@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	<RunWorkingDirectory>$(MSBuildThisFileDirectory)</RunWorkingDirectory>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Raylib-CsLo" Version="4.0.1" />
+    <PackageReference Include="Vortice.XInput" Version="2.1.19" />
+  </ItemGroup>
+
+</Project>
