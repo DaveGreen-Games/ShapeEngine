@@ -49,7 +49,7 @@ namespace ShapeEngineCore.Globals.Input
 
         private static bool mouseUsed = false;
         private static bool keyboardOnlyMode = false;
-        private static int gamepadUsed = -1;
+        public static int gamepadUsed = -1;
         //STATIC EVENT!!! - everything that subscribes to a static event must unsubscribe before deletion, otherwise memory leaks can happen
         //garbage collector can not collect anything that is subscribed to a static event!!!
         public delegate void InputChanged(InputType newType);
@@ -157,18 +157,19 @@ namespace ShapeEngineCore.Globals.Input
 
 
             gamepadUsed = GetGamepadUsed();
-            if (gamepadUsed != CUR_GAMEPAD && gamepadUsed >= 0)
+            //if (gamepadUsed < 0 && IsGamepad()) gamepadUsed = CUR_GAMEPAD;
+            if (gamepadUsed >= 0 && gamepadUsed != CUR_GAMEPAD)
             {
-                if (CUR_GAMEPAD >= 0)//change to another connected gamepad
+                //if (CUR_GAMEPAD >= 0)//change to another connected gamepad
+                //{
+                XInput.SetVibration(CUR_GAMEPAD, 0f, 0f);
+                CUR_GAMEPAD = gamepadUsed;
+                if (CUR_INPUT_TYPE != InputType.GAMEPAD)
                 {
-                    XInput.SetVibration(CUR_GAMEPAD, 0f, 0f);
-                    CUR_GAMEPAD = gamepadUsed;
-                    if (CUR_INPUT_TYPE != InputType.GAMEPAD)
-                    {
-                        CUR_INPUT_TYPE = InputType.GAMEPAD;
-                        OnInputTypeChanged(CUR_INPUT_TYPE);
-                    }
+                    CUR_INPUT_TYPE = InputType.GAMEPAD;
+                    OnInputTypeChanged(CUR_INPUT_TYPE);
                 }
+                //}
             }
 
         }
@@ -285,23 +286,22 @@ namespace ShapeEngineCore.Globals.Input
             if (connectedGamepads.Count <= 0) return -1;
             foreach (int gamepad in connectedGamepads)
             {
+                //if (gamepad == CUR_GAMEPAD) continue;
                 if (CheckGamepadUsed(gamepad)) return gamepad;
             }
-            return -1;
+            return -1; // CUR_GAMEPAD;
         }
         private static bool CheckGamepadUsed(int gamepad)
         {
-
             if (!IsGamepadConnected(gamepad)) return false;
 
-            bool button = GetGamepadButtonPressed() > 0;
-            if (button) return true;
+            if (GetGamepadButton(gamepad)) return true;
 
             bool axis =
-                Vector2LengthSqr(GetGamepadAxisLeft(gamepad)) > 0.0f ||
-                Vector2LengthSqr(GetGamepadAxisRight(gamepad)) > 0.0f ||
-                GetGamepadLeftTrigger(gamepad) > 0.0f ||
-                GetGamepadRightTrigger(gamepad) > 0.0f;
+                Vector2LengthSqr(GetGamepadAxisLeft(gamepad, 0.5f, false)) > 0.0f ||
+                Vector2LengthSqr(GetGamepadAxisRight(gamepad, 0.5f, false)) > 0.0f ||
+                GetGamepadLeftTrigger(gamepad, 0.5f, false) > 0.0f ||
+                GetGamepadRightTrigger(gamepad, 0.5f, false) > 0.0f;
             return axis;
         }
         private static bool WasAnyGamepadUsed()
@@ -321,14 +321,21 @@ namespace ShapeEngineCore.Globals.Input
             return connectedGamepads.Contains(CUR_GAMEPAD);
         }
 
-
+        public static bool GetGamepadButton(int gamepad)
+        {
+            foreach (var button in Enum.GetValues(typeof(GamepadButton)).Cast<int>())
+            {
+                if (IsGamepadButtonDown(gamepad, button)) return true;
+            }
+            return false;
+        }
         public static Vector2 GetGamepadAxisLeft(int gamepad, float deadzone = 0.25f, bool normalized = false)
         {
             if (!IsGamepadConnected(gamepad)) return new(0.0f, 0.0f);
 
             Vector2 axis = new Vector2(
-                GetGamepadAxisMovement(CUR_GAMEPAD, GamepadAxis.GAMEPAD_AXIS_LEFT_X),
-                GetGamepadAxisMovement(CUR_GAMEPAD, GamepadAxis.GAMEPAD_AXIS_LEFT_Y));
+                GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_X),
+                GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_Y));
 
             if (Vector2LengthSqr(axis) < deadzone * deadzone) return new(0.0f, 0.0f);
 
@@ -340,8 +347,8 @@ namespace ShapeEngineCore.Globals.Input
             if (!IsGamepadConnected(gamepad)) return new(0.0f, 0.0f);
 
             Vector2 axis = new Vector2(
-                GetGamepadAxisMovement(CUR_GAMEPAD, GamepadAxis.GAMEPAD_AXIS_RIGHT_X),
-                GetGamepadAxisMovement(CUR_GAMEPAD, GamepadAxis.GAMEPAD_AXIS_RIGHT_Y));
+                GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_X),
+                GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_Y));
 
             if (Vector2LengthSqr(axis) < deadzone * deadzone) return new(0.0f, 0.0f);
 
@@ -356,7 +363,7 @@ namespace ShapeEngineCore.Globals.Input
                 return 0.0f;
             }
             //raylib axis goes from -1 to 1 -> converted to 0 to 1
-            float axis = (GetGamepadAxisMovement(CUR_GAMEPAD, GamepadAxis.GAMEPAD_AXIS_LEFT_TRIGGER) + 1.0f) * 0.5f;
+            float axis = (GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_TRIGGER) + 1.0f) * 0.5f;
             if (MathF.Abs(axis) < deadzone)
             {
                 if (inverted) return 1.0f;
@@ -374,7 +381,7 @@ namespace ShapeEngineCore.Globals.Input
                 return 0.0f;
             }
             //raylib axis goes from -1 to 1 -> converted to 0 to 1
-            float axis = (GetGamepadAxisMovement(CUR_GAMEPAD, GamepadAxis.GAMEPAD_AXIS_RIGHT_TRIGGER) + 1.0f) * 0.5f;
+            float axis = (GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_TRIGGER) + 1.0f) * 0.5f;
             if (MathF.Abs(axis) < deadzone)
             {
                 if (inverted) return 1.0f;

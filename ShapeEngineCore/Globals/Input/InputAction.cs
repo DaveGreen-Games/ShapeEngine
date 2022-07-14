@@ -162,7 +162,7 @@ namespace ShapeEngineCore.Globals.Input
         private string name = "";
         private List<Keys> actionKeys = new();
         private bool disabled = false;
-        private int gamepadIndex = 0;
+        //private int gamepadIndex = -1;
         private float deadzone = 0.25f;
         private string keyboardMouseKeyName = "";
         private string gamepadKeyName = "";
@@ -185,29 +185,18 @@ namespace ShapeEngineCore.Globals.Input
                 AddKey(key);
             }
         }
-        public InputAction(string name, int gamepadIndex, params Keys[] keys)
+        public InputAction(string name, float deadzone, params Keys[] keys)
         {
             this.name = name;
-            this.gamepadIndex = gamepadIndex;
-            foreach (var key in keys)
-            {
-                AddKey(key);
-            }
-        }
-        public InputAction(string name, int gamepadIndex, float deadzone, params Keys[] keys)
-        {
-            this.name = name;
-            this.gamepadIndex = gamepadIndex;
             this.deadzone = deadzone;
             foreach (var key in keys)
             {
                 AddKey(key);
             }
         }
-        public InputAction(string name, int gamepadIndex, float deadzone, string keyboardMouseKeyName, string gamepadKeyName, params Keys[] keys)
+        public InputAction(string name, float deadzone, string keyboardMouseKeyName, string gamepadKeyName, params Keys[] keys)
         {
             this.name = name;
-            this.gamepadIndex = gamepadIndex;
             this.deadzone = deadzone;
             this.keyboardMouseKeyName = keyboardMouseKeyName;
             this.gamepadKeyName = gamepadKeyName;
@@ -217,8 +206,6 @@ namespace ShapeEngineCore.Globals.Input
             }
         }
 
-        public void SetGamepadIndex(int newIndex) { gamepadIndex = newIndex; }
-        public int GetGamepadIndex() { return gamepadIndex; }
         public void Rename(string newName) { name = newName; }
         public void AddKey(Keys key)
         {
@@ -249,7 +236,7 @@ namespace ShapeEngineCore.Globals.Input
             else return keyboardMouseKeyName;
         }
         //gamepad axis released/pressed are the same as up/down right now
-        public bool IsDown()
+        public bool IsDown(int gamepad)
         {
             if (actionKeys.Count <= 0 || IsDisabled()) return false;
             foreach (var key in actionKeys)
@@ -258,21 +245,21 @@ namespace ShapeEngineCore.Globals.Input
                 {
                     if (IsMouseButtonDown(TransformKeyValue(key))) return true;
                 }
-                else if (IsGamepadButton(key))
+                else if (gamepad >= 0 && IsGamepadButton(key))
                 {
-                    if (IsGamepadButtonDown(gamepadIndex, TransformKeyValue(key))) return true;
+                    if (IsGamepadButtonDown(gamepad, TransformKeyValue(key))) return true;
                 }
-                else if (IsGamepadAxisButtonPos(key))
+                else if (gamepad >= 0 && IsGamepadAxisButtonPos(key))
                 {
-                    if (AxisMovement(key) > 0f) return true;
+                    if (GetGamepadAxisMovement(gamepad, TransformKeyValue(key)) > 0f) return true;
                 }
-                else if (IsGamepadAxisButtonNeg(key))
+                else if (gamepad >= 0 && IsGamepadAxisButtonNeg(key))
                 {
-                    if (AxisMovement(key) < 0f) return true;
+                    if (GetGamepadAxisMovement(gamepad, TransformKeyValue(key)) < 0f) return true;
                 }
-                else if (IsGamepadAxis(key))
+                else if (gamepad >= 0 && IsGamepadAxis(key))
                 {
-                    if (AxisMovement(key) != 0f) return true;
+                    if (GetGamepadAxisMovement(gamepad, TransformKeyValue(key)) != 0f) return true;
                 }
                 else
                 {
@@ -281,7 +268,7 @@ namespace ShapeEngineCore.Globals.Input
             }
             return false;
         }
-        public bool IsPressed()
+        public bool IsPressed(int gamepad)
         {
             if (actionKeys.Count <= 0 || IsDisabled()) return false;
             foreach (var key in actionKeys)
@@ -290,21 +277,21 @@ namespace ShapeEngineCore.Globals.Input
                 {
                     if (IsMouseButtonPressed(TransformKeyValue(key))) return true;
                 }
-                else if (IsGamepadButton(key))
+                else if (gamepad >= 0 && IsGamepadButton(key))
                 {
-                    if (IsGamepadButtonPressed(gamepadIndex, TransformKeyValue(key))) return true;
+                    if (IsGamepadButtonPressed(gamepad, TransformKeyValue(key))) return true;
                 }
-                else if (IsGamepadAxisButtonPos(key))
+                else if (gamepad >= 0 && IsGamepadAxisButtonPos(key))
                 {
-                    if (GetGamepadAxisMovement(gamepadIndex, TransformKeyValue(key)) > 0f) return true;
+                    if (GetGamepadAxisMovement(gamepad, TransformKeyValue(key)) > 0f) return true;
                 }
-                else if (IsGamepadAxisButtonNeg(key))
+                else if (gamepad >= 0 && IsGamepadAxisButtonNeg(key))
                 {
-                    if (GetGamepadAxisMovement(gamepadIndex, TransformKeyValue(key)) < 0f) return true;
+                    if (GetGamepadAxisMovement(gamepad, TransformKeyValue(key)) < 0f) return true;
                 }
-                else if (IsGamepadAxis(key))
+                else if (gamepad >= 0 && IsGamepadAxis(key))
                 {
-                    if (GetGamepadAxisMovement(gamepadIndex, TransformKeyValue(key)) != 0f) return true;
+                    if (GetGamepadAxisMovement(gamepad, TransformKeyValue(key)) != 0f) return true;
                 }
                 else
                 {
@@ -313,7 +300,7 @@ namespace ShapeEngineCore.Globals.Input
             }
             return false;
         }
-        public bool IsReleased()
+        public bool IsReleased(int gamepad)
         {
             if (actionKeys.Count <= 0 || IsDisabled()) return false;
             foreach (var key in actionKeys)
@@ -322,21 +309,21 @@ namespace ShapeEngineCore.Globals.Input
                 {
                     if (IsMouseButtonReleased(TransformKeyValue(key))) return true;
                 }
-                else if (IsGamepadButton(key))
+                else if (gamepad >= 0 && IsGamepadButton(key))
                 {
-                    if (IsGamepadButtonReleased(gamepadIndex, TransformKeyValue(key))) return true;
+                    if (IsGamepadButtonReleased(gamepad, TransformKeyValue(key))) return true;
                 }
-                else if (IsGamepadAxisButtonPos(key))
+                else if (gamepad >= 0 && IsGamepadAxisButtonPos(key))
                 {
-                    if (GetGamepadAxisMovement(gamepadIndex, TransformKeyValue(key)) <= 0f) return true;
+                    if (GetGamepadAxisMovement(gamepad, TransformKeyValue(key)) <= 0f) return true;
                 }
-                else if (IsGamepadAxisButtonNeg(key))
+                else if (gamepad >= 0 && IsGamepadAxisButtonNeg(key))
                 {
-                    if (GetGamepadAxisMovement(gamepadIndex, TransformKeyValue(key)) >= 0f) return true;
+                    if (GetGamepadAxisMovement(gamepad, TransformKeyValue(key)) >= 0f) return true;
                 }
-                else if (IsGamepadAxis(key))
+                else if (gamepad >= 0 && IsGamepadAxis(key))
                 {
-                    if (GetGamepadAxisMovement(gamepadIndex, TransformKeyValue(key)) == 0f) return true;
+                    if (GetGamepadAxisMovement(gamepad, TransformKeyValue(key)) == 0f) return true;
                 }
                 else
                 {
@@ -345,7 +332,7 @@ namespace ShapeEngineCore.Globals.Input
             }
             return false;
         }
-        public bool IsUp()
+        public bool IsUp(int gamepad)
         {
             if (actionKeys.Count <= 0 || IsDisabled()) return false;
             foreach (var key in actionKeys)
@@ -354,21 +341,21 @@ namespace ShapeEngineCore.Globals.Input
                 {
                     if (IsMouseButtonUp(TransformKeyValue(key))) return true;
                 }
-                else if (IsGamepadButton(key))
+                else if (gamepad >= 0 && IsGamepadButton(key))
                 {
-                    if (IsGamepadButtonUp(gamepadIndex, TransformKeyValue(key))) return true;
+                    if (IsGamepadButtonUp(gamepad, TransformKeyValue(key))) return true;
                 }
-                else if (IsGamepadAxisButtonPos(key))
+                else if (gamepad >= 0 && IsGamepadAxisButtonPos(key))
                 {
-                    if (GetGamepadAxisMovement(gamepadIndex, TransformKeyValue(key)) <= 0f) return true;
+                    if (GetGamepadAxisMovement(gamepad, TransformKeyValue(key)) <= 0f) return true;
                 }
-                else if (IsGamepadAxisButtonNeg(key))
+                else if (gamepad >= 0 && IsGamepadAxisButtonNeg(key))
                 {
-                    if (GetGamepadAxisMovement(gamepadIndex, TransformKeyValue(key)) >= 0f) return true;
+                    if (GetGamepadAxisMovement(gamepad, TransformKeyValue(key)) >= 0f) return true;
                 }
-                else if (IsGamepadAxis(key))
+                else if (gamepad >= 0 && IsGamepadAxis(key))
                 {
-                    if (GetGamepadAxisMovement(gamepadIndex, TransformKeyValue(key)) == 0f) return true;
+                    if (GetGamepadAxisMovement(gamepad, TransformKeyValue(key)) == 0f) return true;
                 }
                 else
                 {
@@ -378,20 +365,22 @@ namespace ShapeEngineCore.Globals.Input
             return false;
         }
 
-        private float AxisMovement(Keys key)
+        private float AxisMovement(int gamepad, Keys key)
         {
+            if (gamepad < 0) return 0f;
             if (!IsGamepadAxis(key) && !IsGamepadAxisButton(key)) return 0f;
-            float movement = GetGamepadAxisMovement(gamepadIndex, TransformKeyValue(key));
+            float movement = GetGamepadAxisMovement(gamepad, TransformKeyValue(key));
             if (MathF.Abs(movement) < deadzone) movement = 0f;
             return movement;
         }
-        public float GetGamepadAxis()
+        public float GetGamepadAxis(int gamepad)
         {
+            if (gamepad < 0) return 0f;
             if (actionKeys.Count <= 0 || IsDisabled()) return 0f;
             float axisValue = 0f;
             foreach (var key in actionKeys)
             {
-                axisValue += AxisMovement(key);
+                axisValue += AxisMovement(gamepad, key);
             }
             return Clamp(axisValue, -1f, 1f);
         }

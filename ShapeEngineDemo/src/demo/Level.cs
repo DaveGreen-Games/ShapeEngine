@@ -139,6 +139,10 @@ namespace ShapeEngineDemo
             UIHandler.DrawTextAlignedPro(String.Format("Objs {0}", area.GetGameObjects().Count), new(75, 150), -5f, FontSize.XLARGE, 5, PaletteHandler.C("text"), Alignement.LEFTCENTER);
             UIHandler.DrawTextAlignedPro(String.Format("{0}", Input.GetCurInputType()), new(75, 300), -5f, FontSize.XLARGE, 5, PaletteHandler.C("text"), Alignement.LEFTCENTER);
             UIHandler.DrawTextAlignedPro(String.Format("GP {0}/{1}", Input.GetCurGamepad(), Input.GetConnectedGamepadCount()), new(75, 450), -5f, FontSize.XLARGE, 5, PaletteHandler.C("text"), Alignement.LEFTCENTER);
+            UIHandler.DrawTextAlignedPro(String.Format("Used {0}", Input.gamepadUsed), new(75, 600), -5f, FontSize.XLARGE, 5, PaletteHandler.C("text"), Alignement.LEFTCENTER);
+            //UIHandler.DrawTextAlignedPro(String.Format("Button {0}", GetGamepadButtonPressed()), new(75, 750), -5f, FontSize.XLARGE, 5, PaletteHandler.C("text"), Alignement.LEFTCENTER);
+
+            
         }
         public override void Close()
         {
