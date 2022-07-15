@@ -236,14 +236,14 @@ namespace ShapeEngineCore.Globals.Input
             else return keyboardMouseKeyName;
         }
         //gamepad axis released/pressed are the same as up/down right now
-        public bool IsDown(int gamepad)
+        public bool IsDown(int gamepad, bool gamepadOnly = false)
         {
             if (actionKeys.Count <= 0 || IsDisabled()) return false;
             foreach (var key in actionKeys)
             {
                 if (IsMouse(key))
                 {
-                    if (IsMouseButtonDown(TransformKeyValue(key))) return true;
+                    if (!gamepadOnly && IsMouseButtonDown(TransformKeyValue(key))) return true;
                 }
                 else if (gamepad >= 0 && IsGamepadButton(key))
                 {
@@ -263,19 +263,19 @@ namespace ShapeEngineCore.Globals.Input
                 }
                 else
                 {
-                    if (IsKeyDown(TransformKeyValue(key))) return true;
+                    if (!gamepadOnly && IsKeyDown(TransformKeyValue(key))) return true;
                 }
             }
             return false;
         }
-        public bool IsPressed(int gamepad)
+        public bool IsPressed(int gamepad, bool gamepadOnly = false)
         {
             if (actionKeys.Count <= 0 || IsDisabled()) return false;
             foreach (var key in actionKeys)
             {
                 if (IsMouse(key))
                 {
-                    if (IsMouseButtonPressed(TransformKeyValue(key))) return true;
+                    if (!gamepadOnly && IsMouseButtonPressed(TransformKeyValue(key))) return true;
                 }
                 else if (gamepad >= 0 && IsGamepadButton(key))
                 {
@@ -295,19 +295,19 @@ namespace ShapeEngineCore.Globals.Input
                 }
                 else
                 {
-                    if (IsKeyPressed(TransformKeyValue(key))) return true;
+                    if (!gamepadOnly && IsKeyPressed(TransformKeyValue(key))) return true;
                 }
             }
             return false;
         }
-        public bool IsReleased(int gamepad)
+        public bool IsReleased(int gamepad, bool gamepadOnly = false)
         {
             if (actionKeys.Count <= 0 || IsDisabled()) return false;
             foreach (var key in actionKeys)
             {
                 if (IsMouse(key))
                 {
-                    if (IsMouseButtonReleased(TransformKeyValue(key))) return true;
+                    if (!gamepadOnly && IsMouseButtonReleased(TransformKeyValue(key))) return true;
                 }
                 else if (gamepad >= 0 && IsGamepadButton(key))
                 {
@@ -327,19 +327,19 @@ namespace ShapeEngineCore.Globals.Input
                 }
                 else
                 {
-                    if (IsKeyReleased(TransformKeyValue(key))) return true;
+                    if (!gamepadOnly && IsKeyReleased(TransformKeyValue(key))) return true;
                 }
             }
             return false;
         }
-        public bool IsUp(int gamepad)
+        public bool IsUp(int gamepad, bool gamepadOnly = false)
         {
             if (actionKeys.Count <= 0 || IsDisabled()) return false;
             foreach (var key in actionKeys)
             {
                 if (IsMouse(key))
                 {
-                    if (IsMouseButtonUp(TransformKeyValue(key))) return true;
+                    if (!gamepadOnly && IsMouseButtonUp(TransformKeyValue(key))) return true;
                 }
                 else if (gamepad >= 0 && IsGamepadButton(key))
                 {
@@ -359,7 +359,7 @@ namespace ShapeEngineCore.Globals.Input
                 }
                 else
                 {
-                    if (IsKeyUp(TransformKeyValue(key))) return true;
+                    if (!gamepadOnly && IsKeyUp(TransformKeyValue(key))) return true;
                 }
             }
             return false;

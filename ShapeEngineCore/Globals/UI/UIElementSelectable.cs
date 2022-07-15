@@ -41,16 +41,16 @@ namespace ShapeEngineCore.Globals.UI
         public bool Clicked() { return clicked; }
         protected virtual bool CheckPressed()
         {
-            return hovered && InputMapHandler.IsDown("UI Mouse Select") || selected && InputMapHandler.IsDown("UI Select");
+            return hovered && InputHandler.IsDown(-1, "UI Mouse Select") || selected && InputHandler.IsDown(-1, "UI Select");
         }
         protected virtual bool CheckClicked()
         {
-            return hovered && InputMapHandler.IsReleased("UI Mouse Select") || selected && InputMapHandler.IsReleased("UI Select");
+            return hovered && InputHandler.IsReleased(-1, "UI Mouse Select") || selected && InputHandler.IsReleased(-1, "UI Select");
         }
         protected bool IsShortcutDown()
         {
             if (shortcut == "") return false;
-            return InputMapHandler.IsDown(shortcut);
+            return InputHandler.IsDown(-1, shortcut);
             //if (keyboardShortcuts.Count <= 0 && mouseShortcuts.Count <= 0) return false;
             //foreach (var button in keyboardShortcuts)
             //{
@@ -65,7 +65,7 @@ namespace ShapeEngineCore.Globals.UI
         protected bool IsShortcutReleased()
         {
             if (shortcut == "") return false;
-            return InputMapHandler.IsReleased(shortcut);
+            return InputHandler.IsReleased(-1, shortcut);
             //if (keyboardShortcuts.Count <= 0 && mouseShortcuts.Count <= 0) return false;
             //foreach (var button in keyboardShortcuts)
             //{

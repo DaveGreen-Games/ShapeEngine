@@ -223,7 +223,7 @@ namespace ShapeEngineCore
             UIHandler.Initialize();
             AudioHandler.Initialize();
             ShaderHandler.Initialize();
-            InputMapHandler.Initialize();
+            InputHandler.Initialize();
             CursorHandler.Initialize();
         }
 
@@ -235,7 +235,7 @@ namespace ShapeEngineCore
             if (RESTART && fullscreen) ScreenHandler.ToggleFullscreen();
 
             ClearScenes();
-            InputMapHandler.Close();
+            InputHandler.Close();
             DataHandler.Close();
             ShaderHandler.Close();
             AudioHandler.Close();
@@ -278,7 +278,7 @@ namespace ShapeEngineCore
         }
         protected void Update(float dt)
         {
-            Input.Update(dt);
+            InputHandler.Update(dt);
             //UI.UpdateMousePos(MOUSE_POS_UI);
             Ease.Update(dt);
             UIHandler.Update(dt);

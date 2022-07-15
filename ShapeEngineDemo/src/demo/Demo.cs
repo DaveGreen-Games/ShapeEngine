@@ -136,9 +136,9 @@ namespace ShapeEngineDemo
                 shootFixed, dropAimPoint,
                 spawnAsteroidDebug, healPlayerDebug, toggleDrawCollidersDebug, toggleDrawHelpersDebug, cycleZoomDebug
                 );
-            InputMapHandler.AddInputMap(inputMap);
-            InputMapHandler.AddDefaultUIInputsToMap("Default");
-            InputMapHandler.SwitchToMap("Default");
+            InputHandler.AddInputMap(inputMap, true);
+            //InputHandler.AddDefaultUIInputsToMap("Default");
+            InputHandler.SwitchToMap("Default", 0);
             Action startscene = () => GoToScene("splash");
             TimerHandler.Add(2.0f, startscene);
         }
@@ -148,26 +148,26 @@ namespace ShapeEngineDemo
         //}
         public override void HandleInput()
         {
-            if (InputMapHandler.IsReleased("Fullscreen")) { ScreenHandler.ToggleFullscreen(); }
+            if (InputHandler.IsReleased(0, "Fullscreen")) { ScreenHandler.ToggleFullscreen(); }
 
             if (DEBUGMODE)
             {
-                if (InputMapHandler.IsReleased("Toggle Draw Helpers")) DEBUG_DrawHelpers = !DEBUG_DrawHelpers;
-                if (InputMapHandler.IsReleased("Toggle Draw Colliders")) DEBUG_DrawColliders = !DEBUG_DrawColliders;
-                if (InputMapHandler.IsReleased("Cycle Zoom"))
+                if (InputHandler.IsReleased(0, "Toggle Draw Helpers")) DEBUG_DrawHelpers = !DEBUG_DrawHelpers;
+                if (InputHandler.IsReleased(0, "Toggle Draw Colliders")) DEBUG_DrawColliders = !DEBUG_DrawColliders;
+                if (InputHandler.IsReleased(0, "Cycle Zoom"))
                 {
                     ScreenHandler.Cam.ZoomBy(0.25f);
                     if (ScreenHandler.Cam.ZoomFactor > 2) ScreenHandler.Cam.ZoomFactor = 0.25f;
                 }
             }
 
-            //if (InputMapHandler.IsReleased("Switch Palette")) { ColorPalette.Next(); ScreenHandler.GetTexture("main").SetClearColor(ColorPalette.Cur.bg1); }
+            //if (InputHandler.IsReleased("Switch Palette")) { ColorPalette.Next(); ScreenHandler.GetTexture("main").SetClearColor(ColorPalette.Cur.bg1); }
 
-            //if (InputMapHandler.IsReleased("Restart")) Restart();
+            //if (InputHandler.IsReleased("Restart")) Restart();
 
-            //if (InputMapHandler.IsReleased("Next Monitor")) ScreenHandler.NextMonitor();
+            //if (InputHandler.IsReleased("Next Monitor")) ScreenHandler.NextMonitor();
 
-            //if (InputMapHandler.IsReleased("Vsync")) ScreenHandler.ToggleVsync();
+            //if (InputHandler.IsReleased("Vsync")) ScreenHandler.ToggleVsync();
         }
     }
 }

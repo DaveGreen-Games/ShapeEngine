@@ -87,7 +87,7 @@ namespace ShapeEngineDemo
         public override void Draw()
         {
             Vector2 center = GetCenter();
-            string text = InputMapHandler.GetInputActionKeyName(inputAction, Input.IsGamepad());
+            string text = InputHandler.GetInputActionKeyName(0, inputAction, InputHandler.IsGamepad());
             //var textSize = UIHandler.GetTextSize(text);
             //float fontSize = radius * (textSize.X / radius);
             //figure out dynamic font size based on text!!!!

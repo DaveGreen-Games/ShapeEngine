@@ -123,19 +123,20 @@ namespace ShapeEngineCore.Globals.UI
 
             if (selected != null)
             {
-                if (InputMapHandler.IsPressed("UI Up"))
+                
+                if (InputHandler.IsPressed(-1, "UI Up"))
                 {
                     CheckDirection(UINeighbors.NeighborDirection.TOP);
                 }
-                else if (InputMapHandler.IsPressed("UI Right"))
+                else if (InputHandler.IsPressed(-1, "UI Right"))
                 {
                     CheckDirection(UINeighbors.NeighborDirection.RIGHT);
                 }
-                else if (InputMapHandler.IsPressed("UI Down"))
+                else if (InputHandler.IsPressed(-1, "UI Down"))
                 {
                     CheckDirection(UINeighbors.NeighborDirection.BOTTOM);
                 }
-                else if (InputMapHandler.IsPressed("UI Left"))
+                else if (InputHandler.IsPressed(-1, "UI Left"))
                 {
                     CheckDirection(UINeighbors.NeighborDirection.LEFT);
                 }

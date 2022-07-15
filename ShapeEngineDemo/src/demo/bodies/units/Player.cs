@@ -166,11 +166,11 @@ namespace ShapeEngineDemo.Bodies
         //}
         private void CheckInput()
         {
-            if (InputMapHandler.IsDown(fixedInput))
+            if (InputHandler.IsDown(0, fixedInput))
             {
                 Shoot();
             }
-            else if (InputMapHandler.IsReleased(fixedInput))
+            else if (InputHandler.IsReleased(0, fixedInput))
             {
                 ReleaseTrigger();
             }
@@ -399,7 +399,7 @@ namespace ShapeEngineDemo.Bodies
                 HitParticle particle = new(collider.Pos + RNG.randVec2(1, stats.Get("size")), RNG.randVec2(), 2f, 2f, PaletteHandler.C("player"));
                 GAMELOOP.AddGameObject(particle);
             }
-            Input.AddVibration(0.5f, 0.5f, 1.5f);
+            InputHandler.AddVibration(0, 0.5f, 0.5f, 1.5f);
             ScreenHandler.Cam.AddCameraOrderChain("player died", false, new CameraOrder(5f, 1f, 2f));
         }
         public override void WasDamaged(DamageInfo info)
@@ -416,7 +416,7 @@ namespace ShapeEngineDemo.Bodies
                 HitParticle particle = new(info.pos, info.dir, 0.75f + f, 0.5f, particleColor);
                 GAMELOOP.AddGameObject(particle);
             }
-            Input.AddVibration(0f, 0.25f, 0.5f);
+            InputHandler.AddVibration(0, 0f, 0.25f, 0.5f);
             ScreenHandler.Cam.Shake(0.5f, new(20f, 20f), 1f, 0f, 0.75f);
             //ScreenHandler.Flash(0.3f, ColorPalette.Cur.enemy, BLANK, true);
             ScreenHandler.FlashTint(0.3f, BLACK, false);
@@ -457,7 +457,7 @@ namespace ShapeEngineDemo.Bodies
             var prevStunned = IsStunned();
             base.Update(dt);
 
-            if (InputMapHandler.IsReleased("Heal Player")) Heal(RNG.randF(10, 35), collider.Pos, this);
+            if (InputHandler.IsReleased(0, "Heal Player")) Heal(RNG.randF(10, 35), collider.Pos, this);
 
             damageTimer.Update(dt);
 
@@ -485,8 +485,8 @@ namespace ShapeEngineDemo.Bodies
             {
                 if (prevStunned) AudioHandler.PlaySFX("player stun ended");
 
-                if (InputMapHandler.IsReleased("Drop Aim Point")) weaponSystem.DropAimPoint(collider.Pos);
-                //if (InputMapHandler.IsReleased("Drop Turrets")) weaponSystem.DropTurrets(collider.Pos);
+                if (InputHandler.IsReleased(0, "Drop Aim Point")) weaponSystem.DropAimPoint(collider.Pos);
+                //if (InputHandler.IsReleased("Drop Turrets")) weaponSystem.DropTurrets(collider.Pos);
 
                 energyCore.Update(dt);
                 if (energyCore.IsCooldownActive())
@@ -508,9 +508,9 @@ namespace ShapeEngineDemo.Bodies
                 curMovement = PlayerMovement.NORMAL;
 
 
-                if (Input.IsGamepad())
+                if (InputHandler.IsGamepad())
                 {
-                    float gamepadRotation = InputMapHandler.GetGamepadAxis("Rotate");
+                    float gamepadRotation = InputHandler.GetGamepadAxis(0, "Rotate");
                     float amount = gamepadRotation * gamepadRotation;
                     if (gamepadRotation > 0)
                     {
@@ -523,11 +523,11 @@ namespace ShapeEngineDemo.Bodies
                 }
                 else
                 {
-                    if (InputMapHandler.IsDown("Rotate Left"))
+                    if (InputHandler.IsDown(0, "Rotate Left"))
                     {
                         MovementDir = Vec.Rotate(MovementDir, -stats.Get("rotSpeed") * DEG2RAD * dt);
                     }
-                    else if (InputMapHandler.IsDown("Rotate Right"))
+                    else if (InputHandler.IsDown(0, "Rotate Right"))
                     {
                         MovementDir = Vec.Rotate(MovementDir, stats.Get("rotSpeed") * DEG2RAD * dt);
                     }
@@ -535,7 +535,7 @@ namespace ShapeEngineDemo.Bodies
 
 
                 float speed = stats.Get("maxSpeed");
-                if (InputMapHandler.IsDown("Boost") && CanBoost())
+                if (InputHandler.IsDown(0, "Boost") && CanBoost())
                 {
                     if (prevMovement != PlayerMovement.BOOST)
                     {
@@ -546,7 +546,7 @@ namespace ShapeEngineDemo.Bodies
                     speed *= stats.Get("boostF");
                     energyCore.Use(stats.Get("boostCost") * dt);
                 }
-                else if (InputMapHandler.IsDown("Slow") && CanSlow())
+                else if (InputHandler.IsDown(0, "Slow") && CanSlow())
                 {
                     if (prevMovement != PlayerMovement.SLOW)
                     {
@@ -733,20 +733,20 @@ namespace ShapeEngineDemo.Bodies
         private void SlowStarted()
         {
             slowPos = collider.Pos;
-            Input.AddVibration(0f, 0.05f, -1f, "slow");
+            InputHandler.AddVibration(0, 0f, 0.05f, -1f, "slow");
         }
         private void SlowEnded()
         {
-            Input.RemoveVibration("slow");
+            InputHandler.RemoveVibration(0, "slow");
         }
         private void BoostStarted()
         {
-            Input.AddVibration(0.1f, 0.05f, -1f, "boost");
+            InputHandler.AddVibration(0, 0.1f, 0.05f, -1f, "boost");
             ScreenHandler.Cam.AddCameraOrderChain("player boost", false, new CameraOrder(0.4f, 1f, 1.1f));
         }
         private void BoostEnded()
         {
-            Input.RemoveVibration("boost");
+            InputHandler.RemoveVibration(0, "boost");
             ScreenHandler.Cam.AddCameraOrderChain("player boost", true, new CameraOrder(0.4f, 1.1f, 1f));
         }
 

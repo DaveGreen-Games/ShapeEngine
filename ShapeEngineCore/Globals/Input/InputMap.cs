@@ -5,9 +5,9 @@ namespace ShapeEngineCore.Globals.Input
     public class InputMap
     {
         private string name = "";
-        private int gamepad = -1;
+        //private int gamepad = -1;
         private Dictionary<string, InputAction> inputActions = new();
-        private bool disabled = false;
+        //private bool disabled = false;
 
         public InputMap(string name, params InputAction[] actions)
         {
@@ -17,18 +17,9 @@ namespace ShapeEngineCore.Globals.Input
                 AddAction(action.GetName(), action);
             }
         }
-        public InputMap(string name, int gamepad, params InputAction[] actions)
-        {
-            this.name = name;
-            this.gamepad = gamepad;
-            foreach (var action in actions)
-            {
-                AddAction(action.GetName(), action);
-            }
-        }
 
-        public int GamepadIndex { get { return gamepad; } }
-        public bool HasGamepad { get { return gamepad >= 0; } }
+        //public int GamepadIndex { get { return gamepad; } }
+        //public bool HasGamepad { get { return gamepad >= 0; } }
         public void Rename(string newName) { name = newName; }
         public string GetName() { return name; }
         public void AddAction(string name, InputAction action)
@@ -60,62 +51,62 @@ namespace ShapeEngineCore.Globals.Input
             if (!inputActions.ContainsKey(name)) return new();
             return inputActions[name].GetKeyNames();
         }
-        public bool IsDisabled() { return disabled; }
-        public void Enable() { disabled = false; }
-        public void Disable() { disabled = true; }
+        //public bool IsDisabled() { return disabled; }
+        //public void Enable() { disabled = false; }
+        //public void Disable() { disabled = true; }
 
-        public float GetAxis(string negative, string positive)
+        public float GetAxis(int gamepad, string negative, string positive)
         {
             if (!inputActions.ContainsKey(negative) || !inputActions.ContainsKey(positive)) return 0f;
-            int gamepadIndex = !HasGamepad ? Input.GetCurGamepad() : gamepad;
-            float p = inputActions[positive].IsDown(gamepadIndex) ? 1f : 0f;
-            float n = inputActions[negative].IsDown(gamepadIndex) ? 1f : 0f;
+            //int gamepadIndex = gamepad < 0 ? Input.GetCurGamepad() : gamepad;
+            float p = inputActions[positive].IsDown(gamepad) ? 1f : 0f;
+            float n = inputActions[negative].IsDown(gamepad) ? 1f : 0f;
             return p - n;
         }
-        public Vector2 GetAxis(string left, string right, string up, string down)
+        public Vector2 GetAxis(int gamepad, string left, string right, string up, string down)
         {
-            return new(GetAxis(left, right), GetAxis(up, down));
+            return new(GetAxis(gamepad, left, right), GetAxis(gamepad, up, down));
         }
-        public float GetGamepadAxis(string gamepadAxisAction)
+        public float GetGamepadAxis(int gamepad, string gamepadAxisAction)
         {
             if (!inputActions.ContainsKey(gamepadAxisAction)) return 0f;
-            int gamepadIndex = !HasGamepad ? Input.GetCurGamepad() : gamepad;
-            return inputActions[gamepadAxisAction].GetGamepadAxis(gamepadIndex);
+            //int gamepadIndex = gamepad < 0 ? Input.GetCurGamepad() : gamepad;
+            return inputActions[gamepadAxisAction].GetGamepadAxis(gamepad);
         }
-        public Vector2 GetGamepadAxis(string gamepadAxisHor, string gamepadAxisVer)
+        public Vector2 GetGamepadAxis(int gamepad,string gamepadAxisHor, string gamepadAxisVer)
         {
-            return new(GetGamepadAxis(gamepadAxisHor), GetGamepadAxis(gamepadAxisVer));
+            return new(GetGamepadAxis(gamepad, gamepadAxisHor), GetGamepadAxis(gamepad, gamepadAxisVer));
         }
 
 
-        public bool IsDown(string actionName)
+        public bool IsDown(int gamepad, string actionName, bool gamepadOnly = false)
         {
-            if (inputActions.Count <= 0 || IsDisabled() || !inputActions.ContainsKey(actionName)) return false;
-            int gamepadIndex = !HasGamepad ? Input.GetCurGamepad() : gamepad;
-            return inputActions[actionName].IsDown(gamepadIndex);
+            if (inputActions.Count <= 0 || !inputActions.ContainsKey(actionName)) return false;
+            //int gamepadIndex = gamepad < 0 ? Input.GetCurGamepad() : gamepad;
+            return inputActions[actionName].IsDown(gamepad, gamepadOnly);
         }
-        public bool IsPressed(string actionName)
+        public bool IsPressed(int gamepad, string actionName, bool gamepadOnly = false)
         {
-            if (inputActions.Count <= 0 || IsDisabled() || !inputActions.ContainsKey(actionName)) return false;
-            int gamepadIndex = !HasGamepad ? Input.GetCurGamepad() : gamepad;
-            return inputActions[actionName].IsPressed(gamepadIndex);
+            if (inputActions.Count <= 0 || !inputActions.ContainsKey(actionName)) return false;
+            //int gamepadIndex = gamepad < 0 ? Input.GetCurGamepad() : gamepad;
+            return inputActions[actionName].IsPressed(gamepad, gamepadOnly);
         }
-        public bool IsReleased(string actionName)
+        public bool IsReleased(int gamepad, string actionName, bool gamepadOnly = false)
         {
-            if (inputActions.Count <= 0 || IsDisabled() || !inputActions.ContainsKey(actionName)) return false;
-            int gamepadIndex = !HasGamepad ? Input.GetCurGamepad() : gamepad;
-            return inputActions[actionName].IsReleased(gamepadIndex);
+            if (inputActions.Count <= 0 || !inputActions.ContainsKey(actionName)) return false;
+            //int gamepadIndex = gamepad < 0 ? Input.GetCurGamepad() : gamepad;
+            return inputActions[actionName].IsReleased(gamepad, gamepadOnly);
         }
-        public bool IsUp(string actionName)
+        public bool IsUp(int gamepad, string actionName, bool gamepadOnly = false)
         {
-            if (inputActions.Count <= 0 || IsDisabled() || !inputActions.ContainsKey(actionName)) return false;
-            int gamepadIndex = !HasGamepad ? Input.GetCurGamepad() : gamepad;
-            return inputActions[actionName].IsUp(gamepadIndex);
+            if (inputActions.Count <= 0 || !inputActions.ContainsKey(actionName)) return false;
+            //int gamepadIndex = gamepad < 0 ? Input.GetCurGamepad() : gamepad;
+            return inputActions[actionName].IsUp(gamepad, gamepadOnly);
         }
 
         public string GetInputActionKeyName(string actionName, bool isGamepad = false)
         {
-            if (inputActions.Count <= 0 || IsDisabled() || !inputActions.ContainsKey(actionName)) return "";
+            if (inputActions.Count <= 0 || !inputActions.ContainsKey(actionName)) return "";
             return inputActions[actionName].GetInputKeyName(isGamepad);
         }
         //public List<string> GetKeyNames(string actionName, bool shorthand = true)
