@@ -22,15 +22,14 @@ namespace ShapeEngineCore.Globals.Input
         }
 
     }
-
-    public  class PlayerSlot
+    public  class InputSlot
     {
         public int gamepadIndex = -1;
         public InputMap curInputMap;
         public bool disabled = false;
 
         private List<GamepadVibration> gamepadVibrationStack = new();
-        public PlayerSlot(int gamepadIndex)
+        public InputSlot(int gamepadIndex)
         {
             curInputMap = new("empty");
             this.gamepadIndex = gamepadIndex;
@@ -144,7 +143,7 @@ namespace ShapeEngineCore.Globals.Input
             TOUCH = 3
         }
 
-        private static List<PlayerSlot> playerSlots = new();
+        private static Dictionary<int, InputSlot> inputSlots = new();
         private static Dictionary<string, InputMap> inputMaps = new();
         //private static bool disabled = false;
         private static readonly Dictionary<string, InputAction> UI_Default_InputActions = new()
@@ -165,8 +164,8 @@ namespace ShapeEngineCore.Globals.Input
         //private static int CUR_GAMEPAD = -1;
         private static List<int> connectedGamepads = new();
         public static int CUR_GAMEPAD {
-            get { return playerSlots[0].gamepadIndex; }
-            set { playerSlots[0].gamepadIndex = value; } }
+            get { return inputSlots[0].gamepadIndex; }
+            set { inputSlots[0].gamepadIndex = value; } }
         public static ref readonly List<int> GetConnectedGamepads() { return ref connectedGamepads; }
         public static int GetConnectedGamepadCount() { return connectedGamepads.Count; }
 
@@ -209,15 +208,16 @@ namespace ShapeEngineCore.Globals.Input
                 basicMap.AddAction(input.Key, input.Value);
             }
             inputMaps.Add(basicMap.GetName(), basicMap);
-            playerSlots.Add(new(-1));
-            if (IsGamepadAvailable(0)) { playerSlots[0].gamepadIndex = 0; }
-            playerSlots[0].curInputMap = basicMap;
+            AddInputSlot(-1, "basic");
+            //inputSlots.Add(0, new(-1));
+            if (IsGamepadAvailable(0)) { inputSlots[0].gamepadIndex = 0; }
+            //inputSlots[0].curInputMap = basicMap;
         }
         public static void Update(float dt)
         {
             CheckGamepadConnection();
             CheckInputType();
-            foreach (var slot in playerSlots)
+            foreach (var slot in inputSlots.Values)
             {
                 slot.Update(dt);
             }
@@ -225,14 +225,34 @@ namespace ShapeEngineCore.Globals.Input
 
         public static void Close()
         {
-            playerSlots.Clear();
+            inputSlots.Clear();
             inputMaps.Clear();
         }
 
-        private static PlayerSlot? GetPlayerSlot(int index)
+
+        public static void AddInputSlot(int gamepadIndex, string inputMap = "basic")
         {
-            if (index < 0 || index >= playerSlots.Count) return null;
-            return playerSlots[index];
+            if (!inputMaps.ContainsKey(inputMap)) return;
+            for (int i = 0; i < inputSlots.Count + 1; i++)
+            {
+                if (!inputSlots.ContainsKey(i))
+                {
+                    inputSlots.Add(i, new(gamepadIndex));
+                    SwitchToMap(inputMap, i);
+                    return;
+                }
+            }
+        }
+        public static void RemoveInputSlot(int index)
+        {
+            if (index <= 0) return;
+            if (!inputSlots.ContainsKey(index)) return;
+            inputSlots.Remove(index);
+        }
+        private static InputSlot? GetInputSlot(int index)
+        {
+            if (index < 0 || index >= inputSlots.Count) return null;
+            return inputSlots[index];
         }
         private static void AddDefaultUIInputsToMap(string mapName)
         {
@@ -250,7 +270,7 @@ namespace ShapeEngineCore.Globals.Input
 
         public static string NextInputMap(int playerSlot = 0, bool switchMap = true)
         {
-            var slot = GetPlayerSlot(playerSlot);
+            var slot = GetInputSlot(playerSlot);
             if (slot == null) return "";
             var mapNameList = inputMaps.Keys.ToList();
             int nextIndex = mapNameList.IndexOf(slot.curInputMap.GetName()) + 1;
@@ -261,7 +281,7 @@ namespace ShapeEngineCore.Globals.Input
         }
         public static string PreviousInputMap(int playerSlot = 0, bool switchMap = true)
         {
-            var slot = GetPlayerSlot(playerSlot);
+            var slot = GetInputSlot(playerSlot);
             if (slot == null) return "";
             var mapNameList = inputMaps.Keys.ToList();
             int prevIndex = mapNameList.IndexOf(slot.curInputMap.GetName()) - 1;
@@ -273,25 +293,25 @@ namespace ShapeEngineCore.Globals.Input
         public static void SwitchToMap(string mapName, int playerSlot = 0)
         {
             if (!inputMaps.ContainsKey(mapName)) return;
-            var slot = GetPlayerSlot(playerSlot);
+            var slot = GetInputSlot(playerSlot);
             if (slot == null) return;
             slot.curInputMap = inputMaps[mapName];
         }
         public static bool IsDisabled(int playerSlot)
         {
-            var slot = GetPlayerSlot(playerSlot);
+            var slot = GetInputSlot(playerSlot);
             if (slot == null) return false;
             else return slot.disabled;
         }
         public static void Enable(int playerSlot = 0)
         {
-            var slot = GetPlayerSlot(playerSlot);
+            var slot = GetInputSlot(playerSlot);
             if (slot == null) return;
             slot.disabled = false;
         }
         public static void Disable(int playerSlot = 0)
         {
-            var slot = GetPlayerSlot(playerSlot);
+            var slot = GetInputSlot(playerSlot);
             if (slot == null) return;
             slot.disabled = true;
         }
@@ -316,7 +336,7 @@ namespace ShapeEngineCore.Globals.Input
         public static void RemoveInputMap(string name)
         {
             if (!inputMaps.ContainsKey(name)) return;
-            foreach (var slot in playerSlots)
+            foreach (var slot in inputSlots.Values)
             {
                 if(slot.curInputMap.GetName() == name)
                 {
@@ -333,7 +353,7 @@ namespace ShapeEngineCore.Globals.Input
                 return;
             }
             if (!inputMaps.ContainsKey(name)) return;
-            foreach (var slot in playerSlots)
+            foreach (var slot in inputSlots.Values)
             {
                 if (slot.curInputMap.GetName() == name)
                 {
@@ -371,16 +391,16 @@ namespace ShapeEngineCore.Globals.Input
         {
             if(playerSlot < 0)
             {
-                for (int i = 0; i < playerSlots.Count; i++)
+                for (int i = 0; i < inputSlots.Count; i++)
                 {
-                    var slot = playerSlots[i];
+                    var slot = inputSlots[i];
                     if (slot.IsDown(actionName, i > 0)) return true;
                 }
                 return false;
             }
             else
             {
-                var slot = GetPlayerSlot(playerSlot);
+                var slot = GetInputSlot(playerSlot);
                 if (slot == null) return false;
                 return slot.IsDown(actionName, playerSlot > 0);
             }
@@ -389,16 +409,16 @@ namespace ShapeEngineCore.Globals.Input
         {
             if (playerSlot < 0)
             {
-                for (int i = 0; i < playerSlots.Count; i++)
+                for (int i = 0; i < inputSlots.Count; i++)
                 {
-                    var slot = playerSlots[i];
+                    var slot = inputSlots[i];
                     if (slot.IsPressed(actionName, i > 0)) return true;
                 }
                 return false;
             }
             else
             {
-                var slot = GetPlayerSlot(playerSlot);
+                var slot = GetInputSlot(playerSlot);
                 if (slot == null) return false;
                 return slot.IsPressed(actionName, playerSlot > 0);
             }
@@ -407,16 +427,16 @@ namespace ShapeEngineCore.Globals.Input
         {
             if (playerSlot < 0)
             {
-                for (int i = 0; i < playerSlots.Count; i++)
+                for (int i = 0; i < inputSlots.Count; i++)
                 {
-                    var slot = playerSlots[i];
+                    var slot = inputSlots[i];
                     if (slot.IsReleased(actionName, i > 0)) return true;
                 }
                 return false;
             }
             else
             {
-                var slot = GetPlayerSlot(playerSlot);
+                var slot = GetInputSlot(playerSlot);
                 if (slot == null) return false;
                 return slot.IsReleased(actionName, playerSlot > 0);
             }
@@ -425,16 +445,16 @@ namespace ShapeEngineCore.Globals.Input
         {
             if (playerSlot < 0)
             {
-                for (int i = 0; i < playerSlots.Count; i++)
+                for (int i = 0; i < inputSlots.Count; i++)
                 {
-                    var slot = playerSlots[i];
+                    var slot = inputSlots[i];
                     if (slot.IsUp(actionName, i > 0)) return true;
                 }
                 return false;
             }
             else
             {
-                var slot = GetPlayerSlot(playerSlot);
+                var slot = GetInputSlot(playerSlot);
                 if (slot == null) return false;
                 return slot.IsUp(actionName, playerSlot > 0);
             }
@@ -442,25 +462,25 @@ namespace ShapeEngineCore.Globals.Input
 
         public static float GetAxis(int playerSlot, string negative, string positive)
         {
-            var slot = GetPlayerSlot(playerSlot);
+            var slot = GetInputSlot(playerSlot);
             if (slot == null) return 0f;
             return slot.GetAxis(negative, positive);
         }
         public static Vector2 GetAxis(int playerSlot, string left, string right, string up, string down, bool normalized = true)
         {
-            var slot = GetPlayerSlot(playerSlot);
+            var slot = GetInputSlot(playerSlot);
             if (slot == null) return new(0f, 0f);
             return slot.GetAxis(left, right, up, down, normalized);
         }
         public static float GetGamepadAxis(int playerSlot, string gamepadAxisAction)
         {
-            var slot = GetPlayerSlot(playerSlot);
+            var slot = GetInputSlot(playerSlot);
             if (slot == null) return 0f;
             return slot.GetGamepadAxis(gamepadAxisAction);
         }
         public static Vector2 GetGamepadAxis(int playerSlot, string gamepadAxisHor, string gamepadAxisVer, bool normalized = true)
         {
-            var slot = GetPlayerSlot(playerSlot);
+            var slot = GetInputSlot(playerSlot);
             if (slot == null) return new(0f, 0f);
 
             return slot.GetGamepadAxis(gamepadAxisHor, gamepadAxisVer, normalized);
@@ -468,7 +488,7 @@ namespace ShapeEngineCore.Globals.Input
 
         public static string GetInputActionKeyName(int playerSlot, string inputAction, bool isGamepad = false)
         {
-            var slot = GetPlayerSlot(playerSlot);
+            var slot = GetInputSlot(playerSlot);
             if (slot == null) return "";
             return slot.GetInputActionKeyName(inputAction, isGamepad);
         }
@@ -482,17 +502,17 @@ namespace ShapeEngineCore.Globals.Input
         {
             if (playerSlot == 0 && !IsGamepad()) return;
             
-            var slot = GetPlayerSlot(playerSlot);
+            var slot = GetInputSlot(playerSlot);
             if (slot != null) slot.AddVibration(leftMotor, rightMotor, duration, name);
         }
         public static void RemoveVibration(int playerSlot, string name)
         {
-            var slot = GetPlayerSlot(playerSlot);
+            var slot = GetInputSlot(playerSlot);
             if (slot != null) slot.RemoveVibration(name);
         }
         public static void StopVibration(int playerSlot)
         {
-            var slot = GetPlayerSlot(playerSlot);
+            var slot = GetInputSlot(playerSlot);
             if (slot != null) slot.StopVibration();
         }
 
@@ -518,7 +538,7 @@ namespace ShapeEngineCore.Globals.Input
                             CUR_INPUT_TYPE = InputType.GAMEPAD;
                             OnInputTypeChanged(CUR_INPUT_TYPE);
                         }
-                        if (playerSlots.Count == 1 && CUR_GAMEPAD < 0) CUR_GAMEPAD = i;
+                        if (inputSlots.Count == 1 && CUR_GAMEPAD < 0) CUR_GAMEPAD = i;
                     }
                 }
                 else
@@ -528,7 +548,7 @@ namespace ShapeEngineCore.Globals.Input
                         connectedGamepads.Remove(i);
                         OnControllerConnectionChanged(i, false, CUR_GAMEPAD);
 
-                        if(playerSlots.Count == 1)
+                        if(inputSlots.Count == 1)
                         {
                             if (connectedGamepads.Count <= 0)
                             {
@@ -557,7 +577,7 @@ namespace ShapeEngineCore.Globals.Input
                 }
             }
 
-            if(playerSlots.Count == 1)
+            if(inputSlots.Count == 1)
             {
                 gamepadUsed = GetGamepadUsed();
                 if (gamepadUsed >= 0 && gamepadUsed != CUR_GAMEPAD)

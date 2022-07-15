@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.2.32616.157
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShapeEngineCore", "ShapeEngineCore\ShapeEngineCore.csproj", "{C581ADC9-28A1-4C62-80DE-E7A1BED64061}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShapeEngineCore", "ShapeEngineCore\ShapeEngineCore.csproj", "{C581ADC9-28A1-4C62-80DE-E7A1BED64061}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShapeEngineDemo", "ShapeEngineDemo\ShapeEngineDemo.csproj", "{1FEE42F8-B9BB-430A-8C77-487B83109DF8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShapeEngineDemo", "ShapeEngineDemo\ShapeEngineDemo.csproj", "{1FEE42F8-B9BB-430A-8C77-487B83109DF8}"
 	ProjectSection(ProjectDependencies) = postProject
 		{C581ADC9-28A1-4C62-80DE-E7A1BED64061} = {C581ADC9-28A1-4C62-80DE-E7A1BED64061}
 	EndProjectSection
