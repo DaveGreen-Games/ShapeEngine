@@ -1,0 +1,47 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+	<RunWorkingDirectory>$(MSBuildThisFileDirectory)</RunWorkingDirectory>
+    <Nullable>enable</Nullable>
+	<StartupObject>ShapeEngineTemplate.Program</StartupObject>
+	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+    <ItemGroup>
+	    <Content Include="gfx\**">
+		    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	    </Content>
+
+	    <Content Include="audio\**">
+		    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	    </Content>
+
+	    <Content Include="fonts\**">
+		    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	    </Content>
+
+	    <Content Include="shaders\**">
+		    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	    </Content>
+
+	    <Content Include="data\**">
+		    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	    </Content>
+
+    </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Raylib-CsLo" Version="4.0.1" />
+    <PackageReference Include="Vortice.XInput" Version="2.1.19" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="ShapeEngineCore">
+      <HintPath>ShapeEngineCore.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

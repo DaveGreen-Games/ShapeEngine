@@ -1,11 +1,14 @@
 ﻿global using static Raylib_CsLo.Raylib;
 global using static Raylib_CsLo.RayMath;
 global using static ShapeEngineCore.ShapeEngine;
-//global using static TemplateRaylib.Program;
-
-//global using static Raylib_CsLo.Easings;
-//global using static Raylib_CsLo.RayGui;
 using ShapeEngineCore;
+
+
+//either copy into project file or download those 2 nuget packages.
+//< ItemGroup >
+//    < PackageReference Include = "Raylib-CsLo" Version = "4.0.1" />
+//    < PackageReference Include = "Vortice.XInput" Version = "2.1.19" />
+//</ ItemGroup >
 
 
 namespace ShapeEngineDemo
