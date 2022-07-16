@@ -16,32 +16,32 @@ namespace ShapeEngineCore
         public CollisionHandler colHandler;
         public Area(float x, float y, float w, float h, int rows, int cols)
         {
-            colHandler = new(x, y, w, h, rows, cols, true);
             inner = new(x, y, w, h);
             outer = Utils.ScaleRectangle(inner, 2f);
+            colHandler = new(outer.x, outer.y, outer.width, outer.height, rows, cols, true);
             Start();
         }
         public Area(Vector2 topLeft, Vector2 bottomRight, int rows, int cols)
         {
             float w = bottomRight.X - topLeft.X;
             float h = bottomRight.Y - topLeft.Y;
-            colHandler = new(topLeft.X, topLeft.Y, w, h, rows, cols, true);
             inner = new(topLeft.X, topLeft.Y, w, h);
             outer = Utils.ScaleRectangle(inner, 2f);
+            colHandler = new(outer.x, outer.y, outer.width, outer.height, rows, cols, true);
             Start();
         }
         public Area(Vector2 topLeft, float w, float h, int rows, int cols)
         {
-            colHandler = new(topLeft.X, topLeft.Y, w, h, rows, cols, true);
             inner = new(topLeft.X, topLeft.Y, w, h);
             outer = Utils.ScaleRectangle(inner, 2f);
+            colHandler = new(outer.x, outer.y, outer.width, outer.height, rows, cols, true);
             Start();
         }
         public Area(Rectangle area, int rows, int cols)
         {
-            colHandler = new(area.x, area.y, area.width, area.height, rows, cols, true);
             inner = area;
             outer = Utils.ScaleRectangle(inner, 2f);
+            colHandler = new(outer.x, outer.y, outer.width, outer.height, rows, cols, true);
             Start();
         }
 
@@ -154,6 +154,12 @@ namespace ShapeEngineCore
         }
         public virtual void Draw()
         {
+            if (DEBUG_DrawHelpers)
+            {
+                DrawRectangleRec(this.inner, new(200, 200, 0, 150));
+                DrawRectangleRec(this.outer, new(0, 200, 200, 150));
+                colHandler.DebugDrawGrid(GOLD, new(0, 150, 0, 100));
+            }
             if (playfield != null) playfield.Draw();
             SortGameObjects();
             foreach (GameObject obj in gameObjects)

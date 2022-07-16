@@ -28,8 +28,8 @@ namespace ShapeEngineCore
         public void Debug_Draw(Color color)
         {
             //DrawRectangleRec(rect, ColorPalette.ChangeAlpha(color, 100));
-            DrawRectangleRec(rect, DEBUG_HelperColor);
-            DrawRectangleLinesEx(rect, 1f, WHITE);
+            //DrawRectangleRec(rect, DEBUG_HelperColor);
+            DrawRectangleLinesEx(rect, 1f, color);
         }
     }
     public class SpawnArea
@@ -88,10 +88,10 @@ namespace ShapeEngineCore
 
         public void Debug_DrawSegments()
         {
-            Color[] colors = new Color[] { RED, ORANGE, YELLOW, LIME, GREEN, BLUE, PURPLE, BEIGE };
+            //Color[] colors = new Color[] { RED, ORANGE, YELLOW, LIME, GREEN, BLUE, PURPLE, BEIGE };
             for (int i = 0; i < spawnSegments.Count; i++)
             {
-                spawnSegments[i].Debug_Draw(colors[i]);
+                spawnSegments[i].Debug_Draw(ORANGE);
             }
         }
         private List<SpawnSegment> ConstructSpawnSegments(Rectangle inner, Rectangle outer)

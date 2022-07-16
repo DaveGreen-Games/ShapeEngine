@@ -63,7 +63,7 @@ namespace ShapeEngineCore.SimpleCollision
             for (int i = 0; i < bucket_size; i++)
             {
                 var coords = GetCoordinatesGrid(i);
-                var rect = new Rectangle(coords.x * spacing_x, coords.y * spacing_y, spacing_x, spacing_y);
+                var rect = new Rectangle(origin_x + coords.x * spacing_x, origin_y + coords.y * spacing_y, spacing_x, spacing_y);
 
                 DrawRectangleLinesEx(rect, 1, border);
                 int id = GetCellID(coords.x, coords.y);

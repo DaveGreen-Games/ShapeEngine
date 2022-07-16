@@ -653,7 +653,11 @@ namespace ShapeEngineDemo.Bodies
                 weaponSystem.Draw();
                 targetFinder.Draw(stats.Get("targetingRange"));
             }
-            if (DEBUG_DrawColliders) collider.DebugDrawShape(DEBUG_ColliderColor);
+            if (DEBUG_DrawColliders)
+            {
+                if (collider.IsEnabled()) collider.DebugDrawShape(DEBUG_ColliderColor);
+                else collider.DebugDrawShape(DEBUG_ColliderDisabledColor);
+            }
 
         }
 

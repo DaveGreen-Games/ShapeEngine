@@ -22,7 +22,6 @@ namespace ShapeEngineDemo
 
         public override void Draw()
         {
-
             base.Draw();
             //DrawRectangleLinesEx(new Rectangle(0.0f, 0.0f, ScreenHandler.GameWidth(), ScreenHandler.GameHeight()), 6, ColorPalette.Cur.neutral);
 

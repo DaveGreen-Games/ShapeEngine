@@ -14,6 +14,7 @@ namespace ShapeEngineCore
         public static bool DEBUG_DrawColliders = false;
         public static bool DEBUG_DrawHelpers = false;
         public static Raylib_CsLo.Color DEBUG_ColliderColor = new(0, 25, 200, 100);
+        public static Raylib_CsLo.Color DEBUG_ColliderDisabledColor = new(200, 25, 0, 100);
         public static Raylib_CsLo.Color DEBUG_HelperColor = new(0, 200, 25, 100);
 
         

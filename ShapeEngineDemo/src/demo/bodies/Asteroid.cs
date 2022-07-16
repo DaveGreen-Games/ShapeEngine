@@ -175,7 +175,11 @@ namespace ShapeEngineDemo.Bodies
         public override void Draw()
         {
             Drawing.DrawPolygon(polygon, 2f, PaletteHandler.C("neutral"), collider.Pos);
-            if (DEBUG_DrawColliders) collider.DebugDrawShape(DEBUG_ColliderColor);
+            if (DEBUG_DrawColliders)
+            {
+                if(collider.IsEnabled()) collider.DebugDrawShape(DEBUG_ColliderColor);
+                else collider.DebugDrawShape(DEBUG_ColliderDisabledColor);
+            }
         }
         //public override void DrawUI()
         //{
