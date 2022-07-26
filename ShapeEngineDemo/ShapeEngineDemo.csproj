@@ -2,12 +2,14 @@
 
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
-		<TargetFramework>net6.0-windows</TargetFramework>
+		<TargetFramework>net6.0-windows10.0.22000.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<RunWorkingDirectory>$(MSBuildThisFileDirectory)</RunWorkingDirectory>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<StartupObject>ShapeEngineDemo.Program</StartupObject>
+		<ApplicationIcon>shape-engine.ico</ApplicationIcon>
+		<PackageIcon>icon-windows-128px.png</PackageIcon>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -40,6 +42,19 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 
+	</ItemGroup>
+
+
+	<ItemGroup>
+	  <Content Include="shape-engine.ico" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+	  <None Include="I:\game-dev\projects\raylib\shape-engine\capsules\v2\icon\icon-windows\icon-windows-128px.png">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
 	</ItemGroup>
 
 

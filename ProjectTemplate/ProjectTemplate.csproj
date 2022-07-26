@@ -8,7 +8,12 @@
     <Nullable>enable</Nullable>
 	<StartupObject>ShapeEngineTemplate.Program</StartupObject>
 	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	<ApplicationIcon>shape-engine.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="shape-engine.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Raylib-CsLo" Version="4.0.1" />
