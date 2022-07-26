@@ -139,11 +139,11 @@ namespace ShapeEngineCore.Globals.Shaders
 
 
         public static bool HasScreenShader(string name) { return screenShaders.ContainsKey(name); }
-        public static void AddScreenShader(string name, string path, bool enabled = true, int order = 0)
+        public static void AddScreenShader(string name, string fileName, bool enabled = true, int order = 0)
         {
-            if (name == "" || path == "") return;
+            if (name == "" || fileName == "") return;
             if (screenShaders.ContainsKey(name)) return;
-            screenShaders[name] = new ScreenShader(path, name, enabled);
+            screenShaders[name] = new ScreenShader(fileName, name, enabled);
         }
         public static void RemoveScreenShader(string name)
         {

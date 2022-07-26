@@ -2,6 +2,7 @@
 using ShapeEngineCore.Globals.Input;
 using ShapeEngineCore.Globals.Screen;
 using System.Numerics;
+using ShapeEngineCore.Globals.Persistent;
 
 namespace ShapeEngineCore.Globals.UI
 {
@@ -77,15 +78,18 @@ namespace ShapeEngineCore.Globals.UI
             float factor = size / textSize.X;
             return fontSizeBase * factor;
         }
-        public static void AddFont(string name, string path, int fontSize = 100)
+        public static void AddFont(string name, string fileName, int fontSize = 100)
         {
-            if (path == "" || fonts.ContainsKey(name)) return;
-            unsafe
-            {
-                Font font = LoadFontEx(path, fontSize, (int*)0, 300);
-                SetTextureFilter(font.texture, TextureFilter.TEXTURE_FILTER_BILINEAR);
-                fonts.Add(name, font);
-            }
+            if (fileName == "" || fonts.ContainsKey(name)) return;
+            Font font = ResourceManager.LoadFont(fileName, fontSize);
+            SetTextureFilter(font.texture, TextureFilter.TEXTURE_FILTER_BILINEAR);
+            fonts.Add(name, font);
+            //unsafe
+            //{
+            //    Font font = LoadFontEx(fileName, fontSize, (int*)0, 300);
+            //    SetTextureFilter(font.texture, TextureFilter.TEXTURE_FILTER_BILINEAR);
+            //    fonts.Add(name, font);
+            //}
         }
 
         public static Font GetFont(string name = "")

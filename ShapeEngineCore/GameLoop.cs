@@ -45,12 +45,13 @@ namespace ShapeEngineCore
     }
     public struct DataInitInfo
     {
-        public string dataFolderPath = "";
+        public string resourceFolderPath = "";
+        public string dataFileName = "";
         public DataResolver dataResolver = new DataResolver();
         public string[] sheetNames = new string[0];
 
         public DataInitInfo() { }
-        public DataInitInfo(string dataFolderPath, DataResolver dataResolver, params string[] sheetNames) { this.dataFolderPath = dataFolderPath; this.dataResolver = dataResolver; this.sheetNames = sheetNames; }
+        public DataInitInfo(string resourceFolderPath, string dataFileName, DataResolver dataResolver, params string[] sheetNames) { this.resourceFolderPath = resourceFolderPath; this.dataFileName = dataFileName; this.dataResolver = dataResolver; this.sheetNames = sheetNames; }
     }
 
     public class GameLoop
@@ -216,9 +217,9 @@ namespace ShapeEngineCore
             //ScreenHandler.Initialize(1920, 1080, 0.25f, 2.0f, "Raylib Template", 60, true, fs, 0, false);
             ScreenHandler.Initialize(screenInitInfo.devWidth, screenInitInfo.devHeight, screenInitInfo.gameSizeFactor, screenInitInfo.uiSizeFactor, screenInitInfo.windowName, screenInitInfo.fps, screenInitInfo.vsync, fs, screenInitInfo.monitor, screenInitInfo.stretch);
 
-
             //DataHandler.Initialize("data/test-properties.json", new DataResolver());
-            DataHandler.Initialize(dataInitInfo.dataFolderPath, dataInitInfo.dataResolver, dataInitInfo.sheetNames);
+            ResourceManager.Initialize(dataInitInfo.resourceFolderPath);
+            DataHandler.Initialize(dataInitInfo.dataFileName, dataInitInfo.dataResolver, dataInitInfo.sheetNames);
             PaletteHandler.Initialize();
             UIHandler.Initialize();
             AudioHandler.Initialize();

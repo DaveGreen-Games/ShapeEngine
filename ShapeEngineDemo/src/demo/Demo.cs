@@ -13,8 +13,15 @@ namespace ShapeEngineDemo
 {
     public class Demo : GameLoop
     {
+        private Image icon;
+
         public override void Start()
         {
+
+            icon = ResourceManager.LoadImage("shape-engine-icon-bg");
+            SetWindowIcon(icon);
+            
+
             var colorData = DataHandler.GetSheet<ColorData>("colors");
             foreach (var palette in colorData)
             {
@@ -45,14 +52,14 @@ namespace ShapeEngineDemo
 
             ScreenHandler.Game.SetClearColor(PaletteHandler.C("bg1"));
 
-            ShaderHandler.AddScreenShader("outline", "shaders/outline-shader.fs", false, -1);
-            ShaderHandler.AddScreenShader("colorize", "shaders/colorize-shader.fs", false, 0);
-            ShaderHandler.AddScreenShader("bloom", "shaders/bloom-shader.fs", false, 1);
-            ShaderHandler.AddScreenShader("chrom", "shaders/chromatic-aberration-shader.fs", false, 2);
-            ShaderHandler.AddScreenShader("crt", "shaders/crt-shader.fs", true, 3);
-            ShaderHandler.AddScreenShader("grayscale", "shaders/grayscale-shader.fs", false, 4);
-            ShaderHandler.AddScreenShader("pixelizer", "shaders/pixelizer-shader.fs", false, 5);
-            ShaderHandler.AddScreenShader("blur", "shaders/blur-shader.fs", false, 6);
+            ShaderHandler.AddScreenShader("outline", "outline-shader", false, -1);
+            ShaderHandler.AddScreenShader("colorize", "colorize-shader", false, 0);
+            ShaderHandler.AddScreenShader("bloom", "bloom-shader", false, 1);
+            ShaderHandler.AddScreenShader("chrom", "chromatic-aberration-shader", false, 2);
+            ShaderHandler.AddScreenShader("crt", "crt-shader", true, 3);
+            ShaderHandler.AddScreenShader("grayscale", "grayscale-shader", false, 4);
+            ShaderHandler.AddScreenShader("pixelizer", "pixelizer-shader", false, 5);
+            ShaderHandler.AddScreenShader("blur", "blur-shader", false, 6);
 
             //outline only works with transparent background!!
             ShaderHandler.SetScreenShaderValueVec("outline", "textureSize", new float[] { ScreenHandler.GameWidth(), ScreenHandler.GameHeight() }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
@@ -67,42 +74,42 @@ namespace ShapeEngineDemo
             ShaderHandler.SetScreenShaderValueFloat("blur", "renderHeight", ScreenHandler.GameHeight());
             ShaderHandler.SetScreenShaderValueFloat("blur", "scale", 1.25f);
 
-            UIHandler.AddFont("light", "fonts/teko-light.ttf", 200);
-            UIHandler.AddFont("regular", "fonts/teko-regular.ttf", 200);
-            UIHandler.AddFont("medium", "fonts/teko-medium.ttf", 200);
-            UIHandler.AddFont("semibold", "fonts/teko-semibold.ttf", 200);
+            UIHandler.AddFont("light", "teko-light", 200);
+            UIHandler.AddFont("regular", "teko-regular", 200);
+            UIHandler.AddFont("medium", "teko-medium", 200);
+            UIHandler.AddFont("semibold", "teko-semibold", 200);
             UIHandler.SetDefaultFont("medium");
 
             AudioHandler.AddBus("music", 0.5f, "master");
             AudioHandler.AddBus("sound", 0.5f, "master");
 
-            AudioHandler.AddSFX("button click", "audio/sfx/button-click01.wav", 0.25f, "sound");
-            AudioHandler.AddSFX("button hover", "audio/sfx/button-hover01.wav", 0.5f, "sound");
-            AudioHandler.AddSFX("boost", "audio/sfx/boost01.wav", 0.5f, "sound");
-            AudioHandler.AddSFX("slow", "audio/sfx/slow02.wav", 0.5f, "sound");
-            AudioHandler.AddSFX("player hurt", "audio/sfx/hurt01.wav", 0.5f, "sound");
-            AudioHandler.AddSFX("player die", "audio/sfx/die01.wav", 0.5f, "sound");
-            AudioHandler.AddSFX("player stun ended", "audio/sfx/stun01.wav", 0.5f, "sound");
-            AudioHandler.AddSFX("player healed", "audio/sfx/healed01.wav", 0.5f, "sound");
+            AudioHandler.AddSFX("button click", "button-click01", 0.25f, "sound");
+            AudioHandler.AddSFX("button hover", "button-hover01", 0.5f, "sound");
+            AudioHandler.AddSFX("boost", "boost01", 0.5f, "sound");
+            AudioHandler.AddSFX("slow", "slow02", 0.5f, "sound");
+            AudioHandler.AddSFX("player hurt", "hurt01", 0.5f, "sound");
+            AudioHandler.AddSFX("player die", "die01", 0.5f, "sound");
+            AudioHandler.AddSFX("player stun ended", "stun01", 0.5f, "sound");
+            AudioHandler.AddSFX("player healed", "healed01", 0.5f, "sound");
 
-            AudioHandler.AddSFX("player pwr down", "audio/sfx/pwrDown01.wav", 1.0f, "sound");
-            AudioHandler.AddSFX("player pwr up", "audio/sfx/pwrUp05.wav", 1.0f, "sound");
+            AudioHandler.AddSFX("player pwr down", "pwrDown01", 1.0f, "sound");
+            AudioHandler.AddSFX("player pwr up", "pwrUp05", 1.0f, "sound");
 
-            AudioHandler.AddSFX("projectile pierce", "audio/sfx/projectilePierce01.wav", 0.7f, "sound");
-            AudioHandler.AddSFX("projectile bounce", "audio/sfx/projectileBounce03.wav", 0.6f, "sound");
-            AudioHandler.AddSFX("projectile impact", "audio/sfx/projectileImpact01.wav", 0.8f, "sound");
-            AudioHandler.AddSFX("projectile explosion", "audio/sfx/explosion01.wav", 1f, "sound");
-            AudioHandler.AddSFX("projectile crit", "audio/sfx/projectileCrit01.wav", 0.6f, "sound");
+            AudioHandler.AddSFX("projectile pierce", "projectilePierce01", 0.7f, "sound");
+            AudioHandler.AddSFX("projectile bounce", "projectileBounce03", 0.6f, "sound");
+            AudioHandler.AddSFX("projectile impact", "projectileImpact01", 0.8f, "sound");
+            AudioHandler.AddSFX("projectile explosion", "explosion01", 1f, "sound");
+            AudioHandler.AddSFX("projectile crit", "projectileCrit01", 0.6f, "sound");
             //AudioHandler.AddSFX("asteroid hurt", "audio/sfx/hurt02.wav", 0.5f, "sound");
-            AudioHandler.AddSFX("asteroid die", "audio/sfx/die02.wav", 0.55f, "sound");
-            AudioHandler.AddSFX("bullet", "audio/sfx/gun05.wav", 0.25f, "sound");
+            AudioHandler.AddSFX("asteroid die", "die02", 0.55f, "sound");
+            AudioHandler.AddSFX("bullet", "gun05", 0.25f, "sound");
 
-            AudioHandler.AddSong("neon-road-trip", "audio/music/neon-road-trip.wav", 0.05f, "music");
-            AudioHandler.AddSong("space-invaders", "audio/music/space-invaders.wav", 0.05f, "music");
+            AudioHandler.AddSong("neon-road-trip", "neon-road-trip", 0.05f, "music");
+            AudioHandler.AddSong("space-invaders", "space-invaders", 0.05f, "music");
 
-            AudioHandler.AddSong("behind-the-darkness", "audio/music/behind-the-darkness.ogg", 0.1f, "music");
-            AudioHandler.AddSong("synthetic-whisper", "audio/music/synthetic-whisper.ogg", 0.1f, "music");
-            AudioHandler.AddSong("underbeat", "audio/music/underbeat.ogg", 0.1f, "music");
+            AudioHandler.AddSong("behind-the-darkness", "behind-the-darkness", 0.1f, "music");
+            AudioHandler.AddSong("synthetic-whisper", "synthetic-whisper", 0.1f, "music");
+            AudioHandler.AddSong("underbeat", "underbeat", 0.1f, "music");
 
             AudioHandler.AddPlaylist("menu", new() { "behind-the-darkness", "synthetic-whisper", "underbeat" });
             AudioHandler.AddPlaylist("game", new() { "neon-road-trip", "space-invaders" });
@@ -168,6 +175,12 @@ namespace ShapeEngineDemo
             //if (InputHandler.IsReleased("Next Monitor")) ScreenHandler.NextMonitor();
 
             //if (InputHandler.IsReleased("Vsync")) ScreenHandler.ToggleVsync();
+        }
+
+        public override void End()
+        {
+            base.End();
+            UnloadImage(icon);
         }
     }
 }

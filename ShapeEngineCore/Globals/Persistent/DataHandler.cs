@@ -64,11 +64,11 @@ namespace ShapeEngineCore.Globals.Persistent
             else return null;
         }
 
-        public static void Initialize(string dataPath, DataResolver resolver, params string[] sheetNames)
+        public static void Initialize(string dataFileName, DataResolver resolver, params string[] sheetNames)
         {
-            if (dataPath == "" || sheetNames.Length <= 0) return;
+            if (dataFileName == "" || sheetNames.Length <= 0) return;
             
-            var dataString = LoadFileText(dataPath);
+            var dataString = ResourceManager.LoadJsonData(dataFileName);
             var dataNode = JsonNode.Parse(dataString);
             if (dataNode == null) return;
 

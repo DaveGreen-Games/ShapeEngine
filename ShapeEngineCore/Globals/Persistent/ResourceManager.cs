@@ -12,15 +12,15 @@ namespace ShapeEngineCore.Globals.Persistent
 
         public ResourceInfo(string extension, byte[] data) { this.extension = extension; this.data = data; }
     }
-    public class ResourceManager
+    public static class ResourceManager
     {
-        private readonly Dictionary<string, ResourceInfo> resources;
+        private static Dictionary<string, ResourceInfo> resources = new();
 
-        public ResourceManager(string path)
+        
+        public static void Initialize(string path)
         {
             resources = LoadResources(path);
         }
-
 
         public static void Generate(string sourcePath, string outputPath)
         {
@@ -37,11 +37,12 @@ namespace ShapeEngineCore.Globals.Persistent
         }
 
         
-        public Texture LoadTexture(string name)
+        
+        public static Texture LoadTexture(string name)
         {
             return Raylib.LoadTextureFromImage(LoadImage(name));
         }
-        public Image LoadImage(string name)
+        public static Image LoadImage(string name)
         {
             unsafe
             {
@@ -53,7 +54,7 @@ namespace ShapeEngineCore.Globals.Persistent
                 }
             }
         }
-        public Font LoadFont(string name, int fontSize = 100)
+        public static Font LoadFont(string name, int fontSize = 100)
         {
             unsafe
             {
@@ -65,7 +66,7 @@ namespace ShapeEngineCore.Globals.Persistent
                 }
             }
         }
-        public Wave LoadWave(string name)
+        public static Wave LoadWave(string name)
         {
             unsafe
             {
@@ -77,11 +78,11 @@ namespace ShapeEngineCore.Globals.Persistent
                 }
             }
         }
-        public Sound LoadSound(string name)
+        public static Sound LoadSound(string name)
         {
             return Raylib.LoadSoundFromWave(LoadWave(name));
         }
-        public Music LoadMusic(string name)
+        public static Music LoadMusic(string name)
         {
             unsafe
             {
@@ -93,23 +94,23 @@ namespace ShapeEngineCore.Globals.Persistent
                 }
             }
         }
-        public Shader LoadFragmentShader(string name)
+        public static Shader LoadFragmentShader(string name)
         {
             string file = Encoding.Default.GetString(resources[name].data);
             return Raylib.LoadShaderFromMemory(null, file);
         }
-        public Shader LoadVertexShader(string name)
+        public static Shader LoadVertexShader(string name)
         {
             string file = Encoding.Default.GetString(resources[name].data);
             return Raylib.LoadShaderFromMemory(null, file);
         }
-        public string LoadJsonData(string name)
+        public static string LoadJsonData(string name)
         {
             return Encoding.Default.GetString(resources[name].data);
         }
 
 
-        private Dictionary<string, ResourceInfo> LoadResources(string path)
+        private static Dictionary<string, ResourceInfo> LoadResources(string path)
         {
             Dictionary<string, ResourceInfo> result = new();
             var lines = File.ReadAllLines(path + "resources.shp");

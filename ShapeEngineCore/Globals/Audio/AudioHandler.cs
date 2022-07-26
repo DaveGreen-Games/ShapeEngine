@@ -1,4 +1,6 @@
 ﻿using Raylib_CsLo;
+using ShapeEngineCore.Globals.Persistent;
+
 
 namespace ShapeEngineCore.Globals.Audio
 
@@ -198,21 +200,21 @@ namespace ShapeEngineCore.Globals.Audio
         }
 
 
-        public static void AddSFX(string name, string path, float volume = 0.5f, string bus = "master", float pitch = 1.0f)
+        public static void AddSFX(string name, string fileName, float volume = 0.5f, string bus = "master", float pitch = 1.0f)
         {
             if (audioBusKeys.ContainsKey(name) || !buses.ContainsKey(bus)) return;
-            if (path == "") return;
-            Sound sound = LoadSound(path);
+            if (fileName == "") return;
+            Sound sound = ResourceManager.LoadSound(fileName); // LoadSound(fileName);
 
             SFX sfx = new SFX(name, sound, volume, bus, pitch);
             buses[bus].AddAudio(name, sfx);
             audioBusKeys.Add(name, bus);
         }
-        public static void AddSong(string name, string path, float volume = 0.5f, string bus = "master", float pitch = 1.0f)
+        public static void AddSong(string name, string fileName, float volume = 0.5f, string bus = "master", float pitch = 1.0f)
         {
             if (audioBusKeys.ContainsKey(name) || !buses.ContainsKey(bus)) return;
-            if (path == "") return;
-            Music song = LoadMusicStream(path);
+            if (fileName == "") return;
+            Music song = ResourceManager.LoadMusic(fileName); // LoadMusicStream(fileName);
             Song s = new Song(name, song, volume, bus, pitch);
             buses[bus].AddAudio(name, s);
             audioBusKeys.Add(name, bus);

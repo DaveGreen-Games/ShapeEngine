@@ -1,4 +1,6 @@
 ﻿using Raylib_CsLo;
+using ShapeEngineCore.Globals.Persistent;
+
 
 namespace ShapeEngineCore.Globals.Shaders
 {
@@ -8,10 +10,10 @@ namespace ShapeEngineCore.Globals.Shaders
         private bool enabled = true;
         private string name = "";
         private int order = 0;
-        public ScreenShader(string path, string name, bool enabled = true, int order = 0)
+        public ScreenShader(string fileName, string name, bool enabled = true, int order = 0)
         {
             this.name = name;
-            shader = LoadShader("330", path);
+            shader = ResourceManager.LoadFragmentShader(fileName); // LoadShader("330", fileName);
             this.enabled = enabled;
             this.order = order;
         }
