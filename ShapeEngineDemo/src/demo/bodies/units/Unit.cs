@@ -45,7 +45,7 @@ namespace ShapeEngineDemo.Bodies
 
         public override Rectangle GetBoundingBox()
         {
-            return collider.GetBoundingRect();
+            return HasDynamicBoundingBox() ? collider.GetDynamicBoundingRect() : collider.GetBoundingRect();
         }
         public override Vector2 GetPos()
         {

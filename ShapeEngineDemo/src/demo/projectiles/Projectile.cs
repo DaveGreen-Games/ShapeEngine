@@ -93,15 +93,20 @@ namespace ShapeEngineDemo.Projectiles
         }
 
         public Collider GetCollider() { return collider; }
+
         public ColliderClass GetColliderClass() { return this.colliderClass; }
         public ColliderType GetColliderType() { return ColliderType.DYNAMIC; }
+        public virtual bool HasDynamicBoundingBox() { return true; }
         public string GetCollisionLayer() { return "bullet"; }
         public string[] GetCollisionMask() { return collisionMask; }
         public string GetID() { return type; }
         public override Vector2 GetPosition() { return collider.Pos; }
         public Vector2 GetPos() { return collider.Pos; }
 
-
+        public override Rectangle GetBoundingBox()
+        {
+            return HasDynamicBoundingBox() ? collider.GetDynamicBoundingRect() : collider.GetBoundingRect();
+        }
         public virtual void Collide(CastInfo info) { }
         public virtual void Overlap(OverlapInfo info) { }
         public override bool IsDead() { return dead; }
@@ -131,6 +136,14 @@ namespace ShapeEngineDemo.Projectiles
         public override void Draw()
         {
             DrawCircle((int)collider.Pos.X, (int)collider.Pos.Y, collider.Radius, color);
+
+            if (DEBUG_DrawColliders)
+            {
+                if (collider.IsEnabled()) collider.DebugDrawShape(DEBUG_ColliderColor);
+                else collider.DebugDrawShape(DEBUG_ColliderDisabledColor);
+
+                DrawRectangleLinesEx(GetBoundingBox(), 1f, GREEN);
+            }
         }
 
         protected DamageInfo ImpactDamage(IDamageable target)

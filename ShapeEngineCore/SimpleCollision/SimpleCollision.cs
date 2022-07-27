@@ -28,6 +28,8 @@ namespace ShapeEngineCore.SimpleCollision
         public Vector2 GetPos();
         public string GetCollisionLayer();//on what collision layer is the ICollidable
         public string[] GetCollisionMask();//with what layers does this ICollidable collide
+
+        public bool HasDynamicBoundingBox();// { return false; }
     }
 
 
@@ -130,6 +132,7 @@ namespace ShapeEngineCore.SimpleCollision
         public bool IsStatic() { return Vel.X == 0.0f && Vel.Y == 0.0f; }
 
         public virtual Rectangle GetBoundingRect() { return new(Pos.X, Pos.Y, 1.0f, 1.0f); }
+        public virtual Rectangle GetDynamicBoundingRect() { return Utils.ScaleRectangle(GetBoundingRect(), MathF.Max(Vel.Length() * GAMELOOP.DELTA, 1f)); }
         public virtual void DebugDrawShape(Color color) { DrawCircle((int)Pos.X, (int)Pos.Y, 5.0f, color); }
     }
     public class CircleCollider : Collider
@@ -147,6 +150,7 @@ namespace ShapeEngineCore.SimpleCollision
         public float GetCircumference() { return MathF.PI * Radius * 2.0f; }
 
         public override Rectangle GetBoundingRect() { return new(Pos.X - radius, Pos.Y - radius, radius * 2.0f, radius * 2.0f); }
+        //public virtual Rectangle GetDynamicBoundingRect() { return Utils.ScaleRectangle(GetBoundingRect(), Vel.Length() * GAMELOOP.DELTA); }
         public override void DebugDrawShape(Color color) { DrawCircle((int)Pos.X, (int)Pos.Y, Radius, color); }
 
     }
@@ -400,7 +404,7 @@ namespace ShapeEngineCore.SimpleCollision
 
                 //if (collider.GetColliderType() == ColliderType.STATIC || collider.GetColliderClass() == ColliderClass.AREA) continue;
 
-                List<ICollidable> others = spatialHash.GetObjects(collider.GetCollider());
+                List<ICollidable> others = spatialHash.GetObjects(collider.GetCollider(), collider.HasDynamicBoundingBox());
                 foreach (ICollidable other in others)
                 {
                     string otherLayer = other.GetCollisionLayer();
@@ -591,7 +595,7 @@ namespace ShapeEngineCore.SimpleCollision
         public List<ICollidable> CastSpace(ICollidable caster)
         {
             List<ICollidable> bodies = new();
-            List<ICollidable> objects = spatialHash.GetObjects(caster.GetCollider());
+            List<ICollidable> objects = spatialHash.GetObjects(caster.GetCollider(), caster.HasDynamicBoundingBox());
             foreach (ICollidable obj in objects)
             {
                 if (caster.GetCollisionMask().Length <= 0)
@@ -1380,6 +1384,16 @@ namespace ShapeEngineCore.SimpleCollision
             Vector2 sEnd = Vec.Rotate(segmentEnd - rectCenter, -rectRotation) + rectHalfSize;
 
             return OverlapSegmentRect(sStart, sEnd, rPos, rSize);
+        }
+        public static bool OverlapRectRect(Rectangle a, Rectangle b)
+        {
+            Vector2 aTopLeft = new(a.x, a.y);
+            Vector2 aBottomRight = aTopLeft + new Vector2(a.width, a.height);
+            Vector2 bTopLeft = new(b.x, b.y);
+            Vector2 bBottomRight = bTopLeft + new Vector2(b.width, b.height);
+            return
+                OverlappingRange(aTopLeft.X, aBottomRight.X, bTopLeft.X, bBottomRight.X) &&
+                OverlappingRange(aTopLeft.Y, aBottomRight.Y, bTopLeft.Y, bBottomRight.Y);
         }
         public static bool OverlapRectRect(Vector2 aPos, Vector2 aSize, Vector2 bPos, Vector2 bSize)
         {

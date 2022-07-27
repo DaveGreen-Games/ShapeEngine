@@ -161,9 +161,9 @@ namespace ShapeEngineDemo.Bodies
         }
         public override Rectangle GetBoundingBox()
         {
-            return collider.GetBoundingRect();
+            return HasDynamicBoundingBox() ? collider.GetDynamicBoundingRect() : collider.GetBoundingRect();
         }
-        
+
         public override void Update(float dt)
         {
             if (IsDead()) return;
@@ -179,6 +179,8 @@ namespace ShapeEngineDemo.Bodies
             {
                 if(collider.IsEnabled()) collider.DebugDrawShape(DEBUG_ColliderColor);
                 else collider.DebugDrawShape(DEBUG_ColliderDisabledColor);
+
+                DrawRectangleLinesEx(GetBoundingBox(), 1f, GREEN);
             }
         }
         //public override void DrawUI()

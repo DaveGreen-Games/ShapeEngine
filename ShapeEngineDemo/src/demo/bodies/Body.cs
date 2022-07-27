@@ -131,6 +131,10 @@ namespace ShapeEngineDemo.Bodies
         {
             return "body";
         }
+        public virtual bool HasDynamicBoundingBox()
+        {
+            return true;
+        }
         public virtual Collider GetCollider()
         {
             return new Collider();
@@ -179,6 +183,7 @@ namespace ShapeEngineDemo.Bodies
         {
             return collisionMask;
         }
+
         public void Overlap(OverlapInfo info)
         {
             return;

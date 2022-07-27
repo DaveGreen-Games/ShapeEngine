@@ -1,4 +1,5 @@
 ﻿using Raylib_CsLo;
+using ShapeEngineCore.Globals;
 using System.Numerics;
 //using System.Drawing;
 
@@ -121,14 +122,15 @@ namespace ShapeEngineCore.SimpleCollision
         //TODO (DAVID):
         //get all the cells in the bounding rect area and then make overlap test between the shape and each cell in the bounding area
         //only make those checks if there are more than 1 cell
-        public List<int> GetCellIDs(Collider shape)
+        public List<int> GetCellIDs(Collider shape, bool dynamicBoundingBox = false)
         {
-            Rectangle boundingRect = shape.GetBoundingRect();
+            Rectangle boundingRect = dynamicBoundingBox? shape.GetDynamicBoundingRect() : shape.GetBoundingRect();
             List<int> hashes = new List<int>();
             (int x, int y) topLeft = GetCellCoordinate(boundingRect.x, boundingRect.y);
             (int x, int y) bottomRight = GetCellCoordinate(boundingRect.x + boundingRect.width, boundingRect.y + boundingRect.height);
 
-            if (topLeft.x == bottomRight.x && topLeft.y == bottomRight.y)
+            if(boundingRect.width <= 0f || boundingRect.height <= 0f)
+            //if (topLeft.x == bottomRight.x && topLeft.y == bottomRight.y)
             {
                 hashes.Add(GetCellID(topLeft.x, topLeft.y));
                 return hashes;
@@ -144,7 +146,8 @@ namespace ShapeEngineCore.SimpleCollision
 
                     if (!hashes.Contains(id)) //do i still need this check?
                     {
-                        if (Overlap.Check(GetCellRectangle(id), shape))
+                        if(Overlap.OverlapRectRect(GetCellRectangle(id), boundingRect))
+                        //if (Overlap.Check(GetCellRectangle(id), shape))
                         {
                             hashes.Add(id);
                         }
@@ -178,7 +181,7 @@ namespace ShapeEngineCore.SimpleCollision
         }
         public void Add(ICollidable collider, bool dynamic = true)
         {
-            var hashes = GetCellIDs(collider.GetCollider());
+            var hashes = GetCellIDs(collider.GetCollider(), collider.HasDynamicBoundingBox());
             foreach (int hash in hashes)
             {
                 if (dynamic)
@@ -194,7 +197,7 @@ namespace ShapeEngineCore.SimpleCollision
 
         public void Remove(ICollidable collider, bool dynamic = false)
         {
-            var hashes = GetCellIDs(collider.GetCollider());
+            var hashes = GetCellIDs(collider.GetCollider(), collider.HasDynamicBoundingBox());
             foreach (int hash in hashes)
             {
                 if (dynamic)
@@ -233,10 +236,10 @@ namespace ShapeEngineCore.SimpleCollision
             }
         }
 
-        public List<ICollidable> GetObjects(Collider shape)
+        public List<ICollidable> GetObjects(Collider shape, bool dynamicBoundingBox = false)
         {
             List<ICollidable> objects = new List<ICollidable>();
-            var hashes = GetCellIDs(shape);
+            var hashes = GetCellIDs(shape, dynamicBoundingBox);
             foreach (int hash in hashes)
             {
                 objects.AddRange(bucketsDynamic[hash]);
