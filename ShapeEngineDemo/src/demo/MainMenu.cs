@@ -56,7 +56,7 @@ namespace ShapeEngineDemo
             CursorHandler.Switch("ui");
             GAMELOOP.backgroundColor = PaletteHandler.C("bg2");
             GAMELOOP.RemoveScene("level1");
-            AudioHandler.SwitchPlaylist("menu");
+            //AudioHandler.SwitchPlaylist("menu");
         }
         public override void Deactivate(Scene? newScene)
         {

@@ -83,7 +83,7 @@ namespace ShapeEngineDemo
             //AudioHandler.PlaySFX("explosion");
             CursorHandler.Switch("game");
             GAMELOOP.backgroundColor = PaletteHandler.C("bg1");
-            AudioHandler.SwitchPlaylist("game");
+            //AudioHandler.SwitchPlaylist("game");
         }
         public override void Deactivate(Scene? newScene)
         {
@@ -132,16 +132,17 @@ namespace ShapeEngineDemo
             //    DrawRectangleRec(new(0, 0, 580, ScreenHandler.UIHeight()), ColorPalette.Cur.bg1);
             //    //DrawRectangleLinesEx(new(0, 0, 580, ScreenHandler.UIHeight()), 10f, ColorPalette.Cur.text);
             //}
-            UIHandler.DrawTextAlignedPro(String.Format("{0}", GetFPS()), new Vector2(50, 50), -5f, FontSize.XLARGE, 5, PaletteHandler.C("special1"), Alignement.LEFTCENTER);
+            UIHandler.DrawTextAlignedPro(String.Format("{0}", GetFPS()), new Vector2(30, 60), -5f, FontSize.XLARGE, 5, PaletteHandler.C("special1"), Alignement.LEFTCENTER);
             if (area == null) return;
             area.DrawUI();
-            UIHandler.DrawTextAlignedPro(String.Format("Objs {0}", area.GetGameObjects().Count), new(75, 150), -5f, FontSize.XLARGE, 5, PaletteHandler.C("text"), Alignement.LEFTCENTER);
-            UIHandler.DrawTextAlignedPro(String.Format("{0}", InputHandler.GetCurInputType()), new(75, 300), -5f, FontSize.XLARGE, 5, PaletteHandler.C("text"), Alignement.LEFTCENTER);
-            UIHandler.DrawTextAlignedPro(String.Format("GP {0}/{1}", InputHandler.CUR_GAMEPAD, InputHandler.GetConnectedGamepadCount()), new(75, 450), -5f, FontSize.XLARGE, 5, PaletteHandler.C("text"), Alignement.LEFTCENTER);
-            UIHandler.DrawTextAlignedPro(String.Format("Used {0}", InputHandler.gamepadUsed), new(75, 600), -5f, FontSize.XLARGE, 5, PaletteHandler.C("text"), Alignement.LEFTCENTER);
+            UIHandler.DrawTextAlignedPro(String.Format("Objs {0}", area.GetGameObjects().Count), new(30, 200), 0f, FontSize.LARGE, 5, PaletteHandler.C("text"), Alignement.LEFTCENTER);
+            UIHandler.DrawTextAlignedPro(String.Format("{0}", InputHandler.GetCurInputType()), new(30, 260), 0f, FontSize.LARGE, 5, PaletteHandler.C("text"), Alignement.LEFTCENTER);
+            UIHandler.DrawTextAlignedPro(String.Format("GP {0}/{1}", InputHandler.CUR_GAMEPAD, InputHandler.GetConnectedGamepadCount()), new(30, 320), 0f, FontSize.LARGE, 5, PaletteHandler.C("text"), Alignement.LEFTCENTER);
+            UIHandler.DrawTextAlignedPro(String.Format("Used {0}", InputHandler.gamepadUsed), new(30, 380), 0f, FontSize.LARGE, 5, PaletteHandler.C("text"), Alignement.LEFTCENTER);
+            UIHandler.DrawTextAlignedPro("Debug Keys [8, 9, 0]", new Vector2(ScreenHandler.UIWidth() / 2, ScreenHandler.UIHeight() - 20), 0f, FontSize.LARGE, 5f, PaletteHandler.C("text"), Alignement.BOTTOMCENTER);
             //UIHandler.DrawTextAlignedPro(String.Format("Button {0}", GetGamepadButtonPressed()), new(75, 750), -5f, FontSize.XLARGE, 5, PaletteHandler.C("text"), Alignement.LEFTCENTER);
 
-            
+
         }
         public override void Close()
         {

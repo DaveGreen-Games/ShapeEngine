@@ -17,11 +17,12 @@ namespace ShapeEngineDemo
 
         public override void Start()
         {
-
+            //WINDOW ICON
             icon = ResourceManager.LoadImage("shape-engine-icon-bg");
             SetWindowIcon(icon);
             
 
+            //COLOR PALETTES
             var colorData = DataHandler.GetSheet<ColorData>("colors");
             foreach (var palette in colorData)
             {
@@ -47,11 +48,15 @@ namespace ShapeEngineDemo
                 };
                 PaletteHandler.AddPalette(palette.Key, colors);
             }
-
             PaletteHandler.ChangePalette("starter");
 
+
+            //Set the clear color for game screen texture
             ScreenHandler.Game.SetClearColor(PaletteHandler.C("bg1"));
 
+
+
+            //SHADERS - Does not work right now because Raylib-CsLo LoadShaderFromMemory does not work correctly...
             ShaderHandler.AddScreenShader("outline", "outline-shader", false, -1);
             ShaderHandler.AddScreenShader("colorize", "colorize-shader", false, 0);
             ShaderHandler.AddScreenShader("bloom", "bloom-shader", false, 1);
@@ -74,15 +79,21 @@ namespace ShapeEngineDemo
             ShaderHandler.SetScreenShaderValueFloat("blur", "renderHeight", ScreenHandler.GameHeight());
             ShaderHandler.SetScreenShaderValueFloat("blur", "scale", 1.25f);
 
+
+            //FONTS
             UIHandler.AddFont("light", "teko-light", 200);
             UIHandler.AddFont("regular", "teko-regular", 200);
             UIHandler.AddFont("medium", "teko-medium", 200);
             UIHandler.AddFont("semibold", "teko-semibold", 200);
             UIHandler.SetDefaultFont("medium");
 
+
+            //AUDIO BUSES
             AudioHandler.AddBus("music", 0.5f, "master");
             AudioHandler.AddBus("sound", 0.5f, "master");
 
+
+            //SOUNDS
             AudioHandler.AddSFX("button click", "button-click01", 0.25f, "sound");
             AudioHandler.AddSFX("button hover", "button-hover01", 0.5f, "sound");
             AudioHandler.AddSFX("boost", "boost01", 0.5f, "sound");
@@ -100,25 +111,28 @@ namespace ShapeEngineDemo
             AudioHandler.AddSFX("projectile impact", "projectileImpact01", 0.8f, "sound");
             AudioHandler.AddSFX("projectile explosion", "explosion01", 1f, "sound");
             AudioHandler.AddSFX("projectile crit", "projectileCrit01", 0.6f, "sound");
-            //AudioHandler.AddSFX("asteroid hurt", "audio/sfx/hurt02.wav", 0.5f, "sound");
             AudioHandler.AddSFX("asteroid die", "die02", 0.55f, "sound");
             AudioHandler.AddSFX("bullet", "gun05", 0.25f, "sound");
 
-            AudioHandler.AddSong("neon-road-trip", "neon-road-trip", 0.05f, "music");
-            AudioHandler.AddSong("space-invaders", "space-invaders", 0.05f, "music");
 
-            AudioHandler.AddSong("behind-the-darkness", "behind-the-darkness", 0.1f, "music");
-            AudioHandler.AddSong("synthetic-whisper", "synthetic-whisper", 0.1f, "music");
-            AudioHandler.AddSong("underbeat", "underbeat", 0.1f, "music");
 
-            AudioHandler.AddPlaylist("menu", new() { "behind-the-darkness", "synthetic-whisper", "underbeat" });
-            AudioHandler.AddPlaylist("game", new() { "neon-road-trip", "space-invaders" });
-            AudioHandler.StartPlaylist("menu");
+            //MUSIC EXAMPLE--------------
+            //AudioHandler.AddSong("menu-song1", "song1", 0.5f, "music");
+            //AudioHandler.AddSong("menu-song2", "song2", 0.35f, "music");
+            //AudioHandler.AddSong("game-song1", "song3", 0.4f, "music");
+            //AudioHandler.AddSong("game-song2", "song4", 0.5f, "music");
+            //
+            //AudioHandler.AddPlaylist("menu", new() { "menu-song1", "menu-song2" });
+            //AudioHandler.AddPlaylist("game", new() { "game-song1", "game-song2" });
+            //AudioHandler.StartPlaylist("menu");
+            //----------------------------------
+
 
             AddScene("splash", new SplashScreen());
             AddScene("mainmenu", new MainMenu());
 
-            //InputAction iaRestart = new("Restart", InputAction.Keys.R);
+
+            //INPUT
             InputAction iaQuit = new("Quit", InputAction.Keys.ESCAPE);
             InputAction iaFullscreen = new("Fullscreen", InputAction.Keys.F);
             InputAction rotateLeft = new("Rotate Left", InputAction.Keys.A, InputAction.Keys.GP_BUTTON_LEFT_FACE_LEFT);
@@ -144,15 +158,14 @@ namespace ShapeEngineDemo
                 spawnAsteroidDebug, healPlayerDebug, toggleDrawCollidersDebug, toggleDrawHelpersDebug, cycleZoomDebug
                 );
             InputHandler.AddInputMap(inputMap, true);
-            //InputHandler.AddDefaultUIInputsToMap("Default");
             InputHandler.SwitchToMap("Default", 0);
+            
+            
+            //SPAWN SPLASH SCREEN
             Action startscene = () => GoToScene("splash");
             TimerHandler.Add(2.0f, startscene);
         }
-        //public override void PostDraw()
-        //{
-        //    Screen.DEBUG_DrawMonitorInfo(20, 20, 25);
-        //}
+        
         public override void HandleInput()
         {
             if (InputHandler.IsReleased(0, "Fullscreen")) { ScreenHandler.ToggleFullscreen(); }
@@ -167,14 +180,6 @@ namespace ShapeEngineDemo
                     if (ScreenHandler.Cam.ZoomFactor > 2) ScreenHandler.Cam.ZoomFactor = 0.25f;
                 }
             }
-
-            //if (InputHandler.IsReleased("Switch Palette")) { ColorPalette.Next(); ScreenHandler.GetTexture("main").SetClearColor(ColorPalette.Cur.bg1); }
-
-            //if (InputHandler.IsReleased("Restart")) Restart();
-
-            //if (InputHandler.IsReleased("Next Monitor")) ScreenHandler.NextMonitor();
-
-            //if (InputHandler.IsReleased("Vsync")) ScreenHandler.ToggleVsync();
         }
 
         public override void End()
