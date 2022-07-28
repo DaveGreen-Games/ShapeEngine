@@ -92,7 +92,6 @@ namespace ShapeEngineDemo
             level1Button.Draw();
             optionsButton.Draw();
             quitButton.Draw();
-
             //Vector2 center = new(SCREEN_AREA_UI.width / 2, SCREEN_AREA_UI.height / 2);
             //Vector2 size = new(750, 300);
             //Rectangle rect = new(center.X - size.X * 0.5f, center.Y - size.Y * 0.5f, size.X, size.Y);

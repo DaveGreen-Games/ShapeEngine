@@ -103,6 +103,20 @@ namespace ShapeEngineCore.Globals
             if (!palette.ContainsKey(name)) return WHITE;
             else return palette[name];
         }
+        public List<Color> GetAllColors()
+        {
+            return palette.Values.ToList();
+        }
+
+        public void Draw(int x, int y, int width, int height)
+        {
+            var colors = GetAllColors();
+            int colorWidth = width / colors.Count;
+            for (int i = 0; i < colors.Count; i++)
+            {
+                Raylib.DrawRectangle(x + colorWidth * i, y, colorWidth, height, colors[i]);
+            }
+        }
     }
 
     public static class PaletteHandler
@@ -156,6 +170,10 @@ namespace ShapeEngineCore.Globals
                 paletteNames.Add(paletteName);
             }
         }
+        public static void AddPalette(string paletteName, Image source, params string[] colorNames)
+        {
+            AddPalette(GeneratePaletteFromImage(paletteName, source, colorNames));
+        }
         public static void RemovePalette(string paletteName)
         {
             if (paletteName == "default") return;
@@ -199,6 +217,112 @@ namespace ShapeEngineCore.Globals
             ChangePalette(curPaletteIndex - 1);
         }
 
+        /// <summary>
+        /// Get all the colors from the source image.
+        /// </summary>
+        /// <param name="source"> Image that contains the colors. Each color should only be 1 pixel wide.</param>
+        /// <param name="colorCount">How many colors there are in the image. </param>
+        /// <returns></returns>
+        public static Color[] GetColorsFromImage(Image source, int colorCount)
+        {
+            unsafe
+            {
+                var cptr = Raylib.LoadImageColors(source);
+                Color[] colors = new Color[colorCount];
+                for (int i = 0; i < colorCount; i++)
+                {
+                    colors[i] = *(cptr + i);
+                }
+                Raylib.UnloadImageColors(cptr);
+                return colors;
+            }
+        }
+        /// <summary>
+        /// Get all the colors from the source image.
+        /// </summary>
+        /// <param name="source"> Image that contains the colors. Each color should only be 1 pixel wide.</param>
+        /// <param name="colorCount">How many colors there are in the image. </param>
+        /// <returns></returns>
+        public static Dictionary<string, Color> GeneratePaletteFromImage(Image source, params string[] colorNames)
+        {
+            unsafe
+            {
+                int size = colorNames.Length;
+                int* colorCount = null;
+                var cptr = Raylib.LoadImageColors(source);
+                Dictionary<string, Color> colors = new();
+                for (int i = 0; i < size; i++)
+                {
+                    Color color = *(cptr + i);
+                    colors.Add(colorNames[i], color);
+                }
+                Raylib.UnloadImageColors(cptr);
+                return colors;
+            }
+        }
+        /// <summary>
+        /// Get all the colors from the source image.
+        /// </summary>
+        /// <param name="source"> Image that contains the colors. Each color should only be 1 pixel wide.</param>
+        /// <param name="colorCount">How many colors there are in the image. </param>
+        /// <returns></returns>
+        public static ColorPalette GeneratePaletteFromImage(string paletteName, Image source, params string[] colorNames)
+        {
+            return new(paletteName, GeneratePaletteFromImage(source, colorNames));
+        }
+
+        public static Dictionary<string, Color> GeneratePalette(int[] colors, params string[] colorNames)
+        {
+            if (colors.Length <= 0 || colorNames.Length <= 0) return new();
+            Dictionary<string, Color> palette = new Dictionary<string, Color>();
+            int size = colors.Length;
+            if (colorNames.Length < size) size = colorNames.Length;
+            for (int i = 0; i < size; i++)
+            {
+                palette.Add(colorNames[i], HexToColor(colors[i]));
+            }
+            return palette;
+        }
+        public static Dictionary<string, Color> GeneratePalette(string[] hexColors, params string[] colorNames)
+        {
+            if (hexColors.Length <= 0 || colorNames.Length <= 0) return new();
+            Dictionary<string, Color> palette = new Dictionary<string, Color>();
+            int size = hexColors.Length;
+            if (colorNames.Length < size) size = colorNames.Length;
+            for (int i = 0; i < size; i++)
+            {
+                palette.Add(colorNames[i], HexToColor(hexColors[i]));
+            }
+            return palette;
+        }
+
+        public static ColorPalette GeneratePalette(string paletteName, int[] colors, params string[] colorNames)
+        {
+            return new(paletteName, GeneratePalette(colors, colorNames));
+        }
+        public static ColorPalette GeneratePalette(string paletteName, string[] hexColors, params string[] colorNames)
+        {
+            return new(paletteName, GeneratePalette(hexColors, colorNames));
+        }
+
+        public static Color[] GeneratePalette(params int[] colors)
+        {
+            Color[] palette = new Color[colors.Length];
+            for (int i = 0; i < colors.Length; i++)
+            {
+                palette[i] = HexToColor(colors[i]);
+            }
+            return palette;
+        }
+        public static Color[] GeneratePalette(params string[] hexColors)
+        {
+            Color[] palette = new Color[hexColors.Length];
+            for (int i = 0; i < hexColors.Length; i++)
+            {
+                palette[i] = HexToColor(hexColors[i]);
+            }
+            return palette;
+        }
 
         public static Color HexToColor(int colorValue)
         {
@@ -264,5 +388,24 @@ namespace ShapeEngineCore.Globals
             c.b = b;
             return c;
         }
+    
+        //public static void DebugDrawColorPalette(ColorPalette palette, int x, int y, int width, int height)
+        //{
+        //    var colors = palette.GetAllColors();
+        //    int colorWidth = width / colors.Count;
+        //    for (int i = 0; i < colors.Count; i++)
+        //    {
+        //        Raylib.DrawRectangle(x + colorWidth * i, y, colorWidth, height, colors[i]);
+        //    }
+        //}
+        //private static unsafe Color[] PointerToArray(Color* ptr, int size)
+        //{
+        //    Color[] values = new Color[size];
+        //    for (int i = 0; i < size; i++)
+        //    {
+        //        values[i] = *(ptr + i);
+        //    }
+        //    return values;
+        //}
     }
 }
