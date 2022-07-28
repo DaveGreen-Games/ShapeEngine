@@ -4,7 +4,7 @@ My custom-made engine based on the great [Raylib Framework](https://www.raylib.c
 When using the Shape Engine everything from Raylib is available as well. ([Raylib Examples](https://www.raylib.com/examples.html), [Raylib Cheatsheet](https://www.raylib.com/cheatsheet/raylib_cheatsheet_v4.0.pdf))
 
 ## Documentation
-Right now there is no documentation for the Shape Engine but there is a Visual Studio Template in the Release Folder and a complete Demo Game to see how everything works.
+Right now there is no documentation.  There is a Visual Studio Template in the Release Folder and a complete Demo Game to see how everything works.
 
 ## Dependencies
 Shape Engine uses the [Raylib CsLo](https://github.com/NotNotTech/Raylib-CsLo) Bindings. I also use the [Vortice XInput Nuget Package](https://www.nuget.org/packages/Vortice.XInput/) for controller vibration. 
