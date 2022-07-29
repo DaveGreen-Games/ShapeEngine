@@ -7,10 +7,12 @@ When using the Shape Engine everything from Raylib is available as well. ([Rayli
 Right now there is no documentation.  There is a Visual Studio Template in the Release Folder and a complete Demo Game to see how everything works.
 
 ## Dependencies
-Shape Engine uses the [Raylib CsLo](https://github.com/NotNotTech/Raylib-CsLo) Bindings. I also use the [Vortice XInput Nuget Package](https://www.nuget.org/packages/Vortice.XInput/) for controller vibration. 
-So the dependencies are:
-- Raylib CsLo
-- Vortice.XInput
+Shape Engine uses the following nuget packages:
+
+- [Raylib CsLo](https://github.com/NotNotTech/Raylib-CsLo) (c# Bindings for Raylib)
+- [Vortice.XInput](https://www.nuget.org/packages/Vortice.XInput) (Gamepad Vibration)
+- [Newtonsoft.Json](https://www.nuget.org/packages/Newtonsoft.Json) (Data Handler Json Serialization/Deserialization)
+
 
 ## Known Problems/ Issues
 - ResourceManager.LoadShader does not work right now because of a problem with the Raylib-CsLo LoadShaderFromMemory function.
