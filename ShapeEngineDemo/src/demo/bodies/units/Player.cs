@@ -243,8 +243,8 @@ namespace ShapeEngineDemo.Bodies
             );
             
 
-            var shipData = DataHandler.Get<DataObjects.PlayerData>("player", shipName);
-            var engineData = DataHandler.Get<DataObjects.EngineData>("engines", armoryInfo.engine);
+            var shipData = DataHandler.GetCDBContainer().Get<DataObjects.PlayerData>("player", shipName);
+            var engineData = DataHandler.GetCDBContainer().Get<DataObjects.EngineData>("engines", armoryInfo.engine);
             stats.SetStat("boostF", engineData.boostF);
             stats.SetStat("slowF", engineData.slowF);
             stats.SetStat("boostCost", engineData.boostCost);

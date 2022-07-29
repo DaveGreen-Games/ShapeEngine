@@ -23,8 +23,8 @@ namespace ShapeEngineDemo
             
             //START
             ScreenInitInfo screenInitInfo = new ScreenInitInfo(1920, 1080, 0.25f, 2.0f, "Raylib Template", 60, true, false, 0, false);
-            DataInitInfo dataInitInfo = new DataInitInfo("", "test-properties", new ShapeEngineDemo.DataObjects.DefaultDataResolver(), "asteroids", "player", "guns", "projectiles", "colors", "engines");
-            ShapeEngine.Start(new Demo(), screenInitInfo, dataInitInfo);
+            //DataInitInfo dataInitInfo = new DataInitInfo("", "test-properties", new ShapeEngineDemo.DataObjects.DefaultDataResolver(), "asteroids", "player", "guns", "projectiles", "colors", "engines");
+            ShapeEngine.Start(new Demo(), "", screenInitInfo);
             
         }
     }

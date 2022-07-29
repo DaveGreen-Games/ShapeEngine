@@ -77,7 +77,7 @@ namespace ShapeEngineDemo.Guns
         //protected virtual void StatChanged(string statName) { }
         private void LoadData()
         {
-            var data = DataHandler.Get<GunData>("guns", gunName);
+            var data = DataHandler.GetCDBContainer().Get<GunData>("guns", gunName);
             if (data == null) return;
             bulletName = data.bullet;
             stats.SetStat("acc", data.accuracy * DEG2RAD);

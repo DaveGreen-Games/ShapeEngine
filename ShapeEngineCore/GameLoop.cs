@@ -204,7 +204,7 @@ namespace ShapeEngineCore
         }
 
 
-        public void Initialize(ScreenInitInfo screenInitInfo, DataInitInfo dataInitInfo, params string[] launchParams)
+        public void Initialize(string resourceFolderPath, ScreenInitInfo screenInitInfo, params string[] launchParams)
         {
             LAUNCH_PARAMS = launchParams;
             QUIT = false;
@@ -217,9 +217,7 @@ namespace ShapeEngineCore
             //ScreenHandler.Initialize(1920, 1080, 0.25f, 2.0f, "Raylib Template", 60, true, fs, 0, false);
             ScreenHandler.Initialize(screenInitInfo.devWidth, screenInitInfo.devHeight, screenInitInfo.gameSizeFactor, screenInitInfo.uiSizeFactor, screenInitInfo.windowName, screenInitInfo.fps, screenInitInfo.vsync, fs, screenInitInfo.monitor, screenInitInfo.stretch);
 
-            //DataHandler.Initialize("data/test-properties.json", new DataResolver());
-            ResourceManager.Initialize(dataInitInfo.resourceFolderPath);
-            DataHandler.Initialize(dataInitInfo.dataFileName, dataInitInfo.dataResolver, dataInitInfo.sheetNames);
+            ResourceManager.Initialize(resourceFolderPath);
             PaletteHandler.Initialize();
             UIHandler.Initialize();
             AudioHandler.Initialize();

@@ -20,10 +20,15 @@ namespace ShapeEngineDemo
             //WINDOW ICON
             icon = ResourceManager.LoadImage("shape-engine-icon-bg");
             SetWindowIcon(icon);
-            
 
+
+            //DATA CONTAINER INIT
+            DataContainerCDB dataContainer = new("test-properties", new ShapeEngineDemo.DataObjects.DefaultDataResolver(), "asteroids", "player", "guns", "projectiles", "colors", "engines");
+            DataHandler.AddDataContainer(dataContainer);
+
+            
             //COLOR PALETTES
-            var colorData = DataHandler.GetSheet<ColorData>("colors");
+            var colorData = DataHandler.GetCDBContainer().GetSheet<ColorData>("colors");
             foreach (var palette in colorData)
             {
                 Dictionary<string, Color> colors = new()

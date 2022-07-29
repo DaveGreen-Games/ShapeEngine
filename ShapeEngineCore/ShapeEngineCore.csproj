@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Raylib-CsLo" Version="4.0.1" />
     <PackageReference Include="Vortice.XInput" Version="2.1.19" />
   </ItemGroup>

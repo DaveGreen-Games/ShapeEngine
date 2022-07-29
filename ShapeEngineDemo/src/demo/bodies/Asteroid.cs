@@ -61,7 +61,7 @@ namespace ShapeEngineDemo.Bodies
             collisionMask = new string[] { "asteroid"};
             //var data = DataHandler.asteroidData[this.asteroidType];
             Vector2 vel = new(0f, 0f);
-            var data = DataHandler.Get<DataObjects.AsteroidData>("asteroids", this.asteroidType);
+            var data = DataHandler.GetCDBContainer().Get<DataObjects.AsteroidData>("asteroids", this.asteroidType);
             if (data != null)
             {
                 this.spawnCount = data.spawnCount;
@@ -80,7 +80,7 @@ namespace ShapeEngineDemo.Bodies
             this.asteroidType = asteroidType;
             collisionMask = new string[] { "asteroid" };
             //var data = DataHandler.asteroidData[this.asteroidType];
-            var data = DataHandler.Get("asteroids", this.asteroidType) as DataObjects.AsteroidData;
+            var data = DataHandler.GetCDBContainer().Get("asteroids", this.asteroidType) as DataObjects.AsteroidData;
             if (data != null)
             {
                 this.spawnCount = data.spawnCount;
