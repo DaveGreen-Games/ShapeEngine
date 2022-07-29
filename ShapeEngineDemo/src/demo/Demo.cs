@@ -11,6 +11,7 @@ using ShapeEngineCore;
 
 namespace ShapeEngineDemo
 {
+
     public class Demo : GameLoop
     {
         private Image icon;
@@ -164,8 +165,8 @@ namespace ShapeEngineDemo
                 );
             InputHandler.AddInputMap(inputMap, true);
             InputHandler.SwitchToMap("Default", 0);
-            
-            
+
+
             //SPAWN SPLASH SCREEN
             Action startscene = () => GoToScene("splash");
             TimerHandler.Add(2.0f, startscene);
