@@ -58,7 +58,7 @@ namespace ShapeEngineDemo
 
 
             //Set the clear color for game screen texture
-            ScreenHandler.Game.SetClearColor(PaletteHandler.C("bg1"));
+            //ScreenHandler.Game.SetClearColor(new Color(0, 0, 0, 0)); // PaletteHandler.C("bg1"));
 
 
 

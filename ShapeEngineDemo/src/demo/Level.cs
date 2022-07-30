@@ -12,9 +12,9 @@ using ShapeEngineDemo.Bodies;
 
 namespace ShapeEngineDemo
 {
-    public class AreaAttractorTest : Area
+    public class AreaBasic : Area
     {
-        public AreaAttractorTest(Rectangle area, int rows, int cols) : base(area, rows, cols)
+        public AreaBasic(Rectangle area, int rows, int cols) : base(area, rows, cols)
         {
             SpawnStars(RNG.randI(150, 250));
             this.playfield = new(area, 3f, PaletteHandler.C("neutral"));
@@ -65,7 +65,7 @@ namespace ShapeEngineDemo
         public Level()
         {
             Rectangle playArea = Utils.ScaleRectangle(ScreenHandler.GameArea(), 1.5f);
-            this.area = new AreaAttractorTest(playArea, 20, 20);
+            this.area = new AreaBasic(playArea, 20, 20);
             this.asteroidSpawner = new(this.area, 1f, 2f);
             
 

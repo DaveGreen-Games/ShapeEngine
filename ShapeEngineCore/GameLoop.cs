@@ -62,7 +62,7 @@ namespace ShapeEngineCore
         public bool RESTART = false;
         public float DELTA { get; private set; }
 
-
+        public Vector2 MOUSE_POS { get; private set; }
         public Vector2 MOUSE_POS_GAME { get; private set; }
         public Vector2 MOUSE_POS_UI { get; private set; }
         public Color backgroundColor = BLACK;
@@ -252,7 +252,8 @@ namespace ShapeEngineCore
             {
                 DELTA = GetFrameTime();
                 //MOUSE_POS_GAME = ScreenHandler.ScalePositionV(Raylib.GetMousePosition(), "game");
-                MOUSE_POS_UI = ScreenHandler.ScalePositionV(GetMousePosition(), false);
+                MOUSE_POS = GetMousePosition();
+                MOUSE_POS_UI = ScreenHandler.ScalePositionV(MOUSE_POS, false);
                 MOUSE_POS_GAME = ScreenHandler.TransformPositionToGame(MOUSE_POS_UI);
                 if (WindowShouldClose() && !IsKeyDown(KeyboardKey.KEY_ESCAPE)) QUIT = true;
 
@@ -306,12 +307,11 @@ namespace ShapeEngineCore
 
             //Draw to UI texture
             ScreenHandler.StartDraw(false);
-            //DrawFPS(20, 20);
             if (CUR_SCENE != null) CUR_SCENE.DrawUI();
             CursorHandler.Draw(MOUSE_POS_UI);
             ScreenHandler.EndDraw(false);
 
-
+            
             //Draw textures to screen
             BeginDrawing();
             ClearBackground(backgroundColor);

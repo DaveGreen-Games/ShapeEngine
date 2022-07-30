@@ -5,12 +5,16 @@ namespace ShapeEngineCore.Globals
 
     public interface IPoolable
     {
+        public event Pool.OnPoolableInstanceFinished OnInstanceFinished;
         public void ReturnToPool();
         public void RemoveFromPool();
     }
 
     public class Pool
     {
+        public delegate void OnPoolableInstanceFinished(IPoolable instance);
+
+
         public virtual void Clear() { }
         public virtual bool HasUsableInstances() { return false; }
         public virtual bool HasInstances() { return false; }
@@ -18,6 +22,11 @@ namespace ShapeEngineCore.Globals
         public virtual IPoolable? GetInstance() { return null; }
         public virtual T? GetInstance<T>() { return default; }
         public virtual void ReturnInstance(IPoolable instance) { }
+
+        protected virtual void OnInstanceFinished(IPoolable instance)
+        {
+            ReturnInstance(instance);
+        }
     }
 
     public class PoolBasic : Pool
@@ -36,7 +45,9 @@ namespace ShapeEngineCore.Globals
             this.createInstance = createInstance;
             for (int i = 0; i < startSize; i++)
             {
-                usable.Add(this.createInstance());
+                var instance = this.createInstance();
+                instance.OnInstanceFinished += OnInstanceFinished;
+                usable.Add(instance);
             }
         }
 
@@ -62,7 +73,13 @@ namespace ShapeEngineCore.Globals
         {
             if (usable.Count <= 0)
             {
-                if (maxSize <= 0 || count < maxSize) { usable.Add(createInstance()); count++; }
+                if (maxSize <= 0 || count < maxSize) 
+                {
+                    var newInstance = createInstance();
+                    newInstance.OnInstanceFinished += OnInstanceFinished;
+                    usable.Add(newInstance); 
+                    count++; 
+                }
                 else //reuse instance from inuse stack
                 {
                     var oldest = PopBack(inUse);
@@ -85,6 +102,9 @@ namespace ShapeEngineCore.Globals
             instance.ReturnToPool();
             usable.Add(instance);
         }
+
+
+        
 
         private IPoolable Pop(List<IPoolable> list)
         {
