@@ -151,6 +151,10 @@ namespace ShapeEngineDemo
             InputAction dropAimPoint = new("Drop Aim Point", "K", "RB",  InputAction.Keys.K, InputAction.Keys.GP_BUTTON_RIGHT_TRIGGER_TOP);
 
 
+
+            InputAction pause = new("Pause", InputAction.Keys.P);
+            InputAction slowTime = new("Slow Time", InputAction.Keys.LEFT_ALT);
+            
             InputAction healPlayerDebug = new("Heal Player", InputAction.Keys.H);
             InputAction spawnAsteroidDebug = new("Spawn Asteroid", InputAction.Keys.G);
             InputAction toggleDrawHelpersDebug = new("Toggle Draw Helpers", InputAction.Keys.EIGHT);
@@ -161,6 +165,7 @@ namespace ShapeEngineDemo
                 rotateLeft, rotateRight, rotate, 
                 boost, slow, 
                 shootFixed, dropAimPoint,
+                pause, slowTime,
                 spawnAsteroidDebug, healPlayerDebug, toggleDrawCollidersDebug, toggleDrawHelpersDebug, cycleZoomDebug
                 );
             InputHandler.AddInputMap(inputMap, true);
@@ -185,6 +190,8 @@ namespace ShapeEngineDemo
                     ScreenHandler.Cam.ZoomBy(0.25f);
                     if (ScreenHandler.Cam.ZoomFactor > 2) ScreenHandler.Cam.ZoomFactor = 0.25f;
                 }
+
+                //if (Raylib.IsKeyReleased(KeyboardKey.KEY_P)) TogglePause();
             }
         }
 

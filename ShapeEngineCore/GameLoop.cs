@@ -60,19 +60,98 @@ namespace ShapeEngineCore
         public string[] LAUNCH_PARAMS { get; private set; }
         public bool QUIT = false;
         public bool RESTART = false;
-        public float DELTA { get; private set; }
 
+        /// <summary>
+        /// The delta time of the game. When the game runs at 60fps, DELTA would be 1/60 = 0.016
+        /// </summary>
+        public float DELTA { get; private set; }
+        /// <summary>
+        /// DELTA affected by the current slow amount. Equals DELTA * CUR_SLOW_FACTOR
+        /// </summary>
+        public float GAME_DELTA { get; private set; }
         public Vector2 MOUSE_POS { get; private set; }
         public Vector2 MOUSE_POS_GAME { get; private set; }
         public Vector2 MOUSE_POS_UI { get; private set; }
         public Color backgroundColor = BLACK;
         public Scene? CUR_SCENE { get; private set; }
         private int CUR_SCENE_INDEX = 0;
+
+
+        private DelegateTimerHandlerNamed delayHandler = new();
         private Dictionary<string, Scene> SCENES = new();
         private BasicTimer stopTimer = new();
+        
+        //public bool PAUSED { get; private set; } = false;
+        
+        /// <summary>
+        /// By how much the current scene is slowed down.
+        /// </summary>
+        public float CUR_SLOW_FACTOR { get; private set; } = 1f;
+        private BasicTimer slowTimer = new();
+        //private int slowCounter = 0;
+        //private int slowCount = 0;
 
 
+        /// <summary>
+        /// Slow down the current scene by the factor. 0.5f means scene runs 2 times slower; 2.0f means scene runs 2 times faster. If factor is <= to 0 Stop(duration) is called instead.
+        /// </summary>
+        /// <param name="factor"></param>
+        /// <param name="duration"></param>
+        public void Slow(float factor, float duration, float delay = 0f)
+        {
+            if (duration <= 0) return;
+            if (factor <= 0f) Stop(duration, delay);
+            else
+            {
+                if(delay > 0)
+                {
+                    delayHandler.Add("slow", delay, () => { slowTimer.Start(duration); CUR_SLOW_FACTOR = factor; }, 0);
+                }
+                else
+                {
+                    if (delayHandler.Has("slow")) delayHandler.Remove("slow");
+                    slowTimer.Start(duration);
+                    //slowCounter = 0;
+                    //slowCount = (int)(1f / factor);
+                    CUR_SLOW_FACTOR = factor;
+                }
+            }
+        }
+        public void EndSlow()
+        {
+            if (delayHandler.Has("slow")) delayHandler.Remove("slow");
+            slowTimer.Stop();
+            CUR_SLOW_FACTOR = 1f;
+            //slowCount = 0;
+            //slowCounter = 0;
+        }
 
+        /// <summary>
+        /// Stop the current scene for the duration. Only affects Update().
+        /// </summary>
+        /// <param name="duration"></param>
+        public void Stop(float duration, float delay = 0f) 
+        {
+            if (delay > 0)
+            {
+                delayHandler.Add("stop", delay, () => { stopTimer.Start(duration); }, 0);
+            }
+            else
+            {
+                if (delayHandler.Has("stop")) delayHandler.Remove("stop");
+                stopTimer.Start(duration);
+            }
+            
+        }
+        public void CancelStop() 
+        {
+            if (delayHandler.Has("stop")) delayHandler.Remove("stop");
+            stopTimer.Stop(); 
+        }
+
+        //public void Pause() { PAUSED = true; }
+        //public void UnPause() { PAUSED = false; }
+        //public void TogglePause() { PAUSED = !PAUSED; }
 
         public Area? GetCurArea()
         {
@@ -93,10 +172,7 @@ namespace ShapeEngineCore
         public Rectangle GameArea() { return ScreenHandler.GameArea(); }
         public Rectangle UIArea() { return ScreenHandler.UIArea(); }
 
-        public void Stop(float duration)
-        {
-            stopTimer.Start(duration);
-        }
+        
         public void SwitchScene(Scene oldScene, Scene newScene, string key = "")
         {
             if (newScene == null) return;
@@ -257,19 +333,29 @@ namespace ShapeEngineCore
                 MOUSE_POS_GAME = ScreenHandler.TransformPositionToGame(MOUSE_POS_UI);
                 if (WindowShouldClose() && !IsKeyDown(KeyboardKey.KEY_ESCAPE)) QUIT = true;
 
+                delayHandler.Update(DELTA);
                 stopTimer.Update(DELTA);
-
                 if (!stopTimer.IsRunning())
                 {
-                    PreUpdate(DELTA);
-
-                    //Input
-                    HandleInput();
-
-                    //UPDATE
-                    Update(DELTA);
-
+                    slowTimer.Update(DELTA);
+                    if (CUR_SLOW_FACTOR != 1f && !slowTimer.IsRunning())
+                    {
+                        CUR_SLOW_FACTOR = 1f;
+                        //slowCount = 0;
+                        //slowCounter = 0;
+                    }
                 }
+                GAME_DELTA = DELTA * CUR_SLOW_FACTOR;
+
+                PreUpdate(DELTA);
+                
+                //Input
+                HandleInput();
+                if (CUR_SCENE != null) CUR_SCENE.HandleInput(DELTA);
+                
+                //UPDATE
+                Update(DELTA);
+                
                 // DRAW TO MAIN TEXTURE
                 Draw();
 
@@ -279,7 +365,6 @@ namespace ShapeEngineCore
         protected void Update(float dt)
         {
             InputHandler.Update(dt);
-            //UI.UpdateMousePos(MOUSE_POS_UI);
             Ease.Update(dt);
             UIHandler.Update(dt);
             TimerHandler.Update(dt);
@@ -295,7 +380,23 @@ namespace ShapeEngineCore
                 }
             }
 
-            if (CUR_SCENE != null) CUR_SCENE.Update(dt);
+            if (CUR_SCENE != null)
+            {
+                if (!stopTimer.IsRunning())
+                {
+                    CUR_SCENE.Update(dt * CUR_SLOW_FACTOR);
+                    //if(slowCount <= 0) CUR_SCENE.Update(dt);
+                    //else
+                    //{
+                    //    if (slowCounter >= slowCount)
+                    //    {
+                    //        slowCounter = 0;
+                    //        CUR_SCENE.Update(dt);
+                    //    }
+                    //    else slowCounter++;
+                    //}
+                }
+            }
         }
         protected void Draw()
         {

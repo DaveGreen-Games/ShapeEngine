@@ -343,7 +343,7 @@ namespace ShapeEngineCore.Globals.Screen
 
             Game.Update(dt);
             UI.Update(dt);
-            camera.Update(dt);
+            camera.Update(GAMELOOP.GAME_DELTA);
         }
         public static void EndUpdate(float dt)
         {

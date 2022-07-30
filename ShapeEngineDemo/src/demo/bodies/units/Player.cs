@@ -420,6 +420,8 @@ namespace ShapeEngineDemo.Bodies
             ScreenHandler.Cam.Shake(0.5f, new(20f, 20f), 1f, 0f, 0.75f);
             //ScreenHandler.Flash(0.3f, ColorPalette.Cur.enemy, BLANK, true);
             ScreenHandler.FlashTint(0.3f, BLACK, false);
+            GAMELOOP.Slow(0.3f, 0.5f, 0.1f);
+            //GAMELOOP.Stop(0.5f, 0.1f);
         }
         protected override void WasStunned(float duration)
         {

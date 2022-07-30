@@ -132,7 +132,7 @@ namespace ShapeEngineCore.SimpleCollision
         public bool IsStatic() { return Vel.X == 0.0f && Vel.Y == 0.0f; }
 
         public virtual Rectangle GetBoundingRect() { return new(Pos.X, Pos.Y, 1.0f, 1.0f); }
-        public virtual Rectangle GetDynamicBoundingRect() { return Utils.ScaleRectangle(GetBoundingRect(), MathF.Max(Vel.Length() * GAMELOOP.DELTA, 1f)); }
+        public virtual Rectangle GetDynamicBoundingRect() { return Utils.ScaleRectangle(GetBoundingRect(), MathF.Max(Vel.Length() * GAMELOOP.GAME_DELTA, 1f)); }
         public virtual void DebugDrawShape(Color color) { DrawCircle((int)Pos.X, (int)Pos.Y, 5.0f, color); }
     }
     public class CircleCollider : Collider

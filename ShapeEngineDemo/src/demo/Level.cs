@@ -109,13 +109,21 @@ namespace ShapeEngineDemo
             //Attractor attractor = new(pos, r, -500, 0);
             //area.AddGameObject(attractor);
         }
+        public override void HandleInput(float dt)
+        {
+            if (InputHandler.IsReleased(0, "Pause")) TogglePause();
+            
+            if (InputHandler.IsDown(0, "Slow Time")) GAMELOOP.Slow(0.25f, 1.0f);
+            else if (InputHandler.IsReleased(0, "Slow Time")) GAMELOOP.EndSlow();
+            
+            if (InputHandler.IsReleased(0, "UI Cancel")) GAMELOOP.GoToScene("mainmenu");
+            
+            if (!IsPaused() && InputHandler.IsReleased(0, "Spawn Asteroid")) SpawnAsteroidDebug();
+        }
         public override void Update(float dt)
         {
             if (IsPaused()) return;
             if (area == null) return;
-            
-            if (InputHandler.IsReleased(0, "UI Cancel")) GAMELOOP.GoToScene("mainmenu");
-            if (InputHandler.IsReleased(0, "Spawn Asteroid")) SpawnAsteroidDebug();
             area.Update(dt);
             asteroidSpawner.Update(dt);
         }
@@ -140,6 +148,9 @@ namespace ShapeEngineDemo
             UIHandler.DrawTextAlignedPro(String.Format("GP {0}/{1}", InputHandler.CUR_GAMEPAD, InputHandler.GetConnectedGamepadCount()), new(30, 320), 0f, FontSize.LARGE, 5, PaletteHandler.C("text"), Alignement.LEFTCENTER);
             UIHandler.DrawTextAlignedPro(String.Format("Used {0}", InputHandler.gamepadUsed), new(30, 380), 0f, FontSize.LARGE, 5, PaletteHandler.C("text"), Alignement.LEFTCENTER);
             UIHandler.DrawTextAlignedPro("Debug Keys [8, 9, 0]", new Vector2(ScreenHandler.UIWidth() / 2, ScreenHandler.UIHeight() - 20), 0f, FontSize.LARGE, 5f, PaletteHandler.C("text"), Alignement.BOTTOMCENTER);
+
+            UIHandler.DrawTextAlignedPro("Slow Time [ALT]", new Vector2(ScreenHandler.UIWidth() - 30, 60), 0f, FontSize.LARGE, 5f, PaletteHandler.C("text"), Alignement.RIGHTCENTER);
+            UIHandler.DrawTextAlignedPro("Pause [P]", new Vector2(ScreenHandler.UIWidth() - 30, 150), 0f, FontSize.LARGE, 5f, PaletteHandler.C("text"), Alignement.RIGHTCENTER);
             //UIHandler.DrawTextAlignedPro(String.Format("Button {0}", GetGamepadButtonPressed()), new(75, 750), -5f, FontSize.XLARGE, 5, PaletteHandler.C("text"), Alignement.LEFTCENTER);
 
 

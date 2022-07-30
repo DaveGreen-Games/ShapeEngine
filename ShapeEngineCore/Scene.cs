@@ -18,6 +18,7 @@
         public virtual void Close() { }
         public virtual void Draw() { }
         public virtual void DrawUI() { }
+        public virtual void HandleInput(float dt) { }
         public virtual void Update(float dt) { }
 
 
@@ -32,7 +33,7 @@
             if (!paused) return;
             paused = false;
         }
-
+        public virtual void TogglePause() { paused = !paused; }
         public virtual void MonitorHasChanged()
         {
             var area = GetCurArea();
