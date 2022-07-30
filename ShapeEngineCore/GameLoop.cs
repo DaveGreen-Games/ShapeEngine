@@ -54,6 +54,31 @@ namespace ShapeEngineCore
         public DataInitInfo(string resourceFolderPath, string dataFileName, DataResolver dataResolver, params string[] sheetNames) { this.resourceFolderPath = resourceFolderPath; this.dataFileName = dataFileName; this.dataResolver = dataResolver; this.sheetNames = sheetNames; }
     }
 
+    internal class DeferredInfo
+    {
+        private Action action;
+        private int frames = 0;
+        public DeferredInfo(Action action, int frames)
+        {
+            this.action = action;
+            this.frames = frames;
+        }
+
+        public bool Call()
+        {
+            if(frames <= 0)
+            {
+                action.Invoke();
+                return true;
+            }
+            else
+            {
+                frames--;
+                return false;
+            }
+        }
+
+    }
     public class GameLoop
     {
         public delegate void Triggered(string trigger, params float[] values);
@@ -90,7 +115,7 @@ namespace ShapeEngineCore
         private BasicTimer slowTimer = new();
         //private int slowCounter = 0;
         //private int slowCount = 0;
-
+        private List<DeferredInfo> deferred = new();
 
         /// <summary>
         /// Slow down the current scene by the factor. 0.5f means scene runs 2 times slower; 2.0f means scene runs 2 times faster. If factor is <= to 0 Stop(duration) is called instead.
@@ -149,6 +174,23 @@ namespace ShapeEngineCore
             stopTimer.Stop(); 
         }
 
+        /// <summary>
+        /// The action is called at the end of the frame or at the end after afterFrames.
+        /// </summary>
+        /// <param name="action"></param>
+        /// <param name="afterFrames">How many frames have to pass before the action is called.</param>
+        public void CallDeferred(Action action, int afterFrames = 0)
+        {
+            deferred.Add(new(action, afterFrames));
+        }
+        private void ResolveDeferred()
+        {
+            for (int i = deferred.Count - 1; i >= 0; i--)
+            {
+                var info = deferred[i];
+                if (info.Call()) deferred.RemoveAt(i);
+            }
+        }
         //public void Pause() { PAUSED = true; }
         //public void UnPause() { PAUSED = false; }
         //public void TogglePause() { PAUSED = !PAUSED; }
@@ -360,6 +402,8 @@ namespace ShapeEngineCore
                 Draw();
 
                 ScreenHandler.EndUpdate(DELTA);
+
+                ResolveDeferred();
             }
         }
         protected void Update(float dt)
@@ -371,6 +415,7 @@ namespace ShapeEngineCore
             StepHandler.Update(dt);
             AudioHandler.Update(dt);
             ScreenHandler.Update(dt);
+            if (!stopTimer.IsRunning()) ScreenHandler.UpdateCamera(dt * CUR_SLOW_FACTOR);
 
             if (ScreenHandler.HasMonitorChanged())
             {

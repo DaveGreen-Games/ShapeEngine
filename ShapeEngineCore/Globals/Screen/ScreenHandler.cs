@@ -301,6 +301,10 @@ namespace ShapeEngineCore.Globals.Screen
 
             CloseWindow();
         }
+        public static void UpdateCamera(float dt)
+        {
+            camera.Update(dt);
+        }
         public static void Update(float dt)
         {
             foreach (var shaderFlash in shaderFlashes.Values)
@@ -343,7 +347,7 @@ namespace ShapeEngineCore.Globals.Screen
 
             Game.Update(dt);
             UI.Update(dt);
-            camera.Update(GAMELOOP.GAME_DELTA);
+            
         }
         public static void EndUpdate(float dt)
         {

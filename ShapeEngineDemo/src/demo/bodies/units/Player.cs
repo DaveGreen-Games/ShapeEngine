@@ -242,7 +242,7 @@ namespace ShapeEngineDemo.Bodies
                 ("maxSpeed", 0f), ("targetingRange", 0f)
             );
             
-
+            
             var shipData = DataHandler.GetCDBContainer().Get<DataObjects.PlayerData>("player", shipName);
             var engineData = DataHandler.GetCDBContainer().Get<DataObjects.EngineData>("engines", armoryInfo.engine);
             stats.SetStat("boostF", engineData.boostF);
@@ -421,6 +421,7 @@ namespace ShapeEngineDemo.Bodies
             //ScreenHandler.Flash(0.3f, ColorPalette.Cur.enemy, BLANK, true);
             ScreenHandler.FlashTint(0.3f, BLACK, false);
             GAMELOOP.Slow(0.3f, 0.5f, 0.1f);
+            //GAMELOOP.CallDeferred(() => GAMELOOP.Slow(0.1f, 0.5f, 0f), 1);
             //GAMELOOP.Stop(0.5f, 0.1f);
         }
         protected override void WasStunned(float duration)
