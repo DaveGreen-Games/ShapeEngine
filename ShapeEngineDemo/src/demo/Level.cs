@@ -135,11 +135,6 @@ namespace ShapeEngineDemo
         }
         public override void DrawUI()
         {
-            //if (!player.IsDead())
-            //{
-            //    DrawRectangleRec(new(0, 0, 580, ScreenHandler.UIHeight()), ColorPalette.Cur.bg1);
-            //    //DrawRectangleLinesEx(new(0, 0, 580, ScreenHandler.UIHeight()), 10f, ColorPalette.Cur.text);
-            //}
             UIHandler.DrawTextAlignedPro(String.Format("{0}", GetFPS()), new Vector2(30, 60), -5f, FontSize.XLARGE, 5, PaletteHandler.C("special1"), Alignement.LEFTCENTER);
             if (area == null) return;
             area.DrawUI();
@@ -151,9 +146,6 @@ namespace ShapeEngineDemo
 
             UIHandler.DrawTextAlignedPro("Slow Time [ALT]", new Vector2(ScreenHandler.UIWidth() - 30, 60), 0f, FontSize.LARGE, 5f, PaletteHandler.C("text"), Alignement.RIGHTCENTER);
             UIHandler.DrawTextAlignedPro("Pause [P]", new Vector2(ScreenHandler.UIWidth() - 30, 150), 0f, FontSize.LARGE, 5f, PaletteHandler.C("text"), Alignement.RIGHTCENTER);
-            //UIHandler.DrawTextAlignedPro(String.Format("Button {0}", GetGamepadButtonPressed()), new(75, 750), -5f, FontSize.XLARGE, 5, PaletteHandler.C("text"), Alignement.LEFTCENTER);
-
-
         }
         public override void Close()
         {
