@@ -14,24 +14,24 @@ namespace ShapeEngineCore
         private Vector2 accumulatedForce = new(0f, 0f);
         private Vector2 constAccel = new(0f, 0f);
 
-        public Particle(Vector2 pos) { drawOrder = 25; this.pos = pos; }
+        public Particle(Vector2 pos) { DrawOrder = 25; this.pos = pos; }
         public Particle(Vector2 pos, float lifetime)
         {
-            drawOrder = 25;
+            DrawOrder = 25;
             this.pos = pos;
             vel = new(0f, 0f);
             lifetimeTimer.Start(lifetime);
         }
         public Particle(Vector2 pos, Vector2 vel, float lifetime)
         {
-            drawOrder = 25;
+            DrawOrder = 25;
             this.pos = pos;
             this.vel = vel;
             lifetimeTimer.Start(lifetime);
         }
         public Particle(Vector2 pos, float angle, float lifetime)
         {
-            drawOrder = 25;
+            DrawOrder = 25;
             this.pos = pos;
             vel = Vec.Rotate(Vec.Right(), angle * DEG2RAD);
             lifetimeTimer.Start(lifetime);

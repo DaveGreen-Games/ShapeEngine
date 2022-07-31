@@ -33,7 +33,7 @@ namespace ShapeEngineCore
         protected Color color = WHITE;
         public ShapeEffect(Vector2 pos, float duration, float size, Color color, float rotSpeed = 0f) : base(pos, duration)
         {
-            SetDrawOrder(90);
+            DrawOrder = 90;
             this.size = size;
             this.color = color;
             rotation = RNG.randF(2f * PI);
@@ -41,7 +41,7 @@ namespace ShapeEngineCore
         }
         public ShapeEffect(Vector2 pos, float duration, float size, Color color, float rot = 0f, float rotSpeed = 0f) : base(pos, duration)
         {
-            SetDrawOrder(90);
+            DrawOrder = 90;
             this.size = size;
             this.color = color;
             rotation = rot;

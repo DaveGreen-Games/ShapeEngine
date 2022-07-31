@@ -19,22 +19,22 @@ namespace ShapeEngineDemo
         private Color color;
 
 
-        public Star(Rectangle spawnArea, Vector2 radiusRange, Color color)
+        public Star(Rectangle spawnArea, float radius, Color color)
         {
             this.pos = RNG.randVec2(spawnArea);
-            this.r = RNG.randF(radiusRange.X, radiusRange.Y);
+            this.r = radius;
             color.a = (byte)(125 * this.r);
             this.color = color;
-            SetDrawOrder(-50);
+            DrawOrder = RNG.randF(-1f, 1f);
         }
 
         public override void Draw()
         {
-            DrawCircleV(pos, r, color);
+            DrawCircleV(pos + AreaLayerOffset, r, color);
         }
         public override Rectangle GetBoundingBox()
         {
-            return new(pos.X - r, pos.Y - r, r * 2, r * 2);
+            return new(pos.X + AreaLayerOffset.X - r, pos.Y + AreaLayerOffset.Y - r, r * 2, r * 2);
         }
 
         public override Vector2 GetPosition() { return pos; }
@@ -48,14 +48,14 @@ namespace ShapeEngineDemo
         private Color color;
         List<(Vector2 center, float r, Color color)> circles = new();
         List<(Vector2 center, float r, float thickness, Color color)> rings = new();
-        public Planet(Rectangle spawnArea, Vector2 radiusRange, Color color)
+        public Planet(Rectangle spawnArea, float radius, Color color)
         {
             this.pos = RNG.randVec2(spawnArea);
-            this.r = RNG.randF(radiusRange.X, radiusRange.Y);
+            this.r = radius;
             this.color = color;
-            SetDrawOrder(-RNG.randF(25, 30));
+            DrawOrder = RNG.randF(-1f, 1f);
 
-            if(r > 6)
+            if (r > 6)
             {
                 int randAmount = RNG.randI(0, 4);
                 for (int i = 0; i < randAmount; i++)
@@ -84,21 +84,21 @@ namespace ShapeEngineDemo
         public override void Draw()
         {
             //Drawing.DrawCircleLines(pos, r, 1.0f, color, 2);
-            DrawCircleV(pos, r, color);
+            DrawCircleV(pos + AreaLayerOffset, r, color);
 
             foreach (var circle in circles)
             {
-                DrawCircleV(pos + circle.center, circle.r, circle.color);
+                DrawCircleV(pos + AreaLayerOffset + circle.center, circle.r, circle.color);
             }
 
             foreach (var ring in rings)
             {
-                Drawing.DrawCircleLines(pos + ring.center, ring.r, ring.thickness, ring.color, 4f);
+                Drawing.DrawCircleLines(pos + AreaLayerOffset + ring.center, ring.r, ring.thickness, ring.color, 4f);
             }
         }
         public override Rectangle GetBoundingBox()
         {
-            return new(pos.X - r, pos.Y - r, r * 2, r * 2);
+            return new(pos.X + AreaLayerOffset.X - r, pos.Y + AreaLayerOffset.Y - r, r * 2, r * 2);
         }
 
         public override Vector2 GetPosition() { return pos; }
@@ -110,6 +110,13 @@ namespace ShapeEngineDemo
     {
         public AreaBasic(Rectangle area, int rows, int cols) : base(area, rows, cols)
         {
+            AddLayer("stars fixed", -100, 0);
+            AddLayer("stars far", -95, 0.02f);
+            AddLayer("stars near", -90, 0.04f);
+            AddLayer("planets far", -85, 0.08f);
+            AddLayer("planets near", -80, 0.1f);
+            AddLayer("asteroids", -5, 0);
+            
             SpawnStars(RNG.randI(150, 250));
             SpawnPlanets(RNG.randI(2, 6));
             this.playfield = new(area, 3f, PaletteHandler.C("neutral"), -10);
@@ -135,8 +142,13 @@ namespace ShapeEngineDemo
 
         private void SpawnPlanet()
         {
-            var planet = new Planet(inner, new(3f, 12f), RNG.randColor(150, 220, 255));
-            AddGameObject(planet, false);
+            float randRadius = RNG.randF(3f, 8f);
+            var planet = new Planet(inner, randRadius, RNG.randColor(150, 220, 255));
+
+
+            if (randRadius < 5) AddGameObject(planet, false, "planets far");
+            else AddGameObject(planet, false, "planets near");
+
         }
         private void SpawnPlanets(int amount)
         {
@@ -155,8 +167,12 @@ namespace ShapeEngineDemo
             //CircleParticle p = new(pos, 0f, color, radius, lifetime);
             //AddGameObject(p, false);
 
-            var star = new Star(outer, new(0.25f, 1.25f), WHITE);
-            AddGameObject(star, false);
+            float randRadius = RNG.randF(0.25f, 1.25f);
+            var star = new Star(outer, randRadius, WHITE);
+            
+            if(randRadius < 0.5f) AddGameObject(star, false, "stars fixed");
+            if(randRadius < 0.8f) AddGameObject(star, false, "stars far");
+            else AddGameObject(star, false, "stars near");
         }
         private void SpawnStars(int amount)
         {
@@ -177,6 +193,7 @@ namespace ShapeEngineDemo
             Rectangle playArea = Utils.ScaleRectangle(ScreenHandler.GameArea(), 1.5f);
             this.area = new AreaBasic(playArea, 20, 20);
             this.asteroidSpawner = new(this.area, 1f, 2f);
+
             
 
             ArmoryInfo armoryInfo = new("minigun", "bouncer", "basic");
@@ -200,6 +217,7 @@ namespace ShapeEngineDemo
             if (newScene == null) return;
             ScreenHandler.Game.Flash(0.25f, new(0, 0, 0, 255), new(0, 0, 0, 255));
             Action action = () => GAMELOOP.SwitchScene(this, newScene);
+            ScreenHandler.Cam.ResetZoom();
             TimerHandler.Add(0.25f, action);
 
         }
@@ -235,6 +253,8 @@ namespace ShapeEngineDemo
             if (IsPaused()) return;
             if (area == null) return;
             ScreenHandler.UpdateCamera(dt);
+
+            if(player != null && !player.IsDead()) area.UpdateLayerParallaxe(player.GetPos());
             area.Update(dt);
             asteroidSpawner.Update(dt);
         }

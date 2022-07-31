@@ -8,7 +8,7 @@ namespace ShapeEngineCore
         Rectangle rect;
         float wallThickness = 3f;
         Color color = WHITE;
-        private float drawOrder = 0;
+        private float drawOrder = 100;
         public Playfield(Vector2 topleft, Vector2 bottomright, float wallThickness, Color color, float drawOrder = 0f)
         {
             rect = new(topleft.X, topleft.Y, bottomright.X - topleft.X, bottomright.Y - topleft.Y);

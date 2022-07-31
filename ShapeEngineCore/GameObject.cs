@@ -17,17 +17,16 @@ namespace ShapeEngineCore
     }*/
     public class GameObject
     {
-        protected float drawOrder = 0;
-        protected string group = "NONE";
-
+        public float DrawOrder { get; set; } = 0;
+        public string Group { get; set; } = "default";
+        public string AreaLayerName { get; set; } = "default";
+        public Vector2 AreaLayerOffset { get; set; } = new(0f);
+        
+        
         public GameObject() { }
 
-        public float GetDrawOrder() { return drawOrder; }
-        public void SetDrawOrder(float drawOrder) { this.drawOrder = drawOrder; }
+        public bool IsInGroup(string group) { return this.Group == group; }
 
-        public string GetGroup() { return group; }
-        public void SetGroup(string group) { this.group = group; }
-        public bool IsInGroup(string group) { return this.group == group; }
 
         public virtual void Spawn() { }
         public virtual void Destroy() { }

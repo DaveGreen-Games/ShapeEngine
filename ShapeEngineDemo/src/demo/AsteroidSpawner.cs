@@ -77,7 +77,7 @@ namespace ShapeEngineDemo
             Vector2 vel = dir * velRange.Rand();
             if (RNG.randF() < 0.05f) vel *= 5f;
             Asteroid a = new(pos, vel, name);
-            area.AddGameObject(a, false);
+            area.AddGameObject(a, false, "asteroids");
         }
 
         public void Start()

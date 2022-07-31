@@ -42,7 +42,7 @@ namespace ShapeEngineDemo.Projectiles
 
         public Projectile(string type, ProjectileInfo info)
         {
-            drawOrder = 15;
+            DrawOrder = 15;
             this.type = type;
             this.dmgDealer = info.dmgDealer;
             Vector2 vel = new(0f, 0f);
@@ -67,7 +67,7 @@ namespace ShapeEngineDemo.Projectiles
         }
         public Projectile(string type, ProjectileInfo info, Dictionary<string, StatSimple> bonuses)
         {
-            drawOrder = 15;
+            DrawOrder = 15;
             this.type = type;
             this.dmgDealer = info.dmgDealer;
             stats.SetBonuses(bonuses);

@@ -56,7 +56,7 @@ namespace ShapeEngineDemo.Bodies
         List<Vector2> polygon;
         public Asteroid(Vector2 pos, string asteroidType)
         {
-            drawOrder = 10;
+            DrawOrder = 10;
             this.asteroidType = asteroidType;
             collisionMask = new string[] { "asteroid"};
             //var data = DataHandler.asteroidData[this.asteroidType];
@@ -76,7 +76,7 @@ namespace ShapeEngineDemo.Bodies
         }
         public Asteroid(Vector2 pos, Vector2 vel, string asteroidType)
         {
-            drawOrder = 10;
+            DrawOrder = 10;
             this.asteroidType = asteroidType;
             collisionMask = new string[] { "asteroid" };
             //var data = DataHandler.asteroidData[this.asteroidType];

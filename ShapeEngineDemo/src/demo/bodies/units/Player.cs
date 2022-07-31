@@ -231,7 +231,7 @@ namespace ShapeEngineDemo.Bodies
         private Vector2 slowPos = new(0f);
         public Player(ArmoryInfo armoryInfo, string shipName = "default")
         {
-            drawOrder = 50;
+            DrawOrder = 50;
             this.shipName = shipName;
             
             stats.AddStats
