@@ -17,13 +17,13 @@ namespace ShapeEngineCore
     }*/
     public class GameObject
     {
-        protected int drawOrder = 0;
+        protected float drawOrder = 0;
         protected string group = "NONE";
 
         public GameObject() { }
 
-        public int GetDrawOrder() { return drawOrder; }
-        public void SetDrawOrder(int drawOrder) { this.drawOrder = drawOrder; }
+        public float GetDrawOrder() { return drawOrder; }
+        public void SetDrawOrder(float drawOrder) { this.drawOrder = drawOrder; }
 
         public string GetGroup() { return group; }
         public void SetGroup(string group) { this.group = group; }

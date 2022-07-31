@@ -415,7 +415,7 @@ namespace ShapeEngineCore
             StepHandler.Update(dt);
             AudioHandler.Update(dt);
             ScreenHandler.Update(dt);
-            if (!stopTimer.IsRunning()) ScreenHandler.UpdateCamera(dt * CUR_SLOW_FACTOR);
+            //if (!stopTimer.IsRunning()) ScreenHandler.UpdateCamera(dt * CUR_SLOW_FACTOR);
 
             if (ScreenHandler.HasMonitorChanged())
             {

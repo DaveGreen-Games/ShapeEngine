@@ -362,33 +362,7 @@ namespace ShapeEngineCore.Globals
             return new(red, green, blue, 255);
         }
 
-        public static Color ChangeAlpha(Color c, byte a)
-        {
-            c.a = a;
-            return c;
-        }
-        public static Color ChangeAlpha(Color c, int change)
-        {
-            int newAlpha = c.a - change;
-            c.a = (byte)newAlpha;
-            return c;
-        }
-        public static Color ChangeRed(Color c, byte r)
-        {
-            c.r = r;
-            return c;
-        }
-        public static Color ChangeGreen(Color c, byte g)
-        {
-            c.g = g;
-            return c;
-        }
-        public static Color ChangeBlue(Color c, byte b)
-        {
-            c.b = b;
-            return c;
-        }
-    
+        
         //public static void DebugDrawColorPalette(ColorPalette palette, int x, int y, int width, int height)
         //{
         //    var colors = palette.GetAllColors();

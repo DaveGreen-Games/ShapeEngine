@@ -203,7 +203,7 @@ namespace ShapeEngineDemo.Guns
                 if (targetFinder != null && targetFinder.HasTarget())
                 {
                     var target = targetFinder.GetTarget();
-                    Color targetColor = PaletteHandler.ChangeAlpha(PaletteHandler.C("enemy"), 125);
+                    Color targetColor = Utils.ChangeAlpha(PaletteHandler.C("enemy"), 125);
                     Vector2 targetPos = target.GetPos() + RNG.randVec2(0f, 3f);
                     Vector2 size = new(5f, 5f);
                     var rect = new Rectangle(targetPos.X - size.X / 2, targetPos.Y - size.Y / 2, size.X, size.Y);

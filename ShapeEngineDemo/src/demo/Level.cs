@@ -12,11 +12,106 @@ using ShapeEngineDemo.Bodies;
 
 namespace ShapeEngineDemo
 {
+    internal class Star : GameObject
+    {
+        private Vector2 pos;
+        private float r = 1f;
+        private Color color;
+
+
+        public Star(Rectangle spawnArea, Vector2 radiusRange, Color color)
+        {
+            this.pos = RNG.randVec2(spawnArea);
+            this.r = RNG.randF(radiusRange.X, radiusRange.Y);
+            color.a = (byte)(125 * this.r);
+            this.color = color;
+            SetDrawOrder(-50);
+        }
+
+        public override void Draw()
+        {
+            DrawCircleV(pos, r, color);
+        }
+        public override Rectangle GetBoundingBox()
+        {
+            return new(pos.X - r, pos.Y - r, r * 2, r * 2);
+        }
+
+        public override Vector2 GetPosition() { return pos; }
+        public override bool IsDead() { return false; }
+    }
+
+    internal class Planet : GameObject
+    {
+        private Vector2 pos;
+        private float r = 1f;
+        private Color color;
+        List<(Vector2 center, float r, Color color)> circles = new();
+        List<(Vector2 center, float r, float thickness, Color color)> rings = new();
+        public Planet(Rectangle spawnArea, Vector2 radiusRange, Color color)
+        {
+            this.pos = RNG.randVec2(spawnArea);
+            this.r = RNG.randF(radiusRange.X, radiusRange.Y);
+            this.color = color;
+            SetDrawOrder(-RNG.randF(25, 30));
+
+            if(r > 6)
+            {
+                int randAmount = RNG.randI(0, 4);
+                for (int i = 0; i < randAmount; i++)
+                {
+                    var randR = RNG.randF(1f, this.r / 2f);
+                    var randPos = RNG.randVec2(0, this.r - randR);
+                    var randColor = Utils.ShiftHue(color, RNG.randI(-50, 50));
+                    randColor = Utils.ChangeBrightness(randColor, RNG.randF(-0.2f, -0.1f));
+                    circles.Add((randPos, randR, randColor));
+                }
+            }
+
+            if(RNG.randF() < 0.1f)
+            {
+                int randAmount = RNG.randI(1, 2);
+                for (int i = 0; i < randAmount; i++)
+                {
+                    var randR = RNG.randF(r * 1.2f, r * 2.5f);
+                    var randThickness = RNG.randF(1f, (randR - this.r) / 2);
+                    var randColor = Utils.ShiftHue(color, RNG.randI(-50, 50)); 
+                    rings.Add((new Vector2(0f), randR, randThickness, Utils.ChangeAlpha(randColor, (byte) RNG.randI(75, 150))));
+                }
+            }
+        }
+
+        public override void Draw()
+        {
+            //Drawing.DrawCircleLines(pos, r, 1.0f, color, 2);
+            DrawCircleV(pos, r, color);
+
+            foreach (var circle in circles)
+            {
+                DrawCircleV(pos + circle.center, circle.r, circle.color);
+            }
+
+            foreach (var ring in rings)
+            {
+                Drawing.DrawCircleLines(pos + ring.center, ring.r, ring.thickness, ring.color, 4f);
+            }
+        }
+        public override Rectangle GetBoundingBox()
+        {
+            return new(pos.X - r, pos.Y - r, r * 2, r * 2);
+        }
+
+        public override Vector2 GetPosition() { return pos; }
+        public override bool IsDead() { return false; }
+    }
+
+
     public class AreaBasic : Area
     {
         public AreaBasic(Rectangle area, int rows, int cols) : base(area, rows, cols)
         {
             SpawnStars(RNG.randI(150, 250));
+            SpawnPlanets(RNG.randI(2, 6));
             this.playfield = new(area, 3f, PaletteHandler.C("neutral"));
         }
 
@@ -38,15 +133,30 @@ namespace ShapeEngineDemo
         //    if(RNG.randF() < 0.1f) SpawnStar();
         //}
 
+        private void SpawnPlanet()
+        {
+            var planet = new Planet(inner, new(3f, 12f), RNG.randColor(150, 220, 255));
+            AddGameObject(planet, false);
+        }
+        private void SpawnPlanets(int amount)
+        {
+            for (int i = 0; i < amount; i++)
+            {
+                SpawnPlanet();
+            }
+        }
         private void SpawnStar()
         {
-            Vector2 pos = RNG.randVec2(outer);
-            float radius = RNG.randF(0.25f, 1.25f);
-            float lifetime = -1f; // RNG.randF(15, 30);
-            Color color = WHITE;
-            color.a = (byte)(100 * radius);
-            CircleParticle p = new(pos, 0f, color, radius, lifetime);
-            AddGameObject(p, false);
+            //Vector2 pos = RNG.randVec2(outer);
+            //float radius = RNG.randF(0.25f, 1.25f);
+            //float lifetime = -1f; // RNG.randF(15, 30);
+            //Color color = WHITE;
+            //color.a = (byte)(100 * radius);
+            //CircleParticle p = new(pos, 0f, color, radius, lifetime);
+            //AddGameObject(p, false);
+
+            var star = new Star(outer, new(0.25f, 1.25f), WHITE);
+            AddGameObject(star, false);
         }
         private void SpawnStars(int amount)
         {
@@ -124,6 +234,7 @@ namespace ShapeEngineDemo
         {
             if (IsPaused()) return;
             if (area == null) return;
+            ScreenHandler.UpdateCamera(dt);
             area.Update(dt);
             asteroidSpawner.Update(dt);
         }
@@ -146,6 +257,12 @@ namespace ShapeEngineDemo
 
             UIHandler.DrawTextAlignedPro("Slow Time [ALT]", new Vector2(ScreenHandler.UIWidth() - 30, 60), 0f, FontSize.LARGE, 5f, PaletteHandler.C("text"), Alignement.RIGHTCENTER);
             UIHandler.DrawTextAlignedPro("Pause [P]", new Vector2(ScreenHandler.UIWidth() - 30, 150), 0f, FontSize.LARGE, 5f, PaletteHandler.C("text"), Alignement.RIGHTCENTER);
+
+            if (IsPaused())
+            {
+                var pos = GAMELOOP.UISize();
+                UIHandler.DrawTextAlignedPro("PAUSED", new Vector2(pos.X/2, pos.Y * 0.25f), 0f, FontSize.HEADER_L, 5f, PaletteHandler.C("header"), Alignement.CENTER);
+            }
         }
         public override void Close()
         {
