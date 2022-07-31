@@ -8,18 +8,24 @@ namespace ShapeEngineCore
         Rectangle rect;
         float wallThickness = 3f;
         Color color = WHITE;
-        public Playfield(Vector2 topleft, Vector2 bottomright, float wallThickness, Color color)
+        private float drawOrder = 0;
+        public Playfield(Vector2 topleft, Vector2 bottomright, float wallThickness, Color color, float drawOrder = 0f)
         {
             rect = new(topleft.X, topleft.Y, bottomright.X - topleft.X, bottomright.Y - topleft.Y);
             this.wallThickness = wallThickness;
             this.color = color;
+            this.drawOrder = drawOrder;
         }
-        public Playfield(Rectangle rect, float wallThickness, Color color)
+        public Playfield(Rectangle rect, float wallThickness, Color color, float drawOrder = 0f)
         {
             this.rect = rect;
             this.wallThickness = wallThickness;
             this.color = color;
+            this.drawOrder = drawOrder;
         }
+
+        public float GetDrawOrder() { return drawOrder; }
+
         public void Change(Vector2 topleft, Vector2 bottomright) { ChangeTopLeft(topleft); ChangeBottomRight(bottomright); }
         public void Change(Vector2 topleft, float w, float h) { ChangeTopLeft(topleft); ChangeSize(w, h); }
         public void ChangeTopLeft(Vector2 value) { rect.x = value.X; rect.y = value.Y; }

@@ -112,7 +112,7 @@ namespace ShapeEngineDemo
         {
             SpawnStars(RNG.randI(150, 250));
             SpawnPlanets(RNG.randI(2, 6));
-            this.playfield = new(area, 3f, PaletteHandler.C("neutral"));
+            this.playfield = new(area, 3f, PaletteHandler.C("neutral"), -10);
         }
 
         public override void Draw()

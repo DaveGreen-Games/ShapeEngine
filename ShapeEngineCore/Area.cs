@@ -160,10 +160,12 @@ namespace ShapeEngineCore
                 DrawRectangleRec(this.outer, new(0, 200, 200, 150));
                 colHandler.DebugDrawGrid(GOLD, new(0, 150, 0, 100));
             }
-            if (playfield != null) playfield.Draw();
+            //if (playfield != null) playfield.Draw();
+            bool playfieldDrawn = false;
             SortGameObjects();
             foreach (GameObject obj in gameObjects)
             {
+                if (playfield != null && !playfieldDrawn && obj.GetDrawOrder() > playfield.GetDrawOrder()) playfield.Draw();
                 if (Overlap.Simple(outer, obj.GetBoundingBox())) { obj.Draw(); }
                 //obj.Draw();
             }
