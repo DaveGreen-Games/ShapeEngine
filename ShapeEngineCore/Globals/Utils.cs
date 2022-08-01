@@ -386,13 +386,13 @@ namespace ShapeEngineCore.Globals
             return new((byte)red, (byte)green, (byte)blue, color.a);
         }
 
-        public static Color AdjustColor(Color source, Color adjust, float p)
+        public static Color ChangeColor(Color source, Color adjust, float p)
         {
             return LerpColor(source, adjust, p);
         }
 
 
-        public static Color ShiftHue(Color color, int amount)
+        public static Color ChangeHUE(Color color, int amount)
         {
             var hvs = ColorToHSV(color);
             return ColorFromHSV((hvs.hue + amount) % 360, hvs.saturation, hvs.value);

@@ -23,7 +23,6 @@ namespace ShapeEngineDemo
         {
             this.pos = RNG.randVec2(spawnArea);
             this.r = radius;
-            color.a = (byte)(125 * this.r);
             this.color = color;
             DrawOrder = RNG.randF(-1f, 1f);
         }
@@ -62,7 +61,7 @@ namespace ShapeEngineDemo
                 {
                     var randR = RNG.randF(1f, this.r / 2f);
                     var randPos = RNG.randVec2(0, this.r - randR);
-                    var randColor = Utils.ShiftHue(color, RNG.randI(-50, 50));
+                    var randColor = Utils.ChangeHUE(color, RNG.randI(-50, 50));
                     randColor = Utils.ChangeBrightness(randColor, RNG.randF(-0.2f, -0.1f));
                     circles.Add((randPos, randR, randColor));
                 }
@@ -75,7 +74,7 @@ namespace ShapeEngineDemo
                 {
                     var randR = RNG.randF(r * 1.2f, r * 2.5f);
                     var randThickness = RNG.randF(1f, (randR - this.r) / 2);
-                    var randColor = Utils.ShiftHue(color, RNG.randI(-50, 50)); 
+                    var randColor = Utils.ChangeHUE(color, RNG.randI(-50, 50)); 
                     rings.Add((new Vector2(0f), randR, randThickness, Utils.ChangeAlpha(randColor, (byte) RNG.randI(75, 150))));
                 }
             }
@@ -110,15 +109,28 @@ namespace ShapeEngineDemo
     {
         public AreaBasic(Rectangle area, int rows, int cols) : base(area, rows, cols)
         {
-            AddLayer("stars fixed", -100, 0);
-            AddLayer("stars far", -95, 0.02f);
-            AddLayer("stars near", -90, 0.04f);
-            AddLayer("planets far", -85, 0.08f);
-            AddLayer("planets near", -80, 0.1f);
+            //for (int i = 0; i < 5; i++)
+            //{
+            //    string layer = String.Format("stars {0}", i);
+            //    AddLayer(layer, -100 + 2 * i, 0.9f - 0.1f * i);
+            //    SpawnStars(60, new Vector2(0.7f, 0.8f) + new Vector2(0.06f, 0.06f) * i, new Vector2(0.4f, 0.5f) + new Vector2(0.04f, 0.04f) * i, layer);
+            //}
+
+
+            AddLayer("stars fixed", -100, 0.9f);
+            AddLayer("stars far", -95, 0.7f);
+            AddLayer("stars near", -90, 0.5f);
+            AddLayer("planets very far", -85, 0.2f);
+            AddLayer("planets far", -85, 0.1f);
+            AddLayer("planets near", -80, 0.05f);
             AddLayer("asteroids", -5, 0);
             
-            SpawnStars(RNG.randI(150, 250));
-            SpawnPlanets(RNG.randI(2, 6));
+            SpawnStars(90, new(0.7f, 0.8f), new(0.4f, 0.5f), "stars fixed");
+            SpawnStars(90, new(0.8f, 1.0f), new(0.5f, 0.6f), "stars far");
+            SpawnStars(90, new(1.0f, 1.2f), new(0.6f, 0.7f), "stars near");
+            SpawnPlanets(5, new(3, 4.5f), "planets very far", -0.9f);
+            SpawnPlanets(3, new(5, 6.5f), "planets far", -0.7f);
+            SpawnPlanets(2, new(7, 8.5f), "planets near", -0.5f);
             this.playfield = new(area, 3f, PaletteHandler.C("neutral"), -10);
         }
 
@@ -140,45 +152,32 @@ namespace ShapeEngineDemo
         //    if(RNG.randF() < 0.1f) SpawnStar();
         //}
 
-        private void SpawnPlanet()
+        private void SpawnPlanet(float radius, string layer, float brightness = 0f)
         {
-            float randRadius = RNG.randF(3f, 8f);
-            var planet = new Planet(inner, randRadius, RNG.randColor(150, 220, 255));
-
-
-            if (randRadius < 5) AddGameObject(planet, false, "planets far");
-            else AddGameObject(planet, false, "planets near");
+            Color color = RNG.randColor(150, 220, 255);
+            var planet = new Planet(inner, radius, Utils.ChangeBrightness(color, brightness));
+            AddGameObject(planet, false, layer);
 
         }
-        private void SpawnPlanets(int amount)
+        private void SpawnPlanets(int amount, Vector2 radiusRange, string layer, float brightness = 0f)
         {
             for (int i = 0; i < amount; i++)
             {
-                SpawnPlanet();
+                SpawnPlanet(RNG.randF(radiusRange.X, radiusRange.Y), layer, brightness);
             }
         }
-        private void SpawnStar()
+        private void SpawnStar(float radius, Vector2 alphaRange, string layer)
         {
-            //Vector2 pos = RNG.randVec2(outer);
-            //float radius = RNG.randF(0.25f, 1.25f);
-            //float lifetime = -1f; // RNG.randF(15, 30);
-            //Color color = WHITE;
-            //color.a = (byte)(100 * radius);
-            //CircleParticle p = new(pos, 0f, color, radius, lifetime);
-            //AddGameObject(p, false);
-
-            float randRadius = RNG.randF(0.25f, 1.25f);
-            var star = new Star(outer, randRadius, WHITE);
-            
-            if(randRadius < 0.5f) AddGameObject(star, false, "stars fixed");
-            if(randRadius < 0.8f) AddGameObject(star, false, "stars far");
-            else AddGameObject(star, false, "stars near");
+            Color color = WHITE;
+            color.a = (byte)(255 * RNG.randF(alphaRange.X, alphaRange.Y));
+            var star = new Star(outer, radius, color);
+            AddGameObject(star, false, layer);
         }
-        private void SpawnStars(int amount)
+        private void SpawnStars(int amount, Vector2 radiusRange, Vector2 alphaRange, string layer)
         {
             for (int i = 0; i < amount; i++)
             {
-                SpawnStar();
+                SpawnStar(RNG.randF(radiusRange.X, radiusRange.Y), alphaRange, layer);
             }
         }
     }
