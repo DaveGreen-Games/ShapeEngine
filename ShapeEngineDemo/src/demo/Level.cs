@@ -117,15 +117,15 @@ namespace ShapeEngineDemo
             //}
 
 
-            AddLayer("stars fixed", -100, 0.9f);
-            AddLayer("stars far", -95, 0.7f);
-            AddLayer("stars near", -90, 0.5f);
-            AddLayer("planets very far", -85, 0.2f);
-            AddLayer("planets far", -85, 0.1f);
-            AddLayer("planets near", -80, 0.05f);
+            AddLayer("stars very far", -100, 0.2f);
+            AddLayer("stars far", -95, 0.15f);
+            AddLayer("stars near", -90, 0.1f);
+            AddLayer("planets very far", -85, 0.05f);
+            AddLayer("planets far", -85, 0.03f);
+            AddLayer("planets near", -80, 0.01f);
             AddLayer("asteroids", -5, 0);
             
-            SpawnStars(90, new(0.7f, 0.8f), new(0.4f, 0.5f), "stars fixed");
+            SpawnStars(90, new(0.7f, 0.8f), new(0.4f, 0.5f), "stars very far");
             SpawnStars(90, new(0.8f, 1.0f), new(0.5f, 0.6f), "stars far");
             SpawnStars(90, new(1.0f, 1.2f), new(0.6f, 0.7f), "stars near");
             SpawnPlanets(5, new(3, 4.5f), "planets very far", -0.9f);
