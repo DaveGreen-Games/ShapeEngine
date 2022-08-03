@@ -1,7 +1,20 @@
+![](final/title/shape-engine-main5.png)
 # ShapeEngine
 My custom-made engine based on the great [Raylib Framework](https://www.raylib.com/examples.html). The Main focus is being performant and only using draw functions instead of textures.
 
 When using the Shape Engine everything from Raylib is available as well. ([Raylib Examples](https://www.raylib.com/examples.html), [Raylib Cheatsheet](https://www.raylib.com/cheatsheet/raylib_cheatsheet_v4.0.pdf))
+
+
+## Demo Showcose
+The demo is included in this repository. The demo is just a simple asteroid shooter like game. It consist of a main menu and 1 level with the player ship and randomly spawning asteroids. The demo tries to show the most important aspects of Shape Engine´s usage, like how to play music in a playlist, playing and adding sounds, using the data/shader/level/ui system, and many more things!
+
+Gameplay
+
+![Gameplay](media/gameplay-short01.gif)
+
+Spatial Hash / Collision System
+
+![](media/simpleCollision-short-cropped01.gif)
 
 ## Documentation
 Right now there is no documentation.  There is a Visual Studio Template in the Release Folder and a complete Demo Game to see how everything works.
