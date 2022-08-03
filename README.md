@@ -1,8 +1,10 @@
 ![](final/title/shape-engine-main5.png)
 # ShapeEngine
-My custom-made engine based on the great [Raylib Framework](https://www.raylib.com/examples.html). The Main focus is being performant and only using draw functions instead of textures.
+My custom-made engine based on the great [Raylib Framework](https://www.raylib.com/examples.html). The Main focus is being performant and only using draw functions instead of textures. I am using Shape Engine for my next game called Galaxy Unknown.
 
 When using the Shape Engine everything from Raylib is available as well. ([Raylib Examples](https://www.raylib.com/examples.html), [Raylib Cheatsheet](https://www.raylib.com/cheatsheet/raylib_cheatsheet_v4.0.pdf))
+
+Shape Engine is available as well on [Itch](https://solobytegames.itch.io/shape-engine) and it is a great way to support me ;)
 
 
 ## Demo Showcose
