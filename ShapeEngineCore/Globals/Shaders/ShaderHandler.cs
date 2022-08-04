@@ -8,7 +8,7 @@ namespace ShapeEngineCore.Globals.Shaders
     {
         private static Dictionary<string, ScreenShader> screenShaders = new Dictionary<string, ScreenShader>();
         private static Dictionary<string, Shader> shaders = new Dictionary<string, Shader>();
-        private static ScreenBuffer[] screenBuffers = new ScreenBuffer[0];
+        //private static ScreenBuffer[] screenBuffers = new ScreenBuffer[0];
         //{
         //    new(ScreenHandler.GameWidth(), ScreenHandler.GameHeight(), ScreenHandler.GameWidth(), ScreenHandler.GameHeight()),
         //    new(ScreenHandler.GameWidth(), ScreenHandler.GameHeight(), ScreenHandler.GameWidth(), ScreenHandler.GameHeight())
@@ -16,21 +16,20 @@ namespace ShapeEngineCore.Globals.Shaders
 
 
 
-        public static void Initialize()
-        {
-            screenBuffers = new ScreenBuffer[]
-            {
-                new(ScreenHandler.GameWidth(), ScreenHandler.GameHeight(), ScreenHandler.GameWidth(), ScreenHandler.GameHeight()),
-                new(ScreenHandler.GameWidth(), ScreenHandler.GameHeight(), ScreenHandler.GameWidth(), ScreenHandler.GameHeight())
-            };
-            //ScreenHandler.CreateGameTexture("screenshader");
-        }
+        //public static void Initialize()
+        //{
+        //    screenBuffers = new ScreenBuffer[]
+        //    {
+        //        new(ScreenHandler.GameWidth(), ScreenHandler.GameHeight(), ScreenHandler.GameWidth(), ScreenHandler.GameHeight()),
+        //        new(ScreenHandler.GameWidth(), ScreenHandler.GameHeight(), ScreenHandler.GameWidth(), ScreenHandler.GameHeight())
+        //    };
+        //}
         public static void Close()
         {
-            foreach (ScreenBuffer screenBuffer in screenBuffers)
-            {
-                screenBuffer.Unload();
-            }
+            //foreach (ScreenBuffer screenBuffer in screenBuffers)
+            //{
+            //    screenBuffer.Unload();
+            //}
             foreach (Shader shader in shaders.Values)
             {
                 UnloadShader(shader);
@@ -41,8 +40,22 @@ namespace ShapeEngineCore.Globals.Shaders
             }
             screenShaders.Clear();
             shaders.Clear();
-            screenBuffers = new ScreenBuffer[0];
+            //screenBuffers = new ScreenBuffer[0];
         }
+
+        public static List<ScreenShader> GetCurActiveShaders()
+        {
+            List<ScreenShader> shadersToApply = screenShaders.Values.ToList().FindAll(s => s.IsEnabled());
+            shadersToApply.Sort(delegate (ScreenShader a, ScreenShader b)
+            {
+                if (a.GetOrder() < b.GetOrder()) return -1;
+                else if (a.GetOrder() > b.GetOrder()) return 1;
+                else return 0;
+            });
+            return shadersToApply;
+        }
+
+        /*
         public static void DrawShaders()
         {
             //BeginMode2D(ScreenHandler.curCamera);
@@ -129,7 +142,7 @@ namespace ShapeEngineCore.Globals.Shaders
                 EndShaderMode();
             }
         }
-
+        */
 
         public static bool HasScreenShader(string name) { return screenShaders.ContainsKey(name); }
         public static void AddScreenShader(string name, string fileName, bool enabled = true, int order = 0)

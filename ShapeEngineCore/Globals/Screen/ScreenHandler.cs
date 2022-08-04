@@ -127,8 +127,8 @@ namespace ShapeEngineCore.Globals.Screen
         public static float UI_TO_GAME { get; private set; } = 1f;
         public static float GAME_TO_UI { get; private set; } = 1f;
         public static int FPS { get; private set; }
-        private static bool stretchMode = false;
-        private static bool monitorChanged = false;
+        //private static bool stretchMode = false;
+        //private static bool monitorChanged = false;
         private static (int width, int height) DEVELOPMENT_TARGET_RESOLUTION = (0, 0);
         private static (int width, int height) DEVELOPMENT_RESOLUTION = (0, 0);
         private static (int width, int height) MONITOR_SIZE = (0, 0);
@@ -145,8 +145,8 @@ namespace ShapeEngineCore.Globals.Screen
         public static Camera Cam { get { return camera; } }
         public static ScreenTexture Game { get { return gameTexture; } }
         public static ScreenTexture UI { get { return uiTexture; } }
-
-        public static bool IsStretchEnabled() { return stretchMode; }
+        private static ScreenBuffer[] screenBuffers = new ScreenBuffer[0];
+        //public static bool IsStretchEnabled() { return stretchMode; }
         public static int GetMonitorSizeWidth() { return MONITOR_SIZE.width; }
         public static int GetMonitorSizeHeight() { return MONITOR_SIZE.height; }
         public static int GetDefaultWindowSizeWidth() { return DEFAULT_WINDOW_SIZE.width; }
@@ -264,13 +264,13 @@ namespace ShapeEngineCore.Globals.Screen
         //public static float ScaleY(float y, string screen = "game") { return GetTexture(screen).GetCurResolutionFactorY() * y; }
 
 
-        public static void Initialize(int devWidth, int devHeight, float gameSizeFactor = 1.0f, float uiSizeFactor = 1.0f, string windowName = "Raylib Game", int fps = 60, bool vsync = true, bool fullscreen = false, int monitor = 0, bool stretch = false)
+        public static void Initialize(int devWidth, int devHeight, float gameSizeFactor = 1.0f, float uiSizeFactor = 1.0f, string windowName = "Raylib Game", int fps = 60, bool vsync = true, bool fullscreen = false, int monitor = 0, bool pixelSmoothing = false)
         {
             InitWindow(0, 0, windowName);
             HideCursor();
             //if(stretch)SetWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
             monitorHandler = new();
-            stretchMode = stretch;
+            //stretchMode = stretch;
             GAME_FACTOR = gameSizeFactor;
             UI_FACTOR = uiSizeFactor;
             GAME_TO_UI = UI_FACTOR / GAME_FACTOR;
@@ -292,9 +292,21 @@ namespace ShapeEngineCore.Globals.Screen
             SetFPS(fps);
 
             camera = new(GameSize(), 1f, 0f, -1f, 1.5f);
+            camera.PIXEL_SMOOTHING_ENABLED = pixelSmoothing;
+
+            screenBuffers = new ScreenBuffer[]
+            {
+                new(ScreenHandler.GameWidth(), ScreenHandler.GameHeight(), ScreenHandler.GameWidth(), ScreenHandler.GameHeight()),
+                new(ScreenHandler.GameWidth(), ScreenHandler.GameHeight(), ScreenHandler.GameWidth(), ScreenHandler.GameHeight())
+            };
         }
         public static void Close()
         {
+            foreach (ScreenBuffer screenBuffer in screenBuffers)
+            {
+                screenBuffer.Unload();
+            }
+            screenBuffers = new ScreenBuffer[0];
             shaderFlashes.Clear();
             Game.Close();
             UI.Close();
@@ -335,7 +347,7 @@ namespace ShapeEngineCore.Globals.Screen
                             SetMonitor(info.oldIndex);
                             SetMonitor(info.newIndex);
                         }
-                        monitorChanged = true;
+                        //monitorChanged = true;
                     }
                 }
                 var newMonitor = monitorHandler.HasMonitorSetupChanged();
@@ -349,12 +361,85 @@ namespace ShapeEngineCore.Globals.Screen
             UI.Update(dt);
             
         }
-        public static void EndUpdate(float dt)
-        {
-            monitorChanged = false;
-        }
 
-        public static bool HasMonitorChanged() { return stretchMode ? monitorChanged : false; }
+        public static void Draw(List<ScreenShader> shadersToApply)
+        {
+            if (shadersToApply.Count <= 0)
+            {
+                Game.Draw();
+                return;
+            }
+            else if (shadersToApply.Count == 1)
+            {
+                ScreenShader s = shadersToApply[0];
+                BeginShaderMode(s.GetShader());
+                Game.Draw();
+                EndShaderMode();
+            }
+            else if (shadersToApply.Count == 2)
+            {
+                ScreenShader s = shadersToApply[0];
+                screenBuffers[0].StartTextureMode();
+                BeginShaderMode(s.GetShader());
+                Game.DrawPro(ScreenHandler.GameWidth(), ScreenHandler.GameHeight());
+                EndShaderMode();
+                screenBuffers[0].EndTextureMode();
+
+                s = shadersToApply[1];
+
+                BeginShaderMode(s.GetShader());
+                screenBuffers[0].DrawPro(ScreenHandler.GetCurWindowSizeWidth(), ScreenHandler.GetCurWindowSizeHeight());
+                EndShaderMode();
+            }
+            else
+            {
+                ScreenShader s = shadersToApply[0];
+                shadersToApply.RemoveAt(0);
+
+                ScreenShader endshader = shadersToApply[shadersToApply.Count - 1];
+                shadersToApply.RemoveAt(shadersToApply.Count - 1);
+
+                //draw game texture to first screenbuffer and first shader is already applied
+                screenBuffers[0].StartTextureMode();
+                BeginShaderMode(s.GetShader());
+                Game.DrawPro(GameWidth(), GameHeight());
+                EndShaderMode();
+                screenBuffers[0].EndTextureMode();
+
+                int currentIndex = 0;
+                int nextIndex = 0;
+                for (int i = 0; i < shadersToApply.Count; i++)
+                {
+                    s = shadersToApply[i];
+                    nextIndex = currentIndex == 0 ? 1 : 0;
+                    ScreenBuffer current = screenBuffers[currentIndex];
+                    ScreenBuffer next = screenBuffers[nextIndex];
+                    next.StartTextureMode();
+                    BeginShaderMode(s.GetShader());
+                    current.DrawPro(GameWidth(), GameHeight());
+                    EndShaderMode();
+                    next.EndTextureMode();
+                    currentIndex = currentIndex == 0 ? 1 : 0;
+                }
+
+                BeginShaderMode(endshader.GetShader());
+                screenBuffers[nextIndex].DrawPro(GetCurWindowSizeWidth(), GetCurWindowSizeHeight());
+                EndShaderMode();
+            }
+        }
+        public static void DrawUI()
+        {
+            UI.Draw();
+        }
+        
+        
+        
+        //public static void EndUpdate(float dt)
+        //{
+        //    monitorChanged = false;
+        //}
+
+       // public static bool HasMonitorChanged() { return stretchMode ? monitorChanged : false; }
         public static MonitorHandler.MonitorInfo GetCurMonitor()
         {
             if (monitorHandler == null) return new();
@@ -402,33 +487,33 @@ namespace ShapeEngineCore.Globals.Screen
                 ChangeWindowDimensions(MONITOR_SIZE.width, MONITOR_SIZE.height);
                 ChangeWindowDimensions(DEFAULT_WINDOW_SIZE.width, DEFAULT_WINDOW_SIZE.height);
             }
-            monitorChanged = true;
+            //monitorChanged = true;
         }
 
 
         private static void UpdateMonitorRelevantInfo()
         {
-            if (stretchMode)
-            {
-                float fWidth = MONITOR_SIZE.width / (float)DEVELOPMENT_TARGET_RESOLUTION.width;
-                float fHeight = MONITOR_SIZE.height / (float)DEVELOPMENT_TARGET_RESOLUTION.height;
-                float f;
-                if (fWidth <= fHeight)
-                {
-                    f = MONITOR_SIZE.width / (float)DEVELOPMENT_TARGET_RESOLUTION.width;
-                }
-                else
-                {
-                    f = MONITOR_SIZE.height / (float)DEVELOPMENT_TARGET_RESOLUTION.height;
-                }
-
-                DEVELOPMENT_RESOLUTION.width = (int)(MONITOR_SIZE.width / f);
-                DEVELOPMENT_RESOLUTION.height = (int)(MONITOR_SIZE.height / f);
-            }
-            else
-            {
-                DEVELOPMENT_RESOLUTION = DEVELOPMENT_TARGET_RESOLUTION;
-            }
+            //if (stretchMode)
+            //{
+            //    float fWidth = MONITOR_SIZE.width / (float)DEVELOPMENT_TARGET_RESOLUTION.width;
+            //    float fHeight = MONITOR_SIZE.height / (float)DEVELOPMENT_TARGET_RESOLUTION.height;
+            //    float f;
+            //    if (fWidth <= fHeight)
+            //    {
+            //        f = MONITOR_SIZE.width / (float)DEVELOPMENT_TARGET_RESOLUTION.width;
+            //    }
+            //    else
+            //    {
+            //        f = MONITOR_SIZE.height / (float)DEVELOPMENT_TARGET_RESOLUTION.height;
+            //    }
+            //
+            //    DEVELOPMENT_RESOLUTION.width = (int)(MONITOR_SIZE.width / f);
+            //    DEVELOPMENT_RESOLUTION.height = (int)(MONITOR_SIZE.height / f);
+            //}
+            //else
+            //{
+            DEVELOPMENT_RESOLUTION = DEVELOPMENT_TARGET_RESOLUTION;
+            //}
 
             DEFAULT_WINDOW_SIZE.width = MONITOR_SIZE.width / 2;
             DEFAULT_WINDOW_SIZE.height = MONITOR_SIZE.height / 2;
@@ -486,19 +571,6 @@ namespace ShapeEngineCore.Globals.Screen
 
         public static void SetFPS(int newFps)
         {
-            //raylib takes care of that already
-            //and without doing that I actually store the target fps in FPS in case vsync is changed
-            //if(monitorHandler != null)
-            //{
-            //    if (IsVsyncEnabled())
-            //    {
-            //        int curRR = monitorHandler.GetRefreshrate();
-            //        if(curRR < newFps)
-            //        {
-            //            newFps = curRR;
-            //        }
-            //    }
-            //}
             FPS = newFps;
             SetTargetFPS(FPS);
         }

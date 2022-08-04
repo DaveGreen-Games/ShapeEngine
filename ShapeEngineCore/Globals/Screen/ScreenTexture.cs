@@ -116,10 +116,10 @@ namespace ShapeEngineCore.Globals.Screen
         }
         public Vector2 ScalePositionV(Vector2 pos)
         {
-            if (ScreenHandler.IsStretchEnabled())
-            {
-                return new(pos.X * GetCurResolutionFactorX(), pos.Y * GetCurResolutionFactorY());
-            }
+            //if (ScreenHandler.IsStretchEnabled())
+            //{
+            //    return new(pos.X * GetCurResolutionFactorX(), pos.Y * GetCurResolutionFactorY());
+            //}
             Vector2 size = GetDestRectSize(curWindowSize.width, curWindowSize.height);
             Vector2 dif = new Vector2(curWindowSize.width, curWindowSize.height) - size;
             dif *= 0.5f;
@@ -302,19 +302,19 @@ namespace ShapeEngineCore.Globals.Screen
             float s = scale;// * (1.0f + flashTintCurScale);// + screenShakeCurScale);
             float w = curWindowSize.width * s;
             float h = curWindowSize.height * s;
-            if (!ScreenHandler.IsStretchEnabled())
-            {
-                Vector2 size = GetDestRectSize(curWindowSize.width, curWindowSize.height);
-                w = size.X * s;
-                h = size.Y * s;
-                destRec.x = curWindowSize.width * 0.5f / s + offset.X;// + screenShakeOffset.X;
-                destRec.y = curWindowSize.height * 0.5f / s + offset.Y;// + screenShakeOffset.Y;
-            }
-            else
-            {
-                destRec.x = w * 0.5f / s + offset.X;// + screenShakeOffset.X;
-                destRec.y = h * 0.5f / s + offset.Y;// + screenShakeOffset.Y;
-            }
+            //if (!ScreenHandler.IsStretchEnabled())
+            //{
+            //    Vector2 size = GetDestRectSize(curWindowSize.width, curWindowSize.height);
+            //    w = size.X * s;
+            //    h = size.Y * s;
+            //    destRec.x = curWindowSize.width * 0.5f / s + offset.X;// + screenShakeOffset.X;
+            //    destRec.y = curWindowSize.height * 0.5f / s + offset.Y;// + screenShakeOffset.Y;
+            //}
+            //else
+            //{
+            destRec.x = w * 0.5f / s + offset.X;// + screenShakeOffset.X;
+            destRec.y = h * 0.5f / s + offset.Y;// + screenShakeOffset.Y;
+            //}
 
             //destRec.x = (w * 0.5f / s) + offset.X + screenShakeOffset.X;
             //destRec.y = (h * 0.5f / s) + offset.Y + screenShakeOffset.Y;

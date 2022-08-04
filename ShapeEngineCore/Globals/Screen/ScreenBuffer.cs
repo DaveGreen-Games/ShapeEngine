@@ -40,19 +40,19 @@ namespace ShapeEngineCore.Globals.Screen
             float w = targetWidth * s;
             float h = targetHeight * s;
 
-            if (!ScreenHandler.IsStretchEnabled())
-            {
-                Vector2 size = GetDestRectSize(targetWidth, targetHeight);
-                w = size.X * s;
-                h = size.Y * s;
-                destRec.x = targetWidth * 0.5f / s;
-                destRec.y = targetHeight * 0.5f / s;
-            }
-            else
-            {
-                destRec.x = w * 0.5f / s;
-                destRec.y = h * 0.5f / s;
-            }
+            //if (!ScreenHandler.IsStretchEnabled())
+            //{
+            //    Vector2 size = GetDestRectSize(targetWidth, targetHeight);
+            //    w = size.X * s;
+            //    h = size.Y * s;
+            //    destRec.x = targetWidth * 0.5f / s;
+            //    destRec.y = targetHeight * 0.5f / s;
+            //}
+            //else
+            //{
+            destRec.x = w * 0.5f / s;
+            destRec.y = h * 0.5f / s;
+            //}
 
             //destRec.x = (w * 0.5f / s);
             //destRec.y = (h * 0.5f / s);

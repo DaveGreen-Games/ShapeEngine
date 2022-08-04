@@ -25,11 +25,11 @@ namespace ShapeEngineCore
         public bool vsync = true;
         public bool fullscreen = false;
         public int monitor = 0;
-        public bool stretch = false;
+        public bool pixelSmoothing = false;
 
         public ScreenInitInfo() { }
         public ScreenInitInfo(int devWidth, int devHeight, string windowName) { this.devWidth = devWidth; this.devHeight = devHeight; this.windowName = windowName; }
-        public ScreenInitInfo(int devWidth, int devHeight, float gameSizeFactor, float uiSizeFactor, string windowName, int fps, bool vsync, bool fullscreen, int monitor, bool stretch)
+        public ScreenInitInfo(int devWidth, int devHeight, float gameSizeFactor, float uiSizeFactor, string windowName, int fps, bool vsync, bool fullscreen, int monitor, bool pixelSmoothing)
         {
             this.devWidth = devWidth;
             this.devHeight = devHeight;
@@ -40,7 +40,7 @@ namespace ShapeEngineCore
             this.vsync = vsync;
             this.fullscreen = fullscreen;
             this.monitor = monitor;
-            this.stretch = stretch;
+            this.pixelSmoothing = pixelSmoothing;
         }
     }
     public struct DataInitInfo
@@ -333,13 +333,13 @@ namespace ShapeEngineCore
             //needs to be called first!!!
             bool fs = launchParams.Contains("fullscreen") || screenInitInfo.fullscreen;
             //ScreenHandler.Initialize(1920, 1080, 0.25f, 2.0f, "Raylib Template", 60, true, fs, 0, false);
-            ScreenHandler.Initialize(screenInitInfo.devWidth, screenInitInfo.devHeight, screenInitInfo.gameSizeFactor, screenInitInfo.uiSizeFactor, screenInitInfo.windowName, screenInitInfo.fps, screenInitInfo.vsync, fs, screenInitInfo.monitor, screenInitInfo.stretch);
+            ScreenHandler.Initialize(screenInitInfo.devWidth, screenInitInfo.devHeight, screenInitInfo.gameSizeFactor, screenInitInfo.uiSizeFactor, screenInitInfo.windowName, screenInitInfo.fps, screenInitInfo.vsync, fs, screenInitInfo.monitor, screenInitInfo.pixelSmoothing);
 
             ResourceManager.Initialize(resourceFolderPath);
             PaletteHandler.Initialize();
             UIHandler.Initialize();
             AudioHandler.Initialize();
-            ShaderHandler.Initialize();
+            //ShaderHandler.Initialize();
             InputHandler.Initialize();
             CursorHandler.Initialize();
         }
@@ -401,7 +401,7 @@ namespace ShapeEngineCore
                 // DRAW TO MAIN TEXTURE
                 Draw();
 
-                ScreenHandler.EndUpdate(DELTA);
+                //ScreenHandler.EndUpdate(DELTA);
 
                 ResolveDeferred();
             }
@@ -417,13 +417,13 @@ namespace ShapeEngineCore
             ScreenHandler.Update(dt);
             //if (!stopTimer.IsRunning()) ScreenHandler.UpdateCamera(dt * CUR_SLOW_FACTOR);
 
-            if (ScreenHandler.HasMonitorChanged())
-            {
-                foreach (var scene in SCENES.Values)
-                {
-                    scene.MonitorHasChanged();
-                }
-            }
+            //if (ScreenHandler.HasMonitorChanged())
+            //{
+            //    foreach (var scene in SCENES.Values)
+            //    {
+            //        scene.MonitorHasChanged();
+            //    }
+            //}
 
             if (CUR_SCENE != null)
             {
@@ -466,15 +466,18 @@ namespace ShapeEngineCore
             ClearBackground(backgroundColor);
             PreDraw();
 
+            var shaders = ShaderHandler.GetCurActiveShaders();
             if (ScreenHandler.Cam != null && ScreenHandler.Cam.PIXEL_SMOOTHING_ENABLED)
             {
                 BeginMode2D(ScreenHandler.Cam.ScreenSpaceCam);
-                ShaderHandler.DrawShaders();
+                ScreenHandler.Draw(shaders);
+                //ShaderHandler.DrawShaders();
                 EndMode2D();
             }
-            else ShaderHandler.DrawShaders();
-            
-            ScreenHandler.UI.Draw();
+            else ScreenHandler.Draw(shaders); // ShaderHandler.DrawShaders();
+
+            ScreenHandler.DrawUI();
+
             PostDraw();
             EndDrawing();
         }

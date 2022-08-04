@@ -167,15 +167,15 @@ namespace ShapeEngineCore
                 }
             }
         }
-        public virtual void MonitorHasChanged()
-        {
-            inner = ScreenHandler.GameArea();
-            foreach (var go in gameObjects)
-            {
-                go.MonitorHasChanged();
-            }
-            colHandler.UpdateArea(inner);
-        }
+        //public virtual void MonitorHasChanged()
+        //{
+        //    inner = ScreenHandler.GameArea();
+        //    foreach (var go in gameObjects)
+        //    {
+        //        go.MonitorHasChanged();
+        //    }
+        //    colHandler.UpdateArea(inner);
+        //}
         protected virtual void SortGameObjects()
         {
             gameObjects.Sort(delegate (GameObject x, GameObject y)
@@ -488,14 +488,14 @@ namespace ShapeEngineCore
             }
         }
         
-        public virtual void MonitorHasChanged()
-        {
-            for (int i = 0; i < sortedLayers.Count; i++)
-            {
-                var layer = sortedLayers[i];
-                layer.MonitorHasChanged();
-            }
-        }
+        //public virtual void MonitorHasChanged()
+        //{
+        //    for (int i = 0; i < sortedLayers.Count; i++)
+        //    {
+        //        var layer = sortedLayers[i];
+        //        layer.MonitorHasChanged();
+        //    }
+        //}
         
         public void SortGameObjects(List<GameObject> objectsToSort)
         {

@@ -46,10 +46,10 @@ namespace ShapeEngineCore
         public virtual bool IsEnabled() { return true; }
         public virtual bool IsVisible() { return true; }
 
-        public virtual void MonitorHasChanged()
-        {
-
-        }
+        //public virtual void MonitorHasChanged()
+        //{
+        //
+        //}
     }
     /*public class GameObject
     {

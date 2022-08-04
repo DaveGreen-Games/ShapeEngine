@@ -109,13 +109,13 @@ namespace ShapeEngineDemo
 
         }
 
-        public override void MonitorHasChanged()
-        {
-            base.MonitorHasChanged();
-            level1Button.MonitorHasChanged();
-            optionsButton.MonitorHasChanged();
-            quitButton.MonitorHasChanged();
-        }
+        //public override void MonitorHasChanged()
+        //{
+        //    base.MonitorHasChanged();
+        //    level1Button.MonitorHasChanged();
+        //    optionsButton.MonitorHasChanged();
+        //    quitButton.MonitorHasChanged();
+        //}
     }
 
 

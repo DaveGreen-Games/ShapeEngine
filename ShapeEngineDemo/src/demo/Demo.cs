@@ -67,7 +67,7 @@ namespace ShapeEngineDemo
             ShaderHandler.AddScreenShader("colorize", "colorize-shader", false, 0);
             ShaderHandler.AddScreenShader("bloom", "bloom-shader", false, 1);
             ShaderHandler.AddScreenShader("chrom", "chromatic-aberration-shader", false, 2);
-            ShaderHandler.AddScreenShader("crt", "crt-shader", true, 3);
+            ShaderHandler.AddScreenShader("crt", "crt-shader", false, 3);
             ShaderHandler.AddScreenShader("grayscale", "grayscale-shader", false, 4);
             ShaderHandler.AddScreenShader("pixelizer", "pixelizer-shader", false, 5);
             ShaderHandler.AddScreenShader("blur", "blur-shader", false, 6);

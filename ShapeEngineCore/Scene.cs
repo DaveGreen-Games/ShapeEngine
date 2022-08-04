@@ -34,10 +34,10 @@
             paused = false;
         }
         public virtual void TogglePause() { paused = !paused; }
-        public virtual void MonitorHasChanged()
-        {
-            var area = GetCurArea();
-            if (area != null) area.MonitorHasChanged();
-        }
+        //public virtual void MonitorHasChanged()
+        //{
+        //    var area = GetCurArea();
+        //    if (area != null) area.MonitorHasChanged();
+        //}
     }
 }

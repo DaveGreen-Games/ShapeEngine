@@ -96,13 +96,21 @@ namespace ShapeEngineCore.Globals.Persistent
         }
         public static Shader LoadFragmentShader(string name)
         {
-            string file = Encoding.Default.GetString(resources[name].data);
-            return Raylib.LoadShaderFromMemory(null, file);
+            if (Path.HasExtension(name)) return Raylib.LoadShader(null, name);
+            else
+            {
+                string file = Encoding.Default.GetString(resources[name].data);
+                return Raylib.LoadShaderFromMemory(null, file);
+            }
         }
         public static Shader LoadVertexShader(string name)
         {
-            string file = Encoding.Default.GetString(resources[name].data);
-            return Raylib.LoadShaderFromMemory(null, file);
+            if (Path.HasExtension(name)) return Raylib.LoadShader(name, "");
+            else
+            {
+                string file = Encoding.Default.GetString(resources[name].data);
+                return Raylib.LoadShaderFromMemory(file, "");
+            }
         }
         public static string LoadJsonData(string name)
         {
