@@ -446,9 +446,12 @@ namespace ShapeEngineCore
         protected void Draw()
         {
             //Draw to game texture
-            ScreenHandler.StartDraw(true);
-            if (CUR_SCENE != null) CUR_SCENE.Draw();
-            ScreenHandler.EndDraw(true);
+            if (CUR_SCENE != null)
+            {
+                ScreenHandler.StartDraw(true);
+                CUR_SCENE.Draw();
+                ScreenHandler.EndDraw(true);
+            }
 
 
             //Draw to UI texture
@@ -462,7 +465,15 @@ namespace ShapeEngineCore
             BeginDrawing();
             ClearBackground(backgroundColor);
             PreDraw();
-            ShaderHandler.DrawShaders();
+
+            if (ScreenHandler.Cam != null && ScreenHandler.Cam.PIXEL_SMOOTHING_ENABLED)
+            {
+                BeginMode2D(ScreenHandler.Cam.ScreenSpaceCam);
+                ShaderHandler.DrawShaders();
+                EndMode2D();
+            }
+            else ShaderHandler.DrawShaders();
+            
             ScreenHandler.UI.Draw();
             PostDraw();
             EndDrawing();

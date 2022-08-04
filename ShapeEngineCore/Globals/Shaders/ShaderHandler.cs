@@ -124,16 +124,9 @@ namespace ShapeEngineCore.Globals.Shaders
                     currentIndex = currentIndex == 0 ? 1 : 0;
                 }
 
-                //draw to screen
-                //ScreenHandler.StartDraw("screenshader");
                 BeginShaderMode(endshader.GetShader());
                 screenBuffers[nextIndex].DrawPro(ScreenHandler.GetCurWindowSizeWidth(), ScreenHandler.GetCurWindowSizeHeight());
                 EndShaderMode();
-                //ScreenHandler.EndDraw("screenshader");
-
-                //BeginShaderMode(endshader1.GetShader());
-                //ScreenHandler.GetTexture("screenshader").Draw();
-                //EndShaderMode();
             }
         }
 

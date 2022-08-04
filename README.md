@@ -8,7 +8,7 @@ Shape Engine is available on [Itch](https://solobytegames.itch.io/shape-engine) 
 
 A template repository for a basic Shape Engine Project is available [here](https://github.com/SoloByte/ShapeEngine-ProjectTemplate).
 
-## Demo Showcose
+## Demo Showcase
 The demo is included in this repository. The demo is just a simple asteroid shooter like game. It consist of a main menu and 1 level with the player ship and randomly spawning asteroids. The demo tries to show the most important aspects of Shape Engine´s usage, like how to play music in a playlist, playing and adding sounds, using the data/shader/level/ui system, and many more things!
 
 Gameplay
