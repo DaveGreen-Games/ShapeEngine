@@ -298,22 +298,22 @@ namespace ShapeEngineCore.Globals.Screen
             return new(w, h);
         }
         public void Draw()
-        {   //                      this are percentages
-            float s = scale;// * (1.0f + flashTintCurScale);// + screenShakeCurScale);
+        {
+            float s = scale;
             float w = curWindowSize.width * s;
             float h = curWindowSize.height * s;
             //if (!ScreenHandler.IsStretchEnabled())
             //{
-            //    Vector2 size = GetDestRectSize(curWindowSize.width, curWindowSize.height);
-            //    w = size.X * s;
-            //    h = size.Y * s;
-            //    destRec.x = curWindowSize.width * 0.5f / s + offset.X;// + screenShakeOffset.X;
-            //    destRec.y = curWindowSize.height * 0.5f / s + offset.Y;// + screenShakeOffset.Y;
+            Vector2 size = GetDestRectSize(curWindowSize.width, curWindowSize.height);
+            w = size.X * s;
+            h = size.Y * s;
+            destRec.x = curWindowSize.width * 0.5f / s + offset.X;// + screenShakeOffset.X;
+            destRec.y = curWindowSize.height * 0.5f / s + offset.Y;// + screenShakeOffset.Y;
             //}
             //else
             //{
-            destRec.x = w * 0.5f / s + offset.X;// + screenShakeOffset.X;
-            destRec.y = h * 0.5f / s + offset.Y;// + screenShakeOffset.Y;
+            //  destRec.x = w * 0.5f / s + offset.X;// + screenShakeOffset.X;
+            //  destRec.y = h * 0.5f / s + offset.Y;// + screenShakeOffset.Y;
             //}
 
             //destRec.x = (w * 0.5f / s) + offset.X + screenShakeOffset.X;
@@ -335,8 +335,8 @@ namespace ShapeEngineCore.Globals.Screen
             }
         }
         public void DrawPro(int targetWidth, int targetHeight)
-        {   //                      this are percentages
-            float s = scale;// * (1.0f + flashTintCurScale);// + screenShakeCurScale);
+        {
+            float s = scale;
             float w = targetWidth * s;
             float h = targetHeight * s;
 
