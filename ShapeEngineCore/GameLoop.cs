@@ -332,7 +332,6 @@ namespace ShapeEngineCore
 
             //needs to be called first!!!
             bool fs = launchParams.Contains("fullscreen") || screenInitInfo.fullscreen;
-            //ScreenHandler.Initialize(1920, 1080, 0.25f, 2.0f, "Raylib Template", 60, true, fs, 0, false);
             ScreenHandler.Initialize(screenInitInfo.devWidth, screenInitInfo.devHeight, screenInitInfo.gameSizeFactor, screenInitInfo.uiSizeFactor, screenInitInfo.windowName, screenInitInfo.fps, screenInitInfo.vsync, fs, screenInitInfo.monitor, screenInitInfo.pixelSmoothing);
 
             ResourceManager.Initialize(resourceFolderPath);
@@ -369,7 +368,6 @@ namespace ShapeEngineCore
             while (!QUIT)
             {
                 DELTA = GetFrameTime();
-                //MOUSE_POS_GAME = ScreenHandler.ScalePositionV(Raylib.GetMousePosition(), "game");
                 MOUSE_POS = GetMousePosition();
                 MOUSE_POS_UI = ScreenHandler.ScalePositionV(MOUSE_POS, false);
                 MOUSE_POS_GAME = ScreenHandler.TransformPositionToGame(MOUSE_POS_UI);
@@ -383,8 +381,6 @@ namespace ShapeEngineCore
                     if (CUR_SLOW_FACTOR != 1f && !slowTimer.IsRunning())
                     {
                         CUR_SLOW_FACTOR = 1f;
-                        //slowCount = 0;
-                        //slowCounter = 0;
                     }
                 }
                 GAME_DELTA = DELTA * CUR_SLOW_FACTOR;
@@ -401,8 +397,6 @@ namespace ShapeEngineCore
                 // DRAW TO MAIN TEXTURE
                 Draw();
 
-                //ScreenHandler.EndUpdate(DELTA);
-
                 ResolveDeferred();
             }
         }
@@ -415,31 +409,13 @@ namespace ShapeEngineCore
             StepHandler.Update(dt);
             AudioHandler.Update(dt);
             ScreenHandler.Update(dt);
-            //if (!stopTimer.IsRunning()) ScreenHandler.UpdateCamera(dt * CUR_SLOW_FACTOR);
-
-            //if (ScreenHandler.HasMonitorChanged())
-            //{
-            //    foreach (var scene in SCENES.Values)
-            //    {
-            //        scene.MonitorHasChanged();
-            //    }
-            //}
+            AlternatorHandler.Update(dt);
 
             if (CUR_SCENE != null)
             {
                 if (!stopTimer.IsRunning())
                 {
                     CUR_SCENE.Update(dt * CUR_SLOW_FACTOR);
-                    //if(slowCount <= 0) CUR_SCENE.Update(dt);
-                    //else
-                    //{
-                    //    if (slowCounter >= slowCount)
-                    //    {
-                    //        slowCounter = 0;
-                    //        CUR_SCENE.Update(dt);
-                    //    }
-                    //    else slowCounter++;
-                    //}
                 }
             }
         }

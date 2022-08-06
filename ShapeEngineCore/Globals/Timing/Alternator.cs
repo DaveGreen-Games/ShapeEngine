@@ -1,6 +1,5 @@
-﻿using ShapeEngineCore.Globals.Timing;
-
-namespace ShapeEngineCore.Globals.Blinker
+﻿
+namespace ShapeEngineCore.Globals.Timing
 {
 
     public class AlternatorState
@@ -16,8 +15,16 @@ namespace ShapeEngineCore.Globals.Blinker
             this.interval = interval;
         }
 
-        public string Name { get { return name; } }
-        public float Interval { get { return interval; } }
+        public string Name 
+        { 
+            get { return name; }
+            set { if (value != "") name = value; }
+        }
+        public float Interval 
+        { 
+            get { return interval; } 
+            set { if(value > 0) interval = value; }
+        }
         public bool IsFinished { get { return timer == 0f; } }
         public bool IsRunning { get { return timer > 0f; } }
         public float Remainder { get { return remainder; } }
@@ -71,6 +78,43 @@ namespace ShapeEngineCore.Globals.Blinker
         public AlternatorState? State { get { return HasStates ? states[curState] : null; } }
         public bool HasStates { get { return states.Count > 0; } }
 
+        public void AddState(AlternatorState state, bool set = false)
+        {
+            states.Add(state);
+            if (set) SetState(states.Count - 1);
+        }
+        public void AddState(string name, float interval, bool set = false)
+        {
+            AddState(new(name, interval), set);
+        }
+        public void ChangeState(string name, string newName, float newInterval, bool set = false)
+        {
+            int index = FindState(name);
+            if (index != -1)
+            {
+                states[index].Name = newName;
+                states[index].Interval = newInterval;
+                if (set) SetState(index);
+            }
+        }
+        public void ChangeStateInterval(string name, float newInterval, bool set = false)
+        {
+            int index = FindState(name);
+            if(index != -1)
+            {
+                states[index].Interval = newInterval;
+                if (set) SetState(index);
+            }
+        }
+        public void ChangeStateName(string name, string newName, bool set = false)
+        {
+            int index = FindState(name);
+            if (index != -1)
+            {
+                states[index].Name = newName;
+                if (set) SetState(index);
+            }
+        }
         public void SetState(int newState)
         {
             if (newState < 0 || newState >= states.Count || curState == newState) return;
@@ -96,13 +140,11 @@ namespace ShapeEngineCore.Globals.Blinker
             if (!HasStates) return;
             SetState(state);
         }
-
         public void Stop()
         {
             if (!HasStates) return;
             states[curState].Stop();
         }
-
         public void Update(float dt)
         {
             if (!HasStates) return;
