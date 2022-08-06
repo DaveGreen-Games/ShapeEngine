@@ -1,7 +1,6 @@
 ﻿
 namespace ShapeEngineCore.Globals.Timing
 {
-
     public class AlternatorState
     {
         private string name = "";
@@ -77,7 +76,7 @@ namespace ShapeEngineCore.Globals.Timing
         public string Cur { get { return HasStates ? states[curState].Name : ""; } }
         public AlternatorState? State { get { return HasStates ? states[curState] : null; } }
         public bool HasStates { get { return states.Count > 0; } }
-
+        public bool IsRunning { get { if(!HasStates) return false; return states[curState].IsRunning; } }
         public void AddState(AlternatorState state, bool set = false)
         {
             states.Add(state);
@@ -117,8 +116,9 @@ namespace ShapeEngineCore.Globals.Timing
         }
         public void SetState(int newState)
         {
-            if (newState < 0 || newState >= states.Count || curState == newState) return;
-            curState = newState;
+            if (curState == newState) return;
+            if (newState < 0 || newState >= states.Count) curState = 0;
+            else curState = newState;
             Start();
         }
         public void SetState(string newState)
