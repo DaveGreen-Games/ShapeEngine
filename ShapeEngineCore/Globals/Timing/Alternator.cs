@@ -119,7 +119,7 @@ namespace ShapeEngineCore.Globals.Timing
             if (curState == newState) return;
             if (newState < 0 || newState >= states.Count) curState = 0;
             else curState = newState;
-            Start();
+            //Start();
         }
         public void SetState(string newState)
         {
