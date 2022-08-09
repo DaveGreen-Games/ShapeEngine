@@ -400,6 +400,25 @@ namespace ShapeEngineCore
             }
         }
         public void RemoveStat(string name) { stats.Remove(name); }
+        public void RemoveStat(StatSimple stat)
+        {
+            string key = GetStatKey(stat);
+            if(key != "")
+            {
+                stats.Remove(key);
+            }
+        }
+        public string GetStatKey(StatSimple stat)
+        {
+            foreach (var kvp in stats)
+            {
+                if (kvp.Value == stat)
+                {
+                    return kvp.Key;
+                }
+            }
+            return "";
+        }
         public void AddBonuses(string statName, params float[] bonuses)
         {
             if (!Has(statName)) return;
