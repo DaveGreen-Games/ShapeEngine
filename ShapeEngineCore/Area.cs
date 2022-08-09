@@ -160,6 +160,7 @@ namespace ShapeEngineCore
                 {
                     obj.Destroy();
                     gameObjects.RemoveAt(i);
+                    uiObjects.Remove(obj);
                     if (obj is ICollidable collidable)
                     {
                         colHandler.Remove(collidable);
