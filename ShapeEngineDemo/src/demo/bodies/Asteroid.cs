@@ -72,7 +72,7 @@ namespace ShapeEngineDemo.Bodies
             }
             collider = new(pos, vel, this.size);
             collider.Mass = size / 2;
-            polygon = Drawing.GeneratePolygon(RNG.randI(10, 15), new(), this.size * 0.75f, this.size*1.25f);
+            polygon = Utils.GeneratePolygon(RNG.randI(10, 15), new(), this.size * 0.75f, this.size*1.25f);
         }
         public Asteroid(Vector2 pos, Vector2 vel, string asteroidType)
         {
@@ -90,7 +90,7 @@ namespace ShapeEngineDemo.Bodies
             }
             collider = new(pos, vel, this.size);
             collider.Mass = size / 2;
-            polygon = Drawing.GeneratePolygon(RNG.randI(10, 15), new(), this.size * 0.75f, this.size * 1.25f);
+            polygon = Utils.GeneratePolygon(RNG.randI(10, 15), new(), this.size * 0.75f, this.size * 1.25f);
         }
         public override void Collide(CastInfo info)
         {

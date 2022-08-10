@@ -5,20 +5,7 @@ namespace ShapeEngineCore.Globals
 {
     public static class Drawing
     {
-        public static List<Vector2> GeneratePolygon(int pointCount, Vector2 center, float minLength, float maxLength)
-        {
-            List<Vector2> points = new();
-            float angleStep = PI * 2.0f / pointCount;
-
-            for (int i = 0; i < pointCount; i++)
-            {
-                float randLength = RNG.randF(minLength, maxLength);
-                Vector2 p = Vec.Rotate(Vec.Right(), angleStep * i) * randLength;
-                p += center;
-                points.Add(p);
-            }
-            return points;
-        }
+        
         public static void DrawPolygon(List<Vector2> points, Vector2 center, Color fillColor, bool clockwise = true)
         {
             if (clockwise)

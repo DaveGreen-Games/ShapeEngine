@@ -181,6 +181,48 @@ namespace ShapeEngineCore.Globals
             return new Rectangle(rect.x - (newWidth - rect.width) / 2, rect.y - (newHeight - rect.height) / 2, newWidth, newHeight);
         }
 
+        public static List<Vector2> ScalePolygon(List<Vector2> poly, float scale)
+        {
+            var points = new List<Vector2>();
+            for (int i = 0; i < poly.Count; i++)
+            {
+                points.Add(Vec.Scale(poly[i], scale));
+            }
+            return points;
+        }
+
+        public static List<Vector2> ScalePolygonUniform(List<Vector2> poly, float distance)
+        {
+            var points = new List<Vector2>();
+            for (int i = 0; i < poly.Count; i++)
+            {
+                float length = poly[i].Length();
+                if (length <= 0f)
+                {
+                    points.Add(poly[i]);
+                    continue;
+                }
+                float scale = distance / length;
+                points.Add(Vec.Scale(poly[i], scale));
+            }
+            return points;
+        }
+
+        public static List<Vector2> GeneratePolygon(int pointCount, Vector2 center, float minLength, float maxLength)
+        {
+            List<Vector2> points = new();
+            float angleStep = PI * 2.0f / pointCount;
+
+            for (int i = 0; i < pointCount; i++)
+            {
+                float randLength = RNG.randF(minLength, maxLength);
+                Vector2 p = Vec.Rotate(Vec.Right(), angleStep * i) * randLength;
+                p += center;
+                points.Add(p);
+            }
+            return points;
+        }
+
         public static Vector2 Attraction(Vector2 center, Vector2 otherPos, Vector2 otherVel, float r, float strength, float friction)
         {
             Vector2 w = center - otherPos;
