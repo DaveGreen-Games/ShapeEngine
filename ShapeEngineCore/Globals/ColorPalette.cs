@@ -90,7 +90,22 @@ namespace ShapeEngineCore.Globals
                 palette.Add(entry.name, entry.color);
             }
         }
-
+        public ColorPalette(string paletteName, Color[] colors, string[] names)
+        {
+            this.name = paletteName;
+            for (int i = 0; i < names.Length; i++)
+            {
+                palette.Add(names[i], colors[i]);
+            }
+        }
+        public ColorPalette(string paletteName, string[] hexColors, string[] names)
+        {
+            this.name = paletteName;
+            for (int i = 0; i < names.Length; i++)
+            {
+                palette.Add(names[i], PaletteHandler.HexToColor(hexColors[i]));
+            }
+        }
         public ColorPalette(string paletteName, Dictionary<string, Color> palette)
         {
             this.name = paletteName;
@@ -140,6 +155,27 @@ namespace ShapeEngineCore.Globals
         public static string CurName { get { return curPalette.Name; } }
         public static ColorPalette Cur { get { return curPalette; } }
         public static Color C(string name) {return curPalette.Get(name);}
+        
+        public static void AddPalette(string paletteName, string[] hexColors, string[] names)
+        {
+            ColorPalette cp = new(paletteName, hexColors, names);
+            if (palettes.ContainsKey(paletteName)) palettes[paletteName] = cp;
+            else
+            {
+                palettes.Add(paletteName, cp);
+                paletteNames.Add(paletteName);
+            }
+        }
+        public static void AddPalette(string paletteName, Color[] colors, string[] names)
+        {
+            ColorPalette cp = new(paletteName, colors, names);
+            if (palettes.ContainsKey(paletteName)) palettes[paletteName] = cp;
+            else
+            {
+                palettes.Add(paletteName, cp);
+                paletteNames.Add(paletteName);
+            }
+        }
         public static void AddPalette(string paletteName, params (string name, Color color)[] entries)
         {
             ColorPalette cp = new(paletteName, entries);
