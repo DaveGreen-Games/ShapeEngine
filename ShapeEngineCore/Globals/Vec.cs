@@ -80,6 +80,14 @@ namespace ShapeEngineCore.Globals
         public static Vector2 Normalize(Vector2 v) { return Vector2Normalize(v); }//return Vector2.Normalize(v); } //Vector2 normalize returns NaN sometimes???
         public static Vector2 Reflect(Vector2 v, Vector2 n) { return Vector2.Reflect(v, n); } //RayMath.Vector2Reflect(v, n);
         public static Vector2 Scale(Vector2 v, float amount) { return Vector2Scale(v, amount); }
+        public static Vector2 ScaleUniform(Vector2 v, float distance)
+        {
+            float length = v.Length();
+            if (length <= 0) return v;
+
+            float scale = 1f + (distance / v.Length());
+            return Scale(v, scale);
+        }
         public static Vector2 SquareRoot(Vector2 v) { return Vector2.SquareRoot(v); }
         public static Vector2 Rotate(Vector2 v, float angle) { return Vector2Rotate(v, angle); } //radians
         public static float AngleDeg(Vector2 v1, Vector2 v2) { return Vector2Angle(v1, v2); }

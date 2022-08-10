@@ -196,14 +196,15 @@ namespace ShapeEngineCore.Globals
             var points = new List<Vector2>();
             for (int i = 0; i < poly.Count; i++)
             {
-                float length = poly[i].Length();
-                if (length <= 0f)
-                {
-                    points.Add(poly[i]);
-                    continue;
-                }
-                float scale = 1f + (distance / length);
-                points.Add(Vec.Scale(poly[i], scale));
+                points.Add(Vec.ScaleUniform(poly[i], distance));
+                //float length = poly[i].Length();
+                //if (length <= 0f)
+                //{
+                //    points.Add(poly[i]);
+                //    continue;
+                //}
+                //float scale = 1f + (distance / length);
+                //points.Add(Vec.Scale(poly[i], scale));
             }
             return points;
         }
