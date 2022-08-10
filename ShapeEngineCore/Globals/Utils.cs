@@ -202,7 +202,7 @@ namespace ShapeEngineCore.Globals
                     points.Add(poly[i]);
                     continue;
                 }
-                float scale = distance / length;
+                float scale = 1f + (distance / length);
                 points.Add(Vec.Scale(poly[i], scale));
             }
             return points;
