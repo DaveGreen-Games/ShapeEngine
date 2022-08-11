@@ -5,18 +5,24 @@ namespace ShapeEngineCore.Globals.Audio
 {
     public class Playlist
     {
+        public delegate void SongStarted(string songName, string playlistName);
+        public event SongStarted? OnSongStarted;
+
         private List<Song> mixtape = new();
         private List<Song> queue = new();
         private string name = "";
         private Song? currentSong = null;
 
         private bool paused = false;
-        public Playlist(string name, List<Song> songs)
+        private string displayName = "";
+        public Playlist(string name, string displayName, List<Song> songs)
         {
             this.name = name;
+            this.displayName = displayName;
             AddSongs(songs);
         }
 
+        public string DisplayName { get { return displayName; } }
         public void Close()
         {
             if (currentSong != null) currentSong.Stop();
@@ -33,7 +39,7 @@ namespace ShapeEngineCore.Globals.Audio
             if (currentSong == null) return paused;
             return currentSong.IsPaused() || paused;
         }
-        public void Start()
+        public string Start()
         {
             if (IsPaused())
             {
@@ -43,6 +49,7 @@ namespace ShapeEngineCore.Globals.Audio
             Stop();
             currentSong = PopNext();
             PlayMusicStream(currentSong.GetSong());
+            return GetCurrentSongName();
         }
         public void Stop()
         {
@@ -74,6 +81,7 @@ namespace ShapeEngineCore.Globals.Audio
                 currentSong.Stop();
                 currentSong = PopNext();
                 PlayMusicStream(currentSong.GetSong());
+                InvokeOnSongStarted(currentSong.DisplayName);
             }
         }
 
@@ -115,12 +123,18 @@ namespace ShapeEngineCore.Globals.Audio
         public string GetCurrentSongName()
         {
             if (currentSong == null) return "";
-            return currentSong.GetName();
+            return currentSong.DisplayName;
         }
         public float GetCurrentSongPercentage()
         {
             if (currentSong == null) return 0.0f;
             return currentSong.GetPercentage();
+        }
+
+
+        private void InvokeOnSongStarted(string songName)
+        {
+            OnSongStarted?.Invoke(songName, displayName);
         }
     }
 

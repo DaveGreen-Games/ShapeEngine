@@ -11,6 +11,9 @@ namespace ShapeEngineCore.Globals.Audio
 
     public static class AudioHandler
     {
+        public delegate void PlaylistStarted(Playlist playlist, string playlistName, string songName);
+        public static event PlaylistStarted? OnPlaylistStarted;
+
         private static Dictionary<string, string> audioBusKeys = new();
         private static Dictionary<string, Bus> buses = new();
         private static Dictionary<string, Playlist> playlists = new();
@@ -69,39 +72,58 @@ namespace ShapeEngineCore.Globals.Audio
 
         public static void StartPlaylist(string name)
         {
+            string songName = "";
             if (currentPlaylist != null)
             {
                 if (name == "" || name == currentPlaylist.GetName())
                 {
-                    currentPlaylist.Start();
+                    songName = currentPlaylist.Start();
                 }
                 else
                 {
                     if (!playlists.ContainsKey(name)) return;
                     currentPlaylist.Stop();
                     currentPlaylist = playlists[name];
-                    currentPlaylist.Start();
+                    songName = currentPlaylist.Start();
                 }
             }
             else
             {
                 currentPlaylist = playlists[name];
-                currentPlaylist.Start();
+                songName = currentPlaylist.Start();
+            }
+
+            if(currentPlaylist != null)
+            {
+                InvokeOnPlaylistStarted(currentPlaylist, currentPlaylist.DisplayName, songName);
             }
         }
-        public static void SwitchPlaylist(string name)
+        public static Playlist? SwitchPlaylist(string name)
         {
             if (currentPlaylist == null)
             {
                 StartPlaylist(name);
-                return;
+                return currentPlaylist;
             }
-            if (!playlists.ContainsKey(name)) return;
-            if (currentPlaylist.GetName() == name) return;
+            if (!playlists.ContainsKey(name) || currentPlaylist.GetName() == name) return currentPlaylist;
             currentPlaylist.Stop();
             currentPlaylist = playlists[name];
             currentPlaylist.Start();
+            
+            return currentPlaylist;
         }
+
+        public static Playlist? GetCurPlaylist()
+        {
+            if (currentPlaylist == null) return null;
+            return currentPlaylist;
+        }
+        public static Playlist? GetPlaylist(string name)
+        {
+            if (!playlists.ContainsKey(name)) return null;
+            return playlists[name];
+        }
+
         public static void StopPlaylist()
         {
             if (currentPlaylist == null) return;
@@ -127,7 +149,7 @@ namespace ShapeEngineCore.Globals.Audio
             if (currentPlaylist == null) return false;
             return currentPlaylist.IsPlaying();
         }
-        public static void AddPlaylist(string name, List<string> songNames)
+        public static void AddPlaylist(string name, string displayName, List<string> songNames)
         {
             if (playlists.ContainsKey(name)) return;
 
@@ -142,7 +164,7 @@ namespace ShapeEngineCore.Globals.Audio
                 if (s == null) continue;
                 songs.Add(s);
             }
-            Playlist playlist = new(name, songs);
+            Playlist playlist = new(name, displayName, songs);
             playlists.Add(name, playlist);
         }
         public static void RemovePlaylist(string name)
@@ -210,12 +232,12 @@ namespace ShapeEngineCore.Globals.Audio
             buses[bus].AddAudio(name, sfx);
             audioBusKeys.Add(name, bus);
         }
-        public static void AddSong(string name, string fileName, float volume = 0.5f, string bus = "master", float pitch = 1.0f)
+        public static void AddSong(string name, string fileName, string displayName, float volume = 0.5f, string bus = "master", float pitch = 1.0f)
         {
             if (audioBusKeys.ContainsKey(name) || !buses.ContainsKey(bus)) return;
             if (fileName == "") return;
             Music song = ResourceManager.LoadMusic(fileName); // LoadMusicStream(fileName);
-            Song s = new Song(name, song, volume, bus, pitch);
+            Song s = new Song(name, displayName, song, volume, bus, pitch);
             buses[bus].AddAudio(name, s);
             audioBusKeys.Add(name, bus);
 
@@ -298,6 +320,11 @@ namespace ShapeEngineCore.Globals.Audio
         {
             if (currentPlaylist == null) return 0.0f;
             return currentPlaylist.GetCurrentSongPercentage();
+        }
+
+        private static void InvokeOnPlaylistStarted(Playlist playlist, string playlistName, string songName)
+        {
+            OnPlaylistStarted?.Invoke(playlist, playlistName, songName);
         }
 
     }

@@ -87,10 +87,11 @@ namespace ShapeEngineCore.Globals.Audio
     public class Song : Audio
     {
         private Music song;
-
-        public Song(string name, Music song, float volume = 0.5f, string bus = "master", float pitch = 1.0f)
+        private string displayName = "";
+        public Song(string name, string displayName, Music song, float volume = 0.5f, string bus = "master", float pitch = 1.0f)
         {
             this.name = name;
+            this.displayName = displayName;
             this.song = song;
             this.bus = bus;
             this.pitch = pitch;
@@ -99,6 +100,7 @@ namespace ShapeEngineCore.Globals.Audio
             //SetVolume(volume);
         }
 
+        public string DisplayName { get { return displayName; } }
         public override void SetPitch(float pitch)
         {
             this.pitch = pitch;
