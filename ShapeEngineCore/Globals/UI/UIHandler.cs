@@ -71,12 +71,18 @@ namespace ShapeEngineCore.Globals.UI
         public static float Scale(float f) { return f * ScreenHandler.UI_FACTOR; }
         public static int Scale(int i) { return (int)(i * ScreenHandler.UI_FACTOR); }
 
-        public static float CalculateDynamicFontSize(string text, float size, float fontSizeBase = -1f, float fontSpacingBase = 1f)
+        public static float CalculateDynamicFontSize(string text, float size, float fontSpacing = 1f, float maxError = 0.01f, int maxTries = 25)
         {
-            if (fontSizeBase <= 0f) fontSizeBase = size;
-            Vector2 textSize = GetTextSize(text, fontSizeBase, fontSpacingBase);
-            float factor = size / textSize.X;
-            return fontSizeBase * factor;
+            float curFontSize = 50f;
+            float correction = 0f;
+            int counter = 0;
+            while (MathF.Abs(1f - correction) > maxError && counter < maxTries)
+            {
+                counter++;
+                correction = size / UIHandler.GetTextSize(text, curFontSize, fontSpacing).X;
+                curFontSize *= correction;
+            }
+            return curFontSize;
         }
         public static void AddFont(string name, string fileName, int fontSize = 100)
         {
