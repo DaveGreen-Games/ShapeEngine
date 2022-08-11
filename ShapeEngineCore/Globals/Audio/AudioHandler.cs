@@ -309,14 +309,26 @@ namespace ShapeEngineCore.Globals.Audio
             }
         }
 
-        public static string Debug_GetCurrentPlaylistSongName()
+
+        public static (string playlistName, string songName, float songPercentage) GetCurrentPlaylistInfo()
+        {
+            if (currentPlaylist == null) return new("", "", 0f);
+            else return new
+                (
+                    currentPlaylist.DisplayName,
+                    currentPlaylist.GetCurrentSongDisplayName(),
+                    currentPlaylist.GetCurrentSongPercentage()
+                );
+        }
+
+        public static string GetCurrentPlaylistSongDisplayName()
         {
             if (currentPlaylist == null) return "no playlist playing";
-            string name = currentPlaylist.GetCurrentSongName();
+            string name = currentPlaylist.GetCurrentSongDisplayName();
             if (name == "") return "no song playing";
             return name;
         }
-        public static float Debug_GetCurrentPlaylistSongPercentage()
+        public static float GetCurrentPlaylistSongPercentage()
         {
             if (currentPlaylist == null) return 0.0f;
             return currentPlaylist.GetCurrentSongPercentage();

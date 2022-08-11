@@ -49,7 +49,7 @@ namespace ShapeEngineCore.Globals.Audio
             Stop();
             currentSong = PopNext();
             PlayMusicStream(currentSong.GetSong());
-            return GetCurrentSongName();
+            return GetCurrentSongDisplayName();
         }
         public void Stop()
         {
@@ -120,6 +120,11 @@ namespace ShapeEngineCore.Globals.Audio
             queue.AddRange(mixtape);
         }
         public string GetName() { return name; }
+        public string GetCurrentSongDisplayName()
+        {
+            if (currentSong == null) return "";
+            return currentSong.DisplayName;
+        }
         public string GetCurrentSongName()
         {
             if (currentSong == null) return "";
