@@ -272,6 +272,7 @@ namespace ShapeEngineDemo.Bodies
                 );
 
             targetFinder.Start();
+
             float size = stats.Get("size");
             collisionMask = new string[] { "asteroid" };
             collider = new(GAMELOOP.GameCenter(), MovementDir * stats.Get("maxSpeed"), size);

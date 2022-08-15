@@ -236,17 +236,72 @@ namespace ShapeEngineCore.SimpleCollision
             }
         }
 
+        //public List<ICollidable> GetObjects(Collider shape, bool dynamicBoundingBox = false)
+        //{
+        //    //HashSet<ICollidable> uniqueObjects = new();
+        //    List<ICollidable> objects = new List<ICollidable>();
+        //    var hashes = GetCellIDs(shape, dynamicBoundingBox);
+        //    foreach (int hash in hashes)
+        //    {
+        //        objects.AddRange(bucketsDynamic[hash]);
+        //        objects.AddRange(bucketsStatic[hash]);
+        //    }
+        //    
+        //    return objects.Distinct().ToList();
+        //}
+
         public List<ICollidable> GetObjects(Collider shape, bool dynamicBoundingBox = false)
         {
-            List<ICollidable> objects = new List<ICollidable>();
+            HashSet<ICollidable> uniqueObjects = new();
             var hashes = GetCellIDs(shape, dynamicBoundingBox);
+            foreach (int hash in hashes)
+            {
+                foreach (var dyn in bucketsDynamic[hash])
+                {
+                    if (dyn.GetCollider() == shape) continue;
+                    uniqueObjects.Add(dyn);
+                }
+                foreach (var sta in bucketsStatic[hash])
+                {
+                    if (sta.GetCollider() == shape) continue;
+                    uniqueObjects.Add(sta);
+                }
+            }
+            return uniqueObjects.ToList();
+        }
+
+        //public List<ICollidable> GetObjects2(ICollidable collider)
+        //{
+        //    HashSet<ICollidable> uniqueObjects = new();
+        //    var hashes = GetCellIDs(collider.GetCollider(), collider.HasDynamicBoundingBox());
+        //    foreach (int hash in hashes)
+        //    {
+        //        foreach (var dyn in bucketsDynamic[hash])
+        //        {
+        //            uniqueObjects.Add(dyn);
+        //        }
+        //        foreach (var sta in bucketsStatic[hash])
+        //        {
+        //            uniqueObjects.Add(sta);
+        //        }
+        //    }
+        //    uniqueObjects.Remove(collider);
+        //    return uniqueObjects.ToList();
+        //}
+        public List<ICollidable> GetObjects(ICollidable collider)
+        {
+            List<ICollidable> objects = new();
+            var hashes = GetCellIDs(collider.GetCollider(), collider.HasDynamicBoundingBox());
             foreach (int hash in hashes)
             {
                 objects.AddRange(bucketsDynamic[hash]);
                 objects.AddRange(bucketsStatic[hash]);
             }
+            objects = objects.Distinct().ToList();
+            objects.Remove(collider);
             return objects;
         }
+
 
         /*public int GetNotEmptyCount()
         {

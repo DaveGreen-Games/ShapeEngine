@@ -404,7 +404,7 @@ namespace ShapeEngineCore.SimpleCollision
 
                 //if (collider.GetColliderType() == ColliderType.STATIC || collider.GetColliderClass() == ColliderClass.AREA) continue;
 
-                List<ICollidable> others = spatialHash.GetObjects(collider.GetCollider(), collider.HasDynamicBoundingBox());
+                List<ICollidable> others = spatialHash.GetObjects(collider);
                 foreach (ICollidable other in others)
                 {
                     string otherLayer = other.GetCollisionLayer();
@@ -595,7 +595,7 @@ namespace ShapeEngineCore.SimpleCollision
         public List<ICollidable> CastSpace(ICollidable caster)
         {
             List<ICollidable> bodies = new();
-            List<ICollidable> objects = spatialHash.GetObjects(caster.GetCollider(), caster.HasDynamicBoundingBox());
+            List<ICollidable> objects = spatialHash.GetObjects(caster);
             foreach (ICollidable obj in objects)
             {
                 if (caster.GetCollisionMask().Length <= 0)
