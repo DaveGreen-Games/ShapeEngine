@@ -75,27 +75,36 @@ namespace ShapeEngineCore.Globals.UI
 
         public override void Draw()
         {
-            if (HasBackground()) DrawRectanglePro(rect, pivot, rot, bgColor);
+            if (HasBackground())
+            {
+                if (HasReservedPart())
+                {
+                    DrawRectanglePro(rect, pivot, rot, reservedColor);
+                    var reservedRect = CalculateProgressRect(1f - reservedF, new(0f));
+                    DrawRectanglePro(reservedRect.rect, reservedRect.pivot, rot, bgColor);
+                }
+                else DrawRectanglePro(rect, pivot, rot, bgColor);
+            }
 
             if (HasTransition())
             {
                 if (transitionF > f)
                 {
-                    var transitionInfo = CalculateProgressRect(transitionF);
+                    var transitionInfo = CalculateProgressRect(transitionF, barOffset);
                     DrawRectanglePro(transitionInfo.rect, transitionInfo.pivot, rot, transitionColor);
                     if (HasBar())
                     {
-                        var progressInfo = CalculateProgressRect(f);
+                        var progressInfo = CalculateProgressRect(f, barOffset);
                         DrawRectanglePro(progressInfo.rect, progressInfo.pivot, rot, barColor);
                     }
                 }
                 else if (transitionF < f)
                 {
-                    var progressInfo = CalculateProgressRect(f);
+                    var progressInfo = CalculateProgressRect(f, barOffset);
                     DrawRectanglePro(progressInfo.rect, progressInfo.pivot, rot, transitionColor);
                     if (barColor.a > 0)
                     {
-                        var transitionInfo = CalculateProgressRect(transitionF);
+                        var transitionInfo = CalculateProgressRect(transitionF, barOffset);
                         DrawRectanglePro(transitionInfo.rect, transitionInfo.pivot, rot, barColor);
                     }
                 }
@@ -103,7 +112,7 @@ namespace ShapeEngineCore.Globals.UI
                 {
                     if (HasBar())
                     {
-                        var progressInfo = CalculateProgressRect(f);
+                        var progressInfo = CalculateProgressRect(f, barOffset);
                         DrawRectanglePro(progressInfo.rect, progressInfo.pivot, rot, barColor);
                     }
                 }
@@ -112,15 +121,15 @@ namespace ShapeEngineCore.Globals.UI
             {
                 if (HasBar())
                 {
-                    var progressInfo = CalculateProgressRect(f);
+                    var progressInfo = CalculateProgressRect(f, barOffset);
                     DrawRectanglePro(progressInfo.rect, progressInfo.pivot, rot, barColor);
                 }
             }
         }
 
-        protected (Rectangle rect, Vector2 pivot) CalculateProgressRect(float f)
+        protected (Rectangle rect, Vector2 pivot) CalculateProgressRect(float f, Vector2 barOffset)
         {
-            var rect = CalculateBarRectPro(f);
+            var rect = CalculateBarRectPro(f, barOffset);
             return (rect, new(rect.width / 2, rect.height / 2));
         }
         protected Vector2 GetTranslation(float f)
@@ -139,7 +148,7 @@ namespace ShapeEngineCore.Globals.UI
                     return Vec.Rotate(new(-rect.width * (1.0f - f) * 0.5f, 0f), GetRotationRad());
             }
         }
-        protected Rectangle CalculateBarRectPro(float f)
+        protected Rectangle CalculateBarRectPro(float f, Vector2 barOffset)
         {
             var rect = this.rect;
             if (!centered)
@@ -164,9 +173,11 @@ namespace ShapeEngineCore.Globals.UI
         protected Color barColor = GREEN;
         protected Color transitionColor = WHITE;
         protected Color outlineColor = GRAY;
+        protected Color reservedColor = YELLOW;
         protected BarType barType = BarType.LEFTRIGHT;
         protected float outlineSize = 0f;
         protected float f = 0f;
+        protected float reservedF = 0f;
         protected float transitionF = 0f;
         protected float transitionSpeed = 0.1f;
         protected bool centered = false;
@@ -210,20 +221,29 @@ namespace ShapeEngineCore.Globals.UI
             this.barColor = barColor;
             this.bgColor = bgColor;
         }
-        public void SetColors(Color barColor, Color bgColor, Color transitionColor)
+        public void SetColors(Color barColor, Color bgColor, Color reservedColor)
+        {
+            this.barColor = barColor;
+            this.bgColor = bgColor;
+            this.reservedColor = reservedColor;
+        }
+        public void SetColors(Color barColor, Color bgColor, Color reservedColor, Color transitionColor)
         {
             this.barColor = barColor;
             this.bgColor = bgColor;
             this.transitionColor = transitionColor;
+            this.reservedColor = reservedColor;
         }
-        public void SetColors(Color barColor, Color bgColor, Color transitionColor, Color outlineColor)
+        public void SetColors(Color barColor, Color bgColor, Color reservedColor, Color transitionColor, Color outlineColor)
         {
             this.barColor = barColor;
             this.bgColor = bgColor;
             this.transitionColor = transitionColor;
             this.outlineColor = outlineColor;
+            this.reservedColor = reservedColor;
         }
         public void SetTransitionSpeed(float value) { transitionSpeed = value; }
+        public void SetReservedF(float value) { reservedF = value; }
         public void SetF(float value, bool setTransitionF = false)
         {
             f = Clamp(value, 0f, 1f);
@@ -244,13 +264,22 @@ namespace ShapeEngineCore.Globals.UI
             }
         }
 
+        public bool HasReservedPart() { return reservedColor.a > 0 && reservedF > 0f; }
         public bool HasBackground() { return bgColor.a > 0; }
         public bool HasBar() { return barColor.a > 0 && f > 0f; }
         public bool HasTransition() { return transitionSpeed > 0f && transitionF > 0f && transitionColor.a > 0; }
         public bool HasOutline() { return outlineSize > 0f && outlineColor.a > 0; }
         public override void Draw()
         {
-            if (HasBackground()) DrawRectangleRec(rect, bgColor);
+            if (HasBackground())
+            {
+                if (HasReservedPart())
+                {
+                    DrawRectangleRec(rect, reservedColor);
+                    DrawRectangleRec(CalculateBarRect(1f - reservedF), bgColor);
+                }
+                else DrawRectangleRec(rect, bgColor);
+            }
 
             if (HasTransition())
             {
