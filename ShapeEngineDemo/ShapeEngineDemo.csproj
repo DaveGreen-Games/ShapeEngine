@@ -32,7 +32,7 @@
 
 
 	<ItemGroup>
-	  <None Update="resources.shp">
+	  <None Update="resources.txt">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
 	</ItemGroup>

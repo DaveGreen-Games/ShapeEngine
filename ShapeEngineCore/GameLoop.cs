@@ -43,16 +43,29 @@ namespace ShapeEngineCore
             this.pixelSmoothing = pixelSmoothing;
         }
     }
-    public struct DataInitInfo
+    
+    public struct ResourceInitInfo
     {
-        public string resourceFolderPath = "";
-        public string dataFileName = "";
-        public DataResolver dataResolver = new DataResolver();
-        public string[] sheetNames = new string[0];
+        public string path = "";
+        public string filename = "";
 
-        public DataInitInfo() { }
-        public DataInitInfo(string resourceFolderPath, string dataFileName, DataResolver dataResolver, params string[] sheetNames) { this.resourceFolderPath = resourceFolderPath; this.dataFileName = dataFileName; this.dataResolver = dataResolver; this.sheetNames = sheetNames; }
+        public ResourceInitInfo(string path, string filename = "resources.txt")
+        {
+            this.path = path;
+            this.filename = filename;
+        }
     }
+    
+    //public struct DataInitInfo
+    //{
+    //    public string resourceFolderPath = "";
+    //    public string dataFileName = "";
+    //    public DataResolver dataResolver = new DataResolver();
+    //    public string[] sheetNames = new string[0];
+    //
+    //    public DataInitInfo() { }
+    //    public DataInitInfo(string resourceFolderPath, string dataFileName, DataResolver dataResolver, params string[] sheetNames) { this.resourceFolderPath = resourceFolderPath; this.dataFileName = dataFileName; this.dataResolver = dataResolver; this.sheetNames = sheetNames; }
+    //}
 
     internal class DeferredInfo
     {
@@ -322,7 +335,7 @@ namespace ShapeEngineCore
         }
 
 
-        public void Initialize(string resourceFolderPath, ScreenInitInfo screenInitInfo, params string[] launchParams)
+        public void Initialize(ResourceInitInfo resourceInitInfo, ScreenInitInfo screenInitInfo, params string[] launchParams)
         {
             LAUNCH_PARAMS = launchParams;
             QUIT = false;
@@ -334,7 +347,7 @@ namespace ShapeEngineCore
             bool fs = launchParams.Contains("fullscreen") || screenInitInfo.fullscreen;
             ScreenHandler.Initialize(screenInitInfo.devWidth, screenInitInfo.devHeight, screenInitInfo.gameSizeFactor, screenInitInfo.uiSizeFactor, screenInitInfo.windowName, screenInitInfo.fps, screenInitInfo.vsync, fs, screenInitInfo.monitor, screenInitInfo.pixelSmoothing);
 
-            ResourceManager.Initialize(resourceFolderPath);
+            ResourceManager.Initialize(resourceInitInfo.path, resourceInitInfo.filename);
             PaletteHandler.Initialize();
             UIHandler.Initialize();
             AudioHandler.Initialize();

@@ -17,14 +17,14 @@ namespace ShapeEngineCore.Globals.Persistent
         private static Dictionary<string, ResourceInfo> resources = new();
 
         
-        public static void Initialize(string path)
+        public static void Initialize(string path, string resourceFileName = "resources.txt")
         {
-            resources = LoadResources(path);
+            resources = LoadResources(path, resourceFileName);
         }
 
-        public static void Generate(string sourcePath, string outputPath)
+        public static void Generate(string sourcePath, string outputPath, string outputFilename = "resources.txt")
         {
-            string filename = "resources.shp";
+            //string filename = "resources.txt";
             string[] files = Directory.GetFiles(sourcePath, "", SearchOption.AllDirectories);
             List<string> lines = new List<string>();
             foreach (var file in files)
@@ -33,7 +33,7 @@ namespace ShapeEngineCore.Globals.Persistent
                 var d = File.ReadAllBytes(file);
                 lines.Add(Convert.ToBase64String(Compress(d)));
             }
-            File.WriteAllLines(outputPath + filename, lines);
+            File.WriteAllLines(outputPath + outputFilename, lines);
         }
 
         
@@ -118,10 +118,10 @@ namespace ShapeEngineCore.Globals.Persistent
         }
 
 
-        private static Dictionary<string, ResourceInfo> LoadResources(string path)
+        private static Dictionary<string, ResourceInfo> LoadResources(string path, string fileName = "resources.txt")
         {
             Dictionary<string, ResourceInfo> result = new();
-            var lines = File.ReadAllLines(path + "resources.shp");
+            var lines = File.ReadAllLines(path + fileName);
             for (int i = 0; i < lines.Length; i += 2)
             {
                 string filenName = lines[i];

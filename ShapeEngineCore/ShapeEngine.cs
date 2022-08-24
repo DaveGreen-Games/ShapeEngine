@@ -18,7 +18,7 @@ namespace ShapeEngineCore
         public static Raylib_CsLo.Color DEBUG_HelperColor = new(0, 200, 25, 100);
 
         
-        public static void Start(GameLoop gameloop, string resourceFolderPath, ScreenInitInfo screenInitInfo, params string[] launchParams)
+        public static void Start(GameLoop gameloop, ResourceInitInfo resourceInitInfo, ScreenInitInfo screenInitInfo, params string[] launchParams)
         {
             GAMELOOP = gameloop;
 
@@ -28,7 +28,7 @@ namespace ShapeEngineCore
                 DEBUG_DrawHelpers = false;
             }
             //Start of Program
-            GAMELOOP.Initialize(resourceFolderPath, screenInitInfo, launchParams);
+            GAMELOOP.Initialize(resourceInitInfo, screenInitInfo, launchParams);
             GAMELOOP.Start();
 
             GAMELOOP.Run();//runs continously
@@ -38,8 +38,8 @@ namespace ShapeEngineCore
             bool fullscreen = GAMELOOP.Close();
             if (GAMELOOP.RESTART)
             {
-                if (fullscreen) Start(gameloop, resourceFolderPath, screenInitInfo, "fullscreen");
-                else Start(gameloop, resourceFolderPath, screenInitInfo);
+                if (fullscreen) Start(gameloop, resourceInitInfo, screenInitInfo, "fullscreen");
+                else Start(gameloop, resourceInitInfo, screenInitInfo);
             }
         }
     }

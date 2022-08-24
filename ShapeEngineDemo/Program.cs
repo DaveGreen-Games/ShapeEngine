@@ -18,12 +18,13 @@ namespace ShapeEngineDemo
         public static void Main(params string[] launchParams)
         {
             //Uncomment to generate a new resources.shp file
-            //ShapeEngineCore.Globals.Persistent.ResourceManager.Generate("resources", "");
+            //ShapeEngineCore.Globals.Persistent.ResourceManager.Generate("resources", "", "resources.txt");
             
             
             //START
             ScreenInitInfo screenInitInfo = new ScreenInitInfo(1920, 1080, 0.25f, 2.0f, "Raylib Template", 60, true, false, 0, true);
-            ShapeEngine.Start(new Demo(), "", screenInitInfo);
+            ResourceInitInfo resourceInitInfo = new("", "resources.txt");
+            ShapeEngine.Start(new Demo(), resourceInitInfo, screenInitInfo);
         }
     }
 }
