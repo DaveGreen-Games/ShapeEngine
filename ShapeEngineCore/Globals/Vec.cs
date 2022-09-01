@@ -32,6 +32,14 @@ namespace ShapeEngineCore.Globals
             return GetPerpendicularRight(v);
         }
 
+        public static Vector2 VecFromAngleRad(float angleRad)
+        {
+            return Vec.Rotate(Vec.Right(), angleRad);
+        }
+        public static Vector2 VecFromAngleDeg(float angleDeg)
+        {
+            return VecFromAngleRad(angleDeg * DEG2RAD);
+        }
         //Projection
         public static float ProjectionTime(Vector2 v, Vector2 onto) { return (v.X * onto.X + v.Y * onto.Y) / onto.LengthSquared(); }
         public static Vector2 ProjectionPoint(Vector2 point, Vector2 v, float t) { return point + v * t; }
@@ -66,6 +74,12 @@ namespace ShapeEngineCore.Globals
         //     else return b;
         // }
 
+        public static Vector2 LerpDirection(Vector2 a, Vector2 b, float t)
+        {
+            float angleA = Vec.AngleRad(a);
+            float angle = Utils.GetShortestAngleRad(angleA, Vec.AngleRad(b));
+            return Vec.Rotate(a, Utils.LerpFloat(0, angle, t));
+        }
         public static Vector2 Lerp(Vector2 v1, Vector2 v2, float t) { return Vector2.Lerp(v1, v2, t); } //RayMath.Vector2Lerp(v1, v2, t);
         public static Vector2 MoveTowards(Vector2 v, Vector2 target, float maxDistance) { return Vector2MoveTowards(v, target, maxDistance); }
 
