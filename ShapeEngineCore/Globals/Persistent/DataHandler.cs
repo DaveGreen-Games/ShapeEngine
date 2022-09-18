@@ -1,6 +1,7 @@
 ﻿using System.Text.Json.Nodes;
 using System.Text.Json;
 using Newtonsoft.Json;
+using System.Xml.Linq;
 //using ShapeEngineCore.Demo.DataObjects;
 
 namespace ShapeEngineCore.Globals.Persistent
@@ -66,6 +67,23 @@ namespace ShapeEngineCore.Globals.Persistent
                 if (value != null) lines.Add(line.Key, value);
             }
             return lines;
+        }
+        public string GetRandomElementName(string sheet)
+        {
+            if (!Contains(sheet)) return "";
+            var s = data[sheet];
+            if (s.Count <= 0) return "";
+            int index = RNG.randI(0, s.Count);
+            return s.Keys.ToList()[index];
+        }
+        public T? GetRandom<T>(string sheet) where T : DataObject
+        {
+            if (!Contains(sheet)) return default;
+            var s = data[sheet];
+            if (s.Count <= 0) return default;
+            int index = RNG.randI(0, s.Count);
+            string id = s.Keys.ToList()[index];
+            return s[id] as T;
         }
         public T? Get<T>(string sheet, string name) where T : DataObject
         {
@@ -230,7 +248,34 @@ namespace ShapeEngineCore.Globals.Persistent
             else return null; 
         }
 
+        /// <summary>
+        /// Get an element (DataObject) from the specified sheet in the specified container.
+        /// </summary>
+        public static T? GetCDBElement<T>(string sheetName, string elementName, string containerName = "default") where T : DataObject
+        {
+            if (!ContainsDataContainer(containerName)) return default;
+            DataContainerCDB container = (DataContainerCDB) dataContainers[containerName];
+            return container.Get<T>(sheetName, elementName);
+        }
+        /// <summary>
+        /// Get a random element (DataObject) from the specified sheet in the specified container.
+        /// </summary>
+        public static T? GetCDBRandomElement<T>(string sheetName, string containerName = "default") where T : DataObject
+        {
+            if (!ContainsDataContainer(containerName)) return default;
+            DataContainerCDB container = (DataContainerCDB)dataContainers[containerName];
+            return container.GetRandom<T>(sheetName);
+        }
 
+        /// <summary>
+        /// Get a random element name from the specified sheet in the specified container.
+        /// </summary>
+        public static string GetCDBRandomElementName(string sheetName, string containerName = "default")
+        {
+            if (!ContainsDataContainer(containerName)) return "";
+            DataContainerCDB container = (DataContainerCDB)dataContainers[containerName];
+            return container.GetRandomElementName(sheetName);
+        }
         /// <summary>
         /// Add a new data container. If name already exists the old container is overwritten with the new one.
         /// </summary>
