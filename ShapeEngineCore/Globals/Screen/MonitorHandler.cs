@@ -54,8 +54,8 @@
                 int w =  GetMonitorWidth(i);
                 int h =  GetMonitorHeight(i);
                 //Temporary Fix!!!
-                if (w > 2000) w = 1920;
-                if (h > 1250) h = 1080;
+                //if (w > 2000) w = 1920;
+                //if (h > 1250) h = 1080;
                 int rr = GetMonitorRefreshRate(i);
                 monitors.Add(new(name, w, h, rr));
             }

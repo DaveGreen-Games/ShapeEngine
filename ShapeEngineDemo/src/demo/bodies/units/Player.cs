@@ -580,8 +580,7 @@ namespace ShapeEngineDemo.Bodies
                 MovementDir = Vec.Rotate(MovementDir, curStunRotation * DEG2RAD * dt);
             }
             collider.Pos = collider.Pos + collider.Vel * dt;
-            angle = Vec.AngleDeg(MovementDir) * DEG2RAD;
-
+            angle = Vec.AngleRad(MovementDir);
             float sizeFactor = stats.GetStat("size").GetF();
             if (damageTimer.IsRunning()) sizeFactor += 0.15f;
             Color drawColor = PaletteHandler.C("player");
@@ -674,6 +673,7 @@ namespace ShapeEngineDemo.Bodies
             Vector2 topLeft = hpBar.GetTopLeft();
             Vector2 offset = hpBar.Transform(new Vector2(barSize.X / 2, 0));
 
+            UIHandler.DrawTextAligned(String.Format("Rad: {0} // Deg: {1}", angle, angle * RAD2DEG), new(1000, 200), 120, 1, WHITE, Alignement.CENTER);
 
             UIHandler.DrawTextAlignedPro("HP", topLeft + offset, hpBar.GetRotationDeg(), FontSize.LARGE, 2, PaletteHandler.C("enemy"), Alignement.BOTTOMCENTER);
             hpBar.Draw();

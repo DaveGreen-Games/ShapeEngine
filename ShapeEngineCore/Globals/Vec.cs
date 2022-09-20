@@ -104,13 +104,13 @@ namespace ShapeEngineCore.Globals
         }
         public static Vector2 SquareRoot(Vector2 v) { return Vector2.SquareRoot(v); }
         public static Vector2 Rotate(Vector2 v, float angle) { return Vector2Rotate(v, angle); } //radians
-        public static float AngleDeg(Vector2 v1, Vector2 v2) { return Vector2Angle(v1, v2); }
+        public static float AngleDeg(Vector2 v1, Vector2 v2) { return AngleRad(v1, v2) * RAD2DEG; }
         public static float AngleDeg(Vector2 v)
         {
-            return AngleDeg(Zero(), v);
+            return AngleRad(v) * RAD2DEG;
         }
-        public static float AngleRad(Vector2 v) { return AngleDeg(v) * DEG2RAD; }
-        public static float AngleRad(Vector2 v1, Vector2 v2) { return AngleDeg(v1, v2) * DEG2RAD; }
+        public static float AngleRad(Vector2 v) { return AngleRad(Zero(), v); }
+        public static float AngleRad(Vector2 v1, Vector2 v2) { return Vector2Angle(v1, v2); }
         public static float Distance(Vector2 v1, Vector2 v2) { return Vector2.Distance(v1, v2); }// RayMath.Vector2Distance(v1, v2); }
         public static float Dot(Vector2 v1, Vector2 v2) { return Vector2.Dot(v1, v2); }// RayMath.Vector2DotProduct(v1, v2); }
         public static float Length(Vector2 v) { return v.Length(); } //RayMath.Vector2Length(v);

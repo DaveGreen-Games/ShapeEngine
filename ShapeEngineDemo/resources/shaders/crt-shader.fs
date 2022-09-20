@@ -16,7 +16,7 @@ out vec4 finalColor;
 // NOTE: Add here your custom variables
 const vec2 curvatureAmount = vec2(6.0, 4.0);//smaller values = bigger curvature
 const float renderWidth = 1920;
-const float renderHeight = 1080;
+const float renderHeight = 1200;
 const vec4 cornerColor = vec4(0.0, 0.0, 0.0, 1.0);
 const float vignetteOpacity = 0.2;
 //const float PI = 3.14159265359;
