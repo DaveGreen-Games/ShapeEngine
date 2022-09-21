@@ -76,7 +76,10 @@ namespace ShapeEngineDemo
             ShaderHandler.SetScreenShaderValueVec("outline", "textureSize", new float[] { ScreenHandler.GameWidth(), ScreenHandler.GameHeight() }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
             ShaderHandler.SetScreenShaderValueFloat("outline", "outlineSize", 2.0f);
             ShaderHandler.SetScreenShaderValueVec("outline", "outlineColor", new float[] { 1.0f, 0.0f, 0.0f, 1.0f }, ShaderUniformDataType.SHADER_UNIFORM_VEC4);
+            ShaderHandler.SetScreenShaderValueVec("chrom", "amount", new float[] { 1.2f, 1.2f }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
             ShaderHandler.SetScreenShaderValueVec("bloom", "size", new float[] { ScreenHandler.GameWidth(), ScreenHandler.GameHeight() }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
+            ShaderHandler.SetScreenShaderValueFloat("bloom", "samples", 5f);
+            ShaderHandler.SetScreenShaderValueFloat("bloom", "quality", 2.5f);
             ShaderHandler.SetScreenShaderValueFloat("pixelizer", "renderWidth", ScreenHandler.GameWidth());
             ShaderHandler.SetScreenShaderValueFloat("pixelizer", "renderHeight", ScreenHandler.GameHeight());
             ShaderHandler.SetScreenShaderValueFloat("pixelizer", "pixelWidth", 1.0f);
@@ -84,7 +87,8 @@ namespace ShapeEngineDemo
             ShaderHandler.SetScreenShaderValueFloat("blur", "renderWidth", ScreenHandler.GameWidth());
             ShaderHandler.SetScreenShaderValueFloat("blur", "renderHeight", ScreenHandler.GameHeight());
             ShaderHandler.SetScreenShaderValueFloat("blur", "scale", 1.25f);
-
+            ShaderHandler.SetScreenShaderValueFloat("crt", "renderWidth", ScreenHandler.GameWidth());
+            ShaderHandler.SetScreenShaderValueFloat("crt", "renderHeight", ScreenHandler.GameHeight());
 
             //FONTS
             UIHandler.AddFont("light", "teko-light", 200);

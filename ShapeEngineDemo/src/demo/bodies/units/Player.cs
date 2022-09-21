@@ -673,7 +673,7 @@ namespace ShapeEngineDemo.Bodies
             Vector2 topLeft = hpBar.GetTopLeft();
             Vector2 offset = hpBar.Transform(new Vector2(barSize.X / 2, 0));
 
-            UIHandler.DrawTextAligned(String.Format("Rad: {0} // Deg: {1}", angle, angle * RAD2DEG), new(1000, 200), 120, 1, WHITE, Alignement.CENTER);
+            //UIHandler.DrawTextAligned(String.Format("Rad: {0} // Deg: {1}", angle, angle * RAD2DEG), new(1000, 200), 120, 1, WHITE, Alignement.CENTER);
 
             UIHandler.DrawTextAlignedPro("HP", topLeft + offset, hpBar.GetRotationDeg(), FontSize.LARGE, 2, PaletteHandler.C("enemy"), Alignement.BOTTOMCENTER);
             hpBar.Draw();
