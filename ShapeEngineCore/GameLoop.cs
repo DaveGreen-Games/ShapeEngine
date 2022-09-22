@@ -372,6 +372,7 @@ namespace ShapeEngineCore
             TimerHandler.Close();
             StepHandler.Close();
             CursorHandler.Close();
+            ResourceManager.Close();
             ScreenHandler.Close();
 
             return fullscreen;

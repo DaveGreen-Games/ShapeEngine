@@ -10,7 +10,7 @@ namespace ShapeEngineCore
         public static readonly string CURRENT_DIRECTORY = Environment.CurrentDirectory;
 
         //-----------DEBUG--------------
-        public static bool DEBUGMODE = true;
+        public static bool DEBUGMODE = false;
         public static bool DEBUG_DrawColliders = false;
         public static bool DEBUG_DrawHelpers = false;
         public static Raylib_CsLo.Color DEBUG_ColliderColor = new(0, 25, 200, 100);
@@ -21,6 +21,10 @@ namespace ShapeEngineCore
         public static void Start(GameLoop gameloop, ResourceInitInfo resourceInitInfo, ScreenInitInfo screenInitInfo, params string[] launchParams)
         {
             GAMELOOP = gameloop;
+
+#if DEBUG
+            DEBUGMODE = true;
+#endif
 
             if (!DEBUGMODE)
             {

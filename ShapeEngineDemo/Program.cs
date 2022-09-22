@@ -17,7 +17,7 @@ namespace ShapeEngineDemo
     {
         public static void Main(params string[] launchParams)
         {
-            //Uncomment to generate a new resources.shp file
+            //Uncomment to generate a new resources.txt file
             //ShapeEngineCore.Globals.Persistent.ResourceManager.Generate("resources", "", "resources.txt");
             
             

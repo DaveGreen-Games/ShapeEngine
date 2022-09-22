@@ -20,11 +20,11 @@ namespace ShapeEngineCore.Globals.Persistent
         private readonly Dictionary<string, Dictionary<string, DataObject>> data = new();
 
 
-        public DataContainerCDB(string dataFileName, DataResolver resolver, params string[] sheetNames)
+        public DataContainerCDB(string dataFilePath, DataResolver resolver, params string[] sheetNames)
         {
-            if (dataFileName == "" || sheetNames.Length <= 0) return;
+            if (dataFilePath == "" || sheetNames.Length <= 0) return;
 
-            var dataString = ResourceManager.LoadJsonData(dataFileName);
+            var dataString = ResourceManager.LoadJsonData(dataFilePath);
             var dataNode = JsonNode.Parse(dataString);
             if (dataNode == null) return;
 
