@@ -1,5 +1,6 @@
 ﻿using Raylib_CsLo;
 using ShapeEngineCore.Globals.Screen;
+using System.Numerics;
 
 namespace ShapeEngineCore.Globals.Shaders
 {
@@ -207,6 +208,41 @@ namespace ShapeEngineCore.Globals.Shaders
             int valueLocation = GetShaderLocation(shader, propertyName);
             SetShaderValue(shader, valueLocation, values, dataType);
         }
+        public static void SetScreenShaderValueVec(string shaderName, string propertyName, float v1, float v2)
+        {
+            if (!screenShaders.ContainsKey(shaderName)) return;
+            Shader shader = screenShaders[shaderName].GetShader();
+            int valueLocation = GetShaderLocation(shader, propertyName);
+            SetShaderValue(shader, valueLocation, new float[] { v1, v2 }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
+        }
+        public static void SetScreenShaderValueVec(string shaderName, string propertyName, float v1, float v2, float v3)
+        {
+            if (!screenShaders.ContainsKey(shaderName)) return;
+            Shader shader = screenShaders[shaderName].GetShader();
+            int valueLocation = GetShaderLocation(shader, propertyName);
+            SetShaderValue(shader, valueLocation, new float[] { v1, v2, v3 }, ShaderUniformDataType.SHADER_UNIFORM_VEC3);
+        }
+        public static void SetScreenShaderValueVec(string shaderName, string propertyName, float v1, float v2, float v3, float v4)
+        {
+            if (!screenShaders.ContainsKey(shaderName)) return;
+            Shader shader = screenShaders[shaderName].GetShader();
+            int valueLocation = GetShaderLocation(shader, propertyName);
+            SetShaderValue(shader, valueLocation, new float[] { v1, v2, v3, v4 }, ShaderUniformDataType.SHADER_UNIFORM_VEC4);
+        }
+        public static void SetScreenShaderValueVec(string shaderName, string propertyName, Vector2 vec)
+        {
+            if (!screenShaders.ContainsKey(shaderName)) return;
+            Shader shader = screenShaders[shaderName].GetShader();
+            int valueLocation = GetShaderLocation(shader, propertyName);
+            SetShaderValue(shader, valueLocation, new float[] { vec.X, vec.Y}, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
+        }
+        public static void SetScreenShaderValueVec(string shaderName, string propertyName, Color color)
+        {
+            if (!screenShaders.ContainsKey(shaderName)) return;
+            Shader shader = screenShaders[shaderName].GetShader();
+            int valueLocation = GetShaderLocation(shader, propertyName);
+            SetShaderValue(shader, valueLocation, new float[] {color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f}, ShaderUniformDataType.SHADER_UNIFORM_VEC4);
+        }
         public static void SetShaderValueFloat(string shaderName, string propertyName, float value)
         {
             if (!shaders.ContainsKey(shaderName)) return;
@@ -220,6 +256,42 @@ namespace ShapeEngineCore.Globals.Shaders
             Shader shader = shaders[shaderName];
             int valueLocation = GetShaderLocation(shader, propertyName);
             SetShaderValue(shader, valueLocation, values, dataType);
+        }
+
+        public static void SetShaderValueVec(string shaderName, string propertyName, float v1, float v2)
+        {
+            if (!shaders.ContainsKey(shaderName)) return;
+            Shader shader = shaders[shaderName];
+            int valueLocation = GetShaderLocation(shader, propertyName);
+            SetShaderValue(shader, valueLocation, new float[] { v1, v2 }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
+        }
+        public static void SetShaderValueVec(string shaderName, string propertyName, float v1, float v2, float v3)
+        {
+            if (!shaders.ContainsKey(shaderName)) return;
+            Shader shader = shaders[shaderName];
+            int valueLocation = GetShaderLocation(shader, propertyName);
+            SetShaderValue(shader, valueLocation, new float[] { v1, v2, v3 }, ShaderUniformDataType.SHADER_UNIFORM_VEC3);
+        }
+        public static void SetShaderValueVec(string shaderName, string propertyName, float v1, float v2, float v3, float v4)
+        {
+            if (!shaders.ContainsKey(shaderName)) return;
+            Shader shader = shaders[shaderName];
+            int valueLocation = GetShaderLocation(shader, propertyName);
+            SetShaderValue(shader, valueLocation, new float[] { v1, v2, v3, v4 }, ShaderUniformDataType.SHADER_UNIFORM_VEC4);
+        }
+        public static void SetShaderValueVec(string shaderName, string propertyName, Vector2 vec)
+        {
+            if (!shaders.ContainsKey(shaderName)) return;
+            Shader shader = shaders[shaderName];
+            int valueLocation = GetShaderLocation(shader, propertyName);
+            SetShaderValue(shader, valueLocation, new float[] { vec.X, vec.Y }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
+        }
+        public static void SetShaderValueVec(string shaderName, string propertyName, Color color)
+        {
+            if (!shaders.ContainsKey(shaderName)) return;
+            Shader shader = shaders[shaderName];
+            int valueLocation = GetShaderLocation(shader, propertyName);
+            SetShaderValue(shader, valueLocation, new float[] { color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f }, ShaderUniformDataType.SHADER_UNIFORM_VEC4);
         }
     }
 }
