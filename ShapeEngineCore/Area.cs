@@ -457,9 +457,9 @@ namespace ShapeEngineCore
         {
             if (DEBUG_DRAWHELPERS)
             {
-                DrawRectangleRec(this.inner, new(200, 200, 0, 150));
-                DrawRectangleRec(this.outer, new(0, 200, 200, 150));
-                colHandler.DebugDrawGrid(GOLD, new(0, 150, 0, 100));
+                DrawRectangleRec(this.inner, DEBUG_AreaInnerColor);
+                DrawRectangleRec(this.outer, DEBUG_AreaOuterColor);
+                colHandler.DebugDrawGrid(DEBUG_CollisionHandlerBorderColor, DEBUG_CollisionHandlerFillColor);
             }
             bool playfieldDrawn = false;
             for (int i = 0; i < sortedLayers.Count; i++)

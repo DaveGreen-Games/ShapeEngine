@@ -51,7 +51,10 @@ namespace ShapeEngineCore
         public static Raylib_CsLo.Color DEBUG_ColliderColor = new(0, 25, 200, 100);
         public static Raylib_CsLo.Color DEBUG_ColliderDisabledColor = new(200, 25, 0, 100);
         public static Raylib_CsLo.Color DEBUG_HelperColor = new(0, 200, 25, 100);
-
+        public static Raylib_CsLo.Color DEBUG_AreaInnerColor = new(200, 200, 0, 150);
+        public static Raylib_CsLo.Color DEBUG_AreaOuterColor = new(0, 200, 200, 150);
+        public static Raylib_CsLo.Color DEBUG_CollisionHandlerBorderColor = GOLD;
+        public static Raylib_CsLo.Color DEBUG_CollisionHandlerFillColor = new(0, 150, 0, 100);
 
         public static void Start(GameLoop gameloop, ResourceInitInfo resourceInitInfo, ScreenInitInfo screenInitInfo, params string[] launchParams)
         {
