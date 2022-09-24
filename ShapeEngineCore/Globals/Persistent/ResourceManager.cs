@@ -89,7 +89,7 @@ namespace ShapeEngineCore.Globals.Persistent
         }
         public static Image LoadImage(string filePath, bool autoUnload = false)
         {
-            if (DEBUGMODE)
+            if (EDITORMODE)
             {
                 Image i = Raylib.LoadImage(filePath);
                 if (autoUnload) imagesToUnload.Add(i);
@@ -111,7 +111,7 @@ namespace ShapeEngineCore.Globals.Persistent
         }
         public static Font LoadFont(string filePath, int fontSize = 100, bool autoUnload = false)
         {
-            if (DEBUGMODE)
+            if (EDITORMODE)
             {
                 unsafe
                 {
@@ -136,7 +136,7 @@ namespace ShapeEngineCore.Globals.Persistent
         }
         public static Wave LoadWave(string filePath, bool autoUnload = false)
         {
-            if (DEBUGMODE)
+            if (EDITORMODE)
             {
                 Wave w = Raylib.LoadWave(filePath);
                 if (autoUnload) wavesToUnload.Add(w);
@@ -158,7 +158,7 @@ namespace ShapeEngineCore.Globals.Persistent
         }
         public static Sound LoadSound(string filePath, bool autoUnload = false)
         {
-            if (DEBUGMODE)
+            if (EDITORMODE)
             {
                 Sound s = Raylib.LoadSound(filePath);
                 if (autoUnload) soundsToUnload.Add(s);
@@ -173,7 +173,7 @@ namespace ShapeEngineCore.Globals.Persistent
         }
         public static Music LoadMusic(string filePath, bool autoUnload = false)
         {
-            if (DEBUGMODE)
+            if (EDITORMODE)
             {
                 Music m = Raylib.LoadMusicStream(filePath);
                 if (autoUnload) musicToUnload.Add(m);
@@ -195,7 +195,7 @@ namespace ShapeEngineCore.Globals.Persistent
         }
         public static Shader LoadFragmentShader(string filePath, bool autoUnload = false)
         {
-            if (DEBUGMODE)
+            if (EDITORMODE)
             {
                 Shader fs = Raylib.LoadShader(null, filePath);
                 if (autoUnload) shadersToUnload.Add(fs);
@@ -210,7 +210,7 @@ namespace ShapeEngineCore.Globals.Persistent
         }
         public static Shader LoadVertexShader(string filePath, bool autoUnload = false)
         {
-            if (DEBUGMODE)
+            if (EDITORMODE)
             {
                 Shader vs = Raylib.LoadShader(filePath, "");
                 if(autoUnload) shadersToUnload.Add(vs);
@@ -225,7 +225,7 @@ namespace ShapeEngineCore.Globals.Persistent
         }
         public static string LoadJsonData(string filePath)
         {
-            if (DEBUGMODE)
+            if (EDITORMODE)
             {
                 return File.ReadAllText(filePath);
             }
@@ -239,7 +239,7 @@ namespace ShapeEngineCore.Globals.Persistent
 
         private static Dictionary<string, ResourceInfo> LoadResources(string path, string fileName = "resources.txt")
         {
-            if (DEBUGMODE) return new Dictionary<string, ResourceInfo>() { };
+            if (EDITORMODE) return new Dictionary<string, ResourceInfo>() { };
 
             Dictionary<string, ResourceInfo> result = new();
             var lines = File.ReadAllLines(path + fileName);

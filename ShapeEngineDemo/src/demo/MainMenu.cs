@@ -88,7 +88,7 @@ namespace ShapeEngineDemo
             DrawRectangleRec(uiArea, PaletteHandler.C("bg1"));
             UIHandler.DrawTextAligned("MAIN MENU", new(uiArea.x + uiArea.width / 2, uiArea.y + uiArea.height * 0.21f), FontSize.HEADER_XL, 15, PaletteHandler.C("bg2"), "bold");
             UIHandler.DrawTextAligned("MAIN MENU", new(uiArea.x + uiArea.width / 2, uiArea.y + uiArea.height * 0.2f), FontSize.HEADER_XL, 15, PaletteHandler.C("header"), "bold");
-
+            UIHandler.DrawTextAligned(ShapeEngine.EDITORMODE == true ? "EDITOR" : "STANDALONE", new Vector2(200, 200), 100, 5, WHITE, Alignement.LEFTCENTER);
             level1Button.Draw();
             optionsButton.Draw();
             quitButton.Draw();

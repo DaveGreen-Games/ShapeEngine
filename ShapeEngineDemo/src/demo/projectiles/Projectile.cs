@@ -137,7 +137,7 @@ namespace ShapeEngineDemo.Projectiles
         {
             DrawCircle((int)collider.Pos.X, (int)collider.Pos.Y, collider.Radius, color);
 
-            if (DEBUG_DrawColliders)
+            if (DEBUG_DRAWCOLLIDERS)
             {
                 if (collider.IsEnabled()) collider.DebugDrawShape(DEBUG_ColliderColor);
                 else collider.DebugDrawShape(DEBUG_ColliderDisabledColor);

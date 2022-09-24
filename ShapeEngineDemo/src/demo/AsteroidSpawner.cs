@@ -59,7 +59,7 @@ namespace ShapeEngineDemo
         }
         public void Draw()
         {
-            if(DEBUG_DrawHelpers)spawnArea.Debug_DrawSegments();
+            if(DEBUG_DRAWHELPERS)spawnArea.Debug_DrawSegments();
         }
         public void SpawnWave()
         {

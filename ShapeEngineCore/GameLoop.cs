@@ -341,7 +341,7 @@ namespace ShapeEngineCore
             QUIT = false;
             RESTART = false;
 
-            //Load savegames here to get stored values for fullscreen, monitor etc.
+            
 
             //needs to be called first!!!
             bool fs = launchParams.Contains("fullscreen") || screenInitInfo.fullscreen;

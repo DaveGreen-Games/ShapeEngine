@@ -455,7 +455,7 @@ namespace ShapeEngineCore
         }
         public virtual void Draw()
         {
-            if (DEBUG_DrawHelpers)
+            if (DEBUG_DRAWHELPERS)
             {
                 DrawRectangleRec(this.inner, new(200, 200, 0, 150));
                 DrawRectangleRec(this.outer, new(0, 200, 200, 150));

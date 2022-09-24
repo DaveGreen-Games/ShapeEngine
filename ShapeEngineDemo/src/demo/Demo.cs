@@ -185,10 +185,10 @@ namespace ShapeEngineDemo
         {
             if (InputHandler.IsReleased(0, "Fullscreen")) { ScreenHandler.ToggleFullscreen(); }
 
-            if (DEBUGMODE)
+            if (EDITORMODE)
             {
-                if (InputHandler.IsReleased(0, "Toggle Draw Helpers")) DEBUG_DrawHelpers = !DEBUG_DrawHelpers;
-                if (InputHandler.IsReleased(0, "Toggle Draw Colliders")) DEBUG_DrawColliders = !DEBUG_DrawColliders;
+                if (InputHandler.IsReleased(0, "Toggle Draw Helpers")) DEBUG_DRAWHELPERS = !DEBUG_DRAWHELPERS;
+                if (InputHandler.IsReleased(0, "Toggle Draw Colliders")) DEBUG_DRAWCOLLIDERS = !DEBUG_DRAWCOLLIDERS;
                 if (InputHandler.IsReleased(0, "Cycle Zoom"))
                 {
                     ScreenHandler.Cam.ZoomBy(0.25f);
