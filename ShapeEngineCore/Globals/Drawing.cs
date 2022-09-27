@@ -168,20 +168,17 @@ namespace ShapeEngineCore.Globals
             DrawLineEx(topRight, bottomRight, lineThickness, color);
         }
 
-        public static void DrawRect(Vector2 center, Vector2 size, Vector2 origin, float rotDeg, Color color)
+        public static void DrawRectangle(Vector2 center, Vector2 size, Vector2 origin, float rotDeg, Color color)
         {
             Rectangle rect = new(center.X, center.Y, size.X, size.Y);
             Vector2 pivot = new(size.X * origin.X, size.Y * origin.Y);
             DrawRectanglePro(rect, pivot, rotDeg, color);
-
-            //DrawRectangle((int)(center.X - size.X / 2), (int)(center.Y - size.Y / 2), (int)size.X, (int)size.Y, new(255, 0, 0, 100));
-            //DrawCircleV(center, 10, YELLOW);
         }
-        public static void DrawRect(Rectangle rect, Vector2 origin, float rotDeg, Color color)
+        public static void DrawRectangle(Rectangle rect, Vector2 origin, float rotDeg, Color color)
         {
             Vector2 center = new(rect.x + rect.width / 2, rect.y + rect.height / 2);
             Vector2 size = new(rect.width, rect.height);
-            DrawRect(center, size, origin, rotDeg, color);
+            DrawRectangle(center, size, origin, rotDeg, color);
         }
 
 

@@ -51,7 +51,7 @@ namespace ShapeEngineCore.Globals.UI
         {
             //DrawRectanglePro(rect, new(0f, 0f), angleDeg, bgColor);
             //DrawRectanglePro(new(rect.X + rect.width / 2, rect.Y + rect.height / 2, rect.width, rect.height), new Vector2(rect.width, rect.height) / 2, angleDeg, bgColor);
-            Drawing.DrawRect(GetCenter(), GetSize(), new(0f, 0f), angleDeg, bgColor);
+            Drawing.DrawRectangle(GetCenter(), GetSize(), new(0f, 0f), angleDeg, bgColor);
             float fontSize = Vec.Max(GetSize()) * 2.5f;
             UIHandler.DrawTextAlignedPro(text, GetCenter(), angleDeg, UIHandler.CalculateDynamicFontSize(text, rect.width * 0.9f), 1, textColor, Alignement.CENTER);
         }

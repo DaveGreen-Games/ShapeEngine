@@ -63,7 +63,7 @@ namespace ShapeEngineCore
                 //Rectangle r = new(rect.X + rect.width / 2, rect.Y + rect.height / 2 , innerSize.X, innerSize.Y);
                 //DrawRectanglePro(r, innerSize / 2, angleDeg, bgColor);
 
-                Drawing.DrawRect(center, innerSize, new(0.5f, 0.5f), angleDeg, bgColor);
+                Drawing.DrawRectangle(center, innerSize, new(0.5f, 0.5f), angleDeg, bgColor);
             }
 
             float baseFontSize = size.X;

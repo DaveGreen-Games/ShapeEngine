@@ -66,15 +66,18 @@ namespace ShapeEngineCore.Globals
         }
     }
 
-    public class RandomRectangleArea
-    {
-
-    }
+    //public class RandomRectangleArea
+    //{
+    //
+    //}
 
     public static class RNG
     {
         private static Random rand = new Random();
 
+        public static bool chance(float value) { return randF() < value; }
+        public static float randAngleRad() { return randF(0f, 2f * PI); }
+        public static float randAngleDeg() { return randF(0f, 359f); }
 
         public static float randDirF() { return randF() < 0.5f ? -1.0f : 1.0f; }
         public static int randDirI() { return randF() < 0.5f ? -1 : 1; }
