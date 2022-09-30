@@ -24,13 +24,13 @@ namespace ShapeEngineCore.Globals.Persistent
             string data_string = JsonSerializer.Serialize(data);//, new JsonSerializerOptions( new JsonSerializerDefaults() ) );
             if (data_string.Length <= 0) return false;
 
-            File.WriteAllText(path + fileName, data_string);
+            File.WriteAllText(path + "\\" + fileName, data_string);
             return true;
         }
 
         public static T? Load<T>(string path, string fileName)
         {
-            path = path + fileName;
+            path = path + "\\" + fileName;
             if (!File.Exists(path)) return default;
 
             var data_string = File.ReadAllText(path);
