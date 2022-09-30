@@ -55,7 +55,16 @@ namespace ShapeEngineCore
             this.filename = filename;
         }
     }
-    
+    public struct GameInitInfo
+    {
+        public string gameName = "";
+        public string studioName = "";
+        public GameInitInfo(string gameName, string studioName)
+        {
+            this.gameName = gameName;
+            this.studioName = studioName;
+        }
+    }
     //public struct DataInitInfo
     //{
     //    public string resourceFolderPath = "";
@@ -335,7 +344,7 @@ namespace ShapeEngineCore
         }
 
 
-        public void Initialize(ResourceInitInfo resourceInitInfo, ScreenInitInfo screenInitInfo, params string[] launchParams)
+        public void Initialize(GameInitInfo gameInitInfo, ResourceInitInfo resourceInitInfo, ScreenInitInfo screenInitInfo, params string[] launchParams)
         {
             LAUNCH_PARAMS = launchParams;
             QUIT = false;
@@ -346,7 +355,7 @@ namespace ShapeEngineCore
             //needs to be called first!!!
             bool fs = launchParams.Contains("fullscreen") || screenInitInfo.fullscreen;
             ScreenHandler.Initialize(screenInitInfo.devWidth, screenInitInfo.devHeight, screenInitInfo.gameSizeFactor, screenInitInfo.uiSizeFactor, screenInitInfo.windowName, screenInitInfo.fps, screenInitInfo.vsync, fs, screenInitInfo.monitor, screenInitInfo.pixelSmoothing);
-
+            SavegameHandler.Initialize(gameInitInfo.studioName, gameInitInfo.gameName);
             ResourceManager.Initialize(resourceInitInfo.path, resourceInitInfo.filename);
             PaletteHandler.Initialize();
             UIHandler.Initialize();

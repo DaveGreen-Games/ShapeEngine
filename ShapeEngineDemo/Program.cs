@@ -24,7 +24,8 @@ namespace ShapeEngineDemo
             //START
             ScreenInitInfo screenInitInfo = new ScreenInitInfo(1920, 1080, 0.25f, 2.0f, "Raylib Template", 60, true, false, 0, true);
             ResourceInitInfo resourceInitInfo = new("", "resources.txt");
-            ShapeEngine.Start(new Demo(), resourceInitInfo, screenInitInfo);
+            GameInitInfo gameInitInfo = new("solobytegames", "shape-engine-demo");
+            ShapeEngine.Start(new Demo(), gameInitInfo, resourceInitInfo, screenInitInfo);
         }
     }
 }

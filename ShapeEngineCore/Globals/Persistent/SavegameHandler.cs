@@ -6,9 +6,15 @@ namespace ShapeEngineCore.Globals.Persistent
     public static class SavegameHandler
     {
 
-        public static string MAIN_PATH = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "/solobytegames/template-raylib/";
-        public static string SAVEGAME_PATH = MAIN_PATH + "savegames/";
+        public static string APPLICATION_DATA_PATH = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        public static string MAIN_PATH = "";
+        public static string SAVEGAME_PATH = "";
 
+        public static void Initialize(string studioName, string gameName)
+        {
+            MAIN_PATH = APPLICATION_DATA_PATH + String.Format("\\{0}\\{1}", studioName, gameName);
+            SAVEGAME_PATH = MAIN_PATH + "\\savegames";
+        }
         public static bool Save<T>(T data, string path, string fileName)
         {
             if (data == null) return false;
