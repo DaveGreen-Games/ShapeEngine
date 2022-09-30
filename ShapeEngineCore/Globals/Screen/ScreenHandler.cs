@@ -282,7 +282,7 @@ namespace ShapeEngineCore.Globals.Screen
             UpdateMonitorRelevantInfo();
 
             if (monitor > 0) SetMonitor(monitor);
-            if (fullscreen) TimerHandler.Add(0.1f, () => ChangeFullscreen(true));
+            if (fullscreen) TimerHandler.Add(0.1f, () => SetFullscreen(true));
             CreateGameTexture();
             CreateUITexture();
 
@@ -557,7 +557,12 @@ namespace ShapeEngineCore.Globals.Screen
             if (!IsWindowState(ConfigFlags.FLAG_VSYNC_HINT)) return;
             ClearWindowState(ConfigFlags.FLAG_VSYNC_HINT);
         }
-        public static void ToggleVsync()
+        public static void SetVsny(bool enabled)
+        {
+            if (enabled) EnableVsync();
+            else DisableVsync();
+        }
+        public static bool ToggleVsync()
         {
             if (IsVsyncEnabled())
             {
@@ -567,6 +572,7 @@ namespace ShapeEngineCore.Globals.Screen
             {
                 EnableVsync();
             }
+            return IsVsyncEnabled();
         }
 
         public static void SetFPS(int newFps)
@@ -575,14 +581,15 @@ namespace ShapeEngineCore.Globals.Screen
             SetTargetFPS(FPS);
         }
 
-        public static void ChangeFullscreen(bool enabled)
+        public static bool IsFullscreen() { return IsWindowFullscreen(); }
+        public static void SetFullscreen(bool enabled)
         {
             if (enabled && IsWindowFullscreen()) { return; }
             if (!enabled && !IsWindowFullscreen()) { return; }
 
             ToggleFullscreen();
         }
-        public static void ToggleFullscreen()
+        public static bool ToggleFullscreen()
         {
             if (IsWindowFullscreen())
             {
@@ -598,6 +605,7 @@ namespace ShapeEngineCore.Globals.Screen
                 SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
             }
 
+            return IsFullscreen();
         }
 
 
