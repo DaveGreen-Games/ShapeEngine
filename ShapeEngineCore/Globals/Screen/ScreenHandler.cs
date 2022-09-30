@@ -557,7 +557,7 @@ namespace ShapeEngineCore.Globals.Screen
             if (!IsWindowState(ConfigFlags.FLAG_VSYNC_HINT)) return;
             ClearWindowState(ConfigFlags.FLAG_VSYNC_HINT);
         }
-        public static void SetVsny(bool enabled)
+        public static void SetVsync(bool enabled)
         {
             if (enabled) EnableVsync();
             else DisableVsync();
