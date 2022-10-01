@@ -9,6 +9,7 @@ namespace ShapeEngineCore.Globals.Shaders
     {
         private static Dictionary<string, ScreenShader> screenShaders = new Dictionary<string, ScreenShader>();
         private static Dictionary<string, Shader> shaders = new Dictionary<string, Shader>();
+        private static bool enabled = true;
         //private static ScreenBuffer[] screenBuffers = new ScreenBuffer[0];
         //{
         //    new(ScreenHandler.GameWidth(), ScreenHandler.GameHeight(), ScreenHandler.GameWidth(), ScreenHandler.GameHeight()),
@@ -46,6 +47,8 @@ namespace ShapeEngineCore.Globals.Shaders
 
         public static List<ScreenShader> GetCurActiveShaders()
         {
+            if (!enabled) return new() { };
+
             List<ScreenShader> shadersToApply = screenShaders.Values.ToList().FindAll(s => s.IsEnabled());
             shadersToApply.Sort(delegate (ScreenShader a, ScreenShader b)
             {
@@ -179,6 +182,24 @@ namespace ShapeEngineCore.Globals.Shaders
             return shaders[name];
         }
 
+        public static bool IsEnabled() { return enabled; }
+        public static bool Enable()
+        {
+            enabled = true;
+            return enabled;
+        }
+        public static bool Disable()
+        {
+            enabled = false;
+            return enabled;
+        }
+        public static void SetEnabled(bool value) { enabled = value; }
+        public static bool ToggleEnabled()
+        {
+            if (enabled) Disable();
+            else Enable();
+            return enabled;
+        }
         public static bool IsScreenShaderEnabled(string name)
         {
             if (!screenShaders.ContainsKey(name)) return false;

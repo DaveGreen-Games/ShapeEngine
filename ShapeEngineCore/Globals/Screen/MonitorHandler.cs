@@ -9,22 +9,24 @@
             public int width = -1;
             public int height = -1;
             public int refreshrate = -1;
-
+            public int index = -1;
             public MonitorInfo()
             {
-                available = false;
-                name = "";
-                width = -1;
-                height = -1;
-                refreshrate = -1;
+                this.available = false;
+                this.name = "";
+                this.width = -1;
+                this.height = -1;
+                this.refreshrate = -1;
+                this.index = -1;
             }
-            public MonitorInfo(string name, int w, int h, int refreshrate)
+            public MonitorInfo(string name, int w, int h, int refreshrate, int index)
             {
-                available = true;
+                this.available = true;
                 this.name = name;
-                width = w;
-                height = h;
+                this.width = w;
+                this.height = h;
                 this.refreshrate = refreshrate;
+                this.index = index;
             }
         }
 
@@ -38,7 +40,8 @@
         {
             GenerateInfo();
         }
-
+        public int MonitorCount() { return monitors.Count; }
+        public List<MonitorInfo> GetAllMonitorInfo() { return monitors; }
         public bool IsValidIndex(int index)
         {
             return index >= 0 && index < monitors.Count;
@@ -57,7 +60,7 @@
                 //if (w > 2000) w = 1920;
                 //if (h > 1250) h = 1080;
                 int rr = GetMonitorRefreshRate(i);
-                monitors.Add(new(name, w, h, rr));
+                monitors.Add(new(name, w, h, rr, i));
             }
         }
         public (bool changed, int oldIndex, int newIndex) HasIndexChanged()
@@ -92,10 +95,11 @@
             }
         }
 
-        public void SetCurIndex(int index)
+        public bool SetCurIndex(int index)
         {
-            if (!IsValidIndex(index)) return;
+            if (!IsValidIndex(index)) return false;
             curIndex = index;
+            return true;
         }
         public int GetCurIndex() { return curIndex; }
         public (int width, int height) GetSize(int monitorIndex)

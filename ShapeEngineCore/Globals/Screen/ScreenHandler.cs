@@ -2,6 +2,7 @@
 using System.Numerics;
 using ShapeEngineCore.Globals.Timing;
 using ShapeEngineCore.Globals.Shaders;
+using Microsoft.Toolkit.HighPerformance;
 
 namespace ShapeEngineCore.Globals.Screen
 {
@@ -440,10 +441,26 @@ namespace ShapeEngineCore.Globals.Screen
         //}
 
        // public static bool HasMonitorChanged() { return stretchMode ? monitorChanged : false; }
+        public static MonitorHandler? GetCurMonitorHandler() { return monitorHandler; }
         public static MonitorHandler.MonitorInfo GetCurMonitor()
         {
             if (monitorHandler == null) return new();
             return monitorHandler.Get();
+        }
+        public static int GetCurMonitorCount()
+        {
+            if (monitorHandler == null) return 1;
+            else return monitorHandler.MonitorCount();
+        }
+        public static List<MonitorHandler.MonitorInfo> GetMonitorInfos()
+        {
+            if (monitorHandler == null) return new() { };
+            else return monitorHandler.GetAllMonitorInfo();
+        }
+        public static bool IsMonitorIndexValid(int index)
+        {
+            if (monitorHandler == null) return false;
+            else return monitorHandler.IsValidIndex(index);
         }
         public static void NextMonitor()
         {
@@ -455,11 +472,16 @@ namespace ShapeEngineCore.Globals.Screen
 
             }
         }
-        public static void SetMonitor(int newMonitor)
+        public static bool SetMonitor(int newMonitor)
         {
-            if (monitorHandler == null) return;
+            if (monitorHandler == null) return false;
             var monitor = monitorHandler.SetMonitor(newMonitor);
-            if (monitor.available) MonitorChanged(true);
+            if (monitor.available)
+            { 
+                MonitorChanged(true);
+                return true;
+            }
+            return false;
         }
         private static void MonitorChanged(bool setWindowMonitor = false)
         {
