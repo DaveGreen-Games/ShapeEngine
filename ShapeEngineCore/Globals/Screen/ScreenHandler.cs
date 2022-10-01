@@ -121,6 +121,10 @@ namespace ShapeEngineCore.Globals.Screen
 
     public static class ScreenHandler
     {
+
+        
+
+
         public static float SCREEN_EFFECT_INTENSITY = 1.0f;
         public static float CAMERA_SHAKE_INTENSITY = 1.0f;
         public static float GAME_FACTOR { get; private set; }
@@ -136,10 +140,10 @@ namespace ShapeEngineCore.Globals.Screen
         private static (int width, int height) DEFAULT_WINDOW_SIZE = (0, 0);
         private static (int width, int height) CUR_WINDOW_SIZE = (0, 0);
         private static Vector2 MONITOR_OFFSET = new();
-        private static MonitorHandler? monitorHandler = null;
 
         private static Dictionary<string, ShaderFlash> shaderFlashes = new();
         //private static Dictionary<string, ScreenTexture> screenTextures = new Dictionary<string, ScreenTexture>();
+        private static MonitorHandler monitorHandler = new();
         private static ScreenTexture gameTexture;
         private static ScreenTexture uiTexture;
         private static Camera camera;
@@ -441,27 +445,27 @@ namespace ShapeEngineCore.Globals.Screen
         //}
 
        // public static bool HasMonitorChanged() { return stretchMode ? monitorChanged : false; }
-        public static MonitorHandler? GetCurMonitorHandler() { return monitorHandler; }
-        public static MonitorHandler.MonitorInfo GetCurMonitor()
-        {
-            if (monitorHandler == null) return new();
-            return monitorHandler.Get();
-        }
-        public static int GetCurMonitorCount()
-        {
-            if (monitorHandler == null) return 1;
-            else return monitorHandler.MonitorCount();
-        }
-        public static List<MonitorHandler.MonitorInfo> GetMonitorInfos()
-        {
-            if (monitorHandler == null) return new() { };
-            else return monitorHandler.GetAllMonitorInfo();
-        }
-        public static bool IsMonitorIndexValid(int index)
-        {
-            if (monitorHandler == null) return false;
-            else return monitorHandler.IsValidIndex(index);
-        }
+        public static MonitorHandler GetMonitorHandler() { return monitorHandler; }
+        //public static MonitorHandler.MonitorInfo GetCurMonitor()
+        //{
+        //    if (monitorHandler == null) return new();
+        //    return monitorHandler.Get();
+        //}
+        //public static int GetCurMonitorCount()
+        //{
+        //    if (monitorHandler == null) return 1;
+        //    else return monitorHandler.MonitorCount();
+        //}
+        //public static List<MonitorHandler.MonitorInfo> GetMonitorInfos()
+        //{
+        //    if (monitorHandler == null) return new() { };
+        //    else return monitorHandler.GetAllMonitorInfo();
+        //}
+        //public static bool IsMonitorIndexValid(int index)
+        //{
+        //    if (monitorHandler == null) return false;
+        //    else return monitorHandler.IsValidIndex(index);
+        //}
         public static void NextMonitor()
         {
             if (monitorHandler == null) return;
@@ -675,10 +679,10 @@ namespace ShapeEngineCore.Globals.Screen
 
         public static void DEBUG_DrawMonitorInfo(int x, int y, float fontSize)
         {
-            var monitorInfo = GetCurMonitor();
+            var monitorInfo = monitorHandler.Get(); // GetCurMonitor();
 
             DrawText(string.Format("Name:{0}", monitorInfo.name), x, y, fontSize, RED);
-            string text = string.Format("W:{0} - H:{1} - RR:{2}", monitorInfo.width, monitorInfo.height, monitorInfo.refreshrate);
+            string text = string.Format("W:{0} - H:{1} - RR:{2} - Slot: {3}", monitorInfo.width, monitorInfo.height, monitorInfo.refreshrate, monitorInfo.index);
             DrawText(text, x, y + fontSize * 1.1f, fontSize, RED);
         }
 

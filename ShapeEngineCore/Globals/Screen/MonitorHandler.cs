@@ -30,6 +30,8 @@
             }
         }
 
+        public delegate void MonitorChanged(MonitorInfo oldMonitor, MonitorInfo newMonitor);
+        public event MonitorChanged? OnMonitorChanged;
 
         private List<MonitorInfo> monitors = new();
         private int curIndex = 0;
@@ -70,6 +72,7 @@
             {
                 int oldIndex = curIndex;
                 curIndex = index;
+                OnMonitorChanged?.Invoke(monitors[oldIndex], monitors[index]);
                 return (true, oldIndex, curIndex);
             }
             return (false, -1, -1);
@@ -88,10 +91,28 @@
             }
             else //monitors removed
             {
-                string currentMonitorName = GetName();
+                //string currentMonitorName = GetName();
+                var oldMonitor = Get();
                 GenerateInfo();
-                if (currentMonitorName != GetName()) return Get();//the current monitor was removed
-                else return new();//current monitor still exists so it was not removed
+
+                var monitor = monitors.Find((MonitorInfo mi) => mi.name == oldMonitor.name);
+                if (!monitor.available) //current monitor was removed
+                {
+                    var newMonitor = Get();
+                    OnMonitorChanged?.Invoke(oldMonitor, newMonitor);
+                    return newMonitor;
+                }
+                else//current monitor is still in the list
+                {
+                    if(monitor.index != oldMonitor.index)//just update the index in case the monitors index has changed
+                    {
+                        curIndex = monitor.index;
+                    }
+                    return new();
+                }
+
+                //if (currentMonitorName != GetName()) return Get();//the current monitor was removed
+                //else return new();//current monitor still exists so it was not removed
             }
         }
 
