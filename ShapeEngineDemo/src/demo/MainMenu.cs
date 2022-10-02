@@ -23,7 +23,7 @@ namespace ShapeEngineDemo
             Vector2 center = new(ScreenHandler.UIWidth() / 2, ScreenHandler.UIHeight() / 2);
             Vector2 size = UIHandler.Scale(new Vector2 (350, 100));
             Vector2 offset = UIHandler.Scale(new Vector2(0, 115));
-            float fontSize = UIHandler.GetFontSizeScaled(FontSize.HUGE);
+            float fontSize = 180;
             level1Button = new("START", fontSize, "medium", center, size, true);
             optionsButton = new("OPTIONS", fontSize, "medium", center + offset, size, true);
             quitButton = new("QUIT", fontSize, "medium", center + offset * 2, size, true);
@@ -86,8 +86,8 @@ namespace ShapeEngineDemo
         {
             Rectangle uiArea = ScreenHandler.UIArea();
             DrawRectangleRec(uiArea, PaletteHandler.C("bg1"));
-            UIHandler.DrawTextAligned("MAIN MENU", new(uiArea.x + uiArea.width / 2, uiArea.y + uiArea.height * 0.21f), FontSize.HEADER_XL, 15, PaletteHandler.C("bg2"), "bold");
-            UIHandler.DrawTextAligned("MAIN MENU", new(uiArea.x + uiArea.width / 2, uiArea.y + uiArea.height * 0.2f), FontSize.HEADER_XL, 15, PaletteHandler.C("header"), "bold");
+            UIHandler.DrawTextAligned("MAIN MENU", new(uiArea.x + uiArea.width / 2, uiArea.y + uiArea.height * 0.21f), 500, 15, PaletteHandler.C("bg2"), "bold");
+            UIHandler.DrawTextAligned("MAIN MENU", new(uiArea.x + uiArea.width / 2, uiArea.y + uiArea.height * 0.2f),500, 15, PaletteHandler.C("header"), "bold");
             UIHandler.DrawTextAligned(ShapeEngine.EDITORMODE == true ? "EDITOR" : "STANDALONE", new Vector2(200, 200), 100, 5, WHITE, Alignement.LEFTCENTER);
             level1Button.Draw();
             optionsButton.Draw();

@@ -18,20 +18,20 @@ namespace ShapeEngineCore.Globals.UI
         LEFTCENTER = 7,
         CENTER = 8,
     }
-    public enum FontSize //good idea?
-    {
-        TINY = 30,
-        SMALL = 35,
-        MEDIUM = 40,
-        LARGE = 50,
-        XLARGE = 75,
-        HUGE = 90,
-        HEADER_S = 120,
-        HEADER_M = 160,
-        HEADER_L = 200,
-        HEADER_XL = 250,
-        HEADER_XXL = 350
-    }
+    //public enum FontSize //good idea?
+    //{
+    //    TINY = 30,
+    //    SMALL = 35,
+    //    MEDIUM = 40,
+    //    LARGE = 50,
+    //    XLARGE = 75,
+    //    HUGE = 90,
+    //    HEADER_S = 120,
+    //    HEADER_M = 160,
+    //    HEADER_L = 200,
+    //    HEADER_XL = 250,
+    //    HEADER_XXL = 350
+    //}
 
     public enum BarType
     {
@@ -48,21 +48,48 @@ namespace ShapeEngineCore.Globals.UI
         private static Dictionary<string, Font> fonts = new Dictionary<string, Font>();
         private static Font defaultFont = GetFontDefault();
 
+        private static Dictionary<string, float> fontSizes = new();
+
+
 
         public static void Initialize()
         {
             defaultFont = GetFontDefault();
         }
 
-        public static float GetFontSizeScaled(FontSize fontSize)
+        //public static float GetFontSizeScaled(FontSize fontSize)
+        //{
+        //    return GetFontSizeScaled((float)fontSize);
+        //}
+
+
+        public static void AddFontSize(string name, float size)
         {
-            return GetFontSizeScaled((float)fontSize);
+            if (fontSizes.ContainsKey(name)) fontSizes[name] = size;
+            else fontSizes.Add(name, size);
         }
-        public static float GetFontSizeScaled(int fontSize)
+        public static void RemoveFontSize(string name)
         {
-            return GetFontSizeScaled(fontSize);
+            fontSizes.Remove(name);
         }
-        public static float GetFontSizeScaled(float fontSize)
+
+        public static float GetFontSize(string name)
+        {
+            if (!fontSizes.ContainsKey(name)) return -1;
+            else return fontSizes[name];
+        }
+        public static float GetFontSizeScaled(string name)
+        {
+            if (!fontSizes.ContainsKey(name)) return -1;
+            else return fontSizes[name] * ScreenHandler.UI_FACTOR;
+        }
+
+
+        public static float ScaleFontSize(int fontSize)
+        {
+            return ScaleFontSize(fontSize);
+        }
+        public static float ScaleFontSize(float fontSize)
         {
             return fontSize * ScreenHandler.UI_FACTOR;
         }
@@ -192,14 +219,14 @@ namespace ShapeEngineCore.Globals.UI
         {
             DrawTextAlignedPro(text, pos, rot, fontSize, fontSpacing, color, GetFont(fontName), alignement);
         }
-        public static void DrawTextAlignedPro(string text, Vector2 pos, float rot, FontSize fontSize, float fontSpacing, Color color, Alignement alignement = Alignement.CENTER)
-        {
-            DrawTextAlignedPro(text, pos, rot, GetFontSizeScaled(fontSize), Scale(fontSpacing), color, GetFont(), alignement);
-        }
-        public static void DrawTextAlignedPro(string text, Vector2 pos, float rot, FontSize fontSize, float fontSpacing, Color color, string fontName, Alignement alignement = Alignement.CENTER)
-        {
-            DrawTextAlignedPro(text, pos, rot, GetFontSizeScaled(fontSize), Scale(fontSpacing), color, GetFont(fontName), alignement);
-        }
+        //public static void DrawTextAlignedPro(string text, Vector2 pos, float rot, FontSize fontSize, float fontSpacing, Color color, Alignement alignement = Alignement.CENTER)
+        //{
+        //    DrawTextAlignedPro(text, pos, rot, GetFontSizeScaled(fontSize), Scale(fontSpacing), color, GetFont(), alignement);
+        //}
+        //public static void DrawTextAlignedPro(string text, Vector2 pos, float rot, FontSize fontSize, float fontSpacing, Color color, string fontName, Alignement alignement = Alignement.CENTER)
+        //{
+        //    DrawTextAlignedPro(text, pos, rot, GetFontSizeScaled(fontSize), Scale(fontSpacing), color, GetFont(fontName), alignement);
+        //}
         public static void DrawTextAligned(string text, Vector2 pos, float fontSize, float fontSpacing, Color color, Font font, Alignement alignement = Alignement.CENTER)
         {
             Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
@@ -214,14 +241,14 @@ namespace ShapeEngineCore.Globals.UI
             DrawTextAligned(text, pos, fontSize, fontSpacing, color, GetFont(fontName), alignement);
         }
 
-        public static void DrawTextAligned(string text, Vector2 pos, FontSize fontSize, float fontSpacing, Color color, Alignement alignement = Alignement.CENTER)
-        {
-            DrawTextAligned(text, pos, GetFontSizeScaled(fontSize), Scale(fontSpacing), color, GetFont(), alignement);
-        }
-        public static void DrawTextAligned(string text, Vector2 pos, FontSize fontSize, float fontSpacing, Color color, string fontName, Alignement alignement = Alignement.CENTER)
-        {
-            DrawTextAligned(text, pos, GetFontSizeScaled(fontSize), Scale(fontSpacing), color, GetFont(fontName), alignement);
-        }
+        //public static void DrawTextAligned(string text, Vector2 pos, FontSize fontSize, float fontSpacing, Color color, Alignement alignement = Alignement.CENTER)
+        //{
+        //    DrawTextAligned(text, pos, GetFontSizeScaled(fontSize), Scale(fontSpacing), color, GetFont(), alignement);
+        //}
+        //public static void DrawTextAligned(string text, Vector2 pos, FontSize fontSize, float fontSpacing, Color color, string fontName, Alignement alignement = Alignement.CENTER)
+        //{
+        //    DrawTextAligned(text, pos, GetFontSizeScaled(fontSize), Scale(fontSpacing), color, GetFont(fontName), alignement);
+        //}
 
         public static void DrawBar(Vector2 topLeft, Vector2 size, float f, Color barColor, Color bgColor, BarType barType = BarType.LEFTRIGHT)
         {

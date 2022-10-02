@@ -46,7 +46,7 @@ namespace ShapeEngineDemo
         {
             DrawRectangleRec(ScreenHandler.UIArea(), PaletteHandler.C("bg1"));
             float f = 1.0f - (timer / maxTime);
-            float fontSize = Lerp(0, UIHandler.GetFontSizeScaled((float)FontSize.HEADER_L * 2f), f);
+            float fontSize = Lerp(0, 800, f);
             Vector2 fontPos = new
                 (
                     ScreenHandler.UIArea().x + ScreenHandler.UIArea().width / 2,

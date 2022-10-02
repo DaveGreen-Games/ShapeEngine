@@ -153,6 +153,38 @@ namespace ShapeEngineCore.Globals
     }
     public static class Utils
     {
+
+        public static Color AddColors(Color a, Color b)
+        {
+            return new
+                (
+                a.r + b.r,
+                a.g + b.g,
+                a.b + b.b,
+                a.a + b.a
+                );
+        }
+        public static Color SubtractColors(Color a, Color b)
+        {
+            return new
+                (
+                a.r - b.r,
+                a.g - b.g,
+                a.b - b.b,
+                a.a - b.a
+                );
+        }
+        public static Color MultiplyColors(Color a, Color b)
+        {
+            return new
+                (
+                a.r * b.r,
+                a.g * b.g,
+                a.b * b.b,
+                a.a * b.a
+                );
+        }
+
         public static Rectangle EnlargeRectangle(Rectangle source, Vector2 point)
         {
             Vector2 newPos = new

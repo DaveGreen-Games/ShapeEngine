@@ -155,7 +155,8 @@ namespace ShapeEngineDemo.Bodies
             Vector2 pos = info.pos + RNG.randVec2(size * 0.5f, size);
             string text = String.Format("{0}", MathF.Floor(info.recieved));
             //var textEffect = new TextEffectEaseColor(pos, text, 1.0f, WHITE, 0.25f, new(255, 255, 255, 0), EasingType.BOUNCE_OUT);
-            var textEffect = new TextEffectEaseSize(pos, text, 1.0f, WHITE, 1f, -(float)ShapeEngineCore.Globals.UI.FontSize.MEDIUM, EasingType.BACK_IN);
+            //var textEffect = new TextEffectEaseSize(pos, text, 1.0f, WHITE, 1f, -80, EasingType.BACK_IN);
+            var textEffect = new TextEffectEaseSize(pos, text, 1f, WHITE, 80, 0, 1, ShapeEngineCore.Globals.UI.Alignement.CENTER, 1f, EasingType.BACK_IN);
             //var textEffect = new TextEffectEasePos(pos, text, 1.0f, WHITE, 0.5f, new Vector2(0, 150), EasingType.CUBIC_OUT);
             GAMELOOP.AddGameObject(textEffect, true);
         }
