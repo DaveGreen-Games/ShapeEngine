@@ -59,7 +59,7 @@ namespace ShapeEngineDemo
             //Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
             //DrawTextEx(font, text, fontPos - fontDimensions * 0.5f, fontSize, fontSpacing, WHITE);
 
-            UIHandler.DrawTextAligned("SHAPE ENGINE", new Vector2(0.5f, 0.5f), fontSize, 10, PaletteHandler.C("header"), "bold", Alignement.CENTER);
+            UIHandler.DrawTextAligned("SHAPE ENGINE", new Vector2(0.5f, 0.5f), new Vector2(0.9f, 0.66f), 10, PaletteHandler.C("header"), "bold", Alignement.CENTER);
         }
     }
 

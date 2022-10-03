@@ -69,7 +69,7 @@ namespace ShapeEngineCore
 
             float baseFontSize = size.X;
             if (title != "")
-                UIHandler.DrawTextAlignedPro(title, GetCenter(false), angleDeg, UIHandler.CalculateDynamicFontSize(title, innerSize, 1), 1, textColor, Alignement.CENTER);
+                UIHandler.DrawTextAlignedPro(title, GetCenter(false), angleDeg, ToRelative(innerSize), 1, textColor, Alignement.CENTER);
 
             if (inputAction != "")
             {
@@ -77,7 +77,7 @@ namespace ShapeEngineCore
                 Vector2 sizeRelative = GetSize(false);
                 Vector2 offsetRelative = Vec.Rotate(new Vector2(sizeRelative.X * 0.5f + Vec.Min(sizeRelative) * 0.1f * 2, 0f), angleDeg * DEG2RAD);
                 string input = InputHandler.GetInputActionKeyName(0, inputAction, InputHandler.IsGamepad());
-                UIHandler.DrawTextAlignedPro(input, centerRelative + offsetRelative, angleDeg, baseFontSize * 0.5f, 1, textColor, Alignement.LEFTCENTER);
+                UIHandler.DrawTextAlignedPro(input, centerRelative + offsetRelative, angleDeg, ToRelative(innerSize), 1, textColor, Alignement.LEFTCENTER);
             }
 
             if (barColor.a > 0)

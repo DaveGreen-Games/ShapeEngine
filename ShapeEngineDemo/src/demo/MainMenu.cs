@@ -88,9 +88,9 @@ namespace ShapeEngineDemo
         {
             Rectangle uiArea = ScreenHandler.UIArea();
             DrawRectangleRec(uiArea, PaletteHandler.C("bg1"));
-            UIHandler.DrawTextAligned("MAIN MENU", new(0.5f, 0.21f), 500, 15, PaletteHandler.C("bg2"), "bold");
-            UIHandler.DrawTextAligned("MAIN MENU", new(0.5f, 0.2f),500, 15, PaletteHandler.C("header"), "bold");
-            UIHandler.DrawTextAligned(ShapeEngine.EDITORMODE == true ? "EDITOR" : "STANDALONE", new Vector2(0.052f, 0.052f), 100, 5, WHITE, Alignement.LEFTCENTER);
+            UIHandler.DrawTextAligned("MAIN MENU", new(0.5f, 0.21f), new Vector2(0.35f, 0.25f), 15, PaletteHandler.C("bg2"), "bold");
+            UIHandler.DrawTextAligned("MAIN MENU", new(0.5f, 0.2f),new Vector2(0.35f, 0.25f), 15, PaletteHandler.C("header"), "bold");
+            UIHandler.DrawTextAligned(ShapeEngine.EDITORMODE == true ? "EDITOR" : "STANDALONE", new Vector2(0.052f, 0.052f), new Vector2(0.005f, 0.005f), 5, WHITE, Alignement.LEFTCENTER);
             level1Button.Draw();
             optionsButton.Draw();
             quitButton.Draw();

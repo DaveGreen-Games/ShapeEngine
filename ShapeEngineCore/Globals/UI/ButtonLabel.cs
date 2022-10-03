@@ -87,7 +87,7 @@ namespace ShapeEngineCore.Globals.UI
             else if (hovered) color = textStateColors.hoveredColor; // DARKBLUE;
             else if (selected) color = textStateColors.selectedColor; // WHITE;
 
-            UIHandler.DrawTextAligned(text, centerRelative + offsetRelative, fontSize, fontSpacing, color, fontName);
+            UIHandler.DrawTextAligned(text, centerRelative + offsetRelative, GetSize(false),fontSpacing, color, fontName, Alignement.CENTER);
         }
 
     }

@@ -678,16 +678,16 @@ namespace ShapeEngineDemo.Bodies
 
             //UIHandler.DrawTextAligned(String.Format("Rad: {0} // Deg: {1}", angle, angle * RAD2DEG), new(1000, 200), 120, 1, WHITE, Alignement.CENTER);
 
-            UIHandler.DrawTextAlignedPro("HP", topLeft + offset, hpBar.GetRotationDeg(), 100, 2, PaletteHandler.C("enemy"), Alignement.BOTTOMCENTER);
+            UIHandler.DrawTextAlignedPro("HP", topLeft + offset, hpBar.GetRotationDeg(), new Vector2(0.1f, 0.06f), 2, PaletteHandler.C("enemy"), Alignement.BOTTOMCENTER);
             hpBar.Draw();
 
             topLeft = pwrBar.GetTopLeft(false);
-            UIHandler.DrawTextAlignedPro("PWR", topLeft + offset, pwrBar.GetRotationDeg(), 100, 2, PaletteHandler.C("player"), Alignement.BOTTOMCENTER);
+            UIHandler.DrawTextAlignedPro("PWR", topLeft + offset, pwrBar.GetRotationDeg(), new Vector2(0.1f, 0.06f), 2, PaletteHandler.C("player"), Alignement.BOTTOMCENTER);
             pwrBar.Draw();
             if (energyCore.IsCooldownActive())
             {
                 Vector2 bottomRight = pwrBar.GetBottomRight(false) + new Vector2(0.001f, 0);
-                UIHandler.DrawTextAlignedPro("REBOOT", bottomRight, pwrBar.GetRotationDeg() - 90f, 180, 10, PaletteHandler.C("bg2"), Alignement.BOTTOMLEFT);
+                UIHandler.DrawTextAlignedPro("REBOOT", bottomRight, pwrBar.GetRotationDeg() - 90f, new Vector2(0.1f, 0.08f), 2, PaletteHandler.C("bg2"), Alignement.BOTTOMLEFT);
             }
             aimpointSkillDisplay.Draw();
             //aimpointInputPanel.Draw();

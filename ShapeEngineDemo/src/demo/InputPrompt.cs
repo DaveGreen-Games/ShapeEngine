@@ -94,7 +94,7 @@ namespace ShapeEngineDemo
             float fontSize = radius * 3f;
             float thickness = radius * 0.25f;
             if(bgColor.a > 0) DrawCircleV(center, radius, bgColor);
-            UIHandler.DrawTextAlignedPro(text, center, angleDeg, fontSize, 1, textColor, Alignement.CENTER);
+            UIHandler.DrawTextAlignedPro(text, center, angleDeg, GetSize(false), 1, textColor, Alignement.CENTER);
             if(barColor.a > 0) Drawing.DrawCircleOutlineBar(center, radius + thickness, -90, thickness, f, barColor, true);
         }
     }

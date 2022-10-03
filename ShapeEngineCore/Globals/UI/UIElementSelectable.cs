@@ -188,7 +188,7 @@ namespace ShapeEngineCore.Globals.UI
             else
             {
                 var prevHovered = hovered;
-                hovered = CheckCollisionPointRec(mousePos, rect);
+                hovered = CheckCollisionPointRec(mousePos, ToAbsolute(rect));
                 if (hovered && !prevHovered)
                 {
                     HoveredChanged(true);
