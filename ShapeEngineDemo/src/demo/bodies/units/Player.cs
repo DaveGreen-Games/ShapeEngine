@@ -276,11 +276,11 @@ namespace ShapeEngineDemo.Bodies
             float size = stats.Get("size");
             collisionMask = new string[] { "asteroid" };
             collider = new(GAMELOOP.GameCenter(), MovementDir * stats.Get("maxSpeed"), size);
-            Vector2 barSize = new(125, 500);
-            Vector2 start = new(65, ScreenHandler.UIHeight() - barSize.Y - 100);
-            Vector2 barOffset = new(-20f, 5f);
-            Vector2 gap = new(180, 30);
-            aimpointSkillDisplay = new(start + new Vector2(100, -250), new Vector2(250, 100), PaletteHandler.C("text"), PaletteHandler.C("flash"), PaletteHandler.C("neutral"),PaletteHandler.C("energy"), "Drop Pin", "Drop Aim Point", -5f);
+            Vector2 barSize = new(0.033f, 0.23f);
+            Vector2 start = new(0.017f, 0.75f);
+            Vector2 barOffset = new(-0.008f, 0.008f);
+            Vector2 gap = new(0.05f, 0.01f);
+            aimpointSkillDisplay = new(start + new Vector2(0.03f, -0.12f), new Vector2(0.065f, 0.04f), PaletteHandler.C("text"), PaletteHandler.C("flash"), PaletteHandler.C("neutral"),PaletteHandler.C("energy"), "Drop Pin", "Drop Aim Point", -5f);
             hpBar = new(start, barSize, barOffset, BarType.BOTTOMTOP, 0.1f, -5f);
             start += gap;
             pwrBar = new(start, barSize, barOffset, BarType.BOTTOMTOP, 0f, -5f);
@@ -289,8 +289,10 @@ namespace ShapeEngineDemo.Bodies
             //start += gap;
             //ammoBar = new(start, barSize, barOffset, BarType.BOTTOMTOP, 0f, -5f);
 
-            hpBarMini.SetSize(new Vector2(size * 2f, size * 0.2f) * ScreenHandler.GAME_TO_UI);
-            pwrBarMini.SetSize(new Vector2(size * 2f, size * 0.2f) * ScreenHandler.GAME_TO_UI);
+            Vector2 barMiniSizeAbsolute = new Vector2(size * 2f, size * 0.2f) * ScreenHandler.GAME_TO_UI;
+            Vector2 barMiniSizeRelative = UIElement.ToRelative(barMiniSizeAbsolute);
+            hpBarMini.SetSize(barMiniSizeRelative);
+            pwrBarMini.SetSize(barMiniSizeRelative);
 
             hpBarMini.SetColors(PaletteHandler.C("enemy"), new(0, 0, 0, 0), PaletteHandler.C("flash")); //ColorPalette.Cur.neutral
             pwrBarMini.SetColors(PaletteHandler.C("player"), new(0, 0, 0, 0));// ColorPalette.Cur.energy);
@@ -613,14 +615,15 @@ namespace ShapeEngineDemo.Bodies
 
             Vector2 miniBarOffset = new Vector2(stats.Get("size"), stats.Get("size") * 2f);
             Vector2 miniBarPos = ScreenHandler.TransformPositionToUI(collider.Pos - miniBarOffset);
+            Vector2 miniBarPosRelative = UIElement.ToRelative(miniBarPos);
             if (GetHealthPercentage() < 1f)
             {
-                hpBarMini.SetTopLeft(miniBarPos);
+                hpBarMini.SetTopLeft(miniBarPosRelative);
 
             }
             if (GetEnergyPercentage() < 1f)
             {
-                pwrBarMini.SetTopLeft(miniBarPos - new Vector2(0f, hpBarMini.GetHeight() + 10));
+                pwrBarMini.SetTopLeft(miniBarPosRelative - new Vector2(0f, hpBarMini.GetHeight(false) + 0.001f));
             }
 
             var info = GAMELOOP.GetCurArea().GetCurPlayfield().Collide(collider.Pos, collider.Radius);
@@ -669,8 +672,8 @@ namespace ShapeEngineDemo.Bodies
         {
             if (IsDead()) return;
 
-            Vector2 barSize = hpBar.GetSize();
-            Vector2 topLeft = hpBar.GetTopLeft();
+            Vector2 barSize = hpBar.GetSize(false);
+            Vector2 topLeft = hpBar.GetTopLeft(false);
             Vector2 offset = hpBar.Transform(new Vector2(barSize.X / 2, 0));
 
             //UIHandler.DrawTextAligned(String.Format("Rad: {0} // Deg: {1}", angle, angle * RAD2DEG), new(1000, 200), 120, 1, WHITE, Alignement.CENTER);
@@ -678,12 +681,12 @@ namespace ShapeEngineDemo.Bodies
             UIHandler.DrawTextAlignedPro("HP", topLeft + offset, hpBar.GetRotationDeg(), 100, 2, PaletteHandler.C("enemy"), Alignement.BOTTOMCENTER);
             hpBar.Draw();
 
-            topLeft = pwrBar.GetTopLeft();
+            topLeft = pwrBar.GetTopLeft(false);
             UIHandler.DrawTextAlignedPro("PWR", topLeft + offset, pwrBar.GetRotationDeg(), 100, 2, PaletteHandler.C("player"), Alignement.BOTTOMCENTER);
             pwrBar.Draw();
             if (energyCore.IsCooldownActive())
             {
-                Vector2 bottomRight = pwrBar.GetBottomRight() + new Vector2(20, 0);
+                Vector2 bottomRight = pwrBar.GetBottomRight(false) + new Vector2(0.001f, 0);
                 UIHandler.DrawTextAlignedPro("REBOOT", bottomRight, pwrBar.GetRotationDeg() - 90f, 180, 10, PaletteHandler.C("bg2"), Alignement.BOTTOMLEFT);
             }
             aimpointSkillDisplay.Draw();

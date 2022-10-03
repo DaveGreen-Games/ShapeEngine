@@ -9,9 +9,9 @@ namespace ShapeEngineCore.Globals.UI
         protected float angleDeg = 0f;
         protected Color bgColor = DARKGRAY;
         protected Color textColor = WHITE;
-        public Panel(string text, Vector2 center, Vector2 size, float angleDeg, Color textColor, Color bgColor)
+        public Panel(string text, Vector2 centerRelative, Vector2 sizeRelative, float angleDeg, Color textColor, Color bgColor)
         {
-            rect = new(center.X - size.X / 2, center.Y - size.Y / 2, size.X, size.Y);
+            rect = new(centerRelative.X - sizeRelative.X / 2, centerRelative.Y - sizeRelative.Y / 2, sizeRelative.X, sizeRelative.Y);
             this.angleDeg = angleDeg;
             this.bgColor = bgColor;
             this.textColor = textColor;
@@ -51,9 +51,9 @@ namespace ShapeEngineCore.Globals.UI
         {
             //DrawRectanglePro(rect, new(0f, 0f), angleDeg, bgColor);
             //DrawRectanglePro(new(rect.X + rect.width / 2, rect.Y + rect.height / 2, rect.width, rect.height), new Vector2(rect.width, rect.height) / 2, angleDeg, bgColor);
-            Drawing.DrawRectangle(GetCenter(), GetSize(), new(0f, 0f), angleDeg, bgColor);
-            float fontSize = Vec.Max(GetSize()) * 2.5f;
-            UIHandler.DrawTextAlignedPro(text, GetCenter(), angleDeg, UIHandler.CalculateDynamicFontSize(text, rect.width * 0.9f), 1, textColor, Alignement.CENTER);
+            Drawing.DrawRectangle(GetCenter(true), GetSize(true), new(0f, 0f), angleDeg, bgColor);
+            float fontSize = Vec.Max(GetSize(true)) * 2.5f;
+            UIHandler.DrawTextAlignedPro(text, GetCenter(true), angleDeg, UIHandler.CalculateDynamicFontSize(text, GetSize(true), 1), 1, textColor, Alignement.CENTER);
         }
     }
 }

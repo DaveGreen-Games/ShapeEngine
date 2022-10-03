@@ -73,48 +73,37 @@ namespace ShapeEngineCore.Globals.UI
             fontSizes.Remove(name);
         }
 
-        public static float GetFontSize(string name)
+        public static float GetFontSizeRelative(string name)
         {
             if (!fontSizes.ContainsKey(name)) return -1;
             else return fontSizes[name];
         }
-        public static float GetFontSizeScaled(string name)
+        public static float GetFontSizeAbsolute(string name)
         {
             if (!fontSizes.ContainsKey(name)) return -1;
-            else return fontSizes[name] * ScreenHandler.UI_FACTOR;
+            else return fontSizes[name] * ScreenHandler.UIWidth();
         }
 
 
-        public static float ScaleFontSize(int fontSize)
-        {
-            return ScaleFontSize(fontSize);
-        }
-        public static float ScaleFontSize(float fontSize)
-        {
-            return fontSize * ScreenHandler.UI_FACTOR;
-        }
+        //public static float ScaleFontSize(int fontSize)
+        //{
+        //    return ScaleFontSize((float)fontSize);
+        //}
+        //public static float ScaleFontSize(float fontSize)
+        //{
+        //    return fontSize * ScreenHandler.UI_FACTOR;
+        //}
 
-        public static Vector2 Scale(Vector2 v) { return v * ScreenHandler.UI_FACTOR; }
-        public static float Scale(float f) { return f * ScreenHandler.UI_FACTOR; }
-        public static int Scale(int i) { return (int)(i * ScreenHandler.UI_FACTOR); }
+        //public static Vector2 Scale(Vector2 v) { return v * ScreenHandler.UI_FACTOR; }
+        //public static float Scale(float f) { return f * ScreenHandler.UI_FACTOR; }
+        //public static int Scale(int i) { return (int)(i * ScreenHandler.UI_FACTOR); }
 
-        public static float CalculateDynamicFontSize(string text, float size, float fontSpacing = 1f, float maxError = 0.01f, int maxTries = 25)
-        {
-            float curFontSize = 50f;
-            float correction = 0f;
-            int counter = 0;
-            while (MathF.Abs(1f - correction) > maxError && counter < maxTries)
-            {
-                counter++;
-                correction = size / UIHandler.GetTextSize(text, curFontSize, fontSpacing).X;
-                curFontSize *= correction;
-            }
-            return curFontSize;
-        }
+        
         public static void AddFont(string name, string fileName, int fontSize = 100)
         {
             if (fileName == "" || fonts.ContainsKey(name)) return;
             Font font = ResourceManager.LoadFont(fileName, fontSize);
+            
             SetTextureFilter(font.texture, TextureFilter.TEXTURE_FILTER_BILINEAR);
             fonts.Add(name, font);
             //unsafe
@@ -124,7 +113,6 @@ namespace ShapeEngineCore.Globals.UI
             //    fonts.Add(name, font);
             //}
         }
-
         public static Font GetFont(string name = "")
         {
             if (name == "" || !fonts.ContainsKey(name)) return defaultFont;
@@ -198,26 +186,45 @@ namespace ShapeEngineCore.Globals.UI
                 default: return new(0.5f, 0.5f);
             }
         }
-
-        public static Vector2 GetTextSize(string text, float fontSize, float fontSpacing)
+        public static float CalculateDynamicFontSize(string text, Vector2 size, float fontSpacing = 1f, string fontName = "")
         {
-            return MeasureTextEx(GetFont(), text, fontSize, fontSpacing);
+            float baseSize = GetFont(fontName).baseSize;
+            //float scalingFactor = size.Y / baseSize;
+            //Vector2 textSize = MeasureTextEx(GetFont(), text, baseSize * scalingFactor, fontSpacing);
+            //float correctionFactor = MathF.Min(size.X / textSize.X, 1f) ;
+            //return (baseSize * scalingFactor) * correctionFactor;// * (size.X / textSize.X);
+
+            return GetFontScalingFactor(text, size, fontSpacing, fontName) * baseSize;
+        }
+        //public static float GetFontScalingFactor(float fontSize, string fontName = "") { return fontSize / (float)GetFont(fontName).baseSize; }
+        public static float GetFontScalingFactor(float height, string fontName = "") { return height / (float)GetFont(fontName).baseSize; }
+        public static float GetFontScalingFactor(string text, Vector2 size, float fontSpacing = 1, string fontName = "")
+        {
+            float baseSize = GetFont(fontName).baseSize;
+            float scalingFactor = size.Y / baseSize;
+            Vector2 textSize = MeasureTextEx(GetFont(), text, baseSize * scalingFactor, fontSpacing);
+            float correctionFactor = MathF.Min(size.X / textSize.X, 1f);
+            return scalingFactor * correctionFactor;
+        }
+        public static Vector2 GetTextSize(string text, float fontSize, float fontSpacing, string fontName = "")
+        {
+            return MeasureTextEx(GetFont(fontName), text, fontSize, fontSpacing);
         }
         //rot is in degrees
-        public static void DrawTextAlignedPro(string text, Vector2 pos, float rot, float fontSize, float fontSpacing, Color color, Font font, Alignement alignement = Alignement.CENTER)
+        public static void DrawTextAlignedPro(string text, Vector2 posRelative, float rot, float fontSize, float fontSpacing, Color color, Font font, Alignement alignement = Alignement.CENTER)
         {
             Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
             Vector2 originOffset = GetAlignementVector(alignement) * fontDimensions;
-            Vector2 textPosition = pos;// - Vec.Rotate(originOffset, rot);
+            Vector2 textPosition = UIElement.ToAbsolute(posRelative); // new Vector2(posRelative.X * ScreenHandler.UIWidth(), posRelative.Y * ScreenHandler.UIHeight());// - Vec.Rotate(originOffset, rot);
             DrawTextPro(font, text, textPosition, originOffset, rot, fontSize, fontSpacing, color);
         }
-        public static void DrawTextAlignedPro(string text, Vector2 pos, float rot, float fontSize, float fontSpacing, Color color, Alignement alignement = Alignement.CENTER)
+        public static void DrawTextAlignedPro(string text, Vector2 posRelative, float rot, float fontSize, float fontSpacing, Color color, Alignement alignement = Alignement.CENTER)
         {
-            DrawTextAlignedPro(text, pos, rot, fontSize, fontSpacing, color, GetFont(), alignement);
+            DrawTextAlignedPro(text, posRelative, rot, fontSize, fontSpacing, color, GetFont(), alignement);
         }
-        public static void DrawTextAlignedPro(string text, Vector2 pos, float rot, float fontSize, float fontSpacing, Color color, string fontName, Alignement alignement = Alignement.CENTER)
+        public static void DrawTextAlignedPro(string text, Vector2 posRelative, float rot, float fontSize, float fontSpacing, Color color, string fontName, Alignement alignement = Alignement.CENTER)
         {
-            DrawTextAlignedPro(text, pos, rot, fontSize, fontSpacing, color, GetFont(fontName), alignement);
+            DrawTextAlignedPro(text, posRelative, rot, fontSize, fontSpacing, color, GetFont(fontName), alignement);
         }
         //public static void DrawTextAlignedPro(string text, Vector2 pos, float rot, FontSize fontSize, float fontSpacing, Color color, Alignement alignement = Alignement.CENTER)
         //{
@@ -227,18 +234,19 @@ namespace ShapeEngineCore.Globals.UI
         //{
         //    DrawTextAlignedPro(text, pos, rot, GetFontSizeScaled(fontSize), Scale(fontSpacing), color, GetFont(fontName), alignement);
         //}
-        public static void DrawTextAligned(string text, Vector2 pos, float fontSize, float fontSpacing, Color color, Font font, Alignement alignement = Alignement.CENTER)
+        public static void DrawTextAligned(string text, Vector2 posRelative, float fontSize, float fontSpacing, Color color, Font font, Alignement alignement = Alignement.CENTER)
         {
             Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
+            Vector2 pos = UIElement.ToAbsolute(posRelative);
             DrawTextEx(font, text, pos - GetAlignementVector(alignement) * fontDimensions, fontSize, fontSpacing, color);
         }
-        public static void DrawTextAligned(string text, Vector2 pos, float fontSize, float fontSpacing, Color color, Alignement alignement = Alignement.CENTER)
+        public static void DrawTextAligned(string text, Vector2 posRelative, float fontSize, float fontSpacing, Color color, Alignement alignement = Alignement.CENTER)
         {
-            DrawTextAligned(text, pos, fontSize, fontSpacing, color, GetFont(), alignement);
+            DrawTextAligned(text, posRelative, fontSize, fontSpacing, color, GetFont(), alignement);
         }
-        public static void DrawTextAligned(string text, Vector2 pos, float fontSize, float fontSpacing, Color color, string fontName, Alignement alignement = Alignement.CENTER)
+        public static void DrawTextAligned(string text, Vector2 posRelative, float fontSize, float fontSpacing, Color color, string fontName, Alignement alignement = Alignement.CENTER)
         {
-            DrawTextAligned(text, pos, fontSize, fontSpacing, color, GetFont(fontName), alignement);
+            DrawTextAligned(text, posRelative, fontSize, fontSpacing, color, GetFont(fontName), alignement);
         }
 
         //public static void DrawTextAligned(string text, Vector2 pos, FontSize fontSize, float fontSpacing, Color color, Alignement alignement = Alignement.CENTER)
@@ -250,14 +258,15 @@ namespace ShapeEngineCore.Globals.UI
         //    DrawTextAligned(text, pos, GetFontSizeScaled(fontSize), Scale(fontSpacing), color, GetFont(fontName), alignement);
         //}
 
-        public static void DrawBar(Vector2 topLeft, Vector2 size, float f, Color barColor, Color bgColor, BarType barType = BarType.LEFTRIGHT)
+        public static void DrawBar(Vector2 topLeftRelative, Vector2 sizeRelative, float f, Color barColor, Color bgColor, BarType barType = BarType.LEFTRIGHT)
         {
-            Rectangle barRect = new(topLeft.X, topLeft.Y, size.X, size.Y);
+            Rectangle barRect = UIElement.ToAbsolute( new Rectangle(topLeftRelative.X, topLeftRelative.Y, sizeRelative.X, sizeRelative.Y) );
             DrawBar(barRect, f, barColor, bgColor, barType);
         }
-        public static void DrawBar(Rectangle rect, float f, Color barColor, Color bgColor, BarType barType = BarType.LEFTRIGHT)
+        public static void DrawBar(Rectangle rectRelative, float f, Color barColor, Color bgColor, BarType barType = BarType.LEFTRIGHT)
         {
-            Rectangle original = rect;
+            Rectangle original = UIElement.ToAbsolute(rectRelative);
+            Rectangle rect = original;
             switch (barType)
             {
                 case BarType.LEFTRIGHT:
@@ -281,14 +290,15 @@ namespace ShapeEngineCore.Globals.UI
             DrawRectangleRec(original, bgColor);
             DrawRectangleRec(rect, barColor);
         }
-        public static void DrawBar(Vector2 topLeft, Vector2 size, float f, Color barColor, Color bgColor, Color outlineColor, float outlineSize, BarType barType = BarType.LEFTRIGHT)
+        public static void DrawBar(Vector2 topLeftRelative, Vector2 sizeRelative, float f, Color barColor, Color bgColor, Color outlineColor, float outlineSize, BarType barType = BarType.LEFTRIGHT)
         {
-            Rectangle barRect = new(topLeft.X, topLeft.Y, size.X, size.Y);
+            Rectangle barRect = UIElement.ToAbsolute( new Rectangle(topLeftRelative.X, topLeftRelative.Y, sizeRelative.X, sizeRelative.Y));
             DrawBar(barRect, f, barColor, bgColor, outlineColor, outlineSize, barType);
         }
-        public static void DrawBar(Rectangle rect, float f, Color barColor, Color bgColor, Color outlineColor, float outlineSize, BarType barType = BarType.LEFTRIGHT)
+        public static void DrawBar(Rectangle rectRelative, float f, Color barColor, Color bgColor, Color outlineColor, float outlineSize, BarType barType = BarType.LEFTRIGHT)
         {
-            Rectangle original = rect;
+            Rectangle original = UIElement.ToAbsolute(rectRelative);
+            Rectangle rect = original;
             switch (barType)
             {
                 case BarType.LEFTRIGHT:

@@ -5,26 +5,29 @@ namespace ShapeEngineCore.Globals.UI
 {
     public class Button : UIElementSelectable
     {
-        protected Vector2 offset = new();
+        protected Vector2 offsetRelative = new();
         protected Vector2 sizeOffset = new(1f, 1f);
         protected EaseHandler easeHandler = new();
         protected bool centered = false;
 
         protected UISelectionColors stateColors = new();
 
-        public Button(Vector2 pos, Vector2 size, bool centered = false)
+        public Button(Vector2 posRelative, Vector2 sizeRelative, bool centered = false)
         {
             this.centered = centered;
 
             if (centered)
             {
-                rect = new(pos.X - size.X * 0.5f, pos.Y - size.Y * 0.5f, size.X, size.Y);
+                rect = new(posRelative.X - sizeRelative.X * 0.5f, posRelative.Y - sizeRelative.Y * 0.5f, sizeRelative.X, sizeRelative.Y);
             }
             else
             {
-                rect = new(pos.X, pos.Y, size.X, size.Y);
+                rect = new(posRelative.X, posRelative.Y, sizeRelative.X, sizeRelative.Y);
             }
         }
+
+
+
 
         public void SetStateColors(UISelectionColors newColors) { this.stateColors = newColors; }
 
@@ -46,9 +49,9 @@ namespace ShapeEngineCore.Globals.UI
             if (easeHandler.HasChain("offset"))
             {
                 var result = easeHandler.GetVector2("offset");
-                offset = result;
+                offsetRelative = result;
             }
-            else { offset.X = 0f; offset.Y = 0f; }
+            else { offsetRelative.X = 0f; offsetRelative.Y = 0f; }
 
             if (easeHandler.HasChain("sizeUp"))
             {
@@ -72,18 +75,18 @@ namespace ShapeEngineCore.Globals.UI
                 Vector2 sizeDif = newSize - size;
                 offsetRect =
                     new(
-                        rect.X + offset.X - sizeDif.X * 0.5f,
-                        rect.Y + offset.Y - sizeDif.Y * 0.5f,
+                        rect.X + offsetRelative.X - sizeDif.X * 0.5f,
+                        rect.Y + offsetRelative.Y - sizeDif.Y * 0.5f,
                         newSize.X,
                         newSize.Y
                         );
             }
             else
             {
-                offsetRect = new(rect.X + offset.X, rect.Y + offset.Y, rect.width * sizeOffset.X, rect.height * sizeOffset.Y);
+                offsetRect = new(rect.X + offsetRelative.X, rect.Y + offsetRelative.Y, rect.width * sizeOffset.X, rect.height * sizeOffset.Y);
             }
-            DrawRectangleRec(offsetRect, color);
-            if (selected) DrawRectangleV(new(offsetRect.x, offsetRect.y + offsetRect.height * 0.9f), new(offsetRect.width, offsetRect.height * 0.1f), stateColors.selectedColor);
+            DrawRectangleRec(ToAbsolute(offsetRect), color);
+            if (selected) DrawRectangleV(ToAbsolute(new Vector2(offsetRect.x, offsetRect.y + offsetRect.height * 0.9f)), ToAbsolute(new Vector2(offsetRect.width, offsetRect.height * 0.1f)), stateColors.selectedColor);
         }
 
         public override void PressedChanged(bool pressed)
@@ -112,9 +115,9 @@ namespace ShapeEngineCore.Globals.UI
             easeHandler.AddChain(
                 "offset",
                 new Vector2(0, 0),
-                new EaseOrder(0.1f, new Vector2(50, 0), EasingType.QUAD_OUT),
-                new EaseOrder(0.2f, new Vector2(-75, 0), EasingType.BACK_IN),
-                new EaseOrder(0.1f, new Vector2(25, 0), EasingType.LINEAR_IN)
+                new EaseOrder(0.1f, new Vector2(0.05f, 0), EasingType.QUAD_OUT),
+                new EaseOrder(0.2f, new Vector2(-0.075f, 0), EasingType.BACK_IN),
+                new EaseOrder(0.1f, new Vector2(0.025f, 0), EasingType.LINEAR_IN)
                 );
 
         }
@@ -126,9 +129,9 @@ namespace ShapeEngineCore.Globals.UI
             easeHandler.AddChain(
                 "offset",
                 new Vector2(0, 0),
-                new EaseOrder(0.1f, new Vector2(-50, 0), EasingType.QUAD_OUT),
-                new EaseOrder(0.2f, new Vector2(75, 0), EasingType.BACK_IN),
-                new EaseOrder(0.1f, new Vector2(-25, 0), EasingType.LINEAR_IN)
+                new EaseOrder(0.1f, new Vector2(-0.05f, 0), EasingType.QUAD_OUT),
+                new EaseOrder(0.2f, new Vector2(0.075f, 0), EasingType.BACK_IN),
+                new EaseOrder(0.1f, new Vector2(-0.025f, 0), EasingType.LINEAR_IN)
                 );
         }
     }

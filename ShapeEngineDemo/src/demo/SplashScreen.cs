@@ -47,11 +47,11 @@ namespace ShapeEngineDemo
             DrawRectangleRec(ScreenHandler.UIArea(), PaletteHandler.C("bg1"));
             float f = 1.0f - (timer / maxTime);
             float fontSize = Lerp(0, 800, f);
-            Vector2 fontPos = new
-                (
-                    ScreenHandler.UIArea().x + ScreenHandler.UIArea().width / 2,
-                    ScreenHandler.UIArea().y + ScreenHandler.UIArea().height / 2
-                );
+            //Vector2 fontPos = new
+            //    (
+            //        ScreenHandler.UIArea().x + ScreenHandler.UIArea().width / 2,
+            //        ScreenHandler.UIArea().y + ScreenHandler.UIArea().height / 2
+            //    );
 
             //float fontSpacing = 10.0f;
             //string text = "SHAPE ENGINE";
@@ -59,7 +59,7 @@ namespace ShapeEngineDemo
             //Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
             //DrawTextEx(font, text, fontPos - fontDimensions * 0.5f, fontSize, fontSpacing, WHITE);
 
-            UIHandler.DrawTextAligned("SHAPE ENGINE", fontPos, fontSize, UIHandler.Scale(5), PaletteHandler.C("header"), "bold", Alignement.CENTER);
+            UIHandler.DrawTextAligned("SHAPE ENGINE", new Vector2(0.5f, 0.5f), fontSize, 10, PaletteHandler.C("header"), "bold", Alignement.CENTER);
         }
     }
 

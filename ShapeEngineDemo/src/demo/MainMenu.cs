@@ -20,13 +20,15 @@ namespace ShapeEngineDemo
             //mazeDrawer = new(maze, new(SCREEN_AREA.X + SCREEN_AREA.width * 0.1f, SCREEN_AREA.Y + SCREEN_AREA.height * 0.1f), new(SCREEN_AREA.width * 0.8f, SCREEN_AREA.height * 0.8f), 2);
             //maze.GenerateDeadCells(50);
             //maze.Generate(MazeGenerator.Maze.GenerationType.PRIM_SIMPLE, -1, 1);
-            Vector2 center = new(ScreenHandler.UIWidth() / 2, ScreenHandler.UIHeight() / 2);
-            Vector2 size = UIHandler.Scale(new Vector2 (350, 100));
-            Vector2 offset = UIHandler.Scale(new Vector2(0, 115));
+            
+            Vector2 centerRelative = new(0.5f, 0.5f);
+            Vector2 sizeRelative = new Vector2 (0.18f, 0.09f);
+            Vector2 offsetRelative = new Vector2(0, 0.11f);
+            
             float fontSize = 180;
-            level1Button = new("START", fontSize, "medium", center, size, true);
-            optionsButton = new("OPTIONS", fontSize, "medium", center + offset, size, true);
-            quitButton = new("QUIT", fontSize, "medium", center + offset * 2, size, true);
+            level1Button = new("START", fontSize, "medium", centerRelative, sizeRelative, true);
+            optionsButton = new("OPTIONS", fontSize, "medium", centerRelative + offsetRelative, sizeRelative, true);
+            quitButton = new("QUIT", fontSize, "medium", centerRelative + offsetRelative * 2, sizeRelative, true);
             quitButton.AddShortcut("UI Cancel");
 
             level1Button.SetStateColors(new(PaletteHandler.C("bg2"), PaletteHandler.C("energy"), PaletteHandler.C("player"), PaletteHandler.C("sepcial1"), PaletteHandler.C("neutral")));
@@ -86,9 +88,9 @@ namespace ShapeEngineDemo
         {
             Rectangle uiArea = ScreenHandler.UIArea();
             DrawRectangleRec(uiArea, PaletteHandler.C("bg1"));
-            UIHandler.DrawTextAligned("MAIN MENU", new(uiArea.x + uiArea.width / 2, uiArea.y + uiArea.height * 0.21f), 500, 15, PaletteHandler.C("bg2"), "bold");
-            UIHandler.DrawTextAligned("MAIN MENU", new(uiArea.x + uiArea.width / 2, uiArea.y + uiArea.height * 0.2f),500, 15, PaletteHandler.C("header"), "bold");
-            UIHandler.DrawTextAligned(ShapeEngine.EDITORMODE == true ? "EDITOR" : "STANDALONE", new Vector2(200, 200), 100, 5, WHITE, Alignement.LEFTCENTER);
+            UIHandler.DrawTextAligned("MAIN MENU", new(0.5f, 0.21f), 500, 15, PaletteHandler.C("bg2"), "bold");
+            UIHandler.DrawTextAligned("MAIN MENU", new(0.5f, 0.2f),500, 15, PaletteHandler.C("header"), "bold");
+            UIHandler.DrawTextAligned(ShapeEngine.EDITORMODE == true ? "EDITOR" : "STANDALONE", new Vector2(0.052f, 0.052f), 100, 5, WHITE, Alignement.LEFTCENTER);
             level1Button.Draw();
             optionsButton.Draw();
             quitButton.Draw();
