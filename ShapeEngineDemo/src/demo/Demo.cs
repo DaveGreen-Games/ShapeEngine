@@ -216,7 +216,7 @@ namespace ShapeEngineDemo
                 curResIndex += 1;
                 if (curResIndex >= resolutions.Count) curResIndex = 0;
                 var res = resolutions[curResIndex];
-                ScreenHandler.ChangeWindowDimensions(res.width, res.height);
+                ScreenHandler.ResizeWindow(res.width, res.height);
 
             }
 

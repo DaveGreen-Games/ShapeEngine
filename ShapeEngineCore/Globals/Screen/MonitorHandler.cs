@@ -68,7 +68,7 @@ namespace ShapeEngineCore.Globals.Screen
                 string name = GetMonitorName_(i);
                 int w =  GetMonitorWidth(i);
                 int h =  GetMonitorHeight(i);
-                Vector2 pos = GetMonitorPosition(i);
+                Vector2 pos = GetMonitorPosition(i) + new Vector2(1, 1);
                 //Temporary Fix!!!
                 //if (w > 2000) w = 1920;
                 //if (h > 1250) h = 1080;

@@ -135,7 +135,7 @@ namespace ShapeEngineCore.Globals.Screen
         //private static (int width, int height) MONITOR_SIZE = (0, 0);
         //private static (int width, int height) DEFAULT_WINDOW_SIZE = (0, 0);
         public static (int width, int height) CUR_WINDOW_SIZE { get; private set; } = (0, 0);
-
+        public static (int width, int height) WINDOWED_WINDOW_SIZE { get; private set; } = (0, 0);
         public static MonitorHandler MONITOR_HANDLER { get; private set; } = new();
         public static Camera CAMERA { get; private set; }
         public static ScreenTexture GAME { get; private set; }
@@ -350,26 +350,11 @@ namespace ShapeEngineCore.Globals.Screen
             SetTargetFPS(FPS);
         }
         
-        public static void ChangeWindowDimensions(int newWidth, int newHeight)
+        public static void ResizeWindow(int newWidth, int newHeight)
         {
-            //if (IsFullscreen()) return;
-
-            if (newWidth == CUR_WINDOW_SIZE.width && newHeight == CUR_WINDOW_SIZE.height) return;
-
-            CUR_WINDOW_SIZE = (newWidth, newHeight);
-
-            GAME.ChangeWindowSize(newWidth, newHeight);
-            UI.ChangeWindowSize(newWidth, newHeight);
-
-            SetWindowSize(newWidth, newHeight);
-            var monitor = MONITOR_HANDLER.CurMonitor();
-            int winPosX = monitor.width / 2 - newWidth / 2;
-            int winPosY = monitor.height / 2 - newHeight / 2;
-            //SetWindowPosition(winPosX + (int)MONITOR_OFFSET.X, winPosY + (int)MONITOR_OFFSET.Y);
-            SetWindowPosition(winPosX + (int)monitor.position.X, winPosY + (int)monitor.position.Y);
-
-            OnWindowSizeChanged?.Invoke(newWidth, newHeight);
+            ChangeWindowDimensions(newWidth, newHeight, false);
         }
+        
 
         public static void ResetWindow()
         {
@@ -378,7 +363,7 @@ namespace ShapeEngineCore.Globals.Screen
                 Raylib.ToggleFullscreen();
             }
             var monitor = MONITOR_HANDLER.CurMonitor();
-            ChangeWindowDimensions(monitor.width / 2, monitor.height / 2);
+            ChangeWindowDimensions(monitor.width / 2, monitor.height / 2, false);
         }
 
         public static bool IsFullscreen() { return IsWindowFullscreen(); }
@@ -395,13 +380,13 @@ namespace ShapeEngineCore.Globals.Screen
             if (IsWindowFullscreen())
             {
                 ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
-                ChangeWindowDimensions(monitor.width / 2, monitor.height / 2);
+                ChangeWindowDimensions(WINDOWED_WINDOW_SIZE.width, WINDOWED_WINDOW_SIZE.height, false);
                 //ChangeWindowDimensions(DEFAULT_WINDOW_SIZE.width, DEFAULT_WINDOW_SIZE.height);
             }
             else
             {
                 //var monitorSize = GetMonitorSize();
-                ChangeWindowDimensions(monitor.width, monitor.height);
+                ChangeWindowDimensions(monitor.width, monitor.height, true);
                 SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
             }
 
@@ -475,7 +460,7 @@ namespace ShapeEngineCore.Globals.Screen
                 //SetMonitorOffset();
                 //UpdateMonitorRelevantInfo();
                 //UpdateMonitorRelevantTextures();
-                ChangeWindowDimensions(monitor.width, monitor.height);
+                ChangeWindowDimensions(monitor.width, monitor.height, true);
                 SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
             }
             else
@@ -488,7 +473,7 @@ namespace ShapeEngineCore.Globals.Screen
                     windowWidth = monitor.width / 2;
                     windowHeight = monitor.height / 2;
                 }
-                ChangeWindowDimensions(monitor.width, monitor.height);
+                ChangeWindowDimensions(monitor.width, monitor.height, true);
                 SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
                 SetWindowMonitor(monitor.index);
                 //SetNativeResolution();
@@ -496,7 +481,7 @@ namespace ShapeEngineCore.Globals.Screen
                 //UpdateMonitorRelevantInfo();
                 //UpdateMonitorRelevantTextures();
                 ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
-                ChangeWindowDimensions(windowWidth, windowHeight);
+                ChangeWindowDimensions(windowWidth, windowHeight, false);
                 //ChangeWindowDimensions(MONITOR_SIZE.width, MONITOR_SIZE.height);
                 //ChangeWindowDimensions(DEFAULT_WINDOW_SIZE.width, DEFAULT_WINDOW_SIZE.height);
             }
@@ -507,6 +492,25 @@ namespace ShapeEngineCore.Globals.Screen
                 UI.ChangeWindowSize(CUR_WINDOW_SIZE.width, CUR_WINDOW_SIZE.height);
             }
         }
+        private static void ChangeWindowDimensions(int newWidth, int newHeight, bool fullscreenChange = false)
+        {
+            if (newWidth == CUR_WINDOW_SIZE.width && newHeight == CUR_WINDOW_SIZE.height) return;
+
+            CUR_WINDOW_SIZE = (newWidth, newHeight);
+            if (!fullscreenChange) WINDOWED_WINDOW_SIZE = (newWidth, newHeight);
+            GAME.ChangeWindowSize(newWidth, newHeight);
+            UI.ChangeWindowSize(newWidth, newHeight);
+
+            SetWindowSize(newWidth, newHeight);
+            var monitor = MONITOR_HANDLER.CurMonitor();
+
+            int winPosX = monitor.width / 2 - newWidth / 2;
+            int winPosY = monitor.height / 2 - newHeight / 2;
+            //SetWindowPosition(winPosX + (int)MONITOR_OFFSET.X, winPosY + (int)MONITOR_OFFSET.Y);
+            SetWindowPosition(winPosX + (int)monitor.position.X, winPosY + (int)monitor.position.Y);
+
+            OnWindowSizeChanged?.Invoke(newWidth, newHeight);
+        }
         private static void SetupWindowDimensions()
         {
             var monitor = MONITOR_HANDLER.CurMonitor();
@@ -516,6 +520,7 @@ namespace ShapeEngineCore.Globals.Screen
             if (newWidth == CUR_WINDOW_SIZE.width && newHeight == CUR_WINDOW_SIZE.height) return;
 
             CUR_WINDOW_SIZE = (newWidth, newHeight);
+            WINDOWED_WINDOW_SIZE = (newWidth, newHeight);
 
             SetWindowSize(newWidth, newHeight);
             int winPosX = monitor.width / 2 - newWidth / 2;
