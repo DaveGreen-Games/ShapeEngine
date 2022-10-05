@@ -197,13 +197,13 @@ namespace ShapeEngineDemo
 
             ArmoryInfo armoryInfo = new("minigun", "bouncer", "basic");
             player = new(armoryInfo, "starter");
-            ScreenHandler.Cam.SetTarget(player);
+            ScreenHandler.CAMERA.SetTarget(player);
             //ScreenHandler.Cam.ZoomFactor = 0.35f;
         }
 
         public override void Activate(Scene? oldScene)
         {
-            ScreenHandler.Game.Flash(0.25f, new(0, 0, 0, 255), new(0, 0, 0, 0));
+            ScreenHandler.GAME.Flash(0.25f, new(0, 0, 0, 255), new(0, 0, 0, 0));
             //Action action = () => ScreenHandler.Cam.Shake(0.25f, new(75.0f, 75.0f), 1, 0, 0.75f);
             //TimerHandler.Add(0.25f, action);
             //AudioHandler.PlaySFX("explosion");
@@ -214,9 +214,9 @@ namespace ShapeEngineDemo
         public override void Deactivate(Scene? newScene)
         {
             if (newScene == null) return;
-            ScreenHandler.Game.Flash(0.25f, new(0, 0, 0, 255), new(0, 0, 0, 255));
+            ScreenHandler.GAME.Flash(0.25f, new(0, 0, 0, 255), new(0, 0, 0, 255));
             Action action = () => GAMELOOP.SwitchScene(this, newScene);
-            ScreenHandler.Cam.ResetZoom();
+            ScreenHandler.CAMERA.ResetZoom();
             TimerHandler.Add(0.25f, action);
 
         }
@@ -282,7 +282,7 @@ namespace ShapeEngineDemo
                 UIHandler.DrawTextAlignedPro("PAUSED", new Vector2(0.5f, 0.25f), 0f, new Vector2(0.1f, 0.04f), 5f, PaletteHandler.C("header"), Alignement.CENTER);
             }
 
-            
+            Drawing.DrawCircleLines(ScreenHandler.UICenter(), 150, 5f, WHITE, 8);
 
         }
         public override void Close()

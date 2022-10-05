@@ -302,7 +302,7 @@ namespace ShapeEngineDemo.Bodies
 
             //ScreenHandler.Cam.AddCameraOrderChain("player zoom", new CameraOrder(1f, 2f, 1f, EasingType.BOUNCE_OUT));
             //ScreenHandler.Cam.AddCameraOrderChain("player rot", new CameraOrder(1f, 0f, 360f, 1f, 1f, EasingType.QUAD_OUT));
-            ScreenHandler.Cam.AddCameraOrderChain("player translation", new CameraOrder(1f, new Vector2(250f, 0f), new Vector2(0f, 0f), EasingType.BOUNCE_OUT));
+            ScreenHandler.CAMERA.AddCameraOrderChain("player translation", new CameraOrder(1f, new Vector2(250f, 0f), new Vector2(0f, 0f), EasingType.BOUNCE_OUT));
             
         }
 
@@ -390,7 +390,7 @@ namespace ShapeEngineDemo.Bodies
         {
             if (IsDead())
             {
-                TimerHandler.Add(5f, () => { ScreenHandler.Cam.ClearCameraOrderChains(); GAMELOOP.GoToScene("mainmenu"); });
+                TimerHandler.Add(5f, () => { ScreenHandler.CAMERA.ClearCameraOrderChains(); GAMELOOP.GoToScene("mainmenu"); });
             }
         }
         protected override void WasKilled()
@@ -403,7 +403,7 @@ namespace ShapeEngineDemo.Bodies
                 GAMELOOP.AddGameObject(particle);
             }
             InputHandler.AddVibration(0, 0.5f, 0.5f, 1.5f);
-            ScreenHandler.Cam.AddCameraOrderChain("player died", false, new CameraOrder(5f, 1f, 2f));
+            ScreenHandler.CAMERA.AddCameraOrderChain("player died", false, new CameraOrder(5f, 1f, 2f));
         }
         public override void WasDamaged(DamageInfo info)
         {
@@ -420,7 +420,7 @@ namespace ShapeEngineDemo.Bodies
                 GAMELOOP.AddGameObject(particle);
             }
             InputHandler.AddVibration(0, 0f, 0.25f, 0.5f);
-            ScreenHandler.Cam.Shake(0.5f, new(20f, 20f), 1f, 0f, 0.75f);
+            ScreenHandler.CAMERA.Shake(0.5f, new(20f, 20f), 1f, 0f, 0.75f);
             //ScreenHandler.Flash(0.3f, ColorPalette.Cur.enemy, BLANK, true);
             ScreenHandler.FlashTint(0.3f, BLACK, false);
             GAMELOOP.Slow(0.3f, 0.5f, 0.1f);
@@ -754,12 +754,12 @@ namespace ShapeEngineDemo.Bodies
         private void BoostStarted()
         {
             InputHandler.AddVibration(0, 0.1f, 0.05f, -1f, "boost");
-            ScreenHandler.Cam.AddCameraOrderChain("player boost", false, new CameraOrder(0.4f, 1f, 1.1f));
+            ScreenHandler.CAMERA.AddCameraOrderChain("player boost", false, new CameraOrder(0.4f, 1f, 1.1f));
         }
         private void BoostEnded()
         {
             InputHandler.RemoveVibration(0, "boost");
-            ScreenHandler.Cam.AddCameraOrderChain("player boost", true, new CameraOrder(0.4f, 1.1f, 1f));
+            ScreenHandler.CAMERA.AddCameraOrderChain("player boost", true, new CameraOrder(0.4f, 1.1f, 1f));
         }
 
         private void CoreTrigger(string triggerName, params float[] values)

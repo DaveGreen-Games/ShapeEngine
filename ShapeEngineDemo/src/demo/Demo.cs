@@ -8,6 +8,7 @@ using ShapeEngineCore.Globals.Timing;
 using ShapeEngineCore.Globals.Persistent;
 using Raylib_CsLo;
 using ShapeEngineCore;
+using System.Numerics;
 
 namespace ShapeEngineDemo
 {
@@ -15,7 +16,7 @@ namespace ShapeEngineDemo
     public class Demo : GameLoop
     {
         private Image icon;
-
+        private int curResIndex = 0;
         public override void Start()
         {
             //WINDOW ICON
@@ -77,18 +78,18 @@ namespace ShapeEngineDemo
             ShaderHandler.SetScreenShaderValueFloat("outline", "outlineSize", 2.0f);
             ShaderHandler.SetScreenShaderValueVec("outline", "outlineColor", new float[] { 1.0f, 0.0f, 0.0f, 1.0f }, ShaderUniformDataType.SHADER_UNIFORM_VEC4);
             ShaderHandler.SetScreenShaderValueVec("chrom", "amount", new float[] { 1.2f, 1.2f }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
-            ShaderHandler.SetScreenShaderValueVec("bloom", "size", new float[] { ScreenHandler.GameWidth(), ScreenHandler.GameHeight() }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
+            ShaderHandler.SetScreenShaderValueVec("bloom", "size", new float[] { ScreenHandler.CUR_WINDOW_SIZE.width, ScreenHandler.CUR_WINDOW_SIZE.height }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
             ShaderHandler.SetScreenShaderValueFloat("bloom", "samples", 5f);
             ShaderHandler.SetScreenShaderValueFloat("bloom", "quality", 2.5f);
-            ShaderHandler.SetScreenShaderValueFloat("pixelizer", "renderWidth", ScreenHandler.GameWidth());
-            ShaderHandler.SetScreenShaderValueFloat("pixelizer", "renderHeight", ScreenHandler.GameHeight());
+            ShaderHandler.SetScreenShaderValueFloat("pixelizer", "renderWidth", ScreenHandler.CUR_WINDOW_SIZE.width);
+            ShaderHandler.SetScreenShaderValueFloat("pixelizer", "renderHeight", ScreenHandler.CUR_WINDOW_SIZE.height);
             ShaderHandler.SetScreenShaderValueFloat("pixelizer", "pixelWidth", 1.0f);
             ShaderHandler.SetScreenShaderValueFloat("pixelizer", "pixelHeight", 1.0f);
-            ShaderHandler.SetScreenShaderValueFloat("blur", "renderWidth", ScreenHandler.GameWidth());
-            ShaderHandler.SetScreenShaderValueFloat("blur", "renderHeight", ScreenHandler.GameHeight());
+            ShaderHandler.SetScreenShaderValueFloat("blur", "renderWidth", ScreenHandler.CUR_WINDOW_SIZE.width);
+            ShaderHandler.SetScreenShaderValueFloat("blur", "renderHeight", ScreenHandler.CUR_WINDOW_SIZE.height);
             ShaderHandler.SetScreenShaderValueFloat("blur", "scale", 1.25f);
-            ShaderHandler.SetScreenShaderValueFloat("crt", "renderWidth", ScreenHandler.GameWidth());
-            ShaderHandler.SetScreenShaderValueFloat("crt", "renderHeight", ScreenHandler.GameHeight());
+            ShaderHandler.SetScreenShaderValueFloat("crt", "renderWidth", ScreenHandler.CUR_WINDOW_SIZE.width);
+            ShaderHandler.SetScreenShaderValueFloat("crt", "renderHeight", ScreenHandler.CUR_WINDOW_SIZE.height);
 
             //FONTS
             UIHandler.AddFont("light", "resources/fonts/teko-light.ttf", 200);
@@ -154,7 +155,8 @@ namespace ShapeEngineDemo
             InputAction shootFixed = new("Shoot Fixed", InputAction.Keys.J, InputAction.Keys.SPACE, InputAction.Keys.GP_BUTTON_RIGHT_TRIGGER_BOTTOM);
             InputAction dropAimPoint = new("Drop Aim Point", "K", "RB",  InputAction.Keys.K, InputAction.Keys.GP_BUTTON_RIGHT_TRIGGER_TOP);
 
-
+            InputAction cycleResolutionsDebug = new("Cycle Res", InputAction.Keys.RIGHT);
+            InputAction nextMonitorDebug = new("Next Monitor", InputAction.Keys.LEFT);
 
             InputAction pause = new("Pause", InputAction.Keys.P);
             InputAction slowTime = new("Slow Time", InputAction.Keys.LEFT_ALT);
@@ -170,11 +172,14 @@ namespace ShapeEngineDemo
                 boost, slow, 
                 shootFixed, dropAimPoint,
                 pause, slowTime,
-                spawnAsteroidDebug, healPlayerDebug, toggleDrawCollidersDebug, toggleDrawHelpersDebug, cycleZoomDebug
+                spawnAsteroidDebug, healPlayerDebug, toggleDrawCollidersDebug, toggleDrawHelpersDebug, cycleZoomDebug, 
+                cycleResolutionsDebug, nextMonitorDebug
                 );
             InputHandler.AddInputMap(inputMap, true);
             InputHandler.SwitchToMap("Default", 0);
 
+
+            ScreenHandler.OnWindowSizeChanged += OnWindowSizeChanged;
 
             //SPAWN SPLASH SCREEN
             Action startscene = () => GoToScene("splash");
@@ -184,6 +189,36 @@ namespace ShapeEngineDemo
         public override void HandleInput()
         {
             if (InputHandler.IsReleased(0, "Fullscreen")) { ScreenHandler.ToggleFullscreen(); }
+            if (InputHandler.IsReleased(0, "Next Monitor"))
+            {
+                ScreenHandler.NextMonitor();
+            }
+            if (InputHandler.IsReleased(0, "Cycle Res") && !ScreenHandler.IsFullscreen())
+            {
+                List<(int width, int height)> supportedResolutions = new()
+                {
+                    //16:9
+                    (1280, 720), (1366, 768), (1920, 1080), (2560, 1440),
+
+                    //16:10
+                    (1280, 800), (1440, 900), (1680, 1050), (1920, 1200),
+
+                    //4:3
+                    (640, 480), (800, 600), (1024, 768),
+
+                    //21:9
+                    (1280, 540), (1600,675), (2560, 1080), (3440, 1440)
+                };
+                var monitor = ScreenHandler.MONITOR_HANDLER.CurMonitor();
+                int width = monitor.width;
+                int height = monitor.height;
+                List<(int width, int height)> resolutions = supportedResolutions.FindAll(((int width, int height) res) => res.width <= width && res.height <= height);
+                curResIndex += 1;
+                if (curResIndex >= resolutions.Count) curResIndex = 0;
+                var res = resolutions[curResIndex];
+                ScreenHandler.ChangeWindowDimensions(res.width, res.height);
+
+            }
 
             if (EDITORMODE)
             {
@@ -191,16 +226,28 @@ namespace ShapeEngineDemo
                 if (InputHandler.IsReleased(0, "Toggle Draw Colliders")) DEBUG_DRAWCOLLIDERS = !DEBUG_DRAWCOLLIDERS;
                 if (InputHandler.IsReleased(0, "Cycle Zoom"))
                 {
-                    ScreenHandler.Cam.ZoomBy(0.25f);
-                    if (ScreenHandler.Cam.ZoomFactor > 2) ScreenHandler.Cam.ZoomFactor = 0.25f;
+                    ScreenHandler.CAMERA.ZoomBy(0.25f);
+                    if (ScreenHandler.CAMERA.ZoomFactor > 2) ScreenHandler.CAMERA.ZoomFactor = 0.25f;
                 }
 
                 //if (Raylib.IsKeyReleased(KeyboardKey.KEY_P)) TogglePause();
             }
         }
 
+        private void OnWindowSizeChanged(int w, int h)
+        {
+            ShaderHandler.SetScreenShaderValueFloat("crt", "renderWidth", w);
+            ShaderHandler.SetScreenShaderValueFloat("crt", "renderHeight", h);
+            ShaderHandler.SetScreenShaderValueFloat("pixelizer", "renderWidth", w);
+            ShaderHandler.SetScreenShaderValueFloat("pixelizer", "renderHeight", h);
+            ShaderHandler.SetScreenShaderValueFloat("blur", "renderWidth", w);
+            ShaderHandler.SetScreenShaderValueFloat("blur", "renderHeight", h);
+            ShaderHandler.SetScreenShaderValueVec("bloom", "size", new float[] { w, h }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
+        }
+
         public override void End()
         {
+            ScreenHandler.OnWindowSizeChanged -= OnWindowSizeChanged;
             base.End();
             UnloadImage(icon);
         }

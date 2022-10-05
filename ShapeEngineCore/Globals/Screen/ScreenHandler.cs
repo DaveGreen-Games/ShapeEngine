@@ -121,9 +121,8 @@ namespace ShapeEngineCore.Globals.Screen
 
     public static class ScreenHandler
     {
-
-        
-
+        public delegate void WindowSizeChanged(int w, int h);
+        public static event WindowSizeChanged? OnWindowSizeChanged;
 
         public static float SCREEN_EFFECT_INTENSITY = 1.0f;
         public static float CAMERA_SHAKE_INTENSITY = 1.0f;
@@ -132,8 +131,462 @@ namespace ShapeEngineCore.Globals.Screen
         public static float UI_TO_GAME { get; private set; } = 1f;
         public static float GAME_TO_UI { get; private set; } = 1f;
         public static int FPS { get; private set; }
-        //private static bool stretchMode = false;
-        //private static bool monitorChanged = false;
+
+        //private static (int width, int height) MONITOR_SIZE = (0, 0);
+        //private static (int width, int height) DEFAULT_WINDOW_SIZE = (0, 0);
+        public static (int width, int height) CUR_WINDOW_SIZE { get; private set; } = (0, 0);
+
+        public static MonitorHandler MONITOR_HANDLER { get; private set; } = new();
+        public static Camera CAMERA { get; private set; }
+        public static ScreenTexture GAME { get; private set; }
+        public static ScreenTexture UI { get; private set; }
+        
+        private static Dictionary<string, ShaderFlash> shaderFlashes = new();
+        private static ScreenBuffer[] screenBuffers = new ScreenBuffer[0];
+
+        private static (int width, int height) DEVELOPMENT_RESOLUTION = (0, 0);
+
+        //private static Vector2 MONITOR_OFFSET = new();
+
+        public static Rectangle CameraArea() { return CAMERA.GetCameraArea(); }
+        public static Rectangle GameArea() { return new(0, 0, GAME.GetTextureWidth(), GAME.GetTextureHeight()); }
+        public static Rectangle UIArea() { return new(0, 0, UI.GetTextureWidth(), UI.GetTextureHeight()); }
+        public static Vector2 GameCenter() { return GameSize() / 2f; }
+        public static Vector2 UICenter() { return UISize() / 2f; }
+        public static Vector2 GameSize() { return new(GAME.GetTextureWidth(), GAME.GetTextureHeight()); }
+        public static Vector2 UISize() { return new(UI.GetTextureWidth(), UI.GetTextureHeight()); }
+        public static int GameWidth() { return GAME.GetTextureWidth(); }
+        public static int GameHeight() { return GAME.GetTextureHeight(); }
+        public static int UIWidth() { return UI.GetTextureWidth(); }
+        public static int UIHeight() { return UI.GetTextureHeight(); }
+
+
+        public static void Initialize(int devWidth, int devHeight, float gameSizeFactor = 1.0f, float uiSizeFactor = 1.0f, string windowName = "Raylib Game", bool gameFixed = true, bool uiFixed = true, bool pixelSmoothing = false)
+        {
+            InitWindow(0, 0, windowName);
+            HideCursor();
+            SetWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
+            ClearWindowState(ConfigFlags.FLAG_VSYNC_HINT);
+            SetFPS(60);
+
+
+            MONITOR_HANDLER = new();
+            GAME_FACTOR = gameSizeFactor;
+            UI_FACTOR = uiSizeFactor;
+            GAME_TO_UI = UI_FACTOR / GAME_FACTOR;
+            UI_TO_GAME = GAME_FACTOR / UI_FACTOR;
+            DEVELOPMENT_RESOLUTION = (devWidth, devHeight);
+
+            //SetMonitorOffset();
+            SetupWindowDimensions();
+
+            GAME = new ScreenTexture(
+                devWidth, devHeight,
+                CUR_WINDOW_SIZE.width,
+                CUR_WINDOW_SIZE.height,
+                gameSizeFactor,
+                gameFixed
+            );
+            UI = new ScreenTexture(
+                devWidth, devHeight,
+                CUR_WINDOW_SIZE.width,
+                CUR_WINDOW_SIZE.height,
+                uiSizeFactor,
+                uiFixed
+            );
+
+
+            CAMERA = new(GameSize(), 1f, 0f, -1f, 1.5f);
+            CAMERA.PIXEL_SMOOTHING_ENABLED = pixelSmoothing;
+
+            screenBuffers = new ScreenBuffer[]
+            {
+                new(ScreenHandler.GameWidth(), ScreenHandler.GameHeight(), ScreenHandler.GameWidth(), ScreenHandler.GameHeight()),
+                new(ScreenHandler.GameWidth(), ScreenHandler.GameHeight(), ScreenHandler.GameWidth(), ScreenHandler.GameHeight())
+            };
+        }
+
+        public static void Close()
+        {
+            foreach (ScreenBuffer screenBuffer in screenBuffers)
+            {
+                screenBuffer.Unload();
+            }
+            screenBuffers = new ScreenBuffer[0];
+            shaderFlashes.Clear();
+            GAME.Close();
+            UI.Close();
+
+            CloseWindow();
+        }
+        public static void UpdateCamera(float dt)
+        {
+            CAMERA.Update(dt);
+        }
+        public static void Update(float dt)
+        {
+            foreach (var shaderFlash in shaderFlashes.Values)
+            {
+                shaderFlash.Update(dt);
+                if (shaderFlash.IsFinished()) shaderFlashes.Remove(shaderFlash.GetShader()); //does that work?
+            }
+
+            var newMonitor = MONITOR_HANDLER.HasMonitorSetupChanged();
+            if (newMonitor.available)
+            {
+                MonitorChanged(newMonitor);
+            }
+
+            GAME.Update(dt);
+            UI.Update(dt);
+
+        }
+
+        public static void Draw(List<ScreenShader> shadersToApply)
+        {
+            if (shadersToApply.Count <= 0)
+            {
+                GAME.Draw();
+                return;
+            }
+            else if (shadersToApply.Count == 1)
+            {
+                ScreenShader s = shadersToApply[0];
+                BeginShaderMode(s.GetShader());
+                GAME.Draw();
+                EndShaderMode();
+            }
+            else if (shadersToApply.Count == 2)
+            {
+                ScreenShader s = shadersToApply[0];
+                screenBuffers[0].StartTextureMode();
+                BeginShaderMode(s.GetShader());
+                GAME.DrawPro(ScreenHandler.GameWidth(), ScreenHandler.GameHeight());
+                EndShaderMode();
+                screenBuffers[0].EndTextureMode();
+
+                s = shadersToApply[1];
+
+                BeginShaderMode(s.GetShader());
+                screenBuffers[0].DrawPro(CUR_WINDOW_SIZE.width, CUR_WINDOW_SIZE.height);
+                EndShaderMode();
+            }
+            else
+            {
+                ScreenShader s = shadersToApply[0];
+                shadersToApply.RemoveAt(0);
+
+                ScreenShader endshader = shadersToApply[shadersToApply.Count - 1];
+                shadersToApply.RemoveAt(shadersToApply.Count - 1);
+
+                //draw game texture to first screenbuffer and first shader is already applied
+                screenBuffers[0].StartTextureMode();
+                BeginShaderMode(s.GetShader());
+                GAME.DrawPro(GameWidth(), GameHeight());
+                EndShaderMode();
+                screenBuffers[0].EndTextureMode();
+
+                int currentIndex = 0;
+                int nextIndex = 0;
+                for (int i = 0; i < shadersToApply.Count; i++)
+                {
+                    s = shadersToApply[i];
+                    nextIndex = currentIndex == 0 ? 1 : 0;
+                    ScreenBuffer current = screenBuffers[currentIndex];
+                    ScreenBuffer next = screenBuffers[nextIndex];
+                    next.StartTextureMode();
+                    BeginShaderMode(s.GetShader());
+                    current.DrawPro(GameWidth(), GameHeight());
+                    EndShaderMode();
+                    next.EndTextureMode();
+                    currentIndex = currentIndex == 0 ? 1 : 0;
+                }
+
+                BeginShaderMode(endshader.GetShader());
+                screenBuffers[nextIndex].DrawPro(CUR_WINDOW_SIZE.width, CUR_WINDOW_SIZE.height);
+                EndShaderMode();
+            }
+        }
+        public static void DrawUI()
+        {
+            UI.Draw();
+        }
+
+
+
+
+
+        public static Vector2 TransformPositionToUI(Vector2 gamePos)
+        {
+            return CAMERA.TransformPositionToUI(gamePos);
+        }
+
+        public static Vector2 TransformPositionToGame(Vector2 uiPos)
+        {
+            return CAMERA.TransformPositionToGame(uiPos);
+        }
+
+        public static bool SetMonitor(int newMonitor)
+        {
+            var monitor = MONITOR_HANDLER.SetMonitor(newMonitor);
+            if (monitor.available)
+            {
+                MonitorChanged(monitor);
+                return true;
+            }
+            return false;
+        }
+        public static void NextMonitor()
+        {
+            var nextMonitor = MONITOR_HANDLER.Next();
+            if (nextMonitor.available)
+            {
+                MonitorChanged(nextMonitor);
+            }
+        }
+        public static void SetFPS(int newFps)
+        {
+            FPS = newFps;
+            SetTargetFPS(FPS);
+        }
+        
+        public static void ChangeWindowDimensions(int newWidth, int newHeight)
+        {
+            //if (IsFullscreen()) return;
+
+            if (newWidth == CUR_WINDOW_SIZE.width && newHeight == CUR_WINDOW_SIZE.height) return;
+
+            CUR_WINDOW_SIZE = (newWidth, newHeight);
+
+            GAME.ChangeWindowSize(newWidth, newHeight);
+            UI.ChangeWindowSize(newWidth, newHeight);
+
+            SetWindowSize(newWidth, newHeight);
+            var monitor = MONITOR_HANDLER.CurMonitor();
+            int winPosX = monitor.width / 2 - newWidth / 2;
+            int winPosY = monitor.height / 2 - newHeight / 2;
+            //SetWindowPosition(winPosX + (int)MONITOR_OFFSET.X, winPosY + (int)MONITOR_OFFSET.Y);
+            SetWindowPosition(winPosX + (int)monitor.position.X, winPosY + (int)monitor.position.Y);
+
+            OnWindowSizeChanged?.Invoke(newWidth, newHeight);
+        }
+
+        public static void ResetWindow()
+        {
+            if (IsWindowFullscreen())
+            {
+                Raylib.ToggleFullscreen();
+            }
+            var monitor = MONITOR_HANDLER.CurMonitor();
+            ChangeWindowDimensions(monitor.width / 2, monitor.height / 2);
+        }
+
+        public static bool IsFullscreen() { return IsWindowFullscreen(); }
+        public static void SetFullscreen(bool enabled)
+        {
+            if (enabled && IsWindowFullscreen()) { return; }
+            if (!enabled && !IsWindowFullscreen()) { return; }
+
+            ToggleFullscreen();
+        }
+        public static bool ToggleFullscreen()
+        {
+            var monitor = MONITOR_HANDLER.CurMonitor();
+            if (IsWindowFullscreen())
+            {
+                ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+                ChangeWindowDimensions(monitor.width / 2, monitor.height / 2);
+                //ChangeWindowDimensions(DEFAULT_WINDOW_SIZE.width, DEFAULT_WINDOW_SIZE.height);
+            }
+            else
+            {
+                //var monitorSize = GetMonitorSize();
+                ChangeWindowDimensions(monitor.width, monitor.height);
+                SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+            }
+
+            return IsFullscreen();
+        }
+
+        public static void ShaderFlash(float duration, params string[] shaders)
+        {
+            if (shaders.Length <= 0) return;
+
+            foreach (string shader in shaders)
+            {
+                if (!ShaderHandler.HasScreenShader(shader)) continue;
+                if (shaderFlashes.ContainsKey(shader))
+                {
+                    shaderFlashes[shader].Reset(duration);
+                }
+                else
+                {
+                    shaderFlashes.Add(shader, new(duration, shader));
+                }
+            }
+        }
+        public static void StopAllShaderFlashes()
+        {
+            foreach (ShaderFlash shaderFlash in shaderFlashes.Values)
+            {
+                shaderFlash.Stop();
+            }
+            shaderFlashes.Clear();
+        }
+        public static void StartDraw(bool game = true)
+        {
+            if (game) GAME.BeginTextureMode(CAMERA);
+            else UI.BeginTextureMode(null);
+        }
+        public static void EndDraw(bool game = true)
+        {
+            if (game) GAME.EndTextureMode(CAMERA);
+            else UI.EndTextureMode(null);
+        }
+        public static void Flash(float duration, Color startColor, Color endColor, bool game = true)
+        {
+            byte startColorAlpha = (byte)(startColor.a * SCREEN_EFFECT_INTENSITY);
+            startColor.a = startColorAlpha;
+            byte endColorAlpha = (byte)(endColor.a * SCREEN_EFFECT_INTENSITY);
+            endColor.a = endColorAlpha;
+            if (game) GAME.Flash(duration, startColor, endColor);
+            else UI.Flash(duration, startColor, endColor);
+        }
+        public static void FlashTint(float duration, Color color, bool game = true)
+        {
+            byte colorAlpha = (byte)(color.a * SCREEN_EFFECT_INTENSITY);
+            color.a = colorAlpha;
+            if (game) GAME.FlashTint(duration, color);
+            else UI.FlashTint(duration, color);
+        }
+
+
+
+        
+        private static void MonitorChanged(MonitorHandler.MonitorInfo monitor)
+        {
+            int prevWidth = CUR_WINDOW_SIZE.width;
+            int prevHeight = CUR_WINDOW_SIZE.height;
+            
+            if (IsWindowFullscreen())
+            {
+                SetWindowMonitor(monitor.index);
+                //SetNativeResolution();
+                //SetMonitorOffset();
+                //UpdateMonitorRelevantInfo();
+                //UpdateMonitorRelevantTextures();
+                ChangeWindowDimensions(monitor.width, monitor.height);
+                SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+            }
+            else
+            {
+                //var monitorSize = GetMonitorSize();
+                int windowWidth = prevWidth;
+                int windowHeight = prevHeight;
+                if(prevWidth > monitor.width || prevHeight > monitor.height)
+                {
+                    windowWidth = monitor.width / 2;
+                    windowHeight = monitor.height / 2;
+                }
+                ChangeWindowDimensions(monitor.width, monitor.height);
+                SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+                SetWindowMonitor(monitor.index);
+                //SetNativeResolution();
+                //SetMonitorOffset();
+                //UpdateMonitorRelevantInfo();
+                //UpdateMonitorRelevantTextures();
+                ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+                ChangeWindowDimensions(windowWidth, windowHeight);
+                //ChangeWindowDimensions(MONITOR_SIZE.width, MONITOR_SIZE.height);
+                //ChangeWindowDimensions(DEFAULT_WINDOW_SIZE.width, DEFAULT_WINDOW_SIZE.height);
+            }
+
+            if(CUR_WINDOW_SIZE.width != prevWidth || CUR_WINDOW_SIZE.height != prevHeight)
+            {
+                GAME.ChangeWindowSize(CUR_WINDOW_SIZE.width, CUR_WINDOW_SIZE.height);
+                UI.ChangeWindowSize(CUR_WINDOW_SIZE.width, CUR_WINDOW_SIZE.height);
+            }
+        }
+        private static void SetupWindowDimensions()
+        {
+            var monitor = MONITOR_HANDLER.CurMonitor();
+            int newWidth = monitor.width / 2;
+            int newHeight = monitor.height / 2;
+
+            if (newWidth == CUR_WINDOW_SIZE.width && newHeight == CUR_WINDOW_SIZE.height) return;
+
+            CUR_WINDOW_SIZE = (newWidth, newHeight);
+
+            SetWindowSize(newWidth, newHeight);
+            int winPosX = monitor.width / 2 - newWidth / 2;
+            int winPosY = monitor.height / 2 - newHeight / 2;
+            //SetWindowPosition(winPosX + (int)MONITOR_OFFSET.X, winPosY + (int)MONITOR_OFFSET.Y);
+            SetWindowPosition(winPosX + (int)monitor.position.X, winPosY + (int)monitor.position.Y);
+
+            OnWindowSizeChanged?.Invoke(newWidth, newHeight);
+        }
+        //private static void SetMonitorOffset()
+        //{
+        //    MONITOR_OFFSET = GetWindowPosition() + new Vector2(1, 1);
+        //}
+
+
+
+
+
+
+
+
+
+
+
+
+        
+
+
+        //private static void UpdateMonitorRelevantInfo()
+        //{
+        //    //if (stretchMode)
+        //    //{
+        //    //    float fWidth = MONITOR_SIZE.width / (float)DEVELOPMENT_TARGET_RESOLUTION.width;
+        //    //    float fHeight = MONITOR_SIZE.height / (float)DEVELOPMENT_TARGET_RESOLUTION.height;
+        //    //    float f;
+        //    //    if (fWidth <= fHeight)
+        //    //    {
+        //    //        f = MONITOR_SIZE.width / (float)DEVELOPMENT_TARGET_RESOLUTION.width;
+        //    //    }
+        //    //    else
+        //    //    {
+        //    //        f = MONITOR_SIZE.height / (float)DEVELOPMENT_TARGET_RESOLUTION.height;
+        //    //    }
+        //    //
+        //    //    DEVELOPMENT_RESOLUTION.width = (int)(MONITOR_SIZE.width / f);
+        //    //    DEVELOPMENT_RESOLUTION.height = (int)(MONITOR_SIZE.height / f);
+        //    //}
+        //    //else
+        //    //{
+        //    DEVELOPMENT_RESOLUTION = DEVELOPMENT_TARGET_RESOLUTION;
+        //    //}
+        //
+        //    DEFAULT_WINDOW_SIZE.width = MONITOR_SIZE.width / 2;
+        //    DEFAULT_WINDOW_SIZE.height = MONITOR_SIZE.height / 2;
+        //    CUR_WINDOW_SIZE = DEFAULT_WINDOW_SIZE;
+        //
+        //}
+        
+        
+        
+        //private static void SetNativeResolution()
+        //{
+        //    if (monitorHandler == null) return;
+        //    var size = monitorHandler.GetSize();
+        //    MONITOR_SIZE = size;
+        //    //MONITOR_SIZE.width = GetScreenWidth();
+        //    //MONITOR_SIZE.height = GetScreenHeight();
+        //}
+
+        /*
+
         private static (int width, int height) DEVELOPMENT_TARGET_RESOLUTION = (0, 0);
         private static (int width, int height) DEVELOPMENT_RESOLUTION = (0, 0);
         private static (int width, int height) MONITOR_SIZE = (0, 0);
@@ -518,7 +971,7 @@ namespace ShapeEngineCore.Globals.Screen
 
 
         private static void UpdateMonitorRelevantInfo()
-        {
+        {FTran
             //if (stretchMode)
             //{
             //    float fWidth = MONITOR_SIZE.width / (float)DEVELOPMENT_TARGET_RESOLUTION.width;
@@ -600,7 +1053,6 @@ namespace ShapeEngineCore.Globals.Screen
             }
             return IsVsyncEnabled();
         }
-
         public static void SetFPS(int newFps)
         {
             FPS = newFps;
@@ -685,6 +1137,6 @@ namespace ShapeEngineCore.Globals.Screen
             string text = string.Format("W:{0} - H:{1} - RR:{2} - Slot: {3}", monitorInfo.width, monitorInfo.height, monitorInfo.refreshrate, monitorInfo.index);
             DrawText(text, x, y + fontSize * 1.1f, fontSize, RED);
         }
-
+        */
     }
 }

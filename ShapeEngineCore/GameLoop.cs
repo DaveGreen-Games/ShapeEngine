@@ -21,25 +21,29 @@ namespace ShapeEngineCore
         public float gameSizeFactor = 1.0f;
         public float uiSizeFactor = 1.0f;
         public string windowName = "Shape Engine Game";
-        public int fps = 60;
-        public bool vsync = true;
-        public bool fullscreen = false;
-        public int monitor = 0;
+        //public int fps = 60;
+        //public bool vsync = true;
+        //public bool fullscreen = false;
+        //public int monitor = 0;
+        public bool gameFixed = true;
+        public bool uiFixed = true;
         public bool pixelSmoothing = false;
 
         public ScreenInitInfo() { }
         public ScreenInitInfo(int devWidth, int devHeight, string windowName) { this.devWidth = devWidth; this.devHeight = devHeight; this.windowName = windowName; }
-        public ScreenInitInfo(int devWidth, int devHeight, float gameSizeFactor, float uiSizeFactor, string windowName, int fps, bool vsync, bool fullscreen, int monitor, bool pixelSmoothing)
+        public ScreenInitInfo(int devWidth, int devHeight, float gameSizeFactor, float uiSizeFactor, string windowName, bool gameFixed, bool uiFixed, bool pixelSmoothing)
         {
             this.devWidth = devWidth;
             this.devHeight = devHeight;
             this.gameSizeFactor = gameSizeFactor;
             this.uiSizeFactor = uiSizeFactor;
             this.windowName = windowName;
-            this.fps = fps;
-            this.vsync = vsync;
-            this.fullscreen = fullscreen;
-            this.monitor = monitor;
+            //this.fps = fps;
+            //this.vsync = vsync;
+            //this.fullscreen = fullscreen;
+            //this.monitor = monitor;
+            this.gameFixed = gameFixed;
+            this.uiFixed = uiFixed;
             this.pixelSmoothing = pixelSmoothing;
         }
     }
@@ -353,8 +357,8 @@ namespace ShapeEngineCore
             
 
             //needs to be called first!!!
-            bool fs = launchParams.Contains("fullscreen") || screenInitInfo.fullscreen;
-            ScreenHandler.Initialize(screenInitInfo.devWidth, screenInitInfo.devHeight, screenInitInfo.gameSizeFactor, screenInitInfo.uiSizeFactor, screenInitInfo.windowName, screenInitInfo.fps, screenInitInfo.vsync, fs, screenInitInfo.monitor, screenInitInfo.pixelSmoothing);
+            //bool fs = launchParams.Contains("fullscreen") || screenInitInfo.fullscreen;
+            ScreenHandler.Initialize(screenInitInfo.devWidth, screenInitInfo.devHeight, screenInitInfo.gameSizeFactor, screenInitInfo.uiSizeFactor, screenInitInfo.windowName, screenInitInfo.gameFixed, screenInitInfo.uiFixed, screenInitInfo.pixelSmoothing);
             SavegameHandler.Initialize(gameInitInfo.studioName, gameInitInfo.gameName);
             ResourceManager.Initialize(resourceInitInfo.path, resourceInitInfo.filename);
             PaletteHandler.Initialize();
@@ -392,7 +396,7 @@ namespace ShapeEngineCore
             {
                 DELTA = GetFrameTime();
                 MOUSE_POS = GetMousePosition();
-                MOUSE_POS_UI = ScreenHandler.ScalePositionV(MOUSE_POS, false);
+                MOUSE_POS_UI = ScreenHandler.UI.ScalePositionV(MOUSE_POS);
                 MOUSE_POS_GAME = ScreenHandler.TransformPositionToGame(MOUSE_POS_UI);
                 if (WindowShouldClose() && !IsKeyDown(KeyboardKey.KEY_ESCAPE)) QUIT = true;
 
@@ -466,9 +470,9 @@ namespace ShapeEngineCore
             PreDraw();
 
             var shaders = ShaderHandler.GetCurActiveShaders();
-            if (ScreenHandler.Cam != null && ScreenHandler.Cam.PIXEL_SMOOTHING_ENABLED)
+            if (ScreenHandler.CAMERA != null && ScreenHandler.CAMERA.PIXEL_SMOOTHING_ENABLED)
             {
-                BeginMode2D(ScreenHandler.Cam.ScreenSpaceCam);
+                BeginMode2D(ScreenHandler.CAMERA.ScreenSpaceCam);
                 ScreenHandler.Draw(shaders);
                 //ShaderHandler.DrawShaders();
                 EndMode2D();

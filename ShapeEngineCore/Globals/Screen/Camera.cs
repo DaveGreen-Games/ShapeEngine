@@ -496,7 +496,7 @@ namespace ShapeEngineCore.Globals.Screen
 
             if (PIXEL_SMOOTHING_ENABLED)
             {
-                float virtualRatio = ScreenHandler.GetCurWindowSizeWidth() / ScreenHandler.Game.GetTextureWidth();
+                float virtualRatio = ScreenHandler.CUR_WINDOW_SIZE.width / ScreenHandler.GAME.GetTextureWidth();
                 worldSpaceCamera.target.X = (int)rawCameraTarget.X;
                 screenSpaceCamera.target.X = rawCameraTarget.X - worldSpaceCamera.target.X;
                 screenSpaceCamera.target.X *= virtualRatio;
