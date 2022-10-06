@@ -26,8 +26,8 @@ namespace ShapeEngineCore.Globals.Screen
         private float curTextureSizeFactor = 1.0f;
         private bool fixedSize = true;
         public Vector2 STRETCH_FACTOR { get; private set; } = new(1f);
-        public float STRETCH_AREA_FACTOR { get { return STRETCH_FACTOR.X * STRETCH_FACTOR.Y; } }
-        public float STRETCH_AREA_SIDE_FACTOR { get { return MathF.Sqrt(STRETCH_AREA_FACTOR); } }
+        public float STRETCH_AREA_FACTOR { get; private set; } = 1f;
+        public float STRETCH_AREA_SIDE_FACTOR { get; private set; } = 1f;
 
         private int blendMode = -1;
         private int prevBlendMode = -1;
@@ -67,6 +67,8 @@ namespace ShapeEngineCore.Globals.Screen
                     (float)targetResolution.width / (float)developmentResolution.width,
                     (float)targetResolution.height / (float)developmentResolution.height
                 );
+            this.STRETCH_AREA_FACTOR = STRETCH_FACTOR.X * STRETCH_FACTOR.Y;
+            this.STRETCH_AREA_SIDE_FACTOR = MathF.Sqrt(STRETCH_AREA_FACTOR);
             int textureWidth = (int)(targetResolution.width * factor);
             int textureHeight = (int)(targetResolution.height * factor);
             //this.prevTextureSize = new(textureWidth, textureHeight);
@@ -236,11 +238,13 @@ namespace ShapeEngineCore.Globals.Screen
                 float f = fWidth <= fHeight ? fWidth : fHeight;
 
                 targetResolution = ((int)(winWidth / f), (int)(winHeight / f));
-                this.STRETCH_FACTOR = new Vector2
+                STRETCH_FACTOR = new Vector2
                 (
                     (float)targetResolution.width / (float)developmentResolution.width,
                     (float)targetResolution.height / (float)developmentResolution.height
                 );
+                STRETCH_AREA_FACTOR = STRETCH_FACTOR.X * STRETCH_FACTOR.Y;
+                STRETCH_AREA_SIDE_FACTOR = MathF.Sqrt(STRETCH_AREA_FACTOR);
                 int textureWidth = (int)(targetResolution.width * curTextureSizeFactor);
                 int textureHeight = (int)(targetResolution.height * curTextureSizeFactor);
                 ChangeTextureSize(textureWidth, textureHeight);
