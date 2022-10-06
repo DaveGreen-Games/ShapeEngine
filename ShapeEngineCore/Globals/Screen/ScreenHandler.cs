@@ -130,8 +130,10 @@ namespace ShapeEngineCore.Globals.Screen
         public static float UI_FACTOR { get; private set; }
         public static float UI_TO_GAME { get; private set; } = 1f;
         public static float GAME_TO_UI { get; private set; } = 1f;
-        
+
+        public static int FRAME_RATE_LIMIT { get; private set; } = 60;
         public static int FPS { get; private set; }
+        public static bool VSYNC { get; private set; } = true;
 
         //private static (int width, int height) MONITOR_SIZE = (0, 0);
         //private static (int width, int height) DEFAULT_WINDOW_SIZE = (0, 0);
@@ -168,7 +170,9 @@ namespace ShapeEngineCore.Globals.Screen
             HideCursor();
             SetWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
             ClearWindowState(ConfigFlags.FLAG_VSYNC_HINT);
-            SetFPS(60);
+
+            FRAME_RATE_LIMIT = 60;
+            SetVsync(true);
 
 
             MONITOR_HANDLER = new();
@@ -348,12 +352,46 @@ namespace ShapeEngineCore.Globals.Screen
                 MonitorChanged(nextMonitor);
             }
         }
-        public static void SetFPS(int newFps)
+
+
+
+        private static void SetFPS(int newFps)
         {
             FPS = newFps;
             SetTargetFPS(FPS);
         }
         
+        public static void SetFrameRateLimit(int newLimit)
+        {
+            if (newLimit < 30) newLimit = 30;
+            else if (newLimit > 240) newLimit = 240;
+            FRAME_RATE_LIMIT = newLimit;
+            if (!IsVsyncEnabled())
+            {
+                SetFPS(FRAME_RATE_LIMIT);
+            }
+        }
+
+        public static bool IsVsyncEnabled() { return VSYNC; }
+        public static void SetVsync(bool enabled)
+        {
+            if (enabled)
+            {
+                VSYNC = true;
+                SetFPS(MONITOR_HANDLER.CurMonitor().refreshrate);
+            }
+            else
+            {
+                VSYNC = false;
+                SetFPS(FRAME_RATE_LIMIT);
+            }
+        }
+        public static bool ToggleVsync()
+        {
+            SetVsync(!IsVsyncEnabled());
+            return IsVsyncEnabled();
+        }
+
         public static void ResizeWindow(int newWidth, int newHeight)
         {
             ChangeWindowDimensions(newWidth, newHeight, false);
@@ -484,6 +522,11 @@ namespace ShapeEngineCore.Globals.Screen
             {
                 GAME.ChangeWindowSize(CUR_WINDOW_SIZE.width, CUR_WINDOW_SIZE.height);
                 UI.ChangeWindowSize(CUR_WINDOW_SIZE.width, CUR_WINDOW_SIZE.height);
+            }
+
+            if (IsVsyncEnabled())
+            {
+                SetFPS(monitor.refreshrate);
             }
         }
         private static void ChangeWindowDimensions(int newWidth, int newHeight, bool fullscreenChange = false)

@@ -17,6 +17,7 @@ namespace ShapeEngineDemo
     {
         private Image icon;
         private int curResIndex = 0;
+        private int curFrameRateLimitIndex = 0;
         public override void Start()
         {
             //WINDOW ICON
@@ -157,6 +158,8 @@ namespace ShapeEngineDemo
 
             InputAction cycleResolutionsDebug = new("Cycle Res", InputAction.Keys.RIGHT);
             InputAction nextMonitorDebug = new("Next Monitor", InputAction.Keys.LEFT);
+            InputAction toggleVsyncDebug = new("Vsync", InputAction.Keys.V);
+            InputAction cycleFramerateLimitDebug = new("Cycle Framerate Limit", InputAction.Keys.UP);
 
             InputAction pause = new("Pause", InputAction.Keys.P);
             InputAction slowTime = new("Slow Time", InputAction.Keys.LEFT_ALT);
@@ -173,7 +176,7 @@ namespace ShapeEngineDemo
                 shootFixed, dropAimPoint,
                 pause, slowTime,
                 spawnAsteroidDebug, healPlayerDebug, toggleDrawCollidersDebug, toggleDrawHelpersDebug, cycleZoomDebug, 
-                cycleResolutionsDebug, nextMonitorDebug
+                cycleResolutionsDebug, nextMonitorDebug, cycleFramerateLimitDebug, toggleVsyncDebug
                 );
             InputHandler.AddInputMap(inputMap, true);
             InputHandler.SwitchToMap("Default", 0);
@@ -189,9 +192,15 @@ namespace ShapeEngineDemo
         public override void HandleInput()
         {
             if (InputHandler.IsReleased(0, "Fullscreen")) { ScreenHandler.ToggleFullscreen(); }
-            if (InputHandler.IsReleased(0, "Next Monitor"))
+            if (InputHandler.IsReleased(0, "Next Monitor")) { ScreenHandler.NextMonitor(); }
+            if (InputHandler.IsReleased(0, "Vsync")) { ScreenHandler.ToggleVsync(); }
+            if (InputHandler.IsReleased(0, "Cycle Framerate Limit"))
             {
-                ScreenHandler.NextMonitor();
+                List<int> frameRateLimits = new List<int>() { 30, 60, 72, 90, 120, 144, 180, 240 };
+                curFrameRateLimitIndex += 1;
+                if (curFrameRateLimitIndex >= frameRateLimits.Count) curFrameRateLimitIndex = 0;
+                ScreenHandler.SetFrameRateLimit(frameRateLimits[curFrameRateLimitIndex]);
+
             }
             if (InputHandler.IsReleased(0, "Cycle Res") && !ScreenHandler.IsFullscreen())
             {
