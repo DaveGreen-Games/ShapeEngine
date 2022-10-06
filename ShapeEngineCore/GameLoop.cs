@@ -25,13 +25,12 @@ namespace ShapeEngineCore
         //public bool vsync = true;
         //public bool fullscreen = false;
         //public int monitor = 0;
-        public bool gameFixed = true;
-        public bool uiFixed = true;
+        public bool fixedTexture = true;
         public bool pixelSmoothing = false;
 
         public ScreenInitInfo() { }
         public ScreenInitInfo(int devWidth, int devHeight, string windowName) { this.devWidth = devWidth; this.devHeight = devHeight; this.windowName = windowName; }
-        public ScreenInitInfo(int devWidth, int devHeight, float gameSizeFactor, float uiSizeFactor, string windowName, bool gameFixed, bool uiFixed, bool pixelSmoothing)
+        public ScreenInitInfo(int devWidth, int devHeight, float gameSizeFactor, float uiSizeFactor, string windowName, bool fixedTexture, bool pixelSmoothing)
         {
             this.devWidth = devWidth;
             this.devHeight = devHeight;
@@ -42,8 +41,7 @@ namespace ShapeEngineCore
             //this.vsync = vsync;
             //this.fullscreen = fullscreen;
             //this.monitor = monitor;
-            this.gameFixed = gameFixed;
-            this.uiFixed = uiFixed;
+            this.fixedTexture = fixedTexture;
             this.pixelSmoothing = pixelSmoothing;
         }
     }
@@ -358,7 +356,7 @@ namespace ShapeEngineCore
 
             //needs to be called first!!!
             //bool fs = launchParams.Contains("fullscreen") || screenInitInfo.fullscreen;
-            ScreenHandler.Initialize(screenInitInfo.devWidth, screenInitInfo.devHeight, screenInitInfo.gameSizeFactor, screenInitInfo.uiSizeFactor, screenInitInfo.windowName, screenInitInfo.gameFixed, screenInitInfo.uiFixed, screenInitInfo.pixelSmoothing);
+            ScreenHandler.Initialize(screenInitInfo.devWidth, screenInitInfo.devHeight, screenInitInfo.gameSizeFactor, screenInitInfo.uiSizeFactor, screenInitInfo.windowName, screenInitInfo.fixedTexture, screenInitInfo.pixelSmoothing);
             SavegameHandler.Initialize(gameInitInfo.studioName, gameInitInfo.gameName);
             ResourceManager.Initialize(resourceInitInfo.path, resourceInitInfo.filename);
             PaletteHandler.Initialize();

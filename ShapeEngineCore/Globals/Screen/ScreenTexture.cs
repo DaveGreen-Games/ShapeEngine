@@ -16,7 +16,7 @@ namespace ShapeEngineCore.Globals.Screen
         private Rectangle sourceRec;
         private Rectangle destRec;
         private Vector2 origin;
-        private Vector2 prevTextureSize = new(0f, 0f);
+        //private Vector2 prevTextureSize = new(0f, 0f);
         private Color backgroundColor = new(0, 0, 0, 0);
 
 
@@ -55,7 +55,7 @@ namespace ShapeEngineCore.Globals.Screen
             this.fixedSize = fixedSize;
             int textureWidth = (int)(devWidth * factor);
             int textureHeight = (int)(devHeight * factor);
-            this.prevTextureSize = new(textureWidth, textureHeight);
+            //this.prevTextureSize = new(textureWidth, textureHeight);
             this.texture = LoadRenderTexture(textureWidth, textureHeight);
             this.curTextureSizeFactor = factor;
 
@@ -90,12 +90,12 @@ namespace ShapeEngineCore.Globals.Screen
             curTint = tint;
         }
 
-        public Vector2 UpdatePosition(Vector2 pos)
-        {
-            float newX = Utils.RemapFloat(pos.X, 0, prevTextureSize.X, 0, GetTextureWidth());
-            float newY = Utils.RemapFloat(pos.Y, 0, prevTextureSize.Y, 0, GetTextureHeight());
-            return new(newX, newY);
-        }
+        //public Vector2 UpdatePosition(Vector2 pos)
+        //{
+        //    float newX = Utils.RemapFloat(pos.X, 0, prevTextureSize.X, 0, GetTextureWidth());
+        //    float newY = Utils.RemapFloat(pos.Y, 0, prevTextureSize.Y, 0, GetTextureHeight());
+        //    return new(newX, newY);
+        //}
 
         public RenderTexture GetTexture() { return texture; }
 
@@ -206,7 +206,7 @@ namespace ShapeEngineCore.Globals.Screen
         //}
         private void ChangeTextureSize(int width, int height)
         {
-            prevTextureSize = new(GetTextureWidth(), GetTextureHeight());
+            //prevTextureSize = new(GetTextureWidth(), GetTextureHeight());
             UnloadRenderTexture(texture);
             texture = LoadRenderTexture(width, height);
             sourceRec.width = width;

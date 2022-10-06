@@ -130,6 +130,7 @@ namespace ShapeEngineCore.Globals.Screen
         public static float UI_FACTOR { get; private set; }
         public static float UI_TO_GAME { get; private set; } = 1f;
         public static float GAME_TO_UI { get; private set; } = 1f;
+        
         public static int FPS { get; private set; }
 
         //private static (int width, int height) MONITOR_SIZE = (0, 0);
@@ -143,8 +144,8 @@ namespace ShapeEngineCore.Globals.Screen
         
         private static Dictionary<string, ShaderFlash> shaderFlashes = new();
         private static ScreenBuffer[] screenBuffers = new ScreenBuffer[0];
-
-        private static (int width, int height) DEVELOPMENT_RESOLUTION = (0, 0);
+        
+        //private static (int width, int height) DEVELOPMENT_RESOLUTION = (0, 0);
 
         //private static Vector2 MONITOR_OFFSET = new();
 
@@ -161,7 +162,7 @@ namespace ShapeEngineCore.Globals.Screen
         public static int UIHeight() { return UI.GetTextureHeight(); }
 
 
-        public static void Initialize(int devWidth, int devHeight, float gameSizeFactor = 1.0f, float uiSizeFactor = 1.0f, string windowName = "Raylib Game", bool gameFixed = true, bool uiFixed = true, bool pixelSmoothing = false)
+        public static void Initialize(int devWidth, int devHeight, float gameSizeFactor = 1.0f, float uiSizeFactor = 1.0f, string windowName = "Raylib Game", bool fixedTexture = true, bool pixelSmoothing = false)
         {
             InitWindow(0, 0, windowName);
             HideCursor();
@@ -175,7 +176,7 @@ namespace ShapeEngineCore.Globals.Screen
             UI_FACTOR = uiSizeFactor;
             GAME_TO_UI = UI_FACTOR / GAME_FACTOR;
             UI_TO_GAME = GAME_FACTOR / UI_FACTOR;
-            DEVELOPMENT_RESOLUTION = (devWidth, devHeight);
+            //DEVELOPMENT_RESOLUTION = (devWidth, devHeight);
 
             //SetMonitorOffset();
             SetupWindowDimensions();
@@ -185,14 +186,14 @@ namespace ShapeEngineCore.Globals.Screen
                 CUR_WINDOW_SIZE.width,
                 CUR_WINDOW_SIZE.height,
                 gameSizeFactor,
-                gameFixed
+                fixedTexture
             );
             UI = new ScreenTexture(
                 devWidth, devHeight,
                 CUR_WINDOW_SIZE.width,
                 CUR_WINDOW_SIZE.height,
                 uiSizeFactor,
-                uiFixed
+                fixedTexture
             );
 
 
@@ -381,11 +382,9 @@ namespace ShapeEngineCore.Globals.Screen
             {
                 ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
                 ChangeWindowDimensions(WINDOWED_WINDOW_SIZE.width, WINDOWED_WINDOW_SIZE.height, false);
-                //ChangeWindowDimensions(DEFAULT_WINDOW_SIZE.width, DEFAULT_WINDOW_SIZE.height);
             }
             else
             {
-                //var monitorSize = GetMonitorSize();
                 ChangeWindowDimensions(monitor.width, monitor.height, true);
                 SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
             }
@@ -456,16 +455,11 @@ namespace ShapeEngineCore.Globals.Screen
             if (IsWindowFullscreen())
             {
                 SetWindowMonitor(monitor.index);
-                //SetNativeResolution();
-                //SetMonitorOffset();
-                //UpdateMonitorRelevantInfo();
-                //UpdateMonitorRelevantTextures();
                 ChangeWindowDimensions(monitor.width, monitor.height, true);
                 SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
             }
             else
             {
-                //var monitorSize = GetMonitorSize();
                 int windowWidth = prevWidth;
                 int windowHeight = prevHeight;
                 if(prevWidth > monitor.width || prevHeight > monitor.height)
@@ -476,14 +470,8 @@ namespace ShapeEngineCore.Globals.Screen
                 ChangeWindowDimensions(monitor.width, monitor.height, true);
                 SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
                 SetWindowMonitor(monitor.index);
-                //SetNativeResolution();
-                //SetMonitorOffset();
-                //UpdateMonitorRelevantInfo();
-                //UpdateMonitorRelevantTextures();
                 ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
                 ChangeWindowDimensions(windowWidth, windowHeight, false);
-                //ChangeWindowDimensions(MONITOR_SIZE.width, MONITOR_SIZE.height);
-                //ChangeWindowDimensions(DEFAULT_WINDOW_SIZE.width, DEFAULT_WINDOW_SIZE.height);
             }
 
             if(CUR_WINDOW_SIZE.width != prevWidth || CUR_WINDOW_SIZE.height != prevHeight)
@@ -530,17 +518,6 @@ namespace ShapeEngineCore.Globals.Screen
 
             OnWindowSizeChanged?.Invoke(newWidth, newHeight);
         }
-        //private static void SetMonitorOffset()
-        //{
-        //    MONITOR_OFFSET = GetWindowPosition() + new Vector2(1, 1);
-        //}
-
-
-
-
-
-
-
 
 
 
