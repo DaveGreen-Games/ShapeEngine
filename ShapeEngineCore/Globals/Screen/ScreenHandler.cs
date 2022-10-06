@@ -196,9 +196,9 @@ namespace ShapeEngineCore.Globals.Screen
                 fixedTexture
             );
 
+            GAME.OnTextureSizeChanged += GameTextureSizeChanged;
 
-            CAMERA = new(GameSize(), 1f, 0f, -1f, 1.5f);
-            CAMERA.PIXEL_SMOOTHING_ENABLED = pixelSmoothing;
+            CAMERA = new(GameSize(), 1f, GAME.STRETCH_AREA_FACTOR, 0f, -1f, 1.5f);
 
             screenBuffers = new ScreenBuffer[]
             {
@@ -213,6 +213,7 @@ namespace ShapeEngineCore.Globals.Screen
             {
                 screenBuffer.Unload();
             }
+            GAME.OnTextureSizeChanged -= GameTextureSizeChanged;
             screenBuffers = new ScreenBuffer[0];
             shaderFlashes.Clear();
             GAME.Close();
@@ -220,6 +221,8 @@ namespace ShapeEngineCore.Globals.Screen
 
             CloseWindow();
         }
+
+        
         public static void UpdateCamera(float dt)
         {
             CAMERA.Update(dt);
@@ -446,7 +449,10 @@ namespace ShapeEngineCore.Globals.Screen
 
 
 
-        
+        private static void GameTextureSizeChanged(int w, int h, float factor)
+        {
+            CAMERA.ChangeSize(new Vector2(w, h), factor);
+        }
         private static void MonitorChanged(MonitorHandler.MonitorInfo monitor)
         {
             int prevWidth = CUR_WINDOW_SIZE.width;

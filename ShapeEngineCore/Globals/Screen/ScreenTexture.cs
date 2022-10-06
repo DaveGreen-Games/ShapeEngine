@@ -5,7 +5,7 @@ namespace ShapeEngineCore.Globals.Screen
 {
     public class ScreenTexture
     {
-        public delegate void TextureSizeChanged(int w, int h);
+        public delegate void TextureSizeChanged(int w, int h, float factor);
         public event TextureSizeChanged? OnTextureSizeChanged;
 
         private Vector2 offset = new(0, 0);
@@ -26,7 +26,8 @@ namespace ShapeEngineCore.Globals.Screen
         private float curTextureSizeFactor = 1.0f;
         private bool fixedSize = true;
         public Vector2 STRETCH_FACTOR { get; private set; } = new(1f);
-
+        public float STRETCH_AREA_FACTOR { get { return STRETCH_FACTOR.X * STRETCH_FACTOR.Y; } }
+        public float STRETCH_AREA_SIDE_FACTOR { get { return MathF.Sqrt(STRETCH_AREA_FACTOR); } }
 
         private int blendMode = -1;
         private int prevBlendMode = -1;
@@ -44,23 +45,33 @@ namespace ShapeEngineCore.Globals.Screen
 
         public ScreenTexture(int devWidth, int devHeight, int winWidth, int winHeight, float factor, bool fixedSize = false)
         {
+            this.fixedSize = fixedSize;
             this.developmentResolution.width = devWidth;
             this.developmentResolution.height = devHeight;
-            this.targetResolution = (devWidth, devHeight);
+            this.curTextureSizeFactor = factor;
+            this.curWindowSize.width = winWidth;
+            this.curWindowSize.height = winHeight;
+
+            if (!fixedSize)
+            {
+                float fWidth = winWidth / (float)developmentResolution.width;
+                float fHeight = winHeight / (float)developmentResolution.height;
+                float f = fWidth <= fHeight ? fWidth : fHeight;
+
+                targetResolution = ((int)(winWidth / f), (int)(winHeight / f));
+            }
+            else this.targetResolution = (devWidth, devHeight);
+            
             this.STRETCH_FACTOR = new Vector2
                 (
                     (float)targetResolution.width / (float)developmentResolution.width,
                     (float)targetResolution.height / (float)developmentResolution.height
                 );
-            this.fixedSize = fixedSize;
-            int textureWidth = (int)(devWidth * factor);
-            int textureHeight = (int)(devHeight * factor);
+            int textureWidth = (int)(targetResolution.width * factor);
+            int textureHeight = (int)(targetResolution.height * factor);
             //this.prevTextureSize = new(textureWidth, textureHeight);
             this.texture = LoadRenderTexture(textureWidth, textureHeight);
-            this.curTextureSizeFactor = factor;
-
-            this.curWindowSize.width = winWidth;
-            this.curWindowSize.height = winHeight;
+            
 
             this.sourceRec = new Rectangle(0, 0, textureWidth, -textureHeight);
             this.destRec = new Rectangle(winWidth / 2, winHeight / 2, winWidth, winHeight);
@@ -211,7 +222,7 @@ namespace ShapeEngineCore.Globals.Screen
             texture = LoadRenderTexture(width, height);
             sourceRec.width = width;
             sourceRec.height = -height;
-            OnTextureSizeChanged?.Invoke(width, height);
+            OnTextureSizeChanged?.Invoke(width, height, STRETCH_AREA_FACTOR);
         }
         public void ChangeWindowSize(int winWidth, int winHeight)
         {

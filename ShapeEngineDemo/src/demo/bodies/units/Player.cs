@@ -715,6 +715,8 @@ namespace ShapeEngineDemo.Bodies
 
         public override Vector2 GetCameraPosition(Vector2 camPos, float dt, float smoothness = 1f, float boundary = 0f)
         {
+            return collider.Pos;
+
             if (dt <= 0f) return collider.Pos;
 
             Vector2 targetPos = collider.Pos;
