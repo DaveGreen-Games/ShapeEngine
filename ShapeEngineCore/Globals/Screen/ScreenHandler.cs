@@ -147,7 +147,7 @@ namespace ShapeEngineCore.Globals.Screen
         private static Dictionary<string, ShaderFlash> shaderFlashes = new();
         private static ScreenBuffer[] screenBuffers = new ScreenBuffer[0];
         
-        //private static (int width, int height) DEVELOPMENT_RESOLUTION = (0, 0);
+        public static (int width, int height) DEVELOPMENT_RESOLUTION { get; private set; } = (0, 0);
 
         //private static Vector2 MONITOR_OFFSET = new();
 
@@ -180,7 +180,7 @@ namespace ShapeEngineCore.Globals.Screen
             UI_FACTOR = uiSizeFactor;
             GAME_TO_UI = UI_FACTOR / GAME_FACTOR;
             UI_TO_GAME = GAME_FACTOR / UI_FACTOR;
-            //DEVELOPMENT_RESOLUTION = (devWidth, devHeight);
+            DEVELOPMENT_RESOLUTION = (devWidth, devHeight);
 
             //SetMonitorOffset();
             SetupWindowDimensions();
