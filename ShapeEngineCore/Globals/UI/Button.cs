@@ -39,9 +39,9 @@ namespace ShapeEngineCore.Globals.UI
                 default: return true;
             }
         }
-        public override void Update(float dt, Vector2 mousePos)
+        public override void Update(float dt, Vector2 mousePosRaw)
         {
-            base.Update(dt, mousePos);
+            base.Update(dt, mousePosRaw);
             easeHandler.Update(dt);
             if (easeHandler.HasChain("offset"))
             {
@@ -88,6 +88,10 @@ namespace ShapeEngineCore.Globals.UI
             }
             DrawRectangleRec(offsetRect, color);
             if (selected) DrawRectangleV(new Vector2(offsetRect.X, offsetRect.y + offsetRect.height * 0.9f), new Vector2(offsetRect.width, offsetRect.height * 0.1f), stateColors.selectedColor);
+            
+            //DrawRectangleLinesEx(rect, 5f, WHITE);
+            //DrawCircleV(GAMELOOP.MOUSE_POS_UI, 15f, BLUE);
+            //DrawCircleV(GAMELOOP.MOUSE_POS_UI_RAW, 5f, YELLOW);
         }
 
         public override void PressedChanged(bool pressed)

@@ -66,9 +66,9 @@ namespace ShapeEngineDemo
         }
         public override void Update(float dt)
         {
-            level1Button.Update(dt, GAMELOOP.MOUSE_POS_UI);
-            optionsButton.Update(dt, GAMELOOP.MOUSE_POS_UI);
-            quitButton.Update(dt, GAMELOOP.MOUSE_POS_UI);
+            level1Button.Update(dt, GAMELOOP.MOUSE_POS_UI_RAW);
+            optionsButton.Update(dt, GAMELOOP.MOUSE_POS_UI_RAW);
+            quitButton.Update(dt, GAMELOOP.MOUSE_POS_UI_RAW);
             if (level1Button.Clicked())
             {
                 GAMELOOP.AddScene("level1", new Level());
@@ -96,9 +96,11 @@ namespace ShapeEngineDemo
 
             //UIHandler.DrawTextAligned(String.Format("Size: {0}", ScreenHandler.UISize()), new Vector2(100f, 180f), 50, 5, WHITE, Alignement.LEFTCENTER);
             //UIHandler.DrawTextAligned(String.Format("Dev Res: {0}", devRes), new Vector2(100f, 260f), 50, 5, WHITE, Alignement.LEFTCENTER);
-            //UIHandler.DrawTextAligned(String.Format("Stretch F: {0}", stretchFactor), new Vector2(100f, 340f), 50, 5, WHITE, Alignement.LEFTCENTER);
-            //UIHandler.DrawTextAligned(String.Format("Area F: {0}", ScreenHandler.UI.STRETCH_AREA_FACTOR), new Vector2(100f, 420f), 50, 5, WHITE, Alignement.LEFTCENTER);
-            //UIHandler.DrawTextAligned(String.Format("Area Side F: {0}", ScreenHandler.UI.STRETCH_AREA_SIDE_FACTOR), new Vector2(100f, 500f), 50, 5, WHITE, Alignement.LEFTCENTER);
+            //UIHandler.DrawTextAligned(String.Format("Target Res: {0}", ScreenHandler.UI.TARGET_RESOLUTION), new Vector2(100f, 340f), 50, 5, WHITE, Alignement.LEFTCENTER);
+            //UIHandler.DrawTextAligned(String.Format("Stretch F: {0}", stretchFactor), new Vector2(100f, 420f), 50, 5, WHITE, Alignement.LEFTCENTER);
+            //
+            ////UIHandler.DrawTextAligned(String.Format("Area F: {0}", ScreenHandler.UI.STRETCH_AREA_FACTOR), new Vector2(100f, 420f), 50, 5, WHITE, Alignement.LEFTCENTER);
+            ////UIHandler.DrawTextAligned(String.Format("Area Side F: {0}", ScreenHandler.UI.STRETCH_AREA_SIDE_FACTOR), new Vector2(100f, 500f), 50, 5, WHITE, Alignement.LEFTCENTER);
             //
             //UIHandler.DrawTextAligned(String.Format("Button Pos: {0}", level1Button.GetCenter()), new Vector2(100f, 580f), 50, 5, WHITE, Alignement.LEFTCENTER);
             //UIHandler.DrawTextAligned(String.Format("Button Scaled Pos: {0}", level1Button.GetCenter() * stretchFactor), new Vector2(100f, 660f), 50, 5, WHITE, Alignement.LEFTCENTER);

@@ -21,7 +21,7 @@ namespace ShapeEngineCore.Globals.Screen
 
 
         private (int width, int height) developmentResolution;
-        private (int width, int height) targetResolution;
+        public (int width, int height) TARGET_RESOLUTION { get; private set; } = (0, 0);
         private (int width, int height) curWindowSize;
         private float curTextureSizeFactor = 1.0f;
         private bool fixedSize = true;
@@ -58,19 +58,19 @@ namespace ShapeEngineCore.Globals.Screen
                 float fHeight = winHeight / (float)developmentResolution.height;
                 float f = fWidth <= fHeight ? fWidth : fHeight;
 
-                targetResolution = ((int)(winWidth / f), (int)(winHeight / f));
+                TARGET_RESOLUTION = ((int)(winWidth / f), (int)(winHeight / f));
             }
-            else this.targetResolution = (devWidth, devHeight);
+            else this.TARGET_RESOLUTION = (devWidth, devHeight);
             
             this.STRETCH_FACTOR = new Vector2
                 (
-                    (float)targetResolution.width / (float)developmentResolution.width,
-                    (float)targetResolution.height / (float)developmentResolution.height
+                    (float)TARGET_RESOLUTION.width / (float)developmentResolution.width,
+                    (float)TARGET_RESOLUTION.height / (float)developmentResolution.height
                 );
             this.STRETCH_AREA_FACTOR = STRETCH_FACTOR.X * STRETCH_FACTOR.Y;
             this.STRETCH_AREA_SIDE_FACTOR = MathF.Sqrt(STRETCH_AREA_FACTOR);
-            int textureWidth = (int)(targetResolution.width * factor);
-            int textureHeight = (int)(targetResolution.height * factor);
+            int textureWidth = (int)(TARGET_RESOLUTION.width * factor);
+            int textureHeight = (int)(TARGET_RESOLUTION.height * factor);
             //this.prevTextureSize = new(textureWidth, textureHeight);
             this.texture = LoadRenderTexture(textureWidth, textureHeight);
             
@@ -115,6 +115,15 @@ namespace ShapeEngineCore.Globals.Screen
         public int GetTextureWidth() { return texture.texture.width; }
         public int GetTextureHeight() { return texture.texture.height; }
         public float GetTextureSizeFactor() { return curTextureSizeFactor; }
+
+        private float GetCurResolutionFactorRawX()
+        {
+            return (float)developmentResolution.width / (float)curWindowSize.width;
+        }
+        private float GetCurResolutionFactorRawY()
+        {
+            return (float)developmentResolution.height / (float)curWindowSize.height;
+        }
         private float GetCurResolutionFactorX()
         {
             return GetTextureWidth() / (float)curWindowSize.width;
@@ -149,6 +158,43 @@ namespace ShapeEngineCore.Globals.Screen
             else
             {
                 return new(pos.X * GetCurResolutionFactorX(), pos.Y * GetCurResolutionFactorY());
+            }
+        }
+        public Vector2 ScalePositionRawV(Vector2 pos)
+        {
+            if (fixedSize)
+            {
+                float w, h;
+                float fWidth = curWindowSize.width / (float)developmentResolution.width;
+                float fHeight = curWindowSize.height / (float)developmentResolution.height;
+                if (fWidth <= fHeight)
+                {
+                    w = curWindowSize.width;
+                    float f = developmentResolution.height / (float)developmentResolution.width;
+                    h = w * f;
+
+                }
+                else
+                {
+                    h = curWindowSize.height;
+                    float f = developmentResolution.width / (float)developmentResolution.height;
+                    w = h * f;
+                }
+
+                Vector2 size = new Vector2(w, h); // GetDestRectSize(curWindowSize.width, curWindowSize.height);
+                Vector2 dif = new Vector2(curWindowSize.width, curWindowSize.height) - size;
+                dif *= 0.5f;
+                pos -= dif;
+                float fW = developmentResolution.width / size.X;
+                float fH = developmentResolution.height / size.Y;
+                pos.X = Clamp(pos.X * fW, 0, developmentResolution.width);
+                pos.Y = Clamp(pos.Y * fH, 0, developmentResolution.height);
+                return pos;
+
+            }
+            else
+            {
+                return new Vector2(pos.X * GetCurResolutionFactorRawX(), pos.Y * GetCurResolutionFactorRawY());
             }
         }
         public Color GetTint() { return tint; }
@@ -237,17 +283,17 @@ namespace ShapeEngineCore.Globals.Screen
                 float fHeight = winHeight / (float)developmentResolution.height;
                 float f = fWidth <= fHeight ? fWidth : fHeight;
 
-                targetResolution = ((int)(winWidth / f), (int)(winHeight / f));
+                TARGET_RESOLUTION = ((int)(winWidth / f), (int)(winHeight / f));
                 //targetResolution = (winWidth, winHeight);
                 STRETCH_FACTOR = new Vector2
                 (
-                    (float)targetResolution.width / (float)developmentResolution.width,
-                    (float)targetResolution.height / (float)developmentResolution.height
+                    (float)TARGET_RESOLUTION.width / (float)developmentResolution.width,
+                    (float)TARGET_RESOLUTION.height / (float)developmentResolution.height
                 );
                 STRETCH_AREA_FACTOR = STRETCH_FACTOR.X * STRETCH_FACTOR.Y;
                 STRETCH_AREA_SIDE_FACTOR = MathF.Sqrt(STRETCH_AREA_FACTOR);
-                int textureWidth = (int)(targetResolution.width * curTextureSizeFactor);
-                int textureHeight = (int)(targetResolution.height * curTextureSizeFactor);
+                int textureWidth = (int)(TARGET_RESOLUTION.width * curTextureSizeFactor);
+                int textureHeight = (int)(TARGET_RESOLUTION.height * curTextureSizeFactor);
                 ChangeTextureSize(textureWidth, textureHeight);
             }
             

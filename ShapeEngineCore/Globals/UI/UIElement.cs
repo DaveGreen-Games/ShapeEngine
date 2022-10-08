@@ -9,7 +9,7 @@ namespace ShapeEngineCore.Globals.UI
         protected Rectangle rect;
 
         public Rectangle GetRect() { return rect; }
-        public Rectangle GetScaledRect() { return Utils.MultiplyRectangle(rect, ScreenHandler.GetUIStretchFactor()); }
+        
         public virtual void SetTopLeft(Vector2 newPos) { rect.X = newPos.X; rect.Y = newPos.Y; }
         public virtual void SetCenter(Vector2 newPos) { SetTopLeft(newPos - GetSize() / 2); }
         public virtual void SetBottomRight(Vector2 newPos) { SetTopLeft(newPos - GetSize()); }
@@ -20,11 +20,16 @@ namespace ShapeEngineCore.Globals.UI
         public virtual Vector2 GetCenter() { return new(rect.x + rect.width / 2, rect.y + rect.height / 2); }
         public virtual Vector2 GetBottomRight() { return new(rect.x + rect.width, rect.y + rect.height); }
         public virtual Vector2 GetSize() { return new(rect.width, rect.height); }
-        public bool IsPointInside(Vector2 pos)
+
+        //public Rectangle GetScaledRect() { return Utils.MultiplyRectangle(rect, ScreenHandler.GetUIStretchFactor()); }
+        //public Vector2 GetScaledSize() { return GetSize() * ScreenHandler.GetUIStretchFactor(); }
+
+
+        public bool IsPointInside(Vector2 posRaw)
         {
-            return CheckCollisionPointRec(pos, GetScaledRect());
+            return CheckCollisionPointRec(posRaw, rect); // GetScaledRect());
         }
-        public virtual void Update(float dt, Vector2 mousePos)
+        public virtual void Update(float dt, Vector2 mousePosRaw)
         {
 
         }

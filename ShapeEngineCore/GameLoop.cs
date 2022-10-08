@@ -121,6 +121,7 @@ namespace ShapeEngineCore
         public Vector2 MOUSE_POS { get; private set; }
         public Vector2 MOUSE_POS_GAME { get; private set; }
         public Vector2 MOUSE_POS_UI { get; private set; }
+        public Vector2 MOUSE_POS_UI_RAW { get; private set; }
         public Color backgroundColor = BLACK;
         public Scene? CUR_SCENE { get; private set; }
         private int CUR_SCENE_INDEX = 0;
@@ -394,7 +395,10 @@ namespace ShapeEngineCore
             {
                 DELTA = GetFrameTime();
                 MOUSE_POS = GetMousePosition();
+
+                //implement mouse pos raw
                 MOUSE_POS_UI = ScreenHandler.UI.ScalePositionV(MOUSE_POS);
+                MOUSE_POS_UI_RAW =  ScreenHandler.UI.ScalePositionRawV(MOUSE_POS);
                 MOUSE_POS_GAME = ScreenHandler.TransformPositionToGame(MOUSE_POS_UI);
                 if (WindowShouldClose() && !IsKeyDown(KeyboardKey.KEY_ESCAPE)) QUIT = true;
 
@@ -454,10 +458,13 @@ namespace ShapeEngineCore
                 ScreenHandler.EndDraw(true);
             }
 
-
+            Vector2 devRes = new Vector2(ScreenHandler.DEVELOPMENT_RESOLUTION.width, ScreenHandler.DEVELOPMENT_RESOLUTION.height);
+            Vector2 stretchFactor = ScreenHandler.UI.STRETCH_FACTOR * ScreenHandler.UI_FACTOR;
+            //float stretchAreaFactor = ScreenHandler.UI.STRETCH_AREA_FACTOR;
+            //float stretchAreaSideFactor = ScreenHandler.UI.STRETCH_AREA_SIDE_FACTOR;
             //Draw to UI texture
             ScreenHandler.StartDraw(false);
-            if (CUR_SCENE != null) CUR_SCENE.DrawUI();
+            if (CUR_SCENE != null) CUR_SCENE.DrawUI(devRes, stretchFactor);
             CursorHandler.Draw(MOUSE_POS_UI);
             ScreenHandler.EndDraw(false);
 
