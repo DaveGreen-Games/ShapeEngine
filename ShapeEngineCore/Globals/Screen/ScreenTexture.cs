@@ -238,6 +238,7 @@ namespace ShapeEngineCore.Globals.Screen
                 float f = fWidth <= fHeight ? fWidth : fHeight;
 
                 targetResolution = ((int)(winWidth / f), (int)(winHeight / f));
+                //targetResolution = (winWidth, winHeight);
                 STRETCH_FACTOR = new Vector2
                 (
                     (float)targetResolution.width / (float)developmentResolution.width,

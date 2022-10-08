@@ -33,7 +33,10 @@ namespace ShapeEngineCore.Globals.UI
         protected bool pressed = false;
         protected bool clicked = false;
         protected bool disabled = false;
+        // protected Rectangle rect;
         protected UINeighbors neighbors = new();
+        //protected List<KeyboardKey> keyboardShortcuts = new();
+        //protected List<MouseButton> mouseShortcuts = new();
         protected string shortcut = "";
         public bool Clicked() { return clicked; }
         protected virtual bool CheckPressed()
@@ -98,7 +101,7 @@ namespace ShapeEngineCore.Globals.UI
         //public Rectangle GetRect() { return rect; }
         public Vector2 GetDirectionPosition(UINeighbors.NeighborDirection dir)
         {
-            Rectangle self = GetRect(true);
+            Rectangle self = GetRect();
             switch (dir)
             {
                 case UINeighbors.NeighborDirection.TOP:
@@ -188,7 +191,7 @@ namespace ShapeEngineCore.Globals.UI
             else
             {
                 var prevHovered = hovered;
-                hovered = CheckCollisionPointRec(mousePos, ToAbsolute(rect));
+                hovered = IsPointInside(mousePos);
                 if (hovered && !prevHovered)
                 {
                     HoveredChanged(true);
@@ -220,18 +223,6 @@ namespace ShapeEngineCore.Globals.UI
         public virtual void PressedChanged(bool pressed) { }
         public virtual void HoveredChanged(bool hovered) { }
         public virtual void SelectedChanged(bool selected) { }
-        //public virtual void MonitorHasChanged()
-        //{
-        //    Vector2 topLeft = new(rect.X, rect.Y);
-        //    Vector2 bottomRight = new(rect.X + rect.width, rect.Y + rect.height);
-        //
-        //    topLeft = ScreenHandler.UpdateTextureRelevantPosition(topLeft, false);
-        //    bottomRight = ScreenHandler.UpdateTextureRelevantPosition(bottomRight, false);
-        //    rect.x = topLeft.X;
-        //    rect.y = topLeft.Y;
-        //    Vector2 size = bottomRight - topLeft;
-        //    rect.width = size.X;
-        //    rect.height = size.Y;
-        //}
+        
     }
 }

@@ -195,6 +195,16 @@ namespace ShapeEngineCore.Globals
                     rect.height * factor
                 );
         }
+        public static Rectangle MultiplyRectangle(Rectangle a, Vector2 factor)
+        {
+            return new Rectangle
+                (
+                    a.x * factor.X,
+                    a.y * factor.Y,
+                    a.width * factor.X,
+                    a.height * factor.Y
+                );
+        }
         public static Rectangle MultiplyRectangle(Rectangle a, Rectangle b)
         {
             return new Rectangle

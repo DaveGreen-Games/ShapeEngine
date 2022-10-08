@@ -20,15 +20,12 @@ namespace ShapeEngineDemo
             //mazeDrawer = new(maze, new(SCREEN_AREA.X + SCREEN_AREA.width * 0.1f, SCREEN_AREA.Y + SCREEN_AREA.height * 0.1f), new(SCREEN_AREA.width * 0.8f, SCREEN_AREA.height * 0.8f), 2);
             //maze.GenerateDeadCells(50);
             //maze.Generate(MazeGenerator.Maze.GenerationType.PRIM_SIMPLE, -1, 1);
-            
-            Vector2 centerRelative = new(0.5f, 0.5f);
-            Vector2 sizeRelative = new Vector2 (0.18f, 0.09f);
-            Vector2 offsetRelative = new Vector2(0, 0.11f);
-            
-            float fontSize = 180;
-            level1Button = new("START", fontSize, "medium", centerRelative, sizeRelative, true);
-            optionsButton = new("OPTIONS", fontSize, "medium", centerRelative + offsetRelative, sizeRelative, true);
-            quitButton = new("QUIT", fontSize, "medium", centerRelative + offsetRelative * 2, sizeRelative, true);
+            Vector2 center = new(ScreenHandler.DEVELOPMENT_RESOLUTION.width / 2, ScreenHandler.DEVELOPMENT_RESOLUTION.height / 2);
+            Vector2 size = new Vector2 (300, 100);
+            Vector2 offset = new Vector2(0, 110);
+            level1Button = new("START", "medium", center, size, true);
+            optionsButton = new("OPTIONS", "medium", center + offset, size, true);
+            quitButton = new("QUIT", "medium", center + offset * 2, size, true);
             quitButton.AddShortcut("UI Cancel");
 
             level1Button.SetStateColors(new(PaletteHandler.C("bg2"), PaletteHandler.C("energy"), PaletteHandler.C("player"), PaletteHandler.C("sepcial1"), PaletteHandler.C("neutral")));
@@ -84,40 +81,39 @@ namespace ShapeEngineDemo
         {
             //mazeDrawer.Draw();
         }
-        public override void DrawUI()
+        public override void DrawUI(Vector2 devRes, Vector2 stretchFactor)
         {
             Rectangle uiArea = ScreenHandler.UIArea();
             DrawRectangleRec(uiArea, PaletteHandler.C("bg1"));
-            UIHandler.DrawTextAligned("MAIN MENU", new(0.5f, 0.21f), new Vector2(0.35f, 0.25f), 15, PaletteHandler.C("bg2"), "bold");
-            UIHandler.DrawTextAligned("MAIN MENU", new(0.5f, 0.2f),new Vector2(0.35f, 0.25f), 15, PaletteHandler.C("header"), "bold");
-            UIHandler.DrawTextAligned(ShapeEngine.EDITORMODE == true ? "EDITOR" : "STANDALONE", new Vector2(0.052f, 0.052f), new Vector2(0.005f, 0.005f), 5, WHITE, Alignement.LEFTCENTER);
-            level1Button.Draw();
-            optionsButton.Draw();
-            quitButton.Draw();
-            //Vector2 center = new(SCREEN_AREA_UI.width / 2, SCREEN_AREA_UI.height / 2);
-            //Vector2 size = new(750, 300);
-            //Rectangle rect = new(center.X - size.X * 0.5f, center.Y - size.Y * 0.5f, size.X, size.Y);
-            //if (UI.Button(rect, new()))
-            //{
-            //    GoToScene("level1");
+            
+            UIHandler.DrawTextAligned("MAIN MENU", devRes * new Vector2(0.5f, 0.21f) * stretchFactor, devRes * new Vector2(0.5f, 0.5f) * stretchFactor, 1, PaletteHandler.C("bg2"), "bold");
+            UIHandler.DrawTextAligned("MAIN MENU", devRes * new Vector2(0.5f, 0.2f) * stretchFactor, devRes * new Vector2(0.5f, 0.5f) * stretchFactor, 1, PaletteHandler.C("header"), "bold");
+            
+            
+            
+            UIHandler.DrawTextAligned2(ShapeEngine.EDITORMODE == true ? "EDITOR" : "STANDALONE", 
+                devRes * new Vector2(0.05f, 0.05f) * stretchFactor, devRes.X * 0.05f * stretchFactor.X, 5, WHITE, Alignement.LEFTCENTER);
+
+            //UIHandler.DrawTextAligned(String.Format("Size: {0}", ScreenHandler.UISize()), new Vector2(100f, 180f), 50, 5, WHITE, Alignement.LEFTCENTER);
+            //UIHandler.DrawTextAligned(String.Format("Dev Res: {0}", devRes), new Vector2(100f, 260f), 50, 5, WHITE, Alignement.LEFTCENTER);
+            //UIHandler.DrawTextAligned(String.Format("Stretch F: {0}", stretchFactor), new Vector2(100f, 340f), 50, 5, WHITE, Alignement.LEFTCENTER);
+            //UIHandler.DrawTextAligned(String.Format("Area F: {0}", ScreenHandler.UI.STRETCH_AREA_FACTOR), new Vector2(100f, 420f), 50, 5, WHITE, Alignement.LEFTCENTER);
+            //UIHandler.DrawTextAligned(String.Format("Area Side F: {0}", ScreenHandler.UI.STRETCH_AREA_SIDE_FACTOR), new Vector2(100f, 500f), 50, 5, WHITE, Alignement.LEFTCENTER);
             //
-            //}
-            ////RayGui.GuiSetStyle(2, 16, 25);
-            //RayGui.GuiSetStyle(0, 16, 50);
-            //if (RayGui.GuiButton(new(center.X - size.X * 0.5f, center.Y - size.Y * 0.5f, size.X, size.Y), "START"))
-            //{
-            //    GoToScene("level1");
-            //}
+            //UIHandler.DrawTextAligned(String.Format("Button Pos: {0}", level1Button.GetCenter()), new Vector2(100f, 580f), 50, 5, WHITE, Alignement.LEFTCENTER);
+            //UIHandler.DrawTextAligned(String.Format("Button Scaled Pos: {0}", level1Button.GetCenter() * stretchFactor), new Vector2(100f, 660f), 50, 5, WHITE, Alignement.LEFTCENTER);
+            level1Button.Draw(devRes, stretchFactor);
+            optionsButton.Draw(devRes, stretchFactor);
+            quitButton.Draw(devRes, stretchFactor);
+
+
+            //Vector2 barSize = devRes * new Vector2(0.5f, 0.05f) * stretchFactor;
+            //Vector2 center = devRes * new Vector2(0.5f, 0.3f) * stretchFactor;
+            //Vector2 topleft = center - barSize / 2;
+            //UIHandler.DrawBar(topleft, barSize, RNG.randF(), RED, DARKPURPLE, BarType.LEFTRIGHT);
+
 
         }
-
-        //public override void MonitorHasChanged()
-        //{
-        //    base.MonitorHasChanged();
-        //    level1Button.MonitorHasChanged();
-        //    optionsButton.MonitorHasChanged();
-        //    quitButton.MonitorHasChanged();
-        //}
     }
 
 

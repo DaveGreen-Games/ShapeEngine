@@ -163,7 +163,7 @@ namespace ShapeEngineCore.Globals.Screen
         public static int UIWidth() { return UI.GetTextureWidth(); }
         public static int UIHeight() { return UI.GetTextureHeight(); }
 
-
+        public static Vector2 GetUIStretchFactor() { return UI.STRETCH_FACTOR * UI_FACTOR; }
         public static void Initialize(int devWidth, int devHeight, float gameSizeFactor = 1.0f, float uiSizeFactor = 1.0f, string windowName = "Raylib Game", bool fixedTexture = true, bool pixelSmoothing = false)
         {
             InitWindow(0, 0, windowName);

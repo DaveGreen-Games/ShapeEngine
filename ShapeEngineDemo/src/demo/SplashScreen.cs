@@ -13,16 +13,19 @@ namespace ShapeEngineDemo
     {
         float timer = 0.0f;
         float maxTime = 0.5f;
+        bool started = false;
         public override void Activate(Scene? oldScene)
         {
             //base.Activate(oldScene);
             Color fadeColor = PaletteHandler.C("player");
             fadeColor.a = 0;
+            Action start = () => { timer = maxTime; started = true; };
+            TimerHandler.Add(1f, start);
             Action flash = () => ScreenHandler.UI.Flash(0.5f, PaletteHandler.C("player"), fadeColor);
-            TimerHandler.Add(0.5f, flash);
+            TimerHandler.Add(1f, flash);
             Action action = () => ShapeEngine.GAMELOOP.GoToScene("mainmenu");
-            TimerHandler.Add(1.5f, action);
-            timer = maxTime;
+            TimerHandler.Add(2f, action);
+            
             ShapeEngine.GAMELOOP.backgroundColor = PaletteHandler.C("bg1");
         }
 
@@ -42,24 +45,17 @@ namespace ShapeEngineDemo
                 }
             }
         }
-        public override void DrawUI()
+        public override void DrawUI(Vector2 devRes, Vector2 stretchFactor)
         {
-            DrawRectangleRec(ScreenHandler.UIArea(), PaletteHandler.C("bg1"));
-            float f = 1.0f - (timer / maxTime);
-            float fontSize = Lerp(0, 800, f);
-            //Vector2 fontPos = new
-            //    (
-            //        ScreenHandler.UIArea().x + ScreenHandler.UIArea().width / 2,
-            //        ScreenHandler.UIArea().y + ScreenHandler.UIArea().height / 2
-            //    );
+            DrawRectangleRec(new Rectangle(0,0,devRes.X * stretchFactor.X, devRes.Y * stretchFactor.Y), PaletteHandler.C("bg1"));
+            
+            if(started)
+            {
+                float f = 1.0f - (timer / maxTime);
+                Vector2 textSize = Vec.Lerp(new(0f), new Vector2(0.9f, 0.5f) * devRes * stretchFactor, f);
+                UIHandler.DrawTextAligned("SHAPE ENGINE", new Vector2(0.5f, 0.5f) * devRes * stretchFactor, textSize, 1, PaletteHandler.C("header"), "bold", Alignement.CENTER);
 
-            //float fontSpacing = 10.0f;
-            //string text = "SHAPE ENGINE";
-            //Font font = GetFontDefault();
-            //Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
-            //DrawTextEx(font, text, fontPos - fontDimensions * 0.5f, fontSize, fontSpacing, WHITE);
-
-            UIHandler.DrawTextAligned("SHAPE ENGINE", new Vector2(0.5f, 0.5f), new Vector2(0.9f, 0.66f), 10, PaletteHandler.C("header"), "bold", Alignement.CENTER);
+            }
         }
     }
 
