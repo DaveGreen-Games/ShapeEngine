@@ -45,15 +45,15 @@ namespace ShapeEngineDemo
                 }
             }
         }
-        public override void DrawUI(Vector2 devRes, Vector2 stretchFactor)
+        public override void DrawUI(Vector2 uiSize, Vector2 stretchFactor)
         {
-            DrawRectangleRec(new Rectangle(0,0,devRes.X * stretchFactor.X, devRes.Y * stretchFactor.Y), PaletteHandler.C("bg1"));
+            DrawRectangleRec(new Rectangle(0,0,uiSize.X * stretchFactor.X, uiSize.Y * stretchFactor.Y), PaletteHandler.C("bg1"));
             
             if(started)
             {
                 float f = 1.0f - (timer / maxTime);
-                Vector2 textSize = Vec.Lerp(new(0f), new Vector2(0.9f, 0.5f) * devRes * stretchFactor, f);
-                UIHandler.DrawTextAligned("SHAPE ENGINE", new Vector2(0.5f, 0.5f) * devRes * stretchFactor, textSize, 1, PaletteHandler.C("header"), "bold", Alignement.CENTER);
+                Vector2 textSize = Vec.Lerp(new(0f), new Vector2(0.9f, 0.5f) * uiSize, f);
+                UIHandler.DrawTextAligned("SHAPE ENGINE", new Vector2(0.5f, 0.5f) * uiSize, textSize, 1, PaletteHandler.C("header"), "bold", Alignement.CENTER);
 
             }
         }

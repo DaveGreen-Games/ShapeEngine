@@ -33,7 +33,7 @@ namespace ShapeEngineCore.Globals.UI
         {
 
         }
-        public virtual void Draw(Vector2 devRes, Vector2 stretchFactor)
+        public virtual void Draw(Vector2 uiSize, Vector2 stretchFactor)
         {
 
         }

@@ -60,9 +60,9 @@ namespace ShapeEngineCore.Globals.UI
 
         public void SetTextStateColors(UISelectionColors newTextStateColors) { this.textStateColors = newTextStateColors; }
         
-        public override void Draw(Vector2 devRes, Vector2 stretchFactor)
+        public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
         {
-            base.Draw(devRes, stretchFactor);
+            base.Draw(uiSize, stretchFactor);
             Color color = textStateColors.baseColor; // DARKGRAY;
             if (disabled) color = textStateColors.disabledColor; // BLACK;
             else if (pressed) color = textStateColors.pressedColor; // SKYBLUE;

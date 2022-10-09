@@ -118,11 +118,11 @@ namespace ShapeEngineCore.Globals.Screen
 
         private float GetCurResolutionFactorRawX()
         {
-            return (float)developmentResolution.width / (float)curWindowSize.width;
+            return ((float)developmentResolution.width * curTextureSizeFactor) / (float)curWindowSize.width;
         }
         private float GetCurResolutionFactorRawY()
         {
-            return (float)developmentResolution.height / (float)curWindowSize.height;
+            return ((float)developmentResolution.height * curTextureSizeFactor) / (float)curWindowSize.height;
         }
         private float GetCurResolutionFactorX()
         {
@@ -164,32 +164,41 @@ namespace ShapeEngineCore.Globals.Screen
         {
             if (fixedSize)
             {
-                float w, h;
-                float fWidth = curWindowSize.width / (float)developmentResolution.width;
-                float fHeight = curWindowSize.height / (float)developmentResolution.height;
-                if (fWidth <= fHeight)
-                {
-                    w = curWindowSize.width;
-                    float f = developmentResolution.height / (float)developmentResolution.width;
-                    h = w * f;
-
-                }
-                else
-                {
-                    h = curWindowSize.height;
-                    float f = developmentResolution.width / (float)developmentResolution.height;
-                    w = h * f;
-                }
-
-                Vector2 size = new Vector2(w, h); // GetDestRectSize(curWindowSize.width, curWindowSize.height);
+                Vector2 size = GetDestRectSize(curWindowSize.width, curWindowSize.height);
                 Vector2 dif = new Vector2(curWindowSize.width, curWindowSize.height) - size;
                 dif *= 0.5f;
                 pos -= dif;
-                float fW = developmentResolution.width / size.X;
-                float fH = developmentResolution.height / size.Y;
-                pos.X = Clamp(pos.X * fW, 0, developmentResolution.width);
-                pos.Y = Clamp(pos.Y * fH, 0, developmentResolution.height);
+                float fWidth = GetTextureWidth() / size.X;
+                float fHeight = GetTextureHeight() / size.Y;
+                pos.X = Clamp(pos.X * fWidth, 0, GetTextureWidth());
+                pos.Y = Clamp(pos.Y * fHeight, 0, GetTextureHeight());
                 return pos;
+                //float w, h;
+                //float fWidth = curWindowSize.width / (float)developmentResolution.width;
+                //float fHeight = curWindowSize.height / (float)developmentResolution.height;
+                //if (fWidth <= fHeight)
+                //{
+                //    w = curWindowSize.width;
+                //    float f = developmentResolution.height / (float)developmentResolution.width;
+                //    h = w * f;
+                //
+                //}
+                //else
+                //{
+                //    h = curWindowSize.height;
+                //    float f = developmentResolution.width / (float)developmentResolution.height;
+                //    w = h * f;
+                //}
+                //
+                //Vector2 size = new Vector2(w, h); // GetDestRectSize(curWindowSize.width, curWindowSize.height);
+                //Vector2 dif = new Vector2(curWindowSize.width, curWindowSize.height) - size;
+                //dif *= 0.5f;
+                //pos -= dif;
+                //float fW = developmentResolution.width / size.X;
+                //float fH = developmentResolution.height / size.Y;
+                //pos.X = Clamp(pos.X * fW, 0, developmentResolution.width);
+                //pos.Y = Clamp(pos.Y * fH, 0, developmentResolution.height);
+                //return pos;
 
             }
             else

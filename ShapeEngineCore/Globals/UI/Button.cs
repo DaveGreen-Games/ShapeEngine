@@ -56,7 +56,7 @@ namespace ShapeEngineCore.Globals.UI
                 sizeOffset = result;
             }
         }
-        public override void Draw(Vector2 devRes, Vector2 stretchFactor)
+        public override void Draw(Vector2 uisSize, Vector2 stretchFactor)
         {
             Color color = stateColors.baseColor;
             if (disabled) color = stateColors.disabledColor;
