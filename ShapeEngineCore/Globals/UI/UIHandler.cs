@@ -284,7 +284,9 @@ namespace ShapeEngineCore.Globals.UI
             float fontSize = CalculateDynamicFontSize(text, textSize, font, fontSpacing);
             Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
             Vector2 originOffset = GetAlignementVector(alignement) * fontDimensions;
-            DrawTextPro(font, text, uiPos * ScreenHandler.UI.STRETCH_FACTOR, originOffset, rotDeg, fontSize, fontSpacing, color);
+            DrawTextPro(font, text, uiPos, originOffset, rotDeg, fontSize, fontSpacing, color);
+
+           // DrawRectangleLinesEx(new())
         }
         public static void DrawTextAlignedPro(string text, Vector2 uiPos, float rotDeg, float textHeight, float fontSpacing, Color color, Font font, Alignement alignement = Alignement.CENTER)
         {

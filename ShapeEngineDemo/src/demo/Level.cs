@@ -140,11 +140,11 @@ namespace ShapeEngineDemo
             //DrawRectangleLinesEx(new Rectangle(0.0f, 0.0f, ScreenHandler.GameWidth(), ScreenHandler.GameHeight()), 6, ColorPalette.Cur.neutral);
 
         }
-        public override void DrawUI()
-        {
-            base.DrawUI();
-            //UIHandler.DrawTextAligned(String.Format("Objects {0}", gameObjects.Count), new(GAMELOOP.UICenter().X, GAMELOOP.UISize().Y), UIHandler.GetFontSizeScaled(FontSize.SMALL), UIHandler.Scale(5), ColorPalette.Cur.text, Alignement.BOTTOMCENTER);
-        }
+        //public override void DrawUI(Vector2 uiSize, Vector2 stretchFactor)
+        //{
+        //    base.DrawUI(devRes, stretchFactor);
+        //    //UIHandler.DrawTextAligned(String.Format("Objects {0}", gameObjects.Count), new(GAMELOOP.UICenter().X, GAMELOOP.UISize().Y), UIHandler.GetFontSizeScaled(FontSize.SMALL), UIHandler.Scale(5), ColorPalette.Cur.text, Alignement.BOTTOMCENTER);
+        //}
 
         //public override void Update(float dt)
         //{
@@ -263,27 +263,30 @@ namespace ShapeEngineDemo
             area.Draw();
             asteroidSpawner.Draw();
         }
-        public override void DrawUI()
+        public override void DrawUI(Vector2 uiSize, Vector2 stretchFactor)
         {
-            UIHandler.DrawTextAlignedPro(String.Format("{0}", GetFPS()), new Vector2(0.02f, 0.03f), -5f, new Vector2(0.05f, 0.05f), 5, PaletteHandler.C("special1"), Alignement.LEFTCENTER);
+            UIHandler.DrawTextAlignedPro(String.Format("{0}", GetFPS()), uiSize * new Vector2(0.01f, 0.03f), -5f, uiSize * new Vector2(0.10f, 0.05f), 2f, PaletteHandler.C("special1"), Alignement.LEFTCENTER);
             if (area == null) return;
-            area.DrawUI();
-            UIHandler.DrawTextAlignedPro(String.Format("Objs {0}", area.GetGameObjects().Count), new(0.008f, 0.09f), 0f, new Vector2(0.1f ,0.04f), 5, PaletteHandler.C("text"), Alignement.LEFTCENTER);
-            UIHandler.DrawTextAlignedPro(String.Format("{0}", InputHandler.GetCurInputType()), new(0.008f, 0.12f), 0f, new Vector2(0.1f, 0.04f), 5, PaletteHandler.C("text"), Alignement.LEFTCENTER);
-            UIHandler.DrawTextAlignedPro(String.Format("GP {0}/{1}", InputHandler.CUR_GAMEPAD, InputHandler.GetConnectedGamepadCount()), new(0.008f, 0.15f), 0f, new Vector2(0.1f, 0.04f), 5, PaletteHandler.C("text"), Alignement.LEFTCENTER);
-            UIHandler.DrawTextAlignedPro(String.Format("Used {0}", InputHandler.gamepadUsed), new(0.008f, 0.18f), 0f, new Vector2(0.1f, 0.04f), 5, PaletteHandler.C("text"), Alignement.LEFTCENTER);
-            UIHandler.DrawTextAlignedPro("Debug Keys [8, 9, 0]", new Vector2(0.5f, 0.99f), 0f, new Vector2(0.1f, 0.04f), 5f, PaletteHandler.C("text"), Alignement.BOTTOMCENTER);
+            area.DrawUI(uiSize, stretchFactor);
 
-            UIHandler.DrawTextAlignedPro("Slow Time [ALT]", new Vector2(0.98f, 0.04f), 0f, new Vector2(0.1f, 0.04f), 5f, PaletteHandler.C("text"), Alignement.RIGHTCENTER);
-            UIHandler.DrawTextAlignedPro("Pause [P]", new Vector2(0.98f, 0.08f), 0f, new Vector2(0.1f, 0.04f), 5f, PaletteHandler.C("text"), Alignement.RIGHTCENTER);
+            Vector2 textSize = uiSize * new Vector2(0.25f, 0.04f);
+            UIHandler.DrawTextAlignedPro(String.Format("Objs {0}", area.GetGameObjects().Count), uiSize * new Vector2(0.01f, 0.1f), 0f, textSize, 2f, PaletteHandler.C("text"), Alignement.LEFTCENTER);
+            UIHandler.DrawTextAlignedPro(String.Format("{0}", InputHandler.GetCurInputType()), uiSize * new Vector2(0.01f, 0.13f), 0f, textSize, 2f, PaletteHandler.C("text"), Alignement.LEFTCENTER);
+            UIHandler.DrawTextAlignedPro(String.Format("GP {0}/{1}", InputHandler.CUR_GAMEPAD, InputHandler.GetConnectedGamepadCount()), uiSize * new Vector2(0.01f, 0.16f), 0f, textSize, 2f, PaletteHandler.C("text"), Alignement.LEFTCENTER);
+            UIHandler.DrawTextAlignedPro(String.Format("Used {0}", InputHandler.gamepadUsed), uiSize * new Vector2(0.01f, 0.19f), 0f, textSize, 2f, PaletteHandler.C("text"), Alignement.LEFTCENTER);
+            
+            
+            UIHandler.DrawTextAlignedPro("Debug Keys [8, 9, 0]", uiSize * new Vector2(0.5f, 0.98f), 0f, textSize, 2f, PaletteHandler.C("text"), Alignement.BOTTOMCENTER);
+            
+
+            UIHandler.DrawTextAlignedPro("Slow Time [ALT]", uiSize * new Vector2(0.99f, 0.03f), 0f, textSize, 2f, PaletteHandler.C("text"), Alignement.RIGHTCENTER);
+            UIHandler.DrawTextAlignedPro("Pause [P]", uiSize * new Vector2(0.99f, 0.07f), 0f, textSize, 2f, PaletteHandler.C("text"), Alignement.RIGHTCENTER);
 
             if (IsPaused())
             {
-                UIHandler.DrawTextAlignedPro("PAUSED", new Vector2(0.5f, 0.25f), 0f, new Vector2(0.1f, 0.04f), 5f, PaletteHandler.C("header"), Alignement.CENTER);
+                var pos = GAMELOOP.UISize();
+                UIHandler.DrawTextAlignedPro("PAUSED", uiSize * new Vector2(0.5f, 0.3f), 0f, uiSize * new Vector2(0.5f, 0.25f), 5f, PaletteHandler.C("header"), Alignement.CENTER);
             }
-
-            Drawing.DrawCircleLines(ScreenHandler.UICenter(), 150, 5f, WHITE, 8);
-
         }
         public override void Close()
         {

@@ -458,13 +458,13 @@ namespace ShapeEngineCore
                 ScreenHandler.EndDraw(true);
             }
 
-            Vector2 devRes = new Vector2(ScreenHandler.DEVELOPMENT_RESOLUTION.width, ScreenHandler.DEVELOPMENT_RESOLUTION.height);
-            Vector2 stretchFactor = ScreenHandler.UI.STRETCH_FACTOR * ScreenHandler.UI_FACTOR;
+            Vector2 uiSize = ScreenHandler.UISize();// new Vector2(ScreenHandler.DEVELOPMENT_RESOLUTION.width, ScreenHandler.DEVELOPMENT_RESOLUTION.height);
+            Vector2 stretchFactor = ScreenHandler.UI.STRETCH_FACTOR;// * ScreenHandler.UI_FACTOR;
             //float stretchAreaFactor = ScreenHandler.UI.STRETCH_AREA_FACTOR;
             //float stretchAreaSideFactor = ScreenHandler.UI.STRETCH_AREA_SIDE_FACTOR;
             //Draw to UI texture
             ScreenHandler.StartDraw(false);
-            if (CUR_SCENE != null) CUR_SCENE.DrawUI(devRes, stretchFactor);
+            if (CUR_SCENE != null) CUR_SCENE.DrawUI(uiSize, stretchFactor);
             CursorHandler.Draw(MOUSE_POS_UI);
             ScreenHandler.EndDraw(false);
 

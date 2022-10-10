@@ -3,7 +3,6 @@ using Raylib_CsLo;
 using ShapeEngineCore.Globals.UI;
 using ShapeEngineCore.Globals;
 using ShapeEngineCore.Globals.Input;
-using System.Text;
 
 namespace ShapeEngineCore
 {
@@ -19,9 +18,9 @@ namespace ShapeEngineCore
         string inputAction = "";
         float f = 0f;
 
-        public SkillDisplay(Vector2 centerRelative, Vector2 sizeRelative, Color textColor, Color barColor, Color barBGColor, Color bgColor, string title = "", string inputAction = "", float angleDeg = 0f)
+        public SkillDisplay(Vector2 center, Vector2 size, Color textColor, Color barColor, Color barBGColor, Color bgColor, string title = "", string inputAction = "", float angleDeg = 0f)
         {
-            rect = new(centerRelative.X - sizeRelative.X / 2, centerRelative.Y - sizeRelative.Y / 2, sizeRelative.X, sizeRelative.Y);
+            rect = new(center.X - size.X / 2, center.Y - size.Y / 2, size.X, size.Y);
             //this.size = size;
             this.inputAction = inputAction;
             this.angleDeg = angleDeg;
@@ -53,10 +52,10 @@ namespace ShapeEngineCore
 
         }
 
-        public override void Draw()
+        public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
         {
-            Vector2 center = GetCenter(true);
-            Vector2 size = GetSize(true);
+            Vector2 size = GetSize() * stretchFactor;
+            Vector2 center = GetTopLeft() * stretchFactor + size / 2; // GetCenter() * stretchFactor;
             float thickness = Vec.Min(size) * 0.1f;
             Vector2 innerSize = new Vector2(size.X - thickness, size.Y - thickness);
             if (bgColor.a > 0)
@@ -67,17 +66,14 @@ namespace ShapeEngineCore
                 Drawing.DrawRectangle(center, innerSize, new(0.5f, 0.5f), angleDeg, bgColor);
             }
 
-            float baseFontSize = size.X;
+            //float baseFontSize = size.X;
             if (title != "")
-                UIHandler.DrawTextAlignedPro(title, GetCenter(false), angleDeg, ToRelative(innerSize), 1, textColor, Alignement.CENTER);
+                UIHandler.DrawTextAlignedPro(title, center, angleDeg, innerSize, 1, textColor, Alignement.CENTER);
 
             if (inputAction != "")
             {
-                Vector2 centerRelative = GetCenter(false);
-                Vector2 sizeRelative = GetSize(false);
-                Vector2 offsetRelative = Vec.Rotate(new Vector2(sizeRelative.X * 0.5f + Vec.Min(sizeRelative) * 0.1f * 2, 0f), angleDeg * DEG2RAD);
                 string input = InputHandler.GetInputActionKeyName(0, inputAction, InputHandler.IsGamepad());
-                UIHandler.DrawTextAlignedPro(input, centerRelative + offsetRelative, angleDeg, ToRelative(innerSize), 1, textColor, Alignement.LEFTCENTER);
+                UIHandler.DrawTextAlignedPro(input, center + Vec.Rotate(new Vector2(size.X * 0.5f + thickness * 2, 0f), angleDeg * DEG2RAD), angleDeg, innerSize, 1, textColor, Alignement.LEFTCENTER);
             }
 
             if (barColor.a > 0)

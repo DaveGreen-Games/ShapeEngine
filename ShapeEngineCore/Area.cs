@@ -130,11 +130,11 @@ namespace ShapeEngineCore
                 if (Overlap.Simple(outer, obj.GetBoundingBox())) { obj.Draw(); }
             }
         }
-        public virtual void DrawUI()
+        public virtual void DrawUI(Vector2 uiSize, Vector2 stretchFactor)
         {
             foreach (GameObject obj in uiObjects)
             {
-                obj.DrawUI();
+                obj.DrawUI(uiSize, stretchFactor);
             }
         }
         public virtual void Update(float dt)
@@ -469,12 +469,12 @@ namespace ShapeEngineCore
                 layer.Draw();
             }
         }
-        public virtual void DrawUI()
+        public virtual void DrawUI(Vector2 uiSize, Vector2 stretchFactor)
         {
             for (int i = 0; i < sortedLayers.Count; i++)
             {
                 var layer = sortedLayers[i];
-                layer.DrawUI();
+                layer.DrawUI(uiSize, stretchFactor);
             }
         }
         public virtual void Update(float dt)
