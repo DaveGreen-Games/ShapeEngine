@@ -20,12 +20,12 @@ namespace ShapeEngineCore.Globals.UI
             //pivot = new(size.X / 2, size.Y / 2);
             this.barType = barType;
             this.transitionSpeed = transitionSpeed;
-            outlineSize = 0;
+            outlineSizeRelative = 0;
             rot = rotation;
             //this.centered = centered;
             SetF(1.0f, true);
         }
-        public ProgressBarPro(Vector2 barOffset, BarType barType = BarType.LEFTRIGHT, float transitionSpeed = 0.1f, float rotation = 0f)
+        public ProgressBarPro(Vector2 barOffsetRelative, BarType barType = BarType.LEFTRIGHT, float transitionSpeed = 0.1f, float rotation = 0f)
         {
             //correct way of doing it but calculating progress bar must be fixed first
             //this.rect = new(topLeft.X, topLeft.Y, size.X, size.Y);
@@ -34,10 +34,10 @@ namespace ShapeEngineCore.Globals.UI
             //pivot = new(size.X / 2, size.Y / 2);
             this.barType = barType;
             this.transitionSpeed = transitionSpeed;
-            outlineSize = 0;
+            outlineSizeRelative = 0;
             rot = rotation;
             //this.centered = centered;
-            this.barOffset = barOffset;
+            this.barOffsetRelative = barOffsetRelative;
             SetF(1.0f, true);
         }
 
@@ -109,21 +109,21 @@ namespace ShapeEngineCore.Globals.UI
             {
                 if (transitionF > f)
                 {
-                    var transitionInfo = CalculateProgressRect(centerRect, transitionF, barOffset);
+                    var transitionInfo = CalculateProgressRect(centerRect, transitionF, barOffsetRelative);
                     DrawRectanglePro(transitionInfo.rect, transitionInfo.pivot, rot, transitionColor);
                     if (HasBar())
                     {
-                        var progressInfo = CalculateProgressRect(centerRect, f, barOffset);
+                        var progressInfo = CalculateProgressRect(centerRect, f, barOffsetRelative);
                         DrawRectanglePro(progressInfo.rect, progressInfo.pivot, rot, barColor);
                     }
                 }
                 else if (transitionF < f)
                 {
-                    var progressInfo = CalculateProgressRect(centerRect, f, barOffset);
+                    var progressInfo = CalculateProgressRect(centerRect, f, barOffsetRelative);
                     DrawRectanglePro(progressInfo.rect, progressInfo.pivot, rot, transitionColor);
                     if (barColor.a > 0)
                     {
-                        var transitionInfo = CalculateProgressRect(centerRect, transitionF, barOffset);
+                        var transitionInfo = CalculateProgressRect(centerRect, transitionF, barOffsetRelative);
                         DrawRectanglePro(transitionInfo.rect, transitionInfo.pivot, rot, barColor);
                     }
                 }
@@ -131,7 +131,7 @@ namespace ShapeEngineCore.Globals.UI
                 {
                     if (HasBar())
                     {
-                        var progressInfo = CalculateProgressRect(centerRect, f, barOffset);
+                        var progressInfo = CalculateProgressRect(centerRect, f, barOffsetRelative);
                         DrawRectanglePro(progressInfo.rect, progressInfo.pivot, rot, barColor);
                     }
                 }
@@ -140,15 +140,15 @@ namespace ShapeEngineCore.Globals.UI
             {
                 if (HasBar())
                 {
-                    var progressInfo = CalculateProgressRect(centerRect, f, barOffset);
+                    var progressInfo = CalculateProgressRect(centerRect, f, barOffsetRelative);
                     DrawRectanglePro(progressInfo.rect, progressInfo.pivot, rot, barColor);
                 }
             }
         }
 
-        protected (Rectangle rect, Vector2 pivot) CalculateProgressRect(Rectangle rect, float f, Vector2 barOffset)
+        protected (Rectangle rect, Vector2 pivot) CalculateProgressRect(Rectangle rect, float f, Vector2 barOffsetRelative)
         {
-            var rectPro = CalculateBarRectPro(rect, f, barOffset);
+            var rectPro = CalculateBarRectPro(rect, f, barOffsetRelative);
             return (rectPro, new(rectPro.width / 2, rectPro.height / 2));
         }
         protected Vector2 GetTranslation(float f)
@@ -167,7 +167,7 @@ namespace ShapeEngineCore.Globals.UI
                     return Vec.Rotate(new(-rect.width * (1.0f - f) * 0.5f, 0f), GetRotationRad());
             }
         }
-        protected Rectangle CalculateBarRectPro(Rectangle rect, float f, Vector2 barOffset)
+        protected Rectangle CalculateBarRectPro(Rectangle rect, float f, Vector2 barOffsetRelative)
         {
             //var rect = this.rect;
             if (!centered)
@@ -176,8 +176,8 @@ namespace ShapeEngineCore.Globals.UI
                 rect.x += translation.X;
                 rect.y += translation.Y;
             }
-            rect.x += barOffset.X;
-            rect.y += barOffset.Y;
+            rect.x += barOffsetRelative.X * rect.width;
+            rect.y += barOffsetRelative.Y * rect.height;
 
             if (barType == BarType.RIGHTLEFT || barType == BarType.LEFTRIGHT) rect.width *= f;
             else if (barType == BarType.BOTTOMTOP || barType == BarType.TOPBOTTOM) rect.height *= f;
@@ -186,42 +186,55 @@ namespace ShapeEngineCore.Globals.UI
         }
     }
 
+    public class ProgressRing : ProgressBar
+    {
+        public ProgressRing(float startAngleRad, float endAngleRad, Vector2 barOffsetRelative, float barRadiusOffset = 0f, float innerRadiusFactor = 0f, float outlineSizeRelative = 0f, bool bgFull = false)
+        {
 
+        }
+    }
     public class ProgressCircle : ProgressBar
     {
-        public ProgressCircle(float transitionSpeed = 0.1f)
+
+        Alignement alignement = Alignement.CENTER;
+
+        public ProgressCircle(Alignement alignement = Alignement.CENTER, float transitionSpeed = 0.1f)
         {
-            this.outlineSize = 0f;
-            this.barOffset = new(0f);
+            this.outlineSizeRelative = 0f;
+            this.barOffsetRelative = new(0f);
             this.transitionSpeed = transitionSpeed;
+            this.alignement = alignement;
             SetF(1f, true);
         }
-        public ProgressCircle(Vector2 barOffset, float transitionSpeed = 0.1f)
+        public ProgressCircle(Vector2 barOffsetRelative, Alignement alignement = Alignement.CENTER, float transitionSpeed = 0.1f)
         {
-            this.outlineSize = 0f;
-            this.barOffset = barOffset;
+            this.outlineSizeRelative = 0f;
+            this.barOffsetRelative = barOffsetRelative;
             this.transitionSpeed = transitionSpeed;
+            this.alignement = alignement;
             SetF(1f, true);
         }
-        public ProgressCircle(float transitionSpeed = 0.1f, float outlineSize = 0f)
+        public ProgressCircle(Alignement alignement = Alignement.CENTER, float transitionSpeed = 0.1f, float outlineSize = 0f)
         {
-            this.outlineSize = outlineSize;
-            this.barOffset = new(0f);
+            this.outlineSizeRelative = outlineSize;
+            this.barOffsetRelative = new(0f);
             this.transitionSpeed = transitionSpeed;
+            this.alignement = alignement;
             SetF(1f, true);
         }
-        public ProgressCircle(Vector2 barOffset, float transitionSpeed = 0.1f, float outlineSize = 0f)
+        public ProgressCircle(Vector2 barOffsetRelative, Alignement alignement = Alignement.CENTER, float transitionSpeed = 0.1f, float outlineSize = 0f)
         {
-            this.outlineSize = outlineSize;
-            this.barOffset = barOffset;
+            this.outlineSizeRelative = outlineSize;
+            this.barOffsetRelative = barOffsetRelative;
             this.transitionSpeed = transitionSpeed;
+            this.alignement = alignement;
             SetF(1f, true);
         }
 
         public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
         {
             //Rectangle rect = Utils.MultiplyRectangle(base.rect, stretchFactor);
-            float radius = rect.width;
+            float radius = rect.width / 2;
             Vector2 center = GetPos(Alignement.CENTER);
 
 
@@ -237,27 +250,34 @@ namespace ShapeEngineCore.Globals.UI
 
             if (HasTransition())
             {
+                Vector2 align = UIHandler.GetAlignementVector(alignement) - new Vector2(0.5f, 0.5f);
+                Vector2 alignPos = center + align * radius * 2f;
+                Vector2 offset = barOffsetRelative * GetSize();
+
                 if (transitionF > f)
                 {
-                    DrawCircleV(center, radius * MathF.Sqrt(transitionF), transitionColor);
-                    if (HasBar()) DrawCircleV(center, radius * MathF.Sqrt(f), barColor);
+                    DrawCircleV(Vec.Lerp(alignPos, center, transitionF) + offset , radius * transitionF, transitionColor);
+                    if (HasBar()) DrawCircleV(Vec.Lerp(alignPos, center, f) + offset, radius * f, barColor);
                 }
                 else if (transitionF < f)
                 {
-                    DrawCircleV(center, radius * MathF.Sqrt(f), transitionColor);
-                    if (barColor.a > 0) DrawCircleV(center, radius * MathF.Sqrt(transitionF), barColor);
+                    DrawCircleV(Vec.Lerp(alignPos, center, f) + offset , radius * f, transitionColor);
+                    if (HasBar()) DrawCircleV(Vec.Lerp(alignPos, center, transitionF) + offset, radius * transitionF, barColor);
                 }
                 else
                 {
-                    if (HasBar()) DrawCircleV(center, radius * MathF.Sqrt(f), barColor);
+                    if (HasBar()) DrawCircleV(Vec.Lerp(alignPos, center, f) + offset, radius * f, barColor);
                 }
             }
             else
             {
-                if (HasBar()) DrawCircleV(center, radius * MathF.Sqrt(f), barColor);
+                Vector2 align = UIHandler.GetAlignementVector(alignement) - new Vector2(0.5f, 0.5f);
+                Vector2 alignPos = center + align * radius * 2f;
+                Vector2 offset = barOffsetRelative * GetSize();
+                if (HasBar()) DrawCircleV(Vec.Lerp(alignPos, center, f) + offset , radius * f, barColor);
             }
 
-            if (HasOutline()) Drawing.DrawCircleLines(center, radius, outlineSize, outlineColor);
+            if (HasOutline()) Drawing.DrawCircleLines(center, radius * 1.01f, outlineSizeRelative * MathF.Max(rect.width, rect.height), outlineColor);
         }
     }
 
@@ -269,27 +289,27 @@ namespace ShapeEngineCore.Globals.UI
         protected Color outlineColor = GRAY;
         protected Color reservedColor = YELLOW;
         protected BarType barType = BarType.LEFTRIGHT;
-        protected float outlineSize = 0f;
+        protected float outlineSizeRelative = 0f;
         protected float f = 0f;
         protected float reservedF = 0f;
         protected float transitionF = 0f;
         protected float transitionSpeed = 0.1f;
         protected bool centered = false;
-        protected Vector2 barOffset = new(0f, 0f);
+        protected Vector2 barOffsetRelative = new(0f, 0f);
         protected ProgressBar() { }
-        public ProgressBar(BarType barType = BarType.LEFTRIGHT, float transitionSpeed = 0.1f, float outlineSize = 0f)
+        public ProgressBar(BarType barType = BarType.LEFTRIGHT, float transitionSpeed = 0.1f, float outlineSizeRelative = 0f)
         {
-            this.outlineSize = outlineSize;
+            this.outlineSizeRelative = outlineSizeRelative;
             this.barType = barType;
             this.transitionSpeed = transitionSpeed;
             SetF(1.0f, true);
         }
-        public ProgressBar(Vector2 barOffset, BarType barType = BarType.LEFTRIGHT, float transitionSpeed = 0.1f, float outlineSize = 0f)
+        public ProgressBar(Vector2 barOffsetRelative, BarType barType = BarType.LEFTRIGHT, float transitionSpeed = 0.1f, float outlineSizeRelative = 0f)
         {
-            this.outlineSize = outlineSize;
+            this.outlineSizeRelative = outlineSizeRelative;
             this.barType = barType;
             this.transitionSpeed = transitionSpeed;
-            this.barOffset = barOffset;
+            this.barOffsetRelative = barOffsetRelative;
             SetF(1.0f, true);
         }
         //public void SetColors(params Color[] colors)
@@ -356,7 +376,7 @@ namespace ShapeEngineCore.Globals.UI
         public bool HasBackground() { return bgColor.a > 0; }
         public bool HasBar() { return barColor.a > 0 && f > 0f; }
         public bool HasTransition() { return transitionSpeed > 0f && transitionF > 0f && transitionColor.a > 0; }
-        public bool HasOutline() { return outlineSize > 0f && outlineColor.a > 0; }
+        public bool HasOutline() { return outlineSizeRelative > 0f && outlineColor.a > 0; }
         public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
         {
             //Rectangle rect = Utils.MultiplyRectangle(base.rect, stretchFactor);
@@ -392,7 +412,7 @@ namespace ShapeEngineCore.Globals.UI
                 if (HasBar()) DrawRectangleRec(CalculateBarRect(rect, f), barColor);
             }
 
-            if (HasOutline()) DrawRectangleLinesEx(rect, outlineSize, outlineColor);
+            if (HasOutline()) DrawRectangleLinesEx(rect, outlineSizeRelative * MathF.Max(rect.width, rect.height), outlineColor);
         }
         protected Rectangle CalculateBarRect(Rectangle rect, float f)
         {
@@ -412,8 +432,8 @@ namespace ShapeEngineCore.Globals.UI
                     case BarType.BOTTOMTOP: rect.Y += rect.height * (1.0f - f) * 0.5f; break;
                 }
             }
-            rect.x += barOffset.X;
-            rect.y += barOffset.Y;
+            rect.x += barOffsetRelative.X * rect.width;
+            rect.y += barOffsetRelative.Y * rect.height;
 
             if (barType == BarType.RIGHTLEFT || barType == BarType.LEFTRIGHT) rect.width *= f;
             else if (barType == BarType.BOTTOMTOP || barType == BarType.TOPBOTTOM) rect.height *= f;

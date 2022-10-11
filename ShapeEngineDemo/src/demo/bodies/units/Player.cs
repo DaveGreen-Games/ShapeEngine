@@ -278,11 +278,11 @@ namespace ShapeEngineDemo.Bodies
             collisionMask = new string[] { "asteroid" };
             collider = new(GAMELOOP.GameCenter(), MovementDir * stats.Get("maxSpeed"), size);
             
-            Vector2 barOffset = new(-10f, 2f);
+            Vector2 barOffset = new(-0.15f, 0.05f);
             aimpointSkillDisplay = new(PaletteHandler.C("text"), PaletteHandler.C("flash"), PaletteHandler.C("neutral"),PaletteHandler.C("energy"), "Drop Pin", "Drop Aim Point", -5f);
             hpBar = new(barOffset, BarType.BOTTOMTOP, 0.1f, -5f);
             pwrBar = new(barOffset, BarType.BOTTOMTOP, 0f, -5f);
-            pwrBarCircle = new(new Vector2(0f), 0.1f, 0f);
+            pwrBarCircle = new(new Vector2(0f), Alignement.BOTTOMCENTER, 0.5f, 0.04f);
             //aimpointInputPrompt = new(start + new Vector2(100, 0), 50, "Drop Aim Point", -5f, ColorPalette.Cur.text, ColorPalette.Cur.flash, ColorPalette.Cur.energy);
             //aimpointInputPanel = new("K", start + new Vector2 (200, 0), new(120, 120), -5f, FontSize.HUGE, ColorPalette.Cur.text, ColorPalette.Cur.energy);
             //start += gap;
@@ -294,7 +294,7 @@ namespace ShapeEngineDemo.Bodies
             pwrBarMini.SetColors(PaletteHandler.C("player"), new(0, 0, 0, 0));// ColorPalette.Cur.energy);
             hpBar.SetColors(PaletteHandler.C("enemy"), PaletteHandler.C("neutral"), PaletteHandler.C("flash"));
             pwrBar.SetColors(PaletteHandler.C("player"), PaletteHandler.C("energy"));
-            pwrBarCircle.SetColors(PaletteHandler.C("player"), PaletteHandler.C("energy"));
+            pwrBarCircle.SetColors(PaletteHandler.C("player"), PaletteHandler.C("energy"), new(0,0,0,0), WHITE, PaletteHandler.C("energy"));
             //ammoBar.SetColors(ColorPalette.Cur.special1, ColorPalette.Cur.special12);
 
             //ScreenHandler.Cam.AddCameraOrderChain("player zoom", new CameraOrder(1f, 2f, 1f, EasingType.BOUNCE_OUT));
