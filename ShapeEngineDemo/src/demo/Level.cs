@@ -189,7 +189,7 @@ namespace ShapeEngineDemo
         private AsteroidSpawner asteroidSpawner;
         public Level()
         {
-            Rectangle playArea = Utils.ScaleRectangle(ScreenHandler.GameArea(), 1.5f);
+            Rectangle playArea = new Rectangle(0, 0, 800, 800);// Utils.ScaleRectangle(ScreenHandler.GameArea(), 1.5f);
             this.area = new AreaBasic(playArea, 20, 20);
             this.asteroidSpawner = new(this.area, 1f, 2f);
 

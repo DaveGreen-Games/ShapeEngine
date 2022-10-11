@@ -87,7 +87,7 @@ namespace ShapeEngineCore.Globals.UI
         //    base.SetSize(newSize);
         //    pivot = newSize / 2;
         //}
-        public override void Draw(Vector2 devRes, Vector2 stretchFactor)
+        public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
         {
             //Rectangle scaledRect = Utils.MultiplyRectangle(rect, stretchFactor);
             //Vector2 scaledtopLeft = new Vector2(rect.X - rect.width / 2, rect.Y - rect.height / 2) * stretchFactor;
@@ -183,6 +183,81 @@ namespace ShapeEngineCore.Globals.UI
             else if (barType == BarType.BOTTOMTOP || barType == BarType.TOPBOTTOM) rect.height *= f;
 
             return rect;
+        }
+    }
+
+
+    public class ProgressCircle : ProgressBar
+    {
+        public ProgressCircle(float transitionSpeed = 0.1f)
+        {
+            this.outlineSize = 0f;
+            this.barOffset = new(0f);
+            this.transitionSpeed = transitionSpeed;
+            SetF(1f, true);
+        }
+        public ProgressCircle(Vector2 barOffset, float transitionSpeed = 0.1f)
+        {
+            this.outlineSize = 0f;
+            this.barOffset = barOffset;
+            this.transitionSpeed = transitionSpeed;
+            SetF(1f, true);
+        }
+        public ProgressCircle(float transitionSpeed = 0.1f, float outlineSize = 0f)
+        {
+            this.outlineSize = outlineSize;
+            this.barOffset = new(0f);
+            this.transitionSpeed = transitionSpeed;
+            SetF(1f, true);
+        }
+        public ProgressCircle(Vector2 barOffset, float transitionSpeed = 0.1f, float outlineSize = 0f)
+        {
+            this.outlineSize = outlineSize;
+            this.barOffset = barOffset;
+            this.transitionSpeed = transitionSpeed;
+            SetF(1f, true);
+        }
+
+        public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
+        {
+            //Rectangle rect = Utils.MultiplyRectangle(base.rect, stretchFactor);
+            float radius = rect.width;
+            Vector2 center = GetPos(Alignement.CENTER);
+
+
+            if (HasBackground())
+            {
+                if (HasReservedPart())
+                {
+                    DrawCircleV(center, radius, reservedColor);
+                    DrawCircleV(center, radius * MathF.Sqrt(1f - reservedF), bgColor);
+                }
+                else DrawCircleV(center, radius, bgColor);
+            }
+
+            if (HasTransition())
+            {
+                if (transitionF > f)
+                {
+                    DrawCircleV(center, radius * MathF.Sqrt(transitionF), transitionColor);
+                    if (HasBar()) DrawCircleV(center, radius * MathF.Sqrt(f), barColor);
+                }
+                else if (transitionF < f)
+                {
+                    DrawCircleV(center, radius * MathF.Sqrt(f), transitionColor);
+                    if (barColor.a > 0) DrawCircleV(center, radius * MathF.Sqrt(transitionF), barColor);
+                }
+                else
+                {
+                    if (HasBar()) DrawCircleV(center, radius * MathF.Sqrt(f), barColor);
+                }
+            }
+            else
+            {
+                if (HasBar()) DrawCircleV(center, radius * MathF.Sqrt(f), barColor);
+            }
+
+            if (HasOutline()) Drawing.DrawCircleLines(center, radius, outlineSize, outlineColor);
         }
     }
 
@@ -282,7 +357,7 @@ namespace ShapeEngineCore.Globals.UI
         public bool HasBar() { return barColor.a > 0 && f > 0f; }
         public bool HasTransition() { return transitionSpeed > 0f && transitionF > 0f && transitionColor.a > 0; }
         public bool HasOutline() { return outlineSize > 0f && outlineColor.a > 0; }
-        public override void Draw(Vector2 devRes, Vector2 stretchFactor)
+        public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
         {
             //Rectangle rect = Utils.MultiplyRectangle(base.rect, stretchFactor);
             if (HasBackground())

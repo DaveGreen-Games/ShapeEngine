@@ -202,8 +202,8 @@ namespace ShapeEngineCore.Globals.Screen
 
             GAME.OnTextureSizeChanged += GameTextureSizeChanged;
 
-            CAMERA = new(GameSize(), 1f, GAME.STRETCH_AREA_FACTOR, 0f, -1f, 1.5f);
-
+            //CAMERA = new(GameSize(), 1f, GAME.STRETCH_AREA_FACTOR, 0f, -1f, 1.5f);
+            CAMERA = new(GameSize(), 1f, GAME.STRETCH_AREA_SIDE_FACTOR, 0f, -1f, 1.5f);
             screenBuffers = new ScreenBuffer[]
             {
                 new(ScreenHandler.GameWidth(), ScreenHandler.GameHeight(), ScreenHandler.GameWidth(), ScreenHandler.GameHeight()),
@@ -425,7 +425,13 @@ namespace ShapeEngineCore.Globals.Screen
             if (IsWindowFullscreen())
             {
                 ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+                if (WINDOWED_WINDOW_SIZE.width > monitor.width || WINDOWED_WINDOW_SIZE.height > monitor.height)
+                {
+                    WINDOWED_WINDOW_SIZE = (monitor.width / 2, monitor.height / 2);
+                }
+
                 ChangeWindowDimensions(WINDOWED_WINDOW_SIZE.width, WINDOWED_WINDOW_SIZE.height, false);
+                ChangeWindowDimensions(WINDOWED_WINDOW_SIZE.width, WINDOWED_WINDOW_SIZE.height, false);//needed for some monitors ...
             }
             else
             {
@@ -509,7 +515,7 @@ namespace ShapeEngineCore.Globals.Screen
             {
                 int windowWidth = prevWidth;
                 int windowHeight = prevHeight;
-                if(prevWidth > monitor.width || prevHeight > monitor.height)
+                if(windowWidth > monitor.width || windowHeight > monitor.height)
                 {
                     windowWidth = monitor.width / 2;
                     windowHeight = monitor.height / 2;
@@ -534,7 +540,7 @@ namespace ShapeEngineCore.Globals.Screen
         }
         private static void ChangeWindowDimensions(int newWidth, int newHeight, bool fullscreenChange = false)
         {
-            if (newWidth == CUR_WINDOW_SIZE.width && newHeight == CUR_WINDOW_SIZE.height) return;
+            //if (newWidth == CUR_WINDOW_SIZE.width && newHeight == CUR_WINDOW_SIZE.height) return;
 
             CUR_WINDOW_SIZE = (newWidth, newHeight);
             if (!fullscreenChange) WINDOWED_WINDOW_SIZE = (newWidth, newHeight);

@@ -279,7 +279,7 @@ namespace ShapeEngineCore.Globals.Screen
             texture = LoadRenderTexture(width, height);
             sourceRec.width = width;
             sourceRec.height = -height;
-            OnTextureSizeChanged?.Invoke(width, height, STRETCH_AREA_FACTOR);
+            OnTextureSizeChanged?.Invoke(width, height, STRETCH_AREA_SIDE_FACTOR);
         }
         public void ChangeWindowSize(int winWidth, int winHeight)
         {
@@ -293,7 +293,7 @@ namespace ShapeEngineCore.Globals.Screen
                 float f = fWidth <= fHeight ? fWidth : fHeight;
 
                 TARGET_RESOLUTION = ((int)(winWidth / f), (int)(winHeight / f));
-                //targetResolution = (winWidth, winHeight);
+                //TARGET_RESOLUTION = (winWidth, winHeight);
                 STRETCH_FACTOR = new Vector2
                 (
                     (float)TARGET_RESOLUTION.width / (float)developmentResolution.width,

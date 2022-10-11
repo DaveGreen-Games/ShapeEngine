@@ -216,6 +216,7 @@ namespace ShapeEngineDemo.Bodies
         private float angle = 0f;
         private ProgressBarPro hpBar;
         private ProgressBarPro pwrBar;
+        private ProgressCircle pwrBarCircle;
         //private ProgressBarPro ammoBar;
         private ProgressBar hpBarMini = new(BarType.LEFTRIGHT, 0.1f, 0f);
         private ProgressBar pwrBarMini = new(BarType.LEFTRIGHT, 0f, 0f);
@@ -281,6 +282,7 @@ namespace ShapeEngineDemo.Bodies
             aimpointSkillDisplay = new(PaletteHandler.C("text"), PaletteHandler.C("flash"), PaletteHandler.C("neutral"),PaletteHandler.C("energy"), "Drop Pin", "Drop Aim Point", -5f);
             hpBar = new(barOffset, BarType.BOTTOMTOP, 0.1f, -5f);
             pwrBar = new(barOffset, BarType.BOTTOMTOP, 0f, -5f);
+            pwrBarCircle = new(new Vector2(0f), 0.1f, 0f);
             //aimpointInputPrompt = new(start + new Vector2(100, 0), 50, "Drop Aim Point", -5f, ColorPalette.Cur.text, ColorPalette.Cur.flash, ColorPalette.Cur.energy);
             //aimpointInputPanel = new("K", start + new Vector2 (200, 0), new(120, 120), -5f, FontSize.HUGE, ColorPalette.Cur.text, ColorPalette.Cur.energy);
             //start += gap;
@@ -292,6 +294,7 @@ namespace ShapeEngineDemo.Bodies
             pwrBarMini.SetColors(PaletteHandler.C("player"), new(0, 0, 0, 0));// ColorPalette.Cur.energy);
             hpBar.SetColors(PaletteHandler.C("enemy"), PaletteHandler.C("neutral"), PaletteHandler.C("flash"));
             pwrBar.SetColors(PaletteHandler.C("player"), PaletteHandler.C("energy"));
+            pwrBarCircle.SetColors(PaletteHandler.C("player"), PaletteHandler.C("energy"));
             //ammoBar.SetColors(ColorPalette.Cur.special1, ColorPalette.Cur.special12);
 
             //ScreenHandler.Cam.AddCameraOrderChain("player zoom", new CameraOrder(1f, 2f, 1f, EasingType.BOUNCE_OUT));
@@ -467,17 +470,20 @@ namespace ShapeEngineDemo.Bodies
             if (energyCore.IsCooldownActive())
             {
                 pwrBar.SetF(1.0f - energyCore.CooldownF);
+                pwrBarCircle.SetF(1.0f - energyCore.CooldownF);
                 pwrBarMini.SetF(1.0f - energyCore.CooldownF);
             }
             else
             {
                 pwrBar.SetF(GetEnergyPercentage());
+                pwrBarCircle.SetF(GetEnergyPercentage());
                 pwrBarMini.SetF(GetEnergyPercentage());
             }
 
             hpBar.Update(dt, GAMELOOP.MOUSE_POS_UI);
             hpBarMini.Update(dt, GAMELOOP.MOUSE_POS_UI);
             pwrBar.Update(dt, GAMELOOP.MOUSE_POS_UI);
+            pwrBarCircle.Update(dt, GAMELOOP.MOUSE_POS_UI);
             pwrBarMini.Update(dt, GAMELOOP.MOUSE_POS_UI);
             //ammoBar.Update(dt, GAMELOOP.MOUSE_POS_UI);
 
@@ -676,7 +682,8 @@ namespace ShapeEngineDemo.Bodies
 
             //UIHandler.DrawTextAligned(String.Format("Rad: {0} // Deg: {1}", angle, angle * RAD2DEG), new(1000, 200), 120, 1, WHITE, Alignement.CENTER);
 
-
+            pwrBarCircle.UpdateRect(uiSize * new Vector2(0.5f, 0.9f), uiSize * new Vector2(0.04f, 0.04f), Alignement.BOTTOMCENTER);
+            pwrBarCircle.Draw(uiSize, stretchFactor);
             Vector2 barSize = uiSize * new Vector2(0.03f, 0.2f);
             Vector2 center = uiSize * new Vector2(0.03f, 0.98f) - new Vector2(0, barSize.Y / 2);
             Vector2 gap = new Vector2(barSize.X * 1.5f, 0);

@@ -99,14 +99,15 @@ namespace ShapeEngineDemo
             UIHandler.DrawTextAligned2(ShapeEngine.EDITORMODE == true ? "EDITOR" : "STANDALONE", 
                 uiSize * new Vector2(0.01f, 0.03f), uiSize.X * 0.05f, 1, WHITE, Alignement.LEFTCENTER);
 
-            Vector2 start = new(30, 180);
-            Vector2 gap = new(0, 65);
-            float fontSize = 60f;
-            UIHandler.DrawTextAligned(String.Format("UI Size: {0}", ScreenHandler.UISize()), start, fontSize, 1, WHITE, Alignement.LEFTCENTER);
-            UIHandler.DrawTextAligned(String.Format("Dev Res: {0}", ScreenHandler.DEVELOPMENT_RESOLUTION), start + gap, fontSize, 1, WHITE, Alignement.LEFTCENTER);
-            UIHandler.DrawTextAligned(String.Format("Target Res: {0}", ScreenHandler.UI.TARGET_RESOLUTION), start + gap * 2, fontSize, 1, WHITE, Alignement.LEFTCENTER);
-            UIHandler.DrawTextAligned(String.Format("Win Size: {0}", ScreenHandler.CUR_WINDOW_SIZE), start + gap * 3, fontSize, 1, WHITE, Alignement.LEFTCENTER);
-            UIHandler.DrawTextAligned(String.Format("Stretch F: {0}", stretchFactor), start + gap * 4, fontSize, 1, WHITE, Alignement.LEFTCENTER);
+            Vector2 start = uiSize * new Vector2(0.01f, 0.08f);
+            Vector2 gap = uiSize * new Vector2(0, 0.04f);
+            Vector2 textSize = uiSize * new Vector2(0.2f, 0.05f);
+            //float fontSize = 60f;
+            UIHandler.DrawTextAligned(String.Format("UI Size: {0}", ScreenHandler.UISize()), start, textSize, 1, WHITE, Alignement.LEFTCENTER);
+            UIHandler.DrawTextAligned(String.Format("Dev Res: {0}", ScreenHandler.DEVELOPMENT_RESOLUTION), start + gap, textSize, 1, WHITE, Alignement.LEFTCENTER);
+            UIHandler.DrawTextAligned(String.Format("Target Res: {0}", ScreenHandler.UI.TARGET_RESOLUTION), start + gap * 2, textSize, 1, WHITE, Alignement.LEFTCENTER);
+            UIHandler.DrawTextAligned(String.Format("Win Size: {0}", ScreenHandler.CUR_WINDOW_SIZE), start + gap * 3, textSize, 1, WHITE, Alignement.LEFTCENTER);
+            UIHandler.DrawTextAligned(String.Format("Stretch F: {0}", stretchFactor), start + gap * 4, textSize, 1, WHITE, Alignement.LEFTCENTER);
             
             //UIHandler.DrawTextAligned(String.Format("Area F: {0}", ScreenHandler.UI.STRETCH_AREA_FACTOR), new Vector2(100f, 420f), 50, 5, WHITE, Alignement.LEFTCENTER);
             //UIHandler.DrawTextAligned(String.Format("Area Side F: {0}", ScreenHandler.UI.STRETCH_AREA_SIDE_FACTOR), new Vector2(100f, 500f), 50, 5, WHITE, Alignement.LEFTCENTER);

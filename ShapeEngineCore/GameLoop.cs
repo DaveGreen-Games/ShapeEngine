@@ -465,7 +465,7 @@ namespace ShapeEngineCore
             //Draw to UI texture
             ScreenHandler.StartDraw(false);
             if (CUR_SCENE != null) CUR_SCENE.DrawUI(uiSize, stretchFactor);
-            CursorHandler.Draw(MOUSE_POS_UI);
+            CursorHandler.Draw(uiSize, MOUSE_POS_UI);
             ScreenHandler.EndDraw(false);
 
             
