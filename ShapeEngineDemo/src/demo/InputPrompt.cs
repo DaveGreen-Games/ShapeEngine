@@ -87,13 +87,9 @@ namespace ShapeEngineDemo
 
         public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
         {
-            Vector2 center = GetCenter() * stretchFactor;
+            Vector2 center = GetPos(Alignement.CENTER);
             string text = InputHandler.GetInputActionKeyName(0, inputAction, InputHandler.IsGamepad());
-            //var textSize = UIHandler.GetTextSize(text);
-            //float fontSize = radius * (textSize.X / radius);
-            //figure out dynamic font size based on text!!!!
-            //float fontSize = radius * 3f;
-            float r = radius * ScreenHandler.UI.STRETCH_AREA_SIDE_FACTOR;
+            float r = GetSize().X;
             float thickness = r * 0.25f;
             if(bgColor.a > 0) DrawCircleV(center, r, bgColor);
             UIHandler.DrawTextAlignedPro(text, center, angleDeg, GetSize(), 1, textColor, Alignement.CENTER);

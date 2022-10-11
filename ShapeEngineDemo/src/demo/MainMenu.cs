@@ -20,12 +20,10 @@ namespace ShapeEngineDemo
             //mazeDrawer = new(maze, new(SCREEN_AREA.X + SCREEN_AREA.width * 0.1f, SCREEN_AREA.Y + SCREEN_AREA.height * 0.1f), new(SCREEN_AREA.width * 0.8f, SCREEN_AREA.height * 0.8f), 2);
             //maze.GenerateDeadCells(50);
             //maze.Generate(MazeGenerator.Maze.GenerationType.PRIM_SIMPLE, -1, 1);
-            Vector2 center = ScreenHandler.UICenter(); // new(ScreenHandler.DEVELOPMENT_RESOLUTION.width / 2, ScreenHandler.DEVELOPMENT_RESOLUTION.height / 2);
-            Vector2 size = new Vector2 (300, 100);
-            Vector2 offset = new Vector2(0, 110);
-            level1Button = new("START", "medium", center, size, true);
-            optionsButton = new("OPTIONS", "medium", center + offset, size, true);
-            quitButton = new("QUIT", "medium", center + offset * 2, size, true);
+            
+            level1Button = new("START", "medium");
+            optionsButton = new("OPTIONS", "medium");
+            quitButton = new("QUIT", "medium");
             quitButton.AddShortcut("UI Cancel");
 
             level1Button.SetStateColors(new(PaletteHandler.C("bg2"), PaletteHandler.C("energy"), PaletteHandler.C("player"), PaletteHandler.C("sepcial1"), PaletteHandler.C("neutral")));
@@ -66,9 +64,16 @@ namespace ShapeEngineDemo
         }
         public override void Update(float dt)
         {
-            level1Button.Update(dt, GAMELOOP.MOUSE_POS_UI_RAW);
-            optionsButton.Update(dt, GAMELOOP.MOUSE_POS_UI_RAW);
-            quitButton.Update(dt, GAMELOOP.MOUSE_POS_UI_RAW);
+            Vector2 uiSize = ScreenHandler.UISize();
+            Vector2 center = uiSize * 0.5f;
+            Vector2 size = uiSize * new Vector2(0.2f, 0.1f);
+            Vector2 offset = new Vector2(0, size.Y * 1.1f);
+            level1Button.UpdateRect(center, size);
+            optionsButton.UpdateRect(center + offset, size);
+            quitButton.UpdateRect(center + offset * 2, size);
+            level1Button.Update(dt, GAMELOOP.MOUSE_POS_UI);
+            optionsButton.Update(dt, GAMELOOP.MOUSE_POS_UI);
+            quitButton.Update(dt, GAMELOOP.MOUSE_POS_UI);
             if (level1Button.Clicked())
             {
                 GAMELOOP.AddScene("level1", new Level());

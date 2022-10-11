@@ -33,10 +33,7 @@ namespace ShapeEngineCore.Globals.UI
         protected bool pressed = false;
         protected bool clicked = false;
         protected bool disabled = false;
-        // protected Rectangle rect;
         protected UINeighbors neighbors = new();
-        //protected List<KeyboardKey> keyboardShortcuts = new();
-        //protected List<MouseButton> mouseShortcuts = new();
         protected string shortcut = "";
         public bool Clicked() { return clicked; }
         protected virtual bool CheckPressed()
@@ -170,7 +167,7 @@ namespace ShapeEngineCore.Globals.UI
             selected = false;
             SelectedChanged(false);
         }
-        public override void Update(float dt, Vector2 mousePos)
+        public override void Update(float dt, Vector2 mousePosUI)
         {
             //if (Screen.HasMonitorChanged())
             //{
@@ -191,7 +188,7 @@ namespace ShapeEngineCore.Globals.UI
             else
             {
                 var prevHovered = hovered;
-                hovered = IsPointInside(mousePos);
+                hovered = IsPointInside(mousePosUI);
                 if (hovered && !prevHovered)
                 {
                     HoveredChanged(true);

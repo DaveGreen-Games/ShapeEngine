@@ -18,10 +18,8 @@ namespace ShapeEngineCore
         string inputAction = "";
         float f = 0f;
 
-        public SkillDisplay(Vector2 center, Vector2 size, Color textColor, Color barColor, Color barBGColor, Color bgColor, string title = "", string inputAction = "", float angleDeg = 0f)
+        public SkillDisplay(Color textColor, Color barColor, Color barBGColor, Color bgColor, string title = "", string inputAction = "", float angleDeg = 0f)
         {
-            rect = new(center.X - size.X / 2, center.Y - size.Y / 2, size.X, size.Y);
-            //this.size = size;
             this.inputAction = inputAction;
             this.angleDeg = angleDeg;
             this.textColor = textColor;
@@ -54,8 +52,8 @@ namespace ShapeEngineCore
 
         public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
         {
-            Vector2 size = GetSize() * stretchFactor;
-            Vector2 center = GetTopLeft() * stretchFactor + size / 2; // GetCenter() * stretchFactor;
+            Vector2 size = GetSize();
+            Vector2 center = GetPos(Alignement.CENTER); // GetCenter() * stretchFactor;
             float thickness = Vec.Min(size) * 0.1f;
             Vector2 innerSize = new Vector2(size.X - thickness, size.Y - thickness);
             if (bgColor.a > 0)

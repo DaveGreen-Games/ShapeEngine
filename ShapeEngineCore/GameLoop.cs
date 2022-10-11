@@ -121,7 +121,7 @@ namespace ShapeEngineCore
         public Vector2 MOUSE_POS { get; private set; }
         public Vector2 MOUSE_POS_GAME { get; private set; }
         public Vector2 MOUSE_POS_UI { get; private set; }
-        public Vector2 MOUSE_POS_UI_RAW { get; private set; }
+        //public Vector2 MOUSE_POS_UI_RAW { get; private set; }
         public Color backgroundColor = BLACK;
         public Scene? CUR_SCENE { get; private set; }
         private int CUR_SCENE_INDEX = 0;
@@ -398,7 +398,7 @@ namespace ShapeEngineCore
 
                 //implement mouse pos raw
                 MOUSE_POS_UI = ScreenHandler.UI.ScalePositionV(MOUSE_POS);
-                MOUSE_POS_UI_RAW =  ScreenHandler.UI.ScalePositionRawV(MOUSE_POS);
+                //MOUSE_POS_UI_RAW =  ScreenHandler.UI.ScalePositionRawV(MOUSE_POS);
                 MOUSE_POS_GAME = ScreenHandler.TransformPositionToGame(MOUSE_POS_UI);
                 if (WindowShouldClose() && !IsKeyDown(KeyboardKey.KEY_ESCAPE)) QUIT = true;
 

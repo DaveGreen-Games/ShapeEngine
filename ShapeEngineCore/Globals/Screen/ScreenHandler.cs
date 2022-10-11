@@ -328,10 +328,10 @@ namespace ShapeEngineCore.Globals.Screen
         {
             return CAMERA.TransformPositionToUI(gamePos);
         }
-        public static Vector2 TransformPositionToUIRaw(Vector2 gamePos)
-        {
-            return CAMERA.TransformPositionToUI(gamePos) / UI.STRETCH_FACTOR;
-        }
+        //public static Vector2 TransformPositionToUIRaw(Vector2 gamePos)
+        //{
+        //    return CAMERA.TransformPositionToUI(gamePos) / UI.STRETCH_FACTOR;
+        //}
         public static Vector2 TransformPositionToGame(Vector2 uiPos)
         {
             return CAMERA.TransformPositionToGame(uiPos);

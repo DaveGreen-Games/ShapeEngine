@@ -12,19 +12,20 @@ namespace ShapeEngineCore.Globals.UI
 
         protected UISelectionColors stateColors = new();
 
-        public Button(Vector2 pos, Vector2 size, bool centered = false)
-        {
-            this.centered = centered;
-
-            if (centered)
-            {
-                rect = new(pos.X - size.X * 0.5f, pos.Y - size.Y * 0.5f, size.X, size.Y);
-            }
-            else
-            {
-                rect = new(pos.X, pos.Y, size.X, size.Y);
-            }
-        }
+        //public Button(Vector2 pos, Vector2 size, bool centered = false)
+        //{
+        //    this.centered = centered;
+        //
+        //    if (centered)
+        //    {
+        //        UpdateRect(pos, size);
+        //        //rect = new(pos.X - size.X * 0.5f, pos.Y - size.Y * 0.5f, size.X, size.Y);
+        //    }
+        //    else
+        //    {
+        //        UpdateRect(new(pos.X, pos.Y, size.X, size.Y));
+        //    }
+        //}
 
         public void SetStateColors(UISelectionColors newColors) { this.stateColors = newColors; }
 
@@ -39,9 +40,9 @@ namespace ShapeEngineCore.Globals.UI
                 default: return true;
             }
         }
-        public override void Update(float dt, Vector2 mousePosRaw)
+        public override void Update(float dt, Vector2 mousePosUI)
         {
-            base.Update(dt, mousePosRaw);
+            base.Update(dt, mousePosUI);
             easeHandler.Update(dt);
             if (easeHandler.HasChain("offset"))
             {
@@ -68,23 +69,21 @@ namespace ShapeEngineCore.Globals.UI
             if (centered)
             {
                 //Vector2 scaledTopLeft = GetCenter() * stretchFactor - GetSize() * 0.5f;
-                Vector2 size = GetSize() * stretchFactor;
+                Vector2 size = GetSize(); // * stretchFactor;
                 Vector2 newSize = new Vector2 (size.X * sizeOffset.X, size.Y * sizeOffset.Y);
                 //size *= areaSideFactor;
                 Vector2 sizeDif = newSize - size;
                 offsetRect =
                     new(
-                        (rect.X + offset.X) * stretchFactor.X - sizeDif.X * 0.5f,
-                        (rect.Y + offset.Y) * stretchFactor.Y - sizeDif.Y * 0.5f,
+                        rect.X + offset.X - sizeDif.X * 0.5f,
+                        rect.Y + offset.Y - sizeDif.Y * 0.5f,
                         newSize.X,
                         newSize.Y
                         );
             }
             else
             {
-                offsetRect = Utils.MultiplyRectangle(
-                    new Rectangle(rect.X + offset.X, rect.Y + offset.Y, rect.width * sizeOffset.X, rect.height * sizeOffset.Y),
-                    stretchFactor);
+                offsetRect = new Rectangle(rect.X + offset.X, rect.Y + offset.Y, rect.width * sizeOffset.X, rect.height * sizeOffset.Y);
             }
             DrawRectangleRec(offsetRect, color);
             if (selected) DrawRectangleV(new Vector2(offsetRect.X, offsetRect.y + offsetRect.height * 0.9f), new Vector2(offsetRect.width, offsetRect.height * 0.1f), stateColors.selectedColor);
