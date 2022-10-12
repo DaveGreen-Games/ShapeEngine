@@ -188,11 +188,171 @@ namespace ShapeEngineCore.Globals.UI
 
     public class ProgressRing : ProgressBar
     {
-        public ProgressRing(float startAngleRad, float endAngleRad, Vector2 barOffsetRelative, float barRadiusOffset = 0f, float innerRadiusFactor = 0f, float outlineSizeRelative = 0f, bool bgFull = false)
+        protected float startAngleDeg = 0f;
+        protected float endAngleDeg = 0f;
+        protected float innerRadiusFactor = 0f;
+        protected float bgRadiusFactor = 0f;
+        protected float barRadiusOffset = 0f;
+
+        public ProgressRing(float startAngleDeg, float endAngleDeg)
+        {
+            this.startAngleDeg = startAngleDeg;
+            this.endAngleDeg = endAngleDeg;
+            this.outlineSizeRelative = 0f;
+            this.barOffsetRelative = new(0f);
+        }
+        public ProgressRing(float startAngleDeg, float endAngleDeg, float innerRadiusFactor = 0f, float bgRadiusFactor = 0f)
+        {
+            this.startAngleDeg = startAngleDeg;
+            this.endAngleDeg = endAngleDeg;
+            this.innerRadiusFactor = innerRadiusFactor;
+            this.bgRadiusFactor = bgRadiusFactor;
+            this.outlineSizeRelative = 0f;
+            this.barOffsetRelative = new(0f);
+        }
+        public ProgressRing(float startAngleDeg, float endAngleDeg, float barRadiusOffset = 0f, float innerRadiusFactor = 0f, float bgRadiusFactor = 0f)
+        {
+            this.startAngleDeg = startAngleDeg;
+            this.endAngleDeg = endAngleDeg;
+            this.barRadiusOffset = barRadiusOffset;
+            this.innerRadiusFactor = innerRadiusFactor;
+            this.bgRadiusFactor = bgRadiusFactor;
+            this.outlineSizeRelative = 0f;
+            this.barOffsetRelative = new(0f);
+        }
+        public ProgressRing(float startAngleDeg, float endAngleDeg, Vector2 barOffsetRelative, float barRadiusOffset = 0f, float innerRadiusFactor = 0f, float outlineSizeRelative = 0f, float bgRadiusFactor = 0f)
         {
 
         }
+
+
+        public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
+        {
+            //Rectangle rect = Utils.MultiplyRectangle(base.rect, stretchFactor);
+            float radius = rect.width / 2;
+            Vector2 center = GetPos(Alignement.CENTER);
+            Vector2 barOffset = GetSize() * barOffsetRelative;
+            //bg
+            if (HasBackground())
+            {
+                if(bgRadiusFactor > 0f)
+                {
+                    Drawing.DrawRingFilled(center, radius * bgRadiusFactor, radius, startAngleDeg, endAngleDeg, bgColor, 10);
+                }
+                else DrawCircleSector(center, radius, startAngleDeg, endAngleDeg, 24, bgColor);
+            }
+
+            if (HasTransition())
+            {
+
+                if (transitionF > f)
+                {
+                    if (innerRadiusFactor > 0f)
+                    {
+                        float rOffset = barRadiusOffset * radius;
+                        Drawing.DrawRingFilled(center, radius * innerRadiusFactor + rOffset, radius + rOffset, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, transitionF), transitionColor, 10);
+                        if (HasBar()) Drawing.DrawRingFilled(center, radius * innerRadiusFactor + rOffset, radius + rOffset, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, f), barColor, 10);
+                    }
+                    else
+                    {
+                        DrawCircleSector(center, radius, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, transitionF), 24, transitionColor);
+                        if (HasBar()) DrawCircleSector(center, radius, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, f), 24, barColor);
+                    }
+                }
+                else if (transitionF < f)
+                {
+                    if (innerRadiusFactor > 0f)
+                    {
+                        float rOffset = barRadiusOffset * radius;
+                        Drawing.DrawRingFilled(center, radius * innerRadiusFactor + rOffset, radius + rOffset, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, f), transitionColor, 10);
+                        Drawing.DrawRingFilled(center, radius * innerRadiusFactor + rOffset, radius + rOffset, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, transitionF), barColor, 10);
+                    }
+                    else
+                    {
+                        DrawCircleSector(center, radius, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, f), 24, transitionColor);
+                        DrawCircleSector(center, radius, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, transitionF), 24, barColor);
+                    }
+                }
+                else
+                {
+                    if (innerRadiusFactor > 0f)
+                    {
+                        float rOffset = barRadiusOffset * radius;
+                        if (HasBar()) Drawing.DrawRingFilled(center, radius * innerRadiusFactor + rOffset, radius + rOffset, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, f), barColor, 10);
+                    }
+                    else
+                    {
+                        if (HasBar()) DrawCircleSector(center, radius, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, f), 24, barColor);
+                    }
+                }
+            }
+            else
+            {
+                if (innerRadiusFactor > 0f)
+                {
+                    float rOffset = barRadiusOffset * radius;
+                    Drawing.DrawRingFilled(center, radius * innerRadiusFactor + rOffset, radius + rOffset, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, f), barColor, 10);
+                }
+                else
+                {
+                    DrawCircleSector(center, radius, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, f), 24, barColor);
+                }
+            }
+            
+            if (HasOutline())
+            {
+                float outlineSize = outlineSizeRelative * radius;
+                Drawing.DrawCircleSectorLinesEx(center, radius + outlineSize * 0.5f, startAngleDeg - 90, endAngleDeg - 90, outlineSize , outlineColor, true, 4, true);
+
+            }
+
+
+
+
+            //if (HasBackground() && bgRadiusFactor < 1f)
+            //{
+            //    if (HasReservedPart())
+            //    {
+            //        DrawCircleV(center, radius, reservedColor);
+            //        DrawCircleV(center, radius * MathF.Sqrt(1f - reservedF), bgColor);
+            //    }
+            //    else DrawCircleV(center, radius, bgColor);
+            //}
+            //
+            //if (HasTransition())
+            //{
+            //    Vector2 align = UIHandler.GetAlignementVector(alignement) - new Vector2(0.5f, 0.5f);
+            //    Vector2 alignPos = center + align * radius * 2f;
+            //    Vector2 offset = barOffsetRelative * GetSize();
+            //
+            //    if (transitionF > f)
+            //    {
+            //        DrawCircleV(Vec.Lerp(alignPos, center, transitionF) + offset, radius * transitionF, transitionColor);
+            //        if (HasBar()) DrawCircleV(Vec.Lerp(alignPos, center, f) + offset, radius * f, barColor);
+            //    }
+            //    else if (transitionF < f)
+            //    {
+            //        DrawCircleV(Vec.Lerp(alignPos, center, f) + offset, radius * f, transitionColor);
+            //        if (HasBar()) DrawCircleV(Vec.Lerp(alignPos, center, transitionF) + offset, radius * transitionF, barColor);
+            //    }
+            //    else
+            //    {
+            //        if (HasBar()) DrawCircleV(Vec.Lerp(alignPos, center, f) + offset, radius * f, barColor);
+            //    }
+            //}
+            //else
+            //{
+            //    Vector2 align = UIHandler.GetAlignementVector(alignement) - new Vector2(0.5f, 0.5f);
+            //    Vector2 alignPos = center + align * radius * 2f;
+            //    Vector2 offset = barOffsetRelative * GetSize();
+            //    if (HasBar()) DrawCircleV(Vec.Lerp(alignPos, center, f) + offset, radius * f, barColor);
+            //}
+            //
+            //if (HasOutline()) Drawing.DrawCircleLines(center, radius * 1.01f, outlineSizeRelative * MathF.Max(rect.width, rect.height), outlineColor);
+        }
+
     }
+
     public class ProgressCircle : ProgressBar
     {
 

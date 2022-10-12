@@ -217,6 +217,7 @@ namespace ShapeEngineDemo.Bodies
         private ProgressBarPro hpBar;
         private ProgressBarPro pwrBar;
         private ProgressCircle pwrBarCircle;
+        private ProgressRing hpBarRing;
         //private ProgressBarPro ammoBar;
         private ProgressBar hpBarMini = new(BarType.LEFTRIGHT, 0.1f, 0f);
         private ProgressBar pwrBarMini = new(BarType.LEFTRIGHT, 0f, 0f);
@@ -283,6 +284,7 @@ namespace ShapeEngineDemo.Bodies
             hpBar = new(barOffset, BarType.BOTTOMTOP, 0.1f, -5f);
             pwrBar = new(barOffset, BarType.BOTTOMTOP, 0f, -5f);
             pwrBarCircle = new(new Vector2(0f), Alignement.BOTTOMCENTER, 0.5f, 0.04f);
+            hpBarRing = new(360, 180, 0.8f, 0.8f);
             //aimpointInputPrompt = new(start + new Vector2(100, 0), 50, "Drop Aim Point", -5f, ColorPalette.Cur.text, ColorPalette.Cur.flash, ColorPalette.Cur.energy);
             //aimpointInputPanel = new("K", start + new Vector2 (200, 0), new(120, 120), -5f, FontSize.HUGE, ColorPalette.Cur.text, ColorPalette.Cur.energy);
             //start += gap;
@@ -465,6 +467,7 @@ namespace ShapeEngineDemo.Bodies
             damageTimer.Update(dt);
 
             hpBar.SetF(GetHealthPercentage());
+            hpBarRing.SetF(GetHealthPercentage());
             hpBarMini.SetF(GetHealthPercentage());
 
             if (energyCore.IsCooldownActive())
@@ -481,6 +484,7 @@ namespace ShapeEngineDemo.Bodies
             }
 
             hpBar.Update(dt, GAMELOOP.MOUSE_POS_UI);
+            hpBarRing.Update(dt, GAMELOOP.MOUSE_POS_UI);
             hpBarMini.Update(dt, GAMELOOP.MOUSE_POS_UI);
             pwrBar.Update(dt, GAMELOOP.MOUSE_POS_UI);
             pwrBarCircle.Update(dt, GAMELOOP.MOUSE_POS_UI);
@@ -681,7 +685,8 @@ namespace ShapeEngineDemo.Bodies
             //Vector2 offset = hpBar.Transform(new Vector2(barSize.X / 2, 0));
 
             //UIHandler.DrawTextAligned(String.Format("Rad: {0} // Deg: {1}", angle, angle * RAD2DEG), new(1000, 200), 120, 1, WHITE, Alignement.CENTER);
-
+            hpBarRing.UpdateRect(uiSize * new Vector2(0.95f, 0.95f), uiSize * new Vector2(0.04f, 0.04f), Alignement.BOTTOMRIGHT);
+            hpBarRing.Draw(uiSize, stretchFactor);
             pwrBarCircle.UpdateRect(uiSize * new Vector2(0.5f, 0.9f), uiSize * new Vector2(0.04f, 0.04f), Alignement.BOTTOMCENTER);
             pwrBarCircle.Draw(uiSize, stretchFactor);
             Vector2 barSize = uiSize * new Vector2(0.03f, 0.2f);
