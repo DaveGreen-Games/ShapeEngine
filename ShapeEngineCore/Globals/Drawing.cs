@@ -62,7 +62,10 @@ namespace ShapeEngineCore.Globals
             int sides = GetCircleSideCount(radius, sideLength);
             DrawPolyLinesEx(center, sides, radius, 0f, lineThickness, color);
         }
-
+        public static void DrawCircleSector(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, int segments, Color color)
+        {
+            Raylib.DrawCircleSector(center, radius, TransformAngleDeg(startAngleDeg), TransformAngleDeg(endAngleDeg), segments, color);
+        }
         public static void DrawCircleSectorLinesEx(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, float lineThickness, Color color, bool closed = true, float sideLength = 8f, bool reversed = false)
         {
             float startAngleRad = startAngleDeg * DEG2RAD;
@@ -89,7 +92,7 @@ namespace ShapeEngineCore.Globals
         }
         public static void DrawCircleSectorLinesEx(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, float lineThickness, Color color, bool closed = true, float sideLength = 8f, bool reversed = false)
         {
-            DrawCircleSectorLinesEx(center, radius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, lineThickness, color, closed, sideLength, reversed);
+            DrawCircleSectorLinesEx(center, radius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, lineThickness, color, closed, sideLength, reversed); ;
         }
         public static void DrawCircleSectorLinesEx(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, int sides, float lineThickness, Color color, bool closed = true, bool reversed = false)
         {
@@ -118,10 +121,10 @@ namespace ShapeEngineCore.Globals
             DrawCircleSectorLinesEx(center, radius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, sides, lineThickness, color, closed, reversed);
         }
 
-        public static void DrawRingLinesEx(Vector2 center, float innerRadius, float outerRadius, float startAngleDeg, float endAngleDeg, float lineThickness, Color color, float sideLength = 8f)
+        public static void DrawRingLinesEx(Vector2 center, float innerRadius, float outerRadius, float startAngleDeg, float endAngleDeg, float lineThickness, Color color, float sideLength = 8f, bool reversed = false)
         {
-            DrawCircleSectorLinesEx(center, innerRadius, startAngleDeg, endAngleDeg, lineThickness, color, false, sideLength);
-            DrawCircleSectorLinesEx(center, outerRadius, startAngleDeg, endAngleDeg, lineThickness, color, false, sideLength);
+            DrawCircleSectorLinesEx(center, innerRadius, startAngleDeg, endAngleDeg, lineThickness, color, false, sideLength, reversed);
+            DrawCircleSectorLinesEx(center, outerRadius, startAngleDeg, endAngleDeg, lineThickness, color, false, sideLength, reversed);
 
             Vector2 innerStart = center + Vec.Rotate(Vec.Right() * innerRadius - new Vector2(lineThickness / 2, 0), startAngleDeg * DEG2RAD);
             Vector2 outerStart = center + Vec.Rotate(Vec.Right() * outerRadius + new Vector2(lineThickness / 2, 0), startAngleDeg * DEG2RAD);
@@ -139,11 +142,11 @@ namespace ShapeEngineCore.Globals
         {
             float anglePiece = MathF.Abs(endAngleDeg - startAngleDeg);
             int sides = GetCircleArcSideCount(outerRadius, anglePiece, sideLength);
-            DrawRing(center, innerRadius, outerRadius, TransformAngleDeg(startAngleDeg), TransformAngleDeg(endAngleDeg), sides, YELLOW);
+            DrawRing(center, innerRadius, outerRadius, TransformAngleDeg(startAngleDeg), TransformAngleDeg(endAngleDeg), sides, color);
         }
         public static void DrawRingFilled(Vector2 center, float innerRadius, float outerRadius, float startAngleDeg, float endAngleDeg, int sides, Color color)
         {
-            DrawRing(center, innerRadius, outerRadius, TransformAngleDeg(startAngleDeg), TransformAngleDeg(endAngleDeg), sides, YELLOW);
+            DrawRing(center, innerRadius, outerRadius, TransformAngleDeg(startAngleDeg), TransformAngleDeg(endAngleDeg), sides, color);
         }
         public static void DrawRingFilled(Vector2 center, float innerRadius, float outerRadius, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, Color color, float sideLength = 10f)
         {

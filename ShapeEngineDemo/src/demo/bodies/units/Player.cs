@@ -284,7 +284,8 @@ namespace ShapeEngineDemo.Bodies
             hpBar = new(barOffset, BarType.BOTTOMTOP, 0.1f, -5f);
             pwrBar = new(barOffset, BarType.BOTTOMTOP, 0f, -5f);
             pwrBarCircle = new(new Vector2(0f), Alignement.BOTTOMCENTER, 0.5f, 0.04f);
-            hpBarRing = new(360, 180, 0.8f, 0.8f);
+            hpBarRing = new(360f, 180f, new Vector2(0f), 0f, 0.7f, 0.3f, 0.1f, 0.1f);
+            hpBarRing.SetReservedF(0.223f);
             //aimpointInputPrompt = new(start + new Vector2(100, 0), 50, "Drop Aim Point", -5f, ColorPalette.Cur.text, ColorPalette.Cur.flash, ColorPalette.Cur.energy);
             //aimpointInputPanel = new("K", start + new Vector2 (200, 0), new(120, 120), -5f, FontSize.HUGE, ColorPalette.Cur.text, ColorPalette.Cur.energy);
             //start += gap;
@@ -296,7 +297,8 @@ namespace ShapeEngineDemo.Bodies
             pwrBarMini.SetColors(PaletteHandler.C("player"), new(0, 0, 0, 0));// ColorPalette.Cur.energy);
             hpBar.SetColors(PaletteHandler.C("enemy"), PaletteHandler.C("neutral"), PaletteHandler.C("flash"));
             pwrBar.SetColors(PaletteHandler.C("player"), PaletteHandler.C("energy"));
-            pwrBarCircle.SetColors(PaletteHandler.C("player"), PaletteHandler.C("energy"), new(0,0,0,0), WHITE, PaletteHandler.C("energy"));
+            pwrBarCircle.SetColors(PaletteHandler.C("player"), PaletteHandler.C("energy"), new(0,0,0,0), PaletteHandler.C("flash"), ORANGE);
+            hpBarRing.SetColors(PaletteHandler.C("enemy"), PaletteHandler.C("neutral"), YELLOW, PaletteHandler.C("flash"), ORANGE);
             //ammoBar.SetColors(ColorPalette.Cur.special1, ColorPalette.Cur.special12);
 
             //ScreenHandler.Cam.AddCameraOrderChain("player zoom", new CameraOrder(1f, 2f, 1f, EasingType.BOUNCE_OUT));
@@ -685,7 +687,7 @@ namespace ShapeEngineDemo.Bodies
             //Vector2 offset = hpBar.Transform(new Vector2(barSize.X / 2, 0));
 
             //UIHandler.DrawTextAligned(String.Format("Rad: {0} // Deg: {1}", angle, angle * RAD2DEG), new(1000, 200), 120, 1, WHITE, Alignement.CENTER);
-            hpBarRing.UpdateRect(uiSize * new Vector2(0.95f, 0.95f), uiSize * new Vector2(0.04f, 0.04f), Alignement.BOTTOMRIGHT);
+            hpBarRing.UpdateRect(uiSize * new Vector2(0.95f, 0.95f), uiSize * new Vector2(0.08f, 0.08f), Alignement.BOTTOMRIGHT);
             hpBarRing.Draw(uiSize, stretchFactor);
             pwrBarCircle.UpdateRect(uiSize * new Vector2(0.5f, 0.9f), uiSize * new Vector2(0.04f, 0.04f), Alignement.BOTTOMCENTER);
             pwrBarCircle.Draw(uiSize, stretchFactor);
