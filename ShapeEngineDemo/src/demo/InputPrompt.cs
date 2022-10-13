@@ -93,7 +93,7 @@ namespace ShapeEngineDemo
             float thickness = r * 0.25f;
             if(bgColor.a > 0) DrawCircleV(center, r, bgColor);
             UIHandler.DrawTextAlignedPro(text, center, angleDeg, GetSize(), 1, textColor, Alignement.CENTER);
-            if(barColor.a > 0) Drawing.DrawCircleOutlineBar(center, r + thickness, -90, thickness, f, barColor, true);
+            if(barColor.a > 0) Drawing.DrawCircleOutlineBar(center, r + thickness, -90, thickness, f, barColor);
         }
     }
 

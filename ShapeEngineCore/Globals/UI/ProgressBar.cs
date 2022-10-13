@@ -335,11 +335,11 @@ namespace ShapeEngineCore.Globals.UI
                 float outlineSize = outlineSizeRelative * radius;
                 if(HasBackground() && bgRadiusFactor > 0f)
                 {
-                    Drawing.DrawRingLinesEx(center, radius * MathF.Min(innerRadiusFactor, bgRadiusFactor), radius, startAngleDeg, endAngleDeg, outlineSize, outlineColor, 8f, true);
+                    Drawing.DrawRingLinesEx(center, radius * MathF.Min(innerRadiusFactor, bgRadiusFactor), radius, startAngleDeg, endAngleDeg, outlineSize, outlineColor, 8f);
                 }
                 else
                 {
-                    Drawing.DrawCircleSectorLinesEx(center, radius + outlineSize * 0.5f, startAngleDeg, endAngleDeg, outlineSize, outlineColor, true, 4, true);
+                    Drawing.DrawCircleSectorLinesEx(center, radius + outlineSize * 0.5f, startAngleDeg, endAngleDeg, outlineSize, outlineColor, true, 4);
                 }
             }
 

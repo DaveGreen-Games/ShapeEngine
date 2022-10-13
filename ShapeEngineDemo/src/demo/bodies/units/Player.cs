@@ -231,6 +231,9 @@ namespace ShapeEngineDemo.Bodies
         private Core energyCore;
         private TargetFinder targetFinder = new("asteroid");
         private Vector2 slowPos = new(0f);
+
+
+
         public Player(ArmoryInfo armoryInfo, string shipName = "default")
         {
             DrawOrder = 50;
@@ -284,7 +287,7 @@ namespace ShapeEngineDemo.Bodies
             hpBar = new(barOffset, BarType.BOTTOMTOP, 0.1f, -5f);
             pwrBar = new(barOffset, BarType.BOTTOMTOP, 0f, -5f);
             pwrBarCircle = new(new Vector2(0f), Alignement.BOTTOMCENTER, 0.5f, 0.04f);
-            hpBarRing = new(360f, 180f, new Vector2(0f), 0f, 0.7f, 0.3f, 0.1f, 0.1f);
+            hpBarRing = new(90, -90, new Vector2(0f), 0f, 0.8f, 0.75f, 0.1f, 0f);
             hpBarRing.SetReservedF(0.223f);
             //aimpointInputPrompt = new(start + new Vector2(100, 0), 50, "Drop Aim Point", -5f, ColorPalette.Cur.text, ColorPalette.Cur.flash, ColorPalette.Cur.energy);
             //aimpointInputPanel = new("K", start + new Vector2 (200, 0), new(120, 120), -5f, FontSize.HUGE, ColorPalette.Cur.text, ColorPalette.Cur.energy);
@@ -463,6 +466,7 @@ namespace ShapeEngineDemo.Bodies
             var prevMovement = curMovement;
             var prevStunned = IsStunned();
             base.Update(dt);
+
 
             if (InputHandler.IsReleased(0, "Heal Player")) Heal(RNG.randF(10, 35), collider.Pos, this);
 
@@ -730,6 +734,29 @@ namespace ShapeEngineDemo.Bodies
             //Vector2 bs = new Vector2(size * 2f, size * 0.2f) * ScreenHandler.GAME_TO_UI;
             //UIHandler.DrawBar(tl * ScreenHandler.GAME_TO_UI, bs, GetHealthPercentage(), ColorPalette.Cur.enemy2, ColorPalette.Cur.neutral, BarType.LEFTRIGHT);
 
+            Vector2 c = uiSize * new Vector2(0.5f, 0.5f);
+            Vector2 g = uiSize * new Vector2(0.15f, 0f);
+            Vector2 lineGap = uiSize * new Vector2(0f, 0.07f);
+            float r = uiSize.X * 0.05f;
+            float lt = r * 0.1f;
+            float startAngleDeg = 180;
+            float endAngleDeg = 0;
+            //float endAngleDeg = Vec.AngleDeg(Vec.Normalize(GAMELOOP.MOUSE_POS_UI - c));
+
+            //Drawing.DrawCircleSector(c + g * 2, r, startAngleDeg, endAngleDeg, 24, WHITE);
+            //Drawing.DrawCircleSectorLinesEx(c + g * 2, r, startAngleDeg, endAngleDeg, lt, ORANGE, true, 8);
+            //
+            //Drawing.DrawRingFilled(c - g * 2, r * 0.5f, r, startAngleDeg, endAngleDeg, WHITE, 10);
+            //Drawing.DrawRingLinesEx(c - g * 2, r * 0.5f, r, startAngleDeg, endAngleDeg, lt, ORANGE, 8);
+            //
+            //Vector2 textSize = uiSize * new Vector2(0.35f, 0.05f);
+            //UIHandler.DrawTextAligned(String.Format("SA: {0}", startAngleDeg), c - lineGap, textSize, 1, WHITE);
+            //UIHandler.DrawTextAligned(String.Format("EA: {0}", endAngleDeg), c - lineGap * 2, textSize, 1, WHITE);
+            //UIHandler.DrawTextAligned(String.Format("Dif: {0}", endAngleDeg - startAngleDeg), c - lineGap * 3, textSize, 1, WHITE);
+            //
+            //UIHandler.DrawTextAligned(String.Format("SAW: {0}", Wrap(startAngleDeg, -360, 360)), c + lineGap, textSize, 1, WHITE);
+            //UIHandler.DrawTextAligned(String.Format("EAW: {0}", Wrap(endAngleDeg, -360, 360)), c + lineGap * 2, textSize, 1, WHITE);
+            //UIHandler.DrawTextAligned(String.Format("DifW: {0}", Wrap(endAngleDeg, -360, 360) - Wrap(startAngleDeg, -360, 360)), c + lineGap * 3,textSize, 1, WHITE);
         }
 
 
