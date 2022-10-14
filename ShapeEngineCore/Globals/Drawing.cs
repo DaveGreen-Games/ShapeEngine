@@ -5,7 +5,50 @@ namespace ShapeEngineCore.Globals
 {
     public static class Drawing
     {
-        
+
+        public static void DrawGrid(Rectangle rect, int lines, float lineThickness, Color color)
+        {
+            float width = rect.width;
+            float height = rect.height;
+            float hGap = width / lines;
+            float vGap = height / lines;
+
+            Vector2 tl = new Vector2(rect.x, rect.y);
+            Vector2 tr = tl + new Vector2(width, 0);
+            Vector2 bl = tl + new Vector2(0, height);
+
+            for (int l = 0; l < lines; l++)
+            {
+                Vector2 xOffset = new Vector2(hGap, 0f) * l;
+                Vector2 yOffset = new Vector2(0f, vGap) * l;
+                DrawLineEx(tl + xOffset, bl + xOffset, lineThickness, color);
+                DrawLineEx(tl + yOffset, tr + yOffset, lineThickness, color);
+            }
+        }
+        //public static void DrawGrid(Rectangle rect, int lines, float lineThickness, Color color, Vector2 highlightPos, Color highlightColor)
+        //{
+        //    float width = rect.width;
+        //    float height = rect.height;
+        //    float hGap = width / lines;
+        //    float vGap = height / lines;
+        //
+        //    Vector2 tl = new Vector2(rect.x, rect.y);
+        //    Vector2 tr = tl + new Vector2(width, 0);
+        //    Vector2 bl = tl + new Vector2(0, height);
+        //
+        //    for (int l = 0; l < lines; l++)
+        //    {
+        //        Vector2 xOffset = new Vector2(hGap, 0f) * l;
+        //        Vector2 yOffset = new Vector2(0f, vGap) * l;
+        //        DrawLineEx(tl + xOffset, bl + xOffset, lineThickness, color);
+        //        DrawLineEx(tl + yOffset, tr + yOffset, lineThickness, color);
+        //    }
+        //
+        //    int x = (int)(highlightPos.X / hGap);
+        //    int y = (int)(highlightPos.Y / vGap);
+        //    Rectangle highlightRect = new(tl.X + x * hGap, tl.Y + y * vGap, hGap, vGap);
+        //    DrawRectangleLinesEx(highlightRect, lineThickness, highlightColor);
+        //}
         public static void DrawPolygon(List<Vector2> points, Vector2 center, Color fillColor, bool clockwise = true)
         {
             if (clockwise)

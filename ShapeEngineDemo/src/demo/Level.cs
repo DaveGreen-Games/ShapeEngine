@@ -187,11 +187,13 @@ namespace ShapeEngineDemo
         private Area area;
         private Player player;
         private AsteroidSpawner asteroidSpawner;
+        private Rectangle playArea;
         public Level()
         {
             Rectangle playArea = new Rectangle(0, 0, 800, 800);// Utils.ScaleRectangle(ScreenHandler.GameArea(), 1.5f);
             this.area = new AreaBasic(playArea, 20, 20);
             this.asteroidSpawner = new(this.area, 1f, 2f);
+            this.playArea = playArea;
 
             
 
@@ -260,6 +262,7 @@ namespace ShapeEngineDemo
         public override void Draw()
         {
             if (area == null) return;
+            //Drawing.DrawGrid(Utils.ScaleRectangle(playArea, 2), 15, 2f, new(255, 255, 255, 120));
             area.Draw();
             asteroidSpawner.Draw();
         }
