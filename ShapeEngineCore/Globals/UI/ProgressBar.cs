@@ -243,7 +243,7 @@ namespace ShapeEngineCore.Globals.UI
         public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
         {
             //Rectangle rect = Utils.MultiplyRectangle(base.rect, stretchFactor);
-            float radius = rect.width / 2;
+            float radius = MathF.Min( rect.width, rect.height) / 2;
             Vector2 center = GetPos(Alignement.CENTER);
             Vector2 barOffset = GetSize() * barOffsetRelative;
             if (HasBackground())
@@ -510,7 +510,7 @@ namespace ShapeEngineCore.Globals.UI
             f = Clamp(value, 0f, 1f);
             if (setTransitionF) transitionF = f;
         }
-        public override void Update(float dt, Vector2 mousePosRaw)
+        public override void Update(float dt, Vector2 mousePosUI)
         {
             if (transitionSpeed > 0f)
             {
