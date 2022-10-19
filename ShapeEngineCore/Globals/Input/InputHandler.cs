@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Diagnostics;
+using System.Numerics;
 using Raylib_CsLo;
 using ShapeEngineCore.Globals.Cursor;
 using Vortice.XInput;
@@ -83,9 +84,9 @@ namespace ShapeEngineCore.Globals.Input
             else return curInputMap.GetGamepadAxis(gamepadIndex, gamepadAxisHor, gamepadAxisVer);
         }
 
-        public string GetInputActionKeyName(string inputAction, bool isGamepad = false)
+        public string GetInputActionKeyName(string inputAction, bool isGamepad = false, bool shorthand = false)
         {
-            return curInputMap.GetInputActionKeyName(inputAction, isGamepad);
+            return curInputMap.GetKeyName(inputAction, isGamepad, shorthand);
         }
 
 
@@ -175,6 +176,7 @@ namespace ShapeEngineCore.Globals.Input
         public static InputType GetCurInputType() { return CUR_INPUT_TYPE; }
 
         private static bool mouseUsed = false;
+        private static bool keyboardUsed = false;
         private static bool keyboardOnlyMode = false;
         public static int gamepadUsed = -1;
         //STATIC EVENT!!! - everything that subscribes to a static event must unsubscribe before deletion, otherwise memory leaks can happen
@@ -369,6 +371,12 @@ namespace ShapeEngineCore.Globals.Input
             return inputMaps[name];
         }
 
+        public static string GetInputActionKeyName(int playerSlot, string inputAction, bool shorthand = false)
+        {
+            var slot = GetInputSlot(playerSlot);
+            if (slot == null) return "";
+            return slot.GetInputActionKeyName(inputAction, IsGamepad(), shorthand);
+        }
         /*
         public static void EnableMap(string name)
         {
@@ -486,12 +494,7 @@ namespace ShapeEngineCore.Globals.Input
             return slot.GetGamepadAxis(gamepadAxisHor, gamepadAxisVer, normalized);
         }
 
-        public static string GetInputActionKeyName(int playerSlot, string inputAction, bool isGamepad = false)
-        {
-            var slot = GetInputSlot(playerSlot);
-            if (slot == null) return "";
-            return slot.GetInputActionKeyName(inputAction, isGamepad);
-        }
+        
 
 
 
@@ -517,7 +520,8 @@ namespace ShapeEngineCore.Globals.Input
         }
 
         public static bool IsMouse() { return mouseUsed && !keyboardOnlyMode; }
-        public static bool IsKeyboardOnly() { return keyboardOnlyMode; }
+        public static bool IsKeyboardOnlyMode() { return keyboardOnlyMode; }
+        public static bool IsKeyboard() { return keyboardUsed; }
         public static bool IsKeyboardMouse() { return CUR_INPUT_TYPE == InputType.KEYBOARD_MOUSE; }
         public static bool IsGamepad() { return CUR_INPUT_TYPE == InputType.GAMEPAD; }
         public static bool IsTouch() { return CUR_INPUT_TYPE == InputType.TOUCH; }
@@ -595,6 +599,7 @@ namespace ShapeEngineCore.Globals.Input
         private static void CheckInputType()
         {
             mouseUsed = false;
+            keyboardUsed = false;
             //check if new input type was used and raise event
             switch (CUR_INPUT_TYPE)
             {
@@ -610,12 +615,17 @@ namespace ShapeEngineCore.Globals.Input
                         CUR_INPUT_TYPE = InputType.TOUCH;
                         OnInputTypeChanged(CUR_INPUT_TYPE);
                     }
-                    else mouseUsed = WasMouseUsed();
+                    else
+                    {
+                        mouseUsed = WasMouseUsed();
+                        keyboardUsed = WasKeyboardUsed();
+                    }
                     break;
 
                 case InputType.GAMEPAD:
                     mouseUsed = WasMouseUsed();
-                    if (mouseUsed || WasKeyboardUsed())
+                    keyboardUsed = WasKeyboardUsed();
+                    if (mouseUsed || keyboardUsed)
                     {
                         StopVibration(0);
                         CUR_INPUT_TYPE = InputType.KEYBOARD_MOUSE;
@@ -630,7 +640,9 @@ namespace ShapeEngineCore.Globals.Input
                     break;
 
                 case InputType.TOUCH:
-                    if (WasMouseUsed() || WasKeyboardUsed())
+                    mouseUsed = WasMouseUsed();
+                    keyboardUsed = WasKeyboardUsed();
+                    if (mouseUsed || keyboardUsed)
                     {
                         CUR_INPUT_TYPE = InputType.KEYBOARD_MOUSE;
                         OnInputTypeChanged(CUR_INPUT_TYPE);

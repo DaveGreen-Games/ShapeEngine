@@ -1,4 +1,5 @@
 ﻿using Raylib_CsLo;
+using System.Security.AccessControl;
 
 namespace ShapeEngineCore.Globals.Input
 {
@@ -164,8 +165,8 @@ namespace ShapeEngineCore.Globals.Input
         private bool disabled = false;
         //private int gamepadIndex = -1;
         private float deadzone = 0.25f;
-        private string keyboardMouseKeyName = "";
-        private string gamepadKeyName = "";
+        //private string keyboardMouseKeyName = "";
+        //private string gamepadKeyName = "";
 
         public InputAction(string name, params Keys[] keys)
         {
@@ -175,16 +176,16 @@ namespace ShapeEngineCore.Globals.Input
                 AddKey(key);
             }
         }
-        public InputAction(string name, string keyboardMouseKeyName, string gamepadKeyName, params Keys[] keys)
-        {
-            this.name = name;
-            this.keyboardMouseKeyName = keyboardMouseKeyName;
-            this.gamepadKeyName = gamepadKeyName;
-            foreach (var key in keys)
-            {
-                AddKey(key);
-            }
-        }
+        //public InputAction(string name, string keyboardMouseKeyName, string gamepadKeyName, params Keys[] keys)
+        //{
+        //    this.name = name;
+        //    this.keyboardMouseKeyName = keyboardMouseKeyName;
+        //    this.gamepadKeyName = gamepadKeyName;
+        //    foreach (var key in keys)
+        //    {
+        //        AddKey(key);
+        //    }
+        //}
         public InputAction(string name, float deadzone, params Keys[] keys)
         {
             this.name = name;
@@ -194,17 +195,17 @@ namespace ShapeEngineCore.Globals.Input
                 AddKey(key);
             }
         }
-        public InputAction(string name, float deadzone, string keyboardMouseKeyName, string gamepadKeyName, params Keys[] keys)
-        {
-            this.name = name;
-            this.deadzone = deadzone;
-            this.keyboardMouseKeyName = keyboardMouseKeyName;
-            this.gamepadKeyName = gamepadKeyName;
-            foreach (var key in keys)
-            {
-                AddKey(key);
-            }
-        }
+        //public InputAction(string name, float deadzone, string keyboardMouseKeyName, string gamepadKeyName, params Keys[] keys)
+        //{
+        //    this.name = name;
+        //    this.deadzone = deadzone;
+        //    this.keyboardMouseKeyName = keyboardMouseKeyName;
+        //    this.gamepadKeyName = gamepadKeyName;
+        //    foreach (var key in keys)
+        //    {
+        //        AddKey(key);
+        //    }
+        //}
 
         public void Rename(string newName) { name = newName; }
         public void AddKey(Keys key)
@@ -217,7 +218,7 @@ namespace ShapeEngineCore.Globals.Input
             actionKeys.Remove(key);
         }
         public string GetName() { return name; }
-        public List<string> GetKeyNames(bool shorthand = true)
+        public List<string> GetAllKeyNames(bool shorthand = true)
         {
             List<string> keyNames = new();
             foreach (var key in actionKeys)
@@ -226,15 +227,52 @@ namespace ShapeEngineCore.Globals.Input
             }
             return keyNames;
         }
+        public List<string> GetKeyboardKeyNames(bool shorthand = true)
+        {
+            List<string> keyNames = new();
+            var keyboardActionKeys = actionKeys.FindAll((Keys k) => { return !IsGamepad(k); });
+            foreach (var key in keyboardActionKeys)
+            {
+                keyNames.Add(GetKeyName(key, shorthand));
+            }
+            return keyNames;
+        }
+        public List<string> GetGamepadKeyNames(bool shorthand = true)
+        {
+            List<string> keyNames = new();
+            var gamepadActionKeys = actionKeys.FindAll((Keys k) => { return IsGamepad(k); });
+            foreach (var key in gamepadActionKeys)
+            {
+                keyNames.Add(GetKeyName(key, shorthand));
+            }
+            return keyNames;
+        }
+        public string GetKeyboardKeyName(bool shorthand = true)
+        {
+            var keyboardActionKeys = actionKeys.FindAll((Keys k) => { return !IsGamepad(k); });
+            if (keyboardActionKeys.Count == 0) return "";
+            return GetKeyName(keyboardActionKeys[0], shorthand);
+        }
+        public string GetGamepadKeyName(bool shorthand = true)
+        {
+            var gamepadActionKeys = actionKeys.FindAll((Keys k) => { return IsGamepad(k); });
+            if (gamepadActionKeys.Count == 0) return "";
+            return GetKeyName(gamepadActionKeys[0], shorthand);
+        }
+        public string GetKeyName(bool gamepad = false, bool shorthand = false)
+        {
+            if (gamepad) return GetGamepadKeyName(shorthand);
+            else return GetKeyboardKeyName(shorthand);
+        }
         public bool IsDisabled() { return disabled; }
         public void Enable() { disabled = false; }
         public void Disable() { disabled = true; }
 
-        public string GetInputKeyName(bool isGamepad)
-        {
-            if (isGamepad) return gamepadKeyName;
-            else return keyboardMouseKeyName;
-        }
+        //public string GetInputKeyName(bool isGamepad)
+        //{
+        //    if (isGamepad) return gamepadKeyName;
+        //    else return keyboardMouseKeyName;
+        //}
         //gamepad axis released/pressed are the same as up/down right now
         public bool IsDown(int gamepad, bool gamepadOnly = false)
         {

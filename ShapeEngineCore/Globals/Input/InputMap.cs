@@ -49,7 +49,7 @@ namespace ShapeEngineCore.Globals.Input
         public List<string> GetKeyNames(string name)
         {
             if (!inputActions.ContainsKey(name)) return new();
-            return inputActions[name].GetKeyNames();
+            return inputActions[name].GetAllKeyNames();
         }
         //public bool IsDisabled() { return disabled; }
         //public void Enable() { disabled = false; }
@@ -104,10 +104,10 @@ namespace ShapeEngineCore.Globals.Input
             return inputActions[actionName].IsUp(gamepad, gamepadOnly);
         }
 
-        public string GetInputActionKeyName(string actionName, bool isGamepad = false)
+        public string GetKeyName(string actionName, bool isGamepad = false, bool shorthand = false)
         {
             if (inputActions.Count <= 0 || !inputActions.ContainsKey(actionName)) return "";
-            return inputActions[actionName].GetInputKeyName(isGamepad);
+            return inputActions[actionName].GetKeyName(isGamepad, shorthand);
         }
         //public List<string> GetKeyNames(string actionName, bool shorthand = true)
         //{
