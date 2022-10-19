@@ -140,11 +140,11 @@ namespace ShapeEngineDemo
             //DrawRectangleLinesEx(new Rectangle(0.0f, 0.0f, ScreenHandler.GameWidth(), ScreenHandler.GameHeight()), 6, ColorPalette.Cur.neutral);
 
         }
-        public override void DrawUI()
-        {
-            base.DrawUI();
-            //UIHandler.DrawTextAligned(String.Format("Objects {0}", gameObjects.Count), new(GAMELOOP.UICenter().X, GAMELOOP.UISize().Y), UIHandler.GetFontSizeScaled(FontSize.SMALL), UIHandler.Scale(5), ColorPalette.Cur.text, Alignement.BOTTOMCENTER);
-        }
+        //public override void DrawUI(Vector2 uiSize, Vector2 stretchFactor)
+        //{
+        //    base.DrawUI(devRes, stretchFactor);
+        //    //UIHandler.DrawTextAligned(String.Format("Objects {0}", gameObjects.Count), new(GAMELOOP.UICenter().X, GAMELOOP.UISize().Y), UIHandler.GetFontSizeScaled(FontSize.SMALL), UIHandler.Scale(5), ColorPalette.Cur.text, Alignement.BOTTOMCENTER);
+        //}
 
         //public override void Update(float dt)
         //{
@@ -187,23 +187,25 @@ namespace ShapeEngineDemo
         private Area area;
         private Player player;
         private AsteroidSpawner asteroidSpawner;
+        private Rectangle playArea;
         public Level()
         {
-            Rectangle playArea = Utils.ScaleRectangle(ScreenHandler.GameArea(), 1.5f);
+            Rectangle playArea = new Rectangle(0, 0, 800, 800);// Utils.ScaleRectangle(ScreenHandler.GameArea(), 1.5f);
             this.area = new AreaBasic(playArea, 20, 20);
             this.asteroidSpawner = new(this.area, 1f, 2f);
+            this.playArea = playArea;
 
             
 
             ArmoryInfo armoryInfo = new("minigun", "bouncer", "basic");
             player = new(armoryInfo, "starter");
-            ScreenHandler.Cam.SetTarget(player);
+            ScreenHandler.CAMERA.SetTarget(player);
             //ScreenHandler.Cam.ZoomFactor = 0.35f;
         }
 
         public override void Activate(Scene? oldScene)
         {
-            ScreenHandler.Game.Flash(0.25f, new(0, 0, 0, 255), new(0, 0, 0, 0));
+            ScreenHandler.GAME.Flash(0.25f, new(0, 0, 0, 255), new(0, 0, 0, 0));
             //Action action = () => ScreenHandler.Cam.Shake(0.25f, new(75.0f, 75.0f), 1, 0, 0.75f);
             //TimerHandler.Add(0.25f, action);
             //AudioHandler.PlaySFX("explosion");
@@ -214,9 +216,9 @@ namespace ShapeEngineDemo
         public override void Deactivate(Scene? newScene)
         {
             if (newScene == null) return;
-            ScreenHandler.Game.Flash(0.25f, new(0, 0, 0, 255), new(0, 0, 0, 255));
+            ScreenHandler.GAME.Flash(0.25f, new(0, 0, 0, 255), new(0, 0, 0, 255));
             Action action = () => GAMELOOP.SwitchScene(this, newScene);
-            ScreenHandler.Cam.ResetZoom();
+            ScreenHandler.CAMERA.ResetZoom();
             TimerHandler.Add(0.25f, action);
 
         }
@@ -260,27 +262,33 @@ namespace ShapeEngineDemo
         public override void Draw()
         {
             if (area == null) return;
+            //Drawing.DrawGrid(Utils.ScaleRectangle(playArea, 2), 15, 2f, new(255, 255, 255, 120));
             area.Draw();
             asteroidSpawner.Draw();
         }
-        public override void DrawUI()
+        public override void DrawUI(Vector2 uiSize, Vector2 stretchFactor)
         {
-            UIHandler.DrawTextAlignedPro(String.Format("{0}", GetFPS()), new Vector2(30, 60), -5f, 150, 5, PaletteHandler.C("special1"), Alignement.LEFTCENTER);
+            UIHandler.DrawTextAlignedPro(String.Format("{0}", GetFPS()), uiSize * new Vector2(0.01f, 0.03f), -5f, uiSize * new Vector2(0.10f, 0.05f), 2f, PaletteHandler.C("special1"), Alignement.LEFTCENTER);
             if (area == null) return;
-            area.DrawUI();
-            UIHandler.DrawTextAlignedPro(String.Format("Objs {0}", area.GetGameObjects().Count), new(30, 200), 0f, 100, 5, PaletteHandler.C("text"), Alignement.LEFTCENTER);
-            UIHandler.DrawTextAlignedPro(String.Format("{0}", InputHandler.GetCurInputType()), new(30, 260), 0f, 100, 5, PaletteHandler.C("text"), Alignement.LEFTCENTER);
-            UIHandler.DrawTextAlignedPro(String.Format("GP {0}/{1}", InputHandler.CUR_GAMEPAD, InputHandler.GetConnectedGamepadCount()), new(30, 320), 0f, 100, 5, PaletteHandler.C("text"), Alignement.LEFTCENTER);
-            UIHandler.DrawTextAlignedPro(String.Format("Used {0}", InputHandler.gamepadUsed), new(30, 380), 0f, 100, 5, PaletteHandler.C("text"), Alignement.LEFTCENTER);
-            UIHandler.DrawTextAlignedPro("Debug Keys [8, 9, 0]", new Vector2(ScreenHandler.UIWidth() / 2, ScreenHandler.UIHeight() - 20), 0f, 100, 5f, PaletteHandler.C("text"), Alignement.BOTTOMCENTER);
+            area.DrawUI(uiSize, stretchFactor);
 
-            UIHandler.DrawTextAlignedPro("Slow Time [ALT]", new Vector2(ScreenHandler.UIWidth() - 30, 60), 0f, 100, 5f, PaletteHandler.C("text"), Alignement.RIGHTCENTER);
-            UIHandler.DrawTextAlignedPro("Pause [P]", new Vector2(ScreenHandler.UIWidth() - 30, 150), 0f, 100, 5f, PaletteHandler.C("text"), Alignement.RIGHTCENTER);
+            Vector2 textSize = uiSize * new Vector2(0.25f, 0.04f);
+            UIHandler.DrawTextAlignedPro(String.Format("Objs {0}", area.GetGameObjects().Count), uiSize * new Vector2(0.01f, 0.1f), 0f, textSize, 2f, PaletteHandler.C("text"), Alignement.LEFTCENTER);
+            UIHandler.DrawTextAlignedPro(String.Format("{0}", InputHandler.GetCurInputType()), uiSize * new Vector2(0.01f, 0.13f), 0f, textSize, 2f, PaletteHandler.C("text"), Alignement.LEFTCENTER);
+            UIHandler.DrawTextAlignedPro(String.Format("GP {0}/{1}", InputHandler.CUR_GAMEPAD, InputHandler.GetConnectedGamepadCount()), uiSize * new Vector2(0.01f, 0.16f), 0f, textSize, 2f, PaletteHandler.C("text"), Alignement.LEFTCENTER);
+            UIHandler.DrawTextAlignedPro(String.Format("Used {0}", InputHandler.gamepadUsed), uiSize * new Vector2(0.01f, 0.19f), 0f, textSize, 2f, PaletteHandler.C("text"), Alignement.LEFTCENTER);
+            
+            
+            UIHandler.DrawTextAlignedPro("Debug Keys [8, 9, 0]", uiSize * new Vector2(0.5f, 0.98f), 0f, textSize, 2f, PaletteHandler.C("text"), Alignement.BOTTOMCENTER);
+            
+
+            UIHandler.DrawTextAlignedPro("Slow Time [ALT]", uiSize * new Vector2(0.99f, 0.03f), 0f, textSize, 2f, PaletteHandler.C("text"), Alignement.RIGHTCENTER);
+            UIHandler.DrawTextAlignedPro("Pause [P]", uiSize * new Vector2(0.99f, 0.07f), 0f, textSize, 2f, PaletteHandler.C("text"), Alignement.RIGHTCENTER);
 
             if (IsPaused())
             {
                 var pos = GAMELOOP.UISize();
-                UIHandler.DrawTextAlignedPro("PAUSED", new Vector2(pos.X/2, pos.Y * 0.25f), 0f, 300, 5f, PaletteHandler.C("header"), Alignement.CENTER);
+                UIHandler.DrawTextAlignedPro("PAUSED", uiSize * new Vector2(0.5f, 0.3f), 0f, uiSize * new Vector2(0.5f, 0.25f), 5f, PaletteHandler.C("header"), Alignement.CENTER);
             }
         }
         public override void Close()

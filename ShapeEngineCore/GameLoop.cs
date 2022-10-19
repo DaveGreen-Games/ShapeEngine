@@ -21,25 +21,27 @@ namespace ShapeEngineCore
         public float gameSizeFactor = 1.0f;
         public float uiSizeFactor = 1.0f;
         public string windowName = "Shape Engine Game";
-        public int fps = 60;
-        public bool vsync = true;
-        public bool fullscreen = false;
-        public int monitor = 0;
+        //public int fps = 60;
+        //public bool vsync = true;
+        //public bool fullscreen = false;
+        //public int monitor = 0;
+        public bool fixedTexture = true;
         public bool pixelSmoothing = false;
 
         public ScreenInitInfo() { }
         public ScreenInitInfo(int devWidth, int devHeight, string windowName) { this.devWidth = devWidth; this.devHeight = devHeight; this.windowName = windowName; }
-        public ScreenInitInfo(int devWidth, int devHeight, float gameSizeFactor, float uiSizeFactor, string windowName, int fps, bool vsync, bool fullscreen, int monitor, bool pixelSmoothing)
+        public ScreenInitInfo(int devWidth, int devHeight, float gameSizeFactor, float uiSizeFactor, string windowName, bool fixedTexture, bool pixelSmoothing)
         {
             this.devWidth = devWidth;
             this.devHeight = devHeight;
             this.gameSizeFactor = gameSizeFactor;
             this.uiSizeFactor = uiSizeFactor;
             this.windowName = windowName;
-            this.fps = fps;
-            this.vsync = vsync;
-            this.fullscreen = fullscreen;
-            this.monitor = monitor;
+            //this.fps = fps;
+            //this.vsync = vsync;
+            //this.fullscreen = fullscreen;
+            //this.monitor = monitor;
+            this.fixedTexture = fixedTexture;
             this.pixelSmoothing = pixelSmoothing;
         }
     }
@@ -119,6 +121,7 @@ namespace ShapeEngineCore
         public Vector2 MOUSE_POS { get; private set; }
         public Vector2 MOUSE_POS_GAME { get; private set; }
         public Vector2 MOUSE_POS_UI { get; private set; }
+        //public Vector2 MOUSE_POS_UI_RAW { get; private set; }
         public Color backgroundColor = BLACK;
         public Scene? CUR_SCENE { get; private set; }
         private int CUR_SCENE_INDEX = 0;
@@ -353,8 +356,8 @@ namespace ShapeEngineCore
             
 
             //needs to be called first!!!
-            bool fs = launchParams.Contains("fullscreen") || screenInitInfo.fullscreen;
-            ScreenHandler.Initialize(screenInitInfo.devWidth, screenInitInfo.devHeight, screenInitInfo.gameSizeFactor, screenInitInfo.uiSizeFactor, screenInitInfo.windowName, screenInitInfo.fps, screenInitInfo.vsync, fs, screenInitInfo.monitor, screenInitInfo.pixelSmoothing);
+            //bool fs = launchParams.Contains("fullscreen") || screenInitInfo.fullscreen;
+            ScreenHandler.Initialize(screenInitInfo.devWidth, screenInitInfo.devHeight, screenInitInfo.gameSizeFactor, screenInitInfo.uiSizeFactor, screenInitInfo.windowName, screenInitInfo.fixedTexture, screenInitInfo.pixelSmoothing);
             SavegameHandler.Initialize(gameInitInfo.studioName, gameInitInfo.gameName);
             ResourceManager.Initialize(resourceInitInfo.path, resourceInitInfo.filename);
             PaletteHandler.Initialize();
@@ -392,7 +395,10 @@ namespace ShapeEngineCore
             {
                 DELTA = GetFrameTime();
                 MOUSE_POS = GetMousePosition();
-                MOUSE_POS_UI = ScreenHandler.ScalePositionV(MOUSE_POS, false);
+
+                //implement mouse pos raw
+                MOUSE_POS_UI = ScreenHandler.UI.ScalePositionV(MOUSE_POS);
+                //MOUSE_POS_UI_RAW =  ScreenHandler.UI.ScalePositionRawV(MOUSE_POS);
                 MOUSE_POS_GAME = ScreenHandler.TransformPositionToGame(MOUSE_POS_UI);
                 if (WindowShouldClose() && !IsKeyDown(KeyboardKey.KEY_ESCAPE)) QUIT = true;
 
@@ -452,11 +458,14 @@ namespace ShapeEngineCore
                 ScreenHandler.EndDraw(true);
             }
 
-
+            Vector2 uiSize = ScreenHandler.UISize();// new Vector2(ScreenHandler.DEVELOPMENT_RESOLUTION.width, ScreenHandler.DEVELOPMENT_RESOLUTION.height);
+            Vector2 stretchFactor = ScreenHandler.UI.STRETCH_FACTOR;// * ScreenHandler.UI_FACTOR;
+            //float stretchAreaFactor = ScreenHandler.UI.STRETCH_AREA_FACTOR;
+            //float stretchAreaSideFactor = ScreenHandler.UI.STRETCH_AREA_SIDE_FACTOR;
             //Draw to UI texture
             ScreenHandler.StartDraw(false);
-            if (CUR_SCENE != null) CUR_SCENE.DrawUI();
-            CursorHandler.Draw(MOUSE_POS_UI);
+            if (CUR_SCENE != null) CUR_SCENE.DrawUI(uiSize, stretchFactor);
+            CursorHandler.Draw(uiSize, MOUSE_POS_UI);
             ScreenHandler.EndDraw(false);
 
             
@@ -466,9 +475,9 @@ namespace ShapeEngineCore
             PreDraw();
 
             var shaders = ShaderHandler.GetCurActiveShaders();
-            if (ScreenHandler.Cam != null && ScreenHandler.Cam.PIXEL_SMOOTHING_ENABLED)
+            if (ScreenHandler.CAMERA != null && ScreenHandler.CAMERA.PIXEL_SMOOTHING_ENABLED)
             {
-                BeginMode2D(ScreenHandler.Cam.ScreenSpaceCam);
+                BeginMode2D(ScreenHandler.CAMERA.ScreenSpaceCam);
                 ScreenHandler.Draw(shaders);
                 //ShaderHandler.DrawShaders();
                 EndMode2D();

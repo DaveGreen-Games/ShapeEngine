@@ -3,6 +3,7 @@ using Raylib_CsLo;
 using ShapeEngineCore.Globals;
 using ShapeEngineCore.Globals.UI;
 using ShapeEngineCore.Globals.Input;
+using ShapeEngineCore.Globals.Screen;
 
 namespace ShapeEngineDemo
 {
@@ -84,18 +85,15 @@ namespace ShapeEngineDemo
 
         }
 
-        public override void Draw()
+        public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
         {
-            Vector2 center = GetCenter();
+            Vector2 center = GetPos(Alignement.CENTER);
             string text = InputHandler.GetInputActionKeyName(0, inputAction, InputHandler.IsGamepad());
-            //var textSize = UIHandler.GetTextSize(text);
-            //float fontSize = radius * (textSize.X / radius);
-            //figure out dynamic font size based on text!!!!
-            float fontSize = radius * 3f;
-            float thickness = radius * 0.25f;
-            if(bgColor.a > 0) DrawCircleV(center, radius, bgColor);
-            UIHandler.DrawTextAlignedPro(text, center, angleDeg, fontSize, 1, textColor, Alignement.CENTER);
-            if(barColor.a > 0) Drawing.DrawCircleOutlineBar(center, radius + thickness, -90, thickness, f, barColor, true);
+            float r = GetSize().X;
+            float thickness = r * 0.25f;
+            if(bgColor.a > 0) DrawCircleV(center, r, bgColor);
+            UIHandler.DrawTextAlignedPro(text, center, angleDeg, GetSize(), 1, textColor, Alignement.CENTER);
+            if(barColor.a > 0) Drawing.DrawCircleOutlineBar(center, r + thickness, -90, thickness, f, barColor);
         }
     }
 

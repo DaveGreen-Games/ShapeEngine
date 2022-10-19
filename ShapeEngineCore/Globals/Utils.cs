@@ -185,6 +185,36 @@ namespace ShapeEngineCore.Globals
                 );
         }
 
+        public static Rectangle MultiplyRectangle(Rectangle rect, float factor)
+        {
+            return new Rectangle
+                (
+                    rect.x * factor,
+                    rect.y * factor,
+                    rect.width * factor,
+                    rect.height * factor
+                );
+        }
+        public static Rectangle MultiplyRectangle(Rectangle a, Vector2 factor)
+        {
+            return new Rectangle
+                (
+                    a.x * factor.X,
+                    a.y * factor.Y,
+                    a.width * factor.X,
+                    a.height * factor.Y
+                );
+        }
+        public static Rectangle MultiplyRectangle(Rectangle a, Rectangle b)
+        {
+            return new Rectangle
+                (
+                    a.x         * b.x,
+                    a.y         * b.y,
+                    a.width     * b.width,
+                    a.height    * b.height
+                );
+        }
         public static Rectangle EnlargeRectangle(Rectangle source, Vector2 point)
         {
             Vector2 newPos = new

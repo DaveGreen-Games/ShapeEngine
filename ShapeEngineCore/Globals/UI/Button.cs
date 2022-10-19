@@ -12,19 +12,20 @@ namespace ShapeEngineCore.Globals.UI
 
         protected UISelectionColors stateColors = new();
 
-        public Button(Vector2 pos, Vector2 size, bool centered = false)
-        {
-            this.centered = centered;
-
-            if (centered)
-            {
-                rect = new(pos.X - size.X * 0.5f, pos.Y - size.Y * 0.5f, size.X, size.Y);
-            }
-            else
-            {
-                rect = new(pos.X, pos.Y, size.X, size.Y);
-            }
-        }
+        //public Button(Vector2 pos, Vector2 size, bool centered = false)
+        //{
+        //    this.centered = centered;
+        //
+        //    if (centered)
+        //    {
+        //        UpdateRect(pos, size);
+        //        //rect = new(pos.X - size.X * 0.5f, pos.Y - size.Y * 0.5f, size.X, size.Y);
+        //    }
+        //    else
+        //    {
+        //        UpdateRect(new(pos.X, pos.Y, size.X, size.Y));
+        //    }
+        //}
 
         public void SetStateColors(UISelectionColors newColors) { this.stateColors = newColors; }
 
@@ -39,9 +40,9 @@ namespace ShapeEngineCore.Globals.UI
                 default: return true;
             }
         }
-        public override void Update(float dt, Vector2 mousePos)
+        public override void Update(float dt, Vector2 mousePosUI)
         {
-            base.Update(dt, mousePos);
+            base.Update(dt, mousePosUI);
             easeHandler.Update(dt);
             if (easeHandler.HasChain("offset"))
             {
@@ -56,7 +57,7 @@ namespace ShapeEngineCore.Globals.UI
                 sizeOffset = result;
             }
         }
-        public override void Draw()
+        public override void Draw(Vector2 uisSize, Vector2 stretchFactor)
         {
             Color color = stateColors.baseColor;
             if (disabled) color = stateColors.disabledColor;
@@ -67,8 +68,10 @@ namespace ShapeEngineCore.Globals.UI
             Rectangle offsetRect;
             if (centered)
             {
-                Vector2 size = new(rect.width, rect.height);
-                Vector2 newSize = new(size.X * sizeOffset.X, size.Y * sizeOffset.Y);
+                //Vector2 scaledTopLeft = GetCenter() * stretchFactor - GetSize() * 0.5f;
+                Vector2 size = GetSize(); // * stretchFactor;
+                Vector2 newSize = new Vector2 (size.X * sizeOffset.X, size.Y * sizeOffset.Y);
+                //size *= areaSideFactor;
                 Vector2 sizeDif = newSize - size;
                 offsetRect =
                     new(
@@ -80,10 +83,14 @@ namespace ShapeEngineCore.Globals.UI
             }
             else
             {
-                offsetRect = new(rect.X + offset.X, rect.Y + offset.Y, rect.width * sizeOffset.X, rect.height * sizeOffset.Y);
+                offsetRect = new Rectangle(rect.X + offset.X, rect.Y + offset.Y, rect.width * sizeOffset.X, rect.height * sizeOffset.Y);
             }
             DrawRectangleRec(offsetRect, color);
-            if (selected) DrawRectangleV(new(offsetRect.x, offsetRect.y + offsetRect.height * 0.9f), new(offsetRect.width, offsetRect.height * 0.1f), stateColors.selectedColor);
+            if (selected) DrawRectangleV(new Vector2(offsetRect.X, offsetRect.y + offsetRect.height * 0.9f), new Vector2(offsetRect.width, offsetRect.height * 0.1f), stateColors.selectedColor);
+            
+            //DrawRectangleLinesEx(rect, 5f, WHITE);
+            //DrawCircleV(GAMELOOP.MOUSE_POS_UI, 15f, BLUE);
+            //DrawCircleV(GAMELOOP.MOUSE_POS_UI_RAW, 5f, YELLOW);
         }
 
         public override void PressedChanged(bool pressed)

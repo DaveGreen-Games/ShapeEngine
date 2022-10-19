@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿
+using System.Numerics;
 using Raylib_CsLo;
 
 namespace ShapeEngineCore.Globals.Screen
@@ -306,6 +307,7 @@ namespace ShapeEngineCore.Globals.Screen
         private float boundaryDis = 0f;
         private float followSmoothness = 0f;
         private float baseZoom = 1f;
+        private float zoomStretchFactor = 1f;
         private float baseRotationDeg = 0f;
         private float curZoomFactor = 1f;
         private float curRotDeg = 0f;
@@ -366,17 +368,23 @@ namespace ShapeEngineCore.Globals.Screen
 
         public Camera2D Cam { get { return worldSpaceCamera; } }
         public Camera2D ScreenSpaceCam { get { return screenSpaceCamera; } }
-        public Camera(Vector2 size, float zoom, float rotation, float boundaryDis = 0f, float followSmoothness = 1f)
+        public Camera(Vector2 size, float zoom, float zoomStretchFactor, float rotation, float boundaryDis = 0f, float followSmoothness = 1f, bool pixelSmoothing = true)
         {
             this.followSmoothness = followSmoothness;
             this.boundaryDis = boundaryDis;
-            baseOffset = size / 2;
-            baseZoom = zoom;
-            baseRotationDeg = rotation;
-            screenSpaceCamera = new() { offset = baseOffset, rotation = baseRotationDeg, zoom = baseZoom, target = new(0f) };
-            worldSpaceCamera = new() { offset = baseOffset, rotation = baseRotationDeg, zoom = baseZoom, target = new(0f) };
+            this.baseOffset = size / 2;
+            this.baseZoom = zoom;
+            this.zoomStretchFactor = zoomStretchFactor;
+            this.baseRotationDeg = rotation;
+            this.PIXEL_SMOOTHING_ENABLED = pixelSmoothing;
+            this.screenSpaceCamera = new() { offset = baseOffset, rotation = baseRotationDeg, zoom = baseZoom, target = new(0f) };
+            this.worldSpaceCamera = new() { offset = baseOffset, rotation = baseRotationDeg, zoom = baseZoom, target = new(0f) };
         }
-
+        public void ChangeSize(Vector2 newSize, float factor)
+        {
+            baseOffset = newSize / 2;
+            zoomStretchFactor = factor;
+        }
         /// <summary>
         /// Current camera rotation in degrees after pixel perfect smoothing is applied.
         /// </summary>
@@ -468,7 +476,7 @@ namespace ShapeEngineCore.Globals.Screen
             shake.Update(dt);
             rawCameraOffset = baseOffset + shake.Offset + curTranslation + cameraOrderChainHandler.TotalTranslation;
             rawCameraRotationDeg = baseRotationDeg + shake.RotDeg + curRotDeg + cameraOrderChainHandler.TotalRotDeg;
-            rawCameraZoom = (baseZoom + shake.Zoom) * curZoomFactor / cameraOrderChainHandler.TotalScale;
+            rawCameraZoom = ( (baseZoom * zoomStretchFactor) + shake.Zoom) * curZoomFactor / cameraOrderChainHandler.TotalScale;
             if (target != null)
             {
                 if (newTarget != null)
@@ -496,7 +504,7 @@ namespace ShapeEngineCore.Globals.Screen
 
             if (PIXEL_SMOOTHING_ENABLED)
             {
-                float virtualRatio = ScreenHandler.GetCurWindowSizeWidth() / ScreenHandler.Game.GetTextureWidth();
+                float virtualRatio = ScreenHandler.CUR_WINDOW_SIZE.width / ScreenHandler.GAME.GetTextureWidth();
                 worldSpaceCamera.target.X = (int)rawCameraTarget.X;
                 screenSpaceCamera.target.X = rawCameraTarget.X - worldSpaceCamera.target.X;
                 screenSpaceCamera.target.X *= virtualRatio;

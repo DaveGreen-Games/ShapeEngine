@@ -11,16 +11,16 @@ namespace ShapeEngineCore.Globals.Cursor
 
         public static void Initialize()
         {
-            Add("ui", new CursorBasic(50, RED));
-            Add("game", new CursorGame(40, RED));
+            Add("ui", new CursorBasic(0.02f, RED));
+            Add("game", new CursorGame(0.02f, RED));
             Switch("ui");
             Hide();
         }
 
-        public static void Draw(Vector2 mousePos)
+        public static void Draw(Vector2 uiSize, Vector2 mousePos)
         {
             if (hidden) return;
-            curCursor.Draw(mousePos);
+            curCursor.Draw(uiSize, mousePos);
         }
         public static void Close()
         {

@@ -7,11 +7,11 @@ namespace ShapeEngineCore
 {
     public class Effect : GameObject
     {
-        protected Vector2 pos;
+        protected Vector2 gamePos;
         protected BasicTimer lifetimeTimer = new();
 
-        public Effect(Vector2 pos) { this.pos = pos; }
-        public Effect(Vector2 pos, float lifeTime) { this.pos = pos; lifetimeTimer.Start(lifeTime); }
+        public Effect(Vector2 gamePos) { this.gamePos = gamePos; }
+        public Effect(Vector2 gamePos, float lifeTime) { this.gamePos = gamePos; lifetimeTimer.Start(lifeTime); }
 
 
         public override void Update(float dt)
@@ -56,7 +56,7 @@ namespace ShapeEngineCore
         protected virtual float GetCurSize() { return Utils.LerpFloat(size, 0f, 1.0f - lifetimeTimer.GetF()); }
         public override Rectangle GetBoundingBox()
         {
-            return new(pos.X - size, pos.Y - size, size * 2, size * 2);
+            return new(gamePos.X - size, gamePos.Y - size, size * 2, size * 2);
         }
     }
     public class SquareEffect : ShapeEffect
@@ -66,7 +66,7 @@ namespace ShapeEngineCore
         {
             if (IsDead()) return;
             float curSize = GetCurSize();
-            Rectangle rect = new(pos.X, pos.Y, curSize * 2f, curSize * 2f);
+            Rectangle rect = new(gamePos.X, gamePos.Y, curSize * 2f, curSize * 2f);
             DrawRectanglePro(rect, new(curSize, curSize), rotation * RAD2DEG, color);
         }
     }
@@ -76,7 +76,7 @@ namespace ShapeEngineCore
         public override void Draw()
         {
             if (IsDead()) return;
-            DrawCircleV(pos, GetCurSize(), color);
+            DrawCircleV(gamePos, GetCurSize(), color);
         }
     }
 
@@ -98,12 +98,12 @@ namespace ShapeEngineCore
         public override void Draw()
         {
             if (IsDead()) return;
-            DrawLineEx(pos, pos + Vec.Rotate(Vec.Right(), rotation) * GetCurSize(), lineThickness, color);
+            DrawLineEx(gamePos, gamePos + Vec.Rotate(Vec.Right(), rotation) * GetCurSize(), lineThickness, color);
         }
         public override Rectangle GetBoundingBox()
         {
-            Vector2 end = pos + Vec.Rotate(Vec.Right() * size, rotation);
-            return new(pos.X, pos.Y, end.X - pos.X, end.Y - pos.Y);
+            Vector2 end = gamePos + Vec.Rotate(Vec.Right() * size, rotation);
+            return new(gamePos.X, gamePos.Y, end.X - gamePos.X, end.Y - gamePos.Y);
         }
     }
 }

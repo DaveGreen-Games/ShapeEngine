@@ -1,4 +1,6 @@
-﻿namespace ShapeEngineCore.Globals.Screen
+﻿using System.Numerics;
+
+namespace ShapeEngineCore.Globals.Screen
 {
     public class MonitorHandler
     {
@@ -10,6 +12,7 @@
             public int height = -1;
             public int refreshrate = -1;
             public int index = -1;
+            public Vector2 position = new();
             public MonitorInfo()
             {
                 this.available = false;
@@ -18,8 +21,9 @@
                 this.height = -1;
                 this.refreshrate = -1;
                 this.index = -1;
+                this.position = new();
             }
-            public MonitorInfo(string name, int w, int h, int refreshrate, int index)
+            public MonitorInfo(string name, int w, int h, Vector2 pos, int refreshrate, int index)
             {
                 this.available = true;
                 this.name = name;
@@ -27,6 +31,7 @@
                 this.height = h;
                 this.refreshrate = refreshrate;
                 this.index = index;
+                this.position = pos;
             }
         }
 
@@ -41,6 +46,11 @@
         public MonitorHandler()
         {
             GenerateInfo();
+        }
+        public MonitorInfo CurMonitor()
+        {
+            if (monitors.Count <= 0) return new();
+            else return monitors[curIndex];
         }
         public int MonitorCount() { return monitors.Count; }
         public List<MonitorInfo> GetAllMonitorInfo() { return monitors; }
@@ -58,11 +68,12 @@
                 string name = GetMonitorName_(i);
                 int w =  GetMonitorWidth(i);
                 int h =  GetMonitorHeight(i);
+                Vector2 pos = GetMonitorPosition(i) + new Vector2(1, 1);
                 //Temporary Fix!!!
                 //if (w > 2000) w = 1920;
                 //if (h > 1250) h = 1080;
                 int rr = GetMonitorRefreshRate(i);
-                monitors.Add(new(name, w, h, rr, i));
+                monitors.Add(new(name, w, h, pos, rr, i));
             }
         }
         public (bool changed, int oldIndex, int newIndex) HasIndexChanged()

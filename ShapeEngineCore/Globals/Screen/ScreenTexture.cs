@@ -5,6 +5,8 @@ namespace ShapeEngineCore.Globals.Screen
 {
     public class ScreenTexture
     {
+        public delegate void TextureSizeChanged(int w, int h, float factor);
+        public event TextureSizeChanged? OnTextureSizeChanged;
 
         private Vector2 offset = new(0, 0);
         private float rotation = 0.0f;
@@ -14,23 +16,18 @@ namespace ShapeEngineCore.Globals.Screen
         private Rectangle sourceRec;
         private Rectangle destRec;
         private Vector2 origin;
-        private Vector2 prevTextureSize = new(0f, 0f);
+        //private Vector2 prevTextureSize = new(0f, 0f);
         private Color backgroundColor = new(0, 0, 0, 0);
 
 
         private (int width, int height) developmentResolution;
+        public (int width, int height) TARGET_RESOLUTION { get; private set; } = (0, 0);
         private (int width, int height) curWindowSize;
         private float curTextureSizeFactor = 1.0f;
-
-
-        //private float screenShakeTimer = 0.0f;
-        //private float screenShakeDuration = 0.0f;
-        //private Shake screenShake = new Shake();
-        //private float screenShakeScale = 0.0f;//percentage
-        //private float screenShakeCurScale = 0.0f;//percentage
-        //private Vector2 screenShakeStrength = new(1.0f, 1.0f);
-        //private Vector2 screenShakeOffset = new(0, 0);
-
+        private bool fixedSize = true;
+        public Vector2 STRETCH_FACTOR { get; private set; } = new(1f);
+        public float STRETCH_AREA_FACTOR { get; private set; } = 1f;
+        public float STRETCH_AREA_SIDE_FACTOR { get; private set; } = 1f;
 
         private int blendMode = -1;
         private int prevBlendMode = -1;
@@ -46,22 +43,41 @@ namespace ShapeEngineCore.Globals.Screen
 
         private List<ScreenFlash> screenFlashes = new List<ScreenFlash>();
 
-        public ScreenTexture(int width, int height, int winWidth, int winHeight, float factor)
+        public ScreenTexture(int devWidth, int devHeight, int winWidth, int winHeight, float factor, bool fixedSize = false)
         {
-            developmentResolution.width = width;
-            developmentResolution.height = height;
+            this.fixedSize = fixedSize;
+            this.developmentResolution.width = devWidth;
+            this.developmentResolution.height = devHeight;
+            this.curTextureSizeFactor = factor;
+            this.curWindowSize.width = winWidth;
+            this.curWindowSize.height = winHeight;
 
-            int textureWidth = (int)(width * factor);
-            int textureHeight = (int)(height * factor);
-            prevTextureSize = new(textureWidth, textureHeight);
-            texture = LoadRenderTexture(textureWidth, textureHeight);
-            curTextureSizeFactor = factor;
+            if (!fixedSize)
+            {
+                float fWidth = winWidth / (float)developmentResolution.width;
+                float fHeight = winHeight / (float)developmentResolution.height;
+                float f = fWidth <= fHeight ? fWidth : fHeight;
 
-            ChangeWindowSize(winWidth, winHeight);
+                TARGET_RESOLUTION = ((int)(winWidth / f), (int)(winHeight / f));
+            }
+            else this.TARGET_RESOLUTION = (devWidth, devHeight);
+            
+            this.STRETCH_FACTOR = new Vector2
+                (
+                    (float)TARGET_RESOLUTION.width / (float)developmentResolution.width,
+                    (float)TARGET_RESOLUTION.height / (float)developmentResolution.height
+                );
+            this.STRETCH_AREA_FACTOR = STRETCH_FACTOR.X * STRETCH_FACTOR.Y;
+            this.STRETCH_AREA_SIDE_FACTOR = MathF.Sqrt(STRETCH_AREA_FACTOR);
+            int textureWidth = (int)(TARGET_RESOLUTION.width * factor);
+            int textureHeight = (int)(TARGET_RESOLUTION.height * factor);
+            //this.prevTextureSize = new(textureWidth, textureHeight);
+            this.texture = LoadRenderTexture(textureWidth, textureHeight);
+            
 
-            sourceRec = new Rectangle(0, 0, textureWidth, -textureHeight);
-            destRec = new Rectangle(winWidth / 2, winHeight / 2, winWidth, winHeight);
-            origin = new Vector2(winWidth / 2, winHeight / 2);
+            this.sourceRec = new Rectangle(0, 0, textureWidth, -textureHeight);
+            this.destRec = new Rectangle(winWidth / 2, winHeight / 2, winWidth, winHeight);
+            this.origin = new Vector2(winWidth / 2, winHeight / 2);
         }
 
 
@@ -87,17 +103,27 @@ namespace ShapeEngineCore.Globals.Screen
             curTint = tint;
         }
 
-        public Vector2 UpdatePosition(Vector2 pos)
-        {
-            float newX = Utils.RemapFloat(pos.X, 0, prevTextureSize.X, 0, GetTextureWidth());
-            float newY = Utils.RemapFloat(pos.Y, 0, prevTextureSize.Y, 0, GetTextureHeight());
-            return new(newX, newY);
-        }
+        //public Vector2 UpdatePosition(Vector2 pos)
+        //{
+        //    float newX = Utils.RemapFloat(pos.X, 0, prevTextureSize.X, 0, GetTextureWidth());
+        //    float newY = Utils.RemapFloat(pos.Y, 0, prevTextureSize.Y, 0, GetTextureHeight());
+        //    return new(newX, newY);
+        //}
 
         public RenderTexture GetTexture() { return texture; }
+
         public int GetTextureWidth() { return texture.texture.width; }
         public int GetTextureHeight() { return texture.texture.height; }
         public float GetTextureSizeFactor() { return curTextureSizeFactor; }
+
+        private float GetCurResolutionFactorRawX()
+        {
+            return ((float)developmentResolution.width * curTextureSizeFactor) / (float)curWindowSize.width;
+        }
+        private float GetCurResolutionFactorRawY()
+        {
+            return ((float)developmentResolution.height * curTextureSizeFactor) / (float)curWindowSize.height;
+        }
         private float GetCurResolutionFactorX()
         {
             return GetTextureWidth() / (float)curWindowSize.width;
@@ -116,20 +142,70 @@ namespace ShapeEngineCore.Globals.Screen
         }
         public Vector2 ScalePositionV(Vector2 pos)
         {
-            //if (ScreenHandler.IsStretchEnabled())
-            //{
-            //    return new(pos.X * GetCurResolutionFactorX(), pos.Y * GetCurResolutionFactorY());
-            //}
-            Vector2 size = GetDestRectSize(curWindowSize.width, curWindowSize.height);
-            Vector2 dif = new Vector2(curWindowSize.width, curWindowSize.height) - size;
-            dif *= 0.5f;
-            pos -= dif;
-            float fWidth = GetTextureWidth() / size.X;
-            float fHeight = GetTextureHeight() / size.Y;
-            pos.X = Clamp(pos.X * fWidth, 0, GetTextureWidth());
-            pos.Y = Clamp(pos.Y * fHeight, 0, GetTextureHeight());
-            return pos;
+            if (fixedSize)
+            {
+                Vector2 size = GetDestRectSize(curWindowSize.width, curWindowSize.height);
+                Vector2 dif = new Vector2(curWindowSize.width, curWindowSize.height) - size;
+                dif *= 0.5f;
+                pos -= dif;
+                float fWidth = GetTextureWidth() / size.X;
+                float fHeight = GetTextureHeight() / size.Y;
+                pos.X = Clamp(pos.X * fWidth, 0, GetTextureWidth());
+                pos.Y = Clamp(pos.Y * fHeight, 0, GetTextureHeight());
+                return pos;
+
+            }
+            else
+            {
+                return new(pos.X * GetCurResolutionFactorX(), pos.Y * GetCurResolutionFactorY());
+            }
         }
+        //public Vector2 ScalePositionRawV(Vector2 pos)
+        //{
+        //    if (fixedSize)
+        //    {
+        //        Vector2 size = GetDestRectSize(curWindowSize.width, curWindowSize.height);
+        //        Vector2 dif = new Vector2(curWindowSize.width, curWindowSize.height) - size;
+        //        dif *= 0.5f;
+        //        pos -= dif;
+        //        float fWidth = GetTextureWidth() / size.X;
+        //        float fHeight = GetTextureHeight() / size.Y;
+        //        pos.X = Clamp(pos.X * fWidth, 0, GetTextureWidth());
+        //        pos.Y = Clamp(pos.Y * fHeight, 0, GetTextureHeight());
+        //        return pos;
+        //        //float w, h;
+        //        //float fWidth = curWindowSize.width / (float)developmentResolution.width;
+        //        //float fHeight = curWindowSize.height / (float)developmentResolution.height;
+        //        //if (fWidth <= fHeight)
+        //        //{
+        //        //    w = curWindowSize.width;
+        //        //    float f = developmentResolution.height / (float)developmentResolution.width;
+        //        //    h = w * f;
+        //        //
+        //        //}
+        //        //else
+        //        //{
+        //        //    h = curWindowSize.height;
+        //        //    float f = developmentResolution.width / (float)developmentResolution.height;
+        //        //    w = h * f;
+        //        //}
+        //        //
+        //        //Vector2 size = new Vector2(w, h); // GetDestRectSize(curWindowSize.width, curWindowSize.height);
+        //        //Vector2 dif = new Vector2(curWindowSize.width, curWindowSize.height) - size;
+        //        //dif *= 0.5f;
+        //        //pos -= dif;
+        //        //float fW = developmentResolution.width / size.X;
+        //        //float fH = developmentResolution.height / size.Y;
+        //        //pos.X = Clamp(pos.X * fW, 0, developmentResolution.width);
+        //        //pos.Y = Clamp(pos.Y * fH, 0, developmentResolution.height);
+        //        //return pos;
+        //
+        //    }
+        //    else
+        //    {
+        //        return new Vector2(pos.X * GetCurResolutionFactorRawX(), pos.Y * GetCurResolutionFactorRawY());
+        //    }
+        //}
         public Color GetTint() { return tint; }
         public void SetTint(Color newTint)
         {
@@ -169,46 +245,71 @@ namespace ShapeEngineCore.Globals.Screen
 
 
 
-        public void MonitorChanged(int devWidth, int devHeight, int winWidth, int winHeight)
+        //public void MonitorChanged(int devWidth, int devHeight, int winWidth, int winHeight)
+        //{
+        //    developmentResolution.width = devWidth;
+        //    developmentResolution.height = devHeight;
+        //
+        //    int textureWidth = (int)(devWidth * curTextureSizeFactor);
+        //    int textureHeight = (int)(devHeight * curTextureSizeFactor);
+        //    ChangeSize(textureWidth, textureHeight);
+        //    //texture = LoadRenderTexture(textureWidth, textureHeight);
+        //    //curTextureSizeFactor = factor;
+        //
+        //    ChangeWindowSize(winWidth, winHeight);
+        //
+        //    //sourceRec = new Rectangle(0, 0, textureWidth, -textureHeight);
+        //    destRec = new Rectangle(winWidth / 2, winHeight / 2, winWidth, winHeight);
+        //    origin = new Vector2(winWidth / 2, winHeight / 2);
+        //}
+        //public void ChangeTextureSizeFactor(float newFactor)
+        //{
+        //    if (newFactor <= 0.0f) return;
+        //    if (newFactor == curTextureSizeFactor) return;
+        //
+        //    curTextureSizeFactor = newFactor;
+        //    int textureWidth = (int)(developmentResolution.width * newFactor);
+        //    int textureHeight = (int)(developmentResolution.height * newFactor);
+        //    ChangeSize(textureWidth, textureHeight);
+        //}
+        private void ChangeTextureSize(int width, int height)
         {
-            developmentResolution.width = devWidth;
-            developmentResolution.height = devHeight;
-
-            int textureWidth = (int)(devWidth * curTextureSizeFactor);
-            int textureHeight = (int)(devHeight * curTextureSizeFactor);
-            ChangeSize(textureWidth, textureHeight);
-            //texture = LoadRenderTexture(textureWidth, textureHeight);
-            //curTextureSizeFactor = factor;
-
-            ChangeWindowSize(winWidth, winHeight);
-
-            //sourceRec = new Rectangle(0, 0, textureWidth, -textureHeight);
-            destRec = new Rectangle(winWidth / 2, winHeight / 2, winWidth, winHeight);
-            origin = new Vector2(winWidth / 2, winHeight / 2);
-        }
-        public void ChangeTextureSizeFactor(float newFactor)
-        {
-            if (newFactor <= 0.0f) return;
-            if (newFactor == curTextureSizeFactor) return;
-
-            curTextureSizeFactor = newFactor;
-            int textureWidth = (int)(developmentResolution.width * newFactor);
-            int textureHeight = (int)(developmentResolution.height * newFactor);
-            ChangeSize(textureWidth, textureHeight);
-        }
-        public void ChangeSize(int width, int height)
-        {
-            prevTextureSize = new(GetTextureWidth(), GetTextureHeight());
+            //prevTextureSize = new(GetTextureWidth(), GetTextureHeight());
             UnloadRenderTexture(texture);
             texture = LoadRenderTexture(width, height);
             sourceRec.width = width;
             sourceRec.height = -height;
+            OnTextureSizeChanged?.Invoke(width, height, STRETCH_AREA_SIDE_FACTOR);
         }
         public void ChangeWindowSize(int winWidth, int winHeight)
         {
             curWindowSize.width = winWidth;
             curWindowSize.height = winHeight;
+
+            if (!fixedSize)
+            {
+                float fWidth = winWidth / (float)developmentResolution.width;
+                float fHeight = winHeight / (float)developmentResolution.height;
+                float f = fWidth <= fHeight ? fWidth : fHeight;
+
+                TARGET_RESOLUTION = ((int)(winWidth / f), (int)(winHeight / f));
+                //TARGET_RESOLUTION = (winWidth, winHeight);
+                STRETCH_FACTOR = new Vector2
+                (
+                    (float)TARGET_RESOLUTION.width / (float)developmentResolution.width,
+                    (float)TARGET_RESOLUTION.height / (float)developmentResolution.height
+                );
+                STRETCH_AREA_FACTOR = STRETCH_FACTOR.X * STRETCH_FACTOR.Y;
+                STRETCH_AREA_SIDE_FACTOR = MathF.Sqrt(STRETCH_AREA_FACTOR);
+                int textureWidth = (int)(TARGET_RESOLUTION.width * curTextureSizeFactor);
+                int textureHeight = (int)(TARGET_RESOLUTION.height * curTextureSizeFactor);
+                ChangeTextureSize(textureWidth, textureHeight);
+            }
+            
+            destRec = new Rectangle(winWidth / 2, winHeight / 2, winWidth, winHeight);
+            origin = new Vector2(winWidth / 2, winHeight / 2);
         }
+
 
 
         public void Update(float dt)
@@ -302,19 +403,19 @@ namespace ShapeEngineCore.Globals.Screen
             float s = scale;
             float w = curWindowSize.width * s;
             float h = curWindowSize.height * s;
-            //if (!ScreenHandler.IsStretchEnabled())
-            //{
-            Vector2 size = GetDestRectSize(curWindowSize.width, curWindowSize.height);
-            w = size.X * s;
-            h = size.Y * s;
-            destRec.x = curWindowSize.width * 0.5f / s + offset.X;// + screenShakeOffset.X;
-            destRec.y = curWindowSize.height * 0.5f / s + offset.Y;// + screenShakeOffset.Y;
-            //}
-            //else
-            //{
-            //  destRec.x = w * 0.5f / s + offset.X;// + screenShakeOffset.X;
-            //  destRec.y = h * 0.5f / s + offset.Y;// + screenShakeOffset.Y;
-            //}
+            if (fixedSize)
+            {
+                Vector2 size = GetDestRectSize(curWindowSize.width, curWindowSize.height);
+                w = size.X * s;
+                h = size.Y * s;
+                destRec.x = curWindowSize.width * 0.5f / s + offset.X;// + screenShakeOffset.X;
+                destRec.y = curWindowSize.height * 0.5f / s + offset.Y;// + screenShakeOffset.Y;
+            }
+            else
+            {
+              destRec.x = w * 0.5f / s + offset.X;// + screenShakeOffset.X;
+              destRec.y = h * 0.5f / s + offset.Y;// + screenShakeOffset.Y;
+            }
 
             //destRec.x = (w * 0.5f / s) + offset.X + screenShakeOffset.X;
             //destRec.y = (h * 0.5f / s) + offset.Y + screenShakeOffset.Y;

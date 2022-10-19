@@ -15,11 +15,11 @@ namespace ShapeEngineCore
         protected float fontSpacing = 5;
         protected Alignement textAlignement = Alignement.CENTER;
 
-        public TextEffect(Vector2 pos, string text, float duration, Color color) : base(pos, duration)
-        {
-            this.text = text;
-            this.color = color;
-        }
+        //public TextEffect(Vector2 pos, string text, float duration, Color color) : base(pos, duration)
+        //{
+        //    this.text = text;
+        //    this.color = color;
+        //}
         //public TextEffect(Vector2 pos, string text, float duration, Color color, FontSize fontSize) : base(pos, duration)
         //{
         //    this.text = text;
@@ -43,22 +43,22 @@ namespace ShapeEngineCore
         //    this.color = color;
         //}
 
-        public override void DrawUI()
+        public override void DrawUI(Vector2 uiSize, Vector2 stretchFactor)
         {
             if (IsDead()) return;
-            Vector2 p = ScreenHandler.TransformPositionToUI(pos);
-            UIHandler.DrawTextAligned(text, p, fontSize, fontSpacing, color, textAlignement);
+            Vector2 uiPos = ScreenHandler.TransformPositionToUI(gamePos);
+            UIHandler.DrawTextAligned(text, uiPos, fontSize, fontSpacing, color, textAlignement);
         }
     }
     public class TextEffectPro : TextEffect
     {
         protected float rot = 0f;
 
-        public TextEffectPro(Vector2 pos, string text, float duration, Color color) : base(pos, text, duration, color)
+        public TextEffectPro(Vector2 pos, string text, float duration, Color color, float fontSize) : base(pos, text, duration, color, fontSize, 1, Alignement.CENTER)
         {
             rot = RNG.randF(-5f, 5f) * DEG2RAD;
         }
-        public TextEffectPro(Vector2 pos, string text, float duration, Color color, float rotation) : base(pos, text, duration, color)
+        public TextEffectPro(Vector2 pos, string text, float duration, Color color, float rotation, float fontSize) : base(pos, text, duration, color, fontSize, 1, Alignement.CENTER)
         {
             rot = rotation;
         }
@@ -84,10 +84,11 @@ namespace ShapeEngineCore
         //    rot = rotation;
         //}
 
-        public override void DrawUI()
+        public override void DrawUI(Vector2 uiSize, Vector2 stretchFactor)
         {
             if (IsDead()) return;
-            UIHandler.DrawTextAlignedPro(text, pos, rot, fontSize, fontSpacing, color, textAlignement);
+            Vector2 uiPos = ScreenHandler.TransformPositionToUI(gamePos);
+            UIHandler.DrawTextAlignedPro(text, uiPos, rot, fontSize, fontSpacing, color, textAlignement);
         }
     }
     public class TextEffectEase : TextEffect
@@ -96,8 +97,8 @@ namespace ShapeEngineCore
         protected EasingType easeType;
         protected bool easing = false;
 
-        public TextEffectEase(Vector2 pos, string text, float duration, Color color, float easeDuration, EasingType easeType = EasingType.LINEAR_OUT)
-            : base(pos, text, duration, color)
+        public TextEffectEase(Vector2 pos, string text, float duration, Color color, float fontSize, float easeDuration, EasingType easeType = EasingType.LINEAR_OUT)
+            : base(pos, text, duration, color, fontSize, 1, Alignement.CENTER)
         {
             this.easeDuration = easeDuration;
             this.easeType = easeType;
@@ -147,8 +148,8 @@ namespace ShapeEngineCore
         protected Vector2 easeFrom;
         protected Vector2 easeChange;
 
-        public TextEffectEasePos(Vector2 pos, string text, float duration, Color color, float easeDuration, Vector2 easeChange, EasingType easeType = EasingType.LINEAR_OUT)
-            : base(pos, text, duration, color, easeDuration, easeType)
+        public TextEffectEasePos(Vector2 pos, string text, float duration, Color color, float fontSize, float easeDuration, Vector2 easeChange, EasingType easeType = EasingType.LINEAR_OUT)
+            : base(pos, text, duration, color, fontSize, easeDuration, easeType)
         {
             easeFrom = pos;
             this.easeChange = easeChange;
@@ -180,7 +181,7 @@ namespace ShapeEngineCore
 
         protected override void Easing()
         {
-            pos = Ease.Advanced(easeFrom, easeChange, lifetimeTimer.GetElapsed(), easeDuration, easeType);
+            gamePos = Ease.Advanced(easeFrom, easeChange, lifetimeTimer.GetElapsed(), easeDuration, easeType);
         }
     }
     public class TextEffectEaseColor : TextEffectEase
@@ -188,8 +189,8 @@ namespace ShapeEngineCore
         protected Color easeFrom;
         protected Color easeChange;
 
-        public TextEffectEaseColor(Vector2 pos, string text, float duration, Color color, float easeDuration, Color easeChange, EasingType easeType = EasingType.LINEAR_OUT)
-            : base(pos, text, duration, color, easeDuration, easeType)
+        public TextEffectEaseColor(Vector2 pos, string text, float duration, Color color, float fontSize, float easeDuration, Color easeChange, EasingType easeType = EasingType.LINEAR_OUT)
+            : base(pos, text, duration, color, fontSize, easeDuration, easeType)
         {
             easeFrom = color;
             this.easeChange = easeChange;
@@ -229,8 +230,8 @@ namespace ShapeEngineCore
         protected float easeFrom;
         protected float easeChange;
 
-        public TextEffectEaseSize(Vector2 pos, string text, float duration, Color color, float easeDuration, float easeChange, EasingType easeType = EasingType.LINEAR_OUT)
-            : base(pos, text, duration, color, easeDuration, easeType)
+        public TextEffectEaseSize(Vector2 pos, string text, float duration, Color color, float fontSize, float easeDuration, float easeChange, EasingType easeType = EasingType.LINEAR_OUT)
+            : base(pos, text, duration, color, fontSize, easeDuration, easeType)
         {
             easeFrom = fontSize;
             this.easeChange = easeChange;

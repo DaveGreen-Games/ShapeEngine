@@ -78,43 +78,32 @@ namespace ShapeEngineCore.Globals.UI
             if (!fontSizes.ContainsKey(name)) return -1;
             else return fontSizes[name];
         }
-        public static float GetFontSizeScaled(string name)
-        {
-            if (!fontSizes.ContainsKey(name)) return -1;
-            else return fontSizes[name] * ScreenHandler.UI_FACTOR;
-        }
+        //public static float GetFontSizeScaled(string name)
+        //{
+        //    if (!fontSizes.ContainsKey(name)) return -1;
+        //    else return fontSizes[name] * ScreenHandler.UI.STRETCH_FACTOR.Y;
+        //}
 
 
-        public static float ScaleFontSize(int fontSize)
-        {
-            return ScaleFontSize(fontSize);
-        }
-        public static float ScaleFontSize(float fontSize)
-        {
-            return fontSize * ScreenHandler.UI_FACTOR;
-        }
+        //public static float ScaleFontSize(int fontSize)
+        //{
+        //    return ScaleFontSize((float)fontSize);
+        //}
+        //public static float ScaleFontSize(float fontSize)
+        //{
+        //    return fontSize * ScreenHandler.UI_FACTOR;
+        //}
 
-        public static Vector2 Scale(Vector2 v) { return v * ScreenHandler.UI_FACTOR; }
-        public static float Scale(float f) { return f * ScreenHandler.UI_FACTOR; }
-        public static int Scale(int i) { return (int)(i * ScreenHandler.UI_FACTOR); }
+        //public static Vector2 Scale(Vector2 v) { return v * ScreenHandler.UI_FACTOR; }
+        //public static float Scale(float f) { return f * ScreenHandler.UI_FACTOR; }
+        //public static int Scale(int i) { return (int)(i * ScreenHandler.UI_FACTOR); }
 
-        public static float CalculateDynamicFontSize(string text, float size, float fontSpacing = 1f, float maxError = 0.01f, int maxTries = 25)
-        {
-            float curFontSize = 50f;
-            float correction = 0f;
-            int counter = 0;
-            while (MathF.Abs(1f - correction) > maxError && counter < maxTries)
-            {
-                counter++;
-                correction = size / UIHandler.GetTextSize(text, curFontSize, fontSpacing).X;
-                curFontSize *= correction;
-            }
-            return curFontSize;
-        }
+        
         public static void AddFont(string name, string fileName, int fontSize = 100)
         {
             if (fileName == "" || fonts.ContainsKey(name)) return;
             Font font = ResourceManager.LoadFont(fileName, fontSize);
+            
             SetTextureFilter(font.texture, TextureFilter.TEXTURE_FILTER_BILINEAR);
             fonts.Add(name, font);
             //unsafe
@@ -124,7 +113,6 @@ namespace ShapeEngineCore.Globals.UI
             //    fonts.Add(name, font);
             //}
         }
-
         public static Font GetFont(string name = "")
         {
             if (name == "" || !fonts.ContainsKey(name)) return defaultFont;
@@ -198,26 +186,159 @@ namespace ShapeEngineCore.Globals.UI
                 default: return new(0.5f, 0.5f);
             }
         }
-
-        public static Vector2 GetTextSize(string text, float fontSize, float fontSpacing)
+        public static float CalculateDynamicFontSize(string text, Vector2 size, float fontSpacing = 1f, string fontName = "")
         {
-            return MeasureTextEx(GetFont(), text, fontSize, fontSpacing);
+            float baseSize = GetFont(fontName).baseSize;
+            //float scalingFactor = size.Y / baseSize;
+            //Vector2 textSize = MeasureTextEx(GetFont(), text, baseSize * scalingFactor, fontSpacing);
+            //float correctionFactor = MathF.Min(size.X / textSize.X, 1f) ;
+            //return (baseSize * scalingFactor) * correctionFactor;// * (size.X / textSize.X);
+
+            return GetFontScalingFactor(text, size, fontSpacing, fontName) * baseSize;
         }
-        //rot is in degrees
-        public static void DrawTextAlignedPro(string text, Vector2 pos, float rot, float fontSize, float fontSpacing, Color color, Font font, Alignement alignement = Alignement.CENTER)
+        
+        public static float CalculateDynamicFontSize(string text, Vector2 size, Font font, float fontSpacing = 1f)
+        {
+            float baseSize = font.baseSize;
+
+            return GetFontScalingFactor(text, size, font, fontSpacing) * baseSize;
+        }
+        public static float CalculateDynamicFontSize(float height,Font font)
+        {
+            float baseSize = font.baseSize;
+
+            return GetFontScalingFactor(height, font) * baseSize;
+        }
+        public static float CalculateDynamicFontSize(float height, string fontName = "")
+        {
+            return CalculateDynamicFontSize(height, GetFont(fontName));
+        }
+        public static float CalculateDynamicFontSize(string text, float width, float fontSpacing = 1f, string fontName = "")
+        {
+            return CalculateDynamicFontSize(text, width, GetFont(fontName), fontSpacing);
+        }
+        public static float CalculateDynamicFontSize(string text, float width, Font font, float fontSpacing = 1f)
+        {
+            float baseSize = font.baseSize;
+
+            return GetFontScalingFactor(text, width, font, fontSpacing) * baseSize;
+        }
+        //public static float GetFontScalingFactor(float fontSize, string fontName = "") { return fontSize / (float)GetFont(fontName).baseSize; }
+        public static float GetFontScalingFactor(float height, string fontName = "") { return GetFontScalingFactor(height, GetFont(fontName)); }
+        public static float GetFontScalingFactor(float height, Font font)
+        {
+            float baseSize = font.baseSize;
+            return height / baseSize;
+        }
+        public static float GetFontScalingFactor(string text, Vector2 size, float fontSpacing = 1, string fontName = "")
+        {
+            float baseSize = GetFont(fontName).baseSize;
+            float scalingFactor = size.Y / baseSize;
+            Vector2 textSize = MeasureTextEx(GetFont(), text, baseSize * scalingFactor, fontSpacing);
+            float correctionFactor = MathF.Min(size.X / textSize.X, 1f);
+            return scalingFactor * correctionFactor;
+        }
+        public static float GetFontScalingFactor(string text, Vector2 size, Font font, float fontSpacing = 1)
+        {
+            float baseSize = font.baseSize;
+            float scalingFactor = size.Y / baseSize;
+            Vector2 textSize = MeasureTextEx(GetFont(), text, baseSize * scalingFactor, fontSpacing);
+            float correctionFactor = MathF.Min(size.X / textSize.X, 1f);
+            return scalingFactor * correctionFactor;
+        }
+        public static float GetFontScalingFactor(string text, float width, float fontSpacing = 1, string fontName = "")
+        {
+            float baseSize = GetFont(fontName).baseSize;
+            Vector2 textSize = MeasureTextEx(GetFont(), text, baseSize, fontSpacing);
+            float scalingFactor = width / textSize.X;
+            return scalingFactor;
+        }
+        public static float GetFontScalingFactor(string text, float width, Font font, float fontSpacing = 1)
+        {
+            float baseSize = font.baseSize;
+            Vector2 textSize = MeasureTextEx(GetFont(), text, baseSize, fontSpacing);
+            float scalingFactor = width / textSize.X;
+            return scalingFactor;
+        }
+        
+        public static Vector2 GetTextSize(string text, float fontSize, float fontSpacing, string fontName = "")
+        {
+            return MeasureTextEx(GetFont(fontName), text, fontSize, fontSpacing);
+        }
+
+        //public static Rectangle AdjustRectangleToScreen(Rectangle rect, Vector2 stretchFactor, float areaSideFactor)
+        //{
+        //    return new Rectangle
+        //        (
+        //            rect.x * stretchFactor.X,
+        //            rect.y * stretchFactor.Y,
+        //            rect.width * areaSideFactor,
+        //            rect.height * areaSideFactor
+        //        );
+        //}
+       
+
+
+        public static void DrawTextAlignedPro(string text, Vector2 uiPos, float rotDeg, Vector2 textSize, float fontSpacing, Color color, Font font, Alignement alignement = Alignement.CENTER)
+        {
+            float fontSize = CalculateDynamicFontSize(text, textSize, font, fontSpacing);
+            Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
+            Vector2 originOffset = GetAlignementVector(alignement) * fontDimensions;
+            DrawTextPro(font, text, uiPos, originOffset, rotDeg, fontSize, fontSpacing, color);
+
+           // DrawRectangleLinesEx(new())
+        }
+        public static void DrawTextAlignedPro(string text, Vector2 uiPos, float rotDeg, float textHeight, float fontSpacing, Color color, Font font, Alignement alignement = Alignement.CENTER)
+        {
+            float fontSize = CalculateDynamicFontSize(textHeight, font);
+            Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
+            Vector2 originOffset = GetAlignementVector(alignement) * fontDimensions;
+            DrawTextPro(font, text, uiPos, originOffset, rotDeg, fontSize, fontSpacing, color);
+        }
+        public static void DrawTextAlignedPro2(string text, Vector2 uiPos, float rotDeg, float textWidth, float fontSpacing, Color color, Font font, Alignement alignement = Alignement.CENTER)
+        {
+            float fontSize = CalculateDynamicFontSize(text, textWidth, font, fontSpacing);
+            Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
+            Vector2 originOffset = GetAlignementVector(alignement) * fontDimensions;
+            DrawTextPro(font, text, uiPos, originOffset, rotDeg, fontSize, 1, color);
+        }
+        public static void DrawTextAlignedPro3(string text, Vector2 uiPos, float rotDeg, float fontSize, float fontSpacing, Color color, Font font, Alignement alignement = Alignement.CENTER)
         {
             Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
             Vector2 originOffset = GetAlignementVector(alignement) * fontDimensions;
-            Vector2 textPosition = pos;// - Vec.Rotate(originOffset, rot);
-            DrawTextPro(font, text, textPosition, originOffset, rot, fontSize, fontSpacing, color);
+            DrawTextPro(font, text, uiPos, originOffset, rotDeg, fontSize, fontSpacing, color);
         }
-        public static void DrawTextAlignedPro(string text, Vector2 pos, float rot, float fontSize, float fontSpacing, Color color, Alignement alignement = Alignement.CENTER)
+        public static void DrawTextAlignedPro(string text, Vector2 uiPos, float rotDeg, Vector2 textSize, float fontSpacing, Color color, Alignement alignement = Alignement.CENTER)
         {
-            DrawTextAlignedPro(text, pos, rot, fontSize, fontSpacing, color, GetFont(), alignement);
+            DrawTextAlignedPro(text, uiPos, rotDeg, textSize, fontSpacing, color, GetFont(), alignement);
         }
-        public static void DrawTextAlignedPro(string text, Vector2 pos, float rot, float fontSize, float fontSpacing, Color color, string fontName, Alignement alignement = Alignement.CENTER)
+        public static void DrawTextAlignedPro(string text, Vector2 uiPos, float rotDeg, float textHeight, float fontSpacing, Color color, Alignement alignement = Alignement.CENTER)
         {
-            DrawTextAlignedPro(text, pos, rot, fontSize, fontSpacing, color, GetFont(fontName), alignement);
+            DrawTextAlignedPro(text, uiPos, rotDeg, textHeight, fontSpacing, color, GetFont(), alignement);
+        }
+        public static void DrawTextAlignedPro2(string text, Vector2 uiPos, float rotDeg, float textWidth, float fontSpacing, Color color, Alignement alignement = Alignement.CENTER)
+        {
+            DrawTextAlignedPro2(text, uiPos, rotDeg, textWidth, fontSpacing, color, GetFont(), alignement);
+        }
+        public static void DrawTextAlignedPro3(string text, Vector2 uiPos, float rotDeg, float fontSize, float fontSpacing, Color color, Alignement alignement = Alignement.CENTER)
+        {
+            DrawTextAlignedPro3(text, uiPos, rotDeg, fontSize, fontSpacing, color, GetFont(), alignement);
+        }
+        public static void DrawTextAlignedPro(string text, Vector2 uiPos, float rotDeg, Vector2 textSize, float fontSpacing, Color color, string fontName, Alignement alignement = Alignement.CENTER)
+        {
+            DrawTextAlignedPro(text, uiPos, rotDeg, textSize, fontSpacing, color, GetFont(fontName), alignement);
+        }
+        public static void DrawTextAlignedPro(string text, Vector2 uiPos, float rotDeg, float textHeight, float fontSpacing, Color color, string fontName, Alignement alignement = Alignement.CENTER)
+        {
+            DrawTextAlignedPro(text, uiPos, rotDeg, textHeight, fontSpacing, color, GetFont(fontName), alignement);
+        }
+        public static void DrawTextAlignedPro2(string text, Vector2 uiPos, float rotDeg, float textWidth, float fontSpacing, Color color, string fontName, Alignement alignement = Alignement.CENTER)
+        {
+            DrawTextAlignedPro2(text, uiPos, rotDeg, textWidth, fontSpacing, color, GetFont(fontName), alignement);
+        }
+        public static void DrawTextAlignedPro3(string text, Vector2 uiPos, float rotDeg, float fontSize, float fontSpacing, Color color, string fontName, Alignement alignement = Alignement.CENTER)
+        {
+            DrawTextAlignedPro3(text, uiPos, rotDeg, fontSize, fontSpacing, color, GetFont(fontName), alignement);
         }
         //public static void DrawTextAlignedPro(string text, Vector2 pos, float rot, FontSize fontSize, float fontSpacing, Color color, Alignement alignement = Alignement.CENTER)
         //{
@@ -227,20 +348,75 @@ namespace ShapeEngineCore.Globals.UI
         //{
         //    DrawTextAlignedPro(text, pos, rot, GetFontSizeScaled(fontSize), Scale(fontSpacing), color, GetFont(fontName), alignement);
         //}
-        public static void DrawTextAligned(string text, Vector2 pos, float fontSize, float fontSpacing, Color color, Font font, Alignement alignement = Alignement.CENTER)
+        public static void DrawTextAligned(string text, Vector2 uiPos, Vector2 textSize, float fontSpacing, Color color, Font font, Alignement alignement = Alignement.CENTER)
+        {
+            float fontSize = CalculateDynamicFontSize(text, textSize, font, fontSpacing);
+            Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
+            Vector2 topLeft = uiPos - GetAlignementVector(alignement) * fontDimensions;
+            DrawTextEx(font, text, topLeft, fontSize, fontSpacing, color);
+            //DrawRectangleLinesEx(new(topLeft.X, topLeft.Y, fontDimensions.X, fontDimensions.Y), 5f, WHITE);
+        }
+        public static void DrawTextAligned(string text, Vector2 uiPos, float textHeight, float fontSpacing, Color color, Font font, Alignement alignement = Alignement.CENTER)
+        {
+            float fontSize = CalculateDynamicFontSize(textHeight, font);
+            Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
+            DrawTextEx(font, text, uiPos - GetAlignementVector(alignement) * fontDimensions, fontSize, fontSpacing, color);
+        }
+        public static void DrawTextAligned2(string text, Vector2 uiPos, float textWidth, float fontSpacing, Color color, Font font, Alignement alignement = Alignement.CENTER)
+        {
+            float fontSize = CalculateDynamicFontSize(text, textWidth, font, fontSpacing);
+            Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
+            DrawTextEx(font, text, uiPos - GetAlignementVector(alignement) * fontDimensions, fontSize, fontSpacing, color);
+        }
+        public static void DrawTextAligned3(string text, Vector2 uiPos, float fontSize, float fontSpacing, Color color, Font font, Alignement alignement = Alignement.CENTER)
         {
             Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
-            DrawTextEx(font, text, pos - GetAlignementVector(alignement) * fontDimensions, fontSize, fontSpacing, color);
-        }
-        public static void DrawTextAligned(string text, Vector2 pos, float fontSize, float fontSpacing, Color color, Alignement alignement = Alignement.CENTER)
-        {
-            DrawTextAligned(text, pos, fontSize, fontSpacing, color, GetFont(), alignement);
-        }
-        public static void DrawTextAligned(string text, Vector2 pos, float fontSize, float fontSpacing, Color color, string fontName, Alignement alignement = Alignement.CENTER)
-        {
-            DrawTextAligned(text, pos, fontSize, fontSpacing, color, GetFont(fontName), alignement);
+            Vector2 topLeft = uiPos - GetAlignementVector(alignement) * fontDimensions;
+            DrawTextEx(font, text, topLeft, fontSize, fontSpacing, color);
+            DrawRectangleLinesEx(new(topLeft.X, topLeft.Y, fontDimensions.X, fontDimensions.Y), 5f, WHITE);
         }
 
+
+        public static void DrawTextAligned(string text, Vector2 uiPos, Vector2 textSize, float fontSpacing, Color color, Alignement alignement = Alignement.CENTER)
+        {
+            DrawTextAligned(text, uiPos, textSize, fontSpacing, color, GetFont(), alignement);
+        }
+        public static void DrawTextAligned(string text, Vector2 uiPos, float textHeight, float fontSpacing, Color color, Alignement alignement = Alignement.CENTER)
+        {
+            DrawTextAligned(text, uiPos, textHeight, fontSpacing, color, GetFont(), alignement);
+        }
+        public static void DrawTextAligned2(string text, Vector2 uiPos, float textWidth, float fontSpacing, Color color, Alignement alignement = Alignement.CENTER)
+        {
+            DrawTextAligned2(text, uiPos, textWidth, fontSpacing, color, GetFont(), alignement);
+        }
+        public static void DrawTextAligned3(string text, Vector2 uiPos, float fontSize, float fontSpacing, Color color, Alignement alignement = Alignement.CENTER)
+        {
+            DrawTextAligned3(text, uiPos, fontSize, fontSpacing, color, GetFont(), alignement);
+        }
+        public static void DrawTextAligned(string text, Rectangle textRect, float fontSpacing, Color color, Alignement alignement = Alignement.CENTER)
+        {
+            DrawTextAligned(text, new Vector2(textRect.X, textRect.Y), new Vector2(textRect.width, textRect.height), fontSpacing, color, GetFont(), alignement);
+        }
+        public static void DrawTextAligned(string text, Vector2 uiPos, Vector2 textSize, float fontSpacing, Color color, string fontName, Alignement alignement = Alignement.CENTER)
+        {
+            DrawTextAligned(text, uiPos, textSize, fontSpacing, color, GetFont(fontName), alignement);
+        }
+        public static void DrawTextAligned(string text, Vector2 uiPos, float fontHeight, float fontSpacing, Color color, string fontName, Alignement alignement = Alignement.CENTER)
+        {
+            DrawTextAligned(text, uiPos, fontHeight, fontSpacing, color, GetFont(fontName), alignement);
+        }
+        public static void DrawTextAligned2(string text, Vector2 uiPos, float fontWidth, float fontSpacing, Color color, string fontName, Alignement alignement = Alignement.CENTER)
+        {
+            DrawTextAligned2(text, uiPos, fontWidth, fontSpacing, color, GetFont(fontName), alignement);
+        }
+        public static void DrawTextAligned3(string text, Vector2 uiPos, float fontSize, float fontSpacing, Color color, string fontName, Alignement alignement = Alignement.CENTER)
+        {
+            DrawTextAligned3(text, uiPos, fontSize, fontSpacing, color, GetFont(fontName), alignement);
+        }
+        public static void DrawTextAligned(string text, Rectangle textRect, float fontSpacing, Color color, string fontName, Alignement alignement = Alignement.CENTER)
+        {
+            DrawTextAligned(text, new Vector2(textRect.X, textRect.Y), new Vector2(textRect.width, textRect.height), fontSpacing, color, GetFont(fontName), alignement);
+        }
         //public static void DrawTextAligned(string text, Vector2 pos, FontSize fontSize, float fontSpacing, Color color, Alignement alignement = Alignement.CENTER)
         //{
         //    DrawTextAligned(text, pos, GetFontSizeScaled(fontSize), Scale(fontSpacing), color, GetFont(), alignement);
@@ -252,12 +428,13 @@ namespace ShapeEngineCore.Globals.UI
 
         public static void DrawBar(Vector2 topLeft, Vector2 size, float f, Color barColor, Color bgColor, BarType barType = BarType.LEFTRIGHT)
         {
-            Rectangle barRect = new(topLeft.X, topLeft.Y, size.X, size.Y);
+            Rectangle barRect = new Rectangle(topLeft.X, topLeft.Y, size.X, size.Y);
             DrawBar(barRect, f, barColor, bgColor, barType);
         }
-        public static void DrawBar(Rectangle rect, float f, Color barColor, Color bgColor, BarType barType = BarType.LEFTRIGHT)
+        public static void DrawBar(Rectangle barRect, float f, Color barColor, Color bgColor, BarType barType = BarType.LEFTRIGHT)
         {
-            Rectangle original = rect;
+            Rectangle original = barRect;
+            Rectangle rect = original;
             switch (barType)
             {
                 case BarType.LEFTRIGHT:
@@ -283,12 +460,13 @@ namespace ShapeEngineCore.Globals.UI
         }
         public static void DrawBar(Vector2 topLeft, Vector2 size, float f, Color barColor, Color bgColor, Color outlineColor, float outlineSize, BarType barType = BarType.LEFTRIGHT)
         {
-            Rectangle barRect = new(topLeft.X, topLeft.Y, size.X, size.Y);
+            Rectangle barRect = new Rectangle(topLeft.X, topLeft.Y, size.X, size.Y);
             DrawBar(barRect, f, barColor, bgColor, outlineColor, outlineSize, barType);
         }
-        public static void DrawBar(Rectangle rect, float f, Color barColor, Color bgColor, Color outlineColor, float outlineSize, BarType barType = BarType.LEFTRIGHT)
+        public static void DrawBar(Rectangle barRect, float f, Color barColor, Color bgColor, Color outlineColor, float outlineSize, BarType barType = BarType.LEFTRIGHT)
         {
-            Rectangle original = rect;
+            Rectangle original = barRect;
+            Rectangle rect = original;
             switch (barType)
             {
                 case BarType.LEFTRIGHT:
