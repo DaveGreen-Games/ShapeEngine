@@ -52,7 +52,7 @@ namespace ShapeEngineDemo
             tb3.SetTextStateColors(new(PaletteHandler.C("text"), PaletteHandler.C("bg2"), PaletteHandler.C("player"), PaletteHandler.C("b1"), PaletteHandler.C("enemy")));
 
 
-            //optionsButton.Disable();
+            optionsButton.Disable();
 
             //startButton.AddShortcut(KeyboardKey.KEY_Q);
             //startButton.SetNeighbor(quitButton, UINeighbors.NeighborDirection.BOTTOM);

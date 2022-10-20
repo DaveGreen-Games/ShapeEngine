@@ -4,6 +4,7 @@ using ShapeEngineCore.Globals.Input;
 using ShapeEngineCore.Globals.Screen;
 using ShapeEngineCore.Globals.Audio;
 using Microsoft.Win32;
+using Vortice.XInput;
 
 namespace ShapeEngineCore.Globals.UI
 {
@@ -36,34 +37,26 @@ namespace ShapeEngineCore.Globals.UI
         protected bool disabled = false;
         protected UINeighbors neighbors = new();
         protected string shortcut = "";
-
-        //protected float hold
-        protected string inputLeft = "UI Left";
-        protected string inputUp = "UI Up";
-        protected string inputRight = "UI Right";
-        protected string inputDown = "UI Down";
-        protected string inputSelect = "UI Select";
-        protected string inputSelectMouse = "UI Select Mouse";
-        protected int playerSlot = -1;
+        
 
         public bool Clicked() { return clicked; }
         protected virtual bool CheckPressed()
         {
-            return hovered && InputHandler.IsDown(playerSlot, inputSelectMouse) || selected && InputHandler.IsDown(playerSlot, inputSelect);
+            return hovered && InputHandler.IsDown(UIHandler.playerSlot, UIHandler.inputSelectMouse) || selected && InputHandler.IsDown(UIHandler.playerSlot, UIHandler.inputSelect);
         }
         protected virtual bool CheckClicked()
         {
-            return hovered && InputHandler.IsReleased(playerSlot, inputSelectMouse) || selected && InputHandler.IsReleased(playerSlot, inputSelect);
+            return hovered && InputHandler.IsReleased(UIHandler.playerSlot, UIHandler.inputSelectMouse) || selected && InputHandler.IsReleased(UIHandler.playerSlot, UIHandler.inputSelect);
         }
         protected virtual bool IsShortcutDown()
         {
             if (shortcut == "") return false;
-            return InputHandler.IsDown(playerSlot, shortcut);
+            return InputHandler.IsDown(UIHandler.playerSlot, shortcut);
         }
         protected virtual bool IsShortcutReleased()
         {
             if (shortcut == "") return false;
-            return InputHandler.IsReleased(playerSlot, shortcut);
+            return InputHandler.IsReleased(UIHandler.playerSlot, shortcut);
         }
 
         public virtual bool IsAutomaticDetectionDirectionEnabled(UINeighbors.NeighborDirection dir) { return true; }
@@ -144,28 +137,8 @@ namespace ShapeEngineCore.Globals.UI
 
 
 
-        public virtual UIElementSelectable? CheckDirectionInput(List<UIElementSelectable> register)
-        {
-            UIElementSelectable? selected = null;
-            if (InputHandler.IsPressed(playerSlot, inputUp))
-            {
-                selected = CheckDirection(UINeighbors.NeighborDirection.TOP, register);
-            }
-            else if (InputHandler.IsPressed(playerSlot, inputRight))
-            {
-                selected = CheckDirection(UINeighbors.NeighborDirection.RIGHT, register);
-            }
-            else if (InputHandler.IsPressed(playerSlot, inputDown))
-            {
-                selected = CheckDirection(UINeighbors.NeighborDirection.BOTTOM, register);
-            }
-            else if (InputHandler.IsPressed(playerSlot, inputLeft))
-            {
-                selected = CheckDirection(UINeighbors.NeighborDirection.LEFT, register);
-            }
-            return selected;
-        }
-        private UIElementSelectable? CheckDirection(UINeighbors.NeighborDirection dir, List<UIElementSelectable> register)
+        
+        public UIElementSelectable? CheckDirection(UINeighbors.NeighborDirection dir, List<UIElementSelectable> register)
         {
             var neighbor = GoToNeighbor(dir);
             if (neighbor != null) return neighbor;
@@ -207,7 +180,7 @@ namespace ShapeEngineCore.Globals.UI
             if (closestIndex < 0 || closestIndex >= neighbors.Count) return null;
             return neighbors[closestIndex];
         }
-        public Vector2 GetDirectionPosition(UINeighbors.NeighborDirection dir)
+        private Vector2 GetDirectionPosition(UINeighbors.NeighborDirection dir)
         {
             Rectangle self = GetRect();
             switch (dir)

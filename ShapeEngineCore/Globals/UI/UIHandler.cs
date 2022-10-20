@@ -3,6 +3,7 @@ using ShapeEngineCore.Globals.Input;
 using ShapeEngineCore.Globals.Screen;
 using System.Numerics;
 using ShapeEngineCore.Globals.Persistent;
+using System.Runtime.CompilerServices;
 
 namespace ShapeEngineCore.Globals.UI
 {
@@ -50,6 +51,17 @@ namespace ShapeEngineCore.Globals.UI
 
         private static Dictionary<string, float> fontSizes = new();
 
+        static float dirInputTimer = -1f;
+        static float dirInputInterval = 0.25f;
+        static UINeighbors.NeighborDirection lastDir = UINeighbors.NeighborDirection.NONE;
+
+        public static string inputLeft = "UI Left";
+        public static string inputUp = "UI Up";
+        public static string inputRight = "UI Right";
+        public static string inputDown = "UI Down";
+        public static string inputSelect = "UI Select";
+        public static string inputSelectMouse = "UI Select Mouse";
+        public static int playerSlot = -1;
 
 
         public static void Initialize()
@@ -57,11 +69,7 @@ namespace ShapeEngineCore.Globals.UI
             defaultFont = GetFontDefault();
         }
 
-        //public static float GetFontSizeScaled(FontSize fontSize)
-        //{
-        //    return GetFontSizeScaled((float)fontSize);
-        //}
-
+        public static void SetDirInputInterval(float newInterval) { dirInputInterval = newInterval; }
 
         public static void AddFontSize(string name, float size)
         {
@@ -78,27 +86,6 @@ namespace ShapeEngineCore.Globals.UI
             if (!fontSizes.ContainsKey(name)) return -1;
             else return fontSizes[name];
         }
-        //public static float GetFontSizeScaled(string name)
-        //{
-        //    if (!fontSizes.ContainsKey(name)) return -1;
-        //    else return fontSizes[name] * ScreenHandler.UI.STRETCH_FACTOR.Y;
-        //}
-
-
-        //public static float ScaleFontSize(int fontSize)
-        //{
-        //    return ScaleFontSize((float)fontSize);
-        //}
-        //public static float ScaleFontSize(float fontSize)
-        //{
-        //    return fontSize * ScreenHandler.UI_FACTOR;
-        //}
-
-        //public static Vector2 Scale(Vector2 v) { return v * ScreenHandler.UI_FACTOR; }
-        //public static float Scale(float f) { return f * ScreenHandler.UI_FACTOR; }
-        //public static int Scale(int i) { return (int)(i * ScreenHandler.UI_FACTOR); }
-
-        
         public static void AddFont(string name, string fileName, int fontSize = 100)
         {
             if (fileName == "" || fonts.ContainsKey(name)) return;
@@ -106,12 +93,6 @@ namespace ShapeEngineCore.Globals.UI
             
             SetTextureFilter(font.texture, TextureFilter.TEXTURE_FILTER_BILINEAR);
             fonts.Add(name, font);
-            //unsafe
-            //{
-            //    Font font = LoadFontEx(fileName, fontSize, (int*)0, 300);
-            //    SetTextureFilter(font.texture, TextureFilter.TEXTURE_FILTER_BILINEAR);
-            //    fonts.Add(name, font);
-            //}
         }
         public static Font GetFont(string name = "")
         {
@@ -147,11 +128,82 @@ namespace ShapeEngineCore.Globals.UI
         {
             if (selected != null)
             {
-                var newSelected = selected.CheckDirectionInput(register);
+                UIElementSelectable? newSelected = null;
+
+                if (dirInputTimer > 0f)
+                {
+                    string input = GetDirInput(lastDir);
+                    if (InputHandler.IsDown(playerSlot, input))
+                    {
+                        dirInputTimer -= dt;
+                        if (dirInputTimer <= 0f) dirInputTimer = 0f;
+                    }
+                    else
+                    {
+                        dirInputTimer = -1f;
+                        lastDir = UINeighbors.NeighborDirection.NONE;
+                    }
+                }
+
+                if (InputHandler.IsPressed(playerSlot, inputUp) || (lastDir == UINeighbors.NeighborDirection.TOP && dirInputTimer == 0f))
+                {
+                    newSelected = selected.CheckDirection(UINeighbors.NeighborDirection.TOP, register);
+                    lastDir = UINeighbors.NeighborDirection.TOP;
+                    if(dirInputInterval > 0f) dirInputTimer = dirInputInterval - dt;
+                }
+                else if (InputHandler.IsPressed(playerSlot, inputRight) || (lastDir == UINeighbors.NeighborDirection.RIGHT && dirInputTimer == 0f))
+                {
+                    newSelected = selected.CheckDirection(UINeighbors.NeighborDirection.RIGHT, register);
+                    lastDir = UINeighbors.NeighborDirection.RIGHT;
+                    if (dirInputInterval > 0f) dirInputTimer = dirInputInterval - dt;
+                }
+                else if (InputHandler.IsPressed(playerSlot, inputDown) || (lastDir == UINeighbors.NeighborDirection.BOTTOM && dirInputTimer == 0f))
+                {
+                    newSelected = selected.CheckDirection(UINeighbors.NeighborDirection.BOTTOM, register);
+                    lastDir = UINeighbors.NeighborDirection.BOTTOM;
+                    if (dirInputInterval > 0f) dirInputTimer = dirInputInterval - dt;
+                }
+                else if (InputHandler.IsPressed(playerSlot, inputLeft) || (lastDir == UINeighbors.NeighborDirection.LEFT && dirInputTimer == 0f))
+                {
+                    newSelected = selected.CheckDirection(UINeighbors.NeighborDirection.LEFT, register);
+                    lastDir = UINeighbors.NeighborDirection.LEFT;
+                    if (dirInputInterval > 0f) dirInputTimer = dirInputInterval - dt;
+                }
+
                 if (newSelected != null) selected = newSelected;
             }
         }
 
+        //private bool IsDown(UINeighbors.NeighborDirection dir)
+        //{
+        //    string input = GetDirInput(dir);
+        //    if (input != "")
+        //    {
+        //        return InputHandler.IsDown(playerSlot, input);
+        //    }
+        //    return false;
+        //}
+        //private bool IsPressed(UINeighbors.NeighborDirection dir)
+        //{
+        //    string input = GetDirInput(dir);
+        //    if (input != "")
+        //    {
+        //        return InputHandler.IsPressed(playerSlot, input);
+        //    }
+        //    return false;
+        //}
+        private static string GetDirInput(UINeighbors.NeighborDirection dir)
+        {
+            switch (dir)
+            {
+                case UINeighbors.NeighborDirection.NONE: return "";
+                case UINeighbors.NeighborDirection.TOP: return inputUp;
+                case UINeighbors.NeighborDirection.RIGHT: return inputRight;
+                case UINeighbors.NeighborDirection.BOTTOM: return inputDown;
+                case UINeighbors.NeighborDirection.LEFT: return inputLeft;
+                default: return "";
+            }
+        }
 
         public static Vector2 GetAlignementVector(Alignement alignement)
         {

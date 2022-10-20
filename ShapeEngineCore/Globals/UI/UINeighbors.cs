@@ -8,7 +8,7 @@ namespace ShapeEngineCore.Globals.UI
 {
     public class UINeighbors
     {
-        public enum NeighborDirection { TOP = 0, RIGHT = 1, BOTTOM = 2, LEFT = 3 };
+        public enum NeighborDirection { NONE = -1, TOP = 0, RIGHT = 1, BOTTOM = 2, LEFT = 3 };
         private UIElementSelectable? top = null;
         private UIElementSelectable? right = null;
         private UIElementSelectable? bottom = null;
