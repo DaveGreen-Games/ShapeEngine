@@ -232,7 +232,8 @@ namespace ShapeEngineDemo.Bodies
         private TargetFinder targetFinder = new("asteroid");
         private Vector2 slowPos = new(0f);
 
-
+        private MultiTapInputActionWrapper doubleTapHeal = new("Heal Player", 2, 0.2f, 0);
+        private HoldInputActionWrapper holdHealPlayer = new("Heal Player", 1.5f, 0);
 
         public Player(ArmoryInfo armoryInfo, string shipName = "default")
         {
@@ -467,8 +468,13 @@ namespace ShapeEngineDemo.Bodies
             var prevStunned = IsStunned();
             base.Update(dt);
 
+            holdHealPlayer.Update(dt);
+            doubleTapHeal.Update(dt);
+            if (holdHealPlayer.IsHoldFinished()) Heal(500, collider.Pos, this);
+            if(doubleTapHeal.IsMultiTapFinished()) Heal(50, collider.Pos, this);
 
-            if (InputHandler.IsReleased(0, "Heal Player")) Heal(RNG.randF(10, 35), collider.Pos, this);
+
+            //if (InputHandler.IsReleased(0, "Heal Player")) Heal(RNG.randF(10, 35), collider.Pos, this);
             //if (InputHandler.GetHoldF(0, "Heal Player") == 0f) Heal(500, collider.Pos, this);
 
             damageTimer.Update(dt);

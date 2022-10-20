@@ -37,80 +37,45 @@ namespace ShapeEngineCore.Globals.UI
         protected UINeighbors neighbors = new();
         protected string shortcut = "";
 
-
+        //protected float hold
         protected string inputLeft = "UI Left";
         protected string inputUp = "UI Up";
         protected string inputRight = "UI Right";
         protected string inputDown = "UI Down";
         protected string inputSelect = "UI Select";
         protected string inputSelectMouse = "UI Select Mouse";
-        protected string inputCancel = "UI Cancel";
-        protected string inputCancelMouse = "UI Cancel Mouse";
+        protected int playerSlot = -1;
 
         public bool Clicked() { return clicked; }
         protected virtual bool CheckPressed()
         {
-            return hovered && InputHandler.IsDown(-1, inputSelectMouse) || selected && InputHandler.IsDown(-1, inputSelect);
+            return hovered && InputHandler.IsDown(playerSlot, inputSelectMouse) || selected && InputHandler.IsDown(playerSlot, inputSelect);
         }
         protected virtual bool CheckClicked()
         {
-            return hovered && InputHandler.IsReleased(-1, inputSelectMouse) || selected && InputHandler.IsReleased(-1, inputSelect);
+            return hovered && InputHandler.IsReleased(playerSlot, inputSelectMouse) || selected && InputHandler.IsReleased(playerSlot, inputSelect);
         }
-        protected bool IsShortcutDown()
+        protected virtual bool IsShortcutDown()
         {
             if (shortcut == "") return false;
-            return InputHandler.IsDown(-1, shortcut);
-            //if (keyboardShortcuts.Count <= 0 && mouseShortcuts.Count <= 0) return false;
-            //foreach (var button in keyboardShortcuts)
-            //{
-            //    if (IsKeyDown(button)) return true;
-            //}
-            //foreach (var button in mouseShortcuts)
-            //{
-            //    if (IsMouseButtonDown(button)) return true;
-            //}
-            //return false;
+            return InputHandler.IsDown(playerSlot, shortcut);
         }
-        protected bool IsShortcutReleased()
+        protected virtual bool IsShortcutReleased()
         {
             if (shortcut == "") return false;
-            return InputHandler.IsReleased(-1, shortcut);
-            //if (keyboardShortcuts.Count <= 0 && mouseShortcuts.Count <= 0) return false;
-            //foreach (var button in keyboardShortcuts)
-            //{
-            //    if (IsKeyReleased(button)) return true;
-            //}
-            //foreach (var button in mouseShortcuts)
-            //{
-            //    if (IsMouseButtonReleased(button)) return true;
-            //}
-            //return false;
+            return InputHandler.IsReleased(playerSlot, shortcut);
         }
 
         public virtual bool IsAutomaticDetectionDirectionEnabled(UINeighbors.NeighborDirection dir) { return true; }
-        //public void AddShortcut(KeyboardKey key)
-        //{
-        //    if (keyboardShortcuts.Contains(key)) return;
-        //    keyboardShortcuts.Add(key);
-        //}
+        
         public void AddShortcut(string newShortcut)
         {
-            //if (mouseShortcuts.Contains(button)) return;
-            //mouseShortcuts.Add(button);
             shortcut = newShortcut;
         }
         public void RemoveShortcut()
         {
             shortcut = "";
         }
-        //public void RemoveShortcut(MouseButton button)
-        //{
-        //    mouseShortcuts.Remove(button);
-        //}
-        //public Rectangle GetRect() { return rect; }
-
-
-        
         public void SetNeighbor(UIElementSelectable neighbor, UINeighbors.NeighborDirection dir) { neighbors.SetNeighbor(neighbor, dir); }
         public bool IsSelected() { return selected; }
         public void Disable() { disabled = true; }
@@ -131,14 +96,8 @@ namespace ShapeEngineCore.Globals.UI
         }
         public override void Update(float dt, Vector2 mousePosUI)
         {
-            //if (Screen.HasMonitorChanged())
-            //{
-            //    MonitorHasChanged();
-            //}
-
             clicked = false;
             if (disabled) return;
-
             bool shortcutPressed = IsShortcutDown();
             bool shortcutReleased = IsShortcutReleased();
             var prevPressed = pressed;
@@ -185,28 +144,25 @@ namespace ShapeEngineCore.Globals.UI
 
 
 
-        public UIElementSelectable? CheckDirectionInput(List<UIElementSelectable> register)
+        public virtual UIElementSelectable? CheckDirectionInput(List<UIElementSelectable> register)
         {
             UIElementSelectable? selected = null;
-            if (InputHandler.IsPressed(-1, inputUp))
+            if (InputHandler.IsPressed(playerSlot, inputUp))
             {
                 selected = CheckDirection(UINeighbors.NeighborDirection.TOP, register);
             }
-            else if (InputHandler.IsPressed(-1, inputRight))
+            else if (InputHandler.IsPressed(playerSlot, inputRight))
             {
                 selected = CheckDirection(UINeighbors.NeighborDirection.RIGHT, register);
             }
-            else if (InputHandler.IsPressed(-1, inputDown))
+            else if (InputHandler.IsPressed(playerSlot, inputDown))
             {
                 selected = CheckDirection(UINeighbors.NeighborDirection.BOTTOM, register);
             }
-            else if (InputHandler.IsPressed(-1, inputLeft))
+            else if (InputHandler.IsPressed(playerSlot, inputLeft))
             {
                 selected = CheckDirection(UINeighbors.NeighborDirection.LEFT, register);
             }
-            //else return this; // no input detected therefore element stays selected
-
-
             return selected;
         }
         private UIElementSelectable? CheckDirection(UINeighbors.NeighborDirection dir, List<UIElementSelectable> register)
