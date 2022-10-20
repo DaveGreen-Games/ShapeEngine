@@ -165,8 +165,13 @@ namespace ShapeEngineCore.Globals.Input
         private bool disabled = false;
         //private int gamepadIndex = -1;
         private float deadzone = 0.25f;
-        //private string keyboardMouseKeyName = "";
-        //private string gamepadKeyName = "";
+
+        private float holdInterval = 0f;
+        private float holdTimer = -1f;
+        
+        private float doubleTapInterval = 0f;
+        //private float doubleTapTimer = 0f;
+        //private bool doubleTapRelease = false;
 
         public InputAction(string name, params Keys[] keys)
         {
@@ -176,16 +181,16 @@ namespace ShapeEngineCore.Globals.Input
                 AddKey(key);
             }
         }
-        //public InputAction(string name, string keyboardMouseKeyName, string gamepadKeyName, params Keys[] keys)
-        //{
-        //    this.name = name;
-        //    this.keyboardMouseKeyName = keyboardMouseKeyName;
-        //    this.gamepadKeyName = gamepadKeyName;
-        //    foreach (var key in keys)
-        //    {
-        //        AddKey(key);
-        //    }
-        //}
+        public InputAction(string name, float doubleTapInterval, float holdInterval, params Keys[] keys)
+        {
+            this.name = name;
+            this.doubleTapInterval = doubleTapInterval;
+            this.holdInterval = holdInterval;
+            foreach (var key in keys)
+            {
+                AddKey(key);
+            }
+        }
         public InputAction(string name, float deadzone, params Keys[] keys)
         {
             this.name = name;
@@ -195,15 +200,68 @@ namespace ShapeEngineCore.Globals.Input
                 AddKey(key);
             }
         }
-        //public InputAction(string name, float deadzone, string keyboardMouseKeyName, string gamepadKeyName, params Keys[] keys)
+        public InputAction(string name, float deadzone, float doubleTapInterval, float holdInterval, params Keys[] keys)
+        {
+            this.name = name;
+            this.deadzone = deadzone;
+            this.doubleTapInterval = doubleTapInterval;
+            this.holdInterval = holdInterval;
+            foreach (var key in keys)
+            {
+                AddKey(key);
+            }
+        }
+        
+        public void Update(float dt, int gamepad, bool gamepadOnly)
+        {
+            if(holdInterval > 0f)
+            {
+                if (holdTimer < 0f) // no hold in progress
+                {
+                    if (IsPressed(gamepad, gamepadOnly))
+                    {
+                        holdTimer = holdInterval - dt; // hold started
+                    }
+                }
+                else if (holdTimer >= 0f) // hold in progress or finished
+                {
+                    if (IsReleased(gamepad, gamepadOnly))
+                    {
+                        holdTimer = -1f; // hold canceled
+                    }
+                    else
+                    {
+                        if (holdTimer > 0f)
+                        {
+                            holdTimer -= dt;
+                            if (holdTimer <= 0f) holdTimer = 0f; //hold finished
+                        }
+                        else holdTimer = holdInterval; // restart hold
+
+                    }
+                }
+            }
+        }
+
+        public bool HasHold() { return holdInterval > 0f; }
+        public float GetHoldF()
+        {
+            if (holdInterval <= 0f) return -1f;
+            if (holdTimer < 0f) return -1f;
+            return 1.0f - ( holdTimer / holdInterval );
+        }
+        //public bool IsHoldFinished()
         //{
-        //    this.name = name;
-        //    this.deadzone = deadzone;
-        //    this.keyboardMouseKeyName = keyboardMouseKeyName;
-        //    this.gamepadKeyName = gamepadKeyName;
-        //    foreach (var key in keys)
+        //    return holdTimer == 0f;
+        //}
+        //public bool IsDoubleTap()
+        //{
+        //    if(doubleTapTimer > 0f)
         //    {
-        //        AddKey(key);
+        //        if (doubleTapRelease)
+        //        {
+        //
+        //        }
         //    }
         //}
 

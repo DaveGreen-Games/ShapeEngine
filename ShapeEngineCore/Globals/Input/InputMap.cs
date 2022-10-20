@@ -18,6 +18,13 @@ namespace ShapeEngineCore.Globals.Input
             }
         }
 
+        public void Update(float dt, int gamepad, bool gamepadOnly)
+        {
+            foreach (var inputAction in inputActions.Values)
+            {
+                inputAction.Update(dt, gamepad, gamepadOnly);
+            }
+        }
         //public int GamepadIndex { get { return gamepad; } }
         //public bool HasGamepad { get { return gamepad >= 0; } }
         public void Rename(string newName) { name = newName; }
@@ -78,7 +85,11 @@ namespace ShapeEngineCore.Globals.Input
             return new(GetGamepadAxis(gamepad, gamepadAxisHor), GetGamepadAxis(gamepad, gamepadAxisVer));
         }
 
-
+        public float GetHoldF(int gamepad, string actionName, bool gamepadOnly = false)
+        {
+            if (inputActions.Count <= 0 || !inputActions.ContainsKey(actionName)) return -1f;
+            return inputActions[actionName].GetHoldF();
+        }
         public bool IsDown(int gamepad, string actionName, bool gamepadOnly = false)
         {
             if (inputActions.Count <= 0 || !inputActions.ContainsKey(actionName)) return false;

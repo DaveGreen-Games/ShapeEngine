@@ -164,11 +164,13 @@ namespace ShapeEngineDemo
             InputAction pause = new("Pause", InputAction.Keys.P);
             InputAction slowTime = new("Slow Time", InputAction.Keys.LEFT_ALT);
             
-            InputAction healPlayerDebug = new("Heal Player", InputAction.Keys.H);
+            InputAction healPlayerDebug = new("Heal Player", 0f, 2f, InputAction.Keys.H);
             InputAction spawnAsteroidDebug = new("Spawn Asteroid", InputAction.Keys.G);
             InputAction toggleDrawHelpersDebug = new("Toggle Draw Helpers", InputAction.Keys.EIGHT);
             InputAction toggleDrawCollidersDebug = new("Toggle Draw Colliders", InputAction.Keys.NINE);
             InputAction cycleZoomDebug = new("Cycle Zoom", InputAction.Keys.ZERO);
+
+
             InputMap inputMap = new("Default", 
                 iaQuit, iaFullscreen, 
                 rotateLeft, rotateRight, rotate, 

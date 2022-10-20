@@ -35,9 +35,16 @@ namespace ShapeEngineCore.Globals.Input
             curInputMap = new("empty");
             this.gamepadIndex = gamepadIndex;
         }
-        public void Update(float dt)
+        public void Update(float dt, bool gamepadOnly)
         {
+            curInputMap.Update(dt, gamepadIndex, gamepadOnly);
             UpdateVibration(dt);
+        }
+
+        public float GetHoldF(string actionName, bool gamepadOnly)
+        {
+            if (disabled) return -1f;
+            return curInputMap.GetHoldF(gamepadIndex, actionName, gamepadOnly);
         }
         public bool IsDown(string actionName, bool gamepadOnly)
         {
@@ -219,9 +226,9 @@ namespace ShapeEngineCore.Globals.Input
         {
             CheckGamepadConnection();
             CheckInputType();
-            foreach (var slot in inputSlots.Values)
+            foreach (var slot in inputSlots)
             {
-                slot.Update(dt);
+                slot.Value.Update(dt, slot.Key > 0);
             }
         }
 
@@ -395,6 +402,25 @@ namespace ShapeEngineCore.Globals.Input
             inputMaps[name].Rename(newName);
         }
 
+        public static float GetHoldF(int playerSlot, string actionName)
+        {
+            if (playerSlot < 0)
+            {
+                for (int i = 0; i < inputSlots.Count; i++)
+                {
+                    var slot = inputSlots[i];
+                    float f = slot.GetHoldF(actionName, i > 0);
+                    if (f >= 0f) return f;
+                }
+                return -1f;
+            }
+            else
+            {
+                var slot = GetInputSlot(playerSlot);
+                if (slot == null) return -1f;
+                return slot.GetHoldF(actionName, playerSlot > 0);
+            }
+        }
         public static bool IsDown(int playerSlot, string actionName)
         {
             if(playerSlot < 0)

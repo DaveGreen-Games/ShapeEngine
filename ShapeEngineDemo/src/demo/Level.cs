@@ -9,6 +9,7 @@ using ShapeEngineCore.Globals.Input;
 using ShapeEngineCore.Globals.Timing;
 using ShapeEngineCore.Globals.Cursor;
 using ShapeEngineDemo.Bodies;
+using Windows.Devices.PointOfService;
 
 namespace ShapeEngineDemo
 {
@@ -290,6 +291,12 @@ namespace ShapeEngineDemo
                 var pos = GAMELOOP.UISize();
                 UIHandler.DrawTextAlignedPro("PAUSED", uiSize * new Vector2(0.5f, 0.3f), 0f, uiSize * new Vector2(0.5f, 0.25f), 5f, PaletteHandler.C("header"), Alignement.CENTER);
             }
+
+            //float f = InputHandler.GetHoldF(0, "Hold");
+            //Vector2 barSize = uiSize * new Vector2(0.25f, 0.05f);
+            //Vector2 barTL = uiSize * new Vector2(0.5f, 0.65f) - barSize / 2;
+            //DrawRectangleV(barTL, barSize, DARKPURPLE);
+            //if(f >= 0f)DrawRectangleV(barTL, new Vector2(barSize.X * f, barSize.Y), PURPLE);
         }
         public override void Close()
         {
