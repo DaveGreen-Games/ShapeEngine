@@ -166,10 +166,10 @@ namespace ShapeEngineCore.Globals.Input
         //private int gamepadIndex = -1;
         private float deadzone = 0.25f;
 
-        private float holdInterval = 0f;
-        private float holdTimer = -1f;
-        
-        private float doubleTapInterval = 0f;
+        //private float holdInterval = 0f;
+        //private float holdTimer = -1f;
+        //
+        //private float doubleTapInterval = 0f;
         //private float doubleTapTimer = 0f;
         //private bool doubleTapRelease = false;
 
@@ -181,16 +181,16 @@ namespace ShapeEngineCore.Globals.Input
                 AddKey(key);
             }
         }
-        public InputAction(string name, float doubleTapInterval, float holdInterval, params Keys[] keys)
-        {
-            this.name = name;
-            this.doubleTapInterval = doubleTapInterval;
-            this.holdInterval = holdInterval;
-            foreach (var key in keys)
-            {
-                AddKey(key);
-            }
-        }
+        //public InputAction(string name, float doubleTapInterval, float holdInterval, params Keys[] keys)
+        //{
+        //    this.name = name;
+        //    this.doubleTapInterval = doubleTapInterval;
+        //    this.holdInterval = holdInterval;
+        //    foreach (var key in keys)
+        //    {
+        //        AddKey(key);
+        //    }
+        //}
         public InputAction(string name, float deadzone, params Keys[] keys)
         {
             this.name = name;
@@ -200,56 +200,63 @@ namespace ShapeEngineCore.Globals.Input
                 AddKey(key);
             }
         }
-        public InputAction(string name, float deadzone, float doubleTapInterval, float holdInterval, params Keys[] keys)
-        {
-            this.name = name;
-            this.deadzone = deadzone;
-            this.doubleTapInterval = doubleTapInterval;
-            this.holdInterval = holdInterval;
-            foreach (var key in keys)
-            {
-                AddKey(key);
-            }
-        }
+        //public InputAction(string name, float deadzone, float doubleTapInterval, float holdInterval, params Keys[] keys)
+        //{
+        //    this.name = name;
+        //    this.deadzone = deadzone;
+        //    this.doubleTapInterval = doubleTapInterval;
+        //    this.holdInterval = holdInterval;
+        //    foreach (var key in keys)
+        //    {
+        //        AddKey(key);
+        //    }
+        //}
         
-        public void Update(float dt, int gamepad, bool gamepadOnly)
+        public List<Keys> GetActionKeys()
         {
-            if(holdInterval > 0f)
-            {
-                if (holdTimer < 0f) // no hold in progress
-                {
-                    if (IsPressed(gamepad, gamepadOnly))
-                    {
-                        holdTimer = holdInterval - dt; // hold started
-                    }
-                }
-                else if (holdTimer >= 0f) // hold in progress or finished
-                {
-                    if (IsReleased(gamepad, gamepadOnly))
-                    {
-                        holdTimer = -1f; // hold canceled
-                    }
-                    else
-                    {
-                        if (holdTimer > 0f)
-                        {
-                            holdTimer -= dt;
-                            if (holdTimer <= 0f) holdTimer = 0f; //hold finished
-                        }
-                        else holdTimer = holdInterval; // restart hold
-
-                    }
-                }
-            }
+            List<Keys> keys = new List<Keys>();
+            keys.AddRange(actionKeys);
+            return keys;
         }
+        //public void Update(float dt, int gamepad, bool gamepadOnly)
+        //{
+        //    if(holdInterval > 0f)
+        //    {
+        //        if (holdTimer < 0f) // no hold in progress
+        //        {
+        //            if (IsPressed(gamepad, gamepadOnly))
+        //            {
+        //                holdTimer = holdInterval - dt; // hold started
+        //            }
+        //        }
+        //        else if (holdTimer >= 0f) // hold in progress or finished
+        //        {
+        //            if (IsReleased(gamepad, gamepadOnly))
+        //            {
+        //                holdTimer = -1f; // hold canceled
+        //            }
+        //            else
+        //            {
+        //                if (holdTimer > 0f)
+        //                {
+        //                    holdTimer -= dt;
+        //                    if (holdTimer <= 0f) holdTimer = 0f; //hold finished
+        //                }
+        //                else holdTimer = holdInterval; // restart hold
+        //
+        //            }
+        //        }
+        //    }
+        //}
 
-        public bool HasHold() { return holdInterval > 0f; }
-        public float GetHoldF()
-        {
-            if (holdInterval <= 0f) return -1f;
-            if (holdTimer < 0f) return -1f;
-            return 1.0f - ( holdTimer / holdInterval );
-        }
+        //public bool HasHold() { return holdInterval > 0f; }
+        //public float GetHoldF()
+        //{
+        //    if (holdInterval <= 0f) return -1f;
+        //    if (holdTimer < 0f) return -1f;
+        //    return 1.0f - ( holdTimer / holdInterval );
+        //}
+
         //public bool IsHoldFinished()
         //{
         //    return holdTimer == 0f;

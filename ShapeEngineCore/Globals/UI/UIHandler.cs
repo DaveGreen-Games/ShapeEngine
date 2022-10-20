@@ -145,28 +145,11 @@ namespace ShapeEngineCore.Globals.UI
         }
         public static void Update(float dt)
         {
-
             if (selected != null)
             {
-                
-                if (InputHandler.IsPressed(-1, "UI Up"))
-                {
-                    CheckDirection(UINeighbors.NeighborDirection.TOP);
-                }
-                else if (InputHandler.IsPressed(-1, "UI Right"))
-                {
-                    CheckDirection(UINeighbors.NeighborDirection.RIGHT);
-                }
-                else if (InputHandler.IsPressed(-1, "UI Down"))
-                {
-                    CheckDirection(UINeighbors.NeighborDirection.BOTTOM);
-                }
-                else if (InputHandler.IsPressed(-1, "UI Left"))
-                {
-                    CheckDirection(UINeighbors.NeighborDirection.LEFT);
-                }
+                var newSelected = selected.CheckDirectionInput(register);
+                if (newSelected != null) selected = newSelected;
             }
-
         }
 
 
@@ -426,69 +409,7 @@ namespace ShapeEngineCore.Globals.UI
         //    DrawTextAligned(text, pos, GetFontSizeScaled(fontSize), Scale(fontSpacing), color, GetFont(fontName), alignement);
         //}
 
-        public static void DrawBar(Vector2 topLeft, Vector2 size, float f, Color barColor, Color bgColor, BarType barType = BarType.LEFTRIGHT)
-        {
-            Rectangle barRect = new Rectangle(topLeft.X, topLeft.Y, size.X, size.Y);
-            DrawBar(barRect, f, barColor, bgColor, barType);
-        }
-        public static void DrawBar(Rectangle barRect, float f, Color barColor, Color bgColor, BarType barType = BarType.LEFTRIGHT)
-        {
-            Rectangle original = barRect;
-            Rectangle rect = original;
-            switch (barType)
-            {
-                case BarType.LEFTRIGHT:
-                    rect.width *= f;
-                    break;
-                case BarType.RIGHTLEFT:
-                    rect.X += rect.width * (1.0f - f);
-                    rect.width *= f;
-                    break;
-                case BarType.TOPBOTTOM:
-                    rect.height *= f;
-                    break;
-                case BarType.BOTTOMTOP:
-                    rect.Y += rect.height * (1.0f - f);
-                    rect.height *= f;
-                    break;
-                default:
-                    rect.width *= f;
-                    break;
-            }
-            DrawRectangleRec(original, bgColor);
-            DrawRectangleRec(rect, barColor);
-        }
-        public static void DrawBar(Vector2 topLeft, Vector2 size, float f, Color barColor, Color bgColor, Color outlineColor, float outlineSize, BarType barType = BarType.LEFTRIGHT)
-        {
-            Rectangle barRect = new Rectangle(topLeft.X, topLeft.Y, size.X, size.Y);
-            DrawBar(barRect, f, barColor, bgColor, outlineColor, outlineSize, barType);
-        }
-        public static void DrawBar(Rectangle barRect, float f, Color barColor, Color bgColor, Color outlineColor, float outlineSize, BarType barType = BarType.LEFTRIGHT)
-        {
-            Rectangle original = barRect;
-            Rectangle rect = original;
-            switch (barType)
-            {
-                case BarType.LEFTRIGHT:
-                    rect.width *= f;
-                    break;
-                case BarType.RIGHTLEFT:
-                    rect.X += rect.width * (1.0f - f);
-                    break;
-                case BarType.TOPBOTTOM:
-                    rect.height *= f;
-                    break;
-                case BarType.BOTTOMTOP:
-                    rect.Y += rect.height * (1.0f - f);
-                    break;
-                default:
-                    rect.width *= f;
-                    break;
-            }
-            DrawRectangleRec(original, bgColor);
-            DrawRectangleRec(rect, barColor);
-            if (outlineSize > 0f) DrawRectangleLinesEx(original, outlineSize, outlineColor);
-        }
+        
         public static void Close()
         {
             foreach (Font font in fonts.Values)
@@ -501,48 +422,7 @@ namespace ShapeEngineCore.Globals.UI
         }
 
 
-        private static void CheckDirection(UINeighbors.NeighborDirection dir)
-        {
-            if (selected == null) return;
-            var neighbor = selected.GoToNeighbor(dir);
-            if (neighbor != null) selected = neighbor;
-            else if (selected.IsAutomaticDetectionDirectionEnabled(dir))
-            {
-                var closest = FindNeighbor(selected, dir);
-                if (closest != null)
-                {
-                    selected.Deselect();
-                    selected = closest;
-                    selected.Select();
-                }
-            }
-        }
-        private static UIElementSelectable? FindNeighbor(UIElementSelectable current, UINeighbors.NeighborDirection dir)
-        {
-            if (current == null) return null;
-            if (register == null || register.Count <= 0) return null;
-            List<UIElementSelectable> neighbors = register.FindAll(e => e != current && !e.IsDisabled());// && e.IsAutomaticDetectionDirectionEnabled(dir));
-            if (neighbors.Count <= 0) return null;
-            if (neighbors.Count == 1)
-            {
-                if (current.CheckNeighborDistance(neighbors[0], dir) < float.PositiveInfinity) return neighbors[0];
-                else return null;
-            }
-            int closestIndex = -1;
-            float closestDistance = float.PositiveInfinity;
-            for (int i = 0; i < neighbors.Count; i++)
-            {
-                float dis = current.CheckNeighborDistance(neighbors[i], dir);
-                if (dis < closestDistance)
-                {
-                    closestDistance = dis;
-                    closestIndex = i;
-                }
-            }
-
-            if (closestIndex < 0 || closestIndex >= neighbors.Count) return null;
-            return neighbors[closestIndex];
-        }
+        
     }
 
 }

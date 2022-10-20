@@ -14,6 +14,8 @@ namespace ShapeEngineDemo
         //MazeGenerator.Maze maze;
         //MazeGenerator.MazeDrawer mazeDrawer;
         ButtonLabel level1Button, quitButton, optionsButton;
+
+        ButtonLabel tb1, tb2, tb3;
         public MainMenu()
         {
             //maze = new(16, 9);
@@ -35,21 +37,45 @@ namespace ShapeEngineDemo
             quitButton.SetStateColors(new(PaletteHandler.C("bg2"), PaletteHandler.C("energy"), PaletteHandler.C("player"), PaletteHandler.C("sepcial1"), PaletteHandler.C("neutral")));
             quitButton.SetTextStateColors(new(PaletteHandler.C("text"), PaletteHandler.C("bg2"), PaletteHandler.C("player"), PaletteHandler.C("b1"), PaletteHandler.C("enemy")));
 
-            optionsButton.Disable();
+
+
+            tb1 = new("TEST 1", "medium");
+            tb1.SetStateColors(new(PaletteHandler.C("bg2"), PaletteHandler.C("energy"), PaletteHandler.C("player"), PaletteHandler.C("sepcial1"), PaletteHandler.C("neutral")));
+            tb1.SetTextStateColors(new(PaletteHandler.C("text"), PaletteHandler.C("bg2"), PaletteHandler.C("player"), PaletteHandler.C("b1"), PaletteHandler.C("enemy")));
+
+            tb2 = new("TEST 2", "medium");
+            tb2.SetStateColors(new(PaletteHandler.C("bg2"), PaletteHandler.C("energy"), PaletteHandler.C("player"), PaletteHandler.C("sepcial1"), PaletteHandler.C("neutral")));
+            tb2.SetTextStateColors(new(PaletteHandler.C("text"), PaletteHandler.C("bg2"), PaletteHandler.C("player"), PaletteHandler.C("b1"), PaletteHandler.C("enemy")));
+
+            tb3 = new("TEST 3", "medium");
+            tb3.SetStateColors(new(PaletteHandler.C("bg2"), PaletteHandler.C("energy"), PaletteHandler.C("player"), PaletteHandler.C("sepcial1"), PaletteHandler.C("neutral")));
+            tb3.SetTextStateColors(new(PaletteHandler.C("text"), PaletteHandler.C("bg2"), PaletteHandler.C("player"), PaletteHandler.C("b1"), PaletteHandler.C("enemy")));
+
+
+            //optionsButton.Disable();
+
             //startButton.AddShortcut(KeyboardKey.KEY_Q);
             //startButton.SetNeighbor(quitButton, UINeighbors.NeighborDirection.BOTTOM);
             //startButton.SetNeighbor(quitButton, UINeighbors.NeighborDirection.TOP);
             //quitButton.SetNeighbor(startButton, UINeighbors.NeighborDirection.BOTTOM);
             //quitButton.SetNeighbor(startButton, UINeighbors.NeighborDirection.TOP);
+
+        }
+        public override void Start()
+        {
             UIHandler.SelectUIElement(level1Button);
         }
-
         public override void Activate(Scene? oldScene)
         {
             base.Activate(oldScene);
             UIHandler.RegisterUIElement(level1Button);
             UIHandler.RegisterUIElement(optionsButton);
             UIHandler.RegisterUIElement(quitButton);
+
+            UIHandler.RegisterUIElement(tb1);
+            UIHandler.RegisterUIElement(tb2);
+            UIHandler.RegisterUIElement(tb3);
+
             CursorHandler.Switch("ui");
             GAMELOOP.backgroundColor = PaletteHandler.C("bg2");
             GAMELOOP.RemoveScene("level1");
@@ -61,6 +87,10 @@ namespace ShapeEngineDemo
             UIHandler.UnregisterUIElement(level1Button);
             UIHandler.UnregisterUIElement(optionsButton);
             UIHandler.UnregisterUIElement(quitButton);
+
+            UIHandler.UnregisterUIElement(tb1);
+            UIHandler.UnregisterUIElement(tb2);
+            UIHandler.UnregisterUIElement(tb3);
         }
         public override void Update(float dt)
         {
@@ -74,6 +104,15 @@ namespace ShapeEngineDemo
             level1Button.Update(dt, GAMELOOP.MOUSE_POS_UI);
             optionsButton.Update(dt, GAMELOOP.MOUSE_POS_UI);
             quitButton.Update(dt, GAMELOOP.MOUSE_POS_UI);
+
+            tb1.UpdateRect(center + offset * 3, size);
+            tb2.UpdateRect(center - new Vector2(size.X * 1.7f, 0f), size * 1.2f);
+            tb3.UpdateRect(center + size * 1.5f, size * 0.5f);
+            tb1.Update(dt, GAMELOOP.MOUSE_POS_UI);
+            tb2.Update(dt, GAMELOOP.MOUSE_POS_UI);
+            tb3.Update(dt, GAMELOOP.MOUSE_POS_UI);
+
+
             if (level1Button.Clicked())
             {
                 GAMELOOP.AddScene("level1", new Level());
@@ -119,7 +158,9 @@ namespace ShapeEngineDemo
             optionsButton.Draw(uiSize, stretchFactor);
             quitButton.Draw(uiSize, stretchFactor);
 
-
+            tb1.Draw(uiSize, stretchFactor);
+            tb2.Draw(uiSize, stretchFactor);
+            tb3.Draw(uiSize, stretchFactor);
             //Vector2 barSize = uiSize * new Vector2(0.5f, 0.05f);// * stretchFactor;
             //Vector2 center = uiSize * new Vector2(0.5f, 0.3f); // * stretchFactor;
             //Vector2 topleft = center - barSize / 2;

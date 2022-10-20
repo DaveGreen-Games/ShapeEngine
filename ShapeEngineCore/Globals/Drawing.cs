@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Raylib_CsLo;
+using ShapeEngineCore.Globals.UI;
 
 namespace ShapeEngineCore.Globals
 {
@@ -336,6 +337,74 @@ namespace ShapeEngineCore.Globals
             float circumference = 2.0f * PI * radius * (angleDeg / 360f);
             return (int)MathF.Max(circumference / maxLength, 1);
         }
+
+
+
+        public static void DrawBar(Vector2 topLeft, Vector2 size, float f, Color barColor, Color bgColor, BarType barType = BarType.LEFTRIGHT)
+        {
+            Rectangle barRect = new Rectangle(topLeft.X, topLeft.Y, size.X, size.Y);
+            DrawBar(barRect, f, barColor, bgColor, barType);
+        }
+        public static void DrawBar(Rectangle barRect, float f, Color barColor, Color bgColor, BarType barType = BarType.LEFTRIGHT)
+        {
+            Rectangle original = barRect;
+            Rectangle rect = original;
+            switch (barType)
+            {
+                case BarType.LEFTRIGHT:
+                    rect.width *= f;
+                    break;
+                case BarType.RIGHTLEFT:
+                    rect.X += rect.width * (1.0f - f);
+                    rect.width *= f;
+                    break;
+                case BarType.TOPBOTTOM:
+                    rect.height *= f;
+                    break;
+                case BarType.BOTTOMTOP:
+                    rect.Y += rect.height * (1.0f - f);
+                    rect.height *= f;
+                    break;
+                default:
+                    rect.width *= f;
+                    break;
+            }
+            DrawRectangleRec(original, bgColor);
+            DrawRectangleRec(rect, barColor);
+        }
+        public static void DrawBar(Vector2 topLeft, Vector2 size, float f, Color barColor, Color bgColor, Color outlineColor, float outlineSize, BarType barType = BarType.LEFTRIGHT)
+        {
+            Rectangle barRect = new Rectangle(topLeft.X, topLeft.Y, size.X, size.Y);
+            DrawBar(barRect, f, barColor, bgColor, outlineColor, outlineSize, barType);
+        }
+        public static void DrawBar(Rectangle barRect, float f, Color barColor, Color bgColor, Color outlineColor, float outlineSize, BarType barType = BarType.LEFTRIGHT)
+        {
+            Rectangle original = barRect;
+            Rectangle rect = original;
+            switch (barType)
+            {
+                case BarType.LEFTRIGHT:
+                    rect.width *= f;
+                    break;
+                case BarType.RIGHTLEFT:
+                    rect.X += rect.width * (1.0f - f);
+                    break;
+                case BarType.TOPBOTTOM:
+                    rect.height *= f;
+                    break;
+                case BarType.BOTTOMTOP:
+                    rect.Y += rect.height * (1.0f - f);
+                    break;
+                default:
+                    rect.width *= f;
+                    break;
+            }
+            DrawRectangleRec(original, bgColor);
+            DrawRectangleRec(rect, barColor);
+            if (outlineSize > 0f) DrawRectangleLinesEx(original, outlineSize, outlineColor);
+        }
+
+
 
         public static float TransformAngleDeg(float angleDeg) { return 450f - angleDeg; }
         public static float TransformAngleRad(float angleRad) { return 2.5f * PI - angleRad; }

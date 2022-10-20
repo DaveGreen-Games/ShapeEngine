@@ -469,7 +469,7 @@ namespace ShapeEngineDemo.Bodies
 
 
             if (InputHandler.IsReleased(0, "Heal Player")) Heal(RNG.randF(10, 35), collider.Pos, this);
-            if (InputHandler.GetHoldF(0, "Heal Player") == 0f) Heal(500, collider.Pos, this);
+            //if (InputHandler.GetHoldF(0, "Heal Player") == 0f) Heal(500, collider.Pos, this);
 
             damageTimer.Update(dt);
 

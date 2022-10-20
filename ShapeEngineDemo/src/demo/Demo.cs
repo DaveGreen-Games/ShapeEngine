@@ -164,7 +164,7 @@ namespace ShapeEngineDemo
             InputAction pause = new("Pause", InputAction.Keys.P);
             InputAction slowTime = new("Slow Time", InputAction.Keys.LEFT_ALT);
             
-            InputAction healPlayerDebug = new("Heal Player", 0f, 2f, InputAction.Keys.H);
+            InputAction healPlayerDebug = new("Heal Player",InputAction.Keys.H);
             InputAction spawnAsteroidDebug = new("Spawn Asteroid", InputAction.Keys.G);
             InputAction toggleDrawHelpersDebug = new("Toggle Draw Helpers", InputAction.Keys.EIGHT);
             InputAction toggleDrawCollidersDebug = new("Toggle Draw Colliders", InputAction.Keys.NINE);
@@ -180,7 +180,8 @@ namespace ShapeEngineDemo
                 spawnAsteroidDebug, healPlayerDebug, toggleDrawCollidersDebug, toggleDrawHelpersDebug, cycleZoomDebug, 
                 cycleResolutionsDebug, nextMonitorDebug, cycleFramerateLimitDebug, toggleVsyncDebug
                 );
-            InputHandler.AddInputMap(inputMap, true);
+            inputMap.AddActions(InputHandler.UI_Default_InputActions.Values.ToList());
+            InputHandler.AddInputMap(inputMap);
             InputHandler.SwitchToMap("Default", 0);
 
 

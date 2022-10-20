@@ -35,17 +35,17 @@ namespace ShapeEngineCore.Globals.Input
             curInputMap = new("empty");
             this.gamepadIndex = gamepadIndex;
         }
-        public void Update(float dt, bool gamepadOnly)
-        {
-            curInputMap.Update(dt, gamepadIndex, gamepadOnly);
-            UpdateVibration(dt);
-        }
-
-        public float GetHoldF(string actionName, bool gamepadOnly)
-        {
-            if (disabled) return -1f;
-            return curInputMap.GetHoldF(gamepadIndex, actionName, gamepadOnly);
-        }
+        //public void Update(float dt, bool gamepadOnly)
+        //{
+        //    curInputMap.Update(dt, gamepadIndex, gamepadOnly);
+        //    UpdateVibration(dt);
+        //}
+        //
+        //public float GetHoldF(string actionName, bool gamepadOnly)
+        //{
+        //    if (disabled) return -1f;
+        //    return curInputMap.GetHoldF(gamepadIndex, actionName, gamepadOnly);
+        //}
         public bool IsDown(string actionName, bool gamepadOnly)
         {
             if (disabled) return false;
@@ -154,9 +154,9 @@ namespace ShapeEngineCore.Globals.Input
         private static Dictionary<int, InputSlot> inputSlots = new();
         private static Dictionary<string, InputMap> inputMaps = new();
         //private static bool disabled = false;
-        private static readonly Dictionary<string, InputAction> UI_Default_InputActions = new()
+        public static readonly Dictionary<string, InputAction> UI_Default_InputActions = new()
         {
-            {"UI Mouse Select", new("UI Mouse Select", InputAction.Keys.MB_LEFT) },
+            {"UI Select Mouse", new("UI Select Mouse", InputAction.Keys.MB_LEFT) },
             {"UI Select", new("UI Select", InputAction.Keys.SPACE, InputAction.Keys.GP_BUTTON_RIGHT_FACE_DOWN) },
             {"UI Cancel", new("UI Cancel", InputAction.Keys.ESCAPE, InputAction.Keys.GP_BUTTON_RIGHT_FACE_RIGHT) },
             {"UI Cancel Mouse", new("UI Cancel Mouse", InputAction.Keys.MB_RIGHT) },
@@ -226,10 +226,10 @@ namespace ShapeEngineCore.Globals.Input
         {
             CheckGamepadConnection();
             CheckInputType();
-            foreach (var slot in inputSlots)
-            {
-                slot.Value.Update(dt, slot.Key > 0);
-            }
+            //foreach (var slot in inputSlots)
+            //{
+            //    slot.Value.Update(dt, slot.Key > 0);
+            //}
         }
 
         public static void Close()
@@ -263,20 +263,26 @@ namespace ShapeEngineCore.Globals.Input
             if (index < 0 || index >= inputSlots.Count) return null;
             return inputSlots[index];
         }
-        private static void AddDefaultUIInputsToMap(string mapName)
-        {
-            if (!inputMaps.ContainsKey(mapName)) return;
-            AddDefaultUIInputsToMap(inputMaps[mapName]);
-        }
-        private static void AddDefaultUIInputsToMap(InputMap map)
-        {
-            foreach (var input in UI_Default_InputActions)
-            {
-                map.AddAction(input.Key, input.Value);
-            }
-        }
+        //private static void AddDefaultUIInputsToMap(string mapName)
+        //{
+        //    if (!inputMaps.ContainsKey(mapName)) return;
+        //    AddDefaultUIInputsToMap(inputMaps[mapName]);
+        //}
+        //private static void AddDefaultUIInputsToMap(InputMap map)
+        //{
+        //    foreach (var input in UI_Default_InputActions)
+        //    {
+        //        map.AddAction(input.Key, input.Value);
+        //    }
+        //}
 
-
+        //public static void AddInputActionsToInputMap(InputMap map, List<InputAction> inputActions)
+        //{
+        //    foreach (var input in inputActions)
+        //    {
+        //        map.AddAction(input);
+        //    }
+        //}
         public static string NextInputMap(int playerSlot = 0, bool switchMap = true)
         {
             var slot = GetInputSlot(playerSlot);
@@ -324,7 +330,7 @@ namespace ShapeEngineCore.Globals.Input
             if (slot == null) return;
             slot.disabled = true;
         }
-        public static void AddInputMap(InputMap map, bool addUIInputs)
+        public static void AddInputMap(InputMap map)
         {
             if (map == null) return;
             if (inputMaps.ContainsKey(map.GetName()))
@@ -335,11 +341,11 @@ namespace ShapeEngineCore.Globals.Input
             {
                 inputMaps.Add(map.GetName(), map);
             }
-            if(addUIInputs) AddDefaultUIInputsToMap(map);
+            //if(addUIInputs) AddDefaultUIInputsToMap(map);
         }
-        public static void AddInputMap(string name, bool addUIInputs, params InputAction[] actions)
+        public static void AddInputMap(string name, params InputAction[] actions)
         {
-            AddInputMap(new InputMap(name, actions), addUIInputs);
+            AddInputMap(new InputMap(name, actions));
         }
         
         public static void RemoveInputMap(string name)
@@ -402,25 +408,25 @@ namespace ShapeEngineCore.Globals.Input
             inputMaps[name].Rename(newName);
         }
 
-        public static float GetHoldF(int playerSlot, string actionName)
-        {
-            if (playerSlot < 0)
-            {
-                for (int i = 0; i < inputSlots.Count; i++)
-                {
-                    var slot = inputSlots[i];
-                    float f = slot.GetHoldF(actionName, i > 0);
-                    if (f >= 0f) return f;
-                }
-                return -1f;
-            }
-            else
-            {
-                var slot = GetInputSlot(playerSlot);
-                if (slot == null) return -1f;
-                return slot.GetHoldF(actionName, playerSlot > 0);
-            }
-        }
+        //public static float GetHoldF(int playerSlot, string actionName)
+        //{
+        //    if (playerSlot < 0)
+        //    {
+        //        for (int i = 0; i < inputSlots.Count; i++)
+        //        {
+        //            var slot = inputSlots[i];
+        //            float f = slot.GetHoldF(actionName, i > 0);
+        //            if (f >= 0f) return f;
+        //        }
+        //        return -1f;
+        //    }
+        //    else
+        //    {
+        //        var slot = GetInputSlot(playerSlot);
+        //        if (slot == null) return -1f;
+        //        return slot.GetHoldF(actionName, playerSlot > 0);
+        //    }
+        //}
         public static bool IsDown(int playerSlot, string actionName)
         {
             if(playerSlot < 0)
