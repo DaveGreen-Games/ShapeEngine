@@ -66,6 +66,7 @@ namespace ShapeEngineCore.Globals.UI
 
 
             Rectangle offsetRect;
+            Rectangle rect = GetRect(Alignement.TOPLEFT);
             if (centered)
             {
                 //Vector2 scaledTopLeft = GetCenter() * stretchFactor - GetSize() * 0.5f;

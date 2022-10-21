@@ -153,6 +153,7 @@ namespace ShapeEngineCore.Globals.UI
         }
         protected Vector2 GetTranslation(float f)
         {
+            Rectangle rect = GetRect();
             switch (barType)
             {
                 case BarType.LEFTRIGHT:
@@ -243,6 +244,7 @@ namespace ShapeEngineCore.Globals.UI
         public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
         {
             //Rectangle rect = Utils.MultiplyRectangle(base.rect, stretchFactor);
+            Rectangle rect = GetRect();
             float radius = MathF.Min( rect.width, rect.height) / 2;
             Vector2 center = GetPos(Alignement.CENTER);
             Vector2 barOffset = GetSize() * barOffsetRelative;
@@ -387,6 +389,7 @@ namespace ShapeEngineCore.Globals.UI
         public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
         {
             //Rectangle rect = Utils.MultiplyRectangle(base.rect, stretchFactor);
+            Rectangle rect = GetRect();
             float radius = rect.width / 2;
             Vector2 center = GetPos(Alignement.CENTER);
 
@@ -533,6 +536,7 @@ namespace ShapeEngineCore.Globals.UI
         public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
         {
             //Rectangle rect = Utils.MultiplyRectangle(base.rect, stretchFactor);
+            Rectangle rect = GetRect();
             if (HasBackground())
             {
                 if (HasReservedPart())
