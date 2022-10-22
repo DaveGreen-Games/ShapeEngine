@@ -61,7 +61,7 @@ namespace ShapeEngineCore
                 //Rectangle r = new(rect.X + rect.width / 2, rect.Y + rect.height / 2 , innerSize.X, innerSize.Y);
                 //DrawRectanglePro(r, innerSize / 2, angleDeg, bgColor);
 
-                Drawing.DrawRectangle(center, innerSize, new(0.5f, 0.5f), angleDeg, bgColor);
+                Drawing.DrawRectangle(center, innerSize, new Vector2(0.5f, 0.5f), angleDeg, bgColor);
             }
 
             //float baseFontSize = size.X;
@@ -76,7 +76,7 @@ namespace ShapeEngineCore
 
             if (barColor.a > 0)
             {
-                Drawing.DrawRectangeLinesPro(center, size, angleDeg * DEG2RAD, thickness, barBackgroundColor);
+                Drawing.DrawRectangeLinesPro(center, size, new Vector2(0.5f, 0.5f), angleDeg * DEG2RAD, thickness, barBackgroundColor);
                 Drawing.DrawRectangleOutlineBar(center, size, angleDeg * DEG2RAD, thickness, f, barColor);
             }
         }

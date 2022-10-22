@@ -425,7 +425,8 @@ namespace ShapeEngineDemo.Bodies
             InputHandler.AddVibration(0, 0f, 0.25f, 0.5f);
             ScreenHandler.CAMERA.Shake(0.5f, new(20f, 20f), 1f, 0f, 0.75f);
             //ScreenHandler.Flash(0.3f, ColorPalette.Cur.enemy, BLANK, true);
-            ScreenHandler.FlashTint(0.3f, BLACK, false);
+            //ScreenHandler.FlashTint(0.3f, BLACK, false);
+            ScreenHandler.Flash(0.5f, new(225, 25, 50, 150), new(50, 0, 0, 50), true);
             GAMELOOP.Slow(0.3f, 0.5f, 0.1f);
             //GAMELOOP.CallDeferred(() => GAMELOOP.Slow(0.1f, 0.5f, 0f), 1);
             //GAMELOOP.Stop(0.5f, 0.1f);

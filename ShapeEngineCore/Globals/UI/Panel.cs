@@ -1,59 +1,130 @@
-﻿using System.Numerics;
+﻿using System.Diagnostics;
+using System.Numerics;
 using Raylib_CsLo;
 
 namespace ShapeEngineCore.Globals.UI
 {
     public class Panel : UIElement
     {
-        protected string text = "";
         protected float angleDeg = 0f;
+        protected float outlineThickness = 0f;
         protected Color bgColor = DARKGRAY;
-        protected Color textColor = WHITE;
-        public Panel(string text, Vector2 center, Vector2 size, float angleDeg, Color textColor, Color bgColor)
+        protected Color outlineColor = YELLOW;
+        protected Alignement alignement = Alignement.CENTER;
+        
+        public Panel(Alignement textAlignement = Alignement.CENTER)
         {
-            rect = new(center.X - size.X / 2, center.Y - size.Y / 2, size.X, size.Y);
-            this.angleDeg = angleDeg;
-            this.bgColor = bgColor;
-            this.textColor = textColor;
-            this.text = text;
+            this.alignement = textAlignement;
         }
-        /*
-        public Panel(string text, Vector2 center, Vector2 size, float angleDeg, float fontSize, Color textColor, Color bgColor)
+        public Panel(float angleDeg, Alignement textAlignement = Alignement.CENTER)
         {
-            this.rect = new(center.X - size.X / 2, center.Y - size.Y / 2, size.X, size.Y);
             this.angleDeg = angleDeg;
-            this.bgColor = bgColor;
-            this.textColor = textColor;
-            this.text = text;
-            this.fontSize = fontSize;
+            this.alignement = textAlignement;
         }
-        public Panel(string text, Vector2 center, Vector2 size, float angleDeg, FontSize fontSize, Color textColor, Color bgColor)
+        public Panel(float angleDeg, float outlineThickness, Alignement textAlignement = Alignement.CENTER)
         {
-            this.rect = new(center.X - size.X / 2, center.Y - size.Y / 2, size.X, size.Y);
             this.angleDeg = angleDeg;
-            this.bgColor = bgColor;
-            this.textColor = textColor;
-            this.text = text;
-            this.fontSize = UIHandler.GetFontSizeScaled(fontSize);
+            this.alignement = textAlignement;
+            this.outlineThickness = outlineThickness;
         }
-        public Panel(string text, Vector2 center, Vector2 size, float angleDeg, FontSize fontSize, float fontSpacing, Color textColor, Color bgColor)
+
+        public void SetRotation(float newAngleDeg) { angleDeg = newAngleDeg; }
+        public void SetRotationRad(float newAngleRad) { angleDeg = newAngleRad * RAD2DEG; }
+        public float GetRotationDeg() { return angleDeg; }
+        public float GetRotationRad() { return angleDeg * DEG2RAD; }
+        public void SetOutlineThickness(float newThickness) { outlineThickness = newThickness; }
+        public float GetOutlineThickness() { return outlineThickness; }
+        public void SetColors(Color bgColor, Color borderColor)
         {
-            this.rect = new(center.X - size.X / 2, center.Y - size.Y / 2, size.X, size.Y);
-            this.angleDeg = angleDeg;
             this.bgColor = bgColor;
-            this.textColor = textColor;
-            this.text = text;
-            this.fontSize = UIHandler.GetFontSizeScaled(fontSize);
-            this.fontSpacing = fontSpacing;
+            this.outlineColor = borderColor;
         }
-        */
+        public void SetColors(Color bgColor)
+        {
+            this.bgColor = bgColor;
+            this.outlineColor = new(0,0,0,0);
+        }
         public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
         {
-            //DrawRectanglePro(rect, new(0f, 0f), angleDeg, bgColor);
-            //DrawRectanglePro(new(rect.X + rect.width / 2, rect.Y + rect.height / 2, rect.width, rect.height), new Vector2(rect.width, rect.height) / 2, angleDeg, bgColor);
-            Drawing.DrawRectangle(GetPos(Alignement.CENTER) * stretchFactor, GetSize() * stretchFactor, new(0f, 0f), angleDeg, bgColor);
-            float fontSize = Vec.Max(GetSize()) * 2.5f;
-            UIHandler.DrawTextAlignedPro(text, GetPos(Alignement.CENTER) * stretchFactor, angleDeg, GetSize() * stretchFactor , 1, textColor, Alignement.CENTER);
+            DrawBackground();
+            DrawOutline();
         }
+
+        protected void DrawBackground()
+        {
+            if (HasBackground()) 
+                Drawing.DrawRectangle(GetPos(Alignement.CENTER), GetSize(), alignement, angleDeg, bgColor);
+
+        }
+
+        protected void DrawOutline()
+        {
+            if (HasOutline()) 
+                Drawing.DrawRectangeLinesPro(GetPos(Alignement.CENTER), GetSize(), alignement, angleDeg * DEG2RAD, outlineThickness, outlineColor);
+        }
+
+        protected bool HasBackground() { return bgColor.a > 0; }
+        protected bool HasOutline() { return outlineColor.a > 0 && outlineThickness > 1f; }
     }
 }
+
+
+/*
+ public class Panel : UIElement
+    {
+        protected string text = "";
+        protected float angleDeg = 0f;
+        protected float lineThickness = 0f;
+        protected Color textColor = WHITE;
+        protected Color bgColor = DARKGRAY;
+        protected Color borderColor = YELLOW;
+        protected Alignement alignement = Alignement.CENTER;
+        public Panel(string text)
+        {
+            this.text = text;
+        }
+        public Panel(string text, Alignement textAlignement = Alignement.CENTER)
+        {
+            this.text = text;
+            this.alignement = textAlignement;
+        }
+        public Panel(string text, float angleDeg)
+        {
+            this.angleDeg = angleDeg;
+            this.text = text;
+        }
+        public Panel(string text, float angleDeg, Alignement textAlignement = Alignement.CENTER)
+        {
+            this.angleDeg = angleDeg;
+            this.text = text;
+            this.alignement = textAlignement;
+        }
+
+        public void SetColors(Color textColor, Color bgColor, Color borderColor)
+        {
+            this.bgColor = bgColor;
+            this.textColor = textColor;
+            this.borderColor = borderColor;
+        }
+        public void SetColors(Color bgColor, Color borderColor)
+        {
+            this.bgColor = bgColor;
+            this.borderColor = borderColor;
+        }
+        public void SetColors(Color bgColor)
+        {
+            this.bgColor = bgColor;
+            this.borderColor = new(0,0,0,0);
+        }
+        public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
+        {
+            if(HasBackground())Drawing.DrawRectangle(GetPos(Alignement.CENTER), GetSize(), alignement, angleDeg, bgColor);
+            if (HasOutline()) Drawing.DrawRectangeLinesPro(GetPos(alignement), GetSize(), alignement, angleDeg * DEG2RAD, lineThickness, borderColor);
+            UIHandler.DrawTextAlignedPro(text, GetPos(Alignement.CENTER), angleDeg, GetSize() , 1, textColor, alignement);
+        }
+
+
+        private bool HasBackground() { return bgColor.a > 0; }
+        private bool HasOutline() { return borderColor.a > 0 && lineThickness > 1f; }
+    }
+*/

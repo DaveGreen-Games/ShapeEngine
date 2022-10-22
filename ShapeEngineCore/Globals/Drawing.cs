@@ -202,34 +202,66 @@ namespace ShapeEngineCore.Globals
             DrawRingFilled(center, innerRadius, outerRadius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, sides, color);
         }
 
-        public static void DrawRectangeLinesPro(Vector2 center, Vector2 size, float rotRad, float lineThickness, Color color)
+        //public static void DrawRectangeLinesPro(Vector2 center, Vector2 size, float rotRad, float lineThickness, Color color)
+        //{
+        //    Vector2 topLeft = center + Vec.Rotate(-size / 2, rotRad);
+        //    Vector2 topRight = center + Vec.Rotate(new Vector2(size.X, -size.Y) / 2, rotRad);
+        //    Vector2 bottomRight = center + Vec.Rotate(size / 2, rotRad);
+        //    Vector2 bottomLeft = center + Vec.Rotate(new Vector2(-size.X, size.Y) / 2, rotRad);
+        //    Vector2 leftExtension = Vec.Rotate(new Vector2(-lineThickness / 2, 0f), rotRad);
+        //    Vector2 rightExtension = Vec.Rotate(new Vector2(lineThickness / 2, 0f), rotRad);
+        //    DrawLineEx(topLeft + leftExtension, topRight + rightExtension, lineThickness, color);
+        //    DrawLineEx(bottomLeft + leftExtension, bottomRight + rightExtension, lineThickness, color);
+        //    DrawLineEx(topLeft, bottomLeft, lineThickness, color);
+        //    DrawLineEx(topRight, bottomRight, lineThickness, color);
+        //}
+        public static void DrawRectangeLinesPro(Vector2 pos, Vector2 size, Vector2 pivot, float rotRad, float lineThickness, Color color)
         {
-            Vector2 topLeft = center + Vec.Rotate(-size / 2, rotRad);
-            Vector2 topRight = center + Vec.Rotate(new Vector2(size.X, -size.Y) / 2, rotRad);
-            Vector2 bottomRight = center + Vec.Rotate(size / 2, rotRad);
-            Vector2 bottomLeft = center + Vec.Rotate(new Vector2(-size.X, size.Y) / 2, rotRad);
-            Vector2 leftExtension = Vec.Rotate(new Vector2(-lineThickness / 2, 0f), rotRad);
-            Vector2 rightExtension = Vec.Rotate(new Vector2(lineThickness / 2, 0f), rotRad);
-            DrawLineEx(topLeft + leftExtension, topRight + rightExtension, lineThickness, color);
-            DrawLineEx(bottomLeft + leftExtension, bottomRight + rightExtension, lineThickness, color);
+            Vector2 av = pivot;
+            Vector2 topLeft = pos + Vec.Rotate(-size * av, rotRad);
+            Vector2 topRight = pos + Vec.Rotate(new Vector2(size.X, 0f) - size * av, rotRad);
+            Vector2 bottomRight = pos + Vec.Rotate(new Vector2(size.X, size.Y) - size * av, rotRad);
+            Vector2 bottomLeft = pos + Vec.Rotate(new Vector2(0f, size.Y) - size * av, rotRad);
+            //Vector2 leftExtension = Vec.Rotate(new Vector2(-lineThickness / 2, 0f), rotRad);
+            //Vector2 rightExtension = Vec.Rotate(new Vector2(lineThickness / 2, 0f), rotRad);
+            DrawLineEx(topLeft, topRight, lineThickness, color);
+            DrawLineEx(bottomLeft, bottomRight, lineThickness, color);
             DrawLineEx(topLeft, bottomLeft, lineThickness, color);
             DrawLineEx(topRight, bottomRight, lineThickness, color);
         }
-
-        public static void DrawRectangle(Vector2 center, Vector2 size, Vector2 origin, float rotDeg, Color color)
+        public static void DrawRectangeLinesPro(Vector2 pos, Vector2 size, Alignement pivot, float rotRad, float lineThickness, Color color)
         {
-            Rectangle rect = new(center.X, center.Y, size.X, size.Y);
-            Vector2 pivot = new(size.X * origin.X, size.Y * origin.Y);
-            DrawRectanglePro(rect, pivot, rotDeg, color);
+            DrawRectangeLinesPro(pos, size, UIHandler.GetAlignementVector(pivot), rotRad, lineThickness, color);
         }
-        public static void DrawRectangle(Rectangle rect, Vector2 origin, float rotDeg, Color color)
+        /// <summary>
+        /// Draw a rectangle with optional rotation.
+        /// </summary>
+        /// <param name="center"></param>
+        /// <param name="size"></param>
+        /// <param name="pivot">Value from 0 (top left) to 1 (bottom right)</param>
+        /// <param name="rotDeg"></param>
+        /// <param name="color"></param>
+        public static void DrawRectangle(Vector2 center, Vector2 size, Vector2 pivot, float rotDeg, Color color)
+        {
+            //pivot -= new Vector2(0.5f, 0.5f);
+            Rectangle rect = new(center.X, center.Y, size.X, size.Y);
+            Vector2 rotPivot = new(size.X * pivot.X, size.Y * pivot.Y);
+            DrawRectanglePro(rect, rotPivot, rotDeg, color);
+        }
+        public static void DrawRectangle(Rectangle rect, Vector2 pivot, float rotDeg, Color color)
         {
             Vector2 center = new(rect.x + rect.width / 2, rect.y + rect.height / 2);
             Vector2 size = new(rect.width, rect.height);
-            DrawRectangle(center, size, origin, rotDeg, color);
+            DrawRectangle(center, size, pivot, rotDeg, color);
         }
-
-
+        public static void DrawRectangle(Rectangle rect, Alignement pivot, float rotDeg, Color color)
+        {
+            Drawing.DrawRectangle(rect, UIHandler.GetAlignementVector(pivot), rotDeg, color);
+        }
+        public static void DrawRectangle(Vector2 center, Vector2 size, Alignement pivot, float rotDeg, Color color)
+        {
+            Drawing.DrawRectangle(center, size, UIHandler.GetAlignementVector(pivot), rotDeg, color);
+        }
 
         public static void DrawRectangleOutlineBar(Vector2 center, Vector2 size, float thickness, float f, Color color)
         {
