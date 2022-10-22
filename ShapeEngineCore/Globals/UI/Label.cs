@@ -6,19 +6,19 @@ namespace ShapeEngineCore.Globals.UI
     public class Label : Panel
     {
         protected string text = "";
-        protected Color textColor = WHITE; 
-        public Label(string text, Alignement textAlignement = Alignement.CENTER)
-            : base(textAlignement)
+        protected Color textColor = WHITE;
+        public Label(string text, Alignement alignement = Alignement.CENTER)
+            : base(alignement)
         {
             this.text = text;
         }
-        public Label(string text, float angleDeg, Alignement textAlignement = Alignement.CENTER)
-            : base(angleDeg, textAlignement)
+        public Label(string text, float angleDeg, Alignement alignement = Alignement.CENTER)
+            : base(angleDeg, alignement)
         {
             this.text = text;
         }
-        public Label(string text, float angleDeg, float outlineThickness, Alignement textAlignement = Alignement.CENTER)
-            : base(angleDeg, outlineThickness, textAlignement)
+        public Label(string text, float angleDeg, float outlineThickness, Alignement alignement = Alignement.CENTER)
+            : base(angleDeg, outlineThickness, alignement)
         {
             this.text = text;
         }

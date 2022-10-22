@@ -154,6 +154,36 @@ namespace ShapeEngineCore.Globals
     public static class Utils
     {
 
+
+        public static (int col, int row) TransformIndexToCoordinates(int index, int rows, int cols, bool leftToRight = true)
+        {
+            if (leftToRight)
+            {
+                int row = index / cols;
+                int col = index % cols;
+                return (col, row);
+            }
+            else
+            {
+                int col = index / rows;
+                int row = index % rows;
+                return (col, row);
+            }
+            
+        }
+
+        public static int TransformCoordinatesToIndex(int row, int col, int rows, int cols, bool leftToRight = true)
+        {
+            if (leftToRight)
+            {
+                return row * cols + col;
+            }
+            else
+            {
+                return col * rows + row;
+            }
+        }
+
         public static Color AddColors(Color a, Color b)
         {
             return new

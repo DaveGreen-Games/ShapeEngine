@@ -12,19 +12,19 @@ namespace ShapeEngineCore.Globals.UI
         protected Color outlineColor = YELLOW;
         protected Alignement alignement = Alignement.CENTER;
         
-        public Panel(Alignement textAlignement = Alignement.CENTER)
+        public Panel(Alignement alignement = Alignement.CENTER)
         {
-            this.alignement = textAlignement;
+            this.alignement = alignement;
         }
-        public Panel(float angleDeg, Alignement textAlignement = Alignement.CENTER)
+        public Panel(float angleDeg, Alignement alignement = Alignement.CENTER)
         {
             this.angleDeg = angleDeg;
-            this.alignement = textAlignement;
+            this.alignement = alignement;
         }
-        public Panel(float angleDeg, float outlineThickness, Alignement textAlignement = Alignement.CENTER)
+        public Panel(float angleDeg, float outlineThickness, Alignement alignement = Alignement.CENTER)
         {
             this.angleDeg = angleDeg;
-            this.alignement = textAlignement;
+            this.alignement = alignement;
             this.outlineThickness = outlineThickness;
         }
 

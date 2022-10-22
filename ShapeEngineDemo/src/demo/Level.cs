@@ -192,8 +192,8 @@ namespace ShapeEngineDemo
         private Rectangle playArea;
 
         //private Panel testPanel = new(Alignement.LEFTCENTER);
-        private float testRotationDeg = 0f;
-        //private Label testLabel = new("TEST", Alignement.BOTTOMRIGHT);
+        //private float testRotationDeg = 0f;
+        //private Label testLabel = new("TEST", Alignement.LEFTCENTER);
 
         public Level()
         {
@@ -266,8 +266,8 @@ namespace ShapeEngineDemo
             area.Update(dt);
             asteroidSpawner.Update(dt);
 
-            testRotationDeg += dt * 90f;
-            if (testRotationDeg > 360) testRotationDeg = 0f;
+            //testRotationDeg += dt * 90f;
+            //if (testRotationDeg > 360) testRotationDeg = 0f;
         }
         public override void Draw()
         {
@@ -316,7 +316,7 @@ namespace ShapeEngineDemo
             //testLabel.SetTextColor(GRAY);
             //testLabel.UpdateRect(uiSize * new Vector2(0.5f, 0.65f), uiSize * new Vector2(0.25f, 0.1f));
             //testLabel.Draw(uiSize, stretchFactor);
-            //
+            
             //DrawCircleV(uiSize * new Vector2(0.5f, 0.5f), 5f, GOLD);
             //DrawCircleV(uiSize * new Vector2(0.5f, 0.65f), 5f, GREEN);
         }
