@@ -243,7 +243,6 @@ namespace ShapeEngineCore.Globals
         /// <param name="color"></param>
         public static void DrawRectangle(Vector2 center, Vector2 size, Vector2 pivot, float rotDeg, Color color)
         {
-            //pivot -= new Vector2(0.5f, 0.5f);
             Rectangle rect = new(center.X, center.Y, size.X, size.Y);
             Vector2 rotPivot = new(size.X * pivot.X, size.Y * pivot.Y);
             DrawRectanglePro(rect, rotPivot, rotDeg, color);
