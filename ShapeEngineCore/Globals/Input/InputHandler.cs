@@ -842,5 +842,12 @@ namespace ShapeEngineCore.Globals.Input
             if (inverted) return -movement;
             return movement;
         }
+        public static Vector2 GetMouseWheelMovementV(bool inverted = false)
+        {
+            Vector2 movement = GetMouseWheelMoveV();
+
+            if (inverted) return -movement;
+            return movement;
+        }
     }
 }
