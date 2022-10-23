@@ -38,7 +38,7 @@ namespace ShapeEngineCore.Globals.UI
         protected void DrawText()
         {
             if(HasText())
-                UIHandler.DrawTextAlignedPro(text, GetPos(Alignement.CENTER), angleDeg, GetSize(), 1, textColor, alignement);
+                UIHandler.DrawTextAlignedPro(text, GetPos(Alignement.TOPLEFT), angleDeg, GetSize(), 1, textColor, alignement);
         }
         protected bool HasText() { return textColor.a > 0 && text != ""; }
     }

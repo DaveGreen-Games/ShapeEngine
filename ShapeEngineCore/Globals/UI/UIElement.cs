@@ -65,8 +65,9 @@ namespace ShapeEngineCore.Globals.UI
         {
             margins = new(top, right, bottom, left);
         }
+        public UIMargins GetMargins() { return margins; }
         public void SetStretchFactor(float newFactor) { stretchFactor = newFactor; }
-
+        public float GetStretchFactor() { return stretchFactor; }
         public Rectangle GetRect(Alignement alignement = Alignement.TOPLEFT) 
         { 
             if(alignement == Alignement.TOPLEFT) return margins.Apply(rect);
