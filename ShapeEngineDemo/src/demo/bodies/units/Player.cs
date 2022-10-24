@@ -214,13 +214,13 @@ namespace ShapeEngineDemo.Bodies
         private BasicTimer damageTimer = new();
         private string shipName = "";
         private float angle = 0f;
-        private ProgressBarPro hpBar;
-        private ProgressBarPro pwrBar;
+        private ProgressBar hpBar;
+        private ProgressBar pwrBar;
         //private ProgressCircle pwrBarCircle;
         //private ProgressRing hpBarRing;
         //private ProgressBarPro ammoBar;
-        private ProgressBar hpBarMini = new(BarType.LEFTRIGHT, 0.1f, 0f);
-        private ProgressBar pwrBarMini = new(BarType.LEFTRIGHT, 0f, 0f);
+        private ProgressBar hpBarMini = new(0.1f, 0f);
+        private ProgressBar pwrBarMini = new(0f, 0f);
         //private Panel aimpointInputPanel;
         //private InputPrompt aimpointInputPrompt;
         private SkillDisplay aimpointSkillDisplay;
@@ -283,8 +283,10 @@ namespace ShapeEngineDemo.Bodies
             
             Vector2 barOffset = new(-0.15f, 0.05f);
             aimpointSkillDisplay = new(PaletteHandler.C("text"), PaletteHandler.C("flash"), PaletteHandler.C("neutral"),PaletteHandler.C("energy"), "Drop Pin", "Drop Aim Point", -5f);
-            hpBar = new(barOffset, BarType.BOTTOMTOP, 0.1f, -5f);
-            pwrBar = new(barOffset, BarType.BOTTOMTOP, 0f, -5f);
+            hpBar = new(-5f, new Vector2(0, 1), barOffset, 0.1f, 0);
+            pwrBar = new(-5f, new Vector2(0, 1), barOffset, 0f, 0f);
+            hpBar.SetProgressDirections(0, 0, 1, 0);
+            pwrBar.SetProgressDirections(0, 0, 1, 0);
             //pwrBarCircle = new(new Vector2(0f), Alignement.BOTTOMCENTER, 0.5f, 0.04f);
             //hpBarRing = new(90, -90, new Vector2(0f), 0f, 0.8f, 0.75f, 0.1f, 0f);
             //hpBarRing.SetReservedF(0.223f);
@@ -293,8 +295,9 @@ namespace ShapeEngineDemo.Bodies
             //start += gap;
             //ammoBar = new(start, barSize, barOffset, BarType.BOTTOMTOP, 0f, -5f);
 
-            
 
+            hpBarMini.SetProgressDirections(0.5f, 0.5f, 0, 0);
+            pwrBarMini.SetProgressDirections(0.5f, 0.5f, 0, 0);
             hpBarMini.SetColors(PaletteHandler.C("enemy"), new(0, 0, 0, 0), PaletteHandler.C("flash")); //ColorPalette.Cur.neutral
             pwrBarMini.SetColors(PaletteHandler.C("player"), new(0, 0, 0, 0));// ColorPalette.Cur.energy);
             hpBar.SetColors(PaletteHandler.C("enemy"), PaletteHandler.C("neutral"), PaletteHandler.C("flash"));
@@ -705,15 +708,15 @@ namespace ShapeEngineDemo.Bodies
             Vector2 gap = new Vector2(barSize.X * 1.5f, 0);
             hpBar.UpdateRect(center, barSize);
             pwrBar.UpdateRect(center + gap, barSize);
-            UIHandler.DrawTextAlignedPro("HP", hpBar.GetPos(Alignement.CENTER) - hpBar.Transform(new Vector2(0, barSize.Y / 2)), hpBar.GetRotationDeg(), 60, 2, PaletteHandler.C("enemy"), Alignement.BOTTOMCENTER);
+            UIHandler.DrawTextAlignedPro("HP", hpBar.GetPos(Alignement.CENTER) - hpBar.Transform(new Vector2(0, barSize.Y / 2)), hpBar.GetAngleDeg(), 60, 2, PaletteHandler.C("enemy"), Alignement.BOTTOMCENTER);
             hpBar.Draw(uiSize, stretchFactor);
 
-            UIHandler.DrawTextAlignedPro("PWR", pwrBar.GetPos(Alignement.CENTER) - pwrBar.Transform(new Vector2(0, barSize.Y / 2)), pwrBar.GetRotationDeg(), 60, 2, PaletteHandler.C("player"), Alignement.BOTTOMCENTER);
+            UIHandler.DrawTextAlignedPro("PWR", pwrBar.GetPos(Alignement.CENTER) - pwrBar.Transform(new Vector2(0, barSize.Y / 2)), pwrBar.GetAngleDeg(), 60, 2, PaletteHandler.C("player"), Alignement.BOTTOMCENTER);
             pwrBar.Draw(uiSize, stretchFactor);
             if (energyCore.IsCooldownActive())
             {
                 Vector2 bottomRight = pwrBar.GetPos(new Vector2(0.75f, 0.5f)) + pwrBar.Transform(barSize / 2);// + new Vector2(20, 0);
-                UIHandler.DrawTextAlignedPro("REBOOT", bottomRight, pwrBar.GetRotationDeg() - 90f, 90, 10, PaletteHandler.C("bg2"), Alignement.BOTTOMLEFT);
+                UIHandler.DrawTextAlignedPro("REBOOT", bottomRight, pwrBar.GetAngleDeg() - 90f, 90, 10, PaletteHandler.C("bg2"), Alignement.BOTTOMLEFT);
             }
             aimpointSkillDisplay.UpdateRect(uiSize * new Vector2(0.05f, 0.5f), uiSize * new Vector2(0.08f, 0.04f));
             aimpointSkillDisplay.Draw(uiSize, stretchFactor);

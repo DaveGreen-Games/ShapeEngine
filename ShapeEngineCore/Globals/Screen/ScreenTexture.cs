@@ -465,7 +465,7 @@ namespace ShapeEngineCore.Globals.Screen
                     Vector2 sizeOffset = new(5f, 5f);
                     Vector2 center = camera.CameraPos;
                     Vector2 size = camera.CameraOffset * 2 * (1f / camera.CameraZoom);
-                    Drawing.DrawRectangle(center, size + sizeOffset, new Vector2(0.5f, 0.5f), -camera.CameraRotDeg, flash.GetColor());
+                    Drawing.DrawRectangle(center, size + sizeOffset, UI.Alignement.CENTER, new Vector2(0.5f, 0.5f), -camera.CameraRotDeg, flash.GetColor());
                 }
                 else DrawRectangle(-1, -1, GetTextureWidth() + 1, GetTextureHeight() + 1, flash.GetColor());
             }

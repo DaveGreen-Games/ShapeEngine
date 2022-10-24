@@ -1,11 +1,26 @@
 ﻿using Raylib_CsLo;
+using ShapeEngineCore.Globals.UI;
 using System.Numerics;
 //using ShapeEngineCore.Globals;
 
 
 namespace ShapeEngineCore.Globals
 {
+    public struct RotatedRectangle
+    {
+        public Vector2 topLeft;
+        public Vector2 topRight;
+        public Vector2 bottomLeft;
+        public Vector2 bottomRight;
 
+        public RotatedRectangle(Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl)
+        {
+            this.topLeft = tl;
+            this.topRight = tr;
+            this.bottomLeft = bl;
+            this.bottomRight = br;
+        }
+    }
     public class RangeInt
     {
         public int min;
@@ -213,6 +228,50 @@ namespace ShapeEngineCore.Globals
                 a.b * b.b,
                 a.a * b.a
                 );
+        }
+
+
+
+        public static RotatedRectangle RotateRectangle(Rectangle rect, Vector2 pivot, float angleDeg)
+        {
+            float rotRad = angleDeg * DEG2RAD;
+            Vector2 size = new Vector2(rect.width, rect.height);
+            Vector2 pivotPoint = new Vector2(rect.x, rect.y) + size * pivot;
+
+            Vector2 tl = new Vector2(rect.X, rect.Y);
+            Vector2 br = tl + size;
+            Vector2 tr = tl + new Vector2(rect.width, 0);
+            Vector2 bl = tl + new Vector2(0, rect.height);
+
+            Vector2 topLeft = pivotPoint + Vec.Rotate(tl - pivotPoint, rotRad);
+            Vector2 topRight = pivotPoint + Vec.Rotate(tr - pivotPoint, rotRad);
+            Vector2 bottomRight = pivotPoint + Vec.Rotate(br - pivotPoint, rotRad);
+            Vector2 bottomLeft = pivotPoint + Vec.Rotate(bl - pivotPoint, rotRad);
+
+            return new(topLeft, topRight, bottomRight, bottomLeft);
+        }
+
+        public static RotatedRectangle RotateRectangle(Vector2 pos, Vector2 size, Alignement alignement, Vector2 pivot, float angleDeg)
+        {
+            Vector2 av = UIHandler.GetAlignementVector(alignement);
+            return RotateRectangle(ConstructRectangle(pos, size, alignement), pivot, angleDeg);
+        }
+
+        public static Rectangle ConstructRectangle(Vector2 pos, Vector2 size, Alignement alignement = Alignement.TOPLEFT)
+        {
+            if (alignement == Alignement.TOPLEFT) return new(pos.X, pos.Y, size.X, size.Y);
+            else
+            {
+                Vector2 offset = size * UIHandler.GetAlignementVector(alignement);
+                Vector2 topLeft = pos - offset;
+                return new
+                    (
+                        topLeft.X,
+                        topLeft.Y,
+                        size.X,
+                        size.Y
+                    );
+            }
         }
 
         public static Rectangle MultiplyRectangle(Rectangle rect, float factor)

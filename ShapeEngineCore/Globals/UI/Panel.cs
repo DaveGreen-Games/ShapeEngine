@@ -53,14 +53,14 @@ namespace ShapeEngineCore.Globals.UI
         protected void DrawBackground()
         {
             if (HasBackground()) 
-                Drawing.DrawRectangle(GetPos(Alignement.TOPLEFT), GetSize(), alignement, angleDeg, bgColor);
+                Drawing.DrawRectangle(GetPos(Alignement.TOPLEFT), GetSize(), Alignement.TOPLEFT, alignement, angleDeg, bgColor);
 
         }
 
         protected void DrawOutline()
         {
             if (HasOutline()) 
-                Drawing.DrawRectangeLinesPro(GetPos(Alignement.TOPLEFT), GetSize(), alignement, angleDeg * DEG2RAD, outlineThickness, outlineColor);
+                Drawing.DrawRectangeLinesPro(GetPos(Alignement.TOPLEFT), GetSize(), Alignement.TOPLEFT, alignement, angleDeg, outlineThickness, outlineColor);
         }
 
         protected bool HasBackground() { return bgColor.a > 0; }
