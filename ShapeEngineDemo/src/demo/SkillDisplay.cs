@@ -77,7 +77,7 @@ namespace ShapeEngineCore
             if (barColor.a > 0)
             {
                 Drawing.DrawRectangeLinesPro(center, size, Alignement.CENTER, new Vector2(0.5f, 0.5f), angleDeg, thickness, barBackgroundColor);
-                Drawing.DrawRectangleOutlineBar(center, size, angleDeg * DEG2RAD, thickness, f, barColor);
+                Drawing.DrawRectangleOutlineBar(center, size, Alignement.CENTER, new Vector2(0.5f, 0.5f),  angleDeg, thickness, f, barColor);
             }
         }
     }

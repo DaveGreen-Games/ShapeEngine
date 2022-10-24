@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Net.NetworkInformation;
+using System.Numerics;
 using Raylib_CsLo;
 using ShapeEngineCore.Globals.UI;
 
@@ -251,15 +252,15 @@ namespace ShapeEngineCore.Globals
         
 
 
-
-        public static void DrawRectangleOutlineBar(Vector2 center, Vector2 size, float thickness, float f, Color color)
+        public static void DrawRectangleOutlineBar(Rectangle rect, float thickness, float f, Color color)
         {
             Vector2 thicknessOffsetX = new Vector2(thickness, 0f);
             Vector2 thicknessOffsetY = new Vector2(0f, thickness);
-            Vector2 tl = center - size / 2;
-            Vector2 br = center + size / 2;
-            Vector2 tr = center + new Vector2(size.X, -size.Y) / 2;
-            Vector2 bl = center + new Vector2(-size.X, size.Y) / 2;
+
+            Vector2 tl = new(rect.x, rect.y);
+            Vector2 br = tl + new Vector2(rect.width, rect.height); ;
+            Vector2 tr = tl + new Vector2(rect.width, 0);
+            Vector2 bl = tl + new Vector2(0, rect.height);
 
             int lines = (int)MathF.Ceiling(4 * Clamp(f, 0f, 1f));
             float fMin = 0.25f * (lines - 1);
@@ -295,14 +296,25 @@ namespace ShapeEngineCore.Globals
                 DrawLineEx(start, end, thickness, color);
             }
         }
-        public static void DrawRectangleOutlineBar(Vector2 center, Vector2 size, float angleRad, float thickness, float f, Color color)
+        public static void DrawRectangleOutlineBar(Vector2 pos, Vector2 size, Alignement alignement, float thickness, float f, Color color)
         {
-            Vector2 thicknessOffsetX = new Vector2(thickness, 0f);
-            Vector2 thicknessOffsetY = new Vector2(0f, thickness);
-            Vector2 tl = -size / 2;
-            Vector2 br = size / 2;
-            Vector2 tr = new Vector2(size.X, -size.Y) / 2;
-            Vector2 bl = new Vector2(-size.X, size.Y) / 2;
+            DrawRectangleOutlineBar(Utils.ConstructRectangle(pos, size, alignement), thickness, f, color);
+        }
+
+
+        public static void DrawRectangleOutlineBar(Rectangle rect, Vector2 pivot, float angleDeg, float thickness, float f, Color color)
+        {
+            var rr = Utils.RotateRectangle(rect, pivot, angleDeg);
+            //Vector2 thicknessOffsetX = new Vector2(thickness, 0f);
+            //Vector2 thicknessOffsetY = new Vector2(0f, thickness);
+            
+            Vector2 leftExtension = Vec.Rotate(new Vector2(-thickness / 2, 0f), angleDeg * DEG2RAD);
+            Vector2 rightExtension = Vec.Rotate(new Vector2(thickness / 2, 0f), angleDeg * DEG2RAD);
+
+            Vector2 tl = rr.topLeft;
+            Vector2 br = rr.bottomRight;
+            Vector2 tr = rr.topRight;
+            Vector2 bl = rr.bottomLeft;
 
             int lines = (int)MathF.Ceiling(4 * Clamp(f, 0f, 1f));
             float fMin = 0.25f * (lines - 1);
@@ -314,31 +326,44 @@ namespace ShapeEngineCore.Globals
                 Vector2 start;
                 if (i == 0)
                 {
-                    start = tl - thicknessOffsetX / 2;
-                    end = tr - thicknessOffsetX / 2;
+                    start = tl + leftExtension;
+                    end = tr + rightExtension;
                 }
                 else if (i == 1)
                 {
-                    start = tr - thicknessOffsetY / 2;
-                    end = br - thicknessOffsetY / 2;
+                    start = tr;
+                    end = br;
                 }
                 else if (i == 2)
                 {
-                    start = br + thicknessOffsetX / 2;
-                    end = bl + thicknessOffsetX / 2;
+                    start = br + rightExtension;
+                    end = bl + leftExtension;
                 }
                 else
                 {
-                    start = bl + thicknessOffsetY / 2;
-                    end = tl + thicknessOffsetY / 2;
+                    start = bl;
+                    end = tl;
                 }
 
                 //last line
                 if (i == lines - 1) end = Vec.Lerp(start, end, newF);
-                DrawLineEx(center + Vec.Rotate(start, angleRad), center + Vec.Rotate(end, angleRad), thickness, color);
+                DrawLineEx(start, end, thickness, color);
             }
         }
-
+        public static void DrawRectangleOutlineBar(Vector2 pos, Vector2 size, Alignement alignement, Vector2 pivot, float angleDeg, float thickness, float f, Color color)
+        {
+            DrawRectangleOutlineBar(Utils.ConstructRectangle(pos, size, alignement), pivot, angleDeg, thickness, f, color);
+        }
+        public static void DrawRectangleOutlineBar(Vector2 pos, Vector2 size, Alignement alignement, Alignement pivot, float angleDeg, float thickness, float f, Color color)
+        {
+            DrawRectangleOutlineBar(Utils.ConstructRectangle(pos, size, alignement), UIHandler.GetAlignementVector(pivot), angleDeg, thickness, f, color);
+        }
+        public static void DrawRectangleOutlineBar(Rectangle rect, Alignement pivot, float angleDeg, float thickness, float f, Color color)
+        {
+            DrawRectangleOutlineBar(rect, UIHandler.GetAlignementVector(pivot), angleDeg, thickness, f, color);
+        }
+        
+        
         public static void DrawCircleOutlineBar(Vector2 center, float radius, float thickness, float f, Color color)
         {
             DrawCircleSectorLinesEx(center, radius, 0, 360 * f, thickness, color, false, 8f);
@@ -347,6 +372,43 @@ namespace ShapeEngineCore.Globals
         {
             DrawCircleSectorLinesEx(center, radius, 0, 360 * f, startOffsetDeg, thickness, color, false, 8f);
         }
+
+        
+        public static void DrawBar(Rectangle rect, float f, Color barColor, Color bgColor, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
+        {
+            f = 1.0f - f;
+            UIMargins progressMargins = new(f * top, f * right, f * bottom, f * left);
+            var progressRect = progressMargins.Apply(rect);
+            Drawing.DrawRectangle(rect, bgColor);
+            Drawing.DrawRectangle(progressRect, barColor);
+        }
+        public static void DrawBar(Vector2 pos, Vector2 size, Alignement alignement, float f, Color barColor, Color bgColor, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
+        {
+            DrawBar(Utils.ConstructRectangle(pos, size, alignement), f, barColor, bgColor, left, right, top, bottom);
+        }
+
+        public static void DrawBar(Rectangle rect, Vector2 pivot, float angleDeg, float f, Color barColor, Color bgColor, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
+        {
+            f = 1.0f - f;
+            UIMargins progressMargins = new(f * top, f * right, f * bottom, f * left);
+            var progressRect = progressMargins.Apply(rect);
+            Drawing.DrawRectangle(rect, pivot, angleDeg, bgColor);
+            Drawing.DrawRectangle(progressRect, pivot, angleDeg, barColor);
+        }
+        public static void DrawBar(Vector2 pos, Vector2 size, Alignement alignement, Vector2 pivot, float angleDeg, float f, Color barColor, Color bgColor, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
+        {
+            DrawBar(Utils.ConstructRectangle(pos, size, alignement), pivot, angleDeg, f, barColor, bgColor, left, right, top, bottom);
+        }
+        public static void DrawBar(Rectangle rect, Alignement pivot, float angleDeg, float f, Color barColor, Color bgColor, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
+        {
+            DrawBar(rect, UIHandler.GetAlignementVector(pivot), angleDeg, f, barColor, bgColor, left, right, top, bottom);
+        }
+        public static void DrawBar(Vector2 pos, Vector2 size, Alignement alignement, Alignement pivot, float angleDeg, float f, Color barColor, Color bgColor, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
+        {
+            DrawBar(Utils.ConstructRectangle(pos, size, alignement), UIHandler.GetAlignementVector(pivot), angleDeg, f, barColor, bgColor, left, right, top, bottom);
+        }
+
+        
 
         public static int GetCircleSideCount(float radius, float maxLength = 10f)
         {
@@ -358,73 +420,6 @@ namespace ShapeEngineCore.Globals
             float circumference = 2.0f * PI * radius * (angleDeg / 360f);
             return (int)MathF.Max(circumference / maxLength, 1);
         }
-
-
-
-        public static void DrawBar(Vector2 topLeft, Vector2 size, float f, Color barColor, Color bgColor, BarType barType = BarType.LEFTRIGHT)
-        {
-            Rectangle barRect = new Rectangle(topLeft.X, topLeft.Y, size.X, size.Y);
-            DrawBar(barRect, f, barColor, bgColor, barType);
-        }
-        public static void DrawBar(Rectangle barRect, float f, Color barColor, Color bgColor, BarType barType = BarType.LEFTRIGHT)
-        {
-            Rectangle original = barRect;
-            Rectangle rect = original;
-            switch (barType)
-            {
-                case BarType.LEFTRIGHT:
-                    rect.width *= f;
-                    break;
-                case BarType.RIGHTLEFT:
-                    rect.X += rect.width * (1.0f - f);
-                    rect.width *= f;
-                    break;
-                case BarType.TOPBOTTOM:
-                    rect.height *= f;
-                    break;
-                case BarType.BOTTOMTOP:
-                    rect.Y += rect.height * (1.0f - f);
-                    rect.height *= f;
-                    break;
-                default:
-                    rect.width *= f;
-                    break;
-            }
-            DrawRectangleRec(original, bgColor);
-            DrawRectangleRec(rect, barColor);
-        }
-        public static void DrawBar(Vector2 topLeft, Vector2 size, float f, Color barColor, Color bgColor, Color outlineColor, float outlineSize, BarType barType = BarType.LEFTRIGHT)
-        {
-            Rectangle barRect = new Rectangle(topLeft.X, topLeft.Y, size.X, size.Y);
-            DrawBar(barRect, f, barColor, bgColor, outlineColor, outlineSize, barType);
-        }
-        public static void DrawBar(Rectangle barRect, float f, Color barColor, Color bgColor, Color outlineColor, float outlineSize, BarType barType = BarType.LEFTRIGHT)
-        {
-            Rectangle original = barRect;
-            Rectangle rect = original;
-            switch (barType)
-            {
-                case BarType.LEFTRIGHT:
-                    rect.width *= f;
-                    break;
-                case BarType.RIGHTLEFT:
-                    rect.X += rect.width * (1.0f - f);
-                    break;
-                case BarType.TOPBOTTOM:
-                    rect.height *= f;
-                    break;
-                case BarType.BOTTOMTOP:
-                    rect.Y += rect.height * (1.0f - f);
-                    break;
-                default:
-                    rect.width *= f;
-                    break;
-            }
-            DrawRectangleRec(original, bgColor);
-            DrawRectangleRec(rect, barColor);
-            if (outlineSize > 0f) DrawRectangleLinesEx(original, outlineSize, outlineColor);
-        }
-
 
 
         public static float TransformAngleDeg(float angleDeg) { return 450f - angleDeg; }
