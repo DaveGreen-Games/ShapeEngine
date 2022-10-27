@@ -64,6 +64,12 @@ namespace ShapeEngineCore.Globals.UI
         public static int playerSlot = -1;
 
 
+        public delegate void DirectionInput(UINeighbors.NeighborDirection dir, UIElement? selected, UIElement? nextSelected);
+        public static event DirectionInput? OnDirectionInput;
+
+        public delegate void SelectedItemUnregistered(UIElement selected);
+        public static event SelectedItemUnregistered? OnSelectedItemUnregistered;
+
         public static void Initialize()
         {
             defaultFont = GetFontDefault();
@@ -115,6 +121,27 @@ namespace ShapeEngineCore.Globals.UI
         {
             if (register == null || register.Count <= 0) return;
             register.Remove(element);
+            if (selected != null && selected == element)
+            {
+                DeselectUIElement();
+                OnSelectedItemUnregistered?.Invoke(element);
+            }
+            else if (element.IsSelected())
+            {
+                element.Deselect();
+                OnSelectedItemUnregistered?.Invoke(element);
+            }
+        }
+
+        public static bool DeselectUIElement()
+        {
+            if(selected != null)
+            {
+                selected.Deselect();
+                selected = null;
+                return true;
+            }
+            return false;
         }
         public static bool SelectUIElement(UIElementSelectable element)
         {
@@ -150,25 +177,31 @@ namespace ShapeEngineCore.Globals.UI
                     newSelected = selected.CheckDirection(UINeighbors.NeighborDirection.TOP, register);
                     lastDir = UINeighbors.NeighborDirection.TOP;
                     if(dirInputInterval > 0f) dirInputTimer = dirInputInterval - dt;
+                    OnDirectionInput?.Invoke(lastDir, selected, newSelected);
                 }
                 else if (InputHandler.IsPressed(playerSlot, inputRight) || (lastDir == UINeighbors.NeighborDirection.RIGHT && dirInputTimer == 0f))
                 {
                     newSelected = selected.CheckDirection(UINeighbors.NeighborDirection.RIGHT, register);
                     lastDir = UINeighbors.NeighborDirection.RIGHT;
                     if (dirInputInterval > 0f) dirInputTimer = dirInputInterval - dt;
+                    OnDirectionInput?.Invoke(lastDir, selected, newSelected);
                 }
                 else if (InputHandler.IsPressed(playerSlot, inputDown) || (lastDir == UINeighbors.NeighborDirection.BOTTOM && dirInputTimer == 0f))
                 {
                     newSelected = selected.CheckDirection(UINeighbors.NeighborDirection.BOTTOM, register);
                     lastDir = UINeighbors.NeighborDirection.BOTTOM;
                     if (dirInputInterval > 0f) dirInputTimer = dirInputInterval - dt;
+                    OnDirectionInput?.Invoke(lastDir, selected, newSelected);
                 }
                 else if (InputHandler.IsPressed(playerSlot, inputLeft) || (lastDir == UINeighbors.NeighborDirection.LEFT && dirInputTimer == 0f))
                 {
                     newSelected = selected.CheckDirection(UINeighbors.NeighborDirection.LEFT, register);
                     lastDir = UINeighbors.NeighborDirection.LEFT;
                     if (dirInputInterval > 0f) dirInputTimer = dirInputInterval - dt;
+                    OnDirectionInput?.Invoke(lastDir, selected, newSelected);
                 }
+
+
 
                 if (newSelected != null) selected = newSelected;
             }
