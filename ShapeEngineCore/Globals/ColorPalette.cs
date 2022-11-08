@@ -112,6 +112,7 @@ namespace ShapeEngineCore.Globals
             this.palette = palette;
         }
 
+        
         public string Name { get { return name; } }
         public Color Get(string name)
         {
@@ -151,6 +152,7 @@ namespace ShapeEngineCore.Globals
             AddPalette(curPalette);
         }
 
+        public static List<string> GetAllPaletteNames() { return paletteNames; }
         public static int CurIndex { get { return curPaletteIndex; } }
         public static string CurName { get { return curPalette.Name; } }
         public static ColorPalette Cur { get { return curPalette; } }
