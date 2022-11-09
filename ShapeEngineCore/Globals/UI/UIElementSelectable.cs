@@ -3,8 +3,6 @@ using Raylib_CsLo;
 using ShapeEngineCore.Globals.Input;
 using ShapeEngineCore.Globals.Screen;
 using ShapeEngineCore.Globals.Audio;
-using Microsoft.Win32;
-using Vortice.XInput;
 
 namespace ShapeEngineCore.Globals.UI
 {
@@ -32,9 +30,11 @@ namespace ShapeEngineCore.Globals.UI
     {
         protected bool hovered = false;
         protected bool selected = false;
+        protected bool disabled = false;
+
         protected bool pressed = false;
         protected bool clicked = false;
-        protected bool disabled = false;
+        
         protected UINeighbors neighbors = new();
         protected string shortcut = "";
         

@@ -69,10 +69,8 @@ namespace ShapeEngineCore.Globals.UI
             Rectangle rect = GetRect(Alignement.TOPLEFT);
             if (centered)
             {
-                //Vector2 scaledTopLeft = GetCenter() * stretchFactor - GetSize() * 0.5f;
-                Vector2 size = GetSize(); // * stretchFactor;
+                Vector2 size = GetSize();
                 Vector2 newSize = new Vector2 (size.X * sizeOffset.X, size.Y * sizeOffset.Y);
-                //size *= areaSideFactor;
                 Vector2 sizeDif = newSize - size;
                 offsetRect =
                     new(
@@ -89,9 +87,6 @@ namespace ShapeEngineCore.Globals.UI
             DrawRectangleRec(offsetRect, color);
             if (selected) DrawRectangleV(new Vector2(offsetRect.X, offsetRect.y + offsetRect.height * 0.9f), new Vector2(offsetRect.width, offsetRect.height * 0.1f), stateColors.selectedColor);
             
-            //DrawRectangleLinesEx(rect, 5f, WHITE);
-            //DrawCircleV(GAMELOOP.MOUSE_POS_UI, 15f, BLUE);
-            //DrawCircleV(GAMELOOP.MOUSE_POS_UI_RAW, 5f, YELLOW);
         }
 
         public override void PressedChanged(bool pressed)
@@ -104,6 +99,9 @@ namespace ShapeEngineCore.Globals.UI
                     new Vector2(1, 1),
                     new EaseOrder(0.1f, new Vector2(0.2f, 0), EasingType.QUAD_IN),
                     new EaseOrder(0.1f, new Vector2(-0.2f, 0), EasingType.QUAD_OUT)
+                    //new EaseOrder(0.05f, new Vector2(0.05f, 0.05f), EasingType.QUAD_OUT),
+                    //new EaseOrder(0.1f, new Vector2(-0.1f, -0.1f), EasingType.BACK_IN),
+                    //new EaseOrder(0.05f, new Vector2(0.02f, 0.02f), EasingType.LINEAR_IN)
                     );
             }
             else
