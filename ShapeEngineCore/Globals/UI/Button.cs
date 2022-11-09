@@ -110,6 +110,27 @@ namespace ShapeEngineCore.Globals.UI
                 sizeOffset.Y = 1f;
             }
         }
+        public override void MousePressedChanged(bool pressed)
+        {
+            if (pressed)
+            {
+                if (easeHandler.HasChain("sizeUp")) return;
+                easeHandler.AddChain(
+                    "sizeUp",
+                    new Vector2(1, 1),
+                    new EaseOrder(0.1f, new Vector2(0.2f, 0), EasingType.QUAD_IN),
+                    new EaseOrder(0.1f, new Vector2(-0.2f, 0), EasingType.QUAD_OUT)
+                    //new EaseOrder(0.05f, new Vector2(0.05f, 0.05f), EasingType.QUAD_OUT),
+                    //new EaseOrder(0.1f, new Vector2(-0.1f, -0.1f), EasingType.BACK_IN),
+                    //new EaseOrder(0.05f, new Vector2(0.02f, 0.02f), EasingType.LINEAR_IN)
+                    );
+            }
+            else
+            {
+                sizeOffset.X = 1f;
+                sizeOffset.Y = 1f;
+            }
+        }
         public override void HoveredChanged(bool hovered)
         {
             if (!hovered) return;

@@ -34,19 +34,31 @@ namespace ShapeEngineCore.Globals.UI
 
         protected bool pressed = false;
         protected bool clicked = false;
-        
+
+        protected bool mousePressed = false;
+        protected bool mouseClicked = false;
+
         protected UINeighbors neighbors = new();
         protected string shortcut = "";
         
 
-        public bool Clicked() { return clicked; }
+        public bool Clicked() { return clicked || mouseClicked; }
+        public bool Pressed() { return pressed || mousePressed; }
         protected virtual bool CheckPressed()
         {
-            return hovered && InputHandler.IsDown(UIHandler.playerSlot, UIHandler.inputSelectMouse) || selected && InputHandler.IsDown(UIHandler.playerSlot, UIHandler.inputSelect);
+            return selected && InputHandler.IsDown(UIHandler.playerSlot, UIHandler.inputSelect);
         }
         protected virtual bool CheckClicked()
         {
-            return hovered && InputHandler.IsReleased(UIHandler.playerSlot, UIHandler.inputSelectMouse) || selected && InputHandler.IsReleased(UIHandler.playerSlot, UIHandler.inputSelect);
+            return selected && InputHandler.IsReleased(UIHandler.playerSlot, UIHandler.inputSelect);
+        }
+        protected virtual bool CheckMousePressed()
+        {
+            return hovered && InputHandler.IsDown(UIHandler.playerSlot, UIHandler.inputSelectMouse);
+        }
+        protected virtual bool CheckMouseClicked()
+        {
+            return hovered && InputHandler.IsReleased(UIHandler.playerSlot, UIHandler.inputSelectMouse);
         }
         protected virtual bool IsShortcutDown()
         {
@@ -90,10 +102,15 @@ namespace ShapeEngineCore.Globals.UI
         public override void Update(float dt, Vector2 mousePosUI)
         {
             clicked = false;
+            mouseClicked = false;
             if (disabled) return;
+            
             bool shortcutPressed = IsShortcutDown();
             bool shortcutReleased = IsShortcutReleased();
+            
             var prevPressed = pressed;
+            var prevMousePressed = mousePressed;
+
             if (shortcutPressed || shortcutReleased)
             {
                 clicked = shortcutReleased;
@@ -109,7 +126,18 @@ namespace ShapeEngineCore.Globals.UI
                     AudioHandler.PlaySFX("button hover");
                 }
                 else if (!hovered && prevHovered) { HoveredChanged(false); }
-                if (hovered || selected)
+               
+                if (hovered)
+                {
+                    if (mousePressed) mouseClicked = CheckMouseClicked();
+                    mousePressed = CheckMousePressed();
+                }
+                else
+                {
+                    mousePressed = false;
+                }
+
+                if (selected)
                 {
                     if (pressed) clicked = CheckClicked();
                     pressed = CheckPressed();
@@ -117,20 +145,33 @@ namespace ShapeEngineCore.Globals.UI
                 else
                 {
                     pressed = false;
-
                 }
             }
-            if (pressed && !prevPressed)
+
+            bool pressedChanged = pressed && !prevPressed;
+            bool mousePressedChanged = mousePressed && !prevMousePressed;
+
+            if (pressedChanged || mousePressedChanged)
             {
-                PressedChanged(true);
+                if(pressedChanged) PressedChanged(true);
+                if(mousePressedChanged) MousePressedChanged(true);
+
                 AudioHandler.PlaySFX("button click");
             }
-            else if (!pressed && prevPressed) { PressedChanged(false); }
+            else
+            {
+                if (prevPressed) PressedChanged(false);
+                if (prevMousePressed) MousePressedChanged(false);
+
+            }
 
             if (clicked) WasClicked();
+            if (mouseClicked) WasMouseClicked();
         }
 
         public virtual void WasClicked() { }
+        public virtual void WasMouseClicked() { }
+        public virtual void MousePressedChanged(bool pressed) { }
         public virtual void PressedChanged(bool pressed) { }
         public virtual void HoveredChanged(bool hovered) { }
         public virtual void SelectedChanged(bool selected) { }
