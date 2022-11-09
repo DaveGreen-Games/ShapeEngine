@@ -8,6 +8,7 @@ namespace ShapeEngineCore.Globals.UI
     public class ButtonLabel : Button
     {
         protected string text = "";
+        protected Alignement textAlignement = Alignement.CENTER;
         //protected Vector2 center = new();
         protected float fontSpacing = 3;
         protected string fontName = "";
@@ -34,6 +35,8 @@ namespace ShapeEngineCore.Globals.UI
             this.fontName = fontName;
         }
 
+        public void SetTextAlignement(Alignement newAlignement) { textAlignement = newAlignement; }
+
         public void SetTextStateColors(UISelectionColors newTextStateColors) { this.textStateColors = newTextStateColors; }
         
         public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
@@ -50,7 +53,7 @@ namespace ShapeEngineCore.Globals.UI
 
         protected virtual void DrawText(Color color)
         {
-            UIHandler.DrawTextAligned(text, GetPos(Alignement.CENTER) + offset, GetSize(), fontSpacing, color, fontName);
+            UIHandler.DrawTextAligned(text, GetPos(textAlignement) + offset, GetSize() * sizeOffset, fontSpacing, color, fontName, textAlignement);
         }
     }
 
