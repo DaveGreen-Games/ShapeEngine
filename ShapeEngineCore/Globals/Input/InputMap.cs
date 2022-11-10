@@ -18,10 +18,36 @@ namespace ShapeEngineCore.Globals.Input
             }
         }
 
+        //public void Update(float dt, int gamepad, bool gamepadOnly)
+        //{
+        //    foreach (var inputAction in inputActions.Values)
+        //    {
+        //        inputAction.Update(dt, gamepad, gamepadOnly);
+        //    }
+        //}
         //public int GamepadIndex { get { return gamepad; } }
         //public bool HasGamepad { get { return gamepad >= 0; } }
         public void Rename(string newName) { name = newName; }
         public string GetName() { return name; }
+        public void AddActions(List<InputAction> actions)
+        {
+            foreach (var inputAction in actions)
+            {
+                AddAction(inputAction);
+            }
+        }
+        public void AddAction(InputAction action)
+        {
+            string name = action.GetName();
+            if (inputActions.ContainsKey(name))
+            {
+                inputActions[name] = action;
+            }
+            else
+            {
+                inputActions.Add(name, action);
+            }
+        }
         public void AddAction(string name, InputAction action)
         {
             if (inputActions.ContainsKey(name))
@@ -49,7 +75,7 @@ namespace ShapeEngineCore.Globals.Input
         public List<string> GetKeyNames(string name)
         {
             if (!inputActions.ContainsKey(name)) return new();
-            return inputActions[name].GetKeyNames();
+            return inputActions[name].GetAllKeyNames();
         }
         //public bool IsDisabled() { return disabled; }
         //public void Enable() { disabled = false; }
@@ -78,7 +104,11 @@ namespace ShapeEngineCore.Globals.Input
             return new(GetGamepadAxis(gamepad, gamepadAxisHor), GetGamepadAxis(gamepad, gamepadAxisVer));
         }
 
-
+        //public float GetHoldF(int gamepad, string actionName, bool gamepadOnly = false)
+        //{
+        //    if (inputActions.Count <= 0 || !inputActions.ContainsKey(actionName)) return -1f;
+        //    return inputActions[actionName].GetHoldF();
+        //}
         public bool IsDown(int gamepad, string actionName, bool gamepadOnly = false)
         {
             if (inputActions.Count <= 0 || !inputActions.ContainsKey(actionName)) return false;
@@ -104,10 +134,10 @@ namespace ShapeEngineCore.Globals.Input
             return inputActions[actionName].IsUp(gamepad, gamepadOnly);
         }
 
-        public string GetInputActionKeyName(string actionName, bool isGamepad = false)
+        public string GetKeyName(string actionName, bool isGamepad = false, bool shorthand = false)
         {
             if (inputActions.Count <= 0 || !inputActions.ContainsKey(actionName)) return "";
-            return inputActions[actionName].GetInputKeyName(isGamepad);
+            return inputActions[actionName].GetKeyName(isGamepad, shorthand);
         }
         //public List<string> GetKeyNames(string actionName, bool shorthand = true)
         //{

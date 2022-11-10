@@ -1,5 +1,7 @@
-﻿using System.Numerics;
+﻿using System.Net.NetworkInformation;
+using System.Numerics;
 using Raylib_CsLo;
+using ShapeEngineCore.Globals.UI;
 
 namespace ShapeEngineCore.Globals
 {
@@ -201,43 +203,64 @@ namespace ShapeEngineCore.Globals
             DrawRingFilled(center, innerRadius, outerRadius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, sides, color);
         }
 
-        public static void DrawRectangeLinesPro(Vector2 center, Vector2 size, float rotRad, float lineThickness, Color color)
+        public static void DrawRectangeLinesPro(Vector2 pos, Vector2 size, Alignement alignement, Vector2 pivot, float rotDeg, float lineThickness, Color color)
         {
-            Vector2 topLeft = center + Vec.Rotate(-size / 2, rotRad);
-            Vector2 topRight = center + Vec.Rotate(new Vector2(size.X, -size.Y) / 2, rotRad);
-            Vector2 bottomRight = center + Vec.Rotate(size / 2, rotRad);
-            Vector2 bottomLeft = center + Vec.Rotate(new Vector2(-size.X, size.Y) / 2, rotRad);
-            Vector2 leftExtension = Vec.Rotate(new Vector2(-lineThickness / 2, 0f), rotRad);
-            Vector2 rightExtension = Vec.Rotate(new Vector2(lineThickness / 2, 0f), rotRad);
-            DrawLineEx(topLeft + leftExtension, topRight + rightExtension, lineThickness, color);
-            DrawLineEx(bottomLeft + leftExtension, bottomRight + rightExtension, lineThickness, color);
-            DrawLineEx(topLeft, bottomLeft, lineThickness, color);
-            DrawLineEx(topRight, bottomRight, lineThickness, color);
+            Vector2 leftExtension = Vec.Rotate(new Vector2(-lineThickness / 2, 0f), rotDeg * DEG2RAD);
+            Vector2 rightExtension = Vec.Rotate(new Vector2(lineThickness / 2, 0f), rotDeg * DEG2RAD);
+
+            var rr = Utils.RotateRectangle(pos, size, alignement, pivot, rotDeg);
+            DrawLineEx(rr.topLeft + leftExtension, rr.topRight + rightExtension, lineThickness, color);
+            DrawLineEx(rr.bottomLeft + leftExtension, rr.bottomRight + rightExtension, lineThickness, color);
+            DrawLineEx(rr.topLeft, rr.bottomLeft, lineThickness, color);
+            DrawLineEx(rr.topRight, rr.bottomRight, lineThickness, color);
+        }
+        public static void DrawRectangeLinesPro(Vector2 pos, Vector2 size, Alignement alignement, Alignement pivot, float rotDeg, float lineThickness, Color color)
+        {
+            DrawRectangeLinesPro(pos, size, alignement, UIHandler.GetAlignementVector(pivot), rotDeg, lineThickness, color);
         }
 
-        public static void DrawRectangle(Vector2 center, Vector2 size, Vector2 origin, float rotDeg, Color color)
+        public static void DrawRectangle(Rectangle rect, Color color)
         {
-            Rectangle rect = new(center.X, center.Y, size.X, size.Y);
-            Vector2 pivot = new(size.X * origin.X, size.Y * origin.Y);
-            DrawRectanglePro(rect, pivot, rotDeg, color);
+            DrawRectangleRec(rect, color);
         }
-        public static void DrawRectangle(Rectangle rect, Vector2 origin, float rotDeg, Color color)
+        public static void DrawRectangle(Vector2 pos, Vector2 size, Alignement alignement, Color color)
         {
-            Vector2 center = new(rect.x + rect.width / 2, rect.y + rect.height / 2);
-            Vector2 size = new(rect.width, rect.height);
-            DrawRectangle(center, size, origin, rotDeg, color);
+            DrawRectangle(Utils.ConstructRectangle(pos, size, alignement), color);
         }
 
+        public static void DrawRectangle(Rectangle rect, Vector2 pivot, float rotDeg, Color color)
+        {
+            var rr = Utils.RotateRectangle(rect, pivot, rotDeg);
+            Raylib.DrawTriangle(rr.topLeft, rr.bottomLeft, rr.bottomRight, color);
+            Raylib.DrawTriangle(rr.bottomRight, rr.topRight, rr.topLeft, color);
+        }
+
+        public static void DrawRectangle(Vector2 pos, Vector2 size, Alignement alignement, Vector2 pivot, float rotDeg, Color color)
+        {
+            DrawRectangle(Utils.ConstructRectangle(pos, size, alignement), pivot, rotDeg, color);
+        }
+
+        public static void DrawRectangle(Rectangle rect, Alignement pivot, float rotDeg, Color color)
+        {
+            DrawRectangle(rect, UIHandler.GetAlignementVector(pivot), rotDeg, color);
+        }
+
+        public static void DrawRectangle(Vector2 pos, Vector2 size, Alignement alignement, Alignement pivot, float rotDeg, Color color)
+        {
+            DrawRectangle(Utils.ConstructRectangle(pos, size, alignement), UIHandler.GetAlignementVector(pivot), rotDeg, color);
+        }
+        
 
 
-        public static void DrawRectangleOutlineBar(Vector2 center, Vector2 size, float thickness, float f, Color color)
+        public static void DrawRectangleOutlineBar(Rectangle rect, float thickness, float f, Color color)
         {
             Vector2 thicknessOffsetX = new Vector2(thickness, 0f);
             Vector2 thicknessOffsetY = new Vector2(0f, thickness);
-            Vector2 tl = center - size / 2;
-            Vector2 br = center + size / 2;
-            Vector2 tr = center + new Vector2(size.X, -size.Y) / 2;
-            Vector2 bl = center + new Vector2(-size.X, size.Y) / 2;
+
+            Vector2 tl = new(rect.x, rect.y);
+            Vector2 br = tl + new Vector2(rect.width, rect.height); ;
+            Vector2 tr = tl + new Vector2(rect.width, 0);
+            Vector2 bl = tl + new Vector2(0, rect.height);
 
             int lines = (int)MathF.Ceiling(4 * Clamp(f, 0f, 1f));
             float fMin = 0.25f * (lines - 1);
@@ -273,14 +296,25 @@ namespace ShapeEngineCore.Globals
                 DrawLineEx(start, end, thickness, color);
             }
         }
-        public static void DrawRectangleOutlineBar(Vector2 center, Vector2 size, float angleRad, float thickness, float f, Color color)
+        public static void DrawRectangleOutlineBar(Vector2 pos, Vector2 size, Alignement alignement, float thickness, float f, Color color)
         {
-            Vector2 thicknessOffsetX = new Vector2(thickness, 0f);
-            Vector2 thicknessOffsetY = new Vector2(0f, thickness);
-            Vector2 tl = -size / 2;
-            Vector2 br = size / 2;
-            Vector2 tr = new Vector2(size.X, -size.Y) / 2;
-            Vector2 bl = new Vector2(-size.X, size.Y) / 2;
+            DrawRectangleOutlineBar(Utils.ConstructRectangle(pos, size, alignement), thickness, f, color);
+        }
+
+
+        public static void DrawRectangleOutlineBar(Rectangle rect, Vector2 pivot, float angleDeg, float thickness, float f, Color color)
+        {
+            var rr = Utils.RotateRectangle(rect, pivot, angleDeg);
+            //Vector2 thicknessOffsetX = new Vector2(thickness, 0f);
+            //Vector2 thicknessOffsetY = new Vector2(0f, thickness);
+            
+            Vector2 leftExtension = Vec.Rotate(new Vector2(-thickness / 2, 0f), angleDeg * DEG2RAD);
+            Vector2 rightExtension = Vec.Rotate(new Vector2(thickness / 2, 0f), angleDeg * DEG2RAD);
+
+            Vector2 tl = rr.topLeft;
+            Vector2 br = rr.bottomRight;
+            Vector2 tr = rr.topRight;
+            Vector2 bl = rr.bottomLeft;
 
             int lines = (int)MathF.Ceiling(4 * Clamp(f, 0f, 1f));
             float fMin = 0.25f * (lines - 1);
@@ -292,31 +326,44 @@ namespace ShapeEngineCore.Globals
                 Vector2 start;
                 if (i == 0)
                 {
-                    start = tl - thicknessOffsetX / 2;
-                    end = tr - thicknessOffsetX / 2;
+                    start = tl + leftExtension;
+                    end = tr + rightExtension;
                 }
                 else if (i == 1)
                 {
-                    start = tr - thicknessOffsetY / 2;
-                    end = br - thicknessOffsetY / 2;
+                    start = tr;
+                    end = br;
                 }
                 else if (i == 2)
                 {
-                    start = br + thicknessOffsetX / 2;
-                    end = bl + thicknessOffsetX / 2;
+                    start = br + rightExtension;
+                    end = bl + leftExtension;
                 }
                 else
                 {
-                    start = bl + thicknessOffsetY / 2;
-                    end = tl + thicknessOffsetY / 2;
+                    start = bl;
+                    end = tl;
                 }
 
                 //last line
                 if (i == lines - 1) end = Vec.Lerp(start, end, newF);
-                DrawLineEx(center + Vec.Rotate(start, angleRad), center + Vec.Rotate(end, angleRad), thickness, color);
+                DrawLineEx(start, end, thickness, color);
             }
         }
-
+        public static void DrawRectangleOutlineBar(Vector2 pos, Vector2 size, Alignement alignement, Vector2 pivot, float angleDeg, float thickness, float f, Color color)
+        {
+            DrawRectangleOutlineBar(Utils.ConstructRectangle(pos, size, alignement), pivot, angleDeg, thickness, f, color);
+        }
+        public static void DrawRectangleOutlineBar(Vector2 pos, Vector2 size, Alignement alignement, Alignement pivot, float angleDeg, float thickness, float f, Color color)
+        {
+            DrawRectangleOutlineBar(Utils.ConstructRectangle(pos, size, alignement), UIHandler.GetAlignementVector(pivot), angleDeg, thickness, f, color);
+        }
+        public static void DrawRectangleOutlineBar(Rectangle rect, Alignement pivot, float angleDeg, float thickness, float f, Color color)
+        {
+            DrawRectangleOutlineBar(rect, UIHandler.GetAlignementVector(pivot), angleDeg, thickness, f, color);
+        }
+        
+        
         public static void DrawCircleOutlineBar(Vector2 center, float radius, float thickness, float f, Color color)
         {
             DrawCircleSectorLinesEx(center, radius, 0, 360 * f, thickness, color, false, 8f);
@@ -325,6 +372,43 @@ namespace ShapeEngineCore.Globals
         {
             DrawCircleSectorLinesEx(center, radius, 0, 360 * f, startOffsetDeg, thickness, color, false, 8f);
         }
+
+        
+        public static void DrawBar(Rectangle rect, float f, Color barColor, Color bgColor, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
+        {
+            f = 1.0f - f;
+            UIMargins progressMargins = new(f * top, f * right, f * bottom, f * left);
+            var progressRect = progressMargins.Apply(rect);
+            Drawing.DrawRectangle(rect, bgColor);
+            Drawing.DrawRectangle(progressRect, barColor);
+        }
+        public static void DrawBar(Vector2 pos, Vector2 size, Alignement alignement, float f, Color barColor, Color bgColor, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
+        {
+            DrawBar(Utils.ConstructRectangle(pos, size, alignement), f, barColor, bgColor, left, right, top, bottom);
+        }
+
+        public static void DrawBar(Rectangle rect, Vector2 pivot, float angleDeg, float f, Color barColor, Color bgColor, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
+        {
+            f = 1.0f - f;
+            UIMargins progressMargins = new(f * top, f * right, f * bottom, f * left);
+            var progressRect = progressMargins.Apply(rect);
+            Drawing.DrawRectangle(rect, pivot, angleDeg, bgColor);
+            Drawing.DrawRectangle(progressRect, pivot, angleDeg, barColor);
+        }
+        public static void DrawBar(Vector2 pos, Vector2 size, Alignement alignement, Vector2 pivot, float angleDeg, float f, Color barColor, Color bgColor, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
+        {
+            DrawBar(Utils.ConstructRectangle(pos, size, alignement), pivot, angleDeg, f, barColor, bgColor, left, right, top, bottom);
+        }
+        public static void DrawBar(Rectangle rect, Alignement pivot, float angleDeg, float f, Color barColor, Color bgColor, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
+        {
+            DrawBar(rect, UIHandler.GetAlignementVector(pivot), angleDeg, f, barColor, bgColor, left, right, top, bottom);
+        }
+        public static void DrawBar(Vector2 pos, Vector2 size, Alignement alignement, Alignement pivot, float angleDeg, float f, Color barColor, Color bgColor, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
+        {
+            DrawBar(Utils.ConstructRectangle(pos, size, alignement), UIHandler.GetAlignementVector(pivot), angleDeg, f, barColor, bgColor, left, right, top, bottom);
+        }
+
+        
 
         public static int GetCircleSideCount(float radius, float maxLength = 10f)
         {
@@ -336,6 +420,7 @@ namespace ShapeEngineCore.Globals
             float circumference = 2.0f * PI * radius * (angleDeg / 360f);
             return (int)MathF.Max(circumference / maxLength, 1);
         }
+
 
         public static float TransformAngleDeg(float angleDeg) { return 450f - angleDeg; }
         public static float TransformAngleRad(float angleRad) { return 2.5f * PI - angleRad; }

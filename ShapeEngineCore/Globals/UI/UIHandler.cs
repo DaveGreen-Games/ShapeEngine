@@ -3,6 +3,7 @@ using ShapeEngineCore.Globals.Input;
 using ShapeEngineCore.Globals.Screen;
 using System.Numerics;
 using ShapeEngineCore.Globals.Persistent;
+using System.Runtime.CompilerServices;
 
 namespace ShapeEngineCore.Globals.UI
 {
@@ -50,18 +51,31 @@ namespace ShapeEngineCore.Globals.UI
 
         private static Dictionary<string, float> fontSizes = new();
 
+        static float dirInputTimer = -1f;
+        static float dirInputInterval = 0.25f;
+        static UINeighbors.NeighborDirection lastDir = UINeighbors.NeighborDirection.NONE;
 
+        public static string inputLeft = "UI Left";
+        public static string inputUp = "UI Up";
+        public static string inputRight = "UI Right";
+        public static string inputDown = "UI Down";
+        public static string inputSelect = "UI Select";
+        public static string inputSelectMouse = "UI Select Mouse";
+        public static int playerSlot = -1;
+
+
+        public delegate void DirectionInput(UINeighbors.NeighborDirection dir, UIElement? selected, UIElement? nextSelected);
+        public static event DirectionInput? OnDirectionInput;
+
+        public delegate void SelectedItemUnregistered(UIElement selected);
+        public static event SelectedItemUnregistered? OnSelectedItemUnregistered;
 
         public static void Initialize()
         {
             defaultFont = GetFontDefault();
         }
 
-        //public static float GetFontSizeScaled(FontSize fontSize)
-        //{
-        //    return GetFontSizeScaled((float)fontSize);
-        //}
-
+        public static void SetDirInputInterval(float newInterval) { dirInputInterval = newInterval; }
 
         public static void AddFontSize(string name, float size)
         {
@@ -78,27 +92,6 @@ namespace ShapeEngineCore.Globals.UI
             if (!fontSizes.ContainsKey(name)) return -1;
             else return fontSizes[name];
         }
-        //public static float GetFontSizeScaled(string name)
-        //{
-        //    if (!fontSizes.ContainsKey(name)) return -1;
-        //    else return fontSizes[name] * ScreenHandler.UI.STRETCH_FACTOR.Y;
-        //}
-
-
-        //public static float ScaleFontSize(int fontSize)
-        //{
-        //    return ScaleFontSize((float)fontSize);
-        //}
-        //public static float ScaleFontSize(float fontSize)
-        //{
-        //    return fontSize * ScreenHandler.UI_FACTOR;
-        //}
-
-        //public static Vector2 Scale(Vector2 v) { return v * ScreenHandler.UI_FACTOR; }
-        //public static float Scale(float f) { return f * ScreenHandler.UI_FACTOR; }
-        //public static int Scale(int i) { return (int)(i * ScreenHandler.UI_FACTOR); }
-
-        
         public static void AddFont(string name, string fileName, int fontSize = 100)
         {
             if (fileName == "" || fonts.ContainsKey(name)) return;
@@ -106,12 +99,6 @@ namespace ShapeEngineCore.Globals.UI
             
             SetTextureFilter(font.texture, TextureFilter.TEXTURE_FILTER_BILINEAR);
             fonts.Add(name, font);
-            //unsafe
-            //{
-            //    Font font = LoadFontEx(fileName, fontSize, (int*)0, 300);
-            //    SetTextureFilter(font.texture, TextureFilter.TEXTURE_FILTER_BILINEAR);
-            //    fonts.Add(name, font);
-            //}
         }
         public static Font GetFont(string name = "")
         {
@@ -134,6 +121,27 @@ namespace ShapeEngineCore.Globals.UI
         {
             if (register == null || register.Count <= 0) return;
             register.Remove(element);
+            if (selected != null && selected == element)
+            {
+                DeselectUIElement();
+                OnSelectedItemUnregistered?.Invoke(element);
+            }
+            else if (element.IsSelected())
+            {
+                element.Deselect();
+                OnSelectedItemUnregistered?.Invoke(element);
+            }
+        }
+
+        public static bool DeselectUIElement()
+        {
+            if(selected != null)
+            {
+                selected.Deselect();
+                selected = null;
+                return true;
+            }
+            return false;
         }
         public static bool SelectUIElement(UIElementSelectable element)
         {
@@ -145,30 +153,90 @@ namespace ShapeEngineCore.Globals.UI
         }
         public static void Update(float dt)
         {
-
             if (selected != null)
             {
-                
-                if (InputHandler.IsPressed(-1, "UI Up"))
-                {
-                    CheckDirection(UINeighbors.NeighborDirection.TOP);
-                }
-                else if (InputHandler.IsPressed(-1, "UI Right"))
-                {
-                    CheckDirection(UINeighbors.NeighborDirection.RIGHT);
-                }
-                else if (InputHandler.IsPressed(-1, "UI Down"))
-                {
-                    CheckDirection(UINeighbors.NeighborDirection.BOTTOM);
-                }
-                else if (InputHandler.IsPressed(-1, "UI Left"))
-                {
-                    CheckDirection(UINeighbors.NeighborDirection.LEFT);
-                }
-            }
+                UIElementSelectable? newSelected = null;
 
+                if (dirInputTimer > 0f)
+                {
+                    string input = GetDirInput(lastDir);
+                    if (InputHandler.IsDown(playerSlot, input))
+                    {
+                        dirInputTimer -= dt;
+                        if (dirInputTimer <= 0f) dirInputTimer = 0f;
+                    }
+                    else
+                    {
+                        dirInputTimer = -1f;
+                        lastDir = UINeighbors.NeighborDirection.NONE;
+                    }
+                }
+
+                if (InputHandler.IsPressed(playerSlot, inputUp) || (lastDir == UINeighbors.NeighborDirection.TOP && dirInputTimer == 0f))
+                {
+                    newSelected = selected.CheckDirection(UINeighbors.NeighborDirection.TOP, register);
+                    lastDir = UINeighbors.NeighborDirection.TOP;
+                    if(dirInputInterval > 0f) dirInputTimer = dirInputInterval - dt;
+                    OnDirectionInput?.Invoke(lastDir, selected, newSelected);
+                }
+                else if (InputHandler.IsPressed(playerSlot, inputRight) || (lastDir == UINeighbors.NeighborDirection.RIGHT && dirInputTimer == 0f))
+                {
+                    newSelected = selected.CheckDirection(UINeighbors.NeighborDirection.RIGHT, register);
+                    lastDir = UINeighbors.NeighborDirection.RIGHT;
+                    if (dirInputInterval > 0f) dirInputTimer = dirInputInterval - dt;
+                    OnDirectionInput?.Invoke(lastDir, selected, newSelected);
+                }
+                else if (InputHandler.IsPressed(playerSlot, inputDown) || (lastDir == UINeighbors.NeighborDirection.BOTTOM && dirInputTimer == 0f))
+                {
+                    newSelected = selected.CheckDirection(UINeighbors.NeighborDirection.BOTTOM, register);
+                    lastDir = UINeighbors.NeighborDirection.BOTTOM;
+                    if (dirInputInterval > 0f) dirInputTimer = dirInputInterval - dt;
+                    OnDirectionInput?.Invoke(lastDir, selected, newSelected);
+                }
+                else if (InputHandler.IsPressed(playerSlot, inputLeft) || (lastDir == UINeighbors.NeighborDirection.LEFT && dirInputTimer == 0f))
+                {
+                    newSelected = selected.CheckDirection(UINeighbors.NeighborDirection.LEFT, register);
+                    lastDir = UINeighbors.NeighborDirection.LEFT;
+                    if (dirInputInterval > 0f) dirInputTimer = dirInputInterval - dt;
+                    OnDirectionInput?.Invoke(lastDir, selected, newSelected);
+                }
+
+
+
+                if (newSelected != null) selected = newSelected;
+            }
         }
 
+        //private bool IsDown(UINeighbors.NeighborDirection dir)
+        //{
+        //    string input = GetDirInput(dir);
+        //    if (input != "")
+        //    {
+        //        return InputHandler.IsDown(playerSlot, input);
+        //    }
+        //    return false;
+        //}
+        //private bool IsPressed(UINeighbors.NeighborDirection dir)
+        //{
+        //    string input = GetDirInput(dir);
+        //    if (input != "")
+        //    {
+        //        return InputHandler.IsPressed(playerSlot, input);
+        //    }
+        //    return false;
+        //}
+        private static string GetDirInput(UINeighbors.NeighborDirection dir)
+        {
+            switch (dir)
+            {
+                case UINeighbors.NeighborDirection.NONE: return "";
+                case UINeighbors.NeighborDirection.TOP: return inputUp;
+                case UINeighbors.NeighborDirection.RIGHT: return inputRight;
+                case UINeighbors.NeighborDirection.BOTTOM: return inputDown;
+                case UINeighbors.NeighborDirection.LEFT: return inputLeft;
+                default: return "";
+            }
+        }
 
         public static Vector2 GetAlignementVector(Alignement alignement)
         {
@@ -426,69 +494,7 @@ namespace ShapeEngineCore.Globals.UI
         //    DrawTextAligned(text, pos, GetFontSizeScaled(fontSize), Scale(fontSpacing), color, GetFont(fontName), alignement);
         //}
 
-        public static void DrawBar(Vector2 topLeft, Vector2 size, float f, Color barColor, Color bgColor, BarType barType = BarType.LEFTRIGHT)
-        {
-            Rectangle barRect = new Rectangle(topLeft.X, topLeft.Y, size.X, size.Y);
-            DrawBar(barRect, f, barColor, bgColor, barType);
-        }
-        public static void DrawBar(Rectangle barRect, float f, Color barColor, Color bgColor, BarType barType = BarType.LEFTRIGHT)
-        {
-            Rectangle original = barRect;
-            Rectangle rect = original;
-            switch (barType)
-            {
-                case BarType.LEFTRIGHT:
-                    rect.width *= f;
-                    break;
-                case BarType.RIGHTLEFT:
-                    rect.X += rect.width * (1.0f - f);
-                    rect.width *= f;
-                    break;
-                case BarType.TOPBOTTOM:
-                    rect.height *= f;
-                    break;
-                case BarType.BOTTOMTOP:
-                    rect.Y += rect.height * (1.0f - f);
-                    rect.height *= f;
-                    break;
-                default:
-                    rect.width *= f;
-                    break;
-            }
-            DrawRectangleRec(original, bgColor);
-            DrawRectangleRec(rect, barColor);
-        }
-        public static void DrawBar(Vector2 topLeft, Vector2 size, float f, Color barColor, Color bgColor, Color outlineColor, float outlineSize, BarType barType = BarType.LEFTRIGHT)
-        {
-            Rectangle barRect = new Rectangle(topLeft.X, topLeft.Y, size.X, size.Y);
-            DrawBar(barRect, f, barColor, bgColor, outlineColor, outlineSize, barType);
-        }
-        public static void DrawBar(Rectangle barRect, float f, Color barColor, Color bgColor, Color outlineColor, float outlineSize, BarType barType = BarType.LEFTRIGHT)
-        {
-            Rectangle original = barRect;
-            Rectangle rect = original;
-            switch (barType)
-            {
-                case BarType.LEFTRIGHT:
-                    rect.width *= f;
-                    break;
-                case BarType.RIGHTLEFT:
-                    rect.X += rect.width * (1.0f - f);
-                    break;
-                case BarType.TOPBOTTOM:
-                    rect.height *= f;
-                    break;
-                case BarType.BOTTOMTOP:
-                    rect.Y += rect.height * (1.0f - f);
-                    break;
-                default:
-                    rect.width *= f;
-                    break;
-            }
-            DrawRectangleRec(original, bgColor);
-            DrawRectangleRec(rect, barColor);
-            if (outlineSize > 0f) DrawRectangleLinesEx(original, outlineSize, outlineColor);
-        }
+        
         public static void Close()
         {
             foreach (Font font in fonts.Values)
@@ -501,48 +507,7 @@ namespace ShapeEngineCore.Globals.UI
         }
 
 
-        private static void CheckDirection(UINeighbors.NeighborDirection dir)
-        {
-            if (selected == null) return;
-            var neighbor = selected.GoToNeighbor(dir);
-            if (neighbor != null) selected = neighbor;
-            else if (selected.IsAutomaticDetectionDirectionEnabled(dir))
-            {
-                var closest = FindNeighbor(selected, dir);
-                if (closest != null)
-                {
-                    selected.Deselect();
-                    selected = closest;
-                    selected.Select();
-                }
-            }
-        }
-        private static UIElementSelectable? FindNeighbor(UIElementSelectable current, UINeighbors.NeighborDirection dir)
-        {
-            if (current == null) return null;
-            if (register == null || register.Count <= 0) return null;
-            List<UIElementSelectable> neighbors = register.FindAll(e => e != current && !e.IsDisabled());// && e.IsAutomaticDetectionDirectionEnabled(dir));
-            if (neighbors.Count <= 0) return null;
-            if (neighbors.Count == 1)
-            {
-                if (current.CheckNeighborDistance(neighbors[0], dir) < float.PositiveInfinity) return neighbors[0];
-                else return null;
-            }
-            int closestIndex = -1;
-            float closestDistance = float.PositiveInfinity;
-            for (int i = 0; i < neighbors.Count; i++)
-            {
-                float dis = current.CheckNeighborDistance(neighbors[i], dir);
-                if (dis < closestDistance)
-                {
-                    closestDistance = dis;
-                    closestIndex = i;
-                }
-            }
-
-            if (closestIndex < 0 || closestIndex >= neighbors.Count) return null;
-            return neighbors[closestIndex];
-        }
+        
     }
 
 }

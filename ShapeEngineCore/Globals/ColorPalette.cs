@@ -112,6 +112,7 @@ namespace ShapeEngineCore.Globals
             this.palette = palette;
         }
 
+        
         public string Name { get { return name; } }
         public Color Get(string name)
         {
@@ -138,7 +139,7 @@ namespace ShapeEngineCore.Globals
     {
         private static Dictionary<string, ColorPalette> palettes = new();
         private static int curPaletteIndex = 0;
-        private static List<string> paletteNames = new() { "default" };
+        private static List<string> paletteNames = new() { };
         private static ColorPalette curPalette = new ColorPalette("default", 
             ("black", BLACK), ("white", WHITE), ("gray", GRAY), 
             ("green", GREEN), ("blue", BLUE), ("red", RED), 
@@ -148,9 +149,10 @@ namespace ShapeEngineCore.Globals
 
         public static void Initialize()
         {
-            AddPalette(curPalette);
+            //AddPalette(curPalette);
         }
 
+        public static List<string> GetAllPaletteNames() { return paletteNames; }
         public static int CurIndex { get { return curPaletteIndex; } }
         public static string CurName { get { return curPalette.Name; } }
         public static ColorPalette Cur { get { return curPalette; } }
@@ -212,7 +214,7 @@ namespace ShapeEngineCore.Globals
         }
         public static void RemovePalette(string paletteName)
         {
-            if (paletteName == "default") return;
+            //if (paletteName == "default") return;
             if (!palettes.ContainsKey(paletteName)) return;
 
             if(curPalette.Name == paletteName)
@@ -224,7 +226,7 @@ namespace ShapeEngineCore.Globals
         }
         public static void ChangePalette(string newPalette)
         {
-            if (CurName == newPalette) return;
+            //if (CurName == newPalette) return;
 
             if (palettes.ContainsKey(newPalette))
             {
@@ -235,7 +237,7 @@ namespace ShapeEngineCore.Globals
         }
         public static void ChangePalette(int index)
         {
-            if (index == curPaletteIndex) return;
+            //if (index == curPaletteIndex) return;
             if (index < 0) { index = paletteNames.Count - 1; }
             else if (index >= paletteNames.Count) { index = 0; }
 

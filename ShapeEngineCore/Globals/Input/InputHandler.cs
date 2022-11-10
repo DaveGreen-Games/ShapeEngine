@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Diagnostics;
+using System.Numerics;
 using Raylib_CsLo;
 using ShapeEngineCore.Globals.Cursor;
 using Vortice.XInput;
@@ -34,10 +35,17 @@ namespace ShapeEngineCore.Globals.Input
             curInputMap = new("empty");
             this.gamepadIndex = gamepadIndex;
         }
-        public void Update(float dt)
-        {
-            UpdateVibration(dt);
-        }
+        //public void Update(float dt, bool gamepadOnly)
+        //{
+        //    curInputMap.Update(dt, gamepadIndex, gamepadOnly);
+        //    UpdateVibration(dt);
+        //}
+        //
+        //public float GetHoldF(string actionName, bool gamepadOnly)
+        //{
+        //    if (disabled) return -1f;
+        //    return curInputMap.GetHoldF(gamepadIndex, actionName, gamepadOnly);
+        //}
         public bool IsDown(string actionName, bool gamepadOnly)
         {
             if (disabled) return false;
@@ -83,9 +91,9 @@ namespace ShapeEngineCore.Globals.Input
             else return curInputMap.GetGamepadAxis(gamepadIndex, gamepadAxisHor, gamepadAxisVer);
         }
 
-        public string GetInputActionKeyName(string inputAction, bool isGamepad = false)
+        public string GetInputActionKeyName(string inputAction, bool isGamepad = false, bool shorthand = false)
         {
-            return curInputMap.GetInputActionKeyName(inputAction, isGamepad);
+            return curInputMap.GetKeyName(inputAction, isGamepad, shorthand);
         }
 
 
@@ -146,9 +154,9 @@ namespace ShapeEngineCore.Globals.Input
         private static Dictionary<int, InputSlot> inputSlots = new();
         private static Dictionary<string, InputMap> inputMaps = new();
         //private static bool disabled = false;
-        private static readonly Dictionary<string, InputAction> UI_Default_InputActions = new()
+        public static readonly Dictionary<string, InputAction> UI_Default_InputActions = new()
         {
-            {"UI Mouse Select", new("UI Mouse Select", InputAction.Keys.MB_LEFT) },
+            {"UI Select Mouse", new("UI Select Mouse", InputAction.Keys.MB_LEFT) },
             {"UI Select", new("UI Select", InputAction.Keys.SPACE, InputAction.Keys.GP_BUTTON_RIGHT_FACE_DOWN) },
             {"UI Cancel", new("UI Cancel", InputAction.Keys.ESCAPE, InputAction.Keys.GP_BUTTON_RIGHT_FACE_RIGHT) },
             {"UI Cancel Mouse", new("UI Cancel Mouse", InputAction.Keys.MB_RIGHT) },
@@ -175,6 +183,7 @@ namespace ShapeEngineCore.Globals.Input
         public static InputType GetCurInputType() { return CUR_INPUT_TYPE; }
 
         private static bool mouseUsed = false;
+        private static bool keyboardUsed = false;
         private static bool keyboardOnlyMode = false;
         public static int gamepadUsed = -1;
         //STATIC EVENT!!! - everything that subscribes to a static event must unsubscribe before deletion, otherwise memory leaks can happen
@@ -217,10 +226,10 @@ namespace ShapeEngineCore.Globals.Input
         {
             CheckGamepadConnection();
             CheckInputType();
-            foreach (var slot in inputSlots.Values)
-            {
-                slot.Update(dt);
-            }
+            //foreach (var slot in inputSlots)
+            //{
+            //    slot.Value.Update(dt, slot.Key > 0);
+            //}
         }
 
         public static void Close()
@@ -254,20 +263,26 @@ namespace ShapeEngineCore.Globals.Input
             if (index < 0 || index >= inputSlots.Count) return null;
             return inputSlots[index];
         }
-        private static void AddDefaultUIInputsToMap(string mapName)
-        {
-            if (!inputMaps.ContainsKey(mapName)) return;
-            AddDefaultUIInputsToMap(inputMaps[mapName]);
-        }
-        private static void AddDefaultUIInputsToMap(InputMap map)
-        {
-            foreach (var input in UI_Default_InputActions)
-            {
-                map.AddAction(input.Key, input.Value);
-            }
-        }
+        //private static void AddDefaultUIInputsToMap(string mapName)
+        //{
+        //    if (!inputMaps.ContainsKey(mapName)) return;
+        //    AddDefaultUIInputsToMap(inputMaps[mapName]);
+        //}
+        //private static void AddDefaultUIInputsToMap(InputMap map)
+        //{
+        //    foreach (var input in UI_Default_InputActions)
+        //    {
+        //        map.AddAction(input.Key, input.Value);
+        //    }
+        //}
 
-
+        //public static void AddInputActionsToInputMap(InputMap map, List<InputAction> inputActions)
+        //{
+        //    foreach (var input in inputActions)
+        //    {
+        //        map.AddAction(input);
+        //    }
+        //}
         public static string NextInputMap(int playerSlot = 0, bool switchMap = true)
         {
             var slot = GetInputSlot(playerSlot);
@@ -315,7 +330,7 @@ namespace ShapeEngineCore.Globals.Input
             if (slot == null) return;
             slot.disabled = true;
         }
-        public static void AddInputMap(InputMap map, bool addUIInputs)
+        public static void AddInputMap(InputMap map)
         {
             if (map == null) return;
             if (inputMaps.ContainsKey(map.GetName()))
@@ -326,11 +341,11 @@ namespace ShapeEngineCore.Globals.Input
             {
                 inputMaps.Add(map.GetName(), map);
             }
-            if(addUIInputs) AddDefaultUIInputsToMap(map);
+            //if(addUIInputs) AddDefaultUIInputsToMap(map);
         }
-        public static void AddInputMap(string name, bool addUIInputs, params InputAction[] actions)
+        public static void AddInputMap(string name, params InputAction[] actions)
         {
-            AddInputMap(new InputMap(name, actions), addUIInputs);
+            AddInputMap(new InputMap(name, actions));
         }
         
         public static void RemoveInputMap(string name)
@@ -369,6 +384,12 @@ namespace ShapeEngineCore.Globals.Input
             return inputMaps[name];
         }
 
+        public static string GetInputActionKeyName(int playerSlot, string inputAction, bool shorthand = false)
+        {
+            var slot = GetInputSlot(playerSlot);
+            if (slot == null) return "";
+            return slot.GetInputActionKeyName(inputAction, IsGamepad(), shorthand);
+        }
         /*
         public static void EnableMap(string name)
         {
@@ -387,6 +408,25 @@ namespace ShapeEngineCore.Globals.Input
             inputMaps[name].Rename(newName);
         }
 
+        //public static float GetHoldF(int playerSlot, string actionName)
+        //{
+        //    if (playerSlot < 0)
+        //    {
+        //        for (int i = 0; i < inputSlots.Count; i++)
+        //        {
+        //            var slot = inputSlots[i];
+        //            float f = slot.GetHoldF(actionName, i > 0);
+        //            if (f >= 0f) return f;
+        //        }
+        //        return -1f;
+        //    }
+        //    else
+        //    {
+        //        var slot = GetInputSlot(playerSlot);
+        //        if (slot == null) return -1f;
+        //        return slot.GetHoldF(actionName, playerSlot > 0);
+        //    }
+        //}
         public static bool IsDown(int playerSlot, string actionName)
         {
             if(playerSlot < 0)
@@ -486,12 +526,7 @@ namespace ShapeEngineCore.Globals.Input
             return slot.GetGamepadAxis(gamepadAxisHor, gamepadAxisVer, normalized);
         }
 
-        public static string GetInputActionKeyName(int playerSlot, string inputAction, bool isGamepad = false)
-        {
-            var slot = GetInputSlot(playerSlot);
-            if (slot == null) return "";
-            return slot.GetInputActionKeyName(inputAction, isGamepad);
-        }
+        
 
 
 
@@ -517,7 +552,8 @@ namespace ShapeEngineCore.Globals.Input
         }
 
         public static bool IsMouse() { return mouseUsed && !keyboardOnlyMode; }
-        public static bool IsKeyboardOnly() { return keyboardOnlyMode; }
+        public static bool IsKeyboardOnlyMode() { return keyboardOnlyMode; }
+        public static bool IsKeyboard() { return keyboardUsed; }
         public static bool IsKeyboardMouse() { return CUR_INPUT_TYPE == InputType.KEYBOARD_MOUSE; }
         public static bool IsGamepad() { return CUR_INPUT_TYPE == InputType.GAMEPAD; }
         public static bool IsTouch() { return CUR_INPUT_TYPE == InputType.TOUCH; }
@@ -595,6 +631,7 @@ namespace ShapeEngineCore.Globals.Input
         private static void CheckInputType()
         {
             mouseUsed = false;
+            keyboardUsed = false;
             //check if new input type was used and raise event
             switch (CUR_INPUT_TYPE)
             {
@@ -610,12 +647,17 @@ namespace ShapeEngineCore.Globals.Input
                         CUR_INPUT_TYPE = InputType.TOUCH;
                         OnInputTypeChanged(CUR_INPUT_TYPE);
                     }
-                    else mouseUsed = WasMouseUsed();
+                    else
+                    {
+                        mouseUsed = WasMouseUsed();
+                        keyboardUsed = WasKeyboardUsed();
+                    }
                     break;
 
                 case InputType.GAMEPAD:
                     mouseUsed = WasMouseUsed();
-                    if (mouseUsed || WasKeyboardUsed())
+                    keyboardUsed = WasKeyboardUsed();
+                    if (mouseUsed || keyboardUsed)
                     {
                         StopVibration(0);
                         CUR_INPUT_TYPE = InputType.KEYBOARD_MOUSE;
@@ -630,7 +672,9 @@ namespace ShapeEngineCore.Globals.Input
                     break;
 
                 case InputType.TOUCH:
-                    if (WasMouseUsed() || WasKeyboardUsed())
+                    mouseUsed = WasMouseUsed();
+                    keyboardUsed = WasKeyboardUsed();
+                    if (mouseUsed || keyboardUsed)
                     {
                         CUR_INPUT_TYPE = InputType.KEYBOARD_MOUSE;
                         OnInputTypeChanged(CUR_INPUT_TYPE);
@@ -794,6 +838,13 @@ namespace ShapeEngineCore.Globals.Input
         public static float GetMouseWheelMovement(bool inverted = false)
         {
             float movement = GetMouseWheelMove();
+
+            if (inverted) return -movement;
+            return movement;
+        }
+        public static Vector2 GetMouseWheelMovementV(bool inverted = false)
+        {
+            Vector2 movement = GetMouseWheelMoveV();
 
             if (inverted) return -movement;
             return movement;

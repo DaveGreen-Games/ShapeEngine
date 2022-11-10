@@ -9,6 +9,8 @@ using ShapeEngineCore.Globals.Input;
 using ShapeEngineCore.Globals.Timing;
 using ShapeEngineCore.Globals.Cursor;
 using ShapeEngineDemo.Bodies;
+using Windows.Devices.PointOfService;
+using Windows.Devices.Usb;
 
 namespace ShapeEngineDemo
 {
@@ -188,6 +190,11 @@ namespace ShapeEngineDemo
         private Player player;
         private AsteroidSpawner asteroidSpawner;
         private Rectangle playArea;
+
+        //private Panel testPanel = new(Alignement.LEFTCENTER);
+        //private float testRotationDeg = 0f;
+        //private Label testLabel = new("TEST", Alignement.RIGHTCENTER);
+
         public Level()
         {
             Rectangle playArea = new Rectangle(0, 0, 800, 800);// Utils.ScaleRectangle(ScreenHandler.GameArea(), 1.5f);
@@ -258,6 +265,9 @@ namespace ShapeEngineDemo
             if(player != null && !player.IsDead()) area.UpdateLayerParallaxe(player.GetPos());
             area.Update(dt);
             asteroidSpawner.Update(dt);
+
+            //testRotationDeg += dt * 90f;
+            //if (testRotationDeg > 360) testRotationDeg = 0f;
         }
         public override void Draw()
         {
@@ -290,6 +300,25 @@ namespace ShapeEngineDemo
                 var pos = GAMELOOP.UISize();
                 UIHandler.DrawTextAlignedPro("PAUSED", uiSize * new Vector2(0.5f, 0.3f), 0f, uiSize * new Vector2(0.5f, 0.25f), 5f, PaletteHandler.C("header"), Alignement.CENTER);
             }
+
+
+            //Drawing.DrawRectangeLinesPro(uiSize * new Vector2(0.5f, 0.5f), uiSize * new Vector2(0.25f, 0.1f), Alignement.CENTER, testRotationDeg * DEG2RAD, 3f, WHITE);
+            //DrawCircleV(uiSize * new Vector2(0.5f, 0.5f), 5f, GOLD);
+            //testPanel.SetRotation(testRotationDeg);
+            //testPanel.SetOutlineThickness(3f);
+            //testPanel.SetColors(RED, WHITE);
+            //testPanel.UpdateRect(uiSize * new Vector2(0.5f, 0.5f), uiSize * new Vector2(0.25f, 0.1f), Alignement.LEFTCENTER);
+            //testPanel.Draw(uiSize, stretchFactor);
+            //
+            //testLabel.SetRotation(testRotationDeg);
+            //testLabel.SetOutlineThickness(2f);
+            //testLabel.SetColors(BLUE, WHITE);
+            //testLabel.SetTextColor(GRAY);
+            //testLabel.UpdateRect(uiSize * new Vector2(0.5f, 0.65f), uiSize * new Vector2(0.25f, 0.1f), Alignement.RIGHTCENTER);
+            //testLabel.Draw(uiSize, stretchFactor);
+            //
+            //DrawCircleV(uiSize * new Vector2(0.5f, 0.5f), 5f, GOLD);
+            //DrawCircleV(uiSize * new Vector2(0.5f, 0.65f), 5f, GREEN);
         }
         public override void Close()
         {
