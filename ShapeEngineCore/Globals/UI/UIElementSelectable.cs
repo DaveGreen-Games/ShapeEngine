@@ -123,7 +123,7 @@ namespace ShapeEngineCore.Globals.UI
                 if (hovered && !prevHovered)
                 {
                     HoveredChanged(true);
-                    AudioHandler.PlaySFX("button hover");
+                    PlayHoveredSound();
                 }
                 else if (!hovered && prevHovered) { HoveredChanged(false); }
                
@@ -156,7 +156,7 @@ namespace ShapeEngineCore.Globals.UI
                 if(pressedChanged) PressedChanged(true);
                 if(mousePressedChanged) MousePressedChanged(true);
 
-                AudioHandler.PlaySFX("button click");
+                PlayClickedSound();
             }
             else
             {
@@ -169,6 +169,15 @@ namespace ShapeEngineCore.Globals.UI
             if (mouseClicked) WasMouseClicked();
         }
 
+
+        public virtual void PlayHoveredSound()
+        {
+            AudioHandler.PlaySFX("button hover");
+        }
+        public virtual void PlayClickedSound()
+        {
+            AudioHandler.PlaySFX("button click");
+        }
         public virtual void WasClicked() { }
         public virtual void WasMouseClicked() { }
         public virtual void MousePressedChanged(bool pressed) { }
