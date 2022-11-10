@@ -444,7 +444,9 @@ namespace ShapeEngineCore.Globals
         }
         public static float LerpInverseInt(int a, int b, int value)
         {
-            return (value - a) / (b - a);
+            float cur = (float)(value - a);
+            float max = (float)(b - a);
+            return cur / max;
         }
         public static int RemapInt(int value, int minOld, int maxOld, int minNew, int maxNew)
         {
