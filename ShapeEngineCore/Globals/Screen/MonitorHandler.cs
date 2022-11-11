@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using ShapeEngineCore.Globals.Timing;
+using System.Numerics;
 
 namespace ShapeEngineCore.Globals.Screen
 {
@@ -37,6 +38,9 @@ namespace ShapeEngineCore.Globals.Screen
 
         public delegate void MonitorChanged(MonitorInfo oldMonitor, MonitorInfo newMonitor);
         public event MonitorChanged? OnMonitorChanged;
+
+        public delegate void MonitorSetupChanged(List<MonitorInfo> newSetup);
+        public event MonitorSetupChanged? OnMonitorSetupChanged;
 
         private List<MonitorInfo> monitors = new();
         private int curIndex = 0;
@@ -98,6 +102,7 @@ namespace ShapeEngineCore.Globals.Screen
             if (dif > 0) //new monitors added -> only update monitor list
             {
                 GenerateInfo();
+                OnMonitorSetupChanged?.Invoke(monitors);
                 return new();
             }
             else //monitors removed
@@ -105,6 +110,7 @@ namespace ShapeEngineCore.Globals.Screen
                 //string currentMonitorName = GetName();
                 var oldMonitor = Get();
                 GenerateInfo();
+                OnMonitorSetupChanged?.Invoke(monitors);
 
                 var monitor = monitors.Find((MonitorInfo mi) => mi.name == oldMonitor.name);
                 if (!monitor.available) //current monitor was removed
