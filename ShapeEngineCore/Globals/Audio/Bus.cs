@@ -29,10 +29,18 @@
         public void SetVolume(float volume)
         {
             this.volume = volume;
+            VolumeChanged();
+        }
+        protected void VolumeChanged()
+        {
             float combinedVolume = GetCombinedVolume();
             foreach (Audio a in audio.Values)
             {
                 a.ChangeCombinedVolume(combinedVolume);
+            }
+            foreach (var child in children)
+            {
+                child.VolumeChanged();
             }
         }
         public string GetName() { return name; }
