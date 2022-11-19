@@ -106,6 +106,8 @@ namespace ShapeEngineCore.SimpleCollision
         protected Vector2 accumulatedForce = Vector2.Zero;
         protected bool enabled = true;
 
+        public bool HasAccumulatedForce() { return accumulatedForce.X != 0f || accumulatedForce.Y != 0f; }
+        public Vector2 GetAccumulatedForce() { return accumulatedForce; }
         public void AccumulateForce(Vector2 force)
         {
             accumulatedForce += force / Mass;
