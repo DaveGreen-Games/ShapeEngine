@@ -375,6 +375,64 @@ namespace ShapeEngineCore.Globals
             return points;
         }
 
+        //doesnt work because lowest value possible = 0.984....
+        //public static float DragFactor(float dragCoefficient, float dt)
+        //{
+        //    if (dragCoefficient >= 1f) return 1f;
+        //    else if (dragCoefficient == 0f) return 0f;
+        //    return MathF.Exp(-dragCoefficient * dt);
+        //
+        //
+        //    //FinalVelocity = InitialVelocity + 1 / 2((DragForce / ObjectMass) * DT ^ 2)
+        //
+        //
+        //}
+
+        /// <summary>
+        /// Apply drag to the given value.
+        /// </summary>
+        /// <param name="value">The value that is affected by the drag.</param>
+        /// <param name="dragCoefficient">The drag coefficient for calculating the drag force. Has to be positive.
+        /// 1 / drag coefficient = seconds until stop. DC of 4 means object stops in 0.25s.</param>
+        /// <param name="dt">The delta time of the current frame.</param>
+        /// <returns></returns>
+        public static float ApplyDragForce(float value, float dragCoefficient, float dt)
+        {
+            if (dragCoefficient <= 0f) return value;
+            float dragForce = dragCoefficient * value * dt;
+            
+            return value - MathF.Min(dragForce, value);
+        }
+        /// <summary>
+        /// Apply drag to the given velocity.
+        /// </summary>
+        /// <param name="vel">The velocity that is affected by the drag.</param>
+        /// <param name="dragCoefficient">The drag coefficient for calculating the drag force. Has to be positive.
+        /// 1 / drag coefficient = seconds until stop. DC of 4 means object stops in 0.25s.</param>
+        /// <param name="dt">The delta time of the current frame.</param>
+        /// <returns></returns>
+        public static Vector2 ApplyDragForce(Vector2 vel, float dragCoefficient, float dt)
+        {
+            if(dragCoefficient <= 0f) return vel;
+            Vector2 dragForce = dragCoefficient * vel * dt;// * dt * 0.5f;
+            if (dragForce.LengthSquared() >= vel.LengthSquared()) return new Vector2(0f, 0f);
+            return vel - dragForce;
+        }
+        public static float GetDragForce(float value, float dragCoefficient, float dt)
+        {
+            if (dragCoefficient <= 0f) return value;
+            float dragForce = dragCoefficient * value * dt;
+
+            return -MathF.Min(dragForce, value);
+        }
+        public static Vector2 GetDragForce(Vector2 vel, float dragCoefficient, float dt)
+        {
+            if (dragCoefficient <= 0f) return vel;
+            Vector2 dragForce = dragCoefficient * vel * dt;
+            if (dragForce.LengthSquared() >= vel.LengthSquared()) return new Vector2(0f, 0f);
+            return -dragForce;
+        }
+
         public static Vector2 Attraction(Vector2 center, Vector2 otherPos, Vector2 otherVel, float r, float strength, float friction)
         {
             Vector2 w = center - otherPos;

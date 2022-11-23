@@ -521,6 +521,7 @@ namespace ShapeEngineDemo.Bodies
                         float aChange = (RNG.randF() < 0.5f ? 90 : -90) * DEG2RAD;
                         float a = angle + aChange;
                         LineParticle p = new(collider.Pos, a, 25*DEG2RAD, RNG.randF(150, 200), PaletteHandler.C("energy"), RNG.randF(3f, 5f), RNG.randF(1.5f, 2f)*energyCore.CooldownF, 1f);
+                        //p.SetDrag(0.5f);
                         GAMELOOP.AddGameObject(p);
                     }
                 }

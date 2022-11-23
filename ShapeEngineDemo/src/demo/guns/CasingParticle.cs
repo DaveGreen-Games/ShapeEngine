@@ -23,8 +23,8 @@ namespace ShapeEngineDemo.Guns
             this.color = color;
             this.startColor = color;
             this.startColor.a = (byte)(this.startColor.a * 0.5f);
-            this.drag = 0.97f; // 0.92f;
-            this.aDrag = 0.95f; // 0.9f;
+            this.drag = 3f;
+            this.aDrag = 1f;
             this.rotationSpeed = (RNG.randF(165, 200) * (RNG.randF() < 0.5f ? -1f : 1f)) * DEG2RAD;
         }
 
@@ -32,7 +32,7 @@ namespace ShapeEngineDemo.Guns
         {
             base.Update(dt);
             rotation += rotationSpeed * dt;
-            rotationSpeed *= aDrag;
+            rotationSpeed = Utils.ApplyDragForce(rotationSpeed, aDrag, dt);
             float f = 1f - lifetimeTimer.GetF();
             color = Utils.LerpColor(startColor, new(0, 0, 0, 0), f * f * f * f * f);
         }

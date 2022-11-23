@@ -19,13 +19,13 @@ namespace ShapeEngineCore
             this.color = color;
             rotDeg = RNG.randF(0f, 360f);
             rotSpeedDeg = RNG.randF(90, 180) * (RNG.randF() < 0.5f ? 1f : -1f);
-            drag = 0.99f;
+            drag = 1f;
         }
         public override void Update(float dt)
         {
             base.Update(dt);
             rotDeg += rotSpeedDeg * dt;
-            rotSpeedDeg *= drag;
+            rotSpeedDeg = Utils.ApplyDragForce(rotSpeedDeg, drag, dt);
         }
         public override void Draw()
         {

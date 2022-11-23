@@ -2,6 +2,7 @@
 using Raylib_CsLo;
 using ShapeEngineCore.Globals.Timing;
 using ShapeEngineCore.Globals;
+using System.Collections.Specialized;
 
 namespace ShapeEngineCore
 {
@@ -9,7 +10,7 @@ namespace ShapeEngineCore
     {
         protected Vector2 pos;
         protected Vector2 vel;
-        protected float drag = 0.95f;
+        protected float drag = 2f;
         protected BasicTimer lifetimeTimer = new();
         private Vector2 accumulatedForce = new(0f, 0f);
         private Vector2 constAccel = new(0f, 0f);
@@ -49,6 +50,10 @@ namespace ShapeEngineCore
         public void SetAcceleration(Vector2 accel) { constAccel = accel; }
         public void ClearAcceleration() { SetAcceleration(new(0f, 0f)); }
 
+        public void SetDrag(float dragCoefficient)
+        {
+            drag = dragCoefficient;
+        }
 
         public override void Update(float dt)
         {
@@ -56,10 +61,11 @@ namespace ShapeEngineCore
             lifetimeTimer.Update(dt);
 
             ApplyAccumulatedForce(dt);
-            ApplyConstAcceleration(dt);
+            ApplyAcceleration(dt);
 
             pos += vel * dt;
-            vel *= drag;
+            //vel = Utils.ApplyDragForce(vel, drag, dt);
+            //vel *= drag;
         }
         public override bool IsDead()
         {
@@ -72,9 +78,11 @@ namespace ShapeEngineCore
             vel += accumulatedForce * dt;
             accumulatedForce = new(0f, 0f);
         }
-        private void ApplyConstAcceleration(float dt)
+        private void ApplyAcceleration(float dt)
         {
-            vel += constAccel * dt;
+            Vector2 dragForce = Utils.GetDragForce(vel, drag, dt); // drag * -vel;
+            Vector2 force = constAccel * dt + dragForce;
+            vel += force;
         }
 
     }
@@ -103,7 +111,7 @@ namespace ShapeEngineCore
             this.color = color;
             this.lineThickness = lineThickness;
         }
-        public LineParticle(Vector2 pos, float speed, Color color, float size, float lifetime, float lineThickness = 1f, float drag = 0.98f) : base(pos, lifetime)
+        public LineParticle(Vector2 pos, float speed, Color color, float size, float lifetime, float lineThickness = 1f, float drag = 2f) : base(pos, lifetime)
         {
             float angle = RNG.randF(0f, 2f * PI);
             rotRad = angle;
@@ -121,7 +129,7 @@ namespace ShapeEngineCore
             this.color = color;
             this.lineThickness = lineThickness;
         }
-        public LineParticle(Vector2 pos, float angleRad, float speed, Color color, float size, float lifetime, float lineThickness = 1f, float drag = 0.98f) : base(pos, lifetime)
+        public LineParticle(Vector2 pos, float angleRad, float speed, Color color, float size, float lifetime, float lineThickness = 1f, float drag = 2f) : base(pos, lifetime)
         {
             rotRad = angleRad;
             vel = Vec.Rotate(Vec.Right() * speed, rotRad);
@@ -166,7 +174,7 @@ namespace ShapeEngineCore
             r = radius;
             this.color = color;
         }
-        public CircleParticle(Vector2 pos, float speed, Color color, float radius, float lifetime, float drag = 0.98f) : base(pos, lifetime)
+        public CircleParticle(Vector2 pos, float speed, Color color, float radius, float lifetime, float drag = 2f) : base(pos, lifetime)
         {
             float angle = RNG.randF(0f, 2f * PI);
             vel = Vec.Rotate(Vec.Right() * speed, angle);
@@ -174,7 +182,7 @@ namespace ShapeEngineCore
             this.color = color;
             this.drag = drag;
         }
-        public CircleParticle(Vector2 pos, float angleRad, float speed, Color color, float radius, float lifetime, float drag = 0.98f) : base(pos, lifetime)
+        public CircleParticle(Vector2 pos, float angleRad, float speed, Color color, float radius, float lifetime, float drag = 2f) : base(pos, lifetime)
         {
             vel = Vec.Rotate(Vec.Right() * speed, angleRad);
             r = radius;

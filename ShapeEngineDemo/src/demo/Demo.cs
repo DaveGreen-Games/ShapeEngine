@@ -187,6 +187,7 @@ namespace ShapeEngineDemo
 
             ScreenHandler.OnWindowSizeChanged += OnWindowSizeChanged;
 
+            //ScreenHandler.SetFrameRateLimit(180);
             //SPAWN SPLASH SCREEN
             Action startscene = () => GoToScene("splash");
             TimerHandler.Add(2.0f, startscene);
