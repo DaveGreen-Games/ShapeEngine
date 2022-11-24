@@ -580,6 +580,22 @@ namespace ShapeEngineCore.Globals
         }
 
 
+        
+        public static float AimAt(Vector2 pos, Vector2 targetPos, float curAngleRad, float rotSpeedRad, float dt)
+        {
+            return AimAt(curAngleRad, Vec.AngleRad(targetPos - pos), rotSpeedRad, dt);
+        }
+        public static float AimAt(float curAngleRad, float targetAngleRad, float rotSpeedRad, float dt)
+        {
+            float dif = Utils.GetShortestAngleRad(curAngleRad, targetAngleRad);
+            float amount = MathF.Min(rotSpeedRad * dt, MathF.Abs(dif));
+            float dir = 1;
+            if (dif < 0) dir = -1;
+            else if (dir == 0) dir = 0;
+            return dir * amount;
+        }
+
+
         public static Color ChangeAlpha(Color c, byte a)
         {
             c.a = a;
