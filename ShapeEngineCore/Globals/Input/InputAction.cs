@@ -295,7 +295,7 @@ namespace ShapeEngineCore.Globals.Input
         public List<string> GetKeyboardKeyNames(bool shorthand = true)
         {
             List<string> keyNames = new();
-            var keyboardActionKeys = actionKeys.FindAll((Keys k) => { return !IsGamepad(k); });
+            var keyboardActionKeys = actionKeys.FindAll((Keys k) => { return IsKeyboard(k); });
             foreach (var key in keyboardActionKeys)
             {
                 keyNames.Add(GetKeyName(key, shorthand));
@@ -312,11 +312,27 @@ namespace ShapeEngineCore.Globals.Input
             }
             return keyNames;
         }
+        public List<string> GetMouseKeyNames(bool shorthand = true)
+        {
+            List<string> keyNames = new();
+            var mouseActionKeys = actionKeys.FindAll((Keys k) => { return IsMouse(k); });
+            foreach (var key in mouseActionKeys)
+            {
+                keyNames.Add(GetKeyName(key, shorthand));
+            }
+            return keyNames;
+        }
         public string GetKeyboardKeyName(bool shorthand = true)
         {
-            var keyboardActionKeys = actionKeys.FindAll((Keys k) => { return !IsGamepad(k); });
+            var keyboardActionKeys = actionKeys.FindAll((Keys k) => { return IsKeyboard(k); });
             if (keyboardActionKeys.Count == 0) return "";
             return GetKeyName(keyboardActionKeys[0], shorthand);
+        }
+        public string GetMouseKeyName(bool shorthand = true)
+        {
+            var mouseActionKeys = actionKeys.FindAll((Keys k) => { return IsMouse(k); });
+            if (mouseActionKeys.Count == 0) return "";
+            return GetKeyName(mouseActionKeys[0], shorthand);
         }
         public string GetGamepadKeyName(bool shorthand = true)
         {
@@ -324,11 +340,17 @@ namespace ShapeEngineCore.Globals.Input
             if (gamepadActionKeys.Count == 0) return "";
             return GetKeyName(gamepadActionKeys[0], shorthand);
         }
-        public string GetKeyName(bool gamepad = false, bool shorthand = false)
+
+
+        public (string keyboard, string mouse, string gamepad) GetKeyNames(bool shorthand = true)
         {
-            if (gamepad) return GetGamepadKeyName(shorthand);
-            else return GetKeyboardKeyName(shorthand);
+            return (GetKeyboardKeyName(shorthand), GetMouseKeyName(shorthand), GetGamepadKeyName(shorthand));
         }
+        //public string GetKeyName(bool gamepad = false, bool shorthand = false)
+        //{
+        //    if (gamepad) return GetGamepadKeyName(shorthand);
+        //    else return GetKeyboardKeyName(shorthand);
+        //}
         public bool IsDisabled() { return disabled; }
         public void Enable() { disabled = false; }
         public void Disable() { disabled = true; }
@@ -495,6 +517,7 @@ namespace ShapeEngineCore.Globals.Input
         public static bool IsGamepadAxisButtonNeg(Keys key) { return (int)key >= 610 && (int)key <= 613; }
         public static bool IsGamepadAxisButton(Keys key) { return (int)key >= 600 && (int)key <= 613; }
         public static bool IsMouse(Keys key) { return (int)key >= 0 && (int)key <= 6; }
+        public static bool IsKeyboard(Keys key) { return (int)key > 6 && (int)key < 400; }
         public static int TransformKeyValue(Keys key)
         {
             if (key == Keys.BACK)

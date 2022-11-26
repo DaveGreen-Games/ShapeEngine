@@ -78,7 +78,14 @@
             timer = 0.0f;
             f = 0.0f;
         }
-
+        public void Cancel()
+        {
+            paused = false;
+            timer = 0f;
+            f = 0f;
+            duration = 0f;
+            elapsed = 0f;
+        }
         public void Restart()
         {
             if (duration <= 0.0f) return;

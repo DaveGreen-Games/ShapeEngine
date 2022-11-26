@@ -91,9 +91,9 @@ namespace ShapeEngineCore.Globals.Input
             else return curInputMap.GetGamepadAxis(gamepadIndex, gamepadAxisHor, gamepadAxisVer);
         }
 
-        public string GetInputActionKeyName(string inputAction, bool isGamepad = false, bool shorthand = false)
+        public (string keyboard, string mouse, string gamepad) GetInputActionKeyNames(string inputAction, bool shorthand = false)
         {
-            return curInputMap.GetKeyName(inputAction, isGamepad, shorthand);
+            return curInputMap.GetKeyNames(inputAction, shorthand);
         }
 
 
@@ -384,11 +384,18 @@ namespace ShapeEngineCore.Globals.Input
             return inputMaps[name];
         }
 
-        public static string GetInputActionKeyName(int playerSlot, string inputAction, bool shorthand = false)
+        public static string SelectInputActionKeyName((string keyboard, string mouse, string gamepad) selection)
+        {
+            if (IsKeyboard()) return selection.keyboard;
+            else if(IsMouse()) return selection.mouse;
+            else if(IsGamepad()) return selection.gamepad;
+            else return "";
+        }
+        public static (string keyboard, string mouse, string gamepad) GetInputActionKeyNames(int playerSlot, string inputAction, bool shorthand = false)
         {
             var slot = GetInputSlot(playerSlot);
-            if (slot == null) return "";
-            return slot.GetInputActionKeyName(inputAction, IsGamepad(), shorthand);
+            if (slot == null) return new();
+            return slot.GetInputActionKeyNames(inputAction, shorthand);
         }
         /*
         public static void EnableMap(string name)

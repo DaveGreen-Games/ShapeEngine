@@ -134,10 +134,10 @@ namespace ShapeEngineCore.Globals.Input
             return inputActions[actionName].IsUp(gamepad, gamepadOnly);
         }
 
-        public string GetKeyName(string actionName, bool isGamepad = false, bool shorthand = false)
+        public (string keyboard, string mouse, string gamepad) GetKeyNames(string actionName, bool shorthand = false)
         {
-            if (inputActions.Count <= 0 || !inputActions.ContainsKey(actionName)) return "";
-            return inputActions[actionName].GetKeyName(isGamepad, shorthand);
+            if (inputActions.Count <= 0 || !inputActions.ContainsKey(actionName)) return ("", "", "");
+            return inputActions[actionName].GetKeyNames(shorthand);
         }
         //public List<string> GetKeyNames(string actionName, bool shorthand = true)
         //{

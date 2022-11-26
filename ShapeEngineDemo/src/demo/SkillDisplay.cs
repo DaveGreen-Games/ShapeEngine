@@ -70,7 +70,7 @@ namespace ShapeEngineCore
 
             if (inputAction != "")
             {
-                string input = InputHandler.GetInputActionKeyName(0, inputAction, InputHandler.IsGamepad());
+                string input = InputHandler.GetInputActionKeyNames(0, inputAction).keyboard;
                 UIHandler.DrawTextAlignedPro(input, center + Vec.Rotate(new Vector2(size.X * 0.5f + thickness * 2, 0f), angleDeg * DEG2RAD), angleDeg, innerSize, 1, textColor, Alignement.LEFTCENTER);
             }
 
