@@ -267,15 +267,47 @@ namespace ShapeEngineCore.Globals.Audio
             Bus bus = buses[audioBusKeys[name]];
             bus.PlaySFX(name, volume, pitch);
         }
-        public static void PlaySFX(string name, Vector2 pos, float minRange, float maxRange, float volume = -1.0f, float pitch = -1.0f, float blockDuration = 0f)
+
+        /// <summary>
+        /// Play a sound. If pos is not inside the current camera area the sound is NOT played.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="pos"></param>
+        /// <param name="volume"></param>
+        /// <param name="pitch"></param>
+        /// <param name="blockDuration"></param>
+        public static void PlaySFX(string name, Vector2 pos, float volume = -1.0f, float pitch = -1.0f, float blockDuration = 0f)
         {
             if (!audioBusKeys.ContainsKey(name)) return;
             if (soundBlockers.ContainsKey(name) && soundBlockers[name] > 0f) return;
+
+            if (!Raylib.CheckCollisionPointRec(pos, ScreenHandler.CameraArea())) return;
+
             if (blockDuration > 0f)
             {
                 if (!soundBlockers.ContainsKey(name)) soundBlockers.Add(name, blockDuration);
                 else soundBlockers[name] = blockDuration;
             }
+            Bus bus = buses[audioBusKeys[name]];
+            bus.PlaySFX(name, volume, pitch);
+        }
+        /// <summary>
+        /// Play the sound. If the pos is less than minRange from the current pos of the camera the sound is played with full volume.
+        /// If the pos is further away than minRange but less than maxRange from the pos of the camera the volume is linearly interpolated.
+        /// If the pos is futher aways than maxRange the sound is not played.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="pos"></param>
+        /// <param name="minRange"></param>
+        /// <param name="maxRange"></param>
+        /// <param name="volume"></param>
+        /// <param name="pitch"></param>
+        /// <param name="blockDuration"></param>
+        public static void PlaySFX(string name, Vector2 pos, float minRange, float maxRange, float volume = -1.0f, float pitch = -1.0f, float blockDuration = 0f)
+        {
+            if (!audioBusKeys.ContainsKey(name)) return;
+            if (soundBlockers.ContainsKey(name) && soundBlockers[name] > 0f) return;
+            
             Bus bus = buses[audioBusKeys[name]];
 
             float disSq = Vec.LengthSquared(ScreenHandler.CAMERA.RawPos - pos);
@@ -284,7 +316,13 @@ namespace ShapeEngineCore.Globals.Audio
             float minSquared = minRange * minRange;
             float maxSquared = maxRange * maxRange;
             if (disSq >= maxSquared) return;
-            
+
+            if (blockDuration > 0f)
+            {
+                if (!soundBlockers.ContainsKey(name)) soundBlockers.Add(name, blockDuration);
+                else soundBlockers[name] = blockDuration;
+            }
+
             float spatialVolumeFactor = 1f;
             if(disSq > minSquared)
             {
