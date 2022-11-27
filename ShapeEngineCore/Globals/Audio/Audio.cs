@@ -13,6 +13,8 @@ namespace ShapeEngineCore.Globals.Audio
 
 
         public virtual void SetPitch(float pitch) { }
+
+        public void AdjustVolume(float factor) { volume *= factor; }
         public void SetVolume(float volume)
         {
             this.volume = volume;

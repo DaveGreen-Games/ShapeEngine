@@ -109,7 +109,25 @@
             {
                 SFX? s = audio[name] as SFX;
                 if (s == null) return;
+                
                 if (volume > 0.0f) s.SetVolume(volume);
+                if (pitch > 0.0f) s.SetPitch(pitch);
+                PlaySound(s.GetSound());
+            }
+        }
+        public void PlaySFX(string name, float volumeFactor, float volume = -1.0f, float pitch = -1.0f)
+        {
+            if (paused || name == "" || !audio.ContainsKey(name)) return;
+            if (volume == 0.0f || volumeFactor <= 0f) return;
+            if (audio[name] is SFX)
+            {
+                SFX? s = audio[name] as SFX;
+                if (s == null) return;
+
+                if (volume > 0.0f) s.SetVolume(volume);
+                
+                s.AdjustVolume(volumeFactor);
+                
                 if (pitch > 0.0f) s.SetPitch(pitch);
                 PlaySound(s.GetSound());
             }

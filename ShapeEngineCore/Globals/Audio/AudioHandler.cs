@@ -1,5 +1,7 @@
 ﻿using Raylib_CsLo;
 using ShapeEngineCore.Globals.Persistent;
+using ShapeEngineCore.Globals.Screen;
+using System.Numerics;
 
 
 namespace ShapeEngineCore.Globals.Audio
@@ -21,6 +23,9 @@ namespace ShapeEngineCore.Globals.Audio
         private static Song? currentSong = null;
 
         private static Dictionary<string, float> soundBlockers = new();
+
+        
+
         public static void Initialize()
         {
             InitAudioDevice();
@@ -261,6 +266,32 @@ namespace ShapeEngineCore.Globals.Audio
             }
             Bus bus = buses[audioBusKeys[name]];
             bus.PlaySFX(name, volume, pitch);
+        }
+        public static void PlaySFX(string name, Vector2 pos, float minRange, float maxRange, float volume = -1.0f, float pitch = -1.0f, float blockDuration = 0f)
+        {
+            if (!audioBusKeys.ContainsKey(name)) return;
+            if (soundBlockers.ContainsKey(name) && soundBlockers[name] > 0f) return;
+            if (blockDuration > 0f)
+            {
+                if (!soundBlockers.ContainsKey(name)) soundBlockers.Add(name, blockDuration);
+                else soundBlockers[name] = blockDuration;
+            }
+            Bus bus = buses[audioBusKeys[name]];
+
+            float disSq = Vec.LengthSquared(ScreenHandler.CAMERA.RawPos - pos);
+            if (minRange < 0f) minRange = 0f;
+            if (maxRange < 0f || maxRange <= minRange) maxRange = minRange + 1;
+            float minSquared = minRange * minRange;
+            float maxSquared = maxRange * maxRange;
+            if (disSq >= maxSquared) return;
+            
+            float spatialVolumeFactor = 1f;
+            if(disSq > minSquared)
+            {
+                spatialVolumeFactor = 1f - Utils.LerpInverseFloat(minSquared, maxSquared, disSq);
+            }
+
+            bus.PlaySFX(name, spatialVolumeFactor, volume, pitch);
         }
         public static void PlaySong(string name, float volume = -1.0f, float pitch = -1.0f)
         {

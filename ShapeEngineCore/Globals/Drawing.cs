@@ -94,6 +94,13 @@ namespace ShapeEngineCore.Globals
             DrawPolygon(points, lineThickness, outlineColor);
         }
 
+        //public static void DrawCircleLinesCheckered(Vector2 center, float radius, float lineThickness, float lineRotDeg, float checkeredLineCount, Color color, float sideLength = 8)
+        //{
+        //
+        //    DrawCircleLines(center, radius, lineThickness, color, sideLength);
+        //    
+        //}
+
         public static void DrawCircleLines(Vector2 center, float radius, float lineThickness, int sides, Color color)
         {
             DrawPolyLinesEx(center, sides, radius, 0f, lineThickness, color);
