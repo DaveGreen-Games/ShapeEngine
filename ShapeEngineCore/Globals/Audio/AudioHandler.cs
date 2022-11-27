@@ -24,6 +24,7 @@ namespace ShapeEngineCore.Globals.Audio
 
         private static Dictionary<string, float> soundBlockers = new();
 
+        public static GameObject? spatialTargetOverride = null;
         
 
         public static void Initialize()
@@ -57,6 +58,8 @@ namespace ShapeEngineCore.Globals.Audio
             //if(currentSong != null) UpdateMusicStream(currentSong.GetSong());
             if (currentPlaylist != null) currentPlaylist.Update(dt);
             if (currentSong != null) currentSong.Update(dt);
+
+            if (spatialTargetOverride != null && spatialTargetOverride.IsDead()) spatialTargetOverride = null;
 
             foreach (var key in soundBlockers.Keys)
             {
@@ -292,7 +295,7 @@ namespace ShapeEngineCore.Globals.Audio
             bus.PlaySFX(name, volume, pitch);
         }
         /// <summary>
-        /// Play the sound. If the pos is less than minRange from the current pos of the camera the sound is played with full volume.
+        /// Play the sound. If the pos is less than minRange from the current pos of the camera (or the spatial target override) the sound is played with full volume.
         /// If the pos is further away than minRange but less than maxRange from the pos of the camera the volume is linearly interpolated.
         /// If the pos is futher aways than maxRange the sound is not played.
         /// </summary>
@@ -310,7 +313,13 @@ namespace ShapeEngineCore.Globals.Audio
             
             Bus bus = buses[audioBusKeys[name]];
 
-            float disSq = Vec.LengthSquared(ScreenHandler.CAMERA.RawPos - pos);
+            Vector2 center;
+            if (spatialTargetOverride == null) center = ScreenHandler.CAMERA.RawPos;
+            else center = spatialTargetOverride.GetPosition();
+
+            float disSq = Vec.LengthSquared(center - pos);
+            
+            
             if (minRange < 0f) minRange = 0f;
             if (maxRange < 0f || maxRange <= minRange) maxRange = minRange + 1;
             float minSquared = minRange * minRange;
