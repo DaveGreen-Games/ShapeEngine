@@ -94,12 +94,51 @@ namespace ShapeEngineCore.Globals
             DrawPolygon(points, lineThickness, outlineColor);
         }
 
-        //public static void DrawCircleLinesCheckered(Vector2 center, float radius, float lineThickness, float lineRotDeg, float checkeredLineCount, Color color, float sideLength = 8)
-        //{
-        //
-        //    DrawCircleLines(center, radius, lineThickness, color, sideLength);
-        //    
-        //}
+        public static void DrawCircleCheckeredLines(Vector2 pos, Alignement alignement, float radius, float spacing, float lineThickness, float angleDeg, Color lineColor, Color bgColor)
+        {
+
+            float maxDimension = radius;
+            Vector2 size = new Vector2(radius, radius) * 2f;
+            Vector2 aVector = UIHandler.GetAlignementVector(alignement) * size;
+            Vector2 center = pos - aVector + size / 2;
+            float rotRad = angleDeg * DEG2RAD;
+
+            if (bgColor.a > 0) DrawCircleV(center, radius, bgColor);
+
+            Vector2 cur = new(-spacing / 2, 0f);
+            while (cur.X > -maxDimension)
+            {
+                Vector2 p = center + Vec.Rotate(cur, rotRad);
+
+                //float y = MathF.Sqrt((radius * radius) - (cur.X * cur.X));
+                float angle = MathF.Acos(cur.X / radius);
+                float y = radius * MathF.Sin(angle);
+
+                Vector2 up = new(0f, -y);
+                Vector2 down = new(0f, y);
+                Vector2 start = p + Vec.Rotate(up, rotRad);
+                Vector2 end = p + Vec.Rotate(down, rotRad);
+                DrawLineEx(start, end, lineThickness, lineColor);
+                cur.X -= spacing;
+            }
+
+            cur = new(spacing / 2, 0f);
+            while (cur.X < maxDimension)
+            {
+                Vector2 p = center + Vec.Rotate(cur, rotRad);
+                //float y = MathF.Sqrt((radius * radius) - (cur.X * cur.X));
+                float angle = MathF.Acos(cur.X / radius);
+                float y = radius * MathF.Sin(angle);
+
+                Vector2 up = new(0f, -y);
+                Vector2 down = new(0f, y);
+                Vector2 start = p + Vec.Rotate(up, rotRad);
+                Vector2 end = p + Vec.Rotate(down, rotRad);
+                DrawLineEx(start, end, lineThickness, lineColor);
+                cur.X += spacing;
+            }
+
+        }
 
         public static void DrawCircleLines(Vector2 center, float radius, float lineThickness, int sides, Color color)
         {
