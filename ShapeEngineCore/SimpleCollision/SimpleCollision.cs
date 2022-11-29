@@ -2502,7 +2502,306 @@ namespace ShapeEngineCore.SimpleCollision
         }
         //--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
+        public static (bool intersection, Vector2 intersectPoint) IntersectLineSegment(Vector2 start, Vector2 end, Vector2 segmentPos, Vector2 segmentDir, float segmentLength, Vector2 segmentVel)
+        {
+            Vector2 pointPos = start;
+            Vector2 pointVel = end - start;
+            Vector2 vel = pointVel - segmentVel;
+            if (vel.LengthSquared() <= 0.0f) return (false, new(0f));
+            Vector2 sv = segmentDir * segmentLength;
+            Vector2 w = segmentPos - pointPos;
+            float projectionTime = -(w.X * sv.X + w.Y * sv.Y) / sv.LengthSquared();
+            if (projectionTime < 0.0f)//behind
+            {
+                float p = sv.X * vel.Y - sv.Y * vel.X;
+                if (p == 0.0f)//parallel
+                {
+                    float c = w.X * segmentDir.Y - w.Y * segmentDir.X;
+                    if (c != 0.0f) return (false, new(0f));
+                    float t;
+                    if (vel.X == 0.0f) t = w.Y / vel.Y;
+                    else t = w.X / vel.X;
+                    if (t < 0.0f || t > 1.0f) return (false, new(0f));
 
+                    Vector2 intersectionPoint = segmentPos;
+                    return (true, intersectionPoint);
+                }
+                else //not parallel
+                {
+                    float ts = (vel.X * w.Y - vel.Y * w.X) / p;
+                    if (ts < 0.0f || ts > 1.0f) return (false, new(0f));
+                    float t = (sv.X * w.Y - sv.Y * w.X) / p;
+                    if (t < 0.0f || t > 1.0f) return (false, new(0f));
+                    if (ts == 0.0f)
+                    {
+                        Vector2 intersectionPoint = segmentPos;
+                        return (true, intersectionPoint);
+                    }
+                    else
+                    {
+                        Vector2 intersectionPoint = pointPos + vel * t;
+                        return (true, intersectionPoint);
+                    }
+                }
+            }
+            else if (projectionTime > 1.0f)//ahead
+            {
+                float p = sv.X * vel.Y - sv.Y * vel.X;
+                if (p == 0.0f) //parallel
+                {
+                    float c = w.X * segmentDir.Y - w.Y * segmentDir.X;
+                    if (c != 0.0f) return (false, new(0f));
+                    float t = vel.X == 0.0f ? w.Y / vel.Y - 1.0f : w.X / vel.X - 1.0f;
+                    if (t < 0.0f || t > 1.0f) return (false, new(0f));
+
+                    Vector2 intersectionPoint = segmentPos + segmentDir * segmentLength;
+                    return (true, intersectionPoint);
+                }
+                else // not parallel
+                {
+                    float ts = (vel.X * w.Y - vel.Y * w.X) / p;
+                    if (ts < 0.0f || ts > 1.0f) return (false, new(0f));
+                    float t = (sv.X * w.Y - sv.Y * w.X) / p;
+                    if (t < 0.0f || t > 1.0f) return (false, new(0f));
+
+                    Vector2 intersectionPoint = segmentPos + segmentDir * segmentLength;
+
+                    if (ts != 1.0f)
+                    {
+                        intersectionPoint = pointPos + vel * t;
+                    }
+                    return (true, intersectionPoint);
+                }
+            }
+            else//on
+            {
+                float p = sv.X * vel.Y - sv.Y * vel.X;
+                if (p == 0.0f) return(false, new(0f));
+                float ts = (vel.X * w.Y - vel.Y * w.X) / p;
+                if (ts < 0.0f || ts > 1.0f) return (false, new(0f));
+                float t = (sv.X * w.Y - sv.Y * w.X) / p;
+                if (t < 0.0f || t > 1.0f) return (false, new(0f));
+
+                Vector2 intersectionPoint = pointPos + vel * t;
+                return (true, intersectionPoint);
+            }
+        }
+        public static (bool intersection, Vector2 intersectPoint) IntersectLineSegment(Vector2 start, Vector2 end, Vector2 segmentStart, Vector2 segmentEnd)
+        {
+            Vector2 segmentPos = segmentStart;
+            Vector2 segmentDir = segmentEnd - segmentStart;
+            float segmentLength = segmentDir.Length();
+            segmentDir /= segmentLength;
+            Vector2 segmentVel = new(0f);
+            Vector2 pointPos = start;
+            Vector2 pointVel = end - start;
+            Vector2 vel = pointVel - segmentVel;
+            if (vel.LengthSquared() <= 0.0f) return (false, new(0f));
+            Vector2 sv = segmentDir * segmentLength;
+            Vector2 w = segmentPos - pointPos;
+            float projectionTime = -(w.X * sv.X + w.Y * sv.Y) / sv.LengthSquared();
+            if (projectionTime < 0.0f)//behind
+            {
+                float p = sv.X * vel.Y - sv.Y * vel.X;
+                if (p == 0.0f)//parallel
+                {
+                    float c = w.X * segmentDir.Y - w.Y * segmentDir.X;
+                    if (c != 0.0f) return (false, new(0f));
+                    float t;
+                    if (vel.X == 0.0f) t = w.Y / vel.Y;
+                    else t = w.X / vel.X;
+                    if (t < 0.0f || t > 1.0f) return (false, new(0f));
+
+                    Vector2 intersectionPoint = segmentPos;
+                    return (true, intersectionPoint);
+                }
+                else //not parallel
+                {
+                    float ts = (vel.X * w.Y - vel.Y * w.X) / p;
+                    if (ts < 0.0f || ts > 1.0f) return (false, new(0f));
+                    float t = (sv.X * w.Y - sv.Y * w.X) / p;
+                    if (t < 0.0f || t > 1.0f) return (false, new(0f));
+                    if (ts == 0.0f)
+                    {
+                        Vector2 intersectionPoint = segmentPos;
+                        return (true, intersectionPoint);
+                    }
+                    else
+                    {
+                        Vector2 intersectionPoint = pointPos + vel * t;
+                        return (true, intersectionPoint);
+                    }
+                }
+            }
+            else if (projectionTime > 1.0f)//ahead
+            {
+                float p = sv.X * vel.Y - sv.Y * vel.X;
+                if (p == 0.0f) //parallel
+                {
+                    float c = w.X * segmentDir.Y - w.Y * segmentDir.X;
+                    if (c != 0.0f) return (false, new(0f));
+                    float t = vel.X == 0.0f ? w.Y / vel.Y - 1.0f : w.X / vel.X - 1.0f;
+                    if (t < 0.0f || t > 1.0f) return (false, new(0f));
+
+                    Vector2 intersectionPoint = segmentPos + segmentDir * segmentLength;
+                    return (true, intersectionPoint);
+                }
+                else // not parallel
+                {
+                    float ts = (vel.X * w.Y - vel.Y * w.X) / p;
+                    if (ts < 0.0f || ts > 1.0f) return (false, new(0f));
+                    float t = (sv.X * w.Y - sv.Y * w.X) / p;
+                    if (t < 0.0f || t > 1.0f) return (false, new(0f));
+
+                    Vector2 intersectionPoint = segmentPos + segmentDir * segmentLength;
+
+                    if (ts != 1.0f)
+                    {
+                        intersectionPoint = pointPos + vel * t;
+                    }
+                    return (true, intersectionPoint);
+                }
+            }
+            else//on
+            {
+                float p = sv.X * vel.Y - sv.Y * vel.X;
+                if (p == 0.0f) return (false, new(0f));
+                float ts = (vel.X * w.Y - vel.Y * w.X) / p;
+                if (ts < 0.0f || ts > 1.0f) return (false, new(0f));
+                float t = (sv.X * w.Y - sv.Y * w.X) / p;
+                if (t < 0.0f || t > 1.0f) return (false, new(0f));
+
+                Vector2 intersectionPoint = pointPos + vel * t;
+                return (true, intersectionPoint);
+            }
+        }
+
+        public static CastInfo Cast(Vector2 pointPos, Vector2 pointVel, Vector2 segmentPos, Vector2 segmentDir, float segmentLength, Vector2 segmentVel, float dt)
+        {
+            //bool overlapping = Overlap.Simple(point, segment);
+            Vector2 vel = pointVel - segmentVel;
+            vel *= dt;
+            if (vel.LengthSquared() <= 0.0f) return new();
+            Vector2 sv = segmentDir * segmentLength;
+            Vector2 w = segmentPos - pointPos;
+            float projectionTime = -(w.X * sv.X + w.Y * sv.Y) / sv.LengthSquared();
+            if (projectionTime < 0.0f)//behind
+            {
+                float p = sv.X * vel.Y - sv.Y * vel.X;
+                if (p == 0.0f)//parallel
+                {
+                    float c = w.X * segmentDir.Y - w.Y * segmentDir.X;
+                    if (c != 0.0f) return new();
+                    float t;
+                    if (vel.X == 0.0f) t = w.Y / vel.Y;
+                    else t = w.X / vel.X;
+                    if (t < 0.0f || t > 1.0f) return new();
+
+                    Vector2 intersectionPoint = segmentPos;
+                    Vector2 collisionPoint = intersectionPoint;
+                    Vector2 normal = segmentDir * -1.0f;
+                    float remaining = 1.0f - t;
+                    float d = (vel.X * normal.X + vel.Y * normal.Y) * 2.0f;
+                    Vector2 reflectVector = new(remaining * (vel.X - normal.X * d), remaining * (vel.Y - normal.Y * d));
+                    //Vector2 reflectPoint = intersectionPoint + reflectVector;
+                    return new(false, true, t, intersectionPoint, collisionPoint, reflectVector, normal, pointVel, segmentVel);
+                }
+                else //not parallel
+                {
+                    float ts = (vel.X * w.Y - vel.Y * w.X) / p;
+                    if (ts < 0.0f || ts > 1.0f) return new();
+                    float t = (sv.X * w.Y - sv.Y * w.X) / p;
+                    if (t < 0.0f || t > 1.0f) return new();
+                    if (ts == 0.0f)
+                    {
+                        Vector2 intersectionPoint = segmentPos;
+                        Vector2 collisionPoint = intersectionPoint;
+                        Vector2 normal = segmentDir * -1.0f;
+                        float remaining = 1.0f - t;
+                        float d = (vel.X * normal.X + vel.Y * normal.Y) * 2.0f;
+                        Vector2 reflectVector = new(remaining * (vel.X - normal.X * d), remaining * (vel.Y - normal.Y * d));
+                        //Vector2 reflectPoint = intersectionPoint + reflectVector;
+                        return new(false, true, t, intersectionPoint, collisionPoint, reflectVector, normal, pointVel, segmentVel);
+                    }
+                    else
+                    {
+                        Vector2 intersectionPoint = pointPos + vel * t;
+                        Vector2 collisionPoint = intersectionPoint;
+                        Vector2 normal;
+                        if (p < 0) normal = new(-segmentDir.Y, segmentDir.X);
+                        else normal = new(segmentDir.Y, -segmentDir.X);
+                        float remaining = 1.0f - t;
+                        float d = (vel.X * normal.X + vel.Y * normal.Y) * 2.0f;
+                        Vector2 reflectVector = new(remaining * (vel.X - normal.X * d), remaining * (vel.Y - normal.Y * d));
+                        //Vector2 reflectPoint = intersectionPoint + reflectVector;
+                        return new(false, true, t, intersectionPoint, collisionPoint, reflectVector, normal, pointVel, segmentVel);
+                    }
+                }
+            }
+            else if (projectionTime > 1.0f)//ahead
+            {
+                float p = sv.X * vel.Y - sv.Y * vel.X;
+                if (p == 0.0f) //parallel
+                {
+                    float c = w.X * segmentDir.Y - w.Y * segmentDir.X;
+                    if (c != 0.0f) return new();
+                    float t = vel.X == 0.0f ? w.Y / vel.Y - 1.0f : w.X / vel.X - 1.0f;
+                    if (t < 0.0f || t > 1.0f) return new();
+
+                    Vector2 intersectionPoint = segmentPos + segmentDir * segmentLength;
+                    Vector2 collisionPoint = intersectionPoint;
+                    Vector2 normal = segmentDir;
+                    float remaining = 1.0f - t;
+                    float d = (vel.X * normal.X + vel.Y * normal.Y) * 2.0f;
+                    Vector2 reflectVector = new(remaining * (vel.X - normal.X * d), remaining * (vel.Y - normal.Y * d));
+                    //Vector2 reflectPoint = intersectionPoint + reflectVector;
+                    return new(false, true, t, intersectionPoint, collisionPoint, reflectVector, normal, pointVel, segmentVel);
+                }
+                else // not parallel
+                {
+                    float ts = (vel.X * w.Y - vel.Y * w.X) / p;
+                    if (ts < 0.0f || ts > 1.0f) return new();
+                    float t = (sv.X * w.Y - sv.Y * w.X) / p;
+                    if (t < 0.0f || t > 1.0f) return new();
+
+                    Vector2 intersectionPoint = segmentPos + segmentDir * segmentLength; ;
+                    Vector2 collisionPoint = intersectionPoint;
+                    Vector2 normal = segmentDir;
+
+                    if (ts != 1.0f)
+                    {
+                        intersectionPoint = pointPos + vel * t;
+                        collisionPoint = intersectionPoint;
+                        normal = p < 0.0f ? new(-segmentDir.Y, segmentDir.X) : new(segmentDir.Y, -segmentDir.X);
+                    }
+
+                    float remaining = 1.0f - t;
+                    float d = (vel.X * normal.X + vel.Y * normal.Y) * 2.0f;
+                    Vector2 reflectVector = new(remaining * (vel.X - normal.X * d), remaining * (vel.Y - normal.Y * d));
+                    //Vector2 reflectPoint = intersectionPoint + reflectVector;
+                    return new(false, true, t, intersectionPoint, collisionPoint, reflectVector, normal, pointVel, segmentVel);
+                }
+            }
+            else//on
+            {
+                float p = sv.X * vel.Y - sv.Y * vel.X;
+                if (p == 0.0f) return new();
+                float ts = (vel.X * w.Y - vel.Y * w.X) / p;
+                if (ts < 0.0f || ts > 1.0f) return new();
+                float t = (sv.X * w.Y - sv.Y * w.X) / p;
+                if (t < 0.0f || t > 1.0f) return new();
+
+                Vector2 intersectionPoint = pointPos + vel * t;
+                Vector2 collisionPoint = intersectionPoint;
+                Vector2 normal = p < 0.0f ? new(-segmentDir.Y, segmentDir.X) : new(segmentDir.Y, -segmentDir.X);
+
+                float remaining = 1.0f - t;
+                float d = (vel.X * normal.X + vel.Y * normal.Y) * 2.0f;
+                Vector2 reflectVector = new(remaining * (vel.X - normal.X * d), remaining * (vel.Y - normal.Y * d));
+                //Vector2 reflectPoint = intersectionPoint + reflectVector;
+                return new(false, true, t, intersectionPoint, collisionPoint, reflectVector, normal, pointVel, segmentVel);
+            }
+        }
         public static CastInfo CastPointLine(Collider point, Vector2 linePos, Vector2 lineDir, Vector2 lineVel, float dt)
         {
             //bool overlapping = Overlap.Simple(point, line);

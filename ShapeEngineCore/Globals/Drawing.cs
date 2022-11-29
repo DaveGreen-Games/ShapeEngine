@@ -1,5 +1,6 @@
 ﻿using System.Net.NetworkInformation;
 using System.Numerics;
+using System.Reflection.Metadata.Ecma335;
 using Raylib_CsLo;
 using ShapeEngineCore.Globals.UI;
 
@@ -94,6 +95,83 @@ namespace ShapeEngineCore.Globals
             DrawPolygon(points, lineThickness, outlineColor);
         }
 
+        public static void DrawRectangleCheckeredLines(Vector2 pos, Vector2 size, Alignement alignement, float spacing, float lineThickness, float angleDeg, Color lineColor, Color outlineColor, Color bgColor)
+        {
+            float maxDimension = MathF.Max(size.X, size.Y);
+            Vector2 aVector = UIHandler.GetAlignementVector(alignement) * size;
+            Vector2 center = pos - aVector + size / 2;
+            float rotRad = angleDeg * DEG2RAD;
+
+            
+
+            var rect = Utils.ConstructRectangle(pos, size, alignement);
+            Vector2 tl = new(rect.x, rect.y);
+            Vector2 tr = new(rect.x + rect.width, rect.y);
+            Vector2 bl = new(rect.x, rect.y + rect.height);
+            Vector2 br = new(rect.x + rect.width, rect.y + rect.height);
+            List<(Vector2 start, Vector2 end)> segments = new()
+            {
+                (tl, tr), (bl, br), (tl, bl), (tr, br)
+            };
+
+            if (bgColor.a > 0) DrawRectangleRec(rect, bgColor);
+
+            Vector2 cur = new(-spacing / 2, 0f);
+            int whileMaxCount = (int)(maxDimension / spacing) * 10;
+            int whileCounter = 0;
+
+            while (whileCounter < whileMaxCount)
+            {
+                Vector2 p = center + Vec.Rotate(cur, rotRad);
+                //if (!SimpleCollision.Overlap.OverlapPointRect(p, tl, size)) break;
+                Vector2 up = new(0f, -maxDimension * 2);
+                Vector2 down = new(0f, maxDimension * 2);
+                Vector2 start = p + Vec.Rotate(up, rotRad);
+                Vector2 end = p + Vec.Rotate(down, rotRad);
+                List<Vector2> intersections = new();
+                foreach (var seg in segments)
+                {
+                    if (intersections.Count >= 2) continue;
+                    var result = SimpleCollision.Collision.IntersectLineSegment(start, end, seg.start, seg.end);
+                    if (result.intersection)
+                    {
+                        intersections.Add(result.intersectPoint);
+                    }
+                }
+                if (intersections.Count >= 2) DrawLineEx(intersections[0], intersections[1], lineThickness, lineColor);
+                else break; // DrawLineEx(start, end, lineThickness, lineColor);
+                cur.X -= spacing;
+                whileCounter++;
+            } 
+
+            cur = new(spacing / 2, 0f);
+            whileCounter = 0;
+            while (whileCounter < whileMaxCount)
+            {
+                Vector2 p = center + Vec.Rotate(cur, rotRad);
+                //if (!SimpleCollision.Overlap.OverlapPointRect(p, tl, size)) break;
+                Vector2 up = new(0f, -maxDimension * 2);
+                Vector2 down = new(0f, maxDimension * 2);
+                Vector2 start = p + Vec.Rotate(up, rotRad);
+                Vector2 end = p + Vec.Rotate(down, rotRad);
+                List<Vector2> intersections = new();
+                foreach (var seg in segments)
+                {
+                    if (intersections.Count >= 2) continue;
+                    var result = SimpleCollision.Collision.IntersectLineSegment(start, end, seg.start, seg.end);
+                    if (result.intersection)
+                    {
+                        intersections.Add(result.intersectPoint);
+                    }
+                }
+                if (intersections.Count >= 2) DrawLineEx(intersections[0], intersections[1], lineThickness, lineColor);
+                else break; // DrawLineEx(start, end, lineThickness, lineColor);
+                cur.X += spacing;
+                whileCounter++;
+            }
+
+            if (outlineColor.a > 0) Drawing.DrawRectangeLinesPro(pos, size, alignement, Alignement.CENTER, 0f, lineThickness, outlineColor);
+        }
         public static void DrawCircleCheckeredLines(Vector2 pos, Alignement alignement, float radius, float spacing, float lineThickness, float angleDeg, Color lineColor, Color bgColor)
         {
 
