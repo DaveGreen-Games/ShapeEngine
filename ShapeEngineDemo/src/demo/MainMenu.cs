@@ -166,7 +166,7 @@ namespace ShapeEngineDemo
             //Vector2 topleft = center - barSize / 2;
             //UIHandler.DrawBar(topleft, barSize, RNG.randF(), RED, DARKPURPLE, BarType.LEFTRIGHT);
 
-
+            //Drawing.DrawRectangleCheckeredLines(GAMELOOP.MOUSE_POS_UI, new(500f), Alignement.CENTER, 15, 5, 45, RED, BLANK, BLANK);
         }
     }
 

@@ -1,6 +1,7 @@
 ﻿using Raylib_CsLo;
 using System.Numerics;
 using ShapeEngineCore.Globals;
+using ShapeEngineCore.Globals.UI;
 
 namespace ShapeEngineCore.SimpleCollision
 {
@@ -2502,6 +2503,43 @@ namespace ShapeEngineCore.SimpleCollision
         }
         //--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
+        
+        public static List<Vector2> IntersectLineRect(Vector2 start, Vector2 end, Rectangle rect)
+        {
+            Vector2 tl = new(rect.x, rect.y);
+            Vector2 tr = new(rect.x + rect.width, rect.y);
+            Vector2 bl = new(rect.x, rect.y + rect.height);
+            Vector2 br = new(rect.x + rect.width, rect.y + rect.height);
+            return IntersectLineRect(start, end, tl, tr, br, bl);
+        }
+        public static List<Vector2> IntersectLineRect(Vector2 start, Vector2 end, Vector2 rectPos, Vector2 rectSize, Alignement rectAlignement)
+        {
+            var rect = Utils.ConstructRectangle(rectPos, rectSize, rectAlignement);
+            return IntersectLineRect(start, end, rect);
+            
+        }
+        public static List<Vector2> IntersectLineRect(Vector2 start, Vector2 end, Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl)
+        {
+            List<(Vector2 start, Vector2 end)> segments = new()
+            {
+                (tl, tr), (bl, br), (tl, bl), (tr, br)
+            };
+
+            List<Vector2> intersections = new();
+            foreach (var seg in segments)
+            {
+                var result = IntersectLineSegment(start, end, seg.start, seg.end);
+                if (result.intersection)
+                {
+                    intersections.Add(result.intersectPoint);
+                }
+                if (intersections.Count >= 2) return intersections;
+            }
+            return intersections;
+        }
+        
+
+
         public static (bool intersection, Vector2 intersectPoint) IntersectLineSegment(Vector2 start, Vector2 end, Vector2 segmentPos, Vector2 segmentDir, float segmentLength, Vector2 segmentVel)
         {
             Vector2 pointPos = start;
@@ -2676,6 +2714,8 @@ namespace ShapeEngineCore.SimpleCollision
             }
         }
 
+        
+        
         public static CastInfo Cast(Vector2 pointPos, Vector2 pointVel, Vector2 segmentPos, Vector2 segmentDir, float segmentLength, Vector2 segmentVel, float dt)
         {
             //bool overlapping = Overlap.Simple(point, segment);

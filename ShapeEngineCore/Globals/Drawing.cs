@@ -102,70 +102,53 @@ namespace ShapeEngineCore.Globals
             Vector2 center = pos - aVector + size / 2;
             float rotRad = angleDeg * DEG2RAD;
 
-            
-
             var rect = Utils.ConstructRectangle(pos, size, alignement);
             Vector2 tl = new(rect.x, rect.y);
             Vector2 tr = new(rect.x + rect.width, rect.y);
             Vector2 bl = new(rect.x, rect.y + rect.height);
             Vector2 br = new(rect.x + rect.width, rect.y + rect.height);
-            List<(Vector2 start, Vector2 end)> segments = new()
-            {
-                (tl, tr), (bl, br), (tl, bl), (tr, br)
-            };
+            //List<(Vector2 start, Vector2 end)> segments = new()
+            //{
+            //    (tl, tr), (bl, br), (tl, bl), (tr, br)
+            //};
 
             if (bgColor.a > 0) DrawRectangleRec(rect, bgColor);
 
             Vector2 cur = new(-spacing / 2, 0f);
-            int whileMaxCount = (int)(maxDimension / spacing) * 10;
+
+            //safety for while loops
+            int whileMaxCount = (int)(maxDimension / spacing) * 2;
             int whileCounter = 0;
 
+            //left half of rectangle
             while (whileCounter < whileMaxCount)
             {
                 Vector2 p = center + Vec.Rotate(cur, rotRad);
-                //if (!SimpleCollision.Overlap.OverlapPointRect(p, tl, size)) break;
-                Vector2 up = new(0f, -maxDimension * 2);
+                Vector2 up = new(0f, -maxDimension * 2);//make sure that lines are going outside of the rectangle
                 Vector2 down = new(0f, maxDimension * 2);
                 Vector2 start = p + Vec.Rotate(up, rotRad);
                 Vector2 end = p + Vec.Rotate(down, rotRad);
-                List<Vector2> intersections = new();
-                foreach (var seg in segments)
-                {
-                    if (intersections.Count >= 2) continue;
-                    var result = SimpleCollision.Collision.IntersectLineSegment(start, end, seg.start, seg.end);
-                    if (result.intersection)
-                    {
-                        intersections.Add(result.intersectPoint);
-                    }
-                }
+                List<Vector2> intersections = SimpleCollision.Collision.IntersectLineRect(start, end, tl, tr, br, bl);
+                
                 if (intersections.Count >= 2) DrawLineEx(intersections[0], intersections[1], lineThickness, lineColor);
-                else break; // DrawLineEx(start, end, lineThickness, lineColor);
+                else break;
                 cur.X -= spacing;
                 whileCounter++;
             } 
 
             cur = new(spacing / 2, 0f);
             whileCounter = 0;
+            //right half of rectangle
             while (whileCounter < whileMaxCount)
             {
                 Vector2 p = center + Vec.Rotate(cur, rotRad);
-                //if (!SimpleCollision.Overlap.OverlapPointRect(p, tl, size)) break;
                 Vector2 up = new(0f, -maxDimension * 2);
                 Vector2 down = new(0f, maxDimension * 2);
                 Vector2 start = p + Vec.Rotate(up, rotRad);
                 Vector2 end = p + Vec.Rotate(down, rotRad);
-                List<Vector2> intersections = new();
-                foreach (var seg in segments)
-                {
-                    if (intersections.Count >= 2) continue;
-                    var result = SimpleCollision.Collision.IntersectLineSegment(start, end, seg.start, seg.end);
-                    if (result.intersection)
-                    {
-                        intersections.Add(result.intersectPoint);
-                    }
-                }
+                List<Vector2> intersections = SimpleCollision.Collision.IntersectLineRect(start, end, tl, tr, br, bl);
                 if (intersections.Count >= 2) DrawLineEx(intersections[0], intersections[1], lineThickness, lineColor);
-                else break; // DrawLineEx(start, end, lineThickness, lineColor);
+                else break;
                 cur.X += spacing;
                 whileCounter++;
             }
@@ -217,6 +200,7 @@ namespace ShapeEngineCore.Globals
             }
 
         }
+
 
         public static void DrawCircleLines(Vector2 center, float radius, float lineThickness, int sides, Color color)
         {
