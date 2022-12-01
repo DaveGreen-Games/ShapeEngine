@@ -23,55 +23,55 @@ namespace ShapeEngineCore.Globals.Achievements
 
     public class Achievement
     {
+
+        public event Action<Achievement>? Achieved;
+        public delegate float IconDrawer(Vector2 pos, Vector2 size, Alignement alignement, float progress, float dt);
+
         public string apiName = "";
         public string displayName = "";
         public string description = "";
 
-        public bool achieved = false;
-        public bool hidden = false; //doesnt show description and display name
+        protected bool achieved = false;
+        protected bool hidden = false; //doesnt show description and display name
 
         public List<AchievementGoal> goals = new();
 
 
-        //progress, dt, return remaining
-        public Func<float, float, float>? iconAchieved = null;
-        public Func<float, float, float>? iconUnachieved = null;
+        protected IconDrawer? iconAchieved = null;
+        protected IconDrawer? iconUnachieved = null;
 
-        public Achievement(string apiName, string displayName, string description, bool achieved = false, bool hidden = false)
+        public Achievement(string apiName, string displayName, string description, bool hidden)
         {
             this.apiName = apiName;
             this.displayName = displayName;
             this.description = description;
-            this.achieved = achieved;
             this.hidden = hidden;
         }
 
-        //public Achievement(
-        //    string apiName, string displayName, string description, AchievementStat stat,
-        //    bool achieved = false, bool hidden = false)
+        public void AddGoal(AchievementStat stat, int goal, bool finished) { AddGoal(new(stat, goal, finished)); }
+        public void AddGoal(AchievementGoal goal) { goals.Add(goal); }
+        public void AddGoals(params AchievementGoal[] goals) { this.goals.AddRange(goals); }
+
+        public void SetIconAchieved(IconDrawer iconAchieved) { this.iconAchieved = iconAchieved; }
+        public void SetIconUnachieved(IconDrawer iconUnachieved) { this.iconUnachieved = iconUnachieved; }
+
+        public bool IsHidden() { return hidden; }
+        public bool IsAchieved() { return achieved; }
+        public void Achieve() 
+        {
+            if (!achieved) Achieved?.Invoke(this);
+            achieved = true; 
+        }
+
+        //public void Update(float dt)
         //{
-        //    this.apiName = apiName;
-        //    this.displayName = displayName;
-        //    this.description = description;
-        //    this.achieved = achieved;
-        //    this.hidden = hidden;
-        //    this.stat = stat;
+        //
         //}
-        //public Achievement(
-        //    string apiName, string displayName, string description,
-        //    AchievementStat stat,
-        //    Func<float, float, float> iconUnachieved, Func<float, float, float> iconAchieved,
-        //    bool achieved = false, bool hidden = false)
-        //{
-        //    this.apiName = apiName;
-        //    this.displayName = displayName;
-        //    this.description = description;
-        //    this.achieved = achieved;
-        //    this.hidden = hidden;
-        //    this.stat = stat;
-        //    this.iconAchieved = iconAchieved;
-        //    this.iconUnachieved = iconUnachieved;
-        //}
+
+        public void Draw(Vector2 pos, Vector2 size, Alignement alignement, float dt)
+        {
+
+        }
     }
 
 
