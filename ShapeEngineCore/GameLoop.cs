@@ -125,10 +125,10 @@ namespace ShapeEngineCore
         public Color backgroundColor = BLACK;
         public Scene? CUR_SCENE { get; private set; }
         private int CUR_SCENE_INDEX = 0;
+        private Dictionary<string, Scene> SCENES = new();
 
 
         private DelegateTimerHandlerNamed delayHandler = new();
-        private Dictionary<string, Scene> SCENES = new();
         private BasicTimer stopTimer = new();
         
         //public bool PAUSED { get; private set; } = false;
