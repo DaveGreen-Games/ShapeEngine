@@ -1640,7 +1640,74 @@ namespace ShapeEngineCore.SimpleCollision
                 );
         }
 
+        /*
+        function pointInPolygon(point, shape)
 
+	local firstPoint = true
+	local lastPoint = 0
+	local rotatedPoint = 0
+	local onRight = 0
+	local onLeft = 0
+	local xCrossing = 0
+	
+	for index,shapePoint in ipairs(shape.points) do
+	
+		rotatedPoint = rotatePoint(shapePoint,shape.rotation)
+	
+		if firstPoint then
+			lastPoint = rotatedPoint
+			firstPoint = false
+		else
+			startPoint = {
+				x = lastPoint.x + shape.position.x,
+			 y = lastPoint.y + shape.position.y
+			}
+			endPoint = {
+				x = rotatedPoint.x + shape.position.x,
+				y = rotatedPoint.y + shape.position.y
+			}
+			if ((startPoint.y >= point.y) and (endPoint.y < point.y))
+				or ((startPoint.y < point.y) and (endPoint.y >= point.y)) then
+				-- line crosses ray
+				if (startPoint.x <= point.x) and (endPoint.x <= point.x) then
+					-- line is to left
+					onLeft = onLeft + 1
+				elseif (startPoint.x >= point.x) and (endPoint.x >= point.x) then
+					-- line is to right
+					onRight = onRight + 1
+				else
+					-- need to calculate crossing x coordinate
+					if (startPoint.y ~= endPoint.y) then
+						-- filter out horizontal line
+						xCrossing = startPoint.x +
+							((point.y - startPoint.y)
+							* (endPoint.x - startPoint.x)
+							/ (endPoint.y - startPoint.y))
+						if (xCrossing >= point.x) then
+							onRight = onRight + 1
+						else
+							onLeft = onLeft + 1
+						end -- if
+					end -- if horizontal
+				end -- if
+			end -- if crosses ray
+				
+			lastPoint = rotatedPoint
+		end
+	
+	end -- for
+
+	-- only need to check on side
+	if (onRight % 2) == 1 then
+		-- odd = inside
+		return true
+	else
+		return false
+	end
+
+end -- pointInPolygon
+
+        */
     }
     public static class Collision
     {

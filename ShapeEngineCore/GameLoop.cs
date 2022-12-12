@@ -353,10 +353,6 @@ namespace ShapeEngineCore
             QUIT = false;
             RESTART = false;
 
-            
-
-            //needs to be called first!!!
-            //bool fs = launchParams.Contains("fullscreen") || screenInitInfo.fullscreen;
             ScreenHandler.Initialize(screenInitInfo.devWidth, screenInitInfo.devHeight, screenInitInfo.gameSizeFactor, screenInitInfo.uiSizeFactor, screenInitInfo.windowName, screenInitInfo.fixedTexture, screenInitInfo.pixelSmoothing);
             SavegameHandler.Initialize(gameInitInfo.studioName, gameInitInfo.gameName);
             ResourceManager.Initialize(resourceInitInfo.path, resourceInitInfo.filename);
