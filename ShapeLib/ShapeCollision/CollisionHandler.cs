@@ -6,25 +6,15 @@ namespace ShapeLib.ShapeCollision
 {
     public class CollisionHandler
     {
-        protected bool advanced = false;
         protected List<ICollidable> collidables = new();
         protected List<ICollidable> tempHolding = new();
         protected List<ICollidable> tempRemoving = new();
         protected SpatialHash spatialHash;
 
         protected List<OverlapInfo> overlapInfos = new();
-        protected List<CastInfo> castInfos = new();
-
-        //advanced section
-        protected List<ICollidable> disabled = new();
-        protected List<ICollidable> staticCollidables = new();
-
-
-        //advanced automatically removes disabled shapes and readds them when they are enabled again
-        public CollisionHandler(float x, float y, float w, float h, int rows, int cols, bool advanced = false)
+        public CollisionHandler(float x, float y, float w, float h, int rows, int cols)
         {
             spatialHash = new(x, y, w, h, rows, cols);
-            this.advanced = advanced;
         }
         public void UpdateArea(Rectangle newArea)
         {
@@ -32,10 +22,6 @@ namespace ShapeLib.ShapeCollision
             int cols = spatialHash.GetCols();
             spatialHash.Close();
             spatialHash = new(newArea.x, newArea.y, newArea.width, newArea.height, rows, cols);
-            foreach (var c in staticCollidables)
-            {
-                spatialHash.Add(c, false);
-            }
         }
         public SpatialHash GetSpatialHash() { return spatialHash; }
         public void Add(ICollidable collider)
@@ -64,7 +50,6 @@ namespace ShapeLib.ShapeCollision
             tempHolding.Clear();
             tempRemoving.Clear();
             overlapInfos.Clear();
-            castInfos.Clear();
         }
         public void Close()
         {
@@ -73,37 +58,14 @@ namespace ShapeLib.ShapeCollision
         }
         public virtual void Update(float dt)
         {
-            spatialHash.ClearDynamic();
-
-            if (advanced)
-            {
-                for (int i = staticCollidables.Count - 1; i >= 0; i--)
-                {
-                    var collider = staticCollidables[i];
-                    if (!collider.GetCollider().IsEnabled())
-                    {
-                        disabled.Add(collider);
-                        spatialHash.Remove(collider, false);
-                        staticCollidables.RemoveAt(i);
-                    }
-                }
-            }
+            spatialHash.Clear();
 
             for (int i = collidables.Count - 1; i >= 0; i--)
             {
                 var collider = collidables[i];
-                if (!collider.GetCollider().IsEnabled())
+                if (collider.GetCollider().IsEnabled())
                 {
-                    if (advanced)
-                    {
-                        disabled.Add(collider);
-                        collidables.RemoveAt(i);
-                    }
-                    continue;
-                }
-                if (collider.GetColliderType() == ColliderType.DYNAMIC)
-                {
-                    spatialHash.Add(collider, true);
+                    spatialHash.Add(collider);
                 }
             }
 
@@ -113,7 +75,6 @@ namespace ShapeLib.ShapeCollision
                 if (!collider.GetCollider().IsEnabled()) continue;
                 string[] collisionMask = collider.GetCollisionMask();
 
-                //if (collider.GetColliderType() == ColliderType.STATIC || collider.GetColliderClass() == ColliderClass.AREA) continue;
 
                 List<ICollidable> others = spatialHash.GetObjects(collider);
                 foreach (ICollidable other in others)
@@ -121,41 +82,15 @@ namespace ShapeLib.ShapeCollision
                     string otherLayer = other.GetCollisionLayer();
                     if (collisionMask.Length > 0)
                     {
-                        //if (otherLayer == "") continue; //do i need that?
                         if (!collisionMask.Contains(otherLayer)) continue;
                     }//else collide with everything
 
-                    if (collider.GetColliderClass() == ColliderClass.COLLIDER)
+                    bool overlap = SGeometry.Overlap(collider, other);
+                    if (overlap)
                     {
-                        if (other.GetColliderClass() == ColliderClass.COLLIDER)
-                        {
-                            CastInfo info = SGeometry.CheckCast(collider, other, dt);
-                            if (info.collided || info.overlapping)
-                            {
-                                castInfos.Add(info);
-                            }
-                        }
-                        //else//area is being checked by collider
-                        //{
-                        //    bool overlap = Overlap.Check(collider, other);
-                        //    if (overlap)
-                        //    {
-                        //
-                        //        overlapInfos.Add(new(true, collider, other));
-                        //    }
-                        //}
+                        overlapInfos.Add(new(true, other, collider));
                     }
-                    else//area checks other things
-                    {
-                        bool overlap = Overlap.Check(collider, other);
-                        if (overlap)
-                        {
-                            overlapInfos.Add(new(true, other, collider, other.GetCollider().Vel, collider.GetCollider().Vel));
-                        }
-                    }
-
                 }
-
             }
         }
         public virtual void Resolve()
@@ -163,143 +98,25 @@ namespace ShapeLib.ShapeCollision
             //collidables.AddRange(tempHolding);
             foreach (var collider in tempHolding)
             {
-                if (collider.GetColliderType() == ColliderType.STATIC)
-                {
-                    if (collider.GetColliderClass() == ColliderClass.AREA)
-                    {
-                        if (advanced)
-                        {
-                            if (!collider.GetCollider().IsEnabled())
-                            {
-                                disabled.Add(collider);
-                            }
-                            else
-                            {
-                                collidables.Add(collider);
-                            }
-                        }
-                        else
-                        {
-                            collidables.Add(collider);
-                        }
-                    }
-                    else
-                    {
-                        if (advanced)
-                        {
-                            if (!collider.GetCollider().IsEnabled())
-                            {
-                                disabled.Add(collider);
-                            }
-                            else
-                            {
-                                spatialHash.Add(collider, false);
-                                staticCollidables.Add(collider);
-                            }
-                        }
-                        else
-                        {
-                            spatialHash.Add(collider, false);
-                        }
-                    }
-                }
-                else
-                {
-                    if (advanced)
-                    {
-                        if (!collider.GetCollider().IsEnabled())
-                        {
-                            disabled.Add(collider);
-                        }
-                        else
-                        {
-                            collidables.Add(collider);
-                        }
-                    }
-                    else
-                    {
-                        collidables.Add(collider);
-                    }
-                }
+                collidables.Add(collider);
             }
             tempHolding.Clear();
 
             foreach (var collider in tempRemoving)
             {
-                if (collider.GetColliderType() == ColliderType.STATIC)
-                {
-                    if (advanced)
-                    {
-                        if (!collider.GetCollider().IsEnabled())
-                        {
-                            disabled.Remove(collider);
-                        }
-                        else
-                        {
-                            spatialHash.Remove(collider, false);
-                            staticCollidables.Remove(collider);
-                        }
-                    }
-                    else
-                    {
-                        spatialHash.Remove(collider, false);
-                    }
-                }
-                else
-                {
-                    if (advanced)
-                    {
-                        if (!collider.GetCollider().IsEnabled())
-                        {
-                            disabled.Remove(collider);
-                        }
-                        else
-                        {
-                            collidables.Remove(collider);
-                        }
-                    }
-                    else
-                    {
-                        collidables.Remove(collider);
-                    }
-                }
+                collidables.Remove(collider);
             }
             tempRemoving.Clear();
 
-            foreach (CastInfo info in castInfos)
-            {
-                if (info.self == null) continue;
-                info.self.Collide(info);
-            }
-            castInfos.Clear();
 
             foreach (OverlapInfo info in overlapInfos)
             {
                 if (info.other == null || info.self == null) continue;
-                info.other.Overlap(info);
+                //info.other.Overlap(info);
                 info.self.Overlap(info);
             }
             overlapInfos.Clear();
-            if (advanced)
-            {
-                for (int i = disabled.Count - 1; i >= 0; i--)
-                {
-                    var collider = disabled[i];
-                    if (collider.GetCollider().IsEnabled())
-                    {
-                        if (collider.GetColliderType() == ColliderType.STATIC)
-                        {
-                            spatialHash.Add(collider, false);
-                            staticCollidables.Add(collider);
-                        }
-                        else
-                        {
-                            collidables.Add(collider);
-                        }
-                        disabled.RemoveAt(i);
-                    }
-                }
-            }
+            
         }
 
 
@@ -311,14 +128,14 @@ namespace ShapeLib.ShapeCollision
             {
                 if (caster.GetCollisionMask().Length <= 0)
                 {
-                    if (Overlap.Check(caster.GetCollider(), obj.GetCollider()))
+                    if (SGeometry.Overlap(caster.GetCollider(), obj.GetCollider()))
                     {
                         bodies.Add(obj);
                     }
                 }
                 else
                 {
-                    if (Overlap.Check(caster.GetCollider(), obj.GetCollider()))
+                    if (SGeometry.Overlap(caster.GetCollider(), obj.GetCollider()))
                     {
                         if (caster.GetCollisionMask().Contains(obj.GetCollisionLayer()))
                         {
@@ -337,14 +154,14 @@ namespace ShapeLib.ShapeCollision
             {
                 if (collisionMask.Length <= 0)
                 {
-                    if (Overlap.Check(collider, obj.GetCollider()))
+                    if (SGeometry.Overlap(collider, obj.GetCollider()))
                     {
                         bodies.Add(obj);
                     }
                 }
                 else
                 {
-                    if (Overlap.Check(collider, obj.GetCollider()))
+                    if (SGeometry.Overlap(collider, obj.GetCollider()))
                     {
                         if (collisionMask.Contains(obj.GetCollisionLayer()))
                         {
@@ -358,20 +175,20 @@ namespace ShapeLib.ShapeCollision
         public List<ICollidable> CastSpace(Rectangle rect, string[] collisionMask)
         {
             List<ICollidable> bodies = new();
-            RectCollider collider = new(new(rect.x, rect.y), new(rect.width, rect.height));
+            RectCollider collider = new(rect);
             List<ICollidable> objects = spatialHash.GetObjects(collider);
             foreach (ICollidable obj in objects)
             {
                 if (collisionMask.Length <= 0)
                 {
-                    if (Overlap.Check(collider, obj.GetCollider()))
+                    if (SGeometry.Overlap(collider, obj.GetCollider()))
                     {
                         bodies.Add(obj);
                     }
                 }
                 else
                 {
-                    if (Overlap.Check(collider, obj.GetCollider()))
+                    if (SGeometry.Overlap(collider, obj.GetCollider()))
                     {
                         if (collisionMask.Contains(obj.GetCollisionLayer()))
                         {
@@ -392,14 +209,14 @@ namespace ShapeLib.ShapeCollision
             {
                 if (collisionMask.Length <= 0)
                 {
-                    if (Overlap.Check(collider, obj.GetCollider()))
+                    if (SGeometry.Overlap(collider, obj.GetCollider()))
                     {
                         bodies.Add(obj);
                     }
                 }
                 else
                 {
-                    if (Overlap.Check(collider, obj.GetCollider()))
+                    if (SGeometry.Overlap(collider, obj.GetCollider()))
                     {
                         if (collisionMask.Contains(obj.GetCollisionLayer()))
                         {
@@ -411,23 +228,23 @@ namespace ShapeLib.ShapeCollision
             }
             return bodies;
         }
-        public List<ICollidable> CastSpace(Vector2 pos, Vector2 size, string[] collisionMask)
+        public List<ICollidable> CastSpace(Vector2 pos, Vector2 size, Vector2 alignement, string[] collisionMask)
         {
             List<ICollidable> bodies = new();
-            RectCollider collider = new(pos, size);
+            RectCollider collider = new(pos, size, alignement);
             List<ICollidable> objects = spatialHash.GetObjects(collider);
             foreach (ICollidable obj in objects)
             {
                 if (collisionMask.Length <= 0)
                 {
-                    if (Overlap.Check(collider, obj.GetCollider()))
+                    if (SGeometry.Overlap(collider, obj.GetCollider()))
                     {
                         bodies.Add(obj);
                     }
                 }
                 else
                 {
-                    if (Overlap.Check(collider, obj.GetCollider()))
+                    if (SGeometry.Overlap(collider, obj.GetCollider()))
                     {
                         if (collisionMask.Contains(obj.GetCollisionLayer()))
                         {
@@ -448,14 +265,42 @@ namespace ShapeLib.ShapeCollision
             {
                 if (collisionMask.Length <= 0)
                 {
-                    if (Overlap.Check(collider, obj.GetCollider()))
+                    if (SGeometry.Overlap(collider, obj.GetCollider()))
                     {
                         bodies.Add(obj);
                     }
                 }
                 else
                 {
-                    if (Overlap.Check(collider, obj.GetCollider()))
+                    if (SGeometry.Overlap(collider, obj.GetCollider()))
+                    {
+                        if (collisionMask.Contains(obj.GetCollisionLayer()))
+                        {
+                            bodies.Add(obj);
+                        }
+                    }
+                }
+
+            }
+            return bodies;
+        }
+        public List<ICollidable> CastSpace(Vector2 start, Vector2 end, string[] collisionMask)
+        {
+            List<ICollidable> bodies = new();
+            SegmentCollider collider = new(start, end);
+            List<ICollidable> objects = spatialHash.GetObjects(collider);
+            foreach (ICollidable obj in objects)
+            {
+                if (collisionMask.Length <= 0)
+                {
+                    if (SGeometry.Overlap(collider, obj.GetCollider()))
+                    {
+                        bodies.Add(obj);
+                    }
+                }
+                else
+                {
+                    if (SGeometry.Overlap(collider, obj.GetCollider()))
                     {
                         if (collisionMask.Contains(obj.GetCollisionLayer()))
                         {
@@ -468,15 +313,6 @@ namespace ShapeLib.ShapeCollision
             return bodies;
         }
 
-
-        public CastInfo RayCastSpace(Vector2 pos, Vector2 dir, float length, string[] collisionMask)
-        {
-            throw new NotImplementedException();
-        }
-        public CastInfo RayCastSpace(SegmentCollider ray, string[] collisionMask)
-        {
-            throw new NotImplementedException();
-        }
 
         public void DebugDrawGrid(Color border, Color fill)
         {

@@ -121,6 +121,20 @@ namespace ShapeLib.ShapeCollision
             this.Vel = vel;
             this.Alignement = alignement;
         }
+        public RectCollider(Rectangle rect)
+        {
+            this.Pos = new(rect.x, rect.y);
+            this.Size = new(rect.width, rect.height);
+            this.Vel = new(0f);
+            this.Alignement = new(0f);
+        }
+        public RectCollider(Rectangle rect, Vector2 vel)
+        {
+            this.Pos = new(rect.x, rect.y);
+            this.Size = new(rect.width, rect.height);
+            this.Vel = vel;
+            this.Alignement = new(0f);
+        }
         public Vector2 Alignement { get; set; }
         public Vector2 Size { get; set; }
         public Rectangle Rect 

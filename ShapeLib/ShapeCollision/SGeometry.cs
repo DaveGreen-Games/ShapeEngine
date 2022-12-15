@@ -8,12 +8,16 @@ namespace ShapeLib.ShapeCollision
         public bool overlapping;
         public ICollidable? self;//area
         public ICollidable? other;//entity
-        public OverlapInfo() { overlapping = false; self = null; other = null; }
+        public Vector2 selfVel;
+        public Vector2 otherVel;
+        public OverlapInfo() { overlapping = false; self = null; other = null; this.selfVel = new(0f); this.otherVel = new(0f); }
         public OverlapInfo(bool overlapping, ICollidable other, ICollidable self)
         {
             this.overlapping = overlapping;
             this.other = other;
             this.self = self;
+            this.selfVel = self.GetCollider().Vel;
+            this.otherVel = other.GetCollider().Vel;
         }
     }
     public struct CastInfo

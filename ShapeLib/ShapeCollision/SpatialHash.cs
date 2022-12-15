@@ -18,12 +18,7 @@ namespace ShapeLib.ShapeCollision
         private int rows = 0;
         private int cols = 0;
 
-        //change that class to something else -> gameobject probably
-        private List<ICollidable>[] bucketsDynamic;
-        private List<ICollidable>[] bucketsStatic;
-
-        //private Color debug_color_dark = new Color(200, 200, 200, 25);
-        //private Color debug_color_light = new Color(125, 125, 125, 50);
+        private List<ICollidable>[] buckets;
 
         //figure out something better than spacing (is not always dividedable by screen size)
         public SpatialHash(float x, float y, float w, float h, int rows, int cols)
@@ -41,12 +36,10 @@ namespace ShapeLib.ShapeCollision
             this.rows = rows;// (int)Math.Floor(height / spacing);
             this.cols = cols;// (int)Math.Floor(width / spacing); 
             bucket_size = rows * cols;
-            bucketsDynamic = new List<ICollidable>[bucket_size];
-            bucketsStatic = new List<ICollidable>[bucket_size];
+            buckets = new List<ICollidable>[bucket_size];
             for (int i = 0; i < bucket_size; i++)
             {
-                bucketsDynamic[i] = new List<ICollidable>();
-                bucketsStatic[i] = new List<ICollidable>();
+                buckets[i] = new List<ICollidable>();
             }
         }
 
@@ -66,7 +59,7 @@ namespace ShapeLib.ShapeCollision
 
                 Raylib.DrawRectangleLinesEx(rect, 1, border);
                 int id = GetCellID(coords.x, coords.y);
-                if (bucketsDynamic[id].Count > 0 || bucketsStatic[id].Count > 0)
+                if (buckets[id].Count > 0)
                 {
                     //DrawRectangleLinesEx(rect, 1, full);
                     Raylib.DrawRectangleRec(rect, fill);
@@ -120,9 +113,9 @@ namespace ShapeLib.ShapeCollision
         //TODO (DAVID):
         //get all the cells in the bounding rect area and then make overlap test between the shape and each cell in the bounding area
         //only make those checks if there are more than 1 cell
-        public List<int> GetCellIDs(Collider shape, bool dynamicBoundingBox = false)
+        public List<int> GetCellIDs(Collider shape)
         {
-            Rectangle boundingRect = dynamicBoundingBox? shape.GetDynamicBoundingRect() : shape.GetBoundingRect();
+            Rectangle boundingRect = shape.GetBoundingRect();
             List<int> hashes = new List<int>();
             (int x, int y) topLeft = GetCellCoordinate(boundingRect.x, boundingRect.y);
             (int x, int y) bottomRight = GetCellCoordinate(boundingRect.x + boundingRect.width, boundingRect.y + boundingRect.height);
@@ -170,68 +163,41 @@ namespace ShapeLib.ShapeCollision
         }
 
 
-        public void AddRange(List<ICollidable> colliders, bool dynamic = true)
+        public void AddRange(List<ICollidable> colliders)
         {
             foreach (ICollidable collider in colliders)
             {
-                Add(collider, dynamic);
+                Add(collider);
             }
         }
-        public void Add(ICollidable collider, bool dynamic = true)
+        public void Add(ICollidable collider)
         {
-            var hashes = GetCellIDs(collider.GetCollider(), collider.HasDynamicBoundingBox());
+            var hashes = GetCellIDs(collider.GetCollider());
             foreach (int hash in hashes)
             {
-                if (dynamic)
-                {
-                    if (!bucketsDynamic[hash].Contains(collider)) { bucketsDynamic[hash].Add(collider); }
-                }
-                else
-                {
-                    if (!bucketsStatic[hash].Contains(collider)) { bucketsStatic[hash].Add(collider); }
-                }
+                if (!buckets[hash].Contains(collider)) { buckets[hash].Add(collider); }
             }
         }
 
-        public void Remove(ICollidable collider, bool dynamic = false)
+        public void Remove(ICollidable collider)
         {
-            var hashes = GetCellIDs(collider.GetCollider(), collider.HasDynamicBoundingBox());
+            var hashes = GetCellIDs(collider.GetCollider());
             foreach (int hash in hashes)
             {
-                if (dynamic)
-                {
-                    bucketsDynamic[hash].Remove(collider);
-                }
-                else
-                {
-                    bucketsStatic[hash].Remove(collider);
-                }
+                buckets[hash].Remove(collider);
             }
         }
         public void Clear()
         {
-            ClearStatic();
-            ClearDynamic();
+            for (int i = 0; i < bucket_size; i++)
+            {
+                buckets[i].Clear();
+            }
         }
         public void Close()
         {
             Clear();
-            bucketsStatic = new List<ICollidable>[0];
-            bucketsDynamic = new List<ICollidable>[0];
-        }
-        public void ClearStatic()
-        {
-            for (int i = 0; i < bucket_size; i++)
-            {
-                bucketsStatic[i].Clear();
-            }
-        }
-        public void ClearDynamic()
-        {
-            for (int i = 0; i < bucket_size; i++)
-            {
-                bucketsDynamic[i].Clear();
-            }
+            buckets = new List<ICollidable>[0];
         }
 
         //public List<ICollidable> GetObjects(Collider shape, bool dynamicBoundingBox = false)
@@ -248,21 +214,16 @@ namespace ShapeLib.ShapeCollision
         //    return objects.Distinct().ToList();
         //}
 
-        public List<ICollidable> GetObjects(Collider shape, bool dynamicBoundingBox = false)
+        public List<ICollidable> GetObjects(Collider shape)
         {
             HashSet<ICollidable> uniqueObjects = new();
-            var hashes = GetCellIDs(shape, dynamicBoundingBox);
+            var hashes = GetCellIDs(shape);
             foreach (int hash in hashes)
             {
-                foreach (var dyn in bucketsDynamic[hash])
+                foreach (var dyn in buckets[hash])
                 {
                     if (dyn.GetCollider() == shape) continue;
                     uniqueObjects.Add(dyn);
-                }
-                foreach (var sta in bucketsStatic[hash])
-                {
-                    if (sta.GetCollider() == shape) continue;
-                    uniqueObjects.Add(sta);
                 }
             }
             return uniqueObjects.ToList();
@@ -289,11 +250,10 @@ namespace ShapeLib.ShapeCollision
         public List<ICollidable> GetObjects(ICollidable collider)
         {
             List<ICollidable> objects = new();
-            var hashes = GetCellIDs(collider.GetCollider(), collider.HasDynamicBoundingBox());
+            var hashes = GetCellIDs(collider.GetCollider());
             foreach (int hash in hashes)
             {
-                objects.AddRange(bucketsDynamic[hash]);
-                objects.AddRange(bucketsStatic[hash]);
+                objects.AddRange(buckets[hash]);
             }
             objects = objects.Distinct().ToList();
             objects.Remove(collider);
