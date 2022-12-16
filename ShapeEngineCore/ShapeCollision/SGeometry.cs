@@ -1215,9 +1215,7 @@ namespace ShapeCollision
         }
         public static Vector2 ClosestPointCirclePoint(CircleCollider c, Collider point)
         {
-            Vector2 p = ClosestPointPointCircle(point, c);
-            Vector2 dir = p - c.Pos;
-            return c.Pos + Vector2.Normalize(dir) * c.Radius;
+            return ClosestPointPointCircle(point, c);
         }
 
         //point - line
@@ -1521,7 +1519,7 @@ namespace ShapeCollision
                 {
                     if (difY <= 0)
                     {
-                        return new(point.x, rect.y);
+                        return new(point.X, rect.y);
                     }
                     else
                     {
@@ -1531,8 +1529,8 @@ namespace ShapeCollision
             }
             else
             {
-                float x = Clamp(point.X, rect.x, rect.x + rect.width);
-                float y = Clamp(point.Y, rect.y, rect.y + rect.height);
+                x = Clamp(point.X, rect.x, rect.x + rect.width);
+                y = Clamp(point.Y, rect.y, rect.y + rect.height);
             }
 
             return new(x, y);
