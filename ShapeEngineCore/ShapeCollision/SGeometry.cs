@@ -1103,6 +1103,80 @@ namespace ShapeCollision
                 return a.Pos;
             }
         }
+
+
+        public static float SqDistPointSegment(Vector2 segA, Vector2 segB, Vector2 c)  
+        {   
+            Vector2 ab = segB - segA;
+            Vector2 ac = c - segA;
+            Vector2 bc = c - segB;  
+            float e = SVec.Dot(ac, ab);  
+            // Handle cases where c projects outside ab
+            if (e <= 0.0f) return SVec.Dot(ac, ac);  
+            float f = SVec.Dot(ab, ab);
+            if (e >= f) return SVec.Dot(bc, bc);  
+            // Handle cases where c projects onto ab
+            return SVec.Dot(ac, ac) - (e * e) / f;  
+        }
+        public static float SqDistPointRect(Vector2 p, Rectangle rect)
+        {
+            float sqDist = 0f;
+
+            float xMin = rect.x;
+            float xMax = rect.x + rect.width;
+            float yMin = rect.y;
+            float yMax = rect.y + rect.height;
+
+            if (p.X < xMin) sqDist += (xMin - p.X) * (xMin - p.X); 
+            if (p.X > xMax) sqDist += (p.X - xMax) * (p.X - xMax);
+
+            if (p.Y < rect.y) sqDist += (yMin - p.Y) * (yMin - p.Y);
+            if (p.Y > rect.y) sqDist += (p.Y - yMax) * (p.Y - yMax);
+
+            return sqDist;
+        }
+        //Vector2 ClosestPointPointTriangle(Vector2 p, Vector2 a, Vector2 b, Vector2 c)
+        //{  // Check if P in vertex region outside A
+           // Vector ab = b - a;
+           // Vector ac = c - a;
+           // Vector ap = p - a;
+           // float d1 = Dot(ab, ap);
+           // float d2 = Dot(ac, ap);
+           // if (d1 <= 0.0f && d2 <= 0.0f) return a; 
+           // barycentric coordinates (1,0,0)  
+           // Check if P in vertex region outside B
+           // Vector bp = p - b;  float d3 = Dot(ab, bp);
+           // float d4 = Dot(ac, bp);
+           // if (d3 >= 0.0f && d4 <= d3) return b; 
+           // barycentric coordinates (0,1,0)  
+           // Check if P in edge region of AB, if so return projection of P onto AB
+           // float vc = d1*d4 - d3*d2;
+           // if (vc <= 0.0f && d1 >= 0.0f && d3 <= 0.0f)
+           // {
+           // float v = d1 / (d1 - d3);
+           // return a + v * ab; 
+           // barycentric coordinates (1-v,v,0)
+           // }  
+           // Check if P in vertex region outside C
+           // Vector cp = p - c;
+           // float d5 = Dot(ab, cp);
+           // float d6 = Dot(ac, cp);
+           // if (d6 >= 0.0f && d5 <= d6) return c; 
+           // barycentric coordinates (0,0,1)
+           // Check if P in edge region of AC, if so return projection of P onto AC
+           // float vb = d5*d2 - d1*d6;
+           // if (vb <= 0.0f && d2 >= 0.0f && d6 <= 0.0f)
+           // {  float w = d2 / (d2 - d6);  return a + w * ac; // barycentric coordinates (1-w,0,w)  }  
+           // Check if P in edge region of BC, if so return projection of P onto BC
+           // float va = d3*d6 - d5*d4;
+           // if (va <= 0.0f && (d4 - d3) >= 0.0f && (d5 - d6) >= 0.0f)
+           // {  float w = (d4 - d3) / ((d4 - d3) + (d5 - d6));  return b + w * (c - b); // barycentric coordinates (0,1-w,w)  }  
+           // P inside face region. Compute Q through its barycentric coordinates (u,v,w)
+           // float denom = 1.0f / (va + vb + vc);
+           // float v = vb * denom;
+           // float w = vc * denom;
+           // return a + ab * v + ac * w; // = u*a + v*b + w*c, u = va * denom = 1.0f - v - w 
+        //}
         
         public static Vector2 ClosestPointCircleCircle(CircleCollider self, CircleCollider other)
         {
@@ -1255,16 +1329,14 @@ namespace ShapeCollision
             float t = SVec.ProjectionTime(displacment, segmentDir);
             if (t < 0.0f) return segmentPos;
             else if (t > 1.0f) return segmentPos + segmentDir * segmentLength;
-            else return SVec.ProjectionPoint(segmentPos, segmentDir, t);
+            else return SVec.ProjectionPoint(segmentPos, segmentDir * segmentLength, t);
         }
         public static Vector2 ClosestPointSegmentPoint(Vector2 segmentStart, Vector2 segmentEnd, Vector2 point)
         {
-            Vector2 segmentDir = Vector2.Normalize(segmentEnd - segmentStart);
-            Vector2 displacment = point - segmentStart;
-            float t = SVec.ProjectionTime(displacment, segmentDir);
-            if (t < 0.0f) return segmentStart;
-            else if (t > 1.0f) return segmentEnd;
-            else return SVec.ProjectionPoint(segmentStart, segmentDir, t);
+            Vector2 segmentDir = segmentEnd - segmentStart;
+            float segmentLength = segmentDir.Length();
+            return ClosestPointSegmentPoint(segmentStart, segmentDir / segmentLength, segmentLength, point);
+            
         }
         public static Vector2 ClosestPointSegmentPoint(SegmentCollider segment, Vector2 point)
         {
@@ -1341,27 +1413,63 @@ namespace ShapeCollision
 
             return disSq1 <= disSq2 ? b1 : b2;
         }
+        public static (Vector2 p, float disSq) ClosestPointSegmentSegment2(Vector2 aStart, Vector2 aEnd, Vector2 bStart, Vector2 bEnd)
+        {
+            var info = IntersectSegmentSegment(aStart, aEnd, bStart, bEnd);
+            if (info.intersection) return (info.intersectPoint, 0f);
+
+            Vector2 b1 = ClosestPointSegmentPoint(aStart, aEnd, bStart);
+            float disSq1 = (b1 - bStart).LengthSquared();
+            Vector2 b2 = ClosestPointSegmentPoint(aStart, aEnd, bEnd);
+            float disSq2 = (b2 - bEnd).LengthSquared();
+
+            return disSq1 <= disSq2 ? (b1, disSq1) : (b2, disSq2);
+        }
         public static Vector2 ClosestPointSegmentSegment(SegmentCollider a, SegmentCollider b)
         {
             return ClosestPointSegmentSegment(a.Pos, a.End, b.Pos, b.End);
         }
         public static Vector2 ClosestPointSegmentRect(Vector2 segmentStart, Vector2 segmentEnd, Rectangle rect)
         {
+            List<Vector2> closestPoints = new();
             var segments = SRect.GetRectSegments(rect);
-            Vector2 tl = new(rect.x, rect.y);
             float minDisSq = float.PositiveInfinity;
-            Vector2 closestPoint = tl;
             foreach (var seg in segments)
             {
-                var p = ClosestPointSegmentSegment(segmentStart, segmentEnd, seg.start, seg.end);
-                float disSq = (tl - p).LengthSquared();
-                if (disSq < minDisSq)
+                var info = ClosestPointSegmentSegment2(segmentStart, segmentEnd, seg.start, seg.end);
+                if (info.disSq < minDisSq)
                 {
-                    minDisSq = disSq;
-                    closestPoint = p;
+                    closestPoints.Clear();
+                    closestPoints.Add(info.p);
+                    minDisSq = info.disSq;
+                }
+                else if(info.disSq == minDisSq)
+                {
+                    closestPoints.Add(info.p);
                 }
             }
-            return closestPoint;
+            return closestPoints[0];
+        }
+        public static (Vector2 p, float disSq) ClosestPointSegmentRect2(Vector2 segmentStart, Vector2 segmentEnd, Rectangle rect)
+        {
+            List<(Vector2 p, float disSq)> closestPoints = new();
+            var segments = SRect.GetRectSegments(rect);
+            float minDisSq = float.PositiveInfinity;
+            foreach (var seg in segments)
+            {
+                var info = ClosestPointSegmentSegment2(segmentStart, segmentEnd, seg.start, seg.end);
+                if (info.disSq < minDisSq)
+                {
+                    closestPoints.Clear();
+                    closestPoints.Add(info);
+                    minDisSq = info.disSq;
+                }
+                else if (info.disSq == minDisSq)
+                {
+                    closestPoints.Add(info);
+                }
+            }
+            return closestPoints[0];
         }
         public static Vector2 ClosestPointSegmentRect(SegmentCollider s, RectCollider r)
         {
@@ -1370,41 +1478,64 @@ namespace ShapeCollision
         public static Vector2 ClosestPointSegmentPoly(SegmentCollider s, PolyCollider pc)
         {
             List<Vector2> poly = pc.Shape;
+            List<Vector2> closestPoints = new();
             Vector2 segmentStart = s.Pos;
             Vector2 segmentEnd = s.End;
             float minDisSq = float.PositiveInfinity;
-            Vector2 closestPoint = pc.Pos;
             for (int i = 0; i < poly.Count; i++)
             {
                 Vector2 start = poly[i];
                 Vector2 end = poly[(i + 1) % poly.Count];
-                var p = ClosestPointSegmentSegment(segmentStart, segmentEnd, start, end);
-                float disSq = (pc.Pos - p).LengthSquared();
-                if (disSq < minDisSq)
+                var info = ClosestPointSegmentSegment2(segmentStart, segmentEnd, start, end);
+                if (info.disSq < minDisSq)
                 {
-                    minDisSq = disSq;
-                    closestPoint = p;
+                    minDisSq = info.disSq;
+                    closestPoints.Clear();
+                    closestPoints.Add(info.p);
                 }
+                else if (info.disSq == minDisSq) closestPoints.Add(info.p);
             }
-            return closestPoint;
+            return closestPoints[0];
         }
         
         public static Vector2 ClosestPointRectPoint(Rectangle rect, Vector2 point)
         {
-            var segments = SRect.GetRectSegments(rect);
-            float minDisSq = float.PositiveInfinity;
-            Vector2 closestPoint = point;
-            foreach (var seg in segments)
+            float x = 0f;
+            float y = 0f;
+            if (ContainsRectPoint(rect, point))
             {
-                var p = ClosestPointSegmentPoint(seg.start, seg.end, point);
-                float disSq = (point - p).LengthSquared();
-                if (disSq < minDisSq)
+                float difX = point.X - rect.x + rect.width / 2;
+                float difY = point.Y - rect.y + rect.height / 2;
+                if(MathF.Abs(difX) >= MathF.Abs(difY))
                 {
-                    minDisSq = disSq;
-                    closestPoint = p;
+                    if(difX <= 0)
+                    {
+                        return new(rect.x, point.Y);
+                    }
+                    else
+                    {
+                        return new(rect.x + rect.width, point.Y);
+                    }
+                }
+                else
+                {
+                    if (difY <= 0)
+                    {
+                        return new(point.x, rect.y);
+                    }
+                    else
+                    {
+                        return new(point.X, rect.y + rect.height);
+                    }
                 }
             }
-            return closestPoint;
+            else
+            {
+                float x = Clamp(point.X, rect.x, rect.x + rect.width);
+                float y = Clamp(point.Y, rect.y, rect.y + rect.height);
+            }
+
+            return new(x, y);
         }
         public static Vector2 ClosestPointRectPoint(RectCollider r, Collider point)
         {
@@ -1412,20 +1543,21 @@ namespace ShapeCollision
         }
         public static Vector2 ClosestPointRectCircle(Rectangle rect, Vector2 circlePos, float radius)
         {
-            var segments = SRect.GetRectSegments(rect);
-            float minDisSq = float.PositiveInfinity;
-            Vector2 closestPoint = circlePos;
-            foreach (var seg in segments)
-            {
-                var p = ClosestPointSegmentCircle(seg.start, seg.end, circlePos, radius);
-                float disSq = (circlePos - p).LengthSquared();
-                if (disSq < minDisSq)
-                {
-                    minDisSq = disSq;
-                    closestPoint = p;
-                }
-            }
-            return closestPoint;
+            return ClosestPointRectPoint(rect, circlePos);
+            //var segments = SRect.GetRectSegments(rect);
+            //float minDisSq = float.PositiveInfinity;
+            //Vector2 closestPoint = circlePos;
+            //foreach (var seg in segments)
+            //{
+            //    var p = ClosestPointSegmentCircle(seg.start, seg.end, circlePos, radius);
+            //    float disSq = (circlePos - p).LengthSquared();
+            //    if (disSq < minDisSq)
+            //    {
+            //        minDisSq = disSq;
+            //        closestPoint = p;
+            //    }
+            //}
+            //return closestPoint;
         }
         public static Vector2 ClosestPointRectCircle(RectCollider r, CircleCollider c)
         {
@@ -1433,20 +1565,45 @@ namespace ShapeCollision
         }
         public static Vector2 ClosestPointRectSegment(Rectangle rect, Vector2 segmentStart, Vector2 segmentEnd)
         {
+            List<Vector2> closestPoints = new();
             var segments = SRect.GetRectSegments(rect);
             float minDisSq = float.PositiveInfinity;
-            Vector2 closestPoint = segmentStart;
             foreach (var seg in segments)
             {
-                var p = ClosestPointSegmentSegment(seg.start, seg.end, segmentStart, segmentEnd);
-                float disSq = (segmentStart - p).LengthSquared();
-                if (disSq < minDisSq)
+                var info = ClosestPointSegmentSegment2(seg.start, seg.end, segmentStart, segmentEnd);
+                if (info.disSq < minDisSq)
                 {
-                    minDisSq = disSq;
-                    closestPoint = p;
+                    closestPoints.Clear();
+                    closestPoints.Add(info.p);
+                    minDisSq = info.disSq;
+                }
+                else if (info.disSq == minDisSq)
+                {
+                    closestPoints.Add(info.p);
                 }
             }
-            return closestPoint;
+            return closestPoints[0];
+        }
+        public static (Vector2 p, float disSq) ClosestPointRectSegment2(Rectangle rect, Vector2 segmentStart, Vector2 segmentEnd)
+        {
+            List<(Vector2 point, float dis)> closestPoints = new();
+            var segments = SRect.GetRectSegments(rect);
+            float minDisSq = float.PositiveInfinity;
+            foreach (var seg in segments)
+            {
+                var info = ClosestPointSegmentSegment2(seg.start, seg.end, segmentStart, segmentEnd);
+                if (info.disSq < minDisSq)
+                {
+                    closestPoints.Clear();
+                    closestPoints.Add(info);
+                    minDisSq = info.disSq;
+                }
+                else if (info.disSq == minDisSq)
+                {
+                    closestPoints.Add(info);
+                }
+            }
+            return closestPoints[0];
         }
         public static Vector2 ClosestPointRectSegment(RectCollider r, SegmentCollider s)
         {
@@ -1454,25 +1611,29 @@ namespace ShapeCollision
         }
         public static Vector2 ClosestPointRectRect(Rectangle a, Rectangle b)
         {
+            List<Vector2> closestPoints = new();
             var aSegments = SRect.GetRectSegments(a);
             var bSegments = SRect.GetRectSegments(b);
-            Vector2 bPos = new(b.x, b.y);
             float minDisSq = float.PositiveInfinity;
-            Vector2 closestPoint = bPos;
+            
             foreach (var aSeg in aSegments)
             {
                 foreach (var bSeg in bSegments)
                 {
-                    var p = ClosestPointSegmentSegment(aSeg.start, aSeg.end, bSeg.start, bSeg.end);
-                    float disSq = (bPos - p).LengthSquared();
-                    if (disSq < minDisSq)
+                    var info = ClosestPointSegmentSegment2(aSeg.start, aSeg.end, bSeg.start, bSeg.end);
+                    if (info.disSq < minDisSq)
                     {
-                        minDisSq = disSq;
-                        closestPoint = p;
+                        closestPoints.Clear();
+                        closestPoints.Add(info.p);
+                        minDisSq = info.disSq;
+                    }
+                    else if (info.disSq == minDisSq)
+                    {
+                        closestPoints.Add(info.p);
                     }
                 }
             }
-            return closestPoint;
+            return closestPoints[0];
         }
         public static Vector2 ClosestPointRectRect(RectCollider a, RectCollider b)
         {
@@ -1482,7 +1643,6 @@ namespace ShapeCollision
         {
             return ClosestPointRectPoint(SRect.ConstructRect(pos,size, alignement), point);
         }
-        
         public static Vector2 ClosestPointRectCircle(Vector2 pos, Vector2 size, Vector2 alignement, Vector2 circlePos, float radius)
         {
             return ClosestPointRectCircle(SRect.ConstructRect(pos, size, alignement), circlePos, radius);
@@ -1527,24 +1687,28 @@ namespace ShapeCollision
         }
         public static Vector2 ClosestPointRectPoly(Rectangle rect, List<Vector2> poly)
         {
-            
             Vector2 rectPos = new(rect.x, rect.y);
-            if (poly.Count < 3) return rectPos;
+            if (poly.Count < 2) return rectPos;
+            else if (poly.Count < 3) return ClosestPointRectSegment(rect, poly[0], poly[1]);
+            List<Vector2> closestPoints = new();
             float minDisSq = float.PositiveInfinity;
-            Vector2 closestPoint = poly[0];
+            
             for (int i = 0; i < poly.Count; i++)
             {
                 Vector2 start = poly[i];
                 Vector2 end = poly[(i + 1) % poly.Count];
-                var p = ClosestPointRectSegment(rect, start, end);
-                float disSq = (poly[0] - p).LengthSquared();
-                if (disSq < minDisSq)
+                var info = ClosestPointRectSegment2(rect, start, end);
+                if (info.disSq < minDisSq)
                 {
-                    minDisSq = disSq;
-                    closestPoint = p;
+                    minDisSq = info.disSq;
+                    closestPoints.Add(info.p);
+                }
+                else if(info.disSq == minDisSq)
+                {
+                    closestPoints.Add(info.p);
                 }
             }
-            return closestPoint;
+            return closestPoints[0];
         }
         public static Vector2 ClosestPointRectPoly(RectCollider r, PolyCollider poly)
         {
@@ -1575,21 +1739,22 @@ namespace ShapeCollision
         }
         public static Vector2 ClosestPointPolyCircle(List<Vector2> poly, Vector2 circlePos, float radius)
         {
-            float minDisSq = float.PositiveInfinity;
-            Vector2 closestPoint = circlePos;
-            for (int i = 0; i < poly.Count; i++)
-            {
-                Vector2 start = poly[i];
-                Vector2 end = poly[(i + 1) % poly.Count];
-                var p = ClosestPointSegmentCircle(start, end, circlePos, radius);
-                float disSq = (circlePos - p).LengthSquared();
-                if (disSq < minDisSq)
-                {
-                    minDisSq = disSq;
-                    closestPoint = p;
-                }
-            }
-            return closestPoint;
+            return ClosestPointPolyPoint(poly, circlePos);
+            //float minDisSq = float.PositiveInfinity;
+            //Vector2 closestPoint = circlePos;
+            //for (int i = 0; i < poly.Count; i++)
+            //{
+            //    Vector2 start = poly[i];
+            //    Vector2 end = poly[(i + 1) % poly.Count];
+            //    var p = ClosestPointSegmentCircle(start, end, circlePos, radius);
+            //    float disSq = (circlePos - p).LengthSquared();
+            //    if (disSq < minDisSq)
+            //    {
+            //        minDisSq = disSq;
+            //        closestPoint = p;
+            //    }
+            //}
+            //return closestPoint;
         }
         public static Vector2 ClosestPointPolyCircle(PolyCollider poly, CircleCollider c)
         {
@@ -1597,21 +1762,21 @@ namespace ShapeCollision
         }
         public static Vector2 ClosestPointPolySegment(List<Vector2> poly, Vector2 segmentStart, Vector2 segmentEnd)
         {
+            List<Vector2> closestPoints = new();
             float minDisSq = float.PositiveInfinity;
-            Vector2 closestPoint = segmentStart;
             for (int i = 0; i < poly.Count; i++)
             {
                 Vector2 start = poly[i];
                 Vector2 end = poly[(i + 1) % poly.Count];
-                var p = ClosestPointSegmentSegment(start, end, segmentStart, segmentEnd);
-                float disSq = (segmentStart - p).LengthSquared();
-                if (disSq < minDisSq)
+                var info = ClosestPointSegmentSegment2(start, end, segmentStart, segmentEnd);
+                if (info.disSq < minDisSq)
                 {
-                    minDisSq = disSq;
-                    closestPoint = p;
+                    minDisSq = info.disSq;
+                    closestPoints.Add(info.p);
                 }
+                else if (info.disSq == minDisSq) closestPoints.Add(info.p);
             }
-            return closestPoint;
+            return closestPoints[0];
         }
         public static Vector2 ClosestPointPolySegment(PolyCollider poly, SegmentCollider s)
         {
@@ -1619,22 +1784,21 @@ namespace ShapeCollision
         }
         public static Vector2 ClosestPointPolyRect(List<Vector2> poly, Rectangle rect)
         {
-            Vector2 rectPos = new(rect.x, rect.y);
+            List<Vector2> closestPoints = new();
             float minDisSq = float.PositiveInfinity;
-            Vector2 closestPoint = rectPos;
             for (int i = 0; i < poly.Count; i++)
             {
                 Vector2 start = poly[i];
                 Vector2 end = poly[(i + 1) % poly.Count];
-                var p = ClosestPointSegmentRect(start, end, rect);
-                float disSq = (rectPos - p).LengthSquared();
-                if (disSq < minDisSq)
+                var info = ClosestPointSegmentRect2(start, end, rect);
+                if (info.disSq < minDisSq)
                 {
-                    minDisSq = disSq;
-                    closestPoint = p;
+                    minDisSq = info.disSq;
+                    closestPoints.Add(info.p);
                 }
+                else if (info.disSq == minDisSq) closestPoints.Add(info.p);
             }
-            return closestPoint;
+            return closestPoints[0];
         }
         public static Vector2 ClosestPointPolyRect(PolyCollider poly, RectCollider r)
         {
@@ -1643,9 +1807,8 @@ namespace ShapeCollision
         public static Vector2 ClosestPointPolyPoly(List<Vector2> a, List<Vector2> b)
         {
             if (a.Count < 3 || b.Count < 3) return new(0f);
-            Vector2 point = a[0];
+            List<Vector2> closestPoints = new();
             float minDisSq = float.PositiveInfinity;
-            Vector2 closestPoint = point;
             for (int i = 0; i < a.Count - 1; i++)
             {
                 Vector2 aStart = a[i];
@@ -1654,16 +1817,16 @@ namespace ShapeCollision
                 {
                     Vector2 bStart = b[i];
                     Vector2 bEnd = b[i + 1];
-                    var p = ClosestPointSegmentSegment(aStart, aEnd, bStart, bEnd);
-                    float disSq = (point - p).LengthSquared();
-                    if (disSq < minDisSq)
+                    var info = ClosestPointSegmentSegment2(aStart, aEnd, bStart, bEnd);
+                    if (info.disSq < minDisSq)
                     {
-                        minDisSq = disSq;
-                        closestPoint = p;
+                        minDisSq = info.disSq;
+                        closestPoints.Add(info.p);
                     }
+                    else if (info.disSq == minDisSq) closestPoints.Add(info.p);
                 }
             }
-            return closestPoint;
+            return closestPoints[0];
         }
         public static Vector2 ClosestPointPolyPoly(PolyCollider a, PolyCollider b)
         {
