@@ -28,6 +28,7 @@ namespace ShapeEngineCore.Globals.Persistent
 
         public static void Initialize(string path, string resourceFileName = "resources.txt")
         {
+            if (path == "" || resourceFileName == "") return;
             resources = LoadResources(path, resourceFileName);
         }
 

@@ -1,10 +1,16 @@
 ﻿
 using System.Numerics;
 using Raylib_CsLo;
+using ShapeEngineCore.Globals;
 using ShapeLib;
 
 namespace ShapeCollision
 {
+    //collider class now holds everything physics related (force, vel, drag, pos, etc)
+    //new shape class will be added that contains everything related to the shape for collision detection
+    //collider has a list of shapes (compound collider) with offset per shape -> figure out how to have accurate world position
+    //for each shape (collider.Pos + shape.Offset) when used in collision detection
+
     public class Collider
     {
         public Collider() { }
@@ -202,6 +208,10 @@ namespace ShapeCollision
         }
 
 
+        public override void DebugDrawShape(Color color)
+        {
+            Drawing.DrawPolygon(Shape, 2f, color);
+        }
     }
 
 }
