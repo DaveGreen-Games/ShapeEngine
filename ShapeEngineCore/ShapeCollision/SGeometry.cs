@@ -1,6 +1,7 @@
 ﻿using Raylib_CsLo;
 using System.Numerics;
 using ShapeLib;
+using System.Diagnostics;
 
 namespace ShapeCollision
 {
@@ -2082,8 +2083,46 @@ namespace ShapeCollision
         }
 
         
-        
-        
+        // Returns 2 times the signed triangle area. The result is positive if  
+        // abc is ccw, negative if abc is cw, zero if abc is degenerate.  
+        private static float Signed2DTriArea(Vector2 a, Vector2 b, Vector2 c)  
+        {  
+            return (a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X);  
+        }
+
+        // Test if segments ab and cd overlap. If they do, compute and return  
+        // intersection t value along ab and intersection position p
+        public static (bool intersected, Vector2 intersectPoint, float time) IntersectSegmentSegment2(Vector2 aStart, Vector2 aEnd, Vector2 bStart, Vector2 bEnd)
+        {
+            //Sign of areas correspond to which side of ab points c and d are
+            float a1 = Signed2DTriArea(aStart, aEnd, bEnd); // Compute winding of abd (+ or -)
+            float a2 = Signed2DTriArea(aStart, aEnd, bStart); // To intersect, must have sign opposite of a1
+            //If c and d are on different sides of ab, areas have different signs
+            if (a1 * a2 < 0.0f)
+            {  
+                //Compute signs for a and b with respect to segment cd
+                float a3 = Signed2DTriArea(bStart, bEnd, aStart); 
+                //Compute winding of cda (+ or -)  
+                // Since area is constant a1 - a2 = a3 - a4, or a4 = a3 + a2 - a1  
+                //float a4 = Signed2DTriArea(bStart, bEnd, aEnd); // Must have opposite sign of a3
+                float a4 = a3 + a2 - a1;  // Points a and b on different sides of cd if areas have different signs
+                if (a3 * a4 < 0.0f)
+                {  
+                    //Segments intersect. Find intersection point along L(t) = a + t * (b - a).  
+                    //Given height h1 of an over cd and height h2 of b over cd, 
+                    //t = h1 / (h1 - h2) = (b*h1/2) / (b*h1/2 - b*h2/2) = a3 / (a3 - a4),  
+                    //where b (the base of the triangles cda and cdb, i.e., the length  
+                    //of cd) cancels out.
+                    float t = a3 / (a3 - a4);
+                    Vector2 p = aStart + t * (aEnd - aStart);
+                    return (true, p, t);
+                }
+            }  
+            //Segments not intersecting (or collinear)
+            return (false, new(0f), -1f);
+        } 
+
+
         //CAST (SemiDynamic - Get Collision Response only for first object - second object can have vel as well)
         public static CastInfo CastIntersection(Collider point, CircleCollider circle, float dt)
         {
