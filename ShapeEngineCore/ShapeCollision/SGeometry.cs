@@ -1,7 +1,6 @@
 ﻿using Raylib_CsLo;
 using System.Numerics;
 using ShapeLib;
-using System.Reflection.Metadata.Ecma335;
 
 namespace ShapeCollision
 {
@@ -933,8 +932,8 @@ namespace ShapeCollision
             {
                 Vector2 start = poly[i];
                 Vector2 end = poly[(i + 1) % poly.Count];
-                var info = IntersectSegmentCircle(start, end, circlePos, radius);
-                if (info.intersected) return false;
+                var points = IntersectSegmentCircle(start, end, circlePos, radius);
+                if (points.Count > 0) return false;
             }
             return true;
         }
@@ -2171,8 +2170,42 @@ namespace ShapeCollision
         }
         public static List<Vector2> IntersectSegmentCircle(Vector2 start, Vector2 end, Vector2 circlePos, float circleRadius)
         {
+            return IntersectSegmentCircle(start, end, circlePos.X, circlePos.Y, circleRadius);
+        }
+        public static List<Vector2> IntersectSegmentCircle(Vector2 point1, Vector2 point2, float cx, float cy, float radius)
+        {
+            float dx, dy, A, B, C, det, t;
 
-            return new();
+            dx = point2.X - point1.X;
+            dy = point2.Y - point1.Y;
+
+            A = dx * dx + dy * dy;
+            B = 2 * (dx * (point1.X - cx) + dy * (point1.Y - cy));
+            C = (point1.X - cx) * (point1.X - cx) +
+                (point1.Y - cy) * (point1.Y - cy) -
+                radius * radius;
+
+            det = B * B - 4 * A * C;
+            if ((A <= 0.0000001) || (det < 0))
+            {
+                // No real solutions.
+                return new();
+            }
+            else if (det == 0)
+            {
+                // One solution.
+                t = -B / (2 * A);
+                return new() { new Vector2(point1.X + t * dx, point1.Y + t * dy) };
+            }
+            else
+            {
+                // Two solutions.
+                t = (float)((-B + Math.Sqrt(det)) / (2 * A));
+                Vector2 intersection1 = new Vector2(point1.X + t * dx, point1.Y + t * dy);
+                t = (float)((-B - Math.Sqrt(det)) / (2 * A));
+                Vector2 intersection2 = new Vector2(point1.X + t * dx, point1.Y + t * dy);
+                return new() {intersection1, intersection2};
+            }
         }
         public static List<Vector2> IntersectCircleSegment(Vector2 circlePos, float circleRadius, Vector2 start, Vector2 end)
         {
