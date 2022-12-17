@@ -1,7 +1,7 @@
 ﻿using Raylib_CsLo;
 using System.Numerics;
 using ShapeLib;
-using System.Diagnostics;
+using System.Reflection.Metadata.Ecma335;
 
 namespace ShapeCollision
 {
@@ -910,7 +910,7 @@ namespace ShapeCollision
             {
                 Vector2 start = poly[i];
                 Vector2 end = poly[(i + 1) % poly.Count];
-                var info = IntersectRaySegment(point, new(1f, 0f), start, end);
+                var info = IntersectRaySegmentInfo(point, new(1f, 0f), start, end);
                 if (info.intersected) intersections += 1;
             }
 
@@ -1404,7 +1404,7 @@ namespace ShapeCollision
         
         public static Vector2 ClosestPointSegmentSegment(Vector2 aStart, Vector2 aEnd, Vector2 bStart, Vector2 bEnd)
         {
-            var info = IntersectSegmentSegment(aStart, aEnd, bStart, bEnd);
+            var info = IntersectSegmentSegmentInfo(aStart, aEnd, bStart, bEnd);
             if (info.intersected) return info.intersectPoint;
             
 
@@ -1419,7 +1419,7 @@ namespace ShapeCollision
         }
         public static (Vector2 p, float disSq) ClosestPointSegmentSegment2(Vector2 aStart, Vector2 aEnd, Vector2 bStart, Vector2 bEnd)
         {
-            var info = IntersectSegmentSegment(aStart, aEnd, bStart, bEnd);
+            var info = IntersectSegmentSegmentInfo(aStart, aEnd, bStart, bEnd);
             if (info.intersected) return (info.intersectPoint, 0f);
 
             Vector2 b1 = ClosestPointSegmentPoint(aStart, aEnd, bStart);
@@ -1842,33 +1842,7 @@ namespace ShapeCollision
         }
 
 
-        public static List<Vector2> IntersectSegmentRect(Vector2 start, Vector2 end, Rectangle rect)
-        {
-            var c = SRect.GetRectCorners(rect);
-            return IntersectSegmentRect(start, end, c.tl, c.tr, c.br, c.bl);
-        }
-        public static List<Vector2> IntersectSegmentRect(Vector2 start, Vector2 end, Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement)
-        {
-            var rect = SRect.ConstructRect(rectPos, rectSize, rectAlignement);
-            return IntersectSegmentRect(start, end, rect);
-
-        }
-        public static List<Vector2> IntersectSegmentRect(Vector2 start, Vector2 end, Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl)
-        {
-            List<(Vector2 start, Vector2 end)> segments = SRect.GetRectSegments(tl, tr, br, bl);
-            List<Vector2> intersections = new();
-            foreach (var seg in segments)
-            {
-                var result = IntersectSegmentSegment(start, end, seg.start, seg.end);
-                if (result.intersected)
-                {
-                    intersections.Add(result.intersectPoint);
-                }
-                if (intersections.Count >= 2) return intersections;
-            }
-            return intersections;
-        }
-
+        
        // public static (bool intersection, Vector2 intersectPoint, float time) IntersectSegmentSegment(Vector2 start, Vector2 end, Vector2 segmentPos, Vector2 segmentDir, float segmentLength, Vector2 segmentVel)
        // {
        //     Vector2 pointPos = start;
@@ -2042,26 +2016,53 @@ namespace ShapeCollision
        //         return (true, intersectionPoint, t);
        //     }
        // }
-        public static (bool intersected, Vector2 intersectPoint, float time) IntersectPointCircle(Vector2 point, Vector2 vel, Vector2 circlePos, float radius)
-        {
-            Vector2 w = circlePos - point;
-            float qa = vel.LengthSquared();
-            float qb = vel.X * w.X + vel.Y * w.Y;
-            float qc = w.LengthSquared() - radius * radius;
+        //public static (bool intersected, Vector2 intersectPoint, float time) IntersectSegmentCircle(Vector2 segmentStart, Vector2 segmentEnd, Vector2 circlePos, float radius)
+        //{
+        //    return IntersectPointCircle(segmentStart, segmentEnd - segmentStart, circlePos, radius);
+        //}
+        
 
-            float qd = qb * qb - qa * qc;
-            if (qd < 0.0f) return (false, new(0f), 0f);
-            float t = (qb - MathF.Sqrt(qd)) / qa;
-            if (t < 0.0f || t > 1.0f) return (false, new(0f), 0f);
+        
 
-            Vector2 intersectionPoint = point + vel * t; // new(point.X + vel.X * t, point.Y + vel.Y * t);
-            return (true, intersectionPoint, t);
+        // Returns 2 times the signed triangle area. The result is positive if  
+        // abc is ccw, negative if abc is cw, zero if abc is degenerate.  
+        private static float Signed2DTriArea(Vector2 a, Vector2 b, Vector2 c)  
+        {  
+            return (a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X);  
         }
-        public static (bool intersected, Vector2 intersectPoint, float time) IntersectSegmentCircle(Vector2 segmentStart, Vector2 segmentEnd, Vector2 circlePos, float radius)
+
+        // Test if segments ab and cd overlap. If they do, compute and return  
+        // intersection t value along ab and intersection position p
+        public static (bool intersected, Vector2 intersectPoint, float time) IntersectSegmentSegmentInfo(Vector2 aStart, Vector2 aEnd, Vector2 bStart, Vector2 bEnd)
         {
-            return IntersectPointCircle(segmentStart, segmentEnd - segmentStart, circlePos, radius);
+            //Sign of areas correspond to which side of ab points c and d are
+            float a1 = Signed2DTriArea(aStart, aEnd, bEnd); // Compute winding of abd (+ or -)
+            float a2 = Signed2DTriArea(aStart, aEnd, bStart); // To intersect, must have sign opposite of a1
+            //If c and d are on different sides of ab, areas have different signs
+            if (a1 * a2 < 0.0f)
+            {  
+                //Compute signs for a and b with respect to segment cd
+                float a3 = Signed2DTriArea(bStart, bEnd, aStart); 
+                //Compute winding of cda (+ or -)  
+                // Since area is constant a1 - a2 = a3 - a4, or a4 = a3 + a2 - a1  
+                //float a4 = Signed2DTriArea(bStart, bEnd, aEnd); // Must have opposite sign of a3
+                float a4 = a3 + a2 - a1;  // Points a and b on different sides of cd if areas have different signs
+                if (a3 * a4 < 0.0f)
+                {  
+                    //Segments intersect. Find intersection point along L(t) = a + t * (b - a).  
+                    //Given height h1 of an over cd and height h2 of b over cd, 
+                    //t = h1 / (h1 - h2) = (b*h1/2) / (b*h1/2 - b*h2/2) = a3 / (a3 - a4),  
+                    //where b (the base of the triangles cda and cdb, i.e., the length  
+                    //of cd) cancels out.
+                    float t = a3 / (a3 - a4);
+                    Vector2 p = aStart + t * (aEnd - aStart);
+                    return (true, p, t);
+                }
+            }  
+            //Segments not intersecting (or collinear)
+            return (false, new(0f), -1f);
         }
-        public static (bool intersected, Vector2 intersectPoint, float time) IntersectRaySegment(Vector2 rayPos, Vector2 rayDir, Vector2 segmentStart, Vector2 segmentEnd)
+        public static (bool intersected, Vector2 intersectPoint, float time) IntersectRaySegmentInfo(Vector2 rayPos, Vector2 rayDir, Vector2 segmentStart, Vector2 segmentEnd)
         {
             Vector2 vel = segmentEnd - segmentStart;
             Vector2 w = rayPos - segmentStart;
@@ -2090,49 +2091,143 @@ namespace ShapeCollision
                 return (true, intersectionPoint, t);
             }
         }
-
         
-        // Returns 2 times the signed triangle area. The result is positive if  
-        // abc is ccw, negative if abc is cw, zero if abc is degenerate.  
-        private static float Signed2DTriArea(Vector2 a, Vector2 b, Vector2 c)  
-        {  
-            return (a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X);  
+        //public static List<Vector2> IntersectCircleCircle(Vector2 aPos, float aRadius, Vector2 bPos, float bRadius)
+        //{
+        //    bool overlap = OverlapCircleCircle(aPos, aRadius, bPos, bRadius);
+        //    if (!overlap) return new();
+        //
+        //    float dx = aPos.X - bPos.X;
+        //    float dy = aPos.Y - bPos.Y;
+        //    float d = MathF.Sqrt(dx * dx + dy * dy); // d = |C1-C2|
+        //    float gamma1 = MathF.Acos((bRadius * bRadius + d * d - aRadius * aRadius) / (2 * bRadius * d)); // law of cosines
+        //    float d1 = aRadius * MathF.Cos(gamma1); // basic math in right triangle
+        //    float h = aRadius * MathF.Sin(gamma1);
+        //    float px = aPos.X + (bPos.X - aPos.X) / d * d1;
+        //    float py = aPos.Y + (bPos.Y - aPos.Y) / d * d1;
+        //    // (-dy, dx)/d is (C2-C1) normalized and rotated by 90 degrees
+        //    float a1x = px + (-dy) / d * h;
+        //    float a1y = py + (+dx) / d * h;
+        //    float a2x = px - (-dy) / d * h;
+        //    float a2y = py - (+dx) / d * h;
+        //    return new() { new Vector2(a1x, a1y), new Vector2(a2x, a2y) };
+        //}
+        public static List<Vector2> IntersectSegmentSegment(Vector2 aStart, Vector2 aEnd, Vector2 bStart, Vector2 bEnd)
+        {
+            var info = IntersectSegmentSegmentInfo(aStart, aEnd, bStart, bEnd);
+            if (info.intersected) return new() { info.intersectPoint };
+            return new();
+        }
+        public static List<Vector2> IntersectCircleCircle(Vector2 aPos, float aRadius, Vector2 bPos, float bRadius)
+        {
+            return IntersectCircleCircle(aPos.X, aPos.Y, aRadius, bPos.X, bPos.Y, bRadius);
+        }
+        public static List<Vector2> IntersectCircleCircle(float cx0, float cy0, float radius0, float cx1, float cy1, float radius1)
+        {
+            // Find the distance between the centers.
+            float dx = cx0 - cx1;
+            float dy = cy0 - cy1;
+            double dist = Math.Sqrt(dx * dx + dy * dy);
+
+            // See how many solutions there are.
+            if (dist > radius0 + radius1)
+            {
+                // No solutions, the circles are too far apart.
+                return new();
+            }
+            else if (dist < Math.Abs(radius0 - radius1))
+            {
+                // No solutions, one circle contains the other.
+                return new();
+            }
+            else if ((dist == 0) && (radius0 == radius1))
+            {
+                // No solutions, the circles coincide.
+                return new();
+            }
+            else
+            {
+                // Find a and h.
+                double a = (radius0 * radius0 - radius1 * radius1 + dist * dist) / (2 * dist);
+                double h = Math.Sqrt(radius0 * radius0 - a * a);
+
+                // Find P2.
+                double cx2 = cx0 + a * (cx1 - cx0) / dist;
+                double cy2 = cy0 + a * (cy1 - cy0) / dist;
+
+                // Get the points P3.
+                Vector2 intersection1 = new Vector2(
+                    (float)(cx2 + h * (cy1 - cy0) / dist),
+                    (float)(cy2 - h * (cx1 - cx0) / dist));
+                Vector2 intersection2 = new Vector2(
+                    (float)(cx2 - h * (cy1 - cy0) / dist),
+                    (float)(cy2 + h * (cx1 - cx0) / dist));
+
+                // See if we have 1 or 2 solutions.
+                if (dist == radius0 + radius1) return new() { intersection1 };
+                return new() { intersection1, intersection2 };
+            }
+            
+        }
+        public static List<Vector2> IntersectSegmentCircle(Vector2 start, Vector2 end, Vector2 circlePos, float circleRadius)
+        {
+
+            return new();
+        }
+        public static List<Vector2> IntersectCircleSegment(Vector2 circlePos, float circleRadius, Vector2 start, Vector2 end)
+        {
+            return IntersectSegmentCircle(start, end, circlePos, circleRadius);
+        }
+        public static List<Vector2> IntersectSegmentRect(Vector2 start, Vector2 end, Rectangle rect)
+        {
+            var c = SRect.GetRectCorners(rect);
+            return IntersectSegmentRect(start, end, c.tl, c.tr, c.br, c.bl);
+        }
+        public static List<Vector2> IntersectSegmentRect(Vector2 start, Vector2 end, Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement)
+        {
+            var rect = SRect.ConstructRect(rectPos, rectSize, rectAlignement);
+            return IntersectSegmentRect(start, end, rect);
+
+        }
+        public static List<Vector2> IntersectSegmentRect(Vector2 start, Vector2 end, Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl)
+        {
+            List<(Vector2 start, Vector2 end)> segments = SRect.GetRectSegments(tl, tr, br, bl);
+            List<Vector2> intersections = new();
+            foreach (var seg in segments)
+            {
+                var result = IntersectSegmentSegmentInfo(start, end, seg.start, seg.end);
+                if (result.intersected)
+                {
+                    intersections.Add(result.intersectPoint);
+                }
+                if (intersections.Count >= 2) return intersections;
+            }
+            return intersections;
         }
 
-        // Test if segments ab and cd overlap. If they do, compute and return  
-        // intersection t value along ab and intersection position p
-        public static (bool intersected, Vector2 intersectPoint, float time) IntersectSegmentSegment(Vector2 aStart, Vector2 aEnd, Vector2 bStart, Vector2 bEnd)
-        {
-            //Sign of areas correspond to which side of ab points c and d are
-            float a1 = Signed2DTriArea(aStart, aEnd, bEnd); // Compute winding of abd (+ or -)
-            float a2 = Signed2DTriArea(aStart, aEnd, bStart); // To intersect, must have sign opposite of a1
-            //If c and d are on different sides of ab, areas have different signs
-            if (a1 * a2 < 0.0f)
-            {  
-                //Compute signs for a and b with respect to segment cd
-                float a3 = Signed2DTriArea(bStart, bEnd, aStart); 
-                //Compute winding of cda (+ or -)  
-                // Since area is constant a1 - a2 = a3 - a4, or a4 = a3 + a2 - a1  
-                //float a4 = Signed2DTriArea(bStart, bEnd, aEnd); // Must have opposite sign of a3
-                float a4 = a3 + a2 - a1;  // Points a and b on different sides of cd if areas have different signs
-                if (a3 * a4 < 0.0f)
-                {  
-                    //Segments intersect. Find intersection point along L(t) = a + t * (b - a).  
-                    //Given height h1 of an over cd and height h2 of b over cd, 
-                    //t = h1 / (h1 - h2) = (b*h1/2) / (b*h1/2 - b*h2/2) = a3 / (a3 - a4),  
-                    //where b (the base of the triangles cda and cdb, i.e., the length  
-                    //of cd) cancels out.
-                    float t = a3 / (a3 - a4);
-                    Vector2 p = aStart + t * (aEnd - aStart);
-                    return (true, p, t);
-                }
-            }  
-            //Segments not intersecting (or collinear)
-            return (false, new(0f), -1f);
-        } 
+
+
+
 
 
         //CAST (SemiDynamic - Get Collision Response only for first object - second object can have vel as well)
+
+        private static (bool intersected, Vector2 intersectPoint, float time) IntersectPointCircle(Vector2 point, Vector2 vel, Vector2 circlePos, float radius)
+        {
+            Vector2 w = circlePos - point;
+            float qa = vel.LengthSquared();
+            float qb = vel.X * w.X + vel.Y * w.Y;
+            float qc = w.LengthSquared() - radius * radius;
+        
+            float qd = qb * qb - qa * qc;
+            if (qd < 0.0f) return (false, new(0f), 0f);
+            float t = (qb - MathF.Sqrt(qd)) / qa;
+            if (t < 0.0f || t > 1.0f) return (false, new(0f), 0f);
+        
+            Vector2 intersectionPoint = point + vel * t; // new(point.X + vel.X * t, point.Y + vel.Y * t);
+            return (true, intersectionPoint, t);
+        }
+
         public static CastInfo CastIntersection(Collider point, CircleCollider circle, float dt)
         {
             bool overlapping = Overlap(point, circle);// Contains(circle.Pos, circle.Radius, point.Pos);

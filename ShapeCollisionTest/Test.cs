@@ -25,7 +25,7 @@ namespace ShapeCollisionTest
         {
             if (Raylib.IsKeyReleased(KeyboardKey.KEY_SPACE))
             {
-                Program.ChangeTest(new Test1());
+                Program.ChangeTest(new TestCircleCircleIntersection());
             }
         }
         public override void Draw(Vector2 mousePos)
@@ -116,4 +116,33 @@ namespace ShapeCollisionTest
         }
     }
 
+    public class TestCircleCircleIntersection : Test
+    {
+        Vector2 start = SRNG.randPoint(new Rectangle(0, 0, 1920, 1080));
+        Vector2 end = SRNG.randPoint(new Rectangle(0, 0, 1920, 1080));
+        public TestCircleCircleIntersection()
+        {
+
+        }
+
+        public override void Update(float dt, Vector2 mousePos)
+        {
+
+        }
+        public override void Draw(Vector2 mousePos)
+        {
+            Vector2 aPos = new Vector2(1920, 1080) / 2;
+            float aR = 250f;
+            Vector2 bPos = mousePos;
+            float bR = 100f;
+            Drawing.DrawCircleLines(aPos, aR, 5f, Raylib.WHITE, 8f);
+            Drawing.DrawCircleLines(bPos, bR, 5f, Raylib.GREEN, 8f);
+            //Raylib.DrawLineEx(start, end, 4f, Raylib.GREEN);
+            var intersections = SGeometry.IntersectCircleCircle(aPos, aR, bPos, bR);
+            foreach (var point in intersections)
+            {
+                Raylib.DrawCircleV(point, 20f, Raylib.RED);
+            }
+        }
+    }
 }
