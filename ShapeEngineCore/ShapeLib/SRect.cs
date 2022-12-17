@@ -200,9 +200,9 @@ namespace ShapeLib
         public static List<(Vector2 start, Vector2 end)> GetRectSegments(Rectangle rect)
         {
             var c = GetRectCorners(rect);
-            return GetRectSegments(c.tl, c.tr, c.bl, c.br);
+            return GetRectSegments(c.tl, c.tr, c.br, c.bl);
         }
-        public static List<(Vector2 start, Vector2 end)> GetRectSegments(Vector2 tl, Vector2 tr, Vector2 bl, Vector2 br)
+        public static List<(Vector2 start, Vector2 end)> GetRectSegments(Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl)
         {
             List<(Vector2 start, Vector2 end)> segments = new()
             {

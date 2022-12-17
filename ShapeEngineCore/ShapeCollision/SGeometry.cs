@@ -2,6 +2,7 @@
 using System.Numerics;
 using ShapeLib;
 using System.Reflection.Metadata.Ecma335;
+using ShapeEngineCore.Globals.UI;
 
 namespace ShapeCollision
 {
@@ -2162,7 +2163,7 @@ namespace ShapeCollision
                 }
                 else
                 {
-                    return new() { shapeB.Pos };
+                    return IntersectCirclePoint((CircleCollider)shapeA, shapeB);
                 }
             }
             else if (shapeA is SegmentCollider)
@@ -2185,7 +2186,7 @@ namespace ShapeCollision
                 }
                 else
                 {
-                    return new() { shapeB.Pos };
+                    return IntersectSegmentPoint((SegmentCollider)shapeA, shapeB);
                 }
             }
             else if (shapeA is RectCollider)
@@ -2208,7 +2209,7 @@ namespace ShapeCollision
                 }
                 else
                 {
-                    return new() { shapeB.Pos };
+                    return IntersectRectPoint((RectCollider)shapeA, shapeB);
                 }
             }
             else if (shapeA is PolyCollider)
@@ -2231,17 +2232,60 @@ namespace ShapeCollision
                 }
                 else
                 {
-                    return new() { shapeB.Pos };
+                    return IntersectPolyPoint((PolyCollider)shapeA, shapeB);
                 }
             }
             else
             {
-                return new() { shapeA.Pos };
+                if (shapeB is CircleCollider)
+                {
+                    return IntersectPointCircle(shapeA, (CircleCollider)shapeB);
+                }
+                else if (shapeB is SegmentCollider)
+                {
+                    return IntersectPointSegment(shapeA, (SegmentCollider)shapeB);
+                }
+                else if (shapeB is RectCollider)
+                {
+                    return IntersectPointRect(shapeA, (RectCollider)shapeB);
+                }
+                else if (shapeB is PolyCollider)
+                {
+                    return IntersectPointPoly(shapeA, (PolyCollider)shapeB);
+                }
+                else
+                {
+                    return IntersectPointPoint(shapeA, shapeB);
+                }
             }
         }
-        
+
+        public static List<Vector2> IntersectPointPoint(Collider a, Collider b)
+        {
+            return IntersectPointPoint(a.Pos, b.Pos);
+        }
+        public static List<Vector2> IntersectPointCircle(Collider a, CircleCollider c)
+        {
+            return IntersectPointCircle(a.Pos, c.Pos, c.Radius);
+        }
+        public static List<Vector2> IntersectPointSegment(Collider a, SegmentCollider s)
+        {
+            return IntersectPointSegment(a.Pos, s.Start, s.End);
+        }
+        public static List<Vector2> IntersectPointRect(Collider a, RectCollider r)
+        {
+            return IntersectPointRect(a.Pos, r.Rect);
+        }
+        public static List<Vector2> IntersectPointPoly(Collider a, PolyCollider p)
+        {
+            return IntersectPointPoly(a.Pos, p.Shape);
+        }
 
         //intersect circle
+        public static List<Vector2> IntersectCirclePoint(CircleCollider c, Collider a)
+        {
+            return IntersectPointCircle(a, c);
+        }
         public static List<Vector2> IntersectCircleCircle(CircleCollider a, CircleCollider b)
         {
             return IntersectCircleCircle(a.Pos, a.Radius, b.Pos, b.Radius);
@@ -2260,6 +2304,10 @@ namespace ShapeCollision
         }
 
         //intersect segment
+        public static List<Vector2> IntersectSegmentPoint(SegmentCollider s, Collider a)
+        {
+            return IntersectPointSegment(a, s);
+        }
         public static List<Vector2> IntersectSegmentSegment(SegmentCollider a, SegmentCollider b)
         {
             return IntersectSegmentSegment(a.Start, a.End, b.Start, b.End);
@@ -2277,6 +2325,10 @@ namespace ShapeCollision
             return IntersectSegmentPoly(a.Start, a.End, poly.Shape);
         }
         //rect
+        public static List<Vector2> IntersectRectPoint(RectCollider r, Collider a)
+        {
+            return IntersectPointRect(a, r);
+        }
         public static List<Vector2> IntersectRectCircle(RectCollider rect, CircleCollider circle)
         {
             return IntersectCircleRect(circle.Pos, circle.Radius, rect.Rect);
@@ -2294,6 +2346,10 @@ namespace ShapeCollision
             return IntersectRectPoly(rect.Rect, poly.Shape);
         }
         //poly
+        public static List<Vector2> IntersectPolyPoint(PolyCollider p, Collider a)
+        {
+            return IntersectPointPoly(a, p);
+        }
         public static List<Vector2> IntersectPolyCircle(PolyCollider poly, CircleCollider circle)
         {
             return IntersectCirclePoly(circle.Pos, circle.Radius, poly.Shape);
@@ -2312,9 +2368,70 @@ namespace ShapeCollision
         }
 
 
+        //intersect point
+        public static List<Vector2> IntersectPointPoint(Vector2 a, Vector2 b)
+        {
+            if (OverlapPointPoint(a, b)) return new() { a };
+            else return new();
+        }
+        public static List<Vector2> IntersectPointCircle(Vector2 a, Vector2 cPos, float cR)
+        {
+            if(OverlapPointCircle(a, cPos, cR))
+            {
+                return new() { cPos + SVec.Normalize(a - cPos) * cR };
+            }
+            else return new();
+        }
+        public static List<Vector2> IntersectPointSegment(Vector2 a, Vector2 start, Vector2 end)
+        {
+            if (OverlapPointSegment(a, start, end)) return new() { a };
+            else return new();
+        }
+        public static List<Vector2> IntersectPointRect(Vector2 a, Rectangle rect)
+        {
+            if (OverlapRectPoint(rect, a))
+            {
+                Vector2 p = ClosestPointRectPoint(rect, a);
+                return new() { p };
+            }
+            else return new();
 
+            //var segments = SRect.GetRectSegments(rect);
+            //List<Vector2> intersectionPoints = new();
+            //foreach (var seg in segments)
+            //{
+            //    var points = IntersectPointSegment(a, seg.start, seg.end);
+            //    intersectionPoints.AddRange(points);
+            //}
+            //return intersectionPoints;
+        }
+        public static List<Vector2> IntersectPointPoly(Vector2 a, List<Vector2> poly)
+        {
+            if (OverlapPolyPoint(poly, a))
+            {
+                Vector2 p = ClosestPointPolyPoint(poly, a);
+                return new() { p };
+            }
+            else return new();
 
+            //List<Vector2> intersectionPoints = new();
+            //for (int i = 0; i < poly.Count; i++)
+            //{
+            //    Vector2 start = poly[i];
+            //    Vector2 end = poly[(i + 1) % poly.Count];
+            //    var points = IntersectPointSegment(a, start, end);
+            //    intersectionPoints.AddRange(points);
+            //}
+            //return intersectionPoints;
+        }
+        
+        
         //intersect circle
+        //intersect circle segment does not work!!!
+        public static List<Vector2> IntersectCirclePoint(Vector2 cPos, float cR, Vector2 p)
+        {
+            return IntersectPointCircle(p, cPos, cR);
+        }
         public static List<Vector2> IntersectCircleCircle(Vector2 aPos, float aRadius, Vector2 bPos, float bRadius)
         {
             return IntersectCircleCircle(aPos.X, aPos.Y, aRadius, bPos.X, bPos.Y, bRadius);
@@ -2399,6 +2516,10 @@ namespace ShapeCollision
         }
         
         //intersect segment
+        public static List<Vector2> IntersectSegmentPoint(Vector2 start, Vector2 end, Vector2 p)
+        {
+            return IntersectPointSegment(p, start, end);
+        }
         public static List<Vector2> IntersectSegmentSegment(Vector2 aStart, Vector2 aEnd, Vector2 bStart, Vector2 bEnd)
         {
             var info = IntersectSegmentSegmentInfo(aStart, aEnd, bStart, bEnd);
@@ -2503,6 +2624,10 @@ namespace ShapeCollision
             return intersectionPoints;
         }
         //rect
+        public static List<Vector2> IntersectRectPoint(Rectangle rect, Vector2 p)
+        {
+            return IntersectPointRect(p, rect);
+        }
         public static List<Vector2> IntersectRectCircle(Rectangle rect, Vector2 circlePos, float circleRadius)
         {
             return IntersectCircleRect(circlePos, circleRadius, rect);
@@ -2529,6 +2654,10 @@ namespace ShapeCollision
             return intersectionPoints;
         }
         //poly
+        public static List<Vector2> IntersectPolyPoint(List<Vector2> poly, Vector2 p)
+        {
+            return IntersectPointPoly(p, poly);
+        }
         public static List<Vector2> IntersectPolyCircle(List<Vector2> poly, Vector2 circlePos, float circleRadius)
         {
             return IntersectCirclePoly(circlePos, circleRadius, poly);
