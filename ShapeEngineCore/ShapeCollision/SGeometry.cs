@@ -1,10 +1,6 @@
 ﻿using Raylib_CsLo;
 using System.Numerics;
 using ShapeLib;
-using System.Reflection.Metadata.Ecma335;
-using ShapeEngineCore.Globals.UI;
-using System.Collections.Generic;
-using System.Net;
 
 namespace ShapeCollision
 {
@@ -15,6 +11,8 @@ namespace ShapeCollision
         public ICollidable? other;//entity
         public Vector2 selfVel;
         public Vector2 otherVel;
+        public List<Vector2> intersectionPoints = new();
+        public bool containsSelfOther = false;
         public OverlapInfo() { overlapping = false; self = null; other = null; this.selfVel = new(0f); this.otherVel = new(0f); }
         public OverlapInfo(bool overlapping, ICollidable other, ICollidable self)
         {
@@ -23,6 +21,27 @@ namespace ShapeCollision
             this.self = self;
             this.selfVel = self.GetCollider().Vel;
             this.otherVel = other.GetCollider().Vel;
+        }
+        public OverlapInfo(bool overlapping, ICollidable other, ICollidable self, List<Vector2> intersectionPoints)
+        {
+            this.overlapping = overlapping;
+            this.other = other;
+            this.self = self;
+            this.selfVel = self.GetCollider().Vel;
+            this.otherVel = other.GetCollider().Vel;
+            this.intersectionPoints = intersectionPoints;
+
+        }
+        public OverlapInfo(bool overlapping, ICollidable other, ICollidable self, List<Vector2> intersectionPoints, bool containsSelfOther)
+        {
+            this.overlapping = overlapping;
+            this.other = other;
+            this.self = self;
+            this.selfVel = self.GetCollider().Vel;
+            this.otherVel = other.GetCollider().Vel;
+            this.intersectionPoints = intersectionPoints;
+            this.containsSelfOther = containsSelfOther;
+
         }
     }
     public struct CastInfo
@@ -63,18 +82,50 @@ namespace ShapeCollision
         public Vector2 GetPos();
         public string GetCollisionLayer();
         public string[] GetCollisionMask();
-        public bool HasDynamicBoundingBox();
     }
 
     public static class SGeometry
     {
         //exact point line, point segment and point point overlap calculations are used if <= 0
         public static readonly float POINT_OVERLAP_EPSILON = 5.0f; //point line and point segment overlap makes more sense when the point is a circle (epsilon = radius)
-        public static OverlapInfo GetOverlapInfo(ICollidable a, ICollidable b)
+        public static OverlapInfo GetOverlapInfo(ICollidable a, ICollidable b, bool getIntersections, bool getContains)
         {
-            if (Overlap(a, b)) return new(true, a, b);
-            else return new();
+            if (getIntersections)
+            {
+                var points = Intersect(a.GetCollider(), b.GetCollider());
+                if(getContains && points.Count <= 0f)
+                {
+                    bool contains = Contains(a.GetCollider(), b.GetCollider());
+                    if (contains) return new(true, a, b, new(), true);
+                    else
+                    {
+                        if (Overlap(a, b)) return new(true, a, b);
+                        else return new();
+                    }
+
+                }
+                else
+                {
+                    return new(true, a, b, points, false);
+                }
+            }
+            else if (getContains)
+            {
+                bool contains = Contains(a.GetCollider(), b.GetCollider());
+                if (contains) return new(true, a, b, new(), true);
+                else
+                {
+                    if (Overlap(a, b)) return new(true, a, b);
+                    else return new();
+                }
+            }
+            else
+            {
+                if (Overlap(a, b)) return new(true, a, b);
+                else return new();
+            }
         }
+        
         public static bool Overlap(ICollidable a, ICollidable b)
         {
             if (a == b) return false;
@@ -693,7 +744,26 @@ namespace ShapeCollision
             }
             else if(a is SegmentCollider)
             {
-                return false;
+                if (b is CircleCollider)
+                {
+                    return OverlapSegmentCircle((SegmentCollider)a, (CircleCollider)b);
+                }
+                else if (b is SegmentCollider)
+                {
+                    return OverlapSegmentSegment((SegmentCollider)a, (SegmentCollider)b);
+                }
+                else if (b is RectCollider)
+                {
+                    return OverlapSegmentRect((SegmentCollider)a, (RectCollider)b);
+                }
+                else if (b is PolyCollider)
+                {
+                    return OverlapSegmentPoly((SegmentCollider)a, (PolyCollider)b);
+                }
+                else
+                {
+                    return OverlapSegmentPoint((SegmentCollider)a, b);
+                }
             }
             else if(a is RectCollider)
             {
@@ -743,7 +813,26 @@ namespace ShapeCollision
             }
             else
             {
-                return false;
+                if (b is CircleCollider)
+                {
+                    return OverlapPointCircle(a, (CircleCollider)b);
+                }
+                else if (b is SegmentCollider)
+                {
+                    return OverlapPointSegment(a, (SegmentCollider)b);
+                }
+                else if (b is RectCollider)
+                {
+                    return OverlapPointRect(a, (RectCollider)b);
+                }
+                else if (b is PolyCollider)
+                {
+                    return OverlapPointPoly(a, (PolyCollider)b);
+                }
+                else
+                {
+                    return OverlapPointPoint(a, b);
+                }
             }
         }
         public static bool ContainsCirclePoint(Vector2 circlePos, float r, Vector2 point)
@@ -764,7 +853,7 @@ namespace ShapeCollision
             if (aR <= bR) return false;
             Vector2 dif = bPos - aPos;
 
-            return dif.LengthSquared() + bR < aR;
+            return dif.LengthSquared() + bR * bR < aR * aR;
         }
         public static bool ContainsCircleCircle(CircleCollider self, CircleCollider other)
         {
