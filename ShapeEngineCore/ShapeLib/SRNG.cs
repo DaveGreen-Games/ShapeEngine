@@ -112,6 +112,11 @@ namespace ShapeLib
         public Vector2 randPoint(Vector2 origin, float max);
         public Vector2 randPoint(Vector2 origin, float min, float max);
 
+        public Rectangle randRect(Vector2 alignement);
+        public Rectangle randRect(Vector2 origin, Vector2 alignement);
+        public Rectangle randRect(float posMin, float posMax, float sizeMin, float sizeMax, Vector2 alignement);
+        public Rectangle randRect(Vector2 origin, float posMin, float posMax, float sizeMin, float sizeMax, Vector2 alignement);
+
         public T? randCollection<T>(List<T> list, bool pop = false);
         public List<T> randCollection<T>(List<T> source, int amount, bool pop = false);
         public T? randCollection<T>(T[] array);
@@ -253,6 +258,31 @@ namespace ShapeLib
         public Vector2 randPoint(Vector2 origin, float min, float max)
         {
             return origin + randVec2(min, max);
+        }
+
+        public Rectangle randRect(Vector2 alignement)
+        {
+            Vector2 pos = randVec2();
+            Vector2 size = randVec2();
+            return SRect.ConstructRect(pos, size, alignement);
+        }
+        public Rectangle randRect(Vector2 origin, Vector2 alignement)
+        {
+            Vector2 pos = randVec2();
+            Vector2 size = randVec2();
+            return SRect.ConstructRect(origin + pos, size, alignement);
+        }
+        public Rectangle randRect(float posMin, float posMax, float sizeMin, float sizeMax, Vector2 alignement)
+        {
+            Vector2 pos = randVec2(posMin, posMax);
+            Vector2 size = randVec2(sizeMax, sizeMax);
+            return SRect.ConstructRect(pos, size, alignement);
+        }
+        public Rectangle randRect(Vector2 origin, float posMin, float posMax, float sizeMin, float sizeMax, Vector2 alignement)
+        {
+            Vector2 pos = randVec2(posMin, posMax);
+            Vector2 size = randVec2(sizeMax, sizeMax);
+            return SRect.ConstructRect(origin + pos, size, alignement);
         }
 
         public T? randCollection<T>(List<T> list, bool pop = false)

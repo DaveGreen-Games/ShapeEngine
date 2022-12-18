@@ -3,6 +3,8 @@ using System.Numerics;
 using ShapeLib;
 using System.Reflection.Metadata.Ecma335;
 using ShapeEngineCore.Globals.UI;
+using System.Collections.Generic;
+using System.Net;
 
 namespace ShapeCollision
 {
@@ -2548,43 +2550,161 @@ namespace ShapeCollision
         }
         public static List<Vector2> IntersectSegmentCircle(Vector2 start, Vector2 end, Vector2 circlePos, float circleRadius)
         {
-            return IntersectSegmentCircle(start, end, circlePos.X, circlePos.Y, circleRadius);
+            return IntersectSegmentCircle(start.X, start.Y, end.X, end.Y, circlePos.X, circlePos.Y, circleRadius);
         }
-        public static List<Vector2> IntersectSegmentCircle(Vector2 point1, Vector2 point2, float cx, float cy, float radius)
+
+        public static List<Vector2> IntersectLineCircle(float aX, float aY, float dX, float dY, float cX, float cY, float R)
         {
-            float dx, dy, A, B, C, det, t;
-
-            dx = point2.X - point1.X;
-            dy = point2.Y - point1.Y;
-
-            A = dx * dx + dy * dy;
-            B = 2 * (dx * (point1.X - cx) + dy * (point1.Y - cy));
-            C = (point1.X - cx) * (point1.X - cx) +
-                (point1.Y - cy) * (point1.Y - cy) -
-                radius * radius;
-
-            det = B * B - 4 * A * C;
-            if ((A <= 0.0000001) || (det < 0))
+            if ((dX == 0) && (dY == 0))
             {
-                // No real solutions.
+                // A and B are the same points, no way to calculate intersection
                 return new();
             }
-            else if (det == 0)
+
+            float dl = (dX * dX + dY * dY);
+            float t = ((cX - aX) * dX + (cY - aY) * dY) / dl;
+
+            // point on a line nearest to circle center
+            float nearestX = aX + t * dX;
+            float nearestY = aY + t * dY;
+
+            float dist = (new Vector2(nearestX, nearestY) - new Vector2(cX, cY)).Length(); // point_dist(nearestX, nearestY, cX, cY);
+
+            if (dist == R)
             {
-                // One solution.
-                t = -B / (2 * A);
-                return new() { new Vector2(point1.X + t * dx, point1.Y + t * dy) };
+                // line segment touches circle; one intersection point
+                float iX = nearestX;
+                float iY = nearestY;
+                return new() { new Vector2(iX, iY) };
+            }
+            else if (dist < R)
+            {
+                // two possible intersection points
+
+                float dt = MathF.Sqrt(R * R - dist * dist) / MathF.Sqrt(dl);
+
+                // intersection point nearest to A
+                float t1 = t - dt;
+                float i1X = aX + t1 * dX;
+                float i1Y = aY + t1 * dY;
+
+                // intersection point farthest from A
+                float t2 = t + dt;
+                float i2X = aX + t2 * dX;
+                float i2Y = aY + t2 * dY;
+                return new() { new Vector2(i1X, i1Y), new Vector2(i2X, i2Y) };
             }
             else
             {
-                // Two solutions.
-                t = (float)((-B + Math.Sqrt(det)) / (2 * A));
-                Vector2 intersection1 = new Vector2(point1.X + t * dx, point1.Y + t * dy);
-                t = (float)((-B - Math.Sqrt(det)) / (2 * A));
-                Vector2 intersection2 = new Vector2(point1.X + t * dx, point1.Y + t * dy);
-                return new() {intersection1, intersection2};
+                // no intersection
+                return new();
             }
         }
+        public static List<Vector2> IntersectSegmentCircle(float aX, float aY, float bX, float bY, float cX, float cY, float R)
+        {
+            float dX = bX - aX;
+            float dY = bY - aY;
+            if ((dX == 0) && (dY == 0))
+            {
+                // A and B are the same points, no way to calculate intersection
+                return new();
+            }
+
+            float dl = (dX * dX + dY * dY);
+            float t = ((cX - aX) * dX + (cY - aY) * dY) / dl;
+
+            // point on a line nearest to circle center
+            float nearestX = aX + t * dX;
+            float nearestY = aY + t * dY;
+
+            float dist = (new Vector2(nearestX, nearestY) - new Vector2(cX, cY)).Length(); // point_dist(nearestX, nearestY, cX, cY);
+
+            if (dist == R)
+            {
+                // line segment touches circle; one intersection point
+                float iX = nearestX;
+                float iY = nearestY;
+
+                if (t >= 0f && t <= 1f)
+                {
+                    // intersection point is not actually within line segment
+                    return new() { new Vector2(iX, iY) };
+                }
+                else return new();
+            }
+            else if (dist < R)
+            {
+                List<Vector2> intersectionPoints = new();
+                // two possible intersection points
+
+                float dt = MathF.Sqrt(R * R - dist * dist) / MathF.Sqrt(dl);
+
+                // intersection point nearest to A
+                float t1 = t - dt;
+                float i1X = aX + t1 * dX;
+                float i1Y = aY + t1 * dY;
+                if (t1 >= 0f && t1 <= 1f)
+                {
+                    // intersection point is actually within line segment
+                    intersectionPoints.Add(new Vector2(i1X, i1Y));
+                }
+
+                // intersection point farthest from A
+                float t2 = t + dt;
+                float i2X = aX + t2 * dX;
+                float i2Y = aY + t2 * dY;
+                if (t2 >= 0f && t2 <= 1f)
+                {
+                    // intersection point is actually within line segment
+                    intersectionPoints.Add(new Vector2(i2X, i2Y));
+                }
+                return intersectionPoints;
+            }
+            else
+            {
+                // no intersection
+                return new();
+            }
+        }
+
+
+        //public static List<Vector2> IntersectSegmentCircleOld(Vector2 point1, Vector2 point2, float cx, float cy, float radius)
+        //{
+        //    float dx, dy, A, B, C, det, t;
+        //
+        //    dx = point2.X - point1.X;
+        //    dy = point2.Y - point1.Y;
+        //
+        //    A = dx * dx + dy * dy;
+        //    B = 2 * (dx * (point1.X - cx) + dy * (point1.Y - cy));
+        //    C = (point1.X - cx) * (point1.X - cx) +
+        //        (point1.Y - cy) * (point1.Y - cy) -
+        //        radius * radius;
+        //
+        //    det = B * B - 4 * A * C;
+        //    if ((A <= 0.0000001f) || (det < 0f))
+        //    {
+        //        // No real solutions.
+        //        return new();
+        //    }
+        //    else if (det == 0f)
+        //    {
+        //        // One solution.
+        //        t = -B / (2 * A);
+        //        return new() { new Vector2(point1.X + t * dx, point1.Y + t * dy) };
+        //    }
+        //    else
+        //    {
+        //        // Two solutions.
+        //        t = (float)((-B + Math.Sqrt(det)) / (2 * A));
+        //        Vector2 intersection1 = new Vector2(point1.X + t * dx, point1.Y + t * dy);
+        //        t = (float)((-B - Math.Sqrt(det)) / (2 * A));
+        //        Vector2 intersection2 = new Vector2(point1.X + t * dx, point1.Y + t * dy);
+        //        return new() {intersection1, intersection2};
+        //    }
+        //}
+        
+        
         public static List<Vector2> IntersectSegmentRect(Vector2 start, Vector2 end, Rectangle rect)
         {
             var c = SRect.GetRectCorners(rect);

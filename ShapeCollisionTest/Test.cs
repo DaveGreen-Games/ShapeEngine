@@ -118,7 +118,7 @@ namespace ShapeCollisionTest
     public class Test2 : Test
     {
         Collider dPoint = new();
-        CircleCollider dCircle = new(0, 0, 100);
+        CircleCollider dCircle = new(0, 0, SRNG.randF(50, 150));
         SegmentCollider dSegment = new(new Vector2(0, 0), SRNG.randVec2(), 500);
         RectCollider dRect = new(new Vector2(0f), new Vector2(100, 100), new Vector2(0.5f, 0.5f));
         PolyCollider dPoly = new(0, 0, SPoly.GeneratePolygon(12, new(0f), 50, 250));
@@ -126,7 +126,7 @@ namespace ShapeCollisionTest
         int dynIndex = 0;
 
         Collider sPoint = new();
-        CircleCollider sCircle = new(0, 0, 100);
+        CircleCollider sCircle = new(0, 0, SRNG.randF(200, 300));
         SegmentCollider sSegment = new(new Vector2(0, 0), SRNG.randVec2(), 500);
         RectCollider sRect = new(new Vector2(0f), new Vector2(100, 100), new Vector2(0.5f, 0.5f));
         PolyCollider sPoly = new(0, 0, new() { new Vector2(1, 0) * 100f, new Vector2(-0.5f, -0.5f) * 100f, new Vector2(-0.5f, 0.5f) * 100f });
@@ -200,6 +200,8 @@ namespace ShapeCollisionTest
             return SRNG.randPoint(new Rectangle(0, 0, 1920, 1080));
         }
     }
+   
+    
     public class TestCircleCircleIntersection : Test
     {
         Vector2 start = SRNG.randPoint(new Rectangle(0, 0, 1920, 1080));
