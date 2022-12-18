@@ -25,7 +25,7 @@ namespace ShapeCollisionTest
         {
             if (Raylib.IsKeyReleased(KeyboardKey.KEY_SPACE))
             {
-                Program.ChangeTest(new Test4());
+                Program.ChangeTest(new Test5());
             }
         }
         public override void Draw(Vector2 mousePos)
@@ -418,6 +418,172 @@ namespace ShapeCollisionTest
             return SRNG.randPoint(new Rectangle(0, 0, 1920, 1080));
         }
     }
+
+    //stress test
+    public class Test5 : Test
+    {
+        internal class Collidable : ICollidable
+        {
+            Collider collider;
+            public Collidable(Collider collider)
+            {
+                this.collider = collider;
+            }
+
+            public Collider GetCollider()
+            {
+                return collider;
+            }
+
+            public string GetCollisionLayer()
+            {
+                return "all";
+            }
+
+            public string[] GetCollisionMask()
+            {
+                return new string[] { "all" };
+            }
+
+            public string GetID()
+            {
+                return "test";
+            }
+
+            public Vector2 GetPos()
+            {
+                return collider.Pos;
+            }
+            public void Overlap(OverlapInfo info)
+            {
+                return;
+            }
+        }
+
+        Collider dPoint = new();
+        CircleCollider dCircle = new(0, 0, SRNG.randF(50, 100));
+        SegmentCollider dSegment = new(new Vector2(0, 0), SRNG.randVec2(), 500);
+        RectCollider dRect = new(new Vector2(0f), new Vector2(100, 100), new Vector2(0.5f, 0.5f));
+        PolyCollider dPoly = new(0, 0, SPoly.GeneratePolygon(12, new(0f), 50, 150));
+        List<Collider> dynamicColliders = new();
+        int dynIndex = 0;
+
+        List<Collidable> collidables = new();
+        int staIndex = 0;
+
+        public Test5()
+        {
+            dPoint.Pos = RandPos();
+            dynamicColliders.Add(dPoint);
+            dCircle.Pos = RandPos();
+            dynamicColliders.Add(dCircle);
+            dSegment.Pos = RandPos();
+            dynamicColliders.Add(dSegment);
+            dRect.Pos = RandPos();
+            dynamicColliders.Add(dRect);
+            dPoly.Pos = RandPos();
+            dynamicColliders.Add(dPoly);
+        }
+
+        public override void Update(float dt, Vector2 mousePos)
+        {
+            if (Raylib.IsMouseButtonDown(MouseButton.MOUSE_BUTTON_LEFT))
+            {
+                dynamicColliders[dynIndex].Pos = mousePos;
+            }
+            else if (Raylib.IsMouseButtonDown(MouseButton.MOUSE_BUTTON_RIGHT))
+            {
+                SpawnCollidable(mousePos);
+            }
+
+            if (Raylib.IsKeyPressed(KeyboardKey.KEY_SPACE))
+            {
+                SpawnCollidable(mousePos, SRNG.randI(1, 5));
+            }
+
+            if (Raylib.IsKeyReleased(KeyboardKey.KEY_Q))
+            {
+                staIndex += 1;
+                if (staIndex >= 5) staIndex = 0;
+            }
+            if (Raylib.IsKeyReleased(KeyboardKey.KEY_E))
+            {
+                dynIndex += 1;
+                if (dynIndex >= dynamicColliders.Count) dynIndex = 0;
+            }
+        }
+        public override void Draw(Vector2 mousePos)
+        {
+            UIHandler.DrawTextAligned(String.Format("{0}", Raylib.GetFPS()), new(5, 5, 75, 50), 10, Raylib.GREEN, Alignement.TOPLEFT);
+            Collidable dyn = new(dynamicColliders[dynIndex]);
+            dynamicColliders[dynIndex].DebugDrawShape(Raylib.BLUE);
+            foreach (var col in collidables)
+            {
+                var info = SGeometry.GetOverlapInfo(dyn, col, true, true);
+                Color color = Raylib.GREEN;
+                if (info.containsSelfOther) color = Raylib.YELLOW;
+                else if (info.overlapping) color = Raylib.ORANGE;
+                col.GetCollider().DebugDrawShape(color);
+                foreach (var p in info.intersectionPoints)
+                {
+                    Raylib.DrawCircleV(p, 5f, Raylib.RED);
+                }
+            }
+
+            DrawSign(staIndex, new Vector2(100, 100), 50, Raylib.WHITE);
+        }
+
+        private void SpawnCollidable(Vector2 pos, int count = 1)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                Vector2 randPos = pos + SRNG.randVec2(50);
+                Collidable c = new(GetCollider(staIndex, randPos));
+                collidables.Add(c);
+            }
+        }
+
+        private Collider GetCollider(int index, Vector2 pos)
+        {
+            if (index == 0) return new Collider(pos.X, pos.Y);
+            else if (index == 1) return new CircleCollider(pos, SRNG.randF(15, 50));
+            else if (index == 2) return new SegmentCollider(pos, pos + SRNG.randVec2(100, 500));
+            else if (index == 3) return new RectCollider(pos, new Vector2(SRNG.randF(10, 100), SRNG.randF(10, 100)), new(0.5f, 0.5f));
+            else if (index == 4) return new PolyCollider(pos, SPoly.GeneratePolygon(12, new(0f), 50, 100));
+            else return new Collider(pos.X, pos.Y);
+        }
+
+        private void DrawSign(int index, Vector2 pos, float size, Color color)
+        {
+            if (index == 0)
+            {
+                Raylib.DrawCircleV(pos, size / 5, color);
+            }
+            else if (index == 1)
+            {
+                Raylib.DrawCircleV(pos, size, color);
+            }
+            else if (index == 2)
+            {
+                Raylib.DrawLineEx(pos - new Vector2(size/2,0f), pos + new Vector2(size/2, 0), size / 10, color);
+            }
+            else if (index == 3)
+            {
+                Raylib.DrawRectangleRec(new(pos.X - size / 2, pos.Y - size /2, size, size), color);
+            }
+            else if (index == 4)
+            {
+                Drawing.DrawPolygon(new() { pos + new Vector2(size, 0), pos + new Vector2(-size, -size / 2), pos + new Vector2(-size, size/ 2) }, size / 10f, color);
+            }
+            
+        }
+
+        private Vector2 RandPos()
+        {
+            return SRNG.randPoint(new Rectangle(0, 0, 1920, 1080));
+        }
+    }
+
     public class TestCircleCircleIntersection : Test
     {
         Vector2 start = SRNG.randPoint(new Rectangle(0, 0, 1920, 1080));

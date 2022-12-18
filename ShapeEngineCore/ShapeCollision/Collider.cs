@@ -70,7 +70,11 @@ namespace ShapeCollision
         public float GetCircumference() { return MathF.PI * Radius * 2.0f; }
 
         public override Rectangle GetBoundingRect() { return new(Pos.X - radius, Pos.Y - radius, radius * 2.0f, radius * 2.0f); }
-        public override void DebugDrawShape(Color color) { Raylib.DrawCircleV(Pos, Radius, color); }
+        public override void DebugDrawShape(Color color) 
+        { 
+            //Raylib.DrawCircleV(Pos, Radius, color);
+            Drawing.DrawCircleLines(Pos, Radius, 3f, color, 4f);
+        }
 
     }
     public class SegmentCollider : Collider
@@ -101,8 +105,8 @@ namespace ShapeCollision
         }
         public override void DebugDrawShape(Color color)
         {
-            Raylib.DrawCircleV(Pos, 10.0f, color);
-            Raylib.DrawLineEx(Pos, End, 5.0f, color);
+            Raylib.DrawCircleV(Pos, 5.0f, color);
+            Raylib.DrawLineEx(Pos, End, 3f, color);
         }
     }
     public class RectCollider : Collider
@@ -156,7 +160,8 @@ namespace ShapeCollision
         public override Rectangle GetBoundingRect() { return Rect; }
         public override void DebugDrawShape(Color color)
         {
-            Raylib.DrawRectangleRec(Rect, color);
+            //Raylib.DrawRectangleRec(Rect, color);
+            Raylib.DrawRectangleLinesEx(Rect, 3f, color);
         }
 
         //public static Rectangle GetCorrectRect(float x, float y, float w, float h)
@@ -210,7 +215,7 @@ namespace ShapeCollision
 
         public override void DebugDrawShape(Color color)
         {
-            Drawing.DrawPolygon(Shape, 2f, color);
+            Drawing.DrawPolygon(Shape, 3f, color);
         }
     }
 
