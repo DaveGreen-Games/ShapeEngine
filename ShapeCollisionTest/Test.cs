@@ -471,6 +471,8 @@ namespace ShapeCollisionTest
         List<Collidable> collidables = new();
         int staIndex = 0;
 
+        Vector2 lastSpawnPos = new(0f);
+
         public Test5()
         {
             dPoint.Pos = RandPos();
@@ -493,12 +495,15 @@ namespace ShapeCollisionTest
             }
             else if (Raylib.IsMouseButtonDown(MouseButton.MOUSE_BUTTON_RIGHT))
             {
-                SpawnCollidable(mousePos);
+                if (SpawnCollidable(mousePos))
+                {
+                    lastSpawnPos = mousePos;
+                }
             }
 
             if (Raylib.IsKeyPressed(KeyboardKey.KEY_SPACE))
             {
-                SpawnCollidable(mousePos, SRNG.randI(1, 5));
+                SpawnCollidable(mousePos, 1);
             }
 
             if (Raylib.IsKeyReleased(KeyboardKey.KEY_Q))
@@ -515,6 +520,7 @@ namespace ShapeCollisionTest
         public override void Draw(Vector2 mousePos)
         {
             UIHandler.DrawTextAligned(String.Format("{0}", Raylib.GetFPS()), new(5, 5, 75, 50), 10, Raylib.GREEN, Alignement.TOPLEFT);
+            UIHandler.DrawTextAligned(String.Format("Objs: {0}", collidables.Count), new(5, 55, 150, 50), 10, Raylib.GREEN, Alignement.TOPLEFT);
             Collidable dyn = new(dynamicColliders[dynIndex]);
             dynamicColliders[dynIndex].DebugDrawShape(Raylib.BLUE);
             foreach (var col in collidables)
@@ -526,29 +532,35 @@ namespace ShapeCollisionTest
                 col.GetCollider().DebugDrawShape(color);
                 foreach (var p in info.intersectionPoints)
                 {
-                    Raylib.DrawCircleV(p, 5f, Raylib.RED);
+                    Raylib.DrawCircleV(p, 7f, Raylib.RED);
                 }
             }
 
-            DrawSign(staIndex, new Vector2(100, 100), 50, Raylib.WHITE);
+            DrawSign(staIndex, new Vector2(100, 150), 50, Raylib.WHITE);
         }
 
-        private void SpawnCollidable(Vector2 pos, int count = 1)
+        private bool SpawnCollidable(Vector2 pos, int count = 1)
         {
-            for (int i = 0; i < count; i++)
+            float minSpawnDis = 25;
+            if((pos - lastSpawnPos).LengthSquared() > minSpawnDis * minSpawnDis)
             {
-                Vector2 randPos = pos + SRNG.randVec2(50);
-                Collidable c = new(GetCollider(staIndex, randPos));
-                collidables.Add(c);
+                for (int i = 0; i < count; i++)
+                {
+                    Vector2 randPos = pos + SRNG.randVec2(50);
+                    Collidable c = new(GetCollider(staIndex, randPos));
+                    collidables.Add(c);
+                }
+                return true;
             }
+            return false;
         }
 
         private Collider GetCollider(int index, Vector2 pos)
         {
             if (index == 0) return new Collider(pos.X, pos.Y);
-            else if (index == 1) return new CircleCollider(pos, SRNG.randF(15, 50));
+            else if (index == 1) return new CircleCollider(pos, SRNG.randF(50, 100));
             else if (index == 2) return new SegmentCollider(pos, pos + SRNG.randVec2(100, 500));
-            else if (index == 3) return new RectCollider(pos, new Vector2(SRNG.randF(10, 100), SRNG.randF(10, 100)), new(0.5f, 0.5f));
+            else if (index == 3) return new RectCollider(pos, new Vector2(SRNG.randF(50, 100), SRNG.randF(50, 100)), new(0.5f, 0.5f));
             else if (index == 4) return new PolyCollider(pos, SPoly.GeneratePolygon(12, new(0f), 50, 100));
             else return new Collider(pos.X, pos.Y);
         }

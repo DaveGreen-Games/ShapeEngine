@@ -73,7 +73,7 @@ namespace ShapeCollision
         public override void DebugDrawShape(Color color) 
         { 
             //Raylib.DrawCircleV(Pos, Radius, color);
-            Drawing.DrawCircleLines(Pos, Radius, 3f, color, 4f);
+            Drawing.DrawCircleLines(Pos, Radius, 5f, color, 4f);
         }
 
     }
@@ -106,7 +106,7 @@ namespace ShapeCollision
         public override void DebugDrawShape(Color color)
         {
             Raylib.DrawCircleV(Pos, 5.0f, color);
-            Raylib.DrawLineEx(Pos, End, 3f, color);
+            Raylib.DrawLineEx(Pos, End, 5f, color);
         }
     }
     public class RectCollider : Collider
@@ -161,7 +161,7 @@ namespace ShapeCollision
         public override void DebugDrawShape(Color color)
         {
             //Raylib.DrawRectangleRec(Rect, color);
-            Raylib.DrawRectangleLinesEx(Rect, 3f, color);
+            Raylib.DrawRectangleLinesEx(Rect, 5f, color);
         }
 
         //public static Rectangle GetCorrectRect(float x, float y, float w, float h)
@@ -215,7 +215,7 @@ namespace ShapeCollision
 
         public override void DebugDrawShape(Color color)
         {
-            Drawing.DrawPolygon(Shape, 3f, color);
+            Drawing.DrawPolygon(Shape, 5f, color);
         }
     }
 
