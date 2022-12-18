@@ -4,6 +4,13 @@ using ShapeLib;
 
 namespace ShapeCollision
 {
+    public struct IntersectionPoint
+    {
+        public Vector2 p;
+        public Vector2 normal;
+        public IntersectionPoint() { this.p = new(0f); this.normal = new(0f); }
+        public IntersectionPoint(Vector2 p, Vector2 normal) { this.p = p; this.normal = normal; }
+    }
     public struct OverlapInfo
     {
         public bool overlapping;
@@ -11,7 +18,7 @@ namespace ShapeCollision
         public ICollidable? other;//entity
         public Vector2 selfVel;
         public Vector2 otherVel;
-        public List<Vector2> intersectionPoints = new();
+        public List<IntersectionPoint> intersectionPoints = new();
         public bool containsSelfOther = false;
         public OverlapInfo() { overlapping = false; self = null; other = null; this.selfVel = new(0f); this.otherVel = new(0f); }
         public OverlapInfo(bool overlapping, ICollidable other, ICollidable self)
@@ -22,7 +29,7 @@ namespace ShapeCollision
             this.selfVel = self.GetCollider().Vel;
             this.otherVel = other.GetCollider().Vel;
         }
-        public OverlapInfo(bool overlapping, ICollidable other, ICollidable self, List<Vector2> intersectionPoints)
+        public OverlapInfo(bool overlapping, ICollidable other, ICollidable self, List<IntersectionPoint> intersectionPoints)
         {
             this.overlapping = overlapping;
             this.other = other;
@@ -32,7 +39,7 @@ namespace ShapeCollision
             this.intersectionPoints = intersectionPoints;
 
         }
-        public OverlapInfo(bool overlapping, ICollidable other, ICollidable self, List<Vector2> intersectionPoints, bool containsSelfOther)
+        public OverlapInfo(bool overlapping, ICollidable other, ICollidable self, List<IntersectionPoint> intersectionPoints, bool containsSelfOther)
         {
             this.overlapping = overlapping;
             this.other = other;
@@ -2228,7 +2235,7 @@ namespace ShapeCollision
             }
         }
 
-        
+        //change return value to List<IntersectionPoint> 
         public static List<Vector2> Intersect(Collider shapeA, Collider shapeB)
         {
             if (shapeA == shapeB) return new();

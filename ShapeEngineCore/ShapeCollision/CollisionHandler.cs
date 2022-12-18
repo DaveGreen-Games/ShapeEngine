@@ -85,11 +85,15 @@ namespace ShapeCollision
                         if (!collisionMask.Contains(otherLayer)) continue;
                     }//else collide with everything
 
-                    bool overlap = SGeometry.Overlap(collider, other);
-                    if (overlap)
-                    {
-                        overlapInfos.Add(new(true, other, collider));
-                    }
+                    var c = collider.GetCollider();
+                    var info = SGeometry.GetOverlapInfo(collider, other, c.GetIntersections, c.GetContains);
+                    if (info.overlapping) overlapInfos.Add(info);
+
+                    //bool overlap = SGeometry.Overlap(collider, other);
+                    //if (overlap)
+                    //{
+                    //    overlapInfos.Add(new(true, other, collider));
+                    //}
                 }
             }
         }

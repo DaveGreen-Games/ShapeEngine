@@ -25,7 +25,7 @@ namespace ShapeCollisionTest
         {
             if (Raylib.IsKeyReleased(KeyboardKey.KEY_SPACE))
             {
-                Program.ChangeTest(new Test5());
+                Program.ChangeTest(new Test6());
             }
         }
         public override void Draw(Vector2 mousePos)
@@ -593,6 +593,213 @@ namespace ShapeCollisionTest
         private Vector2 RandPos()
         {
             return SRNG.randPoint(new Rectangle(0, 0, 1920, 1080));
+        }
+    }
+
+    //hash test
+    public class Test6 : Test
+    {
+        internal interface GameObject : ICollidable
+        {
+            public bool IsDead();
+            public void Kill();
+            public void Draw(Vector2 mousePos);
+            public void Update(float dt, Vector2 mousePos);
+        }
+        internal class Wall : GameObject
+        {
+            SegmentCollider collider;
+            string[] collisionMask = new string[0];
+            
+            public Wall(Vector2 start, Vector2 end, params string[] collisionMask)
+            {
+                this.collider = new(start, end);
+                this.collisionMask = collisionMask;
+            }
+
+            public void Draw(Vector2 mousePos)
+            {
+                collider.DebugDrawShape(Raylib.WHITE);
+            }
+
+            public Collider GetCollider()
+            {
+                return collider;
+            }
+
+            public string GetCollisionLayer()
+            {
+                return "walls";
+            }
+
+            public string[] GetCollisionMask()
+            {
+                return collisionMask;
+            }
+
+            public string GetID()
+            {
+                return "wall";
+            }
+
+            public Vector2 GetPos()
+            {
+                return collider.Pos;
+            }
+
+            public bool IsDead()
+            {
+                return false;
+            }
+
+            public void Kill()
+            {
+                return;
+            }
+
+            public void Overlap(OverlapInfo info)
+            {
+                
+            }
+
+            public void Update(float dt, Vector2 mousePos)
+            {
+                return;
+            }
+        }
+        internal class Ball : GameObject
+        {
+            CircleCollider collider;
+            string[] collisionMask = new string[0];
+
+            public Ball(Vector2 pos, float r, Vector2 vel, params string[] collisionMask)
+            {
+                this.collider = new(pos, vel, r);
+                this.collisionMask = collisionMask;
+            }
+
+            public void Draw(Vector2 mousePos)
+            {
+                collider.DebugDrawShape(Raylib.WHITE);
+            }
+
+            public Collider GetCollider()
+            {
+                return collider;
+            }
+
+            public string GetCollisionLayer()
+            {
+                return "balls";
+            }
+
+            public string[] GetCollisionMask()
+            {
+                return collisionMask;
+            }
+
+            public string GetID()
+            {
+                return "ball";
+            }
+
+            public Vector2 GetPos()
+            {
+                return collider.Pos;
+            }
+
+            public bool IsDead()
+            {
+                return false;
+            }
+
+            public void Kill()
+            {
+                return;
+            }
+
+            public void Overlap(OverlapInfo info)
+            {
+                if (info.overlapping)
+                {
+                    collider.Vel *= -1;
+                }
+            }
+
+            public void Update(float dt, Vector2 mousePos)
+            {
+                collider.ApplyAccumulatedForce(dt);
+                collider.Pos += collider.Vel * dt;
+            }
+        }
+
+        CollisionHandler ch = new(0, 0, 1920, 1080, 20, 20);
+        List<GameObject> gameObjects = new();
+        List<GameObject> persistent = new();
+        public Test6()
+        {
+            float offset = 100;
+            Wall top = new(new Vector2(offset, offset), new Vector2(1920 - offset, offset), "balls");
+            Wall bottom = new(new Vector2(offset, 1080 - offset), new Vector2(1920 - offset, 1080 - offset), "balls");
+            Wall left = new(new Vector2(offset, offset), new Vector2(offset, 1080 - offset), "balls");
+            Wall right = new(new Vector2(1920 - offset, offset), new Vector2(1920 - offset, 1080 - offset), "balls");
+            persistent.Add(top);
+            persistent.Add(bottom);
+            persistent.Add(left);
+            persistent.Add(right);
+
+            ch.AddRange(persistent.ToList<ICollidable>());
+            gameObjects.AddRange(persistent);
+        }
+        public void Restart()
+        {
+            ch.Clear();
+            gameObjects.Clear();
+
+            ch.AddRange(persistent.ToList<ICollidable>());
+            gameObjects.AddRange(persistent);
+        }
+        public override void Update(float dt, Vector2 mousePos)
+        {
+            if(Raylib.IsKeyReleased(KeyboardKey.KEY_R))
+            {
+                Restart();
+                return;
+            }
+
+            if (Raylib.IsKeyReleased(KeyboardKey.KEY_SPACE))
+            {
+                Ball b = new(mousePos, SRNG.randF(10, 50), SRNG.randVec2(100, 500), "walls", "balls");
+                gameObjects.Add(b);
+                ch.Add(b);
+            }
+
+            ch.Update(dt);
+            ch.Resolve();
+            for (int i = gameObjects.Count - 1; i >= 0; i--)
+            {
+                var go = gameObjects[i];
+                go.Update(dt, mousePos);
+                if(go.IsDead()) gameObjects.RemoveAt(i);
+            }
+        }
+
+        public override void Draw(Vector2 mousePos)
+        {
+            ch.DebugDrawGrid(new(200, 0, 0, 200), new(100, 100, 100, 100));
+            for (int i = gameObjects.Count - 1; i >= 0; i--)
+            {
+                var go = gameObjects[i];
+                go.Draw(mousePos);
+            }
+
+            UIHandler.DrawTextAligned(String.Format("{0}", Raylib.GetFPS()), new(5, 5, 75, 50), 10, Raylib.GREEN, Alignement.TOPLEFT);
+            UIHandler.DrawTextAligned(String.Format("Objs: {0}", gameObjects.Count), new(5, 55, 150, 50), 10, Raylib.GREEN, Alignement.TOPLEFT);
+        }
+
+        public override void Close()
+        {
+            ch.Close();
         }
     }
 

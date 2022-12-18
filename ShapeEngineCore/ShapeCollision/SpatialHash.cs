@@ -121,27 +121,26 @@ namespace ShapeCollision
             (int x, int y) topLeft = GetCellCoordinate(boundingRect.x, boundingRect.y);
             (int x, int y) bottomRight = GetCellCoordinate(boundingRect.x + boundingRect.width, boundingRect.y + boundingRect.height);
 
-            if(boundingRect.width <= 0f || boundingRect.height <= 0f)
-            //if (topLeft.x == bottomRight.x && topLeft.y == bottomRight.y)
-            {
-                hashes.Add(GetCellID(topLeft.x, topLeft.y));
-                return hashes;
-            }
+            //if(boundingRect.width <= 0f || boundingRect.height <= 0f)
+            ////if (topLeft.x == bottomRight.x && topLeft.y == bottomRight.y)
+            //{
+            //    hashes.Add(GetCellID(topLeft.x, topLeft.y));
+            //    return hashes;
+            //}
 
 
             for (int j = topLeft.y; j <= bottomRight.y; j++)
             {
                 for (int i = topLeft.x; i <= bottomRight.x; i++)
                 {
-
                     int id = GetCellID(i, j);
 
                     if (!hashes.Contains(id)) //do i still need this check?
                     {
                         if(SGeometry.OverlapRectRect(GetCellRectangle(id), boundingRect))
-                        //if (Overlap.Check(GetCellRectangle(id), shape))
                         {
-                            hashes.Add(id);
+                            if(SGeometry.Overlap(GetCellRectangle(id), shape))
+                                hashes.Add(id);
                         }
                     }
                 }
