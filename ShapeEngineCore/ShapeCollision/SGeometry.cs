@@ -4,13 +4,13 @@ using ShapeLib;
 
 namespace ShapeCollision
 {
-    public struct IntersectionPoint
-    {
-        public Vector2 p;
-        public Vector2 normal;
-        public IntersectionPoint() { this.p = new(0f); this.normal = new(0f); }
-        public IntersectionPoint(Vector2 p, Vector2 normal) { this.p = p; this.normal = normal; }
-    }
+    //public struct IntersectionPoint
+    //{
+    //    public Vector2 p;
+    //    public Vector2 normal;
+    //    public IntersectionPoint() { this.p = new(0f); this.normal = new(0f); }
+    //    public IntersectionPoint(Vector2 p, Vector2 normal) { this.p = p; this.normal = normal; }
+    //}
     public struct OverlapInfo
     {
         public bool overlapping;
@@ -18,18 +18,20 @@ namespace ShapeCollision
         public ICollidable? other;//entity
         public Vector2 selfVel;
         public Vector2 otherVel;
-        public List<IntersectionPoint> intersectionPoints = new();
-        public bool containsSelfOther = false;
-        public OverlapInfo() { overlapping = false; self = null; other = null; this.selfVel = new(0f); this.otherVel = new(0f); }
-        public OverlapInfo(bool overlapping, ICollidable other, ICollidable self)
+        public List<Vector2> intersectionPoints;
+        public bool containsSelfOther;
+        public OverlapInfo() { overlapping = false; self = null; other = null; this.selfVel = new(0f); this.otherVel = new(0f); this.intersectionPoints = new(); this.containsSelfOther = false; }
+        public OverlapInfo(bool overlapping, ICollidable self, ICollidable other)
         {
             this.overlapping = overlapping;
             this.other = other;
             this.self = self;
             this.selfVel = self.GetCollider().Vel;
             this.otherVel = other.GetCollider().Vel;
+            this.containsSelfOther = false;
+            this.intersectionPoints = new();
         }
-        public OverlapInfo(bool overlapping, ICollidable other, ICollidable self, List<IntersectionPoint> intersectionPoints)
+        public OverlapInfo(bool overlapping, ICollidable self, ICollidable other, List<Vector2> intersectionPoints)
         {
             this.overlapping = overlapping;
             this.other = other;
@@ -37,9 +39,10 @@ namespace ShapeCollision
             this.selfVel = self.GetCollider().Vel;
             this.otherVel = other.GetCollider().Vel;
             this.intersectionPoints = intersectionPoints;
+            this.containsSelfOther = false;
 
         }
-        public OverlapInfo(bool overlapping, ICollidable other, ICollidable self, List<IntersectionPoint> intersectionPoints, bool containsSelfOther)
+        public OverlapInfo(bool overlapping, ICollidable self, ICollidable other, List<Vector2> intersectionPoints, bool containsSelfOther)
         {
             this.overlapping = overlapping;
             this.other = other;
@@ -95,18 +98,43 @@ namespace ShapeCollision
     {
         //exact point line, point segment and point point overlap calculations are used if <= 0
         public static readonly float POINT_OVERLAP_EPSILON = 5.0f; //point line and point segment overlap makes more sense when the point is a circle (epsilon = radius)
-        public static OverlapInfo GetOverlapInfo(ICollidable a, ICollidable b, bool getIntersections, bool getContains)
+        public static OverlapInfo GetOverlapInfo(ICollidable self, ICollidable other, bool getIntersections, bool getContains)
         {
+            bool overlap = Overlap(self, other);
+            if (overlap)
+            {
+                var intersections = Intersect(self.GetCollider(), other.GetCollider());
+                return new(true, self, other, intersections);
+            }
+            else
+            {
+                bool contains = Contains(self.GetCollider(), other.GetCollider());
+                if (contains)
+                {
+                    return new(true, self, other, new(), true);
+                }
+                else return new();
+            }
+            /*
             if (getIntersections)
             {
                 var points = Intersect(a.GetCollider(), b.GetCollider());
-                if(getContains && points.Count <= 0f)
+                if(points.Count <= 0)//no intersections therefore no overlapping
                 {
-                    bool contains = Contains(a.GetCollider(), b.GetCollider());
-                    if (contains) return new(true, a, b, new(), true);
+                    if (getContains)
+                    {
+                        bool contains = Contains(a.GetCollider(), b.GetCollider());
+                        if (contains) return new(true, a, b, new(), true);
+                        else
+                        {
+                            if (Overlap(a, b)) return new(true, a, b);
+                            else return new();
+                        }
+                    }
                     else
                     {
-                        if (Overlap(a, b)) return new(true, a, b);
+                        if (Overlap(a, b)) 
+                            return new(true, a, b);
                         else return new();
                     }
 
@@ -131,6 +159,7 @@ namespace ShapeCollision
                 if (Overlap(a, b)) return new(true, a, b);
                 else return new();
             }
+            */
         }
         
         public static bool Overlap(ICollidable a, ICollidable b)

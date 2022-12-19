@@ -615,6 +615,7 @@ namespace ShapeCollisionTest
             {
                 this.collider = new(start, end);
                 this.collisionMask = collisionMask;
+                this.collider.checkCollision = false;
             }
 
             public void Draw(Vector2 mousePos)
@@ -675,6 +676,7 @@ namespace ShapeCollisionTest
             public Ball(Vector2 pos, float r, Vector2 vel, params string[] collisionMask)
             {
                 this.collider = new(pos, vel, r);
+                //this.collider.GetIntersections = true;
                 this.collisionMask = collisionMask;
             }
 
@@ -720,9 +722,34 @@ namespace ShapeCollisionTest
 
             public void Overlap(OverlapInfo info)
             {
-                if (info.overlapping)
+                if (info.overlapping && info.other != null)
                 {
-                    collider.Vel *= -1;
+                    if(info.other is Ball)
+                    {
+                        Vector2 n = collider.Pos - info.other.GetPos();
+                        collider.Vel = SVec.Reflect(collider.Vel, SVec.Normalize(n));
+                    }
+                    else if (info.other is Wall && info.intersectionPoints.Count > 0)
+                    {
+                        SegmentCollider s = (SegmentCollider)info.other.GetCollider();
+                        Vector2 dir = SVec.Normalize(s.End- s.Start);
+                        Vector2 ip = info.intersectionPoints[0];
+                        Vector2 w = collider.Pos - ip;
+                        Vector2 n1 = new(dir.Y, -dir.X);
+                        Vector2 n2 = new(-dir.Y, dir.X);
+
+                        float d1 = SVec.Dot(w, n1);
+                        float d2 = SVec.Dot(w, n2);
+                        if(d1 > 0f)
+                        {
+                            collider.Vel = SVec.Reflect(collider.Vel, n1);
+                        }
+                        else if(d2 > 0f)
+                        {
+                            collider.Vel = SVec.Reflect(collider.Vel, n2);
+                        }
+                    }
+                    
                 }
             }
 

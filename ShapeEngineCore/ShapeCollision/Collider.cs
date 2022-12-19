@@ -24,6 +24,7 @@ namespace ShapeCollision
 
         protected Vector2 accumulatedForce = Vector2.Zero;
         protected bool enabled = true;
+        public bool checkCollision = true;
         public bool GetIntersections = false;
         public bool GetContains = false;
         public bool HasAccumulatedForce() { return accumulatedForce.X != 0f || accumulatedForce.Y != 0f; }
