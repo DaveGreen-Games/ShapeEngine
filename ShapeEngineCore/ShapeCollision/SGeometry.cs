@@ -19,8 +19,7 @@ namespace ShapeCollision
         public Vector2 selfVel;
         public Vector2 otherVel;
         public List<Vector2> intersectionPoints;
-        public bool containsSelfOther;
-        public OverlapInfo() { overlapping = false; self = null; other = null; this.selfVel = new(0f); this.otherVel = new(0f); this.intersectionPoints = new(); this.containsSelfOther = false; }
+        public OverlapInfo() { overlapping = false; self = null; other = null; this.selfVel = new(0f); this.otherVel = new(0f); this.intersectionPoints = new();}
         public OverlapInfo(bool overlapping, ICollidable self, ICollidable other)
         {
             this.overlapping = overlapping;
@@ -28,7 +27,6 @@ namespace ShapeCollision
             this.self = self;
             this.selfVel = self.GetCollider().Vel;
             this.otherVel = other.GetCollider().Vel;
-            this.containsSelfOther = false;
             this.intersectionPoints = new();
         }
         public OverlapInfo(bool overlapping, ICollidable self, ICollidable other, List<Vector2> intersectionPoints)
@@ -39,18 +37,6 @@ namespace ShapeCollision
             this.selfVel = self.GetCollider().Vel;
             this.otherVel = other.GetCollider().Vel;
             this.intersectionPoints = intersectionPoints;
-            this.containsSelfOther = false;
-
-        }
-        public OverlapInfo(bool overlapping, ICollidable self, ICollidable other, List<Vector2> intersectionPoints, bool containsSelfOther)
-        {
-            this.overlapping = overlapping;
-            this.other = other;
-            this.self = self;
-            this.selfVel = self.GetCollider().Vel;
-            this.otherVel = other.GetCollider().Vel;
-            this.intersectionPoints = intersectionPoints;
-            this.containsSelfOther = containsSelfOther;
 
         }
     }
@@ -98,23 +84,28 @@ namespace ShapeCollision
     {
         //exact point line, point segment and point point overlap calculations are used if <= 0
         public static readonly float POINT_OVERLAP_EPSILON = 5.0f; //point line and point segment overlap makes more sense when the point is a circle (epsilon = radius)
-        public static OverlapInfo GetOverlapInfo(ICollidable self, ICollidable other, bool getIntersections, bool getContains)
+        public static OverlapInfo GetOverlapInfo(ICollidable self, ICollidable other, bool checkIntersections)
         {
             bool overlap = Overlap(self, other);
             if (overlap)
             {
-                var intersections = Intersect(self.GetCollider(), other.GetCollider());
-                return new(true, self, other, intersections);
-            }
-            else
-            {
-                bool contains = Contains(self.GetCollider(), other.GetCollider());
-                if (contains)
+                if (checkIntersections)
                 {
-                    return new(true, self, other, new(), true);
+                    var intersections = Intersect(self.GetCollider(), other.GetCollider());
+                    return new(true, self, other, intersections);
                 }
-                else return new();
+                else return new(true, self, other);
             }
+            else return new();
+            //else
+            //{
+            //    bool contains = Contains(self.GetCollider(), other.GetCollider());
+            //    if (contains)
+            //    {
+            //        return new(true, self, other, new(), true);
+            //    }
+            //    else return new();
+            //}
             /*
             if (getIntersections)
             {

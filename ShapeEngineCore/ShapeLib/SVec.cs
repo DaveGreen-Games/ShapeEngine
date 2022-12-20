@@ -103,7 +103,8 @@ namespace ShapeLib
             return Scale(v, scale);
         }
         public static Vector2 SquareRoot(Vector2 v) { return Vector2.SquareRoot(v); }
-        public static Vector2 Rotate(Vector2 v, float angle) { return RayMath.Vector2Rotate(v, angle); } //radians
+        public static Vector2 Rotate(Vector2 v, float angleRad) { return RayMath.Vector2Rotate(v, angleRad); } //radians
+        public static Vector2 RotateDeg(Vector2 v, float angleDeg) { return Rotate(v, angleDeg * DEG2RAD); }
         public static float AngleDeg(Vector2 v1, Vector2 v2) { return AngleRad(v1, v2) * RayMath.RAD2DEG; }
         public static float AngleDeg(Vector2 v)
         {

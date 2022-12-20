@@ -6,6 +6,8 @@ using ShapeEngineCore.Globals.UI;
 using ShapeCollision;
 using ShapeLib;
 using System.Runtime.InteropServices;
+using System.Net.Http.Headers;
+using System.ComponentModel;
 
 namespace ShapeCollisionTest
 {
@@ -398,12 +400,11 @@ namespace ShapeCollisionTest
             //Raylib.DrawCircleV(mousePos, 150, Raylib.WHITE);
             Collidable a = new(staticColliders[staIndex]);
             Collidable b = new(dynamicColliders[dynIndex]);
-            var info = SGeometry.GetOverlapInfo(a, b, true, true);
+            var info = SGeometry.GetOverlapInfo(a, b, true);
             staticColliders[staIndex].DebugDrawShape(Raylib.BLUE);
 
             Color color = Raylib.GREEN;
-            if(info.containsSelfOther) color = Raylib.YELLOW;
-            else if(info.overlapping) color = Raylib.ORANGE;
+            if(info.overlapping) color = Raylib.ORANGE;
             dynamicColliders[dynIndex].DebugDrawShape(color);
 
             foreach (var p in info.intersectionPoints)
@@ -525,10 +526,9 @@ namespace ShapeCollisionTest
             dynamicColliders[dynIndex].DebugDrawShape(Raylib.BLUE);
             foreach (var col in collidables)
             {
-                var info = SGeometry.GetOverlapInfo(dyn, col, true, true);
+                var info = SGeometry.GetOverlapInfo(dyn, col, true);
                 Color color = Raylib.GREEN;
-                if (info.containsSelfOther) color = Raylib.YELLOW;
-                else if (info.overlapping) color = Raylib.ORANGE;
+                if (info.overlapping) color = Raylib.ORANGE;
                 col.GetCollider().DebugDrawShape(color);
                 foreach (var p in info.intersectionPoints)
                 {
@@ -615,7 +615,7 @@ namespace ShapeCollisionTest
             {
                 this.collider = new(start, end);
                 this.collisionMask = collisionMask;
-                this.collider.checkCollision = false;
+                this.collider.CheckCollision = false;
             }
 
             public void Draw(Vector2 mousePos)
@@ -660,7 +660,7 @@ namespace ShapeCollisionTest
 
             public void Overlap(OverlapInfo info)
             {
-                
+                return;
             }
 
             public void Update(float dt, Vector2 mousePos)
@@ -676,7 +676,6 @@ namespace ShapeCollisionTest
             public Ball(Vector2 pos, float r, Vector2 vel, params string[] collisionMask)
             {
                 this.collider = new(pos, vel, r);
-                //this.collider.GetIntersections = true;
                 this.collisionMask = collisionMask;
             }
 
@@ -724,31 +723,32 @@ namespace ShapeCollisionTest
             {
                 if (info.overlapping && info.other != null)
                 {
-                    if(info.other is Ball)
-                    {
-                        Vector2 n = collider.Pos - info.other.GetPos();
-                        collider.Vel = SVec.Reflect(collider.Vel, SVec.Normalize(n));
-                    }
-                    else if (info.other is Wall && info.intersectionPoints.Count > 0)
-                    {
-                        SegmentCollider s = (SegmentCollider)info.other.GetCollider();
-                        Vector2 dir = SVec.Normalize(s.End- s.Start);
-                        Vector2 ip = info.intersectionPoints[0];
-                        Vector2 w = collider.Pos - ip;
-                        Vector2 n1 = new(dir.Y, -dir.X);
-                        Vector2 n2 = new(-dir.Y, dir.X);
-
-                        float d1 = SVec.Dot(w, n1);
-                        float d2 = SVec.Dot(w, n2);
-                        if(d1 > 0f)
-                        {
-                            collider.Vel = SVec.Reflect(collider.Vel, n1);
-                        }
-                        else if(d2 > 0f)
-                        {
-                            collider.Vel = SVec.Reflect(collider.Vel, n2);
-                        }
-                    }
+                    collider.Vel = SVec.RotateDeg(collider.Vel, 180 + SRNG.randF(-25, 25));
+                    //if(info.other is Ball)
+                    //{
+                    //    Vector2 n = collider.Pos - info.other.GetPos();
+                    //    collider.Vel = SVec.Reflect(collider.Vel, SVec.Normalize(n));
+                    //}
+                    //else if (info.other is Wall && info.intersectionPoints.Count > 0)
+                    //{
+                    //    SegmentCollider s = (SegmentCollider)info.other.GetCollider();
+                    //    Vector2 dir = SVec.Normalize(s.End- s.Start);
+                    //    Vector2 ip = info.intersectionPoints[0];
+                    //    Vector2 w = collider.Pos - ip;
+                    //    Vector2 n1 = new(dir.Y, -dir.X);
+                    //    Vector2 n2 = new(-dir.Y, dir.X);
+                    //
+                    //    float d1 = SVec.Dot(w, n1);
+                    //    float d2 = SVec.Dot(w, n2);
+                    //    if(d1 > 0f)
+                    //    {
+                    //        collider.Vel = SVec.Reflect(collider.Vel, n1);
+                    //    }
+                    //    else if(d2 > 0f)
+                    //    {
+                    //        collider.Vel = SVec.Reflect(collider.Vel, n2);
+                    //    }
+                    //}
                     
                 }
             }
@@ -759,6 +759,144 @@ namespace ShapeCollisionTest
                 collider.Pos += collider.Vel * dt;
             }
         }
+        internal class Box : GameObject
+        {
+            RectCollider collider;
+            string[] collisionMask = new string[0];
+            Color baseColor = Raylib.WHITE;
+            Color overlapColor = Raylib.ORANGE;
+            Color curColor = Raylib.WHITE;
+            public Box(Vector2 pos, Vector2 size, Vector2 alignement, Vector2 vel, params string[] collisionMask)
+            {
+                this.collider = new(pos, vel, size, alignement);
+                this.collisionMask = collisionMask;
+            }
+
+            public void Draw(Vector2 mousePos)
+            {
+                collider.DebugDrawShape(curColor);
+                curColor = baseColor;
+            }
+
+            public Collider GetCollider()
+            {
+                return collider;
+            }
+
+            public string GetCollisionLayer()
+            {
+                return "boxes";
+            }
+
+            public string[] GetCollisionMask()
+            {
+                return collisionMask;
+            }
+
+            public string GetID()
+            {
+                return "box";
+            }
+
+            public Vector2 GetPos()
+            {
+                return collider.Pos;
+            }
+
+            public bool IsDead()
+            {
+                return false;
+            }
+
+            public void Kill()
+            {
+                return;
+            }
+
+            public void Overlap(OverlapInfo info)
+            {
+                if(info.overlapping && info.other != null)
+                {
+                    curColor = overlapColor;
+                }
+            }
+
+            public void Update(float dt, Vector2 mousePos)
+            {
+                collider.ApplyAccumulatedForce(dt);
+                collider.Pos += collider.Vel * dt;
+            }
+        }
+
+        internal class Poly : GameObject
+        {
+            PolyCollider collider;
+            string[] collisionMask = new string[0];
+            
+            public Poly(Vector2 pos, List<Vector2> points, Vector2 vel, params string[] collisionMask)
+            {
+                this.collider = new(pos, points, SRNG.randAngleRad());
+                this.collisionMask = collisionMask;
+            }
+
+            public void Draw(Vector2 mousePos)
+            {
+                collider.DebugDrawShape(Raylib.BLUE);
+            }
+
+            public Collider GetCollider()
+            {
+                return collider;
+            }
+
+            public string GetCollisionLayer()
+            {
+                return "polies";
+            }
+
+            public string[] GetCollisionMask()
+            {
+                return collisionMask;
+            }
+
+            public string GetID()
+            {
+                return "poly";
+            }
+
+            public Vector2 GetPos()
+            {
+                return collider.Pos;
+            }
+
+            public bool IsDead()
+            {
+                return false;
+            }
+
+            public void Kill()
+            {
+                return;
+            }
+
+            public void Overlap(OverlapInfo info)
+            {
+                if (info.overlapping && info.other != null)
+                {
+                    //collider.Vel = SVec.RotateDeg(collider.Vel, 180 + SRNG.randF(-25, 25));
+                    collider.Vel = new(0f);
+                }
+            }
+
+            public void Update(float dt, Vector2 mousePos)
+            {
+                collider.ApplyAccumulatedForce(dt);
+                collider.Pos += collider.Vel * dt;
+                
+                if(collider.Vel.X > 0 || collider.Vel.Y > 0)
+                    collider.RotRad += 0.1f * dt;
+            }
+        }
 
         CollisionHandler ch = new(0, 0, 1920, 1080, 20, 20);
         List<GameObject> gameObjects = new();
@@ -766,10 +904,10 @@ namespace ShapeCollisionTest
         public Test6()
         {
             float offset = 100;
-            Wall top = new(new Vector2(offset, offset), new Vector2(1920 - offset, offset), "balls");
-            Wall bottom = new(new Vector2(offset, 1080 - offset), new Vector2(1920 - offset, 1080 - offset), "balls");
-            Wall left = new(new Vector2(offset, offset), new Vector2(offset, 1080 - offset), "balls");
-            Wall right = new(new Vector2(1920 - offset, offset), new Vector2(1920 - offset, 1080 - offset), "balls");
+            Wall top = new(new Vector2(offset, offset), new Vector2(1920 - offset, offset));
+            Wall bottom = new(new Vector2(offset, 1080 - offset), new Vector2(1920 - offset, 1080 - offset));
+            Wall left = new(new Vector2(offset, offset), new Vector2(offset, 1080 - offset));
+            Wall right = new(new Vector2(1920 - offset, offset), new Vector2(1920 - offset, 1080 - offset));
             persistent.Add(top);
             persistent.Add(bottom);
             persistent.Add(left);
@@ -794,13 +932,25 @@ namespace ShapeCollisionTest
                 return;
             }
 
-            if (Raylib.IsKeyReleased(KeyboardKey.KEY_SPACE))
+            if (Raylib.IsKeyReleased(KeyboardKey.KEY_ONE))
             {
                 Ball b = new(mousePos, SRNG.randF(10, 50), SRNG.randVec2(100, 500), "walls", "balls");
                 gameObjects.Add(b);
                 ch.Add(b);
             }
-
+            if (Raylib.IsKeyReleased(KeyboardKey.KEY_TWO))
+            {
+                Box b = new(mousePos, new Vector2(SRNG.randF(50, 150), SRNG.randF(50, 150)), new(0.5f, 0.5f), new(0f), "balls");
+                gameObjects.Add(b);
+                ch.Add(b);
+            }
+            if (Raylib.IsKeyReleased(KeyboardKey.KEY_THREE))
+            {
+                var points = SPoly.GeneratePolygon(SRNG.randI(5, 12), new(0f), 25, 100);
+                Poly p = new(mousePos, points, SRNG.randVec2(50, 150), "balls", "walls", "polies");
+                gameObjects.Add(p);
+                ch.Add(p);
+            }
             ch.Update(dt);
             ch.Resolve();
             for (int i = gameObjects.Count - 1; i >= 0; i--)

@@ -72,7 +72,7 @@ namespace ShapeCollision
             for (int i = 0; i < collidables.Count; i++)
             {
                 ICollidable collider = collidables[i];
-                if (!collider.GetCollider().IsEnabled() || !collider.GetCollider().checkCollision) continue;
+                if (!collider.GetCollider().IsEnabled() || !collider.GetCollider().CheckCollision) continue;
                 string[] collisionMask = collider.GetCollisionMask();
 
 
@@ -86,7 +86,7 @@ namespace ShapeCollision
                     }//else collide with everything
 
                     var c = collider.GetCollider();
-                    var info = SGeometry.GetOverlapInfo(collider, other, c.GetIntersections, c.GetContains);
+                    var info = SGeometry.GetOverlapInfo(collider, other, c.CheckIntersections);
                     if (info.overlapping) 
                         overlapInfos.Add(info);
 
