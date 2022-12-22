@@ -86,7 +86,7 @@ namespace ShapeCollision
                     }//else collide with everything
 
                     var c = collider.GetCollider();
-                    var info = SGeometry.GetOverlapInfo(collider, other, c.CheckIntersections);
+                    var info = SGeometry.GetOverlapInfo(collider, other, c.CheckIntersections, c.CheckClosestPoint);
                     if (info.overlapping) 
                         overlapInfos.Add(info);
 

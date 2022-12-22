@@ -19,7 +19,8 @@ namespace ShapeCollision
         public Vector2 selfVel;
         public Vector2 otherVel;
         public List<Vector2> intersectionPoints;
-        public OverlapInfo() { overlapping = false; self = null; other = null; this.selfVel = new(0f); this.otherVel = new(0f); this.intersectionPoints = new();}
+        public Vector2 closestPoint;
+        public OverlapInfo() { overlapping = false; self = null; other = null; this.selfVel = new(0f); this.otherVel = new(0f); this.intersectionPoints = new(); this.closestPoint = new(0f); }
         public OverlapInfo(bool overlapping, ICollidable self, ICollidable other)
         {
             this.overlapping = overlapping;
@@ -28,6 +29,7 @@ namespace ShapeCollision
             this.selfVel = self.GetCollider().Vel;
             this.otherVel = other.GetCollider().Vel;
             this.intersectionPoints = new();
+            this.closestPoint = new();
         }
         public OverlapInfo(bool overlapping, ICollidable self, ICollidable other, List<Vector2> intersectionPoints)
         {
@@ -37,6 +39,29 @@ namespace ShapeCollision
             this.selfVel = self.GetCollider().Vel;
             this.otherVel = other.GetCollider().Vel;
             this.intersectionPoints = intersectionPoints;
+            this.closestPoint = new();
+
+        }
+        public OverlapInfo(bool overlapping, ICollidable self, ICollidable other, List<Vector2> intersectionPoints, Vector2 closestPoint)
+        {
+            this.overlapping = overlapping;
+            this.other = other;
+            this.self = self;
+            this.selfVel = self.GetCollider().Vel;
+            this.otherVel = other.GetCollider().Vel;
+            this.intersectionPoints = intersectionPoints;
+            this.closestPoint = closestPoint;
+
+        }
+        public OverlapInfo(bool overlapping, ICollidable self, ICollidable other, Vector2 closestPoint)
+        {
+            this.overlapping = overlapping;
+            this.other = other;
+            this.self = self;
+            this.selfVel = self.GetCollider().Vel;
+            this.otherVel = other.GetCollider().Vel;
+            this.intersectionPoints = new();
+            this.closestPoint = closestPoint;
 
         }
     }
@@ -84,17 +109,15 @@ namespace ShapeCollision
     {
         //exact point line, point segment and point point overlap calculations are used if <= 0
         public static readonly float POINT_OVERLAP_EPSILON = 5.0f; //point line and point segment overlap makes more sense when the point is a circle (epsilon = radius)
-        public static OverlapInfo GetOverlapInfo(ICollidable self, ICollidable other, bool checkIntersections)
+        public static OverlapInfo GetOverlapInfo(ICollidable self, ICollidable other, bool checkIntersections, bool checkClosestPoint)
         {
             bool overlap = Overlap(self, other);
             if (overlap)
             {
-                if (checkIntersections)
-                {
-                    var intersections = Intersect(self.GetCollider(), other.GetCollider());
-                    return new(true, self, other, intersections);
-                }
-                else return new(true, self, other);
+                List<Vector2> intersections = checkIntersections ? Intersect(self.GetCollider(), other.GetCollider()) : new();
+                Vector2 closestPoint = checkClosestPoint ? ClosestPoint(other.GetCollider(), self.GetCollider()) : new();
+
+                return new(true, self, other, intersections, closestPoint);
             }
             else return new();
             //else
