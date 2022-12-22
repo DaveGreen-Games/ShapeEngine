@@ -213,6 +213,10 @@ namespace ShapeCollision
             this.points = points;
         }
 
+        public override Rectangle GetBoundingRect()
+        {
+            return SPoly.GetPolyBoundingBox(Shape);
+        }
 
         public override void DebugDrawShape(Color color)
         {

@@ -723,7 +723,12 @@ namespace ShapeCollisionTest
             {
                 if (info.overlapping && info.other != null)
                 {
-                    collider.Vel = SVec.RotateDeg(collider.Vel, 180 + SRNG.randF(-25, 25));
+                    if (collider.Vel.X == 0 && collider.Vel.Y == 0) return;
+                    var p = SGeometry.ClosestPoint(info.other.GetCollider(), collider);
+                    Vector2 dir = SVec.Normalize(collider.Pos - p);
+                    collider.Pos = p + dir * collider.Radius;
+                    //collider.Vel = SVec.RotateDeg(collider.Vel, 180 + SRNG.randF(-25, 25));
+                    collider.Vel = new(0f);
                     //if(info.other is Ball)
                     //{
                     //    Vector2 n = collider.Pos - info.other.GetPos();
@@ -827,7 +832,6 @@ namespace ShapeCollisionTest
                 collider.Pos += collider.Vel * dt;
             }
         }
-
         internal class Poly : GameObject
         {
             PolyCollider collider;
@@ -837,6 +841,7 @@ namespace ShapeCollisionTest
             {
                 this.collider = new(pos, points, SRNG.randAngleRad());
                 this.collisionMask = collisionMask;
+                this.collider.Vel = vel;
             }
 
             public void Draw(Vector2 mousePos)
@@ -894,7 +899,7 @@ namespace ShapeCollisionTest
                 collider.Pos += collider.Vel * dt;
                 
                 if(collider.Vel.X > 0 || collider.Vel.Y > 0)
-                    collider.RotRad += 0.1f * dt;
+                    collider.RotRad += 0.5f * dt;
             }
         }
 
@@ -934,20 +939,20 @@ namespace ShapeCollisionTest
 
             if (Raylib.IsKeyReleased(KeyboardKey.KEY_ONE))
             {
-                Ball b = new(mousePos, SRNG.randF(10, 50), SRNG.randVec2(100, 500), "walls", "balls");
+                Ball b = new(mousePos, SRNG.randF(10, 50), SRNG.randVec2(100, 500), "walls", "balls", "polies");
                 gameObjects.Add(b);
                 ch.Add(b);
             }
             if (Raylib.IsKeyReleased(KeyboardKey.KEY_TWO))
             {
-                Box b = new(mousePos, new Vector2(SRNG.randF(50, 150), SRNG.randF(50, 150)), new(0.5f, 0.5f), new(0f), "balls");
+                Box b = new(mousePos, new Vector2(SRNG.randF(50, 150), SRNG.randF(50, 150)), new(0.5f, 0.5f), new(0f), "balls", "polies");
                 gameObjects.Add(b);
                 ch.Add(b);
             }
             if (Raylib.IsKeyReleased(KeyboardKey.KEY_THREE))
             {
                 var points = SPoly.GeneratePolygon(SRNG.randI(5, 12), new(0f), 25, 100);
-                Poly p = new(mousePos, points, SRNG.randVec2(50, 150), "balls", "walls", "polies");
+                Poly p = new(mousePos, points, SRNG.randVec2(150, 1150), "balls", "walls", "polies");
                 gameObjects.Add(p);
                 ch.Add(p);
             }

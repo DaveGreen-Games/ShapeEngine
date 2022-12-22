@@ -5,6 +5,39 @@ namespace ShapeLib
 {
     public static class SPoly
     {
+        public static Rectangle GetPolyBoundingBox(List<Vector2> poly)
+        {
+            if (poly.Count < 2) return new();
+            Vector2 start = poly[0];
+            Rectangle r = new(start.X, start.Y, 0, 0);
+
+            foreach (var p in poly)
+            {
+                r = SRect.EnlargeRect(r, p);
+            }
+            return r;
+        }
+
+        /*
+        public static Rectangle GetPolyBoundingBox(Vector2 pos, List<Vector2> poly)
+        {
+            Rectangle r = new();
+            foreach (var p in poly)
+            {
+                r = SRect.EnlargeRect(r, pos + p);
+            }
+            return r;
+        }
+        public static Rectangle GetPolyBoundingBox(Vector2 pos, float rotRad, List<Vector2> poly)
+        {
+            Rectangle r = new();
+            foreach (var p in poly)
+            {
+                r = SRect.EnlargeRect(r, pos + SVec.Rotate(p, rotRad));
+            }
+            return r;
+        }
+    */
 
         public static List<Vector2> ScalePolygon(List<Vector2> poly, float scale)
         {

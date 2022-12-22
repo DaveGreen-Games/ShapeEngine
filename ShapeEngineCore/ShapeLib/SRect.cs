@@ -5,6 +5,8 @@ namespace ShapeLib
 {
     public class SRect
     {
+
+        
         public static Rectangle MultiplyRectangle(Rectangle rect, float factor)
         {
             return new Rectangle
@@ -87,12 +89,23 @@ namespace ShapeLib
 
         public static Rectangle EnlargeRect(Rectangle r, Vector2 p)
         {
-            return new
+            Vector2 tl = new
                 (
                     MathF.Min(r.X, p.X),
-                    MathF.Min(r.Y, p.Y),
+                    MathF.Min(r.Y, p.Y)
+                );
+            Vector2 br = new
+                (
                     MathF.Max(r.X + r.width, p.X),
                     MathF.Max(r.Y + r.height, p.Y)
+                );
+            return new
+                (
+                  tl.X,
+                  tl.Y,
+                  br.X - tl.X,
+                  br.Y - tl.Y
+                    
                 );
         }
         public static Rectangle EnlargeRect(Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement, Vector2 point)

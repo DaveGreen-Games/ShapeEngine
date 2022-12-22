@@ -297,6 +297,10 @@ namespace ShapeCollision
             {
                 return OverlapRectRect(rect, (RectCollider) shape);
             }
+            else if(shape is PolyCollider)
+            {
+                return OverlapRectPoly(rect, (PolyCollider) shape);
+            }
             else
             {
                 return OverlapRectPoint(rect, shape);
