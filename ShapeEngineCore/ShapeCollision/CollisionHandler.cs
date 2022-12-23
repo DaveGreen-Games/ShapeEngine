@@ -99,9 +99,12 @@ namespace ShapeCollision
                     //{
                     //    
                     //}
+
                     var info = SGeometry.GetOverlapInfo(collider, other, selfC.CheckIntersections);
                     if (info.overlapping)
                         overlapInfos.Add(info);
+
+
 
 
 
