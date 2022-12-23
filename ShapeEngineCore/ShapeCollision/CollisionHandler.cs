@@ -4,6 +4,10 @@ using Raylib_CsLo;
 
 namespace ShapeCollision
 {
+
+    //colliders have bounding sphere
+    //check if bounding spheres would overlap and if the colliders relative velocity lets them move towards each other
+    //only if both a true, check for final overlap
     public class CollisionHandler
     {
         protected List<ICollidable> collidables = new();
@@ -85,10 +89,57 @@ namespace ShapeCollision
                         if (!collisionMask.Contains(otherLayer)) continue;
                     }//else collide with everything
 
-                    var c = collider.GetCollider();
-                    var info = SGeometry.GetOverlapInfo(collider, other, c.CheckIntersections, c.CheckClosestPoint);
-                    if (info.overlapping) 
+                    var selfC = collider.GetCollider();
+                    
+                    //var otherC = collider.GetCollider();
+                    //Vector2 colNormal = SVec.Normalize(collider.GetPos() - other.GetPos());
+                    //Vector2 relVel = selfC.Vel - otherC.Vel;
+                    //float velDot = SVec.Dot(colNormal, relVel);
+                    //if(velDot < 0f)
+                    //{
+                    //    
+                    //}
+                    var info = SGeometry.GetOverlapInfo(collider, other, selfC.CheckIntersections);
+                    if (info.overlapping)
                         overlapInfos.Add(info);
+
+
+
+
+                    //var selfCol = collider.GetCollider();
+                    //var otherCol = other.GetCollider();
+                    //
+                    //float selfR = selfCol.GetBoundingRadius();
+                    //float otherR = otherCol.GetBoundingRadius();
+                    //float combR = selfR + otherR;
+                    //
+                    //float l = displacement.Length();
+                    //float s = l - combR;
+                    //Vector2 colNormal = displacement / l;
+                    //
+                    //float colTolerance = 1f;
+                    //if(MathF.Abs(s) <= colTolerance && velDot < 0f)
+                    //{
+                    //    //colliding
+                    //    var info = SGeometry.GetOverlapInfo(collider, other, new(0f), c.CheckIntersections);
+                    //    if (info.overlapping)
+                    //        overlapInfos.Add(info);
+                    //}
+                    //else if(s < -colTolerance)
+                    //{
+                    //    //penetrating
+                    //    Vector2 w = colNormal * MathF.Abs(s);
+                    //    var info = SGeometry.GetOverlapInfo(collider, other, new(0f), c.CheckIntersections);
+                    //    if (info.overlapping)
+                    //        overlapInfos.Add(info);
+                    //}
+                    //else
+                    //{
+                    //    //no collision
+                    //    continue;
+                    //}
+
+
 
                     //bool overlap = SGeometry.Overlap(collider, other);
                     //if (overlap)

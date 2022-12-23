@@ -43,8 +43,8 @@ namespace ShapeCollisionTest
         Collider dPoint = new();
         CircleCollider dCircle = new(0, 0, 100);
         SegmentCollider dSegment = new(new Vector2(0, 0), SRNG.randVec2(), 500);
-        RectCollider dRect = new(new Vector2(0f), new Vector2(100, 100), new Vector2(0.5f, 0.5f));
-        PolyCollider dPoly = new(0, 0, new() { new Vector2(1, 0) * 100f, new Vector2(-0.5f, -0.5f) * 100f, new Vector2(-0.5f, 0.5f) * 100f });
+        RectCollider dRect = new(new Vector2(0f), new Vector2(150, 100), new Vector2(0.5f, 0.5f));
+        PolyCollider dPoly = new(0, 0, SPoly.GeneratePolygon(8, new(0f), 50, 100));
         List<Collider> dynamicColliders = new();
         int dynIndex = 0;
 
@@ -52,7 +52,7 @@ namespace ShapeCollisionTest
         CircleCollider sCircle = new(0, 0, 100);
         SegmentCollider sSegment = new(new Vector2(0, 0), SRNG.randVec2(), 500);
         RectCollider sRect = new(new Vector2(0f), new Vector2(100, 100), new Vector2(0.5f, 0.5f));
-        PolyCollider sPoly = new(0, 0, new() { new Vector2(1, 0) * 100f, new Vector2(-0.5f, -0.5f) * 100f, new Vector2(-0.5f, 0.5f) * 100f });
+        PolyCollider sPoly = new(0, 0, SPoly.GeneratePolygon(12, new(0f), 100, 200));
         List<Collider> staticColliders = new();
         int staIndex = 0;
 
@@ -110,8 +110,10 @@ namespace ShapeCollisionTest
 
             staticColliders[staIndex].DebugDrawShape(Raylib.YELLOW);
             dynamicColliders[dynIndex].DebugDrawShape(Raylib.GREEN);
-            Vector2 p = SGeometry.ClosestPoint(staticColliders[staIndex], dynamicColliders[dynIndex]);
+            Vector2 p = SClosestPoint.ClosestPoint(staticColliders[staIndex], dynamicColliders[dynIndex]);
+            Vector2 p2 = SClosestPoint.ClosestPoint(dynamicColliders[dynIndex], staticColliders[staIndex]);
             Raylib.DrawCircleV(p, 10f, new Color(255, 0, 0, 150));
+            Raylib.DrawCircleV(p2, 10f, new Color(0, 0, 255, 150));
         }
 
         private Vector2 RandPos()
@@ -278,7 +280,7 @@ namespace ShapeCollisionTest
             UIHandler.DrawTextAligned(String.Format("{0}", Raylib.GetFPS()), new(5, 5, 75, 50), 10, Raylib.GREEN, Alignement.TOPLEFT);
             //Raylib.DrawCircleV(mousePos, 150, Raylib.WHITE);
 
-            bool contains = SGeometry.Contains(staticColliders[staIndex], dynamicColliders[dynIndex]);
+            bool contains = SContains.Contains(staticColliders[staIndex], dynamicColliders[dynIndex]);
             staticColliders[staIndex].DebugDrawShape(Raylib.YELLOW);
             dynamicColliders[dynIndex].DebugDrawShape(contains ? Raylib.RED : Raylib.GREEN);
 
@@ -723,12 +725,12 @@ namespace ShapeCollisionTest
             {
                 if (info.overlapping && info.other != null)
                 {
-                    if (collider.Vel.X == 0 && collider.Vel.Y == 0) return;
-                    var p = SGeometry.ClosestPoint(info.other.GetCollider(), collider);
-                    Vector2 dir = SVec.Normalize(collider.Pos - p);
-                    collider.Pos = p + dir * collider.Radius;
-                    //collider.Vel = SVec.RotateDeg(collider.Vel, 180 + SRNG.randF(-25, 25));
-                    collider.Vel = new(0f);
+                    //if (collider.Vel.X == 0 && collider.Vel.Y == 0) return;
+                    //var p = SGeometry.ClosestPoint(info.other.GetCollider(), collider);
+                    //Vector2 dir = SVec.Normalize(collider.Pos - p);
+                    //collider.Pos = p + dir * collider.Radius;
+                    collider.Vel = SVec.RotateDeg(collider.Vel, 180 + SRNG.randF(-25, 25));
+                    //collider.Vel = new(0f;
                     //if(info.other is Ball)
                     //{
                     //    Vector2 n = collider.Pos - info.other.GetPos();
