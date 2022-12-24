@@ -41,18 +41,20 @@ namespace ShapeCollision
         }
         
     }
+    
     public struct Intersection
     {
         public bool valid;
         public Vector2 p;
         public Vector2 n;
-
-        public Intersection() { this.valid = false; this.p = new(0f); this.n = new(0f); }
-        public Intersection(Vector2 intersectionPoint, Vector2 normal)
+        public List<(Vector2 p, Vector2 n)> points;
+        public Intersection() { this.valid = false; this.p = new(0f); this.n = new(0f); this.points = new(); }
+        public Intersection(Vector2 intersectionPoint, Vector2 normal, List<(Vector2 p, Vector2 n)> points)
         {
             this.valid = true;
             this.p = intersectionPoint;
             this.n = normal;
+            this.points = points;
         }
     }
     public interface ICollidable
@@ -1156,8 +1158,26 @@ namespace ShapeCollision
         }
 
 
+        private static (Vector2 p, Vector2 n) ConstructNormal(Vector2 p1, Vector2 p2, Vector2 referencePoint)
+        {
+            Vector2 w = p2 - p1;
+            float l = w.Length();
+            Vector2 dir = w / l;
+            Vector2 p = p1 + dir * l * 0.5f;
+            Vector2 n = SUtils.GetNormal(p1, p2, p, referencePoint);
+            return (p, n);
+        }
+        private static (Vector2 p, Vector2 n) ConstructNormalOpposite(Vector2 p1, Vector2 p2, Vector2 referencePoint)
+        {
+            Vector2 w = p2 - p1;
+            float l = w.Length();
+            Vector2 dir = w / l;
+            Vector2 p = p1 + dir * l * 0.5f;
+            Vector2 n = SUtils.GetNormalOpposite(p1, p2, p, referencePoint);
+            return (p, n);
+        }
 
-
+        //update
         public static Intersection Intersection(Collider shapeA, Collider shapeB)
         {
             if (shapeA == shapeB) return new();
@@ -1446,18 +1466,29 @@ namespace ShapeCollision
                 Vector2 intersection1 = new Vector2(
                     (float)(cx2 + h * (cy1 - cy0) / dist),
                     (float)(cy2 - h * (cx1 - cx0) / dist));
-                //Vector2 intersection2 = new Vector2(
-                //    (float)(cx2 - h * (cy1 - cy0) / dist),
-                //    (float)(cy2 + h * (cx1 - cx0) / dist));
+                Vector2 intersection2 = new Vector2(
+                    (float)(cx2 - h * (cy1 - cy0) / dist),
+                    (float)(cy2 + h * (cx1 - cx0) / dist));
 
                 // See if we have 1 or 2 solutions.
                 if (dist == radius0 + radius1)
                 {
-                    return new(intersection1, SVec.Normalize(intersection1 - new Vector2(cx1, cy1)));
+                    Vector2 n = SVec.Normalize(intersection1 - new Vector2(cx1, cy1));
+                    return new(intersection1, n, new() { (intersection1, n)} );
                 }
                 else 
                 {
-                    return new(intersection1, SVec.Normalize(intersection1 - new Vector2(cx1, cy1)));
+                    Vector2 otherPos = new Vector2(cx1, cy1);
+                    Vector2 w = intersection2 - intersection1;
+                    float l = w.Length();
+                    Vector2 dir = w / l;
+                    Vector2 p = intersection1 + dir * l * 0.5f;
+                    Vector2 n = SVec.Normalize(p - otherPos);
+
+                    Vector2 n1 = SVec.Normalize(intersection1 - otherPos);
+                    Vector2 n2 = SVec.Normalize(intersection2 - otherPos);
+
+                    return new(p, n, new() { (intersection1, n1), (intersection2, n2) });
                 }
             }
 
@@ -1492,17 +1523,14 @@ namespace ShapeCollision
                     // intersection point is not actually within line segment
                     Vector2 ip = new(iX, iY);
                     Vector2 n = SUtils.GetNormal(new Vector2(aX, aY), new Vector2(bX, bY), ip, new Vector2(cX, cY));
-                    return new(ip, n);
+                    return new(ip, n, new() { (ip, n)});
                 }
                 else return new();
             }
             else if (dist < R)
             {
-                List<Vector2> intersectionPoints = new();
-                // two possible intersection points
-
                 float dt = MathF.Sqrt(R * R - dist * dist) / MathF.Sqrt(dl);
-
+                List<(Vector2 p, Vector2 n)> points = new();
                 // intersection point nearest to A
                 float t1 = t - dt;
                 float i1X = aX + t1 * dX;
@@ -1512,9 +1540,31 @@ namespace ShapeCollision
                     // intersection point is actually within line segment
                     Vector2 ip = new(i1X, i1Y);
                     Vector2 n = SUtils.GetNormal(new Vector2(aX, aY), new Vector2(bX, bY), ip, new Vector2(cX, cY));
-                    return new(ip, n);
+                    points.Add((ip, n));
                 }
-                else return new();
+                
+                // intersection point farthest from A
+                float t2 = t + dt;
+                float i2X = aX + t2 * dX;
+                float i2Y = aY + t2 * dY;
+                if (t2 >= 0f && t2 <= 1f)
+                {
+                    Vector2 ip = new(i2X, i2Y);
+                    Vector2 n = SUtils.GetNormal(new Vector2(aX, aY), new Vector2(bX, bY), ip, new Vector2(cX, cY));
+                    points.Add((ip, n));
+                }
+
+                if (points.Count <= 0) return new();
+                else if (points.Count == 1) return new(points[0].p, points[0].n, points);
+                else
+                {
+                    Vector2 w = points[1].p - points[0].p;
+                    float l = w.Length();
+                    Vector2 dir = w / l;
+                    Vector2 p = points[0].p + dir * l * 0.5f;
+                    Vector2 n = SUtils.GetNormal(points[0].p, points[1].p, p, new Vector2(cX, cY));
+                    return new(p, n, points);
+                }
             }
             else
             {
@@ -1526,36 +1576,55 @@ namespace ShapeCollision
         {
             return IntersectionCircleSegment(circlePos.X, circlePos.Y, circleRadius, start.X, start.Y, end.X, end.Y);
         }
-        public static Intersection IntersectionCircleSegments(Vector2 circlePos, float circleRadius, List<(Vector2 start, Vector2 end)> segments)
+        public static Intersection IntersectionCircleSegments(Vector2 referencePoint, Vector2 circlePos, float circleRadius, List<(Vector2 start, Vector2 end)> segments)
         {
+            List<(Vector2 p, Vector2 n)> points = new();
             foreach (var seg in segments)
             {
-                var points = IntersectCircleSegment(circlePos, circleRadius, seg.start, seg.end);
-                if(points.Count > 0)
+                //var intersection = IntersectionCircleSegment(circlePos, circleRadius, seg.start, seg.end);
+                //if (intersection.valid) points.AddRange(intersection.points);
+                var intersectPoints = IntersectCircleSegment(circlePos, circleRadius, seg.start, seg.end);
+                foreach (var p in intersectPoints)
                 {
-                    return new(points[0], SUtils.GetNormal(seg.start, seg.end, points[0], circlePos));// SVec.Normalize(points[0] - circlePos));
+                    Vector2 n = SUtils.GetNormalOpposite(seg.start, seg.end, p, referencePoint);
+                    points.Add((p, n));
                 }
             }
-            return new();
+            if(points.Count <= 0) return new();
+            else if(points.Count == 1)
+            {
+                return new(points[0].p, points[0].n, points);
+            }
+            else if(points.Count == 2)
+            {
+                var info = ConstructNormalOpposite(points[0].p, points[1].p, referencePoint);
+                return new(info.p, info.n, points);
+            }
+            else
+            {
+                return new(points[0].p, points[0].n, points);
+            }
         }
-        public static Intersection IntersectionCircleRect(Vector2 circlePos, float circleRadius, Rectangle rect)
+        public static Intersection IntersectionCircleRect(Vector2 referencePoint, Vector2 circlePos, float circleRadius, Rectangle rect)
         {
             var segments = SRect.GetRectSegments(rect);
-            return IntersectionCircleSegments(circlePos, circleRadius, segments);
+            return IntersectionCircleSegments(referencePoint, circlePos, circleRadius, segments);
         }
-        public static Intersection IntersectionCirclePoly(Vector2 circlePos, float circleRadius, List<Vector2> poly)
+        public static Intersection IntersectionCirclePoly(Vector2 referencePoint, Vector2 circlePos, float circleRadius, List<Vector2> poly)
         {
-            for (int i = 0; i < poly.Count; i++)
-            {
-                Vector2 start = poly[i];
-                Vector2 end = poly[(i + 1) % poly.Count];
-                var points = IntersectCircleSegment(circlePos, circleRadius, start, end);
-                if(points.Count > 0)
-                {
-                    return new(points[0], SUtils.GetNormal(start, end, points[0], circlePos));// SVec.Normalize(points[0] - circlePos));
-                }
-            }
-            return new();
+            var segments = SPoly.GetPolySegments(poly);
+            return IntersectionCircleSegments(referencePoint, circlePos, circleRadius, segments);
+            //for (int i = 0; i < poly.Count; i++)
+            //{
+            //    Vector2 start = poly[i];
+            //    Vector2 end = poly[(i + 1) % poly.Count];
+            //    var points = IntersectCircleSegment(circlePos, circleRadius, start, end);
+            //    if(points.Count > 0)
+            //    {
+            //        return new(points[0], SUtils.GetNormal(start, end, points[0], circlePos));// SVec.Normalize(points[0] - circlePos));
+            //    }
+            //}
+            //return new();
         }
         public static Intersection IntersectionSegmentPoint(Vector2 start, Vector2 end, Vector2 p)
         {
@@ -1564,11 +1633,16 @@ namespace ShapeCollision
         public static Intersection IntersectionSegmentSegment(Vector2 referencePoint, Vector2 aStart, Vector2 aEnd, Vector2 bStart, Vector2 bEnd)
         {
             var info = IntersectSegmentSegmentInfo(aStart, aEnd, bStart, bEnd);
-            if (info.intersected) return new(info.intersectPoint, SUtils.GetNormal(bStart, bEnd, info.intersectPoint, referencePoint));
+            if (info.intersected)
+            {
+                Vector2 n = SUtils.GetNormal(bStart, bEnd, info.intersectPoint, referencePoint);
+                return new(info.intersectPoint, n, new() { (info.intersectPoint, n)} );
+            }
             return new();
         }
         public static Intersection IntersectionSegmentSegments(Vector2 referencePoint, Vector2 start, Vector2 end, List<(Vector2 start, Vector2 end)> segments)
         {
+            List<(Vector2 p, Vector2 n)> points = new();
             Vector2 closestIntersectPoint = new();
             Vector2 n = new();
             float closestDisSq = float.PositiveInfinity;
@@ -1578,6 +1652,7 @@ namespace ShapeCollision
                 var intersection = IntersectionSegmentSegment(referencePoint, start, end, seg.start, seg.end);
                 if (intersection.valid)
                 {
+                    points.Add((intersection.p, intersection.n));
                     Vector2 w = referencePoint - intersection.p;
                     float disSq = w.LengthSquared();
                     if(disSq < closestDisSq)
@@ -1588,11 +1663,12 @@ namespace ShapeCollision
                     }
                 }
             }
-            if (n.X != 0f || n.Y != 0f) return new(closestIntersectPoint, n);
+            if (points.Count > 0) return new(closestIntersectPoint, n, points);
             return new();
         }
         public static Intersection IntersectionSegmentsSegment(Vector2 referencePoint, List<(Vector2 start, Vector2 end)> segments, Vector2 start, Vector2 end)
         {
+            List<(Vector2 p, Vector2 n)> points = new();
             Vector2 closestIntersectPoint = new();
             Vector2 n = new();
             float closestDisSq = float.PositiveInfinity;
@@ -1602,6 +1678,7 @@ namespace ShapeCollision
                 var intersection = IntersectionSegmentSegment(referencePoint, seg.start, seg.end, start, end);
                 if (intersection.valid)
                 {
+                    points.Add((intersection.p, intersection.n));
                     Vector2 w = referencePoint - intersection.p;
                     float disSq = w.LengthSquared();
                     if (disSq < closestDisSq)
@@ -1612,11 +1689,12 @@ namespace ShapeCollision
                     }
                 }
             }
-            if (n.X != 0f || n.Y != 0f) return new(closestIntersectPoint, n);
+            if (points.Count > 0) return new(closestIntersectPoint, n, points);
             return new();
         }
         public static Intersection IntersectionSegmentsSegments(Vector2 referencePoint, List<(Vector2 start, Vector2 end)> a, List<(Vector2 start, Vector2 end)> b)
         {
+            List<(Vector2 p, Vector2 n)> points = new(); 
             Vector2 closestIntersectPoint = new();
             Vector2 n = new();
             float closestDisSq = float.PositiveInfinity;
@@ -1625,6 +1703,7 @@ namespace ShapeCollision
                 var intersection = IntersectionSegmentSegments(referencePoint, seg.start, seg.end, b);
                 if (intersection.valid)
                 {
+                    points.Add((intersection.p, intersection.n));
                     Vector2 w = referencePoint - intersection.p;
                     float disSq = w.LengthSquared();
                     if (disSq < closestDisSq)
@@ -1635,7 +1714,7 @@ namespace ShapeCollision
                     }
                 }
             }
-            if (n.X != 0f || n.Y != 0f) return new(closestIntersectPoint, n);
+            if (points.Count > 0) return new(closestIntersectPoint, n, points);
             return new();
         }
         public static Intersection IntersectionSegmentCircle(Vector2 start, Vector2 end, Vector2 circlePos, float circleRadius)
@@ -1672,13 +1751,13 @@ namespace ShapeCollision
                     // intersection point is not actually within line segment
                     Vector2 ip = new(iX, iY);
                     Vector2 n = SVec.Normalize(ip - new Vector2(cX, cY)); // SUtils.GetNormal(new Vector2(aX, aY), new Vector2(bX, bY), ip, new Vector2(cX, cY));
-                    return new(ip, n);
+                    return new(ip, n, new() { (ip, n) });
                 }
                 else return new();
             }
             else if (dist < R)
             {
-                List<Vector2> intersectionPoints = new();
+                List<(Vector2 p, Vector2 n)> points = new();
                 // two possible intersection points
 
                 float dt = MathF.Sqrt(R * R - dist * dist) / MathF.Sqrt(dl);
@@ -1692,9 +1771,25 @@ namespace ShapeCollision
                     // intersection point is actually within line segment
                     Vector2 ip = new(i1X, i1Y);
                     Vector2 n = SVec.Normalize(ip - new Vector2(cX, cY)); // SUtils.GetNormal(new Vector2(aX, aY), new Vector2(bX, bY), ip, new Vector2(cX, cY));
-                    return new(ip, n);
+                    points.Add((ip, n));
                 }
-                else return new();
+                float t2 = t + dt;
+                float i2X = aX + t2 * dX;
+                float i2Y = aY + t2 * dY;
+                if (t2 >= 0f && t2 <= 1f)
+                {
+                    Vector2 ip = new(i2X, i2Y);
+                    Vector2 n = SVec.Normalize(ip - new Vector2(cX, cY));
+                    points.Add((ip, n));
+                }
+
+                if (points.Count <= 0) return new();
+                else if (points.Count == 1) return new(points[0].p, points[0].n, points);
+                else
+                {
+                    var info = ConstructNormal(points[0].p, points[1].p, new Vector2(cX, cY));
+                    return new(info.p, info.n, points);
+                }
             }
             else
             {
@@ -1702,17 +1797,32 @@ namespace ShapeCollision
                 return new();
             }
         }
-        public static Intersection IntersectionSegmentsCircle(List<(Vector2 start, Vector2 end)> segments, Vector2 circlePos, float circleRadius)
+        public static Intersection IntersectionSegmentsCircle(Vector2 referencePoint, List<(Vector2 start, Vector2 end)> segments, Vector2 circlePos, float circleRadius)
         {
+            List<(Vector2 p, Vector2 n)> points = new();
             foreach (var seg in segments)
             {
-                var points = IntersectSegmentCircle(seg.start, seg.end, circlePos, circleRadius);
-                if (points.Count > 0)
+                var intersectPoints = IntersectSegmentCircle(seg.start, seg.end, circlePos, circleRadius);
+                foreach (var p in intersectPoints)
                 {
-                    return new(points[0], SVec.Normalize(points[0] - circlePos));
+                    Vector2 n = SVec.Normalize(p - circlePos);
+                    points.Add((p, n));
                 }
             }
-            return new();
+            if (points.Count <= 0) return new();
+            else if (points.Count == 1)
+            {
+                return new(points[0].p, points[0].n, points);
+            }
+            else if (points.Count == 2)
+            {
+                var info = ConstructNormalOpposite(points[0].p, points[1].p, referencePoint);
+                return new(info.p, info.n, points);
+            }
+            else
+            {
+                return new(points[0].p, points[0].n, points);
+            }
         }
         public static Intersection IntersectionSegmentRect(Vector2 referencePoint, Vector2 start, Vector2 end, Rectangle rect)
         {
@@ -1732,46 +1842,48 @@ namespace ShapeCollision
         }
         public static Intersection IntersectionSegmentPoly(Vector2 referencePoint, Vector2 start, Vector2 end, List<Vector2> poly)
         {
-            Vector2 closestIntersectPoint = new();
-            Vector2 n = new();
-            float closestDisSq = float.PositiveInfinity;
-
-            for (int i = 0; i < poly.Count; i++)
-            {
-                Vector2 pStart = poly[i];
-                Vector2 pEnd = poly[(i + 1) % poly.Count];
-                var intersection = IntersectionSegmentSegment(referencePoint, start, end, pStart, pEnd);
-                if (intersection.valid)
-                {
-                    Vector2 w = referencePoint - intersection.p;
-                    float disSq = w.LengthSquared();
-                    if (disSq < closestDisSq)
-                    {
-                        closestDisSq = disSq;
-                        closestIntersectPoint = intersection.p;
-                        n = intersection.n;
-                    }
-                }
-            }
-            if (n.X != 0f || n.Y != 0f) return new(closestIntersectPoint, n);
-            return new();
+            return IntersectionSegmentSegments(referencePoint, start, end, SPoly.GetPolySegments(poly));
+            //Vector2 closestIntersectPoint = new();
+            //Vector2 n = new();
+            //float closestDisSq = float.PositiveInfinity;
+            //
+            //for (int i = 0; i < poly.Count; i++)
+            //{
+            //    Vector2 pStart = poly[i];
+            //    Vector2 pEnd = poly[(i + 1) % poly.Count];
+            //    var intersection = IntersectionSegmentSegment(referencePoint, start, end, pStart, pEnd);
+            //    if (intersection.valid)
+            //    {
+            //        Vector2 w = referencePoint - intersection.p;
+            //        float disSq = w.LengthSquared();
+            //        if (disSq < closestDisSq)
+            //        {
+            //            closestDisSq = disSq;
+            //            closestIntersectPoint = intersection.p;
+            //            n = intersection.n;
+            //        }
+            //    }
+            //}
+            //if (n.X != 0f || n.Y != 0f) return new(closestIntersectPoint, n);
+            //return new();
         }
         public static Intersection IntersectionRectPoint(Rectangle rect, Vector2 p)
         {
             return IntersectionRectCircle(rect, p, 1f);
         }
-        public static Intersection IntersectionRectCircle(Rectangle rect, Vector2 circlePos, float circleRadius)
+        public static Intersection IntersectionRectCircle(Vector2 referencePoint, Rectangle rect, Vector2 circlePos, float circleRadius)
         {
-            var segments = SRect.GetRectSegments(rect);
-            foreach (var seg in segments)
-            {
-                var intersection = IntersectionSegmentCircle(seg.start, seg.end, circlePos, circleRadius);
-                if (intersection.valid)
-                {
-                    return intersection;
-                }
-            }
-            return new();
+            return IntersectionSegmentsCircle(referencePoint, SRect.GetRectSegments(rect), circlePos, circleRadius);
+            //var segments = SRect.GetRectSegments(rect);
+            //foreach (var seg in segments)
+            //{
+            //    var intersection = IntersectionSegmentCircle(seg.start, seg.end, circlePos, circleRadius);
+            //    if (intersection.valid)
+            //    {
+            //        return intersection;
+            //    }
+            //}
+            //return new();
         }
         public static Intersection IntersectionRectSegment(Vector2 referencePoint, Rectangle rect, Vector2 start, Vector2 end)
         {
