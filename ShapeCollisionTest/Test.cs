@@ -27,7 +27,7 @@ namespace ShapeCollisionTest
         {
             if (Raylib.IsKeyReleased(KeyboardKey.KEY_SPACE))
             {
-                Program.ChangeTest(new Test6());
+                Program.ChangeTest(new Test4a());
             }
         }
         public override void Draw(Vector2 mousePos)
@@ -409,9 +409,138 @@ namespace ShapeCollisionTest
             if(info.overlapping) color = Raylib.ORANGE;
             dynamicColliders[dynIndex].DebugDrawShape(color);
 
-            foreach (var p in info.intersectionPoints)
+            //foreach (var p in info.intersectionPoints)
+            //{
+            //    Raylib.DrawCircleV(p, 5f, Raylib.RED);
+            //}
+
+        }
+
+        private Vector2 RandPos()
+        {
+            return SRNG.randPoint(new Rectangle(0, 0, 1920, 1080));
+        }
+    }
+    public class Test4a : Test
+    {
+        internal class Collidable : ICollidable
+        {
+            Collider collider;
+            public Collidable(Collider collider)
             {
-                Raylib.DrawCircleV(p, 5f, Raylib.RED);
+                this.collider = collider;
+            }
+
+            public Collider GetCollider()
+            {
+                return collider;
+            }
+
+            public string GetCollisionLayer()
+            {
+                return "all";
+            }
+
+            public string[] GetCollisionMask()
+            {
+                return new string[] { "all" };
+            }
+
+            public string GetID()
+            {
+                return "test";
+            }
+
+            public Vector2 GetPos()
+            {
+                return collider.Pos;
+            }
+            public void Overlap(OverlapInfo info)
+            {
+                return;
+            }
+        }
+
+        Collider dPoint = new();
+        CircleCollider dCircle = new(0, 0, SRNG.randF(50, 100));
+        SegmentCollider dSegment = new(new Vector2(0, 0), SRNG.randVec2(), 500);
+        RectCollider dRect = new(new Vector2(0f), new Vector2(100, 100), new Vector2(0.5f, 0.5f));
+        PolyCollider dPoly = new(0, 0, SPoly.GeneratePolygon(12, new(0f), 50, 150));
+        List<Collider> dynamicColliders = new();
+        int dynIndex = 0;
+
+        Collider sPoint = new();
+        CircleCollider sCircle = new(0, 0, SRNG.randF(200, 300));
+        SegmentCollider sSegment = new(new Vector2(0, 0), SRNG.randVec2(), 500);
+        RectCollider sRect = new(new Vector2(0f), new Vector2(500, 500), new Vector2(0.5f, 0.5f));
+        PolyCollider sPoly = new(0, 0, SPoly.GeneratePolygon(12, new(0f), 250, 400));
+        List<Collider> staticColliders = new();
+        int staIndex = 0;
+
+        public Test4a()
+        {
+            dPoint.Pos = RandPos();
+            dynamicColliders.Add(dPoint);
+            dCircle.Pos = RandPos();
+            dynamicColliders.Add(dCircle);
+            dSegment.Pos = RandPos();
+            dynamicColliders.Add(dSegment);
+            dRect.Pos = RandPos();
+            dynamicColliders.Add(dRect);
+            dPoly.Pos = RandPos();
+            dynamicColliders.Add(dPoly);
+
+            sPoint.Pos = RandPos();
+            staticColliders.Add(sPoint);
+            sCircle.Pos = RandPos();
+            staticColliders.Add(sCircle);
+            sSegment.Pos = RandPos();
+            staticColliders.Add(sSegment);
+            sRect.Pos = RandPos();
+            staticColliders.Add(sRect);
+            sPoly.Pos = RandPos();
+            staticColliders.Add(sPoly);
+        }
+
+        public override void Update(float dt, Vector2 mousePos)
+        {
+            if (Raylib.IsMouseButtonDown(MouseButton.MOUSE_BUTTON_LEFT))
+            {
+                dynamicColliders[dynIndex].Pos = mousePos;
+            }
+            else if (Raylib.IsMouseButtonDown(MouseButton.MOUSE_BUTTON_RIGHT))
+            {
+                staticColliders[staIndex].Pos = mousePos;
+            }
+
+            if (Raylib.IsKeyReleased(KeyboardKey.KEY_Q))
+            {
+                staIndex += 1;
+                if (staIndex >= staticColliders.Count) staIndex = 0;
+            }
+            if (Raylib.IsKeyReleased(KeyboardKey.KEY_E))
+            {
+                dynIndex += 1;
+                if (dynIndex >= dynamicColliders.Count) dynIndex = 0;
+            }
+        }
+        public override void Draw(Vector2 mousePos)
+        {
+            UIHandler.DrawTextAligned(String.Format("{0}", Raylib.GetFPS()), new(5, 5, 75, 50), 10, Raylib.GREEN, Alignement.TOPLEFT);
+            //Raylib.DrawCircleV(mousePos, 150, Raylib.WHITE);
+            Collidable a = new(staticColliders[staIndex]);
+            Collidable b = new(dynamicColliders[dynIndex]);
+            var info = SGeometry.GetOverlapInfo(a, b, true);
+            staticColliders[staIndex].DebugDrawShape(Raylib.BLUE);
+
+            Color color = Raylib.GREEN;
+            if (info.overlapping) color = Raylib.ORANGE;
+            dynamicColliders[dynIndex].DebugDrawShape(color);
+
+            if (info.intersection.valid)
+            {
+                Raylib.DrawCircleV(info.intersection.p, 5f, Raylib.RED);
+                Raylib.DrawLineEx(info.intersection.p, info.intersection.p + info.intersection.n * 300, 2f, Raylib.RED);
             }
 
         }
@@ -421,7 +550,6 @@ namespace ShapeCollisionTest
             return SRNG.randPoint(new Rectangle(0, 0, 1920, 1080));
         }
     }
-
     //stress test
     public class Test5 : Test
     {
@@ -532,10 +660,10 @@ namespace ShapeCollisionTest
                 Color color = Raylib.GREEN;
                 if (info.overlapping) color = Raylib.ORANGE;
                 col.GetCollider().DebugDrawShape(color);
-                foreach (var p in info.intersectionPoints)
-                {
-                    Raylib.DrawCircleV(p, 7f, Raylib.RED);
-                }
+                //foreach (var p in info.intersectionPoints)
+                //{
+                //    Raylib.DrawCircleV(p, 7f, Raylib.RED);
+                //}
             }
 
             DrawSign(staIndex, new Vector2(100, 150), 50, Raylib.WHITE);
