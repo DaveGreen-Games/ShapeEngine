@@ -110,10 +110,10 @@ namespace ShapeCollisionTest
 
             staticColliders[staIndex].DebugDrawShape(Raylib.YELLOW);
             dynamicColliders[dynIndex].DebugDrawShape(Raylib.GREEN);
-            Vector2 p = SClosestPoint.ClosestPoint(staticColliders[staIndex], dynamicColliders[dynIndex]);
-            Vector2 p2 = SClosestPoint.ClosestPoint(dynamicColliders[dynIndex], staticColliders[staIndex]);
-            Raylib.DrawCircleV(p, 10f, new Color(255, 0, 0, 150));
-            Raylib.DrawCircleV(p2, 10f, new Color(0, 0, 255, 150));
+            //Vector2 p = SClosestPoint.ClosestPoint(staticColliders[staIndex], dynamicColliders[dynIndex]);
+            //Vector2 p2 = SClosestPoint.ClosestPoint(dynamicColliders[dynIndex], staticColliders[staIndex]);
+            //Raylib.DrawCircleV(p, 10f, new Color(255, 0, 0, 150));
+            //Raylib.DrawCircleV(p2, 10f, new Color(0, 0, 255, 150));
         }
 
         private Vector2 RandPos()
@@ -195,11 +195,11 @@ namespace ShapeCollisionTest
 
             staticColliders[staIndex].DebugDrawShape(Raylib.YELLOW);
             dynamicColliders[dynIndex].DebugDrawShape(Raylib.GREEN);
-            var points = SGeometry.Intersect(staticColliders[staIndex], dynamicColliders[dynIndex]);
-            foreach (var p in points)
-            {
-                Raylib.DrawCircleV(p, 10f, new Color(255, 0, 0, 150));
-            }
+            //var points = SGeometry.Intersect(staticColliders[staIndex], dynamicColliders[dynIndex]);
+            //foreach (var p in points)
+            //{
+            //    Raylib.DrawCircleV(p, 10f, new Color(255, 0, 0, 150));
+            //}
             
         }
 
@@ -280,7 +280,7 @@ namespace ShapeCollisionTest
             UIHandler.DrawTextAligned(String.Format("{0}", Raylib.GetFPS()), new(5, 5, 75, 50), 10, Raylib.GREEN, Alignement.TOPLEFT);
             //Raylib.DrawCircleV(mousePos, 150, Raylib.WHITE);
 
-            bool contains = SContains.Contains(staticColliders[staIndex], dynamicColliders[dynIndex]);
+            bool contains = false;// SContains.Contains(staticColliders[staIndex], dynamicColliders[dynIndex]);
             staticColliders[staIndex].DebugDrawShape(Raylib.YELLOW);
             dynamicColliders[dynIndex].DebugDrawShape(contains ? Raylib.RED : Raylib.GREEN);
 
@@ -1121,33 +1121,4 @@ namespace ShapeCollisionTest
         }
     }
 
-    public class TestCircleCircleIntersection : Test
-    {
-        Vector2 start = SRNG.randPoint(new Rectangle(0, 0, 1920, 1080));
-        Vector2 end = SRNG.randPoint(new Rectangle(0, 0, 1920, 1080));
-        public TestCircleCircleIntersection()
-        {
-
-        }
-
-        public override void Update(float dt, Vector2 mousePos)
-        {
-
-        }
-        public override void Draw(Vector2 mousePos)
-        {
-            Vector2 aPos = new Vector2(1920, 1080) / 2;
-            float aR = 250f;
-            Vector2 bPos = mousePos;
-            float bR = 100f;
-            Drawing.DrawCircleLines(aPos, aR, 5f, Raylib.WHITE, 8f);
-            Drawing.DrawCircleLines(bPos, bR, 5f, Raylib.GREEN, 8f);
-            //Raylib.DrawLineEx(start, end, 4f, Raylib.GREEN);
-            var intersections = SGeometry.IntersectCircleCircle(aPos, aR, bPos, bR);
-            foreach (var point in intersections)
-            {
-                Raylib.DrawCircleV(point, 20f, Raylib.RED);
-            }
-        }
-    }
 }
