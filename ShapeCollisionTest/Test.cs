@@ -530,7 +530,7 @@ namespace ShapeCollisionTest
             //Raylib.DrawCircleV(mousePos, 150, Raylib.WHITE);
             Collidable a = new(staticColliders[staIndex]);
             Collidable b = new(dynamicColliders[dynIndex]);
-            var info = SGeometry.GetOverlapInfo(a, b, true);
+            var info = SGeometry.GetOverlapInfo(b, a, true);
             staticColliders[staIndex].DebugDrawShape(Raylib.BLUE);
 
             Color color = Raylib.GREEN;
@@ -541,6 +541,12 @@ namespace ShapeCollisionTest
             {
                 Raylib.DrawCircleV(info.intersection.p, 5f, Raylib.RED);
                 Raylib.DrawLineEx(info.intersection.p, info.intersection.p + info.intersection.n * 300, 2f, Raylib.RED);
+
+                foreach (var intersections in info.intersection.points)
+                {
+                    Raylib.DrawCircleV(intersections.p, 5f, new(200, 0, 0, 200));
+                    Raylib.DrawLineEx(intersections.p, intersections.p + intersections.n * 300, 2f, new(200, 0, 0, 200));
+                }
             }
 
         }
