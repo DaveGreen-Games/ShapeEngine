@@ -1,6 +1,7 @@
 ﻿using ShapeLib;
 using System.Numerics;
 using Raylib_CsLo;
+using System.Globalization;
 
 namespace ShapeCollision
 {
@@ -139,7 +140,32 @@ namespace ShapeCollision
             
         }
 
-        private List<QueryInfo> GetQueryInfo(Collider caster, bool getIntersections, params string[] collisionMask)
+        public static void SortQueryInfoPoints(Vector2 p, QueryInfo info)
+        {
+            if (!info.intersection.valid) return;
+            if (info.intersection.points.Count <= 1) return;
+            info.intersection.points.Sort
+            (
+                (a, b) =>
+                {
+                    float la = (p - a.p).LengthSquared();
+                    float lb = (p - b.p).LengthSquared();
+
+                    if (la > lb) return 1;
+                    else if (la == lb) return 0;
+                    else return -1;
+                }
+            );
+        }
+        public static void SortQueryInfoPoints(Vector2 p, List<QueryInfo> infos)
+        {
+            foreach (var info in infos)
+            {
+                SortQueryInfoPoints(p, info);
+            }
+        }
+        
+        private List<QueryInfo> GetQueryInfo(Collider caster, bool getIntersections, bool sorted = false, params string[] collisionMask)
         {
             List<QueryInfo> infos = new();
             List<ICollidable> objects = spatialHash.GetObjects(caster);
@@ -167,11 +193,29 @@ namespace ShapeCollision
                     }
                 }
             }
+
+            if (sorted)
+            {
+                infos.Sort
+                (
+                    (a, b) =>
+                    {
+                        Vector2 pos = caster.Pos;
+                        float la = (pos - a.collidable.GetPos()).LengthSquared();
+                        float lb = (pos - b.collidable.GetPos()).LengthSquared();
+
+                        if (la > lb) return 1;
+                        else if (la == lb) return 0;
+                        else return -1;
+                    }
+                );
+            }
+
             return infos;
         }
-        public List<QueryInfo> QuerySpace(ICollidable caster)
+        public List<QueryInfo> QuerySpace(ICollidable caster, bool sorted = false)
         {
-            return GetQueryInfo(caster.GetCollider(), caster.GetCollider().CheckIntersections, caster.GetCollisionMask());
+            return GetQueryInfo(caster.GetCollider(), caster.GetCollider().CheckIntersections, sorted, caster.GetCollisionMask());
             //List<QueryInfo> infos = new();
             //List<ICollidable> objects = spatialHash.GetObjects(caster);
             //foreach (ICollidable obj in objects)
@@ -200,9 +244,9 @@ namespace ShapeCollision
             //}
             //return infos;
         }
-        public List<QueryInfo> QuerySpace(Collider collider, params string[] collisionMask)
+        public List<QueryInfo> QuerySpace(Collider collider, bool sorted = false, params string[] collisionMask)
         {
-            return GetQueryInfo(collider, collider.CheckIntersections, collisionMask);
+            return GetQueryInfo(collider, collider.CheckIntersections, sorted, collisionMask);
             //List<QueryInfo> infos = new();
             //List<ICollidable> objects = spatialHash.GetObjects(collider);
             //foreach (ICollidable obj in objects)
@@ -227,10 +271,10 @@ namespace ShapeCollision
             //}
             //return infos;
         }
-        public List<QueryInfo> QuerySpace(Rectangle rect, bool getIntersections,params string[] collisionMask)
+        public List<QueryInfo> QuerySpace(Rectangle rect, bool getIntersections, bool sorted = false, params string[] collisionMask)
         {
             RectCollider collider = new(rect);
-            return GetQueryInfo(collider, getIntersections, collisionMask);
+            return GetQueryInfo(collider, getIntersections, sorted, collisionMask);
             //List<ICollidable> bodies = new();
             //List<ICollidable> objects = spatialHash.GetObjects(collider);
             //foreach (ICollidable obj in objects)
@@ -256,10 +300,10 @@ namespace ShapeCollision
             //}
             //return bodies;
         }
-        public List<QueryInfo> QuerySpace(Vector2 pos, float r, bool getIntersections, params string[] collisionMask)
+        public List<QueryInfo> QuerySpace(Vector2 pos, float r, bool getIntersections, bool sorted = false, params string[] collisionMask)
         {
             CircleCollider collider = new(pos, r);
-            return GetQueryInfo(collider, getIntersections, collisionMask);
+            return GetQueryInfo(collider, getIntersections, sorted, collisionMask);
             //List<ICollidable> bodies = new();
             //List<ICollidable> objects = spatialHash.GetObjects(collider);
             //foreach (ICollidable obj in objects)
@@ -285,10 +329,10 @@ namespace ShapeCollision
             //}
             //return bodies;
         }
-        public List<QueryInfo> QuerySpace(Vector2 pos, Vector2 size, Vector2 alignement, bool getIntersections, params string[] collisionMask)
+        public List<QueryInfo> QuerySpace(Vector2 pos, Vector2 size, Vector2 alignement, bool getIntersections, bool sorted = false, params string[] collisionMask)
         {
             RectCollider collider = new(pos, size, alignement);
-            return GetQueryInfo(collider, getIntersections, collisionMask);
+            return GetQueryInfo(collider, getIntersections, sorted, collisionMask);
             //List<ICollidable> bodies = new();
             //List<ICollidable> objects = spatialHash.GetObjects(collider);
             //foreach (ICollidable obj in objects)
@@ -314,10 +358,10 @@ namespace ShapeCollision
             //}
             //return bodies;
         }
-        public List<QueryInfo> QuerySpace(Vector2 pos, Vector2 dir, float length, bool getIntersections, params string[] collisionMask)
+        public List<QueryInfo> QuerySpace(Vector2 pos, Vector2 dir, float length, bool getIntersections, bool sorted = false, params string[] collisionMask)
         {
             SegmentCollider collider = new(pos, dir, length);
-            return GetQueryInfo(collider, getIntersections, collisionMask);
+            return GetQueryInfo(collider, getIntersections, sorted, collisionMask);
             //List<ICollidable> bodies = new();
             //List<ICollidable> objects = spatialHash.GetObjects(collider);
             //foreach (ICollidable obj in objects)
@@ -343,10 +387,10 @@ namespace ShapeCollision
             //}
             //return bodies;
         }
-        public List<QueryInfo> QuerySpace(Vector2 start, Vector2 end, bool getIntersections, params string[] collisionMask)
+        public List<QueryInfo> QuerySpace(Vector2 start, Vector2 end, bool getIntersections, bool sorted = false, params string[] collisionMask)
         {
             SegmentCollider collider = new(start, end);
-            return GetQueryInfo(collider, getIntersections, collisionMask);
+            return GetQueryInfo(collider, getIntersections, sorted, collisionMask);
             //List<ICollidable> bodies = new();
             //List<ICollidable> objects = spatialHash.GetObjects(collider);
             //foreach (ICollidable obj in objects)
@@ -374,7 +418,7 @@ namespace ShapeCollision
         }
 
 
-        private List<ICollidable> GetCastBodies(Collider caster, params string[] collisionMask)
+        private List<ICollidable> GetCastBodies(Collider caster, bool sorted = false, params string[] collisionMask)
         {
             List<ICollidable> bodies = new();
             List<ICollidable> objects = spatialHash.GetObjects(caster);
@@ -398,11 +442,27 @@ namespace ShapeCollision
                     }
                 }
             }
+            if (sorted)
+            {
+                bodies.Sort
+                (
+                    (a, b) =>
+                    {
+                        Vector2 pos = caster.Pos;
+                        float la = (pos - a.GetPos()).LengthSquared();
+                        float lb = (pos - b.GetPos()).LengthSquared();
+
+                        if (la > lb) return 1;
+                        else if (la == lb) return 0;
+                        else return -1;
+                    }
+                );
+            }
             return bodies;
         }
-        public List<ICollidable> CastSpace(ICollidable caster)
+        public List<ICollidable> CastSpace(ICollidable caster, bool sorted = false)
         {
-            return GetCastBodies(caster.GetCollider(), caster.GetCollisionMask());
+            return GetCastBodies(caster.GetCollider(), sorted, caster.GetCollisionMask());
             //List<ICollidable> bodies = new();
             //List<ICollidable> objects = spatialHash.GetObjects(caster);
             //foreach (ICollidable obj in objects)
@@ -427,9 +487,9 @@ namespace ShapeCollision
             //}
             //return bodies;
         }
-        public List<ICollidable> CastSpace(Collider collider, params string[] collisionMask)
+        public List<ICollidable> CastSpace(Collider collider, bool sorted = false, params string[] collisionMask)
         {
-            return GetCastBodies(collider, collisionMask);
+            return GetCastBodies(collider, sorted, collisionMask);
             //List<ICollidable> bodies = new();
             //List<ICollidable> objects = spatialHash.GetObjects(collider);
             //foreach (ICollidable obj in objects)
@@ -454,10 +514,10 @@ namespace ShapeCollision
             //}
             //return bodies;
         }
-        public List<ICollidable> CastSpace(Rectangle rect, params string[] collisionMask)
+        public List<ICollidable> CastSpace(Rectangle rect, bool sorted = false, params string[] collisionMask)
         {
             RectCollider collider = new(rect);
-            return GetCastBodies(collider, collisionMask);
+            return GetCastBodies(collider, sorted, collisionMask);
             //List<ICollidable> bodies = new();
             //List<ICollidable> objects = spatialHash.GetObjects(collider);
             //foreach (ICollidable obj in objects)
@@ -483,10 +543,10 @@ namespace ShapeCollision
             //}
             //return bodies;
         }
-        public List<ICollidable> CastSpace(Vector2 pos, float r, params string[] collisionMask)
+        public List<ICollidable> CastSpace(Vector2 pos, float r, bool sorted = false, params string[] collisionMask)
         {
             CircleCollider collider = new(pos, r);
-            return GetCastBodies(collider, collisionMask);
+            return GetCastBodies(collider, sorted, collisionMask);
             //List<ICollidable> bodies = new();
             //List<ICollidable> objects = spatialHash.GetObjects(collider);
             //foreach (ICollidable obj in objects)
@@ -512,10 +572,10 @@ namespace ShapeCollision
             //}
             //return bodies;
         }
-        public List<ICollidable> CastSpace(Vector2 pos, Vector2 size, Vector2 alignement, params string[] collisionMask)
+        public List<ICollidable> CastSpace(Vector2 pos, Vector2 size, Vector2 alignement, bool sorted = false, params string[] collisionMask)
         {
             RectCollider collider = new(pos, size, alignement);
-            return GetCastBodies(collider, collisionMask);
+            return GetCastBodies(collider, sorted, collisionMask);
             //List<ICollidable> bodies = new();
             //List<ICollidable> objects = spatialHash.GetObjects(collider);
             //foreach (ICollidable obj in objects)
@@ -541,10 +601,10 @@ namespace ShapeCollision
             //}
             //return bodies;
         }
-        public List<ICollidable> CastSpace(Vector2 pos, Vector2 dir, float length, params string[] collisionMask)
+        public List<ICollidable> CastSpace(Vector2 pos, Vector2 dir, float length, bool sorted = false, params string[] collisionMask)
         {
             SegmentCollider collider = new(pos, dir, length);
-            return GetCastBodies(collider, collisionMask);
+            return GetCastBodies(collider, sorted, collisionMask);
             //List<ICollidable> bodies = new();
             //List<ICollidable> objects = spatialHash.GetObjects(collider);
             //foreach (ICollidable obj in objects)
@@ -570,10 +630,10 @@ namespace ShapeCollision
             //}
             //return bodies;
         }
-        public List<ICollidable> CastSpace(Vector2 start, Vector2 end, params string[] collisionMask)
+        public List<ICollidable> CastSpace(Vector2 start, Vector2 end, bool sorted = false, params string[] collisionMask)
         {
             SegmentCollider collider = new(start, end);
-            return GetCastBodies(collider, collisionMask);
+            return GetCastBodies(collider, sorted, collisionMask);
             //List<ICollidable> bodies = new();
             //List<ICollidable> objects = spatialHash.GetObjects(collider);
             //foreach (ICollidable obj in objects)
