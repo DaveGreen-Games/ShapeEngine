@@ -4,16 +4,25 @@ using ShapeLib;
 
 namespace ShapeCollision
 {
-    public struct OverlapInfo
+    public interface ICollidable
+    {
+        public string GetID();
+        public Collider GetCollider();
+        public void Overlap(CollisionInfo info);
+        public Vector2 GetPos();
+        public string GetCollisionLayer();
+        public string[] GetCollisionMask();
+    }
+    public struct CollisionInfo
     {
         public bool overlapping;
-        public ICollidable? self;//area
-        public ICollidable? other;//entity
+        public ICollidable? self;
+        public ICollidable? other;
         public Vector2 selfVel;
         public Vector2 otherVel;
         public Intersection intersection;
-        public OverlapInfo() { overlapping = false; self = null; other = null; this.selfVel = new(0f); this.otherVel = new(0f); this.intersection = new(); }
-        public OverlapInfo(bool overlapping, ICollidable self, ICollidable other)
+        public CollisionInfo() { overlapping = false; self = null; other = null; this.selfVel = new(0f); this.otherVel = new(0f); this.intersection = new();}
+        public CollisionInfo(bool overlapping, ICollidable self, ICollidable other)
         {
             this.overlapping = overlapping;
             this.other = other;
@@ -22,7 +31,7 @@ namespace ShapeCollision
             this.otherVel = other.GetCollider().Vel;
             this.intersection = new();
         }
-        public OverlapInfo(bool overlapping, ICollidable self, ICollidable other, Intersection intersection)
+        public CollisionInfo(bool overlapping, ICollidable self, ICollidable other, Intersection intersection)
         {
             this.overlapping = overlapping;
             this.other = other;
@@ -31,7 +40,6 @@ namespace ShapeCollision
             this.otherVel = other.GetCollider().Vel;
             this.intersection = intersection;
         }
-        
     }
     public struct Intersection
     {
@@ -48,15 +56,32 @@ namespace ShapeCollision
             this.points = points;
         }
     }
-    public interface ICollidable
+    
+    /*
+    public struct Cast
     {
-        public string GetID();
-        public Collider GetCollider();
-        public void Overlap(OverlapInfo info);
-        public Vector2 GetPos();
-        public string GetCollisionLayer();
-        public string[] GetCollisionMask();
+        public bool collided;
+        public bool overlapping;
+        public float time;
+        public Vector2 colP;
+        public Vector2 intersectP;
+        public Vector2 n;
+
+        public Cast() { this.collided = false; this.overlapping = false; this.time = -1f; this.colP = new(0f); this.intersectP = new(0f); this.n = new(0f); }
+        public Cast(bool overlapping) { this.overlapping = overlapping; this.collided = false; this.time = -1f; this.colP = new(0f); this.intersectP = new(0f); this.n = new(0f); }
+        public Cast(bool overlapping, bool collided, float time, Vector2 intersectP, Vector2 colP, Vector2 n)
+        {
+            this.collided = collided;
+            this.overlapping = overlapping;
+            this.time = time;
+            this.colP = colP;
+            this.intersectP = intersectP;
+            this.n = n;
+        }
     }
+    */
+    
+    /*
     public struct CastInfo
     {
         public bool overlapping = false;
@@ -87,18 +112,19 @@ namespace ShapeCollision
             this.otherVel = otherVel;
         }
     }
-
+    */
 
     public static class SGeometry
     {
         //exact point line, point segment and point point overlap calculations are used if <= 0
         public static float POINT_RADIUS = 5.0f; //point line and point segment overlap makes more sense when the point is a circle (epsilon = radius)
 
-        public static OverlapInfo GetOverlapInfo(ICollidable self, ICollidable other, bool checkIntersections)
+        public static CollisionInfo GetCollisionInfo(ICollidable self, ICollidable other)
         {
             bool overlap = Overlap(self, other);
             if (overlap)
             {
+                bool checkIntersections = self.GetCollider().CheckIntersections;
                 var intersection = checkIntersections ? Intersection(self.GetCollider(), other.GetCollider()) : new();
 
                 return new(true, self, other, intersection);
@@ -1786,7 +1812,7 @@ namespace ShapeCollision
             return true;
         }
 
-
+        /*
         private static (bool intersected, Vector2 intersectPoint, float time) IntersectPointCircle(Vector2 point, Vector2 vel, Vector2 circlePos, float radius)
         {
             Vector2 w = circlePos - point;
@@ -1803,7 +1829,338 @@ namespace ShapeCollision
             return (true, intersectionPoint, t);
         }
 
-        public static CastInfo CastIntersection(Collider point, CircleCollider circle, float dt)
+        public static Cast Cast(Collider a, Collider b, float dt)
+        {
+            if (a is CircleCollider)
+            {
+                if(b is CircleCollider)
+                {
+                    return CastIntersection((CircleCollider)a, (CircleCollider)b, dt);
+                }
+                else if(b is SegmentCollider)
+                {
+                    return CastIntersection((CircleCollider)a, (SegmentCollider)b, dt);
+                }
+                else
+                {
+                    return CastIntersection((CircleCollider)a, b, dt);
+                }
+            }
+            else return new();
+        }
+        
+       
+        public static Cast CastIntersection(CircleCollider circle, Collider point, float dt)
+        {
+            bool overlapping = SGeometry.Overlap(circle, point);// Contains(circle.Pos, circle.Radius, point.Pos);
+            Vector2 vel = circle.Vel - point.Vel;
+            vel *= dt;
+            if (overlapping || vel.LengthSquared() <= 0.0f) return new(overlapping);
+
+            Vector2 w = point.Pos - circle.Pos;
+
+            float qa = vel.LengthSquared();
+            float qb = vel.X * w.X + vel.Y * w.Y;
+            float qc = w.LengthSquared() - circle.RadiusSquared;
+            float qd = qb * qb - qa * qc;
+            if (qd < 0) return new();
+            float t = (qb - MathF.Sqrt(qd)) / qa;
+            if (t < 0 || t > 1) return new();
+
+            Vector2 intersectionPoint = circle.Pos + vel * t;
+            Vector2 collisionPoint = point.Pos;
+            Vector2 normal = (intersectionPoint - point.Pos) / circle.Radius;
+            return new(false, true, t, intersectionPoint, collisionPoint, normal);
+        }
+        public static Cast CastIntersection(CircleCollider self, CircleCollider other, float dt)
+        {
+            bool overlapping = SGeometry.Overlap(self, other);
+            Vector2 vel = self.Vel - other.Vel;
+            vel *= dt;
+            if (overlapping || vel.LengthSquared() <= 0.0f) return new(overlapping);
+
+            float r = self.Radius + other.Radius;
+            var intersectionInfo = IntersectPointCircle(self.Pos, vel, other.Pos, r);
+            if (!intersectionInfo.intersected) return new();
+            Vector2 normal = (intersectionInfo.intersectPoint - other.Pos) / r;
+            Vector2 collisionPoint = other.Pos + normal * other.Radius;
+            return new(false, true, intersectionInfo.time, intersectionInfo.intersectPoint, collisionPoint, normal);
+        }
+        public static Cast CastIntersection(CircleCollider circle, SegmentCollider segment, float dt)
+        {
+            bool overlapping = SGeometry.Overlap(circle, segment);
+            Vector2 vel = circle.Vel - segment.Vel;
+            vel *= dt;
+            if (overlapping || vel.LengthSquared() <= 0.0f) return new(overlapping);
+            Vector2 sv = segment.Dir * segment.Length;
+            float p = sv.X * vel.Y - sv.Y * vel.X;
+            if (p < 0.0f)
+            {
+
+                Vector2 point = new(segment.Pos.X - segment.Dir.Y * circle.Radius, segment.Pos.Y + segment.Dir.X * circle.Radius);// segment.Pos - segment.Dir * circle.Radius;
+                Vector2 w1 = point - circle.Pos;
+                float ts = (vel.X * w1.Y - vel.Y * w1.X) / p;
+                if (ts < 0.0f)
+                {
+                    Vector2 w2 = segment.Pos - circle.Pos;
+                    float qa = vel.LengthSquared();
+                    float qb = vel.X * w2.X + vel.Y * w2.Y;
+                    float qc = w2.LengthSquared() - circle.RadiusSquared;
+                    float qd = qb * qb - qa * qc;
+                    if (qd < 0.0f) return new();
+                    float t = (qb - MathF.Sqrt(qd)) / qa;
+                    if (t < 0.0f || t > 1.0f) return new();
+
+                    //return values
+                    Vector2 intersectionPoint = circle.Pos + vel * t;
+                    Vector2 collisionPoint = segment.Pos;
+                    Vector2 normal = (intersectionPoint - segment.Pos) / circle.Radius;
+                    return new(false, true, t, intersectionPoint, collisionPoint, normal);
+                }
+                else if (ts > 1.0f)
+                {
+                    Vector2 end = segment.Pos + sv;
+                    Vector2 w2 = end - circle.Pos;
+                    float qa = vel.LengthSquared();
+                    float qb = vel.X * w2.X + vel.Y * w2.Y;
+                    float qc = w2.LengthSquared() - circle.RadiusSquared;
+                    float qd = qb * qb - qa * qc;
+                    if (qd < 0.0f) return new();
+                    float t = (qb - MathF.Sqrt(qd)) / qa;
+                    if (t < 0.0f || t > 1.0f) return new();
+
+                    //return values
+                    Vector2 intersectionPoint = circle.Pos + vel * t;
+                    Vector2 collisionPoint = end;
+                    Vector2 normal = (intersectionPoint - end) / circle.Radius;
+                    return new(false, true, t, intersectionPoint, collisionPoint, normal);
+                }
+                else
+                {
+                    float t = (sv.X * w1.Y - sv.Y * w1.X) / p;
+                    if (t < 0.0f || t > 1.0f) return new();
+
+                    //return values
+                    Vector2 intersectionPoint = circle.Pos + vel * t;
+                    Vector2 collisionPoint = new(intersectionPoint.X + segment.Dir.Y * circle.Radius, intersectionPoint.Y - segment.Dir.X * circle.Radius);
+                    Vector2 normal = new(-segment.Dir.Y, segment.Dir.X);
+                    return new(false, true, t, intersectionPoint, collisionPoint, normal);
+                }
+            }
+            else if (p > 0.0f)
+            {
+                Vector2 p1 = new(segment.Pos.X + segment.Dir.Y * circle.Radius, segment.Pos.Y - segment.Dir.X * circle.Radius);// segment.Pos + segment.Dir * circle.Radius;
+                Vector2 w1 = p1 - circle.Pos;
+                float ts = (vel.X * w1.Y - vel.Y * w1.X) / p;
+                if (ts < 0.0f)
+                {
+                    Vector2 w2 = segment.Pos - circle.Pos;
+                    float qa = vel.LengthSquared();
+                    float qb = vel.X * w2.X + vel.Y * w2.Y;
+                    float qc = w2.LengthSquared() - circle.RadiusSquared;
+                    float qd = qb * qb - qa * qc;
+                    if (qd < 0.0f) return new();
+                    float t = (qb - MathF.Sqrt(qd)) / qa;
+                    if (t < 0.0f || t > 1.0f) return new();
+
+                    Vector2 intersectionPoint = circle.Pos + vel * t;
+                    Vector2 collisionPoint = segment.Pos;
+                    Vector2 normal = (intersectionPoint - segment.Pos) / circle.Radius;
+                    return new(false, true, t, intersectionPoint, collisionPoint, normal);
+                }
+                else if (ts > 1.0f)
+                {
+                    Vector2 end = segment.Pos + sv;// segment.End;
+                    Vector2 w2 = end - circle.Pos;
+                    float qa = vel.LengthSquared();
+                    float qb = vel.X * w2.X + vel.Y * w2.Y;
+                    float qc = w2.LengthSquared() - circle.RadiusSquared;
+                    float qd = qb * qb - qa * qc;
+                    if (qd < 0.0f) return new();
+                    float t = (qb - MathF.Sqrt(qd)) / qa;
+                    if (t < 0.0f || t > 1.0f) return new();
+
+                    Vector2 intersectionPoint = circle.Pos + vel * t;
+                    Vector2 collisionPoint = end;
+                    Vector2 normal = (intersectionPoint - end) / circle.Radius;
+                    return new(false, true, t, intersectionPoint, collisionPoint, normal);
+                }
+                else
+                {
+                    float t = (sv.X * w1.Y - sv.Y * w1.X) / p;
+                    if (t < 0.0f || t > 1.0f) return new();
+
+                    Vector2 intersectionPoint = circle.Pos + vel * t;
+                    Vector2 collisionPoint = new(intersectionPoint.X - segment.Dir.Y * circle.Radius, intersectionPoint.Y + segment.Dir.X * circle.Radius); // intersectionPoint - segment.Dir * circle.Radius;
+                    Vector2 normal = new(segment.Dir.Y, -segment.Dir.X);
+                    return new(false, true, t, intersectionPoint, collisionPoint,normal);
+                }
+            }
+            else
+            {
+                return new(true);
+            }
+        }
+        */
+
+        /*
+       public static Cast CastIntersection(Collider point, CircleCollider circle, float dt)
+       {
+           bool overlapping = SGeometry.Overlap(point, circle);// Contains(circle.Pos, circle.Radius, point.Pos);
+           Vector2 vel = point.Vel - circle.Vel; //-> simple way of making sure second object is static and first is dynamic
+           vel *= dt;
+           if (overlapping || vel.LengthSquared() <= 0.0f) return new(overlapping);
+
+           Vector2 w = circle.Pos - point.Pos;
+           float qa = vel.LengthSquared();
+           float qb = vel.X * w.X + vel.Y * w.Y;
+           float qc = w.LengthSquared() - circle.RadiusSquared;
+           float qd = qb * qb - qa * qc;
+
+           if (qd < 0.0f) return new();
+           float t = (qb - MathF.Sqrt(qd)) / qa;
+           if (t < 0.0f || t > 1.0f) return new();
+
+           Vector2 intersectPoint = point.Pos + vel * t;
+           Vector2 collisionPoint = intersectPoint;
+           Vector2 normal = (intersectPoint - circle.Pos) / circle.Radius;
+           float remaining = 1.0f - t;
+           return new(false, true, t, intersectPoint, collisionPoint, normal);
+       }
+       public static Cast CastIntersection(Collider self, Collider other, float dt)
+       {
+           //REAL Point - Point collision basically never happens.... so this is the point - circle cast code!!!
+           CircleCollider circle = new(other.Pos, other.Vel, POINT_RADIUS);
+
+           bool overlapping = SGeometry.Overlap(self, circle);// Contains(circle.Pos, circle.Radius, point.Pos);
+           Vector2 vel = self.Vel - circle.Vel; //-> simple way of making sure second object is static and first is dynamic
+           vel *= dt;
+           if (overlapping || vel.LengthSquared() <= 0.0f) return new(overlapping);
+
+           Vector2 w = circle.Pos - self.Pos;
+           float qa = vel.LengthSquared();
+           float qb = vel.X * w.X + vel.Y * w.Y;
+           float qc = w.LengthSquared() - circle.RadiusSquared;
+           float qd = qb * qb - qa * qc;
+
+           if (qd < 0.0f) return new();
+           float t = (qb - MathF.Sqrt(qd)) / qa;
+           if (t < 0.0f || t > 1.0f) return new();
+
+           Vector2 intersectPoint = self.Pos + vel * t;
+           Vector2 collisionPoint = intersectPoint;
+           Vector2 normal = (intersectPoint - circle.Pos) / circle.Radius;
+           return new(false, true, t, intersectPoint, collisionPoint, normal);
+
+       }
+       public static Cast CastIntersection(Collider point, SegmentCollider segment, float dt)
+       {
+           //bool overlapping = Overlap.Simple(point, segment);
+           Vector2 vel = point.Vel - segment.Vel;
+           vel *= dt;
+           if (vel.LengthSquared() <= 0.0f) return new();
+           Vector2 sv = segment.Dir * segment.Length;
+           Vector2 w = segment.Pos - point.Pos;
+           float projectionTime = -(w.X * sv.X + w.Y * sv.Y) / sv.LengthSquared();
+           if (projectionTime < 0.0f)//behind
+           {
+               float p = sv.X * vel.Y - sv.Y * vel.X;
+               if (p == 0.0f)//parallel
+               {
+                   float c = w.X * segment.Dir.Y - w.Y * segment.Dir.X;
+                   if (c != 0.0f) return new();
+                   float t;
+                   if (vel.X == 0.0f) t = w.Y / vel.Y;
+                   else t = w.X / vel.X;
+                   if (t < 0.0f || t > 1.0f) return new();
+
+                   Vector2 intersectionPoint = segment.Pos;
+                   Vector2 collisionPoint = intersectionPoint;
+                   Vector2 normal = segment.Dir * -1.0f;
+                   return new(false, true, t, intersectionPoint, collisionPoint, normal);
+               }
+               else //not parallel
+               {
+                   float ts = (vel.X * w.Y - vel.Y * w.X) / p;
+                   if (ts < 0.0f || ts > 1.0f) return new();
+                   float t = (sv.X * w.Y - sv.Y * w.X) / p;
+                   if (t < 0.0f || t > 1.0f) return new();
+                   if (ts == 0.0f)
+                   {
+                       Vector2 intersectionPoint = segment.Pos;
+                       Vector2 collisionPoint = intersectionPoint;
+                       Vector2 normal = segment.Dir * -1.0f;
+                       return new(false, true, t, intersectionPoint, collisionPoint, normal);
+                   }
+                   else
+                   {
+                       Vector2 intersectionPoint = point.Pos + vel * t;
+                       Vector2 collisionPoint = intersectionPoint;
+                       Vector2 normal;
+                       if (p < 0) normal = new(-segment.Dir.Y, segment.Dir.X);
+                       else normal = new(segment.Dir.Y, -segment.Dir.X);
+                       return new(false, true, t, intersectionPoint, collisionPoint, normal);
+                   }
+               }
+           }
+           else if (projectionTime > 1.0f)//ahead
+           {
+               float p = sv.X * vel.Y - sv.Y * vel.X;
+               if (p == 0.0f) //parallel
+               {
+                   float c = w.X * segment.Dir.Y - w.Y * segment.Dir.X;
+                   if (c != 0.0f) return new();
+                   float t = vel.X == 0.0f ? w.Y / vel.Y - 1.0f : w.X / vel.X - 1.0f;
+                   if (t < 0.0f || t > 1.0f) return new();
+
+                   Vector2 intersectionPoint = segment.End;
+                   Vector2 collisionPoint = intersectionPoint;
+                   Vector2 normal = segment.Dir;
+                   return new(false, true, t, intersectionPoint, collisionPoint, normal);
+               }
+               else // not parallel
+               {
+                   float ts = (vel.X * w.Y - vel.Y * w.X) / p;
+                   if (ts < 0.0f || ts > 1.0f) return new();
+                   float t = (sv.X * w.Y - sv.Y * w.X) / p;
+                   if (t < 0.0f || t > 1.0f) return new();
+
+                   Vector2 intersectionPoint = segment.End;
+                   Vector2 collisionPoint = intersectionPoint;
+                   Vector2 normal = segment.Dir;
+
+                   if (ts != 1.0f)
+                   {
+                       intersectionPoint = point.Pos + vel * t;
+                       collisionPoint = intersectionPoint;
+                       normal = p < 0.0f ? new(-segment.Dir.Y, segment.Dir.X) : new(segment.Dir.Y, -segment.Dir.X);
+                   }
+
+                   return new(false, true, t, intersectionPoint, collisionPoint, normal);
+               }
+           }
+           else//on
+           {
+               float p = sv.X * vel.Y - sv.Y * vel.X;
+               if (p == 0.0f) return new();
+               float ts = (vel.X * w.Y - vel.Y * w.X) / p;
+               if (ts < 0.0f || ts > 1.0f) return new();
+               float t = (sv.X * w.Y - sv.Y * w.X) / p;
+               if (t < 0.0f || t > 1.0f) return new();
+
+               Vector2 intersectionPoint = point.Pos + vel * t;
+               Vector2 collisionPoint = intersectionPoint;
+               Vector2 normal = p < 0.0f ? new(-segment.Dir.Y, segment.Dir.X) : new(segment.Dir.Y, -segment.Dir.X);
+               return new(false, true, t, intersectionPoint, collisionPoint, normal);
+           }
+       }
+       */
+
+    }
+}
+
+/*
+ public static CastInfo CastIntersection(Collider point, CircleCollider circle, float dt)
         {
             bool overlapping = SGeometry.Overlap(point, circle);// Contains(circle.Pos, circle.Radius, point.Pos);
             Vector2 vel = point.Vel - circle.Vel; //-> simple way of making sure second object is static and first is dynamic
@@ -1904,38 +2261,7 @@ namespace ShapeCollision
             Vector2 reflectVector = new(remaining * (vel.X - d * normal.X), remaining * (vel.Y - d * normal.Y));
             //Vector2 reflectPoint = intersectPoint + reflectVector;
             return new(false, true, t, intersectPoint, collisionPoint, reflectVector, normal, self.Vel, circle.Vel);
-            /*
-            bool overlapping = Overlap.Simple(self, other);
-            Vector2 vel = self.Vel - other.Vel;
-            if (overlapping || vel.LengthSquared() <= 0.0f) return new CollisionInfo() { collided = false, overlapping = overlapping };
-
-            Vector2 w = Helper.Floor(other.Pos) - Helper.Floor(self.Pos); //displacement
-            float p = w.X * vel.Y - w.Y * vel.X; //perpendicular product
-            if(p != 0.0f) return new CollisionInfo { overlapping = false, collided = false };
-            float t = (w.X * vel.X + w.Y * vel.Y) / vel.LengthSquared();
-            if(t < 0.0f || t > 1.0f) return new CollisionInfo() { overlapping = false, collided=false };
-
-            Vector2 intersectionPoint = other.Pos;
-            Vector2 collisionPoint = intersectionPoint;
-            float len = vel.Length();
-            Vector2 normal = -vel / len;
-            float remaining = 1.0f - t;
-            float d = (vel.X * normal.X + vel.Y * normal.Y) * 2.0f;
-            Vector2 reflectVector = new(remaining * (vel.X - normal.X * d), remaining * (self.Vel.Y - normal.Y * d));
-            Vector2 reflectPoint = intersectionPoint + reflectVector;
-
-            return new CollisionInfo 
-            { 
-                overlapping = false, 
-                collided = true,
-                self = new CollisionResponse { shape = self, available = true, normal = normal, intersectPoint = intersectionPoint, reflectVector = reflectVector, reflectPoint = reflectPoint },
-                other = new CollisionResponse { shape = other, available = false},
-                intersectPoint = intersectionPoint,
-                collisionPoint = collisionPoint,
-                time = t,
-                remaining = remaining
-            };
-            */
+           
         }
         public static CastInfo CastIntersection(Collider point, SegmentCollider segment, float dt)
         {
@@ -2535,8 +2861,7 @@ namespace ShapeCollision
             }
         }
 
-    }
-}
+*/
 
 
 /*
