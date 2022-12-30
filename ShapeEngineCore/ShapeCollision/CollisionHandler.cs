@@ -194,7 +194,7 @@ namespace ShapeCollision
                 }
             }
 
-            if (sorted)
+            if (sorted && infos.Count > 1)
             {
                 infos.Sort
                 (
@@ -442,7 +442,7 @@ namespace ShapeCollision
                     }
                 }
             }
-            if (sorted)
+            if (sorted && bodies.Count > 1)
             {
                 bodies.Sort
                 (

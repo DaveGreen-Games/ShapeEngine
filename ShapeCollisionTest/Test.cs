@@ -1178,6 +1178,7 @@ namespace ShapeCollisionTest
             string[] collisionMask = new string[0];
             bool dead = false;
             protected float slowResistance = 1f;
+            protected bool wasDamaged = false;
             public Enemy(params string[] collisionMask)
             {
                 this.collisionMask = collisionMask;
@@ -1226,6 +1227,8 @@ namespace ShapeCollisionTest
 
             public void Damage(float amount)
             {
+                wasDamaged = true;
+                return;
                 var col = GetCollider();
                 float speed = col.Vel.Length();
                 speed -= amount;
@@ -1259,6 +1262,7 @@ namespace ShapeCollisionTest
 
             public void Update(float dt, Vector2 mousePos)
             {
+                wasDamaged = false;
                 GetCollider().ApplyAccumulatedForce(dt);
                 GetCollider().Pos += GetCollider().Vel * dt;
             }
@@ -1277,7 +1281,8 @@ namespace ShapeCollisionTest
 
             public override void Draw(Vector2 mousePos)
             {
-                collider.DebugDrawShape(Raylib.WHITE);
+                Color color = wasDamaged ? Raylib.RED : Raylib.WHITE;
+                collider.DebugDrawShape(color);
             }
 
             public override Collider GetCollider()
@@ -1291,7 +1296,7 @@ namespace ShapeCollisionTest
 
             public Enemy2(Vector2 pos, Vector2 vel, params string[] collisionMask) : base(collisionMask)
             {
-                var points = SPoly.GeneratePolygon(SRNG.randI(5, 10), new(0f), 20, 40);
+                var points = SPoly.GeneratePolygon(SRNG.randI(8, 12), new(0f), 40, 80);
                 this.collider = new(pos, points, SRNG.randAngleRad());
                 this.collider.Vel = vel;
                 this.collider.CheckIntersections = true;
@@ -1301,7 +1306,8 @@ namespace ShapeCollisionTest
 
             public override void Draw(Vector2 mousePos)
             {
-                collider.DebugDrawShape(Raylib.BLUE);
+                Color color = wasDamaged ? Raylib.RED : Raylib.WHITE;
+                collider.DebugDrawShape(color);
             }
 
             public override Collider GetCollider()
@@ -1319,23 +1325,40 @@ namespace ShapeCollisionTest
         float timer = 0f;
         Vector2 laserStart = new(150, 540);
         Vector2 laserDir = new(1, 0);
-        float laserLength = 1500f;
-        Vector2 laserEnd = new(0f);
-        Vector2 laserOff = new();
+        float laserLength = 3000f;
+
+        List<Vector2> laserPoints = new();
+        //Vector2 laserEnd = new(0f);
+        //Vector2 laserOff = new();
         public LaserTest()
         {
             float offset = 100;
             Wall left = new(new Vector2(offset, -offset), new Vector2(offset, 1080 + offset));
-            //Wall top = new(new Vector2(offset, offset), new Vector2(1920 - offset, offset));
-            //Wall bottom = new(new Vector2(offset, 1080 - offset), new Vector2(1920 - offset, 1080 - offset));
-            //Wall right = new(new Vector2(1920 - offset, offset), new Vector2(1920 - offset, 1080 - offset));
+            Wall top = new(new Vector2(offset, offset), new Vector2(1920 - offset, offset));
+            Wall bottom = new(new Vector2(offset, 1080 - offset), new Vector2(1920 - offset, 1080 - offset));
+            Wall right = new(new Vector2(1920 - offset, offset), new Vector2(1920 - offset, 1080 - offset));
 
+            persistent.Add(top);
+            persistent.Add(bottom);
+            persistent.Add(right);
             persistent.Add(left);
 
             ch.AddRange(persistent.ToList<ICollidable>());
             gameObjects.AddRange(persistent);
 
             timer = spawnTime;
+
+            Rectangle rect = new(200, 200, 1500, 680);
+            for (int i = 0; i < 10; i++)
+            {
+                Enemy e;
+                Vector2 spawnPoint = SRNG.randPoint(rect);
+                if (SRNG.randF() < 1.5f) e = new Enemy2(spawnPoint, new(0f), "walls");
+                else e = new Enemy1(spawnPoint, new(0f), "walls");
+                ch.Add(e);
+                gameObjects.Add(e);
+            }
+            
         }
         public void Restart()
         {
@@ -1381,11 +1404,12 @@ namespace ShapeCollisionTest
 
         private void SpawnEnemy()
         {
-            Rectangle rect = new(1600, 100, 220, 980);
+            return;
+            Rectangle rect = new(1600, 200, 220, 680);
             Vector2 spawnPoint = SRNG.randPoint(rect);
             
             Enemy e;
-            if (SRNG.randF() < 0.2f)
+            if (SRNG.randF() < 0.25f)
             {
                 Vector2 randVel = new Vector2(-SRNG.randF(10, 20), 0f);
                 e = new Enemy2(spawnPoint, randVel, "walls");
@@ -1401,7 +1425,73 @@ namespace ShapeCollisionTest
         }
         public override void Draw(Vector2 mousePos)
         {
-            //ch.DebugDrawGrid(new(200, 0, 0, 200), new(100, 100, 100, 100));
+            ch.DebugDrawGrid(new(200, 0, 0, 200), new(100, 100, 100, 100));
+            
+            laserPoints.Clear();
+            laserDir = SVec.Normalize(mousePos - laserStart);
+
+            Vector2 curStart = laserStart;
+            Vector2 curDir = laserDir;
+            float remainingLength = laserLength;
+            while(remainingLength > 0)
+            {
+                var query = ch.QuerySpace(curStart, curDir, remainingLength, true, true, "enemies", "walls");
+                //Raylib.DrawLineEx(curStart, curStart + curDir * remainingLength, 10f, new(0, 200, 0, 200));
+                
+                if (query.Count <= 0)
+                {
+                    laserPoints.Add(curStart + curDir * remainingLength);
+                    remainingLength = 0f; //finished
+
+                    //laserEnd = laserStart + laserDir * laserLength;
+                    //laserOff = new(0f);
+                }
+                else
+                {
+                    QueryInfo closest = query[0];
+                    
+                    if (closest.intersection.valid)
+                    {
+                        CollisionHandler.SortQueryInfoPoints(curStart, closest);
+
+                        Vector2 next = closest.intersection.points[0].p;
+                        float l = (next - curStart).Length();
+                        remainingLength -= l;
+                        curStart = next - curDir * 5f;
+                        curDir = SVec.Reflect(curDir, closest.intersection.points[0].n);
+                        laserPoints.Add(next);
+                        //laserEnd = closest.intersection.points[0].p;
+                        //float p = 1f - (lengthSq / (laserLength * laserLength));
+                        //float remaining = laserLength * p;
+                        //laserOff = SVec.Reflect(laserDir, closest.intersection.points[0].n) * remaining;
+
+                        
+                        var enemy = closest.collidable as Enemy;
+                        if (enemy != null) enemy.Damage(1f);
+
+                        //Raylib.DrawCircleV(intersection.p, 5f, Raylib.ORANGE);
+                        //Raylib.DrawLineEx(closest.intersection.points[0].p, closest.intersection.points[0].p + closest.intersection.points[0].n * 100, 3f, Raylib.ORANGE);
+                    }
+                    else
+                    {
+                        laserPoints.Add(curStart + curDir * remainingLength);
+                        remainingLength = 0f;
+                        //laserEnd = laserStart + laserDir * laserLength;
+                        //laserOff = new(0f);
+                    }
+                }
+            }
+
+            Raylib.DrawLineEx(laserStart, laserPoints[0], 4f, Raylib.RED);
+            for (int i = 0; i < laserPoints.Count - 1; i++)
+            {
+                Raylib.DrawLineEx(laserPoints[i], laserPoints[i+1], 4f, Raylib.RED);
+            }
+
+            //Raylib.DrawLineEx(laserStart, laserEnd, 4f, Raylib.RED);
+            //if (laserOff.LengthSquared() > 0f) Raylib.DrawLineEx(laserEnd, laserEnd + laserOff, 3f, Raylib.RED);
+
+
             for (int i = gameObjects.Count - 1; i >= 0; i--)
             {
                 var go = gameObjects[i];
@@ -1410,45 +1500,6 @@ namespace ShapeCollisionTest
             UIHandler.DrawTextAligned(String.Format("{0}", Raylib.GetFPS()), new(5, 5, 75, 50), 10, Raylib.GREEN, Alignement.TOPLEFT);
             UIHandler.DrawTextAligned(String.Format("Objs: {0}", gameObjects.Count), new(5, 55, 150, 50), 10, Raylib.GREEN, Alignement.TOPLEFT);
 
-            
-            laserDir = SVec.Normalize(mousePos - laserStart);
-            var query = ch.QuerySpace(laserStart, laserDir, laserLength, true, true, "enemies");
-            if (query.Count <= 0)
-            {
-                laserEnd = laserStart + laserDir * laserLength;
-                laserOff = new(0f);
-            }
-            else
-            {
-                QueryInfo closest = query[0];
-
-                if (closest.intersection.valid)
-                {
-                    CollisionHandler.SortQueryInfoPoints(laserStart, closest);
-                    
-                    laserEnd = closest.intersection.points[0].p;
-                    float lengthSq = (laserEnd - laserStart).LengthSquared();
-                
-                    float p = 1f - (lengthSq / (laserLength * laserLength));
-                    float remaining = laserLength * p;
-                    laserOff = SVec.Reflect(laserDir, closest.intersection.points[0].n) * remaining;
-
-                    Enemy enemy = (Enemy)closest.collidable;
-                    if (enemy != null) enemy.Damage(1);
-
-                    //Raylib.DrawCircleV(intersection.p, 5f, Raylib.ORANGE);
-                    //Raylib.DrawLineEx(closest.intersection.points[0].p, closest.intersection.points[0].p + closest.intersection.points[0].n * 100, 3f, Raylib.ORANGE);
-                }
-                else
-                {
-                    laserEnd = laserStart + laserDir * laserLength;
-                    laserOff = new(0f);
-                }
-            }
-
-
-            Raylib.DrawLineEx(laserStart, laserEnd, 4f, Raylib.RED);
-            if (laserOff.LengthSquared() > 0f) Raylib.DrawLineEx(laserEnd, laserEnd + laserOff, 3f, Raylib.RED);
         }
 
         public override void Close()
