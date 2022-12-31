@@ -24,7 +24,7 @@ namespace ShapeCollisionTest
             //Raylib.HideCursor();
             //Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
             Raylib.ClearWindowState(ConfigFlags.FLAG_VSYNC_HINT);
-            Raylib.SetTargetFPS(30);
+            Raylib.SetTargetFPS(60);
             //Raylib.SetWindowState(ConfigFlags.FLAG_VSYNC_HINT);
 
             CUR_TEST.Start();
