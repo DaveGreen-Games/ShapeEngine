@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Reflection.Metadata.Ecma335;
 using Raylib_CsLo;
 using ShapeEngineCore.Globals.UI;
+using ShapeLib;
 
 namespace ShapeEngineCore.Globals
 {
@@ -94,6 +95,33 @@ namespace ShapeEngineCore.Globals
             DrawPolygon(points, center, fillColor, clockwise);
             DrawPolygon(points, lineThickness, outlineColor);
         }
+
+
+        public static void DrawGlowLine(Vector2 start, Vector2 end, float width, float endWidth, Color color, Color endColor, int steps)
+        {
+            float wStep = (endWidth - width) / steps;
+
+            float rStep = (endColor.r - color.r) / steps;
+            float gStep = (endColor.g - color.g) / steps;
+            float bStep = (endColor.b - color.b) / steps;
+            float aStep = (endColor.a - color.a) / steps;
+
+            for (int i = steps; i >= 0; i--)
+            {
+                DrawLineEx
+                (
+                    start, end, width + wStep * i, 
+                    new
+                    (
+                        (int)(color.r + rStep * i), 
+                        (int)(color.g + gStep * i), 
+                        (int)(color.b + bStep * i), 
+                        (int)(color.a + aStep * i)
+                    )
+                );
+            }
+        }
+
 
         public static void DrawRectangleCheckeredLines(Vector2 pos, Vector2 size, Alignement alignement, float spacing, float lineThickness, float angleDeg, Color lineColor, Color outlineColor, Color bgColor)
         {
