@@ -2516,7 +2516,7 @@ namespace ShapeCollisionTest
         List<Collider> dynamicColliders = new();
         int dynIndex = 0;
 
-        PolyCollider poly = new(1920 / 2, 1080 / 2, SPoly.GeneratePolygon(12, new(0f), 150, 500));
+        PolyCollider poly = new(1920 / 2, 1080 / 2, SPoly.GeneratePolygon(6, new(0f), 150, 150));
 
         public SATTest()
         {

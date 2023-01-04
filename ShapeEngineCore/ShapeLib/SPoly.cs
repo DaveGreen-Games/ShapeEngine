@@ -76,6 +76,11 @@ namespace ShapeLib
 
         public static List<(Vector2 start, Vector2 end)> GetPolySegments(List<Vector2> poly)
         {
+            if (poly.Count <= 1) return new();
+            else if (poly.Count == 2)
+            {
+                return new() { (poly[0], poly[1]) };
+            }
             List<(Vector2 start, Vector2 end)> segments = new();
             for (int i = 0; i < poly.Count; i++)
             {
@@ -88,6 +93,11 @@ namespace ShapeLib
     
         public static List<Vector2> GetPolyAxis(List<Vector2> poly, bool normalized = false)
         {
+            if (poly.Count <= 1) return new();
+            else if(poly.Count == 2)
+            {
+                return new() { poly[1] - poly[0] };
+            }
             List<Vector2> axis = new();
             for (int i = 0; i < poly.Count; i++)
             {

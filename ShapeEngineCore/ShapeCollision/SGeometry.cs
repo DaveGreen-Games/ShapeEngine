@@ -1849,36 +1849,30 @@ namespace ShapeCollision
             }
             return true;
         }
-        /// <summary>
-        /// Only use with concave (not self intersecting) polygons!!!
-        /// </summary>
-        /// <param name="circlePos">Position of the circle.</param>
-        /// <param name="circleRadius">Radius of the circle.</param>
-        /// <param name="b">Polygon b.</param>
-        /// <returns></returns>
-        public static bool OverlapSAT(Vector2 circlePos, float circleRadius, List<Vector2> b)
-        {
-            List<Vector2> axis = new();
-            axis.AddRange(SPoly.GetPolyAxis(b));
-
-            foreach (var ax in axis)
-            {
-                float aMin = SVec.Dot(ax, circlePos - SVec.Normalize(ax) * circleRadius);
-                float aMax = SVec.Dot(ax, circlePos + SVec.Normalize(ax) * circleRadius);
-                float bMin = float.PositiveInfinity;
-                float bMax = float.NegativeInfinity;
-
-                foreach (var p in b)
-                {
-                    float d = SVec.Dot(ax, p);
-                    if (d < bMin) bMin = d;
-                    if (d > bMax) bMax = d;
-                }
-                if ((aMin < bMax && aMin > bMin) || (bMin < aMax && bMin > aMin)) continue;
-                else return false;
-            }
-            return true;
-        }
+        
+        //public static bool OverlapSAT(Vector2 circlePos, float circleRadius, List<Vector2> b)
+        //{
+        //    List<Vector2> axis = new();
+        //    axis.AddRange(SPoly.GetPolyAxis(b));
+        //
+        //    foreach (var ax in axis)
+        //    {
+        //        float aMin = SVec.Dot(ax, circlePos - SVec.Normalize(ax) * circleRadius);
+        //        float aMax = SVec.Dot(ax, circlePos + SVec.Normalize(ax) * circleRadius);
+        //        float bMin = float.PositiveInfinity;
+        //        float bMax = float.NegativeInfinity;
+        //
+        //        foreach (var p in b)
+        //        {
+        //            float d = SVec.Dot(ax, p);
+        //            if (d < bMin) bMin = d;
+        //            if (d > bMax) bMax = d;
+        //        }
+        //        if ((aMin < bMax && aMin > bMin) || (bMin < aMax && bMin > aMin)) continue;
+        //        else return false;
+        //    }
+        //    return true;
+        //}
 
         /*
         private static (bool intersected, Vector2 intersectPoint, float time) IntersectPointCircle(Vector2 point, Vector2 vel, Vector2 circlePos, float radius)
