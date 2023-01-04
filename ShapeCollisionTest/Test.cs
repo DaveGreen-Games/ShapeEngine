@@ -5,6 +5,7 @@ using ShapeEngineCore.Globals;
 using ShapeEngineCore.Globals.UI;
 using ShapeCollision;
 using ShapeLib;
+using System.Runtime.Intrinsics;
 
 namespace ShapeCollisionTest
 {
@@ -24,7 +25,7 @@ namespace ShapeCollisionTest
         {
             if (Raylib.IsKeyReleased(KeyboardKey.KEY_SPACE))
             {
-                Program.ChangeTest(new LaserTest3());
+                Program.ChangeTest(new SATTest());
             }
         }
         public override void Draw(Vector2 mousePos)
@@ -118,7 +119,7 @@ namespace ShapeCollisionTest
             return SRNG.randPoint(new Rectangle(0, 0, 1920, 1080));
         }
     }
-    
+
     //intersection test
     public class Test2 : Test
     {
@@ -418,6 +419,7 @@ namespace ShapeCollisionTest
             return SRNG.randPoint(new Rectangle(0, 0, 1920, 1080));
         }
     }
+    
     public class Test4a : Test
     {
         internal class Collidable : ICollidable
@@ -2503,6 +2505,78 @@ namespace ShapeCollisionTest
         public override void Close()
         {
             ch.Close();
+        }
+    }
+
+    public class SATTest : Test
+    {
+        CircleCollider dCircle = new(0, 0, 100);
+        SegmentCollider dSegment = new(new Vector2(0, 0), SRNG.randVec2(), 500);
+        PolyCollider dPoly = new(0, 0, SPoly.GeneratePolygon(8, new(0f), 50, 100));
+        List<Collider> dynamicColliders = new();
+        int dynIndex = 0;
+
+        PolyCollider poly = new(1920 / 2, 1080 / 2, SPoly.GeneratePolygon(12, new(0f), 150, 500));
+
+        public SATTest()
+        {
+            dCircle.Pos = RandPos();
+            dynamicColliders.Add(dCircle);
+            dSegment.Pos = RandPos();
+            dynamicColliders.Add(dSegment);
+            dPoly.Pos = RandPos();
+            dynamicColliders.Add(dPoly);
+        }
+
+        public override void Update(float dt, Vector2 mousePos)
+        {
+            if (Raylib.IsMouseButtonDown(MouseButton.MOUSE_BUTTON_LEFT))
+            {
+                dynamicColliders[dynIndex].Pos = mousePos;
+            }
+
+            if (Raylib.IsKeyReleased(KeyboardKey.KEY_E))
+            {
+                dynIndex += 1;
+                if (dynIndex >= dynamicColliders.Count) dynIndex = 0;
+            }
+        }
+        public override void Draw(Vector2 mousePos)
+        {
+            UIHandler.DrawTextAligned(String.Format("{0}", Raylib.GetFPS()), new(5, 5, 75, 50), 10, Raylib.GREEN, Alignement.TOPLEFT);
+
+            var dynamic = dynamicColliders[dynIndex];
+            bool overlap = false;
+            if(dynamic is CircleCollider)
+            {
+                CircleCollider circle = (CircleCollider)dynamic;
+                overlap = SGeometry.OverlapSAT(circle.Pos, circle.Radius, poly.Shape);
+            }
+            else if(dynamic is SegmentCollider)
+            {
+                SegmentCollider segment = (SegmentCollider)dynamic;
+                List<Vector2> a = new()
+                {
+                    segment.Start,
+                    segment.End
+                };
+                overlap = SGeometry.OverlapSAT(a, poly.Shape);
+            }
+            else
+            {
+                PolyCollider a = (PolyCollider)dynamic;
+                overlap = SGeometry.OverlapSAT(a.Shape, poly.Shape);
+            }
+
+            Color color = overlap ? Raylib.RED : Raylib.GREEN;
+            dynamicColliders[dynIndex].DebugDrawShape(color);
+            poly.DebugDrawShape(color);
+            
+        }
+
+        private Vector2 RandPos()
+        {
+            return SRNG.randPoint(new Rectangle(0, 0, 1920, 1080));
         }
     }
 

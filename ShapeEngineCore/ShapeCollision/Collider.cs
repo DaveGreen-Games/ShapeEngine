@@ -11,6 +11,9 @@ namespace ShapeCollision
     //collider has a list of shapes (compound collider) with offset per shape -> figure out how to have accurate world position
     //for each shape (collider.Pos + shape.Offset) when used in collision detection
 
+    //collider has list of shapes
+    //rename circle/segment/rect/poly collider to shape
+
     public class Collider
     {
         public Collider() { }

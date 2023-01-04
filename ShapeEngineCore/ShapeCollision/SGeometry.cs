@@ -1,6 +1,7 @@
 ﻿using Raylib_CsLo;
 using System.Numerics;
 using ShapeLib;
+using System.Diagnostics;
 
 namespace ShapeCollision
 {
@@ -1808,6 +1809,73 @@ namespace ShapeCollision
                 Vector2 end = poly[(i + 1) % poly.Count];
                 var points = IntersectSegmentCircle(start, end, circlePos, radius);
                 if (points.Count > 0) return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Only use with concave (not self intersecting) polygons!!!
+        /// </summary>
+        /// <param name="a">Polygon a</param>
+        /// <param name="b">Polygon b</param>
+        /// <returns></returns>
+        public static bool OverlapSAT(List<Vector2> a, List<Vector2> b)
+        {
+            List<Vector2> axis = new();
+            axis.AddRange(SPoly.GetPolyAxis(a));
+            axis.AddRange(SPoly.GetPolyAxis(b));
+
+            foreach (var ax in axis)
+            {
+                float aMin = float.PositiveInfinity;
+                float aMax = float.NegativeInfinity;
+                float bMin = float.PositiveInfinity;
+                float bMax = float.NegativeInfinity;
+
+                foreach (var p in a)
+                {
+                    float d = SVec.Dot(ax, p);
+                    if (d < aMin) aMin = d;
+                    if (d > aMax) aMax = d;
+                }
+                foreach (var p in b)
+                {
+                    float d = SVec.Dot(ax, p);
+                    if (d < bMin) bMin = d;
+                    if (d > bMax) bMax = d;
+                }
+                if ((aMin < bMax && aMin > bMin) || (bMin < aMax && bMin > aMin)) continue;
+                else return false;
+            }
+            return true;
+        }
+        /// <summary>
+        /// Only use with concave (not self intersecting) polygons!!!
+        /// </summary>
+        /// <param name="circlePos">Position of the circle.</param>
+        /// <param name="circleRadius">Radius of the circle.</param>
+        /// <param name="b">Polygon b.</param>
+        /// <returns></returns>
+        public static bool OverlapSAT(Vector2 circlePos, float circleRadius, List<Vector2> b)
+        {
+            List<Vector2> axis = new();
+            axis.AddRange(SPoly.GetPolyAxis(b));
+
+            foreach (var ax in axis)
+            {
+                float aMin = SVec.Dot(ax, circlePos - SVec.Normalize(ax) * circleRadius);
+                float aMax = SVec.Dot(ax, circlePos + SVec.Normalize(ax) * circleRadius);
+                float bMin = float.PositiveInfinity;
+                float bMax = float.NegativeInfinity;
+
+                foreach (var p in b)
+                {
+                    float d = SVec.Dot(ax, p);
+                    if (d < bMin) bMin = d;
+                    if (d > bMax) bMax = d;
+                }
+                if ((aMin < bMax && aMin > bMin) || (bMin < aMax && bMin > aMin)) continue;
+                else return false;
             }
             return true;
         }

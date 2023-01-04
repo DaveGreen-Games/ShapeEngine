@@ -85,5 +85,18 @@ namespace ShapeLib
             }
             return segments;
         }
+    
+        public static List<Vector2> GetPolyAxis(List<Vector2> poly, bool normalized = false)
+        {
+            List<Vector2> axis = new();
+            for (int i = 0; i < poly.Count; i++)
+            {
+                Vector2 start = poly[i];
+                Vector2 end = poly[(i + 1) % poly.Count];
+                Vector2 a = end - start;
+                axis.Add(normalized ? SVec.Normalize(a) : a);
+            }
+            return axis;
+        }
     }
 }
