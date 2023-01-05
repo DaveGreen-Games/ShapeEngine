@@ -5,7 +5,6 @@ using ShapeEngineCore.Globals;
 using ShapeEngineCore.Globals.UI;
 using ShapeCollision;
 using ShapeLib;
-using System.Runtime.Intrinsics;
 
 namespace ShapeCollisionTest
 {
