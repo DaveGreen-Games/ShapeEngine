@@ -25,7 +25,7 @@ namespace ShapeCollisionTest
         {
             if (Raylib.IsKeyReleased(KeyboardKey.KEY_SPACE))
             {
-                Program.ChangeTest(new SATTest());
+                Program.ChangeTest(new CompoundColliderTest());
             }
         }
         public override void Draw(Vector2 mousePos)
@@ -2510,66 +2510,29 @@ namespace ShapeCollisionTest
 
     public class SATTest : Test
     {
-        CircleCollider dCircle = new(0, 0, 100);
-        SegmentCollider dSegment = new(new Vector2(0, 0), SRNG.randVec2(), 500);
         PolyCollider dPoly = new(0, 0, SPoly.GeneratePolygon(8, new(0f), 50, 100));
-        List<Collider> dynamicColliders = new();
-        int dynIndex = 0;
-
         PolyCollider poly = new(1920 / 2, 1080 / 2, SPoly.GeneratePolygon(6, new(0f), 150, 150));
 
         public SATTest()
         {
-            dCircle.Pos = RandPos();
-            dynamicColliders.Add(dCircle);
-            dSegment.Pos = RandPos();
-            dynamicColliders.Add(dSegment);
-            dPoly.Pos = RandPos();
-            dynamicColliders.Add(dPoly);
         }
 
         public override void Update(float dt, Vector2 mousePos)
         {
             if (Raylib.IsMouseButtonDown(MouseButton.MOUSE_BUTTON_LEFT))
             {
-                dynamicColliders[dynIndex].Pos = mousePos;
-            }
-
-            if (Raylib.IsKeyReleased(KeyboardKey.KEY_E))
-            {
-                dynIndex += 1;
-                if (dynIndex >= dynamicColliders.Count) dynIndex = 0;
+                dPoly.Pos = mousePos;
             }
         }
         public override void Draw(Vector2 mousePos)
         {
             UIHandler.DrawTextAligned(String.Format("{0}", Raylib.GetFPS()), new(5, 5, 75, 50), 10, Raylib.GREEN, Alignement.TOPLEFT);
 
-            var dynamic = dynamicColliders[dynIndex];
             bool overlap = false;
-            if(dynamic is CircleCollider)
-            {
-                CircleCollider circle = (CircleCollider)dynamic;
-                overlap = SGeometry.OverlapSAT(circle.Pos, circle.Radius, poly.Shape);
-            }
-            else if(dynamic is SegmentCollider)
-            {
-                SegmentCollider segment = (SegmentCollider)dynamic;
-                List<Vector2> a = new()
-                {
-                    segment.Start,
-                    segment.End
-                };
-                overlap = SGeometry.OverlapSAT(a, poly.Shape);
-            }
-            else
-            {
-                PolyCollider a = (PolyCollider)dynamic;
-                overlap = SGeometry.OverlapSAT(a.Shape, poly.Shape);
-            }
+            overlap = SGeometry.OverlapSAT(dPoly.Shape, poly.Shape);
 
             Color color = overlap ? Raylib.RED : Raylib.GREEN;
-            dynamicColliders[dynIndex].DebugDrawShape(color);
+            dPoly.DebugDrawShape(color);
             poly.DebugDrawShape(color);
             
         }
@@ -2580,4 +2543,333 @@ namespace ShapeCollisionTest
         }
     }
 
+    public class CompoundColliderTest : Test
+    {
+        CollisionHandler ch;
+        Boss boss;
+        Tester tester;
+        internal class Boss : ICollidable
+        {
+            CircleCollider circle;
+            List<Gun> guns = new();
+            float rotRad = 0f;
+            CollisionHandler ch;
+            bool damaged = false;
+            float hp = 1000f;
+            float startRadius = 0f;
+            public Boss(Vector2 pos, float radius, int gunCount, CollisionHandler ch)
+            {
+                this.ch = ch;
+                this.startRadius = radius;
+                circle = new(pos, radius);
+                circle.CheckCollision = false;
+                circle.CheckIntersections = false;
+
+                float gunRadius = radius / ((float)gunCount*0.25f);
+                float angleStep = (2f * RayMath.PI) / (float)gunCount;
+                float offset = radius + gunRadius;
+
+                for (int i = 0; i < gunCount; i++)
+                {
+                    Gun gun = new(circle.Pos, SVec.Rotate(new Vector2(offset, 0f), angleStep * i), rotRad, gunRadius);
+                    AddGun(gun);
+                }
+            }
+            public bool IsDead() { return hp <= 0f; }
+            protected void AddGun(Gun newGun)
+            {
+                if (!guns.Contains(newGun))
+                {
+                    guns.Add(newGun);
+                    ch.Add(newGun);
+                }
+            }
+            public void SetPos(Vector2 p) { circle.Pos = p; }
+            public void Update(float dt)
+            {
+                damaged = false;
+                rotRad += dt * 0.5f;
+
+                for (int i = guns.Count - 1; i >= 0; i--)
+                {
+                    var g = guns[i];
+                    if (g.IsDead())
+                    {
+                        ch.Remove(g);
+                        guns.RemoveAt(i);
+                    }
+                    else
+                    {
+                        if (!damaged)
+                        {
+                            if (g.WasDamaged()) damaged = true;
+                        }
+                        g.UpdatePos(circle.Pos, rotRad);
+                        g.Update(dt);
+                    }
+                }
+            }
+            public void Damage(float amount)
+            {
+                if (amount > 0f && hp > 0f)
+                {
+                    damaged = true;
+                    hp -= amount;
+                    if (hp <= 0f)
+                    {
+                        hp = 0f;
+                        foreach (var g in guns)
+                        {
+                            ch.Remove(g);
+                        }
+                        guns.Clear();
+                    }
+                    circle.Radius = startRadius * (hp / 1000);
+                }
+            }
+            public void Draw(Color color)
+            {
+                Color c = damaged ? Raylib.RED : color;
+                Rectangle textRect = SRect.ConstructRect(circle.Pos, new Vector2(circle.Radius), new Vector2(0f));
+                UIHandler.DrawTextAligned(String.Format("{0}", (int)hp), textRect, 1f, c, Alignement.CENTER);
+                circle.DebugDrawShape(c);
+                foreach (var g in guns)
+                {
+                    g.Draw(color);
+                }
+            }
+            public Collider GetCollider()
+            {
+                return circle;
+            }
+
+            public string GetCollisionLayer()
+            {
+                return "boss";
+            }
+
+            public string[] GetCollisionMask()
+            {
+                return new string[] {};
+            }
+
+            public string GetID()
+            {
+                return "boss";
+            }
+
+            public Vector2 GetPos()
+            {
+                return circle.Pos;
+            }
+
+            public void Overlap(CollisionInfo info)
+            {
+                throw new NotImplementedException();
+            }
+        }
+        internal class Gun : ICollidable
+        {
+            CircleCollider circle;
+            Vector2 startOffset;
+            Vector2 offset;
+            bool damaged = false;
+            float timer = 0f;
+            //float interval = 1f;
+            float offsetFactor = 1f;
+            float hp = 100f;
+            float startRadius = 0f;
+            public Gun(Vector2 pos, Vector2 offset, float rotRad, float radius)
+            {
+                this.startOffset = offset;
+                this.offset = offset;
+                this.startRadius = radius;
+                circle = new(pos + SVec.Rotate(offset, rotRad), radius);
+                circle.CheckCollision = false;
+                circle.CheckIntersections = false;
+                //timer = SRNG.randF(interval * 0.1f, interval * 0.9f);
+                timer = SRNG.randF();
+                offsetFactor = SRNG.randF(1.5f, 3f);
+            }
+            public bool WasDamaged() { return damaged; }
+            public bool IsDead() { return hp <= 0f; }
+            public void UpdatePos(Vector2 pos, float rotRad)
+            {
+                circle.Pos = pos + SVec.Rotate(offset, rotRad);
+            }
+            public void Update(float dt)
+            {
+                timer += dt;
+                //if(timer > 0f)
+                //{
+                //    timer -= dt;
+                //    if(timer <= 0f)
+                //    {
+                //        timer = interval + timer;
+                //    }
+                //}
+                float s = MathF.Sin(timer);
+                float f = (s + 1) * 0.5f; // 1f - (timer / interval);
+                offset = SVec.Lerp(startOffset, startOffset * offsetFactor, f);
+                damaged = false;
+            }
+            public void Damage(float amount)
+            {
+                if (amount > 0f && hp > 0f)
+                {
+                    damaged = true;
+                    hp -= amount;
+                    if(hp <= 0f)
+                    {
+                        hp = 0f;
+                    }
+                    circle.Radius = startRadius * (hp / 100);
+                }
+            }
+            public void Draw(Color color)
+            {
+                Color c = damaged ? Raylib.RED : color;
+                Rectangle textRect = SRect.ConstructRect(circle.Pos, new Vector2(circle.Radius), new Vector2(0f));
+                UIHandler.DrawTextAligned(String.Format("{0}", (int)hp), textRect, 1f, c, Alignement.CENTER);
+                circle.DebugDrawShape(c);
+            }
+
+            public Collider GetCollider()
+            {
+                return circle;
+            }
+
+            public string GetCollisionLayer()
+            {
+                return "gun";
+            }
+
+            public string[] GetCollisionMask()
+            {
+                return new string[] { };
+            }
+
+            public string GetID()
+            {
+                return "gun";
+            }
+
+            public Vector2 GetPos()
+            {
+                return circle.Pos;
+            }
+
+            public void Overlap(CollisionInfo info)
+            {
+                throw new NotImplementedException();
+            }
+
+        }
+
+        internal class Tester : ICollidable
+        {
+            CircleCollider circle;
+            string[] collisionMask = new string[] { "boss", "gun" };
+            float dmg = 0f;
+
+            public Tester(Vector2 pos, float r, float dmg)
+            {
+                circle = new(pos, r);
+                this.dmg = dmg;
+            }
+            public void SetPos(Vector2 p) { circle.Pos = p;}
+            public void Update(float dt)
+            {
+
+            }
+            public void Draw(Color color)
+            {
+                circle.DebugDrawShape(color);
+            }
+            public Collider GetCollider()
+            {
+                return circle;
+            }
+
+            public string GetCollisionLayer()
+            {
+                return "tester";
+            }
+
+            public string[] GetCollisionMask()
+            {
+                return collisionMask;
+            }
+
+            public string GetID()
+            {
+                return "tester";
+            }
+
+            public Vector2 GetPos()
+            {
+                return circle.Pos;
+            }
+
+            public void Overlap(CollisionInfo info)
+            {
+                if(info.other != null)
+                {
+                    if(info.other is Boss)
+                    {
+                        Boss boss = (Boss)info.other;
+                        boss.Damage(dmg);
+                    }
+                    else if(info.other is Gun)
+                    {
+                        Gun gun = (Gun)info.other;
+                        gun.Damage(dmg * 2);
+                    }
+                }
+            }
+        }
+
+        public CompoundColliderTest()
+        {
+            Rectangle playfield = new(50, 100, 1920 - 100, 1080 - 200);
+            ch = new(playfield.x, playfield.y, playfield.width, playfield.height, 10, 10);
+            boss = new(new Vector2(1920, 1080) / 2, 100, 12, ch);
+            tester = new(new Vector2(100, 540), 50, 0.4f);
+            ch.Add(boss);
+            ch.Add(tester);
+        }
+
+        public override void Update(float dt, Vector2 mousePos)
+        {
+            if (Raylib.IsMouseButtonDown(MouseButton.MOUSE_BUTTON_RIGHT))
+            {
+                boss.SetPos(mousePos);
+            }
+            if (Raylib.IsMouseButtonDown(MouseButton.MOUSE_BUTTON_LEFT))
+            {
+                tester.SetPos(mousePos);
+            }
+            if (boss.IsDead())
+            {
+                ch.Remove(boss);
+            }
+            boss.Update(dt);
+            tester.Update(dt);
+            ch.Update(dt);
+        }
+        public override void Draw(Vector2 mousePos)
+        {
+            ch.DebugDrawGrid(new(200, 0, 0, 200), new(100, 100, 100, 100));
+            UIHandler.DrawTextAligned(String.Format("{0}", Raylib.GetFPS()), new(5, 5, 75, 50), 10, Raylib.GREEN, Alignement.TOPLEFT);
+            boss.Draw(Raylib.WHITE);
+            tester.Draw(Raylib.GREEN);
+            //bool overlap = false;
+            //overlap = SGeometry.OverlapSAT(dPoly.Shape, poly.Shape);
+            //
+            //Color color = overlap ? Raylib.RED : Raylib.GREEN;
+            //dPoly.DebugDrawShape(color);
+            //poly.DebugDrawShape(color);
+
+        }
+    }
 }
