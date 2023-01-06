@@ -91,7 +91,7 @@ namespace ShapeEngineDemo
 
             foreach (var ring in rings)
             {
-                Drawing.DrawCircleLines(pos + AreaLayerOffset + ring.center, ring.r, ring.thickness, ring.color, 4f);
+                SDrawing.DrawCircleLines(pos + AreaLayerOffset + ring.center, ring.r, ring.thickness, ring.color, 4f);
             }
         }
         public override Rectangle GetBoundingBox()

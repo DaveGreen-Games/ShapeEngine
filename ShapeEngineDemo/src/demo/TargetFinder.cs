@@ -126,7 +126,7 @@ namespace ShapeEngineDemo
                 lineThickness = 1f;
             }
 
-            Drawing.DrawCircleLines(pos, targetingRange + RNG.randF(-0.5f, 0.5f), lineThickness, circleColor, 8f);
+            SDrawing.DrawCircleLines(pos, targetingRange + RNG.randF(-0.5f, 0.5f), lineThickness, circleColor, 8f);
         }
 
         public ICollidable? CheckForTarget(float targetingRange)

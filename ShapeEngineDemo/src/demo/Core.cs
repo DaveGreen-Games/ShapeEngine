@@ -29,7 +29,7 @@ namespace ShapeEngineCore
         }
         public override void Draw()
         {
-            float f = Ease.EaseOutBack(lifetimeTimer.GetF());
+            float f = SEase.EaseOutBack(lifetimeTimer.GetF());
             DrawPoly(pos, 6, RNG.randF(0.85f, 1.15f) * size * f, rotDeg, color);
         }
     }

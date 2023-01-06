@@ -32,7 +32,7 @@ namespace ShapeEngineDemo
         }
         public void Draw()
         {
-            Drawing.DrawPolygon(points, lineThickness * sizeFactor, color);
+            SDrawing.DrawPolygon(points, lineThickness * sizeFactor, color);
         }
     }
 }
