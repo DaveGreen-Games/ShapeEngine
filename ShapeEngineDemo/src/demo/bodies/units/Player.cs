@@ -1,16 +1,16 @@
 ﻿using System.Numerics;
-using ShapeEngineCore;
-using ShapeEngineCore.Globals;
-using ShapeEngineCore.Globals.Input;
-using ShapeEngineCore.Globals.Screen;
-using ShapeEngineCore.Globals.Timing;
-using ShapeEngineCore.Globals.Audio;
-using ShapeEngineCore.Globals.UI;
-using ShapeEngineCore.Globals.Persistent;
-using ShapeEngineCore.SimpleCollision;
+using ShapeCore;
+using ShapeInput;
+using ShapeScreen;
+using ShapeTiming;
+using ShapeAudio;
+using ShapeUI;
+using ShapePersistent;
+using ShapeCollision;
 using Raylib_CsLo;
 using ShapeEngineDemo.Guns;
 using ShapeEngineDemo.DataObjects;
+using ShapeLib;
 //using ShapeEngineDemo.Projectiles;
 
 
@@ -86,7 +86,7 @@ namespace ShapeEngineDemo.Bodies
             if (IsActive() && drawFlag)
             {
                 Color color = PaletteHandler.C("special1");
-                Vector2 endpoint = location + new Vector2(RNG.randF(-1, 2), -8);
+                Vector2 endpoint = location + new Vector2(SRNG.randF(-1, 2), -8);
                 DrawLineEx(location, endpoint, 1, color);
                 Vector2 size = new(6f, 4f);
                 Rectangle rect = new(endpoint.X, endpoint.Y - size.Y, size.X, size.Y);
@@ -280,7 +280,9 @@ namespace ShapeEngineDemo.Bodies
             float size = stats.Get("size");
             collisionMask = new string[] { "asteroid" };
             collider = new(GAMELOOP.GameCenter(), MovementDir * stats.Get("maxSpeed"), size);
-            
+            collider.CheckCollision = true;
+            collider.CheckIntersections = true;
+
             Vector2 barOffset = new(-0.15f, 0.05f);
             aimpointSkillDisplay = new(PaletteHandler.C("text"), PaletteHandler.C("flash"), PaletteHandler.C("neutral"),PaletteHandler.C("energy"), "Drop Pin", "Drop Aim Point", -5f);
             hpBar = new(-5f, new Vector2(0, 1), barOffset, 0.1f, 0);
@@ -332,9 +334,9 @@ namespace ShapeEngineDemo.Bodies
         {
             return "player";
         }
-        public override void Collide(CastInfo info)
+        public override void Overlap(CollisionInfo info)
         {
-            if (info.collided)
+            if (info.overlapping)
             {
                 if (info.other != null)
                 {
@@ -353,25 +355,27 @@ namespace ShapeEngineDemo.Bodies
                     if (colLayer == "asteroid")
                     {
                         IDamageable? other = info.other as IDamageable;
-                        if (other != null)
+                        if (other != null && info.intersection.valid)
                         {
                             //Vector2 hitDir = Vec.Normalize(info.other.GetPos() - collider.Pos);
-                            var dmgInfo = other.Damage(GetDamage(), info.collisionPoint, info.normal, this, false);
+                            Vector2 normal = info.intersection.n;
+                            Vector2 colP = info.intersection.p;
+                            var dmgInfo = other.Damage(GetDamage(), colP, normal, this, false);
                             if (!dmgInfo.killed && !dmgInfo.dead)
                             {
-                                Damage(other.GetDamage(), info.collisionPoint, -info.normal, other, false);
+                                Damage(other.GetDamage(), colP, -normal, other, false);
                                 float stunTime = WALL_STUN_TIME * 0.5f;
                                 float speed = stats.Get("maxSpeed");
                                 if (IsMovementBoosting()) { stunTime *= stats.Get("boostF"); speed *= stats.Get("boostF"); }
                                 else if (IsMovementSlow()) { stunTime *= stats.Get("slowF"); speed *= stats.Get("slowF"); }
                                 Stun(stunTime);
-                                Vector2 dir = Vec.Normalize(info.reflectVector);
+                                Vector2 dir = SVec.Normalize(SVec.Reflect(info.other.GetCollider().Vel, normal)); //SVec.Normalize(info.reflectVector);
                                 info.other.GetCollider().AddImpulse(-dir * speed);
                                 collider.Vel = dir * stats.Get("maxSpeed") * WALL_COL_FORCE_FACTOR;
                             }
                             else 
                             {
-                                Damage(other.GetDamage() * 0.25f, info.collisionPoint, -info.normal, other, false);
+                                Damage(other.GetDamage() * 0.25f, colP, -normal, other, false);
                             }
                         }
                     }
@@ -405,7 +409,7 @@ namespace ShapeEngineDemo.Bodies
             AudioHandler.PlaySFX("player die");
             for (int i = 0; i < 100; i++)
             {
-                HitParticle particle = new(collider.Pos + RNG.randVec2(1, stats.Get("size")), RNG.randVec2(), 2f, 2f, PaletteHandler.C("player"));
+                HitParticle particle = new(collider.Pos + SRNG.randVec2(1, stats.Get("size")), SRNG.randVec2(), 2f, 2f, PaletteHandler.C("player"));
                 GAMELOOP.AddGameObject(particle);
             }
             InputHandler.AddVibration(0, 0.5f, 0.5f, 1.5f);
@@ -437,8 +441,8 @@ namespace ShapeEngineDemo.Bodies
         protected override void WasStunned(float duration)
         {
             base.WasStunned(duration);
-            curStunRotation = RNG.randF(300f, 600f);
-            if (RNG.randF() < 0.5f) curStunRotation *= -1;
+            curStunRotation = SRNG.randF(300f, 600f);
+            if (SRNG.randF() < 0.5f) curStunRotation *= -1;
             if(IsMovementBoosting()) BoostEnded();
             if(IsMovementSlow()) SlowEnded();
 
@@ -458,9 +462,9 @@ namespace ShapeEngineDemo.Bodies
         public override void Spawn()
         {
             //SetStat("maxSpeed", 75f);
-            float randAngle = RNG.randF(0f, 2f * PI);
-            Vector2 dir = Vec.Rotate(Vec.Right(), randAngle);
-            MovementDir = Vec.Normalize(dir);
+            float randAngle = SRNG.randF(0f, 2f * PI);
+            Vector2 dir = SVec.Rotate(SVec.Right(), randAngle);
+            MovementDir = SVec.Normalize(dir);
             collider.Vel = MovementDir * stats.Get("maxSpeed");
         }
 
@@ -515,12 +519,12 @@ namespace ShapeEngineDemo.Bodies
                 energyCore.Update(dt);
                 if (energyCore.IsCooldownActive())
                 {
-                    int randAmount = RNG.randI(1, 4);
+                    int randAmount = SRNG.randI(1, 4);
                     for (int i = 0; i < randAmount; i++)
                     {
-                        float aChange = (RNG.randF() < 0.5f ? 90 : -90) * DEG2RAD;
+                        float aChange = (SRNG.randF() < 0.5f ? 90 : -90) * DEG2RAD;
                         float a = angle + aChange;
-                        LineParticle p = new(collider.Pos, a, 25*DEG2RAD, RNG.randF(150, 200), PaletteHandler.C("energy"), RNG.randF(3f, 5f), RNG.randF(1.5f, 2f)*energyCore.CooldownF, 1f);
+                        LineParticle p = new(collider.Pos, a, 25*DEG2RAD, SRNG.randF(150, 200), PaletteHandler.C("energy"), SRNG.randF(3f, 5f), SRNG.randF(1.5f, 2f)*energyCore.CooldownF, 1f);
                         //p.SetDrag(0.5f);
                         GAMELOOP.AddGameObject(p);
                     }
@@ -539,22 +543,22 @@ namespace ShapeEngineDemo.Bodies
                     float amount = gamepadRotation * gamepadRotation;
                     if (gamepadRotation > 0)
                     {
-                        MovementDir = Vec.Rotate(MovementDir, stats.Get("rotSpeed") * DEG2RAD * dt * amount);
+                        MovementDir = SVec.Rotate(MovementDir, stats.Get("rotSpeed") * DEG2RAD * dt * amount);
                     }
                     else if (gamepadRotation < 0)
                     {
-                        MovementDir = Vec.Rotate(MovementDir, -stats.Get("rotSpeed") * DEG2RAD * dt * amount);
+                        MovementDir = SVec.Rotate(MovementDir, -stats.Get("rotSpeed") * DEG2RAD * dt * amount);
                     }
                 }
                 else
                 {
                     if (InputHandler.IsDown(0, "Rotate Left"))
                     {
-                        MovementDir = Vec.Rotate(MovementDir, -stats.Get("rotSpeed") * DEG2RAD * dt);
+                        MovementDir = SVec.Rotate(MovementDir, -stats.Get("rotSpeed") * DEG2RAD * dt);
                     }
                     else if (InputHandler.IsDown(0, "Rotate Right"))
                     {
-                        MovementDir = Vec.Rotate(MovementDir, stats.Get("rotSpeed") * DEG2RAD * dt);
+                        MovementDir = SVec.Rotate(MovementDir, stats.Get("rotSpeed") * DEG2RAD * dt);
                     }
                 }
 
@@ -592,16 +596,16 @@ namespace ShapeEngineDemo.Bodies
                 //    engineCore.Update(dt);
                 //}
 
-                collider.Vel = Vec.Lerp(collider.Vel, Vec.Normalize(MovementDir) * speed, dt * VEL_LERP_STRENGTH);
+                collider.Vel = SVec.Lerp(collider.Vel, SVec.Normalize(MovementDir) * speed, dt * VEL_LERP_STRENGTH);
 
             }
             else
             {
                 curMovement = PlayerMovement.NORMAL;
-                MovementDir = Vec.Rotate(MovementDir, curStunRotation * DEG2RAD * dt);
+                MovementDir = SVec.Rotate(MovementDir, curStunRotation * DEG2RAD * dt);
             }
             collider.Pos = collider.Pos + collider.Vel * dt;
-            angle = Vec.AngleRad(MovementDir);
+            angle = SVec.AngleRad(MovementDir);
             float sizeFactor = stats.GetStat("size").GetF();
             if (damageTimer.IsRunning()) sizeFactor += 0.15f;
             Color drawColor = PaletteHandler.C("player");
@@ -641,12 +645,12 @@ namespace ShapeEngineDemo.Bodies
             
             if (GetHealthPercentage() < 1f)
             {
-                hpBarMini.UpdateRect(miniBarPos, miniBarSize);
+                hpBarMini.UpdateRect(miniBarPos, miniBarSize, new(0.5f));
 
             }
             if (GetEnergyPercentage() < 1f)
             {
-                pwrBarMini.UpdateRect(miniBarPos - new Vector2(0, miniBarSize.Y * 1.1f) * 1.2f, miniBarSize);
+                pwrBarMini.UpdateRect(miniBarPos - new Vector2(0, miniBarSize.Y * 1.1f) * 1.2f, miniBarSize, new(0.5f));
             }
 
             var info = GAMELOOP.GetCurArea().GetCurPlayfield().Collide(collider.Pos, collider.Radius);
@@ -658,7 +662,7 @@ namespace ShapeEngineDemo.Bodies
 
                 Stun(stunTime);
                 Damage(25f, info.hitPoint, info.n, this, false);
-                collider.Vel = Vec.Normalize(Vec.Reflect(collider.Vel, info.n)) * stats.Get("maxSpeed") * WALL_COL_FORCE_FACTOR;
+                collider.Vel = SVec.Normalize(SVec.Reflect(collider.Vel, info.n)) * stats.Get("maxSpeed") * WALL_COL_FORCE_FACTOR;
 
             }
             if (weaponSystem.IsAimPointCooldownActive()) aimpointSkillDisplay.SetBarF(weaponSystem.F);
@@ -707,19 +711,19 @@ namespace ShapeEngineDemo.Bodies
             Vector2 barSize = uiSize * new Vector2(0.03f, 0.2f);
             Vector2 center = uiSize * new Vector2(0.03f, 0.98f) - new Vector2(0, barSize.Y / 2);
             Vector2 gap = new Vector2(barSize.X * 1.5f, 0);
-            hpBar.UpdateRect(center, barSize);
-            pwrBar.UpdateRect(center + gap, barSize);
-            UIHandler.DrawTextAlignedPro("HP", hpBar.GetPos(Alignement.CENTER) - hpBar.Transform(new Vector2(0, barSize.Y / 2)), hpBar.GetAngleDeg(), 60, 2, PaletteHandler.C("enemy"), Alignement.BOTTOMCENTER);
+            hpBar.UpdateRect(center, barSize, new(0.5f));
+            pwrBar.UpdateRect(center + gap, barSize, new(0.5f));
+            SDrawing.DrawTextAlignedPro("HP", hpBar.GetPos(new(0.5f)) - hpBar.Transform(new Vector2(0, barSize.Y / 2)), hpBar.GetAngleDeg(), 60, 2, PaletteHandler.C("enemy"), new(0.5f, 1f));
             hpBar.Draw(uiSize, stretchFactor);
 
-            UIHandler.DrawTextAlignedPro("PWR", pwrBar.GetPos(Alignement.CENTER) - pwrBar.Transform(new Vector2(0, barSize.Y / 2)), pwrBar.GetAngleDeg(), 60, 2, PaletteHandler.C("player"), Alignement.BOTTOMCENTER);
+            SDrawing.DrawTextAlignedPro("PWR", pwrBar.GetPos(new(0.5f)) - pwrBar.Transform(new Vector2(0, barSize.Y / 2)), pwrBar.GetAngleDeg(), 60, 2, PaletteHandler.C("player"), new(0.5f, 1f));
             pwrBar.Draw(uiSize, stretchFactor);
             if (energyCore.IsCooldownActive())
             {
                 Vector2 bottomRight = pwrBar.GetPos(new Vector2(0.75f, 0.5f)) + pwrBar.Transform(barSize / 2);// + new Vector2(20, 0);
-                UIHandler.DrawTextAlignedPro("REBOOT", bottomRight, pwrBar.GetAngleDeg() - 90f, 90, 10, PaletteHandler.C("bg2"), Alignement.BOTTOMLEFT);
+                SDrawing.DrawTextAlignedPro("REBOOT", bottomRight, pwrBar.GetAngleDeg() - 90f, 90, 10, PaletteHandler.C("bg2"), new(0,1));
             }
-            aimpointSkillDisplay.UpdateRect(uiSize * new Vector2(0.05f, 0.5f), uiSize * new Vector2(0.08f, 0.04f));
+            aimpointSkillDisplay.UpdateRect(uiSize * new Vector2(0.05f, 0.5f), uiSize * new Vector2(0.08f, 0.04f), new(0,0.5f));
             aimpointSkillDisplay.Draw(uiSize, stretchFactor);
             //aimpointInputPanel.Draw();
             //topLeft = ammoBar.GetTopLeft();
@@ -777,7 +781,7 @@ namespace ShapeEngineDemo.Bodies
             if (IsMovementSlow()) { targetPos = slowPos; }
             else if (IsMovementBoosting()) { targetPos = collider.Pos + collider.Vel * 1.2f;}
             //else { targetPos = collider.Pos; }
-            return Vec.Lerp(camPos, targetPos, dt * smoothness);
+            return SVec.Lerp(camPos, targetPos, dt * smoothness);
         }
         public bool CanBoost() { return !IsEnergyEmpty() && !energyCore.IsCooldownActive(); }
         public bool CanSlow() { return !IsEnergyEmpty() && !energyCore.IsCooldownActive(); }

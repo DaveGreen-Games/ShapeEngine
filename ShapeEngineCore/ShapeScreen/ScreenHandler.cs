@@ -1,6 +1,7 @@
 ﻿using Raylib_CsLo;
 using System.Numerics;
 using ShapeShaders;
+using ShapeLib;
 
 namespace ShapeScreen
 {
@@ -104,7 +105,7 @@ namespace ShapeScreen
             {
                 flashTimer -= dt;
                 float f = 1.0f - flashTimer / maxDuration;
-                curColor = Utils.LerpColor(startColor, endColor, f);
+                curColor = SColor.LerpColor(startColor, endColor, f);
                 if (flashTimer <= 0.0f)
                 {
                     flashTimer = 0.0f;

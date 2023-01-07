@@ -1,14 +1,15 @@
-﻿using ShapeEngineCore.Globals;
-using ShapeEngineCore.Globals.Screen;
-using ShapeEngineCore.Globals.Audio;
-using ShapeEngineCore.Globals.Input;
-using ShapeEngineCore.Globals.UI;
-using ShapeEngineCore.Globals.Shaders;
-using ShapeEngineCore.Globals.Timing;
-using ShapeEngineCore.Globals.Persistent;
+﻿using ShapeCore;
+using ShapeScreen;
+using ShapeAudio;
+using ShapeInput;
+using ShapeUI;
+using ShapeShaders;
+using ShapeTiming;
+using ShapePersistent;
 using Raylib_CsLo;
-using ShapeEngineCore;
+using ShapeLib;
 using System.Numerics;
+using ShapeEngineDemo.DataObjects;
 
 namespace ShapeEngineDemo
 {

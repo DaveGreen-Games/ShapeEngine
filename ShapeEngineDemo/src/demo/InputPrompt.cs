@@ -1,9 +1,7 @@
 ﻿using System.Numerics;
 using Raylib_CsLo;
-using ShapeCore;
 using ShapeUI;
 using ShapeInput;
-using ShapeScreen;
 using ShapeLib;
 
 namespace ShapeEngineDemo

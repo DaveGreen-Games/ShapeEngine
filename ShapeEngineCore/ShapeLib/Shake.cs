@@ -45,8 +45,8 @@
                 //float t = MathF.Pow(smoothness, f);
                 //curX = Lerp(RNG.randRangeFloat(-1.0f, 1.0f), curX, t);
                 //curY = Lerp(RNG.randRangeFloat(-1.0f, 1.0f), curY, t);
-                curX = Lerp(RNG.randF(-1.0f, 1.0f), curX, smoothness) * f;
-                curY = Lerp(RNG.randF(-1.0f, 1.0f), curY, smoothness) * f;
+                curX = Lerp(SRNG.randF(-1.0f, 1.0f), curX, smoothness) * f;
+                curY = Lerp(SRNG.randF(-1.0f, 1.0f), curY, smoothness) * f;
             }
         }
     }

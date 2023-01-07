@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Raylib_CsLo;
+using ShapeLib;
 
 namespace ShapeCursor
 {
@@ -18,8 +19,8 @@ namespace ShapeCursor
         public virtual void Draw(Vector2 uiSize, Vector2 mousePos)
         {
             Vector2 tip = mousePos;
-            Vector2 right = mousePos + Vec.Rotate(Vec.Right() * sizeRelative * uiSize.X, 90.0f * DEG2RAD);
-            Vector2 left = mousePos + Vec.Rotate(Vec.Right() * sizeRelative * uiSize.X, 135.0f * DEG2RAD);
+            Vector2 right = mousePos + SVec.Rotate(SVec.Right() * sizeRelative * uiSize.X, 90.0f * DEG2RAD);
+            Vector2 left = mousePos + SVec.Rotate(SVec.Right() * sizeRelative * uiSize.X, 135.0f * DEG2RAD);
             DrawTriangle(tip, left, right, color);
 
         }

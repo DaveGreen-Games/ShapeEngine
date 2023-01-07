@@ -1,4 +1,6 @@
-﻿using ShapeEngineCore.Globals.Timing;
+﻿using ShapeCore;
+using ShapeEngineDemo;
+using ShapeTiming;
 using System.Numerics;
 
 namespace ShapeEngineCore

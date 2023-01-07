@@ -1,9 +1,9 @@
 ﻿using System.Numerics;
-using ShapeEngineCore.Globals;
-using ShapeEngineCore.SimpleCollision;
+using ShapeCore;
+using ShapeCollision;
 using ShapeEngineDemo.Bodies;
-using ShapeEngineCore.Globals.Audio;
-using ShapeEngineCore;
+using ShapeAudio;
+using ShapeLib;
 using Raylib_CsLo;
 //using ShapeEngineCore.Globals.Timing;
 
@@ -22,7 +22,7 @@ namespace ShapeEngineDemo.Projectiles
         {
 
         }
-        public override void Overlap(OverlapInfo info)
+        public override void Overlap(CollisionInfo info)
         {
             if (info.overlapping)
             {
@@ -50,7 +50,7 @@ namespace ShapeEngineDemo.Projectiles
 
         public override void Draw()
         {
-            DrawLineEx(collider.Pos, collider.Pos - Vec.Normalize(collider.Vel) * collider.Radius * 2f, collider.Radius * 0.5f, color);
+            DrawLineEx(collider.Pos, collider.Pos - SVec.Normalize(collider.Vel) * collider.Radius * 2f, collider.Radius * 0.5f, color);
         }
     }
 }

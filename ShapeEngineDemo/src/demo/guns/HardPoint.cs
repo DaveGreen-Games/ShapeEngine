@@ -1,10 +1,10 @@
 ﻿using System.Numerics;
 using Raylib_CsLo;
 using ShapeEngineDemo.Bodies;
-using ShapeEngineCore;
-using ShapeEngineCore.Globals;
-using ShapeEngineCore.SimpleCollision;
-using ShapeEngineCore.Globals.Timing;
+using ShapeCore;
+using ShapeCollision;
+using ShapeTiming;
+using ShapeLib;
 
 namespace ShapeEngineDemo.Guns
 {
@@ -203,8 +203,8 @@ namespace ShapeEngineDemo.Guns
                 if (targetFinder != null && targetFinder.HasTarget())
                 {
                     var target = targetFinder.GetTarget();
-                    Color targetColor = Utils.ChangeAlpha(PaletteHandler.C("enemy"), 125);
-                    Vector2 targetPos = target.GetPos() + RNG.randVec2(0f, 3f);
+                    Color targetColor = SColor.ChangeAlpha(PaletteHandler.C("enemy"), 125);
+                    Vector2 targetPos = target.GetPos() + SRNG.randVec2(0f, 3f);
                     Vector2 size = new(5f, 5f);
                     var rect = new Rectangle(targetPos.X - size.X / 2, targetPos.Y - size.Y / 2, size.X, size.Y);
                     DrawRectangleLinesEx(rect, 1f, PaletteHandler.C("enemy"));
@@ -227,7 +227,7 @@ namespace ShapeEngineDemo.Guns
         public void UpdateSpacing(Vector2 pos, float angle, float sizeFactor = 1f) 
         {
             this.rotRad = angle;// + rotOffsetRad;
-            this.pos = pos + Vec.Rotate(offset * sizeFactor, angle) + RNG.randVec2(0.5f, 1f);
+            this.pos = pos + SVec.Rotate(offset * sizeFactor, angle) + SRNG.randVec2(0.5f, 1f);
         }
         //public void SetAimAngle(float angleRad) { if (!HasGun()) return; gun.SetRotRad(angleRad); }
         public void Aim(float dt, int dir)
@@ -245,13 +245,13 @@ namespace ShapeEngineDemo.Guns
         {
             if (!HasGun()) return;
             if (!CanRotate()) return;
-            AimAt(Vec.AngleRad(pos - this.pos), dt);
+            AimAt(SVec.AngleRad(pos - this.pos), dt);
         }
         public void AimAt(float targetAngleRad, float dt)
         {
             if(!HasGun()) return;
             if (!CanRotate()) return;
-            float dif = Utils.GetShortestAngleRad(gun.GetRotationRad(), targetAngleRad);
+            float dif = SUtils.GetShortestAngleRad(gun.GetRotationRad(), targetAngleRad);
             float amount = MathF.Min(stats.Get("rotSpeed") * DEG2RAD * dt, MathF.Abs(dif));
             float dir = 1;
             if (dif < 0) dir = -1;
@@ -271,7 +271,7 @@ namespace ShapeEngineDemo.Guns
         public void DrawDebugDirection(float length, float width)
         {
             if (!HasGun()) return;
-            DrawLineEx(gun.GetPosition(), gun.GetPosition() + Vec.Rotate(Vec.Right(), gun.GetRotationRad()) * length, width, WHITE);
+            DrawLineEx(gun.GetPosition(), gun.GetPosition() + SVec.Rotate(SVec.Right(), gun.GetRotationRad()) * length, width, WHITE);
         }
 
         private void GunFired(float ammoCost)

@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Nodes;
 using System.Text.Json;
 using Newtonsoft.Json;
-using System.Xml.Linq;
+using ShapeLib;
 //using ShapeEngineCore.Demo.DataObjects;
 
 namespace ShapePersistent
@@ -73,7 +73,7 @@ namespace ShapePersistent
             if (!Contains(sheet)) return "";
             var s = data[sheet];
             if (s.Count <= 0) return "";
-            int index = RNG.randI(0, s.Count);
+            int index = SRNG.randI(0, s.Count);
             return s.Keys.ToList()[index];
         }
         public T? GetRandom<T>(string sheet) where T : DataObject
@@ -81,7 +81,7 @@ namespace ShapePersistent
             if (!Contains(sheet)) return default;
             var s = data[sheet];
             if (s.Count <= 0) return default;
-            int index = RNG.randI(0, s.Count);
+            int index = SRNG.randI(0, s.Count);
             string id = s.Keys.ToList()[index];
             return s[id] as T;
         }

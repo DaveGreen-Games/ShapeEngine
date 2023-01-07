@@ -22,7 +22,7 @@ namespace ShapeCore
         public float Area { get { return area; } }
         public Vector2 GetRandPos()
         {
-            return RNG.randVec2(rect);
+            return SRNG.randVec2(rect);
         }
 
         public void Debug_Draw(Color color)
@@ -70,7 +70,7 @@ namespace ShapeCore
             {
                 maxArea += segment.Area;
             }
-            float chosen = RNG.randF(0, maxArea);
+            float chosen = SRNG.randF(0, maxArea);
             float cur = 0f;
             for (int i = 0; i < segments.Count; i++)
             {
@@ -83,8 +83,8 @@ namespace ShapeCore
             }
             return segments[spawnSegments.Count - 1];
         }
-        public Vector2 RandInner() { return RNG.randVec2(inner); }
-        public Vector2 RandOuter() { return RNG.randVec2(outer); }
+        public Vector2 RandInner() { return SRNG.randVec2(inner); }
+        public Vector2 RandOuter() { return SRNG.randVec2(outer); }
 
         public void Debug_DrawSegments()
         {

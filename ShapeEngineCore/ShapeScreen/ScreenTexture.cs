@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Raylib_CsLo;
+using ShapeLib;
 
 namespace ShapeScreen
 {
@@ -343,7 +344,7 @@ namespace ShapeScreen
             {
                 flashTintTimer -= dt;
                 float f = 1.0f - flashTintTimer / flashTintDuration;
-                curTint = Utils.LerpColor(flashTintStartColor, tint, f);
+                curTint = SColor.LerpColor(flashTintStartColor, tint, f);
                 //flashTintCurScale = RayMath.Lerp(flashTintScale, 0.0f, f);
                 if (flashTintTimer <= 0.0f)
                 {
@@ -465,7 +466,7 @@ namespace ShapeScreen
                     Vector2 sizeOffset = new(5f, 5f);
                     Vector2 center = camera.CameraPos;
                     Vector2 size = camera.CameraOffset * 2 * (1f / camera.CameraZoom);
-                    SDrawing.DrawRectangle(center, size + sizeOffset, UI.Alignement.CENTER, new Vector2(0.5f, 0.5f), -camera.CameraRotDeg, flash.GetColor());
+                    SDrawing.DrawRectangle(center, size + sizeOffset, new(0.5f), new Vector2(0.5f, 0.5f), -camera.CameraRotDeg, flash.GetColor());
                 }
                 else DrawRectangle(-1, -1, GetTextureWidth() + 1, GetTextureHeight() + 1, flash.GetColor());
             }

@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+﻿using ShapeLib;
 using System.Numerics;
 using Raylib_CsLo;
 using ShapeCursor;
@@ -75,7 +75,7 @@ namespace ShapeInput
         public Vector2 GetAxis(string left, string right, string up, string down, bool normalized = true)
         {
             if (disabled) return new(0f, 0f);
-            if (normalized) return Vec.Normalize(curInputMap.GetAxis(gamepadIndex,left, right, up, down));
+            if (normalized) return SVec.Normalize(curInputMap.GetAxis(gamepadIndex,left, right, up, down));
             else return curInputMap.GetAxis(gamepadIndex, left, right, up, down);
         }
         public float GetGamepadAxis(string gamepadAxisAction)
@@ -87,7 +87,7 @@ namespace ShapeInput
         {
             if (disabled) return new(0f, 0f);
 
-            if (normalized) return Vec.Normalize(curInputMap.GetGamepadAxis(gamepadIndex, gamepadAxisHor, gamepadAxisVer));
+            if (normalized) return SVec.Normalize(curInputMap.GetGamepadAxis(gamepadIndex, gamepadAxisHor, gamepadAxisVer));
             else return curInputMap.GetGamepadAxis(gamepadIndex, gamepadAxisHor, gamepadAxisVer);
         }
 

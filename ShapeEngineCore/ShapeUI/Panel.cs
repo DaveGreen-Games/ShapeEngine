@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+﻿using ShapeLib;
 using System.Numerics;
 using Raylib_CsLo;
 
@@ -53,14 +53,14 @@ namespace ShapeUI
         protected void DrawBackground()
         {
             if (HasBackground()) 
-                SDrawing.DrawRectangle(GetPos(Alignement.TOPLEFT), GetSize(), Alignement.TOPLEFT, alignement, angleDeg, bgColor);
+                SDrawing.DrawRectangle(GetPos(new(0f)), GetSize(), new(0f), alignement, angleDeg, bgColor);
 
         }
 
         protected void DrawOutline()
         {
             if (HasOutline()) 
-                SDrawing.DrawRectangeLinesPro(GetPos(Alignement.TOPLEFT), GetSize(), Alignement.TOPLEFT, alignement, angleDeg, outlineThickness, outlineColor);
+                SDrawing.DrawRectangeLinesPro(GetPos(new(0f)), GetSize(), new(0f), alignement, angleDeg, outlineThickness, outlineColor);
         }
 
         protected bool HasBackground() { return bgColor.a > 0; }

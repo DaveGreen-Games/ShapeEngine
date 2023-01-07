@@ -1,7 +1,6 @@
 ﻿using Raylib_CsLo;
-using ShapeEngineCore.Globals;
-using ShapeEngineCore.Globals.Timing;
-using ShapeEngineCore.SimpleCollision;
+using ShapeTiming;
+using ShapeCollision;
 using System.Numerics;
 
 namespace ShapeEngineDemo.Bodies
@@ -45,7 +44,7 @@ namespace ShapeEngineDemo.Bodies
 
         public override Rectangle GetBoundingBox()
         {
-            return HasDynamicBoundingBox() ? collider.GetDynamicBoundingRect() : collider.GetBoundingRect();
+            return collider.GetBoundingRect();
         }
         public override Vector2 GetPos()
         {

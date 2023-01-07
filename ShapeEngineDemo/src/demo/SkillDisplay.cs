@@ -5,7 +5,7 @@ using ShapeCore;
 using ShapeInput;
 using ShapeLib;
 
-namespace ShapeEngineCore
+namespace ShapeEngineDemo
 {
     public class SkillDisplay : UIElement
     {

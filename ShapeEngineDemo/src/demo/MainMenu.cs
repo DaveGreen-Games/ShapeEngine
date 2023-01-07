@@ -1,11 +1,10 @@
 ﻿using System.Numerics;
 using Raylib_CsLo;
-using ShapeEngineCore;
-using ShapeEngineCore.Globals.UI;
-using ShapeEngineCore.Globals.Screen;
-using ShapeEngineCore.Globals;
-using ShapeEngineCore.Globals.Cursor;
-using ShapeEngineCore.Globals.Audio;
+using ShapeUI;
+using ShapeScreen;
+using ShapeCore;
+using ShapeCursor;
+using ShapeLib;
 
 namespace ShapeEngineDemo
 {
@@ -98,16 +97,16 @@ namespace ShapeEngineDemo
             Vector2 center = uiSize * 0.5f;
             Vector2 size = uiSize * new Vector2(0.2f, 0.1f);
             Vector2 offset = new Vector2(0, size.Y * 1.1f);
-            level1Button.UpdateRect(center, size);
-            optionsButton.UpdateRect(center + offset, size);
-            quitButton.UpdateRect(center + offset * 2, size);
+            level1Button.UpdateRect(center, size, new(0.5f));
+            optionsButton.UpdateRect(center + offset, size, new(0.5f));
+            quitButton.UpdateRect(center + offset * 2, size, new(0.5f));
             level1Button.Update(dt, GAMELOOP.MOUSE_POS_UI);
             optionsButton.Update(dt, GAMELOOP.MOUSE_POS_UI);
             quitButton.Update(dt, GAMELOOP.MOUSE_POS_UI);
 
-            tb1.UpdateRect(center + offset * 3, size);
-            tb2.UpdateRect(center - new Vector2(size.X * 1.7f, 0f), size * 1.2f);
-            tb3.UpdateRect(center + size * 1.5f, size * 0.5f);
+            tb1.UpdateRect(center + offset * 3, size, new(0.5f));
+            tb2.UpdateRect(center - new Vector2(size.X * 1.7f, 0f), size * 1.2f, new(0.5f));
+            tb3.UpdateRect(center + size * 1.5f, size * 0.5f, new(0.5f));
             tb1.Update(dt, GAMELOOP.MOUSE_POS_UI);
             tb2.Update(dt, GAMELOOP.MOUSE_POS_UI);
             tb3.Update(dt, GAMELOOP.MOUSE_POS_UI);
@@ -130,23 +129,23 @@ namespace ShapeEngineDemo
             Rectangle uiArea = ScreenHandler.UIArea();
             DrawRectangleRec(uiArea, PaletteHandler.C("bg1"));
             
-            UIHandler.DrawTextAligned("MAIN MENU", uiSize * new Vector2(0.5f, 0.21f), uiSize * new Vector2(0.5f, 0.5f), 1, PaletteHandler.C("bg2"), "bold");
-            UIHandler.DrawTextAligned("MAIN MENU", uiSize * new Vector2(0.5f, 0.2f), uiSize * new Vector2(0.5f, 0.5f), 1, PaletteHandler.C("header"), "bold");
+            SDrawing.DrawTextAligned("MAIN MENU", uiSize * new Vector2(0.5f, 0.21f), uiSize * new Vector2(0.5f, 0.5f), 1, PaletteHandler.C("bg2"), "bold", new(0.5f));
+            SDrawing.DrawTextAligned("MAIN MENU", uiSize * new Vector2(0.5f, 0.2f), uiSize * new Vector2(0.5f, 0.5f), 1, PaletteHandler.C("header"), "bold", new(0.5f));
             
             
             
-            UIHandler.DrawTextAligned2(ShapeEngine.EDITORMODE == true ? "EDITOR" : "STANDALONE", 
-                uiSize * new Vector2(0.01f, 0.03f), uiSize.X * 0.05f, 1, WHITE, Alignement.LEFTCENTER);
+            SDrawing.DrawTextAligned2(ShapeEngine.EDITORMODE == true ? "EDITOR" : "STANDALONE", 
+                uiSize * new Vector2(0.01f, 0.03f), uiSize.X * 0.05f, 1, WHITE, new(0,0.5f));
 
             Vector2 start = uiSize * new Vector2(0.01f, 0.08f);
             Vector2 gap = uiSize * new Vector2(0, 0.04f);
             Vector2 textSize = uiSize * new Vector2(0.2f, 0.05f);
             //float fontSize = 60f;
-            UIHandler.DrawTextAligned(String.Format("UI Size: {0}", ScreenHandler.UISize()), start, textSize, 1, WHITE, Alignement.LEFTCENTER);
-            UIHandler.DrawTextAligned(String.Format("Dev Res: {0}", ScreenHandler.DEVELOPMENT_RESOLUTION), start + gap, textSize, 1, WHITE, Alignement.LEFTCENTER);
-            UIHandler.DrawTextAligned(String.Format("Target Res: {0}", ScreenHandler.UI.TARGET_RESOLUTION), start + gap * 2, textSize, 1, WHITE, Alignement.LEFTCENTER);
-            UIHandler.DrawTextAligned(String.Format("Win Size: {0}", ScreenHandler.CUR_WINDOW_SIZE), start + gap * 3, textSize, 1, WHITE, Alignement.LEFTCENTER);
-            UIHandler.DrawTextAligned(String.Format("Stretch F: {0}", stretchFactor), start + gap * 4, textSize, 1, WHITE, Alignement.LEFTCENTER);
+            SDrawing.DrawTextAligned(String.Format("UI Size: {0}", ScreenHandler.UISize()), start, textSize, 1, WHITE, new(0, 0.5f));
+            SDrawing.DrawTextAligned(String.Format("Dev Res: {0}", ScreenHandler.DEVELOPMENT_RESOLUTION), start + gap, textSize, 1, WHITE, new(0, 0.5f));
+            SDrawing.DrawTextAligned(String.Format("Target Res: {0}", ScreenHandler.UI.TARGET_RESOLUTION), start + gap * 2, textSize, 1, WHITE, new(0, 0.5f));
+            SDrawing.DrawTextAligned(String.Format("Win Size: {0}", ScreenHandler.CUR_WINDOW_SIZE), start + gap * 3, textSize, 1, WHITE, new(0, 0.5f));
+            SDrawing.DrawTextAligned(String.Format("Stretch F: {0}", stretchFactor), start + gap * 4, textSize, 1, WHITE, new(0, 0.5f));
             
             //UIHandler.DrawTextAligned(String.Format("Area F: {0}", ScreenHandler.UI.STRETCH_AREA_FACTOR), new Vector2(100f, 420f), 50, 5, WHITE, Alignement.LEFTCENTER);
             //UIHandler.DrawTextAligned(String.Format("Area Side F: {0}", ScreenHandler.UI.STRETCH_AREA_SIDE_FACTOR), new Vector2(100f, 500f), 50, 5, WHITE, Alignement.LEFTCENTER);

@@ -4,7 +4,7 @@ using ShapeCore;
 using ShapeLib;
 using ShapeTiming;
 
-namespace ShapeEngineCore
+namespace ShapeEngineDemo
 {
     public class CoreParticle : Particle
     {

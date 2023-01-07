@@ -20,7 +20,7 @@ namespace ShapeLib
             this.easingType = easingType;
         }
 
-        public dynamic GetValue(dynamic start) { return Utils.LerpDynamic(start, start + change, f); }
+        public dynamic GetValue(dynamic start) { return SUtils.LerpDynamic(start, start + change, f); }
         public bool IsFinished() { return duration > 0 && timer <= 0; }
         public void Update(float dt)
         {
@@ -180,7 +180,7 @@ namespace ShapeLib
         {
             switch (easingType)
             {
-                case EasingType.LINEAR_NONE: return Utils.LerpFloat(from, from + change, time / maxTime);// Easings.EaseLinearNone(time, from, to, maxTime);
+                case EasingType.LINEAR_NONE: return SUtils.LerpFloat(from, from + change, time / maxTime);// Easings.EaseLinearNone(time, from, to, maxTime);
                 case EasingType.LINEAR_IN: return Easings.EaseLinearIn(time, from, change, maxTime);
                 case EasingType.LINEAR_OUT: return Easings.EaseLinearOut(time, from, change, maxTime);
                 case EasingType.LINEAR_INOUT: return Easings.EaseLinearInOut(time, from, change, maxTime);
@@ -337,15 +337,15 @@ namespace ShapeLib
         }
         public static float Simple(float from, float to, float t, EasingType easingType)
         {
-            return Utils.LerpFloat(from, to, Simple(t, easingType));
+            return SUtils.LerpFloat(from, to, Simple(t, easingType));
         }
         public static Vector2 Simple(Vector2 from, Vector2 to, float t, EasingType easingType)
         {
-            return Vec.Lerp(from, to, Simple(t, easingType));
+            return SVec.Lerp(from, to, Simple(t, easingType));
         }
         public static Color Simple(Color from, Color to, float t, EasingType easingType)
         {
-            return Utils.LerpColor(from, to, Simple(t, easingType));
+            return SColor.LerpColor(from, to, Simple(t, easingType));
         }
 
         public static float EaseInSine(float t)

@@ -36,8 +36,8 @@ namespace ShapeCore
             DrawOrder = 90;
             this.size = size;
             this.color = color;
-            rotation = RNG.randF(2f * PI);
-            this.rotSpeed = rotSpeed * RNG.randF() < 0.5f ? 1f : -1f;
+            rotation = SRNG.randF(2f * PI);
+            this.rotSpeed = rotSpeed * SRNG.randF() < 0.5f ? 1f : -1f;
         }
         public ShapeEffect(Vector2 pos, float duration, float size, Color color, float rot = 0f, float rotSpeed = 0f) : base(pos, duration)
         {
@@ -45,7 +45,7 @@ namespace ShapeCore
             this.size = size;
             this.color = color;
             rotation = rot;
-            this.rotSpeed = rotSpeed * RNG.randF() < 0.5f ? 1f : -1f;
+            this.rotSpeed = rotSpeed * SRNG.randF() < 0.5f ? 1f : -1f;
         }
         public override void Update(float dt)
         {
@@ -53,7 +53,7 @@ namespace ShapeCore
             base.Update(dt);
             rotation += rotSpeed * dt;
         }
-        protected virtual float GetCurSize() { return Utils.LerpFloat(size, 0f, 1.0f - lifetimeTimer.GetF()); }
+        protected virtual float GetCurSize() { return SUtils.LerpFloat(size, 0f, 1.0f - lifetimeTimer.GetF()); }
         public override Rectangle GetBoundingBox()
         {
             return new(gamePos.X - size, gamePos.Y - size, size * 2, size * 2);
@@ -98,11 +98,11 @@ namespace ShapeCore
         public override void Draw()
         {
             if (IsDead()) return;
-            DrawLineEx(gamePos, gamePos + Vec.Rotate(Vec.Right(), rotation) * GetCurSize(), lineThickness, color);
+            DrawLineEx(gamePos, gamePos + SVec.Rotate(SVec.Right(), rotation) * GetCurSize(), lineThickness, color);
         }
         public override Rectangle GetBoundingBox()
         {
-            Vector2 end = gamePos + Vec.Rotate(Vec.Right() * size, rotation);
+            Vector2 end = gamePos + SVec.Rotate(SVec.Right() * size, rotation);
             return new(gamePos.X, gamePos.Y, end.X - gamePos.X, end.Y - gamePos.Y);
         }
     }

@@ -1,11 +1,10 @@
 ﻿using System.Numerics;
 using Raylib_CsLo;
-using ShapeEngineCore.Globals;
-using ShapeEngineCore.Globals.Screen;
-using ShapeEngineCore.Globals.UI;
-using ShapeEngineCore.Globals.Timing;
-
-using ShapeEngineCore;
+using ShapeCore;
+using ShapeScreen;
+using ShapeUI;
+using ShapeTiming;
+using ShapeLib;
 
 namespace ShapeEngineDemo
 {
@@ -32,7 +31,7 @@ namespace ShapeEngineDemo
         public override void Deactivate(Scene? newScene)
         {
             base.Deactivate(newScene);
-            ShapeEngineCore.Globals.Cursor.CursorHandler.Show();
+            ShapeCursor.CursorHandler.Show();
         }
         public override void Update(float dt)
         {
@@ -52,8 +51,8 @@ namespace ShapeEngineDemo
             if(started)
             {
                 float f = 1.0f - (timer / maxTime);
-                Vector2 textSize = Vec.Lerp(new(0f), new Vector2(0.9f, 0.5f) * uiSize, f);
-                UIHandler.DrawTextAligned("SHAPE ENGINE", new Vector2(0.5f, 0.5f) * uiSize, textSize, 1, PaletteHandler.C("header"), "bold", Alignement.CENTER);
+                Vector2 textSize = SVec.Lerp(new(0f), new Vector2(0.9f, 0.5f) * uiSize, f);
+                SDrawing.DrawTextAligned("SHAPE ENGINE", new Vector2(0.5f, 0.5f) * uiSize, textSize, 1, PaletteHandler.C("header"), "bold", new(0.5f));
 
             }
         }

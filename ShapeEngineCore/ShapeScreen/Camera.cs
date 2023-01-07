@@ -79,9 +79,9 @@ namespace ShapeScreen
         }
 
 
-        public Vector2 Translation { get { return Vec.Lerp(startTranslation, endTranslation, f); } }
-        public float RotDeg { get { return Utils.LerpFloat(startRotDeg, endRotDeg, f); } }
-        public float Scale { get { return Utils.LerpFloat(startScale, endScale, f); } }
+        public Vector2 Translation { get { return SVec.Lerp(startTranslation, endTranslation, f); } }
+        public float RotDeg { get { return SUtils.LerpFloat(startRotDeg, endRotDeg, f); } }
+        public float Scale { get { return SUtils.LerpFloat(startScale, endScale, f); } }
 
         public void Update(float dt)
         {
@@ -294,10 +294,10 @@ namespace ShapeScreen
                     return;
                 }
                 f = timer / duration;
-                curX = Lerp(RNG.randF(-1.0f, 1.0f), curX, smoothness) * f;
-                curY = Lerp(RNG.randF(-1.0f, 1.0f), curY, smoothness) * f;
-                curRotDeg = Lerp(RNG.randF(-1.0f, 1.0f), curRotDeg, smoothness) * f;
-                curZoom = Lerp(RNG.randF(-1.0f, 1.0f), curZoom, smoothness) * f;
+                curX = Lerp(SRNG.randF(-1.0f, 1.0f), curX, smoothness) * f;
+                curY = Lerp(SRNG.randF(-1.0f, 1.0f), curY, smoothness) * f;
+                curRotDeg = Lerp(SRNG.randF(-1.0f, 1.0f), curRotDeg, smoothness) * f;
+                curZoom = Lerp(SRNG.randF(-1.0f, 1.0f), curZoom, smoothness) * f;
             }
         }
     }
@@ -484,7 +484,7 @@ namespace ShapeScreen
                 {
                     Vector2 curPos = rawCameraTarget; // screenSpaceCamera.target;// target.GetPosition();
                     Vector2 newPos = newTarget.GetCameraPosition(curPos, 0f, followSmoothness, boundaryDis);
-                    float disSq = Vec.LengthSquared(newPos - curPos);
+                    float disSq = SVec.LengthSquared(newPos - curPos);
                     if (disSq < 25)
                     {
                         target = newTarget;
@@ -493,7 +493,7 @@ namespace ShapeScreen
                     }
                     else
                     {
-                        rawCameraTarget = Vec.Lerp(curPos, newPos, dt * followSmoothness);
+                        rawCameraTarget = SVec.Lerp(curPos, newPos, dt * followSmoothness);
                     }
                 }
                 else
