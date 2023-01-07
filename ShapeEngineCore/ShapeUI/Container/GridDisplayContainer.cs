@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using ShapeLib;
 
 namespace ShapeUI.Container
 {
@@ -334,12 +335,12 @@ namespace ShapeUI.Container
             int index = children.IndexOf(child);
             if (vContainer)
             {
-                var coords = Utils.TransformIndexToCoordinates(index, GetMaxRows(), columns, true);
+                var coords = SUtils.TransformIndexToCoordinates(index, GetMaxRows(), columns, true);
                 SetIndex(coords.row);
             }
             else
             {
-                var coords = Utils.TransformIndexToCoordinates(index, rows, GetMaxColumns(), false);
+                var coords = SUtils.TransformIndexToCoordinates(index, rows, GetMaxColumns(), false);
                 SetIndex(coords.col);
             }
 
@@ -360,7 +361,7 @@ namespace ShapeUI.Container
 
                 if (count > childCount)
                 {
-                    var coords = Utils.TransformIndexToCoordinates(childCount - 1, GetMaxRows(), columns, true);
+                    var coords = SUtils.TransformIndexToCoordinates(childCount - 1, GetMaxRows(), columns, true);
                     index = coords.row + 1;
                 }
                 return index;
@@ -373,7 +374,7 @@ namespace ShapeUI.Container
 
                 if (count > childCount)
                 {
-                    var coords = Utils.TransformIndexToCoordinates(childCount - 1, rows, GetMaxColumns(), false);
+                    var coords = SUtils.TransformIndexToCoordinates(childCount - 1, rows, GetMaxColumns(), false);
                     index = coords.col + 1;
                 }
                 return index;
@@ -390,7 +391,7 @@ namespace ShapeUI.Container
 
                 if (count > childCount)
                 {
-                    var coords = Utils.TransformIndexToCoordinates(childCount - 1, GetMaxRows(), columns, true);
+                    var coords = SUtils.TransformIndexToCoordinates(childCount - 1, GetMaxRows(), columns, true);
                     index = coords.row + 1;
                 }
                 return index;
@@ -403,7 +404,7 @@ namespace ShapeUI.Container
 
                 if (count > childCount)
                 {
-                    var coords = Utils.TransformIndexToCoordinates(childCount - 1, rows, GetMaxColumns(), false);
+                    var coords = SUtils.TransformIndexToCoordinates(childCount - 1, rows, GetMaxColumns(), false);
                     index = coords.col + 1;
                 }
                 return index;
@@ -450,13 +451,13 @@ namespace ShapeUI.Container
         {
             movementDir = 0;
             var range = GetDisplayedItemRange();
-            UpdateRects(GetRect(), range.start, range.end, vContainer);
+            UpdateRects(GetRect(new(0f)), range.start, range.end, vContainer);
             UpdateChildren(dt, mousePosUI, range.start, range.end);
         }
 
         public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
         {
-            if (HasBackground()) DrawBackground(GetRect(), bgColor);
+            if (HasBackground()) DrawBackground(GetRect(new(0f)), bgColor);
             var range = GetDisplayedItemRange();
             DrawChildren(uiSize, stretchFactor, range.start, range.end);
         }

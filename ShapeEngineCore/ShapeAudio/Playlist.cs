@@ -1,4 +1,4 @@
-﻿using ShapeEngineCore.Globals;
+﻿using ShapeLib;
 
 namespace ShapeAudio
 
@@ -109,7 +109,7 @@ namespace ShapeAudio
         public Song PopNext()
         {
             if (queue.Count <= 0) Refill();
-            int index = RNG.randI(0, queue.Count);
+            int index = SRNG.randI(0, queue.Count);
             Song next = queue[index];
             queue.RemoveAt(index);
             return next;

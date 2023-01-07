@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
-using ShapeEngineCore;
-using ShapeEngineCore.SimpleCollision;
+using ShapeCore;
+using ShapeCollision;
 
 namespace ShapeEngineDemo.Bodies
 {
@@ -119,10 +119,6 @@ namespace ShapeEngineDemo.Bodies
             }
         }
         
-        public virtual void Collide(CastInfo info)
-        {
-            return;
-        }
         public virtual string GetCollisionLayer()
         {
             return "body";
@@ -171,20 +167,13 @@ namespace ShapeEngineDemo.Bodies
         public virtual bool CanBeDamaged() { return true; }
         public virtual float GetDamage() { return 0f; }
 
-        public ColliderClass GetColliderClass()
-        {
-            return ColliderClass.COLLIDER;
-        }
-        public ColliderType GetColliderType()
-        {
-            return ColliderType.DYNAMIC;
-        }
+        
         public string[] GetCollisionMask()
         {
             return collisionMask;
         }
 
-        public void Overlap(OverlapInfo info)
+        public virtual void Overlap(CollisionInfo info)
         {
             return;
         }

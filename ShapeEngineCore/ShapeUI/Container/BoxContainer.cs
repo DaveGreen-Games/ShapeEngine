@@ -48,7 +48,7 @@ namespace ShapeUI.Container
         }
         public override void Update(float dt, Vector2 mousePosUI)
         {
-            UpdateRects(GetRect(), 0, children.Count);
+            UpdateRects(GetRect(new(0f)), 0, children.Count);
             UpdateChildren(dt, mousePosUI);
         }
 
@@ -78,7 +78,7 @@ namespace ShapeUI.Container
                     Vector2 maxSize = maxElementSizeRel * new Vector2(rect.width, rect.height);
                     if (maxSize.X > 0f) size.X = MathF.Min(size.X, maxSize.X);
                     if (maxSize.Y > 0f) size.Y = MathF.Min(size.Y, maxSize.Y);
-                    item.UpdateRect(startPos + offset, size, Alignement.TOPLEFT);
+                    item.UpdateRect(startPos + offset, size, new(0f));
                     offset += new Vector2(0, gapSize + size.Y);
                 }
             }
@@ -96,7 +96,7 @@ namespace ShapeUI.Container
                     Vector2 maxSize = maxElementSizeRel * new Vector2(rect.width, rect.height);
                     if (maxSize.X > 0f) size.X = MathF.Min(size.X, maxSize.X);
                     if (maxSize.Y > 0f) size.Y = MathF.Min(size.Y, maxSize.Y);
-                    item.UpdateRect(startPos + offset, size, Alignement.TOPLEFT);
+                    item.UpdateRect(startPos + offset, size, new(0f));
                     offset += new Vector2(gapSize + width, 0f);
                 }
             }

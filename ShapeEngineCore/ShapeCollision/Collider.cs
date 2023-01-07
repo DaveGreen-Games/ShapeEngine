@@ -1,7 +1,6 @@
 ﻿
 using System.Numerics;
 using Raylib_CsLo;
-using ShapeEngineCore.Globals;
 using ShapeLib;
 
 namespace ShapeCollision

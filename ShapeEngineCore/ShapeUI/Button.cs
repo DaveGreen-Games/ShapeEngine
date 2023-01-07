@@ -1,18 +1,19 @@
 ﻿using System.Numerics;
 using Raylib_CsLo;
+using ShapeLib;
 
 namespace ShapeUI
 {
     public class Button : UIElementSelectable
     {
-        protected Alignement animationAlignement = Alignement.CENTER;
+        protected Vector2 animationAlignement = new(0.5f);
         protected Vector2 offset = new();
         protected Vector2 sizeOffset = new(1f, 1f);
         protected EaseHandler easeHandler = new();
 
         protected UISelectionColors stateColors = new();
 
-        public void SetAnimationAlignment(Alignement newAlignement) { animationAlignement = newAlignement; }
+        public void SetAnimationAlignment(Vector2 newAlignement) { animationAlignement = newAlignement; }
 
         public void SetStateColors(UISelectionColors newColors) { this.stateColors = newColors; }
 
@@ -63,7 +64,7 @@ namespace ShapeUI
         {
             Vector2 pos = GetPos(animationAlignement);
             Vector2 size = GetSize();
-            Rectangle animationRect = Utils.ConstructRectangle(pos + offset, size * sizeOffset, animationAlignement);
+            Rectangle animationRect = SRect.ConstructRect(pos + offset, size * sizeOffset, animationAlignement);
 
             DrawRectangleRec(animationRect, color);
             if (selected) DrawRectangleV(new Vector2(animationRect.X, animationRect.y + animationRect.height * 0.9f), new Vector2(animationRect.width, animationRect.height * 0.1f), stateColors.selectedColor);

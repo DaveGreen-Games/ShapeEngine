@@ -1,12 +1,12 @@
 ﻿using System.Numerics;
 using Raylib_CsLo;
-using ShapeEngineCore;
-using ShapeEngineCore.Globals;
-using ShapeEngineCore.Globals.Screen;
-using ShapeEngineCore.Globals.UI;
-using ShapeEngineCore.Globals.Input;
-using ShapeEngineCore.Globals.Timing;
-using ShapeEngineCore.Globals.Cursor;
+using ShapeCore;
+using ShapeLib;
+using ShapeScreen;
+using ShapeUI;
+using ShapeInput;
+using ShapeTiming;
+using ShapeCursor;
 using ShapeEngineDemo.Bodies;
 
 namespace ShapeEngineDemo
@@ -20,10 +20,10 @@ namespace ShapeEngineDemo
 
         public Star(Rectangle spawnArea, float radius, Color color)
         {
-            this.pos = RNG.randVec2(spawnArea);
+            this.pos = SRNG.randVec2(spawnArea);
             this.r = radius;
             this.color = color;
-            DrawOrder = RNG.randF(-1f, 1f);
+            DrawOrder = SRNG.randF(-1f, 1f);
         }
 
         public override void Draw()
@@ -48,33 +48,33 @@ namespace ShapeEngineDemo
         List<(Vector2 center, float r, float thickness, Color color)> rings = new();
         public Planet(Rectangle spawnArea, float radius, Color color)
         {
-            this.pos = RNG.randVec2(spawnArea);
+            this.pos = SRNG.randVec2(spawnArea);
             this.r = radius;
             this.color = color;
-            DrawOrder = RNG.randF(-1f, 1f);
+            DrawOrder = SRNG.randF(-1f, 1f);
 
             if (r > 6)
             {
-                int randAmount = RNG.randI(0, 4);
+                int randAmount = SRNG.randI(0, 4);
                 for (int i = 0; i < randAmount; i++)
                 {
-                    var randR = RNG.randF(1f, this.r / 2f);
-                    var randPos = RNG.randVec2(0, this.r - randR);
-                    var randColor = Utils.ChangeHUE(color, RNG.randI(-50, 50));
-                    randColor = Utils.ChangeBrightness(randColor, RNG.randF(-0.2f, -0.1f));
+                    var randR = SRNG.randF(1f, this.r / 2f);
+                    var randPos = SRNG.randVec2(0, this.r - randR);
+                    var randColor = SColor.ChangeHUE(color, SRNG.randI(-50, 50));
+                    randColor = SColor.ChangeBrightness(randColor, SRNG.randF(-0.2f, -0.1f));
                     circles.Add((randPos, randR, randColor));
                 }
             }
 
-            if(RNG.randF() < 0.1f)
+            if(SRNG.randF() < 0.1f)
             {
-                int randAmount = RNG.randI(1, 2);
+                int randAmount = SRNG.randI(1, 2);
                 for (int i = 0; i < randAmount; i++)
                 {
-                    var randR = RNG.randF(r * 1.2f, r * 2.5f);
-                    var randThickness = RNG.randF(1f, (randR - this.r) / 2);
-                    var randColor = Utils.ChangeHUE(color, RNG.randI(-50, 50)); 
-                    rings.Add((new Vector2(0f), randR, randThickness, Utils.ChangeAlpha(randColor, (byte) RNG.randI(75, 150))));
+                    var randR = SRNG.randF(r * 1.2f, r * 2.5f);
+                    var randThickness = SRNG.randF(1f, (randR - this.r) / 2);
+                    var randColor = SColor.ChangeHUE(color, SRNG.randI(-50, 50)); 
+                    rings.Add((new Vector2(0f), randR, randThickness, SColor.ChangeAlpha(randColor, (byte) SRNG.randI(75, 150))));
                 }
             }
         }
@@ -153,8 +153,8 @@ namespace ShapeEngineDemo
 
         private void SpawnPlanet(float radius, string layer, float brightness = 0f)
         {
-            Color color = RNG.randColor(150, 220, 255);
-            var planet = new Planet(inner, radius, Utils.ChangeBrightness(color, brightness));
+            Color color = SRNG.randColor(150, 220, 255);
+            var planet = new Planet(inner, radius, SColor.ChangeBrightness(color, brightness));
             AddGameObject(planet, false, layer);
 
         }
@@ -162,13 +162,13 @@ namespace ShapeEngineDemo
         {
             for (int i = 0; i < amount; i++)
             {
-                SpawnPlanet(RNG.randF(radiusRange.X, radiusRange.Y), layer, brightness);
+                SpawnPlanet(SRNG.randF(radiusRange.X, radiusRange.Y), layer, brightness);
             }
         }
         private void SpawnStar(float radius, Vector2 alphaRange, string layer)
         {
             Color color = WHITE;
-            color.a = (byte)(255 * RNG.randF(alphaRange.X, alphaRange.Y));
+            color.a = (byte)(255 * SRNG.randF(alphaRange.X, alphaRange.Y));
             var star = new Star(outer, radius, color);
             AddGameObject(star, false, layer);
         }
@@ -176,7 +176,7 @@ namespace ShapeEngineDemo
         {
             for (int i = 0; i < amount; i++)
             {
-                SpawnStar(RNG.randF(radiusRange.X, radiusRange.Y), alphaRange, layer);
+                SpawnStar(SRNG.randF(radiusRange.X, radiusRange.Y), alphaRange, layer);
             }
         }
     }
@@ -271,27 +271,27 @@ namespace ShapeEngineDemo
         }
         public override void DrawUI(Vector2 uiSize, Vector2 stretchFactor)
         {
-            UIHandler.DrawTextAlignedPro(String.Format("{0}", GetFPS()), uiSize * new Vector2(0.01f, 0.03f), -5f, uiSize * new Vector2(0.10f, 0.05f), 2f, PaletteHandler.C("special1"), Alignement.LEFTCENTER);
+            SDrawing.DrawTextAlignedPro(String.Format("{0}", GetFPS()), uiSize * new Vector2(0.01f, 0.03f), -5f, uiSize * new Vector2(0.10f, 0.05f), 2f, PaletteHandler.C("special1"), new(0,0.5f));
             if (area == null) return;
             area.DrawUI(uiSize, stretchFactor);
 
             Vector2 textSize = uiSize * new Vector2(0.25f, 0.04f);
-            UIHandler.DrawTextAlignedPro(String.Format("Objs {0}", area.GetGameObjects().Count), uiSize * new Vector2(0.01f, 0.1f), 0f, textSize, 2f, PaletteHandler.C("text"), Alignement.LEFTCENTER);
-            UIHandler.DrawTextAlignedPro(String.Format("{0}", InputHandler.GetCurInputType()), uiSize * new Vector2(0.01f, 0.13f), 0f, textSize, 2f, PaletteHandler.C("text"), Alignement.LEFTCENTER);
-            UIHandler.DrawTextAlignedPro(String.Format("GP {0}/{1}", InputHandler.CUR_GAMEPAD, InputHandler.GetConnectedGamepadCount()), uiSize * new Vector2(0.01f, 0.16f), 0f, textSize, 2f, PaletteHandler.C("text"), Alignement.LEFTCENTER);
-            UIHandler.DrawTextAlignedPro(String.Format("Used {0}", InputHandler.gamepadUsed), uiSize * new Vector2(0.01f, 0.19f), 0f, textSize, 2f, PaletteHandler.C("text"), Alignement.LEFTCENTER);
+            SDrawing.DrawTextAlignedPro(String.Format("Objs {0}", area.GetGameObjects().Count), uiSize * new Vector2(0.01f, 0.1f), 0f, textSize, 2f, PaletteHandler.C("text"), new(0, 0.5f));
+            SDrawing.DrawTextAlignedPro(String.Format("{0}", InputHandler.GetCurInputType()), uiSize * new Vector2(0.01f, 0.13f), 0f, textSize, 2f, PaletteHandler.C("text"), new(0, 0.5f));
+            SDrawing.DrawTextAlignedPro(String.Format("GP {0}/{1}", InputHandler.CUR_GAMEPAD, InputHandler.GetConnectedGamepadCount()), uiSize * new Vector2(0.01f, 0.16f), 0f, textSize, 2f, PaletteHandler.C("text"), new(0, 0.5f));
+            SDrawing.DrawTextAlignedPro(String.Format("Used {0}", InputHandler.gamepadUsed), uiSize * new Vector2(0.01f, 0.19f), 0f, textSize, 2f, PaletteHandler.C("text"), new(0, 0.5f));
             
             
-            UIHandler.DrawTextAlignedPro("Debug Keys [8, 9, 0]", uiSize * new Vector2(0.5f, 0.98f), 0f, textSize, 2f, PaletteHandler.C("text"), Alignement.BOTTOMCENTER);
+            SDrawing.DrawTextAlignedPro("Debug Keys [8, 9, 0]", uiSize * new Vector2(0.5f, 0.98f), 0f, textSize, 2f, PaletteHandler.C("text"), new(0.5f, 1));
             
 
-            UIHandler.DrawTextAlignedPro("Slow Time [ALT]", uiSize * new Vector2(0.99f, 0.03f), 0f, textSize, 2f, PaletteHandler.C("text"), Alignement.RIGHTCENTER);
-            UIHandler.DrawTextAlignedPro("Pause [P]", uiSize * new Vector2(0.99f, 0.07f), 0f, textSize, 2f, PaletteHandler.C("text"), Alignement.RIGHTCENTER);
+            SDrawing.DrawTextAlignedPro("Slow Time [ALT]", uiSize * new Vector2(0.99f, 0.03f), 0f, textSize, 2f, PaletteHandler.C("text"), new(1, 0.5f));
+            SDrawing.DrawTextAlignedPro("Pause [P]", uiSize * new Vector2(0.99f, 0.07f), 0f, textSize, 2f, PaletteHandler.C("text"), new(1, 0.5f));
 
             if (IsPaused())
             {
                 var pos = GAMELOOP.UISize();
-                UIHandler.DrawTextAlignedPro("PAUSED", uiSize * new Vector2(0.5f, 0.3f), 0f, uiSize * new Vector2(0.5f, 0.25f), 5f, PaletteHandler.C("header"), Alignement.CENTER);
+                SDrawing.DrawTextAlignedPro("PAUSED", uiSize * new Vector2(0.5f, 0.3f), 0f, uiSize * new Vector2(0.5f, 0.25f), 5f, PaletteHandler.C("header"), new(0.5f));
             }
 
         }

@@ -1,5 +1,6 @@
 ﻿using Raylib_CsLo;
 using System.Numerics;
+using ShapeLib;
 
 namespace ShapeUI.Container
 {
@@ -65,7 +66,7 @@ namespace ShapeUI.Container
         public void SetRows(int newRows) { rows = newRows; }
         public override void Update(float dt, Vector2 mousePosUI)
         {
-            UpdateRects(GetRect(), 0, children.Count);
+            UpdateRects(GetRect(new(0f)), 0, children.Count);
             UpdateChildren(dt, mousePosUI);
         }
 
@@ -93,11 +94,11 @@ namespace ShapeUI.Container
             //for (int i = startIndex; i < endIndex; i++)
             {
                 var item = children[i + startIndex];
-                var coords = Utils.TransformIndexToCoordinates(i, rows, columns, leftToRight);
+                var coords = SUtils.TransformIndexToCoordinates(i, rows, columns, leftToRight);
 
                 //int col = i / rows;
                 //int row = i % rows;
-                item.UpdateRect(startPos + hGap * coords.col + vGap * coords.row, elementSize, Alignement.TOPLEFT);
+                item.UpdateRect(startPos + hGap * coords.col + vGap * coords.row, elementSize, new(0f));
             }
         }
     }

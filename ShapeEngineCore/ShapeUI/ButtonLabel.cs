@@ -1,14 +1,13 @@
 ﻿using System.Numerics;
 using Raylib_CsLo;
-using ShapeEngineCore.Globals;
-using ShapeEngineCore.Globals.Screen;
+using ShapeLib;
 
 namespace ShapeUI
 {
     public class ButtonLabel : Button
     {
         protected string text = "";
-        protected Alignement textAlignement = Alignement.CENTER;
+        protected Vector2 textAlignement = new(0.5f);
         //protected Vector2 center = new();
         protected float fontSpacing = 3;
         protected string fontName = "";
@@ -35,7 +34,7 @@ namespace ShapeUI
             this.fontName = fontName;
         }
 
-        public void SetTextAlignement(Alignement newAlignement) { textAlignement = newAlignement; }
+        public void SetTextAlignement(Vector2 newAlignement) { textAlignement = newAlignement; }
 
         public void SetTextStateColors(UISelectionColors newTextStateColors) { this.textStateColors = newTextStateColors; }
         
@@ -53,7 +52,7 @@ namespace ShapeUI
 
         protected virtual void DrawText(Color color)
         {
-            UIHandler.DrawTextAligned(text, GetPos(textAlignement) + offset, GetSize() * sizeOffset, fontSpacing, color, fontName, textAlignement);
+            SDrawing.DrawTextAligned(text, GetPos(textAlignement) + offset, GetSize() * sizeOffset, fontSpacing, color, fontName, textAlignement);
         }
     }
 

@@ -10,18 +10,18 @@ namespace ShapeUI
         protected float outlineThickness = 0f;
         protected Color bgColor = DARKGRAY;
         protected Color outlineColor = YELLOW;
-        protected Alignement alignement = Alignement.CENTER;
+        protected Vector2 alignement = new(0.5f);
         
-        public Panel(Alignement alignement = Alignement.CENTER)
+        public Panel(Vector2 alignement)
         {
             this.alignement = alignement;
         }
-        public Panel(float angleDeg, Alignement alignement = Alignement.CENTER)
+        public Panel(float angleDeg, Vector2 alignement)
         {
             this.angleDeg = angleDeg;
             this.alignement = alignement;
         }
-        public Panel(float angleDeg, float outlineThickness, Alignement alignement = Alignement.CENTER)
+        public Panel(float angleDeg, float outlineThickness, Vector2 alignement)
         {
             this.angleDeg = angleDeg;
             this.alignement = alignement;

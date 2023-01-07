@@ -1,5 +1,6 @@
 ﻿using Raylib_CsLo;
 using System.Numerics;
+using ShapeLib;
 
 namespace ShapeUI.Container
 {
@@ -248,7 +249,7 @@ namespace ShapeUI.Container
 
         public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
         {
-            if (HasBackground()) DrawBackground(GetRect(), bgColor);
+            if (HasBackground()) DrawBackground(GetRect(new(0f)), bgColor);
             DrawChildren(uiSize, stretchFactor);
         }
 
@@ -256,7 +257,7 @@ namespace ShapeUI.Container
         {
             foreach (var child in children)
             {
-                child.UpdateRect(GetPos(Alignement.CENTER), GetSize(), Alignement.CENTER);
+                child.UpdateRect(GetPos(new(0.5f)), GetSize(), new(0.5f));
                 child.Update(dt, mousePosUI);
             }
         }

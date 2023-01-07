@@ -1,7 +1,7 @@
 ﻿global using static Raylib_CsLo.Raylib;
 global using static Raylib_CsLo.RayMath;
-global using static ShapeEngineCore.ShapeEngine;
-using ShapeEngineCore;
+global using static ShapeCore.ShapeEngine;
+using ShapeCore;
 
 //either copy into project file or download those 2 nuget packages.
 //< ItemGroup >

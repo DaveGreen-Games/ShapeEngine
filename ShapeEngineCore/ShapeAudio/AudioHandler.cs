@@ -1,7 +1,9 @@
 ﻿using Raylib_CsLo;
-using ShapeEngineCore.Globals.Persistent;
-using ShapeEngineCore.Globals.Screen;
+using ShapePersistent;
+using ShapeScreen;
 using System.Numerics;
+using ShapeCore;
+using ShapeLib;
 
 
 namespace ShapeAudio
@@ -317,7 +319,7 @@ namespace ShapeAudio
             if (spatialTargetOverride == null) center = ScreenHandler.CAMERA.RawPos;
             else center = spatialTargetOverride.GetPosition();
 
-            float disSq = Vec.LengthSquared(center - pos);
+            float disSq = SVec.LengthSquared(center - pos);
             
             
             if (minRange < 0f) minRange = 0f;
@@ -335,7 +337,7 @@ namespace ShapeAudio
             float spatialVolumeFactor = 1f;
             if(disSq > minSquared)
             {
-                spatialVolumeFactor = 1f - Utils.LerpInverseFloat(minSquared, maxSquared, disSq);
+                spatialVolumeFactor = 1f - SUtils.LerpInverseFloat(minSquared, maxSquared, disSq);
             }
 
             bus.PlaySFX(name, spatialVolumeFactor, volume, pitch);

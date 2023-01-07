@@ -1,8 +1,7 @@
 ﻿using System.Numerics;
-using ShapeEngineCore.Globals;
-using ShapeEngineCore.Globals.Timing;
+using ShapeCore;
 using Raylib_CsLo;
-using ShapeEngineCore;
+using ShapeLib;
 
 namespace ShapeEngineDemo
 {
@@ -19,12 +18,12 @@ namespace ShapeEngineDemo
         Color color;
         public HitParticle(Vector2 pos, Vector2 dir, float impactFactor, float lifetime, Color color) : base(pos)
         {
-            float speed = RNG.randF(baseSpeed * impactFactor * 0.5f, baseSpeed * impactFactor * 1.5f);
-            this.vel = Vec.Rotate(dir, RNG.randF(-0.6f, 0.6f)) * speed;
-            this.startSize = RNG.randF(baseSize * impactFactor * 0.5f, baseSize * impactFactor * 1.5f);
+            float speed = SRNG.randF(baseSpeed * impactFactor * 0.5f, baseSpeed * impactFactor * 1.5f);
+            this.vel = SVec.Rotate(dir, SRNG.randF(-0.6f, 0.6f)) * speed;
+            this.startSize = SRNG.randF(baseSize * impactFactor * 0.5f, baseSize * impactFactor * 1.5f);
             this.curSize = this.startSize;
             this.curRotationSpeed = baseRotationSpeed;// * impactFactor;
-            this.rotation = RNG.randF(360f);
+            this.rotation = SRNG.randF(360f);
             this.color = color;
             lifetimeTimer.Start(lifetime);
         }
@@ -33,7 +32,7 @@ namespace ShapeEngineDemo
         {
             base.Update(dt);
             rotation += dt * curRotationSpeed;
-            curSize = Utils.LerpFloat(startSize, startSize * 0.05f, 1f - lifetimeTimer.GetF());
+            curSize = SUtils.LerpFloat(startSize, startSize * 0.05f, 1f - lifetimeTimer.GetF());
         }
 
         public override void Draw()

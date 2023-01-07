@@ -1,6 +1,7 @@
 ﻿using Raylib_CsLo;
 using ShapeUI;
 using System.Numerics;
+using ShapeLib;
 
 namespace ShapeLib
 {
@@ -45,7 +46,7 @@ namespace ShapeLib
             Vector2 cur = new(-spacing / 2, 0f);
             while (cur.X > -maxDimension)
             {
-                Vector2 p = center + Vec.Rotate(cur, rotRad);
+                Vector2 p = center + SVec.Rotate(cur, rotRad);
 
                 //float y = MathF.Sqrt((radius * radius) - (cur.X * cur.X));
                 float angle = MathF.Acos(cur.X / radius);
@@ -53,8 +54,8 @@ namespace ShapeLib
 
                 Vector2 up = new(0f, -y);
                 Vector2 down = new(0f, y);
-                Vector2 start = p + Vec.Rotate(up, rotRad);
-                Vector2 end = p + Vec.Rotate(down, rotRad);
+                Vector2 start = p + SVec.Rotate(up, rotRad);
+                Vector2 end = p + SVec.Rotate(down, rotRad);
                 DrawLineEx(start, end, lineThickness, lineColor);
                 cur.X -= spacing;
             }
@@ -62,15 +63,15 @@ namespace ShapeLib
             cur = new(spacing / 2, 0f);
             while (cur.X < maxDimension)
             {
-                Vector2 p = center + Vec.Rotate(cur, rotRad);
+                Vector2 p = center + SVec.Rotate(cur, rotRad);
                 //float y = MathF.Sqrt((radius * radius) - (cur.X * cur.X));
                 float angle = MathF.Acos(cur.X / radius);
                 float y = radius * MathF.Sin(angle);
 
                 Vector2 up = new(0f, -y);
                 Vector2 down = new(0f, y);
-                Vector2 start = p + Vec.Rotate(up, rotRad);
-                Vector2 end = p + Vec.Rotate(down, rotRad);
+                Vector2 start = p + SVec.Rotate(up, rotRad);
+                Vector2 end = p + SVec.Rotate(down, rotRad);
                 DrawLineEx(start, end, lineThickness, lineColor);
                 cur.X += spacing;
             }
@@ -93,11 +94,11 @@ namespace ShapeLib
             Vector2 cur = new(-spacing / 2, 0f);
             while (cur.X > -maxDimension)
             {
-                Vector2 p = center + Vec.Rotate(cur, rotRad);
+                Vector2 p = center + SVec.Rotate(cur, rotRad);
                 Vector2 up = new(0f, -maxDimension * 2);
                 Vector2 down = new(0f, maxDimension * 2);
-                Vector2 start = p + Vec.Rotate(up, rotRad);
-                Vector2 end = p + Vec.Rotate(down, rotRad);
+                Vector2 start = p + SVec.Rotate(up, rotRad);
+                Vector2 end = p + SVec.Rotate(down, rotRad);
                 DrawLineEx(start, end, lineThickness, lineColor);
                 cur.X -= spacing;
             }
@@ -105,11 +106,11 @@ namespace ShapeLib
             cur = new(spacing / 2, 0f);
             while (cur.X < maxDimension)
             {
-                Vector2 p = center + Vec.Rotate(cur, rotRad);
+                Vector2 p = center + SVec.Rotate(cur, rotRad);
                 Vector2 up = new(0f, -maxDimension * 2);
                 Vector2 down = new(0f, maxDimension * 2);
-                Vector2 start = p + Vec.Rotate(up, rotRad);
-                Vector2 end = p + Vec.Rotate(down, rotRad);
+                Vector2 start = p + SVec.Rotate(up, rotRad);
+                Vector2 end = p + SVec.Rotate(down, rotRad);
                 DrawLineEx(start, end, lineThickness, lineColor);
                 cur.X += spacing;
             }
@@ -118,13 +119,13 @@ namespace ShapeLib
             return rt;
         }
 
-        public static void Stamp(Texture texture, Vector2 pos, float rotDeg, float scale, Color tint, Alignement alignement = Alignement.CENTER)
+        public static void Stamp(Texture texture, Vector2 pos, float rotDeg, float scale, Color tint, Vector2 alignement)
         {
             Vector2 size = new(texture.width, texture.height);
-            Vector2 aVector = UIHandler.GetAlignementVector(alignement);// + new Vector2(-0.5f, -0.5f);
+            //Vector2 aVector = UIHandler.GetAlignementVector(alignement);// + new Vector2(-0.5f, -0.5f);
 
             Rectangle sourceRec = new Rectangle(0, 0, size.X, -size.Y);
-            Vector2 origin = aVector * size * scale;
+            Vector2 origin = alignement * size * scale;
             Rectangle destRec = new Rectangle(pos.X, pos.Y, size.X * scale, size.Y * scale);
 
             DrawTexturePro(texture, sourceRec, destRec, origin, rotDeg, tint);

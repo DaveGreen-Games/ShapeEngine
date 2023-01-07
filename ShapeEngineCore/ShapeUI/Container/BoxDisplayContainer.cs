@@ -255,12 +255,12 @@ namespace ShapeUI.Container
         public override void Update(float dt, Vector2 mousePosUI)
         {
             movementDir = 0;
-            UpdateRects(GetRect(), curIndex, GetEndIndex());
+            UpdateRects(GetRect(new(0f)), curIndex, GetEndIndex());
             UpdateChildren(dt, mousePosUI, curIndex, GetEndIndex());
         }
         public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
         {
-            if (HasBackground()) DrawBackground(GetRect(), bgColor);
+            if (HasBackground()) DrawBackground(GetRect(new(0f)), bgColor);
 
             DrawChildren(uiSize, stretchFactor, curIndex, GetEndIndex());
         }

@@ -556,22 +556,22 @@ namespace ShapeLib
 
         public static void DrawRectangleOutlineBar(Rectangle rect, Vector2 pivot, float angleDeg, float thickness, float f, Color color)
         {
-            var rr = Utils.RotateRectangle(rect, pivot, angleDeg);
+            var rr = SRect.RotateRect(rect, pivot, angleDeg);
             //Vector2 thicknessOffsetX = new Vector2(thickness, 0f);
             //Vector2 thicknessOffsetY = new Vector2(0f, thickness);
             
-            Vector2 leftExtension = Vec.Rotate(new Vector2(-thickness / 2, 0f), angleDeg * DEG2RAD);
-            Vector2 rightExtension = Vec.Rotate(new Vector2(thickness / 2, 0f), angleDeg * DEG2RAD);
+            Vector2 leftExtension = SVec.Rotate(new Vector2(-thickness / 2, 0f), angleDeg * DEG2RAD);
+            Vector2 rightExtension = SVec.Rotate(new Vector2(thickness / 2, 0f), angleDeg * DEG2RAD);
 
-            Vector2 tl = rr.topLeft;
-            Vector2 br = rr.bottomRight;
-            Vector2 tr = rr.topRight;
-            Vector2 bl = rr.bottomLeft;
+            Vector2 tl = rr.tl;
+            Vector2 br = rr.br;
+            Vector2 tr = rr.tr;
+            Vector2 bl = rr.bl;
 
             int lines = (int)MathF.Ceiling(4 * Clamp(f, 0f, 1f));
             float fMin = 0.25f * (lines - 1);
             float fMax = fMin + 0.25f;
-            float newF = Utils.RemapFloat(f, fMin, fMax, 0f, 1f);
+            float newF = SUtils.RemapFloat(f, fMin, fMax, 0f, 1f);
             for (int i = 0; i < lines; i++)
             {
                 Vector2 end;
@@ -598,7 +598,7 @@ namespace ShapeLib
                 }
 
                 //last line
-                if (i == lines - 1) end = Vec.Lerp(start, end, newF);
+                if (i == lines - 1) end = SVec.Lerp(start, end, newF);
                 DrawLineEx(start, end, thickness, color);
             }
         }
@@ -625,11 +625,6 @@ namespace ShapeLib
             SDrawing.DrawRectangle(rect, bgColor);
             SDrawing.DrawRectangle(progressRect, barColor);
         }
-        public static void DrawBar(Vector2 pos, Vector2 size, Vector2 alignement, float f, Color barColor, Color bgColor, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
-        {
-            DrawBar(SRect.ConstructRect(pos, size, alignement), f, barColor, bgColor, left, right, top, bottom);
-        }
-
         public static void DrawBar(Rectangle rect, Vector2 pivot, float angleDeg, float f, Color barColor, Color bgColor, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
         {
             f = 1.0f - f;
@@ -638,18 +633,16 @@ namespace ShapeLib
             SDrawing.DrawRectangle(rect, pivot, angleDeg, bgColor);
             SDrawing.DrawRectangle(progressRect, pivot, angleDeg, barColor);
         }
-        public static void DrawBar(Vector2 pos, Vector2 size, Vector2 alignement, Vector2 pivot, float angleDeg, float f, Color barColor, Color bgColor, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
+        
+        public static void DrawBar(Vector2 pos, Vector2 size, Vector2 alignement, float f, Color barColor, Color bgColor, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
         {
-            DrawBar(Utils.ConstructRectangle(pos, size, alignement), pivot, angleDeg, f, barColor, bgColor, left, right, top, bottom);
-        }
-        public static void DrawBar(Rectangle rect, Vector2 pivot, float angleDeg, float f, Color barColor, Color bgColor, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
-        {
-            DrawBar(rect, UIHandler.GetAlignementVector(pivot), angleDeg, f, barColor, bgColor, left, right, top, bottom);
+            DrawBar(SRect.ConstructRect(pos, size, alignement), f, barColor, bgColor, left, right, top, bottom);
         }
         public static void DrawBar(Vector2 pos, Vector2 size, Vector2 alignement, Vector2 pivot, float angleDeg, float f, Color barColor, Color bgColor, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
         {
-            DrawBar(Utils.ConstructRectangle(pos, size, alignement), UIHandler.GetAlignementVector(pivot), angleDeg, f, barColor, bgColor, left, right, top, bottom);
+            DrawBar(SRect.ConstructRect(pos, size, alignement), pivot, angleDeg, f, barColor, bgColor, left, right, top, bottom);
         }
+        
 
         
 

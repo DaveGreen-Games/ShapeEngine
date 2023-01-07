@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Raylib_CsLo;
+using ShapeLib;
 
 namespace ShapeUI
 {
@@ -246,9 +247,9 @@ namespace ShapeUI
         public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
         {
             //Rectangle rect = Utils.MultiplyRectangle(base.rect, stretchFactor);
-            Rectangle rect = GetRect();
+            Rectangle rect = GetRect(new(0f));
             float radius = MathF.Min( rect.width, rect.height) / 2;
-            Vector2 center = GetPos(Alignement.CENTER);
+            Vector2 center = GetPos(new Vector2(0.5f));
             Vector2 barOffset = GetSize() * barOffsetRelative;
             if (HasBackground())
             {
@@ -353,9 +354,9 @@ namespace ShapeUI
     public class ProgressCircle : ProgressElement
     {
 
-        Alignement progressAlignement = Alignement.CENTER;
+        Vector2 progressAlignement = new(0.5f);
 
-        public ProgressCircle(Alignement progressAlignement = Alignement.CENTER, float transitionSpeed = 0.1f)
+        public ProgressCircle(Vector2 progressAlignement, float transitionSpeed = 0.1f)
         {
             this.outlineSizeRelative = 0f;
             this.barOffsetRelative = new(0f);
@@ -363,7 +364,7 @@ namespace ShapeUI
             this.progressAlignement = progressAlignement;
             SetF(1f, true);
         }
-        public ProgressCircle(Vector2 barOffsetRelative, Alignement progressAlignement = Alignement.CENTER, float transitionSpeed = 0.1f)
+        public ProgressCircle(Vector2 barOffsetRelative, Vector2 progressAlignement, float transitionSpeed = 0.1f)
         {
             this.outlineSizeRelative = 0f;
             this.barOffsetRelative = barOffsetRelative;
@@ -371,7 +372,7 @@ namespace ShapeUI
             this.progressAlignement = progressAlignement;
             SetF(1f, true);
         }
-        public ProgressCircle(Alignement progressAlignement = Alignement.CENTER, float transitionSpeed = 0.1f, float outlineSize = 0f)
+        public ProgressCircle(Vector2 progressAlignement, float transitionSpeed = 0.1f, float outlineSize = 0f)
         {
             this.outlineSizeRelative = outlineSize;
             this.barOffsetRelative = new(0f);
@@ -379,7 +380,7 @@ namespace ShapeUI
             this.progressAlignement = progressAlignement;
             SetF(1f, true);
         }
-        public ProgressCircle(Vector2 barOffsetRelative, Alignement progressAlignement = Alignement.CENTER, float transitionSpeed = 0.1f, float outlineSize = 0f)
+        public ProgressCircle(Vector2 barOffsetRelative, Vector2 progressAlignement, float transitionSpeed = 0.1f, float outlineSize = 0f)
         {
             this.outlineSizeRelative = outlineSize;
             this.barOffsetRelative = barOffsetRelative;
@@ -391,9 +392,9 @@ namespace ShapeUI
         public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
         {
             //Rectangle rect = Utils.MultiplyRectangle(base.rect, stretchFactor);
-            Rectangle rect = GetRect();
+            Rectangle rect = GetRect(new(0f));
             float radius = rect.width / 2;
-            Vector2 center = GetPos(Alignement.CENTER);
+            Vector2 center = GetPos(new(0.5f));
 
 
             if (HasBackground())
@@ -408,31 +409,31 @@ namespace ShapeUI
 
             if (HasTransition())
             {
-                Vector2 align = UIHandler.GetAlignementVector(progressAlignement) - new Vector2(0.5f, 0.5f);
+                Vector2 align = progressAlignement - new Vector2(0.5f, 0.5f);
                 Vector2 alignPos = center + align * radius * 2f;
                 Vector2 offset = barOffsetRelative * GetSize();
 
                 if (transitionF > f)
                 {
-                    DrawCircleV(Vec.Lerp(alignPos, center, transitionF) + offset , radius * transitionF, transitionColor);
-                    if (HasBar()) DrawCircleV(Vec.Lerp(alignPos, center, f) + offset, radius * f, barColor);
+                    DrawCircleV(SVec.Lerp(alignPos, center, transitionF) + offset , radius * transitionF, transitionColor);
+                    if (HasBar()) DrawCircleV(SVec.Lerp(alignPos, center, f) + offset, radius * f, barColor);
                 }
                 else if (transitionF < f)
                 {
-                    DrawCircleV(Vec.Lerp(alignPos, center, f) + offset , radius * f, transitionColor);
-                    if (HasBar()) DrawCircleV(Vec.Lerp(alignPos, center, transitionF) + offset, radius * transitionF, barColor);
+                    DrawCircleV(SVec.Lerp(alignPos, center, f) + offset , radius * f, transitionColor);
+                    if (HasBar()) DrawCircleV(SVec.Lerp(alignPos, center, transitionF) + offset, radius * transitionF, barColor);
                 }
                 else
                 {
-                    if (HasBar()) DrawCircleV(Vec.Lerp(alignPos, center, f) + offset, radius * f, barColor);
+                    if (HasBar()) DrawCircleV(SVec.Lerp(alignPos, center, f) + offset, radius * f, barColor);
                 }
             }
             else
             {
-                Vector2 align = UIHandler.GetAlignementVector(progressAlignement) - new Vector2(0.5f, 0.5f);
+                Vector2 align = progressAlignement - new Vector2(0.5f, 0.5f);
                 Vector2 alignPos = center + align * radius * 2f;
                 Vector2 offset = barOffsetRelative * GetSize();
-                if (HasBar()) DrawCircleV(Vec.Lerp(alignPos, center, f) + offset , radius * f, barColor);
+                if (HasBar()) DrawCircleV(SVec.Lerp(alignPos, center, f) + offset , radius * f, barColor);
             }
 
             if (HasOutline()) SDrawing.DrawCircleLines(center, radius * 1.01f, outlineSizeRelative * MathF.Max(rect.width, rect.height), outlineColor);
@@ -492,7 +493,7 @@ namespace ShapeUI
         {
             return (left, right, top, bottom);
         }
-        public Vector2 Transform(Vector2 v) { return Vec.Rotate(v, GetAngleRad()); }
+        public Vector2 Transform(Vector2 v) { return SVec.Rotate(v, GetAngleRad()); }
         public void SetAngleDeg(float newAngleDeg) { angleDeg = newAngleDeg; }
         public void SetAngleRad(float newAngleRad) { angleDeg = newAngleRad * RAD2DEG; }
         public float GetAngleDeg() { return angleDeg; }
@@ -503,7 +504,7 @@ namespace ShapeUI
 
         public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
         {
-            Rectangle rect = GetRect();
+            Rectangle rect = GetRect(new(0f));
             if (HasBackground())
             {
                 if (HasReservedPart())
@@ -540,7 +541,7 @@ namespace ShapeUI
                 SDrawing.DrawRectangeLinesPro(
                     new Vector2(rect.X, rect.y) + barOffsetRelative * new Vector2(rect.width, rect.height), 
                     new Vector2(rect.width, rect.height),
-                    Alignement.TOPLEFT,
+                    new(0f),
                     pivot, 
                     GetAngleDeg(), 
                     outlineSizeRelative * MathF.Max(rect.width, rect.height), 

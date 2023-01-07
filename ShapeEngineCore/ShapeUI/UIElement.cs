@@ -1,5 +1,5 @@
 ﻿using Raylib_CsLo;
-using ShapeEngineCore.Globals.Screen;
+using ShapeScreen;
 using System.Numerics;
 
 namespace ShapeUI
@@ -67,14 +67,14 @@ namespace ShapeUI
         public UIMargins GetMargins() { return margins; }
         public void SetStretchFactor(float newFactor) { stretchFactor = newFactor; }
         public float GetStretchFactor() { return stretchFactor; }
-        public Rectangle GetRect(Alignement alignement = Alignement.TOPLEFT) 
+        public Rectangle GetRect(Vector2 alignement) 
         { 
-            if(alignement == Alignement.TOPLEFT) return margins.Apply(rect);
+            if(alignement.X == 0f && alignement.Y == 0f) return margins.Apply(rect);
             else
             {
                 Vector2 topLeft = new Vector2(rect.X, rect.Y);
                 Vector2 size = GetSize();
-                Vector2 offset = size * UIHandler.GetAlignementVector(alignement);
+                Vector2 offset = size * alignement;
                 return margins.Apply(new
                     (
                         topLeft.X + offset.X,
@@ -86,13 +86,13 @@ namespace ShapeUI
         }
         
 
-        public virtual void UpdateRect(Vector2 pos, Vector2 size, Alignement alignement = Alignement.CENTER)
+        public virtual void UpdateRect(Vector2 pos, Vector2 size, Vector2 alignement)
         {
-            Vector2 align = UIHandler.GetAlignementVector(alignement);
-            Vector2 offset = size * align;
+            //Vector2 align = UIHandler.GetAlignementVector(alignement);
+            Vector2 offset = size * alignement;
             rect = new(pos.X - offset.X, pos.Y - offset.Y, size.X, size.Y);
         }
-        public virtual void UpdateRect(Rectangle rect, Alignement alignement = Alignement.CENTER) 
+        public virtual void UpdateRect(Rectangle rect, Vector2 alignement) 
         { 
             UpdateRect(new Vector2(rect.x, rect.y), new Vector2(rect.width, rect.height), alignement);
         }
@@ -102,28 +102,21 @@ namespace ShapeUI
         //public virtual void SetSize(Vector2 newSize) { rect.width = newSize.X; rect.height = newSize.Y; }
         
         
-        public virtual float GetWidth() { return GetRect().width; }
-        public virtual float GetHeight() { return GetRect().height; }
+        public virtual float GetWidth() { return GetRect(new(0f)).width; }
+        public virtual float GetHeight() { return GetRect(new(0f)).height; }
         //public virtual Vector2 GetTopLeft() { return new(rect.x, rect.y); }
         //public virtual Vector2 GetCenter() { return new(rect.x + rect.width / 2, rect.y + rect.height / 2); }
         //public virtual Vector2 GetBottomRight() { return new(rect.x + rect.width, rect.y + rect.height); }
-        public virtual Vector2 GetPos(Alignement alignement = Alignement.CENTER) 
+        public virtual Vector2 GetPos(Vector2 alignement) 
         {
-            Rectangle rect = GetRect();
-            Vector2 topLeft = new Vector2(rect.X, rect.Y);
-            Vector2 offset = GetSize() * UIHandler.GetAlignementVector(alignement);
-            return topLeft + offset;
-        }
-        public virtual Vector2 GetPos(Vector2 alignement)
-        {
-            Rectangle rect = GetRect();
+            Rectangle rect = GetRect(new(0f));
             Vector2 topLeft = new Vector2(rect.X, rect.Y);
             Vector2 offset = GetSize() * alignement;
             return topLeft + offset;
         }
         public virtual Vector2 GetSize() 
         {
-            Rectangle rect = GetRect();
+            Rectangle rect = GetRect(new(0f));
             return new(rect.width, rect.height); 
         }
 
@@ -133,7 +126,7 @@ namespace ShapeUI
 
         public bool IsPointInside(Vector2 uiPos)
         {
-            return CheckCollisionPointRec(uiPos, GetRect()); // GetScaledRect());
+            return CheckCollisionPointRec(uiPos, GetRect(new(0f))); // GetScaledRect());
         }
         public virtual void Update(float dt, Vector2 mousePosUI)
         {

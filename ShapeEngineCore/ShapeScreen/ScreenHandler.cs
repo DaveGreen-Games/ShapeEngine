@@ -1,6 +1,6 @@
 ﻿using Raylib_CsLo;
 using System.Numerics;
-using ShapeEngineCore.Globals.Shaders;
+using ShapeShaders;
 
 namespace ShapeScreen
 {

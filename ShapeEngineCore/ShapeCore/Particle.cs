@@ -33,7 +33,7 @@ namespace ShapeCore
         {
             DrawOrder = 25;
             this.pos = pos;
-            vel = Vec.Rotate(Vec.Right(), angle * DEG2RAD);
+            vel = SVec.Rotate(SVec.Right(), angle * DEG2RAD);
             lifetimeTimer.Start(lifetime);
         }
 
@@ -79,7 +79,7 @@ namespace ShapeCore
         }
         private void ApplyAcceleration(float dt)
         {
-            Vector2 dragForce = Utils.GetDragForce(vel, drag, dt); // drag * -vel;
+            Vector2 dragForce = SPhysics.GetDragForce(vel, drag, dt); // drag * -vel;
             Vector2 force = constAccel * dt + dragForce;
             vel += force;
         }
@@ -95,26 +95,26 @@ namespace ShapeCore
 
         public LineParticle(Vector2 pos, float speed, Color color, float size, float lifetime) : base(pos, lifetime)
         {
-            float angle = RNG.randF(0f, 2f * PI);
+            float angle = SRNG.randF(0f, 2f * PI);
             rotRad = angle;
-            vel = Vec.Rotate(Vec.Right() * speed, angle);
+            vel = SVec.Rotate(SVec.Right() * speed, angle);
             this.size = size;
             this.color = color;
         }
         public LineParticle(Vector2 pos, float speed, Color color, float size, float lifetime, float lineThickness = 1f) : base(pos, lifetime)
         {
-            float angle = RNG.randF(0f, 2f * PI);
+            float angle = SRNG.randF(0f, 2f * PI);
             rotRad = angle;
-            vel = Vec.Rotate(Vec.Right() * speed, angle);
+            vel = SVec.Rotate(SVec.Right() * speed, angle);
             this.size = size;
             this.color = color;
             this.lineThickness = lineThickness;
         }
         public LineParticle(Vector2 pos, float speed, Color color, float size, float lifetime, float lineThickness = 1f, float drag = 2f) : base(pos, lifetime)
         {
-            float angle = RNG.randF(0f, 2f * PI);
+            float angle = SRNG.randF(0f, 2f * PI);
             rotRad = angle;
-            vel = Vec.Rotate(Vec.Right() * speed, angle);
+            vel = SVec.Rotate(SVec.Right() * speed, angle);
             this.size = size;
             this.color = color;
             this.lineThickness = lineThickness;
@@ -123,7 +123,7 @@ namespace ShapeCore
         public LineParticle(Vector2 pos, float angleRad, float speed, Color color, float size, float lifetime, float lineThickness = 1f) : base(pos, lifetime)
         {
             rotRad = angleRad;
-            vel = Vec.Rotate(Vec.Right() * speed, rotRad);
+            vel = SVec.Rotate(SVec.Right() * speed, rotRad);
             this.size = size;
             this.color = color;
             this.lineThickness = lineThickness;
@@ -131,7 +131,7 @@ namespace ShapeCore
         public LineParticle(Vector2 pos, float angleRad, float speed, Color color, float size, float lifetime, float lineThickness = 1f, float drag = 2f) : base(pos, lifetime)
         {
             rotRad = angleRad;
-            vel = Vec.Rotate(Vec.Right() * speed, rotRad);
+            vel = SVec.Rotate(SVec.Right() * speed, rotRad);
             this.size = size;
             this.color = color;
             this.lineThickness = lineThickness;
@@ -139,19 +139,19 @@ namespace ShapeCore
         }
         public LineParticle(Vector2 pos, float angleRad, float accRad, float speed, Color color, float size, float lifetime, float lineThickness = 1f) : base(pos, lifetime)
         {
-            rotRad = angleRad + RNG.randF(-accRad, accRad);
-            vel = Vec.Rotate(Vec.Right() * speed, rotRad);
+            rotRad = angleRad + SRNG.randF(-accRad, accRad);
+            vel = SVec.Rotate(SVec.Right() * speed, rotRad);
             this.size = size;
             this.color = color;
             this.lineThickness = lineThickness;
         }
         public override void Draw()
         {
-            DrawLineEx(pos, pos + Vec.Rotate(Vec.Right() * size, rotRad), lineThickness, color);
+            DrawLineEx(pos, pos + SVec.Rotate(SVec.Right() * size, rotRad), lineThickness, color);
         }
         public override Rectangle GetBoundingBox()
         {
-            Vector2 end = pos + Vec.Rotate(Vec.Right() * size, rotRad);
+            Vector2 end = pos + SVec.Rotate(SVec.Right() * size, rotRad);
             return new(pos.X, pos.Y, end.X - pos.X, end.Y - pos.Y);
         }
     }
@@ -162,35 +162,35 @@ namespace ShapeCore
 
         public CircleParticle(Vector2 pos, float speed, Color color, float radius, float lifetime) : base(pos, lifetime)
         {
-            float angle = RNG.randF(0f, 2f * PI);
-            vel = Vec.Rotate(Vec.Right() * speed, angle);
+            float angle = SRNG.randF(0f, 2f * PI);
+            vel = SVec.Rotate(SVec.Right() * speed, angle);
             r = radius;
             this.color = color;
         }
         public CircleParticle(Vector2 pos, float angleRad, float speed, Color color, float radius, float lifetime) : base(pos, lifetime)
         {
-            vel = Vec.Rotate(Vec.Right() * speed, angleRad);
+            vel = SVec.Rotate(SVec.Right() * speed, angleRad);
             r = radius;
             this.color = color;
         }
         public CircleParticle(Vector2 pos, float speed, Color color, float radius, float lifetime, float drag = 2f) : base(pos, lifetime)
         {
-            float angle = RNG.randF(0f, 2f * PI);
-            vel = Vec.Rotate(Vec.Right() * speed, angle);
+            float angle = SRNG.randF(0f, 2f * PI);
+            vel = SVec.Rotate(SVec.Right() * speed, angle);
             r = radius;
             this.color = color;
             this.drag = drag;
         }
         public CircleParticle(Vector2 pos, float angleRad, float speed, Color color, float radius, float lifetime, float drag = 2f) : base(pos, lifetime)
         {
-            vel = Vec.Rotate(Vec.Right() * speed, angleRad);
+            vel = SVec.Rotate(SVec.Right() * speed, angleRad);
             r = radius;
             this.color = color;
             this.drag = drag;
         }
         public CircleParticle(Vector2 pos, float angleRad, float accRad, float speed, Color color, float radius, float lifetime) : base(pos, lifetime)
         {
-            vel = Vec.Rotate(Vec.Right() * speed, angleRad + RNG.randF(-accRad, accRad));
+            vel = SVec.Rotate(SVec.Right() * speed, angleRad + SRNG.randF(-accRad, accRad));
             r = radius;
             this.color = color;
         }

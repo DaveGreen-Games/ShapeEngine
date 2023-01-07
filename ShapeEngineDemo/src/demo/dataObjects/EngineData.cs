@@ -1,4 +1,4 @@
-﻿using ShapeEngineCore.Globals.Persistent;
+﻿using ShapePersistent;
 
 namespace ShapeEngineDemo.DataObjects
 {

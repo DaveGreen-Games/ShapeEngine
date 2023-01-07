@@ -1,4 +1,4 @@
-﻿using ShapeEngineCore.Globals.Timing;
+﻿using ShapeTiming;
 using System.Numerics;
 
 namespace ShapeScreen

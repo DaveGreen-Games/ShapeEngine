@@ -1,8 +1,7 @@
 ﻿using System.Numerics;
 using Raylib_CsLo;
-using ShapeEngineCore.Globals.Input;
-using ShapeEngineCore.Globals.Screen;
-using ShapeEngineCore.Globals.Audio;
+using ShapeInput;
+using ShapeAudio;
 
 namespace ShapeUI
 {
@@ -232,7 +231,7 @@ namespace ShapeUI
         }
         private Vector2 GetDirectionPosition(UINeighbors.NeighborDirection dir)
         {
-            Rectangle self = GetRect();
+            Rectangle self = GetRect(new(0f));
             switch (dir)
             {
                 case UINeighbors.NeighborDirection.TOP:

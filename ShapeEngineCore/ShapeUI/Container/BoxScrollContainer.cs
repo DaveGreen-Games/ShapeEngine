@@ -1,5 +1,6 @@
 ﻿using Raylib_CsLo;
-using ShapeEngineCore.Globals.Input;
+using ShapeInput;
+using ShapeLib;
 using System.Numerics;
 
 namespace ShapeUI.Container
@@ -120,7 +121,7 @@ namespace ShapeUI.Container
                 {
                     isMouseInside = false;
                     //MoveThroughElements();
-                    UpdateRects(GetRect(), curIndex, GetEndIndex());
+                    UpdateRects(GetRect(new(0f)), curIndex, GetEndIndex());
                 }
                 else
                 {
@@ -167,7 +168,7 @@ namespace ShapeUI.Container
                     //adjust rect to scroll bar
                     if (isScrollBarHandleDragging || (isMouseInside && IsScrollBarEnabled()))
                     {
-                        var rect = GetRect();
+                        var rect = GetRect(new(0f));
 
                         if (vContainer)
                         {
@@ -192,7 +193,7 @@ namespace ShapeUI.Container
 
                         UpdateRects(rect, curIndex, GetEndIndex());
                     }
-                    else UpdateRects(GetRect(), curIndex, GetEndIndex());
+                    else UpdateRects(GetRect(new(0f)), curIndex, GetEndIndex());
                 }
             }
             else if (InputHandler.IsGamepad())
@@ -206,7 +207,7 @@ namespace ShapeUI.Container
                     Scroll(scrollMove, dt);
                 }
 
-                UpdateRects(GetRect(), curIndex, GetEndIndex());
+                UpdateRects(GetRect(new(0f)), curIndex, GetEndIndex());
             }
 
             for (int i = curIndex; i < GetEndIndex(); i++)
@@ -216,7 +217,7 @@ namespace ShapeUI.Container
         }
         public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
         {
-            if (HasBackground()) DrawBackground(GetRect(), bgColor);
+            if (HasBackground()) DrawBackground(GetRect(new(0f)), bgColor);
 
             DrawScrollBar();
 
@@ -326,13 +327,13 @@ namespace ShapeUI.Container
             Vector2 slotSize = GetSlotSize();
             if (vContainer)
             {
-                float index = (value - GetPos(Alignement.TOPLEFT).Y) / slotSize.Y;
+                float index = (value - GetPos(new(0f)).Y) / slotSize.Y;
                 if (ceil) return (int)MathF.Ceiling(index);
                 else return (int)MathF.Floor(index);
             }
             else
             {
-                float index = (value - GetPos(Alignement.TOPLEFT).X) / slotSize.X;
+                float index = (value - GetPos(new(0f)).X) / slotSize.X;
                 if (ceil) return (int)MathF.Ceiling(index);
                 else return (int)MathF.Floor(index);
             }
@@ -433,7 +434,7 @@ namespace ShapeUI.Container
         }
         private void CalculateScrollBarRects(Vector2 mousePosUI)
         {
-            var rect = GetRect();
+            var rect = GetRect(new(0f));
             Vector2 slotSize = GetSlotSize();
             if (vContainer)
             {
@@ -444,13 +445,15 @@ namespace ShapeUI.Container
                 Vector2 handlePosOffset = new(0, slotSize.Y * curIndex);
                 if (reversedScrollBarLocation)
                 {
-                    scrollBarRect = Utils.ConstructRectangle(GetPos(Alignement.TOPRIGHT), size, Alignement.TOPRIGHT);
-                    scrollBarHandleRect = Utils.ConstructRectangle(GetPos(Alignement.TOPRIGHT) + handlePosOffset, handleSize, Alignement.TOPRIGHT);
+                    Vector2 alignement = new(1, 0);
+                    scrollBarRect = SRect.ConstructRect(GetPos(alignement), size, alignement);
+                    scrollBarHandleRect = SRect.ConstructRect(GetPos(alignement) + handlePosOffset, handleSize, alignement);
                 }
                 else
                 {
-                    scrollBarRect = Utils.ConstructRectangle(GetPos(Alignement.TOPLEFT), size, Alignement.TOPLEFT);
-                    scrollBarHandleRect = Utils.ConstructRectangle(GetPos(Alignement.TOPLEFT) + handlePosOffset, handleSize, Alignement.TOPLEFT);
+                    Vector2 alignement = new(0);
+                    scrollBarRect = SRect.ConstructRect(GetPos(alignement), size, alignement);
+                    scrollBarHandleRect = SRect.ConstructRect(GetPos(alignement) + handlePosOffset, handleSize, alignement);
                 }
             }
             else
@@ -462,13 +465,15 @@ namespace ShapeUI.Container
                 Vector2 handlePosOffset = new(slotSize.X * curIndex, 0);
                 if (reversedScrollBarLocation)
                 {
-                    scrollBarRect = Utils.ConstructRectangle(GetPos(Alignement.BOTTOMLEFT), size, Alignement.BOTTOMLEFT);
-                    scrollBarHandleRect = Utils.ConstructRectangle(GetPos(Alignement.BOTTOMLEFT) + handlePosOffset, handleSize, Alignement.BOTTOMLEFT);
+                    Vector2 alignement = new(0, 1);
+                    scrollBarRect = SRect.ConstructRect(GetPos(alignement), size, alignement);
+                    scrollBarHandleRect = SRect.ConstructRect(GetPos(alignement) + handlePosOffset, handleSize, alignement);
                 }
                 else
                 {
-                    scrollBarRect = Utils.ConstructRectangle(GetPos(Alignement.TOPLEFT), size, Alignement.TOPLEFT);
-                    scrollBarHandleRect = Utils.ConstructRectangle(GetPos(Alignement.TOPLEFT) + handlePosOffset, handleSize, Alignement.TOPLEFT);
+                    Vector2 alignement = new(0);
+                    scrollBarRect = SRect.ConstructRect(GetPos(alignement), size, alignement);
+                    scrollBarHandleRect = SRect.ConstructRect(GetPos(alignement) + handlePosOffset, handleSize, alignement);
                 }
             }
 

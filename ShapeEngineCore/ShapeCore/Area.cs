@@ -479,7 +479,7 @@ namespace ShapeCore
         public virtual void Update(float dt)
         {
             colHandler.Update(dt);
-            colHandler.Resolve();
+            //colHandler.Resolve();
 
             for (int i = 0; i < sortedLayers.Count; i++)
             {

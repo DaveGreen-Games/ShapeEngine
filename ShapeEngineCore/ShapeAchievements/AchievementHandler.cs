@@ -24,7 +24,7 @@ namespace ShapeAchievements
     {
 
         public event Action<Achievement>? Achieved;
-        public delegate float IconDrawer(Vector2 pos, Vector2 size, Alignement alignement, float progress, float dt);
+        public delegate float IconDrawer(Vector2 pos, Vector2 size, Vector2 alignement, float progress, float dt);
 
         public string apiName = "";
         public string displayName = "";
@@ -67,7 +67,7 @@ namespace ShapeAchievements
         //
         //}
 
-        public void Draw(Vector2 pos, Vector2 size, Alignement alignement, float dt)
+        public void Draw(Vector2 pos, Vector2 size, Vector2 alignement, float dt)
         {
 
         }

@@ -1,12 +1,11 @@
 ﻿using System.Numerics;
-using ShapeEngineCore.SimpleCollision;
-using ShapeEngineCore.Globals;
-using ShapeEngineCore.Globals.Persistent;
-using ShapeEngineCore.Globals.Audio;
-using ShapeEngineCore.Globals.Timing;
-using ShapeEngineCore.Globals.Screen;
-using ShapeEngineCore;
+using ShapeCollision;
+using ShapeCore;
+using ShapePersistent;
+using ShapeAudio;
 using Raylib_CsLo;
+using ShapeLib;
+using ShapeEngineDemo.DataObjects;
 
 namespace ShapeEngineDemo.Bodies
 {
@@ -35,7 +34,7 @@ namespace ShapeEngineDemo.Bodies
         protected override float GetCurSize()
         {
             if (!second) return size;
-            else return Utils.LerpFloat(size, 0, 1.0f - lifetimeTimer.GetF());
+            else return SUtils.LerpFloat(size, 0, 1.0f - lifetimeTimer.GetF());
         }
         //public override void Draw()
         //{
@@ -68,11 +67,11 @@ namespace ShapeEngineDemo.Bodies
                 this.spawnType = data.spawnName;
                 this.size = data.size;
                 SetTotalHealth(data.health);
-                vel = RNG.randVec2(data.velMin, data.velMax);
+                vel = SRNG.randVec2(data.velMin, data.velMax);
             }
             collider = new(pos, vel, this.size);
             collider.Mass = size / 2;
-            polygon = Utils.GeneratePolygon(RNG.randI(10, 15), new(), this.size * 0.75f, this.size*1.25f);
+            polygon = SPoly.GeneratePolygon(SRNG.randI(10, 15), new(), this.size * 0.75f, this.size*1.25f);
         }
         public Asteroid(Vector2 pos, Vector2 vel, string asteroidType)
         {
@@ -90,11 +89,11 @@ namespace ShapeEngineDemo.Bodies
             }
             collider = new(pos, vel, this.size);
             collider.Mass = size / 2;
-            polygon = Utils.GeneratePolygon(RNG.randI(10, 15), new(), this.size * 0.75f, this.size * 1.25f);
+            polygon = SPoly.GeneratePolygon(SRNG.randI(10, 15), new(), this.size * 0.75f, this.size * 1.25f);
         }
-        public override void Collide(CastInfo info)
+        public override void Overlap(CollisionInfo info)
         {
-            if (info.collided)
+            if (info.overlapping)
             {
                 if (info.other != null)
                 {
@@ -111,7 +110,7 @@ namespace ShapeEngineDemo.Bodies
                     if(colLayer == "asteroid")
                     {
                         var otherCol = info.other.GetCollider();
-                        collider.Vel = Utils.ElasticCollision2D(collider.Pos, info.selfVel, collider.Mass, otherCol.Pos, info.otherVel, otherCol.Mass, 1f);
+                        collider.Vel = SPhysics.ElasticCollision2D(collider.Pos, info.selfVel, collider.Mass, otherCol.Pos, info.otherVel, otherCol.Mass, 1f);
                     }
                 }
             }
@@ -146,23 +145,23 @@ namespace ShapeEngineDemo.Bodies
             float f = 0.75f + (info.recieved / GetTotalHealth());
             Color particleColor = PaletteHandler.C("neutral");
             if (info.crit) particleColor = PaletteHandler.C("flash"); f += 0.5f;
-            for (int i = 0; i < RNG.randI(5, 10); i++)
+            for (int i = 0; i < SRNG.randI(5, 10); i++)
             {
                 HitParticle particle = new(info.pos, info.dir, f, 0.5f, particleColor);
                 GAMELOOP.AddGameObject(particle);
             }
             //Vector2 pos = ScreenHandler.GAME_TO_UI * (info.pos + RNG.randVec2(size * 0.5f, size));
-            Vector2 pos = info.pos + RNG.randVec2(size * 0.5f, size);
+            Vector2 pos = info.pos + SRNG.randVec2(size * 0.5f, size);
             string text = String.Format("{0}", MathF.Floor(info.recieved));
             //var textEffect = new TextEffectEaseColor(pos, text, 1.0f, WHITE, 0.25f, new(255, 255, 255, 0), EasingType.BOUNCE_OUT);
             //var textEffect = new TextEffectEaseSize(pos, text, 1.0f, WHITE, 1f, -80, EasingType.BACK_IN);
-            var textEffect = new TextEffectEaseSize(pos, text, 1f, WHITE, 50, 0, 1, ShapeEngineCore.Globals.UI.Alignement.CENTER, 1f, EasingType.BACK_IN);
+            var textEffect = new TextEffectEaseSize(pos, text, 1f, WHITE, 50, 0, 1, new(0.5f), 1f, EasingType.BACK_IN);
             //var textEffect = new TextEffectEasePos(pos, text, 1.0f, WHITE, 0.5f, new Vector2(0, 150), EasingType.CUBIC_OUT);
             GAMELOOP.AddGameObject(textEffect, true);
         }
         public override Rectangle GetBoundingBox()
         {
-            return HasDynamicBoundingBox() ? collider.GetDynamicBoundingRect() : collider.GetBoundingRect();
+            return collider.GetBoundingRect();
         }
 
         public override void Update(float dt)

@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Raylib_CsLo;
+using ShapeLib;
 
 namespace ShapeUI
 {
@@ -7,17 +8,17 @@ namespace ShapeUI
     {
         protected string text = "";
         protected Color textColor = WHITE;
-        public Label(string text, Alignement alignement = Alignement.CENTER)
+        public Label(string text, Vector2 alignement)
             : base(alignement)
         {
             this.text = text;
         }
-        public Label(string text, float angleDeg, Alignement alignement = Alignement.CENTER)
+        public Label(string text, float angleDeg, Vector2 alignement)
             : base(angleDeg, alignement)
         {
             this.text = text;
         }
-        public Label(string text, float angleDeg, float outlineThickness, Alignement alignement = Alignement.CENTER)
+        public Label(string text, float angleDeg, float outlineThickness, Vector2 alignement)
             : base(angleDeg, outlineThickness, alignement)
         {
             this.text = text;
@@ -38,7 +39,7 @@ namespace ShapeUI
         protected void DrawText()
         {
             if(HasText())
-                UIHandler.DrawTextAlignedPro(text, GetPos(alignement), angleDeg, GetSize(), 1, textColor, alignement);
+                SDrawing.DrawTextAlignedPro(text, GetPos(alignement), angleDeg, GetSize(), 1, textColor, alignement);
         }
         protected bool HasText() { return textColor.a > 0 && text != ""; }
     }
