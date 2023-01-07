@@ -3,6 +3,7 @@ using ShapeCollision;
 using ShapeCore;
 using ShapeLib;
 using Raylib_CsLo;
+using ShapeColor;
 
 namespace ShapeEngineDemo
 {

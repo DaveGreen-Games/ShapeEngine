@@ -1,19 +1,19 @@
 ﻿using Raylib_CsLo;
 
-namespace ShapeLib
+namespace ShapeColor
 {
     public static class SColor
     {
-        public static Color LerpColor(Color a, Color b, float f)
+        public static Raylib_CsLo.Color LerpColor(Raylib_CsLo.Color a, Raylib_CsLo.Color b, float f)
         {
-            return new Color(
+            return new Raylib_CsLo.Color(
                 (int)RayMath.Lerp(a.r, b.r, f),
                 (int)RayMath.Lerp(a.g, b.g, f),
                 (int)RayMath.Lerp(a.b, b.b, f),
                 (int)RayMath.Lerp(a.a, b.a, f));
         }
 
-        public static Color AddColors(Color a, Color b)
+        public static Raylib_CsLo.Color AddColors(Raylib_CsLo.Color a, Raylib_CsLo.Color b)
         {
             return new
                 (
@@ -23,7 +23,7 @@ namespace ShapeLib
                 a.a + b.a
                 );
         }
-        public static Color SubtractColors(Color a, Color b)
+        public static Raylib_CsLo.Color SubtractColors(Raylib_CsLo.Color a, Raylib_CsLo.Color b)
         {
             return new
                 (
@@ -33,7 +33,7 @@ namespace ShapeLib
                 a.a - b.a
                 );
         }
-        public static Color MultiplyColors(Color a, Color b)
+        public static Raylib_CsLo.Color MultiplyColors(Raylib_CsLo.Color a, Raylib_CsLo.Color b)
         {
             return new
                 (
@@ -43,28 +43,28 @@ namespace ShapeLib
                 a.a * b.a
                 );
         }
-        public static Color ChangeAlpha(Color c, byte a)
+        public static Raylib_CsLo.Color ChangeAlpha(Raylib_CsLo.Color c, byte a)
         {
             c.a = a;
             return c;
         }
-        public static Color ChangeAlpha(Color c, int change)
+        public static Raylib_CsLo.Color ChangeAlpha(Raylib_CsLo.Color c, int change)
         {
             int newAlpha = c.a - change;
             c.a = (byte)newAlpha;
             return c;
         }
-        public static Color ChangeRed(Color c, byte r)
+        public static Raylib_CsLo.Color ChangeRed(Raylib_CsLo.Color c, byte r)
         {
             c.r = r;
             return c;
         }
-        public static Color ChangeGreen(Color c, byte g)
+        public static Raylib_CsLo.Color ChangeGreen(Raylib_CsLo.Color c, byte g)
         {
             c.g = g;
             return c;
         }
-        public static Color ChangeBlue(Color c, byte b)
+        public static Raylib_CsLo.Color ChangeBlue(Raylib_CsLo.Color c, byte b)
         {
             c.b = b;
             return c;
@@ -78,9 +78,9 @@ namespace ShapeLib
         /// <param name="correctionFactor">The brightness correction factor. Must be between -1 and 1. 
         /// Negative values produce darker colors.</param>
         /// <returns>
-        /// Corrected <see cref="Color"/> structure.
+        /// Corrected <see cref="Raylib_CsLo.Color"/> structure.
         /// </returns>
-        public static Color ChangeBrightness(Color color, float correctionFactor)
+        public static Raylib_CsLo.Color ChangeBrightness(Raylib_CsLo.Color color, float correctionFactor)
         {
             float red = color.r;
             float green = color.g;
@@ -103,19 +103,19 @@ namespace ShapeLib
             return new((byte)red, (byte)green, (byte)blue, color.a);
         }
 
-        public static Color ChangeColor(Color source, Color adjust, float p)
+        public static Raylib_CsLo.Color ChangeColor(Raylib_CsLo.Color source, Raylib_CsLo.Color adjust, float p)
         {
             return LerpColor(source, adjust, p);
         }
 
 
-        public static Color ChangeHUE(Color color, int amount)
+        public static Raylib_CsLo.Color ChangeHUE(Raylib_CsLo.Color color, int amount)
         {
             var hvs = ColorToHSV(color);
             return ColorFromHSV((hvs.hue + amount) % 360, hvs.saturation, hvs.value);
         }
 
-        public static (float hue, float saturation, float value) ColorToHSV(Color color)
+        public static (float hue, float saturation, float value) ColorToHSV(Raylib_CsLo.Color color)
         {
             int max = Math.Max(color.r, Math.Max(color.g, color.g));
             int min = Math.Min(color.r, Math.Min(color.g, color.b));
@@ -129,7 +129,7 @@ namespace ShapeLib
             return new(hue, saturation, value);
         }
 
-        public static Color ColorFromHSV(float hue, float saturation, float value)
+        public static Raylib_CsLo.Color ColorFromHSV(float hue, float saturation, float value)
         {
             int hi = Convert.ToInt32(MathF.Floor(hue / 60)) % 6;
             float f = hue / 60 - MathF.Floor(hue / 60);

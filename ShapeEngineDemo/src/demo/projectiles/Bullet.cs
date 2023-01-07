@@ -1,11 +1,7 @@
-﻿using System.Numerics;
-using ShapeCore;
+﻿using ShapeCore;
 using ShapeCollision;
 using ShapeEngineDemo.Bodies;
 using ShapeAudio;
-using ShapeLib;
-using Raylib_CsLo;
-//using ShapeEngineCore.Globals.Timing;
 
 namespace ShapeEngineDemo.Projectiles
 {

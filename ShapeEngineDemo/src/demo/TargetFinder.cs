@@ -4,6 +4,7 @@ using ShapeTiming;
 using ShapeCollision;
 using ShapeLib;
 using Raylib_CsLo;
+using ShapeColor;
 
 namespace ShapeEngineDemo
 {

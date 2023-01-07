@@ -2,6 +2,7 @@
 using Raylib_CsLo;
 using ShapeLib;
 using ShapeCore;
+using ShapeColor;
 
 namespace ShapeEngineDemo.Guns
 {

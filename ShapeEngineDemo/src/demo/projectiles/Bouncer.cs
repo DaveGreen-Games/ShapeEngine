@@ -5,7 +5,6 @@ using ShapeEngineDemo.Bodies;
 using Raylib_CsLo;
 using ShapeAudio;
 using ShapeLib;
-//using ShapeEngineCore.Globals.Timing;
 
 namespace ShapeEngineDemo.Projectiles
 {

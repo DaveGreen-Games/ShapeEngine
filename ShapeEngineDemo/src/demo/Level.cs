@@ -8,6 +8,7 @@ using ShapeInput;
 using ShapeTiming;
 using ShapeCursor;
 using ShapeEngineDemo.Bodies;
+using ShapeColor;
 
 namespace ShapeEngineDemo
 {

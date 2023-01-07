@@ -7,9 +7,9 @@ using ShapeShaders;
 using ShapeTiming;
 using ShapePersistent;
 using Raylib_CsLo;
-using ShapeLib;
-using System.Numerics;
+using ShapeColor;
 using ShapeEngineDemo.DataObjects;
+
 
 namespace ShapeEngineDemo
 {

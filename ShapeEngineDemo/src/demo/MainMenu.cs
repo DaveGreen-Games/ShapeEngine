@@ -5,6 +5,7 @@ using ShapeScreen;
 using ShapeCore;
 using ShapeCursor;
 using ShapeLib;
+using ShapeColor;
 
 namespace ShapeEngineDemo
 {

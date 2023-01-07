@@ -1,7 +1,7 @@
 ﻿using Raylib_CsLo;
 using System.Numerics;
 using ShapeShaders;
-using ShapeLib;
+using ShapeColor;
 
 namespace ShapeScreen
 {
