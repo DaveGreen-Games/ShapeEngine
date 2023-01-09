@@ -342,42 +342,31 @@ namespace ShapeEngineDemo.Bodies
                 if (info.other != null)
                 {
                     string colLayer = info.other.GetCollisionLayer();
-                    //if(colLayer == "wall")
-                    //{
-                    //    //float dmg = 10f;
-                    //    float stunTime = wallStunTime;
-                    //    if (IsMovementBoosting()) { stunTime *= boostFactor; }
-                    //    else if (IsMovementSlow()) { stunTime *= slowFactor; }
-                    //
-                    //    Stun(stunTime);
-                    //    Damage(25f, info.collisionPoint, info.normal, this);
-                    //    collider.Vel = Vec.Normalize(info.reflectVector) * MaxSpeed * wallColForceFactor;
-                    //}
                     if (colLayer == "asteroid")
                     {
                         IDamageable? other = info.other as IDamageable;
                         if (other != null && info.intersection.valid)
                         {
-                            //Vector2 hitDir = Vec.Normalize(info.other.GetPos() - collider.Pos);
                             Vector2 normal = info.intersection.n;
                             Vector2 colP = info.intersection.p;
-                            var dmgInfo = other.Damage(GetDamage(), colP, normal, this, false);
+                            var dmgInfo = other.Damage(GetDamage(), colP, -normal, this, false);
                             if (!dmgInfo.killed && !dmgInfo.dead)
                             {
-                                Damage(other.GetDamage(), colP, -normal, other, false);
+                                Damage(other.GetDamage(), colP, normal, other, false);
                                 float stunTime = WALL_STUN_TIME * 0.5f;
                                 float speed = stats.Get("maxSpeed");
                                 if (IsMovementBoosting()) { stunTime *= stats.Get("boostF"); speed *= stats.Get("boostF"); }
                                 else if (IsMovementSlow()) { stunTime *= stats.Get("slowF"); speed *= stats.Get("slowF"); }
                                 Stun(stunTime);
-                                Vector2 dir = SVec.Normalize(SVec.Reflect(info.other.GetCollider().Vel, normal)); //SVec.Normalize(info.reflectVector);
-                                info.other.GetCollider().AddImpulse(-dir * speed);
-                                collider.Vel = dir * stats.Get("maxSpeed") * WALL_COL_FORCE_FACTOR;
+                                Vector2 otherDir = SVec.Normalize(SVec.Reflect(info.other.GetCollider().Vel, -normal));
+                                info.other.GetCollider().AddImpulse(otherDir * speed);
+                                Vector2 selfDir = SVec.Normalize(SVec.Reflect(collider.Vel, normal)); //SVec.Normalize(info.reflectVector);
+                                collider.Vel = selfDir * stats.Get("maxSpeed") * WALL_COL_FORCE_FACTOR;
                             }
-                            else 
-                            {
-                                Damage(other.GetDamage() * 0.25f, colP, -normal, other, false);
-                            }
+                            //else 
+                            //{
+                            //    Damage(other.GetDamage() * 0.25f, colP, -normal, other, false);
+                            //}
                         }
                     }
                 }
