@@ -11,7 +11,7 @@ namespace ShapeEngineDemo.Projectiles
 {
     public class Piercer : Projectile 
     {
-        protected ICollidable? pierced = null;
+        //protected ICollidable? pierced = null;
         
 
         public Piercer(ProjectileInfo info, Dictionary<string, StatSimple> bonuses, string type = "piercer") : base(type, info, bonuses)
@@ -24,28 +24,40 @@ namespace ShapeEngineDemo.Projectiles
         }
         public override void Overlap(CollisionInfo info)
         {
-            if (info.overlapping)
+            if (info.collision)
             {
-                if (info.other != null)
+                if(info.other != null)
                 {
-                    if(pierced == null || pierced != info.other)
+                    var obj = info.other as IDamageable;
+                    if (obj != null)
                     {
-                        pierced = info.other;
-                        var obj = info.other as IDamageable;
-                        if (obj != null)
-                        {
-                            var dmgInfo = ImpactDamage(obj);
-                            if(dmgInfo.recieved > 0f) AudioHandler.PlaySFX("projectile pierce", -1f, -1f, 0.1f);
-                            //obj.Damage(damage, collider.Pos, Vec.Normalize(collider.Vel), dmgDealer);
-                        }
+                        var dmgInfo = ImpactDamage(obj);
+                        if(dmgInfo.recieved > 0f) AudioHandler.PlaySFX("projectile pierce", -1f, -1f, 0.1f);
                     }
                 }
-                //Kill();
             }
-            else
-            {
-                pierced = null;
-            }
+            //if (info.overlapping)
+            //{
+            //    if (info.other != null)
+            //    {
+            //        if(pierced == null || pierced != info.other)
+            //        {
+            //            pierced = info.other;
+            //            var obj = info.other as IDamageable;
+            //            if (obj != null)
+            //            {
+            //                var dmgInfo = ImpactDamage(obj);
+            //                if(dmgInfo.recieved > 0f) AudioHandler.PlaySFX("projectile pierce", -1f, -1f, 0.1f);
+            //                //obj.Damage(damage, collider.Pos, Vec.Normalize(collider.Vel), dmgDealer);
+            //            }
+            //        }
+            //    }
+            //    //Kill();
+            //}
+            //else
+            //{
+            //    pierced = null;
+            //}
         }
 
         public override void Draw()

@@ -107,6 +107,7 @@ namespace ShapeEngineDemo.Projectiles
             return collider.GetBoundingRect();
         }
         public virtual void Overlap(CollisionInfo info) { }
+        public virtual void OverlapEnded(ICollidable other) { }
         public override bool IsDead() { return dead; }
         public override bool Kill()
         {
@@ -185,5 +186,7 @@ namespace ShapeEngineDemo.Projectiles
             AsteroidDeathEffect ade = new(collider.Pos, 0.25f, collider.Radius * 1.5f, color);
             GAMELOOP.AddGameObject(ade);
         }
+
+        
     }
 }

@@ -337,7 +337,7 @@ namespace ShapeEngineDemo.Bodies
         }
         public override void Overlap(CollisionInfo info)
         {
-            if (info.overlapping)
+            if (info.collision)// || info.overlapping)
             {
                 if (info.other != null)
                 {

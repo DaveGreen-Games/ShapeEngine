@@ -23,7 +23,7 @@ namespace ShapeEngineDemo.Projectiles
         }
         public override void Overlap(CollisionInfo info)
         {
-            if (info.overlapping)
+            if (info.collision)
             {
                 if (info.other != null)
                 {
