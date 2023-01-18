@@ -378,8 +378,8 @@ namespace ShapeScreen
             this.zoomStretchFactor = zoomStretchFactor;
             this.baseRotationDeg = rotation;
             this.PIXEL_SMOOTHING_ENABLED = pixelSmoothing;
-            this.screenSpaceCamera = new() { offset = baseOffset, rotation = baseRotationDeg, zoom = baseZoom, target = new(0f) };
-            this.worldSpaceCamera = new() { offset = baseOffset, rotation = baseRotationDeg, zoom = baseZoom, target = new(0f) };
+            this.screenSpaceCamera = new() { offset = baseOffset, rotation = baseRotationDeg, zoom = 1f, target = new(0f) };
+            this.worldSpaceCamera = new() { offset = baseOffset, rotation = baseRotationDeg, zoom = 1f, target = new(0f) };
         }
         public void ChangeSize(Vector2 newSize, float factor)
         {
@@ -406,7 +406,14 @@ namespace ShapeScreen
         /// Current camera zoom after pixel perfect smoothing is applied.
         /// </summary>
         public float CameraZoom { get { return worldSpaceCamera.zoom; } }
-
+        public float BaseZoom { get { return baseZoom; } 
+            set 
+            {
+                baseZoom = value;
+                //screenSpaceCamera.zoom = baseZoom;
+                //worldSpaceCamera.zoom = baseZoom;
+            } 
+        }
         public float ZoomFactor { get { return curZoomFactor; } set { curZoomFactor = value; } }
         public void ZoomBy(float amountFactor) { curZoomFactor += amountFactor; }
         public void ResetZoom() { curZoomFactor = 1f; }
@@ -477,7 +484,7 @@ namespace ShapeScreen
             shake.Update(dt);
             rawCameraOffset = baseOffset + shake.Offset + curTranslation + cameraOrderChainHandler.TotalTranslation;
             rawCameraRotationDeg = baseRotationDeg + shake.RotDeg + curRotDeg + cameraOrderChainHandler.TotalRotDeg;
-            rawCameraZoom = ( (baseZoom * zoomStretchFactor) + shake.Zoom) * curZoomFactor / cameraOrderChainHandler.TotalScale;
+            rawCameraZoom = ( ( (baseZoom * zoomStretchFactor) + shake.Zoom) * curZoomFactor ) / cameraOrderChainHandler.TotalScale;
             if (target != null)
             {
                 if (newTarget != null)

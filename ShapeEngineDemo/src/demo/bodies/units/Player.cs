@@ -626,7 +626,7 @@ namespace ShapeEngineDemo.Bodies
                 }
             }
 
-            Vector2 miniBarSize = new Vector2(stats.Get("size") * 2f, stats.Get("size") * 0.2f) * ScreenHandler.GAME_TO_UI;
+            Vector2 miniBarSize = new Vector2(stats.Get("size") * 2f, stats.Get("size") * 0.2f) * ScreenHandler.GAME_TO_UI * ScreenHandler.CAMERA.RawZoom;
             Vector2 miniBarOffset = new Vector2(0, stats.Get("size") * 2f);
             Vector2 miniBarPos = ScreenHandler.TransformPositionToUI(collider.Pos - miniBarOffset);
             //hpBarMini.SetSize();
@@ -737,13 +737,13 @@ namespace ShapeEngineDemo.Bodies
             //Vector2 bs = new Vector2(size * 2f, size * 0.2f) * ScreenHandler.GAME_TO_UI;
             //UIHandler.DrawBar(tl * ScreenHandler.GAME_TO_UI, bs, GetHealthPercentage(), ColorPalette.Cur.enemy2, ColorPalette.Cur.neutral, BarType.LEFTRIGHT);
 
-            Vector2 c = uiSize * new Vector2(0.5f, 0.5f);
-            Vector2 g = uiSize * new Vector2(0.15f, 0f);
-            Vector2 lineGap = uiSize * new Vector2(0f, 0.07f);
-            float r = uiSize.X * 0.05f;
-            float lt = r * 0.1f;
-            float startAngleDeg = 180;
-            float endAngleDeg = 0;
+            //Vector2 c = uiSize * new Vector2(0.5f, 0.5f);
+            //Vector2 g = uiSize * new Vector2(0.15f, 0f);
+            //Vector2 lineGap = uiSize * new Vector2(0f, 0.07f);
+            //float r = uiSize.X * 0.05f;
+            //float lt = r * 0.1f;
+            //float startAngleDeg = 180;
+            //float endAngleDeg = 0;
             //float endAngleDeg = Vec.AngleDeg(Vec.Normalize(GAMELOOP.MOUSE_POS_UI - c));
 
             //Drawing.DrawCircleSector(c + g * 2, r, startAngleDeg, endAngleDeg, 24, WHITE);

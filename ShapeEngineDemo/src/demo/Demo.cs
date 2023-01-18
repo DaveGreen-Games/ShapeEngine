@@ -187,7 +187,7 @@ namespace ShapeEngineDemo
 
 
             ScreenHandler.OnWindowSizeChanged += OnWindowSizeChanged;
-
+            ScreenHandler.CAMERA.BaseZoom = 1.5f;
             //ScreenHandler.SetFrameRateLimit(180);
             //SPAWN SPLASH SCREEN
             Action startscene = () => GoToScene("splash");
