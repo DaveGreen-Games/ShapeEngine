@@ -1,79 +1,10 @@
 ﻿using System.Numerics;
 using Raylib_CsLo;
+using ShapeLib;
 using ShapeUI;
 
 namespace ShapeAchievements
 {
-    public class AchievementGoal
-    {
-        public AchievementStat stat;
-        public int goal = 0;
-        public int updateIncrement = -1;
-        public bool finished = false;
-
-        public AchievementGoal(AchievementStat stat, int goal, bool finished)
-        {
-            this.stat = stat;
-            this.goal = goal;
-            this.finished = finished;
-        }
-    }
-
-
-    public class Achievement
-    {
-
-        public event Action<Achievement>? Achieved;
-        public delegate float IconDrawer(Vector2 pos, Vector2 size, Vector2 alignement, float progress, float dt);
-
-        public string apiName = "";
-        public string displayName = "";
-        public string description = "";
-
-        protected bool achieved = false;
-        protected bool hidden = false; //doesnt show description and display name
-
-        public List<AchievementGoal> goals = new();
-
-
-        protected IconDrawer? iconAchieved = null;
-        protected IconDrawer? iconUnachieved = null;
-
-        public Achievement(string apiName, string displayName, string description, bool hidden)
-        {
-            this.apiName = apiName;
-            this.displayName = displayName;
-            this.description = description;
-            this.hidden = hidden;
-        }
-
-        public void AddGoal(AchievementStat stat, int goal, bool finished) { AddGoal(new(stat, goal, finished)); }
-        public void AddGoal(AchievementGoal goal) { goals.Add(goal); }
-        public void AddGoals(params AchievementGoal[] goals) { this.goals.AddRange(goals); }
-
-        public void SetIconAchieved(IconDrawer iconAchieved) { this.iconAchieved = iconAchieved; }
-        public void SetIconUnachieved(IconDrawer iconUnachieved) { this.iconUnachieved = iconUnachieved; }
-
-        public bool IsHidden() { return hidden; }
-        public bool IsAchieved() { return achieved; }
-        public void Achieve() 
-        {
-            if (!achieved) Achieved?.Invoke(this);
-            achieved = true; 
-        }
-
-        //public void Update(float dt)
-        //{
-        //
-        //}
-
-        public void Draw(Vector2 pos, Vector2 size, Vector2 alignement, float dt)
-        {
-
-        }
-    }
-
-
     public class AchievementStat
     {
         public string apiName = "";
@@ -114,14 +45,130 @@ namespace ShapeAchievements
 
         public void SetStat(int newValue) { ChangeStat(newValue - value); }
 
-        //private int Abs(int value)
+    }
+    public class AchievementGoal
+    {
+        protected AchievementStat stat;
+        protected int goal = 0;
+        protected bool finished = false;
+        public event Action<AchievementGoal, AchievementStat, int>? GoalFinished;
+
+        public AchievementGoal(AchievementStat stat, int goal)
+        {
+            this.stat = stat;
+            this.goal = goal;
+
+            if(stat.value >= goal)
+            {
+                finished= true;
+            }
+            else this.stat.OnValueChanged += OnStatValueChanged;
+        }
+
+        public bool IsFinished() { return finished; }
+        protected void OnStatValueChanged(int oldValue, int newValue) 
+        { 
+            if(newValue >= goal)
+            {
+                this.stat.OnValueChanged-= OnStatValueChanged;
+                finished = true;
+                GoalFinished?.Invoke(this, stat, goal);
+            }
+        }
+    }
+    public class Achievement
+    {
+
+        public event Action<Achievement>? Achieved;
+        public delegate float IconDrawer(Rectangle rect, float progress, Color color, float dt);
+
+        public string apiName = "";
+        public string displayName = "";
+        public string description = "";
+
+        protected bool achieved = false;
+        protected bool hidden = false; //doesnt show description and display name
+
+        protected List<AchievementGoal> goals = new();
+        protected int achievedGoals = 0;
+
+        protected IconDrawer? icon = null;
+
+        public Achievement(string apiName, string displayName, string description, bool hidden, params AchievementGoal[] goals)
+        {
+            this.apiName = apiName;
+            this.displayName = displayName;
+            this.description = description;
+            this.hidden = hidden;
+            
+            this.goals = goals.ToList();
+            foreach (var goal in goals)
+            {
+                if (!goal.IsFinished())
+                {
+                    goal.GoalFinished += OnGoalFinished;
+                }
+                else achievedGoals++;
+            }
+
+            if(achievedGoals >= goals.Length)
+            {
+                Achieve();
+            }
+        }
+
+        protected void OnGoalFinished(AchievementGoal goal, AchievementStat stat, int goalValue)
+        {
+            goal.GoalFinished -= OnGoalFinished;
+            achievedGoals++;
+
+            if (achievedGoals >= goals.Count)
+            {
+                Achieve();
+            }
+        }
+
+        public void SetIconDrawer(IconDrawer icon) { this.icon = icon; }
+
+        public bool IsHidden() { return hidden; }
+        public bool IsAchieved() { return achieved; }
+        public void Achieve() 
+        {
+            if (!achieved) Achieved?.Invoke(this);
+            achieved = true; 
+        }
+
+        //public void Update(float dt)
         //{
-        //    if (value >= 0) return value;
-        //    else return value * -1;
+        //
         //}
+
+        public virtual void Draw(Rectangle rect, Color bgColor, Color iconAchieved, Color iconUnachieved, Color textColor, Color progressColor, float dt)
+        {
+
+            //draw background
+            SDrawing.DrawRectangle(rect, bgColor);
+
+
+            float margin = 0.05f;
+            Rectangle inside = new(rect.x + rect.width * margin, rect.y + rect.height * margin, rect.width * (1f - margin * 2f), rect.height * (1f - margin * 2f));
+            Rectangle iconRect = new(inside.x, inside.y, inside.width * 0.25f, inside.height);
+
+            //Draw Icon
+            if (icon != null) icon.Invoke(rect, 1f, achieved ? iconAchieved: iconUnachieved, dt);
+
+            //draw title
+            
+
+
+            //draw description
+
+            //draw progress bar
+        }
     }
 
 
+    
 
 
     public static class AchievementHandler
