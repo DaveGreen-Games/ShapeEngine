@@ -6,6 +6,7 @@ using ShapeAudio;
 using Raylib_CsLo;
 using ShapeLib;
 using ShapeColor;
+using ShapeAchievements;
 
 namespace ShapeEngineDemo.Bodies
 {
@@ -136,6 +137,7 @@ namespace ShapeEngineDemo.Bodies
             SpawnDeathEffect();
             SpawnAsteroids();
             AudioHandler.PlaySFX("asteroid die", -1f, -1f, 0.1f);
+            AchievementHandler.UpdateStatValue("asteroidKills", 1);
         }
         public override void WasDamaged(DamageInfo info)
         {

@@ -273,5 +273,15 @@ namespace ShapeLib
             return Vector2.Dot(n, d1) * Vector2.Dot(n, d2) > 0.0f;
         }
 
+        public static Vector2 GetRectPos(Rectangle rect, Vector2 alignement)
+        {
+            Vector2 topLeft = new Vector2(rect.X, rect.Y);
+            Vector2 offset = GetRectSize(rect) * alignement;
+            return topLeft + offset;
+        }
+        public static Vector2 GetRectSize(Rectangle rect)
+        {
+            return new(rect.width, rect.height);
+        }
     }
 }

@@ -9,7 +9,7 @@ using ShapePersistent;
 using Raylib_CsLo;
 using ShapeColor;
 using ShapeEngineDemo.DataObjects;
-
+using ShapeAchievements;
 
 namespace ShapeEngineDemo
 {
@@ -188,6 +188,22 @@ namespace ShapeEngineDemo
 
             ScreenHandler.OnWindowSizeChanged += OnWindowSizeChanged;
             ScreenHandler.CAMERA.BaseZoom = 1.5f;
+
+            
+            //Achievements
+            AchievementStat asteroidKills = new("asteroidKills", "Asteroid Kills", 0);
+            AchievementHandler.AddStat(asteroidKills);
+
+
+            Achievement asteroidKiller = new("asteroidKiller", "Asteroid Killer", true, asteroidKills, 0, 100, 20);
+            Achievement asteroidDestroyer = new("asteroidDestroyer", "Asteroid Destroyer", false, asteroidKills, 100, 250, 50);
+            Achievement asteroidAnnihilator = new("asteroidAnnihilator", "Asteroid Annihilator", false, asteroidKills, 250, 1000, 250);
+
+
+            AchievementHandler.AddAchievement(asteroidKiller);
+            AchievementHandler.AddAchievement(asteroidDestroyer);
+            AchievementHandler.AddAchievement(asteroidAnnihilator);
+
             //ScreenHandler.SetFrameRateLimit(180);
             //SPAWN SPLASH SCREEN
             Action startscene = () => GoToScene("splash");

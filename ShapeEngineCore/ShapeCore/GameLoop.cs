@@ -11,7 +11,7 @@ using ShapeCursor;
 using Raylib_CsLo;
 using System.Numerics;
 using ShapeColor;
-
+using ShapeAchievements;
 
 namespace ShapeCore
 {
@@ -354,13 +354,17 @@ namespace ShapeCore
             QUIT = false;
             RESTART = false;
 
+            //figure out a way where the user has to initialize the handlers that are going to be used...
             ScreenHandler.Initialize(screenInitInfo.devWidth, screenInitInfo.devHeight, screenInitInfo.gameSizeFactor, screenInitInfo.uiSizeFactor, screenInitInfo.windowName, screenInitInfo.fixedTexture, screenInitInfo.pixelSmoothing);
             SavegameHandler.Initialize(gameInitInfo.studioName, gameInitInfo.gameName);
             ResourceManager.Initialize(resourceInitInfo.path, resourceInitInfo.filename);
             PaletteHandler.Initialize();
             UIHandler.Initialize();
             AudioHandler.Initialize();
-            //ShaderHandler.Initialize();
+            
+            ShaderHandler.Initialize();
+            AchievementHandler.Initialize();
+            
             InputHandler.Initialize();
             CursorHandler.Initialize();
         }

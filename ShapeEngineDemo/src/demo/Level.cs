@@ -9,6 +9,7 @@ using ShapeTiming;
 using ShapeCursor;
 using ShapeEngineDemo.Bodies;
 using ShapeColor;
+using ShapeAchievements;
 
 namespace ShapeEngineDemo
 {
@@ -260,6 +261,9 @@ namespace ShapeEngineDemo
             area.Update(dt);
             asteroidSpawner.Update(dt);
 
+
+
+            AchievementHandler.Update(dt);
             //testRotationDeg += dt * 90f;
             //if (testRotationDeg > 360) testRotationDeg = 0f;
         }
@@ -282,6 +286,8 @@ namespace ShapeEngineDemo
             SDrawing.DrawTextAlignedPro(String.Format("GP {0}/{1}", InputHandler.CUR_GAMEPAD, InputHandler.GetConnectedGamepadCount()), uiSize * new Vector2(0.01f, 0.16f), 0f, textSize, 2f, PaletteHandler.C("text"), new(0, 0.5f));
             SDrawing.DrawTextAlignedPro(String.Format("Used {0}", InputHandler.gamepadUsed), uiSize * new Vector2(0.01f, 0.19f), 0f, textSize, 2f, PaletteHandler.C("text"), new(0, 0.5f));
             
+            SDrawing.DrawTextAlignedPro(String.Format("Kills {0}", AchievementHandler.GetStatValue("asteroidKills")), uiSize * new Vector2(0.01f, 0.25f), 0f, textSize, 2f, PaletteHandler.C("text"), new(0, 0.5f));
+            
             
             SDrawing.DrawTextAlignedPro("Debug Keys [8, 9, 0]", uiSize * new Vector2(0.5f, 0.98f), 0f, textSize, 2f, PaletteHandler.C("text"), new(0.5f, 1));
             
@@ -294,6 +300,9 @@ namespace ShapeEngineDemo
                 var pos = GAMELOOP.UISize();
                 SDrawing.DrawTextAlignedPro("PAUSED", uiSize * new Vector2(0.5f, 0.3f), 0f, uiSize * new Vector2(0.5f, 0.25f), 5f, PaletteHandler.C("header"), new(0.5f));
             }
+
+
+            AchievementHandler.Draw(SRect.ConstructRect(uiSize * new Vector2(0.97f), uiSize * new Vector2(0.2f, 0.08f), new(1, 1)));
 
         }
         public override void Close()

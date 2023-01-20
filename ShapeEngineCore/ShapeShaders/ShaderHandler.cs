@@ -16,7 +16,7 @@ namespace ShapeShaders
         //    new(ScreenHandler.GameWidth(), ScreenHandler.GameHeight(), ScreenHandler.GameWidth(), ScreenHandler.GameHeight())
         //};
 
-
+        public static void Initialize() {}
 
         //public static void Initialize()
         //{

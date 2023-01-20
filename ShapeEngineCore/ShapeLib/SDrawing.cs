@@ -67,6 +67,9 @@ namespace ShapeLib
         {
             DrawTextAlignedPro3(text, uiPos, rotDeg, fontSize, fontSpacing, color,  UIHandler.GetFont(fontName), alignement);
         }
+
+
+
         public static void DrawTextAligned(string text, Vector2 uiPos, Vector2 textSize, float fontSpacing, Color color, Font font, Vector2 alignement)
         {
             float fontSize = UIHandler.CalculateDynamicFontSize(text, textSize, font, fontSpacing);
@@ -74,6 +77,15 @@ namespace ShapeLib
             Vector2 topLeft = uiPos - alignement * fontDimensions;
             DrawTextEx(font, text, topLeft, fontSize, fontSpacing, color);
             //DrawRectangleLinesEx(new(topLeft.X, topLeft.Y, fontDimensions.X, fontDimensions.Y), 5f, WHITE);
+        }
+        public static void DrawTextAligned(string text, Rectangle rect, float fontSpacing, Color color, Font font, Vector2 alignement)
+        {
+            Vector2 textSize = SRect.GetRectSize(rect);
+            Vector2 uiPos = SRect.GetRectPos(rect, alignement);
+            float fontSize = UIHandler.CalculateDynamicFontSize(text, textSize, font, fontSpacing);
+            Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
+            Vector2 topLeft = uiPos - alignement * fontDimensions;
+            DrawTextEx(font, text, topLeft, fontSize, fontSpacing, color);
         }
         public static void DrawTextAligned(string text, Vector2 uiPos, float textHeight, float fontSpacing, Color color, Font font, Vector2 alignement)
         {
@@ -114,7 +126,8 @@ namespace ShapeLib
         }
         public static void DrawTextAligned(string text, Rectangle textRect, float fontSpacing, Color color, Vector2 alignement)
         {
-            DrawTextAligned(text, new Vector2(textRect.X, textRect.Y), new Vector2(textRect.width, textRect.height), fontSpacing, color, UIHandler.GetFont(), alignement);
+            DrawTextAligned(text, textRect, fontSpacing, color, UIHandler.GetFont(), alignement);
+            //DrawTextAligned(text, new Vector2(textRect.X, textRect.Y), new Vector2(textRect.width, textRect.height), fontSpacing, color, UIHandler.GetFont(), alignement);
         }
         public static void DrawTextAligned(string text, Vector2 uiPos, Vector2 textSize, float fontSpacing, Color color, string fontName, Vector2 alignement)
         {
@@ -134,7 +147,8 @@ namespace ShapeLib
         }
         public static void DrawTextAligned(string text, Rectangle textRect, float fontSpacing, Color color, string fontName, Vector2 alignement)
         {
-            DrawTextAligned(text, new Vector2(textRect.X, textRect.Y), new Vector2(textRect.width, textRect.height), fontSpacing, color, UIHandler.GetFont(fontName), alignement);
+            DrawTextAligned(text, textRect, fontSpacing, color, UIHandler.GetFont(fontName), alignement);
+            //DrawTextAligned(text, new Vector2(textRect.X, textRect.Y), new Vector2(textRect.width, textRect.height), fontSpacing, color, UIHandler.GetFont(fontName), alignement);
         }
 
 
