@@ -6,6 +6,31 @@ namespace ShapeLib
 {
     public static class SDrawing
     {
+
+
+        public static void DrawTextBox(Rectangle rect, List<char> chars, float fontSpacing, Font font, Color textColor, bool drawCaret, int caretPosition, float caretWidth, Color caretColor, Vector2 alignement)
+        {
+            //fix alignement
+            alignement = new(0, 0.5f);
+            string text = String.Concat(chars);
+            SDrawing.DrawTextAligned(text, rect, fontSpacing, textColor, font, alignement);
+
+            if (drawCaret)
+            {
+                float fontSize = UIHandler.CalculateDynamicFontSize(text, new Vector2(rect.width, rect.height), font, fontSpacing);
+                string caretText = String.Concat(chars.GetRange(0, caretPosition));
+                Vector2 caretTextSize = MeasureTextEx(font, caretText, fontSize, fontSpacing);
+
+                //Vector2 uiPos = SRect.GetRectPos(rect, alignement);
+                //Vector2 topLeft = uiPos - alignement * new Vector2(caretTextSize.X, 0f);
+                Vector2 topLeft = new(rect.x, rect.y);
+
+                Vector2 caretTop = topLeft + new Vector2(caretTextSize.X + fontSpacing * 0.5f, 0f);
+                Vector2 caretBottom = topLeft + new Vector2(caretTextSize.X + fontSpacing * 0.5f, rect.height);
+                DrawLineEx(caretTop, caretBottom, caretWidth, caretColor);
+            }
+        }
+
         public static void DrawTextAlignedPro(string text, Vector2 uiPos, float rotDeg, Vector2 textSize, float fontSpacing, Color color, Font font, Vector2 alignement)
         {
             float fontSize = UIHandler.CalculateDynamicFontSize(text, textSize, font, fontSpacing);

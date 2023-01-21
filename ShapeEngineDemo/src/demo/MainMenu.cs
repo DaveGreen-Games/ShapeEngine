@@ -71,11 +71,11 @@ namespace ShapeEngineDemo
 
         private void OnTextEntryStarted()
         {
-            InputHandler.Disable();
+            InputHandler.DisableInput();
         }
         private void OnTextEntryCanceled()
         {
-            InputHandler.Enable();
+            InputHandler.EnableInput();
         }
 
 
@@ -197,9 +197,21 @@ namespace ShapeEngineDemo
             //int unicode = Raylib.GetCharPressed();
             //SDrawing.DrawTextAligned(String.Format("Key/Unicode: {0}/{1}", key, unicode), start + gap * 5, textSize , 1, WHITE, new(0, 0.5f));
 
-            string text = t.Text != "" ? t.Text : "Enter Text...";
-            SDrawing.DrawTextAligned(text, start + gap * 5, textSize, 1, WHITE, new(0, 0.5f));
+            if(t.Text == "")
+            {
+                //string text = t.Text != "" ? t.Text : "Enter Text...";
+                SDrawing.DrawTextAligned("Enter Text ...", start + gap * 5, textSize, 1, WHITE, new(0, 0.5f));
+            }
+            else
+            {
+                Rectangle r = SRect.ConstructRect(start + gap * 5, textSize, new(0, 0.5f));
+                SDrawing.DrawTextBox(r, t.characters, 1, UIHandler.GetFont(), WHITE, true, t.CaretPosition, 2f, RED, new(1, 0.5f));
+            }
+            
+            
             SDrawing.DrawTextAligned(String.Format("Active:{0}",t.Active), start + gap * 6, textSize, 1, WHITE, new(0, 0.5f));
+
+            
         }
 
         //string text = "fail";
