@@ -354,6 +354,8 @@ namespace ShapeCore
             QUIT = false;
             RESTART = false;
 
+            Raylib.SetExitKey(-1);
+
             //figure out a way where the user has to initialize the handlers that are going to be used...
             ScreenHandler.Initialize(screenInitInfo.devWidth, screenInitInfo.devHeight, screenInitInfo.gameSizeFactor, screenInitInfo.uiSizeFactor, screenInitInfo.windowName, screenInitInfo.fixedTexture, screenInitInfo.pixelSmoothing);
             SavegameHandler.Initialize(gameInitInfo.studioName, gameInitInfo.gameName);
@@ -401,7 +403,7 @@ namespace ShapeCore
                 MOUSE_POS_UI = ScreenHandler.UI.ScalePositionV(MOUSE_POS);
                 //MOUSE_POS_UI_RAW =  ScreenHandler.UI.ScalePositionRawV(MOUSE_POS);
                 MOUSE_POS_GAME = ScreenHandler.TransformPositionToGame(MOUSE_POS_UI);
-                if (WindowShouldClose() && !IsKeyDown(KeyboardKey.KEY_ESCAPE)) QUIT = true;
+                //if (WindowShouldClose() && !InputHandler.QuitPressed()) QUIT = true; // IsKeyDown(KeyboardKey.KEY_ESCAPE)) QUIT = true;
 
                 delayHandler.Update(DELTA);
                 stopTimer.Update(DELTA);

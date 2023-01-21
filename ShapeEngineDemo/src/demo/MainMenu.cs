@@ -6,6 +6,8 @@ using ShapeCore;
 using ShapeCursor;
 using ShapeLib;
 using ShapeColor;
+using static ShapeInput.InputAction;
+using ShapeInput;
 
 namespace ShapeEngineDemo
 {
@@ -16,6 +18,9 @@ namespace ShapeEngineDemo
         ButtonLabel level1Button, quitButton, optionsButton;
 
         ButtonLabel tb1, tb2, tb3;
+
+        TextEntry t = new();
+
         public MainMenu()
         {
             //maze = new(16, 9);
@@ -60,7 +65,20 @@ namespace ShapeEngineDemo
             //quitButton.SetNeighbor(startButton, UINeighbors.NeighborDirection.BOTTOM);
             //quitButton.SetNeighbor(startButton, UINeighbors.NeighborDirection.TOP);
 
+            t.TextEntryCanceled += OnTextEntryCanceled;
+            t.TextEntryStarted += OnTextEntryStarted;
         }
+
+        private void OnTextEntryStarted()
+        {
+            InputHandler.Disable();
+        }
+        private void OnTextEntryCanceled()
+        {
+            InputHandler.Enable();
+        }
+
+
         public override void Start()
         {
             UIHandler.SelectUIElement(level1Button);
@@ -120,6 +138,8 @@ namespace ShapeEngineDemo
             }
             //if (optionsButton.Clicked()) GAMELOOP.GoToScene("level2");
             if (quitButton.Clicked()) GAMELOOP.QUIT = true;
+
+            t.Update(dt);
         }
         public override void Draw()
         {
@@ -167,7 +187,22 @@ namespace ShapeEngineDemo
             //UIHandler.DrawBar(topleft, barSize, RNG.randF(), RED, DARKPURPLE, BarType.LEFTRIGHT);
 
             //Drawing.DrawRectangleCheckeredLines(GAMELOOP.MOUSE_POS_UI, new(500f), Alignement.CENTER, 15, 5, 45, RED, BLANK, BLANK);
+
+            //int unicode = Raylib.GetCharPressed();
+            //var c = (char)unicode;
+            //if (unicode > 0) text = c.ToString();
+            //SDrawing.DrawTextAligned(text, start + gap * 5, textSize, 1, WHITE, new(0, 0.5f));
+
+            //int key = Raylib.GetKeyPressed();
+            //int unicode = Raylib.GetCharPressed();
+            //SDrawing.DrawTextAligned(String.Format("Key/Unicode: {0}/{1}", key, unicode), start + gap * 5, textSize , 1, WHITE, new(0, 0.5f));
+
+            string text = t.Text != "" ? t.Text : "Enter Text...";
+            SDrawing.DrawTextAligned(text, start + gap * 5, textSize, 1, WHITE, new(0, 0.5f));
+            SDrawing.DrawTextAligned(String.Format("Active:{0}",t.Active), start + gap * 6, textSize, 1, WHITE, new(0, 0.5f));
         }
+
+        //string text = "fail";
     }
 
 

@@ -3,9 +3,130 @@ using System.Numerics;
 using Raylib_CsLo;
 using ShapeCursor;
 using Vortice.XInput;
+using static System.Net.Mime.MediaTypeNames;
+using System.Runtime.CompilerServices;
 
 namespace ShapeInput
 {
+    public class TextEntry
+    {
+
+        //change to char array !!!
+        public string Text { get; protected set; } = "";
+        public int CaretPosition { get; protected set; } = 0;
+        public bool Active { get; protected set; } = false;
+
+        public event Action<string>? TextEntered;
+        public event Action? TextEntryStarted;
+        public event Action? TextEntryCanceled;
+
+        private KeyboardKey startKey = KeyboardKey.KEY_F9;
+        public TextEntry() { }
+        public TextEntry(KeyboardKey startKey)
+        {
+            this.startKey = startKey;
+        }
+
+        public void Update(float dt)
+        {
+            if (!Active)
+            {
+                if (IsKeyPressed(startKey))
+                {
+                    Start();
+                }
+            }
+            else
+            {
+                if (IsKeyPressed(KeyboardKey.KEY_LEFT))
+                {
+                    MoveCaretLeft();
+                }
+                else if (IsKeyPressed(KeyboardKey.KEY_RIGHT))
+                {
+                    MoveCaretRight();
+                }
+
+                if (IsKeyPressed(KeyboardKey.KEY_ENTER))
+                {
+                    Enter();
+                }
+
+                if (IsKeyPressed(KeyboardKey.KEY_BACKSPACE))
+                {
+                    if (Text.Length > 0)
+                    {
+                        Text = Text.Remove(CaretPosition - 1);
+                        MoveCaretLeft();
+                    }
+                }
+
+                if (IsKeyPressed(KeyboardKey.KEY_DELETE))
+                {
+                    if (Text.Length > 0 && CaretPosition < Text.Length)
+                    {
+                        Text = Text.Remove(CaretPosition);
+                    }
+                }
+
+                if (IsKeyPressed(KeyboardKey.KEY_ESCAPE))
+                {
+                    if (Text != "") ClearText();
+                    else Cancel();
+                }
+
+                if (Active)
+                {
+                    int unicode = Raylib.GetCharPressed();
+                    while (unicode != 0)
+                    {
+                        var c = (char)unicode;
+                        Text = Text.Insert(CaretPosition, c.ToString());
+                        CaretPosition++;
+                        unicode = Raylib.GetCharPressed();
+                    }
+                }
+            }
+        }
+        public void ClearText() 
+        {
+            Text = ""; // string.Empty; 
+            CaretPosition = 0; 
+        }
+        public void Start()
+        {
+            if (Active) return;
+            Active = true;
+            TextEntryStarted?.Invoke();
+        }
+        public string Enter()
+        {
+            if (!Active || Text == "") return "";
+            TextEntered?.Invoke(Text);
+            return Text;
+        }
+        public void Cancel()
+        {
+            if (!Active) return;
+            Active = false;
+            ClearText();
+            TextEntryCanceled?.Invoke();
+        }
+
+        public int MoveCaretLeft()
+        {
+            CaretPosition--;
+            if (CaretPosition < 0) CaretPosition = 0; // Text.Length - 1;
+            return CaretPosition;
+        }
+
+        public int MoveCaretRight()
+        {
+            CaretPosition++;
+            if (CaretPosition >= Text.Length) CaretPosition = Text.Length - 1; // 0;
+            return CaretPosition;
+        }
+    }
     public class GamepadVibration
     {
         public string name = "";
@@ -194,6 +315,30 @@ namespace ShapeInput
         public delegate void GamepadConnectionChanged(int gamepad, bool connected, int curGamepad);
         public static event GamepadConnectionChanged? OnGamepadConnectionChanged;
 
+
+        //public static KeyboardKey quitKey = KeyboardKey.KEY_ESCAPE;
+        //public static bool QuitPressed()
+        //{
+        //    if(disabled) return false;
+        //    return IsKeyDown(quitKey);
+        //}
+
+        private static bool disabled = false;
+        public static void Disable()
+        {
+            if (disabled) return;
+            disabled = true;
+            foreach (var slot in inputSlots.Keys)
+            {
+                StopVibration(slot);
+            }
+        }
+        public static void Enable()
+        {
+            if(!disabled) return;
+            disabled = false;
+        }
+
         private static void OnInputTypeChanged(InputType newInputType)
         {
             if (newInputType == InputType.KEYBOARD_MOUSE) { CursorHandler.Show(); }
@@ -226,10 +371,13 @@ namespace ShapeInput
         {
             CheckGamepadConnection();
             CheckInputType();
-            //foreach (var slot in inputSlots)
-            //{
-            //    slot.Value.Update(dt, slot.Key > 0);
-            //}
+
+
+            //int key = Raylib.GetKeyPressed();
+            //int unicode = Raylib.GetCharPressed();
+            //string str = string.Format(@"\u{0:x4}", unicode);
+            //string myValue = Char.Parse(str).ToString();
+
         }
 
         public static void Close()
@@ -436,7 +584,8 @@ namespace ShapeInput
         //}
         public static bool IsDown(int playerSlot, string actionName)
         {
-            if(playerSlot < 0)
+            if (disabled) return false;
+            if (playerSlot < 0)
             {
                 for (int i = 0; i < inputSlots.Count; i++)
                 {
@@ -454,6 +603,7 @@ namespace ShapeInput
         }
         public static bool IsPressed(int playerSlot, string actionName)
         {
+            if (disabled) return false;
             if (playerSlot < 0)
             {
                 for (int i = 0; i < inputSlots.Count; i++)
@@ -472,6 +622,7 @@ namespace ShapeInput
         }
         public static bool IsReleased(int playerSlot, string actionName)
         {
+            if (disabled) return false;
             if (playerSlot < 0)
             {
                 for (int i = 0; i < inputSlots.Count; i++)
@@ -490,6 +641,7 @@ namespace ShapeInput
         }
         public static bool IsUp(int playerSlot, string actionName)
         {
+            if (disabled) return false;
             if (playerSlot < 0)
             {
                 for (int i = 0; i < inputSlots.Count; i++)
@@ -509,24 +661,28 @@ namespace ShapeInput
 
         public static float GetAxis(int playerSlot, string negative, string positive)
         {
+            if (disabled) return 0f;
             var slot = GetInputSlot(playerSlot);
             if (slot == null) return 0f;
             return slot.GetAxis(negative, positive);
         }
         public static Vector2 GetAxis(int playerSlot, string left, string right, string up, string down, bool normalized = true)
         {
+            if (disabled) return new(0f);
             var slot = GetInputSlot(playerSlot);
             if (slot == null) return new(0f, 0f);
             return slot.GetAxis(left, right, up, down, normalized);
         }
         public static float GetGamepadAxis(int playerSlot, string gamepadAxisAction)
         {
+            if (disabled) return 0f;
             var slot = GetInputSlot(playerSlot);
             if (slot == null) return 0f;
             return slot.GetGamepadAxis(gamepadAxisAction);
         }
         public static Vector2 GetGamepadAxis(int playerSlot, string gamepadAxisHor, string gamepadAxisVer, bool normalized = true)
         {
+            if (disabled) return new(0f);
             var slot = GetInputSlot(playerSlot);
             if (slot == null) return new(0f, 0f);
 
@@ -542,6 +698,7 @@ namespace ShapeInput
 
         public static void AddVibration(int playerSlot, float leftMotor, float rightMotor, float duration = -1f, string name = "default")
         {
+            if (disabled) return;
             if (playerSlot == 0 && !IsGamepad()) return;
             
             var slot = GetInputSlot(playerSlot);
@@ -773,6 +930,7 @@ namespace ShapeInput
         }
         public static Vector2 GetGamepadAxisLeft(int gamepad, float deadzone = 0.25f, bool normalized = false)
         {
+            if (disabled) return new(0f);
             if (!IsGamepadConnected(gamepad)) return new(0.0f, 0.0f);
 
             Vector2 axis = new Vector2(
@@ -786,6 +944,7 @@ namespace ShapeInput
         }
         public static Vector2 GetGamepadAxisRight(int gamepad, float deadzone = 0.25f, bool normalized = false)
         {
+            if (disabled) return new(0f);
             if (!IsGamepadConnected(gamepad)) return new(0.0f, 0.0f);
 
             Vector2 axis = new Vector2(
@@ -799,6 +958,7 @@ namespace ShapeInput
         }
         public static float GetGamepadLeftTrigger(int gamepad, float deadzone = 0.25f, bool inverted = false)
         {
+            if (disabled) return inverted ? 1f : 0f;
             if (!IsGamepadConnected(gamepad))
             {
                 if (inverted) return 1.0f;
@@ -817,6 +977,7 @@ namespace ShapeInput
         }
         public static float GetGamepadRightTrigger(int gamepad, float deadzone = 0.25f, bool inverted = false)
         {
+            if (disabled) return inverted ? 1f : 0f;
             if (!IsGamepadConnected(gamepad))
             {
                 if (inverted) return 1.0f;
