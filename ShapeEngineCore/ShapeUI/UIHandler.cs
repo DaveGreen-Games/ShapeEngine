@@ -42,6 +42,8 @@ namespace ShapeUI
         public delegate void SelectedItemUnregistered(UIElement selected);
         public static event SelectedItemUnregistered? OnSelectedItemUnregistered;
 
+        public static bool InputDisabled { get; set; } = false;
+
         public static void Initialize()
         {
             defaultFont = GetFontDefault();
@@ -125,7 +127,7 @@ namespace ShapeUI
         }
         public static void Update(float dt)
         {
-            if (selected != null)
+            if (selected != null && !InputDisabled)
             {
                 UIElementSelectable? newSelected = null;
 

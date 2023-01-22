@@ -240,7 +240,7 @@ namespace ShapeEngineDemo
             //Attractor attractor = new(pos, r, -500, 0);
             //area.AddGameObject(attractor);
         }
-        public override void HandleInput(float dt)
+        private void HandleInput()
         {
             if (InputHandler.IsReleased(0, "Pause")) TogglePause();
             
@@ -250,9 +250,24 @@ namespace ShapeEngineDemo
             if (InputHandler.IsReleased(0, "UI Cancel")) GAMELOOP.GoToScene("mainmenu");
             
             if (!IsPaused() && InputHandler.IsReleased(0, "Spawn Asteroid")) SpawnAsteroidDebug();
+
+            if (EDITORMODE)
+            {
+                if (InputHandler.IsReleased(0, "Toggle Draw Helpers")) DEBUG_DRAWHELPERS = !DEBUG_DRAWHELPERS;
+                if (InputHandler.IsReleased(0, "Toggle Draw Colliders")) DEBUG_DRAWCOLLIDERS = !DEBUG_DRAWCOLLIDERS;
+                if (InputHandler.IsReleased(0, "Cycle Zoom"))
+                {
+                    ScreenHandler.CAMERA.ZoomBy(0.25f);
+                    if (ScreenHandler.CAMERA.ZoomFactor > 2) ScreenHandler.CAMERA.ZoomFactor = 0.25f;
+                }
+
+                //if (Raylib.IsKeyReleased(KeyboardKey.KEY_P)) TogglePause();
+            }
         }
         public override void Update(float dt)
         {
+            HandleInput();
+
             if (IsPaused()) return;
             if (area == null) return;
             ScreenHandler.UpdateCamera(dt);

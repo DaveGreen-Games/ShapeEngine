@@ -110,7 +110,10 @@ namespace ShapeCore
         public string[] LAUNCH_PARAMS { get; private set; }
         public bool QUIT = false;
         public bool RESTART = false;
-
+        //public bool CALL_HANDLE_INPUT = true;
+        public bool CALL_GAMELOOP_UPDATE = true;
+        public bool CALL_GAMELOOP_DRAW = true;
+        public bool CALL_GAMELOOP_DRAWUI = true;
         /// <summary>
         /// The delta time of the game. When the game runs at 60fps, DELTA would be 1/60 = 0.016
         /// </summary>
@@ -417,23 +420,28 @@ namespace ShapeCore
                 }
                 GAME_DELTA = DELTA * CUR_SLOW_FACTOR;
 
-                PreUpdate(DELTA);
                 
+
                 //Input
-                HandleInput();
-                if (CUR_SCENE != null) CUR_SCENE.HandleInput(DELTA);
-                
+                //if (CALL_HANDLE_INPUT)
+                //{
+                //    HandleInput();
+                //    if (CUR_SCENE != null) CUR_SCENE.HandleInput(DELTA);
+                //}
+
                 //UPDATE
-                Update(DELTA);
-                
+                UpdateGame(DELTA);
+
                 // DRAW TO MAIN TEXTURE
-                Draw();
+                DrawGame();
 
                 ResolveDeferred();
             }
         }
-        protected void Update(float dt)
+        private void UpdateGame(float dt)
         {
+            if (CALL_GAMELOOP_UPDATE) PreUpdate(dt);
+
             InputHandler.Update(dt);
             SEase.Update(dt);
             UIHandler.Update(dt);
@@ -450,32 +458,33 @@ namespace ShapeCore
                     CUR_SCENE.Update(dt * CUR_SLOW_FACTOR);
                 }
             }
+            if (CALL_GAMELOOP_UPDATE) PostUpdate(dt);
         }
-        protected void Draw()
+        private void DrawGame()
         {
             //Draw to game texture
-            if (CUR_SCENE != null)
-            {
-                ScreenHandler.StartDraw(true);
-                CUR_SCENE.Draw();
-                ScreenHandler.EndDraw(true);
-            }
+            ScreenHandler.StartDraw(true);
+            if (CALL_GAMELOOP_DRAW) PreDraw();
+            if (CUR_SCENE != null) CUR_SCENE.Draw();
+            if (CALL_GAMELOOP_DRAW) PostDraw();
+            ScreenHandler.EndDraw(true);
 
-            Vector2 uiSize = ScreenHandler.UISize();// new Vector2(ScreenHandler.DEVELOPMENT_RESOLUTION.width, ScreenHandler.DEVELOPMENT_RESOLUTION.height);
-            Vector2 stretchFactor = ScreenHandler.UI.STRETCH_FACTOR;// * ScreenHandler.UI_FACTOR;
-            //float stretchAreaFactor = ScreenHandler.UI.STRETCH_AREA_FACTOR;
-            //float stretchAreaSideFactor = ScreenHandler.UI.STRETCH_AREA_SIDE_FACTOR;
             //Draw to UI texture
+            Vector2 uiSize = ScreenHandler.UISize();
+            Vector2 stretchFactor = ScreenHandler.UI.STRETCH_FACTOR;
+            
             ScreenHandler.StartDraw(false);
-            if (CUR_SCENE != null) CUR_SCENE.DrawUI(uiSize, stretchFactor);
+            PreDrawUI(uiSize, stretchFactor);
+            if (CALL_GAMELOOP_DRAWUI) if (CUR_SCENE != null) CUR_SCENE.DrawUI(uiSize, stretchFactor);
             CursorHandler.Draw(uiSize, MOUSE_POS_UI);
+            if (CALL_GAMELOOP_DRAWUI) PostDrawUI(uiSize, stretchFactor);
             ScreenHandler.EndDraw(false);
 
             
             //Draw textures to screen
             BeginDrawing();
             ClearBackground(backgroundColor);
-            PreDraw();
+            
 
             var shaders = ShaderHandler.GetCurActiveShaders();
             if (ScreenHandler.CAMERA != null && ScreenHandler.CAMERA.PIXEL_SMOOTHING_ENABLED)
@@ -489,16 +498,19 @@ namespace ShapeCore
 
             ScreenHandler.DrawUI();
 
-            PostDraw();
+            
             EndDrawing();
         }
 
         //public virtual void PreInit() { } //called before initialization -> use for setting specific vars
         public virtual void Start() { } //called after initialization
         public virtual void PreUpdate(float dt) { } //always called before update
-        public virtual void HandleInput() { }//called before update to handle global input
+        public virtual void PostUpdate(float dt) { }
+        //public virtual void HandleInput() { }//called before update to handle global input
         public virtual void PreDraw() { }//called before draw
         public virtual void PostDraw() { }//called after draw
+        public virtual void PreDrawUI(Vector2 uiSize, Vector2 stretchFactor) { }//called before draw
+        public virtual void PostDrawUI(Vector2 uiSize, Vector2 stretchFactor) { }//called after draw
         public virtual void End() { } //called before game closes
 
     }

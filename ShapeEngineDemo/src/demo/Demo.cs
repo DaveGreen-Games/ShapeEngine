@@ -10,6 +10,7 @@ using Raylib_CsLo;
 using ShapeColor;
 using ShapeEngineDemo.DataObjects;
 using ShapeAchievements;
+using System.Numerics;
 
 namespace ShapeEngineDemo
 {
@@ -210,7 +211,7 @@ namespace ShapeEngineDemo
             TimerHandler.Add(2.0f, startscene);
         }
         
-        public override void HandleInput()
+        public override void PreUpdate(float dt)
         {
             if (InputHandler.IsReleased(0, "Fullscreen")) { ScreenHandler.ToggleFullscreen(); }
             if (InputHandler.IsReleased(0, "Next Monitor")) { ScreenHandler.NextMonitor(); }
@@ -249,19 +250,12 @@ namespace ShapeEngineDemo
                 ScreenHandler.ResizeWindow(res.width, res.height);
 
             }
+            
+        }
 
-            if (EDITORMODE)
-            {
-                if (InputHandler.IsReleased(0, "Toggle Draw Helpers")) DEBUG_DRAWHELPERS = !DEBUG_DRAWHELPERS;
-                if (InputHandler.IsReleased(0, "Toggle Draw Colliders")) DEBUG_DRAWCOLLIDERS = !DEBUG_DRAWCOLLIDERS;
-                if (InputHandler.IsReleased(0, "Cycle Zoom"))
-                {
-                    ScreenHandler.CAMERA.ZoomBy(0.25f);
-                    if (ScreenHandler.CAMERA.ZoomFactor > 2) ScreenHandler.CAMERA.ZoomFactor = 0.25f;
-                }
-
-                //if (Raylib.IsKeyReleased(KeyboardKey.KEY_P)) TogglePause();
-            }
+        public override void PostDrawUI(Vector2 uiSize, Vector2 stretchFactor)
+        {
+            base.PostDrawUI(uiSize, stretchFactor);
         }
 
         private void OnWindowSizeChanged(int w, int h)

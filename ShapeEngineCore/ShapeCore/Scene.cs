@@ -27,7 +27,7 @@ namespace ShapeCore
         /// the button should still be relative to the current screen size. Just multiply your raw position and size with the stretch factor.
         /// ONLY needed if texture mode is not fixed! </param>
         public virtual void DrawUI(Vector2 uiSize, Vector2 stretchFactor) { }
-        public virtual void HandleInput(float dt) { }
+        //public virtual void HandleInput(float dt) { }
         public virtual void Update(float dt) { }
 
 
