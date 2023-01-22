@@ -36,7 +36,6 @@ namespace ShapeInput
         public int CaretPosition { get; protected set; } = 0;
         public bool Active { get; protected set; } = false;
 
-        private string defaultText = "";
         private int maxCharacters = -1;
 
         public event Action<string>? TextEntered;
@@ -44,9 +43,8 @@ namespace ShapeInput
         public event Action? TextEntryCanceled;
 
         public TextEntry() { }
-        public TextEntry(string defaultText = "", int maxCharacters = -1)
+        public TextEntry(int maxCharacters = -1)
         {
-            this.defaultText = defaultText;
             this.maxCharacters = maxCharacters;
         }
 
@@ -54,68 +52,6 @@ namespace ShapeInput
 
         public void Update(float dt)
         {
-            //if (!Active)
-            //{
-            //    if (IsKeyPressed(startKey))
-            //    {
-            //        Start();
-            //    }
-            //}
-            //else
-            //{
-            //    if (IsKeyPressed(KeyboardKey.KEY_LEFT))
-            //    {
-            //        MoveCaretLeft();
-            //    }
-            //    else if (IsKeyPressed(KeyboardKey.KEY_RIGHT))
-            //    {
-            //        MoveCaretRight();
-            //    }
-            //
-            //    if (IsKeyPressed(KeyboardKey.KEY_ENTER))
-            //    {
-            //        Enter();
-            //    }
-            //
-            //    if (IsKeyPressed(KeyboardKey.KEY_BACKSPACE))
-            //    {
-            //        if (characters.Count > 0)
-            //        {
-            //            characters.RemoveAt(CaretPosition - 1);
-            //            ActualizeText();
-            //            MoveCaretLeft();
-            //        }
-            //    }
-            //
-            //    if (IsKeyPressed(KeyboardKey.KEY_DELETE))
-            //    {
-            //        if (characters.Count > 0 && CaretPosition < characters.Count)
-            //        {
-            //            characters.RemoveAt(CaretPosition);
-            //            ActualizeText();
-            //        }
-            //    }
-            //
-            //    if (IsKeyPressed(KeyboardKey.KEY_ESCAPE))
-            //    {
-            //        if (characters.Count > 0) ClearText();
-            //        else Cancel();
-            //    }
-            //
-            //    if (Active)
-            //    {
-            //        int unicode = Raylib.GetCharPressed();
-            //        while (unicode != 0)
-            //        {
-            //            var c = (char)unicode;
-            //            characters.Insert(CaretPosition, c);
-            //            ActualizeText();
-            //            CaretPosition++;
-            //            unicode = Raylib.GetCharPressed();
-            //        }
-            //    }
-            //}
-
             if (Active && (maxCharacters < 0 || characters.Count <= maxCharacters))
             {
                 int unicode = Raylib.GetCharPressed();
@@ -153,7 +89,7 @@ namespace ShapeInput
         }
         public void ClearText()
         {
-            Text = defaultText; // string.Empty;
+            Text = "";
             characters.Clear();
             CaretPosition = 0;
         }

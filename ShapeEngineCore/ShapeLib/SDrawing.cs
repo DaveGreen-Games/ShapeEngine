@@ -8,26 +8,33 @@ namespace ShapeLib
     {
 
 
-        public static void DrawTextBox(Rectangle rect, List<char> chars, float fontSpacing, Font font, Color textColor, bool drawCaret, int caretPosition, float caretWidth, Color caretColor, Vector2 alignement)
+        public static void DrawTextBox(Rectangle rect, string emptyText, List<char> chars, float fontSpacing, Font font, Color textColor, bool drawCaret, int caretPosition, float caretWidth, Color caretColor, Vector2 alignement)
         {
             //fix alignement
             alignement = new(0, 0.5f);
-            string text = String.Concat(chars);
-            SDrawing.DrawTextAligned(text, rect, fontSpacing, textColor, font, alignement);
-
-            if (drawCaret)
+            if(chars.Count <= 0)
             {
-                float fontSize = UIHandler.CalculateDynamicFontSize(text, new Vector2(rect.width, rect.height), font, fontSpacing);
-                string caretText = String.Concat(chars.GetRange(0, caretPosition));
-                Vector2 caretTextSize = MeasureTextEx(font, caretText, fontSize, fontSpacing);
+                SDrawing.DrawTextAligned(emptyText, rect, fontSpacing, textColor, font, alignement);
+            }
+            else
+            {
+                string text = String.Concat(chars);
+                SDrawing.DrawTextAligned(text, rect, fontSpacing, textColor, font, alignement);
 
-                //Vector2 uiPos = SRect.GetRectPos(rect, alignement);
-                //Vector2 topLeft = uiPos - alignement * new Vector2(caretTextSize.X, 0f);
-                Vector2 topLeft = new(rect.x, rect.y);
+                if (drawCaret)
+                {
+                    float fontSize = UIHandler.CalculateDynamicFontSize(text, new Vector2(rect.width, rect.height), font, fontSpacing);
+                    string caretText = String.Concat(chars.GetRange(0, caretPosition));
+                    Vector2 caretTextSize = MeasureTextEx(font, caretText, fontSize, fontSpacing);
 
-                Vector2 caretTop = topLeft + new Vector2(caretTextSize.X + fontSpacing * 0.5f, 0f);
-                Vector2 caretBottom = topLeft + new Vector2(caretTextSize.X + fontSpacing * 0.5f, rect.height);
-                DrawLineEx(caretTop, caretBottom, caretWidth, caretColor);
+                    //Vector2 uiPos = SRect.GetRectPos(rect, alignement);
+                    //Vector2 topLeft = uiPos - alignement * new Vector2(caretTextSize.X, 0f);
+                    Vector2 topLeft = new(rect.x, rect.y);
+
+                    Vector2 caretTop = topLeft + new Vector2(caretTextSize.X + fontSpacing * 0.5f, 0f);
+                    Vector2 caretBottom = topLeft + new Vector2(caretTextSize.X + fontSpacing * 0.5f, rect.height);
+                    DrawLineEx(caretTop, caretBottom, caretWidth, caretColor);
+                }
             }
         }
 
