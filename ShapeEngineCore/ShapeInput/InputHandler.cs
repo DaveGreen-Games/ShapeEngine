@@ -36,88 +36,102 @@ namespace ShapeInput
         public int CaretPosition { get; protected set; } = 0;
         public bool Active { get; protected set; } = false;
 
+        private string defaultText = "";
+        private int maxCharacters = -1;
+
         public event Action<string>? TextEntered;
         public event Action? TextEntryStarted;
         public event Action? TextEntryCanceled;
 
-        private KeyboardKey startKey = KeyboardKey.KEY_F9;
         public TextEntry() { }
-        public TextEntry(KeyboardKey startKey)
+        public TextEntry(string defaultText = "", int maxCharacters = -1)
         {
-            this.startKey = startKey;
+            this.defaultText = defaultText;
+            this.maxCharacters = maxCharacters;
         }
+
+
 
         public void Update(float dt)
         {
-            if (!Active)
+            //if (!Active)
+            //{
+            //    if (IsKeyPressed(startKey))
+            //    {
+            //        Start();
+            //    }
+            //}
+            //else
+            //{
+            //    if (IsKeyPressed(KeyboardKey.KEY_LEFT))
+            //    {
+            //        MoveCaretLeft();
+            //    }
+            //    else if (IsKeyPressed(KeyboardKey.KEY_RIGHT))
+            //    {
+            //        MoveCaretRight();
+            //    }
+            //
+            //    if (IsKeyPressed(KeyboardKey.KEY_ENTER))
+            //    {
+            //        Enter();
+            //    }
+            //
+            //    if (IsKeyPressed(KeyboardKey.KEY_BACKSPACE))
+            //    {
+            //        if (characters.Count > 0)
+            //        {
+            //            characters.RemoveAt(CaretPosition - 1);
+            //            ActualizeText();
+            //            MoveCaretLeft();
+            //        }
+            //    }
+            //
+            //    if (IsKeyPressed(KeyboardKey.KEY_DELETE))
+            //    {
+            //        if (characters.Count > 0 && CaretPosition < characters.Count)
+            //        {
+            //            characters.RemoveAt(CaretPosition);
+            //            ActualizeText();
+            //        }
+            //    }
+            //
+            //    if (IsKeyPressed(KeyboardKey.KEY_ESCAPE))
+            //    {
+            //        if (characters.Count > 0) ClearText();
+            //        else Cancel();
+            //    }
+            //
+            //    if (Active)
+            //    {
+            //        int unicode = Raylib.GetCharPressed();
+            //        while (unicode != 0)
+            //        {
+            //            var c = (char)unicode;
+            //            characters.Insert(CaretPosition, c);
+            //            ActualizeText();
+            //            CaretPosition++;
+            //            unicode = Raylib.GetCharPressed();
+            //        }
+            //    }
+            //}
+
+            if (Active && (maxCharacters < 0 || characters.Count <= maxCharacters))
             {
-                if (IsKeyPressed(startKey))
+                int unicode = Raylib.GetCharPressed();
+                while (unicode != 0)
                 {
-                    Start();
-                }
-            }
-            else
-            {
-                if (IsKeyPressed(KeyboardKey.KEY_LEFT))
-                {
-                    MoveCaretLeft();
-                }
-                else if (IsKeyPressed(KeyboardKey.KEY_RIGHT))
-                {
-                    MoveCaretRight();
-                }
-
-                if (IsKeyPressed(KeyboardKey.KEY_ENTER))
-                {
-                    Enter();
-                }
-
-                if (IsKeyPressed(KeyboardKey.KEY_BACKSPACE))
-                {
-                    if (characters.Count > 0)
-                    {
-                        characters.RemoveAt(CaretPosition - 1);
-                        ActualizeText();
-                        MoveCaretLeft();
-                    }
-                }
-
-                if (IsKeyPressed(KeyboardKey.KEY_DELETE))
-                {
-                    if (characters.Count > 0 && CaretPosition < characters.Count)
-                    {
-                        characters.RemoveAt(CaretPosition);
-                        ActualizeText();
-                    }
-                }
-
-                if (IsKeyPressed(KeyboardKey.KEY_ESCAPE))
-                {
-                    if (characters.Count > 0) ClearText();
-                    else Cancel();
-                }
-
-                if (Active)
-                {
-                    int unicode = Raylib.GetCharPressed();
-                    while (unicode != 0)
-                    {
-                        var c = (char)unicode;
-                        characters.Insert(CaretPosition, c);
-                        ActualizeText();
-                        CaretPosition++;
-                        unicode = Raylib.GetCharPressed();
-                    }
+                    var c = (char)unicode;
+                    characters.Insert(CaretPosition, c);
+                    ActualizeText();
+                    CaretPosition++;
+                    unicode = Raylib.GetCharPressed();
                 }
             }
         }
+
         
-        public void ClearText() 
-        {
-            Text = ""; // string.Empty;
-            characters.Clear();
-            CaretPosition = 0; 
-        }
+        
         public void Start()
         {
             if (Active) return;
@@ -137,7 +151,29 @@ namespace ShapeInput
             ClearText();
             TextEntryCanceled?.Invoke();
         }
-
+        public void ClearText()
+        {
+            Text = defaultText; // string.Empty;
+            characters.Clear();
+            CaretPosition = 0;
+        }
+        public void Backspace()
+        {
+            if (characters.Count > 0)
+            {
+                characters.RemoveAt(CaretPosition - 1);
+                ActualizeText();
+                MoveCaretLeft();
+            }
+        }
+        public void Del()
+        {
+            if (characters.Count > 0 && CaretPosition < characters.Count)
+            {
+                characters.RemoveAt(CaretPosition);
+                ActualizeText();
+            }
+        }
         public int MoveCaretLeft()
         {
             CaretPosition--;
@@ -154,6 +190,7 @@ namespace ShapeInput
 
         private void ActualizeText() { Text = String.Concat(characters); }
     }
+
     public class GamepadVibration
     {
         public string name = "";
