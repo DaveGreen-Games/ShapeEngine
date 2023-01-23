@@ -19,8 +19,6 @@ namespace ShapeEngineDemo
 
         ButtonLabel tb1, tb2, tb3;
 
-        //TextEntry t = new();
-        CommandConsole cc = new();
 
         public MainMenu()
         {
@@ -66,32 +64,7 @@ namespace ShapeEngineDemo
             //quitButton.SetNeighbor(startButton, UINeighbors.NeighborDirection.BOTTOM);
             //quitButton.SetNeighbor(startButton, UINeighbors.NeighborDirection.TOP);
 
-            //t.TextEntryCanceled += OnTextEntryCanceled;
-            //t.TextEntryStarted += OnTextEntryStarted;
-            cc.ConsoleOpened += OnCommandConsoleOpened;
-            cc.ConsoleClosed += OnCommandConsoleClosed;
         }
-
-        private void OnCommandConsoleOpened()
-        {
-            //GAMELOOP.CALL_HANDLE_INPUT = false;
-            GAMELOOP.CALL_GAMELOOP_UPDATE = false;
-            UIHandler.InputDisabled = true;
-        }
-        private void OnCommandConsoleClosed() 
-        {
-            //GAMELOOP.CALL_HANDLE_INPUT = true;
-            GAMELOOP.CALL_GAMELOOP_UPDATE = true;
-            UIHandler.InputDisabled = false;
-        }
-        //private void OnTextEntryStarted()
-        //{
-        //    InputHandler.DisableInput();
-        //}
-        //private void OnTextEntryCanceled()
-        //{
-        //    InputHandler.EnableInput();
-        //}
 
 
         public override void Start()
@@ -127,38 +100,31 @@ namespace ShapeEngineDemo
         }
         public override void Update(float dt)
         {
-            if (!cc.IsActive())
+            Vector2 uiSize = ScreenHandler.UISize();
+            Vector2 center = uiSize * 0.5f;
+            Vector2 size = uiSize * new Vector2(0.2f, 0.1f);
+            Vector2 offset = new Vector2(0, size.Y * 1.1f);
+            level1Button.UpdateRect(center, size, new(0.5f));
+            optionsButton.UpdateRect(center + offset, size, new(0.5f));
+            quitButton.UpdateRect(center + offset * 2, size, new(0.5f));
+            level1Button.Update(dt, GAMELOOP.MOUSE_POS_UI);
+            optionsButton.Update(dt, GAMELOOP.MOUSE_POS_UI);
+            quitButton.Update(dt, GAMELOOP.MOUSE_POS_UI);
+
+            tb1.UpdateRect(center + offset * 3, size, new(0.5f));
+            tb2.UpdateRect(center - new Vector2(size.X * 1.7f, 0f), size * 1.2f, new(0.5f));
+            tb3.UpdateRect(center + size * 1.5f, size * 0.5f, new(0.5f));
+            tb1.Update(dt, GAMELOOP.MOUSE_POS_UI);
+            tb2.Update(dt, GAMELOOP.MOUSE_POS_UI);
+            tb3.Update(dt, GAMELOOP.MOUSE_POS_UI);
+
+
+            if (level1Button.Clicked())
             {
-                Vector2 uiSize = ScreenHandler.UISize();
-                Vector2 center = uiSize * 0.5f;
-                Vector2 size = uiSize * new Vector2(0.2f, 0.1f);
-                Vector2 offset = new Vector2(0, size.Y * 1.1f);
-                level1Button.UpdateRect(center, size, new(0.5f));
-                optionsButton.UpdateRect(center + offset, size, new(0.5f));
-                quitButton.UpdateRect(center + offset * 2, size, new(0.5f));
-                level1Button.Update(dt, GAMELOOP.MOUSE_POS_UI);
-                optionsButton.Update(dt, GAMELOOP.MOUSE_POS_UI);
-                quitButton.Update(dt, GAMELOOP.MOUSE_POS_UI);
-
-                tb1.UpdateRect(center + offset * 3, size, new(0.5f));
-                tb2.UpdateRect(center - new Vector2(size.X * 1.7f, 0f), size * 1.2f, new(0.5f));
-                tb3.UpdateRect(center + size * 1.5f, size * 0.5f, new(0.5f));
-                tb1.Update(dt, GAMELOOP.MOUSE_POS_UI);
-                tb2.Update(dt, GAMELOOP.MOUSE_POS_UI);
-                tb3.Update(dt, GAMELOOP.MOUSE_POS_UI);
-
-
-                if (level1Button.Clicked())
-                {
-                    GAMELOOP.AddScene("level1", new Level());
-                    GAMELOOP.GoToScene("level1");
-                }
-                if (quitButton.Clicked()) GAMELOOP.QUIT = true;
+                GAMELOOP.AddScene("level1", new Level());
+                GAMELOOP.GoToScene("level1");
             }
-            
-
-            cc.Update(dt);
-            //t.Update(dt);
+            if (quitButton.Clicked()) GAMELOOP.QUIT = true;
         }
         public override void Draw()
         {
@@ -230,8 +196,8 @@ namespace ShapeEngineDemo
             //
             //SDrawing.DrawTextAligned(String.Format("Active:{0}",t.Active), start + gap * 6, textSize, 1, WHITE, new(0, 0.5f));
 
-            Rectangle r = SRect.ConstructRect(start + gap * 5, new(textSize.X * 2, textSize.Y * 3), new(0, 0.5f));
-            cc.Draw(r, WHITE, RED, DARKGRAY);
+            //Rectangle r = SRect.ConstructRect(start + gap * 5, new(textSize.X * 2, textSize.Y * 3), new(0, 0.5f));
+            //cc.Draw(r, WHITE, RED, DARKGRAY);
             
         }
 

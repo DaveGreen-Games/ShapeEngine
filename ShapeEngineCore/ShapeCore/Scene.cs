@@ -5,7 +5,8 @@ namespace ShapeCore
     public class Scene
     {
         protected bool paused = false;
-
+        protected bool inputDisabled = false;
+        protected bool hidden = false;
 
         public Scene() { }
 
@@ -18,6 +19,10 @@ namespace ShapeCore
 
         public virtual void Start() { }
         public virtual void Close() { }
+        
+
+        public virtual void HandleInput() { }
+        public virtual void Update(float dt) { }
         public virtual void Draw() { }
         /// <summary>
         /// Used for drawing UI elements like buttons, progress bars and text.
@@ -28,25 +33,63 @@ namespace ShapeCore
         /// ONLY needed if texture mode is not fixed! </param>
         public virtual void DrawUI(Vector2 uiSize, Vector2 stretchFactor) { }
         //public virtual void HandleInput(float dt) { }
-        public virtual void Update(float dt) { }
 
 
-        public virtual bool IsPaused() { return paused; }
-        public virtual void Pause()
+
+
+        public bool IsInputDisabled() { return inputDisabled; }
+        public bool IsHidden() { return hidden; }
+        public bool IsPaused() { return paused; }
+
+
+        public void DisableInput()
+        {
+            if(inputDisabled) return;
+            inputDisabled = true;
+        }
+        public void EnableInput() 
+        { 
+            if (!inputDisabled) return;
+            inputDisabled = false; 
+        }
+        public bool ToggleInputDisabled()
+        {
+            inputDisabled= !inputDisabled;
+            return inputDisabled;
+        }
+
+        public void Hide()
+        {
+            if(hidden) return;
+            hidden = true;
+        }
+        public void UnHide()
+        {
+            if(!hidden) return;
+            hidden = false;
+        }
+        public bool ToggleHide()
+        {
+            hidden = !hidden;
+            return hidden;
+        }
+
+
+        public void Pause()
         {
             if (paused) return;
             paused = true;
         }
-        public virtual void Resume()
+        public void UnPause()
         {
             if (!paused) return;
             paused = false;
         }
-        public virtual void TogglePause() { paused = !paused; }
-        //public virtual void MonitorHasChanged()
-        //{
-        //    var area = GetCurArea();
-        //    if (area != null) area.MonitorHasChanged();
-        //}
+        public bool TogglePause() 
+        { 
+            paused = !paused; 
+            return paused; 
+        }
+        
     }
 }

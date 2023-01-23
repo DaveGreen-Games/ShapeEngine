@@ -240,7 +240,7 @@ namespace ShapeEngineDemo
             //Attractor attractor = new(pos, r, -500, 0);
             //area.AddGameObject(attractor);
         }
-        private void HandleInput()
+        public override void HandleInput()
         {
             if (InputHandler.IsReleased(0, "Pause")) TogglePause();
             
@@ -266,9 +266,7 @@ namespace ShapeEngineDemo
         }
         public override void Update(float dt)
         {
-            HandleInput();
-
-            if (IsPaused()) return;
+            //if (IsPaused()) return;
             if (area == null) return;
             ScreenHandler.UpdateCamera(dt);
 

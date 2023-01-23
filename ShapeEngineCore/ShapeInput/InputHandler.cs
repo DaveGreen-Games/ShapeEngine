@@ -7,6 +7,7 @@ using static System.Net.Mime.MediaTypeNames;
 using System.Runtime.CompilerServices;
 using System;
 using ShapeUI;
+using System.Linq.Expressions;
 
 namespace ShapeInput
 {
@@ -125,6 +126,13 @@ namespace ShapeInput
         }
 
         private void ActualizeText() { Text = String.Concat(characters); }
+
+        public void SetText(string newText)
+        {
+            Text = newText;
+            characters = newText.ToCharArray().ToList();
+            CaretPosition = characters.Count;
+        }
     }
 
     public class GamepadVibration

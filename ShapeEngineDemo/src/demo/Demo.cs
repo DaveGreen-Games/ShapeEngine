@@ -11,6 +11,8 @@ using ShapeColor;
 using ShapeEngineDemo.DataObjects;
 using ShapeAchievements;
 using System.Numerics;
+using ShapeLib;
+using System.Runtime.CompilerServices;
 
 namespace ShapeEngineDemo
 {
@@ -20,6 +22,12 @@ namespace ShapeEngineDemo
         private Image icon;
         private int curResIndex = 0;
         private int curFrameRateLimitIndex = 0;
+
+
+        private float hp = 0f;
+        private string enemyName = "";
+
+
         public override void Start()
         {
             //WINDOW ICON
@@ -205,14 +213,62 @@ namespace ShapeEngineDemo
             AchievementHandler.AddAchievement(asteroidDestroyer);
             AchievementHandler.AddAchievement(asteroidAnnihilator);
 
+
+            CommandConsoleHandler.OnConsoleOpened += OnCommandConsoleOpened;
+            CommandConsoleHandler.OnConsoleClosed += OnCommandConsoleClosed;
+            CommandConsoleHandler.OnCommandEntered += OnConsoleCommandEntered;
+
+
             //ScreenHandler.SetFrameRateLimit(180);
             //SPAWN SPLASH SCREEN
             Action startscene = () => GoToScene("splash");
             TimerHandler.Add(2.0f, startscene);
         }
-        
+
+
+        private void OnCommandConsoleOpened()
+        {
+            UIHandler.InputDisabled = true;
+            if(CUR_SCENE != null)
+            {
+                CUR_SCENE.Pause();
+                CUR_SCENE.DisableInput();
+            }
+        }
+        private void OnCommandConsoleClosed()
+        {
+            UIHandler.InputDisabled = false;
+            if (CUR_SCENE != null)
+            {
+                CUR_SCENE.UnPause();
+                CUR_SCENE.EnableInput();
+            }
+        }
+        private void OnConsoleCommandEntered(string command, Dictionary<string, dynamic> args)
+        {
+            switch (command)
+            {
+                case "spawnEnemy":
+                    if (args.ContainsKey("name"))
+                    {
+                        enemyName = args["name"];
+                    }
+                    if (args.ContainsKey("hp"))
+                    {
+                        hp = args["hp"];
+                    }
+                    break;
+                case "fullscreen on": ScreenHandler.SetFullscreen(true); break;
+                case "fullscreen off": ScreenHandler.SetFullscreen(false); break;
+                case "fullscreen toggle": ScreenHandler.ToggleFullscreen(); break;
+                case "quit": QUIT = true; break;
+            }
+        }
+
         public override void PreUpdate(float dt)
         {
+            if (CommandConsoleHandler.IsActive()) return;
+
             if (InputHandler.IsReleased(0, "Fullscreen")) { ScreenHandler.ToggleFullscreen(); }
             if (InputHandler.IsReleased(0, "Next Monitor")) { ScreenHandler.NextMonitor(); }
             if (InputHandler.IsReleased(0, "Vsync")) { ScreenHandler.ToggleVsync(); }
@@ -253,9 +309,19 @@ namespace ShapeEngineDemo
             
         }
 
+        public override void PreDrawUI(Vector2 uiSize, Vector2 stretchFactor)
+        {
+            
+            CommandConsoleHandler.SetConsoleColors(WHITE, RED, GRAY);
+            Rectangle r = SRect.ConstructRect(uiSize * new Vector2(0.02f, 0.9f), uiSize * new Vector2(0.5f, 0.1f), new(0f, 0.5f));
+            CommandConsoleHandler.SetConsoleRect(r);
+        }
         public override void PostDrawUI(Vector2 uiSize, Vector2 stretchFactor)
         {
-            base.PostDrawUI(uiSize, stretchFactor);
+            Vector2 start = uiSize * new Vector2(0.01f, 0.08f);
+            Vector2 gap = uiSize * new Vector2(0, 0.04f);
+            Vector2 textSize = uiSize * new Vector2(0.2f, 0.05f);
+            SDrawing.DrawTextAligned(String.Format("Name={0}, HP={1}", enemyName, hp), start + gap * 6, textSize, 1, WHITE, new(0, 0.5f));
         }
 
         private void OnWindowSizeChanged(int w, int h)
@@ -271,6 +337,9 @@ namespace ShapeEngineDemo
 
         public override void End()
         {
+            CommandConsoleHandler.OnConsoleOpened -= OnCommandConsoleOpened;
+            CommandConsoleHandler.OnConsoleClosed -= OnCommandConsoleClosed;
+            CommandConsoleHandler.OnCommandEntered -= OnConsoleCommandEntered;
             ScreenHandler.OnWindowSizeChanged -= OnWindowSizeChanged;
             base.End();
             UnloadImage(icon);

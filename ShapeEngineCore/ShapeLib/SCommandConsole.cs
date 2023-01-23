@@ -1,17 +1,20 @@
 ﻿using Raylib_CsLo;
 using ShapeInput;
+using ShapeScreen;
 using ShapeUI;
+using System.Globalization;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace ShapeLib
 {
-
     public class CommandConsole
     {
         protected List<string> commandHistory = new();
+        protected int historyIndex = -1;
         protected TextEntry textEntry = new(-1);
 
-        private char commandDelimiter = ',';
+        private char commandDelimiter = '/';
         private char nameDelimiter = '=';
 
         private char intPrefix = 'i';
@@ -64,7 +67,7 @@ namespace ShapeLib
 
         public bool IsActive() { return textEntry.Active; }
 
-        public void Update(float dt)
+        public virtual void Update(float dt)
         {
             if (!IsActive())
             {
@@ -81,12 +84,20 @@ namespace ShapeLib
 
                 if (IsKeyPressed(KeyboardKey.KEY_ENTER)) EnterCommand();
 
-                if (IsKeyPressed(KeyboardKey.KEY_BACKSPACE)) textEntry.Backspace();
+                if (IsKeyPressed(KeyboardKey.KEY_BACKSPACE))
+                {
+                    textEntry.Backspace();
+                    if (textEntry.characters.Count <= 0) historyIndex = -1;
+                }
 
-                if (IsKeyPressed(KeyboardKey.KEY_DELETE)) textEntry.Del();
+                if (IsKeyPressed(KeyboardKey.KEY_DELETE))
+                {
+                    textEntry.Del();
+                    if (textEntry.characters.Count <= 0) historyIndex = -1;
+                }
 
 
-                if (IsKeyPressed(cancelKey)) textEntry.ClearText();
+                if (IsKeyPressed(cancelKey)) { textEntry.ClearText(); historyIndex = -1; }
 
                 if (IsKeyPressed(openKey)) Close();
                 
@@ -94,7 +105,7 @@ namespace ShapeLib
             }
         }
 
-        public void Draw(Rectangle consoleRect, Color textColor, Color caretColor, Color boxColor)
+        public virtual void Draw(Rectangle consoleRect, Vector2 alignement, Color textColor, Color caretColor, Color boxColor, params Color[] extraColors)
         {
             if (IsActive())
             {
@@ -105,9 +116,9 @@ namespace ShapeLib
 
                 if(commandHistory.Count > 0)
                 {
-                    SDrawing.DrawTextAligned(commandHistory[commandHistory.Count - 1], historyRect, 1f, caretColor, new(0f, 0.5f));
+                    SDrawing.DrawTextAligned(commandHistory[0], historyRect, 1f, caretColor, new(0f, 0.5f));
                 }
-                SDrawing.DrawTextBox(textBoxRect, "Enter Command...", textEntry.characters, 1f, UIHandler.GetFont(), textColor, true, textEntry.CaretPosition, 2f, caretColor, new(0f, 0.5f));
+                SDrawing.DrawTextBox(textBoxRect, "Enter Command...", textEntry.characters, 1f, UIHandler.GetFont(), textColor, true, textEntry.CaretPosition, 2f, caretColor, alignement);
                 SDrawing.DrawRectangeLinesPro(new(consoleRect.x, consoleRect.y), new(consoleRect.width, consoleRect.height), new(0f), new(0f), 0f, 4f, caretColor);
             }
         }
@@ -126,7 +137,7 @@ namespace ShapeLib
             ConsoleClosed?.Invoke();
         }
         
-        public void EnterCommand()
+        public virtual void EnterCommand()
         {
             if (!IsActive()) return;
             var input = textEntry.Text; // textEntry.Enter();
@@ -143,42 +154,35 @@ namespace ShapeLib
                         var variable = substrings[i];
                         if (variable == "") continue;
                         var nameValue = variable.Split(nameDelimiter);
-                        string name = "";
-                        string value = "";
-                        if (nameValue.Length <= 0) continue;
-                        else if(nameValue.Length == 1)
+                        if (nameValue.Length > 1)
                         {
-                            name = String.Format("Var{0}", i);
-                            value = nameValue[0];
-                        }
-                        else
-                        {
-                            name = nameValue[0];
-                            value = nameValue[1];
-                        }
+                            string name = nameValue[0];
+                            string value = nameValue[1];
 
-                        char type = value[0];
-                        string v = value.Substring(1);
-                        if (type == floatPrefix)
-                        {
-                            float dyn = float.Parse(v);
-                            args.Add(name, dyn);
+                            char type = value[0];
+                            string v = value.Substring(1);
+                            if (type == floatPrefix)
+                            {
+                                float dyn = float.Parse(v, CultureInfo.InvariantCulture);
+                                args.Add(name, dyn);
+                            }
+                            else if (type == intPrefix)
+                            {
+                                int dyn = int.Parse(v);
+                                args.Add(name, dyn);
+                            }
+                            else if (type == stringPrefix)
+                            {
+                                string dyn = v;
+                                args.Add(name, dyn);
+                            }
+                            else continue;
                         }
-                        else if (type == intPrefix)
-                        {
-                            int dyn = int.Parse(v);
-                            args.Add(name, dyn);
-                        }
-                        else if (type == stringPrefix)
-                        {
-                            string dyn = v;
-                            args.Add(name, dyn);
-                        }
-                        else continue;
                     }
 
-                    commandHistory.Add(input);
+                    commandHistory.Insert(0,input);
                     CommandEntered?.Invoke(command, args);
+                    historyIndex = -1;
                 }
             }
         }
@@ -193,22 +197,131 @@ namespace ShapeLib
         //{
         //    consoleRect = console;
         //}
-
+        public void ClearHistory()
+        {
+            historyIndex = -1;
+            commandHistory.Clear();
+        }
         public void MoveHistoryForward()
         {
-
+            if (commandHistory.Count <= 0) return;
+            if (historyIndex > 0)
+            {
+                historyIndex -= 1;
+                string command = commandHistory[historyIndex];
+                textEntry.SetText(command);
+            }
+            else if (historyIndex == 0)
+            {
+                historyIndex = -1;
+                textEntry.ClearText();
+            }
         }
         public void MoveHistoryBack()
         {
-
+            if(commandHistory.Count <= 0) return;
+            if(historyIndex < commandHistory.Count - 1)
+            {
+                historyIndex += 1;
+                string command = commandHistory[historyIndex];
+                textEntry.SetText(command);
+            }
         }
 
     }
 
-    public static class SCommandConsole
+    public static class CommandConsoleHandler
     {
-
+        private static CommandConsole cc = new();
+        private static Rectangle consoleRect = new();
         
+        private static Color textColor = WHITE;
+        private static Color caretColor = RED;
+        private static Color consoleColor = GRAY;
+        private static Color[] extraColors = new Color[0];
+
+        public static event Action? OnConsoleOpened;
+        public static event Action? OnConsoleClosed;
+        public static event Action<string, Dictionary<string, dynamic>>? OnCommandEntered;
+
+        private static bool disabled = false;
+
+        public static bool IsActive()
+        {
+            if (disabled) return false;
+            return cc.IsActive();
+        }
+        public static void Disable()
+        {
+            if (disabled) return;
+            disabled = true;
+            cc.Close();
+        }
+        public static void Enable() 
+        {
+            if (!disabled) return;
+            disabled = false;
+
+        }
+        public static void Initialize() 
+        {
+            cc.ConsoleOpened += OnCommandConsoleOpened;
+            cc.ConsoleClosed += OnCommandConsoleClosed;
+            cc.CommandEntered += OnConsoleCommandEntered;
+        }
+        
+        public static void ChangeCommandConsole(CommandConsole newConsole) 
+        {
+            cc.ConsoleOpened -= OnCommandConsoleOpened;
+            cc.ConsoleClosed -= OnCommandConsoleClosed;
+            cc.CommandEntered -= OnConsoleCommandEntered;
+            
+            cc = newConsole;
+            
+            cc.ConsoleOpened += OnCommandConsoleOpened;
+            cc.ConsoleClosed += OnCommandConsoleClosed;
+            cc.CommandEntered += OnConsoleCommandEntered;
+        }
+        
+        public static void SetConsoleRect(Rectangle rect) { consoleRect = rect; }
+        public static void SetConsoleColors(Color text, Color caret, Color console, params Color[] extra)
+        {
+            textColor = text;
+            caretColor = caret;
+            consoleColor = console;
+            extraColors = extra;
+        }
+        public static void Update(float dt) 
+        { 
+            if(disabled) return;
+            cc.Update(dt);
+            
+        }
+        public static void Draw()
+        {
+            if (disabled) return;
+            cc.Draw(consoleRect, new(0f, 0.5f), textColor, caretColor, consoleColor, extraColors);
+        }
+        public static void Close()
+        {
+            cc.Close();
+            cc.ConsoleOpened -= OnCommandConsoleOpened;
+            cc.ConsoleClosed -= OnCommandConsoleClosed;
+            cc.CommandEntered -= OnConsoleCommandEntered;
+        }
+
+        private static void OnCommandConsoleOpened() 
+        {
+            OnConsoleOpened?.Invoke();
+        }
+        private static void OnCommandConsoleClosed() 
+        {
+            OnConsoleClosed?.Invoke();
+        }
+        private static void OnConsoleCommandEntered(string command, Dictionary<string, dynamic> args) 
+        { 
+            OnCommandEntered?.Invoke(command, args);
+        }
 
     }
 }

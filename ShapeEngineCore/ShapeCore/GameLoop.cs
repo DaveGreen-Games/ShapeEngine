@@ -121,7 +121,7 @@ namespace ShapeCore
         /// <summary>
         /// DELTA affected by the current slow amount. Equals DELTA * CUR_SLOW_FACTOR
         /// </summary>
-        public float GAME_DELTA { get; private set; }
+        //public float GAME_DELTA { get; private set; }
         public Vector2 MOUSE_POS { get; private set; }
         public Vector2 MOUSE_POS_GAME { get; private set; }
         public Vector2 MOUSE_POS_UI { get; private set; }
@@ -372,6 +372,7 @@ namespace ShapeCore
             
             InputHandler.Initialize();
             CursorHandler.Initialize();
+            CommandConsoleHandler.Initialize();
         }
 
         public bool Close()
@@ -408,27 +409,6 @@ namespace ShapeCore
                 MOUSE_POS_GAME = ScreenHandler.TransformPositionToGame(MOUSE_POS_UI);
                 //if (WindowShouldClose() && !InputHandler.QuitPressed()) QUIT = true; // IsKeyDown(KeyboardKey.KEY_ESCAPE)) QUIT = true;
 
-                delayHandler.Update(DELTA);
-                stopTimer.Update(DELTA);
-                if (!stopTimer.IsRunning())
-                {
-                    slowTimer.Update(DELTA);
-                    if (CUR_SLOW_FACTOR != 1f && !slowTimer.IsRunning())
-                    {
-                        CUR_SLOW_FACTOR = 1f;
-                    }
-                }
-                GAME_DELTA = DELTA * CUR_SLOW_FACTOR;
-
-                
-
-                //Input
-                //if (CALL_HANDLE_INPUT)
-                //{
-                //    HandleInput();
-                //    if (CUR_SCENE != null) CUR_SCENE.HandleInput(DELTA);
-                //}
-
                 //UPDATE
                 UpdateGame(DELTA);
 
@@ -450,13 +430,31 @@ namespace ShapeCore
             AudioHandler.Update(dt);
             ScreenHandler.Update(dt);
             AlternatorHandler.Update(dt);
+            CommandConsoleHandler.Update(dt);
 
             if (CUR_SCENE != null)
             {
-                if (!stopTimer.IsRunning())
+                if(!CUR_SCENE.IsInputDisabled()) CUR_SCENE.HandleInput();
+
+                if (!CUR_SCENE.IsPaused())
                 {
-                    CUR_SCENE.Update(dt * CUR_SLOW_FACTOR);
+                    delayHandler.Update(DELTA);
+                    stopTimer.Update(DELTA);
+                    if (!stopTimer.IsRunning())
+                    {
+                        slowTimer.Update(DELTA);
+                        if (CUR_SLOW_FACTOR != 1f && !slowTimer.IsRunning())
+                        {
+                            CUR_SLOW_FACTOR = 1f;
+                        }
+                    }
+                    
+                    if (!stopTimer.IsRunning())
+                    {
+                        CUR_SCENE.Update(dt * CUR_SLOW_FACTOR);
+                    }
                 }
+                //GAME_DELTA = DELTA * CUR_SLOW_FACTOR;
             }
             if (CALL_GAMELOOP_UPDATE) PostUpdate(dt);
         }
@@ -465,7 +463,7 @@ namespace ShapeCore
             //Draw to game texture
             ScreenHandler.StartDraw(true);
             if (CALL_GAMELOOP_DRAW) PreDraw();
-            if (CUR_SCENE != null) CUR_SCENE.Draw();
+            if (CUR_SCENE != null && !CUR_SCENE.IsHidden()) CUR_SCENE.Draw();
             if (CALL_GAMELOOP_DRAW) PostDraw();
             ScreenHandler.EndDraw(true);
 
@@ -474,9 +472,10 @@ namespace ShapeCore
             Vector2 stretchFactor = ScreenHandler.UI.STRETCH_FACTOR;
             
             ScreenHandler.StartDraw(false);
-            PreDrawUI(uiSize, stretchFactor);
-            if (CALL_GAMELOOP_DRAWUI) if (CUR_SCENE != null) CUR_SCENE.DrawUI(uiSize, stretchFactor);
+            if (CALL_GAMELOOP_DRAWUI) PreDrawUI(uiSize, stretchFactor);
+            if (CUR_SCENE != null && !CUR_SCENE.IsHidden()) CUR_SCENE.DrawUI(uiSize, stretchFactor);
             CursorHandler.Draw(uiSize, MOUSE_POS_UI);
+            CommandConsoleHandler.Draw();
             if (CALL_GAMELOOP_DRAWUI) PostDrawUI(uiSize, stretchFactor);
             ScreenHandler.EndDraw(false);
 
