@@ -313,7 +313,7 @@ namespace ShapeEngineDemo
         {
             
             CommandConsoleHandler.SetConsoleColors(WHITE, RED, GRAY);
-            Rectangle r = SRect.ConstructRect(uiSize * new Vector2(0.02f, 0.9f), uiSize * new Vector2(0.5f, 0.1f), new(0f, 0.5f));
+            Rectangle r = SRect.ConstructRect(uiSize * new Vector2(0.02f, 0.98f), uiSize * new Vector2(0.5f, 0.1f), new(0f, 1f));
             CommandConsoleHandler.SetConsoleRect(r);
         }
         public override void PostDrawUI(Vector2 uiSize, Vector2 stretchFactor)

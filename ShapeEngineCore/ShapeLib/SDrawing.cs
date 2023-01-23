@@ -8,28 +8,29 @@ namespace ShapeLib
     {
 
 
-        public static void DrawTextBox(Rectangle rect, string emptyText, List<char> chars, float fontSpacing, Font font, Color textColor, bool drawCaret, int caretPosition, float caretWidth, Color caretColor, Vector2 alignement)
+        public static void DrawTextBox(Rectangle rect, string emptyText, List<char> chars, float fontSpacing, Font font, Color textColor, bool drawCaret, int caretPosition, float caretWidth, Color caretColor, Vector2 textAlignement)
         {
             //fix alignement
-            alignement = new(0, 0.5f);
+            //alignement = new(0, 0.5f);
             if(chars.Count <= 0)
             {
-                SDrawing.DrawTextAligned(emptyText, rect, fontSpacing, textColor, font, alignement);
+                SDrawing.DrawTextAligned(emptyText, rect, fontSpacing, textColor, font, textAlignement);
             }
             else
             {
                 string text = String.Concat(chars);
-                SDrawing.DrawTextAligned(text, rect, fontSpacing, textColor, font, alignement);
+                SDrawing.DrawTextAligned(text, rect, fontSpacing, textColor, font, textAlignement);
 
                 if (drawCaret)
                 {
                     float fontSize = UIHandler.CalculateDynamicFontSize(text, new Vector2(rect.width, rect.height), font, fontSpacing);
+                    Vector2 textSize = MeasureTextEx(font, text, fontSize, fontSpacing);
+                    Vector2 uiPos = SRect.GetRectPos(rect, textAlignement);
+                    Vector2 topLeft = uiPos - textAlignement * textSize;
+                    //Vector2 topLeft = new(rect.x, rect.y);
+                    
                     string caretText = String.Concat(chars.GetRange(0, caretPosition));
                     Vector2 caretTextSize = MeasureTextEx(font, caretText, fontSize, fontSpacing);
-
-                    //Vector2 uiPos = SRect.GetRectPos(rect, alignement);
-                    //Vector2 topLeft = uiPos - alignement * new Vector2(caretTextSize.X, 0f);
-                    Vector2 topLeft = new(rect.x, rect.y);
 
                     Vector2 caretTop = topLeft + new Vector2(caretTextSize.X + fontSpacing * 0.5f, 0f);
                     Vector2 caretBottom = topLeft + new Vector2(caretTextSize.X + fontSpacing * 0.5f, rect.height);
@@ -527,6 +528,17 @@ namespace ShapeLib
             Vector2 rightExtension = SVec.Rotate(new Vector2(lineThickness / 2, 0f), rotDeg * DEG2RAD);
 
             var rr = SRect.RotateRect(pos, size, alignement, pivot, rotDeg);
+            DrawLineEx(rr.tl + leftExtension, rr.tr + rightExtension, lineThickness, color);
+            DrawLineEx(rr.bl + leftExtension, rr.br + rightExtension, lineThickness, color);
+            DrawLineEx(rr.tl, rr.bl, lineThickness, color);
+            DrawLineEx(rr.tr, rr.br, lineThickness, color);
+        }
+        public static void DrawRectangeLinesPro(Rectangle rect, Vector2 pivot, float rotDeg, float lineThickness, Color color)
+        {
+            Vector2 leftExtension = SVec.Rotate(new Vector2(-lineThickness / 2, 0f), rotDeg * DEG2RAD);
+            Vector2 rightExtension = SVec.Rotate(new Vector2(lineThickness / 2, 0f), rotDeg * DEG2RAD);
+
+            var rr = SRect.RotateRect(rect, pivot, rotDeg);
             DrawLineEx(rr.tl + leftExtension, rr.tr + rightExtension, lineThickness, color);
             DrawLineEx(rr.bl + leftExtension, rr.br + rightExtension, lineThickness, color);
             DrawLineEx(rr.tl, rr.bl, lineThickness, color);
