@@ -12,6 +12,7 @@ using Raylib_CsLo;
 using System.Numerics;
 using ShapeColor;
 using ShapeAchievements;
+using System.ComponentModel;
 
 namespace ShapeCore
 {
@@ -111,6 +112,7 @@ namespace ShapeCore
         public bool QUIT = false;
         public bool RESTART = false;
         //public bool CALL_HANDLE_INPUT = true;
+        public bool CALL_GAMELOOP_HANDLE_INPUT = true;
         public bool CALL_GAMELOOP_UPDATE = true;
         public bool CALL_GAMELOOP_DRAW = true;
         public bool CALL_GAMELOOP_DRAWUI = true;
@@ -372,7 +374,6 @@ namespace ShapeCore
             
             InputHandler.Initialize();
             CursorHandler.Initialize();
-            CommandConsoleHandler.Initialize();
         }
 
         public bool Close()
@@ -430,8 +431,8 @@ namespace ShapeCore
             AudioHandler.Update(dt);
             ScreenHandler.Update(dt);
             AlternatorHandler.Update(dt);
-            CommandConsoleHandler.Update(dt);
 
+            if (CALL_GAMELOOP_HANDLE_INPUT) PreHandleInput();
             if (CUR_SCENE != null)
             {
                 if(!CUR_SCENE.IsInputDisabled()) CUR_SCENE.HandleInput();
@@ -456,6 +457,7 @@ namespace ShapeCore
                 }
                 //GAME_DELTA = DELTA * CUR_SLOW_FACTOR;
             }
+            if (CALL_GAMELOOP_HANDLE_INPUT) PostHandleInput();
             if (CALL_GAMELOOP_UPDATE) PostUpdate(dt);
         }
         private void DrawGame()
@@ -475,7 +477,6 @@ namespace ShapeCore
             if (CALL_GAMELOOP_DRAWUI) PreDrawUI(uiSize, stretchFactor);
             if (CUR_SCENE != null && !CUR_SCENE.IsHidden()) CUR_SCENE.DrawUI(uiSize, stretchFactor);
             CursorHandler.Draw(uiSize, MOUSE_POS_UI);
-            CommandConsoleHandler.Draw();
             if (CALL_GAMELOOP_DRAWUI) PostDrawUI(uiSize, stretchFactor);
             ScreenHandler.EndDraw(false);
 
@@ -503,6 +504,8 @@ namespace ShapeCore
 
         //public virtual void PreInit() { } //called before initialization -> use for setting specific vars
         public virtual void Start() { } //called after initialization
+        public virtual void PreHandleInput() { }
+        public virtual void PostHandleInput() { }
         public virtual void PreUpdate(float dt) { } //always called before update
         public virtual void PostUpdate(float dt) { }
         //public virtual void HandleInput() { }//called before update to handle global input

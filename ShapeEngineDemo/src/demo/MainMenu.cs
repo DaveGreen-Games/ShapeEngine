@@ -58,12 +58,6 @@ namespace ShapeEngineDemo
 
             optionsButton.Disable();
 
-            //startButton.AddShortcut(KeyboardKey.KEY_Q);
-            //startButton.SetNeighbor(quitButton, UINeighbors.NeighborDirection.BOTTOM);
-            //startButton.SetNeighbor(quitButton, UINeighbors.NeighborDirection.TOP);
-            //quitButton.SetNeighbor(startButton, UINeighbors.NeighborDirection.BOTTOM);
-            //quitButton.SetNeighbor(startButton, UINeighbors.NeighborDirection.TOP);
-
         }
 
 
@@ -146,18 +140,11 @@ namespace ShapeEngineDemo
             Vector2 start = uiSize * new Vector2(0.01f, 0.08f);
             Vector2 gap = uiSize * new Vector2(0, 0.04f);
             Vector2 textSize = uiSize * new Vector2(0.2f, 0.05f);
-            //float fontSize = 60f;
             SDrawing.DrawTextAligned(String.Format("UI Size: {0}", ScreenHandler.UISize()), start, textSize, 1, WHITE, new(0, 0.5f));
             SDrawing.DrawTextAligned(String.Format("Dev Res: {0}", ScreenHandler.DEVELOPMENT_RESOLUTION), start + gap, textSize, 1, WHITE, new(0, 0.5f));
             SDrawing.DrawTextAligned(String.Format("Target Res: {0}", ScreenHandler.UI.TARGET_RESOLUTION), start + gap * 2, textSize, 1, WHITE, new(0, 0.5f));
             SDrawing.DrawTextAligned(String.Format("Win Size: {0}", ScreenHandler.CUR_WINDOW_SIZE), start + gap * 3, textSize, 1, WHITE, new(0, 0.5f));
             SDrawing.DrawTextAligned(String.Format("Stretch F: {0}", stretchFactor), start + gap * 4, textSize, 1, WHITE, new(0, 0.5f));
-            
-            //UIHandler.DrawTextAligned(String.Format("Area F: {0}", ScreenHandler.UI.STRETCH_AREA_FACTOR), new Vector2(100f, 420f), 50, 5, WHITE, Alignement.LEFTCENTER);
-            //UIHandler.DrawTextAligned(String.Format("Area Side F: {0}", ScreenHandler.UI.STRETCH_AREA_SIDE_FACTOR), new Vector2(100f, 500f), 50, 5, WHITE, Alignement.LEFTCENTER);
-            
-            //UIHandler.DrawTextAligned(String.Format("Button Pos: {0}", level1Button.GetCenter()), new Vector2(100f, 580f), 60, 5, WHITE, Alignement.LEFTCENTER);
-            //UIHandler.DrawTextAligned(String.Format("Button Scaled Pos: {0}", level1Button.GetCenter() * stretchFactor), new Vector2(100f, 660f), 60, 5, WHITE, Alignement.LEFTCENTER);
             
             level1Button.Draw(uiSize, stretchFactor);
             optionsButton.Draw(uiSize, stretchFactor);
@@ -166,42 +153,8 @@ namespace ShapeEngineDemo
             tb1.Draw(uiSize, stretchFactor);
             tb2.Draw(uiSize, stretchFactor);
             tb3.Draw(uiSize, stretchFactor);
-            //Vector2 barSize = uiSize * new Vector2(0.5f, 0.05f);// * stretchFactor;
-            //Vector2 center = uiSize * new Vector2(0.5f, 0.3f); // * stretchFactor;
-            //Vector2 topleft = center - barSize / 2;
-            //UIHandler.DrawBar(topleft, barSize, RNG.randF(), RED, DARKPURPLE, BarType.LEFTRIGHT);
-
-            //Drawing.DrawRectangleCheckeredLines(GAMELOOP.MOUSE_POS_UI, new(500f), Alignement.CENTER, 15, 5, 45, RED, BLANK, BLANK);
-
-            //int unicode = Raylib.GetCharPressed();
-            //var c = (char)unicode;
-            //if (unicode > 0) text = c.ToString();
-            //SDrawing.DrawTextAligned(text, start + gap * 5, textSize, 1, WHITE, new(0, 0.5f));
-
-            //int key = Raylib.GetKeyPressed();
-            //int unicode = Raylib.GetCharPressed();
-            //SDrawing.DrawTextAligned(String.Format("Key/Unicode: {0}/{1}", key, unicode), start + gap * 5, textSize , 1, WHITE, new(0, 0.5f));
-
-            //if(t.Text == "")
-            //{
-            //    //string text = t.Text != "" ? t.Text : "Enter Text...";
-            //    SDrawing.DrawTextAligned("Enter Text ...", start + gap * 5, textSize, 1, WHITE, new(0, 0.5f));
-            //}
-            //else
-            //{
-            //    Rectangle r = SRect.ConstructRect(start + gap * 5, textSize, new(0, 0.5f));
-            //    SDrawing.DrawTextBox(r, t.characters, 1, UIHandler.GetFont(), WHITE, true, t.CaretPosition, 2f, RED, new(1, 0.5f));
-            //}
-            //
-            //
-            //SDrawing.DrawTextAligned(String.Format("Active:{0}",t.Active), start + gap * 6, textSize, 1, WHITE, new(0, 0.5f));
-
-            //Rectangle r = SRect.ConstructRect(start + gap * 5, new(textSize.X * 2, textSize.Y * 3), new(0, 0.5f));
-            //cc.Draw(r, WHITE, RED, DARKGRAY);
             
         }
-
-        //string text = "fail";
     }
 
 

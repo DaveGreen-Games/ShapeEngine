@@ -1,12 +1,10 @@
 ﻿using Raylib_CsLo;
-using ShapeInput;
-using ShapeScreen;
 using ShapeUI;
 using System.Globalization;
 using System.Numerics;
-using System.Runtime.CompilerServices;
+using ShapeLib;
 
-namespace ShapeLib
+namespace ShapeCore
 {
     public class CommandConsole
     {
@@ -250,6 +248,10 @@ namespace ShapeLib
 
     }
 
+
+
+
+    /*
     public static class CommandConsoleHandler
     {
         private static CommandConsole cc = new();
@@ -344,4 +346,5 @@ namespace ShapeLib
         }
 
     }
+    */
 }
