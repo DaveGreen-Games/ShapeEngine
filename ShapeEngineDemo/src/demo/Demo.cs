@@ -3,7 +3,6 @@ using ShapeScreen;
 using ShapeAudio;
 using ShapeInput;
 using ShapeUI;
-using ShapeShaders;
 using ShapeTiming;
 using ShapePersistent;
 using Raylib_CsLo;
@@ -12,7 +11,6 @@ using ShapeEngineDemo.DataObjects;
 using ShapeAchievements;
 using System.Numerics;
 using ShapeLib;
-using System.Runtime.CompilerServices;
 using ShapeCursor;
 using static ShapeInput.InputHandler;
 

@@ -3,16 +3,16 @@
 namespace ShapeTiming
 {
     //alternator handler
-    public class AlternatorContainer
+    public class AlternatorHandler
     {
         private Dictionary<string, Alternator> alternators = new();
 
-        public AlternatorContainer() { }
-        public AlternatorContainer(Dictionary<string, Alternator> alternators)
+        public AlternatorHandler() { }
+        public AlternatorHandler(Dictionary<string, Alternator> alternators)
         {
             this.alternators = alternators;
         }
-        public AlternatorContainer(params (string name, Alternator alternator)[] alternators)
+        public AlternatorHandler(params (string name, Alternator alternator)[] alternators)
         {
             foreach (var item in alternators)
             {

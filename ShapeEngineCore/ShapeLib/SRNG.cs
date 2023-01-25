@@ -1,81 +1,238 @@
 ﻿using System.Numerics;
 using Raylib_CsLo;
+using ShapeRandom;
 
 namespace ShapeLib
 {
-
-    public class ChanceList<T>
+    public static class SRNG
     {
-        private List<T> values = new();
-        private (int amount, T value)[] entries;
+        //private static Random rand = new Random();
+        private static RandomNumberGenerator rand = new RandomNumberGenerator();
 
-        private SRandomNumberGen rng;
+        public static void SetSeed(int seed) { rand.SetSeed(seed); }
 
-        public ChanceList(params (int amount, T value)[] entries)
+        public static bool chance(float value) { return rand.chance(value); }
+        public static float randAngleRad() { return rand.randAngleRad(); }
+        public static float randAngleDeg() { return rand.randAngleDeg(); }
+
+        public static float randDirF() { return rand.randDirF(); }
+        public static int randDirI() { return rand.randDirI(); }
+
+        public static float randF() { return rand.randF(); }
+        public static float randF(float max) { return rand.randF(max); }
+        public static float randF(float min, float max) { return rand.randF(min, max); }
+
+        public static int randI() { return rand.randI(); }
+        public static int randI(int max) { return rand.randI(max); }
+        public static int randI(int min, int max) { return rand.randI(min, max); }
+
+        public static Vector2 randVec2() { return rand.randVec2(); }
+        public static Vector2 randVec2(float max) { return rand.randVec2(max); }
+        public static Vector2 randVec2(float min, float max) { return rand.randVec2(min, max); }
+        public static Vector2 randVec2(Rectangle rect) { return rand.randVec2(rect); }
+        public static Color randColor() { return rand.randColor(); }
+        public static Color randColor(int alpha) { return rand.randColor(alpha); }
+        public static Color randColor(Color color) { return rand.randColor(color); }
+        public static Color randColor(Color color, int max) { return rand.randColor(color, max); }
+        public static Color randColor(Color color, int min, int max) { return rand.randColor(color, min, max); }
+        public static Color randColor(int min, int max, int alpha = -1) { return rand.randColor(min, max, alpha); }
+
+
+        public static Vector2 randPoint(Rectangle rect) { return rand.randPoint(rect); }
+        public static Vector2 randPoint(Vector2 start, Vector2 end) { return rand.randPoint(start, end); }
+        public static Vector2 randPoint(Vector2 origin) { return rand.randPoint(origin); }
+        public static Vector2 randPoint(Vector2 origin, float max) { return rand.randPoint(origin, max); }
+        public static Vector2 randPoint(Vector2 origin, float min, float max) { return rand.randPoint(origin, min, max); }
+
+        public static T? randCollection<T>(List<T> list, bool pop = false) { return rand.randCollection<T>(list, pop); }
+        public static List<T> randCollection<T>(List<T> source, int amount, bool pop = false) { return rand.randCollection<T>(source, amount, pop); }
+        public static T? randCollection<T>(T[] array) { return rand.randCollection(array); }
+
+    }
+}
+
+/*
+ public static class SRNG
+    {
+        private static Random rand = new Random();
+
+        public static void SetSeed(int seed) { rand = new(seed); }
+        public static bool chance(float value) { return randF() < value; }
+        public static float randAngleRad() { return randF(0f, 2f * RayMath.PI); }
+        public static float randAngleDeg() { return randF(0f, 359f); }
+
+        public static float randDirF() { return randF() < 0.5f ? -1.0f : 1.0f; }
+        public static int randDirI() { return randF() < 0.5f ? -1 : 1; }
+
+        public static float randF() { return rand.NextSingle(); }
+        public static float randF(float max)
         {
-            this.rng = new SRandomNumberGen();
-            this.entries = entries;
-            Generate();
+            if (max < 0.0f)
+            {
+                return randF(max, 0.0f);
+            }
+            else if (max > 0.0f)
+            {
+                return randF(0.0f, max);
+            }
+            else return 0.0f;
         }
-        public ChanceList(int seed, params (int amount, T value)[] entries)
+        public static float randF(float min, float max)
         {
-            this.rng = new SRandomNumberGen(seed);
-            this.entries = entries;
-            Generate();
+            if (max == min) return max;
+            else if (max < min)
+            {
+                float temp = max;
+                max = min;
+                min = temp;
+            }
+            return min + (float)rand.NextDouble() * (max - min);
         }
 
-        public void Refill()
+        public static int randI() { return rand.Next(); }
+        public static int randI(int max)
         {
-            values.Clear();
-            Generate();
+            if (max < 0)
+            {
+                return randI(max, 0);
+            }
+            else if (max > 0)
+            {
+                return randI(0, max);
+            }
+            else return 0;
+        }
+        public static int randI(int min, int max)
+        {
+            if (max == min) return max;
+            else if (max < min)
+            {
+                int temp = max;
+                max = min;
+                min = temp;
+            }
+            return rand.Next(min, max);
         }
 
-        public T? Next(Predicate<T> match)
+        public static Vector2 randVec2()
         {
-            if (values.Count <= 0) Generate();
-            List<T> filtered = values.FindAll(match);
-            if (filtered.Count <= 0) return default;
-            int index = rng.randI(0, filtered.Count);
-            T value = filtered[index];
-            //filtered.RemoveAt(index);
-            return value;
+            float a = randF() * 2.0f * MathF.PI;
+            return new Vector2(MathF.Cos(a), MathF.Sin(a));
+        }
+        public static Vector2 randVec2(float max) { return randVec2(0, max); }
+        public static Vector2 randVec2(float min, float max) { return randVec2() * randF(min, max); }
+        public static Vector2 randVec2(Rectangle rect)
+        {
+            return new(randF(rect.x, rect.x + rect.width), randF(rect.y, rect.y + rect.height));
+        }
+        public static Color randColor() { return randColor(0, 255); }
+        public static Color randColor(int alpha) { return randColor(0, 255, alpha); }
+        public static Color randColor(Color color)
+        {
+            color.a = (byte)randI(0, 255);
+            return color;
+        }
+        public static Color randColor(Color color, int max)
+        {
+            color.a = (byte)randI(0, max);
+            return color;
+        }
+        public static Color randColor(Color color, int min, int max)
+        {
+            color.a = (byte)randI(min, max);
+            return color;
+        }
+        public static Color randColor(int min, int max, int alpha = -1)
+        {
+            if (alpha < 0)
+            {
+                return new Color(randI(min, max), randI(min, max), randI(min, max), randI(min, max));
+            }
+            return new Color(randI(min, max), randI(min, max), randI(min, max), alpha);
         }
 
-        public List<T> Next(int min, int max)
+
+        public static Vector2 randPoint(Rectangle rect)
         {
-            return Next(rng.randI(min, max));
+            float x = randF(rect.x, rect.x + rect.width);
+            float y = randF(rect.y, rect.y + rect.height);
+            return new(x, y);
         }
-        public List<T> Next(int amount)
+        public static Vector2 randPoint(Vector2 start, Vector2 end)
         {
-            List<T> picked = new();
+            return SVec.Lerp(start, end, randF());
+        }
+        public static Vector2 randPoint(Vector2 origin)
+        {
+            return origin + randVec2();
+        }
+        public static Vector2 randPoint(Vector2 origin, float max)
+        {
+            return origin + randVec2(max);
+        }
+        public static Vector2 randPoint(Vector2 origin, float min, float max)
+        {
+            return origin + randVec2(min, max);
+        }
+
+        public static Rectangle randRect(Vector2 alignement)
+        {
+            Vector2 pos = randVec2();
+            Vector2 size = randVec2();
+            return SRect.ConstructRect(pos, size, alignement);
+        }
+        public static Rectangle randRect(Vector2 origin, Vector2 alignement)
+        {
+            Vector2 pos = randVec2();
+            Vector2 size = randVec2();
+            return SRect.ConstructRect(origin + pos, size, alignement);
+        }
+        public static Rectangle randRect(float posMin, float posMax, float sizeMin, float sizeMax, Vector2 alignement)
+        {
+            Vector2 pos = randVec2(posMin, posMax);
+            Vector2 size = randVec2(sizeMin, sizeMax);
+            return SRect.ConstructRect(pos, size, alignement);
+        }
+        public static Rectangle randRect(Vector2 origin, float posMin, float posMax, float sizeMin, float sizeMax, Vector2 alignement)
+        {
+            Vector2 pos = randVec2(posMin, posMax);
+            Vector2 size = randVec2(sizeMin, sizeMax);
+            return SRect.ConstructRect(origin + pos, size, alignement);
+        }
+
+        public static T? randCollection<T>(List<T> list, bool pop = false)
+        {
+            if (list == null || list.Count <= 0) return default;
+            int index = randI(0, list.Count);
+            T t = list[index];
+            if (pop) list.RemoveAt(index);
+            return t;
+        }
+        public static List<T> randCollection<T>(List<T> source, int amount, bool pop = false)
+        {
+            if (source == null || source.Count <= 0 || amount <= 0) return new List<T>();
+            if (pop) amount = Math.Min(amount, source.Count);
+            List<T> list = new List<T>();
             for (int i = 0; i < amount; i++)
             {
-                picked.Add(Next());
+                int index = randI(0, source.Count);
+                T element = source[index];
+                list.Add(element);
+                if (pop) source.RemoveAt(index);
             }
-            return picked;
-        }
-        public T Next()
-        {
-            if (values.Count <= 0) Generate();
+            return list;
 
-            int index = rng.randI(0, values.Count);
-            T value = values[index];
-            values.RemoveAt(index);
-            return value;
         }
-        private void Generate()
+        public static T? randCollection<T>(T[] array)
         {
-            foreach (var entry in entries)
-            {
-                for (int i = 0; i < entry.amount; i++)
-                {
-                    values.Add(entry.value);
-                }
-            }
+            if (array == null || array.Length <= 0) return default;
+            return array[randI(0, array.Length)];
         }
+
     }
+ */
 
-
+/*
     public interface RandomNumberGenerator
     {
         public void SetSeed(int seed);
@@ -122,8 +279,6 @@ namespace ShapeLib
         public T? randCollection<T>(T[] array);
 
     }
-
-    
     public class SRandomNumberGen : RandomNumberGenerator
     {
         private Random rand;
@@ -315,8 +470,6 @@ namespace ShapeLib
         }
 
     }
-    
-
     public static class SRNG
     {
         //private static Random rand = new Random();
@@ -363,9 +516,7 @@ namespace ShapeLib
         public static T? randCollection<T>(T[] array) { return rand.randCollection(array); }
 
     }
-}
-
-
+    */
 
 /*
     public class LehmerRng : RandomNumberGenerator

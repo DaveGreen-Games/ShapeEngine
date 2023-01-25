@@ -1,4 +1,7 @@
-﻿namespace ShapeLib
+﻿using System.Numerics;
+using ShapeLib;
+
+namespace ShapeCore
 {
     public class Shake
     {
@@ -15,7 +18,7 @@
         public float GetCurY() { return curY; }
         public bool IsActive() { return timer > 0.0f; }
         public float GetF() { return f; }
-
+        public Vector2 GetCur() { return new(curX, curY); }
 
         public void Start(float duration, float smoothness)
         {
