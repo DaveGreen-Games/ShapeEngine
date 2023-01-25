@@ -193,8 +193,9 @@ namespace ShapeInput
         public static int gamepadUsed = -1;
         //STATIC EVENT!!! - everything that subscribes to a static event must unsubscribe before deletion, otherwise memory leaks can happen
         //garbage collector can not collect anything that is subscribed to a static event!!!
-        public delegate void InputChanged(InputType newType);
-        public static event InputChanged? OnInputChanged;
+        
+        //public delegate void InputChanged(InputType newType);
+        public static event Action<InputType>? OnInputChanged;
 
         public delegate void GamepadConnectionChanged(int gamepad, bool connected, int curGamepad);
         public static event GamepadConnectionChanged? OnGamepadConnectionChanged;
@@ -225,8 +226,8 @@ namespace ShapeInput
 
         private static void OnInputTypeChanged(InputType newInputType)
         {
-            if (newInputType == InputType.KEYBOARD_MOUSE) { CursorHandler.Show(); }
-            else { CursorHandler.Hide(); }
+            //if (newInputType == InputType.KEYBOARD_MOUSE) { CursorHandler.Show(); }
+            //else { CursorHandler.Hide(); }
             OnInputChanged?.Invoke(newInputType);
         }
         private static void OnControllerConnectionChanged(int gamepad, bool connected, int curGamepad)
@@ -247,9 +248,7 @@ namespace ShapeInput
             }
             inputMaps.Add(basicMap.GetName(), basicMap);
             AddInputSlot(-1, "basic");
-            //inputSlots.Add(0, new(-1));
             if (IsGamepadAvailable(0)) { inputSlots[0].gamepadIndex = 0; }
-            //inputSlots[0].curInputMap = basicMap;
         }
         public static void Update(float dt)
         {

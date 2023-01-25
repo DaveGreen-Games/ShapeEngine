@@ -132,7 +132,7 @@ namespace ShapeEngineDemo
             SpawnPlanets(5, new(3, 4.5f), "planets very far", -0.9f);
             SpawnPlanets(3, new(5, 6.5f), "planets far", -0.7f);
             SpawnPlanets(2, new(7, 8.5f), "planets near", -0.5f);
-            this.playfield = new(area, 3f, PaletteHandler.C("neutral"), -10);
+            this.playfield = new(area, 3f, Demo.PALETTES.C("neutral"), -10);
         }
 
         public override void Draw()
@@ -211,8 +211,8 @@ namespace ShapeEngineDemo
             //Action action = () => ScreenHandler.Cam.Shake(0.25f, new(75.0f, 75.0f), 1, 0, 0.75f);
             //TimerHandler.Add(0.25f, action);
             //AudioHandler.PlaySFX("explosion");
-            CursorHandler.Switch("game");
-            GAMELOOP.backgroundColor = PaletteHandler.C("bg1");
+            Demo.CURSOR.Switch("game");
+            GAMELOOP.backgroundColor = Demo.PALETTES.C("bg1");
             //AudioHandler.SwitchPlaylist("game");
         }
         public override void Deactivate(Scene? newScene)
@@ -221,7 +221,7 @@ namespace ShapeEngineDemo
             ScreenHandler.GAME.Flash(0.25f, new(0, 0, 0, 255), new(0, 0, 0, 255));
             Action action = () => GAMELOOP.SwitchScene(this, newScene);
             ScreenHandler.CAMERA.ResetZoom();
-            TimerHandler.Add(0.25f, action);
+            Demo.TIMER.Add(0.25f, action);
 
         }
         public override Area? GetCurArea()
@@ -276,7 +276,7 @@ namespace ShapeEngineDemo
 
 
 
-            AchievementHandler.Update(dt);
+            
             //testRotationDeg += dt * 90f;
             //if (testRotationDeg > 360) testRotationDeg = 0f;
         }
@@ -289,33 +289,33 @@ namespace ShapeEngineDemo
         }
         public override void DrawUI(Vector2 uiSize, Vector2 stretchFactor)
         {
-            SDrawing.DrawTextAlignedPro(String.Format("{0}", GetFPS()), uiSize * new Vector2(0.01f, 0.03f), -5f, uiSize * new Vector2(0.10f, 0.05f), 2f, PaletteHandler.C("special1"), new(0,0.5f));
+            SDrawing.DrawTextAlignedPro(String.Format("{0}", GetFPS()), uiSize * new Vector2(0.01f, 0.03f), -5f, uiSize * new Vector2(0.10f, 0.05f), 2f, Demo.PALETTES.C("special1"), Demo.FONT.GetFont(), new(0,0.5f));
             if (area == null) return;
             area.DrawUI(uiSize, stretchFactor);
 
             Vector2 textSize = uiSize * new Vector2(0.25f, 0.04f);
-            SDrawing.DrawTextAlignedPro(String.Format("Objs {0}", area.GetGameObjects().Count), uiSize * new Vector2(0.01f, 0.1f), 0f, textSize, 2f, PaletteHandler.C("text"), new(0, 0.5f));
-            SDrawing.DrawTextAlignedPro(String.Format("{0}", InputHandler.GetCurInputType()), uiSize * new Vector2(0.01f, 0.13f), 0f, textSize, 2f, PaletteHandler.C("text"), new(0, 0.5f));
-            SDrawing.DrawTextAlignedPro(String.Format("GP {0}/{1}", InputHandler.CUR_GAMEPAD, InputHandler.GetConnectedGamepadCount()), uiSize * new Vector2(0.01f, 0.16f), 0f, textSize, 2f, PaletteHandler.C("text"), new(0, 0.5f));
-            SDrawing.DrawTextAlignedPro(String.Format("Used {0}", InputHandler.gamepadUsed), uiSize * new Vector2(0.01f, 0.19f), 0f, textSize, 2f, PaletteHandler.C("text"), new(0, 0.5f));
+            SDrawing.DrawTextAlignedPro(String.Format("Objs {0}", area.GetGameObjects().Count), uiSize * new Vector2(0.01f, 0.1f), 0f, textSize, 2f, Demo.PALETTES.C("text"), Demo.FONT.GetFont(), new(0, 0.5f));
+            SDrawing.DrawTextAlignedPro(String.Format("{0}", InputHandler.GetCurInputType()), uiSize * new Vector2(0.01f, 0.13f), 0f, textSize, 2f, Demo.PALETTES.C("text"), Demo.FONT.GetFont(), new(0, 0.5f));
+            SDrawing.DrawTextAlignedPro(String.Format("GP {0}/{1}", InputHandler.CUR_GAMEPAD, InputHandler.GetConnectedGamepadCount()), uiSize * new Vector2(0.01f, 0.16f), 0f, textSize, 2f, Demo.PALETTES.C("text"), Demo.FONT.GetFont(), new(0, 0.5f));
+            SDrawing.DrawTextAlignedPro(String.Format("Used {0}", InputHandler.gamepadUsed), uiSize * new Vector2(0.01f, 0.19f), 0f, textSize, 2f, Demo.PALETTES.C("text"), Demo.FONT.GetFont(), new(0, 0.5f));
             
-            SDrawing.DrawTextAlignedPro(String.Format("Kills {0}", AchievementHandler.GetStatValue("asteroidKills")), uiSize * new Vector2(0.01f, 0.25f), 0f, textSize, 2f, PaletteHandler.C("text"), new(0, 0.5f));
+            SDrawing.DrawTextAlignedPro(String.Format("Kills {0}", Demo.ACHIEVEMENTS.GetStatValue("asteroidKills")), uiSize * new Vector2(0.01f, 0.25f), 0f, textSize, 2f, Demo.PALETTES.C("text"), Demo.FONT.GetFont(), new(0, 0.5f));
             
             
-            SDrawing.DrawTextAlignedPro("Debug Keys [8, 9, 0]", uiSize * new Vector2(0.5f, 0.98f), 0f, textSize, 2f, PaletteHandler.C("text"), new(0.5f, 1));
+            SDrawing.DrawTextAlignedPro("Debug Keys [8, 9, 0]", uiSize * new Vector2(0.5f, 0.98f), 0f, textSize, 2f, Demo.PALETTES.C("text"), Demo.FONT.GetFont(), new(0.5f, 1));
             
 
-            SDrawing.DrawTextAlignedPro("Slow Time [ALT]", uiSize * new Vector2(0.99f, 0.03f), 0f, textSize, 2f, PaletteHandler.C("text"), new(1, 0.5f));
-            SDrawing.DrawTextAlignedPro("Pause [P]", uiSize * new Vector2(0.99f, 0.07f), 0f, textSize, 2f, PaletteHandler.C("text"), new(1, 0.5f));
+            SDrawing.DrawTextAlignedPro("Slow Time [ALT]", uiSize * new Vector2(0.99f, 0.03f), 0f, textSize, 2f, Demo.PALETTES.C("text"), Demo.FONT.GetFont(), new(1, 0.5f));
+            SDrawing.DrawTextAlignedPro("Pause [P]", uiSize * new Vector2(0.99f, 0.07f), 0f, textSize, 2f, Demo.PALETTES.C("text"), Demo.FONT.GetFont(), new(1, 0.5f));
 
             if (IsPaused())
             {
                 var pos = GAMELOOP.UISize();
-                SDrawing.DrawTextAlignedPro("PAUSED", uiSize * new Vector2(0.5f, 0.3f), 0f, uiSize * new Vector2(0.5f, 0.25f), 5f, PaletteHandler.C("header"), new(0.5f));
+                SDrawing.DrawTextAlignedPro("PAUSED", uiSize * new Vector2(0.5f, 0.3f), 0f, uiSize * new Vector2(0.5f, 0.25f), 5f, Demo.PALETTES.C("header"), Demo.FONT.GetFont(), new(0.5f));
             }
 
 
-            AchievementHandler.Draw(SRect.ConstructRect(uiSize * new Vector2(0.97f), uiSize * new Vector2(0.2f, 0.08f), new(1, 1)));
+           
 
         }
         public override void Close()

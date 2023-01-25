@@ -19,13 +19,9 @@ namespace ShapeEngineDemo
         {
             //Uncomment to generate a new resources.txt file
             //ShapeEngineCore.Globals.Persistent.ResourceManager.Generate("resources", "", "resources.txt");
+
             
-            
-            //START
-            ScreenInitInfo screenInitInfo = new ScreenInitInfo(1920, 1080, 0.5f, 1.0f, "Raylib Template", false, true);
-            ResourceInitInfo resourceInitInfo = new("", "resources.txt");
-            GameInitInfo gameInitInfo = new("solobytegames", "shape-engine-demo");
-            ShapeEngine.Start(new Demo(), gameInitInfo, resourceInitInfo, screenInitInfo);
+            ShapeEngine.Start(new Demo(), 1920, 1080, 0.5f, 1.0f, "Raylib Template", false, true, true);
         }
     }
 }

@@ -2,49 +2,56 @@
 
 namespace ShapeCursor
 {
-    public static class CursorHandler
+    public class CursorHandler
     {
-        private static Dictionary<string, CursorBasic> cursors = new();
-        private static CursorBasic nullCursor = new CursorNull();
-        private static CursorBasic curCursor = nullCursor;
-        private static bool hidden = false;
+        private Dictionary<string, CursorBasic> cursors = new();
+        private CursorBasic nullCursor;
+        private CursorBasic curCursor;
+        private bool hidden = false;
 
-        public static void Initialize()
+        public CursorHandler(bool hidden = false) 
         {
-            Add("ui", new CursorBasic(0.02f, RED));
-            Add("game", new CursorGame(0.02f, RED));
-            Switch("ui");
-            Hide();
+            this.nullCursor = new CursorNull();
+            this.curCursor = nullCursor;
+            this.hidden = hidden;
         }
 
-        public static void Draw(Vector2 uiSize, Vector2 mousePos)
+        //public void Initialize()
+        //{
+        //    Add("ui", new CursorBasic(0.02f, RED));
+        //    Add("game", new CursorGame(0.02f, RED));
+        //    Switch("ui");
+        //    Hide();
+        //}
+
+        public void Draw(Vector2 uiSize, Vector2 mousePos)
         {
             if (hidden) return;
             curCursor.Draw(uiSize, mousePos);
         }
-        public static void Close()
+        public void Close()
         {
             cursors.Clear();
             curCursor = nullCursor;
         }
 
 
-        public static void Hide()
+        public void Hide()
         {
             if (hidden) return;
             hidden = true;
         }
-        public static void Show()
+        public void Show()
         {
             if (!hidden) return;
             hidden = false;
         }
-        public static void Switch(string name)
+        public void Switch(string name)
         {
             if (!cursors.ContainsKey(name)) return;
             curCursor = cursors[name];
         }
-        public static void Remove(string name)
+        public void Remove(string name)
         {
             if (name == "ui" || name == "game") return;
             if (!cursors.ContainsKey(name)) return;
@@ -58,7 +65,7 @@ namespace ShapeCursor
                 cursors.Remove(name);
             }
         }
-        public static void Add(string name, CursorBasic cursor)
+        public void Add(string name, CursorBasic cursor)
         {
             curCursor.Name = name;
             if (cursors.ContainsKey(name))

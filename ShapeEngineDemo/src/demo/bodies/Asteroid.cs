@@ -61,7 +61,7 @@ namespace ShapeEngineDemo.Bodies
             collisionMask = new string[] { "asteroid"};
             //var data = DataHandler.asteroidData[this.asteroidType];
             Vector2 vel = new(0f, 0f);
-            var data = DataHandler.GetCDBContainer().Get<DataObjects.AsteroidData>("asteroids", this.asteroidType);
+            var data = Demo.DATA.GetCDBContainer().Get<DataObjects.AsteroidData>("asteroids", this.asteroidType);
             if (data != null)
             {
                 this.spawnCount = data.spawnCount;
@@ -80,7 +80,7 @@ namespace ShapeEngineDemo.Bodies
             this.asteroidType = asteroidType;
             collisionMask = new string[] { "asteroid" };
             //var data = DataHandler.asteroidData[this.asteroidType];
-            var data = DataHandler.GetCDBContainer().Get("asteroids", this.asteroidType) as DataObjects.AsteroidData;
+            var data = Demo.DATA.GetCDBContainer().Get("asteroids", this.asteroidType) as DataObjects.AsteroidData;
             if (data != null)
             {
                 this.spawnCount = data.spawnCount;
@@ -137,7 +137,7 @@ namespace ShapeEngineDemo.Bodies
             SpawnDeathEffect();
             SpawnAsteroids();
             AudioHandler.PlaySFX("asteroid die", -1f, -1f, 0.1f);
-            AchievementHandler.UpdateStatValue("asteroidKills", 1);
+            Demo.ACHIEVEMENTS.UpdateStatValue("asteroidKills", 1);
         }
         public override void WasDamaged(DamageInfo info)
         {
@@ -145,8 +145,8 @@ namespace ShapeEngineDemo.Bodies
             //AudioHandler.PlaySFX("asteroid hurt", -1f, -1f, 0.1f);
 
             float f = 0.75f + (info.recieved / GetTotalHealth());
-            Color particleColor = PaletteHandler.C("neutral");
-            if (info.crit) particleColor = PaletteHandler.C("flash"); f += 0.5f;
+            Color particleColor = Demo.PALETTES.C("neutral");
+            if (info.crit) particleColor = Demo.PALETTES.C("flash"); f += 0.5f;
             for (int i = 0; i < SRNG.randI(5, 10); i++)
             {
                 HitParticle particle = new(info.pos, info.dir, f, 0.5f, particleColor);
@@ -157,7 +157,7 @@ namespace ShapeEngineDemo.Bodies
             string text = String.Format("{0}", MathF.Floor(info.recieved));
             //var textEffect = new TextEffectEaseColor(pos, text, 1.0f, WHITE, 0.25f, new(255, 255, 255, 0), EasingType.BOUNCE_OUT);
             //var textEffect = new TextEffectEaseSize(pos, text, 1.0f, WHITE, 1f, -80, EasingType.BACK_IN);
-            var textEffect = new TextEffectEaseSize(pos, text, 1f, WHITE, 50, 0, 1, new(0.5f), 1f, EasingType.BACK_IN);
+            var textEffect = new TextEffectEaseSize(pos, text, 1f, WHITE, 50, Demo.FONT.GetFont(), 0, 1, new(0.5f), 1f, EasingType.BACK_IN);
             //var textEffect = new TextEffectEasePos(pos, text, 1.0f, WHITE, 0.5f, new Vector2(0, 150), EasingType.CUBIC_OUT);
             GAMELOOP.AddGameObject(textEffect, true);
         }
@@ -177,7 +177,7 @@ namespace ShapeEngineDemo.Bodies
         }
         public override void Draw()
         {
-            SDrawing.DrawPolygon(polygon, 2f, PaletteHandler.C("neutral"), collider.Pos);
+            SDrawing.DrawPolygon(polygon, 2f, Demo.PALETTES.C("neutral"), collider.Pos);
             if (DEBUG_DRAWCOLLIDERS)
             {
                 if(collider.IsEnabled()) collider.DebugDrawShape(DEBUG_ColliderColor);
@@ -220,7 +220,7 @@ namespace ShapeEngineDemo.Bodies
 
         private void SpawnDeathEffect()
         {
-            AsteroidDeathEffect ade = new(collider.Pos, 0.5f, size*1.25f, PaletteHandler.C("neutral"));
+            AsteroidDeathEffect ade = new(collider.Pos, 0.5f, size*1.25f, Demo.PALETTES.C("neutral"));
             GAMELOOP.AddGameObject(ade);
         }
         private void SpawnAsteroids()

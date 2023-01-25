@@ -14,6 +14,7 @@ namespace ShapeCore
         protected float fontSize = 80;
         protected float fontSpacing = 5;
         protected Vector2 textAlignement = new(0.5f);
+        protected Font font;
 
         //public TextEffect(Vector2 pos, string text, float duration, Color color) : base(pos, duration)
         //{
@@ -26,13 +27,14 @@ namespace ShapeCore
         //    this.fontSize = UIHandler.GetFontSizeScaled(fontSize);
         //    this.color = color;
         //}
-        public TextEffect(Vector2 pos, string text, float duration, Color color, float fontSize, float fontSpacing, Vector2 alignement) : base(pos, duration)
+        public TextEffect(Vector2 pos, string text, float duration, Color color, float fontSize, float fontSpacing, Font font, Vector2 alignement) : base(pos, duration)
         {
             this.text = text;
             this.fontSize = fontSize;
             this.fontSpacing = fontSpacing;
-            textAlignement = alignement;
+            this.textAlignement = alignement;
             this.color = color;
+            this.font = font;
         }
         //public TextEffect(Vector2 pos, string text, float duration, Color color, FontSize fontSize, float fontSpacing, Alignement alignement) : base(pos, duration)
         //{
@@ -47,18 +49,18 @@ namespace ShapeCore
         {
             if (IsDead()) return;
             Vector2 uiPos = ScreenHandler.TransformPositionToUI(gamePos);
-            SDrawing.DrawTextAligned(text, uiPos, fontSize, fontSpacing, color, textAlignement);
+            SDrawing.DrawTextAligned(text, uiPos, fontSize, fontSpacing, color, font, textAlignement);
         }
     }
     public class TextEffectPro : TextEffect
     {
         protected float rot = 0f;
 
-        public TextEffectPro(Vector2 pos, string text, float duration, Color color, float fontSize) : base(pos, text, duration, color, fontSize, 1, new Vector2(0.5f))
+        public TextEffectPro(Vector2 pos, string text, float duration, Color color, float fontSize, Font font) : base(pos, text, duration, color, fontSize, 1, font, new Vector2(0.5f))
         {
             rot = SRNG.randF(-5f, 5f) * DEG2RAD;
         }
-        public TextEffectPro(Vector2 pos, string text, float duration, Color color, float rotation, float fontSize) : base(pos, text, duration, color, fontSize, 1, new Vector2(0.5f))
+        public TextEffectPro(Vector2 pos, string text, float duration, Color color, float rotation, float fontSize, Font font) : base(pos, text, duration, color, fontSize, 1, font, new Vector2(0.5f))
         {
             rot = rotation;
         }
@@ -72,8 +74,8 @@ namespace ShapeCore
         //{
         //    rot = RNG.randF(-5f, 5f) * DEG2RAD;
         //}
-        public TextEffectPro(Vector2 pos, string text, float duration, Color color, float rotation, float fontSize, float fontSpacing, Vector2 alignement)
-            : base(pos, text, duration, color, fontSize, fontSpacing, alignement)
+        public TextEffectPro(Vector2 pos, string text, float duration, Color color, float rotation, float fontSize, float fontSpacing, Font font, Vector2 alignement)
+            : base(pos, text, duration, color, fontSize, fontSpacing, font, alignement)
         {
             rot = rotation;
         }
@@ -88,7 +90,7 @@ namespace ShapeCore
         {
             if (IsDead()) return;
             Vector2 uiPos = ScreenHandler.TransformPositionToUI(gamePos);
-            SDrawing.DrawTextAlignedPro(text, uiPos, rot, fontSize, fontSpacing, color, textAlignement);
+            SDrawing.DrawTextAlignedPro(text, uiPos, rot, fontSize, fontSpacing, color, font, textAlignement);
         }
     }
     public class TextEffectEase : TextEffect
@@ -97,8 +99,8 @@ namespace ShapeCore
         protected EasingType easeType;
         protected bool easing = false;
 
-        public TextEffectEase(Vector2 pos, string text, float duration, Color color, float fontSize, float easeDuration, EasingType easeType = EasingType.LINEAR_OUT)
-            : base(pos, text, duration, color, fontSize, 1, new Vector2(0.5f))
+        public TextEffectEase(Vector2 pos, string text, float duration, Color color, float fontSize, Font font, float easeDuration, EasingType easeType = EasingType.LINEAR_OUT)
+            : base(pos, text, duration, color, fontSize, 1, font, new Vector2(0.5f))
         {
             this.easeDuration = easeDuration;
             this.easeType = easeType;
@@ -109,8 +111,8 @@ namespace ShapeCore
         //    this.easeDuration = easeDuration;
         //    this.easeType = easeType;
         //}
-        public TextEffectEase(Vector2 pos, string text, float duration, Color color, float fontSize, float fontSpacing, Vector2 alignement, float easeDuration, EasingType easeType = EasingType.LINEAR_OUT)
-            : base(pos, text, duration, color, fontSize, fontSpacing, alignement)
+        public TextEffectEase(Vector2 pos, string text, float duration, Color color, float fontSize, float fontSpacing, Font font, Vector2 alignement, float easeDuration, EasingType easeType = EasingType.LINEAR_OUT)
+            : base(pos, text, duration, color, fontSize, fontSpacing, font, alignement)
         {
             this.easeDuration = easeDuration;
             this.easeType = easeType;
@@ -148,8 +150,8 @@ namespace ShapeCore
         protected Vector2 easeFrom;
         protected Vector2 easeChange;
 
-        public TextEffectEasePos(Vector2 pos, string text, float duration, Color color, float fontSize, float easeDuration, Vector2 easeChange, EasingType easeType = EasingType.LINEAR_OUT)
-            : base(pos, text, duration, color, fontSize, easeDuration, easeType)
+        public TextEffectEasePos(Vector2 pos, string text, float duration, Color color, float fontSize, Font font, float easeDuration, Vector2 easeChange, EasingType easeType = EasingType.LINEAR_OUT)
+            : base(pos, text, duration, color, fontSize, font, easeDuration, easeType)
         {
             easeFrom = pos;
             this.easeChange = easeChange;
@@ -160,14 +162,14 @@ namespace ShapeCore
         //    easeFrom = pos;
         //    this.easeChange = easeChange;
         //}
-        public TextEffectEasePos(Vector2 pos, string text, float duration, Color color, float fontSize, float fontSpacing, Vector2 alignement, float easeDuration, Vector2 easeChange, EasingType easeType = EasingType.LINEAR_OUT)
-            : base(pos, text, duration, color, fontSize, fontSpacing, alignement, easeDuration, easeType)
+        public TextEffectEasePos(Vector2 pos, string text, float duration, Color color, float fontSize, float fontSpacing, Font font, Vector2 alignement, float easeDuration, Vector2 easeChange, EasingType easeType = EasingType.LINEAR_OUT)
+            : base(pos, text, duration, color, fontSize, fontSpacing, font, alignement, easeDuration, easeType)
         {
             easeFrom = pos;
             this.easeChange = easeChange;
         }
-        public TextEffectEasePos(Vector2 pos, Vector2 easeTo, string text, float duration, Color color, float fontSize, float fontSpacing, Vector2 alignement, float easeDuration, EasingType easeType = EasingType.LINEAR_OUT)
-            : base(pos, text, duration, color, fontSize, fontSpacing, alignement, easeDuration, easeType)
+        public TextEffectEasePos(Vector2 pos, Vector2 easeTo, string text, float duration, Color color, float fontSize, float fontSpacing, Font font, Vector2 alignement, float easeDuration, EasingType easeType = EasingType.LINEAR_OUT)
+            : base(pos, text, duration, color, fontSize, fontSpacing, font,alignement, easeDuration, easeType)
         {
             this.easeFrom = pos;
             this.easeChange = easeTo - this.easeFrom;
@@ -189,8 +191,8 @@ namespace ShapeCore
         protected Color easeFrom;
         protected Color easeChange;
 
-        public TextEffectEaseColor(Vector2 pos, string text, float duration, Color color, float fontSize, float easeDuration, Color easeChange, EasingType easeType = EasingType.LINEAR_OUT)
-            : base(pos, text, duration, color, fontSize, easeDuration, easeType)
+        public TextEffectEaseColor(Vector2 pos, string text, float duration, Color color, float fontSize, Font font, float easeDuration, Color easeChange, EasingType easeType = EasingType.LINEAR_OUT)
+            : base(pos, text, duration, color, fontSize, font, easeDuration, easeType)
         {
             easeFrom = color;
             this.easeChange = easeChange;
@@ -201,14 +203,14 @@ namespace ShapeCore
         //    easeFrom = color;
         //    this.easeChange = easeChange;
         //}
-        public TextEffectEaseColor(Vector2 pos, string text, float duration, Color color, float fontSize, float fontSpacing, Vector2 alignement, float easeDuration, Color easeChange, EasingType easeType = EasingType.LINEAR_OUT)
-            : base(pos, text, duration, color, fontSize, fontSpacing, alignement, easeDuration, easeType)
+        public TextEffectEaseColor(Vector2 pos, string text, float duration, Color color, float fontSize, Font font, float fontSpacing, Vector2 alignement, float easeDuration, Color easeChange, EasingType easeType = EasingType.LINEAR_OUT)
+            : base(pos, text, duration, color, fontSize, fontSpacing, font, alignement, easeDuration, easeType)
         {
             easeFrom = color;
             this.easeChange = easeChange;
         }
-        public TextEffectEaseColor(Vector2 pos, string text, float duration, Color color, Color easeTo, float fontSize, float fontSpacing, Vector2 alignement, float easeDuration, EasingType easeType = EasingType.LINEAR_OUT)
-            : base(pos, text, duration, color, fontSize, fontSpacing, alignement, easeDuration, easeType)
+        public TextEffectEaseColor(Vector2 pos, string text, float duration, Color color, Color easeTo, float fontSize, float fontSpacing, Font font, Vector2 alignement, float easeDuration, EasingType easeType = EasingType.LINEAR_OUT)
+            : base(pos, text, duration, color, fontSize, fontSpacing, font, alignement, easeDuration, easeType)
         {
             this.easeFrom = color;
             this.easeChange = SColor.SubtractColors(easeTo, this.easeFrom);
@@ -230,8 +232,8 @@ namespace ShapeCore
         protected float easeFrom;
         protected float easeChange;
 
-        public TextEffectEaseSize(Vector2 pos, string text, float duration, Color color, float fontSize, float easeDuration, float easeChange, EasingType easeType = EasingType.LINEAR_OUT)
-            : base(pos, text, duration, color, fontSize, easeDuration, easeType)
+        public TextEffectEaseSize(Vector2 pos, string text, float duration, Color color, float fontSize, Font font, float easeDuration, float easeChange, EasingType easeType = EasingType.LINEAR_OUT)
+            : base(pos, text, duration, color, fontSize, font, easeDuration, easeType)
         {
             easeFrom = fontSize;
             this.easeChange = easeChange;
@@ -242,14 +244,14 @@ namespace ShapeCore
         //    easeFrom = this.fontSize;
         //    this.easeChange = UIHandler.GetFontSizeScaled(easeChange);
         //}
-        public TextEffectEaseSize(Vector2 pos, string text, float duration, Color color, float fontSize, float fontSpacing, Vector2 alignement, float easeDuration, float easeChange, EasingType easeType = EasingType.LINEAR_OUT)
-            : base(pos, text, duration, color, fontSize, fontSpacing, alignement, easeDuration, easeType)
+        public TextEffectEaseSize(Vector2 pos, string text, float duration, Color color, float fontSize, float fontSpacing, Font font, Vector2 alignement, float easeDuration, float easeChange, EasingType easeType = EasingType.LINEAR_OUT)
+            : base(pos, text, duration, color, fontSize, fontSpacing, font, alignement, easeDuration, easeType)
         {
             this.easeFrom = fontSize;
             this.easeChange = easeChange;
         }
-        public TextEffectEaseSize(Vector2 pos, string text, float duration, Color color, float fontSize, float easeTo, float fontSpacing, Vector2 alignement, float easeDuration, EasingType easeType = EasingType.LINEAR_OUT)
-            : base(pos, text, duration, color, fontSize, fontSpacing, alignement, easeDuration, easeType)
+        public TextEffectEaseSize(Vector2 pos, string text, float duration, Color color, float fontSize, Font font, float easeTo, float fontSpacing, Vector2 alignement, float easeDuration, EasingType easeType = EasingType.LINEAR_OUT)
+            : base(pos, text, duration, color, fontSize, fontSpacing, font, alignement, easeDuration, easeType)
         {
             this.easeFrom = fontSize;
             this.easeChange = easeTo - this.easeFrom;

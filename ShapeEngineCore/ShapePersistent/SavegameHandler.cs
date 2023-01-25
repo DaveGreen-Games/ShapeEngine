@@ -3,14 +3,14 @@
 
 namespace ShapePersistent
 {
-    public static class SavegameHandler
+    public class SavegameHandler
     {
 
         public static string APPLICATION_DATA_PATH = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        public static string MAIN_PATH = "";
-        public static string SAVEGAME_PATH = "";
+        public string MAIN_PATH = "";
+        public string SAVEGAME_PATH = "";
 
-        public static void Initialize(string studioName, string gameName)
+        public SavegameHandler(string studioName, string gameName)
         {
             MAIN_PATH = APPLICATION_DATA_PATH + String.Format("\\{0}\\{1}", studioName, gameName);
             SAVEGAME_PATH = MAIN_PATH + "\\savegames";

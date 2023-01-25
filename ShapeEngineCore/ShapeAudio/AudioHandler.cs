@@ -232,11 +232,31 @@ namespace ShapeAudio
         }
 
 
+        public static void AddSFX(string name, Sound sound, float volume = 0.5f, string bus = "master", float pitch = 1.0f)
+        {
+            if (audioBusKeys.ContainsKey(name) || !buses.ContainsKey(bus)) return;
+            //if (fileName == "") return;
+            //Sound sound = ResourceManager.LoadSound(fileName); // LoadSound(fileName);
+
+            SFX sfx = new SFX(name, sound, volume, bus, pitch);
+            buses[bus].AddAudio(name, sfx);
+            audioBusKeys.Add(name, bus);
+        }
+        public static void AddSong(string name, Music song, string displayName, float volume = 0.5f, string bus = "master", float pitch = 1.0f)
+        {
+            if (audioBusKeys.ContainsKey(name) || !buses.ContainsKey(bus)) return;
+            //if (fileName == "") return;
+            //Music song = ResourceManager.LoadMusic(fileName); // LoadMusicStream(fileName);
+            Song s = new Song(name, displayName, song, volume, bus, pitch);
+            buses[bus].AddAudio(name, s);
+            audioBusKeys.Add(name, bus);
+
+        }
         public static void AddSFX(string name, string fileName, float volume = 0.5f, string bus = "master", float pitch = 1.0f)
         {
             if (audioBusKeys.ContainsKey(name) || !buses.ContainsKey(bus)) return;
             if (fileName == "") return;
-            Sound sound = ResourceManager.LoadSound(fileName); // LoadSound(fileName);
+            Sound sound = ResourceManager.LoadSoundFromRaylib(fileName); // LoadSound(fileName);
 
             SFX sfx = new SFX(name, sound, volume, bus, pitch);
             buses[bus].AddAudio(name, sfx);
@@ -246,13 +266,12 @@ namespace ShapeAudio
         {
             if (audioBusKeys.ContainsKey(name) || !buses.ContainsKey(bus)) return;
             if (fileName == "") return;
-            Music song = ResourceManager.LoadMusic(fileName); // LoadMusicStream(fileName);
+            Music song = ResourceManager.LoadMusicFromRaylib(fileName); // LoadMusicStream(fileName);
             Song s = new Song(name, displayName, song, volume, bus, pitch);
             buses[bus].AddAudio(name, s);
             audioBusKeys.Add(name, bus);
 
         }
-
 
         public static void PlaySFXMulti(string name, float volume = -1.0f, float pitch = -1.0f)
         {

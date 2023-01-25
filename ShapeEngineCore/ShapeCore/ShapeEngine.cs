@@ -57,14 +57,14 @@ namespace ShapeCore
         public static Raylib_CsLo.Color DEBUG_CollisionHandlerFill = new(0, 150, 0, 100);
         public static Raylib_CsLo.Color DEBUG_SpawnAreaLines = RED;
 
-        public static void Start(GameLoop gameloop, GameInitInfo gameInitInfo, ResourceInitInfo resourceInitInfo, ScreenInitInfo screenInitInfo, params string[] launchParams)
+        public static void Start(GameLoop gameloop, int devWidth, int devHeight, float gameSizeFactor, float uiSizeFactor, string windowName, bool fixedTexture, bool pixelSmoothing, bool hideCursor, params string[] launchParams)
         {
             GAMELOOP = gameloop;
 
             EDITORMODE = Directory.Exists("resources");
 
             //Start of Program
-            GAMELOOP.Initialize(gameInitInfo, resourceInitInfo, screenInitInfo, launchParams);
+            GAMELOOP.Initialize(devWidth, devHeight, gameSizeFactor, uiSizeFactor, windowName, fixedTexture, pixelSmoothing, hideCursor, launchParams);
             GAMELOOP.Start();
 
             GAMELOOP.Run();//runs continously
@@ -74,8 +74,8 @@ namespace ShapeCore
             bool fullscreen = GAMELOOP.Close();
             if (GAMELOOP.RESTART)
             {
-                if (fullscreen) Start(gameloop, gameInitInfo, resourceInitInfo, screenInitInfo, "fullscreen");
-                else Start(gameloop, gameInitInfo, resourceInitInfo, screenInitInfo);
+                if (fullscreen) Start(gameloop, devWidth, devHeight, gameSizeFactor, uiSizeFactor, windowName, fixedTexture, pixelSmoothing, hideCursor, "fullscreen");
+                else Start(gameloop, devWidth, devHeight, gameSizeFactor, uiSizeFactor, windowName, fixedTexture, pixelSmoothing, hideCursor);
             }
         }
     }

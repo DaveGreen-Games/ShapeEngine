@@ -86,7 +86,7 @@ namespace ShapeEngineDemo.Bodies
         {
             if (IsActive() && drawFlag)
             {
-                Color color = PaletteHandler.C("special1");
+                Color color = Demo.PALETTES.C("special1");
                 Vector2 endpoint = location + new Vector2(SRNG.randF(-1, 2), -8);
                 DrawLineEx(location, endpoint, 1, color);
                 Vector2 size = new(6f, 4f);
@@ -248,8 +248,8 @@ namespace ShapeEngineDemo.Bodies
             );
             
             
-            var shipData = DataHandler.GetCDBContainer().Get<DataObjects.PlayerData>("player", shipName);
-            var engineData = DataHandler.GetCDBContainer().Get<DataObjects.EngineData>("engines", armoryInfo.engine);
+            var shipData = Demo.DATA.GetCDBContainer().Get<DataObjects.PlayerData>("player", shipName);
+            var engineData = Demo.DATA.GetCDBContainer().Get<DataObjects.EngineData>("engines", armoryInfo.engine);
             stats.SetStat("boostF", engineData.boostF);
             stats.SetStat("slowF", engineData.slowF);
             stats.SetStat("boostCost", engineData.boostCost);
@@ -285,7 +285,7 @@ namespace ShapeEngineDemo.Bodies
             collider.CheckIntersections = true;
 
             Vector2 barOffset = new(-0.15f, 0.05f);
-            aimpointSkillDisplay = new(PaletteHandler.C("text"), PaletteHandler.C("flash"), PaletteHandler.C("neutral"),PaletteHandler.C("energy"), "Drop Pin", "Drop Aim Point", -5f);
+            aimpointSkillDisplay = new(Demo.PALETTES.C("text"), Demo.PALETTES.C("flash"), Demo.PALETTES.C("neutral"),Demo.PALETTES.C("energy"), "Drop Pin", "Drop Aim Point", -5f);
             hpBar = new(-5f, new Vector2(0, 1), barOffset, 0.1f, 0);
             pwrBar = new(-5f, new Vector2(0, 1), barOffset, 0f, 0f);
             hpBar.SetProgressDirections(0, 0, 1, 0);
@@ -301,10 +301,10 @@ namespace ShapeEngineDemo.Bodies
 
             hpBarMini.SetProgressDirections(0.5f, 0.5f, 0, 0);
             pwrBarMini.SetProgressDirections(0.5f, 0.5f, 0, 0);
-            hpBarMini.SetColors(PaletteHandler.C("enemy"), new(0, 0, 0, 0), PaletteHandler.C("flash")); //ColorPalette.Cur.neutral
-            pwrBarMini.SetColors(PaletteHandler.C("player"), new(0, 0, 0, 0));// ColorPalette.Cur.energy);
-            hpBar.SetColors(PaletteHandler.C("enemy"), PaletteHandler.C("neutral"), PaletteHandler.C("flash"));
-            pwrBar.SetColors(PaletteHandler.C("player"), PaletteHandler.C("energy"));
+            hpBarMini.SetColors(Demo.PALETTES.C("enemy"), new(0, 0, 0, 0), Demo.PALETTES.C("flash")); //ColorPalette.Cur.neutral
+            pwrBarMini.SetColors(Demo.PALETTES.C("player"), new(0, 0, 0, 0));// ColorPalette.Cur.energy);
+            hpBar.SetColors(Demo.PALETTES.C("enemy"), Demo.PALETTES.C("neutral"), Demo.PALETTES.C("flash"));
+            pwrBar.SetColors(Demo.PALETTES.C("player"), Demo.PALETTES.C("energy"));
             //pwrBarCircle.SetColors(PaletteHandler.C("player"), PaletteHandler.C("energy"), new(0,0,0,0), PaletteHandler.C("flash"), ORANGE);
             //hpBarRing.SetColors(PaletteHandler.C("enemy"), PaletteHandler.C("neutral"), YELLOW, PaletteHandler.C("flash"), ORANGE);
             //ammoBar.SetColors(ColorPalette.Cur.special1, ColorPalette.Cur.special12);
@@ -390,7 +390,7 @@ namespace ShapeEngineDemo.Bodies
         {
             if (IsDead())
             {
-                TimerHandler.Add(5f, () => { ScreenHandler.CAMERA.ClearCameraOrderChains(); GAMELOOP.GoToScene("mainmenu"); });
+                Demo.TIMER.Add(5f, () => { ScreenHandler.CAMERA.ClearCameraOrderChains(); GAMELOOP.GoToScene("mainmenu"); });
             }
         }
         protected override void WasKilled()
@@ -399,7 +399,7 @@ namespace ShapeEngineDemo.Bodies
             AudioHandler.PlaySFX("player die");
             for (int i = 0; i < 100; i++)
             {
-                HitParticle particle = new(collider.Pos + SRNG.randVec2(1, stats.Get("size")), SRNG.randVec2(), 2f, 2f, PaletteHandler.C("player"));
+                HitParticle particle = new(collider.Pos + SRNG.randVec2(1, stats.Get("size")), SRNG.randVec2(), 2f, 2f, Demo.PALETTES.C("player"));
                 GAMELOOP.AddGameObject(particle);
             }
             InputHandler.AddVibration(0, 0.5f, 0.5f, 1.5f);
@@ -412,8 +412,8 @@ namespace ShapeEngineDemo.Bodies
 
             float f = info.recieved / GetTotalHealth();
             int amount = (int)(50 * f);
-            Color particleColor = PaletteHandler.C("player");
-            if (info.crit) { f += 0.5f; particleColor = PaletteHandler.C("flash"); }
+            Color particleColor = Demo.PALETTES.C("player");
+            if (info.crit) { f += 0.5f; particleColor = Demo.PALETTES.C("flash"); }
             for (int i = 0; i < amount; i++)
             {
                 HitParticle particle = new(info.pos, info.dir, 0.75f + f, 0.5f, particleColor);
@@ -514,7 +514,7 @@ namespace ShapeEngineDemo.Bodies
                     {
                         float aChange = (SRNG.randF() < 0.5f ? 90 : -90) * DEG2RAD;
                         float a = angle + aChange;
-                        LineParticle p = new(collider.Pos, a, 25*DEG2RAD, SRNG.randF(150, 200), PaletteHandler.C("energy"), SRNG.randF(3f, 5f), SRNG.randF(1.5f, 2f)*energyCore.CooldownF, 1f);
+                        LineParticle p = new(collider.Pos, a, 25*DEG2RAD, SRNG.randF(150, 200), Demo.PALETTES.C("energy"), SRNG.randF(3f, 5f), SRNG.randF(1.5f, 2f)*energyCore.CooldownF, 1f);
                         //p.SetDrag(0.5f);
                         GAMELOOP.AddGameObject(p);
                     }
@@ -598,9 +598,9 @@ namespace ShapeEngineDemo.Bodies
             angle = SVec.AngleRad(MovementDir);
             float sizeFactor = stats.GetStat("size").GetF();
             if (damageTimer.IsRunning()) sizeFactor += 0.15f;
-            Color drawColor = PaletteHandler.C("player");
-            if (damageTimer.IsRunning()) drawColor = PaletteHandler.C("flash");
-            else if (energyCore.IsCooldownActive()) drawColor = PaletteHandler.C("energy");
+            Color drawColor = Demo.PALETTES.C("player");
+            if (damageTimer.IsRunning()) drawColor = Demo.PALETTES.C("flash");
+            else if (energyCore.IsCooldownActive()) drawColor = Demo.PALETTES.C("energy");
 
             frame.Update(collider.Pos, angle, sizeFactor, drawColor, dt);
 
@@ -703,15 +703,15 @@ namespace ShapeEngineDemo.Bodies
             Vector2 gap = new Vector2(barSize.X * 1.5f, 0);
             hpBar.UpdateRect(center, barSize, new(0.5f));
             pwrBar.UpdateRect(center + gap, barSize, new(0.5f));
-            SDrawing.DrawTextAlignedPro("HP", hpBar.GetPos(new(0.5f)) - hpBar.Transform(new Vector2(0, barSize.Y / 2)), hpBar.GetAngleDeg(), 60, 2, PaletteHandler.C("enemy"), new(0.5f, 1f));
+            SDrawing.DrawTextAlignedPro("HP", hpBar.GetPos(new(0.5f)) - hpBar.Transform(new Vector2(0, barSize.Y / 2)), hpBar.GetAngleDeg(), 60, 2, Demo.PALETTES.C("enemy"), Demo.FONT.GetFont(), new(0.5f, 1f));
             hpBar.Draw(uiSize, stretchFactor);
 
-            SDrawing.DrawTextAlignedPro("PWR", pwrBar.GetPos(new(0.5f)) - pwrBar.Transform(new Vector2(0, barSize.Y / 2)), pwrBar.GetAngleDeg(), 60, 2, PaletteHandler.C("player"), new(0.5f, 1f));
+            SDrawing.DrawTextAlignedPro("PWR", pwrBar.GetPos(new(0.5f)) - pwrBar.Transform(new Vector2(0, barSize.Y / 2)), pwrBar.GetAngleDeg(), 60, 2, Demo.PALETTES.C("player"), Demo.FONT.GetFont(), new(0.5f, 1f));
             pwrBar.Draw(uiSize, stretchFactor);
             if (energyCore.IsCooldownActive())
             {
                 Vector2 bottomRight = pwrBar.GetPos(new Vector2(0.75f, 0.5f)) + pwrBar.Transform(barSize / 2);// + new Vector2(20, 0);
-                SDrawing.DrawTextAlignedPro("REBOOT", bottomRight, pwrBar.GetAngleDeg() - 90f, 90, 10, PaletteHandler.C("bg2"), new(0,1));
+                SDrawing.DrawTextAlignedPro("REBOOT", bottomRight, pwrBar.GetAngleDeg() - 90f, 90, 10, Demo.PALETTES.C("bg2"), Demo.FONT.GetFont(), new(0,1));
             }
             aimpointSkillDisplay.UpdateRect(uiSize * new Vector2(0.05f, 0.5f), uiSize * new Vector2(0.08f, 0.04f), new(0,0.5f));
             aimpointSkillDisplay.Draw(uiSize, stretchFactor);
@@ -816,18 +816,18 @@ namespace ShapeEngineDemo.Bodies
         {
             if (triggerName == "emptied")
             {
-                pwrBarMini.SetColors(PaletteHandler.C("flash"));
-                pwrBar.SetColors(PaletteHandler.C("flash"));
+                pwrBarMini.SetColors(Demo.PALETTES.C("flash"));
+                pwrBar.SetColors(Demo.PALETTES.C("flash"));
 
-                CoreParticle cp = new(collider.Pos, angle + PI / 2, PaletteHandler.C("energy"));
+                CoreParticle cp = new(collider.Pos, angle + PI / 2, Demo.PALETTES.C("energy"));
                 GAMELOOP.AddGameObject(cp);
 
                 AudioHandler.PlaySFX("player pwr down", -1, -1, 0);
             }
             else if(triggerName == "reloaded")
             {
-                pwrBarMini.SetColors(PaletteHandler.C("player"));
-                pwrBar.SetColors(PaletteHandler.C("player"));
+                pwrBarMini.SetColors(Demo.PALETTES.C("player"));
+                pwrBar.SetColors(Demo.PALETTES.C("player"));
 
                 AudioHandler.PlaySFX("player pwr up", -1, -1, 0);
             }
@@ -850,8 +850,8 @@ namespace ShapeEngineDemo.Bodies
         }
         private Hardpoint CreateHardpoint(HardpointInfo info, Core engineCore, float size, float targetingRange)
         {
-            Color color = PaletteHandler.C("player");
-            Color offColor = PaletteHandler.C("energy");
+            Color color = Demo.PALETTES.C("player");
+            Color offColor = Demo.PALETTES.C("energy");
             Vector2 offset = new Vector2(info.x, info.y) * size;
             TargetFinder? tf = null;
             if (info.type == (int)Hardpoint.HardpointType.TURRET) tf = targetFinder;

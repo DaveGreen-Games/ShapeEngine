@@ -10,76 +10,11 @@ using ShapePersistent;
 using ShapeCursor;
 using Raylib_CsLo;
 using System.Numerics;
-using ShapeColor;
-using ShapeAchievements;
-using System.ComponentModel;
+using ShapeEase;
 
 namespace ShapeCore
 {
-    public struct ScreenInitInfo
-    {
-        public int devWidth = 1920;
-        public int devHeight = 1080;
-        public float gameSizeFactor = 1.0f;
-        public float uiSizeFactor = 1.0f;
-        public string windowName = "Shape Engine Game";
-        //public int fps = 60;
-        //public bool vsync = true;
-        //public bool fullscreen = false;
-        //public int monitor = 0;
-        public bool fixedTexture = true;
-        public bool pixelSmoothing = false;
-
-        public ScreenInitInfo() { }
-        public ScreenInitInfo(int devWidth, int devHeight, string windowName) { this.devWidth = devWidth; this.devHeight = devHeight; this.windowName = windowName; }
-        public ScreenInitInfo(int devWidth, int devHeight, float gameSizeFactor, float uiSizeFactor, string windowName, bool fixedTexture, bool pixelSmoothing)
-        {
-            this.devWidth = devWidth;
-            this.devHeight = devHeight;
-            this.gameSizeFactor = gameSizeFactor;
-            this.uiSizeFactor = uiSizeFactor;
-            this.windowName = windowName;
-            //this.fps = fps;
-            //this.vsync = vsync;
-            //this.fullscreen = fullscreen;
-            //this.monitor = monitor;
-            this.fixedTexture = fixedTexture;
-            this.pixelSmoothing = pixelSmoothing;
-        }
-    }
     
-    public struct ResourceInitInfo
-    {
-        public string path = "";
-        public string filename = "";
-
-        public ResourceInitInfo(string path, string filename = "resources.txt")
-        {
-            this.path = path;
-            this.filename = filename;
-        }
-    }
-    public struct GameInitInfo
-    {
-        public string gameName = "";
-        public string studioName = "";
-        public GameInitInfo(string gameName, string studioName)
-        {
-            this.gameName = gameName;
-            this.studioName = studioName;
-        }
-    }
-    //public struct DataInitInfo
-    //{
-    //    public string resourceFolderPath = "";
-    //    public string dataFileName = "";
-    //    public DataResolver dataResolver = new DataResolver();
-    //    public string[] sheetNames = new string[0];
-    //
-    //    public DataInitInfo() { }
-    //    public DataInitInfo(string resourceFolderPath, string dataFileName, DataResolver dataResolver, params string[] sheetNames) { this.resourceFolderPath = resourceFolderPath; this.dataFileName = dataFileName; this.dataResolver = dataResolver; this.sheetNames = sheetNames; }
-    //}
-
     internal class DeferredInfo
     {
         private Action action;
@@ -107,6 +42,13 @@ namespace ShapeCore
     }
     public class GameLoop
     {
+        //public static DelegateTimerHandler TIMER = new();
+        //public static AlternatorContainer ALTERNATOR = new();
+        //public static EaseHandler EASE = new();
+        //public static StepHandler STEP = new();
+        //public static FontHandler FONT = new();
+
+
         public delegate void Triggered(string trigger, params float[] values);
         public string[] LAUNCH_PARAMS { get; private set; }
         public bool QUIT = false;
@@ -353,7 +295,7 @@ namespace ShapeCore
         }
 
 
-        public void Initialize(GameInitInfo gameInitInfo, ResourceInitInfo resourceInitInfo, ScreenInitInfo screenInitInfo, params string[] launchParams)
+        public void Initialize(int devWidth, int devHeight, float gameSizeFactor, float uiSizeFactor, string windowName, bool fixedTexture, bool pixelSmoothing, bool hideCursor, params string[] launchParams)
         {
             LAUNCH_PARAMS = launchParams;
             QUIT = false;
@@ -361,19 +303,11 @@ namespace ShapeCore
 
             Raylib.SetExitKey(-1);
 
-            //figure out a way where the user has to initialize the handlers that are going to be used...
-            ScreenHandler.Initialize(screenInitInfo.devWidth, screenInitInfo.devHeight, screenInitInfo.gameSizeFactor, screenInitInfo.uiSizeFactor, screenInitInfo.windowName, screenInitInfo.fixedTexture, screenInitInfo.pixelSmoothing);
-            SavegameHandler.Initialize(gameInitInfo.studioName, gameInitInfo.gameName);
-            ResourceManager.Initialize(resourceInitInfo.path, resourceInitInfo.filename);
-            PaletteHandler.Initialize();
-            UIHandler.Initialize();
+            ScreenHandler.Initialize(devWidth, devHeight, gameSizeFactor, uiSizeFactor, windowName, fixedTexture, pixelSmoothing, hideCursor);
             AudioHandler.Initialize();
-            
-            ShaderHandler.Initialize();
-            AchievementHandler.Initialize();
-            
             InputHandler.Initialize();
-            CursorHandler.Initialize();
+            
+            
         }
 
         public bool Close()
@@ -385,15 +319,15 @@ namespace ShapeCore
 
             ClearScenes();
             InputHandler.Close();
-            DataHandler.Close();
-            ShaderHandler.Close();
             AudioHandler.Close();
             UIHandler.Close();
-            TimerHandler.Close();
-            StepHandler.Close();
-            CursorHandler.Close();
-            ResourceManager.Close();
             ScreenHandler.Close();
+
+            //STEP.Close();
+            //TIMER.Close();
+            //ALTERNATOR.Close();
+            //EASE.Close();
+
 
             return fullscreen;
         }
@@ -424,13 +358,14 @@ namespace ShapeCore
             if (CALL_GAMELOOP_UPDATE) PreUpdate(dt);
 
             InputHandler.Update(dt);
-            SEase.Update(dt);
-            UIHandler.Update(dt);
-            TimerHandler.Update(dt);
-            StepHandler.Update(dt);
             AudioHandler.Update(dt);
+            UIHandler.Update(dt);
             ScreenHandler.Update(dt);
-            AlternatorHandler.Update(dt);
+
+            //STEP.Update(dt);
+            //EASE.Update(dt);
+            //ALTERNATOR.Update(dt);
+            //TIMER.Update(dt);
 
             if (CALL_GAMELOOP_HANDLE_INPUT) PreHandleInput();
             if (CUR_SCENE != null)
@@ -476,7 +411,7 @@ namespace ShapeCore
             ScreenHandler.StartDraw(false);
             if (CALL_GAMELOOP_DRAWUI) PreDrawUI(uiSize, stretchFactor);
             if (CUR_SCENE != null && !CUR_SCENE.IsHidden()) CUR_SCENE.DrawUI(uiSize, stretchFactor);
-            CursorHandler.Draw(uiSize, MOUSE_POS_UI);
+            //CursorHandler.Draw(uiSize, MOUSE_POS_UI);
             if (CALL_GAMELOOP_DRAWUI) PostDrawUI(uiSize, stretchFactor);
             ScreenHandler.EndDraw(false);
 
@@ -484,17 +419,17 @@ namespace ShapeCore
             //Draw textures to screen
             BeginDrawing();
             ClearBackground(backgroundColor);
-            
 
-            var shaders = ShaderHandler.GetCurActiveShaders();
+            //List<ScreenShader> activeShaders = CUR_SHADER_HANDLER != null ? CUR_SHADER_HANDLER.GetCurActiveShaders() : new();
+            //var shaders = ShaderHandler.GetCurActiveShaders();
             if (ScreenHandler.CAMERA != null && ScreenHandler.CAMERA.PIXEL_SMOOTHING_ENABLED)
             {
                 BeginMode2D(ScreenHandler.CAMERA.ScreenSpaceCam);
-                ScreenHandler.Draw(shaders);
+                ScreenHandler.Draw();
                 //ShaderHandler.DrawShaders();
                 EndMode2D();
             }
-            else ScreenHandler.Draw(shaders); // ShaderHandler.DrawShaders();
+            else ScreenHandler.Draw(); // ShaderHandler.DrawShaders();
 
             ScreenHandler.DrawUI();
 

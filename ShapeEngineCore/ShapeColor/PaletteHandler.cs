@@ -2,30 +2,44 @@
 
 namespace ShapeColor
 {
-    public static class PaletteHandler
+    public class PaletteHandler
     {
-        private static Dictionary<string, ColorPalette> palettes = new();
-        private static int curPaletteIndex = 0;
-        private static List<string> paletteNames = new() { };
-        private static ColorPalette curPalette = new ColorPalette("default",
-            ("black", BLACK), ("white", WHITE), ("gray", GRAY),
-            ("green", GREEN), ("blue", BLUE), ("red", RED),
-            ("orange", ORANGE), ("purple", PURPLE), ("pink", PINK));
+        private Dictionary<string, ColorPalette> palettes = new();
+        private int curPaletteIndex = 0;
+        private List<string> paletteNames = new() { };
+        private ColorPalette curPalette; // = new("empty");
 
 
-
-        public static void Initialize()
+        public PaletteHandler()
         {
-            //AddPalette(curPalette);
+            curPalette = new ColorPalette(
+                "default",
+            
+                ("black", BLACK), 
+                ("white", WHITE), 
+                ("gray", GRAY),
+                ("green", GREEN), 
+                ("blue", BLUE), 
+                ("red", RED),
+                ("orange", ORANGE), 
+                ("purple", PURPLE), 
+                ("pink", PINK));
+        }
+        public PaletteHandler(string paletteName, params (string name, Raylib_CsLo.Color color)[] entries)
+        {
+            curPalette = new(paletteName, entries);
+            palettes.Add(paletteName, curPalette);
+            paletteNames.Add(paletteName);
+            curPaletteIndex= 0;
         }
 
-        public static List<string> GetAllPaletteNames() { return paletteNames; }
-        public static int CurIndex { get { return curPaletteIndex; } }
-        public static string CurName { get { return curPalette.Name; } }
-        public static ColorPalette Cur { get { return curPalette; } }
-        public static Raylib_CsLo.Color C(string name) { return curPalette.Get(name); }
+        public List<string> GetAllPaletteNames() { return paletteNames; }
+        public int CurIndex { get { return curPaletteIndex; } }
+        public string CurName { get { return curPalette.Name; } }
+        public ColorPalette Cur { get { return curPalette; } }
+        public Raylib_CsLo.Color C(string name) { return curPalette.Get(name); }
 
-        public static void AddPalette(string paletteName, string[] hexColors, string[] names)
+        public void AddPalette(string paletteName, string[] hexColors, string[] names)
         {
             ColorPalette cp = new(paletteName, hexColors, names);
             if (palettes.ContainsKey(paletteName)) palettes[paletteName] = cp;
@@ -35,7 +49,7 @@ namespace ShapeColor
                 paletteNames.Add(paletteName);
             }
         }
-        public static void AddPalette(string paletteName, Raylib_CsLo.Color[] colors, string[] names)
+        public void AddPalette(string paletteName, Raylib_CsLo.Color[] colors, string[] names)
         {
             ColorPalette cp = new(paletteName, colors, names);
             if (palettes.ContainsKey(paletteName)) palettes[paletteName] = cp;
@@ -45,7 +59,7 @@ namespace ShapeColor
                 paletteNames.Add(paletteName);
             }
         }
-        public static void AddPalette(string paletteName, params (string name, Raylib_CsLo.Color color)[] entries)
+        public void AddPalette(string paletteName, params (string name, Raylib_CsLo.Color color)[] entries)
         {
             ColorPalette cp = new(paletteName, entries);
             if (palettes.ContainsKey(paletteName)) palettes[paletteName] = cp;
@@ -55,7 +69,7 @@ namespace ShapeColor
                 paletteNames.Add(paletteName);
             }
         }
-        public static void AddPalette(string paletteName, Dictionary<string, Raylib_CsLo.Color> palette)
+        public void AddPalette(string paletteName, Dictionary<string, Raylib_CsLo.Color> palette)
         {
             ColorPalette cp = new(paletteName, palette);
             if (palettes.ContainsKey(paletteName)) palettes[paletteName] = cp;
@@ -65,7 +79,7 @@ namespace ShapeColor
                 paletteNames.Add(paletteName);
             }
         }
-        public static void AddPalette(ColorPalette palette)
+        public void AddPalette(ColorPalette palette)
         {
             string paletteName = palette.Name;
             if (palettes.ContainsKey(paletteName)) palettes[paletteName] = palette;
@@ -75,11 +89,11 @@ namespace ShapeColor
                 paletteNames.Add(paletteName);
             }
         }
-        public static void AddPalette(string paletteName, Image source, params string[] colorNames)
+        public void AddPalette(string paletteName, Image source, params string[] colorNames)
         {
             AddPalette(GeneratePaletteFromImage(paletteName, source, colorNames));
         }
-        public static void RemovePalette(string paletteName)
+        public void RemovePalette(string paletteName)
         {
             //if (paletteName == "default") return;
             if (!palettes.ContainsKey(paletteName)) return;
@@ -91,7 +105,7 @@ namespace ShapeColor
             palettes.Remove(paletteName);
             paletteNames.Remove(paletteName);
         }
-        public static void ChangePalette(string newPalette)
+        public void ChangePalette(string newPalette)
         {
             //if (CurName == newPalette) return;
 
@@ -102,7 +116,7 @@ namespace ShapeColor
                 curPaletteIndex = paletteNames.IndexOf(newPalette);
             }
         }
-        public static void ChangePalette(int index)
+        public void ChangePalette(int index)
         {
             //if (index == curPaletteIndex) return;
             if (index < 0) { index = paletteNames.Count - 1; }
@@ -113,15 +127,19 @@ namespace ShapeColor
             curPalette = palettes[paletteNames[index]];
 
         }
-        public static void Next()
+        public void Next()
         {
             ChangePalette(curPaletteIndex + 1);
         }
-        public static void Previous()
+        public void Previous()
         {
             ChangePalette(curPaletteIndex - 1);
         }
-
+        public void Close()
+        {
+            paletteNames.Clear();
+            paletteNames.Clear();
+        }
         /// <summary>
         /// Get all the colors from the source image.
         /// </summary>
@@ -268,24 +286,6 @@ namespace ShapeColor
         }
 
 
-        //public static void DebugDrawColorPalette(ColorPalette palette, int x, int y, int width, int height)
-        //{
-        //    var colors = palette.GetAllColors();
-        //    int colorWidth = width / colors.Count;
-        //    for (int i = 0; i < colors.Count; i++)
-        //    {
-        //        Raylib.DrawRectangle(x + colorWidth * i, y, colorWidth, height, colors[i]);
-        //    }
-        //}
-        //private static unsafe Color[] PointerToArray(Color* ptr, int size)
-        //{
-        //    Color[] values = new Color[size];
-        //    for (int i = 0; i < size; i++)
-        //    {
-        //        values[i] = *(ptr + i);
-        //    }
-        //    return values;
-        //}
     }
 
 }

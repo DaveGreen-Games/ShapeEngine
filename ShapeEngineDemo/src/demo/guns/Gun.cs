@@ -77,7 +77,7 @@ namespace ShapeEngineDemo.Guns
         //protected virtual void StatChanged(string statName) { }
         private void LoadData()
         {
-            var data = DataHandler.GetCDBContainer().Get<GunData>("guns", gunName);
+            var data = Demo.DATA.GetCDBContainer().Get<GunData>("guns", gunName);
             if (data == null) return;
             bulletName = data.bullet;
             stats.SetStat("acc", data.accuracy * DEG2RAD);
@@ -245,10 +245,10 @@ namespace ShapeEngineDemo.Guns
             switch (effect)
             {
                 case "circle":
-                    fx = new CircleEffect(pos + SVec.Rotate(SVec.Right(), rotRad) * 10f, SRNG.randF(0.15f, 0.2f), SRNG.randF(7f, 10f), PaletteHandler.C("flash"));
+                    fx = new CircleEffect(pos + SVec.Rotate(SVec.Right(), rotRad) * 10f, SRNG.randF(0.15f, 0.2f), SRNG.randF(7f, 10f), Demo.PALETTES.C("flash"));
                     break;
                 default: 
-                    fx = new CircleEffect(pos + SVec.Rotate(SVec.Right(), rotRad) * 10f, SRNG.randF(0.15f, 0.2f), SRNG.randF(7f, 10f), PaletteHandler.C("flash"));
+                    fx = new CircleEffect(pos + SVec.Rotate(SVec.Right(), rotRad) * 10f, SRNG.randF(0.15f, 0.2f), SRNG.randF(7f, 10f), Demo.PALETTES.C("flash"));
                     break;
             }
             GAMELOOP.AddGameObject(fx);

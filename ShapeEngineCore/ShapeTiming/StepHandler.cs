@@ -43,34 +43,34 @@
         public bool Contains(StepFrame step) { return step == this.step; }
     }
 
-    public static class StepHandler
+    public class StepHandler
     {
-        private static List<Step> steps = new();
-        private static List<StepTimerContainer> stepTimers = new();
-        private static List<StepFrameContainer> stepFrames = new();
+        private List<Step> steps = new();
+        private List<StepTimerContainer> stepTimers = new();
+        private List<StepFrameContainer> stepFrames = new();
 
-        public static void Add(Step step)
+        public void Add(Step step)
         {
             if (step == null) return;
             steps.Add(step);
         }
-        public static void Add(StepTimer step, float timer)
+        public void Add(StepTimer step, float timer)
         {
             if (step == null || timer <= 0.0f) return;
             stepTimers.Add(new(step, timer));
         }
-        public static void Add(StepFrame step, int maxFrames)
+        public void Add(StepFrame step, int maxFrames)
         {
             if (step == null || maxFrames <= 0) return;
             stepFrames.Add(new(step, maxFrames));
         }
 
-        public static void Remove(Step step)
+        public void Remove(Step step)
         {
             if (step == null || steps.Count <= 0) return;
             steps.Remove(step);
         }
-        public static void Remove(StepTimer step)
+        public void Remove(StepTimer step)
         {
             if (step == null || stepTimers.Count <= 0) return;
             for (int i = stepTimers.Count - 1; i >= 0; i--)
@@ -78,7 +78,7 @@
                 if (stepTimers[i].Contains(step)) { stepTimers.RemoveAt(i); return; }
             }
         }
-        public static void Remove(StepFrame step)
+        public void Remove(StepFrame step)
         {
             if (step == null || stepFrames.Count <= 0) return;
             for (int i = stepFrames.Count - 1; i >= 0; i--)
@@ -87,12 +87,12 @@
             }
         }
 
-        public static void ClearSteps() { steps.Clear(); }
-        public static void ClearStepTimers() { stepTimers.Clear(); }
-        public static void ClearStepFrames() { stepFrames.Clear(); }
-        public static void Clear() { steps.Clear(); stepTimers.Clear(); stepFrames.Clear(); }
+        public void ClearSteps() { steps.Clear(); }
+        public void ClearStepTimers() { stepTimers.Clear(); }
+        public void ClearStepFrames() { stepFrames.Clear(); }
+        public void Clear() { steps.Clear(); stepTimers.Clear(); stepFrames.Clear(); }
 
-        public static void Update(float dt)
+        public void Update(float dt)
         {
             for (int i = steps.Count - 1; i >= 0; i--)
             {
@@ -110,7 +110,7 @@
             }
         }
 
-        public static void Close()
+        public void Close()
         {
             Clear();
         }

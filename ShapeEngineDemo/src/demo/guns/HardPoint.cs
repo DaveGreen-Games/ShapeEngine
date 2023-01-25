@@ -202,12 +202,12 @@ namespace ShapeEngineDemo.Guns
                 if (targetFinder != null && targetFinder.HasTarget())
                 {
                     var target = targetFinder.GetTarget();
-                    Color targetColor = SColor.ChangeAlpha(PaletteHandler.C("enemy"), 125);
+                    Color targetColor = SColor.ChangeAlpha(Demo.PALETTES.C("enemy"), 125);
                     Vector2 targetPos = target.GetPos() + SRNG.randVec2(0f, 3f);
                     Vector2 size = new(5f, 5f);
                     var rect = new Rectangle(targetPos.X - size.X / 2, targetPos.Y - size.Y / 2, size.X, size.Y);
-                    DrawRectangleLinesEx(rect, 1f, PaletteHandler.C("enemy"));
-                    DrawLineEx(pos, targetPos, 1f, PaletteHandler.C("enemy"));
+                    DrawRectangleLinesEx(rect, 1f, Demo.PALETTES.C("enemy"));
+                    DrawLineEx(pos, targetPos, 1f, Demo.PALETTES.C("enemy"));
                 }
             }
         }

@@ -102,7 +102,7 @@ namespace ShapeCore
                 textEntry.Update(dt);
             }
         }
-        public virtual void Draw(Rectangle consoleRect, Vector2 textAlignement, Color textColor, Color caretColor, Color boxColor, params Color[] extraColors)
+        public virtual void Draw(Font font, Rectangle consoleRect, Vector2 textAlignement, Color textColor, Color caretColor, Color boxColor, params Color[] extraColors)
         {
             if (IsActive())
             {
@@ -114,15 +114,15 @@ namespace ShapeCore
 
                 if (commandHistory.Count > 0)
                 {
-                    SDrawing.DrawTextAligned(commandHistory[0], historyRect, 1f, caretColor, textAlignement);
+                    SDrawing.DrawTextAligned(commandHistory[0], historyRect, 1f, caretColor, font, textAlignement);
                 }
-                SDrawing.DrawTextBox(textBoxRect, "Enter Command...", textEntry.characters, 1f, UIHandler.GetFont(), textColor, true, textEntry.CaretPosition, 2f, caretColor, textAlignement);
+                SDrawing.DrawTextBox(textBoxRect, "Enter Command...", textEntry.characters, 1f, font, textColor, true, textEntry.CaretPosition, 2f, caretColor, textAlignement);
                 SDrawing.DrawRectangeLinesPro(consoleRect, new(0f), 0f, 4f, caretColor);
             }
         }
-        public virtual void Draw(Vector2 pos, Vector2 size, Vector2 alignement, Vector2 textAlignement, Color textColor, Color caretColor, Color boxColor, params Color[] extraColors)
+        public virtual void Draw(Font font, Vector2 pos, Vector2 size, Vector2 alignement, Vector2 textAlignement, Color textColor, Color caretColor, Color boxColor, params Color[] extraColors)
         {
-            Draw(SRect.ConstructRect(pos, size, alignement), textAlignement, textColor, caretColor, boxColor, extraColors);
+            Draw(font, SRect.ConstructRect(pos, size, alignement), textAlignement, textColor, caretColor, boxColor, extraColors);
             //if (IsActive())
             //{
             //    Rectangle consoleRect = SRect.ConstructRect(pos, size, alignement);

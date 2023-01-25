@@ -116,7 +116,7 @@ namespace ShapeAchievements
             if (!achieved) Achieved?.Invoke(this);
             achieved = true; 
         }
-        public virtual void Draw(Rectangle rect, Color bgColor, Color textColor, Color progressColor, Color achievedColor)
+        public virtual void Draw(Font font, Rectangle rect, Color bgColor, Color textColor, Color progressColor, Color achievedColor)
         {
             Rectangle left = new(rect.x, rect.y, rect.width * 0.25f, rect.height);
             Rectangle leftTop = new(left.x, left.y, left.width, left.height * 0.5f);
@@ -126,14 +126,14 @@ namespace ShapeAchievements
             if (achieved) SDrawing.DrawRectangeLinesPro(new(rect.x, rect.y), new(rect.width, rect.height), new(0f), new(0f), 0f, 3f, achievedColor);
             int value = stat.value;
             int max = end;
-            SDrawing.DrawTextAligned(String.Format("{0}", value), leftTop, 1f, textColor, new(0.5f));
-            SDrawing.DrawTextAligned(String.Format("{0}", max), leftBottom, 1f, textColor, new(0.5f));
+            SDrawing.DrawTextAligned(String.Format("{0}", value), leftTop, 1f, textColor, font, new(0.5f));
+            SDrawing.DrawTextAligned(String.Format("{0}", max), leftBottom, 1f, textColor, font, new(0.5f));
             if (hidden)
             {
-                if(achieved) SDrawing.DrawTextAligned(displayName, right, 1f, achieved ? achievedColor : textColor, new(0.5f));
-                else SDrawing.DrawTextAligned("???", right, 1f, textColor, new(0.5f));
+                if(achieved) SDrawing.DrawTextAligned(displayName, right, 1f, achieved ? achievedColor : textColor, font, new(0.5f));
+                else SDrawing.DrawTextAligned("???", right, 1f, textColor, font, new(0.5f));
             }
-            else SDrawing.DrawTextAligned(displayName, right, 1f, achieved ? achievedColor : textColor, new(0.5f));
+            else SDrawing.DrawTextAligned(displayName, right, 1f, achieved ? achievedColor : textColor, font, new(0.5f));
         }
     }
 
@@ -158,31 +158,18 @@ namespace ShapeAchievements
     }
 
 
-    public static class AchievementHandler
+    public class AchievementHandler
     {
-        private static Dictionary<string,AchievementStat> stats = new();
-        private static List<Achievement> achievements = new();
+        private Dictionary<string,AchievementStat> stats = new();
+        private List<Achievement> achievements = new();
 
-        private static List<AchievmentDrawStack> achievementDrawStack = new();
+        private List<AchievmentDrawStack> achievementDrawStack = new();
         
 
-        private static Color bgColor = GRAY;
-        private static Color achievedColor = YELLOW;
-        private static Color textColor = WHITE;
-        private static Color progressColor = BLUE;
+        public float achievedDisplayDuration = 5f;
+        public float notificationDuration = 3f;
 
-        public static float achievedDisplayDuration = 5f;
-        public static float notificationDuration = 3f;
-        public static void Initialize()
-        {
-
-        }
-
-        public static void SetColors(Color bgColor, Color textColor, Color progressColor, Color achievedColor)
-        {
-
-        }
-        public static void Update(float dt)
+        public void Update(float dt)
         {
             if(achievementDrawStack.Count > 0)
             {
@@ -194,37 +181,35 @@ namespace ShapeAchievements
 
             }
         }
-        public static void Draw(Rectangle achievementRect) 
+        public void Draw(Font font, Rectangle achievementRect, Color background, Color text, Color progress, Color achieved) 
         {
             if (achievementDrawStack.Count > 0)
             {
-                achievementDrawStack[0].achievement.Draw(achievementRect, bgColor, textColor, progressColor, achievedColor);
+                achievementDrawStack[0].achievement.Draw(font, achievementRect, background, text, progress, achieved);
             }
         }
-
-        public static void AddStat(AchievementStat stat)
+        public void Close()
+        {
+            stats.Clear();
+            achievements.Clear();
+            achievementDrawStack.Clear();
+        }
+        public  void AddStat(AchievementStat stat)
         {
             if(stats.ContainsKey(stat.apiName)) return;
             stats.Add(stat.apiName, stat);
         }
-        //public static void RemoveStat(AchievementStat stat)
-        //{
-        //    stats.Remove(stat.apiName);
-        //}
-        //public static void ClearStats() { stats.Clear(); }
-        
-        public static int GetStatValue(string stat)
+        public  int GetStatValue(string stat)
         {
             if(!stats.ContainsKey(stat)) return -1;
             else return stats[stat].value;
         }
-        public static void UpdateStatValue(string stat, int change)
+        public  void UpdateStatValue(string stat, int change)
         {
             if (!stats.ContainsKey(stat)) return;
             stats[stat].ChangeStat(change);
         }
-
-        public static void AddAchievement(Achievement achievement)
+        public  void AddAchievement(Achievement achievement)
         {
             if(achievements.Contains(achievement)) return;
             achievements.Add(achievement);
@@ -234,21 +219,20 @@ namespace ShapeAchievements
                 achievement.IncrementNotification += OnAchievementIncrementNotification;
             }
         }
-        public static void RemoveAchievment(Achievement achievement) 
+        public  void RemoveAchievment(Achievement achievement) 
         { 
             achievements.Remove(achievement);
             achievement.Achieved -= OnAchievementAchieved;
             achievement.IncrementNotification -= OnAchievementIncrementNotification;
         }
-        public static void ClearAchievements() { achievements.Clear(); }
-
-        private static void OnAchievementAchieved(Achievement achievement)
+        public  void ClearAchievements() { achievements.Clear(); }
+        private void OnAchievementAchieved(Achievement achievement)
         {
             achievementDrawStack.Add(new(achievedDisplayDuration, achievement));
             achievement.Achieved -= OnAchievementAchieved;
             achievement.IncrementNotification -= OnAchievementIncrementNotification;
         }
-        private static void OnAchievementIncrementNotification(Achievement achievement)
+        private void OnAchievementIncrementNotification(Achievement achievement)
         {
             achievementDrawStack.Add(new(notificationDuration, achievement));
         }

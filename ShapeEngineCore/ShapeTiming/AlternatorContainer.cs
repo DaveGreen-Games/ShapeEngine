@@ -2,6 +2,7 @@
 
 namespace ShapeTiming
 {
+    //alternator handler
     public class AlternatorContainer
     {
         private Dictionary<string, Alternator> alternators = new();
@@ -75,6 +76,7 @@ namespace ShapeTiming
         {
             alternators.Clear();
         }
+        public void Close() { Clear(); }
 
     }
 }

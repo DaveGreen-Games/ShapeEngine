@@ -225,18 +225,18 @@ namespace ShapeUI.Container
             DrawChildren(uiSize, stretchFactor, range.start, range.end);
 
             //string text = String.Format("I: {0} - EI: {1} - R: {2} - C: {3} - MR: {4} - MC: {5} - DC: {6} - CH: {7}", curIndex, GetEndIndex(), rows, columns, GetMaxRows(), GetMaxColumns(), displayCount, children.Count);
-            Rectangle handleRect = scrollBarHandleRect;
-            Rectangle barRect = scrollBarRect;
-
-            Vector2 hPos = new(handleRect.x, handleRect.y);
-            Vector2 hSize = new(handleRect.width, handleRect.height);
-            Vector2 bSize = new(barRect.width, barRect.height);
-            Vector2 slotSize = GetSlotSize();
-            string text = String.Format("HPos: {0} - HSize: {1} - HOff: {2} - BSize: {3} - SSize: {4}", hPos, hSize, handleDragOffset, bSize, slotSize);
-            Rectangle rect = GetRect(new(0f));
-            Vector2 size = new(rect.width, rect.height * 0.1f);
-            Vector2 tl = new(rect.X, rect.Y - size.Y);
-            SDrawing.DrawTextAligned(text, SRect.ConstructRect(tl, size, new(0f)), 1, WHITE, new(0f));
+            //Rectangle handleRect = scrollBarHandleRect;
+            //Rectangle barRect = scrollBarRect;
+            //
+            //Vector2 hPos = new(handleRect.x, handleRect.y);
+            //Vector2 hSize = new(handleRect.width, handleRect.height);
+            //Vector2 bSize = new(barRect.width, barRect.height);
+            //Vector2 slotSize = GetSlotSize();
+            ////string text = String.Format("HPos: {0} - HSize: {1} - HOff: {2} - BSize: {3} - SSize: {4}", hPos, hSize, handleDragOffset, bSize, slotSize);
+            //Rectangle rect = GetRect(new(0f));
+            //Vector2 size = new(rect.width, rect.height * 0.1f);
+            //Vector2 tl = new(rect.X, rect.Y - size.Y);
+            //SDrawing.DrawTextAligned(text, SRect.ConstructRect(tl, size, new(0f)), 1, WHITE, new(0f));
         }
         protected virtual void DrawScrollBar()
         {

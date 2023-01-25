@@ -46,7 +46,7 @@ namespace ShapeEngineDemo.Projectiles
             this.dmgDealer = info.dmgDealer;
             Vector2 vel = new(0f, 0f);
             float size = 3f;
-            var data = DataHandler.GetCDBContainer().Get<ProjectileData>("projectiles", type);
+            var data = Demo.DATA.GetCDBContainer().Get<ProjectileData>("projectiles", type);
             if(data != null)
             {
                 stats.SetStat("dmg", data.dmg);
@@ -72,7 +72,7 @@ namespace ShapeEngineDemo.Projectiles
             stats.SetBonuses(bonuses);
             Vector2 vel = new(0f, 0f);
             float size = 3f;
-            var data = DataHandler.GetCDBContainer().Get<ProjectileData>("projectiles", type);
+            var data = Demo.DATA.GetCDBContainer().Get<ProjectileData>("projectiles", type);
             if (data != null)
             {
                 stats.SetStat("dmg", data.dmg);

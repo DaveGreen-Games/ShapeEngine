@@ -8,30 +8,20 @@ namespace ShapeUI
     {
         protected string text = "";
         protected Vector2 textAlignement = new(0.5f);
-        //protected Vector2 center = new();
         protected float fontSpacing = 3;
-        protected string fontName = "";
+        protected Font font;
         protected UISelectionColors textStateColors = new(WHITE, BLACK, BLACK, BLACK, LIGHTGRAY);
-        public ButtonLabel(string text)
+        public ButtonLabel(Font font, string text)
         {
             this.text = text;
+            this.font = font;
         }
         
-        public ButtonLabel(string text, string fontName)
-        {
-            this.text = text;
-            this.fontName = fontName;
-        }
-        public ButtonLabel(string text, float fontSpacing)
+        public ButtonLabel(Font font, string text, float fontSpacing)
         {
             this.text = text;
             this.fontSpacing = fontSpacing;
-        }
-        public ButtonLabel(string text, float fontSpacing, string fontName)
-        {
-            this.text = text;
-            this.fontSpacing = fontSpacing;
-            this.fontName = fontName;
+            this.font = font;
         }
 
         public void SetTextAlignement(Vector2 newAlignement) { textAlignement = newAlignement; }
@@ -52,7 +42,7 @@ namespace ShapeUI
 
         protected virtual void DrawText(Color color)
         {
-            SDrawing.DrawTextAligned(text, GetPos(textAlignement) + offset, GetSize() * sizeOffset, fontSpacing, color, fontName, textAlignement);
+            SDrawing.DrawTextAligned(text, GetPos(textAlignement) + offset, GetSize() * sizeOffset, fontSpacing, color, font, textAlignement);
         }
     }
 

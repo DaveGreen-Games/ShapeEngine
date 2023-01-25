@@ -19,7 +19,7 @@ namespace ShapeScreen
 
             if (timer > 0f)
             {
-                ShaderHandler.EnableScreenShader(shader);
+                ScreenHandler.SHADERS.EnableScreenShader(shader);
                 shaderEnabled = true;
             }
         }
@@ -43,7 +43,7 @@ namespace ShapeScreen
             timer = dur;
             if (!shaderEnabled)
             {
-                ShaderHandler.EnableScreenShader(shader);
+                ScreenHandler.SHADERS.EnableScreenShader(shader);
                 shaderEnabled = true;
             }
         }
@@ -52,7 +52,7 @@ namespace ShapeScreen
             timer = 0f;
             if (shaderEnabled)
             {
-                ShaderHandler.DisableScreenShader(shader);
+                ScreenHandler.SHADERS.DisableScreenShader(shader);
                 shaderEnabled = false;
             }
         }
@@ -62,7 +62,7 @@ namespace ShapeScreen
             timer = duration;
             if (!shaderEnabled)
             {
-                ShaderHandler.EnableScreenShader(shader);
+                ScreenHandler.SHADERS.EnableScreenShader(shader);
                 shaderEnabled = true;
             }
         }
@@ -73,7 +73,7 @@ namespace ShapeScreen
                 timer -= dt;
                 if (timer <= 0.0f)
                 {
-                    ShaderHandler.DisableScreenShader(shader);
+                    ScreenHandler.SHADERS.DisableScreenShader(shader);
                     shaderEnabled = false;
                     timer = 0f;
                 }
@@ -143,6 +143,8 @@ namespace ShapeScreen
         public static ScreenTexture GAME { get; private set; }
         public static ScreenTexture UI { get; private set; }
         
+        public static ShaderHandler SHADERS = new();
+
         private static Dictionary<string, ShaderFlash> shaderFlashes = new();
         private static ScreenBuffer[] screenBuffers = new ScreenBuffer[0];
         
@@ -163,10 +165,10 @@ namespace ShapeScreen
         public static int UIHeight() { return UI.GetTextureHeight(); }
 
         //public static Vector2 GetUIStretchFactor() { return UI.STRETCH_FACTOR * UI_FACTOR; }
-        public static void Initialize(int devWidth, int devHeight, float gameSizeFactor = 1.0f, float uiSizeFactor = 1.0f, string windowName = "Raylib Game", bool fixedTexture = true, bool pixelSmoothing = false)
+        public static void Initialize(int devWidth, int devHeight, float gameSizeFactor = 1.0f, float uiSizeFactor = 1.0f, string windowName = "Raylib Game", bool fixedTexture = true, bool pixelSmoothing = false, bool hideCursor = false)
         {
             InitWindow(0, 0, windowName);
-            HideCursor();
+            if(hideCursor) HideCursor();
             SetWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
             ClearWindowState(ConfigFlags.FLAG_VSYNC_HINT);
 
@@ -221,7 +223,7 @@ namespace ShapeScreen
             shaderFlashes.Clear();
             GAME.Close();
             UI.Close();
-
+            SHADERS.Close();
             CloseWindow();
         }
 
@@ -249,8 +251,9 @@ namespace ShapeScreen
 
         }
 
-        public static void Draw(List<ScreenShader> shadersToApply)
+        public static void Draw()
         {
+            List<ScreenShader> shadersToApply = SHADERS.GetCurActiveShaders();
             if (shadersToApply.Count <= 0)
             {
                 GAME.Draw();
@@ -447,7 +450,7 @@ namespace ShapeScreen
 
             foreach (string shader in shaders)
             {
-                if (!ShaderHandler.HasScreenShader(shader)) continue;
+                if (!SHADERS.HasScreenShader(shader)) continue;
                 if (shaderFlashes.ContainsKey(shader))
                 {
                     shaderFlashes[shader].Reset(duration);
