@@ -34,16 +34,18 @@ namespace ShapeEngineDemo
 
         public override void Start()
         {
-
+            
+            
             //WINDOW ICON
             icon = RESOURCES.LoadImage("resources/gfx/shape-engine-icon-bg.png");
             SetWindowIcon(icon);
-
+            
+            
             //DATA CONTAINER INIT
             var dataString = RESOURCES.LoadJsonData("resources/data/test-properties.json");
             DataContainerCDB dataContainer = new(new ShapeEngineDemo.DataObjects.DefaultDataResolver(), dataString, "asteroids", "player", "guns", "projectiles", "colors", "engines");
             DATA.AddDataContainer(dataContainer);
-
+            
             
             //COLOR PALETTES
             var colorData = DATA.GetCDBContainer().GetSheet<ColorData>("colors");
@@ -72,8 +74,8 @@ namespace ShapeEngineDemo
                 PALETTES.AddPalette(palette.Key, colors);
             }
             PALETTES.ChangePalette("starter");
-
-
+            
+            
             //Set the clear color for game screen texture
             //ScreenHandler.Game.SetClearColor(new Color(0, 0, 0, 0)); // PaletteHandler.C("bg1"));
 
@@ -112,8 +114,8 @@ namespace ShapeEngineDemo
             ScreenHandler.SHADERS.SetScreenShaderValueFloat("blur", "scale", 1.25f);
             ScreenHandler.SHADERS.SetScreenShaderValueFloat("crt", "renderWidth", ScreenHandler.CUR_WINDOW_SIZE.width);
             ScreenHandler.SHADERS.SetScreenShaderValueFloat("crt", "renderHeight", ScreenHandler.CUR_WINDOW_SIZE.height);
-
-
+            
+            
             var light = RESOURCES.LoadFont("resources/fonts/teko-light.ttf", 200);
             var regular = RESOURCES.LoadFont("resources/fonts/teko-regular.ttf", 200);
             var medium = RESOURCES.LoadFont("resources/fonts/teko-medium.ttf", 200);
@@ -126,13 +128,13 @@ namespace ShapeEngineDemo
             FONT.AddFont("semibold", semibold, 200);
             FONT.AddFont("huge", huge, 500);
             FONT.SetDefaultFont("medium");
-
+            
 
             //AUDIO BUSES
             AudioHandler.AddBus("music", 0.5f, "master");
             AudioHandler.AddBus("sound", 0.5f, "master");
 
-
+            
             var buttonClick = RESOURCES.LoadSound("resources/audio/sfx/button-click01.wav");
             var buttonHover = RESOURCES.LoadSound("resources/audio/sfx/button-hover01.wav");
             var boost = RESOURCES.LoadSound("resources/audio/sfx/boost01.wav");
@@ -171,7 +173,7 @@ namespace ShapeEngineDemo
             AudioHandler.AddSFX("projectile crit", projectileCrit, 0.6f, "sound");
             AudioHandler.AddSFX("asteroid die", asteroidDie, 0.55f, "sound");
             AudioHandler.AddSFX("bullet", bullet, 0.25f, "sound");
-
+            
 
 
             //MUSIC EXAMPLE--------------

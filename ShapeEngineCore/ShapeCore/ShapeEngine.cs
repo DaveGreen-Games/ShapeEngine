@@ -62,7 +62,6 @@ namespace ShapeCore
             GAMELOOP = gameloop;
 
             EDITORMODE = Directory.Exists("resources");
-
             //Start of Program
             GAMELOOP.Initialize(devWidth, devHeight, gameSizeFactor, uiSizeFactor, windowName, fixedTexture, pixelSmoothing, hideCursor, launchParams);
             GAMELOOP.Start();

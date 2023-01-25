@@ -32,7 +32,7 @@ namespace ShapePersistent
 
         public ResourceManager(string path, string resourceFileName = "resources.txt")
         {
-            if (path == "" || resourceFileName == "") return;
+            if (resourceFileName == "") return;
             this.path = path;
             this.resourceFileName = resourceFileName;
             resources = LoadResources(path, resourceFileName);
