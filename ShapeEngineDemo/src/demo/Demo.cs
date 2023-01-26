@@ -12,7 +12,6 @@ using ShapeAchievements;
 using System.Numerics;
 using ShapeLib;
 using ShapeCursor;
-using static ShapeInput.InputHandler;
 
 namespace ShapeEngineDemo
 {

@@ -1,16 +1,16 @@
 ﻿using ShapeLib;
 using System.Numerics;
 using Raylib_CsLo;
-using ShapeCursor;
 using Vortice.XInput;
-using static System.Net.Mime.MediaTypeNames;
-using System.Runtime.CompilerServices;
-using System;
-using ShapeUI;
-using System.Linq.Expressions;
 
 namespace ShapeInput
 {
+    public enum InputType
+    {
+        KEYBOARD_MOUSE = 0,
+        GAMEPAD = 2,
+        TOUCH = 3
+    }
     public class GamepadVibration
     {
         public string name = "";
@@ -149,12 +149,7 @@ namespace ShapeInput
     }
     public static class InputHandler
     {
-        public enum InputType
-        {
-            KEYBOARD_MOUSE = 0,
-            GAMEPAD = 2,
-            TOUCH = 3
-        }
+        
 
         private static Dictionary<int, InputSlot> inputSlots = new();
         private static Dictionary<string, InputMap> inputMaps = new();
