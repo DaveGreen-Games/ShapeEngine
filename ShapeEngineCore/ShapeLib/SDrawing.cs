@@ -303,7 +303,7 @@ namespace ShapeLib
                 Vector2 down = new(0f, maxDimension * 2);
                 Vector2 start = p + SVec.Rotate(up, rotRad);
                 Vector2 end = p + SVec.Rotate(down, rotRad);
-                List<(Vector2 p, Vector2 n)> intersections = ShapeCollision.SGeometry.IntersectionSegmentRect(start, end, tl, tr, br, bl).points;
+                List<(Vector2 p, Vector2 n)> intersections = ShapeCollision.SGeometry.IntersectionSegmentRect(center, start, end, tl, tr, br, bl).points;
                 
                 if (intersections.Count >= 2) DrawLineEx(intersections[0].p, intersections[1].p, lineThickness, lineColor);
                 else break;
@@ -321,7 +321,7 @@ namespace ShapeLib
                 Vector2 down = new(0f, maxDimension * 2);
                 Vector2 start = p + SVec.Rotate(up, rotRad);
                 Vector2 end = p + SVec.Rotate(down, rotRad);
-                List<(Vector2 p, Vector2 n)> intersections = ShapeCollision.SGeometry.IntersectionSegmentRect(start, end, tl, tr, br, bl).points;
+                List<(Vector2 p, Vector2 n)> intersections = ShapeCollision.SGeometry.IntersectionSegmentRect(center, start, end, tl, tr, br, bl).points;
                 if (intersections.Count >= 2) DrawLineEx(intersections[0].p, intersections[1].p, lineThickness, lineColor);
                 else break;
                 cur.X += spacing;
