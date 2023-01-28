@@ -79,9 +79,10 @@ namespace ShapeCore
         }
         private void ApplyAcceleration(float dt)
         {
-            Vector2 dragForce = SPhysics.GetDragForce(vel, drag, dt); // drag * -vel;
-            Vector2 force = constAccel * dt + dragForce;
+            //Vector2 dragForce = SPhysics.GetDragForce(vel, drag, dt); // drag * -vel;
+            Vector2 force = constAccel * dt; // + dragForce;
             vel += force;
+            vel = SPhysics.GetDragForce(vel, drag, dt);
         }
 
     }
