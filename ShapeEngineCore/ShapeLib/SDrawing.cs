@@ -219,23 +219,46 @@ namespace ShapeLib
         }
         public static void DrawPolygon(List<Vector2> points, float lineThickness, Color outlineColor)
         {
-            DrawCircleV(points[0], lineThickness * 0.5f, outlineColor);
             for (int i = 0; i < points.Count - 1; i++)
             {
                 DrawCircleV(points[i + 1], lineThickness * 0.5f, outlineColor);
                 DrawLineEx(points[i], points[i + 1], lineThickness, outlineColor);
             }
+            DrawCircleV(points[points.Count - 1], lineThickness * 0.5f, outlineColor);
             DrawLineEx(points[points.Count - 1], points[0], lineThickness, outlineColor);
         }
         public static void DrawPolygon(List<Vector2> points, float lineThickness, Color outlineColor, Vector2 center)
         {
-            DrawCircleV(center + points[0], lineThickness * 0.5f, outlineColor);
             for (int i = 0; i < points.Count - 1; i++)
             {
                 DrawCircleV(center + points[i + 1], lineThickness * 0.5f, outlineColor);
                 DrawLineEx(center + points[i], center + points[i + 1], lineThickness, outlineColor);
             }
+            DrawCircleV(center + points[points.Count - 1], lineThickness * 0.5f, outlineColor);
             DrawLineEx(center + points[points.Count - 1], center + points[0], lineThickness, outlineColor);
+        }
+        public static void DrawPolygon(List<Vector2> points, float lineThickness, Color outlineColor, Vector2 center, float scale)
+        {
+            for (int i = 0; i < points.Count - 1; i++)
+            {
+                DrawCircleV(center + points[i + 1] * scale, lineThickness * 0.5f * scale, outlineColor);
+                DrawLineEx(center + points[i] * scale, center + points[i + 1] * scale, lineThickness * scale, outlineColor);
+            }
+            DrawCircleV(center + points[points.Count - 1] * scale, lineThickness * 0.5f * scale, outlineColor);
+            DrawLineEx(center + points[points.Count - 1] * scale, center + points[0] * scale, lineThickness * scale, outlineColor);
+        }
+        public static void DrawPolygon(List<Vector2> points, float lineThickness, Color outlineColor, Vector2 center, float scale, float rotDeg)
+        {
+            float lt = lineThickness * scale;
+            for (int i = 0; i < points.Count - 1; i++)
+            {
+                Vector2 p1 = center + SVec.Rotate(points[i] * scale, rotDeg * DEG2RAD);
+                Vector2 p2 = center + SVec.Rotate(points[i + 1] * scale, rotDeg * DEG2RAD);
+                DrawCircleV(p1, lt * 0.5f, outlineColor);
+                DrawLineEx(p1, p2, lt, outlineColor);
+            }
+            DrawCircleV(center + SVec.Rotate(points[points.Count - 1] * scale, rotDeg * DEG2RAD), lt * 0.5f, outlineColor);
+            DrawLineEx(center + SVec.Rotate(points[points.Count - 1] * scale, rotDeg * DEG2RAD), center + SVec.Rotate(points[0] * scale, rotDeg * DEG2RAD), lt, outlineColor);
         }
         public static void DrawPolygon(List<Vector2> points, Vector2 center, Color fillColor, float lineThickness, Color outlineColor, bool clockwise = true)
         {
