@@ -82,7 +82,7 @@ namespace ShapeCore
             //Vector2 dragForce = SPhysics.GetDragForce(vel, drag, dt); // drag * -vel;
             Vector2 force = constAccel * dt; // + dragForce;
             vel += force;
-            vel = SPhysics.GetDragForce(vel, drag, dt);
+            vel = SPhysics.ApplyDragForce(vel, drag, dt);
         }
 
     }
