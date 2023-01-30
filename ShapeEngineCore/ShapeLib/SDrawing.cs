@@ -305,7 +305,105 @@ namespace ShapeLib
             }
         }
 
+        private static List<Vector2> GetRectangleCorneredPoints(Rectangle rect, Vector2 topF, Vector2 rightF, Vector2 bottomF, Vector2 leftF)
+        {
+            List<Vector2> poly = new();
 
+            Vector2 tl = new(rect.x, rect.y);
+            Vector2 tr = new(rect.x + rect.width, rect.y);
+            Vector2 br = new(rect.x + rect.width, rect.y + rect.height);
+            Vector2 bl = new(rect.x, rect.y + rect.height);
+
+            //if (averaged)
+            //{
+            //    if (rect.width < rect.height)
+            //    {
+            //        float factor = rect.width / rect.height;
+            //        rightF *= factor;
+            //        leftF *= factor;
+            //    }
+            //    else if (rect.height < rect.width)
+            //    {
+            //        float factor = rect.height / rect.width;
+            //        topF *= factor;
+            //        bottomF *= factor;
+            //    }
+            //}
+            
+
+
+            if (topF.X <= 0f && leftF.Y <= 0f)
+            {
+                poly.Add(tl);
+            }
+            else
+            {
+                poly.Add(tl + new Vector2(0f, rect.height * leftF.Y));
+                poly.Add(tl + new Vector2(rect.width * topF.X, 0f));
+            }
+
+            if (topF.Y <= 0f && rightF.X <= 0f)
+            {
+                poly.Add(tr);
+            }
+            else
+            {
+                poly.Add(tr - new Vector2(rect.width * topF.Y, 0f));
+                poly.Add(tr + new Vector2(0f, rect.height * rightF.X));
+            }
+
+            if (rightF.Y <= 0f && bottomF.X <= 0f)
+            {
+                poly.Add(br);
+            }
+            else
+            {
+                poly.Add(br - new Vector2(0f, rect.height * rightF.Y));
+                poly.Add(br - new Vector2(rect.width * bottomF.X, 0f));
+            }
+
+            if (bottomF.Y <= 0f && leftF.X <= 0f)
+            {
+                poly.Add(bl);
+            }
+            else
+            {
+                poly.Add(bl + new Vector2(rect.width * bottomF.Y, 0f));
+                poly.Add(bl - new Vector2(0f, rect.height * leftF.X));
+            }
+
+            return poly;
+        }
+        public static void DrawRectangleCornered(Rectangle rect, float lineThickness, Color outlineColor, Color fillColor, Vector2 topF, Vector2 rightF, Vector2 bottomF, Vector2 leftF)
+        {
+            var points = GetRectangleCorneredPoints(rect, topF, rightF, bottomF, leftF);
+            Vector2 center = new(rect.x + rect.width / 2, rect.y + rect.height / 2);
+            DrawPolygon(points, center, fillColor, true);
+            DrawPolygon(points, lineThickness, outlineColor);
+            //foreach (var p in points)
+            //{
+            //    DrawCircleV(p, 5f, YELLOW);
+            //}
+        }
+        public static void DrawRectangleCorneredLine(Rectangle rect, float lineThickness, Color color, Vector2 topF, Vector2 rightF, Vector2 bottomF, Vector2 leftF)
+        {
+            DrawPolygon(GetRectangleCorneredPoints(rect, topF, rightF, bottomF, leftF), lineThickness, color);
+            //foreach (var p in GetRectangleCorneredPoints(rect, topF, rightF, bottomF, leftF))
+            //{
+            //    DrawCircleV(p, 5f, GREEN);
+            //}
+        }
+        public static void DrawRectangleCorneredFilled(Rectangle rect, Color color, Vector2 topF, Vector2 rightF, Vector2 bottomF, Vector2 leftF)
+        {
+            Vector2 center = new(rect.x +rect.width / 2, rect.y + rect.height / 2);
+            DrawPolygon(GetRectangleCorneredPoints(rect, topF, rightF, bottomF, leftF), center, color, true);
+            //foreach (var p in points)
+            //{
+            //    DrawCircleV(p, 5f, RED);
+            //}
+        }
+        
+        
         public static void DrawRectangleCheckeredLines(Vector2 pos, Vector2 size, Vector2 alignement, float spacing, float lineThickness, float angleDeg, Color lineColor, Color outlineColor, Color bgColor)
         {
             float maxDimension = MathF.Max(size.X, size.Y);
