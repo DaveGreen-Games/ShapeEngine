@@ -318,7 +318,7 @@ namespace ShapeLib
             if (topF.X > 0 || leftF.Y > 0) DrawCircleV(tl, lineThickness / 2, color);
             if (topF.Y > 0 || rightF.X > 0) DrawCircleV(tr, lineThickness / 2, color);
             if (bottomF.X > 0 || rightF.Y > 0) DrawCircleV(br, lineThickness / 2, color);
-            if (bottomF.Y > 0 || rightF.X > 0) DrawCircleV(bl, lineThickness / 2, color);
+            if (bottomF.Y > 0 || leftF.X > 0) DrawCircleV(bl, lineThickness / 2, color);
 
             if (topF.X > 0 && topF.X <= 1f) DrawLineEx(tl, tl + new Vector2(rect.width * topF.X, 0f), lineThickness, color);
             else if(topF.X > 1f) DrawLineEx(tl, tl + new Vector2(topF.X, 0f), lineThickness, color);
