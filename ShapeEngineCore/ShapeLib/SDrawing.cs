@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Diagnostics;
+using System.Numerics;
 using Raylib_CsLo;
 using ShapeUI;
 
@@ -305,6 +306,50 @@ namespace ShapeLib
             }
         }
 
+
+        public static void DrawRectangleCorners(Rectangle rect, float lineThickness, Color color, Vector2 topF, Vector2 rightF, Vector2 bottomF, Vector2 leftF)
+        {
+            Vector2 tl = new(rect.x, rect.y);
+            Vector2 tr = new(rect.x + rect.width, rect.y);
+            Vector2 br = new(rect.x + rect.width, rect.y + rect.height);
+            Vector2 bl = new(rect.x, rect.y + rect.height);
+
+
+            if (topF.X > 0 || leftF.Y > 0) DrawCircleV(tl, lineThickness / 2, color);
+            if (topF.Y > 0 || rightF.X > 0) DrawCircleV(tr, lineThickness / 2, color);
+            if (bottomF.X > 0 || rightF.Y > 0) DrawCircleV(br, lineThickness / 2, color);
+            if (bottomF.Y > 0 || rightF.X > 0) DrawCircleV(bl, lineThickness / 2, color);
+
+            if (topF.X > 0 && topF.X <= 1f) DrawLineEx(tl, tl + new Vector2(rect.width * topF.X, 0f), lineThickness, color);
+            else if(topF.X > 1f) DrawLineEx(tl, tl + new Vector2(topF.X, 0f), lineThickness, color);
+
+            if (topF.Y > 0 && topF.Y <= 1f) DrawLineEx(tr, tr - new Vector2(rect.width * topF.Y, 0f), lineThickness, color);
+            else if(topF.Y > 1f) DrawLineEx(tr, tr - new Vector2(topF.Y, 0f), lineThickness, color);
+
+            if (bottomF.X > 0 && bottomF.X <= 1f) DrawLineEx(br, br - new Vector2(rect.width * bottomF.X, 0f), lineThickness, color);
+            else if(bottomF.X > 1f) DrawLineEx(br, br - new Vector2(bottomF.X, 0f), lineThickness, color);
+
+            if (bottomF.Y > 0 && bottomF.Y <= 1f) DrawLineEx(bl, bl + new Vector2(rect.width * bottomF.Y, 0f), lineThickness, color);
+            else if(bottomF.Y > 1f) DrawLineEx(bl, bl + new Vector2(bottomF.Y, 0f), lineThickness, color);
+
+            if (rightF.X > 0 && rightF.X <= 1f) DrawLineEx(tr, tr + new Vector2(0f, rect.height * rightF.X), lineThickness, color);
+            else if(rightF.X > 1f) DrawLineEx(tr, tr + new Vector2(0f, rightF.X), lineThickness, color);
+
+            if (rightF.Y > 0 && rightF.Y <= 1f) DrawLineEx(br, br - new Vector2(0f, rect.height * rightF.Y), lineThickness, color);
+            else if(rightF.Y > 1f) DrawLineEx(br, br - new Vector2(0f, rightF.Y), lineThickness, color);
+
+            if (leftF.X > 0 && leftF.X <= 1f) DrawLineEx(bl, bl - new Vector2(0f, rect.height * leftF.X), lineThickness, color);
+            else if(leftF.X > 1f) DrawLineEx(bl, bl - new Vector2(0f, leftF.X), lineThickness, color);
+
+            if (leftF.Y > 0 && leftF.Y <= 1f) DrawLineEx(tl, tl + new Vector2(0f, rect.height * leftF.Y), lineThickness, color);
+            else if(leftF.Y > 1f) DrawLineEx(tl, tl + new Vector2(0f, leftF.Y), lineThickness, color);
+
+        }
+
+        public static void DrawRectangleCorners(Vector2 pos, Vector2 size, Vector2 alignement, float lineThickness, Color color, Vector2 topF, Vector2 rightF, Vector2 bottomF, Vector2 leftF)
+        {
+            DrawRectangleCorners(SRect.ConstructRect(pos, size, alignement), lineThickness, color, topF, rightF, bottomF, leftF);
+        }
         private static List<Vector2> GetRectangleCorneredPoints(Rectangle rect, Vector2 topF, Vector2 rightF, Vector2 bottomF, Vector2 leftF)
         {
             List<Vector2> poly = new();
