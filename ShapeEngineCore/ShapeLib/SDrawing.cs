@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Numerics;
+﻿using System.Numerics;
 using Raylib_CsLo;
 using ShapeUI;
 
@@ -448,23 +447,17 @@ namespace ShapeLib
             //}
         }
         
-        
-        public static void DrawRectangleCheckeredLines(Vector2 pos, Vector2 size, Vector2 alignement, float spacing, float lineThickness, float angleDeg, Color lineColor, Color outlineColor, Color bgColor)
+        public static void DrawRectangleCheckeredLines(Rectangle rect, float spacing, float lineThickness, float angleDeg, Color lineColor, Color outlineColor, Color bgColor)
         {
+            Vector2 size = new Vector2(rect.width, rect.height);
+            Vector2 center = new Vector2(rect.x, rect.y) + size / 2;
             float maxDimension = MathF.Max(size.X, size.Y);
-            Vector2 aVector = alignement * size;
-            Vector2 center = pos - aVector + size / 2;
             float rotRad = angleDeg * DEG2RAD;
 
-            var rect = SRect.ConstructRect(pos, size, alignement);
             Vector2 tl = new(rect.x, rect.y);
             Vector2 tr = new(rect.x + rect.width, rect.y);
             Vector2 bl = new(rect.x, rect.y + rect.height);
             Vector2 br = new(rect.x + rect.width, rect.y + rect.height);
-            //List<(Vector2 start, Vector2 end)> segments = new()
-            //{
-            //    (tl, tr), (bl, br), (tl, bl), (tr, br)
-            //};
 
             if (bgColor.a > 0) DrawRectangleRec(rect, bgColor);
 
@@ -483,12 +476,12 @@ namespace ShapeLib
                 Vector2 start = p + SVec.Rotate(up, rotRad);
                 Vector2 end = p + SVec.Rotate(down, rotRad);
                 List<(Vector2 p, Vector2 n)> intersections = ShapeCollision.SGeometry.IntersectionSegmentRect(center, start, end, tl, tr, br, bl).points;
-                
+
                 if (intersections.Count >= 2) DrawLineEx(intersections[0].p, intersections[1].p, lineThickness, lineColor);
                 else break;
                 cur.X -= spacing;
                 whileCounter++;
-            } 
+            }
 
             cur = new(spacing / 2, 0f);
             whileCounter = 0;
@@ -507,7 +500,71 @@ namespace ShapeLib
                 whileCounter++;
             }
 
-            if (outlineColor.a > 0) SDrawing.DrawRectangeLinesPro(pos, size, alignement, new Vector2(0.5f, 0.5f), 0f, lineThickness, outlineColor);
+            if (outlineColor.a > 0) SDrawing.DrawRectangeLinesPro(rect, new Vector2(0.5f, 0.5f), 0f, lineThickness, outlineColor);
+        }
+        public static void DrawRectangleCheckeredLines(Vector2 pos, Vector2 size, Vector2 alignement, float spacing, float lineThickness, float angleDeg, Color lineColor, Color outlineColor, Color bgColor)
+        {
+            var rect = SRect.ConstructRect(pos, size, alignement);
+            DrawRectangleCheckeredLines(rect, spacing, lineThickness, angleDeg, lineColor, outlineColor, bgColor);
+
+
+            //float maxDimension = MathF.Max(size.X, size.Y);
+            //Vector2 aVector = alignement * size;
+            //Vector2 center = pos - aVector + size / 2;
+            //float rotRad = angleDeg * DEG2RAD;
+            //
+            //var rect = SRect.ConstructRect(pos, size, alignement);
+            //Vector2 tl = new(rect.x, rect.y);
+            //Vector2 tr = new(rect.x + rect.width, rect.y);
+            //Vector2 bl = new(rect.x, rect.y + rect.height);
+            //Vector2 br = new(rect.x + rect.width, rect.y + rect.height);
+            ////List<(Vector2 start, Vector2 end)> segments = new()
+            ////{
+            ////    (tl, tr), (bl, br), (tl, bl), (tr, br)
+            ////};
+            //
+            //if (bgColor.a > 0) DrawRectangleRec(rect, bgColor);
+            //
+            //Vector2 cur = new(-spacing / 2, 0f);
+            //
+            ////safety for while loops
+            //int whileMaxCount = (int)(maxDimension / spacing) * 2;
+            //int whileCounter = 0;
+            //
+            ////left half of rectangle
+            //while (whileCounter < whileMaxCount)
+            //{
+            //    Vector2 p = center + SVec.Rotate(cur, rotRad);
+            //    Vector2 up = new(0f, -maxDimension * 2);//make sure that lines are going outside of the rectangle
+            //    Vector2 down = new(0f, maxDimension * 2);
+            //    Vector2 start = p + SVec.Rotate(up, rotRad);
+            //    Vector2 end = p + SVec.Rotate(down, rotRad);
+            //    List<(Vector2 p, Vector2 n)> intersections = ShapeCollision.SGeometry.IntersectionSegmentRect(center, start, end, tl, tr, br, bl).points;
+            //    
+            //    if (intersections.Count >= 2) DrawLineEx(intersections[0].p, intersections[1].p, lineThickness, lineColor);
+            //    else break;
+            //    cur.X -= spacing;
+            //    whileCounter++;
+            //} 
+            //
+            //cur = new(spacing / 2, 0f);
+            //whileCounter = 0;
+            ////right half of rectangle
+            //while (whileCounter < whileMaxCount)
+            //{
+            //    Vector2 p = center + SVec.Rotate(cur, rotRad);
+            //    Vector2 up = new(0f, -maxDimension * 2);
+            //    Vector2 down = new(0f, maxDimension * 2);
+            //    Vector2 start = p + SVec.Rotate(up, rotRad);
+            //    Vector2 end = p + SVec.Rotate(down, rotRad);
+            //    List<(Vector2 p, Vector2 n)> intersections = ShapeCollision.SGeometry.IntersectionSegmentRect(center, start, end, tl, tr, br, bl).points;
+            //    if (intersections.Count >= 2) DrawLineEx(intersections[0].p, intersections[1].p, lineThickness, lineColor);
+            //    else break;
+            //    cur.X += spacing;
+            //    whileCounter++;
+            //}
+            //
+            //if (outlineColor.a > 0) SDrawing.DrawRectangeLinesPro(pos, size, alignement, new Vector2(0.5f, 0.5f), 0f, lineThickness, outlineColor);
         }
         public static void DrawCircleCheckeredLines(Vector2 pos, Vector2 alignement, float radius, float spacing, float lineThickness, float angleDeg, Color lineColor, Color bgColor)
         {

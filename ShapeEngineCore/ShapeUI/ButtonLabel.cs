@@ -34,8 +34,8 @@ namespace ShapeUI
             Color color = textStateColors.baseColor; // DARKGRAY;
             if (disabled) color = textStateColors.disabledColor; // BLACK;
             else if (pressed) color = textStateColors.pressedColor; // SKYBLUE;
-            else if (hovered) color = textStateColors.hoveredColor; // DARKBLUE;
             else if (selected) color = textStateColors.selectedColor; // WHITE;
+            else if (hovered) color = textStateColors.hoveredColor; // DARKBLUE;
 
             DrawText(color);
         }

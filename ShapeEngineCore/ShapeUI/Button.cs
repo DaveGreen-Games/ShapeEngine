@@ -52,7 +52,7 @@ namespace ShapeUI
             if (disabled) color = stateColors.disabledColor;
             else if (pressed || mousePressed) color = stateColors.pressedColor;
             else if (hovered) color = stateColors.hoveredColor;
-
+            
 
             DrawButton(color);
             //Rectangle rect = GetRect(Alignement.TOPLEFT);
@@ -67,8 +67,21 @@ namespace ShapeUI
             Vector2 size = GetSize();
             Rectangle animationRect = SRect.ConstructRect(pos + offset, size * sizeOffset, animationAlignement);
 
-            DrawRectangleRec(animationRect, color);
-            if (selected) DrawRectangleV(new Vector2(animationRect.X, animationRect.y + animationRect.height * 0.9f), new Vector2(animationRect.width, animationRect.height * 0.1f), stateColors.selectedColor);
+            //if (disabled) SDrawing.DrawRectangleCheckeredLines(animationRect, 12f, 4f, 45, color, new(0, 0, 0, 0), new(0, 0, 0, 0));
+            //else
+            //{
+            //    
+            //}
+            if (hovered) DrawRectangleRec(animationRect, color);
+            if (selected)
+            {
+                SDrawing.DrawRectangleCorners(animationRect, 4f, stateColors.selectedColor, new(0.1f), new(0.1f), new(0.1f), new(0.1f));
+                //DrawRectangleV(new Vector2(animationRect.X, animationRect.y + animationRect.height * 0.9f), new Vector2(animationRect.width, animationRect.height * 0.1f), stateColors.selectedColor);
+            }
+
+            //DrawRectangleRec(animationRect, color);
+            //if (selected) DrawRectangleV(new Vector2(animationRect.X, animationRect.y + animationRect.height * 0.9f), new Vector2(animationRect.width, animationRect.height * 0.1f), stateColors.selectedColor);
+
         }
 
         protected virtual void PlayAnimation(string name)
@@ -90,9 +103,9 @@ namespace ShapeUI
                     easeHandler.AddChain(
                         "offset",
                         new Vector2(0, 0),
-                        new EaseOrder(0.1f, new Vector2(50, 0), EasingType.QUAD_OUT),
-                        new EaseOrder(0.2f, new Vector2(-75, 0), EasingType.BACK_IN),
-                        new EaseOrder(0.1f, new Vector2(25, 0), EasingType.LINEAR_IN)
+                        new EaseOrder(0.1f, new Vector2(25, 0), EasingType.QUAD_OUT),
+                        new EaseOrder(0.2f, new Vector2(-35, 0), EasingType.BACK_IN),
+                        new EaseOrder(0.1f, new Vector2(10, 0), EasingType.LINEAR_IN)
                         );
                     break;
 
@@ -101,9 +114,9 @@ namespace ShapeUI
                     easeHandler.AddChain(
                         "offset",
                         new Vector2(0, 0),
-                        new EaseOrder(0.1f, new Vector2(-50, 0), EasingType.QUAD_OUT),
-                        new EaseOrder(0.2f, new Vector2(75, 0), EasingType.BACK_IN),
-                        new EaseOrder(0.1f, new Vector2(-25, 0), EasingType.LINEAR_IN)
+                        new EaseOrder(0.1f, new Vector2(25, 0), EasingType.QUAD_OUT),
+                        new EaseOrder(0.2f, new Vector2(-35, 0), EasingType.BACK_IN),
+                        new EaseOrder(0.1f, new Vector2(10, 0), EasingType.LINEAR_IN)
                         );
                     break;
             }
