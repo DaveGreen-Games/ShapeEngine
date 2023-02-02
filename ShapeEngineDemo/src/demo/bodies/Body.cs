@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
-using ShapeEngineCore;
-using ShapeEngineCore.SimpleCollision;
+using ShapeCore;
+using ShapeCollision;
 
 namespace ShapeEngineDemo.Bodies
 {
@@ -119,10 +119,6 @@ namespace ShapeEngineDemo.Bodies
             }
         }
         
-        public virtual void Collide(CastInfo info)
-        {
-            return;
-        }
         public virtual string GetCollisionLayer()
         {
             return "body";
@@ -171,95 +167,22 @@ namespace ShapeEngineDemo.Bodies
         public virtual bool CanBeDamaged() { return true; }
         public virtual float GetDamage() { return 0f; }
 
-        public ColliderClass GetColliderClass()
-        {
-            return ColliderClass.COLLIDER;
-        }
-        public ColliderType GetColliderType()
-        {
-            return ColliderType.DYNAMIC;
-        }
+        
         public string[] GetCollisionMask()
         {
             return collisionMask;
         }
 
-        public void Overlap(OverlapInfo info)
+        public virtual void Overlap(CollisionInfo info)
         {
             return;
         }
-
+        public virtual void OverlapEnded(ICollidable other)
+        {
+            return;
+        }
         protected virtual void StatChanged(string statName) { }
-        /*protected float Stat(string name)
-        {
-            if (!stats.ContainsKey(name)) return 0f;
-            return stats[name].Cur;
-        }
-        protected void SetStat(string name, float value)
-        {
-            if (!stats.ContainsKey(name)) return;
-            stats[name].SetBase(value);
-            StatChanged(name);
-        }
-        protected void AddStats(params (string name, float value)[] add)
-        {
-            foreach (var stat in add)
-            {
-                AddStat(stat.name, stat.value);
-            }
-        }
-        protected void AddStat(string name, float value)
-        {
-            if (stats.ContainsKey(name)) stats[name].SetBase(value);
-            else stats.Add(name, new(value));
-        }
-        protected void RemoveStat(string name) { stats.Remove(name); }
-        protected void UpdateStats(float dt)
-        {
-            foreach (var stat in stats)
-            {
-                if (stat.Value.Update(dt))
-                {
-                    StatChanged(stat.Key);
-                }
-            }
-        }
-        public void AddBonuses(string statName, params float[] bonuses)
-        {
-            if (!stats.ContainsKey(statName)) return;
-            stats[statName].AddBonuses(bonuses);
-            StatChanged(statName);
-        }
-        public void AddBonus(string statName, float value, float duration = -1f)
-        {
-            if (!stats.ContainsKey(statName)) return;
-            stats[statName].AddBonus(value, duration);
-            StatChanged(statName);
-        }
-        public void AddFlats(string statName, params float[] flats)
-        {
-            if (!stats.ContainsKey(statName)) return;
-            stats[statName].AddFlats(flats);
-            StatChanged(statName);
-        }
-        public void AddFlat(string statName, float value, float duration = -1f)
-        {
-            if (!stats.ContainsKey(statName)) return;
-            stats[statName].AddFlat(value, duration);
-            StatChanged(statName);
-        }
-        public void RemoveBonus(string statName, float value)
-        {
-            if (!stats.ContainsKey(statName)) return;
-            stats[statName].RemoveBonus(value);
-            StatChanged(statName);
-        }
-        public void RemoveFlat(string statName, float value)
-        {
-            if (!stats.ContainsKey(statName)) return;
-            stats[statName].RemoveFlat(value);
-            StatChanged(statName);
-        }
-        */
+
+       
     }
 }

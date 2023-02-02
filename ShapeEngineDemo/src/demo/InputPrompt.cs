@@ -1,9 +1,8 @@
 ﻿using System.Numerics;
 using Raylib_CsLo;
-using ShapeEngineCore.Globals;
-using ShapeEngineCore.Globals.UI;
-using ShapeEngineCore.Globals.Input;
-using ShapeEngineCore.Globals.Screen;
+using ShapeUI;
+using ShapeInput;
+using ShapeLib;
 
 namespace ShapeEngineDemo
 {
@@ -87,13 +86,13 @@ namespace ShapeEngineDemo
 
         public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
         {
-            Vector2 center = GetPos(Alignement.CENTER);
+            Vector2 center = GetPos(new(0.5f));
             string text = InputHandler.GetInputActionKeyNames(0, inputAction, true).keyboard;
             float r = GetSize().X;
             float thickness = r * 0.25f;
             if(bgColor.a > 0) DrawCircleV(center, r, bgColor);
-            UIHandler.DrawTextAlignedPro(text, center, angleDeg, GetSize(), 1, textColor, Alignement.CENTER);
-            if(barColor.a > 0) Drawing.DrawCircleOutlineBar(center, r + thickness, -90, thickness, f, barColor);
+            SDrawing.DrawTextAlignedPro(text, center, angleDeg, GetSize(), 1, textColor, Demo.FONT.GetFont(), new(0.5f));
+            if(barColor.a > 0) SDrawing.DrawCircleOutlineBar(center, r + thickness, -90, thickness, f, barColor);
         }
     }
 

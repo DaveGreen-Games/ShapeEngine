@@ -1,7 +1,6 @@
 ﻿
 using System.Numerics;
 using Raylib_CsLo;
-using ShapeEngineCore.Globals;
 using ShapeLib;
 
 namespace ShapeCollision
@@ -82,7 +81,7 @@ namespace ShapeCollision
         public override void DebugDrawShape(Color color) 
         { 
             //Raylib.DrawCircleV(Pos, Radius, color);
-            Drawing.DrawCircleLines(Pos, Radius, 5f, color, 4f);
+            SDrawing.DrawCircleLines(Pos, Radius, 5f, color, 4f);
         }
 
     }
@@ -248,7 +247,7 @@ namespace ShapeCollision
         //}
         public override void DebugDrawShape(Color color)
         {
-            Drawing.DrawPolygon(Shape, 5f, color);
+            SDrawing.DrawPolygon(Shape, 5f, color);
         }
     }
 

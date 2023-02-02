@@ -719,7 +719,7 @@ namespace ShapeCollisionTest
             }
             else if (index == 4)
             {
-                Drawing.DrawPolygon(new() { pos + new Vector2(size, 0), pos + new Vector2(-size, -size / 2), pos + new Vector2(-size, size/ 2) }, size / 10f, color);
+                SDrawing.DrawPolygon(new() { pos + new Vector2(size, 0), pos + new Vector2(-size, -size / 2), pos + new Vector2(-size, size/ 2) }, size / 10f, color);
             }
             
         }
@@ -1591,7 +1591,7 @@ namespace ShapeCollisionTest
             
             //Raylib.DrawLineEx(laserStart, laserPoints[0], laserBackgroundWidth, laserBackgroundColor);
             //Raylib.DrawLineEx(laserStart, laserPoints[0], laserWidth, laserColor);
-            Drawing.DrawGlowLine(laserStart, laserPoints[0], laserWidth, laserBackgroundWidth, laserColor, laserBackgroundColor, 2);
+            SDrawing.DrawGlowLine(laserStart, laserPoints[0], laserWidth, laserBackgroundWidth, laserColor, laserBackgroundColor, 2);
             Raylib.DrawCircleV(laserStart, r * SRNG.randF(1.25f, 2f) * 2f, laserColor);
             for (int i = 0; i < laserPoints.Count - 1; i++)
             {
@@ -1599,7 +1599,7 @@ namespace ShapeCollisionTest
                 Raylib.DrawCircleV(laserPoints[i], r * SRNG.randF(1.25f,2f), laserColor);
                 //Raylib.DrawLineEx(laserPoints[i], laserPoints[i + 1], laserBackgroundWidth, laserBackgroundColor);
                 //Raylib.DrawLineEx(laserPoints[i], laserPoints[i+1], laserWidth, laserColor);
-                Drawing.DrawGlowLine(laserPoints[i], laserPoints[i+1], laserWidth, laserBackgroundWidth, laserColor, laserBackgroundColor, 2);
+                SDrawing.DrawGlowLine(laserPoints[i], laserPoints[i+1], laserWidth, laserBackgroundWidth, laserColor, laserBackgroundColor, 2);
 
             }
 
@@ -2476,13 +2476,13 @@ namespace ShapeCollisionTest
 
             float r = 7f;
 
-            Drawing.DrawGlowLine(laserStart, laserPoints[0], laserWidth, laserBackgroundWidth, laserColor, laserBackgroundColor, 2);
+            SDrawing.DrawGlowLine(laserStart, laserPoints[0], laserWidth, laserBackgroundWidth, laserColor, laserBackgroundColor, 2);
             Raylib.DrawCircleV(laserStart, r * SRNG.randF(1.25f, 2f) * 2f, laserColor);
             for (int i = 0; i < laserPoints.Count - 1; i++)
             {
                 Color color = Raylib.RED;
                 Raylib.DrawCircleV(laserPoints[i], r * SRNG.randF(1.25f, 2f), laserColor);
-                Drawing.DrawGlowLine(laserPoints[i], laserPoints[i + 1], laserWidth, laserBackgroundWidth, laserColor, laserBackgroundColor, 2);
+                SDrawing.DrawGlowLine(laserPoints[i], laserPoints[i + 1], laserWidth, laserBackgroundWidth, laserColor, laserBackgroundColor, 2);
 
             }
 

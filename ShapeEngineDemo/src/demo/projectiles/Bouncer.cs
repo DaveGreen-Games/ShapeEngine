@@ -1,11 +1,10 @@
 ﻿using System.Numerics;
-using ShapeEngineCore.Globals;
-using ShapeEngineCore.SimpleCollision;
+using ShapeCore;
+using ShapeCollision;
 using ShapeEngineDemo.Bodies;
 using Raylib_CsLo;
-using ShapeEngineCore.Globals.Audio;
-using ShapeEngineCore;
-//using ShapeEngineCore.Globals.Timing;
+using ShapeAudio;
+using ShapeLib;
 
 namespace ShapeEngineDemo.Projectiles
 {
@@ -22,9 +21,9 @@ namespace ShapeEngineDemo.Projectiles
         {
 
         }
-        public override void Overlap(OverlapInfo info)
+        public override void Overlap(CollisionInfo info)
         {
-            if (info.overlapping)
+            if (info.collision)
             {
                 if (info.other != null)
                 {
@@ -37,8 +36,8 @@ namespace ShapeEngineDemo.Projectiles
                             var dmgInfo = ImpactDamage(obj);
                             if (dmgInfo.recieved > 0f) AudioHandler.PlaySFX("projectile bounce", -1f, -1f, 0.1f);
                         }
-                        float angle = 180 + RNG.randF(-45f, 45f);
-                        collider.Vel = Vec.Rotate(collider.Vel, angle * DEG2RAD);
+                        float angle = 180 + SRNG.randF(-45f, 45f);
+                        collider.Vel = SVec.Rotate(collider.Vel, angle * DEG2RAD);
                     }
                 }
                 //Kill();

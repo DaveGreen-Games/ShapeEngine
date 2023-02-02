@@ -1,8 +1,8 @@
 ﻿using System.Numerics;
-using ShapeEngineCore;
+using ShapeLib;
 using ShapeEngineDemo.Bodies;
-using ShapeEngineCore.Globals.Timing;
-using ShapeEngineCore.Globals;
+using ShapeTiming;
+using ShapeCore;
 using Raylib_CsLo;
 
 namespace ShapeEngineDemo
@@ -73,9 +73,9 @@ namespace ShapeEngineDemo
         {
             Vector2 pos = spawnArea.Rand();
             Vector2 targetPos = spawnArea.RandInner();
-            Vector2 dir = Vec.Normalize(targetPos - pos);
+            Vector2 dir = SVec.Normalize(targetPos - pos);
             Vector2 vel = dir * velRange.Rand();
-            if (RNG.randF() < 0.05f) vel *= 5f;
+            if (SRNG.randF() < 0.05f) vel *= 5f;
             Asteroid a = new(pos, vel, name);
             area.AddGameObject(a, false, "asteroids");
         }
@@ -106,7 +106,7 @@ namespace ShapeEngineDemo
             {
                 var filtered = keys.FindAll(k => COSTS[k] <= budget);
                 if (filtered.Count <= 0) { budget = 0; continue; }
-                var key = RNG.randCollection(filtered);
+                var key = SRNG.randCollection(filtered);
                 //var key = chances.Next(a => COSTS[a] <= budget);
                 if (key != null && COSTS.ContainsKey(key))
                 {

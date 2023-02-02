@@ -33,6 +33,11 @@ namespace ShapeCollision
         protected SpatialHash spatialHash;
 
         protected List<CollisionInfo> overlapInfos = new();
+        protected List<(ICollidable collider, ICollidable other)> overlapEnded= new();
+
+        protected Dictionary<ICollidable, List<ICollidable>> overlaps = new();
+
+
         public CollisionHandler(float x, float y, float w, float h, int rows, int cols)
         {
             spatialHash = new(x, y, w, h, rows, cols);
@@ -96,7 +101,7 @@ namespace ShapeCollision
                 if (!collider.GetCollider().IsEnabled() || !collider.GetCollider().CheckCollision) continue;
                 string[] collisionMask = collider.GetCollisionMask();
 
-
+                List<ICollidable> collisions = new();
                 List<ICollidable> others = spatialHash.GetObjects(collider);
                 foreach (ICollidable other in others)
                 {
@@ -108,9 +113,55 @@ namespace ShapeCollision
 
                     var selfC = collider.GetCollider();
                     var info = SGeometry.GetCollisionInfo(collider, other);
-                    if (info.overlapping)
-                        overlapInfos.Add(info);
+
+                    if (overlaps.ContainsKey(collider) && overlaps[collider].Contains(other))//collision has happend last frame as well
+                    {
+                        if (info.overlapping)//has overlapped last frame and this frame
+                        {
+                            overlapInfos.Add(info);
+                            collisions.Add(other);
+                        }
+                        else//has overlapped last frame but not this frame -> overlap ended
+                        {
+                            //overlap ended
+                            overlapEnded.Add((collider, other));
+                        }
+                    }
+                    else //collision has not happend last frame
+                    {
+                        if (info.overlapping)//overlapping for the first time => called collision
+                        {
+                            info.collision = true;
+                            info.overlapping = false;
+                            overlapInfos.Add(info);
+                            collisions.Add(other);
+                        }
+                        //else no overlap last frame or this frame => nothing happens
+                    }
+
                 }
+
+
+                //update overlaps dictionary for the current collider
+                if(collisions.Count > 0)
+                {
+                    if (overlaps.ContainsKey(collider))
+                    {
+                        overlaps[collider] = collisions;
+                    }
+                    else
+                    {
+                        overlaps.Add(collider, collisions);
+                    }
+                }
+                else
+                {
+                    if(overlaps.ContainsKey(collider))
+                    {
+                        overlaps[collider].Clear();
+                    }
+                }
+
             }
             Resolve();
         }
@@ -126,6 +177,7 @@ namespace ShapeCollision
             foreach (var collider in tempRemoving)
             {
                 collidables.Remove(collider);
+                overlaps.Remove(collider);
             }
             tempRemoving.Clear();
 
@@ -137,7 +189,14 @@ namespace ShapeCollision
                 info.self.Overlap(info);
             }
             overlapInfos.Clear();
-            
+
+            foreach (var pair in overlapEnded)
+            {
+                if (pair.collider == null || pair.other == null) continue;
+                pair.collider.OverlapEnded(pair.other);
+            }
+            overlapEnded.Clear();
+
         }
 
         public static void SortQueryInfoPoints(Vector2 p, QueryInfo info)

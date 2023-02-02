@@ -1,8 +1,9 @@
 ﻿using System.Numerics;
-using ShapeEngineCore.SimpleCollision;
-using ShapeEngineCore.Globals;
-using ShapeEngineCore;
+using ShapeCollision;
+using ShapeCore;
+using ShapeLib;
 using Raylib_CsLo;
+using ShapeColor;
 
 namespace ShapeEngineDemo
 {
@@ -23,19 +24,19 @@ namespace ShapeEngineDemo
 
         public override void Update(float dt)
         {
-            List<ICollidable> bodies = GAMELOOP.CUR_SCENE.GetCurArea().colHandler.CastSpace(pos, radius, collisionMask);
+            List<ICollidable> bodies = GAMELOOP.CUR_SCENE.GetCurArea().colHandler.CastSpace(pos, radius, false, collisionMask);
             foreach (ICollidable body in bodies)
             {
                 Collider col = body.GetCollider();
-                col.AccumulateForce(Utils.Attraction(pos, col.Pos, col.Vel, radius, strength, friction));
+                col.AccumulateForce(SPhysics.Attraction(pos, col.Pos, col.Vel, radius, strength, friction));
             }
         }
 
         public override void Draw()
         {
-            Color color = PaletteHandler.C("text");
-            color.a = (byte)RNG.randI(140, 160);
-            DrawCircle((int)pos.X, (int)pos.Y, RNG.randF(radius * 0.99f, radius * 1.01f), color);
+            Color color = Demo.PALETTES.C("text");
+            color.a = (byte)SRNG.randI(140, 160);
+            DrawCircle((int)pos.X, (int)pos.Y, SRNG.randF(radius * 0.99f, radius * 1.01f), color);
         }
     }
 

@@ -1,12 +1,12 @@
 ﻿using System.Numerics;
-using ShapeEngineCore.SimpleCollision;
+using ShapeCollision;
 using ShapeEngineDemo.Bodies;
 using Raylib_CsLo;
-using ShapeEngineCore.Globals;
-using ShapeEngineCore.Globals.Persistent;
+using ShapeCore;
+using ShapePersistent;
 using ShapeEngineDemo.DataObjects;
-using ShapeEngineCore.Globals.Audio;
-using ShapeEngineCore;
+using ShapeAudio;
+using ShapeLib;
 
 namespace ShapeEngineDemo.Projectiles
 {
@@ -32,7 +32,6 @@ namespace ShapeEngineDemo.Projectiles
         static readonly string[] collisionMask = new string[] { "asteroid" };
 
         protected string type = "";
-        protected ColliderClass colliderClass = ColliderClass.AREA;
         protected CircleCollider collider;
         protected IDamageable dmgDealer;
         protected Color color;
@@ -47,7 +46,7 @@ namespace ShapeEngineDemo.Projectiles
             this.dmgDealer = info.dmgDealer;
             Vector2 vel = new(0f, 0f);
             float size = 3f;
-            var data = DataHandler.GetCDBContainer().Get<ProjectileData>("projectiles", type);
+            var data = Demo.DATA.GetCDBContainer().Get<ProjectileData>("projectiles", type);
             if(data != null)
             {
                 stats.SetStat("dmg", data.dmg);
@@ -57,10 +56,10 @@ namespace ShapeEngineDemo.Projectiles
                 stats.SetStat("speed", data.speed);
                 this.timer = stats.Get("lifetime");
                 this.color = info.color;
-                float a = RNG.randF(-data.accuracy, data.accuracy);
+                float a = SRNG.randF(-data.accuracy, data.accuracy);
                 float speed = stats.Get("speed");
-                float finalSpeed = speed + speed * RNG.randF(-info.speedVariation, info.speedVariation);
-                vel = Vec.Rotate(Vec.Normalize(info.dir), a) * finalSpeed;
+                float finalSpeed = speed + speed * SRNG.randF(-info.speedVariation, info.speedVariation);
+                vel = SVec.Rotate(SVec.Normalize(info.dir), a) * finalSpeed;
                 size = data.size;
             }
             collider = new CircleCollider(info.pos, vel, size);
@@ -73,7 +72,7 @@ namespace ShapeEngineDemo.Projectiles
             stats.SetBonuses(bonuses);
             Vector2 vel = new(0f, 0f);
             float size = 3f;
-            var data = DataHandler.GetCDBContainer().Get<ProjectileData>("projectiles", type);
+            var data = Demo.DATA.GetCDBContainer().Get<ProjectileData>("projectiles", type);
             if (data != null)
             {
                 stats.SetStat("dmg", data.dmg);
@@ -83,19 +82,19 @@ namespace ShapeEngineDemo.Projectiles
                 stats.SetStat("speed", data.speed);
                 this.timer = stats.Get("lifetime");
                 this.color = info.color;
-                float a = RNG.randF(-data.accuracy, data.accuracy);
+                float a = SRNG.randF(-data.accuracy, data.accuracy);
                 float speed = stats.Get("speed");
-                float finalSpeed = speed + speed * RNG.randF(-info.speedVariation, info.speedVariation);
-                vel = Vec.Rotate(Vec.Normalize(info.dir), a) * finalSpeed;
+                float finalSpeed = speed + speed * SRNG.randF(-info.speedVariation, info.speedVariation);
+                vel = SVec.Rotate(SVec.Normalize(info.dir), a) * finalSpeed;
                 size = data.size;
             }
             collider = new CircleCollider(info.pos, vel, size);
+            collider.CheckCollision = true;
+            collider.CheckIntersections = false;
         }
 
         public Collider GetCollider() { return collider; }
 
-        public ColliderClass GetColliderClass() { return this.colliderClass; }
-        public ColliderType GetColliderType() { return ColliderType.DYNAMIC; }
         public virtual bool HasDynamicBoundingBox() { return true; }
         public string GetCollisionLayer() { return "bullet"; }
         public string[] GetCollisionMask() { return collisionMask; }
@@ -105,10 +104,10 @@ namespace ShapeEngineDemo.Projectiles
 
         public override Rectangle GetBoundingBox()
         {
-            return HasDynamicBoundingBox() ? collider.GetDynamicBoundingRect() : collider.GetBoundingRect();
+            return collider.GetBoundingRect();
         }
-        public virtual void Collide(CastInfo info) { }
-        public virtual void Overlap(OverlapInfo info) { }
+        public virtual void Overlap(CollisionInfo info) { }
+        public virtual void OverlapEnded(ICollidable other) { }
         public override bool IsDead() { return dead; }
         public override bool Kill()
         {
@@ -153,10 +152,10 @@ namespace ShapeEngineDemo.Projectiles
             float critChance = stats.Get("critChance");
             if(critChance > 0f)
             {
-                if (RNG.randF() < critChance) { finalDamage *= stats.Get("critBonus"); critted = true; }
+                if (SRNG.randF() < critChance) { finalDamage *= stats.Get("critBonus"); critted = true; }
             }
             if (critted) AudioHandler.PlaySFX("projectile crit", -1f, -1f, 0.1f);
-            return target.Damage(finalDamage, collider.Pos, Vec.Normalize(collider.Vel), dmgDealer, critted);
+            return target.Damage(finalDamage, collider.Pos, SVec.Normalize(collider.Vel), dmgDealer, critted);
         }
         protected virtual void Move(float dt)
         {
@@ -187,5 +186,7 @@ namespace ShapeEngineDemo.Projectiles
             AsteroidDeathEffect ade = new(collider.Pos, 0.25f, collider.Radius * 1.5f, color);
             GAMELOOP.AddGameObject(ade);
         }
+
+        
     }
 }

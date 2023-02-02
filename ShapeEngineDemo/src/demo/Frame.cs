@@ -1,5 +1,5 @@
 ﻿using System.Numerics;
-using ShapeEngineCore.Globals;
+using ShapeLib;
 using Raylib_CsLo;
 
 
@@ -27,12 +27,12 @@ namespace ShapeEngineDemo
 
             for (int i = 0; i < basePoints.Count; i++)
             {
-                points[i] = center + Vec.Rotate(basePoints[i] * sizeFactor, angleRad);
+                points[i] = center + SVec.Rotate(basePoints[i] * sizeFactor, angleRad);
             }
         }
         public void Draw()
         {
-            Drawing.DrawPolygon(points, lineThickness * sizeFactor, color);
+            SDrawing.DrawPolygon(points, lineThickness * sizeFactor, color);
         }
     }
 }

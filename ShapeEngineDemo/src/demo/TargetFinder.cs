@@ -1,9 +1,10 @@
 ﻿using System.Numerics;
-using ShapeEngineCore;
-using ShapeEngineCore.Globals.Timing;
-using ShapeEngineCore.SimpleCollision;
-using ShapeEngineCore.Globals;
+using ShapeCore;
+using ShapeTiming;
+using ShapeCollision;
+using ShapeLib;
 using Raylib_CsLo;
+using ShapeColor;
 
 namespace ShapeEngineDemo
 {
@@ -89,8 +90,8 @@ namespace ShapeEngineDemo
                         return;
                     }
                 }
-
-                if (!Overlap.Check(new CircleCollider(this.pos, targetingRange), target.GetCollider()))
+                //if (!Overlap.Check(new CircleCollider(this.pos, targetingRange), target.GetCollider()))
+                if(!SGeometry.Overlap(new CircleCollider(this.pos, targetingRange), target.GetCollider()))
                 {
                     ClearTarget();
                     //target = CheckForTarget();
@@ -118,7 +119,7 @@ namespace ShapeEngineDemo
         {
             if (!enabled) return;
             //Color circleColor = ColorPalette.ChangeAlpha(ColorPalette.Cur.flash, 125);
-            Color circleColor = PaletteHandler.C("flash");
+            Color circleColor = Demo.PALETTES.C("flash");
             float lineThickness = 2f;
             if (!HasTarget())
             {
@@ -126,7 +127,7 @@ namespace ShapeEngineDemo
                 lineThickness = 1f;
             }
 
-            Drawing.DrawCircleLines(pos, targetingRange + RNG.randF(-0.5f, 0.5f), lineThickness, circleColor, 8f);
+            SDrawing.DrawCircleLines(pos, targetingRange + SRNG.randF(-0.5f, 0.5f), lineThickness, circleColor, 8f);
         }
 
         public ICollidable? CheckForTarget(float targetingRange)
@@ -134,7 +135,7 @@ namespace ShapeEngineDemo
             if (GAMELOOP.CUR_SCENE == null) return null;
             var area = GAMELOOP.CUR_SCENE.GetCurArea();
             if (area == null) return null;
-            var bodies = area.colHandler.CastSpace(this.pos, targetingRange, this.mask);
+            var bodies = area.colHandler.CastSpace(this.pos, targetingRange, false, this.mask);
             return Filter(bodies);
         }
         private ICollidable? Filter(List<ICollidable> bodies)
@@ -156,16 +157,16 @@ namespace ShapeEngineDemo
                 if (a != null && b == null) return -1;
                 if (targetingType == TargetingType.NEAREST)
                 {
-                    float aDis = Vec.LengthSquared(a.GetPos() - pos);
-                    float bDis = Vec.LengthSquared(b.GetPos() - pos);
+                    float aDis = SVec.LengthSquared(a.GetPos() - pos);
+                    float bDis = SVec.LengthSquared(b.GetPos() - pos);
                     if (aDis < bDis) return -1;
                     else if (aDis > bDis) return 1;
                     else return 0;
                 }
                 else if (targetingType == TargetingType.FURTHEST)
                 {
-                    float aDis = Vec.LengthSquared(a.GetPos() - pos);
-                    float bDis = Vec.LengthSquared(b.GetPos() - pos);
+                    float aDis = SVec.LengthSquared(a.GetPos() - pos);
+                    float bDis = SVec.LengthSquared(b.GetPos() - pos);
                     if (aDis < bDis) return 1;
                     else if (aDis > bDis) return -1;
                     else return 0;
@@ -196,8 +197,8 @@ namespace ShapeEngineDemo
                     var bRect = b.GetCollider().GetBoundingRect();
                     float aSize = aRect.width * aRect.height;
                     float bSize = bRect.width * bRect.height;
-                    float aDis = Vec.LengthSquared(a.GetPos() - pos);
-                    float bDis = Vec.LengthSquared(b.GetPos() - pos);
+                    float aDis = SVec.LengthSquared(a.GetPos() - pos);
+                    float bDis = SVec.LengthSquared(b.GetPos() - pos);
 
                     const float disWeight = 1f;
                     const float sizeWeight = 1f;

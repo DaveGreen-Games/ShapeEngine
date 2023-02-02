@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
-using ShapeEngineCore.Globals;
+using ShapeCore;
 using Raylib_CsLo;
-using ShapeEngineCore;
+using ShapeLib;
 using ShapeEngineDemo.Bodies;
 
 namespace ShapeEngineDemo
@@ -28,7 +28,7 @@ namespace ShapeEngineDemo
             this.sizeFactor = sizeFactor;
             this.rotRad = angleRad;
             this.color = color;
-            this.pos = pos + Vec.Rotate(offset * sizeFactor, angleRad) + RNG.randVec2(0.5f, 1f);
+            this.pos = pos + SVec.Rotate(offset * sizeFactor, angleRad) + SRNG.randVec2(0.5f, 1f);
         }
         public void Draw()
         {
@@ -37,7 +37,7 @@ namespace ShapeEngineDemo
 
         public void SpawnParticles(float speed, Vector2 amountRange, float factor = 1f)
         {
-            int randAmount = RNG.randI((int)amountRange.X, (int)amountRange.Y);
+            int randAmount = SRNG.randI((int)amountRange.X, (int)amountRange.Y);
             for (int i = 0; i < randAmount; i++)
             {
                 ThrusterParticle p = new(pos, rotRad + PI, speed, color, particleSize * sizeFactor, factor);
@@ -52,12 +52,12 @@ namespace ShapeEngineDemo
         private Color color;
         public ThrusterParticle(Vector2 pos, float angle, float speed, Color color, float size, float factor = 1f) : base(pos)
         {
-            angle += (RNG.randF(-25, 25) * DEG2RAD);
-            speed *= RNG.randF(0.9f, 1.1f);
-            this.vel = Vec.Rotate(Vec.Right() * speed, angle) * factor;
-            this.r = MathF.Max(RNG.randF(size * 0.75f, size * 1.25f) * factor, 1f);
+            angle += (SRNG.randF(-25, 25) * DEG2RAD);
+            speed *= SRNG.randF(0.9f, 1.1f);
+            this.vel = SVec.Rotate(SVec.Right() * speed, angle) * factor;
+            this.r = MathF.Max(SRNG.randF(size * 0.75f, size * 1.25f) * factor, 1f);
             this.color = color;
-            float lifetime = RNG.randF(0.25f, 0.5f) / factor;
+            float lifetime = SRNG.randF(0.25f, 0.5f) / factor;
             lifetimeTimer.Start(lifetime);
         }
         //public ThrusterParticle(Vector2 pos, float speed, Color color, float size, float lifetime) : base(pos, lifetime)

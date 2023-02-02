@@ -1,7 +1,7 @@
 ﻿global using static Raylib_CsLo.Raylib;
 global using static Raylib_CsLo.RayMath;
-global using static ShapeEngineCore.ShapeEngine;
-using ShapeEngineCore;
+global using static ShapeCore.ShapeEngine;
+using ShapeCore;
 
 //either copy into project file or download those 2 nuget packages.
 //< ItemGroup >
@@ -18,14 +18,11 @@ namespace ShapeEngineDemo
         public static void Main(params string[] launchParams)
         {
             //Uncomment to generate a new resources.txt file
-            //ShapeEngineCore.Globals.Persistent.ResourceManager.Generate("resources", "", "resources.txt");
+            //ShapePersistent.ResourceManager.Generate("resources", "", "resources.txt");
+
             
             
-            //START
-            ScreenInitInfo screenInitInfo = new ScreenInitInfo(1920, 1080, 0.25f, 1.0f, "Raylib Template", false, true);
-            ResourceInitInfo resourceInitInfo = new("", "resources.txt");
-            GameInitInfo gameInitInfo = new("solobytegames", "shape-engine-demo");
-            ShapeEngine.Start(new Demo(), gameInitInfo, resourceInitInfo, screenInitInfo);
+            ShapeEngine.Start(new Demo(), 1920, 1080, 0.5f, 1.0f, "Raylib Template", false, true, true);
         }
     }
 }

@@ -1,9 +1,10 @@
 ﻿using System.Numerics;
 using Raylib_CsLo;
-using ShapeEngineCore.Globals;
-using ShapeEngineCore.Globals.Timing;
+using ShapeCore;
+using ShapeLib;
+using ShapeTiming;
 
-namespace ShapeEngineCore
+namespace ShapeEngineDemo
 {
     public class CoreParticle : Particle
     {
@@ -13,24 +14,24 @@ namespace ShapeEngineCore
         private float rotSpeedDeg = 0f;
         public CoreParticle(Vector2 pos, float angle, Color color) : base(pos, 15f)
         {
-            angle += RNG.randF(-25, 25) * DEG2RAD;
-            float speed = 60f * RNG.randF(0.9f, 1.1f);
-            vel = Vec.Rotate(Vec.Right() * speed, angle);
+            angle += SRNG.randF(-25, 25) * DEG2RAD;
+            float speed = 60f * SRNG.randF(0.9f, 1.1f);
+            vel = SVec.Rotate(SVec.Right() * speed, angle);
             this.color = color;
-            rotDeg = RNG.randF(0f, 360f);
-            rotSpeedDeg = RNG.randF(90, 180) * (RNG.randF() < 0.5f ? 1f : -1f);
+            rotDeg = SRNG.randF(0f, 360f);
+            rotSpeedDeg = SRNG.randF(90, 180) * (SRNG.randF() < 0.5f ? 1f : -1f);
             drag = 1f;
         }
         public override void Update(float dt)
         {
             base.Update(dt);
             rotDeg += rotSpeedDeg * dt;
-            rotSpeedDeg = Utils.ApplyDragForce(rotSpeedDeg, drag, dt);
+            rotSpeedDeg = SPhysics.ApplyDragForce(rotSpeedDeg, drag, dt);
         }
         public override void Draw()
         {
-            float f = Ease.EaseOutBack(lifetimeTimer.GetF());
-            DrawPoly(pos, 6, RNG.randF(0.85f, 1.15f) * size * f, rotDeg, color);
+            float f = SEase.EaseOutBack(lifetimeTimer.GetF());
+            DrawPoly(pos, 6, SRNG.randF(0.85f, 1.15f) * size * f, rotDeg, color);
         }
     }
     public class Core

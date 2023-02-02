@@ -1,13 +1,13 @@
 ﻿using System.Numerics;
-using ShapeEngineCore.Globals;
-using ShapeEngineCore.Globals.Persistent;
+using ShapePersistent;
 using ShapeEngineDemo.DataObjects;
 using ShapeEngineDemo.Projectiles;
 using ShapeEngineDemo.Bodies;
-using ShapeEngineCore.Globals.Audio;
+using ShapeAudio;
 using Raylib_CsLo;
-using ShapeEngineCore;
-using ShapeEngineCore.Globals.Timing;
+using ShapeCore;
+using ShapeColor;
+using ShapeLib;
 
 namespace ShapeEngineDemo.Guns
 {
@@ -60,7 +60,7 @@ namespace ShapeEngineDemo.Guns
         public Gun(Vector2 pos, Vector2 dir, string gun, Color color, IDamageable dmgDealer)
         {
             this.pos = pos;
-            this.rotRad = Vec.AngleRad(dir);
+            this.rotRad = SVec.AngleRad(dir);
             this.gunName = gun;
             this.dmgDealer = dmgDealer;
             this.color = color;
@@ -77,7 +77,7 @@ namespace ShapeEngineDemo.Guns
         //protected virtual void StatChanged(string statName) { }
         private void LoadData()
         {
-            var data = DataHandler.GetCDBContainer().Get<GunData>("guns", gunName);
+            var data = Demo.DATA.GetCDBContainer().Get<GunData>("guns", gunName);
             if (data == null) return;
             bulletName = data.bullet;
             stats.SetStat("acc", data.accuracy * DEG2RAD);
@@ -94,29 +94,29 @@ namespace ShapeEngineDemo.Guns
         
         public bool IsAligned(Vector2 targetPos)
         {
-            return IsAlignedDir(Vec.Normalize(targetPos - this.pos));
+            return IsAlignedDir(SVec.Normalize(targetPos - this.pos));
             //Vector2 dir = targetPos - this.pos;
             //float dot = Vec.Dot(dir, Vec.Rotate(Vec.Right(), rotRad));
             //return dot > 0.6f;
         }
         public bool IsAligned(float targetAngleRad)
         {
-            return IsAlignedDir(Vec.Rotate(Vec.Right(), targetAngleRad));
+            return IsAlignedDir(SVec.Rotate(SVec.Right(), targetAngleRad));
 
             //float dot = Vec.Dot(Vec.Rotate(Vec.Right(), targetAngleRad), Vec.Rotate(Vec.Right(), rotRad));
             //return dot > 0.6f;
         }
         public bool IsAlignedDir(Vector2 targetDir)
         {
-            float dot = Vec.Dot(targetDir, Vec.Rotate(Vec.Right(), rotRad));
+            float dot = SVec.Dot(targetDir, SVec.Rotate(SVec.Right(), rotRad));
             return dot > alignedTolerance;
         }
         
         public Vector2 GetPosition() { return pos; }
         public float GetRotationRad() { return rotRad; }
         public void SetPos(Vector2 newPos) { this.pos = newPos; }
-        public void SetRotRad(float newRot) { this.rotRad = Utils.WrapAngleRad(newRot); }
-        public void SetRotDeg(float newRot) { this.rotRad = Utils.WrapAngleRad(newRot * DEG2RAD); }
+        public void SetRotRad(float newRot) { this.rotRad = SUtils.WrapAngleRad(newRot); }
+        public void SetRotDeg(float newRot) { this.rotRad = SUtils.WrapAngleRad(newRot * DEG2RAD); }
         //public void RotateBy(float amountRad, float lowerLimitRad, float upperLimitRad)
         //{
         //    SetRotRad(Clamp(rotRad + amountRad, lowerLimitRad, upperLimitRad));
@@ -199,14 +199,14 @@ namespace ShapeEngineDemo.Guns
         public void Shoot(Vector2 dir)
         {
             if (!CanShoot()) return;
-            SetRotRad(Vec.AngleRad(dir));
+            SetRotRad(SVec.AngleRad(dir));
             Shoot();
         }
         public void Shoot(Vector2 pos, Vector2 dir)
         {
             if (!CanShoot()) return;
             SetPos(pos);
-            SetRotRad(Vec.AngleRad(dir));
+            SetRotRad(SVec.AngleRad(dir));
             Shoot();
         }
 
@@ -217,7 +217,7 @@ namespace ShapeEngineDemo.Guns
             for (int i = 0; i < amount; i++)
             {
                 float acc = stats.Get("acc");
-                Vector2 dir = Vec.Rotate(Vec.Right(), rotRad + aimOffsetRad + RNG.randF(-acc, acc));
+                Vector2 dir = SVec.Rotate(SVec.Right(), rotRad + aimOffsetRad + SRNG.randF(-acc, acc));
                 ProjectileInfo pi = new(pos, dir, color, dmgDealer, speedVariation);
                 Projectile projectile;
                 
@@ -245,10 +245,10 @@ namespace ShapeEngineDemo.Guns
             switch (effect)
             {
                 case "circle":
-                    fx = new CircleEffect(pos + Vec.Rotate(Vec.Right(), rotRad) * 10f, RNG.randF(0.15f, 0.2f), RNG.randF(7f, 10f), PaletteHandler.C("flash"));
+                    fx = new CircleEffect(pos + SVec.Rotate(SVec.Right(), rotRad) * 10f, SRNG.randF(0.15f, 0.2f), SRNG.randF(7f, 10f), Demo.PALETTES.C("flash"));
                     break;
                 default: 
-                    fx = new CircleEffect(pos + Vec.Rotate(Vec.Right(), rotRad) * 10f, RNG.randF(0.15f, 0.2f), RNG.randF(7f, 10f), PaletteHandler.C("flash"));
+                    fx = new CircleEffect(pos + SVec.Rotate(SVec.Right(), rotRad) * 10f, SRNG.randF(0.15f, 0.2f), SRNG.randF(7f, 10f), Demo.PALETTES.C("flash"));
                     break;
             }
             GAMELOOP.AddGameObject(fx);
@@ -256,7 +256,7 @@ namespace ShapeEngineDemo.Guns
     
         private void SpawnCasing()
         {
-            Vector2 dir = Vec.Rotate(Vec.Right(), rotRad + PI / 2);
+            Vector2 dir = SVec.Rotate(SVec.Right(), rotRad + PI / 2);
             var casing = new CasingParticle(pos, dir, 1.5f, color, 1f, 1f);
             GAMELOOP.AddGameObject(casing);
         }

@@ -10,6 +10,7 @@ namespace ShapeCollision
         public string GetID();
         public Collider GetCollider();
         public void Overlap(CollisionInfo info);
+        public void OverlapEnded(ICollidable other);
         public Vector2 GetPos();
         public string GetCollisionLayer();
         public string[] GetCollisionMask();
@@ -17,15 +18,17 @@ namespace ShapeCollision
     public struct CollisionInfo
     {
         public bool overlapping;
+        public bool collision = false;
         public ICollidable? self;
         public ICollidable? other;
         public Vector2 selfVel;
         public Vector2 otherVel;
         public Intersection intersection;
-        public CollisionInfo() { overlapping = false; self = null; other = null; this.selfVel = new(0f); this.otherVel = new(0f); this.intersection = new();}
+        public CollisionInfo() { overlapping = false; collision = false; self = null; other = null; this.selfVel = new(0f); this.otherVel = new(0f); this.intersection = new();}
         public CollisionInfo(bool overlapping, ICollidable self, ICollidable other)
         {
             this.overlapping = overlapping;
+            
             this.other = other;
             this.self = self;
             this.selfVel = self.GetCollider().Vel;

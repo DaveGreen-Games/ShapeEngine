@@ -1,14 +1,17 @@
-﻿using ShapeEngineCore.Globals;
-using ShapeEngineCore.Globals.Screen;
-using ShapeEngineCore.Globals.Audio;
-using ShapeEngineCore.Globals.Input;
-using ShapeEngineCore.Globals.UI;
-using ShapeEngineCore.Globals.Shaders;
-using ShapeEngineCore.Globals.Timing;
-using ShapeEngineCore.Globals.Persistent;
+﻿using ShapeCore;
+using ShapeScreen;
+using ShapeAudio;
+using ShapeInput;
+using ShapeUI;
+using ShapeTiming;
+using ShapePersistent;
 using Raylib_CsLo;
-using ShapeEngineCore;
+using ShapeColor;
+using ShapeEngineDemo.DataObjects;
+using ShapeAchievements;
 using System.Numerics;
+using ShapeLib;
+using ShapeCursor;
 
 namespace ShapeEngineDemo
 {
@@ -18,20 +21,33 @@ namespace ShapeEngineDemo
         private Image icon;
         private int curResIndex = 0;
         private int curFrameRateLimitIndex = 0;
+
+        public static ResourceManager RESOURCES = new("", "resources.txt");
+        public static SavegameHandler SAVEGAME = new("solobytegames", "shape-engine-demo");
+        public static DataHandler DATA = new();
+        public static FontHandler FONT = new();
+        public static CursorHandler CURSOR = new(true);
+        public static DelegateTimerHandler TIMER = new();
+        public static AchievementHandler ACHIEVEMENTS = new();
+        public static PaletteHandler PALETTES = new();
+
         public override void Start()
         {
+            
+            
             //WINDOW ICON
-            icon = ResourceManager.LoadImage("resources/gfx/shape-engine-icon-bg.png");
+            icon = RESOURCES.LoadImage("resources/gfx/shape-engine-icon-bg.png");
             SetWindowIcon(icon);
-
-
+            
+            
             //DATA CONTAINER INIT
-            DataContainerCDB dataContainer = new("resources/data/test-properties.json", new ShapeEngineDemo.DataObjects.DefaultDataResolver(), "asteroids", "player", "guns", "projectiles", "colors", "engines");
-            DataHandler.AddDataContainer(dataContainer);
-
+            var dataString = RESOURCES.LoadJsonData("resources/data/test-properties.json");
+            DataContainerCDB dataContainer = new(new ShapeEngineDemo.DataObjects.DefaultDataResolver(), dataString, "asteroids", "player", "guns", "projectiles", "colors", "engines");
+            DATA.AddDataContainer(dataContainer);
+            
             
             //COLOR PALETTES
-            var colorData = DataHandler.GetCDBContainer().GetSheet<ColorData>("colors");
+            var colorData = DATA.GetCDBContainer().GetSheet<ColorData>("colors");
             foreach (var palette in colorData)
             {
                 Dictionary<string, Color> colors = new()
@@ -54,78 +70,109 @@ namespace ShapeEngineDemo
                     {"darkmatter", PaletteHandler.HexToColor(palette.Value.darkMatter)},
 
                 };
-                PaletteHandler.AddPalette(palette.Key, colors);
+                PALETTES.AddPalette(palette.Key, colors);
             }
-            PaletteHandler.ChangePalette("starter");
-
-
+            PALETTES.ChangePalette("starter");
+            
+            
             //Set the clear color for game screen texture
             //ScreenHandler.Game.SetClearColor(new Color(0, 0, 0, 0)); // PaletteHandler.C("bg1"));
 
-
-
+            var outline = RESOURCES.LoadFragmentShader("resources/shaders/outline-shader.fs");
+            var colorize = RESOURCES.LoadFragmentShader("resources/shaders/colorize-shader.fs");
+            var bloom = RESOURCES.LoadFragmentShader("resources/shaders/bloom-shader.fs");
+            var chrom = RESOURCES.LoadFragmentShader("resources/shaders/chromatic-aberration-shader.fs");
+            var crt = RESOURCES.LoadFragmentShader("resources/shaders/crt-shader.fs");
+            var grayscale = RESOURCES.LoadFragmentShader("resources/shaders/grayscale-shader.fs");
+            var pixelizer = RESOURCES.LoadFragmentShader("resources/shaders/pixelizer-shader.fs");
+            var blur = RESOURCES.LoadFragmentShader("resources/shaders/blur-shader.fs");
             //SHADERS - Does not work right now because Raylib-CsLo LoadShaderFromMemory does not work correctly...
-            ShaderHandler.AddScreenShader("outline", "resources/shaders/outline-shader.fs", false, -1);
-            ShaderHandler.AddScreenShader("colorize", "resources/shaders/colorize-shader.fs", false, 0);
-            ShaderHandler.AddScreenShader("bloom", "resources/shaders/bloom-shader.fs", false, 1);
-            ShaderHandler.AddScreenShader("chrom", "resources/shaders/chromatic-aberration-shader.fs", false, 2);
-            ShaderHandler.AddScreenShader("crt", "resources/shaders/crt-shader.fs", true, 3);
-            ShaderHandler.AddScreenShader("grayscale", "resources/shaders/grayscale-shader.fs", false, 4);
-            ShaderHandler.AddScreenShader("pixelizer", "resources/shaders/pixelizer-shader.fs", false, 5);
-            ShaderHandler.AddScreenShader("blur", "resources/shaders/blur-shader.fs", false, 6);
+            ScreenHandler.SHADERS.AddScreenShader("outline", outline, false, -1);
+            ScreenHandler.SHADERS.AddScreenShader("colorize", colorize, false, 0);
+            ScreenHandler.SHADERS.AddScreenShader("bloom", bloom, false, 1);
+            ScreenHandler.SHADERS.AddScreenShader("chrom", chrom, false, 2);
+            ScreenHandler.SHADERS.AddScreenShader("crt", crt, true, 3);
+            ScreenHandler.SHADERS.AddScreenShader("grayscale", grayscale, false, 4);
+            ScreenHandler.SHADERS.AddScreenShader("pixelizer", pixelizer, false, 5);
+            ScreenHandler.SHADERS.AddScreenShader("blur", blur, false, 6);
 
             //outline only works with transparent background!!
-            ShaderHandler.SetScreenShaderValueVec("outline", "textureSize", new float[] { ScreenHandler.GameWidth(), ScreenHandler.GameHeight() }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
-            ShaderHandler.SetScreenShaderValueFloat("outline", "outlineSize", 2.0f);
-            ShaderHandler.SetScreenShaderValueVec("outline", "outlineColor", new float[] { 1.0f, 0.0f, 0.0f, 1.0f }, ShaderUniformDataType.SHADER_UNIFORM_VEC4);
-            ShaderHandler.SetScreenShaderValueVec("chrom", "amount", new float[] { 1.2f, 1.2f }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
-            ShaderHandler.SetScreenShaderValueVec("bloom", "size", new float[] { ScreenHandler.CUR_WINDOW_SIZE.width, ScreenHandler.CUR_WINDOW_SIZE.height }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
-            ShaderHandler.SetScreenShaderValueFloat("bloom", "samples", 5f);
-            ShaderHandler.SetScreenShaderValueFloat("bloom", "quality", 2.5f);
-            ShaderHandler.SetScreenShaderValueFloat("pixelizer", "renderWidth", ScreenHandler.CUR_WINDOW_SIZE.width);
-            ShaderHandler.SetScreenShaderValueFloat("pixelizer", "renderHeight", ScreenHandler.CUR_WINDOW_SIZE.height);
-            ShaderHandler.SetScreenShaderValueFloat("pixelizer", "pixelWidth", 1.0f);
-            ShaderHandler.SetScreenShaderValueFloat("pixelizer", "pixelHeight", 1.0f);
-            ShaderHandler.SetScreenShaderValueFloat("blur", "renderWidth", ScreenHandler.CUR_WINDOW_SIZE.width);
-            ShaderHandler.SetScreenShaderValueFloat("blur", "renderHeight", ScreenHandler.CUR_WINDOW_SIZE.height);
-            ShaderHandler.SetScreenShaderValueFloat("blur", "scale", 1.25f);
-            ShaderHandler.SetScreenShaderValueFloat("crt", "renderWidth", ScreenHandler.CUR_WINDOW_SIZE.width);
-            ShaderHandler.SetScreenShaderValueFloat("crt", "renderHeight", ScreenHandler.CUR_WINDOW_SIZE.height);
-
+            ScreenHandler.SHADERS.SetScreenShaderValueVec("outline", "textureSize", new float[] { ScreenHandler.GameWidth(), ScreenHandler.GameHeight() }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
+            ScreenHandler.SHADERS.SetScreenShaderValueFloat("outline", "outlineSize", 2.0f);
+            ScreenHandler.SHADERS.SetScreenShaderValueVec("outline", "outlineColor", new float[] { 1.0f, 0.0f, 0.0f, 1.0f }, ShaderUniformDataType.SHADER_UNIFORM_VEC4);
+            ScreenHandler.SHADERS.SetScreenShaderValueVec("chrom", "amount", new float[] { 1.2f, 1.2f }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
+            ScreenHandler.SHADERS.SetScreenShaderValueVec("bloom", "size", new float[] { ScreenHandler.CUR_WINDOW_SIZE.width, ScreenHandler.CUR_WINDOW_SIZE.height }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
+            ScreenHandler.SHADERS.SetScreenShaderValueFloat("bloom", "samples", 5f);
+            ScreenHandler.SHADERS.SetScreenShaderValueFloat("bloom", "quality", 2.5f);
+            ScreenHandler.SHADERS.SetScreenShaderValueFloat("pixelizer", "renderWidth", ScreenHandler.CUR_WINDOW_SIZE.width);
+            ScreenHandler.SHADERS.SetScreenShaderValueFloat("pixelizer", "renderHeight", ScreenHandler.CUR_WINDOW_SIZE.height);
+            ScreenHandler.SHADERS.SetScreenShaderValueFloat("pixelizer", "pixelWidth", 1.0f);
+            ScreenHandler.SHADERS.SetScreenShaderValueFloat("pixelizer", "pixelHeight", 1.0f);
+            ScreenHandler.SHADERS.SetScreenShaderValueFloat("blur", "renderWidth", ScreenHandler.CUR_WINDOW_SIZE.width);
+            ScreenHandler.SHADERS.SetScreenShaderValueFloat("blur", "renderHeight", ScreenHandler.CUR_WINDOW_SIZE.height);
+            ScreenHandler.SHADERS.SetScreenShaderValueFloat("blur", "scale", 1.25f);
+            ScreenHandler.SHADERS.SetScreenShaderValueFloat("crt", "renderWidth", ScreenHandler.CUR_WINDOW_SIZE.width);
+            ScreenHandler.SHADERS.SetScreenShaderValueFloat("crt", "renderHeight", ScreenHandler.CUR_WINDOW_SIZE.height);
+            
+            
+            var light = RESOURCES.LoadFont("resources/fonts/teko-light.ttf", 200);
+            var regular = RESOURCES.LoadFont("resources/fonts/teko-regular.ttf", 200);
+            var medium = RESOURCES.LoadFont("resources/fonts/teko-medium.ttf", 200);
+            var semibold = RESOURCES.LoadFont("resources/fonts/teko-semibold.ttf", 200);
+            var huge = RESOURCES.LoadFont("resources/fonts/teko-semibold.ttf", 600);
             //FONTS
-            UIHandler.AddFont("light", "resources/fonts/teko-light.ttf", 200);
-            UIHandler.AddFont("regular", "resources/fonts/teko-regular.ttf", 200);
-            UIHandler.AddFont("medium", "resources/fonts/teko-medium.ttf", 200);
-            UIHandler.AddFont("semibold", "resources/fonts/teko-semibold.ttf", 200);
-            UIHandler.SetDefaultFont("medium");
-
+            FONT.AddFont("light", light, 200);
+            FONT.AddFont("regular", regular, 200);
+            FONT.AddFont("medium", medium, 200);
+            FONT.AddFont("semibold", semibold, 200);
+            FONT.AddFont("huge", huge, 500);
+            FONT.SetDefaultFont("medium");
+            
 
             //AUDIO BUSES
             AudioHandler.AddBus("music", 0.5f, "master");
             AudioHandler.AddBus("sound", 0.5f, "master");
 
+            
+            var buttonClick = RESOURCES.LoadSound("resources/audio/sfx/button-click01.wav");
+            var buttonHover = RESOURCES.LoadSound("resources/audio/sfx/button-hover01.wav");
+            var boost = RESOURCES.LoadSound("resources/audio/sfx/boost01.wav");
+            var slow = RESOURCES.LoadSound("resources/audio/sfx/slow02.wav");
+            var playerHurt = RESOURCES.LoadSound("resources/audio/sfx/hurt01.wav");
+            var playerDie = RESOURCES.LoadSound("resources/audio/sfx/die01.wav");
+            var playerStunEnded = RESOURCES.LoadSound("resources/audio/sfx/stun01.wav");
+            var playerHealed = RESOURCES.LoadSound("resources/audio/sfx/healed01.wav");
+            var playerPwrDown = RESOURCES.LoadSound("resources/audio/sfx/pwrDown01.wav");
+            var playerPwrUp = RESOURCES.LoadSound("resources/audio/sfx/pwrUp05.wav");
+            var projectilePierce = RESOURCES.LoadSound("resources/audio/sfx/projectilePierce01.wav");
+            var projectileBounce = RESOURCES.LoadSound("resources/audio/sfx/projectileBounce03.wav");
+            var projectileImpact = RESOURCES.LoadSound("resources/audio/sfx/projectileImpact01.wav");
+            var projectileExplosion = RESOURCES.LoadSound("resources/audio/sfx/explosion01.wav");
+            var projectileCrit = RESOURCES.LoadSound("resources/audio/sfx/projectileCrit01.wav");
+            var asteroidDie = RESOURCES.LoadSound("resources/audio/sfx/die02.wav");
+            var bullet = RESOURCES.LoadSound("resources/audio/sfx/gun05.wav");
 
             //SOUNDS
-            AudioHandler.AddSFX("button click", "resources/audio/sfx/button-click01.wav", 0.25f, "sound");
-            AudioHandler.AddSFX("button hover", "resources/audio/sfx/button-hover01.wav", 0.5f, "sound");
-            AudioHandler.AddSFX("boost", "resources/audio/sfx/boost01.wav", 0.5f, "sound");
-            AudioHandler.AddSFX("slow", "resources/audio/sfx/slow02.wav", 0.5f, "sound");
-            AudioHandler.AddSFX("player hurt", "resources/audio/sfx/hurt01.wav", 0.5f, "sound");
-            AudioHandler.AddSFX("player die", "resources/audio/sfx/die01.wav", 0.5f, "sound");
-            AudioHandler.AddSFX("player stun ended", "resources/audio/sfx/stun01.wav", 0.5f, "sound");
-            AudioHandler.AddSFX("player healed", "resources/audio/sfx/healed01.wav", 0.5f, "sound");
+            AudioHandler.AddSFX("button click", buttonClick, 0.25f, "sound");
+            AudioHandler.AddSFX("button hover", buttonHover, 0.5f, "sound");
+            AudioHandler.AddSFX("boost", boost, 0.5f, "sound");
+            AudioHandler.AddSFX("slow", slow, 0.5f, "sound");
+            AudioHandler.AddSFX("player hurt", playerHurt, 0.5f, "sound");
+            AudioHandler.AddSFX("player die", playerDie, 0.5f, "sound");
+            AudioHandler.AddSFX("player stun ended", playerStunEnded, 0.5f, "sound");
+            AudioHandler.AddSFX("player healed", playerHealed, 0.5f, "sound");
 
-            AudioHandler.AddSFX("player pwr down", "resources/audio/sfx/pwrDown01.wav", 1.0f, "sound");
-            AudioHandler.AddSFX("player pwr up", "resources/audio/sfx/pwrUp05.wav", 1.0f, "sound");
+            AudioHandler.AddSFX("player pwr down", playerPwrDown, 1.0f, "sound");
+            AudioHandler.AddSFX("player pwr up", playerPwrUp, 1.0f, "sound");
 
-            AudioHandler.AddSFX("projectile pierce", "resources/audio/sfx/projectilePierce01.wav", 0.7f, "sound");
-            AudioHandler.AddSFX("projectile bounce", "resources/audio/sfx/projectileBounce03.wav", 0.6f, "sound");
-            AudioHandler.AddSFX("projectile impact", "resources/audio/sfx/projectileImpact01.wav", 0.8f, "sound");
-            AudioHandler.AddSFX("projectile explosion", "resources/audio/sfx/explosion01.wav", 1f, "sound");
-            AudioHandler.AddSFX("projectile crit", "resources/audio/sfx/projectileCrit01.wav", 0.6f, "sound");
-            AudioHandler.AddSFX("asteroid die", "resources/audio/sfx/die02.wav", 0.55f, "sound");
-            AudioHandler.AddSFX("bullet", "resources/audio/sfx/gun05.wav", 0.25f, "sound");
-
+            AudioHandler.AddSFX("projectile pierce", projectilePierce, 0.7f, "sound");
+            AudioHandler.AddSFX("projectile bounce", projectileBounce, 0.6f, "sound");
+            AudioHandler.AddSFX("projectile impact", projectileImpact, 0.8f, "sound");
+            AudioHandler.AddSFX("projectile explosion", projectileExplosion, 1f, "sound");
+            AudioHandler.AddSFX("projectile crit", projectileCrit, 0.6f, "sound");
+            AudioHandler.AddSFX("asteroid die", asteroidDie, 0.55f, "sound");
+            AudioHandler.AddSFX("bullet", bullet, 0.25f, "sound");
+            
 
 
             //MUSIC EXAMPLE--------------
@@ -150,8 +197,8 @@ namespace ShapeEngineDemo
             InputAction rotateLeft = new("Rotate Left", InputAction.Keys.A, InputAction.Keys.GP_BUTTON_LEFT_FACE_LEFT);
             InputAction rotateRight = new("Rotate Right", InputAction.Keys.D, InputAction.Keys.GP_BUTTON_LEFT_FACE_RIGHT);
             InputAction rotate = new("Rotate", 0.25f, InputAction.Keys.GP_AXIS_LEFT_X);
-            InputAction boost = new("Boost", InputAction.Keys.W, InputAction.Keys.GP_BUTTON_LEFT_FACE_UP, InputAction.Keys.GP_BUTTON_LEFT_TRIGGER_BOTTOM);
-            InputAction slow = new("Slow", InputAction.Keys.S, InputAction.Keys.GP_BUTTON_LEFT_FACE_DOWN, InputAction.Keys.GP_BUTTON_LEFT_TRIGGER_TOP);
+            InputAction boostInput = new("Boost", InputAction.Keys.W, InputAction.Keys.GP_BUTTON_LEFT_FACE_UP, InputAction.Keys.GP_BUTTON_LEFT_TRIGGER_BOTTOM);
+            InputAction slowInput = new("Slow", InputAction.Keys.S, InputAction.Keys.GP_BUTTON_LEFT_FACE_DOWN, InputAction.Keys.GP_BUTTON_LEFT_TRIGGER_TOP);
             InputAction cycleGunSetup = new("Cycle Gun Setup", InputAction.Keys.ONE, InputAction.Keys.GP_BUTTON_RIGHT_FACE_UP);
             InputAction shootFixed = new("Shoot Fixed", InputAction.Keys.J, InputAction.Keys.SPACE, InputAction.Keys.GP_BUTTON_RIGHT_TRIGGER_BOTTOM);
             InputAction dropAimPoint = new("Drop Aim Point",  InputAction.Keys.K, InputAction.Keys.GP_BUTTON_RIGHT_TRIGGER_TOP);
@@ -174,7 +221,7 @@ namespace ShapeEngineDemo
             InputMap inputMap = new("Default", 
                 iaQuit, iaFullscreen, 
                 rotateLeft, rotateRight, rotate, 
-                boost, slow, 
+                boostInput, slowInput, 
                 shootFixed, dropAimPoint,
                 pause, slowTime,
                 spawnAsteroidDebug, healPlayerDebug, toggleDrawCollidersDebug, toggleDrawHelpersDebug, cycleZoomDebug, 
@@ -186,14 +233,52 @@ namespace ShapeEngineDemo
 
 
             ScreenHandler.OnWindowSizeChanged += OnWindowSizeChanged;
+            ScreenHandler.CAMERA.BaseZoom = 1.5f;
+
+            
+            //Achievements
+            AchievementStat asteroidKills = new("asteroidKills", "Asteroid Kills", 0);
+            ACHIEVEMENTS.AddStat(asteroidKills);
+
+
+            Achievement asteroidKiller = new("asteroidKiller", "Asteroid Killer", true, asteroidKills, 0, 100, 20);
+            Achievement asteroidDestroyer = new("asteroidDestroyer", "Asteroid Destroyer", false, asteroidKills, 100, 250, 50);
+            Achievement asteroidAnnihilator = new("asteroidAnnihilator", "Asteroid Annihilator", false, asteroidKills, 250, 1000, 250);
+
+
+            ACHIEVEMENTS.AddAchievement(asteroidKiller);
+            ACHIEVEMENTS.AddAchievement(asteroidDestroyer);
+            ACHIEVEMENTS.AddAchievement(asteroidAnnihilator);
+
+
+            CURSOR.Add("ui", new CursorBasic(0.02f, RED));
+            CURSOR.Add("game", new CursorGame(0.02f, RED));
+            CURSOR.Switch("ui");
+            CURSOR.Hide();
+
+            InputHandler.OnInputChanged += OnInputTypeChanged;
 
             //ScreenHandler.SetFrameRateLimit(180);
             //SPAWN SPLASH SCREEN
             Action startscene = () => GoToScene("splash");
-            TimerHandler.Add(2.0f, startscene);
+            TIMER.Add(2.0f, startscene);
         }
         
-        public override void HandleInput()
+
+        public override void PostDrawUI(Vector2 uiSize, Vector2 stretchFactor)
+        {
+            CURSOR.Draw(uiSize, MOUSE_POS_UI);
+            Rectangle r = SRect.ConstructRect(uiSize * new Vector2(0.97f), uiSize * new Vector2(0.2f, 0.08f), new(1, 1));
+            ACHIEVEMENTS.Draw(FONT.GetFont("medium"), r, GRAY, WHITE, BLUE, YELLOW);
+            
+        }
+        public override void PreUpdate(float dt)
+        {
+            TIMER.Update(dt);
+            ACHIEVEMENTS.Update(dt);
+        }
+
+        public override void PreHandleInput()
         {
             if (InputHandler.IsReleased(0, "Fullscreen")) { ScreenHandler.ToggleFullscreen(); }
             if (InputHandler.IsReleased(0, "Next Monitor")) { ScreenHandler.NextMonitor(); }
@@ -232,35 +317,34 @@ namespace ShapeEngineDemo
                 ScreenHandler.ResizeWindow(res.width, res.height);
 
             }
-
-            if (EDITORMODE)
-            {
-                if (InputHandler.IsReleased(0, "Toggle Draw Helpers")) DEBUG_DRAWHELPERS = !DEBUG_DRAWHELPERS;
-                if (InputHandler.IsReleased(0, "Toggle Draw Colliders")) DEBUG_DRAWCOLLIDERS = !DEBUG_DRAWCOLLIDERS;
-                if (InputHandler.IsReleased(0, "Cycle Zoom"))
-                {
-                    ScreenHandler.CAMERA.ZoomBy(0.25f);
-                    if (ScreenHandler.CAMERA.ZoomFactor > 2) ScreenHandler.CAMERA.ZoomFactor = 0.25f;
-                }
-
-                //if (Raylib.IsKeyReleased(KeyboardKey.KEY_P)) TogglePause();
-            }
         }
 
         private void OnWindowSizeChanged(int w, int h)
         {
-            ShaderHandler.SetScreenShaderValueFloat("crt", "renderWidth", w);
-            ShaderHandler.SetScreenShaderValueFloat("crt", "renderHeight", h);
-            ShaderHandler.SetScreenShaderValueFloat("pixelizer", "renderWidth", w);
-            ShaderHandler.SetScreenShaderValueFloat("pixelizer", "renderHeight", h);
-            ShaderHandler.SetScreenShaderValueFloat("blur", "renderWidth", w);
-            ShaderHandler.SetScreenShaderValueFloat("blur", "renderHeight", h);
-            ShaderHandler.SetScreenShaderValueVec("bloom", "size", new float[] { w, h }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
+            ScreenHandler.SHADERS.SetScreenShaderValueFloat("crt", "renderWidth", w);
+            ScreenHandler.SHADERS.SetScreenShaderValueFloat("crt", "renderHeight", h);
+            ScreenHandler.SHADERS.SetScreenShaderValueFloat("pixelizer", "renderWidth", w);
+            ScreenHandler.SHADERS.SetScreenShaderValueFloat("pixelizer", "renderHeight", h);
+            ScreenHandler.SHADERS.SetScreenShaderValueFloat("blur", "renderWidth", w);
+            ScreenHandler.SHADERS.SetScreenShaderValueFloat("blur", "renderHeight", h);
+            ScreenHandler.SHADERS.SetScreenShaderValueVec("bloom", "size", new float[] { w, h }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
         }
-
+        private static void OnInputTypeChanged(InputType newInputType)
+        {
+            if (newInputType == InputType.KEYBOARD_MOUSE) { CURSOR.Show(); }
+            else { CURSOR.Hide(); }
+        }
         public override void End()
         {
             ScreenHandler.OnWindowSizeChanged -= OnWindowSizeChanged;
+            InputHandler.OnInputChanged -= OnInputTypeChanged;
+            RESOURCES.Close();
+            DATA.Close();
+            FONT.Close();
+            CURSOR.Close();
+            TIMER.Close();
+            ACHIEVEMENTS.Close();
+            PALETTES.Close();
             base.End();
             UnloadImage(icon);
         }

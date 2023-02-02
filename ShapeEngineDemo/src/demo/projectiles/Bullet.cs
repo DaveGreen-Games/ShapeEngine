@@ -1,11 +1,7 @@
-﻿using System.Numerics;
-using ShapeEngineCore.Globals;
-using ShapeEngineCore.SimpleCollision;
+﻿using ShapeCore;
+using ShapeCollision;
 using ShapeEngineDemo.Bodies;
-using ShapeEngineCore.Globals.Audio;
-using ShapeEngineCore;
-using Raylib_CsLo;
-//using ShapeEngineCore.Globals.Timing;
+using ShapeAudio;
 
 namespace ShapeEngineDemo.Projectiles
 {
@@ -21,10 +17,10 @@ namespace ShapeEngineDemo.Projectiles
         {
 
         }
-        public override void Overlap(OverlapInfo info)
+        public override void Overlap(CollisionInfo info)
         {
             //if (IsDead()) return;
-            if (info.overlapping)
+            if (info.collision || info.overlapping)
             {
                 if(info.other != null)
                 {
