@@ -55,6 +55,33 @@ namespace ShapeUI.Container
         //    UIHandler.OnSelectedItemUnregistered -= OnSelectedItemUnregistered;
         //}
 
+        public virtual UIElement NextElement(UIElement selected)
+        {
+            int index = children.IndexOf(selected);
+            if (index >= children.Count - 1) return selected;
+            
+            index++;
+            movementDir = 1;
+
+            UIElement next = children[index];
+            if (next == GetLastElement()) ChangeCurIndex(1);
+            
+            return next;
+        }
+        public virtual UIElement PrevElement(UIElement selected)
+        {
+            int index = children.IndexOf(selected);
+            if (index <= 0) return selected;
+
+            index--;
+            movementDir = -1;
+
+            UIElement next = children[index];
+            if (next == GetFirstElement()) ChangeCurIndex(-1);
+
+            return next;
+        }
+
         protected virtual void OnDirectionInput(UINeighbors.NeighborDirection dir, UIElement? selected, UIElement? nextSelected)
         {
             if (nextSelected == null) return;
