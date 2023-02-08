@@ -30,6 +30,7 @@ namespace ShapePersistent
         private string path = "";
         private string resourceFileName = "";
 
+        public static int GLYPH_COUNT = 0;
         public ResourceManager(string path, string resourceFileName = "resources.txt")
         {
             if (resourceFileName == "") return;
@@ -105,7 +106,7 @@ namespace ShapePersistent
             {
                 unsafe
                 {
-                    Font f = Raylib.LoadFontEx(filePath, fontSize, (int*)0, 300);
+                    Font f = Raylib.LoadFontEx(filePath, fontSize, (int*)0, GLYPH_COUNT);
                     if(autoUnload) fontsToUnload.Add(f);
                     return f;
                 }
@@ -119,7 +120,7 @@ namespace ShapePersistent
                     var extension = resources[fileName].extension;
                     fixed (byte* ptr = data)
                     {
-                        return Raylib.LoadFontFromMemory(extension, ptr, data.Length, fontSize, (int*)0, 300);
+                        return Raylib.LoadFontFromMemory(extension, ptr, data.Length, fontSize, (int*)0, GLYPH_COUNT);
                     }
                 }
             }
@@ -272,7 +273,7 @@ namespace ShapePersistent
         {
             unsafe
             {
-                Font f = Raylib.LoadFontEx(filePath, fontSize, (int*)0, 300);
+                Font f = Raylib.LoadFontEx(filePath, fontSize, (int*)0, GLYPH_COUNT);
                 return f;
             }
         }

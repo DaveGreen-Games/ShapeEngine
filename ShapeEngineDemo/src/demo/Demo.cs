@@ -121,11 +121,14 @@ namespace ShapeEngineDemo
             var semibold = RESOURCES.LoadFont("resources/fonts/teko-semibold.ttf", 200);
             var huge = RESOURCES.LoadFont("resources/fonts/teko-semibold.ttf", 600);
             //FONTS
-            FONT.AddFont("light", light, 200);
-            FONT.AddFont("regular", regular, 200);
-            FONT.AddFont("medium", medium, 200);
-            FONT.AddFont("semibold", semibold, 200);
-            FONT.AddFont("huge", huge, 500);
+
+            var tf = TextureFilter.TEXTURE_FILTER_BILINEAR;
+            int fs = 200;
+            FONT.AddFont("light", light, fs, tf);
+            FONT.AddFont("regular", regular, fs, tf);
+            FONT.AddFont("medium", medium, fs, tf);
+            FONT.AddFont("semibold", semibold, fs, tf);
+            FONT.AddFont("huge", huge, 500, tf);
             FONT.SetDefaultFont("medium");
             
 

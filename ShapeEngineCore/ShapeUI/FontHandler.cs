@@ -25,18 +25,23 @@ namespace ShapeUI
             if (!fontSizes.ContainsKey(name)) return -1;
             else return fontSizes[name];
         }
-        public void AddFont(string name, string fileName, int fontSize = 100)
+        public void SetFontFilter(string name = "", TextureFilter textureFilter = TextureFilter.TEXTURE_FILTER_BILINEAR)
+        {
+            Font font = GetFont(name);
+            SetTextureFilter(font.texture, textureFilter);
+        }
+        public void AddFont(string name, string fileName, int fontSize = 100, TextureFilter textureFilter = TextureFilter.TEXTURE_FILTER_BILINEAR)
         {
             if (fileName == "" || fonts.ContainsKey(name)) return;
             Font font = ResourceManager.LoadFontFromRaylib(fileName, fontSize);
 
-            SetTextureFilter(font.texture, TextureFilter.TEXTURE_FILTER_BILINEAR);
+            SetTextureFilter(font.texture, textureFilter);
             fonts.Add(name, font);
         }
-        public void AddFont(string name, Font font, int fontSize = 100)
+        public void AddFont(string name, Font font, int fontSize = 100, TextureFilter textureFilter = TextureFilter.TEXTURE_FILTER_BILINEAR)
         {
             if (fonts.ContainsKey(name)) return;
-            SetTextureFilter(font.texture, TextureFilter.TEXTURE_FILTER_BILINEAR);
+            SetTextureFilter(font.texture, textureFilter);
             fonts.Add(name, font);
         }
         public Font GetFont(string name = "")
