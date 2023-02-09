@@ -164,6 +164,11 @@ namespace ShapeLib
     public static class SUtils
     {
 
+        public static float CalculateFrameIndependentLerpFactor(float lerpPercentage, float dt)
+        {
+            float rate = 1f - MathF.Pow(1f - lerpPercentage, dt);
+            return rate;
+        }
         public static Vector2 GetNormal(Vector2 start, Vector2 end, Vector2 intersectionPoint, Vector2 referencePoint)
         {
             Vector2 dir = SVec.Normalize(start - end);
