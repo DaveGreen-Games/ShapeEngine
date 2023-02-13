@@ -105,6 +105,17 @@ namespace ShapeEngineDemo
         public override bool IsDead() { return false; }
     }
 
+    public class PlayfieldBasic : Playfield
+    {
+        public PlayfieldBasic(Rectangle rect, int drawOrder = 0) : base(rect, drawOrder)
+        {
+
+        }
+        public override void Draw()
+        {
+            DrawRectangleLinesEx(rect, 3f, Demo.PALETTES.C("neutral"));
+        }
+    }
 
     public class AreaBasic : Area
     {
@@ -132,9 +143,9 @@ namespace ShapeEngineDemo
             SpawnPlanets(5, new(3, 4.5f), "planets very far", -0.9f);
             SpawnPlanets(3, new(5, 6.5f), "planets far", -0.7f);
             SpawnPlanets(2, new(7, 8.5f), "planets near", -0.5f);
-            this.playfield = new(area, 3f, Demo.PALETTES.C("neutral"), -10);
+            this.playfield = new PlayfieldBasic(area, -10);
         }
-
+        //
         public override void Draw()
         {
             base.Draw();

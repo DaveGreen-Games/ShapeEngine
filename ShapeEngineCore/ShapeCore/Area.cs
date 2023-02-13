@@ -201,13 +201,20 @@ namespace ShapeCore
         protected Rectangle outer;
         protected Playfield? playfield = null;
         public CollisionHandler colHandler;
+        
+        public Area()
+        {
+            inner = new();
+            outer = new();
+            colHandler = new(0,0,0,0,0,0);
+        }
         public Area(float x, float y, float w, float h, int rows, int cols)
         {
             inner = new(x, y, w, h);
             outer = SRect.ScaleRectangle(inner, 2f);
-            colHandler = new(outer.x, outer.y, outer.width, outer.height, rows, cols);
+            colHandler = new(inner.x, inner.y, inner.width, inner.height, rows, cols);
             AddLayer("default");
-            Start();
+            //Start();
         }
         public Area(Vector2 topLeft, Vector2 bottomRight, int rows, int cols)
         {
@@ -215,25 +222,25 @@ namespace ShapeCore
             float h = bottomRight.Y - topLeft.Y;
             inner = new(topLeft.X, topLeft.Y, w, h);
             outer = SRect.ScaleRectangle(inner, 2f);
-            colHandler = new(outer.x, outer.y, outer.width, outer.height, rows, cols);
+            colHandler = new(inner.x, inner.y, inner.width, inner.height, rows, cols);
             AddLayer("default");
-            Start();
+            //Start();
         }
         public Area(Vector2 topLeft, float w, float h, int rows, int cols)
         {
             inner = new(topLeft.X, topLeft.Y, w, h);
             outer = SRect.ScaleRectangle(inner, 2f);
-            colHandler = new(outer.x, outer.y, outer.width, outer.height, rows, cols);
+            colHandler = new(inner.x, inner.y, inner.width, inner.height, rows, cols);
             AddLayer("default");
-            Start();
+            //Start();
         }
         public Area(Rectangle area, int rows, int cols)
         {
             inner = area;
             outer = SRect.ScaleRectangle(inner, 2f);
-            colHandler = new(outer.x, outer.y, outer.width, outer.height, rows, cols);
+            colHandler = new(inner.x, inner.y, inner.width, inner.height, rows, cols);
             AddLayer("default");
-            Start();
+            //Start();
         }
 
         public Playfield? GetCurPlayfield() { return playfield; }
@@ -249,16 +256,19 @@ namespace ShapeCore
         }
         public void AddLayer(string name, float drawOrder = 0f, float parallaxeScaling = 0f)
         {
-            if (name == "" || layers.ContainsKey(name)) return;
-            layers.Add(name, new(name, inner, outer, colHandler, drawOrder, parallaxeScaling));
+            if (name == "") return;
+            if (layers.ContainsKey(name)) layers[name] = new(name, inner, outer, colHandler, drawOrder, parallaxeScaling);
+            else layers.Add(name, new(name, inner, outer, colHandler, drawOrder, parallaxeScaling));
+            
             sortedLayers = SortAreaLayers();
         }
         public void AddLayers(params (string name, float drawOrder, float parallaxeScaling)[] add)
         {
             foreach (var layer in add)
             {
-                if (layer.name == "" || layer.name == "default" || layers.ContainsKey(layer.name)) continue;
-                layers.Add(layer.name, new(layer.name, inner, outer, colHandler, layer.drawOrder, layer.parallaxeScaling));
+                if (layer.name == "") continue;
+                if (layers.ContainsKey(layer.name)) layers[layer.name] = new(layer.name, inner, outer, colHandler, layer.drawOrder, layer.parallaxeScaling);
+                else layers.Add(layer.name, new(layer.name, inner, outer, colHandler, layer.drawOrder, layer.parallaxeScaling));
             }
             sortedLayers = SortAreaLayers();
         }

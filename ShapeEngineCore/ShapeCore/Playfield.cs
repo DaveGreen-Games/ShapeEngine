@@ -5,22 +5,20 @@ namespace ShapeCore
 {
     public class Playfield
     {
-        Rectangle rect;
-        float wallThickness = 3f;
-        Color color = WHITE;
-        private float drawOrder = 100;
-        public Playfield(Vector2 topleft, Vector2 bottomright, float wallThickness, Color color, float drawOrder = 0f)
+        protected Rectangle rect;
+        //protected float wallThickness = 3f;
+        //protected Color color = WHITE;
+        protected float drawOrder = 100;
+        public Playfield(Vector2 topleft, Vector2 bottomright, float drawOrder = 0f)
         {
             rect = new(topleft.X, topleft.Y, bottomright.X - topleft.X, bottomright.Y - topleft.Y);
-            this.wallThickness = wallThickness;
-            this.color = color;
+            //this.wallThickness = wallThickness;
             this.drawOrder = drawOrder;
         }
-        public Playfield(Rectangle rect, float wallThickness, Color color, float drawOrder = 0f)
+        public Playfield(Rectangle rect, float drawOrder = 0f)
         {
             this.rect = rect;
-            this.wallThickness = wallThickness;
-            this.color = color;
+            //this.wallThickness = wallThickness;
             this.drawOrder = drawOrder;
         }
 
@@ -34,8 +32,8 @@ namespace ShapeCore
         public void ChangeWidth(float value) { rect.width = value; }
         public void ChangeSize(float w, float h) { ChangeWidth(w); ChangeHeight(h); }
         public void ChangeSize(Vector2 size) { ChangeWidth(size.X); ChangeHeight(size.Y); }
-        public void SetWallThickness(float value) { if (value > 0f) wallThickness = value; }
-        public void SetColor(Color value) { color = value; }
+        //public void SetWallThickness(float value) { if (value > 0f) wallThickness = value; }
+        //public void SetColor(Color value) { color = value; }
 
         public (bool collided, Vector2 hitPoint, Vector2 n, Vector2 newPos) Collide(Vector2 pos, float radius)
         {
@@ -104,9 +102,9 @@ namespace ShapeCore
             return (outOfBounds, newPos);
         }
 
-        public void Draw()
+        public virtual void Draw()
         {
-            DrawRectangleLinesEx(rect, wallThickness, color);
+            //DrawRectangleLinesEx(rect, wallThickness, color);
         }
     }
 }
