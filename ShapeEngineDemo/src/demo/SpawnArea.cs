@@ -2,7 +2,7 @@
 using Raylib_CsLo;
 using ShapeLib;
 
-namespace ShapeCore
+namespace ShapeEngineDemo
 {
 
     internal class SpawnSegment

@@ -3,7 +3,6 @@ using ShapeLib;
 using ShapeEngineDemo.Bodies;
 using ShapeTiming;
 using ShapeCore;
-using Raylib_CsLo;
 
 namespace ShapeEngineDemo
 {

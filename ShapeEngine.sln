@@ -12,8 +12,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShapeEngineDemo", "ShapeEng
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProjectTemplate", "ProjectTemplate\ProjectTemplate.csproj", "{30DA0565-C410-42C4-8B10-7B373907468A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShapeCollisionTest", "ShapeCollisionTest\ShapeCollisionTest.csproj", "{AC74D392-4271-4AF6-B7B9-94C6B0E0FC5D}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,10 +30,6 @@ Global
 		{30DA0565-C410-42C4-8B10-7B373907468A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{30DA0565-C410-42C4-8B10-7B373907468A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{30DA0565-C410-42C4-8B10-7B373907468A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AC74D392-4271-4AF6-B7B9-94C6B0E0FC5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AC74D392-4271-4AF6-B7B9-94C6B0E0FC5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AC74D392-4271-4AF6-B7B9-94C6B0E0FC5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AC74D392-4271-4AF6-B7B9-94C6B0E0FC5D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
