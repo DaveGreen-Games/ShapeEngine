@@ -199,7 +199,6 @@ namespace ShapeCore
         protected List<AreaLayer> sortedLayers = new();
         protected Rectangle inner;
         protected Rectangle outer;
-        protected Playfield? playfield = null;
         public CollisionHandler colHandler;
         
         public Area()
@@ -214,7 +213,6 @@ namespace ShapeCore
             outer = SRect.ScaleRectangle(inner, 2f);
             colHandler = new(inner.x, inner.y, inner.width, inner.height, rows, cols);
             AddLayer("default");
-            //Start();
         }
         public Area(Vector2 topLeft, Vector2 bottomRight, int rows, int cols)
         {
@@ -224,7 +222,6 @@ namespace ShapeCore
             outer = SRect.ScaleRectangle(inner, 2f);
             colHandler = new(inner.x, inner.y, inner.width, inner.height, rows, cols);
             AddLayer("default");
-            //Start();
         }
         public Area(Vector2 topLeft, float w, float h, int rows, int cols)
         {
@@ -232,7 +229,6 @@ namespace ShapeCore
             outer = SRect.ScaleRectangle(inner, 2f);
             colHandler = new(inner.x, inner.y, inner.width, inner.height, rows, cols);
             AddLayer("default");
-            //Start();
         }
         public Area(Rectangle area, int rows, int cols)
         {
@@ -240,14 +236,11 @@ namespace ShapeCore
             outer = SRect.ScaleRectangle(inner, 2f);
             colHandler = new(inner.x, inner.y, inner.width, inner.height, rows, cols);
             AddLayer("default");
-            //Start();
         }
 
-        public Playfield? GetCurPlayfield() { return playfield; }
+
         public Rectangle GetInnerArea() { return inner; }
         public Rectangle GetOuterArea() { return outer; }
-        public Vector2 GetInnerCenter() { return new(inner.x + inner.width / 2, inner.Y + inner.height / 2); }
-        public Vector2 GetOuterCenter() { return new(outer.x + outer.width / 2, outer.Y + outer.height / 2); }
 
 
         public bool HasLayer(string name)
@@ -470,11 +463,11 @@ namespace ShapeCore
                 DrawRectangleLinesEx(this.outer, 15f, DEBUG_AreaOuterColor);
                 colHandler.DebugDrawGrid(DEBUG_CollisionHandlerBorder, DEBUG_CollisionHandlerFill);
             }
-            bool playfieldDrawn = false;
+            //bool playfieldDrawn = false;
             for (int i = 0; i < sortedLayers.Count; i++)
             {
                 var layer = sortedLayers[i];
-                if (playfield != null && !playfieldDrawn && layer.DrawOrder > playfield.GetDrawOrder()) playfield.Draw();
+                //if (playfield != null && !playfieldDrawn && layer.DrawOrder > playfield.GetDrawOrder()) playfield.Draw();
                 layer.Draw();
             }
         }

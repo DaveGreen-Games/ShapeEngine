@@ -129,7 +129,8 @@ namespace ShapeEngineDemo.Projectiles
             stats.Update(dt);
             Move(dt);
             
-            var info = GAMELOOP.GetCurArea().GetCurPlayfield().Collide(collider.Pos, collider.Radius);
+            //var info = GAMELOOP.GetCurArea().GetCurPlayfield().Collide(collider.Pos, collider.Radius);
+            var info = SRect.CollidePlayfield(GAMELOOP.GetCurArea().GetInnerArea(), collider.Pos, collider.Radius);
             if (info.collided) PlayfieldCollision(info.hitPoint, info.n);
         }
         public override void Draw()

@@ -105,30 +105,11 @@ namespace ShapeEngineDemo
         public override bool IsDead() { return false; }
     }
 
-    public class PlayfieldBasic : Playfield
-    {
-        public PlayfieldBasic(Rectangle rect, int drawOrder = 0) : base(rect, drawOrder)
-        {
-
-        }
-        public override void Draw()
-        {
-            DrawRectangleLinesEx(rect, 3f, Demo.PALETTES.C("neutral"));
-        }
-    }
-
+    
     public class AreaBasic : Area
     {
         public AreaBasic(Rectangle area, int rows, int cols) : base(area, rows, cols)
         {
-            //for (int i = 0; i < 5; i++)
-            //{
-            //    string layer = String.Format("stars {0}", i);
-            //    AddLayer(layer, -100 + 2 * i, 0.9f - 0.1f * i);
-            //    SpawnStars(60, new Vector2(0.7f, 0.8f) + new Vector2(0.06f, 0.06f) * i, new Vector2(0.4f, 0.5f) + new Vector2(0.04f, 0.04f) * i, layer);
-            //}
-
-
             AddLayer("stars very far", -100, 0.2f);
             AddLayer("stars far", -95, 0.15f);
             AddLayer("stars near", -90, 0.1f);
@@ -143,26 +124,16 @@ namespace ShapeEngineDemo
             SpawnPlanets(5, new(3, 4.5f), "planets very far", -0.9f);
             SpawnPlanets(3, new(5, 6.5f), "planets far", -0.7f);
             SpawnPlanets(2, new(7, 8.5f), "planets near", -0.5f);
-            this.playfield = new PlayfieldBasic(area, -10);
+            //this.playfield = new PlayfieldBasic(area, -10);
         }
         //
         public override void Draw()
         {
+            DrawRectangleLinesEx(inner, 3f, Demo.PALETTES.C("neutral"));
             base.Draw();
             //DrawRectangleLinesEx(new Rectangle(0.0f, 0.0f, ScreenHandler.GameWidth(), ScreenHandler.GameHeight()), 6, ColorPalette.Cur.neutral);
 
         }
-        //public override void DrawUI(Vector2 uiSize, Vector2 stretchFactor)
-        //{
-        //    base.DrawUI(devRes, stretchFactor);
-        //    //UIHandler.DrawTextAligned(String.Format("Objects {0}", gameObjects.Count), new(GAMELOOP.UICenter().X, GAMELOOP.UISize().Y), UIHandler.GetFontSizeScaled(FontSize.SMALL), UIHandler.Scale(5), ColorPalette.Cur.text, Alignement.BOTTOMCENTER);
-        //}
-
-        //public override void Update(float dt)
-        //{
-        //    base.Update(dt);
-        //    if(RNG.randF() < 0.1f) SpawnStar();
-        //}
 
         private void SpawnPlanet(float radius, string layer, float brightness = 0f)
         {
@@ -203,8 +174,8 @@ namespace ShapeEngineDemo
 
         public Level()
         {
-            Rectangle playArea = new Rectangle(0, 0, 800, 800);// Utils.ScaleRectangle(ScreenHandler.GameArea(), 1.5f);
-            this.area = new AreaBasic(playArea, 20, 20);
+            Rectangle playArea = new Rectangle(0, 0, 1200, 1200);// Utils.ScaleRectangle(ScreenHandler.GameArea(), 1.5f);
+            this.area = new AreaBasic(playArea, 10, 10);
             this.asteroidSpawner = new(this.area, 1f, 2f);
             this.playArea = playArea;
 

@@ -5,8 +5,129 @@ namespace ShapeLib
 {
     public class SRect
     {
+        public static (bool collided, Vector2 hitPoint, Vector2 n, Vector2 newPos) CollidePlayfield(Rectangle playfieldRect, Vector2 objPos, float objRadius)
+        {
+            bool collided = false;
+            Vector2 hitPoint = objPos;
+            Vector2 n = new(0f, 0f);
+            Vector2 newPos = objPos;
+            if (objPos.X + objRadius > playfieldRect.x + playfieldRect.width)
+            {
+                hitPoint = new(playfieldRect.x + playfieldRect.width, objPos.Y);
+                newPos.X = hitPoint.X - objRadius;
+                n = new(-1, 0);
+                collided = true;
+            }
+            else if (objPos.X - objRadius < playfieldRect.x)
+            {
+                hitPoint = new(playfieldRect.x, objPos.Y);
+                newPos.X = hitPoint.X + objRadius;
+                n = new(1, 0);
+                collided = true;
+            }
 
-        
+            if (objPos.Y + objRadius > playfieldRect.Y + playfieldRect.height)
+            {
+                hitPoint = new(objPos.X, playfieldRect.Y + playfieldRect.height);
+                newPos.Y = hitPoint.Y - objRadius;
+                n = new(0, -1);
+                collided = true;
+            }
+            else if (objPos.Y - objRadius < playfieldRect.y)
+            {
+                hitPoint = new(objPos.X, playfieldRect.Y);
+                newPos.Y = hitPoint.Y + objRadius;
+                n = new(0, 1);
+                collided = true;
+            }
+
+            return (collided, hitPoint, n, newPos);
+        }
+        public static (bool outOfBounds, Vector2 newPos) WrapAroundPlayfield(Rectangle playfieldRect, Vector2 objPos, float objRadius)
+        {
+            bool outOfBounds = false;
+            Vector2 newPos = objPos;
+            if (objPos.X + objRadius > playfieldRect.x + playfieldRect.width)
+            {
+                newPos = new(playfieldRect.x, objPos.Y);
+                outOfBounds = true;
+            }
+            else if (objPos.X - objRadius < playfieldRect.x)
+            {
+                newPos = new(playfieldRect.x + playfieldRect.width, objPos.Y);
+                outOfBounds = true;
+            }
+
+            if (objPos.Y + objRadius > playfieldRect.Y + playfieldRect.height)
+            {
+                newPos = new(objPos.X, playfieldRect.Y);
+                outOfBounds = true;
+            }
+            else if (objPos.Y - objRadius < playfieldRect.y)
+            {
+                newPos = new(objPos.X, playfieldRect.Y + playfieldRect.height);
+                outOfBounds = true;
+            }
+
+            return (outOfBounds, newPos);
+        }
+
+        /// <summary>
+        /// Construct 9 rects out of an outer and inner rect.
+        /// </summary>
+        /// <param name="inner">The inner rect. Has to be inside of the outer rect.</param>
+        /// <param name="outer">The outer rect. Has to be bigger than the inner rect.</param>
+        /// <returns>A list of rectangle in the order [TL,TC,TR,LC,C,RC,BL,BC,BR].</returns>
+        public static List<Rectangle> GetNineTiles(Rectangle inner, Rectangle outer)
+        {
+            List<Rectangle> tiles = new();
+
+            //topLeft
+            Vector2 tl0 = new(outer.x, outer.y);
+            Vector2 br0 = new(inner.x, inner.y);
+            
+            //topCenter
+            Vector2 tl1 = new(inner.x, outer.y);
+            Vector2 br1 = new(inner.x + inner.width, inner.y);
+            
+            //topRight
+            Vector2 tl2 = new(inner.x + inner.width, outer.y);
+            Vector2 br2 = new(outer.x + outer.width, inner.y);
+           
+            //rightCenter
+            Vector2 tl3 = br1;
+            Vector2 br3 = new(outer.x + outer.width, inner.y + inner.height);
+            
+            //bottomRight
+            Vector2 tl4 = new(inner.x + inner.width, inner.y + inner.height);
+            Vector2 br4 = new(outer.x + outer.width, outer.y + outer.height);
+            
+            //bottomCenter
+            Vector2 tl5 = new(inner.x, inner.y + inner.height);
+            Vector2 br5 = new(inner.x + inner.width, outer.y + outer.height);
+            
+            //bottomLeft
+            Vector2 tl6 = new(outer.x, inner.y + inner.height);
+            Vector2 br6 = new(inner.x, outer.y + outer.height);
+            
+            //leftCenter
+            Vector2 tl7 = new(outer.x, inner.y);
+            Vector2 br7 = tl5;
+            
+            tiles.Add(ConstructRect(tl0, br0));//topLeft
+            tiles.Add(ConstructRect(tl1, br1));//topCenter
+            tiles.Add(ConstructRect(tl2, br2));//topRight
+            tiles.Add(ConstructRect(tl7, br7));//leftCenter
+            tiles.Add(inner);
+            tiles.Add(ConstructRect(tl3, br3));//rightCenter
+            tiles.Add(ConstructRect(tl6, br6));//bottomLeft
+            tiles.Add(ConstructRect(tl5, br5));//bottomCenter
+            tiles.Add(ConstructRect(tl4, br4));//bottomRight
+
+            return tiles;
+        }
+
+
         public static Rectangle MultiplyRectangle(Rectangle rect, float factor)
         {
             return new Rectangle
@@ -126,6 +247,11 @@ namespace ShapeLib
                     RayMath.Clamp(p.X, rect.X, rect.X + rect.width),
                     RayMath.Clamp(p.Y, rect.Y, rect.Y + rect.height)
                 );
+        }
+
+        public static Rectangle ConstructRect(Vector2 topLeft, Vector2 bottomRight)
+        {
+            return new(topLeft.X, topLeft.Y, bottomRight.X - topLeft.X, bottomRight.Y - topLeft.Y);
         }
         public static Rectangle ConstructRect(Vector2 pos, Vector2 size, Vector2 alignement)
         {

@@ -643,7 +643,8 @@ namespace ShapeEngineDemo.Bodies
                 pwrBarMini.UpdateRect(miniBarPos - new Vector2(0, miniBarSize.Y * 1.1f) * 1.2f, miniBarSize, new(0.5f));
             }
 
-            var info = GAMELOOP.GetCurArea().GetCurPlayfield().Collide(collider.Pos, collider.Radius);
+            //var info = GAMELOOP.GetCurArea().GetCurPlayfield().Collide(collider.Pos, collider.Radius);
+            var info = SRect.CollidePlayfield(GAMELOOP.GetCurArea().GetInnerArea(), collider.Pos, collider.Radius);
             if (info.collided)
             {
                 float stunTime = WALL_STUN_TIME;
