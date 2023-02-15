@@ -121,7 +121,7 @@ namespace ShapeCollision
     public static class SGeometry
     {
         //exact point line, point segment and point point overlap calculations are used if <= 0
-        public static float POINT_RADIUS = 5.0f; //point line and point segment overlap makes more sense when the point is a circle (epsilon = radius)
+        public static float POINT_RADIUS = float.Epsilon; // 5.0f; //point line and point segment overlap makes more sense when the point is a circle (epsilon = radius)
 
         public static CollisionInfo GetCollisionInfo(ICollidable self, ICollidable other)
         {
@@ -355,14 +355,24 @@ namespace ShapeCollision
 
         public static bool OverlapPointPoint(Vector2 pointA, Vector2 pointB)
         {
-            return OverlapCircleCircle(pointA, POINT_RADIUS, pointB, POINT_RADIUS);
+            //float difX = MathF.Abs(pointA.X - pointB.X);
+            //float difY = MathF.Abs(pointA.Y - pointB.Y);
+            //return difX <= 0.001f && difY <= 0.001f;
+            //return OverlapCircleCircle(pointA, 0.001f, pointB, 0.001f);
+            return pointA.X == pointB.X && pointA.Y == pointB.Y;
         }
         public static bool OverlapPointCircle(Vector2 point, Vector2 circlePos, float circleRadius)
         {
-            return OverlapCircleCircle(point, POINT_RADIUS, circlePos, circleRadius);
+            float disSq = (circlePos - point).LengthSquared();
+            return disSq <= circleRadius * circleRadius;
+            //return OverlapCircleCircle(point, POINT_RADIUS, circlePos, circleRadius);
         }
         public static bool OverlapPointLine(Vector2 point, Vector2 linePos, Vector2 lineDir)
         {
+            //Vector2 w = point - linePos;
+            //Vector2 p = SVec.Project(w, linePos + lineDir);
+            ////return (point - p).LengthSquared() == 0f;
+            //return OverlapPointPoint(point, p);
             return OverlapCircleLine(point, POINT_RADIUS, linePos, lineDir);
         }
         //public static bool OverlapPointRay(Vector2 point, Vector2 rayPos, Vector2 rayDir)
@@ -410,7 +420,8 @@ namespace ShapeCollision
         }
         public static bool OverlapCirclePoint(Vector2 circlePos, float circleRadius, Vector2 point)
         {
-            return OverlapCircleCircle(circlePos, circleRadius, point, POINT_RADIUS);
+            return OverlapPointCircle(point, circlePos, circleRadius);
+            //return OverlapCircleCircle(circlePos, circleRadius, point, POINT_RADIUS);
         }
         public static bool OverlapCircleLine(Vector2 circlePos, float circleRadius, Vector2 linePos, Vector2 lineDir)
         {
