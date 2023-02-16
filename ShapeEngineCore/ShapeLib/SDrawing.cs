@@ -344,7 +344,32 @@ namespace ShapeLib
             else if(leftF.Y > 1f) DrawLineEx(tl, tl + new Vector2(0f, leftF.Y), lineThickness, color);
 
         }
-
+        public static void DrawRectangleCorners(Rectangle rect, float lineThickness, Color color, float length)
+        {
+            DrawRectangleCorners(rect, lineThickness, color, new(length), new(length), new(length), new(length));
+            //Vector2 tl = new(rect.x, rect.y);
+            //Vector2 tr = new(rect.x + rect.width, rect.y);
+            //Vector2 br = new(rect.x + rect.width, rect.y + rect.height);
+            //Vector2 bl = new(rect.x, rect.y + rect.height);
+            //
+            //DrawCircleV(tl, lineThickness / 2, color);
+            //DrawCircleV(tr, lineThickness / 2, color);
+            //DrawCircleV(br, lineThickness / 2, color);
+            //DrawCircleV(bl, lineThickness / 2, color);
+            //
+            //DrawLineEx(tl, tl + new Vector2(length, 0f), lineThickness, color);
+            //DrawLineEx(tr, tr - new Vector2(length, 0f), lineThickness, color);
+            //DrawLineEx(br, br - new Vector2(length, 0f), lineThickness, color);
+            //DrawLineEx(bl, bl + new Vector2(length, 0f), lineThickness, color);
+            //DrawLineEx(tr, tr + new Vector2(0f, length), lineThickness, color);
+            //DrawLineEx(br, br - new Vector2(0f, length), lineThickness, color);
+            //DrawLineEx(bl, bl - new Vector2(0f, length), lineThickness, color);
+            //DrawLineEx(tl, tl + new Vector2(0f, length), lineThickness, color);
+        }
+        public static void DrawRectangleCorners(Vector2 pos, Vector2 size, Vector2 alignement, float lineThickness, Color color, float length)
+        {
+            DrawRectangleCorners(SRect.ConstructRect(pos, size, alignement), lineThickness, color, length);
+        }
         public static void DrawRectangleCorners(Vector2 pos, Vector2 size, Vector2 alignement, float lineThickness, Color color, Vector2 topF, Vector2 rightF, Vector2 bottomF, Vector2 leftF)
         {
             DrawRectangleCorners(SRect.ConstructRect(pos, size, alignement), lineThickness, color, topF, rightF, bottomF, leftF);
