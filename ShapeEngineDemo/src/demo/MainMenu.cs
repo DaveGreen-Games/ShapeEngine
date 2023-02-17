@@ -151,10 +151,17 @@ namespace ShapeEngineDemo
             optionsButton.Draw(uiSize, stretchFactor);
             quitButton.Draw(uiSize, stretchFactor);
 
+            //SDrawing.DrawLineDotted(uiSize * new Vector2(0.1f, 0.35f), uiSize * new Vector2(0.9f, 0.35f), 5, 12f, RED, true);
+            //Rectangle r = SRect.ConstructRect(uiSize * new Vector2(0.2f, 0.05f), uiSize * new Vector2(0.8f, 0.8f));
+            //SDrawing.DrawRectangleLinesDotted(r, 4, 16, YELLOW, false, true);
+            //Rectangle r2 = SRect.ConstructRect(uiSize * new Vector2(0.21f, 0.07f), uiSize * new Vector2(0.79f, 0.78f));
+            //SDrawing.DrawRectangleLinesDotted(r2, 40, 8, LIME, true, false);
+            //SDrawing.DrawCircleLinesDotted(uiSize * new Vector2(0.5f, 0.5f), 500, 2, 12f, GREEN, 16, true);
+            
             //tb1.Draw(uiSize, stretchFactor);
             //tb2.Draw(uiSize, stretchFactor);
             //tb3.Draw(uiSize, stretchFactor);
-            
+
         }
     }
 

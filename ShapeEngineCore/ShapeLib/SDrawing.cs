@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Raylib_CsLo;
+using ShapeCollision;
 using ShapeUI;
 
 namespace ShapeLib
@@ -7,6 +8,155 @@ namespace ShapeLib
     public static class SDrawing
     {
 
+        public static void DrawLineDotted(Vector2 start, Vector2 end, int gaps, float lineThickness, Color color, bool roundedLineEdges = false)
+        {
+            if(gaps <= 0) DrawLineEx(start, end, lineThickness, color);
+            else
+            {
+                Vector2 w = end - start;
+                float l = w.Length();
+                Vector2 dir = w / l;
+                int totalGaps = gaps * 2 + 1;
+                float size = l / totalGaps;
+                Vector2 offset = dir * size;
+
+                Vector2 cur = start;
+                for (int i = 0; i < totalGaps; i++)
+                {
+                    if(i % 2 == 0)
+                    {
+                        Vector2 next = cur + offset;
+                        if (roundedLineEdges)
+                        {
+                            DrawCircleV(cur, lineThickness * 0.5f, color);
+                            DrawCircleV(next, lineThickness * 0.5f, color);
+                        }
+                        DrawLineEx(cur, next, lineThickness, color);
+                        cur = next;
+                        
+                    }
+                    else
+                    {
+                        cur = cur + offset; //gap
+                    }
+                }
+            }
+        }
+        public static void DrawLineDotted(Vector2 start, Vector2 end, int gaps, float gapSizeF, float lineThickness, Color color, bool roundedLineEdges = false)
+        {
+            if (gaps <= 0) DrawLineEx(start, end, lineThickness, color);
+            else
+            {
+                Vector2 w = end - start;
+                float l = w.Length();
+                Vector2 dir = w / l;
+
+                float totalGapSize = l * gapSizeF;
+                float remaining = l - totalGapSize;
+                float gapSize = totalGapSize / gaps;
+                float size = remaining / (gaps + 1);
+
+                Vector2 gapOffset = dir * gapSize;
+                Vector2 offset = dir * size;
+
+                int totalGaps = gaps * 2 + 1;
+                Vector2 cur = start;
+                for (int i = 0; i < totalGaps; i++)
+                {
+                    if (i % 2 == 0)
+                    {
+                        Vector2 next = cur + offset;
+                        if (roundedLineEdges)
+                        {
+                            DrawCircleV(cur, lineThickness * 0.5f, color);
+                            DrawCircleV(next, lineThickness * 0.5f, color);
+                        }
+                        DrawLineEx(cur, next, lineThickness, color);
+                        cur = next;
+                    }
+                    else
+                    {
+                        cur = cur + gapOffset; //gap
+                    }
+                }
+            }
+        }
+        public static void DrawRectangleLinesDotted(Rectangle rect, int gapsPerSide, float lineThickness, Color color, bool cornersRounded = false, bool roundedLineEdges = false)
+        {
+            if (cornersRounded)
+            {
+                var corners = SRect.GetRectCorners(rect);
+                float r = lineThickness * 0.5f;
+                DrawCircleV(corners.tl, r, color);
+                DrawCircleV(corners.tr, r, color);
+                DrawCircleV(corners.br, r, color);
+                DrawCircleV(corners.bl, r, color);
+            }
+            
+            
+            var segments = SRect.GetRectSegments(rect);
+            foreach (var s in segments)
+            {
+                DrawLineDotted(s.start, s.end, gapsPerSide, lineThickness, color, roundedLineEdges);
+            }
+        }
+        public static void DrawRectangleLinesDotted(Rectangle rect, int gapsPerSide, float gapSizeF, float lineThickness, Color color, bool cornersRounded = false, bool roundedLineEdges = false)
+        {
+            if (cornersRounded)
+            {
+                var corners = SRect.GetRectCorners(rect);
+                float r = lineThickness * 0.5f;
+                DrawCircleV(corners.tl, r, color);
+                DrawCircleV(corners.tr, r, color);
+                DrawCircleV(corners.br, r, color);
+                DrawCircleV(corners.bl, r, color);
+            }
+
+
+            var segments = SRect.GetRectSegments(rect);
+            foreach (var s in segments)
+            {
+                DrawLineDotted(s.start, s.end, gapsPerSide, gapSizeF, lineThickness, color, roundedLineEdges);
+            }
+        }
+        public static void DrawCircleLinesDotted(Vector2 center, float radius, int sidesPerGap, float lineThickness, Color color, float sideLength = 8f, bool roundedLineEdges = false)
+        {
+            float anglePieceRad = 360 * DEG2RAD;
+            int sides = GetCircleArcSideCount(radius, MathF.Abs(anglePieceRad * RAD2DEG), sideLength);
+            float angleStep = anglePieceRad / sides;
+
+            //int totalGaps = gaps * 2 + 1;
+            //float circum = 2f * PI * radius;
+            //float size = circum / totalGaps;
+            float size = sideLength * sidesPerGap;
+            float remainingSize = size;
+            bool gap = false;
+            for (int i = 0; i < sides; i++)
+            {
+                if (!gap)
+                {
+                    Vector2 start = center + SVec.Rotate(SVec.Right() * radius, angleStep * i);
+                    Vector2 end = center + SVec.Rotate(SVec.Right() * radius, angleStep * (i + 1));
+                    if (roundedLineEdges)
+                    {
+                        DrawCircleV(start, lineThickness * 0.5f, color);
+                        DrawCircleV(end, lineThickness * 0.5f, color);
+                    }
+                    DrawLineEx(start, end, lineThickness, color);
+                }
+                
+                remainingSize -= sideLength;
+                if(remainingSize <= 0f)
+                {
+                    gap = !gap;
+                    remainingSize = size;
+                }
+            }
+        }
+        //public static void DrawPolygonLinesDotted()
+        //{
+        //
+        //}
 
         public static void DrawTextBox(Rectangle rect, string emptyText, List<char> chars, float fontSpacing, Font font, Color textColor, bool drawCaret, int caretPosition, float caretWidth, Color caretColor, Vector2 textAlignement)
         {
@@ -272,7 +422,6 @@ namespace ShapeLib
             DrawCircleV(pos + SVec.Rotate(relativePoints[relativePoints.Count - 1] * size, rotDeg * DEG2RAD), lineThickness * 0.5f, outlineColor);
             DrawLineEx(pos + SVec.Rotate(relativePoints[relativePoints.Count - 1] * size, rotDeg * DEG2RAD), pos + SVec.Rotate(relativePoints[0] * size, rotDeg * DEG2RAD), lineThickness, outlineColor);
         }
-
         public static void DrawPolygon(List<Vector2> points, Vector2 center, Color fillColor, float lineThickness, Color outlineColor, bool clockwise = true)
         {
             DrawPolygon(points, center, fillColor, clockwise);
@@ -280,7 +429,7 @@ namespace ShapeLib
         }
 
 
-        public static void DrawGlowLine(Vector2 start, Vector2 end, float width, float endWidth, Color color, Color endColor, int steps)
+        public static void DrawLineGlow(Vector2 start, Vector2 end, float width, float endWidth, Color color, Color endColor, int steps)
         {
             float wStep = (endWidth - width) / steps;
 
@@ -777,19 +926,16 @@ namespace ShapeLib
         {
             DrawRectangle(SRect.ConstructRect(pos, size, alignement), color);
         }
-
         public static void DrawRectangle(Rectangle rect, Vector2 pivot, float rotDeg, Color color)
         {
             var rr = SRect.RotateRect(rect, pivot, rotDeg);
             Raylib.DrawTriangle(rr.tl, rr.bl, rr.br, color);
             Raylib.DrawTriangle(rr.br, rr.tr, rr.tl, color);
         }
-
         public static void DrawRectangle(Vector2 pos, Vector2 size, Vector2 alignement, Vector2 pivot, float rotDeg, Color color)
         {
             DrawRectangle(SRect.ConstructRect(pos, size, alignement), pivot, rotDeg, color);
         }
-        
 
         public static void DrawRectangleOutlineBar(Rectangle rect, float thickness, float f, Color color)
         {
