@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Security.Cryptography.X509Certificates;
 using Raylib_CsLo;
 using ShapeCollision;
 using ShapeUI;
@@ -7,6 +8,184 @@ namespace ShapeLib
 {
     public static class SDrawing
     {
+        public static void DrawLines(List<Vector2> points, float lineThickness, Color color, bool smoothJoints = false)
+        {
+            if(points.Count < 2) return;
+            if(smoothJoints) DrawCircleV(points[0], lineThickness / 2, color);
+            for (int i = 0; i < points.Count - 1; i++)
+            {
+                Vector2 cur = points[i];
+                Vector2 next = points[i + 1];
+                DrawCircleV(next, lineThickness / 2, color);
+                DrawLineEx(cur, next, lineThickness, color);
+            }
+        }
+        public static List<Vector2> CreateLightningLine(Vector2 start, Vector2 end, int segments = 10, float maxSway = 80f)
+        {
+            List<Vector2> result = new();
+            Vector2 w = end - start;
+            Vector2 dir = SVec.Normalize(w);
+            Vector2 n = new Vector2(dir.Y, -dir.X);
+            float length = w.Length();
+
+            float prevDisplacement = 0;
+            Vector2 cur = start;
+            result.Add(start);
+
+            float segmentLength = length / segments;
+            float remainingLength = length;
+            while (remainingLength > 0f)
+            {
+                float randSegmentLength = SRNG.randF() * segmentLength;
+                remainingLength -= randSegmentLength;
+                if (remainingLength <= 0f)
+                {
+                    result.Add(end);
+                    break;
+                }
+                float scale = randSegmentLength / segmentLength;
+                float displacement = SRNG.randF(-maxSway, maxSway);
+                displacement -= (displacement - prevDisplacement) * (1 - scale);
+                cur = cur + dir * randSegmentLength;
+                Vector2 p = cur + displacement * n;
+                result.Add(p);
+                prevDisplacement = displacement;
+            }
+            return result;
+        }
+        public static List<Vector2> CreateLightningLine(Vector2 start, Vector2 end, float segmentLength = 5f, float maxSway = 80f)
+        {
+            List<Vector2> result = new();
+            Vector2 w = end - start;
+            Vector2 dir = SVec.Normalize(w);
+            Vector2 n = new Vector2(dir.Y, -dir.X);
+            float length = w.Length();
+            
+            float prevDisplacement = 0;
+            Vector2 cur = start;
+            result.Add(start);
+            float remainingLength = length;
+            while(remainingLength > 0f)
+            {
+                float randSegmentLength = SRNG.randF() * segmentLength;
+                remainingLength-= randSegmentLength;
+                if(remainingLength <= 0f)
+                {
+                    result.Add(end);
+                    break;
+                }
+                float scale = randSegmentLength / segmentLength;
+                float displacement = SRNG.randF(-maxSway, maxSway);
+                displacement -= (displacement - prevDisplacement) * (1-scale);
+                cur = cur + dir * randSegmentLength;
+                Vector2 p = cur + displacement * n;
+                result.Add(p);
+                prevDisplacement = displacement;
+            }
+            return result;
+        }
+        //public static List<Vector2> CreateLightningLine(Vector2 start, Vector2 end, float segmentLength = 5f, float maxSway = 80f)
+        //{
+        //    List<Vector2> result = new();
+        //    Vector2 tangent = end - start;
+        //    Vector2 normal = Vector2.Normalize(new Vector2(tangent.Y, -tangent.X));
+        //    float length = tangent.Length();
+        //    List<float> positions = new() { 0 };
+        //    for (int i = 0; i < length / segmentLength; i++)
+        //        positions.Add(SRNG.randF());
+        //    positions.Sort();
+        //    float Sway = maxSway;
+        //    float Jaggedness = 1 / Sway;
+        //    float prevDisplacement = 0;
+        //    result.Add(start);
+        //    for (int i = 1; i < positions.Count; i++)
+        //    {
+        //        float pos = positions[i];
+        //        // used to prevent sharp angles by ensuring very close positions also have small perpendicular variation. 
+        //        float scale = (length * Jaggedness) * (pos - positions[i - 1]);
+        //        // defines an envelope. Points near the middle of the bolt can be further from the central line. 
+        //        float envelope = pos > 0.95f ? 20 * (1 - pos) : 1;
+        //        float displacement = SRNG.randF(-Sway, Sway);
+        //        displacement -= (displacement - prevDisplacement) * (1 - scale);
+        //        displacement *= envelope;
+        //        Vector2 point = start + pos * tangent + displacement * normal;
+        //        result.Add(point);
+        //        prevDisplacement = displacement;
+        //    }
+        //    result.Add(end); 
+        //    return result;
+        //}
+        //public static void DrawLineLightning(Vector2 start, Vector2 end, float lineThickness, Color color, float segmentLength = 5f, float maxSway = 80)
+        //{
+        //    Vector2 tangent = end - start;
+        //    Vector2 normal = Vector2.Normalize(new Vector2(tangent.Y, -tangent.X));
+        //    float length = tangent.Length();
+        //    List<float> positions = new() { 0 };
+        //    for (int i = 0; i < length / segmentLength; i++)
+        //        positions.Add(SRNG.randF());
+        //    positions.Sort();
+        //    float Sway = maxSway;
+        //    float Jaggedness = 1 / Sway;
+        //    Vector2 prevPoint = start;
+        //    float prevDisplacement = 0;
+        //    for (int i = 1; i < positions.Count; i++)
+        //    {
+        //        float pos = positions[i];
+        //        // used to prevent sharp angles by ensuring very close positions also have small perpendicular variation. 
+        //        float scale = (length * Jaggedness) * (pos - positions[i - 1]);
+        //        // defines an envelope. Points near the middle of the bolt can be further from the central line. 
+        //        float envelope = pos > 0.95f ? 20 * (1 - pos) : 1;
+        //        float displacement = SRNG.randF(-Sway, Sway);
+        //        displacement -= (displacement - prevDisplacement) * (1 - scale);
+        //        displacement *= envelope;
+        //        Vector2 point = start + pos * tangent + displacement * normal;
+        //        DrawLineEx(prevPoint, point, lineThickness, color);
+        //        prevPoint = point;
+        //        prevDisplacement = displacement;
+        //    }
+        //    DrawLineEx(prevPoint, end, lineThickness, color);
+        //    DrawCircleV(start, lineThickness * 2, color);
+        //    DrawCircleV(end, lineThickness * 2, color);
+        //    //results.Add(new Line(prevPoint, dest, thickness));
+        //}
+        //public static void DrawLineLightning(Vector2 start, Vector2 end, float maxAngleDeg, Vector2 sizeFRange, float lineThickness, Color color)
+        //{
+        //    
+        //    Vector2 w = (end - start);
+        //    float l = w.Length();
+        //    Vector2 dir = w / l;
+        //    float maxAngleRad = maxAngleDeg * DEG2RAD;
+        //
+        //    float minSize = sizeFRange.X * l;
+        //    float maxSize = sizeFRange.Y * l;
+        //
+        //    DrawCircleV(start, lineThickness * 4, RED);
+        //    DrawCircleV(end, lineThickness * 4, RED);
+        //    DrawCircleV(end, minSize, new(255, 0, 0, 50));
+        //    DrawLineEx(start, end, lineThickness * 2, RED);
+        //    Vector2 cur = start;
+        //    Vector2 curGuide = cur;
+        //    float remainingLength = l;
+        //    while(true)
+        //    {
+        //        float randSize = SRNG.randF(minSize, maxSize);
+        //        remainingLength -= randSize;
+        //        if(remainingLength <= minSize)
+        //        {
+        //            DrawLineEx(cur, end, lineThickness, color);
+        //            break;
+        //        }
+        //        Vector2 randP = curGuide + dir * randSize;
+        //        DrawCircleV(randP, lineThickness * 4, RED);
+        //        Vector2 next = SVec.Rotate(randP, SRNG.randF(-maxAngleRad, maxAngleRad));
+        //        //Vector2 randDisplacement = SVec.Rotate(randP, SRNG.randF(-maxAngleRad, maxAngleRad));
+        //        //Vector2 next = cur + randDisplacement;
+        //        DrawLineEx(cur, next, lineThickness, color);
+        //        cur = next;
+        //        curGuide = randP;
+        //    }
+        //    //DrawLineEx(cur, end, lineThickness, color);
+        //}
 
         public static void DrawLineDotted(Vector2 start, Vector2 end, int gaps, float lineThickness, Color color, bool roundedLineEdges = false)
         {

@@ -16,10 +16,9 @@ namespace ShapeEngineDemo
         //MazeGenerator.Maze maze;
         //MazeGenerator.MazeDrawer mazeDrawer;
         ButtonLabel level1Button, quitButton, optionsButton;
-
+        //List<Vector2> bolt = new();
+        //float boltTimer = 1f;
         //ButtonLabel tb1, tb2, tb3;
-
-
         public MainMenu()
         {
             //maze = new(16, 9);
@@ -119,6 +118,17 @@ namespace ShapeEngineDemo
                 GAMELOOP.GoToScene("level1");
             }
             if (quitButton.Clicked()) GAMELOOP.QUIT = true;
+
+            //if(boltTimer > 0f)
+            //{
+            //    boltTimer -= dt;
+            //    if(boltTimer <= 0f)
+            //    {
+            //        boltTimer = SRNG.randF(0.02f, 0.05f);
+            //        bolt = SDrawing.CreateLightningLine(uiSize * new Vector2(0.5f, 0.05f), GAMELOOP.MOUSE_POS_UI, 25f, 35f);
+            //    }
+            //}
+
         }
         public override void Draw()
         {
@@ -157,11 +167,14 @@ namespace ShapeEngineDemo
             //Rectangle r2 = SRect.ConstructRect(uiSize * new Vector2(0.21f, 0.07f), uiSize * new Vector2(0.79f, 0.78f));
             //SDrawing.DrawRectangleLinesDotted(r2, 40, 8, LIME, true, false);
             //SDrawing.DrawCircleLinesDotted(uiSize * new Vector2(0.5f, 0.5f), 500, 2, 12f, GREEN, 16, true);
-            
+
             //tb1.Draw(uiSize, stretchFactor);
             //tb2.Draw(uiSize, stretchFactor);
             //tb3.Draw(uiSize, stretchFactor);
-
+            
+            //SDrawing.DrawLines(bolt, 4f, GOLD, true);
+            //SDrawing.DrawLineLightning(uiSize * new Vector2(0.1f, 0.35f), uiSize * new Vector2(0.9f, 0.35f), 4f, GOLD);
+            //SDrawing.DrawLineLightning(uiSize * new Vector2(0.1f, 0.35f), uiSize * new Vector2(0.9f, 0.35f), 4, new Vector2(0.1f, 0.12f), 4f, GOLD);
         }
     }
 
