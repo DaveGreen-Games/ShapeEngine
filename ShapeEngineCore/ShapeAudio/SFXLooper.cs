@@ -14,6 +14,8 @@ namespace ShapeAudio
         public float MinSpatialRange { get; set; } = 0f;
         public float MaxSpatialRange { get; set; } = 0f;
 
+        public event Action<SFXLooper>? OnLooped;
+
         public SFXLooper(SFX sound, float minSpatialRange, float maxSpatialRange)
         {
             this.sound = sound;
@@ -50,6 +52,11 @@ namespace ShapeAudio
             if (isLooping) Stop();
             else Start();
         }
+        protected virtual void Loop()
+        {
+            PlaySound(sound.GetSound());
+            OnLooped?.Invoke(this);
+        }
         public virtual void Update(float dt)
         {
             bool playing = IsSoundPlaying(sound.GetSound());
@@ -78,7 +85,7 @@ namespace ShapeAudio
 
                 if (!playing)
                 {
-                    PlaySound(sound.GetSound());
+                    Loop();
                 }
             }
         }
