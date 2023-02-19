@@ -2,6 +2,7 @@
 using System.Numerics;
 using ShapeCollision;
 using ShapeLib;
+using System.Security.Cryptography;
 
 namespace ShapeCore
 {
@@ -9,7 +10,17 @@ namespace ShapeCore
 
     //Automatically set areaLayerName on GameObject?
     //Then Removing a gameobject never needs the areaLayerName
+    internal class TimerValue
+    {
+        public float Timer = 0f;
+        public float Value = 0f;
 
+        public TimerValue(float duration, float value)
+        {
+            this.Timer = duration;
+            this.Value = value;
+        }
+    }
 
     public class AreaLayer
     {
@@ -23,7 +34,9 @@ namespace ShapeCore
         protected string name = "";
         public float ParallaxeSmoothing { get; set; } = 0.1f;
         public float DrawOrder { get; protected set; } = 0f;
+        public float UpdateSlowFactor { get; set; } = 1f;
 
+        
         public AreaLayer(string name, Rectangle inner, Rectangle outer, CollisionHandler colHandler, float drawOrder = 0f, float parallaxeScaling = 0f)
         {
             this.name = name;
@@ -33,6 +46,8 @@ namespace ShapeCore
             this.parallaxeScaling = parallaxeScaling;
             this.DrawOrder = drawOrder;
         }
+
+        
 
         public bool IsParallaxeLayer() { return parallaxeScaling != 0f; }
         public bool HasGameObject(GameObject obj) { return gameObjects.Contains(obj); }
@@ -136,7 +151,7 @@ namespace ShapeCore
                 obj.DrawUI(uiSize, stretchFactor);
             }
         }
-        public virtual void Update(float dt)
+        public virtual void Update(float dt, float slowFactor)
         {
             for (int i = gameObjects.Count - 1; i >= 0; i--)
             {
@@ -148,7 +163,10 @@ namespace ShapeCore
                 }
 
                 if(IsParallaxeLayer()) obj.AreaLayerOffset = parallaxeOffset;
-                obj.Update(dt);
+                float curSlowFactor = slowFactor * UpdateSlowFactor * obj.UpdateSlowFactor;// * obj.UpdateSlowResistance;
+                float dif = dt - (dt * curSlowFactor);
+                dif *= obj.UpdateSlowResistance;
+                obj.Update(dt - dif);
                 bool insideInner = SGeometry.OverlapRectRect(inner, obj.GetBoundingBox());
                 bool insideOuter = false;
                 if (insideInner) insideOuter = true;
@@ -201,6 +219,46 @@ namespace ShapeCore
         protected Rectangle outer;
         public CollisionHandler colHandler;
         
+        public float UpdateSlowFactor { get; set; } = 1f;
+        Dictionary<string, TimerValue> updateSlowFactors = new();
+        public void Slow(string id, float factor, float duration = -1)
+        {
+            if (id == "" || factor < 0) return;
+            if (updateSlowFactors.ContainsKey(id))
+            {
+                //var old = updateSlowFactors[id];
+                updateSlowFactors[id] = new(duration, factor);
+            }
+            else
+            {
+                updateSlowFactors.Add(id, new(duration, factor));
+            }
+        }
+        public void RemoveSlow(string id)
+        {
+            if (!updateSlowFactors.ContainsKey(id)) return;
+            updateSlowFactors.Remove(id);
+        }
+        public void ClearSlow() { updateSlowFactors.Clear(); }
+        private float UpdateSlowFactors(float dt)
+        {
+            float accumualted = 1f;
+            var keys = updateSlowFactors.Keys.ToList();
+            for (int i = keys.Count - 1; i >= 0; i--)
+            {
+                var entry = updateSlowFactors[keys[i]];
+                entry.Timer -= dt;
+                if (entry.Timer <= 0f)
+                {
+                    updateSlowFactors.Remove(keys[i]);
+                }
+                else
+                {
+                    accumualted *= entry.Value;
+                }
+            }
+            return accumualted;
+        }
         public Area()
         {
             inner = new();
@@ -242,7 +300,11 @@ namespace ShapeCore
         public Rectangle GetInnerArea() { return inner; }
         public Rectangle GetOuterArea() { return outer; }
 
-
+        public void SetLayerSlowFactor(string layer, float slowFactor)
+        {
+            if (!layers.ContainsKey(layer)) return;
+            layers[layer].UpdateSlowFactor = slowFactor;
+        }
         public bool HasLayer(string name)
         {
             return layers.ContainsKey(name);
@@ -484,10 +546,12 @@ namespace ShapeCore
             colHandler.Update(dt);
             //colHandler.Resolve();
 
+            float curSlowFactor = UpdateSlowFactors(dt) * UpdateSlowFactor;
+
             for (int i = 0; i < sortedLayers.Count; i++)
             {
                 var layer = sortedLayers[i];
-                layer.Update(dt);
+                layer.Update(dt, curSlowFactor);
             }
         }
         

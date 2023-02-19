@@ -216,18 +216,13 @@ namespace ShapeEngineDemo
             area.AddGameObject(player, true);
             area.Start();
             asteroidSpawner.Start();
-
-            //Vector2 pos = new(RNG.randF(0, ScreenHandler.GameWidth()), RNG.randF(0, ScreenHandler.GameHeight()));
-            //float r = RNG.randF(100, 200);
-            //Attractor attractor = new(pos, r, -500, 0);
-            //area.AddGameObject(attractor);
         }
         public override void HandleInput()
         {
             if (InputHandler.IsReleased(0, "Pause")) TogglePause();
-            
-            if (InputHandler.IsDown(0, "Slow Time")) GAMELOOP.Slow(0.25f, 1.0f);
-            else if (InputHandler.IsReleased(0, "Slow Time")) GAMELOOP.EndSlow();
+
+            if (InputHandler.IsDown(0, "Slow Time")) GAMELOOP.GetCurArea().UpdateSlowFactor = 0.05f;
+            else if (InputHandler.IsReleased(0, "Slow Time")) GAMELOOP.GetCurArea().UpdateSlowFactor = 1f;
             
             if (InputHandler.IsReleased(0, "UI Cancel")) GAMELOOP.GoToScene("mainmenu");
             

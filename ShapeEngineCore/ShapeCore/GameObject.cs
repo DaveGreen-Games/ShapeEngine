@@ -21,8 +21,15 @@ namespace ShapeCore
         public string Group { get; set; } = "default";
         public string AreaLayerName { get; set; } = "default";
         public Vector2 AreaLayerOffset { get; set; } = new(0f);
-        
-        
+
+        /// <summary>
+        /// Slows down or speeds up the gameobject. 2 means twice as fast, 0.5 means half speed. Is affect by slow resistance and area slow factor.
+        /// </summary>
+        public float UpdateSlowFactor { get; set; } = 1f;
+        /// <summary>
+        /// Multiplier for the total slow factor. 2 means slow factor has twice the effect, 0.5 means half the effect.
+        /// </summary>
+        public float UpdateSlowResistance { get; set; } = 1f;
         public GameObject() { }
 
         public bool IsInGroup(string group) { return this.Group == group; }

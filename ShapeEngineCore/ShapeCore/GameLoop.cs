@@ -78,51 +78,48 @@ namespace ShapeCore
 
         private DelegateTimerHandlerNamed delayHandler = new();
         private BasicTimer stopTimer = new();
-        
-        //public bool PAUSED { get; private set; } = false;
-        
-        /// <summary>
-        /// By how much the current scene is slowed down.
-        /// </summary>
-        public float CUR_SLOW_FACTOR { get; private set; } = 1f;
-        private BasicTimer slowTimer = new();
-        //private int slowCounter = 0;
-        //private int slowCount = 0;
         private List<DeferredInfo> deferred = new();
-
-        /// <summary>
-        /// Slow down the current scene by the factor. 0.5f means scene runs 2 times slower; 2.0f means scene runs 2 times faster. If factor is <= to 0 Stop(duration) is called instead.
-        /// </summary>
-        /// <param name="factor"></param>
-        /// <param name="duration"></param>
-        public void Slow(float factor, float duration, float delay = 0f)
-        {
-            if (duration <= 0) return;
-            if (factor <= 0f) Stop(duration, delay);
-            else
-            {
-                if(delay > 0)
-                {
-                    delayHandler.Add("slow", delay, () => { slowTimer.Start(duration); CUR_SLOW_FACTOR = factor; }, 0);
-                }
-                else
-                {
-                    if (delayHandler.Has("slow")) delayHandler.Remove("slow");
-                    slowTimer.Start(duration);
-                    //slowCounter = 0;
-                    //slowCount = (int)(1f / factor);
-                    CUR_SLOW_FACTOR = factor;
-                }
-            }
-        }
-        public void EndSlow()
-        {
-            if (delayHandler.Has("slow")) delayHandler.Remove("slow");
-            slowTimer.Stop();
-            CUR_SLOW_FACTOR = 1f;
-            //slowCount = 0;
-            //slowCounter = 0;
-        }
+        
+        
+        ///// <summary>
+        ///// By how much the current scene is slowed down.
+        ///// </summary>
+        //public float CUR_SLOW_FACTOR { get; private set; } = 1f;
+        //private BasicTimer slowTimer = new();
+        //
+        ///// <summary>
+        ///// Slow down the current scene by the factor. 0.5f means scene runs 2 times slower; 2.0f means scene runs 2 times faster. If factor is <= to 0 Stop(duration) is called instead.
+        ///// </summary>
+        ///// <param name="factor"></param>
+        ///// <param name="duration"></param>
+        //public void Slow(float factor, float duration, float delay = 0f)
+        //{
+        //    if (duration <= 0) return;
+        //    if (factor <= 0f) Stop(duration, delay);
+        //    else
+        //    {
+        //        if(delay > 0)
+        //        {
+        //            delayHandler.Add("slow", delay, () => { slowTimer.Start(duration); CUR_SLOW_FACTOR = factor; }, 0);
+        //        }
+        //        else
+        //        {
+        //            if (delayHandler.Has("slow")) delayHandler.Remove("slow");
+        //            slowTimer.Start(duration);
+        //            //slowCounter = 0;
+        //            //slowCount = (int)(1f / factor);
+        //            CUR_SLOW_FACTOR = factor;
+        //        }
+        //    }
+        //}
+        //public void EndSlow()
+        //{
+        //    if (delayHandler.Has("slow")) delayHandler.Remove("slow");
+        //    slowTimer.Stop();
+        //    CUR_SLOW_FACTOR = 1f;
+        //    //slowCount = 0;
+        //    //slowCounter = 0;
+        //}
 
         /// <summary>
         /// Stop the current scene for the duration. Only affects Update().
@@ -376,18 +373,19 @@ namespace ShapeCore
                 {
                     delayHandler.Update(DELTA);
                     stopTimer.Update(DELTA);
-                    if (!stopTimer.IsRunning())
-                    {
-                        slowTimer.Update(DELTA);
-                        if (CUR_SLOW_FACTOR != 1f && !slowTimer.IsRunning())
-                        {
-                            CUR_SLOW_FACTOR = 1f;
-                        }
-                    }
+                    //if (!stopTimer.IsRunning())
+                    //{
+                    //    slowTimer.Update(DELTA);
+                    //    if (CUR_SLOW_FACTOR != 1f && !slowTimer.IsRunning())
+                    //    {
+                    //        CUR_SLOW_FACTOR = 1f;
+                    //    }
+                    //}
                     
                     if (!stopTimer.IsRunning())
                     {
-                        CUR_SCENE.Update(dt * CUR_SLOW_FACTOR);
+                        //CUR_SCENE.Update(dt * CUR_SLOW_FACTOR);
+                        CUR_SCENE.Update(dt);
                     }
                 }
                 //GAME_DELTA = DELTA * CUR_SLOW_FACTOR;

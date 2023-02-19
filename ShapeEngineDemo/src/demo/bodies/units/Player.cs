@@ -232,6 +232,8 @@ namespace ShapeEngineDemo.Bodies
         private Core energyCore;
         private TargetFinder targetFinder = new("asteroid");
         private Vector2 slowPos = new(0f);
+        private bool playfieldCollision = false;
+
 
         private InputActionWrapper healPlayerInput = new(2, 0.2f, 1f);
         public Player(ArmoryInfo armoryInfo, string shipName = "default")
@@ -312,7 +314,8 @@ namespace ShapeEngineDemo.Bodies
             //ScreenHandler.Cam.AddCameraOrderChain("player zoom", new CameraOrder(1f, 2f, 1f, EasingType.BOUNCE_OUT));
             //ScreenHandler.Cam.AddCameraOrderChain("player rot", new CameraOrder(1f, 0f, 360f, 1f, 1f, EasingType.QUAD_OUT));
             ScreenHandler.CAMERA.AddCameraOrderChain("player translation", new CameraOrder(1f, new Vector2(250f, 0f), new Vector2(0f, 0f), EasingType.BOUNCE_OUT));
-            
+
+            //UpdateSlowResistance = 0f;
         }
 
 
@@ -424,7 +427,9 @@ namespace ShapeEngineDemo.Bodies
             //ScreenHandler.Flash(0.3f, ColorPalette.Cur.enemy, BLANK, true);
             //ScreenHandler.FlashTint(0.3f, BLACK, false);
             ScreenHandler.Flash(0.5f, new(225, 25, 50, 150), new(50, 0, 0, 50), true);
-            GAMELOOP.Slow(0.3f, 0.5f, 0.1f);
+            GAMELOOP.GetCurArea().Slow("player hurt", 0.25f, 0.5f);
+            //GAMELOOP.Slow(0.3f, 0.5f, 0.1f);
+            //GAMELOOP.GetCurArea().UpdateSlowFactor = 0.3f;
             //GAMELOOP.CallDeferred(() => GAMELOOP.Slow(0.1f, 0.5f, 0f), 1);
             //GAMELOOP.Stop(0.5f, 0.1f);
         }
@@ -647,14 +652,21 @@ namespace ShapeEngineDemo.Bodies
             var info = SRect.CollidePlayfield(GAMELOOP.GetCurArea().GetInnerArea(), collider.Pos, collider.Radius);
             if (info.collided)
             {
-                float stunTime = WALL_STUN_TIME;
-                if (IsMovementBoosting()) { stunTime *= stats.Get("boostF"); }
-                else if (IsMovementSlow()) { stunTime *= stats.Get("slowF"); }
+                if (!playfieldCollision)
+                {
+                    playfieldCollision = true;
+                    float stunTime = WALL_STUN_TIME;
+                    if (IsMovementBoosting()) { stunTime *= stats.Get("boostF"); }
+                    else if (IsMovementSlow()) { stunTime *= stats.Get("slowF"); }
 
-                Stun(stunTime);
-                Damage(25f, info.hitPoint, info.n, this, false);
-                collider.Vel = SVec.Normalize(SVec.Reflect(collider.Vel, info.n)) * stats.Get("maxSpeed") * WALL_COL_FORCE_FACTOR;
-
+                    Stun(stunTime);
+                    Damage(25f, info.hitPoint, info.n, this, false);
+                    collider.Vel = SVec.Normalize(SVec.Reflect(collider.Vel, info.n)) * stats.Get("maxSpeed") * WALL_COL_FORCE_FACTOR;
+                }
+            }
+            else
+            {
+                if (playfieldCollision) playfieldCollision = false;
             }
             if (weaponSystem.IsAimPointCooldownActive()) aimpointSkillDisplay.SetBarF(weaponSystem.F);
             else if(weaponSystem.IsAimPointActive()) aimpointSkillDisplay.SetBarF(1.0f - weaponSystem.F);
