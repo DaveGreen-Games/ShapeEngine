@@ -11,7 +11,8 @@ namespace ShapeAudio
         protected float combinedVolume = 1.0f;
         protected bool paused = false;
 
-
+        public float GetVolume() { return volume; }
+        public float GetPitch() { return pitch; }
         public virtual void SetPitch(float pitch) { }
 
         public void AdjustVolume(float factor) { volume *= factor; }

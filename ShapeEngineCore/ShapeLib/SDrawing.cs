@@ -607,7 +607,16 @@ namespace ShapeLib
             DrawPolygon(points, lineThickness, outlineColor);
         }
 
-
+        public static void DrawLinesGlow(List<Vector2> points, float width, float endWidth, Color color, Color endColor, int steps)
+        {
+            if (points.Count < 2) return;
+            for (int i = 0; i < points.Count - 1; i++)
+            {
+                Vector2 cur = points[i];
+                Vector2 next = points[i + 1];
+                DrawLineGlow(cur, next, width, endWidth, color, endColor, steps);
+            }
+        }
         public static void DrawLineGlow(Vector2 start, Vector2 end, float width, float endWidth, Color color, Color endColor, int steps)
         {
             float wStep = (endWidth - width) / steps;

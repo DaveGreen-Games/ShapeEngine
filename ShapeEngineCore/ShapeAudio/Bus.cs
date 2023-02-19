@@ -84,10 +84,15 @@
         public Song? GetSong(string name)
         {
             if (!audio.ContainsKey(name)) return null;
-            if (!IsSong(name)) return null;
-            return audio[name] as Song;
+            if (audio[name] is Song song) return song;
+            return null;
         }
-
+        public SFX? GetSFX(string name)
+        {
+            if (!audio.ContainsKey(name)) return null;
+            if (audio[name] is SFX sfx) return sfx;
+            return null;
+        }
         public void PlaySFXMulti(string name, float volume = -1.0f, float pitch = -1.0f)
         {
             if (paused || name == "" || !audio.ContainsKey(name)) return;

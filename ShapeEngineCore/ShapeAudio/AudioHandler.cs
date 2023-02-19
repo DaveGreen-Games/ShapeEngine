@@ -5,7 +5,6 @@ using System.Numerics;
 using ShapeCore;
 using ShapeLib;
 
-
 namespace ShapeAudio
 
 {
@@ -28,6 +27,7 @@ namespace ShapeAudio
 
         public static GameObject? spatialTargetOverride = null;
         
+        //private static Dictionary<string, SFXLooper> sFXLoopers = new();
 
         public static void Initialize()
         {
@@ -291,7 +291,73 @@ namespace ShapeAudio
             Bus bus = buses[audioBusKeys[name]];
             bus.PlaySFX(name, volume, pitch);
         }
+        
+        public static SFXLooper? CreateSFXLoop(string soundName, float minSpatialRange, float maxSpatialRange, float volume = -1.0f, float pitch = -1.0f)
+        {
+            if (!audioBusKeys.ContainsKey(soundName)) return null;
+            //if (sFXLoopers.ContainsKey(id)) return null;
 
+            Bus bus = buses[audioBusKeys[soundName]];
+            var sfx = bus.GetSFX(soundName);
+            if (sfx != null)
+            {
+                SFXLooper looper = new(sfx, minSpatialRange, maxSpatialRange);
+                looper.SetVolume(volume);
+                looper.SetPitch(pitch);
+                //sFXLoopers.Add(id, looper);
+                return looper;
+            }
+            return null;
+        }
+        public static SFXLooper? CreateSFXLoop(string soundName, float volume = -1.0f, float pitch = -1.0f)
+        {
+            if (!audioBusKeys.ContainsKey(soundName)) return null;
+            //if (sFXLoopers.ContainsKey(id)) return null;
+
+            Bus bus = buses[audioBusKeys[soundName]];
+            var sfx = bus.GetSFX(soundName);
+            if(sfx != null)
+            {
+                SFXLooper looper = new(sfx);
+                looper.SetVolume(volume);
+                looper.SetPitch(pitch);
+                //sFXLoopers.Add(id, looper);
+                return looper;
+            }
+            return null;
+        }
+        
+        //public static bool PlaySFXLoop(string id, float volume = -1.0f, float pitch = -1.0f)
+        //{
+        //    if (sFXLoopers.ContainsKey(id))
+        //    {
+        //        sFXLoopers[id].Start(volume, pitch);
+        //        return true;
+        //    }
+        //    return false;
+        //}
+        //public static bool StopSFXLoop(string id)
+        //{
+        //    if (sFXLoopers.ContainsKey(id))
+        //    {
+        //        sFXLoopers[id].Stop();
+        //        return true;
+        //    }
+        //    return false;
+        //}
+        //public static SFXLooper? GetSFXLoop(string id)
+        //{
+        //    if(sFXLoopers.ContainsKey(id)) return sFXLoopers[id];
+        //    return null;
+        //}
+        //public static void RemoveSFXLoop(string id)
+        //{
+        //    if (sFXLoopers.ContainsKey(id))
+        //    {
+        //        sFXLoopers[id].Stop();
+        //        sFXLoopers.Remove(id);
+        //    }
+        //}
         /// <summary>
         /// Play a sound. If pos is not inside the current camera area the sound is NOT played.
         /// </summary>

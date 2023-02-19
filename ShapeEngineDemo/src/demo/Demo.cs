@@ -155,6 +155,10 @@ namespace ShapeEngineDemo
             var asteroidDie = RESOURCES.LoadSound("resources/audio/sfx/die02.wav");
             var bullet = RESOURCES.LoadSound("resources/audio/sfx/gun05.wav");
 
+
+           
+
+
             //SOUNDS
             AudioHandler.AddSFX("button click", buttonClick, 0.25f, "sound");
             AudioHandler.AddSFX("button hover", buttonHover, 0.5f, "sound");

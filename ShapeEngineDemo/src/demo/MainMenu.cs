@@ -8,23 +8,17 @@ using ShapeLib;
 using ShapeColor;
 using static ShapeInput.InputAction;
 using ShapeInput;
+using static System.Net.Mime.MediaTypeNames;
+using System.Resources;
+using ShapeAudio;
 
 namespace ShapeEngineDemo
 {
     public class MainMenu : Scene
     {
-        //MazeGenerator.Maze maze;
-        //MazeGenerator.MazeDrawer mazeDrawer;
         ButtonLabel level1Button, quitButton, optionsButton;
-        //List<Vector2> bolt = new();
-        //float boltTimer = 1f;
-        //ButtonLabel tb1, tb2, tb3;
         public MainMenu()
         {
-            //maze = new(16, 9);
-            //mazeDrawer = new(maze, new(SCREEN_AREA.X + SCREEN_AREA.width * 0.1f, SCREEN_AREA.Y + SCREEN_AREA.height * 0.1f), new(SCREEN_AREA.width * 0.8f, SCREEN_AREA.height * 0.8f), 2);
-            //maze.GenerateDeadCells(50);
-            //maze.Generate(MazeGenerator.Maze.GenerationType.PRIM_SIMPLE, -1, 1);
             var font = Demo.FONT.GetFont("medium");
             level1Button =  new(font, "START");
             optionsButton = new(font, "OPTIONS");
@@ -40,23 +34,7 @@ namespace ShapeEngineDemo
             quitButton.SetStateColors(new(Demo.PALETTES.C("bg2"), Demo.PALETTES.C("energy"), Demo.PALETTES.C("player"), Demo.PALETTES.C("sepcial1"), Demo.PALETTES.C("neutral")));
             quitButton.SetTextStateColors(new(Demo.PALETTES.C("text"), Demo.PALETTES.C("bg2"), Demo.PALETTES.C("player"), Demo.PALETTES.C("b1"), Demo.PALETTES.C("enemy")));
 
-
-
-            //tb1 = new("TEST 1", "medium");
-            //tb1.SetStateColors(new(Demo.PALETTES.C("bg2"), Demo.PALETTES.C("energy"), Demo.PALETTES.C("player"), Demo.PALETTES.C("sepcial1"), Demo.PALETTES.C("neutral")));
-            //tb1.SetTextStateColors(new(Demo.PALETTES.C("text"), Demo.PALETTES.C("bg2"), Demo.PALETTES.C("player"), Demo.PALETTES.C("b1"), Demo.PALETTES.C("enemy")));
-            //
-            //tb2 = new("TEST 2", "medium");
-            //tb2.SetStateColors(new(Demo.PALETTES.C("bg2"), Demo.PALETTES.C("energy"), Demo.PALETTES.C("player"), Demo.PALETTES.C("sepcial1"), Demo.PALETTES.C("neutral")));
-            //tb2.SetTextStateColors(new(Demo.PALETTES.C("text"), Demo.PALETTES.C("bg2"), Demo.PALETTES.C("player"), Demo.PALETTES.C("b1"), Demo.PALETTES.C("enemy")));
-            //
-            //tb3 = new("TEST 3", "medium");
-            //tb3.SetStateColors(new(Demo.PALETTES.C("bg2"), Demo.PALETTES.C("energy"), Demo.PALETTES.C("player"), Demo.PALETTES.C("sepcial1"), Demo.PALETTES.C("neutral")));
-            //tb3.SetTextStateColors(new(Demo.PALETTES.C("text"), Demo.PALETTES.C("bg2"), Demo.PALETTES.C("player"), Demo.PALETTES.C("b1"), Demo.PALETTES.C("enemy")));
-
-
             optionsButton.Disable();
-
         }
 
 
@@ -70,15 +48,9 @@ namespace ShapeEngineDemo
             UIHandler.RegisterUIElement(level1Button);
             UIHandler.RegisterUIElement(optionsButton);
             UIHandler.RegisterUIElement(quitButton);
-
-            //UIHandler.RegisterUIElement(tb1);
-            //UIHandler.RegisterUIElement(tb2);
-            //UIHandler.RegisterUIElement(tb3);
-
             Demo.CURSOR.Switch("ui");
             GAMELOOP.backgroundColor = Demo.PALETTES.C("bg2");
             GAMELOOP.RemoveScene("level1");
-            //AudioHandler.SwitchPlaylist("menu");
         }
         public override void Deactivate(Scene? newScene)
         {
@@ -86,10 +58,6 @@ namespace ShapeEngineDemo
             UIHandler.UnregisterUIElement(level1Button);
             UIHandler.UnregisterUIElement(optionsButton);
             UIHandler.UnregisterUIElement(quitButton);
-
-            //UIHandler.UnregisterUIElement(tb1);
-            //UIHandler.UnregisterUIElement(tb2);
-            //UIHandler.UnregisterUIElement(tb3);
         }
         public override void Update(float dt)
         {
@@ -104,30 +72,12 @@ namespace ShapeEngineDemo
             optionsButton.Update(dt, GAMELOOP.MOUSE_POS_UI);
             quitButton.Update(dt, GAMELOOP.MOUSE_POS_UI);
 
-            //tb1.UpdateRect(center + offset * 3, size, new(0.5f));
-            //tb2.UpdateRect(center - new Vector2(size.X * 1.7f, 0f), size * 1.2f, new(0.5f));
-            //tb3.UpdateRect(center + size * 1.5f, size * 0.5f, new(0.5f));
-            //tb1.Update(dt, GAMELOOP.MOUSE_POS_UI);
-            //tb2.Update(dt, GAMELOOP.MOUSE_POS_UI);
-            //tb3.Update(dt, GAMELOOP.MOUSE_POS_UI);
-
-
             if (level1Button.Clicked())
             {
                 GAMELOOP.AddScene("level1", new Level());
                 GAMELOOP.GoToScene("level1");
             }
             if (quitButton.Clicked()) GAMELOOP.QUIT = true;
-
-            //if(boltTimer > 0f)
-            //{
-            //    boltTimer -= dt;
-            //    if(boltTimer <= 0f)
-            //    {
-            //        boltTimer = SRNG.randF(0.02f, 0.05f);
-            //        bolt = SDrawing.CreateLightningLine(uiSize * new Vector2(0.5f, 0.05f), GAMELOOP.MOUSE_POS_UI, 25f, 35f);
-            //    }
-            //}
 
         }
         public override void Draw()
@@ -160,21 +110,6 @@ namespace ShapeEngineDemo
             level1Button.Draw(uiSize, stretchFactor);
             optionsButton.Draw(uiSize, stretchFactor);
             quitButton.Draw(uiSize, stretchFactor);
-
-            //SDrawing.DrawLineDotted(uiSize * new Vector2(0.1f, 0.35f), uiSize * new Vector2(0.9f, 0.35f), 5, 12f, RED, true);
-            //Rectangle r = SRect.ConstructRect(uiSize * new Vector2(0.2f, 0.05f), uiSize * new Vector2(0.8f, 0.8f));
-            //SDrawing.DrawRectangleLinesDotted(r, 4, 16, YELLOW, false, true);
-            //Rectangle r2 = SRect.ConstructRect(uiSize * new Vector2(0.21f, 0.07f), uiSize * new Vector2(0.79f, 0.78f));
-            //SDrawing.DrawRectangleLinesDotted(r2, 40, 8, LIME, true, false);
-            //SDrawing.DrawCircleLinesDotted(uiSize * new Vector2(0.5f, 0.5f), 500, 2, 12f, GREEN, 16, true);
-
-            //tb1.Draw(uiSize, stretchFactor);
-            //tb2.Draw(uiSize, stretchFactor);
-            //tb3.Draw(uiSize, stretchFactor);
-            
-            //SDrawing.DrawLines(bolt, 4f, GOLD, true);
-            //SDrawing.DrawLineLightning(uiSize * new Vector2(0.1f, 0.35f), uiSize * new Vector2(0.9f, 0.35f), 4f, GOLD);
-            //SDrawing.DrawLineLightning(uiSize * new Vector2(0.1f, 0.35f), uiSize * new Vector2(0.9f, 0.35f), 4, new Vector2(0.1f, 0.12f), 4f, GOLD);
         }
     }
 
