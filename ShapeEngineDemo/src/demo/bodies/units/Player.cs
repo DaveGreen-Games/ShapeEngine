@@ -454,7 +454,7 @@ namespace ShapeEngineDemo.Bodies
         {
             return "player";
         }
-        public override void Spawn()
+        public override void Start()
         {
             //SetStat("maxSpeed", 75f);
             float randAngle = SRNG.randF(0f, 2f * PI);

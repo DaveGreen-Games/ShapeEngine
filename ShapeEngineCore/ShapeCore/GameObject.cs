@@ -35,7 +35,7 @@ namespace ShapeCore
         public bool IsInGroup(string group) { return this.Group == group; }
 
 
-        public virtual void Spawn() { }
+        public virtual void Start() { }
         public virtual void Destroy() { }
         public virtual void Draw() { }
         public virtual void DrawUI(Vector2 uiSize, Vector2 stretchFactor) { }

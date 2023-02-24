@@ -83,7 +83,7 @@ namespace ShapeCore
             gameObjects.Add(obj);
             if (uiDrawing && !uiObjects.Contains(obj)) uiObjects.Add(obj);
             obj.AreaLayerName = this.name;
-            obj.Spawn();
+            obj.Start();
         }
         public void AddGameObjects(List<GameObject> newObjects, bool uiDrawing = false)
         {

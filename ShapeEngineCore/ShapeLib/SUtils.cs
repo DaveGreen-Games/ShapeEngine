@@ -163,7 +163,11 @@ namespace ShapeLib
     
     public static class SUtils
     {
-
+        public static bool Blinking(float timer, float interval)
+        {
+            if (interval <= 0f) return false;
+            return (int)(timer / interval) % 2 == 0;
+        }
         public static float CalculateFrameIndependentLerpFactor(float lerpPercentage, float dt)
         {
             float rate = 1f - MathF.Pow(1f - lerpPercentage, dt);

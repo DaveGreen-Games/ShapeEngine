@@ -543,8 +543,58 @@ namespace ShapeLib
                 }
                 DrawTriangle(points[points.Count - 1], points[0], center, fillColor);
             }
+        }
+        public static void DrawPolygonCentered(List<Vector2> points, Vector2 center, Color fillColor, bool clockwise = true)
+        {
+            if (clockwise)
+            {
+                for (int i = 0; i < points.Count - 1; i++)
+                {
+                    DrawTriangle(center + points[i], center, center + points[i + 1], fillColor);
+                }
+                DrawTriangle(center + points[points.Count - 1], center, center + points[0], fillColor);
+            }
+            else
+            {
+                for (int i = 0; i < points.Count - 1; i++)
+                {
+                    DrawTriangle(center + points[i], center + points[i + 1], center, fillColor);
+                }
+                DrawTriangle(center + points[points.Count - 1], center + points[0], center, fillColor);
+            }
+        }
+        public static void DrawPolygonCentered(List<Vector2> points, Vector2 center, float scale, float rotDeg, Color fillColor, bool clockwise = true)
+        {
+            if (clockwise)
+            {
+                for (int i = 0; i < points.Count - 1; i++)
+                {
+                    Vector2 a = center + SVec.Rotate(points[i] * scale, rotDeg * DEG2RAD);
+                    Vector2 b = center;
+                    Vector2 c = center + SVec.Rotate(points[i+1] * scale, rotDeg * DEG2RAD);
+                    DrawTriangle(a,b,c, fillColor);
+                }
 
+                Vector2 aFinal = center + SVec.Rotate(points[points.Count - 1] * scale, rotDeg * DEG2RAD);
+                Vector2 bFinal = center;
+                Vector2 cFinal = center + SVec.Rotate(points[0] * scale, rotDeg * DEG2RAD);
+                DrawTriangle(aFinal, bFinal, cFinal, fillColor);
+            }
+            else
+            {
+                for (int i = 0; i < points.Count - 1; i++)
+                {
+                    Vector2 a = center + SVec.Rotate(points[i] * scale, rotDeg * DEG2RAD);
+                    Vector2 b = center + SVec.Rotate(points[i + 1] * scale, rotDeg * DEG2RAD);
+                    Vector2 c = center;
+                    DrawTriangle(a, b, c, fillColor);
+                }
 
+                Vector2 aFinal = center + SVec.Rotate(points[points.Count - 1] * scale, rotDeg * DEG2RAD);
+                Vector2 bFinal = center + SVec.Rotate(points[0] * scale, rotDeg * DEG2RAD);
+                Vector2 cFinal = center;
+                DrawTriangle(aFinal, bFinal, cFinal, fillColor);
+            }
         }
         public static void DrawPolygon(List<Vector2> points, float lineThickness, Color outlineColor)
         {
@@ -604,9 +654,21 @@ namespace ShapeLib
         public static void DrawPolygon(List<Vector2> points, Vector2 center, Color fillColor, float lineThickness, Color outlineColor, bool clockwise = true)
         {
             DrawPolygon(points, center, fillColor, clockwise);
-            DrawPolygon(points, lineThickness, outlineColor);
+            DrawPolygon(points, lineThickness, outlineColor, center);
         }
-
+        public static void DrawPolygonCentered(List<Vector2> points, Vector2 center, Color fillColor, float lineThickness, Color outlineColor, bool clockwise = true)
+        {
+            DrawPolygonCentered(points, center, fillColor, clockwise);
+            DrawPolygon(points, lineThickness, outlineColor, center);
+        }
+        public static void DrawPolygonCentered(List<Vector2> points, Vector2 center, float scale, float rotDeg, Color fillColor, float lineThickness, Color outlineColor, bool clockwise = true)
+        {
+            DrawPolygonCentered(points, center, scale, rotDeg, fillColor, clockwise);
+            DrawPolygon(points, lineThickness, outlineColor, center, scale, rotDeg);
+        }
+        
+        
+        
         public static void DrawLinesGlow(List<Vector2> points, float width, float endWidth, Color color, Color endColor, int steps)
         {
             if (points.Count < 2) return;
