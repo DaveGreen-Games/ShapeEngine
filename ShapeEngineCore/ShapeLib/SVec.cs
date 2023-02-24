@@ -6,6 +6,7 @@ namespace ShapeLib
 {
     public static class SVec
     {
+        public static bool IsNan(Vector2 v) { return float.IsNaN(v.X) || float.IsNaN(v.Y); }
         public static Vector2 Right() { return new(1.0f, 0.0f); }
         public static Vector2 Left() { return new(-1.0f, 0.0f); }
         public static Vector2 Up() { return new(0.0f, -1.0f); }

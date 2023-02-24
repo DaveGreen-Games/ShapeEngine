@@ -66,9 +66,9 @@ namespace ShapeCore
         /// DELTA affected by the current slow amount. Equals DELTA * CUR_SLOW_FACTOR
         /// </summary>
         //public float GAME_DELTA { get; private set; }
-        public Vector2 MOUSE_POS { get; private set; }
-        public Vector2 MOUSE_POS_GAME { get; private set; }
-        public Vector2 MOUSE_POS_UI { get; private set; }
+        public Vector2 MOUSE_POS { get; private set; } = new(0f);
+        public Vector2 MOUSE_POS_GAME { get; private set; } = new(0f);
+        public Vector2 MOUSE_POS_UI { get; private set; } = new(0f);
         //public Vector2 MOUSE_POS_UI_RAW { get; private set; }
         public Color backgroundColor = BLACK;
         public Scene? CUR_SCENE { get; private set; }
@@ -333,13 +333,23 @@ namespace ShapeCore
             while (!QUIT)
             {
                 DELTA = GetFrameTime();
-                MOUSE_POS = GetMousePosition();
 
-                //implement mouse pos raw
-                MOUSE_POS_UI = ScreenHandler.UI.ScalePositionV(MOUSE_POS);
-                //MOUSE_POS_UI_RAW =  ScreenHandler.UI.ScalePositionRawV(MOUSE_POS);
-                MOUSE_POS_GAME = ScreenHandler.TransformPositionToGame(MOUSE_POS_UI);
-                //if (WindowShouldClose() && !InputHandler.QuitPressed()) QUIT = true; // IsKeyDown(KeyboardKey.KEY_ESCAPE)) QUIT = true;
+                Vector2 curMousePos = GetMousePosition();
+                if(!SVec.IsNan(curMousePos))
+                {
+                    MOUSE_POS = curMousePos;
+
+                    //implement mouse pos raw
+                    Vector2 curMousePosUI = ScreenHandler.UI.ScalePositionV(MOUSE_POS);
+                    if (!SVec.IsNan(curMousePosUI)) MOUSE_POS_UI = curMousePosUI;
+                    //MOUSE_POS_UI_RAW =  ScreenHandler.UI.ScalePositionRawV(MOUSE_POS);
+
+                    Vector2 curMousePosGame = ScreenHandler.TransformPositionToGame(MOUSE_POS_UI);
+                    if (!SVec.IsNan(curMousePosGame)) MOUSE_POS_GAME = curMousePosGame;
+                    //if (WindowShouldClose() && !InputHandler.QuitPressed()) QUIT = true; // IsKeyDown(KeyboardKey.KEY_ESCAPE)) QUIT = true;
+                }
+
+
 
                 //UPDATE
                 UpdateGame(DELTA);
