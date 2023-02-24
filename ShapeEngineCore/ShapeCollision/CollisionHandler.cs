@@ -243,8 +243,12 @@ namespace ShapeCollision
                 }
                 else
                 {
-                    var intersection = SGeometry.Intersection(caster, obj.GetCollider());
-                    if (intersection.valid) infos.Add(new(obj, intersection));
+                    if (collisionMask.Contains(obj.GetCollisionLayer()))
+                    {
+                        var intersection = SGeometry.Intersection(caster, obj.GetCollider());
+                        if (intersection.valid) infos.Add(new(obj, intersection));
+                    }
+                    
 
 
                     //if (SGeometry.Overlap(caster, obj.GetCollider()))
@@ -331,9 +335,9 @@ namespace ShapeCollision
                 }
                 else
                 {
-                    if (SGeometry.Overlap(caster, obj.GetCollider()))
+                    if (collisionMask.Contains(obj.GetCollisionLayer()))
                     {
-                        if (collisionMask.Contains(obj.GetCollisionLayer()))
+                        if (SGeometry.Overlap(caster, obj.GetCollider()))
                         {
                             bodies.Add(obj);
                         }
