@@ -6,6 +6,7 @@ namespace ShapeAudio
 {
     public class SFXLooper
     {
+        protected bool disabled = false;
         protected bool isLooping = false;
         protected SFX sound;
 
@@ -16,6 +17,7 @@ namespace ShapeAudio
 
         public event Action<SFXLooper>? OnLooped;
 
+        
         public SFXLooper(SFX sound, float minSpatialRange, float maxSpatialRange)
         {
             this.sound = sound;
@@ -30,6 +32,18 @@ namespace ShapeAudio
         }
 
         //public void UpdateSpatialPos(Vector2 newPos) { spatialPos = newPos; }
+        public bool IsDisabled() { return disabled; }
+        public bool IsEnabled() { return !disabled; }
+        public void Enable()
+        {
+            if(isLooping) PlaySound(sound.GetSound());
+            disabled = false;
+        }
+        public void Disable()
+        {
+            if(isLooping) StopSound(sound.GetSound());
+            disabled = true;
+        }
         public bool IsLooping() { return isLooping; }
         public float GetVolume() { return sound.GetVolume(); }
         public float GetPitch() { return sound.GetPitch(); }
@@ -40,7 +54,7 @@ namespace ShapeAudio
             isLooping = true;
             if (volume > 0.0f) sound.SetVolume(volume);
             if (pitch > 0.0f) sound.SetPitch(pitch);
-            PlaySound(sound.GetSound());
+            if(!IsDisabled()) PlaySound(sound.GetSound());
         }
         public virtual void Stop()
         {
@@ -59,6 +73,8 @@ namespace ShapeAudio
         }
         public virtual void Update(float dt)
         {
+            if (disabled) return;
+
             bool playing = IsSoundPlaying(sound.GetSound());
             if (isLooping)
             {
