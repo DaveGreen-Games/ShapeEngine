@@ -1,6 +1,7 @@
 ﻿global using static Raylib_CsLo.Raylib;
 global using static Raylib_CsLo.RayMath;
 global using static ShapeCore.ShapeEngine;
+using System.Runtime.InteropServices;
 
 namespace ShapeCore
 {
@@ -56,6 +57,15 @@ namespace ShapeCore
         public static Raylib_CsLo.Color DEBUG_CollisionHandlerBorder = GOLD;
         public static Raylib_CsLo.Color DEBUG_CollisionHandlerFill = new(0, 150, 0, 100);
         public static Raylib_CsLo.Color DEBUG_SpawnAreaLines = RED;
+        public static OSPlatform OS_PLATFORM { get; private set; } =
+           RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? OSPlatform.Windows :
+           RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? OSPlatform.Linux :
+           RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? OSPlatform.OSX :
+                                                                   OSPlatform.FreeBSD;
+
+        public static bool IsWindows() { return OS_PLATFORM == OSPlatform.Windows; }
+        public static bool IsLinux() { return OS_PLATFORM == OSPlatform.Linux; }
+        public static bool IsOSX() { return OS_PLATFORM == OSPlatform.OSX; }
 
         public static void Start(GameLoop gameloop, int devWidth, int devHeight, float gameSizeFactor, float uiSizeFactor, string windowName, bool fixedTexture, bool pixelSmoothing, bool hideCursor, params string[] launchParams)
         {

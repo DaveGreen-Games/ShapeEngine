@@ -2,6 +2,8 @@
 using System.Numerics;
 using Raylib_CsLo;
 using Vortice.XInput;
+using System.Runtime.InteropServices;
+using ShapeCore;
 
 namespace ShapeInput
 {
@@ -114,10 +116,11 @@ namespace ShapeInput
         }
         public void StopVibration()
         {
-            XInput.SetVibration(gamepadIndex, 0f, 0f);
+            if(ShapeEngine.IsWindows()) XInput.SetVibration(gamepadIndex, 0f, 0f);
+
             gamepadVibrationStack.Clear();
         }
-        private void UpdateVibration(float dt)
+        public void UpdateVibration(float dt)
         {
             if (InputHandler.IsGamepadConnected(gamepadIndex))
             {
@@ -143,7 +146,8 @@ namespace ShapeInput
                     }
                 }
 
-                XInput.SetVibration(gamepadIndex, Clamp(maxLeftMotor * InputHandler.GAMEPAD_VIBRATION_STRENGTH, 0f, 1f), Clamp(maxRightMotor * InputHandler.GAMEPAD_VIBRATION_STRENGTH, 0f, 1f));
+                if (ShapeEngine.IsWindows()) 
+                    XInput.SetVibration(gamepadIndex, Clamp(maxLeftMotor * InputHandler.GAMEPAD_VIBRATION_STRENGTH, 0f, 1f), Clamp(maxRightMotor * InputHandler.GAMEPAD_VIBRATION_STRENGTH, 0f, 1f));
             }
         }
     }
@@ -195,7 +199,9 @@ namespace ShapeInput
         public delegate void GamepadConnectionChanged(int gamepad, bool connected, int curGamepad);
         public static event GamepadConnectionChanged? OnGamepadConnectionChanged;
 
-
+        //public static OperatingSystem OS { get; private set; } = System.Environment.OSVersion;
+        //public static bool IsLinux { get; private set; } = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+       
         //public static KeyboardKey quitKey = KeyboardKey.KEY_ESCAPE;
         //public static bool QuitPressed()
         //{
@@ -250,7 +256,10 @@ namespace ShapeInput
             CheckGamepadConnection();
             CheckInputType();
 
-
+            foreach (var inputSlot in inputSlots.Values)
+            {
+                inputSlot.UpdateVibration(dt);
+            }
             //int key = Raylib.GetKeyPressed();
             //int unicode = Raylib.GetCharPressed();
             //string str = string.Format(@"\u{0:x4}", unicode);
@@ -660,7 +669,7 @@ namespace ShapeInput
                 gamepadUsed = GetGamepadUsed();
                 if (gamepadUsed >= 0 && gamepadUsed != CUR_GAMEPAD)
                 {
-                    XInput.SetVibration(CUR_GAMEPAD, 0f, 0f);
+                    if (ShapeEngine.IsWindows()) XInput.SetVibration(CUR_GAMEPAD, 0f, 0f);
                     CUR_GAMEPAD = gamepadUsed;
                     if (CUR_INPUT_TYPE != InputType.GAMEPAD)
                     {
