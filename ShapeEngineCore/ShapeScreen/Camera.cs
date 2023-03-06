@@ -306,7 +306,7 @@ namespace ShapeScreen
         private GameObject? target = null;
         private GameObject? newTarget = null;
         private float boundaryDis = 0f;
-        private float followSmoothness = 0f;
+        public float FollowSmoothness { get; set; } = 0f;
         private float baseZoom = 1f;
         private float zoomStretchFactor = 1f;
         private float baseRotationDeg = 0f;
@@ -371,7 +371,7 @@ namespace ShapeScreen
         public Camera2D ScreenSpaceCam { get { return screenSpaceCamera; } }
         public Camera(Vector2 size, float zoom, float zoomStretchFactor, float rotation, float boundaryDis = 0f, float followSmoothness = 1f, bool pixelSmoothing = true)
         {
-            this.followSmoothness = followSmoothness;
+            this.FollowSmoothness = followSmoothness;
             this.boundaryDis = boundaryDis;
             this.baseOffset = size / 2;
             this.baseZoom = zoom;
@@ -427,7 +427,7 @@ namespace ShapeScreen
         public void SetTarget(GameObject target)
         {
             this.target = target;
-            rawCameraTarget = target.GetCameraPosition(rawCameraTarget, 0f, followSmoothness, boundaryDis);
+            rawCameraTarget = target.GetCameraPosition(rawCameraTarget, 0f, FollowSmoothness, boundaryDis);
         }
         public void ChangeTarget(GameObject newTarget)
         {
@@ -490,7 +490,7 @@ namespace ShapeScreen
                 if (newTarget != null)
                 {
                     Vector2 curPos = rawCameraTarget; // screenSpaceCamera.target;// target.GetPosition();
-                    Vector2 newPos = newTarget.GetCameraPosition(curPos, 0f, followSmoothness, boundaryDis);
+                    Vector2 newPos = newTarget.GetCameraPosition(curPos, 0f, FollowSmoothness, boundaryDis);
                     float disSq = SVec.LengthSquared(newPos - curPos);
                     if (disSq < 25)
                     {
@@ -500,12 +500,12 @@ namespace ShapeScreen
                     }
                     else
                     {
-                        rawCameraTarget = SVec.Lerp(curPos, newPos, dt * followSmoothness);
+                        rawCameraTarget = SVec.Lerp(curPos, newPos, dt * FollowSmoothness);
                     }
                 }
                 else
                 {
-                    rawCameraTarget = target.GetCameraPosition(rawCameraTarget, dt, followSmoothness, boundaryDis);
+                    rawCameraTarget = target.GetCameraPosition(rawCameraTarget, dt, FollowSmoothness, boundaryDis);
                 }
             }
 
