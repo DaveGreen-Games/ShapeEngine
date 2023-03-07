@@ -56,7 +56,8 @@ namespace ShapeCore
             get { return (baseValue + flatTotal) * bonusTotal; }
             private set { }
         }
-
+        public float BonusTotal { get { return bonusTotal; } }
+        public float FlatTotal { get { return flatTotal; } }
         public bool Update(float dt)
         {
             bool changed = false;
@@ -180,6 +181,8 @@ namespace ShapeCore
     {
         private float prevTotal = 0f;
         private float baseValue = 0f;
+        private float flatTotal = 0f;
+        private float bonusTotal = 1f;
         private float total = 0f;
 
         private Dictionary<string, StatValue> bonuses = new();
@@ -196,9 +199,10 @@ namespace ShapeCore
             this.baseValue = baseValue;
             this.ID = id;
         }
+        public float BonusTotal { get { return bonusTotal; } }
+        public float FlatTotal { get { return flatTotal; } }
         public float GetBase() { return baseValue; }
         public float GetCur() { return total; }
-
         public void Update(float dt)
         {
             if (bonuses.Count > 0)
@@ -307,14 +311,18 @@ namespace ShapeCore
         private void UpdateTotal()
         {
             total = baseValue;
+            flatTotal = 0f;
+            bonusTotal = 1f;
             foreach (var flat in flatBonues.Values)
             {
+                flatTotal += flat.value;
                 total += flat.value;
             }
 
             float totalBonus = 1f;
             foreach (var bonus in bonuses.Values)
             {
+                bonusTotal += bonus.value;
                 totalBonus += bonus.value;
             }
 
