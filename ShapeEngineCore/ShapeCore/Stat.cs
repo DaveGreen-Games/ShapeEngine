@@ -1,4 +1,4 @@
-﻿using System.Linq;
+﻿
 
 namespace ShapeCore
 {
@@ -38,9 +38,18 @@ namespace ShapeCore
         private List<StatValue> timedBonuses = new();
         private List<StatValue> timedFlats = new();
 
-        public StatSimple(float baseValue) { this.baseValue = baseValue; }
+        public string ID { get; private set; } = "";
 
-        public void SetBase(float value) { baseValue = value; }
+        public event Action<StatSimple>? Changed;
+        
+        public StatSimple(float baseValue) { this.baseValue = baseValue; }
+        public StatSimple(float baseValue, string id) { this.baseValue = baseValue; this.ID = id;}
+        public void SetBase(float value) 
+        {
+            float prev = baseValue;
+            baseValue = value;
+            if (prev != baseValue) Changed?.Invoke(this);
+        }
         public float Base { get { return baseValue; } }
         public float Cur
         {
@@ -76,6 +85,9 @@ namespace ShapeCore
                     }
                 }
             }
+
+            if (changed) Changed?.Invoke(this);
+
             return changed;
         }
 
@@ -102,6 +114,8 @@ namespace ShapeCore
             {
                 AddFlat(flat.value, flat.GetRemaining());
             }
+
+            Changed?.Invoke(this);
         }
 
         public void AddBonuses(params float[] bonuses)
@@ -110,6 +124,8 @@ namespace ShapeCore
             {
                 bonusTotal += bonus;
             }
+
+            Changed?.Invoke(this);
         }
         public void AddFlats(params float[] flats)
         {
@@ -117,6 +133,7 @@ namespace ShapeCore
             {
                 flatTotal += flat;
             }
+            Changed?.Invoke(this);
         }
         public void AddBonus(float bonus, float duration = -1f)
         {
@@ -125,6 +142,7 @@ namespace ShapeCore
             {
                 timedBonuses.Add(new(bonus, duration));
             }
+            Changed?.Invoke(this);
         }
         public void AddFlat(float flat, float duration = -1f)
         {
@@ -133,32 +151,51 @@ namespace ShapeCore
             {
                 timedFlats.Add(new(flat, duration));
             }
+            Changed?.Invoke(this);
         }
         public void RemoveBonus(float bonus)
         {
             bonusTotal -= bonus;
+            Changed?.Invoke(this);
         }
         public void RemoveFlat(float flat)
         {
             flatTotal -= flat;
+            Changed?.Invoke(this);
         }
-        public void ResetBonus() { bonusTotal = 1f; timedBonuses.Clear(); }
-        public void ResetFlat() { flatTotal = 0f; timedFlats.Clear(); }
-        public void Reset() { ResetBonus(); ResetFlat(); }
+        public void ResetBonus() { bonusTotal = 1f; timedBonuses.Clear(); Changed?.Invoke(this); }
+        public void ResetFlat() { flatTotal = 0f; timedFlats.Clear(); Changed?.Invoke(this); }
+        public void Reset() 
+        {
+            bonusTotal = 1f; 
+            timedBonuses.Clear();
+            
+            flatTotal = 0f; 
+            timedFlats.Clear(); 
+            
+            Changed?.Invoke(this);
+        }
     }
     public class Stat
     {
-        float baseValue = 0f;
-        float total = 0f;
+        private float prevTotal = 0f;
+        private float baseValue = 0f;
+        private float total = 0f;
 
-        Dictionary<string, StatValue> bonuses = new();
-        Dictionary<string, StatValue> flatBonues = new();
+        private Dictionary<string, StatValue> bonuses = new();
+        private Dictionary<string, StatValue> flatBonues = new();
+        public string ID { get; private set; } = "";
 
+        public event Action<Stat>? Changed;
         public Stat(float baseValue)
         {
             this.baseValue = baseValue;
         }
-
+        public Stat(float baseValue, string id)
+        {
+            this.baseValue = baseValue;
+            this.ID = id;
+        }
         public float GetBase() { return baseValue; }
         public float GetCur() { return total; }
 
@@ -167,6 +204,7 @@ namespace ShapeCore
             if (bonuses.Count > 0)
             {
                 var removeBonuses = bonuses.Where(kvp => kvp.Value.Update(dt));
+                
                 foreach (var kvp in removeBonuses)
                 {
                     bonuses.Remove(kvp.Key);
@@ -181,6 +219,7 @@ namespace ShapeCore
                     flatBonues.Remove(kvp.Key);
                 }
             }
+            UpdateTotal();
         }
         public void AddBonuses(params (string name, float value)[] bonuses)
         {
@@ -262,6 +301,7 @@ namespace ShapeCore
             bonuses.Clear();
             flatBonues.Clear();
             total = baseValue;
+            UpdateTotal();
         }
 
         private void UpdateTotal()
@@ -279,218 +319,12 @@ namespace ShapeCore
             }
 
             total *= totalBonus;
+
+            if(total != prevTotal) Changed?.Invoke(this);
+
+            prevTotal = total;
         }
     }
 
 
-    public class StatHandler
-    {
-        private Dictionary<string, StatSimple> stats = new();
-
-        public delegate void StatChanged(string statName);
-        public event StatChanged? OnStatChanged;
-
-        public StatHandler() { }
-        public StatHandler(params (string name, float value)[] add)
-        {
-            AddStats(add);
-        }
-
-
-        public void Update(float dt)
-        {
-            foreach (var stat in stats)
-            {
-                if (stat.Value.Update(dt))
-                {
-                    FireStatChanged(stat.Key);
-                }
-            }
-        }
-
-        public Dictionary<string, StatSimple> GetAllStats() { return stats; }
-        public Dictionary<string, StatSimple> GetAllStats(params string[] filters)
-        {
-            return stats.Where(kvp => filters.Contains(kvp.Key)).ToDictionary(k => k.Key, e => e.Value);
-        }
-        public bool Has(string statName) { return stats.ContainsKey(statName); }
-        public void Set(params (string name, StatSimple stat)[] stats)
-        {
-            foreach (var item in stats)
-            {
-                Set(item.name, item.stat);
-            }
-        }
-        public void Set(Dictionary<string, StatSimple> stats)
-        {
-            foreach (var item in stats)
-            {
-                Set(item.Key, item.Value);
-            }
-        }
-        public void Set(string name, StatSimple stat)
-        {
-            if (!Has(name)) return;
-            stats[name].Set(stat);
-        }
-        public void SetBonuses(params (string name, StatSimple stat)[] stats)
-        {
-            foreach (var item in stats)
-            {
-                SetBonuses(item.name, item.stat);
-            }
-        }
-        public void SetBonuses(string name, StatSimple stat)
-        {
-            if (!Has(name)) return;
-            stats[name].SetBonuses(stat);
-        }
-        public void SetBonuses(Dictionary<string, StatSimple> stats)
-        {
-            foreach (var item in stats)
-            {
-                SetBonuses(item.Key, item.Value);
-            }
-        }
-
-        public float Get(string name)
-        {
-            if (!Has(name)) return 0f;
-            return stats[name].Cur;
-        }
-        public StatSimple? GetStat(string name)
-        {
-            if (!Has(name)) return null;
-            return stats[name];
-        }
-
-        public void SetBase(string name, float value)
-        {
-            if (!Has(name)) return;
-            stats[name].SetBase(value);
-        }
-        public void SetStat(string name, float value)
-        {
-            if (!Has(name)) return;
-            stats[name].SetBase(value);
-            FireStatChanged(name);
-        }
-        public void AddStats(params (string name, float value)[] add)
-        {
-            foreach (var stat in add)
-            {
-                AddStat(stat.name, stat.value);
-            }
-        }
-        public void AddStat(string name, float value)
-        {
-            if (Has(name)) stats[name].SetBase(value);
-            else stats.Add(name, new(value));
-        }
-        public void AddStat(string name, StatSimple stat)
-        {
-            if (Has(name)) stats[name] = stat;
-            else stats.Add(name, stat);
-        }
-        public void AddStats(params (string name, StatSimple stat)[] add)
-        {
-            foreach (var param in add)
-            {
-                AddStat(param.name, param.stat);
-            }
-        }
-        public void RemoveStat(string name) { stats.Remove(name); }
-        public void RemoveStat(StatSimple stat)
-        {
-            string key = GetStatKey(stat);
-            if(key != "")
-            {
-                stats.Remove(key);
-            }
-        }
-        public string GetStatKey(StatSimple stat)
-        {
-            foreach (var kvp in stats)
-            {
-                if (kvp.Value == stat)
-                {
-                    return kvp.Key;
-                }
-            }
-            return "";
-        }
-        public void AddBonuses(string statName, params float[] bonuses)
-        {
-            if (!Has(statName)) return;
-            stats[statName].AddBonuses(bonuses);
-            FireStatChanged(statName);
-        }
-        public void AddBonuses(params (string name, float bonus, float duration)[] bonuses)
-        {
-            foreach (var item in bonuses)
-            {
-                AddBonus(item.name, item.bonus, item.duration);
-            }
-        }
-        public void AddBonuses(params (string name, float bonus)[] bonuses)
-        {
-            foreach (var item in bonuses)
-            {
-                AddBonus(item.name, item.bonus);
-            }
-        }
-        public void AddBonus(string statName, float value, float duration = -1f)
-        {
-            if (!Has(statName)) return;
-            stats[statName].AddBonus(value, duration);
-            FireStatChanged(statName);
-        }
-        public void AddFlats(string statName, params float[] flats)
-        {
-            if (!Has(statName)) return;
-            stats[statName].AddFlats(flats);
-            FireStatChanged(statName);
-        }
-        public void AddFlats(params (string name, float flat, float duration)[] flats)
-        {
-            foreach (var item in flats)
-            {
-                AddFlat(item.name, item.flat, item.duration);
-            }
-        }
-        public void AddFlats(params (string name, float flat)[] flats)
-        {
-            foreach (var item in flats)
-            {
-                AddFlat(item.name, item.flat);
-            }
-        }
-        public void AddFlat(string statName, float value, float duration = -1f)
-        {
-            if (!Has(statName)) return;
-            stats[statName].AddFlat(value, duration);
-            FireStatChanged(statName);
-        }
-        public void RemoveBonus(string statName, float value)
-        {
-            if (!Has(statName)) return;
-            stats[statName].RemoveBonus(value);
-            FireStatChanged(statName);
-        }
-        public void RemoveFlat(string statName, float value)
-        {
-            if (!Has(statName)) return;
-            stats[statName].RemoveFlat(value);
-            FireStatChanged(statName);
-        }
-
-        public void Reset()
-        {
-            foreach (var stat in stats.Values)
-            {
-                stat.Reset();
-            }
-        }
-        private void FireStatChanged(string statName) { OnStatChanged?.Invoke(statName); }
-    }
 }
