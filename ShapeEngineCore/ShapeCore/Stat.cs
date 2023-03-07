@@ -38,7 +38,7 @@ namespace ShapeCore
         private List<StatValue> timedBonuses = new();
         private List<StatValue> timedFlats = new();
 
-        public string ID { get; private set; } = "";
+        public string ID { get; set; } = "";
 
         public event Action<StatSimple>? Changed;
         
@@ -184,7 +184,7 @@ namespace ShapeCore
 
         private Dictionary<string, StatValue> bonuses = new();
         private Dictionary<string, StatValue> flatBonues = new();
-        public string ID { get; private set; } = "";
+        public string ID { get; set; } = "";
 
         public event Action<Stat>? Changed;
         public Stat(float baseValue)
