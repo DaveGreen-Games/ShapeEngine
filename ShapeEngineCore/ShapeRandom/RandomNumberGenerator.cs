@@ -4,6 +4,13 @@ using System.Numerics;
 
 namespace ShapeRandom
 {
+    public struct WeightedItem
+    {
+        public string id { get; set; }
+        public int weight { get; set; }
+    }
+
+
     public class RandomNumberGenerator
     {
         private Random rand;
@@ -22,6 +29,47 @@ namespace ShapeRandom
             rand = new Random(seed);
         }
         public void SetSeed(int seed) { rand = new(seed); }
+
+        public string PickRandomItem(params WeightedItem[] items)
+        {
+            int totalWeight = 0;
+            foreach (var item in items)
+            {
+                totalWeight += item.weight;
+            }
+
+            int ticket = randI(0, totalWeight);
+
+            int curWeight = 0;
+            foreach (var item in items)
+            {
+                curWeight += item.weight;
+                if (ticket <= curWeight) return item.id;
+            }
+
+            return "";
+        }
+        public string PickRandomItem(params (string id, int weight)[] items)
+        {
+            int totalWeight = 0;
+            foreach (var item in items)
+            {
+                totalWeight += item.weight;
+            }
+
+            int ticket = randI(0, totalWeight);
+
+            int curWeight = 0;
+            foreach (var item in items)
+            {
+                curWeight += item.weight;
+                if (ticket <= curWeight) return item.id;
+            }
+
+            return "";
+        }
+
+
         public bool chance(float value) { return randF() < value; }
         public float randAngleRad() { return randF(0f, 2f * RayMath.PI); }
         public float randAngleDeg() { return randF(0f, 359f); }

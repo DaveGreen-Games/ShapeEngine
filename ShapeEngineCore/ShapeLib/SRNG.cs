@@ -4,12 +4,24 @@ using ShapeRandom;
 
 namespace ShapeLib
 {
+    
+
     public static class SRNG
     {
         //private static Random rand = new Random();
         private static RandomNumberGenerator rand = new RandomNumberGenerator();
 
         public static void SetSeed(int seed) { rand.SetSeed(seed); }
+
+        public static string PickRandomItem(params WeightedItem[] items)
+        {
+           return rand.PickRandomItem(items);
+        }
+        public static string PickRandomItem(params (string id, int weight)[] items)
+        {
+            return rand.PickRandomItem(items);
+        }
+
 
         public static bool chance(float value) { return rand.chance(value); }
         public static float randAngleRad() { return rand.randAngleRad(); }
