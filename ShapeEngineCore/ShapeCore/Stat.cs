@@ -33,10 +33,10 @@ namespace ShapeCore
 
     public class StatContainer
     {
-        public Dictionary<string, Stat> stats = new();
-        public event Action<Stat>? StatChanged;
+        public Dictionary<string, StatBonuses> stats = new();
+        //public event Action<StatBonuses>? StatChanged;
         
-        public float Apply(float baseValue, params string[] statIDs)
+        public float ApplyBonuses(float baseValue, params string[] statIDs)
         {
             float bonusTotal = 1f;
             float flatTotal = 0f;
@@ -53,7 +53,7 @@ namespace ShapeCore
 
             return (baseValue + flatTotal) * bonusTotal;
         }
-        public int Apply(int baseValue, params string[] statIDs)
+        public int ApplyBonuses(int baseValue, params string[] statIDs)
         {
             float bonusTotal = 1f;
             float flatTotal = 0f;
@@ -71,7 +71,7 @@ namespace ShapeCore
             return (int)MathF.Ceiling(v);
         }
         
-        public void Apply(StatF baseStat, params string[] statIDs)
+        public void ApplyBonusesToStat(StatF baseStat, params string[] statIDs)
         {
             float bonusTotal = 1f;
             float flatTotal = 0f;
@@ -85,10 +85,9 @@ namespace ShapeCore
                     flatTotal += stat.FlatTotal;
                 }
             }
-
-            baseStat.Cur = (baseStat.Base + flatTotal) * bonusTotal;
+            baseStat.UpdateCur(bonusTotal, flatTotal);
         }
-        public void Apply(StatI baseStat, params string[] statIDs)
+        public void ApplyBonusesToStat(StatI baseStat, params string[] statIDs)
         {
             float bonusTotal = 1f;
             float flatTotal = 0f;
@@ -102,22 +101,21 @@ namespace ShapeCore
                     flatTotal += stat.FlatTotal;
                 }
             }
-            float v = ((float)baseStat.Base + flatTotal) * bonusTotal;
-            baseStat.Cur = (int)MathF.Ceiling(v);
+            baseStat.UpdateCur(bonusTotal, flatTotal);
         }
 
-        public void ApplyAll(params StatF[] stats)
+        public void ApplyBonusesToStats(params StatF[] stats)
         {
             foreach (var stat in stats)
             {
-                Apply(stat, stat.IDS);
+                ApplyBonusesToStat(stat, stat.StatBonusIDS);
             }
         }
-        public void ApplyAll(params StatI[] stats)
+        public void ApplyBonusesToStats(params StatI[] stats)
         {
             foreach (var stat in stats)
             {
-                Apply(stat, stat.IDS);
+                ApplyBonusesToStat(stat, stat.StatBonusIDS);
             }
         }
         
@@ -129,29 +127,36 @@ namespace ShapeCore
             }
         }
 
-        public void Add(Stat stat)
+        public void Add(StatBonuses stat)
         {
             if (!stats.ContainsKey(stat.ID))
             {
                 stats.Add(stat.ID, stat);
-                stat.Changed += OnStatChanged;
+                //stat.Changed += OnStatChanged;
             }
         }
-        public void Remove(Stat stat)
+        public void Remove(StatBonuses stat)
         {
             if (stats.ContainsKey(stat.ID))
             {
-                stat.Changed -= OnStatChanged;
+                //stat.Changed -= OnStatChanged;
                 stats.Remove(stat.ID);
             }
         }
 
+        public void Add(params string[] ids)
+        {
+            foreach (var id in ids)
+            {
+                Add(id);
+            }
+        }
         public void Add(string id)
         {
             if (!stats.ContainsKey(id))
             {
-                var stat = new Stat(id);
-                stat.Changed += OnStatChanged;
+                var stat = new StatBonuses(id);
+                //stat.Changed += OnStatChanged;
                 stats.Add(id, stat);
             }
         }
@@ -159,7 +164,7 @@ namespace ShapeCore
         {
             if (stats.ContainsKey(id))
             {
-                stats[id].Changed -= OnStatChanged;
+                //stats[id].Changed -= OnStatChanged;
                 stats.Remove(id);
             }
         }
@@ -187,9 +192,9 @@ namespace ShapeCore
             }
         }
 
-        private void OnStatChanged(Stat stat) { StatChanged?.Invoke(stat); }
+        //private void OnStatChanged(StatBonuses stat) { StatChanged?.Invoke(stat); }
     }
-    public class Stat
+    public class StatBonuses
     {
         private float flatTotal = 0f;
         private float bonusTotal = 1f;
@@ -198,19 +203,19 @@ namespace ShapeCore
 
         public string ID { get; set; } = "";
 
-        public event Action<Stat>? Changed;
+        public event Action<StatBonuses>? Changed;
 
-        public Stat(string id) { this.ID = id; }
+        public StatBonuses(string id) { this.ID = id; }
         
        
         public float BonusTotal { get { return bonusTotal - 1f; } }
         public float FlatTotal { get { return flatTotal; } }
         
-        public float Apply(float baseValue)
+        public float ApplyBonuses(float baseValue)
         {
            return (baseValue + flatTotal) * bonusTotal;
         }
-        public int Apply(int baseValue)
+        public int ApplyBonuses(int baseValue)
         {
             float v = ((float)baseValue + flatTotal) * bonusTotal;
             return (int)MathF.Ceiling(v);
@@ -250,7 +255,7 @@ namespace ShapeCore
             return changed;
         }
 
-        public void Set(Stat other)
+        public void Set(StatBonuses other)
         {
             flatTotal = other.flatTotal;
             bonusTotal = other.bonusTotal;
@@ -264,7 +269,7 @@ namespace ShapeCore
             }
             Changed?.Invoke(this);
         }
-        public void Add(Stat other)
+        public void Add(StatBonuses other)
         {
             flatTotal += other.flatTotal;
             bonusTotal += other.bonusTotal - 1f;
@@ -340,53 +345,62 @@ namespace ShapeCore
             Changed?.Invoke(this);
         }
     }
-
-    //public class StatBase
-    //{
-    //    public float Base { get; set; } = 0f;
-    //    public float TotalBonus { get; set; } = 1f;
-    //    public float TotalFlat { get; set; } = 0f;
-    //    public float Cur { get { return cur; } }
-    //
-    //    private float cur = 0f;
-    //
-    //
-    //
-    //    public float UpdateCur(float totalBonus, float totalFlat)
-    //    {
-    //        cur = (cur + totalFlat) * totalBonus;
-    //        this.TotalFlat = totalFlat;
-    //        this.TotalBonus = totalBonus;
-    //        return cur;
-    //    }
-    //
-    //
-    //}
-    
-    
     public class StatI
     {
-        public int Base { get; set; } = 0;
-        public int Cur { get; set; } = 0;
-        public string[] IDS { get; set; }
-        public StatI(int baseValue, params string[] ids) { Base = baseValue; Cur = baseValue; IDS = ids; }
+        public event Action<StatI, int>? CurChanged;
+        public int Base { get; private set; } = 0;
+        public int Cur { get; private set; } = 0;
+        public float F
+        {
+            get
+            {
+                if (Base <= 0f) return 0f;
+                return (float)Cur / (float)Base;
+            }
+        }
+        public string[] StatBonusIDS { get; set; }
+        public StatI(int baseValue, params string[] statBonusIds) { Base = baseValue; Cur = baseValue; StatBonusIDS = statBonusIds; }
         public void SetBase(int value)
         {
             Base = value;
             Cur = value;
         }
+        public void UpdateCur(float totalBonuses, float totalFlats)
+        {
+            int old = Cur;
+            float v = ((float)Base + totalFlats) * totalBonuses;
+            Cur = (int)MathF.Ceiling(v);
+            if (Cur != old) CurChanged?.Invoke(this, old);
+        }
+
     }
     public class StatF
     {
-        public float Base { get; set; } = 0f;
-        public float Cur { get; set; } = 0f;
-        public string[] IDS { get; set; }
-        public StatF(float baseValue, params string[] ids) { Base = baseValue; Cur = baseValue; IDS = ids; }
+        public event Action<StatF, float>? CurChanged;
+        public float Base { get; private set; } = 0f;
+        public float Cur { get; private set; } = 0f;
+        public float F 
+        { 
+            get
+            {
+                if (Base <= 0f) return 0f;
+                return Cur / Base;
+            } 
+        }
+        public string[] StatBonusIDS { get; set; }
+        public StatF(float baseValue, params string[] statBonusIds) { Base = baseValue; Cur = baseValue; StatBonusIDS = statBonusIds; }
         public void SetBase(float value)
         {
             Base = value;
             Cur = value;
         }
+        public void UpdateCur(float totalBonuses, float totalFlats)
+        {
+            float old = Cur;
+            Cur = (Base + totalFlats) * totalBonuses;
+            if (Cur != old) CurChanged?.Invoke(this, old);
+        }
+        
     }
 
     //StatF/ StatI have event for changed and stat does not have an event anymore!!!
