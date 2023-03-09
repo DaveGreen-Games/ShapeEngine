@@ -30,6 +30,367 @@ namespace ShapeCore
             return false;
         }
     }
+
+    public class StatContainer
+    {
+        public Dictionary<string, Stat> stats = new();
+        public event Action<Stat>? StatChanged;
+        
+        public float Apply(float baseValue, params string[] statIDs)
+        {
+            float bonusTotal = 1f;
+            float flatTotal = 0f;
+
+            foreach (var id in statIDs)
+            {
+                if (stats.ContainsKey(id))
+                {
+                    var stat = stats[id];
+                    bonusTotal += stat.BonusTotal;
+                    flatTotal += stat.FlatTotal;
+                }
+            }
+
+            return (baseValue + flatTotal) * bonusTotal;
+        }
+        public int Apply(int baseValue, params string[] statIDs)
+        {
+            float bonusTotal = 1f;
+            float flatTotal = 0f;
+
+            foreach (var id in statIDs)
+            {
+                if (stats.ContainsKey(id))
+                {
+                    var stat = stats[id];
+                    bonusTotal += stat.BonusTotal;
+                    flatTotal += stat.FlatTotal;
+                }
+            }
+            float v = ((float)baseValue + flatTotal) * bonusTotal;
+            return (int)MathF.Ceiling(v);
+        }
+        
+        public void Apply(StatF baseStat, params string[] statIDs)
+        {
+            float bonusTotal = 1f;
+            float flatTotal = 0f;
+
+            foreach (var id in statIDs)
+            {
+                if (stats.ContainsKey(id))
+                {
+                    var stat = stats[id];
+                    bonusTotal += stat.BonusTotal;
+                    flatTotal += stat.FlatTotal;
+                }
+            }
+
+            baseStat.Cur = (baseStat.Base + flatTotal) * bonusTotal;
+        }
+        public void Apply(StatI baseStat, params string[] statIDs)
+        {
+            float bonusTotal = 1f;
+            float flatTotal = 0f;
+
+            foreach (var id in statIDs)
+            {
+                if (stats.ContainsKey(id))
+                {
+                    var stat = stats[id];
+                    bonusTotal += stat.BonusTotal;
+                    flatTotal += stat.FlatTotal;
+                }
+            }
+            float v = ((float)baseStat.Base + flatTotal) * bonusTotal;
+            baseStat.Cur = (int)MathF.Ceiling(v);
+        }
+
+        public void ApplyAll(params StatF[] stats)
+        {
+            foreach (var stat in stats)
+            {
+                Apply(stat, stat.IDS);
+            }
+        }
+        public void ApplyAll(params StatI[] stats)
+        {
+            foreach (var stat in stats)
+            {
+                Apply(stat, stat.IDS);
+            }
+        }
+        
+        public void Update(float dt)
+        {
+            foreach (var stat in stats.Values)
+            {
+                stat.Update(dt);
+            }
+        }
+
+        public void Add(Stat stat)
+        {
+            if (!stats.ContainsKey(stat.ID))
+            {
+                stats.Add(stat.ID, stat);
+                stat.Changed += OnStatChanged;
+            }
+        }
+        public void Remove(Stat stat)
+        {
+            if (stats.ContainsKey(stat.ID))
+            {
+                stat.Changed -= OnStatChanged;
+                stats.Remove(stat.ID);
+            }
+        }
+
+        public void Add(string id)
+        {
+            if (!stats.ContainsKey(id))
+            {
+                var stat = new Stat(id);
+                stat.Changed += OnStatChanged;
+                stats.Add(id, stat);
+            }
+        }
+        public void Remove(string id)
+        {
+            if (stats.ContainsKey(id))
+            {
+                stats[id].Changed -= OnStatChanged;
+                stats.Remove(id);
+            }
+        }
+
+        public void ChangeStatBonus(string id, float bonus, float duration = -1, bool remove = false)
+        {
+            if (stats.ContainsKey(id))
+            {
+                if (remove)
+                {
+                    stats[id].RemoveBonus(bonus);
+                }
+                else stats[id].AddBonus(bonus, duration);
+            }
+        }
+        public void ChangeStatFlat(string id, float flat, float duration = -1, bool remove = false)
+        {
+            if (stats.ContainsKey(id))
+            {
+                if (remove)
+                {
+                    stats[id].RemoveFlat(flat);
+                }
+                else stats[id].AddFlat(flat, duration);
+            }
+        }
+
+        private void OnStatChanged(Stat stat) { StatChanged?.Invoke(stat); }
+    }
+    public class Stat
+    {
+        private float flatTotal = 0f;
+        private float bonusTotal = 1f;
+        private List<StatValue> timedBonuses = new();
+        private List<StatValue> timedFlats = new();
+
+        public string ID { get; set; } = "";
+
+        public event Action<Stat>? Changed;
+
+        public Stat(string id) { this.ID = id; }
+        
+       
+        public float BonusTotal { get { return bonusTotal - 1f; } }
+        public float FlatTotal { get { return flatTotal; } }
+        
+        public float Apply(float baseValue)
+        {
+           return (baseValue + flatTotal) * bonusTotal;
+        }
+        public int Apply(int baseValue)
+        {
+            float v = ((float)baseValue + flatTotal) * bonusTotal;
+            return (int)MathF.Ceiling(v);
+        }
+        
+        public bool Update(float dt)
+        {
+            bool changed = false;
+            if (timedBonuses.Count > 0)
+            {
+                for (int i = timedBonuses.Count - 1; i >= 0; i--)
+                {
+                    if (timedBonuses[i].Update(dt))
+                    {
+                        bonusTotal -= timedBonuses[i].value;
+                        timedBonuses.RemoveAt(i);
+                        if (!changed) changed = true;
+                    }
+                }
+            }
+
+            if (timedFlats.Count > 0)
+            {
+                for (int i = timedFlats.Count - 1; i >= 0; i--)
+                {
+                    if (timedFlats[i].Update(dt))
+                    {
+                        flatTotal -= timedFlats[i].value;
+                        timedFlats.RemoveAt(i);
+                        if (!changed) changed = true;
+                    }
+                }
+            }
+
+            if (changed) Changed?.Invoke(this);
+
+            return changed;
+        }
+
+        public void Set(Stat other)
+        {
+            flatTotal = other.flatTotal;
+            bonusTotal = other.bonusTotal;
+            foreach (var bonus in other.timedBonuses)
+            {
+                AddBonus(bonus.value, bonus.GetRemaining());
+            }
+            foreach (var flat in other.timedFlats)
+            {
+                AddFlat(flat.value, flat.GetRemaining());
+            }
+            Changed?.Invoke(this);
+        }
+        public void Add(Stat other)
+        {
+            flatTotal += other.flatTotal;
+            bonusTotal += other.bonusTotal - 1f;
+
+            foreach (var bonus in other.timedBonuses)
+            {
+                AddBonus(bonus.value, bonus.GetRemaining());
+            }
+            foreach (var flat in other.timedFlats)
+            {
+                AddFlat(flat.value, flat.GetRemaining());
+            }
+
+            Changed?.Invoke(this);
+        }
+
+        public void AddBonuses(params float[] bonuses)
+        {
+            foreach (var bonus in bonuses)
+            {
+                bonusTotal += bonus;
+            }
+
+            Changed?.Invoke(this);
+        }
+        public void AddFlats(params float[] flats)
+        {
+            foreach (var flat in flats)
+            {
+                flatTotal += flat;
+            }
+            Changed?.Invoke(this);
+        }
+        
+        public void AddBonus(float bonus, float duration = -1f)
+        {
+            bonusTotal += bonus;
+            if (duration > 0f)
+            {
+                timedBonuses.Add(new(bonus, duration));
+            }
+            Changed?.Invoke(this);
+        }
+        public void AddFlat(float flat, float duration = -1f)
+        {
+            flatTotal += flat;
+            if (duration > 0f)
+            {
+                timedFlats.Add(new(flat, duration));
+            }
+            Changed?.Invoke(this);
+        }
+        public void RemoveBonus(float bonus)
+        {
+            bonusTotal -= bonus;
+            Changed?.Invoke(this);
+        }
+        public void RemoveFlat(float flat)
+        {
+            flatTotal -= flat;
+            Changed?.Invoke(this);
+        }
+        public void ResetBonus() { bonusTotal = 1f; timedBonuses.Clear(); Changed?.Invoke(this); }
+        public void ResetFlat() { flatTotal = 0f; timedFlats.Clear(); Changed?.Invoke(this); }
+        public void Reset()
+        {
+            bonusTotal = 1f;
+            timedBonuses.Clear();
+
+            flatTotal = 0f;
+            timedFlats.Clear();
+
+            Changed?.Invoke(this);
+        }
+    }
+
+    //public class StatBase
+    //{
+    //    public float Base { get; set; } = 0f;
+    //    public float TotalBonus { get; set; } = 1f;
+    //    public float TotalFlat { get; set; } = 0f;
+    //    public float Cur { get { return cur; } }
+    //
+    //    private float cur = 0f;
+    //
+    //
+    //
+    //    public float UpdateCur(float totalBonus, float totalFlat)
+    //    {
+    //        cur = (cur + totalFlat) * totalBonus;
+    //        this.TotalFlat = totalFlat;
+    //        this.TotalBonus = totalBonus;
+    //        return cur;
+    //    }
+    //
+    //
+    //}
+    
+    
+    public class StatI
+    {
+        public int Base { get; set; } = 0;
+        public int Cur { get; set; } = 0;
+        public string[] IDS { get; set; }
+        public StatI(int baseValue, params string[] ids) { Base = baseValue; Cur = baseValue; IDS = ids; }
+        public void SetBase(int value)
+        {
+            Base = value;
+            Cur = value;
+        }
+    }
+    public class StatF
+    {
+        public float Base { get; set; } = 0f;
+        public float Cur { get; set; } = 0f;
+        public string[] IDS { get; set; }
+        public StatF(float baseValue, params string[] ids) { Base = baseValue; Cur = baseValue; IDS = ids; }
+        public void SetBase(float value)
+        {
+            Base = value;
+            Cur = value;
+        }
+    }
+
+    //StatF/ StatI have event for changed and stat does not have an event anymore!!!
+
     public class StatSimple
     {
         private float baseValue = 0f;
@@ -177,7 +538,7 @@ namespace ShapeCore
             Changed?.Invoke(this);
         }
     }
-    public class Stat
+    public class StatNamed
     {
         private float prevTotal = 0f;
         private float baseValue = 0f;
@@ -189,12 +550,12 @@ namespace ShapeCore
         private Dictionary<string, StatValue> flatBonues = new();
         public string ID { get; set; } = "";
 
-        public event Action<Stat>? Changed;
-        public Stat(float baseValue)
+        public event Action<StatNamed>? Changed;
+        public StatNamed(float baseValue)
         {
             this.baseValue = baseValue;
         }
-        public Stat(float baseValue, string id)
+        public StatNamed(float baseValue, string id)
         {
             this.baseValue = baseValue;
             this.ID = id;
