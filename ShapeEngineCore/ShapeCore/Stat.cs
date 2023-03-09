@@ -71,12 +71,12 @@ namespace ShapeCore
             return (int)MathF.Ceiling(v);
         }
         
-        public void ApplyBonusesToStat(StatF baseStat, params string[] statIDs)
+        public void ApplyBonusesToStat(StatF baseStat)
         {
             float bonusTotal = 1f;
             float flatTotal = 0f;
 
-            foreach (var id in statIDs)
+            foreach (var id in baseStat.StatBonusIDS)
             {
                 if (stats.ContainsKey(id))
                 {
@@ -87,12 +87,12 @@ namespace ShapeCore
             }
             baseStat.UpdateCur(bonusTotal, flatTotal);
         }
-        public void ApplyBonusesToStat(StatI baseStat, params string[] statIDs)
+        public void ApplyBonusesToStat(StatI baseStat)
         {
             float bonusTotal = 1f;
             float flatTotal = 0f;
 
-            foreach (var id in statIDs)
+            foreach (var id in baseStat.StatBonusIDS)
             {
                 if (stats.ContainsKey(id))
                 {
@@ -108,14 +108,14 @@ namespace ShapeCore
         {
             foreach (var stat in stats)
             {
-                ApplyBonusesToStat(stat, stat.StatBonusIDS);
+                ApplyBonusesToStat(stat);
             }
         }
         public void ApplyBonusesToStats(params StatI[] stats)
         {
             foreach (var stat in stats)
             {
-                ApplyBonusesToStat(stat, stat.StatBonusIDS);
+                ApplyBonusesToStat(stat);
             }
         }
         
