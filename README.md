@@ -29,10 +29,6 @@ Shape Engine uses the following nuget packages:
 - [Vortice.XInput](https://www.nuget.org/packages/Vortice.XInput) (Gamepad Vibration)
 - [Newtonsoft.Json](https://www.nuget.org/packages/Newtonsoft.Json) (Data Handler Json Serialization/Deserialization)
 
-
-## Known Problems/ Issues
-- Simple Collision is not finished yet. The entire collision system with the CollisionHandler and HashGrid System works right now but not all the dynamic collision functions are implemented yet. Only circle, segment, and point colliders work as collider class right now. If you want to use one of the other collider classes you have to set your ICollidable object as an area instead of a collider. (In the Demo the projectiles are actually areas while the player and asteroids are colliders)
-
 ## Limitations
 - There is no physics system because I don´t need one and would´t know how to make one. There is complete collision system but the collision response is up to you. You can also use raylibs physics system.
 - The UI system is functional but not finished yet.
