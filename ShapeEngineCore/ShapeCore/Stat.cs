@@ -1,13 +1,27 @@
 ﻿
 
-using System.Globalization;
-using System.Security.Cryptography.X509Certificates;
-using System.Xml.Linq;
-using Vortice.XInput;
+using Raylib_CsLo;
+using System.Collections.Specialized;
 
 namespace ShapeCore
 {
 
+    public interface IBuff
+    {
+        public string GetID();
+        public bool IsEmpty();
+        public bool DrawToUI();
+        public (float totalBonus, float totalFlat) Get(params string[] tags);
+        public void AddStack();
+        public bool RemoveStack();
+        public void Update(float dt);
+        public void DrawUI(Rectangle r, Color barColor, Color bgColor, Color textColor);
+    }
+    public interface IStat
+    {
+        public string[] Tags { get; set; }
+        public void UpdateCur(float totalBonus, float totalFlat);
+    }
 
     public struct BuffValue
     {
@@ -27,9 +41,11 @@ namespace ShapeCore
             this.flat = flat;
         }
     }
-    public class Buff
+
+    public class Buff : IBuff
     {
-        private Dictionary<string, BuffValue> statChanges = new();
+        private Dictionary<string, BuffValue> buffValues = new();
+        private string id = "";
         public int MaxStacks { get; private set; } = -1;
         public int CurStacks { get; private set; } = 1;
         public float Duration { get; private set; } = -1f;
@@ -50,26 +66,31 @@ namespace ShapeCore
                 return (float)CurStacks / (float)MaxStacks;
             }
         }
-        public string ID { get; private set; } = "";
         public string Name { get; set; } = "";
+        public string Abbreviation { get; set; } = "";
         public bool clearAllStacksOnDurationEnd = false;
         public bool IsEmpty() { return CurStacks <= 0; }
-        public Buff(string id, int maxStacks = -1, float duration = -1, params BuffValue[] statChanges)
+        public bool DrawToUI() { return Abbreviation != ""; }
+        public string GetID() { return  id; }
+        
+        public Buff(string id, int maxStacks = -1, float duration = -1, params BuffValue[] buffValues)
         {
-            this.ID = id;
-            foreach (var statChange in statChanges)
+            this.id = id;
+            this.MaxStacks = maxStacks;
+            this.Duration = duration;
+            foreach (var statChange in buffValues)
             {
-                this.statChanges.Add(statChange.id, statChange);
+                this.buffValues.Add(statChange.id, statChange);
             }
         }
 
-        public (float bonus, float flat) Get(params string[] tags)
+        public (float totalBonus, float totalFlat) Get(params string[] tags)
         {
             float totalBonus = 0f;
             float totalFlat = 0f;
             if (IsEmpty()) return new(0f, 0f);
 
-            foreach (var stat in statChanges.Values)
+            foreach (var stat in buffValues.Values)
             {
                 if (tags.Contains(stat.id))
                 {
@@ -99,23 +120,31 @@ namespace ShapeCore
                 Timer -= dt;
                 if(Timer <= 0f)
                 {
-                    CurStacks -= 1;
-                    if(CurStacks > 0)
+                    if (clearAllStacksOnDurationEnd) CurStacks = 0;
+                    else
                     {
-                        Timer = Duration;
+                        CurStacks -= 1;
+                        if (CurStacks > 0)
+                        {
+                            Timer = Duration;
+                        }
                     }
                 }
             }
         }
+        
+        public void DrawUI(Rectangle r, Color barColor, Color bgColor, Color textColor) { }
     }
     public class BuffContainer
     {
-        private Dictionary<string, Buff> buffs = new();
-
-        public void AddBuff(Buff buff)
+        private Dictionary<string, IBuff> buffs = new();
+        public List<IBuff> GetBuffs() { return buffs.Values.ToList(); }
+        public List<IBuff> GetBuffs(Predicate<IBuff> match) { return GetBuffs().FindAll(match); }
+        public List<IBuff> GetUIBuffs() { return GetBuffs(b => b.DrawToUI()); }
+        public void AddBuff(IBuff buff)
         {
-            if(buffs.ContainsKey(buff.ID)) buffs[buff.ID].RemoveStack();
-            else buffs.Add(buff.ID, buff);
+            if(buffs.ContainsKey(buff.GetID())) buffs[buff.GetID()].RemoveStack();
+            else buffs.Add(buff.GetID(), buff);
         }
         public void RemoveBuff(string name) 
         {
@@ -125,12 +154,12 @@ namespace ShapeCore
                 if (buffs[name].IsEmpty()) buffs.Remove(name);
             }
         }
-        public void RemoveBuff(Buff buff)
+        public void RemoveBuff(IBuff buff)
         {
-            if (buffs.ContainsKey(buff.ID))
+            if (buffs.ContainsKey(buff.GetID()))
             {
-                buffs[buff.ID].RemoveStack();
-                if (buffs[buff.ID].IsEmpty()) buffs.Remove(buff.ID);
+                buffs[buff.GetID()].RemoveStack();
+                if (buffs[buff.GetID()].IsEmpty()) buffs.Remove(buff.GetID());
             }
         }
         public void Update(float dt)
@@ -141,11 +170,11 @@ namespace ShapeCore
                 buff.Update(dt);
                 if (buff.IsEmpty())
                 {
-                    buffs.Remove(buff.ID);
+                    buffs.Remove(buff.GetID());
                 }
             }
         }
-        public void Apply(params StatF[] stats)
+        public void Apply(params IStat[] stats)
         {
             if (buffs.Count <= 0) return;
             foreach (var stat in stats)
@@ -153,6 +182,21 @@ namespace ShapeCore
                 Apply(stat);
             }
         }
+        private void Apply(IStat stat)
+        {
+            float totalFlat = 0f;
+            float totalBonus = 0f;
+            foreach (var buff in buffs.Values)
+            {
+                var info = buff.Get(stat.Tags);
+                totalBonus += info.totalBonus;
+                totalFlat += info.totalFlat;
+            }
+            
+            stat.UpdateCur(totalBonus, totalFlat);
+        }
+        
+        /*
         public void Apply(params StatI[] stats)
         {
             if (buffs.Count <= 0) return;
@@ -160,19 +204,6 @@ namespace ShapeCore
             {
                 Apply(stat);
             }
-        }
-        private void Apply(StatF stat)
-        {
-            float totalFlat = 0f;
-            float totalBonus = 0f;
-            foreach (var buff in buffs.Values)
-            {
-                var info = buff.Get(stat.StatBonusIDS);
-                totalBonus += info.bonus;
-                totalFlat += info.flat;
-            }
-            
-            stat.UpdateCur(totalBonus, totalFlat);
         }
         private void Apply(StatI stat)
         {
@@ -187,9 +218,10 @@ namespace ShapeCore
 
             stat.UpdateCur(totalBonus, totalFlat);
         }
+        */
     }
 
-    public class StatI
+    public class StatI : IStat
     {
         public event Action<StatI, int>? CurChanged;
         public int Base { get; private set; } = 0;
@@ -202,8 +234,9 @@ namespace ShapeCore
                 return (float)Cur / (float)Base;
             }
         }
-        public string[] StatBonusIDS { get; set; }
-        public StatI(int baseValue, params string[] statBonusIds) { Base = baseValue; Cur = baseValue; StatBonusIDS = statBonusIds; }
+        public string[] Tags { get; set; }
+
+        public StatI(int baseValue, params string[] tags) { Base = baseValue; Cur = baseValue; this.Tags = tags; }
         public void SetBase(int value)
         {
             Base = value;
@@ -227,7 +260,7 @@ namespace ShapeCore
         }
 
     }
-    public class StatF
+    public class StatF : IStat
     {
         public event Action<StatF, float>? CurChanged;
         public float Base { get; private set; } = 0f;
@@ -240,8 +273,8 @@ namespace ShapeCore
                 return Cur / Base;
             } 
         }
-        public string[] StatBonusIDS { get; set; }
-        public StatF(float baseValue, params string[] statBonusIds) { Base = baseValue; Cur = baseValue; StatBonusIDS = statBonusIds; }
+        public string[] Tags { get; set; }
+        public StatF(float baseValue, params string[] tags) { Base = baseValue; Cur = baseValue; Tags = tags; }
         public void SetBase(float value)
         {
             Base = value;
@@ -264,6 +297,8 @@ namespace ShapeCore
         
     }
 
+    
+    
     //deprecated--------------------------------
     internal class StatValue
     {
@@ -338,7 +373,7 @@ namespace ShapeCore
             float bonusTotal = 1f;
             float flatTotal = 0f;
 
-            foreach (var id in baseStat.StatBonusIDS)
+            foreach (var id in baseStat.Tags)
             {
                 if (stats.ContainsKey(id))
                 {
@@ -354,7 +389,7 @@ namespace ShapeCore
             float bonusTotal = 1f;
             float flatTotal = 0f;
 
-            foreach (var id in baseStat.StatBonusIDS)
+            foreach (var id in baseStat.Tags)
             {
                 if (stats.ContainsKey(id))
                 {
