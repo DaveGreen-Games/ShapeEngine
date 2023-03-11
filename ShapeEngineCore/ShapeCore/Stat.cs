@@ -1,7 +1,270 @@
 ﻿
 
+using System.Globalization;
+using System.Security.Cryptography.X509Certificates;
+using System.Xml.Linq;
+using Vortice.XInput;
+
 namespace ShapeCore
 {
+
+
+    public struct BuffValue
+    {
+        public float bonus = 0f;
+        public float flat = 0f;
+        public string id = "";
+        public BuffValue(string id)
+        {
+            this.bonus = 0f;
+            this.flat = 0f;
+            this.id = id;
+        }
+        public BuffValue(string id, float bonus, float flat)
+        {
+            this.id = id;
+            this.bonus = bonus;
+            this.flat = flat;
+        }
+    }
+    public class Buff
+    {
+        private Dictionary<string, BuffValue> statChanges = new();
+        public int MaxStacks { get; private set; } = -1;
+        public int CurStacks { get; private set; } = 1;
+        public float Duration { get; private set; } = -1f;
+        public float Timer { get; private set; } = 0f;
+        public float TimerF 
+        { 
+            get
+            {
+                if (Duration <= 0f) return 0f;
+                return 1f - (Timer / Duration);
+            } 
+        }
+        public float StackF
+        {
+            get
+            {
+                if(MaxStacks <= 0) return 0f;
+                return (float)CurStacks / (float)MaxStacks;
+            }
+        }
+        public string ID { get; private set; } = "";
+        public string Name { get; set; } = "";
+        public bool clearAllStacksOnDurationEnd = false;
+        public bool IsEmpty() { return CurStacks <= 0; }
+        public Buff(string id, int maxStacks = -1, float duration = -1, params BuffValue[] statChanges)
+        {
+            this.ID = id;
+            foreach (var statChange in statChanges)
+            {
+                this.statChanges.Add(statChange.id, statChange);
+            }
+        }
+
+        public (float bonus, float flat) Get(params string[] tags)
+        {
+            float totalBonus = 0f;
+            float totalFlat = 0f;
+            if (IsEmpty()) return new(0f, 0f);
+
+            foreach (var stat in statChanges.Values)
+            {
+                if (tags.Contains(stat.id))
+                {
+                    totalBonus += stat.bonus * CurStacks;
+                    totalFlat += stat.flat * CurStacks;
+                }
+            }
+            return(totalBonus, totalFlat);
+        }
+        public void AddStack()
+        {
+            if (CurStacks < MaxStacks || MaxStacks < 0) CurStacks += 1;
+            if (Duration > 0) Timer = Duration;
+        }
+        public bool RemoveStack()
+        {
+            CurStacks -= 1;
+            if (CurStacks <= 0) return true;
+
+            return false;
+        }
+        public void Update(float dt)
+        {
+            if(IsEmpty()) return;
+            if(Duration > 0f)
+            {
+                Timer -= dt;
+                if(Timer <= 0f)
+                {
+                    CurStacks -= 1;
+                    if(CurStacks > 0)
+                    {
+                        Timer = Duration;
+                    }
+                }
+            }
+        }
+    }
+    public class BuffContainer
+    {
+        private Dictionary<string, Buff> buffs = new();
+
+        public void AddBuff(Buff buff)
+        {
+            if(buffs.ContainsKey(buff.ID)) buffs[buff.ID].RemoveStack();
+            else buffs.Add(buff.ID, buff);
+        }
+        public void RemoveBuff(string name) 
+        {
+            if (buffs.ContainsKey(name))
+            {
+                buffs[name].RemoveStack();
+                if (buffs[name].IsEmpty()) buffs.Remove(name);
+            }
+        }
+        public void RemoveBuff(Buff buff)
+        {
+            if (buffs.ContainsKey(buff.ID))
+            {
+                buffs[buff.ID].RemoveStack();
+                if (buffs[buff.ID].IsEmpty()) buffs.Remove(buff.ID);
+            }
+        }
+        public void Update(float dt)
+        {
+            for (int i = buffs.Count - 1; i >= 0; i--)
+            {
+                var buff = buffs.ElementAt(i).Value;
+                buff.Update(dt);
+                if (buff.IsEmpty())
+                {
+                    buffs.Remove(buff.ID);
+                }
+            }
+        }
+        public void Apply(params StatF[] stats)
+        {
+            if (buffs.Count <= 0) return;
+            foreach (var stat in stats)
+            {
+                Apply(stat);
+            }
+        }
+        public void Apply(params StatI[] stats)
+        {
+            if (buffs.Count <= 0) return;
+            foreach (var stat in stats)
+            {
+                Apply(stat);
+            }
+        }
+        private void Apply(StatF stat)
+        {
+            float totalFlat = 0f;
+            float totalBonus = 0f;
+            foreach (var buff in buffs.Values)
+            {
+                var info = buff.Get(stat.StatBonusIDS);
+                totalBonus += info.bonus;
+                totalFlat += info.flat;
+            }
+            
+            stat.UpdateCur(totalBonus, totalFlat);
+        }
+        private void Apply(StatI stat)
+        {
+            float totalFlat = 0f;
+            float totalBonus = 0f;
+            foreach (var buff in buffs.Values)
+            {
+                var info = buff.Get(stat.StatBonusIDS);
+                totalBonus += info.bonus;
+                totalFlat += info.flat;
+            }
+
+            stat.UpdateCur(totalBonus, totalFlat);
+        }
+    }
+
+    public class StatI
+    {
+        public event Action<StatI, int>? CurChanged;
+        public int Base { get; private set; } = 0;
+        public int Cur { get; private set; } = 0;
+        public float F
+        {
+            get
+            {
+                if (Base <= 0f) return 0f;
+                return (float)Cur / (float)Base;
+            }
+        }
+        public string[] StatBonusIDS { get; set; }
+        public StatI(int baseValue, params string[] statBonusIds) { Base = baseValue; Cur = baseValue; StatBonusIDS = statBonusIds; }
+        public void SetBase(int value)
+        {
+            Base = value;
+            Cur = value;
+        }
+        public void UpdateCur(float totalBonuses, float totalFlats)
+        {
+            int old = Cur;
+            if (totalBonuses >= 0f)
+            {
+                float v = ((float)Base + totalFlats) * totalBonuses;
+                Cur = (int)MathF.Ceiling(v);
+            }
+            else
+            {
+                float v = ((float)Base + totalFlats) / (1f + MathF.Abs(totalBonuses));
+                Cur = (int)MathF.Ceiling(v);
+            }
+            
+            if (Cur != old) CurChanged?.Invoke(this, old);
+        }
+
+    }
+    public class StatF
+    {
+        public event Action<StatF, float>? CurChanged;
+        public float Base { get; private set; } = 0f;
+        public float Cur { get; private set; } = 0f;
+        public float F 
+        { 
+            get
+            {
+                if (Base <= 0f) return 0f;
+                return Cur / Base;
+            } 
+        }
+        public string[] StatBonusIDS { get; set; }
+        public StatF(float baseValue, params string[] statBonusIds) { Base = baseValue; Cur = baseValue; StatBonusIDS = statBonusIds; }
+        public void SetBase(float value)
+        {
+            Base = value;
+            Cur = value;
+        }
+        public void UpdateCur(float totalBonuses, float totalFlats)
+        {
+            float old = Cur;
+            if(totalBonuses >= 0f)
+            {
+                Cur = (Base + totalFlats) * (1f + totalBonuses);
+            }
+            else
+            {
+                Cur = (Base + totalFlats) / (1f + MathF.Abs(totalBonuses));
+            }
+            
+            if (Cur != old) CurChanged?.Invoke(this, old);
+        }
+        
+    }
+
+    //deprecated--------------------------------
     internal class StatValue
     {
         public float value = 0f;
@@ -30,7 +293,6 @@ namespace ShapeCore
             return false;
         }
     }
-
     public class StatContainer
     {
         public Dictionary<string, StatBonuses> stats = new();
@@ -345,66 +607,7 @@ namespace ShapeCore
             Changed?.Invoke(this);
         }
     }
-    public class StatI
-    {
-        public event Action<StatI, int>? CurChanged;
-        public int Base { get; private set; } = 0;
-        public int Cur { get; private set; } = 0;
-        public float F
-        {
-            get
-            {
-                if (Base <= 0f) return 0f;
-                return (float)Cur / (float)Base;
-            }
-        }
-        public string[] StatBonusIDS { get; set; }
-        public StatI(int baseValue, params string[] statBonusIds) { Base = baseValue; Cur = baseValue; StatBonusIDS = statBonusIds; }
-        public void SetBase(int value)
-        {
-            Base = value;
-            Cur = value;
-        }
-        public void UpdateCur(float totalBonuses, float totalFlats)
-        {
-            int old = Cur;
-            float v = ((float)Base + totalFlats) * totalBonuses;
-            Cur = (int)MathF.Ceiling(v);
-            if (Cur != old) CurChanged?.Invoke(this, old);
-        }
-
-    }
-    public class StatF
-    {
-        public event Action<StatF, float>? CurChanged;
-        public float Base { get; private set; } = 0f;
-        public float Cur { get; private set; } = 0f;
-        public float F 
-        { 
-            get
-            {
-                if (Base <= 0f) return 0f;
-                return Cur / Base;
-            } 
-        }
-        public string[] StatBonusIDS { get; set; }
-        public StatF(float baseValue, params string[] statBonusIds) { Base = baseValue; Cur = baseValue; StatBonusIDS = statBonusIds; }
-        public void SetBase(float value)
-        {
-            Base = value;
-            Cur = value;
-        }
-        public void UpdateCur(float totalBonuses, float totalFlats)
-        {
-            float old = Cur;
-            Cur = (Base + totalFlats) * totalBonuses;
-            if (Cur != old) CurChanged?.Invoke(this, old);
-        }
-        
-    }
-
-    //StatF/ StatI have event for changed and stat does not have an event anymore!!!
-
+    
     public class StatSimple
     {
         private float baseValue = 0f;
@@ -708,6 +911,6 @@ namespace ShapeCore
             prevTotal = total;
         }
     }
-
+    //------------------------------------------
 
 }
