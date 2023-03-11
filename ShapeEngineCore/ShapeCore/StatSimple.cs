@@ -1,4 +1,5 @@
-﻿
+﻿using ShapeStats;
+
 namespace ShapeCore
 {
     
@@ -71,7 +72,7 @@ namespace ShapeCore
             return (int)MathF.Ceiling(v);
         }
         
-        public void ApplyBonusesToStat(StatF baseStat)
+        public void ApplyBonusesToStat(Stat baseStat)
         {
             float bonusTotal = 1f;
             float flatTotal = 0f;
@@ -87,7 +88,7 @@ namespace ShapeCore
             }
             baseStat.UpdateCur(bonusTotal, flatTotal);
         }
-        public void ApplyBonusesToStat(StatI baseStat)
+        public void ApplyBonusesToStat(StatInt baseStat)
         {
             float bonusTotal = 1f;
             float flatTotal = 0f;
@@ -104,14 +105,14 @@ namespace ShapeCore
             baseStat.UpdateCur(bonusTotal, flatTotal);
         }
 
-        public void ApplyBonusesToStats(params StatF[] stats)
+        public void ApplyBonusesToStats(params Stat[] stats)
         {
             foreach (var stat in stats)
             {
                 ApplyBonusesToStat(stat);
             }
         }
-        public void ApplyBonusesToStats(params StatI[] stats)
+        public void ApplyBonusesToStats(params StatInt[] stats)
         {
             foreach (var stat in stats)
             {
