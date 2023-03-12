@@ -53,76 +53,42 @@ namespace ShapeCore
         public virtual bool IsEnabled() { return true; }
         public virtual bool IsVisible() { return true; }
 
-        //public virtual void MonitorHasChanged()
-        //{
-        //
-        //}
     }
-    /*public class GameObject
-    {
-        protected Vector2 pos = new(0, 0);
-        protected Vector2 size = new(0, 0);
-        protected bool dead = false;
-        protected int drawOrder = 0;
-        protected bool visible = false;
-        protected bool enabled = false;
-        protected string group = "NONE";
+    
+    //public interface IGameObject
+    //{
+    //    public float DrawOrder { get; set; }
+    //    public string Group { get; set; }
+    //    public string AreaLayerName { get; set; }
+    //    public Vector2 AreaLayerOffset { get; set; }
+    //
+    //    /// <summary>
+    //    /// Slows down or speeds up the gameobject. 2 means twice as fast, 0.5 means half speed. Is affect by slow resistance and area slow factor.
+    //    /// </summary>
+    //    public float UpdateSlowFactor { get; set; }
+    //    /// <summary>
+    //    /// Multiplier for the total slow factor. 2 means slow factor has twice the effect, 0.5 means half the effect.
+    //    /// </summary>
+    //    public float UpdateSlowResistance { get; set; }
+    //
+    //    public bool IsInGroup(string group) { return this.Group == group; }
+    //
+    //
+    //    public void Start();
+    //    public void Destroy();
+    //    public void Draw();
+    //    public void DrawUI(Vector2 uiSize, Vector2 stretchFactor);
+    //    public void Update(float dt);
+    //    public void OnPlayfield(bool inner, bool outer);
+    //    public Rectangle GetBoundingBox();
+    //    public Vector2 GetPosition();
+    //    public Vector2 GetCameraPosition(Vector2 camPos, float dt, float smoothness = 1f, float boundary = 0f);
+    //    public bool Kill();
+    //    protected void WasKilled();
+    //    public virtual bool IsDead() { return false; }
+    //    public virtual bool IsEnabled() { return true; }
+    //    public virtual bool IsVisible() { return true; }
+    //}
 
-        public GameObject() { }
-
-
-
-        public int GetDrawOrder() { return drawOrder; }
-        public void SetDrawOrder(int drawOrder) { this.drawOrder = drawOrder; }
-        public bool IsDead() { return dead; }
-        
-        public string GetGroup() { return group; }
-        public void SetGroup(string group) { this.group = group; }
-        public bool IsInGroup(string group) { return this.group == group; }
-        
-        public virtual void Spawn(int x, int y)
-        {
-            pos.X = x;
-            pos.Y = y;
-            dead = false;
-        }
-        public virtual void Destroy() { }
-        public virtual void Draw() { }
-        public virtual void Update(float dt) { }
-
-        public virtual bool IsEnabled() { return enabled; }
-        public virtual void Enable()
-        {
-            if (enabled) return;
-            enabled = true;
-        }
-        public virtual void Disable()
-        {
-            if(!enabled) return;
-            enabled = false;
-        }
-
-        public virtual bool IsVisible() { return visible; }
-        public virtual void Show()
-        {
-            if (visible) return;
-            visible = true;
-        }
-        public virtual void Hide()
-        {
-            if(!visible) return;
-            visible = false;
-        }
-
-
-        public bool IsOnScreen(Rectangle screen)
-        {
-            return CheckCollisionRecs(GetBoundingBox(), screen);
-        }
-        public virtual Rectangle GetBoundingBox()
-        {
-            return new(pos.X - size.X * 0.5f, pos.Y - size.Y * 0.5f, size.X, size.Y);
-        }
-    }*/
 
 }

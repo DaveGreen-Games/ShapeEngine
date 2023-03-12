@@ -12,7 +12,7 @@ namespace ShapeStats
         
         public void AddBuff(IBuff buff)
         {
-            if (buffs.ContainsKey(buff.GetID())) buffs[buff.GetID()].RemoveStack();
+            if (buffs.ContainsKey(buff.GetID())) buffs[buff.GetID()].AddStack();
             else buffs.Add(buff.GetID(), buff);
         }
         public void RemoveBuff(int id)
