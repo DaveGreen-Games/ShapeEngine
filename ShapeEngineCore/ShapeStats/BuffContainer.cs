@@ -4,21 +4,23 @@ namespace ShapeStats
 {
     public class BuffContainer
     {
-        private Dictionary<string, IBuff> buffs = new();
+        private Dictionary<int, IBuff> buffs = new();
+        
         public List<IBuff> GetBuffs() { return buffs.Values.ToList(); }
         public List<IBuff> GetBuffs(Predicate<IBuff> match) { return GetBuffs().FindAll(match); }
         public List<IBuff> GetUIBuffs() { return GetBuffs(b => b.DrawToUI()); }
+        
         public void AddBuff(IBuff buff)
         {
             if (buffs.ContainsKey(buff.GetID())) buffs[buff.GetID()].RemoveStack();
             else buffs.Add(buff.GetID(), buff);
         }
-        public void RemoveBuff(string name)
+        public void RemoveBuff(int id)
         {
-            if (buffs.ContainsKey(name))
+            if (buffs.ContainsKey(id))
             {
-                buffs[name].RemoveStack();
-                if (buffs[name].IsEmpty()) buffs.Remove(name);
+                buffs[id].RemoveStack();
+                if (buffs[id].IsEmpty()) buffs.Remove(id);
             }
         }
         public void RemoveBuff(IBuff buff)
@@ -29,6 +31,7 @@ namespace ShapeStats
                 if (buffs[buff.GetID()].IsEmpty()) buffs.Remove(buff.GetID());
             }
         }
+       
         public void Update(float dt)
         {
             for (int i = buffs.Count - 1; i >= 0; i--)
@@ -41,15 +44,22 @@ namespace ShapeStats
                 }
             }
         }
+        
         public void Apply(params IStat[] stats)
         {
             if (buffs.Count <= 0) return;
             foreach (var stat in stats)
             {
-                Apply(stat);
+                ApplyStat(stat);
             }
         }
-        private void Apply(IStat stat)
+        public void Apply(IStat stat)
+        {
+            if (buffs.Count <= 0) return;
+            ApplyStat(stat);
+        }
+        
+        private void ApplyStat(IStat stat)
         {
             float totalFlat = 0f;
             float totalBonus = 0f;

@@ -5,7 +5,7 @@ namespace ShapeStats
     {
         void AddBuff(IBuff buff);
         void RemoveBuff(IBuff buff);
-        void RemoveBuff(string id);
+        void RemoveBuff(int id);
     }
 
 }

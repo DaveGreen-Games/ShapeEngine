@@ -6,10 +6,10 @@ namespace ShapeStats
 {
     public interface IBuff
     {
-        public string GetID();
+        public int GetID();
         public bool IsEmpty();
         public bool DrawToUI();
-        public (float totalBonus, float totalFlat) Get(params string[] tags);
+        public (float totalBonus, float totalFlat) Get(params int[] tags);
         public void AddStack();
         public bool RemoveStack();
         public void Update(float dt);
@@ -20,14 +20,14 @@ namespace ShapeStats
     {
         public float bonus = 0f;
         public float flat = 0f;
-        public string id = "";
-        public BuffValue(string id)
+        public int id = -1;
+        public BuffValue(int id)
         {
             this.bonus = 0f;
             this.flat = 0f;
             this.id = id;
         }
-        public BuffValue(string id, float bonus, float flat)
+        public BuffValue(int id, float bonus, float flat)
         {
             this.id = id;
             this.bonus = bonus;
@@ -37,8 +37,8 @@ namespace ShapeStats
 
     public class Buff : IBuff
     {
-        private Dictionary<string, BuffValue> buffValues = new();
-        private string id = "";
+        private Dictionary<int, BuffValue> buffValues = new();
+        private int id = -1;
         public int MaxStacks { get; private set; } = -1;
         public int CurStacks { get; private set; } = 1;
         public float Duration { get; private set; } = -1f;
@@ -64,31 +64,31 @@ namespace ShapeStats
         public bool clearAllStacksOnDurationEnd = false;
         public bool IsEmpty() { return CurStacks <= 0; }
         public bool DrawToUI() { return Abbreviation != ""; }
-        public string GetID() { return id; }
+        public int GetID() { return id; }
 
-        public Buff(string id, int maxStacks = -1, float duration = -1, params BuffValue[] buffValues)
+        public Buff(int id, int maxStacks = -1, float duration = -1, params BuffValue[] buffValues)
         {
             this.id = id;
             this.MaxStacks = maxStacks;
             this.Duration = duration;
-            foreach (var statChange in buffValues)
+            foreach (var buffValue in buffValues)
             {
-                this.buffValues.Add(statChange.id, statChange);
+                this.buffValues.Add(buffValue.id, buffValue);
             }
         }
 
-        public (float totalBonus, float totalFlat) Get(params string[] tags)
+        public (float totalBonus, float totalFlat) Get(params int[] tags)
         {
             float totalBonus = 0f;
             float totalFlat = 0f;
             if (IsEmpty()) return new(0f, 0f);
 
-            foreach (var stat in buffValues.Values)
+            foreach (var buffValue in buffValues.Values)
             {
-                if (tags.Contains(stat.id))
+                if (tags.Contains(buffValue.id))
                 {
-                    totalBonus += stat.bonus * CurStacks;
-                    totalFlat += stat.flat * CurStacks;
+                    totalBonus += buffValue.bonus * CurStacks;
+                    totalFlat += buffValue.flat * CurStacks;
                 }
             }
             return (totalBonus, totalFlat);

@@ -3,7 +3,7 @@ namespace ShapeStats
 {
     public interface IStat
     {
-        public string[] Tags { get; set; }
+        public int[] Tags { get; set; }
         public void UpdateCur(float totalBonus, float totalFlat);
     }
 
@@ -20,8 +20,8 @@ namespace ShapeStats
                 return Cur / Base;
             }
         }
-        public string[] Tags { get; set; }
-        public Stat(float baseValue, params string[] tags) { Base = baseValue; Cur = baseValue; Tags = tags; }
+        public int[] Tags { get; set; }
+        public Stat(float baseValue, params int[] tags) { Base = baseValue; Cur = baseValue; Tags = tags; }
         public void SetBase(float value)
         {
             Base = value;
@@ -57,9 +57,9 @@ namespace ShapeStats
                 return (float)Cur / (float)Base;
             }
         }
-        public string[] Tags { get; set; }
+        public int[] Tags { get; set; }
 
-        public StatInt(int baseValue, params string[] tags) { Base = baseValue; Cur = baseValue; this.Tags = tags; }
+        public StatInt(int baseValue, params int[] tags) { Base = baseValue; Cur = baseValue; this.Tags = tags; }
         public void SetBase(int value)
         {
             Base = value;
