@@ -72,6 +72,7 @@ namespace ShapeStats
             this.id = id;
             this.MaxStacks = maxStacks;
             this.Duration = duration;
+            if (this.Duration > 0f) Timer = this.Duration;
             foreach (var buffValue in buffValues)
             {
                 this.buffValues.Add(buffValue.id, buffValue);
@@ -171,6 +172,7 @@ namespace ShapeStats
             this.id = id;
             this.MaxStacks = maxStacks;
             this.Duration = duration;
+            if (this.Duration > 0f) Timer = this.Duration;
             this.buffValue = buffValue;
         }
 
