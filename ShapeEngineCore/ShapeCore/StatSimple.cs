@@ -34,10 +34,10 @@ namespace ShapeCore
     }
     public class StatContainer
     {
-        public Dictionary<string, StatBonuses> stats = new();
+        public Dictionary<int, StatBonuses> stats = new();
         //public event Action<StatBonuses>? StatChanged;
         
-        public float ApplyBonuses(float baseValue, params string[] statIDs)
+        public float ApplyBonuses(float baseValue, params int[] statIDs)
         {
             float bonusTotal = 1f;
             float flatTotal = 0f;
@@ -54,7 +54,7 @@ namespace ShapeCore
 
             return (baseValue + flatTotal) * bonusTotal;
         }
-        public int ApplyBonuses(int baseValue, params string[] statIDs)
+        public int ApplyBonuses(int baseValue, params int[] statIDs)
         {
             float bonusTotal = 1f;
             float flatTotal = 0f;
@@ -145,14 +145,14 @@ namespace ShapeCore
             }
         }
 
-        public void Add(params string[] ids)
+        public void Add(params int[] ids)
         {
             foreach (var id in ids)
             {
                 Add(id);
             }
         }
-        public void Add(string id)
+        public void Add(int id)
         {
             if (!stats.ContainsKey(id))
             {
@@ -161,7 +161,7 @@ namespace ShapeCore
                 stats.Add(id, stat);
             }
         }
-        public void Remove(string id)
+        public void Remove(int id)
         {
             if (stats.ContainsKey(id))
             {
@@ -170,7 +170,7 @@ namespace ShapeCore
             }
         }
 
-        public void ChangeStatBonus(string id, float bonus, float duration = -1, bool remove = false)
+        public void ChangeStatBonus(int id, float bonus, float duration = -1, bool remove = false)
         {
             if (stats.ContainsKey(id))
             {
@@ -181,7 +181,7 @@ namespace ShapeCore
                 else stats[id].AddBonus(bonus, duration);
             }
         }
-        public void ChangeStatFlat(string id, float flat, float duration = -1, bool remove = false)
+        public void ChangeStatFlat(int id, float flat, float duration = -1, bool remove = false)
         {
             if (stats.ContainsKey(id))
             {
@@ -202,11 +202,11 @@ namespace ShapeCore
         private List<StatValue> timedBonuses = new();
         private List<StatValue> timedFlats = new();
 
-        public string ID { get; set; } = "";
+        public int ID { get; set; } = -1;
 
         public event Action<StatBonuses>? Changed;
 
-        public StatBonuses(string id) { this.ID = id; }
+        public StatBonuses(int id) { this.ID = id; }
         
        
         public float BonusTotal { get { return bonusTotal - 1f; } }
