@@ -9,22 +9,22 @@ namespace ShapeScreen
     {
         private float duration = 0f;
         private float timer = 0f;
-        private string shader;
+        private int shaderID;
         private bool shaderEnabled = false;
-        public ShaderFlash(float dur, string shader)
+        public ShaderFlash(float dur, int shaderID)
         {
-            this.shader = shader;
+            this.shaderID = shaderID;
             duration = dur;
             timer = dur;
 
             if (timer > 0f)
             {
-                ScreenHandler.SHADERS.EnableScreenShader(shader);
+                ScreenHandler.SHADERS.EnableScreenShader(shaderID);
                 shaderEnabled = true;
             }
         }
 
-        public string GetShader() { return shader; }
+        public int GetShaderID() { return shaderID; }
         public float Percentage()
         {
             if (duration <= 0.0f) return 0f;
@@ -43,7 +43,7 @@ namespace ShapeScreen
             timer = dur;
             if (!shaderEnabled)
             {
-                ScreenHandler.SHADERS.EnableScreenShader(shader);
+                ScreenHandler.SHADERS.EnableScreenShader(shaderID);
                 shaderEnabled = true;
             }
         }
@@ -52,7 +52,7 @@ namespace ShapeScreen
             timer = 0f;
             if (shaderEnabled)
             {
-                ScreenHandler.SHADERS.DisableScreenShader(shader);
+                ScreenHandler.SHADERS.DisableScreenShader(shaderID);
                 shaderEnabled = false;
             }
         }
@@ -62,7 +62,7 @@ namespace ShapeScreen
             timer = duration;
             if (!shaderEnabled)
             {
-                ScreenHandler.SHADERS.EnableScreenShader(shader);
+                ScreenHandler.SHADERS.EnableScreenShader(shaderID);
                 shaderEnabled = true;
             }
         }
@@ -73,7 +73,7 @@ namespace ShapeScreen
                 timer -= dt;
                 if (timer <= 0.0f)
                 {
-                    ScreenHandler.SHADERS.DisableScreenShader(shader);
+                    ScreenHandler.SHADERS.DisableScreenShader(shaderID);
                     shaderEnabled = false;
                     timer = 0f;
                 }
@@ -145,7 +145,7 @@ namespace ShapeScreen
         
         public static ShaderHandler SHADERS = new();
 
-        private static Dictionary<string, ShaderFlash> shaderFlashes = new();
+        private static Dictionary<int, ShaderFlash> shaderFlashes = new();
         private static ScreenBuffer[] screenBuffers = new ScreenBuffer[0];
         
         public static (int width, int height) DEVELOPMENT_RESOLUTION { get; private set; } = (0, 0);
@@ -237,7 +237,7 @@ namespace ShapeScreen
             foreach (var shaderFlash in shaderFlashes.Values)
             {
                 shaderFlash.Update(dt);
-                if (shaderFlash.IsFinished()) shaderFlashes.Remove(shaderFlash.GetShader()); //does that work?
+                if (shaderFlash.IsFinished()) shaderFlashes.Remove(shaderFlash.GetShaderID()); //does that work?
             }
 
             var newMonitor = MONITOR_HANDLER.HasMonitorSetupChanged();
@@ -444,20 +444,20 @@ namespace ShapeScreen
             return IsFullscreen();
         }
 
-        public static void ShaderFlash(float duration, params string[] shaders)
+        public static void ShaderFlash(float duration, params int[] shaderIDs)
         {
-            if (shaders.Length <= 0) return;
+            if (shaderIDs.Length <= 0) return;
 
-            foreach (string shader in shaders)
+            foreach (var id in shaderIDs)
             {
-                if (!SHADERS.HasScreenShader(shader)) continue;
-                if (shaderFlashes.ContainsKey(shader))
+                if (!SHADERS.HasScreenShader(id)) continue;
+                if (shaderFlashes.ContainsKey(id))
                 {
-                    shaderFlashes[shader].Reset(duration);
+                    shaderFlashes[id].Reset(duration);
                 }
                 else
                 {
-                    shaderFlashes.Add(shader, new(duration, shader));
+                    shaderFlashes.Add(id, new(duration, id));
                 }
             }
         }

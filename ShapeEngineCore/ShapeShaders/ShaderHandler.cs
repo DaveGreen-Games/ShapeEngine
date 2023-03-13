@@ -7,8 +7,8 @@ namespace ShapeShaders
 
     public class ShaderHandler
     {
-        private Dictionary<string, ScreenShader> screenShaders = new();
-        private Dictionary<string, Shader> shaders = new();
+        private Dictionary<int, ScreenShader> screenShaders = new();
+        private Dictionary<int, Shader> shaders = new();
         private bool enabled = true;
         
         public void Close()
@@ -44,44 +44,43 @@ namespace ShapeShaders
             return shadersToApply;
         }
 
-        public bool HasScreenShader(string name) { return screenShaders.ContainsKey(name); }
-        public void AddScreenShader(string name, string fileName, bool enabled = true, int order = 0)
+        public bool HasScreenShader(int id) { return screenShaders.ContainsKey(id); }
+        public void AddScreenShader(int id, string fileName, bool enabled = true, int order = 0)
         {
-            if (name == "" || fileName == "") return;
-            if (screenShaders.ContainsKey(name)) return;
-            screenShaders[name] = new ScreenShader(fileName, name, enabled);
+            if (fileName == "") return;
+            if (screenShaders.ContainsKey(id)) return;
+            screenShaders[id] = new ScreenShader(fileName, id, enabled);
         }
-        public void AddScreenShader(string name, Shader shader, bool enabled = true, int order = 0)
+        public void AddScreenShader(int name, Shader shader, bool enabled = true, int order = 0)
         {
-            if (name == "") return;
             if (screenShaders.ContainsKey(name)) return;
             screenShaders[name] = new ScreenShader(shader, name, enabled);
         }
-        public void RemoveScreenShader(string name)
+        public void RemoveScreenShader(int id)
         {
             //if (!screenShaders.ContainsKey(name)) return;
-            screenShaders.Remove(name);
+            screenShaders.Remove(id);
         }
-        public ScreenShader? GetScreenShader(string name)
+        public ScreenShader? GetScreenShader(int id)
         {
-            if (!screenShaders.ContainsKey(name)) return null;
-            return screenShaders[name];
+            if (!screenShaders.ContainsKey(id)) return null;
+            return screenShaders[id];
         }
 
-        public void AddShader(string name, string path)
+        public void AddShader(int id, string path)
         {
-            if (name == "" || path == "") return;
-            if (shaders.ContainsKey(name)) return;
-            shaders[name] = LoadShader("330", path);
+            if (path == "") return;
+            if (shaders.ContainsKey(id)) return;
+            shaders[id] = LoadShader("330", path);
         }
-        public void RemoveShader(string name)
+        public void RemoveShader(int id)
         {
-            shaders.Remove(name);
+            shaders.Remove(id);
         }
-        public Shader? GetShader(string name)
+        public Shader? GetShader(int id)
         {
-            if (!shaders.ContainsKey(name)) return null;
-            return shaders[name];
+            if (!shaders.ContainsKey(id)) return null;
+            return shaders[id];
         }
 
         public bool IsEnabled() { return enabled; }
@@ -102,117 +101,117 @@ namespace ShapeShaders
             else Enable();
             return enabled;
         }
-        public bool IsScreenShaderEnabled(string name)
+        public bool IsScreenShaderEnabled(int id)
         {
-            if (!screenShaders.ContainsKey(name)) return false;
-            return screenShaders[name].IsEnabled();
+            if (!screenShaders.ContainsKey(id)) return false;
+            return screenShaders[id].IsEnabled();
         }
-        public void EnableScreenShader(string name)
+        public void EnableScreenShader(int id)
         {
-            if (!screenShaders.ContainsKey(name)) return;
-            screenShaders[name].Enable();
+            if (!screenShaders.ContainsKey(id)) return;
+            screenShaders[id].Enable();
         }
-        public void DisableScreenShader(string name)
+        public void DisableScreenShader(int id)
         {
-            if (!screenShaders.ContainsKey(name)) return;
-            screenShaders[name].Disable();
+            if (!screenShaders.ContainsKey(id)) return;
+            screenShaders[id].Disable();
         }
-        public void SetScreenShaderValueFloat(string shaderName, string propertyName, float value)
+        public void SetScreenShaderValueFloat(int id, string propertyName, float value)
         {
-            if (!screenShaders.ContainsKey(shaderName)) return;
-            Shader shader = screenShaders[shaderName].GetShader();
+            if (!screenShaders.ContainsKey(id)) return;
+            Shader shader = screenShaders[id].GetShader();
             int valueLocation = GetShaderLocation(shader, propertyName);
             SetShaderValue(shader, valueLocation, value, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
         }
-        public void SetScreenShaderValueVec(string shaderName, string propertyName, float[] values, ShaderUniformDataType dataType)
+        public void SetScreenShaderValueVec(int id, string propertyName, float[] values, ShaderUniformDataType dataType)
         {
-            if (!screenShaders.ContainsKey(shaderName)) return;
-            Shader shader = screenShaders[shaderName].GetShader();
+            if (!screenShaders.ContainsKey(id)) return;
+            Shader shader = screenShaders[id].GetShader();
             int valueLocation = GetShaderLocation(shader, propertyName);
             SetShaderValue(shader, valueLocation, values, dataType);
         }
-        public void SetScreenShaderValueVec(string shaderName, string propertyName, float v1, float v2)
+        public void SetScreenShaderValueVec(int id, string propertyName, float v1, float v2)
         {
-            if (!screenShaders.ContainsKey(shaderName)) return;
-            Shader shader = screenShaders[shaderName].GetShader();
+            if (!screenShaders.ContainsKey(id)) return;
+            Shader shader = screenShaders[id].GetShader();
             int valueLocation = GetShaderLocation(shader, propertyName);
             SetShaderValue(shader, valueLocation, new float[] { v1, v2 }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
         }
-        public void SetScreenShaderValueVec(string shaderName, string propertyName, float v1, float v2, float v3)
+        public void SetScreenShaderValueVec(int id, string propertyName, float v1, float v2, float v3)
         {
-            if (!screenShaders.ContainsKey(shaderName)) return;
-            Shader shader = screenShaders[shaderName].GetShader();
+            if (!screenShaders.ContainsKey(id)) return;
+            Shader shader = screenShaders[id].GetShader();
             int valueLocation = GetShaderLocation(shader, propertyName);
             SetShaderValue(shader, valueLocation, new float[] { v1, v2, v3 }, ShaderUniformDataType.SHADER_UNIFORM_VEC3);
         }
-        public void SetScreenShaderValueVec(string shaderName, string propertyName, float v1, float v2, float v3, float v4)
+        public void SetScreenShaderValueVec(int id, string propertyName, float v1, float v2, float v3, float v4)
         {
-            if (!screenShaders.ContainsKey(shaderName)) return;
-            Shader shader = screenShaders[shaderName].GetShader();
+            if (!screenShaders.ContainsKey(id)) return;
+            Shader shader = screenShaders[id].GetShader();
             int valueLocation = GetShaderLocation(shader, propertyName);
             SetShaderValue(shader, valueLocation, new float[] { v1, v2, v3, v4 }, ShaderUniformDataType.SHADER_UNIFORM_VEC4);
         }
-        public void SetScreenShaderValueVec(string shaderName, string propertyName, Vector2 vec)
+        public void SetScreenShaderValueVec(int id, string propertyName, Vector2 vec)
         {
-            if (!screenShaders.ContainsKey(shaderName)) return;
-            Shader shader = screenShaders[shaderName].GetShader();
+            if (!screenShaders.ContainsKey(id)) return;
+            Shader shader = screenShaders[id].GetShader();
             int valueLocation = GetShaderLocation(shader, propertyName);
             SetShaderValue(shader, valueLocation, new float[] { vec.X, vec.Y}, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
         }
-        public void SetScreenShaderValueVec(string shaderName, string propertyName, Color color)
+        public void SetScreenShaderValueVec(int id, string propertyName, Color color)
         {
-            if (!screenShaders.ContainsKey(shaderName)) return;
-            Shader shader = screenShaders[shaderName].GetShader();
+            if (!screenShaders.ContainsKey(id)) return;
+            Shader shader = screenShaders[id].GetShader();
             int valueLocation = GetShaderLocation(shader, propertyName);
             SetShaderValue(shader, valueLocation, new float[] {color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f}, ShaderUniformDataType.SHADER_UNIFORM_VEC4);
         }
-        public void SetShaderValueFloat(string shaderName, string propertyName, float value)
+        public void SetShaderValueFloat(int id, string propertyName, float value)
         {
-            if (!shaders.ContainsKey(shaderName)) return;
-            Shader shader = shaders[shaderName];
+            if (!shaders.ContainsKey(id)) return;
+            Shader shader = shaders[id];
             int valueLocation = GetShaderLocation(shader, propertyName);
             SetShaderValue(shader, valueLocation, value, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
         }
-        public void SetShaderValueVec(string shaderName, string propertyName, float[] values, ShaderUniformDataType dataType)
+        public void SetShaderValueVec(int id, string propertyName, float[] values, ShaderUniformDataType dataType)
         {
-            if (!shaders.ContainsKey(shaderName)) return;
-            Shader shader = shaders[shaderName];
+            if (!shaders.ContainsKey(id)) return;
+            Shader shader = shaders[id];
             int valueLocation = GetShaderLocation(shader, propertyName);
             SetShaderValue(shader, valueLocation, values, dataType);
         }
 
-        public void SetShaderValueVec(string shaderName, string propertyName, float v1, float v2)
+        public void SetShaderValueVec(int id, string propertyName, float v1, float v2)
         {
-            if (!shaders.ContainsKey(shaderName)) return;
-            Shader shader = shaders[shaderName];
+            if (!shaders.ContainsKey(id)) return;
+            Shader shader = shaders[id];
             int valueLocation = GetShaderLocation(shader, propertyName);
             SetShaderValue(shader, valueLocation, new float[] { v1, v2 }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
         }
-        public void SetShaderValueVec(string shaderName, string propertyName, float v1, float v2, float v3)
+        public void SetShaderValueVec(int id, string propertyName, float v1, float v2, float v3)
         {
-            if (!shaders.ContainsKey(shaderName)) return;
-            Shader shader = shaders[shaderName];
+            if (!shaders.ContainsKey(id)) return;
+            Shader shader = shaders[id];
             int valueLocation = GetShaderLocation(shader, propertyName);
             SetShaderValue(shader, valueLocation, new float[] { v1, v2, v3 }, ShaderUniformDataType.SHADER_UNIFORM_VEC3);
         }
-        public void SetShaderValueVec(string shaderName, string propertyName, float v1, float v2, float v3, float v4)
+        public void SetShaderValueVec(int id, string propertyName, float v1, float v2, float v3, float v4)
         {
-            if (!shaders.ContainsKey(shaderName)) return;
-            Shader shader = shaders[shaderName];
+            if (!shaders.ContainsKey(id)) return;
+            Shader shader = shaders[id];
             int valueLocation = GetShaderLocation(shader, propertyName);
             SetShaderValue(shader, valueLocation, new float[] { v1, v2, v3, v4 }, ShaderUniformDataType.SHADER_UNIFORM_VEC4);
         }
-        public void SetShaderValueVec(string shaderName, string propertyName, Vector2 vec)
+        public void SetShaderValueVec(int id, string propertyName, Vector2 vec)
         {
-            if (!shaders.ContainsKey(shaderName)) return;
-            Shader shader = shaders[shaderName];
+            if (!shaders.ContainsKey(id)) return;
+            Shader shader = shaders[id];
             int valueLocation = GetShaderLocation(shader, propertyName);
             SetShaderValue(shader, valueLocation, new float[] { vec.X, vec.Y }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
         }
-        public void SetShaderValueVec(string shaderName, string propertyName, Color color)
+        public void SetShaderValueVec(int id, string propertyName, Color color)
         {
-            if (!shaders.ContainsKey(shaderName)) return;
-            Shader shader = shaders[shaderName];
+            if (!shaders.ContainsKey(id)) return;
+            Shader shader = shaders[id];
             int valueLocation = GetShaderLocation(shader, propertyName);
             SetShaderValue(shader, valueLocation, new float[] { color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f }, ShaderUniformDataType.SHADER_UNIFORM_VEC4);
         }

@@ -30,7 +30,7 @@ namespace ShapeEngineDemo
         public static DelegateTimerHandler TIMER = new();
         public static AchievementHandler ACHIEVEMENTS = new();
         public static PaletteHandler PALETTES = new();
-
+        public const int SHADER_CRT = 0;
         public override void Start()
         {
             
@@ -78,41 +78,41 @@ namespace ShapeEngineDemo
             //Set the clear color for game screen texture
             //ScreenHandler.Game.SetClearColor(new Color(0, 0, 0, 0)); // PaletteHandler.C("bg1"));
 
-            var outline = RESOURCES.LoadFragmentShader("resources/shaders/outline-shader.fs");
-            var colorize = RESOURCES.LoadFragmentShader("resources/shaders/colorize-shader.fs");
-            var bloom = RESOURCES.LoadFragmentShader("resources/shaders/bloom-shader.fs");
-            var chrom = RESOURCES.LoadFragmentShader("resources/shaders/chromatic-aberration-shader.fs");
+            //var outline = RESOURCES.LoadFragmentShader("resources/shaders/outline-shader.fs");
+            //var colorize = RESOURCES.LoadFragmentShader("resources/shaders/colorize-shader.fs");
+            //var bloom = RESOURCES.LoadFragmentShader("resources/shaders/bloom-shader.fs");
+            //var chrom = RESOURCES.LoadFragmentShader("resources/shaders/chromatic-aberration-shader.fs");
             var crt = RESOURCES.LoadFragmentShader("resources/shaders/crt-shader.fs");
-            var grayscale = RESOURCES.LoadFragmentShader("resources/shaders/grayscale-shader.fs");
-            var pixelizer = RESOURCES.LoadFragmentShader("resources/shaders/pixelizer-shader.fs");
-            var blur = RESOURCES.LoadFragmentShader("resources/shaders/blur-shader.fs");
+            //var grayscale = RESOURCES.LoadFragmentShader("resources/shaders/grayscale-shader.fs");
+            //var pixelizer = RESOURCES.LoadFragmentShader("resources/shaders/pixelizer-shader.fs");
+            //var blur = RESOURCES.LoadFragmentShader("resources/shaders/blur-shader.fs");
             //SHADERS - Does not work right now because Raylib-CsLo LoadShaderFromMemory does not work correctly...
-            ScreenHandler.SHADERS.AddScreenShader("outline", outline, false, -1);
-            ScreenHandler.SHADERS.AddScreenShader("colorize", colorize, false, 0);
-            ScreenHandler.SHADERS.AddScreenShader("bloom", bloom, false, 1);
-            ScreenHandler.SHADERS.AddScreenShader("chrom", chrom, false, 2);
-            ScreenHandler.SHADERS.AddScreenShader("crt", crt, true, 3);
-            ScreenHandler.SHADERS.AddScreenShader("grayscale", grayscale, false, 4);
-            ScreenHandler.SHADERS.AddScreenShader("pixelizer", pixelizer, false, 5);
-            ScreenHandler.SHADERS.AddScreenShader("blur", blur, false, 6);
+            //ScreenHandler.SHADERS.AddScreenShader("outline", outline, false, -1);
+            //ScreenHandler.SHADERS.AddScreenShader("colorize", colorize, false, 0);
+            //ScreenHandler.SHADERS.AddScreenShader("bloom", bloom, false, 1);
+            //ScreenHandler.SHADERS.AddScreenShader("chrom", chrom, false, 2);
+            ScreenHandler.SHADERS.AddScreenShader(SHADER_CRT, crt, true, 3);
+            //ScreenHandler.SHADERS.AddScreenShader("grayscale", grayscale, false, 4);
+            //ScreenHandler.SHADERS.AddScreenShader("pixelizer", pixelizer, false, 5);
+            //ScreenHandler.SHADERS.AddScreenShader("blur", blur, false, 6);
 
             //outline only works with transparent background!!
-            ScreenHandler.SHADERS.SetScreenShaderValueVec("outline", "textureSize", new float[] { ScreenHandler.GameWidth(), ScreenHandler.GameHeight() }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
-            ScreenHandler.SHADERS.SetScreenShaderValueFloat("outline", "outlineSize", 2.0f);
-            ScreenHandler.SHADERS.SetScreenShaderValueVec("outline", "outlineColor", new float[] { 1.0f, 0.0f, 0.0f, 1.0f }, ShaderUniformDataType.SHADER_UNIFORM_VEC4);
-            ScreenHandler.SHADERS.SetScreenShaderValueVec("chrom", "amount", new float[] { 1.2f, 1.2f }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
-            ScreenHandler.SHADERS.SetScreenShaderValueVec("bloom", "size", new float[] { ScreenHandler.CUR_WINDOW_SIZE.width, ScreenHandler.CUR_WINDOW_SIZE.height }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
-            ScreenHandler.SHADERS.SetScreenShaderValueFloat("bloom", "samples", 5f);
-            ScreenHandler.SHADERS.SetScreenShaderValueFloat("bloom", "quality", 2.5f);
-            ScreenHandler.SHADERS.SetScreenShaderValueFloat("pixelizer", "renderWidth", ScreenHandler.CUR_WINDOW_SIZE.width);
-            ScreenHandler.SHADERS.SetScreenShaderValueFloat("pixelizer", "renderHeight", ScreenHandler.CUR_WINDOW_SIZE.height);
-            ScreenHandler.SHADERS.SetScreenShaderValueFloat("pixelizer", "pixelWidth", 1.0f);
-            ScreenHandler.SHADERS.SetScreenShaderValueFloat("pixelizer", "pixelHeight", 1.0f);
-            ScreenHandler.SHADERS.SetScreenShaderValueFloat("blur", "renderWidth", ScreenHandler.CUR_WINDOW_SIZE.width);
-            ScreenHandler.SHADERS.SetScreenShaderValueFloat("blur", "renderHeight", ScreenHandler.CUR_WINDOW_SIZE.height);
-            ScreenHandler.SHADERS.SetScreenShaderValueFloat("blur", "scale", 1.25f);
-            ScreenHandler.SHADERS.SetScreenShaderValueFloat("crt", "renderWidth", ScreenHandler.CUR_WINDOW_SIZE.width);
-            ScreenHandler.SHADERS.SetScreenShaderValueFloat("crt", "renderHeight", ScreenHandler.CUR_WINDOW_SIZE.height);
+            //ScreenHandler.SHADERS.SetScreenShaderValueVec("outline", "textureSize", new float[] { ScreenHandler.GameWidth(), ScreenHandler.GameHeight() }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
+            //ScreenHandler.SHADERS.SetScreenShaderValueFloat("outline", "outlineSize", 2.0f);
+            //ScreenHandler.SHADERS.SetScreenShaderValueVec("outline", "outlineColor", new float[] { 1.0f, 0.0f, 0.0f, 1.0f }, ShaderUniformDataType.SHADER_UNIFORM_VEC4);
+            //ScreenHandler.SHADERS.SetScreenShaderValueVec("chrom", "amount", new float[] { 1.2f, 1.2f }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
+            //ScreenHandler.SHADERS.SetScreenShaderValueVec("bloom", "size", new float[] { ScreenHandler.CUR_WINDOW_SIZE.width, ScreenHandler.CUR_WINDOW_SIZE.height }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
+            //ScreenHandler.SHADERS.SetScreenShaderValueFloat("bloom", "samples", 5f);
+            //ScreenHandler.SHADERS.SetScreenShaderValueFloat("bloom", "quality", 2.5f);
+            //ScreenHandler.SHADERS.SetScreenShaderValueFloat("pixelizer", "renderWidth", ScreenHandler.CUR_WINDOW_SIZE.width);
+            //ScreenHandler.SHADERS.SetScreenShaderValueFloat("pixelizer", "renderHeight", ScreenHandler.CUR_WINDOW_SIZE.height);
+            //ScreenHandler.SHADERS.SetScreenShaderValueFloat("pixelizer", "pixelWidth", 1.0f);
+            //ScreenHandler.SHADERS.SetScreenShaderValueFloat("pixelizer", "pixelHeight", 1.0f);
+            //ScreenHandler.SHADERS.SetScreenShaderValueFloat("blur", "renderWidth", ScreenHandler.CUR_WINDOW_SIZE.width);
+            //ScreenHandler.SHADERS.SetScreenShaderValueFloat("blur", "renderHeight", ScreenHandler.CUR_WINDOW_SIZE.height);
+            //ScreenHandler.SHADERS.SetScreenShaderValueFloat("blur", "scale", 1.25f);
+            ScreenHandler.SHADERS.SetScreenShaderValueFloat(SHADER_CRT, "renderWidth", ScreenHandler.CUR_WINDOW_SIZE.width);
+            ScreenHandler.SHADERS.SetScreenShaderValueFloat(SHADER_CRT, "renderHeight", ScreenHandler.CUR_WINDOW_SIZE.height);
             
             
             var light = RESOURCES.LoadFont("resources/fonts/teko-light.ttf", 200);
@@ -328,13 +328,13 @@ namespace ShapeEngineDemo
 
         private void OnWindowSizeChanged(int w, int h)
         {
-            ScreenHandler.SHADERS.SetScreenShaderValueFloat("crt", "renderWidth", w);
-            ScreenHandler.SHADERS.SetScreenShaderValueFloat("crt", "renderHeight", h);
-            ScreenHandler.SHADERS.SetScreenShaderValueFloat("pixelizer", "renderWidth", w);
-            ScreenHandler.SHADERS.SetScreenShaderValueFloat("pixelizer", "renderHeight", h);
-            ScreenHandler.SHADERS.SetScreenShaderValueFloat("blur", "renderWidth", w);
-            ScreenHandler.SHADERS.SetScreenShaderValueFloat("blur", "renderHeight", h);
-            ScreenHandler.SHADERS.SetScreenShaderValueVec("bloom", "size", new float[] { w, h }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
+            ScreenHandler.SHADERS.SetScreenShaderValueFloat(SHADER_CRT, "renderWidth", w);
+            ScreenHandler.SHADERS.SetScreenShaderValueFloat(SHADER_CRT, "renderHeight", h);
+            //ScreenHandler.SHADERS.SetScreenShaderValueFloat("pixelizer", "renderWidth", w);
+            //ScreenHandler.SHADERS.SetScreenShaderValueFloat("pixelizer", "renderHeight", h);
+            //ScreenHandler.SHADERS.SetScreenShaderValueFloat("blur", "renderWidth", w);
+            //ScreenHandler.SHADERS.SetScreenShaderValueFloat("blur", "renderHeight", h);
+            //ScreenHandler.SHADERS.SetScreenShaderValueVec("bloom", "size", new float[] { w, h }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
         }
         private static void OnInputTypeChanged(InputType newInputType)
         {

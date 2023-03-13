@@ -8,18 +8,18 @@ namespace ShapeShaders
     {
         private Shader shader;
         private bool enabled = true;
-        private string name = "";
+        private int id = -1;
         private int order = 0;
-        public ScreenShader(string fileName, string name, bool enabled = true, int order = 0)
+        public ScreenShader(string fileName, int id, bool enabled = true, int order = 0)
         {
-            this.name = name;
+            this.id = id;
             shader = Raylib.LoadShader(null, fileName); // ResourceManager.LoadFragmentShader(fileName); // LoadShader("330", fileName);
             this.enabled = enabled;
             this.order = order;
         }
-        public ScreenShader(Shader shader, string name, bool enabled = true, int order = 0)
+        public ScreenShader(Shader shader, int id, bool enabled = true, int order = 0)
         {
-            this.name = name;
+            this.id = id;
             this.shader = shader;// = ResourceManager.LoadFragmentShader(fileName); // LoadShader("330", fileName);
             this.enabled = enabled;
             this.order = order;
@@ -30,7 +30,7 @@ namespace ShapeShaders
         public bool IsEnabled() { return enabled; }
         public void Enable() { enabled = true; }
         public void Disable() { enabled = false; }
-        public string GetName() { return name; }
+        public int GetID() { return id; }
         public void Unload() { UnloadShader(shader); }
 
 
