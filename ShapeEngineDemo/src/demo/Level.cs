@@ -219,20 +219,20 @@ namespace ShapeEngineDemo
         }
         public override void HandleInput()
         {
-            if (InputHandler.IsReleased(0, "Pause")) TogglePause();
+            if (InputHandler.IsReleased(0, InputIDs.GAME_Pause)) TogglePause();
 
-            if (InputHandler.IsDown(0, "Slow Time")) GAMELOOP.GetCurArea().UpdateSlowFactor = 0.05f;
-            else if (InputHandler.IsReleased(0, "Slow Time")) GAMELOOP.GetCurArea().UpdateSlowFactor = 1f;
+            if (InputHandler.IsDown(0, InputIDs.GAME_SlowTime)) GAMELOOP.GetCurArea().UpdateSlowFactor = 0.05f;
+            else if (InputHandler.IsReleased(0, InputIDs.GAME_SlowTime)) GAMELOOP.GetCurArea().UpdateSlowFactor = 1f;
             
-            if (InputHandler.IsReleased(0, "UI Cancel")) GAMELOOP.GoToScene("mainmenu");
+            if (InputHandler.IsReleased(0, InputHandler.UI_Cancel)) GAMELOOP.GoToScene("mainmenu");
             
-            if (!IsPaused() && InputHandler.IsReleased(0, "Spawn Asteroid")) SpawnAsteroidDebug();
+            if (!IsPaused() && InputHandler.IsReleased(0, InputIDs.DEBUG_SpawnAsteroid)) SpawnAsteroidDebug();
 
             if (EDITORMODE)
             {
-                if (InputHandler.IsReleased(0, "Toggle Draw Helpers")) DEBUG_DRAWHELPERS = !DEBUG_DRAWHELPERS;
-                if (InputHandler.IsReleased(0, "Toggle Draw Colliders")) DEBUG_DRAWCOLLIDERS = !DEBUG_DRAWCOLLIDERS;
-                if (InputHandler.IsReleased(0, "Cycle Zoom"))
+                if (InputHandler.IsReleased(0, InputIDs.DEBUG_ToggleDrawHelpers)) DEBUG_DRAWHELPERS = !DEBUG_DRAWHELPERS;
+                if (InputHandler.IsReleased(0, InputIDs.DEBUG_ToggleDrawColliders)) DEBUG_DRAWCOLLIDERS = !DEBUG_DRAWCOLLIDERS;
+                if (InputHandler.IsReleased(0, InputIDs.DEBUG_CycleZoom))
                 {
                     ScreenHandler.CAMERA.ZoomBy(0.25f);
                     if (ScreenHandler.CAMERA.ZoomFactor > 2) ScreenHandler.CAMERA.ZoomFactor = 0.25f;

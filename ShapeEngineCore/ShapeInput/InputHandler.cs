@@ -39,7 +39,7 @@ namespace ShapeInput
         private List<GamepadVibration> gamepadVibrationStack = new();
         public InputSlot(int gamepadIndex)
         {
-            curInputMap = new("empty");
+            curInputMap = new(-1, "Empty");
             this.gamepadIndex = gamepadIndex;
         }
         //public void Update(float dt, bool gamepadOnly)
@@ -53,54 +53,54 @@ namespace ShapeInput
         //    if (disabled) return -1f;
         //    return curInputMap.GetHoldF(gamepadIndex, actionName, gamepadOnly);
         //}
-        public bool IsDown(string actionName, bool gamepadOnly)
+        public bool IsDown(int actionID, bool gamepadOnly)
         {
             if (disabled) return false;
-            return curInputMap.IsDown(gamepadIndex, actionName, gamepadOnly);
+            return curInputMap.IsDown(gamepadIndex, actionID, gamepadOnly);
         }
-        public bool IsPressed(string actionName, bool gamepadOnly)
+        public bool IsPressed(int actionID, bool gamepadOnly)
         {
             if (disabled) return false;
-            return curInputMap.IsPressed(gamepadIndex, actionName, gamepadOnly);
+            return curInputMap.IsPressed(gamepadIndex, actionID, gamepadOnly);
         }
-        public bool IsReleased(string actionName, bool gamepadOnly)
+        public bool IsReleased(int actionID, bool gamepadOnly)
         {
             if (disabled) return false;
-            return curInputMap.IsReleased(gamepadIndex, actionName, gamepadOnly);
+            return curInputMap.IsReleased(gamepadIndex, actionID, gamepadOnly);
         }
-        public bool IsUp(string actionName, bool gamepadOnly)
+        public bool IsUp(int actionID, bool gamepadOnly)
         {
             if (disabled) return false;
-            return curInputMap.IsUp(gamepadIndex, actionName, gamepadOnly);
+            return curInputMap.IsUp(gamepadIndex, actionID, gamepadOnly);
         }
 
-        public float GetAxis(string negative, string positive)
+        public float GetAxis(int negativeID, int positiveID)
         {
             if (disabled) return 0f;
-            return curInputMap.GetAxis(gamepadIndex, negative, positive);
+            return curInputMap.GetAxis(gamepadIndex, negativeID, positiveID);
         }
-        public Vector2 GetAxis(string left, string right, string up, string down, bool normalized = true)
+        public Vector2 GetAxis(int leftID, int rightID, int upID, int downID, bool normalized = true)
         {
             if (disabled) return new(0f, 0f);
-            if (normalized) return SVec.Normalize(curInputMap.GetAxis(gamepadIndex,left, right, up, down));
-            else return curInputMap.GetAxis(gamepadIndex, left, right, up, down);
+            if (normalized) return SVec.Normalize(curInputMap.GetAxis(gamepadIndex,leftID, rightID, upID, downID));
+            else return curInputMap.GetAxis(gamepadIndex, leftID, rightID, upID, downID);
         }
-        public float GetGamepadAxis(string gamepadAxisAction)
+        public float GetGamepadAxis(int gamepadAxisActionID)
         {
             if (disabled) return 0f;
-            return curInputMap.GetGamepadAxis(gamepadIndex, gamepadAxisAction);
+            return curInputMap.GetGamepadAxis(gamepadIndex, gamepadAxisActionID);
         }
-        public Vector2 GetGamepadAxis(string gamepadAxisHor, string gamepadAxisVer, bool normalized = true)
+        public Vector2 GetGamepadAxis(int gamepadAxisHorID, int gamepadAxisVerID, bool normalized = true)
         {
             if (disabled) return new(0f, 0f);
 
-            if (normalized) return SVec.Normalize(curInputMap.GetGamepadAxis(gamepadIndex, gamepadAxisHor, gamepadAxisVer));
-            else return curInputMap.GetGamepadAxis(gamepadIndex, gamepadAxisHor, gamepadAxisVer);
+            if (normalized) return SVec.Normalize(curInputMap.GetGamepadAxis(gamepadIndex, gamepadAxisHorID, gamepadAxisVerID));
+            else return curInputMap.GetGamepadAxis(gamepadIndex, gamepadAxisHorID, gamepadAxisVerID);
         }
 
-        public (string keyboard, string mouse, string gamepad) GetInputActionKeyNames(string inputAction, bool shorthand = false)
+        public (string keyboard, string mouse, string gamepad) GetInputActionKeyNames(int inputActionID, bool shorthand = false)
         {
-            return curInputMap.GetKeyNames(inputAction, shorthand);
+            return curInputMap.GetKeyNames(inputActionID, shorthand);
         }
 
 
@@ -156,19 +156,33 @@ namespace ShapeInput
         
 
         private static Dictionary<int, InputSlot> inputSlots = new();
-        private static Dictionary<string, InputMap> inputMaps = new();
+        private static Dictionary<int, InputMap> inputMaps = new();
         //private static bool disabled = false;
-        public static readonly Dictionary<string, InputAction> UI_Default_InputActions = new()
+        
+        public const int UI_Select = 10;
+        public const int UI_SelectMouse = 11;
+        public const int UI_Cancel = 12;
+        public const int UI_CancelMouse = 13;
+        public const int UI_Up = 14;
+        public const int UI_Down = 15;
+        public const int UI_Left = 16;
+        public const int UI_Right = 17;
+
+        public const int INPUTMAP_Basic = 100;
+
+        public static readonly List<InputAction> UI_Default_InputActions = new()
         {
-            {"UI Select Mouse", new("UI Select Mouse", InputAction.Keys.MB_LEFT) },
-            {"UI Select", new("UI Select", InputAction.Keys.SPACE, InputAction.Keys.GP_BUTTON_RIGHT_FACE_DOWN) },
-            {"UI Cancel", new("UI Cancel", InputAction.Keys.ESCAPE, InputAction.Keys.GP_BUTTON_RIGHT_FACE_RIGHT) },
-            {"UI Cancel Mouse", new("UI Cancel Mouse", InputAction.Keys.MB_RIGHT) },
-            {"UI Up", new("UI Up", InputAction.Keys.W, InputAction.Keys.UP, InputAction.Keys.GP_BUTTON_LEFT_FACE_UP) },
-            {"UI Right", new("UI Right", InputAction.Keys.D, InputAction.Keys.RIGHT, InputAction.Keys.GP_BUTTON_LEFT_FACE_RIGHT) },
-            {"UI Down", new("UI Down", InputAction.Keys.S, InputAction.Keys.DOWN, InputAction.Keys.GP_BUTTON_LEFT_FACE_DOWN) },
-            {"UI Left", new("UI Left", InputAction.Keys.A, InputAction.Keys.LEFT, InputAction.Keys.GP_BUTTON_LEFT_FACE_LEFT) },
+            {new(UI_SelectMouse, InputAction.Keys.MB_LEFT) },
+            {new(UI_Select, InputAction.Keys.SPACE, InputAction.Keys.GP_BUTTON_RIGHT_FACE_DOWN) },
+            {new(UI_Cancel, InputAction.Keys.ESCAPE, InputAction.Keys.GP_BUTTON_RIGHT_FACE_RIGHT) },
+            {new(UI_CancelMouse, InputAction.Keys.MB_RIGHT) },
+            {new(UI_Up, InputAction.Keys.W, InputAction.Keys.UP, InputAction.Keys.GP_BUTTON_LEFT_FACE_UP) },
+            {new(UI_Right,InputAction.Keys.D, InputAction.Keys.RIGHT, InputAction.Keys.GP_BUTTON_LEFT_FACE_RIGHT) },
+            {new(UI_Down, InputAction.Keys.S, InputAction.Keys.DOWN, InputAction.Keys.GP_BUTTON_LEFT_FACE_DOWN) },
+            {new(UI_Left,InputAction.Keys.A, InputAction.Keys.LEFT, InputAction.Keys.GP_BUTTON_LEFT_FACE_LEFT) },
         };
+
+
 
 
         public static float GAMEPAD_VIBRATION_STRENGTH = 1.0f;
@@ -242,13 +256,13 @@ namespace ShapeInput
         {
             CUR_INPUT_TYPE = InputType.KEYBOARD_MOUSE;
             inputMaps.Clear();
-            InputMap basicMap = new("basic");
-            foreach (var input in UI_Default_InputActions)
+            InputMap basicMap = new(INPUTMAP_Basic, "Basic");
+            foreach (var action in UI_Default_InputActions)
             {
-                basicMap.AddAction(input.Key, input.Value);
+                basicMap.AddAction(action.GetID(), action);
             }
-            inputMaps.Add(basicMap.GetName(), basicMap);
-            AddInputSlot(-1, "basic");
+            inputMaps.Add(basicMap.GetID(), basicMap);
+            AddInputSlot(-1);
             if (IsGamepadAvailable(0)) { inputSlots[0].gamepadIndex = 0; }
         }
         public static void Update(float dt)
@@ -274,7 +288,7 @@ namespace ShapeInput
         }
 
 
-        public static void AddInputSlot(int gamepadIndex, string inputMap = "basic")
+        public static void AddInputSlot(int gamepadIndex, int inputMap = INPUTMAP_Basic)
         {
             if (!inputMaps.ContainsKey(inputMap)) return;
             for (int i = 0; i < inputSlots.Count + 1; i++)
@@ -318,34 +332,34 @@ namespace ShapeInput
         //        map.AddAction(input);
         //    }
         //}
-        public static string NextInputMap(int playerSlot = 0, bool switchMap = true)
+        public static int NextInputMap(int playerSlot = 0, bool switchMap = true)
         {
             var slot = GetInputSlot(playerSlot);
-            if (slot == null) return "";
-            var mapNameList = inputMaps.Keys.ToList();
-            int nextIndex = mapNameList.IndexOf(slot.curInputMap.GetName()) + 1;
-            if (nextIndex >= mapNameList.Count) nextIndex = 0;
-            string newMapName = mapNameList[nextIndex];
-            if (switchMap) SwitchToMap(newMapName, playerSlot);
-            return newMapName;
+            if (slot == null) return -1;
+            var mapIDs = inputMaps.Keys.ToList();
+            int nextIndex = mapIDs.IndexOf(slot.curInputMap.GetID()) + 1;
+            if (nextIndex >= mapIDs.Count) nextIndex = 0;
+            int nextMapID = mapIDs[nextIndex];
+            if (switchMap) SwitchToMap(nextMapID, playerSlot);
+            return nextMapID;
         }
-        public static string PreviousInputMap(int playerSlot = 0, bool switchMap = true)
+        public static int PreviousInputMap(int playerSlot = 0, bool switchMap = true)
         {
             var slot = GetInputSlot(playerSlot);
-            if (slot == null) return "";
-            var mapNameList = inputMaps.Keys.ToList();
-            int prevIndex = mapNameList.IndexOf(slot.curInputMap.GetName()) - 1;
-            if (prevIndex < 0) prevIndex = mapNameList.Count - 1;
-            string newMapName = mapNameList[prevIndex];
-            if (switchMap) SwitchToMap(newMapName, playerSlot);
-            return newMapName;
+            if (slot == null) return -1;
+            var mapIDs = inputMaps.Keys.ToList();
+            int prevIndex = mapIDs.IndexOf(slot.curInputMap.GetID()) - 1;
+            if (prevIndex < 0) prevIndex = mapIDs.Count - 1;
+            int prevMapID = mapIDs[prevIndex];
+            if (switchMap) SwitchToMap(prevMapID, playerSlot);
+            return prevMapID;
         }
-        public static void SwitchToMap(string mapName, int playerSlot = 0)
+        public static void SwitchToMap(int mapID, int playerSlot = 0)
         {
-            if (!inputMaps.ContainsKey(mapName)) return;
+            if (!inputMaps.ContainsKey(mapID)) return;
             var slot = GetInputSlot(playerSlot);
             if (slot == null) return;
-            slot.curInputMap = inputMaps[mapName];
+            slot.curInputMap = inputMaps[mapID];
         }
         public static bool IsDisabled(int playerSlot)
         {
@@ -368,55 +382,55 @@ namespace ShapeInput
         public static void AddInputMap(InputMap map)
         {
             if (map == null) return;
-            if (inputMaps.ContainsKey(map.GetName()))
+            if (inputMaps.ContainsKey(map.GetID()))
             {
-                inputMaps[map.GetName()] = map;
+                inputMaps[map.GetID()] = map;
             }
             else
             {
-                inputMaps.Add(map.GetName(), map);
+                inputMaps.Add(map.GetID(), map);
             }
             //if(addUIInputs) AddDefaultUIInputsToMap(map);
         }
-        public static void AddInputMap(string name, params InputAction[] actions)
+        public static void AddInputMap(int id, string displayName, params InputAction[] actions)
         {
-            AddInputMap(new InputMap(name, actions));
+            AddInputMap(new InputMap(id, displayName, actions));
         }
         
-        public static void RemoveInputMap(string name)
+        public static void RemoveInputMap(int id)
         {
-            if (!inputMaps.ContainsKey(name)) return;
+            if (!inputMaps.ContainsKey(id)) return;
             foreach (var slot in inputSlots.Values)
             {
-                if(slot.curInputMap.GetName() == name)
+                if(slot.curInputMap.GetID() == id)
                 {
-                    slot.curInputMap = inputMaps["basic"];
+                    slot.curInputMap = inputMaps[INPUTMAP_Basic];
                 }
             }
-            inputMaps.Remove(name);
+            inputMaps.Remove(id);
         }
-        public static void RemoveInputMap(string name, string fallback)
+        public static void RemoveInputMap(int id, int fallbackID)
         {
-            if (!inputMaps.ContainsKey(fallback))
+            if (!inputMaps.ContainsKey(fallbackID))
             {
-                RemoveInputMap(name);
+                RemoveInputMap(id);
                 return;
             }
-            if (!inputMaps.ContainsKey(name)) return;
+            if (!inputMaps.ContainsKey(id)) return;
             foreach (var slot in inputSlots.Values)
             {
-                if (slot.curInputMap.GetName() == name)
+                if (slot.curInputMap.GetID() == id)
                 {
-                    slot.curInputMap = inputMaps[fallback];
+                    slot.curInputMap = inputMaps[fallbackID];
                 }
             }
-            inputMaps.Remove(name);
+            inputMaps.Remove(id);
         }
 
-        public static InputMap? GetMap(string name)
+        public static InputMap? GetMap(int id)
         {
-            if (!inputMaps.ContainsKey(name)) return null;
-            return inputMaps[name];
+            if (!inputMaps.ContainsKey(id)) return null;
+            return inputMaps[id];
         }
 
         public static string SelectInputActionKeyName((string keyboard, string mouse, string gamepad) selection)
@@ -426,11 +440,11 @@ namespace ShapeInput
             else if(IsGamepad()) return selection.gamepad;
             else return "";
         }
-        public static (string keyboard, string mouse, string gamepad) GetInputActionKeyNames(int playerSlot, string inputAction, bool shorthand = false)
+        public static (string keyboard, string mouse, string gamepad) GetInputActionKeyNames(int playerSlot, int inputActionID, bool shorthand = false)
         {
             var slot = GetInputSlot(playerSlot);
             if (slot == null) return new();
-            return slot.GetInputActionKeyNames(inputAction, shorthand);
+            return slot.GetInputActionKeyNames(inputActionID, shorthand);
         }
         /*
         public static void EnableMap(string name)
@@ -444,11 +458,11 @@ namespace ShapeInput
             inputMaps[name].Disable();
         }
         */
-        public static void RenameMap(string name, string newName)
-        {
-            if (!inputMaps.ContainsKey(name)) return;
-            inputMaps[name].Rename(newName);
-        }
+        //public static void RenameMap(int id, string newName)
+        //{
+        //    if (!inputMaps.ContainsKey(id)) return;
+        //    inputMaps[id].Rename(newName);
+        //}
 
         //public static float GetHoldF(int playerSlot, string actionName)
         //{
@@ -469,7 +483,7 @@ namespace ShapeInput
         //        return slot.GetHoldF(actionName, playerSlot > 0);
         //    }
         //}
-        public static bool IsDown(int playerSlot, string actionName)
+        public static bool IsDown(int playerSlot, int actionID)
         {
             if (inputDisabled) return false;
             if (playerSlot < 0)
@@ -477,7 +491,7 @@ namespace ShapeInput
                 for (int i = 0; i < inputSlots.Count; i++)
                 {
                     var slot = inputSlots[i];
-                    if (slot.IsDown(actionName, i > 0)) return true;
+                    if (slot.IsDown(actionID, i > 0)) return true;
                 }
                 return false;
             }
@@ -485,10 +499,10 @@ namespace ShapeInput
             {
                 var slot = GetInputSlot(playerSlot);
                 if (slot == null) return false;
-                return slot.IsDown(actionName, playerSlot > 0);
+                return slot.IsDown(actionID, playerSlot > 0);
             }
         }
-        public static bool IsPressed(int playerSlot, string actionName)
+        public static bool IsPressed(int playerSlot, int actionID)
         {
             if (inputDisabled) return false;
             if (playerSlot < 0)
@@ -496,7 +510,7 @@ namespace ShapeInput
                 for (int i = 0; i < inputSlots.Count; i++)
                 {
                     var slot = inputSlots[i];
-                    if (slot.IsPressed(actionName, i > 0)) return true;
+                    if (slot.IsPressed(actionID, i > 0)) return true;
                 }
                 return false;
             }
@@ -504,10 +518,10 @@ namespace ShapeInput
             {
                 var slot = GetInputSlot(playerSlot);
                 if (slot == null) return false;
-                return slot.IsPressed(actionName, playerSlot > 0);
+                return slot.IsPressed(actionID, playerSlot > 0);
             }
         }
-        public static bool IsReleased(int playerSlot, string actionName)
+        public static bool IsReleased(int playerSlot, int actionID)
         {
             if (inputDisabled) return false;
             if (playerSlot < 0)
@@ -515,7 +529,7 @@ namespace ShapeInput
                 for (int i = 0; i < inputSlots.Count; i++)
                 {
                     var slot = inputSlots[i];
-                    if (slot.IsReleased(actionName, i > 0)) return true;
+                    if (slot.IsReleased(actionID, i > 0)) return true;
                 }
                 return false;
             }
@@ -523,10 +537,10 @@ namespace ShapeInput
             {
                 var slot = GetInputSlot(playerSlot);
                 if (slot == null) return false;
-                return slot.IsReleased(actionName, playerSlot > 0);
+                return slot.IsReleased(actionID, playerSlot > 0);
             }
         }
-        public static bool IsUp(int playerSlot, string actionName)
+        public static bool IsUp(int playerSlot, int actionID)
         {
             if (inputDisabled) return false;
             if (playerSlot < 0)
@@ -534,7 +548,7 @@ namespace ShapeInput
                 for (int i = 0; i < inputSlots.Count; i++)
                 {
                     var slot = inputSlots[i];
-                    if (slot.IsUp(actionName, i > 0)) return true;
+                    if (slot.IsUp(actionID, i > 0)) return true;
                 }
                 return false;
             }
@@ -542,38 +556,38 @@ namespace ShapeInput
             {
                 var slot = GetInputSlot(playerSlot);
                 if (slot == null) return false;
-                return slot.IsUp(actionName, playerSlot > 0);
+                return slot.IsUp(actionID, playerSlot > 0);
             }
         }
 
-        public static float GetAxis(int playerSlot, string negative, string positive)
+        public static float GetAxis(int playerSlot, int negativeID, int positiveID)
         {
             if (inputDisabled) return 0f;
             var slot = GetInputSlot(playerSlot);
             if (slot == null) return 0f;
-            return slot.GetAxis(negative, positive);
+            return slot.GetAxis(negativeID, positiveID);
         }
-        public static Vector2 GetAxis(int playerSlot, string left, string right, string up, string down, bool normalized = true)
+        public static Vector2 GetAxis(int playerSlot, int leftID, int rightID, int upID, int downID, bool normalized = true)
         {
             if (inputDisabled) return new(0f);
             var slot = GetInputSlot(playerSlot);
             if (slot == null) return new(0f, 0f);
-            return slot.GetAxis(left, right, up, down, normalized);
+            return slot.GetAxis(leftID, rightID, upID, downID, normalized);
         }
-        public static float GetGamepadAxis(int playerSlot, string gamepadAxisAction)
+        public static float GetGamepadAxis(int playerSlot, int gamepadAxisActionID)
         {
             if (inputDisabled) return 0f;
             var slot = GetInputSlot(playerSlot);
             if (slot == null) return 0f;
-            return slot.GetGamepadAxis(gamepadAxisAction);
+            return slot.GetGamepadAxis(gamepadAxisActionID);
         }
-        public static Vector2 GetGamepadAxis(int playerSlot, string gamepadAxisHor, string gamepadAxisVer, bool normalized = true)
+        public static Vector2 GetGamepadAxis(int playerSlot, int gamepadAxisHorID, int gamepadAxisVerID, bool normalized = true)
         {
             if (inputDisabled) return new(0f);
             var slot = GetInputSlot(playerSlot);
             if (slot == null) return new(0f, 0f);
 
-            return slot.GetGamepadAxis(gamepadAxisHor, gamepadAxisVer, normalized);
+            return slot.GetGamepadAxis(gamepadAxisHorID, gamepadAxisVerID, normalized);
         }
 
         

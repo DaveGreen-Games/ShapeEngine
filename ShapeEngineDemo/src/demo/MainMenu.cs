@@ -23,7 +23,7 @@ namespace ShapeEngineDemo
             level1Button =  new(font, "START");
             optionsButton = new(font, "OPTIONS");
             quitButton =    new(font, "QUIT");
-            quitButton.AddShortcut("UI Cancel");
+            quitButton.AddShortcut(InputHandler.UI_Cancel);
 
             level1Button.SetStateColors(new(Demo.PALETTES.C(ColorIDs.Background2), Demo.PALETTES.C(ColorIDs.Energy), Demo.PALETTES.C(ColorIDs.Player), Demo.PALETTES.C(ColorIDs.Special1), Demo.PALETTES.C(ColorIDs.Neutral)));
             level1Button.SetTextStateColors(new(Demo.PALETTES.C(ColorIDs.Text), Demo.PALETTES.C(ColorIDs.Background2), Demo.PALETTES.C(ColorIDs.Player), Demo.PALETTES.C(ColorIDs.Background1), Demo.PALETTES.C(ColorIDs.Enemy)));

@@ -26,12 +26,12 @@ namespace ShapeUI
         private static float dirInputInterval = 0.25f;
         private static UINeighbors.NeighborDirection lastDir = UINeighbors.NeighborDirection.NONE;
 
-        public static string inputLeft = "UI Left";
-        public static string inputUp = "UI Up";
-        public static string inputRight = "UI Right";
-        public static string inputDown = "UI Down";
-        public static string inputSelect = "UI Select";
-        public static string inputSelectMouse = "UI Select Mouse";
+        public static int InputLeft = InputHandler.UI_Left;
+        public static int InputUp = InputHandler.UI_Up;
+        public static int InputRight = InputHandler.UI_Right;
+        public static int InputDown = InputHandler.UI_Down;
+        public static int InputSelect = InputHandler.UI_Select;
+        public static int InputSelectMouse = InputHandler.UI_SelectMouse;
         public static int playerSlot = -1;
 
 
@@ -90,7 +90,7 @@ namespace ShapeUI
 
                 if (dirInputTimer > 0f)
                 {
-                    string input = GetDirInput(lastDir);
+                    int input = GetDirInput(lastDir);
                     if (InputHandler.IsDown(playerSlot, input))
                     {
                         dirInputTimer -= dt;
@@ -103,28 +103,28 @@ namespace ShapeUI
                     }
                 }
 
-                if (InputHandler.IsPressed(playerSlot, inputUp) || (lastDir == UINeighbors.NeighborDirection.TOP && dirInputTimer == 0f))
+                if (InputHandler.IsPressed(playerSlot, InputUp) || (lastDir == UINeighbors.NeighborDirection.TOP && dirInputTimer == 0f))
                 {
                     newSelected = selected.CheckDirection(UINeighbors.NeighborDirection.TOP, register);
                     lastDir = UINeighbors.NeighborDirection.TOP;
                     if(dirInputInterval > 0f) dirInputTimer = dirInputInterval - dt;
                     OnDirectionInput?.Invoke(lastDir, selected, newSelected);
                 }
-                else if (InputHandler.IsPressed(playerSlot, inputRight) || (lastDir == UINeighbors.NeighborDirection.RIGHT && dirInputTimer == 0f))
+                else if (InputHandler.IsPressed(playerSlot, InputRight) || (lastDir == UINeighbors.NeighborDirection.RIGHT && dirInputTimer == 0f))
                 {
                     newSelected = selected.CheckDirection(UINeighbors.NeighborDirection.RIGHT, register);
                     lastDir = UINeighbors.NeighborDirection.RIGHT;
                     if (dirInputInterval > 0f) dirInputTimer = dirInputInterval - dt;
                     OnDirectionInput?.Invoke(lastDir, selected, newSelected);
                 }
-                else if (InputHandler.IsPressed(playerSlot, inputDown) || (lastDir == UINeighbors.NeighborDirection.BOTTOM && dirInputTimer == 0f))
+                else if (InputHandler.IsPressed(playerSlot, InputDown) || (lastDir == UINeighbors.NeighborDirection.BOTTOM && dirInputTimer == 0f))
                 {
                     newSelected = selected.CheckDirection(UINeighbors.NeighborDirection.BOTTOM, register);
                     lastDir = UINeighbors.NeighborDirection.BOTTOM;
                     if (dirInputInterval > 0f) dirInputTimer = dirInputInterval - dt;
                     OnDirectionInput?.Invoke(lastDir, selected, newSelected);
                 }
-                else if (InputHandler.IsPressed(playerSlot, inputLeft) || (lastDir == UINeighbors.NeighborDirection.LEFT && dirInputTimer == 0f))
+                else if (InputHandler.IsPressed(playerSlot, InputLeft) || (lastDir == UINeighbors.NeighborDirection.LEFT && dirInputTimer == 0f))
                 {
                     newSelected = selected.CheckDirection(UINeighbors.NeighborDirection.LEFT, register);
                     lastDir = UINeighbors.NeighborDirection.LEFT;
@@ -142,16 +142,16 @@ namespace ShapeUI
             register.Clear();
             selected = null;
         }
-        private static string GetDirInput(UINeighbors.NeighborDirection dir)
+        private static int GetDirInput(UINeighbors.NeighborDirection dir)
         {
             switch (dir)
             {
-                case UINeighbors.NeighborDirection.NONE: return "";
-                case UINeighbors.NeighborDirection.TOP: return inputUp;
-                case UINeighbors.NeighborDirection.RIGHT: return inputRight;
-                case UINeighbors.NeighborDirection.BOTTOM: return inputDown;
-                case UINeighbors.NeighborDirection.LEFT: return inputLeft;
-                default: return "";
+                case UINeighbors.NeighborDirection.NONE: return -1;
+                case UINeighbors.NeighborDirection.TOP: return InputUp;
+                case UINeighbors.NeighborDirection.RIGHT: return InputRight;
+                case UINeighbors.NeighborDirection.BOTTOM: return InputDown;
+                case UINeighbors.NeighborDirection.LEFT: return InputLeft;
+                default: return -1;
             }
         }
     }

@@ -16,12 +16,12 @@ namespace ShapeEngineDemo
         Color barBackgroundColor;
         float angleDeg = 0f;
         string title = "";
-        string inputAction = "";
+        int inputActionID = -1;
         float f = 0f;
 
-        public SkillDisplay(Color textColor, Color barColor, Color barBGColor, Color bgColor, string title = "", string inputAction = "", float angleDeg = 0f)
+        public SkillDisplay(Color textColor, Color barColor, Color barBGColor, Color bgColor, string title = "", int inputActionID = -1, float angleDeg = 0f)
         {
-            this.inputAction = inputAction;
+            this.inputActionID = inputActionID;
             this.angleDeg = angleDeg;
             this.textColor = textColor;
             this.barColor = barColor;
@@ -69,9 +69,9 @@ namespace ShapeEngineDemo
             if (title != "")
                 SDrawing.DrawTextAlignedPro(title, center, angleDeg, innerSize, 1, textColor, Demo.FONT.GetFont(Demo.FONT_Medium), new(0.5f));
 
-            if (inputAction != "")
+            if (inputActionID != -1)
             {
-                string input = InputHandler.GetInputActionKeyNames(0, inputAction).keyboard;
+                string input = InputHandler.GetInputActionKeyNames(0, inputActionID).keyboard;
                 SDrawing.DrawTextAlignedPro(input, center + SVec.Rotate(new Vector2(size.X * 0.5f + thickness * 2, 0f), angleDeg * DEG2RAD), angleDeg, innerSize, 1, textColor, Demo.FONT.GetFont(Demo.FONT_Medium), new(0, 0.5f));
             }
 

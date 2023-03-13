@@ -38,47 +38,47 @@ namespace ShapeUI
         protected bool mouseClicked = false;
 
         protected UINeighbors neighbors = new();
-        protected string shortcut = "";
+        protected int shortcut = -1;
 
 
         public bool Clicked() { return clicked || mouseClicked; }
         public bool Pressed() { return pressed || mousePressed; }
         protected virtual bool CheckPressed()
         {
-            return selected && InputHandler.IsDown(UIHandler.playerSlot, UIHandler.inputSelect);
+            return selected && InputHandler.IsDown(UIHandler.playerSlot, UIHandler.InputSelect);
         }
         protected virtual bool CheckClicked()
         {
-            return selected && InputHandler.IsReleased(UIHandler.playerSlot, UIHandler.inputSelect);
+            return selected && InputHandler.IsReleased(UIHandler.playerSlot, UIHandler.InputSelect);
         }
         protected virtual bool CheckMousePressed()
         {
-            return hovered && InputHandler.IsDown(UIHandler.playerSlot, UIHandler.inputSelectMouse);
+            return hovered && InputHandler.IsDown(UIHandler.playerSlot, UIHandler.InputSelectMouse);
         }
         protected virtual bool CheckMouseClicked()
         {
-            return hovered && InputHandler.IsReleased(UIHandler.playerSlot, UIHandler.inputSelectMouse);
+            return hovered && InputHandler.IsReleased(UIHandler.playerSlot, UIHandler.InputSelectMouse);
         }
         protected virtual bool IsShortcutDown()
         {
-            if (shortcut == "") return false;
+            if (shortcut == -1) return false;
             return InputHandler.IsDown(UIHandler.playerSlot, shortcut);
         }
         protected virtual bool IsShortcutReleased()
         {
-            if (shortcut == "") return false;
+            if (shortcut == -1) return false;
             return InputHandler.IsReleased(UIHandler.playerSlot, shortcut);
         }
 
         public virtual bool IsAutomaticDetectionDirectionEnabled(UINeighbors.NeighborDirection dir) { return true; }
         
-        public void AddShortcut(string newShortcut)
+        public void AddShortcut(int shortCutID)
         {
-            shortcut = newShortcut;
+            shortcut = shortCutID;
         }
         public void RemoveShortcut()
         {
-            shortcut = "";
+            shortcut = -1;
         }
         public void SetNeighbor(UIElementSelectable neighbor, UINeighbors.NeighborDirection dir) { neighbors.SetNeighbor(neighbor, dir); }
         public bool IsSelected() { return selected; }

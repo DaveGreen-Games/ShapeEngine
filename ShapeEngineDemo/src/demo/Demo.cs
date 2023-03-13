@@ -210,33 +210,33 @@ namespace ShapeEngineDemo
 
 
             //INPUT
-            InputAction iaQuit = new("Quit", InputAction.Keys.ESCAPE);
-            InputAction iaFullscreen = new("Fullscreen", InputAction.Keys.F);
-            InputAction rotateLeft = new("Rotate Left", InputAction.Keys.A, InputAction.Keys.GP_BUTTON_LEFT_FACE_LEFT);
-            InputAction rotateRight = new("Rotate Right", InputAction.Keys.D, InputAction.Keys.GP_BUTTON_LEFT_FACE_RIGHT);
-            InputAction rotate = new("Rotate", 0.25f, InputAction.Keys.GP_AXIS_LEFT_X);
-            InputAction boostInput = new("Boost", InputAction.Keys.W, InputAction.Keys.GP_BUTTON_LEFT_FACE_UP, InputAction.Keys.GP_BUTTON_LEFT_TRIGGER_BOTTOM);
-            InputAction slowInput = new("Slow", InputAction.Keys.S, InputAction.Keys.GP_BUTTON_LEFT_FACE_DOWN, InputAction.Keys.GP_BUTTON_LEFT_TRIGGER_TOP);
-            InputAction cycleGunSetup = new("Cycle Gun Setup", InputAction.Keys.ONE, InputAction.Keys.GP_BUTTON_RIGHT_FACE_UP);
-            InputAction shootFixed = new("Shoot Fixed", InputAction.Keys.J, InputAction.Keys.SPACE, InputAction.Keys.GP_BUTTON_RIGHT_TRIGGER_BOTTOM, InputAction.Keys.MB_LEFT);
-            InputAction dropAimPoint = new("Drop Aim Point",  InputAction.Keys.K, InputAction.Keys.GP_BUTTON_RIGHT_TRIGGER_TOP);
+            InputAction iaQuit =                    new(InputIDs.OPTIONS_Quit, InputAction.Keys.ESCAPE);
+            InputAction iaFullscreen =              new(InputIDs.OPTIONS_Fullscreen, InputAction.Keys.F);
+            InputAction rotateLeft =                new(InputIDs.PLAYER_RotateLeft, InputAction.Keys.A, InputAction.Keys.GP_BUTTON_LEFT_FACE_LEFT);
+            InputAction rotateRight =               new(InputIDs.PLAYER_RotateRight, InputAction.Keys.D, InputAction.Keys.GP_BUTTON_LEFT_FACE_RIGHT);
+            InputAction rotate =                    new(InputIDs.PLAYER_Rotate, 0.25f, InputAction.Keys.GP_AXIS_LEFT_X);
+            InputAction boostInput =                new(InputIDs.PLAYER_Boost, InputAction.Keys.W, InputAction.Keys.GP_BUTTON_LEFT_FACE_UP, InputAction.Keys.GP_BUTTON_LEFT_TRIGGER_BOTTOM);
+            InputAction slowInput =                 new(InputIDs.PLAYER_Slow, InputAction.Keys.S, InputAction.Keys.GP_BUTTON_LEFT_FACE_DOWN, InputAction.Keys.GP_BUTTON_LEFT_TRIGGER_TOP);
+            InputAction cycleGunSetup =             new(InputIDs.PLAYER_CycleGuns, InputAction.Keys.ONE, InputAction.Keys.GP_BUTTON_RIGHT_FACE_UP);
+            InputAction shootFixed =                new(InputIDs.PLAYER_Shoot, InputAction.Keys.J, InputAction.Keys.SPACE, InputAction.Keys.GP_BUTTON_RIGHT_TRIGGER_BOTTOM, InputAction.Keys.MB_LEFT);
+            InputAction dropAimPoint =              new(InputIDs.PLAYER_DropAimPoint,  InputAction.Keys.K, InputAction.Keys.GP_BUTTON_RIGHT_TRIGGER_TOP);
 
-            InputAction cycleResolutionsDebug = new("Cycle Res", InputAction.Keys.RIGHT);
-            InputAction nextMonitorDebug = new("Next Monitor", InputAction.Keys.LEFT);
-            InputAction toggleVsyncDebug = new("Vsync", InputAction.Keys.V);
-            InputAction cycleFramerateLimitDebug = new("Cycle Framerate Limit", InputAction.Keys.UP);
+            InputAction cycleResolutionsDebug =     new(InputIDs.OPTIONS_CycleRes, InputAction.Keys.RIGHT);
+            InputAction nextMonitorDebug =          new(InputIDs.OPTIONS_NextMonitor, InputAction.Keys.LEFT);
+            InputAction toggleVsyncDebug =          new(InputIDs.OPTIONS_Vsync, InputAction.Keys.V);
+            InputAction cycleFramerateLimitDebug =  new(InputIDs.OPTIONS_CycleFrameRateLimit, InputAction.Keys.UP);
 
-            InputAction pause = new("Pause", InputAction.Keys.P);
-            InputAction slowTime = new("Slow Time", InputAction.Keys.LEFT_ALT);
+            InputAction pause =                     new(InputIDs.GAME_Pause, InputAction.Keys.P);
+            InputAction slowTime =                  new(InputIDs.GAME_SlowTime, InputAction.Keys.LEFT_ALT);
             
-            InputAction healPlayerDebug = new("Heal Player",InputAction.Keys.H);
-            InputAction spawnAsteroidDebug = new("Spawn Asteroid", InputAction.Keys.G);
-            InputAction toggleDrawHelpersDebug = new("Toggle Draw Helpers", InputAction.Keys.EIGHT);
-            InputAction toggleDrawCollidersDebug = new("Toggle Draw Colliders", InputAction.Keys.NINE);
-            InputAction cycleZoomDebug = new("Cycle Zoom", InputAction.Keys.ZERO);
+            InputAction healPlayerDebug =           new(InputIDs.DEBUG_HealPlayer,InputAction.Keys.H);
+            InputAction spawnAsteroidDebug =        new(InputIDs.DEBUG_SpawnAsteroid, InputAction.Keys.G);
+            InputAction toggleDrawHelpersDebug =    new(InputIDs.DEBUG_ToggleDrawHelpers, InputAction.Keys.EIGHT);
+            InputAction toggleDrawCollidersDebug =  new(InputIDs.DEBUG_ToggleDrawColliders, InputAction.Keys.NINE);
+            InputAction cycleZoomDebug =            new(InputIDs.DEBUG_CycleZoom, InputAction.Keys.ZERO);
 
 
-            InputMap inputMap = new("Default", 
+            InputMap inputMap = new(InputIDs.INPUTMAP_Default, "Default",
                 iaQuit, iaFullscreen, 
                 rotateLeft, rotateRight, rotate, 
                 boostInput, slowInput, 
@@ -245,9 +245,9 @@ namespace ShapeEngineDemo
                 spawnAsteroidDebug, healPlayerDebug, toggleDrawCollidersDebug, toggleDrawHelpersDebug, cycleZoomDebug, 
                 cycleResolutionsDebug, nextMonitorDebug, cycleFramerateLimitDebug, toggleVsyncDebug
                 );
-            inputMap.AddActions(InputHandler.UI_Default_InputActions.Values.ToList());
+            inputMap.AddActions(InputHandler.UI_Default_InputActions);
             InputHandler.AddInputMap(inputMap);
-            InputHandler.SwitchToMap("Default", 0);
+            InputHandler.SwitchToMap(InputIDs.INPUTMAP_Default, 0);
 
 
             ScreenHandler.OnWindowSizeChanged += OnWindowSizeChanged;
@@ -298,10 +298,10 @@ namespace ShapeEngineDemo
 
         public override void PreHandleInput()
         {
-            if (InputHandler.IsReleased(0, "Fullscreen")) { ScreenHandler.ToggleFullscreen(); }
-            if (InputHandler.IsReleased(0, "Next Monitor")) { ScreenHandler.NextMonitor(); }
-            if (InputHandler.IsReleased(0, "Vsync")) { ScreenHandler.ToggleVsync(); }
-            if (InputHandler.IsReleased(0, "Cycle Framerate Limit"))
+            if (InputHandler.IsReleased(0, InputIDs.OPTIONS_Fullscreen)) { ScreenHandler.ToggleFullscreen(); }
+            if (InputHandler.IsReleased(0, InputIDs.OPTIONS_NextMonitor)) { ScreenHandler.NextMonitor(); }
+            if (InputHandler.IsReleased(0, InputIDs.OPTIONS_Vsync)) { ScreenHandler.ToggleVsync(); }
+            if (InputHandler.IsReleased(0, InputIDs.OPTIONS_CycleFrameRateLimit))
             {
                 List<int> frameRateLimits = new List<int>() { 30, 60, 72, 90, 120, 144, 180, 240 };
                 curFrameRateLimitIndex += 1;
@@ -309,7 +309,7 @@ namespace ShapeEngineDemo
                 ScreenHandler.SetFrameRateLimit(frameRateLimits[curFrameRateLimitIndex]);
 
             }
-            if (InputHandler.IsReleased(0, "Cycle Res") && !ScreenHandler.IsFullscreen())
+            if (InputHandler.IsReleased(0, InputIDs.OPTIONS_CycleRes) && !ScreenHandler.IsFullscreen())
             {
                 List<(int width, int height)> supportedResolutions = new()
                 {

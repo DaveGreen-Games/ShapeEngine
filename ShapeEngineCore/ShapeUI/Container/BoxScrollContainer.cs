@@ -142,14 +142,14 @@ namespace ShapeUI.Container
                         CalculateScrollBarRects(mousePosUI);
                     }
 
-                    if (InputHandler.IsReleased(-1, "UI Select Mouse"))
+                    if (InputHandler.IsReleased(-1, InputHandler.UI_SelectMouse))
                     {
                         EndScrollBarHandleDrag();
                     }
 
                     if (isInsideScrollBar && !isScrolling)
                     {
-                        if (InputHandler.IsPressed(-1, "UI Select Mouse"))
+                        if (InputHandler.IsPressed(-1, InputHandler.UI_SelectMouse))
                         {
                             CheckScrollBarClick(mousePosUI);
                         }

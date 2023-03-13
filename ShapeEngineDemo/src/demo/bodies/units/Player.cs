@@ -98,13 +98,13 @@ namespace ShapeEngineDemo.Bodies
     public class WeaponSystem
     {
         private List<Hardpoint> hardpoints = new();
-        private string fixedInput = "";
+        private int fixedInputID = -1;
         //private Pin turretPin;
         private Pin aimpointPin;
-        public WeaponSystem(List<Hardpoint> hardpoints, float pinDuration, float pinCooldown, string fixedInput)
+        public WeaponSystem(List<Hardpoint> hardpoints, float pinDuration, float pinCooldown, int fixedInputID)
         {
             this.hardpoints = hardpoints;
-            this.fixedInput = fixedInput;
+            this.fixedInputID = fixedInputID;
             //turretPin = new(pinDuration, pinCooldown, false);
             aimpointPin = new(pinDuration, pinCooldown, true);
         }
@@ -167,11 +167,11 @@ namespace ShapeEngineDemo.Bodies
         //}
         private void CheckInput()
         {
-            if (InputHandler.IsDown(0, fixedInput))
+            if (InputHandler.IsDown(0, fixedInputID))
             {
                 Shoot();
             }
-            else if (InputHandler.IsReleased(0, fixedInput))
+            else if (InputHandler.IsReleased(0, fixedInputID))
             {
                 ReleaseTrigger();
             }
@@ -275,7 +275,7 @@ namespace ShapeEngineDemo.Bodies
                     HardpointSetup(s, shipData.targetingRange, armoryInfo.fixedGun, armoryInfo.turretGun, this.energyCore, shipData.hardpoints),
                     shipData.pinDuration,
                     shipData.pinCooldown,
-                    "Shoot Fixed"
+                    InputIDs.PLAYER_Shoot
                 );
 
             targetFinder.Start();
@@ -287,7 +287,7 @@ namespace ShapeEngineDemo.Bodies
             collider.CheckIntersections = true;
 
             Vector2 barOffset = new(-0.15f, 0.05f);
-            aimpointSkillDisplay = new(Demo.PALETTES.C(ColorIDs.Text), Demo.PALETTES.C(ColorIDs.Flash), Demo.PALETTES.C(ColorIDs.Neutral),Demo.PALETTES.C(ColorIDs.Energy), "Drop Pin", "Drop Aim Point", -5f);
+            aimpointSkillDisplay = new(Demo.PALETTES.C(ColorIDs.Text), Demo.PALETTES.C(ColorIDs.Flash), Demo.PALETTES.C(ColorIDs.Neutral),Demo.PALETTES.C(ColorIDs.Energy), "Drop Pin", InputIDs.PLAYER_DropAimPoint, -5f);
             hpBar = new(-5f, new Vector2(0, 1), barOffset, 0.1f, 0);
             pwrBar = new(-5f, new Vector2(0, 1), barOffset, 0f, 0f);
             hpBar.SetProgressDirections(0, 0, 1, 0);
@@ -469,7 +469,7 @@ namespace ShapeEngineDemo.Bodies
             var prevStunned = IsStunned();
             base.Update(dt);
 
-            var healInput = healPlayerInput.Update(dt, InputHandler.IsPressed(0, "Heal Player"), InputHandler.IsReleased(0, "Heal Player"));
+            var healInput = healPlayerInput.Update(dt, InputHandler.IsPressed(0, InputIDs.DEBUG_HealPlayer), InputHandler.IsReleased(0, InputIDs.DEBUG_HealPlayer));
             if (healInput.holdFinished) Heal(500, collider.Pos, this);
             if(healInput.tapFinished) Heal(50, collider.Pos, this);
 
@@ -508,7 +508,7 @@ namespace ShapeEngineDemo.Bodies
             {
                 if (prevStunned) AudioHandler.PlaySFX(SoundIDs.PLAYER_StunEnded);
 
-                if (InputHandler.IsReleased(0, "Drop Aim Point")) weaponSystem.DropAimPoint(collider.Pos);
+                if (InputHandler.IsReleased(0, InputIDs.PLAYER_DropAimPoint)) weaponSystem.DropAimPoint(collider.Pos);
                 //if (InputHandler.IsReleased("Drop Turrets")) weaponSystem.DropTurrets(collider.Pos);
 
                 energyCore.Update(dt);
@@ -534,7 +534,7 @@ namespace ShapeEngineDemo.Bodies
 
                 if (InputHandler.IsGamepad())
                 {
-                    float gamepadRotation = InputHandler.GetGamepadAxis(0, "Rotate");
+                    float gamepadRotation = InputHandler.GetGamepadAxis(0, InputIDs.PLAYER_Rotate);
                     float amount = gamepadRotation * gamepadRotation;
                     if (gamepadRotation > 0)
                     {
@@ -547,11 +547,11 @@ namespace ShapeEngineDemo.Bodies
                 }
                 else
                 {
-                    if (InputHandler.IsDown(0, "Rotate Left"))
+                    if (InputHandler.IsDown(0, InputIDs.PLAYER_RotateLeft))
                     {
                         MovementDir = SVec.Rotate(MovementDir, -stats.Get("rotSpeed") * DEG2RAD * dt);
                     }
-                    else if (InputHandler.IsDown(0, "Rotate Right"))
+                    else if (InputHandler.IsDown(0, InputIDs.PLAYER_RotateRight))
                     {
                         MovementDir = SVec.Rotate(MovementDir, stats.Get("rotSpeed") * DEG2RAD * dt);
                     }
@@ -559,7 +559,7 @@ namespace ShapeEngineDemo.Bodies
 
 
                 float speed = stats.Get("maxSpeed");
-                if (InputHandler.IsDown(0, "Boost") && CanBoost())
+                if (InputHandler.IsDown(0, InputIDs.PLAYER_Boost) && CanBoost())
                 {
                     if (prevMovement != PlayerMovement.BOOST)
                     {
@@ -570,7 +570,7 @@ namespace ShapeEngineDemo.Bodies
                     speed *= stats.Get("boostF");
                     energyCore.Use(stats.Get("boostCost") * dt);
                 }
-                else if (InputHandler.IsDown(0, "Slow") && CanSlow())
+                else if (InputHandler.IsDown(0, InputIDs.PLAYER_Slow) && CanSlow())
                 {
                     if (prevMovement != PlayerMovement.SLOW)
                     {

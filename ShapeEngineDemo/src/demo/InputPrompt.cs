@@ -13,61 +13,61 @@ namespace ShapeEngineDemo
         Color textColor = WHITE;
         Color bgColor = DARKGRAY;
         Color barColor = YELLOW;
-        string inputAction = "";
+        int inputActionID = -1;
         float f = 0f;
 
-        public InputPrompt(Vector2 center, float radius, string inputAction, float angleDeg, Color textColor, Color barColor, Color bgColor)
+        public InputPrompt(Vector2 center, float radius, int inputActionID, float angleDeg, Color textColor, Color barColor, Color bgColor)
         {
             this.rect = new(center.X + radius, center.Y + radius, radius, radius);
             this.radius = radius;
-            this.inputAction = inputAction;
+            this.inputActionID = inputActionID;
             this.angleDeg = angleDeg;
             this.textColor = textColor;
             this.barColor = barColor;
             this.bgColor = bgColor;
         }
-        public InputPrompt(Vector2 center, float radius, string inputAction, Color textColor, Color barColor, Color bgColor)
+        public InputPrompt(Vector2 center, float radius, int inputActionID, Color textColor, Color barColor, Color bgColor)
         {
             this.rect = new(center.X + radius, center.Y + radius, radius, radius);
             this.radius = radius;
-            this.inputAction = inputAction;
+            this.inputActionID = inputActionID;
             this.textColor = textColor;
             this.barColor = barColor;
             this.bgColor = bgColor;
         }
-        public InputPrompt(Vector2 center, float radius, string inputAction, Color textColor, Color barColor)
+        public InputPrompt(Vector2 center, float radius, int inputActionID, Color textColor, Color barColor)
         {
             this.rect = new(center.X + radius, center.Y + radius, radius, radius);
             this.radius = radius;
-            this.inputAction = inputAction;
+            this.inputActionID = inputActionID;
             this.textColor = textColor;
             this.barColor = barColor;
             this.bgColor = new(0,0,0,0);
         }
-        public InputPrompt(Vector2 center, float radius, string inputAction, Color textColor)
+        public InputPrompt(Vector2 center, float radius, int inputActionID, Color textColor)
         {
             this.rect = new(center.X + radius, center.Y + radius, radius, radius);
             this.radius = radius;
-            this.inputAction = inputAction;
+            this.inputActionID = inputActionID;
             this.textColor = textColor;
             this.barColor = new(0,0,0,0);
             this.bgColor = new(0, 0, 0, 0);
         }
-        public InputPrompt(Vector2 center, float radius, string inputAction, float angleDeg, Color textColor)
+        public InputPrompt(Vector2 center, float radius, int inputActionID, float angleDeg, Color textColor)
         {
             this.rect = new(center.X + radius, center.Y + radius, radius, radius);
             this.radius = radius;
-            this.inputAction = inputAction;
+            this.inputActionID = inputActionID;
             this.textColor = textColor;
             this.angleDeg = angleDeg;
             this.barColor = new(0, 0, 0, 0);
             this.bgColor = new(0, 0, 0, 0);
         }
-        public InputPrompt(Vector2 center, float radius, string inputAction, float angleDeg, Color textColor, Color bgColor)
+        public InputPrompt(Vector2 center, float radius, int inputActionID, float angleDeg, Color textColor, Color bgColor)
         {
             this.rect = new(center.X + radius, center.Y + radius, radius, radius);
             this.radius = radius;
-            this.inputAction = inputAction;
+            this.inputActionID = inputActionID;
             this.angleDeg = angleDeg;
             this.textColor = textColor;
             this.barColor = new(0,0,0,0);
@@ -87,7 +87,7 @@ namespace ShapeEngineDemo
         public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
         {
             Vector2 center = GetPos(new(0.5f));
-            string text = InputHandler.GetInputActionKeyNames(0, inputAction, true).keyboard;
+            string text = InputHandler.GetInputActionKeyNames(0, inputActionID, true).keyboard;
             float r = GetSize().X;
             float thickness = r * 0.25f;
             if(bgColor.a > 0) DrawCircleV(center, r, bgColor);

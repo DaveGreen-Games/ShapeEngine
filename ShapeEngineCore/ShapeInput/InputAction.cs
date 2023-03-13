@@ -159,7 +159,7 @@ namespace ShapeInput
             GP_BUTTON_RSTICK_UP = 613,
         }
 
-        private string name = "";
+        private int id = -1;
         private List<Keys> actionKeys = new();
         private bool disabled = false;
         //private int gamepadIndex = -1;
@@ -172,9 +172,9 @@ namespace ShapeInput
         //private float doubleTapTimer = 0f;
         //private bool doubleTapRelease = false;
 
-        public InputAction(string name, params Keys[] keys)
+        public InputAction(int id, params Keys[] keys)
         {
-            this.name = name;
+            this.id = id;
             foreach (var key in keys)
             {
                 AddKey(key);
@@ -190,9 +190,9 @@ namespace ShapeInput
         //        AddKey(key);
         //    }
         //}
-        public InputAction(string name, float deadzone, params Keys[] keys)
+        public InputAction(int id, float deadzone, params Keys[] keys)
         {
-            this.name = name;
+            this.id = id;
             this.deadzone = deadzone;
             foreach (var key in keys)
             {
@@ -271,7 +271,7 @@ namespace ShapeInput
         //    }
         //}
 
-        public void Rename(string newName) { name = newName; }
+        //public void Rename(string newName) { id = newName; }
         public void AddKey(Keys key)
         {
             if (actionKeys.Contains(key)) return;
@@ -281,7 +281,7 @@ namespace ShapeInput
         {
             actionKeys.Remove(key);
         }
-        public string GetName() { return name; }
+        public int GetID() { return id; }
         public List<string> GetAllKeyNames(bool shorthand = true)
         {
             List<string> keyNames = new();
