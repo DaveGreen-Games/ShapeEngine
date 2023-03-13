@@ -34,7 +34,7 @@ namespace ShapeEngineDemo
 
         public override void Draw()
         {
-            Color color = Demo.PALETTES.C("text");
+            Color color = Demo.PALETTES.C(ColorIDs.Text);
             color.a = (byte)SRNG.randI(140, 160);
             DrawCircle((int)pos.X, (int)pos.Y, SRNG.randF(radius * 0.99f, radius * 1.01f), color);
         }

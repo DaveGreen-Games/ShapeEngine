@@ -50,24 +50,24 @@ namespace ShapeEngineDemo
             var colorData = DATA.GetCDBContainer().GetSheet<ColorData>("colors");
             foreach (var palette in colorData)
             {
-                Dictionary<string, Color> colors = new()
+                Dictionary<int, Color> colors = new()
                 {
-                    {"bg1", PaletteHandler.HexToColor(palette.Value.bg1)},
-                    {"bg2", PaletteHandler.HexToColor(palette.Value.bg2)},
-                    {"flash", PaletteHandler.HexToColor(palette.Value.flash)},
-                    {"special1", PaletteHandler.HexToColor(palette.Value.special1)},
-                    {"special2", PaletteHandler.HexToColor(palette.Value.special2)},
-                    {"text", PaletteHandler.HexToColor(palette.Value.text)},
-                    {"header", PaletteHandler.HexToColor(palette.Value.header)},
-                    {"player", PaletteHandler.HexToColor(palette.Value.player)},
-                    {"neutral", PaletteHandler.HexToColor(palette.Value.neutral)},
-                    {"enemy", PaletteHandler.HexToColor(palette.Value.enemy)},
-                    {"armor", PaletteHandler.HexToColor(palette.Value.armor)},
-                    {"acid", PaletteHandler.HexToColor(palette.Value.acid)},
-                    {"shield", PaletteHandler.HexToColor(palette.Value.shield)},
-                    {"radiation", PaletteHandler.HexToColor(palette.Value.radiation)},
-                    {"energy", PaletteHandler.HexToColor(palette.Value.energy)},
-                    {"darkmatter", PaletteHandler.HexToColor(palette.Value.darkMatter)},
+                    {ColorIDs.Background1, PaletteHandler.HexToColor(palette.Value.bg1)},
+                    {ColorIDs.Background2, PaletteHandler.HexToColor(palette.Value.bg2)},
+                    {ColorIDs.Flash, PaletteHandler.HexToColor(palette.Value.flash)},
+                    {ColorIDs.Special1, PaletteHandler.HexToColor(palette.Value.special1)},
+                    {ColorIDs.Special2, PaletteHandler.HexToColor(palette.Value.special2)},
+                    {ColorIDs.Text, PaletteHandler.HexToColor(palette.Value.text)},
+                    {ColorIDs.Header, PaletteHandler.HexToColor(palette.Value.header)},
+                    {ColorIDs.Player, PaletteHandler.HexToColor(palette.Value.player)},
+                    {ColorIDs.Neutral, PaletteHandler.HexToColor(palette.Value.neutral)},
+                    {ColorIDs.Enemy, PaletteHandler.HexToColor(palette.Value.enemy)},
+                    {ColorIDs.Armor, PaletteHandler.HexToColor(palette.Value.armor)},
+                    {ColorIDs.Acid, PaletteHandler.HexToColor(palette.Value.acid)},
+                    {ColorIDs.Shield, PaletteHandler.HexToColor(palette.Value.shield)},
+                    {ColorIDs.Radiation, PaletteHandler.HexToColor(palette.Value.radiation)},
+                    {ColorIDs.Energy, PaletteHandler.HexToColor(palette.Value.energy)},
+                    {ColorIDs.DarkMatter, PaletteHandler.HexToColor(palette.Value.darkMatter)},
 
                 };
                 PALETTES.AddPalette(palette.Key, colors);

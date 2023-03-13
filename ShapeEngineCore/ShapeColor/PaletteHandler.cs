@@ -7,41 +7,41 @@ namespace ShapeColor
         private Dictionary<string, ColorPalette> palettes = new();
         private int curPaletteIndex = 0;
         private List<string> paletteNames = new() { };
-        private ColorPalette curPalette; // = new("empty");
+        private ColorPalette curPalette = new("empty");
 
 
         public PaletteHandler()
         {
-            curPalette = new ColorPalette(
-                "default",
-            
-                ("black", BLACK), 
-                ("white", WHITE), 
-                ("gray", GRAY),
-                ("green", GREEN), 
-                ("blue", BLUE), 
-                ("red", RED),
-                ("orange", ORANGE), 
-                ("purple", PURPLE), 
-                ("pink", PINK));
+            //curPalette = new ColorPalette(
+            //    "default",
+            //
+            //    ("black", BLACK), 
+            //    ("white", WHITE), 
+            //    ("gray", GRAY),
+            //    ("green", GREEN), 
+            //    ("blue", BLUE), 
+            //    ("red", RED),
+            //    ("orange", ORANGE), 
+            //    ("purple", PURPLE), 
+            //    ("pink", PINK));
         }
-        public PaletteHandler(string paletteName, params (string name, Raylib_CsLo.Color color)[] entries)
-        {
-            curPalette = new(paletteName, entries);
-            palettes.Add(paletteName, curPalette);
-            paletteNames.Add(paletteName);
-            curPaletteIndex= 0;
-        }
+        //public PaletteHandler(string paletteName, params (string name, Raylib_CsLo.Color color)[] entries)
+        //{
+        //    curPalette = new(paletteName, entries);
+        //    palettes.Add(paletteName, curPalette);
+        //    paletteNames.Add(paletteName);
+        //    curPaletteIndex= 0;
+        //}
 
         public List<string> GetAllPaletteNames() { return paletteNames; }
-        public int CurIndex { get { return curPaletteIndex; } }
-        public string CurName { get { return curPalette.Name; } }
-        public ColorPalette Cur { get { return curPalette; } }
-        public Raylib_CsLo.Color C(string name) { return curPalette.Get(name); }
+        public int CurPaletteIndex { get { return curPaletteIndex; } }
+        public string CurPaletteName { get { return curPalette.Name; } }
+        public ColorPalette CurPalette { get { return curPalette; } }
+        public Color C(int id) { return curPalette.Get(id); }
 
-        public void AddPalette(string paletteName, string[] hexColors, string[] names)
+        public void AddPalette(string paletteName, string[] hexColors, int[] ids)
         {
-            ColorPalette cp = new(paletteName, hexColors, names);
+            ColorPalette cp = new(paletteName, hexColors, ids);
             if (palettes.ContainsKey(paletteName)) palettes[paletteName] = cp;
             else
             {
@@ -49,9 +49,9 @@ namespace ShapeColor
                 paletteNames.Add(paletteName);
             }
         }
-        public void AddPalette(string paletteName, Raylib_CsLo.Color[] colors, string[] names)
+        public void AddPalette(string paletteName, Color[] colors, int[] ids)
         {
-            ColorPalette cp = new(paletteName, colors, names);
+            ColorPalette cp = new(paletteName, colors, ids);
             if (palettes.ContainsKey(paletteName)) palettes[paletteName] = cp;
             else
             {
@@ -59,7 +59,7 @@ namespace ShapeColor
                 paletteNames.Add(paletteName);
             }
         }
-        public void AddPalette(string paletteName, params (string name, Raylib_CsLo.Color color)[] entries)
+        public void AddPalette(string paletteName, params (int id, Color color)[] entries)
         {
             ColorPalette cp = new(paletteName, entries);
             if (palettes.ContainsKey(paletteName)) palettes[paletteName] = cp;
@@ -69,7 +69,7 @@ namespace ShapeColor
                 paletteNames.Add(paletteName);
             }
         }
-        public void AddPalette(string paletteName, Dictionary<string, Raylib_CsLo.Color> palette)
+        public void AddPalette(string paletteName, Dictionary<int, Color> palette)
         {
             ColorPalette cp = new(paletteName, palette);
             if (palettes.ContainsKey(paletteName)) palettes[paletteName] = cp;
@@ -89,10 +89,12 @@ namespace ShapeColor
                 paletteNames.Add(paletteName);
             }
         }
-        public void AddPalette(string paletteName, Image source, params string[] colorNames)
-        {
-            AddPalette(GeneratePaletteFromImage(paletteName, source, colorNames));
-        }
+        //public void AddPalette(string paletteName, Image source, params string[] colorNames)
+        //{
+        //    AddPalette(GeneratePaletteFromImage(paletteName, source, colorNames));
+        //}
+        
+        
         public void RemovePalette(string paletteName)
         {
             //if (paletteName == "default") return;
@@ -140,95 +142,98 @@ namespace ShapeColor
             paletteNames.Clear();
             paletteNames.Clear();
         }
-        /// <summary>
-        /// Get all the colors from the source image.
-        /// </summary>
-        /// <param name="source"> Image that contains the colors. Each color should only be 1 pixel wide.</param>
-        /// <param name="colorCount">How many colors there are in the image. </param>
-        /// <returns></returns>
-        public static Raylib_CsLo.Color[] GetColorsFromImage(Image source, int colorCount)
-        {
-            unsafe
-            {
-                var cptr = Raylib.LoadImageColors(source);
-                Raylib_CsLo.Color[] colors = new Raylib_CsLo.Color[colorCount];
-                for (int i = 0; i < colorCount; i++)
-                {
-                    colors[i] = *(cptr + i);
-                }
-                Raylib.UnloadImageColors(cptr);
-                return colors;
-            }
-        }
-        /// <summary>
-        /// Get all the colors from the source image.
-        /// </summary>
-        /// <param name="source"> Image that contains the colors. Each color should only be 1 pixel wide.</param>
-        /// <param name="colorCount">How many colors there are in the image. </param>
-        /// <returns></returns>
-        public static Dictionary<string, Raylib_CsLo.Color> GeneratePaletteFromImage(Image source, params string[] colorNames)
-        {
-            unsafe
-            {
-                int size = colorNames.Length;
-                int* colorCount = null;
-                var cptr = Raylib.LoadImageColors(source);
-                Dictionary<string, Raylib_CsLo.Color> colors = new();
-                for (int i = 0; i < size; i++)
-                {
-                    Raylib_CsLo.Color color = *(cptr + i);
-                    colors.Add(colorNames[i], color);
-                }
-                Raylib.UnloadImageColors(cptr);
-                return colors;
-            }
-        }
-        /// <summary>
-        /// Get all the colors from the source image.
-        /// </summary>
-        /// <param name="source"> Image that contains the colors. Each color should only be 1 pixel wide.</param>
-        /// <param name="colorCount">How many colors there are in the image. </param>
-        /// <returns></returns>
-        public static ColorPalette GeneratePaletteFromImage(string paletteName, Image source, params string[] colorNames)
-        {
-            return new(paletteName, GeneratePaletteFromImage(source, colorNames));
-        }
 
-        public static Dictionary<string, Raylib_CsLo.Color> GeneratePalette(int[] colors, params string[] colorNames)
+
+        ///// <summary>
+        ///// Get all the colors from the source image.
+        ///// </summary>
+        ///// <param name="source"> Image that contains the colors. Each color should only be 1 pixel wide.</param>
+        ///// <param name="colorCount">How many colors there are in the image. </param>
+        ///// <returns></returns>
+        //public static Raylib_CsLo.Color[] GetColorsFromImage(Image source, int colorCount)
+        //{
+        //    unsafe
+        //    {
+        //        var cptr = Raylib.LoadImageColors(source);
+        //        Raylib_CsLo.Color[] colors = new Raylib_CsLo.Color[colorCount];
+        //        for (int i = 0; i < colorCount; i++)
+        //        {
+        //            colors[i] = *(cptr + i);
+        //        }
+        //        Raylib.UnloadImageColors(cptr);
+        //        return colors;
+        //    }
+        //}
+        ///// <summary>
+        ///// Get all the colors from the source image.
+        ///// </summary>
+        ///// <param name="source"> Image that contains the colors. Each color should only be 1 pixel wide.</param>
+        ///// <param name="colorCount">How many colors there are in the image. </param>
+        ///// <returns></returns>
+        //public static Dictionary<string, Raylib_CsLo.Color> GeneratePaletteFromImage(Image source, params string[] colorNames)
+        //{
+        //    unsafe
+        //    {
+        //        int size = colorNames.Length;
+        //        int* colorCount = null;
+        //        var cptr = Raylib.LoadImageColors(source);
+        //        Dictionary<string, Raylib_CsLo.Color> colors = new();
+        //        for (int i = 0; i < size; i++)
+        //        {
+        //            Raylib_CsLo.Color color = *(cptr + i);
+        //            colors.Add(colorNames[i], color);
+        //        }
+        //        Raylib.UnloadImageColors(cptr);
+        //        return colors;
+        //    }
+        //}
+        ///// <summary>
+        ///// Get all the colors from the source image.
+        ///// </summary>
+        ///// <param name="source"> Image that contains the colors. Each color should only be 1 pixel wide.</param>
+        ///// <param name="colorCount">How many colors there are in the image. </param>
+        ///// <returns></returns>
+        //public static ColorPalette GeneratePaletteFromImage(string paletteName, Image source, params string[] colorNames)
+        //{
+        //    return new(paletteName, GeneratePaletteFromImage(source, colorNames));
+        //}
+
+
+        public static Dictionary<int, Color> GeneratePalette(int[] colors, params int[] colorIDs)
         {
-            if (colors.Length <= 0 || colorNames.Length <= 0) return new();
-            Dictionary<string, Raylib_CsLo.Color> palette = new Dictionary<string, Raylib_CsLo.Color>();
+            if (colors.Length <= 0 || colorIDs.Length <= 0) return new();
+            Dictionary<int, Color> palette = new();
             int size = colors.Length;
-            if (colorNames.Length < size) size = colorNames.Length;
+            if (colorIDs.Length < size) size = colorIDs.Length;
             for (int i = 0; i < size; i++)
             {
-                palette.Add(colorNames[i], HexToColor(colors[i]));
+                palette.Add(colorIDs[i], HexToColor(colors[i]));
             }
             return palette;
         }
-        public static Dictionary<string, Raylib_CsLo.Color> GeneratePalette(string[] hexColors, params string[] colorNames)
+        public static Dictionary<int, Color> GeneratePalette(string[] hexColors, params int[] colorIDs)
         {
-            if (hexColors.Length <= 0 || colorNames.Length <= 0) return new();
-            Dictionary<string, Raylib_CsLo.Color> palette = new Dictionary<string, Raylib_CsLo.Color>();
+            if (hexColors.Length <= 0 || colorIDs.Length <= 0) return new();
+            Dictionary<int, Color> palette = new();
             int size = hexColors.Length;
-            if (colorNames.Length < size) size = colorNames.Length;
+            if (colorIDs.Length < size) size = colorIDs.Length;
             for (int i = 0; i < size; i++)
             {
-                palette.Add(colorNames[i], HexToColor(hexColors[i]));
+                palette.Add(colorIDs[i], HexToColor(hexColors[i]));
             }
             return palette;
         }
 
-        public static ColorPalette GeneratePalette(string paletteName, int[] colors, params string[] colorNames)
+        public static ColorPalette GeneratePalette(string paletteName, int[] colors, params int[] colorIDs)
         {
-            return new(paletteName, GeneratePalette(colors, colorNames));
+            return new(paletteName, GeneratePalette(colors, colorIDs));
         }
-        public static ColorPalette GeneratePalette(string paletteName, string[] hexColors, params string[] colorNames)
+        public static ColorPalette GeneratePalette(string paletteName, string[] hexColors, params int[] colorIDs)
         {
-            return new(paletteName, GeneratePalette(hexColors, colorNames));
+            return new(paletteName, GeneratePalette(hexColors, colorIDs));
         }
 
-        public static Raylib_CsLo.Color[] GeneratePalette(params int[] colors)
+        public static Color[] GeneratePalette(params int[] colors)
         {
             Raylib_CsLo.Color[] palette = new Raylib_CsLo.Color[colors.Length];
             for (int i = 0; i < colors.Length; i++)
@@ -237,7 +242,7 @@ namespace ShapeColor
             }
             return palette;
         }
-        public static Raylib_CsLo.Color[] GeneratePalette(params string[] hexColors)
+        public static Color[] GeneratePalette(params string[] hexColors)
         {
             Raylib_CsLo.Color[] palette = new Raylib_CsLo.Color[hexColors.Length];
             for (int i = 0; i < hexColors.Length; i++)
@@ -247,7 +252,7 @@ namespace ShapeColor
             return palette;
         }
 
-        public static Raylib_CsLo.Color HexToColor(int colorValue)
+        public static Color HexToColor(int colorValue)
         {
             byte[] rgb = BitConverter.GetBytes(colorValue);
             if (!BitConverter.IsLittleEndian) Array.Reverse(rgb);
@@ -257,7 +262,7 @@ namespace ShapeColor
             byte a = 255;
             return new(r, g, b, a);
         }
-        public static Raylib_CsLo.Color HexToColor(string hexColor)
+        public static Color HexToColor(string hexColor)
         {
             //Remove # if present
             if (hexColor.IndexOf('#') != -1)

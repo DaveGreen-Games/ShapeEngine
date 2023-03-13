@@ -25,14 +25,14 @@ namespace ShapeEngineDemo
             quitButton =    new(font, "QUIT");
             quitButton.AddShortcut("UI Cancel");
 
-            level1Button.SetStateColors(new(Demo.PALETTES.C("bg2"), Demo.PALETTES.C("energy"), Demo.PALETTES.C("player"), Demo.PALETTES.C("sepcial1"), Demo.PALETTES.C("neutral")));
-            level1Button.SetTextStateColors(new(Demo.PALETTES.C("text"), Demo.PALETTES.C("bg2"), Demo.PALETTES.C("player"), Demo.PALETTES.C("b1"), Demo.PALETTES.C("enemy")));
+            level1Button.SetStateColors(new(Demo.PALETTES.C(ColorIDs.Background2), Demo.PALETTES.C(ColorIDs.Energy), Demo.PALETTES.C(ColorIDs.Player), Demo.PALETTES.C(ColorIDs.Special1), Demo.PALETTES.C(ColorIDs.Neutral)));
+            level1Button.SetTextStateColors(new(Demo.PALETTES.C(ColorIDs.Text), Demo.PALETTES.C(ColorIDs.Background2), Demo.PALETTES.C(ColorIDs.Player), Demo.PALETTES.C(ColorIDs.Background1), Demo.PALETTES.C(ColorIDs.Enemy)));
 
-            optionsButton.SetStateColors(new(Demo.PALETTES.C("bg2"), Demo.PALETTES.C("energy"), Demo.PALETTES.C("player"), Demo.PALETTES.C("sepcial1"), Demo.PALETTES.C("neutral")));
-            optionsButton.SetTextStateColors(new(Demo.PALETTES.C("text"), Demo.PALETTES.C("bg2"), Demo.PALETTES.C("player"), Demo.PALETTES.C("b1"), Demo.PALETTES.C("enemy")));
+            optionsButton.SetStateColors(new(Demo.PALETTES.C(ColorIDs.Background2), Demo.PALETTES.C(ColorIDs.Energy), Demo.PALETTES.C(ColorIDs.Player), Demo.PALETTES.C(ColorIDs.Special1), Demo.PALETTES.C(ColorIDs.Neutral)));
+            optionsButton.SetTextStateColors(new(Demo.PALETTES.C(ColorIDs.Text), Demo.PALETTES.C(ColorIDs.Background2), Demo.PALETTES.C(ColorIDs.Player), Demo.PALETTES.C(ColorIDs.Background1), Demo.PALETTES.C(ColorIDs.Enemy)));
 
-            quitButton.SetStateColors(new(Demo.PALETTES.C("bg2"), Demo.PALETTES.C("energy"), Demo.PALETTES.C("player"), Demo.PALETTES.C("sepcial1"), Demo.PALETTES.C("neutral")));
-            quitButton.SetTextStateColors(new(Demo.PALETTES.C("text"), Demo.PALETTES.C("bg2"), Demo.PALETTES.C("player"), Demo.PALETTES.C("b1"), Demo.PALETTES.C("enemy")));
+            quitButton.SetStateColors(new(Demo.PALETTES.C(ColorIDs.Background2), Demo.PALETTES.C(ColorIDs.Energy), Demo.PALETTES.C(ColorIDs.Player), Demo.PALETTES.C(ColorIDs.Special1), Demo.PALETTES.C(ColorIDs.Neutral)));
+            quitButton.SetTextStateColors(new(Demo.PALETTES.C(ColorIDs.Text), Demo.PALETTES.C(ColorIDs.Background2), Demo.PALETTES.C(ColorIDs.Player), Demo.PALETTES.C(ColorIDs.Background1), Demo.PALETTES.C(ColorIDs.Enemy)));
 
             optionsButton.Disable();
         }
@@ -49,7 +49,7 @@ namespace ShapeEngineDemo
             UIHandler.RegisterUIElement(optionsButton);
             UIHandler.RegisterUIElement(quitButton);
             Demo.CURSOR.Switch("ui");
-            GAMELOOP.backgroundColor = Demo.PALETTES.C("bg2");
+            GAMELOOP.backgroundColor = Demo.PALETTES.C(ColorIDs.Background2);
             GAMELOOP.RemoveScene("level1");
         }
         public override void Deactivate(Scene? newScene)
@@ -87,10 +87,10 @@ namespace ShapeEngineDemo
         public override void DrawUI(Vector2 uiSize, Vector2 stretchFactor)
         {
             Rectangle uiArea = ScreenHandler.UIArea();
-            DrawRectangleRec(uiArea, Demo.PALETTES.C("bg1"));
+            DrawRectangleRec(uiArea, Demo.PALETTES.C(ColorIDs.Background1));
             
-            SDrawing.DrawTextAligned("MAIN MENU", uiSize * new Vector2(0.5f, 0.21f), uiSize * new Vector2(0.5f, 0.5f), 1, Demo.PALETTES.C("bg2"), Demo.FONT.GetFont("huge"), new(0.5f));
-            SDrawing.DrawTextAligned("MAIN MENU", uiSize * new Vector2(0.5f, 0.2f), uiSize * new Vector2(0.5f, 0.5f), 1, Demo.PALETTES.C("header"), Demo.FONT.GetFont("huge"), new(0.5f));
+            SDrawing.DrawTextAligned("MAIN MENU", uiSize * new Vector2(0.5f, 0.21f), uiSize * new Vector2(0.5f, 0.5f), 1, Demo.PALETTES.C(ColorIDs.Background2), Demo.FONT.GetFont("huge"), new(0.5f));
+            SDrawing.DrawTextAligned("MAIN MENU", uiSize * new Vector2(0.5f, 0.2f), uiSize * new Vector2(0.5f, 0.5f), 1, Demo.PALETTES.C(ColorIDs.Header), Demo.FONT.GetFont("huge"), new(0.5f));
             
             
             

@@ -145,8 +145,8 @@ namespace ShapeEngineDemo.Bodies
             //AudioHandler.PlaySFX("asteroid hurt", -1f, -1f, 0.1f);
 
             float f = 0.75f + (info.recieved / GetTotalHealth());
-            Color particleColor = Demo.PALETTES.C("neutral");
-            if (info.crit) particleColor = Demo.PALETTES.C("flash"); f += 0.5f;
+            Color particleColor = Demo.PALETTES.C(ColorIDs.Neutral);
+            if (info.crit) particleColor = Demo.PALETTES.C(ColorIDs.Flash); f += 0.5f;
             for (int i = 0; i < SRNG.randI(5, 10); i++)
             {
                 HitParticle particle = new(info.pos, info.dir, f, 0.5f, particleColor);
@@ -177,7 +177,7 @@ namespace ShapeEngineDemo.Bodies
         }
         public override void Draw()
         {
-            SDrawing.DrawPolygon(polygon, 2f, Demo.PALETTES.C("neutral"), collider.Pos);
+            SDrawing.DrawPolygon(polygon, 2f, Demo.PALETTES.C(ColorIDs.Neutral), collider.Pos);
             if (DEBUG_DRAWCOLLIDERS)
             {
                 if(collider.IsEnabled()) collider.DebugDrawShape(DEBUG_ColliderColor);
@@ -220,7 +220,7 @@ namespace ShapeEngineDemo.Bodies
 
         private void SpawnDeathEffect()
         {
-            AsteroidDeathEffect ade = new(collider.Pos, 0.5f, size*1.25f, Demo.PALETTES.C("neutral"));
+            AsteroidDeathEffect ade = new(collider.Pos, 0.5f, size*1.25f, Demo.PALETTES.C(ColorIDs.Neutral));
             GAMELOOP.AddGameObject(ade);
         }
         private void SpawnAsteroids()

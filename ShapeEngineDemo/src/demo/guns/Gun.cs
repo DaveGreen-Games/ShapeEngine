@@ -245,10 +245,10 @@ namespace ShapeEngineDemo.Guns
             switch (effect)
             {
                 case "circle":
-                    fx = new CircleEffect(pos + SVec.Rotate(SVec.Right(), rotRad) * 10f, SRNG.randF(0.15f, 0.2f), SRNG.randF(7f, 10f), Demo.PALETTES.C("flash"));
+                    fx = new CircleEffect(pos + SVec.Rotate(SVec.Right(), rotRad) * 10f, SRNG.randF(0.15f, 0.2f), SRNG.randF(7f, 10f), Demo.PALETTES.C(ColorIDs.Flash));
                     break;
                 default: 
-                    fx = new CircleEffect(pos + SVec.Rotate(SVec.Right(), rotRad) * 10f, SRNG.randF(0.15f, 0.2f), SRNG.randF(7f, 10f), Demo.PALETTES.C("flash"));
+                    fx = new CircleEffect(pos + SVec.Rotate(SVec.Right(), rotRad) * 10f, SRNG.randF(0.15f, 0.2f), SRNG.randF(7f, 10f), Demo.PALETTES.C(ColorIDs.Flash));
                     break;
             }
             GAMELOOP.AddGameObject(fx);

@@ -16,16 +16,16 @@ namespace ShapeEngineDemo
         public override void Activate(Scene? oldScene)
         {
             //base.Activate(oldScene);
-            Color fadeColor = Demo.PALETTES.C("player");
+            Color fadeColor = Demo.PALETTES.C(ColorIDs.Player);
             fadeColor.a = 0;
             Action start = () => { timer = maxTime; started = true; };
             Demo.TIMER.Add(1f, start);
-            Action flash = () => ScreenHandler.UI.Flash(0.5f, Demo.PALETTES.C("player"), fadeColor);
+            Action flash = () => ScreenHandler.UI.Flash(0.5f, Demo.PALETTES.C(ColorIDs.Player), fadeColor);
             Demo.TIMER.Add(1f, flash);
             Action action = () => ShapeEngine.GAMELOOP.GoToScene("mainmenu");
             Demo.TIMER.Add(2f, action);
             
-            ShapeEngine.GAMELOOP.backgroundColor = Demo.PALETTES.C("bg1");
+            ShapeEngine.GAMELOOP.backgroundColor = Demo.PALETTES.C(ColorIDs.Background1);
         }
 
         public override void Deactivate(Scene? newScene)
@@ -46,13 +46,13 @@ namespace ShapeEngineDemo
         }
         public override void DrawUI(Vector2 uiSize, Vector2 stretchFactor)
         {
-            DrawRectangleRec(new Rectangle(0,0,uiSize.X * stretchFactor.X, uiSize.Y * stretchFactor.Y), Demo.PALETTES.C("bg1"));
+            DrawRectangleRec(new Rectangle(0,0,uiSize.X * stretchFactor.X, uiSize.Y * stretchFactor.Y), Demo.PALETTES.C(ColorIDs.Background1));
             
             if(started)
             {
                 float f = 1.0f - (timer / maxTime);
                 Vector2 textSize = SVec.Lerp(new(0f), new Vector2(0.9f, 0.5f) * uiSize, f);
-                SDrawing.DrawTextAligned("SHAPE ENGINE", new Vector2(0.5f, 0.5f) * uiSize, textSize, 1, Demo.PALETTES.C("header"), Demo.FONT.GetFont("huge"), new(0.5f));
+                SDrawing.DrawTextAligned("SHAPE ENGINE", new Vector2(0.5f, 0.5f) * uiSize, textSize, 1, Demo.PALETTES.C(ColorIDs.Header), Demo.FONT.GetFont("huge"), new(0.5f));
 
             }
         }

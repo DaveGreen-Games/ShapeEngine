@@ -119,7 +119,7 @@ namespace ShapeEngineDemo
         {
             if (!enabled) return;
             //Color circleColor = ColorPalette.ChangeAlpha(ColorPalette.Cur.flash, 125);
-            Color circleColor = Demo.PALETTES.C("flash");
+            Color circleColor = Demo.PALETTES.C(ColorIDs.Flash);
             float lineThickness = 2f;
             if (!HasTarget())
             {

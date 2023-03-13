@@ -7,8 +7,8 @@ namespace ShapeShaders
 
     public class ShaderHandler
     {
-        private Dictionary<string, ScreenShader> screenShaders = new Dictionary<string, ScreenShader>();
-        private Dictionary<string, Shader> shaders = new Dictionary<string, Shader>();
+        private Dictionary<string, ScreenShader> screenShaders = new();
+        private Dictionary<string, Shader> shaders = new();
         private bool enabled = true;
         
         public void Close()
