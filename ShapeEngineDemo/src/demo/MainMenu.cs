@@ -19,7 +19,7 @@ namespace ShapeEngineDemo
         ButtonLabel level1Button, quitButton, optionsButton;
         public MainMenu()
         {
-            var font = Demo.FONT.GetFont("medium");
+            var font = Demo.FONT.GetFont(Demo.FONT_Medium);
             level1Button =  new(font, "START");
             optionsButton = new(font, "OPTIONS");
             quitButton =    new(font, "QUIT");
@@ -89,18 +89,18 @@ namespace ShapeEngineDemo
             Rectangle uiArea = ScreenHandler.UIArea();
             DrawRectangleRec(uiArea, Demo.PALETTES.C(ColorIDs.Background1));
             
-            SDrawing.DrawTextAligned("MAIN MENU", uiSize * new Vector2(0.5f, 0.21f), uiSize * new Vector2(0.5f, 0.5f), 1, Demo.PALETTES.C(ColorIDs.Background2), Demo.FONT.GetFont("huge"), new(0.5f));
-            SDrawing.DrawTextAligned("MAIN MENU", uiSize * new Vector2(0.5f, 0.2f), uiSize * new Vector2(0.5f, 0.5f), 1, Demo.PALETTES.C(ColorIDs.Header), Demo.FONT.GetFont("huge"), new(0.5f));
+            SDrawing.DrawTextAligned("MAIN MENU", uiSize * new Vector2(0.5f, 0.21f), uiSize * new Vector2(0.5f, 0.5f), 1, Demo.PALETTES.C(ColorIDs.Background2), Demo.FONT.GetFont(Demo.FONT_Huge), new(0.5f));
+            SDrawing.DrawTextAligned("MAIN MENU", uiSize * new Vector2(0.5f, 0.2f), uiSize * new Vector2(0.5f, 0.5f), 1, Demo.PALETTES.C(ColorIDs.Header), Demo.FONT.GetFont(Demo.FONT_Huge), new(0.5f));
             
             
             
             SDrawing.DrawTextAligned2(ShapeEngine.EDITORMODE == true ? "EDITOR" : "STANDALONE", 
-                uiSize * new Vector2(0.01f, 0.03f), uiSize.X * 0.05f, 1, WHITE, Demo.FONT.GetFont(), new(0,0.5f));
+                uiSize * new Vector2(0.01f, 0.03f), uiSize.X * 0.05f, 1, WHITE, Demo.FONT.GetFont(Demo.FONT_Medium), new(0,0.5f));
 
             Vector2 start = uiSize * new Vector2(0.01f, 0.08f);
             Vector2 gap = uiSize * new Vector2(0, 0.04f);
             Vector2 textSize = uiSize * new Vector2(0.2f, 0.05f);
-            var font = Demo.FONT.GetFont("medium");
+            var font = Demo.FONT.GetFont(Demo.FONT_Medium);
             SDrawing.DrawTextAligned(String.Format("UI Size: {0}", ScreenHandler.UISize()), start, textSize, 1, WHITE, font, new(0, 0.5f));
             SDrawing.DrawTextAligned(String.Format("Dev Res: {0}", ScreenHandler.DEVELOPMENT_RESOLUTION), start + gap, textSize, 1, WHITE, font, new(0, 0.5f));
             SDrawing.DrawTextAligned(String.Format("Target Res: {0}", ScreenHandler.UI.TARGET_RESOLUTION), start + gap * 2, textSize, 1, WHITE, font, new(0, 0.5f));

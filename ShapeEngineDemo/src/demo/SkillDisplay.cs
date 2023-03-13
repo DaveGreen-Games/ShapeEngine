@@ -67,12 +67,12 @@ namespace ShapeEngineDemo
 
             //float baseFontSize = size.X;
             if (title != "")
-                SDrawing.DrawTextAlignedPro(title, center, angleDeg, innerSize, 1, textColor, Demo.FONT.GetFont(), new(0.5f));
+                SDrawing.DrawTextAlignedPro(title, center, angleDeg, innerSize, 1, textColor, Demo.FONT.GetFont(Demo.FONT_Medium), new(0.5f));
 
             if (inputAction != "")
             {
                 string input = InputHandler.GetInputActionKeyNames(0, inputAction).keyboard;
-                SDrawing.DrawTextAlignedPro(input, center + SVec.Rotate(new Vector2(size.X * 0.5f + thickness * 2, 0f), angleDeg * DEG2RAD), angleDeg, innerSize, 1, textColor, Demo.FONT.GetFont(), new(0, 0.5f));
+                SDrawing.DrawTextAlignedPro(input, center + SVec.Rotate(new Vector2(size.X * 0.5f + thickness * 2, 0f), angleDeg * DEG2RAD), angleDeg, innerSize, 1, textColor, Demo.FONT.GetFont(Demo.FONT_Medium), new(0, 0.5f));
             }
 
             if (barColor.a > 0)

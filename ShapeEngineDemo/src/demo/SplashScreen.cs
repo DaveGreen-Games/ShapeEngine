@@ -52,7 +52,7 @@ namespace ShapeEngineDemo
             {
                 float f = 1.0f - (timer / maxTime);
                 Vector2 textSize = SVec.Lerp(new(0f), new Vector2(0.9f, 0.5f) * uiSize, f);
-                SDrawing.DrawTextAligned("SHAPE ENGINE", new Vector2(0.5f, 0.5f) * uiSize, textSize, 1, Demo.PALETTES.C(ColorIDs.Header), Demo.FONT.GetFont("huge"), new(0.5f));
+                SDrawing.DrawTextAligned("SHAPE ENGINE", new Vector2(0.5f, 0.5f) * uiSize, textSize, 1, Demo.PALETTES.C(ColorIDs.Header), Demo.FONT.GetFont(Demo.FONT_Huge), new(0.5f));
 
             }
         }

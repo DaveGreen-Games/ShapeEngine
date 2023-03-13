@@ -35,6 +35,13 @@ namespace ShapeEngineDemo
         public const int BUS_MUSIC = 2;
 
 
+        public const int FONT_Light = 0;
+        public const int FONT_Regular = 1;
+        public const int FONT_Medium = 2;
+        public const int FONT_SemiBold = 3;
+        public const int FONT_Huge = 4;
+
+
         public override void Start()
         {
             
@@ -128,12 +135,12 @@ namespace ShapeEngineDemo
 
             var tf = TextureFilter.TEXTURE_FILTER_BILINEAR;
             int fs = 200;
-            FONT.AddFont("light", light, fs, tf);
-            FONT.AddFont("regular", regular, fs, tf);
-            FONT.AddFont("medium", medium, fs, tf);
-            FONT.AddFont("semibold", semibold, fs, tf);
-            FONT.AddFont("huge", huge, 500, tf);
-            FONT.SetDefaultFont("medium");
+            FONT.AddFont(FONT_Light, light, fs, tf);
+            FONT.AddFont(FONT_Regular, regular, fs, tf);
+            FONT.AddFont(FONT_Medium, medium, fs, tf);
+            FONT.AddFont(FONT_SemiBold, semibold, fs, tf);
+            FONT.AddFont(FONT_Huge, huge, 500, tf);
+            FONT.SetDefaultFont(FONT_Medium);
             
 
             //AUDIO BUSES
@@ -280,7 +287,7 @@ namespace ShapeEngineDemo
         {
             CURSOR.Draw(uiSize, MOUSE_POS_UI);
             Rectangle r = SRect.ConstructRect(uiSize * new Vector2(0.97f), uiSize * new Vector2(0.2f, 0.08f), new(1, 1));
-            ACHIEVEMENTS.Draw(FONT.GetFont("medium"), r, GRAY, WHITE, BLUE, YELLOW);
+            ACHIEVEMENTS.Draw(FONT.GetFont(Demo.FONT_Medium), r, GRAY, WHITE, BLUE, YELLOW);
             
         }
         public override void PreUpdate(float dt)

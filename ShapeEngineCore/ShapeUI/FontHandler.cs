@@ -6,9 +6,10 @@ namespace ShapeUI
 {
     public class FontHandler
     {
-        private Dictionary<string, Font> fonts = new Dictionary<string, Font>();
+        private Dictionary<int, Font> fonts = new();
         private Font defaultFont = GetFontDefault();
-        private Dictionary<string, float> fontSizes = new();
+        /*
+        //private Dictionary<string, float> fontSizes = new();
 
         public void AddFontSize(string name, float size)
         {
@@ -19,40 +20,40 @@ namespace ShapeUI
         {
             fontSizes.Remove(name);
         }
-
         public float GetFontSize(string name)
         {
             if (!fontSizes.ContainsKey(name)) return -1;
             else return fontSizes[name];
         }
-        public void SetFontFilter(string name = "", TextureFilter textureFilter = TextureFilter.TEXTURE_FILTER_BILINEAR)
+        */
+        public void SetFontFilter(int id, TextureFilter textureFilter = TextureFilter.TEXTURE_FILTER_BILINEAR)
         {
-            Font font = GetFont(name);
+            Font font = GetFont(id);
             SetTextureFilter(font.texture, textureFilter);
         }
-        public void AddFont(string name, string fileName, int fontSize = 100, TextureFilter textureFilter = TextureFilter.TEXTURE_FILTER_BILINEAR)
+        public void AddFont(int id, string fileName, int fontSize = 100, TextureFilter textureFilter = TextureFilter.TEXTURE_FILTER_BILINEAR)
         {
-            if (fileName == "" || fonts.ContainsKey(name)) return;
+            if (fileName == "" || fonts.ContainsKey(id)) return;
             Font font = ResourceManager.LoadFontFromRaylib(fileName, fontSize);
 
             SetTextureFilter(font.texture, textureFilter);
-            fonts.Add(name, font);
+            fonts.Add(id, font);
         }
-        public void AddFont(string name, Font font, int fontSize = 100, TextureFilter textureFilter = TextureFilter.TEXTURE_FILTER_BILINEAR)
+        public void AddFont(int id, Font font, int fontSize = 100, TextureFilter textureFilter = TextureFilter.TEXTURE_FILTER_BILINEAR)
         {
-            if (fonts.ContainsKey(name)) return;
+            if (fonts.ContainsKey(id)) return;
             SetTextureFilter(font.texture, textureFilter);
-            fonts.Add(name, font);
+            fonts.Add(id, font);
         }
-        public Font GetFont(string name = "")
+        public Font GetFont(int id)
         {
-            if (name == "" || !fonts.ContainsKey(name)) return defaultFont;
-            return fonts[name];
+            if (!fonts.ContainsKey(id)) return defaultFont;
+            return fonts[id];
         }
-        public void SetDefaultFont(string name)
+        public void SetDefaultFont(int id)
         {
-            if (!fonts.ContainsKey(name)) return;
-            defaultFont = fonts[name];
+            if (!fonts.ContainsKey(id)) return;
+            defaultFont = fonts[id];
         }
         public void Close()
         {
@@ -63,38 +64,38 @@ namespace ShapeUI
             fonts.Clear();
         }
 
-        public float CalculateDynamicFontSize(string text, Vector2 size, float fontSpacing = 1f, string fontName = "")
+        public float CalculateDynamicFontSize(string text, Vector2 size, int fontID, float fontSpacing = 1f)
         {
-            float baseSize = GetFont(fontName).baseSize;
-            return GetFontScalingFactor(text, size, fontSpacing, fontName) * baseSize;
+            float baseSize = GetFont(fontID).baseSize;
+            return GetFontScalingFactor(text, size, fontID, fontSpacing) * baseSize;
         }
-        public float CalculateDynamicFontSize(float height, string fontName = "")
+        public float CalculateDynamicFontSize(float height, int fontID)
         {
-            return CalculateDynamicFontSize(height, GetFont(fontName));
+            return CalculateDynamicFontSize(height, GetFont(fontID));
         }
-        public float CalculateDynamicFontSize(string text, float width, float fontSpacing = 1f, string fontName = "")
+        public float CalculateDynamicFontSize(string text, float width, int fontID, float fontSpacing = 1f)
         {
-            return CalculateDynamicFontSize(text, width, GetFont(fontName), fontSpacing);
+            return CalculateDynamicFontSize(text, width, GetFont(fontID), fontSpacing);
         }
-        public float GetFontScalingFactor(float height, string fontName = "") { return GetFontScalingFactor(height, GetFont(fontName)); }
-        public float GetFontScalingFactor(string text, float width, float fontSpacing = 1, string fontName = "")
+        public float GetFontScalingFactor(float height, int fontID) { return GetFontScalingFactor(height, GetFont(fontID)); }
+        public float GetFontScalingFactor(string text, float width, int fontID, float fontSpacing = 1)
         {
-            float baseSize = GetFont(fontName).baseSize;
-            Vector2 textSize = MeasureTextEx(GetFont(fontName), text, baseSize, fontSpacing);
+            float baseSize = GetFont(fontID).baseSize;
+            Vector2 textSize = MeasureTextEx(GetFont(fontID), text, baseSize, fontSpacing);
             float scalingFactor = width / textSize.X;
             return scalingFactor;
         }
-        public float GetFontScalingFactor(string text, Vector2 size, float fontSpacing = 1, string fontName = "")
+        public float GetFontScalingFactor(string text, Vector2 size, int fontID, float fontSpacing = 1)
         {
-            float baseSize = GetFont(fontName).baseSize;
+            float baseSize = GetFont(fontID).baseSize;
             float scalingFactor = size.Y / baseSize;
-            Vector2 textSize = MeasureTextEx(GetFont(fontName), text, baseSize * scalingFactor, fontSpacing);
+            Vector2 textSize = MeasureTextEx(GetFont(fontID), text, baseSize * scalingFactor, fontSpacing);
             float correctionFactor = MathF.Min(size.X / textSize.X, 1f);
             return scalingFactor * correctionFactor;
         }
-        public Vector2 GetTextSize(string text, float fontSize, float fontSpacing, string fontName = "")
+        public Vector2 GetTextSize(string text, float fontSize, float fontSpacing, int fontID)
         {
-            return MeasureTextEx(GetFont(fontName), text, fontSize, fontSpacing);
+            return MeasureTextEx(GetFont(fontID), text, fontSize, fontSpacing);
         }
 
         public static float CalculateDynamicFontSize(string text, Vector2 size, Font font, float fontSpacing = 1f)

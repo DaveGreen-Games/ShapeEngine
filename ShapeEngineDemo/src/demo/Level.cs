@@ -266,29 +266,29 @@ namespace ShapeEngineDemo
         }
         public override void DrawUI(Vector2 uiSize, Vector2 stretchFactor)
         {
-            SDrawing.DrawTextAlignedPro(String.Format("{0}", GetFPS()), uiSize * new Vector2(0.01f, 0.03f), -5f, uiSize * new Vector2(0.10f, 0.05f), 2f, Demo.PALETTES.C(ColorIDs.Special1), Demo.FONT.GetFont(), new(0,0.5f));
+            SDrawing.DrawTextAlignedPro(String.Format("{0}", GetFPS()), uiSize * new Vector2(0.01f, 0.03f), -5f, uiSize * new Vector2(0.10f, 0.05f), 2f, Demo.PALETTES.C(ColorIDs.Special1), Demo.FONT.GetFont(Demo.FONT_Medium), new(0,0.5f));
             if (area == null) return;
             area.DrawUI(uiSize, stretchFactor);
 
             Vector2 textSize = uiSize * new Vector2(0.25f, 0.04f);
-            SDrawing.DrawTextAlignedPro(String.Format("Objs {0}", area.GetGameObjects().Count), uiSize * new Vector2(0.01f, 0.1f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(), new(0, 0.5f));
-            SDrawing.DrawTextAlignedPro(String.Format("{0}", InputHandler.GetCurInputType()), uiSize * new Vector2(0.01f, 0.13f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(), new(0, 0.5f));
-            SDrawing.DrawTextAlignedPro(String.Format("GP {0}/{1}", InputHandler.CUR_GAMEPAD, InputHandler.GetConnectedGamepadCount()), uiSize * new Vector2(0.01f, 0.16f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(), new(0, 0.5f));
-            SDrawing.DrawTextAlignedPro(String.Format("Used {0}", InputHandler.gamepadUsed), uiSize * new Vector2(0.01f, 0.19f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(), new(0, 0.5f));
+            SDrawing.DrawTextAlignedPro(String.Format("Objs {0}", area.GetGameObjects().Count), uiSize * new Vector2(0.01f, 0.1f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(Demo.FONT_Medium), new(0, 0.5f));
+            SDrawing.DrawTextAlignedPro(String.Format("{0}", InputHandler.GetCurInputType()), uiSize * new Vector2(0.01f, 0.13f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(Demo.FONT_Medium), new(0, 0.5f));
+            SDrawing.DrawTextAlignedPro(String.Format("GP {0}/{1}", InputHandler.CUR_GAMEPAD, InputHandler.GetConnectedGamepadCount()), uiSize * new Vector2(0.01f, 0.16f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(Demo.FONT_Medium), new(0, 0.5f));
+            SDrawing.DrawTextAlignedPro(String.Format("Used {0}", InputHandler.gamepadUsed), uiSize * new Vector2(0.01f, 0.19f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(Demo.FONT_Medium), new(0, 0.5f));
             
-            SDrawing.DrawTextAlignedPro(String.Format("Kills {0}", Demo.ACHIEVEMENTS.GetStatValue("asteroidKills")), uiSize * new Vector2(0.01f, 0.25f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(), new(0, 0.5f));
+            SDrawing.DrawTextAlignedPro(String.Format("Kills {0}", Demo.ACHIEVEMENTS.GetStatValue("asteroidKills")), uiSize * new Vector2(0.01f, 0.25f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(Demo.FONT_Medium), new(0, 0.5f));
             
             
-            SDrawing.DrawTextAlignedPro("Debug Keys [8, 9, 0]", uiSize * new Vector2(0.5f, 0.98f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(), new(0.5f, 1));
+            SDrawing.DrawTextAlignedPro("Debug Keys [8, 9, 0]", uiSize * new Vector2(0.5f, 0.98f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(Demo.FONT_Medium), new(0.5f, 1));
             
 
-            SDrawing.DrawTextAlignedPro("Slow Time [ALT]", uiSize * new Vector2(0.99f, 0.03f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(), new(1, 0.5f));
-            SDrawing.DrawTextAlignedPro("Pause [P]", uiSize * new Vector2(0.99f, 0.07f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(), new(1, 0.5f));
+            SDrawing.DrawTextAlignedPro("Slow Time [ALT]", uiSize * new Vector2(0.99f, 0.03f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(Demo.FONT_Medium), new(1, 0.5f));
+            SDrawing.DrawTextAlignedPro("Pause [P]", uiSize * new Vector2(0.99f, 0.07f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(Demo.FONT_Medium), new(1, 0.5f));
 
             if (IsPaused())
             {
                 var pos = GAMELOOP.UISize();
-                SDrawing.DrawTextAlignedPro("PAUSED", uiSize * new Vector2(0.5f, 0.3f), 0f, uiSize * new Vector2(0.5f, 0.25f), 5f, Demo.PALETTES.C(ColorIDs.Header), Demo.FONT.GetFont(), new(0.5f));
+                SDrawing.DrawTextAlignedPro("PAUSED", uiSize * new Vector2(0.5f, 0.3f), 0f, uiSize * new Vector2(0.5f, 0.25f), 5f, Demo.PALETTES.C(ColorIDs.Header), Demo.FONT.GetFont(Demo.FONT_SemiBold), new(0.5f));
             }
 
 

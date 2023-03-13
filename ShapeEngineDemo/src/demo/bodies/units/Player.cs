@@ -716,15 +716,15 @@ namespace ShapeEngineDemo.Bodies
             Vector2 gap = new Vector2(barSize.X * 1.5f, 0);
             hpBar.UpdateRect(center, barSize, new(0.5f));
             pwrBar.UpdateRect(center + gap, barSize, new(0.5f));
-            SDrawing.DrawTextAlignedPro("HP", hpBar.GetPos(new(0.5f)) - hpBar.Transform(new Vector2(0, barSize.Y / 2)), hpBar.GetAngleDeg(), 60, 2, Demo.PALETTES.C(ColorIDs.Enemy), Demo.FONT.GetFont(), new(0.5f, 1f));
+            SDrawing.DrawTextAlignedPro("HP", hpBar.GetPos(new(0.5f)) - hpBar.Transform(new Vector2(0, barSize.Y / 2)), hpBar.GetAngleDeg(), 60, 2, Demo.PALETTES.C(ColorIDs.Enemy), Demo.FONT.GetFont(Demo.FONT_Medium), new(0.5f, 1f));
             hpBar.Draw(uiSize, stretchFactor);
 
-            SDrawing.DrawTextAlignedPro("PWR", pwrBar.GetPos(new(0.5f)) - pwrBar.Transform(new Vector2(0, barSize.Y / 2)), pwrBar.GetAngleDeg(), 60, 2, Demo.PALETTES.C(ColorIDs.Player), Demo.FONT.GetFont(), new(0.5f, 1f));
+            SDrawing.DrawTextAlignedPro("PWR", pwrBar.GetPos(new(0.5f)) - pwrBar.Transform(new Vector2(0, barSize.Y / 2)), pwrBar.GetAngleDeg(), 60, 2, Demo.PALETTES.C(ColorIDs.Player), Demo.FONT.GetFont(Demo.FONT_Medium), new(0.5f, 1f));
             pwrBar.Draw(uiSize, stretchFactor);
             if (energyCore.IsCooldownActive())
             {
                 Vector2 bottomRight = pwrBar.GetPos(new Vector2(0.75f, 0.5f)) + pwrBar.Transform(barSize / 2);// + new Vector2(20, 0);
-                SDrawing.DrawTextAlignedPro("REBOOT", bottomRight, pwrBar.GetAngleDeg() - 90f, 90, 10, Demo.PALETTES.C(ColorIDs.Background2), Demo.FONT.GetFont(), new(0,1));
+                SDrawing.DrawTextAlignedPro("REBOOT", bottomRight, pwrBar.GetAngleDeg() - 90f, 90, 10, Demo.PALETTES.C(ColorIDs.Background2), Demo.FONT.GetFont(Demo.FONT_Medium), new(0,1));
             }
             aimpointSkillDisplay.UpdateRect(uiSize * new Vector2(0.05f, 0.5f), uiSize * new Vector2(0.08f, 0.04f), new(0,0.5f));
             aimpointSkillDisplay.Draw(uiSize, stretchFactor);
