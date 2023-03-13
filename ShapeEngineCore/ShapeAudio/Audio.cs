@@ -6,8 +6,8 @@ namespace ShapeAudio
     {
         protected float volume = 0.5f;
         protected float pitch = 1.0f;
-        protected string name = "";
-        protected string bus = "master";
+        protected int id = -1;
+        protected int bus = 0;
         protected float combinedVolume = 1.0f;
         protected bool paused = false;
 
@@ -27,8 +27,8 @@ namespace ShapeAudio
             UpdateVolume(combinedVolume);
         }
         protected virtual void UpdateVolume(float volume) { }
-        public string GetBus() { return bus; }
-        public string GetName() { return name; }
+        public int GetBusID() { return bus; }
+        public int GetID() { return id; }
         public virtual bool IsPlaying() { return false; }
         public bool IsPaused() { return paused; }
         public virtual void Stop() { }
@@ -40,9 +40,9 @@ namespace ShapeAudio
     {
         private Sound sound;
 
-        public SFX(string name, Sound sound, float volume = 0.5f, string bus = "master", float pitch = 1.0f)
+        public SFX(int id, Sound sound, float volume = 0.5f, int bus = AudioHandler.BUS_MASTER, float pitch = 1.0f)
         {
-            this.name = name;
+            this.id = id;
             this.sound = sound;
             this.bus = bus;
             this.pitch = pitch;
@@ -91,9 +91,9 @@ namespace ShapeAudio
     {
         private Music song;
         private string displayName = "";
-        public Song(string name, string displayName, Music song, float volume = 0.5f, string bus = "master", float pitch = 1.0f)
+        public Song(int id, string displayName, Music song, float volume = 0.5f, int bus = AudioHandler.BUS_MASTER, float pitch = 1.0f)
         {
-            this.name = name;
+            this.id = id;
             this.displayName = displayName;
             this.song = song;
             this.bus = bus;

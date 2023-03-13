@@ -39,7 +39,7 @@ namespace ShapeUI
 
         protected UINeighbors neighbors = new();
         protected string shortcut = "";
-        
+
 
         public bool Clicked() { return clicked || mouseClicked; }
         public bool Pressed() { return pressed || mousePressed; }
@@ -90,7 +90,7 @@ namespace ShapeUI
             if (selected) return;
             selected = true;
             SelectedChanged(true);
-            AudioHandler.PlaySFX("button hover");
+            //AudioHandler.PlaySFX("button hover");
         }
         public void Deselect()
         {
@@ -171,11 +171,11 @@ namespace ShapeUI
 
         public virtual void PlayHoveredSound()
         {
-            AudioHandler.PlaySFX("button hover");
+            //AudioHandler.PlaySFX("button hover");
         }
         public virtual void PlayClickedSound()
         {
-            AudioHandler.PlaySFX("button click");
+            //AudioHandler.PlaySFX("button click");
         }
         public virtual void WasClicked() { }
         public virtual void WasMouseClicked() { }

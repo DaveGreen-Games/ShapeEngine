@@ -16,25 +16,25 @@ namespace ShapeAudio
         public delegate void PlaylistStarted(Playlist playlist, string playlistName, string songName);
         public static event PlaylistStarted? OnPlaylistStarted;
 
-        private static Dictionary<string, string> audioBusKeys = new();
-        private static Dictionary<string, Bus> buses = new();
-        private static Dictionary<string, Playlist> playlists = new();
+        private static Dictionary<int, int> audioBusKeys = new();
+        private static Dictionary<int, Bus> buses = new();
+        private static Dictionary<int, Playlist> playlists = new();
         private static Playlist? currentPlaylist = null;
         private static Song? currentSong = null;
 
-        private static Dictionary<string, float> soundBlockers = new();
+        private static Dictionary<int, float> soundBlockers = new();
 
         public static GameObject? spatialTargetOverride = null;
 
-        private static Dictionary<string, SFXLooper> loopers = new();
+        private static Dictionary<int, SFXLooper> loopers = new();
 
-
+        public const int BUS_MASTER = 0;
         
         //MAIN
         public static void Initialize()
         {
             InitAudioDevice();
-            buses.Add("master", new("master", 1.0f, null));
+            buses.Add(BUS_MASTER, new(BUS_MASTER, 1.0f, null));
         }
         public static void Close()
         {
@@ -85,7 +85,7 @@ namespace ShapeAudio
 
 
         //LOOPING SFX
-        public static void PlaySFXLoop(string id, string soundName, float volume = -1f, float pitch = -1f)
+        public static void PlaySFXLoop(int id, int soundID, float volume = -1f, float pitch = -1f)
         {
             if (loopers.ContainsKey(id))
             {
@@ -102,7 +102,7 @@ namespace ShapeAudio
             }
             else
             {
-                var looper = CreateSFXLoop(soundName, volume, pitch);
+                var looper = CreateSFXLoop(soundID, volume, pitch);
                 if (looper != null)
                 {
                     loopers.Add(id, looper);
@@ -111,7 +111,7 @@ namespace ShapeAudio
             }
 
         }
-        public static void PlaySFXLoop(string id, string soundName, Vector2 pos, float minRange, float maxRange, float volume = -1f, float pitch = -1f)
+        public static void PlaySFXLoop(int id, int soundID, Vector2 pos, float minRange, float maxRange, float volume = -1f, float pitch = -1f)
         {
             if (loopers.ContainsKey(id))
             {
@@ -135,7 +135,7 @@ namespace ShapeAudio
             }
             else
             {
-                var looper = CreateSFXLoop(soundName, minRange, maxRange, volume, pitch);
+                var looper = CreateSFXLoop(soundID, minRange, maxRange, volume, pitch);
                 if (looper != null)
                 {
                     loopers.Add(id, looper);
@@ -145,17 +145,17 @@ namespace ShapeAudio
             }
 
         }
-        public static void UpdateSFXLoopSpatialPos(string id, Vector2 pos)
+        public static void UpdateSFXLoopSpatialPos(int id, Vector2 pos)
         {
             if (!loopers.ContainsKey(id)) return;
             loopers[id].SpatialPos = pos;
         }
-        public static bool IsSFXLoopLooping(string id)
+        public static bool IsSFXLoopLooping(int id)
         {
             if (!loopers.ContainsKey(id)) return false;
             return loopers[id].IsLooping();
         }
-        public static void RemoveSFXLoop(string id)
+        public static void RemoveSFXLoop(int id)
         {
             if (!loopers.ContainsKey(id)) return;
             loopers[id].Disable();
@@ -203,13 +203,13 @@ namespace ShapeAudio
         //    if (!loopers.ContainsKey(id)) return;
         //    loopers[id].Stop();
         //}
-        private static SFXLooper? CreateSFXLoop(string soundName, float minSpatialRange, float maxSpatialRange, float volume = -1.0f, float pitch = -1.0f)
+        private static SFXLooper? CreateSFXLoop(int soundID, float minSpatialRange, float maxSpatialRange, float volume = -1.0f, float pitch = -1.0f)
         {
-            if (!audioBusKeys.ContainsKey(soundName)) return null;
+            if (!audioBusKeys.ContainsKey(soundID)) return null;
             //if (sFXLoopers.ContainsKey(id)) return null;
 
-            Bus bus = buses[audioBusKeys[soundName]];
-            var sfx = bus.GetSFX(soundName);
+            Bus bus = buses[audioBusKeys[soundID]];
+            var sfx = bus.GetSFX(soundID);
             if (sfx != null)
             {
                 SFXLooper looper = new(sfx, minSpatialRange, maxSpatialRange);
@@ -220,13 +220,13 @@ namespace ShapeAudio
             }
             return null;
         }
-        private static SFXLooper? CreateSFXLoop(string soundName, float volume = -1.0f, float pitch = -1.0f)
+        private static SFXLooper? CreateSFXLoop(int soundID, float volume = -1.0f, float pitch = -1.0f)
         {
-            if (!audioBusKeys.ContainsKey(soundName)) return null;
+            if (!audioBusKeys.ContainsKey(soundID)) return null;
             //if (sFXLoopers.ContainsKey(id)) return null;
 
-            Bus bus = buses[audioBusKeys[soundName]];
-            var sfx = bus.GetSFX(soundName);
+            Bus bus = buses[audioBusKeys[soundID]];
+            var sfx = bus.GetSFX(soundID);
             if (sfx != null)
             {
                 SFXLooper looper = new(sfx);
@@ -241,26 +241,26 @@ namespace ShapeAudio
 
 
         //PLAYLISTS
-        public static void StartPlaylist(string name)
+        public static void StartPlaylist(int id)
         {
             string songName = "";
             if (currentPlaylist != null)
             {
-                if (name == "" || name == currentPlaylist.GetName())
+                if (id == currentPlaylist.GetID())
                 {
                     songName = currentPlaylist.Start();
                 }
                 else
                 {
-                    if (!playlists.ContainsKey(name)) return;
+                    if (!playlists.ContainsKey(id)) return;
                     currentPlaylist.Stop();
-                    currentPlaylist = playlists[name];
+                    currentPlaylist = playlists[id];
                     songName = currentPlaylist.Start();
                 }
             }
             else
             {
-                currentPlaylist = playlists[name];
+                currentPlaylist = playlists[id];
                 songName = currentPlaylist.Start();
             }
 
@@ -269,16 +269,16 @@ namespace ShapeAudio
                 InvokeOnPlaylistStarted(currentPlaylist, currentPlaylist.DisplayName, songName);
             }
         }
-        public static Playlist? SwitchPlaylist(string name)
+        public static Playlist? SwitchPlaylist(int id)
         {
             if (currentPlaylist == null)
             {
-                StartPlaylist(name);
+                StartPlaylist(id);
                 return currentPlaylist;
             }
-            if (!playlists.ContainsKey(name) || currentPlaylist.GetName() == name) return currentPlaylist;
+            if (!playlists.ContainsKey(id) || currentPlaylist.GetID() == id) return currentPlaylist;
             currentPlaylist.Stop();
-            currentPlaylist = playlists[name];
+            currentPlaylist = playlists[id];
             currentPlaylist.Start();
             
             return currentPlaylist;
@@ -288,10 +288,10 @@ namespace ShapeAudio
             if (currentPlaylist == null) return null;
             return currentPlaylist;
         }
-        public static Playlist? GetPlaylist(string name)
+        public static Playlist? GetPlaylist(int id)
         {
-            if (!playlists.ContainsKey(name)) return null;
-            return playlists[name];
+            if (!playlists.ContainsKey(id)) return null;
+            return playlists[id];
         }
         public static void StopPlaylist()
         {
@@ -318,14 +318,14 @@ namespace ShapeAudio
             if (currentPlaylist == null) return false;
             return currentPlaylist.IsPlaying();
         }
-        public static void AddPlaylist(string name, string displayName, List<string> songNames)
+        public static void AddPlaylist(int id, string displayName, List<int> songIDs)
         {
-            if (playlists.ContainsKey(name)) return;
+            if (playlists.ContainsKey(id)) return;
 
-            FilterSongs(songNames);
-            if (songNames.Count <= 0) return;
+            FilterSongs(songIDs);
+            if (songIDs.Count <= 0) return;
             List<Song> songs = new();
-            foreach (string songName in songNames)
+            foreach (var songName in songIDs)
             {
                 Bus? bus = GetBusFromAudioName(songName);
                 if (bus == null) continue;
@@ -333,23 +333,23 @@ namespace ShapeAudio
                 if (s == null) continue;
                 songs.Add(s);
             }
-            Playlist playlist = new(name, displayName, songs);
-            playlists.Add(name, playlist);
+            Playlist playlist = new(id, displayName, songs);
+            playlists.Add(id, playlist);
         }
-        public static void RemovePlaylist(string name)
+        public static void RemovePlaylist(int id)
         {
-            if (!playlists.ContainsKey(name)) return;
-            if (currentPlaylist == playlists[name])
+            if (!playlists.ContainsKey(id)) return;
+            if (currentPlaylist == playlists[id])
             {
                 currentPlaylist.Stop();
                 currentPlaylist = null;
             }
-            playlists.Remove(name);
+            playlists.Remove(id);
         }
-        public static string CurrentPlaylistName()
+        public static int CurrentPlaylistID()
         {
-            if (currentPlaylist == null) return "";
-            return currentPlaylist.GetName();
+            if (currentPlaylist == null) return -1;
+            return currentPlaylist.GetID();
         }
         public static (string playlistName, string songName, float songPercentage) GetCurrentPlaylistInfo()
         {
@@ -377,25 +377,25 @@ namespace ShapeAudio
 
 
         //BUS
-        public static Bus? GetBusFromAudioName(string audioName)
+        public static Bus? GetBusFromAudioName(int id)
         {
-            if (!audioBusKeys.ContainsKey(audioName)) return null;
-            return buses[audioBusKeys[audioName]];
+            if (!audioBusKeys.ContainsKey(id)) return null;
+            return buses[audioBusKeys[id]];
         }
-        public static void AddBus(string name, float volume, string parentName)
+        public static void AddBus(int id, float volume, int parentID)
         {
-            if (name == "" || buses.ContainsKey(name)) return;
-            if (parentName == "" || !buses.ContainsKey(parentName)) parentName = "master";
-            Bus parent = buses[parentName];
-            Bus bus = new Bus(name, volume, parent);
+            if (buses.ContainsKey(id)) return;
+            if (!buses.ContainsKey(parentID)) parentID = BUS_MASTER;
+            Bus parent = buses[parentID];
+            Bus bus = new Bus(id, volume, parent);
             parent.AddChild(bus);
-            buses.Add(name, bus);
+            buses.Add(id, bus);
         }
-        public static void SetBusVolume(string name, float volume)
+        public static void SetBusVolume(int id, float volume)
         {
-            if (name == "" || !buses.ContainsKey(name)) return;
+            if (buses.ContainsKey(id)) return;
             volume = Clamp(volume, 0.0f, 1.0f);
-            buses[name].SetVolume(volume);
+            buses[id].SetVolume(volume);
 
             //float combinedVolume = CalculateBusVolume(name);
             //
@@ -410,103 +410,103 @@ namespace ShapeAudio
             //    if (song.GetBus() == name) song.ChangeCombinedVolume(combinedVolume);
             //}
         }
-        public static void ChangeBusVolume(string name, float amount)
+        public static void ChangeBusVolume(int id, float amount)
         {
-            if (name == "" || !buses.ContainsKey(name)) return;
-            SetBusVolume(name, buses[name].GetVolume() + amount);
+            if (!buses.ContainsKey(id)) return;
+            SetBusVolume(id, buses[id].GetVolume() + amount);
         }
-        public static float GetBusVolume(string name)
+        public static float GetBusVolume(int id)
         {
-            if (name == "" || !buses.ContainsKey(name)) return 1.0f;
-            return buses[name].GetVolume();
+            if (!buses.ContainsKey(id)) return 1.0f;
+            return buses[id].GetVolume();
         }
-        public static void Stop(string name = "master")
+        public static void Stop(int id = BUS_MASTER)
         {
-            if (name == "" || !buses.ContainsKey(name)) return;
-            buses[name].Stop();
+            if (!buses.ContainsKey(id)) return;
+            buses[id].Stop();
         }
-        public static bool IsPaused(string name = "master")
+        public static bool IsPaused(int id = BUS_MASTER)
         {
-            if (name == "" || !buses.ContainsKey(name)) return false;
-            return buses[name].IsPaused();
+            if (!buses.ContainsKey(id)) return false;
+            return buses[id].IsPaused();
         }
-        public static void Pause(string name = "master")
+        public static void Pause(int id = BUS_MASTER)
         {
-            if (name == "" || !buses.ContainsKey(name)) return;
-            buses[name].Pause();
+            if (!buses.ContainsKey(id)) return;
+            buses[id].Pause();
         }
-        public static void Resume(string name = "master")
+        public static void Resume(int id = BUS_MASTER)
         {
-            if (name == "" || !buses.ContainsKey(name)) return;
-            buses[name].Resume();
+            if (!buses.ContainsKey(id)) return;
+            buses[id].Resume();
         }
-        public static bool IsPlaying(string name = "master")
+        public static bool IsPlaying(int id = BUS_MASTER)
         {
-            if (!audioBusKeys.ContainsKey(name)) return false;
-            return buses[audioBusKeys[name]].IsPlaying(name);
+            if (!audioBusKeys.ContainsKey(id)) return false;
+            return buses[audioBusKeys[id]].IsPlaying(id);
         }
 
 
 
         //SFX & SONGS
-        public static void AddSFX(string name, Sound sound, float volume = 0.5f, string bus = "master", float pitch = 1.0f)
+        public static void AddSFX(int id, Sound sound, float volume = 0.5f, int bus = BUS_MASTER, float pitch = 1.0f)
         {
-            if (audioBusKeys.ContainsKey(name) || !buses.ContainsKey(bus)) return;
+            if (audioBusKeys.ContainsKey(id) || !buses.ContainsKey(bus)) return;
             //if (fileName == "") return;
             //Sound sound = ResourceManager.LoadSound(fileName); // LoadSound(fileName);
 
-            SFX sfx = new SFX(name, sound, volume, bus, pitch);
-            buses[bus].AddAudio(name, sfx);
-            audioBusKeys.Add(name, bus);
+            SFX sfx = new SFX(id, sound, volume, bus, pitch);
+            buses[bus].AddAudio(id, sfx);
+            audioBusKeys.Add(id, bus);
         }
-        public static void AddSong(string name, Music song, string displayName, float volume = 0.5f, string bus = "master", float pitch = 1.0f)
+        public static void AddSong(int id, Music song, string displayName, float volume = 0.5f, int bus = BUS_MASTER, float pitch = 1.0f)
         {
-            if (audioBusKeys.ContainsKey(name) || !buses.ContainsKey(bus)) return;
+            if (audioBusKeys.ContainsKey(id) || !buses.ContainsKey(bus)) return;
             //if (fileName == "") return;
             //Music song = ResourceManager.LoadMusic(fileName); // LoadMusicStream(fileName);
-            Song s = new Song(name, displayName, song, volume, bus, pitch);
-            buses[bus].AddAudio(name, s);
-            audioBusKeys.Add(name, bus);
+            Song s = new Song(id, displayName, song, volume, bus, pitch);
+            buses[bus].AddAudio(id, s);
+            audioBusKeys.Add(id, bus);
 
         }
-        public static void AddSFX(string name, string fileName, float volume = 0.5f, string bus = "master", float pitch = 1.0f)
+        public static void AddSFX(int id, string fileName, float volume = 0.5f, int bus = BUS_MASTER, float pitch = 1.0f)
         {
-            if (audioBusKeys.ContainsKey(name) || !buses.ContainsKey(bus)) return;
+            if (audioBusKeys.ContainsKey(id) || !buses.ContainsKey(bus)) return;
             if (fileName == "") return;
             Sound sound = ResourceManager.LoadSoundFromRaylib(fileName); // LoadSound(fileName);
 
-            SFX sfx = new SFX(name, sound, volume, bus, pitch);
-            buses[bus].AddAudio(name, sfx);
-            audioBusKeys.Add(name, bus);
+            SFX sfx = new SFX(id, sound, volume, bus, pitch);
+            buses[bus].AddAudio(id, sfx);
+            audioBusKeys.Add(id, bus);
         }
-        public static void AddSong(string name, string fileName, string displayName, float volume = 0.5f, string bus = "master", float pitch = 1.0f)
+        public static void AddSong(int id, string fileName, string displayName, float volume = 0.5f, int bus = BUS_MASTER, float pitch = 1.0f)
         {
-            if (audioBusKeys.ContainsKey(name) || !buses.ContainsKey(bus)) return;
+            if (audioBusKeys.ContainsKey(id) || !buses.ContainsKey(bus)) return;
             if (fileName == "") return;
             Music song = ResourceManager.LoadMusicFromRaylib(fileName); // LoadMusicStream(fileName);
-            Song s = new Song(name, displayName, song, volume, bus, pitch);
-            buses[bus].AddAudio(name, s);
-            audioBusKeys.Add(name, bus);
+            Song s = new Song(id, displayName, song, volume, bus, pitch);
+            buses[bus].AddAudio(id, s);
+            audioBusKeys.Add(id, bus);
 
         }
 
-        public static void PlaySFXMulti(string name, float volume = -1.0f, float pitch = -1.0f)
+        public static void PlaySFXMulti(int id, float volume = -1.0f, float pitch = -1.0f)
         {
-            if (!audioBusKeys.ContainsKey(name)) return;
-            Bus bus = buses[audioBusKeys[name]];
-            bus.PlaySFXMulti(name, volume, pitch);
+            if (!audioBusKeys.ContainsKey(id)) return;
+            Bus bus = buses[audioBusKeys[id]];
+            bus.PlaySFXMulti(id, volume, pitch);
         }
-        public static void PlaySFX(string name, float volume = -1.0f, float pitch = -1.0f, float blockDuration = 0f)
+        public static void PlaySFX(int id, float volume = -1.0f, float pitch = -1.0f, float blockDuration = 0f)
         {
-            if (!audioBusKeys.ContainsKey(name)) return;
-            if (soundBlockers.ContainsKey(name) && soundBlockers[name] > 0f) return;
+            if (!audioBusKeys.ContainsKey(id)) return;
+            if (soundBlockers.ContainsKey(id) && soundBlockers[id] > 0f) return;
             if (blockDuration > 0f)
             {
-                if (!soundBlockers.ContainsKey(name)) soundBlockers.Add(name, blockDuration);
-                else soundBlockers[name] = blockDuration;
+                if (!soundBlockers.ContainsKey(id)) soundBlockers.Add(id, blockDuration);
+                else soundBlockers[id] = blockDuration;
             }
-            Bus bus = buses[audioBusKeys[name]];
-            bus.PlaySFX(name, volume, pitch);
+            Bus bus = buses[audioBusKeys[id]];
+            bus.PlaySFX(id, volume, pitch);
         }
         
         //public static bool PlaySFXLoop(string id, float volume = -1.0f, float pitch = -1.0f)
@@ -543,44 +543,44 @@ namespace ShapeAudio
         /// <summary>
         /// Play a sound. If pos is not inside the current camera area the sound is NOT played.
         /// </summary>
-        /// <param name="name"></param>
+        /// <param name="id"></param>
         /// <param name="pos"></param>
         /// <param name="volume"></param>
         /// <param name="pitch"></param>
         /// <param name="blockDuration"></param>
-        public static void PlaySFX(string name, Vector2 pos, float volume = -1.0f, float pitch = -1.0f, float blockDuration = 0f)
+        public static void PlaySFX(int id, Vector2 pos, float volume = -1.0f, float pitch = -1.0f, float blockDuration = 0f)
         {
-            if (!audioBusKeys.ContainsKey(name)) return;
-            if (soundBlockers.ContainsKey(name) && soundBlockers[name] > 0f) return;
+            if (!audioBusKeys.ContainsKey(id)) return;
+            if (soundBlockers.ContainsKey(id) && soundBlockers[id] > 0f) return;
 
             if (!Raylib.CheckCollisionPointRec(pos, ScreenHandler.CameraArea())) return;
 
             if (blockDuration > 0f)
             {
-                if (!soundBlockers.ContainsKey(name)) soundBlockers.Add(name, blockDuration);
-                else soundBlockers[name] = blockDuration;
+                if (!soundBlockers.ContainsKey(id)) soundBlockers.Add(id, blockDuration);
+                else soundBlockers[id] = blockDuration;
             }
-            Bus bus = buses[audioBusKeys[name]];
-            bus.PlaySFX(name, volume, pitch);
+            Bus bus = buses[audioBusKeys[id]];
+            bus.PlaySFX(id, volume, pitch);
         }
         /// <summary>
         /// Play the sound. If the pos is less than minRange from the current pos of the camera (or the spatial target override) the sound is played with full volume.
         /// If the pos is further away than minRange but less than maxRange from the pos of the camera the volume is linearly interpolated.
         /// If the pos is futher aways than maxRange the sound is not played.
         /// </summary>
-        /// <param name="name"></param>
+        /// <param name="id"></param>
         /// <param name="pos"></param>
         /// <param name="minRange"></param>
         /// <param name="maxRange"></param>
         /// <param name="volume"></param>
         /// <param name="pitch"></param>
         /// <param name="blockDuration"></param>
-        public static void PlaySFX(string name, Vector2 pos, float minRange, float maxRange, float volume = -1.0f, float pitch = -1.0f, float blockDuration = 0f)
+        public static void PlaySFX(int id, Vector2 pos, float minRange, float maxRange, float volume = -1.0f, float pitch = -1.0f, float blockDuration = 0f)
         {
-            if (!audioBusKeys.ContainsKey(name)) return;
-            if (soundBlockers.ContainsKey(name) && soundBlockers[name] > 0f) return;
+            if (!audioBusKeys.ContainsKey(id)) return;
+            if (soundBlockers.ContainsKey(id) && soundBlockers[id] > 0f) return;
             
-            Bus bus = buses[audioBusKeys[name]];
+            Bus bus = buses[audioBusKeys[id]];
 
             Vector2 center;
             if (spatialTargetOverride == null) center = ScreenHandler.CAMERA.RawPos;
@@ -597,8 +597,8 @@ namespace ShapeAudio
 
             if (blockDuration > 0f)
             {
-                if (!soundBlockers.ContainsKey(name)) soundBlockers.Add(name, blockDuration);
-                else soundBlockers[name] = blockDuration;
+                if (!soundBlockers.ContainsKey(id)) soundBlockers.Add(id, blockDuration);
+                else soundBlockers[id] = blockDuration;
             }
 
             float spatialVolumeFactor = 1f;
@@ -607,26 +607,26 @@ namespace ShapeAudio
                 spatialVolumeFactor = 1f - SUtils.LerpInverseFloat(minSquared, maxSquared, disSq);
             }
 
-            bus.PlaySFX(name, spatialVolumeFactor, volume, pitch);
+            bus.PlaySFX(id, spatialVolumeFactor, volume, pitch);
         }
-        public static void PlaySong(string name, float volume = -1.0f, float pitch = -1.0f)
+        public static void PlaySong(int id, float volume = -1.0f, float pitch = -1.0f)
         {
-            if (!audioBusKeys.ContainsKey(name)) return;
-            Bus bus = buses[audioBusKeys[name]];
-            var newSong = bus.PlaySong(name, volume, pitch);
+            if (!audioBusKeys.ContainsKey(id)) return;
+            Bus bus = buses[audioBusKeys[id]];
+            var newSong = bus.PlaySong(id, volume, pitch);
             if (newSong != null) currentSong = newSong;
         }
 
 
         
         //PRIVATE FUNCS
-        private static void FilterSongs(List<string> songs)
+        private static void FilterSongs(List<int> songIDs)
         {
-            for (int i = songs.Count - 1; i >= 0; i--)
+            for (int i = songIDs.Count - 1; i >= 0; i--)
             {
-                string name = songs[i];
-                if (!audioBusKeys.ContainsKey(name)) songs.RemoveAt(i);
-                if (!buses[audioBusKeys[name]].IsSong(name)) songs.RemoveAt(i);
+                var id = songIDs[i];
+                if (!audioBusKeys.ContainsKey(id)) songIDs.RemoveAt(i);
+                if (!buses[audioBusKeys[id]].IsSong(id)) songIDs.RemoveAt(i);
             }
         }
         private static void InvokeOnPlaylistStarted(Playlist playlist, string playlistName, string songName)

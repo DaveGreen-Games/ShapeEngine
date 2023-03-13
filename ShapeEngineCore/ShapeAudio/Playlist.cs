@@ -10,14 +10,14 @@ namespace ShapeAudio
 
         private List<Song> mixtape = new();
         private List<Song> queue = new();
-        private string name = "";
+        private int id = -1;
         private Song? currentSong = null;
 
         private bool paused = false;
         private string displayName = "";
-        public Playlist(string name, string displayName, List<Song> songs)
+        public Playlist(int id, string displayName, List<Song> songs)
         {
-            this.name = name;
+            this.id = id;
             this.displayName = displayName;
             AddSongs(songs);
         }
@@ -119,7 +119,7 @@ namespace ShapeAudio
             queue.Clear();
             queue.AddRange(mixtape);
         }
-        public string GetName() { return name; }
+        public int GetID() { return id; }
         public string GetCurrentSongDisplayName()
         {
             if (currentSong == null) return "";

@@ -28,7 +28,7 @@ namespace ShapeEngineDemo.Guns
         //data values
         protected bool semiAuto = false;
         protected float speedVariation = 0f;
-        protected string sound = "";
+        protected int soundID = -1;
         protected string effect = "";
         protected float timer = 0f;
         protected float burstTimer = 0f;
@@ -86,7 +86,7 @@ namespace ShapeEngineDemo.Guns
             stats.SetStat("burstCount", data.burstCount);
             stats.SetStat("burstFirerate", 1f / data.burstDelay);
             stats.SetStat("ammoCost", data.ammoCost);
-            sound = data.sound;
+            soundID = SoundIDs.PROJECTILE_Shoot; // data.sound;
             effect = data.effect;
             semiAuto = data.semiAuto;
             speedVariation = data.speedVar;
@@ -232,7 +232,7 @@ namespace ShapeEngineDemo.Guns
 
                 GAMELOOP.AddGameObject(projectile);
             }
-            AudioHandler.PlaySFX(sound, -1f, -1f, 0.1f);
+            AudioHandler.PlaySFX(soundID, -1f, -1f, 0.1f);
             SpawnEffect();
             SpawnCasing();
             OnGunFired?.Invoke(stats.Get("ammoCost"));

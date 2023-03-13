@@ -31,6 +31,10 @@ namespace ShapeEngineDemo
         public static AchievementHandler ACHIEVEMENTS = new();
         public static PaletteHandler PALETTES = new();
         public const int SHADER_CRT = 0;
+        public const int BUS_SOUND = 1;
+        public const int BUS_MUSIC = 2;
+
+
         public override void Start()
         {
             
@@ -133,8 +137,8 @@ namespace ShapeEngineDemo
             
 
             //AUDIO BUSES
-            AudioHandler.AddBus("music", 0.5f, "master");
-            AudioHandler.AddBus("sound", 0.5f, "master");
+            AudioHandler.AddBus(BUS_MUSIC, 0.5f, AudioHandler.BUS_MASTER);
+            AudioHandler.AddBus(BUS_SOUND, 0.5f, AudioHandler.BUS_MASTER);
 
             
             var buttonClick = RESOURCES.LoadSound("resources/audio/sfx/button-click01.wav");
@@ -160,25 +164,25 @@ namespace ShapeEngineDemo
 
 
             //SOUNDS
-            AudioHandler.AddSFX("button click", buttonClick, 0.25f, "sound");
-            AudioHandler.AddSFX("button hover", buttonHover, 0.5f, "sound");
-            AudioHandler.AddSFX("boost", boost, 0.5f, "sound");
-            AudioHandler.AddSFX("slow", slow, 0.5f, "sound");
-            AudioHandler.AddSFX("player hurt", playerHurt, 0.5f, "sound");
-            AudioHandler.AddSFX("player die", playerDie, 0.5f, "sound");
-            AudioHandler.AddSFX("player stun ended", playerStunEnded, 0.5f, "sound");
-            AudioHandler.AddSFX("player healed", playerHealed, 0.5f, "sound");
+            AudioHandler.AddSFX(SoundIDs.UI_Click, buttonClick, 0.25f, BUS_SOUND);
+            AudioHandler.AddSFX(SoundIDs.UI_Hover, buttonHover, 0.5f, BUS_SOUND);
+            AudioHandler.AddSFX(SoundIDs.PLAYER_Boost, boost, 0.5f, BUS_SOUND);
+            AudioHandler.AddSFX(SoundIDs.PLAYER_Slow, slow, 0.5f, BUS_SOUND);
+            AudioHandler.AddSFX(SoundIDs.PLAYER_Hurt, playerHurt, 0.5f, BUS_SOUND);
+            AudioHandler.AddSFX(SoundIDs.PLAYER_Die, playerDie, 0.5f, BUS_SOUND);
+            AudioHandler.AddSFX(SoundIDs.PLAYER_StunEnded, playerStunEnded, 0.5f, BUS_SOUND);
+            AudioHandler.AddSFX(SoundIDs.PLAYER_Healed, playerHealed, 0.5f, BUS_SOUND);
 
-            AudioHandler.AddSFX("player pwr down", playerPwrDown, 1.0f, "sound");
-            AudioHandler.AddSFX("player pwr up", playerPwrUp, 1.0f, "sound");
+            AudioHandler.AddSFX(SoundIDs.PLAYER_PowerDown, playerPwrDown, 1.0f, BUS_SOUND);
+            AudioHandler.AddSFX(SoundIDs.PLAYER_PowerUp, playerPwrUp, 1.0f, BUS_SOUND);
 
-            AudioHandler.AddSFX("projectile pierce", projectilePierce, 0.7f, "sound");
-            AudioHandler.AddSFX("projectile bounce", projectileBounce, 0.6f, "sound");
-            AudioHandler.AddSFX("projectile impact", projectileImpact, 0.8f, "sound");
-            AudioHandler.AddSFX("projectile explosion", projectileExplosion, 1f, "sound");
-            AudioHandler.AddSFX("projectile crit", projectileCrit, 0.6f, "sound");
-            AudioHandler.AddSFX("asteroid die", asteroidDie, 0.55f, "sound");
-            AudioHandler.AddSFX("bullet", bullet, 0.25f, "sound");
+            AudioHandler.AddSFX(SoundIDs.PROJECTILE_Pierce, projectilePierce, 0.7f, BUS_SOUND);
+            AudioHandler.AddSFX(SoundIDs.PROJECTILE_Bounce, projectileBounce, 0.6f, BUS_SOUND);
+            AudioHandler.AddSFX(SoundIDs.PROJECTILE_Impact, projectileImpact, 0.8f, BUS_SOUND);
+            AudioHandler.AddSFX(SoundIDs.PROJECTILE_Explosion, projectileExplosion, 1f, BUS_SOUND);
+            AudioHandler.AddSFX(SoundIDs.PROJECTILE_Crit, projectileCrit, 0.6f, BUS_SOUND);
+            AudioHandler.AddSFX(SoundIDs.PROJECTILE_Shoot, bullet, 0.25f, BUS_SOUND);
+            AudioHandler.AddSFX(SoundIDs.ASTEROID_Die, asteroidDie, 0.55f, BUS_SOUND);
             
 
 

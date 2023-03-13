@@ -6,24 +6,24 @@
         private Bus? parent = null;
         private List<Bus> children = new();
 
-        private Dictionary<string, Audio> audio = new();
+        private Dictionary<int, Audio> audio = new();
 
         private float volume = 1.0f;
-        private string name = "";
+        private int id = -1;
         private bool paused = false;
 
-        public Bus(string name, float volume, Bus? parent)
+        public Bus(int id, float volume, Bus? parent)
         {
-            this.name = name;
+            this.id = id;
             this.volume = volume;
             this.parent = parent;
         }
 
-        public void AddAudio(string name, Audio a)
+        public void AddAudio(int id, Audio a)
         {
-            if (audio.ContainsKey(name)) return;
+            if (audio.ContainsKey(id)) return;
             a.ChangeCombinedVolume(GetCombinedVolume());
-            audio.Add(name, a);
+            audio.Add(id, a);
         }
         public float GetVolume() { return volume; }
         public void SetVolume(float volume)
@@ -43,7 +43,7 @@
                 child.VolumeChanged();
             }
         }
-        public string GetName() { return name; }
+        public int GetID() { return id; }
         public Bus? GetParent() { return parent; }
         public void AddChild(Bus child)
         {
@@ -76,43 +76,43 @@
             children.Clear();
         }
 
-        public Audio? GetAudio(string name)
+        public Audio? GetAudio(int id)
         {
-            if (!audio.ContainsKey(name)) return null;
-            return audio[name];
+            if (!audio.ContainsKey(id)) return null;
+            return audio[id];
         }
-        public Song? GetSong(string name)
+        public Song? GetSong(int id)
         {
-            if (!audio.ContainsKey(name)) return null;
-            if (audio[name] is Song song) return song;
+            if (!audio.ContainsKey(id)) return null;
+            if (audio[id] is Song song) return song;
             return null;
         }
-        public SFX? GetSFX(string name)
+        public SFX? GetSFX(int id)
         {
-            if (!audio.ContainsKey(name)) return null;
-            if (audio[name] is SFX sfx) return sfx;
+            if (!audio.ContainsKey(id)) return null;
+            if (audio[id] is SFX sfx) return sfx;
             return null;
         }
-        public void PlaySFXMulti(string name, float volume = -1.0f, float pitch = -1.0f)
+        public void PlaySFXMulti(int id, float volume = -1.0f, float pitch = -1.0f)
         {
-            if (paused || name == "" || !audio.ContainsKey(name)) return;
+            if (paused || !audio.ContainsKey(id)) return;
             if (volume == 0.0f) return;
-            if (audio[name] is SFX)
+            if (audio[id] is SFX)
             {
-                SFX? s = audio[name] as SFX;
+                SFX? s = audio[id] as SFX;
                 if (s == null) return;
                 if (volume > 0.0f) s.SetVolume(volume);
                 if (pitch > 0.0f) s.SetPitch(pitch);
                 PlaySoundMulti(s.GetSound());
             }
         }
-        public void PlaySFX(string name, float volume = -1.0f, float pitch = -1.0f)
+        public void PlaySFX(int id, float volume = -1.0f, float pitch = -1.0f)
         {
-            if (paused || name == "" || !audio.ContainsKey(name)) return;
+            if (paused || !audio.ContainsKey(id)) return;
             if (volume == 0.0f) return;
-            if (audio[name] is SFX)
+            if (audio[id] is SFX)
             {
-                SFX? s = audio[name] as SFX;
+                SFX? s = audio[id] as SFX;
                 if (s == null) return;
                 
                 if (volume > 0.0f) s.SetVolume(volume);
@@ -120,13 +120,13 @@
                 PlaySound(s.GetSound());
             }
         }
-        public void PlaySFX(string name, float volumeFactor, float volume = -1.0f, float pitch = -1.0f)
+        public void PlaySFX(int id, float volumeFactor, float volume = -1.0f, float pitch = -1.0f)
         {
-            if (paused || name == "" || !audio.ContainsKey(name)) return;
+            if (paused || !audio.ContainsKey(id)) return;
             if (volume == 0.0f || volumeFactor <= 0f) return;
-            if (audio[name] is SFX)
+            if (audio[id] is SFX)
             {
-                SFX? s = audio[name] as SFX;
+                SFX? s = audio[id] as SFX;
                 if (s == null) return;
 
                 if (volume > 0.0f) s.SetVolume(volume);
@@ -137,13 +137,13 @@
                 PlaySound(s.GetSound());
             }
         }
-        public Song? PlaySong(string name, float volume = -1.0f, float pitch = -1.0f)
+        public Song? PlaySong(int id, float volume = -1.0f, float pitch = -1.0f)
         {
-            if (paused || name == "" || !audio.ContainsKey(name)) return null;
+            if (paused || !audio.ContainsKey(id)) return null;
             if (volume == 0.0f) return null;
-            if (audio[name] is Song)
+            if (audio[id] is Song)
             {
-                Song? s = audio[name] as Song;
+                Song? s = audio[id] as Song;
                 if (s == null) return null;
                 if (volume > 0.0f) s.SetVolume(volume);
                 if (pitch > 0.0f) s.SetPitch(pitch);
@@ -195,15 +195,15 @@
                 child.Resume();
             }
         }
-        public bool IsPlaying(string name)
+        public bool IsPlaying(int id)
         {
-            if (!audio.ContainsKey(name)) return false;
-            return audio[name].IsPlaying();
+            if (!audio.ContainsKey(id)) return false;
+            return audio[id].IsPlaying();
         }
-        public bool IsSong(string name)
+        public bool IsSong(int id)
         {
-            if (!audio.ContainsKey(name)) return false;
-            return audio[name] is Song;
+            if (!audio.ContainsKey(id)) return false;
+            return audio[id] is Song;
         }
         private float GetCombinedVolume()
         {
