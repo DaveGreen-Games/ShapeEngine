@@ -4,6 +4,8 @@ using System.Numerics;
 
 namespace ShapeAudio
 {
+
+    /*
     public class SFXLooper
     {
         protected bool disabled = false;
@@ -106,5 +108,5 @@ namespace ShapeAudio
             }
         }
     }
-
+    */
 }

@@ -1,8 +1,105 @@
 ﻿using ShapeLib;
 
 namespace ShapeAudio
-
 {
+    internal class Playlist
+    {
+        public event Action<int, Playlist>? RequestNextSong;
+        public event Action<string, string>? SongStarted;
+
+        private HashSet<int> mixtape = new();
+        private List<int> queue = new();
+
+        public int ID { get; private set; } = -1;
+        public Song? CurrentSong { get; private set; } = null;
+        public string DisplayName { get; private set; } = "";
+        public bool Paused { get; private set; } = false;
+        public Playlist(int id, string displayName, HashSet<int> songIDs)
+        {
+            this.ID = id;
+            this.DisplayName = displayName;
+            this.mixtape = songIDs;
+            this.Refill();
+        }
+
+        public void Update(float dt)
+        {
+            if (Paused) return;
+
+            if (CurrentSong != null && CurrentSong.Update(dt))
+            {
+                CurrentSong.Stop();
+                int id = PopNextID();
+                RequestNextSong?.Invoke(id, this);
+            }
+        }
+        public void Close()
+        {
+            if (CurrentSong != null) CurrentSong.Stop();
+            CurrentSong = null;
+            mixtape.Clear();
+            queue.Clear();
+        }
+        public bool IsPlaying()
+        {
+            return CurrentSong != null;
+        }
+        public void Start()
+        {
+            if (IsPlaying()) return;
+            int id = PopNextID();
+            RequestNextSong?.Invoke(id, this);
+        }
+        public void Stop()
+        {
+            if (CurrentSong == null) return;
+            CurrentSong.Stop();
+            CurrentSong = null;
+        }
+        public void Pause()
+        {
+            Paused = true;
+            if (CurrentSong == null) return;
+            CurrentSong.Pause();
+        }
+        public void Resume()
+        {
+            Paused = false;
+            if (CurrentSong == null) return;
+            CurrentSong.Resume();
+        }
+
+        public void DeliverNextSong(Song song)
+        {
+            CurrentSong = song;
+            SongStarted?.Invoke(song.DisplayName, DisplayName);
+            song.Play();
+        }
+        public void AddSongID(int id)
+        {
+            if (mixtape.Add(id))
+            {
+                queue.Add(id);
+            }
+        }
+
+        private int PopNextID()
+        {
+            if (queue.Count <= 0) Refill();
+            int index = SRNG.randI(0, queue.Count);
+            int nextID = queue[index];
+            queue.RemoveAt(index);
+            return nextID;
+        }
+        private void Refill()
+        {
+            queue.Clear();
+            queue.AddRange(mixtape);
+        }
+
+    }
+
+    /*
     public class Playlist
     {
         public delegate void SongStarted(string songName, string playlistName);
@@ -142,5 +239,5 @@ namespace ShapeAudio
             OnSongStarted?.Invoke(songName, displayName);
         }
     }
-
+    */
 }

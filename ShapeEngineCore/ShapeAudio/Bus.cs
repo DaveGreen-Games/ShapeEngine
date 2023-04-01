@@ -1,6 +1,51 @@
 ﻿namespace ShapeAudio
-
 {
+    internal class Bus
+    {
+        public event Action<float>? VolumeChanged;
+        public event Action? Stopped;
+        private float volume = 1f;
+        public float Volume
+        {
+            get
+            {
+                return volume;
+            }
+            set
+            {
+                volume = value;
+                VolumeChanged?.Invoke(volume);
+            }
+        }
+        public int ID { get; protected set; } = -1;
+
+        public Bus(int id, float volume)
+        {
+            this.ID = id;
+            this.volume = volume;
+        }
+        public void Stop()
+        {
+            Stopped?.Invoke();
+        }
+        //public float GetCombinedVolume()
+        //{
+        //    if (Parent == null) return Volume;
+        //
+        //    float v = 1f;
+        //
+        //    Bus2? current = Parent;
+        //    while (current != null)
+        //    {
+        //        v *= current.Volume;
+        //        current = current.Parent;
+        //    }
+        //
+        //    return v;
+        //}
+    }
+
+    /*
     public class Bus
     {
         private Bus? parent = null;
@@ -219,5 +264,5 @@
         }
 
     }
-
+    */
 }

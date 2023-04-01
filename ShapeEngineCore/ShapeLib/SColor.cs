@@ -1,6 +1,6 @@
 ﻿using Raylib_CsLo;
 
-namespace ShapeColor
+namespace ShapeLib
 {
     public static class SColor
     {

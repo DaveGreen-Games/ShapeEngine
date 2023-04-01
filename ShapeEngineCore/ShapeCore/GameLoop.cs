@@ -301,7 +301,8 @@ namespace ShapeCore
             Raylib.SetExitKey(-1);
 
             ScreenHandler.Initialize(devWidth, devHeight, gameSizeFactor, uiSizeFactor, windowName, fixedTexture, pixelSmoothing, hideCursor);
-            AudioHandler.Initialize();
+            InitAudioDevice();
+            //AudioHandler.Initialize();
             InputHandler.Initialize();
             
             
@@ -309,23 +310,14 @@ namespace ShapeCore
 
         public bool Close()
         {
-            //it is good to toggle fullscreen when restarting
-
             bool fullscreen = IsWindowFullscreen();
             if (RESTART && fullscreen) ScreenHandler.ToggleFullscreen();
 
             ClearScenes();
             InputHandler.Close();
-            AudioHandler.Close();
+            //AudioHandler.Close();
             UIHandler.Close();
             ScreenHandler.Close();
-
-            //STEP.Close();
-            //TIMER.Close();
-            //ALTERNATOR.Close();
-            //EASE.Close();
-
-
             return fullscreen;
         }
         public void Run()
