@@ -81,8 +81,8 @@ namespace ShapeAudio
                 if (IsSpatial)
                 {
                     Vector2 center;
-                    if (AudioHandler.spatialTargetOverride == null) center = ScreenHandler.CAMERA.RawPos;
-                    else center = AudioHandler.spatialTargetOverride.GetPosition();
+                    if (AudioHandler.SpatialTargetOverride == null) center = ScreenHandler.CAMERA.RawPos;
+                    else center = AudioHandler.SpatialTargetOverride.GetPosition();
 
                     float disSq = SVec.LengthSquared(center - SpatialPos);
                     if (MinSpatialRange < 0f) MinSpatialRange = 0f;
