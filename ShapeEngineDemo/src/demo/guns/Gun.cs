@@ -232,7 +232,7 @@ namespace ShapeEngineDemo.Guns
 
                 GAMELOOP.AddGameObject(projectile);
             }
-            AudioHandler.PlaySFX(soundID, -1f, -1f, 0.1f);
+            Demo.AUDIO.SFXPlay(soundID, -1f, -1f, 0.1f);
             SpawnEffect();
             SpawnCasing();
             OnGunFired?.Invoke(stats.Get("ammoCost"));

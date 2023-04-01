@@ -1,9 +1,5 @@
-﻿using Raylib_CsLo;
+﻿
 using ShapeInput;
-using ShapeScreen;
-using System.Numerics;
-using ShapePersistent;
-using Microsoft.Win32;
 
 namespace ShapeUI
 {

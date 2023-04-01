@@ -136,7 +136,7 @@ namespace ShapeEngineDemo.Bodies
         {
             SpawnDeathEffect();
             SpawnAsteroids();
-            AudioHandler.PlaySFX(SoundIDs.ASTEROID_Die, -1f, -1f, 0.1f);
+            Demo.AUDIO.SFXPlay(SoundIDs.ASTEROID_Die, -1f, -1f, 0.1f);
             Demo.ACHIEVEMENTS.UpdateStatValue("asteroidKills", 1);
         }
         public override void WasDamaged(DamageInfo info)

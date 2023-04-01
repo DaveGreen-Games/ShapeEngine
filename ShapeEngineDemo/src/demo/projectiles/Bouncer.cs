@@ -34,7 +34,7 @@ namespace ShapeEngineDemo.Projectiles
                         if (obj != null)
                         {
                             var dmgInfo = ImpactDamage(obj);
-                            if (dmgInfo.recieved > 0f) AudioHandler.PlaySFX(SoundIDs.PROJECTILE_Bounce, -1f, -1f, 0.1f);
+                            if (dmgInfo.recieved > 0f) Demo.AUDIO.SFXPlay(SoundIDs.PROJECTILE_Bounce, -1f, -1f, 0.1f);
                         }
                         float angle = 180 + SRNG.randF(-45f, 45f);
                         collider.Vel = SVec.Rotate(collider.Vel, angle * DEG2RAD);

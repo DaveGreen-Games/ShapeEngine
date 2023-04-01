@@ -357,7 +357,7 @@ namespace ShapeCore
             if (CALL_GAMELOOP_UPDATE) PreUpdate(dt);
 
             InputHandler.Update(dt);
-            AudioHandler.Update(dt);
+            //AudioHandler.Update(dt);
             UIHandler.Update(dt);
             ScreenHandler.Update(dt);
 

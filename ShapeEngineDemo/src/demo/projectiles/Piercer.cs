@@ -32,7 +32,7 @@ namespace ShapeEngineDemo.Projectiles
                     if (obj != null)
                     {
                         var dmgInfo = ImpactDamage(obj);
-                        if(dmgInfo.recieved > 0f) AudioHandler.PlaySFX(SoundIDs.PROJECTILE_Pierce, -1f, -1f, 0.1f);
+                        if(dmgInfo.recieved > 0f) Demo.AUDIO.SFXPlay(SoundIDs.PROJECTILE_Pierce, -1f, -1f, 0.1f);
                     }
                 }
             }

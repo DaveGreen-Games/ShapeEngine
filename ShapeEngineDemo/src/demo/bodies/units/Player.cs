@@ -399,7 +399,7 @@ namespace ShapeEngineDemo.Bodies
         protected override void WasKilled()
         {
             base.WasKilled();
-            AudioHandler.PlaySFX(SoundIDs.PLAYER_Die);
+            Demo.AUDIO.SFXPlay(SoundIDs.PLAYER_Die);
             for (int i = 0; i < 100; i++)
             {
                 HitParticle particle = new(collider.Pos + SRNG.randVec2(1, stats.Get("size")), SRNG.randVec2(), 2f, 2f, Demo.PALETTES.C(ColorIDs.Player));
@@ -411,7 +411,7 @@ namespace ShapeEngineDemo.Bodies
         public override void WasDamaged(DamageInfo info)
         {
             base.WasDamaged(info);
-            if (!info.killed && info.recieved > 0f) AudioHandler.PlaySFX(SoundIDs.PLAYER_Hurt);
+            if (!info.killed && info.recieved > 0f) Demo.AUDIO.SFXPlay(SoundIDs.PLAYER_Hurt);
 
             float f = info.recieved / GetTotalHealth();
             int amount = (int)(50 * f);
@@ -447,7 +447,7 @@ namespace ShapeEngineDemo.Bodies
             base.WasHealed(info);
             if (info.recieved > 0f)
             {
-                AudioHandler.PlaySFX(SoundIDs.PLAYER_Healed);
+                Demo.AUDIO.SFXPlay(SoundIDs.PLAYER_Healed);
             }
         }
         public override string GetID()
@@ -506,7 +506,7 @@ namespace ShapeEngineDemo.Bodies
 
             if (!IsStunned())
             {
-                if (prevStunned) AudioHandler.PlaySFX(SoundIDs.PLAYER_StunEnded);
+                if (prevStunned) Demo.AUDIO.SFXPlay(SoundIDs.PLAYER_StunEnded);
 
                 if (InputHandler.IsReleased(0, InputIDs.PLAYER_DropAimPoint)) weaponSystem.DropAimPoint(collider.Pos);
                 //if (InputHandler.IsReleased("Drop Turrets")) weaponSystem.DropTurrets(collider.Pos);
@@ -563,7 +563,7 @@ namespace ShapeEngineDemo.Bodies
                 {
                     if (prevMovement != PlayerMovement.BOOST)
                     {
-                        AudioHandler.PlaySFX(SoundIDs.PLAYER_Boost);
+                        Demo.AUDIO.SFXPlay(SoundIDs.PLAYER_Boost);
                         BoostStarted();
                     }
                     curMovement = PlayerMovement.BOOST;
@@ -574,7 +574,7 @@ namespace ShapeEngineDemo.Bodies
                 {
                     if (prevMovement != PlayerMovement.SLOW)
                     {
-                        AudioHandler.PlaySFX(SoundIDs.PLAYER_Slow);
+                        Demo.AUDIO.SFXPlay(SoundIDs.PLAYER_Slow);
                         SlowStarted();
                     }
                     curMovement = PlayerMovement.SLOW;
@@ -835,14 +835,14 @@ namespace ShapeEngineDemo.Bodies
                 CoreParticle cp = new(collider.Pos, angle + PI / 2, Demo.PALETTES.C(ColorIDs.Energy));
                 GAMELOOP.AddGameObject(cp);
 
-                AudioHandler.PlaySFX(SoundIDs.PLAYER_PowerDown, -1, -1, 0);
+                Demo.AUDIO.SFXPlay(SoundIDs.PLAYER_PowerDown, -1, -1, 0);
             }
             else if(triggerName == "reloaded")
             {
                 pwrBarMini.SetColors(Demo.PALETTES.C(ColorIDs.Player));
                 pwrBar.SetColors(Demo.PALETTES.C(ColorIDs.Player));
 
-                AudioHandler.PlaySFX(SoundIDs.PLAYER_PowerUp, -1, -1, 0);
+                Demo.AUDIO.SFXPlay(SoundIDs.PLAYER_PowerUp, -1, -1, 0);
             }
         }
 

@@ -22,6 +22,7 @@ namespace ShapeEngineDemo
         private int curResIndex = 0;
         private int curFrameRateLimitIndex = 0;
 
+        public static AudioHandler AUDIO = new();
         public static ResourceManager RESOURCES = new("", "resources.txt");
         public static SavegameHandler SAVEGAME = new("solobytegames", "shape-engine-demo");
         public static DataHandler DATA = new();
@@ -144,8 +145,8 @@ namespace ShapeEngineDemo
             
 
             //AUDIO BUSES
-            AudioHandler.AddBus(BUS_MUSIC, 0.5f, AudioHandler.BUS_MASTER);
-            AudioHandler.AddBus(BUS_SOUND, 0.5f, AudioHandler.BUS_MASTER);
+            AUDIO.BusAdd(BUS_MUSIC, 0.5f);
+            AUDIO.BusAdd(BUS_SOUND, 0.5f);
 
             
             var buttonClick = RESOURCES.LoadSound("resources/audio/sfx/button-click01.wav");
@@ -167,29 +168,24 @@ namespace ShapeEngineDemo
             var bullet = RESOURCES.LoadSound("resources/audio/sfx/gun05.wav");
 
 
-           
-
-
             //SOUNDS
-            AudioHandler.AddSFX(SoundIDs.UI_Click, buttonClick, 0.25f, BUS_SOUND);
-            AudioHandler.AddSFX(SoundIDs.UI_Hover, buttonHover, 0.5f, BUS_SOUND);
-            AudioHandler.AddSFX(SoundIDs.PLAYER_Boost, boost, 0.5f, BUS_SOUND);
-            AudioHandler.AddSFX(SoundIDs.PLAYER_Slow, slow, 0.5f, BUS_SOUND);
-            AudioHandler.AddSFX(SoundIDs.PLAYER_Hurt, playerHurt, 0.5f, BUS_SOUND);
-            AudioHandler.AddSFX(SoundIDs.PLAYER_Die, playerDie, 0.5f, BUS_SOUND);
-            AudioHandler.AddSFX(SoundIDs.PLAYER_StunEnded, playerStunEnded, 0.5f, BUS_SOUND);
-            AudioHandler.AddSFX(SoundIDs.PLAYER_Healed, playerHealed, 0.5f, BUS_SOUND);
-
-            AudioHandler.AddSFX(SoundIDs.PLAYER_PowerDown, playerPwrDown, 1.0f, BUS_SOUND);
-            AudioHandler.AddSFX(SoundIDs.PLAYER_PowerUp, playerPwrUp, 1.0f, BUS_SOUND);
-
-            AudioHandler.AddSFX(SoundIDs.PROJECTILE_Pierce, projectilePierce, 0.7f, BUS_SOUND);
-            AudioHandler.AddSFX(SoundIDs.PROJECTILE_Bounce, projectileBounce, 0.6f, BUS_SOUND);
-            AudioHandler.AddSFX(SoundIDs.PROJECTILE_Impact, projectileImpact, 0.8f, BUS_SOUND);
-            AudioHandler.AddSFX(SoundIDs.PROJECTILE_Explosion, projectileExplosion, 1f, BUS_SOUND);
-            AudioHandler.AddSFX(SoundIDs.PROJECTILE_Crit, projectileCrit, 0.6f, BUS_SOUND);
-            AudioHandler.AddSFX(SoundIDs.PROJECTILE_Shoot, bullet, 0.25f, BUS_SOUND);
-            AudioHandler.AddSFX(SoundIDs.ASTEROID_Die, asteroidDie, 0.55f, BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.UI_Click, buttonClick, 0.25f,                     1f, AudioHandler.BUS_MASTER, BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.UI_Hover, buttonHover, 0.5f,                      1f, AudioHandler.BUS_MASTER, BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PLAYER_Boost, boost, 0.5f,                        1f, AudioHandler.BUS_MASTER, BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PLAYER_Slow, slow, 0.5f,                          1f, AudioHandler.BUS_MASTER, BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PLAYER_Hurt, playerHurt, 0.5f,                    1f, AudioHandler.BUS_MASTER, BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PLAYER_Die, playerDie, 0.5f,                      1f, AudioHandler.BUS_MASTER, BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PLAYER_StunEnded, playerStunEnded, 0.5f,          1f, AudioHandler.BUS_MASTER, BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PLAYER_Healed, playerHealed, 0.5f,                1f, AudioHandler.BUS_MASTER, BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PLAYER_PowerDown, playerPwrDown, 1.0f,            1f, AudioHandler.BUS_MASTER, BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PLAYER_PowerUp, playerPwrUp, 1.0f,                1f, AudioHandler.BUS_MASTER, BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Pierce, projectilePierce, 0.7f,        1f, AudioHandler.BUS_MASTER, BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Bounce, projectileBounce, 0.6f,        1f, AudioHandler.BUS_MASTER, BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Impact, projectileImpact, 0.8f,        1f, AudioHandler.BUS_MASTER, BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Explosion, projectileExplosion, 1f,    1f, AudioHandler.BUS_MASTER, BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Crit, projectileCrit, 0.6f,            1f, AudioHandler.BUS_MASTER, BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Shoot, bullet, 0.25f,                  1f, AudioHandler.BUS_MASTER, BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.ASTEROID_Die, asteroidDie, 0.55f,                 1f, AudioHandler.BUS_MASTER, BUS_SOUND);
             
 
 
@@ -294,10 +290,12 @@ namespace ShapeEngineDemo
         {
             TIMER.Update(dt);
             ACHIEVEMENTS.Update(dt);
+            AUDIO.Update(dt, ScreenHandler.CAMERA.RawPos);
         }
 
         public override void PreHandleInput()
         {
+
             if (InputHandler.IsReleased(0, InputIDs.OPTIONS_Fullscreen)) { ScreenHandler.ToggleFullscreen(); }
             if (InputHandler.IsReleased(0, InputIDs.OPTIONS_NextMonitor)) { ScreenHandler.NextMonitor(); }
             if (InputHandler.IsReleased(0, InputIDs.OPTIONS_Vsync)) { ScreenHandler.ToggleVsync(); }
@@ -357,6 +355,7 @@ namespace ShapeEngineDemo
             ScreenHandler.OnWindowSizeChanged -= OnWindowSizeChanged;
             InputHandler.OnInputChanged -= OnInputTypeChanged;
             RESOURCES.Close();
+            AUDIO.Close();
             DATA.Close();
             FONT.Close();
             CURSOR.Close();

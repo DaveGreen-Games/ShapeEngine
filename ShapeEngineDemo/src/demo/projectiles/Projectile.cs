@@ -155,7 +155,7 @@ namespace ShapeEngineDemo.Projectiles
             {
                 if (SRNG.randF() < critChance) { finalDamage *= stats.Get("critBonus"); critted = true; }
             }
-            if (critted) AudioHandler.PlaySFX(SoundIDs.PROJECTILE_Crit, -1f, -1f, 0.1f);
+            if (critted) Demo.AUDIO.SFXPlay(SoundIDs.PROJECTILE_Crit, -1f, -1f, 0.1f);
             return target.Damage(finalDamage, collider.Pos, SVec.Normalize(collider.Vel), dmgDealer, critted);
         }
         protected virtual void Move(float dt)
