@@ -1,7 +1,6 @@
 ﻿using System.Numerics;
 using Raylib_CsLo;
 using ShapeInput;
-using ShapeAudio;
 
 namespace ShapeUI
 {

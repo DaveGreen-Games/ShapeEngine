@@ -1,4 +1,5 @@
 ﻿using Raylib_CsLo;
+using ShapeUI;
 using System.Numerics;
 
 namespace ShapeLib
@@ -71,7 +72,56 @@ namespace ShapeLib
 
             return (outOfBounds, newPos);
         }
+        
+        
+        public Rectangle AlignRect(Rectangle rect, Vector2 alignement)
+        {
+            Vector2 topLeft = new Vector2(rect.X, rect.Y);
+            Vector2 size = new(rect.width, rect.height);
+            Vector2 offset = size * alignement;
+            return new
+                (
+                    topLeft.X + offset.X,
+                    topLeft.Y + offset.Y,
+                    size.X,
+                    size.Y
+                );
+        }
+        public static Vector2 GetRectPos(Rectangle rect, Vector2 alignement)
+        {
+            Vector2 topLeft = new Vector2(rect.X, rect.Y);
+            Vector2 offset = GetRectSize(rect) * alignement;
+            return topLeft + offset;
+        }
+        public static Vector2 GetRectSize(Rectangle rect)
+        {
+            return new(rect.width, rect.height);
+        }
 
+
+        public static Rectangle ApplyMargins(Rectangle rect, float left, float right, float top, float bottom)
+        {
+            Vector2 tl = new(rect.x, rect.y);
+            Vector2 size = new(rect.width, rect.height);
+            Vector2 br = tl + size;
+
+            tl.X += size.X * left;
+            tl.Y += size.Y * top;
+            br.X -= size.X * right;
+            br.Y -= size.Y * bottom;
+
+            Vector2 finalTopLeft = new(MathF.Min(tl.X, br.X), MathF.Min(tl.Y, br.Y));
+            Vector2 finalBottomRight = new(MathF.Max(tl.X, br.X), MathF.Max(tl.Y, br.Y));
+            return new
+                (
+                    finalTopLeft.X,
+                    finalTopLeft.Y,
+                    finalBottomRight.X - finalTopLeft.X,
+                    finalBottomRight.Y - finalTopLeft.Y
+                );
+        }
+        
+        
         /// <summary>
         /// Construct 9 rects out of an outer and inner rect.
         /// </summary>
@@ -399,15 +449,6 @@ namespace ShapeLib
             return Vector2.Dot(n, d1) * Vector2.Dot(n, d2) > 0.0f;
         }
 
-        public static Vector2 GetRectPos(Rectangle rect, Vector2 alignement)
-        {
-            Vector2 topLeft = new Vector2(rect.X, rect.Y);
-            Vector2 offset = GetRectSize(rect) * alignement;
-            return topLeft + offset;
-        }
-        public static Vector2 GetRectSize(Rectangle rect)
-        {
-            return new(rect.width, rect.height);
-        }
+        
     }
 }
