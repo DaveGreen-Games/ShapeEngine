@@ -1,4 +1,6 @@
 ﻿using Raylib_CsLo;
+using ShapeInput;
+using ShapeLib;
 using System.Numerics;
 
 namespace ShapeUI
@@ -130,8 +132,8 @@ namespace ShapeUI
         private HashSet<UIElement2> register = new();
         
         public UIElement2? StartElement { get; protected set; } = null;
-        public UIElement2? Selected { get; protected set; } = null;
-        public float InputInterval { get; set; } = 0.25f;
+        public UIElement2? SelectedElement { get; protected set; } = null;
+        public float InputInterval { get; set; } = 1f;
         public bool InputDisabled { get; set; } = false;
         public UINeighbors2.NeighborDirection LastInputDirection { get; protected set; } = UINeighbors2.NeighborDirection.NONE;
         
@@ -143,35 +145,48 @@ namespace ShapeUI
             RegisterElements(elements);
         }
         
-        
         public void RegisterElements(params UIElement2[] elements)
         {
             if (elements.Length > 0)
             {
-                if(Selected != null)
+                if(SelectedElement != null)
                 {
-                    Selected.Deselect();
-                    Selected = null;
+                    SelectedElement.Deselect();
+                    SelectedElement = null;
                 }
-                
+
+                foreach (var element in register)
+                {
+                    element.Deselect();
+                    element.WasSelected -= OnUIElementSelected;
+                }
                 register.Clear();
                 
-                foreach (var element in elements) { element.Deselect(); }
+                foreach (var element in elements) 
+                { 
+                    element.Deselect();
+                    element.WasSelected += OnUIElementSelected;
+                }
                 
                 StartElement = elements[0];
                 StartElement.Select();
-                Selected = StartElement;
+                SelectedElement = StartElement;
 
                 register = elements.ToHashSet();
             }
             else
             {
-                if (Selected != null)
+                if (SelectedElement != null)
                 {
-                    Selected.Deselect();
-                    Selected = null;
+                    SelectedElement.Deselect();
+                    SelectedElement = null;
                 }
                 StartElement = null;
+                foreach (var element in register)
+                {
+                    element.Deselect();
+                    element.WasSelected -= OnUIElementSelected;
+                }
                 register.Clear();
             }
             
@@ -184,25 +199,38 @@ namespace ShapeUI
                 if (StartElement != null)
                 {
                     StartElement.Select();
-                    Selected = StartElement;
+                    SelectedElement = StartElement;
                 }
                 else
                 {
 
                     StartElement = register.First();
                     StartElement.Select();
-                    Selected = StartElement;
+                    SelectedElement = StartElement;
                 }
             }
         }
         public void Close()
         {
             register.Clear();
-            Selected = null;
+            SelectedElement = null;
         }
         public void Update(float dt, UINeighbors2.NeighborDirection inputDirection)
         {
-            if (Selected != null && !InputDisabled)
+            if (SelectedElement != null && !SelectedElement.Selected) SelectedElement.Selected = true;
+
+            if(InputDisabled) return;
+
+            if(SelectedElement == null)
+            {
+                if (StartElement == null) return;
+                else
+                {
+                    SelectedElement = StartElement;
+                    SelectedElement.Select();
+                }
+            }
+            else
             {
                 UIElement2? newSelected = null;
 
@@ -219,55 +247,74 @@ namespace ShapeUI
                         LastInputDirection = UINeighbors2.NeighborDirection.NONE;
                     }
                 }
-
-                if (inputDirection == UINeighbors2.NeighborDirection.TOP || (LastInputDirection == UINeighbors2.NeighborDirection.TOP && dirInputTimer == 0f))
+                else
                 {
-                    LastInputDirection = UINeighbors2.NeighborDirection.TOP;
-                    newSelected = CheckDirection(Selected, inputDirection);
-                    if (InputInterval > 0f) dirInputTimer = InputInterval - dt;
-                    //OnDirectionInput?.Invoke(lastDir, Selected, newSelected);
+                    if (inputDirection == UINeighbors2.NeighborDirection.TOP)// || (LastInputDirection == UINeighbors2.NeighborDirection.TOP && dirInputTimer == 0f))
+                    {
+                        LastInputDirection = UINeighbors2.NeighborDirection.TOP;
+                        newSelected = CheckDirection(SelectedElement, inputDirection);
+                        if (InputInterval > 0f) dirInputTimer = InputInterval - dt;
+                        //OnDirectionInput?.Invoke(lastDir, Selected, newSelected);
+                    }
+                    else if (inputDirection == UINeighbors2.NeighborDirection.RIGHT)// || (LastInputDirection == UINeighbors2.NeighborDirection.RIGHT && dirInputTimer == 0f))
+                    {
+                        LastInputDirection = UINeighbors2.NeighborDirection.RIGHT;
+                        newSelected = CheckDirection(SelectedElement, inputDirection);
+                        if (InputInterval > 0f) dirInputTimer = InputInterval - dt;
+                        //OnDirectionInput?.Invoke(lastDir, Selected, newSelected);
+                    }
+                    else if (inputDirection == UINeighbors2.NeighborDirection.BOTTOM)// || (LastInputDirection == UINeighbors2.NeighborDirection.BOTTOM && dirInputTimer == 0f))
+                    {
+                        LastInputDirection = UINeighbors2.NeighborDirection.BOTTOM;
+                        newSelected = CheckDirection(SelectedElement, inputDirection);
+                        if (InputInterval > 0f) dirInputTimer = InputInterval - dt;
+                        //OnDirectionInput?.Invoke(lastDir, Selected, newSelected);
+                    }
+                    else if (inputDirection == UINeighbors2.NeighborDirection.LEFT)// || (LastInputDirection == UINeighbors2.NeighborDirection.LEFT && dirInputTimer == 0f))
+                    {
+                        LastInputDirection = UINeighbors2.NeighborDirection.LEFT;
+                        newSelected = CheckDirection(SelectedElement, inputDirection);
+                        if (InputInterval > 0f) dirInputTimer = InputInterval - dt;
+                        //OnDirectionInput?.Invoke(lastDir, Selected, newSelected);
+                    }
                 }
-                else if (inputDirection == UINeighbors2.NeighborDirection.RIGHT || (LastInputDirection == UINeighbors2.NeighborDirection.RIGHT && dirInputTimer == 0f))
-                {
-                    LastInputDirection = UINeighbors2.NeighborDirection.RIGHT;
-                    newSelected = CheckDirection(Selected, inputDirection);
-                    if (InputInterval > 0f) dirInputTimer = InputInterval - dt;
-                    //OnDirectionInput?.Invoke(lastDir, Selected, newSelected);
-                }
-                else if (inputDirection == UINeighbors2.NeighborDirection.BOTTOM || (LastInputDirection == UINeighbors2.NeighborDirection.BOTTOM && dirInputTimer == 0f))
-                {
-                    LastInputDirection = UINeighbors2.NeighborDirection.BOTTOM;
-                    newSelected = CheckDirection(Selected, inputDirection);
-                    if (InputInterval > 0f) dirInputTimer = InputInterval - dt;
-                    //OnDirectionInput?.Invoke(lastDir, Selected, newSelected);
-                }
-                else if (inputDirection == UINeighbors2.NeighborDirection.LEFT || (LastInputDirection == UINeighbors2.NeighborDirection.LEFT && dirInputTimer == 0f))
-                {
-                    LastInputDirection = UINeighbors2.NeighborDirection.LEFT;
-                    newSelected = CheckDirection(Selected, inputDirection);
-                    if (InputInterval > 0f) dirInputTimer = InputInterval - dt;
-                    //OnDirectionInput?.Invoke(lastDir, Selected, newSelected);
-                }
+                
 
                 if (newSelected != null)
                 {
-                    Selected = newSelected;
+                    SelectedElement.Deselect();
+                    SelectedElement = newSelected;
+                    SelectedElement.Select();
                 }
             }
         }
 
+        private void OnUIElementSelected(UIElement2 element)
+        {
+            if (element == SelectedElement) return; //valid selection from the navigator
+            else
+            {
+                if (SelectedElement != null) SelectedElement.Deselect();
+                SelectedElement = element;
+            }
+        }
 
         protected UIElement2? CheckDirection(UIElement2 current, UINeighbors2.NeighborDirection dir)
         {
             var neighbor = current.Neighbors.GetNeighbor(dir); 
-            if (neighbor != null) return neighbor;
+            if (neighbor != null)
+            {
+                //current.Deselect();
+                //neighbor.Select();
+                return neighbor;
+            }
             else
             {
                 var closest = FindNeighbor(current, dir);
                 if (closest != null)
                 {
-                    current.Deselect();
-                    closest.Select();
+                    //current.Deselect();
+                    //closest.Select();
                     return closest;
                 }
             }
@@ -470,6 +517,9 @@ namespace ShapeUI
     }
     public class UIElement2
     {
+        public event Action<UIElement2>? WasSelected;
+
+
         protected Rectangle rect;
         protected Vector2 prevMousePos = new(0f);
 
@@ -478,7 +528,8 @@ namespace ShapeUI
         public UINeighbors2 Neighbors { get; private set; } = new();
         public string Tooltip { get; set; } = "";
 
-        public bool Selected { get; protected set; } = false;
+        public bool Released { get; protected set; } = false;
+        public bool Selected { get; internal set; } = false;
         public bool Pressed { get; protected set; } = false;
         public bool Disabled { get; set; } = false;
         public float MouseTolerance { get; set; } = 5f;
@@ -549,48 +600,111 @@ namespace ShapeUI
         }
         public virtual void Update(float dt, Vector2 mousePosUI)
         {
+            Released = false;
             if (!Disabled)
             {
-
-                float disSq = (prevMousePos - mousePosUI).LengthSquared();
-                if (disSq > MouseTolerance)
+                if(IsPointInside(prevMousePos))
                 {
-                    bool mouseInside = IsPointInside(mousePosUI);
-                    if (mouseInside && !Selected)
+                    float disSq = (prevMousePos - mousePosUI).LengthSquared();
+                    if (disSq > MouseTolerance)
                     {
-                        Selected = true;
-                        SelectedChanged(true);
-                    }
-                    else if (!mouseInside && Selected)
-                    {
-                        Selected = false;
-                        SelectedChanged(false);
+                        bool mouseInside = IsPointInside(mousePosUI);
+                        if (mouseInside && !Selected)
+                        {
+                            Selected = true;
+                            SelectedChanged(true);
+                            WasSelected?.Invoke(this);
+                        }
+                        else if (!mouseInside && Selected)
+                        {
+                            Selected = false;
+                            SelectedChanged(false);
+                        }
                     }
                 }
-
+                
                 bool prevPressed = Pressed;
-                bool sp = CheckShortcutPressed();
-                if (sp) Pressed = sp;
+                if (CheckShortcutPressed()) Pressed = true;
                 else if (Selected) Pressed = CheckPressed();
                 else Pressed = false;
 
 
                 if (Pressed && !prevPressed) PressedChanged(true);
-                else if (!Pressed && prevPressed) PressedChanged(false);
+                else if (!Pressed && prevPressed) 
+                { 
+                    PressedChanged(false); 
+                    Released = true;
+                }
             }
 
             prevMousePos = mousePosUI;
         }
-        public virtual void Draw(Vector2 uiSize, Vector2 stretchFactor)
+        public virtual void Draw()
         {
 
         }
 
-
+        
         public virtual void PressedChanged(bool pressed) { }
         public virtual void SelectedChanged(bool selected) { }
     }
 
+
+    public class TestButton : UIElement2
+    {
+        public string Text { get; set; } = "Button";
+        private Font font;
+        private int shortcutID = -1;
+        private int pressedID = -1;
+        public TestButton(string text, Font font, int pressedID, int shortcutID = -1) 
+        { 
+            this.Text = text; 
+            this.font = font; 
+            this.shortcutID = shortcutID;
+            this.pressedID = pressedID;
+        }
+
+        protected override bool CheckPressed()
+        {
+            if (pressedID < 0) return false;
+            else return InputHandler.IsDown(0, pressedID);
+        }
+
+        protected override bool CheckShortcutPressed()
+        {
+            if (shortcutID < 0) return false;
+            else return InputHandler.IsDown(0, shortcutID);
+        }
+        public override void Draw()
+        {
+            Rectangle r = GetRect();
+            
+            if (Disabled)
+            {
+                DrawRectangleRec(r, DARKGRAY);
+                SDrawing.DrawTextAligned(Text, r, 1f, RED, font, new(0.5f));
+            }
+            else
+            {
+                //string t = Text;
+                //if (CheckShortcutPressed()) t = "Shortcut";
+                Color buttonColor = GRAY;
+                Color textColor = DARKGREEN;
+                if (Pressed)
+                {
+                    buttonColor = WHITE;
+                    textColor = BLACK;
+                }
+                else if(Selected)
+                {
+                    buttonColor = LIGHTGRAY;
+                    textColor = LIME;
+                }
+                DrawRectangleRec(r, buttonColor);
+                SDrawing.DrawTextAligned(Text, r, 1f, textColor, font, new(0.5f));
+            }
+        }
+    }
 }
 
 /*
