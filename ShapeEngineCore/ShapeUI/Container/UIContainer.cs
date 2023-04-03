@@ -4,6 +4,108 @@ using ShapeLib;
 
 namespace ShapeUI.Container
 {
+    public class UIContainer2 : UIElement
+    {
+        public static void AlignUIElementsHorizontal(Rectangle rect, List<UIElement> elements, float gapRelative = 0f, float maxElementSizeRel = 1f)
+        {
+            AlignRectsHorizontal(rect, elements, 0, elements.Count, gapRelative, maxElementSizeRel);
+        }
+        public static void AlignUIElementsHorizontal(Rectangle rect, List<UIElement> elements, int startIndex, int endIndex, float gapRelative = 0f, float maxElementSizeRel = 1f)
+        {
+            Vector2 startPos = new(rect.x, rect.y);
+            float stretchFactorTotal = 0f;
+            for (int i = startIndex; i < endIndex; i++)
+            {
+                stretchFactorTotal += elements[i].StretchFactor;
+            }
+            int count = endIndex - startIndex;
+            int gaps = count - 1;
+
+            float totalWidth = rect.width;
+            float gapSize = totalWidth * gapRelative;
+            float elementWidth = (totalWidth - gaps * gapSize) / stretchFactorTotal;
+            Vector2 offset = new(0f, 0f);
+            for (int i = startIndex; i < endIndex; i++)
+            {
+                var item = elements[i];
+                float width = elementWidth * item.StretchFactor;
+                Vector2 size = new(width, rect.height);
+                Vector2 maxSize = maxElementSizeRel * new Vector2(rect.width, rect.height);
+                if (maxSize.X > 0f) size.X = MathF.Min(size.X, maxSize.X);
+                if (maxSize.Y > 0f) size.Y = MathF.Min(size.Y, maxSize.Y);
+                item.UpdateRect(startPos + offset, size, new(0f));
+                offset += new Vector2(gapSize + width, 0f);
+            }
+
+        }
+        public static void AlignUIElementsVertical(Rectangle rect, List<UIElement> elements, float gapRelative = 0f, float maxElementSizeRel = 1f)
+        {
+            AlignRectsVertical(rect, elements, 0, elements.Count, gapRelative, maxElementSizeRel);
+        }
+        public static void AlignUIElementsVertical(Rectangle rect, List<UIElement> elements, int startIndex, int endIndex, float gapRelative = 0f, float maxElementSizeRel = 1f)
+        {
+            Vector2 startPos = new(rect.x, rect.y);
+            float stretchFactorTotal = 0f;
+            for (int i = startIndex; i < endIndex; i++)
+            {
+                stretchFactorTotal += elements[i].StretchFactor;
+            }
+            int count = endIndex - startIndex;
+            int gaps = count - 1;
+
+            float totalHeight = rect.height;
+            float gapSize = totalHeight * gapRelative;
+            float elementHeight = (totalHeight - gaps * gapSize) / stretchFactorTotal;
+            Vector2 offset = new(0f, 0f);
+            for (int i = startIndex; i < endIndex; i++)
+            {
+                var item = elements[i];
+                float height = elementHeight * item.StretchFactor;
+                Vector2 size = new(rect.width, height);
+                Vector2 maxSize = maxElementSizeRel * new Vector2(rect.width, rect.height);
+                if (maxSize.X > 0f) size.X = MathF.Min(size.X, maxSize.X);
+                if (maxSize.Y > 0f) size.Y = MathF.Min(size.Y, maxSize.Y);
+                item.UpdateRect(startPos + offset, size, new(0f));
+                offset += new Vector2(0, gapSize + size.Y);
+            }
+
+        }
+        public static void AlignUIElementsGrid(Rectangle rect, List<UIElement> elements, int columns, int rows, float hGapRelative = 0f, float vGapRelative = 0f, bool leftToRight = true)
+        {
+            AlignRectsGrid(rect, elements, columns, rows, 0, elements.Count, hGapRelative, vGapRelative, leftToRight);
+        }
+        public static void AlignUIElementsGrid(Rectangle rect, List<UIElement> elements, int columns, int rows, int startIndex, int endIndex, float hGapRelative = 0f, float vGapRelative = 0f, bool leftToRight = true)
+        {
+            Vector2 startPos = new(rect.x, rect.y);
+
+            int hGaps = columns - 1;
+            float totalWidth = rect.width;
+            float hGapSize = totalWidth * hGapRelative;
+            float elementWidth = (totalWidth - hGaps * hGapSize) / columns;
+            Vector2 hGap = new(hGapSize + elementWidth, 0);
+
+            int vGaps = rows - 1;
+            float totalHeight = rect.height;
+            float vGapSize = totalHeight * vGapRelative;
+            float elementHeight = (totalHeight - vGaps * vGapSize) / rows;
+            Vector2 vGap = new(0, vGapSize + elementHeight);
+
+            Vector2 elementSize = new(elementWidth, elementHeight);
+            int displayedItems = endIndex - startIndex;
+
+            for (int i = 0; i < displayedItems; i++)
+            {
+                var item = elements[i + startIndex];
+                var coords = SUtils.TransformIndexToCoordinates(i, rows, columns, leftToRight);
+
+                item.UpdateRect(startPos + hGap * coords.col + vGap * coords.row, elementSize, new(0f));
+            }
+        }
+
+
+    }
+
+
     public class UIContainer : UIElement
     {
         protected List<UIElement> children = new();

@@ -6,6 +6,80 @@ namespace ShapeLib
 {
     public class SRect
     {
+        public static List<Rectangle> AlignRectsHorizontal(Rectangle rect, int count, float gapRelative = 0f, float maxElementSizeRel = 1f)
+        {
+            List<Rectangle> rects = new();
+            Vector2 startPos = new(rect.x, rect.y);
+            int gaps = count - 1;
+
+            float totalWidth = rect.width;
+            float gapSize = totalWidth * gapRelative;
+            float elementWidth = (totalWidth - gaps * gapSize) / count;
+            Vector2 offset = new(0f, 0f);
+            for (int i = 0; i < count; i++)
+            {
+                Vector2 size = new(elementWidth, rect.height);
+                Vector2 maxSize = maxElementSizeRel * new Vector2(rect.width, rect.height);
+                if (maxSize.X > 0f) size.X = MathF.Min(size.X, maxSize.X);
+                if (maxSize.Y > 0f) size.Y = MathF.Min(size.Y, maxSize.Y);
+                Rectangle r = ConstructRect(startPos + offset, size, new(0f));
+                rects.Add(r);
+                offset += new Vector2(gapSize + elementWidth, 0f);
+            }
+            return rects;
+        }
+        public static List<Rectangle> AlignRectsVertical(Rectangle rect, int count, float gapRelative = 0f, float maxElementSizeRel = 1f)
+        {
+            List<Rectangle> rects = new();
+            Vector2 startPos = new(rect.x, rect.y);
+            int gaps = count - 1;
+
+            float totalHeight = rect.height;
+            float gapSize = totalHeight * gapRelative;
+            float elementHeight = (totalHeight - gaps * gapSize) / count;
+            Vector2 offset = new(0f, 0f);
+            for (int i = 0; i < count; i++)
+            {
+                Vector2 size = new(rect.width, elementHeight);
+                Vector2 maxSize = maxElementSizeRel * new Vector2(rect.width, rect.height);
+                if (maxSize.X > 0f) size.X = MathF.Min(size.X, maxSize.X);
+                if (maxSize.Y > 0f) size.Y = MathF.Min(size.Y, maxSize.Y);
+                Rectangle r = ConstructRect(startPos + offset, size, new(0f));
+                rects.Add(r);
+                offset += new Vector2(0, gapSize + size.Y);
+            }
+            return rects;
+        }
+        public static List<Rectangle> AlignRectsGrid(Rectangle rect, int columns, int rows, int count, float hGapRelative = 0f, float vGapRelative = 0f, bool leftToRight = true)
+        {
+            List<Rectangle> rects = new();
+            Vector2 startPos = new(rect.x, rect.y);
+
+            int hGaps = columns - 1;
+            float totalWidth = rect.width;
+            float hGapSize = totalWidth * hGapRelative;
+            float elementWidth = (totalWidth - hGaps * hGapSize) / columns;
+            Vector2 hGap = new(hGapSize + elementWidth, 0);
+
+            int vGaps = rows - 1;
+            float totalHeight = rect.height;
+            float vGapSize = totalHeight * vGapRelative;
+            float elementHeight = (totalHeight - vGaps * vGapSize) / rows;
+            Vector2 vGap = new(0, vGapSize + elementHeight);
+
+            Vector2 elementSize = new(elementWidth, elementHeight);
+
+            for (int i = 0; i < count; i++)
+            {
+                var coords = SUtils.TransformIndexToCoordinates(i, rows, columns, leftToRight);
+                Rectangle r = ConstructRect(startPos + hGap * coords.col + vGap * coords.row, elementSize, new(0f));
+                rects.Add(r);
+            }
+            return rects;
+        }
+
+
+
         public static (bool collided, Vector2 hitPoint, Vector2 n, Vector2 newPos) CollidePlayfield(Rectangle playfieldRect, Vector2 objPos, float objRadius)
         {
             bool collided = false;
