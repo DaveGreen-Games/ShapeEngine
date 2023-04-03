@@ -1,4 +1,5 @@
-﻿using ShapeLib;
+﻿/*
+using ShapeLib;
 using System.Numerics;
 using Raylib_CsLo;
 
@@ -67,7 +68,7 @@ namespace ShapeUI
         protected bool HasOutline() { return outlineColor.a > 0 && outlineThickness > 1f; }
     }
 }
-
+*/
 
 /*
  public class Panel : UIElement

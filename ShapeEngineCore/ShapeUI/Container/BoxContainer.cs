@@ -59,7 +59,7 @@ namespace ShapeUI.Container
             float stretchFactorTotal = 0f;
             for (int i = startIndex; i < endIndex; i++)
             {
-                stretchFactorTotal += children[i].GetStretchFactor();
+                stretchFactorTotal += children[i].StretchFactor;
             }
             int count = endIndex - startIndex;
             int gaps = count - 1;
@@ -73,7 +73,7 @@ namespace ShapeUI.Container
                 for (int i = startIndex; i < endIndex; i++)
                 {
                     var item = children[i];
-                    float height = elementHeight * item.GetStretchFactor();
+                    float height = elementHeight * item.StretchFactor;
                     Vector2 size = new(rect.width, height);
                     Vector2 maxSize = maxElementSizeRel * new Vector2(rect.width, rect.height);
                     if (maxSize.X > 0f) size.X = MathF.Min(size.X, maxSize.X);
@@ -91,7 +91,7 @@ namespace ShapeUI.Container
                 for (int i = startIndex; i < endIndex; i++)
                 {
                     var item = children[i];
-                    float width = elementWidth * item.GetStretchFactor();
+                    float width = elementWidth * item.StretchFactor;
                     Vector2 size = new(width, rect.height);
                     Vector2 maxSize = maxElementSizeRel * new Vector2(rect.width, rect.height);
                     if (maxSize.X > 0f) size.X = MathF.Min(size.X, maxSize.X);

@@ -55,14 +55,14 @@ namespace ShapeUI.Container
                 curTab.Update(dt, mousePosUI);
             }
         }
-        public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
+        public override void Draw()
         {
-            if (HasBackground()) DrawBackground(GetRect(new(0f)), bgColor);
+            //if (HasBackground()) DrawBackground(GetRect(new(0f)), bgColor);
 
             var curTab = GetCurTab();
             if (curTab != null)
             {
-                curTab.Draw(uiSize, stretchFactor);
+                curTab.Draw();
             }
         }
 

@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿/*
+using System.Numerics;
 using Raylib_CsLo;
 using ShapeLib;
 
@@ -48,3 +49,4 @@ namespace ShapeUI
         protected bool HasText() { return textColor.a > 0 && text != ""; }
     }
 }
+*/

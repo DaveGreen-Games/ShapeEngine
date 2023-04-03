@@ -1,9 +1,58 @@
 ﻿using System.Numerics;
-using Raylib_CsLo;
-using ShapeLib;
 
 namespace ShapeUI
 {
+    public class ProgressElement : UIElement
+    {
+        public float F { get; protected set; } = 0f;
+        public float TransitionF { get; protected set; } = 0f;
+        public float ReservedF { get; set; } = 0f;
+        public float TransitionSpeed { get; set; } = 0.1f;
+        public Vector2 BarOffsetRelative { get; set; } = new(0f, 0f);
+
+        protected ProgressElement()
+        {
+            SetF(1f, true);
+        }
+        public ProgressElement(float transitionSpeed = 0.1f)
+        {
+            this.TransitionSpeed = transitionSpeed;
+            SetF(1.0f, true);
+        }
+        public ProgressElement(Vector2 barOffsetRelative, float transitionSpeed = 0.1f)
+        {
+            this.TransitionSpeed = transitionSpeed;
+            this.BarOffsetRelative = barOffsetRelative;
+            SetF(1.0f, true);
+        }
+
+
+        public void SetF(float value, bool setTransitionF = false)
+        {
+            F = Clamp(value, 0f, 1f);
+            if (setTransitionF) TransitionF = F;
+        }
+        public override void Update(float dt, Vector2 mousePosUI)
+        {
+            if (TransitionSpeed > 0f)
+            {
+                if (F > TransitionF)
+                {
+                    TransitionF = TransitionF + MathF.Min(TransitionSpeed * dt, F - TransitionF);
+                }
+                else if (F < TransitionF)
+                {
+                    TransitionF = TransitionF - MathF.Min(TransitionSpeed * dt, TransitionF - F);
+                }
+            }
+        }
+
+        public bool HasReservedPart() { return ReservedF > 0f; }
+        public bool HasBar() { return F > 0f; }
+        public bool HasTransition() { return TransitionSpeed > 0f && TransitionF > 0f; }
+    }
+
+}
 
     /*
     public class ProgressBarPro : ProgressBar
@@ -188,8 +237,7 @@ namespace ShapeUI
         }
     }
     */
-
-
+    /*
     public class ProgressRing : ProgressElement
     {
         protected float startAngleDeg = 0f;
@@ -203,8 +251,8 @@ namespace ShapeUI
             this.startAngleDeg = startAngleDeg;
             this.endAngleDeg = endAngleDeg;
             this.outlineSizeRelative = 0f;
-            this.barOffsetRelative = new(0f);
-            this.transitionSpeed = transitionSpeed;
+            this.BarOffsetRelative = new(0f);
+            this.TransitionSpeed = transitionSpeed;
             SetF(1f, true);
         }
         public ProgressRing(float startAngleDeg, float endAngleDeg, float innerRadiusFactor = 0f, float bgRadiusFactor = 0f, float transitionSpeed = 0.1f)
@@ -214,8 +262,8 @@ namespace ShapeUI
             this.innerRadiusFactor = innerRadiusFactor;
             this.bgRadiusFactor = bgRadiusFactor;
             this.outlineSizeRelative = 0f;
-            this.barOffsetRelative = new(0f);
-            this.transitionSpeed = transitionSpeed;
+            this.BarOffsetRelative = new(0f);
+            this.TransitionSpeed = transitionSpeed;
             SetF(1f, true);
         }
         public ProgressRing(float startAngleDeg, float endAngleDeg, float barRadiusOffset = 0f, float innerRadiusFactor = 0f, float bgRadiusFactor = 0f, float transitionSpeed = 0.1f)
@@ -226,8 +274,8 @@ namespace ShapeUI
             this.innerRadiusFactor = innerRadiusFactor;
             this.bgRadiusFactor = bgRadiusFactor;
             this.outlineSizeRelative = 0f;
-            this.barOffsetRelative = new(0f);
-            this.transitionSpeed = transitionSpeed;
+            this.BarOffsetRelative = new(0f);
+            this.TransitionSpeed = transitionSpeed;
             SetF(1f, true);
         }
         public ProgressRing(float startAngleDeg, float endAngleDeg, Vector2 barOffsetRelative, float barRadiusOffset = 0f, float innerRadiusFactor = 0f, float bgRadiusFactor = 0f, float transitionSpeed = 0.1f, float outlineSizeRelative = 0f)
@@ -238,8 +286,8 @@ namespace ShapeUI
             this.innerRadiusFactor = innerRadiusFactor;
             this.bgRadiusFactor = bgRadiusFactor;
             this.outlineSizeRelative = outlineSizeRelative;
-            this.barOffsetRelative = barOffsetRelative;
-            this.transitionSpeed = transitionSpeed;
+            this.BarOffsetRelative = barOffsetRelative;
+            this.TransitionSpeed = transitionSpeed;
             SetF(1f, true);
         }
 
@@ -250,7 +298,7 @@ namespace ShapeUI
             Rectangle rect = GetRect(new(0f));
             float radius = MathF.Min( rect.width, rect.height) / 2;
             Vector2 center = GetPos(new Vector2(0.5f));
-            Vector2 barOffset = GetSize() * barOffsetRelative;
+            Vector2 barOffset = GetSize() * BarOffsetRelative;
             if (HasBackground())
             {
             
@@ -259,12 +307,12 @@ namespace ShapeUI
                     if (bgRadiusFactor > 0f)
                     {
                         SDrawing.DrawRingFilled(center, radius * 1.02f * bgRadiusFactor, radius * 0.98f, startAngleDeg, endAngleDeg, reservedColor, 10);
-                        SDrawing.DrawRingFilled(center, radius * bgRadiusFactor, radius, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, 1f - reservedF), bgColor, 10);
+                        SDrawing.DrawRingFilled(center, radius * bgRadiusFactor, radius, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, 1f - ReservedF), bgColor, 10);
                     }
                     else
                     {
                         SDrawing.DrawCircleSector(center, radius, startAngleDeg, endAngleDeg, 24, reservedColor);
-                        SDrawing.DrawCircleSector(center, radius, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, 1f - reservedF), 24, bgColor); 
+                        SDrawing.DrawCircleSector(center, radius, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, 1f - ReservedF), 24, bgColor); 
                     }
                 }
                 else
@@ -281,32 +329,32 @@ namespace ShapeUI
             if (HasTransition())
             {
 
-                if (transitionF > f)
+                if (TransitionF > F)
                 {
                     if (innerRadiusFactor > 0f)
                     {
                         float rOffset = barRadiusOffset * radius;
-                        SDrawing.DrawRingFilled(center + barOffset, radius * innerRadiusFactor * 1.02f + rOffset, radius * 0.98f + rOffset, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, transitionF), transitionColor, 10);
-                        if (HasBar()) SDrawing.DrawRingFilled(center + barOffset, radius * innerRadiusFactor + rOffset, radius + rOffset, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, f), barColor, 10);
+                        SDrawing.DrawRingFilled(center + barOffset, radius * innerRadiusFactor * 1.02f + rOffset, radius * 0.98f + rOffset, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, TransitionF), transitionColor, 10);
+                        if (HasBar()) SDrawing.DrawRingFilled(center + barOffset, radius * innerRadiusFactor + rOffset, radius + rOffset, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, F), barColor, 10);
                     }
                     else
                     {
-                        SDrawing.DrawCircleSector(center + barOffset, radius * 0.98f, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, transitionF), 24, transitionColor);
-                        if (HasBar()) SDrawing.DrawCircleSector(center + barOffset, radius, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, f), 24, barColor);
+                        SDrawing.DrawCircleSector(center + barOffset, radius * 0.98f, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, TransitionF), 24, transitionColor);
+                        if (HasBar()) SDrawing.DrawCircleSector(center + barOffset, radius, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, F), 24, barColor);
                     }
                 }
-                else if (transitionF < f)
+                else if (TransitionF < F)
                 {
                     if (innerRadiusFactor > 0f)
                     {
                         float rOffset = barRadiusOffset * radius;
-                        SDrawing.DrawRingFilled(center + barOffset, radius * 1.02f * innerRadiusFactor + rOffset, radius * 0.98f + rOffset, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, f), transitionColor, 10);
-                        if(HasBar()) SDrawing.DrawRingFilled(center + barOffset, radius * innerRadiusFactor + rOffset, radius + rOffset, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, transitionF), barColor, 10);
+                        SDrawing.DrawRingFilled(center + barOffset, radius * 1.02f * innerRadiusFactor + rOffset, radius * 0.98f + rOffset, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, F), transitionColor, 10);
+                        if(HasBar()) SDrawing.DrawRingFilled(center + barOffset, radius * innerRadiusFactor + rOffset, radius + rOffset, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, TransitionF), barColor, 10);
                     }
                     else
                     {
-                        SDrawing.DrawCircleSector(center + barOffset, radius * 0.98f, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, f), 24, transitionColor);
-                        if(HasBar()) SDrawing.DrawCircleSector(center + barOffset, radius, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, transitionF), 24, barColor);
+                        SDrawing.DrawCircleSector(center + barOffset, radius * 0.98f, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, F), 24, transitionColor);
+                        if(HasBar()) SDrawing.DrawCircleSector(center + barOffset, radius, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, TransitionF), 24, barColor);
                     }
                 }
                 else
@@ -314,11 +362,11 @@ namespace ShapeUI
                     if (innerRadiusFactor > 0f)
                     {
                         float rOffset = barRadiusOffset * radius;
-                        if (HasBar()) SDrawing.DrawRingFilled(center + barOffset, radius * innerRadiusFactor + rOffset, radius + rOffset, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, f), barColor, 10);
+                        if (HasBar()) SDrawing.DrawRingFilled(center + barOffset, radius * innerRadiusFactor + rOffset, radius + rOffset, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, F), barColor, 10);
                     }
                     else
                     {
-                        if (HasBar()) SDrawing.DrawCircleSector(center + barOffset, radius, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, f), 24, barColor);
+                        if (HasBar()) SDrawing.DrawCircleSector(center + barOffset, radius, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, F), 24, barColor);
                     }
                 }
             }
@@ -327,11 +375,11 @@ namespace ShapeUI
                 if (innerRadiusFactor > 0f)
                 {
                     float rOffset = barRadiusOffset * radius;
-                    SDrawing.DrawRingFilled(center + barOffset, radius * innerRadiusFactor + rOffset, radius + rOffset, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, f), barColor, 10);
+                    SDrawing.DrawRingFilled(center + barOffset, radius * innerRadiusFactor + rOffset, radius + rOffset, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, F), barColor, 10);
                 }
                 else
                 {
-                    SDrawing.DrawCircleSector(center + barOffset, radius, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, f), 24, barColor);
+                    SDrawing.DrawCircleSector(center + barOffset, radius, startAngleDeg, Lerp(startAngleDeg, endAngleDeg, F), 24, barColor);
                 }
             }
             
@@ -359,32 +407,32 @@ namespace ShapeUI
         public ProgressCircle(Vector2 progressAlignement, float transitionSpeed = 0.1f)
         {
             this.outlineSizeRelative = 0f;
-            this.barOffsetRelative = new(0f);
-            this.transitionSpeed = transitionSpeed;
+            this.BarOffsetRelative = new(0f);
+            this.TransitionSpeed = transitionSpeed;
             this.progressAlignement = progressAlignement;
             SetF(1f, true);
         }
         public ProgressCircle(Vector2 barOffsetRelative, Vector2 progressAlignement, float transitionSpeed = 0.1f)
         {
             this.outlineSizeRelative = 0f;
-            this.barOffsetRelative = barOffsetRelative;
-            this.transitionSpeed = transitionSpeed;
+            this.BarOffsetRelative = barOffsetRelative;
+            this.TransitionSpeed = transitionSpeed;
             this.progressAlignement = progressAlignement;
             SetF(1f, true);
         }
         public ProgressCircle(Vector2 progressAlignement, float transitionSpeed = 0.1f, float outlineSize = 0f)
         {
             this.outlineSizeRelative = outlineSize;
-            this.barOffsetRelative = new(0f);
-            this.transitionSpeed = transitionSpeed;
+            this.BarOffsetRelative = new(0f);
+            this.TransitionSpeed = transitionSpeed;
             this.progressAlignement = progressAlignement;
             SetF(1f, true);
         }
         public ProgressCircle(Vector2 barOffsetRelative, Vector2 progressAlignement, float transitionSpeed = 0.1f, float outlineSize = 0f)
         {
             this.outlineSizeRelative = outlineSize;
-            this.barOffsetRelative = barOffsetRelative;
-            this.transitionSpeed = transitionSpeed;
+            this.BarOffsetRelative = barOffsetRelative;
+            this.TransitionSpeed = transitionSpeed;
             this.progressAlignement = progressAlignement;
             SetF(1f, true);
         }
@@ -402,7 +450,7 @@ namespace ShapeUI
                 if (HasReservedPart())
                 {
                     DrawCircleV(center, radius, reservedColor);
-                    DrawCircleV(center, radius * MathF.Sqrt(1f - reservedF), bgColor);
+                    DrawCircleV(center, radius * MathF.Sqrt(1f - ReservedF), bgColor);
                 }
                 else DrawCircleV(center, radius, bgColor);
             }
@@ -411,29 +459,29 @@ namespace ShapeUI
             {
                 Vector2 align = progressAlignement - new Vector2(0.5f, 0.5f);
                 Vector2 alignPos = center + align * radius * 2f;
-                Vector2 offset = barOffsetRelative * GetSize();
+                Vector2 offset = BarOffsetRelative * GetSize();
 
-                if (transitionF > f)
+                if (TransitionF > F)
                 {
-                    DrawCircleV(SVec.Lerp(alignPos, center, transitionF) + offset , radius * transitionF, transitionColor);
-                    if (HasBar()) DrawCircleV(SVec.Lerp(alignPos, center, f) + offset, radius * f, barColor);
+                    DrawCircleV(SVec.Lerp(alignPos, center, TransitionF) + offset , radius * TransitionF, transitionColor);
+                    if (HasBar()) DrawCircleV(SVec.Lerp(alignPos, center, F) + offset, radius * F, barColor);
                 }
-                else if (transitionF < f)
+                else if (TransitionF < F)
                 {
-                    DrawCircleV(SVec.Lerp(alignPos, center, f) + offset , radius * f, transitionColor);
-                    if (HasBar()) DrawCircleV(SVec.Lerp(alignPos, center, transitionF) + offset, radius * transitionF, barColor);
+                    DrawCircleV(SVec.Lerp(alignPos, center, F) + offset , radius * F, transitionColor);
+                    if (HasBar()) DrawCircleV(SVec.Lerp(alignPos, center, TransitionF) + offset, radius * TransitionF, barColor);
                 }
                 else
                 {
-                    if (HasBar()) DrawCircleV(SVec.Lerp(alignPos, center, f) + offset, radius * f, barColor);
+                    if (HasBar()) DrawCircleV(SVec.Lerp(alignPos, center, F) + offset, radius * F, barColor);
                 }
             }
             else
             {
                 Vector2 align = progressAlignement - new Vector2(0.5f, 0.5f);
                 Vector2 alignPos = center + align * radius * 2f;
-                Vector2 offset = barOffsetRelative * GetSize();
-                if (HasBar()) DrawCircleV(SVec.Lerp(alignPos, center, f) + offset , radius * f, barColor);
+                Vector2 offset = BarOffsetRelative * GetSize();
+                if (HasBar()) DrawCircleV(SVec.Lerp(alignPos, center, F) + offset , radius * F, barColor);
             }
 
             if (HasOutline()) SDrawing.DrawCircleLines(center, radius * 1.01f, outlineSizeRelative * MathF.Max(rect.width, rect.height), outlineColor);
@@ -510,36 +558,36 @@ namespace ShapeUI
                 if (HasReservedPart())
                 {
                     SDrawing.DrawRectangle(rect, pivot, angleDeg, reservedColor); // DrawRectangleRec(rect, reservedColor);
-                    SDrawing.DrawRectangle(CalculateBarRect(rect, 1f - reservedF, new(0f)), pivot, angleDeg, bgColor); // DrawRectangleRec(CalculateBarRect(rect, 1f - reservedF, new(0f)), bgColor);
+                    SDrawing.DrawRectangle(CalculateBarRect(rect, 1f - ReservedF, new(0f)), pivot, angleDeg, bgColor); // DrawRectangleRec(CalculateBarRect(rect, 1f - reservedF, new(0f)), bgColor);
                 }
                 else SDrawing.DrawRectangle(rect, pivot, angleDeg, bgColor); //DrawRectangleRec(rect, bgColor);
             }
 
             if (HasTransition())
             {
-                if (transitionF > f)
+                if (TransitionF > F)
                 {
-                    SDrawing.DrawRectangle(CalculateBarRect(rect, transitionF, barOffsetRelative), pivot, angleDeg, transitionColor); //DrawRectangleRec(CalculateBarRect(rect, transitionF, barOffsetRelative), transitionColor);
-                    if (HasBar()) SDrawing.DrawRectangle(CalculateBarRect(rect, f, barOffsetRelative), pivot, angleDeg, barColor);// DrawRectangleRec(CalculateBarRect(rect,f, barOffsetRelative), barColor);
+                    SDrawing.DrawRectangle(CalculateBarRect(rect, TransitionF, BarOffsetRelative), pivot, angleDeg, transitionColor); //DrawRectangleRec(CalculateBarRect(rect, transitionF, barOffsetRelative), transitionColor);
+                    if (HasBar()) SDrawing.DrawRectangle(CalculateBarRect(rect, F, BarOffsetRelative), pivot, angleDeg, barColor);// DrawRectangleRec(CalculateBarRect(rect,f, barOffsetRelative), barColor);
                 }
-                else if (transitionF < f)
+                else if (TransitionF < F)
                 {
-                    SDrawing.DrawRectangle(CalculateBarRect(rect, f, barOffsetRelative), pivot, angleDeg, transitionColor);  //DrawRectangleRec(CalculateBarRect(rect, f, barOffsetRelative), transitionColor);
-                    if (HasBar()) SDrawing.DrawRectangle(CalculateBarRect(rect, transitionF, barOffsetRelative), pivot, angleDeg, barColor);  //DrawRectangleRec(CalculateBarRect(rect, transitionF, barOffsetRelative), barColor);
+                    SDrawing.DrawRectangle(CalculateBarRect(rect, F, BarOffsetRelative), pivot, angleDeg, transitionColor);  //DrawRectangleRec(CalculateBarRect(rect, f, barOffsetRelative), transitionColor);
+                    if (HasBar()) SDrawing.DrawRectangle(CalculateBarRect(rect, TransitionF, BarOffsetRelative), pivot, angleDeg, barColor);  //DrawRectangleRec(CalculateBarRect(rect, transitionF, barOffsetRelative), barColor);
                 }
                 else
                 {
-                    if (HasBar()) SDrawing.DrawRectangle(CalculateBarRect(rect, f, barOffsetRelative), pivot, angleDeg, barColor);// DrawRectangleRec(CalculateBarRect(rect, f, barOffsetRelative), barColor);
+                    if (HasBar()) SDrawing.DrawRectangle(CalculateBarRect(rect, F, BarOffsetRelative), pivot, angleDeg, barColor);// DrawRectangleRec(CalculateBarRect(rect, f, barOffsetRelative), barColor);
                 }
             }
             else
             {
-                if (HasBar()) SDrawing.DrawRectangle(CalculateBarRect(rect, f, barOffsetRelative), pivot, angleDeg, barColor);  //DrawRectangleRec(CalculateBarRect(rect, f, barOffsetRelative), barColor);
+                if (HasBar()) SDrawing.DrawRectangle(CalculateBarRect(rect, F, BarOffsetRelative), pivot, angleDeg, barColor);  //DrawRectangleRec(CalculateBarRect(rect, f, barOffsetRelative), barColor);
             }
 
             if (HasOutline()) 
                 SDrawing.DrawRectangeLinesPro(
-                    new Vector2(rect.X, rect.y) + barOffsetRelative * new Vector2(rect.width, rect.height), 
+                    new Vector2(rect.X, rect.y) + BarOffsetRelative * new Vector2(rect.width, rect.height), 
                     new Vector2(rect.width, rect.height),
                     new(0f),
                     pivot, 
@@ -551,8 +599,8 @@ namespace ShapeUI
         {
             f = 1.0f - f;
             UIMargins progressMargins = new(f * top, f * right, f * bottom, f * left);
-            rect.x += barOffsetRelative.X * rect.width;
-            rect.y += barOffsetRelative.Y * rect.height;
+            rect.x += BarOffsetRelative.X * rect.width;
+            rect.y += BarOffsetRelative.Y * rect.height;
             return progressMargins.Apply(rect);
 
             //var rect = this.rect;
@@ -580,94 +628,4 @@ namespace ShapeUI
             //return rect;
         }
     }
-
-    public class ProgressElement : UIElement
-    {
-        protected Color bgColor = DARKGRAY;
-        protected Color barColor = GREEN;
-        protected Color transitionColor = WHITE;
-        protected Color outlineColor = GRAY;
-        protected Color reservedColor = YELLOW;
-
-        protected float outlineSizeRelative = 0f;
-        protected float f = 0f;
-        protected float reservedF = 0f;
-        protected float transitionF = 0f;
-        protected float transitionSpeed = 0.1f;
-        protected Vector2 barOffsetRelative = new(0f, 0f);
-
-        protected ProgressElement(){ }
-        public ProgressElement(float transitionSpeed = 0.1f, float outlineSizeRelative = 0f)
-        {
-            this.outlineSizeRelative = outlineSizeRelative;
-            this.transitionSpeed = transitionSpeed;
-            SetF(1.0f, true);
-        }
-        public ProgressElement(Vector2 barOffsetRelative, float transitionSpeed = 0.1f, float outlineSizeRelative = 0f)
-        {
-            this.outlineSizeRelative = outlineSizeRelative;
-            this.transitionSpeed = transitionSpeed;
-            this.barOffsetRelative = barOffsetRelative;
-            SetF(1.0f, true);
-        }
-
-
-        public void SetColors(Color barColor)
-        {
-            this.barColor = barColor;
-        }
-        public void SetColors(Color barColor, Color bgColor)
-        {
-            this.barColor = barColor;
-            this.bgColor = bgColor;
-        }
-        public void SetColors(Color barColor, Color bgColor, Color reservedColor)
-        {
-            this.barColor = barColor;
-            this.bgColor = bgColor;
-            this.reservedColor = reservedColor;
-        }
-        public void SetColors(Color barColor, Color bgColor, Color reservedColor, Color transitionColor)
-        {
-            this.barColor = barColor;
-            this.bgColor = bgColor;
-            this.transitionColor = transitionColor;
-            this.reservedColor = reservedColor;
-        }
-        public void SetColors(Color barColor, Color bgColor, Color reservedColor, Color transitionColor, Color outlineColor)
-        {
-            this.barColor = barColor;
-            this.bgColor = bgColor;
-            this.transitionColor = transitionColor;
-            this.outlineColor = outlineColor;
-            this.reservedColor = reservedColor;
-        }
-        public void SetTransitionSpeed(float value) { transitionSpeed = value; }
-        public void SetReservedF(float value) { reservedF = value; }
-        public void SetF(float value, bool setTransitionF = false)
-        {
-            f = Clamp(value, 0f, 1f);
-            if (setTransitionF) transitionF = f;
-        }
-        public override void Update(float dt, Vector2 mousePosUI)
-        {
-            if (transitionSpeed > 0f)
-            {
-                if (f > transitionF)
-                {
-                    transitionF = transitionF + MathF.Min(transitionSpeed * dt, f - transitionF);
-                }
-                else if (f < transitionF)
-                {
-                    transitionF = transitionF - MathF.Min(transitionSpeed * dt, transitionF - f);
-                }
-            }
-        }
-
-        public bool HasReservedPart() { return reservedColor.a > 0 && reservedF > 0f; }
-        public bool HasBackground() { return bgColor.a > 0; }
-        public bool HasBar() { return barColor.a > 0 && f > 0f; }
-        public bool HasTransition() { return transitionSpeed > 0f && transitionF > 0f && transitionColor.a > 0; }
-        public bool HasOutline() { return outlineSizeRelative > 0f && outlineColor.a > 0; }
-    }
-}
+    */

@@ -7,7 +7,7 @@ namespace ShapeUI.Container
     public class UIContainer : UIElement
     {
         protected List<UIElement> children = new();
-        protected Color bgColor = new(0, 0, 0, 0);
+        //protected Color bgColor = new(0, 0, 0, 0);
         protected string containerTitle = "";
 
         public UIContainer() { }
@@ -25,11 +25,11 @@ namespace ShapeUI.Container
 
         public string GetContainerTitle() { return containerTitle; }
         public void SetContainerTitle(string newTitle) { containerTitle = newTitle; }
-        public void SetColors(Color newBgColor)
-        {
-            bgColor = newBgColor;
-        }
-        public bool HasBackground() { return bgColor.a > 0; }
+        //public void SetColors(Color newBgColor)
+        //{
+        //    bgColor = newBgColor;
+        //}
+        //public bool HasBackground() { return bgColor.a > 0; }
 
         public bool HasChildren() { return children != null && children.Count > 0; }
 
@@ -43,33 +43,33 @@ namespace ShapeUI.Container
         /// </summary>
         /// <param name="index">Item to try to select.</param>
         /// <returns></returns>
-        public virtual bool Select(int index = -1)
-        {
-            var items = GetDisplayedItems();
-            if (items != null && items.Count > 0)
-            {
-                int i = 0;
-                if (index < 0) i = 0;
-                else if (index >= items.Count) i = items.Count - 1;
-                else i = index;
-                var element = items[i];
-                if (element != null)
-                {
-                    var selectable = element as UIElementSelectable;
-                    if (selectable != null)
-                    {
-                        UIHandler.SelectUIElement(selectable);
-                        return true;
-                    }
-                    else
-                    {
-                        var container = element as UIContainer;
-                        if (container != null) return container.Select(index);
-                    }
-                }
-            }
-            return false;
-        }
+        //public virtual bool Select(int index = -1)
+        //{
+        //    var items = GetDisplayedItems();
+        //    if (items != null && items.Count > 0)
+        //    {
+        //        int i = 0;
+        //        if (index < 0) i = 0;
+        //        else if (index >= items.Count) i = items.Count - 1;
+        //        else i = index;
+        //        var element = items[i];
+        //        if (element != null)
+        //        {
+        //            var selectable = element as UIElementSelectable;
+        //            if (selectable != null)
+        //            {
+        //                UIHandler.SelectUIElement(selectable);
+        //                return true;
+        //            }
+        //            else
+        //            {
+        //                var container = element as UIContainer;
+        //                if (container != null) return container.Select(index);
+        //            }
+        //        }
+        //    }
+        //    return false;
+        //}
 
         public UIElement? GetChild(int index)
         {
@@ -154,70 +154,71 @@ namespace ShapeUI.Container
         }
         public bool IsElementSelected(UIElement element)
         {
-            var selectable = element as UIElementSelectable;
-            if (selectable != null) return selectable.IsSelected();
-            else return false;
+            return element.Selected;
+            //var selectable = element as UIElementSelectable;
+            //if (selectable != null) return selectable.IsSelected();
+            //else return false;
         }
-        public bool IsSelected(bool deep = false)
-        {
-            var displayedItems = GetDisplayedItems();
-            if (displayedItems == null || displayedItems.Count <= 0) return false;
-            if (deep)
-            {
-                foreach (var child in displayedItems)
-                {
-                    var selectable = child as UIElementSelectable;
-                    if (selectable != null)
-                    {
-                        if (selectable.IsSelected()) return true;
-                    }
-                    else
-                    {
-                        var container = child as UIContainer;
-                        if (container != null)
-                        {
-                            bool selected = container.IsSelected();
-                            if (selected) return true;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                foreach (var item in displayedItems)
-                {
-                    if (IsElementSelected(item)) return true;
-                }
-            }
-
-            return false;
-        }
+        //public bool IsSelected(bool deep = false)
+        //{
+        //    var displayedItems = GetDisplayedItems();
+        //    if (displayedItems == null || displayedItems.Count <= 0) return false;
+        //    if (deep)
+        //    {
+        //        foreach (var child in displayedItems)
+        //        {
+        //            var selectable = child as UIElementSelectable;
+        //            if (selectable != null)
+        //            {
+        //                if (selectable.IsSelected()) return true;
+        //            }
+        //            else
+        //            {
+        //                var container = child as UIContainer;
+        //                if (container != null)
+        //                {
+        //                    bool selected = container.IsSelected();
+        //                    if (selected) return true;
+        //                }
+        //            }
+        //        }
+        //    }
+        //    else
+        //    {
+        //        foreach (var item in displayedItems)
+        //        {
+        //            if (IsElementSelected(item)) return true;
+        //        }
+        //    }
+        //
+        //    return false;
+        //}
 
         public virtual void AddChild(UIElement newChild)
         {
-            RegisterChild(newChild);
+            //RegisterChild(newChild);
             children.Add(newChild);
         }
 
         public virtual void AddChildren(List<UIElement> newChildren)
         {
-            foreach (var child in newChildren)
-            {
-                RegisterChild(child);
-            }
+            //foreach (var child in newChildren)
+            //{
+            //    RegisterChild(child);
+            //}
             children.AddRange(newChildren);
         }
         public virtual void AddChildren(params UIElement[] newChildren)
         {
-            foreach (var child in newChildren)
-            {
-                RegisterChild(child);
-            }
+            //foreach (var child in newChildren)
+            //{
+            //    RegisterChild(child);
+            //}
             children.AddRange(newChildren);
         }
         public virtual void RemoveChild(UIElement child)
         {
-            UnregisterChild(child);
+            //UnregisterChild(child);
             children.Remove(child);
         }
 
@@ -237,20 +238,20 @@ namespace ShapeUI.Container
         }
         public void RemoveAll(Predicate<UIElement> match)
         {
-            UnregisterChildren();
+            //UnregisterChildren();
             children.RemoveAll(match);
-            RegisterChildren();
+            //RegisterChildren();
         }
         public void ClearChildren()
         {
-            UnregisterChildren();
+            //UnregisterChildren();
             children.Clear();
         }
 
-        public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
+        public override void Draw()
         {
-            if (HasBackground()) DrawBackground(GetRect(new(0f)), bgColor);
-            DrawChildren(uiSize, stretchFactor);
+            //if (HasBackground()) DrawBackground(GetRect(new(0f)), bgColor);
+            DrawChildren();
         }
 
         public override void Update(float dt, Vector2 mousePosUI)
@@ -262,63 +263,63 @@ namespace ShapeUI.Container
             }
         }
 
-        public virtual void RegisterChildren()
-        {
-            foreach (var child in GetDisplayedItems())
-            {
-                RegisterChild(child);
-            }
-        }
-
-        public virtual void UnregisterChildren()
-        {
-            foreach (var child in GetDisplayedItems())
-            {
-                UnregisterChild(child);
-            }
-        }
-
-        protected void RegisterChild(UIElement child)
-        {
-            if (child is UIContainer)
-            {
-                var container = (UIContainer)child;
-                container.RegisterChildren();
-            }
-            else if (child is UIElementSelectable)
-            {
-                var selectable = (UIElementSelectable)child;
-                UIHandler.RegisterUIElement(selectable);
-            }
-        }
-
-        protected void UnregisterChild(UIElement child)
-        {
-            if (child is UIContainer)
-            {
-                var container = (UIContainer)child;
-                container.UnregisterChildren();
-            }
-            else if (child is UIElementSelectable)
-            {
-                var selectable = (UIElementSelectable)child;
-                UIHandler.UnregisterUIElement(selectable);
-            }
-        }
-        protected virtual void DrawChildren(Vector2 uiSize, Vector2 stretchFactor, int startIndex = -1, int endIndex = -1)
+        //public virtual void RegisterChildren()
+        //{
+        //    foreach (var child in GetDisplayedItems())
+        //    {
+        //        RegisterChild(child);
+        //    }
+        //}
+        //
+        //public virtual void UnregisterChildren()
+        //{
+        //    foreach (var child in GetDisplayedItems())
+        //    {
+        //        UnregisterChild(child);
+        //    }
+        //}
+        //
+        //protected void RegisterChild(UIElement child)
+        //{
+        //    if (child is UIContainer)
+        //    {
+        //        var container = (UIContainer)child;
+        //        container.RegisterChildren();
+        //    }
+        //    else if (child is UIElementSelectable)
+        //    {
+        //        var selectable = (UIElementSelectable)child;
+        //        UIHandler.RegisterUIElement(selectable);
+        //    }
+        //}
+        //
+        //protected void UnregisterChild(UIElement child)
+        //{
+        //    if (child is UIContainer)
+        //    {
+        //        var container = (UIContainer)child;
+        //        container.UnregisterChildren();
+        //    }
+        //    else if (child is UIElementSelectable)
+        //    {
+        //        var selectable = (UIElementSelectable)child;
+        //        UIHandler.UnregisterUIElement(selectable);
+        //    }
+        //}
+        protected virtual void DrawChildren(int startIndex = -1, int endIndex = -1)
         {
             if (startIndex < 0 || endIndex < 0)
             {
                 foreach (var child in children)
                 {
-                    child.Draw(uiSize, stretchFactor);
+                    child.Draw();
                 }
             }
             else
             {
                 for (int i = startIndex; i < endIndex; i++)
                 {
-                    children[i].Draw(uiSize, stretchFactor);
+                    children[i].Draw();
                 }
             }
 
@@ -341,10 +342,10 @@ namespace ShapeUI.Container
             }
         }
 
-        protected virtual void DrawBackground(Rectangle rect, Color color)
-        {
-            SDrawing.DrawRectangle(rect, color);
-        }
+        //protected virtual void DrawBackground(Rectangle rect, Color color)
+        //{
+        //    SDrawing.DrawRectangle(rect, color);
+        //}
     }
 
 }
