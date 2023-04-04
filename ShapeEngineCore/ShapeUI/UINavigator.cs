@@ -6,13 +6,14 @@ namespace ShapeUI
 {
     public class UINavigator
     {
-        private HashSet<UIElement> register = new();
+        private List<UIElement> elements = new();
 
         public UIElement? StartElement { get; protected set; } = null;
         public UIElement? SelectedElement { get; protected set; } = null;
         public float InputInterval { get; set; } = 1f;
         public bool InputDisabled { get; set; } = false;
         public UINeighbors.NeighborDirection LastInputDirection { get; protected set; } = UINeighbors.NeighborDirection.NONE;
+        public UINeighbors.NeighborDirection CurInputDirection { get; protected set; } = UINeighbors.NeighborDirection.NONE;
 
         private float dirInputTimer = -1f;
 
@@ -22,98 +23,176 @@ namespace ShapeUI
             RegisterElements(elements);
         }
 
-        public void RegisterElements(params UIElement[] elements)
+
+        public void RegisterElements(params UIElement[] newElements)
         {
-            if (elements.Length > 0)
+            if (newElements.Length > 0)
             {
                 if (SelectedElement != null)
                 {
-                    SelectedElement.Deselect();
+                    SelectedElement.Selected = false;
                     SelectedElement = null;
                 }
 
-                foreach (var element in register)
-                {
-                    element.Deselect();
-                    element.WasSelected -= OnUIElementSelected;
-                }
-                register.Clear();
-
                 foreach (var element in elements)
                 {
-                    element.Deselect();
-                    element.WasSelected += OnUIElementSelected;
+                    element.Selected = false;
+                    element.WasSelected -= OnUIElementSelected;
+                    //element.WasDeselected -= OnUIElementDeselected;
                 }
+                elements.Clear();
 
-                StartElement = elements[0];
-                StartElement.Select();
-                SelectedElement = StartElement;
-
-                register = elements.ToHashSet();
+                foreach (var element in newElements)
+                {
+                    element.Selected = false;
+                    element.WasSelected += OnUIElementSelected;
+                    //element.WasDeselected += OnUIElementDeselected;
+                }
+                
+                elements = newElements.ToList();
+                
+                StartElement = GetStartElement();
+                
+                if(StartElement != null)
+                {
+                    StartElement.Select();
+                    SelectedElement = StartElement;
+                }
             }
             else
             {
                 if (SelectedElement != null)
                 {
-                    SelectedElement.Deselect();
+                    SelectedElement.Selected = false;
                     SelectedElement = null;
                 }
                 StartElement = null;
-                foreach (var element in register)
+                foreach (var element in elements)
                 {
-                    element.Deselect();
+                    element.Selected = false;
                     element.WasSelected -= OnUIElementSelected;
+                    //element.WasDeselected -= OnUIElementDeselected;
                 }
-                register.Clear();
+                elements.Clear();
             }
 
         }
         public void Reset()
         {
-            if (register.Count > 0)
+            if (elements.Count > 0)
             {
-                foreach (var element in register) { element.Deselect(); }
+                foreach (var element in elements) { element.Deselect(); }
                 if (StartElement != null)
                 {
                     StartElement.Select();
                     SelectedElement = StartElement;
                 }
-                else
-                {
-
-                    StartElement = register.First();
-                    StartElement.Select();
-                    SelectedElement = StartElement;
-                }
+                //else
+                //{
+                //    
+                //    StartElement = elements.First();
+                //    StartElement.Select();
+                //    SelectedElement = StartElement;
+                //}
             }
         }
         public void Close()
         {
-            register.Clear();
+            elements.Clear();
             SelectedElement = null;
         }
-        public void Update(float dt, UINeighbors.NeighborDirection inputDirection)
+        
+
+        public void Navigate(UINeighbors.NeighborDirection inputDirection)
         {
-            if (SelectedElement != null && !SelectedElement.Selected) SelectedElement.Selected = true;
-
             if (InputDisabled) return;
+            if (SelectedElement == null) return;
 
-            if (SelectedElement == null)
+            UIElement? newSelected = null;
+
+            LastInputDirection = CurInputDirection;
+            CurInputDirection = inputDirection;
+
+            if (inputDirection == UINeighbors.NeighborDirection.TOP)
             {
-                if (StartElement == null) return;
-                else
+                newSelected = CheckDirection(SelectedElement, inputDirection);
+                if (InputInterval > 0f) dirInputTimer = InputInterval;
+            }
+            else if (inputDirection == UINeighbors.NeighborDirection.RIGHT)
+            {
+                newSelected = CheckDirection(SelectedElement, inputDirection);
+                if (InputInterval > 0f) dirInputTimer = InputInterval;
+            }
+            else if (inputDirection == UINeighbors.NeighborDirection.BOTTOM)
+            {
+                newSelected = CheckDirection(SelectedElement, inputDirection);
+                if (InputInterval > 0f) dirInputTimer = InputInterval;
+            }
+            else if (inputDirection == UINeighbors.NeighborDirection.LEFT)
+            {
+                newSelected = CheckDirection(SelectedElement, inputDirection);
+                if (InputInterval > 0f) dirInputTimer = InputInterval;
+            }
+            
+            if (newSelected != null)
+            {
+                SelectedElement.Deselect();
+                SelectedElement = newSelected;
+                SelectedElement.Select();
+            }
+        }
+        public void Update(float dt)
+        {
+            var newStartElement = GetStartElement();
+            if(newStartElement == null)
+            {
+                if(StartElement != null)
+                {
+                    if (StartElement.Selected) StartElement.Selected = false;
+                    if (SelectedElement == StartElement) SelectedElement = null;
+                    StartElement = null;
+                }
+            }
+            else
+            {
+                if(newStartElement != StartElement)
+                {
+                    if(StartElement != null && StartElement.Selected) StartElement.Selected = false;
+                    if (SelectedElement == StartElement) 
+                    { 
+                        SelectedElement = newStartElement;
+                        SelectedElement.Select();
+                    }
+                    StartElement = newStartElement;
+                }
+            }
+
+            if(SelectedElement != null)
+            {
+                if(SelectedElement.Hidden || SelectedElement.Disabled)
+                {
+                    if(StartElement != null)
+                    {
+                        SelectedElement = StartElement;
+                        SelectedElement.Select();
+                    }
+                }
+                else if(!SelectedElement.Selected) SelectedElement.Selected = true;
+            }
+            else
+            {
+                if(StartElement != null)
                 {
                     SelectedElement = StartElement;
                     SelectedElement.Select();
                 }
             }
-            else
-            {
-                UIElement? newSelected = null;
 
+            if(SelectedElement != null)
+            {
                 if (dirInputTimer > 0f)
                 {
-                    if (LastInputDirection == inputDirection)
+                    if (LastInputDirection == CurInputDirection)
                     {
                         dirInputTimer -= dt;
                         if (dirInputTimer <= 0f) dirInputTimer = 0f;
@@ -121,51 +200,76 @@ namespace ShapeUI
                     else
                     {
                         dirInputTimer = -1f;
-                        LastInputDirection = UINeighbors.NeighborDirection.NONE;
+                        //LastInputDirection = UINeighbors.NeighborDirection.NONE;
                     }
-                }
-                else
-                {
-                    if (inputDirection == UINeighbors.NeighborDirection.TOP)// || (LastInputDirection == UINeighbors2.NeighborDirection.TOP && dirInputTimer == 0f))
-                    {
-                        LastInputDirection = UINeighbors.NeighborDirection.TOP;
-                        newSelected = CheckDirection(SelectedElement, inputDirection);
-                        if (InputInterval > 0f) dirInputTimer = InputInterval - dt;
-                        //OnDirectionInput?.Invoke(lastDir, Selected, newSelected);
-                    }
-                    else if (inputDirection == UINeighbors.NeighborDirection.RIGHT)// || (LastInputDirection == UINeighbors2.NeighborDirection.RIGHT && dirInputTimer == 0f))
-                    {
-                        LastInputDirection = UINeighbors.NeighborDirection.RIGHT;
-                        newSelected = CheckDirection(SelectedElement, inputDirection);
-                        if (InputInterval > 0f) dirInputTimer = InputInterval - dt;
-                        //OnDirectionInput?.Invoke(lastDir, Selected, newSelected);
-                    }
-                    else if (inputDirection == UINeighbors.NeighborDirection.BOTTOM)// || (LastInputDirection == UINeighbors2.NeighborDirection.BOTTOM && dirInputTimer == 0f))
-                    {
-                        LastInputDirection = UINeighbors.NeighborDirection.BOTTOM;
-                        newSelected = CheckDirection(SelectedElement, inputDirection);
-                        if (InputInterval > 0f) dirInputTimer = InputInterval - dt;
-                        //OnDirectionInput?.Invoke(lastDir, Selected, newSelected);
-                    }
-                    else if (inputDirection == UINeighbors.NeighborDirection.LEFT)// || (LastInputDirection == UINeighbors2.NeighborDirection.LEFT && dirInputTimer == 0f))
-                    {
-                        LastInputDirection = UINeighbors.NeighborDirection.LEFT;
-                        newSelected = CheckDirection(SelectedElement, inputDirection);
-                        if (InputInterval > 0f) dirInputTimer = InputInterval - dt;
-                        //OnDirectionInput?.Invoke(lastDir, Selected, newSelected);
-                    }
-                }
-
-
-                if (newSelected != null)
-                {
-                    SelectedElement.Deselect();
-                    SelectedElement = newSelected;
-                    SelectedElement.Select();
                 }
             }
+
+            //else
+            //{
+            //    UIElement? newSelected = null;
+            //
+            //    if (dirInputTimer > 0f)
+            //    {
+            //        if (LastInputDirection == inputDirection)
+            //        {
+            //            dirInputTimer -= dt;
+            //            if (dirInputTimer <= 0f) dirInputTimer = 0f;
+            //        }
+            //        else
+            //        {
+            //            dirInputTimer = -1f;
+            //            LastInputDirection = UINeighbors.NeighborDirection.NONE;
+            //        }
+            //    }
+            //    else
+            //    {
+            //        if (inputDirection == UINeighbors.NeighborDirection.TOP)// || (LastInputDirection == UINeighbors2.NeighborDirection.TOP && dirInputTimer == 0f))
+            //        {
+            //            LastInputDirection = UINeighbors.NeighborDirection.TOP;
+            //            newSelected = CheckDirection(SelectedElement, inputDirection);
+            //            if (InputInterval > 0f) dirInputTimer = InputInterval - dt;
+            //            //OnDirectionInput?.Invoke(lastDir, Selected, newSelected);
+            //        }
+            //        else if (inputDirection == UINeighbors.NeighborDirection.RIGHT)// || (LastInputDirection == UINeighbors2.NeighborDirection.RIGHT && dirInputTimer == 0f))
+            //        {
+            //            LastInputDirection = UINeighbors.NeighborDirection.RIGHT;
+            //            newSelected = CheckDirection(SelectedElement, inputDirection);
+            //            if (InputInterval > 0f) dirInputTimer = InputInterval - dt;
+            //            //OnDirectionInput?.Invoke(lastDir, Selected, newSelected);
+            //        }
+            //        else if (inputDirection == UINeighbors.NeighborDirection.BOTTOM)// || (LastInputDirection == UINeighbors2.NeighborDirection.BOTTOM && dirInputTimer == 0f))
+            //        {
+            //            LastInputDirection = UINeighbors.NeighborDirection.BOTTOM;
+            //            newSelected = CheckDirection(SelectedElement, inputDirection);
+            //            if (InputInterval > 0f) dirInputTimer = InputInterval - dt;
+            //            //OnDirectionInput?.Invoke(lastDir, Selected, newSelected);
+            //        }
+            //        else if (inputDirection == UINeighbors.NeighborDirection.LEFT)// || (LastInputDirection == UINeighbors2.NeighborDirection.LEFT && dirInputTimer == 0f))
+            //        {
+            //            LastInputDirection = UINeighbors.NeighborDirection.LEFT;
+            //            newSelected = CheckDirection(SelectedElement, inputDirection);
+            //            if (InputInterval > 0f) dirInputTimer = InputInterval - dt;
+            //            //OnDirectionInput?.Invoke(lastDir, Selected, newSelected);
+            //        }
+            //    }
+            //
+            //
+            //    if (newSelected != null)
+            //    {
+            //        SelectedElement.Deselect();
+            //        SelectedElement = newSelected;
+            //        SelectedElement.Select();
+            //    }
+            //}
         }
 
+        protected UIElement? GetStartElement()
+        {
+            var available = elements.FindAll(e => !e.Hidden && !e.Disabled);
+            if(available.Count > 0) return available[0];
+            return null;
+        }
         private void OnUIElementSelected(UIElement element)
         {
             if (element == SelectedElement) return; //valid selection from the navigator
@@ -175,11 +279,14 @@ namespace ShapeUI
                 SelectedElement = element;
             }
         }
-
+        //private void OnUIElementDeselected(UIElement element)
+        //{
+        //
+        //}
         protected UIElement? CheckDirection(UIElement current, UINeighbors.NeighborDirection dir)
         {
             var neighbor = current.Neighbors.GetNeighbor(dir);
-            if (neighbor != null)
+            if (neighbor != null && !neighbor.Disabled && !neighbor.Hidden)
             {
                 //current.Deselect();
                 //neighbor.Select();
@@ -199,8 +306,8 @@ namespace ShapeUI
         }
         protected UIElement? FindNeighbor(UIElement current, UINeighbors.NeighborDirection dir)
         {
-            if (register == null || register.Count <= 0) return null;
-            List<UIElement> neighbors = register.ToList().FindAll(e => e != current && !e.Disabled);
+            if (elements == null || elements.Count <= 0) return null;
+            List<UIElement> neighbors = elements.ToList().FindAll(e => e != current && !e.Disabled && !e.Hidden);
             if (neighbors.Count <= 0) return null;
             if (neighbors.Count == 1)
             {

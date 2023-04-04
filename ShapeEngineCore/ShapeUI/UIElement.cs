@@ -9,7 +9,6 @@ namespace ShapeUI
     {
         public event Action<UIElement>? WasSelected;
 
-
         protected Rectangle rect;
         protected Vector2 prevMousePos = new(0f);
 
@@ -21,7 +20,35 @@ namespace ShapeUI
         public bool Released { get; protected set; } = false;
         public bool Selected { get; internal set; } = false;
         public bool Pressed { get; protected set; } = false;
-        public bool Disabled { get; set; } = false;
+
+        protected bool disabled = false;
+        public bool Disabled 
+        {
+            get { return disabled; }
+            set 
+            {
+                disabled = value;
+                if(disabled && Selected)
+                {
+                    Selected = false;
+                    //WasDeselected?.Invoke(this);
+                }
+            }
+        }
+        protected bool hidden = false;
+        public bool Hidden 
+        {
+            get { return hidden; }
+            set
+            {
+                hidden = value;
+                if(hidden && Selected)
+                {
+                    Selected = false;
+                    //WasDeselected?.Invoke(this);
+                }
+            }
+        }
         public float MouseTolerance { get; set; } = 5f;
 
         
@@ -88,10 +115,14 @@ namespace ShapeUI
         {
             return CheckCollisionPointRec(uiPos, GetRect(new(0f)));
         }
+        public void Draw()
+        {
+            if (!Hidden) DrawElement();
+        }
         public virtual void Update(float dt, Vector2 mousePosUI)
         {
             Released = false;
-            if (!Disabled)
+            if (!Disabled && !Hidden)
             {
                 if(IsPointInside(prevMousePos))
                 {
@@ -129,11 +160,7 @@ namespace ShapeUI
 
             prevMousePos = mousePosUI;
         }
-        public virtual void Draw()
-        {
-
-        }
-
+        public virtual void DrawElement() { }
         
         public virtual void PressedChanged(bool pressed) { }
         public virtual void SelectedChanged(bool selected) { }
