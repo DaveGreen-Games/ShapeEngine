@@ -237,6 +237,12 @@ namespace ShapeEngineDemo
             InputAction uiUp = new(InputIDs.UI_Up, InputAction.Keys.W);
             InputAction uiLeft = new(InputIDs.UI_Left, InputAction.Keys.A);
             InputAction uiRight = new(InputIDs.UI_Right, InputAction.Keys.D);
+
+            InputAction uiNext = new(2000, InputAction.Keys.E);
+            InputAction uiPrev = new(2001, InputAction.Keys.Q);
+            InputAction uiNextPage = new(2002, InputAction.Keys.C);
+            InputAction uiPrevPage = new(2003, InputAction.Keys.X);
+            
             InputMap inputMap = new(InputIDs.INPUTMAP_Default, "Default",
                 iaQuit, iaFullscreen, 
                 rotateLeft, rotateRight, rotate, 
@@ -246,9 +252,10 @@ namespace ShapeEngineDemo
                 spawnAsteroidDebug, healPlayerDebug, toggleDrawCollidersDebug, toggleDrawHelpersDebug, cycleZoomDebug, 
                 cycleResolutionsDebug, nextMonitorDebug, cycleFramerateLimitDebug, toggleVsyncDebug,
 
-                uiPressed, uiCancel, uiDown, uiUp, uiLeft, uiRight
+                uiPressed, uiCancel, uiDown, uiUp, uiLeft, uiRight,
+                uiNext, uiPrev, uiNextPage, uiPrevPage
                 );
-            inputMap.AddActions(InputHandler.UI_Default_InputActions);
+            //inputMap.AddActions(InputHandler.UI_Default_InputActions);
             InputHandler.AddInputMap(inputMap);
             InputHandler.SwitchToMap(InputIDs.INPUTMAP_Default, 0);
 

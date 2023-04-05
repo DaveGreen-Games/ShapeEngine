@@ -70,6 +70,7 @@ namespace ShapeUI
 
         
         protected virtual bool CheckPressed() { return false; }
+        //protected virtual bool CheckMousePressed() { return false; }
         protected virtual bool CheckShortcutPressed() { return false; }
         
         public void Select()
@@ -77,6 +78,7 @@ namespace ShapeUI
             if (Selected) return;
             Selected = true;
             SelectedChanged(true);
+            WasSelected?.Invoke(this);
         }
         public void Deselect()
         {
@@ -203,7 +205,6 @@ namespace ShapeUI
             if (pressedID < 0) return false;
             else return InputHandler.IsDown(0, pressedID);
         }
-
         protected override bool CheckShortcutPressed()
         {
             if (shortcutID < 0) return false;

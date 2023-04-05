@@ -13,6 +13,11 @@ namespace ShapeEngineDemo
         TestButton b1, b2, b3;
         UINavigator nav;
 
+
+        List<TestButton> testButtons = new();
+        UIContainer testContainer;
+
+
         public MainMenu()
         {
             var font = Demo.FONT.GetFont(Demo.FONT_Medium);
@@ -24,6 +29,16 @@ namespace ShapeEngineDemo
             b3.Neighbors.SetNeighbor(b1, UINeighbors.NeighborDirection.BOTTOM);
             nav = new(b1, b2, b3);
             nav.StartNavigation();
+
+            for (int i = 0; i < 8; i++)
+            {
+                TestButton b = new(String.Format("Test Button {0}", i), font, InputIDs.UI_Pressed, -1);
+                testButtons.Add(b);
+            }
+            testContainer = new(testButtons.ToArray());
+            
+            //testContainer.DisplayCount = 4;
+            testContainer.StartNavigation();
         }
 
 
@@ -45,32 +60,61 @@ namespace ShapeEngineDemo
         public override void Update(float dt)
         {
             Vector2 uiSize = ScreenHandler.UISize();
-            Vector2 center = uiSize * 0.5f;
-            Vector2 size = uiSize * new Vector2(0.2f, 0.1f);
-            Vector2 offset = new Vector2(0, size.Y * 1.1f);
-
-            b1.UpdateRect(center, size, new(0.5f));
-            b2.UpdateRect(center + offset, size, new(0.5f));
-            b3.UpdateRect(center + offset * 2, size, new(0.5f));
-            b1.Update(dt, GAMELOOP.MOUSE_POS_UI);
-            b2.Update(dt, GAMELOOP.MOUSE_POS_UI);
-            b3.Update(dt, GAMELOOP.MOUSE_POS_UI);
+            Rectangle r = SRect.ConstructRect(uiSize *0.5f, uiSize * new Vector2(0.5f, 0.8f), new Vector2(0.5f, 0.5f));
+            UIContainer.AlignUIElementsVertical(r, testButtons.ToList<UIElement>(), testContainer.GetDisplayStartIndex(), testContainer.GetDisplayEndIndex(), 0.01f, 1, 1);
+            testContainer.Update(dt, GAMELOOP.MOUSE_POS_UI);
 
             UINeighbors.NeighborDirection dir = UINeighbors.NeighborDirection.NONE;
             if (InputHandler.IsDown(0, InputIDs.UI_Down)) dir = UINeighbors.NeighborDirection.BOTTOM;
             else if (InputHandler.IsDown(0, InputIDs.UI_Up)) dir = UINeighbors.NeighborDirection.TOP;
-            nav.Navigate(dir);
-            nav.Update(dt);
+            testContainer.Navigate(dir);
 
-            if (b1.Released)
+
+            if (InputHandler.IsReleased(0, 2000)) testContainer.MoveNext();
+            else if (InputHandler.IsReleased(0, 2001)) testContainer.MovePrevious();
+            else if (InputHandler.IsReleased(0, 2002)) testContainer.MoveNextPage();
+            else if (InputHandler.IsReleased(0, 2003)) testContainer.MovePreviousPage();
+
+            for (int i = 0; i < testButtons.Count; i++)
             {
-                GAMELOOP.AddScene("level1", new Level());
-                GAMELOOP.GoToScene("level1");
+                var b = testButtons[i];
+                if(b.Released)
+                {
+                    List<TestButton> disabled = testButtons.FindAll(m => m.Disabled);
+                    foreach (var d in disabled)
+                    {
+                        d.Disabled = false;
+                    }
+                    b.Disabled = true;
+                }
             }
-            if (b3.Released)
-            {
-                GAMELOOP.QUIT = true;
-            }
+            //Vector2 uiSize = ScreenHandler.UISize();
+            //Vector2 center = uiSize * 0.5f;
+            //Vector2 size = uiSize * new Vector2(0.2f, 0.1f);
+            //Vector2 offset = new Vector2(0, size.Y * 1.1f);
+            //
+            //b1.UpdateRect(center, size, new(0.5f));
+            //b2.UpdateRect(center + offset, size, new(0.5f));
+            //b3.UpdateRect(center + offset * 2, size, new(0.5f));
+            //b1.Update(dt, GAMELOOP.MOUSE_POS_UI);
+            //b2.Update(dt, GAMELOOP.MOUSE_POS_UI);
+            //b3.Update(dt, GAMELOOP.MOUSE_POS_UI);
+            //
+            //UINeighbors.NeighborDirection dir = UINeighbors.NeighborDirection.NONE;
+            //if (InputHandler.IsDown(0, InputIDs.UI_Down)) dir = UINeighbors.NeighborDirection.BOTTOM;
+            //else if (InputHandler.IsDown(0, InputIDs.UI_Up)) dir = UINeighbors.NeighborDirection.TOP;
+            //nav.Navigate(dir);
+            //nav.Update(dt);
+            //
+            //if (b1.Released)
+            //{
+            //    GAMELOOP.AddScene("level1", new Level());
+            //    GAMELOOP.GoToScene("level1");
+            //}
+            //if (b3.Released)
+            //{
+            //    GAMELOOP.QUIT = true;
+            //}
 
         }
         public override void Draw()
@@ -79,8 +123,11 @@ namespace ShapeEngineDemo
         }
         public override void DrawUI(Vector2 uiSize, Vector2 stretchFactor)
         {
+
             Rectangle uiArea = ScreenHandler.UIArea();
             DrawRectangleRec(uiArea, Demo.PALETTES.C(ColorIDs.Background1));
+            //Rectangle r = SRect.ConstructRect(uiSize * 0.5f, uiSize * new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+            //DrawRectangleRec(r, RED);
             
             SDrawing.DrawTextAligned("MAIN MENU", uiSize * new Vector2(0.5f, 0.21f), uiSize * new Vector2(0.5f, 0.5f), 1, Demo.PALETTES.C(ColorIDs.Background2), Demo.FONT.GetFont(Demo.FONT_Huge), new(0.5f));
             SDrawing.DrawTextAligned("MAIN MENU", uiSize * new Vector2(0.5f, 0.2f), uiSize * new Vector2(0.5f, 0.5f), 1, Demo.PALETTES.C(ColorIDs.Header), Demo.FONT.GetFont(Demo.FONT_Huge), new(0.5f));
@@ -104,13 +151,10 @@ namespace ShapeEngineDemo
             if (ShapeEngine.IsLinux()) SDrawing.DrawTextAligned("Linux", start + gap * 5, textSize, 1, WHITE, font, new(0, 0.5f));
             if (ShapeEngine.IsOSX()) SDrawing.DrawTextAligned("OSX", start + gap * 5, textSize, 1, WHITE, font, new(0, 0.5f));
 
-
-            //level1Button.Draw(uiSize, stretchFactor);
-            //optionsButton.Draw(uiSize, stretchFactor);
-            //quitButton.Draw(uiSize, stretchFactor);
-            b1.Draw();
-            b2.Draw();
-            b3.Draw();
+            testContainer.Draw();
+            //b1.Draw();
+            //b2.Draw();
+            //b3.Draw();
         }
     }
 
