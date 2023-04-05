@@ -29,5 +29,12 @@ namespace ShapeEngineDemo
         public const int DEBUG_ToggleDrawHelpers = 402;
         public const int DEBUG_ToggleDrawColliders = 403;
         public const int DEBUG_CycleZoom = 404;
+
+        public const int UI_Pressed = 1000;
+        public const int UI_Cancel = 1001;
+        public const int UI_Up = 1010;
+        public const int UI_Down = 1011;
+        public const int UI_Left = 1012;
+        public const int UI_Right = 1013;
     }
 }

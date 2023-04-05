@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿/*
+using System.Numerics;
 
 namespace ShapeUI.Container
 {
@@ -292,81 +293,6 @@ namespace ShapeUI.Container
             DrawChildren(uiSize, stretchFactor, curIndex, GetEndIndex());
         }
 
-        /*
-        protected override void UpdateRects(Rectangle rect, int startIndex, int endIndex)
-        {
-            Vector2 startPos = new(rect.x, rect.y);
-
-            int count = displayCount;// endIndex - startIndex;
-            int gaps = count - 1;
-        
-            if (vContainer)
-            {
-                float totalHeight = rect.height;
-                float gapSize = totalHeight * gapRelative;
-                float baseHeight = (totalHeight - gaps * gapSize) / count;
-                float accumulatedHeight = 0f;
-                float stretchFactorTotal = 0f;
-                for (int i = startIndex; i < endIndex; i++)
-                {
-                    float factor = children[i].GetStretchFactor();
-                    stretchFactorTotal += factor;
-                    accumulatedHeight += baseHeight * factor;
-                }
-                accumulatedHeight += gapSize * gaps;
-                float dif = accumulatedHeight - totalHeight;
-                float correction = 0f;
-                if(dif > 0) correction = dif / stretchFactorTotal;
-
-                //float elementHeight = (totalHeight - gaps * gapSize) / stretchFactorTotal;
-                
-                Vector2 offset = new(0f, 0f);
-                for (int i = startIndex; i < endIndex; i++)
-                {
-                    var item = children[i];
-                    float stretchFactor = item.GetStretchFactor();
-                    float elementHeight = baseHeight * stretchFactor - correction * stretchFactor; 
-                    //float height = elementHeight * item.GetStretchFactor();
-                    Vector2 size = new(rect.width, elementHeight);
-                    item.UpdateRect(startPos + offset, size, Alignement.TOPLEFT);
-                    offset += new Vector2(0, gapSize + elementHeight);
-                }
-            }
-            else
-            {
-                float totalWidth = rect.width;
-                float gapSize = totalWidth * gapRelative;
-                float baseWidth = (totalWidth - gaps * gapSize) / count;
-                float accumulatedWidth = 0f;
-                float stretchFactorTotal = 0f;
-                for (int i = startIndex; i < endIndex; i++)
-                {
-                    float factor = children[i].GetStretchFactor();
-                    stretchFactorTotal += factor;
-                    accumulatedWidth += baseWidth * factor;
-                }
-
-                float dif = accumulatedWidth - totalWidth;
-                float correction = 0f;
-                if (dif > 0) correction = dif / stretchFactorTotal;
-                //float elementWidth = (totalWidth - gaps * gapSize) / stretchFactorTotal;
-                Vector2 offset = new(0f, 0f);
-                for (int i = startIndex; i < endIndex; i++)
-                {
-                    var item = children[i];
-                    //float width = elementWidth * item.GetStretchFactor();
-                    float stretchFactor = item.GetStretchFactor();
-                    float elementWidth = baseWidth * stretchFactor - correction * stretchFactor;
-                    Vector2 size = new(elementWidth, rect.height);
-                    item.UpdateRect(startPos + offset, size, Alignement.TOPLEFT);
-                    offset += new Vector2(gapSize + elementWidth, 0f);
-                }
-            }
-        
-        }
-        */
-
-
         public override void RegisterChildren()
         {
             for (int i = curIndex; i < GetEndIndex(); i++)
@@ -387,3 +313,4 @@ namespace ShapeUI.Container
     }
 
 }
+*/

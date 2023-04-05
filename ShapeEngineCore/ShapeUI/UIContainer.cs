@@ -1,11 +1,10 @@
 ﻿using Raylib_CsLo;
 using System.Numerics;
 using ShapeLib;
-using Microsoft.Win32;
-using System.Drawing;
 
-namespace ShapeUI.Container
+namespace ShapeUI
 {
+    /*
     public class BoxDisplayContainer2 : BoxContainer2
     {
         protected int displayCount = 0;
@@ -292,79 +291,79 @@ namespace ShapeUI.Container
             DrawChildren(uiSize, stretchFactor, curIndex, GetEndIndex());
         }
 
-        /*
-        protected override void UpdateRects(Rectangle rect, int startIndex, int endIndex)
-        {
-            Vector2 startPos = new(rect.x, rect.y);
-
-            int count = displayCount;// endIndex - startIndex;
-            int gaps = count - 1;
         
-            if (vContainer)
-            {
-                float totalHeight = rect.height;
-                float gapSize = totalHeight * gapRelative;
-                float baseHeight = (totalHeight - gaps * gapSize) / count;
-                float accumulatedHeight = 0f;
-                float stretchFactorTotal = 0f;
-                for (int i = startIndex; i < endIndex; i++)
-                {
-                    float factor = children[i].GetStretchFactor();
-                    stretchFactorTotal += factor;
-                    accumulatedHeight += baseHeight * factor;
-                }
-                accumulatedHeight += gapSize * gaps;
-                float dif = accumulatedHeight - totalHeight;
-                float correction = 0f;
-                if(dif > 0) correction = dif / stretchFactorTotal;
-
-                //float elementHeight = (totalHeight - gaps * gapSize) / stretchFactorTotal;
-                
-                Vector2 offset = new(0f, 0f);
-                for (int i = startIndex; i < endIndex; i++)
-                {
-                    var item = children[i];
-                    float stretchFactor = item.GetStretchFactor();
-                    float elementHeight = baseHeight * stretchFactor - correction * stretchFactor; 
-                    //float height = elementHeight * item.GetStretchFactor();
-                    Vector2 size = new(rect.width, elementHeight);
-                    item.UpdateRect(startPos + offset, size, Alignement.TOPLEFT);
-                    offset += new Vector2(0, gapSize + elementHeight);
-                }
-            }
-            else
-            {
-                float totalWidth = rect.width;
-                float gapSize = totalWidth * gapRelative;
-                float baseWidth = (totalWidth - gaps * gapSize) / count;
-                float accumulatedWidth = 0f;
-                float stretchFactorTotal = 0f;
-                for (int i = startIndex; i < endIndex; i++)
-                {
-                    float factor = children[i].GetStretchFactor();
-                    stretchFactorTotal += factor;
-                    accumulatedWidth += baseWidth * factor;
-                }
-
-                float dif = accumulatedWidth - totalWidth;
-                float correction = 0f;
-                if (dif > 0) correction = dif / stretchFactorTotal;
-                //float elementWidth = (totalWidth - gaps * gapSize) / stretchFactorTotal;
-                Vector2 offset = new(0f, 0f);
-                for (int i = startIndex; i < endIndex; i++)
-                {
-                    var item = children[i];
-                    //float width = elementWidth * item.GetStretchFactor();
-                    float stretchFactor = item.GetStretchFactor();
-                    float elementWidth = baseWidth * stretchFactor - correction * stretchFactor;
-                    Vector2 size = new(elementWidth, rect.height);
-                    item.UpdateRect(startPos + offset, size, Alignement.TOPLEFT);
-                    offset += new Vector2(gapSize + elementWidth, 0f);
-                }
-            }
+        //protected override void UpdateRects(Rectangle rect, int startIndex, int endIndex)
+        //{
+        //    Vector2 startPos = new(rect.x, rect.y);
+        //
+        //    int count = displayCount;// endIndex - startIndex;
+        //    int gaps = count - 1;
+        //
+        //    if (vContainer)
+        //    {
+        //        float totalHeight = rect.height;
+        //        float gapSize = totalHeight * gapRelative;
+        //        float baseHeight = (totalHeight - gaps * gapSize) / count;
+        //        float accumulatedHeight = 0f;
+        //        float stretchFactorTotal = 0f;
+        //        for (int i = startIndex; i < endIndex; i++)
+        //        {
+        //            float factor = children[i].GetStretchFactor();
+        //            stretchFactorTotal += factor;
+        //            accumulatedHeight += baseHeight * factor;
+        //        }
+        //        accumulatedHeight += gapSize * gaps;
+        //        float dif = accumulatedHeight - totalHeight;
+        //        float correction = 0f;
+        //        if(dif > 0) correction = dif / stretchFactorTotal;
+        //
+        //        //float elementHeight = (totalHeight - gaps * gapSize) / stretchFactorTotal;
+        //        
+        //        Vector2 offset = new(0f, 0f);
+        //        for (int i = startIndex; i < endIndex; i++)
+        //        {
+        //            var item = children[i];
+        //            float stretchFactor = item.GetStretchFactor();
+        //            float elementHeight = baseHeight * stretchFactor - correction * stretchFactor; 
+        //            //float height = elementHeight * item.GetStretchFactor();
+        //            Vector2 size = new(rect.width, elementHeight);
+        //            item.UpdateRect(startPos + offset, size, Alignement.TOPLEFT);
+        //            offset += new Vector2(0, gapSize + elementHeight);
+        //        }
+        //    }
+        //    else
+        //    {
+        //        float totalWidth = rect.width;
+        //        float gapSize = totalWidth * gapRelative;
+        //        float baseWidth = (totalWidth - gaps * gapSize) / count;
+        //        float accumulatedWidth = 0f;
+        //        float stretchFactorTotal = 0f;
+        //        for (int i = startIndex; i < endIndex; i++)
+        //        {
+        //            float factor = children[i].GetStretchFactor();
+        //            stretchFactorTotal += factor;
+        //            accumulatedWidth += baseWidth * factor;
+        //        }
+        //
+        //        float dif = accumulatedWidth - totalWidth;
+        //        float correction = 0f;
+        //        if (dif > 0) correction = dif / stretchFactorTotal;
+        //        //float elementWidth = (totalWidth - gaps * gapSize) / stretchFactorTotal;
+        //        Vector2 offset = new(0f, 0f);
+        //        for (int i = startIndex; i < endIndex; i++)
+        //        {
+        //            var item = children[i];
+        //            //float width = elementWidth * item.GetStretchFactor();
+        //            float stretchFactor = item.GetStretchFactor();
+        //            float elementWidth = baseWidth * stretchFactor - correction * stretchFactor;
+        //            Vector2 size = new(elementWidth, rect.height);
+        //            item.UpdateRect(startPos + offset, size, Alignement.TOPLEFT);
+        //            offset += new Vector2(gapSize + elementWidth, 0f);
+        //        }
+        //    }
+        //
+        //}
         
-        }
-        */
 
 
         public override void RegisterChildren()
@@ -385,7 +384,8 @@ namespace ShapeUI.Container
             }
         }
     }
-
+    */
+    
     public class BoxContainer2 : UIContainer2
     {
         public float GapRelative { get; set; } = 0f;
@@ -399,55 +399,306 @@ namespace ShapeUI.Container
         {
             if (VContainer)
             {
-                AlignUIElementsVertical(GetRect(), Elements, startIndex, endIndex, GapRelative, ElementMaxSizeRelative.X, ElementMaxSizeRelative.Y);
+                AlignUIElementsVertical(GetRect(), elements, startIndex, endIndex, GapRelative, ElementMaxSizeRelative.X, ElementMaxSizeRelative.Y);
             }
             else
             {
-                AlignUIElementsHorizontal(GetRect(), Elements, startIndex, endIndex, GapRelative, ElementMaxSizeRelative.X, ElementMaxSizeRelative.Y);
+                AlignUIElementsHorizontal(GetRect(), elements, startIndex, endIndex, GapRelative, ElementMaxSizeRelative.X, ElementMaxSizeRelative.Y);
             }
         }
     }
-
+    
+    
     public class UIContainer2 : UIElement
     {
 
-        public List<UIElement> Elements { get; protected set; } = new();
+        protected List<UIElement> elements = new();
         public string Title { get; set; } = "";
+        public UIElement? StartElement { get; protected set; } = null;
+        public UIElement? SelectedElement { get; protected set; } = null;
+        public bool InputDisabled { get; protected set; } = true;
+        public float InputInterval { get; set; } = 1f;
+        public UINeighbors.NeighborDirection LastInputDirection { get; protected set; } = UINeighbors.NeighborDirection.NONE;
+        public UINeighbors.NeighborDirection CurInputDirection { get; protected set; } = UINeighbors.NeighborDirection.NONE;
 
+        private float dirInputTimer = -1f;
 
         public UIContainer2() { }
         public UIContainer2(List<UIElement> elements)
         {
-            this.Elements = elements;
+            this.elements = elements;
         }
         public UIContainer2(params UIElement[] elements)
         {
-            this.Elements = elements.ToList();
+            this.elements = elements.ToList();
         }
-        public override void DrawElement()
+
+
+        public void RegisterElements(params UIElement[] newElements)
+        {
+            if (newElements.Length > 0)
+            {
+                if (SelectedElement != null)
+                {
+                    SelectedElement.Selected = false;
+                    SelectedElement = null;
+                }
+
+                foreach (var element in elements)
+                {
+                    element.Selected = false;
+                    element.WasSelected -= OnUIElementSelected;
+                    //element.WasDeselected -= OnUIElementDeselected;
+                }
+                elements.Clear();
+
+                foreach (var element in newElements)
+                {
+                    element.Selected = false;
+                    element.WasSelected += OnUIElementSelected;
+                    //element.WasDeselected += OnUIElementDeselected;
+                }
+
+                elements = newElements.ToList();
+
+                StartElement = GetStartElement();
+
+                if (StartElement != null)
+                {
+                    StartElement.Select();
+                    SelectedElement = StartElement;
+                }
+            }
+            else
+            {
+                if (SelectedElement != null)
+                {
+                    SelectedElement.Selected = false;
+                    SelectedElement = null;
+                }
+                StartElement = null;
+                foreach (var element in elements)
+                {
+                    element.Selected = false;
+                    element.WasSelected -= OnUIElementSelected;
+                    //element.WasDeselected -= OnUIElementDeselected;
+                }
+                elements.Clear();
+            }
+
+        }
+        public void Reset()
+        {
+            if (elements.Count > 0)
+            {
+                foreach (var element in elements) { element.Deselect(); }
+                if (StartElement != null)
+                {
+                    StartElement.Select();
+                    SelectedElement = StartElement;
+                }
+                //else
+                //{
+                //    
+                //    StartElement = elements.First();
+                //    StartElement.Select();
+                //    SelectedElement = StartElement;
+                //}
+            }
+        }
+        public void Close()
+        {
+            elements.Clear();
+            SelectedElement = null;
+        }
+
+
+
+        public UIElement? SelectNextElement() { return null; }
+        public UIElement? SelectPrevElement() { return null; }
+        
+        public void StartNavigation()
+        {
+            if (InputDisabled)
+            {
+                InputDisabled = false;
+                StartElement = GetStartElement();
+
+                if (StartElement != null)
+                {
+                    SelectedElement = StartElement;
+                    StartElement.Select();
+                }
+            }
+        }
+        public void StopNavigation()
+        {
+            if (!InputDisabled)
+            {
+                InputDisabled = true;
+                if (SelectedElement != null)
+                {
+                    SelectedElement.Selected = false;
+                    SelectedElement = null;
+                }
+            }
+        }
+
+        public void Navigate(UINeighbors.NeighborDirection inputDirection)
+        {
+            if (InputDisabled) return;
+
+            if (inputDirection == UINeighbors.NeighborDirection.NONE)
+            {
+                LastInputDirection = UINeighbors.NeighborDirection.NONE;
+                CurInputDirection = UINeighbors.NeighborDirection.NONE;
+                dirInputTimer = -1;
+                return;
+            }
+
+            LastInputDirection = CurInputDirection;
+            CurInputDirection = inputDirection;
+
+            if (dirInputTimer > 0f)
+            {
+                if (LastInputDirection != CurInputDirection)
+                {
+                    dirInputTimer = -1;
+                }
+                else return;
+            }
+
+            if (SelectedElement == null) return;
+
+            UIElement? newSelected = null;
+
+            if (inputDirection == UINeighbors.NeighborDirection.TOP)
+            {
+                newSelected = CheckDirection(SelectedElement, inputDirection);
+                if (InputInterval > 0f) dirInputTimer = InputInterval;
+            }
+            else if (inputDirection == UINeighbors.NeighborDirection.RIGHT)
+            {
+                newSelected = CheckDirection(SelectedElement, inputDirection);
+                if (InputInterval > 0f) dirInputTimer = InputInterval;
+            }
+            else if (inputDirection == UINeighbors.NeighborDirection.BOTTOM)
+            {
+                newSelected = CheckDirection(SelectedElement, inputDirection);
+                if (InputInterval > 0f) dirInputTimer = InputInterval;
+            }
+            else if (inputDirection == UINeighbors.NeighborDirection.LEFT)
+            {
+                newSelected = CheckDirection(SelectedElement, inputDirection);
+                if (InputInterval > 0f) dirInputTimer = InputInterval;
+            }
+
+            if (newSelected != null)
+            {
+                SelectedElement.Deselect();
+                SelectedElement = newSelected;
+                SelectedElement.Select();
+            }
+        }
+        private void UpdateNavigation(float dt)
+        {
+            if (InputDisabled) return;
+
+            var newStartElement = GetStartElement();
+            if (newStartElement == null)
+            {
+                if (StartElement != null)
+                {
+                    if (StartElement.Selected) StartElement.Selected = false;
+                    if (SelectedElement == StartElement) SelectedElement = null;
+                    StartElement = null;
+                }
+            }
+            else
+            {
+                if (newStartElement != StartElement)
+                {
+                    if (StartElement != null && StartElement.Selected) StartElement.Selected = false;
+                    if (SelectedElement == StartElement)
+                    {
+                        SelectedElement = newStartElement;
+                        SelectedElement.Select();
+                    }
+                    StartElement = newStartElement;
+                }
+            }
+
+            if (SelectedElement != null)
+            {
+                if (!SelectedElement.Selectable || SelectedElement.Disabled)
+                {
+                    if (StartElement != null)
+                    {
+                        SelectedElement = StartElement;
+                        SelectedElement.Select();
+                    }
+                }
+                else if (!SelectedElement.Selected) SelectedElement.Selected = true;
+            }
+            else
+            {
+                if (StartElement != null)
+                {
+                    SelectedElement = StartElement;
+                    SelectedElement.Select();
+                }
+            }
+
+            if (dirInputTimer > 0f)
+            {
+                dirInputTimer -= dt;
+                if (dirInputTimer <= 0f) dirInputTimer = 0f;
+            }
+        }
+
+        protected UIElement? GetStartElement()
+        {
+            var available = elements.FindAll(e => e.Selectable && !e.Disabled);
+            if (available.Count > 0) return available[0];
+            return null;
+        }
+        private void OnUIElementSelected(UIElement element)
+        {
+            if (element == SelectedElement) return; //valid selection from the navigator
+            else
+            {
+                if (SelectedElement != null) SelectedElement.Deselect();
+                SelectedElement = element;
+            }
+        }
+
+
+
+        public override void Draw()
         {
             DrawChildren(GetStartIndex(), GetEndIndex());
         }
         public override void Update(float dt, Vector2 mousePosUI)
         {
+            UpdateNavigation(dt);
             UpdateRects(GetStartIndex(), GetEndIndex());
             UpdateChildren(dt, mousePosUI, GetStartIndex(), GetEndIndex());
         }
         
         public virtual int GetStartIndex() { return 0; }
-        public virtual int GetEndIndex() { return Elements.Count; }
-        public virtual List<UIElement> GetDisplayedItems() { return Elements; }
-        public UIElement? GetChild(int index)
+        public virtual int GetEndIndex() { return elements.Count; }
+        public virtual List<UIElement> GetDisplayedElements() { return elements; }
+        public UIElement? GetElementAt(int index)
         {
-            if (Elements == null || Elements.Count <= 0) return null;
+            if (elements == null || elements.Count <= 0) return null;
             if (index < 0) index = 0;
-            else if (index >= Elements.Count) index = Elements.Count - 1;
+            else if (index >= elements.Count) index = elements.Count - 1;
 
-            return Elements[index];
+            return elements[index];
         }
-        public UIElement? GetDisplayedItem(int index)
+        public UIElement? GetDisplayedElementAt(int index)
         {
-            var items = GetDisplayedItems();
+            var items = GetDisplayedElements();
             if (items == null || items.Count <= 0) return null;
             if (index < 0) index = 0;
             else if (index >= items.Count) index = items.Count - 1;
@@ -459,7 +710,7 @@ namespace ShapeUI.Container
         {
             for (int i = startIndex; i < endIndex; i++)
             {
-                Elements[i].Draw();
+                elements[i].Draw();
             }
 
         }
@@ -467,17 +718,119 @@ namespace ShapeUI.Container
         {
             for (int i = startIndex; i < endIndex; i++)
             {
-                Elements[i].Update(dt, mousePosUI);
+                elements[i].Update(dt, mousePosUI);
             }
         }
         protected virtual void UpdateRects(int startIndex, int endIndex)
         {
-            for (int i = startIndex; i < endIndex; i++)
+            ///for (int i = startIndex; i < endIndex; i++)
+            ///{
+            ///    Elements[i].UpdateRect(GetPos(new(0.5f)), GetSize(), new(0.5f));
+            ///}
+        }
+
+
+        protected UIElement? CheckDirection(UIElement current, UINeighbors.NeighborDirection dir)
+        {
+            var neighbor = current.Neighbors.GetNeighbor(dir);
+            if (neighbor != null && !neighbor.Disabled && neighbor.Selectable)
             {
-                Elements[i].UpdateRect(GetPos(new(0.5f)), GetSize(), new(0.5f));
+                //current.Deselect();
+                //neighbor.Select();
+                return neighbor;
+            }
+            else
+            {
+                var closest = FindNeighbor(current, dir);
+                if (closest != null)
+                {
+                    //current.Deselect();
+                    //closest.Select();
+                    return closest;
+                }
+            }
+            return null;
+        }
+        protected UIElement? FindNeighbor(UIElement current, UINeighbors.NeighborDirection dir)
+        {
+            if (elements == null || elements.Count <= 0) return null;
+            List<UIElement> neighbors = elements.ToList().FindAll(e => e != current && !e.Disabled && e.Selectable);
+            if (neighbors.Count <= 0) return null;
+            if (neighbors.Count == 1)
+            {
+                if (CheckNeighborDistance(current, neighbors[0], dir) < float.PositiveInfinity) return neighbors[0];
+                else return null;
+            }
+            int closestIndex = -1;
+            float closestDistance = float.PositiveInfinity;
+            for (int i = 0; i < neighbors.Count; i++)
+            {
+                float dis = CheckNeighborDistance(current, neighbors[i], dir);
+                if (dis < closestDistance)
+                {
+                    closestDistance = dis;
+                    closestIndex = i;
+                }
+            }
+
+            if (closestIndex < 0 || closestIndex >= neighbors.Count) return null;
+            return neighbors[closestIndex];
+        }
+        protected float CheckNeighborDistance(UIElement current, UIElement neighbor, UINeighbors.NeighborDirection dir)
+        {
+            if (neighbor == null) return float.PositiveInfinity;
+            Vector2 pos = GetDirectionPosition(current, dir);
+            Vector2 otherPos = GetDirectionPosition(neighbor, dir);
+            switch (dir)
+            {
+                case UINeighbors.NeighborDirection.TOP:
+                    if (pos.Y - otherPos.Y > 0)//neighbor is really on top
+                    {
+                        return (otherPos - pos).LengthSquared();
+                    }
+                    return float.PositiveInfinity;
+                case UINeighbors.NeighborDirection.RIGHT:
+                    if (otherPos.X - pos.X > 0)
+                    {
+                        return (otherPos - pos).LengthSquared();
+                    }
+                    return float.PositiveInfinity;
+                case UINeighbors.NeighborDirection.BOTTOM:
+                    if (otherPos.Y - pos.Y > 0)
+                    {
+                        return (otherPos - pos).LengthSquared();
+                    }
+                    return float.PositiveInfinity;
+                case UINeighbors.NeighborDirection.LEFT:
+                    if (pos.X - otherPos.X > 0)
+                    {
+                        return (otherPos - pos).LengthSquared();
+                    }
+                    return float.PositiveInfinity;
+                default:
+                    return float.PositiveInfinity;
+            }
+
+        }
+        protected Vector2 GetDirectionPosition(UIElement element, UINeighbors.NeighborDirection dir)
+        {
+            Rectangle self = element.GetRect(new(0f));
+            switch (dir)
+            {
+                case UINeighbors.NeighborDirection.TOP:
+                    return new(self.X + self.width / 2, self.Y + self.height);//bottom
+                case UINeighbors.NeighborDirection.RIGHT:
+                    return new(self.X, self.Y + self.height / 2); //left
+                case UINeighbors.NeighborDirection.BOTTOM:
+                    return new(self.X + self.width / 2, self.Y);//top
+                case UINeighbors.NeighborDirection.LEFT:
+                    return new(self.X + self.width, self.Y + self.height / 2);//right
+                default: return new(self.X + self.width / 2, self.Y + self.height / 2); //center
             }
         }
-        
+
+
+
         public static void AlignUIElementsHorizontal(Rectangle rect, List<UIElement> elements, float gapRelative = 0f, float elementMaxSizeX = 1f, float elementMaxSizeY = 1f)
         {
             AlignUIElementsHorizontal(rect, elements, 0, elements.Count, gapRelative, elementMaxSizeX, elementMaxSizeY);
@@ -770,7 +1123,7 @@ namespace ShapeUI.Container
         //}
     }
 
-
+    /*
     public class UIContainer : UIElement
     {
         protected List<UIElement> children = new();
@@ -854,46 +1207,46 @@ namespace ShapeUI.Container
             else if (index >= items.Count) index = items.Count - 1;
             return items[index];
         }
-        /*
-        public bool SelectFirstElement()
-        {
-            var element = GetFirstElement();
-            if (element != null)
-            {
-                var selectable = element as UIElementSelectable;
-                if (selectable != null)
-                {
-                    UIHandler.SelectUIElement(selectable);
-                    return true;
-                }
-                else
-                {
-                    var container = element as UIContainer;
-                    if (container != null) return container.SelectFirstElement();
-                }
-            }
-            return false;
-        }
-        public bool SelectLastElement()
-        {
-            var element = GetLastElement();
-            if (element != null)
-            {
-                var selectable = element as UIElementSelectable;
-                if (selectable != null)
-                {
-                    UIHandler.SelectUIElement(selectable);
-                    return true;
-                }
-                else
-                {
-                    var container = element as UIContainer;
-                    if (container != null) return container.SelectLastElement();
-                }
-            }
-            return false;
-        }
-        */
+        
+        //public bool SelectFirstElement()
+        //{
+        //    var element = GetFirstElement();
+        //    if (element != null)
+        //    {
+        //        var selectable = element as UIElementSelectable;
+        //        if (selectable != null)
+        //        {
+        //            UIHandler.SelectUIElement(selectable);
+        //            return true;
+        //        }
+        //        else
+        //        {
+        //            var container = element as UIContainer;
+        //            if (container != null) return container.SelectFirstElement();
+        //        }
+        //    }
+        //    return false;
+        //}
+        //public bool SelectLastElement()
+        //{
+        //    var element = GetLastElement();
+        //    if (element != null)
+        //    {
+        //        var selectable = element as UIElementSelectable;
+        //        if (selectable != null)
+        //        {
+        //            UIHandler.SelectUIElement(selectable);
+        //            return true;
+        //        }
+        //        else
+        //        {
+        //            var container = element as UIContainer;
+        //            if (container != null) return container.SelectLastElement();
+        //        }
+        //    }
+        //    return false;
+        //}
+        
 
         public UIElement? GetFirstElement()
         {
@@ -1114,5 +1467,5 @@ namespace ShapeUI.Container
         //    SDrawing.DrawRectangle(rect, color);
         //}
     }
-
+    */
 }

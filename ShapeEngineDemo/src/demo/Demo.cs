@@ -231,7 +231,12 @@ namespace ShapeEngineDemo
             InputAction toggleDrawCollidersDebug =  new(InputIDs.DEBUG_ToggleDrawColliders, InputAction.Keys.NINE);
             InputAction cycleZoomDebug =            new(InputIDs.DEBUG_CycleZoom, InputAction.Keys.ZERO);
 
-
+            InputAction uiPressed = new(InputIDs.UI_Pressed, InputAction.Keys.SPACE, InputAction.Keys.ENTER, InputAction.Keys.MB_LEFT);
+            InputAction uiCancel = new(InputIDs.UI_Cancel, InputAction.Keys.ESCAPE);
+            InputAction uiDown = new(InputIDs.UI_Down, InputAction.Keys.S);
+            InputAction uiUp = new(InputIDs.UI_Up, InputAction.Keys.W);
+            InputAction uiLeft = new(InputIDs.UI_Left, InputAction.Keys.A);
+            InputAction uiRight = new(InputIDs.UI_Right, InputAction.Keys.D);
             InputMap inputMap = new(InputIDs.INPUTMAP_Default, "Default",
                 iaQuit, iaFullscreen, 
                 rotateLeft, rotateRight, rotate, 
@@ -239,7 +244,9 @@ namespace ShapeEngineDemo
                 shootFixed, dropAimPoint,
                 pause, slowTime,
                 spawnAsteroidDebug, healPlayerDebug, toggleDrawCollidersDebug, toggleDrawHelpersDebug, cycleZoomDebug, 
-                cycleResolutionsDebug, nextMonitorDebug, cycleFramerateLimitDebug, toggleVsyncDebug
+                cycleResolutionsDebug, nextMonitorDebug, cycleFramerateLimitDebug, toggleVsyncDebug,
+
+                uiPressed, uiCancel, uiDown, uiUp, uiLeft, uiRight
                 );
             inputMap.AddActions(InputHandler.UI_Default_InputActions);
             InputHandler.AddInputMap(inputMap);

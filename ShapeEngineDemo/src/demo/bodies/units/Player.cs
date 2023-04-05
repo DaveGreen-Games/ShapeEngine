@@ -215,15 +215,12 @@ namespace ShapeEngineDemo.Bodies
         private BasicTimer damageTimer = new();
         private string shipName = "";
         private float angle = 0f;
-        private ProgressBar hpBar;
-        private ProgressBar pwrBar;
-        //private ProgressCircle pwrBarCircle;
-        //private ProgressRing hpBarRing;
-        //private ProgressBarPro ammoBar;
-        private ProgressBar hpBarMini = new(0.1f, 0f);
-        private ProgressBar pwrBarMini = new(0f, 0f);
-        //private Panel aimpointInputPanel;
-        //private InputPrompt aimpointInputPrompt;
+
+        //private ProgressBar hpBar;
+        //private ProgressBar pwrBar;
+        //private ProgressBar hpBarMini = new(0.1f, 0f);
+        //private ProgressBar pwrBarMini = new(0f, 0f);
+        
         private SkillDisplay aimpointSkillDisplay;
 
         private List<Thruster> thrusters = new();
@@ -288,31 +285,19 @@ namespace ShapeEngineDemo.Bodies
 
             Vector2 barOffset = new(-0.15f, 0.05f);
             aimpointSkillDisplay = new(Demo.PALETTES.C(ColorIDs.Text), Demo.PALETTES.C(ColorIDs.Flash), Demo.PALETTES.C(ColorIDs.Neutral),Demo.PALETTES.C(ColorIDs.Energy), "Drop Pin", InputIDs.PLAYER_DropAimPoint, -5f);
-            hpBar = new(-5f, new Vector2(0, 1), barOffset, 0.1f, 0);
-            pwrBar = new(-5f, new Vector2(0, 1), barOffset, 0f, 0f);
-            hpBar.SetProgressDirections(0, 0, 1, 0);
-            pwrBar.SetProgressDirections(0, 0, 1, 0);
-            //pwrBarCircle = new(new Vector2(0f), Alignement.BOTTOMCENTER, 0.5f, 0.04f);
-            //hpBarRing = new(90, -90, new Vector2(0f), 0f, 0.8f, 0.75f, 0.1f, 0f);
-            //hpBarRing.SetReservedF(0.223f);
-            //aimpointInputPrompt = new(start + new Vector2(100, 0), 50, "Drop Aim Point", -5f, ColorPalette.Cur.text, ColorPalette.Cur.flash, ColorPalette.Cur.energy);
-            //aimpointInputPanel = new("K", start + new Vector2 (200, 0), new(120, 120), -5f, FontSize.HUGE, ColorPalette.Cur.text, ColorPalette.Cur.energy);
-            //start += gap;
-            //ammoBar = new(start, barSize, barOffset, BarType.BOTTOMTOP, 0f, -5f);
-
-
-            hpBarMini.SetProgressDirections(0.5f, 0.5f, 0, 0);
-            pwrBarMini.SetProgressDirections(0.5f, 0.5f, 0, 0);
-            hpBarMini.SetColors(Demo.PALETTES.C(ColorIDs.Enemy), new(0, 0, 0, 0), Demo.PALETTES.C(ColorIDs.Flash)); //ColorPalette.Cur.neutral
-            pwrBarMini.SetColors(Demo.PALETTES.C(ColorIDs.Player), new(0, 0, 0, 0));// ColorPalette.Cur.energy);
-            hpBar.SetColors(Demo.PALETTES.C(ColorIDs.Enemy), Demo.PALETTES.C(ColorIDs.Neutral), Demo.PALETTES.C(ColorIDs.Flash));
-            pwrBar.SetColors(Demo.PALETTES.C(ColorIDs.Player), Demo.PALETTES.C(ColorIDs.Energy));
-            //pwrBarCircle.SetColors(PaletteHandler.C("player"), PaletteHandler.C("energy"), new(0,0,0,0), PaletteHandler.C("flash"), ORANGE);
-            //hpBarRing.SetColors(PaletteHandler.C("enemy"), PaletteHandler.C("neutral"), YELLOW, PaletteHandler.C("flash"), ORANGE);
-            //ammoBar.SetColors(ColorPalette.Cur.special1, ColorPalette.Cur.special12);
-
-            //ScreenHandler.Cam.AddCameraOrderChain("player zoom", new CameraOrder(1f, 2f, 1f, EasingType.BOUNCE_OUT));
-            //ScreenHandler.Cam.AddCameraOrderChain("player rot", new CameraOrder(1f, 0f, 360f, 1f, 1f, EasingType.QUAD_OUT));
+            //hpBar = new(-5f, new Vector2(0, 1), barOffset, 0.1f, 0);
+            //pwrBar = new(-5f, new Vector2(0, 1), barOffset, 0f, 0f);
+            //hpBar.SetProgressDirections(0, 0, 1, 0);
+            //pwrBar.SetProgressDirections(0, 0, 1, 0);
+            //
+            //
+            //hpBarMini.SetProgressDirections(0.5f, 0.5f, 0, 0);
+            //pwrBarMini.SetProgressDirections(0.5f, 0.5f, 0, 0);
+            //hpBarMini.SetColors(Demo.PALETTES.C(ColorIDs.Enemy), new(0, 0, 0, 0), Demo.PALETTES.C(ColorIDs.Flash)); //ColorPalette.Cur.neutral
+            //pwrBarMini.SetColors(Demo.PALETTES.C(ColorIDs.Player), new(0, 0, 0, 0));// ColorPalette.Cur.energy);
+            //hpBar.SetColors(Demo.PALETTES.C(ColorIDs.Enemy), Demo.PALETTES.C(ColorIDs.Neutral), Demo.PALETTES.C(ColorIDs.Flash));
+            //pwrBar.SetColors(Demo.PALETTES.C(ColorIDs.Player), Demo.PALETTES.C(ColorIDs.Energy));
+            
             ScreenHandler.CAMERA.AddCameraOrderChain("player translation", new CameraOrder(1f, new Vector2(250f, 0f), new Vector2(0f, 0f), EasingType.BOUNCE_OUT));
 
             //UpdateSlowResistance = 0f;
@@ -479,30 +464,24 @@ namespace ShapeEngineDemo.Bodies
 
             damageTimer.Update(dt);
 
-            hpBar.SetF(GetHealthPercentage());
-            //hpBarRing.SetF(GetHealthPercentage());
-            hpBarMini.SetF(GetHealthPercentage());
-
-            if (energyCore.IsCooldownActive())
-            {
-                pwrBar.SetF(1.0f - energyCore.CooldownF);
-                //pwrBarCircle.SetF(1.0f - energyCore.CooldownF);
-                pwrBarMini.SetF(1.0f - energyCore.CooldownF);
-            }
-            else
-            {
-                pwrBar.SetF(GetEnergyPercentage());
-                //pwrBarCircle.SetF(GetEnergyPercentage());
-                pwrBarMini.SetF(GetEnergyPercentage());
-            }
-
-            hpBar.Update(dt, GAMELOOP.MOUSE_POS_UI);
-            //hpBarRing.Update(dt, GAMELOOP.MOUSE_POS_UI);
-            hpBarMini.Update(dt, GAMELOOP.MOUSE_POS_UI);
-            pwrBar.Update(dt, GAMELOOP.MOUSE_POS_UI);
-            //pwrBarCircle.Update(dt, GAMELOOP.MOUSE_POS_UI);
-            pwrBarMini.Update(dt, GAMELOOP.MOUSE_POS_UI);
-            //ammoBar.Update(dt, GAMELOOP.MOUSE_POS_UI);
+            //hpBar.SetF(GetHealthPercentage());
+            //hpBarMini.SetF(GetHealthPercentage());
+            //
+            //if (energyCore.IsCooldownActive())
+            //{
+            //    pwrBar.SetF(1.0f - energyCore.CooldownF);
+            //    pwrBarMini.SetF(1.0f - energyCore.CooldownF);
+            //}
+            //else
+            //{
+            //    pwrBar.SetF(GetEnergyPercentage());
+            //    pwrBarMini.SetF(GetEnergyPercentage());
+            //}
+            //
+            //hpBar.Update(dt, GAMELOOP.MOUSE_POS_UI);
+            //hpBarMini.Update(dt, GAMELOOP.MOUSE_POS_UI);
+            //pwrBar.Update(dt, GAMELOOP.MOUSE_POS_UI);
+            //pwrBarMini.Update(dt, GAMELOOP.MOUSE_POS_UI);
 
             if (!IsStunned())
             {
@@ -638,15 +617,15 @@ namespace ShapeEngineDemo.Bodies
             //pwrBarMini.SetSize(new Vector2(size * 2f, size * 0.2f) * ScreenHandler.GAME_TO_UI);
 
             
-            if (GetHealthPercentage() < 1f)
-            {
-                hpBarMini.UpdateRect(miniBarPos, miniBarSize, new(0.5f));
-
-            }
-            if (GetEnergyPercentage() < 1f)
-            {
-                pwrBarMini.UpdateRect(miniBarPos - new Vector2(0, miniBarSize.Y * 1.1f) * 1.2f, miniBarSize, new(0.5f));
-            }
+            //if (GetHealthPercentage() < 1f)
+            //{
+            //    hpBarMini.UpdateRect(miniBarPos, miniBarSize, new(0.5f));
+            //
+            //}
+            //if (GetEnergyPercentage() < 1f)
+            //{
+            //    pwrBarMini.UpdateRect(miniBarPos - new Vector2(0, miniBarSize.Y * 1.1f) * 1.2f, miniBarSize, new(0.5f));
+            //}
 
             //var info = GAMELOOP.GetCurArea().GetCurPlayfield().Collide(collider.Pos, collider.Radius);
             var info = SRect.CollidePlayfield(GAMELOOP.GetCurArea().GetInnerArea(), collider.Pos, collider.Radius);
@@ -702,77 +681,33 @@ namespace ShapeEngineDemo.Bodies
         {
             if (IsDead()) return;
 
-            //Vector2 barSize = hpBar.GetSize();
-            //Vector2 topLeft = hpBar.GetTopLeft();
-            //Vector2 offset = hpBar.Transform(new Vector2(barSize.X / 2, 0));
-
-            //UIHandler.DrawTextAligned(String.Format("Rad: {0} // Deg: {1}", angle, angle * RAD2DEG), new(1000, 200), 120, 1, WHITE, Alignement.CENTER);
-            //hpBarRing.UpdateRect(uiSize * new Vector2(0.95f, 0.95f), uiSize * new Vector2(0.08f, 0.08f), Alignement.BOTTOMRIGHT);
-            //hpBarRing.Draw(uiSize, stretchFactor);
-            //pwrBarCircle.UpdateRect(uiSize * new Vector2(0.5f, 0.9f), uiSize * new Vector2(0.04f, 0.04f), Alignement.BOTTOMCENTER);
-            //pwrBarCircle.Draw(uiSize, stretchFactor);
             Vector2 barSize = uiSize * new Vector2(0.03f, 0.2f);
             Vector2 center = uiSize * new Vector2(0.03f, 0.98f) - new Vector2(0, barSize.Y / 2);
             Vector2 gap = new Vector2(barSize.X * 1.5f, 0);
-            hpBar.UpdateRect(center, barSize, new(0.5f));
-            pwrBar.UpdateRect(center + gap, barSize, new(0.5f));
-            SDrawing.DrawTextAlignedPro("HP", hpBar.GetPos(new(0.5f)) - hpBar.Transform(new Vector2(0, barSize.Y / 2)), hpBar.GetAngleDeg(), 60, 2, Demo.PALETTES.C(ColorIDs.Enemy), Demo.FONT.GetFont(Demo.FONT_Medium), new(0.5f, 1f));
-            hpBar.Draw(uiSize, stretchFactor);
-
-            SDrawing.DrawTextAlignedPro("PWR", pwrBar.GetPos(new(0.5f)) - pwrBar.Transform(new Vector2(0, barSize.Y / 2)), pwrBar.GetAngleDeg(), 60, 2, Demo.PALETTES.C(ColorIDs.Player), Demo.FONT.GetFont(Demo.FONT_Medium), new(0.5f, 1f));
-            pwrBar.Draw(uiSize, stretchFactor);
-            if (energyCore.IsCooldownActive())
-            {
-                Vector2 bottomRight = pwrBar.GetPos(new Vector2(0.75f, 0.5f)) + pwrBar.Transform(barSize / 2);// + new Vector2(20, 0);
-                SDrawing.DrawTextAlignedPro("REBOOT", bottomRight, pwrBar.GetAngleDeg() - 90f, 90, 10, Demo.PALETTES.C(ColorIDs.Background2), Demo.FONT.GetFont(Demo.FONT_Medium), new(0,1));
-            }
+            //hpBar.UpdateRect(center, barSize, new(0.5f));
+            //pwrBar.UpdateRect(center + gap, barSize, new(0.5f));
+            //SDrawing.DrawTextAlignedPro("HP", hpBar.GetPos(new(0.5f)) - hpBar.Transform(new Vector2(0, barSize.Y / 2)), hpBar.GetAngleDeg(), 60, 2, Demo.PALETTES.C(ColorIDs.Enemy), Demo.FONT.GetFont(Demo.FONT_Medium), new(0.5f, 1f));
+            //hpBar.Draw(uiSize, stretchFactor);
+            //
+            //SDrawing.DrawTextAlignedPro("PWR", pwrBar.GetPos(new(0.5f)) - pwrBar.Transform(new Vector2(0, barSize.Y / 2)), pwrBar.GetAngleDeg(), 60, 2, Demo.PALETTES.C(ColorIDs.Player), Demo.FONT.GetFont(Demo.FONT_Medium), new(0.5f, 1f));
+            //pwrBar.Draw(uiSize, stretchFactor);
+            //if (energyCore.IsCooldownActive())
+            //{
+            //    Vector2 bottomRight = pwrBar.GetPos(new Vector2(0.75f, 0.5f)) + pwrBar.Transform(barSize / 2);// + new Vector2(20, 0);
+            //    SDrawing.DrawTextAlignedPro("REBOOT", bottomRight, pwrBar.GetAngleDeg() - 90f, 90, 10, Demo.PALETTES.C(ColorIDs.Background2), Demo.FONT.GetFont(Demo.FONT_Medium), new(0,1));
+            //}
             aimpointSkillDisplay.UpdateRect(uiSize * new Vector2(0.05f, 0.5f), uiSize * new Vector2(0.08f, 0.04f), new(0,0.5f));
-            aimpointSkillDisplay.Draw(uiSize, stretchFactor);
-            //aimpointInputPanel.Draw();
-            //topLeft = ammoBar.GetTopLeft();
-            //UIHandler.DrawTextAlignedPro("AMMO", topLeft + offset, ammoBar.GetRotationDeg(), FontSize.LARGE, 2, ColorPalette.Cur.special1, Alignement.BOTTOMCENTER);
-            //ammoBar.Draw();
+            aimpointSkillDisplay.Draw();
 
-            if (GetHealthPercentage() < 1f)
-            {
-                hpBarMini.Draw(uiSize, stretchFactor);
-            }
-            if (GetEnergyPercentage() < 1f)
-            {
-                
-                pwrBarMini.Draw(uiSize, stretchFactor);
-            }
-
-            //Drawing.DrawCircleLines(ScreenHandler.TransformPositionToUI(collider.Pos), 50, 5, WHITE, 8);
-            //Drawing.DrawRect(new(500, 500), new(200, 50), new(0f, 0.5f), angle * RAD2DEG, VIOLET);
-            //Drawing.DrawCircleOutlineBar(GAMELOOP.UICenter(), 200, -90f, 20, GetEnergyPercentage(), YELLOW);
-            //Vector2 tl = collider.Origin + new Vector2(-size, -size*2f);
-            //Vector2 bs = new Vector2(size * 2f, size * 0.2f) * ScreenHandler.GAME_TO_UI;
-            //UIHandler.DrawBar(tl * ScreenHandler.GAME_TO_UI, bs, GetHealthPercentage(), ColorPalette.Cur.enemy2, ColorPalette.Cur.neutral, BarType.LEFTRIGHT);
-
-            //Vector2 c = uiSize * new Vector2(0.5f, 0.5f);
-            //Vector2 g = uiSize * new Vector2(0.15f, 0f);
-            //Vector2 lineGap = uiSize * new Vector2(0f, 0.07f);
-            //float r = uiSize.X * 0.05f;
-            //float lt = r * 0.1f;
-            //float startAngleDeg = 180;
-            //float endAngleDeg = 0;
-            //float endAngleDeg = Vec.AngleDeg(Vec.Normalize(GAMELOOP.MOUSE_POS_UI - c));
-
-            //Drawing.DrawCircleSector(c + g * 2, r, startAngleDeg, endAngleDeg, 24, WHITE);
-            //Drawing.DrawCircleSectorLinesEx(c + g * 2, r, startAngleDeg, endAngleDeg, lt, ORANGE, true, 8);
-            //
-            //Drawing.DrawRingFilled(c - g * 2, r * 0.5f, r, startAngleDeg, endAngleDeg, WHITE, 10);
-            //Drawing.DrawRingLinesEx(c - g * 2, r * 0.5f, r, startAngleDeg, endAngleDeg, lt, ORANGE, 8);
-            //
-            //Vector2 textSize = uiSize * new Vector2(0.35f, 0.05f);
-            //UIHandler.DrawTextAligned(String.Format("SA: {0}", startAngleDeg), c - lineGap, textSize, 1, WHITE);
-            //UIHandler.DrawTextAligned(String.Format("EA: {0}", endAngleDeg), c - lineGap * 2, textSize, 1, WHITE);
-            //UIHandler.DrawTextAligned(String.Format("Dif: {0}", endAngleDeg - startAngleDeg), c - lineGap * 3, textSize, 1, WHITE);
-            //
-            //UIHandler.DrawTextAligned(String.Format("SAW: {0}", Wrap(startAngleDeg, -360, 360)), c + lineGap, textSize, 1, WHITE);
-            //UIHandler.DrawTextAligned(String.Format("EAW: {0}", Wrap(endAngleDeg, -360, 360)), c + lineGap * 2, textSize, 1, WHITE);
-            //UIHandler.DrawTextAligned(String.Format("DifW: {0}", Wrap(endAngleDeg, -360, 360) - Wrap(startAngleDeg, -360, 360)), c + lineGap * 3,textSize, 1, WHITE);
+            //if (GetHealthPercentage() < 1f)
+            //{
+            //    hpBarMini.Draw(uiSize, stretchFactor);
+            //}
+            //if (GetEnergyPercentage() < 1f)
+            //{
+            //    
+            //    pwrBarMini.Draw(uiSize, stretchFactor);
+            //}
         }
 
 
@@ -829,8 +764,8 @@ namespace ShapeEngineDemo.Bodies
         {
             if (triggerName == "emptied")
             {
-                pwrBarMini.SetColors(Demo.PALETTES.C(ColorIDs.Flash));
-                pwrBar.SetColors(Demo.PALETTES.C(ColorIDs.Flash));
+                //pwrBarMini.SetColors(Demo.PALETTES.C(ColorIDs.Flash));
+                //pwrBar.SetColors(Demo.PALETTES.C(ColorIDs.Flash));
 
                 CoreParticle cp = new(collider.Pos, angle + PI / 2, Demo.PALETTES.C(ColorIDs.Energy));
                 GAMELOOP.AddGameObject(cp);
@@ -839,8 +774,8 @@ namespace ShapeEngineDemo.Bodies
             }
             else if(triggerName == "reloaded")
             {
-                pwrBarMini.SetColors(Demo.PALETTES.C(ColorIDs.Player));
-                pwrBar.SetColors(Demo.PALETTES.C(ColorIDs.Player));
+                //pwrBarMini.SetColors(Demo.PALETTES.C(ColorIDs.Player));
+                //pwrBar.SetColors(Demo.PALETTES.C(ColorIDs.Player));
 
                 Demo.AUDIO.SFXPlay(SoundIDs.PLAYER_PowerUp, -1, -1, 0);
             }

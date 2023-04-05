@@ -316,7 +316,7 @@ namespace ShapeCore
             ClearScenes();
             InputHandler.Close();
             //AudioHandler.Close();
-            UIHandler.Close();
+            //UIHandler.Close();
             ScreenHandler.Close();
             return fullscreen;
         }
@@ -358,7 +358,7 @@ namespace ShapeCore
 
             InputHandler.Update(dt);
             //AudioHandler.Update(dt);
-            UIHandler.Update(dt);
+            //UIHandler.Update(dt);
             ScreenHandler.Update(dt);
 
             //STEP.Update(dt);

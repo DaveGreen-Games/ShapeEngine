@@ -35,20 +35,37 @@ namespace ShapeUI
                 }
             }
         }
-        protected bool hidden = false;
-        public bool Hidden 
+        
+        //protected bool hidden = false;
+        //public bool Hidden 
+        //{
+        //    get { return hidden; }
+        //    set
+        //    {
+        //        hidden = value;
+        //        if(hidden && Selected)
+        //        {
+        //            Selected = false;
+        //            //WasDeselected?.Invoke(this);
+        //        }
+        //    }
+        //}
+        
+        protected bool selectable = false;
+        public bool Selectable
         {
-            get { return hidden; }
+            get { return selectable; }
             set
             {
-                hidden = value;
-                if(hidden && Selected)
+                selectable = value;
+                if (!selectable && Selected)
                 {
                     Selected = false;
                     //WasDeselected?.Invoke(this);
                 }
             }
         }
+        
         public float MouseTolerance { get; set; } = 5f;
 
         
@@ -115,14 +132,14 @@ namespace ShapeUI
         {
             return CheckCollisionPointRec(uiPos, GetRect(new(0f)));
         }
-        public void Draw()
+        public virtual void Draw()
         {
-            if (!Hidden) DrawElement();
+            
         }
         public virtual void Update(float dt, Vector2 mousePosUI)
         {
             Released = false;
-            if (!Disabled && !Hidden)
+            if (!Disabled && Selectable)
             {
                 if(IsPointInside(prevMousePos))
                 {
@@ -160,7 +177,7 @@ namespace ShapeUI
 
             prevMousePos = mousePosUI;
         }
-        public virtual void DrawElement() { }
+        //public virtual void DrawElement() { }
         
         public virtual void PressedChanged(bool pressed) { }
         public virtual void SelectedChanged(bool selected) { }
@@ -178,6 +195,7 @@ namespace ShapeUI
             this.font = font; 
             this.shortcutID = shortcutID;
             this.pressedID = pressedID;
+            this.selectable = true;
         }
 
         protected override bool CheckPressed()

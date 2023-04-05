@@ -46,12 +46,8 @@ namespace ShapeEngineDemo
             this.textColor = textColor;
             this.bgColor = bgColor;
         }
-        public void Pressed()
-        {
 
-        }
-
-        public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
+        public override void Draw()
         {
             Vector2 size = GetSize();
             Vector2 center = GetPos(new(0.5f)); // GetCenter() * stretchFactor;

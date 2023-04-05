@@ -79,12 +79,8 @@ namespace ShapeEngineDemo
             f = value;
         }
 
-        public void Pressed()
-        {
 
-        }
-
-        public override void Draw(Vector2 uiSize, Vector2 stretchFactor)
+        public override void Draw()
         {
             Vector2 center = GetPos(new(0.5f));
             string text = InputHandler.GetInputActionKeyNames(0, inputActionID, true).keyboard;
