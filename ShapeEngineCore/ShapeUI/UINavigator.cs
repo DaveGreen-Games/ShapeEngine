@@ -135,7 +135,7 @@ namespace ShapeUI
         {
             if (SelectedElement == null) return null;
             var available = GetAvailableElements();
-            if(available.Count <= 0) return null; 
+            if (available.Count <= 0) return null;
             int index = available.IndexOf(SelectedElement);
             index += 1;
             if (index >= available.Count) index = 0;
@@ -145,12 +145,12 @@ namespace ShapeUI
                 SelectedElement.Deselect();
                 SelectedElement = next;
                 SelectedElement.Select();
-                NewElementSelected?.Invoke(StartElement);
+                NewElementSelected?.Invoke(next);
                 return next;
             }
             else return SelectedElement;
         }
-        public UIElement? SelectPreviousElement() 
+        public UIElement? SelectPreviousElement()
         {
             if (SelectedElement == null) return null;
             var available = GetAvailableElements();
@@ -158,17 +158,18 @@ namespace ShapeUI
             int index = available.IndexOf(SelectedElement);
             index -= 1;
             if (index < 0) index = available.Count - 1;
-            UIElement next = available[index];
-            if (next != SelectedElement)
+            UIElement prev = available[index];
+            if (prev != SelectedElement)
             {
                 SelectedElement.Deselect();
-                SelectedElement = next;
+                SelectedElement = prev;
                 SelectedElement.Select();
-                NewElementSelected?.Invoke(StartElement);
-                return next;
+                NewElementSelected?.Invoke(prev);
+                return prev;
             }
             else return SelectedElement;
         }
+
         public void Navigate(UINeighbors.NeighborDirection inputDirection)
         {
             if (InputDisabled) return;
@@ -285,7 +286,7 @@ namespace ShapeUI
         
         protected List<UIElement> GetAvailableElements()
         {
-            return elements.ToList().FindAll(e => !e.Disabled && e.Selectable);
+            return elements.FindAll(e => !e.Disabled && e.Selectable);
         }
         protected UIElement? CheckDirection(UIElement current, UINeighbors.NeighborDirection dir)
         {
@@ -311,7 +312,7 @@ namespace ShapeUI
         protected UIElement? FindNeighbor(UIElement current, UINeighbors.NeighborDirection dir)
         {
             if (elements == null || elements.Count <= 0) return null;
-            List<UIElement> neighbors = elements.ToList().FindAll(e => e != current && !e.Disabled && e.Selectable);
+            List<UIElement> neighbors = elements.FindAll(e => e != current && !e.Disabled && e.Selectable);
             if (neighbors.Count <= 0) return null;
             if (neighbors.Count == 1)
             {
