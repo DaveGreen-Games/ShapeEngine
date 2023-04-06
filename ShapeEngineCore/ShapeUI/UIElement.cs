@@ -10,7 +10,6 @@ namespace ShapeUI
         public event Action<UIElement>? WasSelected;
 
         protected Rectangle rect;
-        protected Vector2 prevMousePos = new(0f);
 
         public float StretchFactor { get; set; } = 1f;
         public UIMargins Margins { get; set; } = new();
@@ -18,10 +17,9 @@ namespace ShapeUI
         public string Tooltip { get; set; } = "";
 
         public bool Released { get; protected set; } = false;
-        public bool Selected { get; internal set; } = false;
+        public bool Selected { get; set; } = false;
         public bool Pressed { get; protected set; } = false;
         public bool MouseInside { get; protected set;} = false;
-        public bool InsideContainer { get; set;} = false;
         protected bool disabled = false;
         public bool Disabled 
         {
@@ -67,13 +65,6 @@ namespace ShapeUI
             }
         }
         
-        public float MouseTolerance { get; set; } = 5f;
-
-        
-        protected virtual bool CheckPressed() { return false; }
-        protected virtual bool CheckMousePressed() { return false; }
-        protected virtual bool CheckShortcutPressed() { return false; }
-        
         public void Select()
         {
             if (Selected) return;
@@ -86,6 +77,20 @@ namespace ShapeUI
             if (!Selected) return;
             Selected = false;
             SelectedChanged(false);
+        }
+        
+        public void Press()
+        {
+            if(Pressed) return;
+            Pressed = true;
+            PressedChanged(true);
+        }
+        public void Release()
+        {
+            if(!Pressed) return;
+            Pressed = false;
+            PressedChanged(false);
+            Released = true;
         }
 
         public Rectangle GetRect() { return GetRect(new(0f)); }
@@ -106,6 +111,7 @@ namespace ShapeUI
                     ));
             }
         }
+        
         public Vector2 GetPos(Vector2 alignement)
         {
             Rectangle rect = GetRect(new(0f));
@@ -118,6 +124,7 @@ namespace ShapeUI
             Rectangle rect = GetRect(new(0f));
             return new(rect.width, rect.height);
         }
+        
         public void UpdateRect(Vector2 pos, Vector2 size, Vector2 alignement)
         {
             Vector2 offset = size * alignement;
@@ -128,63 +135,96 @@ namespace ShapeUI
             UpdateRect(new Vector2(rect.x, rect.y), new Vector2(rect.width, rect.height), alignement);
         }
 
-
-
-
         public bool IsPointInside(Vector2 uiPos)
         {
             return CheckCollisionPointRec(uiPos, GetRect(new(0f)));
         }
+        public void Check(Vector2 prevMousePos, Vector2 mousePosUI, bool mouseDeselects = false, float mouseTolerance = 5f)
+        {
+            Released = false;
+            if (!Disabled && Selectable)
+            {
+                MouseInside = IsPointInside(mousePosUI);
+                bool prevMouseInside = IsPointInside(prevMousePos);
+                float disSq = (prevMousePos - mousePosUI).LengthSquared();
+                if ((MouseInside && !prevMouseInside) || (!MouseInside && prevMouseInside) || disSq > mouseTolerance)
+                {
+                    if (MouseInside && !Selected)
+                    {
+                        Select();
+                    }
+                    else if (!MouseInside && Selected && mouseDeselects)
+                    {
+                        Deselect();
+                    }
+                }
+
+                bool prevPressed = Pressed;
+                bool pressed;
+                if (CheckShortcutPressed()) pressed = true;
+                else if (Selected && CheckPressed()) pressed = true;
+                else if (MouseInside && CheckMousePressed()) pressed = true;
+                else pressed = false;
+
+
+                if (pressed && !prevPressed) Press();
+                else if (!pressed && prevPressed) Release();
+            }
+        }
+        
         public virtual void Draw()
         {
             
         }
         public virtual void Update(float dt, Vector2 mousePosUI)
         {
-            Released = false;
-            if (!Disabled && Selectable)
-            {
-                MouseInside = IsPointInside(mousePosUI);
-                if (IsPointInside(prevMousePos))
-                {
-                    float disSq = (prevMousePos - mousePosUI).LengthSquared();
-                    if (disSq > MouseTolerance)
-                    {
-                        if (MouseInside && !Selected)
-                        {
-                            Selected = true;
-                            SelectedChanged(true);
-                            WasSelected?.Invoke(this);
-                        }
-                        else if (!MouseInside && Selected && !InsideContainer)
-                        {
-                            Selected = false;
-                            SelectedChanged(false);
-                        }
-                    }
-                }
-
-                bool prevPressed = Pressed;
-                if (CheckShortcutPressed()) Pressed = true;
-                else if (Selected && CheckPressed()) Pressed = true;
-                else if (MouseInside && CheckMousePressed()) Pressed = true;
-                else Pressed = false;
-
-
-                if (Pressed && !prevPressed) PressedChanged(true);
-                else if (!Pressed && prevPressed) 
-                { 
-                    PressedChanged(false); 
-                    Released = true;
-                }
-            }
-
-            prevMousePos = mousePosUI;
+            //if (!Disabled && Selectable)
+            //{
+            //    MouseInside = IsPointInside(mousePosUI);
+            //    if (IsPointInside(prevMousePos))
+            //    {
+            //        float disSq = (prevMousePos - mousePosUI).LengthSquared();
+            //        if (disSq > MouseTolerance)
+            //        {
+            //            if (MouseInside && !Selected)
+            //            {
+            //                Selected = true;
+            //                SelectedChanged(true);
+            //                WasSelected?.Invoke(this);
+            //            }
+            //            else if (!MouseInside && Selected && !InsideContainer)
+            //            {
+            //                Selected = false;
+            //                SelectedChanged(false);
+            //            }
+            //        }
+            //    }
+            //
+            //    bool prevPressed = Pressed;
+            //    if (CheckShortcutPressed()) Pressed = true;
+            //    else if (Selected && CheckPressed()) Pressed = true;
+            //    else if (MouseInside && CheckMousePressed()) Pressed = true;
+            //    else Pressed = false;
+            //
+            //
+            //    if (Pressed && !prevPressed) PressedChanged(true);
+            //    else if (!Pressed && prevPressed) 
+            //    { 
+            //        PressedChanged(false); 
+            //        Released = true;
+            //    }
+            //}
+            //
+            //prevMousePos = mousePosUI;
         }
-        //public virtual void DrawElement() { }
+
         
-        public virtual void PressedChanged(bool pressed) { }
-        public virtual void SelectedChanged(bool selected) { }
+        protected virtual bool CheckPressed() { return false; }
+        protected virtual bool CheckMousePressed() { return false; }
+        protected virtual bool CheckShortcutPressed() { return false; }
+
+        protected virtual void PressedChanged(bool pressed) { }
+        protected virtual void SelectedChanged(bool selected) { }
     }
 
     public class TestButton : UIElement
@@ -225,26 +265,26 @@ namespace ShapeUI
             
             if (Disabled)
             {
-                DrawRectangleRec(r, DARKGRAY);
+                //DrawRectangleRec(r, DARKGRAY);
                 SDrawing.DrawTextAligned(Text, r, 1f, RED, font, new(0.5f));
             }
             else
             {
                 //string t = Text;
                 //if (CheckShortcutPressed()) t = "Shortcut";
-                Color buttonColor = GRAY;
+                //Color buttonColor = GRAY;
                 Color textColor = DARKGREEN;
                 if (Pressed)
                 {
-                    buttonColor = WHITE;
+                    DrawRectangleRec(r, WHITE);
                     textColor = BLACK;
                 }
                 else if(Selected)
                 {
-                    buttonColor = LIGHTGRAY;
+                    DrawRectangleRec(r, LIGHTGRAY);
                     textColor = LIME;
                 }
-                DrawRectangleRec(r, buttonColor);
+                
                 SDrawing.DrawTextAligned(Text, r, 1f, textColor, font, new(0.5f));
             }
         }

@@ -415,18 +415,24 @@ namespace ShapeUI
         public event Action<UIElement>? FirstElementSelected;
         public event Action<UIElement>? LastElementSelected;
 
-        protected List<UIElement> elements = new();
+
         public string Title { get; set; } = "";
-        public UIElement? NavigationStartElement { get; protected set; } = null;
-        public UIElement? NavigationSelectedElement { get; protected set; } = null;
         public bool InputDisabled { get; protected set; } = true;
-        public float InputInterval { get; set; } = 1f;
+        public float MouseTolerance { get; set; } = 5f;
+        public float InputInterval { get; set; } = 0.1f;
         public int DisplayCount { get; set; } = -1;
-        protected int curDisplayIndex = 0;
         public UINeighbors.NeighborDirection LastInputDirection { get; protected set; } = UINeighbors.NeighborDirection.NONE;
         public UINeighbors.NeighborDirection CurInputDirection { get; protected set; } = UINeighbors.NeighborDirection.NONE;
-
+        public UIElement? NavigationStartElement { get; protected set; } = null;
+        public UIElement? NavigationSelectedElement { get; protected set; } = null;
+        
+        protected int curDisplayIndex = 0;
+        protected Vector2 prevMousePos = new(0f);
+        protected List<UIElement> elements = new();
+        
         private float dirInputTimer = -1f;
+        
+        
 
         public UIContainer() { }
         public UIContainer(params UIElement[] elements)
@@ -434,6 +440,18 @@ namespace ShapeUI
             RegisterElements(elements);
         }
 
+
+
+        public override void Update(float dt, Vector2 mousePosUI)
+        {
+            UpdateNavigation(dt);
+            UpdateRects();
+            UpdateChildren(dt, mousePosUI);
+        }
+        public override void Draw()
+        {
+            DrawChildren();
+        }
 
         public void RegisterElements(params UIElement[] newElements)
         {
@@ -443,7 +461,7 @@ namespace ShapeUI
                 {
                     element.Selected = false;
                     element.WasSelected -= OnUIElementSelected;
-                    element.InsideContainer = false;
+                    //element.InsideContainer = false;
                 }
                 elements.Clear();
 
@@ -451,7 +469,7 @@ namespace ShapeUI
                 {
                     element.Selected = false;
                     element.WasSelected += OnUIElementSelected;
-                    element.InsideContainer = true;
+                    //element.InsideContainer = true;
                 }
 
                 elements = newElements.ToList();
@@ -479,7 +497,7 @@ namespace ShapeUI
                 {
                     element.Selected = false;
                     element.WasSelected -= OnUIElementSelected;
-                    element.InsideContainer = false;
+                    //element.InsideContainer = false;
                 }
                 elements.Clear();
             }
@@ -542,48 +560,6 @@ namespace ShapeUI
                 }
             }
         }
-
-        public UIElement? SelectNextElement()
-        {
-            if (InputDisabled || Disabled) return null;
-            if (NavigationSelectedElement == null) return null;
-            var available = GetAvailableElements();
-            if (available.Count <= 0) return null;
-            int index = available.IndexOf(NavigationSelectedElement);
-            index += 1;
-            if (index >= available.Count) index = 0;
-            UIElement next = available[index];
-            if (next != NavigationSelectedElement)
-            {
-                NavigationSelectedElement.Deselect();
-                NavigationSelectedElement = next;
-                NavigationSelectedElement.Select();
-                NewElementSelected?.Invoke(next);
-                return next;
-            }
-            else return NavigationSelectedElement;
-        }
-        public UIElement? SelectPreviousElement()
-        {
-            if (InputDisabled || Disabled) return null;
-            if (NavigationSelectedElement == null) return null;
-            var available = GetAvailableElements();
-            if (available.Count <= 0) return null;
-            int index = available.IndexOf(NavigationSelectedElement);
-            index -= 1;
-            if (index < 0) index = available.Count - 1;
-            UIElement prev = available[index];
-            if (prev != NavigationSelectedElement)
-            {
-                NavigationSelectedElement.Deselect();
-                NavigationSelectedElement = prev;
-                NavigationSelectedElement.Select();
-                NewElementSelected?.Invoke(prev);
-                return prev;
-            }
-            else return NavigationSelectedElement;
-        }
-        
         public void Navigate(UINeighbors.NeighborDirection inputDirection)
         {
             if (InputDisabled || Disabled) return;
@@ -641,23 +617,53 @@ namespace ShapeUI
                 NavigationSelectedElement.Select();
                 NewElementSelected?.Invoke(newSelected);
 
-                var availableElements = GetAvailableElements();
+                var availableElements = GetDisplayedAvailableElements();
                 if (newSelected == availableElements[0]) FirstElementSelected?.Invoke(newSelected);
                 else if (newSelected == availableElements[availableElements.Count - 1]) LastElementSelected?.Invoke(newSelected);
             }
         }
         
-        public override void Draw()
+        public UIElement? SelectNextElement()
         {
-            DrawChildren();
+            if (InputDisabled || Disabled) return null;
+            if (NavigationSelectedElement == null) return null;
+            var available = GetDisplayedAvailableElements();
+            if (available.Count <= 0) return null;
+            int index = available.IndexOf(NavigationSelectedElement);
+            index += 1;
+            if (index >= available.Count) index = 0;
+            UIElement next = available[index];
+            if (next != NavigationSelectedElement)
+            {
+                NavigationSelectedElement.Deselect();
+                NavigationSelectedElement = next;
+                NavigationSelectedElement.Select();
+                NewElementSelected?.Invoke(next);
+                return next;
+            }
+            else return NavigationSelectedElement;
         }
-        public override void Update(float dt, Vector2 mousePosUI)
+        public UIElement? SelectPreviousElement()
         {
-            UpdateNavigation(dt);
-            UpdateRects();
-            UpdateChildren(dt, mousePosUI);
+            if (InputDisabled || Disabled) return null;
+            if (NavigationSelectedElement == null) return null;
+            var available = GetDisplayedAvailableElements();
+            if (available.Count <= 0) return null;
+            int index = available.IndexOf(NavigationSelectedElement);
+            index -= 1;
+            if (index < 0) index = available.Count - 1;
+            UIElement prev = available[index];
+            if (prev != NavigationSelectedElement)
+            {
+                NavigationSelectedElement.Deselect();
+                NavigationSelectedElement = prev;
+                NavigationSelectedElement.Select();
+                NewElementSelected?.Invoke(prev);
+                return prev;
+            }
+            else return NavigationSelectedElement;
         }
-        
+
         public void MoveNext()
         {
             if (DisplayCount <= 0) return;
@@ -687,7 +693,6 @@ namespace ShapeUI
         }
         public void SetDisplayStartIndex(int newIndex)
         {
-            //if (!Selected || InputDisabled || Disabled || !Selectable) return;
             if (DisplayCount <= 0) return;
             if(newIndex < 0) newIndex = 0;
             else if(newIndex > elements.Count - DisplayCount) newIndex = elements.Count - DisplayCount;
@@ -697,12 +702,9 @@ namespace ShapeUI
                 int dif = newIndex - curDisplayIndex;
                 curDisplayIndex = newIndex;
 
-                //var newStartElement = GetNavigationStartElement();
-                //if (newStartElement != NavigationStartElement) NavigationStartElement = newStartElement;
-                //do stuff here because displayed items have changed
                 if (NavigationSelectedElement != null)
                 {
-                    var displayedElements = GetAvailableElements();
+                    var displayedElements = GetDisplayedAvailableElements();
                     if (displayedElements.Count > 0 && !displayedElements.Contains(NavigationSelectedElement))
                     {
                         NavigationSelectedElement.Deselect();
@@ -717,35 +719,6 @@ namespace ShapeUI
                             NavigationSelectedElement.Select();
                         }
                     }
-
-                    //var displayedElements = GetDisplayedElements();
-                    //if (!displayedElements.Contains(NavigationSelectedElement))
-                    //{
-                    //    
-                    //    if(NavigationStartElement != null)
-                    //    {
-                    //        NavigationSelectedElement.Deselect();
-                    //        NavigationSelectedElement = NavigationStartElement;
-                    //        NavigationSelectedElement.Select();
-                    //    }
-                    //}
-
-                    //var closest = GetClosestNeighbor(NavigationSelectedElement);
-                    //if (closest != null)
-                    //{
-                    //    if (closest != NavigationSelectedElement)
-                    //    {
-                    //        NavigationSelectedElement.Deselect();
-                    //        NavigationSelectedElement = closest;
-                    //        NavigationSelectedElement.Select();
-                    //    }
-                    //}
-                    //else
-                    //{
-                    //    NavigationSelectedElement.Deselect();
-                    //    NavigationSelectedElement = null;
-                    //}
-
                 }
             }
 
@@ -762,27 +735,21 @@ namespace ShapeUI
             if (index >= elements.Count) index = elements.Count - 1;
             return index;
         }
+        
         public List<UIElement> GetDisplayedElements() 
         {
             int count = GetDisplayEndIndex() - GetDisplayStartIndex();
             return elements.GetRange(GetDisplayStartIndex(), count + 1); 
         }
-        //public UIElement? GetElementAt(int index)
-        //{
-        //    if (elements == null || elements.Count <= 0) return null;
-        //    if (index < 0) index = 0;
-        //    else if (index >= elements.Count) index = elements.Count - 1;
-        //
-        //    return elements[index];
-        //}
-        //public UIElement? GetDisplayedElementAt(int index)
-        //{
-        //    var items = GetDisplayedElements();
-        //    if (items == null || items.Count <= 0) return null;
-        //    if (index < 0) index = 0;
-        //    else if (index >= items.Count) index = items.Count - 1;
-        //    return items[index];
-        //}
+        public List<UIElement> GetDisplayedAvailableElements()
+        {
+            return GetDisplayedElements().FindAll(e => !e.Disabled && e.Selectable);
+        }
+        public List<UIElement> GetAllAvailableElements()
+        {
+            return elements.FindAll(e => !e.Disabled && e.Selectable);
+        }
+
 
 
         protected void DrawChildren()
@@ -795,11 +762,15 @@ namespace ShapeUI
         }
         protected void UpdateChildren(float dt, Vector2 mousePosUI)
         {
-            if (InputDisabled || Disabled) return;
-            for (int i = GetDisplayStartIndex(); i <= GetDisplayEndIndex(); i++)
+            if (!Disabled)
             {
-                elements[i].Update(dt, mousePosUI);
+                for (int i = GetDisplayStartIndex(); i <= GetDisplayEndIndex(); i++)
+                {
+                    elements[i].Check(prevMousePos, mousePosUI, InputDisabled, MouseTolerance);
+                    elements[i].Update(dt, mousePosUI);
+                }
             }
+            prevMousePos = mousePosUI;
         }
         protected virtual void UpdateRects()
         {
@@ -809,13 +780,9 @@ namespace ShapeUI
             ///}
         }
 
-        protected List<UIElement> GetAvailableElements()
-        {
-            return GetDisplayedElements().FindAll(e => !e.Disabled && e.Selectable);
-        }
         protected UIElement? GetClosestNeighbor(UIElement current)
         {
-            List<UIElement> neighbors = GetAvailableElements();
+            List<UIElement> neighbors = GetDisplayedAvailableElements();
             if (!neighbors.Contains(current))
             {
                 float closestDisSq = float.PositiveInfinity;
@@ -973,7 +940,7 @@ namespace ShapeUI
         }
         protected UIElement? GetNavigationStartElement()
         {
-            var available = GetAvailableElements();
+            var available = GetDisplayedAvailableElements();
             if (available.Count > 0) return available[0];
             return null;
         }
@@ -991,6 +958,7 @@ namespace ShapeUI
             //    else if (element == availableElements[availableElements.Count - 1]) MoveNext();
             //}
         }
+
 
 
         public static void AlignUIElementsHorizontal(Rectangle rect, List<UIElement> elements, float gapRelative = 0f, float elementMaxSizeX = 1f, float elementMaxSizeY = 1f)

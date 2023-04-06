@@ -30,15 +30,20 @@ namespace ShapeEngineDemo
             //nav = new(b1, b2, b3);
             //nav.StartNavigation();
 
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < 24; i++)
             {
                 TestButton b = new(String.Format("Test Button {0}", i), font, InputIDs.UI_Pressed, InputIDs.UI_MousePressed, - 1);
+                if (SRNG.chance(0.25f))
+                {
+                    b.Disabled = true;
+                }
                 testButtons.Add(b);
             }
             testContainer = new(testButtons.ToArray());
             
-            testContainer.DisplayCount = 4;
+            testContainer.DisplayCount = 12;
             testContainer.StartNavigation();
+            //testContainer.Disabled = true;
         }
 
 
@@ -70,7 +75,17 @@ namespace ShapeEngineDemo
             testContainer.Navigate(dir);
 
 
-            if (InputHandler.IsReleased(0, 2000)) testContainer.MoveNext();
+            if (InputHandler.IsReleased(0, 2000)) 
+            {
+                //var available = testContainer.GetAllAvailableElements();
+                //if(available.Count > 0)
+                //{
+                //    int randIndex = SRNG.randI(0, available.Count);
+                //    available[randIndex].Select();
+                //    testContainer.MoveToElement(available[randIndex]);
+                //}
+                testContainer.MoveNext();
+            }
             else if (InputHandler.IsReleased(0, 2001)) testContainer.MovePrevious();
             else if (InputHandler.IsReleased(0, 2002)) testContainer.MoveNextPage();
             else if (InputHandler.IsReleased(0, 2003)) testContainer.MovePreviousPage();
@@ -80,11 +95,9 @@ namespace ShapeEngineDemo
                 var b = testButtons[i];
                 if(b.Released)
                 {
+                    
                     List<TestButton> disabled = testButtons.FindAll(m => m.Disabled);
-                    foreach (var d in disabled)
-                    {
-                        d.Disabled = false;
-                    }
+                    if(disabled.Count > 0) disabled[SRNG.randI(0, disabled.Count)].Disabled = false;
                     b.Disabled = true;
                 }
             }
