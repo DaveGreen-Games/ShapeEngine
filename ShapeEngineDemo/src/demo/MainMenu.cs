@@ -10,8 +10,8 @@ namespace ShapeEngineDemo
 {
     public class MainMenu : Scene
     {
-        TestButton b1, b2, b3;
-        UINavigator nav;
+        //TestButton b1, b2, b3;
+        //UINavigator nav;
 
 
         List<TestButton> testButtons = new();
@@ -22,22 +22,22 @@ namespace ShapeEngineDemo
         {
             var font = Demo.FONT.GetFont(Demo.FONT_Medium);
             
-            b1 = new("START",   font, InputIDs.UI_Pressed, -1);
-            b2 = new("OPTIONS", font, InputIDs.UI_Pressed, -1);
-            b3 = new("QUIT",    font, InputIDs.UI_Pressed, InputIDs.UI_Cancel);
-            b1.Neighbors.SetNeighbor(b3, UINeighbors.NeighborDirection.TOP);
-            b3.Neighbors.SetNeighbor(b1, UINeighbors.NeighborDirection.BOTTOM);
-            nav = new(b1, b2, b3);
-            nav.StartNavigation();
+            //b1 = new("START",   font, InputIDs.UI_Pressed, InputIDs.UI_MousePressed, -1);
+            //b2 = new("OPTIONS", font, InputIDs.UI_Pressed, InputIDs.UI_MousePressed, -1);
+            //b3 = new("QUIT",    font, InputIDs.UI_Pressed, InputIDs.UI_MousePressed, InputIDs.UI_Cancel);
+            //b1.Neighbors.SetNeighbor(b3, UINeighbors.NeighborDirection.TOP);
+            //b3.Neighbors.SetNeighbor(b1, UINeighbors.NeighborDirection.BOTTOM);
+            //nav = new(b1, b2, b3);
+            //nav.StartNavigation();
 
             for (int i = 0; i < 8; i++)
             {
-                TestButton b = new(String.Format("Test Button {0}", i), font, InputIDs.UI_Pressed, -1);
+                TestButton b = new(String.Format("Test Button {0}", i), font, InputIDs.UI_Pressed, InputIDs.UI_MousePressed, - 1);
                 testButtons.Add(b);
             }
             testContainer = new(testButtons.ToArray());
             
-            //testContainer.DisplayCount = 4;
+            testContainer.DisplayCount = 4;
             testContainer.StartNavigation();
         }
 

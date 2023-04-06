@@ -20,7 +20,8 @@ namespace ShapeUI
         public bool Released { get; protected set; } = false;
         public bool Selected { get; internal set; } = false;
         public bool Pressed { get; protected set; } = false;
-
+        public bool MouseInside { get; protected set;} = false;
+        public bool InsideContainer { get; set;} = false;
         protected bool disabled = false;
         public bool Disabled 
         {
@@ -70,7 +71,7 @@ namespace ShapeUI
 
         
         protected virtual bool CheckPressed() { return false; }
-        //protected virtual bool CheckMousePressed() { return false; }
+        protected virtual bool CheckMousePressed() { return false; }
         protected virtual bool CheckShortcutPressed() { return false; }
         
         public void Select()
@@ -143,29 +144,30 @@ namespace ShapeUI
             Released = false;
             if (!Disabled && Selectable)
             {
-                if(IsPointInside(prevMousePos))
+                MouseInside = IsPointInside(mousePosUI);
+                if (IsPointInside(prevMousePos))
                 {
                     float disSq = (prevMousePos - mousePosUI).LengthSquared();
                     if (disSq > MouseTolerance)
                     {
-                        bool mouseInside = IsPointInside(mousePosUI);
-                        if (mouseInside && !Selected)
+                        if (MouseInside && !Selected)
                         {
                             Selected = true;
                             SelectedChanged(true);
                             WasSelected?.Invoke(this);
                         }
-                        else if (!mouseInside && Selected)
+                        else if (!MouseInside && Selected && !InsideContainer)
                         {
                             Selected = false;
                             SelectedChanged(false);
                         }
                     }
                 }
-                
+
                 bool prevPressed = Pressed;
                 if (CheckShortcutPressed()) Pressed = true;
-                else if (Selected) Pressed = CheckPressed();
+                else if (Selected && CheckPressed()) Pressed = true;
+                else if (MouseInside && CheckMousePressed()) Pressed = true;
                 else Pressed = false;
 
 
@@ -190,13 +192,15 @@ namespace ShapeUI
         public string Text { get; set; } = "Button";
         private Font font;
         private int shortcutID = -1;
+        private int pressedMouseID = -1;
         private int pressedID = -1;
-        public TestButton(string text, Font font, int pressedID, int shortcutID = -1) 
+        public TestButton(string text, Font font, int pressedID, int pressedMouseID, int shortcutID = -1) 
         { 
             this.Text = text; 
             this.font = font; 
             this.shortcutID = shortcutID;
             this.pressedID = pressedID;
+            this.pressedMouseID = pressedMouseID;
             this.selectable = true;
         }
 
@@ -204,6 +208,11 @@ namespace ShapeUI
         {
             if (pressedID < 0) return false;
             else return InputHandler.IsDown(0, pressedID);
+        }
+        protected override bool CheckMousePressed()
+        {
+            if (pressedMouseID < 0) return false;
+            else return InputHandler.IsDown(0, pressedMouseID);
         }
         protected override bool CheckShortcutPressed()
         {

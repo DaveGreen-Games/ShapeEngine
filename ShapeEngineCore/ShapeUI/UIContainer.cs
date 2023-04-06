@@ -443,6 +443,7 @@ namespace ShapeUI
                 {
                     element.Selected = false;
                     element.WasSelected -= OnUIElementSelected;
+                    element.InsideContainer = false;
                 }
                 elements.Clear();
 
@@ -450,6 +451,7 @@ namespace ShapeUI
                 {
                     element.Selected = false;
                     element.WasSelected += OnUIElementSelected;
+                    element.InsideContainer = true;
                 }
 
                 elements = newElements.ToList();
@@ -477,6 +479,7 @@ namespace ShapeUI
                 {
                     element.Selected = false;
                     element.WasSelected -= OnUIElementSelected;
+                    element.InsideContainer = false;
                 }
                 elements.Clear();
             }
@@ -542,6 +545,7 @@ namespace ShapeUI
 
         public UIElement? SelectNextElement()
         {
+            if (InputDisabled || Disabled) return null;
             if (NavigationSelectedElement == null) return null;
             var available = GetAvailableElements();
             if (available.Count <= 0) return null;
@@ -561,6 +565,7 @@ namespace ShapeUI
         }
         public UIElement? SelectPreviousElement()
         {
+            if (InputDisabled || Disabled) return null;
             if (NavigationSelectedElement == null) return null;
             var available = GetAvailableElements();
             if (available.Count <= 0) return null;
@@ -581,7 +586,7 @@ namespace ShapeUI
         
         public void Navigate(UINeighbors.NeighborDirection inputDirection)
         {
-            if (InputDisabled) return;
+            if (InputDisabled || Disabled) return;
             if (elements.Count <= 0 || DisplayCount == 1) return;
 
             if (inputDirection == UINeighbors.NeighborDirection.NONE)
@@ -682,6 +687,7 @@ namespace ShapeUI
         }
         public void SetDisplayStartIndex(int newIndex)
         {
+            //if (!Selected || InputDisabled || Disabled || !Selectable) return;
             if (DisplayCount <= 0) return;
             if(newIndex < 0) newIndex = 0;
             else if(newIndex > elements.Count - DisplayCount) newIndex = elements.Count - DisplayCount;
@@ -789,6 +795,7 @@ namespace ShapeUI
         }
         protected void UpdateChildren(float dt, Vector2 mousePosUI)
         {
+            if (InputDisabled || Disabled) return;
             for (int i = GetDisplayStartIndex(); i <= GetDisplayEndIndex(); i++)
             {
                 elements[i].Update(dt, mousePosUI);
@@ -925,8 +932,8 @@ namespace ShapeUI
         }
         protected void UpdateNavigation(float dt)
         {
-            if (InputDisabled) return;
-
+            //if (!Selected || InputDisabled || Disabled || !selectable) return;
+            if (InputDisabled || Disabled) return;
             var newStartElement = GetNavigationStartElement();
             if (newStartElement != NavigationStartElement) NavigationStartElement = newStartElement;
 
