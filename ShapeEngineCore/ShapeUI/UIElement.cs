@@ -5,7 +5,7 @@ using System.Numerics;
 
 namespace ShapeUI
 {
-    public class UIElement
+    public abstract class UIElement
     {
         public event Action<UIElement>? WasSelected;
 
@@ -20,14 +20,14 @@ namespace ShapeUI
         public bool Selected { get; set; } = false;
         public bool Pressed { get; protected set; } = false;
         public bool MouseInside { get; protected set;} = false;
-        protected bool disabled = false;
-        public bool Disabled 
+        protected bool disabledSelection = true;
+        public bool DisabledSelection 
         {
-            get { return disabled; }
+            get { return disabledSelection; }
             set 
             {
-                disabled = value;
-                if(disabled && Selected)
+                disabledSelection = value;
+                if(disabledSelection && Selected)
                 {
                     Selected = false;
                     //WasDeselected?.Invoke(this);
@@ -35,36 +35,34 @@ namespace ShapeUI
             }
         }
         
-        //protected bool hidden = false;
-        //public bool Hidden 
+        //protected bool selectable = false;
+        //public bool Selectable
         //{
-        //    get { return hidden; }
+        //    get { return selectable; }
         //    set
         //    {
-        //        hidden = value;
-        //        if(hidden && Selected)
+        //        selectable = value;
+        //        if (!selectable && Selected)
         //        {
         //            Selected = false;
-        //            //WasDeselected?.Invoke(this);
         //        }
         //    }
         //}
-        
-        protected bool selectable = false;
-        public bool Selectable
+
+        protected bool hidden = false;
+        public bool Hidden
         {
-            get { return selectable; }
+            get { return hidden; }
             set
             {
-                selectable = value;
-                if (!selectable && Selected)
+                hidden = value;
+                if (hidden && Selected)
                 {
                     Selected = false;
-                    //WasDeselected?.Invoke(this);
                 }
             }
         }
-        
+
         public void Select()
         {
             if (Selected) return;
@@ -142,7 +140,7 @@ namespace ShapeUI
         public void Check(Vector2 prevMousePos, Vector2 mousePosUI, bool mouseDeselects = false, float mouseTolerance = 5f)
         {
             Released = false;
-            if (!Disabled && Selectable)
+            if (!DisabledSelection && !Hidden)
             {
                 MouseInside = IsPointInside(mousePosUI);
                 bool prevMouseInside = IsPointInside(prevMousePos);
@@ -241,7 +239,7 @@ namespace ShapeUI
             this.shortcutID = shortcutID;
             this.pressedID = pressedID;
             this.pressedMouseID = pressedMouseID;
-            this.selectable = true;
+            this.DisabledSelection = false;
         }
 
         protected override bool CheckPressed()
@@ -263,7 +261,7 @@ namespace ShapeUI
         {
             Rectangle r = GetRect();
             
-            if (Disabled)
+            if (DisabledSelection)
             {
                 //DrawRectangleRec(r, DARKGRAY);
                 SDrawing.DrawTextAligned(Text, r, 1f, RED, font, new(0.5f));
@@ -284,7 +282,8 @@ namespace ShapeUI
                     DrawRectangleRec(r, LIGHTGRAY);
                     textColor = LIME;
                 }
-                
+                else DrawRectangleRec(r, DARKGRAY);
+
                 SDrawing.DrawTextAligned(Text, r, 1f, textColor, font, new(0.5f));
             }
         }

@@ -30,20 +30,20 @@ namespace ShapeEngineDemo
             //nav = new(b1, b2, b3);
             //nav.StartNavigation();
 
-            for (int i = 0; i < 24; i++)
+            for (int i = 0; i < 120; i++)
             {
-                TestButton b = new(String.Format("Test Button {0}", i), font, InputIDs.UI_Pressed, InputIDs.UI_MousePressed, - 1);
+                TestButton b = new(String.Format("B{0}", i + 1), font, InputIDs.UI_Pressed, InputIDs.UI_MousePressed, - 1);
                 if (SRNG.chance(0.25f))
                 {
-                    b.Disabled = true;
+                    //b.Hidden = true;
+                    b.DisabledSelection = true;
                 }
                 testButtons.Add(b);
             }
             testContainer = new(testButtons.ToArray());
             
-            testContainer.DisplayCount = 12;
+            testContainer.DisplayCount = 25;
             testContainer.StartNavigation();
-            //testContainer.Disabled = true;
         }
 
 
@@ -66,12 +66,14 @@ namespace ShapeEngineDemo
         {
             Vector2 uiSize = ScreenHandler.UISize();
             Rectangle r = SRect.ConstructRect(uiSize *0.5f, uiSize * new Vector2(0.5f, 0.8f), new Vector2(0.5f, 0.5f));
-            UIContainer.AlignUIElementsVertical(r, testButtons.ToList<UIElement>(), testContainer.GetDisplayStartIndex(), testContainer.GetDisplayEndIndex(), 0.01f, 1, 1);
             testContainer.Update(dt, GAMELOOP.MOUSE_POS_UI);
-
+            //UIContainer.AlignUIElementsVertical(r, testContainer.DisplayedElements, testContainer.DisplayCount, 0.01f, 1, 1);
+            UIContainer.AlignUIElementsGrid(r, testContainer.DisplayedElements, 5, 5, 0.01f, 0.01f, true);
             UINeighbors.NeighborDirection dir = UINeighbors.NeighborDirection.NONE;
             if (InputHandler.IsDown(0, InputIDs.UI_Down)) dir = UINeighbors.NeighborDirection.BOTTOM;
             else if (InputHandler.IsDown(0, InputIDs.UI_Up)) dir = UINeighbors.NeighborDirection.TOP;
+            else if (InputHandler.IsDown(0, InputIDs.UI_Left))  dir = UINeighbors.NeighborDirection.LEFT;
+            else if (InputHandler.IsDown(0, InputIDs.UI_Right))  dir = UINeighbors.NeighborDirection.RIGHT;
             testContainer.Navigate(dir);
 
 
@@ -96,9 +98,10 @@ namespace ShapeEngineDemo
                 if(b.Released)
                 {
                     
-                    List<TestButton> disabled = testButtons.FindAll(m => m.Disabled);
-                    if(disabled.Count > 0) disabled[SRNG.randI(0, disabled.Count)].Disabled = false;
-                    b.Disabled = true;
+                    //List<TestButton> disabled = testButtons.FindAll(m => m.Disabled);
+                    //if(disabled.Count > 0) disabled[SRNG.randI(0, disabled.Count)].Disabled = false;
+                    //b.Disabled = true;
+                    b.Hidden = true;
                 }
             }
             //Vector2 uiSize = ScreenHandler.UISize();
@@ -163,7 +166,7 @@ namespace ShapeEngineDemo
             if(ShapeEngine.IsWindows()) SDrawing.DrawTextAligned("Windows", start + gap * 5, textSize, 1, WHITE, font, new(0, 0.5f));
             if (ShapeEngine.IsLinux()) SDrawing.DrawTextAligned("Linux", start + gap * 5, textSize, 1, WHITE, font, new(0, 0.5f));
             if (ShapeEngine.IsOSX()) SDrawing.DrawTextAligned("OSX", start + gap * 5, textSize, 1, WHITE, font, new(0, 0.5f));
-
+            SDrawing.DrawTextAligned(String.Format("FPS: {0}", GetFPS()), start + gap * 6, textSize, 1, GREEN, font, new(0, 0.5f));
             testContainer.Draw();
             //b1.Draw();
             //b2.Draw();
