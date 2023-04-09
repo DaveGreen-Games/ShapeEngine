@@ -15,6 +15,8 @@ namespace ShapeUI
         public UIMargins Margins { get; set; } = new();
         public UINeighbors Neighbors { get; private set; } = new();
         public string Tooltip { get; set; } = "";
+        
+        public int ID { get; set; } = -1;
 
         public bool Released { get; protected set; } = false;
         public bool Selected { get; set; } = false;
@@ -27,11 +29,14 @@ namespace ShapeUI
             set 
             {
                 disabledSelection = value;
-                if(disabledSelection && Selected)
+                Released = false;
+                if (disabledSelection && Selected)
                 {
                     Selected = false;
+                    SelectedChanged(false);
                     //WasDeselected?.Invoke(this);
                 }
+                DisabledSelectionChanged(disabledSelection);
             }
         }
         
@@ -56,10 +61,13 @@ namespace ShapeUI
             set
             {
                 hidden = value;
+                Released = false;
                 if (hidden && Selected)
                 {
                     Selected = false;
+                    SelectedChanged(false);
                 }
+                HiddenChanged(hidden);
             }
         }
 
@@ -132,7 +140,10 @@ namespace ShapeUI
         {
             UpdateRect(new Vector2(rect.x, rect.y), new Vector2(rect.width, rect.height), alignement);
         }
-
+        public void UpdateRect(Rectangle rect)
+        {
+            this.rect = rect;
+        }
         public bool IsPointInside(Vector2 uiPos)
         {
             return CheckCollisionPointRec(uiPos, GetRect(new(0f)));
@@ -223,6 +234,8 @@ namespace ShapeUI
 
         protected virtual void PressedChanged(bool pressed) { }
         protected virtual void SelectedChanged(bool selected) { }
+        protected virtual void HiddenChanged(bool hidden) { }
+        protected virtual void DisabledSelectionChanged(bool disabledSelection) { }
     }
 
     public class TestButton : UIElement

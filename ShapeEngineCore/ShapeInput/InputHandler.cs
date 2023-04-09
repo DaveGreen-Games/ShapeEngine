@@ -153,11 +153,10 @@ namespace ShapeInput
     }
     public static class InputHandler
     {
-        
-
         private static Dictionary<int, InputSlot> inputSlots = new();
         private static Dictionary<int, InputMap> inputMaps = new();
         //private static bool disabled = false;
+        public const int INPUTMAP_Basic = 100;
         
         public const int UI_Select = 10;
         public const int UI_SelectMouse = 11;
@@ -168,7 +167,6 @@ namespace ShapeInput
         public const int UI_Left = 16;
         public const int UI_Right = 17;
 
-        public const int INPUTMAP_Basic = 100;
 
         public static readonly List<InputAction> UI_Default_InputActions = new()
         {
