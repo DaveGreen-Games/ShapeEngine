@@ -224,8 +224,8 @@ namespace ShapeEngineDemo
             if (InputHandler.IsDown(0, InputIDs.GAME_SlowTime)) GAMELOOP.GetCurArea().UpdateSlowFactor = 0.05f;
             else if (InputHandler.IsReleased(0, InputIDs.GAME_SlowTime)) GAMELOOP.GetCurArea().UpdateSlowFactor = 1f;
             
-            if (InputHandler.IsReleased(0, InputHandler.UI_Cancel)) GAMELOOP.GoToScene("mainmenu");
-            
+            if (InputHandler.IsReleased(0, InputIDs.UI_Cancel)) GAMELOOP.GoToScene("mainmenu");
+
             if (!IsPaused() && InputHandler.IsReleased(0, InputIDs.DEBUG_SpawnAsteroid)) SpawnAsteroidDebug();
 
             if (EDITORMODE)

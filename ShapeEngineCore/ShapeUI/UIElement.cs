@@ -34,25 +34,10 @@ namespace ShapeUI
                 {
                     Selected = false;
                     SelectedChanged(false);
-                    //WasDeselected?.Invoke(this);
                 }
                 DisabledSelectionChanged(disabledSelection);
             }
         }
-        
-        //protected bool selectable = false;
-        //public bool Selectable
-        //{
-        //    get { return selectable; }
-        //    set
-        //    {
-        //        selectable = value;
-        //        if (!selectable && Selected)
-        //        {
-        //            Selected = false;
-        //        }
-        //    }
-        //}
 
         protected bool hidden = false;
         public bool Hidden
@@ -181,51 +166,8 @@ namespace ShapeUI
             }
         }
         
-        public virtual void Draw()
-        {
-            
-        }
-        public virtual void Update(float dt, Vector2 mousePosUI)
-        {
-            //if (!Disabled && Selectable)
-            //{
-            //    MouseInside = IsPointInside(mousePosUI);
-            //    if (IsPointInside(prevMousePos))
-            //    {
-            //        float disSq = (prevMousePos - mousePosUI).LengthSquared();
-            //        if (disSq > MouseTolerance)
-            //        {
-            //            if (MouseInside && !Selected)
-            //            {
-            //                Selected = true;
-            //                SelectedChanged(true);
-            //                WasSelected?.Invoke(this);
-            //            }
-            //            else if (!MouseInside && Selected && !InsideContainer)
-            //            {
-            //                Selected = false;
-            //                SelectedChanged(false);
-            //            }
-            //        }
-            //    }
-            //
-            //    bool prevPressed = Pressed;
-            //    if (CheckShortcutPressed()) Pressed = true;
-            //    else if (Selected && CheckPressed()) Pressed = true;
-            //    else if (MouseInside && CheckMousePressed()) Pressed = true;
-            //    else Pressed = false;
-            //
-            //
-            //    if (Pressed && !prevPressed) PressedChanged(true);
-            //    else if (!Pressed && prevPressed) 
-            //    { 
-            //        PressedChanged(false); 
-            //        Released = true;
-            //    }
-            //}
-            //
-            //prevMousePos = mousePosUI;
-        }
+        public virtual void Draw() { }
+        public virtual void Update(float dt, Vector2 mousePosUI) { }
 
         
         protected virtual bool CheckPressed() { return false; }
@@ -238,69 +180,7 @@ namespace ShapeUI
         protected virtual void DisabledSelectionChanged(bool disabledSelection) { }
     }
 
-    public class TestButton : UIElement
-    {
-        public string Text { get; set; } = "Button";
-        private Font font;
-        private int shortcutID = -1;
-        private int pressedMouseID = -1;
-        private int pressedID = -1;
-        public TestButton(string text, Font font, int pressedID, int pressedMouseID, int shortcutID = -1) 
-        { 
-            this.Text = text; 
-            this.font = font; 
-            this.shortcutID = shortcutID;
-            this.pressedID = pressedID;
-            this.pressedMouseID = pressedMouseID;
-            this.DisabledSelection = false;
-        }
-
-        protected override bool CheckPressed()
-        {
-            if (pressedID < 0) return false;
-            else return InputHandler.IsDown(0, pressedID);
-        }
-        protected override bool CheckMousePressed()
-        {
-            if (pressedMouseID < 0) return false;
-            else return InputHandler.IsDown(0, pressedMouseID);
-        }
-        protected override bool CheckShortcutPressed()
-        {
-            if (shortcutID < 0) return false;
-            else return InputHandler.IsDown(0, shortcutID);
-        }
-        public override void Draw()
-        {
-            Rectangle r = GetRect();
-            
-            if (DisabledSelection)
-            {
-                //DrawRectangleRec(r, DARKGRAY);
-                SDrawing.DrawTextAligned(Text, r, 1f, RED, font, new(0.5f));
-            }
-            else
-            {
-                //string t = Text;
-                //if (CheckShortcutPressed()) t = "Shortcut";
-                //Color buttonColor = GRAY;
-                Color textColor = DARKGREEN;
-                if (Pressed)
-                {
-                    DrawRectangleRec(r, WHITE);
-                    textColor = BLACK;
-                }
-                else if(Selected)
-                {
-                    DrawRectangleRec(r, LIGHTGRAY);
-                    textColor = LIME;
-                }
-                else DrawRectangleRec(r, DARKGRAY);
-
-                SDrawing.DrawTextAligned(Text, r, 1f, textColor, font, new(0.5f));
-            }
-        }
-    }
+    
 }
 
 

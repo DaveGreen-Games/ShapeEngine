@@ -201,8 +201,7 @@ namespace ShapeEngineDemo
             //----------------------------------
 
 
-            AddScene("splash", new SplashScreen());
-            AddScene("mainmenu", new MainMenu());
+            
 
 
             //INPUT
@@ -239,11 +238,6 @@ namespace ShapeEngineDemo
             InputAction uiLeft = new(InputIDs.UI_Left, InputAction.Keys.A);
             InputAction uiRight = new(InputIDs.UI_Right, InputAction.Keys.D);
 
-            InputAction uiNext = new(2000, InputAction.Keys.E);
-            InputAction uiPrev = new(2001, InputAction.Keys.Q);
-            InputAction uiNextPage = new(2002, InputAction.Keys.C);
-            InputAction uiPrevPage = new(2003, InputAction.Keys.X);
-            
             InputMap inputMap = new(InputIDs.INPUTMAP_Default, "Default",
                 iaQuit, iaFullscreen, 
                 rotateLeft, rotateRight, rotate, 
@@ -253,8 +247,7 @@ namespace ShapeEngineDemo
                 spawnAsteroidDebug, healPlayerDebug, toggleDrawCollidersDebug, toggleDrawHelpersDebug, cycleZoomDebug, 
                 cycleResolutionsDebug, nextMonitorDebug, cycleFramerateLimitDebug, toggleVsyncDebug,
 
-                uiPressed, uiMousePressed, uiCancel, uiDown, uiUp, uiLeft, uiRight,
-                uiNext, uiPrev, uiNextPage, uiPrevPage
+                uiPressed, uiMousePressed, uiCancel, uiDown, uiUp, uiLeft, uiRight
                 );
             //inputMap.AddActions(InputHandler.UI_Default_InputActions);
             InputHandler.AddInputMap(inputMap);
@@ -286,9 +279,10 @@ namespace ShapeEngineDemo
             CURSOR.Hide();
 
             InputHandler.OnInputChanged += OnInputTypeChanged;
-
-            //ScreenHandler.SetFrameRateLimit(180);
-            //SPAWN SPLASH SCREEN
+            
+            AddScene("splash", new SplashScreen());
+            AddScene("mainmenu", new MainMenu());
+            
             Action startscene = () => GoToScene("splash");
             TIMER.Add(2.0f, startscene);
         }
