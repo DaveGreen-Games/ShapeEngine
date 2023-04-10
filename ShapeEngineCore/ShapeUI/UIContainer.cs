@@ -67,7 +67,9 @@ namespace ShapeUI
         public float MouseTolerance { get; set; } = 5f;
         public UINeighbors.NeighborDirection LastInputDirection { get; protected set; } = UINeighbors.NeighborDirection.NONE;
         public UINeighbors.NeighborDirection CurInputDirection { get; protected set; } = UINeighbors.NeighborDirection.NONE;
-        public UIElement? NavigationStartElement { get; protected set; } = null;
+        //public UIElement? NavigationStartElement { get; protected set; } = null;
+        //protected UIElement? lastSelectedElement = null;
+        protected int lastSelectedIndex = -1;
         public UIElement? SelectedElement { get; protected set; } = null;
         public List<UIElement> Elements { get; protected set; } = new();
         public List<UIElement> VisibleElements { get; protected set; } = new();
@@ -129,25 +131,46 @@ namespace ShapeUI
 
                 Elements = newElements.ToList();
                 UpdateDisplayedElements();
-                if (SelectedElement != null)
-                {
-                    if (SelectedElement.DisabledSelection || !newElements.Contains(SelectedElement))
-                    {
-                        SelectedElement.Selected = false;
-                        SelectedElement = null;
-                    }
-                }
 
-                NavigationStartElement = GetNavigationStartElement();
-            }
-            else
-            {
+                
                 if (SelectedElement != null)
                 {
                     SelectedElement.Selected = false;
                     SelectedElement = null;
+                    //if (SelectedElement.DisabledSelection || !GetDisplayedAvailableElements().Contains(SelectedElement))
+                    //{
+                    //    SelectedElement.Selected = false;
+                    //    SelectedElement = null;
+                    //    lastSelectedElement = null;
+                    //}
                 }
-                NavigationStartElement = null;
+
+                //if (!NavigationDisabled)
+                //{
+                //    if(SelectedElement == null)
+                //    {
+                //        var e = GetNavigationStartElement();
+                //        if(e != null)
+                //        {
+                //            SelectedElement = e;
+                //            lastSelectedElement = e;
+                //            SelectedElement.Select();
+                //        }
+                //    }
+                //}
+                //NavigationStartElement = GetNavigationStartElement();
+            }
+            else
+            {
+                lastSelectedIndex = -1;
+                if (SelectedElement != null)
+                {
+                    SelectedElement.Selected = false;
+                    SelectedElement = null;
+                    //lastSelectedElement = null;
+                }
+                
+                //NavigationStartElement = null;
                 foreach (var element in Elements)
                 {
                     element.Selected = false;
@@ -167,20 +190,34 @@ namespace ShapeUI
             if (Elements.Count > 0)
             {
                 //foreach (var element in elements) { element.Deselect(); }
+                
                 if (SelectedElement != null)
                 {
                     SelectedElement.Selected = false;
                     SelectedElement = null;
                 }
-
-                NavigationStartElement = GetNavigationStartElement();
-
-                if (NavigationStartElement != null)
-                {
-                    SelectedElement = NavigationStartElement;
-                    NavigationStartElement.Select();
-                    NewElementSelected?.Invoke(NavigationStartElement);
-                }
+                lastSelectedIndex = 0;
+                //if (!NavigationDisabled)
+                //{
+                //    if (SelectedElement == null)
+                //    {
+                //        var e = GetNavigationStartElement();
+                //        if (e != null)
+                //        {
+                //            SelectedElement = e;
+                //            lastSelectedElement = e;
+                //            SelectedElement.Select();
+                //        }
+                //    }
+                //}
+                //NavigationStartElement = GetNavigationStartElement();
+                //
+                //if (NavigationStartElement != null)
+                //{
+                //    SelectedElement = NavigationStartElement;
+                //    NavigationStartElement.Select();
+                //    NewElementSelected?.Invoke(NavigationStartElement);
+                //}
             }
         }
         public void Close()
@@ -189,9 +226,10 @@ namespace ShapeUI
             VisibleElements.Clear();
             DisplayedElements.Clear();
             SelectedElement = null;
-            NavigationStartElement = null;
+            //NavigationStartElement = null;
         }
 
+        
         protected override void SelectedChanged(bool selected)
         {
             if (selected) StartNavigation();
@@ -202,14 +240,30 @@ namespace ShapeUI
             if (NavigationDisabled)
             {
                 NavigationDisabled = false;
+                UpdateSelectedElement();
+                //if (lastSelectedElement != null && GetDisplayedAvailableElements().Contains(lastSelectedElement))
+                //{
+                //    SelectedElement = lastSelectedElement;
+                //    SelectedElement.Select();
+                //}
+                //else
+                //{
+                //    var e = GetNavigationStartElement();
+                //    if (e != null)
+                //    {
+                //        SelectedElement = e;
+                //        lastSelectedElement = e;
+                //        SelectedElement.Select();
+                //    }
+                //}
 
-                NavigationStartElement = GetNavigationStartElement();
-                if (SelectedElement == null && NavigationStartElement != null)
-                {
-                    SelectedElement = NavigationStartElement;
-                    NavigationStartElement.Select();
-                    NewElementSelected?.Invoke(NavigationStartElement);
-                }
+                //NavigationStartElement = GetNavigationStartElement();
+                //if (SelectedElement == null && NavigationStartElement != null)
+                //{
+                //    SelectedElement = NavigationStartElement;
+                //    NavigationStartElement.Select();
+                //    NewElementSelected?.Invoke(NavigationStartElement);
+                //}
             }
         }
         private void StopNavigation()
@@ -219,6 +273,7 @@ namespace ShapeUI
                 NavigationDisabled = true;
                 if (SelectedElement != null)
                 {
+                    //SelectedElement.Deselect();
                     SelectedElement.Selected = false;
                     SelectedElement = null;
                 }
@@ -250,41 +305,45 @@ namespace ShapeUI
 
             if (SelectedElement == null) return false;
 
-            UIElement? newSelected = null;
-
+            int newIndex = -1;
+            List<UIElement> neighbors = DisplayedElements.FindAll(e => e != SelectedElement && !e.DisabledSelection);
             if (inputDirection == UINeighbors.NeighborDirection.TOP)
             {
-                newSelected = CheckDirection(SelectedElement, inputDirection);
+                newIndex = CheckDirection(neighbors, SelectedElement, inputDirection);
                 if (InputInterval > 0f) dirInputTimer = InputInterval;
             }
             else if (inputDirection == UINeighbors.NeighborDirection.RIGHT)
             {
-                newSelected = CheckDirection(SelectedElement, inputDirection);
+                newIndex = CheckDirection(neighbors, SelectedElement, inputDirection);
                 if (InputInterval > 0f) dirInputTimer = InputInterval;
             }
             else if (inputDirection == UINeighbors.NeighborDirection.BOTTOM)
             {
-                newSelected = CheckDirection(SelectedElement, inputDirection);
+                newIndex = CheckDirection(neighbors, SelectedElement, inputDirection);
                 if (InputInterval > 0f) dirInputTimer = InputInterval;
             }
             else if (inputDirection == UINeighbors.NeighborDirection.LEFT)
             {
-                newSelected = CheckDirection(SelectedElement, inputDirection);
+                newIndex = CheckDirection(neighbors, SelectedElement, inputDirection);
                 if (InputInterval > 0f) dirInputTimer = InputInterval;
             }
 
-            if (newSelected != null && SelectedElement != newSelected)
+            if(newIndex >= 0)
             {
-                SelectedElement.Deselect();
-                SelectedElement = newSelected;
-                SelectedElement.Select();
-                NewElementSelected?.Invoke(newSelected);
-
-                var availableElements = GetDisplayedAvailableElements();
-                if (newSelected == availableElements[0]) FirstElementSelected?.Invoke(newSelected);
-                else if (newSelected == availableElements[availableElements.Count - 1]) LastElementSelected?.Invoke(newSelected);
-
-                return true;
+                UIElement newSelected = neighbors[newIndex];
+                if(newSelected != SelectedElement)
+                {
+                    SelectedElement.Deselect();
+                    SelectedElement = newSelected;
+                    SelectedElement.Select();
+                    lastSelectedIndex = newIndex;
+                    
+                    var availableElements = GetDisplayedAvailableElements();
+                    if (newSelected == availableElements[0]) FirstElementSelected?.Invoke(newSelected);
+                    else if (newSelected == availableElements[availableElements.Count - 1]) LastElementSelected?.Invoke(newSelected);
+                    
+                    return true;
+                }
             }
             return false;
         }
@@ -381,14 +440,20 @@ namespace ShapeUI
                     if (displayedElements.Count > 0 && !displayedElements.Contains(SelectedElement))
                     {
                         SelectedElement.Deselect();
+                        SelectedElement = null;
+                        //lastSelectedElement = null;
                         if(dif > 0)
                         {
+                            lastSelectedIndex = 0;
                             SelectedElement = displayedElements[0];
+                            //lastSelectedElement = SelectedElement;
                             SelectedElement.Select();
                         }
                         else
                         {
-                            SelectedElement = displayedElements[displayedElements.Count - 1];
+                            lastSelectedIndex = displayedElements.Count - 1;
+                            SelectedElement = displayedElements[lastSelectedIndex];
+                            //lastSelectedElement = SelectedElement;
                             SelectedElement.Select();
                         }
                     }
@@ -460,56 +525,61 @@ namespace ShapeUI
                 if (curDisplayIndex < 0) curDisplayIndex = 0;
             }
         }
-        protected UIElement? GetClosestNeighbor(UIElement current)
-        {
-            List<UIElement> neighbors = GetDisplayedAvailableElements();
-            if (!neighbors.Contains(current))
-            {
-                float closestDisSq = float.PositiveInfinity;
-                UIElement? closest = null;
-                foreach (var neighbor in neighbors)
-                {
-                    float disSq = (current.GetPos(new(0.5f)) - neighbor.GetPos(new(0.5f))).LengthSquared();
-                    if(disSq < closestDisSq)
-                    {
-                        closestDisSq = disSq;
-                        closest = neighbor;
-                    }
-                }
-                return closest;
-            }
-            return current;
-        }
-        protected UIElement? CheckDirection(UIElement current, UINeighbors.NeighborDirection dir)
+        
+        //protected UIElement? FindClosestNeighbor(UIElement current)
+        //{
+        //    List<UIElement> neighbors = GetDisplayedAvailableElements();
+        //    if (!neighbors.Contains(current))
+        //    {
+        //        float closestDisSq = float.PositiveInfinity;
+        //        UIElement? closest = null;
+        //        foreach (var neighbor in neighbors)
+        //        {
+        //            float disSq = (current.GetPos(new(0.5f)) - neighbor.GetPos(new(0.5f))).LengthSquared();
+        //            if(disSq < closestDisSq)
+        //            {
+        //                closestDisSq = disSq;
+        //                closest = neighbor;
+        //            }
+        //        }
+        //        return closest;
+        //    }
+        //    return current;
+        //}
+        //protected int FindClosestNeighbor(List<UIElement> available, int lastSelectedIndex)
+        //{
+        //    if (available.Count <= 0) return -1;
+        //    if (available.Count == 1) return 0;
+        //    if (available.Count == 2) return 
+        //    if(lastSelectedIndex > 0)
+        //    {
+        //
+        //    }
+        //    else
+        //    {
+        //
+        //    }
+        //    return 0;
+        //}
+        
+        protected int CheckDirection(List<UIElement> neighbors, UIElement current, UINeighbors.NeighborDirection dir)
         {
             var neighbor = current.Neighbors.GetNeighbor(dir);
-            if (neighbor != null && !neighbor.DisabledSelection && !neighbor.Hidden)
+            if (neighbor != null && !neighbor.DisabledSelection && !neighbor.Hidden && neighbors.Contains(neighbor))
             {
-                //current.Deselect();
-                //neighbor.Select();
-                return neighbor;
+                return neighbors.IndexOf(neighbor);
             }
-            else
-            {
-                var closest = FindNeighbor(current, dir);
-                if (closest != null)
-                {
-                    //current.Deselect();
-                    //closest.Select();
-                    return closest;
-                }
-            }
-            return null;
+            else return FindNeighbor(neighbors, current, dir);
         }
-        protected UIElement? FindNeighbor(UIElement current, UINeighbors.NeighborDirection dir)
+        protected int FindNeighbor(List<UIElement> neighbors, UIElement current, UINeighbors.NeighborDirection dir)
         {
-            List<UIElement> neighbors = DisplayedElements.FindAll(e => e != current && !e.DisabledSelection);
-            if (neighbors.Count <= 0) return null;
-            if (neighbors.Count == 1)
-            {
-                if (CheckNeighborDistance(current, neighbors[0], dir) < float.PositiveInfinity) return neighbors[0];
-                else return null;
-            }
+            
+            if (neighbors.Count <= 0) return -1;
+            if (neighbors.Count == 1) return 0;
+            //{
+            //    if (CheckNeighborDistance(current, neighbors[0], dir) < float.PositiveInfinity) return neighbors[0];
+            //    else return null;
+            //}
             int closestIndex = -1;
             float closestDistance = float.PositiveInfinity;
             for (int i = 0; i < neighbors.Count; i++)
@@ -522,8 +592,8 @@ namespace ShapeUI
                 }
             }
 
-            if (closestIndex < 0 || closestIndex >= neighbors.Count) return null;
-            return neighbors[closestIndex];
+            if (closestIndex < 0 || closestIndex >= neighbors.Count) return -1;
+            return closestIndex;
         }
         protected float CheckNeighborDistance(UIElement current, UIElement neighbor, UINeighbors.NeighborDirection dir)
         {
@@ -581,35 +651,37 @@ namespace ShapeUI
         {
             //if (!Selected || InputDisabled || Disabled || !selectable) return;
             if (NavigationDisabled || DisabledSelection) return;
-            var newStartElement = GetNavigationStartElement();
-            if (newStartElement != NavigationStartElement) NavigationStartElement = newStartElement;
-
-            if (SelectedElement != null)
-            {
-                if (!SelectedElement.Selected)
-                {
-                    if (SelectedElement.DisabledSelection || SelectedElement.Hidden)
-                    {
-
-                        if (NavigationStartElement != null)
-                        {
-                            SelectedElement = NavigationStartElement;
-                            SelectedElement.Select();
-                            NewElementSelected?.Invoke(SelectedElement);
-                        }
-                    }
-                    else SelectedElement.Selected = true;
-                }
-            }
-            else
-            {
-                if (NavigationStartElement != null)
-                {
-                    SelectedElement = NavigationStartElement;
-                    SelectedElement.Select();
-                    NewElementSelected?.Invoke(SelectedElement);
-                }
-            }
+            CleanSelectedElement();
+            UpdateSelectedElement();
+            //var newStartElement = GetNavigationDefaultElement();
+            //if (newStartElement != NavigationStartElement) NavigationStartElement = newStartElement;
+            //
+            //if (SelectedElement != null)
+            //{
+            //    if (!SelectedElement.Selected)
+            //    {
+            //        if (SelectedElement.DisabledSelection || SelectedElement.Hidden)
+            //        {
+            //
+            //            if (NavigationStartElement != null)
+            //            {
+            //                SelectedElement = NavigationStartElement;
+            //                SelectedElement.Select();
+            //                NewElementSelected?.Invoke(SelectedElement);
+            //            }
+            //        }
+            //        else SelectedElement.Selected = true;
+            //    }
+            //}
+            //else
+            //{
+            //    if (NavigationStartElement != null)
+            //    {
+            //        SelectedElement = NavigationStartElement;
+            //        SelectedElement.Select();
+            //        NewElementSelected?.Invoke(SelectedElement);
+            //    }
+            //}
 
 
             if (dirInputTimer > 0f)
@@ -618,25 +690,72 @@ namespace ShapeUI
                 if (dirInputTimer <= 0f) dirInputTimer = 0f;
             }
         }
-        protected UIElement? GetNavigationStartElement()
+        protected void CleanSelectedElement()
         {
-            var available = GetDisplayedAvailableElements();
-            if (available.Count > 0) return available[0];
-            return null;
+            if (SelectedElement != null)
+            {
+                if (SelectedElement.DisabledSelection || SelectedElement.Hidden)
+                {
+                    SelectedElement = null;
+                    //lastSelectedElement = null;
+                }
+            }
         }
+        protected void UpdateSelectedElement()
+        {
+            if (!NavigationDisabled)
+            {
+                if (SelectedElement == null)
+                {
+                    var available = GetDisplayedAvailableElements();
+                    if(available.Count > 0)
+                    {
+                        if (lastSelectedIndex >= 0 && lastSelectedIndex < available.Count)
+                        {
+                            SelectedElement = available[lastSelectedIndex];
+                            SelectedElement.Select();
+                        }
+                        else
+                        {
+                            if (lastSelectedIndex >= available.Count)
+                            {
+                                lastSelectedIndex = available.Count - 1;
+                                SelectedElement = available[lastSelectedIndex];
+                                SelectedElement.Select();
+                            }
+                            else
+                            {
+                                lastSelectedIndex = 0;
+                                SelectedElement = available[0];
+                                SelectedElement.Select();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        //protected UIElement? GetNavigationDefaultElement()
+        //{
+        //    var available = GetDisplayedAvailableElements();
+        //    if (available.Count > 0) return available[0];
+        //    return null;
+        //}
         private void OnUIElementSelected(UIElement element)
         {
             if (element != SelectedElement)
             {
-                if (SelectedElement != null) SelectedElement.Deselect();
-                SelectedElement = element;
+                var available = GetDisplayedAvailableElements();
+                int index = available.IndexOf(element);
+                if (index >= 0)
+                {
+                    if (SelectedElement != null) SelectedElement.Deselect();
+                    lastSelectedIndex = index;
+                    SelectedElement = element;
+                    SelectedElement.Select();
+                }
+
             }
-            //if (DisplayCount > 2 && elements.Count > 2)
-            //{
-            //    var availableElements = GetAvailableElements();
-            //    if (element == availableElements[0]) MovePrevious();
-            //    else if (element == availableElements[availableElements.Count - 1]) MoveNext();
-            //}
         }
 
 
