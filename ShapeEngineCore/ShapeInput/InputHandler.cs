@@ -2,7 +2,6 @@
 using System.Numerics;
 using Raylib_CsLo;
 using Vortice.XInput;
-using System.Runtime.InteropServices;
 using ShapeCore;
 
 namespace ShapeInput
@@ -158,27 +157,27 @@ namespace ShapeInput
         //private static bool disabled = false;
         public const int INPUTMAP_Basic = 100;
         
-        public const int UI_Select = 10;
-        public const int UI_SelectMouse = 11;
-        public const int UI_Cancel = 12;
-        public const int UI_CancelMouse = 13;
-        public const int UI_Up = 14;
-        public const int UI_Down = 15;
-        public const int UI_Left = 16;
-        public const int UI_Right = 17;
-
-
-        public static readonly List<InputAction> UI_Default_InputActions = new()
-        {
-            {new(UI_SelectMouse, InputAction.Keys.MB_LEFT) },
-            {new(UI_Select, InputAction.Keys.SPACE, InputAction.Keys.GP_BUTTON_RIGHT_FACE_DOWN) },
-            {new(UI_Cancel, InputAction.Keys.ESCAPE, InputAction.Keys.GP_BUTTON_RIGHT_FACE_RIGHT) },
-            {new(UI_CancelMouse, InputAction.Keys.MB_RIGHT) },
-            {new(UI_Up, InputAction.Keys.W, InputAction.Keys.UP, InputAction.Keys.GP_BUTTON_LEFT_FACE_UP) },
-            {new(UI_Right,InputAction.Keys.D, InputAction.Keys.RIGHT, InputAction.Keys.GP_BUTTON_LEFT_FACE_RIGHT) },
-            {new(UI_Down, InputAction.Keys.S, InputAction.Keys.DOWN, InputAction.Keys.GP_BUTTON_LEFT_FACE_DOWN) },
-            {new(UI_Left,InputAction.Keys.A, InputAction.Keys.LEFT, InputAction.Keys.GP_BUTTON_LEFT_FACE_LEFT) },
-        };
+        //public const int UI_Select = 10;
+        //public const int UI_SelectMouse = 11;
+        //public const int UI_Cancel = 12;
+        //public const int UI_CancelMouse = 13;
+        //public const int UI_Up = 14;
+        //public const int UI_Down = 15;
+        //public const int UI_Left = 16;
+        //public const int UI_Right = 17;
+        //
+        //
+        //public static readonly List<InputAction> UI_Default_InputActions = new()
+        //{
+        //    {new(UI_SelectMouse, InputAction.Keys.MB_LEFT) },
+        //    {new(UI_Select, InputAction.Keys.SPACE, InputAction.Keys.GP_BUTTON_RIGHT_FACE_DOWN) },
+        //    {new(UI_Cancel, InputAction.Keys.ESCAPE, InputAction.Keys.GP_BUTTON_RIGHT_FACE_RIGHT) },
+        //    {new(UI_CancelMouse, InputAction.Keys.MB_RIGHT) },
+        //    {new(UI_Up, InputAction.Keys.W, InputAction.Keys.UP, InputAction.Keys.GP_BUTTON_LEFT_FACE_UP) },
+        //    {new(UI_Right,InputAction.Keys.D, InputAction.Keys.RIGHT, InputAction.Keys.GP_BUTTON_LEFT_FACE_RIGHT) },
+        //    {new(UI_Down, InputAction.Keys.S, InputAction.Keys.DOWN, InputAction.Keys.GP_BUTTON_LEFT_FACE_DOWN) },
+        //    {new(UI_Left,InputAction.Keys.A, InputAction.Keys.LEFT, InputAction.Keys.GP_BUTTON_LEFT_FACE_LEFT) },
+        //};
 
 
 
@@ -255,10 +254,10 @@ namespace ShapeInput
             CUR_INPUT_TYPE = InputType.KEYBOARD_MOUSE;
             inputMaps.Clear();
             InputMap basicMap = new(INPUTMAP_Basic, "Basic");
-            foreach (var action in UI_Default_InputActions)
-            {
-                basicMap.AddAction(action.GetID(), action);
-            }
+            //foreach (var action in UI_Default_InputActions)
+            //{
+            //    basicMap.AddAction(action.GetID(), action);
+            //}
             inputMaps.Add(basicMap.GetID(), basicMap);
             AddInputSlot(-1);
             if (IsGamepadAvailable(0)) { inputSlots[0].gamepadIndex = 0; }
@@ -272,11 +271,6 @@ namespace ShapeInput
             {
                 inputSlot.UpdateVibration(dt);
             }
-            //int key = Raylib.GetKeyPressed();
-            //int unicode = Raylib.GetCharPressed();
-            //string str = string.Format(@"\u{0:x4}", unicode);
-            //string myValue = Char.Parse(str).ToString();
-
         }
 
         public static void Close()

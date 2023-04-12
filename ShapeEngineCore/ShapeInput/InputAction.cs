@@ -162,15 +162,7 @@ namespace ShapeInput
         private int id = -1;
         private List<Keys> actionKeys = new();
         private bool disabled = false;
-        //private int gamepadIndex = -1;
         private float deadzone = 0.25f;
-
-        //private float holdInterval = 0f;
-        //private float holdTimer = -1f;
-        //
-        //private float doubleTapInterval = 0f;
-        //private float doubleTapTimer = 0f;
-        //private bool doubleTapRelease = false;
 
         public InputAction(int id, params Keys[] keys)
         {
@@ -180,16 +172,6 @@ namespace ShapeInput
                 AddKey(key);
             }
         }
-        //public InputAction(string name, float doubleTapInterval, float holdInterval, params Keys[] keys)
-        //{
-        //    this.name = name;
-        //    this.doubleTapInterval = doubleTapInterval;
-        //    this.holdInterval = holdInterval;
-        //    foreach (var key in keys)
-        //    {
-        //        AddKey(key);
-        //    }
-        //}
         public InputAction(int id, float deadzone, params Keys[] keys)
         {
             this.id = id;
@@ -199,17 +181,6 @@ namespace ShapeInput
                 AddKey(key);
             }
         }
-        //public InputAction(string name, float deadzone, float doubleTapInterval, float holdInterval, params Keys[] keys)
-        //{
-        //    this.name = name;
-        //    this.deadzone = deadzone;
-        //    this.doubleTapInterval = doubleTapInterval;
-        //    this.holdInterval = holdInterval;
-        //    foreach (var key in keys)
-        //    {
-        //        AddKey(key);
-        //    }
-        //}
         
         public List<Keys> GetActionKeys()
         {
@@ -217,61 +188,6 @@ namespace ShapeInput
             keys.AddRange(actionKeys);
             return keys;
         }
-        //public void Update(float dt, int gamepad, bool gamepadOnly)
-        //{
-        //    if(holdInterval > 0f)
-        //    {
-        //        if (holdTimer < 0f) // no hold in progress
-        //        {
-        //            if (IsPressed(gamepad, gamepadOnly))
-        //            {
-        //                holdTimer = holdInterval - dt; // hold started
-        //            }
-        //        }
-        //        else if (holdTimer >= 0f) // hold in progress or finished
-        //        {
-        //            if (IsReleased(gamepad, gamepadOnly))
-        //            {
-        //                holdTimer = -1f; // hold canceled
-        //            }
-        //            else
-        //            {
-        //                if (holdTimer > 0f)
-        //                {
-        //                    holdTimer -= dt;
-        //                    if (holdTimer <= 0f) holdTimer = 0f; //hold finished
-        //                }
-        //                else holdTimer = holdInterval; // restart hold
-        //
-        //            }
-        //        }
-        //    }
-        //}
-
-        //public bool HasHold() { return holdInterval > 0f; }
-        //public float GetHoldF()
-        //{
-        //    if (holdInterval <= 0f) return -1f;
-        //    if (holdTimer < 0f) return -1f;
-        //    return 1.0f - ( holdTimer / holdInterval );
-        //}
-
-        //public bool IsHoldFinished()
-        //{
-        //    return holdTimer == 0f;
-        //}
-        //public bool IsDoubleTap()
-        //{
-        //    if(doubleTapTimer > 0f)
-        //    {
-        //        if (doubleTapRelease)
-        //        {
-        //
-        //        }
-        //    }
-        //}
-
-        //public void Rename(string newName) { id = newName; }
         public void AddKey(Keys key)
         {
             if (actionKeys.Contains(key)) return;
@@ -345,21 +261,12 @@ namespace ShapeInput
         {
             return (GetKeyboardKeyName(shorthand), GetMouseKeyName(shorthand), GetGamepadKeyName(shorthand));
         }
-        //public string GetKeyName(bool gamepad = false, bool shorthand = false)
-        //{
-        //    if (gamepad) return GetGamepadKeyName(shorthand);
-        //    else return GetKeyboardKeyName(shorthand);
-        //}
+        
         public bool IsDisabled() { return disabled; }
         public void Enable() { disabled = false; }
         public void Disable() { disabled = true; }
 
-        //public string GetInputKeyName(bool isGamepad)
-        //{
-        //    if (isGamepad) return gamepadKeyName;
-        //    else return keyboardMouseKeyName;
-        //}
-        //gamepad axis released/pressed are the same as up/down right now
+        
         public bool IsDown(int gamepad, bool gamepadOnly = false)
         {
             if (actionKeys.Count <= 0 || IsDisabled()) return false;
@@ -685,6 +592,7 @@ namespace ShapeInput
                 default: return shortHand ? "No Key" : "No Key";
             }
         }
+    
     }
 
 }
