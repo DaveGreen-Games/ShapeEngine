@@ -808,7 +808,7 @@ namespace ShapeInput
         {
             return connectedGamepads.Contains(gamepadIndex);
         }
-        private static bool IsCurGamepadConnected()
+        public static bool IsCurGamepadConnected()
         {
             return connectedGamepads.Contains(CUR_GAMEPAD);
         }
