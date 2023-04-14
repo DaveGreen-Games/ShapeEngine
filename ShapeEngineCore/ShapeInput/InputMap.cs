@@ -1,8 +1,5 @@
-﻿using Raylib_CsLo;
-using System.Diagnostics;
+﻿
 using System.Numerics;
-using Vortice.XInput;
-using static ShapeInput.InputAction;
 
 namespace ShapeInput
 {
@@ -173,15 +170,15 @@ namespace ShapeInput
         LEFT_THUMB = 16,
         RIGHT_THUMB = 17,
 
-        LSTICK_RIGHT = 30,
-        LSTICK_LEFT = 40,
-        LSTICK_DOWN = 31,
-        LSTICK_UP = 41,
+        LEFT_STICK_RIGHT = 30,
+        LEFT_STICK_LEFT = 40,
+        LEFT_STICK_DOWN = 31,
+        LEFT_STICK_UP = 41,
 
-        RSTICK_RIGHT = 32,
-        RSTICK_LEFT = 42,
-        RSTICK_DOWN = 33,
-        RSTICK_UP = 43,
+        RIGHT_STICK_RIGHT = 32,
+        RIGHT_STICK_LEFT = 42,
+        RIGHT_STICK_DOWN = 33,
+        RIGHT_STICK_UP = 43,
     }
     public enum MouseWheelAxis
     {
@@ -198,6 +195,8 @@ namespace ShapeInput
         RIGHT_TRIGGER = 5,
     }
 
+
+    //new names for all of that
     public interface IInput
     {
         public string GetName(bool shorthand = true);
@@ -363,14 +362,14 @@ namespace ShapeInput
                 case GamepadButton.MIDDLE_RIGHT: return shortHand ? "Start" : "GP Button Start";
                 case GamepadButton.LEFT_THUMB: return shortHand ? "LClick" : "GP Button Left Stick Click";
                 case GamepadButton.RIGHT_THUMB: return shortHand ? "RClick" : "GP Button Right Stick Click";
-                case GamepadButton.LSTICK_RIGHT: return shortHand ? "LS R" : "Left Stick Right";
-                case GamepadButton.LSTICK_LEFT: return shortHand ? "LS L" : "Left Stick Left";
-                case GamepadButton.LSTICK_DOWN: return shortHand ? "LS D" : "Left Stick Down";
-                case GamepadButton.LSTICK_UP: return shortHand ? "LS U" : "Left Stick Up";
-                case GamepadButton.RSTICK_RIGHT: return shortHand ? "RS R" : "Right Stick Right";
-                case GamepadButton.RSTICK_LEFT: return shortHand ? "RS L" : "Right Stick Left";
-                case GamepadButton.RSTICK_DOWN: return shortHand ? "RS D" : "Right Stick Down";
-                case GamepadButton.RSTICK_UP: return shortHand ? "RS U" : "Right Stick Up";
+                case GamepadButton.LEFT_STICK_RIGHT: return shortHand ? "LS R" : "Left Stick Right";
+                case GamepadButton.LEFT_STICK_LEFT: return shortHand ? "LS L" : "Left Stick Left";
+                case GamepadButton.LEFT_STICK_DOWN: return shortHand ? "LS D" : "Left Stick Down";
+                case GamepadButton.LEFT_STICK_UP: return shortHand ? "LS U" : "Left Stick Up";
+                case GamepadButton.RIGHT_STICK_RIGHT: return shortHand ? "RS R" : "Right Stick Right";
+                case GamepadButton.RIGHT_STICK_LEFT: return shortHand ? "RS L" : "Right Stick Left";
+                case GamepadButton.RIGHT_STICK_DOWN: return shortHand ? "RS D" : "Right Stick Down";
+                case GamepadButton.RIGHT_STICK_UP: return shortHand ? "RS U" : "Right Stick Up";
                 default: return shortHand ? "No Key" : "No Key";
             }
         }
@@ -398,6 +397,16 @@ namespace ShapeInput
                 default: return shortHand ? "No Key" : "No Key";
             }
         }
+
+
+        public static IInput Create(KeyboardButton button) { return new KeyboardButtonInput(button); }
+        public static IInput Create(MouseButton button) { return new MouseButtonInput(button); }
+        public static IInput Create(GamepadButton button, float deadzone = 0.2f) { return new GamepadButtonInput(button, deadzone); }
+        public static IInput Create(KeyboardButton neg, KeyboardButton pos) { return new KeyboardButtonAxisInput(neg, pos); }
+        public static IInput Create(GamepadButton neg, GamepadButton pos, float deadzone = 0.2f) { return new GamepadButtonAxisInput(neg, pos, deadzone); }
+        public static IInput Create(MouseButton neg, MouseButton pos) { return new MouseButtonAxisInput(neg, pos); }
+        public static IInput Create(MouseWheelAxis axis) { return new MouseWheelAxisInput(axis); }
+        public static IInput Create(GamepadAxis axis, float deadzone = 0.2f) { return new GamepadAxisInput(axis, deadzone); }
 
         /*
         protected static int GetButtonID(Buttons button)
@@ -817,7 +826,7 @@ namespace ShapeInput
 
             return IsKeyUp((int)neg) && IsKeyUp((int)pos);
         }
-        public float GetAxis(int slot, float deadzone)
+        public float GetAxis(int slot)
         {
             if (slot > 0) return 0f;
             float vNegative = IsKeyDown((int)neg) ? 1f : 0f;
@@ -1000,7 +1009,7 @@ namespace ShapeInput
         public int ID { get; protected set; } = -1;
         private List<IInput> inputs = new();
         
-        private InputState state = new();
+        private InputState state = new();//set every frame
 
         public InputCondition(int id, params IInput[] inputs)
         {
@@ -1008,9 +1017,7 @@ namespace ShapeInput
             this.ID = id;
         }
 
-
-
-
+        
 
         public void ReplaceKeys(params Buttons[] newKeys)
         {
