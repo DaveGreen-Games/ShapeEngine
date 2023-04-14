@@ -1,17 +1,44 @@
 ﻿using Raylib_CsLo;
+using System.Diagnostics;
 using System.Numerics;
 using Vortice.XInput;
 using static ShapeInput.InputAction;
 
 namespace ShapeInput
 {
-
-
-
-
-
-    public enum Keys
+    public struct InputState
     {
+        public bool down = false;
+        public bool up = false;
+        public bool released = false;
+        public bool pressed = false;
+        public float axisValue = 0f;
+
+        public InputState() { }
+        public InputState(bool down, bool up, bool released, bool pressed, float axisValue) 
+        { 
+            this.down = down;
+            this.up = up;
+            this.released = released;
+            this.pressed = pressed;
+            this.axisValue = axisValue;
+        }
+    }
+    public enum Axis 
+    {
+        NONE = -1,
+        MW_AXIS_VERTICAL = 10,
+        MW_AXIS_HORIZONTAL = 11,
+        GP_AXIS_LEFT_X = 400,
+        GP_AXIS_LEFT_Y = 401,
+        GP_AXIS_RIGHT_X = 402,
+        GP_AXIS_RIGHT_Y = 403,
+        GP_AXIS_LEFT_TRIGGER = 404,
+        GP_AXIS_RIGHT_TRIGGER = 405,
+    }
+    public enum Buttons
+    {
+        NONE = -1,
         MB_LEFT = 0,
         MB_RIGHT = 1,
         MB_MIDDLE = 2,
@@ -23,8 +50,6 @@ namespace ShapeInput
         MW_DOWN = 21,
         MW_LEFT = 22,
         MW_RIGHT = 23,
-        MW_AXIS_VERTICAL = 29,
-        MW_AXIS_HORIZONTAL = 30,
         APOSTROPHE = 39,
         COMMA = 44,
         MINUS = 45,
@@ -135,12 +160,6 @@ namespace ShapeInput
         BACK = 7,
         NULL = 8,
         MENU = 9,
-        GP_AXIS_LEFT_X = 400,
-        GP_AXIS_LEFT_Y = 401,
-        GP_AXIS_RIGHT_X = 402,
-        GP_AXIS_RIGHT_Y = 403,
-        GP_AXIS_LEFT_TRIGGER = 404,
-        GP_AXIS_RIGHT_TRIGGER = 405,
         GP_BUTTON_UNKNOWN = 500,
         GP_BUTTON_LEFT_FACE_UP = 501,
         GP_BUTTON_LEFT_FACE_RIGHT = 502,
@@ -170,214 +189,527 @@ namespace ShapeInput
         GP_BUTTON_RSTICK_DOWN = 603,
         GP_BUTTON_RSTICK_UP = 613,
     }
-    public static class InputKeys
+    public interface IInputValue
     {
-        public static bool IsButton(Keys key) { return IsGamepadButton(key) || IsGamepadAxisButton(key) || IsGamepadAxisButtonNeg(key) || IsGamepadAxisButtonPos(key) || IsKeyboard(key) || IsMouse(key) || IsMouseWheelButton(key); }
-        public static bool IsAxis(Keys key) { return IsGamepadAxis(key) || IsMouseWheelAxis(key); }
-        public static bool IsGamepad(Keys key) { return (int)key >= 500 && (int)key <= 523; }
-        public static bool IsGamepadAxis(Keys key) { return (int)key >= 400 && (int)key <= 405; }
-        public static bool IsGamepadButton(Keys key) { return (int)key >= 500 && (int)key <= 517; }
-        public static bool IsGamepadAxisButtonPos(Keys key) { return (int)key >= 600 && (int)key <= 603; }
-        public static bool IsGamepadAxisButtonNeg(Keys key) { return (int)key >= 610 && (int)key <= 613; }
-        public static bool IsGamepadAxisButton(Keys key) { return (int)key >= 600 && (int)key <= 613; }
-        public static bool IsMouse(Keys key) { return ( (int)key >= 0 && (int)key <= 6 ) || IsMouseWheel(key); }
-        public static bool IsMouseWheel(Keys key) { return IsMouseWheelAxis(key) || IsMouseWheelButton(key); }
-        public static bool IsMouseWheelButton(Keys key) { return (int)key >= 20 && (int)key <= 23; }
-        public static bool IsMouseWheelAxis(Keys key) { return (int)key == 29 || (int)key == 30; }
-        public static bool IsKeyboard(Keys key) { return (int)key > 6 && (int)key < 400 && !IsMouseWheel(key); }
-        public static int TransformKeyValue(Keys key)
+        public (string keyboard, string mouse, string gamepad) GetNames(bool shorthand = true);
+
+        
+        public void Change(Buttons newButton);
+        public void Change(Axis newAxis);
+        public void Change((Buttons neg, Buttons pos) newAxis);
+
+
+
+        public bool IsDown(int slot);
+        public bool IsUp(int slot);
+        public float GetAxis(int slot, float deadzone);
+
+        protected static int GetButtonID(Buttons button)
         {
-            if (key == Keys.BACK)
+            if (button == Buttons.BACK)
             {
                 return (int)KeyboardKey.KEY_BACK;
             }
-            else if (key == Keys.NULL)
+            else if (button == Buttons.NULL)
             {
                 return (int)KeyboardKey.KEY_NULL;
             }
-            else if (key == Keys.MENU)
+            else if (button == Buttons.MENU)
             {
                 return (int)KeyboardKey.KEY_MENU;
             }
-            else if (IsGamepadAxis(key)) return (int)key - 400;
-            else if (IsGamepadButton(key)) return (int)key - 500;
-            else if (IsGamepadAxisButtonPos(key)) return (int)key - 600;
-            else if (IsGamepadAxisButtonNeg(key)) return (int)key - 610;
-            return (int)key;
+            //else if (IsGamepadAxis(key)) return (int)key - 400;
+            else if (IsGamepadButton(button)) return (int)button - 500;
+            else if (IsGamepadAxisButtonPos(button)) return (int)button - 600;
+            else if (IsGamepadAxisButtonNeg(button)) return (int)button - 610;
+            return (int)button;
         }
-        public static string GetKeyName(Keys key, bool shortHand = true)
+        protected static int GetAxisID(Axis axis)
         {
-            switch (key)
+            if (IsGamepadAxis(axis)) return (int)axis - 400;
+            else return (int)axis;
+        }
+
+        protected static string GetButtonName(Buttons button, bool shortHand = true)
+        {
+            switch (button)
             {
-                case Keys.MB_LEFT: return shortHand ? "LMB" : "Left Mouse Button";
-                case Keys.MB_RIGHT: return shortHand ? "RMB" : "Right Mouse Button";
-                case Keys.MB_MIDDLE: return shortHand ? "MMB" : "Middle Mouse Button";
-                case Keys.MB_SIDE: return shortHand ? "SMB" : "Side Mouse Button";
-                case Keys.MB_EXTRA: return shortHand ? "EMB" : "Extra Mouse Button";
-                case Keys.MB_FORWARD: return shortHand ? "FMB" : "Forward Mouse Button";
-                case Keys.MB_BACK: return shortHand ? "BMB" : "Back Mouse Button";
-                case Keys.MW_UP: return shortHand ? "MWU" : "Mouse Wheel Up";
-                case Keys.MW_DOWN: return shortHand ? "MWD" : "Mouse Wheel Down";
-                case Keys.MW_LEFT: return shortHand ? "MWL" : "Mouse Wheel Left";
-                case Keys.MW_RIGHT: return shortHand ? "MWR" : "Mouse Wheel Right";
-                case Keys.MW_AXIS_HORIZONTAL: return shortHand ? "MWx" : "Mouse Wheel Horizontal";
-                case Keys.MW_AXIS_VERTICAL: return shortHand ? "MWy" : "Mouse Wheel Vertical";
-                case Keys.APOSTROPHE: return shortHand ? "´" : "Apostrophe";
-                case Keys.COMMA: return shortHand ? "," : "Comma";
-                case Keys.MINUS: return shortHand ? "-" : "Minus";
-                case Keys.PERIOD: return shortHand ? "." : "Period";
-                case Keys.SLASH: return shortHand ? "/" : "Slash";
-                case Keys.ZERO: return shortHand ? "0" : "Zero";
-                case Keys.ONE: return shortHand ? "1" : "One";
-                case Keys.TWO: return shortHand ? "2" : "Two";
-                case Keys.THREE: return shortHand ? "3" : "Three";
-                case Keys.FOUR: return shortHand ? "4" : "Four";
-                case Keys.FIVE: return shortHand ? "5" : "Five";
-                case Keys.SIX: return shortHand ? "6" : "Six";
-                case Keys.SEVEN: return shortHand ? "7" : "Seven";
-                case Keys.EIGHT: return shortHand ? "8" : "Eight";
-                case Keys.NINE: return shortHand ? "9" : "Nine";
-                case Keys.SEMICOLON: return shortHand ? ";" : "Semi Colon";
-                case Keys.EQUAL: return shortHand ? "=" : "Equal";
-                case Keys.A: return shortHand ? "A" : "A";
-                case Keys.B: return shortHand ? "B" : "B";
-                case Keys.C: return shortHand ? "C" : "C";
-                case Keys.D: return shortHand ? "D" : "D";
-                case Keys.E: return shortHand ? "E" : "E";
-                case Keys.F: return shortHand ? "F" : "F";
-                case Keys.G: return shortHand ? "G" : "G";
-                case Keys.H: return shortHand ? "H" : "H";
-                case Keys.I: return shortHand ? "I" : "I";
-                case Keys.J: return shortHand ? "J" : "J";
-                case Keys.K: return shortHand ? "K" : "K";
-                case Keys.L: return shortHand ? "L" : "L";
-                case Keys.M: return shortHand ? "M" : "M";
-                case Keys.N: return shortHand ? "N" : "N";
-                case Keys.O: return shortHand ? "O" : "O";
-                case Keys.P: return shortHand ? "P" : "P";
-                case Keys.Q: return shortHand ? "Q" : "Q";
-                case Keys.R: return shortHand ? "R" : "R";
-                case Keys.S: return shortHand ? "S" : "S";
-                case Keys.T: return shortHand ? "T" : "T";
-                case Keys.U: return shortHand ? "U" : "U";
-                case Keys.V: return shortHand ? "V" : "V";
-                case Keys.W: return shortHand ? "W" : "W";
-                case Keys.X: return shortHand ? "X" : "X";
-                case Keys.Y: return shortHand ? "Y" : "Y";
-                case Keys.Z: return shortHand ? "Z" : "Z";
-                case Keys.LEFT_BRACKET: return shortHand ? "[" : "Left Bracket";
-                case Keys.BACKSLASH: return shortHand ? "\\" : "Backslash";
-                case Keys.RIGHT_BRACKET: return shortHand ? "]" : "Right Bracket";
-                case Keys.GRAVE: return shortHand ? "`" : "Grave";//Check
-                case Keys.SPACE: return shortHand ? "Space" : "Space";
-                case Keys.ESCAPE: return shortHand ? "Esc" : "Escape";
-                case Keys.ENTER: return shortHand ? "Enter" : "Enter";
-                case Keys.TAB: return shortHand ? "Tab" : "Tab";
-                case Keys.BACKSPACE: return shortHand ? "Backspc" : "Backspace";
-                case Keys.INSERT: return shortHand ? "Ins" : "Insert";
-                case Keys.DELETE: return shortHand ? "Del" : "Delete";
-                case Keys.RIGHT: return shortHand ? "Right" : "Right";
-                case Keys.LEFT: return shortHand ? "Left" : "Left";
-                case Keys.DOWN: return shortHand ? "Down" : "Down";
-                case Keys.UP: return shortHand ? "Up" : "Up";
-                case Keys.PAGE_UP: return shortHand ? "PUp" : "Page Up";
-                case Keys.PAGE_DOWN: return shortHand ? "PDo" : "";
-                case Keys.HOME: return shortHand ? "Home" : "Home";
-                case Keys.END: return shortHand ? "End" : "End";
-                case Keys.CAPS_LOCK: return shortHand ? "CpsL" : "Caps Lock";
-                case Keys.SCROLL_LOCK: return shortHand ? "ScrL" : "Scroll Lock";
-                case Keys.NUM_LOCK: return shortHand ? "NumL" : "Num Lock";
-                case Keys.PRINT_SCREEN: return shortHand ? "Print" : "Print Screen";
-                case Keys.PAUSE: return shortHand ? "Pause" : "Pause";
-                case Keys.F1: return shortHand ? "F1" : "F1";
-                case Keys.F2: return shortHand ? "F2" : "F2";
-                case Keys.F3: return shortHand ? "F3" : "F3";
-                case Keys.F4: return shortHand ? "F4" : "F4";
-                case Keys.F5: return shortHand ? "F5" : "F5";
-                case Keys.F6: return shortHand ? "F6" : "F6";
-                case Keys.F7: return shortHand ? "F7" : "F7";
-                case Keys.F8: return shortHand ? "F8" : "F8";
-                case Keys.F9: return shortHand ? "F9" : "F9";
-                case Keys.F10: return shortHand ? "F10" : "F10";
-                case Keys.F11: return shortHand ? "F11" : "F11";
-                case Keys.F12: return shortHand ? "F12" : "F12";
-                case Keys.LEFT_SHIFT: return shortHand ? "LShift" : "Left Shift";
-                case Keys.LEFT_CONTROL: return shortHand ? "LCtrl" : "Left Control";
-                case Keys.LEFT_ALT: return shortHand ? "LAlt" : "Left Alt";
-                case Keys.LEFT_SUPER: return shortHand ? "LSuper" : "Left Super";
-                case Keys.RIGHT_SHIFT: return shortHand ? "RShift" : "Right Shift";
-                case Keys.RIGHT_CONTROL: return shortHand ? "RCtrl" : "Right Control";
-                case Keys.RIGHT_ALT: return shortHand ? "RAlt" : "Right Alt";
-                case Keys.RIGHT_SUPER: return shortHand ? "RSuper" : "Right Super";
-                case Keys.KB_MENU: return shortHand ? "KBMenu" : "KB Menu";
-                case Keys.KP_0: return shortHand ? "KP0" : "Keypad 0";
-                case Keys.KP_1: return shortHand ? "KP1" : "Keypad 1";
-                case Keys.KP_2: return shortHand ? "KP2" : "Keypad 2";
-                case Keys.KP_3: return shortHand ? "KP3" : "Keypad 3";
-                case Keys.KP_4: return shortHand ? "KP4" : "Keypad 4";
-                case Keys.KP_5: return shortHand ? "KP5" : "Keypad 5";
-                case Keys.KP_6: return shortHand ? "KP6" : "Keypad 6";
-                case Keys.KP_7: return shortHand ? "KP7" : "Keypad 7";
-                case Keys.KP_8: return shortHand ? "KP8" : "Keypad 8";
-                case Keys.KP_9: return shortHand ? "KP9" : "Keypad 9";
-                case Keys.KP_DECIMAL: return shortHand ? "KPDec" : "Keypad Decimal";
-                case Keys.KP_DIVIDE: return shortHand ? "KPDiv" : "Keypad Divide";
-                case Keys.KP_MULTIPLY: return shortHand ? "KPMult" : "Keypad Multiply";
-                case Keys.KP_SUBTRACT: return shortHand ? "KPSub" : "Keypad Subtract";
-                case Keys.KP_ADD: return shortHand ? "KPAdd" : "Keypad Add";
-                case Keys.KP_ENTER: return shortHand ? "KPEnt" : "Keypad Enter";
-                case Keys.KP_EQUAL: return shortHand ? "KPEqual" : "Keypad Equal";
-                case Keys.VOLUME_UP: return shortHand ? "Vol+" : "Volume Up";
-                case Keys.VOLUME_DOWN: return shortHand ? "Vol-" : "Volume Down";
-                case Keys.BACK: return shortHand ? "Back" : "Back";
-                case Keys.NULL: return shortHand ? "Null" : "Null";
-                case Keys.MENU: return shortHand ? "Menu" : "Menu";
-                case Keys.GP_AXIS_LEFT_X: return shortHand ? "LSx" : "GP Axis Left X";
-                case Keys.GP_AXIS_LEFT_Y: return shortHand ? "LSy" : "GP Axis Left Y";
-                case Keys.GP_AXIS_RIGHT_X: return shortHand ? "RSx" : "GP Axis Right X";
-                case Keys.GP_AXIS_RIGHT_Y: return shortHand ? "RSy" : "GP Axis Right Y";
-                case Keys.GP_AXIS_RIGHT_TRIGGER: return shortHand ? "RT" : "GP Axis Right Trigger";
-                case Keys.GP_AXIS_LEFT_TRIGGER: return shortHand ? "LT" : "GP Axis Left Trigger";
-                case Keys.GP_BUTTON_UNKNOWN: return shortHand ? "Unknown" : "GP Button Unknown";
-                case Keys.GP_BUTTON_LEFT_FACE_UP: return shortHand ? "Up" : "GP Button Up";
-                case Keys.GP_BUTTON_LEFT_FACE_RIGHT: return shortHand ? "Right" : "GP Button Right";
-                case Keys.GP_BUTTON_LEFT_FACE_DOWN: return shortHand ? "Down" : "GP Button Down";
-                case Keys.GP_BUTTON_LEFT_FACE_LEFT: return shortHand ? "Left" : "GP Button Left";
-                case Keys.GP_BUTTON_RIGHT_FACE_UP: return shortHand ? "Y" : "GP Button Y";
-                case Keys.GP_BUTTON_RIGHT_FACE_RIGHT: return shortHand ? "B" : "GP Button B";
-                case Keys.GP_BUTTON_RIGHT_FACE_DOWN: return shortHand ? "A" : "GP Button A";
-                case Keys.GP_BUTTON_RIGHT_FACE_LEFT: return shortHand ? "X" : "GP Button X";
-                case Keys.GP_BUTTON_LEFT_TRIGGER_TOP: return shortHand ? "LB" : "GP Button Left Bumper";
-                case Keys.GP_BUTTON_LEFT_TRIGGER_BOTTOM: return shortHand ? "LT" : "GP Button Left Trigger";
-                case Keys.GP_BUTTON_RIGHT_TRIGGER_TOP: return shortHand ? "RB" : "GP Button Right Bumper";
-                case Keys.GP_BUTTON_RIGHT_TRIGGER_BOTTOM: return shortHand ? "RT" : "GP Button Right Trigger";
-                case Keys.GP_BUTTON_MIDDLE_LEFT: return shortHand ? "Select" : "GP Button Select";
-                case Keys.GP_BUTTON_MIDDLE: return shortHand ? "Home" : "GP Button Home";
-                case Keys.GP_BUTTON_MIDDLE_RIGHT: return shortHand ? "Start" : "GP Button Start";
-                case Keys.GP_BUTTON_LEFT_THUMB: return shortHand ? "LClick" : "GP Button Left Stick Click";
-                case Keys.GP_BUTTON_RIGHT_THUMB: return shortHand ? "RClick" : "GP Button Right Stick Click";
+                case Buttons.MB_LEFT: return shortHand ? "LMB" : "Left Mouse Button";
+                case Buttons.MB_RIGHT: return shortHand ? "RMB" : "Right Mouse Button";
+                case Buttons.MB_MIDDLE: return shortHand ? "MMB" : "Middle Mouse Button";
+                case Buttons.MB_SIDE: return shortHand ? "SMB" : "Side Mouse Button";
+                case Buttons.MB_EXTRA: return shortHand ? "EMB" : "Extra Mouse Button";
+                case Buttons.MB_FORWARD: return shortHand ? "FMB" : "Forward Mouse Button";
+                case Buttons.MB_BACK: return shortHand ? "BMB" : "Back Mouse Button";
+                case Buttons.MW_UP: return shortHand ? "MWU" : "Mouse Wheel Up";
+                case Buttons.MW_DOWN: return shortHand ? "MWD" : "Mouse Wheel Down";
+                case Buttons.MW_LEFT: return shortHand ? "MWL" : "Mouse Wheel Left";
+                case Buttons.MW_RIGHT: return shortHand ? "MWR" : "Mouse Wheel Right";
+                //case Buttons.MW_AXIS_HORIZONTAL: return shortHand ? "MWx" : "Mouse Wheel Horizontal";
+                //case Buttons.MW_AXIS_VERTICAL: return shortHand ? "MWy" : "Mouse Wheel Vertical";
+                case Buttons.APOSTROPHE: return shortHand ? "´" : "Apostrophe";
+                case Buttons.COMMA: return shortHand ? "," : "Comma";
+                case Buttons.MINUS: return shortHand ? "-" : "Minus";
+                case Buttons.PERIOD: return shortHand ? "." : "Period";
+                case Buttons.SLASH: return shortHand ? "/" : "Slash";
+                case Buttons.ZERO: return shortHand ? "0" : "Zero";
+                case Buttons.ONE: return shortHand ? "1" : "One";
+                case Buttons.TWO: return shortHand ? "2" : "Two";
+                case Buttons.THREE: return shortHand ? "3" : "Three";
+                case Buttons.FOUR: return shortHand ? "4" : "Four";
+                case Buttons.FIVE: return shortHand ? "5" : "Five";
+                case Buttons.SIX: return shortHand ? "6" : "Six";
+                case Buttons.SEVEN: return shortHand ? "7" : "Seven";
+                case Buttons.EIGHT: return shortHand ? "8" : "Eight";
+                case Buttons.NINE: return shortHand ? "9" : "Nine";
+                case Buttons.SEMICOLON: return shortHand ? ";" : "Semi Colon";
+                case Buttons.EQUAL: return shortHand ? "=" : "Equal";
+                case Buttons.A: return shortHand ? "A" : "A";
+                case Buttons.B: return shortHand ? "B" : "B";
+                case Buttons.C: return shortHand ? "C" : "C";
+                case Buttons.D: return shortHand ? "D" : "D";
+                case Buttons.E: return shortHand ? "E" : "E";
+                case Buttons.F: return shortHand ? "F" : "F";
+                case Buttons.G: return shortHand ? "G" : "G";
+                case Buttons.H: return shortHand ? "H" : "H";
+                case Buttons.I: return shortHand ? "I" : "I";
+                case Buttons.J: return shortHand ? "J" : "J";
+                case Buttons.K: return shortHand ? "K" : "K";
+                case Buttons.L: return shortHand ? "L" : "L";
+                case Buttons.M: return shortHand ? "M" : "M";
+                case Buttons.N: return shortHand ? "N" : "N";
+                case Buttons.O: return shortHand ? "O" : "O";
+                case Buttons.P: return shortHand ? "P" : "P";
+                case Buttons.Q: return shortHand ? "Q" : "Q";
+                case Buttons.R: return shortHand ? "R" : "R";
+                case Buttons.S: return shortHand ? "S" : "S";
+                case Buttons.T: return shortHand ? "T" : "T";
+                case Buttons.U: return shortHand ? "U" : "U";
+                case Buttons.V: return shortHand ? "V" : "V";
+                case Buttons.W: return shortHand ? "W" : "W";
+                case Buttons.X: return shortHand ? "X" : "X";
+                case Buttons.Y: return shortHand ? "Y" : "Y";
+                case Buttons.Z: return shortHand ? "Z" : "Z";
+                case Buttons.LEFT_BRACKET: return shortHand ? "[" : "Left Bracket";
+                case Buttons.BACKSLASH: return shortHand ? "\\" : "Backslash";
+                case Buttons.RIGHT_BRACKET: return shortHand ? "]" : "Right Bracket";
+                case Buttons.GRAVE: return shortHand ? "`" : "Grave";//Check
+                case Buttons.SPACE: return shortHand ? "Space" : "Space";
+                case Buttons.ESCAPE: return shortHand ? "Esc" : "Escape";
+                case Buttons.ENTER: return shortHand ? "Enter" : "Enter";
+                case Buttons.TAB: return shortHand ? "Tab" : "Tab";
+                case Buttons.BACKSPACE: return shortHand ? "Backspc" : "Backspace";
+                case Buttons.INSERT: return shortHand ? "Ins" : "Insert";
+                case Buttons.DELETE: return shortHand ? "Del" : "Delete";
+                case Buttons.RIGHT: return shortHand ? "Right" : "Right";
+                case Buttons.LEFT: return shortHand ? "Left" : "Left";
+                case Buttons.DOWN: return shortHand ? "Down" : "Down";
+                case Buttons.UP: return shortHand ? "Up" : "Up";
+                case Buttons.PAGE_UP: return shortHand ? "PUp" : "Page Up";
+                case Buttons.PAGE_DOWN: return shortHand ? "PDo" : "";
+                case Buttons.HOME: return shortHand ? "Home" : "Home";
+                case Buttons.END: return shortHand ? "End" : "End";
+                case Buttons.CAPS_LOCK: return shortHand ? "CpsL" : "Caps Lock";
+                case Buttons.SCROLL_LOCK: return shortHand ? "ScrL" : "Scroll Lock";
+                case Buttons.NUM_LOCK: return shortHand ? "NumL" : "Num Lock";
+                case Buttons.PRINT_SCREEN: return shortHand ? "Print" : "Print Screen";
+                case Buttons.PAUSE: return shortHand ? "Pause" : "Pause";
+                case Buttons.F1: return shortHand ? "F1" : "F1";
+                case Buttons.F2: return shortHand ? "F2" : "F2";
+                case Buttons.F3: return shortHand ? "F3" : "F3";
+                case Buttons.F4: return shortHand ? "F4" : "F4";
+                case Buttons.F5: return shortHand ? "F5" : "F5";
+                case Buttons.F6: return shortHand ? "F6" : "F6";
+                case Buttons.F7: return shortHand ? "F7" : "F7";
+                case Buttons.F8: return shortHand ? "F8" : "F8";
+                case Buttons.F9: return shortHand ? "F9" : "F9";
+                case Buttons.F10: return shortHand ? "F10" : "F10";
+                case Buttons.F11: return shortHand ? "F11" : "F11";
+                case Buttons.F12: return shortHand ? "F12" : "F12";
+                case Buttons.LEFT_SHIFT: return shortHand ? "LShift" : "Left Shift";
+                case Buttons.LEFT_CONTROL: return shortHand ? "LCtrl" : "Left Control";
+                case Buttons.LEFT_ALT: return shortHand ? "LAlt" : "Left Alt";
+                case Buttons.LEFT_SUPER: return shortHand ? "LSuper" : "Left Super";
+                case Buttons.RIGHT_SHIFT: return shortHand ? "RShift" : "Right Shift";
+                case Buttons.RIGHT_CONTROL: return shortHand ? "RCtrl" : "Right Control";
+                case Buttons.RIGHT_ALT: return shortHand ? "RAlt" : "Right Alt";
+                case Buttons.RIGHT_SUPER: return shortHand ? "RSuper" : "Right Super";
+                case Buttons.KB_MENU: return shortHand ? "KBMenu" : "KB Menu";
+                case Buttons.KP_0: return shortHand ? "KP0" : "Keypad 0";
+                case Buttons.KP_1: return shortHand ? "KP1" : "Keypad 1";
+                case Buttons.KP_2: return shortHand ? "KP2" : "Keypad 2";
+                case Buttons.KP_3: return shortHand ? "KP3" : "Keypad 3";
+                case Buttons.KP_4: return shortHand ? "KP4" : "Keypad 4";
+                case Buttons.KP_5: return shortHand ? "KP5" : "Keypad 5";
+                case Buttons.KP_6: return shortHand ? "KP6" : "Keypad 6";
+                case Buttons.KP_7: return shortHand ? "KP7" : "Keypad 7";
+                case Buttons.KP_8: return shortHand ? "KP8" : "Keypad 8";
+                case Buttons.KP_9: return shortHand ? "KP9" : "Keypad 9";
+                case Buttons.KP_DECIMAL: return shortHand ? "KPDec" : "Keypad Decimal";
+                case Buttons.KP_DIVIDE: return shortHand ? "KPDiv" : "Keypad Divide";
+                case Buttons.KP_MULTIPLY: return shortHand ? "KPMult" : "Keypad Multiply";
+                case Buttons.KP_SUBTRACT: return shortHand ? "KPSub" : "Keypad Subtract";
+                case Buttons.KP_ADD: return shortHand ? "KPAdd" : "Keypad Add";
+                case Buttons.KP_ENTER: return shortHand ? "KPEnt" : "Keypad Enter";
+                case Buttons.KP_EQUAL: return shortHand ? "KPEqual" : "Keypad Equal";
+                case Buttons.VOLUME_UP: return shortHand ? "Vol+" : "Volume Up";
+                case Buttons.VOLUME_DOWN: return shortHand ? "Vol-" : "Volume Down";
+                case Buttons.BACK: return shortHand ? "Back" : "Back";
+                case Buttons.NULL: return shortHand ? "Null" : "Null";
+                case Buttons.MENU: return shortHand ? "Menu" : "Menu";
+                //case Buttons.GP_AXIS_LEFT_X: return shortHand ? "LSx" : "GP Axis Left X";
+                //case Buttons.GP_AXIS_LEFT_Y: return shortHand ? "LSy" : "GP Axis Left Y";
+                //case Buttons.GP_AXIS_RIGHT_X: return shortHand ? "RSx" : "GP Axis Right X";
+                //case Buttons.GP_AXIS_RIGHT_Y: return shortHand ? "RSy" : "GP Axis Right Y";
+                //case Buttons.GP_AXIS_RIGHT_TRIGGER: return shortHand ? "RT" : "GP Axis Right Trigger";
+                //case Buttons.GP_AXIS_LEFT_TRIGGER: return shortHand ? "LT" : "GP Axis Left Trigger";
+                case Buttons.GP_BUTTON_UNKNOWN: return shortHand ? "Unknown" : "GP Button Unknown";
+                case Buttons.GP_BUTTON_LEFT_FACE_UP: return shortHand ? "Up" : "GP Button Up";
+                case Buttons.GP_BUTTON_LEFT_FACE_RIGHT: return shortHand ? "Right" : "GP Button Right";
+                case Buttons.GP_BUTTON_LEFT_FACE_DOWN: return shortHand ? "Down" : "GP Button Down";
+                case Buttons.GP_BUTTON_LEFT_FACE_LEFT: return shortHand ? "Left" : "GP Button Left";
+                case Buttons.GP_BUTTON_RIGHT_FACE_UP: return shortHand ? "Y" : "GP Button Y";
+                case Buttons.GP_BUTTON_RIGHT_FACE_RIGHT: return shortHand ? "B" : "GP Button B";
+                case Buttons.GP_BUTTON_RIGHT_FACE_DOWN: return shortHand ? "A" : "GP Button A";
+                case Buttons.GP_BUTTON_RIGHT_FACE_LEFT: return shortHand ? "X" : "GP Button X";
+                case Buttons.GP_BUTTON_LEFT_TRIGGER_TOP: return shortHand ? "LB" : "GP Button Left Bumper";
+                case Buttons.GP_BUTTON_LEFT_TRIGGER_BOTTOM: return shortHand ? "LT" : "GP Button Left Trigger";
+                case Buttons.GP_BUTTON_RIGHT_TRIGGER_TOP: return shortHand ? "RB" : "GP Button Right Bumper";
+                case Buttons.GP_BUTTON_RIGHT_TRIGGER_BOTTOM: return shortHand ? "RT" : "GP Button Right Trigger";
+                case Buttons.GP_BUTTON_MIDDLE_LEFT: return shortHand ? "Select" : "GP Button Select";
+                case Buttons.GP_BUTTON_MIDDLE: return shortHand ? "Home" : "GP Button Home";
+                case Buttons.GP_BUTTON_MIDDLE_RIGHT: return shortHand ? "Start" : "GP Button Start";
+                case Buttons.GP_BUTTON_LEFT_THUMB: return shortHand ? "LClick" : "GP Button Left Stick Click";
+                case Buttons.GP_BUTTON_RIGHT_THUMB: return shortHand ? "RClick" : "GP Button Right Stick Click";
                 default: return shortHand ? "No Key" : "No Key";
             }
         }
+        protected static string GetAxisName(Axis axis, bool shortHand = true)
+        {
+            switch (axis)
+            {
+                case Axis.MW_AXIS_HORIZONTAL: return shortHand ? "MWx" : "Mouse Wheel Horizontal";
+                case Axis.MW_AXIS_VERTICAL: return shortHand ? "MWy" : "Mouse Wheel Vertical";
+                case Axis.GP_AXIS_LEFT_X: return shortHand ? "LSx" : "GP Axis Left X";
+                case Axis.GP_AXIS_LEFT_Y: return shortHand ? "LSy" : "GP Axis Left Y";
+                case Axis.GP_AXIS_RIGHT_X: return shortHand ? "RSx" : "GP Axis Right X";
+                case Axis.GP_AXIS_RIGHT_Y: return shortHand ? "RSy" : "GP Axis Right Y";
+                case Axis.GP_AXIS_RIGHT_TRIGGER: return shortHand ? "RT" : "GP Axis Right Trigger";
+                case Axis.GP_AXIS_LEFT_TRIGGER: return shortHand ? "LT" : "GP Axis Left Trigger";
+                default: return shortHand ? "No Key" : "No Key";
+            }
+        }
+        
+        protected static bool IsGamepad(Buttons button) { return (int)button >= 500 && (int)button <= 523; }
+        protected static bool IsMouse(Buttons button) { return ((int)button >= 0 && (int)button <= 6) || IsMouseWheelAxisButton(button); }
+        protected static bool IsMouseWheelAxisButton(Buttons button) { return (int)button >= 20 && (int)button <= 23; }
+        protected static bool IsKeyboard(Buttons button) { return (int)button > 6 && (int)button < 400 && !IsMouseWheelAxisButton(button); }
+        protected static bool IsGamepadButton(Buttons button) { return (int)button >= 500 && (int)button <= 517; }
+        protected static bool IsGamepadAxisButtonPos(Buttons button) { return (int)button >= 600 && (int)button <= 603; }
+        protected static bool IsGamepadAxisButtonNeg(Buttons button) { return (int)button >= 610 && (int)button <= 613; }
+        protected static bool IsGamepadAxisButton(Buttons button) { return (int)button >= 600 && (int)button <= 613; }
+        protected static bool IsGamepadAxis(Axis axis) { return (int)axis >= 400 && (int)axis <= 405; }
+        protected static bool IsMouseWheelAxis(Axis axis) { return (int)axis == 10 || (int)axis == 11; }
 
+        protected static Vector2 GetMouseWheelMovementV(bool inverted = false)
+        {
+            Vector2 movement = GetMouseWheelMoveV();
+
+            if (inverted) return -movement;
+            return movement;
+        }
+        protected static float GetMouseWheelAxisValue(Axis axis)
+        {
+            Vector2 mw = GetMouseWheelMovementV();
+            if (axis == Axis.MW_AXIS_HORIZONTAL) return mw.X;
+            else if (axis == Axis.MW_AXIS_VERTICAL) return mw.Y;
+            else return 0f;
+        }
+        protected static float GetMouseWheelAxisButtonValue(Buttons button)
+        {
+            if (!IsMouseWheelAxisButton(button)) return 0f;
+            Vector2 mw = GetMouseWheelMovementV();
+            if (button == Buttons.MW_UP && mw.Y < 0) return MathF.Abs(mw.Y);
+            else if (button == Buttons.MW_DOWN && mw.Y > 0) return mw.Y;
+            else if (button == Buttons.MW_LEFT && mw.X < 0) return MathF.Abs(mw.X);
+            else if(button == Buttons.MW_RIGHT && mw.X > 0) return mw.X;
+            else return 0f;
+        }
+        protected static float GetGamepadAxisButtonValue(Buttons button, int slot, float deadzone)
+        {
+            if(!IsGamepadAxisButton(button)) return 0f;
+            float movement = GetGamepadAxisMovement(slot, GetButtonID(button));
+            if (MathF.Abs(movement) < deadzone) movement = 0f;
+            if (IsGamepadAxisButtonPos(button) && movement > 0f)
+            {
+                return movement;
+            }
+            else if (IsGamepadAxisButtonNeg(button) && movement < 0f)
+            {
+                return MathF.Abs(movement);
+            }
+            else return 0f;
+        }
+        
+        protected static float GetGamepadAxisValue(Axis axis, int slot, float deadzone)
+        {
+            if (slot < 0) return 0f;
+            float movement = GetGamepadAxisMovement(slot, GetAxisID(axis));
+            if (MathF.Abs(movement) < deadzone) movement = 0f;
+            return movement;
+        }
+        protected static float GetGamepadAxisValue(Buttons axisButton, int slot, float deadzone)
+        {
+            if(slot < 0 ) return 0f;
+            float movement = GetGamepadAxisMovement(slot, GetButtonID(axisButton));
+            if (MathF.Abs(movement) < deadzone) movement = 0f;
+            return movement;
+        }
+
+    }
+    public class ButtonValue : IInputValue
+    {
+        private Buttons button = Buttons.NONE;
+        public ButtonValue(Buttons button)
+        {
+            this.button = button;
+        }
+
+        public void Change(Buttons newButton)
+        {
+            button = newButton;
+        }
+        public void Change(Axis newAxis) { return; }
+        public void Change((Buttons neg, Buttons pos) newAxis) { return; }
+
+        public (string keyboard, string mouse, string gamepad) GetNames(bool shorthand = true)
+        {
+            if (IInputValue.IsKeyboard(button)) return (IInputValue.GetButtonName(button, shorthand), "", "");
+            else if (IInputValue.IsMouse(button)) return ("", IInputValue.GetButtonName(button, shorthand), "");
+            else return ("", "", IInputValue.GetButtonName(button, shorthand));
+        }
+
+        public bool IsDown(int slot)
+        {
+            if(button == Buttons.NONE) return false;
+            int buttonID = IInputValue.GetButtonID(button);
+            if (IInputValue.IsMouse(button))
+            {
+                if (slot <= 0 && IsMouseButtonDown(buttonID)) return true;
+            }
+            else if (IInputValue.IsMouseWheelAxisButton(button))
+            {
+                if (slot <= 0 && IInputValue.GetMouseWheelAxisButtonValue(button) > 0f) return true;
+            }
+            else if (IInputValue.IsGamepadButton(button))
+            {
+                if (slot >= 0 && IsGamepadButtonDown(slot, buttonID)) return true;
+            }
+            else if (IInputValue.IsGamepadAxisButton(button))
+            {
+                if (slot >= 0 && IInputValue.GetGamepadAxisButtonValue(button, slot, 0f) > 0f) return true;
+            }
+            else
+            {
+                if (slot <= 0 && IsKeyDown(buttonID)) return true;
+            }
+            return false;
+        }
+        public bool IsUp(int slot)
+        {
+            if (button == Buttons.NONE) return false;
+            int buttonID = IInputValue.GetButtonID(button);
+            if (IInputValue.IsMouse(button))
+            {
+                if (slot <= 0 && IsMouseButtonUp(buttonID)) return true;
+            }
+            else if (IInputValue.IsMouseWheelAxisButton(button))
+            {
+                if (slot <= 0 && IInputValue.GetMouseWheelAxisButtonValue(button) <= 0f) return true;
+            }
+            else if (IInputValue.IsGamepadButton(button))
+            {
+                if (slot >= 0 && IsGamepadButtonUp(slot, buttonID)) return true;
+            }
+            else if (IInputValue.IsGamepadAxisButton(button))
+            {
+                if (slot >= 0 && IInputValue.GetGamepadAxisButtonValue(button, slot, 0f) <= 0f) return true;
+            }
+            else
+            {
+                if (slot <= 0 && IsKeyUp(buttonID)) return true;
+            }
+            return false;
+        }
+        public float GetAxis(int slot, float deadzone)
+        {
+            return IsDown(slot) ? 1f : 0f;
+        }
+        
+    }
+    public class AxisValue : IInputValue
+    {
+        private Axis axis = Axis.NONE;
+        private (Buttons neg, Buttons pos) axisButtons = (Buttons.NONE, Buttons.NONE);
+        
+        public AxisValue(Axis axis)
+        {
+            this.axis = axis;
+        }
+        public AxisValue((Buttons neg, Buttons pos) axis)
+        {
+            this.axisButtons = axis;
+        }
+
+        public void Change(Buttons newButton) { return; }
+        public void Change(Axis newAxis)
+        {
+            axis = newAxis;
+        }
+        public void Change((Buttons neg, Buttons pos) newAxis)
+        {
+            axisButtons = newAxis;
+        }
+
+        public (string keyboard, string mouse, string gamepad) GetNames(bool shorthand = true)
+        {
+            if (axis != Axis.NONE)
+            {
+                if (IInputValue.IsGamepadAxis(axis)) return ("", "", IInputValue.GetAxisName(axis, shorthand));
+                else return ("", IInputValue.GetAxisName(axis, shorthand), "");
+            }
+            else
+            {
+                if (axisButtons.neg != Buttons.NONE && axisButtons.pos != Buttons.NONE)
+                {
+                    string name = IInputValue.GetButtonName(axisButtons.neg, shorthand) + "/" + IInputValue.GetButtonName(axisButtons.pos, shorthand);
+                    if (IInputValue.IsKeyboard(axisButtons.neg)) return (name, "", "");
+                    else if (IInputValue.IsMouse(axisButtons.neg)) return ("", name, "");
+                    else return ("", "", name);
+                }
+                else return ("", "", "");
+            }
+        }
+
+        public bool IsDown(int slot)
+        {
+            if(axis != Axis.NONE)
+            {
+                if (IInputValue.IsGamepadAxis(axis))
+                {
+                    return IInputValue.GetGamepadAxisValue(axis, slot, 0f) != 0f;
+                }
+                else if (IInputValue.IsMouseWheelAxis(axis))
+                {
+                    return IInputValue.GetMouseWheelAxisValue(axis) != 0f;
+                }
+            }
+            else
+            {
+                if (axisButtons.neg != Buttons.NONE && axisButtons.pos != Buttons.NONE)
+                {
+                    if (IInputValue.IsMouseWheelAxisButton(axisButtons.neg) && IInputValue.IsMouseWheelAxisButton(axisButtons.pos))
+                    {
+                        float neg = IInputValue.GetMouseWheelAxisButtonValue(axisButtons.neg);
+                        float pos = IInputValue.GetMouseWheelAxisButtonValue(axisButtons.pos);
+                        return (pos - neg) != 0;
+                    }
+                    else if (IInputValue.IsGamepadAxisButton(axisButtons.neg) && IInputValue.IsGamepadAxisButton(axisButtons.pos))
+                    {
+                        return IInputValue.GetGamepadAxisValue(axisButtons.neg, slot, 0f) != 0f;
+                    }
+                }
+            }
+            
+            return false;
+        }
+        public bool IsUp(int slot)
+        {
+            if (axis != Axis.NONE)
+            {
+                if (IInputValue.IsGamepadAxis(axis))
+                {
+                    return IInputValue.GetGamepadAxisValue(axis, slot, 0f) == 0f;
+                }
+                else if (IInputValue.IsMouseWheelAxis(axis))
+                {
+                    return IInputValue.GetMouseWheelAxisValue(axis) == 0f;
+                }
+            }
+            else
+            {
+                if (axisButtons.neg != Buttons.NONE && axisButtons.pos != Buttons.NONE)
+                {
+                    if (IInputValue.IsMouseWheelAxisButton(axisButtons.neg) && IInputValue.IsMouseWheelAxisButton(axisButtons.pos))
+                    {
+                        float neg = IInputValue.GetMouseWheelAxisButtonValue(axisButtons.neg);
+                        float pos = IInputValue.GetMouseWheelAxisButtonValue(axisButtons.pos);
+                        return (pos - neg) == 0f;
+                    }
+                    else if (IInputValue.IsGamepadAxisButton(axisButtons.neg) && IInputValue.IsGamepadAxisButton(axisButtons.pos))
+                    {
+                        return IInputValue.GetGamepadAxisValue(axisButtons.neg, slot, 0f) == 0f;
+                    }
+                }
+            }
+
+            return false;
+        }
+        public float GetAxis(int slot, float deadzone)
+        {
+            if (axis != Axis.NONE)
+            {
+                if (IInputValue.IsGamepadAxis(axis))
+                {
+                    return IInputValue.GetGamepadAxisValue(axis, slot, deadzone);
+                }
+                else if (IInputValue.IsMouseWheelAxis(axis))
+                {
+                    return IInputValue.GetMouseWheelAxisValue(axis); // implement deadzone
+                }
+            }
+            else
+            {
+                if (axisButtons.neg != Buttons.NONE && axisButtons.pos != Buttons.NONE)
+                {
+                    if (IInputValue.IsMouseWheelAxisButton(axisButtons.neg) && IInputValue.IsMouseWheelAxisButton(axisButtons.pos))
+                    {
+                        //implement deadzone
+                        float neg = IInputValue.GetMouseWheelAxisButtonValue(axisButtons.neg);
+                        float pos = IInputValue.GetMouseWheelAxisButtonValue(axisButtons.pos);
+                        return (pos - neg);
+                    }
+                    else if (IInputValue.IsGamepadAxisButton(axisButtons.neg) && IInputValue.IsGamepadAxisButton(axisButtons.pos))
+                    {
+                        return IInputValue.GetGamepadAxisValue(axisButtons.neg, slot, deadzone);
+                    }
+                    else
+                    {
+                        //gamepad or keyboard buttons as axis
+                    }
+                }
+            }
+
+            return 0f;
+        }
     }
     public class InputCondition
     {
         public int ID { get; protected set; } = -1;
-        private List<Keys> keys = new();
-        public InputCondition(int id, params Keys[] keys)
+        private List<Buttons> keys = new();
+        public InputCondition(int id, params Buttons[] keys)
         {
             this.keys = keys.ToList();
             this.ID = id;
         }
 
-        public void ReplaceKeys(params Keys[] newKeys)
+        public void ReplaceKeys(params Buttons[] newKeys)
         {
             keys = newKeys.ToList();
         }
-        public bool ChangeKey(Keys newKey, int index)
+        public bool ChangeKey(Buttons newKey, int index)
         {
-            if(index >= 0 && index < keys.Count)
+            if (index >= 0 && index < keys.Count)
             {
                 if (!keys.Contains(newKey))
                 {
@@ -387,12 +719,12 @@ namespace ShapeInput
             }
             return false;
         }
-        
+
         public (string keyboard, string mouse, string gamepad) GetKeyNames(bool shorthand = true)
         {
             return (GetKeyboardKeyName(shorthand), GetMouseKeyName(shorthand), GetGamepadKeyName(shorthand));
         }
-        
+
         public bool IsDown(int slot)
         {
             if (keys.Count <= 0) return false;
@@ -553,7 +885,7 @@ namespace ShapeInput
             }
             return false;
         }
-        
+
 
         //implement new axis system -> just 1 function to get axis value
         //new functions and caching to know if axis was released or pressed
@@ -597,11 +929,11 @@ namespace ShapeInput
             if (inverted) return -movement;
             return movement;
         }
-        private float GetMouseWheelAxisMovement(Keys key)
+        private float GetMouseWheelAxisMovement(Buttons key)
         {
             if (InputKeys.IsMouseWheelAxis(key) || InputKeys.IsMouseWheelButton(key))
             {
-                if(key == Keys.MW_AXIS_HORIZONTAL || key == Keys.MW_LEFT || key == Keys.MW_RIGHT)
+                if (key == Buttons.MW_AXIS_HORIZONTAL || key == Buttons.MW_LEFT || key == Buttons.MW_RIGHT)
                 {
                     return GetMouseWheelMovementV().X;
                 }
@@ -613,25 +945,25 @@ namespace ShapeInput
             }
             return 0f;
         }
-        private bool IsMouseWheelDown(Keys key)
+        private bool IsMouseWheelDown(Buttons key)
         {
             Vector2 mw = GetMouseWheelMovementV();
-            if (key == Keys.MW_UP && mw.Y < 0) return true;
-            else if (key == Keys.MW_DOWN && mw.Y > 0) return true;
-            else if (key == Keys.MW_LEFT && mw.X < 0) return true;
-            else if (key == Keys.MW_RIGHT && mw.X > 0) return true;
+            if (key == Buttons.MW_UP && mw.Y < 0) return true;
+            else if (key == Buttons.MW_DOWN && mw.Y > 0) return true;
+            else if (key == Buttons.MW_LEFT && mw.X < 0) return true;
+            else if (key == Buttons.MW_RIGHT && mw.X > 0) return true;
             else return false;
         }
-        private bool IsMouseWheelReleased(Keys key)
+        private bool IsMouseWheelReleased(Buttons key)
         {
             Vector2 mw = GetMouseWheelMovementV();
-            if (key == Keys.MW_UP && mw.Y >= 0) return true;
-            else if (key == Keys.MW_DOWN && mw.Y <= 0) return true;
-            else if (key == Keys.MW_LEFT && mw.X >= 0) return true;
-            else if (key == Keys.MW_RIGHT && mw.X <= 0) return true;
+            if (key == Buttons.MW_UP && mw.Y >= 0) return true;
+            else if (key == Buttons.MW_DOWN && mw.Y <= 0) return true;
+            else if (key == Buttons.MW_LEFT && mw.X >= 0) return true;
+            else if (key == Buttons.MW_RIGHT && mw.X <= 0) return true;
             else return false;
         }
-        private float AxisMovement(Keys key, int slot, float deadzone)
+        private float AxisMovement(Buttons key, int slot, float deadzone)
         {
             if (slot < 0) return 0f;
             if (InputKeys.IsGamepadAxis(key) || InputKeys.IsGamepadAxisButton(key))
@@ -648,27 +980,31 @@ namespace ShapeInput
 
         private string GetKeyboardKeyName(bool shorthand = true)
         {
-            List<Keys> keyboard = new();
+            List<Buttons> keyboard = new();
             foreach (var key in keys) if (InputKeys.IsKeyboard(key)) keyboard.Add(key);
             if (keyboard.Count <= 0) return "";
             return InputKeys.GetKeyName(keyboard[0], shorthand);
         }
         private string GetMouseKeyName(bool shorthand = true)
         {
-            List<Keys> mouse = new();
+            List<Buttons> mouse = new();
             foreach (var key in keys) if (InputKeys.IsMouse(key)) mouse.Add(key);
             if (mouse.Count <= 0) return "";
             return InputKeys.GetKeyName(mouse[0], shorthand);
         }
         private string GetGamepadKeyName(bool shorthand = true)
         {
-            List<Keys> gamepad = new();
+            List<Buttons> gamepad = new();
             foreach (var key in keys) if (InputKeys.IsGamepad(key)) gamepad.Add(key);
             if (gamepad.Count <= 0) return "";
             return InputKeys.GetKeyName(gamepad[0], shorthand);
         }
 
     }
+
+
+
+
     public class InputMap2
     {
         private Dictionary<int, InputCondition> conditions = new();
@@ -903,4 +1239,332 @@ namespace ShapeInput
         //}
     }
 
+    /*
+    public abstract class InputValue
+    {
+        public bool IsAxis { get; private set; } = false;
+
+        private Buttons button = Buttons.NONE;
+        private Axis axis = Axis.NONE;
+        private (Buttons neg, Buttons pos) axisButtons = (Buttons.NONE, Buttons.NONE);
+
+
+        public InputValue(Buttons button)
+        {
+            this.button = button;
+        }
+        
+        public InputValue(Axis axis)
+        {
+            this.axis = axis;
+            this.IsAxis = true;
+        }  
+        public InputValue((Buttons neg, Buttons pos) axis)
+        {
+            this.axisButtons = axis;
+            this.IsAxis = true;
+        }
+
+        public (string keyboard, string mouse, string gamepad) GetNames(bool shorthand = true)
+        {
+            if (IsAxis)
+            {
+                if (axis != Axis.NONE)
+                {
+                    if (IsGamepadAxis(axis)) return ("", "", GetAxisName(axis, shorthand));
+                    else return ("", GetAxisName(axis, shorthand), "");
+                }
+                else
+                {
+                    if (axisButtons.neg != Buttons.NONE && axisButtons.pos != Buttons.NONE)
+                    {
+                        string name = GetButtonName(axisButtons.neg, shorthand) + "/" + GetButtonName(axisButtons.pos, shorthand);
+                        if (IsKeyboard(axisButtons.neg)) return (name, "", "");
+                        else if (IsMouse(axisButtons.neg)) return ("", name, "");
+                        else return ("", "", name);
+                    }
+                    else return ("", "", "");
+                }
+            }
+            else
+            {
+                if (IsKeyboard(button)) return (GetButtonName(button, shorthand), "", "");
+                else if(IsMouse(button)) return ("", GetButtonName(button, shorthand), "");
+                else return ("", "", GetButtonName(button, shorthand));
+            }
+        }
+
+        public void Change(Buttons newButton)
+        {
+            button = newButton;
+            if (IsAxis)
+            {
+                IsAxis = false;
+                axis = Axis.NONE;
+                axisButtons = (Buttons.NONE, Buttons.NONE);
+            }
+        }
+        public void Change(Axis newAxis)
+        {
+            axis = newAxis;
+            axisButtons = (Buttons.NONE, Buttons.NONE);
+            if (!IsAxis)
+            {
+                IsAxis = true;
+                button = Buttons.NONE;
+            }
+        }
+        public void Change((Buttons neg, Buttons pos) newAxis)
+        {
+            axisButtons = newAxis;
+            axis = Axis.NONE;
+            if (!IsAxis)
+            {
+                IsAxis = true;
+                button = Buttons.NONE;
+            }
+        }
+
+
+
+        public bool IsDown(int slot)
+        {
+            return false;
+        }
+        public bool IsPressed(int slot)
+        {
+            return false;
+        }
+        public bool IsReleased(int slot)
+        {
+            return false;
+        }
+        public bool IsUp(int slot)
+        {
+            return false;
+        }
+        public float GetAxis(int slot, float deadzone)
+        {
+            return 0f;
+        }
+
+
+        private static int TransformButtonValue(Buttons key)
+        {
+            if (key == Buttons.BACK)
+            {
+                return (int)KeyboardKey.KEY_BACK;
+            }
+            else if (key == Buttons.NULL)
+            {
+                return (int)KeyboardKey.KEY_NULL;
+            }
+            else if (key == Buttons.MENU)
+            {
+                return (int)KeyboardKey.KEY_MENU;
+            }
+            //else if (IsGamepadAxis(key)) return (int)key - 400;
+            else if (IsGamepadButton(key)) return (int)key - 500;
+            else if (IsGamepadAxisButtonPos(key)) return (int)key - 600;
+            else if (IsGamepadAxisButtonNeg(key)) return (int)key - 610;
+            return (int)key;
+        }
+        private static int TransformAxisValue(Axis axis)
+        {
+            if (IsGamepadAxis(axis)) return (int)axis - 400;
+            else return (int)axis;
+        }
+        
+        public static string GetButtonName(Buttons key, bool shortHand = true)
+        {
+            switch (key)
+            {
+                case Buttons.MB_LEFT: return shortHand ? "LMB" : "Left Mouse Button";
+                case Buttons.MB_RIGHT: return shortHand ? "RMB" : "Right Mouse Button";
+                case Buttons.MB_MIDDLE: return shortHand ? "MMB" : "Middle Mouse Button";
+                case Buttons.MB_SIDE: return shortHand ? "SMB" : "Side Mouse Button";
+                case Buttons.MB_EXTRA: return shortHand ? "EMB" : "Extra Mouse Button";
+                case Buttons.MB_FORWARD: return shortHand ? "FMB" : "Forward Mouse Button";
+                case Buttons.MB_BACK: return shortHand ? "BMB" : "Back Mouse Button";
+                case Buttons.MW_UP: return shortHand ? "MWU" : "Mouse Wheel Up";
+                case Buttons.MW_DOWN: return shortHand ? "MWD" : "Mouse Wheel Down";
+                case Buttons.MW_LEFT: return shortHand ? "MWL" : "Mouse Wheel Left";
+                case Buttons.MW_RIGHT: return shortHand ? "MWR" : "Mouse Wheel Right";
+                //case Buttons.MW_AXIS_HORIZONTAL: return shortHand ? "MWx" : "Mouse Wheel Horizontal";
+                //case Buttons.MW_AXIS_VERTICAL: return shortHand ? "MWy" : "Mouse Wheel Vertical";
+                case Buttons.APOSTROPHE: return shortHand ? "´" : "Apostrophe";
+                case Buttons.COMMA: return shortHand ? "," : "Comma";
+                case Buttons.MINUS: return shortHand ? "-" : "Minus";
+                case Buttons.PERIOD: return shortHand ? "." : "Period";
+                case Buttons.SLASH: return shortHand ? "/" : "Slash";
+                case Buttons.ZERO: return shortHand ? "0" : "Zero";
+                case Buttons.ONE: return shortHand ? "1" : "One";
+                case Buttons.TWO: return shortHand ? "2" : "Two";
+                case Buttons.THREE: return shortHand ? "3" : "Three";
+                case Buttons.FOUR: return shortHand ? "4" : "Four";
+                case Buttons.FIVE: return shortHand ? "5" : "Five";
+                case Buttons.SIX: return shortHand ? "6" : "Six";
+                case Buttons.SEVEN: return shortHand ? "7" : "Seven";
+                case Buttons.EIGHT: return shortHand ? "8" : "Eight";
+                case Buttons.NINE: return shortHand ? "9" : "Nine";
+                case Buttons.SEMICOLON: return shortHand ? ";" : "Semi Colon";
+                case Buttons.EQUAL: return shortHand ? "=" : "Equal";
+                case Buttons.A: return shortHand ? "A" : "A";
+                case Buttons.B: return shortHand ? "B" : "B";
+                case Buttons.C: return shortHand ? "C" : "C";
+                case Buttons.D: return shortHand ? "D" : "D";
+                case Buttons.E: return shortHand ? "E" : "E";
+                case Buttons.F: return shortHand ? "F" : "F";
+                case Buttons.G: return shortHand ? "G" : "G";
+                case Buttons.H: return shortHand ? "H" : "H";
+                case Buttons.I: return shortHand ? "I" : "I";
+                case Buttons.J: return shortHand ? "J" : "J";
+                case Buttons.K: return shortHand ? "K" : "K";
+                case Buttons.L: return shortHand ? "L" : "L";
+                case Buttons.M: return shortHand ? "M" : "M";
+                case Buttons.N: return shortHand ? "N" : "N";
+                case Buttons.O: return shortHand ? "O" : "O";
+                case Buttons.P: return shortHand ? "P" : "P";
+                case Buttons.Q: return shortHand ? "Q" : "Q";
+                case Buttons.R: return shortHand ? "R" : "R";
+                case Buttons.S: return shortHand ? "S" : "S";
+                case Buttons.T: return shortHand ? "T" : "T";
+                case Buttons.U: return shortHand ? "U" : "U";
+                case Buttons.V: return shortHand ? "V" : "V";
+                case Buttons.W: return shortHand ? "W" : "W";
+                case Buttons.X: return shortHand ? "X" : "X";
+                case Buttons.Y: return shortHand ? "Y" : "Y";
+                case Buttons.Z: return shortHand ? "Z" : "Z";
+                case Buttons.LEFT_BRACKET: return shortHand ? "[" : "Left Bracket";
+                case Buttons.BACKSLASH: return shortHand ? "\\" : "Backslash";
+                case Buttons.RIGHT_BRACKET: return shortHand ? "]" : "Right Bracket";
+                case Buttons.GRAVE: return shortHand ? "`" : "Grave";//Check
+                case Buttons.SPACE: return shortHand ? "Space" : "Space";
+                case Buttons.ESCAPE: return shortHand ? "Esc" : "Escape";
+                case Buttons.ENTER: return shortHand ? "Enter" : "Enter";
+                case Buttons.TAB: return shortHand ? "Tab" : "Tab";
+                case Buttons.BACKSPACE: return shortHand ? "Backspc" : "Backspace";
+                case Buttons.INSERT: return shortHand ? "Ins" : "Insert";
+                case Buttons.DELETE: return shortHand ? "Del" : "Delete";
+                case Buttons.RIGHT: return shortHand ? "Right" : "Right";
+                case Buttons.LEFT: return shortHand ? "Left" : "Left";
+                case Buttons.DOWN: return shortHand ? "Down" : "Down";
+                case Buttons.UP: return shortHand ? "Up" : "Up";
+                case Buttons.PAGE_UP: return shortHand ? "PUp" : "Page Up";
+                case Buttons.PAGE_DOWN: return shortHand ? "PDo" : "";
+                case Buttons.HOME: return shortHand ? "Home" : "Home";
+                case Buttons.END: return shortHand ? "End" : "End";
+                case Buttons.CAPS_LOCK: return shortHand ? "CpsL" : "Caps Lock";
+                case Buttons.SCROLL_LOCK: return shortHand ? "ScrL" : "Scroll Lock";
+                case Buttons.NUM_LOCK: return shortHand ? "NumL" : "Num Lock";
+                case Buttons.PRINT_SCREEN: return shortHand ? "Print" : "Print Screen";
+                case Buttons.PAUSE: return shortHand ? "Pause" : "Pause";
+                case Buttons.F1: return shortHand ? "F1" : "F1";
+                case Buttons.F2: return shortHand ? "F2" : "F2";
+                case Buttons.F3: return shortHand ? "F3" : "F3";
+                case Buttons.F4: return shortHand ? "F4" : "F4";
+                case Buttons.F5: return shortHand ? "F5" : "F5";
+                case Buttons.F6: return shortHand ? "F6" : "F6";
+                case Buttons.F7: return shortHand ? "F7" : "F7";
+                case Buttons.F8: return shortHand ? "F8" : "F8";
+                case Buttons.F9: return shortHand ? "F9" : "F9";
+                case Buttons.F10: return shortHand ? "F10" : "F10";
+                case Buttons.F11: return shortHand ? "F11" : "F11";
+                case Buttons.F12: return shortHand ? "F12" : "F12";
+                case Buttons.LEFT_SHIFT: return shortHand ? "LShift" : "Left Shift";
+                case Buttons.LEFT_CONTROL: return shortHand ? "LCtrl" : "Left Control";
+                case Buttons.LEFT_ALT: return shortHand ? "LAlt" : "Left Alt";
+                case Buttons.LEFT_SUPER: return shortHand ? "LSuper" : "Left Super";
+                case Buttons.RIGHT_SHIFT: return shortHand ? "RShift" : "Right Shift";
+                case Buttons.RIGHT_CONTROL: return shortHand ? "RCtrl" : "Right Control";
+                case Buttons.RIGHT_ALT: return shortHand ? "RAlt" : "Right Alt";
+                case Buttons.RIGHT_SUPER: return shortHand ? "RSuper" : "Right Super";
+                case Buttons.KB_MENU: return shortHand ? "KBMenu" : "KB Menu";
+                case Buttons.KP_0: return shortHand ? "KP0" : "Keypad 0";
+                case Buttons.KP_1: return shortHand ? "KP1" : "Keypad 1";
+                case Buttons.KP_2: return shortHand ? "KP2" : "Keypad 2";
+                case Buttons.KP_3: return shortHand ? "KP3" : "Keypad 3";
+                case Buttons.KP_4: return shortHand ? "KP4" : "Keypad 4";
+                case Buttons.KP_5: return shortHand ? "KP5" : "Keypad 5";
+                case Buttons.KP_6: return shortHand ? "KP6" : "Keypad 6";
+                case Buttons.KP_7: return shortHand ? "KP7" : "Keypad 7";
+                case Buttons.KP_8: return shortHand ? "KP8" : "Keypad 8";
+                case Buttons.KP_9: return shortHand ? "KP9" : "Keypad 9";
+                case Buttons.KP_DECIMAL: return shortHand ? "KPDec" : "Keypad Decimal";
+                case Buttons.KP_DIVIDE: return shortHand ? "KPDiv" : "Keypad Divide";
+                case Buttons.KP_MULTIPLY: return shortHand ? "KPMult" : "Keypad Multiply";
+                case Buttons.KP_SUBTRACT: return shortHand ? "KPSub" : "Keypad Subtract";
+                case Buttons.KP_ADD: return shortHand ? "KPAdd" : "Keypad Add";
+                case Buttons.KP_ENTER: return shortHand ? "KPEnt" : "Keypad Enter";
+                case Buttons.KP_EQUAL: return shortHand ? "KPEqual" : "Keypad Equal";
+                case Buttons.VOLUME_UP: return shortHand ? "Vol+" : "Volume Up";
+                case Buttons.VOLUME_DOWN: return shortHand ? "Vol-" : "Volume Down";
+                case Buttons.BACK: return shortHand ? "Back" : "Back";
+                case Buttons.NULL: return shortHand ? "Null" : "Null";
+                case Buttons.MENU: return shortHand ? "Menu" : "Menu";
+                //case Buttons.GP_AXIS_LEFT_X: return shortHand ? "LSx" : "GP Axis Left X";
+                //case Buttons.GP_AXIS_LEFT_Y: return shortHand ? "LSy" : "GP Axis Left Y";
+                //case Buttons.GP_AXIS_RIGHT_X: return shortHand ? "RSx" : "GP Axis Right X";
+                //case Buttons.GP_AXIS_RIGHT_Y: return shortHand ? "RSy" : "GP Axis Right Y";
+                //case Buttons.GP_AXIS_RIGHT_TRIGGER: return shortHand ? "RT" : "GP Axis Right Trigger";
+                //case Buttons.GP_AXIS_LEFT_TRIGGER: return shortHand ? "LT" : "GP Axis Left Trigger";
+                case Buttons.GP_BUTTON_UNKNOWN: return shortHand ? "Unknown" : "GP Button Unknown";
+                case Buttons.GP_BUTTON_LEFT_FACE_UP: return shortHand ? "Up" : "GP Button Up";
+                case Buttons.GP_BUTTON_LEFT_FACE_RIGHT: return shortHand ? "Right" : "GP Button Right";
+                case Buttons.GP_BUTTON_LEFT_FACE_DOWN: return shortHand ? "Down" : "GP Button Down";
+                case Buttons.GP_BUTTON_LEFT_FACE_LEFT: return shortHand ? "Left" : "GP Button Left";
+                case Buttons.GP_BUTTON_RIGHT_FACE_UP: return shortHand ? "Y" : "GP Button Y";
+                case Buttons.GP_BUTTON_RIGHT_FACE_RIGHT: return shortHand ? "B" : "GP Button B";
+                case Buttons.GP_BUTTON_RIGHT_FACE_DOWN: return shortHand ? "A" : "GP Button A";
+                case Buttons.GP_BUTTON_RIGHT_FACE_LEFT: return shortHand ? "X" : "GP Button X";
+                case Buttons.GP_BUTTON_LEFT_TRIGGER_TOP: return shortHand ? "LB" : "GP Button Left Bumper";
+                case Buttons.GP_BUTTON_LEFT_TRIGGER_BOTTOM: return shortHand ? "LT" : "GP Button Left Trigger";
+                case Buttons.GP_BUTTON_RIGHT_TRIGGER_TOP: return shortHand ? "RB" : "GP Button Right Bumper";
+                case Buttons.GP_BUTTON_RIGHT_TRIGGER_BOTTOM: return shortHand ? "RT" : "GP Button Right Trigger";
+                case Buttons.GP_BUTTON_MIDDLE_LEFT: return shortHand ? "Select" : "GP Button Select";
+                case Buttons.GP_BUTTON_MIDDLE: return shortHand ? "Home" : "GP Button Home";
+                case Buttons.GP_BUTTON_MIDDLE_RIGHT: return shortHand ? "Start" : "GP Button Start";
+                case Buttons.GP_BUTTON_LEFT_THUMB: return shortHand ? "LClick" : "GP Button Left Stick Click";
+                case Buttons.GP_BUTTON_RIGHT_THUMB: return shortHand ? "RClick" : "GP Button Right Stick Click";
+                default: return shortHand ? "No Key" : "No Key";
+            }
+        }
+        public static string GetAxisName(Axis axis, bool shortHand = true)
+        {
+            switch (axis)
+            {
+                case Axis.MW_AXIS_HORIZONTAL: return shortHand ? "MWx" : "Mouse Wheel Horizontal";
+                case Axis.MW_AXIS_VERTICAL: return shortHand ? "MWy" : "Mouse Wheel Vertical";
+                case Axis.GP_AXIS_LEFT_X: return shortHand ? "LSx" : "GP Axis Left X";
+                case Axis.GP_AXIS_LEFT_Y: return shortHand ? "LSy" : "GP Axis Left Y";
+                case Axis.GP_AXIS_RIGHT_X: return shortHand ? "RSx" : "GP Axis Right X";
+                case Axis.GP_AXIS_RIGHT_Y: return shortHand ? "RSy" : "GP Axis Right Y";
+                case Axis.GP_AXIS_RIGHT_TRIGGER: return shortHand ? "RT" : "GP Axis Right Trigger";
+                case Axis.GP_AXIS_LEFT_TRIGGER: return shortHand ? "LT" : "GP Axis Left Trigger";
+                default: return shortHand ? "No Key" : "No Key";
+            }
+        }
+
+        public static bool IsGamepad(Buttons key) { return (int)key >= 500 && (int)key <= 523; }
+        public static bool IsMouse(Buttons key) { return ((int)key >= 0 && (int)key <= 6) || IsMouseWheel(key); }
+        public static bool IsMouseWheel(Buttons key) { return (int)key >= 20 && (int)key <= 23; }
+        public static bool IsKeyboard(Buttons key) { return (int)key > 6 && (int)key < 400 && !IsMouseWheel(key); }
+        public static bool IsGamepadButton(Buttons key) { return (int)key >= 500 && (int)key <= 517; }
+        public static bool IsGamepadAxisButtonPos(Buttons key) { return (int)key >= 600 && (int)key <= 603; }
+        public static bool IsGamepadAxisButtonNeg(Buttons key) { return (int)key >= 610 && (int)key <= 613; }
+        public static bool IsGamepadAxisButton(Buttons key) { return (int)key >= 600 && (int)key <= 613; }
+        public static bool IsGamepadAxis(Axis axis) { return (int)axis >= 400 && (int)axis <= 405; }
+        public static bool IsMouseWheelAxis(Axis axis) { return (int)axis == 10 || (int)axis == 11; }
+        
+
+
+
+
+        //public static bool IsButton(Buttons key) { return IsGamepadButton(key) || IsGamepadAxisButton(key) || IsGamepadAxisButtonNeg(key) || IsGamepadAxisButtonPos(key) || IsKeyboard(key) || IsMouse(key) || IsMouseWheelButton(key); }
+        //public static bool IsAxis(Buttons key) { return IsGamepadAxis(key) || IsMouseWheelAxis(key); }
+        //public static bool IsMouseWheelButton(Buttons key) { return (int)key >= 20 && (int)key <= 23; }
+        //public static bool IsMouseWheelAxis(Buttons key) { return (int)key == 29 || (int)key == 30; }
+
+    }
+    */
 }
