@@ -5,6 +5,11 @@ using static ShapeInput.InputAction;
 
 namespace ShapeInput
 {
+
+
+
+
+
     public enum Keys
     {
         MB_LEFT = 0,
@@ -18,6 +23,8 @@ namespace ShapeInput
         MW_DOWN = 21,
         MW_LEFT = 22,
         MW_RIGHT = 23,
+        MW_AXIS_VERTICAL = 29,
+        MW_AXIS_HORIZONTAL = 30,
         APOSTROPHE = 39,
         COMMA = 44,
         MINUS = 45,
@@ -165,8 +172,8 @@ namespace ShapeInput
     }
     public static class InputKeys
     {
-        public static bool IsButton(Keys key) { return IsGamepadButton(key) || IsGamepadAxisButton(key) || IsGamepadAxisButtonNeg(key) || IsGamepadAxisButtonPos(key) || IsKeyboard(key) || IsMouse(key); }
-        public static bool IsAxis(Keys key) { return IsGamepadAxis(key) || IsMouseWheel(key); }
+        public static bool IsButton(Keys key) { return IsGamepadButton(key) || IsGamepadAxisButton(key) || IsGamepadAxisButtonNeg(key) || IsGamepadAxisButtonPos(key) || IsKeyboard(key) || IsMouse(key) || IsMouseWheelButton(key); }
+        public static bool IsAxis(Keys key) { return IsGamepadAxis(key) || IsMouseWheelAxis(key); }
         public static bool IsGamepad(Keys key) { return (int)key >= 500 && (int)key <= 523; }
         public static bool IsGamepadAxis(Keys key) { return (int)key >= 400 && (int)key <= 405; }
         public static bool IsGamepadButton(Keys key) { return (int)key >= 500 && (int)key <= 517; }
@@ -174,7 +181,9 @@ namespace ShapeInput
         public static bool IsGamepadAxisButtonNeg(Keys key) { return (int)key >= 610 && (int)key <= 613; }
         public static bool IsGamepadAxisButton(Keys key) { return (int)key >= 600 && (int)key <= 613; }
         public static bool IsMouse(Keys key) { return ( (int)key >= 0 && (int)key <= 6 ) || IsMouseWheel(key); }
-        public static bool IsMouseWheel(Keys key) { return (int)key >= 20 && (int)key <= 23; }
+        public static bool IsMouseWheel(Keys key) { return IsMouseWheelAxis(key) || IsMouseWheelButton(key); }
+        public static bool IsMouseWheelButton(Keys key) { return (int)key >= 20 && (int)key <= 23; }
+        public static bool IsMouseWheelAxis(Keys key) { return (int)key == 29 || (int)key == 30; }
         public static bool IsKeyboard(Keys key) { return (int)key > 6 && (int)key < 400 && !IsMouseWheel(key); }
         public static int TransformKeyValue(Keys key)
         {
@@ -211,6 +220,8 @@ namespace ShapeInput
                 case Keys.MW_DOWN: return shortHand ? "MWD" : "Mouse Wheel Down";
                 case Keys.MW_LEFT: return shortHand ? "MWL" : "Mouse Wheel Left";
                 case Keys.MW_RIGHT: return shortHand ? "MWR" : "Mouse Wheel Right";
+                case Keys.MW_AXIS_HORIZONTAL: return shortHand ? "MWx" : "Mouse Wheel Horizontal";
+                case Keys.MW_AXIS_VERTICAL: return shortHand ? "MWy" : "Mouse Wheel Vertical";
                 case Keys.APOSTROPHE: return shortHand ? "´" : "Apostrophe";
                 case Keys.COMMA: return shortHand ? "," : "Comma";
                 case Keys.MINUS: return shortHand ? "-" : "Minus";
@@ -353,13 +364,35 @@ namespace ShapeInput
     public class InputCondition
     {
         public int ID { get; protected set; } = -1;
-        private HashSet<Keys> keys = new();
+        private List<Keys> keys = new();
         public InputCondition(int id, params Keys[] keys)
         {
-            this.keys = keys.ToHashSet();
+            this.keys = keys.ToList();
             this.ID = id;
         }
 
+        public void ReplaceKeys(params Keys[] newKeys)
+        {
+            keys = newKeys.ToList();
+        }
+        public bool ChangeKey(Keys newKey, int index)
+        {
+            if(index >= 0 && index < keys.Count)
+            {
+                if (!keys.Contains(newKey))
+                {
+                    keys[index] = newKey;
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        public (string keyboard, string mouse, string gamepad) GetKeyNames(bool shorthand = true)
+        {
+            return (GetKeyboardKeyName(shorthand), GetMouseKeyName(shorthand), GetGamepadKeyName(shorthand));
+        }
+        
         public bool IsDown(int slot)
         {
             if (keys.Count <= 0) return false;
@@ -369,23 +402,27 @@ namespace ShapeInput
                 {
                     if (slot <= 0 && IsMouseButtonDown(InputKeys.TransformKeyValue(key))) return true;
                 }
-                else if (InputKeys.IsMouseWheel(key))
+                else if (InputKeys.IsMouseWheelButton(key))//!!!!!!!!!!!
                 {
                     if (slot <= 0) return IsMouseWheelDown(key);
+                }
+                else if (InputKeys.IsMouseWheelAxis(key))//!!!!!!!!!!!!
+                {
+                    if (slot <= 0 && GetMouseWheelAxisMovement(key) != 0f) return true;
                 }
                 else if (InputKeys.IsGamepadButton(key))
                 {
                     if (slot >= 0 && IsGamepadButtonDown(slot, InputKeys.TransformKeyValue(key))) return true;
                 }
-                else if (InputKeys.IsGamepadAxisButtonPos(key))
+                else if (InputKeys.IsGamepadAxisButtonPos(key))//!!!!!!!!!!!!!!!!!
                 {
                     if (slot >= 0 && GetGamepadAxisMovement(slot, InputKeys.TransformKeyValue(key)) > 0f) return true;
                 }
-                else if (InputKeys.IsGamepadAxisButtonNeg(key))
+                else if (InputKeys.IsGamepadAxisButtonNeg(key))//!!!!!!!!!!!!!!!!!!!!
                 {
                     if (slot >= 0 && GetGamepadAxisMovement(slot, InputKeys.TransformKeyValue(key)) < 0f) return true;
                 }
-                else if (InputKeys.IsGamepadAxis(key))
+                else if (InputKeys.IsGamepadAxis(key))//!!!!!!!!!!!!!!!!!!!
                 {
                     if (slot >= 0 && GetGamepadAxisMovement(slot, InputKeys.TransformKeyValue(key)) != 0f) return true;
                 }
@@ -405,9 +442,13 @@ namespace ShapeInput
                 {
                     if (slot <= 0 && IsMouseButtonPressed(InputKeys.TransformKeyValue(key))) return true;
                 }
-                else if (InputKeys.IsMouseWheel(key))
+                else if (InputKeys.IsMouseWheelButton(key))
                 {
                     if (slot <= 0) return IsMouseWheelDown(key);
+                }
+                else if (InputKeys.IsMouseWheelAxis(key))
+                {
+                    if (slot <= 0 && GetMouseWheelAxisMovement(key) != 0f) return true;
                 }
                 else if (InputKeys.IsGamepadButton(key))
                 {
@@ -441,9 +482,13 @@ namespace ShapeInput
                 {
                     if (slot <= 0 && IsMouseButtonReleased(InputKeys.TransformKeyValue(key))) return true;
                 }
-                else if (InputKeys.IsMouseWheel(key))
+                else if (InputKeys.IsMouseWheelButton(key))
                 {
                     if (slot <= 0) return IsMouseWheelReleased(key);
+                }
+                else if (InputKeys.IsMouseWheelAxis(key))
+                {
+                    if (slot <= 0 && GetMouseWheelAxisMovement(key) == 0f) return true;
                 }
                 else if (InputKeys.IsGamepadButton(key))
                 {
@@ -477,9 +522,13 @@ namespace ShapeInput
                 {
                     if (slot <= 0 && IsMouseButtonUp(InputKeys.TransformKeyValue(key))) return true;
                 }
-                else if (InputKeys.IsMouseWheel(key))
+                else if (InputKeys.IsMouseWheelButton(key))
                 {
                     if (slot <= 0) return IsMouseWheelReleased(key);
+                }
+                else if (InputKeys.IsMouseWheelAxis(key))
+                {
+                    if (slot <= 0 && GetMouseWheelAxisMovement(key) == 0f) return true;
                 }
                 else if (InputKeys.IsGamepadButton(key))
                 {
@@ -504,6 +553,16 @@ namespace ShapeInput
             }
             return false;
         }
+        
+
+        //implement new axis system -> just 1 function to get axis value
+        //new functions and caching to know if axis was released or pressed
+        //should not count axis more than once
+        public float GetAxis(int slot, float deadzone)
+        {
+            return 0f;
+        }
+        //----------deprecate!------------------------------------
         public float GetGamepadAxis(int slot, float deadzone)
         {
             if (slot < 0) return 0f;
@@ -517,19 +576,43 @@ namespace ShapeInput
             }
             return Clamp(axisValue, -1f, 1f);
         }
-        public (string keyboard, string mouse, string gamepad) GetKeyNames(bool shorthand = true)
+        public float GetMouseWheelAxis()
         {
-            return (GetKeyboardKeyName(shorthand), GetMouseKeyName(shorthand), GetGamepadKeyName(shorthand));
+            float axisValue = 0f;
+            Vector2 mw = GetMouseWheelMovementV();
+            foreach (var key in keys)
+            {
+                if (InputKeys.IsMouseWheelAxis(key) || InputKeys.IsMouseWheelButton(key))
+                {
+                    axisValue += GetMouseWheelAxisMovement(key);
+                }
+            }
+            return Clamp(axisValue, -1f, 1f);
         }
 
+        private Vector2 GetMouseWheelMovementV(bool inverted = false)
+        {
+            Vector2 movement = GetMouseWheelMoveV();
 
-        //private float GetMouseWheelMovement(bool inverted = false)
-        //{
-        //    float movement = GetMouseWheelMove();
-        //
-        //    if (inverted) return -movement;
-        //    return movement;
-        //}
+            if (inverted) return -movement;
+            return movement;
+        }
+        private float GetMouseWheelAxisMovement(Keys key)
+        {
+            if (InputKeys.IsMouseWheelAxis(key) || InputKeys.IsMouseWheelButton(key))
+            {
+                if(key == Keys.MW_AXIS_HORIZONTAL || key == Keys.MW_LEFT || key == Keys.MW_RIGHT)
+                {
+                    return GetMouseWheelMovementV().X;
+                }
+                else
+                {
+                    return GetMouseWheelMovementV().Y;
+
+                }
+            }
+            return 0f;
+        }
         private bool IsMouseWheelDown(Keys key)
         {
             Vector2 mw = GetMouseWheelMovementV();
@@ -548,13 +631,6 @@ namespace ShapeInput
             else if (key == Keys.MW_RIGHT && mw.X <= 0) return true;
             else return false;
         }
-        private Vector2 GetMouseWheelMovementV(bool inverted = false)
-        {
-            Vector2 movement = GetMouseWheelMoveV();
-
-            if (inverted) return -movement;
-            return movement;
-        }
         private float AxisMovement(Keys key, int slot, float deadzone)
         {
             if (slot < 0) return 0f;
@@ -566,6 +642,9 @@ namespace ShapeInput
             }
             return 0f;
         }
+        //--------------------------------------------------------
+
+
 
         private string GetKeyboardKeyName(bool shorthand = true)
         {

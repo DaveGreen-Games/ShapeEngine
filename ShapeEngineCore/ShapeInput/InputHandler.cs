@@ -910,5 +910,6 @@ namespace ShapeInput
             if (inverted) return -movement;
             return movement;
         }
+    
     }
 }
