@@ -6,13 +6,27 @@ namespace ShapeInput
     public struct InputState
     {
         public bool down = false;
+        public bool up = true;
+        public float axis = 0f;
+
+        public InputState() { }
+        public InputState(bool down, bool up, float axis)
+        {
+            this.down = down;
+            this.up = up;
+            this.axis = axis;
+        }
+    }
+    public struct InputConditionState
+    {
+        public bool down = false;
         public bool up = false;
         public bool released = false;
         public bool pressed = false;
         public float axisValue = 0f;
 
-        public InputState() { }
-        public InputState(bool down, bool up, bool released, bool pressed, float axisValue) 
+        public InputConditionState() { }
+        public InputConditionState(bool down, bool up, bool released, bool pressed, float axisValue) 
         { 
             this.down = down;
             this.up = up;
@@ -20,8 +34,18 @@ namespace ShapeInput
             this.pressed = pressed;
             this.axisValue = axisValue;
         }
+
+        public static InputConditionState Generate(InputConditionState state, bool down, bool up, float axis)
+        {
+            bool released = state.down && up;
+            bool pressed = state.up && down;
+
+            return new InputConditionState(down, up, released, pressed, axis);
+        }
     }
     
+    
+
     public enum KeyboardButton
     {
         APOSTROPHE = 39,
@@ -201,9 +225,18 @@ namespace ShapeInput
     {
         public string GetName(bool shorthand = true);
 
-        public bool IsDown(int slot);
-        public bool IsUp(int slot);
-        public float GetAxis(int slot);
+        public IInput Copy();
+        public InputState GetState(int slot);
+        public bool IsGamepad();
+        public bool IsMouse();
+        public bool IsKeyboard();
+        
+        public bool IsButton();
+        public bool IsAxis();
+        public bool IsAxisButton();
+        //public bool IsDown(int slot);
+        //public bool IsUp(int slot);
+        //public float GetAxis(int slot);
 
         public static string GetMouseButtonName(MouseButton button, bool shortHand = true)
         {
@@ -398,7 +431,7 @@ namespace ShapeInput
             }
         }
 
-
+        
         public static IInput Create(KeyboardButton button) { return new KeyboardButtonInput(button); }
         public static IInput Create(MouseButton button) { return new MouseButtonInput(button); }
         public static IInput Create(GamepadButton button, float deadzone = 0.2f) { return new GamepadButtonInput(button, deadzone); }
@@ -674,9 +707,10 @@ namespace ShapeInput
         }
         */
     }
-    public class KeyboardButtonInput : IInput
+    internal class KeyboardButtonInput : IInput
     {
         private KeyboardButton button;
+        
         public KeyboardButtonInput(KeyboardButton button)
         {
             this.button = button;
@@ -686,34 +720,56 @@ namespace ShapeInput
         {
             return IInput.GetKeyboardButtonName(button, shorthand);
         }
-        
-        
-        public bool IsDown(int slot)
+        public InputState GetState(int slot)
         {
-            if (slot <= 0 && IsKeyDown((int)button)) return true;
-            return false;
+           if(slot > 0) return new InputState();
+
+            bool down = IsKeyDown((int)button);
+
+            return new InputState(down, !down, 0f);
         }
-        public bool IsUp(int slot)
+        public IInput Copy()
         {
-            if (slot <= 0 && IsKeyUp((int)button)) return true;
-            return false;
+            return new KeyboardButtonInput(button);
         }
-        public float GetAxis(int slot) { return 0f; }
+
+        //public bool IsDown(int slot)
+        //{
+        //    if (slot <= 0 && IsKeyDown((int)button)) return true;
+        //    return false;
+        //}
+        //public bool IsUp(int slot)
+        //{
+        //    if (slot <= 0 && IsKeyUp((int)button)) return true;
+        //    return false;
+        //}
+        //public float GetAxis(int slot) { return 0f; }
         
     }
-    public class MouseButtonInput : IInput
+    internal class MouseButtonInput : IInput
     {
         private MouseButton button;
+        
         public MouseButtonInput(MouseButton button) { this.button = button; }
 
         public string GetName(bool shorthand = true)
         {
             return IInput.GetMouseButtonName(button, shorthand);
         }
-        public bool IsDown(int slot)
+        public InputState GetState(int slot)
         {
-            if (slot < 0) return false;
+            if (slot > 0) return new InputState();
 
+            bool down = IsDown();
+
+            return new InputState(down, !down, 0f);
+        }
+        public IInput Copy()
+        {
+            return new MouseButtonInput(button);
+        }
+        private bool IsDown()
+        {
             int id = (int)button;
             if (id >= 10)
             {
@@ -724,40 +780,49 @@ namespace ShapeInput
                 else if (button == MouseButton.MW_DOWN) return value.Y > 0f;
                 else return false;
             }
-            else return IsGamepadButtonDown(slot, id);
+            else return IsMouseButtonDown(id);
         }
-        public bool IsUp(int slot)
-        {
-            if (slot < 0) return false;
+        
+        //public bool IsUp(int slot)
+        //{
+        //    if (slot < 0) return false;
+        //
+        //    int id = (int)button;
+        //    if (id >= 10)
+        //    {
+        //        Vector2 value = GetMouseWheelMoveV();
+        //        if (button == MouseButton.MW_LEFT) return value.X >= 0f;
+        //        else if (button == MouseButton.MW_RIGHT) return value.X <= 0f;
+        //        else if (button == MouseButton.MW_UP) return value.Y >= 0f;
+        //        else if (button == MouseButton.MW_DOWN) return value.Y <= 0f;
+        //        else return false;
+        //    }
+        //    else return IsMouseButtonUp(id);
+        //}
+        //public float GetAxis(int slot) { return 0f; }
 
-            int id = (int)button;
-            if (id >= 10)
-            {
-                Vector2 value = GetMouseWheelMoveV();
-                if (button == MouseButton.MW_LEFT) return value.X >= 0f;
-                else if (button == MouseButton.MW_RIGHT) return value.X <= 0f;
-                else if (button == MouseButton.MW_UP) return value.Y >= 0f;
-                else if (button == MouseButton.MW_DOWN) return value.Y <= 0f;
-                else return false;
-            }
-            else return IsGamepadButtonDown(slot, id);
-        }
-        public float GetAxis(int slot) { return 0f; }
     }
-    public class GamepadButtonInput : IInput
+    internal class GamepadButtonInput : IInput
     {
         private GamepadButton button;
         private float deadzone;
+        
         public GamepadButtonInput(GamepadButton button, float deadzone = 0.2f) { this.button = button; this.deadzone = deadzone; }
 
         public string GetName(bool shorthand = true)
         {
             return IInput.GetGamepadButtonName(button, shorthand);
         }
-        public bool IsDown(int slot)
+        public InputState GetState(int slot)
         {
-            if (slot < 0) return false;
+            if (slot < 0) return new InputState();
 
+            bool down = IsDown(slot);
+
+            return new InputState(down, !down, 0f);
+        }
+        private bool IsDown(int slot)
+        {
             int id = (int)button;
             if (id >= 30 && id <= 33)
             {
@@ -775,82 +840,118 @@ namespace ShapeInput
             }
             else return IsGamepadButtonDown(slot, id);
         }
-        public bool IsUp(int slot)
+        public IInput Copy()
         {
-            if (slot < 0) return false;
-
-            int id = (int)button;
-            if (id >= 30 && id <= 33)
-            {
-                id -= 30;
-                float value = GetGamepadAxisMovement(slot, id);
-                if (MathF.Abs(value) < deadzone) value = 0f;
-                return value <= 0f;
-            }
-            else if (id >= 40 && id <= 43)
-            {
-                id -= 40;
-                float value = GetGamepadAxisMovement(slot, id);
-                if (MathF.Abs(value) < deadzone) value = 0f;
-                return value >= 0f;
-            }
-            else return IsGamepadButtonUp(slot, id);
+            return new GamepadButtonInput(button, deadzone);
         }
-        public float GetAxis(int slot) { return 0f; }
+
+        //public bool IsUp(int slot)
+        //{
+        //    if (slot < 0) return false;
+        //
+        //    int id = (int)button;
+        //    if (id >= 30 && id <= 33)
+        //    {
+        //        id -= 30;
+        //        float value = GetGamepadAxisMovement(slot, id);
+        //        if (MathF.Abs(value) < deadzone) value = 0f;
+        //        return value <= 0f;
+        //    }
+        //    else if (id >= 40 && id <= 43)
+        //    {
+        //        id -= 40;
+        //        float value = GetGamepadAxisMovement(slot, id);
+        //        if (MathF.Abs(value) < deadzone) value = 0f;
+        //        return value >= 0f;
+        //    }
+        //    else return IsGamepadButtonUp(slot, id);
+        //}
+        //public float GetAxis(int slot) { return 0f; }
     }
     
-    public class KeyboardButtonAxisInput : IInput
+    internal class KeyboardButtonAxisInput : IInput
     {
         private KeyboardButton neg;
         private KeyboardButton pos;
+        
         public KeyboardButtonAxisInput(KeyboardButton neg, KeyboardButton pos)
         {
             this.neg = neg;
             this.pos = pos;
         }
+        
         public string GetName(bool shorthand = true)
         {
             return IInput.GetKeyboardButtonName(neg, shorthand) + " <> " + IInput.GetKeyboardButtonName(pos, shorthand);
         }
-
-
-        public bool IsDown(int slot)
+        public InputState GetState(int slot)
         {
-            if (slot > 0) return false;
+            if (slot > 0) return new InputState();
+            float axis = GetAxis();
+            bool down = axis != 0f;
 
-            return IsKeyDown((int)neg) || IsKeyDown((int)pos);
+            return new InputState(down, !down, axis);
         }
-        public bool IsUp(int slot)
+        private float GetAxis()
         {
-            if (slot > 0) return false;
-
-            return IsKeyUp((int)neg) && IsKeyUp((int)pos);
-        }
-        public float GetAxis(int slot)
-        {
-            if (slot > 0) return 0f;
             float vNegative = IsKeyDown((int)neg) ? 1f : 0f;
             float vPositive = IsKeyDown((int)pos) ? 1f : 0f;
             return vPositive - vNegative;
         }
+        public IInput Copy()
+        {
+            return new KeyboardButtonAxisInput(neg, pos);
+        }
 
+        //public bool IsDown(int slot)
+        //{
+        //    if (slot > 0) return false;
+        //
+        //    return IsKeyDown((int)neg) || IsKeyDown((int)pos);
+        //}
+        //public bool IsUp(int slot)
+        //{
+        //    if (slot > 0) return false;
+        //
+        //    return IsKeyUp((int)neg) && IsKeyUp((int)pos);
+        //}
     }
-    public class GamepadButtonAxisInput : IInput
+    internal class GamepadButtonAxisInput : IInput
     {
         private GamepadButton neg;
         private GamepadButton pos;
         private float deadzone;
+        
         public GamepadButtonAxisInput(GamepadButton neg, GamepadButton pos, float deadzone = 0.2f)
         {
             this.neg = neg;
             this.pos = pos;
             this.deadzone = deadzone;
         }
+        
         public string GetName(bool shorthand = true)
         {
             return IInput.GetGamepadButtonName(neg, shorthand) + " <> " + IInput.GetGamepadButtonName(pos, shorthand);
         }
+        public InputState GetState(int slot)
+        {
+            if (slot < 0) return new InputState();
+            float axis = GetAxis(slot);
+            bool down = axis != 0f;
 
+            return new InputState(down, !down, axis);
+        }
+        public IInput Copy()
+        {
+            return new GamepadButtonAxisInput(neg, pos, deadzone);
+        }
+
+        private float GetAxis(int slot)
+        {
+            float vNegative = GetValue(slot, neg);
+            float vPositive = GetValue(slot, pos);
+            return vPositive - vNegative;
+        }
         private float GetValue(int slot, GamepadButton button)
         {
             if (slot < 0) return 0f;
@@ -874,41 +975,52 @@ namespace ShapeInput
             }
             else return IsGamepadButtonDown(slot, id) ? 1f : 0f;
         }
-
-        public bool IsDown(int slot)
-        {
-            return GetValue(slot, neg) > 0f || GetValue(slot, pos) > 0f;
-        }
-        public bool IsUp(int slot)
-        {
-            return GetValue(slot, neg) <= 0f && GetValue(slot, pos) <= 0f;
-        }
-        public float GetAxis(int slot)
-        {
-            float vNegative = GetValue(slot, neg);
-            float vPositive = GetValue(slot, pos);
-            return vPositive - vNegative;
-        }
-
+        
+        //public bool IsDown(int slot)
+        //{
+        //    return GetValue(slot, neg) > 0f || GetValue(slot, pos) > 0f;
+        //}
+        //public bool IsUp(int slot)
+        //{
+        //    return GetValue(slot, neg) <= 0f && GetValue(slot, pos) <= 0f;
+        //}
     }
-    public class MouseButtonAxisInput : IInput
+    internal class MouseButtonAxisInput : IInput
     {
         private MouseButton neg;
         private MouseButton pos;
+       
         public MouseButtonAxisInput(MouseButton neg, MouseButton pos)
         {
             this.neg = neg;
             this.pos = pos;
         }
+        
         public string GetName(bool shorthand = true)
         {
             return IInput.GetMouseButtonName(neg, shorthand) + " <> " + IInput.GetMouseButtonName(pos, shorthand);
         }
-
-        private float GetValue(int slot, MouseButton button)
+        public InputState GetState(int slot)
         {
-            if (slot > 0) return 0f;
+            if (slot > 0) return new InputState();
+            float axis = GetAxis();
+            bool down = axis != 0f;
 
+            return new InputState(down, !down, axis);
+        }
+        public IInput Copy()
+        {
+            return new MouseButtonAxisInput(neg, pos);
+        }
+
+        private float GetAxis()
+        {
+            float vNegative = GetValue(neg);
+            float vPositive = GetValue(pos);
+            return vPositive - vNegative;
+        }
+        private float GetValue(MouseButton button)
+        {
             int id = (int)button;
             if (id >= 10)
             {
@@ -921,87 +1033,96 @@ namespace ShapeInput
             }
             else return IsMouseButtonDown(id) ? 1f : 0f;
         }
-
-        public bool IsDown(int slot)
-        {
-            return GetValue(slot, neg) > 0f || GetValue(slot, pos) > 0f;
-        }
-        public bool IsUp(int slot)
-        {
-            return GetValue(slot, neg) <= 0f && GetValue(slot, pos) <= 0f;
-        }
-        public float GetAxis(int slot)
-        {
-            float vNegative = GetValue(slot, neg);
-            float vPositive = GetValue(slot, pos);
-            return vPositive - vNegative;
-        }
-
+        
+        //public bool IsDown(int slot)
+        //{
+        //    return GetValue(slot, neg) > 0f || GetValue(slot, pos) > 0f;
+        //}
+        //public bool IsUp(int slot)
+        //{
+        //    return GetValue(slot, neg) <= 0f && GetValue(slot, pos) <= 0f;
+        //}
     }
-
-    public class MouseWheelAxisInput : IInput
+    
+    internal class MouseWheelAxisInput : IInput
     {
         private MouseWheelAxis axis;
         public MouseWheelAxisInput(MouseWheelAxis axis) { this.axis = axis; }
 
-        
-
         public string GetName(bool shorthand = true) { return IInput.GetMouseWheelAxisName(axis, shorthand); }
-
-        private float GetValue(int slot)
+        public InputState GetState(int slot)
         {
-            if (slot > 0) return 0f;
-            Vector2 value = GetMouseWheelMoveV();
+            if (slot > 0) return new InputState();
+            float axis = GetValue();
+            bool down = axis != 0f;
 
+            return new InputState(down, !down, axis);
+        }
+        public IInput Copy()
+        {
+            return new MouseWheelAxisInput(axis);
+        }
+
+        private float GetValue()
+        {
+            Vector2 value = GetMouseWheelMoveV();
             return axis == MouseWheelAxis.VERTICAL ? value.Y : value.X;
         }
 
-        public bool IsDown(int slot)
-        {
-            return GetValue(slot) != 0f;
-        }
-
-        public bool IsUp(int slot)
-        {
-            return GetValue(slot) == 0f;
-        }
-        public float GetAxis(int slot)
-        {
-            return GetValue(slot);
-        }
+        //public bool IsDown(int slot)
+        //{
+        //    return GetValue(slot) != 0f;
+        //}
+        //public bool IsUp(int slot)
+        //{
+        //    return GetValue(slot) == 0f;
+        //}
+        //private float GetAxis(int slot)
+        //{
+        //    return GetValue(slot);
+        //}
     }
-    public class GamepadAxisInput : IInput
+    internal class GamepadAxisInput : IInput
     {
         private GamepadAxis axis;
         private float deadzone;
+        
         public GamepadAxisInput(GamepadAxis axis, float deadzone = 0.2f) { this.axis = axis; this.deadzone = deadzone; }
 
-
-
         public string GetName(bool shorthand = true) { return IInput.GetGamepadAxisName(axis, shorthand); }
+        public InputState GetState(int slot)
+        {
+            if (slot < 0) return new InputState();
+            float axis = GetValue(slot);
+            bool down = axis != 0f;
 
+            return new InputState(down, !down, axis);
+        }
+        public IInput Copy()
+        {
+            return new GamepadAxisInput(axis, deadzone);
+        }
+        
         private float GetValue(int slot)
         {
-            if (slot < 0) return 0f;
             float value = GetGamepadAxisMovement(slot, (int)axis);
             if (MathF.Abs(value) < deadzone) return 0f;
             else return value;
             
         }
-
-        public bool IsDown(int slot)
-        {
-            return GetValue(slot) != 0f;
-        }
-
-        public bool IsUp(int slot)
-        {
-            return GetValue(slot) == 0f;
-        }
-        public float GetAxis(int slot)
-        {
-            return GetValue(slot);
-        }
+    
+        //public bool IsDown(int slot)
+        //{
+        //    return GetValue(slot) != 0f;
+        //}
+        //public bool IsUp(int slot)
+        //{
+        //    return GetValue(slot) == 0f;
+        //}
+        //public float GetAxis(int slot)
+        //{
+        //    return GetValue(slot);
+        //}
     }
 
     public class InputCondition
@@ -1009,7 +1130,7 @@ namespace ShapeInput
         public int ID { get; protected set; } = -1;
         private List<IInput> inputs = new();
         
-        private InputState state = new();//set every frame
+        public InputConditionState State { get; protected set; } = new();
 
         public InputCondition(int id, params IInput[] inputs)
         {
@@ -1017,7 +1138,37 @@ namespace ShapeInput
             this.ID = id;
         }
 
-        
+        public InputCondition Copy()
+        {
+            IInput[] copy = new IInput[inputs.Count];
+            for (int i = 0; i < copy.Length; i++)
+            {
+                copy[i] = inputs[i].Copy();
+            }
+            return new(ID, copy);
+        }
+        public void Update(int slot, float dt)
+        {
+            bool down = false;
+            bool up = true;
+            float axis = 0f;
+            foreach (var input in inputs)
+            {
+                var state = input.GetState(slot);
+                axis += state.axis;
+                down = down || state.down;
+                up = up && state.up;
+            }
+            axis = Clamp(axis, -1f, 1f);
+
+            State = InputConditionState.Generate(State, down, up, axis);
+        }
+
+
+
+
+
+
 
         public void ReplaceKeys(params Buttons[] newKeys)
         {
