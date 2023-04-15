@@ -1,5 +1,10 @@
 ﻿
+using ShapeCore;
+using ShapeLib;
 using System.Numerics;
+using System.Reflection.Metadata.Ecma335;
+using System.Xml.Linq;
+using Vortice.XInput;
 
 namespace ShapeInput
 {
@@ -20,7 +25,7 @@ namespace ShapeInput
     public struct InputConditionState
     {
         public bool down = false;
-        public bool up = false;
+        public bool up = true;
         public bool released = false;
         public bool pressed = false;
         public float axisValue = 0f;
@@ -45,7 +50,6 @@ namespace ShapeInput
     }
     
     
-
     public enum KeyboardButton
     {
         APOSTROPHE = 39,
@@ -228,15 +232,6 @@ namespace ShapeInput
         public IInput Copy();
         public InputState GetState(int slot);
         public bool IsGamepad();
-        public bool IsMouse();
-        public bool IsKeyboard();
-        
-        public bool IsButton();
-        public bool IsAxis();
-        public bool IsAxisButton();
-        //public bool IsDown(int slot);
-        //public bool IsUp(int slot);
-        //public float GetAxis(int slot);
 
         public static string GetMouseButtonName(MouseButton button, bool shortHand = true)
         {
@@ -716,6 +711,7 @@ namespace ShapeInput
             this.button = button;
         }
 
+        public bool IsGamepad() { return false; }
         public string GetName(bool shorthand = true)
         {
             return IInput.GetKeyboardButtonName(button, shorthand);
@@ -752,6 +748,7 @@ namespace ShapeInput
         
         public MouseButtonInput(MouseButton button) { this.button = button; }
 
+        public bool IsGamepad() { return false; }
         public string GetName(bool shorthand = true)
         {
             return IInput.GetMouseButtonName(button, shorthand);
@@ -809,6 +806,7 @@ namespace ShapeInput
         
         public GamepadButtonInput(GamepadButton button, float deadzone = 0.2f) { this.button = button; this.deadzone = deadzone; }
 
+        public bool IsGamepad() { return true; }
         public string GetName(bool shorthand = true)
         {
             return IInput.GetGamepadButtonName(button, shorthand);
@@ -879,7 +877,8 @@ namespace ShapeInput
             this.neg = neg;
             this.pos = pos;
         }
-        
+
+        public bool IsGamepad() { return false; }
         public string GetName(bool shorthand = true)
         {
             return IInput.GetKeyboardButtonName(neg, shorthand) + " <> " + IInput.GetKeyboardButtonName(pos, shorthand);
@@ -916,6 +915,65 @@ namespace ShapeInput
         //    return IsKeyUp((int)neg) && IsKeyUp((int)pos);
         //}
     }
+    internal class MouseButtonAxisInput : IInput
+    {
+        private MouseButton neg;
+        private MouseButton pos;
+       
+        public MouseButtonAxisInput(MouseButton neg, MouseButton pos)
+        {
+            this.neg = neg;
+            this.pos = pos;
+        }
+
+        public bool IsGamepad() { return false; }
+        public string GetName(bool shorthand = true)
+        {
+            return IInput.GetMouseButtonName(neg, shorthand) + " <> " + IInput.GetMouseButtonName(pos, shorthand);
+        }
+        public InputState GetState(int slot)
+        {
+            if (slot > 0) return new InputState();
+            float axis = GetAxis();
+            bool down = axis != 0f;
+
+            return new InputState(down, !down, axis);
+        }
+        public IInput Copy()
+        {
+            return new MouseButtonAxisInput(neg, pos);
+        }
+
+        private float GetAxis()
+        {
+            float vNegative = GetValue(neg);
+            float vPositive = GetValue(pos);
+            return vPositive - vNegative;
+        }
+        private float GetValue(MouseButton button)
+        {
+            int id = (int)button;
+            if (id >= 10)
+            {
+                Vector2 value = GetMouseWheelMoveV();
+                if (button == MouseButton.MW_LEFT) return MathF.Abs(value.X);
+                else if (button == MouseButton.MW_RIGHT) return value.X;
+                else if (button == MouseButton.MW_UP) return MathF.Abs(value.Y);
+                else if (button == MouseButton.MW_DOWN) return value.Y;
+                else return 0f;
+            }
+            else return IsMouseButtonDown(id) ? 1f : 0f;
+        }
+        
+        //public bool IsDown(int slot)
+        //{
+        //    return GetValue(slot, neg) > 0f || GetValue(slot, pos) > 0f;
+        //}
+        //public bool IsUp(int slot)
+        //{
+        //    return GetValue(slot, neg) <= 0f && GetValue(slot, pos) <= 0f;
+        //}
+    }
     internal class GamepadButtonAxisInput : IInput
     {
         private GamepadButton neg;
@@ -928,7 +986,8 @@ namespace ShapeInput
             this.pos = pos;
             this.deadzone = deadzone;
         }
-        
+
+        public bool IsGamepad() { return true; }
         public string GetName(bool shorthand = true)
         {
             return IInput.GetGamepadButtonName(neg, shorthand) + " <> " + IInput.GetGamepadButtonName(pos, shorthand);
@@ -985,70 +1044,13 @@ namespace ShapeInput
         //    return GetValue(slot, neg) <= 0f && GetValue(slot, pos) <= 0f;
         //}
     }
-    internal class MouseButtonAxisInput : IInput
-    {
-        private MouseButton neg;
-        private MouseButton pos;
-       
-        public MouseButtonAxisInput(MouseButton neg, MouseButton pos)
-        {
-            this.neg = neg;
-            this.pos = pos;
-        }
-        
-        public string GetName(bool shorthand = true)
-        {
-            return IInput.GetMouseButtonName(neg, shorthand) + " <> " + IInput.GetMouseButtonName(pos, shorthand);
-        }
-        public InputState GetState(int slot)
-        {
-            if (slot > 0) return new InputState();
-            float axis = GetAxis();
-            bool down = axis != 0f;
-
-            return new InputState(down, !down, axis);
-        }
-        public IInput Copy()
-        {
-            return new MouseButtonAxisInput(neg, pos);
-        }
-
-        private float GetAxis()
-        {
-            float vNegative = GetValue(neg);
-            float vPositive = GetValue(pos);
-            return vPositive - vNegative;
-        }
-        private float GetValue(MouseButton button)
-        {
-            int id = (int)button;
-            if (id >= 10)
-            {
-                Vector2 value = GetMouseWheelMoveV();
-                if (button == MouseButton.MW_LEFT) return MathF.Abs(value.X);
-                else if (button == MouseButton.MW_RIGHT) return value.X;
-                else if (button == MouseButton.MW_UP) return MathF.Abs(value.Y);
-                else if (button == MouseButton.MW_DOWN) return value.Y;
-                else return 0f;
-            }
-            else return IsMouseButtonDown(id) ? 1f : 0f;
-        }
-        
-        //public bool IsDown(int slot)
-        //{
-        //    return GetValue(slot, neg) > 0f || GetValue(slot, pos) > 0f;
-        //}
-        //public bool IsUp(int slot)
-        //{
-        //    return GetValue(slot, neg) <= 0f && GetValue(slot, pos) <= 0f;
-        //}
-    }
     
     internal class MouseWheelAxisInput : IInput
     {
         private MouseWheelAxis axis;
         public MouseWheelAxisInput(MouseWheelAxis axis) { this.axis = axis; }
 
+        public bool IsGamepad() { return false; }
         public string GetName(bool shorthand = true) { return IInput.GetMouseWheelAxisName(axis, shorthand); }
         public InputState GetState(int slot)
         {
@@ -1089,6 +1091,7 @@ namespace ShapeInput
         
         public GamepadAxisInput(GamepadAxis axis, float deadzone = 0.2f) { this.axis = axis; this.deadzone = deadzone; }
 
+        public bool IsGamepad() { return true; }
         public string GetName(bool shorthand = true) { return IInput.GetGamepadAxisName(axis, shorthand); }
         public InputState GetState(int slot)
         {
@@ -1163,469 +1166,39 @@ namespace ShapeInput
 
             State = InputConditionState.Generate(State, down, up, axis);
         }
-
-
-
-
-
-
-
-        public void ReplaceKeys(params Buttons[] newKeys)
+        public string GetInputName(bool gamepad, bool shorthand = true)
         {
-            inputs = newKeys.ToList();
+            foreach (var input in inputs)
+            {
+                if (input.IsGamepad() == gamepad) return input.GetName(shorthand);
+            }
+            return "";
         }
-        public bool ChangeKey(Buttons newKey, int index)
+        public void Replace(params IInput[] newInputs)
+        {
+            State = new();
+            inputs = newInputs.ToList();
+        }
+        public bool ChangeInput(int index, IInput newInput)
         {
             if (index >= 0 && index < inputs.Count)
             {
-                if (!inputs.Contains(newKey))
+                if (!inputs.Contains(newInput))
                 {
-                    inputs[index] = newKey;
+                    inputs[index] = newInput;
                     return true;
                 }
             }
             return false;
         }
-
-        public (string keyboard, string mouse, string gamepad) GetKeyNames(bool shorthand = true)
-        {
-            return (GetKeyboardKeyName(shorthand), GetMouseKeyName(shorthand), GetGamepadKeyName(shorthand));
-        }
-
-        public bool IsDown(int slot)
-        {
-            if (inputs.Count <= 0) return false;
-            foreach (var key in inputs)
-            {
-                if (InputKeys.IsMouse(key))
-                {
-                    if (slot <= 0 && IsMouseButtonDown(InputKeys.TransformKeyValue(key))) return true;
-                }
-                else if (InputKeys.IsMouseWheelButton(key))//!!!!!!!!!!!
-                {
-                    if (slot <= 0) return IsMouseWheelDown(key);
-                }
-                else if (InputKeys.IsMouseWheelAxis(key))//!!!!!!!!!!!!
-                {
-                    if (slot <= 0 && GetMouseWheelAxisMovement(key) != 0f) return true;
-                }
-                else if (InputKeys.IsGamepadButton(key))
-                {
-                    if (slot >= 0 && IsGamepadButtonDown(slot, InputKeys.TransformKeyValue(key))) return true;
-                }
-                else if (InputKeys.IsGamepadAxisButtonPos(key))//!!!!!!!!!!!!!!!!!
-                {
-                    if (slot >= 0 && GetGamepadAxisMovement(slot, InputKeys.TransformKeyValue(key)) > 0f) return true;
-                }
-                else if (InputKeys.IsGamepadAxisButtonNeg(key))//!!!!!!!!!!!!!!!!!!!!
-                {
-                    if (slot >= 0 && GetGamepadAxisMovement(slot, InputKeys.TransformKeyValue(key)) < 0f) return true;
-                }
-                else if (InputKeys.IsGamepadAxis(key))//!!!!!!!!!!!!!!!!!!!
-                {
-                    if (slot >= 0 && GetGamepadAxisMovement(slot, InputKeys.TransformKeyValue(key)) != 0f) return true;
-                }
-                else
-                {
-                    if (slot <= 0 && IsKeyDown(InputKeys.TransformKeyValue(key))) return true;
-                }
-            }
-            return false;
-        }
-        public bool IsPressed(int slot)
-        {
-            if (inputs.Count <= 0) return false;
-            foreach (var key in inputs)
-            {
-                if (InputKeys.IsMouse(key))
-                {
-                    if (slot <= 0 && IsMouseButtonPressed(InputKeys.TransformKeyValue(key))) return true;
-                }
-                else if (InputKeys.IsMouseWheelButton(key))
-                {
-                    if (slot <= 0) return IsMouseWheelDown(key);
-                }
-                else if (InputKeys.IsMouseWheelAxis(key))
-                {
-                    if (slot <= 0 && GetMouseWheelAxisMovement(key) != 0f) return true;
-                }
-                else if (InputKeys.IsGamepadButton(key))
-                {
-                    if (slot >= 0 && IsGamepadButtonPressed(slot, InputKeys.TransformKeyValue(key))) return true;
-                }
-                else if (InputKeys.IsGamepadAxisButtonPos(key))
-                {
-                    if (slot >= 0 && GetGamepadAxisMovement(slot, InputKeys.TransformKeyValue(key)) > 0f) return true;
-                }
-                else if (InputKeys.IsGamepadAxisButtonNeg(key))
-                {
-                    if (slot >= 0 && GetGamepadAxisMovement(slot, InputKeys.TransformKeyValue(key)) < 0f) return true;
-                }
-                else if (InputKeys.IsGamepadAxis(key))
-                {
-                    if (slot >= 0 && GetGamepadAxisMovement(slot, InputKeys.TransformKeyValue(key)) != 0f) return true;
-                }
-                else
-                {
-                    if (slot <= 0 && IsKeyPressed(InputKeys.TransformKeyValue(key))) return true;
-                }
-            }
-            return false;
-        }
-        public bool IsReleased(int slot)
-        {
-            if (inputs.Count <= 0) return false;
-            foreach (var key in inputs)
-            {
-                if (InputKeys.IsMouse(key))
-                {
-                    if (slot <= 0 && IsMouseButtonReleased(InputKeys.TransformKeyValue(key))) return true;
-                }
-                else if (InputKeys.IsMouseWheelButton(key))
-                {
-                    if (slot <= 0) return IsMouseWheelReleased(key);
-                }
-                else if (InputKeys.IsMouseWheelAxis(key))
-                {
-                    if (slot <= 0 && GetMouseWheelAxisMovement(key) == 0f) return true;
-                }
-                else if (InputKeys.IsGamepadButton(key))
-                {
-                    if (slot >= 0 && IsGamepadButtonReleased(slot, InputKeys.TransformKeyValue(key))) return true;
-                }
-                else if (InputKeys.IsGamepadAxisButtonPos(key))
-                {
-                    if (slot >= 0 && GetGamepadAxisMovement(slot, InputKeys.TransformKeyValue(key)) <= 0f) return true;
-                }
-                else if (InputKeys.IsGamepadAxisButtonNeg(key))
-                {
-                    if (slot >= 0 && GetGamepadAxisMovement(slot, InputKeys.TransformKeyValue(key)) >= 0f) return true;
-                }
-                else if (InputKeys.IsGamepadAxis(key))
-                {
-                    if (slot >= 0 && GetGamepadAxisMovement(slot, InputKeys.TransformKeyValue(key)) == 0f) return true;
-                }
-                else
-                {
-                    if (slot <= 0 && IsKeyReleased(InputKeys.TransformKeyValue(key))) return true;
-                }
-            }
-            return false;
-        }
-        public bool IsUp(int slot)
-        {
-            if (inputs.Count <= 0) return false;
-            foreach (var key in inputs)
-            {
-                if (InputKeys.IsMouse(key))
-                {
-                    if (slot <= 0 && IsMouseButtonUp(InputKeys.TransformKeyValue(key))) return true;
-                }
-                else if (InputKeys.IsMouseWheelButton(key))
-                {
-                    if (slot <= 0) return IsMouseWheelReleased(key);
-                }
-                else if (InputKeys.IsMouseWheelAxis(key))
-                {
-                    if (slot <= 0 && GetMouseWheelAxisMovement(key) == 0f) return true;
-                }
-                else if (InputKeys.IsGamepadButton(key))
-                {
-                    if (slot >= 0 && IsGamepadButtonUp(slot, InputKeys.TransformKeyValue(key))) return true;
-                }
-                else if (InputKeys.IsGamepadAxisButtonPos(key))
-                {
-                    if (slot >= 0 && GetGamepadAxisMovement(slot, InputKeys.TransformKeyValue(key)) <= 0f) return true;
-                }
-                else if (InputKeys.IsGamepadAxisButtonNeg(key))
-                {
-                    if (slot >= 0 && GetGamepadAxisMovement(slot, InputKeys.TransformKeyValue(key)) >= 0f) return true;
-                }
-                else if (InputKeys.IsGamepadAxis(key))
-                {
-                    if (slot >= 0 && GetGamepadAxisMovement(slot, InputKeys.TransformKeyValue(key)) == 0f) return true;
-                }
-                else
-                {
-                    if (slot <= 0 && IsKeyUp(InputKeys.TransformKeyValue(key))) return true;
-                }
-            }
-            return false;
-        }
-
-
-        //implement new axis system -> just 1 function to get axis value
-        //new functions and caching to know if axis was released or pressed
-        //should not count axis more than once
-        public float GetAxis(int slot, float deadzone)
-        {
-            return 0f;
-        }
-        //----------deprecate!------------------------------------
-        public float GetGamepadAxis(int slot, float deadzone)
-        {
-            if (slot < 0) return 0f;
-            float axisValue = 0f;
-            foreach (var key in inputs)
-            {
-                if (InputKeys.IsGamepadAxis(key) || InputKeys.IsGamepadAxisButton(key))
-                {
-                    axisValue += AxisMovement(key, slot, deadzone);
-                }
-            }
-            return Clamp(axisValue, -1f, 1f);
-        }
-        public float GetMouseWheelAxis()
-        {
-            float axisValue = 0f;
-            Vector2 mw = GetMouseWheelMovementV();
-            foreach (var key in inputs)
-            {
-                if (InputKeys.IsMouseWheelAxis(key) || InputKeys.IsMouseWheelButton(key))
-                {
-                    axisValue += GetMouseWheelAxisMovement(key);
-                }
-            }
-            return Clamp(axisValue, -1f, 1f);
-        }
-
-        private Vector2 GetMouseWheelMovementV(bool inverted = false)
-        {
-            Vector2 movement = GetMouseWheelMoveV();
-
-            if (inverted) return -movement;
-            return movement;
-        }
-        private float GetMouseWheelAxisMovement(Buttons key)
-        {
-            if (InputKeys.IsMouseWheelAxis(key) || InputKeys.IsMouseWheelButton(key))
-            {
-                if (key == Buttons.MW_AXIS_HORIZONTAL || key == Buttons.MW_LEFT || key == Buttons.MW_RIGHT)
-                {
-                    return GetMouseWheelMovementV().X;
-                }
-                else
-                {
-                    return GetMouseWheelMovementV().Y;
-
-                }
-            }
-            return 0f;
-        }
-        private bool IsMouseWheelDown(Buttons key)
-        {
-            Vector2 mw = GetMouseWheelMovementV();
-            if (key == Buttons.MW_UP && mw.Y < 0) return true;
-            else if (key == Buttons.MW_DOWN && mw.Y > 0) return true;
-            else if (key == Buttons.MW_LEFT && mw.X < 0) return true;
-            else if (key == Buttons.MW_RIGHT && mw.X > 0) return true;
-            else return false;
-        }
-        private bool IsMouseWheelReleased(Buttons key)
-        {
-            Vector2 mw = GetMouseWheelMovementV();
-            if (key == Buttons.MW_UP && mw.Y >= 0) return true;
-            else if (key == Buttons.MW_DOWN && mw.Y <= 0) return true;
-            else if (key == Buttons.MW_LEFT && mw.X >= 0) return true;
-            else if (key == Buttons.MW_RIGHT && mw.X <= 0) return true;
-            else return false;
-        }
-        private float AxisMovement(Buttons key, int slot, float deadzone)
-        {
-            if (slot < 0) return 0f;
-            if (InputKeys.IsGamepadAxis(key) || InputKeys.IsGamepadAxisButton(key))
-            {
-                float movement = GetGamepadAxisMovement(slot, InputKeys.TransformKeyValue(key));
-                if (MathF.Abs(movement) < deadzone) movement = 0f;
-                return movement;
-            }
-            return 0f;
-        }
-        //--------------------------------------------------------
-
-
-
-        private string GetKeyboardKeyName(bool shorthand = true)
-        {
-            List<Buttons> keyboard = new();
-            foreach (var key in inputs) if (InputKeys.IsKeyboard(key)) keyboard.Add(key);
-            if (keyboard.Count <= 0) return "";
-            return InputKeys.GetKeyName(keyboard[0], shorthand);
-        }
-        private string GetMouseKeyName(bool shorthand = true)
-        {
-            List<Buttons> mouse = new();
-            foreach (var key in inputs) if (InputKeys.IsMouse(key)) mouse.Add(key);
-            if (mouse.Count <= 0) return "";
-            return InputKeys.GetKeyName(mouse[0], shorthand);
-        }
-        private string GetGamepadKeyName(bool shorthand = true)
-        {
-            List<Buttons> gamepad = new();
-            foreach (var key in inputs) if (InputKeys.IsGamepad(key)) gamepad.Add(key);
-            if (gamepad.Count <= 0) return "";
-            return InputKeys.GetKeyName(gamepad[0], shorthand);
-        }
-
     }
 
-
-
-
-    /*
-    public class AxisValue : IInput
-    {
-        private Axis axis = Axis.NONE;
-        private (Buttons neg, Buttons pos) axisButtons = (Buttons.NONE, Buttons.NONE);
-        
-        public AxisValue(Axis axis)
-        {
-            this.axis = axis;
-        }
-        public AxisValue((Buttons neg, Buttons pos) axis)
-        {
-            this.axisButtons = axis;
-        }
-
-        public void Change(Buttons newButton) { return; }
-        public void Change(Axis newAxis)
-        {
-            axis = newAxis;
-        }
-        public void Change((Buttons neg, Buttons pos) newAxis)
-        {
-            axisButtons = newAxis;
-        }
-
-        public (string keyboard, string mouse, string gamepad) GetNames(bool shorthand = true)
-        {
-            if (axis != Axis.NONE)
-            {
-                if (IInput.IsGamepadAxis(axis)) return ("", "", IInput.GetAxisName(axis, shorthand));
-                else return ("", IInput.GetAxisName(axis, shorthand), "");
-            }
-            else
-            {
-                if (axisButtons.neg != Buttons.NONE && axisButtons.pos != Buttons.NONE)
-                {
-                    string name = IInput.GetButtonName(axisButtons.neg, shorthand) + "/" + IInput.GetButtonName(axisButtons.pos, shorthand);
-                    if (IInput.IsKeyboard(axisButtons.neg)) return (name, "", "");
-                    else if (IInput.IsMouse(axisButtons.neg)) return ("", name, "");
-                    else return ("", "", name);
-                }
-                else return ("", "", "");
-            }
-        }
-
-        public bool IsDown(int slot)
-        {
-            if(axis != Axis.NONE)
-            {
-                if (IInput.IsGamepadAxis(axis))
-                {
-                    return IInput.GetGamepadAxisValue(axis, slot, 0f) != 0f;
-                }
-                else if (IInput.IsMouseWheelAxis(axis))
-                {
-                    return IInput.GetMouseWheelAxisValue(axis) != 0f;
-                }
-            }
-            else
-            {
-                if (axisButtons.neg != Buttons.NONE && axisButtons.pos != Buttons.NONE)
-                {
-                    if (IInput.IsMouseWheelAxisButton(axisButtons.neg) && IInput.IsMouseWheelAxisButton(axisButtons.pos))
-                    {
-                        float neg = IInput.GetMouseWheelAxisButtonValue(axisButtons.neg);
-                        float pos = IInput.GetMouseWheelAxisButtonValue(axisButtons.pos);
-                        return (pos - neg) != 0;
-                    }
-                    else if (IInput.IsGamepadAxisButton(axisButtons.neg) && IInput.IsGamepadAxisButton(axisButtons.pos))
-                    {
-                        return IInput.GetGamepadAxisValue(axisButtons.neg, slot, 0f) != 0f;
-                    }
-                }
-            }
-            
-            return false;
-        }
-        public bool IsUp(int slot)
-        {
-            if (axis != Axis.NONE)
-            {
-                if (IInput.IsGamepadAxis(axis))
-                {
-                    return IInput.GetGamepadAxisValue(axis, slot, 0f) == 0f;
-                }
-                else if (IInput.IsMouseWheelAxis(axis))
-                {
-                    return IInput.GetMouseWheelAxisValue(axis) == 0f;
-                }
-            }
-            else
-            {
-                if (axisButtons.neg != Buttons.NONE && axisButtons.pos != Buttons.NONE)
-                {
-                    if (IInput.IsMouseWheelAxisButton(axisButtons.neg) && IInput.IsMouseWheelAxisButton(axisButtons.pos))
-                    {
-                        float neg = IInput.GetMouseWheelAxisButtonValue(axisButtons.neg);
-                        float pos = IInput.GetMouseWheelAxisButtonValue(axisButtons.pos);
-                        return (pos - neg) == 0f;
-                    }
-                    else if (IInput.IsGamepadAxisButton(axisButtons.neg) && IInput.IsGamepadAxisButton(axisButtons.pos))
-                    {
-                        return IInput.GetGamepadAxisValue(axisButtons.neg, slot, 0f) == 0f;
-                    }
-                }
-            }
-
-            return false;
-        }
-        public float GetAxis(int slot, float deadzone)
-        {
-            if (axis != Axis.NONE)
-            {
-                if (IInput.IsGamepadAxis(axis))
-                {
-                    return IInput.GetGamepadAxisValue(axis, slot, deadzone);
-                }
-                else if (IInput.IsMouseWheelAxis(axis))
-                {
-                    return IInput.GetMouseWheelAxisValue(axis); // implement deadzone
-                }
-            }
-            else
-            {
-                if (axisButtons.neg != Buttons.NONE && axisButtons.pos != Buttons.NONE)
-                {
-                    if (IInput.IsMouseWheelAxisButton(axisButtons.neg) && IInput.IsMouseWheelAxisButton(axisButtons.pos))
-                    {
-                        //implement deadzone
-                        float neg = IInput.GetMouseWheelAxisButtonValue(axisButtons.neg);
-                        float pos = IInput.GetMouseWheelAxisButtonValue(axisButtons.pos);
-                        return (pos - neg);
-                    }
-                    else if (IInput.IsGamepadAxisButton(axisButtons.neg) && IInput.IsGamepadAxisButton(axisButtons.pos))
-                    {
-                        return IInput.GetGamepadAxisValue(axisButtons.neg, slot, deadzone);
-                    }
-                    else
-                    {
-                        //gamepad or keyboard buttons as axis
-                    }
-                }
-            }
-
-            return 0f;
-        }
-    }
-    */
     public class InputMap2
     {
         private Dictionary<int, InputCondition> conditions = new();
         public int Slot { get; protected set; } = -1;
         public int ID { get; protected set; } = -1;
-        public float Deadzone { get; set; } = 0.2f;
+        public bool Disabled { get; set; } = false;
         public InputMap2(int id, int slot, params InputCondition[] conditions)
         {
             foreach (var condition in conditions)
@@ -1637,72 +1210,504 @@ namespace ShapeInput
             this.ID = id;
         }
 
-        public bool IsDown(int id)
+        public void Update(float dt)
         {
-            if (conditions.ContainsKey(id))
+            if(Disabled) return;
+            foreach (var condition in conditions.Values)
             {
-                return conditions[id].IsDown(Slot);
+                condition.Update(Slot, dt);
             }
-            return false;
         }
-        public bool IsPressed(int id)
+        public InputConditionState GetConditionState(int id)
         {
-            if (conditions.ContainsKey(id))
+            if (!Disabled && conditions.ContainsKey(id))
             {
-                return conditions[id].IsPressed(Slot);
+                return conditions[id].State;
             }
-            return false;
-        }
-        public bool IsReleased(int id)
-        {
-            if (conditions.ContainsKey(id))
-            {
-                return conditions[id].IsReleased(Slot);
-            }
-            return false;
-        }
-        public bool IsUp(int id)
-        {
-            if (conditions.ContainsKey(id))
-            {
-                return conditions[id].IsUp(Slot);
-            }
-            return false;
-        }
-        
-        public float GetAxis(int idNegative, int idPositive)
-        {
-            if (!conditions.ContainsKey(idNegative) || !conditions.ContainsKey(idPositive)) return 0f;
-            float p = conditions[idPositive].IsDown(Slot) ? 1f : 0f;
-            float n = conditions[idNegative].IsDown(Slot) ? 1f : 0f;
-            return p - n;
-        }
-        public Vector2 GetAxis(int idLeft, int idRight, int idUp, int idDown)
-        {
-            return new(GetAxis(idLeft, idRight), GetAxis(idUp, idDown));
-        }
-        public float GetGamepadAxis(int id)
-        {
-            if (!conditions.ContainsKey(id)) return 0f;
-            return conditions[id].GetGamepadAxis(Slot, Deadzone);
-        }
-        public Vector2 GetGamepadAxis(int gamepadAxisHorID, int gamepadAxisVerID)
-        {
-            return new(GetGamepadAxis(gamepadAxisHorID), GetGamepadAxis(gamepadAxisVerID));
-        }
-        
-        
-        
-
-        public (string keyboard, string mouse, string gamepad) GetKeyNames(int id, bool shorthand = false)
-        {
-            if(conditions.ContainsKey(id)) return conditions[id].GetKeyNames(shorthand);
-            return ("", "", "");
+            return new();
         }
     }
+    
+    //IInputDevice interface?
+    //input device class -> keyboard/mouse/gamepad
+    //gamepad device supports vibration
+    //last used input device = cur input device
+    public class GamepadSlot
+    {
+        public int gamepadIndex = -1;
+        public bool disabled = false;
 
+        private List<GamepadVibration> gamepadVibrationStack = new();
+        public GamepadSlot(int gamepadIndex)
+        {
+            this.gamepadIndex = gamepadIndex;
+        }
+
+        public void AddVibration(float leftMotor, float rightMotor, float duration = -1f, string name = "default")
+        {
+            if (!InputHandler.IsGamepadConnected(gamepadIndex) || InputHandler.GAMEPAD_VIBRATION_STRENGTH <= 0f) return;
+            gamepadVibrationStack.Add(new(name, duration, leftMotor, rightMotor));
+        }
+        public void RemoveVibration(string name)
+        {
+            if (name == "" || gamepadVibrationStack.Count <= 0) return;
+            gamepadVibrationStack.RemoveAll(item => item.name == name);
+        }
+        public void StopVibration()
+        {
+            if (ShapeEngine.IsWindows()) XInput.SetVibration(gamepadIndex, 0f, 0f);
+
+            gamepadVibrationStack.Clear();
+        }
+        public void UpdateVibration(float dt)
+        {
+            if (InputHandler.IsGamepadConnected(gamepadIndex))
+            {
+                float maxLeftMotor = 0f;
+                float maxRightMotor = 0f;
+                for (int i = gamepadVibrationStack.Count - 1; i >= 0; i--)
+                {
+                    var stack = gamepadVibrationStack[i];
+                    if (stack.duration > 0)
+                    {
+                        if (stack.timer > 0)
+                        {
+                            stack.timer -= dt;
+                            maxLeftMotor += stack.leftMotor;
+                            maxRightMotor += stack.rightMotor;
+                        }
+                        else gamepadVibrationStack.RemoveAt(i);
+                    }
+                    else
+                    {
+                        maxLeftMotor += stack.leftMotor;
+                        maxRightMotor += stack.rightMotor;
+                    }
+                }
+
+                if (ShapeEngine.IsWindows())
+                    XInput.SetVibration(gamepadIndex, Clamp(maxLeftMotor * InputHandler.GAMEPAD_VIBRATION_STRENGTH, 0f, 1f), Clamp(maxRightMotor * InputHandler.GAMEPAD_VIBRATION_STRENGTH, 0f, 1f));
+            }
+        }
+    }
     public static class InputHandler2
     {
+        public static readonly int MAX_GAMEPADS = 8;
+
+
+        private static Dictionary<int, GamepadSlot> gamepadSlots = new();
+
+        public static float GAMEPAD_VIBRATION_STRENGTH = 1.0f;
+        private static List<int> connectedGamepads = new();
+        public static int CUR_GAMEPAD
+        {
+            get { return gamepadSlots[0].gamepadIndex; }
+            set { gamepadSlots[0].gamepadIndex = value; }
+        }
+        public static ref readonly List<int> GetConnectedGamepads() { return ref connectedGamepads; }
+        public static int GetConnectedGamepadCount() { return connectedGamepads.Count; }
+
+
+
+        private static InputType CUR_INPUT_TYPE = InputType.KEYBOARD_MOUSE;
+        public static InputType GetCurInputType() { return CUR_INPUT_TYPE; }
+
+        private static bool mouseUsed = false;
+        private static bool keyboardUsed = false;
+        private static bool keyboardOnlyMode = false;
+        public static int gamepadUsed = -1;
+
+        public static event Action<InputType>? OnInputChanged;
+        public delegate void GamepadConnectionChanged(int gamepad, bool connected, int curGamepad);
+        public static event GamepadConnectionChanged? OnGamepadConnectionChanged;
+
+
+        private static bool inputDisabled = false;
+        public static void DisableInput()
+        {
+            if (inputDisabled) return;
+            inputDisabled = true;
+            foreach (var slot in gamepadSlots.Keys)
+            {
+                StopVibration(slot);
+            }
+        }
+        public static void EnableInput()
+        {
+            if (!inputDisabled) return;
+            inputDisabled = false;
+        }
+
+        private static void OnInputTypeChanged(InputType newInputType)
+        {
+            //if (newInputType == InputType.KEYBOARD_MOUSE) { CursorHandler.Show(); }
+            //else { CursorHandler.Hide(); }
+            OnInputChanged?.Invoke(newInputType);
+        }
+        private static void OnControllerConnectionChanged(int gamepad, bool connected, int curGamepad)
+        {
+            if (!connected && gamepad == curGamepad) StopVibration(gamepad);
+            OnGamepadConnectionChanged?.Invoke(gamepad, connected, curGamepad);
+        }
+
+
+        public static void Initialize()
+        {
+            CUR_INPUT_TYPE = InputType.KEYBOARD_MOUSE;
+            for (int i = 0; i < MAX_GAMEPADS; i++)
+            {
+                if (IsGamepadAvailable(i)) AddGamepadSlot(i);
+            }
+            
+        }
+        public static void Update(float dt)
+        {
+            CheckGamepadConnection();
+            CheckInputType();
+
+            foreach (var inputSlot in gamepadSlots.Values)
+            {
+                inputSlot.UpdateVibration(dt);
+            }
+        }
+        public static void Close()
+        {
+            gamepadSlots.Clear();
+        }
+
+
+        public static void AddGamepadSlot(int gamepadIndex)
+        {
+            if (!gamepadSlots.ContainsKey(gamepadIndex)) gamepadSlots.Add(gamepadIndex, new(gamepadIndex));
+        }
+        public static void RemoveInputSlot(int gamepadIndex)
+        {
+            gamepadSlots.Remove(gamepadIndex);
+        }
+        public static void AddVibration(int gamepadIndex, float leftMotor, float rightMotor, float duration = -1f, string name = "default")
+        {
+            if (inputDisabled) return;
+            if (!gamepadSlots.ContainsKey(gamepadIndex)) return;
+            if (gamepadIndex == 0 && !IsGamepad()) return;
+
+            gamepadSlots[gamepadIndex].AddVibration(leftMotor, rightMotor, duration, name);
+
+        }
+        public static void RemoveVibration(int gamepadIndex, string name)
+        {
+            if (!gamepadSlots.ContainsKey(gamepadIndex)) return;
+            gamepadSlots[gamepadIndex].RemoveVibration(name);
+        }
+        public static void StopVibration(int gamepadIndex)
+        {
+            if (!gamepadSlots.ContainsKey(gamepadIndex)) return;
+            gamepadSlots[gamepadIndex].StopVibration();
+        }
+
+
+        public static bool IsMouse() { return mouseUsed && !keyboardOnlyMode; }
+        public static bool IsKeyboardOnlyMode() { return keyboardOnlyMode; }
+        public static bool IsKeyboard() { return keyboardUsed; }
+        public static bool IsKeyboardMouse() { return CUR_INPUT_TYPE == InputType.KEYBOARD_MOUSE; }
+        public static bool IsGamepad() { return CUR_INPUT_TYPE == InputType.GAMEPAD; }
+        public static bool IsTouch() { return CUR_INPUT_TYPE == InputType.TOUCH; }
+
+        private static void CheckGamepadConnection()
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                bool contains = connectedGamepads.Contains(i);
+                if (IsGamepadAvailable(i))
+                {
+                    if (!contains)
+                    {
+                        connectedGamepads.Add(i);
+                        OnControllerConnectionChanged(i, true, CUR_GAMEPAD);
+                        if (CUR_INPUT_TYPE != InputType.GAMEPAD)
+                        {
+                            CUR_INPUT_TYPE = InputType.GAMEPAD;
+                            OnInputTypeChanged(CUR_INPUT_TYPE);
+                        }
+                        if (gamepadSlots.Count == 1 && CUR_GAMEPAD < 0) CUR_GAMEPAD = i;
+                    }
+                }
+                else
+                {
+                    if (contains)
+                    {
+                        connectedGamepads.Remove(i);
+                        OnControllerConnectionChanged(i, false, CUR_GAMEPAD);
+
+                        if (gamepadSlots.Count == 1)
+                        {
+                            if (connectedGamepads.Count <= 0)
+                            {
+                                CUR_GAMEPAD = -1;
+                                if (CUR_INPUT_TYPE == InputType.GAMEPAD)
+                                {
+                                    CUR_INPUT_TYPE = InputType.KEYBOARD_MOUSE;
+                                    OnInputTypeChanged(CUR_INPUT_TYPE);
+                                }
+                            }
+                            else//other gamepads remaining
+                            {
+                                CUR_GAMEPAD = connectedGamepads[0];
+                                if (CUR_INPUT_TYPE == InputType.GAMEPAD)
+                                {
+                                    CUR_INPUT_TYPE = InputType.KEYBOARD_MOUSE;
+                                    OnInputTypeChanged(CUR_INPUT_TYPE);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (CUR_GAMEPAD == i) CUR_GAMEPAD = -1;
+                        }
+                    }
+                }
+            }
+
+            if (gamepadSlots.Count == 1)
+            {
+                gamepadUsed = GetGamepadUsed();
+                if (gamepadUsed >= 0 && gamepadUsed != CUR_GAMEPAD)
+                {
+                    if (ShapeEngine.IsWindows()) XInput.SetVibration(CUR_GAMEPAD, 0f, 0f);
+                    CUR_GAMEPAD = gamepadUsed;
+                    if (CUR_INPUT_TYPE != InputType.GAMEPAD)
+                    {
+                        CUR_INPUT_TYPE = InputType.GAMEPAD;
+                        OnInputTypeChanged(CUR_INPUT_TYPE);
+                    }
+                }
+            }
+        }
+        private static void CheckInputType()
+        {
+            mouseUsed = false;
+            keyboardUsed = false;
+            //check if new input type was used and raise event
+            switch (CUR_INPUT_TYPE)
+            {
+                case InputType.KEYBOARD_MOUSE:
+
+                    if (WasAnyGamepadUsed())
+                    {
+                        CUR_INPUT_TYPE = InputType.GAMEPAD;
+                        OnInputTypeChanged(CUR_INPUT_TYPE);
+                    }
+                    else if (WasTouchUsed())
+                    {
+                        CUR_INPUT_TYPE = InputType.TOUCH;
+                        OnInputTypeChanged(CUR_INPUT_TYPE);
+                    }
+                    else
+                    {
+                        mouseUsed = WasMouseUsed();
+                        keyboardUsed = WasKeyboardUsed();
+                    }
+                    break;
+
+                case InputType.GAMEPAD:
+                    mouseUsed = WasMouseUsed();
+                    keyboardUsed = WasKeyboardUsed();
+                    if (mouseUsed || keyboardUsed)
+                    {
+                        StopVibration(0);
+                        CUR_INPUT_TYPE = InputType.KEYBOARD_MOUSE;
+                        OnInputTypeChanged(CUR_INPUT_TYPE);
+                    }
+                    else if (WasTouchUsed())
+                    {
+                        StopVibration(0);
+                        CUR_INPUT_TYPE = InputType.TOUCH;
+                        OnInputTypeChanged(CUR_INPUT_TYPE);
+                    }
+                    break;
+
+                case InputType.TOUCH:
+                    mouseUsed = WasMouseUsed();
+                    keyboardUsed = WasKeyboardUsed();
+                    if (mouseUsed || keyboardUsed)
+                    {
+                        CUR_INPUT_TYPE = InputType.KEYBOARD_MOUSE;
+                        OnInputTypeChanged(CUR_INPUT_TYPE);
+                    }
+                    else if (WasAnyGamepadUsed())
+                    {
+                        CUR_INPUT_TYPE = InputType.GAMEPAD;
+                        OnInputTypeChanged(CUR_INPUT_TYPE);
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+
+        }
+
+        private static bool WasKeyboardUsed()
+        {
+            return GetKeyPressed() > 0;
+        }
+        private static bool WasMouseUsed()
+        {
+            bool mouseMovement = Vector2LengthSqr(GetMouseMovement()) > 0.0f;
+            if (mouseMovement) return true;
+
+            bool wheelMovement = MathF.Abs(GetMouseWheelMovement()) > 0;
+            if (wheelMovement) return true;
+
+            bool mouseButton =
+                IsMouseButtonDown(MouseButton.MOUSE_BUTTON_LEFT) ||
+                IsMouseButtonDown(MouseButton.MOUSE_BUTTON_RIGHT) ||
+                IsMouseButtonDown(MouseButton.MOUSE_BUTTON_MIDDLE) ||
+                IsMouseButtonDown(MouseButton.MOUSE_BUTTON_SIDE) ||
+                IsMouseButtonDown(MouseButton.MOUSE_BUTTON_EXTRA) ||
+                IsMouseButtonDown(MouseButton.MOUSE_BUTTON_FORWARD) ||
+                IsMouseButtonDown(MouseButton.MOUSE_BUTTON_BACK);
+
+            return mouseButton;
+        }
+
+        private static int GetGamepadUsed()
+        {
+            if (connectedGamepads.Count <= 0) return -1;
+            foreach (int gamepad in connectedGamepads)
+            {
+                //if (gamepad == CUR_GAMEPAD) continue;
+                if (CheckGamepadUsed(gamepad)) return gamepad;
+            }
+            return -1; // CUR_GAMEPAD;
+        }
+        private static bool CheckGamepadUsed(int gamepad)
+        {
+            if (!IsGamepadConnected(gamepad)) return false;
+
+            if (GetGamepadButton(gamepad)) return true;
+
+            bool axis =
+                Vector2LengthSqr(GetGamepadAxisLeft(gamepad, 0.5f, false)) > 0.0f ||
+                Vector2LengthSqr(GetGamepadAxisRight(gamepad, 0.5f, false)) > 0.0f ||
+                GetGamepadLeftTrigger(gamepad, 0.5f, false) > 0.0f ||
+                GetGamepadRightTrigger(gamepad, 0.5f, false) > 0.0f;
+            return axis;
+        }
+        private static bool WasAnyGamepadUsed()
+        {
+            return gamepadUsed >= 0;
+        }
+        private static bool WasTouchUsed()
+        {
+            return GetTouchPointCount() > 0;
+        }
+        public static bool IsGamepadConnected(int gamepadIndex)
+        {
+            return connectedGamepads.Contains(gamepadIndex);
+        }
+        public static bool IsCurGamepadConnected()
+        {
+            return connectedGamepads.Contains(CUR_GAMEPAD);
+        }
+
+        public static bool GetGamepadButton(int gamepad)
+        {
+            foreach (var button in Enum.GetValues(typeof(GamepadButton)).Cast<int>())
+            {
+                if (IsGamepadButtonDown(gamepad, button)) return true;
+            }
+            return false;
+        }
+        public static Vector2 GetGamepadAxisLeft(int gamepad, float deadzone = 0.25f, bool normalized = false)
+        {
+            if (inputDisabled) return new(0f);
+            if (!IsGamepadConnected(gamepad)) return new(0.0f, 0.0f);
+
+            Vector2 axis = new Vector2(
+                GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_X),
+                GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_Y));
+
+            if (Vector2LengthSqr(axis) < deadzone * deadzone) return new(0.0f, 0.0f);
+
+            if (normalized) return Vector2Normalize(axis);
+            return axis;
+        }
+        public static Vector2 GetGamepadAxisRight(int gamepad, float deadzone = 0.25f, bool normalized = false)
+        {
+            if (inputDisabled) return new(0f);
+            if (!IsGamepadConnected(gamepad)) return new(0.0f, 0.0f);
+
+            Vector2 axis = new Vector2(
+                GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_X),
+                GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_Y));
+
+            if (Vector2LengthSqr(axis) < deadzone * deadzone) return new(0.0f, 0.0f);
+
+            if (normalized) return Vector2Normalize(axis);
+            return axis;
+        }
+        public static float GetGamepadLeftTrigger(int gamepad, float deadzone = 0.25f, bool inverted = false)
+        {
+            if (inputDisabled) return inverted ? 1f : 0f;
+            if (!IsGamepadConnected(gamepad))
+            {
+                if (inverted) return 1.0f;
+                return 0.0f;
+            }
+            //raylib axis goes from -1 to 1 -> converted to 0 to 1
+            float axis = (GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_TRIGGER) + 1.0f) * 0.5f;
+            if (MathF.Abs(axis) < deadzone)
+            {
+                if (inverted) return 1.0f;
+                return 0.0f;
+            }
+
+            if (inverted) return 1.0f - axis;
+            return axis;
+        }
+        public static float GetGamepadRightTrigger(int gamepad, float deadzone = 0.25f, bool inverted = false)
+        {
+            if (inputDisabled) return inverted ? 1f : 0f;
+            if (!IsGamepadConnected(gamepad))
+            {
+                if (inverted) return 1.0f;
+                return 0.0f;
+            }
+            //raylib axis goes from -1 to 1 -> converted to 0 to 1
+            float axis = (GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_TRIGGER) + 1.0f) * 0.5f;
+            if (MathF.Abs(axis) < deadzone)
+            {
+                if (inverted) return 1.0f;
+                return 0.0f;
+            }
+
+            if (inverted) return 1.0f - axis;
+            return axis;
+        }
+
+
+        public static Vector2 GetMouseMovement(float deadzone = 5.0f, bool normalized = false)
+        {
+            var movement = GetMouseDelta();
+            if (Vector2LengthSqr(movement) < deadzone * deadzone) return new(0.0f, 0.0f);
+            if (normalized) return Vector2Normalize(movement);
+            return movement;
+        }
+        public static float GetMouseWheelMovement(bool inverted = false)
+        {
+            float movement = GetMouseWheelMove();
+
+            if (inverted) return -movement;
+            return movement;
+        }
+        public static Vector2 GetMouseWheelMovementV(bool inverted = false)
+        {
+            Vector2 movement = GetMouseWheelMoveV();
+
+            if (inverted) return -movement;
+            return movement;
+        }
+
 
     }
 

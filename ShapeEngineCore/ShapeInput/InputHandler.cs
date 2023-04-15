@@ -156,35 +156,10 @@ namespace ShapeInput
         private static Dictionary<int, InputMap> inputMaps = new();
         //private static bool disabled = false;
         public const int INPUTMAP_Basic = 100;
-        
-        //public const int UI_Select = 10;
-        //public const int UI_SelectMouse = 11;
-        //public const int UI_Cancel = 12;
-        //public const int UI_CancelMouse = 13;
-        //public const int UI_Up = 14;
-        //public const int UI_Down = 15;
-        //public const int UI_Left = 16;
-        //public const int UI_Right = 17;
-        //
-        //
-        //public static readonly List<InputAction> UI_Default_InputActions = new()
-        //{
-        //    {new(UI_SelectMouse, InputAction.Keys.MB_LEFT) },
-        //    {new(UI_Select, InputAction.Keys.SPACE, InputAction.Keys.GP_BUTTON_RIGHT_FACE_DOWN) },
-        //    {new(UI_Cancel, InputAction.Keys.ESCAPE, InputAction.Keys.GP_BUTTON_RIGHT_FACE_RIGHT) },
-        //    {new(UI_CancelMouse, InputAction.Keys.MB_RIGHT) },
-        //    {new(UI_Up, InputAction.Keys.W, InputAction.Keys.UP, InputAction.Keys.GP_BUTTON_LEFT_FACE_UP) },
-        //    {new(UI_Right,InputAction.Keys.D, InputAction.Keys.RIGHT, InputAction.Keys.GP_BUTTON_LEFT_FACE_RIGHT) },
-        //    {new(UI_Down, InputAction.Keys.S, InputAction.Keys.DOWN, InputAction.Keys.GP_BUTTON_LEFT_FACE_DOWN) },
-        //    {new(UI_Left,InputAction.Keys.A, InputAction.Keys.LEFT, InputAction.Keys.GP_BUTTON_LEFT_FACE_LEFT) },
-        //};
-
 
 
 
         public static float GAMEPAD_VIBRATION_STRENGTH = 1.0f;
-
-        //private static int CUR_GAMEPAD = -1;
         private static List<int> connectedGamepads = new();
         public static int CUR_GAMEPAD {
             get { return inputSlots[0].gamepadIndex; }
@@ -201,24 +176,11 @@ namespace ShapeInput
         private static bool keyboardUsed = false;
         private static bool keyboardOnlyMode = false;
         public static int gamepadUsed = -1;
-        //STATIC EVENT!!! - everything that subscribes to a static event must unsubscribe before deletion, otherwise memory leaks can happen
-        //garbage collector can not collect anything that is subscribed to a static event!!!
-        
-        //public delegate void InputChanged(InputType newType);
-        public static event Action<InputType>? OnInputChanged;
 
+        public static event Action<InputType>? OnInputChanged;
         public delegate void GamepadConnectionChanged(int gamepad, bool connected, int curGamepad);
         public static event GamepadConnectionChanged? OnGamepadConnectionChanged;
 
-        //public static OperatingSystem OS { get; private set; } = System.Environment.OSVersion;
-        //public static bool IsLinux { get; private set; } = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
-       
-        //public static KeyboardKey quitKey = KeyboardKey.KEY_ESCAPE;
-        //public static bool QuitPressed()
-        //{
-        //    if(disabled) return false;
-        //    return IsKeyDown(quitKey);
-        //}
 
         private static bool inputDisabled = false;
         public static void DisableInput()
