@@ -21,12 +21,12 @@ namespace ShapeEngineDemo
             this.DisabledSelection = false;
         }
 
-        protected override bool CheckPressed() { return InputHandler.IsDown(0, InputIDs.UI_Pressed); }
-        protected override bool CheckMousePressed() { return InputHandler.IsDown(0, InputIDs.UI_MousePressed); }
+        protected override bool CheckPressed() { return Demo.INPUT.GetActionState(InputIDs.UI_Pressed).down; }
+        protected override bool CheckMousePressed() { return Demo.INPUT.GetActionState(InputIDs.UI_MousePressed).down; }
         protected override bool CheckShortcutPressed()
         {
             if (shortcutID < 0) return false;
-            else return InputHandler.IsDown(0, shortcutID);
+            else return Demo.INPUT.GetActionState(shortcutID).down;
         }
         public override void Draw()
         {
@@ -105,8 +105,8 @@ namespace ShapeEngineDemo
             buttonContainer.Update(dt, GAMELOOP.MOUSE_POS_UI);
 
             UINeighbors.NeighborDirection dir = UINeighbors.NeighborDirection.NONE;
-            if (InputHandler.IsDown(0, InputIDs.UI_Down)) dir = UINeighbors.NeighborDirection.BOTTOM;
-            else if (InputHandler.IsDown(0, InputIDs.UI_Up)) dir = UINeighbors.NeighborDirection.TOP;
+            if (Demo.INPUT.GetActionState(InputIDs.UI_Down).down) dir = UINeighbors.NeighborDirection.BOTTOM;
+            else if (Demo.INPUT.GetActionState(InputIDs.UI_Up).down) dir = UINeighbors.NeighborDirection.TOP;
             //else if (InputHandler.IsDown(0, InputIDs.UI_Left))  dir = UINeighbors.NeighborDirection.LEFT;
             //else if (InputHandler.IsDown(0, InputIDs.UI_Right))  dir = UINeighbors.NeighborDirection.RIGHT;
             buttonContainer.Navigate(dir);

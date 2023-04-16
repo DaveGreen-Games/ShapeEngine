@@ -1,7 +1,132 @@
-﻿using Raylib_CsLo;
-
+﻿
 namespace ShapeInput
 {
+    public struct InputActionState
+    {
+        public bool down = false;
+        public bool up = true;
+        public bool released = false;
+        public bool pressed = false;
+        public float axisValue = 0f;
+
+        public InputActionState() { }
+        public InputActionState(bool down, bool up, bool released, bool pressed, float axisValue)
+        {
+            this.down = down;
+            this.up = up;
+            this.released = released;
+            this.pressed = pressed;
+            this.axisValue = axisValue;
+        }
+
+        public static InputActionState Generate(InputActionState state, bool down, bool up, float axis)
+        {
+            bool released = state.down && up;
+            bool pressed = state.up && down;
+
+            return new InputActionState(down, up, released, pressed, axis);
+        }
+    }
+
+    public class InputAction
+    {
+        public event Action<bool, bool>? WasUsed;
+        public int ID { get; protected set; } = -1;
+        private List<IInputType> inputs = new();
+        private bool gamepadUsed = false;
+        private bool keyboardUsed = false;
+        public InputActionState State { get; protected set; } = new();
+
+        public InputAction(int id, params IInputType[] inputs)
+        {
+            this.inputs = inputs.ToList();
+            this.ID = id;
+        }
+
+        public InputAction Copy()
+        {
+            IInputType[] copy = new IInputType[inputs.Count];
+            for (int i = 0; i < copy.Length; i++)
+            {
+                copy[i] = inputs[i].Copy();
+            }
+            return new(ID, copy);
+        }
+        public void Update(int slot, float dt)
+        {
+            bool gpUsed = false;
+            bool kbUsed = false;
+
+            bool down = false;
+            bool up = true;
+            float axis = 0f;
+            foreach (var input in inputs)
+            {
+                var state = input.GetState(slot);
+                axis += state.axis;
+                down = down || state.down;
+                up = up && state.up;
+
+                if (state.down || state.axis != 0f)
+                {
+                    if (input.IsGamepad()) gpUsed = true;
+                    else kbUsed = true;
+                }
+            }
+
+            axis = Clamp(axis, -1f, 1f);
+
+            State = InputActionState.Generate(State, down, up, axis);
+
+            if (kbUsed)
+            {
+                gamepadUsed = false;
+                if (!keyboardUsed)
+                {
+                    keyboardUsed = true;
+                    WasUsed?.Invoke(true, false);
+                }
+            }
+            else if (gpUsed)
+            {
+                keyboardUsed = false;
+                if (!gamepadUsed)
+                {
+                    gamepadUsed = true;
+                    WasUsed?.Invoke(false, true);
+                }
+            }
+        }
+        public string GetInputName(bool gamepad, bool shorthand = true)
+        {
+            foreach (var input in inputs)
+            {
+                if (input.IsGamepad() == gamepad) return input.GetName(shorthand);
+            }
+            return "";
+        }
+        public void Replace(params IInputType[] newInputs)
+        {
+            State = new();
+            inputs = newInputs.ToList();
+        }
+        public bool ChangeInput(int index, IInputType newInput)
+        {
+            if (index >= 0 && index < inputs.Count)
+            {
+                if (!inputs.Contains(newInput))
+                {
+                    inputs[index] = newInput;
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+}
+
+/*
     public class InputAction
     {
         public enum Keys
@@ -594,5 +719,4 @@ namespace ShapeInput
         }
     
     }
-
-}
+    */

@@ -83,7 +83,7 @@ namespace ShapeEngineDemo
         public override void Draw()
         {
             Vector2 center = GetPos(new(0.5f));
-            string text = InputHandler.GetInputActionKeyNames(0, inputActionID, true).keyboard;
+            string text = Demo.INPUT.GetInputName(inputActionID, true);
             float r = GetSize().X;
             float thickness = r * 0.25f;
             if(bgColor.a > 0) DrawCircleV(center, r, bgColor);

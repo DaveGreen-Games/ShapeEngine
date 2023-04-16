@@ -31,6 +31,7 @@ namespace ShapeEngineDemo
         public static DelegateTimerHandler TIMER = new();
         public static AchievementHandler ACHIEVEMENTS = new();
         public static PaletteHandler PALETTES = new();
+        public static InputMap INPUT = new(0, 0);
         public const int SHADER_CRT = 0;
         public const int BUS_SOUND = 1;
         public const int BUS_MUSIC = 2;
@@ -186,7 +187,7 @@ namespace ShapeEngineDemo
             AUDIO.SFXAdd(SoundIDs.PROJECTILE_Crit, projectileCrit, 0.6f,            1f, AudioHandler.BUS_MASTER, BUS_SOUND);
             AUDIO.SFXAdd(SoundIDs.PROJECTILE_Shoot, bullet, 0.25f,                  1f, AudioHandler.BUS_MASTER, BUS_SOUND);
             AUDIO.SFXAdd(SoundIDs.ASTEROID_Die, asteroidDie, 0.55f,                 1f, AudioHandler.BUS_MASTER, BUS_SOUND);
-            
+
 
 
             //MUSIC EXAMPLE--------------
@@ -201,44 +202,44 @@ namespace ShapeEngineDemo
             //----------------------------------
 
 
-            
+
 
 
             //INPUT
-            InputAction iaQuit =                    new(InputIDs.OPTIONS_Quit, InputAction.Keys.ESCAPE);
-            InputAction iaFullscreen =              new(InputIDs.OPTIONS_Fullscreen, InputAction.Keys.F);
-            InputAction rotateLeft =                new(InputIDs.PLAYER_RotateLeft, InputAction.Keys.A, InputAction.Keys.GP_BUTTON_LEFT_FACE_LEFT);
-            InputAction rotateRight =               new(InputIDs.PLAYER_RotateRight, InputAction.Keys.D, InputAction.Keys.GP_BUTTON_LEFT_FACE_RIGHT);
-            InputAction rotate =                    new(InputIDs.PLAYER_Rotate, 0.25f, InputAction.Keys.GP_AXIS_LEFT_X);
-            InputAction boostInput =                new(InputIDs.PLAYER_Boost, InputAction.Keys.W, InputAction.Keys.GP_BUTTON_LEFT_FACE_UP, InputAction.Keys.GP_BUTTON_LEFT_TRIGGER_BOTTOM);
-            InputAction slowInput =                 new(InputIDs.PLAYER_Slow, InputAction.Keys.S, InputAction.Keys.GP_BUTTON_LEFT_FACE_DOWN, InputAction.Keys.GP_BUTTON_LEFT_TRIGGER_TOP);
-            InputAction cycleGunSetup =             new(InputIDs.PLAYER_CycleGuns, InputAction.Keys.ONE, InputAction.Keys.GP_BUTTON_RIGHT_FACE_UP);
-            InputAction shootFixed =                new(InputIDs.PLAYER_Shoot, InputAction.Keys.J, InputAction.Keys.SPACE, InputAction.Keys.GP_BUTTON_RIGHT_TRIGGER_BOTTOM, InputAction.Keys.MB_LEFT);
-            InputAction dropAimPoint =              new(InputIDs.PLAYER_DropAimPoint,  InputAction.Keys.K, InputAction.Keys.GP_BUTTON_RIGHT_TRIGGER_TOP);
+            InputAction iaQuit = new(InputIDs.OPTIONS_Quit, IInputType.Create(SKeyboardButton.ESCAPE));//, IInputType.Create(SGamepadButton.MIDDLE_RIGHT));
+            InputAction iaFullscreen =              new(InputIDs.OPTIONS_Fullscreen, IInputType.Create(SKeyboardButton.F), IInputType.Create(SGamepadButton.MIDDLE_LEFT));
+            InputAction rotateLeft =                new(InputIDs.PLAYER_RotateLeft, IInputType.Create(SKeyboardButton.A), IInputType.Create(SGamepadButton.LEFT_STICK_LEFT));
+            InputAction rotateRight =               new(InputIDs.PLAYER_RotateRight, IInputType.Create(SKeyboardButton.D), IInputType.Create(SGamepadButton.LEFT_STICK_RIGHT));
+            InputAction rotate =                    new(InputIDs.PLAYER_Rotate, IInputType.Create(SKeyboardButton.A, SKeyboardButton.D), IInputType.Create(SGamepadAxis.LEFT_X, 0.25f));
+            InputAction boostInput =                new(InputIDs.PLAYER_Boost, IInputType.Create(SKeyboardButton.W), IInputType.Create(SGamepadButton.RIGHT_TRIGGER_TOP));
+            InputAction slowInput =                 new(InputIDs.PLAYER_Slow, IInputType.Create(SKeyboardButton.S), IInputType.Create(SGamepadButton.LEFT_TRIGGER_TOP));
+            InputAction cycleGunSetup =             new(InputIDs.PLAYER_CycleGuns, IInputType.Create(SMouseButton.RIGHT), IInputType.Create(SKeyboardButton.Q), IInputType.Create(SGamepadButton.RIGHT_FACE_UP));
+            InputAction shootFixed =                new(InputIDs.PLAYER_Shoot, IInputType.Create(SMouseButton.LEFT), IInputType.Create(SKeyboardButton.SPACE), IInputType.Create(SGamepadButton.RIGHT_TRIGGER_BOTTOM));
+            InputAction dropAimPoint =              new(InputIDs.PLAYER_DropAimPoint, IInputType.Create(SKeyboardButton.E), IInputType.Create(SGamepadButton.RIGHT_FACE_LEFT));
 
-            InputAction cycleResolutionsDebug =     new(InputIDs.OPTIONS_CycleRes, InputAction.Keys.RIGHT);
-            InputAction nextMonitorDebug =          new(InputIDs.OPTIONS_NextMonitor, InputAction.Keys.LEFT);
-            InputAction toggleVsyncDebug =          new(InputIDs.OPTIONS_Vsync, InputAction.Keys.V);
-            InputAction cycleFramerateLimitDebug =  new(InputIDs.OPTIONS_CycleFrameRateLimit, InputAction.Keys.UP);
+            InputAction cycleResolutionsDebug =     new(InputIDs.OPTIONS_CycleRes, IInputType.Create(SKeyboardButton.UP));
+            InputAction nextMonitorDebug =          new(InputIDs.OPTIONS_NextMonitor, IInputType.Create(SKeyboardButton.RIGHT));
+            InputAction toggleVsyncDebug =          new(InputIDs.OPTIONS_Vsync, IInputType.Create(SKeyboardButton.DOWN));
+            InputAction cycleFramerateLimitDebug =  new(InputIDs.OPTIONS_CycleFrameRateLimit, IInputType.Create(SKeyboardButton.LEFT));
 
-            InputAction pause =                     new(InputIDs.GAME_Pause, InputAction.Keys.P);
-            InputAction slowTime =                  new(InputIDs.GAME_SlowTime, InputAction.Keys.LEFT_ALT);
+            InputAction pause =                     new(InputIDs.GAME_Pause, IInputType.Create(SKeyboardButton.P), IInputType.Create(SGamepadButton.MIDDLE_RIGHT));
+            InputAction slowTime =                  new(InputIDs.GAME_SlowTime, IInputType.Create(SKeyboardButton.LEFT_ALT), IInputType.Create(SGamepadButton.LEFT_THUMB));
             
-            InputAction healPlayerDebug =           new(InputIDs.DEBUG_HealPlayer,InputAction.Keys.H);
-            InputAction spawnAsteroidDebug =        new(InputIDs.DEBUG_SpawnAsteroid, InputAction.Keys.G);
-            InputAction toggleDrawHelpersDebug =    new(InputIDs.DEBUG_ToggleDrawHelpers, InputAction.Keys.EIGHT);
-            InputAction toggleDrawCollidersDebug =  new(InputIDs.DEBUG_ToggleDrawColliders, InputAction.Keys.NINE);
-            InputAction cycleZoomDebug =            new(InputIDs.DEBUG_CycleZoom, InputAction.Keys.ZERO);
+            InputAction healPlayerDebug =           new(InputIDs.DEBUG_HealPlayer, IInputType.Create(SKeyboardButton.H));
+            InputAction spawnAsteroidDebug =        new(InputIDs.DEBUG_SpawnAsteroid, IInputType.Create(SKeyboardButton.G));
+            InputAction toggleDrawHelpersDebug =    new(InputIDs.DEBUG_ToggleDrawHelpers, IInputType.Create(SKeyboardButton.EIGHT));
+            InputAction toggleDrawCollidersDebug =  new(InputIDs.DEBUG_ToggleDrawColliders, IInputType.Create(SKeyboardButton.NINE));
+            InputAction cycleZoomDebug =            new(InputIDs.DEBUG_CycleZoom, IInputType.Create(SKeyboardButton.ZERO));
 
-            InputAction uiPressed = new(InputIDs.UI_Pressed, InputAction.Keys.SPACE, InputAction.Keys.ENTER);
-            InputAction uiMousePressed = new(InputIDs.UI_MousePressed, InputAction.Keys.MB_LEFT);
-            InputAction uiCancel = new(InputIDs.UI_Cancel, InputAction.Keys.ESCAPE);
-            InputAction uiDown = new(InputIDs.UI_Down, InputAction.Keys.S);
-            InputAction uiUp = new(InputIDs.UI_Up, InputAction.Keys.W);
-            InputAction uiLeft = new(InputIDs.UI_Left, InputAction.Keys.A);
-            InputAction uiRight = new(InputIDs.UI_Right, InputAction.Keys.D);
+            InputAction uiPressed = new(InputIDs.UI_Pressed, IInputType.Create(SKeyboardButton.SPACE), IInputType.Create(SGamepadButton.RIGHT_FACE_DOWN));
+            InputAction uiMousePressed = new(InputIDs.UI_MousePressed, IInputType.Create(SMouseButton.LEFT));
+            InputAction uiCancel = new(InputIDs.UI_Cancel, IInputType.Create(SKeyboardButton.ESCAPE), IInputType.Create(SGamepadButton.RIGHT_FACE_RIGHT));
+            InputAction uiDown = new(InputIDs.UI_Down, IInputType.Create(SKeyboardButton.S), IInputType.Create(SGamepadButton.LEFT_FACE_DOWN));
+            InputAction uiUp = new(InputIDs.UI_Up, IInputType.Create(SKeyboardButton.W), IInputType.Create(SGamepadButton.LEFT_FACE_UP));
+            InputAction uiLeft = new(InputIDs.UI_Left, IInputType.Create(SKeyboardButton.A), IInputType.Create(SGamepadButton.LEFT_FACE_LEFT));
+            InputAction uiRight = new(InputIDs.UI_Right, IInputType.Create(SKeyboardButton.D), IInputType.Create(SGamepadButton.LEFT_FACE_RIGHT));
 
-            InputMap inputMap = new(InputIDs.INPUTMAP_Default, "Default",
+            INPUT.SetInputActions(
                 iaQuit, iaFullscreen, 
                 rotateLeft, rotateRight, rotate, 
                 boostInput, slowInput, 
@@ -249,10 +250,6 @@ namespace ShapeEngineDemo
 
                 uiPressed, uiMousePressed, uiCancel, uiDown, uiUp, uiLeft, uiRight
                 );
-            //inputMap.AddActions(InputHandler.UI_Default_InputActions);
-            InputHandler.AddInputMap(inputMap);
-            InputHandler.SwitchToMap(InputIDs.INPUTMAP_Default, 0);
-
 
             ScreenHandler.OnWindowSizeChanged += OnWindowSizeChanged;
             ScreenHandler.CAMERA.BaseZoom = 1.5f;
@@ -278,7 +275,7 @@ namespace ShapeEngineDemo
             CURSOR.Switch("ui");
             CURSOR.Hide();
 
-            InputHandler.OnInputChanged += OnInputTypeChanged;
+            INPUT.OnInputTypeChanged += OnInputTypeChanged;
             
             AddScene("splash", new SplashScreen());
             AddScene("mainmenu", new MainMenu());
@@ -300,15 +297,16 @@ namespace ShapeEngineDemo
             TIMER.Update(dt);
             ACHIEVEMENTS.Update(dt);
             AUDIO.Update(dt, ScreenHandler.CAMERA.RawPos);
+            INPUT.Update(dt);
         }
 
         public override void PreHandleInput()
         {
 
-            if (InputHandler.IsReleased(0, InputIDs.OPTIONS_Fullscreen)) { ScreenHandler.ToggleFullscreen(); }
-            if (InputHandler.IsReleased(0, InputIDs.OPTIONS_NextMonitor)) { ScreenHandler.NextMonitor(); }
-            if (InputHandler.IsReleased(0, InputIDs.OPTIONS_Vsync)) { ScreenHandler.ToggleVsync(); }
-            if (InputHandler.IsReleased(0, InputIDs.OPTIONS_CycleFrameRateLimit))
+            if (INPUT.GetActionState(InputIDs.OPTIONS_Fullscreen).released) { ScreenHandler.ToggleFullscreen(); }
+            if (INPUT.GetActionState(InputIDs.OPTIONS_NextMonitor).released) { ScreenHandler.NextMonitor(); }
+            if (INPUT.GetActionState(InputIDs.OPTIONS_Vsync).released) { ScreenHandler.ToggleVsync(); }
+            if (INPUT.GetActionState(InputIDs.OPTIONS_CycleFrameRateLimit).released)
             {
                 List<int> frameRateLimits = new List<int>() { 30, 60, 72, 90, 120, 144, 180, 240 };
                 curFrameRateLimitIndex += 1;
@@ -316,7 +314,7 @@ namespace ShapeEngineDemo
                 ScreenHandler.SetFrameRateLimit(frameRateLimits[curFrameRateLimitIndex]);
 
             }
-            if (InputHandler.IsReleased(0, InputIDs.OPTIONS_CycleRes) && !ScreenHandler.IsFullscreen())
+            if (INPUT.GetActionState(InputIDs.OPTIONS_CycleRes).released && !ScreenHandler.IsFullscreen())
             {
                 List<(int width, int height)> supportedResolutions = new()
                 {
@@ -354,15 +352,15 @@ namespace ShapeEngineDemo
             //ScreenHandler.SHADERS.SetScreenShaderValueFloat("blur", "renderHeight", h);
             //ScreenHandler.SHADERS.SetScreenShaderValueVec("bloom", "size", new float[] { w, h }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
         }
-        private static void OnInputTypeChanged(InputType newInputType)
+        private static void OnInputTypeChanged()
         {
-            if (newInputType == InputType.KEYBOARD_MOUSE) { CURSOR.Show(); }
-            else { CURSOR.Hide(); }
+            if (INPUT.IsGamepad) CURSOR.Hide();
+            else CURSOR.Show();
         }
         public override void End()
         {
             ScreenHandler.OnWindowSizeChanged -= OnWindowSizeChanged;
-            InputHandler.OnInputChanged -= OnInputTypeChanged;
+            INPUT.OnInputTypeChanged -= OnInputTypeChanged;
             RESOURCES.Close();
             AUDIO.Close();
             DATA.Close();

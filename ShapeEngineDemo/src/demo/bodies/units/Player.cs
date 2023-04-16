@@ -167,11 +167,11 @@ namespace ShapeEngineDemo.Bodies
         //}
         private void CheckInput()
         {
-            if (InputHandler.IsDown(0, fixedInputID))
+            if (Demo.INPUT.GetActionState(fixedInputID).down)
             {
                 Shoot();
             }
-            else if (InputHandler.IsReleased(0, fixedInputID))
+            else if (Demo.INPUT.GetActionState(fixedInputID).released)
             {
                 ReleaseTrigger();
             }
@@ -232,7 +232,7 @@ namespace ShapeEngineDemo.Bodies
         private bool playfieldCollision = false;
 
 
-        private InputActionWrapper healPlayerInput = new(2, 0.2f, 1f);
+        //private InputActionWrapper healPlayerInput = new(2, 0.2f, 1f);
         public Player(ArmoryInfo armoryInfo, string shipName = "default")
         {
             DrawOrder = 50;
@@ -390,7 +390,7 @@ namespace ShapeEngineDemo.Bodies
                 HitParticle particle = new(collider.Pos + SRNG.randVec2(1, stats.Get("size")), SRNG.randVec2(), 2f, 2f, Demo.PALETTES.C(ColorIDs.Player));
                 GAMELOOP.AddGameObject(particle);
             }
-            InputHandler.AddVibration(0, 0.5f, 0.5f, 1.5f);
+            Demo.INPUT.AddVibration(0.5f, 0.5f, 1.5f);
             ScreenHandler.CAMERA.AddCameraOrderChain("player died", false, new CameraOrder(5f, 1f, 2f));
         }
         public override void WasDamaged(DamageInfo info)
@@ -407,7 +407,7 @@ namespace ShapeEngineDemo.Bodies
                 HitParticle particle = new(info.pos, info.dir, 0.75f + f, 0.5f, particleColor);
                 GAMELOOP.AddGameObject(particle);
             }
-            InputHandler.AddVibration(0, 0f, 0.25f, 0.5f);
+            Demo.INPUT.AddVibration(0f, 0.25f, 0.5f);
             ScreenHandler.CAMERA.Shake(0.5f, new(20f, 20f), 1f, 0f, 0.75f);
             //ScreenHandler.Flash(0.3f, ColorPalette.Cur.enemy, BLANK, true);
             //ScreenHandler.FlashTint(0.3f, BLACK, false);
@@ -454,10 +454,10 @@ namespace ShapeEngineDemo.Bodies
             var prevStunned = IsStunned();
             base.Update(dt);
 
-            var healInput = healPlayerInput.Update(dt, InputHandler.IsPressed(0, InputIDs.DEBUG_HealPlayer), InputHandler.IsReleased(0, InputIDs.DEBUG_HealPlayer));
-            if (healInput.holdFinished) Heal(500, collider.Pos, this);
-            if(healInput.tapFinished) Heal(50, collider.Pos, this);
-
+            //var healInput = healPlayerInput.Update(dt, InputHandler.IsPressed(0, InputIDs.DEBUG_HealPlayer), InputHandler.IsReleased(0, InputIDs.DEBUG_HealPlayer));
+            //if (healInput.holdFinished) Heal(500, collider.Pos, this);
+            //if(healInput.tapFinished) Heal(50, collider.Pos, this);
+            if (Demo.INPUT.GetActionState(InputIDs.DEBUG_HealPlayer).released) Heal(50, collider.Pos, this);
 
             //if (InputHandler.IsReleased(0, "Heal Player")) Heal(RNG.randF(10, 35), collider.Pos, this);
             //if (InputHandler.GetHoldF(0, "Heal Player") == 0f) Heal(500, collider.Pos, this);
@@ -487,7 +487,7 @@ namespace ShapeEngineDemo.Bodies
             {
                 if (prevStunned) Demo.AUDIO.SFXPlay(SoundIDs.PLAYER_StunEnded);
 
-                if (InputHandler.IsReleased(0, InputIDs.PLAYER_DropAimPoint)) weaponSystem.DropAimPoint(collider.Pos);
+                if (Demo.INPUT.GetActionState(InputIDs.PLAYER_DropAimPoint).released) weaponSystem.DropAimPoint(collider.Pos);
                 //if (InputHandler.IsReleased("Drop Turrets")) weaponSystem.DropTurrets(collider.Pos);
 
                 energyCore.Update(dt);
@@ -510,35 +510,44 @@ namespace ShapeEngineDemo.Bodies
 
                 curMovement = PlayerMovement.NORMAL;
 
-
-                if (InputHandler.IsGamepad())
+                float gamepadRotation = Demo.INPUT.GetActionState(InputIDs.PLAYER_Rotate).axisValue;
+                float amount = gamepadRotation * gamepadRotation;
+                if (gamepadRotation > 0)
                 {
-                    float gamepadRotation = InputHandler.GetGamepadAxis(0, InputIDs.PLAYER_Rotate);
-                    float amount = gamepadRotation * gamepadRotation;
-                    if (gamepadRotation > 0)
-                    {
-                        MovementDir = SVec.Rotate(MovementDir, stats.Get("rotSpeed") * DEG2RAD * dt * amount);
-                    }
-                    else if (gamepadRotation < 0)
-                    {
-                        MovementDir = SVec.Rotate(MovementDir, -stats.Get("rotSpeed") * DEG2RAD * dt * amount);
-                    }
+                    MovementDir = SVec.Rotate(MovementDir, stats.Get("rotSpeed") * DEG2RAD * dt * amount);
                 }
-                else
+                else if (gamepadRotation < 0)
                 {
-                    if (InputHandler.IsDown(0, InputIDs.PLAYER_RotateLeft))
-                    {
-                        MovementDir = SVec.Rotate(MovementDir, -stats.Get("rotSpeed") * DEG2RAD * dt);
-                    }
-                    else if (InputHandler.IsDown(0, InputIDs.PLAYER_RotateRight))
-                    {
-                        MovementDir = SVec.Rotate(MovementDir, stats.Get("rotSpeed") * DEG2RAD * dt);
-                    }
+                    MovementDir = SVec.Rotate(MovementDir, -stats.Get("rotSpeed") * DEG2RAD * dt * amount);
                 }
+                //if (Demo.INPUT.IsGamepad)
+                //{
+                //    float gamepadRotation = InputHandler.GetGamepadAxis(0, InputIDs.PLAYER_Rotate);
+                //    float amount = gamepadRotation * gamepadRotation;
+                //    if (gamepadRotation > 0)
+                //    {
+                //        MovementDir = SVec.Rotate(MovementDir, stats.Get("rotSpeed") * DEG2RAD * dt * amount);
+                //    }
+                //    else if (gamepadRotation < 0)
+                //    {
+                //        MovementDir = SVec.Rotate(MovementDir, -stats.Get("rotSpeed") * DEG2RAD * dt * amount);
+                //    }
+                //}
+                //else
+                //{
+                //    if (InputHandler.IsDown(0, InputIDs.PLAYER_RotateLeft))
+                //    {
+                //        MovementDir = SVec.Rotate(MovementDir, -stats.Get("rotSpeed") * DEG2RAD * dt);
+                //    }
+                //    else if (InputHandler.IsDown(0, InputIDs.PLAYER_RotateRight))
+                //    {
+                //        MovementDir = SVec.Rotate(MovementDir, stats.Get("rotSpeed") * DEG2RAD * dt);
+                //    }
+                //}
 
 
                 float speed = stats.Get("maxSpeed");
-                if (InputHandler.IsDown(0, InputIDs.PLAYER_Boost) && CanBoost())
+                if (Demo.INPUT.GetActionState(InputIDs.PLAYER_Boost).down && CanBoost())
                 {
                     if (prevMovement != PlayerMovement.BOOST)
                     {
@@ -549,7 +558,7 @@ namespace ShapeEngineDemo.Bodies
                     speed *= stats.Get("boostF");
                     energyCore.Use(stats.Get("boostCost") * dt);
                 }
-                else if (InputHandler.IsDown(0, InputIDs.PLAYER_Slow) && CanSlow())
+                else if (Demo.INPUT.GetActionState(InputIDs.PLAYER_Slow).down && CanSlow())
                 {
                     if (prevMovement != PlayerMovement.SLOW)
                     {
@@ -743,20 +752,20 @@ namespace ShapeEngineDemo.Bodies
         private void SlowStarted()
         {
             slowPos = collider.Pos;
-            InputHandler.AddVibration(0, 0f, 0.05f, -1f, "slow");
+            Demo.INPUT.AddVibration(0f, 0.05f, -1f, "slow");
         }
         private void SlowEnded()
         {
-            InputHandler.RemoveVibration(0, "slow");
+            Demo.INPUT.RemoveVibration("slow");
         }
         private void BoostStarted()
         {
-            InputHandler.AddVibration(0, 0.1f, 0.05f, -1f, "boost");
+            Demo.INPUT.AddVibration(0.1f, 0.05f, -1f, "boost");
             ScreenHandler.CAMERA.AddCameraOrderChain("player boost", false, new CameraOrder(0.4f, 1f, 1.1f));
         }
         private void BoostEnded()
         {
-            InputHandler.RemoveVibration(0, "boost");
+            Demo.INPUT.RemoveVibration("boost");
             ScreenHandler.CAMERA.AddCameraOrderChain("player boost", true, new CameraOrder(0.4f, 1.1f, 1f));
         }
 

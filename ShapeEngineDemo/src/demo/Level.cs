@@ -219,20 +219,20 @@ namespace ShapeEngineDemo
         }
         public override void HandleInput()
         {
-            if (InputHandler.IsReleased(0, InputIDs.GAME_Pause)) TogglePause();
+            if (Demo.INPUT.GetActionState(InputIDs.GAME_Pause).released) TogglePause();
 
-            if (InputHandler.IsDown(0, InputIDs.GAME_SlowTime)) GAMELOOP.GetCurArea().UpdateSlowFactor = 0.05f;
-            else if (InputHandler.IsReleased(0, InputIDs.GAME_SlowTime)) GAMELOOP.GetCurArea().UpdateSlowFactor = 1f;
+            if (Demo.INPUT.GetActionState(InputIDs.GAME_SlowTime).down) GAMELOOP.GetCurArea().UpdateSlowFactor = 0.05f;
+            else if (Demo.INPUT.GetActionState(InputIDs.GAME_SlowTime).released) GAMELOOP.GetCurArea().UpdateSlowFactor = 1f;
             
-            if (InputHandler.IsReleased(0, InputIDs.UI_Cancel)) GAMELOOP.GoToScene("mainmenu");
+            if (Demo.INPUT.GetActionState(InputIDs.UI_Cancel).released) GAMELOOP.GoToScene("mainmenu");
 
-            if (!IsPaused() && InputHandler.IsReleased(0, InputIDs.DEBUG_SpawnAsteroid)) SpawnAsteroidDebug();
+            if (!IsPaused() && Demo.INPUT.GetActionState(InputIDs.DEBUG_SpawnAsteroid).released) SpawnAsteroidDebug();
 
             if (EDITORMODE)
             {
-                if (InputHandler.IsReleased(0, InputIDs.DEBUG_ToggleDrawHelpers)) DEBUG_DRAWHELPERS = !DEBUG_DRAWHELPERS;
-                if (InputHandler.IsReleased(0, InputIDs.DEBUG_ToggleDrawColliders)) DEBUG_DRAWCOLLIDERS = !DEBUG_DRAWCOLLIDERS;
-                if (InputHandler.IsReleased(0, InputIDs.DEBUG_CycleZoom))
+                if (Demo.INPUT.GetActionState(InputIDs.DEBUG_ToggleDrawHelpers).released) DEBUG_DRAWHELPERS = !DEBUG_DRAWHELPERS;
+                if (Demo.INPUT.GetActionState(InputIDs.DEBUG_ToggleDrawColliders).released) DEBUG_DRAWCOLLIDERS = !DEBUG_DRAWCOLLIDERS;
+                if (Demo.INPUT.GetActionState(InputIDs.DEBUG_CycleZoom).released)
                 {
                     ScreenHandler.CAMERA.ZoomBy(0.25f);
                     if (ScreenHandler.CAMERA.ZoomFactor > 2) ScreenHandler.CAMERA.ZoomFactor = 0.25f;
@@ -272,9 +272,9 @@ namespace ShapeEngineDemo
 
             Vector2 textSize = uiSize * new Vector2(0.25f, 0.04f);
             SDrawing.DrawTextAlignedPro(String.Format("Objs {0}", area.GetGameObjects().Count), uiSize * new Vector2(0.01f, 0.1f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(Demo.FONT_Medium), new(0, 0.5f));
-            SDrawing.DrawTextAlignedPro(String.Format("{0}", InputHandler.GetCurInputType()), uiSize * new Vector2(0.01f, 0.13f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(Demo.FONT_Medium), new(0, 0.5f));
-            SDrawing.DrawTextAlignedPro(String.Format("GP {0}/{1}", InputHandler.CUR_GAMEPAD, InputHandler.GetConnectedGamepadCount()), uiSize * new Vector2(0.01f, 0.16f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(Demo.FONT_Medium), new(0, 0.5f));
-            SDrawing.DrawTextAlignedPro(String.Format("Used {0}", InputHandler.gamepadUsed), uiSize * new Vector2(0.01f, 0.19f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(Demo.FONT_Medium), new(0, 0.5f));
+            //SDrawing.DrawTextAlignedPro(String.Format("{0}"), uiSize * new Vector2(0.01f, 0.13f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(Demo.FONT_Medium), new(0, 0.5f));
+            SDrawing.DrawTextAlignedPro(String.Format("Input is {0}", Demo.INPUT.IsGamepad ? "Gamepad" : "Keyboard/Mouse"), uiSize * new Vector2(0.01f, 0.16f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(Demo.FONT_Medium), new(0, 0.5f));
+            SDrawing.DrawTextAlignedPro(String.Format("Input GP Index {0}", Demo.INPUT.GamepadIndex), uiSize * new Vector2(0.01f, 0.19f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(Demo.FONT_Medium), new(0, 0.5f));
             
             SDrawing.DrawTextAlignedPro(String.Format("Kills {0}", Demo.ACHIEVEMENTS.GetStatValue("asteroidKills")), uiSize * new Vector2(0.01f, 0.25f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(Demo.FONT_Medium), new(0, 0.5f));
             

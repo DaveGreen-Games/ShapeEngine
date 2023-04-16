@@ -303,7 +303,7 @@ namespace ShapeCore
             ScreenHandler.Initialize(devWidth, devHeight, gameSizeFactor, uiSizeFactor, windowName, fixedTexture, pixelSmoothing, hideCursor);
             InitAudioDevice();
             //AudioHandler.Initialize();
-            InputHandler.Initialize();
+            //InputHandler.Initialize();
             
             
         }
@@ -314,7 +314,7 @@ namespace ShapeCore
             if (RESTART && fullscreen) ScreenHandler.ToggleFullscreen();
 
             ClearScenes();
-            InputHandler.Close();
+            ///InputHandler.Close();
             //AudioHandler.Close();
             //UIHandler.Close();
             ScreenHandler.Close();
@@ -356,7 +356,7 @@ namespace ShapeCore
         {
             if (CALL_GAMELOOP_UPDATE) PreUpdate(dt);
 
-            InputHandler.Update(dt);
+            //InputHandler.Update(dt);
             //AudioHandler.Update(dt);
             //UIHandler.Update(dt);
             ScreenHandler.Update(dt);

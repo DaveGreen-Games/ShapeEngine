@@ -1,4 +1,4 @@
-﻿
+﻿/*
 namespace ShapeInput
 {
     public class InputActionWrapper
@@ -122,22 +122,6 @@ namespace ShapeInput
 
             return (holdFinished, tapFinished);
         }
-
-        /*
-        public void Update(float dt)
-        {
-            pressed = InputHandler.IsPressed(playerSlot, inputAction);
-            released = InputHandler.IsReleased(playerSlot, inputAction);
-
-            
-        }
-        public void Update(float dt)
-        {
-            pressed = InputHandler.IsPressed(playerSlot, inputAction);
-            released = InputHandler.IsReleased(playerSlot, inputAction);
-
-            
-        }
-        */
     }
 }
+*/
