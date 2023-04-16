@@ -1,9 +1,6 @@
 ﻿
 using ShapeCore;
-using ShapeLib;
 using System.Numerics;
-using System.Reflection.Metadata.Ecma335;
-using System.Xml.Linq;
 using Vortice.XInput;
 
 namespace ShapeInput
@@ -1130,9 +1127,11 @@ namespace ShapeInput
 
     public class InputCondition
     {
+        public event Action<bool, bool>? WasUsed;
         public int ID { get; protected set; } = -1;
         private List<IInput> inputs = new();
-        
+        private bool gamepadUsed = false;
+        private bool keyboardUsed = false;
         public InputConditionState State { get; protected set; } = new();
 
         public InputCondition(int id, params IInput[] inputs)
@@ -1152,6 +1151,9 @@ namespace ShapeInput
         }
         public void Update(int slot, float dt)
         {
+            bool gpUsed = false;
+            bool kbUsed = false;
+
             bool down = false;
             bool up = true;
             float axis = 0f;
@@ -1161,10 +1163,36 @@ namespace ShapeInput
                 axis += state.axis;
                 down = down || state.down;
                 up = up && state.up;
+
+                if(state.down || state.axis != 0f)
+                {
+                    if (input.IsGamepad()) gpUsed = true;
+                    else kbUsed = true;
+                }
             }
+
             axis = Clamp(axis, -1f, 1f);
 
             State = InputConditionState.Generate(State, down, up, axis);
+
+            if (kbUsed)
+            {
+                gamepadUsed = false;
+                if (!keyboardUsed)
+                {
+                    keyboardUsed = true;
+                    WasUsed?.Invoke(true, false);
+                }
+            }
+            else if (gpUsed)
+            {
+                keyboardUsed = false;
+                if (!gamepadUsed)
+                {
+                    gamepadUsed = true;
+                    WasUsed?.Invoke(false, true);
+                }
+            }
         }
         public string GetInputName(bool gamepad, bool shorthand = true)
         {
@@ -1195,27 +1223,71 @@ namespace ShapeInput
 
     public class InputMap2
     {
+        public event Action? OnInputTypeChanged;
+        public event Action? OnGamepadConnectionChanged;
+        public event Action? OnGamepadIndexChanged;
+
+
         private Dictionary<int, InputCondition> conditions = new();
-        public int Slot { get; protected set; } = -1;
-        public int ID { get; protected set; } = -1;
+        private List<GamepadVibration> gamepadVibrationStack = new();
+        private List<int> connectedGamepads = new();
+
         public bool Disabled { get; set; } = false;
-        public InputMap2(int id, int slot, params InputCondition[] conditions)
+        public float VibrationStrength { get; set; } = 1.0f;
+        public int GamepadIndex { get; protected set; } = -1;
+        public int MaxGamepads { get; set; } = 4;
+        public int ID { get; protected set; } = -1;
+        /// <summary>
+        /// The input map is either using a gamepad or keyboard/mouse for input. If the gamepad index is bigger than 0 IsGamepad is always true. (only -1 / 0 index can be keyboard/mouse as well)
+        /// </summary>
+        public bool IsGamepad { get; protected set; } = false; //Input Type
+        public bool IsGamepadConnected { get; protected set; } = false;
+        private bool autoAssignGamepad = false;
+        
+        public InputMap2(int id, int gamepadIndex, params InputCondition[] conditions)
         {
             foreach (var condition in conditions)
             {
                 if (this.conditions.ContainsKey(condition.ID)) continue;
                 this.conditions.Add(condition.ID, condition);
+                condition.WasUsed += OnConditionUsed;
             }
-            this.Slot = slot;
+
+            GamepadSetup();
+            this.autoAssignGamepad = false;
+            this.GamepadIndex = gamepadIndex;
+            if (gamepadIndex < 0) IsGamepad = false;
+            else if (gamepadIndex > 0) IsGamepad = true;
+            this.IsGamepadConnected = CheckGamepad(this.GamepadIndex);
             this.ID = id;
         }
+        public InputMap2(int id, params InputCondition[] conditions)
+        {
+            foreach (var condition in conditions)
+            {
+                if (this.conditions.ContainsKey(condition.ID)) continue;
+                this.conditions.Add(condition.ID, condition);
+                condition.WasUsed += OnConditionUsed;
+            }
 
+            GamepadSetup();
+            this.autoAssignGamepad = true;
+            this.GamepadIndex = GetNextGamepad();
+            if (this.GamepadIndex < 0) IsGamepad = false;
+            this.IsGamepadConnected = CheckGamepad(this.GamepadIndex);
+            this.ID = id;
+        }
         public void Update(float dt)
         {
-            if(Disabled) return;
-            foreach (var condition in conditions.Values)
+            if (!Disabled)
             {
-                condition.Update(Slot, dt);
+                foreach (var condition in conditions.Values)
+                {
+                    condition.Update(GamepadIndex, dt);
+                }
+                CheckGamepadConnection();
+                CheckInputType();
+                UpdateVibration(dt);
             }
         }
         public InputConditionState GetConditionState(int id)
@@ -1226,8 +1298,173 @@ namespace ShapeInput
             }
             return new();
         }
+
+        public void AddVibration(float leftMotor, float rightMotor, float duration = -1f, string name = "default")
+        {
+            if(!Disabled && IsGamepad && IsGamepadConnected && VibrationStrength > 0f)
+            {
+                gamepadVibrationStack.Add(new(name, duration, leftMotor, rightMotor));
+            }
+        }
+        public void RemoveVibration(string name)
+        {
+            if (name == "" || gamepadVibrationStack.Count <= 0) return;
+            gamepadVibrationStack.RemoveAll(item => item.name == name);
+        }
+        public void StopVibration()
+        {
+            if (ShapeEngine.IsWindows()) XInput.SetVibration(GamepadIndex, 0f, 0f);
+
+            gamepadVibrationStack.Clear();
+        }
+        private void UpdateVibration(float dt)
+        {
+            if (IsGamepad && IsGamepadConnected)
+            {
+                float maxLeftMotor = 0f;
+                float maxRightMotor = 0f;
+                for (int i = gamepadVibrationStack.Count - 1; i >= 0; i--)
+                {
+                    var stack = gamepadVibrationStack[i];
+                    if (stack.duration > 0)
+                    {
+                        if (stack.timer > 0)
+                        {
+                            stack.timer -= dt;
+                            maxLeftMotor += stack.leftMotor;
+                            maxRightMotor += stack.rightMotor;
+                        }
+                        else gamepadVibrationStack.RemoveAt(i);
+                    }
+                    else
+                    {
+                        maxLeftMotor += stack.leftMotor;
+                        maxRightMotor += stack.rightMotor;
+                    }
+                }
+
+                if (ShapeEngine.IsWindows())
+                    XInput.SetVibration(GamepadIndex, Clamp(maxLeftMotor * VibrationStrength, 0f, 1f), Clamp(maxRightMotor * VibrationStrength, 0f, 1f));
+            }
+        }
+
+        private void GamepadSetup()
+        {
+            connectedGamepads.Clear();
+            for (int i = 0; i < MaxGamepads; i++)
+            {
+                if (IsGamepadAvailable(i)) connectedGamepads.Add(i);
+            }
+        }
+        private bool CheckGamepad(int gamepadIndex)
+        {
+            if (gamepadIndex < 0) return false;
+            else return connectedGamepads.Contains(gamepadIndex);
+        }
+        private int GetNextGamepad()
+        {
+            if (connectedGamepads.Count <= 0) return -1;
+            else return connectedGamepads[0];
+        }
+        private void CheckGamepadConnection()
+        {
+            for (int i = 0; i < MaxGamepads; i++)
+            {
+                bool contains = connectedGamepads.Contains(i);
+                if (IsGamepadAvailable(i))
+                {
+                    if (!contains)
+                    {
+                        connectedGamepads.Add(i);
+                    }
+                }
+                else
+                {
+                    if (contains)
+                    {
+                        connectedGamepads.Remove(i);
+                    }
+                }
+            }
+
+            bool prevIsGamepad = IsGamepad;
+            bool prevIsGamepadConnected = IsGamepadConnected;
+            int prevGamepadIndex = GamepadIndex;
+            if (autoAssignGamepad)
+            {
+                if (!connectedGamepads.Contains(GamepadIndex))
+                {
+                    GamepadIndex = GetNextGamepad();
+                }
+            }
+
+            IsGamepadConnected = CheckGamepad(GamepadIndex);
+            if(!IsGamepadConnected && GamepadIndex <= 0)
+            {
+                IsGamepad = false;
+            }
+
+            if (prevIsGamepad != IsGamepad) InputTypeChanged();
+            if (prevIsGamepadConnected != IsGamepadConnected) GamepadConnectionChanged();
+            if (prevGamepadIndex != GamepadIndex) GamepadIndexChanged();
+        }
+        private void CheckInputType()
+        {
+            if(GamepadIndex <= 0 || autoAssignGamepad)
+            {
+                if (IsGamepad)
+                {
+                    if (WasMouseMoved())
+                    {
+                        IsGamepad = false;
+                        InputTypeChanged();
+                    }
+                }
+            }
+        }
+        private void OnConditionUsed(bool keyboard, bool gamepad)
+        {
+            if (GamepadIndex <= 0 || autoAssignGamepad)
+            {
+                if (keyboard)
+                {
+                    if (IsGamepad)
+                    {
+                        IsGamepad = false;
+                        InputTypeChanged();
+                    }
+                }
+                else if (gamepad)
+                {
+                    if (!IsGamepad)
+                    {
+                        IsGamepad = true;
+                        InputTypeChanged();
+                    }
+                }
+            }
+        }
+        
+        private void GamepadConnectionChanged() { OnGamepadConnectionChanged?.Invoke(); }
+        private void GamepadIndexChanged() { OnGamepadIndexChanged?.Invoke(); }
+        private void InputTypeChanged() { OnInputTypeChanged?.Invoke(); }
+        
+        private bool WasMouseMoved()
+        {
+            bool mouseMovement = Vector2LengthSqr(GetMouseMovement()) > 0.0f;
+            if (mouseMovement) return true;
+            return false;
+        }
+        private Vector2 GetMouseMovement(float deadzone = 5.0f, bool normalized = false)
+        {
+            var movement = GetMouseDelta();
+            if (Vector2LengthSqr(movement) < deadzone * deadzone) return new(0.0f, 0.0f);
+            if (normalized) return Vector2Normalize(movement);
+            return movement;
+        }
+
     }
-    
+
     //IInputDevice interface?
     //input device class -> keyboard/mouse/gamepad
     //gamepad device supports vibration

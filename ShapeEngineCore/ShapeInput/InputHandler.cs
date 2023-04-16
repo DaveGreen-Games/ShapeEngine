@@ -149,6 +149,7 @@ namespace ShapeInput
                     XInput.SetVibration(gamepadIndex, Clamp(maxLeftMotor * InputHandler.GAMEPAD_VIBRATION_STRENGTH, 0f, 1f), Clamp(maxRightMotor * InputHandler.GAMEPAD_VIBRATION_STRENGTH, 0f, 1f));
             }
         }
+    
     }
     public static class InputHandler
     {
@@ -647,6 +648,7 @@ namespace ShapeInput
                 }
             }
         }
+        
         private static void CheckInputType()
         {
             mouseUsed = false;
