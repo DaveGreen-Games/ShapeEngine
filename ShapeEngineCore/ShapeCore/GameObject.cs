@@ -38,7 +38,7 @@ namespace ShapeCore
         public virtual void Start() { }
         public virtual void Destroy() { }
         public virtual void Draw() { }
-        public virtual void DrawUI(Vector2 uiSize, Vector2 stretchFactor) { }
+        public virtual void DrawUI(Vector2 uiSize) { }
         public virtual void Update(float dt) { }
         public virtual void OnPlayfield(bool inner, bool outer) { }
         //public virtual float Damage(float amount, Vector2 pos, GameObject dealer) { return 0; }

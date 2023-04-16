@@ -686,7 +686,7 @@ namespace ShapeEngineDemo.Bodies
             }
 
         }
-        public override void DrawUI(Vector2 uiSize, Vector2 stretchFactor)
+        public override void DrawUI(Vector2 uiSize)
         {
             if (IsDead()) return;
 

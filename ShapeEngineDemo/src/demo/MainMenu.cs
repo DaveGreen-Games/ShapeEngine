@@ -102,7 +102,7 @@ namespace ShapeEngineDemo
             Vector2 uiSize = ScreenHandler.UISize();
             Rectangle r = SRect.ConstructRect(uiSize * 0.5f, uiSize * new Vector2(0.3f, 0.4f), new Vector2(0.5f, 0.25f));
             buttonContainer.UpdateRect(r);
-            buttonContainer.Update(dt, GAMELOOP.MOUSE_POS_UI);
+            buttonContainer.Update(dt, Demo.MousePosUI);
 
             UINeighbors.NeighborDirection dir = UINeighbors.NeighborDirection.NONE;
             if (Demo.INPUT.GetActionState(InputIDs.UI_Down).down) dir = UINeighbors.NeighborDirection.BOTTOM;
@@ -124,7 +124,7 @@ namespace ShapeEngineDemo
         {
             //mazeDrawer.Draw();
         }
-        public override void DrawUI(Vector2 uiSize, Vector2 stretchFactor)
+        public override void DrawUI(Vector2 uiSize)
         {
 
             Rectangle uiArea = ScreenHandler.UIArea();
@@ -145,7 +145,7 @@ namespace ShapeEngineDemo
             SDrawing.DrawTextAligned(String.Format("Dev Res: {0}", ScreenHandler.DEVELOPMENT_RESOLUTION), start + gap, textSize, 1, WHITE, font, new(0, 0.5f));
             SDrawing.DrawTextAligned(String.Format("Target Res: {0}", ScreenHandler.UI.TARGET_RESOLUTION), start + gap * 2, textSize, 1, WHITE, font, new(0, 0.5f));
             SDrawing.DrawTextAligned(String.Format("Win Size: {0}", ScreenHandler.CUR_WINDOW_SIZE), start + gap * 3, textSize, 1, WHITE, font, new(0, 0.5f));
-            SDrawing.DrawTextAligned(String.Format("Stretch F: {0}", stretchFactor), start + gap * 4, textSize, 1, WHITE, font, new(0, 0.5f));
+            //SDrawing.DrawTextAligned(String.Format("Stretch F: {0}", stretchFactor), start + gap * 4, textSize, 1, WHITE, font, new(0, 0.5f));
 
             if(ShapeEngine.IsWindows()) SDrawing.DrawTextAligned("Windows", start + gap * 5, textSize, 1, WHITE, font, new(0, 0.5f));
             if (ShapeEngine.IsLinux()) SDrawing.DrawTextAligned("Linux", start + gap * 5, textSize, 1, WHITE, font, new(0, 0.5f));

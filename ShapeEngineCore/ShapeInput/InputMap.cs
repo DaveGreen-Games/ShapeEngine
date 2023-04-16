@@ -1,4 +1,5 @@
 ﻿using ShapeCore;
+using ShapeLib;
 using System.Numerics;
 
 namespace ShapeInput
@@ -199,7 +200,7 @@ namespace ShapeInput
         public event Action? OnInputTypeChanged;
         public event Action? OnGamepadConnectionChanged;
         public event Action? OnGamepadIndexChanged;
-
+        public event Action? OnMouseMoved;
 
         private Dictionary<int, InputAction> actions = new();
         private List<GamepadVibration> gamepadVibrationStack = new();
@@ -210,6 +211,18 @@ namespace ShapeInput
         public int GamepadIndex { get; protected set; } = -1;
         public int MaxGamepads { get; set; } = 4;
         public int ID { get; protected set; } = -1;
+        public Vector2 MousePos
+        {
+            get
+            {
+                if (IsGamepad) return new(-1);
+                else return mousePos;
+            }
+        }
+
+        private Vector2 mousePos = new(-1);
+        private Vector2 prevMousePos = new(-1);
+
         /// <summary>
         /// The input map is either using a gamepad or keyboard/mouse for input. If the gamepad index is bigger than 0 IsGamepad is always true. (only -1 / 0 index can be keyboard/mouse as well)
         /// </summary>
@@ -238,6 +251,15 @@ namespace ShapeInput
             this.IsGamepadConnected = CheckGamepad(this.GamepadIndex);
             this.ID = id;
         }
+        public InputMap Copy(int id, int gamepadIndex)
+        {
+            List<InputAction> actions = new();
+            foreach (var action in actions)
+            {
+                actions.Add(action.Copy());
+            }
+            return new InputMap(id, gamepadIndex, actions.ToArray());
+        }
         public void SetInputActions(params InputAction[] actions)
         {
             foreach (var action in actions)
@@ -251,6 +273,13 @@ namespace ShapeInput
         {
             if (!Disabled)
             {
+                if(GamepadIndex <= 0)
+                {
+                    prevMousePos = mousePos;
+                    mousePos = GetMousePos();
+                    if (WasMouseMoved()) OnMouseMoved?.Invoke();
+                }
+
                 bool gamepadUsed = false;
                 bool keyboardUsed = false;
                 foreach (var action in actions.Values)
@@ -279,6 +308,7 @@ namespace ShapeInput
             if (!actions.ContainsKey(id)) return "";
             else return actions[id].GetInputName(IsGamepad, shorthand);
         }
+        
         public void AddVibration(float leftMotor, float rightMotor, float duration = -1f, string name = "default")
         {
             if(!Disabled && IsGamepad && IsGamepadConnected && VibrationStrength > 0f)
@@ -426,19 +456,39 @@ namespace ShapeInput
             OnInputTypeChanged?.Invoke(); 
         }
         
-        private bool WasMouseMoved()
+
+        
+        public Vector2 GetMouseDelta(float deadzone = 0f, bool normalized = false)
         {
-            bool mouseMovement = Vector2LengthSqr(GetMouseMovement()) > 0.0f;
-            if (mouseMovement) return true;
-            return false;
+            if (IsGamepad) return new(0f);
+            Vector2 d = mousePos - prevMousePos;
+            if (Vector2LengthSqr(d) < deadzone * deadzone) return new(0f);
+            else return normalized ? Vector2Normalize(d) : d;
         }
-        private Vector2 GetMouseMovement(float deadzone = 5.0f, bool normalized = false)
+        private Vector2 GetMousePos()
         {
-            var movement = GetMouseDelta();
-            if (Vector2LengthSqr(movement) < deadzone * deadzone) return new(0.0f, 0.0f);
-            if (normalized) return Vector2Normalize(movement);
-            return movement;
+            var pos = GetMousePosition();
+            if (float.IsNaN(pos.X) || float.IsNaN(pos.Y))
+            {
+                return prevMousePos;
+            }
+            else return pos;
         }
+        private bool WasMouseMoved(float deadzone = 5f)
+        {
+            Vector2 d = mousePos - prevMousePos;
+            float lSq = Vector2LengthSqr(d);
+            if (lSq < deadzone * deadzone) lSq = 0f;
+            return lSq > 0.0f;
+        }
+        
+        //private Vector2 GetMouseMovement(float deadzone = 5.0f, bool normalized = false)
+        //{
+        //    var movement = Raylib_CsLo.Raylib.GetMouseDelta();
+        //    if (Vector2LengthSqr(movement) < deadzone * deadzone) return new(0.0f, 0.0f);
+        //    if (normalized) return Vector2Normalize(movement);
+        //    return movement;
+        //}
 
     }
    

@@ -264,11 +264,11 @@ namespace ShapeEngineDemo
             area.Draw();
             asteroidSpawner.Draw();
         }
-        public override void DrawUI(Vector2 uiSize, Vector2 stretchFactor)
+        public override void DrawUI(Vector2 uiSize)
         {
             SDrawing.DrawTextAlignedPro(String.Format("{0}", GetFPS()), uiSize * new Vector2(0.01f, 0.03f), -5f, uiSize * new Vector2(0.10f, 0.05f), 2f, Demo.PALETTES.C(ColorIDs.Special1), Demo.FONT.GetFont(Demo.FONT_Medium), new(0,0.5f));
             if (area == null) return;
-            area.DrawUI(uiSize, stretchFactor);
+            area.DrawUI(uiSize);
 
             Vector2 textSize = uiSize * new Vector2(0.25f, 0.04f);
             SDrawing.DrawTextAlignedPro(String.Format("Objs {0}", area.GetGameObjects().Count), uiSize * new Vector2(0.01f, 0.1f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(Demo.FONT_Medium), new(0, 0.5f));
@@ -303,7 +303,7 @@ namespace ShapeEngineDemo
 
         private void SpawnAsteroidDebug()
         {
-            Asteroid a = new(GAMELOOP.MOUSE_POS_GAME, "xlarge");
+            Asteroid a = new(Demo.MousePosGame, "xlarge");
             area.AddGameObject(a);
         }
     }

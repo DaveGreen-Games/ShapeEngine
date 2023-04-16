@@ -144,11 +144,11 @@ namespace ShapeCore
                 if (SGeometry.OverlapRectRect(outer, obj.GetBoundingBox())) { obj.Draw(); }
             }
         }
-        public virtual void DrawUI(Vector2 uiSize, Vector2 stretchFactor)
+        public virtual void DrawUI(Vector2 uiSize)
         {
             foreach (GameObject obj in uiObjects)
             {
-                obj.DrawUI(uiSize, stretchFactor);
+                obj.DrawUI(uiSize);
             }
         }
         public virtual void Update(float dt, float slowFactor)
@@ -533,12 +533,12 @@ namespace ShapeCore
                 layer.Draw();
             }
         }
-        public virtual void DrawUI(Vector2 uiSize, Vector2 stretchFactor)
+        public virtual void DrawUI(Vector2 uiSize)
         {
             for (int i = 0; i < sortedLayers.Count; i++)
             {
                 var layer = sortedLayers[i];
-                layer.DrawUI(uiSize, stretchFactor);
+                layer.DrawUI(uiSize);
             }
         }
         public virtual void Update(float dt)

@@ -49,6 +49,7 @@ namespace ShapeCore
                 }
             }
         }
+        
         public static Raylib_CsLo.Color DEBUG_ColliderColor = new(0, 25, 200, 100);
         public static Raylib_CsLo.Color DEBUG_ColliderDisabledColor = new(200, 25, 0, 100);
         public static Raylib_CsLo.Color DEBUG_HelperColor = new(0, 200, 25, 100);
@@ -57,6 +58,7 @@ namespace ShapeCore
         public static Raylib_CsLo.Color DEBUG_CollisionHandlerBorder = GOLD;
         public static Raylib_CsLo.Color DEBUG_CollisionHandlerFill = new(0, 150, 0, 100);
         public static Raylib_CsLo.Color DEBUG_SpawnAreaLines = RED;
+        
         public static OSPlatform OS_PLATFORM { get; private set; } =
            RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? OSPlatform.Windows :
            RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? OSPlatform.Linux :

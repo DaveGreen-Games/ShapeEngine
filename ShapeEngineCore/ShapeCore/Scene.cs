@@ -31,7 +31,7 @@ namespace ShapeCore
         /// <param name="stretchFactor">Should be used for ui elements like buttons where the position and size is set a start but 
         /// the button should still be relative to the current screen size. Just multiply your raw position and size with the stretch factor.
         /// ONLY needed if texture mode is not fixed! </param>
-        public virtual void DrawUI(Vector2 uiSize, Vector2 stretchFactor) { }
+        public virtual void DrawUI(Vector2 uiSize) { }
         //public virtual void HandleInput(float dt) { }
 
 

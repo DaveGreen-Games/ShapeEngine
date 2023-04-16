@@ -44,9 +44,9 @@ namespace ShapeEngineDemo
                 }
             }
         }
-        public override void DrawUI(Vector2 uiSize, Vector2 stretchFactor)
+        public override void DrawUI(Vector2 uiSize)
         {
-            DrawRectangleRec(new Rectangle(0,0,uiSize.X * stretchFactor.X, uiSize.Y * stretchFactor.Y), Demo.PALETTES.C(ColorIDs.Background1));
+            DrawRectangleRec(new Rectangle(0,0,uiSize.X, uiSize.Y), Demo.PALETTES.C(ColorIDs.Background1));
             
             if(started)
             {

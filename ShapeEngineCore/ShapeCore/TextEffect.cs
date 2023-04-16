@@ -45,7 +45,7 @@ namespace ShapeCore
         //    this.color = color;
         //}
 
-        public override void DrawUI(Vector2 uiSize, Vector2 stretchFactor)
+        public override void DrawUI(Vector2 uiSize)
         {
             if (IsDead()) return;
             Vector2 uiPos = ScreenHandler.TransformPositionToUI(gamePos);
@@ -86,7 +86,7 @@ namespace ShapeCore
         //    rot = rotation;
         //}
 
-        public override void DrawUI(Vector2 uiSize, Vector2 stretchFactor)
+        public override void DrawUI(Vector2 uiSize)
         {
             if (IsDead()) return;
             Vector2 uiPos = ScreenHandler.TransformPositionToUI(gamePos);

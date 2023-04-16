@@ -31,7 +31,10 @@ namespace ShapeEngineDemo
         public static DelegateTimerHandler TIMER = new();
         public static AchievementHandler ACHIEVEMENTS = new();
         public static PaletteHandler PALETTES = new();
-        public static InputMap INPUT = new(0, 1);
+        public static InputMap INPUT = new(0);
+        public static Vector2 MousePos { get; private set; } = new(0f);
+        public static Vector2 MousePosUI { get; private set; } = new(0f);
+        public static Vector2 MousePosGame { get; private set; } = new(0f);
         public const int SHADER_CRT = 0;
         public const int BUS_SOUND = 1;
         public const int BUS_MUSIC = 2;
@@ -95,7 +98,6 @@ namespace ShapeEngineDemo
             //var colorize = RESOURCES.LoadFragmentShader("resources/shaders/colorize-shader.fs");
             //var bloom = RESOURCES.LoadFragmentShader("resources/shaders/bloom-shader.fs");
             //var chrom = RESOURCES.LoadFragmentShader("resources/shaders/chromatic-aberration-shader.fs");
-            var crt = RESOURCES.LoadFragmentShader("resources/shaders/crt-shader.fs");
             //var grayscale = RESOURCES.LoadFragmentShader("resources/shaders/grayscale-shader.fs");
             //var pixelizer = RESOURCES.LoadFragmentShader("resources/shaders/pixelizer-shader.fs");
             //var blur = RESOURCES.LoadFragmentShader("resources/shaders/blur-shader.fs");
@@ -104,7 +106,6 @@ namespace ShapeEngineDemo
             //ScreenHandler.SHADERS.AddScreenShader("colorize", colorize, false, 0);
             //ScreenHandler.SHADERS.AddScreenShader("bloom", bloom, false, 1);
             //ScreenHandler.SHADERS.AddScreenShader("chrom", chrom, false, 2);
-            ScreenHandler.SHADERS.AddScreenShader(SHADER_CRT, crt, true, 3);
             //ScreenHandler.SHADERS.AddScreenShader("grayscale", grayscale, false, 4);
             //ScreenHandler.SHADERS.AddScreenShader("pixelizer", pixelizer, false, 5);
             //ScreenHandler.SHADERS.AddScreenShader("blur", blur, false, 6);
@@ -124,6 +125,8 @@ namespace ShapeEngineDemo
             //ScreenHandler.SHADERS.SetScreenShaderValueFloat("blur", "renderWidth", ScreenHandler.CUR_WINDOW_SIZE.width);
             //ScreenHandler.SHADERS.SetScreenShaderValueFloat("blur", "renderHeight", ScreenHandler.CUR_WINDOW_SIZE.height);
             //ScreenHandler.SHADERS.SetScreenShaderValueFloat("blur", "scale", 1.25f);
+            var crt = RESOURCES.LoadFragmentShader("resources/shaders/crt-shader.fs");
+            ScreenHandler.SHADERS.AddScreenShader(SHADER_CRT, crt, true, 3);
             ScreenHandler.SHADERS.SetScreenShaderValueFloat(SHADER_CRT, "renderWidth", ScreenHandler.CUR_WINDOW_SIZE.width);
             ScreenHandler.SHADERS.SetScreenShaderValueFloat(SHADER_CRT, "renderHeight", ScreenHandler.CUR_WINDOW_SIZE.height);
             
@@ -187,20 +190,6 @@ namespace ShapeEngineDemo
             AUDIO.SFXAdd(SoundIDs.PROJECTILE_Crit, projectileCrit, 0.6f,            1f, AudioHandler.BUS_MASTER, BUS_SOUND);
             AUDIO.SFXAdd(SoundIDs.PROJECTILE_Shoot, bullet, 0.25f,                  1f, AudioHandler.BUS_MASTER, BUS_SOUND);
             AUDIO.SFXAdd(SoundIDs.ASTEROID_Die, asteroidDie, 0.55f,                 1f, AudioHandler.BUS_MASTER, BUS_SOUND);
-
-
-
-            //MUSIC EXAMPLE--------------
-            //AudioHandler.AddSong("menu-song1", "song1", 0.5f, "music");
-            //AudioHandler.AddSong("menu-song2", "song2", 0.35f, "music");
-            //AudioHandler.AddSong("game-song1", "song3", 0.4f, "music");
-            //AudioHandler.AddSong("game-song2", "song4", 0.5f, "music");
-            //
-            //AudioHandler.AddPlaylist("menu", new() { "menu-song1", "menu-song2" });
-            //AudioHandler.AddPlaylist("game", new() { "game-song1", "game-song2" });
-            //AudioHandler.StartPlaylist("menu");
-            //----------------------------------
-
 
 
 
@@ -287,9 +276,9 @@ namespace ShapeEngineDemo
         }
         
 
-        public override void PostDrawUI(Vector2 uiSize, Vector2 stretchFactor)
+        public override void PostDrawUI(Vector2 uiSize)
         {
-            CURSOR.Draw(uiSize, MOUSE_POS_UI);
+            CURSOR.Draw(uiSize, MousePosUI);
             Rectangle r = SRect.ConstructRect(uiSize * new Vector2(0.97f), uiSize * new Vector2(0.2f, 0.08f), new(1, 1));
             ACHIEVEMENTS.Draw(FONT.GetFont(Demo.FONT_Medium), r, GRAY, WHITE, BLUE, YELLOW);
             
@@ -300,6 +289,9 @@ namespace ShapeEngineDemo
             ACHIEVEMENTS.Update(dt);
             AUDIO.Update(dt, ScreenHandler.CAMERA.RawPos);
             INPUT.Update(dt);
+            MousePos = INPUT.MousePos;
+            MousePosUI = ScreenHandler.UI.ScalePositionV(MousePos);
+            MousePosGame = ScreenHandler.TransformPositionToGame(MousePosUI);
         }
 
         public override void PreHandleInput()

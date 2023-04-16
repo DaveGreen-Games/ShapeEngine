@@ -42,13 +42,6 @@ namespace ShapeCore
     }
     public class GameLoop
     {
-        //public static DelegateTimerHandler TIMER = new();
-        //public static AlternatorContainer ALTERNATOR = new();
-        //public static EaseHandler EASE = new();
-        //public static StepHandler STEP = new();
-        //public static FontHandler FONT = new();
-
-
         public delegate void Triggered(string trigger, params float[] values);
         public string[] LAUNCH_PARAMS { get; private set; }
         public bool QUIT = false;
@@ -61,15 +54,15 @@ namespace ShapeCore
         /// <summary>
         /// The delta time of the game. When the game runs at 60fps, DELTA would be 1/60 = 0.016
         /// </summary>
-        public float DELTA { get; private set; }
+        //public float DELTA { get; private set; }
         /// <summary>
         /// DELTA affected by the current slow amount. Equals DELTA * CUR_SLOW_FACTOR
         /// </summary>
-        //public float GAME_DELTA { get; private set; }
-        public Vector2 MOUSE_POS { get; private set; } = new(0f);
-        public Vector2 MOUSE_POS_GAME { get; private set; } = new(0f);
-        public Vector2 MOUSE_POS_UI { get; private set; } = new(0f);
-        //public Vector2 MOUSE_POS_UI_RAW { get; private set; }
+        
+        //public Vector2 MOUSE_POS { get; private set; } = new(0f);
+        //public Vector2 MOUSE_POS_GAME { get; private set; } = new(0f);
+        //public Vector2 MOUSE_POS_UI { get; private set; } = new(0f);
+        
         public Color backgroundColor = BLACK;
         public Scene? CUR_SCENE { get; private set; }
         private int CUR_SCENE_INDEX = 0;
@@ -80,47 +73,6 @@ namespace ShapeCore
         private BasicTimer stopTimer = new();
         private List<DeferredInfo> deferred = new();
         
-        
-        ///// <summary>
-        ///// By how much the current scene is slowed down.
-        ///// </summary>
-        //public float CUR_SLOW_FACTOR { get; private set; } = 1f;
-        //private BasicTimer slowTimer = new();
-        //
-        ///// <summary>
-        ///// Slow down the current scene by the factor. 0.5f means scene runs 2 times slower; 2.0f means scene runs 2 times faster. If factor is <= to 0 Stop(duration) is called instead.
-        ///// </summary>
-        ///// <param name="factor"></param>
-        ///// <param name="duration"></param>
-        //public void Slow(float factor, float duration, float delay = 0f)
-        //{
-        //    if (duration <= 0) return;
-        //    if (factor <= 0f) Stop(duration, delay);
-        //    else
-        //    {
-        //        if(delay > 0)
-        //        {
-        //            delayHandler.Add("slow", delay, () => { slowTimer.Start(duration); CUR_SLOW_FACTOR = factor; }, 0);
-        //        }
-        //        else
-        //        {
-        //            if (delayHandler.Has("slow")) delayHandler.Remove("slow");
-        //            slowTimer.Start(duration);
-        //            //slowCounter = 0;
-        //            //slowCount = (int)(1f / factor);
-        //            CUR_SLOW_FACTOR = factor;
-        //        }
-        //    }
-        //}
-        //public void EndSlow()
-        //{
-        //    if (delayHandler.Has("slow")) delayHandler.Remove("slow");
-        //    slowTimer.Stop();
-        //    CUR_SLOW_FACTOR = 1f;
-        //    //slowCount = 0;
-        //    //slowCounter = 0;
-        //}
-
         /// <summary>
         /// Stop the current scene for the duration. Only affects Update().
         /// </summary>
@@ -170,13 +122,13 @@ namespace ShapeCore
             if (CUR_SCENE == null) return null;
             return CUR_SCENE.GetCurArea();
         }
-
         public void AddGameObject(GameObject obj, bool uiDrawing = false)
         {
             Area? area = GetCurArea();
             if (area == null) return;
             area.AddGameObject(obj, uiDrawing);
         }
+        
         public Vector2 GameSize() { return ScreenHandler.GameSize(); }
         public Vector2 UISize() { return ScreenHandler.UISize(); }
         public Vector2 GameCenter() { return ScreenHandler.GameCenter(); }
@@ -324,27 +276,24 @@ namespace ShapeCore
         {
             while (!QUIT)
             {
-                DELTA = GetFrameTime();
-
-                Vector2 curMousePos = GetMousePosition();
-                if(!SVec.IsNan(curMousePos))
-                {
-                    MOUSE_POS = curMousePos;
-
-                    //implement mouse pos raw
-                    Vector2 curMousePosUI = ScreenHandler.UI.ScalePositionV(MOUSE_POS);
-                    if (!SVec.IsNan(curMousePosUI)) MOUSE_POS_UI = curMousePosUI;
-                    //MOUSE_POS_UI_RAW =  ScreenHandler.UI.ScalePositionRawV(MOUSE_POS);
-
-                    Vector2 curMousePosGame = ScreenHandler.TransformPositionToGame(MOUSE_POS_UI);
-                    if (!SVec.IsNan(curMousePosGame)) MOUSE_POS_GAME = curMousePosGame;
-                    //if (WindowShouldClose() && !InputHandler.QuitPressed()) QUIT = true; // IsKeyDown(KeyboardKey.KEY_ESCAPE)) QUIT = true;
-                }
-
+                //Vector2 curMousePos = GetMousePosition();
+                //if(!SVec.IsNan(curMousePos))
+                //{
+                //    MOUSE_POS = curMousePos;
+                //
+                //    //implement mouse pos raw
+                //    Vector2 curMousePosUI = ScreenHandler.UI.ScalePositionV(MOUSE_POS);
+                //    if (!SVec.IsNan(curMousePosUI)) MOUSE_POS_UI = curMousePosUI;
+                //    //MOUSE_POS_UI_RAW =  ScreenHandler.UI.ScalePositionRawV(MOUSE_POS);
+                //
+                //    Vector2 curMousePosGame = ScreenHandler.TransformPositionToGame(MOUSE_POS_UI);
+                //    if (!SVec.IsNan(curMousePosGame)) MOUSE_POS_GAME = curMousePosGame;
+                //    //if (WindowShouldClose() && !InputHandler.QuitPressed()) QUIT = true; // IsKeyDown(KeyboardKey.KEY_ESCAPE)) QUIT = true;
+                //}
 
 
                 //UPDATE
-                UpdateGame(DELTA);
+                UpdateGame(GetFrameTime());
 
                 // DRAW TO MAIN TEXTURE
                 DrawGame();
@@ -356,25 +305,18 @@ namespace ShapeCore
         {
             if (CALL_GAMELOOP_UPDATE) PreUpdate(dt);
 
-            //InputHandler.Update(dt);
-            //AudioHandler.Update(dt);
-            //UIHandler.Update(dt);
             ScreenHandler.Update(dt);
-
-            //STEP.Update(dt);
-            //EASE.Update(dt);
-            //ALTERNATOR.Update(dt);
-            //TIMER.Update(dt);
-
+            
             if (CALL_GAMELOOP_HANDLE_INPUT) PreHandleInput();
+            
             if (CUR_SCENE != null)
             {
                 if(!CUR_SCENE.IsInputDisabled()) CUR_SCENE.HandleInput();
 
                 if (!CUR_SCENE.IsPaused())
                 {
-                    delayHandler.Update(DELTA);
-                    stopTimer.Update(DELTA);
+                    delayHandler.Update(dt);
+                    stopTimer.Update(dt);
                     //if (!stopTimer.IsRunning())
                     //{
                     //    slowTimer.Update(DELTA);
@@ -404,15 +346,13 @@ namespace ShapeCore
             if (CALL_GAMELOOP_DRAW) PostDraw();
             ScreenHandler.EndDraw(true);
 
+            
             //Draw to UI texture
             Vector2 uiSize = ScreenHandler.UISize();
-            Vector2 stretchFactor = ScreenHandler.UI.STRETCH_FACTOR;
-            
             ScreenHandler.StartDraw(false);
-            if (CALL_GAMELOOP_DRAWUI) PreDrawUI(uiSize, stretchFactor);
-            if (CUR_SCENE != null && !CUR_SCENE.IsHidden()) CUR_SCENE.DrawUI(uiSize, stretchFactor);
-            //CursorHandler.Draw(uiSize, MOUSE_POS_UI);
-            if (CALL_GAMELOOP_DRAWUI) PostDrawUI(uiSize, stretchFactor);
+            if (CALL_GAMELOOP_DRAWUI) PreDrawUI(uiSize);
+            if (CUR_SCENE != null && !CUR_SCENE.IsHidden()) CUR_SCENE.DrawUI(uiSize);
+            if (CALL_GAMELOOP_DRAWUI) PostDrawUI(uiSize);
             ScreenHandler.EndDraw(false);
 
             
@@ -420,16 +360,13 @@ namespace ShapeCore
             BeginDrawing();
             ClearBackground(backgroundColor);
 
-            //List<ScreenShader> activeShaders = CUR_SHADER_HANDLER != null ? CUR_SHADER_HANDLER.GetCurActiveShaders() : new();
-            //var shaders = ShaderHandler.GetCurActiveShaders();
             if (ScreenHandler.CAMERA != null && ScreenHandler.CAMERA.PIXEL_SMOOTHING_ENABLED)
             {
                 BeginMode2D(ScreenHandler.CAMERA.ScreenSpaceCam);
                 ScreenHandler.Draw();
-                //ShaderHandler.DrawShaders();
                 EndMode2D();
             }
-            else ScreenHandler.Draw(); // ShaderHandler.DrawShaders();
+            else ScreenHandler.Draw();
 
             ScreenHandler.DrawUI();
 
@@ -437,7 +374,6 @@ namespace ShapeCore
             EndDrawing();
         }
 
-        //public virtual void PreInit() { } //called before initialization -> use for setting specific vars
         public virtual void Start() { } //called after initialization
         public virtual void PreHandleInput() { }
         public virtual void PostHandleInput() { }
@@ -446,8 +382,8 @@ namespace ShapeCore
         //public virtual void HandleInput() { }//called before update to handle global input
         public virtual void PreDraw() { }//called before draw
         public virtual void PostDraw() { }//called after draw
-        public virtual void PreDrawUI(Vector2 uiSize, Vector2 stretchFactor) { }//called before draw
-        public virtual void PostDrawUI(Vector2 uiSize, Vector2 stretchFactor) { }//called after draw
+        public virtual void PreDrawUI(Vector2 uiSize) { }//called before draw
+        public virtual void PostDrawUI(Vector2 uiSize) { }//called after draw
         public virtual void End() { } //called before game closes
 
     }
