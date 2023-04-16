@@ -422,7 +422,11 @@ namespace ShapeInput
         
         private void GamepadConnectionChanged() { OnGamepadConnectionChanged?.Invoke(); }
         private void GamepadIndexChanged() { OnGamepadIndexChanged?.Invoke(); }
-        private void InputTypeChanged() { OnInputTypeChanged?.Invoke(); }
+        private void InputTypeChanged() 
+        {
+            if (!IsGamepad) StopVibration();
+            OnInputTypeChanged?.Invoke(); 
+        }
         
         private bool WasMouseMoved()
         {

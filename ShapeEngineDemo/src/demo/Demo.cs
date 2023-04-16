@@ -31,7 +31,7 @@ namespace ShapeEngineDemo
         public static DelegateTimerHandler TIMER = new();
         public static AchievementHandler ACHIEVEMENTS = new();
         public static PaletteHandler PALETTES = new();
-        public static InputMap INPUT = new(0, 0);
+        public static InputMap INPUT = new(0);
         public const int SHADER_CRT = 0;
         public const int BUS_SOUND = 1;
         public const int BUS_MUSIC = 2;
