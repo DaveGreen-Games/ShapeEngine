@@ -31,7 +31,7 @@ namespace ShapeEngineDemo
         public static DelegateTimerHandler TIMER = new();
         public static AchievementHandler ACHIEVEMENTS = new();
         public static PaletteHandler PALETTES = new();
-        public static InputMap INPUT = new(0);
+        public static InputMap INPUT = new(0, 1);
         public const int SHADER_CRT = 0;
         public const int BUS_SOUND = 1;
         public const int BUS_MUSIC = 2;
@@ -276,7 +276,9 @@ namespace ShapeEngineDemo
             CURSOR.Hide();
 
             INPUT.OnInputTypeChanged += OnInputTypeChanged;
-            
+            if (INPUT.IsGamepad) CURSOR.Hide();
+            else CURSOR.Show();
+
             AddScene("splash", new SplashScreen());
             AddScene("mainmenu", new MainMenu());
             

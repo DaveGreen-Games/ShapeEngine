@@ -9,32 +9,37 @@ namespace ShapeInput
         public bool pressed = false;
         public float axisValue = 0f;
 
+        public bool gamepadUsed = false;
+        public bool keyboardUsed = false;
+
         public InputActionState() { }
-        public InputActionState(bool down, bool up, bool released, bool pressed, float axisValue)
+        public InputActionState(bool down, bool up, bool released, bool pressed, float axisValue, bool gamepadUsed, bool keyboardUsed)
         {
             this.down = down;
             this.up = up;
             this.released = released;
             this.pressed = pressed;
             this.axisValue = axisValue;
+            this.gamepadUsed = gamepadUsed;
+            this.keyboardUsed = keyboardUsed;
         }
 
-        public static InputActionState Generate(InputActionState state, bool down, bool up, float axis)
+        public static InputActionState Generate(InputActionState state, bool down, bool up, float axis, bool gamepadUsed, bool keyboardUsed)
         {
             bool released = state.down && up;
             bool pressed = state.up && down;
 
-            return new InputActionState(down, up, released, pressed, axis);
+            return new InputActionState(down, up, released, pressed, axis, gamepadUsed, keyboardUsed);
         }
     }
 
     public class InputAction
     {
-        public event Action<bool, bool>? WasUsed;
+        //public event Action<bool, bool>? WasUsed;
         public int ID { get; protected set; } = -1;
         private List<IInputType> inputs = new();
-        private bool gamepadUsed = false;
-        private bool keyboardUsed = false;
+        //private bool gamepadUsed = false;
+        //private bool keyboardUsed = false;
         public InputActionState State { get; protected set; } = new();
 
         public InputAction(int id, params IInputType[] inputs)
@@ -52,7 +57,7 @@ namespace ShapeInput
             }
             return new(ID, copy);
         }
-        public void Update(int slot, float dt)
+        public void Update(int gamepadIndex, float dt)
         {
             bool gpUsed = false;
             bool kbUsed = false;
@@ -62,7 +67,7 @@ namespace ShapeInput
             float axis = 0f;
             foreach (var input in inputs)
             {
-                var state = input.GetState(slot);
+                var state = input.GetState(gamepadIndex);
                 axis += state.axis;
                 down = down || state.down;
                 up = up && state.up;
@@ -76,26 +81,25 @@ namespace ShapeInput
 
             axis = Clamp(axis, -1f, 1f);
 
-            State = InputActionState.Generate(State, down, up, axis);
-
-            if (kbUsed)
-            {
-                gamepadUsed = false;
-                if (!keyboardUsed)
-                {
-                    keyboardUsed = true;
-                    WasUsed?.Invoke(true, false);
-                }
-            }
-            else if (gpUsed)
-            {
-                keyboardUsed = false;
-                if (!gamepadUsed)
-                {
-                    gamepadUsed = true;
-                    WasUsed?.Invoke(false, true);
-                }
-            }
+            State = InputActionState.Generate(State, down, up, axis, gpUsed, kbUsed);
+            //if (kbUsed)
+            //{
+            //    gamepadUsed = false;
+            //    if (!keyboardUsed)
+            //    {
+            //        keyboardUsed = true;
+            //        WasUsed?.Invoke(true, false);
+            //    }
+            //}
+            //else if (gpUsed)
+            //{
+            //    keyboardUsed = false;
+            //    if (!gamepadUsed)
+            //    {
+            //        gamepadUsed = true;
+            //        WasUsed?.Invoke(false, true);
+            //    }
+            //}
         }
         public string GetInputName(bool gamepad, bool shorthand = true)
         {

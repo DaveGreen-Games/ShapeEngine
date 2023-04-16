@@ -1,6 +1,5 @@
 ﻿using ShapeCore;
 using System.Numerics;
-using Vortice.XInput;
 
 namespace ShapeInput
 {
@@ -224,7 +223,7 @@ namespace ShapeInput
             GamepadSetup();
             this.autoAssignGamepad = false;
             this.GamepadIndex = gamepadIndex;
-            if (gamepadIndex < 0) IsGamepad = false;
+            if (gamepadIndex <= 0) IsGamepad = false;
             else if (gamepadIndex > 0) IsGamepad = true;
             this.IsGamepadConnected = CheckGamepad(this.GamepadIndex);
             this.ID = id;
@@ -245,19 +244,25 @@ namespace ShapeInput
             {
                 if (this.actions.ContainsKey(action.ID)) continue;
                 this.actions.Add(action.ID, action);
-                action.WasUsed += OnConditionUsed;
+                //action.WasUsed += OnConditionUsed;
             }
         }
         public void Update(float dt)
         {
             if (!Disabled)
             {
-                foreach (var condition in actions.Values)
+                bool gamepadUsed = false;
+                bool keyboardUsed = false;
+                foreach (var action in actions.Values)
                 {
-                    condition.Update(GamepadIndex, dt);
+                    action.Update(GamepadIndex, dt);
+                    var state = action.State;
+                    gamepadUsed = gamepadUsed || action.State.gamepadUsed;
+                    keyboardUsed = keyboardUsed || action.State.keyboardUsed;
                 }
+
                 CheckGamepadConnection();
-                CheckInputType();
+                CheckInputType(keyboardUsed, gamepadUsed);
                 UpdateVibration(dt);
             }
         }
@@ -288,7 +293,7 @@ namespace ShapeInput
         }
         public void StopVibration()
         {
-            if (ShapeEngine.IsWindows()) XInput.SetVibration(GamepadIndex, 0f, 0f);
+            //if (ShapeEngine.IsWindows()) XInput.SetVibration(GamepadIndex, 0f, 0f);
 
             gamepadVibrationStack.Clear();
         }
@@ -318,8 +323,8 @@ namespace ShapeInput
                     }
                 }
 
-                if (ShapeEngine.IsWindows())
-                    XInput.SetVibration(GamepadIndex, Clamp(maxLeftMotor * VibrationStrength, 0f, 1f), Clamp(maxRightMotor * VibrationStrength, 0f, 1f));
+                //if (ShapeEngine.IsWindows())
+                //    XInput.SetVibration(GamepadIndex, Clamp(maxLeftMotor * VibrationStrength, 0f, 1f), Clamp(maxRightMotor * VibrationStrength, 0f, 1f));
             }
         }
 
@@ -383,39 +388,32 @@ namespace ShapeInput
             if (prevIsGamepadConnected != IsGamepadConnected) GamepadConnectionChanged();
             if (prevGamepadIndex != GamepadIndex) GamepadIndexChanged();
         }
-        private void CheckInputType()
+        private void CheckInputType(bool keyboardUsed, bool gamepadUsed)
         {
             if(GamepadIndex <= 0 || autoAssignGamepad)
             {
+                bool prevIsGamepad = IsGamepad;
+
                 if (IsGamepad)
                 {
-                    if (WasMouseMoved())
+                    if (!gamepadUsed)
                     {
-                        IsGamepad = false;
-                        InputTypeChanged();
+                        if (WasMouseMoved() || keyboardUsed) IsGamepad = false;
+                    }
+                    
+                }
+                else
+                {
+                    if (!keyboardUsed)
+                    {
+                        if (gamepadUsed) 
+                            IsGamepad = true;
                     }
                 }
-            }
-        }
-        private void OnConditionUsed(bool keyboard, bool gamepad)
-        {
-            if (GamepadIndex <= 0 || autoAssignGamepad)
-            {
-                if (keyboard)
+
+                if(IsGamepad != prevIsGamepad)
                 {
-                    if (IsGamepad)
-                    {
-                        IsGamepad = false;
-                        InputTypeChanged();
-                    }
-                }
-                else if (gamepad)
-                {
-                    if (!IsGamepad)
-                    {
-                        IsGamepad = true;
-                        InputTypeChanged();
-                    }
+                    InputTypeChanged();
                 }
             }
         }

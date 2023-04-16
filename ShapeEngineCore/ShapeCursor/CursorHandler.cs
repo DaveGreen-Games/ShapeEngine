@@ -7,13 +7,13 @@ namespace ShapeCursor
         private Dictionary<string, CursorBasic> cursors = new();
         private CursorBasic nullCursor;
         private CursorBasic curCursor;
-        private bool hidden = false;
+        public bool Hidden { get; protected set; } = false;
 
         public CursorHandler(bool hidden = false) 
         {
             this.nullCursor = new CursorNull();
             this.curCursor = nullCursor;
-            this.hidden = hidden;
+            this.Hidden = hidden;
         }
 
         //public void Initialize()
@@ -26,7 +26,7 @@ namespace ShapeCursor
 
         public void Draw(Vector2 uiSize, Vector2 mousePos)
         {
-            if (hidden) return;
+            if (Hidden) return;
             curCursor.Draw(uiSize, mousePos);
         }
         public void Close()
@@ -38,13 +38,13 @@ namespace ShapeCursor
 
         public void Hide()
         {
-            if (hidden) return;
-            hidden = true;
+            if (Hidden) return;
+            Hidden = true;
         }
         public void Show()
         {
-            if (!hidden) return;
-            hidden = false;
+            if (!Hidden) return;
+            Hidden = false;
         }
         public void Switch(string name)
         {

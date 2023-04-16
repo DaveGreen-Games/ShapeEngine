@@ -272,10 +272,11 @@ namespace ShapeEngineDemo
 
             Vector2 textSize = uiSize * new Vector2(0.25f, 0.04f);
             SDrawing.DrawTextAlignedPro(String.Format("Objs {0}", area.GetGameObjects().Count), uiSize * new Vector2(0.01f, 0.1f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(Demo.FONT_Medium), new(0, 0.5f));
-            //SDrawing.DrawTextAlignedPro(String.Format("{0}"), uiSize * new Vector2(0.01f, 0.13f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(Demo.FONT_Medium), new(0, 0.5f));
+            var boostState = Demo.INPUT.GetActionState(InputIDs.PLAYER_Boost);
+            SDrawing.DrawTextAlignedPro(String.Format("KB {0} GP {1}", boostState.keyboardUsed, boostState.gamepadUsed), uiSize * new Vector2(0.01f, 0.13f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(Demo.FONT_Medium), new(0, 0.5f));
             SDrawing.DrawTextAlignedPro(String.Format("Input is {0}", Demo.INPUT.IsGamepad ? "Gamepad" : "Keyboard/Mouse"), uiSize * new Vector2(0.01f, 0.16f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(Demo.FONT_Medium), new(0, 0.5f));
             SDrawing.DrawTextAlignedPro(String.Format("Input GP Index {0}", Demo.INPUT.GamepadIndex), uiSize * new Vector2(0.01f, 0.19f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(Demo.FONT_Medium), new(0, 0.5f));
-            
+            SDrawing.DrawTextAlignedPro(String.Format("Cursor {0}", Demo.CURSOR.Hidden ? "Hidden" : "Visible"), uiSize * new Vector2(0.01f, 0.22f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(Demo.FONT_Medium), new(0, 0.5f));
             SDrawing.DrawTextAlignedPro(String.Format("Kills {0}", Demo.ACHIEVEMENTS.GetStatValue("asteroidKills")), uiSize * new Vector2(0.01f, 0.25f), 0f, textSize, 2f, Demo.PALETTES.C(ColorIDs.Text), Demo.FONT.GetFont(Demo.FONT_Medium), new(0, 0.5f));
             
             

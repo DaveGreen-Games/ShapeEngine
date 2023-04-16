@@ -31,7 +31,7 @@ namespace ShapeEngineDemo
         public override void Deactivate(Scene? newScene)
         {
             base.Deactivate(newScene);
-            Demo.CURSOR.Show();
+            //Demo.CURSOR.Show();
         }
         public override void Update(float dt)
         {
