@@ -193,8 +193,13 @@ namespace ShapeEngineDemo
             //Action action = () => ScreenHandler.Cam.Shake(0.25f, new(75.0f, 75.0f), 1, 0, 0.75f);
             //TimerHandler.Add(0.25f, action);
             //AudioHandler.PlaySFX("explosion");
-            Demo.CURSOR.Switch("game");
+            Demo.CURSOR.Switch(Demo.CURSOR_Game);
             GAMELOOP.backgroundColor = Demo.PALETTES.C(ColorIDs.Background1);
+            Demo.INPUT.SetGroupDisabled(InputIDs.GROUP_Player, false);
+            Demo.INPUT.SetGroupDisabled(InputIDs.GROUP_Level, false);
+            Demo.INPUT.SetGroupDisabled(InputIDs.GROUP_Debug, false);
+            Demo.INPUT.SetGroupDisabled(InputIDs.GROUP_UI, true);
+            Demo.INPUT.SetGroupDisabled(InputIDs.GROUP_Settings, true);
             //AudioHandler.SwitchPlaylist("game");
         }
         public override void Deactivate(Scene? newScene)
@@ -224,7 +229,7 @@ namespace ShapeEngineDemo
             if (Demo.INPUT.GetActionState(InputIDs.GAME_SlowTime).down) GAMELOOP.GetCurArea().UpdateSlowFactor = 0.05f;
             else if (Demo.INPUT.GetActionState(InputIDs.GAME_SlowTime).released) GAMELOOP.GetCurArea().UpdateSlowFactor = 1f;
             
-            if (Demo.INPUT.GetActionState(InputIDs.UI_Cancel).released) GAMELOOP.GoToScene("mainmenu");
+            if (Demo.INPUT.GetActionState(InputIDs.OPTIONS_Quit).released) GAMELOOP.GoToScene("mainmenu");
 
             if (!IsPaused() && Demo.INPUT.GetActionState(InputIDs.DEBUG_SpawnAsteroid).released) SpawnAsteroidDebug();
 

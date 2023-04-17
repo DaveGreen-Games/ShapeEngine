@@ -1,41 +1,51 @@
 ﻿
+using ShapeInput;
+using ShapeLib;
+
 namespace ShapeEngineDemo
 {
     public static class InputIDs
     {
-        public const int INPUTMAP_Default = 10;
+        public static readonly uint INPUTMAP_Default = SID.NextID;
 
-        public const int OPTIONS_Quit = 101;
-        public const int OPTIONS_Fullscreen = 102;
-        public const int OPTIONS_CycleRes = 103;
-        public const int OPTIONS_NextMonitor = 104;
-        public const int OPTIONS_Vsync = 105;
-        public const int OPTIONS_CycleFrameRateLimit = 106;
+        public static readonly uint GROUP_UI = SID.NextID;
+        public static readonly uint GROUP_Debug = SID.NextID;
+        public static readonly uint GROUP_Settings = SID.NextID;
+        public static readonly uint GROUP_Player = SID.NextID;
+        public static readonly uint GROUP_Level = SID.NextID;
 
-        public const int GAME_Pause = 200;
-        public const int GAME_SlowTime = 201;
 
-        public const int PLAYER_RotateLeft = 300;
-        public const int PLAYER_RotateRight = 301;
-        public const int PLAYER_Rotate = 302;
-        public const int PLAYER_Boost = 303;
-        public const int PLAYER_Slow = 304;
-        public const int PLAYER_CycleGuns = 305;
-        public const int PLAYER_Shoot = 306;
-        public const int PLAYER_DropAimPoint = 307;
-        
-        public const int DEBUG_HealPlayer = 400;
-        public const int DEBUG_SpawnAsteroid = 401;
-        public const int DEBUG_ToggleDrawHelpers = 402;
-        public const int DEBUG_ToggleDrawColliders = 403;
-        public const int DEBUG_CycleZoom = 404;
+        public static readonly uint OPTIONS_Quit                    = SID.NextID;
+        public static readonly uint OPTIONS_Fullscreen              = SID.NextID;
+        public static readonly uint OPTIONS_CycleRes                = SID.NextID;
+        public static readonly uint OPTIONS_NextMonitor             = SID.NextID;
+        public static readonly uint OPTIONS_Vsync                   = SID.NextID;
+        public static readonly uint OPTIONS_CycleFrameRateLimit     = SID.NextID;
 
-        public const int UI_Pressed = 1000;
-        public const int UI_MousePressed = 1001;
-        public const int UI_Cancel = 1002;
-        public const int UI_Up = 1010;
-        public const int UI_Down = 1011;
-        public const int UI_Left = 1012;
-        public const int UI_Right = 1013;
+        public static readonly uint GAME_Pause = SID.NextID;
+        public static readonly uint GAME_SlowTime = SID.NextID;
+               
+        public static readonly uint PLAYER_RotateLeft = SID.NextID;
+        public static readonly uint PLAYER_RotateRight = SID.NextID;
+        public static readonly uint PLAYER_Rotate = SID.NextID;
+        public static readonly uint PLAYER_Boost = SID.NextID;
+        public static readonly uint PLAYER_Slow = SID.NextID;
+        public static readonly uint PLAYER_CycleGuns = SID.NextID;
+        public static readonly uint PLAYER_Shoot = SID.NextID;
+        public static readonly uint PLAYER_DropAimPoint = SID.NextID;
+               
+        public static readonly uint DEBUG_HealPlayer = SID.NextID;
+        public static readonly uint DEBUG_SpawnAsteroid = SID.NextID;
+        public static readonly uint DEBUG_ToggleDrawHelpers = SID.NextID;
+        public static readonly uint DEBUG_ToggleDrawColliders = SID.NextID;
+        public static readonly uint DEBUG_CycleZoom = SID.NextID;
+
+        public static readonly uint UI_Pressed = SID.NextID;
+        public static readonly uint UI_MousePressed = SID.NextID;
+        public static readonly uint UI_Cancel = SID.NextID;
+        public static readonly uint UI_Up = SID.NextID;
+        public static readonly uint UI_Down = SID.NextID;
+        public static readonly uint UI_Left = SID.NextID;
+        public static readonly uint UI_Right = SID.NextID;
     }
 }

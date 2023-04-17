@@ -28,7 +28,7 @@ namespace ShapeEngineDemo.Guns
         //data values
         protected bool semiAuto = false;
         protected float speedVariation = 0f;
-        protected int soundID = -1;
+        protected uint soundID = 0;
         protected string effect = "";
         protected float timer = 0f;
         protected float burstTimer = 0f;

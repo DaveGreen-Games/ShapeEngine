@@ -10,16 +10,16 @@ namespace ShapeAudio
     {
         public event Action<string>? PlaylistStarted;
         public event Action<string, string>? PlaylistSongStarted;
-        public const int BUS_MASTER = 0;
+        public static readonly uint BUS_MASTER = SID.NextID;
 
-        private Dictionary<int, Bus> buses = new();
-        private Dictionary<int, SFX> sounds = new();
-        private Dictionary<int, SFXLoop> loops = new();
-        private Dictionary<int, Song> songs = new();
+        private Dictionary<uint, Bus> buses = new();
+        private Dictionary<uint, SFX> sounds = new();
+        private Dictionary<uint, SFXLoop> loops = new();
+        private Dictionary<uint, Song> songs = new();
         
-        private Dictionary<int, Playlist> playlists = new();
+        private Dictionary<uint, Playlist> playlists = new();
         private Playlist? currentPlaylist = null;
-        private Dictionary<int, float> soundBlockers = new();
+        private Dictionary<uint, float> soundBlockers = new();
         public  GameObject? SpatialTargetOverride { get; set; } = null;
 
         public AudioHandler()
@@ -75,7 +75,7 @@ namespace ShapeAudio
 
 
         //PLAYLISTS
-        private void OnPlaylistRequestSong(int id, Playlist playlist)
+        private void OnPlaylistRequestSong(uint id, Playlist playlist)
         {
             if (songs.ContainsKey(id)) playlist.DeliverNextSong(songs[id]);
         }
@@ -83,7 +83,7 @@ namespace ShapeAudio
         {
             PlaylistSongStarted?.Invoke(songName, playlistName);
         }
-        public void PlaylistAdd(int id, string displayName, params int[] songIDs)
+        public void PlaylistAdd(uint id, string displayName, params uint[] songIDs)
         {
             if (playlists.ContainsKey(id)) return;
             Playlist playlist = new(id, displayName, songIDs.ToHashSet());
@@ -112,7 +112,7 @@ namespace ShapeAudio
             if (currentPlaylist == null) return;
             currentPlaylist.Resume();
         }
-        public void PlaylistSwitch(int id)
+        public void PlaylistSwitch(uint id)
         {
             if (!playlists.ContainsKey(id)) return;
             
@@ -142,31 +142,31 @@ namespace ShapeAudio
         
         
         //BUS
-        public void BusAdd(int busID, float volume)
+        public void BusAdd(uint busID, float volume)
         {
             if (buses.ContainsKey(busID)) return;
             Bus bus = new Bus(busID, volume);
             buses.Add(busID, bus);
         }
-        public void BusSetVolume(int busID, float volume)
+        public void BusSetVolume(uint busID, float volume)
         {
             if (!buses.ContainsKey(busID)) return;
             volume = Clamp(volume, 0.0f, 1.0f);
             buses[busID].Volume = volume;
 
         }
-        public void BusChangeVolume(int busID, float amount)
+        public void BusChangeVolume(uint busID, float amount)
         {
             if (!buses.ContainsKey(busID)) return;
             float newVolume = Clamp(buses[busID].Volume + amount, 0.0f, 1.0f);
             buses[busID].Volume = newVolume;
         }
-        public float BusGetVolume(int busID)
+        public float BusGetVolume(uint busID)
         {
             if (!buses.ContainsKey(busID)) return 1.0f;
             return buses[busID].Volume;
         }
-        public void BusStop(int busID)
+        public void BusStop(uint busID)
         {
             if (!buses.ContainsKey(busID)) return;
             buses[busID].Stop();
@@ -174,7 +174,7 @@ namespace ShapeAudio
         
 
         // SFX - LOOPS - SONGS
-        public void SFXAdd(int id, Sound sound, float volume = 0.5f, float pitch = 1.0f, params int[] busIDs)
+        public void SFXAdd(uint id, Sound sound, float volume = 0.5f, float pitch = 1.0f, params uint[] busIDs)
         {
             if (sounds.ContainsKey(id)) return;
             List<Bus> b = new();
@@ -186,7 +186,7 @@ namespace ShapeAudio
 
             sounds.Add(id, sfx);
         }
-        public void SFXLoopAdd(int id, Sound sound, float volume = 0.5f, float pitch = 1.0f, params int[] busIDs)
+        public void SFXLoopAdd(uint id, Sound sound, float volume = 0.5f, float pitch = 1.0f, params uint[] busIDs)
         {
             if (sounds.ContainsKey(id)) return;
             List<Bus> b = new();
@@ -198,7 +198,7 @@ namespace ShapeAudio
 
             loops.Add(id, loop);
         }
-        public void SFXLoopAdd(int id, Sound sound, float minSpatialRange, float maxSpatialRange, float volume = 0.5f, float pitch = 1.0f, params int[] busIDs)
+        public void SFXLoopAdd(uint id, Sound sound, float minSpatialRange, float maxSpatialRange, float volume = 0.5f, float pitch = 1.0f, params uint[] busIDs)
         {
             if (sounds.ContainsKey(id)) return;
             List<Bus> b = new();
@@ -210,7 +210,7 @@ namespace ShapeAudio
 
             loops.Add(id, loop);
         }
-        public void SongAdd(int id, Music song, string displayName, float volume = 0.5f, float pitch = 1.0f, params int[] busIDs)
+        public void SongAdd(uint id, Music song, string displayName, float volume = 0.5f, float pitch = 1.0f, params uint[] busIDs)
         {
             if(songs.ContainsKey(id)) return;
             List<Bus> b = new();
@@ -225,7 +225,7 @@ namespace ShapeAudio
         }
         
 
-        public void SFXPlay(int id, float volume = 1f, float pitch = 1f, float blockDuration = 0f)
+        public void SFXPlay(uint id, float volume = 1f, float pitch = 1f, float blockDuration = 0f)
         {
             if(!sounds.ContainsKey(id)) return;
             if (soundBlockers.ContainsKey(id) && soundBlockers[id] > 0f) return;
@@ -245,7 +245,7 @@ namespace ShapeAudio
         /// <param name="volume"></param>
         /// <param name="pitch"></param>
         /// <param name="blockDuration"></param>
-        public void SFXPlay(int id, Vector2 pos, float volume = 1.0f, float pitch = 1.0f, float blockDuration = 0f)
+        public void SFXPlay(uint id, Vector2 pos, float volume = 1.0f, float pitch = 1.0f, float blockDuration = 0f)
         {
             if (!sounds.ContainsKey(id)) return;
             if (!Raylib.CheckCollisionPointRec(pos, ScreenHandler.CameraArea())) return;
@@ -271,7 +271,7 @@ namespace ShapeAudio
         /// <param name="volume"></param>
         /// <param name="pitch"></param>
         /// <param name="blockDuration"></param>
-        public void SFXPlay(int id, Vector2 pos, float minRange, float maxRange, float volume = 1.0f, float pitch = 1.0f, float blockDuration = 0f)
+        public void SFXPlay(uint id, Vector2 pos, float minRange, float maxRange, float volume = 1.0f, float pitch = 1.0f, float blockDuration = 0f)
         {
             if (!sounds.ContainsKey(id)) return;
             if (soundBlockers.ContainsKey(id) && soundBlockers[id] > 0f) return;
@@ -305,7 +305,7 @@ namespace ShapeAudio
             sounds[id].Play(volume * spatialVolumeFactor, pitch);
         }
 
-        public void SFXLoopPlay(int id, float volume = 1f, float pitch = 1f, float blockDuration = 0f)
+        public void SFXLoopPlay(uint id, float volume = 1f, float pitch = 1f, float blockDuration = 0f)
         {
             if (!loops.ContainsKey(id)) return;
             if (soundBlockers.ContainsKey(id) && soundBlockers[id] > 0f) return;
@@ -317,7 +317,7 @@ namespace ShapeAudio
 
             loops[id].Play(volume, pitch);
         }
-        public void SFXLoopPlay(int id, Vector2 pos, float volume = 1f, float pitch = 1f, float blockDuration = 0f)
+        public void SFXLoopPlay(uint id, Vector2 pos, float volume = 1f, float pitch = 1f, float blockDuration = 0f)
         {
             if (!loops.ContainsKey(id)) return;
             if (soundBlockers.ContainsKey(id) && soundBlockers[id] > 0f) return;
@@ -329,11 +329,11 @@ namespace ShapeAudio
             loops[id].SpatialPos = pos;
             loops[id].Play(volume, pitch);
         }
-        public void SFXLoopUpdateSpatialPos(int id, Vector2 pos)
+        public void SFXLoopUpdateSpatialPos(uint id, Vector2 pos)
         {
             if(loops.ContainsKey(id)) loops[id].SpatialPos = pos;
         }
-        public void SFXLoopStop(int id)
+        public void SFXLoopStop(uint id)
         {
             if (!loops.ContainsKey(id)) return;
             loops[id].Stop();

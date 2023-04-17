@@ -13,10 +13,10 @@ namespace ShapeEngineDemo
         Color textColor = WHITE;
         Color bgColor = DARKGRAY;
         Color barColor = YELLOW;
-        int inputActionID = -1;
+        uint inputActionID = 0;
         float f = 0f;
 
-        public InputPrompt(Vector2 center, float radius, int inputActionID, float angleDeg, Color textColor, Color barColor, Color bgColor)
+        public InputPrompt(Vector2 center, float radius, uint inputActionID, float angleDeg, Color textColor, Color barColor, Color bgColor)
         {
             this.rect = new(center.X + radius, center.Y + radius, radius, radius);
             this.radius = radius;
@@ -26,7 +26,7 @@ namespace ShapeEngineDemo
             this.barColor = barColor;
             this.bgColor = bgColor;
         }
-        public InputPrompt(Vector2 center, float radius, int inputActionID, Color textColor, Color barColor, Color bgColor)
+        public InputPrompt(Vector2 center, float radius, uint inputActionID, Color textColor, Color barColor, Color bgColor)
         {
             this.rect = new(center.X + radius, center.Y + radius, radius, radius);
             this.radius = radius;
@@ -35,7 +35,7 @@ namespace ShapeEngineDemo
             this.barColor = barColor;
             this.bgColor = bgColor;
         }
-        public InputPrompt(Vector2 center, float radius, int inputActionID, Color textColor, Color barColor)
+        public InputPrompt(Vector2 center, float radius, uint inputActionID, Color textColor, Color barColor)
         {
             this.rect = new(center.X + radius, center.Y + radius, radius, radius);
             this.radius = radius;
@@ -44,7 +44,7 @@ namespace ShapeEngineDemo
             this.barColor = barColor;
             this.bgColor = new(0,0,0,0);
         }
-        public InputPrompt(Vector2 center, float radius, int inputActionID, Color textColor)
+        public InputPrompt(Vector2 center, float radius, uint inputActionID, Color textColor)
         {
             this.rect = new(center.X + radius, center.Y + radius, radius, radius);
             this.radius = radius;
@@ -53,7 +53,7 @@ namespace ShapeEngineDemo
             this.barColor = new(0,0,0,0);
             this.bgColor = new(0, 0, 0, 0);
         }
-        public InputPrompt(Vector2 center, float radius, int inputActionID, float angleDeg, Color textColor)
+        public InputPrompt(Vector2 center, float radius, uint inputActionID, float angleDeg, Color textColor)
         {
             this.rect = new(center.X + radius, center.Y + radius, radius, radius);
             this.radius = radius;
@@ -63,7 +63,7 @@ namespace ShapeEngineDemo
             this.barColor = new(0, 0, 0, 0);
             this.bgColor = new(0, 0, 0, 0);
         }
-        public InputPrompt(Vector2 center, float radius, int inputActionID, float angleDeg, Color textColor, Color bgColor)
+        public InputPrompt(Vector2 center, float radius, uint inputActionID, float angleDeg, Color textColor, Color bgColor)
         {
             this.rect = new(center.X + radius, center.Y + radius, radius, radius);
             this.radius = radius;

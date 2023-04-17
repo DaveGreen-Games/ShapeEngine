@@ -12,9 +12,61 @@ using ShapeAchievements;
 using System.Numerics;
 using ShapeLib;
 using ShapeCursor;
+using Windows.UI.ViewManagement;
 
 namespace ShapeEngineDemo
 {
+    public class CursorUI : ICursor
+    {
+        protected float sizeRelative = 20f;
+        protected uint colorID;
+        public uint ID { get;}
+        public CursorUI(uint id, float size, uint colorID)
+        {
+            this.sizeRelative = size;
+            this.colorID = colorID;
+            this.ID = id;
+        }
+    
+        public void Draw(Vector2 uiSize, Vector2 mousePos)
+        {
+            Vector2 tip = mousePos;
+            Vector2 right = mousePos + SVec.Rotate(SVec.Right() * sizeRelative * uiSize.X, 90.0f * DEG2RAD);
+            Vector2 left = mousePos + SVec.Rotate(SVec.Right() * sizeRelative * uiSize.X, 135.0f * DEG2RAD);
+            DrawTriangle(tip, left, right, Demo.PALETTES.C(colorID));
+    
+        }
+    }
+    public class CursorGame : ICursor
+    {
+        protected float sizeRelative = 20f;
+        protected uint colorID;
+        public uint ID { get; }
+        public CursorGame(uint id, float size, uint colorID)
+        {
+            this.sizeRelative = size;
+            this.colorID = colorID;
+            this.ID = id;
+        }
+
+        public void Draw(Vector2 uiSize, Vector2 mousePos)
+        {
+            Color color = Demo.PALETTES.C(colorID);
+            float size = uiSize.X * sizeRelative;
+            DrawLineEx(mousePos + new Vector2(-size / 2, -size / 2), mousePos + new Vector2(-size / 4, -size / 2), 4.0f, color);
+            DrawLineEx(mousePos + new Vector2(-size / 2, -size / 2), mousePos + new Vector2(-size / 2, -size / 4), 4.0f, color);
+    
+            DrawLineEx(mousePos + new Vector2(size / 2, -size / 2), mousePos + new Vector2(size / 4, -size / 2), 4.0f, color);
+            DrawLineEx(mousePos + new Vector2(size / 2, -size / 2), mousePos + new Vector2(size / 2, -size / 4), 4.0f, color);
+    
+            DrawLineEx(mousePos + new Vector2(-size / 2, size / 2), mousePos + new Vector2(-size / 4, size / 2), 4.0f, color);
+            DrawLineEx(mousePos + new Vector2(-size / 2, size / 2), mousePos + new Vector2(-size / 2, size / 4), 4.0f, color);
+    
+            DrawLineEx(mousePos + new Vector2(size / 2, size / 2), mousePos + new Vector2(size / 4, size / 2), 4.0f, color);
+            DrawLineEx(mousePos + new Vector2(size / 2, size / 2), mousePos + new Vector2(size / 2, size / 4), 4.0f, color);
+    
+        }
+    }
 
     public class Demo : GameLoop
     {
@@ -35,18 +87,19 @@ namespace ShapeEngineDemo
         public static Vector2 MousePos { get; private set; } = new(0f);
         public static Vector2 MousePosUI { get; private set; } = new(0f);
         public static Vector2 MousePosGame { get; private set; } = new(0f);
-        public const int SHADER_CRT = 0;
-        public const int BUS_SOUND = 1;
-        public const int BUS_MUSIC = 2;
+
+        public static readonly uint SHADER_CRT = SID.NextID;
 
 
-        public const int FONT_Light = 0;
-        public const int FONT_Regular = 1;
-        public const int FONT_Medium = 2;
-        public const int FONT_SemiBold = 3;
-        public const int FONT_Huge = 4;
+        public static readonly uint FONT_Light = SID.NextID;
+        public static readonly uint FONT_Regular = SID.NextID;
+        public static readonly uint FONT_Medium = SID.NextID;
+        public static readonly uint FONT_SemiBold = SID.NextID;
+        public static readonly uint FONT_Huge = SID.NextID;
 
-
+        public static readonly uint CURSOR_UI = SID.NextID;
+        public static readonly uint CURSOR_Game = SID.NextID;
+        public static readonly Dictionary<string, uint> PALETTE_IDs = new();
         public override void Start()
         {
             
@@ -60,13 +113,15 @@ namespace ShapeEngineDemo
             var dataString = RESOURCES.LoadJsonData("resources/data/test-properties.json");
             DataContainerCDB dataContainer = new(new ShapeEngineDemo.DataObjects.DefaultDataResolver(), dataString, "asteroids", "player", "guns", "projectiles", "colors", "engines");
             DATA.AddDataContainer(dataContainer);
-            
-            
+
+            Dictionary<string, uint> paletteIDs = new();
             //COLOR PALETTES
             var colorData = DATA.GetCDBContainer().GetSheet<ColorData>("colors");
             foreach (var palette in colorData)
             {
-                Dictionary<int, Color> colors = new()
+                uint id = SID.NextID;
+                PALETTE_IDs.Add(palette.Key, id);
+                Dictionary<uint, Color> colors = new()
                 {
                     {ColorIDs.Background1, PaletteHandler.HexToColor(palette.Value.bg1)},
                     {ColorIDs.Background2, PaletteHandler.HexToColor(palette.Value.bg2)},
@@ -86,9 +141,9 @@ namespace ShapeEngineDemo
                     {ColorIDs.DarkMatter, PaletteHandler.HexToColor(palette.Value.darkMatter)},
 
                 };
-                PALETTES.AddPalette(palette.Key, colors);
+                PALETTES.AddPalette(id, colors);
             }
-            PALETTES.ChangePalette("starter");
+            PALETTES.ChangePalette(PALETTE_IDs["starter"]);
             
             
             //Set the clear color for game screen texture
@@ -149,8 +204,8 @@ namespace ShapeEngineDemo
             
 
             //AUDIO BUSES
-            AUDIO.BusAdd(BUS_MUSIC, 0.5f);
-            AUDIO.BusAdd(BUS_SOUND, 0.5f);
+            AUDIO.BusAdd(SoundIDs.BUS_MUSIC, 0.5f);
+            AUDIO.BusAdd(SoundIDs.BUS_SOUND, 0.5f);
 
             
             var buttonClick = RESOURCES.LoadSound("resources/audio/sfx/button-click01.wav");
@@ -173,30 +228,29 @@ namespace ShapeEngineDemo
 
 
             //SOUNDS
-            AUDIO.SFXAdd(SoundIDs.UI_Click, buttonClick, 0.25f,                     1f, AudioHandler.BUS_MASTER, BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.UI_Hover, buttonHover, 0.5f,                      1f, AudioHandler.BUS_MASTER, BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.PLAYER_Boost, boost, 0.5f,                        1f, AudioHandler.BUS_MASTER, BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.PLAYER_Slow, slow, 0.5f,                          1f, AudioHandler.BUS_MASTER, BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.PLAYER_Hurt, playerHurt, 0.5f,                    1f, AudioHandler.BUS_MASTER, BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.PLAYER_Die, playerDie, 0.5f,                      1f, AudioHandler.BUS_MASTER, BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.PLAYER_StunEnded, playerStunEnded, 0.5f,          1f, AudioHandler.BUS_MASTER, BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.PLAYER_Healed, playerHealed, 0.5f,                1f, AudioHandler.BUS_MASTER, BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.PLAYER_PowerDown, playerPwrDown, 1.0f,            1f, AudioHandler.BUS_MASTER, BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.PLAYER_PowerUp, playerPwrUp, 1.0f,                1f, AudioHandler.BUS_MASTER, BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Pierce, projectilePierce, 0.7f,        1f, AudioHandler.BUS_MASTER, BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Bounce, projectileBounce, 0.6f,        1f, AudioHandler.BUS_MASTER, BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Impact, projectileImpact, 0.8f,        1f, AudioHandler.BUS_MASTER, BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Explosion, projectileExplosion, 1f,    1f, AudioHandler.BUS_MASTER, BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Crit, projectileCrit, 0.6f,            1f, AudioHandler.BUS_MASTER, BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Shoot, bullet, 0.25f,                  1f, AudioHandler.BUS_MASTER, BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.ASTEROID_Die, asteroidDie, 0.55f,                 1f, AudioHandler.BUS_MASTER, BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.UI_Click, buttonClick, 0.25f,                     1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.UI_Hover, buttonHover, 0.5f,                      1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PLAYER_Boost, boost, 0.5f,                        1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PLAYER_Slow, slow, 0.5f,                          1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PLAYER_Hurt, playerHurt, 0.5f,                    1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PLAYER_Die, playerDie, 0.5f,                      1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PLAYER_StunEnded, playerStunEnded, 0.5f,          1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PLAYER_Healed, playerHealed, 0.5f,                1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PLAYER_PowerDown, playerPwrDown, 1.0f,            1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PLAYER_PowerUp, playerPwrUp, 1.0f,                1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Pierce, projectilePierce, 0.7f,        1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Bounce, projectileBounce, 0.6f,        1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Impact, projectileImpact, 0.8f,        1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Explosion, projectileExplosion, 1f,    1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Crit, projectileCrit, 0.6f,            1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Shoot, bullet, 0.25f,                  1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.ASTEROID_Die, asteroidDie, 0.55f,                 1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
 
 
 
 
             //INPUT
-            InputAction iaQuit = new(InputIDs.OPTIONS_Quit, IInputType.Create(SKeyboardButton.ESCAPE));//, IInputType.Create(SGamepadButton.MIDDLE_RIGHT));
-            InputAction iaFullscreen =              new(InputIDs.OPTIONS_Fullscreen, IInputType.Create(SKeyboardButton.F), IInputType.Create(SGamepadButton.MIDDLE_LEFT));
+            InputAction quit =                      new(InputIDs.OPTIONS_Quit, IInputType.Create(SKeyboardButton.ESCAPE));//, IInputType.Create(SGamepadButton.MIDDLE_RIGHT));
             InputAction rotateLeft =                new(InputIDs.PLAYER_RotateLeft, IInputType.Create(SKeyboardButton.A), IInputType.Create(SGamepadButton.LEFT_STICK_LEFT));
             InputAction rotateRight =               new(InputIDs.PLAYER_RotateRight, IInputType.Create(SKeyboardButton.D), IInputType.Create(SGamepadButton.LEFT_STICK_RIGHT));
             InputAction rotate =                    new(InputIDs.PLAYER_Rotate, IInputType.Create(SKeyboardButton.A, SKeyboardButton.D), IInputType.Create(SGamepadAxis.LEFT_X, 0.25f));
@@ -206,6 +260,7 @@ namespace ShapeEngineDemo
             InputAction shootFixed =                new(InputIDs.PLAYER_Shoot, IInputType.Create(SMouseButton.LEFT), IInputType.Create(SKeyboardButton.SPACE), IInputType.Create(SGamepadButton.RIGHT_TRIGGER_BOTTOM));
             InputAction dropAimPoint =              new(InputIDs.PLAYER_DropAimPoint, IInputType.Create(SKeyboardButton.E), IInputType.Create(SGamepadButton.RIGHT_FACE_LEFT));
 
+            InputAction fullscreen =                new(InputIDs.OPTIONS_Fullscreen, IInputType.Create(SKeyboardButton.F), IInputType.Create(SGamepadButton.MIDDLE_LEFT));
             InputAction cycleResolutionsDebug =     new(InputIDs.OPTIONS_CycleRes, IInputType.Create(SKeyboardButton.UP));
             InputAction nextMonitorDebug =          new(InputIDs.OPTIONS_NextMonitor, IInputType.Create(SKeyboardButton.RIGHT));
             InputAction toggleVsyncDebug =          new(InputIDs.OPTIONS_Vsync, IInputType.Create(SKeyboardButton.DOWN));
@@ -228,17 +283,16 @@ namespace ShapeEngineDemo
             InputAction uiLeft = new(InputIDs.UI_Left, IInputType.Create(SKeyboardButton.A), IInputType.Create(SGamepadButton.LEFT_FACE_LEFT));
             InputAction uiRight = new(InputIDs.UI_Right, IInputType.Create(SKeyboardButton.D), IInputType.Create(SGamepadButton.LEFT_FACE_RIGHT));
 
-            INPUT.SetInputActions(
-                iaQuit, iaFullscreen, 
-                rotateLeft, rotateRight, rotate, 
-                boostInput, slowInput, 
-                shootFixed, dropAimPoint,
-                pause, slowTime,
-                spawnAsteroidDebug, healPlayerDebug, toggleDrawCollidersDebug, toggleDrawHelpersDebug, cycleZoomDebug, 
-                cycleResolutionsDebug, nextMonitorDebug, cycleFramerateLimitDebug, toggleVsyncDebug,
+            //ui
+            INPUT.AddGroup(InputIDs.GROUP_UI, uiPressed, uiMousePressed, uiCancel, uiDown, uiUp, uiLeft, uiRight);
+            INPUT.AddGroup(InputIDs.GROUP_Settings, cycleResolutionsDebug, nextMonitorDebug, cycleFramerateLimitDebug, toggleVsyncDebug, fullscreen);
+            INPUT.AddGroup(InputIDs.GROUP_Debug, spawnAsteroidDebug, healPlayerDebug, toggleDrawCollidersDebug, toggleDrawHelpersDebug, cycleZoomDebug);
+            INPUT.AddGroup(InputIDs.GROUP_Player, rotateLeft, rotateRight, rotate, boostInput, slowInput, shootFixed, dropAimPoint);
+            INPUT.AddGroup(InputIDs.GROUP_Level, quit, pause, slowTime);
 
-                uiPressed, uiMousePressed, uiCancel, uiDown, uiUp, uiLeft, uiRight
-                );
+            INPUT.SetGroupDisabled(InputIDs.GROUP_Player, true);
+            INPUT.SetGroupDisabled(InputIDs.GROUP_Level, true);
+            INPUT.SetGroupDisabled(InputIDs.GROUP_Debug, true);
 
             ScreenHandler.OnWindowSizeChanged += OnWindowSizeChanged;
             ScreenHandler.CAMERA.BaseZoom = 1.5f;
@@ -259,9 +313,9 @@ namespace ShapeEngineDemo
             ACHIEVEMENTS.AddAchievement(asteroidAnnihilator);
 
 
-            CURSOR.Add("ui", new CursorBasic(0.02f, RED));
-            CURSOR.Add("game", new CursorGame(0.02f, RED));
-            CURSOR.Switch("ui");
+            CURSOR.Add(new CursorUI(CURSOR_UI, 0.02f, ColorIDs.Player));
+            CURSOR.Add(new CursorGame(CURSOR_Game, 0.02f, ColorIDs.Player));
+            CURSOR.Switch(CURSOR_UI);
             CURSOR.Hide();
 
             INPUT.OnInputTypeChanged += OnInputTypeChanged;

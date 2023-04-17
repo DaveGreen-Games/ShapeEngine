@@ -1,6 +1,8 @@
 ﻿using ShapeCore;
 using ShapeLib;
 using System.Numerics;
+using System.Reflection.Metadata.Ecma335;
+using System.Threading.Tasks.Dataflow;
 
 namespace ShapeInput
 {
@@ -202,7 +204,7 @@ namespace ShapeInput
         public event Action? OnGamepadIndexChanged;
         public event Action? OnMouseMoved;
 
-        private Dictionary<int, InputAction> actions = new();
+        private Dictionary<uint, InputActionGroup> actionGroups = new();
         private List<GamepadVibration> gamepadVibrationStack = new();
         private List<int> connectedGamepads = new();
 
@@ -210,7 +212,7 @@ namespace ShapeInput
         public float VibrationStrength { get; set; } = 1.0f;
         public int GamepadIndex { get; protected set; } = -1;
         public int MaxGamepads { get; set; } = 4;
-        public int ID { get; protected set; } = -1;
+        public uint ID { get; protected set; }
         public Vector2 MousePos
         {
             get
@@ -230,9 +232,9 @@ namespace ShapeInput
         public bool IsGamepadConnected { get; protected set; } = false;
         private bool autoAssignGamepad = false;
         
-        public InputMap(int id, int gamepadIndex, params InputAction[] actions)
+        public InputMap(uint id, int gamepadIndex)//, params InputActionGroup[] actions)
         {
-            SetInputActions(actions);
+            //SetInputActionsGroups(actions);
             GamepadSetup();
             this.autoAssignGamepad = false;
             this.GamepadIndex = gamepadIndex;
@@ -241,9 +243,9 @@ namespace ShapeInput
             this.IsGamepadConnected = CheckGamepad(this.GamepadIndex);
             this.ID = id;
         }
-        public InputMap(int id, params InputAction[] actions)
+        public InputMap(uint id)//, params InputActionGroup[] actions)
         {
-            SetInputActions(actions);
+            //SetInputActionsGroups(actions);
             GamepadSetup();
             this.autoAssignGamepad = true;
             this.GamepadIndex = GetNextGamepad();
@@ -251,24 +253,40 @@ namespace ShapeInput
             this.IsGamepadConnected = CheckGamepad(this.GamepadIndex);
             this.ID = id;
         }
-        public InputMap Copy(int id, int gamepadIndex)
+        public InputMap Copy(uint id, int gamepadIndex)
         {
-            List<InputAction> actions = new();
-            foreach (var action in actions)
+            var newMap = new InputMap(id, gamepadIndex);
+            foreach (var group in actionGroups.Values)
             {
-                actions.Add(action.Copy());
+                newMap.AddGroup(group.Copy());
             }
-            return new InputMap(id, gamepadIndex, actions.ToArray());
+            return newMap;
         }
-        public void SetInputActions(params InputAction[] actions)
+        internal void AddGroup(InputActionGroup group)
         {
-            foreach (var action in actions)
+            if (actionGroups.ContainsKey(group.ID))
             {
-                if (this.actions.ContainsKey(action.ID)) continue;
-                this.actions.Add(action.ID, action);
-                //action.WasUsed += OnConditionUsed;
+                actionGroups[group.ID] = group;
             }
+            else actionGroups.Add(group.ID, group);
         }
+        public void AddGroup(uint id, params InputAction[] actions)
+        {
+            if (actionGroups.ContainsKey(id))
+            {
+                actionGroups[id] = new(id, actions);
+            }
+            else actionGroups.Add(id, new(id, actions));
+        }
+        //public void SetInputActionsGroups(params InputActionGroup[] newGroups)
+        //{
+        //    this.actionGroups.Clear();
+        //    foreach (var group in newGroups)
+        //    {
+        //        if (this.actionGroups.ContainsKey(group.ID)) continue;
+        //        this.actionGroups.Add(group.ID, group);
+        //    }
+        //}
         public void Update(float dt)
         {
             if (!Disabled)
@@ -282,33 +300,60 @@ namespace ShapeInput
 
                 bool gamepadUsed = false;
                 bool keyboardUsed = false;
-                foreach (var action in actions.Values)
+                foreach (var group in actionGroups.Values)
                 {
-                    action.Update(GamepadIndex, dt);
-                    var state = action.State;
-                    gamepadUsed = gamepadUsed || action.State.gamepadUsed;
-                    keyboardUsed = keyboardUsed || action.State.keyboardUsed;
+                    if (group.Disabled) continue;
+                    foreach (var action in group.Actions.Values)
+                    {
+                        action.Update(GamepadIndex, dt);
+                        var state = action.State;
+                        gamepadUsed = gamepadUsed || action.State.gamepadUsed;
+                        keyboardUsed = keyboardUsed || action.State.keyboardUsed;
+                    }
                 }
-
+                
                 CheckGamepadConnection();
                 CheckInputType(keyboardUsed, gamepadUsed);
                 UpdateVibration(dt);
             }
         }
-        public InputActionState GetActionState(int id)
+        public InputActionState GetActionState(uint groupID, uint actionID)
         {
-            if (!Disabled && actions.ContainsKey(id))
+            if (!Disabled)
             {
-                return actions[id].State;
+                if(actionGroups.ContainsKey(groupID))
+                {
+                    return actionGroups[groupID].GetState(actionID);
+                }
             }
             return new();
         }
-        public string GetInputName(int id, bool shorthand = true)
+        public InputActionState GetActionState(uint actionID)
         {
-            if (!actions.ContainsKey(id)) return "";
-            else return actions[id].GetInputName(IsGamepad, shorthand);
+            foreach (var group in actionGroups.Values)
+            {
+                if(group.Actions.ContainsKey(actionID)) 
+                    return group.Disabled ? new() : group.GetState(actionID);
+
+            }
+            return new();
         }
-        
+        public string GetInputName(uint actionID,bool shorthand = true)
+        {
+            foreach (var group in actionGroups.Values)
+            {
+                if (group.Actions.ContainsKey(actionID))
+                    return group.Disabled ? "" : group.GetInputName(actionID, shorthand);
+
+            }
+            return "";
+        }
+        public string GetInputName(uint groupID, uint actionID, bool shorthand = true)
+        {
+            if (!actionGroups.ContainsKey(groupID)) return "";
+            return actionGroups[groupID].GetInputName(actionID, shorthand);
+        }
+        public void SetGroupDisabled(uint groupID, bool disabled) { if(actionGroups.ContainsKey(groupID)) actionGroups[groupID].Disabled = disabled; }
         public void AddVibration(float leftMotor, float rightMotor, float duration = -1f, string name = "default")
         {
             if(!Disabled && IsGamepad && IsGamepadConnected && VibrationStrength > 0f)

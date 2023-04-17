@@ -12,20 +12,25 @@ namespace ShapeEngineDemo
     {
         public string Text { get; set; } = "Button";
         private Font font;
-        private int shortcutID = -1;
-        public ButtonBasic(string text, Font font, int shortcutID = -1)
+        private uint shortcutID = 0;
+        public ButtonBasic(string text, Font font)
+        {
+            this.Text = text;
+            this.font = font;
+            this.DisabledSelection = false;
+        }
+        public ButtonBasic(string text, Font font, uint shortcutID)
         {
             this.Text = text;
             this.font = font;
             this.shortcutID = shortcutID;
             this.DisabledSelection = false;
         }
-
         protected override bool CheckPressed() { return Demo.INPUT.GetActionState(InputIDs.UI_Pressed).down; }
         protected override bool CheckMousePressed() { return Demo.INPUT.GetActionState(InputIDs.UI_MousePressed).down; }
         protected override bool CheckShortcutPressed()
         {
-            if (shortcutID < 0) return false;
+            if (shortcutID == 0) return false;
             else return Demo.INPUT.GetActionState(shortcutID).down;
         }
         public override void Draw()
@@ -72,8 +77,8 @@ namespace ShapeEngineDemo
         {
             var font = Demo.FONT.GetFont(Demo.FONT_Medium);
 
-            startButton = new("START", font, -1);
-            optionsButton = new("OPTIONS", font, -1);
+            startButton = new("START", font);
+            optionsButton = new("OPTIONS", font);
             optionsButton.DisabledSelection = true;
             quitButton = new("QUIT", font, InputIDs.UI_Cancel);
             buttonContainer = new(startButton, optionsButton, quitButton);
@@ -89,9 +94,16 @@ namespace ShapeEngineDemo
         public override void Activate(Scene? oldScene)
         {
             base.Activate(oldScene);
-            Demo.CURSOR.Switch("ui");
+            Demo.CURSOR.Switch(Demo.CURSOR_UI);
             GAMELOOP.backgroundColor = Demo.PALETTES.C(ColorIDs.Background2);
+            
+            Demo.INPUT.SetGroupDisabled(InputIDs.GROUP_Player, true);
+            Demo.INPUT.SetGroupDisabled(InputIDs.GROUP_Level, true);
+            Demo.INPUT.SetGroupDisabled(InputIDs.GROUP_Debug, true);
+            Demo.INPUT.SetGroupDisabled(InputIDs.GROUP_UI, false);
+            Demo.INPUT.SetGroupDisabled(InputIDs.GROUP_Settings, false);
             GAMELOOP.RemoveScene("level1");
+
         }
         public override void Deactivate(Scene? newScene)
         {

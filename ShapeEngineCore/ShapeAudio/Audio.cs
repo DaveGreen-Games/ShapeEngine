@@ -5,13 +5,13 @@ using System.Numerics;
 namespace ShapeAudio
 {
 
-    internal class Audio
+    internal abstract class Audio
     {
         public float BaseVolume { get; protected set; } = 0.5f;
         public float Volume { get; set; } = 1f;
         public float BasePitch { get; protected set; } = 1.0f;
         public float Pitch { get; set; } = 1f;
-        public int ID { get; protected set; } = -1;
+        public uint ID { get; protected set; }
         public bool Paused { get; protected set; } = false;
         protected Bus[] buses = new Bus[0];
         public virtual bool IsPlaying() { return false; }
@@ -36,7 +36,7 @@ namespace ShapeAudio
     {
         public Sound Sound { get; protected set; }
 
-        public SFX(int id, Sound sound, Bus[] buses, float volume = 0.5f, float pitch = 1.0f)
+        public SFX(uint id, Sound sound, Bus[] buses, float volume = 0.5f, float pitch = 1.0f)
         {
             this.ID = id;
             this.Sound = sound;
@@ -97,7 +97,7 @@ namespace ShapeAudio
         public float MinSpatialRange { get; set; } = 0f;
         public float MaxSpatialRange { get; set; } = 0f;
         public override bool IsPlaying() { return IsSoundPlaying(Sound); }
-        public SFXLoop(int id, Sound sound, Bus[] buses, float volume = 0.5f, float pitch = 1.0f)
+        public SFXLoop(uint id, Sound sound, Bus[] buses, float volume = 0.5f, float pitch = 1.0f)
         {
             this.ID = id;
             this.Sound = sound;
@@ -111,7 +111,7 @@ namespace ShapeAudio
                 bus.Stopped += Stop;
             }
         }
-        public SFXLoop(int id, Sound sound, float minSpatialRange, float maxSpatialRange, Bus[] buses, float volume = 0.5f, float pitch = 1.0f)
+        public SFXLoop(uint id, Sound sound, float minSpatialRange, float maxSpatialRange, Bus[] buses, float volume = 0.5f, float pitch = 1.0f)
         {
             this.ID = id;
             this.Sound = sound;
@@ -207,7 +207,7 @@ namespace ShapeAudio
     {
         public Music Music { get; protected set; }
         public string DisplayName { get; protected set; } = "";
-        public Song(int id, string displayName, Music song, Bus[] buses, float volume = 0.5f, float pitch = 1.0f)
+        public Song(uint id, string displayName, Music song, Bus[] buses, float volume = 0.5f, float pitch = 1.0f)
         {
             this.ID = id;
             this.DisplayName = displayName;

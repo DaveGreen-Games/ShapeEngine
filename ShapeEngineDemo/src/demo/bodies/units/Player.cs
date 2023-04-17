@@ -98,10 +98,10 @@ namespace ShapeEngineDemo.Bodies
     public class WeaponSystem
     {
         private List<Hardpoint> hardpoints = new();
-        private int fixedInputID = -1;
+        private uint fixedInputID;
         //private Pin turretPin;
         private Pin aimpointPin;
-        public WeaponSystem(List<Hardpoint> hardpoints, float pinDuration, float pinCooldown, int fixedInputID)
+        public WeaponSystem(List<Hardpoint> hardpoints, float pinDuration, float pinCooldown, uint fixedInputID)
         {
             this.hardpoints = hardpoints;
             this.fixedInputID = fixedInputID;

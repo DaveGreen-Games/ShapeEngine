@@ -9,22 +9,22 @@ namespace ShapeScreen
     {
         private float duration = 0f;
         private float timer = 0f;
-        private int shaderID;
+        public uint ID { get; private set; }
         private bool shaderEnabled = false;
-        public ShaderFlash(float dur, int shaderID)
+        public ShaderFlash(float dur, uint id)
         {
-            this.shaderID = shaderID;
+            this.ID = id;
             duration = dur;
             timer = dur;
 
             if (timer > 0f)
             {
-                ScreenHandler.SHADERS.EnableScreenShader(shaderID);
+                ScreenHandler.SHADERS.EnableScreenShader(id);
                 shaderEnabled = true;
             }
         }
 
-        public int GetShaderID() { return shaderID; }
+        //public uint GetShaderID() { return shaderID; }
         public float Percentage()
         {
             if (duration <= 0.0f) return 0f;
@@ -43,7 +43,7 @@ namespace ShapeScreen
             timer = dur;
             if (!shaderEnabled)
             {
-                ScreenHandler.SHADERS.EnableScreenShader(shaderID);
+                ScreenHandler.SHADERS.EnableScreenShader(ID);
                 shaderEnabled = true;
             }
         }
@@ -52,7 +52,7 @@ namespace ShapeScreen
             timer = 0f;
             if (shaderEnabled)
             {
-                ScreenHandler.SHADERS.DisableScreenShader(shaderID);
+                ScreenHandler.SHADERS.DisableScreenShader(ID);
                 shaderEnabled = false;
             }
         }
@@ -62,7 +62,7 @@ namespace ShapeScreen
             timer = duration;
             if (!shaderEnabled)
             {
-                ScreenHandler.SHADERS.EnableScreenShader(shaderID);
+                ScreenHandler.SHADERS.EnableScreenShader(ID);
                 shaderEnabled = true;
             }
         }
@@ -73,7 +73,7 @@ namespace ShapeScreen
                 timer -= dt;
                 if (timer <= 0.0f)
                 {
-                    ScreenHandler.SHADERS.DisableScreenShader(shaderID);
+                    ScreenHandler.SHADERS.DisableScreenShader(ID);
                     shaderEnabled = false;
                     timer = 0f;
                 }
@@ -145,7 +145,7 @@ namespace ShapeScreen
         
         public static ShaderHandler SHADERS = new();
 
-        private static Dictionary<int, ShaderFlash> shaderFlashes = new();
+        private static Dictionary<uint, ShaderFlash> shaderFlashes = new();
         private static ScreenBuffer[] screenBuffers = new ScreenBuffer[0];
         
         public static (int width, int height) DEVELOPMENT_RESOLUTION { get; private set; } = (0, 0);
@@ -237,7 +237,7 @@ namespace ShapeScreen
             foreach (var shaderFlash in shaderFlashes.Values)
             {
                 shaderFlash.Update(dt);
-                if (shaderFlash.IsFinished()) shaderFlashes.Remove(shaderFlash.GetShaderID()); //does that work?
+                if (shaderFlash.IsFinished()) shaderFlashes.Remove(shaderFlash.ID); //does that work?
             }
 
             var newMonitor = MONITOR_HANDLER.HasMonitorSetupChanged();
@@ -444,7 +444,7 @@ namespace ShapeScreen
             return IsFullscreen();
         }
 
-        public static void ShaderFlash(float duration, params int[] shaderIDs)
+        public static void ShaderFlash(float duration, params uint[] shaderIDs)
         {
             if (shaderIDs.Length <= 0) return;
 

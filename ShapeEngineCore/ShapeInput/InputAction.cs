@@ -1,4 +1,6 @@
 ﻿
+using System.Security.AccessControl;
+
 namespace ShapeInput
 {
     public struct InputActionState
@@ -32,17 +34,57 @@ namespace ShapeInput
             return new InputActionState(down, up, released, pressed, axis, gamepadUsed, keyboardUsed);
         }
     }
+    internal class InputActionGroup
+    {
+        public uint ID { get; private set; }
+        public bool Disabled { get; set; } = false;
+        public Dictionary<uint, InputAction> Actions { get; private set; } = new();
 
+        public InputActionGroup(uint id, params InputAction[] actions)
+        {
+            this.ID = id;
+            
+            SetInputActions(actions);
+        }
+        
+        public void SetInputActions(params InputAction[] actions)
+        {
+            foreach (var action in actions)
+            {
+                if (!Actions.ContainsKey(action.ID))
+                {
+                    Actions.Add(action.ID, action);
+                }
+            }
+        }
+        public InputActionState GetState(uint id)
+        {
+            if (!Disabled && Actions.ContainsKey(id)) return Actions[id].State;
+            else return new();
+        }
+        public string GetInputName(uint id, bool gamepad, bool shorthand = true)
+        {
+            if(Actions.ContainsKey(id)) return Actions[id].GetInputName(gamepad, shorthand);
+            return "";
+        }
+        public InputActionGroup Copy()
+        {
+            List<InputAction> copy = new();
+            foreach (var action in Actions.Values)
+            {
+                copy.Add(action.Copy());
+            }
+            return new(ID, copy.ToArray());
+        }
+        
+    }
     public class InputAction
     {
-        //public event Action<bool, bool>? WasUsed;
-        public int ID { get; protected set; } = -1;
+        public uint ID { get; protected set; }
         private List<IInputType> inputs = new();
-        //private bool gamepadUsed = false;
-        //private bool keyboardUsed = false;
         public InputActionState State { get; protected set; } = new();
 
-        public InputAction(int id, params IInputType[] inputs)
+        public InputAction(uint id, params IInputType[] inputs)
         {
             this.inputs = inputs.ToList();
             this.ID = id;
@@ -57,6 +99,7 @@ namespace ShapeInput
             }
             return new(ID, copy);
         }
+        
         public void Update(int gamepadIndex, float dt)
         {
             bool gpUsed = false;
@@ -127,7 +170,6 @@ namespace ShapeInput
             return false;
         }
     }
-
 }
 
 /*

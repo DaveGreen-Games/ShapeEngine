@@ -16,10 +16,10 @@ namespace ShapeEngineDemo
         Color barBackgroundColor;
         float angleDeg = 0f;
         string title = "";
-        int inputActionID = -1;
+        uint inputActionID = 0;
         float f = 0f;
 
-        public SkillDisplay(Color textColor, Color barColor, Color barBGColor, Color bgColor, string title = "", int inputActionID = -1, float angleDeg = 0f)
+        public SkillDisplay(Color textColor, Color barColor, Color barBGColor, Color bgColor, string title = "", uint inputActionID = 0, float angleDeg = 0f)
         {
             this.inputActionID = inputActionID;
             this.angleDeg = angleDeg;

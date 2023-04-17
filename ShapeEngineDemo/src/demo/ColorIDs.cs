@@ -1,39 +1,26 @@
 ﻿
 
+using ShapeLib;
+
 namespace ShapeEngineDemo
 {
     public static class ColorIDs
     {
-        public const int Background1 = 1;
-
-        public const int Background2 = 2;
-
-        public const int Flash = 3;
-
-        public const int Special1 = 4;
-
-        public const int Special2 = 5;
-
-        public const int Text = 6;
-
-        public const int Header = 7;
-
-        public const int Player = 8;
-
-        public const int Neutral = 9;
-
-        public const int Enemy = 10;
-
-        public const int Armor = 11;
-
-        public const int Acid = 12;
-
-        public const int Shield = 13;
-
-        public const int Radiation = 14;
-
-        public const int Energy = 15;
-
-        public const int DarkMatter = 16;
+        public static readonly uint Background1 = SID.NextID;
+        public static readonly uint Background2 = SID.NextID;
+        public static readonly uint Flash = SID.NextID;
+        public static readonly uint Special1 = SID.NextID;
+        public static readonly uint Special2 = SID.NextID;
+        public static readonly uint Text = SID.NextID;
+        public static readonly uint Header = SID.NextID;
+        public static readonly uint Player = SID.NextID;
+        public static readonly uint Neutral = SID.NextID;
+        public static readonly uint Enemy = SID.NextID;
+        public static readonly uint Armor = SID.NextID;
+        public static readonly uint Acid = SID.NextID;
+        public static readonly uint Shield = SID.NextID;
+        public static readonly uint Radiation = SID.NextID;
+        public static readonly uint Energy = SID.NextID;
+        public static readonly uint DarkMatter = SID.NextID;
     }
 }

@@ -1,27 +1,31 @@
 ﻿
+using ShapeAudio;
+using ShapeLib;
+
 namespace ShapeEngineDemo
 {
     public static class SoundIDs
     {
-        public const int UI_Click = 10;
-        public const int UI_Hover = 11;
+        public static readonly uint UI_Click =      SID.NextID;
+        public static readonly uint UI_Hover = SID.NextID;
+        public static readonly uint PLAYER_Boost =  SID.NextID;
+        public static readonly uint PLAYER_Slow =   SID.NextID;
+        public static readonly uint PLAYER_Hurt =   SID.NextID;
+        public static readonly uint PLAYER_Die =    SID.NextID;
+        public static readonly uint PLAYER_StunEnded = SID.NextID;
+        public static readonly uint PLAYER_PowerDown = SID.NextID;
+        public static readonly uint PLAYER_PowerUp = SID.NextID;
+        public static readonly uint PLAYER_Healed = SID.NextID;
+        public static readonly uint PROJECTILE_Pierce = SID.NextID;
+        public static readonly uint PROJECTILE_Bounce = SID.NextID;
+        public static readonly uint PROJECTILE_Impact = SID.NextID;
+        public static readonly uint PROJECTILE_Explosion = SID.NextID;
+        public static readonly uint PROJECTILE_Crit = SID.NextID;
+        public static readonly uint PROJECTILE_Shoot = SID.NextID;
+        public static readonly uint ASTEROID_Die = SID.NextID;
 
-        public const int PLAYER_Boost = 20;
-        public const int PLAYER_Slow = 21;
-        public const int PLAYER_Hurt = 22;
-        public const int PLAYER_Die = 23;
-        public const int PLAYER_StunEnded = 24;
-        public const int PLAYER_PowerDown = 25;
-        public const int PLAYER_PowerUp = 26;
-        public const int PLAYER_Healed = 27;
-
-        public const int PROJECTILE_Pierce = 31;
-        public const int PROJECTILE_Bounce = 32;
-        public const int PROJECTILE_Impact = 33;
-        public const int PROJECTILE_Explosion = 34;
-        public const int PROJECTILE_Crit = 35;
-        public const int PROJECTILE_Shoot = 36;
-
-        public const int ASTEROID_Die = 40;
+        
+        public static readonly uint BUS_SOUND   = SID.NextID;
+        public static readonly uint BUS_MUSIC   = SID.NextID;
     }
 }

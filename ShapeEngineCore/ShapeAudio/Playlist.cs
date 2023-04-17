@@ -4,17 +4,17 @@ namespace ShapeAudio
 {
     internal class Playlist
     {
-        public event Action<int, Playlist>? RequestNextSong;
+        public event Action<uint, Playlist>? RequestNextSong;
         public event Action<string, string>? SongStarted;
 
-        private HashSet<int> mixtape = new();
-        private List<int> queue = new();
+        private HashSet<uint> mixtape = new();
+        private List<uint> queue = new();
 
-        public int ID { get; private set; } = -1;
+        public uint ID { get; private set; }
         public Song? CurrentSong { get; private set; } = null;
         public string DisplayName { get; private set; } = "";
         public bool Paused { get; private set; } = false;
-        public Playlist(int id, string displayName, HashSet<int> songIDs)
+        public Playlist(uint id, string displayName, HashSet<uint> songIDs)
         {
             this.ID = id;
             this.DisplayName = displayName;
@@ -29,7 +29,7 @@ namespace ShapeAudio
             if (CurrentSong != null && CurrentSong.Update(dt))
             {
                 CurrentSong.Stop();
-                int id = PopNextID();
+                uint id = PopNextID();
                 RequestNextSong?.Invoke(id, this);
             }
         }
@@ -47,7 +47,7 @@ namespace ShapeAudio
         public void Start()
         {
             if (IsPlaying()) return;
-            int id = PopNextID();
+            uint id = PopNextID();
             RequestNextSong?.Invoke(id, this);
         }
         public void Stop()
@@ -75,7 +75,7 @@ namespace ShapeAudio
             SongStarted?.Invoke(song.DisplayName, DisplayName);
             song.Play();
         }
-        public void AddSongID(int id)
+        public void AddSongID(uint id)
         {
             if (mixtape.Add(id))
             {
@@ -83,11 +83,11 @@ namespace ShapeAudio
             }
         }
 
-        private int PopNextID()
+        private uint PopNextID()
         {
             if (queue.Count <= 0) Refill();
             int index = SRNG.randI(0, queue.Count);
-            int nextID = queue[index];
+            uint nextID = queue[index];
             queue.RemoveAt(index);
             return nextID;
         }

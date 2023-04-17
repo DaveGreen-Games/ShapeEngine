@@ -17,9 +17,9 @@
                 VolumeChanged?.Invoke(volume);
             }
         }
-        public int ID { get; protected set; } = -1;
+        public uint ID { get; protected set; }
 
-        public Bus(int id, float volume)
+        public Bus(uint id, float volume)
         {
             this.ID = id;
             this.volume = volume;
