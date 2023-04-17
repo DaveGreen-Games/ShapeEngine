@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 using Raylib_CsLo;
 using ShapeColor;
 
@@ -268,11 +269,10 @@ namespace ShapeLib
         public static float EaseInElastic(float t)
         {
             const float c4 = 2f * PI / 3f;
-
             return t == 0f
-              ? 0f
-              : t == 1f
-              ? 1f
+            ? 0f
+            : t == 1f
+            ? 1f
               : -MathF.Pow(2f, 10f * t - 10f) * MathF.Sin((t * 10f - 10.75f) * c4);
         }
         public static float EaseOutElastic(float t)
