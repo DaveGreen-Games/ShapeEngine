@@ -1,4 +1,5 @@
-﻿using System;
+﻿/*
+using System;
 using System.Numerics;
 using Raylib_CsLo;
 using ShapeColor;
@@ -402,7 +403,7 @@ namespace ShapeLib
     }
 }
 
-
+*/
 
 /*
 public struct EaseValue
