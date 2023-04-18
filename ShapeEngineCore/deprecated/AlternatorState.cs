@@ -1,5 +1,5 @@
 ﻿
-
+/*
 namespace ShapeTiming
 {
     public class AlternatorState
@@ -49,3 +49,4 @@ namespace ShapeTiming
     }
 
 }
+*/

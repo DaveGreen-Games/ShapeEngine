@@ -1,4 +1,5 @@
-﻿namespace ShapeTiming
+﻿/*
+namespace ShapeTiming
 {
     
     public class DelegateTimerHandlerNamed
@@ -63,3 +64,4 @@
     }
     
 }
+*/

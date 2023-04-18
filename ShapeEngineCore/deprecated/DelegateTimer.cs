@@ -1,5 +1,5 @@
 ﻿
-
+/*
 namespace ShapeTiming
 {
     public class DelegateTimer
@@ -40,3 +40,4 @@ namespace ShapeTiming
     } //execute action after a certain amount of time has passed with possible repeats
 
 }
+*/

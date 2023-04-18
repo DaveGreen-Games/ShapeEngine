@@ -1,4 +1,5 @@
-﻿namespace ShapeTiming
+﻿/*
+namespace ShapeTiming
 {
     //execute delegates every frame until true(finished) is returned
 
@@ -117,3 +118,4 @@
     }
 
 }
+*/

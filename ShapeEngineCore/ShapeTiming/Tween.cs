@@ -2,81 +2,11 @@
 using Raylib_CsLo;
 using ShapeCore;
 using System.Numerics;
+using ShapeLib;
 
-namespace ShapeEase
+namespace ShapeTiming
 {
-    public interface ISequenceable
-    {
-        public bool Update(float dt);
-    }
-
-    public class Repeater : ISequenceable
-    {
-        /// <summary>
-        /// Delegate that is called after duration for every repeat. Takes the specified duration and return a duration as well.
-        /// </summary>
-        /// <param name="duration">Takes in the specified duration for modification.</param>
-        /// <returns>Returns the duration for the next cycle.</returns>
-        public delegate float RepeaterFunc(float duration);
-        
-        private RepeaterFunc repeaterFunc;
-        private float timer;
-        private float duration;
-        private int remainingRepeats;
-
-        public Repeater(RepeaterFunc repeaterFunc, float duration, int repeats = 0)
-        {
-            this.repeaterFunc = repeaterFunc;
-            this.duration = duration;
-            this.timer = 0f;
-            this.remainingRepeats = repeats;
-        }
-        public bool Update(float dt)
-        {
-            if (duration <= 0f) return true;
-            
-            timer += dt;
-            if(timer >= duration)
-            {
-                float dur = repeaterFunc(duration);
-                if (remainingRepeats > 0)
-                {
-                    timer = 0f;// timer - duration; //in case timer over shot
-                    duration = dur;
-                    remainingRepeats--;
-                }
-            }
-            return timer >= duration && remainingRepeats <= 0;
-        }
-    }
-    public class Actionable : ISequenceable
-    {
-        public delegate void ActionableFunc(float timeF, float dt);
-        private ActionableFunc action;
-        private float duration;
-        private float timer;
-
-        public Actionable(ActionableFunc action, float duration)
-        {
-            this.action = action;
-            this.duration = duration;
-            this.timer = 0f;
-        }
-
-        public bool Update(float dt)
-        {
-            if (duration <= 0f) return true;
-            float t = Clamp(timer / duration, 0f, 1f);
-
-            timer += dt;
-            action(t, dt);
-            return t >= 1f;
-        }
-
-    }
-    
     //alternator class?
-
 
     public class Tween : ISequenceable
     {
@@ -260,52 +190,6 @@ namespace ShapeEase
             Rect result = STween.Tween(from, to, t, tweenType);
 
             return func(result) || t >= 1f;
-        }
-    }
-
-
-    public class Sequencer
-    {
-        public event Action<uint>? OnSequenceFinished;
-
-        private Dictionary<uint, List<ISequenceable>> sequences = new();
-
-        private static uint idCounter = 0;
-        private static uint NextID { get { return idCounter++; } }
-
-        public Sequencer() { }
-
-        public uint StartSequence(params ISequenceable[] actionables)
-        {
-            var id = NextID;
-            sequences.Add(id, actionables.Reverse().ToList());
-            return id;
-        }
-        public void CancelSequence(uint id)
-        {
-            if(sequences.ContainsKey(id)) sequences.Remove(id);
-        }
-        public void Stop() { sequences.Clear(); }
-        public void Update(float dt)
-        {
-            List<uint> remove = new();
-            foreach(uint id in sequences.Keys)
-            {
-                var tweenList = sequences[id];
-                if (tweenList.Count > 0)
-                {
-                    var tween = tweenList[tweenList.Count - 1];//list is reversed
-                    var finished = tween.Update(dt);
-                    if (finished) tweenList.RemoveAt(tweenList.Count - 1);
-                }
-                else
-                {
-                    remove.Add(id);
-                    OnSequenceFinished?.Invoke(id);
-                }
-            }
-
-            foreach(uint id in remove) sequences.Remove(id);
         }
     }
 

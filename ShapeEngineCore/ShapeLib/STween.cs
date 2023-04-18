@@ -2,10 +2,10 @@
 //https://github.com/idbrii/cs-tween/blob/main/Easing.cs
 
 using Raylib_CsLo;
-using ShapeLib;
 using System.Numerics;
 using ShapeCore;
-namespace ShapeEase
+
+namespace ShapeLib
 {
     public enum TweenType
     {

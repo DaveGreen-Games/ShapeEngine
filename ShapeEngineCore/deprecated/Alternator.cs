@@ -1,4 +1,4 @@
-﻿
+﻿/*
 namespace ShapeTiming
 {
     public class Alternator
@@ -126,3 +126,4 @@ namespace ShapeTiming
         }
     }
 }
+*/
