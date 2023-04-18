@@ -1,6 +1,5 @@
 ﻿using Raylib_CsLo;
 using System.Numerics;
-using ShapeColor;
 
 namespace ShapeLib
 { 
@@ -39,7 +38,7 @@ namespace ShapeLib
         }
 
         public int Rand() { return SRNG.randI(min, max); }
-        public int Lerp(float f) { return (int)RayMath.Lerp(min, max, f); }
+        public int Lerp(float f) { return (int)SUtils.LerpFloat(min, max, f); }
         public float Inverse(int value) { return (value - min) / (max - min); }
         public int Remap(RangeInt to, int value) { return to.Lerp(Inverse(value)); }
         public int Remap(int newMin, int newMax, int value) { return SUtils.LerpInt(newMin, newMax, Inverse(value)); }
@@ -86,7 +85,7 @@ namespace ShapeLib
             }
         }
         public float Rand() { return SRNG.randF(min, max); }
-        public float Lerp(float f) { return RayMath.Lerp(min, max, f); }
+        public float Lerp(float f) { return SUtils.LerpFloat(min, max, f); }
         public float Inverse(float value) { return (value - min) / (max - min); }
         public float Remap(RangeFloat to, float value) { return to.Lerp(Inverse(value)); }
         public float Remap(float newMin, float newMax, float value) { return SUtils.LerpFloat(newMin, newMax, Inverse(value)); }
@@ -163,6 +162,10 @@ namespace ShapeLib
     
     public static class SUtils
     {
+        public const float DEGTORAD = MathF.PI / 180f;
+
+        public const float RADTODEG = 180f / MathF.PI;
+
         public static bool Blinking(float timer, float interval)
         {
             if (interval <= 0f) return false;
@@ -229,35 +232,35 @@ namespace ShapeLib
         {
             return (int)MathF.Abs(value);
         }
-        public static dynamic LerpDynamic(dynamic a, dynamic b, float f)
+        public static dynamic LerpDynamic(dynamic from, dynamic to, float f)
         {
-            if (a is float) return LerpFloat(a, b, f);
-            else if (a is int) return LerpInt(a, b, f);
-            else if (a is Vector2) return SVec.Lerp(a, b, f);
-            else if (a is Color) return SColor.LerpColor(a, b, f);
-            else return a;
+            if (from is float) return LerpFloat(from, to, f);
+            else if (from is int) return LerpInt(from, to, f);
+            else if (from is Vector2) return SVec.Lerp(from, to, f);
+            else if (from is Color) return SColor.Lerp(from, to, f);
+            else return from;
         }
-        public static float LerpFloat(float a, float b, float f)
+        public static float LerpFloat(float from, float to, float f)
         {
-            //return (1.0f - f) * a + b * f;
-            return RayMath.Lerp(a, b, f);
+            return (1.0f - f) * from + to * f;
+            //return RayMath.Lerp(from, to, f);
         }
-        public static float LerpInverseFloat(float a, float b, float value)
+        public static float LerpInverseFloat(float from, float to, float value)
         {
-            return (value - a) / (b - a);
+            return (value - from) / (to - from);
         }
         public static float RemapFloat(float value, float minOld, float maxOld, float minNew, float maxNew)
         {
             return LerpFloat(minNew, maxNew, LerpInverseFloat(minOld, maxOld, value));
         }
-        public static int LerpInt(int a, int b, float f)
+        public static int LerpInt(int from, int to, float f)
         {
-            return (int)RayMath.Lerp(a, b, f);
+            return (int)LerpFloat(from, to, f);
         }
-        public static float LerpInverseInt(int a, int b, int value)
+        public static float LerpInverseInt(int from, int to, int value)
         {
-            float cur = (float)(value - a);
-            float max = (float)(b - a);
+            float cur = (float)(value - from);
+            float max = (float)(to - from);
             return cur / max;
         }
         public static int RemapInt(int value, int minOld, int maxOld, int minNew, int maxNew)
@@ -266,7 +269,7 @@ namespace ShapeLib
         }
         public static float WrapAngleRad(float amount)
         {
-            return WrapF(amount, 0f, 2.0f * RayMath.PI);
+            return WrapF(amount, 0f, 2.0f * MathF.PI);
         }
         public static float WrapAngleDeg(float amount)
         {
@@ -295,10 +298,10 @@ namespace ShapeLib
             //from = WrapAngleRad(from);
             //to = WrapAngleRad(to);
             float dif = to - from;
-            if (MathF.Abs(dif) > RayMath.PI)
+            if (MathF.Abs(dif) > MathF.PI)
             {
-                if (dif > 0) dif -= 2f * RayMath.PI;
-                else if (dif < 0) dif += 2f * RayMath.PI;
+                if (dif > 0) dif -= 2f * MathF.PI;
+                else if (dif < 0) dif += 2f * MathF.PI;
             }
             return dif;
 

@@ -213,7 +213,7 @@ namespace ShapeCore
             : base(pos, text, duration, color, fontSize, fontSpacing, font, alignement, easeDuration, easeType)
         {
             this.easeFrom = color;
-            this.easeChange = SColor.SubtractColors(easeTo, this.easeFrom);
+            this.easeChange = SColor.Subtract(easeTo, this.easeFrom);
         }
         //public TextEffectEaseColor(Vector2 pos, string text, float duration, Color color, FontSize fontSize, float fontSpacing, Alignement alignement, float easeDuration, Color easeChange, EasingType easeType = EasingType.LINEAR_OUT)
         //    : base(pos, text, duration, color, fontSize, fontSpacing, alignement, easeDuration, easeType)
