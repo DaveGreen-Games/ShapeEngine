@@ -1,4 +1,5 @@
 ﻿using Raylib_CsLo;
+using ShapeCore;
 using ShapeLib;
 using System.Numerics;
 
@@ -165,7 +166,7 @@ namespace ShapeRandom
         }
 
 
-        public Vector2 randPoint(Rectangle rect)
+        public Vector2 randPoint(Rect rect)
         {
             float x = randF(rect.x, rect.x + rect.width);
             float y = randF(rect.y, rect.y + rect.height);
@@ -188,29 +189,29 @@ namespace ShapeRandom
             return origin + randVec2(min, max);
         }
 
-        public Rectangle randRect(Vector2 alignement)
+        public Rect randRect(Vector2 alignement)
         {
             Vector2 pos = randVec2();
             Vector2 size = randVec2();
-            return SRect.ConstructRect(pos, size, alignement);
+            return new(pos, size, alignement);
         }
-        public Rectangle randRect(Vector2 origin, Vector2 alignement)
+        public Rect randRect(Vector2 origin, Vector2 alignement)
         {
             Vector2 pos = randVec2();
             Vector2 size = randVec2();
-            return SRect.ConstructRect(origin + pos, size, alignement);
+            return new(origin + pos, size, alignement);
         }
-        public Rectangle randRect(float posMin, float posMax, float sizeMin, float sizeMax, Vector2 alignement)
+        public Rect randRect(float posMin, float posMax, float sizeMin, float sizeMax, Vector2 alignement)
         {
             Vector2 pos = randVec2(posMin, posMax);
             Vector2 size = randVec2(sizeMin, sizeMax);
-            return SRect.ConstructRect(pos, size, alignement);
+            return new(pos, size, alignement);
         }
-        public Rectangle randRect(Vector2 origin, float posMin, float posMax, float sizeMin, float sizeMax, Vector2 alignement)
+        public Rect randRect(Vector2 origin, float posMin, float posMax, float sizeMin, float sizeMax, Vector2 alignement)
         {
             Vector2 pos = randVec2(posMin, posMax);
             Vector2 size = randVec2(sizeMin, sizeMax);
-            return SRect.ConstructRect(origin + pos, size, alignement);
+            return new(origin + pos, size, alignement);
         }
 
         public T? randCollection<T>(List<T> list, bool pop = false)

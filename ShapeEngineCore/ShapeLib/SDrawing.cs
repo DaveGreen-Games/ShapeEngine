@@ -1,7 +1,6 @@
 ﻿using System.Numerics;
-using System.Security.Cryptography.X509Certificates;
 using Raylib_CsLo;
-using ShapeCollision;
+using ShapeCore;
 using ShapeUI;
 
 namespace ShapeLib
@@ -154,7 +153,7 @@ namespace ShapeLib
         //    Vector2 w = (end - start);
         //    float l = w.Length();
         //    Vector2 dir = w / l;
-        //    float maxAngleRad = maxAngleDeg * DEG2RAD;
+        //    float maxAngleRad = maxAngleDeg * SUtils.DEGTORAD;
         //
         //    float minSize = sizeFRange.X * l;
         //    float maxSize = sizeFRange.Y * l;
@@ -260,7 +259,7 @@ namespace ShapeLib
                 }
             }
         }
-        public static void DrawRectangleLinesDotted(Rectangle rect, int gapsPerSide, float lineThickness, Color color, bool cornersRounded = false, bool roundedLineEdges = false)
+        public static void DrawRectangleLinesDotted(Rect rect, int gapsPerSide, float lineThickness, Color color, bool cornersRounded = false, bool roundedLineEdges = false)
         {
             if (cornersRounded)
             {
@@ -279,7 +278,7 @@ namespace ShapeLib
                 DrawLineDotted(s.start, s.end, gapsPerSide, lineThickness, color, roundedLineEdges);
             }
         }
-        public static void DrawRectangleLinesDotted(Rectangle rect, int gapsPerSide, float gapSizeF, float lineThickness, Color color, bool cornersRounded = false, bool roundedLineEdges = false)
+        public static void DrawRectangleLinesDotted(Rect rect, int gapsPerSide, float gapSizeF, float lineThickness, Color color, bool cornersRounded = false, bool roundedLineEdges = false)
         {
             if (cornersRounded)
             {
@@ -300,7 +299,7 @@ namespace ShapeLib
         }
         public static void DrawCircleLinesDotted(Vector2 center, float radius, int sidesPerGap, float lineThickness, Color color, float sideLength = 8f, bool roundedLineEdges = false)
         {
-            float anglePieceRad = 360 * DEG2RAD;
+            float anglePieceRad = 360 * SUtils.DEGTORAD;
             int sides = GetCircleArcSideCount(radius, MathF.Abs(anglePieceRad * RAD2DEG), sideLength);
             float angleStep = anglePieceRad / sides;
 
@@ -332,12 +331,9 @@ namespace ShapeLib
                 }
             }
         }
-        //public static void DrawPolygonLinesDotted()
-        //{
-        //
-        //}
+        
 
-        public static void DrawTextBox(Rectangle rect, string emptyText, List<char> chars, float fontSpacing, Font font, Color textColor, bool drawCaret, int caretPosition, float caretWidth, Color caretColor, Vector2 textAlignement)
+        public static void DrawTextBox(Rect rect, string emptyText, List<char> chars, float fontSpacing, Font font, Color textColor, bool drawCaret, int caretPosition, float caretWidth, Color caretColor, Vector2 textAlignement)
         {
             //fix alignement
             //alignement = new(0, 0.5f);
@@ -354,7 +350,7 @@ namespace ShapeLib
                 {
                     float fontSize = FontHandler.CalculateDynamicFontSize(text, new Vector2(rect.width, rect.height), font, fontSpacing);
                     Vector2 textSize = MeasureTextEx(font, text, fontSize, fontSpacing);
-                    Vector2 uiPos = SRect.GetRectPos(rect, textAlignement);
+                    Vector2 uiPos = rect.GetPos(textAlignement);
                     Vector2 topLeft = uiPos - textAlignement * textSize;
                     //Vector2 topLeft = new(rect.x, rect.y);
                     
@@ -398,25 +394,6 @@ namespace ShapeLib
             DrawTextPro(font, text, uiPos, originOffset, rotDeg, fontSize, fontSpacing, color);
         }
         
-        
-        
-        //public static void DrawTextAlignedPro(string text, Vector2 uiPos, float rotDeg, Vector2 textSize, float fontSpacing, Color color, string fontName, Vector2 alignement)
-        //{
-        //    DrawTextAlignedPro(text, uiPos, rotDeg, textSize, fontSpacing, color,   UIHandler.GetFont(fontName), alignement);
-        //}
-        //public static void DrawTextAlignedPro(string text, Vector2 uiPos, float rotDeg, float textHeight, float fontSpacing, Color color, string fontName, Vector2 alignement)
-        //{
-        //    DrawTextAlignedPro(text, uiPos, rotDeg, textHeight, fontSpacing, color, UIHandler.GetFont(fontName), alignement);
-        //}
-        //public static void DrawTextAlignedPro2(string text, Vector2 uiPos, float rotDeg, float textWidth, float fontSpacing, Color color, string fontName, Vector2 alignement)
-        //{
-        //    DrawTextAlignedPro2(text, uiPos, rotDeg, textWidth, fontSpacing, color, UIHandler.GetFont(fontName), alignement);
-        //}
-        //public static void DrawTextAlignedPro3(string text, Vector2 uiPos, float rotDeg, float fontSize, float fontSpacing, Color color, string fontName, Vector2 alignement)
-        //{
-        //    DrawTextAlignedPro3(text, uiPos, rotDeg, fontSize, fontSpacing, color,  UIHandler.GetFont(fontName), alignement);
-        //}
-
 
 
         public static void DrawTextAligned(string text, Vector2 uiPos, Vector2 textSize, float fontSpacing, Color color, Font font, Vector2 alignement)
@@ -427,10 +404,10 @@ namespace ShapeLib
             DrawTextEx(font, text, topLeft, fontSize, fontSpacing, color);
             //DrawRectangleLinesEx(new(topLeft.X, topLeft.Y, fontDimensions.X, fontDimensions.Y), 5f, WHITE);
         }
-        public static void DrawTextAligned(string text, Rectangle rect, float fontSpacing, Color color, Font font, Vector2 alignement)
+        public static void DrawTextAligned(string text, Rect rect, float fontSpacing, Color color, Font font, Vector2 alignement)
         {
-            Vector2 textSize = SRect.GetRectSize(rect);
-            Vector2 uiPos = SRect.GetRectPos(rect, alignement);
+            Vector2 textSize = rect.Size;
+            Vector2 uiPos = rect.GetPos(alignement);
             float fontSize = FontHandler.CalculateDynamicFontSize(text, textSize, font, fontSpacing);
             Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
             Vector2 topLeft = uiPos - alignement * fontDimensions;
@@ -457,64 +434,14 @@ namespace ShapeLib
         }
 
 
-        //public static void DrawTextAligned(string text, Vector2 uiPos, Vector2 textSize, float fontSpacing, Color color, Vector2 alignement)
-        //{
-        //    DrawTextAligned(text, uiPos, textSize, fontSpacing, color, UIHandler.GetFont(), alignement);
-        //}
-        //public static void DrawTextAligned(string text, Vector2 uiPos, float textHeight, float fontSpacing, Color color, Vector2 alignement)
-        //{
-        //    DrawTextAligned(text, uiPos, textHeight, fontSpacing, color, UIHandler.GetFont(), alignement);
-        //}
-        //public static void DrawTextAligned2(string text, Vector2 uiPos, float textWidth, float fontSpacing, Color color, Vector2 alignement)
-        //{
-        //    DrawTextAligned2(text, uiPos, textWidth, fontSpacing, color, UIHandler.GetFont(), alignement);
-        //}
-        //public static void DrawTextAligned3(string text, Vector2 uiPos, float fontSize, float fontSpacing, Color color, Vector2 alignement)
-        //{
-        //    DrawTextAligned3(text, uiPos, fontSize, fontSpacing, color, UIHandler.GetFont(), alignement);
-        //}
-        //public static void DrawTextAligned(string text, Rectangle textRect, float fontSpacing, Color color, Vector2 alignement)
-        //{
-        //    DrawTextAligned(text, textRect, fontSpacing, color, UIHandler.GetFont(), alignement);
-        //    //DrawTextAligned(text, new Vector2(textRect.X, textRect.Y), new Vector2(textRect.width, textRect.height), fontSpacing, color, UIHandler.GetFont(), alignement);
-        //}
-        //public static void DrawTextAligned(string text, Vector2 uiPos, Vector2 textSize, float fontSpacing, Color color, string fontName, Vector2 alignement)
-        //{
-        //    DrawTextAligned(text, uiPos, textSize, fontSpacing, color, UIHandler.GetFont(fontName), alignement);
-        //}
-        //public static void DrawTextAligned(string text, Vector2 uiPos, float fontHeight, float fontSpacing, Color color, string fontName, Vector2 alignement)
-        //{
-        //    DrawTextAligned(text, uiPos, fontHeight, fontSpacing, color, UIHandler.GetFont(fontName), alignement);
-        //}
-        //public static void DrawTextAligned2(string text, Vector2 uiPos, float fontWidth, float fontSpacing, Color color, string fontName, Vector2 alignement)
-        //{
-        //    DrawTextAligned2(text, uiPos, fontWidth, fontSpacing, color, UIHandler.GetFont(fontName), alignement);
-        //}
-        //public static void DrawTextAligned3(string text, Vector2 uiPos, float fontSize, float fontSpacing, Color color, string fontName, Vector2 alignement)
-        //{
-        //    DrawTextAligned3(text, uiPos, fontSize, fontSpacing, color, UIHandler.GetFont(fontName), alignement);
-        //}
-        //public static void DrawTextAligned(string text, Rectangle textRect, float fontSpacing, Color color, string fontName, Vector2 alignement)
-        //{
-        //    DrawTextAligned(text, textRect, fontSpacing, color, UIHandler.GetFont(fontName), alignement);
-        //    //DrawTextAligned(text, new Vector2(textRect.X, textRect.Y), new Vector2(textRect.width, textRect.height), fontSpacing, color, UIHandler.GetFont(fontName), alignement);
-        //}
-
-
-
-
-
-
-        public static void DrawGrid(Rectangle rect, int lines, float lineThickness, Color color)
+        public static void DrawGrid(Rect r, int lines, float lineThickness, Color color)
         {
-            float width = rect.width;
-            float height = rect.height;
-            float hGap = width / lines;
-            float vGap = height / lines;
+            float hGap = r.width / lines;
+            float vGap = r.height / lines;
 
-            Vector2 tl = new Vector2(rect.x, rect.y);
-            Vector2 tr = tl + new Vector2(width, 0);
-            Vector2 bl = tl + new Vector2(0, height);
+            Vector2 tl = r.TopLeft;
+            Vector2 tr = tl + new Vector2(r.width, 0);
+            Vector2 bl = tl + new Vector2(0, r.height);
 
             for (int l = 0; l < lines; l++)
             {
@@ -569,29 +496,29 @@ namespace ShapeLib
             {
                 for (int i = 0; i < points.Count - 1; i++)
                 {
-                    Vector2 a = center + SVec.Rotate(points[i] * scale, rotDeg * DEG2RAD);
+                    Vector2 a = center + SVec.Rotate(points[i] * scale, rotDeg * SUtils.DEGTORAD);
                     Vector2 b = center;
-                    Vector2 c = center + SVec.Rotate(points[i+1] * scale, rotDeg * DEG2RAD);
+                    Vector2 c = center + SVec.Rotate(points[i+1] * scale, rotDeg * SUtils.DEGTORAD);
                     DrawTriangle(a,b,c, fillColor);
                 }
 
-                Vector2 aFinal = center + SVec.Rotate(points[points.Count - 1] * scale, rotDeg * DEG2RAD);
+                Vector2 aFinal = center + SVec.Rotate(points[points.Count - 1] * scale, rotDeg * SUtils.DEGTORAD);
                 Vector2 bFinal = center;
-                Vector2 cFinal = center + SVec.Rotate(points[0] * scale, rotDeg * DEG2RAD);
+                Vector2 cFinal = center + SVec.Rotate(points[0] * scale, rotDeg * SUtils.DEGTORAD);
                 DrawTriangle(aFinal, bFinal, cFinal, fillColor);
             }
             else
             {
                 for (int i = 0; i < points.Count - 1; i++)
                 {
-                    Vector2 a = center + SVec.Rotate(points[i] * scale, rotDeg * DEG2RAD);
-                    Vector2 b = center + SVec.Rotate(points[i + 1] * scale, rotDeg * DEG2RAD);
+                    Vector2 a = center + SVec.Rotate(points[i] * scale, rotDeg * SUtils.DEGTORAD);
+                    Vector2 b = center + SVec.Rotate(points[i + 1] * scale, rotDeg * SUtils.DEGTORAD);
                     Vector2 c = center;
                     DrawTriangle(a, b, c, fillColor);
                 }
 
-                Vector2 aFinal = center + SVec.Rotate(points[points.Count - 1] * scale, rotDeg * DEG2RAD);
-                Vector2 bFinal = center + SVec.Rotate(points[0] * scale, rotDeg * DEG2RAD);
+                Vector2 aFinal = center + SVec.Rotate(points[points.Count - 1] * scale, rotDeg * SUtils.DEGTORAD);
+                Vector2 bFinal = center + SVec.Rotate(points[0] * scale, rotDeg * SUtils.DEGTORAD);
                 Vector2 cFinal = center;
                 DrawTriangle(aFinal, bFinal, cFinal, fillColor);
             }
@@ -631,25 +558,25 @@ namespace ShapeLib
             float lt = lineThickness * scale;
             for (int i = 0; i < points.Count - 1; i++)
             {
-                Vector2 p1 = center + SVec.Rotate(points[i] * scale, rotDeg * DEG2RAD);
-                Vector2 p2 = center + SVec.Rotate(points[i + 1] * scale, rotDeg * DEG2RAD);
+                Vector2 p1 = center + SVec.Rotate(points[i] * scale, rotDeg * SUtils.DEGTORAD);
+                Vector2 p2 = center + SVec.Rotate(points[i + 1] * scale, rotDeg * SUtils.DEGTORAD);
                 DrawCircleV(p1, lt * 0.5f, outlineColor);
                 DrawLineEx(p1, p2, lt, outlineColor);
             }
-            DrawCircleV(center + SVec.Rotate(points[points.Count - 1] * scale, rotDeg * DEG2RAD), lt * 0.5f, outlineColor);
-            DrawLineEx(center + SVec.Rotate(points[points.Count - 1] * scale, rotDeg * DEG2RAD), center + SVec.Rotate(points[0] * scale, rotDeg * DEG2RAD), lt, outlineColor);
+            DrawCircleV(center + SVec.Rotate(points[points.Count - 1] * scale, rotDeg * SUtils.DEGTORAD), lt * 0.5f, outlineColor);
+            DrawLineEx(center + SVec.Rotate(points[points.Count - 1] * scale, rotDeg * SUtils.DEGTORAD), center + SVec.Rotate(points[0] * scale, rotDeg * SUtils.DEGTORAD), lt, outlineColor);
         }
         public static void DrawPolygon(List<Vector2> relativePoints, Vector2 pos, Vector2 size, float rotDeg, float lineThickness, Color outlineColor)
         {
             for (int i = 0; i < relativePoints.Count - 1; i++)
             {
-                Vector2 p1 = pos + SVec.Rotate(relativePoints[i] * size, rotDeg * DEG2RAD);
-                Vector2 p2 = pos + SVec.Rotate(relativePoints[i + 1] * size, rotDeg * DEG2RAD);
+                Vector2 p1 = pos + SVec.Rotate(relativePoints[i] * size, rotDeg * SUtils.DEGTORAD);
+                Vector2 p2 = pos + SVec.Rotate(relativePoints[i + 1] * size, rotDeg * SUtils.DEGTORAD);
                 DrawCircleV(p1, lineThickness * 0.5f, outlineColor);
                 DrawLineEx(p1, p2, lineThickness, outlineColor);
             }
-            DrawCircleV(pos + SVec.Rotate(relativePoints[relativePoints.Count - 1] * size, rotDeg * DEG2RAD), lineThickness * 0.5f, outlineColor);
-            DrawLineEx(pos + SVec.Rotate(relativePoints[relativePoints.Count - 1] * size, rotDeg * DEG2RAD), pos + SVec.Rotate(relativePoints[0] * size, rotDeg * DEG2RAD), lineThickness, outlineColor);
+            DrawCircleV(pos + SVec.Rotate(relativePoints[relativePoints.Count - 1] * size, rotDeg * SUtils.DEGTORAD), lineThickness * 0.5f, outlineColor);
+            DrawLineEx(pos + SVec.Rotate(relativePoints[relativePoints.Count - 1] * size, rotDeg * SUtils.DEGTORAD), pos + SVec.Rotate(relativePoints[0] * size, rotDeg * SUtils.DEGTORAD), lineThickness, outlineColor);
         }
         public static void DrawPolygon(List<Vector2> points, Vector2 center, Color fillColor, float lineThickness, Color outlineColor, bool clockwise = true)
         {
@@ -705,7 +632,7 @@ namespace ShapeLib
         }
 
 
-        public static void DrawRectangleCorners(Rectangle rect, float lineThickness, Color color, Vector2 topF, Vector2 rightF, Vector2 bottomF, Vector2 leftF)
+        public static void DrawRectangleCorners(Rect rect, float lineThickness, Color color, Vector2 topF, Vector2 rightF, Vector2 bottomF, Vector2 leftF)
         {
             Vector2 tl = new(rect.x, rect.y);
             Vector2 tr = new(rect.x + rect.width, rect.y);
@@ -743,37 +670,19 @@ namespace ShapeLib
             else if(leftF.Y > 1f) DrawLineEx(tl, tl + new Vector2(0f, leftF.Y), lineThickness, color);
 
         }
-        public static void DrawRectangleCorners(Rectangle rect, float lineThickness, Color color, float length)
+        public static void DrawRectangleCorners(Rect rect, float lineThickness, Color color, float length)
         {
             DrawRectangleCorners(rect, lineThickness, color, new(length), new(length), new(length), new(length));
-            //Vector2 tl = new(rect.x, rect.y);
-            //Vector2 tr = new(rect.x + rect.width, rect.y);
-            //Vector2 br = new(rect.x + rect.width, rect.y + rect.height);
-            //Vector2 bl = new(rect.x, rect.y + rect.height);
-            //
-            //DrawCircleV(tl, lineThickness / 2, color);
-            //DrawCircleV(tr, lineThickness / 2, color);
-            //DrawCircleV(br, lineThickness / 2, color);
-            //DrawCircleV(bl, lineThickness / 2, color);
-            //
-            //DrawLineEx(tl, tl + new Vector2(length, 0f), lineThickness, color);
-            //DrawLineEx(tr, tr - new Vector2(length, 0f), lineThickness, color);
-            //DrawLineEx(br, br - new Vector2(length, 0f), lineThickness, color);
-            //DrawLineEx(bl, bl + new Vector2(length, 0f), lineThickness, color);
-            //DrawLineEx(tr, tr + new Vector2(0f, length), lineThickness, color);
-            //DrawLineEx(br, br - new Vector2(0f, length), lineThickness, color);
-            //DrawLineEx(bl, bl - new Vector2(0f, length), lineThickness, color);
-            //DrawLineEx(tl, tl + new Vector2(0f, length), lineThickness, color);
         }
         public static void DrawRectangleCorners(Vector2 pos, Vector2 size, Vector2 alignement, float lineThickness, Color color, float length)
         {
-            DrawRectangleCorners(SRect.ConstructRect(pos, size, alignement), lineThickness, color, length);
+            DrawRectangleCorners(new(pos, size, alignement), lineThickness, color, length);
         }
         public static void DrawRectangleCorners(Vector2 pos, Vector2 size, Vector2 alignement, float lineThickness, Color color, Vector2 topF, Vector2 rightF, Vector2 bottomF, Vector2 leftF)
         {
-            DrawRectangleCorners(SRect.ConstructRect(pos, size, alignement), lineThickness, color, topF, rightF, bottomF, leftF);
+            DrawRectangleCorners(new(pos, size, alignement), lineThickness, color, topF, rightF, bottomF, leftF);
         }
-        private static List<Vector2> GetRectangleCorneredPoints(Rectangle rect, Vector2 topF, Vector2 rightF, Vector2 bottomF, Vector2 leftF)
+        private static List<Vector2> GetRectangleCorneredPoints(Rect rect, Vector2 topF, Vector2 rightF, Vector2 bottomF, Vector2 leftF)
         {
             List<Vector2> poly = new();
 
@@ -781,23 +690,6 @@ namespace ShapeLib
             Vector2 tr = new(rect.x + rect.width, rect.y);
             Vector2 br = new(rect.x + rect.width, rect.y + rect.height);
             Vector2 bl = new(rect.x, rect.y + rect.height);
-
-            //if (averaged)
-            //{
-            //    if (rect.width < rect.height)
-            //    {
-            //        float factor = rect.width / rect.height;
-            //        rightF *= factor;
-            //        leftF *= factor;
-            //    }
-            //    else if (rect.height < rect.width)
-            //    {
-            //        float factor = rect.height / rect.width;
-            //        topF *= factor;
-            //        bottomF *= factor;
-            //    }
-            //}
-            
 
 
             if (topF.X <= 0f && leftF.Y <= 0f)
@@ -842,48 +734,36 @@ namespace ShapeLib
 
             return poly;
         }
-        public static void DrawRectangleCornered(Rectangle rect, float lineThickness, Color outlineColor, Color fillColor, Vector2 topF, Vector2 rightF, Vector2 bottomF, Vector2 leftF)
+        public static void DrawRectangleCornered(Rect rect, float lineThickness, Color outlineColor, Color fillColor, Vector2 topF, Vector2 rightF, Vector2 bottomF, Vector2 leftF)
         {
             var points = GetRectangleCorneredPoints(rect, topF, rightF, bottomF, leftF);
             Vector2 center = new(rect.x + rect.width / 2, rect.y + rect.height / 2);
             DrawPolygon(points, center, fillColor, true);
             DrawPolygon(points, lineThickness, outlineColor);
-            //foreach (var p in points)
-            //{
-            //    DrawCircleV(p, 5f, YELLOW);
-            //}
         }
-        public static void DrawRectangleCorneredLine(Rectangle rect, float lineThickness, Color color, Vector2 topF, Vector2 rightF, Vector2 bottomF, Vector2 leftF)
+        public static void DrawRectangleCorneredLine(Rect rect, float lineThickness, Color color, Vector2 topF, Vector2 rightF, Vector2 bottomF, Vector2 leftF)
         {
             DrawPolygon(GetRectangleCorneredPoints(rect, topF, rightF, bottomF, leftF), lineThickness, color);
-            //foreach (var p in GetRectangleCorneredPoints(rect, topF, rightF, bottomF, leftF))
-            //{
-            //    DrawCircleV(p, 5f, GREEN);
-            //}
         }
-        public static void DrawRectangleCorneredFilled(Rectangle rect, Color color, Vector2 topF, Vector2 rightF, Vector2 bottomF, Vector2 leftF)
+        public static void DrawRectangleCorneredFilled(Rect rect, Color color, Vector2 topF, Vector2 rightF, Vector2 bottomF, Vector2 leftF)
         {
             Vector2 center = new(rect.x +rect.width / 2, rect.y + rect.height / 2);
             DrawPolygon(GetRectangleCorneredPoints(rect, topF, rightF, bottomF, leftF), center, color, true);
-            //foreach (var p in points)
-            //{
-            //    DrawCircleV(p, 5f, RED);
-            //}
         }
         
-        public static void DrawRectangleCheckeredLines(Rectangle rect, float spacing, float lineThickness, float angleDeg, Color lineColor, Color outlineColor, Color bgColor)
+        public static void DrawRectangleCheckeredLines(Rect rect, float spacing, float lineThickness, float angleDeg, Color lineColor, Color outlineColor, Color bgColor)
         {
             Vector2 size = new Vector2(rect.width, rect.height);
             Vector2 center = new Vector2(rect.x, rect.y) + size / 2;
             float maxDimension = MathF.Max(size.X, size.Y);
-            float rotRad = angleDeg * DEG2RAD;
+            float rotRad = angleDeg * SUtils.DEGTORAD;
 
             Vector2 tl = new(rect.x, rect.y);
             Vector2 tr = new(rect.x + rect.width, rect.y);
             Vector2 bl = new(rect.x, rect.y + rect.height);
             Vector2 br = new(rect.x + rect.width, rect.y + rect.height);
 
-            if (bgColor.a > 0) DrawRectangleRec(rect, bgColor);
+            if (bgColor.a > 0) DrawRectangleRec(rect.Rectangle, bgColor);
 
             Vector2 cur = new(-spacing / 2, 0f);
 
@@ -928,67 +808,8 @@ namespace ShapeLib
         }
         public static void DrawRectangleCheckeredLines(Vector2 pos, Vector2 size, Vector2 alignement, float spacing, float lineThickness, float angleDeg, Color lineColor, Color outlineColor, Color bgColor)
         {
-            var rect = SRect.ConstructRect(pos, size, alignement);
+            Rect rect = new(pos, size, alignement);
             DrawRectangleCheckeredLines(rect, spacing, lineThickness, angleDeg, lineColor, outlineColor, bgColor);
-
-
-            //float maxDimension = MathF.Max(size.X, size.Y);
-            //Vector2 aVector = alignement * size;
-            //Vector2 center = pos - aVector + size / 2;
-            //float rotRad = angleDeg * DEG2RAD;
-            //
-            //var rect = SRect.ConstructRect(pos, size, alignement);
-            //Vector2 tl = new(rect.x, rect.y);
-            //Vector2 tr = new(rect.x + rect.width, rect.y);
-            //Vector2 bl = new(rect.x, rect.y + rect.height);
-            //Vector2 br = new(rect.x + rect.width, rect.y + rect.height);
-            ////List<(Vector2 start, Vector2 end)> segments = new()
-            ////{
-            ////    (tl, tr), (bl, br), (tl, bl), (tr, br)
-            ////};
-            //
-            //if (bgColor.a > 0) DrawRectangleRec(rect, bgColor);
-            //
-            //Vector2 cur = new(-spacing / 2, 0f);
-            //
-            ////safety for while loops
-            //int whileMaxCount = (int)(maxDimension / spacing) * 2;
-            //int whileCounter = 0;
-            //
-            ////left half of rectangle
-            //while (whileCounter < whileMaxCount)
-            //{
-            //    Vector2 p = center + SVec.Rotate(cur, rotRad);
-            //    Vector2 up = new(0f, -maxDimension * 2);//make sure that lines are going outside of the rectangle
-            //    Vector2 down = new(0f, maxDimension * 2);
-            //    Vector2 start = p + SVec.Rotate(up, rotRad);
-            //    Vector2 end = p + SVec.Rotate(down, rotRad);
-            //    List<(Vector2 p, Vector2 n)> intersections = ShapeCollision.SGeometry.IntersectionSegmentRect(center, start, end, tl, tr, br, bl).points;
-            //    
-            //    if (intersections.Count >= 2) DrawLineEx(intersections[0].p, intersections[1].p, lineThickness, lineColor);
-            //    else break;
-            //    cur.X -= spacing;
-            //    whileCounter++;
-            //} 
-            //
-            //cur = new(spacing / 2, 0f);
-            //whileCounter = 0;
-            ////right half of rectangle
-            //while (whileCounter < whileMaxCount)
-            //{
-            //    Vector2 p = center + SVec.Rotate(cur, rotRad);
-            //    Vector2 up = new(0f, -maxDimension * 2);
-            //    Vector2 down = new(0f, maxDimension * 2);
-            //    Vector2 start = p + SVec.Rotate(up, rotRad);
-            //    Vector2 end = p + SVec.Rotate(down, rotRad);
-            //    List<(Vector2 p, Vector2 n)> intersections = ShapeCollision.SGeometry.IntersectionSegmentRect(center, start, end, tl, tr, br, bl).points;
-            //    if (intersections.Count >= 2) DrawLineEx(intersections[0].p, intersections[1].p, lineThickness, lineColor);
-            //    else break;
-            //    cur.X += spacing;
-            //    whileCounter++;
-            //}
-            //
-            //if (outlineColor.a > 0) SDrawing.DrawRectangeLinesPro(pos, size, alignement, new Vector2(0.5f, 0.5f), 0f, lineThickness, outlineColor);
         }
         public static void DrawCircleCheckeredLines(Vector2 pos, Vector2 alignement, float radius, float spacing, float lineThickness, float angleDeg, Color lineColor, Color bgColor)
         {
@@ -997,7 +818,7 @@ namespace ShapeLib
             Vector2 size = new Vector2(radius, radius) * 2f;
             Vector2 aVector = alignement * size;
             Vector2 center = pos - aVector + size / 2;
-            float rotRad = angleDeg * DEG2RAD;
+            float rotRad = angleDeg * SUtils.DEGTORAD;
 
             if (bgColor.a > 0) DrawCircleV(center, radius, bgColor);
 
@@ -1056,8 +877,8 @@ namespace ShapeLib
         }
         public static void DrawCircleSectorLinesEx(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, float lineThickness, Color color, bool closed = true, float sideLength = 8f)
         {
-            float startAngleRad = startAngleDeg * DEG2RAD;
-            float endAngleRad = endAngleDeg * DEG2RAD;
+            float startAngleRad = startAngleDeg * SUtils.DEGTORAD;
+            float endAngleRad = endAngleDeg * SUtils.DEGTORAD;
             float anglePiece = endAngleRad - startAngleRad;
             int sides = GetCircleArcSideCount(radius, MathF.Abs(anglePiece * RAD2DEG), sideLength);
             float angleStep = anglePiece / sides;
@@ -1082,8 +903,8 @@ namespace ShapeLib
         }
         public static void DrawCircleSectorLinesEx(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, int sides, float lineThickness, Color color, bool closed = true)
         {
-            float startAngleRad = startAngleDeg * DEG2RAD;
-            float endAngleRad = endAngleDeg * DEG2RAD;
+            float startAngleRad = startAngleDeg * SUtils.DEGTORAD;
+            float endAngleRad = endAngleDeg * SUtils.DEGTORAD;
             float anglePiece = endAngleDeg - startAngleRad;
             float angleStep = MathF.Abs(anglePiece) / sides;
             if (closed)
@@ -1111,8 +932,8 @@ namespace ShapeLib
             DrawCircleSectorLinesEx(center, innerRadius, startAngleDeg, endAngleDeg, lineThickness, color, false, sideLength);
             DrawCircleSectorLinesEx(center, outerRadius, startAngleDeg, endAngleDeg, lineThickness, color, false, sideLength);
 
-            float startAngleRad = startAngleDeg * DEG2RAD;
-            float endAngleRad = endAngleDeg * DEG2RAD;
+            float startAngleRad = startAngleDeg * SUtils.DEGTORAD;
+            float endAngleRad = endAngleDeg * SUtils.DEGTORAD;
             Vector2 innerStart = center + SVec.Rotate(SVec.Right() * innerRadius - new Vector2(lineThickness / 2, 0), startAngleRad);
             Vector2 outerStart = center + SVec.Rotate(SVec.Right() * outerRadius + new Vector2(lineThickness / 2, 0), startAngleRad);
             DrawLineEx(innerStart, outerStart, lineThickness, color);
@@ -1148,8 +969,8 @@ namespace ShapeLib
 
         public static void DrawRectangeLinesPro(Vector2 pos, Vector2 size, Vector2 alignement, Vector2 pivot, float rotDeg, float lineThickness, Color color)
         {
-            Vector2 leftExtension = SVec.Rotate(new Vector2(-lineThickness / 2, 0f), rotDeg * DEG2RAD);
-            Vector2 rightExtension = SVec.Rotate(new Vector2(lineThickness / 2, 0f), rotDeg * DEG2RAD);
+            Vector2 leftExtension = SVec.Rotate(new Vector2(-lineThickness / 2, 0f), rotDeg * SUtils.DEGTORAD);
+            Vector2 rightExtension = SVec.Rotate(new Vector2(lineThickness / 2, 0f), rotDeg * SUtils.DEGTORAD);
 
             var rr = SRect.RotateRect(pos, size, alignement, pivot, rotDeg);
             DrawLineEx(rr.tl + leftExtension, rr.tr + rightExtension, lineThickness, color);
@@ -1157,10 +978,10 @@ namespace ShapeLib
             DrawLineEx(rr.tl, rr.bl, lineThickness, color);
             DrawLineEx(rr.tr, rr.br, lineThickness, color);
         }
-        public static void DrawRectangeLinesPro(Rectangle rect, Vector2 pivot, float rotDeg, float lineThickness, Color color)
+        public static void DrawRectangeLinesPro(Rect rect, Vector2 pivot, float rotDeg, float lineThickness, Color color)
         {
-            Vector2 leftExtension = SVec.Rotate(new Vector2(-lineThickness / 2, 0f), rotDeg * DEG2RAD);
-            Vector2 rightExtension = SVec.Rotate(new Vector2(lineThickness / 2, 0f), rotDeg * DEG2RAD);
+            Vector2 leftExtension = SVec.Rotate(new Vector2(-lineThickness / 2, 0f), rotDeg * SUtils.DEGTORAD);
+            Vector2 rightExtension = SVec.Rotate(new Vector2(lineThickness / 2, 0f), rotDeg * SUtils.DEGTORAD);
 
             var rr = SRect.RotateRect(rect, pivot, rotDeg);
             DrawLineEx(rr.tl + leftExtension, rr.tr + rightExtension, lineThickness, color);
@@ -1168,15 +989,15 @@ namespace ShapeLib
             DrawLineEx(rr.tl, rr.bl, lineThickness, color);
             DrawLineEx(rr.tr, rr.br, lineThickness, color);
         }
-        public static void DrawRectangle(Rectangle rect, Color color)
+        public static void DrawRectangle(Rect rect, Color color)
         {
-            DrawRectangleRec(rect, color);
+            DrawRectangleRec(rect.Rectangle, color);
         }
         public static void DrawRectangle(Vector2 pos, Vector2 size, Vector2 alignement, Color color)
         {
-            DrawRectangle(SRect.ConstructRect(pos, size, alignement), color);
+            DrawRectangle(new(pos, size, alignement), color);
         }
-        public static void DrawRectangle(Rectangle rect, Vector2 pivot, float rotDeg, Color color)
+        public static void DrawRectangle(Rect rect, Vector2 pivot, float rotDeg, Color color)
         {
             var rr = SRect.RotateRect(rect, pivot, rotDeg);
             Raylib.DrawTriangle(rr.tl, rr.bl, rr.br, color);
@@ -1184,10 +1005,10 @@ namespace ShapeLib
         }
         public static void DrawRectangle(Vector2 pos, Vector2 size, Vector2 alignement, Vector2 pivot, float rotDeg, Color color)
         {
-            DrawRectangle(SRect.ConstructRect(pos, size, alignement), pivot, rotDeg, color);
+            DrawRectangle(new(pos, size, alignement), pivot, rotDeg, color);
         }
 
-        public static void DrawRectangleOutlineBar(Rectangle rect, float thickness, float f, Color color)
+        public static void DrawRectangleOutlineBar(Rect rect, float thickness, float f, Color color)
         {
             Vector2 thicknessOffsetX = new Vector2(thickness, 0f);
             Vector2 thicknessOffsetY = new Vector2(0f, thickness);
@@ -1233,18 +1054,18 @@ namespace ShapeLib
         }
         public static void DrawRectangleOutlineBar(Vector2 pos, Vector2 size, Vector2 alignement, float thickness, float f, Color color)
         {
-            DrawRectangleOutlineBar(SRect.ConstructRect(pos, size, alignement), thickness, f, color);
+            DrawRectangleOutlineBar(new(pos, size, alignement), thickness, f, color);
         }
 
 
-        public static void DrawRectangleOutlineBar(Rectangle rect, Vector2 pivot, float angleDeg, float thickness, float f, Color color)
+        public static void DrawRectangleOutlineBar(Rect rect, Vector2 pivot, float angleDeg, float thickness, float f, Color color)
         {
             var rr = SRect.RotateRect(rect, pivot, angleDeg);
             //Vector2 thicknessOffsetX = new Vector2(thickness, 0f);
             //Vector2 thicknessOffsetY = new Vector2(0f, thickness);
             
-            Vector2 leftExtension = SVec.Rotate(new Vector2(-thickness / 2, 0f), angleDeg * DEG2RAD);
-            Vector2 rightExtension = SVec.Rotate(new Vector2(thickness / 2, 0f), angleDeg * DEG2RAD);
+            Vector2 leftExtension = SVec.Rotate(new Vector2(-thickness / 2, 0f), angleDeg * SUtils.DEGTORAD);
+            Vector2 rightExtension = SVec.Rotate(new Vector2(thickness / 2, 0f), angleDeg * SUtils.DEGTORAD);
 
             Vector2 tl = rr.tl;
             Vector2 br = rr.br;
@@ -1287,7 +1108,7 @@ namespace ShapeLib
         }
         public static void DrawRectangleOutlineBar(Vector2 pos, Vector2 size, Vector2 alignement, Vector2 pivot, float angleDeg, float thickness, float f, Color color)
         {
-            DrawRectangleOutlineBar(SRect.ConstructRect(pos, size, alignement), pivot, angleDeg, thickness, f, color);
+            DrawRectangleOutlineBar(new(pos, size, alignement), pivot, angleDeg, thickness, f, color);
         }
         
         public static void DrawCircleOutlineBar(Vector2 center, float radius, float thickness, float f, Color color)
@@ -1300,7 +1121,7 @@ namespace ShapeLib
         }
 
         
-        public static void DrawBar(Rectangle rect, float f, Color barColor, Color bgColor, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
+        public static void DrawBar(Rect rect, float f, Color barColor, Color bgColor, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
         {
             f = 1.0f - f;
             UIMargins progressMargins = new(f * top, f * right, f * bottom, f * left);
@@ -1308,7 +1129,7 @@ namespace ShapeLib
             SDrawing.DrawRectangle(rect, bgColor);
             SDrawing.DrawRectangle(progressRect, barColor);
         }
-        public static void DrawBar(Rectangle rect, Vector2 pivot, float angleDeg, float f, Color barColor, Color bgColor, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
+        public static void DrawBar(Rect rect, Vector2 pivot, float angleDeg, float f, Color barColor, Color bgColor, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
         {
             f = 1.0f - f;
             UIMargins progressMargins = new(f * top, f * right, f * bottom, f * left);
@@ -1319,11 +1140,11 @@ namespace ShapeLib
         
         public static void DrawBar(Vector2 pos, Vector2 size, Vector2 alignement, float f, Color barColor, Color bgColor, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
         {
-            DrawBar(SRect.ConstructRect(pos, size, alignement), f, barColor, bgColor, left, right, top, bottom);
+            DrawBar(new(pos, size, alignement), f, barColor, bgColor, left, right, top, bottom);
         }
         public static void DrawBar(Vector2 pos, Vector2 size, Vector2 alignement, Vector2 pivot, float angleDeg, float f, Color barColor, Color bgColor, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
         {
-            DrawBar(SRect.ConstructRect(pos, size, alignement), pivot, angleDeg, f, barColor, bgColor, left, right, top, bottom);
+            DrawBar(new(pos, size, alignement), pivot, angleDeg, f, barColor, bgColor, left, right, top, bottom);
         }
         
 

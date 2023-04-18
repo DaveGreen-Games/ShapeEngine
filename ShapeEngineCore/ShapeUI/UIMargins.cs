@@ -1,4 +1,5 @@
 ﻿using Raylib_CsLo;
+using ShapeCore;
 using System.Numerics;
 
 namespace ShapeUI
@@ -26,7 +27,7 @@ namespace ShapeUI
             this.bottom = vertical.Y;
         }
 
-        public Rectangle Apply(Rectangle rect)
+        public Rect Apply(Rect rect)
         {
             Vector2 tl = new(rect.x, rect.y);
             Vector2 size = new(rect.width, rect.height);

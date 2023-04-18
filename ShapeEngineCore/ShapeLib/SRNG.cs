@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Raylib_CsLo;
+using ShapeCore;
 using ShapeRandom;
 
 namespace ShapeLib
@@ -50,7 +51,7 @@ namespace ShapeLib
         public static Color randColor(int min, int max, int alpha = -1) { return rand.randColor(min, max, alpha); }
 
 
-        public static Vector2 randPoint(Rectangle rect) { return rand.randPoint(rect); }
+        public static Vector2 randPoint(Rect rect) { return rand.randPoint(rect); }
         public static Vector2 randPoint(Vector2 start, Vector2 end) { return rand.randPoint(start, end); }
         public static Vector2 randPoint(Vector2 origin) { return rand.randPoint(origin); }
         public static Vector2 randPoint(Vector2 origin, float max) { return rand.randPoint(origin, max); }

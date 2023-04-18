@@ -13,9 +13,15 @@ namespace ShapeCore
 
         public float height;
 
-        public Vector2 Pos { get { return new Vector2(x, y); } }
-        public Vector2 size { get { return new Vector2(width, height); } }
+        public Vector2 TopLeft { get { return new Vector2(x, y); } }
+        public Vector2 TopRight { get { return TopLeft + new Vector2(width, 0); } }
+        public Vector2 BottomRight { get { return TopLeft + Size; } }
+        public Vector2 BottomLeft { get { return TopLeft + new Vector2(0, height); } }
+        
 
+        public Vector2 Size { get { return new Vector2(width, height); } }
+        public Rectangle Rectangle { get { return new(x, y, width, height); } }
+        
         public Rect(float x, float y, float width, float height)
         {
             this.x = x;
@@ -57,7 +63,11 @@ namespace ShapeCore
             this.height = size.Y;
         }
 
-
-        public Rectangle GetRectangle() { return new(x, y, width, height); }
+        public Vector2 GetPos(Vector2 alignement)
+        {
+            Vector2 offset = Size * alignement;
+            return TopLeft + offset;
+        }
+        
     }
 }
