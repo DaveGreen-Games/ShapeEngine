@@ -1,6 +1,7 @@
 ﻿using Raylib_CsLo;
 using System.Numerics;
 using ShapeLib;
+using ShapeCore;
 
 namespace ShapeUI
 {
@@ -429,18 +430,18 @@ namespace ShapeUI
         }
         protected Vector2 GetDirectionPosition(UIElement element, UINeighbors.NeighborDirection dir)
         {
-            Rectangle self = element.GetRect(new(0f));
+            Rect self = element.GetRect();
             switch (dir)
             {
                 case UINeighbors.NeighborDirection.TOP:
-                    return new(self.X + self.width / 2, self.Y + self.height);//bottom
+                    return new(self.x + self.width / 2, self.y + self.height);//bottom
                 case UINeighbors.NeighborDirection.RIGHT:
-                    return new(self.X, self.Y + self.height / 2); //left
+                    return new(self.x, self.y + self.height / 2); //left
                 case UINeighbors.NeighborDirection.BOTTOM:
-                    return new(self.X + self.width / 2, self.Y);//top
+                    return new(self.x + self.width / 2, self.y);//top
                 case UINeighbors.NeighborDirection.LEFT:
-                    return new(self.X + self.width, self.Y + self.height / 2);//right
-                default: return new(self.X + self.width / 2, self.Y + self.height / 2); //center
+                    return new(self.x + self.width, self.y + self.height / 2);//right
+                default: return new(self.x + self.width / 2, self.y + self.height / 2); //center
             }
         }
         protected void UpdateNavigation(float dt)
@@ -516,7 +517,7 @@ namespace ShapeUI
         }
 
 
-        public static void AlignUIElementsHorizontal(Rectangle rect, List<UIElement> elements, int displayCount = -1, float gapRelative = 0f, float elementMaxSizeX = 1f, float elementMaxSizeY = 1f)
+        public static void AlignUIElementsHorizontal(Rect rect, List<UIElement> elements, int displayCount = -1, float gapRelative = 0f, float elementMaxSizeX = 1f, float elementMaxSizeY = 1f)
         {
             Vector2 startPos = new(rect.x, rect.y);
             Vector2 maxElementSizeRel = new(elementMaxSizeX, elementMaxSizeY);
@@ -548,7 +549,7 @@ namespace ShapeUI
             }
 
         }
-        public static void AlignUIElementsVertical(Rectangle rect, List<UIElement> elements, int displayCount = -1, float gapRelative = 0f, float elementMaxSizeX = 1f, float elementMaxSizeY = 1f)
+        public static void AlignUIElementsVertical(Rect rect, List<UIElement> elements, int displayCount = -1, float gapRelative = 0f, float elementMaxSizeX = 1f, float elementMaxSizeY = 1f)
         {
             Vector2 startPos = new(rect.x, rect.y);
             Vector2 maxElementSizeRel = new(elementMaxSizeX, elementMaxSizeY);
@@ -580,7 +581,7 @@ namespace ShapeUI
             }
 
         }
-        public static void AlignUIElementsGrid(Rectangle rect, List<UIElement> elements, int columns, int rows, float hGapRelative = 0f, float vGapRelative = 0f, bool leftToRight = true)
+        public static void AlignUIElementsGrid(Rect rect, List<UIElement> elements, int columns, int rows, float hGapRelative = 0f, float vGapRelative = 0f, bool leftToRight = true)
         {
             Vector2 startPos = new(rect.x, rect.y);
 

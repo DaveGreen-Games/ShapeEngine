@@ -1,4 +1,5 @@
 ﻿using Raylib_CsLo;
+using ShapeCore;
 using ShapeInput;
 using ShapeLib;
 using System.Numerics;
@@ -9,7 +10,7 @@ namespace ShapeUI
     {
         public event Action<UIElement>? WasSelected;
 
-        protected Rectangle rect;
+        protected Rect rect;
 
         public float StretchFactor { get; set; } = 1f;
         public UIMargins Margins { get; set; } = new();
@@ -84,14 +85,14 @@ namespace ShapeUI
             Released = true;
         }
 
-        public Rectangle GetRect() { return GetRect(new(0f)); }
-        public Rectangle GetRect(Vector2 alignement)
+        public Rect GetRect() { return GetRect(new(0f)); }
+        public Rect GetRect(Vector2 alignement)
         {
             if (alignement.X == 0f && alignement.Y == 0f) return Margins.Apply(rect);
             else
             {
-                Vector2 topLeft = new Vector2(rect.X, rect.Y);
-                Vector2 size = GetSize();
+                Vector2 topLeft = rect.TopLeft; // new Vector2(rect.x, rect.y);
+                Vector2 size = rect.Size;
                 Vector2 offset = size * alignement;
                 return Margins.Apply(new
                     (
@@ -105,15 +106,16 @@ namespace ShapeUI
         
         public Vector2 GetPos(Vector2 alignement)
         {
-            Rectangle rect = GetRect(new(0f));
-            Vector2 topLeft = new Vector2(rect.X, rect.Y);
+            Rect rect = GetRect(new(0f));
+            Vector2 topLeft = new Vector2(rect.x, rect.y);
             Vector2 offset = GetSize() * alignement;
             return topLeft + offset;
         }
         public Vector2 GetSize()
         {
-            Rectangle rect = GetRect(new(0f));
-            return new(rect.width, rect.height);
+            return GetRect().Size;
+            //Rectangle rect = GetRect(new(0f));
+            //return new(rect.width, rect.height);
         }
         
         public void UpdateRect(Vector2 pos, Vector2 size, Vector2 alignement)
@@ -121,17 +123,18 @@ namespace ShapeUI
             Vector2 offset = size * alignement;
             rect = new(pos.X - offset.X, pos.Y - offset.Y, size.X, size.Y);
         }
-        public void UpdateRect(Rectangle rect, Vector2 alignement)
+        public void UpdateRect(Rect rect, Vector2 alignement)
         {
             UpdateRect(new Vector2(rect.x, rect.y), new Vector2(rect.width, rect.height), alignement);
         }
-        public void UpdateRect(Rectangle rect)
+        public void UpdateRect(Rect rect)
         {
             this.rect = rect;
         }
         public bool IsPointInside(Vector2 uiPos)
         {
-            return CheckCollisionPointRec(uiPos, GetRect(new(0f)));
+            return GetRect().IsPointInside(uiPos);
+            //return CheckCollisionPointRec(uiPos, GetRect().Rectangle);
         }
         public void Check(Vector2 prevMousePos, Vector2 mousePosUI, bool mouseDeselects = false, float mouseTolerance = 5f)
         {

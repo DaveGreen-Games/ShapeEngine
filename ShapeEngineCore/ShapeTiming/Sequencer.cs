@@ -7,18 +7,20 @@ namespace ShapeTiming
         public bool Update(float dt);
     }
 
-    public class Sequencer
+    
+    public class Sequencer <T> where T : ISequenceable
     {
         public event Action<uint>? OnSequenceFinished;
+        public event Action<T>? OnItemUpdated;
 
-        private Dictionary<uint, List<ISequenceable>> sequences = new();
+        protected Dictionary<uint, List<T>> sequences = new();
 
         private static uint idCounter = 0;
         private static uint NextID { get { return idCounter++; } }
 
         public Sequencer() { }
 
-        public uint StartSequence(params ISequenceable[] actionables)
+        public uint StartSequence(params T[] actionables)
         {
             var id = NextID;
             sequences.Add(id, actionables.Reverse().ToList());
@@ -39,6 +41,7 @@ namespace ShapeTiming
                 {
                     var tween = tweenList[tweenList.Count - 1];//list is reversed
                     var finished = tween.Update(dt);
+                    OnItemUpdated?.Invoke(tween);
                     if (finished) tweenList.RemoveAt(tweenList.Count - 1);
                 }
                 else

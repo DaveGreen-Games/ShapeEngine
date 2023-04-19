@@ -2,9 +2,11 @@
 using System.Numerics;
 using Raylib_CsLo;
 using ShapeCore;
+using ShapeTiming;
 
 namespace ShapeScreen
 {
+    /*
     public class CameraOrder
     {
         float startRotDeg = 0f;
@@ -224,8 +226,104 @@ namespace ShapeScreen
             }
         }
     }
+    */
 
+    public interface ICameraTween : ISequenceable
+    {
+        public Vector2 GetOffset() { return new(0f); }
+        public float GetRotationDeg() { return 0f; }
+        public float GetScale() { return 1f; }
+    }
+    public class CameraTweenOffset : ICameraTween
+    {
+        private float duration;
+        private float timer;
+        private TweenType tweenType;
+        private Vector2 from;
+        private Vector2 to;
+        private Vector2 cur;
+        public CameraTweenOffset(Vector2 from, Vector2 to, float duration, TweenType tweenType)
+        {
+            this.duration = duration;
+            this.timer = 0f;
+            this.tweenType = tweenType;
+            this.from = from;
+            this.to = to;
+            this.cur = from;
+        }
 
+        public bool Update(float dt)
+        {
+            if (duration <= 0f) return true;
+            float t = Clamp(timer / duration, 0f, 1f);
+            timer += dt;
+            cur = STween.Tween(from, to, t, tweenType);
+
+            return t >= 1f;
+        }
+
+        public Vector2 GetOffset() { return cur; }
+    }
+    public class CameraTweenRotation: ICameraTween
+    {
+        private float duration;
+        private float timer;
+        private TweenType tweenType;
+        private float from;
+        private float to;
+        private float cur;
+        public CameraTweenRotation(float fromDeg, float toDeg, float duration, TweenType tweenType)
+        {
+            this.duration = duration;
+            this.timer = 0f;
+            this.tweenType = tweenType;
+            this.from = fromDeg;
+            this.to = toDeg;
+            this.cur = from;
+        }
+
+        public bool Update(float dt)
+        {
+            if (duration <= 0f) return true;
+            float t = Clamp(timer / duration, 0f, 1f);
+            timer += dt;
+            cur = STween.Tween(from, to, t, tweenType);
+
+            return t >= 1f;
+        }
+
+        public float GetRoation() { return cur; }
+    }
+    public class CameraTweenScale : ICameraTween
+    {
+        private float duration;
+        private float timer;
+        private TweenType tweenType;
+        private float from;
+        private float to;
+        private float cur;
+        public CameraTweenScale(float from, float to, float duration, TweenType tweenType)
+        {
+            this.duration = duration;
+            this.timer = 0f;
+            this.tweenType = tweenType;
+            this.from = from;
+            this.to = to;
+            this.cur = from;
+        }
+
+        public bool Update(float dt)
+        {
+            if (duration <= 0f) return true;
+            float t = Clamp(timer / duration, 0f, 1f);
+            timer += dt;
+            cur = STween.Tween(from, to, t, tweenType);
+
+            return t >= 1f;
+        }
+
+        public float GetScale() { return cur; }
+    }
 
     internal class CameraShake
     {
@@ -331,8 +429,14 @@ namespace ShapeScreen
 
         private CameraShake shake = new();
 
-        private CameraOrderChainHandler cameraOrderChainHandler = new();
+        //private CameraOrderChainHandler cameraOrderChainHandler = new();
+        public Sequencer<ICameraTween> CameraTweens { get; private set; } = new();
+        private float cameraTweenTotalRotationDeg = 0f;
+        private float cameraTweenTotalScale = 1f;
+        private Vector2 cameraTweenTotalOffset = new();
 
+
+        /*
         public void AddCameraOrderChain(string name, params CameraOrder[] orders)
         {
             cameraOrderChainHandler.AddChain(name, orders);
@@ -346,7 +450,7 @@ namespace ShapeScreen
             cameraOrderChainHandler.RemoveChain(name);
         }
         public void ClearCameraOrderChains() { cameraOrderChainHandler.ClearChains(); }
-
+        */
 
         public GameObject? Target { get { return target; } set { target = value; } }
         
@@ -380,7 +484,17 @@ namespace ShapeScreen
             this.PIXEL_SMOOTHING_ENABLED = pixelSmoothing;
             this.screenSpaceCamera = new() { offset = baseOffset, rotation = baseRotationDeg, zoom = 1f, target = new(0f) };
             this.worldSpaceCamera = new() { offset = baseOffset, rotation = baseRotationDeg, zoom = 1f, target = new(0f) };
+            this.CameraTweens.OnItemUpdated += OnCameraTweenUpdated;
         }
+
+        private void OnCameraTweenUpdated(ICameraTween tween)
+        {
+            cameraTweenTotalOffset += tween.GetOffset();
+            cameraTweenTotalRotationDeg += tween.GetRotationDeg();
+            cameraTweenTotalScale *= tween.GetScale();
+
+        }
+
         public void ChangeSize(Vector2 newSize, float factor)
         {
             baseOffset = newSize / 2;
@@ -480,11 +594,14 @@ namespace ShapeScreen
         }
         public void Update(float dt)
         {
-            cameraOrderChainHandler.Update(dt);
+            CameraTweens.Update(dt);
             shake.Update(dt);
-            rawCameraOffset = baseOffset + shake.Offset + curTranslation + cameraOrderChainHandler.TotalTranslation;
-            rawCameraRotationDeg = baseRotationDeg + shake.RotDeg + curRotDeg + cameraOrderChainHandler.TotalRotDeg;
-            rawCameraZoom = ( ( (baseZoom * zoomStretchFactor) + shake.Zoom) * curZoomFactor ) / cameraOrderChainHandler.TotalScale;
+            rawCameraOffset = baseOffset + shake.Offset + curTranslation + cameraTweenTotalOffset;
+            rawCameraRotationDeg = baseRotationDeg + shake.RotDeg + curRotDeg + cameraTweenTotalRotationDeg;
+            rawCameraZoom = ( ( (baseZoom * zoomStretchFactor) + shake.Zoom) * curZoomFactor ) / cameraTweenTotalScale;
+            cameraTweenTotalOffset = new(0f);
+            cameraTweenTotalRotationDeg = 0f;
+            cameraTweenTotalScale = 1f;
             if (target != null)
             {
                 if (newTarget != null)
