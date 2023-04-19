@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Raylib_CsLo;
+using ShapeCore;
 using ShapeLib;
 
 namespace ShapeCollision
@@ -82,12 +83,12 @@ namespace ShapeCollision
             return new Vector2(coord.x * spacing_x, coord.y * spacing_y);
         }
 
-        public Rectangle GetCellRectangle(int x, int y)
+        public Rect GetCellRectangle(int x, int y)
         {
-            return new Rectangle(origin_x + x * spacing_x, origin_y + y * spacing_y, spacing_x, spacing_y);
+            return new Rect(origin_x + x * spacing_x, origin_y + y * spacing_y, spacing_x, spacing_y);
         }
 
-        public Rectangle GetCellRectangle(int index)
+        public Rect GetCellRectangle(int index)
         {
             return GetCellRectangle(index % cols, index / cols);
         }
@@ -114,9 +115,9 @@ namespace ShapeCollision
         //TODO (DAVID):
         //get all the cells in the bounding rect area and then make overlap test between the shape and each cell in the bounding area
         //only make those checks if there are more than 1 cell
-        public List<int> GetCellIDs(Collider shape)
+        public List<int> GetCellIDs(ICollider shape)
         {
-            Rectangle boundingRect = shape.GetBoundingRect();
+            Rect boundingRect = shape.GetBoundingBox();
             List<int> hashes = new List<int>();
             (int x, int y) topLeft = GetCellCoordinate(boundingRect.x, boundingRect.y);
             (int x, int y) bottomRight = GetCellCoordinate(boundingRect.x + boundingRect.width, boundingRect.y + boundingRect.height);

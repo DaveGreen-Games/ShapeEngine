@@ -14,9 +14,9 @@ namespace ShapeCore
         public float height;
 
         public Vector2 TopLeft { get { return new Vector2(x, y); } }
-        public Vector2 TopRight { get { return TopLeft + new Vector2(width, 0); } }
-        public Vector2 BottomRight { get { return TopLeft + Size; } }
-        public Vector2 BottomLeft { get { return TopLeft + new Vector2(0, height); } }
+        public Vector2 TopRight { get { return new Vector2(x + width, 0); } }
+        public Vector2 BottomRight { get { return new Vector2(x+width, y+height); } }
+        public Vector2 BottomLeft { get { return new Vector2(x, y + height); } }
         
 
         public Vector2 Size { get { return new Vector2(width, height); } }
@@ -62,12 +62,24 @@ namespace ShapeCore
             this.width = size.X;
             this.height = size.Y;
         }
+        public Rect(Rectangle rect)
+        {
+            this.x = rect.X;
+            this.y = rect.Y;
+            this.width = rect.width;
+            this.height = rect.height;
+        }
 
         public Vector2 GetPos(Vector2 alignement)
         {
             Vector2 offset = Size * alignement;
             return TopLeft + offset;
         }
-        
+        public bool IsPointInside(Vector2 p)
+        {
+            Vector2 tl = TopLeft;
+            Vector2 br = BottomRight;
+            return p.X > tl.X && p.X < br.X && p.Y > tl.Y && p.Y < br.Y;
+        }
     }
 }

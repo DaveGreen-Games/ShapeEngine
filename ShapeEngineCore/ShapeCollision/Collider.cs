@@ -1,6 +1,7 @@
 ﻿
 using System.Numerics;
 using Raylib_CsLo;
+using ShapeCore;
 using ShapeLib;
 
 namespace ShapeCollision
@@ -13,7 +14,35 @@ namespace ShapeCollision
     //collider has list of shapes
     //rename circle/segment/rect/poly collider to shape
 
-    public class Collider
+    
+    public interface ICollider
+    {
+        public float Mass { get; set; }
+        public Vector2 Vel { get; set; }
+        public Vector2 Pos { get; set; }
+        public bool Enabled { get; set; }
+        public bool CheckCollision { get; set; }
+        public bool CheckIntersections { get; set; }
+        public sealed bool IsStatic() { return Vel.X == 0.0f && Vel.Y == 0.0f; }
+        public Vector2 GetAccumulatedForce();
+        public void AccumulateForce(Vector2 force);
+        public void ApplyAccumulatedForce(float dt);
+        public void AddImpulse(Vector2 force);
+        public Rect GetBoundingBox();
+        public void DrawDebugShape(Color color);
+        public bool Overlap(ICollider other);
+        public bool OverlapRect(Rect other);
+        public Intersection Intersect(ICollider other);
+
+
+        //public sealed Intersection Intersect(Collider other)
+        //{
+        //    return CheckIntersections ? CheckIntersection(other) : new();
+        //}
+
+    }
+    
+    public abstract class Collider : ICollider
     {
         public Collider() { }
         public Collider(float x, float y) { Pos = new(x, y); }
@@ -24,15 +53,17 @@ namespace ShapeCollision
         public Vector2 Vel { get; set; }
         public Vector2 Pos { get; set; }
 
-        protected Vector2 accumulatedForce = Vector2.Zero;
-        protected bool enabled = true;
-        public bool CheckCollision = true;
-        public bool CheckIntersections = false;
+        protected Vector2 accumulatedForce = new(0f);
+        public bool Enabled { get; set; } = true;
+        public bool CheckCollision { get; set; } = true;
+        public bool CheckIntersections { get; set; } = false;
+        public bool IsStatic() { return Vel.X == 0.0f && Vel.Y == 0.0f; }
         public bool HasAccumulatedForce() { return accumulatedForce.X != 0f || accumulatedForce.Y != 0f; }
         public Vector2 GetAccumulatedForce() { return accumulatedForce; }
         public void AccumulateForce(Vector2 force)
         {
-            accumulatedForce += force / Mass;
+            if (Mass <= 0) accumulatedForce += force;
+            else accumulatedForce += force / Mass;
         }
         public void ApplyAccumulatedForce(float dt)
         {
@@ -41,23 +72,24 @@ namespace ShapeCollision
         }
         public void AddImpulse(Vector2 force)
         {
-            if (Mass <= 0.0f)
-            {
-                Vel += force;
-            }
-            else
-            {
-                Vel = Vel + force / Mass;
-            }
+            if (Mass <= 0.0f) Vel += force;
+            else Vel = Vel + force / Mass;
         }
-        public bool IsEnabled() { return enabled; }
-        public void Enable() { enabled = true; }
-        public void Disable() { enabled = false; }
-        public bool IsStatic() { return Vel.X == 0.0f && Vel.Y == 0.0f; }
+        
 
-        public virtual Rectangle GetBoundingRect() { return new(Pos.X, Pos.Y, 1.0f, 1.0f); }
-        //public virtual float GetBoundingRadius() { return 1.0f; }
-        public virtual void DebugDrawShape(Color color) { Raylib.DrawCircleV(Pos, 5.0f, color); }
+
+
+        //public Intersection Intersect(Collider other)
+        //{
+        //    return CheckIntersections ? CheckIntersection(other) : new();
+        //}
+
+        public abstract Rect GetBoundingBox();
+        public abstract void DrawDebugShape(Color color);
+        public abstract bool Overlap(ICollider other);
+        public abstract bool OverlapRect(Rect other);
+        public abstract Intersection Intersect(ICollider other);
+
     }
     public class CircleCollider : Collider
     {
@@ -73,12 +105,12 @@ namespace ShapeCollision
         public float GetArea() { return MathF.PI * RadiusSquared; }
         public float GetCircumference() { return MathF.PI * Radius * 2.0f; }
 
-        public override Rectangle GetBoundingRect() { return new(Pos.X - radius, Pos.Y - radius, radius * 2.0f, radius * 2.0f); }
+        public override Rect GetBoundingBox() { return new(Pos.X - radius, Pos.Y - radius, radius * 2.0f, radius * 2.0f); }
         //public override float GetBoundingRadius()
         //{
         //    return Radius;
         //}
-        public override void DebugDrawShape(Color color) 
+        public override void DrawDebugShape(Color color) 
         { 
             //Raylib.DrawCircleV(Pos, Radius, color);
             SDrawing.DrawCircleLines(Pos, Radius, 5f, color, 4f);
@@ -103,7 +135,7 @@ namespace ShapeCollision
         public Vector2 End { get { return Pos + Dir * Length; } }
         public Vector2 Displacement { get { return End - Pos; } }
 
-        public override Rectangle GetBoundingRect()
+        public override Rect GetBoundingBox()
         {
             Vector2 end = End;
             float topLeftX = MathF.Min(Pos.X, end.X);
@@ -112,11 +144,7 @@ namespace ShapeCollision
             float bottomRightY = MathF.Max(Pos.Y, end.Y);
             return new(topLeftX, topLeftY, bottomRightX - topLeftX, bottomRightY - topLeftY);
         }
-        //public override float GetBoundingRadius()
-        //{
-        //    return Length / 2;
-        //}
-        public override void DebugDrawShape(Color color)
+        public override void DrawDebugShape(Color color)
         {
             Raylib.DrawCircleV(Pos, 5.0f, color);
             Raylib.DrawLineEx(Pos, End, 5f, color);
@@ -161,41 +189,21 @@ namespace ShapeCollision
         }
         public Vector2 Alignement { get; set; }
         public Vector2 Size { get; set; }
-        public Rectangle Rect 
+        public Rect Rect 
         { 
             get
             {
-                return SRect.ConstructRect(Pos, Size, Alignement);
+                return new(Pos, Size, Alignement);
             } 
         }
         public List<Vector2> GetCornersList() { return SRect.GetRectCornersList(Rect); }
         public (Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl) GetCorners() { return SRect.GetRectCorners(Rect); }
-        public override Rectangle GetBoundingRect() { return Rect; }
-        //public override float GetBoundingRadius()
-        //{
-        //    Rectangle r = Rect;
-        //    return (new Vector2(r.x, r.y) - new Vector2(r.x + r.width / 2, r.y + r.height / 2)).Length();
-        //}
-        public override void DebugDrawShape(Color color)
+        public override Rect GetBoundingBox() { return Rect; }
+       
+        public override void DrawDebugShape(Color color)
         {
-            //Raylib.DrawRectangleRec(Rect, color);
-            Raylib.DrawRectangleLinesEx(Rect, 5f, color);
-            //Drawing.DrawCircleLines(Pos, (Pos - new Vector2(Rect.x, Rect.y)).Length(), 3f, color, 4f);
+            Raylib.DrawRectangleLinesEx(Rect.Rectangle, 5f, color);
         }
-
-        //public static Rectangle GetCorrectRect(float x, float y, float w, float h)
-        //{
-        //    float p1x = x;
-        //    float p1y = y;
-        //    float p2x = x + w;
-        //    float p2y = y + h;
-        //
-        //    float topLeftX = MathF.Min(p1x, p2x);
-        //    float topLeftY = MathF.Min(p1y, p2y);
-        //    float bottomRightX = MathF.Max(p1x, p2x);
-        //    float bottomRightY = MathF.Max(p1y, p2y);
-        //    return new(topLeftX, topLeftY, bottomRightX - topLeftX, bottomRightY - topLeftY);
-        //}
 
     }
     public class PolyCollider : Collider
@@ -231,21 +239,11 @@ namespace ShapeCollision
             this.points = points;
         }
 
-        public override Rectangle GetBoundingRect()
+        public override Rect GetBoundingBox()
         {
             return SPoly.GetPolyBoundingBox(Shape);
         }
-        //public override float GetBoundingRadius()
-        //{
-        //    float maxDisSq = 0f;
-        //    foreach (var p in points)
-        //    {
-        //        float lengthSq = p.LengthSquared();
-        //        if (lengthSq > maxDisSq) maxDisSq = lengthSq;
-        //    }
-        //    return MathF.Sqrt(maxDisSq);
-        //}
-        public override void DebugDrawShape(Color color)
+        public override void DrawDebugShape(Color color)
         {
             SDrawing.DrawPolygon(Shape, 5f, color);
         }

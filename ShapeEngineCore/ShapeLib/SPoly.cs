@@ -1,15 +1,16 @@
 ﻿using System.Numerics;
 using Raylib_CsLo;
+using ShapeCore;
 
 namespace ShapeLib
 {
     public static class SPoly
     {
-        public static Rectangle GetPolyBoundingBox(List<Vector2> poly)
+        public static Rect GetPolyBoundingBox(List<Vector2> poly)
         {
             if (poly.Count < 2) return new();
             Vector2 start = poly[0];
-            Rectangle r = new(start.X, start.Y, 0, 0);
+            Rect r = new(start.X, start.Y, 0, 0);
 
             foreach (var p in poly)
             {
@@ -44,7 +45,7 @@ namespace ShapeLib
             var points = new List<Vector2>();
             for (int i = 0; i < poly.Count; i++)
             {
-                points.Add(SVec.Scale(poly[i], scale));
+                points.Add(poly[i] * scale);
             }
             return points;
         }
