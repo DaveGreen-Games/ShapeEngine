@@ -2,29 +2,25 @@
 {
     public class BasicTimer
     {
-        private float timer = 0.0f;
-        private float elapsed = 0.0f;
-        private float duration = 0.0f;
-        private bool paused = false;
-        private float f = 0.0f;
+        public float timer = 0.0f;
+        public float Remaining { get { return timer; } }
+        public float Elapsed { get; protected set; } = 0.0f;
+        public float Duration { get; protected set; } = 0.0f;
+        public bool Paused { get; protected set; } = false;
+        public float F { get; protected set; } = 0.0f;
 
         public BasicTimer()
         {
         }
 
-        public bool IsRunning() { return timer > 0.0f; }
-        public bool IsPaused() { return paused; }
-        public bool IsFinished() { return WasStarted() && !IsRunning(); }
-        public bool WasStarted() { return duration > 0f; }
-        public float GetF() { return f; }
-        public float GetDuration() { return duration; }
-        public float GetElapsed() { return elapsed; }
-        public float GetRemaining() { return timer; }
+        public bool IsRunning { get { return timer > 0.0f; } }
+        public bool IsFinished { get { return WasStarted && !IsRunning; } }
+        public bool WasStarted { get { return Duration > 0f; } }
 
 
         public void Update(float dt)
         {
-            if (paused) return;
+            if (Paused) return;
 
             if (timer > 0.0f)
             {
@@ -32,12 +28,12 @@
                 if (timer <= 0.0f)
                 {
                     timer = 0.0f;
-                    elapsed = duration;
-                    f = 0.0f;
+                    Elapsed = Duration;
+                    F = 0.0f;
                     return;
                 }
-                elapsed = duration - timer;
-                f = timer / duration;
+                Elapsed = Duration - timer;
+                F = timer / Duration;
             }
         }
 
@@ -45,53 +41,51 @@
         {
             if (duration <= 0.0f) return;
 
-            paused = false;
+            Paused = false;
             timer = duration;
-            this.duration = duration;
-            elapsed = 0.0f;
-            f = 1.0f;
+            this.Duration = duration;
+            Elapsed = 0.0f;
+            F = 1.0f;
         }
         public void Add(float amount)
         {
             if (amount <= 0f) return;
-            paused = false;
-            duration += amount;
+            Paused = false;
+            Duration += amount;
             timer += amount;
 
-            f = timer / duration;
+            F = timer / Duration;
         }
         public void Pause()
         {
-            if (paused) return;
-            paused = true;
+            if (Paused) return;
+            Paused = true;
         }
-
         public void Resume()
         {
-            if (!paused) return;
-            paused = false;
+            if (!Paused) return;
+            Paused = false;
         }
-
         public void Stop()
         {
-            paused = false;
+            Paused = false;
             timer = 0.0f;
-            f = 0.0f;
+            F = 0.0f;
         }
         public void Cancel()
         {
-            paused = false;
+            Paused = false;
             timer = 0f;
-            f = 0f;
-            duration = 0f;
-            elapsed = 0f;
+            F = 0f;
+            Duration = 0f;
+            Elapsed = 0f;
         }
         public void Restart()
         {
-            if (duration <= 0.0f) return;
-            paused = false;
-            timer = duration;
-            f = 1.0f;
+            if (Duration <= 0.0f) return;
+            Paused = false;
+            timer = Duration;
+            F = 1.0f;
         }
     }
 
