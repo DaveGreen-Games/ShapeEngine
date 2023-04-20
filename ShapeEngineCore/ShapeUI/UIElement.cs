@@ -107,9 +107,10 @@ namespace ShapeUI
         public Vector2 GetPos(Vector2 alignement)
         {
             Rect rect = GetRect(new(0f));
-            Vector2 topLeft = new Vector2(rect.x, rect.y);
-            Vector2 offset = GetSize() * alignement;
-            return topLeft + offset;
+            return rect.GetAlignementPos(alignement);
+            //Vector2 topLeft = new Vector2(rect.x, rect.y);
+            //Vector2 offset = GetSize() * alignement;
+            //return topLeft + offset;
         }
         public Vector2 GetSize()
         {

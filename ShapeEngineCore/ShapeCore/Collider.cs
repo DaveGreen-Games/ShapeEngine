@@ -1,20 +1,10 @@
 ﻿
 using System.Numerics;
 using Raylib_CsLo;
-using ShapeCore;
 using ShapeLib;
 
-namespace ShapeCollision
+namespace ShapeCore
 {
-    //collider class now holds everything physics related (force, vel, drag, pos, etc)
-    //new shape class will be added that contains everything related to the shape for collision detection
-    //collider has a list of shapes (compound collider) with offset per shape -> figure out how to have accurate world position
-    //for each shape (collider.Pos + shape.Offset) when used in collision detection
-
-    //collider has list of shapes
-    //rename circle/segment/rect/poly collider to shape
-
-    
     public interface ICollider
     {
         public float Mass { get; set; }
@@ -260,14 +250,14 @@ namespace ShapeCollision
             this.Vel = vel;
             this.Alignement = alignement;
         }
-        public RectCollider(Rectangle rect)
+        public RectCollider(Rect rect)
         {
             this.Pos = new(rect.x, rect.y);
             this.Size = new(rect.width, rect.height);
             this.Vel = new(0f);
             this.Alignement = new(0f);
         }
-        public RectCollider(Rectangle rect, Vector2 vel)
+        public RectCollider(Rect rect, Vector2 vel)
         {
             this.Pos = new(rect.x, rect.y);
             this.Size = new(rect.width, rect.height);
@@ -276,20 +266,61 @@ namespace ShapeCollision
         }
         public Vector2 Alignement { get; set; }
         public Vector2 Size { get; set; }
-        public Rect Rect 
-        { 
-            get
-            {
-                return new(Pos, Size, Alignement);
-            } 
+        public Rect Rect
+        {
+            get { return new(Pos, Size, Alignement); }
         }
-        public List<Vector2> GetCornersList() { return SRect.GetRectCornersList(Rect); }
-        public (Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl) GetCorners() { return SRect.GetRectCorners(Rect); }
+        //public List<Vector2> GetCornersList() { return SRect.GetRectCornersList(Rect); }
+        //public (Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl) GetCorners() { return SRect.GetRectCorners(Rect); }
         public override Rect GetBoundingBox() { return Rect; }
-       
         public override void DrawDebugShape(Color color)
         {
             Raylib.DrawRectangleLinesEx(Rect.Rectangle, 5f, color);
+        }
+        public override bool Overlap(ICollider other)
+        {
+            if (other is CircleCollider c)
+            {
+                return SGeometry.OverlapRectCircle(this, c);
+            }
+            else if (other is SegmentCollider s) 
+            {
+                return SGeometry.OverlapRectSegment(this, s);
+            }
+            else if (other is RectCollider r)
+            {
+                return SGeometry.OverlapRectRect(this, r);
+            }
+            else if (other is PolyCollider p)
+            {
+                return SGeometry.OverlapRectPoly(this, p);
+            }
+            else return other.Overlap(this);
+        }
+        public override bool OverlapRect(Rect rect)
+        {
+            return  SGeometry.OverlapRectRect(rect, this);
+        }
+        public override Intersection Intersect(ICollider other)
+        {
+
+            if (other is CircleCollider c)
+            {
+                return SGeometry.IntersectionRectCircle(this, c);
+            }
+            else if (other is SegmentCollider s)
+            {
+                return SGeometry.IntersectionRectSegment(this, s);
+            }
+            else if (other is RectCollider r)
+            {
+                return SGeometry.IntersectionRectRect(this, r);
+            }
+            else if (other is PolyCollider p)
+            {
+                return SGeometry.IntersectionRectPoly(this, p);
+            }
+            else return other.Intersect(this);
         }
 
     }
@@ -297,18 +328,19 @@ namespace ShapeCollision
     {
         List<Vector2> points;
         public float RotRad { get; set; }
-        public List<Vector2> Shape
-        {
-            get
-            {
-                List<Vector2> shape = new();
-                for (int i = 0; i < points.Count; i++)
-                {
-                    shape.Add(Pos + SVec.Rotate(points[i], RotRad));
-                }
-                return shape;
-            }
-        }
+        public float Scale { get; set; } = 1f;
+        public List<Vector2> Shape { get { return SPoly.TransformPoly(points, Pos, RotRad, new(Scale)); } }
+        //{
+        //    get
+        //    {
+        //        List<Vector2> shape = new();
+        //        for (int i = 0; i < points.Count; i++)
+        //        {
+        //            shape.Add(Pos + SVec.Rotate(points[i], RotRad));
+        //        }
+        //        return shape;
+        //    }
+        //}
         public PolyCollider(float x, float y, List<Vector2> points, float rotRad = 0f) : base(x, y)
         {
             this.RotRad = rotRad;
@@ -325,7 +357,17 @@ namespace ShapeCollision
             this.RotRad = rotRad;
             this.points = points;
         }
-
+        public PolyCollider(Rect rect, float rotRad = 0f) : base(rect.Center, new(0f))
+        {
+            this.points = rect.GetRectCornersListRelative(rect.Center);
+            this.RotRad = rotRad;
+        }
+        public PolyCollider(Rect rect, Vector2 vel, float rotRad = 0f) : base(rect.Center, vel)
+        {
+            this.points = rect.GetRectCornersListRelative(rect.Center);
+            this.RotRad = RotRad;
+            this.Vel = vel;
+        }
         public override Rect GetBoundingBox()
         {
             return SPoly.GetPolyBoundingBox(Shape);
@@ -334,6 +376,53 @@ namespace ShapeCollision
         {
             SDrawing.DrawPolygon(Shape, 5f, color);
         }
+        
+        public override bool Overlap(ICollider other)
+        {
+            if (other is CircleCollider c)
+            {
+                return SGeometry.OverlapPolyCircle(this, c);
+            }
+            else if (other is SegmentCollider s)
+            {
+                return SGeometry.OverlapPolySegment(this, s);
+            }
+            else if (other is RectCollider r)
+            {
+                return SGeometry.OverlapPolyRect(this, r);
+            }
+            else if (other is PolyCollider p)
+            {
+                return SGeometry.OverlapPolyPoly(this, p);
+            }
+            else return other.Overlap(this);
+        }
+        public override bool OverlapRect(Rect rect)
+        {
+            return SGeometry.OverlapRectPoly(rect, this);
+        }
+        public override Intersection Intersect(ICollider other)
+        {
+
+            if (other is CircleCollider c)
+            {
+                return SGeometry.IntersectionPolyCircle(this, c);
+            }
+            else if (other is SegmentCollider s)
+            {
+                return SGeometry.IntersectionPolySegment(this, s);
+            }
+            else if (other is RectCollider r)
+            {
+                return SGeometry.IntersectionPolyRect(this, r);
+            }
+            else if (other is PolyCollider p)
+            {
+                return SGeometry.IntersectionPolyPoly(this, p);
+            }
+            else return other.Intersect(this);
+        }
+
     }
 
 }

@@ -89,8 +89,7 @@ namespace ShapeLib
             return rects;
         }
 
-
-
+        
         public static (bool collided, Vector2 hitPoint, Vector2 n, Vector2 newPos) CollidePlayfield(this Rect playfieldRect, Vector2 objPos, float objRadius)
         {
             bool collided = false;
@@ -157,8 +156,13 @@ namespace ShapeLib
 
             return (outOfBounds, newPos);
         }
-        
-        
+
+        public static Vector2 GetAlignementPos(this Rect rect, Vector2 alignement)
+        {
+            Vector2 offset = rect.Size * alignement;
+            return rect.TopLeft + offset;
+        }
+
         public static Rect AlignRect(this Rect rect, Vector2 alignement)
         {
             Vector2 topLeft = new Vector2(rect.x, rect.y);
@@ -439,6 +443,16 @@ namespace ShapeLib
             Vector2 br = new(rect.x + rect.width, rect.y + rect.height);
             return new() { tl, tr, br, bl };
         }
+        public static List<Vector2> GetRectCornersListRelative(this Rect rect, Vector2 pos)
+        {
+            var points = GetRectCornersList(rect);
+            for (int i = 0; i < points.Count; i++)
+            {
+                points[i] -= pos;
+            }
+            return points;
+        }
+
         public static List<(Vector2 start, Vector2 end)> GetRectSegments(this Rect rect)
         {
             var c = GetRectCorners(rect);

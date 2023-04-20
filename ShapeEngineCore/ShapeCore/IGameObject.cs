@@ -1,5 +1,5 @@
-﻿using System.Numerics;
-using Raylib_CsLo;
+﻿using ShapeLib;
+using System.Numerics;
 
 namespace ShapeCore
 {
@@ -46,11 +46,23 @@ namespace ShapeCore
         //public virtual bool IsEnabled() { return true; }
         //public virtual bool IsVisible() { return true; }
     }
+    public interface ICollidable : IGameObject
+    {
+        public string GetID();
+        public Collider GetCollider();
+        public void Overlap(CollisionInfo info);
+        public void OverlapEnded(ICollidable other);
+        public uint GetCollisionLayer();
+        public uint[] GetCollisionMask();
 
+        Rect IShape.GetBoundingBox() { return GetCollider().GetBoundingBox(); }
+        Vector2 IShape.GetPosition() { return GetCollider().Pos; }
+        //public Vector2 GetPos();
+    }
 
+}
 
-
-    
+/*
     public class GameObject
     {
         public float DrawOrder { get; set; } = 0;
@@ -90,8 +102,4 @@ namespace ShapeCore
         public virtual bool IsVisible() { return true; }
 
     }
-    
-    
-
-
-}
+    */

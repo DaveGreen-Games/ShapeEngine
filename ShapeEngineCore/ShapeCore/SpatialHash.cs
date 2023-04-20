@@ -1,9 +1,8 @@
 ﻿using System.Numerics;
 using Raylib_CsLo;
-using ShapeCore;
 using ShapeLib;
 
-namespace ShapeCollision
+namespace ShapeCore
 {
     public class SpatialHash
     {

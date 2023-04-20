@@ -1,15 +1,12 @@
 ﻿using Raylib_CsLo;
 using System.Numerics;
-using ShapeCollision;
 using ShapeLib;
-using System.Security.Cryptography;
+using System.Reflection.Emit;
 
 namespace ShapeCore
 {
-
-
-    //Automatically set areaLayerName on GameObject?
-    //Then Removing a gameobject never needs the areaLayerName
+    //clean up and rework
+    //to much duplication of the same functions in area
     internal class TimerValue
     {
         public float Timer = 0f;
@@ -24,22 +21,22 @@ namespace ShapeCore
 
     public class AreaLayer
     {
-        protected List<GameObject> gameObjects = new();
-        protected List<GameObject> uiObjects = new();
-        protected Rectangle inner;
-        protected Rectangle outer; 
+        protected List<IGameObject> gameObjects = new();
+        protected List<IGameObject> uiObjects = new();
+        protected Rect inner;
+        protected Rect outer; 
         protected CollisionHandler colHandler;
         protected Vector2 parallaxeOffset = new(0f);
         protected float parallaxeScaling = 0f;
-        protected string name = "";
+        public uint ID { get; protected set; }
         public float ParallaxeSmoothing { get; set; } = 0.1f;
         public float DrawOrder { get; protected set; } = 0f;
         public float UpdateSlowFactor { get; set; } = 1f;
 
         
-        public AreaLayer(string name, Rectangle inner, Rectangle outer, CollisionHandler colHandler, float drawOrder = 0f, float parallaxeScaling = 0f)
+        public AreaLayer(uint id, Rect inner, Rect outer, CollisionHandler colHandler, float drawOrder = 0f, float parallaxeScaling = 0f)
         {
-            this.name = name;
+            this.ID = id;
             this.inner = inner;
             this.outer = outer;
             this.colHandler = colHandler;
@@ -50,17 +47,10 @@ namespace ShapeCore
         
 
         public bool IsParallaxeLayer() { return parallaxeScaling != 0f; }
-        public bool HasGameObject(GameObject obj) { return gameObjects.Contains(obj); }
-        public List<GameObject> GetGameObjects() { return gameObjects; }
-        public List<GameObject> GetGameObjects(string group)
-        {
-            if (group == "") return gameObjects;
-            return gameObjects.FindAll(x => x.IsInGroup(group));
-        }
-        public List<GameObject> GetGameObjects(Predicate<GameObject> match)
-        {
-            return gameObjects.FindAll(match);
-        }
+        public bool HasGameObject(IGameObject obj) { return gameObjects.Contains(obj); }
+        public List<IGameObject> GetGameObjects() { return gameObjects; }
+        public List<IGameObject> GetGameObjects(uint group) { return gameObjects.FindAll(x => x.IsInGroup(group)); }
+        public List<IGameObject> GetGameObjects(Predicate<IGameObject> match) { return gameObjects.FindAll(match); }
         public void Clear()
         {
             uiObjects.Clear();
@@ -75,26 +65,25 @@ namespace ShapeCore
             gameObjects.Clear();
         }
 
-        public void AddGameObject(GameObject obj, bool uiDrawing = false)
+        public void AddGameObject(IGameObject obj, bool uiDrawing = false)
         {
             if (obj == null) return;
-            //if (gameObjects.Contains(obj)) return; //dont need that i think
             if (obj is ICollidable collidable) colHandler.Add(collidable);
             gameObjects.Add(obj);
             if (uiDrawing && !uiObjects.Contains(obj)) uiObjects.Add(obj);
-            obj.AreaLayerName = this.name;
+            obj.AreaLayerID = this.ID;
             obj.Start();
         }
-        public void AddGameObjects(List<GameObject> newObjects, bool uiDrawing = false)
+        public void AddGameObjects(List<IGameObject> newObjects, bool uiDrawing = false)
         {
-            foreach (GameObject obj in newObjects)
+            foreach (IGameObject obj in newObjects)
             {
                 AddGameObject(obj, uiDrawing);
             }
         }
 
         
-        public void RemoveGameObject(GameObject obj)
+        public void RemoveGameObject(IGameObject obj)
         {
             if (obj == null) return;
             if (!gameObjects.Contains(obj)) return;
@@ -106,14 +95,14 @@ namespace ShapeCore
             obj.Destroy();
             gameObjects.Remove(obj);
         }
-        public void RemoveGameObjects(List<GameObject> objs)
+        public void RemoveGameObjects(List<IGameObject> objs)
         {
             foreach (var obj in objs)
             {
                 RemoveGameObject(obj);
             }
         }
-        public void RemoveGameObjects(Predicate<GameObject> match)
+        public void RemoveGameObjects(Predicate<IGameObject> match)
         {
             var remove = gameObjects.FindAll(match);
             foreach (var obj in remove)
@@ -121,9 +110,8 @@ namespace ShapeCore
                 RemoveGameObject(obj);
             }
         }
-        public void RemoveGameObjects(string group)
+        public void RemoveGameObjects(uint group)
         {
-            if (group == "") return;
             var remove = GetGameObjects(group);
             foreach (var obj in remove)
             {
@@ -139,14 +127,14 @@ namespace ShapeCore
         public virtual void Draw()
         {
             SortGameObjects();
-            foreach (GameObject obj in gameObjects)
+            foreach (IGameObject obj in gameObjects)
             {
                 if (SGeometry.OverlapRectRect(outer, obj.GetBoundingBox())) { obj.Draw(); }
             }
         }
         public virtual void DrawUI(Vector2 uiSize)
         {
-            foreach (GameObject obj in uiObjects)
+            foreach (IGameObject obj in uiObjects)
             {
                 obj.DrawUI(uiSize);
             }
@@ -155,7 +143,7 @@ namespace ShapeCore
         {
             for (int i = gameObjects.Count - 1; i >= 0; i--)
             {
-                GameObject obj = gameObjects[i];
+                IGameObject obj = gameObjects[i];
                 if (obj == null)
                 {
                     gameObjects.RemoveAt(i);
@@ -196,7 +184,7 @@ namespace ShapeCore
         //}
         protected virtual void SortGameObjects()
         {
-            gameObjects.Sort(delegate (GameObject x, GameObject y)
+            gameObjects.Sort(delegate (IGameObject x, IGameObject y)
             {
                 if (x == null || y == null) return 0;
 
@@ -208,22 +196,19 @@ namespace ShapeCore
 
     }
 
-
-
-
     public class Area
     {
-        protected Dictionary<string, AreaLayer> layers = new();
+        protected Dictionary<uint, AreaLayer> layers = new();
         protected List<AreaLayer> sortedLayers = new();
-        protected Rectangle inner;
-        protected Rectangle outer;
+        public Rect InnerRect { get;protected set;}
+        public Rect OuterRect { get; protected set; }
         public CollisionHandler colHandler;
-        
+        public uint DefaultID { get; protected set; }
         public float UpdateSlowFactor { get; set; } = 1f;
-        Dictionary<string, TimerValue> updateSlowFactors = new();
-        public void Slow(string id, float factor, float duration = -1)
+        Dictionary<uint, TimerValue> updateSlowFactors = new();
+        public void Slow(uint id, float factor, float duration = -1)
         {
-            if (id == "" || factor < 0) return;
+            if (factor < 0) return;
             if (updateSlowFactors.ContainsKey(id))
             {
                 //var old = updateSlowFactors[id];
@@ -234,7 +219,7 @@ namespace ShapeCore
                 updateSlowFactors.Add(id, new(duration, factor));
             }
         }
-        public void RemoveSlow(string id)
+        public void RemoveSlow(uint id)
         {
             if (!updateSlowFactors.ContainsKey(id)) return;
             updateSlowFactors.Remove(id);
@@ -261,151 +246,145 @@ namespace ShapeCore
         }
         public Area()
         {
-            inner = new();
-            outer = new();
+            InnerRect = new();
+            OuterRect = new();
             colHandler = new(0,0,0,0,0,0);
         }
         public Area(float x, float y, float w, float h, int rows, int cols)
         {
-            inner = new(x, y, w, h);
-            outer = SRect.ScaleRectangle(inner, 2f);
-            colHandler = new(inner.x, inner.y, inner.width, inner.height, rows, cols);
-            AddLayer("default");
+            InnerRect = new(x, y, w, h);
+            OuterRect = SRect.ScaleRectangle(InnerRect, 2f);
+            colHandler = new(InnerRect.x, InnerRect.y, InnerRect.width, InnerRect.height, rows, cols);
+            DefaultID = SID.NextID;
+            AddLayer(DefaultID);
         }
         public Area(Vector2 topLeft, Vector2 bottomRight, int rows, int cols)
         {
             float w = bottomRight.X - topLeft.X;
             float h = bottomRight.Y - topLeft.Y;
-            inner = new(topLeft.X, topLeft.Y, w, h);
-            outer = SRect.ScaleRectangle(inner, 2f);
-            colHandler = new(inner.x, inner.y, inner.width, inner.height, rows, cols);
-            AddLayer("default");
+            InnerRect = new(topLeft.X, topLeft.Y, w, h);
+            OuterRect = SRect.ScaleRectangle(InnerRect, 2f);
+            colHandler = new(InnerRect.x, InnerRect.y, InnerRect.width, InnerRect.height, rows, cols);
+            DefaultID = SID.NextID;
+            AddLayer(DefaultID);
         }
         public Area(Vector2 topLeft, float w, float h, int rows, int cols)
         {
-            inner = new(topLeft.X, topLeft.Y, w, h);
-            outer = SRect.ScaleRectangle(inner, 2f);
-            colHandler = new(inner.x, inner.y, inner.width, inner.height, rows, cols);
-            AddLayer("default");
+            InnerRect = new(topLeft.X, topLeft.Y, w, h);
+            OuterRect = SRect.ScaleRectangle(InnerRect, 2f);
+            colHandler = new(InnerRect.x, InnerRect.y, InnerRect.width, InnerRect.height, rows, cols);
+            DefaultID = SID.NextID;
+            AddLayer(DefaultID);
         }
-        public Area(Rectangle area, int rows, int cols)
+        public Area(Rect area, int rows, int cols)
         {
-            inner = area;
-            outer = SRect.ScaleRectangle(inner, 2f);
-            colHandler = new(inner.x, inner.y, inner.width, inner.height, rows, cols);
-            AddLayer("default");
+            InnerRect = area;
+            OuterRect = SRect.ScaleRectangle(InnerRect, 2f);
+            colHandler = new(InnerRect.x, InnerRect.y, InnerRect.width, InnerRect.height, rows, cols);
+            DefaultID = SID.NextID;
+            AddLayer(DefaultID);
         }
 
 
-        public Rectangle GetInnerArea() { return inner; }
-        public Rectangle GetOuterArea() { return outer; }
+        //public Rect GetInnerArea() { return inner; }
+        //public Rect GetOuterArea() { return outer; }
 
-        public void SetLayerSlowFactor(string layer, float slowFactor)
+        public void SetLayerSlowFactor(uint layerID, float slowFactor)
         {
-            if (!layers.ContainsKey(layer)) return;
-            layers[layer].UpdateSlowFactor = slowFactor;
+            if (!layers.ContainsKey(layerID)) return;
+            layers[layerID].UpdateSlowFactor = slowFactor;
         }
-        public bool HasLayer(string name)
+        public bool HasLayer(uint id)
         {
-            return layers.ContainsKey(name);
+            return layers.ContainsKey(id);
         }
-        public void AddLayer(string name, float drawOrder = 0f, float parallaxeScaling = 0f)
+        public void AddLayer(uint id, float drawOrder = 0f, float parallaxeScaling = 0f)
         {
-            if (name == "") return;
-            if (layers.ContainsKey(name)) layers[name] = new(name, inner, outer, colHandler, drawOrder, parallaxeScaling);
-            else layers.Add(name, new(name, inner, outer, colHandler, drawOrder, parallaxeScaling));
+            if (id == DefaultID) return;
+            if (layers.ContainsKey(id)) layers[id] = new(id, InnerRect, OuterRect, colHandler, drawOrder, parallaxeScaling);
+            else layers.Add(id, new(id, InnerRect, OuterRect, colHandler, drawOrder, parallaxeScaling));
             
             sortedLayers = SortAreaLayers();
         }
-        public void AddLayers(params (string name, float drawOrder, float parallaxeScaling)[] add)
+        public void AddLayers(params (uint id, float drawOrder, float parallaxeScaling)[] add)
         {
             foreach (var layer in add)
             {
-                if (layer.name == "") continue;
-                if (layers.ContainsKey(layer.name)) layers[layer.name] = new(layer.name, inner, outer, colHandler, layer.drawOrder, layer.parallaxeScaling);
-                else layers.Add(layer.name, new(layer.name, inner, outer, colHandler, layer.drawOrder, layer.parallaxeScaling));
+                if(layer.id == DefaultID) continue;
+                if (layers.ContainsKey(layer.id)) layers[layer.id] = new(layer.id, InnerRect, OuterRect, colHandler, layer.drawOrder, layer.parallaxeScaling);
+                else layers.Add(layer.id, new(layer.id, InnerRect, OuterRect, colHandler, layer.drawOrder, layer.parallaxeScaling));
             }
             sortedLayers = SortAreaLayers();
         }
 
-        public void RemoveLayer(string name)
+        public void RemoveLayer(uint id)
         {
-            if (name == "" || name == "default" || !HasLayer(name)) return;
-            layers[name].Clear();
-            layers.Remove(name);
+            if (id == DefaultID || !HasLayer(id)) return;
+            layers[id].Clear();
+            layers.Remove(id);
             sortedLayers = SortAreaLayers();
         }
-        public void RemoveLayers(params string[] names)
+        public void RemoveLayers(params uint[] ids)
         {
-            foreach (var name in names)
+            foreach (var id in ids)
             {
-                if (name == "" || name == "default" || !HasLayer(name)) continue;
-                layers[name].Clear();
-                layers.Remove(name);
+                if (id == DefaultID || !HasLayer(id)) continue;
+                layers[id].Clear();
+                layers.Remove(id);
             }
             sortedLayers = SortAreaLayers();
         }
-        public void UpdateLayerParallaxe(Vector2 pos, string name = "")
+        public void UpdateLayerParallaxe(Vector2 pos, uint id)
         {
-            if(name == "")
+            if (!HasLayer(id)) return;
+            layers[id].UpdateParallaxe(pos);
+        }
+        public void UpdateLayerParallaxe(Vector2 pos)
+        {
+            foreach (var layer in sortedLayers)
             {
-                foreach (var layer in sortedLayers)
-                {
-                    layer.UpdateParallaxe(pos);
-                }
-            }
-            else
-            {
-                if(!HasLayer(name)) return;
-                layers[name].UpdateParallaxe(pos);
+                layer.UpdateParallaxe(pos);
             }
         }
-
         /// <summary>
         /// If layerName is "" all gameObjects of all layers are returned.
         /// </summary>
         /// <param name="layerName"></param>
         /// <returns></returns>
-        public List<GameObject> GetGameObjects(string layerName = "")
+        public List<IGameObject> GetGameObjects(uint layerID)
         {
-            
-            if(layerName == "")
+
+            if (!HasLayer(layerID)) return new();
+            return layers[layerID].GetGameObjects();
+        }
+        public List<IGameObject> GetAllGameObjects()
+        {
+            List<IGameObject> gameObjects = new();
+            foreach (var layer in layers.Values)
             {
-                List<GameObject> gameObjects = new();
-                foreach (var layer in layers.Values)
-                {
-                    gameObjects.AddRange(layer.GetGameObjects());
-                }
-                return gameObjects;
+                gameObjects.AddRange(layer.GetGameObjects());
             }
-            else
-            {
-                if (!HasLayer(layerName)) return new();
-                return layers[layerName].GetGameObjects();
-            }
+            return gameObjects;
         }
         /// <summary>
         /// If layerName is "" all gameObjects of all layers are returned.
         /// </summary>
         /// <param name="group"></param>
-        /// <param name="layerName"></param>
+        /// <param name="layerID"></param>
         /// <returns></returns>
-        public List<GameObject> GetGameObjects(string group, string layerName = "")
+        public List<IGameObject> GetGameObjects(uint group, uint layerID)
         {
-            if (layerName == "")
+            if (!HasLayer(layerID)) return new();
+            return layers[layerID].GetGameObjects(group);
+        }
+        public List<IGameObject> GetAllGameObjects(uint group)
+        {
+            List<IGameObject> gameObjects = new();
+            foreach (var layer in layers.Values)
             {
-                List<GameObject> gameObjects = new();
-                foreach (var layer in layers.Values)
-                {
-                    gameObjects.AddRange(layer.GetGameObjects(group));
-                }
-                return gameObjects;
+                gameObjects.AddRange(layer.GetGameObjects(group));
             }
-            else
-            {
-                if (!HasLayer(layerName)) return new();
-                return layers[layerName].GetGameObjects(group);
-            }
+            return gameObjects;
         }
         /// <summary>
         /// If layerName is "" all gameObjects of all layers are returned.
@@ -413,40 +392,32 @@ namespace ShapeCore
         /// <param name="match">Predicate to match game objects that should be returned.</param>
         /// <param name="layerName"></param>
         /// <returns></returns>
-        public List<GameObject> GetGameObjects(Predicate<GameObject> match, string layerName = "")
+        public List<IGameObject> GetGameObjects(Predicate<IGameObject> match, uint layerID)
         {
-            if (layerName == "")
+            if (!HasLayer(layerID)) return new();
+            return layers[layerID].GetGameObjects(match);
+        }
+        public List<IGameObject> GetAllGameObjects(Predicate<IGameObject> match)
+        {
+            List<IGameObject> gameObjects = new();
+            foreach (var layer in layers.Values)
             {
-                List<GameObject> gameObjects = new();
-                foreach (var layer in layers.Values)
-                {
-                    gameObjects.AddRange(layer.GetGameObjects(match));
-                }
-                return gameObjects;
+                gameObjects.AddRange(layer.GetGameObjects(match));
             }
-            else
+            return gameObjects;
+        }
+        public void ClearGameObjects(uint layerID)
+        {
+            if (!HasLayer(layerID)) return;
+            layers[layerID].Clear();
+        }
+        public void ClearAllGameObjects()
+        {
+            foreach(var layer in layers.Values)
             {
-                if (!HasLayer(layerName)) return new();
-                return layers[layerName].GetGameObjects(match);
+                layer.Clear();
             }
         }
-
-        public void ClearGameObjects(string layerName = "")
-        {
-            if (layerName == "")
-            {
-                foreach (var layer in layers.Values)
-                {
-                    layer.Clear();
-                }
-            }
-            else
-            {
-                if (!HasLayer(layerName)) return;
-                layers[layerName].Clear();
-            }
-        }
-
         public void AddICollidable(ICollidable obj)
         {
             colHandler.Add(obj);
@@ -456,73 +427,66 @@ namespace ShapeCore
             colHandler.Remove(obj);
         }
 
-        public void AddGameObject(GameObject obj, bool uiDrawing = false, string layerName = "default")
-        {
-            if(layerName == "" || !HasLayer(layerName)) return;
-            layers[layerName].AddGameObject(obj, uiDrawing);
+        public bool AddGameObject(IGameObject obj, uint layerID, bool uiDrawing = false)
+        { 
+            if(!HasLayer(layerID)) return false;
+            layers[layerID].AddGameObject(obj, uiDrawing);
+            return true;
         }
-        public void AddGameObjects(List<GameObject> newObjects, bool uiDrawing = false, string layerName = "default")
+        public void AddGameObjects(List<IGameObject> newObjects, uint layerName, bool uiDrawing = false)
         {
-            if (layerName == "" || !HasLayer(layerName)) return;
+            if (!HasLayer(layerName)) return;
             layers[layerName].AddGameObjects(newObjects, uiDrawing);
         }
 
-        public void RemoveGameObject(GameObject obj)
+        public void RemoveGameObject(IGameObject obj)
         {
-            string layerName = obj.AreaLayerName;
-            if (layerName == "" || !HasLayer(layerName)) return;
-            layers[layerName].RemoveGameObject(obj);
+            if (!HasLayer(obj.AreaLayerID)) return;
+            layers[obj.AreaLayerID].RemoveGameObject(obj);
         }
-        public void RemoveGameObjects(List<GameObject> objs)
+        public void RemoveGameObjects(List<IGameObject> objs)
         {
             foreach (var obj in objs)
             {
                 RemoveGameObject(obj);
             }
         }
-        public void RemoveGameObjects(Predicate<GameObject> match, string layerName = "")
+        public void RemoveGameObjects(Predicate<IGameObject> match, uint layerID)
         {
-            if(layerName == "")
+            if (!HasLayer(layerID)) return;
+            layers[layerID].RemoveGameObjects(match);
+        }
+        public void RemoveAllGameObjects(Predicate<IGameObject> match)
+        {
+            foreach (var layer in sortedLayers)
             {
-                foreach (var layer in sortedLayers)
-                {
-                    layer.RemoveGameObjects(match);
-                }
-            }
-            else
-            {
-                if (!HasLayer(layerName)) return;
-                layers[layerName].RemoveGameObjects(match);
+                layer.RemoveGameObjects(match);
             }
         }
-        public void RemoveGameObjects(string group, string layerName = "")
+        public void RemoveGameObjects(uint group, uint layerID)
         {
-            if (layerName == "")
+            if (!HasLayer(layerID)) return;
+            layers[layerID].RemoveGameObjects(group);
+        }
+        public void RemoveAllGameObjects(uint group)
+        {
+            foreach (var layer in sortedLayers)
             {
-                foreach (var layer in sortedLayers)
-                {
-                    layer.RemoveGameObjects(group);
-                }
-            }
-            else
-            {
-                if (!HasLayer(layerName)) return;
-                layers[layerName].RemoveGameObjects(group);
+                layer.RemoveGameObjects(group);
             }
         }
-
         public virtual void Start() { }
         public virtual void Close()
         {
-            ClearGameObjects();
+            ClearAllGameObjects();
             colHandler.Close();
         }
         public virtual void Draw()
         {
             if (DEBUG_DRAWHELPERS)
             {
-                DrawRectangleLinesEx(this.inner, 15f, DEBUG_AreaInnerColor);
-                DrawRectangleLinesEx(this.outer, 15f, DEBUG_AreaOuterColor);
+                DrawRectangleLinesEx(this.InnerRect.Rectangle, 15f, DEBUG_AreaInnerColor);
+                DrawRectangleLinesEx(this.OuterRect.Rectangle, 15f, DEBUG_AreaOuterColor);
                 colHandler.DebugDrawGrid(DEBUG_CollisionHandlerBorder, DEBUG_CollisionHandlerFill);
             }
             //bool playfieldDrawn = false;
@@ -555,18 +519,9 @@ namespace ShapeCore
             }
         }
         
-        //public virtual void MonitorHasChanged()
-        //{
-        //    for (int i = 0; i < sortedLayers.Count; i++)
-        //    {
-        //        var layer = sortedLayers[i];
-        //        layer.MonitorHasChanged();
-        //    }
-        //}
-        
-        public void SortGameObjects(List<GameObject> objectsToSort)
+        public void SortGameObjects(List<IGameObject> objectsToSort)
         {
-            objectsToSort.Sort(delegate (GameObject x, GameObject y)
+            objectsToSort.Sort(delegate (IGameObject x, IGameObject y)
             {
                 if (x == null || y == null) return 0;
 
@@ -575,9 +530,6 @@ namespace ShapeCore
                 else return 0;
             });
         }
-        
-        
-
         protected List<AreaLayer> SortAreaLayers()
         {
             var list = layers.Values.ToList();

@@ -4,8 +4,27 @@ using ShapeCore;
 
 namespace ShapeLib
 {
+    //public class Polygon
+    //{
+    //    private List<Vector2> points;
+    //    public Polygon(List<Vector2> points) { this.points = points; }
+    //    public List<Vector2> GetShape(Vector2 pos, float rotRad, Vector2 scale)
+    //    {
+    //        return SPoly.TransformPoly(points, pos, rotRad, scale);
+    //    }
+    //}
+
     public static class SPoly
     {
+        public static List<Vector2> TransformPoly(List<Vector2> points, Vector2 pos, float rotRad, Vector2 scale)
+        {
+            List<Vector2> poly = new();
+            for (int i = 0; i < points.Count; i++)
+            {
+                poly.Add(pos + SVec.Rotate(points[i], rotRad) + scale);
+            }
+            return poly;
+        }
         public static Rect GetPolyBoundingBox(List<Vector2> poly)
         {
             if (poly.Count < 2) return new();
@@ -18,27 +37,6 @@ namespace ShapeLib
             }
             return r;
         }
-
-        /*
-        public static Rectangle GetPolyBoundingBox(Vector2 pos, List<Vector2> poly)
-        {
-            Rectangle r = new();
-            foreach (var p in poly)
-            {
-                r = SRect.EnlargeRect(r, pos + p);
-            }
-            return r;
-        }
-        public static Rectangle GetPolyBoundingBox(Vector2 pos, float rotRad, List<Vector2> poly)
-        {
-            Rectangle r = new();
-            foreach (var p in poly)
-            {
-                r = SRect.EnlargeRect(r, pos + SVec.Rotate(p, rotRad));
-            }
-            return r;
-        }
-    */
 
         public static List<Vector2> ScalePolygon(List<Vector2> poly, float scale)
         {

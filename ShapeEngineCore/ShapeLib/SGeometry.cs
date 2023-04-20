@@ -1,26 +1,11 @@
 ﻿using Raylib_CsLo;
 using System.Numerics;
 using ShapeLib;
-using System.Diagnostics;
 using ShapeCore;
 
-namespace ShapeCollision
+namespace ShapeLib
 {
-    public interface ICollidable : IGameObject
-    {
-        public string GetID();
-        public Collider GetCollider();
-        public void Overlap(CollisionInfo info);
-        public void OverlapEnded(ICollidable other);
-        public uint GetCollisionLayer();
-        public uint[] GetCollisionMask();
-        
-        Rect IShape.GetBoundingBox() { return GetCollider().GetBoundingBox(); }
-        Vector2 IShape.GetPosition() { return GetCollider().Pos; }
-        //public Vector2 GetPos();
-    }
-
-
+    
     public struct CollisionInfo
     {
         public bool overlapping;
@@ -234,27 +219,6 @@ namespace ShapeCollision
             if (col == null) return false;
             if (!col.Enabled) return false;
             return col.OverlapRect(rect);
-            //if (shape is CircleCollider)
-            //{
-            //    return OverlapRectCircle(rect, (CircleCollider)shape);
-            //}
-            //else if (shape is SegmentCollider)
-            //{
-            //    return OverlapRectSegment(rect, (SegmentCollider)shape);
-            //}
-            //else if (shape is RectCollider)
-            //{
-            //    return OverlapRectRect(rect, (RectCollider) shape);
-            //}
-            //else if(shape is PolyCollider)
-            //{
-            //    return OverlapRectPoly(rect, (PolyCollider) shape);
-            //}
-            //return false;
-            //else
-            //{
-            //    return OverlapRectPoint(rect, shape);
-            //}
         }
 
         

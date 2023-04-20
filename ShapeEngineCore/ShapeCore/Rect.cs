@@ -17,7 +17,7 @@ namespace ShapeCore
         public Vector2 TopRight { get { return new Vector2(x + width, 0); } }
         public Vector2 BottomRight { get { return new Vector2(x+width, y+height); } }
         public Vector2 BottomLeft { get { return new Vector2(x, y + height); } }
-        
+        public Vector2 Center { get { return new Vector2(x + width * 0.5f, y + height * 0.5f); } }
 
         public Vector2 Size { get { return new Vector2(width, height); } }
         public Rectangle Rectangle { get { return new(x, y, width, height); } }
