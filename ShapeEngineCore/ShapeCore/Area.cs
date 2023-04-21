@@ -14,7 +14,7 @@ namespace ShapeCore
         public float ParallaxeSmoothing { get; set; } = 0.1f;
         public float UpdateSlowFactor { get; set; } = 1f;
 
-        internal Slow slow = new(); 
+        public ITimedValues UpdateSlowFactors { get; } = new TimedFactors(); 
 
         public int Layer { get; protected set; }
         public Vector2 ParallaxeOffset { get; protected set; } = new(0f);
@@ -34,11 +34,11 @@ namespace ShapeCore
             this.ParallaxeScaling = 0f;
         }
         public bool IsParallaxe() { return ParallaxeScaling != 0f; }
-        public void UpdateParallaxe(Vector2 pos)
+        public virtual void UpdateParallaxe(Vector2 pos)
         {
             ParallaxeOffset = ParallaxeOffset.Lerp(pos * ParallaxeScaling, ParallaxeSmoothing);
         }
-        public void SortGameObjects()
+        public virtual void SortGameObjects()
         {
             gameObjects.Sort(delegate (IGameObject x, IGameObject y)
             {
@@ -53,10 +53,31 @@ namespace ShapeCore
     }
     
     //make generic and public like factor handler or something
-    internal class Slow
+    public interface ITimedValues
     {
-        private Dictionary<uint, TimerValue> factors = new();
-        public float TotalFactor { get; protected set; } = 1f;
+        public float Total { get; }
+        public uint Add(float factor, float duration = -1);
+        public void Remove(uint id);
+        public void Clear();
+        public void Update(float dt);
+
+    }
+    public class TimedFactors : ITimedValues
+    {
+        internal class TimedFloat
+        {
+            public float Timer = 0f;
+            public float Value = 0f;
+
+            public TimedFloat(float duration, float value)
+            {
+                this.Timer = duration;
+                this.Value = value;
+            }
+        }
+
+        private Dictionary<uint, TimedFloat> factors = new();
+        public float Total { get; protected set; } = 1f;
         public uint Add(float factor, float duration = -1)
         {
             if (factor < 0) return 0;
@@ -95,20 +116,12 @@ namespace ShapeCore
                 }
             }
 
-            TotalFactor = accumualted;
+            Total = accumualted;
         }
+    
     }
-    internal class TimerValue
-    {
-        public float Timer = 0f;
-        public float Value = 0f;
 
-        public TimerValue(float duration, float value)
-        {
-            this.Timer = duration;
-            this.Value = value;
-        }
-    }
+    
 
     /*
     public class AreaLayer
@@ -296,12 +309,12 @@ namespace ShapeCore
         public Rect OuterRect { get; protected set; }
         public CollisionHandler colHandler;
 
+        protected ITimedValues UpdateSlowFactors { get; } = new TimedFactors();
         public float UpdateSlowFactor { get; set; } = 1f;
         public Vector2 ParallaxePosition = new(0f);
         
         private Dictionary<int, AreaLayer> layers = new();
         private List<AreaLayer> sortedLayers = new();
-        private Slow slow = new Slow();
         protected List<IGameObject> uiObjects = new();
         
         
@@ -664,7 +677,7 @@ namespace ShapeCore
         public virtual void Update(float dt)
         {
             colHandler.Update(dt);
-            slow.Update(dt);
+            UpdateSlowFactors.Update(dt);
             uiObjects.Clear();
             for (int i = 0; i < sortedLayers.Count; i++)
             {
@@ -680,8 +693,8 @@ namespace ShapeCore
         }
         protected void UpdateLayer(float dt, AreaLayer layer)
         {
-            layer.slow.Update(dt);
-            float slowFactor = UpdateSlowFactor * slow.TotalFactor * layer.slow.TotalFactor * layer.UpdateSlowFactor;
+            layer.UpdateSlowFactors.Update(dt);
+            float slowFactor = UpdateSlowFactor * UpdateSlowFactors.Total * layer.UpdateSlowFactors.Total * layer.UpdateSlowFactor;
             for (int i = layer.gameObjects.Count - 1; i >= 0; i--)
             {
                 IGameObject obj = layer.gameObjects[i];
