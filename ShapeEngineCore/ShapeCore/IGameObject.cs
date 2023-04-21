@@ -11,9 +11,10 @@ namespace ShapeCore
     public interface IGameObject : IShape
     {
         public float DrawOrder { get; set; }
-        public uint Group { get; set; }
-        public uint AreaLayerID { get; set; }
-        public Vector2 AreaLayerOffset { get; set; }
+        public int LayerGroup { get; set; }
+        public bool DrawToUI { get; set; }
+        //public uint AreaLayerID { get; set; }
+        public Vector2 ParallaxeOffset { get; set; }
         //public bool Enabled { get; set; }
         //public bool Visible { get; set; }
         /// <summary>
@@ -25,7 +26,7 @@ namespace ShapeCore
         /// </summary>
         public float UpdateSlowResistance { get; set; }
     
-        public sealed bool IsInGroup(uint group) { return this.Group == group; }
+        public sealed bool IsInGroup(int layerGroup) { return this.LayerGroup == layerGroup; }
         public sealed bool Kill()
         {
             if (IsDead()) return false;
