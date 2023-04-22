@@ -1,63 +1,127 @@
 ﻿using ShapeLib;
 using ShapeTiming;
 using System.Numerics;
+using ShapeCore;
+using System.Reflection.Emit;
 
 namespace ShapeCore
 {
-    public class AreaLayer
-    {
-        public readonly List<IGameObject> gameObjects = new();
-        public float ParallaxeScaling { get; set; } = 0f;
-        public float ParallaxeSmoothing { get; set; } = 0.1f;
-        public float UpdateSlowFactor { get; set; } = 1f;
-        public ITimedValues UpdateSlowFactors { get; } = new TimedFactors(); 
-        public int Layer { get; private set; }
-        public Vector2 ParallaxeOffset { get; protected set; } = new(0f);
-        
-        public AreaLayer(int layer, float parallaxeScaling, float parallaxeSmoothing = 0.1f)
-        {
-            this.Layer = layer;
-            this.ParallaxeScaling = parallaxeScaling;
-            this.ParallaxeSmoothing = parallaxeSmoothing;
-        }
-        public AreaLayer(int layer)
-        {
-            this.Layer = layer;
-            this.ParallaxeScaling = 0f;
-        }
-        public bool IsParallaxe() { return ParallaxeScaling != 0f; }
-        public virtual void UpdateParallaxe(Vector2 pos)
-        {
-            ParallaxeOffset = ParallaxeOffset.Lerp(pos * ParallaxeScaling, ParallaxeSmoothing);
-        }
-        public virtual void SortGameObjects()
-        {
-            gameObjects.Sort(delegate (IGameObject x, IGameObject y)
-            {
-                if (x == null || y == null) return 0;
+    //public class AreaLayer
+    //{
+    //    public readonly List<IGameObject> gameObjects = new();
+    //    public float ParallaxeScaling { get; set; } = 0f;
+    //    public float ParallaxeSmoothing { get; set; } = 0.1f;
+    //    public float UpdateSlowFactor { get; set; } = 1f;
+    //    public ITimedValues UpdateSlowFactors { get; } = new TimedFactors(); 
+    //    public int Layer { get; private set; }
+    //    public Vector2 ParallaxeOffset { get; protected set; } = new(0f);
+    //    
+    //    public AreaLayer(int layer, float parallaxeScaling, float parallaxeSmoothing = 0.1f)
+        //{
+        //    this.Layer = layer;
+        //    this.ParallaxeScaling = parallaxeScaling;
+        //    this.ParallaxeSmoothing = parallaxeSmoothing;
+        //}
+    //    public AreaLayer(int layer)
+        //{
+        //    this.Layer = layer;
+        //    this.ParallaxeScaling = 0f;
+        //}
+    //    public bool IsParallaxe() { return ParallaxeScaling != 0f; }
+    //    public virtual void UpdateParallaxe(Vector2 pos)
+    //    {
+    //        ParallaxeOffset = ParallaxeOffset.Lerp(pos * ParallaxeScaling, ParallaxeSmoothing);
+    //    }
 
-                if (x.DrawOrder < y.DrawOrder) return -1;
-                else if (x.DrawOrder > y.DrawOrder) return 1;
-                else return 0;
-            });
-        }
 
-    }
+    //}
     
     public class Area
     {
+        protected class AreaLayer
+        {
+            public List<IGameObject> objs = new();
+            public int Layer { get; private set; }
+            public AreaLayer(int layer) { this.Layer = layer; }
+            public TimedFactors UpdateSlowFactors = new();
+            public Dictionary<IGameObject, TimedFactors> GameObjectUpdateSlowFactors = new();
+            public uint AddSlow(float factor, float duration = -1)
+            {
+                return UpdateSlowFactors.Add(factor, duration);
+            }
+            public uint AddSlow(IGameObject obj, float factor, float duration = -1)
+            {
+                if (!GameObjectUpdateSlowFactors.ContainsKey(obj)) GameObjectUpdateSlowFactors.Add(obj, new());
+                return GameObjectUpdateSlowFactors[obj].Add(factor, duration);
+            }
+            public bool RemoveSlow(uint id) { return UpdateSlowFactors.Remove(id); }
+            public bool RemoveSlow(IGameObject obj, uint id)
+            {
+                if (GameObjectUpdateSlowFactors.ContainsKey(obj)) return GameObjectUpdateSlowFactors[obj].Remove(id);
+                return false;
+            }
+            public void ClearSlow() { UpdateSlowFactors.Clear(); }
+            public void ClearSlow(IGameObject obj)
+            {
+                if (GameObjectUpdateSlowFactors.ContainsKey(obj)) GameObjectUpdateSlowFactors[obj].Clear();
+            }
+            public void Add(IGameObject obj) { objs.Add(obj); }
+            public bool Remove(IGameObject obj) 
+            { 
+                bool removed = objs.Remove(obj);
+                GameObjectUpdateSlowFactors.Remove(obj);
+                obj.Destroy();
+                return removed;
+            }
+            public bool RemoveAt(int index)
+            {
+                if(index < 0 || index >= objs.Count) return false;
+                var obj = objs[index];
+                objs.RemoveAt(index);
+                GameObjectUpdateSlowFactors.Remove(obj);
+                obj.Destroy();
+                return true;
+
+            }
+            public float GetTotalUpdateSlowFactor(IGameObject obj)
+            {
+                if (GameObjectUpdateSlowFactors.ContainsKey(obj))
+                {
+                    return UpdateSlowFactors.Total * GameObjectUpdateSlowFactors[obj].Total;
+                }
+                else return UpdateSlowFactors.Total;
+            }
+            public void Update(float dt)
+            {
+                UpdateSlowFactors.Update(dt);
+                foreach (var kvp in GameObjectUpdateSlowFactors)
+                {
+                    if(!kvp.Key.IsDead()) kvp.Value.Update(dt);
+                }
+            }
+            public void SortGameObjects()
+            {
+                objs.Sort(delegate (IGameObject x, IGameObject y)
+                {
+                    if (x == null || y == null) return 0;
+
+                    if (x.DrawOrder < y.DrawOrder) return -1;
+                    else if (x.DrawOrder > y.DrawOrder) return 1;
+                    else return 0;
+                });
+            }
+        }
+
         public Rect InnerRect { get;protected set;}
         public Rect OuterRect { get; protected set; }
         public CollisionHandler colHandler { get; protected set; }
-
-        private ITimedValues UpdateSlowFactors { get; } = new TimedFactors();
-        public float UpdateSlowFactor { get; set; } = 1f;
         public Vector2 ParallaxePosition { get; set; } = new(0f);
-        
-        private Dictionary<int, AreaLayer> layers = new();
-        private List<AreaLayer> sortedLayers = new();
+
+        protected Dictionary<int, AreaLayer> layers = new();
+        protected List<AreaLayer> sortedLayers = new();
         protected List<IGameObject> uiObjects = new();
-        
+        private ITimedValues UpdateSlowFactors { get; } = new TimedFactors();
+       
         
         public Area()
         {
@@ -99,112 +163,77 @@ namespace ShapeCore
             //DefaultID = SID.NextID;
             //AddLayer(DefaultID);
         }
-        /*
-        public uint AddSlow(float factor, float duration)
+       
+        public bool HasLayer(int layer) { return layers.ContainsKey(layer); }
+        
+        public uint AddSlow(float factor, float duration = -1) { return UpdateSlowFactors.Add(factor, duration); }
+        public uint AddSlow(int layer, float factor, float duration = -1) { return HasLayer(layer) ? layers[layer].AddSlow(factor, duration) : 0; }
+        public uint AddSlow(IGameObject obj, float factor, float duration = -1)
         {
-            return UpdateSlowFactors.Add(factor, duration);
+            if (HasLayer(obj.AreaLayer))
+            {
+                return layers[obj.AreaLayer].AddSlow(obj, factor, duration);
+            }
+            return 0;
         }
-        public uint AddSlow(float factor, float duration, int layer)
-        {
-            if (layers.ContainsKey(layer)) return layers[layer].UpdateSlowFactors.Add(factor, duration);
-            return AddSlow(factor, duration);
-        }
-
+        
         public bool RemoveSlow(uint id)
         {
             return UpdateSlowFactors.Remove(id);
         }
         public bool RemoveSlow(uint id, int layer)
         {
-            if (layers.ContainsKey(layer)) return layers[layer].UpdateSlowFactors.Remove(id);
-            else return UpdateSlowFactors.Remove(id);
+            if (layers.ContainsKey(layer)) return layers[layer].RemoveSlow(id);
+            else return false;
         }
-
-        public void ClearSlow() => UpdateSlowFactors.Clear();
-        public void ClearSlow(int layer) { if (layers.ContainsKey(layer)) layers[layer].UpdateSlowFactors.Clear(); }
-
-        public void SetLayerUpdateSlowFactor(int layer, float updateSlowFactor) { }
-        public void SetLayerParallaxeScaling(int layer, float parallaxeScaling) { }
-        public void SetLayer
-        public void AddLayer(int layer, float parallaxeScaling, float parallaxeSmoothing = 0.1f)
+        public bool RemoveSlow(uint id, IGameObject obj)
         {
-            if(!this.layers.ContainsKey(layer)) this.layers.Add(layer, new(layer, parallaxeScaling, parallaxeSmoothing));
+            if (layers.ContainsKey(obj.AreaLayer))
+            {
+                return layers[obj.AreaLayer].RemoveSlow(obj, id);
+            }
+            return false;
         }
-*/
+       
+        public void ClearSlow() { UpdateSlowFactors.Clear(); }
+        public void ClearSlow(int layer) { if (layers.ContainsKey(layer)) layers[layer].ClearSlow(); }
+        public void ClearSlow(IGameObject obj) { if(layers.ContainsKey(obj.AreaLayer)) layers[obj.AreaLayer].ClearSlow(obj); }
         
-        public AreaLayer? GetLayer(int layer) { return HasLayer(layer) ? layers[layer] : null; }
-        public void AddLayers(params AreaLayer[] layers)
-        {
-            foreach (var layer in layers)
-            {
-                if (!this.layers.ContainsKey(layer.Layer))
-                    this.layers.Add(layer.Layer, layer);
-            }
-            SortAreaLayerGroups();
-        }
-        public void AddLayers(params int[] layers)
-        {
-            foreach (var layer in layers)
-            {
-                if(!this.layers.ContainsKey(layer))
-                    this.layers.Add(layer, new(layer));
-            }
-            SortAreaLayerGroups();
-        }
-        public void RemoveLayers(params int[] layers)
-        {
-            foreach (var layer in layers)
-            {
-                if (this.layers.ContainsKey(layer))
-                {
-                    ClearLayer(layer);
-                    this.layers.Remove(layer);
-                }
-            }
-            SortAreaLayerGroups();
-        }
-        public void RemoveLayers(params AreaLayer[] layers)
-        {
-            foreach (AreaLayer layer in layers)
-            {
-                if (this.layers.ContainsKey(layer.Layer))
-                {
-                    ClearLayer(layer.Layer);
-                    this.layers.Remove(layer.Layer);
-                }
-            }
-            SortAreaLayerGroups();
-        }
-        public bool HasLayer(int layer) { return layers.ContainsKey(layer); }
-        public List<IGameObject> GetGameObjects(int layer, Predicate<IGameObject> match) { return HasLayer(layer) ? layers[layer].gameObjects : new(); }// gameObjects.ToList().FindAll(match); }
+        public List<IGameObject> GetGameObjects(int layer, Predicate<IGameObject> match) { return HasLayer(layer) ? layers[layer].objs.FindAll(match) : new(); }// gameObjects.ToList().FindAll(match); }
         public List<IGameObject> GetAllGameObjects()
         {
             List<IGameObject> objects = new();
             foreach (var layerGroup in layers.Values)
             {
-                objects.AddRange(layerGroup.gameObjects);
+                objects.AddRange(layerGroup.objs);
             }
             return objects;
         }
         public List<IGameObject> GetAllGameObjects(Predicate<IGameObject> match) { return GetAllGameObjects().FindAll(match); }
         
-        
+        protected void AddLayer(int layer)
+        {
+            if (!layers.ContainsKey(layer))
+            {
+                layers.Add(layer, new(layer));
+                SortAreaLayerGroups();
+            }
+        }
         public void AddGameObject(IGameObject gameObject) 
         {
             int layer = gameObject.AreaLayer;
-            if (!layers.ContainsKey(layer)) AddLayers(layer); // layerGroups.Add(layer, new(layer));
+            if (!layers.ContainsKey(layer)) AddLayer(layer);
 
-            layers[layer].gameObjects.Add(gameObject);
+            layers[layer].Add(gameObject);
         }
         public void AddGameObjects(params IGameObject[] gameObjects) { foreach (var go in gameObjects) AddGameObject(go); }
         public bool RemoveGameObject(IGameObject gameObject)
         {
             if (layers.ContainsKey(gameObject.AreaLayer))
             {
-                bool removed = layers[gameObject.AreaLayer].gameObjects.Remove(gameObject);
+                bool removed = layers[gameObject.AreaLayer].Remove(gameObject);
                 if (removed)
                 {
-                    gameObject.Destroy();
                     if (gameObject is ICollidable collidable)
                     {
                         colHandler.Remove(collidable);
@@ -245,210 +274,18 @@ namespace ShapeCore
             if (layers.ContainsKey(layer))
             {
                 var layerGroup = layers[layer];
-                foreach (var obj in layerGroup.gameObjects)
+                foreach (var obj in layerGroup.objs)
                 {
-                    obj.Destroy();
+                    layerGroup.Remove(obj);
                     if (obj is ICollidable collidable)
                     {
                         colHandler.Remove(collidable);
                     }
                 }
-                layerGroup.gameObjects.Clear();
+                layerGroup.objs.Clear();
             }
-            
         }
 
-
-        /*
-        public void SetLayerSlowFactor(uint layerID, float slowFactor)
-        {
-            if (!groups.ContainsKey(layerID)) return;
-            groups[layerID].UpdateSlowFactor = slowFactor;
-        }
-        public bool HasLayer(uint id)
-        {
-            return groups.ContainsKey(id);
-        }
-        public void AddLayer(uint id, float drawOrder = 0f, float parallaxeScaling = 0f)
-        {
-            if (id == DefaultID) return;
-            if (groups.ContainsKey(id)) groups[id] = new(id, InnerRect, OuterRect, colHandler, drawOrder, parallaxeScaling);
-            else groups.Add(id, new(id, InnerRect, OuterRect, colHandler, drawOrder, parallaxeScaling));
-            
-            sortedGroups = SortAreaGroups();
-        }
-        public void AddLayers(params (uint id, float drawOrder, float parallaxeScaling)[] add)
-        {
-            foreach (var layer in add)
-            {
-                if(layer.id == DefaultID) continue;
-                if (groups.ContainsKey(layer.id)) groups[layer.id] = new(layer.id, InnerRect, OuterRect, colHandler, layer.drawOrder, layer.parallaxeScaling);
-                else groups.Add(layer.id, new(layer.id, InnerRect, OuterRect, colHandler, layer.drawOrder, layer.parallaxeScaling));
-            }
-            sortedGroups = SortAreaGroups();
-        }
-
-        public void RemoveLayer(uint id)
-        {
-            if (id == DefaultID || !HasLayer(id)) return;
-            groups[id].Clear();
-            groups.Remove(id);
-            sortedGroups = SortAreaGroups();
-        }
-        public void RemoveLayers(params uint[] ids)
-        {
-            foreach (var id in ids)
-            {
-                if (id == DefaultID || !HasLayer(id)) continue;
-                groups[id].Clear();
-                groups.Remove(id);
-            }
-            sortedGroups = SortAreaGroups();
-        }
-        public void UpdateLayerParallaxe(Vector2 pos, uint id)
-        {
-            if (!HasLayer(id)) return;
-            groups[id].UpdateParallaxe(pos);
-        }
-        public void UpdateLayerParallaxe(Vector2 pos)
-        {
-            foreach (var layer in sortedGroups)
-            {
-                layer.UpdateParallaxe(pos);
-            }
-        }
-        /// <summary>
-        /// If layerName is "" all gameObjects of all layers are returned.
-        /// </summary>
-        /// <param name="layerName"></param>
-        /// <returns></returns>
-        public List<IGameObject> GetGameObjects(uint layerID)
-        {
-
-            if (!HasLayer(layerID)) return new();
-            return groups[layerID].GetGameObjects();
-        }
-        public List<IGameObject> GetAllGameObjects()
-        {
-            List<IGameObject> gameObjects = new();
-            foreach (var layer in groups.Values)
-            {
-                gameObjects.AddRange(layer.GetGameObjects());
-            }
-            return gameObjects;
-        }
-        /// <summary>
-        /// If layerName is "" all gameObjects of all layers are returned.
-        /// </summary>
-        /// <param name="group"></param>
-        /// <param name="layerID"></param>
-        /// <returns></returns>
-        public List<IGameObject> GetGameObjects(uint group, uint layerID)
-        {
-            if (!HasLayer(layerID)) return new();
-            return groups[layerID].GetGameObjects(group);
-        }
-        public List<IGameObject> GetAllGameObjects(uint group)
-        {
-            List<IGameObject> gameObjects = new();
-            foreach (var layer in groups.Values)
-            {
-                gameObjects.AddRange(layer.GetGameObjects(group));
-            }
-            return gameObjects;
-        }
-        /// <summary>
-        /// If layerName is "" all gameObjects of all layers are returned.
-        /// </summary>
-        /// <param name="match">Predicate to match game objects that should be returned.</param>
-        /// <param name="layerName"></param>
-        /// <returns></returns>
-        public List<IGameObject> GetGameObjects(Predicate<IGameObject> match, uint layerID)
-        {
-            if (!HasLayer(layerID)) return new();
-            return groups[layerID].GetGameObjects(match);
-        }
-        public List<IGameObject> GetAllGameObjects(Predicate<IGameObject> match)
-        {
-            List<IGameObject> gameObjects = new();
-            foreach (var layer in groups.Values)
-            {
-                gameObjects.AddRange(layer.GetGameObjects(match));
-            }
-            return gameObjects;
-        }
-        
-        public void ClearGameObjects(uint layerID)
-        {
-            if (!HasLayer(layerID)) return;
-            groups[layerID].Clear();
-        }
-        public void ClearAllGameObjects()
-        {
-            foreach(var layer in groups.Values)
-            {
-                layer.Clear();
-            }
-        }
-        public void AddICollidable(ICollidable obj)
-        {
-            colHandler.Add(obj);
-        }
-        public void RemoveICollidable(ICollidable obj)
-        {
-            colHandler.Remove(obj);
-        }
-
-        public bool AddGameObject(IGameObject obj, uint layerID, bool uiDrawing = false)
-        { 
-            if(!HasLayer(layerID)) return false;
-            groups[layerID].AddGameObject(obj, uiDrawing);
-            return true;
-        }
-        public void AddGameObjects(List<IGameObject> newObjects, uint layerName, bool uiDrawing = false)
-        {
-            if (!HasLayer(layerName)) return;
-            groups[layerName].AddGameObjects(newObjects, uiDrawing);
-        }
-
-        public void RemoveGameObject(IGameObject obj)
-        {
-            if (!HasLayer(obj.AreaLayerID)) return;
-            groups[obj.AreaLayerID].RemoveGameObject(obj);
-        }
-        public void RemoveGameObjects(List<IGameObject> objs)
-        {
-            foreach (var obj in objs)
-            {
-                RemoveGameObject(obj);
-            }
-        }
-        public void RemoveGameObjects(Predicate<IGameObject> match, uint layerID)
-        {
-            if (!HasLayer(layerID)) return;
-            groups[layerID].RemoveGameObjects(match);
-        }
-        public void RemoveAllGameObjects(Predicate<IGameObject> match)
-        {
-            foreach (var layer in sortedGroups)
-            {
-                layer.RemoveGameObjects(match);
-            }
-        }
-        public void RemoveGameObjects(uint group, uint layerID)
-        {
-            if (!HasLayer(layerID)) return;
-            groups[layerID].RemoveGameObjects(group);
-        }
-        public void RemoveAllGameObjects(uint group)
-        {
-            foreach (var layer in sortedGroups)
-            {
-                layer.RemoveGameObjects(group);
-            }
-        }
-        */
-        
         
         public virtual void Start() { }
         public virtual void Close()
@@ -460,17 +297,11 @@ namespace ShapeCore
         {
             colHandler.Update(dt);
             UpdateSlowFactors.Update(dt);
-            uiObjects.Clear();
+            
             for (int i = 0; i < sortedLayers.Count; i++)
             {
                 var layer = sortedLayers[i];
-
-                if(layer.IsParallaxe())
-                    layer.UpdateParallaxe(ParallaxePosition);
-
                 UpdateLayer(dt, layer);
-                
-                layer.SortGameObjects();
             }
         }
         public virtual void Draw()
@@ -482,12 +313,18 @@ namespace ShapeCore
                 colHandler.DebugDrawGrid(DEBUG_CollisionHandlerBorder, DEBUG_CollisionHandlerFill);
             }
 
+            uiObjects.Clear();
             for (int i = 0; i < sortedLayers.Count; i++)
             {
                 var layer = sortedLayers[i];
-                foreach (IGameObject obj in layer.gameObjects)
+                layer.SortGameObjects();
+                foreach (IGameObject obj in layer.objs)
                 {
-                    if (SGeometry.OverlapRectRect(OuterRect, obj.GetBoundingBox())) { obj.Draw(); }
+                    if (SGeometry.OverlapRectRect(OuterRect, obj.GetBoundingBox())) 
+                    { 
+                        obj.Draw();
+                        if (obj.DrawToUI) uiObjects.Add(obj);
+                    }
                 }
             }
         }
@@ -500,22 +337,24 @@ namespace ShapeCore
         }
         protected virtual void UpdateLayer(float dt, AreaLayer layer)
         {
-            layer.UpdateSlowFactors.Update(dt);
-            float slowFactor = UpdateSlowFactor * UpdateSlowFactors.Total * layer.UpdateSlowFactors.Total * layer.UpdateSlowFactor;
-            for (int i = layer.gameObjects.Count - 1; i >= 0; i--)
+            layer.Update(dt);
+            
+            for (int i = layer.objs.Count - 1; i >= 0; i--)
             {
-                IGameObject obj = layer.gameObjects[i];
+                IGameObject obj = layer.objs[i];
                 if (obj == null)
                 {
-                    layer.gameObjects.RemoveAt(i);
+                    layer.RemoveAt(i);
                     return;
                 }
 
-                if (layer.IsParallaxe()) obj.ParallaxeOffset = layer.ParallaxeOffset;
-                float curSlowFactor = slowFactor * obj.UpdateSlowFactor;
+                obj.UpdateParallaxe(ParallaxePosition);
+                float curSlowFactor =  UpdateSlowFactors.Total * layer.GetTotalUpdateSlowFactor(obj);// slowFactor * obj.UpdateSlowFactor;
                 float dif = dt - (dt * curSlowFactor);
                 dif *= obj.UpdateSlowResistance;
-                obj.Update(dt - dif);
+                
+                if(dif > 0f) obj.Update(dt - dif);
+                
                 bool insideInner = SGeometry.OverlapRectRect(InnerRect, obj.GetBoundingBox());
                 bool insideOuter = false;
                 if (insideInner) insideOuter = true;
@@ -525,13 +364,13 @@ namespace ShapeCore
                 if (obj.IsDead() || !insideOuter)
                 {
                     obj.Destroy();
-                    layer.gameObjects.RemoveAt(i);
+                    layer.RemoveAt(i);
                     if (obj is ICollidable collidable)
                     {
                         colHandler.Remove(collidable);
                     }
                 }
-                else if(obj.DrawToUI) uiObjects.Add(obj);
+                
             }
         }
         

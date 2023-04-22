@@ -13,19 +13,15 @@ namespace ShapeCore
         public float DrawOrder { get; set; }
         public int AreaLayer { get; set; }
         public bool DrawToUI { get; set; }
-        //public uint AreaLayerID { get; set; }
-        public Vector2 ParallaxeOffset { get; set; }
-        //public bool Enabled { get; set; }
-        //public bool Visible { get; set; }
-        /// <summary>
-        /// Slows down or speeds up the gameobject. 2 means twice as fast, 0.5 means half speed. Is affect by slow resistance and area slow factor.
-        /// </summary>
-        public float UpdateSlowFactor { get; set; }
         /// <summary>
         /// Multiplier for the total slow factor. 2 means slow factor has twice the effect, 0.5 means half the effect.
         /// </summary>
         public float UpdateSlowResistance { get; set; }
-    
+        public virtual void UpdateParallaxe(Vector2 pos)
+        { 
+            //ParallaxeOffset = ParallaxeOffset.Lerp(pos * ParallaxeScaling, ParallaxeSmoothing);
+        }
+        
         public sealed bool IsInLayer(int layer) { return this.AreaLayer == layer; }
         public sealed bool Kill()
         {
