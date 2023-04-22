@@ -2,72 +2,80 @@
 using Raylib_CsLo;
 using ShapeTiming;
 using ShapeLib;
+using System.Reflection.Metadata.Ecma335;
 
 namespace ShapeCore
 {
-    public class Effect : GameObject
+    public class Effect : IGameObject
     {
-        protected Vector2 gamePos;
+        public Vector2 Pos { get; set; }
+        public Vector2 Size { get; protected set; }
+        public TweenType TweenType { get; set; } = TweenType.LINEAR;
+        public float LifetimeF { get { return 1f - lifetimeTimer.F; } }
         protected BasicTimer lifetimeTimer = new();
 
-        public Effect(Vector2 gamePos) { this.gamePos = gamePos; }
-        public Effect(Vector2 gamePos, float lifeTime) { this.gamePos = gamePos; lifetimeTimer.Start(lifeTime); }
+        public float DrawOrder { get; set; } = 0;
+        public int AreaLayer { get; set; } = 0;
+        public bool DrawToUI { get; set; } = false;
+        public Vector2 ParallaxeOffset { get; set; } = new(0f);
+        public float UpdateSlowFactor { get; set; } = 1f;
+        public float UpdateSlowResistance { get; set; } = 1f;
+
+        public Effect(Vector2 pos, Vector2 size) { this.Pos = pos; this.Size = size; }
+        public Effect(Vector2 pos, Vector2 size, float lifeTime) { this.Pos = pos; this.Size = size; lifetimeTimer.Start(lifeTime); }
 
 
-        public override void Update(float dt)
+        public virtual void Update(float dt)
         {
             if (IsDead()) return;
             lifetimeTimer.Update(dt);
         }
-        public override bool IsDead()
+        public bool IsDead()
         {
-            return lifetimeTimer.IsFinished();
+            return lifetimeTimer.IsFinished;
         }
-
+        
+        public virtual Vector2 GetPosition() { return Pos; }
+        protected virtual Vector2 GetCurSize() { return Size.Tween(new Vector2(0f), LifetimeF, TweenType); }
+        public virtual Rect GetBoundingBox() { return new(Pos, Size, new(0.5f)); }
     }
+}
+/*
     public class ShapeEffect : Effect
     {
-        protected float size = 0f;
-        protected float rotation = 0f;//radians
+        protected float rotRad = 0f;//radians
         protected float rotSpeed = 0f;
-        protected Color color = WHITE;
-        public ShapeEffect(Vector2 pos, float duration, float size, Color color, float rotSpeed = 0f) : base(pos, duration)
+        
+        public Color Color { get; set; } = WHITE;
+        public ShapeEffect(Vector2 pos, Vector2 size, float duration, float rotSpeed = 0f) : base(pos, size, duration)
         {
-            DrawOrder = 90;
-            this.size = size;
-            this.color = color;
-            rotation = SRNG.randF(2f * PI);
+            rotRad = SRNG.randF(2f * PI);
             this.rotSpeed = rotSpeed * SRNG.randF() < 0.5f ? 1f : -1f;
         }
-        public ShapeEffect(Vector2 pos, float duration, float size, Color color, float rot = 0f, float rotSpeed = 0f) : base(pos, duration)
+        public ShapeEffect(Vector2 pos, Vector2 size, float duration, float rot = 0f, float rotSpeed = 0f) : base(pos, size, duration)
         {
-            DrawOrder = 90;
-            this.size = size;
-            this.color = color;
-            rotation = rot;
+            rotRad = rot;
             this.rotSpeed = rotSpeed * SRNG.randF() < 0.5f ? 1f : -1f;
         }
         public override void Update(float dt)
         {
             if (IsDead()) return;
             base.Update(dt);
-            rotation += rotSpeed * dt;
+            rotRad += rotSpeed * dt;
         }
-        protected virtual float GetCurSize() { return SUtils.LerpFloat(size, 0f, 1.0f - lifetimeTimer.GetF()); }
-        public override Rectangle GetBoundingBox()
-        {
-            return new(gamePos.X - size, gamePos.Y - size, size * 2, size * 2);
-        }
+         // return STween. return Size.Lerp(new(0f), 1f - lifetimeTimer.F); }// SUtils.LerpFloat(Size, 0f, 1.0f - lifetimeTimer.F); }
+        
     }
+    
     public class SquareEffect : ShapeEffect
     {
-        public SquareEffect(Vector2 pos, float duration, float size, Color color, float rotSpeed = 0f) : base(pos, duration, size, color, rotSpeed) { }
-        public override void Draw()
+        public SquareEffect(Vector2 pos, Vector2 size, float duration, Color color, float rotSpeed = 0f) : base(pos, duration, size, color, rotSpeed) { }
+        public void Draw()
         {
             if (IsDead()) return;
-            float curSize = GetCurSize();
-            Rectangle rect = new(gamePos.X, gamePos.Y, curSize * 2f, curSize * 2f);
-            DrawRectanglePro(rect, new(curSize, curSize), rotation * RAD2DEG, color);
+            var curSize = GetCurSize();
+            Rect r = GetBoundingBox();
+            DrawRectanglePro(r.Rectangle, curSize, rotRad * RAD2DEG, Color);
         }
     }
     public class CircleEffect : ShapeEffect
@@ -76,10 +84,9 @@ namespace ShapeCore
         public override void Draw()
         {
             if (IsDead()) return;
-            DrawCircleV(gamePos, GetCurSize(), color);
+            DrawCircleV(Pos, GetCurSize(), Color);
         }
     }
-
     public class LineEffect : ShapeEffect
     {
         float lineThickness = 4f;
@@ -98,15 +105,15 @@ namespace ShapeCore
         public override void Draw()
         {
             if (IsDead()) return;
-            DrawLineEx(gamePos, gamePos + SVec.Rotate(SVec.Right(), rotation) * GetCurSize(), lineThickness, color);
+            DrawLineEx(Pos, Pos + SVec.Rotate(SVec.Right(), rotRad) * GetCurSize(), lineThickness, Color);
         }
         public override Rectangle GetBoundingBox()
         {
-            Vector2 end = gamePos + SVec.Rotate(SVec.Right() * size, rotation);
-            return new(gamePos.X, gamePos.Y, end.X - gamePos.X, end.Y - gamePos.Y);
+            Vector2 end = Pos + SVec.Rotate(SVec.Right() * size, rotRad);
+            return new(Pos.X, Pos.Y, end.X - Pos.X, end.Y - Pos.Y);
         }
     }
-}
+    */
 
 /*
 public class SquareEffect : Effect
