@@ -22,8 +22,8 @@ namespace ShapeLib
             
             this.other = other;
             this.self = self;
-            this.selfVel = self.GetCollider().Vel;
-            this.otherVel = other.GetCollider().Vel;
+            this.selfVel = self.GetVelocity(); // GetCollider().Vel;
+            this.otherVel = other.GetVelocity(); // GetCollider().Vel;
             this.intersection = new();
         }
         public CollisionInfo(bool overlapping, ICollidable self, ICollidable other, Intersection intersection)
@@ -31,8 +31,8 @@ namespace ShapeLib
             this.overlapping = overlapping;
             this.other = other;
             this.self = self;
-            this.selfVel = self.GetCollider().Vel;
-            this.otherVel = other.GetCollider().Vel;
+            this.selfVel = self.GetVelocity(); //self.GetCollider().Vel;
+            this.otherVel = other.GetVelocity(); //other.GetCollider().Vel;
             this.intersection = intersection;
         }
     }

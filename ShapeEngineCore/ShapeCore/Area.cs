@@ -120,7 +120,7 @@ namespace ShapeCore
         protected Dictionary<int, AreaLayer> layers = new();
         protected List<AreaLayer> sortedLayers = new();
         protected List<IGameObject> uiObjects = new();
-        private ITimedValues UpdateSlowFactors { get; } = new TimedFactors();
+        private TimedFactors UpdateSlowFactors { get; } = new TimedFactors();
        
         
         public Area()

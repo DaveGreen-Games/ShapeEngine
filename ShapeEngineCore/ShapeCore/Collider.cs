@@ -5,31 +5,17 @@ using ShapeLib;
 
 namespace ShapeCore
 {
-    public interface ICollider
+    public interface ICollider : IPhysicsObject
     {
-        public float Mass { get; set; }
-        public Vector2 Vel { get; set; }
-        public Vector2 Pos { get; set; }
         public bool Enabled { get; set; }
         public bool CheckCollision { get; set; }
         public bool CheckIntersections { get; set; }
-        public sealed bool IsStatic() { return Vel.X == 0.0f && Vel.Y == 0.0f; }
-        public Vector2 GetAccumulatedForce();
-        public void AccumulateForce(Vector2 force);
-        public void ApplyAccumulatedForce(float dt);
-        public void AddImpulse(Vector2 force);
+        
         public Rect GetBoundingBox();
         public void DrawDebugShape(Color color);
         public bool Overlap(ICollider other);
         public bool OverlapRect(Rect rect);
         public Intersection Intersect(ICollider other);
-
-
-        //public sealed Intersection Intersect(Collider other)
-        //{
-        //    return CheckIntersections ? CheckIntersection(other) : new();
-        //}
-
     }
     
     public abstract class Collider : ICollider
@@ -38,47 +24,27 @@ namespace ShapeCore
         public Collider(float x, float y) { Pos = new(x, y); }
         public Collider(Vector2 pos, Vector2 vel) { Pos = pos; Vel = vel; }
 
-
         public float Mass { get; set; } = 1.0f;
         public Vector2 Vel { get; set; }
         public Vector2 Pos { get; set; }
-
-        protected Vector2 accumulatedForce = new(0f);
+        public Vector2 ConstAcceleration { get; set; } = new(0f);
+        public float Drag { get; set; } = 0f;
         public bool Enabled { get; set; } = true;
         public bool CheckCollision { get; set; } = true;
         public bool CheckIntersections { get; set; } = false;
-        public bool IsStatic() { return Vel.X == 0.0f && Vel.Y == 0.0f; }
-        public bool HasAccumulatedForce() { return accumulatedForce.X != 0f || accumulatedForce.Y != 0f; }
-        public Vector2 GetAccumulatedForce() { return accumulatedForce; }
-        public void AccumulateForce(Vector2 force)
-        {
-            if (Mass <= 0) accumulatedForce += force;
-            else accumulatedForce += force / Mass;
-        }
-        public void ApplyAccumulatedForce(float dt)
-        {
-            Vel += accumulatedForce * dt;
-            accumulatedForce = Vector2.Zero;
-        }
-        public void AddImpulse(Vector2 force)
-        {
-            if (Mass <= 0.0f) Vel += force;
-            else Vel = Vel + force / Mass;
-        }
-        
-
-
-
-        //public Intersection Intersect(Collider other)
-        //{
-        //    return CheckIntersections ? CheckIntersection(other) : new();
-        //}
-
         public abstract Rect GetBoundingBox();
         public abstract void DrawDebugShape(Color color);
         public abstract bool Overlap(ICollider other);
         public abstract bool OverlapRect(Rect other);
         public abstract Intersection Intersect(ICollider other);
+
+        
+        protected Vector2 accumulatedForce = new(0f);
+        public Vector2 GetAccumulatedForce() { return accumulatedForce; }
+        public void ClearAccumulatedForce() { accumulatedForce = new(0f); }
+        public void AddForce(Vector2 force) { accumulatedForce = SPhysics.AddForce(this, force); }
+        public void AddImpulse(Vector2 force) { SPhysics.AddImpuls(this, force); }
+        public void UpdateState(float dt) { SPhysics.UpdateState(this, dt); }
 
     }
     public class CircleCollider : Collider

@@ -1,10 +1,88 @@
 ﻿
+using ShapeCore;
 using System.Numerics;
 
 namespace ShapeLib
 {
     public static class SPhysics
     {
+        private static void ApplyAccumulatedForce(this IPhysicsObject p, float dt)
+        {
+            p.Vel += p.GetAccumulatedForce() * dt;
+            p.ClearAccumulatedForce();
+        }
+        private static void ApplyAcceleration(this IPhysicsObject p, float dt)
+        {
+            Vector2 force = p.ConstAcceleration * dt;
+            p.Vel += force;
+            p.Vel = SPhysics.ApplyDragForce(p.Vel, p.Drag, dt);
+        }
+
+        /// <summary>
+        /// Update the state of a physics object. That includes: 
+        /// - applying and reseting the accumulatedForce of the frame,
+        /// - applying the constant acceleration and drag,
+        /// - adding the final velocity to the current position
+        /// </summary>
+        /// <param name="p">The physics objects to update.</param>
+        /// <param name="dt">The current frames delta time.</param>
+        public static void UpdateState(this IPhysicsObject p, float dt)
+        {
+            ApplyAccumulatedForce(p, dt);
+            ApplyAcceleration(p, dt);
+            p.Pos += p.Vel * dt;
+        }
+        /// <summary>
+        /// Used for adding a force every frame. The total accumualted force should be applied at the end of the frame an reset to zero.
+        /// </summary>
+        /// <param name="force">The force that should be applied.</param>
+        /// <param name="accumulatedForce">The current accumualted force from all AddForce calls this frame.</param>
+        /// <param name="mass">The mass for calculating the final force that is added. Mass <= 0 has no impact.</param>
+        /// <returns>Returns the new accumulated force value.</returns>
+        public static Vector2 AddForce(Vector2 force, Vector2 accumulatedForce, float mass)
+        {
+            if( mass <= 0) accumulatedForce += force;
+            else accumulatedForce += force / mass;
+            return accumulatedForce;
+        }
+
+        /// <summary>
+        /// Adds the force to the current accumulated force and returns the new accumulatedForce;
+        /// AddForce should be used for adding forces every frame vs. AddImpuls that adds a force instantly to the velocty.
+        /// </summary>
+        /// <param name="p">The physics object that the force should be applied to.</param>
+        /// <param name="force">The force to apply.</param>
+        /// <returns>Returns the new accumulated force.</returns>
+        public static Vector2 AddForce(this IPhysicsObject p, Vector2 force)
+        {
+            return AddForce(force, p.GetAccumulatedForce(), p.Mass);
+        }
+
+        /// <summary>
+        /// Add an instant impulse to the velocity.
+        /// </summary>
+        /// <param name="force">The force to apply once.</param>
+        /// <param name="velocity">The current velocity the force should be applied to.</param>
+        /// <param name="mass">The mass for calculating the final force that is added. Mass <= 0 has no impact.</param>
+        /// <returns>Returns the new velocty.</returns>
+        public static Vector2 AddImpulse(Vector2 force, Vector2 velocity, float mass)
+        {
+            if (mass <= 0.0f) velocity += force;
+            else velocity = velocity + force / mass;
+            return velocity;
+        }
+        /// <summary>
+        /// Instantly applies the force to the physics objects vel. Should be used for one time impulses vs. AddForce that is used to add force every frame.
+        /// </summary>
+        /// <param name="p">Physics Object that the force should be applied to.</param>
+        /// <param name="force">Impuls force to apply.</param>
+        public static void AddImpuls(this IPhysicsObject p, Vector2 force)
+        {
+            p.Vel = AddImpulse(force, p.Vel, p.Mass);
+        }
+
+
+
         /// <summary>
         /// Apply drag to the given value.
         /// </summary>
@@ -27,11 +105,11 @@ namespace ShapeLib
         /// <param name="dragCoefficient">The drag coefficient for calculating the drag force. Has to be positive.
         /// 1 / drag coefficient = seconds until stop. DC of 4 means object stops in 0.25s.</param>
         /// <param name="dt">The delta time of the current frame.</param>
-        /// <returns></returns>
+        /// <returns>Returns the new velocity.</returns>
         public static Vector2 ApplyDragForce(Vector2 vel, float dragCoefficient, float dt)
         {
             if (dragCoefficient <= 0f) return vel;
-            Vector2 dragForce = dragCoefficient * vel * dt;// * dt * 0.5f;
+            Vector2 dragForce = dragCoefficient * vel * dt;
             if (dragForce.LengthSquared() >= vel.LengthSquared()) return new Vector2(0f, 0f);
             return vel - dragForce;
         }
