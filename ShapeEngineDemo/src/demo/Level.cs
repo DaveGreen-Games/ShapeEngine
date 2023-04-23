@@ -129,7 +129,7 @@ namespace ShapeEngineDemo
         //
         public override void Draw()
         {
-            DrawRectangleLinesEx(inner, 3f, Demo.PALETTES.C(ColorIDs.Neutral));
+            DrawRectangleLinesEx(InnerRect, 3f, Demo.PALETTES.C(ColorIDs.Neutral));
             base.Draw();
             //DrawRectangleLinesEx(new Rectangle(0.0f, 0.0f, ScreenHandler.GameWidth(), ScreenHandler.GameHeight()), 6, ColorPalette.Cur.neutral);
 
@@ -138,7 +138,7 @@ namespace ShapeEngineDemo
         private void SpawnPlanet(float radius, string layer, float brightness = 0f)
         {
             Color color = SRNG.randColor(150, 220, 255);
-            var planet = new Planet(inner, radius, SColor.ChangeBrightness(color, brightness));
+            var planet = new Planet(InnerRect, radius, SColor.ChangeBrightness(color, brightness));
             AddGameObject(planet, false, layer);
 
         }
@@ -153,7 +153,7 @@ namespace ShapeEngineDemo
         {
             Color color = WHITE;
             color.a = (byte)(255 * SRNG.randF(alphaRange.X, alphaRange.Y));
-            var star = new Star(outer, radius, color);
+            var star = new Star(OuterRect, radius, color);
             AddGameObject(star, false, layer);
         }
         private void SpawnStars(int amount, Vector2 radiusRange, Vector2 alphaRange, string layer)

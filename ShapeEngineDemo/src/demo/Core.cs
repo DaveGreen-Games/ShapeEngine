@@ -16,17 +16,17 @@ namespace ShapeEngineDemo
         {
             angle += SRNG.randF(-25, 25) * DEG2RAD;
             float speed = 60f * SRNG.randF(0.9f, 1.1f);
-            vel = SVec.Rotate(SVec.Right() * speed, angle);
+            Vel = SVec.Rotate(SVec.Right() * speed, angle);
             this.color = color;
             rotDeg = SRNG.randF(0f, 360f);
             rotSpeedDeg = SRNG.randF(90, 180) * (SRNG.randF() < 0.5f ? 1f : -1f);
-            drag = 1f;
+            Drag = 1f;
         }
         public override void Update(float dt)
         {
             base.Update(dt);
             rotDeg += rotSpeedDeg * dt;
-            rotSpeedDeg = SPhysics.ApplyDragForce(rotSpeedDeg, drag, dt);
+            rotSpeedDeg = SPhysics.ApplyDragForce(rotSpeedDeg, Drag, dt);
         }
         public override void Draw()
         {

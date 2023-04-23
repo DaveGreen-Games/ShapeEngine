@@ -54,7 +54,7 @@ namespace ShapeEngineDemo
         {
             angle += (SRNG.randF(-25, 25) * DEG2RAD);
             speed *= SRNG.randF(0.9f, 1.1f);
-            this.vel = SVec.Rotate(SVec.Right() * speed, angle) * factor;
+            this.Vel = SVec.Rotate(SVec.Right() * speed, angle) * factor;
             this.r = MathF.Max(SRNG.randF(size * 0.75f, size * 1.25f) * factor, 1f);
             this.color = color;
             float lifetime = SRNG.randF(0.25f, 0.5f) / factor;

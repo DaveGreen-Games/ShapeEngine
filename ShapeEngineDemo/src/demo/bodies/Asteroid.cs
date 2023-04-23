@@ -163,7 +163,7 @@ namespace ShapeEngineDemo.Bodies
         }
         public override Rectangle GetBoundingBox()
         {
-            return collider.GetBoundingRect();
+            return collider.GetBoundingBox();
         }
 
         public override void Update(float dt)
@@ -180,8 +180,8 @@ namespace ShapeEngineDemo.Bodies
             SDrawing.DrawPolygon(polygon, 2f, Demo.PALETTES.C(ColorIDs.Neutral), collider.Pos);
             if (DEBUG_DRAWCOLLIDERS)
             {
-                if(collider.IsEnabled()) collider.DebugDrawShape(DEBUG_ColliderColor);
-                else collider.DebugDrawShape(DEBUG_ColliderDisabledColor);
+                if(collider.IsEnabled()) collider.DrawDebugShape(DEBUG_ColliderColor);
+                else collider.DrawDebugShape(DEBUG_ColliderDisabledColor);
 
                 DrawRectangleLinesEx(GetBoundingBox(), 1f, GREEN);
             }

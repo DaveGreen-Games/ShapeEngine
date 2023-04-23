@@ -679,8 +679,8 @@ namespace ShapeEngineDemo.Bodies
             }
             if (DEBUG_DRAWCOLLIDERS)
             {
-                if (collider.IsEnabled()) collider.DebugDrawShape(DEBUG_ColliderColor);
-                else collider.DebugDrawShape(DEBUG_ColliderDisabledColor);
+                if (collider.IsEnabled()) collider.DrawDebugShape(DEBUG_ColliderColor);
+                else collider.DrawDebugShape(DEBUG_ColliderDisabledColor);
 
                 DrawRectangleLinesEx(GetBoundingBox(), 1f, GREEN);
             }

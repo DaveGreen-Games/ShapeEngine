@@ -89,8 +89,8 @@ namespace ShapeEngineDemo.Projectiles
                 size = data.size;
             }
             collider = new CircleCollider(info.pos, vel, size);
-            collider.CheckCollision = true;
-            collider.CheckIntersections = false;
+            collider.ComputeCollision = true;
+            collider.ComputeIntersections = false;
         }
 
         public Collider GetCollider() { return collider; }
@@ -104,7 +104,7 @@ namespace ShapeEngineDemo.Projectiles
 
         public override Rectangle GetBoundingBox()
         {
-            return collider.GetBoundingRect();
+            return collider.GetBoundingBox();
         }
         public virtual void Overlap(CollisionInfo info) { }
         public virtual void OverlapEnded(ICollidable other) { }
@@ -139,8 +139,8 @@ namespace ShapeEngineDemo.Projectiles
 
             if (DEBUG_DRAWCOLLIDERS)
             {
-                if (collider.IsEnabled()) collider.DebugDrawShape(DEBUG_ColliderColor);
-                else collider.DebugDrawShape(DEBUG_ColliderDisabledColor);
+                if (collider.IsEnabled()) collider.DrawDebugShape(DEBUG_ColliderColor);
+                else collider.DrawDebugShape(DEBUG_ColliderDisabledColor);
 
                 DrawRectangleLinesEx(GetBoundingBox(), 1f, GREEN);
             }

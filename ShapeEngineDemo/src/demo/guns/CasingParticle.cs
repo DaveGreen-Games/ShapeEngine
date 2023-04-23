@@ -19,12 +19,12 @@ namespace ShapeEngineDemo.Guns
             this.size *= sizeFactor;
             float acc = SRNG.randF(-5f, 5f) * DEG2RAD;
             float speed = SRNG.randF(150, 400);
-            this.vel = SVec.Rotate(dir, acc) * speed * speedFactor;
-            this.rotation = SVec.AngleRad(this.vel);
+            this.Vel = SVec.Rotate(dir, acc) * speed * speedFactor;
+            this.rotation = SVec.AngleRad(this.Vel);
             this.color = color;
             this.startColor = color;
             this.startColor.a = (byte)(this.startColor.a * 0.5f);
-            this.drag = 3f;
+            this.Drag = 3f;
             this.aDrag = 1f;
             this.rotationSpeed = (SRNG.randF(165, 200) * (SRNG.randF() < 0.5f ? -1f : 1f)) * DEG2RAD;
         }

@@ -19,7 +19,7 @@ namespace ShapeEngineDemo
         public HitParticle(Vector2 pos, Vector2 dir, float impactFactor, float lifetime, Color color) : base(pos)
         {
             float speed = SRNG.randF(baseSpeed * impactFactor * 0.5f, baseSpeed * impactFactor * 1.5f);
-            this.vel = SVec.Rotate(dir, SRNG.randF(-0.6f, 0.6f)) * speed;
+            this.Vel = SVec.Rotate(dir, SRNG.randF(-0.6f, 0.6f)) * speed;
             this.startSize = SRNG.randF(baseSize * impactFactor * 0.5f, baseSize * impactFactor * 1.5f);
             this.curSize = this.startSize;
             this.curRotationSpeed = baseRotationSpeed;// * impactFactor;

@@ -5,6 +5,10 @@ using ShapeUI;
 
 namespace ShapeLib
 {
+    //overhaul entire script
+    // - better naming
+    // - shadow all raylib functions
+    // - improvements
     public static class SDrawing
     {
         public static void DrawLines(List<Vector2> points, float lineThickness, Color color, bool smoothJoints = false)
