@@ -214,7 +214,7 @@ namespace ShapeCore
         //    return objects.Distinct().ToList();
         //}
 
-        public List<ICollidable> GetObjects(Collider shape)
+        public List<ICollidable> GetObjects(ICollider shape)
         {
             HashSet<ICollidable> uniqueObjects = new();
             var hashes = GetCellIDs(shape);

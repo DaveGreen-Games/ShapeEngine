@@ -345,7 +345,7 @@ namespace ShapeScreen
             {
                 flashTintTimer -= dt;
                 float f = 1.0f - flashTintTimer / flashTintDuration;
-                curTint = SColor.LerpColor(flashTintStartColor, tint, f);
+                curTint = SColor.Lerp(flashTintStartColor, tint, f);
                 //flashTintCurScale = RayMath.Lerp(flashTintScale, 0.0f, f);
                 if (flashTintTimer <= 0.0f)
                 {
@@ -467,7 +467,7 @@ namespace ShapeScreen
                     Vector2 sizeOffset = new(5f, 5f);
                     Vector2 center = camera.CameraPos;
                     Vector2 size = camera.CameraOffset * 2 * (1f / camera.CameraZoom);
-                    SDrawing.DrawRectangle(center, size + sizeOffset, new(0.5f), new Vector2(0.5f, 0.5f), -camera.CameraRotDeg, flash.GetColor());
+                    SDrawing.DrawRect(new(center, size + sizeOffset, new(0.5f) ), new Vector2(0.5f, 0.5f), -camera.CameraRotDeg, flash.GetColor());
                 }
                 else DrawRectangle(-1, -1, GetTextureWidth() + 1, GetTextureHeight() + 1, flash.GetColor());
             }

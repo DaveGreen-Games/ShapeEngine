@@ -69,6 +69,38 @@ namespace ShapeUI
             float baseSize = GetFont(fontID).baseSize;
             return GetFontScalingFactor(text, size, fontID, fontSpacing) * baseSize;
         }
+        public float GetFontScalingFactor(string text, Vector2 size, uint fontID, float fontSpacing = 1)
+        {
+            float baseSize = GetFont(fontID).baseSize;
+            float scalingFactor = size.Y / baseSize;
+            Vector2 textSize = MeasureTextEx(GetFont(fontID), text, baseSize * scalingFactor, fontSpacing);
+            float correctionFactor = MathF.Min(size.X / textSize.X, 1f);
+            return scalingFactor * correctionFactor;
+        }
+        public Vector2 GetTextSize(string text, float fontSize, float fontSpacing, uint fontID)
+        {
+            return MeasureTextEx(GetFont(fontID), text, fontSize, fontSpacing);
+        }
+        public static float CalculateDynamicFontSize(string text, Vector2 size, Font font, float fontSpacing = 1f)
+        {
+            float baseSize = font.baseSize;
+
+            return GetFontScalingFactor(text, size, font, fontSpacing) * baseSize;
+        }
+        public static float GetFontScalingFactor(string text, Vector2 size, Font font, float fontSpacing = 1)
+        {
+            float baseSize = font.baseSize;
+            float scalingFactor = size.Y / baseSize;
+            Vector2 textSize = MeasureTextEx(font, text, baseSize * scalingFactor, fontSpacing);
+            float correctionFactor = MathF.Min(size.X / textSize.X, 1f);
+            return scalingFactor * correctionFactor;
+        }
+        public static Vector2 GetTextSize(string text, float fontSize, float fontSpacing, Font font)
+        {
+            return MeasureTextEx(font, text, fontSize, fontSpacing);
+        }
+        
+        /*
         public float CalculateDynamicFontSize(float height, uint fontID)
         {
             return CalculateDynamicFontSize(height, GetFont(fontID));
@@ -85,25 +117,7 @@ namespace ShapeUI
             float scalingFactor = width / textSize.X;
             return scalingFactor;
         }
-        public float GetFontScalingFactor(string text, Vector2 size, uint fontID, float fontSpacing = 1)
-        {
-            float baseSize = GetFont(fontID).baseSize;
-            float scalingFactor = size.Y / baseSize;
-            Vector2 textSize = MeasureTextEx(GetFont(fontID), text, baseSize * scalingFactor, fontSpacing);
-            float correctionFactor = MathF.Min(size.X / textSize.X, 1f);
-            return scalingFactor * correctionFactor;
-        }
-        public Vector2 GetTextSize(string text, float fontSize, float fontSpacing, uint fontID)
-        {
-            return MeasureTextEx(GetFont(fontID), text, fontSize, fontSpacing);
-        }
 
-        public static float CalculateDynamicFontSize(string text, Vector2 size, Font font, float fontSpacing = 1f)
-        {
-            float baseSize = font.baseSize;
-
-            return GetFontScalingFactor(text, size, font, fontSpacing) * baseSize;
-        }
         public static float CalculateDynamicFontSize(float height, Font font)
         {
             float baseSize = font.baseSize;
@@ -121,14 +135,6 @@ namespace ShapeUI
             float baseSize = font.baseSize;
             return height / baseSize;
         }
-        public static float GetFontScalingFactor(string text, Vector2 size, Font font, float fontSpacing = 1)
-        {
-            float baseSize = font.baseSize;
-            float scalingFactor = size.Y / baseSize;
-            Vector2 textSize = MeasureTextEx(font, text, baseSize * scalingFactor, fontSpacing);
-            float correctionFactor = MathF.Min(size.X / textSize.X, 1f);
-            return scalingFactor * correctionFactor;
-        }
         public static float GetFontScalingFactor(string text, float width, Font font, float fontSpacing = 1)
         {
             float baseSize = font.baseSize;
@@ -136,11 +142,7 @@ namespace ShapeUI
             float scalingFactor = width / textSize.X;
             return scalingFactor;
         }
-        public static Vector2 GetTextSize(string text, float fontSize, float fontSpacing, Font font)
-        {
-            return MeasureTextEx(font, text, fontSize, fontSpacing);
-        }
-
+        */
     }
 
 }

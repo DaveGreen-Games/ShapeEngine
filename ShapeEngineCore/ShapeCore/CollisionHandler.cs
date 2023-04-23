@@ -97,7 +97,7 @@ namespace ShapeCore
             for (int i = 0; i < collidables.Count; i++)
             {
                 ICollidable collider = collidables[i];
-                if (!collider.GetCollider().Enabled || !collider.GetCollider().CheckCollision) continue;
+                if (!collider.GetCollider().Enabled || !collider.GetCollider().ComputeCollision) continue;
                 uint[] collisionMask = collider.GetCollisionMask();
 
                 List<ICollidable> collisions = new();
@@ -223,7 +223,7 @@ namespace ShapeCore
             }
         }
         
-        private List<QueryInfo> GetQueryInfo(Collider caster, bool sorted = false, params uint[] collisionMask)
+        private List<QueryInfo> GetQueryInfo(ICollider caster, bool sorted = false, params uint[] collisionMask)
         {
             List<QueryInfo> infos = new();
             List<ICollidable> objects = spatialHash.GetObjects(caster);
@@ -288,7 +288,7 @@ namespace ShapeCore
         {
             return GetQueryInfo(caster.GetCollider(), sorted, caster.GetCollisionMask());
         }
-        public List<QueryInfo> QuerySpace(Collider collider, bool sorted = false, params uint[] collisionMask)
+        public List<QueryInfo> QuerySpace(ICollider collider, bool sorted = false, params uint[] collisionMask)
         {
             return GetQueryInfo(collider, sorted, collisionMask);
         }
@@ -319,7 +319,7 @@ namespace ShapeCore
         }
 
 
-        private List<ICollidable> GetCastBodies(Collider caster, bool sorted = false, params uint[] collisionMask)
+        private List<ICollidable> GetCastBodies(ICollider caster, bool sorted = false, params uint[] collisionMask)
         {
             List<ICollidable> bodies = new();
             List<ICollidable> objects = spatialHash.GetObjects(caster);
@@ -365,7 +365,7 @@ namespace ShapeCore
         {
             return GetCastBodies(caster.GetCollider(), sorted, caster.GetCollisionMask());
         }
-        public List<ICollidable> CastSpace(Collider collider, bool sorted = false, params uint[] collisionMask)
+        public List<ICollidable> CastSpace(ICollider collider, bool sorted = false, params uint[] collisionMask)
         {
             return GetCastBodies(collider, sorted, collisionMask);
         }

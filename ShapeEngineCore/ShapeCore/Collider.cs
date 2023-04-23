@@ -8,14 +8,14 @@ namespace ShapeCore
     public interface ICollider : IPhysicsObject
     {
         public bool Enabled { get; set; }
-        public bool CheckCollision { get; set; }
-        public bool CheckIntersections { get; set; }
+        public bool ComputeCollision { get; set; }
+        public bool ComputeIntersections { get; set; }
         
         public Rect GetBoundingBox();
         public void DrawDebugShape(Color color);
-        public bool Overlap(ICollider other);
-        public bool OverlapRect(Rect rect);
-        public Intersection Intersect(ICollider other);
+        public (bool valid, bool overlap) CheckOverlap(ICollider other);
+        public (bool valid, Intersection i) CheckIntersection(ICollider other);
+        public bool CheckOverlapRect(Rect rect);
     }
     
     public abstract class Collider : ICollider
@@ -30,13 +30,13 @@ namespace ShapeCore
         public Vector2 ConstAcceleration { get; set; } = new(0f);
         public float Drag { get; set; } = 0f;
         public bool Enabled { get; set; } = true;
-        public bool CheckCollision { get; set; } = true;
-        public bool CheckIntersections { get; set; } = false;
+        public bool ComputeCollision { get; set; } = true;
+        public bool ComputeIntersections { get; set; } = false;
         public abstract Rect GetBoundingBox();
         public abstract void DrawDebugShape(Color color);
-        public abstract bool Overlap(ICollider other);
-        public abstract bool OverlapRect(Rect other);
-        public abstract Intersection Intersect(ICollider other);
+        public abstract (bool valid, bool overlap) CheckOverlap(ICollider other);
+        public abstract (bool valid, Intersection i) CheckIntersection(ICollider other);
+        public abstract bool CheckOverlapRect(Rect other);
 
         
         protected Vector2 accumulatedForce = new(0f);
@@ -67,51 +67,49 @@ namespace ShapeCore
             SDrawing.DrawCircleLines(Pos, Radius, 5f, color, 4f);
         }
 
-        public override bool Overlap(ICollider other)
+        public override (bool valid, bool overlap) CheckOverlap(ICollider other)
         {
+            
             if (other is CircleCollider c)
             {
-                return SGeometry.OverlapCircleCircle(this, c);
+                return (true, this.OverlapCircleCircle(c));
             }
             else if (other is SegmentCollider s)
             {
-                return SGeometry.OverlapCircleSegment(this, s);
+                return (true, this.OverlapCircleSegment(s));
             }
             else if (other is RectCollider r)
             {
-                return SGeometry.OverlapCircleRect(this, r);
+                return (true, this.OverlapCircleRect(r));
             }
             else if (other is PolyCollider p)
             {
-                return SGeometry.OverlapCirclePoly(this, p);
+                return (true, this.OverlapCirclePoly(p));
             }
-            else return other.Overlap(this);
+            return (false, false);
         }
-        public override bool OverlapRect(Rect rect)
-        {
-            return SGeometry.OverlapRectCircle(rect, this);
-        }
-        public override Intersection Intersect(ICollider other)
+        public override (bool valid, Intersection i) CheckIntersection(ICollider other)
         {
 
             if (other is CircleCollider c)
             {
-                return SGeometry.IntersectionCircleCircle(this, c);
+                return (true, this.IntersectionCircleCircle(c));
             }
             else if (other is SegmentCollider s)
             {
-                return SGeometry.IntersectionCircleSegment(this, s);
+                return (true, this.IntersectionCircleSegment(s));
             }
             else if (other is RectCollider r)
             {
-                return SGeometry.IntersectionCircleRect(this, r);
+                return (true, this.IntersectionCircleRect(r));
             }
             else if (other is PolyCollider p)
             {
-                return SGeometry.IntersectionCirclePoly(this, p);
+                return (true, this.IntersectionCirclePoly(p));
             }
-            else return other.Intersect(this);
+            return (false, new());
         }
+        public override bool CheckOverlapRect(Rect rect) { return rect.OverlapRectCircle(this); }
     
     }
     public class SegmentCollider : Collider
@@ -146,51 +144,47 @@ namespace ShapeCore
             Raylib.DrawCircleV(Pos, 5.0f, color);
             Raylib.DrawLineEx(Pos, End, 5f, color);
         }
-        public override bool Overlap(ICollider other)
+        public override (bool valid, bool overlap) CheckOverlap(ICollider other)
         {
             if (other is CircleCollider c)
             {
-                return SGeometry.OverlapSegmentCircle(this, c);
+                return (true, this.OverlapSegmentCircle(c));
             }
             else if (other is SegmentCollider s)
             {
-                return SGeometry.OverlapSegmentSegment(this, s);
+                return (true, this.OverlapSegmentSegment(s));
             }
             else if (other is RectCollider r)
             {
-                return SGeometry.OverlapSegmentRect(this, r);
+                return (true, this.OverlapSegmentRect(r));
             }
             else if (other is PolyCollider p)
             {
-                return SGeometry.OverlapSegmentPoly(this, p);
+                return (true, this.OverlapSegmentPoly(p));
             }
-            else return other.Overlap(this);
+            return (false, false);
         }
-        public override bool OverlapRect(Rect rect)
+        public override (bool valid, Intersection i) CheckIntersection(ICollider other)
         {
-            return SGeometry.OverlapRectSegment(rect, this);
-        }
-        public override Intersection Intersect(ICollider other)
-        {
-
             if (other is CircleCollider c)
             {
-                return SGeometry.IntersectionSegmentCircle(this, c);
+                return (true, this.IntersectionSegmentCircle(c));
             }
             else if (other is SegmentCollider s)
             {
-                return SGeometry.IntersectionSegmentSegment(this, s);
+                return (true, this.IntersectionSegmentSegment(s));
             }
             else if (other is RectCollider r)
             {
-                return SGeometry.IntersectionSegmentRect(this, r);
+                return (true, this.IntersectionSegmentRect(r));
             }
             else if (other is PolyCollider p)
             {
-                return SGeometry.IntersectionSegmentPoly(this, p);
+                return (true, this.IntersectionSegmentPoly(p));
             }
-            else return other.Intersect(this);
+            return (false, new());
         }
+        public override bool CheckOverlapRect(Rect rect) { return rect.OverlapRectSegment(this); }
 
     }
     public class RectCollider : Collider
@@ -243,51 +237,48 @@ namespace ShapeCore
         {
             Raylib.DrawRectangleLinesEx(Rect.Rectangle, 5f, color);
         }
-        public override bool Overlap(ICollider other)
+        public override (bool valid, bool overlap) CheckOverlap(ICollider other)
         {
             if (other is CircleCollider c)
             {
-                return SGeometry.OverlapRectCircle(this, c);
+                return (true, this.OverlapRectCircle(c));
             }
             else if (other is SegmentCollider s) 
             {
-                return SGeometry.OverlapRectSegment(this, s);
+                return (true, this.OverlapRectSegment(s));
             }
             else if (other is RectCollider r)
             {
-                return SGeometry.OverlapRectRect(this, r);
+                return (true, this.OverlapRectRect(r));
             }
             else if (other is PolyCollider p)
             {
-                return SGeometry.OverlapRectPoly(this, p);
+                return (true, this.OverlapRectPoly(p));
             }
-            else return other.Overlap(this);
+            return (false, false);
         }
-        public override bool OverlapRect(Rect rect)
-        {
-            return  SGeometry.OverlapRectRect(rect, this);
-        }
-        public override Intersection Intersect(ICollider other)
+        public override (bool valid, Intersection i) CheckIntersection(ICollider other)
         {
 
             if (other is CircleCollider c)
             {
-                return SGeometry.IntersectionRectCircle(this, c);
+                return (true, this.IntersectionRectCircle(c));
             }
             else if (other is SegmentCollider s)
             {
-                return SGeometry.IntersectionRectSegment(this, s);
+                return (true, this.IntersectionRectSegment(s));
             }
             else if (other is RectCollider r)
             {
-                return SGeometry.IntersectionRectRect(this, r);
+                return (true, this.IntersectionRectRect(r));
             }
             else if (other is PolyCollider p)
             {
-                return SGeometry.IntersectionRectPoly(this, p);
+                return (true, this.IntersectionRectPoly(p));
             }
-            else return other.Intersect(this);
+            return (false, new());
         }
+        public override bool CheckOverlapRect(Rect rect) { return  rect.OverlapRectRect(this); }
 
     }
     public class PolyCollider : Collider
@@ -343,51 +334,48 @@ namespace ShapeCore
             SDrawing.DrawPolygon(Shape, 5f, color);
         }
         
-        public override bool Overlap(ICollider other)
+        public override (bool valid, bool overlap) CheckOverlap(ICollider other)
         {
             if (other is CircleCollider c)
             {
-                return SGeometry.OverlapPolyCircle(this, c);
+                return (true, this.OverlapPolyCircle(c));
             }
             else if (other is SegmentCollider s)
             {
-                return SGeometry.OverlapPolySegment(this, s);
+                return (true, this.OverlapPolySegment(s));
             }
             else if (other is RectCollider r)
             {
-                return SGeometry.OverlapPolyRect(this, r);
-            }
+                return (true, this.OverlapPolyRect(r));
+            }   
             else if (other is PolyCollider p)
             {
-                return SGeometry.OverlapPolyPoly(this, p);
+                return (true, this.OverlapPolyPoly(p));
             }
-            else return other.Overlap(this);
+            return (false, false);
         }
-        public override bool OverlapRect(Rect rect)
-        {
-            return SGeometry.OverlapRectPoly(rect, this);
-        }
-        public override Intersection Intersect(ICollider other)
+        public override (bool valid, Intersection i) CheckIntersection(ICollider other)
         {
 
             if (other is CircleCollider c)
             {
-                return SGeometry.IntersectionPolyCircle(this, c);
+                return (true, this.IntersectionPolyCircle(c));
             }
             else if (other is SegmentCollider s)
             {
-                return SGeometry.IntersectionPolySegment(this, s);
+                return (true, this.IntersectionPolySegment(s));
             }
             else if (other is RectCollider r)
             {
-                return SGeometry.IntersectionPolyRect(this, r);
+                return (true, this.IntersectionPolyRect(r));
             }
             else if (other is PolyCollider p)
             {
-                return SGeometry.IntersectionPolyPoly(this, p);
+                return (true, this.IntersectionPolyPoly(p));
             }
-            else return other.Intersect(this);
+            return (false, new());
         }
+        public override bool CheckOverlapRect(Rect rect) { return rect.OverlapRectPoly(this); }
 
     }
 

@@ -401,8 +401,8 @@ namespace ShapeScreen
     }
     public class Camera
     {
-        private GameObject? target = null;
-        private GameObject? newTarget = null;
+        private IGameObject? target = null;
+        private IGameObject? newTarget = null;
         private float boundaryDis = 0f;
         public float FollowSmoothness { get; set; } = 0f;
         private float baseZoom = 1f;
@@ -452,7 +452,7 @@ namespace ShapeScreen
         public void ClearCameraOrderChains() { cameraOrderChainHandler.ClearChains(); }
         */
 
-        public GameObject? Target { get { return target; } set { target = value; } }
+        public IGameObject? Target { get { return target; } set { target = value; } }
         
         /// <summary>
         /// Original world position of the camera before pixel perfect smoothing is applied.
@@ -538,12 +538,12 @@ namespace ShapeScreen
         public Vector2 Translation { get { return curTranslation; } set { curTranslation = value; } }
         public void Translate(Vector2 amount) { curTranslation += amount; }
         public void ResetTranslation() { curTranslation = new(0f); }
-        public void SetTarget(GameObject target)
+        public void SetTarget(IGameObject target)
         {
             this.target = target;
             rawCameraTarget = target.GetCameraPosition(rawCameraTarget, 0f, FollowSmoothness, boundaryDis);
         }
-        public void ChangeTarget(GameObject newTarget)
+        public void ChangeTarget(IGameObject newTarget)
         {
             if (target == null)
             {

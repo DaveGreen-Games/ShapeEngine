@@ -1,9 +1,6 @@
-﻿using System.Numerics;
-using System.Reflection.Metadata;
+﻿using ShapeCore;
 using Raylib_CsLo;
-using ShapeColor;
 using ShapeLib;
-using ShapeUI;
 
 namespace ShapeAchievements
 {
@@ -116,14 +113,14 @@ namespace ShapeAchievements
             if (!achieved) Achieved?.Invoke(this);
             achieved = true; 
         }
-        public virtual void Draw(Font font, Rectangle rect, Color bgColor, Color textColor, Color progressColor, Color achievedColor)
+        public virtual void Draw(Font font, Rect rect, Color bgColor, Color textColor, Color progressColor, Color achievedColor)
         {
-            Rectangle left = new(rect.x, rect.y, rect.width * 0.25f, rect.height);
-            Rectangle leftTop = new(left.x, left.y, left.width, left.height * 0.5f);
-            Rectangle leftBottom = new(left.x, left.y +left.height * 0.5f, left.width, left.height * 0.5f);
-            Rectangle right = new(rect.x + rect.width * 0.28f, rect.y, rect.width * 0.72f, rect.height);
+            Rect left = new(rect.x, rect.y, rect.width * 0.25f, rect.height);
+            Rect leftTop = new(left.x, left.y, left.width, left.height * 0.5f);
+            Rect leftBottom = new(left.x, left.y +left.height * 0.5f, left.width, left.height * 0.5f);
+            Rect right = new(rect.x + rect.width * 0.28f, rect.y, rect.width * 0.72f, rect.height);
             SDrawing.DrawBar(rect, GetGoalPercentage(), progressColor, bgColor);
-            if (achieved) SDrawing.DrawRectangeLinesPro(new(rect.x, rect.y), new(rect.width, rect.height), new(0f), new(0f), 0f, 3f, achievedColor);
+            if (achieved) SDrawing.DrawRect(rect, new(0f), 0f, 3f, achievedColor);
             int value = stat.value;
             int max = end;
             SDrawing.DrawTextAligned(String.Format("{0}", value), leftTop, 1f, textColor, font, new(0.5f));
@@ -181,7 +178,7 @@ namespace ShapeAchievements
 
             }
         }
-        public void Draw(Font font, Rectangle achievementRect, Color background, Color text, Color progress, Color achieved) 
+        public void Draw(Font font, Rect achievementRect, Color background, Color text, Color progress, Color achieved) 
         {
             if (achievementDrawStack.Count > 0)
             {

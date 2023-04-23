@@ -4,26 +4,17 @@ using ShapeLib;
 
 namespace ShapeEffects
 {
-    public class TextEffect : EffectObject
+    public class TextEffect : Effect
     {
         public string Text { get; set; } = "";
 
-        public TextEffect(Vector2 pos, Vector2 size) : base(pos, size) { }
-        public TextEffect(Vector2 pos, Vector2 size, string text) : base(pos, size) { this.Text = text; }
-        public TextEffect(Vector2 pos, Vector2 size, float lifeTime) : base(pos, size, lifeTime) { }
-        public TextEffect(Vector2 pos, Vector2 size, string text, float lifeTime) : base(pos, size, lifeTime) { this.Text = text; }
+        public TextEffect(Vector2 pos, Vector2 size, float rotRad, string text) : base(pos, size, rotRad) { this.Text = text; }
+        public TextEffect(Vector2 pos, Vector2 size, float rotRad, string text, float lifeTime) : base(pos, size, rotRad, lifeTime) { this.Text = text; }
 
-
-        //public virtual bool Draw()
-        //{
-        //    if (IsDead()) return true;
-        //    DrawEffectFunc?.Invoke(this);
-        //    return false;
-        //}
-
-
-        //use rotation?
-        protected void DrawText(Color color, Font font, Vector2 alignement) { SDrawing.DrawTextAligned(Text, GetBoundingBox(), 1f, color, font, alignement); }
+        protected void DrawText(Color color, Font font, Vector2 alignement) 
+        { 
+            SDrawing.DrawTextAligned(Text, GetBoundingBox(), RotRad * SUtils.RADTODEG, 1f, color, font, alignement); 
+        }
     }
 
 

@@ -13,10 +13,10 @@ namespace ShapeEffects
         //public DrawEffect? DrawEffectFunc = null;
 
         //add rotation?
+        public float RotRad { get; set; } = 0f;
 
-        public Effect(Vector2 pos, Vector2 size) : base(pos, size) { }
-        public Effect(Vector2 pos, Vector2 size, float lifeTime) : base(pos, size, lifeTime) { }
-
+        public Effect(Vector2 pos, Vector2 size, float rotRad) : base(pos, size) { RotRad = rotRad; }
+        public Effect(Vector2 pos, Vector2 size, float rotRad, float lifeTime) : base(pos, size, lifeTime) { RotRad = rotRad; }
 
         //public virtual bool Draw()
         //{
@@ -24,7 +24,7 @@ namespace ShapeEffects
         //    if(DrawEffectFunc != null) DrawEffectFunc(this);
         //    return false;
         //}
-    
+
     }
 }
 /*

@@ -11,8 +11,8 @@ namespace ShapeEffects
         public float Drag { get; set; }
         public Vector2 ConstAcceleration { get; set; }
         public bool Enabled { get; set; }
-        public bool CheckCollision { get; set; }
-        public bool CheckIntersections { get; set; }
+        public bool ComputeCollision { get; set; }
+        public bool ComputeIntersections { get; set; }
 
         protected Vector2 accumulatedForce = new(0f);
 
@@ -51,52 +51,49 @@ namespace ShapeEffects
         {
             Raylib.DrawRectangleLinesEx(GetBoundingBox().Rectangle, 5f, color);
         }
-        public bool Overlap(ICollider other)
+        public (bool valid, bool overlap) CheckOverlap(ICollider other)
         {
             Rect r = GetBoundingBox();
             if (other is CircleCollider c)
             {
-                return SGeometry.OverlapRectCircle(r, c);
+                return (true, r.OverlapRectCircle(c));
             }
             else if (other is SegmentCollider s)
             {
-                return SGeometry.OverlapRectSegment(r, s);
+                return (true, r.OverlapRectSegment(s));
             }
             else if (other is RectCollider rect)
             {
-                return SGeometry.OverlapRectRect(r, rect);
+                return (true, r.OverlapRectRect(rect));
             }
             else if (other is PolyCollider p)
             {
-                return SGeometry.OverlapRectPoly(r, p);
+                return (true, r.OverlapRectPoly(p));
             }
-            else return other.Overlap(this);
+            return (false, false);
         }
-        public bool OverlapRect(Rect rect)
-        {
-            return SGeometry.OverlapRectRect(rect, GetBoundingBox());
-        }
-        public Intersection Intersect(ICollider other)
+        public (bool valid, Intersection i) CheckIntersection(ICollider other)
         {
             Rect r = GetBoundingBox();
             if (other is CircleCollider c)
             {
-                return SGeometry.IntersectionRectCircle(r, c);
+                return (true, r.IntersectionRectCircle(c));
             }
             else if (other is SegmentCollider s)
             {
-                return SGeometry.IntersectionRectSegment(r, s);
+                return (true, r.IntersectionRectSegment(s));
             }
             else if (other is RectCollider rect)
             {
-                return SGeometry.IntersectionRectRect(r, rect);
+                return (true, r.IntersectionRectRect(rect));
             }
             else if (other is PolyCollider p)
             {
-                return SGeometry.IntersectionRectPoly(r, p);
+                return (true, r.IntersectionRectPoly(p));
             }
-            else return other.Intersect(this);
+            return (false, new());
         }
+        public bool CheckOverlapRect(Rect rect) { return GetBoundingBox().OverlapRectRect(rect); }
 
     }
 }
