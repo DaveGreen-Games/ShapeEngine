@@ -1,11 +1,33 @@
 ﻿using System.Numerics;
 using Raylib_CsLo;
 using ShapeLib;
-using ShapeScreen;
-using ShapeColor;
 
-namespace ShapeCore
+namespace ShapeEffects
 {
+    public class TextEffect : EffectObject
+    {
+        public string Text { get; set; } = "";
+
+        public TextEffect(Vector2 pos, Vector2 size) : base(pos, size) { }
+        public TextEffect(Vector2 pos, Vector2 size, string text) : base(pos, size) { this.Text = text; }
+        public TextEffect(Vector2 pos, Vector2 size, float lifeTime) : base(pos, size, lifeTime) { }
+        public TextEffect(Vector2 pos, Vector2 size, string text, float lifeTime) : base(pos, size, lifeTime) { this.Text = text; }
+
+
+        //public virtual bool Draw()
+        //{
+        //    if (IsDead()) return true;
+        //    DrawEffectFunc?.Invoke(this);
+        //    return false;
+        //}
+
+
+        //use rotation?
+        protected void DrawText(Color color, Font font, Vector2 alignement) { SDrawing.DrawTextAligned(Text, GetBoundingBox(), 1f, color, font, alignement); }
+    }
+
+
+    /*
     public class TextEffect : Effect
     {
 
@@ -16,17 +38,7 @@ namespace ShapeCore
         protected Vector2 textAlignement = new(0.5f);
         protected Font font;
 
-        //public TextEffect(Vector2 pos, string text, float duration, Color color) : base(pos, duration)
-        //{
-        //    this.text = text;
-        //    this.color = color;
-        //}
-        //public TextEffect(Vector2 pos, string text, float duration, Color color, FontSize fontSize) : base(pos, duration)
-        //{
-        //    this.text = text;
-        //    this.fontSize = UIHandler.GetFontSizeScaled(fontSize);
-        //    this.color = color;
-        //}
+        
         public TextEffect(Vector2 pos, string text, float duration, Color color, float fontSize, float fontSpacing, Font font, Vector2 alignement) : base(pos, duration)
         {
             this.text = text;
@@ -36,22 +48,15 @@ namespace ShapeCore
             this.color = color;
             this.font = font;
         }
-        //public TextEffect(Vector2 pos, string text, float duration, Color color, FontSize fontSize, float fontSpacing, Alignement alignement) : base(pos, duration)
-        //{
-        //    this.text = text;
-        //    this.fontSize = UIHandler.GetFontSizeScaled(fontSize);
-        //    this.fontSpacing = fontSpacing;
-        //    textAlignement = alignement;
-        //    this.color = color;
-        //}
 
         public override void DrawUI(Vector2 uiSize)
         {
             if (IsDead()) return;
-            Vector2 uiPos = ScreenHandler.TransformPositionToUI(gamePos);
+            Vector2 uiPos = ScreenHandler.TransformPositionToUI(Pos);
             SDrawing.DrawTextAligned(text, uiPos, fontSize, fontSpacing, color, font, textAlignement);
         }
     }
+    
     public class TextEffectPro : TextEffect
     {
         protected float rot = 0f;
@@ -89,7 +94,7 @@ namespace ShapeCore
         public override void DrawUI(Vector2 uiSize)
         {
             if (IsDead()) return;
-            Vector2 uiPos = ScreenHandler.TransformPositionToUI(gamePos);
+            Vector2 uiPos = ScreenHandler.TransformPositionToUI(Pos);
             SDrawing.DrawTextAlignedPro(text, uiPos, rot, fontSize, fontSpacing, color, font, textAlignement);
         }
     }
@@ -183,7 +188,7 @@ namespace ShapeCore
 
         protected override void Easing()
         {
-            gamePos = SEase.Advanced(easeFrom, easeChange, lifetimeTimer.GetElapsed(), easeDuration, easeType);
+            Pos = SEase.Advanced(easeFrom, easeChange, lifetimeTimer.GetElapsed(), easeDuration, easeType);
         }
     }
     public class TextEffectEaseColor : TextEffectEase
@@ -269,5 +274,5 @@ namespace ShapeCore
             fontSize = SEase.Advanced(easeFrom, easeChange, lifetimeTimer.GetElapsed(), easeDuration, easeType);
         }
     }
-
+    */
 }

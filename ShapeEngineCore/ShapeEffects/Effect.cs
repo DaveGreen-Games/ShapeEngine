@@ -2,42 +2,29 @@
 using Raylib_CsLo;
 using ShapeTiming;
 using ShapeLib;
-using System.Reflection.Metadata.Ecma335;
 
-namespace ShapeCore
+namespace ShapeEffects
 {
-    public class Effect : IGameObject
+    
+    public class Effect : EffectObject
     {
-        public Vector2 Pos { get; set; }
-        public Vector2 Size { get; protected set; }
-        public TweenType TweenType { get; set; } = TweenType.LINEAR;
-        public float LifetimeF { get { return 1f - lifetimeTimer.F; } }
-        protected BasicTimer lifetimeTimer = new();
+        //public delegate void DrawEffect(Effect e);
+        //
+        //public DrawEffect? DrawEffectFunc = null;
 
-        public float DrawOrder { get; set; } = 0;
-        public int AreaLayer { get; set; } = 0;
-        public bool DrawToUI { get; set; } = false;
-        public Vector2 ParallaxeOffset { get; set; } = new(0f);
-        public float UpdateSlowFactor { get; set; } = 1f;
-        public float UpdateSlowResistance { get; set; } = 1f;
+        //add rotation?
 
-        public Effect(Vector2 pos, Vector2 size) { this.Pos = pos; this.Size = size; }
-        public Effect(Vector2 pos, Vector2 size, float lifeTime) { this.Pos = pos; this.Size = size; lifetimeTimer.Start(lifeTime); }
+        public Effect(Vector2 pos, Vector2 size) : base(pos, size) { }
+        public Effect(Vector2 pos, Vector2 size, float lifeTime) : base(pos, size, lifeTime) { }
 
 
-        public virtual void Update(float dt)
-        {
-            if (IsDead()) return;
-            lifetimeTimer.Update(dt);
-        }
-        public bool IsDead()
-        {
-            return lifetimeTimer.IsFinished;
-        }
-        
-        public virtual Vector2 GetPosition() { return Pos; }
-        protected virtual Vector2 GetCurSize() { return Size.Tween(new Vector2(0f), LifetimeF, TweenType); }
-        public virtual Rect GetBoundingBox() { return new(Pos, Size, new(0.5f)); }
+        //public virtual bool Draw()
+        //{
+        //    if(IsDead()) return true;
+        //    if(DrawEffectFunc != null) DrawEffectFunc(this);
+        //    return false;
+        //}
+    
     }
 }
 /*

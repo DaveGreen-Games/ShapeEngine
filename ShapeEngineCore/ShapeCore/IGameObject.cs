@@ -31,9 +31,9 @@ namespace ShapeCore
     
         public virtual void Start() { }
         public virtual void Destroy() { }
-        public virtual void Draw() { }
-        public virtual void DrawUI(Vector2 uiSize) { }
-        public virtual void Update(float dt) { }
+        public virtual bool Update(float dt) { return false; }
+        public virtual bool Draw() { return false; }
+        public virtual bool DrawUI(Vector2 uiSize) { return false; }
         public virtual void OnPlayfield(bool inner, bool outer) { }
         public virtual Vector2 GetCameraPosition(Vector2 camPos, float dt, float smoothness = 1f, float boundary = 0f) { return GetPosition(); }
         public bool IsDead();
@@ -45,8 +45,8 @@ namespace ShapeCore
     }
     public interface ICollidable : IGameObject
     {
-        public string GetID();
-        public Collider GetCollider();
+        //public uint GetID();
+        public ICollider GetCollider();
         public void Overlap(CollisionInfo info);
         public void OverlapEnded(ICollidable other);
         public uint GetCollisionLayer();
