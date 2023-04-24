@@ -1243,7 +1243,7 @@ namespace ShapeLib
         
         // Returns 2 times the signed triangle area. The result is positive if  
         // abc is ccw, negative if abc is cw, zero if abc is degenerate.  
-        private static float Signed2DTriArea(Vector2 a, Vector2 b, Vector2 c)
+        private static float TriangleAreaSigned(Vector2 a, Vector2 b, Vector2 c)
         {
             return (a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X);
         }
@@ -1251,13 +1251,13 @@ namespace ShapeLib
         public static (bool intersected, Vector2 intersectPoint, float time) IntersectSegmentSegmentInfo(Vector2 aStart, Vector2 aEnd, Vector2 bStart, Vector2 bEnd)
         {
             //Sign of areas correspond to which side of ab points c and d are
-            float a1 = Signed2DTriArea(aStart, aEnd, bEnd); // Compute winding of abd (+ or -)
-            float a2 = Signed2DTriArea(aStart, aEnd, bStart); // To intersect, must have sign opposite of a1
+            float a1 = TriangleAreaSigned(aStart, aEnd, bEnd); // Compute winding of abd (+ or -)
+            float a2 = TriangleAreaSigned(aStart, aEnd, bStart); // To intersect, must have sign opposite of a1
             //If c and d are on different sides of ab, areas have different signs
             if (a1 * a2 < 0.0f)
             {
                 //Compute signs for a and b with respect to segment cd
-                float a3 = Signed2DTriArea(bStart, bEnd, aStart);
+                float a3 = TriangleAreaSigned(bStart, bEnd, aStart);
                 //Compute winding of cda (+ or -)  
                 // Since area is constant a1 - a2 = a3 - a4, or a4 = a3 + a2 - a1  
                 //float a4 = Signed2DTriArea(bStart, bEnd, aEnd); // Must have opposite sign of a3

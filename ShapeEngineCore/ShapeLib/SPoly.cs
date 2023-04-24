@@ -21,7 +21,7 @@ namespace ShapeLib
             List<Vector2> poly = new();
             for (int i = 0; i < points.Count; i++)
             {
-                poly.Add(pos + SVec.Rotate(points[i], rotRad) + scale);
+                poly.Add(pos + SVec.Rotate(points[i], rotRad) * scale);
             }
             return poly;
         }
