@@ -72,6 +72,7 @@ namespace ShapeLib
         public static Vector2 Lerp(this Vector2 from, Vector2 to, float t) { return Vector2.Lerp(from, to, t); } //RayMath.Vector2Lerp(v1, v2, t);
         public static Vector2 MoveTowards(this Vector2 from, Vector2 to, float maxDistance) 
         {
+            
             Vector2 result = new();
             float difX = to.X - from.X;
             float difY = to.Y - from.Y;
@@ -124,8 +125,8 @@ namespace ShapeLib
         public static float AngleRad(this Vector2 v1, Vector2 v2) { return MathF.Atan2(v2.Y, v2.X) - MathF.Atan2(v1.Y, v1.X); }// return RayMath.Vector2Angle(v1, v2); }
         public static float Distance(this Vector2 v1, Vector2 v2) { return Vector2.Distance(v1, v2); }// RayMath.Vector2Distance(v1, v2); }
         public static float Dot(this Vector2 v1, Vector2 v2) { return Vector2.Dot(v1, v2); }// RayMath.Vector2DotProduct(v1, v2); }
-        public static float Length(Vector2 v) { return v.Length(); } //RayMath.Vector2Length(v);
-        public static float LengthSquared(Vector2 v) { return v.LengthSquared(); } //RayMath.Vector2LengthSqr(v);
+        //public static float Length(Vector2 v) { return v.Length(); } //RayMath.Vector2Length(v);
+        //public static float LengthSquared(Vector2 v) { return v.LengthSquared(); } //RayMath.Vector2LengthSqr(v);
 
 
     }

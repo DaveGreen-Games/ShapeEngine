@@ -1,23 +1,13 @@
-﻿//using Raylib_CsLo;
-using ShapeCore;
+﻿using ShapeCore;
 using System.Numerics;
 
 namespace ShapeLib
 {
     public static class SRect
     {
-        public static Rect Lerp(this Rect from, Rect to, float f)
-        {
-            return
-                new
-                (
-                    SUtils.LerpFloat(from.x, to.x, f),
-                    SUtils.LerpFloat(from.y, to.y, f),
-                    SUtils.LerpFloat(from.width, to.width, f),
-                    SUtils.LerpFloat(from.height, to.height, f)
-                );
-        }
-        public static List<Rect> AlignRectsHorizontal(this Rect rect, int count, float gapRelative = 0f, float maxElementSizeRel = 1f)
+
+        #region UI
+        public static List<Rect> GetAlignedRectsHorizontal(this Rect rect, int count, float gapRelative = 0f, float maxElementSizeRel = 1f)
         {
             List<Rect> rects = new();
             Vector2 startPos = new(rect.x, rect.y);
@@ -39,7 +29,7 @@ namespace ShapeLib
             }
             return rects;
         }
-        public static List<Rect> AlignRectsVertical(this Rect rect, int count, float gapRelative = 0f, float maxElementSizeRel = 1f)
+        public static List<Rect> GetAlignedRectsVertical(this Rect rect, int count, float gapRelative = 0f, float maxElementSizeRel = 1f)
         {
             List<Rect> rects = new();
             Vector2 startPos = new(rect.x, rect.y);
@@ -61,7 +51,7 @@ namespace ShapeLib
             }
             return rects;
         }
-        public static List<Rect> AlignRectsGrid(this Rect rect, int columns, int rows, int count, float hGapRelative = 0f, float vGapRelative = 0f, bool leftToRight = true)
+        public static List<Rect> GetAlignedRectsGrid(this Rect rect, int columns, int rows, int count, float hGapRelative = 0f, float vGapRelative = 0f, bool leftToRight = true)
         {
             List<Rect> rects = new();
             Vector2 startPos = new(rect.x, rect.y);
@@ -88,8 +78,9 @@ namespace ShapeLib
             }
             return rects;
         }
+        #endregion
 
-        
+        #region Collision
         public static (bool collided, Vector2 hitPoint, Vector2 n, Vector2 newPos) CollidePlayfield(this Rect playfieldRect, Vector2 objPos, float objRadius)
         {
             bool collided = false;
@@ -156,56 +147,16 @@ namespace ShapeLib
 
             return (outOfBounds, newPos);
         }
+        #endregion
 
-        public static Vector2 GetAlignementPos(this Rect rect, Vector2 alignement)
-        {
-            Vector2 offset = rect.Size * alignement;
-            return rect.TopLeft + offset;
-        }
-
-        public static Rect AlignRect(this Rect rect, Vector2 alignement)
-        {
-            Vector2 topLeft = new Vector2(rect.x, rect.y);
-            Vector2 size = new(rect.width, rect.height);
-            Vector2 offset = size * alignement;
-            return new
-                (
-                    topLeft.X + offset.X,
-                    topLeft.Y + offset.Y,
-                    size.X,
-                    size.Y
-                );
-        }
-        public static Rect ApplyMargins(this Rect rect, float left, float right, float top, float bottom)
-        {
-            Vector2 tl = new(rect.x, rect.y);
-            Vector2 size = new(rect.width, rect.height);
-            Vector2 br = tl + size;
-
-            tl.X += size.X * left;
-            tl.Y += size.Y * top;
-            br.X -= size.X * right;
-            br.Y -= size.Y * bottom;
-
-            Vector2 finalTopLeft = new(MathF.Min(tl.X, br.X), MathF.Min(tl.Y, br.Y));
-            Vector2 finalBottomRight = new(MathF.Max(tl.X, br.X), MathF.Max(tl.Y, br.Y));
-            return new
-                (
-                    finalTopLeft.X,
-                    finalTopLeft.Y,
-                    finalBottomRight.X - finalTopLeft.X,
-                    finalBottomRight.Y - finalTopLeft.Y
-                );
-        }
-        
-        
+        #region Misc
         /// <summary>
         /// Construct 9 rects out of an outer and inner rect.
         /// </summary>
         /// <param name="inner">The inner rect. Has to be inside of the outer rect.</param>
         /// <param name="outer">The outer rect. Has to be bigger than the inner rect.</param>
         /// <returns>A list of rectangle in the order [TL,TC,TR,LC,C,RC,BL,BC,BR].</returns>
-        public static List<Rect> GetNineTiles(this Rect inner, Rect outer)
+        public static List<Rect> GetNineTiles(Rect inner, Rect outer)
         {
             List<Rect> tiles = new();
 
@@ -254,129 +205,6 @@ namespace ShapeLib
             return tiles;
         }
 
-
-        public static Rect MultiplyRectangle(this Rect rect, float factor)
-        {
-            return new Rect
-                (
-                    rect.x * factor,
-                    rect.y * factor,
-                    rect.width * factor,
-                    rect.height * factor
-                );
-        }
-        public static Rect MultiplyRectangle(this Rect a, Vector2 factor)
-        {
-            return new Rect
-                (
-                    a.x * factor.X,
-                    a.y * factor.Y,
-                    a.width * factor.X,
-                    a.height * factor.Y
-                );
-        }
-        public static Rect MultiplyRectangle(this Rect a, Rect b)
-        {
-            return new Rect
-                (
-                    a.x * b.x,
-                    a.y * b.y,
-                    a.width * b.width,
-                    a.height * b.height
-                );
-        }
-        
-        public static Rect ScaleRectangle(this Rect rect, float scale, Vector2 pivot)
-        {
-            float newWidth = rect.width * scale;
-            float newHeight = rect.height * scale;
-            return new Rect(rect.x - (newWidth - rect.width) * pivot.X, rect.y - (newHeight - rect.height) * pivot.Y, newWidth, newHeight);
-        }
-        public static Rect ScaleRectangle(this Rect rect, float scale)
-        {
-            float newWidth = rect.width * scale;
-            float newHeight = rect.height * scale;
-            return new Rect(rect.x - (newWidth - rect.width) / 2, rect.y - (newHeight - rect.height) / 2, newWidth, newHeight);
-        }
-
-
-        public static Vector2 GetRectCorner(this Rect r, int corner)
-        {
-            return GetRectCornersList(r)[corner % 4];
-        }
-        public static Vector2 GetRectCorner(Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement, int corner)
-        {
-            Rect rect = new(rectPos, rectSize, rectAlignement);
-            return GetRectCorner(rect, corner);
-        }
-        public static bool SeperateAxisRect(Vector2 axisStart, Vector2 axisEnd, Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement)
-        {
-            Vector2 n = axisStart - axisEnd;
-            Vector2 edgeAStart = GetRectCorner(rectPos, rectSize, rectAlignement, 0);
-            Vector2 edgeAEnd = GetRectCorner(rectPos, rectSize, rectAlignement, 1);
-            Vector2 edgeBStart = GetRectCorner(rectPos, rectSize, rectAlignement, 2);
-            Vector2 edgeBEnd = GetRectCorner(rectPos, rectSize, rectAlignement, 3);
-
-            RangeFloat edgeARange = ProjectSegment(edgeAStart, edgeAEnd, n);
-            RangeFloat edgeBRange = ProjectSegment(edgeBStart, edgeBEnd, n);
-            RangeFloat rProjection = RangeHull(edgeARange, edgeBRange);
-
-            RangeFloat axisRange = ProjectSegment(axisStart, axisEnd, n);
-            return !OverlappingRange(axisRange, rProjection);
-        }
-
-        public static Rect EnlargeRect(this Rect r, Vector2 p)
-        {
-            Vector2 tl = new
-                (
-                    MathF.Min(r.x, p.X),
-                    MathF.Min(r.y, p.Y)
-                );
-            Vector2 br = new
-                (
-                    MathF.Max(r.x + r.width, p.X),
-                    MathF.Max(r.y + r.height, p.Y)
-                );
-            return new
-                (
-                  tl.X,
-                  tl.Y,
-                  br.X - tl.X,
-                  br.Y - tl.Y
-                    
-                );
-        }
-        public static Rect EnlargeRect(Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement, Vector2 point)
-        {
-            Rect r = new(rectPos, rectSize, rectAlignement);
-            return EnlargeRect(r, point);
-
-        }
-
-        public static Vector2 ClampOnRect(Vector2 p, Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement)
-        {
-            return ClampOnRect(p, new(rectPos, rectSize, rectAlignement));
-        }
-        public static Vector2 ClampOnRect(Vector2 p, Rect rect)
-        {
-            return new
-                (
-                    SUtils.Clamp(p.X, rect.x, rect.x + rect.width),
-                    SUtils.Clamp(p.Y, rect.y, rect.y + rect.height)
-                );
-        }
-
-        public static Rect Clamp(this Rect r, Rect bounds)
-        {
-            Vector2 tl = ClampOnRect(r.TopLeft, bounds);
-            Vector2 br = ClampOnRect(r.BottomRight, bounds);
-            return new(tl, br);
-        }
-        public static Rect Clamp(this Rect r, Vector2 min, Vector2 max)
-        {
-            return Clamp(r, new(min, max));
-        }
-       
         public static List<Vector2> RotateRectList(this Rect rect, Vector2 pivot, float angleDeg)
         {
             float rotRad = angleDeg * SUtils.DEGTORAD;
@@ -395,11 +223,6 @@ namespace ShapeLib
 
             return new() { topLeft, topRight, bottomRight, bottomLeft };
         }
-        public static List<Vector2> RotateRectList(Vector2 pos, Vector2 size, Vector2 alignement, Vector2 pivot, float angleDeg)
-        {
-            return RotateRectList(new(pos, size, alignement), pivot, angleDeg);
-        }
-
         public static (Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl) RotateRect(this Rect rect, Vector2 pivot, float angleDeg)
         {
             float rotRad = angleDeg * SUtils.DEGTORAD;
@@ -418,15 +241,94 @@ namespace ShapeLib
 
             return new(topLeft, topRight, bottomRight, bottomLeft);
         }
-        public static (Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl) RotateRect(Vector2 pos, Vector2 size, Vector2 alignement, Vector2 pivot, float angleDeg)
+        public static List<Line> GetRectSegments(this Rect rect)
         {
-            return RotateRect(new(pos, size, alignement), pivot, angleDeg);
+            var c = rect.GetRectCorners();
+            return GetRectSegments(c.tl, c.tr, c.br, c.bl);
         }
+        public static List<Line> GetRectSegments(Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl)
+        {
+            List<Line> segments = new()
+            {
+                new(tl, tr), new(bl, br), new(tl, bl), new(tr, br)
+            };
 
-        public static (Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl) GetRectCorners(Vector2 pos, Vector2 size, Vector2 alignement)
-        {
-            return GetRectCorners(new(pos, size, alignement));
+            return segments;
         }
+        #endregion
+
+        #region Math
+        public static Rect Lerp(this Rect from, Rect to, float f)
+        {
+            return
+                new
+                (
+                    SUtils.LerpFloat(from.x, to.x, f),
+                    SUtils.LerpFloat(from.y, to.y, f),
+                    SUtils.LerpFloat(from.width, to.width, f),
+                    SUtils.LerpFloat(from.height, to.height, f)
+                );
+        }
+        public static Rect Align(this Rect r, Vector2 alignement) { return new(r.TopLeft, r.Size, alignement); }
+        public static Rect ApplyMargins(this Rect rect, float left, float right, float top, float bottom)
+        {
+            Vector2 tl = new(rect.x, rect.y);
+            Vector2 size = new(rect.width, rect.height);
+            Vector2 br = tl + size;
+
+            tl.X += size.X * left;
+            tl.Y += size.Y * top;
+            br.X -= size.X * right;
+            br.Y -= size.Y * bottom;
+
+            Vector2 finalTopLeft = new(MathF.Min(tl.X, br.X), MathF.Min(tl.Y, br.Y));
+            Vector2 finalBottomRight = new(MathF.Max(tl.X, br.X), MathF.Max(tl.Y, br.Y));
+            return new
+                (
+                    finalTopLeft.X,
+                    finalTopLeft.Y,
+                    finalBottomRight.X - finalTopLeft.X,
+                    finalBottomRight.Y - finalTopLeft.Y
+                );
+        }
+        public static Rect ScaleSize(this Rect r, float scale, Vector2 alignement) { return new(r.GetPos(alignement), r.Size * scale, alignement); }
+        public static Rect ScaleSize(this Rect r, Vector2 scale, Vector2 alignement) { return new(r.GetPos(alignement), r.Size * scale, alignement); }
+        public static Rect ChangeSize(this Rect r, float amount, Vector2 alignement) { return new(r.GetPos(alignement), new(r.width + amount, r.height + amount), alignement); }
+        public static Rect ChangeSize(this Rect r, Vector2 amount, Vector2 alignement) { return new(r.GetPos(alignement), r.Size + amount, alignement); }
+        public static Rect Move(this Rect r, Vector2 amount) { return new( r.TopLeft + amount, r.Size, new(0f)); }
+        public static Rect EnlargeRect(this Rect r, Vector2 p)
+        {
+            Vector2 tl = new
+                (
+                    MathF.Min(r.x, p.X),
+                    MathF.Min(r.y, p.Y)
+                );
+            Vector2 br = new
+                (
+                    MathF.Max(r.x + r.width, p.X),
+                    MathF.Max(r.y + r.height, p.Y)
+                );
+            return new(tl, br);
+        }
+        public static Vector2 ClampOnRect(Vector2 p, Rect rect)
+        {
+            return new
+                (
+                    SUtils.Clamp(p.X, rect.x, rect.x + rect.width),
+                    SUtils.Clamp(p.Y, rect.y, rect.y + rect.height)
+                );
+        }
+        public static Rect Clamp(this Rect r, Rect bounds)
+        {
+            Vector2 tl = ClampOnRect(r.TopLeft, bounds);
+            Vector2 br = ClampOnRect(r.BottomRight, bounds);
+            return new(tl, br);
+        }
+        public static Rect Clamp(this Rect r, Vector2 min, Vector2 max) { return Clamp(r, new Rect(min, max)); }
+        #endregion
+
+        #region Corners
+        public static Vector2 GetRectCorner(this Rect r, int corner) { return GetRectCornersList(r)[corner % 4]; }
         public static (Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl) GetRectCorners(this Rect rect)
         {
             Vector2 tl = new(rect.x, rect.y);
@@ -452,29 +354,23 @@ namespace ShapeLib
             }
             return points;
         }
-
-        public static List<(Vector2 start, Vector2 end)> GetRectSegments(this Rect rect)
+        public static bool SeperateAxisRect(this Rect r, Vector2 axisStart, Vector2 axisEnd)
         {
-            var c = GetRectCorners(rect);
-            return GetRectSegments(c.tl, c.tr, c.br, c.bl);
+            Vector2 n = axisStart - axisEnd;
+            var corners = r.GetRectCornersList();
+            Vector2 edgeAStart =    corners[0]; //r.GetRectCorner(0); //GetRectCorner(rectPos, rectSize, rectAlignement, 0);
+            Vector2 edgeAEnd =      corners[1]; //r.GetRectCorner(1);// GetRectCorner(rectPos, rectSize, rectAlignement, 1);
+            Vector2 edgeBStart =    corners[2]; //r.GetRectCorner(2); //GetRectCorner(rectPos, rectSize, rectAlignement, 2);
+            Vector2 edgeBEnd =      corners[3]; //r.GetRectCorner(3); //GetRectCorner(rectPos, rectSize, rectAlignement, 3);
+
+            RangeFloat edgeARange = ProjectSegment(edgeAStart, edgeAEnd, n);
+            RangeFloat edgeBRange = ProjectSegment(edgeBStart, edgeBEnd, n);
+            RangeFloat rProjection = RangeHull(edgeARange, edgeBRange);
+
+            RangeFloat axisRange = ProjectSegment(axisStart, axisEnd, n);
+            return !OverlappingRange(axisRange, rProjection);
         }
-        public static List<(Vector2 start, Vector2 end)> GetRectSegments(Vector2 pos, Vector2 size, Vector2 alignement)
-        {
-            return GetRectSegments(new(pos, size, alignement));
-        }
-        public static List<(Vector2 start, Vector2 end)> GetRectSegments(Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl)
-        {
-            List<(Vector2 start, Vector2 end)> segments = new()
-            {
-                (tl, tr), (bl, br), (tl, bl), (tr, br)
-            };
-
-            return segments;
-        }
-
-
-
-
+        #endregion
 
 
         public static bool OverlappingRange(float minA, float maxA, float minB, float maxB)
@@ -523,3 +419,71 @@ namespace ShapeLib
         
     }
 }
+
+
+
+//public static Vector2 GetAlignementPos(this Rect rect, Vector2 alignement)
+//{
+//    Vector2 offset = rect.Size * alignement;
+//    return rect.TopLeft + offset;
+//}
+//public static Rect Align(this Rect rect, Vector2 alignement)
+//{
+//    Vector2 topLeft = new Vector2(rect.x, rect.y);
+//    Vector2 size = new(rect.width, rect.height);
+//    //return new(topLeft, size, alignement);
+//    Vector2 offset = size * alignement;
+//    return new
+//        (
+//            topLeft.X + offset.X,
+//            topLeft.Y + offset.Y,
+//            size.X,
+//            size.Y
+//        );
+//}
+/*
+public static Rect MultiplyRectangle(this Rect rect, float factor)
+{
+    return new Rect
+        (
+            rect.x * factor,
+            rect.y * factor,
+            rect.width * factor,
+            rect.height * factor
+        );
+}
+public static Rect MultiplyRectangle(this Rect a, Vector2 factor)
+{
+    return new Rect
+        (
+            a.x * factor.X,
+            a.y * factor.Y,
+            a.width * factor.X,
+            a.height * factor.Y
+        );
+}
+public static Rect MultiplyRectangle(this Rect a, Rect b)
+{
+    return new Rect
+        (
+            a.x * b.x,
+            a.y * b.y,
+            a.width * b.width,
+            a.height * b.height
+        );
+}
+*/
+/*
+public static Rect ScaleRectangle(this Rect rect, float scale, Vector2 pivot)
+{
+    float newWidth = rect.width * scale;
+    float newHeight = rect.height * scale;
+    return new Rect(rect.x - (newWidth - rect.width) * pivot.X, rect.y - (newHeight - rect.height) * pivot.Y, newWidth, newHeight);
+}
+public static Rect ScaleRectangle(this Rect rect, float scale)
+{
+    float newWidth = rect.width * scale;
+    float newHeight = rect.height * scale;
+    return new Rect(rect.x - (newWidth - rect.width) / 2, rect.y - (newHeight - rect.height) / 2, newWidth, newHeight);
+}
+*/

@@ -569,30 +569,6 @@ namespace ShapeLib
             return a.GetBoundingBox().IntersectionRectRect(b.Pos, b.GetBoundingBox());
             //return IntersectionRectRect(a.GetBoundingBox(), b.Pos, b.GetBoundingBox());
         }
-        //public static Intersection IntersectionPointPoint(Collider a, Collider b)
-        //{
-        //    return IntersectionPointPoint(a.Pos, b.Pos);
-        //}
-        //public static Intersection IntersectionPointCircle(Collider a, CircleCollider c)
-        //{
-        //    return IntersectionPointCircle(a.Pos, c.Pos, c.Radius);
-        //}
-        //public static Intersection IntersectionPointSegment(Collider a, SegmentCollider s)
-        //{
-        //    return IntersectionPointSegment(a.Pos, s.Start, s.End);
-        //}
-        //public static Intersection IntersectionPointRect(Collider a, RectCollider r)
-        //{
-        //    return IntersectionPointRect(r.Pos, a.Pos, r.Rect);
-        //}
-        //public static Intersection IntersectionPointPoly(Collider a, PolyCollider p)
-        //{
-        //    return IntersectionPointPoly(p.Pos, a.Pos, p.Shape);
-        //}
-        //public static Intersection IntersectionCirclePoint(CircleCollider c, Collider a)
-        //{
-        //    return IntersectionCirclePoint(c, a);
-        //}
         public static Intersection IntersectionCircleCircle(this CircleCollider a, CircleCollider b)
         {
             return IntersectionCircleCircle(a.Pos, a.Radius, b.Pos, b.Radius);
@@ -609,10 +585,6 @@ namespace ShapeLib
         {
             return IntersectionCirclePoly(poly.Pos, circle.Pos, circle.Radius, poly.Shape);
         }
-        //public static Intersection IntersectionSegmentPoint(SegmentCollider s, Collider a)
-        //{
-        //    return IntersectionSegmentPoint(s, a);
-        //}
         public static Intersection IntersectionSegmentSegment(this SegmentCollider a, SegmentCollider b)
         {
             return IntersectionSegmentSegment(a.Pos, a.Start, a.End, b.Start, b.End);
@@ -629,10 +601,6 @@ namespace ShapeLib
         {
             return IntersectionSegmentPoly(poly.Pos, a.Start, a.End, poly.Shape);
         }
-        //public static Intersection IntersectionRectPoint(RectCollider r, Collider a)
-        //{
-        //    return IntersectionRectPoint(r.Pos, r.Rect, a.Pos);
-        //}
         public static Intersection IntersectionRectCircle(this RectCollider rect, CircleCollider circle)
         {
             return rect.Rect.IntersectionRectCircle(circle.Pos, circle.Pos, circle.Radius);
@@ -671,10 +639,6 @@ namespace ShapeLib
             return rect.IntersectionRectPoly(poly.Pos, poly.Shape);
         }
 
-        //public static Intersection IntersectionPolyPoint(PolyCollider p, Collider a)
-        //{
-        //    return IntersectionPolyPoint(p.Pos, p.Shape, a.Pos);
-        //}
         public static Intersection IntersectionPolyCircle(this PolyCollider poly, CircleCollider circle)
         {
             return IntersectionPolyCircle(circle.Pos, poly.Shape, circle.Pos, circle.Radius);
@@ -692,30 +656,6 @@ namespace ShapeLib
             return IntersectionPolyPoly(b.Pos, a.Shape, b.Shape);
         }
 
-        //public static Intersection IntersectionPointPoint(Vector2 a, Vector2 b)
-        //{
-        //    return IntersectionCircleCircle(a, POINT_RADIUS, b, POINT_RADIUS);
-        //}
-        //public static Intersection IntersectionPointCircle(Vector2 a, Vector2 cPos, float cR)
-        //{
-        //    return IntersectionCircleCircle(a, POINT_RADIUS, cPos, cR);
-        //}
-        //public static Intersection IntersectionPointSegment(Vector2 a, Vector2 start, Vector2 end)
-        //{
-        //    return IntersectionCircleSegment(a, POINT_RADIUS, start, end);
-        //}
-        //public static Intersection IntersectionPointRect(Vector2 referencePoint, Vector2 a, Rect rect)
-        //{
-        //    return IntersectionCircleRect(referencePoint, a, POINT_RADIUS, rect);
-        //}
-        //public static Intersection IntersectionPointPoly(Vector2 referencePoint, Vector2 a, List<Vector2> poly)
-        //{
-        //    return IntersectionCirclePoly(referencePoint, a, POINT_RADIUS, poly);
-        //}
-        //public static Intersection IntersectionCirclePoint(Vector2 cPos, float cR, Vector2 p)
-        //{
-        //    return IntersectionCircleCircle(cPos, cR, p, POINT_RADIUS);
-        //}
         public static Intersection IntersectionCircleCircle(Vector2 aPos, float aRadius, Vector2 bPos, float bRadius)
         {
             return IntersectionCircleCircle(aPos.X, aPos.Y, aRadius, bPos.X, bPos.Y, bRadius);
@@ -903,7 +843,7 @@ namespace ShapeLib
         }
         public static Intersection IntersectionCirclePoly(Vector2 referencePoint, Vector2 circlePos, float circleRadius, List<Vector2> poly)
         {
-            var segments = SPoly.GetPolySegments(poly);
+            var segments = SPoly.GetSegments(poly);
             return IntersectionCircleSegments(referencePoint, circlePos, circleRadius, segments);
             //for (int i = 0; i < poly.Count; i++)
             //{
@@ -917,10 +857,6 @@ namespace ShapeLib
             //}
             //return new();
         }
-        //public static Intersection IntersectionSegmentPoint(Vector2 start, Vector2 end, Vector2 p)
-        //{
-        //    return IntersectionSegmentCircle(start, end, p, POINT_RADIUS);
-        //}
         public static Intersection IntersectionSegmentSegment(Vector2 referencePoint, Vector2 aStart, Vector2 aEnd, Vector2 bStart, Vector2 bEnd)
         {
             var info = IntersectSegmentSegmentInfo(aStart, aEnd, bStart, bEnd);
@@ -1161,7 +1097,7 @@ namespace ShapeLib
         }
         public static Intersection IntersectionSegmentPoly(Vector2 referencePoint, Vector2 start, Vector2 end, List<Vector2> poly)
         {
-            return IntersectionSegmentSegments(referencePoint, start, end, SPoly.GetPolySegments(poly));
+            return IntersectionSegmentSegments(referencePoint, start, end, SPoly.GetSegments(poly));
             //Vector2 closestIntersectPoint = new();
             //Vector2 n = new();
             //float closestDisSq = float.PositiveInfinity;
@@ -1186,10 +1122,6 @@ namespace ShapeLib
             //if (n.X != 0f || n.Y != 0f) return new(closestIntersectPoint, n);
             //return new();
         }
-        //public static Intersection IntersectionRectPoint(Vector2 referencePoint, Rect rect, Vector2 p)
-        //{
-        //    return IntersectionRectCircle(referencePoint, rect, p, POINT_RADIUS);
-        //}
         
         public static Intersection IntersectionRectCircle(this Rect rect, Vector2 referencePoint, Vector2 circlePos, float circleRadius)
         {
@@ -1209,40 +1141,35 @@ namespace ShapeLib
         public static Intersection IntersectionRectPoly(this Rect rect, Vector2 referencePoint, List<Vector2> poly)
         {
             var segments = SRect.GetRectSegments(rect);
-            var polySegments = SPoly.GetPolySegments(poly);
+            var polySegments = SPoly.GetSegments(poly);
             return IntersectionSegmentsSegments(referencePoint, segments, polySegments);
         }
-        //public static Intersection IntersectionPolyPoint(Vector2 referencePoint, List<Vector2> poly, Vector2 p)
-        //{
-        //    return IntersectionPolyCircle(referencePoint, poly, p, POINT_RADIUS);
-        //}
         public static Intersection IntersectionPolyCircle(Vector2 referencePoint, List<Vector2> poly, Vector2 circlePos, float circleRadius)
         {
-            var segments = SPoly.GetPolySegments(poly);
+            var segments = SPoly.GetSegments(poly);
             return IntersectionSegmentsCircle(referencePoint, segments, circlePos, circleRadius);
         }
         public static Intersection IntersectionPolySegment(Vector2 referencePoint, List<Vector2> poly, Vector2 start, Vector2 end)
         {
-            var segments = SPoly.GetPolySegments(poly);
+            var segments = SPoly.GetSegments(poly);
             return IntersectionSegmentsSegment(referencePoint, segments, start, end);
         }
         public static Intersection IntersectionPolyRect(Vector2 referencePoint, List<Vector2> poly, Rect rect)
         {   
             var segments = SRect.GetRectSegments(rect);
-            var polySegments = SPoly.GetPolySegments(poly);
+            var polySegments = SPoly.GetSegments(poly);
             return IntersectionSegmentsSegments(referencePoint, polySegments, segments);
         }
         public static Intersection IntersectionPolyPoly(Vector2 referencePoint, List<Vector2> a, List<Vector2> b)
         {
-            var aSegments = SPoly.GetPolySegments(a);
-            var bSegments = SPoly.GetPolySegments(b);
+            var aSegments = SPoly.GetSegments(a);
+            var bSegments = SPoly.GetSegments(b);
             return IntersectionSegmentsSegments(referencePoint, aSegments, bSegments);
         }
 
         
         
-        // Returns 2 times the signed triangle area. The result is positive if  
-        // abc is ccw, negative if abc is cw, zero if abc is degenerate.  
+        
         private static float TriangleAreaSigned(Vector2 a, Vector2 b, Vector2 c)
         {
             return (a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X);
@@ -1538,71 +1465,153 @@ namespace ShapeLib
 
 
 
-        /// <summary>
-        /// Only use with concave (not self intersecting) polygons!!!
-        /// </summary>
-        /// <param name="a">Polygon a</param>
-        /// <param name="b">Polygon b</param>
-        /// <returns></returns>
-        //public static bool OverlapSAT(List<Vector2> a, List<Vector2> b)
-        //{
-        //    List<Vector2> axis = new();
-        //    axis.AddRange(SPoly.GetPolyAxis(a));
-        //    axis.AddRange(SPoly.GetPolyAxis(b));
-        //
-        //    foreach (var ax in axis)
-        //    {
-        //        float aMin = float.PositiveInfinity;
-        //        float aMax = float.NegativeInfinity;
-        //        float bMin = float.PositiveInfinity;
-        //        float bMax = float.NegativeInfinity;
-        //
-        //        foreach (var p in a)
-        //        {
-        //            float d = SVec.Dot(ax, p);
-        //            if (d < aMin) aMin = d;
-        //            if (d > aMax) aMax = d;
-        //        }
-        //        foreach (var p in b)
-        //        {
-        //            float d = SVec.Dot(ax, p);
-        //            if (d < bMin) bMin = d;
-        //            if (d > bMax) bMax = d;
-        //        }
-        //        if ((aMin < bMax && aMin > bMin) || (bMin < aMax && bMin > aMin)) continue;
-        //        else return false;
-        //    }
-        //    return true;
-        //}
-        
-        //public static bool OverlapSAT(Vector2 circlePos, float circleRadius, List<Vector2> b)
-        //{
-        //    List<Vector2> axis = new();
-        //    axis.AddRange(SPoly.GetPolyAxis(b));
-        //
-        //    foreach (var ax in axis)
-        //    {
-        //        float aMin = SVec.Dot(ax, circlePos - SVec.Normalize(ax) * circleRadius);
-        //        float aMax = SVec.Dot(ax, circlePos + SVec.Normalize(ax) * circleRadius);
-        //        float bMin = float.PositiveInfinity;
-        //        float bMax = float.NegativeInfinity;
-        //
-        //        foreach (var p in b)
-        //        {
-        //            float d = SVec.Dot(ax, p);
-        //            if (d < bMin) bMin = d;
-        //            if (d > bMax) bMax = d;
-        //        }
-        //        if ((aMin < bMax && aMin > bMin) || (bMin < aMax && bMin > aMin)) continue;
-        //        else return false;
-        //    }
-        //    return true;
-        //}
 
 
 
     }
 }
+
+//public static Intersection IntersectionPointPoint(Collider a, Collider b)
+//{
+//    return IntersectionPointPoint(a.Pos, b.Pos);
+//}
+//public static Intersection IntersectionPointCircle(Collider a, CircleCollider c)
+//{
+//    return IntersectionPointCircle(a.Pos, c.Pos, c.Radius);
+//}
+//public static Intersection IntersectionPointSegment(Collider a, SegmentCollider s)
+//{
+//    return IntersectionPointSegment(a.Pos, s.Start, s.End);
+//}
+//public static Intersection IntersectionPointRect(Collider a, RectCollider r)
+//{
+//    return IntersectionPointRect(r.Pos, a.Pos, r.Rect);
+//}
+//public static Intersection IntersectionPointPoly(Collider a, PolyCollider p)
+//{
+//    return IntersectionPointPoly(p.Pos, a.Pos, p.Shape);
+//}
+//public static Intersection IntersectionCirclePoint(CircleCollider c, Collider a)
+//{
+//    return IntersectionCirclePoint(c, a);
+//}
+//public static Intersection IntersectionSegmentPoint(SegmentCollider s, Collider a)
+//{
+//    return IntersectionSegmentPoint(s, a);
+//}
+//public static Intersection IntersectionRectPoint(RectCollider r, Collider a)
+//{
+//    return IntersectionRectPoint(r.Pos, r.Rect, a.Pos);
+//}
+//public static Intersection IntersectionPolyPoint(PolyCollider p, Collider a)
+//{
+//    return IntersectionPolyPoint(p.Pos, p.Shape, a.Pos);
+//}
+//public static Intersection IntersectionPointPoint(Vector2 a, Vector2 b)
+//{
+//    return IntersectionCircleCircle(a, POINT_RADIUS, b, POINT_RADIUS);
+//}
+//public static Intersection IntersectionPointCircle(Vector2 a, Vector2 cPos, float cR)
+//{
+//    return IntersectionCircleCircle(a, POINT_RADIUS, cPos, cR);
+//}
+//public static Intersection IntersectionPointSegment(Vector2 a, Vector2 start, Vector2 end)
+//{
+//    return IntersectionCircleSegment(a, POINT_RADIUS, start, end);
+//}
+//public static Intersection IntersectionPointRect(Vector2 referencePoint, Vector2 a, Rect rect)
+//{
+//    return IntersectionCircleRect(referencePoint, a, POINT_RADIUS, rect);
+//}
+//public static Intersection IntersectionPointPoly(Vector2 referencePoint, Vector2 a, List<Vector2> poly)
+//{
+//    return IntersectionCirclePoly(referencePoint, a, POINT_RADIUS, poly);
+//}
+//public static Intersection IntersectionCirclePoint(Vector2 cPos, float cR, Vector2 p)
+//{
+//    return IntersectionCircleCircle(cPos, cR, p, POINT_RADIUS);
+//}
+//public static Intersection IntersectionSegmentPoint(Vector2 start, Vector2 end, Vector2 p)
+//{
+//    return IntersectionSegmentCircle(start, end, p, POINT_RADIUS);
+//}
+//public static Intersection IntersectionRectPoint(Vector2 referencePoint, Rect rect, Vector2 p)
+//{
+//    return IntersectionRectCircle(referencePoint, rect, p, POINT_RADIUS);
+//}
+//public static Intersection IntersectionPolyPoint(Vector2 referencePoint, List<Vector2> poly, Vector2 p)
+//{
+//    return IntersectionPolyCircle(referencePoint, poly, p, POINT_RADIUS);
+//}
+
+
+// Returns 2 times the signed triangle area. The result is positive if  
+// abc is ccw, negative if abc is cw, zero if abc is degenerate.  
+
+
+/// <summary>
+/// Only use with concave (not self intersecting) polygons!!!
+/// </summary>
+/// <param name="a">Polygon a</param>
+/// <param name="b">Polygon b</param>
+/// <returns></returns>
+//public static bool OverlapSAT(List<Vector2> a, List<Vector2> b)
+//{
+//    List<Vector2> axis = new();
+//    axis.AddRange(SPoly.GetPolyAxis(a));
+//    axis.AddRange(SPoly.GetPolyAxis(b));
+//
+//    foreach (var ax in axis)
+//    {
+//        float aMin = float.PositiveInfinity;
+//        float aMax = float.NegativeInfinity;
+//        float bMin = float.PositiveInfinity;
+//        float bMax = float.NegativeInfinity;
+//
+//        foreach (var p in a)
+//        {
+//            float d = SVec.Dot(ax, p);
+//            if (d < aMin) aMin = d;
+//            if (d > aMax) aMax = d;
+//        }
+//        foreach (var p in b)
+//        {
+//            float d = SVec.Dot(ax, p);
+//            if (d < bMin) bMin = d;
+//            if (d > bMax) bMax = d;
+//        }
+//        if ((aMin < bMax && aMin > bMin) || (bMin < aMax && bMin > aMin)) continue;
+//        else return false;
+//    }
+//    return true;
+//}
+
+//public static bool OverlapSAT(Vector2 circlePos, float circleRadius, List<Vector2> b)
+//{
+//    List<Vector2> axis = new();
+//    axis.AddRange(SPoly.GetPolyAxis(b));
+//
+//    foreach (var ax in axis)
+//    {
+//        float aMin = SVec.Dot(ax, circlePos - SVec.Normalize(ax) * circleRadius);
+//        float aMax = SVec.Dot(ax, circlePos + SVec.Normalize(ax) * circleRadius);
+//        float bMin = float.PositiveInfinity;
+//        float bMax = float.NegativeInfinity;
+//
+//        foreach (var p in b)
+//        {
+//            float d = SVec.Dot(ax, p);
+//            if (d < bMin) bMin = d;
+//            if (d > bMax) bMax = d;
+//        }
+//        if ((aMin < bMax && aMin > bMin) || (bMin < aMax && bMin > aMin)) continue;
+//        else return false;
+//    }
+//    return true;
+//}
+
+
+
 /*
         private static (bool intersected, Vector2 intersectPoint, float time) IntersectPointCircle(Vector2 point, Vector2 vel, Vector2 circlePos, float radius)
         {

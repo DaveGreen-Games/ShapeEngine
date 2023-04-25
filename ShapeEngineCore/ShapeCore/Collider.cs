@@ -286,7 +286,7 @@ namespace ShapeCore
         List<Vector2> points;
         public float RotRad { get; set; }
         public float Scale { get; set; } = 1f;
-        public List<Vector2> Shape { get { return SPoly.TransformPoly(points, Pos, RotRad, new(Scale)); } }
+        public List<Vector2> Shape { get { return SPoly.GetShape(points, Pos, RotRad, new(Scale)); } }
         //{
         //    get
         //    {
@@ -327,7 +327,7 @@ namespace ShapeCore
         }
         public override Rect GetBoundingBox()
         {
-            return SPoly.GetPolyBoundingBox(Shape);
+            return SPoly.GetBoundingBox(Shape);
         }
         public override void DrawDebugShape(Color color)
         {

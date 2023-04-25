@@ -3,12 +3,12 @@ using System.Numerics;
 
 namespace ShapeCore
 {
-    public interface IShape
+    public interface ILocation
     {
         public Vector2 GetPosition();
         public Rect GetBoundingBox();
     }
-    public interface IGameObject : IShape
+    public interface IGameObject : ILocation
     {
         public float DrawOrder { get; set; }
         public int AreaLayer { get; set; }
@@ -52,8 +52,8 @@ namespace ShapeCore
         public uint GetCollisionLayer();
         public uint[] GetCollisionMask();
         public Vector2 GetVelocity() { return GetCollider().Vel; }
-        Rect IShape.GetBoundingBox() { return GetCollider().GetBoundingBox(); }
-        Vector2 IShape.GetPosition() { return GetCollider().Pos; }
+        Rect ILocation.GetBoundingBox() { return GetCollider().GetBoundingBox(); }
+        Vector2 ILocation.GetPosition() { return GetCollider().Pos; }
         //public Vector2 GetPos();
     }
 

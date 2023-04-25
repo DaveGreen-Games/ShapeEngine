@@ -1,134 +1,59 @@
 ﻿using System.Numerics;
+using System.Reflection.Metadata.Ecma335;
 using Raylib_CsLo;
 using ShapeCore;
 using ShapeUI;
-using static System.Formats.Asn1.AsnWriter;
 
 namespace ShapeLib
 {
-    //make SShape static script for all kinds of shape related functions (SPoly functions for instance or circle area etc. and extend this structs + basic version of each function)
-    public struct Line// : IShape
+    //TODO
+    // -> put all shape structs into shapes.cs file
+    // -> combine SRect, SPoly, etc. classes into SShape class -> put all sorts of convinient methods for shapes there with extensions and basics as parameters
+    // -> keep shape structs as clean as possible and work with SShape extensions
+    // -> make simple IShape interface (GetPos(), GetBoundingBox(), GetSegments(), Draw(float linethickness, Color color)/ Draw(Color color), IsPointInside(Vector2 p))
+    // -> ICollider gets GetShape() function
+    // -> try a way to implement/add shapes to colliders instead of using multiple variables
+    // -> SGeometry get Overlap/Intersection functions with IShape instead of ICollider -> Like OverlapCircleRect(Circle c, Rect r)
+    // -> SGeometry has all base Overlap/Intersection functions for extension with shapes
+    // -> Colliders keep the Overlap/Intersect functions they now just check the shape instead of the collider
+    // -> Go over all SDrawing functions and use Shape structs where ever possible for extensions
+    // -> Add DrawShape(IShape shape) function to sdrawing 
+
+    /*
+    public static class SCircle
     {
-        public Vector2 start;
-        public Vector2 end;
-        public Vector2 Dir { get { return Displacement.Normalize(); } }
-        public Vector2 Displacement { get { return end - start; } }
-        public float Length { get { return Displacement.Length(); } }
-        public float LengthSquared { get { return Displacement.LengthSquared(); } }
-
-        public Line(Vector2 start, Vector2 end) { this.start = start; this.end = end; }
-        public Line(float startX, float startY, float endX, float endY) { this.start = new(startX, startY); this.end = new(endX, endY); }
+        public static float GetArea(float radius) { return MathF.PI * radius * radius; ; }
+        public static float GetArea(this Circle c) { return GetArea(c.radius); }
+        public static float GetCircumference(float radius) { return MathF.PI * radius * 2f; }
+        public static float GetCircumference(this Circle c) { return GetCircumference(c.radius); }
+        public static Rect GetBoundingBox(Vector2 center, float radius) { return new Rect(center, new(radius, radius), new(0.5f)); }
+        public static Rect GetBoundingBox(this Circle c) { return GetBoundingBox(c.center, c.radius); }
     }
-    public struct Circle
+    public static class STriangle
     {
-        public Vector2 center;
-        public float radius;
-
-        public float Area { get { return MathF.PI * radius * radius; } }
-        public float Circumference { get { return MathF.PI * radius * 2f; } }
-
-        public Circle(Vector2 center, float radius) { this.center = center; this.radius = radius; }
-        public Circle(float x, float y, float radius) { this.center = new(x, y); this.radius = radius; }
-
+        public static float GetArea(Vector2 a, Vector2 b, Vector2 c) { return (a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X); }
+        public static float GetArea(this Triangle t) { return GetArea(t.a, t.b, t.c); }
+        public static float GetCircumference(Vector2 a, Vector2 b, Vector2 c) { return MathF.Sqrt((b-a).LengthSquared() + (c-b).LengthSquared() + (a-c).LengthSquared()); }
+        public static float GetCircumference(this Triangle t) { return GetCircumference(t.a, t.b, t.c); }
+        public static Vector2 GetCentroid(Vector2 a, Vector2 b, Vector2 c) { return (a + b + c) / 3; }
+        public static Vector2 GetCentroid(this Triangle t) { return GetCentroid(t.a, t.b, t.c); }
+        public static List<Line> GetSegments(Vector2 a, Vector2 b, Vector2 c) { return new() { new(a, b), new(b, c), new(c, a) }; }
+        public static List<Line> GetSegments(this Triangle t) { return GetSegments(t.a, t.b, t.c); }
+        public static Rect GetBoundingBox(Vector2 a, Vector2 b, Vector2 c) { return new Rect(a.X, a.Y, 0, 0).EnlargeRect(b).EnlargeRect(c); }
+        public static Rect GetBoundingBox(this Triangle t) { return GetBoundingBox(t.a, t.b, t.c); }
     }
-    public struct Triangle
-    {
-        public Vector2 a, b, c;
-
-        public Vector2 Centroid { get { return (a + b + c) / 3; } }
-        public float Area {get{ return (a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X);}}
-        public Vector2 A { get { return b - a; } }
-        public Vector2 B { get { return c - b; } }
-        public Vector2 C { get { return a - c; } }
-        public float Circumference { get{ return MathF.Sqrt(A.LengthSquared() + B.LengthSquared() + C.LengthSquared()); } }
-
-        public Triangle(Vector2 a, Vector2 b, Vector2 c) { this.a = a; this.b = b; this.c = c; }
-    }
-    public struct Polygon
-    {
-        public List<Vector2> points;
-        public Vector2 pos;
-        public float rotRad;
-        public Vector2 scale;
-
-        public List<Vector2> Shape
-        {
-            get
-            {
-                if (points.Count < 3) return new();
-                List<Vector2> shape = new();
-                for (int i = 0; i < points.Count; i++)
-                {
-                    shape.Add(pos + SVec.Rotate(points[i], rotRad) * scale);
-                }
-                return shape;
-            }
-        }
-        public float Circumference 
-        {
-            get
-            {
-                if (points.Count < 3) return 0f;
-                float lengthSq = 0f;
-                var shape = Shape;
-                shape.Add(shape[0]);
-                for (int i = 0; i < shape.Count - 1; i++)
-                {
-                    Vector2 w = shape[i + 1] - shape[i];
-                    lengthSq += w.LengthSquared();
-                }
-                ///Vector2 final = shape[0] - shape[shape.Count - 1];
-                ///lengthSq += final.LengthSquared();
-                return MathF.Sqrt(lengthSq);
-            } 
-        }
-        public float Area 
-        { 
-            get
-            {
-                if(points.Count < 3) return 0f;
-                var triangles = Triangulate();
-                float totalArea = 0f;
-                foreach (var t in triangles)
-                {
-                    totalArea += t.Area;
-                }
-                return totalArea;
-            } 
-        }
-        public List<Triangle> Triangulate()
-        {
-            if (points.Count < 3) return new();
-            List<Triangle> triangles = new();
-            var shape = Shape;
-            shape.Add(shape[0]);
-            for (int i = 0; i < shape.Count - 1; i++)
-            {
-                Vector2 a = shape[i];
-                Vector2 b = pos;
-                Vector2 c = shape[i + 1];
-                triangles.Add(new(a,b,c));
-            }
-            return triangles;
-        }
-
-        public Polygon(Vector2 pos, float rotRad, Vector2 scale, params Vector2[] points)
-        {
-            this.pos = pos;
-            this.rotRad = rotRad;
-            this.scale = scale;
-            this.points = points.ToList();
-        }
-        public Polygon(Vector2 pos, float rotRad, Vector2 scale, List<Vector2> points)
-        {
-            this.pos = pos;
-            this.rotRad = rotRad;
-            this.scale = scale;
-            this.points = points;
-        }
-
-    }
-
+    */
+    
+    //public interface IShape : ILocation
+    //{
+    //    public List<Line> GetSegments();
+    //    public bool IsPointInside(Vector2 p);
+    //    public void Draw(Color color);
+    //    public void Draw(float lineThickness, Color color);
+    //
+    //}
+    
+   
 
 
     //overhaul entire script
