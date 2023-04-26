@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Runtime.CompilerServices;
 using Raylib_CsLo;
 using ShapeLib;
 
@@ -114,6 +115,8 @@ namespace ShapeCore
             float y = (1f - f1Sq) * t.a.Y + (f1Sq * (1f - f2)) * t.b.Y + (f1Sq * f2) * t.c.Y;
             return new(x, y);
         }
+        public static List<Vector2> GetPoints(this Triangle t) { return new() { t.a, t.b, t.c }; }
+        public static Polygon GetPointsPolygon(this Triangle t) { return new(t.Centroid, t.a, t.b, t.c); }
         public static Triangle Rotate(this Triangle t, float rad) { return Rotate(t, t.Centroid, rad); }
         public static Triangle Rotate(this Triangle t, Vector2 pivot, float rad)
         {
@@ -174,12 +177,7 @@ namespace ShapeCore
         public float GetCircumferenceSquared() { return LengthSquared; }
         public List<Line> GetSegments() { return new() { this }; }
         public Rect GetBoundingBox() { return new(start, end); }
-        //public Circle GetBoundingCircle() { return new(Center, Length / 2); }
-
-        public void DrawShape(float linethickness, Color color)
-        {
-            throw new NotImplementedException();
-        }
+        public void DrawShape(float linethickness, Color color) => this.Draw(linethickness, color);
     }
     public struct Circle : IShape
     {
@@ -210,12 +208,8 @@ namespace ShapeCore
             }
             return segments;
         }
-        //public Circle GetBoundingCircle() { return this; }
 
-        public void DrawShape(float linethickness, Color color)
-        {
-            throw new NotImplementedException();
-        }
+        public void DrawShape(float linethickness, Color color) => this.DrawLines(linethickness, color);
     }
     public struct Triangle : IShape
     {
@@ -229,16 +223,14 @@ namespace ShapeCore
         public Triangle(Vector2 a, Vector2 b, Vector2 c) { this.a = a; this.b = b; this.c = c; }
         public Triangle(Triangle t) { a = t.a; b = t.b; c = t.c; }
 
+        
         public float GetCircumference() { return MathF.Sqrt(GetCircumferenceSquared()); }
         public float GetCircumferenceSquared() { return A.LengthSquared() + B.LengthSquared() + C.LengthSquared(); }
         public float GetArea() { return (a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X); }
         public List<Line> GetSegments() { return new() { new(a, b), new(b, c), new(c, a) }; }
         public Rect GetBoundingBox() { return new Rect(a.X, a.Y, 0, 0).EnlargeRect(b).EnlargeRect(c); }
         //public Circle GetBoundingCircle() { return new(Center, Length / 2); }
-        public void DrawShape(float linethickness, Color color)
-        {
-            throw new NotImplementedException();
-        }
+        public void DrawShape(float linethickness, Color color) => this.DrawLines(linethickness, color);
     }
     public struct Rect : IShape
     {
@@ -312,10 +304,7 @@ namespace ShapeCore
         public float GetArea() { return width * height; }
         public List<Line> GetSegments() { return SRect.GetRectSegments(this); }
         public Rect GetBoundingBox() { return this; }
-        public void DrawShape(float linethickness, Color color)
-        {
-            throw new NotImplementedException();
-        }
+        public void DrawShape(float linethickness, Color color) => this.DrawLines(linethickness, color);
 
         /*
         public Vector2 GetPoint(Vector2 alignement)
@@ -461,9 +450,28 @@ namespace ShapeCore
         //}
         */
     }
+    public struct Polygon : IShape
+    {
+        public List<Vector2> points;
+        public Vector2 center;
 
+        public Polygon(List<Vector2> points) 
+        { this.points = points; this.center = SPoly.GetCentroid(points); }
+        public Polygon(params Vector2[] points) { this.points = points.ToList(); this.center = SPoly.GetCentroid(points.ToList()); }
+        public Polygon(List<Vector2> points, Vector2 center) { this.points = points; this.center = center; }
+        public Polygon(Vector2 center, params Vector2[] points) { this.points = points.ToList(); this.center = center; }
+        public Polygon(Triangle t) { this.points = t.GetPoints(); this.center = t.Centroid; }
+        public Polygon(Rect r) { this.points = r.GetPoints(); this.center = r.Center; }
 
+        
 
+        public float GetCircumference() { return this.GetCircumference(); }
+        public float GetCircumferenceSquared() { return this.GetCircumferenceSquared(); }
+        public float GetArea() { return this.GetArea(); }
+        public List<Line> GetSegments() { return this.GetSegments(); }
+        public Rect GetBoundingBox() { return this.GetBoundingBox(); }
+        public void DrawShape(float linethickness, Color color) => SDrawing.DrawPolygonLines(points, linethickness, color);
+    }
 
 
 

@@ -483,7 +483,7 @@ namespace ShapeLib
         public static bool OverlapPolyRect(List<Vector2> poly, Rect rect)
         {
             if (poly.Count < 3) return false;
-            var corners = SRect.GetRectCornersList(rect);
+            var corners = SRect.GetPoints(rect);
             foreach (var c in corners)
             {
                 if (IsPointInPoly(c, poly)) return true;

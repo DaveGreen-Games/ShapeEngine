@@ -316,12 +316,12 @@ namespace ShapeCore
         }
         public PolyCollider(Rect rect, float rotRad = 0f) : base(rect.Center, new(0f))
         {
-            this.points = rect.GetRectCornersListRelative(rect.Center);
+            this.points = rect.GetPointsRelative(rect.Center);
             this.RotRad = rotRad;
         }
         public PolyCollider(Rect rect, Vector2 vel, float rotRad = 0f) : base(rect.Center, vel)
         {
-            this.points = rect.GetRectCornersListRelative(rect.Center);
+            this.points = rect.GetPointsRelative(rect.Center);
             this.RotRad = RotRad;
             this.Vel = vel;
         }
@@ -331,7 +331,7 @@ namespace ShapeCore
         }
         public override void DrawDebugShape(Color color)
         {
-            SDrawing.DrawPolygon(Shape, 5f, color);
+            SDrawing.DrawPolygonLines(Shape, 5f, color);
         }
         
         public override (bool valid, bool overlap) CheckOverlap(ICollider other)

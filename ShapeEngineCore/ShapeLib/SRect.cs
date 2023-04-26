@@ -208,39 +208,44 @@ namespace ShapeLib
 
         public static List<Vector2> RotateRectList(this Rect rect, Vector2 pivot, float angleDeg)
         {
-            float rotRad = angleDeg * SUtils.DEGTORAD;
-            Vector2 size = new Vector2(rect.width, rect.height);
-            Vector2 pivotPoint = new Vector2(rect.x, rect.y) + size * pivot;
+            return SPoly.Rotate(rect.GetPoints(), pivot, angleDeg);
 
-            Vector2 tl = new Vector2(rect.x, rect.y);
-            Vector2 br = tl + size;
-            Vector2 tr = tl + new Vector2(rect.width, 0);
-            Vector2 bl = tl + new Vector2(0, rect.height);
-
-            Vector2 topLeft = pivotPoint + SVec.Rotate(tl - pivotPoint, rotRad);
-            Vector2 topRight = pivotPoint + SVec.Rotate(tr - pivotPoint, rotRad);
-            Vector2 bottomRight = pivotPoint + SVec.Rotate(br - pivotPoint, rotRad);
-            Vector2 bottomLeft = pivotPoint + SVec.Rotate(bl - pivotPoint, rotRad);
-
-            return new() { topLeft, topRight, bottomRight, bottomLeft };
+            //float rotRad = angleDeg * SUtils.DEGTORAD;
+            //Vector2 size = new Vector2(rect.width, rect.height);
+            //Vector2 pivotPoint = new Vector2(rect.x, rect.y) + size * pivot;
+            //
+            //Vector2 tl = new Vector2(rect.x, rect.y);
+            //Vector2 br = tl + size;
+            //Vector2 tr = tl + new Vector2(rect.width, 0);
+            //Vector2 bl = tl + new Vector2(0, rect.height);
+            //
+            //Vector2 topLeft = pivotPoint + SVec.Rotate(tl - pivotPoint, rotRad);
+            //Vector2 topRight = pivotPoint + SVec.Rotate(tr - pivotPoint, rotRad);
+            //Vector2 bottomRight = pivotPoint + SVec.Rotate(br - pivotPoint, rotRad);
+            //Vector2 bottomLeft = pivotPoint + SVec.Rotate(bl - pivotPoint, rotRad);
+            //
+            //return new() { topLeft, topRight, bottomRight, bottomLeft };
         }
         public static (Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl) RotateRect(this Rect rect, Vector2 pivot, float angleDeg)
         {
-            float rotRad = angleDeg * SUtils.DEGTORAD;
-            Vector2 size = new Vector2(rect.width, rect.height);
-            Vector2 pivotPoint = new Vector2(rect.x, rect.y) + size * pivot;
+            var rotated = SPoly.Rotate(rect.GetPoints(), pivot, angleDeg);
+            return new(rotated[0], rotated[1], rotated[2], rotated[3]);
 
-            Vector2 tl = new Vector2(rect.x, rect.y);
-            Vector2 br = tl + size;
-            Vector2 tr = tl + new Vector2(rect.width, 0);
-            Vector2 bl = tl + new Vector2(0, rect.height);
-
-            Vector2 topLeft = pivotPoint + SVec.Rotate(tl - pivotPoint, rotRad);
-            Vector2 topRight = pivotPoint + SVec.Rotate(tr - pivotPoint, rotRad);
-            Vector2 bottomRight = pivotPoint + SVec.Rotate(br - pivotPoint, rotRad);
-            Vector2 bottomLeft = pivotPoint + SVec.Rotate(bl - pivotPoint, rotRad);
-
-            return new(topLeft, topRight, bottomRight, bottomLeft);
+            //float rotRad = angleDeg * SUtils.DEGTORAD;
+            //Vector2 size = new Vector2(rect.width, rect.height);
+            //Vector2 pivotPoint = new Vector2(rect.x, rect.y) + size * pivot;
+            //
+            //Vector2 tl = new Vector2(rect.x, rect.y);
+            //Vector2 br = tl + size;
+            //Vector2 tr = tl + new Vector2(rect.width, 0);
+            //Vector2 bl = tl + new Vector2(0, rect.height);
+            //
+            //Vector2 topLeft = pivotPoint + SVec.Rotate(tl - pivotPoint, rotRad);
+            //Vector2 topRight = pivotPoint + SVec.Rotate(tr - pivotPoint, rotRad);
+            //Vector2 bottomRight = pivotPoint + SVec.Rotate(br - pivotPoint, rotRad);
+            //Vector2 bottomLeft = pivotPoint + SVec.Rotate(bl - pivotPoint, rotRad);
+            //
+            //return new(topLeft, topRight, bottomRight, bottomLeft);
         }
         public static List<Line> GetRectSegments(this Rect rect)
         {
@@ -334,7 +339,7 @@ namespace ShapeLib
         #endregion
 
         #region Corners
-        public static Vector2 GetRectCorner(this Rect r, int corner) { return GetRectCornersList(r)[corner % 4]; }
+        public static Vector2 GetRectCorner(this Rect r, int corner) { return GetPoints(r)[corner % 4]; }
         public static (Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl) GetRectCorners(this Rect rect)
         {
             Vector2 tl = new(rect.x, rect.y);
@@ -343,7 +348,7 @@ namespace ShapeLib
             Vector2 br = new(rect.x + rect.width, rect.y + rect.height);
             return (tl, tr, br, bl);
         }
-        public static List<Vector2> GetRectCornersList(this Rect rect)
+        public static List<Vector2> GetPoints(this Rect rect)
         {
             Vector2 tl = new(rect.x, rect.y);
             Vector2 tr = new(rect.x + rect.width, rect.y);
@@ -351,19 +356,20 @@ namespace ShapeLib
             Vector2 br = new(rect.x + rect.width, rect.y + rect.height);
             return new() { tl, tr, br, bl };
         }
-        public static List<Vector2> GetRectCornersListRelative(this Rect rect, Vector2 pos)
+        public static List<Vector2> GetPointsRelative(this Rect rect, Vector2 pos)
         {
-            var points = GetRectCornersList(rect);
+            var points = GetPoints(rect);
             for (int i = 0; i < points.Count; i++)
             {
                 points[i] -= pos;
             }
             return points;
         }
+        
         public static bool SeperateAxisRect(this Rect r, Vector2 axisStart, Vector2 axisEnd)
         {
             Vector2 n = axisStart - axisEnd;
-            var corners = r.GetRectCornersList();
+            var corners = r.GetPoints();
             Vector2 edgeAStart =    corners[0]; //r.GetRectCorner(0); //GetRectCorner(rectPos, rectSize, rectAlignement, 0);
             Vector2 edgeAEnd =      corners[1]; //r.GetRectCorner(1);// GetRectCorner(rectPos, rectSize, rectAlignement, 1);
             Vector2 edgeBStart =    corners[2]; //r.GetRectCorner(2); //GetRectCorner(rectPos, rectSize, rectAlignement, 2);
@@ -376,6 +382,8 @@ namespace ShapeLib
             RangeFloat axisRange = ProjectSegment(axisStart, axisEnd, n);
             return !OverlappingRange(axisRange, rProjection);
         }
+
+        
         #endregion
 
 

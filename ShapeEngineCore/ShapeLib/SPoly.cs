@@ -99,7 +99,13 @@ namespace ShapeLib
             return axis;
         }
         */
-
+        public static Vector2 GetCentroid(List<Vector2> points)
+        {
+            if (points.Count <= 0) return new(0f);
+            Vector2 total = new(0f);
+            foreach (Vector2 p in points) { total += p; }
+            return total / points.Count;
+        }
         public static List<Vector2> GetShape(List<Vector2> points, Vector2 pos, float rotRad, Vector2 scale)
         {
             if (points.Count < 3) return new();
@@ -110,13 +116,24 @@ namespace ShapeLib
             }
             return shape;
         }
-        public static Rect GetBoundingBox(List<Vector2> shape)
+        public static List<Vector2> Rotate(this List<Vector2> points, Vector2 pivot, float rotRad)
         {
-            if (shape.Count < 2) return new();
-            Vector2 start = shape[0];
+            if (points.Count < 3) return new();
+            List<Vector2> rotated = new();
+            for (int i = 0; i < points.Count; i++)
+            {
+                Vector2 w = points[i] - pivot;
+                rotated.Add(pivot + w.Rotate(rotRad));
+            }
+            return rotated;
+        }
+        public static Rect GetBoundingBox(List<Vector2> points)
+        {
+            if (points.Count < 2) return new();
+            Vector2 start = points[0];
             Rect r = new(start.X, start.Y, 0, 0);
 
-            foreach (var p in shape)
+            foreach (var p in points)
             {
                 r = SRect.EnlargeRect(r, p);
             }
@@ -124,21 +141,32 @@ namespace ShapeLib
         }
         public static List<Vector2> Scale(List<Vector2> points, float scale)
         {
-            var points = new List<Vector2>();
+            var shape = new List<Vector2>();
             for (int i = 0; i < points.Count; i++)
             {
-                points.Add(points[i] * scale);
+                shape.Add(points[i] * scale);
             }
-            return points;
+            return shape;
+        }
+        public static List<Vector2> Scale(List<Vector2> points, Vector2 pivot, float scale)
+        {
+            if (points.Count < 3) return new();
+            List<Vector2> scaled = new();
+            for (int i = 0; i < points.Count; i++)
+            {
+                Vector2 w = points[i] - pivot;
+                scaled.Add(pivot + w * scale);
+            }
+            return scaled;
         }
         public static List<Vector2> ScaleUniform(List<Vector2> points, float distance)
         {
-            var points = new List<Vector2>();
+            var shape = new List<Vector2>();
             for (int i = 0; i < points.Count; i++)
             {
-                points.Add(SVec.ScaleUniform(points[i], distance));
+                shape.Add(SVec.ScaleUniform(points[i], distance));
             }
-            return points;
+            return shape;
         }
         public static List<Vector2> GeneratePoints(Vector2 center, int pointCount, float minLength, float maxLength)
         {
@@ -167,91 +195,109 @@ namespace ShapeLib
             }
             return points;
         }
-        public static List<Line> GetSegments(List<Vector2> shape)
+        public static List<Line> GetSegments(List<Vector2> points)
         {
-            if (shape.Count <= 1) return new();
-            else if (shape.Count == 2)
+            if (points.Count <= 1) return new();
+            else if (points.Count == 2)
             {
-                return new() { new(shape[0], shape[1]) };
+                return new() { new(points[0], points[1]) };
             }
             List<Line> segments = new();
-            for (int i = 0; i < shape.Count; i++)
+            for (int i = 0; i < points.Count; i++)
             {
-                Vector2 start = shape[i];
-                Vector2 end = shape[(i + 1) % shape.Count];
+                Vector2 start = points[i];
+                Vector2 end = points[(i + 1) % points.Count];
                 segments.Add(new(start, end));
             }
             return segments;
         }
-        public static List<Vector2> GetSegmentAxis(List<Vector2> shape, bool normalized = false)
+        public static List<Vector2> GetSegmentAxis(List<Vector2> points, bool normalized = false)
         {
-            if (shape.Count <= 1) return new();
-            else if (shape.Count == 2)
+            if (points.Count <= 1) return new();
+            else if (points.Count == 2)
             {
-                return new() { shape[1] - shape[0] };
+                return new() { points[1] - points[0] };
             }
             List<Vector2> axis = new();
-            for (int i = 0; i < shape.Count; i++)
+            for (int i = 0; i < points.Count; i++)
             {
-                Vector2 start = shape[i];
-                Vector2 end = shape[(i + 1) % shape.Count];
+                Vector2 start = points[i];
+                Vector2 end = points[(i + 1) % points.Count];
                 Vector2 a = end - start;
                 axis.Add(normalized ? SVec.Normalize(a) : a);
             }
             return axis;
         }
-        public static List<Vector2> GetSegmentAxis(List<Line> segments, bool normalized = false)
+        public static List<Vector2> GetSegmentAxis(List<Line> points, bool normalized = false)
         {
             List<Vector2> axis = new();
-            foreach (var seg in segments)
+            foreach (var seg in points)
             {
                 axis.Add(normalized ? seg.Dir : seg.Displacement);
             }
             return axis;
         }
-        public static List<Triangle> Triangulate(List<Vector2> shape, Vector2 center)
+        public static List<Triangle> Triangulate(List<Vector2> points, Vector2 center)
         {
-            if (shape.Count < 3) return new();
+            if (points.Count < 3) return new();
             List<Triangle> triangles = new();
-            shape.Add(shape[0]);
-            for (int i = 0; i < shape.Count - 1; i++)
+            points.Add(points[0]);
+            for (int i = 0; i < points.Count - 1; i++)
             {
-                Vector2 a = shape[i];
+                Vector2 a = points[i];
                 Vector2 b = center;
-                Vector2 c = shape[i + 1];
+                Vector2 c = points[i + 1];
                 triangles.Add(new(a, b, c));
             }
             return triangles;
         }
-        public static float GetArea(List<Vector2> shape, Vector2 center)
+        public static float GetArea(List<Vector2> points, Vector2 center)
         {
-            if (shape.Count < 3) return 0f;
-            var triangles = Triangulate(shape, center);
+            if (points.Count < 3) return 0f;
+            var triangles = Triangulate(points, center);
             float totalArea = 0f;
             foreach (var t in triangles)
             {
-                totalArea += t.Area;
+                totalArea += t.GetArea();
             }
             return totalArea;
         }
-        public static float GetCircumference(List<Vector2> shape)
+        public static float GetCircumference(List<Vector2> points)
         {
-            return MathF.Sqrt(GetCircumferenceSquared(shape));
+            return MathF.Sqrt(GetCircumferenceSquared(points));
         }
-        public static float GetCircumferenceSquared(List<Vector2> shape)
+        public static float GetCircumferenceSquared(List<Vector2> points)
         {
-            if (shape.Count < 3) return 0f;
+            if (points.Count < 3) return 0f;
             float lengthSq = 0f;
-            shape.Add(shape[0]);
-            for (int i = 0; i < shape.Count - 1; i++)
+            points.Add(points[0]);
+            for (int i = 0; i < points.Count - 1; i++)
             {
-                Vector2 w = shape[i + 1] - shape[i];
+                Vector2 w = points[i + 1] - points[i];
                 lengthSq += w.LengthSquared();
             }
             return lengthSq;
         }
         
         
+        public static Vector2 GetCentroid(this Polygon p) { return GetCentroid(p.points); }
+        public static Polygon GetShape(this Polygon p, Vector2 pos, float rotRad, Vector2 scale) { return new(GetShape(p.points, pos, rotRad, scale), pos); }
+        public static Polygon Rotate(this Polygon p, Vector2 pivot, float rotRad) { return new(Rotate(p.points, pivot, rotRad), p.center); }
+        public static Rect GetBoundingBox(this Polygon p) { return GetBoundingBox(p.points); }
+        public static Polygon Scale(this Polygon p, float scale) { return new(Scale(p.points, scale), p.center); }
+        public static Polygon Scale(this Polygon p, Vector2 pivot, float scale) { return new(Scale(p.points, pivot, scale)); }
+        public static Polygon ScaleUniform(this Polygon p, float distance) { return new(ScaleUniform(p.points, distance), p.center); }
+        public static Polygon GeneratePointsPolygon(Vector2 center, int pointCount, float minLength, float maxLength) { return new Polygon(GeneratePoints(center, pointCount, minLength, maxLength), center); }
+        public static Polygon GeneratePointsPolygon(int pointCount, float minLength, float maxLength) { return new(GeneratePoints(pointCount, minLength, maxLength), new Vector2(0f)); }
+        public static List<Line> GetSegments(this Polygon p) { return GetSegments(p.points); }
+        public static List<Vector2> GetSegmentAxis(this Polygon p, bool normalized = false) { return GetSegmentAxis(p.points, normalized); }
+        
+        public static List<Triangle> Triangulate(this Polygon p) { return Triangulate(p.points, p.center); }
+        public static float GetArea(this Polygon p) { return GetArea(p.points, p.center); }
+        public static float GetCircumference(this Polygon p) { return GetCircumference(p.points); }
+        public static float GetCircumferenceSquared(this Polygon p) { return GetCircumferenceSquared(p.points); }
+
+
         /*
         public static List<Vector2> GetShape(this Polygon p)
         {
