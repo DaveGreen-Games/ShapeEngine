@@ -13,7 +13,7 @@ namespace ShapeEffects
 
         protected void DrawText(Color color, Font font, Vector2 alignement) 
         { 
-            SDrawing.DrawTextAligned(Text, GetBoundingBox(), RotRad * SUtils.RADTODEG, 1f, color, font, alignement); 
+            SDrawing.DrawText(Text, GetBoundingBox(), RotRad * SUtils.RADTODEG, 1f, color, font, alignement); 
         }
     }
 

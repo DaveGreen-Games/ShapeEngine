@@ -123,14 +123,14 @@ namespace ShapeAchievements
             if (achieved) SDrawing.DrawRect(rect, new(0f), 0f, 3f, achievedColor);
             int value = stat.value;
             int max = end;
-            SDrawing.DrawTextAligned(String.Format("{0}", value), leftTop, 1f, textColor, font, new(0.5f));
-            SDrawing.DrawTextAligned(String.Format("{0}", max), leftBottom, 1f, textColor, font, new(0.5f));
+            SDrawing.DrawText(String.Format("{0}", value), leftTop, 1f, textColor, font, new(0.5f));
+            SDrawing.DrawText(String.Format("{0}", max), leftBottom, 1f, textColor, font, new(0.5f));
             if (hidden)
             {
-                if(achieved) SDrawing.DrawTextAligned(displayName, right, 1f, achieved ? achievedColor : textColor, font, new(0.5f));
-                else SDrawing.DrawTextAligned("???", right, 1f, textColor, font, new(0.5f));
+                if(achieved) SDrawing.DrawText(displayName, right, 1f, achieved ? achievedColor : textColor, font, new(0.5f));
+                else SDrawing.DrawText("???", right, 1f, textColor, font, new(0.5f));
             }
-            else SDrawing.DrawTextAligned(displayName, right, 1f, achieved ? achievedColor : textColor, font, new(0.5f));
+            else SDrawing.DrawText(displayName, right, 1f, achieved ? achievedColor : textColor, font, new(0.5f));
         }
     }
 
