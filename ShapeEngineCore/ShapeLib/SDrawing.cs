@@ -440,7 +440,7 @@ namespace ShapeLib
                 {
                     float fontSize = FontHandler.CalculateDynamicFontSize(text, new Vector2(rect.width, rect.height), font, fontSpacing);
                     Vector2 textSize = MeasureTextEx(font, text, fontSize, fontSpacing);
-                    Vector2 uiPos = rect.GetPos(textAlignement);
+                    Vector2 uiPos = rect.GetPoint(textAlignement);
                     Vector2 topLeft = uiPos - textAlignement * textSize;
                     //Vector2 topLeft = new(rect.x, rect.y);
                     
@@ -461,7 +461,7 @@ namespace ShapeLib
         public static void DrawTextAligned(string text, Rect rect, float fontSpacing, Color color, Font font, Vector2 alignement)
         {
             Vector2 textSize = rect.Size;
-            Vector2 uiPos = rect.GetPos(alignement);
+            Vector2 uiPos = rect.GetPoint(alignement);
             float fontSize = FontHandler.CalculateDynamicFontSize(text, textSize, font, fontSpacing);
             Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
             Vector2 topLeft = uiPos - alignement * fontDimensions;
@@ -470,7 +470,7 @@ namespace ShapeLib
         public static void DrawTextAligned(string text, Rect rect, float rotDeg, float fontSpacing, Color color, Font font, Vector2 alignement)
         {
             Vector2 textSize = rect.Size;
-            Vector2 uiPos = rect.GetPos(alignement);
+            Vector2 uiPos = rect.GetPoint(alignement);
             float fontSize = FontHandler.CalculateDynamicFontSize(text, textSize, font, fontSpacing);
             Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
             Vector2 originOffset = alignement * fontDimensions;

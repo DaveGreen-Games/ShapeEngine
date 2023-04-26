@@ -1,4 +1,5 @@
 ﻿using ShapeCore;
+using System.Drawing;
 using System.Numerics;
 
 namespace ShapeLib
@@ -258,6 +259,11 @@ namespace ShapeLib
         #endregion
 
         #region Math
+        public static Vector2 GetPoint(this Rect r, Vector2 alignement)
+        {
+            Vector2 offset = r.Size * alignement;
+            return r.TopLeft + offset;
+        }
         public static Rect Lerp(this Rect from, Rect to, float f)
         {
             return
@@ -291,10 +297,10 @@ namespace ShapeLib
                     finalBottomRight.Y - finalTopLeft.Y
                 );
         }
-        public static Rect ScaleSize(this Rect r, float scale, Vector2 alignement) { return new(r.GetPos(alignement), r.Size * scale, alignement); }
-        public static Rect ScaleSize(this Rect r, Vector2 scale, Vector2 alignement) { return new(r.GetPos(alignement), r.Size * scale, alignement); }
-        public static Rect ChangeSize(this Rect r, float amount, Vector2 alignement) { return new(r.GetPos(alignement), new(r.width + amount, r.height + amount), alignement); }
-        public static Rect ChangeSize(this Rect r, Vector2 amount, Vector2 alignement) { return new(r.GetPos(alignement), r.Size + amount, alignement); }
+        public static Rect ScaleSize(this Rect r, float scale, Vector2 alignement) { return new(r.GetPoint(alignement), r.Size * scale, alignement); }
+        public static Rect ScaleSize(this Rect r, Vector2 scale, Vector2 alignement) { return new(r.GetPoint(alignement), r.Size * scale, alignement); }
+        public static Rect ChangeSize(this Rect r, float amount, Vector2 alignement) { return new(r.GetPoint(alignement), new(r.width + amount, r.height + amount), alignement); }
+        public static Rect ChangeSize(this Rect r, Vector2 amount, Vector2 alignement) { return new(r.GetPoint(alignement), r.Size + amount, alignement); }
         public static Rect Move(this Rect r, Vector2 amount) { return new( r.TopLeft + amount, r.Size, new(0f)); }
         public static Rect EnlargeRect(this Rect r, Vector2 p)
         {

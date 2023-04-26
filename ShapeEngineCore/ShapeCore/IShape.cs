@@ -1,8 +1,9 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Numerics;
-using System.Runtime.CompilerServices;
+﻿using System.Numerics;
+using System.Reflection.Metadata.Ecma335;
+using System.Runtime.InteropServices;
 using Raylib_CsLo;
 using ShapeLib;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace ShapeCore
 {
@@ -16,6 +17,142 @@ namespace ShapeCore
         //public bool Equals(IShape other);
         //public Circle GetBoundingCircle();
         public void DrawShape(float linethickness, Color color);
+    }
+
+
+    public static class SLine
+    {
+        public static List<Line> Split(this Line l, float f)
+        {
+            Vector2 p = GetPoint(l, f);
+            return new() { new(l.start, p), new(p, l.end) };
+        }
+        public static Vector2 GetPoint(this Line l, float f) { return l.start.Lerp(l.end, f); }
+        public static Line Rotate(this Line l, float pivot, float rad)
+        {
+            Vector2 p = GetPoint(l, pivot);
+            Vector2 s = l.start - p;
+            Vector2 e = l.end - p;
+            return new Line(p + s.Rotate(rad), p + e.Rotate(rad));
+
+
+            //float len = l.Length;
+            //Vector2 d = l.Dir;
+            //
+            //float startLength = len * pivot;
+            //float endLength = len * (1f - pivot);
+            //
+            //Vector2 p = l.start + d * startLength;
+            //Vector2 newStart = p - (d * startLength).Rotate(rad);
+            //Vector2 newEnd = p + (d * endLength).Rotate(rad);
+            //return new Line(newStart, newEnd);
+        }
+        
+        public static Line Scale(this Line l, float scale) { return new(l.start * scale, l.end * scale); }
+        public static Line Scale(this Line l, Vector2 scale) { return new(l.start * scale, l.end * scale); }
+        public static Line Scale(this Line l, float startScale, float endScale) { return new(l.start * startScale, l.end * endScale); }
+        public static Line ScaleF(this Line l, float scale, float f) 
+        {
+            Vector2 p = GetPoint(l, f);
+            Vector2 s = l.start - p;
+            Vector2 e = l.end - p;
+            return new Line(p + s * scale, p + e * scale);
+
+            //float len = l.Length;
+            //Vector2 d = l.Dir;
+            //
+            //float startLength = len * f;
+            //float endLength = len * (1f - f);
+            //
+            //Vector2 p = l.start + d * startLength;
+            //Vector2 newStart = p - (d * startLength * scale);
+            //Vector2 newEnd = p + (d * endLength * scale);
+            //return new Line(newStart, newEnd);
+        }
+        public static Line ScaleF(this Line l, Vector2 scale, float f)
+        {
+            Vector2 p = GetPoint(l, f);
+            Vector2 s = l.start - p;
+            Vector2 e = l.end - p;
+            return new Line(p + s * scale, p + e * scale);
+        }
+        public static Line Move(this Line l, Vector2 offset, float f) { return new(l.start + (offset * (1f - f)), l.end + (offset * (f))); }
+        public static Line Move(this Line l,  Vector2 offset) { return new(l.start + offset, l.end + offset); }
+        public static Line Move(this Line l, float x, float y) { return Move(l, new Vector2(x, y)); }
+    }
+    public static class SCircle
+    {
+        public static Vector2 GetPoint(this Circle c, float angleRad, float f) { return c.center + new Vector2(c.radius * f, 0f).Rotate(angleRad); }
+        
+        public static Circle ScaleRadius(this Circle c, float scale) { return new(c.center, c.radius * scale); }
+        public static Circle ChangeRadius(this Circle c, float amount) { return new(c.center, c.radius + amount); }
+        public static Circle Move(this Circle c, Vector2 offset) { return new(c.center + offset, c.radius); }
+    }
+    public static class STriangle
+    {
+        public static List<Triangle> Triangulate(this Triangle t)
+        {
+            return Triangulate(t, t.Centroid);
+        }
+        public static List<Triangle> Triangulate(this Triangle t, Vector2 p)
+        {
+            return new()
+            {
+                new(t.a, t.b, p),
+                new(t.b, t.c, p),
+                new(t.c, t.a, p)
+            };
+        }
+        public static Triangle GetInsideTriangle(this Triangle t, float abF, float bcF, float caF)
+        {
+            Vector2 a = SVec.Lerp(t.a, t.b, abF);
+            Vector2 b = SVec.Lerp(t.b, t.c, bcF);
+            Vector2 c = SVec.Lerp(t.c, t.a, caF);
+            return new(a, b, c);
+        }
+        public static Vector2 GetPoint(this Triangle t, float f1, float f2)
+        {
+            float f1Sq = MathF.Sqrt(f1);
+            float x = (1f - f1Sq) * t.a.X + (f1Sq * (1f - f2)) * t.b.X + (f1Sq * f2) * t.c.X;
+            float y = (1f - f1Sq) * t.a.Y + (f1Sq * (1f - f2)) * t.b.Y + (f1Sq * f2) * t.c.Y;
+            return new(x, y);
+        }
+        public static Triangle Rotate(this Triangle t, float rad) { return Rotate(t, t.Centroid, rad); }
+        public static Triangle Rotate(this Triangle t, Vector2 pivot, float rad)
+        {
+            Vector2 a = pivot + (t.a - pivot).Rotate(rad);
+            Vector2 b = pivot + (t.b - pivot).Rotate(rad);
+            Vector2 c = pivot + (t.c - pivot).Rotate(rad);
+            return new(a, b, c);
+        }
+        public static Triangle Scale(this Triangle t, float scale) { return new(t.a * scale, t.b * scale, t.c * scale); }
+        public static Triangle Scale(this Triangle t, Vector2 scale) { return new(t.a * scale, t.b * scale, t.c * scale); }
+        public static Triangle Scale(this Triangle t, Vector2 pivot, float scale) 
+        {
+            Vector2 a = pivot + (t.a - pivot) * scale;
+            Vector2 b = pivot + (t.b - pivot) * scale;
+            Vector2 c = pivot + (t.c - pivot) * scale;
+            return new(a, b, c);
+        }
+        public static Triangle Scale(this Triangle t, Vector2 pivot, Vector2 scale)
+        {
+            Vector2 a = pivot + (t.a - pivot) * scale;
+            Vector2 b = pivot + (t.b - pivot) * scale;
+            Vector2 c = pivot + (t.c - pivot) * scale;
+            return new(a, b, c);
+        }
+        public static Triangle Scale(this Triangle t, float aF, float bF, float cF) { return new(t.a * aF, t.b * bF, t.c * cF); }
+        public static Triangle Scale(this Triangle t, Vector2 aF, Vector2 bF, Vector2 cF) { return new(t.a * aF, t.b * bF, t.c * cF); }
+        public static Triangle Move(this Triangle t, Vector2 offset) { return new(t.a + offset, t.b + offset, t.c + offset); }
+        public static Triangle Move(this Triangle t, Vector2 aOffset, Vector2 bOffset, Vector2 cOffset) { return new(t.a + aOffset, t.b + bOffset, t.c + cOffset); }
+
+        public static bool IsPointInside(this Triangle t, Vector2 p)
+        {
+            var triangles = Triangulate(t, p);
+            float totalArea = triangles.Sum((Triangle t) => { return t.GetArea(); });
+            return t.GetArea() >= totalArea;
+
+        }
     }
 
 
@@ -33,21 +170,7 @@ namespace ShapeCore
         public Line(float startX, float startY, float endX, float endY) { this.start = new(startX, startY); this.end = new(endX, endY); }
         public Line(Line l) { start = l.start; end = l.end; }
 
-        public Line Rotate(float pivot, float rad)
-        {
-            float l = Length;
-            Vector2 d = Dir;
-
-            float startLength = l * pivot;
-            float endLength = l * (1f - pivot);
-
-            Vector2 p = start + d * startLength;
-            Vector2 newStart = p - (d * startLength).Rotate(rad);
-            Vector2 newEnd = p + (d * endLength).Rotate(rad);
-            return new Line(newStart, newEnd);
-        }
-        //scale
-        //move
+       
 
         public float GetArea() { return 0f; }
         public float GetCircumference() { return Length; }
@@ -187,11 +310,6 @@ namespace ShapeCore
             this.height = rect.height;
         }
 
-        public Vector2 GetPos(Vector2 alignement)
-        {
-            Vector2 offset = Size * alignement;
-            return TopLeft + offset;
-        }
         public float GetCircumference() { return width * 2 + height * 2; }
         public float GetCircumferenceSquared() { return GetCircumference() * GetCircumference(); }
         public float GetArea() { return width * height; }
@@ -202,6 +320,13 @@ namespace ShapeCore
             throw new NotImplementedException();
         }
 
+        /*
+        public Vector2 GetPoint(Vector2 alignement)
+        {
+            Vector2 offset = Size * alignement;
+            return TopLeft + offset;
+        }
+        */
         /*
         public static bool operator ==(Rect left, Rect right)
         {
