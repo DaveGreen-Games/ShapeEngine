@@ -1,9 +1,6 @@
 ﻿using System.Numerics;
-using System.Reflection.Metadata.Ecma335;
-using System.Runtime.InteropServices;
 using Raylib_CsLo;
 using ShapeLib;
-using static System.Formats.Asn1.AsnWriter;
 
 namespace ShapeCore
 {
