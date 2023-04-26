@@ -16,6 +16,8 @@ namespace ShapeCore
         public (bool valid, bool overlap) CheckOverlap(ICollider other);
         public (bool valid, Intersection i) CheckIntersection(ICollider other);
         public bool CheckOverlapRect(Rect rect);
+
+        //todo getsegments intersection/overlap
     }
     
     public abstract class Collider : ICollider

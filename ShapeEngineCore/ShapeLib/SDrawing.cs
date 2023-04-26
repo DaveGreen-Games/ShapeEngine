@@ -10,8 +10,6 @@ namespace ShapeLib
     //TODO
     // -> SGeometry has all base Overlap/Intersection functions for extension with shapes
 
-    //everything that returns a list of vectors (poly of some sort) should return points in ccw order!!!
-    
     public static class SDrawing
     {
 
@@ -814,6 +812,15 @@ namespace ShapeLib
             DrawPolygonLines(points, lineThickness, color);
         }
 
+        /// <summary>
+        /// Get the points to draw a rectangle with slanted corners.
+        /// </summary>
+        /// <param name="rect"></param>
+        /// <param name="tlCorner"></param>
+        /// <param name="trCorner"></param>
+        /// <param name="brCorner"></param>
+        /// <param name="blCorner"></param>
+        /// <returns>Returns points in ccw order.</returns>
         public static List<Vector2> GetRectSlantedCornerPoints(this Rect rect, float tlCorner, float trCorner, float brCorner, float blCorner)
         {
             Vector2 tl = rect.TopLeft;
@@ -823,26 +830,35 @@ namespace ShapeLib
             List<Vector2> points = new();
             if (tlCorner > 0f && tlCorner < 1f)
             {
-                points.Add(tl + new Vector2(0f, MathF.Min(tlCorner, rect.height)));
                 points.Add(tl + new Vector2(MathF.Min(tlCorner, rect.width), 0f));
-            }
-            if (trCorner > 0f && trCorner < 1f)
-            {
-                points.Add(tr - new Vector2(MathF.Min(tlCorner, rect.width), 0f));
-                points.Add(tr + new Vector2(0f, MathF.Min(tlCorner, rect.height)));
-            }
-            if (brCorner > 0f && brCorner < 1f)
-            {
-                points.Add(br - new Vector2(0f, MathF.Min(tlCorner, rect.height)));
-                points.Add(br - new Vector2(MathF.Min(tlCorner, rect.width), 0f));
+                points.Add(tl + new Vector2(0f, MathF.Min(tlCorner, rect.height)));
             }
             if (blCorner > 0f && blCorner < 1f)
             {
-                points.Add(bl + new Vector2(MathF.Min(tlCorner, rect.width), 0f));
                 points.Add(bl - new Vector2(0f, MathF.Min(tlCorner, rect.height)));
+                points.Add(bl + new Vector2(MathF.Min(tlCorner, rect.width), 0f));
+            }
+            if (brCorner > 0f && brCorner < 1f)
+            {
+                points.Add(br - new Vector2(MathF.Min(tlCorner, rect.width), 0f));
+                points.Add(br - new Vector2(0f, MathF.Min(tlCorner, rect.height)));
+            }
+            if (trCorner > 0f && trCorner < 1f)
+            {
+                points.Add(tr + new Vector2(0f, MathF.Min(tlCorner, rect.height)));
+                points.Add(tr - new Vector2(MathF.Min(tlCorner, rect.width), 0f));
             }
             return points;
         }
+        /// <summary>
+        /// Get the points to draw a rectangle with slanted corners. The corner values are the percentage of the width/height of the rectange the should be used for the slant.
+        /// </summary>
+        /// <param name="rect"></param>
+        /// <param name="tlCorner">Should be bewteen 0 - 1</param>
+        /// <param name="trCorner">Should be bewteen 0 - 1</param>
+        /// <param name="brCorner">Should be bewteen 0 - 1</param>
+        /// <param name="blCorner">Should be bewteen 0 - 1</param>
+        /// <returns>Returns points in ccw order.</returns>
         public static List<Vector2> GetRectSlantedCornerPointsRelative(this Rect rect, float tlCorner, float trCorner, float brCorner, float blCorner)
         {
             Vector2 tl = rect.TopLeft;
@@ -852,23 +868,23 @@ namespace ShapeLib
             List<Vector2> points = new();
             if (tlCorner > 0f && tlCorner < 1f)
             {
-                points.Add(tl + new Vector2(0f, tlCorner * rect.height));
                 points.Add(tl + new Vector2(tlCorner * rect.width, 0f));
-            }
-            if (trCorner > 0f && trCorner < 1f)
-            {
-                points.Add(tr - new Vector2(tlCorner * rect.width, 0f));
-                points.Add(tr + new Vector2(0f, tlCorner * rect.height));
-            }
-            if (brCorner > 0f && brCorner < 1f)
-            {
-                points.Add(br - new Vector2(0f, tlCorner * rect.height));
-                points.Add(br - new Vector2(tlCorner * rect.width, 0f));
+                points.Add(tl + new Vector2(0f, tlCorner * rect.height));
             }
             if (blCorner > 0f && blCorner < 1f)
             {
-                points.Add(bl + new Vector2(tlCorner * rect.width, 0f));
                 points.Add(bl - new Vector2(0f, tlCorner * rect.height));
+                points.Add(bl + new Vector2(tlCorner * rect.width, 0f));
+            }
+            if (brCorner > 0f && brCorner < 1f)
+            {
+                points.Add(br - new Vector2(tlCorner * rect.width, 0f));
+                points.Add(br - new Vector2(0f, tlCorner * rect.height));
+            }
+            if (trCorner > 0f && trCorner < 1f)
+            {
+                points.Add(tr + new Vector2(0f, tlCorner * rect.height));
+                points.Add(tr - new Vector2(tlCorner * rect.width, 0f));
             }
             return points;
         }
@@ -1705,20 +1721,5 @@ namespace ShapeLib
         //}
         #endregion
 
-
-
-
-        
-        
-        
-        
-        
-
-       
-
-
-        
-
-        
     }
 }

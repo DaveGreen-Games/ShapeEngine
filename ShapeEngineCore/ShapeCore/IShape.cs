@@ -211,6 +211,10 @@ namespace ShapeCore
 
         public void DrawShape(float linethickness, Color color) => this.DrawLines(linethickness, color);
     }
+    
+    /// <summary>
+    /// Class that represents a triangle by holding three points. Points a, b, c should be in ccw order!
+    /// </summary>
     public struct Triangle : IShape
     {
         public Vector2 a, b, c;
@@ -220,6 +224,12 @@ namespace ShapeCore
         public Vector2 B { get { return c - b; } }
         public Vector2 C { get { return a - c; } }
 
+        /// <summary>
+        /// Points should be in ccw order!
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <param name="c"></param>
         public Triangle(Vector2 a, Vector2 b, Vector2 c) { this.a = a; this.b = b; this.c = c; }
         public Triangle(Triangle t) { a = t.a; b = t.b; c = t.c; }
 
@@ -450,6 +460,10 @@ namespace ShapeCore
         //}
         */
     }
+    
+    /// <summary>
+    /// Points should be in ccw order!
+    /// </summary>
     public struct Polygon : IShape
     {
         public List<Vector2> points;

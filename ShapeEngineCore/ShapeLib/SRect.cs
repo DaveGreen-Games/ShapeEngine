@@ -206,6 +206,13 @@ namespace ShapeLib
             return tiles;
         }
 
+        /// <summary>
+        /// Points are ordered in ccw order starting with top left. (tl, bl, br, tr)
+        /// </summary>
+        /// <param name="rect"></param>
+        /// <param name="pivot"></param>
+        /// <param name="angleDeg"></param>
+        /// <returns></returns>
         public static List<Vector2> RotateRectList(this Rect rect, Vector2 pivot, float angleDeg)
         {
             return SPoly.Rotate(rect.GetPoints(), pivot, angleDeg);
@@ -226,7 +233,7 @@ namespace ShapeLib
             //
             //return new() { topLeft, topRight, bottomRight, bottomLeft };
         }
-        public static (Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl) RotateRect(this Rect rect, Vector2 pivot, float angleDeg)
+        public static (Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr) RotateRect(this Rect rect, Vector2 pivot, float angleDeg)
         {
             var rotated = SPoly.Rotate(rect.GetPoints(), pivot, angleDeg);
             return new(rotated[0], rotated[1], rotated[2], rotated[3]);
@@ -250,13 +257,21 @@ namespace ShapeLib
         public static List<Line> GetRectSegments(this Rect rect)
         {
             var c = rect.GetRectCorners();
-            return GetRectSegments(c.tl, c.tr, c.br, c.bl);
+            return GetRectSegments(c.tl, c.bl, c.br, c.tr);
         }
-        public static List<Line> GetRectSegments(Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl)
+        /// <summary>
+        /// Returns the segments of a rect in ccw order. (tl -> bl, bl -> br, br -> tr, tr -> tl)
+        /// </summary>
+        /// <param name="tl"></param>
+        /// <param name="bl"></param>
+        /// <param name="br"></param>
+        /// <param name="tr"></param>
+        /// <returns></returns>
+        public static List<Line> GetRectSegments(Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr)
         {
             List<Line> segments = new()
             {
-                new(tl, tr), new(bl, br), new(tl, bl), new(tr, br)
+                new(tl, bl), new(bl, br), new(br, tr), new(tr, tl)
             };
 
             return segments;
@@ -339,23 +354,26 @@ namespace ShapeLib
         #endregion
 
         #region Corners
+        /// <summary>
+        /// Corners a numbered in ccw order starting from the top left. (tl, bl, br, tr)
+        /// </summary>
+        /// <param name="r"></param>
+        /// <param name="corner">Corner Index from 0 to 3</param>
+        /// <returns></returns>
         public static Vector2 GetRectCorner(this Rect r, int corner) { return GetPoints(r)[corner % 4]; }
-        public static (Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl) GetRectCorners(this Rect rect)
-        {
-            Vector2 tl = new(rect.x, rect.y);
-            Vector2 tr = new(rect.x + rect.width, rect.y);
-            Vector2 bl = new(rect.x, rect.y + rect.height);
-            Vector2 br = new(rect.x + rect.width, rect.y + rect.height);
-            return (tl, tr, br, bl);
-        }
-        public static List<Vector2> GetPoints(this Rect rect)
-        {
-            Vector2 tl = new(rect.x, rect.y);
-            Vector2 tr = new(rect.x + rect.width, rect.y);
-            Vector2 bl = new(rect.x, rect.y + rect.height);
-            Vector2 br = new(rect.x + rect.width, rect.y + rect.height);
-            return new() { tl, tr, br, bl };
-        }
+        
+        public static (Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr) GetRectCorners(this Rect rect) { return (rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight); }
+        /// <summary>
+        /// Points are ordered in ccw order starting from the top left. (tl, bl, br, tr)
+        /// </summary>
+        /// <param name="rect"></param>
+        /// <returns></returns>
+        public static List<Vector2> GetPoints(this Rect rect) { return new() { rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight }; }
+        /// <summary>
+        /// Points are ordered in ccw order starting from the top left. (tl, bl, br, tr)
+        /// </summary>
+        /// <param name="rect"></param>
+        /// <returns></returns>
         public static List<Vector2> GetPointsRelative(this Rect rect, Vector2 pos)
         {
             var points = GetPoints(rect);
@@ -366,6 +384,9 @@ namespace ShapeLib
             return points;
         }
         
+        #endregion
+
+
         public static bool SeperateAxisRect(this Rect r, Vector2 axisStart, Vector2 axisEnd)
         {
             Vector2 n = axisStart - axisEnd;
@@ -382,11 +403,6 @@ namespace ShapeLib
             RangeFloat axisRange = ProjectSegment(axisStart, axisEnd, n);
             return !OverlappingRange(axisRange, rProjection);
         }
-
-        
-        #endregion
-
-
         public static bool OverlappingRange(float minA, float maxA, float minB, float maxB)
         {
             if (maxA < minA)
