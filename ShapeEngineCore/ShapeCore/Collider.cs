@@ -74,19 +74,19 @@ namespace ShapeCore
             
             if (other is CircleCollider c)
             {
-                return (true, this.OverlapCircleCircle(c));
+                return (true, this.OverlapCollider(c));
             }
             else if (other is SegmentCollider s)
             {
-                return (true, this.OverlapCircleSegment(s));
+                return (true, this.OverlapCollider(s));
             }
             else if (other is RectCollider r)
             {
-                return (true, this.OverlapCircleRect(r));
+                return (true, this.OverlapCollider(r));
             }
             else if (other is PolyCollider p)
             {
-                return (true, this.OverlapCirclePoly(p));
+                return (true, this.OverlapCollider(p));
             }
             return (false, false);
         }
@@ -150,19 +150,19 @@ namespace ShapeCore
         {
             if (other is CircleCollider c)
             {
-                return (true, this.OverlapSegmentCircle(c));
+                return (true, this.OverlapCollider(c));
             }
             else if (other is SegmentCollider s)
             {
-                return (true, this.OverlapSegmentSegment(s));
+                return (true, this.OverlapCollider(s));
             }
             else if (other is RectCollider r)
             {
-                return (true, this.OverlapSegmentRect(r));
+                return (true, this.OverlapCollider(r));
             }
             else if (other is PolyCollider p)
             {
-                return (true, this.OverlapSegmentPoly(p));
+                return (true, this.OverlapCollider(p));
             }
             return (false, false);
         }
@@ -243,19 +243,19 @@ namespace ShapeCore
         {
             if (other is CircleCollider c)
             {
-                return (true, this.OverlapRectCircle(c));
+                return (true, this.OverlapCollider(c));
             }
             else if (other is SegmentCollider s) 
             {
-                return (true, this.OverlapRectSegment(s));
+                return (true, this.OverlapCollider(s));
             }
             else if (other is RectCollider r)
             {
-                return (true, this.OverlapRectRect(r));
+                return (true, this.OverlapCollider(r));
             }
             else if (other is PolyCollider p)
             {
-                return (true, this.OverlapRectPoly(p));
+                return (true, this.OverlapCollider(p));
             }
             return (false, false);
         }
@@ -340,19 +340,19 @@ namespace ShapeCore
         {
             if (other is CircleCollider c)
             {
-                return (true, this.OverlapPolyCircle(c));
+                return (true, this.OverlapCollider(c));
             }
             else if (other is SegmentCollider s)
             {
-                return (true, this.OverlapPolySegment(s));
+                return (true, this.OverlapCollider(s));
             }
             else if (other is RectCollider r)
             {
-                return (true, this.OverlapPolyRect(r));
+                return (true, this.OverlapCollider(r));
             }   
             else if (other is PolyCollider p)
             {
-                return (true, this.OverlapPolyPoly(p));
+                return (true, this.OverlapCollider(p));
             }
             return (false, false);
         }

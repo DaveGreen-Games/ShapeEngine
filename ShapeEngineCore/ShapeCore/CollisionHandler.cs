@@ -231,7 +231,7 @@ namespace ShapeCore
             {
                 if (collisionMask.Length <= 0)
                 {
-                    var intersection = SGeometry.Intersection(caster, obj.GetCollider());
+                    var intersection = SGeometry.Intersect(caster, obj.GetCollider());
                     if (intersection.valid) infos.Add( new(obj, intersection) );
 
                     //if (SGeometry.Overlap(caster, obj.GetCollider()))
@@ -244,7 +244,7 @@ namespace ShapeCore
                 {
                     if (collisionMask.Contains(obj.GetCollisionLayer()))
                     {
-                        var intersection = SGeometry.Intersection(caster, obj.GetCollider());
+                        var intersection = SGeometry.Intersect(caster, obj.GetCollider());
                         if (intersection.valid) infos.Add(new(obj, intersection));
                     }
                     

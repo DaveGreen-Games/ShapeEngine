@@ -254,7 +254,7 @@ namespace ShapeLib
             //
             //return new(topLeft, topRight, bottomRight, bottomLeft);
         }
-        public static List<Line> GetRectSegments(this Rect rect)
+        public static List<Segment> GetRectSegments(this Rect rect)
         {
             var c = rect.GetRectCorners();
             return GetRectSegments(c.tl, c.bl, c.br, c.tr);
@@ -267,9 +267,9 @@ namespace ShapeLib
         /// <param name="br"></param>
         /// <param name="tr"></param>
         /// <returns></returns>
-        public static List<Line> GetRectSegments(Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr)
+        public static List<Segment> GetRectSegments(Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr)
         {
-            List<Line> segments = new()
+            List<Segment> segments = new()
             {
                 new(tl, bl), new(bl, br), new(br, tr), new(tr, tl)
             };

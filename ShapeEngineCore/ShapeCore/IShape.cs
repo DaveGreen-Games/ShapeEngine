@@ -10,28 +10,31 @@ namespace ShapeCore
         public float GetArea();
         public float GetCircumference();
         public float GetCircumferenceSquared();
-        public List<Line> GetSegments();
+        public List<Segment> GetSegments();
+        public List<Vector2> GetPoints();
+        public Vector2 GetReferencePoint();
         public Rect GetBoundingBox();
+        public bool IsPointOnShape(Vector2 p);
         //public bool Equals(IShape other);
         //public Circle GetBoundingCircle();
         public void DrawShape(float linethickness, Color color);
     }
 
 
-    public static class SLine
+    public static class SSegment
     {
-        public static List<Line> Split(this Line l, float f)
+        public static List<Segment> Split(this Segment l, float f)
         {
             Vector2 p = GetPoint(l, f);
             return new() { new(l.start, p), new(p, l.end) };
         }
-        public static Vector2 GetPoint(this Line l, float f) { return l.start.Lerp(l.end, f); }
-        public static Line Rotate(this Line l, float pivot, float rad)
+        public static Vector2 GetPoint(this Segment l, float f) { return l.start.Lerp(l.end, f); }
+        public static Segment Rotate(this Segment l, float pivot, float rad)
         {
             Vector2 p = GetPoint(l, pivot);
             Vector2 s = l.start - p;
             Vector2 e = l.end - p;
-            return new Line(p + s.Rotate(rad), p + e.Rotate(rad));
+            return new Segment(p + s.Rotate(rad), p + e.Rotate(rad));
 
 
             //float len = l.Length;
@@ -46,15 +49,15 @@ namespace ShapeCore
             //return new Line(newStart, newEnd);
         }
         
-        public static Line Scale(this Line l, float scale) { return new(l.start * scale, l.end * scale); }
-        public static Line Scale(this Line l, Vector2 scale) { return new(l.start * scale, l.end * scale); }
-        public static Line Scale(this Line l, float startScale, float endScale) { return new(l.start * startScale, l.end * endScale); }
-        public static Line ScaleF(this Line l, float scale, float f) 
+        public static Segment Scale(this Segment l, float scale) { return new(l.start * scale, l.end * scale); }
+        public static Segment Scale(this Segment l, Vector2 scale) { return new(l.start * scale, l.end * scale); }
+        public static Segment Scale(this Segment l, float startScale, float endScale) { return new(l.start * startScale, l.end * endScale); }
+        public static Segment ScaleF(this Segment l, float scale, float f) 
         {
             Vector2 p = GetPoint(l, f);
             Vector2 s = l.start - p;
             Vector2 e = l.end - p;
-            return new Line(p + s * scale, p + e * scale);
+            return new Segment(p + s * scale, p + e * scale);
 
             //float len = l.Length;
             //Vector2 d = l.Dir;
@@ -67,16 +70,16 @@ namespace ShapeCore
             //Vector2 newEnd = p + (d * endLength * scale);
             //return new Line(newStart, newEnd);
         }
-        public static Line ScaleF(this Line l, Vector2 scale, float f)
+        public static Segment ScaleF(this Segment l, Vector2 scale, float f)
         {
             Vector2 p = GetPoint(l, f);
             Vector2 s = l.start - p;
             Vector2 e = l.end - p;
-            return new Line(p + s * scale, p + e * scale);
+            return new Segment(p + s * scale, p + e * scale);
         }
-        public static Line Move(this Line l, Vector2 offset, float f) { return new(l.start + (offset * (1f - f)), l.end + (offset * (f))); }
-        public static Line Move(this Line l,  Vector2 offset) { return new(l.start + offset, l.end + offset); }
-        public static Line Move(this Line l, float x, float y) { return Move(l, new Vector2(x, y)); }
+        public static Segment Move(this Segment l, Vector2 offset, float f) { return new(l.start + (offset * (1f - f)), l.end + (offset * (f))); }
+        public static Segment Move(this Segment l,  Vector2 offset) { return new(l.start + offset, l.end + offset); }
+        public static Segment Move(this Segment l, float x, float y) { return Move(l, new Vector2(x, y)); }
     }
     public static class SCircle
     {
@@ -146,17 +149,17 @@ namespace ShapeCore
         public static Triangle Move(this Triangle t, Vector2 offset) { return new(t.a + offset, t.b + offset, t.c + offset); }
         public static Triangle Move(this Triangle t, Vector2 aOffset, Vector2 bOffset, Vector2 cOffset) { return new(t.a + aOffset, t.b + bOffset, t.c + cOffset); }
 
-        public static bool IsPointInside(this Triangle t, Vector2 p)
-        {
-            var triangles = Triangulate(t, p);
-            float totalArea = triangles.Sum((Triangle t) => { return t.GetArea(); });
-            return t.GetArea() >= totalArea;
-
-        }
+        //public static bool IsPointInside(this Triangle t, Vector2 p)
+        //{
+        //    var triangles = Triangulate(t, p);
+        //    float totalArea = triangles.Sum((Triangle t) => { return t.GetArea(); });
+        //    return t.GetArea() >= totalArea;
+        //
+        //}
     }
 
 
-    public struct Line : IShape
+    public struct Segment : IShape
     {
         public Vector2 start;
         public Vector2 end;
@@ -166,17 +169,19 @@ namespace ShapeCore
         public float Length { get { return Displacement.Length(); } }
         public float LengthSquared { get { return Displacement.LengthSquared(); } }
 
-        public Line(Vector2 start, Vector2 end) { this.start = start; this.end = end; }
-        public Line(float startX, float startY, float endX, float endY) { this.start = new(startX, startY); this.end = new(endX, endY); }
-        public Line(Line l) { start = l.start; end = l.end; }
+        public Segment(Vector2 start, Vector2 end) { this.start = start; this.end = end; }
+        public Segment(float startX, float startY, float endX, float endY) { this.start = new(startX, startY); this.end = new(endX, endY); }
+        public Segment(Segment l) { start = l.start; end = l.end; }
 
-       
 
+        public Vector2 GetReferencePoint() { return Center; }
         public float GetArea() { return 0f; }
         public float GetCircumference() { return Length; }
         public float GetCircumferenceSquared() { return LengthSquared; }
-        public List<Line> GetSegments() { return new() { this }; }
+        public List<Segment> GetSegments() { return new() { this }; }
+        public List<Vector2> GetPoints() { return new() { start, end }; }
         public Rect GetBoundingBox() { return new(start, end); }
+        public bool IsPointOnShape(Vector2 p) { return this.IsPointInsideShape(p); }
         public void DrawShape(float linethickness, Color color) => this.Draw(linethickness, color);
     }
     public struct Circle : IShape
@@ -190,26 +195,39 @@ namespace ShapeCore
         public Circle(float x, float y, float radius) { this.center = new(x, y); this.radius = radius; }
         public Circle(Circle c) { center = c.center; radius = c.radius; }
         public Circle(Rect r) { center = r.Center; radius = MathF.Max(r.width, r.height); }
-
+        
+        public Vector2 GetReferencePoint() { return center; }
         public float GetArea() { return MathF.PI * radius * radius; }
         public float GetCircumference() { return MathF.PI * radius * 2f; }
         public float GetCircumferenceSquared() { return GetCircumference() * GetCircumference(); }
         public Rect GetBoundingBox() { return new Rect(center, new(radius, radius), new(0.5f)); }
-        public List<Line> GetSegments() 
+        public List<Segment> GetSegments() 
         {
             int points = 16;
             float angleStep = (MathF.PI * 2f) / points;
-            List<Line> segments = new();
+            List<Segment> segments = new();
             for (int i = 0; i < points; i++)
             {
                 Vector2 start = center + new Vector2(radius, 0f).Rotate(angleStep * i);
                 Vector2 end =  center + new Vector2(radius, 0f).Rotate(angleStep * (( i + 1 ) % points));
-                segments.Add(new Line(start, end));
+                segments.Add(new Segment(start, end));
             }
             return segments;
         }
-
+        public List<Vector2> GetPoints()
+        {
+            int pointCount = 16;
+            float angleStep = (MathF.PI * 2f) / pointCount;
+            List<Vector2> points = new();
+            for (int i = 0; i < pointCount; i++)
+            {
+                Vector2 p = center + new Vector2(radius, 0f).Rotate(angleStep * i);
+                points.Add(p);
+            }
+            return points;
+        }
         public void DrawShape(float linethickness, Color color) => this.DrawLines(linethickness, color);
+        public bool IsPointOnShape(Vector2 p) { return this.IsPointInsideShape(p); }
     }
     
     /// <summary>
@@ -233,14 +251,16 @@ namespace ShapeCore
         public Triangle(Vector2 a, Vector2 b, Vector2 c) { this.a = a; this.b = b; this.c = c; }
         public Triangle(Triangle t) { a = t.a; b = t.b; c = t.c; }
 
-        
+        public Vector2 GetReferencePoint() { return Centroid; }
         public float GetCircumference() { return MathF.Sqrt(GetCircumferenceSquared()); }
         public float GetCircumferenceSquared() { return A.LengthSquared() + B.LengthSquared() + C.LengthSquared(); }
         public float GetArea() { return (a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X); }
-        public List<Line> GetSegments() { return new() { new(a, b), new(b, c), new(c, a) }; }
+        public List<Segment> GetSegments() { return new() { new(a, b), new(b, c), new(c, a) }; }
+        public List<Vector2> GetPoints() { return new() { a, b, c }; }
         public Rect GetBoundingBox() { return new Rect(a.X, a.Y, 0, 0).EnlargeRect(b).EnlargeRect(c); }
         //public Circle GetBoundingCircle() { return new(Center, Length / 2); }
         public void DrawShape(float linethickness, Color color) => this.DrawLines(linethickness, color);
+        public bool IsPointOnShape(Vector2 p) { return this.IsPointInsideShape(p); }
     }
     public struct Rect : IShape
     {
@@ -309,13 +329,17 @@ namespace ShapeCore
             this.height = rect.height;
         }
 
+        public Vector2 GetReferencePoint() { return Center; }
         public float GetCircumference() { return width * 2 + height * 2; }
         public float GetCircumferenceSquared() { return GetCircumference() * GetCircumference(); }
         public float GetArea() { return width * height; }
-        public List<Line> GetSegments() { return SRect.GetRectSegments(this); }
+        public List<Segment> GetSegments() { return SRect.GetRectSegments(this); }
+        public List<Vector2> GetPoints() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
         public Rect GetBoundingBox() { return this; }
         public void DrawShape(float linethickness, Color color) => this.DrawLines(linethickness, color);
-
+        public bool IsPointOnShape(Vector2 p) { return this.IsPointInsideShape(p); }
+        
+        
         /*
         public Vector2 GetPoint(Vector2 alignement)
         {
@@ -477,14 +501,16 @@ namespace ShapeCore
         public Polygon(Triangle t) { this.points = t.GetPoints(); this.center = t.Centroid; }
         public Polygon(Rect r) { this.points = r.GetPoints(); this.center = r.Center; }
 
-        
 
+        public Vector2 GetReferencePoint() { return center; }
         public float GetCircumference() { return this.GetCircumference(); }
         public float GetCircumferenceSquared() { return this.GetCircumferenceSquared(); }
         public float GetArea() { return this.GetArea(); }
-        public List<Line> GetSegments() { return this.GetSegments(); }
+        public List<Segment> GetSegments() { return this.GetSegments(); }
+        public List<Vector2> GetPoints() { return points; }
         public Rect GetBoundingBox() { return this.GetBoundingBox(); }
         public void DrawShape(float linethickness, Color color) => SDrawing.DrawPolygonLines(points, linethickness, color);
+        public bool IsPointOnShape(Vector2 p) { return this.IsPointInsideShape(p); }
     }
 
 

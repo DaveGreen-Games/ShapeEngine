@@ -7,9 +7,6 @@ using ShapeUI;
 
 namespace ShapeLib
 {
-    //TODO
-    // -> SGeometry has all base Overlap/Intersection functions for extension with shapes
-
     public static class SDrawing
     {
 
@@ -19,10 +16,10 @@ namespace ShapeLib
         #endregion
 
         #region Line
-        public static void Draw(this Line line, float thickness, Color color) => Raylib.DrawLineEx(line.start, line.end, thickness, color);
+        public static void Draw(this Segment line, float thickness, Color color) => Raylib.DrawLineEx(line.start, line.end, thickness, color);
         public static void DrawLine(float x1, float y1, float x2, float y2, float thickness, Color color) => Raylib.DrawLineEx(new(x1, y1), new(x2, y2), thickness, color);
         public static void DrawLine(Vector2 start, Vector2 end, float thickness, Color color) => Raylib.DrawLineEx(start, end, thickness, color);
-        public static void DrawLines(List<Line> lines, float thickness, Color color, bool smoothJoints) 
+        public static void DrawLines(List<Segment> lines, float thickness, Color color, bool smoothJoints) 
         {
             if(lines.Count <= 0) return;
             foreach (var line in lines)
@@ -32,7 +29,7 @@ namespace ShapeLib
             }
             if (smoothJoints) Raylib.DrawCircleV(lines[lines.Count - 1].end, thickness / 2, color);
         }
-        public static void DrawLines(List<Line> lines, float thickness, List<Color> colors, bool smoothJoints)
+        public static void DrawLines(List<Segment> lines, float thickness, List<Color> colors, bool smoothJoints)
         {
             if (lines.Count <= 0 || colors.Count <= 0) return;
             for (int i = 0; i < lines.Count; i++)
@@ -49,7 +46,7 @@ namespace ShapeLib
             for(int i = 0; i < lines.Count - 1; i++)
             {
                 if (smoothJoints) Raylib.DrawCircleV(lines[i], thickness / 2, color);
-                Draw(new Line(lines[i], lines[i+1]), thickness, color);
+                Draw(new Segment(lines[i], lines[i+1]), thickness, color);
             }
             if (smoothJoints) Raylib.DrawCircleV(lines[lines.Count - 1], thickness / 2, color);
         }
@@ -60,13 +57,13 @@ namespace ShapeLib
             {
                 Color c = colors[i % colors.Count];
                 if (smoothJoints) Raylib.DrawCircleV(lines[i], thickness / 2, c);
-                Draw(new Line(lines[i], lines[i + 1]), thickness, c);
+                Draw(new Segment(lines[i], lines[i + 1]), thickness, c);
             }
             if (smoothJoints) Raylib.DrawCircleV(lines[lines.Count - 1], thickness / 2, colors[(lines.Count - 1) % colors.Count]);
         }
-        public static List<Line> CreateLightningLine(this Line line, int segments = 10, float maxSway = 80f)
+        public static List<Segment> CreateLightningLine(this Segment line, int segments = 10, float maxSway = 80f)
         {
-            List<Line> result = new();
+            List<Segment> result = new();
             Vector2 w = line.end - line.start;
             Vector2 dir = SVec.Normalize(w);
             Vector2 n = new Vector2(dir.Y, -dir.X);
@@ -113,9 +110,9 @@ namespace ShapeLib
             }
             return result;
         }
-        public static List<Line> CreateLightningLine(this Line line, float segmentLength = 5f, float maxSway = 80f)
+        public static List<Segment> CreateLightningLine(this Segment line, float segmentLength = 5f, float maxSway = 80f)
         {
-            List<Line> result = new();
+            List<Segment> result = new();
             Vector2 w = line.end - line.start;
             Vector2 dir = SVec.Normalize(w);
             Vector2 n = new Vector2(dir.Y, -dir.X);
@@ -223,11 +220,11 @@ namespace ShapeLib
             }
             return result;
         }
-        public static void DrawLineDotted(this Line line, int gaps, float thickness, Color color, bool roundedLineEdges = false)
+        public static void DrawLineDotted(this Segment line, int gaps, float thickness, Color color, bool roundedLineEdges = false)
         {
             DrawLineDotted(line.start, line.end, gaps, thickness, color, roundedLineEdges);
         }
-        public static void DrawLineDotted(this Line line, int gaps, float gapSizeF, float thickness, Color color, bool roundedLineEdges = false)
+        public static void DrawLineDotted(this Segment line, int gaps, float gapSizeF, float thickness, Color color, bool roundedLineEdges = false)
         {
             DrawLineDotted(line.start, line.end, gaps, gapSizeF, thickness, color, roundedLineEdges);
         }
@@ -304,11 +301,11 @@ namespace ShapeLib
                 }
             }
         }
-        public static void DrawLineGlow(this Line line, float width, float endWidth, Color color, Color endColor, int steps)
+        public static void DrawLineGlow(this Segment line, float width, float endWidth, Color color, Color endColor, int steps)
         {
             DrawLineGlow(line.start, line.end, width, endWidth, color, endColor, steps);
         }
-        public static void DrawLinesGlow(List<Line> lines, float width, float endWidth, Color color, Color endColor, int steps)
+        public static void DrawLinesGlow(List<Segment> lines, float width, float endWidth, Color color, Color endColor, int steps)
         {
             foreach (var line in lines)
             {

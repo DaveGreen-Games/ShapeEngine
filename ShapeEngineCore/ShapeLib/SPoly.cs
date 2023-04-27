@@ -195,14 +195,14 @@ namespace ShapeLib
             }
             return points;
         }
-        public static List<Line> GetSegments(List<Vector2> points)
+        public static List<Segment> GetSegments(List<Vector2> points)
         {
             if (points.Count <= 1) return new();
             else if (points.Count == 2)
             {
                 return new() { new(points[0], points[1]) };
             }
-            List<Line> segments = new();
+            List<Segment> segments = new();
             for (int i = 0; i < points.Count; i++)
             {
                 Vector2 start = points[i];
@@ -228,7 +228,7 @@ namespace ShapeLib
             }
             return axis;
         }
-        public static List<Vector2> GetSegmentAxis(List<Line> points, bool normalized = false)
+        public static List<Vector2> GetSegmentAxis(List<Segment> points, bool normalized = false)
         {
             List<Vector2> axis = new();
             foreach (var seg in points)
@@ -289,7 +289,7 @@ namespace ShapeLib
         public static Polygon ScaleUniform(this Polygon p, float distance) { return new(ScaleUniform(p.points, distance), p.center); }
         public static Polygon GeneratePointsPolygon(Vector2 center, int pointCount, float minLength, float maxLength) { return new Polygon(GeneratePoints(center, pointCount, minLength, maxLength), center); }
         public static Polygon GeneratePointsPolygon(int pointCount, float minLength, float maxLength) { return new(GeneratePoints(pointCount, minLength, maxLength), new Vector2(0f)); }
-        public static List<Line> GetSegments(this Polygon p) { return GetSegments(p.points); }
+        public static List<Segment> GetSegments(this Polygon p) { return GetSegments(p.points); }
         public static List<Vector2> GetSegmentAxis(this Polygon p, bool normalized = false) { return GetSegmentAxis(p.points, normalized); }
         
         public static List<Triangle> Triangulate(this Polygon p) { return Triangulate(p.points, p.center); }
