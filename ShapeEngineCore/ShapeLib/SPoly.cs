@@ -135,7 +135,7 @@ namespace ShapeLib
 
             foreach (var p in points)
             {
-                r = SRect.EnlargeRect(r, p);
+                r = SRect.Enlarge(r, p);
             }
             return r;
         }

@@ -151,6 +151,7 @@ namespace ShapeLib
         #endregion
 
         #region Misc
+        
         /// <summary>
         /// Construct 9 rects out of an outer and inner rect.
         /// </summary>
@@ -213,9 +214,9 @@ namespace ShapeLib
         /// <param name="pivot"></param>
         /// <param name="angleDeg"></param>
         /// <returns></returns>
-        public static List<Vector2> RotateRectList(this Rect rect, Vector2 pivot, float angleDeg)
+        public static List<Vector2> RotateList(this Rect rect, Vector2 pivot, float angleDeg)
         {
-            return SPoly.Rotate(rect.GetPoints(), pivot, angleDeg);
+            return SPoly.Rotate(rect.GetPolygon().points, pivot, angleDeg);
 
             //float rotRad = angleDeg * SUtils.DEGTORAD;
             //Vector2 size = new Vector2(rect.width, rect.height);
@@ -233,9 +234,9 @@ namespace ShapeLib
             //
             //return new() { topLeft, topRight, bottomRight, bottomLeft };
         }
-        public static (Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr) RotateRect(this Rect rect, Vector2 pivot, float angleDeg)
+        public static (Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr) Rotate(this Rect rect, Vector2 pivot, float angleDeg)
         {
-            var rotated = SPoly.Rotate(rect.GetPoints(), pivot, angleDeg);
+            var rotated = SPoly.Rotate(rect.GetPolygon().points, pivot, angleDeg);
             return new(rotated[0], rotated[1], rotated[2], rotated[3]);
 
             //float rotRad = angleDeg * SUtils.DEGTORAD;
@@ -254,10 +255,10 @@ namespace ShapeLib
             //
             //return new(topLeft, topRight, bottomRight, bottomLeft);
         }
-        public static List<Segment> GetRectSegments(this Rect rect)
+        public static List<Segment> GetSegments(this Rect rect)
         {
-            var c = rect.GetRectCorners();
-            return GetRectSegments(c.tl, c.bl, c.br, c.tr);
+            var c = rect.GetCorners();
+            return GetSegments(c.tl, c.bl, c.br, c.tr);
         }
         /// <summary>
         /// Returns the segments of a rect in ccw order. (tl -> bl, bl -> br, br -> tr, tr -> tl)
@@ -267,7 +268,7 @@ namespace ShapeLib
         /// <param name="br"></param>
         /// <param name="tr"></param>
         /// <returns></returns>
-        public static List<Segment> GetRectSegments(Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr)
+        public static List<Segment> GetSegments(Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr)
         {
             List<Segment> segments = new()
             {
@@ -322,7 +323,7 @@ namespace ShapeLib
         public static Rect ChangeSize(this Rect r, float amount, Vector2 alignement) { return new(r.GetPoint(alignement), new(r.width + amount, r.height + amount), alignement); }
         public static Rect ChangeSize(this Rect r, Vector2 amount, Vector2 alignement) { return new(r.GetPoint(alignement), r.Size + amount, alignement); }
         public static Rect Move(this Rect r, Vector2 amount) { return new( r.TopLeft + amount, r.Size, new(0f)); }
-        public static Rect EnlargeRect(this Rect r, Vector2 p)
+        public static Rect Enlarge(this Rect r, Vector2 p)
         {
             Vector2 tl = new
                 (
@@ -360,9 +361,9 @@ namespace ShapeLib
         /// <param name="r"></param>
         /// <param name="corner">Corner Index from 0 to 3</param>
         /// <returns></returns>
-        public static Vector2 GetRectCorner(this Rect r, int corner) { return GetPoints(r)[corner % 4]; }
+        public static Vector2 GetCorner(this Rect r, int corner) { return GetPoints(r)[corner % 4]; }
         
-        public static (Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr) GetRectCorners(this Rect rect) { return (rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight); }
+        public static (Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr) GetCorners(this Rect rect) { return (rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight); }
         /// <summary>
         /// Points are ordered in ccw order starting from the top left. (tl, bl, br, tr)
         /// </summary>
@@ -387,10 +388,10 @@ namespace ShapeLib
         #endregion
 
 
-        public static bool SeperateAxisRect(this Rect r, Vector2 axisStart, Vector2 axisEnd)
+        public static bool SeperateAxis(this Rect r, Vector2 axisStart, Vector2 axisEnd)
         {
             Vector2 n = axisStart - axisEnd;
-            var corners = r.GetPoints();
+            var corners = r.GetPolygon().points;
             Vector2 edgeAStart =    corners[0]; //r.GetRectCorner(0); //GetRectCorner(rectPos, rectSize, rectAlignement, 0);
             Vector2 edgeAEnd =      corners[1]; //r.GetRectCorner(1);// GetRectCorner(rectPos, rectSize, rectAlignement, 1);
             Vector2 edgeBStart =    corners[2]; //r.GetRectCorner(2); //GetRectCorner(rectPos, rectSize, rectAlignement, 2);

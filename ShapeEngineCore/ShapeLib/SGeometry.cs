@@ -102,7 +102,7 @@ namespace ShapeLib
         }
         public static bool OverlapBoundingBox(this ICollider a, ICollider b)
         {
-            return OverlapRectRect(a.GetBoundingBox(), b.GetBoundingBox());
+            return OverlapShape(a.GetBoundingBox(), b.GetBoundingBox());
         }
         public static Intersection Intersect(this ICollider colA, ICollider colB)
         {
@@ -123,32 +123,61 @@ namespace ShapeLib
 
             return intersectionInfo.i;
         }
-        public static Intersection IntersectBoundingBoxes(this ICollider a, ICollider b) { return a.GetBoundingBox().IntersectionRectRect(b.Pos, b.GetBoundingBox()); }
-        #endregion
-
-        #region IShape
-        public static bool OverlapShape(this IShape a, IShape b) { return OverlapSegmentsSegments(a.GetSegments(), b.GetSegments()); }
-        public static Intersection IntersectShape(this IShape a, IShape b) { return IntersectionSegmentsSegments(b.GetReferencePoint(), a.GetSegments(), b.GetSegments()); }
-        
-        public static bool OverlapShapeBoundingBox(this IShape a, IShape b) { return OverlapRectRect(a.GetBoundingBox(), b.GetBoundingBox()); }
-        public static Intersection IntersectShapeBoundingBox(this IShape a, IShape b) { return IntersectionRectRect(a.GetBoundingBox(), b.GetReferencePoint(), b.GetBoundingBox()); }
-
+        public static Intersection IntersectBoundingBoxes(this ICollider a, ICollider b) { return IntersectShape(a.GetBoundingBox(), b.GetBoundingBox()); }
         #endregion
 
         #region Line
 
         #region Overlap
-        public static bool OverlapCollider(this SegmentCollider a, SegmentCollider b) { return OverlapSegmentSegment(a.Pos, a.End, b.Pos, b.End); }
-        public static bool OverlapCollider(this SegmentCollider s, CircleCollider c) { return OverlapSegmentCircle(s.Pos, s.End, c.Pos, c.Radius); }
-        public static bool OverlapCollider(this SegmentCollider s, RectCollider r) { return OverlapSegmentRect(s.Pos, s.End, r.Rect); }
-        public static bool OverlapCollider(this SegmentCollider s, PolyCollider poly) { return OverlapPolySegment(poly.Shape, s.Pos, s.End); }
         
-        public static bool OverlapShape(this Segment a, Segment b) { return OverlapSegmentSegment(a.start, a.end, b.start, b.end); }
-        public static bool OverlapShape(this Segment s, Circle c) { return OverlapSegmentCircle(s.start, s.end, c.center, c.radius); }
-        public static bool OverlapShape(this Segment s, Triangle t) { return OverlapPolySegment(t.GetPoints(), s.start, s.end); }
-        public static bool OverlapShape(this Segment s, Rect r) { return OverlapSegmentRect(s.start, s.end, r); }
-        public static bool OverlapShape(this Segment s, Polygon poly) { return OverlapPolySegment(poly.points, s.start, s.end); }
+        public static bool OverlapShape(this Segment a, Segment b) 
+        {
+            Vector2 axisAPos = a.start;
+            Vector2 axisADir = a.end - a.start;
+            if (SRect.SegmentOnOneSide(axisAPos, axisADir, b.start, b.end)) return false;
 
+            Vector2 axisBPos = b.start;
+            Vector2 axisBDir = b.end - b.start;
+            if (SRect.SegmentOnOneSide(axisBPos, axisBDir, a.start, a.end)) return false;
+
+            if (SVec.Parallel(axisADir, axisBDir))
+            {
+                RangeFloat rangeA = SRect.ProjectSegment(a.start, a.end, axisADir);
+                RangeFloat rangeB = SRect.ProjectSegment(b.start, b.end, axisADir);
+                return SRect.OverlappingRange(rangeA, rangeB);
+            }
+            return true;
+        }
+        public static bool OverlapShape(this Segment s, Circle c) { return OverlapShape(c, s); }
+        public static bool OverlapShape(this Segment s, Triangle t) { return OverlapShape(t, s); }
+        public static bool OverlapShape(this Segment s, Rect r)
+        {
+            if (!OverlapRectLine(r, s.start, s.Displacement)) return false;
+            RangeFloat rectRange = new
+                (
+                    r.x,
+                    r.x + r.width
+                );
+            RangeFloat segmentRange = new
+                (
+                    s.start.X,
+                    s.end.X
+                );
+
+            if (!SRect.OverlappingRange(rectRange, segmentRange)) return false;
+
+            rectRange.min = r.y;
+            rectRange.max = r.y + r.height;
+            rectRange.Sort();
+
+            segmentRange.min = s.start.Y;
+            segmentRange.max = s.end.Y;
+            segmentRange.Sort();
+
+            return SRect.OverlappingRange(rectRange, segmentRange);
+        }
+        public static bool OverlapShape(this Segment s, Polygon poly) { return OverlapShape(poly, s); }
+        public static bool OverlapSegmentLine(this Segment s, Vector2 linePos, Vector2 lineDir) { return !SRect.SegmentOnOneSide(linePos, lineDir, s.start, s.end); }
         public static bool OverlapLineLine(Vector2 aPos, Vector2 aDir, Vector2 bPos, Vector2 bDir)
         {
             if (SVec.Parallel(aDir, bDir))
@@ -158,658 +187,52 @@ namespace ShapeLib
             }
             return true;
         }
-        public static bool OverlapLineCircle(Vector2 linePos, Vector2 lineDir, Vector2 circlePos, float circleRadius) { return OverlapCircleLine(circlePos, circleRadius, linePos, lineDir); }
-        public static bool OverlapLineSegment(Vector2 linePos, Vector2 lineDir, Vector2 segmentPos, Vector2 segmentDir, float segmentLength) { return OverlapLineSegment(linePos, lineDir, segmentPos, segmentPos + segmentDir * segmentLength); }
-        public static bool OverlapLineRect(Vector2 linePos, Vector2 lineDir, Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement) { return OverlapLineRect(linePos, lineDir, new(rectPos, rectSize, rectAlignement)); }
-        public static bool OverlapLineRect(Vector2 linePos, Vector2 lineDir, Rect rect)
-        {
-            Vector2 n = SVec.Rotate90CCW(lineDir);
-
-            Vector2 c1 = new(rect.x, rect.y);
-            Vector2 c2 = c1 + new Vector2(rect.width, rect.height);
-            Vector2 c3 = new(c2.X, c1.Y);
-            Vector2 c4 = new(c1.X, c2.Y);
-
-            c1 -= linePos;
-            c2 -= linePos;
-            c3 -= linePos;
-            c4 -= linePos;
-
-            float dp1 = Vector2.Dot(n, c1);
-            float dp2 = Vector2.Dot(n, c2);
-            float dp3 = Vector2.Dot(n, c3);
-            float dp4 = Vector2.Dot(n, c4);
-
-            return dp1 * dp2 <= 0.0f || dp2 * dp3 <= 0.0f || dp3 * dp4 <= 0.0f;
-        }
-        public static bool OverlapLineSegment(Vector2 linePos, Vector2 lineDir, Vector2 segmentPos, Vector2 segmentEnd) { return !SRect.SegmentOnOneSide(linePos, lineDir, segmentPos, segmentEnd); }
-        
-        public static bool OverlapSegmentSegment(Vector2 aPos, Vector2 aDir, float aLength, Vector2 bPos, Vector2 bDir, float bLength) { return OverlapSegmentSegment(aPos, aPos + aDir * aLength, bPos, bPos + bDir * bLength); }
-        public static bool OverlapSegmentSegment(Vector2 aPos, Vector2 aEnd, Vector2 bPos, Vector2 bEnd)
-        {
-            Vector2 axisAPos = aPos;
-            Vector2 axisADir = aEnd - aPos;
-            if (SRect.SegmentOnOneSide(axisAPos, axisADir, bPos, bEnd)) return false;
-
-            Vector2 axisBPos = bPos;
-            Vector2 axisBDir = bEnd - bPos;
-            if (SRect.SegmentOnOneSide(axisBPos, axisBDir, aPos, aEnd)) return false;
-
-            if (SVec.Parallel(axisADir, axisBDir))
-            {
-                RangeFloat rangeA = SRect.ProjectSegment(aPos, aEnd, axisADir);
-                RangeFloat rangeB = SRect.ProjectSegment(bPos, bEnd, axisADir);
-                return SRect.OverlappingRange(rangeA, rangeB);
-            }
-            return true;
-        }
         public static bool OverlapSegmentsSegments(List<Segment> a, List<Segment> b)
         {
             foreach (var la in a)
             {
                 foreach (var lb in b)
                 {
-                    if (OverlapSegmentSegment(la.start, la.end, lb.start, lb.end)) return true;
+                    if (OverlapShape(la, lb)) return true;
                 }
             }
             return false;
         }
-        public static bool OverlapSegmentCircle(Vector2 segmentPos, Vector2 segmentDir, float segmentLength, Vector2 circlePos, float circleRadius) { return OverlapCircleSegment(circlePos, circleRadius, segmentPos, segmentPos + segmentDir * segmentLength); }
-        public static bool OverlapSegmentCircle(Vector2 segmentPos, Vector2 segmentEnd, Vector2 circlePos, float circleRadius) { return OverlapCircleSegment(circlePos, circleRadius, segmentPos, segmentEnd); }
-        public static bool OverlapSegmentLine(Vector2 segmentPos, Vector2 segmentDir, float segmentLength, Vector2 linePos, Vector2 lineDir) { return OverlapLineSegment(linePos, lineDir, segmentPos, segmentPos + segmentDir * segmentLength); }
-        public static bool OverlapSegmentLine(Vector2 segmentPos, Vector2 segmentEnd, Vector2 linePos, Vector2 lineDir) { return OverlapLineSegment(linePos, lineDir, segmentPos, segmentEnd); }
-        public static bool OverlapSegmentRect(Vector2 segmentPos, Vector2 segmentDir, float segmentLength, Rect rect) { return OverlapSegmentRect(segmentPos, segmentPos + segmentDir * segmentLength, rect); }
-        public static bool OverlapSegmentRect(Vector2 segmentPos, Vector2 segmentEnd, Rect rect)
-        {
-            if (!OverlapLineRect(segmentPos, segmentEnd - segmentPos, rect)) return false;
-            RangeFloat rectRange = new
-                (
-                    rect.x,
-                    rect.x + rect.width
-                );
-            RangeFloat segmentRange = new
-                (
-                    segmentPos.X,
-                    segmentEnd.X
-                );
-
-            if (!SRect.OverlappingRange(rectRange, segmentRange)) return false;
-
-            rectRange.min = rect.y;
-            rectRange.max = rect.y + rect.height;
-            rectRange.Sort();
-
-            segmentRange.min = segmentPos.Y;
-            segmentRange.max = segmentEnd.Y;
-            segmentRange.Sort();
-
-            return SRect.OverlappingRange(rectRange, segmentRange);
-        }
-        public static bool OverlapSegmentRect(Vector2 segmentPos, Vector2 segmentDir, float segmentLength, Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement) { return OverlapSegmentRect(segmentPos, segmentPos + segmentDir * segmentLength, new(rectPos, rectSize, rectAlignement)); }
-        public static bool OverlapSegmentRect(Vector2 segmentPos, Vector2 segmentEnd, Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement) { return OverlapSegmentRect(segmentPos, segmentEnd, new(rectPos, rectSize, rectAlignement)); }
-
-        #endregion
-
-        #region Intersect
-
-        #endregion
-
-        #endregion
-
-        #region Circle
-        public static bool OverlapCollider(this CircleCollider a, CircleCollider b) { return OverlapCircleCircle(a.Pos, a.Radius, b.Pos, b.Radius); }
-        public static bool OverlapCollider(this CircleCollider c, SegmentCollider s) { return OverlapCircleSegment(c.Pos, c.Radius, s.Pos, s.End); }
-        public static bool OverlapCollider(this CircleCollider c, RectCollider r) { return OverlapCircleRect(c.Pos, c.Radius, r.Rect); }
-        public static bool OverlapCollider(this CircleCollider c, PolyCollider poly) { return OverlapPolyCircle(poly.Shape, c.Pos, c.Radius); }
-
-        public static bool OverlapShape(this Circle c, Segment s) { return OverlapCircleSegment(c.center, c.radius, s.start, s.end); }
-        public static bool OverlapShape(this Circle a, Circle b) { return OverlapCircleCircle(a.center, a.radius, b.center, b.radius); }
-        public static bool OverlapShape(this Circle c, Triangle t) { return OverlapPolyCircle(t.GetPoints(), c.center, c.radius); }
-        public static bool OverlapShape(this Circle c, Rect r) { return OverlapCircleRect(c.center, c.radius, r); }
-        public static bool OverlapShape(this Circle c, Polygon poly) { return OverlapPolyCircle(poly.points, c.center, c.radius); }
-
-
-        public static bool OverlapCircleCircle(Vector2 aPos, float aRadius, Vector2 bPos, float bRadius)
-        {
-            if (aRadius <= 0.0f && bRadius > 0.0f) return OverlapPointCircle(aPos, bPos, bRadius);
-            else if (bRadius <= 0.0f && aRadius > 0.0f) return OverlapPointCircle(bPos, aPos, aRadius);
-            else if (aRadius <= 0.0f && bRadius <= 0.0f) return OverlapPointPoint(aPos, bPos);
-            float rSum = aRadius + bRadius;
-
-            return (aPos - bPos).LengthSquared() < rSum * rSum;
-        }
-        public static bool OverlapCircleLine(Vector2 circlePos, float circleRadius, Vector2 linePos, Vector2 lineDir)
-        {
-            Vector2 lc = circlePos - linePos;
-            Vector2 p = SVec.Project(lc, lineDir);
-            Vector2 nearest = linePos + p;
-            return OverlapPointCircle(nearest, circlePos, circleRadius);
-        }
-        public static bool OverlapCircleRay(Vector2 circlePos, float circleRadius, Vector2 rayPos, Vector2 rayDir)
-        {
-            return OverlapRayCircle(rayPos, rayDir, circlePos, circleRadius);
-        }
-        public static bool OverlapRayCircle(Vector2 rayPos, Vector2 rayDir, Vector2 circlePos, float circleRadius)
-        {
-            Vector2 w = circlePos - rayPos;
-            float p = w.X * rayDir.Y - w.Y * rayDir.X;
-            if (p < -circleRadius || p > circleRadius) return false;
-            float t = w.X * rayDir.X + w.Y * rayDir.Y;
-            if (t < 0.0f)
-            {
-                float d = w.LengthSquared();
-                if (d > circleRadius * circleRadius) return false;
-            }
-            return true;
-        }
-        public static bool OverlapCircleSegment(Vector2 circlePos, float circleRadius, Vector2 segmentPos, Vector2 segmentDir, float segmentLength) { return OverlapCircleSegment(circlePos, circleRadius, segmentPos, segmentPos + segmentDir * segmentLength); }
-        public static bool OverlapCircleSegment(Vector2 circlePos, float circleRadius, Vector2 segmentPos, Vector2 segmentEnd)
-        {
-            if (circleRadius <= 0.0f) return OverlapPointSegment(circlePos, segmentPos, segmentEnd);
-            if (OverlapPointCircle(segmentPos, circlePos, circleRadius)) return true;
-            if (OverlapPointCircle(segmentEnd, circlePos, circleRadius)) return true;
-
-            Vector2 d = segmentEnd - segmentPos;
-            Vector2 lc = circlePos - segmentPos;
-            Vector2 p = SVec.Project(lc, d);
-            Vector2 nearest = segmentPos + p;
-
-            //bool nearestInside = OverlapPointCircle(nearest, circlePos, circleRadius);
-            //bool smaller = p.LengthSquared() <= d.LengthSquared();
-            //float dot = Vector2.Dot(p, d);
-
-            return
-                OverlapPointCircle(nearest, circlePos, circleRadius) &&
-                p.LengthSquared() <= d.LengthSquared() &&
-                Vector2.Dot(p, d) >= 0.0f;
-        }
-        public static bool OverlapCircleRect(Vector2 circlePos, float circleRadius, Rect rect)
-        {
-            if (circleRadius <= 0.0f) return OverlapPointRect(circlePos, rect);
-            return OverlapPointCircle(SRect.ClampOnRect(circlePos, rect), circlePos, circleRadius);
-        }
-        public static bool OverlapCircleRect(Vector2 circlePos, float circleRadius, Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement) { return OverlapCircleRect(circlePos, circleRadius, new(rectPos, rectSize, rectAlignement)); }
-
-        #region Overlap
-
-        #endregion
-
-        #region Intersect
-
-        #endregion
-
-        #endregion
-
-        #region Triangle
-        public static bool OverlapShape(this Triangle t, Segment s) { return OverlapShape(s, t); }
-        public static bool OverlapShape(this Triangle t, Circle c) { return OverlapShape(c, t); }
-        public static bool OverlapShape(this Triangle a, Triangle b) { return OverlapPolyPoly(a.GetPoints(), b.GetPoints()); }
-        public static bool OverlapShape(this Triangle t, Rect r) { return OverlapShape(r, t); }
-        public static bool OverlapShape(this Triangle t, Polygon poly) { return OverlapShape(poly, t); }
-
-        #region Overlap
-
-        #endregion
-
-        #region Intersect
-
-        #endregion
-
-        #endregion
-
-        #region Rect
-
-        #region Overlap
-        public static bool OverlapCollider(this RectCollider a, RectCollider b) { return OverlapRectRect(a.Rect, b.Rect); }
-        public static bool OverlapCollider(this RectCollider r, CircleCollider c) { return OverlapRectCircle(r.Rect, c.Pos, c.Radius); }
-        public static bool OverlapCollider(this RectCollider r, SegmentCollider s) { return OverlapRectSegment(r.Rect, s.Pos, s.End); }
-        public static bool OverlapCollider(this RectCollider r, PolyCollider poly) { return OverlapPolyRect(poly.Shape, r.Rect); }
         
-        public static bool OverlapShape(this Rect a, Rect b) { return OverlapRectRect(a, b); }
-        public static bool OverlapShape(this Rect r, Circle c) { return OverlapRectCircle(r, c.center, c.radius); }
-        public static bool OverlapShape(this Rect r, Triangle t) { return OverlapPolyRect(t.GetPoints(), r); }
-        public static bool OverlapShape(this Rect r, Segment s) { return OverlapRectSegment(r, s.start, s.end); }
-        public static bool OverlapShape(this Rect r, Polygon poly) { return OverlapPolyRect(poly.points, r); }
 
-        public static bool OverlapRectCircle(this Rect rect, CircleCollider c) { return OverlapRectCircle(rect, c.Pos, c.Radius); }
-        public static bool OverlapRectSegment(this Rect rect, SegmentCollider s) { return OverlapRectSegment(rect, s.Pos, s.End); }
-        public static bool OverlapRectRect(this Rect rect, RectCollider r) { return OverlapRectRect(rect, r.Rect); }
-        public static bool OverlapRectPoly(this Rect rect, PolyCollider poly) { return OverlapPolyRect(poly.Shape, rect); }
-        public static bool OverlapRectRect(this Rect a, Rect b)
-        {
-            Vector2 aTopLeft = new(a.x, a.y);
-            Vector2 aBottomRight = aTopLeft + new Vector2(a.width, a.height);
-            Vector2 bTopLeft = new(b.x, b.y);
-            Vector2 bBottomRight = bTopLeft + new Vector2(b.width, b.height);
-            return
-                SRect.OverlappingRange(aTopLeft.X, aBottomRight.X, bTopLeft.X, bBottomRight.X) &&
-                SRect.OverlappingRange(aTopLeft.Y, aBottomRight.Y, bTopLeft.Y, bBottomRight.Y);
-        }
-        public static bool OverlapRectCircle(this Rect rect, Vector2 circlePos, float circleRadius) { return OverlapCircleRect(circlePos, circleRadius, rect); }
-        public static bool OverlapRectLine(this Rect rect, Vector2 linePos, Vector2 lineDir) { return OverlapLineRect(linePos, lineDir, rect); }
-        public static bool OverlapRectSegment(this Rect rect, Vector2 segmentPos, Vector2 segmentEnd) { return OverlapSegmentRect(segmentPos, segmentEnd, rect); }
-        
-        public static bool OverlapRectRect(Vector2 aPos, Vector2 aSize, Vector2 aAlignement, Vector2 bPos, Vector2 bSize, Vector2 bAlignement)
-        {
-            var a = new Rect(aPos, aSize, aAlignement);
-            var b = new Rect(bPos, bSize, bAlignement);
-            return OverlapRectRect(a, b);
-        }
-        public static bool OverlapRectCircle(Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement, Vector2 circlePos, float circleRadius) { return OverlapCircleRect(circlePos, circleRadius, rectPos, rectSize, rectAlignement); }
-        public static bool OverlapRectLine(Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement, Vector2 linePos, Vector2 lineDir) { return OverlapLineRect(linePos, lineDir, rectPos, rectSize, rectAlignement); }
-        public static bool OverlapRectSegment(Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement, Vector2 segmentPos, Vector2 segmentDir, float segmentLength) { return OverlapSegmentRect(segmentPos, segmentDir, segmentLength, rectPos, rectSize, rectAlignement); }
-        public static bool OverlapRectSegment(Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement, Vector2 segmentPos, Vector2 segmentEnd) { return OverlapSegmentRect(segmentPos, segmentEnd, rectPos, rectSize, rectAlignement); }
-
+        //public static bool OverlapCollider(this SegmentCollider a, SegmentCollider b) { return OverlapSegmentSegment(a.Pos, a.End, b.Pos, b.End); }
+        //public static bool OverlapCollider(this SegmentCollider s, CircleCollider c) { return OverlapSegmentCircle(s.Pos, s.End, c.Pos, c.Radius); }
+        //public static bool OverlapCollider(this SegmentCollider s, RectCollider r) { return OverlapSegmentRect(s.Pos, s.End, r.Rect); }
+        //public static bool OverlapCollider(this SegmentCollider s, PolyCollider poly) { return OverlapPolySegment(poly.Shape, s.Pos, s.End); }
+        //public static bool OverlapSegmentRect(Vector2 segmentPos, Vector2 segmentEnd, Rect rect)
+        //public static bool OverlapSegmentSegment(Vector2 aPos, Vector2 aEnd, Vector2 bPos, Vector2 bEnd)
+        //public static bool OverlapSegmentRect(Vector2 segmentPos, Vector2 segmentEnd, Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement) { return OverlapSegmentRect(segmentPos, segmentEnd, new(rectPos, rectSize, rectAlignement)); }
+        //public static bool OverlapSegmentLine(Vector2 segmentPos, Vector2 segmentEnd, Vector2 linePos, Vector2 lineDir) { return OverlapLineSegment(linePos, lineDir, segmentPos, segmentEnd); }
+        //public static bool OverlapSegmentCircle(Vector2 segmentPos, Vector2 segmentEnd, Vector2 circlePos, float circleRadius) { return OverlapCircleSegment(circlePos, circleRadius, segmentPos, segmentEnd); }
+        //public static bool OverlapLineCircle(Vector2 linePos, Vector2 lineDir, Circle c) { return OverlapCircleLine(c.center, c.radius, linePos, lineDir); }
+        //public static bool OverlapLineSegment(Vector2 linePos, Vector2 lineDir, Segment s) { return !SRect.SegmentOnOneSide(linePos, lineDir, s.start, s.end); }
+        //public static bool OverlapLineSegment(Vector2 linePos, Vector2 lineDir, Vector2 segmentPos, Vector2 segmentDir, float segmentLength) { return OverlapLineSegment(linePos, lineDir, segmentPos, segmentPos + segmentDir * segmentLength); }
+        //public static bool OverlapLineRect(Vector2 linePos, Vector2 lineDir, Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement) { return OverlapLineRect(linePos, lineDir, new(rectPos, rectSize, rectAlignement)); }
+        //public static bool OverlapSegmentSegment(Vector2 aPos, Vector2 aDir, float aLength, Vector2 bPos, Vector2 bDir, float bLength) { return OverlapSegmentSegment(aPos, aPos + aDir * aLength, bPos, bPos + bDir * bLength); }
+        //public static bool OverlapSegmentCircle(Vector2 segmentPos, Vector2 segmentDir, float segmentLength, Vector2 circlePos, float circleRadius) { return OverlapCircleSegment(circlePos, circleRadius, segmentPos, segmentPos + segmentDir * segmentLength); }
+        //public static bool OverlapSegmentLine(Vector2 segmentPos, Vector2 segmentDir, float segmentLength, Vector2 linePos, Vector2 lineDir) { return OverlapLineSegment(linePos, lineDir, segmentPos, segmentPos + segmentDir * segmentLength); }
+        //public static bool OverlapSegmentRect(Vector2 segmentPos, Vector2 segmentDir, float segmentLength, Rect rect) { return OverlapSegmentRect(segmentPos, segmentPos + segmentDir * segmentLength, rect); }
+        //public static bool OverlapSegmentRect(Vector2 segmentPos, Vector2 segmentDir, float segmentLength, Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement) { return OverlapSegmentRect(segmentPos, segmentPos + segmentDir * segmentLength, new(rectPos, rectSize, rectAlignement)); }
         #endregion
 
         #region Intersect
-
-        #endregion
-
-        #endregion
-
-        #region Polygon
-
-        #region Overlap
-        public static bool OverlapCollider(this PolyCollider poly, CircleCollider circle) { return OverlapPolyCircle(poly.Shape, circle.Pos, circle.Radius); }
-        public static bool OverlapCollider(this PolyCollider poly, RectCollider rect) { return OverlapPolyRect(poly.Shape, rect.Rect); }
-        public static bool OverlapCollider(this PolyCollider poly, SegmentCollider segment) { return OverlapPolySegment(poly.Shape, segment.Start, segment.End); }
-        public static bool OverlapCollider(this PolyCollider a, PolyCollider b) { return OverlapPolyPoly(a.Shape, b.Shape); }
-        
-        public static bool OverlapShape(this Polygon poly, Segment segment) { return OverlapPolySegment(poly.points, segment.start, segment.end); }
-        public static bool OverlapShape(this Polygon poly, Circle circle) { return OverlapPolyCircle(poly.points, circle.center, circle.radius); }
-        public static bool OverlapShape(this Polygon poly, Triangle t) { return OverlapPolyPoly(poly.points, t.GetPoints()); }
-        public static bool OverlapShape(this Polygon poly, Rect rect) { return OverlapPolyRect(poly.points, rect); }
-        public static bool OverlapShape(this Polygon a, Polygon b) { return OverlapPolyPoly(a.points, b.points); }
-
-        public static bool OverlapPolyCircle(List<Vector2> poly, Vector2 circlePos, float radius)
+        public static Intersection IntersectShape(this Segment a, Segment b) { return IntersectSegmentSegment(a, b, a.GetReferencePoint(), false); }
+        public static Intersection IntersectShape(this Segment s, Circle c)
         {
-            if (poly.Count < 3) return false;
-            if (IsPointInPoly(circlePos, poly)) return true;
-            for (int i = 0; i < poly.Count; i++)
-            {
-                Vector2 start = poly[i];
-                Vector2 end = poly[(i + 1) % poly.Count];
-                if (OverlapCircleSegment(circlePos, radius, start, end)) return true;
-            }
-            return false;
-        }
-        public static bool OverlapPolyRect(List<Vector2> poly, Rect rect)
-        {
-            if (poly.Count < 3) return false;
-            var corners = SRect.GetPoints(rect);
-            foreach (var c in corners)
-            {
-                if (IsPointInPoly(c, poly)) return true;
-            }
-
-            for (int i = 0; i < poly.Count; i++)
-            {
-                Vector2 start = poly[i];
-                Vector2 end = poly[(i + 1) % poly.Count];
-                if (OverlapRectSegment(rect, start, end)) return true;
-            }
-            return false;
-        }
-        public static bool OverlapPolySegment(List<Vector2> poly, Vector2 segmentStart, Vector2 segmentEnd)
-        {
-            if (poly.Count < 3) return false;
-            if (IsPointInPoly(segmentStart, poly)) return true;
-            if (IsPointInPoly(segmentEnd, poly)) return true;
-            for (int i = 0; i < poly.Count; i++)
-            {
-                Vector2 start = poly[i];
-                Vector2 end = poly[(i + 1) % poly.Count];
-                if (OverlapSegmentSegment(start, end, segmentStart, segmentEnd)) return true;
-            }
-            return false;
-        }
-        public static bool OverlapPolyPoly(List<Vector2> a, List<Vector2> b)
-        {
-            if (a.Count < 3 || b.Count < 3) return false;
-            foreach (var point in a)
-            {
-                if (IsPointInPoly(point, b)) return true;
-            }
-            foreach (var point in b)
-            {
-                if (IsPointInPoly(point, a)) return true;
-            }
-            return false;
-        }
-
-        #endregion
-
-        #region Intersect
-
-        #endregion
-
-        #endregion
+            float aX = s.start.X;
+            float aY = s.start.Y;
+            float bX = s.end.X;
+            float bY = s.end.Y;
+            float cX = c.center.X;
+            float cY = c.center.Y;
+            float R = c.radius;
 
 
-
-        #region Point - DELETE
-        public static bool OverlapPointPoint(Vector2 pointA, Vector2 pointB) { return pointA.X == pointB.X && pointA.Y == pointB.Y; }
-        public static bool OverlapPointCircle(Vector2 point, Vector2 circlePos, float circleRadius)
-        {
-            float disSq = (circlePos - point).LengthSquared();
-            return disSq <= circleRadius * circleRadius;
-            //return OverlapCircleCircle(point, POINT_RADIUS, circlePos, circleRadius);
-        }
-        public static bool OverlapPointLine(Vector2 point, Vector2 linePos, Vector2 lineDir) { return OverlapCircleLine(point, POINT_RADIUS, linePos, lineDir); }
-        public static bool OverlapPointRay(Vector2 point, Vector2 rayPos, Vector2 rayDir)
-        {
-            Vector2 displacement = point - rayPos;
-            float p = rayDir.Y * displacement.X - rayDir.X * displacement.Y;
-            if (p != 0.0f) return false;
-            float d = displacement.X * rayDir.X + displacement.Y * rayDir.Y;
-            return d >= 0;
-        }
-        public static bool OverlapRayPoint(Vector2 point, Vector2 rayPos, Vector2 rayDir) { return OverlapPointRay(point, rayPos, rayDir); }
-        public static bool OverlapPointSegment(Vector2 point, Vector2 segmentPos, Vector2 segmentDir, float segmentlength) { return OverlapPointSegment(point, segmentPos, segmentPos + segmentDir * segmentlength); }
-        public static bool OverlapPointSegment(Vector2 point, Vector2 segmentPos, Vector2 segmentEnd) { return OverlapCircleSegment(point, POINT_RADIUS, segmentPos, segmentEnd); }
-        public static bool OverlapPointRect(Vector2 point, Rect rect) { return OverlapCircleRect(point, POINT_RADIUS, rect);}
-        public static bool OverlapPointRect(Vector2 point, Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement) {return OverlapPointRect(point, new(rectPos, rectSize, rectAlignement));}
-        public static bool OverlapCirclePoint(Vector2 circlePos, float circleRadius, Vector2 point) { return OverlapPointCircle(point, circlePos, circleRadius); }
-        public static bool OverlapSegmentPoint(Vector2 segmentPos, Vector2 segmentDir, float segmentLength, Vector2 point) {return OverlapSegmentCircle(segmentPos, segmentPos + segmentDir * segmentLength, point, POINT_RADIUS);}
-        public static bool OverlapLinePoint(Vector2 linePos, Vector2 lineDir, Vector2 point) {return OverlapLineCircle(linePos, lineDir, point, POINT_RADIUS);}
-        public static bool OverlapSegmentPoint(Vector2 segmentPos, Vector2 segmentEnd, Vector2 point) {return OverlapSegmentCircle(segmentPos, segmentEnd, point, POINT_RADIUS);}
-        public static bool OverlapRectPoint(this Rect rect, Vector2 point) { return OverlapRectCircle(rect, point, POINT_RADIUS); }
-        public static bool OverlapRectPoint(Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement, Vector2 point) { return OverlapRectCircle(rectPos, rectSize, rectAlignement, point, POINT_RADIUS);}
-        public static bool OverlapPolyPoint(List<Vector2> poly, Vector2 point) { return OverlapPolyCircle(poly, point, POINT_RADIUS); }
-        #endregion
-
-        public static Intersection IntersectionCircleCircle(this CircleCollider a, CircleCollider b) { return IntersectionCircleCircle(a.Pos, a.Radius, b.Pos, b.Radius); }
-        public static Intersection IntersectionCircleSegment(this CircleCollider circle, SegmentCollider segment) { return IntersectionCircleSegment(circle.Pos, circle.Radius, segment.Start, segment.End); }
-        public static Intersection IntersectionCircleRect(this CircleCollider circle, RectCollider rect) { return IntersectionCircleRect(rect.Pos, circle.Pos, circle.Radius, rect.Rect); }
-        public static Intersection IntersectionCirclePoly(this CircleCollider circle, PolyCollider poly) { return IntersectionCirclePoly(poly.Pos, circle.Pos, circle.Radius, poly.Shape); }
-        public static Intersection IntersectionSegmentSegment(this SegmentCollider a, SegmentCollider b) { return IntersectionSegmentSegment(a.Pos, a.Start, a.End, b.Start, b.End); }
-        public static Intersection IntersectionSegmentCircle(this SegmentCollider a, CircleCollider circle) { return IntersectionSegmentCircle(a.Start, a.End, circle.Pos, circle.Radius); }
-        public static Intersection IntersectionSegmentRect(this SegmentCollider a, RectCollider rect) { return IntersectionSegmentRect(rect.Pos, a.Start, a.End, rect.Rect); }
-        public static Intersection IntersectionSegmentPoly(this SegmentCollider a, PolyCollider poly) { return IntersectionSegmentPoly(poly.Pos, a.Start, a.End, poly.Shape); }
-        public static Intersection IntersectionRectCircle(this RectCollider rect, CircleCollider circle) { return rect.Rect.IntersectionRectCircle(circle.Pos, circle.Pos, circle.Radius); }
-        public static Intersection IntersectionRectSegment(this RectCollider rect, SegmentCollider segment) { return rect.Rect.IntersectionRectSegment(rect.Pos, segment.Start, segment.End); }
-        public static Intersection IntersectionRectRect(this RectCollider a, RectCollider b) { return a.Rect.IntersectionRectRect(b.Pos, b.Rect); }
-        public static Intersection IntersectionRectPoly(this RectCollider rect, PolyCollider poly) { return rect.Rect.IntersectionRectPoly(poly.Pos, poly.Shape); }
-        public static Intersection IntersectionRectCircle(this Rect rect, CircleCollider circle) { return rect.IntersectionRectCircle(circle.Pos, circle.Pos, circle.Radius); }
-        public static Intersection IntersectionRectSegment(this Rect rect, SegmentCollider segment) { return rect.IntersectionRectSegment(rect.Center, segment.Start, segment.End); }
-        public static Intersection IntersectionRectRect(this Rect a, RectCollider b) { return a.IntersectionRectRect(b.Pos, b.Rect); }
-        public static Intersection IntersectionRectPoly(this Rect rect, PolyCollider poly) { return rect.IntersectionRectPoly(poly.Pos, poly.Shape); }
-
-        public static Intersection IntersectionPolyCircle(this PolyCollider poly, CircleCollider circle) { return IntersectionPolyCircle(circle.Pos, poly.Shape, circle.Pos, circle.Radius); }
-        public static Intersection IntersectionPolySegment(this PolyCollider poly, SegmentCollider segment) { return IntersectionPolySegment(poly.Pos, poly.Shape, segment.Start, segment.End); }
-        public static Intersection IntersectionPolyRect(this PolyCollider poly, RectCollider rect) { return IntersectionPolyRect(rect.Pos, poly.Shape, rect.Rect); }
-        public static Intersection IntersectionPolyPoly(this PolyCollider a, PolyCollider b) { return IntersectionPolyPoly(b.Pos, a.Shape, b.Shape); }
-
-        public static Intersection IntersectionCircleCircle(Vector2 aPos, float aRadius, Vector2 bPos, float bRadius) { return IntersectionCircleCircle(aPos.X, aPos.Y, aRadius, bPos.X, bPos.Y, bRadius); }
-        public static Intersection IntersectionCircleCircle(float cx0, float cy0, float radius0, float cx1, float cy1, float radius1)
-        {
-            // Find the distance between the centers.
-            float dx = cx0 - cx1;
-            float dy = cy0 - cy1;
-            double dist = Math.Sqrt(dx * dx + dy * dy);
-
-            // See how many solutions there are.
-            if (dist > radius0 + radius1)
-            {
-                // No solutions, the circles are too far apart.
-                return new();
-            }
-            else if (dist < Math.Abs(radius0 - radius1))
-            {
-                // No solutions, one circle contains the other.
-                return new();
-            }
-            else if ((dist == 0) && (radius0 == radius1))
-            {
-                // No solutions, the circles coincide.
-                return new();
-            }
-            else
-            {
-                // Find a and h.
-                double a = (radius0 * radius0 - radius1 * radius1 + dist * dist) / (2 * dist);
-                double h = Math.Sqrt(radius0 * radius0 - a * a);
-
-                // Find P2.
-                double cx2 = cx0 + a * (cx1 - cx0) / dist;
-                double cy2 = cy0 + a * (cy1 - cy0) / dist;
-
-                // Get the points P3.
-                Vector2 intersection1 = new Vector2(
-                    (float)(cx2 + h * (cy1 - cy0) / dist),
-                    (float)(cy2 - h * (cx1 - cx0) / dist));
-                Vector2 intersection2 = new Vector2(
-                    (float)(cx2 - h * (cy1 - cy0) / dist),
-                    (float)(cy2 + h * (cx1 - cx0) / dist));
-
-                // See if we have 1 or 2 solutions.
-                if (dist == radius0 + radius1)
-                {
-                    Vector2 n = SVec.Normalize(intersection1 - new Vector2(cx1, cy1));
-                    return new(intersection1, n, new() { (intersection1, n)} );
-                }
-                else 
-                {
-                    Vector2 otherPos = new Vector2(cx1, cy1);
-                    Vector2 w = intersection2 - intersection1;
-                    float l = w.Length();
-                    Vector2 dir = w / l;
-                    Vector2 p = intersection1 + dir * l * 0.5f;
-                    Vector2 n = SVec.Normalize(p - otherPos);
-
-                    Vector2 n1 = SVec.Normalize(intersection1 - otherPos);
-                    Vector2 n2 = SVec.Normalize(intersection2 - otherPos);
-
-                    return new(p, n, new() { (intersection1, n1), (intersection2, n2) });
-                }
-            }
-
-        }
-        public static Intersection IntersectionCircleSegment(float cX, float cY, float R, float aX, float aY, float bX, float bY)
-        {
-            float dX = bX - aX;
-            float dY = bY - aY;
-            if ((dX == 0) && (dY == 0))
-            {
-                // A and B are the same points, no way to calculate intersection
-                return new();
-            }
-
-            float dl = (dX * dX + dY * dY);
-            float t = ((cX - aX) * dX + (cY - aY) * dY) / dl;
-
-            // point on a line nearest to circle center
-            float nearestX = aX + t * dX;
-            float nearestY = aY + t * dY;
-
-            float dist = (new Vector2(nearestX, nearestY) - new Vector2(cX, cY)).Length(); // point_dist(nearestX, nearestY, cX, cY);
-
-            if (dist == R)
-            {
-                // line segment touches circle; one intersection point
-                float iX = nearestX;
-                float iY = nearestY;
-
-                if (t >= 0f && t <= 1f)
-                {
-                    // intersection point is not actually within line segment
-                    Vector2 ip = new(iX, iY);
-                    Vector2 n = SUtils.GetNormal(new Vector2(aX, aY), new Vector2(bX, bY), ip, new Vector2(cX, cY));
-                    return new(ip, n, new() { (ip, n)});
-                }
-                else return new();
-            }
-            else if (dist < R)
-            {
-                float dt = MathF.Sqrt(R * R - dist * dist) / MathF.Sqrt(dl);
-                List<(Vector2 p, Vector2 n)> points = new();
-                // intersection point nearest to A
-                float t1 = t - dt;
-                float i1X = aX + t1 * dX;
-                float i1Y = aY + t1 * dY;
-                if (t1 >= 0f && t1 <= 1f)
-                {
-                    // intersection point is actually within line segment
-                    Vector2 ip = new(i1X, i1Y);
-                    Vector2 n = SUtils.GetNormal(new Vector2(aX, aY), new Vector2(bX, bY), ip, new Vector2(cX, cY));
-                    points.Add((ip, n));
-                }
-                
-                // intersection point farthest from A
-                float t2 = t + dt;
-                float i2X = aX + t2 * dX;
-                float i2Y = aY + t2 * dY;
-                if (t2 >= 0f && t2 <= 1f)
-                {
-                    Vector2 ip = new(i2X, i2Y);
-                    Vector2 n = SUtils.GetNormal(new Vector2(aX, aY), new Vector2(bX, bY), ip, new Vector2(cX, cY));
-                    points.Add((ip, n));
-                }
-
-                if (points.Count <= 0) return new();
-                else if (points.Count == 1) return new(points[0].p, points[0].n, points);
-                else
-                {
-                    Vector2 w = points[1].p - points[0].p;
-                    float l = w.Length();
-                    Vector2 dir = w / l;
-                    Vector2 p = points[0].p + dir * l * 0.5f;
-                    Vector2 n = SUtils.GetNormal(points[0].p, points[1].p, p, new Vector2(cX, cY));
-                    return new(p, n, points);
-                }
-            }
-            else
-            {
-                // no intersection
-                return new();
-            }
-        }
-        public static Intersection IntersectionCircleSegment(Vector2 circlePos, float circleRadius, Vector2 start, Vector2 end) { return IntersectionCircleSegment(circlePos.X, circlePos.Y, circleRadius, start.X, start.Y, end.X, end.Y); }
-        public static Intersection IntersectionCircleSegments(Vector2 referencePoint, Vector2 circlePos, float circleRadius, List<(Vector2 start, Vector2 end)> segments)
-        {
-            List<(Vector2 p, Vector2 n)> points = new();
-            foreach (var seg in segments)
-            {
-                //var intersection = IntersectionCircleSegment(circlePos, circleRadius, seg.start, seg.end);
-                //if (intersection.valid) points.AddRange(intersection.points);
-                var intersectPoints = IntersectCircleSegment(circlePos, circleRadius, seg.start, seg.end);
-                foreach (var p in intersectPoints)
-                {
-                    Vector2 n = SUtils.GetNormalOpposite(seg.start, seg.end, p, referencePoint);
-                    points.Add((p, n));
-                }
-            }
-            if(points.Count <= 0) return new();
-            else if(points.Count == 1)
-            {
-                return new(points[0].p, points[0].n, points);
-            }
-            else if(points.Count == 2)
-            {
-                var info = ConstructNormalOpposite(points[0].p, points[1].p, referencePoint);
-                return new(info.p, info.n, points);
-            }
-            else
-            {
-                return new(points[0].p, points[0].n, points);
-            }
-        }
-        public static Intersection IntersectionCircleRect(Vector2 referencePoint, Vector2 circlePos, float circleRadius, Rect rect)
-        {
-            var segments = rect.GetRectSegments();// SRect.GetRectSegments(rect);
-            return IntersectionCircleSegments(referencePoint, circlePos, circleRadius, segments);
-        }
-        public static Intersection IntersectionCirclePoly(Vector2 referencePoint, Vector2 circlePos, float circleRadius, List<Vector2> poly)
-        {
-            var segments = SPoly.GetSegments(poly);
-            return IntersectionCircleSegments(referencePoint, circlePos, circleRadius, segments);
-        }
-        public static Intersection IntersectionSegmentSegment(Vector2 referencePoint, Vector2 aStart, Vector2 aEnd, Vector2 bStart, Vector2 bEnd)
-        {
-            var info = IntersectSegmentSegmentInfo(aStart, aEnd, bStart, bEnd);
-            if (info.intersected)
-            {
-                Vector2 n = SUtils.GetNormal(bStart, bEnd, info.intersectPoint, referencePoint);
-                return new(info.intersectPoint, n, new() { (info.intersectPoint, n)} );
-            }
-            return new();
-        }
-        public static Intersection IntersectionSegmentSegmentOpposite(Vector2 referencePoint, Vector2 aStart, Vector2 aEnd, Vector2 bStart, Vector2 bEnd)
-        {
-            var info = IntersectSegmentSegmentInfo(aStart, aEnd, bStart, bEnd);
-            if (info.intersected)
-            {
-                Vector2 n = SUtils.GetNormalOpposite(bStart, bEnd, info.intersectPoint, referencePoint);
-                return new(info.intersectPoint, n, new() { (info.intersectPoint, n) });
-            }
-            return new();
-        }
-        public static Intersection IntersectionSegmentSegments(Vector2 referencePoint, Vector2 start, Vector2 end, List<(Vector2 start, Vector2 end)> segments)
-        {
-            List<(Vector2 p, Vector2 n)> points = new();
-
-            foreach (var seg in segments)
-            {
-                var intersection = IntersectionSegmentSegmentOpposite(referencePoint, start, end, seg.start, seg.end);
-                if (intersection.valid)
-                {
-                    points.Add((intersection.p, intersection.n));
-                }
-            }
-            if (points.Count <= 0) return new();
-            else if (points.Count == 1) return new(points[0].p, points[0].n, points);
-            else if(points.Count == 2)
-            {
-                var info = ConstructNormalOpposite(points[0].p, points[1].p, referencePoint);
-                return new(info.p, info.n, points);
-            }
-            else return new(points[0].p, points[1].n, points);
-        }
-        public static Intersection IntersectionSegmentsSegment(Vector2 referencePoint, List<(Vector2 start, Vector2 end)> segments, Vector2 start, Vector2 end)
-        {
-            List<(Vector2 p, Vector2 n)> points = new();
-
-            foreach (var seg in segments)
-            {
-                var intersection = IntersectionSegmentSegment(referencePoint, seg.start, seg.end, start, end);
-                if (intersection.valid)
-                {
-                    points.Add((intersection.p, intersection.n));
-                }
-            }
-            if (points.Count <= 0) return new();
-            else if (points.Count == 1) return new(points[0].p, points[0].n, points);
-            else if (points.Count == 2)
-            {
-                var info = ConstructNormal(points[0].p, points[1].p, referencePoint);
-                return new(info.p, info.n, points);
-            }
-            else return new(points[0].p, points[0].n, points);
-        }
-        public static Intersection IntersectionSegmentsSegments(Vector2 referencePoint, List<(Vector2 start, Vector2 end)> a, List<(Vector2 start, Vector2 end)> b)
-        {
-            List<(Vector2 p, Vector2 n)> points = new(); 
-            foreach (var seg in a)
-            {
-                var intersection = IntersectionSegmentSegments(referencePoint, seg.start, seg.end, b);
-                if (intersection.valid)
-                {
-                    points.Add((intersection.p, intersection.n));
-                }
-            }
-            if (points.Count <= 0) return new();
-            else if (points.Count == 1) return new(points[0].p, points[0].n, points);
-            else if(points.Count == 2)
-            {
-                var info = ConstructNormalOpposite(points[0].p, points[1].p, referencePoint);
-                return new(info.p, info.n, points);
-            }
-            else return new(points[0].p, points[0].n, points);
-        }
-        public static Intersection IntersectionSegmentCircle(Vector2 start, Vector2 end, Vector2 circlePos, float circleRadius) { return IntersectionSegmentCircle(start.X, start.Y, end.X, end.Y, circlePos.X, circlePos.Y, circleRadius); }
-        public static Intersection IntersectionSegmentCircle(float aX, float aY, float bX, float bY, float cX, float cY, float R)
-        {
             float dX = bX - aX;
             float dY = bY - aY;
             if ((dX == 0) && (dY == 0))
@@ -884,15 +307,71 @@ namespace ShapeLib
                 return new();
             }
         }
-        public static Intersection IntersectionSegmentsCircle(Vector2 referencePoint, List<(Vector2 start, Vector2 end)> segments, Vector2 circlePos, float circleRadius)
+        public static Intersection IntersectShape(this Segment s, Triangle t) { return IntersectShape(s, t.GetSegmentShape()); }
+        public static Intersection IntersectShape(this Segment s, Rect rect) { return IntersectShape(s, rect.GetSegmentShape()); }
+        public static Intersection IntersectShape(this Segment s, Polygon p) { return IntersectShape(s, p.GetSegmentShape()); }
+        public static Intersection IntersectShape(this Segment s, SegmentShape shape)
         {
             List<(Vector2 p, Vector2 n)> points = new();
-            foreach (var seg in segments)
+
+            foreach (var seg in shape.segments)
             {
-                var intersectPoints = IntersectSegmentCircle(seg.start, seg.end, circlePos, circleRadius);
+                var intersection = IntersectSegmentSegment(s, seg, shape.referencePoint, true);
+                if (intersection.valid)
+                {
+                    points.Add((intersection.p, intersection.n));
+                }
+            }
+            if (points.Count <= 0) return new();
+            else if (points.Count == 1) return new(points[0].p, points[0].n, points);
+            else if (points.Count == 2)
+            {
+                var info = ConstructNormalOpposite(points[0].p, points[1].p, shape.referencePoint);
+                return new(info.p, info.n, points);
+            }
+            else return new(points[0].p, points[1].n, points);
+        }
+        
+        public static Intersection IntersectSegmentShapeSegment(SegmentShape shape, Segment s)
+        {
+            List<(Vector2 p, Vector2 n)> points = new();
+
+            foreach (var seg in shape.segments)
+            {
+                var intersection = IntersectSegmentSegment(seg, s, shape.referencePoint, false);
+                if (intersection.valid)
+                {
+                    points.Add((intersection.p, intersection.n));
+                }
+            }
+            if (points.Count <= 0) return new();
+            else if (points.Count == 1) return new(points[0].p, points[0].n, points);
+            else if (points.Count == 2)
+            {
+                var info = ConstructNormal(points[0].p, points[1].p, s.GetReferencePoint());
+                return new(info.p, info.n, points);
+            }
+            else return new(points[0].p, points[1].n, points);
+        }
+        public static Intersection IntersectSegmentSegment(Segment a, Segment b, Vector2 referencePoint, bool opposite)
+        {
+            var info = IntersectSegmentSegmentInfo(a.start, a.end, b.start, b.end);
+            if (info.intersected)
+            {
+                Vector2 n = opposite ? SUtils.GetNormalOpposite(b.start, b.end, info.intersectPoint, referencePoint) : SUtils.GetNormal(b.start, b.end, info.intersectPoint, referencePoint);
+                return new(info.intersectPoint, n, new() { (info.intersectPoint, n) });
+            }
+            return new();
+        }
+        public static Intersection IntersectSegmentShapeCircle(SegmentShape shape, Circle c)
+        {
+            List<(Vector2 p, Vector2 n)> points = new();
+            foreach (var seg in shape.segments)
+            {
+                var intersectPoints = IntersectSegmentCircle(seg.start, seg.end, c.center, c.radius);
                 foreach (var p in intersectPoints)
                 {
-                    Vector2 n = SVec.Normalize(p - circlePos);
+                    Vector2 n = SVec.Normalize(p - c.center);
                     points.Add((p, n));
                 }
             }
@@ -903,50 +382,634 @@ namespace ShapeLib
             }
             else if (points.Count == 2)
             {
-                var info = ConstructNormalOpposite(points[0].p, points[1].p, referencePoint);
-                return new(circlePos + info.n * circleRadius, info.n, points);
+                var info = ConstructNormalOpposite(points[0].p, points[1].p, c.center);
+                return new(c.center + info.n * c.radius, info.n, points);
             }
             else
             {
                 return new(points[0].p, points[0].n, points);
             }
         }
-        public static Intersection IntersectionSegmentRect(Vector2 referencePoint, Vector2 start, Vector2 end, Rect rect)
+        public static Intersection IntersectSegmentShapeSegmentShape(SegmentShape a, SegmentShape b)
         {
-            var c = rect.GetRectCorners(); // SRect.GetRectCorners(rect);
-            return IntersectionSegmentRect(referencePoint, start, end, c.tl, c.tr, c.br, c.bl);
+            List<(Vector2 p, Vector2 n)> points = new();
+            foreach (var seg in a.segments)
+            {
+                var intersection = IntersectShape(seg, b);// IntersectionSegmentSegments(referencePoint, seg.start, seg.end, b);
+                if (intersection.valid)
+                {
+                    points.Add((intersection.p, intersection.n));
+                }
+            }
+            if (points.Count <= 0) return new();
+            else if (points.Count == 1) return new(points[0].p, points[0].n, points);
+            else if (points.Count == 2)
+            {
+                var info = ConstructNormalOpposite(points[0].p, points[1].p, b.referencePoint);
+                return new(info.p, info.n, points);
+            }
+            else return new(points[0].p, points[0].n, points);
         }
-        public static Intersection IntersectionSegmentRect(Vector2 referencePoint, Vector2 start, Vector2 end, Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement)
+
+
+        
+        //public static Intersection IntersectSegmentSegment(Segment a, Segment b, Vector2 referencePoint)
+        //{
+        //    var info = IntersectSegmentSegmentInfo(a.start, a.end, b.start, b.end);
+        //    if (info.intersected)
+        //    {
+        //        Vector2 n = SUtils.GetNormal(b.start, b.end, info.intersectPoint, referencePoint);
+        //        return new(info.intersectPoint, n, new() { (info.intersectPoint, n) });
+        //    }
+        //    return new();
+        //}
+        /*
+        public static Intersection IntersectShape(this Segment a, Segment b, Vector2 referencePoint, bool opposite = false)
         {
-            var rect = new Rect(rectPos, rectSize, rectAlignement);
-            return IntersectionSegmentRect(referencePoint, start, end, rect);
+            var info = IntersectSegmentSegmentInfo(a.start, a.end, b.start, b.end);
+            if (info.intersected)
+            {
+                Vector2 n = opposite ? SUtils.GetNormalOpposite(b.start, b.end, info.intersectPoint, referencePoint) : SUtils.GetNormal(b.start, b.end, info.intersectPoint, referencePoint);
+                return new(info.intersectPoint, n, new() { (info.intersectPoint, n) });
+            }
+            return new();
+        }
+        public static Intersection IntersectShape(this Segment s, List<Segment> segments, Vector2 referencePoint, bool opposite = false)
+        {
+            List<(Vector2 p, Vector2 n)> points = new();
+
+            foreach (var seg in segments)
+            {
+                var intersection = opposite ? IntersectShape(s, seg, referencePoint, true) : IntersectShape(seg, s, referencePoint, false);
+                if (intersection.valid)
+                {
+                    points.Add((intersection.p, intersection.n));
+                }
+            }
+            if (points.Count <= 0) return new();
+            else if (points.Count == 1) return new(points[0].p, points[0].n, points);
+            else if (points.Count == 2)
+            {
+                var info = opposite ? ConstructNormalOpposite(points[0].p, points[1].p, referencePoint) : ConstructNormal(points[0].p, points[1].p, referencePoint);
+                return new(info.p, info.n, points);
+            }
+            else return new(points[0].p, points[1].n, points);
+        }
+        */
+
+        //public static Intersection IntersectionSegmentRect(Vector2 referencePoint, Vector2 start, Vector2 end, Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl)
+        //{
+        //    List<(Vector2 start, Vector2 end)> segments = SRect.GetRectSegments(tl, tr, br, bl);
+        //    return IntersectionSegmentSegments(referencePoint, start, end, segments);
+        //}
+        //public static Intersection IntersectionSegmentRect(Vector2 referencePoint, Vector2 start, Vector2 end, Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement)
+        //{
+        //    var rect = new Rect(rectPos, rectSize, rectAlignement);
+        //    return IntersectionSegmentRect(referencePoint, start, end, rect);
+        //
+        //}
+        //public static Intersection IntersectShape(this Segment a, Segment b, Vector2 referencePoint)
+        //{
+        //    var info = IntersectSegmentSegmentInfo(a.start, a.end, b.start, b.end);
+        //    if (info.intersected)
+        //    {
+        //        Vector2 n = SUtils.GetNormalOpposite(b.start, b.end, info.intersectPoint, referencePoint);
+        //        return new(info.intersectPoint, n, new() { (info.intersectPoint, n) });
+        //    }
+        //    return new();
+        //}
+        //public static Intersection IntersectionSegmentsSegment(Vector2 referencePoint, List<Segment> segments, Segment s)
+        //{
+        //    List<(Vector2 p, Vector2 n)> points = new();
+        //
+        //    foreach (var seg in segments)
+        //    {
+        //        var intersection = IntersectionSegmentSegment(referencePoint, seg.start, seg.end, start, end);
+        //        if (intersection.valid)
+        //        {
+        //            points.Add((intersection.p, intersection.n));
+        //        }
+        //    }
+        //    if (points.Count <= 0) return new();
+        //    else if (points.Count == 1) return new(points[0].p, points[0].n, points);
+        //    else if (points.Count == 2)
+        //    {
+        //        var info = ConstructNormal(points[0].p, points[1].p, referencePoint);
+        //        return new(info.p, info.n, points);
+        //    }
+        //    else return new(points[0].p, points[0].n, points);
+        //}
+        //public static Intersection IntersectionSegmentSegment(this SegmentCollider a, SegmentCollider b) { return IntersectionSegmentSegment(a.Pos, a.Start, a.End, b.Start, b.End); }
+        //public static Intersection IntersectionSegmentCircle(this SegmentCollider a, CircleCollider circle) { return IntersectionSegmentCircle(a.Start, a.End, circle.Pos, circle.Radius); }
+        //public static Intersection IntersectionSegmentRect(this SegmentCollider a, RectCollider rect) { return IntersectionSegmentRect(rect.Pos, a.Start, a.End, rect.Rect); }
+        //public static Intersection IntersectionSegmentPoly(this SegmentCollider a, PolyCollider poly) { return IntersectionSegmentPoly(poly.Pos, a.Start, a.End, poly.Shape); }
+
+        #endregion
+
+        #endregion
+
+        #region Circle
+        
+        #region Overlap
+
+        public static bool OverlapShape(this Circle c, Segment s)
+        {
+            if (c.radius <= 0.0f) return IsPointInsideShape(s, c.center);
+            if (IsPointInsideShape(c, s.start)) return true;
+            if (IsPointInsideShape(c, s.end)) return true;
+
+            Vector2 d = s.end - s.start;
+            Vector2 lc = c.center - s.start;
+            Vector2 p = SVec.Project(lc, d);
+            Vector2 nearest = s.start + p;
+
+            return
+                IsPointInsideShape(c, nearest) &&
+                p.LengthSquared() <= d.LengthSquared() &&
+                Vector2.Dot(p, d) >= 0.0f;
+        }
+        public static bool OverlapShape(this Circle a, Circle b)
+        {
+            if (a.radius <= 0.0f && b.radius > 0.0f) return IsPointInsideShape(b, a.center);
+            else if (b.radius <= 0.0f && a.radius > 0.0f) return IsPointInsideShape(a, b.center);
+            else if (a.radius <= 0.0f && b.radius <= 0.0f) return IsPointOnPoint(a.center, b.center);
+            float rSum = a.radius + b.radius;
+
+            return (a.center - b.center).LengthSquared() < rSum * rSum;
+        }
+        public static bool OverlapShape(this Circle c, Triangle t) { return OverlapShape(t, c); }
+        public static bool OverlapShape(this Circle c, Rect r)
+        {
+            if (c.radius <= 0.0f) return IsPointInsideShape(r, c.center);
+            return IsPointInsideShape(c, SRect.ClampOnRect(c.center, r));
+        }
+        public static bool OverlapShape(this Circle c, Polygon poly) { return OverlapPolyCircle(poly.points, c.center, c.radius); }
+        public static bool OverlapCircleLine(this Circle c, Vector2 linePos, Vector2 lineDir)
+        {
+            Vector2 lc = c.center - linePos;
+            Vector2 p = SVec.Project(lc, lineDir);
+            Vector2 nearest = linePos + p;
+            return IsPointInsideShape(c, nearest);
+        }
+        public static bool OverlapCircleRay(this Circle c, Vector2 rayPos, Vector2 rayDir)
+        {
+            Vector2 w = c.center - rayPos;
+            float p = w.X * rayDir.Y - w.Y * rayDir.X;
+            if (p < -c.radius || p > c.radius) return false;
+            float t = w.X * rayDir.X + w.Y * rayDir.Y;
+            if (t < 0.0f)
+            {
+                float d = w.LengthSquared();
+                if (d > c.radius * c.radius) return false;
+            }
+            return true;
+        }
+
+
+        //public static bool OverlapCollider(this CircleCollider a, CircleCollider b) { return OverlapCircleCircle(a.Pos, a.Radius, b.Pos, b.Radius); }
+        //public static bool OverlapCollider(this CircleCollider c, SegmentCollider s) { return OverlapCircleSegment(c.Pos, c.Radius, s.Pos, s.End); }
+        //public static bool OverlapCollider(this CircleCollider c, RectCollider r) { return OverlapCircleRect(c.Pos, c.Radius, r.Rect); }
+        //public static bool OverlapCollider(this CircleCollider c, PolyCollider poly) { return OverlapPolyCircle(poly.Shape, c.Pos, c.Radius); }
+        //public static bool OverlapCircleCircle(Vector2 aPos, float aRadius, Vector2 bPos, float bRadius)
+        //{
+        //    if (aRadius <= 0.0f && bRadius > 0.0f) return OverlapPointCircle(aPos, bPos, bRadius);
+        //    else if (bRadius <= 0.0f && aRadius > 0.0f) return OverlapPointCircle(bPos, aPos, aRadius);
+        //    else if (aRadius <= 0.0f && bRadius <= 0.0f) return OverlapPointPoint(aPos, bPos);
+        //    float rSum = aRadius + bRadius;
+        //
+        //    return (aPos - bPos).LengthSquared() < rSum * rSum;
+        //}
+        //public static bool OverlapRayCircle(Vector2 rayPos, Vector2 rayDir, Vector2 circlePos, float circleRadius)
+        //{
+        //    Vector2 w = circlePos - rayPos;
+        //    float p = w.X * rayDir.Y - w.Y * rayDir.X;
+        //    if (p < -circleRadius || p > circleRadius) return false;
+        //    float t = w.X * rayDir.X + w.Y * rayDir.Y;
+        //    if (t < 0.0f)
+        //    {
+        //        float d = w.LengthSquared();
+        //        if (d > circleRadius * circleRadius) return false;
+        //    }
+        //    return true;
+        //}
+        //public static bool OverlapCircleSegment(Vector2 circlePos, float circleRadius, Vector2 segmentPos, Vector2 segmentDir, float segmentLength) { return OverlapCircleSegment(circlePos, circleRadius, segmentPos, segmentPos + segmentDir * segmentLength); }
+        //public static bool OverlapCircleSegment(Vector2 circlePos, float circleRadius, Vector2 segmentPos, Vector2 segmentEnd)
+        //{
+        //    if (circleRadius <= 0.0f) return OverlapPointSegment(circlePos, segmentPos, segmentEnd);
+        //    if (OverlapPointCircle(segmentPos, circlePos, circleRadius)) return true;
+        //    if (OverlapPointCircle(segmentEnd, circlePos, circleRadius)) return true;
+        //
+        //    Vector2 d = segmentEnd - segmentPos;
+        //    Vector2 lc = circlePos - segmentPos;
+        //    Vector2 p = SVec.Project(lc, d);
+        //    Vector2 nearest = segmentPos + p;
+        //
+        //    return
+        //        OverlapPointCircle(nearest, circlePos, circleRadius) &&
+        //        p.LengthSquared() <= d.LengthSquared() &&
+        //        Vector2.Dot(p, d) >= 0.0f;
+        //}
+        //public static bool OverlapCircleRect(Vector2 circlePos, float circleRadius, Rect rect)
+        //{
+        //    if (circleRadius <= 0.0f) return OverlapPointRect(circlePos, rect);
+        //    return OverlapPointCircle(SRect.ClampOnRect(circlePos, rect), circlePos, circleRadius);
+        //}
+        //public static bool OverlapCircleRect(Vector2 circlePos, float circleRadius, Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement) { return OverlapCircleRect(circlePos, circleRadius, new(rectPos, rectSize, rectAlignement)); }
+        #endregion
+
+        #region Intersect
+        public static Intersection IntersectShape(this Circle cA, Circle cB)
+        {
+            float cx0 = cA.center.X; 
+            float cy0 = cA.center.Y;
+            float radius0 = cA.radius;
+            float cx1 = cB.center.X;
+            float cy1 = cB.center.Y;
+            float radius1 = cB.radius;
+            // Find the distance between the centers.
+            float dx = cx0 - cx1;
+            float dy = cy0 - cy1;
+            double dist = Math.Sqrt(dx * dx + dy * dy);
+
+            // See how many solutions there are.
+            if (dist > radius0 + radius1)
+            {
+                // No solutions, the circles are too far apart.
+                return new();
+            }
+            else if (dist < Math.Abs(radius0 - radius1))
+            {
+                // No solutions, one circle contains the other.
+                return new();
+            }
+            else if ((dist == 0) && (radius0 == radius1))
+            {
+                // No solutions, the circles coincide.
+                return new();
+            }
+            else
+            {
+                // Find a and h.
+                double a = (radius0 * radius0 - radius1 * radius1 + dist * dist) / (2 * dist);
+                double h = Math.Sqrt(radius0 * radius0 - a * a);
+
+                // Find P2.
+                double cx2 = cx0 + a * (cx1 - cx0) / dist;
+                double cy2 = cy0 + a * (cy1 - cy0) / dist;
+
+                // Get the points P3.
+                Vector2 intersection1 = new Vector2(
+                    (float)(cx2 + h * (cy1 - cy0) / dist),
+                    (float)(cy2 - h * (cx1 - cx0) / dist));
+                Vector2 intersection2 = new Vector2(
+                    (float)(cx2 - h * (cy1 - cy0) / dist),
+                    (float)(cy2 + h * (cx1 - cx0) / dist));
+
+                // See if we have 1 or 2 solutions.
+                if (dist == radius0 + radius1)
+                {
+                    Vector2 n = SVec.Normalize(intersection1 - new Vector2(cx1, cy1));
+                    return new(intersection1, n, new() { (intersection1, n) });
+                }
+                else
+                {
+                    Vector2 otherPos = new Vector2(cx1, cy1);
+                    Vector2 w = intersection2 - intersection1;
+                    float l = w.Length();
+                    Vector2 dir = w / l;
+                    Vector2 p = intersection1 + dir * l * 0.5f;
+                    Vector2 n = SVec.Normalize(p - otherPos);
+
+                    Vector2 n1 = SVec.Normalize(intersection1 - otherPos);
+                    Vector2 n2 = SVec.Normalize(intersection2 - otherPos);
+
+                    return new(p, n, new() { (intersection1, n1), (intersection2, n2) });
+                }
+            }
 
         }
-        public static Intersection IntersectionSegmentRect(Vector2 referencePoint, Vector2 start, Vector2 end, Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl)
+        public static Intersection IntersectShape(this Circle c, Segment s)
         {
-            List<(Vector2 start, Vector2 end)> segments = SRect.GetRectSegments(tl, tr, br, bl);
-            return IntersectionSegmentSegments(referencePoint, start, end, segments);
+            float cX = c.center.X;
+            float cY = c.center.Y;
+            float R = c.radius;
+            float aX = s.start.X;
+            float aY = s.start.Y;
+            float bX = s.end.X;
+            float bY = s.end.Y;
+
+            float dX = bX - aX;
+            float dY = bY - aY;
+            if ((dX == 0) && (dY == 0))
+            {
+                // A and B are the same points, no way to calculate intersection
+                return new();
+            }
+
+            float dl = (dX * dX + dY * dY);
+            float t = ((cX - aX) * dX + (cY - aY) * dY) / dl;
+
+            // point on a line nearest to circle center
+            float nearestX = aX + t * dX;
+            float nearestY = aY + t * dY;
+
+            float dist = (new Vector2(nearestX, nearestY) - new Vector2(cX, cY)).Length(); // point_dist(nearestX, nearestY, cX, cY);
+
+            if (dist == R)
+            {
+                // line segment touches circle; one intersection point
+                float iX = nearestX;
+                float iY = nearestY;
+
+                if (t >= 0f && t <= 1f)
+                {
+                    // intersection point is not actually within line segment
+                    Vector2 ip = new(iX, iY);
+                    Vector2 n = SUtils.GetNormal(new Vector2(aX, aY), new Vector2(bX, bY), ip, new Vector2(cX, cY));
+                    return new(ip, n, new() { (ip, n) });
+                }
+                else return new();
+            }
+            else if (dist < R)
+            {
+                float dt = MathF.Sqrt(R * R - dist * dist) / MathF.Sqrt(dl);
+                List<(Vector2 p, Vector2 n)> points = new();
+                // intersection point nearest to A
+                float t1 = t - dt;
+                float i1X = aX + t1 * dX;
+                float i1Y = aY + t1 * dY;
+                if (t1 >= 0f && t1 <= 1f)
+                {
+                    // intersection point is actually within line segment
+                    Vector2 ip = new(i1X, i1Y);
+                    Vector2 n = SUtils.GetNormal(new Vector2(aX, aY), new Vector2(bX, bY), ip, new Vector2(cX, cY));
+                    points.Add((ip, n));
+                }
+
+                // intersection point farthest from A
+                float t2 = t + dt;
+                float i2X = aX + t2 * dX;
+                float i2Y = aY + t2 * dY;
+                if (t2 >= 0f && t2 <= 1f)
+                {
+                    Vector2 ip = new(i2X, i2Y);
+                    Vector2 n = SUtils.GetNormal(new Vector2(aX, aY), new Vector2(bX, bY), ip, new Vector2(cX, cY));
+                    points.Add((ip, n));
+                }
+
+                if (points.Count <= 0) return new();
+                else if (points.Count == 1) return new(points[0].p, points[0].n, points);
+                else
+                {
+                    Vector2 w = points[1].p - points[0].p;
+                    float l = w.Length();
+                    Vector2 dir = w / l;
+                    Vector2 p = points[0].p + dir * l * 0.5f;
+                    Vector2 n = SUtils.GetNormal(points[0].p, points[1].p, p, new Vector2(cX, cY));
+                    return new(p, n, points);
+                }
+            }
+            else
+            {
+                // no intersection
+                return new();
+            }
         }
-        public static Intersection IntersectionSegmentPoly(Vector2 referencePoint, Vector2 start, Vector2 end, List<Vector2> poly) { return IntersectionSegmentSegments(referencePoint, start, end, SPoly.GetSegments(poly)); }
+        public static Intersection IntersectShape(this Circle c, Triangle t) { return IntersectShape(c, t.GetSegmentShape()); }
+        public static Intersection IntersectShape(this Circle c, Rect r) { return IntersectShape(c, r.GetSegmentShape()); }
+        public static Intersection IntersectShape(this Circle c, Polygon p) { return IntersectShape(c, p.GetSegmentShape()); }
+        public static Intersection IntersectShape(this Circle c, SegmentShape shape)
+        {
+            List<(Vector2 p, Vector2 n)> points = new();
+            foreach (var seg in shape.segments)
+            {
+                //var intersection = IntersectionCircleSegment(circlePos, circleRadius, seg.start, seg.end);
+                //if (intersection.valid) points.AddRange(intersection.points);
+                var intersectPoints = IntersectCircleSegment(c.center, c.radius, seg.start, seg.end);
+                foreach (var p in intersectPoints)
+                {
+                    Vector2 n = SUtils.GetNormalOpposite(seg.start, seg.end, p, shape.referencePoint);
+                    points.Add((p, n));
+                }
+            }
+            if (points.Count <= 0) return new();
+            else if (points.Count == 1)
+            {
+                return new(points[0].p, points[0].n, points);
+            }
+            else if (points.Count == 2)
+            {
+                var info = ConstructNormalOpposite(points[0].p, points[1].p, shape.referencePoint);
+                return new(info.p, info.n, points);
+            }
+            else
+            {
+                return new(points[0].p, points[0].n, points);
+            }
+        }
+
+        //public static Intersection IntersectionCircleSegment(Vector2 circlePos, float circleRadius, Vector2 start, Vector2 end) { return IntersectionCircleSegment(circlePos.X, circlePos.Y, circleRadius, start.X, start.Y, end.X, end.Y); }
+        //public static Intersection IntersectionCircleCircle(Vector2 aPos, float aRadius, Vector2 bPos, float bRadius) { return IntersectionCircleCircle(aPos.X, aPos.Y, aRadius, bPos.X, bPos.Y, bRadius); }
+        //public static Intersection IntersectionCircleCircle(this CircleCollider a, CircleCollider b) { return IntersectionCircleCircle(a.Pos, a.Radius, b.Pos, b.Radius); }
+        //public static Intersection IntersectionCircleSegment(this CircleCollider circle, SegmentCollider segment) { return IntersectionCircleSegment(circle.Pos, circle.Radius, segment.Start, segment.End); }
+        //public static Intersection IntersectionCircleRect(this CircleCollider circle, RectCollider rect) { return IntersectionCircleRect(rect.Pos, circle.Pos, circle.Radius, rect.Rect); }
+        //public static Intersection IntersectionCirclePoly(this CircleCollider circle, PolyCollider poly) { return IntersectionCirclePoly(poly.Pos, circle.Pos, circle.Radius, poly.Shape); }
+
+        #endregion
+
+        #endregion
+
+        #region Triangle
         
-        public static Intersection IntersectionRectCircle(this Rect rect, Vector2 referencePoint, Vector2 circlePos, float circleRadius) { return IntersectionSegmentsCircle(referencePoint, SRect.GetRectSegments(rect), circlePos, circleRadius); }
-        public static Intersection IntersectionRectSegment(this Rect rect, Vector2 referencePoint, Vector2 start, Vector2 end)
+        #region Overlap
+        public static bool OverlapShape(this Triangle t, Segment s) { return OverlapShape(t.GetPolygon(), s); }
+        public static bool OverlapShape(this Triangle t, Circle c) { return OverlapShape(t.GetPolygon(), c); }
+        public static bool OverlapShape(this Triangle a, Triangle b) { return OverlapShape(a.GetPolygon(), b.GetPolygon()); }
+        public static bool OverlapShape(this Triangle t, Rect r) { return OverlapShape(t.GetPolygon(), r); }
+        public static bool OverlapShape(this Triangle t, Polygon poly) { return OverlapShape(t.GetPolygon(), poly); }
+
+
+        #endregion
+
+        #region Intersect
+        public static Intersection IntersectShape(this Triangle t, Segment s) { return IntersectSegmentShapeSegment(t.GetSegmentShape(), s); }
+        public static Intersection IntersectShape(this Triangle t, Circle c) { return IntersectShape(t.GetPolygon(), c); }
+        public static Intersection IntersectShape(this Triangle a, Triangle b) { return IntersectShape(a.GetPolygon(), b.GetPolygon()); }
+        public static Intersection IntersectShape(this Triangle t, Rect r) { return IntersectShape(t.GetPolygon(), r.GetPolygon()); }
+        public static Intersection IntersectShape(this Triangle t, Polygon p) { return IntersectShape(t.GetPolygon(), p); }
+        #endregion
+
+        #endregion
+
+        #region Rect
+
+        #region Overlap
+
+        public static bool OverlapShape(this Rect r, Segment s) { return OverlapShape(s, r); }
+        public static bool OverlapShape(this Rect r, Circle c) { return OverlapShape(c, r); }
+        public static bool OverlapShape(this Rect r, Triangle t) { return OverlapShape(t, r); }
+        public static bool OverlapShape(this Rect a, Rect b)
         {
-            var segments = SRect.GetRectSegments(rect);
-            return IntersectionSegmentsSegment(referencePoint, segments, start, end);
+            Vector2 aTopLeft = new(a.x, a.y);
+            Vector2 aBottomRight = aTopLeft + new Vector2(a.width, a.height);
+            Vector2 bTopLeft = new(b.x, b.y);
+            Vector2 bBottomRight = bTopLeft + new Vector2(b.width, b.height);
+            return
+                SRect.OverlappingRange(aTopLeft.X, aBottomRight.X, bTopLeft.X, bBottomRight.X) &&
+                SRect.OverlappingRange(aTopLeft.Y, aBottomRight.Y, bTopLeft.Y, bBottomRight.Y);
         }
-        public static Intersection IntersectionRectRect(this Rect a, Vector2 referencePoint, Rect b)
+        public static bool OverlapShape(this Rect r, Polygon poly) { return OverlapShape(poly, r); }
+        public static bool OverlapRectLine(this Rect rect, Vector2 linePos, Vector2 lineDir)
         {
-            var aSegments = SRect.GetRectSegments(a);
-            var bSegments = SRect.GetRectSegments(b);
-            return IntersectionSegmentsSegments(referencePoint, aSegments, bSegments);
+            Vector2 n = SVec.Rotate90CCW(lineDir);
+
+            Vector2 c1 = new(rect.x, rect.y);
+            Vector2 c2 = c1 + new Vector2(rect.width, rect.height);
+            Vector2 c3 = new(c2.X, c1.Y);
+            Vector2 c4 = new(c1.X, c2.Y);
+
+            c1 -= linePos;
+            c2 -= linePos;
+            c3 -= linePos;
+            c4 -= linePos;
+
+            float dp1 = Vector2.Dot(n, c1);
+            float dp2 = Vector2.Dot(n, c2);
+            float dp3 = Vector2.Dot(n, c3);
+            float dp4 = Vector2.Dot(n, c4);
+
+            return dp1 * dp2 <= 0.0f || dp2 * dp3 <= 0.0f || dp3 * dp4 <= 0.0f;
         }
-        public static Intersection IntersectionRectPoly(this Rect rect, Vector2 referencePoint, List<Vector2> poly)
+        
+        
+        //public static bool OverlapCollider(this RectCollider a, RectCollider b) { return OverlapRectRect(a.Rect, b.Rect); }
+        //public static bool OverlapCollider(this RectCollider r, CircleCollider c) { return OverlapRectCircle(r.Rect, c.Pos, c.Radius); }
+        //public static bool OverlapCollider(this RectCollider r, SegmentCollider s) { return OverlapRectSegment(r.Rect, s.Pos, s.End); }
+        //public static bool OverlapCollider(this RectCollider r, PolyCollider poly) { return OverlapPolyRect(poly.Shape, r.Rect); }
+        //public static bool OverlapRectCircle(this Rect rect, CircleCollider c) { return OverlapRectCircle(rect, c.Pos, c.Radius); }
+        //public static bool OverlapRectSegment(this Rect rect, SegmentCollider s) { return OverlapRectSegment(rect, s.Pos, s.End); }
+        //public static bool OverlapRectRect(this Rect rect, RectCollider r) { return OverlapRectRect(rect, r.Rect); }
+        //public static bool OverlapRectPoly(this Rect rect, PolyCollider poly) { return OverlapPolyRect(poly.Shape, rect); }
+        //public static bool OverlapRectCircle(this Rect rect, Vector2 circlePos, float circleRadius) { return OverlapCircleRect(circlePos, circleRadius, rect); }
+        //public static bool OverlapRectLine(this Rect rect, Vector2 linePos, Vector2 lineDir) { return OverlapLineRect(linePos, lineDir, rect); }
+        //public static bool OverlapRectSegment(this Rect rect, Vector2 segmentPos, Vector2 segmentEnd) { return OverlapSegmentRect(segmentPos, segmentEnd, rect); }
+        
+        //public static bool OverlapRectRect(Vector2 aPos, Vector2 aSize, Vector2 aAlignement, Vector2 bPos, Vector2 bSize, Vector2 bAlignement)
+        //{
+        //    var a = new Rect(aPos, aSize, aAlignement);
+        //    var b = new Rect(bPos, bSize, bAlignement);
+        //    return OverlapRectRect(a, b);
+        //}
+        //public static bool OverlapRectCircle(Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement, Vector2 circlePos, float circleRadius) { return OverlapCircleRect(circlePos, circleRadius, rectPos, rectSize, rectAlignement); }
+        //public static bool OverlapRectLine(Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement, Vector2 linePos, Vector2 lineDir) { return OverlapLineRect(linePos, lineDir, rectPos, rectSize, rectAlignement); }
+        //public static bool OverlapRectSegment(Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement, Vector2 segmentPos, Vector2 segmentDir, float segmentLength) { return OverlapSegmentRect(segmentPos, segmentDir, segmentLength, rectPos, rectSize, rectAlignement); }
+        //public static bool OverlapRectSegment(Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement, Vector2 segmentPos, Vector2 segmentEnd) { return OverlapSegmentRect(segmentPos, segmentEnd, rectPos, rectSize, rectAlignement); }
+
+        #endregion
+
+        #region Intersect
+        public static Intersection IntersectShape(this Rect rect, Segment s) { return IntersectSegmentShapeSegment(rect.GetSegmentShape(), s); }
+        public static Intersection IntersectShape(this Rect rect, Circle c) { return IntersectSegmentShapeCircle(rect.GetSegmentShape(), c); }
+        public static Intersection IntersectShape(this Rect rect, Triangle t) { return IntersectSegmentShapeSegmentShape(rect.GetSegmentShape(), t.GetSegmentShape()); }
+        public static Intersection IntersectShape(this Rect a, Rect b) { return IntersectSegmentShapeSegmentShape(a.GetSegmentShape(), b.GetSegmentShape()); }
+        public static Intersection IntersectShape(this Rect rect, Polygon p) { return IntersectSegmentShapeSegmentShape(rect.GetSegmentShape(), p.GetSegmentShape()); }
+
+
+        //public static Intersection IntersectionRectCircle(this RectCollider rect, CircleCollider circle) { return rect.Rect.IntersectionRectCircle(circle.Pos, circle.Pos, circle.Radius); }
+        //public static Intersection IntersectionRectSegment(this RectCollider rect, SegmentCollider segment) { return rect.Rect.IntersectionRectSegment(rect.Pos, segment.Start, segment.End); }
+        //public static Intersection IntersectionRectRect(this RectCollider a, RectCollider b) { return a.Rect.IntersectionRectRect(b.Pos, b.Rect); }
+        //public static Intersection IntersectionRectPoly(this RectCollider rect, PolyCollider poly) { return rect.Rect.IntersectionRectPoly(poly.Pos, poly.Shape); }
+        //public static Intersection IntersectionRectCircle(this Rect rect, CircleCollider circle) { return rect.IntersectionRectCircle(circle.Pos, circle.Pos, circle.Radius); }
+        //public static Intersection IntersectionRectSegment(this Rect rect, SegmentCollider segment) { return rect.IntersectionRectSegment(rect.Center, segment.Start, segment.End); }
+        //public static Intersection IntersectionRectRect(this Rect a, RectCollider b) { return a.IntersectionRectRect(b.Pos, b.Rect); }
+        //public static Intersection IntersectionRectPoly(this Rect rect, PolyCollider poly) { return rect.IntersectionRectPoly(poly.Pos, poly.Shape); }
+
+        #endregion
+
+        #endregion
+
+        #region Polygon
+
+        #region Overlap
+        public static bool OverlapShape(this Polygon poly, Segment segment) { return OverlapPolySegment(poly.points, segment.start, segment.end); }
+        public static bool OverlapShape(this Polygon poly, Circle circle) { return OverlapPolyCircle(poly.points, circle.center, circle.radius); }
+        public static bool OverlapShape(this Polygon poly, Triangle t) { return OverlapPolyPoly(poly.points, t.GetPolygon().points); }
+        public static bool OverlapShape(this Polygon poly, Rect rect) { return OverlapPolyRect(poly.points, rect); }
+        public static bool OverlapShape(this Polygon a, Polygon b) { return OverlapPolyPoly(a.points, b.points); }
+
+        public static bool OverlapPolyCircle(List<Vector2> poly, Vector2 circlePos, float radius)
         {
-            var segments = SRect.GetRectSegments(rect);
-            var polySegments = SPoly.GetSegments(poly);
-            return IntersectionSegmentsSegments(referencePoint, segments, polySegments);
+            if (poly.Count < 3) return false;
+            if (IsPointInPoly(circlePos, poly)) return true;
+            Circle c = new(circlePos, radius);
+            for (int i = 0; i < poly.Count; i++)
+            {
+                Vector2 start = poly[i];
+                Vector2 end = poly[(i + 1) % poly.Count];
+                if (OverlapShape(c, new Segment(start, end))) return true;
+            }
+            return false;
         }
+        public static bool OverlapPolyRect(List<Vector2> poly, Rect rect)
+        {
+            if (poly.Count < 3) return false;
+            var corners = SRect.GetPoints(rect);
+            foreach (var c in corners)
+            {
+                if (IsPointInPoly(c, poly)) return true;
+            }
+
+            for (int i = 0; i < poly.Count; i++)
+            {
+                Vector2 start = poly[i];
+                Vector2 end = poly[(i + 1) % poly.Count];
+                if (OverlapShape(rect, new Segment(start, end))) return true;
+            }
+            return false;
+        }
+        public static bool OverlapPolySegment(List<Vector2> poly, Vector2 segmentStart, Vector2 segmentEnd)
+        {
+            if (poly.Count < 3) return false;
+            if (IsPointInPoly(segmentStart, poly)) return true;
+            if (IsPointInPoly(segmentEnd, poly)) return true;
+            Segment s = new(segmentStart, segmentEnd);
+            for (int i = 0; i < poly.Count; i++)
+            {
+                Vector2 start = poly[i];
+                Vector2 end = poly[(i + 1) % poly.Count];
+                if (OverlapShape(new Segment(start, end), s)) return true;
+            }
+            return false;
+        }
+        public static bool OverlapPolyPoly(List<Vector2> a, List<Vector2> b)
+        {
+            if (a.Count < 3 || b.Count < 3) return false;
+            foreach (var point in a)
+            {
+                if (IsPointInPoly(point, b)) return true;
+            }
+            foreach (var point in b)
+            {
+                if (IsPointInPoly(point, a)) return true;
+            }
+            return false;
+        }
+
+        //public static bool OverlapCollider(this PolyCollider poly, CircleCollider circle) { return OverlapPolyCircle(poly.Shape, circle.Pos, circle.Radius); }
+        //public static bool OverlapCollider(this PolyCollider poly, RectCollider rect) { return OverlapPolyRect(poly.Shape, rect.Rect); }
+        //public static bool OverlapCollider(this PolyCollider poly, SegmentCollider segment) { return OverlapPolySegment(poly.Shape, segment.Start, segment.End); }
+        //public static bool OverlapCollider(this PolyCollider a, PolyCollider b) { return OverlapPolyPoly(a.Shape, b.Shape); }
+        #endregion
+
+        #region Intersect
+        public static Intersection IntersectShape(this Polygon p, Segment s) { return IntersectSegmentShapeSegment(p.GetSegmentShape(), s); }
+        public static Intersection IntersectShape(this Polygon p, Circle c) { return IntersectSegmentShapeCircle(p.GetSegmentShape(), c); }
+        public static Intersection IntersectShape(this Polygon p, Triangle t) { return IntersectSegmentShapeSegmentShape(p.GetSegmentShape(), t.GetSegmentShape()); }
+        public static Intersection IntersectShape(this Polygon p, Rect r) { return IntersectSegmentShapeSegmentShape(p.GetSegmentShape(), r.GetSegmentShape()); }
+        public static Intersection IntersectShape(this Polygon a, Polygon b) { return IntersectSegmentShapeSegmentShape(a.GetSegmentShape(), b.GetSegmentShape()); }
+
+
+        /*
         public static Intersection IntersectionPolyCircle(Vector2 referencePoint, List<Vector2> poly, Vector2 circlePos, float circleRadius)
         {
             var segments = SPoly.GetSegments(poly);
@@ -958,8 +1021,8 @@ namespace ShapeLib
             return IntersectionSegmentsSegment(referencePoint, segments, start, end);
         }
         public static Intersection IntersectionPolyRect(Vector2 referencePoint, List<Vector2> poly, Rect rect)
-        {   
-            var segments = SRect.GetRectSegments(rect);
+        {
+            var segments = SRect.GetSegments(rect);
             var polySegments = SPoly.GetSegments(poly);
             return IntersectionSegmentsSegments(referencePoint, polySegments, segments);
         }
@@ -970,6 +1033,84 @@ namespace ShapeLib
             return IntersectionSegmentsSegments(referencePoint, aSegments, bSegments);
         }
 
+
+        public static Intersection IntersectionPolyCircle(this PolyCollider poly, CircleCollider circle) { return IntersectionPolyCircle(circle.Pos, poly.Shape, circle.Pos, circle.Radius); }
+        public static Intersection IntersectionPolySegment(this PolyCollider poly, SegmentCollider segment) { return IntersectionPolySegment(poly.Pos, poly.Shape, segment.Start, segment.End); }
+        public static Intersection IntersectionPolyRect(this PolyCollider poly, RectCollider rect) { return IntersectionPolyRect(rect.Pos, poly.Shape, rect.Rect); }
+        public static Intersection IntersectionPolyPoly(this PolyCollider a, PolyCollider b) { return IntersectionPolyPoly(b.Pos, a.Shape, b.Shape); }
+        */
+        #endregion
+
+        #endregion
+
+        #region IsPointInside
+
+        public static bool IsPointOnPoint(Vector2 pointA, Vector2 pointB) { return pointA.X == pointB.X && pointA.Y == pointB.Y; }
+        public static bool IsPointOnSegment(Vector2 point, Vector2 start, Vector2 end)
+        {
+            Vector2 d = end - start;
+            Vector2 lp = point - start;
+            Vector2 p = SVec.Project(lp, d);
+            return lp == p && p.LengthSquared() <= d.LengthSquared() && Vector2.Dot(p, d) >= 0.0f;
+        }
+        public static bool IsPointOnRay(Vector2 point, Vector2 start, Vector2 dir)
+        {
+            Vector2 displacement = point - start;
+            float p = dir.Y * displacement.X - dir.X * displacement.Y;
+            if (p != 0.0f) return false;
+            float d = displacement.X * dir.X + displacement.Y * dir.Y;
+            return d >= 0;
+        }
+        public static bool IsPointInCircle(Vector2 point, Vector2 circlePos, float circleRadius) { return (circlePos - point).LengthSquared() <= circleRadius * circleRadius; }
+        public static bool IsPointInRect(Vector2 point, Vector2 topLeft, Vector2 size)
+        {
+            float left = topLeft.X;
+            float top = topLeft.Y;
+            float right = topLeft.X + size.X;
+            float bottom = topLeft.Y + size.Y;
+
+            return left <= point.X && right >= point.X && top <= point.Y && bottom >= point.Y;
+        }
+        public static bool IsPointInPoly(Vector2 point, List<Vector2> poly)
+        {
+            if (poly.Count < 3) return false;
+            int intersections = 0;
+            for (int i = 0; i < poly.Count; i++)
+            {
+                Vector2 start = poly[i];
+                Vector2 end = poly[(i + 1) % poly.Count];
+                var info = SGeometry.IntersectRaySegmentInfo(point, new(1f, 0f), start, end);
+                if (info.intersected) intersections += 1;
+            }
+
+            return !(intersections % 2 == 0);
+        }
+        public static bool IsCircleInPoly(Vector2 circlePos, float radius, List<Vector2> poly)
+        {
+            if (poly.Count < 3) return false;
+            if (!IsPointInPoly(circlePos, poly)) return false;
+            for (int i = 0; i < poly.Count; i++)
+            {
+                Vector2 start = poly[i];
+                Vector2 end = poly[(i + 1) % poly.Count];
+                var points = IntersectSegmentCircle(start, end, circlePos, radius);
+                if (points.Count > 0) return false;
+            }
+            return true;
+        }
+
+        public static bool IsPointInsideShape(this Segment l, Vector2 p) { return IsPointOnSegment(p, l.start, l.end); }
+        public static bool IsPointInsideShape(this Circle c, Vector2 p) { return IsPointInCircle(p, c.center, c.radius); }
+        public static bool IsPointInsideShape(this Triangle t, Vector2 p)
+        {
+            var triangles = t.Triangulate(p);
+            float totalArea = triangles.Sum((Triangle t) => { return t.GetArea(); });
+            return t.GetArea() >= totalArea;
+        }
+        public static bool IsPointInsideShape(this Rect r, Vector2 p) { return IsPointInRect(p, r.TopLeft, r.Size); }
+        public static bool IsPointInsideShape(this Polygon poly, Vector2 p) { return IsPointInPoly(p, poly.points); }
+
+        #endregion
 
         #region Intersection Helper
         private static float TriangleAreaSigned(Vector2 a, Vector2 b, Vector2 c) { return (a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X); }
@@ -1218,78 +1359,38 @@ namespace ShapeLib
 
         #endregion
 
-        #region IsPointInside
-        public static bool IsPointOnSegment(Vector2 point, Vector2 start, Vector2 end)
-        {
-            Vector2 d = end - start;
-            Vector2 lp = point - start;
-            Vector2 p = SVec.Project(lp, d);
-            return lp == p && p.LengthSquared() <= d.LengthSquared() && Vector2.Dot(p, d) >= 0.0f;
-        }
-        public static bool IsPointOnRay(Vector2 point, Vector2 start, Vector2 dir)
-        {
-            Vector2 displacement = point - start;
-            float p = dir.Y * displacement.X - dir.X * displacement.Y;
-            if (p != 0.0f) return false;
-            float d = displacement.X * dir.X + displacement.Y * dir.Y;
-            return d >= 0;
-        }
-        public static bool IsPointInCircle(Vector2 point, Vector2 circlePos, float circleRadius) { return (circlePos - point).LengthSquared() <= circleRadius * circleRadius; }
-        public static bool IsPointInRect(Vector2 point, Vector2 topLeft, Vector2 size)
-        {
-            float left = topLeft.X;
-            float top = topLeft.Y;
-            float right = topLeft.X + size.X;
-            float bottom = topLeft.Y + size.Y;
 
-            return left <= point.X && right >= point.X && top <= point.Y && bottom >= point.Y;
-        }
-        public static bool IsPointInPoly(Vector2 point, List<Vector2> poly)
-        {
-            if (poly.Count < 3) return false;
-            int intersections = 0;
-            for (int i = 0; i < poly.Count; i++)
-            {
-                Vector2 start = poly[i];
-                Vector2 end = poly[(i + 1) % poly.Count];
-                var info = SGeometry.IntersectRaySegmentInfo(point, new(1f, 0f), start, end);
-                if (info.intersected) intersections += 1;
-            }
-
-            return !(intersections % 2 == 0);
-        }
-        public static bool IsCircleInPoly(Vector2 circlePos, float radius, List<Vector2> poly)
-        {
-            if (poly.Count < 3) return false;
-            if (!IsPointInPoly(circlePos, poly)) return false;
-            for (int i = 0; i < poly.Count; i++)
-            {
-                Vector2 start = poly[i];
-                Vector2 end = poly[(i + 1) % poly.Count];
-                var points = IntersectSegmentCircle(start, end, circlePos, radius);
-                if (points.Count > 0) return false;
-            }
-            return true;
-        }
-
-
-        public static bool IsPointInsideShape(this Segment l, Vector2 p) { return IsPointOnSegment(p, l.start, l.end); }
-        public static bool IsPointInsideShape(this Circle c, Vector2 p) { return IsPointInCircle(p, c.center, c.radius); }
-        public static bool IsPointInsideShape(this Rect r, Vector2 p) { return IsPointInRect(p, r.TopLeft, r.Size); }
-        public static bool IsPointInsideShape(this Polygon poly, Vector2 p) { return IsPointInPoly(p, poly.points); }
-        public static bool IsPointInsideShape(this Triangle t, Vector2 p)
-        {
-            var triangles = t.Triangulate(p);
-            float totalArea = triangles.Sum((Triangle t) => { return t.GetArea(); });
-            return t.GetArea() >= totalArea;
-        }
-        #endregion
-
-
+        
+        //#region IShape
+        //public static bool OverlapShape(this IShape a, IShape b) { return OverlapSegmentsSegments(a.GetSegmentShape(), b.GetSegmentShape()); }
+        //public static Intersection IntersectShape(this IShape a, IShape b) { return IntersectionSegmentsSegments(b.GetReferencePoint(), a.GetSegmentShape(), b.GetSegmentShape()); }
+        //
+        //public static bool OverlapShapeBoundingBox(this IShape a, IShape b) { return OverlapShape(a.GetBoundingBox(), b.GetBoundingBox()); }
+        //public static Intersection IntersectShapeBoundingBox(this IShape a, IShape b) { return IntersectionRectRect(a.GetBoundingBox(), b.GetReferencePoint(), b.GetBoundingBox()); }
+        //
+        //#endregion
     }
 }
 
 
+//public static bool OverlapCirclePoint(this Circle c, Vector2 point)
+        //{
+        //    float disSq = (circlePos - point).LengthSquared();
+        //    return disSq <= circleRadius * circleRadius;
+        //}
+        //public static bool OverlapPointSegment(Vector2 point, Vector2 segmentPos, Vector2 segmentEnd) { return OverlapCircleSegment(point, POINT_RADIUS, segmentPos, segmentEnd); }
+        //public static bool OverlapPointRect(Vector2 point, Rect rect) { return OverlapCircleRect(point, POINT_RADIUS, rect);}
+        //public static bool OverlapPointLine(Vector2 point, Vector2 linePos, Vector2 lineDir) { return OverlapCircleLine(point, POINT_RADIUS, linePos, lineDir); }
+        //public static bool OverlapRayPoint(Vector2 point, Vector2 rayPos, Vector2 rayDir) { return OverlapPointRay(point, rayPos, rayDir); }
+        //public static bool OverlapPointSegment(Vector2 point, Vector2 segmentPos, Vector2 segmentDir, float segmentlength) { return OverlapPointSegment(point, segmentPos, segmentPos + segmentDir * segmentlength); }
+        //public static bool OverlapPointRect(Vector2 point, Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement) {return OverlapPointRect(point, new(rectPos, rectSize, rectAlignement));}
+        //public static bool OverlapCirclePoint(Vector2 circlePos, float circleRadius, Vector2 point) { return OverlapPointCircle(point, circlePos, circleRadius); }
+        //public static bool OverlapSegmentPoint(Vector2 segmentPos, Vector2 segmentDir, float segmentLength, Vector2 point) {return OverlapSegmentCircle(segmentPos, segmentPos + segmentDir * segmentLength, point, POINT_RADIUS);}
+        //public static bool OverlapLinePoint(Vector2 linePos, Vector2 lineDir, Vector2 point) {return OverlapLineCircle(linePos, lineDir, point, POINT_RADIUS);}
+        //public static bool OverlapSegmentPoint(Vector2 segmentPos, Vector2 segmentEnd, Vector2 point) {return OverlapSegmentCircle(segmentPos, segmentEnd, point, POINT_RADIUS);}
+        //public static bool OverlapRectPoint(this Rect rect, Vector2 point) { return OverlapRectCircle(rect, point, POINT_RADIUS); }
+        //public static bool OverlapRectPoint(Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement, Vector2 point) { return OverlapRectCircle(rectPos, rectSize, rectAlignement, point, POINT_RADIUS);}
+        //public static bool OverlapPolyPoint(List<Vector2> poly, Vector2 point) { return OverlapPolyCircle(poly, point, POINT_RADIUS); }
 //public static Intersection IntersectionPointPoint(Collider a, Collider b)
 //{
 //    return IntersectionPointPoint(a.Pos, b.Pos);

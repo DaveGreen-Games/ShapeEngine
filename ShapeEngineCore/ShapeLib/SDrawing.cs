@@ -752,14 +752,14 @@ namespace ShapeLib
         public static void Draw(this Rect rect, Color color) => DrawRectangleRec(rect.Rectangle, color);
         public static void Draw(this Rect rect, Vector2 pivot, float rotDeg, Color color)
         {
-            var rr = rect.RotateRect(pivot, rotDeg); // SRect.RotateRect(rect, pivot, rotDeg);
+            var rr = rect.Rotate(pivot, rotDeg); // SRect.RotateRect(rect, pivot, rotDeg);
             Raylib.DrawTriangle(rr.tl, rr.bl, rr.br, color);
             Raylib.DrawTriangle(rr.br, rr.tr, rr.tl, color);
         }
         public static void DrawLines(this Rect rect, float lineThickness, Color color) => Raylib.DrawRectangleLinesEx(rect.Rectangle, lineThickness, color);
         public static void DrawLines(this Rect rect, Vector2 pivot, float rotDeg, float lineThickness, Color color, bool rounded = false)
         {
-            var rr = SRect.RotateRect(rect, pivot, rotDeg);
+            var rr = SRect.Rotate(rect, pivot, rotDeg);
 
             if (rounded)
             {
@@ -1013,7 +1013,7 @@ namespace ShapeLib
         {
             if (cornersRounded)
             {
-                var corners = SRect.GetRectCorners(rect);
+                var corners = SRect.GetCorners(rect);
                 float r = lineThickness * 0.5f;
                 DrawCircleV(corners.tl, r, color);
                 DrawCircleV(corners.tr, r, color);
@@ -1022,7 +1022,7 @@ namespace ShapeLib
             }
 
 
-            var segments = SRect.GetRectSegments(rect);
+            var segments = SRect.GetSegments(rect);
             foreach (var s in segments)
             {
                 DrawLineDotted(s.start, s.end, gapsPerSide, lineThickness, color, roundedLineEdges);
@@ -1032,7 +1032,7 @@ namespace ShapeLib
         {
             if (cornersRounded)
             {
-                var corners = SRect.GetRectCorners(rect);
+                var corners = SRect.GetCorners(rect);
                 float r = lineThickness * 0.5f;
                 DrawCircleV(corners.tl, r, color);
                 DrawCircleV(corners.tr, r, color);
@@ -1041,7 +1041,7 @@ namespace ShapeLib
             }
 
 
-            var segments = SRect.GetRectSegments(rect);
+            var segments = SRect.GetSegments(rect);
             foreach (var s in segments)
             {
                 DrawLineDotted(s.start, s.end, gapsPerSide, gapSizeF, lineThickness, color, roundedLineEdges);
@@ -1624,7 +1624,7 @@ namespace ShapeLib
         }
         public static void DrawOutlineBar(this Rect rect, Vector2 pivot, float angleDeg, float thickness, float f, Color color)
         {
-            var rr = SRect.RotateRect(rect, pivot, angleDeg);
+            var rr = SRect.Rotate(rect, pivot, angleDeg);
             //Vector2 thicknessOffsetX = new Vector2(thickness, 0f);
             //Vector2 thicknessOffsetY = new Vector2(0f, thickness);
 
