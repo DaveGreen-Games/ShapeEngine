@@ -36,6 +36,10 @@ namespace ShapeCore
 
     //}
     
+    
+
+    //TODO _> make layers/gameobjects sorted list/dictionary
+
     public class Area
     {
         protected class AreaLayer

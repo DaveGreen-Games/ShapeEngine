@@ -255,6 +255,7 @@ namespace ShapeLib
             //
             //return new(topLeft, topRight, bottomRight, bottomLeft);
         }
+        //public static SegmentShape GetSegmentsShape(this Rect rect) { return new(GetSegments(rect), rect.Center); }
         public static List<Segment> GetSegments(this Rect rect)
         {
             var c = rect.GetCorners();
@@ -363,6 +364,7 @@ namespace ShapeLib
         /// <returns></returns>
         public static Vector2 GetCorner(this Rect r, int corner) { return GetPoints(r)[corner % 4]; }
         
+        //public static Polygon GetPointsPolygon(this Rect rect) { return new() { rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight }; }
         public static (Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr) GetCorners(this Rect rect) { return (rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight); }
         /// <summary>
         /// Points are ordered in ccw order starting from the top left. (tl, bl, br, tr)

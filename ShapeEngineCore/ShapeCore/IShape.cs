@@ -15,174 +15,15 @@ namespace ShapeCore
         public Vector2 GetReferencePoint();
         public Rect GetBoundingBox();
         public bool IsPointOnShape(Vector2 p);
+        public void DrawShape(float linethickness, Color color);
+        //public void SetPosition(Vector2 position);
         //public bool Equals(IShape other);
         //public Circle GetBoundingCircle();
-        public void DrawShape(float linethickness, Color color);
     }
 
 
-    public static class SSegment
-    {
-        public static List<Segment> Split(this Segment l, float f)
-        {
-            Vector2 p = GetPoint(l, f);
-            return new() { new(l.start, p), new(p, l.end) };
-        }
-        public static Vector2 GetPoint(this Segment l, float f) { return l.start.Lerp(l.end, f); }
-        public static Segment Rotate(this Segment l, float pivot, float rad)
-        {
-            Vector2 p = GetPoint(l, pivot);
-            Vector2 s = l.start - p;
-            Vector2 e = l.end - p;
-            return new Segment(p + s.Rotate(rad), p + e.Rotate(rad));
-
-
-            //float len = l.Length;
-            //Vector2 d = l.Dir;
-            //
-            //float startLength = len * pivot;
-            //float endLength = len * (1f - pivot);
-            //
-            //Vector2 p = l.start + d * startLength;
-            //Vector2 newStart = p - (d * startLength).Rotate(rad);
-            //Vector2 newEnd = p + (d * endLength).Rotate(rad);
-            //return new Line(newStart, newEnd);
-        }
-        
-        public static Segment Scale(this Segment l, float scale) { return new(l.start * scale, l.end * scale); }
-        public static Segment Scale(this Segment l, Vector2 scale) { return new(l.start * scale, l.end * scale); }
-        public static Segment Scale(this Segment l, float startScale, float endScale) { return new(l.start * startScale, l.end * endScale); }
-        public static Segment ScaleF(this Segment l, float scale, float f) 
-        {
-            Vector2 p = GetPoint(l, f);
-            Vector2 s = l.start - p;
-            Vector2 e = l.end - p;
-            return new Segment(p + s * scale, p + e * scale);
-
-            //float len = l.Length;
-            //Vector2 d = l.Dir;
-            //
-            //float startLength = len * f;
-            //float endLength = len * (1f - f);
-            //
-            //Vector2 p = l.start + d * startLength;
-            //Vector2 newStart = p - (d * startLength * scale);
-            //Vector2 newEnd = p + (d * endLength * scale);
-            //return new Line(newStart, newEnd);
-        }
-        public static Segment ScaleF(this Segment l, Vector2 scale, float f)
-        {
-            Vector2 p = GetPoint(l, f);
-            Vector2 s = l.start - p;
-            Vector2 e = l.end - p;
-            return new Segment(p + s * scale, p + e * scale);
-        }
-        public static Segment Move(this Segment l, Vector2 offset, float f) { return new(l.start + (offset * (1f - f)), l.end + (offset * (f))); }
-        public static Segment Move(this Segment l,  Vector2 offset) { return new(l.start + offset, l.end + offset); }
-        public static Segment Move(this Segment l, float x, float y) { return Move(l, new Vector2(x, y)); }
-        public static List<Vector2> GetPoints(this Segment s) { return new() { s.start, s.end }; }
-    }
-    public static class SCircle
-    {
-        public static Vector2 GetPoint(this Circle c, float angleRad, float f) { return c.center + new Vector2(c.radius * f, 0f).Rotate(angleRad); }
-        
-        public static Circle ScaleRadius(this Circle c, float scale) { return new(c.center, c.radius * scale); }
-        public static Circle ChangeRadius(this Circle c, float amount) { return new(c.center, c.radius + amount); }
-        public static Circle Move(this Circle c, Vector2 offset) { return new(c.center + offset, c.radius); }
-        public static List<Segment> GetSegments(this Circle c, int pointCount = 16)
-        {
-            float angleStep = (MathF.PI * 2f) / pointCount;
-            List<Segment> segments = new();
-            for (int i = 0; i < pointCount; i++)
-            {
-                Vector2 start = c.center + new Vector2(c.radius, 0f).Rotate(angleStep * i);
-                Vector2 end = c.center + new Vector2(c.radius, 0f).Rotate(angleStep * ((i + 1) % pointCount));
-                segments.Add(new Segment(start, end));
-            }
-            return segments;
-        }
-        public static List<Vector2> GetPoints(this Circle c, int pointCount = 16)
-        {
-            float angleStep = (MathF.PI * 2f) / pointCount;
-            List<Vector2> points = new();
-            for (int i = 0; i < pointCount; i++)
-            {
-                Vector2 p = c.center + new Vector2(c.radius, 0f).Rotate(angleStep * i);
-                points.Add(p);
-            }
-            return points;
-        }
-    }
-    public static class STriangle
-    {
-        public static List<Triangle> Triangulate(this Triangle t)
-        {
-            return Triangulate(t, t.Centroid);
-        }
-        public static List<Triangle> Triangulate(this Triangle t, Vector2 p)
-        {
-            return new()
-            {
-                new(t.a, t.b, p),
-                new(t.b, t.c, p),
-                new(t.c, t.a, p)
-            };
-        }
-        public static Triangle GetInsideTriangle(this Triangle t, float abF, float bcF, float caF)
-        {
-            Vector2 a = SVec.Lerp(t.a, t.b, abF);
-            Vector2 b = SVec.Lerp(t.b, t.c, bcF);
-            Vector2 c = SVec.Lerp(t.c, t.a, caF);
-            return new(a, b, c);
-        }
-        public static Vector2 GetPoint(this Triangle t, float f1, float f2)
-        {
-            float f1Sq = MathF.Sqrt(f1);
-            float x = (1f - f1Sq) * t.a.X + (f1Sq * (1f - f2)) * t.b.X + (f1Sq * f2) * t.c.X;
-            float y = (1f - f1Sq) * t.a.Y + (f1Sq * (1f - f2)) * t.b.Y + (f1Sq * f2) * t.c.Y;
-            return new(x, y);
-        }
-        public static List<Vector2> GetPoints(this Triangle t) { return new() { t.a, t.b, t.c }; }
-        public static Polygon GetPointsPolygon(this Triangle t) { return new(t.Centroid, t.a, t.b, t.c); }
-        public static Triangle Rotate(this Triangle t, float rad) { return Rotate(t, t.Centroid, rad); }
-        public static Triangle Rotate(this Triangle t, Vector2 pivot, float rad)
-        {
-            Vector2 a = pivot + (t.a - pivot).Rotate(rad);
-            Vector2 b = pivot + (t.b - pivot).Rotate(rad);
-            Vector2 c = pivot + (t.c - pivot).Rotate(rad);
-            return new(a, b, c);
-        }
-        public static Triangle Scale(this Triangle t, float scale) { return new(t.a * scale, t.b * scale, t.c * scale); }
-        public static Triangle Scale(this Triangle t, Vector2 scale) { return new(t.a * scale, t.b * scale, t.c * scale); }
-        public static Triangle Scale(this Triangle t, Vector2 pivot, float scale) 
-        {
-            Vector2 a = pivot + (t.a - pivot) * scale;
-            Vector2 b = pivot + (t.b - pivot) * scale;
-            Vector2 c = pivot + (t.c - pivot) * scale;
-            return new(a, b, c);
-        }
-        public static Triangle Scale(this Triangle t, Vector2 pivot, Vector2 scale)
-        {
-            Vector2 a = pivot + (t.a - pivot) * scale;
-            Vector2 b = pivot + (t.b - pivot) * scale;
-            Vector2 c = pivot + (t.c - pivot) * scale;
-            return new(a, b, c);
-        }
-        public static Triangle Scale(this Triangle t, float aF, float bF, float cF) { return new(t.a * aF, t.b * bF, t.c * cF); }
-        public static Triangle Scale(this Triangle t, Vector2 aF, Vector2 bF, Vector2 cF) { return new(t.a * aF, t.b * bF, t.c * cF); }
-        public static Triangle Move(this Triangle t, Vector2 offset) { return new(t.a + offset, t.b + offset, t.c + offset); }
-        public static Triangle Move(this Triangle t, Vector2 aOffset, Vector2 bOffset, Vector2 cOffset) { return new(t.a + aOffset, t.b + bOffset, t.c + cOffset); }
-        public static List<Segment> GetSegments(this Triangle t) { return new() { new(t.a, t.b), new(t.b, t.c), new(t.c, t.a) }; }
-        public static List<Vector2> GetPoints(this Triangle t) { return new() { t.a, t.b, t.c }; }
-        //public static bool IsPointInside(this Triangle t, Vector2 p)
-        //{
-        //    var triangles = Triangulate(t, p);
-        //    float totalArea = triangles.Sum((Triangle t) => { return t.GetArea(); });
-        //    return t.GetArea() >= totalArea;
-        //
-        //}
-    }
-
+    
+    
     public struct SegmentShape
     {
         public List<Segment> segments;
@@ -190,6 +31,20 @@ namespace ShapeCore
         public SegmentShape(List<Segment> segments, Vector2 referencePoint) { this.segments = segments; this.referencePoint = referencePoint; }
         public SegmentShape(Vector2 referencePoint, params Segment[] segments) { this.segments = segments.ToList(); this.referencePoint = referencePoint; }
     }
+    //public struct PolygonShape
+    //{
+    //    public List<Vector2> points;
+    //    public Vector2 referencePoint;
+    //
+    //    public PolygonShape(List<Vector2> points) { this.points = points; this.referencePoint = SPoly.GetCentroid(points); }
+    //    public PolygonShape(params Vector2[] points) { this.points = points.ToList(); this.referencePoint = SPoly.GetCentroid(points.ToList()); }
+    //    public PolygonShape(List<Vector2> points, Vector2 center) { this.points = points; this.referencePoint = center; }
+    //    public PolygonShape(Vector2 center, params Vector2[] points) { this.points = points.ToList(); this.referencePoint = center; }
+    //    public PolygonShape(Triangle t) { this.points = t.GetPolygon().points; this.referencePoint = t.Centroid; }
+    //    public PolygonShape(Rect r) { this.points = r.GetPolygon().points; this.referencePoint = r.Center; }
+    //}
+
+
     public struct Segment : IShape
     {
         public Vector2 start;
@@ -202,9 +57,8 @@ namespace ShapeCore
 
         public Segment(Vector2 start, Vector2 end) { this.start = start; this.end = end; }
         public Segment(float startX, float startY, float endX, float endY) { this.start = new(startX, startY); this.end = new(endX, endY); }
-        public Segment(Segment l) { start = l.start; end = l.end; }
-
-
+        public Segment(Segment s) { start = s.start; end = s.end; }
+        
         public Vector2 GetReferencePoint() { return Center; }
         public float GetArea() { return 0f; }
         public float GetCircumference() { return Length; }
@@ -214,6 +68,14 @@ namespace ShapeCore
         public Rect GetBoundingBox() { return new(start, end); }
         public bool IsPointOnShape(Vector2 p) { return this.IsPointInsideShape(p); }
         public void DrawShape(float linethickness, Color color) => this.Draw(linethickness, color);
+        
+        //public Segment ChangePosition(Vector2 newPos) { return new(newPos, newPos + Displacement); }
+        //public void SetPosition(Vector2 newPosition)
+        //{
+        //    Vector2 w = Displacement;
+        //    start = newPosition;
+        //    end = newPosition + w;
+        //}
     }
     public struct Circle : IShape
     {
@@ -226,7 +88,7 @@ namespace ShapeCore
         public Circle(float x, float y, float radius) { this.center = new(x, y); this.radius = radius; }
         public Circle(Circle c) { center = c.center; radius = c.radius; }
         public Circle(Rect r) { center = r.Center; radius = MathF.Max(r.width, r.height); }
-        
+
         public Vector2 GetReferencePoint() { return center; }
         public float GetArea() { return MathF.PI * radius * radius; }
         public float GetCircumference() { return MathF.PI * radius * 2f; }
@@ -236,6 +98,8 @@ namespace ShapeCore
         public Polygon GetPolygon() { return new(this.GetPoints(), center); }
         public void DrawShape(float linethickness, Color color) => this.DrawLines(linethickness, color);
         public bool IsPointOnShape(Vector2 p) { return this.IsPointInsideShape(p); }
+        
+        //public void SetPosition(Vector2 newPosition) { center = newPosition; }
     }
     
     /// <summary>
@@ -258,7 +122,7 @@ namespace ShapeCore
         /// <param name="c"></param>
         public Triangle(Vector2 a, Vector2 b, Vector2 c) { this.a = a; this.b = b; this.c = c; }
         public Triangle(Triangle t) { a = t.a; b = t.b; c = t.c; }
-
+        
         public Vector2 GetReferencePoint() { return Centroid; }
         public float GetCircumference() { return MathF.Sqrt(GetCircumferenceSquared()); }
         public float GetCircumferenceSquared() { return A.LengthSquared() + B.LengthSquared() + C.LengthSquared(); }
@@ -266,10 +130,19 @@ namespace ShapeCore
         public SegmentShape GetSegmentShape() { return new(Centroid, new(a, b), new(b, c), new(c, a) ); }
         public Polygon GetPolygon() { return new(Centroid, a, b, c); }
         public Rect GetBoundingBox() { return new Rect(a.X, a.Y, 0, 0).Enlarge(b).Enlarge(c); }
-        //public Circle GetBoundingCircle() { return new(Center, Length / 2); }
         public void DrawShape(float linethickness, Color color) => this.DrawLines(linethickness, color);
         public bool IsPointOnShape(Vector2 p) { return this.IsPointInsideShape(p); }
+        
+        //public Circle GetBoundingCircle() { return new(Center, Length / 2); }
+        //public void SetPosition(Vector2 newPosition) 
+        //{
+        //    Vector2 w = newPosition - Centroid;//displacement
+        //    a += w;
+        //    b += w;
+        //    c += w;
+        //}
     }
+    
     public struct Rect : IShape
     {
         public float x;
@@ -348,6 +221,12 @@ namespace ShapeCore
         public void DrawShape(float linethickness, Color color) => this.DrawLines(linethickness, color);
         
         
+        //public void SetPosition(Vector2 newPosition) 
+        //{
+        //    Vector2 w = newPosition - Center;
+        //    x += w.X;
+        //    y += w.Y;
+        //}
         /*
         public Vector2 GetPoint(Vector2 alignement)
         {
@@ -501,14 +380,12 @@ namespace ShapeCore
         public List<Vector2> points;
         public Vector2 center;
 
-        public Polygon(List<Vector2> points) 
-        { this.points = points; this.center = SPoly.GetCentroid(points); }
+        public Polygon(List<Vector2> points) { this.points = points; this.center = SPoly.GetCentroid(points); }
         public Polygon(params Vector2[] points) { this.points = points.ToList(); this.center = SPoly.GetCentroid(points.ToList()); }
         public Polygon(List<Vector2> points, Vector2 center) { this.points = points; this.center = center; }
         public Polygon(Vector2 center, params Vector2[] points) { this.points = points.ToList(); this.center = center; }
         public Polygon(Triangle t) { this.points = t.GetPolygon().points; this.center = t.Centroid; }
         public Polygon(Rect r) { this.points = r.GetPolygon().points; this.center = r.Center; }
-
 
         public Vector2 GetReferencePoint() { return center; }
         public float GetCircumference() { return this.GetCircumference(); }
@@ -519,9 +396,54 @@ namespace ShapeCore
         public Rect GetBoundingBox() { return this.GetBoundingBox(); }
         public void DrawShape(float linethickness, Color color) => SDrawing.DrawPolygonLines(points, linethickness, color);
         public bool IsPointOnShape(Vector2 p) { return this.IsPointInsideShape(p); }
+        
+        //public void SetPosition(Vector2 newPosition) { center = newPosition; }
     }
+    
+    /*
+    public class Poly
+    {
+        List<Vector2> displacements = new();
+        private List<Vector2> shape = new();
 
+        
+        private Vector2 center;
+        private Vector2 scale;
+        private float rotRad;
+        bool dirty;
 
+        public Polygon GetShape()
+        {
+            if (dirty) UpdateShape();
+            return new Polygon(shape, center);
+        }
+        
+        public Vector2 GetPos() { return center; }
+        public Vector2 GetScale() { return scale; }
+        public float GetRotRad() { return rotRad; }
+
+        public void SetPos(Vector2 pos)
+        {
+            if (!dirty) dirty = true;
+            center = pos;
+        }
+        public void SetScale(Vector2 scale)
+        {
+            if (!dirty) dirty = true;
+            this.scale = scale;
+        }
+        public void SetRotation(float radians)
+        {
+            if (!dirty) dirty = true;
+            this.rotRad = radians;
+        }
+        private void UpdateShape()
+        {
+            dirty = false;
+            shape = SPoly.GetShape(displacements, center, rotRad, scale);
+        }
+    }
+    */
 
     /*
 
