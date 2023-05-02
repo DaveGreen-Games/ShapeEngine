@@ -10,7 +10,7 @@ namespace ShapeCore
     }
     public interface IGameObject : ILocation
     {
-        public float DrawOrder { get; set; }
+        //public float DrawOrder { get; set; }
         public int AreaLayer { get; set; }
         public bool DrawToUI { get; set; }
         /// <summary>
@@ -34,12 +34,13 @@ namespace ShapeCore
         public virtual bool Update(float dt) { return false; }
         public virtual bool Draw() { return false; }
         public virtual bool DrawUI(Vector2 uiSize) { return false; }
-        public virtual void OnPlayfield(bool inner, bool outer) { }
+        public virtual void LeftWorldBounds() { Destroy(); }
         public virtual Vector2 GetCameraPosition(Vector2 camPos, float dt, float smoothness = 1f, float boundary = 0f) { return GetPosition(); }
         public bool IsDead();
         
         protected virtual bool WasKilled() { return true; }
         
+        //public virtual void OnPlayfield(bool inner, bool outer) { }
         //public virtual bool IsEnabled() { return true; }
         //public virtual bool IsVisible() { return true; }
     }

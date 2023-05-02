@@ -21,9 +21,7 @@ namespace ShapeCore
 
     }
 
-    //colliders have bounding sphere
-    //check if bounding spheres would overlap and if the colliders relative velocity lets them move towards each other
-    //only if both a true, check for final overlap
+
     public class CollisionHandler
     {
         protected List<ICollidable> collidables = new();
@@ -37,17 +35,19 @@ namespace ShapeCore
         protected Dictionary<ICollidable, List<ICollidable>> overlaps = new();
 
 
-        public CollisionHandler(float x, float y, float w, float h, int rows, int cols)
-        {
-            spatialHash = new(x, y, w, h, rows, cols);
-        }
-        public void UpdateArea(Rect newArea)
-        {
-            int rows = spatialHash.GetRows();
-            int cols = spatialHash.GetCols();
-            spatialHash.Close();
-            spatialHash = new(newArea.x, newArea.y, newArea.width, newArea.height, rows, cols);
-        }
+        public CollisionHandler(float x, float y, float w, float h, int rows, int cols) { spatialHash = new(x, y, w, h, rows, cols); }
+        public CollisionHandler(Rect bounds, int rows, int cols) { spatialHash = new(bounds.x, bounds.y, bounds.width, bounds.height, rows, cols); }
+        
+        
+        public void UpdateBounds(Rect newBounds) { spatialHash = spatialHash.Resize(newBounds); }
+        //{
+        //    int rows = spatialHash.GetRows();
+        //    int cols = spatialHash.GetCols();
+        //    spatialHash.Close();
+        //    spatialHash = new(newBounds.x, newBounds.y, newBounds.width, newBounds.height, rows, cols);
+        //}
+        
+        
         public SpatialHash GetSpatialHash() { return spatialHash; }
         public void Add(ICollidable collider)
         {
@@ -69,6 +69,7 @@ namespace ShapeCore
         {
             tempRemoving.AddRange(colliders);
         }
+        
         public void Clear()
         {
             collidables.Clear();
@@ -81,6 +82,7 @@ namespace ShapeCore
             Clear();
             spatialHash.Close();
         }
+        
         public virtual void Update(float dt)
         {
             spatialHash.Clear();
@@ -104,6 +106,8 @@ namespace ShapeCore
                 List<ICollidable> others = spatialHash.GetObjects(collider);
                 foreach (ICollidable other in others)
                 {
+                    if(!other.GetCollider().Enabled) continue;
+
                     uint otherLayer = other.GetCollisionLayer();
                     if (collisionMask.Length > 0)
                     {

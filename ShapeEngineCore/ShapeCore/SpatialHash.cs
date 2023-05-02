@@ -21,7 +21,7 @@ namespace ShapeCore
 
         private List<ICollidable>[] buckets;
 
-        //figure out something better than spacing (is not always dividedable by screen size)
+        //figure out something better than spacing (is not always divisable by screen size)
         public SpatialHash(float x, float y, float w, float h, int rows, int cols)
         {
             origin_x = x;
@@ -43,13 +43,33 @@ namespace ShapeCore
                 buckets[i] = new List<ICollidable>();
             }
         }
+        public SpatialHash(Rect bounds, int rows, int cols)
+        {
+            origin_x = bounds.x;
+            origin_y = bounds.y;
 
+            width = bounds.width;
+            height = bounds.height;
+
+            spacing_x = width / cols;
+            spacing_y = height / rows;
+
+
+            this.rows = rows;// (int)Math.Floor(height / spacing);
+            this.cols = cols;// (int)Math.Floor(width / spacing); 
+            bucket_size = rows * cols;
+            buckets = new List<ICollidable>[bucket_size];
+            for (int i = 0; i < bucket_size; i++)
+            {
+                buckets[i] = new List<ICollidable>();
+            }
+        }
+        
         public int GetRows() { return rows; }
         public int GetCols() { return cols; }
-        public int getBucketSize()
-        {
-            return bucket_size;
-        }
+        public int GetBucketSize() { return bucket_size; }
+
+        public SpatialHash Resize(Rect newBounds) { return new(newBounds, rows, cols); }
 
         public void DebugDrawGrid(Color border, Color fill)
         {
@@ -116,7 +136,7 @@ namespace ShapeCore
         //only make those checks if there are more than 1 cell
         public List<int> GetCellIDs(ICollider shape)
         {
-            Rect boundingRect = shape.GetBoundingBox();
+            Rect boundingRect = shape.GetShape().GetBoundingBox();
             List<int> hashes = new List<int>();
             (int x, int y) topLeft = GetCellCoordinate(boundingRect.x, boundingRect.y);
             (int x, int y) bottomRight = GetCellCoordinate(boundingRect.x + boundingRect.width, boundingRect.y + boundingRect.height);
@@ -137,7 +157,7 @@ namespace ShapeCore
 
                     if (!hashes.Contains(id)) //do i still need this check?
                     {
-                        if(SGeometry.OverlapRectRect(GetCellRectangle(id), boundingRect))
+                        if(SGeometry.OverlapShape(GetCellRectangle(id), boundingRect))
                         {
                             if(SGeometry.Overlap(GetCellRectangle(id), shape))
                                 hashes.Add(id);

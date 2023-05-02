@@ -1,54 +1,52 @@
 ﻿using ShapeLib;
 using ShapeTiming;
 using System.Numerics;
-using ShapeCore;
-using System.Reflection.Emit;
 
 namespace ShapeCore
 {
-    //public class AreaLayer
-    //{
-    //    public readonly List<IGameObject> gameObjects = new();
-    //    public float ParallaxeScaling { get; set; } = 0f;
-    //    public float ParallaxeSmoothing { get; set; } = 0.1f;
-    //    public float UpdateSlowFactor { get; set; } = 1f;
-    //    public ITimedValues UpdateSlowFactors { get; } = new TimedFactors(); 
-    //    public int Layer { get; private set; }
-    //    public Vector2 ParallaxeOffset { get; protected set; } = new(0f);
-    //    
-    //    public AreaLayer(int layer, float parallaxeScaling, float parallaxeSmoothing = 0.1f)
-        //{
-        //    this.Layer = layer;
-        //    this.ParallaxeScaling = parallaxeScaling;
-        //    this.ParallaxeSmoothing = parallaxeSmoothing;
-        //}
-    //    public AreaLayer(int layer)
-        //{
-        //    this.Layer = layer;
-        //    this.ParallaxeScaling = 0f;
-        //}
-    //    public bool IsParallaxe() { return ParallaxeScaling != 0f; }
-    //    public virtual void UpdateParallaxe(Vector2 pos)
-    //    {
-    //        ParallaxeOffset = ParallaxeOffset.Lerp(pos * ParallaxeScaling, ParallaxeSmoothing);
-    //    }
+    public struct BehaviorResult
+    {
+        public bool finished = false;
+        public float newDelta = 0f;
 
+        public BehaviorResult(bool finished, float newDelta) { this.finished = finished; this.newDelta = newDelta; }
+    }
+    public interface IBehavior
+    {
+        public HashSet<int> GetAffectedLayers();
+        public void Update(float dt);
+        public BehaviorResult Apply(IGameObject obj, float delta);
+    }
+    public class AreaSlowBehavior : IBehavior
+    {
+        public TimedFactors UpdateSlowFactors = new();
+        protected HashSet<int> affectedLayers;
 
-    //}
-    
-    
+        public AreaSlowBehavior(params int [] affectedLayers)
+        {
+            this.affectedLayers = affectedLayers.ToHashSet();
+        }
 
-    //TODO _> make layers/gameobjects sorted list/dictionary
+        public BehaviorResult Apply(IGameObject obj, float delta) { return new(false, delta * UpdateSlowFactors.Total); }
+        public HashSet<int> GetAffectedLayers() {  return  affectedLayers; }
+        public void Update(float dt) { UpdateSlowFactors.Update(dt); }
+    }
+
 
     public class Area
     {
         protected class AreaLayer
         {
             public List<IGameObject> objs = new();
+            public List<IBehavior> behaviors = new();
             public int Layer { get; private set; }
             public AreaLayer(int layer) { this.Layer = layer; }
-            public TimedFactors UpdateSlowFactors = new();
-            public Dictionary<IGameObject, TimedFactors> GameObjectUpdateSlowFactors = new();
+            
+            
+            //public TimedFactors UpdateSlowFactors = new();
+            //public Dictionary<IGameObject, TimedFactors> GameObjectUpdateSlowFactors = new();
+            //public SortedList<float, IGameObject> gameobjects = new();
+            /*
             public uint AddSlow(float factor, float duration = -1)
             {
                 return UpdateSlowFactors.Add(factor, duration);
@@ -69,24 +67,8 @@ namespace ShapeCore
             {
                 if (GameObjectUpdateSlowFactors.ContainsKey(obj)) GameObjectUpdateSlowFactors[obj].Clear();
             }
-            public void Add(IGameObject obj) { objs.Add(obj); }
-            public bool Remove(IGameObject obj) 
-            { 
-                bool removed = objs.Remove(obj);
-                GameObjectUpdateSlowFactors.Remove(obj);
-                obj.Destroy();
-                return removed;
-            }
-            public bool RemoveAt(int index)
-            {
-                if(index < 0 || index >= objs.Count) return false;
-                var obj = objs[index];
-                objs.RemoveAt(index);
-                GameObjectUpdateSlowFactors.Remove(obj);
-                obj.Destroy();
-                return true;
-
-            }
+            */
+            /*
             public float GetTotalUpdateSlowFactor(IGameObject obj)
             {
                 if (GameObjectUpdateSlowFactors.ContainsKey(obj))
@@ -114,95 +96,79 @@ namespace ShapeCore
                     else return 0;
                 });
             }
-        }
+            */
+            
+            public void Add(IGameObject obj) { objs.Add(obj); }
+            
+            public bool Remove(IGameObject obj, bool destroy = false)
+            {
+                bool removed = objs.Remove(obj);
+                if(destroy) obj.Destroy();
+                return removed;
+            }
+            public bool Remove(int index, bool destroy = false)
+            {
+                if (index < 0 || index >= objs.Count) return false;
+                if (destroy) objs[index].Destroy();
+                objs.RemoveAt(index);
+                return true;
 
-        public Rect InnerRect { get;protected set;}
-        public Rect OuterRect { get; protected set; }
-        public CollisionHandler colHandler { get; protected set; }
+            }
+
+        }
+        
+        //public Rect InnerRect { get;protected set;}
+        //public Rect OuterRect { get; protected set; }
+
+        public Rect Bounds { get; protected set; }
+        public CollisionHandler Col { get; protected set; }
         public Vector2 ParallaxePosition { get; set; } = new(0f);
 
-        protected Dictionary<int, AreaLayer> layers = new();
-        protected List<AreaLayer> sortedLayers = new();
+        protected SortedList<int, AreaLayer> layers = new();
+        protected HashSet<IBehavior> behaviors = new();
         protected List<IGameObject> uiObjects = new();
-        private TimedFactors UpdateSlowFactors { get; } = new TimedFactors();
-       
         
+
+        //public Area(Vector2 topLeft, Vector2 bottomRight, int rows, int cols)
+        //{
+        //    //float w = bottomRight.X - topLeft.X;
+        //    //float h = bottomRight.Y - topLeft.Y;
+        //    //InnerRect = new(topLeft.X, topLeft.Y, w, h);
+        //    //OuterRect = InnerRect.ScaleSize(2f, new(0.5f)); //SRect.ScaleRectangle(InnerRect, 2f);
+        //    //Col = new(InnerRect.x, InnerRect.y, InnerRect.width, InnerRect.height, rows, cols);
+        //    Bounds = new(topLeft, bottomRight);
+        //    Col = new(Bounds, rows, cols);
+        //}
+        //public Area(Vector2 topLeft, Vector2 size, int rows, int cols)
+        //{
+        //    //InnerRect = new(topLeft.X, topLeft.Y, w, h);
+        //    //OuterRect = InnerRect.ScaleSize(2f, new(0.5f)); //SRect.ScaleRectangle(InnerRect, 2f);
+        //    //Col = new(InnerRect.x, InnerRect.y, InnerRect.width, InnerRect.height, rows, cols);
+        //}
         public Area()
         {
-            InnerRect = new();
-            OuterRect = new();
-            colHandler = new(0,0,0,0,0,0);
+            //InnerRect = new();
+            //OuterRect = new();
+            Bounds = new Rect();
+            Col = new(0,0,0,0,0,0);
         }
         public Area(float x, float y, float w, float h, int rows, int cols)
         {
-            InnerRect = new(x, y, w, h);
-            OuterRect = SRect.ScaleRectangle(InnerRect, 2f);
-            colHandler = new(InnerRect.x, InnerRect.y, InnerRect.width, InnerRect.height, rows, cols);
-            //DefaultID = SID.NextID;
-            //AddLayer(DefaultID);
+            //InnerRect = new(x, y, w, h);
+            //OuterRect = InnerRect.ScaleSize(2f, new(0.5f)); // SRect.ScaleRectangle(InnerRect, 2f);
+            Bounds = new(x, y, w, h);
+            Col = new(Bounds, rows, cols);
         }
-        public Area(Vector2 topLeft, Vector2 bottomRight, int rows, int cols)
+        public Area(Rect bounds, int rows, int cols)
         {
-            float w = bottomRight.X - topLeft.X;
-            float h = bottomRight.Y - topLeft.Y;
-            InnerRect = new(topLeft.X, topLeft.Y, w, h);
-            OuterRect = SRect.ScaleRectangle(InnerRect, 2f);
-            colHandler = new(InnerRect.x, InnerRect.y, InnerRect.width, InnerRect.height, rows, cols);
-            //DefaultID = SID.NextID;
-            //AddLayer(DefaultID);
-        }
-        public Area(Vector2 topLeft, float w, float h, int rows, int cols)
-        {
-            InnerRect = new(topLeft.X, topLeft.Y, w, h);
-            OuterRect = SRect.ScaleRectangle(InnerRect, 2f);
-            colHandler = new(InnerRect.x, InnerRect.y, InnerRect.width, InnerRect.height, rows, cols);
-            //DefaultID = SID.NextID;
-            //AddLayer(DefaultID);
-        }
-        public Area(Rect area, int rows, int cols)
-        {
-            InnerRect = area;
-            OuterRect = SRect.ScaleRectangle(InnerRect, 2f);
-            colHandler = new(InnerRect.x, InnerRect.y, InnerRect.width, InnerRect.height, rows, cols);
-            //DefaultID = SID.NextID;
-            //AddLayer(DefaultID);
+            //InnerRect = area;
+            //OuterRect = InnerRect.ScaleSize(2f, new(0.5f)); //SRect.ScaleRectangle(InnerRect, 2f);
+            //Col = new(InnerRect.x, InnerRect.y, InnerRect.width, InnerRect.height, rows, cols);
+            Bounds = bounds;
+            Col = new(bounds, rows, cols);
         }
        
         public bool HasLayer(int layer) { return layers.ContainsKey(layer); }
-        
-        public uint AddSlow(float factor, float duration = -1) { return UpdateSlowFactors.Add(factor, duration); }
-        public uint AddSlow(int layer, float factor, float duration = -1) { return HasLayer(layer) ? layers[layer].AddSlow(factor, duration) : 0; }
-        public uint AddSlow(IGameObject obj, float factor, float duration = -1)
-        {
-            if (HasLayer(obj.AreaLayer))
-            {
-                return layers[obj.AreaLayer].AddSlow(obj, factor, duration);
-            }
-            return 0;
-        }
-        
-        public bool RemoveSlow(uint id)
-        {
-            return UpdateSlowFactors.Remove(id);
-        }
-        public bool RemoveSlow(uint id, int layer)
-        {
-            if (layers.ContainsKey(layer)) return layers[layer].RemoveSlow(id);
-            else return false;
-        }
-        public bool RemoveSlow(uint id, IGameObject obj)
-        {
-            if (layers.ContainsKey(obj.AreaLayer))
-            {
-                return layers[obj.AreaLayer].RemoveSlow(obj, id);
-            }
-            return false;
-        }
-       
-        public void ClearSlow() { UpdateSlowFactors.Clear(); }
-        public void ClearSlow(int layer) { if (layers.ContainsKey(layer)) layers[layer].ClearSlow(); }
-        public void ClearSlow(IGameObject obj) { if(layers.ContainsKey(obj.AreaLayer)) layers[obj.AreaLayer].ClearSlow(obj); }
-        
         public List<IGameObject> GetGameObjects(int layer, Predicate<IGameObject> match) { return HasLayer(layer) ? layers[layer].objs.FindAll(match) : new(); }// gameObjects.ToList().FindAll(match); }
         public List<IGameObject> GetAllGameObjects()
         {
@@ -220,9 +186,11 @@ namespace ShapeCore
             if (!layers.ContainsKey(layer))
             {
                 layers.Add(layer, new(layer));
-                SortAreaLayerGroups();
+                //SortAreaLayerGroups();
             }
         }
+        
+        
         public void AddGameObject(IGameObject gameObject) 
         {
             int layer = gameObject.AreaLayer;
@@ -231,41 +199,43 @@ namespace ShapeCore
             layers[layer].Add(gameObject);
         }
         public void AddGameObjects(params IGameObject[] gameObjects) { foreach (var go in gameObjects) AddGameObject(go); }
-        public bool RemoveGameObject(IGameObject gameObject)
+        
+        public bool RemoveGameObject(IGameObject gameObject, bool destroy = false)
         {
             if (layers.ContainsKey(gameObject.AreaLayer))
             {
-                bool removed = layers[gameObject.AreaLayer].Remove(gameObject);
+                bool removed = layers[gameObject.AreaLayer].Remove(gameObject, destroy);
                 if (removed)
                 {
                     if (gameObject is ICollidable collidable)
                     {
-                        colHandler.Remove(collidable);
+                        Col.Remove(collidable);
                     }
                 }
                 return removed;
             }
             return false;
         }
-        public void RemoveGameObjects(int layer, Predicate<IGameObject> match)
+        public void RemoveGameObjects(int layer, Predicate<IGameObject> match, bool destroy = false)
         {
             if (layers.ContainsKey(layer))
             {
                 var objs = GetGameObjects(layer, match);
                 foreach (var o in objs)
                 {
-                    RemoveGameObject(o);
+                    RemoveGameObject(o, destroy);
                 }
             }
         }
-        public void RemoveGameObjects(Predicate<IGameObject> match)
+        public void RemoveGameObjects(Predicate<IGameObject> match, bool destroy = false)
         {
             var objs = GetAllGameObjects(match);
             foreach (var o in objs)
             {
-                RemoveGameObject(o);
+                RemoveGameObject(o, destroy);
             }
         }
+
         public void Clear()
         {
             foreach (var layer in layers.Keys)
@@ -280,55 +250,59 @@ namespace ShapeCore
                 var layerGroup = layers[layer];
                 foreach (var obj in layerGroup.objs)
                 {
-                    layerGroup.Remove(obj);
+                    layerGroup.Remove(obj, true);
                     if (obj is ICollidable collidable)
                     {
-                        colHandler.Remove(collidable);
+                        Col.Remove(collidable);
                     }
                 }
                 layerGroup.objs.Clear();
             }
         }
 
+
+        public bool AddBehavior(IBehavior behavior) { return behaviors.Add(behavior); }
+        public bool RemoveBehavior(IBehavior behavior) { return behaviors.Remove(behavior); }
+
         
         public virtual void Start() { }
         public virtual void Close()
         {
             Clear();
-            colHandler.Close();
+            Col.Close();
         }
         public virtual void Update(float dt)
         {
-            colHandler.Update(dt);
-            UpdateSlowFactors.Update(dt);
+            Col.Update(dt);
             
-            for (int i = 0; i < sortedLayers.Count; i++)
+            foreach (var b in behaviors) b.Update(dt);
+
+            for (int i = 0; i < layers.Count; i++)
             {
-                var layer = sortedLayers[i];
-                UpdateLayer(dt, layer);
+                var layer = layers[i];
+                if(layer.objs.Count > 0) UpdateLayer(dt, layer);
             }
         }
         public virtual void Draw()
         {
             if (DEBUG_DRAWHELPERS)
             {
-                DrawRectangleLinesEx(this.InnerRect.Rectangle, 15f, DEBUG_AreaInnerColor);
-                DrawRectangleLinesEx(this.OuterRect.Rectangle, 15f, DEBUG_AreaOuterColor);
-                colHandler.DebugDrawGrid(DEBUG_CollisionHandlerBorder, DEBUG_CollisionHandlerFill);
+                //DrawRectangleLinesEx(this.InnerRect.Rectangle, 15f, DEBUG_AreaInnerColor);
+                //DrawRectangleLinesEx(this.OuterRect.Rectangle, 15f, DEBUG_AreaOuterColor);
+                DrawRectangleLinesEx(this.Bounds.Rectangle, 15f, DEBUG_AreaOuterColor);
+                Col.DebugDrawGrid(DEBUG_CollisionHandlerBorder, DEBUG_CollisionHandlerFill);
             }
 
             uiObjects.Clear();
-            for (int i = 0; i < sortedLayers.Count; i++)
+            for (int i = 0; i < layers.Count; i++)
             {
-                var layer = sortedLayers[i];
-                layer.SortGameObjects();
-                foreach (IGameObject obj in layer.objs)
+                var layer = layers[i];
+                
+                for (int j = 0; j < layer.objs.Count; j++)
                 {
-                    if (SGeometry.OverlapRectRect(OuterRect, obj.GetBoundingBox())) 
-                    { 
-                        obj.Draw();
-                        if (obj.DrawToUI) uiObjects.Add(obj);
-                    }
+                    var obj = layer.objs[j];
+                    obj.Draw();
+                    if (obj.DrawToUI) uiObjects.Add(obj);
                 }
             }
         }
@@ -339,58 +313,83 @@ namespace ShapeCore
                 obj.DrawUI(uiSize);
             }
         }
+        
+        protected List<IBehavior> GetLayerBehaviours(int layer)
+        {
+            List<IBehavior> result = new();
+            foreach (var b in behaviors)
+            {
+                var layers = b.GetAffectedLayers();
+                if(layers.Count <= 0) result.Add(b);
+                else if(layers.Contains(layer)) result.Add(b);
+            }
+            return result;
+        }
         protected virtual void UpdateLayer(float dt, AreaLayer layer)
         {
-            layer.Update(dt);
+            var behaviors = GetLayerBehaviours(layer.Layer);
             
             for (int i = layer.objs.Count - 1; i >= 0; i--)
             {
                 IGameObject obj = layer.objs[i];
                 if (obj == null)
                 {
-                    layer.RemoveAt(i);
+                    layer.Remove(i, false);
                     return;
                 }
 
                 obj.UpdateParallaxe(ParallaxePosition);
-                float curSlowFactor =  UpdateSlowFactors.Total * layer.GetTotalUpdateSlowFactor(obj);// slowFactor * obj.UpdateSlowFactor;
-                float dif = dt - (dt * curSlowFactor);
+
+                
+                float delta = dt;
+                for (int j = behaviors.Count - 1; j >= 0; j--)
+                {
+                    var b = layer.behaviors[j];
+                    //delta = b.ChangeDelta(delta);
+                    var result = b.Apply(obj, delta);
+                    delta = result.newDelta;
+                    if (result.finished) { layer.behaviors.RemoveAt(j); }
+                }
+
+                //float curSlowFactor =  UpdateSlowFactors.Total * layer.GetTotalUpdateSlowFactor(obj);
+                float dif = dt - delta; // (dt * curSlowFactor);
                 dif *= obj.UpdateSlowResistance;
                 
                 if(dif > 0f) obj.Update(dt - dif);
-                
-                bool insideInner = SGeometry.OverlapRectRect(InnerRect, obj.GetBoundingBox());
-                bool insideOuter = false;
-                if (insideInner) insideOuter = true;
-                else insideOuter = SGeometry.OverlapRectRect(OuterRect, obj.GetBoundingBox());
-                obj.OnPlayfield(insideInner, insideOuter);
 
-                if (obj.IsDead() || !insideOuter)
+                //bool insideInner = InnerRect.OverlapShape(obj.GetBoundingBox());
+                //bool insideOuter = false;
+                //if (insideInner) insideOuter = true;
+                //else insideOuter = OuterRect.OverlapShape(obj.GetBoundingBox());
+                //obj.OnPlayfield(insideInner, insideOuter);
+                if (!obj.IsDead())
+                {
+                    bool insideBounds = Bounds.OverlapShape(obj.GetBoundingBox());
+                    if (!insideBounds) obj.LeftWorldBounds();
+                }
+                else
                 {
                     obj.Destroy();
-                    layer.RemoveAt(i);
-                    if (obj is ICollidable collidable)
-                    {
-                        colHandler.Remove(collidable);
-                    }
+                    layer.Remove(i, false);
+                    if (obj is ICollidable collidable) Col.Remove(collidable);
                 }
                 
             }
         }
         
-        private void SortAreaLayerGroups()
-        {
-            var list = layers.Values.ToList();
-            list.Sort(delegate (AreaLayer x, AreaLayer y)
-            {
-                if (x == null || y == null) return 0;
-        
-                if (x.Layer < y.Layer) return -1;
-                else if (x.Layer > y.Layer) return 1;
-                else return 0;
-            });
-            sortedLayers = list;
-        }
+        //private void SortAreaLayerGroups()
+        //{
+        //    var list = layers.Values.ToList();
+        //    list.Sort(delegate (AreaLayer x, AreaLayer y)
+        //    {
+        //        if (x == null || y == null) return 0;
+        //
+        //        if (x.Layer < y.Layer) return -1;
+        //        else if (x.Layer > y.Layer) return 1;
+        //        else return 0;
+        //    });
+        //    sortedLayers = list;
+        //}
         //public void SortGameObjects(List<IGameObject> objectsToSort)
         //{
         //    objectsToSort.Sort(delegate (IGameObject x, IGameObject y)
