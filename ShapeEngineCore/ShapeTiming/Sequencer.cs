@@ -20,6 +20,7 @@ namespace ShapeTiming
 
         public Sequencer() { }
 
+        public bool HasSequences() { return sequences.Count > 0; }
         public uint StartSequence(params T[] actionables)
         {
             var id = NextID;
@@ -36,13 +37,13 @@ namespace ShapeTiming
             List<uint> remove = new();
             foreach (uint id in sequences.Keys)
             {
-                var tweenList = sequences[id];
-                if (tweenList.Count > 0)
+                var sequenceList = sequences[id];
+                if (sequenceList.Count > 0)
                 {
-                    var tween = tweenList[tweenList.Count - 1];//list is reversed
-                    var finished = tween.Update(dt);
-                    OnItemUpdated?.Invoke(tween);
-                    if (finished) tweenList.RemoveAt(tweenList.Count - 1);
+                    var seqence = sequenceList[sequenceList.Count - 1];//list is reversed
+                    var finished = seqence.Update(dt);
+                    OnItemUpdated?.Invoke(seqence);
+                    if (finished) sequenceList.RemoveAt(sequenceList.Count - 1);
                 }
                 else
                 {
