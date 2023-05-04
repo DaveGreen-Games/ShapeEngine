@@ -558,7 +558,7 @@ namespace ShapeScreen
         public void ClearTarget() { target = null; newTarget = null; }
         public void Shake(float duration, Vector2 strength, float zoomStrength = 0f, float rotStrength = 0f, float smoothness = 0.75f)
         {
-            float intensity = ScreenHandler.CAMERA_SHAKE_INTENSITY;
+            float intensity = DefaultGraphicsDevice.CAMERA_SHAKE_INTENSITY;
             shake.Start
                 (
                     duration,
@@ -574,14 +574,14 @@ namespace ShapeScreen
         {
             float zoomFactor = 1 / rawCameraZoom;
             Vector2 cPos = rawCameraTarget - rawCameraOffset * zoomFactor;
-            Vector2 p = (gamePos - cPos) * ScreenHandler.GAME_TO_UI * rawCameraZoom;
+            Vector2 p = (gamePos - cPos) * DefaultGraphicsDevice.GAME_TO_UI * rawCameraZoom;
             return p;
         }
 
         public Vector2 TransformPositionToGame(Vector2 uiPos)
         {
             float zoomFactor = 1 / rawCameraZoom;
-            Vector2 p = uiPos * ScreenHandler.UI_TO_GAME * zoomFactor;
+            Vector2 p = uiPos * DefaultGraphicsDevice.UI_TO_GAME * zoomFactor;
             Vector2 cPos = rawCameraTarget - rawCameraOffset * zoomFactor;
             p += cPos;
             return p;
@@ -629,7 +629,7 @@ namespace ShapeScreen
 
             if (PIXEL_SMOOTHING_ENABLED)
             {
-                float virtualRatio = ScreenHandler.CUR_WINDOW_SIZE.width / ScreenHandler.GAME.GetTextureWidth();
+                float virtualRatio = DefaultGraphicsDevice.CUR_WINDOW_SIZE.width / DefaultGraphicsDevice.GAME.GetTextureWidth();
                 worldSpaceCamera.target.X = (int)rawCameraTarget.X;
                 screenSpaceCamera.target.X = rawCameraTarget.X - worldSpaceCamera.target.X;
                 screenSpaceCamera.target.X *= virtualRatio;

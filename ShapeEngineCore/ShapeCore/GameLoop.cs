@@ -183,7 +183,7 @@ namespace ShapeCore
 
         
        
-
+        /*
         public Area? GetCurArea()
         {
             if (CUR_SCENE == null) return null;
@@ -195,15 +195,12 @@ namespace ShapeCore
             if (area == null) return;
             area.AddGameObject(obj, uiDrawing);
         }
-        
+        */
 
         public GameLoop(IGraphicsDevice graphicDevice, params string[] launchParameters)
         {
             this.GFX = graphicDevice;
             this.LAUNCH_PARAMS = launchParameters;
-            
-            this.GFX.Init();
-            //InitAudioDevice();
             
             quit = false;
             restart = false;
@@ -221,7 +218,7 @@ namespace ShapeCore
 
 
         /// <summary>
-        /// Runs the game until Quit() or Restart() is called or the Window is closed by the user.
+        /// Starts the gameloop. Runs until Quit() or Restart() is called or the Window is closed by the user.
         /// </summary>
         /// <returns>Returns an exit code for information how the application was quit. Restart has to be handled seperately.</returns>
         public ExitCode Run()
@@ -230,7 +227,7 @@ namespace ShapeCore
             RunGameloop();
             End();
             
-            ScreenHandler.Close();
+            GFX.Close();
             
             return new ExitCode(restart);
         }
@@ -258,80 +255,59 @@ namespace ShapeCore
         {
             if (!CALL_UPDATE) return;
 
-            ScreenHandler.Update(dt);
+            GFX.Update(dt);
 
             if (BeginUpdate(dt))
             {
                 if (CUR_SCENE.CallUpdate && !stopTimer.IsRunning) CUR_SCENE.Update(dt);
             }
             EndUpdate(dt);
-            /*
-            if (CALL_UPDATE) PreUpdate(dt);
-
-            
-            
-            if (CUR_SCENE != null)
-            {
-                if(!CUR_SCENE.IsInputDisabled()) CUR_SCENE.HandleInput();
-
-                if (!CUR_SCENE.IsPaused())
-                {
-                    delayHandler.Update(dt);
-                    stopTimer.Update(dt);
-                    
-                    if (!stopTimer.IsRunning())
-                    {
-                        CUR_SCENE.Update(dt);
-                    }
-                }
-            }
-            if (CALL_UPDATE) PostUpdate(dt);
-            */
         }
         private void DrawGame()
         {
             //Draw to game texture
             if (CALL_DRAW)
             {
-                ScreenHandler.StartDraw(true);
+                GFX.BeginDraw();
                 if (BeginDraw()) 
                 { 
                     if (CUR_SCENE.CallDraw) CUR_SCENE.Draw(); 
                 }
                 EndDraw();
-                ScreenHandler.EndDraw(true);
+                GFX.EndDraw();
             }
 
             //Draw to ui texture
             if (CALL_DRAWUI)
             {
-                Vector2 uiSize = ScreenHandler.UISize();
-                ScreenHandler.StartDraw(false);
+                Vector2 uiSize = GFX.GetUITextureSize();// ScreenHandler.UISize();
+                GFX.BeginDrawUI();
                 if (BeginDrawUI(uiSize))
                 {
                     if (CUR_SCENE.CallDraw) CUR_SCENE.DrawUI(uiSize);
                 }
                 EndDrawUI(uiSize);
-                ScreenHandler.EndDraw(false);
+                GFX.EndDrawUI();
             }
             
             //Draw textures to screen
             BeginDrawing();
             ClearBackground(BackgroundColor);
 
-            if (ScreenHandler.CAMERA != null && ScreenHandler.CAMERA.PIXEL_SMOOTHING_ENABLED)
+            if (GFX.SmoothingCameraEnabled())
             {
-                BeginMode2D(ScreenHandler.CAMERA.ScreenSpaceCam);
-                ScreenHandler.Draw();
+                BeginMode2D(GFX.GetSmoothingCamera());
+                GFX.DrawGameToScreen();
                 EndMode2D();
             }
-            else ScreenHandler.Draw();
+            else GFX.DrawGameToScreen();
 
-            ScreenHandler.DrawUI();
+            GFX.DrawUIToScreen();
             EndDrawing();
         }
         private void Start() 
         {
+            GFX.Start();
             LoadContent();
             BeginRun();
         }
@@ -341,8 +317,7 @@ namespace ShapeCore
             UnloadContent();
         }
 
-
-
+        
         /// <summary>
         /// Called first after starting the gameloop.
         /// </summary>
