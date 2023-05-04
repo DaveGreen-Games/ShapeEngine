@@ -76,12 +76,9 @@ namespace ShapeCore
             EDITORMODE = Directory.Exists("resources");
             //Start of Program
             GAMELOOP.Initialize(devWidth, devHeight, gameSizeFactor, uiSizeFactor, windowName, fixedTexture, pixelSmoothing, hideCursor, launchParams);
-            GAMELOOP.Start();
 
             GAMELOOP.Run();//runs continously
 
-            //End of Program
-            GAMELOOP.End();
             bool fullscreen = GAMELOOP.Close();
             if (GAMELOOP.RESTART)
             {

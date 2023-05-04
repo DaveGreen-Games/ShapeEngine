@@ -19,7 +19,7 @@ namespace ShapeCore
         private int rows = 0;
         private int cols = 0;
 
-        private List<ICollidable>[] buckets;
+        private List<ICollidable>[] buckets; //change to hashset<ICollidable>[]
 
         //figure out something better than spacing (is not always divisable by screen size)
         public SpatialHash(float x, float y, float w, float h, int rows, int cols)
@@ -131,23 +131,41 @@ namespace ShapeCore
             return (xi, yi);
         }
 
-        //TODO (DAVID):
-        //get all the cells in the bounding rect area and then make overlap test between the shape and each cell in the bounding area
-        //only make those checks if there are more than 1 cell
-        public List<int> GetCellIDs(ICollider shape)
+        
+        public List<int> GetCellIDs(ICollider col)
         {
-            Rect boundingRect = shape.GetShape().GetBoundingBox();
+            return GetCellIDs(col.GetShape());
+
+            //Rect boundingRect = col.GetShape().GetBoundingBox();
+            //List<int> hashes = new List<int>();
+            //(int x, int y) topLeft = GetCellCoordinate(boundingRect.x, boundingRect.y);
+            //(int x, int y) bottomRight = GetCellCoordinate(boundingRect.x + boundingRect.width, boundingRect.y + boundingRect.height);
+            //
+            //for (int j = topLeft.y; j <= bottomRight.y; j++)
+            //{
+            //    for (int i = topLeft.x; i <= bottomRight.x; i++)
+            //    {
+            //        int id = GetCellID(i, j);
+            //
+            //        if (!hashes.Contains(id))
+            //        {
+            //            if (SGeometry.Overlap(GetCellRectangle(id), col))
+            //                hashes.Add(id);
+            //            //if (SGeometry.OverlapShape(GetCellRectangle(id), boundingRect))
+            //            //{
+            //            //    
+            //            //}
+            //        }
+            //    }
+            //}
+            //return hashes;
+        }
+        public List<int> GetCellIDs(IShape shape)
+        {
+            Rect boundingRect = shape.GetBoundingBox();
             List<int> hashes = new List<int>();
             (int x, int y) topLeft = GetCellCoordinate(boundingRect.x, boundingRect.y);
             (int x, int y) bottomRight = GetCellCoordinate(boundingRect.x + boundingRect.width, boundingRect.y + boundingRect.height);
-
-            //if(boundingRect.width <= 0f || boundingRect.height <= 0f)
-            ////if (topLeft.x == bottomRight.x && topLeft.y == bottomRight.y)
-            //{
-            //    hashes.Add(GetCellID(topLeft.x, topLeft.y));
-            //    return hashes;
-            //}
-
 
             for (int j = topLeft.y; j <= bottomRight.y; j++)
             {
@@ -155,33 +173,19 @@ namespace ShapeCore
                 {
                     int id = GetCellID(i, j);
 
-                    if (!hashes.Contains(id)) //do i still need this check?
+                    if (!hashes.Contains(id))
                     {
-                        if(SGeometry.OverlapShape(GetCellRectangle(id), boundingRect))
-                        {
-                            if(SGeometry.Overlap(GetCellRectangle(id), shape))
-                                hashes.Add(id);
-                        }
+                        if (SGeometry.Overlap(GetCellRectangle(id), shape))
+                            hashes.Add(id);
+                        //if (SGeometry.OverlapShape(GetCellRectangle(id), boundingRect))
+                        //{
+                        //    
+                        //}
                     }
                 }
             }
-
-            /*
-            int hash_a = GetCellID(boundingRect.x, boundingRect.y);
-            int hash_b = GetCellID(boundingRect.x + boundingRect.width, boundingRect.y);
-            int hash_c = GetCellID(boundingRect.x + boundingRect.width, boundingRect.y + boundingRect.height);
-            int hash_d = GetCellID(boundingRect.x, boundingRect.y + boundingRect.height);
-
-            hashes.Add(hash_a);
-            //hashes.Add(hash_center);
-            //if (!hashes.Contains(hash_a)) { hashes.Add(hash_a); }
-            if (!hashes.Contains(hash_b)) { hashes.Add(hash_b); }
-            if (!hashes.Contains(hash_c)) { hashes.Add(hash_c); }
-            if (!hashes.Contains(hash_d)) { hashes.Add(hash_d); }
-            */
             return hashes;
         }
-
 
         public void AddRange(List<ICollidable> colliders)
         {
@@ -234,39 +238,30 @@ namespace ShapeCore
         //    return objects.Distinct().ToList();
         //}
 
-        public List<ICollidable> GetObjects(ICollider shape)
+        public List<ICollidable> GetObjects(IShape shape)
         {
-            HashSet<ICollidable> uniqueObjects = new();
+            HashSet<ICollidable> result = new();
             var hashes = GetCellIDs(shape);
             foreach (int hash in hashes)
             {
-                foreach (var dyn in buckets[hash])
+                foreach (var obj in buckets[hash]) result.Add(obj);
+            }
+            return result.ToList();
+        }
+        public List<ICollidable> GetObjects(ICollider col)
+        {
+            HashSet<ICollidable> uniqueObjects = new();
+            var hashes = GetCellIDs(col);
+            foreach (int hash in hashes)
+            {
+                foreach (var obj in buckets[hash])
                 {
-                    if (dyn.GetCollider() == shape) continue;
-                    uniqueObjects.Add(dyn);
+                    if (obj.GetCollider() == col) continue;
+                    uniqueObjects.Add(obj);
                 }
             }
             return uniqueObjects.ToList();
         }
-
-        //public List<ICollidable> GetObjects2(ICollidable collider)
-        //{
-        //    HashSet<ICollidable> uniqueObjects = new();
-        //    var hashes = GetCellIDs(collider.GetCollider(), collider.HasDynamicBoundingBox());
-        //    foreach (int hash in hashes)
-        //    {
-        //        foreach (var dyn in bucketsDynamic[hash])
-        //        {
-        //            uniqueObjects.Add(dyn);
-        //        }
-        //        foreach (var sta in bucketsStatic[hash])
-        //        {
-        //            uniqueObjects.Add(sta);
-        //        }
-        //    }
-        //    uniqueObjects.Remove(collider);
-        //    return uniqueObjects.ToList();
-        //}
         public List<ICollidable> GetObjects(ICollidable collider)
         {
             List<ICollidable> objects = new();

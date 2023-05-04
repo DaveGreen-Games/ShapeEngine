@@ -4,10 +4,13 @@ namespace ShapeTiming
 {
     public interface ISequenceable
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="dt"></param>
+        /// <returns>Returns if finished.</returns>
         public bool Update(float dt);
     }
-
-    
     public class Sequencer <T> where T : ISequenceable
     {
         public event Action<uint>? OnSequenceFinished;
@@ -32,8 +35,12 @@ namespace ShapeTiming
             if (sequences.ContainsKey(id)) sequences.Remove(id);
         }
         public void Stop() { sequences.Clear(); }
+        protected virtual bool UpdateSequence(T sequence, float dt) { return sequence.Update(dt); }
+        protected virtual void StartUpdate() { }
+        protected virtual void EndUpdate() { }
         public void Update(float dt)
         {
+            StartUpdate();
             List<uint> remove = new();
             foreach (uint id in sequences.Keys)
             {
@@ -41,7 +48,7 @@ namespace ShapeTiming
                 if (sequenceList.Count > 0)
                 {
                     var seqence = sequenceList[sequenceList.Count - 1];//list is reversed
-                    var finished = seqence.Update(dt);
+                    var finished = UpdateSequence(seqence, dt); // seqence.Update(dt);
                     OnItemUpdated?.Invoke(seqence);
                     if (finished) sequenceList.RemoveAt(sequenceList.Count - 1);
                 }
@@ -53,7 +60,10 @@ namespace ShapeTiming
             }
 
             foreach (uint id in remove) sequences.Remove(id);
+            EndUpdate();
         }
     }
 
+
+    
 }

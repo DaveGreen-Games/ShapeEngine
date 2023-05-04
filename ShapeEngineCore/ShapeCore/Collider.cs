@@ -4,23 +4,6 @@ using ShapeLib;
 
 namespace ShapeCore
 {
-    public interface ICollider : IPhysicsObject
-    {
-        public bool Enabled { get; set; }
-        public bool ComputeCollision { get; set; }
-        public bool ComputeIntersections { get; set; }
-
-        public IShape GetShape();
-        
-        public (bool valid, bool overlap) CheckOverlap(ICollider other);
-        public (bool valid, Intersection i) CheckIntersection(ICollider other);
-        public bool CheckOverlapRect(Rect rect);
-
-        //public Rect GetBoundingBox();
-        //public void DrawDebugShape(Color color);
-        //todo getsegments intersection/overlap
-    }
-    
     public abstract class Collider : ICollider
     {
         public Collider() { }
@@ -364,7 +347,7 @@ namespace ShapeCore
             shape = SPoly.GetShape(points, Pos, RotRad, new(Scale));
             dirty = false;
         }
-        private List<Vector2> GenerateDisplacements(List<Vector2> shape, Vector2 center)
+        private static List<Vector2> GenerateDisplacements(List<Vector2> shape, Vector2 center)
         {
             List<Vector2> displacements = new();
             for (int i = 0; i < shape.Count; i++)

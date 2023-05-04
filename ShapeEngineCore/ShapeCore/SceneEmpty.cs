@@ -2,31 +2,14 @@
 
 namespace ShapeCore
 {
-    public interface IScene
+    public sealed class SceneEmpty : IScene
     {
-        public bool Paused { get; set; }
-        public bool InputDisabled { get; set; }
-        public bool Hidden { get; set; }
-
-
-        public virtual Area? GetCurArea() { return null; }
-
-
-        public virtual void Activate(Scene? oldScene) { }
-        public virtual void Deactivate(Scene? newScene) { }// { if (newScene != null) GAMELOOP.SwitchScene(this, newScene); }
-
-        public virtual void Start() { }
-        public virtual void Close() { }
-
-        public virtual void HandleInput() { }
-        public virtual void Update(float dt) { }
-        public virtual void Draw() { }
-        public virtual void DrawUI(Vector2 uiSize) { }
-
+        public bool CallUpdate { get; set; }
+        public bool CallHandleInput { get; set; }
+        public bool CallDraw { get; set; }
     }
 
-
-
+    /*
     public class Scene
     {
 
@@ -119,4 +102,5 @@ namespace ShapeCore
         }
         
     }
+    */
 }

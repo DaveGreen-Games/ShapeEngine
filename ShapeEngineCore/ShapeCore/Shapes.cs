@@ -1,29 +1,9 @@
 ﻿using System.Numerics;
-using System.Runtime.CompilerServices;
 using Raylib_CsLo;
 using ShapeLib;
 
 namespace ShapeCore
 {
-    public interface IShape
-    {
-        public float GetArea();
-        public float GetCircumference();
-        public float GetCircumferenceSquared();
-        public SegmentShape GetSegmentShape();
-        public Polygon GetPolygon();
-        public Vector2 GetReferencePoint();
-        public Rect GetBoundingBox();
-        public bool IsPointOnShape(Vector2 p);
-        public void DrawShape(float linethickness, Color color);
-        //public void SetPosition(Vector2 position);
-        //public bool Equals(IShape other);
-        //public Circle GetBoundingCircle();
-    }
-
-
-    
-    
     public struct SegmentShape
     {
         public List<Segment> segments;

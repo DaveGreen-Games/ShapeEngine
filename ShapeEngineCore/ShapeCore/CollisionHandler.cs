@@ -21,7 +21,6 @@ namespace ShapeCore
 
     }
 
-
     public class CollisionHandler
     {
         protected List<ICollidable> collidables = new();
@@ -237,12 +236,6 @@ namespace ShapeCore
                 {
                     var intersection = SGeometry.Intersect(caster, obj.GetCollider());
                     if (intersection.valid) infos.Add( new(obj, intersection) );
-
-                    //if (SGeometry.Overlap(caster, obj.GetCollider()))
-                    //{
-                    //    QueryInfo q = new(obj, SGeometry.Intersection(caster, obj.GetCollider()));
-                    //    infos.Add(q);
-                    //}
                 }
                 else
                 {
@@ -251,17 +244,6 @@ namespace ShapeCore
                         var intersection = SGeometry.Intersect(caster, obj.GetCollider());
                         if (intersection.valid) infos.Add(new(obj, intersection));
                     }
-                    
-
-
-                    //if (SGeometry.Overlap(caster, obj.GetCollider()))
-                    //{
-                    //    if (collisionMask.Contains(obj.GetCollisionLayer()))
-                    //    {
-                    //        QueryInfo q = new(obj, SGeometry.Intersection(caster, obj.GetCollider()));
-                    //        infos.Add(q);
-                    //    }
-                    //}
                 }
             }
 
@@ -271,11 +253,7 @@ namespace ShapeCore
                 (
                     (a, b) =>
                     {
-                        //if (!a.intersection.valid) return 1;
-                        //if (!b.intersection.valid) return -1;
                         Vector2 pos = caster.Pos;
-                        //float la = (pos - a.collidable.GetPos()).LengthSquared();
-                        //float lb = (pos - b.collidable.GetPos()).LengthSquared();
                         float la = (pos - a.intersection.p).LengthSquared();
                         float lb = (pos - b.intersection.p).LengthSquared();
 
@@ -296,32 +274,46 @@ namespace ShapeCore
         {
             return GetQueryInfo(collider, sorted, collisionMask);
         }
-        public List<QueryInfo> QuerySpace(Rect rect, bool sorted = false, params uint[] collisionMask)
+        public List<QueryInfo> QuerySpace(IShape shape, bool sorted = false, params uint[] collisionMask)
         {
-            RectCollider collider = new(rect);
-            return GetQueryInfo(collider, sorted, collisionMask);
-        }
-        public List<QueryInfo> QuerySpace(Vector2 pos, float r, bool sorted = false, params uint[] collisionMask)
-        {
-            CircleCollider collider = new(pos, r);
-            return GetQueryInfo(collider, sorted, collisionMask);
-        }
-        public List<QueryInfo> QuerySpace(Vector2 pos, Vector2 size, Vector2 alignement, bool sorted = false, params uint[] collisionMask)
-        {
-            RectCollider collider = new(pos, size, alignement);
-            return GetQueryInfo(collider, sorted, collisionMask);
-        }
-        public List<QueryInfo> QuerySpace(Vector2 pos, Vector2 dir, float length, bool sorted = false, params uint[] collisionMask)
-        {
-            SegmentCollider collider = new(pos, dir, length);
-            return GetQueryInfo(collider, sorted, collisionMask);
-        }
-        public List<QueryInfo> QuerySpace(Vector2 start, Vector2 end, bool sorted = false, params uint[] collisionMask)
-        {
-            SegmentCollider collider = new(start, end);
-            return GetQueryInfo(collider, sorted, collisionMask);
-        }
+            List<QueryInfo> infos = new();
+            List<ICollidable> objects = spatialHash.GetObjects(shape);
+            foreach (ICollidable obj in objects)
+            {
+                if (collisionMask.Length <= 0)
+                {
+                    var intersection = SGeometry.Intersect(shape, obj.GetCollider().GetShape());
+                    if (intersection.valid) infos.Add(new(obj, intersection));
+                }
+                else
+                {
+                    if (collisionMask.Contains(obj.GetCollisionLayer()))
+                    {
+                        var intersection = SGeometry.Intersect(shape, obj.GetCollider().GetShape());
+                        if (intersection.valid) infos.Add(new(obj, intersection));
+                    }
+                }
+            }
 
+            if (sorted && infos.Count > 1)
+            {
+                infos.Sort
+                (
+                    (a, b) =>
+                    {
+                        Vector2 pos = shape.GetReferencePoint();
+                        float la = (pos - a.intersection.p).LengthSquared();
+                        float lb = (pos - b.intersection.p).LengthSquared();
+
+                        if (la > lb) return 1;
+                        else if (la == lb) return 0;
+                        else return -1;
+                    }
+                );
+            }
+
+            return infos;
+        }
 
         private List<ICollidable> GetCastBodies(ICollider caster, bool sorted = false, params uint[] collisionMask)
         {
@@ -373,6 +365,64 @@ namespace ShapeCore
         {
             return GetCastBodies(collider, sorted, collisionMask);
         }
+        public List<ICollidable> CastSpace(IShape castShape, bool sorted = false, params uint[] collisionMask)
+        {
+            List<ICollidable> bodies = new();
+            List<ICollidable> objects = spatialHash.GetObjects(castShape);
+            foreach (ICollidable obj in objects)
+            {
+                if (collisionMask.Length <= 0)
+                {
+                    if (SGeometry.Overlap(castShape, obj.GetCollider().GetShape()))
+                    {
+                        bodies.Add(obj);
+                    }
+                }
+                else
+                {
+                    if (collisionMask.Contains(obj.GetCollisionLayer()))
+                    {
+                        if (SGeometry.Overlap(castShape, obj.GetCollider().GetShape()))
+                        {
+                            bodies.Add(obj);
+                        }
+                    }
+                }
+            }
+            if (sorted && bodies.Count > 1)
+            {
+                bodies.Sort
+                (
+                    (a, b) =>
+                    {
+                        Vector2 pos = castShape.GetReferencePoint();
+                        float la = (pos - a.GetPosition()).LengthSquared();
+                        float lb = (pos - b.GetPosition()).LengthSquared();
+
+                        if (la > lb) return 1;
+                        else if (la == lb) return 0;
+                        else return -1;
+                    }
+                );
+            }
+            return bodies;
+        }
+        
+
+        public void DebugDrawGrid(Color border, Color fill)
+        {
+            spatialHash.DebugDrawGrid(border, fill);
+        }
+    }
+
+}
+
+
+
+
+
+
+/*
         public List<ICollidable> CastSpace(Rect rect, bool sorted = false, params uint[] collisionMask)
         {
             RectCollider collider = new(rect);
@@ -398,13 +448,32 @@ namespace ShapeCore
             SegmentCollider collider = new(start, end);
             return GetCastBodies(collider, sorted, collisionMask);
         }
-
-
-        public void DebugDrawGrid(Color border, Color fill)
-        {
-            spatialHash.DebugDrawGrid(border, fill);
-        }
-    }
-
-
-}
+        */
+//public List<QueryInfo> QuerySpace(Rect rect, bool sorted = false, params uint[] collisionMask)
+        //{
+        //    return QuerySpace(rect, sorted, collisionMask);
+        //    //RectCollider collider = new(rect);
+        //    //return GetQueryInfo(collider, sorted, collisionMask);
+        //}
+        //public List<QueryInfo> QuerySpace(Vector2 pos, float r, bool sorted = false, params uint[] collisionMask)
+        //{
+        //    return QuerySpace(new Circle(pos, r), sorted, collisionMask);
+        //    //CircleCollider collider = new(pos, r);
+        //    //return GetQueryInfo(collider, sorted, collisionMask);
+        //}
+        //public List<QueryInfo> QuerySpace(Vector2 pos, Vector2 dir, float length, bool sorted = false, params uint[] collisionMask)
+        //{
+        //    SegmentCollider collider = new(pos, dir, length);
+        //    return GetQueryInfo(collider, sorted, collisionMask);
+        //}
+        //public List<QueryInfo> QuerySpace(Vector2 start, Vector2 end, bool sorted = false, params uint[] collisionMask)
+        //{
+        //    SegmentCollider collider = new(start, end);
+        //    return GetQueryInfo(collider, sorted, collisionMask);
+        //}
+//public List<QueryInfo> QuerySpace(Vector2 pos, Vector2 size, Vector2 alignement, bool sorted = false, params uint[] collisionMask)
+        //{
+        //    return QuerySpace(new Rect(pos, size, alignement), sorted, collisionMask);
+        //    //RectCollider collider = new(pos, size, alignement);
+        //    //return GetQueryInfo(collider, sorted, collisionMask);
+        //}

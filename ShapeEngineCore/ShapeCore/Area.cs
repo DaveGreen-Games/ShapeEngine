@@ -4,36 +4,22 @@ using System.Numerics;
 
 namespace ShapeCore
 {
-    public struct BehaviorResult
-    {
-        public bool finished = false;
-        public float newDelta = 0f;
-
-        public BehaviorResult(bool finished, float newDelta) { this.finished = finished; this.newDelta = newDelta; }
-    }
-    public interface IBehavior
-    {
-        public HashSet<int> GetAffectedLayers();
-        public void Update(float dt);
-        public BehaviorResult Apply(IGameObject obj, float delta);
-    }
     public class AreaSlowBehavior : IBehavior
     {
-        public TimedFactors UpdateSlowFactors = new();
+        public SequencerTimedFloat<TimedFloat> UpdateSlowFactors = new();
         protected HashSet<int> affectedLayers;
 
-        public AreaSlowBehavior(params int [] affectedLayers)
+        public AreaSlowBehavior(params int[] affectedLayers)
         {
             this.affectedLayers = affectedLayers.ToHashSet();
         }
 
         public BehaviorResult Apply(IGameObject obj, float delta) { return new(false, delta * UpdateSlowFactors.Total); }
-        public HashSet<int> GetAffectedLayers() {  return  affectedLayers; }
+        public HashSet<int> GetAffectedLayers() { return affectedLayers; }
         public void Update(float dt) { UpdateSlowFactors.Update(dt); }
     }
 
-
-    public class Area
+    public class Area : IBehaviourReciever
     {
         protected class AreaLayer
         {
@@ -117,8 +103,6 @@ namespace ShapeCore
 
         }
         
-        //public Rect InnerRect { get;protected set;}
-        //public Rect OuterRect { get; protected set; }
 
         public Rect Bounds { get; protected set; }
         public CollisionHandler Col { get; protected set; }
@@ -129,22 +113,6 @@ namespace ShapeCore
         protected List<IGameObject> uiObjects = new();
         
 
-        //public Area(Vector2 topLeft, Vector2 bottomRight, int rows, int cols)
-        //{
-        //    //float w = bottomRight.X - topLeft.X;
-        //    //float h = bottomRight.Y - topLeft.Y;
-        //    //InnerRect = new(topLeft.X, topLeft.Y, w, h);
-        //    //OuterRect = InnerRect.ScaleSize(2f, new(0.5f)); //SRect.ScaleRectangle(InnerRect, 2f);
-        //    //Col = new(InnerRect.x, InnerRect.y, InnerRect.width, InnerRect.height, rows, cols);
-        //    Bounds = new(topLeft, bottomRight);
-        //    Col = new(Bounds, rows, cols);
-        //}
-        //public Area(Vector2 topLeft, Vector2 size, int rows, int cols)
-        //{
-        //    //InnerRect = new(topLeft.X, topLeft.Y, w, h);
-        //    //OuterRect = InnerRect.ScaleSize(2f, new(0.5f)); //SRect.ScaleRectangle(InnerRect, 2f);
-        //    //Col = new(InnerRect.x, InnerRect.y, InnerRect.width, InnerRect.height, rows, cols);
-        //}
         public Area()
         {
             //InnerRect = new();
@@ -260,7 +228,7 @@ namespace ShapeCore
             }
         }
 
-
+        public bool HasBehaviors() { return behaviors.Count > 0; }
         public bool AddBehavior(IBehavior behavior) { return behaviors.Add(behavior); }
         public bool RemoveBehavior(IBehavior behavior) { return behaviors.Remove(behavior); }
 
@@ -376,8 +344,17 @@ namespace ShapeCore
                 
             }
         }
-        
-        //private void SortAreaLayerGroups()
+
+    }
+}
+
+
+
+
+
+
+
+//private void SortAreaLayerGroups()
         //{
         //    var list = layers.Values.ToList();
         //    list.Sort(delegate (AreaLayer x, AreaLayer y)
@@ -406,9 +383,24 @@ namespace ShapeCore
         //        }
         //    });
         //}
-    }
-}
-
+        //public Area(Vector2 topLeft, Vector2 bottomRight, int rows, int cols)
+        //{
+        //    //float w = bottomRight.X - topLeft.X;
+        //    //float h = bottomRight.Y - topLeft.Y;
+        //    //InnerRect = new(topLeft.X, topLeft.Y, w, h);
+        //    //OuterRect = InnerRect.ScaleSize(2f, new(0.5f)); //SRect.ScaleRectangle(InnerRect, 2f);
+        //    //Col = new(InnerRect.x, InnerRect.y, InnerRect.width, InnerRect.height, rows, cols);
+        //    Bounds = new(topLeft, bottomRight);
+        //    Col = new(Bounds, rows, cols);
+        //}
+        //public Area(Vector2 topLeft, Vector2 size, int rows, int cols)
+        //{
+        //    //InnerRect = new(topLeft.X, topLeft.Y, w, h);
+        //    //OuterRect = InnerRect.ScaleSize(2f, new(0.5f)); //SRect.ScaleRectangle(InnerRect, 2f);
+        //    //Col = new(InnerRect.x, InnerRect.y, InnerRect.width, InnerRect.height, rows, cols);
+        //}
+        //public Rect InnerRect { get;protected set;}
+        //public Rect OuterRect { get; protected set; }
 /*
     public class AreaLayer
     {
