@@ -80,7 +80,7 @@ namespace ShapeCore
             GAMELOOP.Run();//runs continously
 
             bool fullscreen = GAMELOOP.Close();
-            if (GAMELOOP.RESTART)
+            if (GAMELOOP.restart)
             {
                 if (fullscreen) Start(gameloop, devWidth, devHeight, gameSizeFactor, uiSizeFactor, windowName, fixedTexture, pixelSmoothing, hideCursor, "fullscreen");
                 else Start(gameloop, devWidth, devHeight, gameSizeFactor, uiSizeFactor, windowName, fixedTexture, pixelSmoothing, hideCursor);

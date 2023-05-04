@@ -67,7 +67,15 @@ namespace ShapeCore
         }
 
     }
-    public abstract class GameLoop
+
+
+    public struct ExitCode
+    {
+        public bool restart = false;
+        public ExitCode(bool restart) { this.restart = restart; }
+
+    }
+    public class GameLoop
     {
         //private int CUR_SCENE_INDEX = 0;
         //private Dictionary<string, Scene> SCENES = new();
@@ -87,9 +95,6 @@ namespace ShapeCore
 
         public string[] LAUNCH_PARAMS { get; private set; }
         
-        public bool QUIT { get; protected set; } = false;
-        public bool RESTART { get; protected set; } = false;
-        
         public bool CALL_HANDLE_INPUT = true;
         public bool CALL_UPDATE = true;
         public bool CALL_DRAW = true;
@@ -101,8 +106,10 @@ namespace ShapeCore
         private Sequencer<DelayedAction> delayHandler = new();
         private BasicTimer stopTimer = new();
         private List<DeferredInfo> deferred = new();
+        private bool quit = false;
+        private bool restart = false;
 
-
+        public IGraphicsDevice GFX { get; protected set; }
 
 
 
@@ -114,15 +121,21 @@ namespace ShapeCore
             newScene.Activate(CUR_SCENE);
             CUR_SCENE = newScene;
         }
+        /// <summary>
+        /// Quit the application with the exit code restart.
+        /// </summary>
         public void Restart()
         {
-            RESTART = true;
-            QUIT = true;
+            restart = true;
+            quit = true;
         }
+        /// <summary>
+        /// Quit the application at the end of the frame.
+        /// </summary>
         public void Quit()
         {
-            RESTART = false;
-            QUIT = true;
+            restart = false;
+            quit = true;
         }
 
 
@@ -184,67 +197,74 @@ namespace ShapeCore
         }
         
 
-
-
-        public void Initialize(int devWidth, int devHeight, float gameSizeFactor, float uiSizeFactor, string windowName, bool fixedTexture, bool pixelSmoothing, bool hideCursor, params string[] launchParams)
+        public GameLoop(IGraphicsDevice graphicDevice, params string[] launchParameters)
         {
-            LAUNCH_PARAMS = launchParams;
-            QUIT = false;
-            RESTART = false;
-
+            this.GFX = graphicDevice;
+            this.LAUNCH_PARAMS = launchParameters;
+            
+            this.GFX.Init();
+            //InitAudioDevice();
+            
+            quit = false;
+            restart = false;
             Raylib.SetExitKey(-1);
-
-            ScreenHandler.Initialize(devWidth, devHeight, gameSizeFactor, uiSizeFactor, windowName, fixedTexture, pixelSmoothing, hideCursor);
-            InitAudioDevice();
-            //AudioHandler.Initialize();
-            //InputHandler.Initialize();
-            
-            
         }
 
-        
-        
+        //public void Initialize(int devWidth, int devHeight, float gameSizeFactor, float uiSizeFactor, string windowName, bool fixedTexture, bool pixelSmoothing, bool hideCursor, params string[] launchParams)
+        //{
+        //    LAUNCH_PARAMS = launchParams;
+        //    
+        //
+        //    ScreenHandler.Initialize(devWidth, devHeight, gameSizeFactor, uiSizeFactor, windowName, fixedTexture, pixelSmoothing, hideCursor);
+        //    
+        //}
+
+
         /// <summary>
         /// Runs the game until Quit() or Restart() is called or the Window is closed by the user.
         /// </summary>
-        /// <returns>Returns if the application should restart or not.</returns>
-        public bool Run()
+        /// <returns>Returns an exit code for information how the application was quit. Restart has to be handled seperately.</returns>
+        public ExitCode Run()
         {
             Start();
-            while (!QUIT)
+            RunGameloop();
+            End();
+            
+            ScreenHandler.Close();
+            
+            return new ExitCode(restart);
+        }
+        private void RunGameloop()
+        {
+            while (!quit)
             {
-                //UPDATE
+                HandleInput();
+
                 UpdateGame(GetFrameTime());
 
-                // DRAW TO MAIN TEXTURE
                 DrawGame();
 
                 ResolveDeferred();
             }
-            
-            End();
-            Close();
-            return RESTART;
+        }
+        private void HandleInput()
+        {
+            if(!CALL_HANDLE_INPUT) return;
+
+            if (BeginHandleInput()) CUR_SCENE.HandleInput();
+            EndHandleInput();
         }
         private void UpdateGame(float dt)
         {
-            if (CALL_HANDLE_INPUT) PreHandleInput();
+            if (!CALL_UPDATE) return;
+
             ScreenHandler.Update(dt);
 
-            if (CALL_UPDATE)
+            if (BeginUpdate(dt))
             {
-                PreUpdate(dt);
-                
-                if (CUR_SCENE.CallHandleInput) CUR_SCENE.HandleInput();
-                //delayHandler.Update(dt);
-                //stopTimer.Update(dt);
                 if (CUR_SCENE.CallUpdate && !stopTimer.IsRunning) CUR_SCENE.Update(dt);
-                
-                PostUpdate(dt);
             }
-            
-            if (CALL_HANDLE_INPUT) PostHandleInput();
-
+            EndUpdate(dt);
             /*
             if (CALL_UPDATE) PreUpdate(dt);
 
@@ -274,21 +294,24 @@ namespace ShapeCore
             if (CALL_DRAW)
             {
                 ScreenHandler.StartDraw(true);
-                PreDraw();
-                if (CUR_SCENE.CallDraw) CUR_SCENE.Draw();
-                PostDraw();
+                if (BeginDraw()) 
+                { 
+                    if (CUR_SCENE.CallDraw) CUR_SCENE.Draw(); 
+                }
+                EndDraw();
                 ScreenHandler.EndDraw(true);
             }
 
             //Draw to ui texture
             if (CALL_DRAWUI)
             {
-                //Draw to UI texture
                 Vector2 uiSize = ScreenHandler.UISize();
                 ScreenHandler.StartDraw(false);
-                PreDrawUI(uiSize);
-                if (CUR_SCENE.CallDraw) CUR_SCENE.DrawUI(uiSize);
-                PostDrawUI(uiSize);
+                if (BeginDrawUI(uiSize))
+                {
+                    if (CUR_SCENE.CallDraw) CUR_SCENE.DrawUI(uiSize);
+                }
+                EndDrawUI(uiSize);
                 ScreenHandler.EndDraw(false);
             }
             
@@ -307,26 +330,81 @@ namespace ShapeCore
             ScreenHandler.DrawUI();
             EndDrawing();
         }
-        private void Close()
+        private void Start() 
         {
-            ScreenHandler.Close();
-            //bool fullscreen = IsWindowFullscreen();
-            //if (RESTART && fullscreen) ScreenHandler.ToggleFullscreen();
-
-            //return fullscreen;
+            LoadContent();
+            BeginRun();
+        }
+        private void End() 
+        {
+            EndRun();
+            UnloadContent();
         }
 
 
-        public virtual void Start() { }
-        public virtual void PreHandleInput() { }
-        public virtual void PostHandleInput() { }
-        public virtual void PreUpdate(float dt) { }
-        public virtual void PostUpdate(float dt) { }
-        public virtual void PreDraw() { }
-        public virtual void PostDraw() { }
-        public virtual void PreDrawUI(Vector2 uiSize) { }
-        public virtual void PostDrawUI(Vector2 uiSize) { }
-        public virtual void End() { }
+
+        /// <summary>
+        /// Called first after starting the gameloop.
+        /// </summary>
+        public virtual void LoadContent() { }
+        /// <summary>
+        /// Called after LoadContent but before the main loop has started.
+        /// </summary>
+        public virtual void BeginRun() { }
+        /// <summary>
+        /// Called within the main gameloop before HandleInput is called on the cur scene.
+        /// </summary>
+        /// <returns>Return if HandleInput should be called on the cur scene.</returns>
+        public virtual bool BeginHandleInput() { return true; }
+        /// <summary>
+        /// Called within the main gameloop after HandleInput was called on the cur scene.
+        /// </summary>
+        public virtual void EndHandleInput() { }
+        /// <summary>
+        /// Called within the main gameloop before Update is called on the cur scene.
+        /// </summary>
+        /// <param name="dt"></param>
+        /// <returns>Return if Update should be called on the cur scene.</returns>
+        public virtual bool BeginUpdate(float dt) { return true; }
+        /// <summary>
+        /// Called within the main gameloop after Update was called on the cur scene.
+        /// </summary>
+        /// <param name="dt"></param>
+        public virtual void EndUpdate(float dt) { }
+        /// <summary>
+        /// Called within the main gameloop before Draw is called on the cur scene.
+        /// </summary>
+        /// <returns>Return if Draw should be called on the cur scene.</returns>
+        public virtual bool BeginDraw() { return true; }
+        /// <summary>
+        /// Called within the main gameloop after Draw was called on the cur scene.
+        /// </summary>
+        public virtual void EndDraw() { }
+        /// <summary>
+        /// Called within the main gameloop before DrawUI is called on the cur scene.
+        /// </summary>
+        /// <param name="uiSize"></param>
+        /// <returns>Return if DrawUI should be called on the cur scene</returns>
+        public virtual bool BeginDrawUI(Vector2 uiSize) { return true; }
+        /// <summary>
+        /// Called within the main gameloop after DrawUI was called on the cur scene.
+        /// </summary>
+        /// <param name="uiSize"></param>
+        public virtual void EndDrawUI(Vector2 uiSize) { }
+        /// <summary>
+        /// Called before UnloadContent is called after the main gameloop has been exited.
+        /// </summary>
+        public virtual void EndRun() { }
+        /// <summary>
+        /// Called after EndRun before the application terminates.
+        /// </summary>
+        public virtual void UnloadContent() { }
+
+
+
+
+
+
 
 
         /*

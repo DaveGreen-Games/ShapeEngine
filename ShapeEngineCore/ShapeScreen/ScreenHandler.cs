@@ -5,6 +5,11 @@ using ShapeLib;
 
 namespace ShapeScreen
 {
+    public interface IGraphicsDevice
+    {
+        public void Init();
+    }
+
     internal class ShaderFlash
     {
         private float duration = 0f;
