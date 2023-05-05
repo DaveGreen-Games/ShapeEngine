@@ -91,7 +91,23 @@ namespace ShapeScreen
 
     }
 
-    public sealed class ShaderDevice
+    public interface IShaderDevice
+    {
+        public List<ScreenShader> GetCurActiveShaders();
+        public void Update(float dt);
+        public void Close();
+    }
+
+    public sealed class ShaderDeviceBasic : IShaderDevice
+    {
+        public void Close() { }
+
+        public List<ScreenShader> GetCurActiveShaders() { return new(); }
+
+        public void Update(float dt) { }
+    }
+
+    public sealed class ShaderDevice : IShaderDevice
     {
         private Dictionary<uint, ShaderFlash> screenShaderFlashes = new();
         private Dictionary<uint, ScreenShader> screenShaders = new();

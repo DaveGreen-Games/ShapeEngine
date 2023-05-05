@@ -1,53 +1,42 @@
-﻿using ShapeTiming;
+﻿
 using System.Numerics;
 
 namespace ShapeScreen
 {
-    public sealed class MonitorDevice
+    public interface IMonitorDevice
     {
-        public struct MonitorInfo
-        {
-            public bool available = false;
-            public string name = "";
-            public int width = -1;
-            public int height = -1;
-            public int refreshrate = -1;
-            public int index = -1;
-            public Vector2 position = new();
-            public MonitorInfo()
-            {
-                this.available = false;
-                this.name = "";
-                this.width = -1;
-                this.height = -1;
-                this.refreshrate = -1;
-                this.index = -1;
-                this.position = new();
-            }
-            public MonitorInfo(string name, int w, int h, Vector2 pos, int refreshrate, int index)
-            {
-                this.available = true;
-                this.name = name;
-                this.width = w;
-                this.height = h;
-                this.refreshrate = refreshrate;
-                this.index = index;
-                this.position = pos;
-            }
-        }
-
         public delegate void MonitorChanged(MonitorInfo oldMonitor, MonitorInfo newMonitor);
         public event MonitorChanged? OnMonitorChanged;
 
         public delegate void MonitorSetupChanged(List<MonitorInfo> newSetup);
         public event MonitorSetupChanged? OnMonitorSetupChanged;
 
+        public MonitorInfo CurMonitor();
+        public int MonitorCount();
+        public List<MonitorInfo> GetAllMonitorInfo();
+        public MonitorInfo HasMonitorSetupChanged();
+        public MonitorInfo SetMonitor(int newMonitor);
+        public MonitorInfo NextMonitor();
+        public MonitorInfo PrevMonitor();
+
+    }
+    public sealed class MonitorDeviceBasic : IMonitorDevice
+    {
+        
+        //public delegate void MonitorChanged(MonitorInfo oldMonitor, MonitorInfo newMonitor);
+        //public event MonitorChanged? OnMonitorChanged;
+        //
+        //public delegate void MonitorSetupChanged(List<MonitorInfo> newSetup);
+        //public event MonitorSetupChanged? OnMonitorSetupChanged;
+
         private List<MonitorInfo> monitors = new();
         private int curIndex = 0;
         private int monitorCount = 0;
 
+        public event IMonitorDevice.MonitorChanged? OnMonitorChanged;
+        public event IMonitorDevice.MonitorSetupChanged? OnMonitorSetupChanged;
 
-        public MonitorDevice()
+        public MonitorDeviceBasic()
         {
             GenerateInfo();
         }
@@ -172,7 +161,7 @@ namespace ShapeScreen
             curIndex = newMonitor;
             return Get();
         }
-        public MonitorInfo Next()
+        public MonitorInfo NextMonitor()
         {
             int oldIndex = curIndex;
             curIndex += 1;
@@ -180,13 +169,44 @@ namespace ShapeScreen
             if (oldIndex == curIndex) return new();
             return Get();
         }
-        public MonitorInfo Prev()
+        public MonitorInfo PrevMonitor()
         {
             int oldIndex = curIndex;
             curIndex -= 1;
             if (curIndex < 0) curIndex = monitors.Count - 1;
             if (oldIndex == curIndex) return new();
             return Get();
+        }
+    
+    }
+    public struct MonitorInfo
+    {
+        public bool available = false;
+        public string name = "";
+        public int width = -1;
+        public int height = -1;
+        public int refreshrate = -1;
+        public int index = -1;
+        public Vector2 position = new();
+        public MonitorInfo()
+        {
+            this.available = false;
+            this.name = "";
+            this.width = -1;
+            this.height = -1;
+            this.refreshrate = -1;
+            this.index = -1;
+            this.position = new();
+        }
+        public MonitorInfo(string name, int w, int h, Vector2 pos, int refreshrate, int index)
+        {
+            this.available = true;
+            this.name = name;
+            this.width = w;
+            this.height = h;
+            this.refreshrate = refreshrate;
+            this.index = index;
+            this.position = pos;
         }
     }
 

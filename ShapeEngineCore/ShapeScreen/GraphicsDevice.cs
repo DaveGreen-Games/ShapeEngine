@@ -1,6 +1,7 @@
 ﻿using Raylib_CsLo;
 using System.Numerics;
 using ShapeLib;
+using ShapeCore;
 
 namespace ShapeScreen
 {
@@ -114,14 +115,14 @@ namespace ShapeScreen
         public (int width, int height) WINDOWED_WINDOW_SIZE { get; private set; } = (0, 0);
         public (int width, int height) DEVELOPMENT_RESOLUTION { get; private set; } = (0, 0);
         
-        public MonitorDevice MONITOR { get; private set; }
-        public ShaderDevice SHADERS { get; private set; }
-        public Camera CAMERA { get; private set; }
+        public IMonitorDevice MONITOR { get; set; }
+        public IShaderDevice SHADER { get; set; }
+        public ICamera CAMERA { get; set; }
+
         public ScreenTexture GAME { get; private set; }
         public ScreenTexture UI { get; private set; }
         
         private ScreenBuffer[] screenBuffers = new ScreenBuffer[0];
-        
         
         
         public GraphicsDevice(int devWidth, int devHeight, float gameSizeFactor = 1.0f, float uiSizeFactor = 1.0f, string windowName = "Raylib Game", bool fixedTexture = true, bool hideCursor = false)
@@ -134,13 +135,14 @@ namespace ShapeScreen
             FRAME_RATE_LIMIT = 60;
             SetVsync(true);
 
-            SHADERS = new();
-            MONITOR = new();
             GAME_FACTOR = gameSizeFactor;
             UI_FACTOR = uiSizeFactor;
             GAME_TO_UI = UI_FACTOR / GAME_FACTOR;
             UI_TO_GAME = GAME_FACTOR / UI_FACTOR;
             DEVELOPMENT_RESOLUTION = (devWidth, devHeight);
+
+            MONITOR = new MonitorDeviceBasic();
+            SHADER = new ShaderDeviceBasic();
 
             SetupWindowDimensions();
 
@@ -161,8 +163,8 @@ namespace ShapeScreen
 
             GAME.OnTextureSizeChanged += GameTextureSizeChanged;
 
-            CAMERA = new(GameSize(), 1f, GAME.STRETCH_AREA_SIDE_FACTOR, 0f, -1f, 1.5f);
-            var gameSize = GameSize();
+            CAMERA = new CameraBasic(GameSize(), 1f, 0f, GAME.STRETCH_AREA_SIDE_FACTOR);//TODO i do not like the stretch factor at all
+            
             screenBuffers = new ScreenBuffer[]
             {
                 new(GameWidth(), GameHeight(), GameWidth(), GameHeight()),
@@ -180,17 +182,17 @@ namespace ShapeScreen
                 MonitorChanged(newMonitor);
             }
 
-            SHADERS.Update(dt);
+            SHADER.Update(dt);
             GAME.Update(dt);
             UI.Update(dt);
             CAMERA.Update(dt, CUR_WINDOW_SIZE.width, GAME.GetTextureWidth());
         }
 
-        public virtual void BeginDraw() { GAME.BeginTextureMode(CAMERA); }
-        public virtual void EndDraw() { GAME.EndTextureMode(CAMERA); }
+        public virtual void BeginDraw() { GAME.BeginTextureMode(CAMERA.GetCamera()); }
+        public virtual void EndDraw() { GAME.EndTextureMode(CAMERA.GetCamera()); }
         public virtual void DrawGameToScreen()
         {
-            List<ScreenShader> shadersToApply = SHADERS.GetCurActiveShaders();
+            List<ScreenShader> shadersToApply = SHADER.GetCurActiveShaders();
             if (shadersToApply.Count <= 0)
             {
                 GAME.Draw();
@@ -255,8 +257,8 @@ namespace ShapeScreen
             }
         }
 
-        public virtual void BeginDrawUI() { UI.BeginTextureMode(null); }
-        public virtual void EndDrawUI() { UI.EndTextureMode(null); }
+        public virtual void BeginDrawUI() { UI.BeginTextureMode(); }
+        public virtual void EndDrawUI() { UI.EndTextureMode(); }
         public virtual void DrawUIToScreen()
         {
             UI.Draw();
@@ -273,11 +275,11 @@ namespace ShapeScreen
             
             GAME.Close();
             UI.Close();
-            SHADERS.Close();
+            SHADER.Close();
             CloseWindow();
         }
 
-        public Rectangle CameraArea() { return CAMERA.GetCameraArea(); }
+        public Rect CameraArea() { return CAMERA.GetArea(); }
         public Vector2 GameSize() { return new(GAME.GetTextureWidth(), GAME.GetTextureHeight()); }
         public Vector2 UISize() { return new(UI.GetTextureWidth(), UI.GetTextureHeight()); }
         public Vector2 TransformPositionToUI(Vector2 gamePos)
@@ -305,7 +307,7 @@ namespace ShapeScreen
         }
         public void NextMonitor()
         {
-            var nextMonitor = MONITOR.Next();
+            var nextMonitor = MONITOR.NextMonitor();
             if (nextMonitor.available)
             {
                 MonitorChanged(nextMonitor);
@@ -410,7 +412,7 @@ namespace ShapeScreen
         {
             CAMERA.ChangeSize(new Vector2(w, h), factor);
         }
-        private void MonitorChanged(MonitorDevice.MonitorInfo monitor)
+        private void MonitorChanged(MonitorInfo monitor)
         {
             int prevWidth = CUR_WINDOW_SIZE.width;
             int prevHeight = CUR_WINDOW_SIZE.height;

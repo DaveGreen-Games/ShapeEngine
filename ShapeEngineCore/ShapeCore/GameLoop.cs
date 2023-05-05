@@ -197,9 +197,9 @@ namespace ShapeCore
         }
         */
 
-        public GameLoop(GraphicsDevice graphicDevice, params string[] launchParameters)
+        public GameLoop(GraphicsDevice graphicsDevice, params string[] launchParameters)
         {
-            this.GFX = graphicDevice;
+            this.GFX = graphicsDevice;
             this.LAUNCH_PARAMS = launchParameters;
             
             quit = false;
@@ -285,9 +285,9 @@ namespace ShapeCore
             BeginDrawing();
             ClearBackground(BackgroundColor);
 
-            if (GFX.CAMERA.PIXEL_SMOOTHING_ENABLED)
+            if (GFX.CAMERA.IsPixelSmoothingCameraEnabled())
             {
-                BeginMode2D(GFX.CAMERA.ScreenSpaceCam);
+                BeginMode2D(GFX.CAMERA.GetPixelSmoothingCamera());
                 GFX.DrawGameToScreen();
                 EndMode2D();
             }

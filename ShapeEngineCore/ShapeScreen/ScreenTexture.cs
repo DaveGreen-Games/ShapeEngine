@@ -2,6 +2,7 @@
 using Raylib_CsLo;
 using ShapeLib;
 using ShapeColor;
+using ShapeCore;
 
 namespace ShapeScreen
 {
@@ -452,29 +453,39 @@ namespace ShapeScreen
 
             DrawTexturePro(texture.texture, sourceRec, destRec, origin, rotation, curTint);
         }
-        public void BeginTextureMode(Camera? camera = null)
+        public void BeginTextureMode(Camera2D camera)
         {
             Raylib.BeginTextureMode(texture);
-            if (camera != null) BeginMode2D(camera.Cam);
+            BeginMode2D(camera);
             ClearBackground(backgroundColor);
         }
-        public void EndTextureMode(Camera? camera = null)
+        public void BeginTextureMode()
+        {
+            Raylib.BeginTextureMode(texture);
+            ClearBackground(backgroundColor);
+        }
+        public void EndTextureMode(Camera2D camera)//Camera? camera = null
         {
             foreach (var flash in screenFlashes)
             {
-                if (camera != null)
-                {
-                    Vector2 sizeOffset = new(5f, 5f);
-                    Vector2 center = camera.CameraPos;
-                    Vector2 size = camera.CameraOffset * 2 * (1f / camera.CameraZoom);
-                    SDrawing.DrawRect(new(center, size + sizeOffset, new(0.5f) ), new Vector2(0.5f, 0.5f), -camera.CameraRotDeg, flash.GetColor());
-                }
-                else DrawRectangle(-1, -1, GetTextureWidth() + 1, GetTextureHeight() + 1, flash.GetColor());
+                Vector2 sizeOffset = new(5f, 5f);
+                Vector2 center = camera.target;
+                Vector2 size = camera.offset * 2 * (1f / camera.zoom);
+                var r = new Rect(center, size + offset, new(0.5f, 0.5f));
+                r.Draw(new Vector2(0.5f, 0.5f), -camera.rotation, flash.GetColor());
+                //SDrawing.DrawRect(new(center, size + sizeOffset, new(0.5f)), new Vector2(0.5f, 0.5f), -camera.rotation, flash.GetColor());
             }
-            if (camera != null) EndMode2D();
+            EndMode2D();
             Raylib.EndTextureMode();
         }
-
+        public void EndTextureMode()
+        {
+            foreach (var flash in screenFlashes)
+            {
+                DrawRectangle(-1, -1, GetTextureWidth() + 1, GetTextureHeight() + 1, flash.GetColor());
+            }
+            Raylib.EndTextureMode();
+        }
 
         public void Close()
         {
