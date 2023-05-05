@@ -109,7 +109,7 @@ namespace ShapeCore
         private bool quit = false;
         private bool restart = false;
 
-        public IGraphicsDevice GFX { get; protected set; }
+        public GraphicsDevice GFX { get; protected set; }
 
 
 
@@ -197,7 +197,7 @@ namespace ShapeCore
         }
         */
 
-        public GameLoop(IGraphicsDevice graphicDevice, params string[] launchParameters)
+        public GameLoop(GraphicsDevice graphicDevice, params string[] launchParameters)
         {
             this.GFX = graphicDevice;
             this.LAUNCH_PARAMS = launchParameters;
@@ -206,15 +206,6 @@ namespace ShapeCore
             restart = false;
             Raylib.SetExitKey(-1);
         }
-
-        //public void Initialize(int devWidth, int devHeight, float gameSizeFactor, float uiSizeFactor, string windowName, bool fixedTexture, bool pixelSmoothing, bool hideCursor, params string[] launchParams)
-        //{
-        //    LAUNCH_PARAMS = launchParams;
-        //    
-        //
-        //    ScreenHandler.Initialize(devWidth, devHeight, gameSizeFactor, uiSizeFactor, windowName, fixedTexture, pixelSmoothing, hideCursor);
-        //    
-        //}
 
 
         /// <summary>
@@ -280,7 +271,7 @@ namespace ShapeCore
             //Draw to ui texture
             if (CALL_DRAWUI)
             {
-                Vector2 uiSize = GFX.GetUITextureSize();// ScreenHandler.UISize();
+                Vector2 uiSize = GFX.UISize();// GetUITextureSize();// ScreenHandler.UISize();
                 GFX.BeginDrawUI();
                 if (BeginDrawUI(uiSize))
                 {
@@ -294,9 +285,9 @@ namespace ShapeCore
             BeginDrawing();
             ClearBackground(BackgroundColor);
 
-            if (GFX.SmoothingCameraEnabled())
+            if (GFX.CAMERA.PIXEL_SMOOTHING_ENABLED)
             {
-                BeginMode2D(GFX.GetSmoothingCamera());
+                BeginMode2D(GFX.CAMERA.ScreenSpaceCam);
                 GFX.DrawGameToScreen();
                 EndMode2D();
             }
@@ -317,7 +308,7 @@ namespace ShapeCore
             UnloadContent();
         }
 
-        
+        //public virtual void HandleLaunchParameters() { }
         /// <summary>
         /// Called first after starting the gameloop.
         /// </summary>

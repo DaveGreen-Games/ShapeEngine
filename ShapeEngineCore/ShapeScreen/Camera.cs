@@ -401,10 +401,14 @@ namespace ShapeScreen
     }
     public class Camera
     {
+        public float CAMERA_SHAKE_INTENSITY = 1.0f;
+        public float FOLLOW_SMOOTHNESS { get; set; } = 0f;
+        public bool PIXEL_SMOOTHING_ENABLED = true;
+
+
         private IGameObject? target = null;
         private IGameObject? newTarget = null;
         private float boundaryDis = 0f;
-        public float FollowSmoothness { get; set; } = 0f;
         private float baseZoom = 1f;
         private float zoomStretchFactor = 1f;
         private float baseRotationDeg = 0f;
@@ -415,7 +419,6 @@ namespace ShapeScreen
         private Camera2D worldSpaceCamera;
         private Camera2D screenSpaceCamera;
 
-        public bool PIXEL_SMOOTHING_ENABLED = true;
         /// <summary>
         /// Original world position without pixel perfect smoothing applied. Used for transformation to and from ui and the camera area.
         /// </summary>
@@ -475,7 +478,7 @@ namespace ShapeScreen
         public Camera2D ScreenSpaceCam { get { return screenSpaceCamera; } }
         public Camera(Vector2 size, float zoom, float zoomStretchFactor, float rotation, float boundaryDis = 0f, float followSmoothness = 1f, bool pixelSmoothing = true)
         {
-            this.FollowSmoothness = followSmoothness;
+            this.FOLLOW_SMOOTHNESS = followSmoothness;
             this.boundaryDis = boundaryDis;
             this.baseOffset = size / 2;
             this.baseZoom = zoom;
@@ -541,7 +544,7 @@ namespace ShapeScreen
         public void SetTarget(IGameObject target)
         {
             this.target = target;
-            rawCameraTarget = target.GetCameraPosition(rawCameraTarget, 0f, FollowSmoothness, boundaryDis);
+            rawCameraTarget = target.GetCameraPosition(rawCameraTarget, 0f, FOLLOW_SMOOTHNESS, boundaryDis);
         }
         public void ChangeTarget(IGameObject newTarget)
         {
@@ -558,7 +561,7 @@ namespace ShapeScreen
         public void ClearTarget() { target = null; newTarget = null; }
         public void Shake(float duration, Vector2 strength, float zoomStrength = 0f, float rotStrength = 0f, float smoothness = 0.75f)
         {
-            float intensity = DefaultGraphicsDevice.CAMERA_SHAKE_INTENSITY;
+            float intensity = CAMERA_SHAKE_INTENSITY;
             shake.Start
                 (
                     duration,
@@ -570,18 +573,17 @@ namespace ShapeScreen
         }
         public void StopShake() { shake.Stop(); }
 
-        public Vector2 TransformPositionToUI(Vector2 gamePos)
+        public Vector2 TransformPositionToUI(Vector2 gamePos, float gameToUIFactor)
         {
             float zoomFactor = 1 / rawCameraZoom;
             Vector2 cPos = rawCameraTarget - rawCameraOffset * zoomFactor;
-            Vector2 p = (gamePos - cPos) * DefaultGraphicsDevice.GAME_TO_UI * rawCameraZoom;
+            Vector2 p = (gamePos - cPos) * gameToUIFactor * rawCameraZoom;
             return p;
         }
-
-        public Vector2 TransformPositionToGame(Vector2 uiPos)
+        public Vector2 TransformPositionToGame(Vector2 uiPos, float uiToGameFactor)
         {
             float zoomFactor = 1 / rawCameraZoom;
-            Vector2 p = uiPos * DefaultGraphicsDevice.UI_TO_GAME * zoomFactor;
+            Vector2 p = uiPos * uiToGameFactor * zoomFactor;
             Vector2 cPos = rawCameraTarget - rawCameraOffset * zoomFactor;
             p += cPos;
             return p;
@@ -592,7 +594,7 @@ namespace ShapeScreen
             Vector2 cPos = rawCameraTarget - rawCameraOffset * zoomFactor;
             return new(cPos.X, cPos.Y, rawCameraOffset.X * zoomFactor, rawCameraOffset.Y * zoomFactor);
         }
-        public void Update(float dt)
+        public void Update(float dt, float curWindowWidth, float curGameWidth)
         {
             CameraTweens.Update(dt);
             shake.Update(dt);
@@ -607,8 +609,8 @@ namespace ShapeScreen
                 if (newTarget != null)
                 {
                     Vector2 curPos = rawCameraTarget; // screenSpaceCamera.target;// target.GetPosition();
-                    Vector2 newPos = newTarget.GetCameraPosition(curPos, 0f, FollowSmoothness, boundaryDis);
-                    float disSq = SVec.LengthSquared(newPos - curPos);
+                    Vector2 newPos = newTarget.GetCameraPosition(curPos, 0f, FOLLOW_SMOOTHNESS, boundaryDis);
+                    float disSq = (newPos - curPos).LengthSquared();
                     if (disSq < 25)
                     {
                         target = newTarget;
@@ -617,19 +619,19 @@ namespace ShapeScreen
                     }
                     else
                     {
-                        rawCameraTarget = SVec.Lerp(curPos, newPos, dt * FollowSmoothness);
+                        rawCameraTarget = SVec.Lerp(curPos, newPos, dt * FOLLOW_SMOOTHNESS);
                     }
                 }
                 else
                 {
-                    rawCameraTarget = target.GetCameraPosition(rawCameraTarget, dt, FollowSmoothness, boundaryDis);
+                    rawCameraTarget = target.GetCameraPosition(rawCameraTarget, dt, FOLLOW_SMOOTHNESS, boundaryDis);
                 }
             }
 
 
             if (PIXEL_SMOOTHING_ENABLED)
             {
-                float virtualRatio = DefaultGraphicsDevice.CUR_WINDOW_SIZE.width / DefaultGraphicsDevice.GAME.GetTextureWidth();
+                float virtualRatio = curWindowWidth / curGameWidth;
                 worldSpaceCamera.target.X = (int)rawCameraTarget.X;
                 screenSpaceCamera.target.X = rawCameraTarget.X - worldSpaceCamera.target.X;
                 screenSpaceCamera.target.X *= virtualRatio;
@@ -662,4 +664,254 @@ namespace ShapeScreen
     }
 
 
+    /*
+    public interface ICamera
+    {
+        public float CAMERA_SHAKE_INTENSITY = 1.0f;
+        public float FOLLOW_SMOOTHNESS { get; set; } = 0f;
+        public bool PIXEL_SMOOTHING_ENABLED = true;
+
+
+        private IGameObject? target = null;
+        private IGameObject? newTarget = null;
+        private float boundaryDis = 0f;
+        private float baseZoom = 1f;
+        private float zoomStretchFactor = 1f;
+        private float baseRotationDeg = 0f;
+        private float curZoomFactor = 1f;
+        private float curRotDeg = 0f;
+        private Vector2 curTranslation = new(0f);
+        private Vector2 baseOffset = new(0f);
+        private Camera2D worldSpaceCamera;
+        private Camera2D screenSpaceCamera;
+
+        /// <summary>
+        /// Original world position without pixel perfect smoothing applied. Used for transformation to and from ui and the camera area.
+        /// </summary>
+        private Vector2 rawCameraTarget = new(0f);
+        /// <summary>
+        /// Original offset without pixel perfect smoothing applied. Used for transformation to and from ui and the camera area.
+        /// </summary>
+        private Vector2 rawCameraOffset = new(0f);
+        private float rawCameraZoom = 0f;
+        private float rawCameraRotationDeg = 0f;
+
+        private CameraShake shake = new();
+
+        //private CameraOrderChainHandler cameraOrderChainHandler = new();
+        public Sequencer<ICameraTween> CameraTweens { get; private set; } = new();
+        private float cameraTweenTotalRotationDeg = 0f;
+        private float cameraTweenTotalScale = 1f;
+        private Vector2 cameraTweenTotalOffset = new();
+
+        public IGameObject? Target { get { return target; } set { target = value; } }
+
+        /// <summary>
+        /// Original world position of the camera before pixel perfect smoothing is applied.
+        /// </summary>
+        public Vector2 RawPos { get { return rawCameraTarget; } }
+        /// <summary>
+        /// Original offset of the camera before pixel perfect smoothing is applied.
+        /// </summary>
+        public Vector2 RawOffset { get { return rawCameraOffset; } }
+        /// <summary>
+        /// Original zoom of the camera before pixel perfect smoothing is applied.
+        /// </summary>
+        public float RawZoom { get { return rawCameraZoom; } }
+        /// <summary>
+        /// Original rotation of the camera before pixel perfect smoothing is applied.
+        /// </summary>
+        public float RawRotDeg { get { return rawCameraRotationDeg; } }
+
+        public Camera2D Cam { get { return worldSpaceCamera; } }
+        public Camera2D ScreenSpaceCam { get { return screenSpaceCamera; } }
+        public Camera(Vector2 size, float zoom, float zoomStretchFactor, float rotation, float boundaryDis = 0f, float followSmoothness = 1f, bool pixelSmoothing = true)
+        {
+            this.FOLLOW_SMOOTHNESS = followSmoothness;
+            this.boundaryDis = boundaryDis;
+            this.baseOffset = size / 2;
+            this.baseZoom = zoom;
+            this.zoomStretchFactor = zoomStretchFactor;
+            this.baseRotationDeg = rotation;
+            this.PIXEL_SMOOTHING_ENABLED = pixelSmoothing;
+            this.screenSpaceCamera = new() { offset = baseOffset, rotation = baseRotationDeg, zoom = 1f, target = new(0f) };
+            this.worldSpaceCamera = new() { offset = baseOffset, rotation = baseRotationDeg, zoom = 1f, target = new(0f) };
+            this.CameraTweens.OnItemUpdated += OnCameraTweenUpdated;
+        }
+
+        private void OnCameraTweenUpdated(ICameraTween tween)
+        {
+            cameraTweenTotalOffset += tween.GetOffset();
+            cameraTweenTotalRotationDeg += tween.GetRotationDeg();
+            cameraTweenTotalScale *= tween.GetScale();
+
+        }
+
+        public void ChangeSize(Vector2 newSize, float factor)
+        {
+            baseOffset = newSize / 2;
+            zoomStretchFactor = factor;
+        }
+        /// <summary>
+        /// Current camera rotation in degrees after pixel perfect smoothing is applied.
+        /// </summary>
+        public float CameraRotDeg { get { return worldSpaceCamera.rotation; } }
+        /// <summary>
+        /// Current camera rotation in radians after pixel perfect smoothing is applied.
+        /// </summary>
+        public float CameraRotRad { get { return worldSpaceCamera.rotation * DEG2RAD; } }
+        /// <summary>
+        /// Current camera position after pixel perfect smoothing is applied.
+        /// </summary>
+        public Vector2 CameraPos { get { return worldSpaceCamera.target; } }
+        /// <summary>
+        /// Current camera offset after pixel perfect smoothing is applied.
+        /// </summary>
+        public Vector2 CameraOffset { get { return worldSpaceCamera.offset; } }
+        /// <summary>
+        /// Current camera zoom after pixel perfect smoothing is applied.
+        /// </summary>
+        public float CameraZoom { get { return worldSpaceCamera.zoom; } }
+        public float BaseZoom
+        {
+            get { return baseZoom; }
+            set
+            {
+                baseZoom = value;
+                //screenSpaceCamera.zoom = baseZoom;
+                //worldSpaceCamera.zoom = baseZoom;
+            }
+        }
+        public float ZoomFactor { get { return curZoomFactor; } set { curZoomFactor = value; } }
+        public void ZoomBy(float amountFactor) { curZoomFactor += amountFactor; }
+        public void ResetZoom() { curZoomFactor = 1f; }
+        public float RotationDeg { get { return curRotDeg; } set { curRotDeg = value; } }
+        public void Rotate(float deg) { curRotDeg += deg; }
+        public void ResetRotation() { curRotDeg = 0f; }
+
+        public Vector2 Translation { get { return curTranslation; } set { curTranslation = value; } }
+        public void Translate(Vector2 amount) { curTranslation += amount; }
+        public void ResetTranslation() { curTranslation = new(0f); }
+        public void SetTarget(IGameObject target)
+        {
+            this.target = target;
+            rawCameraTarget = target.GetCameraPosition(rawCameraTarget, 0f, FOLLOW_SMOOTHNESS, boundaryDis);
+        }
+        public void ChangeTarget(IGameObject newTarget)
+        {
+            if (target == null)
+            {
+                target = newTarget;
+            }
+            else
+            {
+                this.newTarget = newTarget;
+            }
+        }
+
+        public void ClearTarget() { target = null; newTarget = null; }
+        public void Shake(float duration, Vector2 strength, float zoomStrength = 0f, float rotStrength = 0f, float smoothness = 0.75f)
+        {
+            float intensity = CAMERA_SHAKE_INTENSITY;
+            shake.Start
+                (
+                    duration,
+                    strength * intensity,
+                    zoomStrength * intensity,
+                    rotStrength * intensity,
+                    smoothness
+                );
+        }
+        public void StopShake() { shake.Stop(); }
+
+        public Vector2 TransformPositionToUI(Vector2 gamePos, float gameToUIFactor)
+        {
+            float zoomFactor = 1 / rawCameraZoom;
+            Vector2 cPos = rawCameraTarget - rawCameraOffset * zoomFactor;
+            Vector2 p = (gamePos - cPos) * gameToUIFactor * rawCameraZoom;
+            return p;
+        }
+        public Vector2 TransformPositionToGame(Vector2 uiPos, float uiToGameFactor)
+        {
+            float zoomFactor = 1 / rawCameraZoom;
+            Vector2 p = uiPos * uiToGameFactor * zoomFactor;
+            Vector2 cPos = rawCameraTarget - rawCameraOffset * zoomFactor;
+            p += cPos;
+            return p;
+        }
+        public Rectangle GetCameraArea()
+        {
+            float zoomFactor = 1 / rawCameraZoom;
+            Vector2 cPos = rawCameraTarget - rawCameraOffset * zoomFactor;
+            return new(cPos.X, cPos.Y, rawCameraOffset.X * zoomFactor, rawCameraOffset.Y * zoomFactor);
+        }
+        public void Update(float dt, float curWindowWidth, float curGameWidth)
+        {
+            CameraTweens.Update(dt);
+            shake.Update(dt);
+            rawCameraOffset = baseOffset + shake.Offset + curTranslation + cameraTweenTotalOffset;
+            rawCameraRotationDeg = baseRotationDeg + shake.RotDeg + curRotDeg + cameraTweenTotalRotationDeg;
+            rawCameraZoom = (((baseZoom * zoomStretchFactor) + shake.Zoom) * curZoomFactor) / cameraTweenTotalScale;
+            cameraTweenTotalOffset = new(0f);
+            cameraTweenTotalRotationDeg = 0f;
+            cameraTweenTotalScale = 1f;
+            if (target != null)
+            {
+                if (newTarget != null)
+                {
+                    Vector2 curPos = rawCameraTarget; // screenSpaceCamera.target;// target.GetPosition();
+                    Vector2 newPos = newTarget.GetCameraPosition(curPos, 0f, FOLLOW_SMOOTHNESS, boundaryDis);
+                    float disSq = (newPos - curPos).LengthSquared();
+                    if (disSq < 25)
+                    {
+                        target = newTarget;
+                        newTarget = null;
+                        rawCameraTarget = newPos;
+                    }
+                    else
+                    {
+                        rawCameraTarget = SVec.Lerp(curPos, newPos, dt * FOLLOW_SMOOTHNESS);
+                    }
+                }
+                else
+                {
+                    rawCameraTarget = target.GetCameraPosition(rawCameraTarget, dt, FOLLOW_SMOOTHNESS, boundaryDis);
+                }
+            }
+
+
+            if (PIXEL_SMOOTHING_ENABLED)
+            {
+                float virtualRatio = curWindowWidth / curGameWidth;
+                worldSpaceCamera.target.X = (int)rawCameraTarget.X;
+                screenSpaceCamera.target.X = rawCameraTarget.X - worldSpaceCamera.target.X;
+                screenSpaceCamera.target.X *= virtualRatio;
+
+                worldSpaceCamera.target.Y = (int)rawCameraTarget.Y;
+                screenSpaceCamera.target.Y = rawCameraTarget.Y - worldSpaceCamera.target.Y;
+                screenSpaceCamera.target.Y *= virtualRatio;
+
+                worldSpaceCamera.offset.X = (int)rawCameraOffset.X;
+                screenSpaceCamera.offset.X = rawCameraOffset.X - worldSpaceCamera.offset.X;
+                screenSpaceCamera.offset.X *= virtualRatio;
+
+                worldSpaceCamera.offset.Y = (int)rawCameraOffset.Y;
+                screenSpaceCamera.offset.Y = rawCameraOffset.Y - worldSpaceCamera.offset.Y;
+                screenSpaceCamera.offset.Y *= virtualRatio;
+
+                worldSpaceCamera.rotation = rawCameraRotationDeg;
+                worldSpaceCamera.zoom = rawCameraZoom;
+            }
+            else
+            {
+                worldSpaceCamera.target = rawCameraTarget;
+                worldSpaceCamera.offset = rawCameraOffset;
+                worldSpaceCamera.zoom = rawCameraZoom;
+                worldSpaceCamera.rotation = rawCameraRotationDeg;
+            }
+
+        }
+
+    }
+    */
 }

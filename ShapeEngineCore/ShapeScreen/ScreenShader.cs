@@ -1,8 +1,7 @@
 ﻿using Raylib_CsLo;
-using ShapePersistent;
 
 
-namespace ShapeShaders
+namespace ShapeScreen
 {
     public class ScreenShader
     {

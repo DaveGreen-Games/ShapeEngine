@@ -248,7 +248,7 @@ namespace ShapeAudio
         public void SFXPlay(uint id, Vector2 pos, float volume = 1.0f, float pitch = 1.0f, float blockDuration = 0f)
         {
             if (!sounds.ContainsKey(id)) return;
-            if (!Raylib.CheckCollisionPointRec(pos, DefaultGraphicsDevice.CameraArea())) return;
+            if (!Raylib.CheckCollisionPointRec(pos, GraphicsDevice.CameraArea())) return;
 
             if (soundBlockers.ContainsKey(id) && soundBlockers[id] > 0f) return;
 
@@ -278,7 +278,7 @@ namespace ShapeAudio
             
 
             Vector2 center;
-            if (SpatialTargetOverride == null) center = DefaultGraphicsDevice.CAMERA.RawPos;
+            if (SpatialTargetOverride == null) center = GraphicsDevice.CAMERA.RawPos;
             else center = SpatialTargetOverride.GetPosition();
 
             float disSq = SVec.LengthSquared(center - pos);

@@ -3,7 +3,7 @@ using System.Numerics;
 
 namespace ShapeScreen
 {
-    public class MonitorHandler
+    public sealed class MonitorDevice
     {
         public struct MonitorInfo
         {
@@ -47,7 +47,7 @@ namespace ShapeScreen
         private int monitorCount = 0;
 
 
-        public MonitorHandler()
+        public MonitorDevice()
         {
             GenerateInfo();
         }

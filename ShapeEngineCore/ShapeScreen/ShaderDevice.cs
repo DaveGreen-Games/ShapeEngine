@@ -1,35 +1,103 @@
 ﻿using Raylib_CsLo;
-using ShapeScreen;
 using System.Numerics;
 
-namespace ShapeShaders
+namespace ShapeScreen
 {
-
-    public class ShaderHandler
+    internal sealed class ShaderFlash
     {
+        public event Action<bool, uint>? ChangeShaderStatus;
+
+        private float duration = 0f;
+        private float timer = 0f;
+        public uint ID { get; private set; }
+        private bool shaderEnabled = false;
+        
+        public ShaderFlash(float dur, uint id)
+        {
+            this.ID = id;
+            duration = dur;
+            timer = dur;
+        }
+
+        public void Init()
+        {
+            if (timer > 0f)
+            {
+                //this.shaderHandler.EnableScreenShader(id);
+                ChangeShaderStatus?.Invoke(true, ID);
+                shaderEnabled = true;
+            }
+        }
+
+        //public uint GetShaderID() { return shaderID; }
+        public float Percentage()
+        {
+            if (duration <= 0.0f) return 0f;
+            return timer / duration;
+        }
+        public bool IsFinished() { return timer <= 0f; }
+        public void Reset(float dur)
+        {
+            if (dur <= 0f)
+            {
+                Stop();
+                return;
+            }
+
+            duration = dur;
+            timer = dur;
+            if (!shaderEnabled)
+            {
+                //shaderHandler.EnableScreenShader(ID);
+                ChangeShaderStatus?.Invoke(true, ID);
+                shaderEnabled = true;
+            }
+        }
+        public void Stop()
+        {
+            timer = 0f;
+            if (shaderEnabled)
+            {
+                //shaderHandler.DisableScreenShader(ID);
+                ChangeShaderStatus?.Invoke(false, ID);
+                shaderEnabled = false;
+            }
+        }
+        public void Restart()
+        {
+            if (duration <= 0f) return;
+            timer = duration;
+            if (!shaderEnabled)
+            {
+                //shaderHandler.EnableScreenShader(ID);
+                ChangeShaderStatus?.Invoke(true, ID);
+                shaderEnabled = true;
+            }
+        }
+        public void Update(float dt)
+        {
+            if (timer > 0.0f)
+            {
+                timer -= dt;
+                if (timer <= 0.0f)
+                {
+                    //shaderHandler.DisableScreenShader(ID);
+                    ChangeShaderStatus?.Invoke(false, ID);
+                    shaderEnabled = false;
+                    timer = 0f;
+                }
+            }
+        }
+
+    }
+
+    public sealed class ShaderDevice
+    {
+        private Dictionary<uint, ShaderFlash> screenShaderFlashes = new();
         private Dictionary<uint, ScreenShader> screenShaders = new();
         private Dictionary<uint, Shader> shaders = new();
         private bool enabled = true;
         
-        public void Close()
-        {
-            //foreach (ScreenBuffer screenBuffer in screenBuffers)
-            //{
-            //    screenBuffer.Unload();
-            //}
-            foreach (Shader shader in shaders.Values)
-            {
-                UnloadShader(shader);
-            }
-            foreach (ScreenShader screenShader in screenShaders.Values)
-            {
-                screenShader.Unload();
-            }
-            screenShaders.Clear();
-            shaders.Clear();
-            //screenBuffers = new ScreenBuffer[0];
-        }
-
         public List<ScreenShader> GetCurActiveShaders()
         {
             if (!enabled) return new() { };
@@ -43,6 +111,76 @@ namespace ShapeShaders
             });
             return shadersToApply;
         }
+
+
+        public void Update(float dt)
+        {
+            UpdateScreenShaderFlashes(dt);
+        }
+        public void Close()
+        {
+            foreach (Shader shader in shaders.Values)
+            {
+                UnloadShader(shader);
+            }
+            foreach (ScreenShader screenShader in screenShaders.Values)
+            {
+                screenShader.Unload();
+            }
+            screenShaders.Clear();
+            shaders.Clear();
+            screenShaderFlashes.Clear();
+        }
+
+
+        public void ScreenShaderFlash(float duration, params uint[] shaderIDs)
+        {
+            if (shaderIDs.Length <= 0) return;
+
+            foreach (var id in shaderIDs)
+            {
+                if (!HasScreenShader(id)) continue;
+                if (screenShaderFlashes.ContainsKey(id))
+                {
+                    screenShaderFlashes[id].Reset(duration);
+                }
+                else
+                {
+                    var flash = new ShaderFlash(duration, id);
+                    flash.ChangeShaderStatus += OnShaderFlashStatusChange;
+                    flash.Init();
+                    screenShaderFlashes.Add(id, flash);
+                }
+            }
+        }
+        public void StopAllScreenShaderFlashes()
+        {
+            foreach (ShaderFlash shaderFlash in screenShaderFlashes.Values)
+            {
+                shaderFlash.Stop();
+            }
+            screenShaderFlashes.Clear();
+        }
+        private void UpdateScreenShaderFlashes(float dt)
+        {
+            List<uint> remove = new();
+            foreach (var shaderFlash in screenShaderFlashes.Values)
+            {
+                shaderFlash.Update(dt);
+                if (shaderFlash.IsFinished()) remove.Add(shaderFlash.ID); // screenShaderFlashes.Remove(shaderFlash.ID); //does that work?
+            }
+            foreach (var id in remove)
+            {
+                screenShaderFlashes[id].ChangeShaderStatus -= OnShaderFlashStatusChange;
+                screenShaderFlashes.Remove(id);
+            }
+        }
+        private void OnShaderFlashStatusChange(bool enable, uint shaderID)
+        {
+            if(enable)EnableScreenShader(shaderID);
+            else DisableScreenShader(shaderID);
+        }
+        
 
         public bool HasScreenShader(uint id) { return screenShaders.ContainsKey(id); }
         public void AddScreenShader(uint id, string fileName, bool enabled = true, int order = 0)

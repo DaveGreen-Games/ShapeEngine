@@ -239,7 +239,6 @@ namespace ShapePersistent
             if (lines.ContainsKey(lineName)) return lines[lineName];
             else return null;
         }
-
         public string LoadJsonData(string filePath)
         {
             if (EDITORMODE)
