@@ -3,21 +3,21 @@ using Raylib_CsLo;
 
 namespace ShapeScreen
 {
-    public class ScreenBuffer
+    internal sealed class ScreenBuffer
     {
         private Color clearColor = new(0, 0, 0, 255);
         private RenderTexture texture;
         private Rectangle sourceRec;
-        private Rectangle destRec;
-        private Vector2 origin;
+        //private Rectangle destRec;
+        //private Vector2 origin;
 
-        public ScreenBuffer(int width, int height, int targetWidth, int targetHeight)
+        public ScreenBuffer(int width, int height)//, int targetWidth, int targetHeight)
         {
             texture = LoadRenderTexture(width, height);
 
             sourceRec = new Rectangle(0, 0, width, -height);
-            destRec = new Rectangle(targetWidth / 2, targetHeight / 2, targetWidth, targetHeight);
-            origin = new Vector2(targetWidth / 2, targetHeight / 2);
+            //destRec = new Rectangle(targetWidth / 2, targetHeight / 2, targetWidth, targetHeight);
+            //origin = new Vector2(targetWidth / 2, targetHeight / 2);
         }
 
         public void StartTextureMode()
@@ -29,33 +29,24 @@ namespace ShapeScreen
         {
             Raylib.EndTextureMode();
         }
-        public void Draw()
-        {
-            DrawTexturePro(texture.texture, sourceRec, destRec, origin, 0.0f, clearColor);
-        }
+        //public void Draw()
+        //{
+        //    DrawTexturePro(texture.texture, sourceRec, destRec, origin, 0.0f, clearColor);
+        //}
 
-        public void DrawPro(int targetWidth, int targetHeight)
+        public void DrawTexture(int targetWidth, int targetHeight)
         {
-            float s = 1.0f;
-            float w = targetWidth * s;
-            float h = targetHeight * s;
+            //float s = 1.0f;
+            //float w = targetWidth * s;
+            //float h = targetHeight * s;
 
-            //if (!ScreenHandler.IsStretchEnabled())
-            //{
+            Vector2 origin = new Vector2(targetWidth / 2, targetHeight / 2);
             Vector2 size = GetDestRectSize(targetWidth, targetHeight);
-            w = size.X * s;
-            h = size.Y * s;
-            destRec.x = targetWidth * 0.5f / s;
-            destRec.y = targetHeight * 0.5f / s;
-            //}
-            //else
-            //{
-            //    destRec.x = w * 0.5f / s;
-            //    destRec.y = h * 0.5f / s;
-            //}
-
-            //destRec.x = (w * 0.5f / s);
-            //destRec.y = (h * 0.5f / s);
+            float w = size.X;
+            float h = size.Y;
+            Rectangle destRec = new();
+            destRec.x = targetWidth * 0.5f;
+            destRec.y = targetHeight * 0.5f;
             destRec.width = w;
             destRec.height = h;
             origin.X = w * 0.5f;

@@ -309,7 +309,7 @@ namespace ShapeScreen
         public Rect GetArea();
         public Vector2 TransformPositionToUI(Vector2 gamePos, float gameToUIFactor);
         public Vector2 TransformPositionToGame(Vector2 uiPos, float uiToGameFactor);
-        public void ChangeSize(Vector2 newSize, float zoomFactor);
+        public void ChangeSize(Vector2 newSize);//, float zoomFactor);
         public void Update(float dt, float curWindowWidth, float curGameWidth);
 
         public Camera2D GetCamera();
@@ -326,15 +326,15 @@ namespace ShapeScreen
         public Vector2 Translation { get; set; }
         public float RotationDeg { get; set; }
         public float ZoomFactor { get; set; }
-        public float ZoomStretchFactor { get; private set; } = 1f;
+        //public float ZoomStretchFactor { get; private set; } = 1f;
 
         public Camera2D WorldCamera { get; private set; }
 
 
 
-        public CameraBasic(Vector2 size, float zoom, float rotation, float zoomStretchFactor)
+        public CameraBasic(Vector2 size, float zoom, float rotation)//, float zoomStretchFactor)
         {
-            ChangeSize(size, zoomStretchFactor);
+            ChangeSize(size);//, zoomStretchFactor);
             this.BaseZoom = zoom;
             this.BaseRotationDeg = rotation;
             this.WorldCamera = new() { offset = BaseOffset, rotation = BaseRotationDeg, zoom = 1f, target = new(0f) };
@@ -344,7 +344,7 @@ namespace ShapeScreen
         {
             Vector2 rawCameraOffset = BaseOffset + Translation;
             float rawCameraRotationDeg = BaseRotationDeg + RotationDeg;
-            float rawCameraZoom = (BaseZoom * ZoomStretchFactor) * ZoomFactor;
+            float rawCameraZoom = (BaseZoom /* *ZoomStretchFactor */) * ZoomFactor;
             Vector2 rawCameraTarget = WorldCamera.target;
 
             var c = new Camera2D();
@@ -355,10 +355,10 @@ namespace ShapeScreen
             WorldCamera = c;
 
         }
-        public void ChangeSize(Vector2 newSize, float factor)
+        public void ChangeSize(Vector2 newSize)//, float factor)
         {
             BaseOffset = newSize / 2;
-            ZoomStretchFactor = factor;
+            //ZoomStretchFactor = factor;
         }
 
         public void ResetZoom() { ZoomFactor = 1f; }
@@ -491,9 +491,9 @@ namespace ShapeScreen
         
 
 
-        public CameraAdvanced(Vector2 size, float zoom, float rotation, float zoomStretchFactor)
+        public CameraAdvanced(Vector2 size, float zoom, float rotation)//, float zoomStretchFactor)
         {
-            ChangeSize(size, zoomStretchFactor);
+            ChangeSize(size);//, zoomStretchFactor);
             this.BaseZoom = zoom;
             this.BaseRotationDeg = rotation;
             this.ScreenCamera = new() { offset = BaseOffset, rotation = BaseRotationDeg, zoom = 1f, target = new(0f) };
@@ -582,10 +582,10 @@ namespace ShapeScreen
             cameraTweenTotalScale *= tween.GetScale();
 
         }
-        public void ChangeSize(Vector2 newSize, float factor)
+        public void ChangeSize(Vector2 newSize)//, float factor)
         {
             BaseOffset = newSize / 2;
-            ZoomStretchFactor = factor;
+            //ZoomStretchFactor = factor;
         }
 
         public void ResetZoom() { ZoomFactor = 1f; }

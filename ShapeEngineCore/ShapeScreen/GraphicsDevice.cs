@@ -135,6 +135,8 @@ namespace ShapeScreen
             FRAME_RATE_LIMIT = 60;
             SetVsync(true);
 
+
+            //figure out screen texture interface system -> factors are polled from screen texture
             GAME_FACTOR = gameSizeFactor;
             UI_FACTOR = uiSizeFactor;
             GAME_TO_UI = UI_FACTOR / GAME_FACTOR;
@@ -150,25 +152,23 @@ namespace ShapeScreen
                 devWidth, devHeight,
                 CUR_WINDOW_SIZE.width,
                 CUR_WINDOW_SIZE.height,
-                gameSizeFactor,
-                fixedTexture
+                gameSizeFactor
             );
             UI = new ScreenTexture(
                 devWidth, devHeight,
                 CUR_WINDOW_SIZE.width,
                 CUR_WINDOW_SIZE.height,
-                uiSizeFactor,
-                fixedTexture
+                uiSizeFactor
             );
 
-            GAME.OnTextureSizeChanged += GameTextureSizeChanged;
+            //GAME.OnTextureSizeChanged += GameTextureSizeChanged;
 
-            CAMERA = new CameraBasic(GameSize(), 1f, 0f, GAME.STRETCH_AREA_SIDE_FACTOR);//TODO i do not like the stretch factor at all
+            CAMERA = new CameraBasic(GameSize(), 1f, 0f);//, GAME.STRETCH_AREA_SIDE_FACTOR);//TODO i do not like the stretch factor at all
             
             screenBuffers = new ScreenBuffer[]
             {
-                new(GameWidth(), GameHeight(), GameWidth(), GameHeight()),
-                new(GameWidth(), GameHeight(), GameWidth(), GameHeight())
+                new(GameWidth(), GameHeight()),// GameWidth(), GameHeight()),
+                new(GameWidth(), GameHeight())//, GameWidth(), GameHeight())
             };
         }
 
@@ -195,14 +195,14 @@ namespace ShapeScreen
             List<ScreenShader> shadersToApply = SHADER.GetCurActiveShaders();
             if (shadersToApply.Count <= 0)
             {
-                GAME.Draw();
+                GAME.DrawTexture(CUR_WINDOW_SIZE.width, CUR_WINDOW_SIZE.height);
                 return;
             }
             else if (shadersToApply.Count == 1)
             {
                 ScreenShader s = shadersToApply[0];
                 BeginShaderMode(s.GetShader());
-                GAME.Draw();
+                GAME.DrawTexture(CUR_WINDOW_SIZE.width, CUR_WINDOW_SIZE.height);
                 EndShaderMode();
             }
             else if (shadersToApply.Count == 2)
@@ -210,14 +210,14 @@ namespace ShapeScreen
                 ScreenShader s = shadersToApply[0];
                 screenBuffers[0].StartTextureMode();
                 BeginShaderMode(s.GetShader());
-                GAME.DrawPro(GameWidth(), GameHeight());
+                GAME.DrawTexture(GameWidth(), GameHeight());
                 EndShaderMode();
                 screenBuffers[0].EndTextureMode();
 
                 s = shadersToApply[1];
 
                 BeginShaderMode(s.GetShader());
-                screenBuffers[0].DrawPro(CUR_WINDOW_SIZE.width, CUR_WINDOW_SIZE.height);
+                screenBuffers[0].DrawTexture(CUR_WINDOW_SIZE.width, CUR_WINDOW_SIZE.height);
                 EndShaderMode();
             }
             else
@@ -231,7 +231,7 @@ namespace ShapeScreen
                 //draw game texture to first screenbuffer and first shader is already applied
                 screenBuffers[0].StartTextureMode();
                 BeginShaderMode(s.GetShader());
-                GAME.DrawPro(GameWidth(), GameHeight());
+                GAME.DrawTexture(GameWidth(), GameHeight());
                 EndShaderMode();
                 screenBuffers[0].EndTextureMode();
 
@@ -245,24 +245,21 @@ namespace ShapeScreen
                     ScreenBuffer next = screenBuffers[nextIndex];
                     next.StartTextureMode();
                     BeginShaderMode(s.GetShader());
-                    current.DrawPro(GameWidth(), GameHeight());
+                    current.DrawTexture(GameWidth(), GameHeight());
                     EndShaderMode();
                     next.EndTextureMode();
                     currentIndex = currentIndex == 0 ? 1 : 0;
                 }
 
                 BeginShaderMode(endshader.GetShader());
-                screenBuffers[nextIndex].DrawPro(CUR_WINDOW_SIZE.width, CUR_WINDOW_SIZE.height);
+                screenBuffers[nextIndex].DrawTexture(CUR_WINDOW_SIZE.width, CUR_WINDOW_SIZE.height);
                 EndShaderMode();
             }
         }
 
         public virtual void BeginDrawUI() { UI.BeginTextureMode(); }
         public virtual void EndDrawUI() { UI.EndTextureMode(); }
-        public virtual void DrawUIToScreen()
-        {
-            UI.Draw();
-        }
+        public virtual void DrawUIToScreen() { UI.DrawTexture(CUR_WINDOW_SIZE.width, CUR_WINDOW_SIZE.height); }
         
         public virtual void Close()
         {
@@ -270,7 +267,7 @@ namespace ShapeScreen
             {
                 screenBuffer.Unload();
             }
-            GAME.OnTextureSizeChanged -= GameTextureSizeChanged;
+            //GAME.OnTextureSizeChanged -= GameTextureSizeChanged;
             screenBuffers = new ScreenBuffer[0];
             
             GAME.Close();
@@ -399,19 +396,6 @@ namespace ShapeScreen
             if (game) GAME.Flash(duration, startColor, endColor);
             else UI.Flash(duration, startColor, endColor);
         }
-        public void FlashTint(float duration, Color color, bool game = true)
-        {
-            byte colorAlpha = (byte)(color.a * SCREEN_EFFECT_INTENSITY);
-            color.a = colorAlpha;
-            if (game) GAME.FlashTint(duration, color);
-            else UI.FlashTint(duration, color);
-        }
-        
-        
-        private void GameTextureSizeChanged(int w, int h, float factor)
-        {
-            CAMERA.ChangeSize(new Vector2(w, h), factor);
-        }
         private void MonitorChanged(MonitorInfo monitor)
         {
             int prevWidth = CUR_WINDOW_SIZE.width;
@@ -456,8 +440,8 @@ namespace ShapeScreen
 
             CUR_WINDOW_SIZE = (newWidth, newHeight);
             if (!fullscreenChange) WINDOWED_WINDOW_SIZE = (newWidth, newHeight);
-            GAME.ChangeWindowSize(newWidth, newHeight);
-            UI.ChangeWindowSize(newWidth, newHeight);
+            //GAME.ChangeWindowSize(newWidth, newHeight);
+            //UI.ChangeWindowSize(newWidth, newHeight);
 
             SetWindowSize(newWidth, newHeight);
             var monitor = MONITOR.CurMonitor();
@@ -490,6 +474,19 @@ namespace ShapeScreen
         }
 
        
+        //public void FlashTint(float duration, Color color, bool game = true)
+        //{
+        //    byte colorAlpha = (byte)(color.a * SCREEN_EFFECT_INTENSITY);
+        //    color.a = colorAlpha;
+        //    if (game) GAME.FlashTint(duration, color);
+        //    else UI.FlashTint(duration, color);
+        //}
+        
+        
+        //private void GameTextureSizeChanged(int w, int h, float factor)
+        //{
+        //    CAMERA.ChangeSize(new Vector2(w, h), factor);
+        //}
         //public Vector2 GameCenter() { return GameSize() / 2f; }
         //public Rectangle GameArea() { return new(0, 0, GAME.GetTextureWidth(), GAME.GetTextureHeight()); }
         //public Rectangle UIArea() { return new(0, 0, UI.GetTextureWidth(), UI.GetTextureHeight()); }
