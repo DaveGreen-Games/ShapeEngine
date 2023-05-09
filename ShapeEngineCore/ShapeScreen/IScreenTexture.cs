@@ -5,12 +5,75 @@ using ShapeCore;
 
 namespace ShapeScreen
 {
-    //public interface IScreenTexture
-    //{
-    //
-    //}
+    public interface IScreenTexture { 
+        
+        public Vector2 Offset { get; set; }
+        public float Rotation { get; set; }
+        public float Scale { get; set; }
 
-    public class ScreenTexture
+        public Color BackgroundColor { get; set; }
+        public Color Tint { get; set; }
+
+        public void Update(float dt);
+        public void DrawTexture(int targetWidth, int targetHeight, int blendMode = -1);
+        public void Close();
+
+        public void BeginTextureMode(Camera2D camera);
+        public void BeginTextureMode();
+        public void EndTextureMode(Camera2D camera);
+        public void EndTextureMode();
+
+
+        public int GetTextureWidth();
+        public int GetTextureHeight();
+        public float GetTextureSizeFactor();
+        public Vector2 GetCurResolutionFactorV(float targetWidth, float targetHeight);
+
+        public Vector2 ScalePosition(Vector2 pos, int targetResWidth, int targetResHeight);
+
+        public void Flash(float duration, Color startColor, Color endColor);
+        public void StopFlash();
+
+
+    }
+    internal class ScreenFlash
+    {
+        private float maxDuration = 0.0f;
+        private float flashTimer = 0.0f;
+        private Color startColor = new(0, 0, 0, 0);
+        private Color endColor = new(0, 0, 0, 0);
+        private Color curColor = new(0, 0, 0, 0);
+
+        public ScreenFlash(float duration, Color start, Color end)
+        {
+
+            maxDuration = duration;
+            flashTimer = duration;
+            startColor = start;
+            curColor = start;
+            endColor = end;
+        }
+
+        public void Update(float dt)
+        {
+            if (flashTimer > 0.0f)
+            {
+                flashTimer -= dt;
+                float f = 1.0f - flashTimer / maxDuration;
+                curColor = startColor.Lerp(endColor, f); // SColor.LerpColor(startColor, endColor, f);
+                if (flashTimer <= 0.0f)
+                {
+                    flashTimer = 0.0f;
+                    curColor = endColor;
+                }
+            }
+        }
+        public bool IsFinished() { return flashTimer <= 0.0f; }
+        public Color GetColor() { return curColor; }
+
+    }
+
+    public class ScreenTexture : IScreenTexture
     {
         //public delegate void TextureSizeChanged(int w, int h, float factor);
         //public event TextureSizeChanged? OnTextureSizeChanged;
@@ -22,17 +85,28 @@ namespace ShapeScreen
         public Color BackgroundColor { get; set; } = new(0, 0, 0, 0);
         public Color Tint { get; set; } = WHITE;
 
-        public (int width, int height) DevRes { get; private set; }
-        public (int width, int height) TargetRes { get; private set; }
-        public float TextureSizeFactor { get; private set; } = 1.0f;
-
+        //public (int width, int height) DevRes { get; private set; }
+        //public (int width, int height) TargetRes { get; private set; }
+        
+        private float textureSizeFactor = 1.0f;
         private RenderTexture texture;
         private Rectangle sourceRec;
         
         private List<ScreenFlash> screenFlashes = new List<ScreenFlash>();
 
+        public ScreenTexture(int devWidth, int devHeight, float factor)
+        {
+            //this.DevRes = (devWidth, devHeight);
+            //this.TargetRes = (winWidth, winHeight);
+            this.textureSizeFactor = factor;
 
+            int textureWidth = (int)(devWidth * factor);
+            int textureHeight = (int)(devHeight * factor);
+            this.texture = LoadRenderTexture(textureWidth, textureHeight);
+            this.sourceRec = new Rectangle(0, 0, textureWidth, -textureHeight);
+        }
 
+        /*
         public ScreenTexture(int devWidth, int devHeight, int winWidth, int winHeight, float textureFactor)
         {
             this.DevRes = (devWidth, devHeight);
@@ -46,31 +120,30 @@ namespace ShapeScreen
             
             //this.destRec = new Rectangle(winWidth / 2, winHeight / 2, winWidth, winHeight);
             //this.origin = new Vector2(winWidth / 2, winHeight / 2);
-            /*
-            this.fixedSize = fixedSize;
-            this.curWindowSize.width = winWidth;
-            this.curWindowSize.height = winHeight;
-
-            if (!fixedSize)
-            {
-                float fWidth = winWidth / (float)developmentResolution.width;
-                float fHeight = winHeight / (float)developmentResolution.height;
-                float f = fWidth <= fHeight ? fWidth : fHeight;
-
-                TARGET_RESOLUTION = ((int)(winWidth / f), (int)(winHeight / f));
-            }
-            else this.TARGET_RESOLUTION = (devWidth, devHeight);
-            
-            this.STRETCH_FACTOR = new Vector2
-                (
-                    (float)TARGET_RESOLUTION.width / (float)developmentResolution.width,
-                    (float)TARGET_RESOLUTION.height / (float)developmentResolution.height
-                );
-            this.STRETCH_AREA_FACTOR = STRETCH_FACTOR.X * STRETCH_FACTOR.Y;
-            this.STRETCH_AREA_SIDE_FACTOR = MathF.Sqrt(STRETCH_AREA_FACTOR);
-            */
+            //this.fixedSize = fixedSize;
+            //this.curWindowSize.width = winWidth;
+            //this.curWindowSize.height = winHeight;
+            //
+            //if (!fixedSize)
+            //{
+            //    float fWidth = winWidth / (float)developmentResolution.width;
+            //    float fHeight = winHeight / (float)developmentResolution.height;
+            //    float f = fWidth <= fHeight ? fWidth : fHeight;
+            //
+            //    TARGET_RESOLUTION = ((int)(winWidth / f), (int)(winHeight / f));
+            //}
+            //else this.TARGET_RESOLUTION = (devWidth, devHeight);
+            //
+            //this.STRETCH_FACTOR = new Vector2
+            //    (
+            //        (float)TARGET_RESOLUTION.width / (float)developmentResolution.width,
+            //        (float)TARGET_RESOLUTION.height / (float)developmentResolution.height
+            //    );
+            //this.STRETCH_AREA_FACTOR = STRETCH_FACTOR.X * STRETCH_FACTOR.Y;
+            //this.STRETCH_AREA_SIDE_FACTOR = MathF.Sqrt(STRETCH_AREA_FACTOR);
         }
-
+        */
+        
         public void Update(float dt)
         {
             /*
@@ -126,7 +199,7 @@ namespace ShapeScreen
         }
         public void DrawTexture(int targetWidth, int targetHeight, int blendMode = -1)
         {
-            TargetRes = (targetWidth, targetHeight);
+            //TargetRes = (targetWidth, targetHeight);
             float s = Scale;
             float w = targetWidth * s;
             float h = targetHeight * s;
@@ -187,7 +260,7 @@ namespace ShapeScreen
                 Vector2 sizeOffset = new(5f, 5f);
                 Vector2 center = camera.target;
                 Vector2 size = camera.offset * 2 * (1f / camera.zoom);
-                var r = new Rect(center, size + Offset, new(0.5f, 0.5f));
+                var r = new Rect(center, size + sizeOffset, new(0.5f, 0.5f));
                 r.Draw(new Vector2(0.5f, 0.5f), -camera.rotation, flash.GetColor());
                 //SDrawing.DrawRect(new(center, size + sizeOffset, new(0.5f)), new Vector2(0.5f, 0.5f), -camera.rotation, flash.GetColor());
             }
@@ -207,18 +280,13 @@ namespace ShapeScreen
         //public RenderTexture GetTexture() { return texture; }
         public int GetTextureWidth() { return texture.texture.width; }
         public int GetTextureHeight() { return texture.texture.height; }
-        public float GetTextureSizeFactor() { return TextureSizeFactor; }
-        private float GetCurResolutionFactorX()
+        public float GetTextureSizeFactor() { return textureSizeFactor; }
+        
+        public Vector2 GetCurResolutionFactorV(float targetWidth, float targetHeight)
         {
-            return GetTextureWidth() / (float)TargetRes.width;
-        }
-        private float GetCurResolutionFactorY()
-        {
-            return GetTextureHeight() / (float)TargetRes.height;
-        }
-        public Vector2 GetCurResolutionFactorV()
-        {
-            return new(GetCurResolutionFactorX(), GetCurResolutionFactorY());
+            float x = GetTextureWidth() / targetWidth;// (float)TargetRes.width;
+            float y = GetTextureHeight() / targetHeight;// (float)TargetRes.height;
+            return new(x, y);
         }
         public Vector2 ScalePosition(Vector2 pos, int targetResWidth, int targetResHeight)
         {
@@ -231,28 +299,6 @@ namespace ShapeScreen
             pos.X = Clamp(pos.X * fWidth, 0, GetTextureWidth());
             pos.Y = Clamp(pos.Y * fHeight, 0, GetTextureHeight());
             return pos;
-        }
-        public Vector2 ScalePositionV(Vector2 pos)
-        {
-            return ScalePosition(pos, TargetRes.width, TargetRes.height);
-
-            //if (fixedSize)
-            //{
-            //    Vector2 size = GetDestRectSize(curWindowSize.width, curWindowSize.height);
-            //    Vector2 dif = new Vector2(curWindowSize.width, curWindowSize.height) - size;
-            //    dif *= 0.5f;
-            //    pos -= dif;
-            //    float fWidth = GetTextureWidth() / size.X;
-            //    float fHeight = GetTextureHeight() / size.Y;
-            //    pos.X = Clamp(pos.X * fWidth, 0, GetTextureWidth());
-            //    pos.Y = Clamp(pos.Y * fHeight, 0, GetTextureHeight());
-            //    return pos;
-            //
-            //}
-            //else
-            //{
-            //    return new(pos.X * GetCurResolutionFactorX(), pos.Y * GetCurResolutionFactorY());
-            //}
         }
         private Vector2 GetDestRectSize(int width, int height)
         {
@@ -285,6 +331,28 @@ namespace ShapeScreen
 
 
 
+        //public Vector2 ScalePositionV(Vector2 pos)
+        //{
+        //    return ScalePosition(pos, TargetRes.width, TargetRes.height);
+        //
+        //    //if (fixedSize)
+        //    //{
+        //    //    Vector2 size = GetDestRectSize(curWindowSize.width, curWindowSize.height);
+        //    //    Vector2 dif = new Vector2(curWindowSize.width, curWindowSize.height) - size;
+        //    //    dif *= 0.5f;
+        //    //    pos -= dif;
+        //    //    float fWidth = GetTextureWidth() / size.X;
+        //    //    float fHeight = GetTextureHeight() / size.Y;
+        //    //    pos.X = Clamp(pos.X * fWidth, 0, GetTextureWidth());
+        //    //    pos.Y = Clamp(pos.Y * fHeight, 0, GetTextureHeight());
+        //    //    return pos;
+        //    //
+        //    //}
+        //    //else
+        //    //{
+        //    //    return new(pos.X * GetCurResolutionFactorX(), pos.Y * GetCurResolutionFactorY());
+        //    //}
+        //}
 
 
         //public Vector2 STRETCH_FACTOR { get; private set; } = new(1f);
@@ -574,8 +642,6 @@ namespace ShapeScreen
         }
         */
     }
-
-
 }
 
 /*

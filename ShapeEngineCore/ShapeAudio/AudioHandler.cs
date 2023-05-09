@@ -20,7 +20,9 @@ namespace ShapeAudio
         private Dictionary<uint, Playlist> playlists = new();
         private Playlist? currentPlaylist = null;
         private Dictionary<uint, float> soundBlockers = new();
-        public  GameObject? SpatialTargetOverride { get; set; } = null;
+        public  IGameObject? SpatialTargetOverride { get; set; } = null;
+
+        private Rect cameraRect = new Rect();
 
         public AudioHandler()
         {
@@ -45,8 +47,9 @@ namespace ShapeAudio
             soundBlockers.Clear();
             CloseAudioDevice();
         }
-        public void Update(float dt, Vector2 cameraPos)
+        public void Update(float dt, ICamera camera)// Vector2 cameraPos)
         {
+            cameraRect = camera.GetArea();
             if (currentPlaylist != null) currentPlaylist.Update(dt);
             //if(currentSong != null) UpdateMusicStream(currentSong.GetSong());
             //if (currentSong != null) currentSong.Update(dt);
@@ -66,7 +69,7 @@ namespace ShapeAudio
             foreach(var loop in loops.Values)
             {
                 Vector2 center;
-                if (SpatialTargetOverride == null) center = cameraPos; // ScreenHandler.CAMERA.RawPos;
+                if (SpatialTargetOverride == null) center = cameraRect.Center;// cameraPos; // ScreenHandler.CAMERA.RawPos;
                 else center = SpatialTargetOverride.GetPosition();
                 //if (SpatialTargetOverride != null) loop.SpatialPos = SpatialTargetOverride.GetPosition();
                 loop.Update(dt, center);
@@ -248,7 +251,7 @@ namespace ShapeAudio
         public void SFXPlay(uint id, Vector2 pos, float volume = 1.0f, float pitch = 1.0f, float blockDuration = 0f)
         {
             if (!sounds.ContainsKey(id)) return;
-            if (!Raylib.CheckCollisionPointRec(pos, GraphicsDevice.CameraArea())) return;
+            if (!Raylib.CheckCollisionPointRec(pos, cameraRect.Rectangle)) return;
 
             if (soundBlockers.ContainsKey(id) && soundBlockers[id] > 0f) return;
 
@@ -278,10 +281,10 @@ namespace ShapeAudio
             
 
             Vector2 center;
-            if (SpatialTargetOverride == null) center = GraphicsDevice.CAMERA.RawPos;
+            if (SpatialTargetOverride == null) center = cameraRect.Center;// GraphicsDevice.CAMERA.RawPos;
             else center = SpatialTargetOverride.GetPosition();
 
-            float disSq = SVec.LengthSquared(center - pos);
+            float disSq = (center - pos).LengthSquared();
             
             
             if (minRange < 0f) minRange = 0f;
