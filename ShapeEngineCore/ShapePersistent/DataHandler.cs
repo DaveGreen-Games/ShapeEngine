@@ -2,11 +2,9 @@
 using System.Text.Json;
 using Newtonsoft.Json;
 using ShapeLib;
-//using ShapeEngineCore.Demo.DataObjects;
 
 namespace ShapePersistent
 {
-
     public class DataContainer
     {
         public virtual void Close()
@@ -199,7 +197,6 @@ namespace ShapePersistent
         }
 
     }
-
 
     public class DataHandler
     {

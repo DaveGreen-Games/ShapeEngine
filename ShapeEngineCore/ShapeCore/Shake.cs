@@ -7,29 +7,52 @@ namespace ShapeCore
     {
         private float timer = 0.0f;
         private float duration = 0.0f;
-        private float smoothness = 0.0f;
-        private float curX = 0.0f;
-        private float curY = 0.0f;
-        private float f = 0.0f;
+        private float[] values;
+        private float[] factors;
 
-        public Shake() { }
+        public float Smoothness { get; set; } = 0.0f;
+        public float F { get; private set; } = 0.0f;
 
-        public float GetCurX() { return curX; }
-        public float GetCurY() { return curY; }
+        /// <summary>
+        /// Create a new shake class with the specified amount of float values that are affected. 
+        /// Each value has an additional factor for the intensity that can be set in the Start() function.
+        /// </summary>
+        /// <param name="valueCount">How many float values to generate.</param>
+        public Shake(int valueCount) 
+        { 
+            values = new float[valueCount]; 
+            factors = new float[valueCount]; 
+            for (int i = 0; i < valueCount; i++) { values[i] = 0f; factors[i] = 1.0f; }
+        }
+
+
+        public float Get(int index)
+        {
+            if(index < 0 || index >= values.Length) return 0.0f;
+            else return values[index] * factors[index];
+        }
         public bool IsActive() { return timer > 0.0f; }
-        public float GetF() { return f; }
-        public Vector2 GetCur() { return new(curX, curY); }
 
-        public void Start(float duration, float smoothness)
+        public void Start(float duration, float smoothness, params float[] newFactors)
         {
             timer = duration;
             this.duration = duration;
-            this.smoothness = smoothness;
-            curX = 0.0f; //RNG.randRangeFloat(-1.0f, 1.0f);
-            curX = 0.0f; //RNG.randRangeFloat(0.0f, 1.0f);
-            f = 0.0f;
-        }
+            this.Smoothness = smoothness;
 
+            int count = newFactors.Length;
+            if(count > factors.Length)  count = factors.Length;
+            for (int i = 0; i < count; i++)
+            {
+                factors[i] = newFactors[i];
+            }
+            F = 0.0f;
+        }
+        public void Stop()
+        {
+            timer = 0f;
+            F = 0.0f;
+            ResetValues();
+        }
         public void Update(float dt)
         {
             if (timer > 0.0f)
@@ -38,20 +61,20 @@ namespace ShapeCore
                 if (timer <= 0.0f)
                 {
                     timer = 0.0f;
-                    curX = 0.0f;
-                    curY = 0.0f;
-                    f = 0.0f;
+                    ResetValues();
+                    F = 0.0f;
                     return;
                 }
-                f = timer / duration;
-                //curValue = Lerp(RNG.randRangeFloat(-1.0f, 1.0f) * f, curValue, MathF.Pow(smoothness, dt));
-                //float t = MathF.Pow(smoothness, f);
-                //curX = Lerp(RNG.randRangeFloat(-1.0f, 1.0f), curX, t);
-                //curY = Lerp(RNG.randRangeFloat(-1.0f, 1.0f), curY, t);
-                curX = Lerp(SRNG.randF(-1.0f, 1.0f), curX, smoothness) * f;
-                curY = Lerp(SRNG.randF(-1.0f, 1.0f), curY, smoothness) * f;
+                F = timer / duration;
+                for (int i = 0; i < values.Length; i++)
+                {
+                    UpdateValue(i);
+                }
             }
         }
+        
+        private void UpdateValue(int index) { values[index] = Lerp(SRNG.randF(-1.0f, 1.0f), values[index], Smoothness) * F; }
+        private void ResetValues() { for (int i = 0; i < values.Length; i++) { values[i] = 0.0f; } }
     }
 
 
