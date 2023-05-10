@@ -1,4 +1,5 @@
-﻿global using static Raylib_CsLo.Raylib;
+﻿/*
+global using static Raylib_CsLo.Raylib;
 global using static Raylib_CsLo.RayMath;
 global using static ShapeCore.ShapeEngine;
 using System.Runtime.InteropServices;
@@ -88,5 +89,5 @@ namespace ShapeCore
         }
     }
 }
-
+*/
 

@@ -2,6 +2,7 @@
 using System.Numerics;
 using ShapeLib;
 using ShapeCore;
+using System.Security.Principal;
 
 namespace ShapeScreen
 {
@@ -224,10 +225,10 @@ namespace ShapeScreen
         public virtual void EndDrawUI() { UI.EndTextureMode(); }
         public virtual void DrawUIToScreen() { UI.DrawTexture(CUR_WINDOW_SIZE.width, CUR_WINDOW_SIZE.height); }
 
-        // custom drawing is not supported right now in graphics device!!!
-        public virtual void BeginCustom(IScreenTexture texture) { texture.BeginTextureMode(); }
-        public virtual void EndCustom(IScreenTexture texture) { texture.EndTextureMode(); }
-        public virtual void DrawCustom(IScreenTexture texture) { texture.DrawTexture(CUR_WINDOW_SIZE.width, CUR_WINDOW_SIZE.height); }
+        
+        public virtual void BeginDrawCustom(IScreenTexture texture) { texture.BeginTextureMode(); }
+        public virtual void EndDrawCustom(IScreenTexture texture) { texture.EndTextureMode(); }
+        public virtual void DrawCustomToScreen(IScreenTexture texture) { texture.DrawTexture(CUR_WINDOW_SIZE.width, CUR_WINDOW_SIZE.height); }
 
 
         public virtual void Close()

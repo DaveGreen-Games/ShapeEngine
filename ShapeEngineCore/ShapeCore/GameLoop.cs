@@ -1,9 +1,11 @@
-﻿
+﻿global using static Raylib_CsLo.Raylib;
+global using static Raylib_CsLo.RayMath;
 using ShapeScreen;
 using ShapeTiming;
 using Raylib_CsLo;
 using System.Numerics;
 using System.Runtime.InteropServices;
+
 
 namespace ShapeCore
 {
@@ -81,6 +83,7 @@ namespace ShapeCore
         //private Dictionary<string, Scene> SCENES = new();
         //private DelegateTimerHandlerNamed delayHandler = new();
         
+
         public static readonly string CURRENT_DIRECTORY = Environment.CurrentDirectory;
         public static bool EDITORMODE { get; private set; } = Directory.Exists("resources");
         
@@ -99,6 +102,7 @@ namespace ShapeCore
         public bool CALL_UPDATE = true;
         public bool CALL_DRAW = true;
         public bool CALL_DRAWUI = true;
+
 
         public Color BackgroundColor = BLACK;
         public IScene CUR_SCENE { get; private set; } = new SceneEmpty();
@@ -256,6 +260,8 @@ namespace ShapeCore
         }
         private void DrawGame()
         {
+            DrawCustom();
+
             //Draw to game texture
             if (CALL_DRAW)
             {
@@ -285,6 +291,8 @@ namespace ShapeCore
             BeginDrawing();
             ClearBackground(BackgroundColor);
 
+            DrawCustomToScreenFirst();
+            
             if (GFX.CAMERA.IsPixelSmoothingCameraEnabled())
             {
                 BeginMode2D(GFX.CAMERA.GetPixelSmoothingCamera());
@@ -293,7 +301,12 @@ namespace ShapeCore
             }
             else GFX.DrawGameToScreen();
 
+            DrawCustomToScreenMiddle();
+            
             GFX.DrawUIToScreen();
+            
+            DrawCustomToScreenLast();
+            
             EndDrawing();
         }
         private void Start() 
@@ -366,8 +379,23 @@ namespace ShapeCore
         /// </summary>
         public virtual void UnloadContent() { }
 
+        /// <summary>
+        /// Use to draw things onto your custom IScreenTextures. Use the graphics device BeginDrawCustom(IScreenTexture texture) & EndDrawCustom(IScreenTexture texture).
+        /// </summary>
+        public virtual void DrawCustom() { }
 
-
+        /// <summary>
+        /// Is called before the game texture is drawn to the screen. Use the graphics device DrawCustomToScreen(IScreenTexture texture) function.
+        /// </summary>
+        public virtual void DrawCustomToScreenFirst() { }
+        /// <summary>
+        /// Is called after the game texture was drawn to screen but before the ui texture is draw to the screen.
+        /// </summary>
+        public virtual void DrawCustomToScreenMiddle() { }
+        /// <summary>
+        /// Is called after the ui texture was drawn to the screen.
+        /// </summary>
+        public virtual void DrawCustomToScreenLast() { }
 
 
 

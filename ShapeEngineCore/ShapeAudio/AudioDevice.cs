@@ -6,7 +6,7 @@ using ShapeLib;
 
 namespace ShapeAudio
 {
-    public class AudioHandler
+    public class AudioDevice
     {
         public event Action<string>? PlaylistStarted;
         public event Action<string, string>? PlaylistSongStarted;
@@ -24,7 +24,7 @@ namespace ShapeAudio
 
         private Rect cameraRect = new Rect();
 
-        public AudioHandler()
+        public AudioDevice()
         {
             BusAdd(BUS_MASTER, 1f);
         }
