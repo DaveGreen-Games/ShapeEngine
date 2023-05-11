@@ -6,7 +6,6 @@ using System.Text.Json;
 
 namespace ShapePersistent
 {
-    //shader loading does not work yet
     internal struct ResourceInfo
     {
         public string extension;
@@ -29,14 +28,15 @@ namespace ShapePersistent
 
         private string path = "";
         private string resourceFileName = "";
-
+        private bool editorMode = false;
         public static int GLYPH_COUNT = 0;
-        public ResourceManager(string path, string resourceFileName = "resources.txt")
+        public ResourceManager(string path, string resourceFileName = "resources.txt", bool editorMode = false)
         {
             if (resourceFileName == "") return;
             this.path = path;
             this.resourceFileName = resourceFileName;
-            resources = LoadResources(path, resourceFileName);
+            this.editorMode = editorMode;
+            resources = LoadResources(path, resourceFileName, editorMode);
         }
 
         public void Close()
@@ -80,7 +80,7 @@ namespace ShapePersistent
         }
         public Image LoadImage(string filePath, bool autoUnload = false)
         {
-            if (EDITORMODE)
+            if (editorMode)
             {
                 Image i = Raylib.LoadImage(filePath);
                 if (autoUnload) imagesToUnload.Add(i);
@@ -102,7 +102,7 @@ namespace ShapePersistent
         }
         public Font LoadFont(string filePath, int fontSize = 100, bool autoUnload = false)
         {
-            if (EDITORMODE)
+            if (editorMode)
             {
                 unsafe
                 {
@@ -127,7 +127,7 @@ namespace ShapePersistent
         }
         public Wave LoadWave(string filePath, bool autoUnload = false)
         {
-            if (EDITORMODE)
+            if (editorMode)
             {
                 Wave w = Raylib.LoadWave(filePath);
                 if (autoUnload) wavesToUnload.Add(w);
@@ -149,7 +149,7 @@ namespace ShapePersistent
         }
         public Sound LoadSound(string filePath, bool autoUnload = false)
         {
-            if (EDITORMODE)
+            if (editorMode)
             {
                 Sound s = Raylib.LoadSound(filePath);
                 if (autoUnload) soundsToUnload.Add(s);
@@ -164,7 +164,7 @@ namespace ShapePersistent
         }
         public Music LoadMusic(string filePath, bool autoUnload = false)
         {
-            if (EDITORMODE)
+            if (editorMode)
             {
                 Music m = Raylib.LoadMusicStream(filePath);
                 if (autoUnload) musicToUnload.Add(m);
@@ -186,7 +186,7 @@ namespace ShapePersistent
         }
         public Shader LoadFragmentShader(string filePath, bool autoUnload = false)
         {
-            if (EDITORMODE)
+            if (editorMode)
             {
                 Shader fs = Raylib.LoadShader(null, filePath);
                 if (autoUnload) shadersToUnload.Add(fs);
@@ -201,7 +201,7 @@ namespace ShapePersistent
         }
         public Shader LoadVertexShader(string filePath, bool autoUnload = false)
         {
-            if (EDITORMODE)
+            if (editorMode)
             {
                 Shader vs = Raylib.LoadShader(filePath, "");
                 if(autoUnload) shadersToUnload.Add(vs);
@@ -241,7 +241,7 @@ namespace ShapePersistent
         }
         public string LoadJsonData(string filePath)
         {
-            if (EDITORMODE)
+            if (editorMode)
             {
                 return File.ReadAllText(filePath);
             }
@@ -254,18 +254,6 @@ namespace ShapePersistent
         
         
         
-        public static void Generate(string sourcePath, string outputPath, string outputFilename = "resources.txt")
-        {
-            string[] files = Directory.GetFiles(sourcePath, "", SearchOption.AllDirectories);
-            List<string> lines = new List<string>();
-            foreach (var file in files)
-            {
-                lines.Add(Path.GetFileName(file));
-                var d = File.ReadAllBytes(file);
-                lines.Add(Convert.ToBase64String(Compress(d)));
-            }
-            File.WriteAllLines(outputPath + outputFilename, lines);
-        }
 
 
         public static Font LoadFontFromRaylib(string filePath, int fontSize = 100)
@@ -316,9 +304,22 @@ namespace ShapePersistent
             return File.ReadAllText(filePath);
         }
 
-        private static Dictionary<string, ResourceInfo> LoadResources(string path, string fileName = "resources.txt")
+        
+        public static void Generate(string sourcePath, string outputPath, string outputFilename = "resources.txt")
         {
-            if (EDITORMODE) return new Dictionary<string, ResourceInfo>() { };
+            string[] files = Directory.GetFiles(sourcePath, "", SearchOption.AllDirectories);
+            List<string> lines = new List<string>();
+            foreach (var file in files)
+            {
+                lines.Add(Path.GetFileName(file));
+                var d = File.ReadAllBytes(file);
+                lines.Add(Convert.ToBase64String(Compress(d)));
+            }
+            File.WriteAllLines(outputPath + outputFilename, lines);
+        }
+        private static Dictionary<string, ResourceInfo> LoadResources(string path, string fileName = "resources.txt", bool editorMode = false)
+        {
+            if (editorMode) return new Dictionary<string, ResourceInfo>() { };
 
             Dictionary<string, ResourceInfo> result = new();
             var lines = File.ReadAllLines(path + fileName);
