@@ -1,41 +1,107 @@
-﻿//using Newtonsoft.Json;
-//using Newtonsoft.Json.Linq;
-using System.Text.Json.Nodes;
+﻿using System.Text.Json.Nodes;
 using System.Text.Json;
-using System.Runtime.CompilerServices;
+using ShapeLib;
 
 namespace ShapePersistent
 {
-    //public class Sheet <T>
+    //public abstract class JDataObject : IDataObject
     //{
-    //    public string name { get; set; } = "";
-    //    public T[] lines { get; set; } = new T[0];
+    //    public abstract string GetName();
     //}
-    //public class DContainer<T> : IDataContainer where T : IDataObject
+
+    //public class JArray : List<JNode>
     //{
-    //    public string Name { get; set; } = "";
-    //    private List<T> data = new();
-    //
-    //    public List<IDataObject> GetData() { return data.Cast<IDataObject>().ToList(); }
-    //
-    //    public string GetName(){return Name;}
-    //
-    //    public IDataObject GetRandom()
-    //    {
-    //        throw new NotImplementedException();
-    //    }
+    //    
     //}
+    
+    public interface IDataObject
+    {
+        public string GetName();
+    }
     public interface IDataContainer
     {
         public string GetName();
         public List<IDataObject> GetData();
-        public IDataObject GetRandom();
+        public List<T> GetData<T>() { return GetData().Cast<T>().ToList(); }
+        public IDataObject? GetRandomEntry();
+        public T? GetRandomEntry<T>();
+        public IDataObject? GetEntry(string name);
+        public T? GetEntry<T>(string name);
     }
-    public interface IDataObject
+    public class JDataContainer : IDataContainer
     {
-        public string GetName();
+        public string Name { get; set; } = "";
+        //public List<JDataObject> data { get; protected set; } = new();
+        //public virtual List<T> GetData<T>() { return data.Cast<T>().ToList(); }
+        protected Dictionary<string, IDataObject> data = new();
+
+        public JDataContainer() { }
+        public JDataContainer(params IDataObject[] data)
+        {
+            foreach (var entry in data)
+            {
+                if (this.data.ContainsKey(entry.GetName())) continue;
+                this.data.Add(entry.GetName(), entry);
+            }
+        }
+        public JDataContainer(List<IDataObject> data)
+        {
+            foreach (var entry in data)
+            {
+                if (this.data.ContainsKey(entry.GetName())) continue;
+                this.data.Add(entry.GetName(), entry);
+            }
+        }
+        public string GetName() { return Name; }
         
+        public IDataObject? GetRandomEntry()
+        {
+            if (data.Count <= 0) return null;
+            int randIndex = SRNG.randI(data.Count);
+            return data.ElementAt(randIndex).Value;
+        }
+        public T? GetRandomEntry<T>()
+        {
+            if (data.Count <= 0) return default(T);
+            int randIndex = SRNG.randI(data.Count);
+            if (data.ElementAt(randIndex).Value is T t) return t;
+            return default(T);
+        }
+
+        public IDataObject? GetEntry(string name)
+        {
+            if (data.ContainsKey(name)) return data[name];
+            else return null;
+        }
+        public T? GetEntry<T>(string name)
+        {
+            if (data.ContainsKey(name))
+            {
+                if (data[name] is T t) return t;
+            }
+            return default(T);
+        }
+
+        public List<IDataObject> GetData() { return data.Values.ToList(); }
+        public List<T> GetData<T>() { return data.Values.Cast<T>().ToList(); }
+        
+        //public IDataObject? GetRandomEntry()
+        //{
+        //    var data = GetData();
+        //    if (data.Count <= 0) return null;
+        //    int randIndex = SRNG.randI(data.Count);
+        //    return data[randIndex];
+        //}
+        //public T? GetRandomEntry<T>()
+        //{
+        //    var data = GetData();
+        //    if (data.Count <= 0) return default(T);
+        //    int randIndex = SRNG.randI(data.Count);
+        //    if (data[randIndex] is T t) return t;
+        //    return default(T);
+        //}
     }
+
     public sealed class JNode
     {
         private JsonObject node;
@@ -95,9 +161,9 @@ namespace ShapePersistent
             return Array.Empty<JNode>();
         }
         
-        public List<IDataContainer> ParseToList(string arrayKey, Func<JNode, IDataContainer> parser)
+        public List<T> ParseToList<T>(string arrayKey, Func<JNode, T> parser) where T : IDataContainer
         {
-            List<IDataContainer> result = new();
+            List<T> result = new();
             var arr = GetArray(arrayKey);
             foreach (var item in arr)
             {
@@ -105,9 +171,9 @@ namespace ShapePersistent
             }
             return result;
         }
-        public Dictionary<string, IDataContainer> ParseToDict(string arrayKey, Func<JNode, IDataContainer> parser)
+        public Dictionary<string, T> ParseToDict<T>(string arrayKey, Func<JNode, T> parser) where T : IDataContainer
         {
-            Dictionary<string, IDataContainer> result = new();
+            Dictionary<string, T> result = new();
             var arr = GetArray(arrayKey);
             foreach (var item in arr)
             {
@@ -116,7 +182,7 @@ namespace ShapePersistent
             }
             return result;
         }
-        
+
         public static List<T> SerializeArrayToList<T>(JNode[] nodes)
         {
             List<T> result = new List<T>();
@@ -127,7 +193,7 @@ namespace ShapePersistent
             }
             return result;
         }
-        public static Dictionary<string, T> SerializeArrayToDictionary<T>(JNode[] nodes) where T : IDataObject
+        public static Dictionary<string, T> SerializeArrayToDict<T>(JNode[] nodes) where T : IDataObject
         {
             Dictionary<string, T> result = new();
             foreach (var node in nodes)
@@ -200,11 +266,9 @@ namespace ShapePersistent
             }
             return default(T);
         }
-        
-        
-        
-        
-        
+
+
+
         //public Dictionary<string, T> GetSheet<T>(string key, string idPropertyName)
         //{
         //    Dictionary<string, T> result = new();
