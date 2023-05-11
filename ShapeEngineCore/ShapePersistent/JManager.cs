@@ -2,11 +2,33 @@
 //using Newtonsoft.Json.Linq;
 using System.Text.Json.Nodes;
 using System.Text.Json;
+using System.Runtime.CompilerServices;
 
 namespace ShapePersistent
 {
+    //public class Sheet <T>
+    //{
+    //    public string name { get; set; } = "";
+    //    public T[] lines { get; set; } = new T[0];
+    //}
+    //public class DContainer<T> : IDataContainer where T : IDataObject
+    //{
+    //    public string Name { get; set; } = "";
+    //    private List<T> data = new();
+    //
+    //    public List<IDataObject> GetData() { return data.Cast<IDataObject>().ToList(); }
+    //
+    //    public string GetName(){return Name;}
+    //
+    //    public IDataObject GetRandom()
+    //    {
+    //        throw new NotImplementedException();
+    //    }
+    //}
     public interface IDataContainer
     {
+        public string GetName();
+        public List<IDataObject> GetData();
         public IDataObject GetRandom();
     }
     public interface IDataObject
@@ -14,7 +36,6 @@ namespace ShapePersistent
         public string GetName();
         
     }
-
     public sealed class JNode
     {
         private JsonObject node;
@@ -54,15 +75,14 @@ namespace ShapePersistent
             }
             return new JNode();
         }
-        public JNode[] GetArray(string key)
+        public JNode[] GetArray(string arrayKey)
         {
             if (!Valid) return Array.Empty<JNode>();   
-            if(node.ContainsKey(key))
+            if(node.ContainsKey(arrayKey))
             {
-                var arr = node[key]?.AsArray();
+                var arr = node[arrayKey]?.AsArray();
                 if(arr != null)
                 {
-                    
                     List<JNode> result = new();
                     foreach (var item in arr)
                     {
@@ -75,24 +95,59 @@ namespace ShapePersistent
             return Array.Empty<JNode>();
         }
         
-        public T? Deserialize<T>() { return node.Deserialize<T>(); }
-        public T? GetProperty<T>(string key)
+        public List<IDataContainer> ParseToList(string arrayKey, Func<JNode, IDataContainer> parser)
         {
-            if (node.ContainsKey(key))
+            List<IDataContainer> result = new();
+            var arr = GetArray(arrayKey);
+            foreach (var item in arr)
             {
-                var n = node[key];
-                return n.Deserialize<T>();
+                result.Add(parser(item));
             }
-            return default(T);
+            return result;
+        }
+        public Dictionary<string, IDataContainer> ParseToDict(string arrayKey, Func<JNode, IDataContainer> parser)
+        {
+            Dictionary<string, IDataContainer> result = new();
+            var arr = GetArray(arrayKey);
+            foreach (var item in arr)
+            {
+                var c = parser(item);
+                result.Add(c.GetName(), c);
+            }
+            return result;
         }
         
-        public List<T> GetSheet<T>(string key)
+        public static List<T> SerializeArrayToList<T>(JNode[] nodes)
+        {
+            List<T> result = new List<T>();
+            foreach (var node in nodes)
+            {
+                var r = node.Deserialize<T>();
+                if(r != null) result.Add(r);
+            }
+            return result;
+        }
+        public static Dictionary<string, T> SerializeArrayToDictionary<T>(JNode[] nodes) where T : IDataObject
+        {
+            Dictionary<string, T> result = new();
+            foreach (var node in nodes)
+            {
+                var r = node.Deserialize<T>();
+                if (r != null)
+                {
+                    result.Add(r.GetName(), r);
+                }
+            }
+            return result;
+        }
+        
+        public List<T> SerializeArrayToList<T>(string arrayKey)
         {
             List<T> result = new();
 
-            if (node.ContainsKey(key))
+            if (node.ContainsKey(arrayKey))
             {
-                var arr = node[key]?.AsArray();
+                var arr = node[arrayKey]?.AsArray();
                 if (arr != null)
                 {
                     foreach (var item in arr)
@@ -110,34 +165,74 @@ namespace ShapePersistent
             }
             return result;
         }
-        public Dictionary<string, T> GetSheet<T>(string key, string idPropertyName)
+        public Dictionary<string, T> SerializeArrayToDict<T>(string arrayKey) where T : IDataObject
         {
             Dictionary<string, T> result = new();
 
-            if (node.ContainsKey(key))
+            if (node.ContainsKey(arrayKey))
             {
-                var arr = node[key]?.AsArray();
-                if(arr != null)
+                var arr = node[arrayKey]?.AsArray();
+                if (arr != null)
                 {
                     foreach (var item in arr)
                     {
-                        if(item == null) continue;
-                        
+                        if (item == null) continue;
+
                         var obj = item.AsObject();
-                        if(obj != null)
+                        if (obj != null)
                         {
-                            if (obj.ContainsKey(idPropertyName))
-                            {
-                                var id = obj[idPropertyName]?.ToString();
-                                var t = obj.Deserialize<T>();
-                                if(id != null && t != null) result.Add(id, t);
-                            }
+                            var t = obj.Deserialize<T>();
+                            if(t != null)result.Add(t.GetName(), t);
                         }
                     }
                 }
             }
             return result;
         }
+
+        public T? Deserialize<T>() { return node.Deserialize<T>(); }
+        public T? GetProperty<T>(string key)
+        {
+            if (node.ContainsKey(key))
+            {
+                var n = node[key];
+                return n.Deserialize<T>();
+            }
+            return default(T);
+        }
+        
+        
+        
+        
+        
+        //public Dictionary<string, T> GetSheet<T>(string key, string idPropertyName)
+        //{
+        //    Dictionary<string, T> result = new();
+        //
+        //    if (node.ContainsKey(key))
+        //    {
+        //        var arr = node[key]?.AsArray();
+        //        if(arr != null)
+        //        {
+        //            foreach (var item in arr)
+        //            {
+        //                if(item == null) continue;
+        //                
+        //                var obj = item.AsObject();
+        //                if(obj != null)
+        //                {
+        //                    if (obj.ContainsKey(idPropertyName))
+        //                    {
+        //                        var id = obj[idPropertyName]?.ToString();
+        //                        var t = obj.Deserialize<T>();
+        //                        if(id != null && t != null) result.Add(id, t);
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+        //    return result;
+        //}
     }
    
     public class JManager
@@ -145,7 +240,6 @@ namespace ShapePersistent
 
         public JManager()
         {
-            
         }
 
 
