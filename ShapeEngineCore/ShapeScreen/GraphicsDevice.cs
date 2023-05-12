@@ -4,62 +4,6 @@ using ShapeCore;
 
 namespace ShapeScreen
 {
-    /*
-    public interface IGraphicsDevice
-    {
-        public delegate void WindowSizeChanged(int w, int h);
-        public event WindowSizeChanged? OnWindowSizeChanged;
-
-        public float GAME_FACTOR { get; }
-        public float UI_FACTOR { get; }
-        public float UI_TO_GAME { get; }
-        public float GAME_TO_UI { get; }
-
-        public void Start();
-        public Vector2 TransformPositionToUI(Vector2 gamePos);
-        public Vector2 TransformPositionToGame(Vector2 uiPos);
-
-        public int GetCurrentMonitor();
-        public bool SetMonitor(int newMonitor);
-        public int GetMonitorCount();
-
-        public int GetFramesPerSecond();
-        public int GetFrameRateLimit();
-        public void SetFrameRateLimit(int newLimit);
-
-        public bool IsVsyncEnabled();
-        public void SetVsync(bool enabled);
-        public bool ToggleVsync();
-
-        public void ResizeWindow(int newWidth, int newHeight);
-        public void ResetWindow();
-
-        public bool IsFullscreen();
-        public void SetFullscreen(bool enabled);
-        public bool ToggleFullscreen();
-
-        public void BeginDraw();
-        public void EndDraw();
-        public void BeginDrawUI();
-        public void EndDrawUI();
-
-
-        public void Update(float dt);
-        public void DrawGameToScreen();
-        public void DrawUIToScreen();
-        public void Close();
-
-        public Rectangle GetCameraArea();
-        public Vector2 GetGameTextureSize();
-        public Vector2 GetUITextureSize();
-
-        //public bool SmoothingCameraEnabled();
-        //public Camera2D GetSmoothingCamera();
-
-    }
-    */
-    
-    
     public class GraphicsDevice
     {
         public delegate void WindowSizeChanged(int w, int h);
@@ -83,7 +27,8 @@ namespace ShapeScreen
         public ICamera CAMERA { get; set; }
         public IScreenTexture GAME { get; private set; }
         public IScreenTexture UI { get; private set; }
-        
+        public ICursor Cursor { get; private set; } = new NullCursor();
+       
         private ScreenBuffer[] screenBuffers = new ScreenBuffer[0];
         
         
@@ -148,6 +93,7 @@ namespace ShapeScreen
             GAME.Update(dt);
             UI.Update(dt);
             CAMERA.Update(dt, CUR_WINDOW_SIZE.width, GAME.GetTextureWidth());
+            Cursor.Update(dt);
         }
 
         public virtual void BeginDraw() { GAME.BeginTextureMode(CAMERA.GetCamera()); }
@@ -243,6 +189,19 @@ namespace ShapeScreen
             SHADER.Close();
             CloseWindow();
         }
+
+        public bool SwitchCursor(ICursor newCursor)
+        {
+            if(Cursor != newCursor)
+            {
+                Cursor.Deactivate();
+                newCursor.Activate(Cursor);
+                Cursor = newCursor;
+                return true;
+            }
+            return false;
+        }
+        public void DrawCursor(Vector2 uiSize, Vector2 pos) { Cursor.Draw(uiSize, pos); }
 
         public Vector2 GetScreenTextureResolutionFactorGame()
         {
@@ -453,6 +412,61 @@ namespace ShapeScreen
     }
 }
 
+
+/*
+    public interface IGraphicsDevice
+    {
+        public delegate void WindowSizeChanged(int w, int h);
+        public event WindowSizeChanged? OnWindowSizeChanged;
+
+        public float GAME_FACTOR { get; }
+        public float UI_FACTOR { get; }
+        public float UI_TO_GAME { get; }
+        public float GAME_TO_UI { get; }
+
+        public void Start();
+        public Vector2 TransformPositionToUI(Vector2 gamePos);
+        public Vector2 TransformPositionToGame(Vector2 uiPos);
+
+        public int GetCurrentMonitor();
+        public bool SetMonitor(int newMonitor);
+        public int GetMonitorCount();
+
+        public int GetFramesPerSecond();
+        public int GetFrameRateLimit();
+        public void SetFrameRateLimit(int newLimit);
+
+        public bool IsVsyncEnabled();
+        public void SetVsync(bool enabled);
+        public bool ToggleVsync();
+
+        public void ResizeWindow(int newWidth, int newHeight);
+        public void ResetWindow();
+
+        public bool IsFullscreen();
+        public void SetFullscreen(bool enabled);
+        public bool ToggleFullscreen();
+
+        public void BeginDraw();
+        public void EndDraw();
+        public void BeginDrawUI();
+        public void EndDrawUI();
+
+
+        public void Update(float dt);
+        public void DrawGameToScreen();
+        public void DrawUIToScreen();
+        public void Close();
+
+        public Rectangle GetCameraArea();
+        public Vector2 GetGameTextureSize();
+        public Vector2 GetUITextureSize();
+
+        //public bool SmoothingCameraEnabled();
+        //public Camera2D GetSmoothingCamera();
+
+    }
+    */
 
 //public void FlashTint(float duration, Color color, bool game = true)
         //{

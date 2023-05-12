@@ -1,4 +1,6 @@
-﻿namespace ShapePersistent
+﻿
+/*
+namespace ShapePersistent
 {
     public class DataObject
     {
@@ -13,3 +15,4 @@
     //}
 
 }
+*/

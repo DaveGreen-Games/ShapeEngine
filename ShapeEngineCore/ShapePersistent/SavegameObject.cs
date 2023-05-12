@@ -1,6 +1,7 @@
 ﻿namespace ShapePersistent
 {
     //without getters and setter serialization does not work!!!
+
     public class SavegameObject
     {
         public SavegameObject() { }

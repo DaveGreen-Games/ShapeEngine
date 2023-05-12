@@ -299,13 +299,4 @@ namespace ShapePersistent
         //}
     }
    
-    public class JManager
-    {
-
-        public JManager()
-        {
-        }
-
-
-    }
 }

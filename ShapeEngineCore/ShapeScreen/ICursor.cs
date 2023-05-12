@@ -1,15 +1,35 @@
-﻿using System.Numerics;
+﻿using ShapeLib;
+using System.Numerics;
 
-namespace ShapeCursor
+namespace ShapeScreen
 {
     public interface ICursor
     {
-        public uint ID { get; }
+        public uint GetID();
         public void Draw(Vector2 uiSize, Vector2 pos);
+        public void Update(float dt);
+        public void Deactivate();
+        public void Activate(ICursor oldCursor);
     }
 
-    
+    public class NullCursor : ICursor 
+    {
+        private uint id = SID.NextID;
+        public NullCursor() { }
 
+        public void Activate(ICursor oldCursor) { }
+
+        public void Deactivate() { }
+
+        public void Draw(Vector2 uiSize, Vector2 pos) { }
+
+        public uint GetID() { return id; }
+
+        public void Update(float dt) { }
+    }
+
+
+    /*
     public class CursorHandler
     {
         private Dictionary<uint, ICursor> cursors = new();
@@ -63,4 +83,5 @@ namespace ShapeCursor
             else cursors.Add(cursor.ID, cursor);
         }
     }
+    */
 }

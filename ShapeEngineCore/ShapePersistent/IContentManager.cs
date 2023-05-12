@@ -1,21 +1,248 @@
 ﻿using Raylib_CsLo;
 using System.Text;
-using System.IO.Compression;
-using System.Text.Json.Nodes;
-using System.Text.Json;
 
 namespace ShapePersistent
 {
-    internal struct ResourceInfo
+    public interface IContentManager
     {
-        public string extension;
-        public byte[] data;
+        public void Close();
 
-        public ResourceInfo(string extension, byte[] data) { this.extension = extension; this.data = data; }
+        public Texture LoadTexture(string filePath);
+        public Image LoadImage(string filePath);
+        public Font LoadFont(string filePath, int fontSize = 100);
+        public Wave LoadWave(string filePath);
+        public Sound LoadSound(string filePath);
+        public Music LoadMusic(string filePath);
+        public Shader LoadFragmentShader(string filePath);
+        public Shader LoadVertexShader(string filePath);
+        public string LoadJson(string filePath);
+
     }
+    
+    /// <summary>
+    /// Provides a simple class to load content and automatically unload all loaded content when close is called.
+    /// </summary>
+    public sealed class ContentManager : IContentManager
+    {
+
+        private List<Shader> shadersToUnload = new();
+        private List<Texture> texturesToUnload = new();
+        private List<Image> imagesToUnload = new();
+        private List<Font> fontsToUnload = new();
+        private List<Sound> soundsToUnload = new();
+        private List<Music> musicToUnload = new();
+        private List<Wave> wavesToUnload = new();
+
+        public ContentManager() { }
+
+        /// <summary>
+        /// Unloads all loaded content.
+        /// </summary>
+        public void Close()
+        {
+            foreach (var item in shadersToUnload)
+            {
+                UnloadShader(item);
+            }
+
+            foreach (var item in texturesToUnload)
+            {
+                UnloadTexture(item);
+            }
+            foreach (var item in imagesToUnload)
+            {
+                UnloadImage(item);
+            }
+            foreach (var item in fontsToUnload)
+            {
+                UnloadFont(item);
+            }
+            foreach (var item in wavesToUnload)
+            {
+                UnloadWave(item);
+            }
+            foreach (var item in soundsToUnload)
+            {
+                UnloadSound(item);
+            }
+            foreach (var item in musicToUnload)
+            {
+                UnloadMusicStream(item);
+            }
+        }
+
+        public Texture LoadTexture(string filePath)
+        {
+            Texture t = ContentLoader.LoadTexture(filePath);
+            texturesToUnload.Add(t);
+            return t;
+        }
+        public Image LoadImage(string filePath)
+        {
+            Image i = ContentLoader.LoadImage(filePath);
+            imagesToUnload.Add(i);
+            return i;
+        }
+        public Font LoadFont(string filePath, int fontSize = 100)
+        {
+            unsafe
+            {
+                Font f = ContentLoader.LoadFont(filePath, fontSize);
+                fontsToUnload.Add(f);
+                return f;
+            }
+        }
+        public Wave LoadWave(string filePath)
+        {
+            Wave w = ContentLoader.LoadWave(filePath);
+            wavesToUnload.Add(w);
+            return w;
+        }
+        public Sound LoadSound(string filePath)
+        {
+            Sound s = ContentLoader.LoadSound(filePath);
+            soundsToUnload.Add(s);
+            return s;
+
+        }
+        public Music LoadMusic(string filePath)
+        {
+            Music m = ContentLoader.LoadMusic(filePath);
+            musicToUnload.Add(m);
+            return m;
+        }
+        public Shader LoadFragmentShader(string filePath)
+        {
+            Shader fs = ContentLoader.LoadFragmentShader(filePath);
+            shadersToUnload.Add(fs);
+            return fs;
+        }
+        public Shader LoadVertexShader(string filePath)
+        {
+            Shader vs = ContentLoader.LoadVertexShader(filePath);
+            shadersToUnload.Add(vs);
+            return vs;
+        }
+        public string LoadJson(string filePath)
+        {
+            return ContentLoader.LoadJson(filePath);
+        }
+
+    }
+    
+    /// <summary>
+    /// Provides a simple class to load content that was packed with the ContentPacker.
+    /// </summary>
+    public sealed class ContentManagerPacked : IContentManager
+    {
+        public int GLYPH_COUNT = 0;
+        private Dictionary<string, ContentInfo> content = new();
+        private List<Texture> texturesToUnload = new();
+
+        public ContentManagerPacked(string path, string resourceFileName = "resources.txt")
+        {
+            if (resourceFileName == "") return;
+            content = ContentPacker.Unpack(path, resourceFileName);
+        }
+
+        public void Close()
+        {
+            foreach (var item in texturesToUnload)
+            {
+                UnloadTexture(item);
+            }
+        }
+
+        public Texture LoadTexture(string filePath)
+        {
+            Texture t = Raylib.LoadTextureFromImage(LoadImage(filePath));
+            texturesToUnload.Add(t);
+            return t;
+        }
+        public Image LoadImage(string filePath)
+        {
+            unsafe
+            {
+                string fileName = Path.GetFileNameWithoutExtension(filePath);
+                var data = content[fileName].data;
+                var extension = content[fileName].extension;
+                fixed (byte* ptr = data)
+                {
+                    return Raylib.LoadImageFromMemory(extension, ptr, data.Length);
+                }
+            }
+        }
+        public Font LoadFont(string filePath, int fontSize = 100)
+        {
+            unsafe
+            {
+                string fileName = Path.GetFileNameWithoutExtension(filePath);
+                var data = content[fileName].data;
+                var extension = content[fileName].extension;
+                fixed (byte* ptr = data)
+                {
+                    return Raylib.LoadFontFromMemory(extension, ptr, data.Length, fontSize, (int*)0, GLYPH_COUNT);
+                }
+            }
+        }
+        public Wave LoadWave(string filePath)
+        {
+            unsafe
+            {
+                string filename = Path.GetFileNameWithoutExtension(filePath);
+                var data = content[filename].data;
+                var extension = content[filename].extension;
+                fixed (byte* ptr = data)
+                {
+                    return Raylib.LoadWaveFromMemory(extension, ptr, data.Length);
+                }
+            }
+        }
+        public Sound LoadSound(string filePath)
+        {
+            string fileName = Path.GetFileNameWithoutExtension(filePath);
+            return Raylib.LoadSoundFromWave(LoadWave(fileName));
+
+        }
+        public Music LoadMusic(string filePath)
+        {
+            unsafe
+            {
+                string fileName = Path.GetFileNameWithoutExtension(filePath);
+                var data = content[fileName].data;
+                var extension = content[fileName].extension;
+                fixed (byte* ptr = data)
+                {
+                    return Raylib.LoadMusicStreamFromMemory(extension, ptr, data.Length);
+                }
+            }
+        }
+        public Shader LoadFragmentShader(string filePath)
+        {
+            string fileName = Path.GetFileNameWithoutExtension(filePath);
+            string file = Encoding.Default.GetString(content[fileName].data);
+            return Raylib.LoadShaderFromMemory(null, file);
+        }
+        public Shader LoadVertexShader(string filePath)
+        {
+            string fileName = Path.GetFileNameWithoutExtension(filePath);
+            string file = Encoding.Default.GetString(content[fileName].data);
+            return Raylib.LoadShaderFromMemory(file, "");
+        }
+        public string LoadJson(string filePath)
+        {
+            string fileName = Path.GetFileNameWithoutExtension(filePath);
+            return Encoding.Default.GetString(content[fileName].data);
+        }
+
+    }
+
+}
+
+/*
     public class ResourceManager
     {
-        private Dictionary<string, ResourceInfo> resources = new();
+        private Dictionary<string, ContentInfo> resources = new();
 
 
         private List<Shader> shadersToUnload = new();
@@ -214,6 +441,18 @@ namespace ShapePersistent
                 return Raylib.LoadShaderFromMemory(file, "");
             }
         }
+        public string LoadJsonData(string filePath)
+        {
+            if (editorMode)
+            {
+                return File.ReadAllText(filePath);
+            }
+            else
+            {
+                string fileName = Path.GetFileNameWithoutExtension(filePath);
+                return Encoding.Default.GetString(resources[fileName].data);
+            }
+        }
 
 
         public Dictionary<string, T> LoadDataSheet<T>(string dataFileName, string sheetName) where T : DataObject
@@ -239,18 +478,6 @@ namespace ShapePersistent
             if (lines.ContainsKey(lineName)) return lines[lineName];
             else return null;
         }
-        public string LoadJsonData(string filePath)
-        {
-            if (editorMode)
-            {
-                return File.ReadAllText(filePath);
-            }
-            else
-            {
-                string fileName = Path.GetFileNameWithoutExtension(filePath);
-                return Encoding.Default.GetString(resources[fileName].data);
-            }
-        }
         
         
         
@@ -269,7 +496,7 @@ namespace ShapePersistent
             Shader fs = Raylib.LoadShader(null, filePath);
             return fs;
         }
-        public Shader LoadVertexShaderFromRaylib(string filePath)
+        public static Shader LoadVertexShaderFromRaylib(string filePath)
         {
             Shader vs = Raylib.LoadShader(filePath, "");
             return vs;
@@ -317,11 +544,11 @@ namespace ShapePersistent
             }
             File.WriteAllLines(outputPath + outputFilename, lines);
         }
-        private static Dictionary<string, ResourceInfo> LoadResources(string path, string fileName = "resources.txt", bool editorMode = false)
+        private static Dictionary<string, ContentInfo> LoadResources(string path, string fileName = "resources.txt", bool editorMode = false)
         {
-            if (editorMode) return new Dictionary<string, ResourceInfo>() { };
+            if (editorMode) return new Dictionary<string, ContentInfo>() { };
 
-            Dictionary<string, ResourceInfo> result = new();
+            Dictionary<string, ContentInfo> result = new();
             var lines = File.ReadAllLines(path + fileName);
             for (int i = 0; i < lines.Length; i += 2)
             {
@@ -355,6 +582,4 @@ namespace ShapePersistent
         }
 
     }
-
-
-}
+    */

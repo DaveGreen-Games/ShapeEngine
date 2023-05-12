@@ -1,5 +1,4 @@
 ﻿using System.Text.Json;
-//using System.IO;
 
 namespace ShapePersistent
 {
@@ -15,19 +14,25 @@ namespace ShapePersistent
             MAIN_PATH = APPLICATION_DATA_PATH + String.Format("\\{0}\\{1}", studioName, gameName);
             SAVEGAME_PATH = MAIN_PATH + "\\savegames";
         }
+
+        //Make functions for relative paths based on how the class was constructed
+
+
+
+
+        //functions for absolute paths
         public static bool Save<T>(T data, string path, string fileName)
         {
             if (data == null) return false;
             if (path.Length <= 0 || fileName.Length <= 0) return false;
             Directory.CreateDirectory(path);
 
-            string data_string = JsonSerializer.Serialize(data);//, new JsonSerializerOptions( new JsonSerializerDefaults() ) );
+            string data_string = JsonSerializer.Serialize(data);
             if (data_string.Length <= 0) return false;
 
             File.WriteAllText(path + "\\" + fileName, data_string);
             return true;
         }
-
         public static T? Load<T>(string path, string fileName)
         {
             path = path + "\\" + fileName;

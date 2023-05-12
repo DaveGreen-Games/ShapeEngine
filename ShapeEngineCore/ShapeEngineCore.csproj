@@ -19,8 +19,6 @@
     <PackageReference Include="Raylib-CsLo" Version="4.2.0.4" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="ShapeCollision\" />
-  </ItemGroup>
+ 
 
 </Project>
