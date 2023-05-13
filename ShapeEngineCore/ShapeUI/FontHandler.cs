@@ -31,15 +31,15 @@ namespace ShapeUI
             Font font = GetFont(id);
             SetTextureFilter(font.texture, textureFilter);
         }
-        public void AddFont(uint id, string fileName, int fontSize = 100, TextureFilter textureFilter = TextureFilter.TEXTURE_FILTER_BILINEAR)
-        {
-            if (fileName == "" || fonts.ContainsKey(id)) return;
-            Font font = ResourceManager.LoadFontFromRaylib(fileName, fontSize);
-
-            SetTextureFilter(font.texture, textureFilter);
-            fonts.Add(id, font);
-        }
-        public void AddFont(uint id, Font font, int fontSize = 100, TextureFilter textureFilter = TextureFilter.TEXTURE_FILTER_BILINEAR)
+        //public void AddFont(uint id, string fileName, int fontSize = 100, TextureFilter textureFilter = TextureFilter.TEXTURE_FILTER_BILINEAR)
+        //{
+        //    if (fileName == "" || fonts.ContainsKey(id)) return;
+        //    Font font = ResourceManager.LoadFontFromRaylib(fileName, fontSize);
+        //
+        //    SetTextureFilter(font.texture, textureFilter);
+        //    fonts.Add(id, font);
+        //}
+        public void AddFont(uint id, Font font, TextureFilter textureFilter = TextureFilter.TEXTURE_FILTER_BILINEAR)
         {
             if (fonts.ContainsKey(id)) return;
             SetTextureFilter(font.texture, textureFilter);

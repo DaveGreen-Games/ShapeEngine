@@ -22,8 +22,8 @@ namespace ShapeCore
         public abstract IShape GetShape();
         //public abstract Rect GetBoundingBox();
         //public abstract void DrawDebugShape(Color color);
-        public abstract (bool valid, bool overlap) CheckOverlap(ICollider other);
-        public abstract (bool valid, Intersection i) CheckIntersection(ICollider other);
+        public abstract bool CheckOverlap(ICollider other);
+        public abstract Intersection CheckIntersection(ICollider other);
         public abstract bool CheckOverlapRect(Rect other);
 
         
@@ -52,27 +52,29 @@ namespace ShapeCore
         //public override Rect GetBoundingBox() { return new Circle(Pos, radius).GetBoundingBox(); }
         public override IShape GetShape() { return new Circle(Pos, radius); }
         public Circle GetCircleShape() { return new Circle(Pos, radius); }
-        public override (bool valid, bool overlap) CheckOverlap(ICollider other)
+        public override bool CheckOverlap(ICollider other)
         {
             Circle shape = new(Pos, radius);
-            var otherShape = other.GetShape();
-            if(otherShape is Circle c) return (true, shape.OverlapShape(c));
-            else if (otherShape is Segment s) return (true, shape.OverlapShape(s));
-            else if (otherShape is Triangle t) return (true, shape.OverlapShape(t));
-            else if (otherShape is Rect r) return (true, shape.OverlapShape(r));
-            else if (otherShape is Polygon p) return (true, shape.OverlapShape(p));
-            return (false, false);
+            return shape.Overlap(other.GetShape());
+            //var otherShape = other.GetShape();
+            //if(otherShape is Circle c) return (true, shape.OverlapShape(c));
+            //else if (otherShape is Segment s) return (true, shape.OverlapShape(s));
+            //else if (otherShape is Triangle t) return (true, shape.OverlapShape(t));
+            //else if (otherShape is Rect r) return (true, shape.OverlapShape(r));
+            //else if (otherShape is Polygon p) return (true, shape.OverlapShape(p));
+            //return (false, false);
         }
-        public override (bool valid, Intersection i) CheckIntersection(ICollider other)
+        public override Intersection CheckIntersection(ICollider other)
         {
             Circle shape = new(Pos, radius);
-            var otherShape = other.GetShape();
-            if (otherShape is Circle c) return (true, shape.IntersectShape(c));
-            else if (otherShape is Segment s) return (true, shape.IntersectShape(s));
-            else if (otherShape is Triangle t) return (true, shape.IntersectShape(t));
-            else if (otherShape is Rect r) return (true, shape.IntersectShape(r));
-            else if (otherShape is Polygon p) return (true, shape.IntersectShape(p));
-            return (false, new());
+            return shape.Intersect(other.GetShape());
+            //var otherShape = other.GetShape();
+            //if (otherShape is Circle c) return (true, shape.IntersectShape(c));
+            //else if (otherShape is Segment s) return (true, shape.IntersectShape(s));
+            //else if (otherShape is Triangle t) return (true, shape.IntersectShape(t));
+            //else if (otherShape is Rect r) return (true, shape.IntersectShape(r));
+            //else if (otherShape is Polygon p) return (true, shape.IntersectShape(p));
+            //return (false, new());
         }
         public override bool CheckOverlapRect(Rect rect) { return rect.OverlapShape(new Circle(Pos, radius)); }
     
@@ -98,27 +100,29 @@ namespace ShapeCore
 
         public override IShape GetShape() { return new Segment(Pos, End); }
         public Segment GetSegmentShape() { return new Segment(Pos, End); }
-        public override (bool valid, bool overlap) CheckOverlap(ICollider other)
+        public override bool CheckOverlap(ICollider other)
         {
             Segment shape = GetSegmentShape();
-            var otherShape = other.GetShape();
-            if (otherShape is Circle c) return (true, shape.OverlapShape(c));
-            else if (otherShape is Segment s) return (true, shape.OverlapShape(s));
-            else if (otherShape is Triangle t) return (true, shape.OverlapShape(t));
-            else if (otherShape is Rect r) return (true, shape.OverlapShape(r));
-            else if (otherShape is Polygon p) return (true, shape.OverlapShape(p));
-            return (false, false);
+            return shape.Overlap(other.GetShape());
+            //var otherShape = other.GetShape();
+            //if (otherShape is Circle c) return (true, shape.OverlapShape(c));
+            //else if (otherShape is Segment s) return (true, shape.OverlapShape(s));
+            //else if (otherShape is Triangle t) return (true, shape.OverlapShape(t));
+            //else if (otherShape is Rect r) return (true, shape.OverlapShape(r));
+            //else if (otherShape is Polygon p) return (true, shape.OverlapShape(p));
+            //return (false, false);
         }
-        public override (bool valid, Intersection i) CheckIntersection(ICollider other)
+        public override Intersection CheckIntersection(ICollider other)
         {
             Segment shape = GetSegmentShape();
-            var otherShape = other.GetShape();
-            if (otherShape is Circle c) return (true, shape.IntersectShape(c));
-            else if (otherShape is Segment s) return (true, shape.IntersectShape(s));
-            else if (otherShape is Triangle t) return (true, shape.IntersectShape(t));
-            else if (otherShape is Rect r) return (true, shape.IntersectShape(r));
-            else if (otherShape is Polygon p) return (true, shape.IntersectShape(p));
-            return (false, new());
+            return shape.Intersect(other.GetShape());
+            //var otherShape = other.GetShape();
+            //if (otherShape is Circle c) return (true, shape.IntersectShape(c));
+            //else if (otherShape is Segment s) return (true, shape.IntersectShape(s));
+            //else if (otherShape is Triangle t) return (true, shape.IntersectShape(t));
+            //else if (otherShape is Rect r) return (true, shape.IntersectShape(r));
+            //else if (otherShape is Polygon p) return (true, shape.IntersectShape(p));
+            //return (false, new());
         }
         public override bool CheckOverlapRect(Rect rect) { return rect.OverlapShape( GetSegmentShape() ); }
 
@@ -191,27 +195,29 @@ namespace ShapeCore
 
         public override IShape GetShape() { return new Rect(Pos, Size, Alignement); }
         public Rect GetRectShape() { return new Rect(Pos, Size, Alignement); }
-        public override (bool valid, bool overlap) CheckOverlap(ICollider other)
+        public override bool CheckOverlap(ICollider other)
         {
             Rect shape = GetRectShape();
-            var otherShape = other.GetShape();
-            if (otherShape is Circle c) return (true, shape.OverlapShape(c));
-            else if (otherShape is Segment s) return (true, shape.OverlapShape(s));
-            else if (otherShape is Triangle t) return (true, shape.OverlapShape(t));
-            else if (otherShape is Rect r) return (true, shape.OverlapShape(r));
-            else if (otherShape is Polygon p) return (true, shape.OverlapShape(p));
-            return (false, false);
+            return shape.Overlap(other.GetShape());
+            //var otherShape = other.GetShape();
+            //if (otherShape is Circle c) return (true, shape.OverlapShape(c));
+            //else if (otherShape is Segment s) return (true, shape.OverlapShape(s));
+            //else if (otherShape is Triangle t) return (true, shape.OverlapShape(t));
+            //else if (otherShape is Rect r) return (true, shape.OverlapShape(r));
+            //else if (otherShape is Polygon p) return (true, shape.OverlapShape(p));
+            //return (false, false);
         }
-        public override (bool valid, Intersection i) CheckIntersection(ICollider other)
+        public override Intersection CheckIntersection(ICollider other)
         {
             Rect shape = GetRectShape();
-            var otherShape = other.GetShape();
-            if (otherShape is Circle c) return (true, shape.IntersectShape(c));
-            else if (otherShape is Segment s) return (true, shape.IntersectShape(s));
-            else if (otherShape is Triangle t) return (true, shape.IntersectShape(t));
-            else if (otherShape is Rect r) return (true, shape.IntersectShape(r));
-            else if (otherShape is Polygon p) return (true, shape.IntersectShape(p));
-            return (false, new());
+            return shape.Intersect(other.GetShape());
+            //var otherShape = other.GetShape();
+            //if (otherShape is Circle c) return (true, shape.IntersectShape(c));
+            //else if (otherShape is Segment s) return (true, shape.IntersectShape(s));
+            //else if (otherShape is Triangle t) return (true, shape.IntersectShape(t));
+            //else if (otherShape is Rect r) return (true, shape.IntersectShape(r));
+            //else if (otherShape is Polygon p) return (true, shape.IntersectShape(p));
+            //return (false, new());
         }
         public override bool CheckOverlapRect(Rect rect) { return rect.OverlapShape(GetRectShape()); }
 
@@ -318,27 +324,29 @@ namespace ShapeCore
         public override IShape GetShape() { return new Polygon(Shape, Pos); }
         public Polygon GetPolygonShape() { return new Polygon(Shape, Pos); }
 
-        public override (bool valid, bool overlap) CheckOverlap(ICollider other)
+        public override bool CheckOverlap(ICollider other)
         {
             Polygon shape = GetPolygonShape();
-            var otherShape = other.GetShape();
-            if (otherShape is Circle c) return (true, shape.OverlapShape(c));
-            else if (otherShape is Segment s) return (true, shape.OverlapShape(s));
-            else if (otherShape is Triangle t) return (true, shape.OverlapShape(t));
-            else if (otherShape is Rect r) return (true, shape.OverlapShape(r));
-            else if (otherShape is Polygon p) return (true, shape.OverlapShape(p));
-            return (false, false);
+            return shape.Overlap(other.GetShape());
+            //var otherShape = other.GetShape();
+            //if (otherShape is Circle c) return (true, shape.OverlapShape(c));
+            //else if (otherShape is Segment s) return (true, shape.OverlapShape(s));
+            //else if (otherShape is Triangle t) return (true, shape.OverlapShape(t));
+            //else if (otherShape is Rect r) return (true, shape.OverlapShape(r));
+            //else if (otherShape is Polygon p) return (true, shape.OverlapShape(p));
+            //return (false, false);
         }
-        public override (bool valid, Intersection i) CheckIntersection(ICollider other)
+        public override Intersection CheckIntersection(ICollider other)
         {
             Polygon shape = GetPolygonShape();
-            var otherShape = other.GetShape();
-            if (otherShape is Circle c) return (true, shape.IntersectShape(c));
-            else if (otherShape is Segment s) return (true, shape.IntersectShape(s));
-            else if (otherShape is Triangle t) return (true, shape.IntersectShape(t));
-            else if (otherShape is Rect r) return (true, shape.IntersectShape(r));
-            else if (otherShape is Polygon p) return (true, shape.IntersectShape(p));
-            return (false, new());
+            return shape.Intersect(other.GetShape());
+            //var otherShape = other.GetShape();
+            //if (otherShape is Circle c) return (true, shape.IntersectShape(c));
+            //else if (otherShape is Segment s) return (true, shape.IntersectShape(s));
+            //else if (otherShape is Triangle t) return (true, shape.IntersectShape(t));
+            //else if (otherShape is Rect r) return (true, shape.IntersectShape(r));
+            //else if (otherShape is Polygon p) return (true, shape.IntersectShape(p));
+            //return (false, new());
         }
         public override bool CheckOverlapRect(Rect rect) { return rect.OverlapShape(GetPolygonShape()); }
 

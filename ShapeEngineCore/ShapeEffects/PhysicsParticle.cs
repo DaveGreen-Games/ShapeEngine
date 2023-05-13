@@ -47,53 +47,22 @@ namespace ShapeEffects
         public abstract uint GetCollisionLayer();
         public abstract uint[] GetCollisionMask();
 
-        public void DrawDebugShape(Color color)
+        public abstract IShape GetShape();
+        public abstract void DrawDebugShape(Color color);
+        
+        public virtual bool CheckOverlap(ICollider other)
         {
-            Raylib.DrawRectangleLinesEx(GetBoundingBox().Rectangle, 5f, color);
+            IShape shape = GetShape();
+            IShape otherShape = other.GetShape();   
+            return shape.Overlap(otherShape);
         }
-        public (bool valid, bool overlap) CheckOverlap(ICollider other)
+        public virtual Intersection CheckIntersection(ICollider other)
         {
-            Rect r = GetBoundingBox();
-            if (other is CircleCollider c)
-            {
-                return (true, r.OverlapRectCircle(c));
-            }
-            else if (other is SegmentCollider s)
-            {
-                return (true, r.OverlapRectSegment(s));
-            }
-            else if (other is RectCollider rect)
-            {
-                return (true, r.OverlapRectRect(rect));
-            }
-            else if (other is PolyCollider p)
-            {
-                return (true, r.OverlapRectPoly(p));
-            }
-            return (false, false);
+            IShape shape = GetShape();
+            IShape otherShape = other.GetShape();
+            return shape.Intersect(otherShape);
         }
-        public (bool valid, Intersection i) CheckIntersection(ICollider other)
-        {
-            Rect r = GetBoundingBox();
-            if (other is CircleCollider c)
-            {
-                return (true, r.IntersectionRectCircle(c));
-            }
-            else if (other is SegmentCollider s)
-            {
-                return (true, r.IntersectionRectSegment(s));
-            }
-            else if (other is RectCollider rect)
-            {
-                return (true, r.IntersectionRectRect(rect));
-            }
-            else if (other is PolyCollider p)
-            {
-                return (true, r.IntersectionRectPoly(p));
-            }
-            return (false, new());
-        }
-        public bool CheckOverlapRect(Rect rect) { return GetBoundingBox().OverlapRectRect(rect); }
+        //public bool CheckOverlapRect(Rect rect) { return rect.Overlap(GetShape()); }// GetBoundingBox().OverlapRectRect(rect); }
 
     }
 }

@@ -144,9 +144,9 @@ namespace ShapeCore
 
         public IShape GetShape();
 
-        public (bool valid, bool overlap) CheckOverlap(ICollider other);
-        public (bool valid, Intersection i) CheckIntersection(ICollider other);
-        public bool CheckOverlapRect(Rect rect);
+        public bool CheckOverlap(ICollider other) { return GetShape().Overlap(other.GetShape()); }
+        public Intersection CheckIntersection(ICollider other) { return GetShape().Intersect(other.GetShape()); }
+        public bool CheckOverlapRect(Rect rect) { return rect.Overlap(GetShape()); }
 
         //public Rect GetBoundingBox();
         //public void DrawDebugShape(Color color);

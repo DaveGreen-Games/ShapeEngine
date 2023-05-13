@@ -6,6 +6,11 @@ using ShapeCore;
 
 namespace ShapeLib
 {
+    //only segment, circle, triangle, rect and polygon shapes can exist -> each overlap/ intersection check is therefore valid
+    //icollider checks just get the shape and overlap/intersect them, because colliders can only use valid shapes.
+    //other ishape is not a valid shape than shape is overlapped/intersected with the bounding box of the invalid shape.
+
+
     public struct CollisionInfo
     {
         public bool overlapping;
@@ -84,16 +89,18 @@ namespace ShapeLib
             if (colA == null || colB == null) return false;
             if (!colA.Enabled || !colB.Enabled) return false;
 
-            var overlapInfo = colA.CheckOverlap(colB);
-            if (!overlapInfo.valid)
-            {
-                overlapInfo = colB.CheckOverlap(colA);
-                if (!overlapInfo.valid)
-                {
-                    return OverlapBoundingBox(colA, colB);
-                }
-            }
-            return overlapInfo.overlap;
+            return colA.CheckOverlap(colB);
+
+            //var overlapInfo = colA.CheckOverlap(colB);
+            //if (!overlapInfo.valid)
+            //{
+            //    overlapInfo = colB.CheckOverlap(colA);
+            //    if (!overlapInfo.valid)
+            //    {
+            //        return OverlapBoundingBox(colA, colB);
+            //    }
+            //}
+            //return overlapInfo.overlap;
         }
         public static bool Overlap(this Rect rect, ICollider col)
         {
@@ -103,12 +110,12 @@ namespace ShapeLib
         }
         public static bool Overlap(this IShape a, IShape b)
         {
-            if (a is Segment s)         return Overlap(s, b);
-            else if (a is Circle c)     return Overlap(c, b);
-            else if (a is Triangle t)   return Overlap(t, b);
-            else if (a is Rect r)       return Overlap(r, b);
-            else if (a is Polygon p)    return Overlap(p, b);
-            else return false;
+            if (a is Segment s) return Overlap(s, b);
+            else if (a is Circle c) return Overlap(c, b);
+            else if (a is Triangle t) return Overlap(t, b);
+            else if (a is Rect r) return Overlap(r, b);
+            else if (a is Polygon p) return Overlap(p, b);
+            else return a.GetBoundingBox().Overlap(b);
         }
         public static bool Overlap(this Segment seg, IShape shape)
         {
@@ -117,7 +124,7 @@ namespace ShapeLib
             else if (shape is Triangle t) return OverlapShape(seg, t);
             else if (shape is Rect r) return OverlapShape(seg, r);
             else if (shape is Polygon p) return OverlapShape(seg, p);
-            else return false;
+            else return seg.OverlapShape(shape.GetBoundingBox());
         }
         public static bool Overlap(this Circle circle, IShape shape)
         {
@@ -126,7 +133,7 @@ namespace ShapeLib
             else if (shape is Triangle t) return OverlapShape(circle, t);
             else if (shape is Rect r) return OverlapShape(circle, r);
             else if (shape is Polygon p) return OverlapShape(circle, p);
-            else return false;
+            else return circle.OverlapShape(shape.GetBoundingBox());
         }
         public static bool Overlap(this Triangle triangle, IShape shape)
         {
@@ -135,7 +142,7 @@ namespace ShapeLib
             else if (shape is Triangle t) return OverlapShape(triangle, t);
             else if (shape is Rect r) return OverlapShape(triangle, r);
             else if (shape is Polygon p) return OverlapShape(triangle, p);
-            else return false;
+            else return triangle.OverlapShape(shape.GetBoundingBox());
         }
         public static bool Overlap(this Rect rect, IShape shape)
         {
@@ -144,7 +151,7 @@ namespace ShapeLib
             else if(shape is Triangle t)    return OverlapShape(t, rect);
             else if(shape is Rect r)        return OverlapShape(r, rect);
             else if(shape is Polygon p)     return OverlapShape(p, rect);
-            else return false;
+            else return rect.OverlapShape(shape.GetBoundingBox());
         }
         public static bool Overlap(this Polygon poly, IShape shape)
         {
@@ -153,12 +160,9 @@ namespace ShapeLib
             else if (shape is Triangle t) return OverlapShape(poly, t);
             else if (shape is Rect r) return OverlapShape(poly, r);
             else if (shape is Polygon p) return OverlapShape(poly, p);
-            else return false;
+            else return poly.OverlapShape(shape.GetBoundingBox());
         }
-        public static bool OverlapBoundingBox(this ICollider a, ICollider b)
-        {
-            return OverlapShape(a.GetShape().GetBoundingBox(), b.GetShape().GetBoundingBox());
-        }
+        public static bool OverlapBoundingBox(this ICollider a, ICollider b) { return OverlapShape(a.GetShape().GetBoundingBox(), b.GetShape().GetBoundingBox()); }
 
         public static Intersection Intersect(this ICollider colA, ICollider colB)
         {
@@ -167,35 +171,36 @@ namespace ShapeLib
             if (!colA.Enabled || !colB.Enabled) return new();
             if (!colA.ComputeIntersections) return new();
 
-            var intersectionInfo = colA.CheckIntersection(colB);
-            if (!intersectionInfo.valid)
-            {
-                intersectionInfo = colB.CheckIntersection(colA);
-                if (!intersectionInfo.valid)
-                {
-                    return IntersectBoundingBoxes(colA, colB);
-                }
-            }
-
-            return intersectionInfo.i;
+            return colA.CheckIntersection(colB);
+            //var intersectionInfo = colA.CheckIntersection(colB);
+            //if (!intersectionInfo.valid)
+            //{
+            //    intersectionInfo = colB.CheckIntersection(colA);
+            //    if (!intersectionInfo.valid)
+            //    {
+            //        return IntersectBoundingBoxes(colA, colB);
+            //    }
+            //}
+            //
+            //return intersectionInfo.i;
         }
         public static Intersection Intersect(this IShape a, IShape b)
         {
-            if (a is Segment s)         return Intersect(s, b);
-            else if (a is Circle c)     return Intersect(c, b);
-            else if (a is Triangle t)   return Intersect(t, b);
-            else if (a is Rect r)       return Intersect(r, b);
-            else if (a is Polygon p)    return Intersect(p, b);
-            else return new();
+            if (a is Segment s) return Intersect(s, b);
+            else if (a is Circle c) return Intersect(c, b);
+            else if (a is Triangle t) return Intersect(t, b);
+            else if (a is Rect r) return Intersect(r, b);
+            else if (a is Polygon p) return Intersect(p, b);
+            else return Intersect(a.GetBoundingBox(), b);
         }
         public static Intersection Intersect(this Segment seg, IShape shape)
         {
-            if (shape is Segment s)         return IntersectShape(seg, s);
-            else if (shape is Circle c)     return IntersectShape(seg, c);
-            else if (shape is Triangle t)   return IntersectShape(seg, t);
-            else if (shape is Rect r)       return IntersectShape(seg, r);
-            else if (shape is Polygon p)    return IntersectShape(seg, p);
-            else return new();
+            if (shape is Segment s) return IntersectShape(seg, s);
+            else if (shape is Circle c) return IntersectShape(seg, c);
+            else if (shape is Triangle t) return IntersectShape(seg, t);
+            else if (shape is Rect r) return IntersectShape(seg, r);
+            else if (shape is Polygon p) return IntersectShape(seg, p);
+            else return seg.IntersectShape(shape.GetBoundingBox());// new();
         }
         public static Intersection Intersect(this Circle circle, IShape shape)
         {
@@ -204,7 +209,7 @@ namespace ShapeLib
             else if (shape is Triangle t)   return IntersectShape(circle, t);
             else if (shape is Rect r)       return IntersectShape(circle, r);
             else if (shape is Polygon p)    return IntersectShape(circle, p);
-            else return new();
+            else return circle.IntersectShape(shape.GetBoundingBox());// new();
         }
         public static Intersection Intersect(this Triangle triangle, IShape shape)
         {
@@ -213,7 +218,7 @@ namespace ShapeLib
             else if (shape is Triangle t)   return IntersectShape(triangle, t);
             else if (shape is Rect r)       return IntersectShape(triangle, r);
             else if (shape is Polygon p)    return IntersectShape(triangle, p);
-            else return new();
+            else return triangle.IntersectShape(shape.GetBoundingBox());// new();
         }
         public static Intersection Intersect(this Rect rect, IShape shape)
         {
@@ -222,7 +227,7 @@ namespace ShapeLib
             else if (shape is Triangle t)   return IntersectShape(t, rect);
             else if (shape is Rect r)       return IntersectShape(r, rect);
             else if (shape is Polygon p)    return IntersectShape(p, rect);
-            else return new();
+            else return rect.IntersectShape(shape.GetBoundingBox());// new();
         }
         public static Intersection Intersect(this Polygon poly, IShape shape)
         {
@@ -231,7 +236,7 @@ namespace ShapeLib
             else if (shape is Triangle t)   return IntersectShape(poly, t);
             else if (shape is Rect r)       return IntersectShape(poly, r);
             else if (shape is Polygon p)    return IntersectShape(poly, p);
-            else return new();
+            else return poly.IntersectShape(shape.GetBoundingBox());// new();
         }
         public static Intersection IntersectBoundingBoxes(this ICollider a, ICollider b) { return IntersectShape(a.GetShape().GetBoundingBox(), b.GetShape().GetBoundingBox()); }
         #endregion

@@ -56,6 +56,10 @@ namespace ShapeEffects
         protected float GetTweenFloat(float start, float end) { return STween.Tween(start, end, LifetimeF, TweenType); }
         protected Vector2 GetTweenVector2(Vector2 start, Vector2 end) { return start.Tween(end, LifetimeF, TweenType); }
         protected Color GetTweenColor(Color startColor, Color endColor) { return startColor.Tween(endColor, LifetimeF, TweenType); }
+
+        public virtual bool HasBehaviors() { return false; }
+        public virtual bool AddBehavior(IBehavior behavior) { return false; }
+        public virtual bool RemoveBehavior(IBehavior behavior) { return false; }
     }
 
     
