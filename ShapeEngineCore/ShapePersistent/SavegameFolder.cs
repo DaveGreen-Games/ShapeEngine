@@ -1,7 +1,26 @@
-﻿using System.Text.Json;
+﻿using ShapeLib;
 
 namespace ShapePersistent
 {
+    public class SavegameFolder
+    {
+        public string Path { get; private set; }
+        public SavegameFolder(params string[] folders)
+        {
+            Path = SSavegame.ConstructPath(folders);
+        }
+        public SavegameFolder(SavegameFolder root,  params string[] folders)
+        {
+            Path = root.Path + SSavegame.ConstructPath(folders);
+        }
+
+        public bool Save<T>(T data, string filename) { return SSavegame.Save(data, Path, filename); }
+        public T? Load<T>(string filename) { return SSavegame.Load<T>(Path, filename); }
+    }
+
+
+
+    /*
     public class SavegameHandler
     {
 
@@ -45,4 +64,5 @@ namespace ShapePersistent
         }
 
     }
+    */
 }
