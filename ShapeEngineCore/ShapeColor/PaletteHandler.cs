@@ -3,19 +3,47 @@ using ShapeLib;
 
 namespace ShapeColor
 {
+
+    //public struct C
+    //{
+    //    public byte r;
+    //    public byte g;
+    //    public byte b;
+    //    public byte a;
+    //
+    //
+    //    public C(byte r, byte g, byte b, byte a)
+    //    {
+    //        this.r = r;
+    //        this.g = g;
+    //        this.b = b;
+    //        this.a = a;
+    //    }
+    //
+    //    public C(int r, int g, int b, int a)
+    //    {
+    //        this.r = (byte)r;
+    //        this.g = (byte)g;
+    //        this.b = (byte)b;
+    //        this.a = (byte)a;
+    //    }
+    //
+    //
+    //
+    //    public Color Color { get { return  new Color(r, g, b, a); } }
+    //}
+
+
     public class PaletteHandler
     {
-        private Dictionary<uint, ColorPalette> palettes = new();
-        private int curPaletteIndex = 0;
+        private Dictionary<uint, IColorPalette> palettes = new();
         private List<uint> paletteIDs = new() { };
-        private ColorPalette? curPalette = null;// = new(SID.NextID);
+        
+        public int CurPaletteIndex { get; private set; } = 0;
+        public IColorPalette? CurPalette { get; private set; } = null;
 
-
-
-        //public List<uint> GetAllPaletteNames() { return paletteNames; }
-        public int CurPaletteIndex { get { return curPaletteIndex; } }
-        public ColorPalette? CurPalette { get { return curPalette; } }
-        public Color C(uint id) { return curPalette != null ? curPalette.Get(id) : WHITE; }
+        
+        public Color C(uint id) { return CurPalette != null ? CurPalette.Get(id) : WHITE; }
 
         public void AddPalette(uint paletteID, string[] hexColors, uint[] ids)
         {
@@ -57,60 +85,48 @@ namespace ShapeColor
                 paletteIDs.Add(paletteID);
             }
         }
-        public void AddPalette(ColorPalette palette)
+        public void AddPalette(IColorPalette palette)
         {
-            //string paletteName = palette.Name;
-            if (palettes.ContainsKey(palette.ID)) palettes[palette.ID] = palette;
+            if (palettes.ContainsKey(palette.GetID())) palettes[palette.GetID()] = palette;
             else
             {
-                palettes.Add(palette.ID, palette);
-                paletteIDs.Add(palette.ID);
+                palettes.Add(palette.GetID(), palette);
+                paletteIDs.Add(palette.GetID());
             }
         }
         
         
-        public void RemovePalette(uint paletteID)
+        public bool RemovePalette(uint paletteID)
         {
-            //if (paletteName == "default") return;
-            if (!palettes.ContainsKey(paletteID)) return;
-            if (curPalette.ID == paletteID) Next();
+            if (!palettes.ContainsKey(paletteID)) return false;
+            if (CurPalette != null && CurPalette.GetID() == paletteID) Next();
             palettes.Remove(paletteID);
             paletteIDs.Remove(paletteID);
-            //if (curPalette.Name == paletteName)
-            //{
-            //    Next();
-            //}
+            return true;
         }
-        public void ChangePalette(uint paletteID)
+        public bool ChangePalette(uint paletteID)
         {
-            //if (CurName == newPalette) return;
-
             if (palettes.ContainsKey(paletteID))
             {
-                curPalette = palettes[paletteID];
-                //curPaletteName = newPalette;
-                curPaletteIndex = paletteIDs.IndexOf(paletteID);
+                CurPalette = palettes[paletteID];
+                CurPaletteIndex = paletteIDs.IndexOf(paletteID);
+                return true;
             }
+            return false;
         }
-        public void ChangePalette(int index)
+        public bool ChangePalette(int index)
         {
-            //if (index == curPaletteIndex) return;
+            if (paletteIDs.Count <= 1) return false;
+            if (index == CurPaletteIndex) return false;
             if (index < 0) { index = paletteIDs.Count - 1; }
             else if (index >= paletteIDs.Count) { index = 0; }
 
-            curPaletteIndex = index;
-            //curPaletteName = paletteNames[index];
-            curPalette = palettes[paletteIDs[index]];
-
+            CurPaletteIndex = index;
+            CurPalette = palettes[paletteIDs[index]];
+            return true;
         }
-        public void Next()
-        {
-            ChangePalette(curPaletteIndex + 1);
-        }
-        public void Previous()
-        {
-            ChangePalette(curPaletteIndex - 1);
-        }
+        public bool Next() { return ChangePalette(CurPaletteIndex + 1); }
+        public bool Previous() { return ChangePalette(CurPaletteIndex - 1); }
         public void Close()
         {
             paletteIDs.Clear();
@@ -118,7 +134,20 @@ namespace ShapeColor
         }
 
 
-        ///// <summary>
+        public static ColorPalette GeneratePalette(uint paletteID, int[] colors, params uint[] colorIDs)
+        {
+            return new(paletteID, SColor.GeneratePalette(colors, colorIDs));
+        }
+        public static ColorPalette GeneratePalette(uint paletteID, string[] hexColors, params uint[] colorIDs)
+        {
+            return new(paletteID, SColor.GeneratePalette(hexColors, colorIDs));
+        }
+
+    }
+
+}
+
+///// <summary>
         ///// Get all the colors from the source image.
         ///// </summary>
         ///// <param name="source"> Image that contains the colors. Each color should only be 1 pixel wide.</param>
@@ -171,100 +200,3 @@ namespace ShapeColor
         //{
         //    return new(paletteName, GeneratePaletteFromImage(source, colorNames));
         //}
-
-
-        public static Dictionary<uint, Color> GeneratePalette(int[] colors, params uint[] colorIDs)
-        {
-            if (colors.Length <= 0 || colorIDs.Length <= 0) return new();
-            Dictionary<uint, Color> palette = new();
-            int size = colors.Length;
-            if (colorIDs.Length < size) size = colorIDs.Length;
-            for (int i = 0; i < size; i++)
-            {
-                palette.Add(colorIDs[i], HexToColor(colors[i]));
-            }
-            return palette;
-        }
-        public static Dictionary<uint, Color> GeneratePalette(string[] hexColors, params uint[] colorIDs)
-        {
-            if (hexColors.Length <= 0 || colorIDs.Length <= 0) return new();
-            Dictionary<uint, Color> palette = new();
-            int size = hexColors.Length;
-            if (colorIDs.Length < size) size = colorIDs.Length;
-            for (int i = 0; i < size; i++)
-            {
-                palette.Add(colorIDs[i], HexToColor(hexColors[i]));
-            }
-            return palette;
-        }
-
-        public static ColorPalette GeneratePalette(uint paletteID, int[] colors, params uint[] colorIDs)
-        {
-            return new(paletteID, GeneratePalette(colors, colorIDs));
-        }
-        public static ColorPalette GeneratePalette(uint paletteID, string[] hexColors, params uint[] colorIDs)
-        {
-            return new(paletteID, GeneratePalette(hexColors, colorIDs));
-        }
-
-        public static Color[] GeneratePalette(params int[] colors)
-        {
-            Raylib_CsLo.Color[] palette = new Raylib_CsLo.Color[colors.Length];
-            for (int i = 0; i < colors.Length; i++)
-            {
-                palette[i] = HexToColor(colors[i]);
-            }
-            return palette;
-        }
-        public static Color[] GeneratePalette(params string[] hexColors)
-        {
-            Raylib_CsLo.Color[] palette = new Raylib_CsLo.Color[hexColors.Length];
-            for (int i = 0; i < hexColors.Length; i++)
-            {
-                palette[i] = HexToColor(hexColors[i]);
-            }
-            return palette;
-        }
-
-        public static Color HexToColor(int colorValue)
-        {
-            byte[] rgb = BitConverter.GetBytes(colorValue);
-            if (!BitConverter.IsLittleEndian) Array.Reverse(rgb);
-            byte r = rgb[2];
-            byte g = rgb[1];
-            byte b = rgb[0];
-            byte a = 255;
-            return new(r, g, b, a);
-        }
-        public static Color HexToColor(string hexColor)
-        {
-            //Remove # if present
-            if (hexColor.IndexOf('#') != -1)
-                hexColor = hexColor.Replace("#", "");
-
-            int red = 0;
-            int green = 0;
-            int blue = 0;
-
-            if (hexColor.Length == 6)
-            {
-                //#RRGGBB
-                red = int.Parse(hexColor.Substring(0, 2), System.Globalization.NumberStyles.AllowHexSpecifier);
-                green = int.Parse(hexColor.Substring(2, 2), System.Globalization.NumberStyles.AllowHexSpecifier);
-                blue = int.Parse(hexColor.Substring(4, 2), System.Globalization.NumberStyles.AllowHexSpecifier);
-            }
-            else if (hexColor.Length == 3)
-            {
-                //#RGB
-                red = int.Parse(hexColor[0].ToString() + hexColor[0].ToString(), System.Globalization.NumberStyles.AllowHexSpecifier);
-                green = int.Parse(hexColor[1].ToString() + hexColor[1].ToString(), System.Globalization.NumberStyles.AllowHexSpecifier);
-                blue = int.Parse(hexColor[2].ToString() + hexColor[2].ToString(), System.Globalization.NumberStyles.AllowHexSpecifier);
-            }
-
-            return new(red, green, blue, 255);
-        }
-
-
-    }
-
-}

@@ -162,5 +162,89 @@ namespace ShapeLib
                 return new(v, p, q, 255);
         }
 
+
+        public static Dictionary<uint, Color> GeneratePalette(int[] colors, params uint[] colorIDs)
+        {
+            if (colors.Length <= 0 || colorIDs.Length <= 0) return new();
+            Dictionary<uint, Color> palette = new();
+            int size = colors.Length;
+            if (colorIDs.Length < size) size = colorIDs.Length;
+            for (int i = 0; i < size; i++)
+            {
+                palette.Add(colorIDs[i], HexToColor(colors[i]));
+            }
+            return palette;
+        }
+        public static Dictionary<uint, Color> GeneratePalette(string[] hexColors, params uint[] colorIDs)
+        {
+            if (hexColors.Length <= 0 || colorIDs.Length <= 0) return new();
+            Dictionary<uint, Color> palette = new();
+            int size = hexColors.Length;
+            if (colorIDs.Length < size) size = colorIDs.Length;
+            for (int i = 0; i < size; i++)
+            {
+                palette.Add(colorIDs[i], HexToColor(hexColors[i]));
+            }
+            return palette;
+        }
+
+        public static Color[] GeneratePalette(params int[] colors)
+        {
+            Raylib_CsLo.Color[] palette = new Raylib_CsLo.Color[colors.Length];
+            for (int i = 0; i < colors.Length; i++)
+            {
+                palette[i] = HexToColor(colors[i]);
+            }
+            return palette;
+        }
+        public static Color[] GeneratePalette(params string[] hexColors)
+        {
+            Raylib_CsLo.Color[] palette = new Raylib_CsLo.Color[hexColors.Length];
+            for (int i = 0; i < hexColors.Length; i++)
+            {
+                palette[i] = HexToColor(hexColors[i]);
+            }
+            return palette;
+        }
+
+        public static Color HexToColor(int colorValue)
+        {
+            byte[] rgb = BitConverter.GetBytes(colorValue);
+            if (!BitConverter.IsLittleEndian) Array.Reverse(rgb);
+            byte r = rgb[2];
+            byte g = rgb[1];
+            byte b = rgb[0];
+            byte a = 255;
+            return new(r, g, b, a);
+        }
+        public static Color HexToColor(string hexColor)
+        {
+            //Remove # if present
+            if (hexColor.IndexOf('#') != -1)
+                hexColor = hexColor.Replace("#", "");
+
+            int red = 0;
+            int green = 0;
+            int blue = 0;
+
+            if (hexColor.Length == 6)
+            {
+                //#RRGGBB
+                red = int.Parse(hexColor.Substring(0, 2), System.Globalization.NumberStyles.AllowHexSpecifier);
+                green = int.Parse(hexColor.Substring(2, 2), System.Globalization.NumberStyles.AllowHexSpecifier);
+                blue = int.Parse(hexColor.Substring(4, 2), System.Globalization.NumberStyles.AllowHexSpecifier);
+            }
+            else if (hexColor.Length == 3)
+            {
+                //#RGB
+                red = int.Parse(hexColor[0].ToString() + hexColor[0].ToString(), System.Globalization.NumberStyles.AllowHexSpecifier);
+                green = int.Parse(hexColor[1].ToString() + hexColor[1].ToString(), System.Globalization.NumberStyles.AllowHexSpecifier);
+                blue = int.Parse(hexColor[2].ToString() + hexColor[2].ToString(), System.Globalization.NumberStyles.AllowHexSpecifier);
+            }
+
+            return new(red, green, blue, 255);
+        }
+
+
     }
 }

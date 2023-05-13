@@ -1,17 +1,29 @@
 ﻿using Raylib_CsLo;
-
+using ShapeLib;
 
 namespace ShapeColor
 {
-    public class ColorPalette
+
+    public interface IColorPalette
     {
-        public uint ID { get; private set; }
+        public uint GetID();
+        public Color Get(uint id);
+        public List<Color> GetAllColors();
+        public Dictionary<uint, Color> GetRandomized();
+        public void Randomize();
+    }
+
+
+    public class ColorPalette : IColorPalette
+    {
+        private uint id;
+        //public uint ID { get; private set; }
         private Dictionary<uint, Color> palette = new();
 
-        public ColorPalette(uint paletteID) { this.ID = paletteID; }
+        public ColorPalette(uint paletteID) { this.id = paletteID; }
         public ColorPalette(uint paletteID, params (uint id, Color color)[] entries)
         {
-            this.ID = paletteID;
+            this.id = paletteID;
             foreach (var entry in entries)
             {
                 palette.Add(entry.id, entry.color);
@@ -19,7 +31,7 @@ namespace ShapeColor
         }
         public ColorPalette(uint paletteID, Color[] colors, uint[] ids)
         {
-            this.ID = paletteID;
+            this.id = paletteID;
             for (int i = 0; i < ids.Length; i++)
             {
                 palette.Add(ids[i], colors[i]);
@@ -27,19 +39,19 @@ namespace ShapeColor
         }
         public ColorPalette(uint paletteID, string[] hexColors, uint[] ids)
         {
-            this.ID = paletteID;
+            this.id = paletteID;
             for (int i = 0; i < ids.Length; i++)
             {
-                palette.Add(ids[i], PaletteHandler.HexToColor(hexColors[i]));
+                palette.Add(ids[i], SColor.HexToColor(hexColors[i]));
             }
         }
         public ColorPalette(uint paletteID, Dictionary<uint, Color> palette)
         {
-            this.ID = paletteID;
+            this.id = paletteID;
             this.palette = palette;
         }
 
-        
+        public uint GetID() { return id; }
         public Color Get(uint id)
         {
             if (!palette.ContainsKey(id)) return WHITE;
@@ -49,8 +61,26 @@ namespace ShapeColor
         {
             return palette.Values.ToList();
         }
+        public void Randomize()
+        {
+            palette = GetRandomized();
+        }
+        public Dictionary<uint, Color> GetRandomized()
+        {
+            var colors = GetAllColors();
+            Dictionary<uint, Color> result = new();
+            foreach (var key in palette.Keys)
+            {
+                result.Add(key, SRNG.randCollection(colors, true));
+            }
+            return result;
+        }
+    }
 
-        //public void Draw(int x, int y, int width, int height)
+    
+}
+
+//public void Draw(int x, int y, int width, int height)
         //{
         //    var colors = GetAllColors();
         //    int colorWidth = width / colors.Count;
@@ -59,7 +89,3 @@ namespace ShapeColor
         //        Raylib.DrawRectangle(x + colorWidth * i, y, colorWidth, height, colors[i]);
         //    }
         //}
-    }
-
-    
-}
