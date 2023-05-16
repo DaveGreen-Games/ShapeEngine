@@ -61,6 +61,7 @@ namespace ShapeLib
             }
             if (smoothJoints) Raylib.DrawCircleV(lines[lines.Count - 1], thickness / 2, colors[(lines.Count - 1) % colors.Count]);
         }
+       
         public static List<Segment> CreateLightningLine(this Segment line, int segments = 10, float maxSway = 80f)
         {
             List<Segment> result = new();
@@ -795,7 +796,7 @@ namespace ShapeLib
         }
         public static void DrawRectSlantedCorners(this Rect rect, Vector2 pivot, float rotDeg, Color color, float tlCorner, float trCorner, float brCorner, float blCorner)
         {
-            var points = GetRectSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner).Rotate(pivot, rotDeg * SUtils.DEGTORAD);
+            var points = SPoly.Rotate(GetRectSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner), pivot, rotDeg * SUtils.DEGTORAD);
             DrawPolygon(points, rect.Center, color);
         }
         public static void DrawRectSlantedCornersLines(this Rect rect, float lineThickness, Color color, float tlCorner, float trCorner, float brCorner, float blCorner)
@@ -805,7 +806,7 @@ namespace ShapeLib
         }
         public static void DrawRectSlantedCornersLines(this Rect rect, Vector2 pivot, float rotDeg, float lineThickness, Color color, float tlCorner, float trCorner, float brCorner, float blCorner)
         {
-            var points = GetRectSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner).Rotate(pivot, rotDeg * SUtils.DEGTORAD);
+            var points = SPoly.Rotate(GetRectSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner), pivot, rotDeg * SUtils.DEGTORAD);
             DrawPolygonLines(points, lineThickness, color);
         }
 
@@ -981,7 +982,7 @@ namespace ShapeLib
                 Vector2 down = new(0f, maxDimension * 2);
                 Vector2 start = p + SVec.Rotate(up, rotRad);
                 Vector2 end = p + SVec.Rotate(down, rotRad);
-                List<(Vector2 p, Vector2 n)> intersections = SGeometry.IntersectionSegmentRect(center, start, end, tl, tr, br, bl).points;
+                List<(Vector2 p, Vector2 n)> intersections = SGeometry.IntersectShape(new Segment(start, end), rect).points; // SGeometry.IntersectionSegmentRect(center, start, end, tl, tr, br, bl).points;
 
                 if (intersections.Count >= 2) DrawLineEx(intersections[0].p, intersections[1].p, lineThickness, lineColor);
                 else break;
@@ -999,7 +1000,7 @@ namespace ShapeLib
                 Vector2 down = new(0f, maxDimension * 2);
                 Vector2 start = p + SVec.Rotate(up, rotRad);
                 Vector2 end = p + SVec.Rotate(down, rotRad);
-                List<(Vector2 p, Vector2 n)> intersections = SGeometry.IntersectionSegmentRect(center, start, end, tl, tr, br, bl).points;
+                List<(Vector2 p, Vector2 n)> intersections = SGeometry.IntersectShape(new Segment(start, end), rect).points; //SGeometry.IntersectionSegmentRect(center, start, end, tl, tr, br, bl).points;
                 if (intersections.Count >= 2) DrawLineEx(intersections[0].p, intersections[1].p, lineThickness, lineColor);
                 else break;
                 cur.X += spacing;

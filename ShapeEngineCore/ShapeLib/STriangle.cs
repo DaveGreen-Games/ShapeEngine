@@ -41,6 +41,14 @@ namespace ShapeLib
             float y = (1f - f1Sq) * t.a.Y + (f1Sq * (1f - f2)) * t.b.Y + (f1Sq * f2) * t.c.Y;
             return new(x, y);
         }
+        public static Vector2 GetRandomPointOnEdge(this Triangle t)
+        {
+            var edges = GetSegments(t);
+            var re = edges[SRNG.randI(edges.Count)];
+            return re.start.Lerp(re.end, SRNG.randF());
+        }
+        public static Vector2 GetRandomPoint(this Triangle t) { return GetPoint(t, SRNG.randF(), SRNG.randF()); }
+
         public static List<Vector2> GetPoints(this Triangle t) { return new() { t.a, t.b, t.c }; }
         public static Polygon GetPointsPolygon(this Triangle t) { return new(t.Centroid, t.a, t.b, t.c); }
         public static Triangle Rotate(this Triangle t, float rad) { return Rotate(t, t.Centroid, rad); }

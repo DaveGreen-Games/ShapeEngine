@@ -46,6 +46,12 @@ namespace ShapeLib
             return new(points, c.center);
         }
         
+        public static Vector2 GetRandomPoint(this Circle c)
+        {
+            float randAngle = SRNG.randAngleRad();
+            var randDir = SVec.VecFromAngleRad(randAngle);
+            return c.center + randDir * SRNG.randF(0, c.radius);
+        }
         
         //public static SegmentShape GetSegmentsShape(this Circle c, int pointCount = 16)
         //{

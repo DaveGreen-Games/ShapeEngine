@@ -11,6 +11,7 @@ namespace ShapeLib
             return new() { new(l.start, p), new(p, l.end) };
         }
         public static Vector2 GetPoint(this Segment l, float f) { return l.start.Lerp(l.end, f); }
+        public static Vector2 GetRandomPoint(this Segment l) { return GetPoint(l, SRNG.randF()); }
         public static Segment Rotate(this Segment l, float pivot, float rad)
         {
             Vector2 p = GetPoint(l, pivot);

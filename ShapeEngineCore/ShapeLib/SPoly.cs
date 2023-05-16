@@ -1,5 +1,6 @@
 ﻿using Raylib_CsLo;
 using ShapeCore;
+using System.Net.Http.Headers;
 using System.Numerics;
 
 
@@ -7,19 +8,8 @@ namespace ShapeLib
 {
     internal static class ToxiLibPolygon
     {
-        public static void Add(List<Vector2> poly, Vector2 v)
-        {
-            for (int i = 0; i < poly.Count; i++)
-            {
-                poly[i] += v;
-            }
-        }
-        public static void Center(List<Vector2> poly, Vector2 newCenter)
-        {
-            var centroid = SPoly.GetCentroid(poly);
-            var delta = newCenter - centroid;
-            Add(poly, delta);
-        }
+        /*
+        //added to sgeometry
         public static bool ContainsPoint(List<Vector2> poly, Vector2 p)
         {
             bool oddNodes = false;
@@ -52,6 +42,23 @@ namespace ShapeLib
             }
             return true;
         }
+        */
+        
+        public static void Add(List<Vector2> poly, Vector2 v)
+        {
+            for (int i = 0; i < poly.Count; i++)
+            {
+                poly[i] += v;
+            }
+        }
+        public static void Center(List<Vector2> poly, Vector2 newCenter)
+        {
+            var centroid = SPoly.GetCentroid(poly);
+            var delta = newCenter - centroid;
+            Add(poly, delta);
+        }
+
+
         /// <summary>
         /// Returns the vertex at the given index. This function follows Python
         /// convention, in that if the index is negative, it is considered relative
@@ -195,7 +202,7 @@ namespace ShapeLib
             var re = edges[SRNG.randI(edges.Count)];
             return re.start.Lerp(re.end, SRNG.randF());
         }
-        public static Vector2 GetRandomPointInside(List<Vector2> poly)
+        public static Vector2 GetRandomPointFast(List<Vector2> poly)
         {
             //only work with convex polygons
             var edges = GetEdges(poly);
@@ -205,6 +212,14 @@ namespace ShapeLib
             var pa = ea.start.Lerp(ea.end, SRNG.randF());
             var pb = eb.start.Lerp(eb.end, SRNG.randF());
             return pa.Lerp(pb, SRNG.randF());
+        }
+        
+        public static Vector2 GetRandomPoint(List<Vector2> poly)
+        {
+            //triangulate poly
+            //pick triangle based on area as weight
+            //pick random point in triangle
+            return new();
         }
 
         public static void IncreaseVertexCount(List<Vector2> poly, int newCount)
@@ -230,7 +245,9 @@ namespace ShapeLib
             }
         }
 
+        
         public static bool IsClockwise(List<Vector2> poly) { return GetArea(poly) > 0f; }
+        
         public static bool IsConvex(List<Vector2> poly)
         {
             int num = poly.Count;
@@ -534,6 +551,7 @@ namespace ShapeLib
         }
         public static List<Triangle> Triangulate(List<Vector2> points)
         {
+
             return new();
         }
         //public static List<Triangle> Triangulate(List<Vector2> points, Vector2 center)

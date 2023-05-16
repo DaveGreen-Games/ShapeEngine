@@ -14,6 +14,15 @@ namespace ShapeLib
         {
             return ToxiLibPolygon.GetClosestPoint( rect.GetPoints(), p);
         }
+        
+        public static Vector2 GetRandomPointOnEdge(this Rect r)
+        {
+            var edges = GetSegments(r);
+            var re = edges[SRNG.randI(edges.Count)];
+            return re.start.Lerp(re.end, SRNG.randF());
+        }
+        
+        public static Vector2 GetRandomPoint(this Rect r) { return new(SRNG.randF(r.x, r.x + r.width), SRNG.randF(r.y, r.y + r.height)); }
 
         #region UI
         public static List<Rect> GetAlignedRectsHorizontal(this Rect rect, int count, float gapRelative = 0f, float maxElementSizeRel = 1f)

@@ -1207,19 +1207,48 @@ namespace ShapeLib
 
             return left <= point.X && right >= point.X && top <= point.Y && bottom >= point.Y;
         }
+        //public static bool IsPointInPoly(Vector2 point, List<Vector2> poly)
+        //{
+        //    if (poly.Count < 3) return false;
+        //    int intersections = 0;
+        //    for (int i = 0; i < poly.Count; i++)
+        //    {
+        //        Vector2 start = poly[i];
+        //        Vector2 end = poly[(i + 1) % poly.Count];
+        //        var info = SGeometry.IntersectRaySegmentInfo(point, new(1f, 0f), start, end);
+        //        if (info.intersected) intersections += 1;
+        //    }
+        //
+        //    return !(intersections % 2 == 0);
+        //}
         public static bool IsPointInPoly(Vector2 point, List<Vector2> poly)
         {
-            if (poly.Count < 3) return false;
-            int intersections = 0;
-            for (int i = 0; i < poly.Count; i++)
+            bool oddNodes = false;
+            int num = poly.Count;
+            int j = num - 1;
+            for (int i = 0; i < num; i++)
             {
-                Vector2 start = poly[i];
-                Vector2 end = poly[(i + 1) % poly.Count];
-                var info = SGeometry.IntersectRaySegmentInfo(point, new(1f, 0f), start, end);
-                if (info.intersected) intersections += 1;
+                var vi = poly[i];
+                var vj = poly[j];
+                if (vi.Y < point.Y && vj.Y >= point.Y || vj.Y < point.Y && vi.Y >= point.Y)
+                {
+                    if (vi.X + (point.Y - vi.Y) / (vj.Y - vi.Y) * (vj.X - vi.X) < point.X)
+                    {
+                        oddNodes = !oddNodes;
+                    }
+                }
+                j = i;
             }
 
-            return !(intersections % 2 == 0);
+            return oddNodes;
+        }
+        public static bool IsPolyInPoly(List<Vector2> poly, List<Vector2> otherPoly)
+        {
+            for (int i = 0; i < otherPoly.Count; i++)
+            {
+                if (!IsPointInPoly(otherPoly[i], poly)) return false;
+            }
+            return true;
         }
         public static bool IsCircleInPoly(Vector2 circlePos, float radius, List<Vector2> poly)
         {
@@ -1235,6 +1264,8 @@ namespace ShapeLib
             return true;
         }
 
+
+
         public static bool IsPointInsideShape(this Segment l, Vector2 p) { return IsPointOnSegment(p, l.start, l.end); }
         public static bool IsPointInsideShape(this Circle c, Vector2 p) { return IsPointInCircle(p, c.center, c.radius); }
         public static bool IsPointInsideShape(this Triangle t, Vector2 p)
@@ -1244,7 +1275,6 @@ namespace ShapeLib
             //float totalArea = triangles.Sum((Triangle t) => { return t.GetArea(); });
             //return t.GetArea() >= totalArea;
         }
-        
         public static bool IsPointInsideShape(this Rect r, Vector2 p) { return IsPointInRect(p, r.TopLeft, r.Size); }
         public static bool IsPointInsideShape(this Polygon poly, Vector2 p) { return IsPointInPoly(p, poly.points); }
 
