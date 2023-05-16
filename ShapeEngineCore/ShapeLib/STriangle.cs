@@ -8,11 +8,11 @@ namespace ShapeLib
     {
         public static Vector2 GetClosestPoint(this Triangle t, Vector2 p)
         {
-            return ToxiLibPolygon.GetClosestPoint(t.GetPoints(), p);
+            return SPoly.GetClosestPoint(t.GetPoints(), p);
         }
         public static Vector2 GetClosestVertex(this Triangle t, Vector2 p)
         {
-            return ToxiLibPolygon.GetClosestVertex(t.GetPoints(), p);
+            return SPoly.GetClosestVertex(t.GetPoints(), p);
         }
         public static List<Triangle> Triangulate(this Triangle t)
         {
@@ -49,7 +49,7 @@ namespace ShapeLib
         }
         public static Vector2 GetRandomPoint(this Triangle t) { return GetPoint(t, SRNG.randF(), SRNG.randF()); }
 
-        public static List<Vector2> GetPoints(this Triangle t) { return new() { t.a, t.b, t.c }; }
+        public static PolygonPath GetPoints(this Triangle t) { return new() { t.a, t.b, t.c }; }
         public static Polygon GetPointsPolygon(this Triangle t) { return new(t.Centroid, t.a, t.b, t.c); }
         public static Triangle Rotate(this Triangle t, float rad) { return Rotate(t, t.Centroid, rad); }
         public static Triangle Rotate(this Triangle t, Vector2 pivot, float rad)

@@ -6,22 +6,14 @@ namespace ShapeLib
 {
     public static class SRect
     {
-        public static Vector2 GetClosestVertex(this Rect rect, Vector2 p)
-        {
-            return ToxiLibPolygon.GetClosestVertex( rect.GetPoints(), p);
-        }
-        public static Vector2 GetClosestPoint(this Rect rect, Vector2 p)
-        {
-            return ToxiLibPolygon.GetClosestPoint( rect.GetPoints(), p);
-        }
-        
+        public static Vector2 GetClosestVertex(this Rect rect, Vector2 p) { return SPoly.GetClosestVertex(rect.GetPoints(), p); }
+        public static Vector2 GetClosestPoint(this Rect rect, Vector2 p) { return SPoly.GetClosestPoint(rect.GetPoints(), p); }
         public static Vector2 GetRandomPointOnEdge(this Rect r)
         {
             var edges = GetEdges(r);
             var re = edges[SRNG.randI(edges.Count)];
             return re.start.Lerp(re.end, SRNG.randF());
         }
-        
         public static Vector2 GetRandomPoint(this Rect r) { return new(SRNG.randF(r.x, r.x + r.width), SRNG.randF(r.y, r.y + r.height)); }
 
         #region UI
@@ -388,13 +380,13 @@ namespace ShapeLib
         /// </summary>
         /// <param name="rect"></param>
         /// <returns></returns>
-        public static List<Vector2> GetPoints(this Rect rect) { return new() { rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight }; }
+        public static PolygonPath GetPoints(this Rect rect) { return new() { rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight }; }
         /// <summary>
         /// Points are ordered in ccw order starting from the top left. (tl, bl, br, tr)
         /// </summary>
         /// <param name="rect"></param>
         /// <returns></returns>
-        public static List<Vector2> GetPointsRelative(this Rect rect, Vector2 pos)
+        public static PolygonPath GetPointsRelative(this Rect rect, Vector2 pos)
         {
             var points = GetPoints(rect);
             for (int i = 0; i < points.Count; i++)
