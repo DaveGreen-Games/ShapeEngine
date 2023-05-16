@@ -5,6 +5,7 @@ namespace ShapeLib
 {
     public static class SCircle
     {
+        public static Vector2 GetClosestPoint(this Circle c, Vector2 p) { return (p - c.center).Normalize() * c.radius; }
         public static Vector2 GetPoint(this Circle c, float angleRad, float f) { return c.center + new Vector2(c.radius * f, 0f).Rotate(angleRad); }
 
         public static Circle ScaleRadius(this Circle c, float scale) { return new(c.center, c.radius * scale); }
@@ -33,7 +34,7 @@ namespace ShapeLib
             }
             return points;
         }
-        public static Polygon GetPointsPolygon(this Circle c, int pointCount = 16)
+        public static Polygon ToPolygon(this Circle c, int pointCount = 16)
         {
             float angleStep = (MathF.PI * 2f) / pointCount;
             List<Vector2> points = new();
@@ -44,6 +45,8 @@ namespace ShapeLib
             }
             return new(points, c.center);
         }
+        
+        
         //public static SegmentShape GetSegmentsShape(this Circle c, int pointCount = 16)
         //{
         //    float angleStep = (MathF.PI * 2f) / pointCount;

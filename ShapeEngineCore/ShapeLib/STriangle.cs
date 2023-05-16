@@ -1,10 +1,19 @@
 ﻿using ShapeCore;
+using System.Data;
 using System.Numerics;
 
 namespace ShapeLib
 {
     public static class STriangle
     {
+        public static Vector2 GetClosestPoint(this Triangle t, Vector2 p)
+        {
+            return ToxiLibPolygon.GetClosestPoint(t.GetPoints(), p);
+        }
+        public static Vector2 GetClosestVertex(this Triangle t, Vector2 p)
+        {
+            return ToxiLibPolygon.GetClosestVertex(t.GetPoints(), p);
+        }
         public static List<Triangle> Triangulate(this Triangle t)
         {
             return Triangulate(t, t.Centroid);

@@ -63,5 +63,16 @@ namespace ShapeLib
         public static Segment Move(this Segment l, Vector2 offset) { return new(l.start + offset, l.end + offset); }
         public static Segment Move(this Segment l, float x, float y) { return Move(l, new Vector2(x, y)); }
         public static List<Vector2> GetPoints(this Segment s) { return new() { s.start, s.end }; }
+
+        public static Vector2 GetClosestPoint(this Segment s, Vector2 p)
+        {
+            var w = s.Displacement;
+            float t = (p - s.start).Dot(w) / w.LengthSquared();
+            if (t < 0f) return s.start;
+            else if(t > 1f) return s.end;
+            else return s.start + w * t;
+        }
+
+
     }
 }

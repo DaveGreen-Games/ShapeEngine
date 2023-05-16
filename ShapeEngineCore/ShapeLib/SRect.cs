@@ -6,6 +6,14 @@ namespace ShapeLib
 {
     public static class SRect
     {
+        public static Vector2 GetClosestVertex(this Rect rect, Vector2 p)
+        {
+            return ToxiLibPolygon.GetClosestVertex( rect.GetPoints(), p);
+        }
+        public static Vector2 GetClosestPoint(this Rect rect, Vector2 p)
+        {
+            return ToxiLibPolygon.GetClosestPoint( rect.GetPoints(), p);
+        }
 
         #region UI
         public static List<Rect> GetAlignedRectsHorizontal(this Rect rect, int count, float gapRelative = 0f, float maxElementSizeRel = 1f)
@@ -388,6 +396,9 @@ namespace ShapeLib
         }
         
         #endregion
+
+
+
 
 
         public static bool SeperateAxis(this Rect r, Vector2 axisStart, Vector2 axisEnd)
