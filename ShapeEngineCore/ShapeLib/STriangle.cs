@@ -43,7 +43,7 @@ namespace ShapeLib
         }
         public static Vector2 GetRandomPointOnEdge(this Triangle t)
         {
-            var edges = GetSegments(t);
+            var edges = GetEdges(t);
             var re = edges[SRNG.randI(edges.Count)];
             return re.start.Lerp(re.end, SRNG.randF());
         }
@@ -79,7 +79,7 @@ namespace ShapeLib
         public static Triangle Scale(this Triangle t, Vector2 aF, Vector2 bF, Vector2 cF) { return new(t.a * aF, t.b * bF, t.c * cF); }
         public static Triangle Move(this Triangle t, Vector2 offset) { return new(t.a + offset, t.b + offset, t.c + offset); }
         public static Triangle Move(this Triangle t, Vector2 aOffset, Vector2 bOffset, Vector2 cOffset) { return new(t.a + aOffset, t.b + bOffset, t.c + cOffset); }
-        public static List<Segment> GetSegments(this Triangle t) { return new() { new(t.a, t.b), new(t.b, t.c), new(t.c, t.a) }; }
+        public static List<Segment> GetEdges(this Triangle t) { return new() { new(t.a, t.b), new(t.b, t.c), new(t.c, t.a) }; }
         //public static SegmentShape GetSegmentsShape(this Triangle t) { return new SegmentShape(t.Centroid, new(t.a, t.b), new(t.b, t.c), new(t.c, t.a)); }
 
         //public static List<Vector2> GetPoints(this Triangle t) { return new() { t.a, t.b, t.c }; }

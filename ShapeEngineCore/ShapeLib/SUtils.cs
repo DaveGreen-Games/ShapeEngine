@@ -169,7 +169,10 @@ namespace ShapeLib
 
         public static int WrapIndex(int count, int index)
         {
-            return index % count;
+            if (index > count) return index % count;
+            else if (index < 0) return (index % count) + count;
+            else return index;
+
         }
         public static T GetItem<T>(List<T> collection, int index)
         {

@@ -629,9 +629,9 @@ namespace ShapeLib
 
         public static bool OverlapShape(this Circle c, Segment s)
         {
-            if (c.radius <= 0.0f) return IsPointInsideShape(s, c.center);
-            if (IsPointInsideShape(c, s.start)) return true;
-            if (IsPointInsideShape(c, s.end)) return true;
+            if (c.radius <= 0.0f) return IsPointInside(s, c.center);
+            if (IsPointInside(c, s.start)) return true;
+            if (IsPointInside(c, s.end)) return true;
 
             Vector2 d = s.end - s.start;
             Vector2 lc = c.center - s.start;
@@ -639,14 +639,14 @@ namespace ShapeLib
             Vector2 nearest = s.start + p;
 
             return
-                IsPointInsideShape(c, nearest) &&
+                IsPointInside(c, nearest) &&
                 p.LengthSquared() <= d.LengthSquared() &&
                 Vector2.Dot(p, d) >= 0.0f;
         }
         public static bool OverlapShape(this Circle a, Circle b)
         {
-            if (a.radius <= 0.0f && b.radius > 0.0f) return IsPointInsideShape(b, a.center);
-            else if (b.radius <= 0.0f && a.radius > 0.0f) return IsPointInsideShape(a, b.center);
+            if (a.radius <= 0.0f && b.radius > 0.0f) return IsPointInside(b, a.center);
+            else if (b.radius <= 0.0f && a.radius > 0.0f) return IsPointInside(a, b.center);
             else if (a.radius <= 0.0f && b.radius <= 0.0f) return IsPointOnPoint(a.center, b.center);
             float rSum = a.radius + b.radius;
 
@@ -655,8 +655,8 @@ namespace ShapeLib
         public static bool OverlapShape(this Circle c, Triangle t) { return OverlapShape(t, c); }
         public static bool OverlapShape(this Circle c, Rect r)
         {
-            if (c.radius <= 0.0f) return IsPointInsideShape(r, c.center);
-            return IsPointInsideShape(c, SRect.ClampOnRect(c.center, r));
+            if (c.radius <= 0.0f) return IsPointInside(r, c.center);
+            return IsPointInside(c, SRect.ClampOnRect(c.center, r));
         }
         public static bool OverlapShape(this Circle c, Polygon poly) { return OverlapPolyCircle(poly.points, c.center, c.radius); }
         public static bool OverlapCircleLine(this Circle c, Vector2 linePos, Vector2 lineDir)
@@ -664,7 +664,7 @@ namespace ShapeLib
             Vector2 lc = c.center - linePos;
             Vector2 p = SVec.Project(lc, lineDir);
             Vector2 nearest = linePos + p;
-            return IsPointInsideShape(c, nearest);
+            return IsPointInside(c, nearest);
         }
         public static bool OverlapCircleRay(this Circle c, Vector2 rayPos, Vector2 rayDir)
         {
@@ -1221,7 +1221,7 @@ namespace ShapeLib
         //
         //    return !(intersections % 2 == 0);
         //}
-        public static bool IsPointInPoly(Vector2 point, List<Vector2> poly)
+        public static bool IsPointInPoly(Vector2 point, PolygonPath poly)
         {
             bool oddNodes = false;
             int num = poly.Count;
@@ -1242,7 +1242,7 @@ namespace ShapeLib
 
             return oddNodes;
         }
-        public static bool IsPolyInPoly(List<Vector2> poly, List<Vector2> otherPoly)
+        public static bool IsPolyInPoly(PolygonPath poly, PolygonPath otherPoly)
         {
             for (int i = 0; i < otherPoly.Count; i++)
             {
@@ -1250,7 +1250,7 @@ namespace ShapeLib
             }
             return true;
         }
-        public static bool IsCircleInPoly(Vector2 circlePos, float radius, List<Vector2> poly)
+        public static bool IsCircleInPoly(Vector2 circlePos, float radius, PolygonPath poly)
         {
             if (poly.Count < 3) return false;
             if (!IsPointInPoly(circlePos, poly)) return false;
@@ -1266,17 +1266,17 @@ namespace ShapeLib
 
 
 
-        public static bool IsPointInsideShape(this Segment l, Vector2 p) { return IsPointOnSegment(p, l.start, l.end); }
-        public static bool IsPointInsideShape(this Circle c, Vector2 p) { return IsPointInCircle(p, c.center, c.radius); }
-        public static bool IsPointInsideShape(this Triangle t, Vector2 p)
+        public static bool IsPointInside(this Segment l, Vector2 p) { return IsPointOnSegment(p, l.start, l.end); }
+        public static bool IsPointInside(this Circle c, Vector2 p) { return IsPointInCircle(p, c.center, c.radius); }
+        public static bool IsPointInside(this Triangle t, Vector2 p)
         {
             return IsPointInTriangle(t.a, t.b, t.c, p);
             //var triangles = t.Triangulate(p);
             //float totalArea = triangles.Sum((Triangle t) => { return t.GetArea(); });
             //return t.GetArea() >= totalArea;
         }
-        public static bool IsPointInsideShape(this Rect r, Vector2 p) { return IsPointInRect(p, r.TopLeft, r.Size); }
-        public static bool IsPointInsideShape(this Polygon poly, Vector2 p) { return IsPointInPoly(p, poly.points); }
+        public static bool IsPointInside(this Rect r, Vector2 p) { return IsPointInRect(p, r.TopLeft, r.Size); }
+        public static bool IsPointInside(this Polygon poly, Vector2 p) { return IsPointInPoly(p, poly.points); }
 
         #endregion
 

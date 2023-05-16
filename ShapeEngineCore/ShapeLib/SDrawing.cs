@@ -1023,7 +1023,7 @@ namespace ShapeLib
             }
 
 
-            var segments = SRect.GetSegments(rect);
+            var segments = SRect.GetEdges(rect);
             foreach (var s in segments)
             {
                 DrawLineDotted(s.start, s.end, gapsPerSide, lineThickness, color, roundedLineEdges);
@@ -1042,7 +1042,7 @@ namespace ShapeLib
             }
 
 
-            var segments = SRect.GetSegments(rect);
+            var segments = SRect.GetEdges(rect);
             foreach (var s in segments)
             {
                 DrawLineDotted(s.start, s.end, gapsPerSide, gapSizeF, lineThickness, color, roundedLineEdges);
@@ -1207,14 +1207,14 @@ namespace ShapeLib
         public static void DrawTriangle(Vector2 a, Vector2 b, Vector2 c, Color color) => Raylib.DrawTriangle(a, b, c, color);
         public static void DrawTriangleLines(Vector2 a, Vector2 b, Vector2 c, float lineThickness, Color color, bool smoothJoints = true)
         {
-            var lines = new Triangle(a,b,c).GetSegments();
+            var lines = new Triangle(a,b,c).GetEdges();
             DrawLines(lines, lineThickness, color, smoothJoints);
         }
 
         public static void Draw(this Triangle t, Color color) => Raylib.DrawTriangle(t.a, t.b, t.c, color);
         public static void DrawLines(this Triangle t, float lineThickness, Color color, bool smoothJoints = true)
         {
-            var lines = t.GetSegments();
+            var lines = t.GetEdges();
             DrawLines(lines, lineThickness, color, smoothJoints);
         }
         

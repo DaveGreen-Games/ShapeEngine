@@ -17,7 +17,7 @@ namespace ShapeLib
         
         public static Vector2 GetRandomPointOnEdge(this Rect r)
         {
-            var edges = GetSegments(r);
+            var edges = GetEdges(r);
             var re = edges[SRNG.randI(edges.Count)];
             return re.start.Lerp(re.end, SRNG.randF());
         }
@@ -273,10 +273,10 @@ namespace ShapeLib
             //return new(topLeft, topRight, bottomRight, bottomLeft);
         }
         //public static SegmentShape GetSegmentsShape(this Rect rect) { return new(GetSegments(rect), rect.Center); }
-        public static List<Segment> GetSegments(this Rect rect)
+        public static List<Segment> GetEdges(this Rect rect)
         {
             var c = rect.GetCorners();
-            return GetSegments(c.tl, c.bl, c.br, c.tr);
+            return GetEdges(c.tl, c.bl, c.br, c.tr);
         }
         /// <summary>
         /// Returns the segments of a rect in ccw order. (tl -> bl, bl -> br, br -> tr, tr -> tl)
@@ -286,7 +286,7 @@ namespace ShapeLib
         /// <param name="br"></param>
         /// <param name="tr"></param>
         /// <returns></returns>
-        public static List<Segment> GetSegments(Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr)
+        public static List<Segment> GetEdges(Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr)
         {
             List<Segment> segments = new()
             {

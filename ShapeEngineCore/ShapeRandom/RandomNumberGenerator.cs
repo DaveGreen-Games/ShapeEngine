@@ -5,10 +5,15 @@ using System.Numerics;
 
 namespace ShapeRandom
 {
-    public struct WeightedItem
+    public struct WeightedItem <T>
     {
-        public string id { get; set; }
+        public T item { get; set; }
         public int weight { get; set; }
+        public WeightedItem(T item,  int weight)
+        {
+            this.item = item;
+            this.weight = weight;
+        }
     }
 
 
@@ -31,7 +36,7 @@ namespace ShapeRandom
         }
         public void SetSeed(int seed) { rand = new(seed); }
 
-        public string PickRandomItem(params WeightedItem[] items)
+        public T? PickRandomItem<T>(params WeightedItem<T>[] items)
         {
             int totalWeight = 0;
             foreach (var item in items)
@@ -45,10 +50,29 @@ namespace ShapeRandom
             foreach (var item in items)
             {
                 curWeight += item.weight;
-                if (ticket <= curWeight) return item.id;
+                if (ticket <= curWeight) return item.item;
             }
 
-            return "";
+            return default(T);
+        }
+        public T? PickRandomItem<T>(params (T item, int weight)[] items)
+        {
+            int totalWeight = 0;
+            foreach (var item in items)
+            {
+                totalWeight += item.weight;
+            }
+
+            int ticket = randI(0, totalWeight);
+
+            int curWeight = 0;
+            foreach (var item in items)
+            {
+                curWeight += item.weight;
+                if (ticket <= curWeight) return item.item;
+            }
+
+            return default(T);
         }
         public string PickRandomItem(params (string id, int weight)[] items)
         {
@@ -135,10 +159,10 @@ namespace ShapeRandom
         }
         public Vector2 randVec2(float max) { return randVec2(0, max); }
         public Vector2 randVec2(float min, float max) { return randVec2() * randF(min, max); }
-        public Vector2 randVec2(Rectangle rect)
-        {
-            return new(randF(rect.x, rect.x + rect.width), randF(rect.y, rect.y + rect.height));
-        }
+        //public Vector2 randVec2(Rectangle rect)
+        //{
+        //    return new(randF(rect.x, rect.x + rect.width), randF(rect.y, rect.y + rect.height));
+        //}
         public Color randColor() { return randColor(0, 255); }
         public Color randColor(int alpha) { return randColor(0, 255, alpha); }
         public Color randColor(Color color)
@@ -166,12 +190,12 @@ namespace ShapeRandom
         }
 
 
-        public Vector2 randPoint(Rect rect)
-        {
-            float x = randF(rect.x, rect.x + rect.width);
-            float y = randF(rect.y, rect.y + rect.height);
-            return new(x, y);
-        }
+        //public Vector2 randPoint(Rect rect)
+        //{
+        //    float x = randF(rect.x, rect.x + rect.width);
+        //    float y = randF(rect.y, rect.y + rect.height);
+        //    return new(x, y);
+        //}
         public Vector2 randPoint(Vector2 start, Vector2 end)
         {
             return SVec.Lerp(start, end, randF());

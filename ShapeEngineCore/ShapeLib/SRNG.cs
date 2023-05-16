@@ -14,9 +14,13 @@ namespace ShapeLib
 
         public static void SetSeed(int seed) { rand.SetSeed(seed); }
 
-        public static string PickRandomItem(params WeightedItem[] items)
+        public static T? PickRandomItem<T>(params WeightedItem<T>[] items)
         {
            return rand.PickRandomItem(items);
+        }
+        public static T? PickRandomItem<T>(params (T item, int weight)[] items)
+        {
+            return rand.PickRandomItem(items);
         }
         public static string PickRandomItem(params (string id, int weight)[] items)
         {

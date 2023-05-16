@@ -134,7 +134,7 @@ namespace ShapeUI
         }
         public bool IsPointInside(Vector2 uiPos)
         {
-            return GetRect().IsPointInsideShape(uiPos);
+            return GetRect().IsPointInside(uiPos);
             //return CheckCollisionPointRec(uiPos, GetRect().Rectangle);
         }
         public void Check(Vector2 prevMousePos, Vector2 mousePosUI, bool mouseDeselects = false, float mouseTolerance = 5f)

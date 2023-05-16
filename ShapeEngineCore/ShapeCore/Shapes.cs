@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Numerics;
 using Raylib_CsLo;
 using ShapeLib;
 
@@ -46,7 +47,7 @@ namespace ShapeCore
         public SegmentShape GetSegmentShape() { return new(start, this); }
         public Polygon GetPolygon() { return new(Center, start, end); }
         public Rect GetBoundingBox() { return new(start, end); }
-        public bool IsPointOnShape(Vector2 p) { return this.IsPointInsideShape(p); }
+        public bool IsPointOnShape(Vector2 p) { return this.IsPointInside(p); }
         public void DrawShape(float linethickness, Color color) => this.Draw(linethickness, color);
         
         //public Segment ChangePosition(Vector2 newPos) { return new(newPos, newPos + Displacement); }
@@ -74,10 +75,10 @@ namespace ShapeCore
         public float GetCircumference() { return MathF.PI * radius * 2f; }
         public float GetCircumferenceSquared() { return GetCircumference() * GetCircumference(); }
         public Rect GetBoundingBox() { return new Rect(center, new(radius, radius), new(0.5f)); }
-        public SegmentShape GetSegmentShape() { return new(this.GetSegments(), center); }
+        public SegmentShape GetSegmentShape() { return new(this.GetEdges(), center); }
         public Polygon GetPolygon() { return new(this.GetPoints(), center); }
         public void DrawShape(float linethickness, Color color) => this.DrawLines(linethickness, color);
-        public bool IsPointOnShape(Vector2 p) { return this.IsPointInsideShape(p); }
+        public bool IsPointOnShape(Vector2 p) { return this.IsPointInside(p); }
         
         //public void SetPosition(Vector2 newPosition) { center = newPosition; }
     }
@@ -111,7 +112,7 @@ namespace ShapeCore
         public Polygon GetPolygon() { return new(Centroid, a, b, c); }
         public Rect GetBoundingBox() { return new Rect(a.X, a.Y, 0, 0).Enlarge(b).Enlarge(c); }
         public void DrawShape(float linethickness, Color color) => this.DrawLines(linethickness, color);
-        public bool IsPointOnShape(Vector2 p) { return this.IsPointInsideShape(p); }
+        public bool IsPointOnShape(Vector2 p) { return this.IsPointInside(p); }
         
         //public Circle GetBoundingCircle() { return new(Center, Length / 2); }
         //public void SetPosition(Vector2 newPosition) 
@@ -181,7 +182,7 @@ namespace ShapeCore
             this.height = size.Y;
         }
         public Rect(IShape shape) { this = shape.GetBoundingBox(); }// ???
-        public Rect(List<Vector2> points) { this = SPoly.GetBoundingBox(points); }// ???
+        public Rect(PolygonPath points) { this = SPoly.GetBoundingBox(points); }// ???
         public Rect(Rectangle rect)
         {
             this.x = rect.X;
@@ -194,10 +195,10 @@ namespace ShapeCore
         public float GetCircumference() { return width * 2 + height * 2; }
         public float GetCircumferenceSquared() { return GetCircumference() * GetCircumference(); }
         public float GetArea() { return width * height; }
-        public SegmentShape GetSegmentShape() { return new(SRect.GetSegments(this), Center); }
+        public SegmentShape GetSegmentShape() { return new(SRect.GetEdges(this), Center); }
         public Polygon GetPolygon() { return new(center : Center, TopLeft, BottomLeft, BottomRight, TopRight); }
         public Rect GetBoundingBox() { return this; }
-        public bool IsPointOnShape(Vector2 p) { return this.IsPointInsideShape(p); }
+        public bool IsPointOnShape(Vector2 p) { return this.IsPointInside(p); }
         public void DrawShape(float linethickness, Color color) => this.DrawLines(linethickness, color);
         
         
@@ -357,29 +358,98 @@ namespace ShapeCore
     /// </summary>
     public struct Polygon : IShape
     {
-        public List<Vector2> points;
+        public PolygonPath points;
         public Vector2 center;
 
-        public Polygon(List<Vector2> points) { this.points = points; this.center = SPoly.GetCentroid(points); }
-        public Polygon(params Vector2[] points) { this.points = points.ToList(); this.center = SPoly.GetCentroid(points.ToList()); }
-        public Polygon(List<Vector2> points, Vector2 center) { this.points = points; this.center = center; }
-        public Polygon(Vector2 center, params Vector2[] points) { this.points = points.ToList(); this.center = center; }
+        public Polygon(List<Vector2> points) { this.points = new(points); this.center = SPoly.GetCentroid(this.points); }
+        public Polygon(params Vector2[] points) { this.points = new(points); this.center = SPoly.GetCentroid(this.points); }
+        public Polygon(List<Vector2> points, Vector2 center) { this.points = new(points); this.center = center; }
+        public Polygon(Vector2 center, params Vector2[] points) { this.points = new(points); this.center = center; }
         public Polygon(Triangle t) { this.points = t.GetPolygon().points; this.center = t.Centroid; }
         public Polygon(Rect r) { this.points = r.GetPolygon().points; this.center = r.Center; }
 
         public Vector2 GetReferencePoint() { return center; }
-        public float GetCircumference() { return this.GetCircumference(); }
-        public float GetCircumferenceSquared() { return this.GetCircumferenceSquared(); }
-        public float GetArea() { return this.GetArea(); }
-        public SegmentShape GetSegmentShape() { return new(SPoly.GetSegments(this), center); }
+        public float GetCircumference() { return points.GetCircumference(); }
+        public float GetCircumferenceSquared() { return points.GetCircumferenceSquared(); }
+        public float GetArea() { return points.GetArea(); }
+        public SegmentShape GetSegmentShape() { return new(points.GetEdges(), center); }
         public Polygon GetPolygon() { return this; }
-        public Rect GetBoundingBox() { return this.GetBoundingBox(); }
+        public Rect GetBoundingBox() { return points.GetBoundingBox(); }
         public void DrawShape(float linethickness, Color color) => SDrawing.DrawPolygonLines(points, linethickness, color);
-        public bool IsPointOnShape(Vector2 p) { return this.IsPointInsideShape(p); }
+        public bool IsPointOnShape(Vector2 p) { return SGeometry.IsPointInPoly(p, points); }// this.IsPointInside(p); }
         
         //public void SetPosition(Vector2 newPosition) { center = newPosition; }
     }
-    
+
+    public class PolygonPath : List<Vector2>//, IShape
+    {
+        public PolygonPath() { }
+        public PolygonPath(params Vector2[] points) { AddRange(points); }
+        public PolygonPath(List<Vector2> points) { AddRange(points); }
+        public PolygonPath(Triangle t) { AddRange(t.GetPoints()); }
+        public PolygonPath(Rect rect) { AddRange(rect.GetPoints());}
+
+        public void ReduceVertexCount(int newCount)
+        {
+            if (newCount < 3) Clear();//no points left to form a polygon
+
+            while (Count > newCount)
+            {
+                float minD = 0f;
+                int shortestID = 0;
+                for (int i = 0; i < Count; i++)
+                {
+                    float d = (this[i] - this[(i + 1) % Count]).LengthSquared();
+                    if (d > minD)
+                    {
+                        minD = d;
+                        shortestID = i;
+                    }
+                }
+                RemoveAt(shortestID);
+            }
+
+        }
+        public void ReduceVertexCount(float factor) { ReduceVertexCount(Count - (int)Count * factor); }
+        public void IncreaseVertexCount(int newCount)
+        {
+            if (newCount <= Count) return;
+
+            while (Count < newCount)
+            {
+                float maxD = 0f;
+                int longestID = 0;
+                for (int i = 0; i < Count; i++)
+                {
+                    float d = (this[i] - this[(i + 1) % Count]).LengthSquared();
+                    if (d > maxD)
+                    {
+                        maxD = d;
+                        longestID = i;
+                    }
+                }
+                Vector2 m = (this[longestID] + this[(longestID + 1) % Count]) * 0.5f;
+                this.Insert(longestID + 1, m);
+            }
+        }
+        public Vector2 GetVertex(int index)
+        {
+            return this[SUtils.WrapIndex(Count, index)];
+        }
+        
+        
+        /*
+        public Vector2 GetReferencePoint() { return this.GetCentroid(); }
+        public float GetCircumference() { return this.GetCircumference(); }
+        public float GetCircumferenceSquared() { return this.GetCircumferenceSquared(); }
+        public float GetArea() { return this.GetArea(); }
+        public SegmentShape GetSegmentShape() { return new(SPoly.GetEdges(this), this.GetCentroid()); }
+        public Polygon GetPolygon() { return new(this); }
+        public Rect GetBoundingBox() { return this.GetBoundingBox(); }
+        public void DrawShape(float linethickness, Color color) => SDrawing.DrawPolygonLines(this, linethickness, color);
+        public bool IsPointOnShape(Vector2 p) { return SGeometry.IsPointInPoly(p, this); }
+        */
+    }
     /*
     public class Poly
     {

@@ -11,7 +11,7 @@ namespace ShapeLib
         public static Circle ScaleRadius(this Circle c, float scale) { return new(c.center, c.radius * scale); }
         public static Circle ChangeRadius(this Circle c, float amount) { return new(c.center, c.radius + amount); }
         public static Circle Move(this Circle c, Vector2 offset) { return new(c.center + offset, c.radius); }
-        public static List<Segment> GetSegments(this Circle c, int pointCount = 16)
+        public static List<Segment> GetEdges(this Circle c, int pointCount = 16)
         {
             float angleStep = (MathF.PI * 2f) / pointCount;
             List<Segment> segments = new();
