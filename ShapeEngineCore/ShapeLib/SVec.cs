@@ -6,11 +6,7 @@ namespace ShapeLib
 {
     public static class SVec
     {
-        public static float Cross(this Vector2 value1, Vector2 value2)
-        {
-            return value1.X * value2.Y
-                   - value1.Y * value2.X;
-        }
+        
         public static bool IsNan(this Vector2 v) { return float.IsNaN(v.X) || float.IsNaN(v.Y); }
         public static Vector2 Right() { return new(1.0f, 0.0f); }
         public static Vector2 Left() { return new(-1.0f, 0.0f); }
@@ -40,13 +36,31 @@ namespace ShapeLib
 
         public static Vector2 VecFromAngleRad(float angleRad)
         {
-            return SVec.Rotate(SVec.Right(), angleRad);
+            return new(MathF.Cos(angleRad), MathF.Sin(angleRad));
+            //return SVec.Rotate(SVec.Right(), angleRad);
         }
         public static Vector2 VecFromAngleDeg(float angleDeg)
         {
             return VecFromAngleRad(angleDeg * SUtils.DEGTORAD);
         }
-        
+
+
+        public static Vector2 FindArithmeticMean(List<Vector2> vertices)
+        {
+            float sx = 0f;
+            float sy = 0f;
+
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                Vector2 v = vertices[i];
+                sx += v.X;
+                sy += v.Y;
+            }
+
+            float invArrayLen = 1f / vertices.Count;
+            return new Vector2(sx * invArrayLen, sy * invArrayLen);
+        }
+
         //Projection
         public static float ProjectionTime(this Vector2 v, Vector2 onto) { return (v.X * onto.X + v.Y * onto.Y) / onto.LengthSquared(); }
         public static Vector2 ProjectionPoint(this Vector2 point, Vector2 v, float t) { return point + v * t; }
@@ -129,7 +143,9 @@ namespace ShapeLib
         public static float AngleRad(this Vector2 v) { return AngleRad(Zero(), v); }
         public static float AngleRad(this Vector2 v1, Vector2 v2) { return MathF.Atan2(v2.Y, v2.X) - MathF.Atan2(v1.Y, v1.X); }// return RayMath.Vector2Angle(v1, v2); }
         public static float Distance(this Vector2 v1, Vector2 v2) { return Vector2.Distance(v1, v2); }// RayMath.Vector2Distance(v1, v2); }
-        public static float Dot(this Vector2 v1, Vector2 v2) { return Vector2.Dot(v1, v2); }// RayMath.Vector2DotProduct(v1, v2); }
+        public static float Dot(this Vector2 v1, Vector2 v2) { return v1.X * v2.X + v1.Y * v2.Y; }// Vector2.Dot(v1, v2); }// RayMath.Vector2DotProduct(v1, v2); }
+        public static float Cross(this Vector2 value1, Vector2 value2) { return value1.X * value2.Y - value1.Y * value2.X; }
+        
         //public static float Length(Vector2 v) { return v.Length(); } //RayMath.Vector2Length(v);
         //public static float LengthSquared(Vector2 v) { return v.LengthSquared(); } //RayMath.Vector2LengthSqr(v);
 

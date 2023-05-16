@@ -1177,6 +1177,27 @@ namespace ShapeLib
             return d >= 0;
         }
         public static bool IsPointInCircle(Vector2 point, Vector2 circlePos, float circleRadius) { return (circlePos - point).LengthSquared() <= circleRadius * circleRadius; }
+        public static bool IsPointInTriangle(Vector2 a, Vector2 b, Vector2 c, Vector2 p)
+        {
+            Vector2 ab = b - a;
+            Vector2 bc = c - b;
+            Vector2 ca = a - c;
+
+            Vector2 ap = p - a;
+            Vector2 bp = p - b;
+            Vector2 cp = p - c;
+
+            float c1 = SVec.Cross(ab, ap);
+            float c2 = SVec.Cross(bc, bp);
+            float c3 = SVec.Cross(ca, cp);
+
+            if (c1 < 0f && c2 < 0f && c3 < 0f)
+            {
+                return true;
+            }
+
+            return false;
+        }
         public static bool IsPointInRect(Vector2 point, Vector2 topLeft, Vector2 size)
         {
             float left = topLeft.X;
@@ -1218,10 +1239,12 @@ namespace ShapeLib
         public static bool IsPointInsideShape(this Circle c, Vector2 p) { return IsPointInCircle(p, c.center, c.radius); }
         public static bool IsPointInsideShape(this Triangle t, Vector2 p)
         {
-            var triangles = t.Triangulate(p);
-            float totalArea = triangles.Sum((Triangle t) => { return t.GetArea(); });
-            return t.GetArea() >= totalArea;
+            return IsPointInTriangle(t.a, t.b, t.c, p);
+            //var triangles = t.Triangulate(p);
+            //float totalArea = triangles.Sum((Triangle t) => { return t.GetArea(); });
+            //return t.GetArea() >= totalArea;
         }
+        
         public static bool IsPointInsideShape(this Rect r, Vector2 p) { return IsPointInRect(p, r.TopLeft, r.Size); }
         public static bool IsPointInsideShape(this Polygon poly, Vector2 p) { return IsPointInPoly(p, poly.points); }
 

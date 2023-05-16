@@ -2,8 +2,275 @@
 using ShapeCore;
 using System.Numerics;
 
+
 namespace ShapeLib
 {
+    internal static class ToxiLibPolygon
+    {
+        public static void Add(List<Vector2> poly, Vector2 v)
+        {
+            for (int i = 0; i < poly.Count; i++)
+            {
+                poly[i] += v;
+            }
+        }
+        public static void Center(List<Vector2> poly, Vector2 newCenter)
+        {
+            var centroid = SPoly.GetCentroid(poly);
+            var delta = newCenter - centroid;
+            Add(poly, delta);
+        }
+        public static bool ContainsPoint(List<Vector2> poly, Vector2 p)
+        {
+            bool oddNodes = false;
+            int num = poly.Count;
+            int j = num - 1;
+            for (int i = 0; i < num; i++)
+            {
+                var vi = poly[i];
+                var vj = poly[j];
+                if (vi.Y < p.Y && vj.Y >= p.Y || vj.Y < p.Y && vi.Y >= p.Y)
+                {
+                    if (vi.X + (p.Y - vi.Y) / (vj.Y - vi.Y) * (vj.X - vi.X) < p.X)
+                    {
+                        oddNodes = !oddNodes;
+                    }
+                }
+                j = i;
+            }
+
+            return oddNodes;
+        }
+        public static bool ContainsPoly(List<Vector2> poly, List<Vector2> otherPoly)
+        {
+            for (int i = 0; i < otherPoly.Count; i++)
+            {
+                if (!ContainsPoint(poly, otherPoly[i]))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+        /// <summary>
+        /// Returns the vertex at the given index. This function follows Python
+        /// convention, in that if the index is negative, it is considered relative
+        /// to the list end. Therefore the vertex at index -1 is the last vertex in
+        /// the list.
+        /// </summary>
+        /// <param name="poly"></param>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public static Vector2 GetVertex(List<Vector2> poly, int index)
+        {
+            if (index < 0)
+            {
+                index += poly.Count;
+            }
+            return poly[index];
+        }
+        /// <summary>
+        /// Computes the length of this polygon's apothem. This will only be valid if
+        /// the polygon is regular. More info: http://en.wikipedia.org/wiki/Apothem
+        /// </summary>
+        /// <param name="poly"></param>
+        /// <returns>Return the length of the apothem.</returns>
+        public static float GetApothem(List<Vector2> poly)
+        {
+            return (GetCentroid(poly) - (poly[0].Lerp(poly[1], 0.5f))).Length();
+        }
+        public static Vector2 GetCentroid(List<Vector2> poly)
+        {
+            Vector2 result = new();
+
+            for (int i = 0; i < poly.Count; i++)
+            {
+                Vector2 a = poly[i];
+                Vector2 b = poly[(i + 1) % poly.Count];
+                float factor = a.X * b.Y - b.X * a.Y;
+                result.X += (a.X + b.X) * factor;
+                result.Y += (a.Y + b.Y) * factor;
+            }
+
+            return result * (1f / (GetArea(poly) * 6f));
+        }
+        public static float GetArea(List<Vector2> poly)
+        {
+            float area = 0f;
+
+            for (int i = 0; i < poly.Count; i++)
+            {
+                Vector2 a = poly[i];
+                Vector2 b = poly[(i + 1) % poly.Count];
+                area += a.X * b.Y;
+                area -= a.Y * b.X;
+            }
+
+            return area * 0.5f;
+        }
+        public static Rect GetBoundingRect(List<Vector2> poly)
+        {
+            Vector2 first = poly[0];
+            Rect bounds = new Rect(first.X, first.Y, 0, 0);
+            for (int i = 1; i < poly.Count; i++)
+            {
+                bounds.Enlarge(poly[i]);
+            }
+            return bounds;
+        }
+        public static Circle GetBoundingCircle(List<Vector2> poly)
+        {
+            float maxD = 0f;
+            int num = poly.Count;
+            Vector2 origin = new();
+            for (int i = 0; i < num; i++) { origin += poly[i]; }
+            origin *= (1f / (float)num);
+            for (int i = 0; i < num; i++)
+            {
+                float d = (origin - poly[i]).LengthSquared();
+                if (d > maxD) maxD = d;
+            }
+
+            return new Circle(origin, MathF.Sqrt(maxD));
+        }
+        public static float GetCircumference(List<Vector2> poly)
+        {
+            float circ = 0;
+
+            for (int i = 0; i < poly.Count; i++)
+            {
+                float dis = (poly[i] - poly[(i + 1) % poly.Count]).Length();
+                circ += dis;
+            }
+
+            return circ;
+        }
+        public static List<Segment> GetEdges(List<Vector2> poly)
+        {
+            List<Segment> edges = new();
+            for (int i = 0; i < poly.Count; i++)
+            {
+                var s = new Segment(poly[i], poly[(i + 1) % poly.Count]);
+                edges.Add(s);
+            }
+            return edges;
+        }
+        public static Vector2 GetClosestPoint(List<Vector2> poly, Vector2 p)
+        {
+            float minD = float.PositiveInfinity;
+            var edges = GetEdges(poly);
+            Vector2 closest = new();
+
+            for (int i = 0; i < edges.Count; i++)
+            {
+                Vector2 c = edges[i].GetClosestPoint(p);
+                float d = (c - p).LengthSquared();
+                if(d < minD)
+                {
+                    closest = c;
+                    minD = d;
+                }
+            }
+            return closest;
+        }
+        public static Vector2 GetClosestVertex(List<Vector2> poly, Vector2 p)
+        {
+            float minD = float.PositiveInfinity;
+            Vector2 closest = new();
+            for (int i = 0; i < poly.Count; i++)
+            {
+                float d = (poly[i] - p).LengthSquared();
+                if(d < minD)
+                {
+                    closest = poly[i]; 
+                    minD = d;
+                }
+            }
+            return closest;
+        }
+        
+        public static Vector2 GetRandomPointOnEdge(List<Vector2> poly)
+        {
+            var edges = GetEdges(poly);
+            var re = edges[SRNG.randI(edges.Count)];
+            return re.start.Lerp(re.end, SRNG.randF());
+        }
+        public static Vector2 GetRandomPointInside(List<Vector2> poly)
+        {
+            //only work with convex polygons
+            var edges = GetEdges(poly);
+            var ea = SRNG.randCollection(edges, true);
+            var eb = SRNG.randCollection(edges);
+
+            var pa = ea.start.Lerp(ea.end, SRNG.randF());
+            var pb = eb.start.Lerp(eb.end, SRNG.randF());
+            return pa.Lerp(pb, SRNG.randF());
+        }
+
+        public static void IncreaseVertexCount(List<Vector2> poly, int newCount)
+        {
+            if (newCount <= poly.Count) return;
+
+            float maxD = 0f;
+            int longestID = 0;
+
+            while(poly.Count < newCount)
+            {
+                for (int i = 0; i < poly.Count; i++)
+                {
+                    float d = (poly[i] - poly[(i + 1) % poly.Count]).LengthSquared();
+                    if(d > maxD)
+                    {
+                        maxD = d;
+                        longestID = i;
+                    }
+                }
+                Vector2 m = (poly[longestID] + poly[(longestID + 1) % poly.Count]) * 0.5f;
+                poly.Insert(longestID + 1, m);
+            }
+        }
+
+        public static bool IsClockwise(List<Vector2> poly) { return GetArea(poly) > 0f; }
+        public static bool IsConvex(List<Vector2> poly)
+        {
+            int num = poly.Count;
+            bool isPositive = false;
+
+            for (int i = 0; i < num; i++)
+            {
+                int prevIndex = (i == 0) ? num -1 : i - 1;
+                int nextIndex = (i == num - 1) ? 0 : i + 1;
+                var d0 = poly[i] - poly[prevIndex];
+                var d1 = poly[nextIndex] - poly[i];
+                var newIsP = d0.Cross(d1) > 0f;
+                if (i == 0) isPositive = true;
+                else if (isPositive != newIsP) return false;
+            }
+            return true;
+        }
+
+
+
+
+
+        public static void Add(Polygon poly, Vector2 v)
+        {
+            for (int i = 0; i < poly.points.Count; i++)
+            {
+                poly.points[i] += v;
+            }
+        }
+        public static void Center(Polygon poly, Vector2 newCenter)
+        {
+            var delta = newCenter - poly.center;
+            Add(poly, delta);
+            poly.center = newCenter;
+        }
+    
+    }
+
+
+
     public static class SPoly
     {
         /*
@@ -219,17 +486,36 @@ namespace ShapeLib
             }
             return axis;
         }
-        public static float GetArea(List<Vector2> points, Vector2 center)
+        public static float GetArea(List<Vector2> points)
         {
-            if (points.Count < 3) return 0f;
-            var triangles = Triangulate(points, center);
             float totalArea = 0f;
-            foreach (var t in triangles)
+
+            for (int i = 0; i < points.Count; i++)
             {
-                totalArea += t.GetArea();
+                Vector2 a = points[i];
+                Vector2 b = points[(i + 1) % points.Count];
+
+                float dy = (a.Y + b.Y) / 2f;
+                float dx = b.X - a.X;
+
+                float area = dy * dx;
+                totalArea += area;
             }
-            return totalArea;
+
+            return MathF.Abs(totalArea);
         }
+        public static bool IsClockwise(List<Vector2> poly) { return GetArea(poly) > 0f; }
+        //public static float GetArea(List<Vector2> points, Vector2 center)
+        //{
+        //    if (points.Count < 3) return 0f;
+        //    var triangles = Triangulate(points, center);
+        //    float totalArea = 0f;
+        //    foreach (var t in triangles)
+        //    {
+        //        totalArea += t.GetArea();
+        //    }
+        //    return totalArea;
+        //}
         public static float GetCircumference(List<Vector2> points)
         {
             return MathF.Sqrt(GetCircumferenceSquared(points));
@@ -246,20 +532,24 @@ namespace ShapeLib
             }
             return lengthSq;
         }
-        public static List<Triangle> Triangulate(List<Vector2> points, Vector2 center)
+        public static List<Triangle> Triangulate(List<Vector2> points)
         {
-            if (points.Count < 3) return new();
-            List<Triangle> triangles = new();
-            points.Add(points[0]);
-            for (int i = 0; i < points.Count - 1; i++)
-            {
-                Vector2 a = points[i];
-                Vector2 b = center;
-                Vector2 c = points[i + 1];
-                triangles.Add(new(a, b, c));
-            }
-            return triangles;
+            return new();
         }
+        //public static List<Triangle> Triangulate(List<Vector2> points, Vector2 center)
+        //{
+        //    if (points.Count < 3) return new();
+        //    List<Triangle> triangles = new();
+        //    points.Add(points[0]);
+        //    for (int i = 0; i < points.Count - 1; i++)
+        //    {
+        //        Vector2 a = points[i];
+        //        Vector2 b = center;
+        //        Vector2 c = points[i + 1];
+        //        triangles.Add(new(a, b, c));
+        //    }
+        //    return triangles;
+        //}
         public static List<Vector2> GeneratePoints(Vector2 center, int pointCount, float minLength, float maxLength)
         {
             List<Vector2> points = new();
@@ -301,8 +591,8 @@ namespace ShapeLib
         public static List<Segment> GetSegments(this Polygon p) { return GetSegments(p.points); }
         //public static SegmentShape GetSegmentsShape(this Polygon p) { return new(GetSegments(p.points), p.center); }
         public static List<Vector2> GetSegmentAxis(this Polygon p, bool normalized = false) { return GetSegmentAxis(p.points, normalized); }
-        public static List<Triangle> Triangulate(this Polygon p) { return Triangulate(p.points, p.center); }
-        public static float GetArea(this Polygon p) { return GetArea(p.points, p.center); }
+        public static List<Triangle> Triangulate(this Polygon p) { return Triangulate(p.points); }
+        public static float GetArea(this Polygon p) { return GetArea(p.points); }
         public static float GetCircumference(this Polygon p) { return GetCircumference(p.points); }
         public static float GetCircumferenceSquared(this Polygon p) { return GetCircumferenceSquared(p.points); }
         

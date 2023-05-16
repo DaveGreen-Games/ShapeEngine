@@ -166,6 +166,17 @@ namespace ShapeLib
 
         public const float RADTODEG = 180f / MathF.PI;
 
+
+        public static int WrapIndex(int count, int index)
+        {
+            return index % count;
+        }
+        public static T GetItem<T>(List<T> collection, int index)
+        {
+            int i = WrapIndex(collection.Count, index);
+            return collection[i];
+        }
+
         public static float Clamp(float value, float min, float max)
         {
             if (value < min) return min;
@@ -343,4 +354,5 @@ namespace ShapeLib
 
         
     }
+
 }
