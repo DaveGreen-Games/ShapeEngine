@@ -482,55 +482,7 @@ namespace ShapeLib
             return (p.GetCentroid() - (p[0].Lerp(p[1], 0.5f))).Length();
         }
 
-        public static float GetAreaSigned(this Polygon p)
-        {
-            float area = 0f;
-
-            for (int i = 0; i < p.Count; i++)
-            {
-                Vector2 a = p[i];
-                Vector2 b = p[(i + 1) % p.Count];
-                area += a.X * b.Y;
-                area -= a.Y * b.X;
-            }
-
-            return area * 0.5f;
-        }
-        public static bool IsClockwise(this Polygon p)
-        {
-            float totalArea = 0f;
-
-            for (int i = 0; i < p.Count; i++)
-            {
-                Vector2 a = p[i];
-                Vector2 b = p[(i + 1) % p.Count];
-
-                float dy = (a.Y + b.Y) / 2f;
-                float dx = b.X - a.X;
-
-                float area = dy * dx;
-                totalArea += area;
-            }
-
-            return totalArea > 0;
-        }
-        public static bool IsConvex(this Polygon p)
-        {
-            int num = p.Count;
-            bool isPositive = false;
-
-            for (int i = 0; i < num; i++)
-            {
-                int prevIndex = (i == 0) ? num - 1 : i - 1;
-                int nextIndex = (i == num - 1) ? 0 : i + 1;
-                var d0 = p[i] - p[prevIndex];
-                var d1 = p[nextIndex] - p[i];
-                var newIsP = d0.Cross(d1) > 0f;
-                if (i == 0) isPositive = true;
-                else if (isPositive != newIsP) return false;
-            }
-            return true;
-        }
+        
         public static Vector2 GetRandomPointConvex(this Polygon p)
         {
             //only work with convex polygons
@@ -545,6 +497,20 @@ namespace ShapeLib
     
     }
 }
+//public static float GetAreaSigned(this Polygon p)
+        //{
+        //    float area = 0f;
+        //
+        //    for (int i = 0; i < p.Count; i++)
+        //    {
+        //        Vector2 a = p[i];
+        //        Vector2 b = p[(i + 1) % p.Count];
+        //        area += a.X * b.Y;
+        //        area -= a.Y * b.X;
+        //    }
+        //
+        //    return area * 0.5f;
+        //}
 
 /*
         public static List<Vector2> GetShape(List<Vector2> points, Vector2 pos, float rotRad, Vector2 scale)

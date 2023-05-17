@@ -586,24 +586,26 @@ namespace ShapeCore
             }
             return lengthSq;
         }
-        public float GetArea()
+        public float GetArea() { return MathF.Abs(GetAreaSigned()); }
+        public bool IsClockwise() { return GetAreaSigned() > 0f; }
+        public bool IsConvex()
         {
-            float totalArea = 0f;
+            int num = this.Count;
+            bool isPositive = false;
 
-            for (int i = 0; i < this.Count; i++)
+            for (int i = 0; i < num; i++)
             {
-                Vector2 a = this[i];
-                Vector2 b = this[(i + 1) % this.Count];
-
-                float dy = (a.Y + b.Y) / 2f;
-                float dx = b.X - a.X;
-
-                float area = dy * dx;
-                totalArea += area;
+                int prevIndex = (i == 0) ? num - 1 : i - 1;
+                int nextIndex = (i == num - 1) ? 0 : i + 1;
+                var d0 = this[i] - this[prevIndex];
+                var d1 = this[nextIndex] - this[i];
+                var newIsP = d0.Cross(d1) > 0f;
+                if (i == 0) isPositive = true;
+                else if (isPositive != newIsP) return false;
             }
-
-            return MathF.Abs(totalArea);
+            return true;
         }
+
         public Polygon ToPolygon() { return this; }
         public bool IsPointInside(Vector2 p) { return SGeometry.IsPointInPoly(p, this); }
         public Vector2 GetClosestPoint(Vector2 p)
@@ -656,6 +658,24 @@ namespace ShapeCore
 
         public void DrawShape(float linethickness, Color color) => SDrawing.DrawPolygonLines(this, linethickness, color);
         
+        private float GetAreaSigned()
+        {
+            float totalArea = 0f;
+
+            for (int i = 0; i < this.Count; i++)
+            {
+                Vector2 a = this[i];
+                Vector2 b = this[(i + 1) % this.Count];
+
+                float dy = (a.Y + b.Y) / 2f;
+                float dx = b.X - a.X;
+
+                float area = dy * dx;
+                totalArea += area;
+            }
+
+            return totalArea;
+        }
     }
 
 
