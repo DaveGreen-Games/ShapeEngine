@@ -5,6 +5,7 @@ using ShapeRandom;
 
 namespace ShapeCore
 {
+
     public class Edges : List<Segment>
     {
         public Edges() { }
