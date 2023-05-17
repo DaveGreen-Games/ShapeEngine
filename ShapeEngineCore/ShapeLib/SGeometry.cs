@@ -1,6 +1,4 @@
-﻿using Raylib_CsLo;
-using System.Numerics;
-using ShapeLib;
+﻿using System.Numerics;
 using ShapeCore;
 
 
@@ -629,9 +627,9 @@ namespace ShapeLib
 
         public static bool OverlapShape(this Circle c, Segment s)
         {
-            if (c.radius <= 0.0f) return IsPointInside(s, c.center);
-            if (IsPointInside(c, s.start)) return true;
-            if (IsPointInside(c, s.end)) return true;
+            if (c.radius <= 0.0f) return s.IsPointInside(c.center); // IsPointInside(s, c.center);
+            if (c.IsPointInside(s.start)) return true;
+            if (c.IsPointInside(s.end)) return true;
 
             Vector2 d = s.end - s.start;
             Vector2 lc = c.center - s.start;
@@ -639,14 +637,14 @@ namespace ShapeLib
             Vector2 nearest = s.start + p;
 
             return
-                IsPointInside(c, nearest) &&
+                c.IsPointInside(nearest) &&
                 p.LengthSquared() <= d.LengthSquared() &&
                 Vector2.Dot(p, d) >= 0.0f;
         }
         public static bool OverlapShape(this Circle a, Circle b)
         {
-            if (a.radius <= 0.0f && b.radius > 0.0f) return IsPointInside(b, a.center);
-            else if (b.radius <= 0.0f && a.radius > 0.0f) return IsPointInside(a, b.center);
+            if (a.radius <= 0.0f && b.radius > 0.0f) return b.IsPointInside(a.center);
+            else if (b.radius <= 0.0f && a.radius > 0.0f) return a.IsPointInside(b.center);
             else if (a.radius <= 0.0f && b.radius <= 0.0f) return IsPointOnPoint(a.center, b.center);
             float rSum = a.radius + b.radius;
 
@@ -655,16 +653,16 @@ namespace ShapeLib
         public static bool OverlapShape(this Circle c, Triangle t) { return OverlapShape(t, c); }
         public static bool OverlapShape(this Circle c, Rect r)
         {
-            if (c.radius <= 0.0f) return IsPointInside(r, c.center);
-            return IsPointInside(c, SRect.ClampOnRect(c.center, r));
+            if (c.radius <= 0.0f) return r.IsPointInside(c.center);
+            return c.IsPointInside(r.ClampOnRect(c.center));
         }
-        public static bool OverlapShape(this Circle c, Polygon poly) { return OverlapPolyCircle(poly.points, c.center, c.radius); }
+        public static bool OverlapShape(this Circle c, Polygon poly) { return OverlapPolyCircle(poly, c.center, c.radius); }
         public static bool OverlapCircleLine(this Circle c, Vector2 linePos, Vector2 lineDir)
         {
             Vector2 lc = c.center - linePos;
             Vector2 p = SVec.Project(lc, lineDir);
             Vector2 nearest = linePos + p;
-            return IsPointInside(c, nearest);
+            return c.IsPointInside(nearest);
         }
         public static bool OverlapCircleRay(this Circle c, Vector2 rayPos, Vector2 rayDir)
         {
@@ -1046,13 +1044,13 @@ namespace ShapeLib
         #region Polygon
 
         #region Overlap
-        public static bool OverlapShape(this Polygon poly, Segment segment) { return OverlapPolySegment(poly.points, segment.start, segment.end); }
-        public static bool OverlapShape(this Polygon poly, Circle circle) { return OverlapPolyCircle(poly.points, circle.center, circle.radius); }
-        public static bool OverlapShape(this Polygon poly, Triangle t) { return OverlapPolyPoly(poly.points, t.ToPolygon().points); }
-        public static bool OverlapShape(this Polygon poly, Rect rect) { return OverlapPolyRect(poly.points, rect); }
-        public static bool OverlapShape(this Polygon a, Polygon b) { return OverlapPolyPoly(a.points, b.points); }
+        public static bool OverlapShape(this Polygon poly, Segment segment) { return OverlapPolySegment(poly, segment.start, segment.end); }
+        public static bool OverlapShape(this Polygon poly, Circle circle) { return OverlapPolyCircle(poly, circle.center, circle.radius); }
+        public static bool OverlapShape(this Polygon poly, Triangle t) { return OverlapPolyPoly(poly, t.ToPolygon()); }
+        public static bool OverlapShape(this Polygon poly, Rect rect) { return OverlapPolyRect(poly, rect); }
+        public static bool OverlapShape(this Polygon a, Polygon b) { return OverlapPolyPoly(a, b); }
 
-        public static bool OverlapPolyCircle(List<Vector2> poly, Vector2 circlePos, float radius)
+        public static bool OverlapPolyCircle(Polygon poly, Vector2 circlePos, float radius)
         {
             if (poly.Count < 3) return false;
             if (IsPointInPoly(circlePos, poly)) return true;
@@ -1065,10 +1063,10 @@ namespace ShapeLib
             }
             return false;
         }
-        public static bool OverlapPolyRect(List<Vector2> poly, Rect rect)
+        public static bool OverlapPolyRect(Polygon poly, Rect rect)
         {
             if (poly.Count < 3) return false;
-            var corners = SRect.GetPoints(rect);
+            var corners = rect.ToPolygon(); // SRect.GetPoints(rect);
             foreach (var c in corners)
             {
                 if (IsPointInPoly(c, poly)) return true;
@@ -1082,7 +1080,7 @@ namespace ShapeLib
             }
             return false;
         }
-        public static bool OverlapPolySegment(List<Vector2> poly, Vector2 segmentStart, Vector2 segmentEnd)
+        public static bool OverlapPolySegment(Polygon poly, Vector2 segmentStart, Vector2 segmentEnd)
         {
             if (poly.Count < 3) return false;
             if (IsPointInPoly(segmentStart, poly)) return true;
@@ -1096,7 +1094,7 @@ namespace ShapeLib
             }
             return false;
         }
-        public static bool OverlapPolyPoly(List<Vector2> a, List<Vector2> b)
+        public static bool OverlapPolyPoly(Polygon a, Polygon b)
         {
             if (a.Count < 3 || b.Count < 3) return false;
             foreach (var point in a)
@@ -1512,8 +1510,6 @@ namespace ShapeLib
 
         #endregion
 
-
-        
     }
 }
 
