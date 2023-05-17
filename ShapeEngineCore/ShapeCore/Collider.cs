@@ -224,8 +224,8 @@ namespace ShapeCore
     }
     public class PolyCollider : Collider
     {
-        private List<Vector2> points;
-        private List<Vector2> shape;
+        private Polygon points;
+        private Polygon shape;
         private Vector2 pos;
         private float rotRad = 0f;
         private float scale = 1f;
@@ -255,28 +255,28 @@ namespace ShapeCore
             } 
         }
 
-        public PolyCollider(List<Vector2> shape)
+        public PolyCollider(Polygon shape)
         {
-            this.pos = SPoly.GetCentroid(shape);
+            this.pos = shape.GetCentroid(); // SPoly.GetCentroid(shape);
             points = GenerateDisplacements(shape, this.pos);
             this.shape = shape;
             this.Vel = new(0f);
         }
-        public PolyCollider(List<Vector2> shape, Vector2 vel)
+        public PolyCollider(Polygon shape, Vector2 vel)
         {
-            this.pos = SPoly.GetCentroid(shape);
+            this.pos = shape.GetCentroid();
             points = GenerateDisplacements(shape, this.pos);
             this.shape = shape;
             this.Vel = vel;
         }
         public PolyCollider(Vector2 vel, params Vector2[] shape)
         {
-            this.shape = shape.ToList();
-            this.pos = SPoly.GetCentroid(this.shape);
+            this.shape = new(shape);// shape.ToList();
+            this.pos = this.shape.GetCentroid(); // SPoly.GetCentroid(this.shape);
             points = GenerateDisplacements(this.shape, this.pos);
             this.Vel = vel;
         }
-        public PolyCollider(List<Vector2> shape, Vector2 pos, Vector2 vel)
+        public PolyCollider(Polygon shape, Vector2 pos, Vector2 vel)
         {
             this.pos = pos;
             points = GenerateDisplacements(shape, this.pos);
@@ -286,11 +286,11 @@ namespace ShapeCore
         public PolyCollider(Vector2 pos, Vector2 vel, params Vector2[] shape)
         {
             this.pos = pos;
-            this.shape = shape.ToList();
+            this.shape = new(shape); // shape.ToList();
             points = GenerateDisplacements(this.shape, this.pos);
             this.Vel = vel;
         }
-        public PolyCollider(List<Vector2> relativePoints, Vector2 pos, float rotRad = 0f, float scale = 1f)
+        public PolyCollider(Polygon relativePoints, Vector2 pos, float rotRad = 0f, float scale = 1f)
         {
             this.points = relativePoints;
             this.shape = new();
@@ -300,7 +300,7 @@ namespace ShapeCore
             this.dirty = true;
             this.Vel = new(0f);
         }
-        public PolyCollider(List<Vector2> relativePoints, Vector2 pos, Vector2 vel, float rotRad = 0f, float scale = 1f)
+        public PolyCollider(Polygon relativePoints, Vector2 pos, Vector2 vel, float rotRad = 0f, float scale = 1f)
         {
             this.points = relativePoints;
             this.shape = new();
@@ -312,7 +312,7 @@ namespace ShapeCore
         }
         public PolyCollider(Vector2 pos, Vector2 vel, float rotRad = 0f, float scale = 1f, params Vector2[] relativePoints)
         {
-            this.points = relativePoints.ToList();
+            this.points = new(relativePoints); // relativePoints.ToList();
             this.shape = new();
             this.pos = pos;
             this.rotRad = rotRad;
@@ -321,8 +321,8 @@ namespace ShapeCore
             this.Vel = vel;
         }
 
-        public override IShape GetShape() { return new Polygon(Shape, Pos); }
-        public Polygon GetPolygonShape() { return new Polygon(Shape, Pos); }
+        public override IShape GetShape() { return new Polygon(Shape); } // new Polygon(Shape, Pos); }
+        public Polygon GetPolygonShape() { return new Polygon(Shape); }
 
         public override bool CheckOverlap(ICollider other)
         {
@@ -355,9 +355,9 @@ namespace ShapeCore
             shape = SPoly.GetShape(points, Pos, RotRad, new(Scale));
             dirty = false;
         }
-        private static List<Vector2> GenerateDisplacements(List<Vector2> shape, Vector2 center)
+        private static Polygon GenerateDisplacements(Polygon shape, Vector2 center)
         {
-            List<Vector2> displacements = new();
+            Polygon displacements = new();
             for (int i = 0; i < shape.Count; i++)
             {
                 displacements.Add(shape[i] - center);
