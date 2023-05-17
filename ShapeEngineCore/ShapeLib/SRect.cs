@@ -6,16 +6,6 @@ namespace ShapeLib
 {
     public static class SRect
     {
-        public static Vector2 GetClosestVertex(this Rect rect, Vector2 p) { return SPoly.GetClosestVertex(rect.GetPoints(), p); }
-        public static Vector2 GetClosestPoint(this Rect rect, Vector2 p) { return SPoly.GetClosestPoint(rect.GetPoints(), p); }
-        public static Vector2 GetRandomPointOnEdge(this Rect r)
-        {
-            var edges = GetEdges(r);
-            var re = edges[SRNG.randI(edges.Count)];
-            return re.start.Lerp(re.end, SRNG.randF());
-        }
-        public static Vector2 GetRandomPoint(this Rect r) { return new(SRNG.randF(r.x, r.x + r.width), SRNG.randF(r.y, r.y + r.height)); }
-
         #region UI
         public static List<Rect> GetAlignedRectsHorizontal(this Rect rect, int count, float gapRelative = 0f, float maxElementSizeRel = 1f)
         {
@@ -223,9 +213,9 @@ namespace ShapeLib
         /// <param name="pivot"></param>
         /// <param name="angleDeg"></param>
         /// <returns></returns>
-        public static List<Vector2> RotateList(this Rect rect, Vector2 pivot, float angleDeg)
+        public static Polygon RotateList(this Rect rect, Vector2 pivot, float angleDeg)
         {
-            return SPoly.Rotate(rect.GetPolygon().points, pivot, angleDeg);
+            return SPoly.Rotate(rect.ToPolygon(), pivot, angleDeg);
 
             //float rotRad = angleDeg * SUtils.DEGTORAD;
             //Vector2 size = new Vector2(rect.width, rect.height);
@@ -245,7 +235,7 @@ namespace ShapeLib
         }
         public static (Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr) Rotate(this Rect rect, Vector2 pivot, float angleDeg)
         {
-            var rotated = SPoly.Rotate(rect.GetPolygon().points, pivot, angleDeg);
+            var rotated = SPoly.Rotate(rect.ToPolygon(), pivot, angleDeg);
             return new(rotated[0], rotated[1], rotated[2], rotated[3]);
 
             //float rotRad = angleDeg * SUtils.DEGTORAD;
@@ -264,12 +254,6 @@ namespace ShapeLib
             //
             //return new(topLeft, topRight, bottomRight, bottomLeft);
         }
-        //public static SegmentShape GetSegmentsShape(this Rect rect) { return new(GetSegments(rect), rect.Center); }
-        public static List<Segment> GetEdges(this Rect rect)
-        {
-            var c = rect.GetCorners();
-            return GetEdges(c.tl, c.bl, c.br, c.tr);
-        }
         /// <summary>
         /// Returns the segments of a rect in ccw order. (tl -> bl, bl -> br, br -> tr, tr -> tl)
         /// </summary>
@@ -278,9 +262,9 @@ namespace ShapeLib
         /// <param name="br"></param>
         /// <param name="tr"></param>
         /// <returns></returns>
-        public static List<Segment> GetEdges(Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr)
+        public static Edges GetEdges(Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr)
         {
-            List<Segment> segments = new()
+            Edges segments = new()
             {
                 new(tl, bl), new(bl, br), new(br, tr), new(tr, tl)
             };
@@ -347,18 +331,19 @@ namespace ShapeLib
                 );
             return new(tl, br);
         }
-        public static Vector2 ClampOnRect(Vector2 p, Rect rect)
+        public static Vector2 ClampOnRect(this Rect r, Vector2 p)
         {
             return new
                 (
-                    SUtils.Clamp(p.X, rect.x, rect.x + rect.width),
-                    SUtils.Clamp(p.Y, rect.y, rect.y + rect.height)
+                    SUtils.Clamp(p.X, r.x, r.x + r.width),
+                    SUtils.Clamp(p.Y, r.y, r.y + r.height)
                 );
         }
+        
         public static Rect Clamp(this Rect r, Rect bounds)
         {
-            Vector2 tl = ClampOnRect(r.TopLeft, bounds);
-            Vector2 br = ClampOnRect(r.BottomRight, bounds);
+            Vector2 tl = ClampOnRect(bounds, r.TopLeft);
+            Vector2 br = ClampOnRect(bounds, r.BottomRight);
             return new(tl, br);
         }
         public static Rect Clamp(this Rect r, Vector2 min, Vector2 max) { return Clamp(r, new Rect(min, max)); }
@@ -371,24 +356,16 @@ namespace ShapeLib
         /// <param name="r"></param>
         /// <param name="corner">Corner Index from 0 to 3</param>
         /// <returns></returns>
-        public static Vector2 GetCorner(this Rect r, int corner) { return GetPoints(r)[corner % 4]; }
-        
-        //public static Polygon GetPointsPolygon(this Rect rect) { return new() { rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight }; }
+        public static Vector2 GetCorner(this Rect r, int corner) { return r.ToPolygon()[corner % 4]; }
         public static (Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr) GetCorners(this Rect rect) { return (rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight); }
         /// <summary>
         /// Points are ordered in ccw order starting from the top left. (tl, bl, br, tr)
         /// </summary>
         /// <param name="rect"></param>
         /// <returns></returns>
-        public static PolygonPath GetPoints(this Rect rect) { return new() { rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight }; }
-        /// <summary>
-        /// Points are ordered in ccw order starting from the top left. (tl, bl, br, tr)
-        /// </summary>
-        /// <param name="rect"></param>
-        /// <returns></returns>
-        public static PolygonPath GetPointsRelative(this Rect rect, Vector2 pos)
+        public static Polygon GetPointsRelative(this Rect rect, Vector2 pos)
         {
-            var points = GetPoints(rect);
+            var points = rect.ToPolygon(); //GetPoints(rect);
             for (int i = 0; i < points.Count; i++)
             {
                 points[i] -= pos;
@@ -399,13 +376,20 @@ namespace ShapeLib
         #endregion
 
 
+        //public static Polygon GetPointsPolygon(this Rect rect) { return new() { rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight }; }
+        ///// <summary>
+        ///// Points are ordered in ccw order starting from the top left. (tl, bl, br, tr)
+        ///// </summary>
+        ///// <param name="rect"></param>
+        ///// <returns></returns>
+        //public static Polygon GetPoints(this Rect rect) { return new() { rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight }; }
 
 
 
         public static bool SeperateAxis(this Rect r, Vector2 axisStart, Vector2 axisEnd)
         {
             Vector2 n = axisStart - axisEnd;
-            var corners = r.GetPolygon().points;
+            var corners = r.ToPolygon();
             Vector2 edgeAStart =    corners[0]; //r.GetRectCorner(0); //GetRectCorner(rectPos, rectSize, rectAlignement, 0);
             Vector2 edgeAEnd =      corners[1]; //r.GetRectCorner(1);// GetRectCorner(rectPos, rectSize, rectAlignement, 1);
             Vector2 edgeBStart =    corners[2]; //r.GetRectCorner(2); //GetRectCorner(rectPos, rectSize, rectAlignement, 2);

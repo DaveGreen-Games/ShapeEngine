@@ -1,24 +1,11 @@
 ﻿using ShapeCore;
-using System.Data;
 using System.Numerics;
 
 namespace ShapeLib
 {
     public static class STriangle
     {
-        public static Vector2 GetClosestPoint(this Triangle t, Vector2 p)
-        {
-            return SPoly.GetClosestPoint(t.GetPoints(), p);
-        }
-        public static Vector2 GetClosestVertex(this Triangle t, Vector2 p)
-        {
-            return SPoly.GetClosestVertex(t.GetPoints(), p);
-        }
-        public static List<Triangle> Triangulate(this Triangle t)
-        {
-            return Triangulate(t, t.Centroid);
-        }
-        public static List<Triangle> Triangulate(this Triangle t, Vector2 p)
+        public static Triangulation Triangulate(this Triangle t, Vector2 p)
         {
             return new()
             {
@@ -41,17 +28,8 @@ namespace ShapeLib
             float y = (1f - f1Sq) * t.a.Y + (f1Sq * (1f - f2)) * t.b.Y + (f1Sq * f2) * t.c.Y;
             return new(x, y);
         }
-        public static Vector2 GetRandomPointOnEdge(this Triangle t)
-        {
-            var edges = GetEdges(t);
-            var re = edges[SRNG.randI(edges.Count)];
-            return re.start.Lerp(re.end, SRNG.randF());
-        }
-        public static Vector2 GetRandomPoint(this Triangle t) { return GetPoint(t, SRNG.randF(), SRNG.randF()); }
 
-        public static PolygonPath GetPoints(this Triangle t) { return new() { t.a, t.b, t.c }; }
-        public static Polygon GetPointsPolygon(this Triangle t) { return new(t.Centroid, t.a, t.b, t.c); }
-        public static Triangle Rotate(this Triangle t, float rad) { return Rotate(t, t.Centroid, rad); }
+        public static Triangle Rotate(this Triangle t, float rad) { return Rotate(t, t.GetCentroid(), rad); }
         public static Triangle Rotate(this Triangle t, Vector2 pivot, float rad)
         {
             Vector2 a = pivot + (t.a - pivot).Rotate(rad);
@@ -79,9 +57,16 @@ namespace ShapeLib
         public static Triangle Scale(this Triangle t, Vector2 aF, Vector2 bF, Vector2 cF) { return new(t.a * aF, t.b * bF, t.c * cF); }
         public static Triangle Move(this Triangle t, Vector2 offset) { return new(t.a + offset, t.b + offset, t.c + offset); }
         public static Triangle Move(this Triangle t, Vector2 aOffset, Vector2 bOffset, Vector2 cOffset) { return new(t.a + aOffset, t.b + bOffset, t.c + cOffset); }
-        public static List<Segment> GetEdges(this Triangle t) { return new() { new(t.a, t.b), new(t.b, t.c), new(t.c, t.a) }; }
-        //public static SegmentShape GetSegmentsShape(this Triangle t) { return new SegmentShape(t.Centroid, new(t.a, t.b), new(t.b, t.c), new(t.c, t.a)); }
+        
+        
+        
+       
+        
 
+        //public static List<Segment> GetEdges(this Triangle t) { return new() { new(t.a, t.b), new(t.b, t.c), new(t.c, t.a) }; }
+        //public static Polygon GetPointsPolygon(this Triangle t) { return new(t.Centroid, t.a, t.b, t.c); }
+        //public static Polygon GetPoints(this Triangle t) { return new() { t.a, t.b, t.c }; }
+        //public static SegmentShape GetSegmentsShape(this Triangle t) { return new SegmentShape(t.Centroid, new(t.a, t.b), new(t.b, t.c), new(t.c, t.a)); }
         //public static List<Vector2> GetPoints(this Triangle t) { return new() { t.a, t.b, t.c }; }
         //public static bool IsPointInside(this Triangle t, Vector2 p)
         //{

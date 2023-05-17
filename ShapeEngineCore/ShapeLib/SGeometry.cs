@@ -937,21 +937,21 @@ namespace ShapeLib
         #region Triangle
         
         #region Overlap
-        public static bool OverlapShape(this Triangle t, Segment s) { return OverlapShape(t.GetPolygon(), s); }
-        public static bool OverlapShape(this Triangle t, Circle c) { return OverlapShape(t.GetPolygon(), c); }
-        public static bool OverlapShape(this Triangle a, Triangle b) { return OverlapShape(a.GetPolygon(), b.GetPolygon()); }
-        public static bool OverlapShape(this Triangle t, Rect r) { return OverlapShape(t.GetPolygon(), r); }
-        public static bool OverlapShape(this Triangle t, Polygon poly) { return OverlapShape(t.GetPolygon(), poly); }
+        public static bool OverlapShape(this Triangle t, Segment s) { return OverlapShape(t.ToPolygon(), s); }
+        public static bool OverlapShape(this Triangle t, Circle c) { return OverlapShape(t.ToPolygon(), c); }
+        public static bool OverlapShape(this Triangle a, Triangle b) { return OverlapShape(a.ToPolygon(), b.ToPolygon()); }
+        public static bool OverlapShape(this Triangle t, Rect r) { return OverlapShape(t.ToPolygon(), r); }
+        public static bool OverlapShape(this Triangle t, Polygon poly) { return OverlapShape(t.ToPolygon(), poly); }
 
 
         #endregion
 
         #region Intersect
         public static Intersection IntersectShape(this Triangle t, Segment s) { return IntersectSegmentShapeSegment(t.GetSegmentShape(), s); }
-        public static Intersection IntersectShape(this Triangle t, Circle c) { return IntersectShape(t.GetPolygon(), c); }
-        public static Intersection IntersectShape(this Triangle a, Triangle b) { return IntersectShape(a.GetPolygon(), b.GetPolygon()); }
-        public static Intersection IntersectShape(this Triangle t, Rect r) { return IntersectShape(t.GetPolygon(), r.GetPolygon()); }
-        public static Intersection IntersectShape(this Triangle t, Polygon p) { return IntersectShape(t.GetPolygon(), p); }
+        public static Intersection IntersectShape(this Triangle t, Circle c) { return IntersectShape(t.ToPolygon(), c); }
+        public static Intersection IntersectShape(this Triangle a, Triangle b) { return IntersectShape(a.ToPolygon(), b.ToPolygon()); }
+        public static Intersection IntersectShape(this Triangle t, Rect r) { return IntersectShape(t.ToPolygon(), r.ToPolygon()); }
+        public static Intersection IntersectShape(this Triangle t, Polygon p) { return IntersectShape(t.ToPolygon(), p); }
         #endregion
 
         #endregion
@@ -1048,7 +1048,7 @@ namespace ShapeLib
         #region Overlap
         public static bool OverlapShape(this Polygon poly, Segment segment) { return OverlapPolySegment(poly.points, segment.start, segment.end); }
         public static bool OverlapShape(this Polygon poly, Circle circle) { return OverlapPolyCircle(poly.points, circle.center, circle.radius); }
-        public static bool OverlapShape(this Polygon poly, Triangle t) { return OverlapPolyPoly(poly.points, t.GetPolygon().points); }
+        public static bool OverlapShape(this Polygon poly, Triangle t) { return OverlapPolyPoly(poly.points, t.ToPolygon().points); }
         public static bool OverlapShape(this Polygon poly, Rect rect) { return OverlapPolyRect(poly.points, rect); }
         public static bool OverlapShape(this Polygon a, Polygon b) { return OverlapPolyPoly(a.points, b.points); }
 
@@ -1159,7 +1159,6 @@ namespace ShapeLib
         #endregion
 
         #region IsPointInside
-
         public static bool IsPointOnPoint(Vector2 pointA, Vector2 pointB) { return pointA.X == pointB.X && pointA.Y == pointB.Y; }
         public static bool IsPointOnSegment(Vector2 point, Vector2 start, Vector2 end)
         {
@@ -1221,7 +1220,7 @@ namespace ShapeLib
         //
         //    return !(intersections % 2 == 0);
         //}
-        public static bool IsPointInPoly(Vector2 point, PolygonPath poly)
+        public static bool IsPointInPoly(Vector2 point, Polygon poly)
         {
             bool oddNodes = false;
             int num = poly.Count;
@@ -1242,7 +1241,7 @@ namespace ShapeLib
 
             return oddNodes;
         }
-        public static bool IsPolyInPoly(PolygonPath poly, PolygonPath otherPoly)
+        public static bool IsPolyInPoly(Polygon poly, Polygon otherPoly)
         {
             for (int i = 0; i < otherPoly.Count; i++)
             {
@@ -1250,7 +1249,7 @@ namespace ShapeLib
             }
             return true;
         }
-        public static bool IsCircleInPoly(Vector2 circlePos, float radius, PolygonPath poly)
+        public static bool IsCircleInPoly(Vector2 circlePos, float radius, Polygon poly)
         {
             if (poly.Count < 3) return false;
             if (!IsPointInPoly(circlePos, poly)) return false;
@@ -1263,20 +1262,6 @@ namespace ShapeLib
             }
             return true;
         }
-
-
-
-        public static bool IsPointInside(this Segment l, Vector2 p) { return IsPointOnSegment(p, l.start, l.end); }
-        public static bool IsPointInside(this Circle c, Vector2 p) { return IsPointInCircle(p, c.center, c.radius); }
-        public static bool IsPointInside(this Triangle t, Vector2 p)
-        {
-            return IsPointInTriangle(t.a, t.b, t.c, p);
-            //var triangles = t.Triangulate(p);
-            //float totalArea = triangles.Sum((Triangle t) => { return t.GetArea(); });
-            //return t.GetArea() >= totalArea;
-        }
-        public static bool IsPointInside(this Rect r, Vector2 p) { return IsPointInRect(p, r.TopLeft, r.Size); }
-        public static bool IsPointInside(this Polygon poly, Vector2 p) { return IsPointInPoly(p, poly.points); }
 
         #endregion
 
@@ -1529,6 +1514,15 @@ namespace ShapeLib
 
 
         
+    }
+}
+
+
+//public static bool IsPointInside(this Segment l, Vector2 p) { return IsPointOnSegment(p, l.start, l.end); }
+        //public static bool IsPointInside(this Circle c, Vector2 p) { return IsPointInCircle(p, c.center, c.radius); }
+        //public static bool IsPointInside(this Triangle t, Vector2 p) { return IsPointInTriangle(t.a, t.b, t.c, p); }
+        //public static bool IsPointInside(this Rect r, Vector2 p) { return IsPointInRect(p, r.TopLeft, r.Size); }
+        //public static bool IsPointInside(this Polygon poly, Vector2 p) { return IsPointInPoly(p, poly.points); }
         //#region IShape
         //public static bool OverlapShape(this IShape a, IShape b) { return OverlapSegmentsSegments(a.GetSegmentShape(), b.GetSegmentShape()); }
         //public static Intersection IntersectShape(this IShape a, IShape b) { return IntersectionSegmentsSegments(b.GetReferencePoint(), a.GetSegmentShape(), b.GetSegmentShape()); }
@@ -1537,10 +1531,6 @@ namespace ShapeLib
         //public static Intersection IntersectShapeBoundingBox(this IShape a, IShape b) { return IntersectionRectRect(a.GetBoundingBox(), b.GetReferencePoint(), b.GetBoundingBox()); }
         //
         //#endregion
-    }
-}
-
-
 //public static bool OverlapCirclePoint(this Circle c, Vector2 point)
         //{
         //    float disSq = (circlePos - point).LengthSquared();

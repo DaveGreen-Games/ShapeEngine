@@ -109,14 +109,24 @@ namespace ShapeCore
 
     public interface IShape
     {
+        public Vector2 GetCentroid();
         public float GetArea();
         public float GetCircumference();
         public float GetCircumferenceSquared();
+        public Polygon ToPolygon();
+        public Edges GetEdges();
+        public Triangulation Triangulate();
         public SegmentShape GetSegmentShape();
-        public Polygon GetPolygon();
         public Vector2 GetReferencePoint();
         public Rect GetBoundingBox();
-        public bool IsPointOnShape(Vector2 p);
+        public Circle GetBoundingCircle();
+        public bool IsPointInside(Vector2 p);
+        public Vector2 GetClosestPoint(Vector2 p);
+        public Vector2 GetClosestVertex(Vector2 p);
+        public Vector2 GetRandomPoint();
+        public Vector2 GetRandomVertex();
+        public Segment GetRandomEdge();
+        public Vector2 GetRandomPointOnEdge();
         public void DrawShape(float linethickness, Color color);
         //public void SetPosition(Vector2 position);
         //public bool Equals(IShape other);

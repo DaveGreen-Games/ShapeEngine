@@ -1,10 +1,24 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Numerics;
+﻿using System.Numerics;
 using Raylib_CsLo;
 using ShapeLib;
+using ShapeRandom;
 
 namespace ShapeCore
 {
+    public class Edges : List<Segment>
+    {
+        public Edges() { }
+        public Edges(IShape shape) { AddRange(shape.GetEdges()); }
+        public Edges(params Segment[] edges) { AddRange(edges); }
+        public Edges(IEnumerable<Segment> edges) {  AddRange(edges); }
+    }
+    public class Triangulation : List<Triangle>
+    {
+        public Triangulation() { }
+        public Triangulation(IShape shape) { AddRange(shape.Triangulate()); }
+        public Triangulation(params Triangle[] triangles) { AddRange(triangles); }
+        public Triangulation(IEnumerable<Triangle> triangles) { AddRange(triangles); }
+    }
     public struct SegmentShape
     {
         public List<Segment> segments;
@@ -12,20 +26,7 @@ namespace ShapeCore
         public SegmentShape(List<Segment> segments, Vector2 referencePoint) { this.segments = segments; this.referencePoint = referencePoint; }
         public SegmentShape(Vector2 referencePoint, params Segment[] segments) { this.segments = segments.ToList(); this.referencePoint = referencePoint; }
     }
-    //public struct PolygonShape
-    //{
-    //    public List<Vector2> points;
-    //    public Vector2 referencePoint;
-    //
-    //    public PolygonShape(List<Vector2> points) { this.points = points; this.referencePoint = SPoly.GetCentroid(points); }
-    //    public PolygonShape(params Vector2[] points) { this.points = points.ToList(); this.referencePoint = SPoly.GetCentroid(points.ToList()); }
-    //    public PolygonShape(List<Vector2> points, Vector2 center) { this.points = points; this.referencePoint = center; }
-    //    public PolygonShape(Vector2 center, params Vector2[] points) { this.points = points.ToList(); this.referencePoint = center; }
-    //    public PolygonShape(Triangle t) { this.points = t.GetPolygon().points; this.referencePoint = t.Centroid; }
-    //    public PolygonShape(Rect r) { this.points = r.GetPolygon().points; this.referencePoint = r.Center; }
-    //}
-
-
+    
     public struct Segment : IShape
     {
         public Vector2 start;
@@ -40,16 +41,42 @@ namespace ShapeCore
         public Segment(float startX, float startY, float endX, float endY) { this.start = new(startX, startY); this.end = new(endX, endY); }
         public Segment(Segment s) { start = s.start; end = s.end; }
         
+        public Vector2 GetCentroid() { return Center; }
         public Vector2 GetReferencePoint() { return Center; }
         public float GetArea() { return 0f; }
         public float GetCircumference() { return Length; }
         public float GetCircumferenceSquared() { return LengthSquared; }
+        public Polygon ToPolygon() { return new(start, end); }
+        public Edges GetEdges() { return new(this); }
+        public Triangulation Triangulate() { return new(); }
         public SegmentShape GetSegmentShape() { return new(start, this); }
-        public Polygon GetPolygon() { return new(Center, start, end); }
+        public Circle GetBoundingCircle() { return ToPolygon().GetBoundingCircle(); }
         public Rect GetBoundingBox() { return new(start, end); }
-        public bool IsPointOnShape(Vector2 p) { return this.IsPointInside(p); }
+        public bool IsPointInside(Vector2 p) { return SGeometry.IsPointOnSegment(p, start, end); }
+        public Vector2 GetClosestPoint(Vector2 p)
+        {
+            var w = Displacement;
+            float t = (p - start).Dot(w) / w.LengthSquared();
+            if (t < 0f) return start;
+            else if (t > 1f) return end;
+            else return start + w * t;
+        }
+        public Vector2 GetClosestVertex(Vector2 p)
+        {
+            float disSqA = (p - start).LengthSquared();
+            float disSqB = (p - end).LengthSquared();
+            return disSqA <= disSqB ? start : end;
+        }
+        public Vector2 GetRandomPoint() { return this.GetPoint(SRNG.randF()); }
+        public Vector2 GetRandomVertex() { return SRNG.chance(0.5f) ? start : end; }
+        public Segment GetRandomEdge() { return this; }
+        public Vector2 GetRandomPointOnEdge() { return GetRandomPoint(); }
         public void DrawShape(float linethickness, Color color) => this.Draw(linethickness, color);
-        
+
+
+
+
+
         //public Segment ChangePosition(Vector2 newPos) { return new(newPos, newPos + Displacement); }
         //public void SetPosition(Vector2 newPosition)
         //{
@@ -70,19 +97,34 @@ namespace ShapeCore
         public Circle(Circle c) { center = c.center; radius = c.radius; }
         public Circle(Rect r) { center = r.Center; radius = MathF.Max(r.width, r.height); }
 
+        public Vector2 GetCentroid() { return center; }
+        public Edges GetEdges() { return this.GetEdges(16); }
+        public Polygon ToPolygon() { return this.GetPoints(16); }
+        public Triangulation Triangulate() { return ToPolygon().Triangulate(); }
+        public SegmentShape GetSegmentShape() { return new(this.GetEdges(), center); }
+        public Circle GetBoundingCircle() { return this; }
         public Vector2 GetReferencePoint() { return center; }
         public float GetArea() { return MathF.PI * radius * radius; }
         public float GetCircumference() { return MathF.PI * radius * 2f; }
         public float GetCircumferenceSquared() { return GetCircumference() * GetCircumference(); }
         public Rect GetBoundingBox() { return new Rect(center, new(radius, radius), new(0.5f)); }
-        public SegmentShape GetSegmentShape() { return new(this.GetEdges(), center); }
-        public Polygon GetPolygon() { return new(this.GetPoints(), center); }
+        public bool IsPointInside(Vector2 p) { return SGeometry.IsPointInCircle(p, center, radius); }
+        public Vector2 GetClosestPoint(Vector2 p) { return (p - center).Normalize() * radius; }
+        public Vector2 GetClosestVertex(Vector2 p) { return (p - center).Normalize() * radius; }
+        public Vector2 GetRandomPoint()
+        {
+            float randAngle = SRNG.randAngleRad();
+            var randDir = SVec.VecFromAngleRad(randAngle);
+            return center + randDir * SRNG.randF(0, radius);
+        }
+        public Vector2 GetRandomVertex() { return GetRandomPoint(); }
+        public Segment GetRandomEdge() { return SRNG.randCollection(GetEdges(), false); }
+        public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
+
         public void DrawShape(float linethickness, Color color) => this.DrawLines(linethickness, color);
-        public bool IsPointOnShape(Vector2 p) { return this.IsPointInside(p); }
-        
-        //public void SetPosition(Vector2 newPosition) { center = newPosition; }
+
+
     }
-    
     /// <summary>
     /// Class that represents a triangle by holding three points. Points a, b, c should be in ccw order!
     /// </summary>
@@ -90,7 +132,7 @@ namespace ShapeCore
     {
         public Vector2 a, b, c;
 
-        public Vector2 Centroid { get { return (a + b + c) / 3; } }
+        //public Vector2 Centroid { get { return (a + b + c) / 3; } }
         public Vector2 A { get { return b - a; } }
         public Vector2 B { get { return c - b; } }
         public Vector2 C { get { return a - c; } }
@@ -103,27 +145,28 @@ namespace ShapeCore
         /// <param name="c"></param>
         public Triangle(Vector2 a, Vector2 b, Vector2 c) { this.a = a; this.b = b; this.c = c; }
         public Triangle(Triangle t) { a = t.a; b = t.b; c = t.c; }
-        
-        public Vector2 GetReferencePoint() { return Centroid; }
+
+        public Vector2 GetCentroid() { return (a + b + c) / 3; }
+        public Polygon ToPolygon() { return new(a, b, c); }
+        public Edges GetEdges() { return new() { new(a, b), new(b, c), new(c, a) }; }
+        public Triangulation Triangulate() { return this.Triangulate(GetCentroid()); }
+        public SegmentShape GetSegmentShape() { return new(GetCentroid(), new(a, b), new(b, c), new(c, a) ); }
+        public Circle GetBoundingCircle() { return ToPolygon().GetBoundingCircle(); }
+        public Vector2 GetReferencePoint() { return GetCentroid(); }
         public float GetCircumference() { return MathF.Sqrt(GetCircumferenceSquared()); }
         public float GetCircumferenceSquared() { return A.LengthSquared() + B.LengthSquared() + C.LengthSquared(); }
         public float GetArea() { return (a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X); }
-        public SegmentShape GetSegmentShape() { return new(Centroid, new(a, b), new(b, c), new(c, a) ); }
-        public Polygon GetPolygon() { return new(Centroid, a, b, c); }
         public Rect GetBoundingBox() { return new Rect(a.X, a.Y, 0, 0).Enlarge(b).Enlarge(c); }
+        public bool IsPointInside(Vector2 p) { return SGeometry.IsPointInTriangle(a, b, c, p); }
+        public Vector2 GetClosestPoint(Vector2 p) { return ToPolygon().GetClosestPoint(p); }
+        public Vector2 GetClosestVertex(Vector2 p) { return ToPolygon().GetClosestVertex(p); }
+        public Vector2 GetRandomPoint() { return this.GetPoint(SRNG.randF(), SRNG.randF()); }
+        public Vector2 GetRandomVertex() { return GetRandomPoint(); }
+        public Segment GetRandomEdge() { return SRNG.randCollection(GetEdges(), false); }
+        public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
         public void DrawShape(float linethickness, Color color) => this.DrawLines(linethickness, color);
-        public bool IsPointOnShape(Vector2 p) { return this.IsPointInside(p); }
-        
-        //public Circle GetBoundingCircle() { return new(Center, Length / 2); }
-        //public void SetPosition(Vector2 newPosition) 
-        //{
-        //    Vector2 w = newPosition - Centroid;//displacement
-        //    a += w;
-        //    b += w;
-        //    c += w;
-        //}
+
     }
-    
     public struct Rect : IShape
     {
         public float x;
@@ -182,7 +225,7 @@ namespace ShapeCore
             this.height = size.Y;
         }
         public Rect(IShape shape) { this = shape.GetBoundingBox(); }// ???
-        public Rect(PolygonPath points) { this = SPoly.GetBoundingBox(points); }// ???
+        public Rect(Polygon p) { this = p.GetBoundingBox(); }// ???
         public Rect(Rectangle rect)
         {
             this.x = rect.X;
@@ -191,17 +234,27 @@ namespace ShapeCore
             this.height = rect.height;
         }
 
+        public Vector2 GetCentroid() { return Center; }
+        public Polygon ToPolygon() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
+        public Edges GetEdges() { return new() { new(TopLeft, BottomLeft), new(BottomLeft, BottomRight), new(BottomRight, TopRight), new(TopRight, TopLeft) }; }
+        public Triangulation Triangulate() { return ToPolygon().Triangulate(); }
+        public SegmentShape GetSegmentShape() { return new(GetEdges(), Center); }
+        public Circle GetBoundingCircle() { return ToPolygon().GetBoundingCircle(); }
         public Vector2 GetReferencePoint() { return Center; }
         public float GetCircumference() { return width * 2 + height * 2; }
         public float GetCircumferenceSquared() { return GetCircumference() * GetCircumference(); }
         public float GetArea() { return width * height; }
-        public SegmentShape GetSegmentShape() { return new(SRect.GetEdges(this), Center); }
-        public Polygon GetPolygon() { return new(center : Center, TopLeft, BottomLeft, BottomRight, TopRight); }
         public Rect GetBoundingBox() { return this; }
-        public bool IsPointOnShape(Vector2 p) { return this.IsPointInside(p); }
+        public bool IsPointInside(Vector2 p) { return SGeometry.IsPointInRect(p, TopLeft, Size); }
+        public Vector2 GetClosestPoint(Vector2 p) { return ToPolygon().GetClosestPoint(p); }
+        public Vector2 GetClosestVertex(Vector2 p) { return ToPolygon().GetClosestVertex(p); }
+        public Vector2 GetRandomPoint() { return new(SRNG.randF(x, x + width), SRNG.randF(y, y + height)); }
+        public Vector2 GetRandomVertex() { return ToPolygon().GetRandomPoint(); }
+        public Segment GetRandomEdge() { return SRNG.randCollection(GetEdges(), false); }
+        public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
+        
         public void DrawShape(float linethickness, Color color) => this.DrawLines(linethickness, color);
-        
-        
+
         //public void SetPosition(Vector2 newPosition) 
         //{
         //    Vector2 w = newPosition - Center;
@@ -352,43 +405,13 @@ namespace ShapeCore
         //}
         */
     }
-    
-    /// <summary>
-    /// Points should be in ccw order!
-    /// </summary>
-    public struct Polygon : IShape
+    public class Polygon : List<Vector2>, IShape
     {
-        public PolygonPath points;
-        public Vector2 center;
-
-        public Polygon(List<Vector2> points) { this.points = new(points); this.center = SPoly.GetCentroid(this.points); }
-        public Polygon(params Vector2[] points) { this.points = new(points); this.center = SPoly.GetCentroid(this.points); }
-        public Polygon(List<Vector2> points, Vector2 center) { this.points = new(points); this.center = center; }
-        public Polygon(Vector2 center, params Vector2[] points) { this.points = new(points); this.center = center; }
-        public Polygon(Triangle t) { this.points = t.GetPolygon().points; this.center = t.Centroid; }
-        public Polygon(Rect r) { this.points = r.GetPolygon().points; this.center = r.Center; }
-
-        public Vector2 GetReferencePoint() { return center; }
-        public float GetCircumference() { return points.GetCircumference(); }
-        public float GetCircumferenceSquared() { return points.GetCircumferenceSquared(); }
-        public float GetArea() { return points.GetArea(); }
-        public SegmentShape GetSegmentShape() { return new(points.GetEdges(), center); }
-        public Polygon GetPolygon() { return this; }
-        public Rect GetBoundingBox() { return points.GetBoundingBox(); }
-        public void DrawShape(float linethickness, Color color) => SDrawing.DrawPolygonLines(points, linethickness, color);
-        public bool IsPointOnShape(Vector2 p) { return SGeometry.IsPointInPoly(p, points); }// this.IsPointInside(p); }
-        
-        //public void SetPosition(Vector2 newPosition) { center = newPosition; }
-    }
-
-    public class PolygonPath : List<Vector2>//, IShape
-    {
-        public PolygonPath() { }
-        public PolygonPath(params Vector2[] points) { AddRange(points); }
-        public PolygonPath(List<Vector2> points) { AddRange(points); }
-        public PolygonPath(Triangle t) { AddRange(t.GetPoints()); }
-        public PolygonPath(Rect rect) { AddRange(rect.GetPoints());}
-
+        public Polygon() { }
+        public Polygon(params Vector2[] points) { AddRange(points); }
+        //public Polygon(List<Vector2> points) { AddRange(points); }
+        public Polygon(IEnumerable<Vector2> edges) { AddRange(edges); }
+        public Polygon(IShape shape) { AddRange(shape.ToPolygon()); }
         public void ReduceVertexCount(int newCount)
         {
             if (newCount < 3) Clear();//no points left to form a polygon
@@ -436,21 +459,255 @@ namespace ShapeCore
         {
             return this[SUtils.WrapIndex(Count, index)];
         }
-        
-        
-        /*
-        public Vector2 GetReferencePoint() { return this.GetCentroid(); }
-        public float GetCircumference() { return this.GetCircumference(); }
-        public float GetCircumferenceSquared() { return this.GetCircumferenceSquared(); }
-        public float GetArea() { return this.GetArea(); }
-        public SegmentShape GetSegmentShape() { return new(SPoly.GetEdges(this), this.GetCentroid()); }
-        public Polygon GetPolygon() { return new(this); }
-        public Rect GetBoundingBox() { return this.GetBoundingBox(); }
+
+        public Vector2 GetReferencePoint() { return GetCentroid(); }
+        public Vector2 GetCentroid()
+        {
+            Vector2 result = new();
+
+            for (int i = 0; i < Count; i++)
+            {
+                Vector2 a = this[i];
+                Vector2 b = this[(i + 1) % Count];
+                float factor = a.X * b.Y - b.X * a.Y;
+                result.X += (a.X + b.X) * factor;
+                result.Y += (a.Y + b.Y) * factor;
+            }
+
+            return result * (1f / (GetArea() * 6f));
+        }
+        public Vector2 GetCentroidMean()
+        {
+            if (Count <= 0) return new(0f);
+            Vector2 total = new(0f);
+            foreach (Vector2 p in this) { total += p; }
+            return total / Count;
+        }
+        public Triangulation Triangulate()
+        {
+            if (Count < 3) return new();
+            else if (Count == 3) return new() { new(this[0], this[1], this[2]) };
+
+            Triangulation triangles = new();
+            List<Vector2> vertices = new();
+            vertices.AddRange(this);
+            while (vertices.Count > 3)
+            {
+                for (int i = 0; i < vertices.Count; i++)
+                {
+                    Vector2 a = vertices[i];
+                    Vector2 b = SUtils.GetItem(vertices, i + 1);
+                    Vector2 c = SUtils.GetItem(vertices, i - 1);
+
+                    Vector2 ba = b - a;
+                    Vector2 ca = c - a;
+
+                    if (ba.Cross(ca) < 0f) continue;
+
+                    Triangle t = new(a, b, c);
+
+                    bool isValid = true;
+                    foreach (var p in this)
+                    {
+                        if (p == a || p == b || p == c) continue;
+                        if (t.IsPointInside(p))
+                        {
+                            isValid = false;
+                            break;
+                        }
+                    }
+
+                    if (isValid)
+                    {
+                        triangles.Add(t);
+                        vertices.RemoveAt(i);
+                        break;
+                    }
+                }
+            }
+            triangles.Add(new(vertices[0], vertices[1], vertices[2]));
+
+
+            return triangles;
+        }
+        public Edges GetEdges()
+        {
+            if (Count <= 1) return new();
+            else if (Count == 2)
+            {
+                return new() { new(this[0], this[1]) };
+            }
+            Edges segments = new();
+            for (int i = 0; i < Count; i++)
+            {
+                Vector2 start = this[i];
+                Vector2 end = this[(i + 1) % Count];
+                segments.Add(new(start, end));
+            }
+            return segments;
+        }
+        public SegmentShape GetSegmentShape() { return new(GetEdges(), this.GetCentroid()); }
+        public Circle GetBoundingCircle()
+        {
+            float maxD = 0f;
+            int num = this.Count;
+            Vector2 origin = new();
+            for (int i = 0; i < num; i++) { origin += this[i]; }
+            origin *= (1f / (float)num);
+            for (int i = 0; i < num; i++)
+            {
+                float d = (origin - this[i]).LengthSquared();
+                if (d > maxD) maxD = d;
+            }
+
+            return new Circle(origin, MathF.Sqrt(maxD));
+        }
+        public Rect GetBoundingBox()
+        {
+            if (Count < 2) return new();
+            Vector2 start = this[0];
+            Rect r = new(start.X, start.Y, 0, 0);
+
+            foreach (var p in this)
+            {
+                r = SRect.Enlarge(r, p);
+            }
+            return r;
+        }
+        public float GetCircumference() { return MathF.Sqrt(GetCircumferenceSquared()); }
+        public float GetCircumferenceSquared()
+        {
+            if (this.Count < 3) return 0f;
+            float lengthSq = 0f;
+            for (int i = 0; i < Count - 1; i++)
+            {
+                Vector2 w = this[(i + 1)%Count] - this[i];
+                lengthSq += w.LengthSquared();
+            }
+            return lengthSq;
+        }
+        public float GetArea()
+        {
+            float totalArea = 0f;
+
+            for (int i = 0; i < this.Count; i++)
+            {
+                Vector2 a = this[i];
+                Vector2 b = this[(i + 1) % this.Count];
+
+                float dy = (a.Y + b.Y) / 2f;
+                float dx = b.X - a.X;
+
+                float area = dy * dx;
+                totalArea += area;
+            }
+
+            return MathF.Abs(totalArea);
+        }
+        public Polygon ToPolygon() { return this; }
+        public bool IsPointInside(Vector2 p) { return SGeometry.IsPointInPoly(p, this); }
+        public Vector2 GetClosestPoint(Vector2 p)
+        {
+            float minD = float.PositiveInfinity;
+            var edges = GetEdges();
+            Vector2 closest = new();
+
+            for (int i = 0; i < edges.Count; i++)
+            {
+                Vector2 c = edges[i].GetClosestPoint(p);
+                float d = (c - p).LengthSquared();
+                if (d < minD)
+                {
+                    closest = c;
+                    minD = d;
+                }
+            }
+            return closest;
+        }
+        public Vector2 GetClosestVertex(Vector2 p)
+        {
+            float minD = float.PositiveInfinity;
+            Vector2 closest = new();
+            for (int i = 0; i < Count; i++)
+            {
+                float d = (this[i] - p).LengthSquared();
+                if (d < minD)
+                {
+                    closest = this[i];
+                    minD = d;
+                }
+            }
+            return closest;
+        }
+        public Vector2 GetRandomPoint()
+        {
+            var triangles = Triangulate();
+            List<WeightedItem<Triangle>> items = new();
+            foreach (var t in triangles)
+            {
+                items.Add(new(t, (int)t.GetArea()));
+            }
+            var item = SRNG.PickRandomItem(items.ToArray());
+            return item.GetRandomPoint();
+        }
+        public Vector2 GetRandomVertex() { return SRNG.randCollection(this, false); }
+        public Segment GetRandomEdge() { return SRNG.randCollection(GetEdges(), false); }
+        public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
+
         public void DrawShape(float linethickness, Color color) => SDrawing.DrawPolygonLines(this, linethickness, color);
-        public bool IsPointOnShape(Vector2 p) { return SGeometry.IsPointInPoly(p, this); }
-        */
+        
     }
-    /*
+
+
+}
+
+
+
+
+
+
+//public struct PolygonShape
+    //{
+    //    public List<Vector2> points;
+    //    public Vector2 referencePoint;
+    //
+    //    public PolygonShape(List<Vector2> points) { this.points = points; this.referencePoint = SPoly.GetCentroid(points); }
+    //    public PolygonShape(params Vector2[] points) { this.points = points.ToList(); this.referencePoint = SPoly.GetCentroid(points.ToList()); }
+    //    public PolygonShape(List<Vector2> points, Vector2 center) { this.points = points; this.referencePoint = center; }
+    //    public PolygonShape(Vector2 center, params Vector2[] points) { this.points = points.ToList(); this.referencePoint = center; }
+    //    public PolygonShape(Triangle t) { this.points = t.GetPolygon().points; this.referencePoint = t.Centroid; }
+    //    public PolygonShape(Rect r) { this.points = r.GetPolygon().points; this.referencePoint = r.Center; }
+    //}
+/// <summary>
+    /// Points should be in ccw order!
+    /// </summary>
+/*
+    public struct Polygon : IShape
+    {
+        public PolygonPath points;
+        public Vector2 center;
+
+        public Polygon(List<Vector2> points) { this.points = new(points); this.center = SPoly.GetCentroid(this.points); }
+        public Polygon(params Vector2[] points) { this.points = new(points); this.center = SPoly.GetCentroid(this.points); }
+        public Polygon(List<Vector2> points, Vector2 center) { this.points = new(points); this.center = center; }
+        public Polygon(Vector2 center, params Vector2[] points) { this.points = new(points); this.center = center; }
+        public Polygon(Triangle t) { this.points = t.GetPolygon().points; this.center = t.Centroid; }
+        public Polygon(Rect r) { this.points = r.GetPolygon().points; this.center = r.Center; }
+
+        public Vector2 GetReferencePoint() { return center; }
+        public float GetCircumference() { return points.GetCircumference(); }
+        public float GetCircumferenceSquared() { return points.GetCircumferenceSquared(); }
+        public float GetArea() { return points.GetArea(); }
+        public SegmentShape GetSegmentShape() { return new(points.GetEdges(), center); }
+        public Polygon GetPolygon() { return this; }
+        public Rect GetBoundingBox() { return points.GetBoundingBox(); }
+        public void DrawShape(float linethickness, Color color) => SDrawing.DrawPolygonLines(points, linethickness, color);
+        public bool IsPointOnShape(Vector2 p) { return SGeometry.IsPointInPoly(p, points); }// this.IsPointInside(p); }
+        
+        //public void SetPosition(Vector2 newPosition) { center = newPosition; }
+    }
+    */
+/*
     public class Poly
     {
         List<Vector2> displacements = new();
@@ -494,8 +751,7 @@ namespace ShapeCore
         }
     }
     */
-
-    /*
+/*
 
     public struct Polygon : IShape
     {
@@ -593,5 +849,3 @@ namespace ShapeCore
 
     }
         */
-
-}
