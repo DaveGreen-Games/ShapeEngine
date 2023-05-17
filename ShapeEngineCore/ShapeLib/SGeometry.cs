@@ -1122,36 +1122,6 @@ namespace ShapeLib
         public static Intersection IntersectShape(this Polygon a, Polygon b) { return IntersectSegmentShapeSegmentShape(a.GetSegmentShape(), b.GetSegmentShape()); }
 
 
-        /*
-        public static Intersection IntersectionPolyCircle(Vector2 referencePoint, List<Vector2> poly, Vector2 circlePos, float circleRadius)
-        {
-            var segments = SPoly.GetSegments(poly);
-            return IntersectionSegmentsCircle(referencePoint, segments, circlePos, circleRadius);
-        }
-        public static Intersection IntersectionPolySegment(Vector2 referencePoint, List<Vector2> poly, Vector2 start, Vector2 end)
-        {
-            var segments = SPoly.GetSegments(poly);
-            return IntersectionSegmentsSegment(referencePoint, segments, start, end);
-        }
-        public static Intersection IntersectionPolyRect(Vector2 referencePoint, List<Vector2> poly, Rect rect)
-        {
-            var segments = SRect.GetSegments(rect);
-            var polySegments = SPoly.GetSegments(poly);
-            return IntersectionSegmentsSegments(referencePoint, polySegments, segments);
-        }
-        public static Intersection IntersectionPolyPoly(Vector2 referencePoint, List<Vector2> a, List<Vector2> b)
-        {
-            var aSegments = SPoly.GetSegments(a);
-            var bSegments = SPoly.GetSegments(b);
-            return IntersectionSegmentsSegments(referencePoint, aSegments, bSegments);
-        }
-
-
-        public static Intersection IntersectionPolyCircle(this PolyCollider poly, CircleCollider circle) { return IntersectionPolyCircle(circle.Pos, poly.Shape, circle.Pos, circle.Radius); }
-        public static Intersection IntersectionPolySegment(this PolyCollider poly, SegmentCollider segment) { return IntersectionPolySegment(poly.Pos, poly.Shape, segment.Start, segment.End); }
-        public static Intersection IntersectionPolyRect(this PolyCollider poly, RectCollider rect) { return IntersectionPolyRect(rect.Pos, poly.Shape, rect.Rect); }
-        public static Intersection IntersectionPolyPoly(this PolyCollider a, PolyCollider b) { return IntersectionPolyPoly(b.Pos, a.Shape, b.Shape); }
-        */
         #endregion
 
         #endregion
@@ -1204,20 +1174,6 @@ namespace ShapeLib
 
             return left <= point.X && right >= point.X && top <= point.Y && bottom >= point.Y;
         }
-        //public static bool IsPointInPoly(Vector2 point, List<Vector2> poly)
-        //{
-        //    if (poly.Count < 3) return false;
-        //    int intersections = 0;
-        //    for (int i = 0; i < poly.Count; i++)
-        //    {
-        //        Vector2 start = poly[i];
-        //        Vector2 end = poly[(i + 1) % poly.Count];
-        //        var info = SGeometry.IntersectRaySegmentInfo(point, new(1f, 0f), start, end);
-        //        if (info.intersected) intersections += 1;
-        //    }
-        //
-        //    return !(intersections % 2 == 0);
-        //}
         public static bool IsPointInPoly(Vector2 point, Polygon poly)
         {
             bool oddNodes = false;
@@ -1512,6 +1468,52 @@ namespace ShapeLib
 
     }
 }
+
+
+/*
+        public static Intersection IntersectionPolyCircle(Vector2 referencePoint, List<Vector2> poly, Vector2 circlePos, float circleRadius)
+        {
+            var segments = SPoly.GetSegments(poly);
+            return IntersectionSegmentsCircle(referencePoint, segments, circlePos, circleRadius);
+        }
+        public static Intersection IntersectionPolySegment(Vector2 referencePoint, List<Vector2> poly, Vector2 start, Vector2 end)
+        {
+            var segments = SPoly.GetSegments(poly);
+            return IntersectionSegmentsSegment(referencePoint, segments, start, end);
+        }
+        public static Intersection IntersectionPolyRect(Vector2 referencePoint, List<Vector2> poly, Rect rect)
+        {
+            var segments = SRect.GetSegments(rect);
+            var polySegments = SPoly.GetSegments(poly);
+            return IntersectionSegmentsSegments(referencePoint, polySegments, segments);
+        }
+        public static Intersection IntersectionPolyPoly(Vector2 referencePoint, List<Vector2> a, List<Vector2> b)
+        {
+            var aSegments = SPoly.GetSegments(a);
+            var bSegments = SPoly.GetSegments(b);
+            return IntersectionSegmentsSegments(referencePoint, aSegments, bSegments);
+        }
+
+
+        public static Intersection IntersectionPolyCircle(this PolyCollider poly, CircleCollider circle) { return IntersectionPolyCircle(circle.Pos, poly.Shape, circle.Pos, circle.Radius); }
+        public static Intersection IntersectionPolySegment(this PolyCollider poly, SegmentCollider segment) { return IntersectionPolySegment(poly.Pos, poly.Shape, segment.Start, segment.End); }
+        public static Intersection IntersectionPolyRect(this PolyCollider poly, RectCollider rect) { return IntersectionPolyRect(rect.Pos, poly.Shape, rect.Rect); }
+        public static Intersection IntersectionPolyPoly(this PolyCollider a, PolyCollider b) { return IntersectionPolyPoly(b.Pos, a.Shape, b.Shape); }
+        */
+//public static bool IsPointInPoly(Vector2 point, List<Vector2> poly)
+        //{
+        //    if (poly.Count < 3) return false;
+        //    int intersections = 0;
+        //    for (int i = 0; i < poly.Count; i++)
+        //    {
+        //        Vector2 start = poly[i];
+        //        Vector2 end = poly[(i + 1) % poly.Count];
+        //        var info = SGeometry.IntersectRaySegmentInfo(point, new(1f, 0f), start, end);
+        //        if (info.intersected) intersections += 1;
+        //    }
+        //
+        //    return !(intersections % 2 == 0);
+        //}
 
 
 //public static bool IsPointInside(this Segment l, Vector2 p) { return IsPointOnSegment(p, l.start, l.end); }
