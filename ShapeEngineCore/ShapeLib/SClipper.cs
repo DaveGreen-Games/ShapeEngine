@@ -7,31 +7,27 @@ using Clipper2Lib;
 
 namespace ShapeLib
 {
+    public class Polygons : List<Polygon>
+    {
+        public Polygons() { }
+        public Polygons(params Polygon[] polygons) { AddRange(polygons); }
+        public Polygons(IEnumerable<Polygon> polygons) { AddRange(polygons); }
+    }
+
     public static class SClipper
     {
-        public static PathsD ClipRect(Rect rect, Polygon poly, int precision = 2, bool convexOnly = false)
+        public static PathsD ClipRect(this Rect rect, Polygon poly, int precision = 2, bool convexOnly = false)
         {
             return Clipper.ExecuteRectClip(rect.ToClipperRect(), poly.ToClipperPath(), precision, convexOnly);
         }
-        public static PathsD Union(FillRule fillRule, params Polygon[] polygons) { return Union(polygons, fillRule); }
-        public static PathsD Union(params Polygon[] polygons) { return Union(polygons, FillRule.NonZero); }
-        public static PathsD Union(IEnumerable<Polygon> polygons, FillRule fillRule = FillRule.NonZero) { return Clipper.Union(polygons.ToClipperPaths(), fillRule); }
-        public static PathsD Union(Polygon a, Polygon b, FillRule fillRule = FillRule.NonZero) { return Clipper.Union(ToClipperPaths(a), ToClipperPaths(b), fillRule); }
+        public static PathsD Union(this Polygons polygons, FillRule fillRule = FillRule.NonZero) { return Clipper.Union(polygons.ToClipperPaths(), fillRule); }
+        public static PathsD Union(this Polygon a, Polygon b, FillRule fillRule = FillRule.NonZero) { return Clipper.Union(ToClipperPaths(a), ToClipperPaths(b), fillRule); }
         
-        public static PathsD Intersect(Polygon subject, Polygon clip, FillRule fillRule = FillRule.NonZero, int precision = 2)
+        public static PathsD Intersect(this Polygon subject, Polygon clip, FillRule fillRule = FillRule.NonZero, int precision = 2)
         {
             return Clipper.Intersect(ToClipperPaths(subject), ToClipperPaths(clip), fillRule, precision);
         }
-        public static PathsD Intersect(Polygon clip, FillRule fillRule, params Polygon[] subjects)
-        {
-            var result = new PathsD();
-            foreach (var subject in subjects)
-            {
-                result.AddRange(Clipper.Intersect(subject.ToClipperPaths(), clip.ToClipperPaths(), fillRule));
-            }
-            return result;
-        }
-        public static PathsD Intersect(Polygon clip, IEnumerable<Polygon> subjects, FillRule fillRule = FillRule.NonZero, int precision = 2)
+        public static PathsD Intersect(this Polygon clip, Polygons subjects, FillRule fillRule = FillRule.NonZero, int precision = 2)
         {
             var result = new PathsD();
             foreach (var subject in subjects)
@@ -40,16 +36,7 @@ namespace ShapeLib
             }
             return result;
         }
-        public static PathsD IntersectMany(Polygon subject, FillRule fillRule, params Polygon[] clips)
-        {
-            var cur = subject.ToClipperPaths();
-            foreach (var clip in clips)
-            {
-                cur = Clipper.Intersect(cur, clip.ToClipperPaths(), fillRule, 2);
-            }
-            return cur;
-        }
-        public static PathsD IntersectMany(Polygon subject, IEnumerable<Polygon> clips, FillRule fillRule = FillRule.NonZero, int precision = 2)
+        public static PathsD IntersectMany(this Polygon subject, Polygons clips, FillRule fillRule = FillRule.NonZero, int precision = 2)
         {
             var cur = subject.ToClipperPaths();
             foreach (var clip in clips)
@@ -59,20 +46,11 @@ namespace ShapeLib
             return cur;
         }
 
-        public static PathsD Difference(Polygon subject, Polygon clip, FillRule fillRule = FillRule.NonZero, int precision = 2)
+        public static PathsD Difference(this Polygon subject, Polygon clip, FillRule fillRule = FillRule.NonZero, int precision = 2)
         {
             return Clipper.Difference(ToClipperPaths(subject), ToClipperPaths(clip), fillRule, precision);
         }
-        public static PathsD Difference(Polygon clip, FillRule fillRule, params Polygon[] subjects)
-        {
-            var result = new PathsD();
-            foreach (var subject in subjects)
-            {
-                result.AddRange(Clipper.Difference(subject.ToClipperPaths(), clip.ToClipperPaths(), fillRule));
-            }
-            return result;
-        }
-        public static PathsD Difference(Polygon clip, IEnumerable<Polygon> subjects, FillRule fillRule = FillRule.NonZero, int precision = 2)
+        public static PathsD Difference(this Polygon clip, Polygons subjects, FillRule fillRule = FillRule.NonZero, int precision = 2)
         {
             var result = new PathsD();
             foreach (var subject in subjects)
@@ -81,16 +59,7 @@ namespace ShapeLib
             }
             return result;
         }
-        public static PathsD DifferenceMany(Polygon subject, FillRule fillRule, params Polygon[] clips)
-        {
-            var cur = subject.ToClipperPaths();
-            foreach (var clip in clips)
-            {
-                cur = Clipper.Difference(cur, clip.ToClipperPaths(), fillRule, 2);
-            }
-            return cur;
-        }
-        public static PathsD DifferenceMany(Polygon subject, IEnumerable<Polygon> clips, FillRule fillRule = FillRule.NonZero, int precision = 2)
+        public static PathsD DifferenceMany(this Polygon subject, Polygons clips, FillRule fillRule = FillRule.NonZero, int precision = 2)
         {
             var cur = subject.ToClipperPaths();
             foreach (var clip in clips)
@@ -100,25 +69,97 @@ namespace ShapeLib
             return cur;
         }
 
+        
+        public static bool IsHole(this PathD path) { return !Clipper.IsPositive(path); }
+        public static bool IsHole(this Polygon p) { return IsHole(p.ToClipperPath()); }
+        
+        public static void RemoveAllHoles(this PathsD paths) { paths.RemoveAll((p) => { return IsHole(p); }); }
+        public static void RemoveAllHoles(this Polygons polygons) { polygons.RemoveAll((p) => { return IsHole(p); }); }
+        
+        public static void GetAllHoles(this PathsD paths) { paths.RemoveAll((p) => { return !IsHole(p); }); }
+        public static void GetAllHoles(this Polygons polygons) { polygons.RemoveAll((p) => { return !IsHole(p); }); }
+        
+        public static PathsD RemoveAllHolesCopy(this PathsD paths)
+        {
+            var result = new PathsD();
+            foreach (var p in paths)
+            {
+                if(!IsHole(p)) result.Add(p);
+            }
+            return result;
+        }
+        public static Polygons RemoveAllHolesCopy(this Polygons polygons)
+        {
+            var result = new Polygons();
+            foreach (var p in polygons)
+            {
+                if (!IsHole(p)) result.Add(p);
+            }
+            return result;
+        }
+       
+        public static PathsD GetAllHolesCopy(this PathsD paths)
+        {
+            var result = new PathsD();
+            foreach (var p in paths)
+            {
+                if (IsHole(p)) result.Add(p);
+            }
+            return result;
+        }
+        public static Polygons GetAllHolesCopy(this Polygons polygons)
+        {
+            var result = new Polygons();
+            foreach (var p in polygons)
+            {
+                if (IsHole(p)) result.Add(p);
+            }
+            return result;
+        }
+
+
+        public static PathsD Inflate(this Polygon poly, float delta, JoinType joinType = JoinType.Square, EndType endType = EndType.Polygon, float miterLimit = 2f, int precision = 2)
+        {
+            return Clipper.InflatePaths(poly.ToClipperPaths(), delta, joinType, endType, miterLimit, precision);
+        }
+        public static PathsD Inflate(this Polygons polygons, float delta, JoinType joinType = JoinType.Square, EndType endType = EndType.Polygon, float miterLimit = 2f, int precision = 2)
+        {
+            return Clipper.InflatePaths(polygons.ToClipperPaths(), delta, joinType, endType, miterLimit, precision);
+        }
+        
+        public static PathD Simplify(this Polygon poly, float epsilon, bool isOpen = false) { return Clipper.SimplifyPath(poly.ToClipperPath(), epsilon, isOpen); }
+        public static PathsD Simplify(this Polygons poly, float epsilon, bool isOpen = false) { return Clipper.SimplifyPaths(poly.ToClipperPaths(), epsilon, isOpen); }
+        
+        /// <summary>
+        /// Uses RamerDouglasPeucker algorithm. Only works on closed polygons
+        /// </summary>
+        /// <param name="poly"></param>
+        /// <param name="epsilon"></param>
+        /// <returns></returns>
+        public static PathD SimplifyRDP(this Polygon poly, float epsilon) { return Clipper.RamerDouglasPeucker(poly.ToClipperPath(), epsilon); }
+        /// <summary>
+        /// Uses RamerDouglasPeucker algorithm. Only works on closed polygons
+        /// </summary>
+        /// <param name="poly"></param>
+        /// <param name="epsilon"></param>
+        /// <returns></returns>
+        public static PathsD SimplifyRDP(this Polygons poly, float epsilon) { return Clipper.SimplifyPaths(poly.ToClipperPaths(), epsilon); }
+
+        public static PointInPolygonResult IsPointInsideClipper(this Polygon poly, Vector2 p) { return Clipper.PointInPolygon(p.ToClipperPoint(), poly.ToClipperPath()); }
+        public static bool IsPointInside(this Polygon poly, Vector2 p) { return IsPointInsideClipper(poly, p) != PointInPolygonResult.IsOutside; }
+
+        public static PathD TrimCollinear(this Polygon poly, int precision, bool isOpen = false) { return Clipper.TrimCollinear(poly.ToClipperPath(), precision, isOpen); }
+        public static PathD StripDuplicates(this Polygon poly, float minEdgeLengthSquared, bool isOpen = false) { return Clipper.StripNearDuplicates(poly.ToClipperPath(), minEdgeLengthSquared, isOpen); }
+
+        public static PathsD MinkowskiDiff(this Polygon poly, Polygon path, bool isClosed = false) { return Clipper.MinkowskiDiff(poly.ToClipperPath(), path.ToClipperPath(), isClosed); }
+        public static PathsD MinkowskiSum(this Polygon poly, Polygon path, bool isClosed = false) { return Clipper.MinkowskiSum(poly.ToClipperPath(), path.ToClipperPath(), isClosed); }
+
+        public static PathsD MinkowskiDiffOrigin(this Polygon poly, Polygon path, bool isClosed = false) { return Clipper.MinkowskiDiff(poly.ToClipperPath(), path.Center(new(0f)).ToClipperPath(), isClosed); }
+        public static PathsD MinkowskiSumOrigin(this Polygon poly, Polygon path, bool isClosed = false) { return Clipper.MinkowskiSum(poly.ToClipperPath(), path.Center(new(0f)).ToClipperPath(), isClosed); }
+
         //TODO IMPLEMENT
-        //Clipper.InflatePaths
-        //Clipper.IsPositive
-        //Clipper.OffsetPath
-        //Clipper.PointInPolygon
         //Clipper.ScalePathD
         //Clipper.ScalePathsD
-        //Clipper.SimplifyPath
-        //Clipper.SimplifyPaths
-        //Clipper.StripDuplicates
-        //Clipper.StripNearDuplicates
-        //Clipper.TrimCollinear
-
-
-        //what does those funcs do?
-        //Clipper.MinkowskiDiff
-        //Clipper.MinkowskiSum
-        //Clipper.RamerDouglasPeucker //simplifies path
-
 
         public static Polygon CreateEllipse(Vector2 center, float radiusX, float radiusY = 0f, int steps = 0) { return Clipper.Ellipse(center.ToClipperPoint(), radiusX, radiusY, steps).ToPolygon(); }
 
@@ -135,12 +176,15 @@ namespace ShapeLib
             }
             return poly;
         }
-        public static List<Polygon> ToPolygons(this PathsD paths)
+        public static Polygons ToPolygons(this PathsD paths, bool removeHoles = false)
         {
-            var polygons = new List<Polygon>();
+            var polygons = new Polygons();
             foreach (var path in paths)
             {
-                polygons.Add(path.ToPolygon());
+                if (!removeHoles || !IsHole(path))
+                {
+                    polygons.Add(path.ToPolygon());
+                }
             }
             return polygons;
         }
