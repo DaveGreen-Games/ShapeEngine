@@ -120,7 +120,7 @@ namespace ShapeAchievements
             Rect leftBottom = new(left.x, left.y +left.height * 0.5f, left.width, left.height * 0.5f);
             Rect right = new(rect.x + rect.width * 0.28f, rect.y, rect.width * 0.72f, rect.height);
             SDrawing.DrawBar(rect, GetGoalPercentage(), progressColor, bgColor);
-            if (achieved) SDrawing.DrawRect(rect, new(0f), 0f, 3f, achievedColor);
+            if (achieved) rect.DrawLines(3f, achievedColor);// SDrawing.DrawRect(rect, new(0f), 0f, 3f, achievedColor);
             int value = stat.value;
             int max = end;
             SDrawing.DrawText(String.Format("{0}", value), leftTop, 1f, textColor, font, new(0.5f));
@@ -133,7 +133,6 @@ namespace ShapeAchievements
             else SDrawing.DrawText(displayName, right, 1f, achieved ? achievedColor : textColor, font, new(0.5f));
         }
     }
-
 
     internal class AchievmentDrawStack
     {
@@ -153,7 +152,6 @@ namespace ShapeAchievements
         }
         public bool IsFinished() { return duration <= 0f; }
     }
-
 
     public class AchievementHandler
     {

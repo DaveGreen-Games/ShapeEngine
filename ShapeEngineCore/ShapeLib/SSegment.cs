@@ -5,17 +5,17 @@ namespace ShapeLib
 {
     public static class SSegment
     {
-        public static List<Segment> Split(this Segment s, float f)
+        public static List<Segment> Split(this Segment seg, float f)
         {
-            Vector2 p = GetPoint(s, f);
-            return new() { new(s.start, p), new(p, s.end) };
+            Vector2 p = GetPoint(seg, f);
+            return new() { new(seg.start, p), new(p, seg.end) };
         }
-        public static Vector2 GetPoint(this Segment s, float f) { return s.start.Lerp(s.end, f); }
-        public static Segment Rotate(this Segment s, float pivot, float rad)
+        public static Vector2 GetPoint(this Segment seg, float f) { return seg.start.Lerp(seg.end, f); }
+        public static Segment Rotate(this Segment seg, float pivot, float rad)
         {
-            Vector2 p = GetPoint(s, pivot);
-            Vector2 s = s.start - p;
-            Vector2 e = s.end - p;
+            Vector2 p = GetPoint(seg, pivot);
+            Vector2 s = seg.start - p;
+            Vector2 e = seg.end - p;
             return new Segment(p + s.Rotate(rad), p + e.Rotate(rad));
 
 
@@ -30,14 +30,14 @@ namespace ShapeLib
             //Vector2 newEnd = p + (d * endLength).Rotate(rad);
             //return new Line(newStart, newEnd);
         }
-        public static Segment Scale(this Segment s, float scale) { return new(s.start * scale, s.end * scale); }
-        public static Segment Scale(this Segment s, Vector2 scale) { return new(s.start * scale, s.end * scale); }
-        public static Segment Scale(this Segment s, float startScale, float endScale) { return new(s.start * startScale, s.end * endScale); }
-        public static Segment ScaleF(this Segment s, float scale, float f)
+        public static Segment Scale(this Segment seg, float scale) { return new(seg.start * scale, seg.end * scale); }
+        public static Segment Scale(this Segment seg, Vector2 scale) { return new(seg.start * scale, seg.end * scale); }
+        public static Segment Scale(this Segment seg, float startScale, float endScale) { return new(seg.start * startScale, seg.end * endScale); }
+        public static Segment ScaleF(this Segment seg, float scale, float f)
         {
-            Vector2 p = GetPoint(s, f);
-            Vector2 s = s.start - p;
-            Vector2 e = s.end - p;
+            Vector2 p = GetPoint(seg, f);
+            Vector2 s = seg.start - p;
+            Vector2 e = seg.end - p;
             return new Segment(p + s * scale, p + e * scale);
 
             //float len = l.Length;
@@ -51,11 +51,11 @@ namespace ShapeLib
             //Vector2 newEnd = p + (d * endLength * scale);
             //return new Line(newStart, newEnd);
         }
-        public static Segment ScaleF(this Segment s, Vector2 scale, float f)
+        public static Segment ScaleF(this Segment seg, Vector2 scale, float f)
         {
-            Vector2 p = GetPoint(s, f);
-            Vector2 s = s.start - p;
-            Vector2 e = s.end - p;
+            Vector2 p = GetPoint(seg, f);
+            Vector2 s = seg.start - p;
+            Vector2 e = seg.end - p;
             return new Segment(p + s * scale, p + e * scale);
         }
         public static Segment Move(this Segment s, Vector2 offset, float f) { return new(s.start + (offset * (1f - f)), s.end + (offset * (f))); }

@@ -1,6 +1,5 @@
 ﻿
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using Raylib_CsLo;
 using ShapeCore;
 using ShapeUI;
@@ -792,12 +791,12 @@ namespace ShapeLib
         public static void DrawRectSlantedCorners(this Rect rect, Color color, float tlCorner, float trCorner, float brCorner, float blCorner)
         {
             var points = GetRectSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner);
-            DrawPolygon(points, rect.Center, color);
+            DrawPolygonConvex(points, rect.Center, color);
         }
         public static void DrawRectSlantedCorners(this Rect rect, Vector2 pivot, float rotDeg, Color color, float tlCorner, float trCorner, float brCorner, float blCorner)
         {
             var points = SPoly.Rotate(GetRectSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner), pivot, rotDeg * SUtils.DEGTORAD);
-            DrawPolygon(points, rect.Center, color);
+            DrawPolygonConvex(points, rect.Center, color);
         }
         public static void DrawRectSlantedCornersLines(this Rect rect, float lineThickness, Color color, float tlCorner, float trCorner, float brCorner, float blCorner)
         {
@@ -819,13 +818,13 @@ namespace ShapeLib
         /// <param name="brCorner"></param>
         /// <param name="blCorner"></param>
         /// <returns>Returns points in ccw order.</returns>
-        public static List<Vector2> GetRectSlantedCornerPoints(this Rect rect, float tlCorner, float trCorner, float brCorner, float blCorner)
+        public static Polygon GetRectSlantedCornerPoints(this Rect rect, float tlCorner, float trCorner, float brCorner, float blCorner)
         {
             Vector2 tl = rect.TopLeft;
             Vector2 tr = rect.TopRight;
             Vector2 br = rect.BottomRight;
             Vector2 bl = rect.BottomLeft;
-            List<Vector2> points = new();
+            Polygon points = new();
             if (tlCorner > 0f && tlCorner < 1f)
             {
                 points.Add(tl + new Vector2(MathF.Min(tlCorner, rect.width), 0f));
@@ -857,13 +856,13 @@ namespace ShapeLib
         /// <param name="brCorner">Should be bewteen 0 - 1</param>
         /// <param name="blCorner">Should be bewteen 0 - 1</param>
         /// <returns>Returns points in ccw order.</returns>
-        public static List<Vector2> GetRectSlantedCornerPointsRelative(this Rect rect, float tlCorner, float trCorner, float brCorner, float blCorner)
+        public static Polygon GetRectSlantedCornerPointsRelative(this Rect rect, float tlCorner, float trCorner, float brCorner, float blCorner)
         {
             Vector2 tl = rect.TopLeft;
             Vector2 tr = rect.TopRight;
             Vector2 br = rect.BottomRight;
             Vector2 bl = rect.BottomLeft;
-            List<Vector2> points = new();
+            Polygon points = new();
             if (tlCorner > 0f && tlCorner < 1f)
             {
                 points.Add(tl + new Vector2(tlCorner * rect.width, 0f));
@@ -1023,7 +1022,7 @@ namespace ShapeLib
             }
 
 
-            var segments = SRect.GetEdges(rect);
+            var segments = rect.GetEdges();// SRect.GetEdges(rect);
             foreach (var s in segments)
             {
                 DrawLineDotted(s.start, s.end, gapsPerSide, lineThickness, color, roundedLineEdges);
@@ -1042,7 +1041,7 @@ namespace ShapeLib
             }
 
 
-            var segments = SRect.GetEdges(rect);
+            var segments = rect.GetEdges(); // SRect.GetEdges(rect);
             foreach (var s in segments)
             {
                 DrawLineDotted(s.start, s.end, gapsPerSide, gapSizeF, lineThickness, color, roundedLineEdges);
@@ -1229,215 +1228,137 @@ namespace ShapeLib
         #endregion
 
         #region Polygon
-        public static void DrawPolygon(List<Vector2> points, Vector2 center, Color color, bool clockwise = false)
+        public static void DrawPolygonConvex(this Polygon poly, Color color, bool clockwise = false) { DrawPolygonConvex(poly, poly.GetCentroid(), color, clockwise); }
+        public static void DrawPolygonConvex(this Polygon poly, Vector2 center, Color color, bool clockwise = false)
         {
             if (clockwise)
             {
-                for (int i = 0; i < points.Count - 1; i++)
+                for (int i = 0; i < poly.Count - 1; i++)
                 {
-                    Raylib.DrawTriangle(points[i], center, points[i + 1], color);
+                    Raylib.DrawTriangle(poly[i], center, poly[i + 1], color);
                 }
-                Raylib.DrawTriangle(points[points.Count - 1], center, points[0], color);
+                Raylib.DrawTriangle(poly[poly.Count - 1], center, poly[0], color);
             }
             else
             {
-                for (int i = 0; i < points.Count - 1; i++)
+                for (int i = 0; i < poly.Count - 1; i++)
                 {
-                    Raylib.DrawTriangle(points[i], points[i + 1], center, color);
+                    Raylib.DrawTriangle(poly[i], poly[i + 1], center, color);
                 }
-                Raylib.DrawTriangle(points[points.Count - 1], points[0], center, color);
+                Raylib.DrawTriangle(poly[poly.Count - 1], poly[0], center, color);
             }
         }
-        public static void DrawPolygon(List<Vector2> points, Vector2 pos, float scale, float rotDeg, Color color, bool clockwise = false)
+        public static void DrawPolygonConvex(this Polygon relativePoly, Vector2 pos, float scale, float rotDeg, Color color, bool clockwise = false)
         {
             if (clockwise)
             {
-                for (int i = 0; i < points.Count - 1; i++)
+                for (int i = 0; i < relativePoly.Count - 1; i++)
                 {
-                    Vector2 a = pos + SVec.Rotate(points[i] * scale, rotDeg * SUtils.DEGTORAD);
+                    Vector2 a = pos + SVec.Rotate(relativePoly[i] * scale, rotDeg * SUtils.DEGTORAD);
                     Vector2 b = pos;
-                    Vector2 c = pos + SVec.Rotate(points[i + 1] * scale, rotDeg * SUtils.DEGTORAD);
+                    Vector2 c = pos + SVec.Rotate(relativePoly[i + 1] * scale, rotDeg * SUtils.DEGTORAD);
                     Raylib.DrawTriangle(a, b, c, color);
                 }
 
-                Vector2 aFinal = pos + SVec.Rotate(points[points.Count - 1] * scale, rotDeg * SUtils.DEGTORAD);
+                Vector2 aFinal = pos + SVec.Rotate(relativePoly[relativePoly.Count - 1] * scale, rotDeg * SUtils.DEGTORAD);
                 Vector2 bFinal = pos;
-                Vector2 cFinal = pos + SVec.Rotate(points[0] * scale, rotDeg * SUtils.DEGTORAD);
+                Vector2 cFinal = pos + SVec.Rotate(relativePoly[0] * scale, rotDeg * SUtils.DEGTORAD);
                 Raylib.DrawTriangle(aFinal, bFinal, cFinal, color);
             }
             else
             {
-                for (int i = 0; i < points.Count - 1; i++)
+                for (int i = 0; i < relativePoly.Count - 1; i++)
                 {
-                    Vector2 a = pos + SVec.Rotate(points[i] * scale, rotDeg * SUtils.DEGTORAD);
-                    Vector2 b = pos + SVec.Rotate(points[i + 1] * scale, rotDeg * SUtils.DEGTORAD);
+                    Vector2 a = pos + SVec.Rotate(relativePoly[i] * scale, rotDeg * SUtils.DEGTORAD);
+                    Vector2 b = pos + SVec.Rotate(relativePoly[i + 1] * scale, rotDeg * SUtils.DEGTORAD);
                     Vector2 c = pos;
                     Raylib.DrawTriangle(a, b, c, color);
                 }
 
-                Vector2 aFinal = pos + SVec.Rotate(points[points.Count - 1] * scale, rotDeg * SUtils.DEGTORAD);
-                Vector2 bFinal = pos + SVec.Rotate(points[0] * scale, rotDeg * SUtils.DEGTORAD);
+                Vector2 aFinal = pos + SVec.Rotate(relativePoly[relativePoly.Count - 1] * scale, rotDeg * SUtils.DEGTORAD);
+                Vector2 bFinal = pos + SVec.Rotate(relativePoly[0] * scale, rotDeg * SUtils.DEGTORAD);
                 Vector2 cFinal = pos;
                 Raylib.DrawTriangle(aFinal, bFinal, cFinal, color);
             }
         }
         
-        public static void DrawPolygonLines(List<Vector2> points, float lineThickness, Color color)
+        public static void DrawPolygon(this Polygon poly, Color color)
         {
-            for (int i = 0; i < points.Count - 1; i++)
-            {
-                DrawCircleV(points[i], lineThickness * 0.5f, color);
-                DrawLineEx(points[i], points[i + 1], lineThickness, color);
-            }
-            DrawCircleV(points[points.Count - 1], lineThickness * 0.5f, color);
-            DrawLineEx(points[points.Count - 1], points[0], lineThickness, color);
+            var triangles = poly.Triangulate();
+            foreach (var t in triangles) t.Draw(color);
         }
-        public static void DrawPolygonLines(List<Vector2> relativePoints, Vector2 pos, Vector2 size, float rotDeg, float lineThickness, Color outlineColor)
+
+        public static void DrawPolygonLines(this Polygon poly, float lineThickness, Color color)
         {
-            for (int i = 0; i < relativePoints.Count - 1; i++)
+            for (int i = 0; i < poly.Count - 1; i++)
             {
-                Vector2 p1 = pos + SVec.Rotate(relativePoints[i] * size, rotDeg * SUtils.DEGTORAD);
-                Vector2 p2 = pos + SVec.Rotate(relativePoints[i + 1] * size, rotDeg * SUtils.DEGTORAD);
+                DrawCircleV(poly[i], lineThickness * 0.5f, color);
+                DrawLineEx(poly[i], poly[i + 1], lineThickness, color);
+            }
+            DrawCircleV(poly[poly.Count - 1], lineThickness * 0.5f, color);
+            DrawLineEx(poly[poly.Count - 1], poly[0], lineThickness, color);
+        }
+        public static void DrawPolygonLines(this Polygon poly, Vector2 pos, Vector2 size, float rotDeg, float lineThickness, Color outlineColor)
+        {
+            for (int i = 0; i < poly.Count - 1; i++)
+            {
+                Vector2 p1 = pos + SVec.Rotate(poly[i] * size, rotDeg * SUtils.DEGTORAD);
+                Vector2 p2 = pos + SVec.Rotate(poly[i + 1] * size, rotDeg * SUtils.DEGTORAD);
                 DrawCircleV(p1, lineThickness * 0.5f, outlineColor);
                 DrawLineEx(p1, p2, lineThickness, outlineColor);
             }
-            DrawCircleV(pos + SVec.Rotate(relativePoints[relativePoints.Count - 1] * size, rotDeg * SUtils.DEGTORAD), lineThickness * 0.5f, outlineColor);
-            DrawLineEx(pos + SVec.Rotate(relativePoints[relativePoints.Count - 1] * size, rotDeg * SUtils.DEGTORAD), pos + SVec.Rotate(relativePoints[0] * size, rotDeg * SUtils.DEGTORAD), lineThickness, outlineColor);
+            DrawCircleV(pos + SVec.Rotate(poly[poly.Count - 1] * size, rotDeg * SUtils.DEGTORAD), lineThickness * 0.5f, outlineColor);
+            DrawLineEx(pos + SVec.Rotate(poly[poly.Count - 1] * size, rotDeg * SUtils.DEGTORAD), pos + SVec.Rotate(poly[0] * size, rotDeg * SUtils.DEGTORAD), lineThickness, outlineColor);
         }
         
-        public static void DrawPolygonCornered(List<Vector2> points, float lineThickness, Color color, float cornerLength)
+        public static void DrawPolygonCornered(this Polygon poly, float lineThickness, Color color, float cornerLength)
         {
-            for (int i = 0; i < points.Count; i++)
+            for (int i = 0; i < poly.Count; i++)
             {
-                Vector2 prev = points[(i-1)%points.Count];
-                Vector2 cur = points[i];
-                Vector2 next = points[(i+1)%points.Count];
+                Vector2 prev = poly[(i-1)%poly.Count];
+                Vector2 cur = poly[i];
+                Vector2 next = poly[(i+1)%poly.Count];
                 DrawLine(cur, cur + next.Normalize() * cornerLength, lineThickness, color);
                 DrawLine(cur, cur + prev.Normalize() * cornerLength, lineThickness, color);
             }
         }
-        public static void DrawPolygonCornered(List<Vector2> points, float lineThickness, Color color, List<float> cornerLengths)
+        public static void DrawPolygonCornered(this Polygon poly, float lineThickness, Color color, List<float> cornerLengths)
         {
-            for (int i = 0; i < points.Count; i++)
+            for (int i = 0; i < poly.Count; i++)
             {
                 float cornerLength = cornerLengths[i%cornerLengths.Count];
-                Vector2 prev = points[(i - 1) % points.Count];
-                Vector2 cur = points[i];
-                Vector2 next = points[(i + 1) % points.Count];
+                Vector2 prev = poly[(i - 1) % poly.Count];
+                Vector2 cur = poly[i];
+                Vector2 next = poly[(i + 1) % poly.Count];
                 DrawLine(cur, cur + next.Normalize() * cornerLength, lineThickness, color);
                 DrawLine(cur, cur + prev.Normalize() * cornerLength, lineThickness, color);
             }
         }
-        public static void DrawPolygonCorneredRelative(List<Vector2> points, float lineThickness, Color color, float cornerF)
+        public static void DrawPolygonCorneredRelative(this Polygon poly, float lineThickness, Color color, float cornerF)
         {
-            for (int i = 0; i < points.Count; i++)
+            for (int i = 0; i < poly.Count; i++)
             {
-                Vector2 prev = points[(i - 1) % points.Count];
-                Vector2 cur = points[i];
-                Vector2 next = points[(i + 1) % points.Count];
+                Vector2 prev = poly[(i - 1) % poly.Count];
+                Vector2 cur = poly[i];
+                Vector2 next = poly[(i + 1) % poly.Count];
                 DrawLine(cur, cur.Lerp(next, cornerF), lineThickness, color);
                 DrawLine(cur, cur.Lerp(prev, cornerF), lineThickness, color);
             }
         }
-        public static void DrawPolygonCorneredRelative(List<Vector2> points, float lineThickness, Color color, List<float> cornerFactors)
+        public static void DrawPolygonCorneredRelative(this Polygon poly, float lineThickness, Color color, List<float> cornerFactors)
         {
-            for (int i = 0; i < points.Count; i++)
+            for (int i = 0; i < poly.Count; i++)
             {
                 float cornerF = cornerFactors[i%cornerFactors.Count];
-                Vector2 prev = points[(i - 1) % points.Count];
-                Vector2 cur = points[i];
-                Vector2 next = points[(i + 1) % points.Count];
+                Vector2 prev = poly[(i - 1) % poly.Count];
+                Vector2 cur = poly[i];
+                Vector2 next = poly[(i + 1) % poly.Count];
                 DrawLine(cur, cur.Lerp(next, cornerF), lineThickness, color);
                 DrawLine(cur, cur.Lerp(prev, cornerF), lineThickness, color);
             }
         }
 
-        public static void Draw(this Polygon p, Color color, bool clockwise = false) => DrawPolygon(p.points, p.center, color, clockwise);
-        public static void Draw(this Polygon p, Vector2 pos, float scale, float rotDeg, Color color, bool clockwise = false) => DrawPolygon(p.points, p.center + pos, scale, rotDeg, color, clockwise);
 
-        public static void DrawLines(this Polygon p, float lineThickness, Color color) => DrawPolygonLines(p.points, lineThickness, color);
-        public static void DrawLines(this Polygon p, Vector2 pos, Vector2 size, float rotDeg, float lineThickness, Color color) => DrawPolygonLines(p.points, p.center + pos, size, rotDeg, lineThickness, color);
-
-        public static void DrawPolygonCornered(this Polygon p, float lineThickness, Color color, float cornerLength) => DrawPolygonCornered(p.points, lineThickness, color, cornerLength);
-        public static void DrawPolygonCornered(this Polygon p, float lineThickness, Color color, List<float> cornerLengths) => DrawPolygonCornered(p.points, lineThickness, color, cornerLengths);
-        public static void DrawPolygonCorneredRelative(this Polygon p, float lineThickness, Color color, float cornerF) => DrawPolygonCorneredRelative(p.points, lineThickness, color, cornerF);
-        public static void DrawPolygonCorneredRelative(this Polygon p, float lineThickness, Color color, List<float> cornerFactors) => DrawPolygonCorneredRelative(p.points, lineThickness, color, cornerFactors);
-
-
-
-        /*
-        public static void DrawPolygonCentered(List<Vector2> points, Vector2 center, Color fillColor, bool clockwise = true)
-        {
-            if (clockwise)
-            {
-                for (int i = 0; i < points.Count - 1; i++)
-                {
-                    Raylib.DrawTriangle(center + points[i], center, center + points[i + 1], fillColor);
-                }
-                Raylib.DrawTriangle(center + points[points.Count - 1], center, center + points[0], fillColor);
-            }
-            else
-            {
-                for (int i = 0; i < points.Count - 1; i++)
-                {
-                    Raylib.DrawTriangle(center + points[i], center + points[i + 1], center, fillColor);
-                }
-                Raylib.DrawTriangle(center + points[points.Count - 1], center + points[0], center, fillColor);
-            }
-        }
-        */
-        /*
-        public static void DrawPolygon(List<Vector2> points, Vector2 center, Color fillColor, float lineThickness, Color outlineColor, bool clockwise = true)
-        {
-            DrawPolygon(points, center, fillColor, clockwise);
-            DrawPolygonLines(points, lineThickness, outlineColor, center);
-        }
-        public static void DrawPolygonCentered(List<Vector2> points, Vector2 center, Color fillColor, float lineThickness, Color outlineColor, bool clockwise = true)
-        {
-            DrawPolygonCentered(points, center, fillColor, clockwise);
-            DrawPolygonLines(points, lineThickness, outlineColor, center);
-        }
-        public static void DrawPolygonCentered(List<Vector2> points, Vector2 center, float scale, float rotDeg, Color fillColor, float lineThickness, Color outlineColor, bool clockwise = true)
-        {
-            DrawPolygon(points, center, scale, rotDeg, fillColor, clockwise);
-            DrawPolygonLines(points, lineThickness, outlineColor, center, scale, rotDeg);
-        }
-        */
-        /*
-        public static void DrawPolygonLines(List<Vector2> points, float lineThickness, Color color, Vector2 center)
-        {
-            for (int i = 0; i < points.Count - 1; i++)
-            {
-                DrawCircleV(center + points[i], lineThickness * 0.5f, color);
-                DrawLineEx(center + points[i], center + points[i + 1], lineThickness, color);
-            }
-            DrawCircleV(center + points[points.Count - 1], lineThickness * 0.5f, color);
-            DrawLineEx(center + points[points.Count - 1], center + points[0], lineThickness, color);
-        }
-        public static void DrawPolygonLines(List<Vector2> points, float lineThickness, Color color, Vector2 center, float scale)
-        {
-            for (int i = 0; i < points.Count - 1; i++)
-            {
-                DrawCircleV(center + points[i] * scale, lineThickness * 0.5f * scale, color);
-                DrawLineEx(center + points[i] * scale, center + points[i + 1] * scale, lineThickness * scale, color);
-            }
-            DrawCircleV(center + points[points.Count - 1] * scale, lineThickness * 0.5f * scale, color);
-            DrawLineEx(center + points[points.Count - 1] * scale, center + points[0] * scale, lineThickness * scale, color);
-        }
-        public static void DrawPolygonLines(List<Vector2> points, float lineThickness, Color color, Vector2 center, float scale, float rotDeg)
-        {
-            float lt = lineThickness * scale;
-            for (int i = 0; i < points.Count - 1; i++)
-            {
-                Vector2 p1 = center + SVec.Rotate(points[i] * scale, rotDeg * SUtils.DEGTORAD);
-                Vector2 p2 = center + SVec.Rotate(points[i + 1] * scale, rotDeg * SUtils.DEGTORAD);
-                DrawCircleV(p1, lt * 0.5f, color);
-                DrawLineEx(p1, p2, lt, color);
-            }
-            DrawCircleV(center + SVec.Rotate(points[points.Count - 1] * scale, rotDeg * SUtils.DEGTORAD), lt * 0.5f, color);
-            DrawLineEx(center + SVec.Rotate(points[points.Count - 1] * scale, rotDeg * SUtils.DEGTORAD), center + SVec.Rotate(points[0] * scale, rotDeg * SUtils.DEGTORAD), lt, color);
-        }
-        */
         #endregion
 
         #region Text
@@ -1721,3 +1642,89 @@ namespace ShapeLib
 
     }
 }
+
+/*
+        public static void Draw(this Polygon p, Color color, bool clockwise = false) => DrawPolygon(p, p.GetCentroid(), color, clockwise);
+        public static void Draw(this Polygon p, Vector2 pos, float scale, float rotDeg, Color color, bool clockwise = false) => DrawPolygon(p, p.GetCentroid() + pos, scale, rotDeg, color, clockwise);
+
+        public static void DrawLines(this Polygon p, float lineThickness, Color color) => DrawPolygonLines(p, lineThickness, color);
+        public static void DrawLines(this Polygon p, Vector2 pos, Vector2 size, float rotDeg, float lineThickness, Color color) => DrawPolygonLines(p, p.GetCentroid() + pos, size, rotDeg, lineThickness, color);
+
+        public static void DrawPolygonCornered(this Polygon p, float lineThickness, Color color, float cornerLength) => DrawPolygonCornered(p, lineThickness, color, cornerLength);
+        public static void DrawPolygonCornered(this Polygon p, float lineThickness, Color color, List<float> cornerLengths) => DrawPolygonCornered(p, lineThickness, color, cornerLengths);
+        public static void DrawPolygonCorneredRelative(this Polygon p, float lineThickness, Color color, float cornerF) => DrawPolygonCorneredRelative(p, lineThickness, color, cornerF);
+        public static void DrawPolygonCorneredRelative(this Polygon p, float lineThickness, Color color, List<float> cornerFactors) => DrawPolygonCorneredRelative(p, lineThickness, color, cornerFactors);
+        */
+/*
+        public static void DrawPolygonCentered(List<Vector2> points, Vector2 center, Color fillColor, bool clockwise = true)
+        {
+            if (clockwise)
+            {
+                for (int i = 0; i < points.Count - 1; i++)
+                {
+                    Raylib.DrawTriangle(center + points[i], center, center + points[i + 1], fillColor);
+                }
+                Raylib.DrawTriangle(center + points[points.Count - 1], center, center + points[0], fillColor);
+            }
+            else
+            {
+                for (int i = 0; i < points.Count - 1; i++)
+                {
+                    Raylib.DrawTriangle(center + points[i], center + points[i + 1], center, fillColor);
+                }
+                Raylib.DrawTriangle(center + points[points.Count - 1], center + points[0], center, fillColor);
+            }
+        }
+        */
+/*
+        public static void DrawPolygon(List<Vector2> points, Vector2 center, Color fillColor, float lineThickness, Color outlineColor, bool clockwise = true)
+        {
+            DrawPolygon(points, center, fillColor, clockwise);
+            DrawPolygonLines(points, lineThickness, outlineColor, center);
+        }
+        public static void DrawPolygonCentered(List<Vector2> points, Vector2 center, Color fillColor, float lineThickness, Color outlineColor, bool clockwise = true)
+        {
+            DrawPolygonCentered(points, center, fillColor, clockwise);
+            DrawPolygonLines(points, lineThickness, outlineColor, center);
+        }
+        public static void DrawPolygonCentered(List<Vector2> points, Vector2 center, float scale, float rotDeg, Color fillColor, float lineThickness, Color outlineColor, bool clockwise = true)
+        {
+            DrawPolygon(points, center, scale, rotDeg, fillColor, clockwise);
+            DrawPolygonLines(points, lineThickness, outlineColor, center, scale, rotDeg);
+        }
+        */
+/*
+        public static void DrawPolygonLines(List<Vector2> points, float lineThickness, Color color, Vector2 center)
+        {
+            for (int i = 0; i < points.Count - 1; i++)
+            {
+                DrawCircleV(center + points[i], lineThickness * 0.5f, color);
+                DrawLineEx(center + points[i], center + points[i + 1], lineThickness, color);
+            }
+            DrawCircleV(center + points[points.Count - 1], lineThickness * 0.5f, color);
+            DrawLineEx(center + points[points.Count - 1], center + points[0], lineThickness, color);
+        }
+        public static void DrawPolygonLines(List<Vector2> points, float lineThickness, Color color, Vector2 center, float scale)
+        {
+            for (int i = 0; i < points.Count - 1; i++)
+            {
+                DrawCircleV(center + points[i] * scale, lineThickness * 0.5f * scale, color);
+                DrawLineEx(center + points[i] * scale, center + points[i + 1] * scale, lineThickness * scale, color);
+            }
+            DrawCircleV(center + points[points.Count - 1] * scale, lineThickness * 0.5f * scale, color);
+            DrawLineEx(center + points[points.Count - 1] * scale, center + points[0] * scale, lineThickness * scale, color);
+        }
+        public static void DrawPolygonLines(List<Vector2> points, float lineThickness, Color color, Vector2 center, float scale, float rotDeg)
+        {
+            float lt = lineThickness * scale;
+            for (int i = 0; i < points.Count - 1; i++)
+            {
+                Vector2 p1 = center + SVec.Rotate(points[i] * scale, rotDeg * SUtils.DEGTORAD);
+                Vector2 p2 = center + SVec.Rotate(points[i + 1] * scale, rotDeg * SUtils.DEGTORAD);
+                DrawCircleV(p1, lt * 0.5f, color);
+                DrawLineEx(p1, p2, lt, color);
+            }
+            DrawCircleV(center + SVec.Rotate(points[points.Count - 1] * scale, rotDeg * SUtils.DEGTORAD), lt * 0.5f, color);
+            DrawLineEx(center + SVec.Rotate(points[points.Count - 1] * scale, rotDeg * SUtils.DEGTORAD), center + SVec.Rotate(points[0] * scale, rotDeg * SUtils.DEGTORAD), lt, color);
+        }
+        */

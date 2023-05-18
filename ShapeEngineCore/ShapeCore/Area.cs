@@ -1,6 +1,7 @@
 ﻿using ShapeLib;
 using ShapeTiming;
 using System.Numerics;
+using Raylib_CsLo;
 
 namespace ShapeCore
 {
@@ -251,16 +252,15 @@ namespace ShapeCore
                 if(layer.objs.Count > 0) UpdateLayer(dt, layer);
             }
         }
+        
+        public void DrawDebugHelpers(Color boundsColor, Color collisionGridColor, Color collisionGridFillColor)
+        {
+            DrawRectangleLinesEx(this.Bounds.Rectangle, 15f, boundsColor);
+            Col.DebugDrawGrid(collisionGridColor, collisionGridFillColor);
+        }
+
         public virtual void Draw()
         {
-            if (DEBUG_DRAWHELPERS)
-            {
-                //DrawRectangleLinesEx(this.InnerRect.Rectangle, 15f, DEBUG_AreaInnerColor);
-                //DrawRectangleLinesEx(this.OuterRect.Rectangle, 15f, DEBUG_AreaOuterColor);
-                DrawRectangleLinesEx(this.Bounds.Rectangle, 15f, DEBUG_AreaOuterColor);
-                Col.DebugDrawGrid(DEBUG_CollisionHandlerBorder, DEBUG_CollisionHandlerFill);
-            }
-
             uiObjects.Clear();
             for (int i = 0; i < layers.Count; i++)
             {

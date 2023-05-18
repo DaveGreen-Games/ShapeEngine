@@ -137,7 +137,7 @@ namespace ShapeAudio
                 if (IsSpatial)
                 {
                     //Vector2 center;
-                    float disSq = SVec.LengthSquared(spatialCenter - SpatialPos);
+                    float disSq = (spatialCenter - SpatialPos).LengthSquared();
                     if (MinSpatialRange < 0f) MinSpatialRange = 0f;
                     if (MaxSpatialRange < 0f || MaxSpatialRange <= MinSpatialRange) MaxSpatialRange = MinSpatialRange + 1;
                     float minSquared = MinSpatialRange * MinSpatialRange;
