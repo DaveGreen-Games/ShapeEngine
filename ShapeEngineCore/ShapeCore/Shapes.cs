@@ -6,12 +6,12 @@ using ShapeRandom;
 namespace ShapeCore
 {
 
-    public class Edges : List<Segment>
+    public class Segments : List<Segment>
     {
-        public Edges() { }
-        public Edges(IShape shape) { AddRange(shape.GetEdges()); }
-        public Edges(params Segment[] edges) { AddRange(edges); }
-        public Edges(IEnumerable<Segment> edges) {  AddRange(edges); }
+        public Segments() { }
+        public Segments(IShape shape) { AddRange(shape.GetEdges()); }
+        public Segments(params Segment[] edges) { AddRange(edges); }
+        public Segments(IEnumerable<Segment> edges) {  AddRange(edges); }
     }
     public class Triangulation : List<Triangle>
     {
@@ -48,7 +48,7 @@ namespace ShapeCore
         public float GetCircumference() { return Length; }
         public float GetCircumferenceSquared() { return LengthSquared; }
         public Polygon ToPolygon() { return new(start, end); }
-        public Edges GetEdges() { return new(this); }
+        public Segments GetEdges() { return new(this); }
         public Triangulation Triangulate() { return new(); }
         public SegmentShape GetSegmentShape() { return new(start, this); }
         public Circle GetBoundingCircle() { return ToPolygon().GetBoundingCircle(); }
@@ -99,7 +99,7 @@ namespace ShapeCore
         public Circle(Rect r) { center = r.Center; radius = MathF.Max(r.width, r.height); }
 
         public Vector2 GetCentroid() { return center; }
-        public Edges GetEdges() { return this.GetEdges(16); }
+        public Segments GetEdges() { return this.GetEdges(16); }
         public Polygon ToPolygon() { return this.GetPoints(16); }
         public Triangulation Triangulate() { return ToPolygon().Triangulate(); }
         public SegmentShape GetSegmentShape() { return new(this.GetEdges(), center); }
@@ -149,7 +149,7 @@ namespace ShapeCore
 
         public Vector2 GetCentroid() { return (a + b + c) / 3; }
         public Polygon ToPolygon() { return new(a, b, c); }
-        public Edges GetEdges() { return new() { new(a, b), new(b, c), new(c, a) }; }
+        public Segments GetEdges() { return new() { new(a, b), new(b, c), new(c, a) }; }
         public Triangulation Triangulate() { return this.Triangulate(GetCentroid()); }
         public SegmentShape GetSegmentShape() { return new(GetCentroid(), new(a, b), new(b, c), new(c, a) ); }
         public Circle GetBoundingCircle() { return ToPolygon().GetBoundingCircle(); }
@@ -237,7 +237,7 @@ namespace ShapeCore
 
         public Vector2 GetCentroid() { return Center; }
         public Polygon ToPolygon() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
-        public Edges GetEdges() { return new() { new(TopLeft, BottomLeft), new(BottomLeft, BottomRight), new(BottomRight, TopRight), new(TopRight, TopLeft) }; }
+        public Segments GetEdges() { return new() { new(TopLeft, BottomLeft), new(BottomLeft, BottomRight), new(BottomRight, TopRight), new(TopRight, TopLeft) }; }
         public Triangulation Triangulate() { return ToPolygon().Triangulate(); }
         public SegmentShape GetSegmentShape() { return new(GetEdges(), Center); }
         public Circle GetBoundingCircle() { return ToPolygon().GetBoundingCircle(); }
@@ -531,14 +531,14 @@ namespace ShapeCore
 
             return triangles;
         }
-        public Edges GetEdges()
+        public Segments GetEdges()
         {
             if (Count <= 1) return new();
             else if (Count == 2)
             {
                 return new() { new(this[0], this[1]) };
             }
-            Edges segments = new();
+            Segments segments = new();
             for (int i = 0; i < Count; i++)
             {
                 Vector2 start = this[i];
@@ -657,7 +657,7 @@ namespace ShapeCore
         public Segment GetRandomEdge() { return SRNG.randCollection(GetEdges(), false); }
         public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
 
-        public void DrawShape(float linethickness, Color color) => SDrawing.DrawPolygonLines(this, linethickness, color);
+        public void DrawShape(float linethickness, Color color) => SDrawing.DrawLines(this, linethickness, color);
         
         private float GetAreaSigned()
         {

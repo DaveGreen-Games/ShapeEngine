@@ -262,9 +262,9 @@ namespace ShapeLib
         /// <param name="br"></param>
         /// <param name="tr"></param>
         /// <returns></returns>
-        public static Edges GetEdges(Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr)
+        public static Segments GetEdges(Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr)
         {
-            Edges segments = new()
+            Segments segments = new()
             {
                 new(tl, bl), new(bl, br), new(br, tr), new(tr, tl)
             };

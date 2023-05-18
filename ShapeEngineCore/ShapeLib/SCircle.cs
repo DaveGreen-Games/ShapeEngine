@@ -7,10 +7,10 @@ namespace ShapeLib
     public static class SCircle
     {
         public static Vector2 GetPoint(this Circle c, float angleRad, float f) { return c.center + new Vector2(c.radius * f, 0f).Rotate(angleRad); }
-        public static Edges GetEdges(this Circle c, int pointCount = 16)
+        public static Segments GetEdges(this Circle c, int pointCount = 16)
         {
             float angleStep = (MathF.PI * 2f) / pointCount;
-            Edges segments = new();
+            Segments segments = new();
             for (int i = 0; i < pointCount; i++)
             {
                 Vector2 start = c.center + new Vector2(c.radius, 0f).Rotate(angleStep * i);

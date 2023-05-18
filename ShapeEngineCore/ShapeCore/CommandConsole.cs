@@ -113,7 +113,7 @@ namespace ShapeCore
 
                 if (commandHistory.Count > 0)
                 {
-                    commandHistory[0].DrawText(historyRect, 1f, caretColor, font, textAlignement);
+                    commandHistory[0].Draw(historyRect, 1f, caretColor, font, textAlignement);
                 }
                 SDrawing.DrawTextBox(textBoxRect, "Enter Command...", textEntry.characters, 1f, font, textColor, true, textEntry.CaretPosition, 2f, caretColor, textAlignement);
                 consoleRect.DrawLines(4f, caretColor);

@@ -433,7 +433,7 @@ namespace ShapeLib
             }
             return axis;
         }
-        public static List<Vector2> GetSegmentAxis(Edges edges, bool normalized = false)
+        public static List<Vector2> GetSegmentAxis(Segments edges, bool normalized = false)
         {
             List<Vector2> axis = new();
             foreach (var seg in edges)

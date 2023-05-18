@@ -114,7 +114,7 @@ namespace ShapeCore
         public float GetCircumference();
         public float GetCircumferenceSquared();
         public Polygon ToPolygon();
-        public Edges GetEdges();
+        public Segments GetEdges();
         public Triangulation Triangulate();
         public SegmentShape GetSegmentShape();
         public Vector2 GetReferencePoint();
