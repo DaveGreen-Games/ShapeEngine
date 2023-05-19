@@ -13,8 +13,8 @@ namespace ShapeLib
             Segments segments = new();
             for (int i = 0; i < pointCount; i++)
             {
-                Vector2 start = c.center + new Vector2(c.radius, 0f).Rotate(angleStep * i);
-                Vector2 end = c.center + new Vector2(c.radius, 0f).Rotate(angleStep * ((i + 1) % pointCount));
+                Vector2 start = c.center + new Vector2(c.radius, 0f).Rotate(-angleStep * i);
+                Vector2 end = c.center + new Vector2(c.radius, 0f).Rotate(-angleStep * ((i + 1) % pointCount));
                 segments.Add(new Segment(start, end));
             }
             return segments;

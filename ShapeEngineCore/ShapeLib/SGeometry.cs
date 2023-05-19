@@ -4,11 +4,6 @@ using ShapeCore;
 
 namespace ShapeLib
 {
-    //only segment, circle, triangle, rect and polygon shapes can exist -> each overlap/ intersection check is therefore valid
-    //icollider checks just get the shape and overlap/intersect them, because colliders can only use valid shapes.
-    //other ishape is not a valid shape than shape is overlapped/intersected with the bounding box of the invalid shape.
-
-
     public struct CollisionInfo
     {
         public bool overlapping;
@@ -334,7 +329,7 @@ namespace ShapeLib
         #endregion
 
         #region Intersect
-        public static Intersection IntersectShape(this Segment a, Segment b) { return IntersectSegmentSegment(a, b, a.GetReferencePoint(), false); }
+        public static Intersection IntersectShape(this Segment a, Segment b) { return IntersectSegmentSegment(a, b); }
         public static Intersection IntersectShape(this Segment s, Circle c)
         {
             float aX = s.start.X;
@@ -410,8 +405,9 @@ namespace ShapeLib
                 else if (points.Count == 1) return new(points[0].p, points[0].n, points);
                 else
                 {
-                    var info = ConstructNormalOpposite(points[0].p, points[1].p, new Vector2(cX, cY));
-                    return new(new Vector2(cX, cY) + info.n * R, info.n, points);
+                    var combinedSegment = new Segment(points[0].p, points[1].p);
+                    //var info = ConstructNormalOpposite(points[0].p, points[1].p, new Vector2(cX, cY));
+                    return new(new Vector2(cX, cY) + combinedSegment.n * R, combinedSegment.n, points);
                 }
             }
             else
@@ -420,16 +416,16 @@ namespace ShapeLib
                 return new();
             }
         }
-        public static Intersection IntersectShape(this Segment s, Triangle t) { return IntersectShape(s, t.GetSegmentShape()); }
-        public static Intersection IntersectShape(this Segment s, Rect rect) { return IntersectShape(s, rect.GetSegmentShape()); }
-        public static Intersection IntersectShape(this Segment s, Polygon p) { return IntersectShape(s, p.GetSegmentShape()); }
-        public static Intersection IntersectShape(this Segment s, SegmentShape shape)
+        public static Intersection IntersectShape(this Segment s, Triangle t) { return IntersectShape(s, t.GetEdges()); }
+        public static Intersection IntersectShape(this Segment s, Rect rect) { return IntersectShape(s, rect.GetEdges()); }
+        public static Intersection IntersectShape(this Segment s, Polygon p) { return IntersectShape(s, p.GetEdges()); }
+        public static Intersection IntersectShape(this Segment s, Segments shape)
         {
             List<(Vector2 p, Vector2 n)> points = new();
 
-            foreach (var seg in shape.segments)
+            foreach (var seg in shape)
             {
-                var intersection = IntersectSegmentSegment(s, seg, shape.referencePoint, true);
+                var intersection = IntersectSegmentSegment(s, seg);//, shape.referencePoint, true);
                 if (intersection.valid)
                 {
                     points.Add((intersection.p, intersection.n));
@@ -439,19 +435,20 @@ namespace ShapeLib
             else if (points.Count == 1) return new(points[0].p, points[0].n, points);
             else if (points.Count == 2)
             {
-                var info = ConstructNormalOpposite(points[0].p, points[1].p, shape.referencePoint);
-                return new(info.p, info.n, points);
+                var combinedSegment = new Segment(points[0].p, points[1].p);
+                //var info = ConstructNormalOpposite(points[0].p, points[1].p, shape.referencePoint);
+                return new(combinedSegment.GetPoint(0.5f), combinedSegment.n, points);
             }
-            else return new(points[0].p, points[1].n, points);
+            else return new(points[0].p, points[0].n, points);
         }
         
-        public static Intersection IntersectSegmentShapeSegment(SegmentShape shape, Segment s)
+        public static Intersection IntersectSegmentShapeSegment(Segments shape, Segment s)
         {
             List<(Vector2 p, Vector2 n)> points = new();
 
-            foreach (var seg in shape.segments)
+            foreach (var seg in shape)
             {
-                var intersection = IntersectSegmentSegment(seg, s, shape.referencePoint, false);
+                var intersection = IntersectSegmentSegment(seg, s); //, shape.referencePoint, false);
                 if (intersection.valid)
                 {
                     points.Add((intersection.p, intersection.n));
@@ -461,25 +458,26 @@ namespace ShapeLib
             else if (points.Count == 1) return new(points[0].p, points[0].n, points);
             else if (points.Count == 2)
             {
-                var info = ConstructNormal(points[0].p, points[1].p, s.GetReferencePoint());
-                return new(info.p, info.n, points);
+                var combinedSegment = new Segment(points[0].p, points[1].p);
+                //var info = ConstructNormal(points[0].p, points[1].p, s.GetReferencePoint());
+                return new(combinedSegment.GetPoint(0.5f), combinedSegment.n, points);
             }
             else return new(points[0].p, points[1].n, points);
         }
-        public static Intersection IntersectSegmentSegment(Segment a, Segment b, Vector2 referencePoint, bool opposite)
+        public static Intersection IntersectSegmentSegment(Segment a, Segment b)
         {
             var info = IntersectSegmentSegmentInfo(a.start, a.end, b.start, b.end);
             if (info.intersected)
             {
-                Vector2 n = opposite ? SUtils.GetNormalOpposite(b.start, b.end, info.intersectPoint, referencePoint) : SUtils.GetNormal(b.start, b.end, info.intersectPoint, referencePoint);
-                return new(info.intersectPoint, n, new() { (info.intersectPoint, n) });
+                //Vector2 n = opposite ? SUtils.GetNormalOpposite(b.start, b.end, info.intersectPoint, referencePoint) : SUtils.GetNormal(b.start, b.end, info.intersectPoint, referencePoint);
+                return new(info.intersectPoint, b.n, new() { (info.intersectPoint, b.n) });
             }
             return new();
         }
-        public static Intersection IntersectSegmentShapeCircle(SegmentShape shape, Circle c)
+        public static Intersection IntersectSegmentShapeCircle(Segments shape, Circle c)
         {
             List<(Vector2 p, Vector2 n)> points = new();
-            foreach (var seg in shape.segments)
+            foreach (var seg in shape)
             {
                 var intersectPoints = IntersectSegmentCircle(seg.start, seg.end, c.center, c.radius);
                 foreach (var p in intersectPoints)
@@ -495,128 +493,41 @@ namespace ShapeLib
             }
             else if (points.Count == 2)
             {
-                var info = ConstructNormalOpposite(points[0].p, points[1].p, c.center);
-                return new(c.center + info.n * c.radius, info.n, points);
+                var combinedSegment = new Segment(points[0].p, points[1].p);
+                //var info = ConstructNormalOpposite(points[0].p, points[1].p, c.center);
+                return new(c.center + combinedSegment.n * c.radius, combinedSegment.n, points);
             }
             else
             {
                 return new(points[0].p, points[0].n, points);
             }
         }
-        public static Intersection IntersectSegmentShapeSegmentShape(SegmentShape a, SegmentShape b)
+        public static Intersection IntersectSegmentShapeSegmentShape(Segments a, Segments b)
         {
             List<(Vector2 p, Vector2 n)> points = new();
-            foreach (var seg in a.segments)
+            foreach (var seg in a)
             {
                 var intersection = IntersectShape(seg, b);// IntersectionSegmentSegments(referencePoint, seg.start, seg.end, b);
                 if (intersection.valid)
                 {
-                    points.Add((intersection.p, intersection.n));
+                    //points.Add((intersection.p, intersection.n));
+                    points.AddRange(intersection.points);
                 }
             }
             if (points.Count <= 0) return new();
             else if (points.Count == 1) return new(points[0].p, points[0].n, points);
             else if (points.Count == 2)
             {
-                var info = ConstructNormalOpposite(points[0].p, points[1].p, b.referencePoint);
-                return new(info.p, info.n, points);
+                var combinedSegment = new Segment(points[0].p, points[1].p);
+                //var info = ConstructNormalOpposite(points[0].p, points[1].p, b.referencePoint);
+                return new(combinedSegment.GetPoint(0.5f), combinedSegment.n, points);
             }
             else return new(points[0].p, points[0].n, points);
         }
 
 
         
-        //public static Intersection IntersectSegmentSegment(Segment a, Segment b, Vector2 referencePoint)
-        //{
-        //    var info = IntersectSegmentSegmentInfo(a.start, a.end, b.start, b.end);
-        //    if (info.intersected)
-        //    {
-        //        Vector2 n = SUtils.GetNormal(b.start, b.end, info.intersectPoint, referencePoint);
-        //        return new(info.intersectPoint, n, new() { (info.intersectPoint, n) });
-        //    }
-        //    return new();
-        //}
-        /*
-        public static Intersection IntersectShape(this Segment a, Segment b, Vector2 referencePoint, bool opposite = false)
-        {
-            var info = IntersectSegmentSegmentInfo(a.start, a.end, b.start, b.end);
-            if (info.intersected)
-            {
-                Vector2 n = opposite ? SUtils.GetNormalOpposite(b.start, b.end, info.intersectPoint, referencePoint) : SUtils.GetNormal(b.start, b.end, info.intersectPoint, referencePoint);
-                return new(info.intersectPoint, n, new() { (info.intersectPoint, n) });
-            }
-            return new();
-        }
-        public static Intersection IntersectShape(this Segment s, List<Segment> segments, Vector2 referencePoint, bool opposite = false)
-        {
-            List<(Vector2 p, Vector2 n)> points = new();
-
-            foreach (var seg in segments)
-            {
-                var intersection = opposite ? IntersectShape(s, seg, referencePoint, true) : IntersectShape(seg, s, referencePoint, false);
-                if (intersection.valid)
-                {
-                    points.Add((intersection.p, intersection.n));
-                }
-            }
-            if (points.Count <= 0) return new();
-            else if (points.Count == 1) return new(points[0].p, points[0].n, points);
-            else if (points.Count == 2)
-            {
-                var info = opposite ? ConstructNormalOpposite(points[0].p, points[1].p, referencePoint) : ConstructNormal(points[0].p, points[1].p, referencePoint);
-                return new(info.p, info.n, points);
-            }
-            else return new(points[0].p, points[1].n, points);
-        }
-        */
-
-        //public static Intersection IntersectionSegmentRect(Vector2 referencePoint, Vector2 start, Vector2 end, Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl)
-        //{
-        //    List<(Vector2 start, Vector2 end)> segments = SRect.GetRectSegments(tl, tr, br, bl);
-        //    return IntersectionSegmentSegments(referencePoint, start, end, segments);
-        //}
-        //public static Intersection IntersectionSegmentRect(Vector2 referencePoint, Vector2 start, Vector2 end, Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement)
-        //{
-        //    var rect = new Rect(rectPos, rectSize, rectAlignement);
-        //    return IntersectionSegmentRect(referencePoint, start, end, rect);
-        //
-        //}
-        //public static Intersection IntersectShape(this Segment a, Segment b, Vector2 referencePoint)
-        //{
-        //    var info = IntersectSegmentSegmentInfo(a.start, a.end, b.start, b.end);
-        //    if (info.intersected)
-        //    {
-        //        Vector2 n = SUtils.GetNormalOpposite(b.start, b.end, info.intersectPoint, referencePoint);
-        //        return new(info.intersectPoint, n, new() { (info.intersectPoint, n) });
-        //    }
-        //    return new();
-        //}
-        //public static Intersection IntersectionSegmentsSegment(Vector2 referencePoint, List<Segment> segments, Segment s)
-        //{
-        //    List<(Vector2 p, Vector2 n)> points = new();
-        //
-        //    foreach (var seg in segments)
-        //    {
-        //        var intersection = IntersectionSegmentSegment(referencePoint, seg.start, seg.end, start, end);
-        //        if (intersection.valid)
-        //        {
-        //            points.Add((intersection.p, intersection.n));
-        //        }
-        //    }
-        //    if (points.Count <= 0) return new();
-        //    else if (points.Count == 1) return new(points[0].p, points[0].n, points);
-        //    else if (points.Count == 2)
-        //    {
-        //        var info = ConstructNormal(points[0].p, points[1].p, referencePoint);
-        //        return new(info.p, info.n, points);
-        //    }
-        //    else return new(points[0].p, points[0].n, points);
-        //}
-        //public static Intersection IntersectionSegmentSegment(this SegmentCollider a, SegmentCollider b) { return IntersectionSegmentSegment(a.Pos, a.Start, a.End, b.Start, b.End); }
-        //public static Intersection IntersectionSegmentCircle(this SegmentCollider a, CircleCollider circle) { return IntersectionSegmentCircle(a.Start, a.End, circle.Pos, circle.Radius); }
-        //public static Intersection IntersectionSegmentRect(this SegmentCollider a, RectCollider rect) { return IntersectionSegmentRect(rect.Pos, a.Start, a.End, rect.Rect); }
-        //public static Intersection IntersectionSegmentPoly(this SegmentCollider a, PolyCollider poly) { return IntersectionSegmentPoly(poly.Pos, a.Start, a.End, poly.Shape); }
-
+        
         #endregion
 
         #endregion
@@ -838,8 +749,8 @@ namespace ShapeLib
                 {
                     // intersection point is not actually within line segment
                     Vector2 ip = new(iX, iY);
-                    Vector2 n = SUtils.GetNormal(new Vector2(aX, aY), new Vector2(bX, bY), ip, new Vector2(cX, cY));
-                    return new(ip, n, new() { (ip, n) });
+                    //Vector2 n = SUtils.GetNormal(new Vector2(aX, aY), new Vector2(bX, bY), ip, new Vector2(cX, cY));
+                    return new(ip, s.n, new() { (ip, s.n) });
                 }
                 else return new();
             }
@@ -855,8 +766,8 @@ namespace ShapeLib
                 {
                     // intersection point is actually within line segment
                     Vector2 ip = new(i1X, i1Y);
-                    Vector2 n = SUtils.GetNormal(new Vector2(aX, aY), new Vector2(bX, bY), ip, new Vector2(cX, cY));
-                    points.Add((ip, n));
+                    //Vector2 n = SUtils.GetNormal(new Vector2(aX, aY), new Vector2(bX, bY), ip, new Vector2(cX, cY));
+                    points.Add((ip, s.n));
                 }
 
                 // intersection point farthest from A
@@ -866,8 +777,8 @@ namespace ShapeLib
                 if (t2 >= 0f && t2 <= 1f)
                 {
                     Vector2 ip = new(i2X, i2Y);
-                    Vector2 n = SUtils.GetNormal(new Vector2(aX, aY), new Vector2(bX, bY), ip, new Vector2(cX, cY));
-                    points.Add((ip, n));
+                    //Vector2 n = SUtils.GetNormal(new Vector2(aX, aY), new Vector2(bX, bY), ip, new Vector2(cX, cY));
+                    points.Add((ip, s.n));
                 }
 
                 if (points.Count <= 0) return new();
@@ -878,8 +789,8 @@ namespace ShapeLib
                     float l = w.Length();
                     Vector2 dir = w / l;
                     Vector2 p = points[0].p + dir * l * 0.5f;
-                    Vector2 n = SUtils.GetNormal(points[0].p, points[1].p, p, new Vector2(cX, cY));
-                    return new(p, n, points);
+                    //Vector2 n = SUtils.GetNormal(points[0].p, points[1].p, p, new Vector2(cX, cY));
+                    return new(p, s.n, points);
                 }
             }
             else
@@ -888,21 +799,21 @@ namespace ShapeLib
                 return new();
             }
         }
-        public static Intersection IntersectShape(this Circle c, Triangle t) { return IntersectShape(c, t.GetSegmentShape()); }
-        public static Intersection IntersectShape(this Circle c, Rect r) { return IntersectShape(c, r.GetSegmentShape()); }
-        public static Intersection IntersectShape(this Circle c, Polygon p) { return IntersectShape(c, p.GetSegmentShape()); }
-        public static Intersection IntersectShape(this Circle c, SegmentShape shape)
+        public static Intersection IntersectShape(this Circle c, Triangle t) { return IntersectShape(c, t.GetEdges()); }
+        public static Intersection IntersectShape(this Circle c, Rect r) { return IntersectShape(c, r.GetEdges()); }
+        public static Intersection IntersectShape(this Circle c, Polygon p) { return IntersectShape(c, p.GetEdges()); }
+        public static Intersection IntersectShape(this Circle c, Segments shape)
         {
             List<(Vector2 p, Vector2 n)> points = new();
-            foreach (var seg in shape.segments)
+            foreach (var seg in shape)
             {
                 //var intersection = IntersectionCircleSegment(circlePos, circleRadius, seg.start, seg.end);
                 //if (intersection.valid) points.AddRange(intersection.points);
                 var intersectPoints = IntersectCircleSegment(c.center, c.radius, seg.start, seg.end);
                 foreach (var p in intersectPoints)
                 {
-                    Vector2 n = SUtils.GetNormalOpposite(seg.start, seg.end, p, shape.referencePoint);
-                    points.Add((p, n));
+                    //Vector2 n = SUtils.GetNormalOpposite(seg.start, seg.end, p, shape.referencePoint);
+                    points.Add((p, seg.n));
                 }
             }
             if (points.Count <= 0) return new();
@@ -912,8 +823,9 @@ namespace ShapeLib
             }
             else if (points.Count == 2)
             {
-                var info = ConstructNormalOpposite(points[0].p, points[1].p, shape.referencePoint);
-                return new(info.p, info.n, points);
+                var combinedSegment = new Segment(points[0].p, points[1].p);
+                //var info = ConstructNormalOpposite(points[0].p, points[1].p, shape.referencePoint);
+                return new(combinedSegment.GetPoint(0.5f), combinedSegment.n, points);
             }
             else
             {
@@ -921,13 +833,7 @@ namespace ShapeLib
             }
         }
 
-        //public static Intersection IntersectionCircleSegment(Vector2 circlePos, float circleRadius, Vector2 start, Vector2 end) { return IntersectionCircleSegment(circlePos.X, circlePos.Y, circleRadius, start.X, start.Y, end.X, end.Y); }
-        //public static Intersection IntersectionCircleCircle(Vector2 aPos, float aRadius, Vector2 bPos, float bRadius) { return IntersectionCircleCircle(aPos.X, aPos.Y, aRadius, bPos.X, bPos.Y, bRadius); }
-        //public static Intersection IntersectionCircleCircle(this CircleCollider a, CircleCollider b) { return IntersectionCircleCircle(a.Pos, a.Radius, b.Pos, b.Radius); }
-        //public static Intersection IntersectionCircleSegment(this CircleCollider circle, SegmentCollider segment) { return IntersectionCircleSegment(circle.Pos, circle.Radius, segment.Start, segment.End); }
-        //public static Intersection IntersectionCircleRect(this CircleCollider circle, RectCollider rect) { return IntersectionCircleRect(rect.Pos, circle.Pos, circle.Radius, rect.Rect); }
-        //public static Intersection IntersectionCirclePoly(this CircleCollider circle, PolyCollider poly) { return IntersectionCirclePoly(poly.Pos, circle.Pos, circle.Radius, poly.Shape); }
-
+        
         #endregion
 
         #endregion
@@ -945,7 +851,7 @@ namespace ShapeLib
         #endregion
 
         #region Intersect
-        public static Intersection IntersectShape(this Triangle t, Segment s) { return IntersectSegmentShapeSegment(t.GetSegmentShape(), s); }
+        public static Intersection IntersectShape(this Triangle t, Segment s) { return IntersectSegmentShapeSegment(t.GetEdges(), s); }
         public static Intersection IntersectShape(this Triangle t, Circle c) { return IntersectShape(t.ToPolygon(), c); }
         public static Intersection IntersectShape(this Triangle a, Triangle b) { return IntersectShape(a.ToPolygon(), b.ToPolygon()); }
         public static Intersection IntersectShape(this Triangle t, Rect r) { return IntersectShape(t.ToPolygon(), r.ToPolygon()); }
@@ -1021,22 +927,13 @@ namespace ShapeLib
         #endregion
 
         #region Intersect
-        public static Intersection IntersectShape(this Rect rect, Segment s) { return IntersectSegmentShapeSegment(rect.GetSegmentShape(), s); }
-        public static Intersection IntersectShape(this Rect rect, Circle c) { return IntersectSegmentShapeCircle(rect.GetSegmentShape(), c); }
-        public static Intersection IntersectShape(this Rect rect, Triangle t) { return IntersectSegmentShapeSegmentShape(rect.GetSegmentShape(), t.GetSegmentShape()); }
-        public static Intersection IntersectShape(this Rect a, Rect b) { return IntersectSegmentShapeSegmentShape(a.GetSegmentShape(), b.GetSegmentShape()); }
-        public static Intersection IntersectShape(this Rect rect, Polygon p) { return IntersectSegmentShapeSegmentShape(rect.GetSegmentShape(), p.GetSegmentShape()); }
+        public static Intersection IntersectShape(this Rect rect, Segment s) { return IntersectSegmentShapeSegment(rect.GetEdges(), s); }
+        public static Intersection IntersectShape(this Rect rect, Circle c) { return IntersectSegmentShapeCircle(rect.GetEdges(), c); }
+        public static Intersection IntersectShape(this Rect rect, Triangle t) { return IntersectSegmentShapeSegmentShape(rect.GetEdges(), t.GetEdges()); }
+        public static Intersection IntersectShape(this Rect a, Rect b) { return IntersectSegmentShapeSegmentShape(a.GetEdges(), b.GetEdges()); }
+        public static Intersection IntersectShape(this Rect rect, Polygon p) { return IntersectSegmentShapeSegmentShape(rect.GetEdges(), p.GetEdges()); }
 
-
-        //public static Intersection IntersectionRectCircle(this RectCollider rect, CircleCollider circle) { return rect.Rect.IntersectionRectCircle(circle.Pos, circle.Pos, circle.Radius); }
-        //public static Intersection IntersectionRectSegment(this RectCollider rect, SegmentCollider segment) { return rect.Rect.IntersectionRectSegment(rect.Pos, segment.Start, segment.End); }
-        //public static Intersection IntersectionRectRect(this RectCollider a, RectCollider b) { return a.Rect.IntersectionRectRect(b.Pos, b.Rect); }
-        //public static Intersection IntersectionRectPoly(this RectCollider rect, PolyCollider poly) { return rect.Rect.IntersectionRectPoly(poly.Pos, poly.Shape); }
-        //public static Intersection IntersectionRectCircle(this Rect rect, CircleCollider circle) { return rect.IntersectionRectCircle(circle.Pos, circle.Pos, circle.Radius); }
-        //public static Intersection IntersectionRectSegment(this Rect rect, SegmentCollider segment) { return rect.IntersectionRectSegment(rect.Center, segment.Start, segment.End); }
-        //public static Intersection IntersectionRectRect(this Rect a, RectCollider b) { return a.IntersectionRectRect(b.Pos, b.Rect); }
-        //public static Intersection IntersectionRectPoly(this Rect rect, PolyCollider poly) { return rect.IntersectionRectPoly(poly.Pos, poly.Shape); }
-
+        
         #endregion
 
         #endregion
@@ -1115,11 +1012,11 @@ namespace ShapeLib
         #endregion
 
         #region Intersect
-        public static Intersection IntersectShape(this Polygon p, Segment s) { return IntersectSegmentShapeSegment(p.GetSegmentShape(), s); }
-        public static Intersection IntersectShape(this Polygon p, Circle c) { return IntersectSegmentShapeCircle(p.GetSegmentShape(), c); }
-        public static Intersection IntersectShape(this Polygon p, Triangle t) { return IntersectSegmentShapeSegmentShape(p.GetSegmentShape(), t.GetSegmentShape()); }
-        public static Intersection IntersectShape(this Polygon p, Rect r) { return IntersectSegmentShapeSegmentShape(p.GetSegmentShape(), r.GetSegmentShape()); }
-        public static Intersection IntersectShape(this Polygon a, Polygon b) { return IntersectSegmentShapeSegmentShape(a.GetSegmentShape(), b.GetSegmentShape()); }
+        public static Intersection IntersectShape(this Polygon p, Segment s) { return IntersectSegmentShapeSegment(p.GetEdges(), s); }
+        public static Intersection IntersectShape(this Polygon p, Circle c) { return IntersectSegmentShapeCircle(p.GetEdges(), c); }
+        public static Intersection IntersectShape(this Polygon p, Triangle t) { return IntersectSegmentShapeSegmentShape(p.GetEdges(), t.GetEdges()); }
+        public static Intersection IntersectShape(this Polygon p, Rect r) { return IntersectSegmentShapeSegmentShape(p.GetEdges(), r.GetEdges()); }
+        public static Intersection IntersectShape(this Polygon a, Polygon b) { return IntersectSegmentShapeSegmentShape(a.GetEdges(), b.GetEdges()); }
 
 
         #endregion
@@ -1445,6 +1342,7 @@ namespace ShapeLib
         }
         public static List<Vector2> IntersectCircleSegment(Vector2 circlePos, float circleRadius, Vector2 start, Vector2 end) { return IntersectSegmentCircle(start, end, circlePos, circleRadius); }
         
+        /*
         private static (Vector2 p, Vector2 n) ConstructNormal(Vector2 p1, Vector2 p2, Vector2 referencePoint)
         {
             Vector2 w = p2 - p1;
@@ -1463,12 +1361,119 @@ namespace ShapeLib
             Vector2 n = SUtils.GetNormalOpposite(p1, p2, p, referencePoint);
             return (p, n);
         }
-
+        */
         #endregion
 
     }
 }
 
+//public static Intersection IntersectionCircleSegment(Vector2 circlePos, float circleRadius, Vector2 start, Vector2 end) { return IntersectionCircleSegment(circlePos.X, circlePos.Y, circleRadius, start.X, start.Y, end.X, end.Y); }
+//public static Intersection IntersectionCircleCircle(Vector2 aPos, float aRadius, Vector2 bPos, float bRadius) { return IntersectionCircleCircle(aPos.X, aPos.Y, aRadius, bPos.X, bPos.Y, bRadius); }
+//public static Intersection IntersectionCircleCircle(this CircleCollider a, CircleCollider b) { return IntersectionCircleCircle(a.Pos, a.Radius, b.Pos, b.Radius); }
+//public static Intersection IntersectionCircleSegment(this CircleCollider circle, SegmentCollider segment) { return IntersectionCircleSegment(circle.Pos, circle.Radius, segment.Start, segment.End); }
+//public static Intersection IntersectionCircleRect(this CircleCollider circle, RectCollider rect) { return IntersectionCircleRect(rect.Pos, circle.Pos, circle.Radius, rect.Rect); }
+//public static Intersection IntersectionCirclePoly(this CircleCollider circle, PolyCollider poly) { return IntersectionCirclePoly(poly.Pos, circle.Pos, circle.Radius, poly.Shape); }
+
+//public static Intersection IntersectionRectCircle(this RectCollider rect, CircleCollider circle) { return rect.Rect.IntersectionRectCircle(circle.Pos, circle.Pos, circle.Radius); }
+//public static Intersection IntersectionRectSegment(this RectCollider rect, SegmentCollider segment) { return rect.Rect.IntersectionRectSegment(rect.Pos, segment.Start, segment.End); }
+//public static Intersection IntersectionRectRect(this RectCollider a, RectCollider b) { return a.Rect.IntersectionRectRect(b.Pos, b.Rect); }
+//public static Intersection IntersectionRectPoly(this RectCollider rect, PolyCollider poly) { return rect.Rect.IntersectionRectPoly(poly.Pos, poly.Shape); }
+//public static Intersection IntersectionRectCircle(this Rect rect, CircleCollider circle) { return rect.IntersectionRectCircle(circle.Pos, circle.Pos, circle.Radius); }
+//public static Intersection IntersectionRectSegment(this Rect rect, SegmentCollider segment) { return rect.IntersectionRectSegment(rect.Center, segment.Start, segment.End); }
+//public static Intersection IntersectionRectRect(this Rect a, RectCollider b) { return a.IntersectionRectRect(b.Pos, b.Rect); }
+//public static Intersection IntersectionRectPoly(this Rect rect, PolyCollider poly) { return rect.IntersectionRectPoly(poly.Pos, poly.Shape); }
+
+
+//public static Intersection IntersectSegmentSegment(Segment a, Segment b, Vector2 referencePoint)
+//{
+//    var info = IntersectSegmentSegmentInfo(a.start, a.end, b.start, b.end);
+//    if (info.intersected)
+//    {
+//        Vector2 n = SUtils.GetNormal(b.start, b.end, info.intersectPoint, referencePoint);
+//        return new(info.intersectPoint, n, new() { (info.intersectPoint, n) });
+//    }
+//    return new();
+//}
+/*
+public static Intersection IntersectShape(this Segment a, Segment b, Vector2 referencePoint, bool opposite = false)
+{
+    var info = IntersectSegmentSegmentInfo(a.start, a.end, b.start, b.end);
+    if (info.intersected)
+    {
+        Vector2 n = opposite ? SUtils.GetNormalOpposite(b.start, b.end, info.intersectPoint, referencePoint) : SUtils.GetNormal(b.start, b.end, info.intersectPoint, referencePoint);
+        return new(info.intersectPoint, n, new() { (info.intersectPoint, n) });
+    }
+    return new();
+}
+public static Intersection IntersectShape(this Segment s, List<Segment> segments, Vector2 referencePoint, bool opposite = false)
+{
+    List<(Vector2 p, Vector2 n)> points = new();
+
+    foreach (var seg in segments)
+    {
+        var intersection = opposite ? IntersectShape(s, seg, referencePoint, true) : IntersectShape(seg, s, referencePoint, false);
+        if (intersection.valid)
+        {
+            points.Add((intersection.p, intersection.n));
+        }
+    }
+    if (points.Count <= 0) return new();
+    else if (points.Count == 1) return new(points[0].p, points[0].n, points);
+    else if (points.Count == 2)
+    {
+        var info = opposite ? ConstructNormalOpposite(points[0].p, points[1].p, referencePoint) : ConstructNormal(points[0].p, points[1].p, referencePoint);
+        return new(info.p, info.n, points);
+    }
+    else return new(points[0].p, points[1].n, points);
+}
+*/
+
+//public static Intersection IntersectionSegmentRect(Vector2 referencePoint, Vector2 start, Vector2 end, Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl)
+//{
+//    List<(Vector2 start, Vector2 end)> segments = SRect.GetRectSegments(tl, tr, br, bl);
+//    return IntersectionSegmentSegments(referencePoint, start, end, segments);
+//}
+//public static Intersection IntersectionSegmentRect(Vector2 referencePoint, Vector2 start, Vector2 end, Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement)
+//{
+//    var rect = new Rect(rectPos, rectSize, rectAlignement);
+//    return IntersectionSegmentRect(referencePoint, start, end, rect);
+//
+//}
+//public static Intersection IntersectShape(this Segment a, Segment b, Vector2 referencePoint)
+//{
+//    var info = IntersectSegmentSegmentInfo(a.start, a.end, b.start, b.end);
+//    if (info.intersected)
+//    {
+//        Vector2 n = SUtils.GetNormalOpposite(b.start, b.end, info.intersectPoint, referencePoint);
+//        return new(info.intersectPoint, n, new() { (info.intersectPoint, n) });
+//    }
+//    return new();
+//}
+//public static Intersection IntersectionSegmentsSegment(Vector2 referencePoint, List<Segment> segments, Segment s)
+//{
+//    List<(Vector2 p, Vector2 n)> points = new();
+//
+//    foreach (var seg in segments)
+//    {
+//        var intersection = IntersectionSegmentSegment(referencePoint, seg.start, seg.end, start, end);
+//        if (intersection.valid)
+//        {
+//            points.Add((intersection.p, intersection.n));
+//        }
+//    }
+//    if (points.Count <= 0) return new();
+//    else if (points.Count == 1) return new(points[0].p, points[0].n, points);
+//    else if (points.Count == 2)
+//    {
+//        var info = ConstructNormal(points[0].p, points[1].p, referencePoint);
+//        return new(info.p, info.n, points);
+//    }
+//    else return new(points[0].p, points[0].n, points);
+//}
+//public static Intersection IntersectionSegmentSegment(this SegmentCollider a, SegmentCollider b) { return IntersectionSegmentSegment(a.Pos, a.Start, a.End, b.Start, b.End); }
+//public static Intersection IntersectionSegmentCircle(this SegmentCollider a, CircleCollider circle) { return IntersectionSegmentCircle(a.Start, a.End, circle.Pos, circle.Radius); }
+//public static Intersection IntersectionSegmentRect(this SegmentCollider a, RectCollider rect) { return IntersectionSegmentRect(rect.Pos, a.Start, a.End, rect.Rect); }
+//public static Intersection IntersectionSegmentPoly(this SegmentCollider a, PolyCollider poly) { return IntersectionSegmentPoly(poly.Pos, a.Start, a.End, poly.Shape); }
 
 /*
         public static Intersection IntersectionPolyCircle(Vector2 referencePoint, List<Vector2> poly, Vector2 circlePos, float circleRadius)
@@ -1501,52 +1506,52 @@ namespace ShapeLib
         public static Intersection IntersectionPolyPoly(this PolyCollider a, PolyCollider b) { return IntersectionPolyPoly(b.Pos, a.Shape, b.Shape); }
         */
 //public static bool IsPointInPoly(Vector2 point, List<Vector2> poly)
-        //{
-        //    if (poly.Count < 3) return false;
-        //    int intersections = 0;
-        //    for (int i = 0; i < poly.Count; i++)
-        //    {
-        //        Vector2 start = poly[i];
-        //        Vector2 end = poly[(i + 1) % poly.Count];
-        //        var info = SGeometry.IntersectRaySegmentInfo(point, new(1f, 0f), start, end);
-        //        if (info.intersected) intersections += 1;
-        //    }
-        //
-        //    return !(intersections % 2 == 0);
-        //}
+//{
+//    if (poly.Count < 3) return false;
+//    int intersections = 0;
+//    for (int i = 0; i < poly.Count; i++)
+//    {
+//        Vector2 start = poly[i];
+//        Vector2 end = poly[(i + 1) % poly.Count];
+//        var info = SGeometry.IntersectRaySegmentInfo(point, new(1f, 0f), start, end);
+//        if (info.intersected) intersections += 1;
+//    }
+//
+//    return !(intersections % 2 == 0);
+//}
 
 
 //public static bool IsPointInside(this Segment l, Vector2 p) { return IsPointOnSegment(p, l.start, l.end); }
-        //public static bool IsPointInside(this Circle c, Vector2 p) { return IsPointInCircle(p, c.center, c.radius); }
-        //public static bool IsPointInside(this Triangle t, Vector2 p) { return IsPointInTriangle(t.a, t.b, t.c, p); }
-        //public static bool IsPointInside(this Rect r, Vector2 p) { return IsPointInRect(p, r.TopLeft, r.Size); }
-        //public static bool IsPointInside(this Polygon poly, Vector2 p) { return IsPointInPoly(p, poly.points); }
-        //#region IShape
-        //public static bool OverlapShape(this IShape a, IShape b) { return OverlapSegmentsSegments(a.GetSegmentShape(), b.GetSegmentShape()); }
-        //public static Intersection IntersectShape(this IShape a, IShape b) { return IntersectionSegmentsSegments(b.GetReferencePoint(), a.GetSegmentShape(), b.GetSegmentShape()); }
-        //
-        //public static bool OverlapShapeBoundingBox(this IShape a, IShape b) { return OverlapShape(a.GetBoundingBox(), b.GetBoundingBox()); }
-        //public static Intersection IntersectShapeBoundingBox(this IShape a, IShape b) { return IntersectionRectRect(a.GetBoundingBox(), b.GetReferencePoint(), b.GetBoundingBox()); }
-        //
-        //#endregion
+//public static bool IsPointInside(this Circle c, Vector2 p) { return IsPointInCircle(p, c.center, c.radius); }
+//public static bool IsPointInside(this Triangle t, Vector2 p) { return IsPointInTriangle(t.a, t.b, t.c, p); }
+//public static bool IsPointInside(this Rect r, Vector2 p) { return IsPointInRect(p, r.TopLeft, r.Size); }
+//public static bool IsPointInside(this Polygon poly, Vector2 p) { return IsPointInPoly(p, poly.points); }
+//#region IShape
+//public static bool OverlapShape(this IShape a, IShape b) { return OverlapSegmentsSegments(a.GetSegmentShape(), b.GetSegmentShape()); }
+//public static Intersection IntersectShape(this IShape a, IShape b) { return IntersectionSegmentsSegments(b.GetReferencePoint(), a.GetSegmentShape(), b.GetSegmentShape()); }
+//
+//public static bool OverlapShapeBoundingBox(this IShape a, IShape b) { return OverlapShape(a.GetBoundingBox(), b.GetBoundingBox()); }
+//public static Intersection IntersectShapeBoundingBox(this IShape a, IShape b) { return IntersectionRectRect(a.GetBoundingBox(), b.GetReferencePoint(), b.GetBoundingBox()); }
+//
+//#endregion
 //public static bool OverlapCirclePoint(this Circle c, Vector2 point)
-        //{
-        //    float disSq = (circlePos - point).LengthSquared();
-        //    return disSq <= circleRadius * circleRadius;
-        //}
-        //public static bool OverlapPointSegment(Vector2 point, Vector2 segmentPos, Vector2 segmentEnd) { return OverlapCircleSegment(point, POINT_RADIUS, segmentPos, segmentEnd); }
-        //public static bool OverlapPointRect(Vector2 point, Rect rect) { return OverlapCircleRect(point, POINT_RADIUS, rect);}
-        //public static bool OverlapPointLine(Vector2 point, Vector2 linePos, Vector2 lineDir) { return OverlapCircleLine(point, POINT_RADIUS, linePos, lineDir); }
-        //public static bool OverlapRayPoint(Vector2 point, Vector2 rayPos, Vector2 rayDir) { return OverlapPointRay(point, rayPos, rayDir); }
-        //public static bool OverlapPointSegment(Vector2 point, Vector2 segmentPos, Vector2 segmentDir, float segmentlength) { return OverlapPointSegment(point, segmentPos, segmentPos + segmentDir * segmentlength); }
-        //public static bool OverlapPointRect(Vector2 point, Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement) {return OverlapPointRect(point, new(rectPos, rectSize, rectAlignement));}
-        //public static bool OverlapCirclePoint(Vector2 circlePos, float circleRadius, Vector2 point) { return OverlapPointCircle(point, circlePos, circleRadius); }
-        //public static bool OverlapSegmentPoint(Vector2 segmentPos, Vector2 segmentDir, float segmentLength, Vector2 point) {return OverlapSegmentCircle(segmentPos, segmentPos + segmentDir * segmentLength, point, POINT_RADIUS);}
-        //public static bool OverlapLinePoint(Vector2 linePos, Vector2 lineDir, Vector2 point) {return OverlapLineCircle(linePos, lineDir, point, POINT_RADIUS);}
-        //public static bool OverlapSegmentPoint(Vector2 segmentPos, Vector2 segmentEnd, Vector2 point) {return OverlapSegmentCircle(segmentPos, segmentEnd, point, POINT_RADIUS);}
-        //public static bool OverlapRectPoint(this Rect rect, Vector2 point) { return OverlapRectCircle(rect, point, POINT_RADIUS); }
-        //public static bool OverlapRectPoint(Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement, Vector2 point) { return OverlapRectCircle(rectPos, rectSize, rectAlignement, point, POINT_RADIUS);}
-        //public static bool OverlapPolyPoint(List<Vector2> poly, Vector2 point) { return OverlapPolyCircle(poly, point, POINT_RADIUS); }
+//{
+//    float disSq = (circlePos - point).LengthSquared();
+//    return disSq <= circleRadius * circleRadius;
+//}
+//public static bool OverlapPointSegment(Vector2 point, Vector2 segmentPos, Vector2 segmentEnd) { return OverlapCircleSegment(point, POINT_RADIUS, segmentPos, segmentEnd); }
+//public static bool OverlapPointRect(Vector2 point, Rect rect) { return OverlapCircleRect(point, POINT_RADIUS, rect);}
+//public static bool OverlapPointLine(Vector2 point, Vector2 linePos, Vector2 lineDir) { return OverlapCircleLine(point, POINT_RADIUS, linePos, lineDir); }
+//public static bool OverlapRayPoint(Vector2 point, Vector2 rayPos, Vector2 rayDir) { return OverlapPointRay(point, rayPos, rayDir); }
+//public static bool OverlapPointSegment(Vector2 point, Vector2 segmentPos, Vector2 segmentDir, float segmentlength) { return OverlapPointSegment(point, segmentPos, segmentPos + segmentDir * segmentlength); }
+//public static bool OverlapPointRect(Vector2 point, Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement) {return OverlapPointRect(point, new(rectPos, rectSize, rectAlignement));}
+//public static bool OverlapCirclePoint(Vector2 circlePos, float circleRadius, Vector2 point) { return OverlapPointCircle(point, circlePos, circleRadius); }
+//public static bool OverlapSegmentPoint(Vector2 segmentPos, Vector2 segmentDir, float segmentLength, Vector2 point) {return OverlapSegmentCircle(segmentPos, segmentPos + segmentDir * segmentLength, point, POINT_RADIUS);}
+//public static bool OverlapLinePoint(Vector2 linePos, Vector2 lineDir, Vector2 point) {return OverlapLineCircle(linePos, lineDir, point, POINT_RADIUS);}
+//public static bool OverlapSegmentPoint(Vector2 segmentPos, Vector2 segmentEnd, Vector2 point) {return OverlapSegmentCircle(segmentPos, segmentEnd, point, POINT_RADIUS);}
+//public static bool OverlapRectPoint(this Rect rect, Vector2 point) { return OverlapRectCircle(rect, point, POINT_RADIUS); }
+//public static bool OverlapRectPoint(Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement, Vector2 point) { return OverlapRectCircle(rectPos, rectSize, rectAlignement, point, POINT_RADIUS);}
+//public static bool OverlapPolyPoint(List<Vector2> poly, Vector2 point) { return OverlapPolyCircle(poly, point, POINT_RADIUS); }
 //public static Intersection IntersectionPointPoint(Collider a, Collider b)
 //{
 //    return IntersectionPointPoint(a.Pos, b.Pos);

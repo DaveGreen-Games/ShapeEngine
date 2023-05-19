@@ -5,7 +5,6 @@ using ShapeRandom;
 
 namespace ShapeCore
 {
-
     public class Segments : List<Segment>
     {
         public Segments() { }
@@ -13,6 +12,7 @@ namespace ShapeCore
         public Segments(params Segment[] edges) { AddRange(edges); }
         public Segments(IEnumerable<Segment> edges) {  AddRange(edges); }
     }
+   
     public class Triangulation : List<Triangle>
     {
         public Triangulation() { }
@@ -20,37 +20,31 @@ namespace ShapeCore
         public Triangulation(params Triangle[] triangles) { AddRange(triangles); }
         public Triangulation(IEnumerable<Triangle> triangles) { AddRange(triangles); }
     }
-    public struct SegmentShape
-    {
-        public List<Segment> segments;
-        public Vector2 referencePoint;
-        public SegmentShape(List<Segment> segments, Vector2 referencePoint) { this.segments = segments; this.referencePoint = referencePoint; }
-        public SegmentShape(Vector2 referencePoint, params Segment[] segments) { this.segments = segments.ToList(); this.referencePoint = referencePoint; }
-    }
     
     public struct Segment : IShape
     {
         public Vector2 start;
         public Vector2 end;
+        public Vector2 n;
+
         public Vector2 Center { get { return (start + end) * 0.5f; } }
         public Vector2 Dir { get { return Displacement.Normalize(); } }
         public Vector2 Displacement { get { return end - start; } }
         public float Length { get { return Displacement.Length(); } }
         public float LengthSquared { get { return Displacement.LengthSquared(); } }
 
-        public Segment(Vector2 start, Vector2 end) { this.start = start; this.end = end; }
-        public Segment(float startX, float startY, float endX, float endY) { this.start = new(startX, startY); this.end = new(endX, endY); }
-        public Segment(Segment s) { start = s.start; end = s.end; }
+        public Segment(Vector2 start, Vector2 end) { this.start = start; this.end = end; this.n = (end - start).GetPerpendicularRight().Normalize(); }
+        public Segment(Vector2 start, Vector2 end, Vector2 n) { this.start = start; this.end = end; this.n = n; }
+        public Segment(float startX, float startY, float endX, float endY) { this.start = new(startX, startY); this.end = new(endX, endY); this.n = (this.end - this.start).GetPerpendicularRight().Normalize(); }
+        public Segment(Segment s) { start = s.start; end = s.end; n = s.n; }
         
         public Vector2 GetCentroid() { return Center; }
-        public Vector2 GetReferencePoint() { return Center; }
         public float GetArea() { return 0f; }
         public float GetCircumference() { return Length; }
         public float GetCircumferenceSquared() { return LengthSquared; }
         public Polygon ToPolygon() { return new(start, end); }
         public Segments GetEdges() { return new(this); }
         public Triangulation Triangulate() { return new(); }
-        public SegmentShape GetSegmentShape() { return new(start, this); }
         public Circle GetBoundingCircle() { return ToPolygon().GetBoundingCircle(); }
         public Rect GetBoundingBox() { return new(start, end); }
         public bool IsPointInside(Vector2 p) { return SGeometry.IsPointOnSegment(p, start, end); }
@@ -76,8 +70,8 @@ namespace ShapeCore
 
 
 
-
-
+        //public SegmentShape GetSegmentShape() { return new(start, this); }
+        //public Vector2 GetReferencePoint() { return Center; }
         //public Segment ChangePosition(Vector2 newPos) { return new(newPos, newPos + Displacement); }
         //public void SetPosition(Vector2 newPosition)
         //{
@@ -86,6 +80,7 @@ namespace ShapeCore
         //    end = newPosition + w;
         //}
     }
+    
     public struct Circle : IShape
     {
         public Vector2 center;
@@ -102,9 +97,7 @@ namespace ShapeCore
         public Segments GetEdges() { return this.GetEdges(16); }
         public Polygon ToPolygon() { return this.GetPoints(16); }
         public Triangulation Triangulate() { return ToPolygon().Triangulate(); }
-        public SegmentShape GetSegmentShape() { return new(this.GetEdges(), center); }
         public Circle GetBoundingCircle() { return this; }
-        public Vector2 GetReferencePoint() { return center; }
         public float GetArea() { return MathF.PI * radius * radius; }
         public float GetCircumference() { return MathF.PI * radius * 2f; }
         public float GetCircumferenceSquared() { return GetCircumference() * GetCircumference(); }
@@ -125,7 +118,10 @@ namespace ShapeCore
         public void DrawShape(float linethickness, Color color) => this.DrawLines(linethickness, color);
 
 
+        //public Vector2 GetReferencePoint() { return center; }
+        //public SegmentShape GetSegmentShape() { return new(this.GetEdges(), center); }
     }
+   
     /// <summary>
     /// Class that represents a triangle by holding three points. Points a, b, c should be in ccw order!
     /// </summary>
@@ -151,9 +147,7 @@ namespace ShapeCore
         public Polygon ToPolygon() { return new(a, b, c); }
         public Segments GetEdges() { return new() { new(a, b), new(b, c), new(c, a) }; }
         public Triangulation Triangulate() { return this.Triangulate(GetCentroid()); }
-        public SegmentShape GetSegmentShape() { return new(GetCentroid(), new(a, b), new(b, c), new(c, a) ); }
         public Circle GetBoundingCircle() { return ToPolygon().GetBoundingCircle(); }
-        public Vector2 GetReferencePoint() { return GetCentroid(); }
         public float GetCircumference() { return MathF.Sqrt(GetCircumferenceSquared()); }
         public float GetCircumferenceSquared() { return A.LengthSquared() + B.LengthSquared() + C.LengthSquared(); }
         public float GetArea() { return (a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X); }
@@ -167,7 +161,10 @@ namespace ShapeCore
         public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
         public void DrawShape(float linethickness, Color color) => this.DrawLines(linethickness, color);
 
+        //public SegmentShape GetSegmentShape() { return new(GetCentroid(), new(a, b), new(b, c), new(c, a) ); }
+        //public Vector2 GetReferencePoint() { return GetCentroid(); }
     }
+    
     public struct Rect : IShape
     {
         public float x;
@@ -239,9 +236,7 @@ namespace ShapeCore
         public Polygon ToPolygon() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
         public Segments GetEdges() { return new() { new(TopLeft, BottomLeft), new(BottomLeft, BottomRight), new(BottomRight, TopRight), new(TopRight, TopLeft) }; }
         public Triangulation Triangulate() { return ToPolygon().Triangulate(); }
-        public SegmentShape GetSegmentShape() { return new(GetEdges(), Center); }
         public Circle GetBoundingCircle() { return ToPolygon().GetBoundingCircle(); }
-        public Vector2 GetReferencePoint() { return Center; }
         public float GetCircumference() { return width * 2 + height * 2; }
         public float GetCircumferenceSquared() { return GetCircumference() * GetCircumference(); }
         public float GetArea() { return width * height; }
@@ -256,6 +251,8 @@ namespace ShapeCore
         
         public void DrawShape(float linethickness, Color color) => this.DrawLines(linethickness, color);
 
+        //public Vector2 GetReferencePoint() { return Center; }
+        //public SegmentShape GetSegmentShape() { return new(GetEdges(), Center); }
         //public void SetPosition(Vector2 newPosition) 
         //{
         //    Vector2 w = newPosition - Center;
@@ -406,13 +403,30 @@ namespace ShapeCore
         //}
         */
     }
+    
+    /// <summary>
+    /// Points shoud be in CCW order!!!
+    /// </summary>
     public class Polygon : List<Vector2>, IShape
     {
         public Polygon() { }
+        /// <summary>
+        /// Points should be in CCW order. Use Reverse if they are in CW order.
+        /// </summary>
+        /// <param name="points"></param>
         public Polygon(params Vector2[] points) { AddRange(points); }
-        //public Polygon(List<Vector2> points) { AddRange(points); }
+        /// <summary>
+        /// Points should be in CCW order. Use Reverse if they are in CW order.
+        /// </summary>
+        /// <param name="points"></param>
         public Polygon(IEnumerable<Vector2> edges) { AddRange(edges); }
+        /// <summary>
+        /// Points should be in CCW order. Use Reverse if they are in CW order.
+        /// </summary>
+        /// <param name="points"></param>
         public Polygon(IShape shape) { AddRange(shape.ToPolygon()); }
+
+        public void FixWindingOrder() { if (this.IsClockwise()) this.Reverse(); }
         public void ReduceVertexCount(int newCount)
         {
             if (newCount < 3) Clear();//no points left to form a polygon
@@ -461,7 +475,6 @@ namespace ShapeCore
             return this[SUtils.WrapIndex(Count, index)];
         }
 
-        public Vector2 GetReferencePoint() { return GetCentroid(); }
         public Vector2 GetCentroid()
         {
             Vector2 result = new();
@@ -547,7 +560,6 @@ namespace ShapeCore
             }
             return segments;
         }
-        public SegmentShape GetSegmentShape() { return new(GetEdges(), this.GetCentroid()); }
         public Circle GetBoundingCircle()
         {
             float maxD = 0f;
@@ -677,6 +689,10 @@ namespace ShapeCore
 
             return totalArea;
         }
+        
+        
+        //public Vector2 GetReferencePoint() { return GetCentroid(); }
+        //public SegmentShape GetSegmentShape() { return new(GetEdges(), this.GetCentroid()); }
     }
 
 
@@ -686,6 +702,15 @@ namespace ShapeCore
 
 
 
+/*
+    public struct SegmentShape
+    {
+        public Segments segments = new();
+        public Vector2 referencePoint;
+        public SegmentShape(IEnumerable<Segment> segments, Vector2 referencePoint) { this.segments.AddRange(segments); this.referencePoint = referencePoint; }
+        public SegmentShape(Vector2 referencePoint, params Segment[] segments) { this.segments.AddRange(segments); this.referencePoint = referencePoint; }
+    }
+    */
 
 //public struct PolygonShape
     //{

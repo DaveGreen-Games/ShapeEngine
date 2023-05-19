@@ -179,6 +179,11 @@ namespace ShapeLib
             int i = WrapIndex(collection.Count, index);
             return collection[i];
         }
+        public static T LerpCollection<T>(List<T> collection, float f)
+        {
+            int index = WrapIndex(collection.Count, (int)(collection.Count * f));
+            return collection[index];
+        }
 
         public static float Clamp(float value, float min, float max)
         {
@@ -196,29 +201,6 @@ namespace ShapeLib
             float rate = 1f - MathF.Pow(1f - lerpPercentage, dt);
             return rate;
         }
-        public static Vector2 GetNormal(Vector2 start, Vector2 end, Vector2 intersectionPoint, Vector2 referencePoint)
-        {
-            Vector2 dir = SVec.Normalize(start - end);
-            Vector2 w = referencePoint - intersectionPoint;
-            Vector2 n1 = new(dir.Y, -dir.X);
-            Vector2 n2 = new(-dir.Y, dir.X);
-            
-            float d1 = SVec.Dot(w, n1);
-            //float d2 = SVec.Dot(w, n2);
-            return d1 > 0 ? n1 : n2;
-        }
-        public static Vector2 GetNormalOpposite(Vector2 start, Vector2 end, Vector2 intersectionPoint, Vector2 referencePoint)
-        {
-            Vector2 dir = SVec.Normalize(start - end);
-            Vector2 w = referencePoint - intersectionPoint;
-            Vector2 n1 = new(dir.Y, -dir.X);
-            Vector2 n2 = new(-dir.Y, dir.X);
-
-            float d1 = SVec.Dot(w, n1);
-            //float d2 = SVec.Dot(w, n2);
-            return d1 <= 0 ? n1 : n2;
-        }
-
         public static (int col, int row) TransformIndexToCoordinates(int index, int rows, int cols, bool leftToRight = true)
         {
             if (leftToRight)
@@ -359,3 +341,28 @@ namespace ShapeLib
     }
 
 }
+
+/*
+        public static Vector2 GetNormal(Vector2 start, Vector2 end, Vector2 intersectionPoint, Vector2 referencePoint)
+        {
+            Vector2 dir = SVec.Normalize(start - end);
+            Vector2 w = referencePoint - intersectionPoint;
+            Vector2 n1 = new(dir.Y, -dir.X);
+            Vector2 n2 = new(-dir.Y, dir.X);
+            
+            float d1 = SVec.Dot(w, n1);
+            //float d2 = SVec.Dot(w, n2);
+            return d1 > 0 ? n1 : n2;
+        }
+        public static Vector2 GetNormalOpposite(Vector2 start, Vector2 end, Vector2 intersectionPoint, Vector2 referencePoint)
+        {
+            Vector2 dir = SVec.Normalize(start - end);
+            Vector2 w = referencePoint - intersectionPoint;
+            Vector2 n1 = new(dir.Y, -dir.X);
+            Vector2 n2 = new(-dir.Y, dir.X);
+
+            float d1 = SVec.Dot(w, n1);
+            //float d2 = SVec.Dot(w, n2);
+            return d1 <= 0 ? n1 : n2;
+        }
+        */

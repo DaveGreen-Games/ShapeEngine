@@ -1,12 +1,22 @@
 ﻿//using Raylib_CsLo;
 using System.Numerics;
-
+using System.Runtime.CompilerServices;
 
 namespace ShapeLib
 {
     public static class SVec
     {
         
+        public static bool IsFacingTheSameDirection(this Vector2 a,  Vector2 b) { return a.Dot(b) > 0; }
+        public static bool IsNormalFacingOutward(this Vector2 normal, Vector2 outwardDirection) { return normal.IsFacingTheSameDirection(outwardDirection); }
+        public static Vector2 GetOutwardFacingNormal(this Vector2 normal, Vector2 outwardDirection)
+        {
+            if(IsNormalFacingOutward(normal, outwardDirection)) return normal;
+            else return -normal;
+        }
+
+
+
         public static bool IsNan(this Vector2 v) { return float.IsNaN(v.X) || float.IsNaN(v.Y); }
         public static Vector2 Right() { return new(1.0f, 0.0f); }
         public static Vector2 Left() { return new(-1.0f, 0.0f); }
@@ -16,23 +26,10 @@ namespace ShapeLib
         public static Vector2 Zero() { return new(0.0f, 0.0f); }
 
         //Perpendicular & Rotation
-        public static Vector2 GetPerpendicularRight(this Vector2 v)
-        {
-            return new(v.Y, -v.X);
-        }
-        public static Vector2 GetPerpendicularLeft(this Vector2 v)
-        {
-            return new(-v.Y, v.X);
-        }
-        public static Vector2 Rotate90CCW(this Vector2 v)
-        {
-            return GetPerpendicularLeft(v);
-            //return new(-v.Y, v.X);
-        }
-        public static Vector2 Rotate90CW(this Vector2 v)
-        {
-            return GetPerpendicularRight(v);
-        }
+        public static Vector2 GetPerpendicularRight(this Vector2 v) { return new(-v.Y, v.X); }
+        public static Vector2 GetPerpendicularLeft(this Vector2 v) { return new(v.Y, -v.X); }
+        public static Vector2 Rotate90CCW(this Vector2 v) { return GetPerpendicularLeft(v); }
+        public static Vector2 Rotate90CW(this Vector2 v) { return GetPerpendicularRight(v); }
 
         public static Vector2 VecFromAngleRad(float angleRad)
         {
@@ -44,22 +41,22 @@ namespace ShapeLib
             return VecFromAngleRad(angleDeg * SUtils.DEGTORAD);
         }
 
-
-        public static Vector2 FindArithmeticMean(List<Vector2> vertices)
+        public static Vector2 FindArithmeticMean(IEnumerable<Vector2> vertices)
         {
             float sx = 0f;
             float sy = 0f;
-
-            for (int i = 0; i < vertices.Count; i++)
+            int count = 0;
+            foreach (var v in vertices)
             {
-                Vector2 v = vertices[i];
                 sx += v.X;
                 sy += v.Y;
+                count ++;
             }
 
-            float invArrayLen = 1f / vertices.Count;
+            float invArrayLen = 1f / (float)count;
             return new Vector2(sx * invArrayLen, sy * invArrayLen);
         }
+        
 
         //Projection
         public static float ProjectionTime(this Vector2 v, Vector2 onto) { return (v.X * onto.X + v.Y * onto.Y) / onto.LengthSquared(); }

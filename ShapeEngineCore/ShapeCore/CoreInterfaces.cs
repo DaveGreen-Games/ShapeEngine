@@ -116,8 +116,6 @@ namespace ShapeCore
         public Polygon ToPolygon();
         public Segments GetEdges();
         public Triangulation Triangulate();
-        public SegmentShape GetSegmentShape();
-        public Vector2 GetReferencePoint();
         public Rect GetBoundingBox();
         public Circle GetBoundingCircle();
         public bool IsPointInside(Vector2 p);
@@ -128,6 +126,8 @@ namespace ShapeCore
         public Segment GetRandomEdge();
         public Vector2 GetRandomPointOnEdge();
         public void DrawShape(float linethickness, Color color);
+        //public SegmentShape GetSegmentShape();
+        //public Vector2 GetReferencePoint();
         //public void SetPosition(Vector2 position);
         //public bool Equals(IShape other);
         //public Circle GetBoundingCircle();
