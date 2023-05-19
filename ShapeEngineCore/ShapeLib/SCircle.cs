@@ -30,7 +30,18 @@ namespace ShapeLib
             }
             return points;
         }
-        
+        public static PolyLine GetPolyLinePoints(this Circle c, int pointCount = 16)
+        {
+            float angleStep = (MathF.PI * 2f) / pointCount;
+            PolyLine points = new();
+            for (int i = 0; i < pointCount; i++)
+            {
+                Vector2 p = c.center + new Vector2(c.radius, 0f).Rotate(angleStep * i);
+                points.Add(p);
+            }
+            return points;
+        }
+
         public static Circle ScaleRadius(this Circle c, float scale) { return new(c.center, c.radius * scale); }
         public static Circle ChangeRadius(this Circle c, float amount) { return new(c.center, c.radius + amount); }
         public static Circle Move(this Circle c, Vector2 offset) { return new(c.center + offset, c.radius); }

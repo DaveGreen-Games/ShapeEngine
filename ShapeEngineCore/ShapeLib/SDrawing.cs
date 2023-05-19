@@ -241,6 +241,21 @@ namespace ShapeLib
         {
             DrawSegmentDotted(segment.start, segment.end, gaps, gapSizeF, thickness, color, roundedLineEdges);
         }
+        public static void DrawDotted(this Segments segments, int gaps, float thickness, Color color, bool roundedLineEdges = false)
+        {
+            foreach (var seg in segments)
+            {
+                seg.DrawDotted(gaps, thickness, color, roundedLineEdges);
+            }
+        }
+        public static void DrawDotted(this Segments segments, int gaps, float gapSizeF, float thickness, Color color, bool roundedLineEdges = false)
+        {
+            foreach (var seg in segments)
+            {
+                seg.DrawDotted(gaps, gapSizeF, thickness, color, roundedLineEdges);
+            }
+        }
+
         public static void DrawGlow(this Segment segment, float width, float endWidth, Color color, Color endColor, int steps)
         {
             DrawLineGlow(segment.start, segment.end, width, endWidth, color, endColor, steps);
@@ -975,8 +990,17 @@ namespace ShapeLib
 
         #endregion
 
+        #region Polyline
+        public static void Draw(this PolyLine polyline, float thickness, Color color) { polyline.GetEdges().Draw(thickness, color); }
+        public static void Draw(this PolyLine polyline, float thickness, List<Color> colors) { polyline.GetEdges().Draw(thickness, colors); }
+        public static void DrawDotted(this PolyLine polyline, int gaps, float thickness, Color color, bool roundedLineEdges = false) { polyline.GetEdges().DrawDotted(gaps, thickness, color, roundedLineEdges); }
+        public static void DrawDotted(this PolyLine polyline, int gaps, float gapSizeF, float thickness, Color color, bool roundedLineEdges = false) { polyline.GetEdges().DrawDotted(gaps, gapSizeF, thickness, color, roundedLineEdges); }
+        public static void DrawGlow(this PolyLine polyline, float width, float endWidth, Color color, Color endColor, int steps) { polyline.GetEdges().DrawGlow(width, endWidth, color, endColor, steps); }
+
+        #endregion
+
         #region Text
-        
+
         public static void DrawTextBox(this Rect rect, string emptyText, List<char> chars, float fontSpacing, Font font, Color textColor, bool drawCaret, int caretPosition, float caretWidth, Color caretColor, Vector2 textAlignement)
         {
             //fix alignement

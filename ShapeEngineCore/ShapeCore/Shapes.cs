@@ -43,6 +43,7 @@ namespace ShapeCore
         public float GetCircumference() { return Length; }
         public float GetCircumferenceSquared() { return LengthSquared; }
         public Polygon ToPolygon() { return new(start, end); }
+        public PolyLine ToPolyLine() { return new(start, end); }
         public Segments GetEdges() { return new(this); }
         public Triangulation Triangulate() { return new(); }
         public Circle GetBoundingCircle() { return ToPolygon().GetBoundingCircle(); }
@@ -96,6 +97,7 @@ namespace ShapeCore
         public Vector2 GetCentroid() { return center; }
         public Segments GetEdges() { return this.GetEdges(16); }
         public Polygon ToPolygon() { return this.GetPoints(16); }
+        public PolyLine ToPolyLine() { return this.GetPolyLinePoints(16); }
         public Triangulation Triangulate() { return ToPolygon().Triangulate(); }
         public Circle GetBoundingCircle() { return this; }
         public float GetArea() { return MathF.PI * radius * radius; }
@@ -145,6 +147,7 @@ namespace ShapeCore
 
         public Vector2 GetCentroid() { return (a + b + c) / 3; }
         public Polygon ToPolygon() { return new(a, b, c); }
+        public PolyLine ToPolyLine() { return new(a, b, c); }
         public Segments GetEdges() { return new() { new(a, b), new(b, c), new(c, a) }; }
         public Triangulation Triangulate() { return this.Triangulate(GetCentroid()); }
         public Circle GetBoundingCircle() { return ToPolygon().GetBoundingCircle(); }
@@ -234,6 +237,7 @@ namespace ShapeCore
 
         public Vector2 GetCentroid() { return Center; }
         public Polygon ToPolygon() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
+        public PolyLine ToPolyLine() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
         public Segments GetEdges() { return new() { new(TopLeft, BottomLeft), new(BottomLeft, BottomRight), new(BottomRight, TopRight), new(TopRight, TopLeft) }; }
         public Triangulation Triangulate() { return ToPolygon().Triangulate(); }
         public Circle GetBoundingCircle() { return ToPolygon().GetBoundingCircle(); }
@@ -620,6 +624,12 @@ namespace ShapeCore
         }
 
         public Polygon ToPolygon() { return this; }
+        public PolyLine ToPolyLine()
+        {
+            var polyLine = new PolyLine();
+            polyLine.AddRange(this);
+            return polyLine;
+        }
         public bool IsPointInside(Vector2 p) { return SGeometry.IsPointInPoly(p, this); }
         public Vector2 GetClosestPoint(Vector2 p)
         {
@@ -695,7 +705,189 @@ namespace ShapeCore
         //public SegmentShape GetSegmentShape() { return new(GetEdges(), this.GetCentroid()); }
     }
 
+    public class PolyLine : List<Vector2>, IShape
+    {
+        public PolyLine() { }
+        /// <summary>
+        /// Points should be in CCW order. Use Reverse if they are in CW order.
+        /// </summary>
+        /// <param name="points"></param>
+        public PolyLine(params Vector2[] points) { AddRange(points); }
+        /// <summary>
+        /// Points should be in CCW order. Use Reverse if they are in CW order.
+        /// </summary>
+        /// <param name="points"></param>
+        public PolyLine(IEnumerable<Vector2> edges) { AddRange(edges); }
+        /// <summary>
+        /// Points should be in CCW order. Use Reverse if they are in CW order.
+        /// </summary>
+        /// <param name="points"></param>
+        public PolyLine(IShape shape) { AddRange(shape.ToPolyLine()); }
 
+        public Vector2 GetVertex(int index)
+        {
+            return this[SUtils.WrapIndex(Count, index)];
+        }
+
+        public Vector2 GetCentroid()
+        {
+            if(Count < 2) return new Vector2();
+            float halfLengthSq = GetCircumferenceSquared() * 0.5f;
+            var segments = GetEdges();
+            float curLengthSq = 0f; 
+            foreach (var seg in segments)
+            {
+                float segLengthSq = seg.LengthSquared;
+                if (curLengthSq + segLengthSq >= halfLengthSq)
+                {
+                    float dif = halfLengthSq - curLengthSq;
+                    return seg.start + seg.Dir * dif;
+                }
+                else curLengthSq += segLengthSq;
+            }
+            return new Vector2();
+        }
+        public Vector2 GetCentroidMean()
+        {
+            if (Count <= 0) return new(0f);
+            Vector2 total = new(0f);
+            foreach (Vector2 p in this) { total += p; }
+            return total / Count;
+        }
+        public Triangulation Triangulate() { return new(); }
+        public Segments GetEdges()
+        {
+            if (Count <= 1) return new();
+            else if (Count == 2)
+            {
+                return new() { new(this[0], this[1]) };
+            }
+            Segments segments = new();
+            for (int i = 0; i < Count - 1; i++)
+            {
+                Vector2 start = this[i];
+                Vector2 end = this[i + 1];
+                segments.Add(new(start, end));
+            }
+            return segments;
+        }
+        public Circle GetBoundingCircle()
+        {
+            float maxD = 0f;
+            int num = this.Count;
+            Vector2 origin = new();
+            for (int i = 0; i < num; i++) { origin += this[i]; }
+            origin *= (1f / (float)num);
+            for (int i = 0; i < num; i++)
+            {
+                float d = (origin - this[i]).LengthSquared();
+                if (d > maxD) maxD = d;
+            }
+
+            return new Circle(origin, MathF.Sqrt(maxD));
+        }
+        public Rect GetBoundingBox()
+        {
+            if (Count < 2) return new();
+            Vector2 start = this[0];
+            Rect r = new(start.X, start.Y, 0, 0);
+
+            foreach (var p in this)
+            {
+                r = SRect.Enlarge(r, p);
+            }
+            return r;
+        }
+        public float GetCircumference() { return MathF.Sqrt(GetCircumferenceSquared()); }
+        public float GetCircumferenceSquared()
+        {
+            if (this.Count < 3) return 0f;
+            float lengthSq = 0f;
+            for (int i = 0; i < Count - 1; i++)
+            {
+                Vector2 w = this[(i + 1) % Count] - this[i];
+                lengthSq += w.LengthSquared();
+            }
+            return lengthSq;
+        }
+        public float GetArea() { return 0f; }
+        public bool IsClockwise() { return false; }
+        public bool IsConvex()
+        {
+            int num = this.Count;
+            bool isPositive = false;
+
+            for (int i = 0; i < num; i++)
+            {
+                int prevIndex = (i == 0) ? num - 1 : i - 1;
+                int nextIndex = (i == num - 1) ? 0 : i + 1;
+                var d0 = this[i] - this[prevIndex];
+                var d1 = this[nextIndex] - this[i];
+                var newIsP = d0.Cross(d1) > 0f;
+                if (i == 0) isPositive = true;
+                else if (isPositive != newIsP) return false;
+            }
+            return true;
+        }
+
+        public PolyLine ToPolyLine() { return this; }
+        public Polygon ToPolygon()
+        {
+            var polygon = new Polygon();
+            polygon.AddRange(this);
+            return polygon;
+        }
+        public bool IsPointInside(Vector2 p)
+        {
+            var segments = GetEdges();
+            foreach (var segment in segments)
+            {
+                if (segment.IsPointInside(p)) return true;
+            }
+            return false;
+        }
+        public Vector2 GetClosestPoint(Vector2 p)
+        {
+            float minD = float.PositiveInfinity;
+            var edges = GetEdges();
+            Vector2 closest = new();
+
+            for (int i = 0; i < edges.Count; i++)
+            {
+                Vector2 c = edges[i].GetClosestPoint(p);
+                float d = (c - p).LengthSquared();
+                if (d < minD)
+                {
+                    closest = c;
+                    minD = d;
+                }
+            }
+            return closest;
+        }
+        public Vector2 GetClosestVertex(Vector2 p)
+        {
+            float minD = float.PositiveInfinity;
+            Vector2 closest = new();
+            for (int i = 0; i < Count; i++)
+            {
+                float d = (this[i] - p).LengthSquared();
+                if (d < minD)
+                {
+                    closest = this[i];
+                    minD = d;
+                }
+            }
+            return closest;
+        }
+        public Vector2 GetRandomPoint() { return GetRandomPointOnEdge(); }
+        public Vector2 GetRandomVertex() { return SRNG.randCollection(this, false); }
+        public Segment GetRandomEdge() { return SRNG.randCollection(GetEdges(), false); }
+        public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
+
+        public void DrawShape(float linethickness, Color color) => this.Draw(linethickness, color);
+
+
+    }
 }
 
 

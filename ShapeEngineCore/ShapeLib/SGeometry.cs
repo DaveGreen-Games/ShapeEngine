@@ -307,25 +307,6 @@ namespace ShapeLib
             return false;
         }
         
-
-        //public static bool OverlapCollider(this SegmentCollider a, SegmentCollider b) { return OverlapSegmentSegment(a.Pos, a.End, b.Pos, b.End); }
-        //public static bool OverlapCollider(this SegmentCollider s, CircleCollider c) { return OverlapSegmentCircle(s.Pos, s.End, c.Pos, c.Radius); }
-        //public static bool OverlapCollider(this SegmentCollider s, RectCollider r) { return OverlapSegmentRect(s.Pos, s.End, r.Rect); }
-        //public static bool OverlapCollider(this SegmentCollider s, PolyCollider poly) { return OverlapPolySegment(poly.Shape, s.Pos, s.End); }
-        //public static bool OverlapSegmentRect(Vector2 segmentPos, Vector2 segmentEnd, Rect rect)
-        //public static bool OverlapSegmentSegment(Vector2 aPos, Vector2 aEnd, Vector2 bPos, Vector2 bEnd)
-        //public static bool OverlapSegmentRect(Vector2 segmentPos, Vector2 segmentEnd, Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement) { return OverlapSegmentRect(segmentPos, segmentEnd, new(rectPos, rectSize, rectAlignement)); }
-        //public static bool OverlapSegmentLine(Vector2 segmentPos, Vector2 segmentEnd, Vector2 linePos, Vector2 lineDir) { return OverlapLineSegment(linePos, lineDir, segmentPos, segmentEnd); }
-        //public static bool OverlapSegmentCircle(Vector2 segmentPos, Vector2 segmentEnd, Vector2 circlePos, float circleRadius) { return OverlapCircleSegment(circlePos, circleRadius, segmentPos, segmentEnd); }
-        //public static bool OverlapLineCircle(Vector2 linePos, Vector2 lineDir, Circle c) { return OverlapCircleLine(c.center, c.radius, linePos, lineDir); }
-        //public static bool OverlapLineSegment(Vector2 linePos, Vector2 lineDir, Segment s) { return !SRect.SegmentOnOneSide(linePos, lineDir, s.start, s.end); }
-        //public static bool OverlapLineSegment(Vector2 linePos, Vector2 lineDir, Vector2 segmentPos, Vector2 segmentDir, float segmentLength) { return OverlapLineSegment(linePos, lineDir, segmentPos, segmentPos + segmentDir * segmentLength); }
-        //public static bool OverlapLineRect(Vector2 linePos, Vector2 lineDir, Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement) { return OverlapLineRect(linePos, lineDir, new(rectPos, rectSize, rectAlignement)); }
-        //public static bool OverlapSegmentSegment(Vector2 aPos, Vector2 aDir, float aLength, Vector2 bPos, Vector2 bDir, float bLength) { return OverlapSegmentSegment(aPos, aPos + aDir * aLength, bPos, bPos + bDir * bLength); }
-        //public static bool OverlapSegmentCircle(Vector2 segmentPos, Vector2 segmentDir, float segmentLength, Vector2 circlePos, float circleRadius) { return OverlapCircleSegment(circlePos, circleRadius, segmentPos, segmentPos + segmentDir * segmentLength); }
-        //public static bool OverlapSegmentLine(Vector2 segmentPos, Vector2 segmentDir, float segmentLength, Vector2 linePos, Vector2 lineDir) { return OverlapLineSegment(linePos, lineDir, segmentPos, segmentPos + segmentDir * segmentLength); }
-        //public static bool OverlapSegmentRect(Vector2 segmentPos, Vector2 segmentDir, float segmentLength, Rect rect) { return OverlapSegmentRect(segmentPos, segmentPos + segmentDir * segmentLength, rect); }
-        //public static bool OverlapSegmentRect(Vector2 segmentPos, Vector2 segmentDir, float segmentLength, Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement) { return OverlapSegmentRect(segmentPos, segmentPos + segmentDir * segmentLength, new(rectPos, rectSize, rectAlignement)); }
         #endregion
 
         #region Intersect
@@ -525,9 +506,6 @@ namespace ShapeLib
             else return new(points[0].p, points[0].n, points);
         }
 
-
-        
-        
         #endregion
 
         #endregion
@@ -1023,6 +1001,21 @@ namespace ShapeLib
 
         #endregion
 
+        
+        
+        #region Polyline
+
+        #region Overlap
+        
+        #endregion
+
+        #region Intersection
+        //other shape center is used for checking segment normal and if necessary normal is flipped
+        #endregion
+
+        #endregion
+
+
         #region IsPointInside
         public static bool IsPointOnPoint(Vector2 pointA, Vector2 pointB) { return pointA.X == pointB.X && pointA.Y == pointB.Y; }
         public static bool IsPointOnSegment(Vector2 point, Vector2 start, Vector2 end)
@@ -1366,6 +1359,27 @@ namespace ShapeLib
 
     }
 }
+
+
+
+//public static bool OverlapCollider(this SegmentCollider a, SegmentCollider b) { return OverlapSegmentSegment(a.Pos, a.End, b.Pos, b.End); }
+//public static bool OverlapCollider(this SegmentCollider s, CircleCollider c) { return OverlapSegmentCircle(s.Pos, s.End, c.Pos, c.Radius); }
+//public static bool OverlapCollider(this SegmentCollider s, RectCollider r) { return OverlapSegmentRect(s.Pos, s.End, r.Rect); }
+//public static bool OverlapCollider(this SegmentCollider s, PolyCollider poly) { return OverlapPolySegment(poly.Shape, s.Pos, s.End); }
+//public static bool OverlapSegmentRect(Vector2 segmentPos, Vector2 segmentEnd, Rect rect)
+//public static bool OverlapSegmentSegment(Vector2 aPos, Vector2 aEnd, Vector2 bPos, Vector2 bEnd)
+//public static bool OverlapSegmentRect(Vector2 segmentPos, Vector2 segmentEnd, Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement) { return OverlapSegmentRect(segmentPos, segmentEnd, new(rectPos, rectSize, rectAlignement)); }
+//public static bool OverlapSegmentLine(Vector2 segmentPos, Vector2 segmentEnd, Vector2 linePos, Vector2 lineDir) { return OverlapLineSegment(linePos, lineDir, segmentPos, segmentEnd); }
+//public static bool OverlapSegmentCircle(Vector2 segmentPos, Vector2 segmentEnd, Vector2 circlePos, float circleRadius) { return OverlapCircleSegment(circlePos, circleRadius, segmentPos, segmentEnd); }
+//public static bool OverlapLineCircle(Vector2 linePos, Vector2 lineDir, Circle c) { return OverlapCircleLine(c.center, c.radius, linePos, lineDir); }
+//public static bool OverlapLineSegment(Vector2 linePos, Vector2 lineDir, Segment s) { return !SRect.SegmentOnOneSide(linePos, lineDir, s.start, s.end); }
+//public static bool OverlapLineSegment(Vector2 linePos, Vector2 lineDir, Vector2 segmentPos, Vector2 segmentDir, float segmentLength) { return OverlapLineSegment(linePos, lineDir, segmentPos, segmentPos + segmentDir * segmentLength); }
+//public static bool OverlapLineRect(Vector2 linePos, Vector2 lineDir, Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement) { return OverlapLineRect(linePos, lineDir, new(rectPos, rectSize, rectAlignement)); }
+//public static bool OverlapSegmentSegment(Vector2 aPos, Vector2 aDir, float aLength, Vector2 bPos, Vector2 bDir, float bLength) { return OverlapSegmentSegment(aPos, aPos + aDir * aLength, bPos, bPos + bDir * bLength); }
+//public static bool OverlapSegmentCircle(Vector2 segmentPos, Vector2 segmentDir, float segmentLength, Vector2 circlePos, float circleRadius) { return OverlapCircleSegment(circlePos, circleRadius, segmentPos, segmentPos + segmentDir * segmentLength); }
+//public static bool OverlapSegmentLine(Vector2 segmentPos, Vector2 segmentDir, float segmentLength, Vector2 linePos, Vector2 lineDir) { return OverlapLineSegment(linePos, lineDir, segmentPos, segmentPos + segmentDir * segmentLength); }
+//public static bool OverlapSegmentRect(Vector2 segmentPos, Vector2 segmentDir, float segmentLength, Rect rect) { return OverlapSegmentRect(segmentPos, segmentPos + segmentDir * segmentLength, rect); }
+//public static bool OverlapSegmentRect(Vector2 segmentPos, Vector2 segmentDir, float segmentLength, Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement) { return OverlapSegmentRect(segmentPos, segmentPos + segmentDir * segmentLength, new(rectPos, rectSize, rectAlignement)); }
 
 //public static Intersection IntersectionCircleSegment(Vector2 circlePos, float circleRadius, Vector2 start, Vector2 end) { return IntersectionCircleSegment(circlePos.X, circlePos.Y, circleRadius, start.X, start.Y, end.X, end.Y); }
 //public static Intersection IntersectionCircleCircle(Vector2 aPos, float aRadius, Vector2 bPos, float bRadius) { return IntersectionCircleCircle(aPos.X, aPos.Y, aRadius, bPos.X, bPos.Y, bRadius); }
