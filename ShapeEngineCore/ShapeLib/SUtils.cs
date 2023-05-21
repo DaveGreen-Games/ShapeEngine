@@ -336,7 +336,9 @@ namespace ShapeLib
             return dir * amount;
         }
 
-
+        
+        
+        
         
     }
 

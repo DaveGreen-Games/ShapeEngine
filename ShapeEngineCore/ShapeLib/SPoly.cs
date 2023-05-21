@@ -1,6 +1,5 @@
 ﻿using Raylib_CsLo;
 using ShapeCore;
-using ShapeRandom;
 using System.Numerics;
 
 namespace ShapeLib
@@ -214,6 +213,100 @@ namespace ShapeLib
 
     public static class SPoly
     {
+
+        public static Rect GetBoundingBox(IEnumerable<Vector2> points)
+        {
+            if (points.Count() < 2) return new();
+            Vector2 start = points.First();
+            Rect r = new(start.X, start.Y, 0, 0);
+
+            foreach (var p in points)
+            {
+                r = SRect.Enlarge(r, p);
+            }
+            return r;
+        }
+        public static Triangle GetBoundingTriangle(IEnumerable<Vector2> points, float margin = 3f)
+        {
+            var bounds = GetBoundingBox(points);
+            float dMax = SVec.Max(bounds.BottomRight - bounds.BottomLeft) * margin; //  Mathf.Max(bounds.maxX - bounds.minX, bounds.maxY - bounds.minY) * Margin;
+            Vector2 center = bounds.Center;
+
+            ///The float 0.866 is an arbitrary value determined for optimum supra triangle conditions.
+            float x1 = center.X - 0.866f * dMax;
+            float x2 = center.X + 0.866f * dMax;
+            float x3 = center.X;
+
+            float y1 = center.Y - 0.5f * dMax;
+            float y2 = center.Y - 0.5f * dMax;
+            float y3 = center.Y + dMax;
+
+            Vector2 pointA = new(x1, y1);
+            Vector2 pointB = new(x2, y2);
+            Vector2 pointC = new(x3, y3);
+
+            return new Triangle(pointA, pointB, pointC);
+        }
+        public static Triangulation TriangulateDelaunay(IEnumerable<Vector2> points)
+        {
+            Triangulation triangles = new();
+
+            Triangle supraTriangle = GetBoundingTriangle(points);
+            triangles.Add(supraTriangle);
+            
+            foreach (var p in points)
+            {
+                Triangulation badTriangles = new();
+
+                //Identify 'bad triangles'
+                for (int triIndex = triangles.Count - 1; triIndex >= 0; triIndex--)
+                {
+                    Triangle triangle = triangles[triIndex];
+
+                    //A 'bad triangle' is defined as a triangle who's CircumCentre contains the current point
+                    var circumCircle = triangle.GetCircumCircle();
+                    float dist = Vector2.Distance(p, circumCircle.center);
+                    if (dist < circumCircle.radius)
+                    {
+                        badTriangles.Add(triangle);
+                        triangles.RemoveAt(triIndex);
+                    }
+                }
+
+                Segments allEdges = new();
+                foreach (var badTriangle in badTriangles) { allEdges.AddRange(badTriangle.GetEdges()); }
+                
+                Segments uniqueEdges = new();
+                for (int i = allEdges.Count - 1; i >= 0; i--)
+                {
+                    var edge = allEdges[i];
+                    if (allEdges.IsUnique(edge))
+                    {
+                        uniqueEdges.Add(edge);
+                        allEdges.RemoveAt(i);
+                    }
+                }
+
+                //Create new triangles
+                for (int i = 0; i < uniqueEdges.Count; i++)
+                {
+                    var edge = uniqueEdges[i];
+                    triangles.Add(new(p, edge));
+                }
+            }
+            
+            //Remove all triangles that share a vertex with the supra triangle to recieve the final triangulation
+            for (int i = triangles.Count - 1; i >= 0; i--)
+            {
+                var t = triangles[i];
+                if(t.SharesVertex(supraTriangle)) triangles.RemoveAt(i);
+            }
+            
+
+            return triangles;
+        }
+
+
         public static Polygon GetShape(this Polygon relative, Vector2 pos, float rotRad, Vector2 scale)
         {
             if (relative.Count < 3) return new();

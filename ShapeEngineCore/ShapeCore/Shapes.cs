@@ -1,4 +1,6 @@
-﻿using System.Numerics;
+﻿
+using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using Raylib_CsLo;
 using ShapeLib;
 using ShapeRandom;
@@ -11,6 +13,57 @@ namespace ShapeCore
         public Segments(IShape shape) { AddRange(shape.GetEdges()); }
         public Segments(params Segment[] edges) { AddRange(edges); }
         public Segments(IEnumerable<Segment> edges) {  AddRange(edges); }
+
+        /// <summary>
+        /// Only add the segment if it not already contained in the list.
+        /// </summary>
+        /// <param name="seg"></param>
+        public void AddUnique(Segment seg)
+        {
+            if (!ContainsSegment(seg)) Add(seg);
+        }
+        /// <summary>
+        /// Only add the segments that are not already contained in the list.
+        /// </summary>
+        /// <param name="edges"></param>
+        public void AddUnique(IEnumerable<Segment> edges)
+        {
+            foreach (var edge in edges)
+            {
+                AddUnique(edge);
+            }
+        }
+        /// <summary>
+        /// Counts how often the specified segment appears in the list.
+        /// </summary>
+        /// <param name="seg"></param>
+        /// <returns></returns>
+        public int GetCount(Segment seg) { return this.Count((s) => s.IsSame(seg)); }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="seg">The segment to check.</param>
+        /// <returns>Returns true if seg exactly exists once in the list.</returns>
+        public bool IsUnique(Segment seg)
+        {
+            int counter = 0;
+            foreach (var segment in this)
+            {
+                if(segment.IsSame(seg)) counter++;
+                if (counter > 1) return false;
+            }
+            return true;
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="seg"></param>
+        /// <returns>Returns true if seg is already in the list.</returns>
+        public bool ContainsSegment(Segment seg)
+        {
+            foreach (var segment in this) { if (segment.IsSame(seg)) return true; }
+            return false;
+        }
     }
    
     public class Triangulation : List<Triangle>
@@ -37,7 +90,18 @@ namespace ShapeCore
         public Segment(Vector2 start, Vector2 end, Vector2 n) { this.start = start; this.end = end; this.n = n; }
         public Segment(float startX, float startY, float endX, float endY) { this.start = new(startX, startY); this.end = new(endX, endY); this.n = (this.end - this.start).GetPerpendicularRight().Normalize(); }
         public Segment(Segment s) { start = s.start; end = s.end; n = s.n; }
-        
+
+        //public static bool operator ==(Segment s1, Segment s2) { return s2.start == s1.start && s2.end == s1.end; }
+        //public static bool operator !=(Segment s1, Segment s2) { return s2.start != s1.start || s2.end != s1.end; }
+        //public override bool Equals([NotNullWhen(true)] object? obj)
+        //{
+        //    return base.Equals(obj);
+        //}
+        //public override int GetHashCode()
+        //{
+        //    return base.GetHashCode();
+        //}
+        public bool IsSame(Segment other) { return other.start == start && other.end == end; }
         public Vector2 GetCentroid() { return Center; }
         public float GetArea() { return 0f; }
         public float GetCircumference() { return Length; }
@@ -144,7 +208,53 @@ namespace ShapeCore
         /// <param name="c"></param>
         public Triangle(Vector2 a, Vector2 b, Vector2 c) { this.a = a; this.b = b; this.c = c; }
         public Triangle(Triangle t) { a = t.a; b = t.b; c = t.c; }
+        public Triangle(Vector2 p, Segment s)
+        {
+            Vector2 w = s.Displacement;
+            Vector2 v = p - s.start;
+            float cross = w.Cross(v);
+            if(cross >= 0f)
+            {
+                a = s.start;
+                b = s.end;
+                c = p;
+            }
+            else
+            {
+                a = s.end;
+                b = s.start;
+                c = p;
+            }
+        }
 
+        public Circle GetCircumCircle()
+        {
+            Vector2 SqrA = new Vector2(a.X * a.X, a.Y + a.Y);
+            Vector2 SqrB = new Vector2(b.X * b.X, b.Y * b.Y); 
+            Vector2 SqrC = new Vector2(c.X * c.X, c.Y * c.Y);
+
+            float D = (a.X * (b.Y - c.Y) + b.X * (c.Y - a.Y) + c.X * (a.Y - b.Y)) * 2f;
+            float x = ((SqrA.X + SqrA.Y) * (b.Y - c.Y) + (SqrB.X + SqrB.Y) * (c.Y - a.Y) + (SqrC.X + SqrC.Y) * (a.Y - b.Y)) / D;
+            float y = ((SqrA.X + SqrA.Y) * (c.X - b.X) + (SqrB.X + SqrB.Y) * (a.X - c.X) + (SqrC.X + SqrC.Y) * (b.X - a.X)) / D;
+
+            Vector2 center = new Vector2(x, y);
+            float r = (a - center).Length();
+            return new(center, r);
+        }
+
+
+        public bool SharesVertex(Vector2 p) { return a == p || b == p || c == p; }
+        public bool SharesVertex(IEnumerable<Vector2> points)
+        {
+            foreach (var p in points)
+            {
+                if (SharesVertex(p)) return true;
+            }
+            return false;
+        }
+        public bool SharesVertex(Triangle t) { return SharesVertex(t.a) || SharesVertex(t.b) || SharesVertex(t.c); }
+        
+        public bool IsValid() { return GetArea() > 0f; }
         public Vector2 GetCentroid() { return (a + b + c) / 3; }
         public Polygon ToPolygon() { return new(a, b, c); }
         public PolyLine ToPolyLine() { return new(a, b, c); }
@@ -429,6 +539,8 @@ namespace ShapeCore
         /// </summary>
         /// <param name="points"></param>
         public Polygon(IShape shape) { AddRange(shape.ToPolygon()); }
+        public Polygon(Polygon poly) { AddRange(poly); }
+        public Polygon(PolyLine polyLine) { AddRange(polyLine); }
 
         public void FixWindingOrder() { if (this.IsClockwise()) this.Reverse(); }
         public void ReduceVertexCount(int newCount)
@@ -478,6 +590,8 @@ namespace ShapeCore
         {
             return this[SUtils.WrapIndex(Count, index)];
         }
+
+        
 
         public Vector2 GetCentroid()
         {
@@ -548,6 +662,7 @@ namespace ShapeCore
 
             return triangles;
         }
+        public Triangulation TriangulateDelaunay() { return SPoly.TriangulateDelaunay(this); }
         public Segments GetEdges()
         {
             if (Count <= 1) return new();
@@ -591,6 +706,7 @@ namespace ShapeCore
             }
             return r;
         }
+        public Triangle GetBoundingTriangle(float margin = 3f) { return SPoly.GetBoundingTriangle(this, margin); }
         public float GetCircumference() { return MathF.Sqrt(GetCircumferenceSquared()); }
         public float GetCircumferenceSquared()
         {
@@ -623,13 +739,9 @@ namespace ShapeCore
             return true;
         }
 
-        public Polygon ToPolygon() { return this; }
-        public PolyLine ToPolyLine()
-        {
-            var polyLine = new PolyLine();
-            polyLine.AddRange(this);
-            return polyLine;
-        }
+        public Polygon ToPolygon() { return new( this ); }
+        public PolyLine ToPolyLine() { return new(this); }
+        
         public bool IsPointInside(Vector2 p) { return SGeometry.IsPointInPoly(p, this); }
         public Vector2 GetClosestPoint(Vector2 p)
         {
@@ -723,7 +835,8 @@ namespace ShapeCore
         /// </summary>
         /// <param name="points"></param>
         public PolyLine(IShape shape) { AddRange(shape.ToPolyLine()); }
-
+        public PolyLine(PolyLine polyLine) { AddRange(polyLine); }
+        public PolyLine(Polygon poly) { AddRange(poly); }
         public Vector2 GetVertex(int index)
         {
             return this[SUtils.WrapIndex(Count, index)];

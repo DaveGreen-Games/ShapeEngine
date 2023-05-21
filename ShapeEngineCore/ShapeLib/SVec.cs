@@ -1,6 +1,9 @@
 ﻿//using Raylib_CsLo;
+using ShapeCore;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using static System.Net.Mime.MediaTypeNames;
+using System.Runtime.ConstrainedExecution;
 
 namespace ShapeLib
 {
@@ -14,7 +17,13 @@ namespace ShapeLib
             if(IsNormalFacingOutward(normal, outwardDirection)) return normal;
             else return -normal;
         }
+        public static bool IsColinear(Vector2 a, Vector2 b, Vector2 c)
+        {
+            Vector2 prevCur = a - b;
+            Vector2 nextCur = c - b;
 
+            return prevCur.Cross(nextCur) == 0f;
+        }
 
 
         public static bool IsNan(this Vector2 v) { return float.IsNaN(v.X) || float.IsNaN(v.Y); }
