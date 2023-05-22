@@ -416,6 +416,29 @@ namespace ShapeCore
         //}
     }
 
+    //Implement!!!
+    public class PolylineCollider : Collider
+    {
+        public override Intersection CheckIntersection(ICollider other)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override bool CheckOverlap(ICollider other)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override bool CheckOverlapRect(Rect other)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override IShape GetShape()
+        {
+            throw new NotImplementedException();
+        }
+    }
 }
 
 

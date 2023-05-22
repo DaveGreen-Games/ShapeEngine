@@ -564,6 +564,69 @@ namespace ShapeLib
             return points;
         }
 
+        /*public static Polygon Generate(Segment segment, float magMin, float magMax, int pointCount)
+        {
+            List<float> factors = new();
+            for (int i = 0; i < pointCount; i++) { factors.Add(SRNG.randF()); }
+            factors.Sort();
+            
+            List<Vector2> points = new();
+            var dir = segment.Dir;
+            var l = segment.Length;
+            foreach (var f in factors)
+            {
+                points.Add(dir * f * l);
+            }
+
+            Polygon poly = new() { segment.start };
+            var rightDir = dir.GetPerpendicularRight();
+            foreach (var p in points)
+            {
+                poly.Add(p + rightDir * SRNG.randF(magMin, magMax));
+            }
+            poly.Add(segment.end);
+            var leftDir = dir.GetPerpendicularLeft();
+            points.Reverse();
+            foreach (var p in points)
+            {
+                poly.Add(p + leftDir * SRNG.randF(magMin, magMax));
+            }
+            return poly;
+        }*/
+        
+        /// <summary>
+        /// Generates a polygon around the given segment. Points are generated ccw around the segment beginning with the segment start.
+        /// </summary>
+        /// <param name="segment">The segment to build a polygon around.</param>
+        /// <param name="magMin">The minimum perpendicular magnitude for generating a point.</param>
+        /// <param name="magMax">The maximum perpendicular magnitude for generating a point.</param>
+        /// <param name="minSectionLength">The minimum length between points along the line.</param>
+        /// <param name="maxSectionLength">The maximum length between points along the line.</param>
+        /// <returns>Returns the a generated polygon.</returns>
+        public static Polygon Generate(Segment segment, float magMin, float magMax, float minSectionLength, float maxSectionLength)
+        {
+            Polygon poly = new() { segment.start };
+            var dir = segment.Dir;
+            var dirRight = dir.GetPerpendicularRight();
+            var dirLeft = dir.GetPerpendicularLeft();
+            float minSectionLengthSq = minSectionLength * minSectionLength;
+            Vector2 cur = segment.start;
+            while(true)
+            {
+                cur += dir * SRNG.randF(minSectionLength, maxSectionLength);
+                if ((cur - segment.end).LengthSquared() < minSectionLengthSq) break;
+                poly.Add(cur + dirRight * SRNG.randF(magMin, magMax));
+            }
+            cur = segment.end;
+            poly.Add(cur);
+            while (true)
+            {
+                cur -= dir * SRNG.randF(minSectionLength, maxSectionLength);
+                if ((cur - segment.start).LengthSquared() < minSectionLengthSq) break;
+                poly.Add(cur + dirLeft * SRNG.randF(magMin, magMax));
+            }
+            return poly;
+        }
         /// <summary>
         /// Computes the length of this polygon's apothem. This will only be valid if
         /// the polygon is regular. More info: http://en.wikipedia.org/wiki/Apothem

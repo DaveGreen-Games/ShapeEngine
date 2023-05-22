@@ -238,6 +238,28 @@ namespace ShapeLib
 
         #region Overlap
         
+        public static bool OverlapShape(this Segments a, Segments b)
+        {
+            foreach (var segA in a)
+            {
+                if (segA.OverlapShape(b)) return true;
+            }
+            return false;
+        }
+        public static bool OverlapShape(this Segments segments, Segment s) { return s.OverlapShape(segments); }
+        public static bool OverlapShape(this Segments segments, Circle c) { return c.OverlapShape(segments); }
+        public static bool OverlapShape(this Segments segments, Triangle t) { return t.OverlapShape(segments); }
+        public static bool OverlapShape(this Segments segments, Rect r) { return r.OverlapShape(segments); }
+        public static bool OverlapShape(this Segments segments, Polygon poly) { return poly.OverlapShape(segments); }
+        public static bool OverlapShape(this Segments segments, PolyLine pl) { return pl.OverlapShape(segments); }
+        public static bool OverlapShape(this Segment s, Segments segments)
+        {
+            foreach (var seg in segments)
+            {
+                if (seg.OverlapShape(s)) return true;
+            }
+            return false;
+        }
         public static bool OverlapShape(this Segment a, Segment b) 
         {
             Vector2 axisAPos = a.start;
@@ -285,6 +307,7 @@ namespace ShapeLib
             return SRect.OverlappingRange(rectRange, segmentRange);
         }
         public static bool OverlapShape(this Segment s, Polygon poly) { return OverlapShape(poly, s); }
+        public static bool OverlapShape(this Segment s, PolyLine pl) { return OverlapShape(pl, s); }
         public static bool OverlapSegmentLine(this Segment s, Vector2 linePos, Vector2 lineDir) { return !SRect.SegmentOnOneSide(linePos, lineDir, s.start, s.end); }
         public static bool OverlapLineLine(Vector2 aPos, Vector2 aDir, Vector2 bPos, Vector2 bDir)
         {
@@ -295,17 +318,7 @@ namespace ShapeLib
             }
             return true;
         }
-        public static bool OverlapSegmentsSegments(List<Segment> a, List<Segment> b)
-        {
-            foreach (var la in a)
-            {
-                foreach (var lb in b)
-                {
-                    if (OverlapShape(la, lb)) return true;
-                }
-            }
-            return false;
-        }
+        
         
         #endregion
 
@@ -513,7 +526,14 @@ namespace ShapeLib
         #region Circle
         
         #region Overlap
-
+        public static bool OverlapShape(this Circle c, Segments segments)
+        {
+            foreach (var seg in segments)
+            {
+                if (seg.OverlapShape(c)) return true;
+            }
+            return false;
+        }
         public static bool OverlapShape(this Circle c, Segment s)
         {
             if (c.radius <= 0.0f) return s.IsPointInside(c.center); // IsPointInside(s, c.center);
@@ -545,7 +565,8 @@ namespace ShapeLib
             if (c.radius <= 0.0f) return r.IsPointInside(c.center);
             return c.IsPointInside(r.ClampOnRect(c.center));
         }
-        public static bool OverlapShape(this Circle c, Polygon poly) { return OverlapPolyCircle(poly, c.center, c.radius); }
+        public static bool OverlapShape(this Circle c, Polygon poly) { return poly.OverlapShape(c); }
+        public static bool OverlapShape(this Circle c, PolyLine pl) { return OverlapShape(pl, c); }
         public static bool OverlapCircleLine(this Circle c, Vector2 linePos, Vector2 lineDir)
         {
             Vector2 lc = c.center - linePos;
@@ -811,19 +832,28 @@ namespace ShapeLib
             }
         }
 
-        
+
         #endregion
 
         #endregion
 
         #region Triangle
-        
+
         #region Overlap
+        public static bool OverlapShape(this Triangle t, Segments segments)
+        {
+            foreach (var seg in segments)
+            {
+                if (seg.OverlapShape(t)) return true;
+            }
+            return false;
+        }
         public static bool OverlapShape(this Triangle t, Segment s) { return OverlapShape(t.ToPolygon(), s); }
         public static bool OverlapShape(this Triangle t, Circle c) { return OverlapShape(t.ToPolygon(), c); }
         public static bool OverlapShape(this Triangle a, Triangle b) { return OverlapShape(a.ToPolygon(), b.ToPolygon()); }
         public static bool OverlapShape(this Triangle t, Rect r) { return OverlapShape(t.ToPolygon(), r); }
         public static bool OverlapShape(this Triangle t, Polygon poly) { return OverlapShape(t.ToPolygon(), poly); }
+        public static bool OverlapShape(this Triangle t, PolyLine pl) { return OverlapShape(pl, t); }
 
 
         #endregion
@@ -841,7 +871,14 @@ namespace ShapeLib
         #region Rect
 
         #region Overlap
-
+        public static bool OverlapShape(this Rect r, Segments segments)
+        {
+            foreach (var seg in segments)
+            {
+                if (seg.OverlapShape(r)) return true;
+            }
+            return false;
+        }
         public static bool OverlapShape(this Rect r, Segment s) { return OverlapShape(s, r); }
         public static bool OverlapShape(this Rect r, Circle c) { return OverlapShape(c, r); }
         public static bool OverlapShape(this Rect r, Triangle t) { return OverlapShape(t, r); }
@@ -856,6 +893,7 @@ namespace ShapeLib
                 SRect.OverlappingRange(aTopLeft.Y, aBottomRight.Y, bTopLeft.Y, bBottomRight.Y);
         }
         public static bool OverlapShape(this Rect r, Polygon poly) { return OverlapShape(poly, r); }
+        public static bool OverlapShape(this Rect r, PolyLine pl) { return OverlapShape(pl, r); }
         public static bool OverlapRectLine(this Rect rect, Vector2 linePos, Vector2 lineDir)
         {
             Vector2 n = SVec.Rotate90CCW(lineDir);
@@ -877,31 +915,8 @@ namespace ShapeLib
 
             return dp1 * dp2 <= 0.0f || dp2 * dp3 <= 0.0f || dp3 * dp4 <= 0.0f;
         }
-        
-        
-        //public static bool OverlapCollider(this RectCollider a, RectCollider b) { return OverlapRectRect(a.Rect, b.Rect); }
-        //public static bool OverlapCollider(this RectCollider r, CircleCollider c) { return OverlapRectCircle(r.Rect, c.Pos, c.Radius); }
-        //public static bool OverlapCollider(this RectCollider r, SegmentCollider s) { return OverlapRectSegment(r.Rect, s.Pos, s.End); }
-        //public static bool OverlapCollider(this RectCollider r, PolyCollider poly) { return OverlapPolyRect(poly.Shape, r.Rect); }
-        //public static bool OverlapRectCircle(this Rect rect, CircleCollider c) { return OverlapRectCircle(rect, c.Pos, c.Radius); }
-        //public static bool OverlapRectSegment(this Rect rect, SegmentCollider s) { return OverlapRectSegment(rect, s.Pos, s.End); }
-        //public static bool OverlapRectRect(this Rect rect, RectCollider r) { return OverlapRectRect(rect, r.Rect); }
-        //public static bool OverlapRectPoly(this Rect rect, PolyCollider poly) { return OverlapPolyRect(poly.Shape, rect); }
-        //public static bool OverlapRectCircle(this Rect rect, Vector2 circlePos, float circleRadius) { return OverlapCircleRect(circlePos, circleRadius, rect); }
-        //public static bool OverlapRectLine(this Rect rect, Vector2 linePos, Vector2 lineDir) { return OverlapLineRect(linePos, lineDir, rect); }
-        //public static bool OverlapRectSegment(this Rect rect, Vector2 segmentPos, Vector2 segmentEnd) { return OverlapSegmentRect(segmentPos, segmentEnd, rect); }
-        
-        //public static bool OverlapRectRect(Vector2 aPos, Vector2 aSize, Vector2 aAlignement, Vector2 bPos, Vector2 bSize, Vector2 bAlignement)
-        //{
-        //    var a = new Rect(aPos, aSize, aAlignement);
-        //    var b = new Rect(bPos, bSize, bAlignement);
-        //    return OverlapRectRect(a, b);
-        //}
-        //public static bool OverlapRectCircle(Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement, Vector2 circlePos, float circleRadius) { return OverlapCircleRect(circlePos, circleRadius, rectPos, rectSize, rectAlignement); }
-        //public static bool OverlapRectLine(Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement, Vector2 linePos, Vector2 lineDir) { return OverlapLineRect(linePos, lineDir, rectPos, rectSize, rectAlignement); }
-        //public static bool OverlapRectSegment(Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement, Vector2 segmentPos, Vector2 segmentDir, float segmentLength) { return OverlapSegmentRect(segmentPos, segmentDir, segmentLength, rectPos, rectSize, rectAlignement); }
-        //public static bool OverlapRectSegment(Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement, Vector2 segmentPos, Vector2 segmentEnd) { return OverlapSegmentRect(segmentPos, segmentEnd, rectPos, rectSize, rectAlignement); }
 
+        
         #endregion
 
         #region Intersect
@@ -911,7 +926,7 @@ namespace ShapeLib
         public static Intersection IntersectShape(this Rect a, Rect b) { return IntersectSegmentShapeSegmentShape(a.GetEdges(), b.GetEdges()); }
         public static Intersection IntersectShape(this Rect rect, Polygon p) { return IntersectSegmentShapeSegmentShape(rect.GetEdges(), p.GetEdges()); }
 
-        
+
         #endregion
 
         #endregion
@@ -919,17 +934,32 @@ namespace ShapeLib
         #region Polygon
 
         #region Overlap
-        public static bool OverlapShape(this Polygon poly, Segment segment) { return OverlapPolySegment(poly, segment.start, segment.end); }
-        public static bool OverlapShape(this Polygon poly, Circle circle) { return OverlapPolyCircle(poly, circle.center, circle.radius); }
-        public static bool OverlapShape(this Polygon poly, Triangle t) { return OverlapPolyPoly(poly, t.ToPolygon()); }
-        public static bool OverlapShape(this Polygon poly, Rect rect) { return OverlapPolyRect(poly, rect); }
-        public static bool OverlapShape(this Polygon a, Polygon b) { return OverlapPolyPoly(a, b); }
-
-        public static bool OverlapPolyCircle(Polygon poly, Vector2 circlePos, float radius)
+        public static bool OverlapShape(this Polygon poly, Segments segments)
+        {
+            foreach (var seg in segments)
+            {
+                if (poly.OverlapShape(seg)) return true;
+            }
+            return false;
+        }
+        public static bool OverlapShape(this Polygon poly, Segment s) 
         {
             if (poly.Count < 3) return false;
-            if (IsPointInPoly(circlePos, poly)) return true;
-            Circle c = new(circlePos, radius);
+            if (IsPointInPoly(s.start, poly)) return true;
+            if (IsPointInPoly(s.end, poly)) return true;
+            for (int i = 0; i < poly.Count; i++)
+            {
+                Vector2 start = poly[i];
+                Vector2 end = poly[(i + 1) % poly.Count];
+                if (OverlapShape(new Segment(start, end), s)) return true;
+            }
+            return false;
+        }
+        public static bool OverlapShape(this Polygon poly, Circle c) 
+        {
+            if (poly.Count < 3) return false;
+            if (IsPointInPoly(c.center, poly)) return true;
+
             for (int i = 0; i < poly.Count; i++)
             {
                 Vector2 start = poly[i];
@@ -938,10 +968,11 @@ namespace ShapeLib
             }
             return false;
         }
-        public static bool OverlapPolyRect(Polygon poly, Rect rect)
+        public static bool OverlapShape(this Polygon poly, Triangle t) { return poly.OverlapShape(t.ToPolygon()); }
+        public static bool OverlapShape(this Polygon poly, Rect r)
         {
             if (poly.Count < 3) return false;
-            var corners = rect.ToPolygon(); // SRect.GetPoints(rect);
+            var corners = r.ToPolygon();
             foreach (var c in corners)
             {
                 if (IsPointInPoly(c, poly)) return true;
@@ -951,25 +982,11 @@ namespace ShapeLib
             {
                 Vector2 start = poly[i];
                 Vector2 end = poly[(i + 1) % poly.Count];
-                if (OverlapShape(rect, new Segment(start, end))) return true;
+                if (OverlapShape(r, new Segment(start, end))) return true;
             }
             return false;
         }
-        public static bool OverlapPolySegment(Polygon poly, Vector2 segmentStart, Vector2 segmentEnd)
-        {
-            if (poly.Count < 3) return false;
-            if (IsPointInPoly(segmentStart, poly)) return true;
-            if (IsPointInPoly(segmentEnd, poly)) return true;
-            Segment s = new(segmentStart, segmentEnd);
-            for (int i = 0; i < poly.Count; i++)
-            {
-                Vector2 start = poly[i];
-                Vector2 end = poly[(i + 1) % poly.Count];
-                if (OverlapShape(new Segment(start, end), s)) return true;
-            }
-            return false;
-        }
-        public static bool OverlapPolyPoly(Polygon a, Polygon b)
+        public static bool OverlapShape(this Polygon a, Polygon b) 
         {
             if (a.Count < 3 || b.Count < 3) return false;
             foreach (var point in a)
@@ -982,11 +999,10 @@ namespace ShapeLib
             }
             return false;
         }
+        public static bool OverlapShape(this Polygon poly, PolyLine pl) { return OverlapShape(pl, poly); }
 
-        //public static bool OverlapCollider(this PolyCollider poly, CircleCollider circle) { return OverlapPolyCircle(poly.Shape, circle.Pos, circle.Radius); }
-        //public static bool OverlapCollider(this PolyCollider poly, RectCollider rect) { return OverlapPolyRect(poly.Shape, rect.Rect); }
-        //public static bool OverlapCollider(this PolyCollider poly, SegmentCollider segment) { return OverlapPolySegment(poly.Shape, segment.Start, segment.End); }
-        //public static bool OverlapCollider(this PolyCollider a, PolyCollider b) { return OverlapPolyPoly(a.Shape, b.Shape); }
+
+       
         #endregion
 
         #region Intersect
@@ -1006,11 +1022,26 @@ namespace ShapeLib
         #region Polyline
 
         #region Overlap
-        
+        public static bool OverlapShape(this PolyLine pl, Segments segments) { return pl.GetEdges().OverlapShape(segments); }
+        public static bool OverlapShape(this PolyLine pl, Segment s) { return pl.GetEdges().OverlapShape(s); }
+        public static bool OverlapShape(this PolyLine pl, Circle c) { return pl.GetEdges().OverlapShape(c); }
+        public static bool OverlapShape(this PolyLine pl, Triangle t) { return pl.GetEdges().OverlapShape(t); }
+        public static bool OverlapShape(this PolyLine pl, Rect r) { return pl.GetEdges().OverlapShape(r); }
+        public static bool OverlapShape(this PolyLine pl, Polygon p) { return pl.GetEdges().OverlapShape(p); }
+        public static bool OverlapShape(this PolyLine a, PolyLine b) { return a.GetEdges().OverlapShape(b.GetEdges()); }
+
+
+
         #endregion
 
         #region Intersection
         //other shape center is used for checking segment normal and if necessary normal is flipped
+        public static Intersection IntersectShape(this PolyLine pl, Segment s) { return new(); }
+        public static Intersection IntersectShape(this PolyLine pl, Circle c) { return new(); }
+        public static Intersection IntersectShape(this PolyLine pl, Triangle t) { return new(); }
+        public static Intersection IntersectShape(this PolyLine pl, Rect r) { return new(); }
+        public static Intersection IntersectShape(this PolyLine pl, Polygon p) { return new(); }
+        public static Intersection IntersectShape(this PolyLine a, PolyLine b) { return new(); }
         #endregion
 
         #endregion
@@ -1360,6 +1391,33 @@ namespace ShapeLib
     }
 }
 
+//public static bool OverlapCollider(this RectCollider a, RectCollider b) { return OverlapRectRect(a.Rect, b.Rect); }
+//public static bool OverlapCollider(this RectCollider r, CircleCollider c) { return OverlapRectCircle(r.Rect, c.Pos, c.Radius); }
+//public static bool OverlapCollider(this RectCollider r, SegmentCollider s) { return OverlapRectSegment(r.Rect, s.Pos, s.End); }
+//public static bool OverlapCollider(this RectCollider r, PolyCollider poly) { return OverlapPolyRect(poly.Shape, r.Rect); }
+//public static bool OverlapRectCircle(this Rect rect, CircleCollider c) { return OverlapRectCircle(rect, c.Pos, c.Radius); }
+//public static bool OverlapRectSegment(this Rect rect, SegmentCollider s) { return OverlapRectSegment(rect, s.Pos, s.End); }
+//public static bool OverlapRectRect(this Rect rect, RectCollider r) { return OverlapRectRect(rect, r.Rect); }
+//public static bool OverlapRectPoly(this Rect rect, PolyCollider poly) { return OverlapPolyRect(poly.Shape, rect); }
+//public static bool OverlapRectCircle(this Rect rect, Vector2 circlePos, float circleRadius) { return OverlapCircleRect(circlePos, circleRadius, rect); }
+//public static bool OverlapRectLine(this Rect rect, Vector2 linePos, Vector2 lineDir) { return OverlapLineRect(linePos, lineDir, rect); }
+//public static bool OverlapRectSegment(this Rect rect, Vector2 segmentPos, Vector2 segmentEnd) { return OverlapSegmentRect(segmentPos, segmentEnd, rect); }
+
+//public static bool OverlapRectRect(Vector2 aPos, Vector2 aSize, Vector2 aAlignement, Vector2 bPos, Vector2 bSize, Vector2 bAlignement)
+//{
+//    var a = new Rect(aPos, aSize, aAlignement);
+//    var b = new Rect(bPos, bSize, bAlignement);
+//    return OverlapRectRect(a, b);
+//}
+//public static bool OverlapRectCircle(Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement, Vector2 circlePos, float circleRadius) { return OverlapCircleRect(circlePos, circleRadius, rectPos, rectSize, rectAlignement); }
+//public static bool OverlapRectLine(Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement, Vector2 linePos, Vector2 lineDir) { return OverlapLineRect(linePos, lineDir, rectPos, rectSize, rectAlignement); }
+//public static bool OverlapRectSegment(Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement, Vector2 segmentPos, Vector2 segmentDir, float segmentLength) { return OverlapSegmentRect(segmentPos, segmentDir, segmentLength, rectPos, rectSize, rectAlignement); }
+//public static bool OverlapRectSegment(Vector2 rectPos, Vector2 rectSize, Vector2 rectAlignement, Vector2 segmentPos, Vector2 segmentEnd) { return OverlapSegmentRect(segmentPos, segmentEnd, rectPos, rectSize, rectAlignement); }
+
+//public static bool OverlapCollider(this PolyCollider poly, CircleCollider circle) { return OverlapPolyCircle(poly.Shape, circle.Pos, circle.Radius); }
+//public static bool OverlapCollider(this PolyCollider poly, RectCollider rect) { return OverlapPolyRect(poly.Shape, rect.Rect); }
+//public static bool OverlapCollider(this PolyCollider poly, SegmentCollider segment) { return OverlapPolySegment(poly.Shape, segment.Start, segment.End); }
+//public static bool OverlapCollider(this PolyCollider a, PolyCollider b) { return OverlapPolyPoly(a.Shape, b.Shape); }
 
 
 //public static bool OverlapCollider(this SegmentCollider a, SegmentCollider b) { return OverlapSegmentSegment(a.Pos, a.End, b.Pos, b.End); }
