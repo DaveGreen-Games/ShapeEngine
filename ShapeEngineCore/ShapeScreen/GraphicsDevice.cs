@@ -4,7 +4,7 @@ using ShapeCore;
 
 namespace ShapeScreen
 {
-    public class GraphicsDevice
+    public sealed class GraphicsDevice
     {
         public delegate void WindowSizeChanged(int w, int h);
         public event WindowSizeChanged? OnWindowSizeChanged;
@@ -30,20 +30,20 @@ namespace ShapeScreen
         public ICursor Cursor { get; private set; } = new NullCursor();
        
         private ScreenBuffer[] screenBuffers = new ScreenBuffer[0];
-        
-        
-        public GraphicsDevice(int devWidth, int devHeight, IScreenTexture game, IScreenTexture ui, string windowName = "Raylib Game")
+
+        //IScreenTexture game, IScreenTexture ui,
+        public GraphicsDevice(int devWidth, int devHeight, float gameFactor, float uiFactor, string windowName = "Raylib Game")
         {
             InitWindow(0, 0, windowName);
             SetWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
             ClearWindowState(ConfigFlags.FLAG_VSYNC_HINT);
 
-            FRAME_RATE_LIMIT = 60;
-            SetVsync(true);
+            
 
-            GAME = game;
-            UI = ui;
-
+            GAME = new ScreenTexture(devWidth, devHeight, gameFactor);
+            UI = new ScreenTexture(devWidth, devHeight, uiFactor);
+            //GAME.Load(devWidth, devHeight);
+            //UI.Load(devWidth, devHeight);
             DEVELOPMENT_RESOLUTION = (devWidth, devHeight);
             //GAME_FACTOR = game.GetTextureSizeFactor();
             //UI_FACTOR = ui.GetTextureSizeFactor();
@@ -55,6 +55,8 @@ namespace ShapeScreen
 
             SetupWindowDimensions();
 
+            FRAME_RATE_LIMIT = 60;
+            SetVsync(true);
             //GAME = new ScreenTexture(
             //    devWidth, devHeight,
             //    CUR_WINDOW_SIZE.width,
@@ -80,8 +82,8 @@ namespace ShapeScreen
         }
 
 
-        public virtual void Start() { }
-        public virtual void Update(float dt)
+        public void Start() { }
+        public void Update(float dt)
         {
             var newMonitor = MONITOR.HasMonitorSetupChanged();
             if (newMonitor.available)
@@ -96,9 +98,9 @@ namespace ShapeScreen
             Cursor.Update(dt);
         }
 
-        public virtual void BeginDraw() { GAME.BeginTextureMode(CAMERA.GetCamera()); }
-        public virtual void EndDraw() { GAME.EndTextureMode(CAMERA.GetCamera()); }
-        public virtual void DrawGameToScreen()
+        public void BeginDraw() { GAME.BeginTextureMode(CAMERA.GetCamera()); } //GAME.BeginTextureMode(CAMERA.GetCamera()); 
+        public void EndDraw() { GAME.EndTextureMode(CAMERA.GetCamera()); } //GAME.EndTextureMode(CAMERA.GetCamera());
+        public void DrawGameToScreen()
         {
             List<ScreenShader> shadersToApply = SHADER.GetCurActiveShaders();
             if (shadersToApply.Count <= 0)
@@ -165,17 +167,17 @@ namespace ShapeScreen
             }
         }
 
-        public virtual void BeginDrawUI() { UI.BeginTextureMode(); }
-        public virtual void EndDrawUI() { UI.EndTextureMode(); }
-        public virtual void DrawUIToScreen() { UI.DrawTexture(CUR_WINDOW_SIZE.width, CUR_WINDOW_SIZE.height); }
+        public void BeginDrawUI() { UI.BeginTextureMode(); }
+        public void EndDrawUI() { UI.EndTextureMode(); }
+        public void DrawUIToScreen() { UI.DrawTexture(CUR_WINDOW_SIZE.width, CUR_WINDOW_SIZE.height); }
 
         
-        public virtual void BeginDrawCustom(IScreenTexture texture) { texture.BeginTextureMode(); }
-        public virtual void EndDrawCustom(IScreenTexture texture) { texture.EndTextureMode(); }
-        public virtual void DrawCustomToScreen(IScreenTexture texture) { texture.DrawTexture(CUR_WINDOW_SIZE.width, CUR_WINDOW_SIZE.height); }
+        public void BeginDrawCustom(IScreenTexture texture) { texture.BeginTextureMode(); }
+        public void EndDrawCustom(IScreenTexture texture) { texture.EndTextureMode(); }
+        public void DrawCustomToScreen(IScreenTexture texture) { texture.DrawTexture(CUR_WINDOW_SIZE.width, CUR_WINDOW_SIZE.height); }
 
 
-        public virtual void Close()
+        public void Close()
         {
             foreach (ScreenBuffer screenBuffer in screenBuffers)
             {

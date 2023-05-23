@@ -2,11 +2,25 @@
 
 namespace ShapeCore
 {
-    public sealed class SceneEmpty : IScene
+    public abstract class Scene : IScene
     {
         public bool CallUpdate { get; set; }
         public bool CallHandleInput { get; set; }
         public bool CallDraw { get; set; }
+
+        public virtual void Activate(IScene oldScene) { }
+        public virtual void Close() { }
+        public virtual void Deactivate() { }
+        public virtual void Draw(Vector2 mousePosGame) { }
+        public virtual void DrawUI(Vector2 uiSize, Vector2 mousePosUI) { }
+        public virtual Area? GetCurArea() { return null; }
+        public virtual void HandleInput() { }
+        public virtual void Start() { }
+        public virtual void Update(float dt, Vector2 mousePosGame) { }
+    }
+    public sealed class SceneEmpty : Scene
+    {
+        public SceneEmpty() { }
     }
 
     /*

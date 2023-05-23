@@ -13,19 +13,19 @@ namespace ShapeCore
         public bool CallDraw { get; set; }
 
 
-        public virtual Area? GetCurArea() { return null; }
+        public Area? GetCurArea();// { return null; }
 
 
-        public virtual void Activate(IScene oldScene) { }
-        public virtual void Deactivate() { }// { if (newScene != null) GAMELOOP.SwitchScene(this, newScene); }
+        public void Activate(IScene oldScene);// { }
+        public void Deactivate();// { }// { if (newScene != null) GAMELOOP.SwitchScene(this, newScene); }
 
-        public virtual void Start() { }
-        public virtual void Close() { }
+        public void Start();// { }
+        public void Close();// { }
 
-        public virtual void HandleInput() { }
-        public virtual void Update(float dt) { }
-        public virtual void Draw() { }
-        public virtual void DrawUI(Vector2 uiSize) { }
+        public void HandleInput();// { }
+        public void Update(float dt, Vector2 mousePosGame);// { }
+        public void Draw(Vector2 mousePosGame);// { }
+        public void DrawUI(Vector2 uiSize, Vector2 mousePosUI);// { }
 
     }
 

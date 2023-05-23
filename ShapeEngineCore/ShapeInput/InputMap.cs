@@ -213,18 +213,20 @@ namespace ShapeInput
         public int GamepadIndex { get; protected set; } = -1;
         public int MaxGamepads { get; set; } = 4;
         public uint ID { get; protected set; }
-        public Vector2 MousePos
-        {
-            get
-            {
-                if (IsGamepad) return new(-1);
-                else return mousePos;
-            }
-        }
-
-        private Vector2 mousePos = new(-1);
+        
+        //public Vector2 MousePos
+        //{
+        //    get
+        //    {
+        //        if (IsGamepad) return new(-1);
+        //        else return mousePos;
+        //    }
+        //}
+        //
+        private Vector2 curMousePos = new(-1);
         private Vector2 prevMousePos = new(-1);
 
+        
         /// <summary>
         /// The input map is either using a gamepad or keyboard/mouse for input. If the gamepad index is bigger than 0 IsGamepad is always true. (only -1 / 0 index can be keyboard/mouse as well)
         /// </summary>
@@ -287,14 +289,14 @@ namespace ShapeInput
         //        this.actionGroups.Add(group.ID, group);
         //    }
         //}
-        public void Update(float dt)
+        public void Update(float dt, Vector2 mousePos)
         {
             if (!Disabled)
             {
                 if(GamepadIndex <= 0)
                 {
-                    prevMousePos = mousePos;
-                    mousePos = GetMousePos();
+                    prevMousePos = curMousePos;
+                    curMousePos = mousePos;
                     if (WasMouseMoved()) OnMouseMoved?.Invoke();
                 }
 
@@ -503,7 +505,7 @@ namespace ShapeInput
         
 
         
-        public Vector2 GetMouseDelta(float deadzone = 0f, bool normalized = false)
+        /*public Vector2 GetMouseDelta(float deadzone = 0f, bool normalized = false)
         {
             if (IsGamepad) return new(0f);
             Vector2 d = mousePos - prevMousePos;
@@ -518,10 +520,11 @@ namespace ShapeInput
                 return prevMousePos;
             }
             else return pos;
-        }
+        }*/
         private bool WasMouseMoved(float deadzone = 5f)
         {
-            Vector2 d = mousePos - prevMousePos;
+            Vector2 d = curMousePos - prevMousePos;
+            
             float lSq = Vector2LengthSqr(d);
             if (lSq < deadzone * deadzone) lSq = 0f;
             return lSq > 0.0f;

@@ -14,6 +14,7 @@ namespace ShapeScreen
         public Color BackgroundColor { get; set; }
         public Color Tint { get; set; }
 
+        //public void Load(int width, int height);
         public void Update(float dt);
         public void DrawTexture(int targetWidth, int targetHeight, int blendMode = -1);
         public void Close();
@@ -30,7 +31,6 @@ namespace ShapeScreen
         public Vector2 GetCurResolutionFactorV(float targetWidth, float targetHeight);
 
         public Vector2 ScalePosition(Vector2 pos, int targetResWidth, int targetResHeight);
-
         public void Flash(float duration, Color startColor, Color endColor);
         public void StopFlash();
 
@@ -94,18 +94,22 @@ namespace ShapeScreen
         
         private List<ScreenFlash> screenFlashes = new List<ScreenFlash>();
 
-        public ScreenTexture(int devWidth, int devHeight, float factor)
+        //int devWidth, int devHeight, 
+        public ScreenTexture(int width, int height, float factor)
         {
             //this.DevRes = (devWidth, devHeight);
             //this.TargetRes = (winWidth, winHeight);
             this.textureSizeFactor = factor;
-
-            int textureWidth = (int)(devWidth * factor);
-            int textureHeight = (int)(devHeight * factor);
+            Load(width, height);
+            
+        }
+        private void Load(int width, int height)
+        {
+            int textureWidth = (int)(width * textureSizeFactor);
+            int textureHeight = (int)(height * textureSizeFactor);
             this.texture = LoadRenderTexture(textureWidth, textureHeight);
             this.sourceRec = new Rectangle(0, 0, textureWidth, -textureHeight);
         }
-
         /*
         public ScreenTexture(int devWidth, int devHeight, int winWidth, int winHeight, float textureFactor)
         {
@@ -143,7 +147,7 @@ namespace ShapeScreen
             //this.STRETCH_AREA_SIDE_FACTOR = MathF.Sqrt(STRETCH_AREA_FACTOR);
         }
         */
-        
+
         public void Update(float dt)
         {
             /*
@@ -327,6 +331,8 @@ namespace ShapeScreen
             screenFlashes.Add(flash);
         }
         public void StopFlash() { screenFlashes.Clear(); }
+
+        
 
 
 

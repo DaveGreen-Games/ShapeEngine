@@ -5,7 +5,7 @@ using ShapeTiming;
 using Raylib_CsLo;
 using System.Numerics;
 using System.Runtime.InteropServices;
-
+using ShapeLib;
 
 namespace ShapeCore
 {
@@ -77,13 +77,8 @@ namespace ShapeCore
         public ExitCode(bool restart) { this.restart = restart; }
 
     }
-    public class GameLoop
+    public abstract class GameLoop
     {
-        //private int CUR_SCENE_INDEX = 0;
-        //private Dictionary<string, Scene> SCENES = new();
-        //private DelegateTimerHandlerNamed delayHandler = new();
-        
-
         public static readonly string CURRENT_DIRECTORY = Environment.CurrentDirectory;
         public static bool EDITORMODE { get; private set; } = Directory.Exists("resources");
         
@@ -96,15 +91,18 @@ namespace ShapeCore
         public static bool IsLinux() { return OS_PLATFORM == OSPlatform.Linux; }
         public static bool IsOSX() { return OS_PLATFORM == OSPlatform.OSX; }
 
-        public string[] LAUNCH_PARAMS { get; private set; }
+        public string[] LAUNCH_PARAMS { get; private set; } = new string[0];
         
-        public bool CALL_HANDLE_INPUT = true;
-        public bool CALL_UPDATE = true;
-        public bool CALL_DRAW = true;
-        public bool CALL_DRAWUI = true;
-
-
+        public bool CallHandleInput = true;
+        public bool CallUpdate = true;
+        public bool CallDraw = true;
+        public bool CallDrawUI = true;
         public Color BackgroundColor = BLACK;
+
+        public Vector2 MousePos { get; private set; } = new(0f);
+        public Vector2 MousePosUI { get; private set; } = new(0f);
+        public Vector2 MousePosGame { get; private set; } = new(0f);
+
         public IScene CUR_SCENE { get; private set; } = new SceneEmpty();
         
         private Sequencer<DelayedAction> delayHandler = new();
@@ -113,9 +111,7 @@ namespace ShapeCore
         private bool quit = false;
         private bool restart = false;
 
-        public GraphicsDevice GFX { get; protected set; }
-
-
+        public GraphicsDevice GFX { get; private set; }
 
         public void GoToScene(IScene newScene)
         {
@@ -166,7 +162,7 @@ namespace ShapeCore
         /// Stop the current scene for the duration. Only affects Update().
         /// </summary>
         /// <param name="duration"></param>
-        public void Stop(float duration, float delay = 0f) 
+        public void StopScene(float duration, float delay = 0f) 
         {
             if (delay > 0)
             {
@@ -179,7 +175,7 @@ namespace ShapeCore
                 stopTimer.Start(duration);
             }
         }
-        public void CancelStop() 
+        public void CancelStopScene() 
         {
             //if (delayHandler.Has("stop")) delayHandler.Remove("stop");
             stopTimer.Stop(); 
@@ -201,23 +197,30 @@ namespace ShapeCore
         }
         */
 
-        public GameLoop(GraphicsDevice graphicsDevice, params string[] launchParameters)
+        //public GameLoop(GraphicsDevice graphicsDevice, params string[] launchParameters)
+        //{
+        //    this.GFX = graphicsDevice;
+        //    this.LAUNCH_PARAMS = launchParameters;
+        //    
+        //    quit = false;
+        //    restart = false;
+        //    Raylib.SetExitKey(-1);
+        //}
+        public GameLoop(int devWidth, int devHeight, float gameFactor, float uiFactor, string windowName = "Raylib Game")
         {
-            this.GFX = graphicsDevice;
-            this.LAUNCH_PARAMS = launchParameters;
-            
+            this.GFX = new(devWidth, devHeight, gameFactor, uiFactor, windowName);
+
             quit = false;
             restart = false;
             Raylib.SetExitKey(-1);
         }
-
-
         /// <summary>
         /// Starts the gameloop. Runs until Quit() or Restart() is called or the Window is closed by the user.
         /// </summary>
         /// <returns>Returns an exit code for information how the application was quit. Restart has to be handled seperately.</returns>
-        public ExitCode Run()
+        public ExitCode Run(params string[] launchParameters)
         {
+            this.LAUNCH_PARAMS = launchParameters;
             Start();
             RunGameloop();
             End();
@@ -230,6 +233,14 @@ namespace ShapeCore
         {
             while (!quit)
             {
+                var mp = GetMousePosition();
+                if (!mp.IsNan())
+                {
+                    MousePos = mp;
+                    MousePosUI = GFX.UI.ScalePosition(mp,GFX.CUR_WINDOW_SIZE.width, GFX.CUR_WINDOW_SIZE.height);
+                    MousePosGame = GFX.TransformPositionToGame(MousePosUI);
+                }
+
                 HandleInput();
 
                 UpdateGame(GetFrameTime());
@@ -241,20 +252,20 @@ namespace ShapeCore
         }
         private void HandleInput()
         {
-            if(!CALL_HANDLE_INPUT) return;
+            if(!CallHandleInput) return;
 
             if (BeginHandleInput()) CUR_SCENE.HandleInput();
             EndHandleInput();
         }
         private void UpdateGame(float dt)
         {
-            if (!CALL_UPDATE) return;
+            if (!CallUpdate) return;
 
             GFX.Update(dt);
 
             if (BeginUpdate(dt))
             {
-                if (CUR_SCENE.CallUpdate && !stopTimer.IsRunning) CUR_SCENE.Update(dt);
+                if (CUR_SCENE.CallUpdate && !stopTimer.IsRunning) CUR_SCENE.Update(dt, MousePosGame);
             }
             EndUpdate(dt);
         }
@@ -263,25 +274,26 @@ namespace ShapeCore
             DrawCustom();
 
             //Draw to game texture
-            if (CALL_DRAW)
+            if (CallDraw)
             {
                 GFX.BeginDraw();
                 if (BeginDraw()) 
                 { 
-                    if (CUR_SCENE.CallDraw) CUR_SCENE.Draw(); 
+                    if (CUR_SCENE.CallDraw) CUR_SCENE.Draw(MousePosGame);
                 }
                 EndDraw();
                 GFX.EndDraw();
             }
 
             //Draw to ui texture
-            if (CALL_DRAWUI)
+            if (CallDrawUI)
             {
-                Vector2 uiSize = GFX.UISize();// GetUITextureSize();// ScreenHandler.UISize();
+                Vector2 uiSize = GFX.UISize();
                 GFX.BeginDrawUI();
                 if (BeginDrawUI(uiSize))
                 {
-                    if (CUR_SCENE.CallDraw) CUR_SCENE.DrawUI(uiSize);
+                    if (CUR_SCENE.CallDraw) CUR_SCENE.DrawUI(uiSize, MousePosUI);
+                    
                 }
                 EndDrawUI(uiSize);
                 GFX.EndDrawUI();
@@ -306,6 +318,7 @@ namespace ShapeCore
             GFX.DrawUIToScreen();
             
             DrawCustomToScreenLast();
+            
             
             EndDrawing();
         }
