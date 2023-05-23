@@ -42,7 +42,12 @@ namespace ShapeEffects
         public EffectObject(Vector2 pos, Vector2 size) { this.Pos = pos; this.Size = size; }
         public EffectObject(Vector2 pos, Vector2 size, float lifeTime) { this.Pos = pos; this.Size = size; lifetimeTimer.Start(lifeTime); }
 
-
+        public bool Kill()
+        {
+            if (IsDead()) return false;
+            lifetimeTimer.Stop();
+            return true;
+        }
         public virtual bool Update(float dt)
         {
             if (IsDead()) return true;

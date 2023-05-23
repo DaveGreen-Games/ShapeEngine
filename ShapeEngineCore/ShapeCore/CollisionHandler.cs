@@ -301,7 +301,7 @@ namespace ShapeCore
                 (
                     (a, b) =>
                     {
-                        Vector2 pos = shape.GetReferencePoint();
+                        Vector2 pos = shape.GetCentroid();
                         float la = (pos - a.intersection.p).LengthSquared();
                         float lb = (pos - b.intersection.p).LengthSquared();
 
@@ -395,7 +395,7 @@ namespace ShapeCore
                 (
                     (a, b) =>
                     {
-                        Vector2 pos = castShape.GetReferencePoint();
+                        Vector2 pos = castShape.GetCentroid();
                         float la = (pos - a.GetPosition()).LengthSquared();
                         float lb = (pos - b.GetPosition()).LengthSquared();
 
