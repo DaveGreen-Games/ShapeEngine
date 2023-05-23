@@ -32,7 +32,7 @@ namespace ShapeCore
         public void ClearAccumulatedForce() { accumulatedForce = new(0f); }
         public void AddForce(Vector2 force) { accumulatedForce = SPhysics.AddForce(this, force); }
         public void AddImpulse(Vector2 force) { SPhysics.AddImpuls(this, force); }
-        public void UpdateState(float dt) { SPhysics.UpdateState(this, dt); }
+        public virtual void UpdateState(float dt) { SPhysics.UpdateState(this, dt); }
 
     }
     public class CircleCollider : Collider
@@ -419,25 +419,81 @@ namespace ShapeCore
     //Implement!!!
     public class PolylineCollider : Collider
     {
-        public override Intersection CheckIntersection(ICollider other)
-        {
-            throw new NotImplementedException();
-        }
+        private PolyLine shape;
 
-        public override bool CheckOverlap(ICollider other)
-        {
-            throw new NotImplementedException();
-        }
+        public float Rot { get; set; } = 0f;
+        public float Scale { get; set; } = 1f;
 
-        public override bool CheckOverlapRect(Rect other)
-        {
-            throw new NotImplementedException();
-        }
+        private float prevRot = 0f;
+        private float prevScale = 1f;
+        private Vector2 prevPos = new();
 
-        public override IShape GetShape()
+        public PolylineCollider(PolyLine shape)
         {
-            throw new NotImplementedException();
+            this.shape = shape;
         }
+        public PolylineCollider(PolyLine shape, Vector2 vel)
+        {
+            this.shape = shape;
+            this.Vel = vel;
+        }
+        public PolylineCollider(Vector2 vel, params Vector2[] shape)
+        {
+            this.shape = new(shape);
+            this.Vel = vel;
+        }
+        public PolylineCollider(PolyLine shape, Vector2 pos, Vector2 vel)
+        {
+            this.shape = shape;
+            this.Pos = pos;
+            this.prevPos = pos;
+            this.Vel = vel;
+        }
+        public PolylineCollider(Vector2 pos, Vector2 vel, params Vector2[] shape)
+        {
+            this.Pos = pos;
+            this.Vel = vel;
+            this.shape = new(shape);
+        }
+        public PolylineCollider(PolyLine shape, Vector2 pos, float rotRad, float scale, Vector2 vel)
+        {
+            this.shape = shape;
+            this.Pos = pos;
+            this.Scale = scale;
+            this.Rot = rotRad;
+            this.Vel = vel;
+
+            this.prevPos = pos;
+            this.prevRot = rotRad;
+            this.prevScale = scale;
+        }
+        public PolylineCollider(Vector2 pos, float rotRad, float scale, Vector2 vel, params Vector2[] shape)
+        {
+            this.Pos = pos;
+            this.Scale = scale;
+            this.Rot = rotRad;
+            this.Vel = vel;
+            this.shape = new(shape);
+
+            this.prevPos = pos;
+            this.prevRot = rotRad;
+            this.prevScale = scale;
+        }
+        
+        public override void UpdateState(float dt)
+        {
+            base.UpdateState(dt);
+            //check if pos, rot or scale have changed.
+            //if yes update points
+        }
+        public override IShape GetShape() { return new PolyLine(shape); } // new Polygon(Shape, Pos); }
+        public Polygon GetPolygonShape() { return new Polygon(shape); }
+
+        public override bool CheckOverlap(ICollider other) { return shape.Overlap(other.GetShape()); }
+        public override Intersection CheckIntersection(ICollider other) { return shape.Intersect(other.GetShape()); }
+        public override bool CheckOverlapRect(Rect rect) { return shape.Overlap(rect); }
+
+        
     }
 }
 
