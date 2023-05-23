@@ -91,6 +91,7 @@ namespace ShapeCore
         public Segment(float startX, float startY, float endX, float endY) { this.start = new(startX, startY); this.end = new(endX, endY); this.n = (this.end - this.start).GetPerpendicularRight().Normalize(); }
         public Segment(Segment s) { start = s.start; end = s.end; n = s.n; }
 
+        
         //public static bool operator ==(Segment s1, Segment s2) { return s2.start == s1.start && s2.end == s1.end; }
         //public static bool operator !=(Segment s1, Segment s2) { return s2.start != s1.start || s2.end != s1.end; }
         //public override bool Equals([NotNullWhen(true)] object? obj)
@@ -109,6 +110,12 @@ namespace ShapeCore
         public Polygon ToPolygon() { return new(start, end); }
         public PolyLine ToPolyLine() { return new(start, end); }
         public Segments GetEdges() { return new(this); }
+        //public Segments GetEdges(Vector2 normalReferencePoint)
+        //{
+        //    var s = new Segment(this);
+        //    s.FixNormal(normalReferencePoint);
+        //    return new(s);
+        //}
         public Triangulation Triangulate() { return new(); }
         public Circle GetBoundingCircle() { return ToPolygon().GetBoundingCircle(); }
         public Rect GetBoundingBox() { return new(start, end); }

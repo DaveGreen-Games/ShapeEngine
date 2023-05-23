@@ -116,6 +116,7 @@ namespace ShapeCore
         public Polygon ToPolygon();
         public PolyLine ToPolyLine();
         public Segments GetEdges();
+        //public Segments GetEdges(Vector2 normalReferencePoint);
         public Triangulation Triangulate();
         public Rect GetBoundingBox();
         public Circle GetBoundingCircle();
