@@ -73,11 +73,11 @@ namespace ShapeLib
         public static bool IsHole(this PathD path) { return !Clipper.IsPositive(path); }
         public static bool IsHole(this Polygon p) { return IsHole(p.ToClipperPath()); }
         
-        public static void RemoveAllHoles(this PathsD paths) { paths.RemoveAll((p) => { return IsHole(p); }); }
-        public static void RemoveAllHoles(this Polygons polygons) { polygons.RemoveAll((p) => { return IsHole(p); }); }
+        public static PathsD RemoveAllHoles(this PathsD paths) { paths.RemoveAll((p) => { return IsHole(p); }); return paths; }
+        public static Polygons RemoveAllHoles(this Polygons polygons) { polygons.RemoveAll((p) => { return IsHole(p); }); return polygons; }
         
-        public static void GetAllHoles(this PathsD paths) { paths.RemoveAll((p) => { return !IsHole(p); }); }
-        public static void GetAllHoles(this Polygons polygons) { polygons.RemoveAll((p) => { return !IsHole(p); }); }
+        public static PathsD GetAllHoles(this PathsD paths) { paths.RemoveAll((p) => { return !IsHole(p); }); return paths; }
+        public static Polygons GetAllHoles(this Polygons polygons) { polygons.RemoveAll((p) => { return !IsHole(p); }); return polygons; }
         
         public static PathsD RemoveAllHolesCopy(this PathsD paths)
         {

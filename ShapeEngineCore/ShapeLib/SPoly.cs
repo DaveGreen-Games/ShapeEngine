@@ -213,8 +213,22 @@ namespace ShapeLib
 
     public static class SPoly
     {
-        // add fracture functions (line, circle)
-        // add functions to combine polygons + combine function with generate circle
+        public static Polygons Cut(this Polygon poly, Polygon cut) { return SClipper.Intersect(poly, cut).ToPolygons().RemoveAllHoles(); }
+        public static Polygons Cut(this Polygon poly, Polygons cuts) { return SClipper.IntersectMany(poly, cuts).ToPolygons().RemoveAllHoles(); }
+        public static Polygons Combine(this Polygon poly, Polygon other) { return SClipper.Union(poly, other).ToPolygons(); }
+        public static Polygons Combine(params Polygon[] polygons) { return SClipper.Union(new Polygons(polygons)).ToPolygons(); }
+
+        public static Polygons Fracture(this Polygon poly, Vector2 cutPos, float minCutRadius, float maxCutRadius, int pointCount = 16)
+        {
+            var cut = Generate(cutPos, pointCount, minCutRadius, maxCutRadius);
+            return poly.Cut(cut);
+        }
+        public static Polygons Fracture(this Polygon poly, Segment cutLine, float minSectionLength = 0.025f, float maxSectionLength = 0.1f, float minMagnitude = 0.05f, float maxMagnitude = 0.25f)
+        {
+            var cut = Generate(cutLine, minMagnitude, maxMagnitude, minSectionLength, maxSectionLength);
+            return poly.Cut(cut);
+        }
+
 
 
         public static Rect GetBoundingBox(IEnumerable<Vector2> points)
@@ -547,7 +561,7 @@ namespace ShapeLib
             for (int i = 0; i < pointCount; i++)
             {
                 float randLength = SRNG.randF(minLength, maxLength);
-                Vector2 p = SVec.Rotate(SVec.Right(), angleStep * i) * randLength;
+                Vector2 p = SVec.Rotate(SVec.Right(), -angleStep * i) * randLength;
                 p += center;
                 points.Add(p);
             }
@@ -561,7 +575,7 @@ namespace ShapeLib
             for (int i = 0; i < pointCount; i++)
             {
                 float randLength = SRNG.randF(minLength, maxLength);
-                Vector2 p = SVec.Rotate(SVec.Right(), angleStep * i) * randLength;
+                Vector2 p = SVec.Rotate(SVec.Right(), -angleStep * i) * randLength;
                 points.Add(p);
             }
             return points;
@@ -601,22 +615,23 @@ namespace ShapeLib
         /// Generates a polygon around the given segment. Points are generated ccw around the segment beginning with the segment start.
         /// </summary>
         /// <param name="segment">The segment to build a polygon around.</param>
-        /// <param name="magMin">The minimum perpendicular magnitude for generating a point.</param>
-        /// <param name="magMax">The maximum perpendicular magnitude for generating a point.</param>
-        /// <param name="minSectionLength">The minimum length between points along the line.</param>
-        /// <param name="maxSectionLength">The maximum length between points along the line.</param>
+        /// <param name="magMin">The minimum perpendicular magnitude factor for generating a point. (0-1)</param>
+        /// <param name="magMax">The maximum perpendicular magnitude factor for generating a point. (0-1)</param>
+        /// <param name="minSectionLength">The minimum factor of the length between points along the line.(0-1)</param>
+        /// <param name="maxSectionLength">The maximum factor of the length between points along the line.(0-1)</param>
         /// <returns>Returns the a generated polygon.</returns>
-        public static Polygon Generate(Segment segment, float magMin, float magMax, float minSectionLength, float maxSectionLength)
+        public static Polygon Generate(Segment segment, float magMin = 0.1f, float magMax = 0.25f, float minSectionLength = 0.025f, float maxSectionLength = 0.1f)
         {
             Polygon poly = new() { segment.start };
             var dir = segment.Dir;
             var dirRight = dir.GetPerpendicularRight();
             var dirLeft = dir.GetPerpendicularLeft();
-            float minSectionLengthSq = minSectionLength * minSectionLength;
+            float len = segment.Length;
+            float minSectionLengthSq = (minSectionLength * len) * (minSectionLength * len);
             Vector2 cur = segment.start;
             while(true)
             {
-                cur += dir * SRNG.randF(minSectionLength, maxSectionLength);
+                cur += dir * SRNG.randF(minSectionLength, maxSectionLength) * len;
                 if ((cur - segment.end).LengthSquared() < minSectionLengthSq) break;
                 poly.Add(cur + dirRight * SRNG.randF(magMin, magMax));
             }
@@ -624,7 +639,7 @@ namespace ShapeLib
             poly.Add(cur);
             while (true)
             {
-                cur -= dir * SRNG.randF(minSectionLength, maxSectionLength);
+                cur -= dir * SRNG.randF(minSectionLength, maxSectionLength) * len;
                 if ((cur - segment.start).LengthSquared() < minSectionLengthSq) break;
                 poly.Add(cur + dirLeft * SRNG.randF(magMin, magMax));
             }
