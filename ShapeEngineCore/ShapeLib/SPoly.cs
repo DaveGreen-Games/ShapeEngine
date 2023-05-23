@@ -213,6 +213,9 @@ namespace ShapeLib
 
     public static class SPoly
     {
+        // add fracture functions (line, circle)
+        // add functions to combine polygons + combine function with generate circle
+
 
         public static Rect GetBoundingBox(IEnumerable<Vector2> points)
         {

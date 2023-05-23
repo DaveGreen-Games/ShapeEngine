@@ -157,10 +157,6 @@ namespace ShapeLib
         public static PathsD MinkowskiDiffOrigin(this Polygon poly, Polygon path, bool isClosed = false) { return Clipper.MinkowskiDiff(poly.ToClipperPath(), path.Center(new(0f)).ToClipperPath(), isClosed); }
         public static PathsD MinkowskiSumOrigin(this Polygon poly, Polygon path, bool isClosed = false) { return Clipper.MinkowskiSum(poly.ToClipperPath(), path.Center(new(0f)).ToClipperPath(), isClosed); }
 
-        //TODO IMPLEMENT
-        //Clipper.ScalePathD
-        //Clipper.ScalePathsD
-
         public static Polygon CreateEllipse(Vector2 center, float radiusX, float radiusY = 0f, int steps = 0) { return Clipper.Ellipse(center.ToClipperPoint(), radiusX, radiusY, steps).ToPolygon(); }
 
         public static Vector2 ToVec2(this PointD p) { return new((float)p.x, (float)p.y); }

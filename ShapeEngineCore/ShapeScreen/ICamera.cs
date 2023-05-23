@@ -149,13 +149,14 @@ namespace ShapeScreen
             cameraTweenTotalOffset = new(0f);
             cameraTweenTotalRotationDeg = 0f;
             cameraTweenTotalScale = 1f;
+            
             Vector2 rawCameraTarget = WorldCamera.target;
             if (Target != null)
             {
                 if (NewTarget != null)
                 {
-                    Vector2 curPos = rawCameraTarget; // screenSpaceCamera.target;// target.GetPosition();
-                    Vector2 newPos = NewTarget.GetCameraPosition(curPos, 0f, FollowSmoothness, BoundaryDis);
+                    Vector2 curPos = rawCameraTarget;
+                    Vector2 newPos = NewTarget.GetCameraFollowPosition(curPos);
                     float disSq = (newPos - curPos).LengthSquared();
                     if (disSq < 25)
                     {
@@ -170,7 +171,18 @@ namespace ShapeScreen
                 }
                 else
                 {
-                    rawCameraTarget = Target.GetCameraPosition(rawCameraTarget, dt, FollowSmoothness, BoundaryDis);
+                    Vector2 curPos = rawCameraTarget;
+                    Vector2 newPos = Target.GetCameraFollowPosition(curPos);
+                    if(BoundaryDis > 0f)
+                    {
+                        float boundaryDisSq = BoundaryDis * BoundaryDis;
+                        float disSq = (curPos - newPos).LengthSquared();
+                        if(disSq > boundaryDisSq)
+                        {
+                            rawCameraTarget = curPos.Lerp(newPos, dt * FollowSmoothness);
+                        }
+                    }
+                    else rawCameraTarget = curPos.Lerp(newPos, dt * FollowSmoothness);
                 }
             }
 
@@ -234,7 +246,7 @@ namespace ShapeScreen
         {
             this.Target = target;
             var wCam = WorldCamera;
-            wCam.target = target.GetCameraPosition(wCam.target, 0f, FollowSmoothness, BoundaryDis);
+            wCam.target = target.GetCameraFollowPosition(wCam.target);//, 0f, FollowSmoothness, BoundaryDis);
             WorldCamera = wCam;
         }
         public void ChangeTarget(IGameObject newTarget)

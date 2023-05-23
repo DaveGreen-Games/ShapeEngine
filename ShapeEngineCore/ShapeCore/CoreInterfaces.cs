@@ -32,44 +32,101 @@ namespace ShapeCore
 
     public interface ILocation
     {
+        /// <summary>
+        /// Get the current position of the object.
+        /// </summary>
+        /// <returns></returns>
         public Vector2 GetPosition();
+        /// <summary>
+        /// Get the current bounding box of the object.
+        /// </summary>
+        /// <returns></returns>
         public Rect GetBoundingBox();
     }
-    public interface IGameObject : ILocation, IBehaviourReciever
+    public interface IUpdateable
     {
-        //public float DrawOrder { get; set; }
-        public int AreaLayer { get; set; }
-        public bool DrawToUI { get; set; }
         /// <summary>
         /// Multiplier for the total slow factor. 2 means slow factor has twice the effect, 0.5 means half the effect.
         /// </summary>
         public float UpdateSlowResistance { get; set; }
-        public virtual void UpdateParallaxe(Vector2 pos)
-        {
-            //ParallaxeOffset = ParallaxeOffset.Lerp(pos * ParallaxeScaling, ParallaxeSmoothing);
-        }
+        /// <summary>
+        /// Called every frame.
+        /// </summary>
+        /// <param name="dt"></param>
+        public virtual void Update(float dt) {  }
+    }
+    public interface IDrawable
+    {
+        /// <summary>
+        /// Should DrawUI be called on this object.
+        /// </summary>
+        public bool DrawToUI { get; set; }
+        /// <summary>
+        /// Called every frame to draw the object.
+        /// </summary>
+        public virtual void Draw() {  }
+        /// <summary>
+        /// Called every frame after Draw was called, if DrawToUI is true.
+        /// </summary>
+        /// <param name="uiSize">The current size of the UI texture.</param>
+        public virtual void DrawUI(Vector2 uiSize) {  }
+    }
+    public interface IAreaObject
+    {
+        /// <summary>
+        /// The area layer the object is stored in. Higher layers are draw on top of lower layers.
+        /// </summary>
+        public int AreaLayer { get; set; }
+        /// <summary>
+        /// Is called by the area. Can be used to update the objects position based on the new parallax position.
+        /// </summary>
+        /// <param name="newParallaxPosition">The new parallax position from the layer the object is in.</param>
+        public virtual void UpdateParallaxe(Vector2 newParallaxPosition) { }
 
+        /// <summary>
+        /// Check if the object is in a layer.
+        /// </summary>
+        /// <param name="layer"></param>
+        /// <returns></returns>
         public sealed bool IsInLayer(int layer) { return this.AreaLayer == layer; }
-        public sealed bool Kill()
-        {
-            if (IsDead()) return false;
-            return WasKilled();
-        }
 
-        public virtual void Start() { }
-        public virtual void Destroy() { }
-        public virtual bool Update(float dt) { return false; }
-        public virtual bool Draw() { return false; }
-        public virtual bool DrawUI(Vector2 uiSize) { return false; }
-        public virtual void LeftWorldBounds() { Destroy(); }
-        public virtual Vector2 GetCameraPosition(Vector2 camPos, float dt, float smoothness = 1f, float boundary = 0f) { return GetPosition(); }
+        /// <summary>
+        /// Is called when gameobject is added to an area.
+        /// </summary>
+        public virtual void AreaEntered() { }
+        /// <summary>
+        /// Is called by the area once a game object is dead.
+        /// </summary>
+        public virtual void AreaLeft() { }
+        /// <summary>
+        /// Called when the object leaves the outer bounds of the area. Can be used to destroy objects that have left the bounds.
+        /// </summary>
+        public virtual void LeftAreaBounds() { }
+    }
+    public interface IKillable
+    {
+        /// <summary>
+        /// Try to kill the object.
+        /// </summary>
+        /// <returns>Return true if kill was successful.</returns>
+        public bool Kill();
+        /// <summary>
+        /// Check if object is dead.
+        /// </summary>
+        /// <returns></returns>
         public bool IsDead();
-
-        protected virtual bool WasKilled() { return true; }
-
-        //public virtual void OnPlayfield(bool inner, bool outer) { }
-        //public virtual bool IsEnabled() { return true; }
-        //public virtual bool IsVisible() { return true; }
+    }
+    /// <summary>
+    /// Used by the area. Each IGameObject is updated and drawn by the area. If it dies it is removed from the area.
+    /// </summary>
+    public interface IGameObject : ILocation, IBehaviorReceiver, IUpdateable, IDrawable, IAreaObject, IKillable
+    {
+        /// <summary>
+        /// The camera calls this function on its target object. Used to determine the next position for the camera to follow.
+        /// </summary>
+        /// <param name="camPos">The current position of the camera.</param>
+        /// <returns>Returns the new position for the camera to follow.</returns>
+        public virtual Vector2 GetCameraFollowPosition(Vector2 camPos) { return GetPosition(); }//, float dt, float smoothness = 1f, float boundary = 0f) { return GetPosition(); }
     }
     public interface ICollidable : IGameObject
     {
@@ -86,7 +143,7 @@ namespace ShapeCore
     }
 
 
-    public interface IBehaviourReciever
+    public interface IBehaviorReceiver
     {
         public bool HasBehaviors();
         public bool AddBehavior(IBehavior behavior);
@@ -162,7 +219,7 @@ namespace ShapeCore
 
         //public Rect GetBoundingBox();
         //public void DrawDebugShape(Color color);
-        //todo getsegments intersection/overlap
+        //todo get segments intersection/overlap
     }
 
 }

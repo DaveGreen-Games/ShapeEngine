@@ -20,7 +20,7 @@ namespace ShapeCore
         public void Update(float dt) { UpdateSlowFactors.Update(dt); }
     }
 
-    public class Area : IBehaviourReciever
+    public class Area : IBehaviorReceiver
     {
         protected class AreaLayer
         {
@@ -87,16 +87,16 @@ namespace ShapeCore
             
             public void Add(IGameObject obj) { objs.Add(obj); }
             
-            public bool Remove(IGameObject obj, bool destroy = false)
+            public bool Remove(IGameObject obj)
             {
                 bool removed = objs.Remove(obj);
-                if(destroy) obj.Destroy();
+                obj.AreaLeft();
                 return removed;
             }
-            public bool Remove(int index, bool destroy = false)
+            public bool Remove(int index)
             {
                 if (index < 0 || index >= objs.Count) return false;
-                if (destroy) objs[index].Destroy();
+                objs[index].AreaLeft();
                 objs.RemoveAt(index);
                 return true;
 
@@ -166,14 +166,15 @@ namespace ShapeCore
             if (!layers.ContainsKey(layer)) AddLayer(layer);
 
             layers[layer].Add(gameObject);
+            gameObject.AreaEntered();
         }
         public void AddGameObjects(params IGameObject[] gameObjects) { foreach (var go in gameObjects) AddGameObject(go); }
         
-        public bool RemoveGameObject(IGameObject gameObject, bool destroy = false)
+        public bool RemoveGameObject(IGameObject gameObject)
         {
             if (layers.ContainsKey(gameObject.AreaLayer))
             {
-                bool removed = layers[gameObject.AreaLayer].Remove(gameObject, destroy);
+                bool removed = layers[gameObject.AreaLayer].Remove(gameObject);
                 if (removed)
                 {
                     if (gameObject is ICollidable collidable)
@@ -185,23 +186,23 @@ namespace ShapeCore
             }
             return false;
         }
-        public void RemoveGameObjects(int layer, Predicate<IGameObject> match, bool destroy = false)
+        public void RemoveGameObjects(int layer, Predicate<IGameObject> match)
         {
             if (layers.ContainsKey(layer))
             {
                 var objs = GetGameObjects(layer, match);
                 foreach (var o in objs)
                 {
-                    RemoveGameObject(o, destroy);
+                    RemoveGameObject(o);
                 }
             }
         }
-        public void RemoveGameObjects(Predicate<IGameObject> match, bool destroy = false)
+        public void RemoveGameObjects(Predicate<IGameObject> match)
         {
             var objs = GetAllGameObjects(match);
             foreach (var o in objs)
             {
-                RemoveGameObject(o, destroy);
+                RemoveGameObject(o);
             }
         }
 
@@ -219,7 +220,7 @@ namespace ShapeCore
                 var layerGroup = layers[layer];
                 foreach (var obj in layerGroup.objs)
                 {
-                    layerGroup.Remove(obj, true);
+                    layerGroup.Remove(obj);
                     if (obj is ICollidable collidable)
                     {
                         Col.Remove(collidable);
@@ -282,7 +283,7 @@ namespace ShapeCore
             }
         }
         
-        protected List<IBehavior> GetLayerBehaviours(int layer)
+        protected List<IBehavior> GetLayerBehaviors(int layer)
         {
             List<IBehavior> result = new();
             foreach (var b in behaviors)
@@ -295,14 +296,14 @@ namespace ShapeCore
         }
         protected virtual void UpdateLayer(float dt, AreaLayer layer)
         {
-            var behaviors = GetLayerBehaviours(layer.Layer);
+            var behaviors = GetLayerBehaviors(layer.Layer);
             
             for (int i = layer.objs.Count - 1; i >= 0; i--)
             {
                 IGameObject obj = layer.objs[i];
                 if (obj == null)
                 {
-                    layer.Remove(i, false);
+                    layer.Remove(i);
                     return;
                 }
 
@@ -333,12 +334,12 @@ namespace ShapeCore
                 if (!obj.IsDead())
                 {
                     bool insideBounds = Bounds.OverlapShape(obj.GetBoundingBox());
-                    if (!insideBounds) obj.LeftWorldBounds();
+                    if (!insideBounds) obj.LeftAreaBounds();
                 }
                 else
                 {
-                    obj.Destroy();
-                    layer.Remove(i, false);
+                    //obj.AreaLeft();
+                    layer.Remove(i);
                     if (obj is ICollidable collidable) Col.Remove(collidable);
                 }
                 
