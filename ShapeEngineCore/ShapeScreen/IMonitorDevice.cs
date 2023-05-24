@@ -20,7 +20,7 @@ namespace ShapeScreen
         public MonitorInfo PrevMonitor();
 
     }
-    public sealed class MonitorDeviceBasic : IMonitorDevice
+    public sealed class MonitorDevice : IMonitorDevice
     {
         
         //public delegate void MonitorChanged(MonitorInfo oldMonitor, MonitorInfo newMonitor);
@@ -36,7 +36,7 @@ namespace ShapeScreen
         public event IMonitorDevice.MonitorChanged? OnMonitorChanged;
         public event IMonitorDevice.MonitorSetupChanged? OnMonitorSetupChanged;
 
-        public MonitorDeviceBasic()
+        public MonitorDevice()
         {
             GenerateInfo();
         }
@@ -62,9 +62,7 @@ namespace ShapeScreen
                 int w =  GetMonitorWidth(i);
                 int h =  GetMonitorHeight(i);
                 Vector2 pos = GetMonitorPosition(i) + new Vector2(1, 1);
-                //Temporary Fix!!!
-                //if (w > 2000) w = 1920;
-                //if (h > 1250) h = 1080;
+                
                 int rr = GetMonitorRefreshRate(i);
                 monitors.Add(new(name, w, h, pos, rr, i));
             }

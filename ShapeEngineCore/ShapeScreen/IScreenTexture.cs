@@ -94,13 +94,13 @@ namespace ShapeScreen
         
         private List<ScreenFlash> screenFlashes = new List<ScreenFlash>();
 
-        //int devWidth, int devHeight, 
-        public ScreenTexture(int width, int height, float factor)
+
+        public ScreenTexture(int devWidth, int devHeight, float scaleFactor)
         {
             //this.DevRes = (devWidth, devHeight);
             //this.TargetRes = (winWidth, winHeight);
-            this.textureSizeFactor = factor;
-            Load(width, height);
+            this.textureSizeFactor = scaleFactor;
+            Load(devWidth, devHeight);
             
         }
         private void Load(int width, int height)

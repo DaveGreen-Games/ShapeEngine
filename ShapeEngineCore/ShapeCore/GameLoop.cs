@@ -77,7 +77,7 @@ namespace ShapeCore
         public ExitCode(bool restart) { this.restart = restart; }
 
     }
-    public abstract class GameLoop
+    public class GameLoop
     {
         public static readonly string CURRENT_DIRECTORY = Environment.CurrentDirectory;
         public static bool EDITORMODE { get; private set; } = Directory.Exists("resources");
@@ -206,21 +206,30 @@ namespace ShapeCore
         //    restart = false;
         //    Raylib.SetExitKey(-1);
         //}
-        public GameLoop(int devWidth, int devHeight, float gameFactor, float uiFactor, string windowName = "Raylib Game")
-        {
-            this.GFX = new(devWidth, devHeight, gameFactor, uiFactor, windowName);
+        //public GameLoop(int devWidth, int devHeight, float gameFactor, float uiFactor, string windowName = "Raylib Game")
+        //{
+        //    this.GFX = new(devWidth, devHeight, gameFactor, uiFactor, windowName);
+        //
+        //    quit = false;
+        //    restart = false;
+        //    Raylib.SetExitKey(-1);
+        //}
+        
 
-            quit = false;
-            restart = false;
-            Raylib.SetExitKey(-1);
-        }
+        
         /// <summary>
         /// Starts the gameloop. Runs until Quit() or Restart() is called or the Window is closed by the user.
         /// </summary>
         /// <returns>Returns an exit code for information how the application was quit. Restart has to be handled seperately.</returns>
-        public ExitCode Run(params string[] launchParameters)
+        public ExitCode Run(GraphicsDevice graphicsDevice, params string[] launchParameters)
         {
             this.LAUNCH_PARAMS = launchParameters;
+
+            this.GFX = graphicsDevice;
+            quit = false;
+            restart = false;
+            Raylib.SetExitKey(-1);
+
             Start();
             RunGameloop();
             End();
@@ -237,7 +246,7 @@ namespace ShapeCore
                 if (!mp.IsNan())
                 {
                     MousePos = mp;
-                    MousePosUI = GFX.UI.ScalePosition(mp,GFX.CUR_WINDOW_SIZE.width, GFX.CUR_WINDOW_SIZE.height);
+                    MousePosUI = GFX.UITexture.ScalePosition(mp,GFX.CurWindowSize.width, GFX.CurWindowSize.height);
                     MousePosGame = GFX.TransformPositionToGame(MousePosUI);
                 }
 
@@ -305,21 +314,21 @@ namespace ShapeCore
 
             DrawCustomToScreenFirst();
             
-            if (GFX.CAMERA.IsPixelSmoothingCameraEnabled())
+            if (GFX.Camera.IsPixelSmoothingCameraEnabled())
             {
-                BeginMode2D(GFX.CAMERA.GetPixelSmoothingCamera());
+                BeginMode2D(GFX.Camera.GetPixelSmoothingCamera());
                 GFX.DrawGameToScreen();
                 EndMode2D();
             }
             else GFX.DrawGameToScreen();
-
+            
             DrawCustomToScreenMiddle();
-            
+
             GFX.DrawUIToScreen();
-            
+
             DrawCustomToScreenLast();
-            
-            
+
+
             EndDrawing();
         }
         private void Start() 

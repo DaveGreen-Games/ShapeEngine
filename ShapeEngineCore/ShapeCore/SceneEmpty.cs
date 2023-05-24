@@ -4,9 +4,9 @@ namespace ShapeCore
 {
     public abstract class Scene : IScene
     {
-        public bool CallUpdate { get; set; }
-        public bool CallHandleInput { get; set; }
-        public bool CallDraw { get; set; }
+        public bool CallUpdate { get; set; } = true;
+        public bool CallHandleInput { get; set; } = true;
+        public bool CallDraw { get; set; } = true;
 
         public virtual void Activate(IScene oldScene) { }
         public virtual void Close() { }

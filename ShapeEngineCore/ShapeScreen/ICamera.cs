@@ -25,21 +25,21 @@ namespace ShapeScreen
         public Vector2 BaseOffset { get; private set; } = new(0f);
         public float BaseZoom { get; private set; } = 1f;
 
-        public Vector2 Translation { get; set; }
-        public float RotationDeg { get; set; }
-        public float ZoomFactor { get; set; }
+        public Vector2 Translation { get; set; } = new(0f);
+        public float RotationDeg { get; set; } = 0f;
+        public float ZoomFactor { get; set; } = 1f;
         //public float ZoomStretchFactor { get; private set; } = 1f;
 
         public Camera2D WorldCamera { get; private set; }
 
 
 
-        public CameraBasic(Vector2 size, float zoom, float rotation)//, float zoomStretchFactor)
+        public CameraBasic(Vector2 size, float baseZoom, float rotation)//, float zoomStretchFactor)
         {
             ChangeSize(size);//, zoomStretchFactor);
-            this.BaseZoom = zoom;
+            this.BaseZoom = baseZoom;
             this.BaseRotationDeg = rotation;
-            this.WorldCamera = new() { offset = BaseOffset, rotation = BaseRotationDeg, zoom = 1f, target = new(0f) };
+            this.WorldCamera = new() { offset = BaseOffset, rotation = BaseRotationDeg, zoom = baseZoom * ZoomFactor, target = new(0f) };
         }
 
         public void Update(float dt, float curWindowWidth, float curGameWidth)
@@ -47,7 +47,7 @@ namespace ShapeScreen
             Vector2 rawCameraOffset = BaseOffset + Translation;
             float rawCameraRotationDeg = BaseRotationDeg + RotationDeg;
             float rawCameraZoom = (BaseZoom /* *ZoomStretchFactor */) * ZoomFactor;
-            Vector2 rawCameraTarget = WorldCamera.target;
+            Vector2 rawCameraTarget =  WorldCamera.target;
 
             var c = new Camera2D();
             c.target = rawCameraTarget;
@@ -59,7 +59,7 @@ namespace ShapeScreen
         }
         public void ChangeSize(Vector2 newSize)//, float factor)
         {
-            BaseOffset = newSize / 2;
+            BaseOffset = newSize/ 2;
             //ZoomStretchFactor = factor;
         }
 
@@ -87,7 +87,7 @@ namespace ShapeScreen
         {
             float zoomFactor = 1 / WorldCamera.zoom;
             Vector2 cPos = WorldCamera.target - WorldCamera.offset * zoomFactor;
-            return new(cPos.X, cPos.Y, WorldCamera.offset.X * zoomFactor, WorldCamera.offset.Y * zoomFactor);
+            return new(cPos.X, cPos.Y, WorldCamera.offset.X * zoomFactor * 2f, WorldCamera.offset.Y * zoomFactor * 2f);
         }
         public bool IsPixelSmoothingCameraEnabled() { return false; }
         public Camera2D GetPixelSmoothingCamera() { return WorldCamera; }
