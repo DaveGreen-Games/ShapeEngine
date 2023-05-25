@@ -216,7 +216,19 @@ namespace ShapeCore
         //}
         
 
-        
+        public void CreateWindow(string windowName, bool undecorated, bool resizable)
+        {
+            InitWindow(0, 0, windowName);
+
+            if (undecorated) SetWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
+            else ClearWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
+
+            if (resizable) SetWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
+            else ClearWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
+            
+            ClearWindowState(ConfigFlags.FLAG_VSYNC_HINT);
+        }
+
         /// <summary>
         /// Starts the gameloop. Runs until Quit() or Restart() is called or the Window is closed by the user.
         /// </summary>
@@ -280,7 +292,7 @@ namespace ShapeCore
         }
         private void DrawGame()
         {
-            DrawCustom();
+            DrawToCustomTexture();
 
             //Draw to game texture
             if (CallDraw)
@@ -314,14 +326,18 @@ namespace ShapeCore
 
             DrawCustomToScreenFirst();
             
-            if (GFX.Camera.IsPixelSmoothingCameraEnabled())
+            if(GFX.Camera != null)
             {
-                BeginMode2D(GFX.Camera.GetPixelSmoothingCamera());
-                GFX.DrawGameToScreen();
-                EndMode2D();
+                if (GFX.Camera.IsPixelSmoothingCameraEnabled())
+                {
+                    BeginMode2D(GFX.Camera.GetPixelSmoothingCamera());
+                    GFX.DrawGameToScreen();
+                    EndMode2D();
+                }
+                else GFX.DrawGameToScreen();
             }
             else GFX.DrawGameToScreen();
-            
+
             DrawCustomToScreenMiddle();
 
             GFX.DrawUIToScreen();
@@ -404,18 +420,21 @@ namespace ShapeCore
         /// <summary>
         /// Use to draw things onto your custom IScreenTextures. Use the graphics device BeginDrawCustom(IScreenTexture texture) & EndDrawCustom(IScreenTexture texture).
         /// </summary>
-        public virtual void DrawCustom() { }
+        public virtual void DrawToCustomTexture() { }
 
         /// <summary>
-        /// Is called before the game texture is drawn to the screen. Use the graphics device DrawCustomToScreen(IScreenTexture texture) function.
+        /// Is called before the game texture is drawn to the screen. 
+        /// Can be used to draw directly to the screen or to draw custom textures to the screen with the graphics device DrawCustomToScreen(IScreenTexture texture) function.
         /// </summary>
         public virtual void DrawCustomToScreenFirst() { }
         /// <summary>
         /// Is called after the game texture was drawn to screen but before the ui texture is draw to the screen.
+        /// Can be used to draw directly to the screen or to draw custom textures to the screen with the graphics device DrawCustomToScreen(IScreenTexture texture) function.
         /// </summary>
         public virtual void DrawCustomToScreenMiddle() { }
         /// <summary>
         /// Is called after the ui texture was drawn to the screen.
+        /// Can be used to draw directly to the screen or to draw custom textures to the screen with the graphics device DrawCustomToScreen(IScreenTexture texture) function.
         /// </summary>
         public virtual void DrawCustomToScreenLast() { }
 

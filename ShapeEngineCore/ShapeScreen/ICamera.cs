@@ -11,7 +11,8 @@ namespace ShapeScreen
         public Rect GetArea();
         public Vector2 TransformPositionToUI(Vector2 gamePos, float gameToUIFactor);
         public Vector2 TransformPositionToGame(Vector2 uiPos, float uiToGameFactor);
-        public void ChangeSize(Vector2 newSize);//, float zoomFactor);
+        //public void ChangeSize(Vector2 newSize);//, float zoomFactor);
+
         public void Update(float dt, float curWindowWidth, float curGameWidth);
 
         public Camera2D GetCamera();
@@ -24,7 +25,7 @@ namespace ShapeScreen
         public float BaseRotationDeg { get; private set; } = 0f;
         public Vector2 BaseOffset { get; private set; } = new(0f);
         public float BaseZoom { get; private set; } = 1f;
-
+        public Vector2 BaseSize { get; private set; } = new(0f);
         public Vector2 Translation { get; set; } = new(0f);
         public float RotationDeg { get; set; } = 0f;
         public float ZoomFactor { get; set; } = 1f;
@@ -34,12 +35,14 @@ namespace ShapeScreen
 
 
 
-        public CameraBasic(Vector2 size, float baseZoom, float rotation)//, float zoomStretchFactor)
+        public CameraBasic(Vector2 pos, Vector2 size, float baseZoom, float rotation)//, float zoomStretchFactor)
         {
-            ChangeSize(size);//, zoomStretchFactor);
+            //ChangeSize(size);//, zoomStretchFactor);
+            this.BaseSize = size;
+            this.BaseOffset = size / 2;
             this.BaseZoom = baseZoom;
             this.BaseRotationDeg = rotation;
-            this.WorldCamera = new() { offset = BaseOffset, rotation = BaseRotationDeg, zoom = baseZoom * ZoomFactor, target = new(0f) };
+            this.WorldCamera = new() { offset = BaseOffset, rotation = BaseRotationDeg, zoom = baseZoom * ZoomFactor, target = pos };
         }
 
         public void Update(float dt, float curWindowWidth, float curGameWidth)
@@ -57,11 +60,11 @@ namespace ShapeScreen
             WorldCamera = c;
 
         }
-        public void ChangeSize(Vector2 newSize)//, float factor)
-        {
-            BaseOffset = newSize/ 2;
-            //ZoomStretchFactor = factor;
-        }
+        //public void ChangeSize(Vector2 newSize)//, float factor)
+        //{
+        //    BaseOffset = newSize/ 2;
+        //    //ZoomStretchFactor = factor;
+        //}
 
         public void ResetZoom() { ZoomFactor = 1f; }
         public void ResetRotation() { RotationDeg = 0f; }
@@ -79,6 +82,11 @@ namespace ShapeScreen
         {
             float zoomFactor = 1 / WorldCamera.zoom;
             Vector2 p = uiPos * uiToGameFactor * zoomFactor;
+            
+            //Vector2 center = WorldCamera.target;// + WorldCamera.offset * zoomFactor;
+            //Vector2 w = p - center;
+            //return center + SVec.Rotate(w, -RotationDeg * SUtils.DEGTORAD);
+
             Vector2 cPos = WorldCamera.target - WorldCamera.offset * zoomFactor;
             p += cPos;
             return p;
@@ -87,7 +95,7 @@ namespace ShapeScreen
         {
             float zoomFactor = 1 / WorldCamera.zoom;
             Vector2 cPos = WorldCamera.target - WorldCamera.offset * zoomFactor;
-            return new(cPos.X, cPos.Y, WorldCamera.offset.X * zoomFactor * 2f, WorldCamera.offset.Y * zoomFactor * 2f);
+            return new(cPos.X, cPos.Y, BaseSize.X * zoomFactor, BaseSize.Y * zoomFactor); // WorldCamera.offset.X * zoomFactor * 2f, WorldCamera.offset.Y * zoomFactor * 2f);
         }
         public bool IsPixelSmoothingCameraEnabled() { return false; }
         public Camera2D GetPixelSmoothingCamera() { return WorldCamera; }
@@ -112,7 +120,7 @@ namespace ShapeScreen
         public float BaseRotationDeg { get; private set; } = 0f;
         public Vector2 BaseOffset { get; private set; } = new(0f);
         public float BaseZoom { get; private set; } = 1f;
-        
+        public Vector2 BaseSize { get; private set; } = new(0f);
         public Vector2 Translation {get; set;}
         public float RotationDeg   {get; set;}
         public float ZoomFactor    {get; set;}
@@ -130,7 +138,9 @@ namespace ShapeScreen
 
         public CameraAdvanced(Vector2 size, float zoom, float rotation)//, float zoomStretchFactor)
         {
-            ChangeSize(size);//, zoomStretchFactor);
+            //ChangeSize(size);//, zoomStretchFactor);
+            this.BaseSize = size;
+            BaseOffset = size / 2;
             this.BaseZoom = zoom;
             this.BaseRotationDeg = rotation;
             this.ScreenCamera = new() { offset = BaseOffset, rotation = BaseRotationDeg, zoom = 1f, target = new(0f) };
@@ -232,11 +242,11 @@ namespace ShapeScreen
             cameraTweenTotalScale *= tween.GetScale();
 
         }
-        public void ChangeSize(Vector2 newSize)//, float factor)
-        {
-            BaseOffset = newSize / 2;
-            //ZoomStretchFactor = factor;
-        }
+        //public void ChangeSize(Vector2 newSize)//, float factor)
+        //{
+        //    BaseOffset = newSize / 2;
+        //    //ZoomStretchFactor = factor;
+        //}
 
         public void ResetZoom() { ZoomFactor = 1f; }
         public void ResetRotation() { RotationDeg = 0f; }
@@ -297,7 +307,7 @@ namespace ShapeScreen
         {
             float zoomFactor = 1 / WorldCamera.zoom;
             Vector2 cPos = WorldCamera.target - WorldCamera.offset * zoomFactor;
-            return new(cPos.X, cPos.Y, WorldCamera.offset.X * zoomFactor, WorldCamera.offset.Y * zoomFactor);
+            return new(cPos.X, cPos.Y, BaseSize.X * zoomFactor, BaseSize.Y * zoomFactor); // WorldCamera.offset.X * zoomFactor, WorldCamera.offset.Y * zoomFactor);
         }
         public bool IsPixelSmoothingCameraEnabled() { return PixelSmoothingEnabled; }
         public Camera2D GetPixelSmoothingCamera() { return ScreenCamera; }

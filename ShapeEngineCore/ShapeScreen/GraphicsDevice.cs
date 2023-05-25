@@ -60,7 +60,7 @@ namespace ShapeScreen
         //    };
         //}
 
-        public GraphicsDevice(int devWidth, int devHeight, IScreenTexture gameTexture, IScreenTexture uiTexture, string windowName)
+        public GraphicsDevice(int devWidth, int devHeight, IScreenTexture gameTexture, IScreenTexture uiTexture)
         {
             //InitWindow(0, 0, windowName);
             //SetWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
@@ -222,7 +222,7 @@ namespace ShapeScreen
             
             GameTexture.Close();
             UITexture.Close();
-            ShaderDevice.Close();
+            if(ShaderDevice != null) ShaderDevice.Close();
             CloseWindow();
         }
 
@@ -250,16 +250,22 @@ namespace ShapeScreen
         {
             return UITexture.GetCurResolutionFactorV(CurWindowSize.width, CurWindowSize.height);
         }
-        public Rect CameraArea() { return Camera.GetArea(); }
+        public Rect CameraArea() 
+        { 
+            if(Camera != null) return Camera.GetArea();
+            else return new(0, 0, GameWidth(), GameHeight());
+        }
         public Vector2 GameSize() { return new(GameTexture.GetTextureWidth(), GameTexture.GetTextureHeight()); }
         public Vector2 UISize() { return new(UITexture.GetTextureWidth(), UITexture.GetTextureHeight()); }
         public Vector2 TransformPositionToUI(Vector2 gamePos)
         {
-            return Camera.TransformPositionToUI(gamePos, GameToUI);
+            if (Camera != null) return Camera.TransformPositionToUI(gamePos, GameToUI);
+            else return gamePos * GameToUI;
         }
         public Vector2 TransformPositionToGame(Vector2 uiPos)
         {
-            return Camera.TransformPositionToGame(uiPos, UIToGame);
+            if(Camera != null) return Camera.TransformPositionToGame(uiPos, UIToGame);
+            else return uiPos * UIToGame;
         }
         public int GameWidth() { return GameTexture.GetTextureWidth(); }
         public int GameHeight() { return GameTexture.GetTextureHeight(); }
