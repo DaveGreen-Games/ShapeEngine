@@ -36,10 +36,6 @@ namespace ShapeScreen
         private ScreenBuffer[] screenBuffers = new ScreenBuffer[0];
 
         
-
-        
-        
-        
         //private void InitializeWindow(int devWidth, int devHeight, string windowName)
         //{
         //    InitWindow(0, 0, windowName);
@@ -267,6 +263,7 @@ namespace ShapeScreen
             if(Camera != null) return Camera.TransformPositionToGame(uiPos, UIToGame);
             else return uiPos * UIToGame;
         }
+        
         public int GameWidth() { return GameTexture.GetTextureWidth(); }
         public int GameHeight() { return GameTexture.GetTextureHeight(); }
         public int UIWidth() { return UITexture.GetTextureWidth(); }

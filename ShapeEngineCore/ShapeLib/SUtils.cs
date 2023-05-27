@@ -191,6 +191,13 @@ namespace ShapeLib
             else if (value > max) return max;
             else return value;
         }
+        public static int Clamp(int value, int min, int max)
+        {
+            if (value < min) return min;
+            else if (value > max) return max;
+            else return value;
+        }
+        
         public static bool Blinking(float timer, float interval)
         {
             if (interval <= 0f) return false;

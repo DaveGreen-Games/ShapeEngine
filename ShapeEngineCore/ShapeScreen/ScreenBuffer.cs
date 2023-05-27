@@ -34,7 +34,7 @@ namespace ShapeScreen
         //    DrawTexturePro(texture.texture, sourceRec, destRec, origin, 0.0f, clearColor);
         //}
 
-        public void DrawTexture(int targetWidth, int targetHeight)
+        public void DrawTexture(int targetWidth, int targetHeight, int blendMode = -1)
         {
             //float s = 1.0f;
             //float w = targetWidth * s;
@@ -52,8 +52,28 @@ namespace ShapeScreen
             origin.X = w * 0.5f;
             origin.Y = h * 0.5f;
 
-            DrawTexturePro(texture.texture, sourceRec, destRec, origin, 0.0f, clearColor);
+            //DrawTexturePro(texture.texture, sourceRec, destRec, origin, 0.0f, clearColor);
+
+            if (blendMode < 0)
+            {
+                DrawTexturePro(texture.texture, sourceRec, destRec, origin, 0f, clearColor);
+            }
+            else
+            {
+                BeginBlendMode(blendMode);
+                DrawTexturePro(texture.texture, sourceRec, destRec, origin, 0f, clearColor);
+                EndBlendMode();
+            }
+
+
+
+
         }
+
+
+
+
+
         private Vector2 GetDestRectSize(int width, int height)
         {
             float w, h;

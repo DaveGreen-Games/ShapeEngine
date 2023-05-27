@@ -82,11 +82,6 @@ namespace ShapeScreen
         {
             float zoomFactor = 1 / WorldCamera.zoom;
             Vector2 p = uiPos * uiToGameFactor * zoomFactor;
-            
-            //Vector2 center = WorldCamera.target;// + WorldCamera.offset * zoomFactor;
-            //Vector2 w = p - center;
-            //return center + SVec.Rotate(w, -RotationDeg * SUtils.DEGTORAD);
-
             Vector2 cPos = WorldCamera.target - WorldCamera.offset * zoomFactor;
             p += cPos;
             return p;
