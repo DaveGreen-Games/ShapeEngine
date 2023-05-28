@@ -548,19 +548,99 @@ namespace ShapeCore
     }
 
     
-    
+    //test mouse pos transformation with an an active camera
+    //test transformation of positions between 2 textures (with and without cameras)
     
     public interface ICamera2
     {
-        public Vector2 TransformToRelative(Vector2 absolutePos);
-        public Vector2 TransformToAbsolute(Vector2 relativePos);
+        public Vector2 WorldToScreen(Vector2 absolutePos);
+        public Vector2 ScreenToWorld(Vector2 relativePos);
 
         public Camera2D GetCamera();
         public bool IsPixelSmoothingCameraEnabled();
         public Camera2D GetPixelSmoothingCamera();
 
     }
+    public class CameraBasic2 : ICamera2
+    {
+        public float BaseRotationDeg { get; private set; } = 0f;
+        public Vector2 BaseOffset { get; private set; } = new(0f);
+        public float BaseZoom { get; private set; } = 1f;
+        public Vector2 BaseSize { get; private set; } = new(0f);
+        public Vector2 Translation { get; set; } = new(0f);
+        public float RotationDeg { get; set; } = 0f;
+        public float ZoomFactor { get; set; } = 1f;
+        //public float ZoomStretchFactor { get; private set; } = 1f;
 
+        public Camera2D WorldCamera { get; private set; }
+
+
+
+        public CameraBasic2(Vector2 pos, Vector2 size, Vector2 origin, float baseZoom, float rotation)//, float zoomStretchFactor)
+        {
+            //ChangeSize(size);//, zoomStretchFactor);
+            this.BaseSize = size;
+            this.BaseOffset = size * origin; // size / 2;
+            this.BaseZoom = baseZoom;
+            this.BaseRotationDeg = rotation;
+            this.WorldCamera = new() { offset = BaseOffset, rotation = BaseRotationDeg, zoom = baseZoom * ZoomFactor, target = pos };
+        }
+
+        public void Update(float dt)
+        {
+            Vector2 rawCameraOffset = BaseOffset;// + Translation;
+            float rawCameraRotationDeg = BaseRotationDeg + RotationDeg;
+            float rawCameraZoom = (BaseZoom /* *ZoomStretchFactor */) * ZoomFactor;
+            Vector2 rawCameraTarget = Translation; //   WorldCamera.target;
+
+            var c = new Camera2D();
+            c.target = rawCameraTarget;
+            c.offset = rawCameraOffset;
+            c.zoom = rawCameraZoom;
+            c.rotation = rawCameraRotationDeg;
+            WorldCamera = c;
+
+        }
+        //public void ChangeSize(Vector2 newSize)//, float factor)
+        //{
+        //    BaseOffset = newSize/ 2;
+        //    //ZoomStretchFactor = factor;
+        //}
+
+        public void ResetZoom() { ZoomFactor = 1f; }
+        public void ResetRotation() { RotationDeg = 0f; }
+        public void ResetTranslation() { Translation = new(0f); }
+
+
+        public Vector2 WorldToScreen(Vector2 pos)
+        {
+            return Raylib.GetWorldToScreen2D(pos, GetCamera());
+            //float zoomFactor = 1 / WorldCamera.zoom;
+            //Vector2 cPos = WorldCamera.target - WorldCamera.offset * zoomFactor;
+            //Vector2 p = (absolutePos - cPos) * WorldCamera.zoom;
+            //return p;
+        }
+        public Vector2 ScreenToWorld(Vector2 pos)
+        {
+            return Raylib.GetScreenToWorld2D(pos, GetCamera());
+            //float zoomFactor = 1 / WorldCamera.zoom;
+            //Vector2 p = relativePos * zoomFactor;
+            //Vector2 cPos = WorldCamera.target - WorldCamera.offset * zoomFactor;
+            //p += cPos;
+            //return p;
+        }
+
+
+        public Rect GetArea()
+        {
+            float zoomFactor = 1 / WorldCamera.zoom;
+            Vector2 cPos = WorldCamera.target - WorldCamera.offset * zoomFactor;
+            return new(cPos.X, cPos.Y, BaseSize.X * zoomFactor, BaseSize.Y * zoomFactor); // WorldCamera.offset.X * zoomFactor * 2f, WorldCamera.offset.Y * zoomFactor * 2f);
+        }
+        public bool IsPixelSmoothingCameraEnabled() { return false; }
+        public Camera2D GetPixelSmoothingCamera() { return WorldCamera; }
+        public Camera2D GetCamera() { return WorldCamera; }
+    }
     public class ScreenTexture2
     {
         public uint ID { get; private set; }
@@ -621,7 +701,7 @@ namespace ShapeCore
             destRec.x = targetWidth * 0.5f + Offset.X;
             destRec.y = targetHeight * 0.5f + Offset.Y;
             
-            Vector2 size = AdjustToAspectRatio(targetWidth, targetHeight);
+            Vector2 size = AdjustToAspectRatio(targetWidth, targetHeight, GetTextureWidth(), GetTextureHeight());
             float w = size.X * s;
             float h = size.Y * s;
             
@@ -808,81 +888,105 @@ namespace ShapeCore
             float y = GetTextureHeight() / targetSize.Y;
             return new(x, y);
         }
-        private Vector2 AdjustToAspectRatio(int width, int height)
+        private Vector2 AdjustToAspectRatio(float fromWidth, float fromHeight, float toWidth, float toHeight)
         {
-            float tWidth = GetTextureWidth();
-            float tHeight = GetTextureHeight();
-
             float w, h;
-            float fWidth = width / tWidth;
-            float fHeight = height / tHeight;
-            if (fWidth <= fHeight)
+            float fWidth = fromWidth / toWidth;
+            float fHeight = fromHeight / toHeight;
+            if ((fWidth >=1f && fWidth <= fHeight) || (fWidth < 1f && fWidth > fHeight))
             {
-                w = width;
-                float f = tHeight / tWidth;
+                w = fromWidth;
+                float f = toHeight / toWidth;
                 h = w * f;
             }
             else
             {
-                h = height;
-                float f = tWidth / tHeight;
+                h = fromHeight;
+                float f = toWidth / toHeight;
                 w = h * f;
             }
             return new(w, h);
         }
 
-        public Vector2 TransformRelativePosition(Vector2 relativePos, int width, int height)
+        /// <summary>
+        /// Transforms a position relative to the screen to a position relative to this texture.
+        /// </summary>
+        /// <param name="screenPos"></param>
+        /// <param name="screenWidth"></param>
+        /// <param name="screenHeight"></param>
+        /// <returns></returns>
+        public Vector2 TransformFromScreen(Vector2 screenPos, int screenWidth, int screenHeight)
         {
-            Vector2 size = AdjustToAspectRatio(width, height) * Scale;
-            Vector2 dif = new Vector2(width, height) - size;
+            Vector2 size = AdjustToAspectRatio(screenWidth, screenHeight, GetTextureWidth(), GetTextureHeight()) * Scale;
+            Vector2 dif = new Vector2(screenWidth, screenHeight) - size;
             dif *= 0.5f;
-            relativePos -= dif;
-            relativePos -= Offset;
+            screenPos -= dif;
+            screenPos -= Offset;
             float fWidth = GetTextureWidth() / size.X;
             float fHeight = GetTextureHeight() / size.Y;
-            relativePos.X = Clamp(relativePos.X * fWidth, 0, GetTextureWidth());
-            relativePos.Y = Clamp(relativePos.Y * fHeight, 0, GetTextureHeight());
-            return relativePos;
-        }
-        public Vector2 TransformRelativePosition(Vector2 relativePos, ScreenTexture2 other) { return TransformRelativePosition(relativePos, other.GetTextureWidth(), other.GetTextureHeight()); }
-
-        public Vector2 TransformAbsolutePosition(Vector2 absolutePos, int targetWidth, int targetHeight)
-        {
-            var rel = TransformToRelative(absolutePos);
-            rel = TransformRelativePosition(rel, targetWidth, targetHeight);
-            return TransformToAbsolute(rel);
-        }
-        public Vector2 TransformAbsolutePosition(Vector2 absolutePos, ScreenTexture2 other)
-        {
-            var rel = other.TransformToRelative(absolutePos);
-            rel = TransformRelativePosition(rel, other);
-            return TransformToAbsolute(rel);
-        }
-
-
-        /// <summary>
-        /// Transforms an absolute position to a relative position. 
-        /// Relative positions are relative to the texture ( (0,0) = top left corner/ (width/height) is bottom right corner ).
-        /// Absolute positions are relative to the camera.
-        /// </summary>
-        /// <param name="absolutePos"></param>
-        /// <returns></returns>
-        public Vector2 TransformToRelative(Vector2 absolutePos)
-        {
-            if (Camera != null) return Camera.TransformToRelative(absolutePos);
-            else return absolutePos;
+            screenPos.X = Clamp(screenPos.X * fWidth, 0, GetTextureWidth());
+            screenPos.Y = Clamp(screenPos.Y * fHeight, 0, GetTextureHeight());
+            return ScreenToWorld(screenPos);
         }
         /// <summary>
-        /// Transforms a relative position to an absolute position. 
-        /// Relative positions are relative to the texture ( (0,0) = top left corner/ (width/height) is bottom right corner ).
-        /// Absolute positions are relative to the camera. 
+        /// Transforms a position relative to this texture to position relative to the screen.
         /// </summary>
-        /// <param name="relativePos"></param>
+        /// <param name="screenPos"></param>
+        /// <param name="screenWidth"></param>
+        /// <param name="screenHeight"></param>
         /// <returns></returns>
-        public Vector2 TransformToAbsolute(Vector2 relativePos)
+        public Vector2 TransformToScreen(Vector2 screenPos, int screenWidth, int screenHeight)
         {
-            if (Camera != null) return Camera.TransformToAbsolute(relativePos);
-            else return relativePos;
+            screenPos = WorldToScreen(screenPos);
+            Vector2 size = AdjustToAspectRatio(GetTextureWidth() / Scale, GetTextureHeight() / Scale, screenWidth, screenHeight);
+            Vector2 dif = GetSize() - size;
+            dif *= 0.5f;
+            screenPos -= dif;
+            float fWidth = screenWidth / size.X;
+            float fHeight = screenHeight / size.Y;
+            screenPos.X = Clamp(screenPos.X * fWidth, 0, screenWidth);
+            screenPos.Y = Clamp(screenPos.Y * fHeight, 0, screenHeight);
+            screenPos += Offset;
+            return screenPos;
+        }
+        
+        /// <summary>
+        /// Transforms a 
+        /// </summary>
+        /// <param name="screenPos"></param>
+        /// <param name="other"></param>
+        /// <returns></returns>
+        public static Vector2 TransformScreenPos(Vector2 screenPos, ScreenTexture2 from, ScreenTexture2 to) 
+        {
+            //return TransformFromScreen(screenPos, other.GetTextureWidth(), other.GetTextureHeight()); 
+            return new();
+        }
+        public static Vector2 TransformWorldPos(Vector2 worldPos, ScreenTexture2 from, ScreenTexture2 to) 
+        {
+            var screenPos = from.WorldToScreen(worldPos);
+            var transformed = new Vector2();//do the magic here
+            return to.ScreenToWorld(transformed);
+        }
+
+        /// <summary>
+        /// Transforms a world position to a relative screen position if Camera != null.
+        /// </summary>
+        /// <param name="pos"></param>
+        /// <returns></returns>
+        public Vector2 WorldToScreen(Vector2 pos)
+        {
+            if (Camera != null) return Camera.WorldToScreen(pos);
+            else return pos;
+        }
+        /// <summary>
+        /// Transforms a relative screen position to a world position if Camera != null.
+        /// </summary>
+        /// <param name="pos"></param>
+        /// <returns></returns>
+        public Vector2 ScreenToWorld(Vector2 pos)
+        {
+            if (Camera != null) return Camera.ScreenToWorld(pos);
+            else return pos;
         }
         
 
@@ -903,6 +1007,20 @@ namespace ShapeCore
         public void StopFlash() { screenFlashes.Clear(); }
 
 
+        /*
+        public Vector2 TransformAbsolutePosition(Vector2 absolutePos, int targetWidth, int targetHeight)
+        {
+            var rel = TransformToRelative(absolutePos);
+            rel = TransformRelativePosition(rel, targetWidth, targetHeight);
+            return TransformToAbsolute(rel);
+        }
+        public Vector2 TransformAbsolutePosition(Vector2 absolutePos, ScreenTexture2 other)
+        {
+            var rel = other.TransformToRelative(absolutePos);
+            rel = TransformRelativePosition(rel, other);
+            return TransformToAbsolute(rel);
+        }
+        */
     }
 
     public abstract class GameLoop2
@@ -1102,9 +1220,9 @@ namespace ShapeCore
 
                 float dt = GetFrameTime();
                 UpdateMonitorDevice(dt);
+                Update(dt);
                 var sortedTextures = SortScreenTextures(screenTextures.Values.ToList());
                 UpdateScreenTextures(sortedTextures, dt);
-                Update(dt);
 
                 DrawGameloopToTextures(sortedTextures);
                 DrawGameloopToScreen(sortedTextures);
@@ -1134,7 +1252,7 @@ namespace ShapeCore
         {
             foreach (var st in sortedTextures)
             {
-                st.MousePos = st.TransformRelativePosition(MousePos, CurWindowSize.width, CurWindowSize.height);
+                st.MousePos = st.TransformFromScreen(MousePos, CurWindowSize.width, CurWindowSize.height);
                 //st.MousePos = st.TransformAbsolutePosition(MousePos, CurWindowSize.width, CurWindowSize.height);
                 st.Update(dt);
             }
