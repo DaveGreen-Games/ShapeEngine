@@ -29,16 +29,9 @@ namespace ShapeScreen
         {
             Raylib.EndTextureMode();
         }
-        //public void Draw()
-        //{
-        //    DrawTexturePro(texture.texture, sourceRec, destRec, origin, 0.0f, clearColor);
-        //}
 
         public void DrawTexture(int targetWidth, int targetHeight, int blendMode = -1)
         {
-            //float s = 1.0f;
-            //float w = targetWidth * s;
-            //float h = targetHeight * s;
 
             Vector2 origin = new Vector2(targetWidth / 2, targetHeight / 2);
             Vector2 size = GetDestRectSize(targetWidth, targetHeight);
@@ -52,7 +45,6 @@ namespace ShapeScreen
             origin.X = w * 0.5f;
             origin.Y = h * 0.5f;
 
-            //DrawTexturePro(texture.texture, sourceRec, destRec, origin, 0.0f, clearColor);
 
             if (blendMode < 0)
             {
