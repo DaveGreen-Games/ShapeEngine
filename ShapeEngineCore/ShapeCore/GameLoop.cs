@@ -43,7 +43,6 @@ namespace ShapeCore
             return false;
         }
     }
-
     internal class DeferredInfo
     {
         private Action action;
@@ -77,7 +76,508 @@ namespace ShapeCore
         public ExitCode(bool restart) { this.restart = restart; }
 
     }
+    public abstract class GameLoop
+    {
+        public static readonly string CURRENT_DIRECTORY = Environment.CurrentDirectory;
+        public static bool EDITORMODE { get; private set; } = Directory.Exists("resources");
+
+        public static OSPlatform OS_PLATFORM { get; private set; } =
+           RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? OSPlatform.Windows :
+           RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? OSPlatform.Linux :
+           RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? OSPlatform.OSX :
+                                                                    OSPlatform.FreeBSD;
+        public static bool IsWindows() { return OS_PLATFORM == OSPlatform.Windows; }
+        public static bool IsLinux() { return OS_PLATFORM == OSPlatform.Linux; }
+        public static bool IsOSX() { return OS_PLATFORM == OSPlatform.OSX; }
+
+
+        public string[] LAUNCH_PARAMS { get; protected set; } = new string[0];
+
+        private Dictionary<uint,ScreenTexture> screenTextures = new();
+        public Vector2 MousePos { get; private set; } = new(0f);
+
+        public Color BackgroundColor = BLACK;
+
+        protected bool quit = false;
+        protected bool restart = false;
+        
+        private List<DeferredInfo> deferred = new();
+
+        public delegate void WindowSizeChanged(int w, int h);
+        public event WindowSizeChanged? OnWindowSizeChanged;
+
+        public float ScreenEffectIntensity = 1.0f;
+
+        public int FrameRateLimit { get; private set; } = 60;
+        public int Fps { get; private set; }
+        public bool VSync { get; private set; } = true;
+        public (int width, int height) CurWindowSize { get; private set; } = (0, 0);
+        public (int width, int height) WindowedWindowSize { get; private set; } = (0, 0);
+        public (int width, int height) WindowMinSize { get; } = (128, 128);
+
+        public MonitorDevice Monitor { get; private set; }
+
+
+
+        public ICursor Cursor { get; private set; } = new NullCursor();
+
+        public GameLoop()
+        {
+            InitWindow(0, 0, "");
+
+            ClearWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
+            SetWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
+
+            ClearWindowState(ConfigFlags.FLAG_VSYNC_HINT);
+
+            Monitor = new MonitorDevice();
+
+            SetupWindowDimensions();
+
+            FrameRateLimit = 60;
+            SetVsync(true);
+            Raylib.SetWindowMinSize(WindowMinSize.width, WindowMinSize.height);
+        }
+        public void SetupWindow(string windowName, bool undecorated, bool resizable)
+        {
+            SetWindowTitle(windowName);
+            if (undecorated) SetWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
+            else ClearWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
+
+            if (resizable) SetWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
+            else ClearWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
+        }
+
+        /// <summary>
+        /// Starts the gameloop. Runs until Quit() or Restart() is called or the Window is closed by the user.
+        /// </summary>
+        /// <returns>Returns an exit code for information how the application was quit. Restart has to be handled seperately.</returns>
+        public ExitCode Run(params string[] launchParameters)
+        {
+            this.LAUNCH_PARAMS = launchParameters;
+
+            quit = false;
+            restart = false;
+            Raylib.SetExitKey(-1);
+
+            StartGameloop();
+            RunGameloop();
+            EndGameloop();
+            CloseWindow();
+
+            return new ExitCode(restart);
+        }
+
+
+        /// <summary>
+        /// Quit the application with the exit code restart.
+        /// </summary>
+        public void Restart()
+        {
+            restart = true;
+            quit = true;
+        }
+        /// <summary>
+        /// Quit the application at the end of the frame.
+        /// </summary>
+        public void Quit()
+        {
+            restart = false;
+            quit = true;
+        }
+
+        /// <summary>
+        /// The action is called at the end of the frame or at the end after afterFrames.
+        /// </summary>
+        /// <param name="action"></param>
+        /// <param name="afterFrames">How many frames have to pass before the action is called.</param>
+        public void CallDeferred(Action action, int afterFrames = 0)
+        {
+            deferred.Add(new(action, afterFrames));
+        }
+        private void ResolveDeferred()
+        {
+            for (int i = deferred.Count - 1; i >= 0; i--)
+            {
+                var info = deferred[i];
+                if (info.Call()) deferred.RemoveAt(i);
+            }
+        }
+
+        public void Flash(uint screenTextureID, float duration, Color startColor, Color endColor)
+        {
+            if (!screenTextures.ContainsKey(screenTextureID)) return;
+
+            byte startColorAlpha = (byte)(startColor.a * ScreenEffectIntensity);
+            startColor.a = startColorAlpha;
+            byte endColorAlpha = (byte)(endColor.a * ScreenEffectIntensity);
+            endColor.a = endColorAlpha;
+
+            var screenTexture = screenTextures[screenTextureID];
+
+            screenTexture.Flash(duration, startColor, endColor);
+        }
+
+        public bool SwitchCursor(ICursor newCursor)
+        {
+            if (Cursor != newCursor)
+            {
+                Cursor.Deactivate();
+                newCursor.Activate(Cursor);
+                Cursor = newCursor;
+                return true;
+            }
+            return false;
+        }
+        private void DrawCursor(Vector2 screenSize, Vector2 pos) { if (Cursor != null) Cursor.Draw(screenSize, pos); }
+
+
+        public ScreenTexture AddScreenTexture(int width, int height, int drawOrder)
+        {
+            var newScreenTexture = new ScreenTexture(width, height, drawOrder);
+
+            AddScreenTexture(newScreenTexture);
+
+            return newScreenTexture;
+        }
+        public bool AddScreenTexture(ScreenTexture newScreenTexture) 
+        {
+            if (screenTextures.ContainsKey(newScreenTexture.ID)) return false;
+            newScreenTexture.AdjustSize(CurWindowSize.width, CurWindowSize.height);
+            screenTextures.Add(newScreenTexture.ID, newScreenTexture);
+            return true;
+        }
+        public bool RemoveScreenTexture(ScreenTexture screenTexture) { return screenTextures.Remove(screenTexture.ID); }
+        public bool RemoveScreenTexture(uint id) { return screenTextures.Remove(id); }
+
+
+        private void StartGameloop()
+        {
+            LoadContent();
+            BeginRun();
+        }
+        private void RunGameloop()
+        {
+            while (!quit)
+            {
+                CheckWindowSizeChanged();
+
+                var mp = GetMousePosition();
+                if (!mp.IsNan()) SetMousePos(mp);
+
+
+                float dt = GetFrameTime();
+
+                HandleInput(dt);
+                UpdateMonitorDevice(dt);
+                Update(dt);
+                var sortedTextures = SortScreenTextures(screenTextures.Values.ToList());
+                UpdateScreenTextures(sortedTextures, dt);
+
+                DrawGameloopToTextures(sortedTextures);
+                DrawGameloopToScreen(sortedTextures);
+
+                ResolveDeferred();
+            }
+        }
+        private void EndGameloop()
+        {
+            EndRun();
+            UnloadContent();
+            foreach (var st in screenTextures.Values)
+            {
+                st.Close();
+            }
+        }
+        private void UpdateMonitorDevice(float dt)
+        {
+            
+            var newMonitor = Monitor.HasMonitorSetupChanged();
+            if (newMonitor.available)
+            {
+                MonitorChanged(newMonitor);
+            }
+        }
+        private void UpdateScreenTextures(List<ScreenTexture> sortedTextures, float dt)
+        {
+            foreach (var st in sortedTextures)
+            {
+                st.MousePos = st.ScalePosition(MousePos, new Vector2(CurWindowSize.width, CurWindowSize.height));
+                st.Update(dt);
+            }
+        }
+        private void DrawGameloopToTextures(List<ScreenTexture> sortedTextures) 
+        {
+            foreach (var st in sortedTextures)
+            {
+                st.BeginTextureMode();
+                Draw(st);
+                st.EndTextureMode();
+            }
+        }
+        private void DrawGameloopToScreen(List<ScreenTexture> sortedTextures) 
+        {
+            Vector2 curScreenSize = new(CurWindowSize.width, CurWindowSize.height);
+            BeginDrawing();
+            ClearBackground(BackgroundColor);
+
+            foreach (var st in sortedTextures)
+            {
+                st.DrawToScreen(CurWindowSize.width, CurWindowSize.height);
+            }
+
+            DrawToScreen(curScreenSize);
+
+            DrawCursor(curScreenSize, MousePos);
+
+            EndDrawing();
+        }
+        private List<ScreenTexture> SortScreenTextures(List<ScreenTexture> textures)
+        {
+            textures.Sort(delegate (ScreenTexture x, ScreenTexture y)
+            {
+                if (x == null || y == null) return 0;
+
+                if (x.DrawOrder < y.DrawOrder) return -1;
+                else if (x.DrawOrder > y.DrawOrder) return 1;
+                else return 0;
+            });
+            return textures;
+        }
+        private void SetMousePos(Vector2 newPos)
+        {
+            MousePos = newPos;
+        }
+        private void CheckWindowSizeChanged()
+        {
+            if (IsFullscreen()) return;
+
+            int w = GetScreenWidth();
+            int h = GetScreenHeight();
+            
+            var monitor = Monitor.CurMonitor();
+            int maxW = monitor.width;
+            int maxH = monitor.height;
+            
+            if (CurWindowSize.width != w || CurWindowSize.height != h)
+            {
+                int newW = SUtils.Clamp(w, WindowMinSize.width, maxW);
+                int newH = SUtils.Clamp(h, WindowMinSize.height, maxH);
+                CurWindowSize = (newW, newH);
+
+                WindowedWindowSize = CurWindowSize;
+
+                OnWindowSizeChanged?.Invoke(newW, newH);
+
+                foreach (var st in screenTextures.Values)
+                {
+                    st.AdjustSize(CurWindowSize.width, CurWindowSize.height);
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Called first after starting the gameloop.
+        /// </summary>
+        protected virtual void LoadContent() { }
+        /// <summary>
+        /// Called after LoadContent but before the main loop has started.
+        /// </summary>
+        protected virtual void BeginRun() { }
+        
+        protected virtual void HandleInput(float dt) { }
+        protected virtual void Update(float dt) { }
+        protected virtual void Draw(ScreenTexture screenTexture) { }
+        protected virtual void DrawToScreen(Vector2 screenSize) { }
+
+        /// <summary>
+        /// Called before UnloadContent is called after the main gameloop has been exited.
+        /// </summary>
+        protected virtual void EndRun() { }
+        /// <summary>
+        /// Called after EndRun before the application terminates.
+        /// </summary>
+        protected virtual void UnloadContent() { }
+
+
+
+        public bool SetMonitor(int newMonitor)
+        {
+            var monitor = Monitor.SetMonitor(newMonitor);
+            if (monitor.available)
+            {
+                MonitorChanged(monitor);
+                return true;
+            }
+            return false;
+        }
+        public void NextMonitor()
+        {
+            var nextMonitor = Monitor.NextMonitor();
+            if (nextMonitor.available)
+            {
+                MonitorChanged(nextMonitor);
+            }
+        }
+        public void SetFrameRateLimit(int newLimit)
+        {
+            if (newLimit < 30) newLimit = 30;
+            else if (newLimit > 240) newLimit = 240;
+            FrameRateLimit = newLimit;
+            if (!VSync)
+            {
+                SetFPS(FrameRateLimit);
+            }
+        }
+        private void SetFPS(int newFps)
+        {
+            Fps = newFps;
+            SetTargetFPS(Fps);
+        }
+        public void SetVsync(bool enabled)
+        {
+            if (enabled)
+            {
+                VSync = true;
+                SetFPS(Monitor.CurMonitor().refreshrate);
+            }
+            else
+            {
+                VSync = false;
+                SetFPS(FrameRateLimit);
+            }
+        }
+        public bool ToggleVsync()
+        {
+            SetVsync(!VSync);
+            return VSync;
+        }
+        public void ResizeWindow(int newWidth, int newHeight)
+        {
+            ChangeWindowDimensions(newWidth, newHeight, false);
+        }
+        public void ResetWindow()
+        {
+            if (IsWindowFullscreen())
+            {
+                Raylib.ToggleFullscreen();
+            }
+            var monitor = Monitor.CurMonitor();
+            ChangeWindowDimensions(monitor.width / 2, monitor.height / 2, false);
+        }
+        public bool IsFullscreen() { return IsWindowFullscreen(); }
+        public void SetFullscreen(bool enabled)
+        {
+            if (enabled && IsWindowFullscreen()) { return; }
+            if (!enabled && !IsWindowFullscreen()) { return; }
+
+            ToggleFullscreen();
+        }
+        public bool ToggleFullscreen()
+        {
+            var monitor = Monitor.CurMonitor();
+            if (IsWindowFullscreen())
+            {
+                ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+                if (WindowedWindowSize.width > monitor.width || WindowedWindowSize.height > monitor.height)
+                {
+                    WindowedWindowSize = (monitor.width / 2, monitor.height / 2);
+                }
+
+                ChangeWindowDimensions(WindowedWindowSize.width, WindowedWindowSize.height, false);
+                ChangeWindowDimensions(WindowedWindowSize.width, WindowedWindowSize.height, false);//needed for some monitors ...
+            }
+            else
+            {
+                ChangeWindowDimensions(monitor.width, monitor.height, true);
+                SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+            }
+
+            return IsFullscreen();
+        }
+
+        
+        private void MonitorChanged(MonitorInfo monitor)
+        {
+            int prevWidth = CurWindowSize.width;
+            int prevHeight = CurWindowSize.height;
+
+            if (IsWindowFullscreen())
+            {
+                SetWindowMonitor(monitor.index);
+                ChangeWindowDimensions(monitor.width, monitor.height, true);
+                SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+            }
+            else
+            {
+                int windowWidth = prevWidth;
+                int windowHeight = prevHeight;
+                if (windowWidth > monitor.width || windowHeight > monitor.height)
+                {
+                    windowWidth = monitor.width / 2;
+                    windowHeight = monitor.height / 2;
+                }
+                ChangeWindowDimensions(monitor.width, monitor.height, true);
+                SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+                SetWindowMonitor(monitor.index);
+                ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+                ChangeWindowDimensions(windowWidth, windowHeight, false);
+            }
+            if (VSync)
+            {
+                SetFPS(monitor.refreshrate);
+            }
+        }
+        private void ChangeWindowDimensions(int newWidth, int newHeight, bool fullscreenChange = false)
+        {
+            //if (newWidth == CUR_WINDOW_SIZE.width && newHeight == CUR_WINDOW_SIZE.height) return;
+
+            CurWindowSize = (newWidth, newHeight);
+            if (!fullscreenChange) WindowedWindowSize = (newWidth, newHeight);
+            //GAME.ChangeWindowSize(newWidth, newHeight);
+            //UI.ChangeWindowSize(newWidth, newHeight);
+
+            SetWindowSize(newWidth, newHeight);
+            var monitor = Monitor.CurMonitor();
+
+            int winPosX = monitor.width / 2 - newWidth / 2;
+            int winPosY = monitor.height / 2 - newHeight / 2;
+            //SetWindowPosition(winPosX + (int)MONITOR_OFFSET.X, winPosY + (int)MONITOR_OFFSET.Y);
+            SetWindowPosition(winPosX + (int)monitor.position.X, winPosY + (int)monitor.position.Y);
+
+            OnWindowSizeChanged?.Invoke(newWidth, newHeight);
+
+            foreach (var st in screenTextures.Values)
+            {
+                st.AdjustSize(CurWindowSize.width, CurWindowSize.height);
+            }
+        }
+        private void SetupWindowDimensions()
+        {
+            var monitor = Monitor.CurMonitor();
+            int newWidth = monitor.width / 2;
+            int newHeight = monitor.height / 2;
+
+            if (newWidth == CurWindowSize.width && newHeight == CurWindowSize.height) return;
+
+            CurWindowSize = (newWidth, newHeight);
+            WindowedWindowSize = (newWidth, newHeight);
+
+            SetWindowSize(newWidth, newHeight);
+            int winPosX = monitor.width / 2 - newWidth / 2;
+            int winPosY = monitor.height / 2 - newHeight / 2;
+            //SetWindowPosition(winPosX + (int)MONITOR_OFFSET.X, winPosY + (int)MONITOR_OFFSET.Y);
+            SetWindowPosition(winPosX + (int)monitor.position.X, winPosY + (int)monitor.position.Y);
+
+            OnWindowSizeChanged?.Invoke(newWidth, newHeight);
+        }
+
+    }
     
+}
+
+/*
     public class GameLoop
     {
         public static readonly string CURRENT_DIRECTORY = Environment.CurrentDirectory;
@@ -182,21 +682,6 @@ namespace ShapeCore
             stopTimer.Stop(); 
         }
 
-        
-       
-        /*
-        public Area? GetCurArea()
-        {
-            if (CUR_SCENE == null) return null;
-            return CUR_SCENE.GetCurArea();
-        }
-        public void AddGameObject(GameObject obj, bool uiDrawing = false)
-        {
-            Area? area = GetCurArea();
-            if (area == null) return;
-            area.AddGameObject(obj, uiDrawing);
-        }
-        */
 
         //public GameLoop(GraphicsDevice graphicsDevice, params string[] launchParameters)
         //{
@@ -443,111 +928,9 @@ namespace ShapeCore
 
 
 
-        /*
-        public Vector2 GameTextureSize { get { return ScreenHandler.GameSize(); } }
-        public Vector2 UITextureSize { get { return ScreenHandler.UISize(); } }
-        public Vector2 GameTextureCenter { get { return ScreenHandler.GameCenter(); } }
-        public Vector2 UITextureCenter { get { return ScreenHandler.UICenter(); } }
-        public Rectangle GameTextureRect { get { return ScreenHandler.GameArea(); } }
-        public Rectangle UITextureRect { get { return ScreenHandler.UIArea(); } }
-        */
-        /*
-       public void SwitchScene(Scene oldScene, Scene newScene, string key = "")
-       {
-           if (newScene == null) return;
-           AddScene(key, newScene);//add scene takes care if scene is already in the dictionary or key == ""
-           CUR_SCENE = newScene;
-           CUR_SCENE.Activate(oldScene);
-           CUR_SCENE_INDEX = SCENES.Values.ToList().IndexOf(newScene);
-       }
-       public void GoToScene(string key)
-       {
-           if (key == "") return;
-           if (!SCENES.ContainsKey(key)) return;
-           GoToScene(SCENES[key]);
-       }
-       public void GoToScene(int index)
-       {
-           if (index < 0 || index >= SCENES.Count) return;
-           GoToScene(SCENES.ElementAt(index).Value);
-       }
-       public void AddScene(string key, Scene scene)
-       {
-           if (key == "") return;
-           if (scene == null) return;
-           if (SCENES.ContainsKey(key))
-           {
-               SCENES[key] = scene;
-           }
-           else
-           {
-               SCENES.Add(key, scene);
-           }
-           scene.Start();
-       }
-       public void RemoveScene(string key, int fallbackIndex = 0)
-       {
-           if (key == "") return;
-           if (!SCENES.ContainsKey(key)) return;
-           Scene? scene = SCENES[key];
-           SCENES.Remove(key);
-           if (scene == null) return;
-
-           if (scene == CUR_SCENE)
-           {
-               if (SCENES.Count > 0 && fallbackIndex >= 0 && fallbackIndex < SCENES.Count)
-               {
-                   var newScene = SCENES.ElementAt(fallbackIndex).Value;
-                   if (newScene == null)
-                   {
-                       CUR_SCENE = null;
-                       return;
-                   }
-                   CUR_SCENE = newScene;
-                   newScene.Activate(scene);
-               }
-               else
-               {
-                   CUR_SCENE = null;
-               }
-           }
-           scene.Close();
-       }
-       public Scene NextScene()
-       {
-           CUR_SCENE_INDEX += 1;
-           if (CUR_SCENE_INDEX >= SCENES.Count) CUR_SCENE_INDEX = 0;
-           var scene = SCENES.ElementAt(CUR_SCENE_INDEX).Value;
-           GoToScene(scene);
-           return scene;
-       }
-       public Scene PreviousScene()
-       {
-           CUR_SCENE_INDEX -= 1;
-           if (CUR_SCENE_INDEX < 0) CUR_SCENE_INDEX = SCENES.Count - 1;
-           var scene = SCENES.ElementAt(CUR_SCENE_INDEX).Value;
-           GoToScene(scene);
-           return scene;
-       }
-       public void ClearScenes()
-       {
-           CUR_SCENE = null;
-           CUR_SCENE_INDEX = 0;
-           foreach (Scene scene in SCENES.Values)
-           {
-               scene.Close();
-           }
-           SCENES.Clear();
-       }
-       */
-        //public virtual void HandleInput() { }//called before update to handle global input
-        //public void Pause() { PAUSED = true; }
-        //public void UnPause() { PAUSED = false; }
-        //public void TogglePause() { PAUSED = !PAUSED; }
-
+        
     }
 
-    
     public class ScreenTexture2
     {
         public uint ID { get; private set; }
@@ -621,33 +1004,36 @@ namespace ShapeCore
 
 
 
-            /*
-            float s = Scale;
-            float w = targetWidth * s;
-            float h = targetHeight * s;
-            var destRec = new Rectangle();
-            destRec.x = w * 0.5f / s + Offset.X;
-            destRec.y = h * 0.5f / s + Offset.Y;
-            destRec.width = w;
-            destRec.height = h;
+            
+            //float s = Scale;
+            //float w = targetWidth * s;
+            //float h = targetHeight * s;
+            //var destRec = new Rectangle();
+            //destRec.x = w * 0.5f / s + Offset.X;
+            //destRec.y = h * 0.5f / s + Offset.Y;
+            //destRec.width = w;
+            //destRec.height = h;
+            //
+            //
+            ////var curSize = GetSize() * Scale; // AdjustToAspectRatio(targetWidth, targetHeight) * Scale;
+            ////var sourceRec = new Rectangle(0, 0, curSize.X, -curSize.Y);
+            ////var adjustedSize = new Vector2(targetWidth, targetHeight);// AdjustToAspectRatio(targetWidth, targetHeight);
+            ////var dif = adjustedSize - curSize;
+            ////var destRec = new Rectangle
+            ////    (
+            ////        adjustedSize.X * 0.5f + Offset.X,
+            ////        adjustedSize.Y * 0.5f + Offset.Y,
+            ////        adjustedSize.X,
+            ////        adjustedSize.Y
+            ////    );
+            //
+            //Vector2 origin = new();
+            //origin.X = destRec.width * 0.5f;
+            //origin.Y = destRec.height * 0.5f;
+            
+                
 
 
-            //var curSize = GetSize() * Scale; // AdjustToAspectRatio(targetWidth, targetHeight) * Scale;
-            //var sourceRec = new Rectangle(0, 0, curSize.X, -curSize.Y);
-            //var adjustedSize = new Vector2(targetWidth, targetHeight);// AdjustToAspectRatio(targetWidth, targetHeight);
-            //var dif = adjustedSize - curSize;
-            //var destRec = new Rectangle
-            //    (
-            //        adjustedSize.X * 0.5f + Offset.X,
-            //        adjustedSize.Y * 0.5f + Offset.Y,
-            //        adjustedSize.X,
-            //        adjustedSize.Y
-            //    );
-
-            Vector2 origin = new();
-            origin.X = destRec.width * 0.5f;
-            origin.Y = destRec.height * 0.5f;
-            */
 
             if (blendMode < 0)
             {
@@ -914,1053 +1300,137 @@ namespace ShapeCore
         public void StopFlash() { screenFlashes.Clear(); }
 
 
-        /*
-        public Vector2 TransformAbsolutePosition(Vector2 absolutePos, int targetWidth, int targetHeight)
-        {
-            var rel = TransformToRelative(absolutePos);
-            rel = TransformRelativePosition(rel, targetWidth, targetHeight);
-            return TransformToAbsolute(rel);
-        }
-        public Vector2 TransformAbsolutePosition(Vector2 absolutePos, ScreenTexture2 other)
-        {
-            var rel = other.TransformToRelative(absolutePos);
-            rel = TransformRelativePosition(rel, other);
-            return TransformToAbsolute(rel);
-        }
+        
+        //public Vector2 TransformAbsolutePosition(Vector2 absolutePos, int targetWidth, int targetHeight)
+        //{
+        //    var rel = TransformToRelative(absolutePos);
+        //    rel = TransformRelativePosition(rel, targetWidth, targetHeight);
+        //    return TransformToAbsolute(rel);
+        //}
+        //public Vector2 TransformAbsolutePosition(Vector2 absolutePos, ScreenTexture2 other)
+        //{
+        //    var rel = other.TransformToRelative(absolutePos);
+        //    rel = TransformRelativePosition(rel, other);
+        //    return TransformToAbsolute(rel);
+        //}
+        
+    }
+    */
+
+/*
+        public Vector2 GameTextureSize { get { return ScreenHandler.GameSize(); } }
+        public Vector2 UITextureSize { get { return ScreenHandler.UISize(); } }
+        public Vector2 GameTextureCenter { get { return ScreenHandler.GameCenter(); } }
+        public Vector2 UITextureCenter { get { return ScreenHandler.UICenter(); } }
+        public Rectangle GameTextureRect { get { return ScreenHandler.GameArea(); } }
+        public Rectangle UITextureRect { get { return ScreenHandler.UIArea(); } }
         */
-    }
-    
-    
+/*
+   public void SwitchScene(Scene oldScene, Scene newScene, string key = "")
+   {
+       if (newScene == null) return;
+       AddScene(key, newScene);//add scene takes care if scene is already in the dictionary or key == ""
+       CUR_SCENE = newScene;
+       CUR_SCENE.Activate(oldScene);
+       CUR_SCENE_INDEX = SCENES.Values.ToList().IndexOf(newScene);
+   }
+   public void GoToScene(string key)
+   {
+       if (key == "") return;
+       if (!SCENES.ContainsKey(key)) return;
+       GoToScene(SCENES[key]);
+   }
+   public void GoToScene(int index)
+   {
+       if (index < 0 || index >= SCENES.Count) return;
+       GoToScene(SCENES.ElementAt(index).Value);
+   }
+   public void AddScene(string key, Scene scene)
+   {
+       if (key == "") return;
+       if (scene == null) return;
+       if (SCENES.ContainsKey(key))
+       {
+           SCENES[key] = scene;
+       }
+       else
+       {
+           SCENES.Add(key, scene);
+       }
+       scene.Start();
+   }
+   public void RemoveScene(string key, int fallbackIndex = 0)
+   {
+       if (key == "") return;
+       if (!SCENES.ContainsKey(key)) return;
+       Scene? scene = SCENES[key];
+       SCENES.Remove(key);
+       if (scene == null) return;
+
+       if (scene == CUR_SCENE)
+       {
+           if (SCENES.Count > 0 && fallbackIndex >= 0 && fallbackIndex < SCENES.Count)
+           {
+               var newScene = SCENES.ElementAt(fallbackIndex).Value;
+               if (newScene == null)
+               {
+                   CUR_SCENE = null;
+                   return;
+               }
+               CUR_SCENE = newScene;
+               newScene.Activate(scene);
+           }
+           else
+           {
+               CUR_SCENE = null;
+           }
+       }
+       scene.Close();
+   }
+   public Scene NextScene()
+   {
+       CUR_SCENE_INDEX += 1;
+       if (CUR_SCENE_INDEX >= SCENES.Count) CUR_SCENE_INDEX = 0;
+       var scene = SCENES.ElementAt(CUR_SCENE_INDEX).Value;
+       GoToScene(scene);
+       return scene;
+   }
+   public Scene PreviousScene()
+   {
+       CUR_SCENE_INDEX -= 1;
+       if (CUR_SCENE_INDEX < 0) CUR_SCENE_INDEX = SCENES.Count - 1;
+       var scene = SCENES.ElementAt(CUR_SCENE_INDEX).Value;
+       GoToScene(scene);
+       return scene;
+   }
+   public void ClearScenes()
+   {
+       CUR_SCENE = null;
+       CUR_SCENE_INDEX = 0;
+       foreach (Scene scene in SCENES.Values)
+       {
+           scene.Close();
+       }
+       SCENES.Clear();
+   }
+   */
+//public virtual void HandleInput() { }//called before update to handle global input
+    //public void Pause() { PAUSED = true; }
+    //public void UnPause() { PAUSED = false; }
+    //public void TogglePause() { PAUSED = !PAUSED; }
 
-    //ScreenToWorld and WorldToScreen may have to be switched...
 
-    public interface ICamera2
-    {
-        public Vector2 WorldToScreen(Vector2 absolutePos);
-        public Vector2 ScreenToWorld(Vector2 relativePos);
-        public void AdjustSize(Vector2 newSize);
-        public Camera2D GetCamera();
-        public bool IsPixelSmoothingCameraEnabled();
-        public Camera2D GetPixelSmoothingCamera();
-
-    }
-    public class CameraBasic2 : ICamera2
-    {
-        public float BaseRotationDeg { get; private set; } = 0f;
-        public Vector2 BaseOffset { get; private set; } = new(0f);
-        public float BaseZoom { get; private set; } = 1f;
-        public Vector2 BaseSize { get; private set; } = new(0f);
-        public Vector2 Origin { get; private set; } = new(0f);
-        public Vector2 Translation { get; set; } = new(0f);
-        public float RotationDeg { get; set; } = 0f;
-        public float ZoomFactor { get; set; } = 1f;
-        //public float ZoomStretchFactor { get; private set; } = 1f;
-
-        public Camera2D WorldCamera { get; private set; }
-
-
-
-        public CameraBasic2(Vector2 pos, Vector2 size, Vector2 origin, float baseZoom, float rotation)//, float zoomStretchFactor)
-        {
-            this.BaseSize = size;
-            this.Origin = origin;
-            this.BaseOffset = size * origin;
-            this.BaseZoom = baseZoom;
-            this.BaseRotationDeg = rotation;
-            this.WorldCamera = new() { offset = BaseOffset, rotation = BaseRotationDeg, zoom = baseZoom * ZoomFactor, target = pos };
-        }
-        public void AdjustSize(Vector2 newSize)
-        {
-            this.BaseSize = newSize;
-            this.BaseOffset = newSize * Origin;
-        }
-        public void Update(float dt)
-        {
-            Vector2 rawCameraOffset = BaseOffset;// + Translation;
-            float rawCameraRotationDeg = BaseRotationDeg + RotationDeg;
-            float rawCameraZoom = (BaseZoom /* *ZoomStretchFactor */) * ZoomFactor;
-            Vector2 rawCameraTarget = Translation; //   WorldCamera.target;
-
-            var c = new Camera2D();
-            c.target = rawCameraTarget;
-            c.offset = rawCameraOffset;
-            c.zoom = rawCameraZoom;
-            c.rotation = rawCameraRotationDeg;
-            WorldCamera = c;
-
-        }
-        //public void ChangeSize(Vector2 newSize)//, float factor)
-        //{
-        //    BaseOffset = newSize/ 2;
-        //    //ZoomStretchFactor = factor;
-        //}
-
-        public void ResetZoom() { ZoomFactor = 1f; }
-        public void ResetRotation() { RotationDeg = 0f; }
-        public void ResetTranslation() { Translation = new(0f); }
-
-
-        public Vector2 WorldToScreen(Vector2 pos)
-        {
-            return Raylib.GetWorldToScreen2D(pos, GetCamera());
-            //float zoomFactor = 1 / WorldCamera.zoom;
-            //Vector2 cPos = WorldCamera.target - WorldCamera.offset * zoomFactor;
-            //Vector2 p = (absolutePos - cPos) * WorldCamera.zoom;
-            //return p;
-        }
-        public Vector2 ScreenToWorld(Vector2 pos)
-        {
-            return Raylib.GetScreenToWorld2D(pos, GetCamera());
-            //float zoomFactor = 1 / WorldCamera.zoom;
-            //Vector2 p = relativePos * zoomFactor;
-            //Vector2 cPos = WorldCamera.target - WorldCamera.offset * zoomFactor;
-            //p += cPos;
-            //return p;
-        }
-
-
-        public Rect GetArea()
-        {
-            float zoomFactor = 1 / WorldCamera.zoom;
-            Vector2 cPos = WorldCamera.target - WorldCamera.offset * zoomFactor;
-            return new(cPos.X, cPos.Y, BaseSize.X * zoomFactor, BaseSize.Y * zoomFactor); // WorldCamera.offset.X * zoomFactor * 2f, WorldCamera.offset.Y * zoomFactor * 2f);
-        }
-        public bool IsPixelSmoothingCameraEnabled() { return false; }
-        public Camera2D GetPixelSmoothingCamera() { return WorldCamera; }
-        public Camera2D GetCamera() { return WorldCamera; }
-
-        
-    }
-    public class ScreenTexture3
-    {
-        /// <summary>
-        /// Can be used for scaling sizes from this texture to match the screen.
-        /// </summary>
-        public float TextureToScreenSizeScale { get; private set; } = 1f;
-        /// <summary>
-        /// Can be used for scaling sizes from screen to match this texture.
-        /// </summary>
-        public float ScreenToTextureSizeScale { get; private set; } = 1f;
-
-        /// <summary>
-        /// The ID of this texture. It is automatically assigned in the constructor.
-        /// </summary>
-        public uint ID { get; private set; }
-        /// <summary>
-        /// The draw order for drawing the texture to screen. Lower number are drawn first to the screen.
-        /// </summary>
-        public int DrawOrder { get; set; } = 0;
-        /// <summary>
-        /// The blend mode of this texture used when drawing the texture to the screen.
-        /// </summary>
-        public int BlendMode { get; set; } = -1;
-        /// <summary>
-        /// The relative mouse pos of this texture.
-        /// </summary>
-        public Vector2 MousePos { get; set; } = new(0f);
-        /// <summary>
-        /// The clear color for drawing to this texture.
-        /// </summary>
-        public Color BackgroundColor { get; set; } = new(0, 0, 0, 0);
-        /// <summary>
-        /// A tint for this texture.
-        /// </summary>
-        public Color Tint { get; set; } = WHITE;
-        /// <summary>
-        /// The base size specified in the constructor.
-        /// </summary>
-        public (int width, int height) BaseSize;
-        
-        /// <summary>
-        /// The shader device that returns all active shaders for drawing to the screen.
-        /// </summary>
-        public IShaderDevice? ShaderDevice { private get; set; } = null;
-        private ICamera2? camera = null;
-
-        private RenderTexture texture;
-        private Rectangle sourceRec;
-        private ScreenBuffer[] screenBuffers = new ScreenBuffer[0];
-        private List<ScreenFlash> screenFlashes = new List<ScreenFlash>();
-
-        public ScreenTexture3(int width, int height, int drawOrder = 0)
-        {
-            this.ID = SID.NextID;
-            this.BaseSize = (width, height);
-            this.Load(width, height);
-            this.DrawOrder = drawOrder;
-        }
-        private void Load(int width, int height)
-        {
-            this.texture = LoadRenderTexture(width, height);
-            this.sourceRec = new Rectangle(0, 0, width, -height);
-            screenBuffers = new ScreenBuffer[]
-            {
-                new(width, height),
-                new(width, height)
-            };
-        }
-        /// <summary>
-        /// Adjust this textures size to the target size. Matches the aspect ratio of the target size, with the closest representation of the base size of the texture.
-        /// If this textures base size aspect ratio matches the target size aspect ratio than the size is not changed.
-        /// </summary>
-        /// <param name="targetWidth">The target width to match.</param>
-        /// <param name="targetHeight">The target height to match.</param>
-        public void AdjustSize(int targetWidth, int targetHeight)
-        {
-            float fWidth = (float)targetWidth / (float)targetHeight;
-            float fHeight = (float)targetHeight / (float)targetWidth;
-
-            int w = BaseSize.width;
-            int h = BaseSize.height;
-
-            float newWidth = ((h * fWidth) + w) * 0.5f;
-            float newHeight = ((w * fHeight) +(h)) * 0.5f;
-
-            int adjustedWidth = (int)newWidth;
-            int adjustedHeight = (int)newHeight;
-
-            if(adjustedWidth != w || adjustedHeight != h)
-            {
-                UnloadRenderTexture(texture);
-                screenBuffers[0].Unload();
-                screenBuffers[1].Unload();
-                Load(adjustedWidth, adjustedHeight);
-                if(camera != null)
-                {
-                    camera.AdjustSize(new(adjustedWidth, adjustedHeight));   
-                }
-            }
-            float tw = GetSize().X;
-            float sw = (float)targetWidth;
-            ScreenToTextureSizeScale = sw / tw;
-            TextureToScreenSizeScale = tw / sw;
-        }
-
-        /// <summary>
-        /// Set the cur camera of this texture.
-        /// </summary>
-        /// <param name="camera"></param>
-        public void SetCamera(ICamera2 camera) 
-        {
-            this.camera = camera;
-            this.camera.AdjustSize(GetSize());
-        }
-        /// <summary>
-        /// Sets the camera to null.
-        /// </summary>
-        public void ClearCamera() { camera = null; }
-        public void Update(float dt)
-        {
-            for (int i = screenFlashes.Count() - 1; i >= 0; i--)
-            {
-                var flash = screenFlashes[i];
-                flash.Update(dt);
-                if (flash.IsFinished()) { screenFlashes.RemoveAt(i); }
-
-            }
-        }
-        /// <summary>
-        /// Draw this texture onto another surface like the screen.
-        /// </summary>
-        /// <param name="targetWidth">The target width of the surface to draw to.</param>
-        /// <param name="targetHeight">The target height of the surface to draw to.</param>
-        /// <param name="blendMode">The blend mode for drawing to the surface.</param>
-        public void DrawTexture(int targetWidth, int targetHeight, int blendMode = -1)
-        {
-            var destRec = new Rectangle();
-            destRec.x = targetWidth * 0.5f;
-            destRec.y = targetHeight * 0.5f;
-            destRec.width = targetWidth;
-            destRec.height = targetHeight;
-
-            Vector2 origin = new();
-            origin.X = targetWidth * 0.5f;
-            origin.Y = targetHeight * 0.5f;
-
-            if (blendMode < 0)
-            {
-                DrawTexturePro(texture.texture, sourceRec, destRec, origin, 0f, Tint);
-            }
-            else
-            {
-                BeginBlendMode(blendMode);
-                DrawTexturePro(texture.texture, sourceRec, destRec, origin, 0f, Tint);
-                EndBlendMode();
-            }
-        }
-        /// <summary>
-        /// Close this texture. Unloads the texture and the screen buffers.
-        /// </summary>
-        public void Close()
-        {
-            UnloadRenderTexture(texture);
-            foreach (ScreenBuffer screenBuffer in screenBuffers)
-            {
-                screenBuffer.Unload();
-            }
-            screenBuffers = new ScreenBuffer[0];
-        }
-
-        /// <summary>
-        /// Start to draw on this texture.
-        /// </summary>
-        public void BeginTextureMode()
-        {
-            if (camera != null)
-            {
-                Raylib.BeginTextureMode(texture);
-                BeginMode2D(camera.GetCamera());
-                ClearBackground(BackgroundColor);
-            }
-            else
-            {
-                Raylib.BeginTextureMode(texture);
-                ClearBackground(BackgroundColor);
-            }
-        }
-        /// <summary>
-        /// End the drawing to this texture.
-        /// </summary>
-        public void EndTextureMode()
-        {
-            if (camera != null)
-            {
-                var camera = this.camera.GetCamera();
-                foreach (var flash in screenFlashes)
-                {
-                    Vector2 sizeOffset = new(5f, 5f);
-                    Vector2 center = camera.target;
-                    Vector2 size = camera.offset * 2 * (1f / camera.zoom);
-                    var r = new Rect(center, size + sizeOffset, new(0.5f, 0.5f));
-                    r.Draw(new Vector2(0.5f, 0.5f), -camera.rotation, flash.GetColor());
-                    //SDrawing.DrawRect(new(center, size + sizeOffset, new(0.5f)), new Vector2(0.5f, 0.5f), -camera.rotation, flash.GetColor());
-                }
-                EndMode2D();
-                Raylib.EndTextureMode();
-            }
-            else
-            {
-                foreach (var flash in screenFlashes)
-                {
-                    DrawRectangle(-1, -1, GetTextureWidth() + 1, GetTextureHeight() + 1, flash.GetColor());
-                }
-                Raylib.EndTextureMode();
-            }
-        }
-        /// <summary>
-        /// Draws the texture to the screen with all active shaders applied.
-        /// </summary>
-        /// <param name="targetWidth">The width of the screen.</param>
-        /// <param name="targetHeight">The height of the screen.</param>
-        public void DrawToScreen(int targetWidth, int targetHeight)
-        {
-            if (camera != null && camera.IsPixelSmoothingCameraEnabled())
-                BeginMode2D(camera.GetPixelSmoothingCamera());
-
-
-            List<ScreenShader> shadersToApply = ShaderDevice != null ? ShaderDevice.GetCurActiveShaders() : new();
-            if (shadersToApply.Count <= 0)
-            {
-                DrawTexture(targetWidth, targetHeight, BlendMode);
-                return;
-            }
-            else if (shadersToApply.Count == 1)
-            {
-                ScreenShader s = shadersToApply[0];
-                BeginShaderMode(s.GetShader());
-                DrawTexture(targetWidth, targetHeight, BlendMode);
-                EndShaderMode();
-            }
-            else if (shadersToApply.Count == 2)
-            {
-                ScreenShader s = shadersToApply[0];
-                screenBuffers[0].StartTextureMode();
-                BeginShaderMode(s.GetShader());
-                DrawTexture(GetTextureWidth(), GetTextureHeight());
-                EndShaderMode();
-                screenBuffers[0].EndTextureMode();
-
-                s = shadersToApply[1];
-
-                BeginShaderMode(s.GetShader());
-                screenBuffers[0].DrawTexture(targetWidth, targetHeight, BlendMode);
-                EndShaderMode();
-            }
-            else
-            {
-                ScreenShader s = shadersToApply[0];
-                shadersToApply.RemoveAt(0);
-
-                ScreenShader endshader = shadersToApply[shadersToApply.Count - 1];
-                shadersToApply.RemoveAt(shadersToApply.Count - 1);
-
-                //draw game texture to first screenbuffer and first shader is already applied
-                screenBuffers[0].StartTextureMode();
-                BeginShaderMode(s.GetShader());
-                DrawTexture(GetTextureWidth(), GetTextureHeight());
-                EndShaderMode();
-                screenBuffers[0].EndTextureMode();
-
-                int currentIndex = 0;
-                int nextIndex = 0;
-                for (int i = 0; i < shadersToApply.Count; i++)
-                {
-                    s = shadersToApply[i];
-                    nextIndex = currentIndex == 0 ? 1 : 0;
-                    ScreenBuffer current = screenBuffers[currentIndex];
-                    ScreenBuffer next = screenBuffers[nextIndex];
-                    next.StartTextureMode();
-                    BeginShaderMode(s.GetShader());
-                    current.DrawTexture(GetTextureWidth(), GetTextureHeight());
-                    EndShaderMode();
-                    next.EndTextureMode();
-                    currentIndex = currentIndex == 0 ? 1 : 0;
-                }
-
-                BeginShaderMode(endshader.GetShader());
-                screenBuffers[nextIndex].DrawTexture(targetWidth, targetHeight, BlendMode);
-                EndShaderMode();
-            }
-
-
-            if (camera != null && camera.IsPixelSmoothingCameraEnabled()) EndMode2D();
-        }
-
-        /// <summary>
-        /// Get the size of the screen texture.
-        /// </summary>
-        /// <returns></returns>
-        public Vector2 GetSize() { return new(texture.texture.width, texture.texture.height); }
-        /// <summary>
-        /// Get the width of the screen texture.
-        /// </summary>
-        /// <returns></returns>
-        public int GetTextureWidth() { return texture.texture.width; }
-        /// <summary>
-        /// Get the height of the screen texture.
-        /// </summary>
-        /// <returns></returns>
-        public int GetTextureHeight() { return texture.texture.height; }
-        /// <summary>
-        /// Get a factor for scaling a a position relative to this texture to a position relative to "toSize".
-        /// </summary>
-        /// <param name="toSize">The target size for the scale factor.</param>
-        /// <returns>Returns a factor for scaling positions.</returns>
-        public float GetScaleFactorTo(Vector2 toSize) { return toSize.X / GetSize().X; }
-        /// <summary>
-        /// Get a factor for scaling a position relative to this texture to another texture.
-        /// </summary>
-        /// <param name="to">The target texture for the scale factor.</param>
-        /// <returns>Returns a factor for scaling positions.</returns>
-        public float GetScaleFactorTo(ScreenTexture3 to) { return to.GetSize().X / GetSize().X; }
-        /// <summary>
-        /// Get a factor for scaling a position relative to "fromSize" to this texture.
-        /// </summary>
-        /// <param name="fromSize"></param>
-        /// <returns>Returns a factor for scaling positions.</returns>
-        public float GetScaleFactorFrom(Vector2 fromSize) { return GetSize().X / fromSize.X; }
-        /// <summary>
-        /// Scale a position from "fromSize" to this texture.
-        /// </summary>
-        /// <param name="pos">The position to scale.</param>
-        /// <param name="fromSize">The size the position is relative to.</param>
-        /// <returns>Returns the scaled position in world space.</returns>
-        public Vector2 ScalePosition(Vector2 pos, Vector2 fromSize) { return ScreenToWorld(pos * GetScaleFactorFrom(fromSize)); }
-        /// <summary>
-        /// Scales a position from this texture to the target texture.
-        /// </summary>
-        /// <param name="pos">The position to scale.</param>
-        /// <param name="to">The target texture to scale to.</param>
-        /// <returns>Return the position scaled to the target texture in world space.</returns>
-        public Vector2 ScalePosition(Vector2 pos, ScreenTexture3 to) { return to.ScreenToWorld(WorldToScreen(pos) * GetScaleFactorTo(to.GetSize())); }
-
-
-        /// <summary>
-        /// Transforms a world position to a relative screen position if Camera != null.
-        /// </summary>
-        /// <param name="pos"></param>
-        /// <returns></returns>
-        public Vector2 WorldToScreen(Vector2 pos)
-        {
-            if (camera != null) return camera.WorldToScreen(pos);
-            else return pos;
-        }
-        /// <summary>
-        /// Transforms a relative screen position to a world position if Camera != null.
-        /// </summary>
-        /// <param name="pos"></param>
-        /// <returns></returns>
-        public Vector2 ScreenToWorld(Vector2 pos)
-        {
-            if (camera != null) return camera.ScreenToWorld(pos);
-            else return pos;
-        }
-
-        /// <summary>
-        /// Add a flash to this texture for a certain duration. The color of the flash lerps from start to end color.
-        /// </summary>
-        /// <param name="duration">Must be bigger than 0.</param>
-        /// <param name="startColor">The flash start color.</param>
-        /// <param name="endColor">The flash end color.</param>
-        public void Flash(float duration, Color startColor, Color endColor)
-        {
-            if (duration <= 0.0f) return;
-            ScreenFlash flash = new(duration, startColor, endColor);
-            screenFlashes.Add(flash);
-        }
-        /// <summary>
-        /// Stop all current flashes.
-        /// </summary>
-        public void StopFlash() { screenFlashes.Clear(); }
-
-
-    }
-    public abstract class GameLoop2
-    {
-        public static readonly string CURRENT_DIRECTORY = Environment.CurrentDirectory;
-        public static bool EDITORMODE { get; private set; } = Directory.Exists("resources");
-
-        public static OSPlatform OS_PLATFORM { get; private set; } =
-           RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? OSPlatform.Windows :
-           RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? OSPlatform.Linux :
-           RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? OSPlatform.OSX :
-                                                                    OSPlatform.FreeBSD;
-        public static bool IsWindows() { return OS_PLATFORM == OSPlatform.Windows; }
-        public static bool IsLinux() { return OS_PLATFORM == OSPlatform.Linux; }
-        public static bool IsOSX() { return OS_PLATFORM == OSPlatform.OSX; }
-
-
-
-        public string[] LAUNCH_PARAMS { get; protected set; } = new string[0];
-
-        private Dictionary<uint,ScreenTexture3> screenTextures = new();
-        public Vector2 MousePos { get; private set; } = new(0f);
-
-        public Color BackgroundColor = BLACK;
-
-        protected bool quit = false;
-        protected bool restart = false;
-        
-        private List<DeferredInfo> deferred = new();
-
-
-
-        public delegate void WindowSizeChanged(int w, int h);
-        public event WindowSizeChanged? OnWindowSizeChanged;
-
-        public float ScreenEffectIntensity = 1.0f;
-
-        public int FrameRateLimit { get; private set; } = 60;
-        public int Fps { get; private set; }
-        public bool VSync { get; private set; } = true;
-        public (int width, int height) CurWindowSize { get; private set; } = (0, 0);
-        public (int width, int height) WindowedWindowSize { get; private set; } = (0, 0);
-        public (int width, int height) WindowMinSize { get; } = (128, 128);
-        //public (int width, int height) DevResolution { get; private set; } = (0, 0);
-
-        public MonitorDevice Monitor { get; private set; }
-
-
-
-        public ICursor Cursor { get; private set; } = new NullCursor();
-
-        public GameLoop2()
-        {
-            InitWindow(0, 0, "");
-
-            ClearWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
-            SetWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
-
-            ClearWindowState(ConfigFlags.FLAG_VSYNC_HINT);
-
-            Monitor = new MonitorDevice();
-
-            SetupWindowDimensions();
-
-            FrameRateLimit = 60;
-            SetVsync(true);
-            Raylib.SetWindowMinSize(WindowMinSize.width, WindowMinSize.height);
-        }
-        public void SetupWindow(string windowName, bool undecorated, bool resizable)
-        {
-            SetWindowTitle(windowName);
-            if (undecorated) SetWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
-            else ClearWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
-
-            if (resizable) SetWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
-            else ClearWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
-        }
-
-        /// <summary>
-        /// Starts the gameloop. Runs until Quit() or Restart() is called or the Window is closed by the user.
-        /// </summary>
-        /// <returns>Returns an exit code for information how the application was quit. Restart has to be handled seperately.</returns>
-        public ExitCode Run(params string[] launchParameters)
-        {
-            this.LAUNCH_PARAMS = launchParameters;
-
-            quit = false;
-            restart = false;
-            Raylib.SetExitKey(-1);
-
-            StartGameloop();
-            RunGameloop();
-            EndGameloop();
-            CloseWindow();
-
-            return new ExitCode(restart);
-        }
-
-
-        /// <summary>
-        /// Quit the application with the exit code restart.
-        /// </summary>
-        public void Restart()
-        {
-            restart = true;
-            quit = true;
-        }
-        /// <summary>
-        /// Quit the application at the end of the frame.
-        /// </summary>
-        public void Quit()
-        {
-            restart = false;
-            quit = true;
-        }
-
-        /// <summary>
-        /// The action is called at the end of the frame or at the end after afterFrames.
-        /// </summary>
-        /// <param name="action"></param>
-        /// <param name="afterFrames">How many frames have to pass before the action is called.</param>
-        public void CallDeferred(Action action, int afterFrames = 0)
-        {
-            deferred.Add(new(action, afterFrames));
-        }
-        private void ResolveDeferred()
-        {
-            for (int i = deferred.Count - 1; i >= 0; i--)
-            {
-                var info = deferred[i];
-                if (info.Call()) deferred.RemoveAt(i);
-            }
-        }
-
-        public void Flash(uint screenTextureID, float duration, Color startColor, Color endColor)
-        {
-            if (!screenTextures.ContainsKey(screenTextureID)) return;
-
-            byte startColorAlpha = (byte)(startColor.a * ScreenEffectIntensity);
-            startColor.a = startColorAlpha;
-            byte endColorAlpha = (byte)(endColor.a * ScreenEffectIntensity);
-            endColor.a = endColorAlpha;
-
-            var screenTexture = screenTextures[screenTextureID];
-
-            screenTexture.Flash(duration, startColor, endColor);
-        }
-
-        public bool SwitchCursor(ICursor newCursor)
-        {
-            if (Cursor != newCursor)
-            {
-                Cursor.Deactivate();
-                newCursor.Activate(Cursor);
-                Cursor = newCursor;
-                return true;
-            }
-            return false;
-        }
-        private void DrawCursor(Vector2 screenSize, Vector2 pos) { if (Cursor != null) Cursor.Draw(screenSize, pos); }
-
-
-        public ScreenTexture3 AddScreenTexture(int width, int height, int drawOrder)
-        {
-            var newScreenTexture = new ScreenTexture3(width, height, drawOrder);
-
-            AddScreenTexture(newScreenTexture);
-
-            return newScreenTexture;
-        }
-        public bool AddScreenTexture(ScreenTexture3 newScreenTexture) 
-        {
-            if (screenTextures.ContainsKey(newScreenTexture.ID)) return false;
-            newScreenTexture.AdjustSize(CurWindowSize.width, CurWindowSize.height);
-            screenTextures.Add(newScreenTexture.ID, newScreenTexture);
-            return true;
-        }
-        public bool RemoveScreenTexture(ScreenTexture3 screenTexture) { return screenTextures.Remove(screenTexture.ID); }
-        public bool RemoveScreenTexture(uint id) { return screenTextures.Remove(id); }
-
-
-        private void StartGameloop()
-        {
-            LoadContent();
-            BeginRun();
-        }
-        private void RunGameloop()
-        {
-            while (!quit)
-            {
-                CheckWindowSizeChanged();
-
-                var mp = GetMousePosition();
-                if (!mp.IsNan()) SetMousePos(mp);
-
-
-                HandleInput();
-
-                float dt = GetFrameTime();
-                UpdateMonitorDevice(dt);
-                Update(dt);
-                var sortedTextures = SortScreenTextures(screenTextures.Values.ToList());
-                UpdateScreenTextures(sortedTextures, dt);
-
-                DrawGameloopToTextures(sortedTextures);
-                DrawGameloopToScreen(sortedTextures);
-
-                ResolveDeferred();
-            }
-        }
-        private void EndGameloop()
-        {
-            EndRun();
-            UnloadContent();
-            foreach (var st in screenTextures.Values)
-            {
-                st.Close();
-            }
-        }
-        private void UpdateMonitorDevice(float dt)
-        {
-            
-            var newMonitor = Monitor.HasMonitorSetupChanged();
-            if (newMonitor.available)
-            {
-                MonitorChanged(newMonitor);
-            }
-        }
-        private void UpdateScreenTextures(List<ScreenTexture3> sortedTextures, float dt)
-        {
-            foreach (var st in sortedTextures)
-            {
-                //Vector2 textureSize = st.GetSize();
-                //Vector2 f = new
-                //    (
-                //    textureSize.X / (float)CurWindowSize.width,
-                //    textureSize.Y / (float)CurWindowSize.height
-                //    );
-                //st.MousePos = st.ScreenToWorld( MousePos * f );
-                st.MousePos = st.ScalePosition(MousePos, new Vector2(CurWindowSize.width, CurWindowSize.height));
-                
-                //st.MousePos = st.TransformFromScreen(MousePos, CurWindowSize.width, CurWindowSize.height);
-                //st.MousePos = st.TransformAbsolutePosition(MousePos, CurWindowSize.width, CurWindowSize.height);
-                st.Update(dt);
-            }
-        }
-        private void DrawGameloopToTextures(List<ScreenTexture3> sortedTextures) 
-        {
-            foreach (var st in sortedTextures)
-            {
-                st.BeginTextureMode();
-                Draw(st);
-                st.EndTextureMode();
-            }
-        }
-        private void DrawGameloopToScreen(List<ScreenTexture3> sortedTextures) 
-        {
-            Vector2 curScreenSize = new(CurWindowSize.width, CurWindowSize.height);
-            BeginDrawing();
-            ClearBackground(BackgroundColor);
-
-            foreach (var st in sortedTextures)
-            {
-                st.DrawToScreen(CurWindowSize.width, CurWindowSize.height);
-            }
-
-            DrawToScreen(curScreenSize);
-
-            DrawCursor(curScreenSize, MousePos);
-
-            EndDrawing();
-        }
-        private List<ScreenTexture3> SortScreenTextures(List<ScreenTexture3> textures)
-        {
-            textures.Sort(delegate (ScreenTexture3 x, ScreenTexture3 y)
-            {
-                if (x == null || y == null) return 0;
-
-                if (x.DrawOrder < y.DrawOrder) return -1;
-                else if (x.DrawOrder > y.DrawOrder) return 1;
-                else return 0;
-            });
-            return textures;
-        }
-        private void SetMousePos(Vector2 newPos)
-        {
-            MousePos = newPos;
-        }
-        private void CheckWindowSizeChanged()
-        {
-            if (IsFullscreen()) return;
-
-            int w = GetScreenWidth();
-            int h = GetScreenHeight();
-            
-            var monitor = Monitor.CurMonitor();
-            int maxW = monitor.width;
-            int maxH = monitor.height;
-            
-            if (CurWindowSize.width != w || CurWindowSize.height != h)
-            {
-                int newW = SUtils.Clamp(w, WindowMinSize.width, maxW);
-                int newH = SUtils.Clamp(h, WindowMinSize.height, maxH);
-                CurWindowSize = (newW, newH);
-
-                WindowedWindowSize = CurWindowSize;
-
-                OnWindowSizeChanged?.Invoke(newW, newH);
-
-                foreach (var st in screenTextures.Values)
-                {
-                    st.AdjustSize(CurWindowSize.width, CurWindowSize.height);
-                }
-            }
-        }
-
-
-        //how to do that??? how to do drawing? call draw for every screen texture? call draw on the cur scene for every screen texture?
-        //adding screen texture returns id -> no access to screen texture just adding and removing
-        //scene should have a draw function for directly drawing to the screen if the user does not want to use screen textures
-        //how to know wich screen texture is which -> do they store their id or do the have a name?
-        //screen textures should either be drawn in the order of the list or the have a draworder that sorts them (sorted list)
-        //implement screen texture interface with only functions that the gameloop uses
-        //probably gameloop light and advanced are not necessary anymore
-        //protected virtual void HandleInputGameloop() 
-        //{
-        //}
-        //protected virtual void UpdateGameloop(float dt) 
-        //{
-        //}
-        //protected virtual void DrawGameloop()
-        //{
-        //}
-
-
-        /// <summary>
-        /// Called first after starting the gameloop.
-        /// </summary>
-        protected virtual void LoadContent() { }
-        /// <summary>
-        /// Called after LoadContent but before the main loop has started.
-        /// </summary>
-        protected virtual void BeginRun() { }
-        
-        protected virtual void HandleInput() { }
-        protected virtual void Update(float dt) { }
-        protected virtual void Draw(ScreenTexture3 screenTexture) { }
-        protected virtual void DrawToScreen(Vector2 screenSize) { }
-
-        /// <summary>
-        /// Called before UnloadContent is called after the main gameloop has been exited.
-        /// </summary>
-        protected virtual void EndRun() { }
-        /// <summary>
-        /// Called after EndRun before the application terminates.
-        /// </summary>
-        protected virtual void UnloadContent() { }
-
-
-
-        public bool SetMonitor(int newMonitor)
-        {
-            var monitor = Monitor.SetMonitor(newMonitor);
-            if (monitor.available)
-            {
-                MonitorChanged(monitor);
-                return true;
-            }
-            return false;
-        }
-        public void NextMonitor()
-        {
-            var nextMonitor = Monitor.NextMonitor();
-            if (nextMonitor.available)
-            {
-                MonitorChanged(nextMonitor);
-            }
-        }
-        public void SetFrameRateLimit(int newLimit)
-        {
-            if (newLimit < 30) newLimit = 30;
-            else if (newLimit > 240) newLimit = 240;
-            FrameRateLimit = newLimit;
-            if (!VSync)
-            {
-                SetFPS(FrameRateLimit);
-            }
-        }
-        private void SetFPS(int newFps)
-        {
-            Fps = newFps;
-            SetTargetFPS(Fps);
-        }
-        public void SetVsync(bool enabled)
-        {
-            if (enabled)
-            {
-                VSync = true;
-                SetFPS(Monitor.CurMonitor().refreshrate);
-            }
-            else
-            {
-                VSync = false;
-                SetFPS(FrameRateLimit);
-            }
-        }
-        public bool ToggleVsync()
-        {
-            SetVsync(!VSync);
-            return VSync;
-        }
-        public void ResizeWindow(int newWidth, int newHeight)
-        {
-            ChangeWindowDimensions(newWidth, newHeight, false);
-        }
-        public void ResetWindow()
-        {
-            if (IsWindowFullscreen())
-            {
-                Raylib.ToggleFullscreen();
-            }
-            var monitor = Monitor.CurMonitor();
-            ChangeWindowDimensions(monitor.width / 2, monitor.height / 2, false);
-        }
-        public bool IsFullscreen() { return IsWindowFullscreen(); }
-        public void SetFullscreen(bool enabled)
-        {
-            if (enabled && IsWindowFullscreen()) { return; }
-            if (!enabled && !IsWindowFullscreen()) { return; }
-
-            ToggleFullscreen();
-        }
-        public bool ToggleFullscreen()
-        {
-            var monitor = Monitor.CurMonitor();
-            if (IsWindowFullscreen())
-            {
-                ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
-                if (WindowedWindowSize.width > monitor.width || WindowedWindowSize.height > monitor.height)
-                {
-                    WindowedWindowSize = (monitor.width / 2, monitor.height / 2);
-                }
-
-                ChangeWindowDimensions(WindowedWindowSize.width, WindowedWindowSize.height, false);
-                ChangeWindowDimensions(WindowedWindowSize.width, WindowedWindowSize.height, false);//needed for some monitors ...
-            }
-            else
-            {
-                ChangeWindowDimensions(monitor.width, monitor.height, true);
-                SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
-            }
-
-            return IsFullscreen();
-        }
-
-        
-        private void MonitorChanged(MonitorInfo monitor)
-        {
-            int prevWidth = CurWindowSize.width;
-            int prevHeight = CurWindowSize.height;
-
-            if (IsWindowFullscreen())
-            {
-                SetWindowMonitor(monitor.index);
-                ChangeWindowDimensions(monitor.width, monitor.height, true);
-                SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
-            }
-            else
-            {
-                int windowWidth = prevWidth;
-                int windowHeight = prevHeight;
-                if (windowWidth > monitor.width || windowHeight > monitor.height)
-                {
-                    windowWidth = monitor.width / 2;
-                    windowHeight = monitor.height / 2;
-                }
-                ChangeWindowDimensions(monitor.width, monitor.height, true);
-                SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
-                SetWindowMonitor(monitor.index);
-                ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
-                ChangeWindowDimensions(windowWidth, windowHeight, false);
-            }
-            if (VSync)
-            {
-                SetFPS(monitor.refreshrate);
-            }
-        }
-        private void ChangeWindowDimensions(int newWidth, int newHeight, bool fullscreenChange = false)
-        {
-            //if (newWidth == CUR_WINDOW_SIZE.width && newHeight == CUR_WINDOW_SIZE.height) return;
-
-            CurWindowSize = (newWidth, newHeight);
-            if (!fullscreenChange) WindowedWindowSize = (newWidth, newHeight);
-            //GAME.ChangeWindowSize(newWidth, newHeight);
-            //UI.ChangeWindowSize(newWidth, newHeight);
-
-            SetWindowSize(newWidth, newHeight);
-            var monitor = Monitor.CurMonitor();
-
-            int winPosX = monitor.width / 2 - newWidth / 2;
-            int winPosY = monitor.height / 2 - newHeight / 2;
-            //SetWindowPosition(winPosX + (int)MONITOR_OFFSET.X, winPosY + (int)MONITOR_OFFSET.Y);
-            SetWindowPosition(winPosX + (int)monitor.position.X, winPosY + (int)monitor.position.Y);
-
-            OnWindowSizeChanged?.Invoke(newWidth, newHeight);
-
-            foreach (var st in screenTextures.Values)
-            {
-                st.AdjustSize(CurWindowSize.width, CurWindowSize.height);
-            }
-        }
-        private void SetupWindowDimensions()
-        {
-            var monitor = Monitor.CurMonitor();
-            int newWidth = monitor.width / 2;
-            int newHeight = monitor.height / 2;
-
-            if (newWidth == CurWindowSize.width && newHeight == CurWindowSize.height) return;
-
-            CurWindowSize = (newWidth, newHeight);
-            WindowedWindowSize = (newWidth, newHeight);
-
-            SetWindowSize(newWidth, newHeight);
-            int winPosX = monitor.width / 2 - newWidth / 2;
-            int winPosY = monitor.height / 2 - newHeight / 2;
-            //SetWindowPosition(winPosX + (int)MONITOR_OFFSET.X, winPosY + (int)MONITOR_OFFSET.Y);
-            SetWindowPosition(winPosX + (int)monitor.position.X, winPosY + (int)monitor.position.Y);
-
-            OnWindowSizeChanged?.Invoke(newWidth, newHeight);
-        }
-
-    }
-
-    
-    
-    
-    
     //add a lot of the stuff from graphics device to screen texture and the rest to gameloop
     //-> gameloop can have any number of screen textures, always has 1
     //screentextures have their own shader device and camera
     //to transform coordinates from one screen texture to another just figure out the factor and if a camera is used public Vector2 TransformPos(this ScreenTexture self, ScreenTexture other, Vector2 pos)?
     //-> maybe screen textures have always a basic camera that can shake (flash and shake would then be supported by every screen texture)
-    
+
     //make the most basic gameloop into gl (if not possible, than the 2 gameloop variants are just completely seperate)
     //implement a light gameloop -> only has 1 texture (no factors)
     //implement a basic gameloop with 2 textures for game and ui
     //combine graphics device and gameloop? -> there is a lot of unnecessary duplication of functions etc.
-    /*
+/*
     public class GameloopLight : GameLoop2
     {
         public ScreenTexture2 ScreenTexture { get; private set; }
@@ -2064,4 +1534,3 @@ namespace ShapeCore
 
     }
     */
-}

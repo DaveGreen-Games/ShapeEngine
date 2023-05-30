@@ -8,6 +8,117 @@ namespace ShapeScreen
 {
     public interface ICamera
     {
+        public Vector2 WorldToScreen(Vector2 absolutePos);
+        public Vector2 ScreenToWorld(Vector2 relativePos);
+        public void AdjustSize(Vector2 newSize);
+        public Camera2D GetCamera();
+        public Rect GetArea();
+        public float GetZoomFactor();
+        public float GetZoomFactorInverse();
+        //public bool IsPixelSmoothingCameraEnabled();
+        //public Camera2D GetPixelSmoothingCamera();
+
+    }
+    public class CameraBasic : ICamera
+    {
+        public float BaseRotationDeg { get; private set; } = 0f;
+        public Vector2 BaseOffset { get; private set; } = new(0f);
+        public float BaseZoom { get; private set; } = 1f;
+        public Vector2 BaseSize { get; private set; } = new(0f);
+        public Vector2 Origin { get; private set; } = new(0f);
+        public Vector2 Translation { get; set; } = new(0f);
+        public float RotationDeg { get; set; } = 0f;
+        public float Zoom { get; set; } = 1f;
+        //public float ZoomStretchFactor { get; private set; } = 1f;
+
+        public Camera2D WorldCamera { get; private set; }
+
+
+
+        public CameraBasic(Vector2 pos, Vector2 size, Vector2 origin, float baseZoom, float rotation)//, float zoomStretchFactor)
+        {
+            this.BaseSize = size;
+            this.Origin = origin;
+            this.BaseOffset = size * origin;
+            this.BaseZoom = baseZoom;
+            this.BaseRotationDeg = rotation;
+            this.WorldCamera = new() { offset = BaseOffset, rotation = BaseRotationDeg, zoom = baseZoom * Zoom, target = pos };
+        }
+        public void AdjustSize(Vector2 newSize)
+        {
+            this.BaseSize = newSize;
+            this.BaseOffset = newSize * Origin;
+        }
+        public void AdjustOrigin(Vector2 newOrigin)
+        {
+            this.Origin = newOrigin;
+            this.BaseOffset = this.BaseSize * this.Origin;
+        }
+        public void Update(float dt)
+        {
+            Vector2 rawCameraOffset = BaseOffset;
+            float rawCameraRotationDeg = BaseRotationDeg + RotationDeg;
+            float rawCameraZoom = BaseZoom * Zoom;
+            Vector2 rawCameraTarget = Translation;
+
+            var c = new Camera2D();
+            c.target = rawCameraTarget;
+            c.offset = rawCameraOffset;
+            c.zoom = rawCameraZoom;
+            c.rotation = rawCameraRotationDeg;
+            WorldCamera = c;
+
+        }
+
+        public void ResetZoom() { Zoom = 1f; }
+        public void ResetRotation() { RotationDeg = 0f; }
+        public void ResetTranslation() { Translation = new(0f); }
+
+
+        public Vector2 WorldToScreen(Vector2 pos)
+        {
+            return Raylib.GetWorldToScreen2D(pos, GetCamera());// - Origin * BaseSize;
+            //float zoomFactor = 1 / WorldCamera.zoom;
+            //Vector2 cPos = WorldCamera.target - WorldCamera.offset * zoomFactor;
+            //Vector2 p = (absolutePos - cPos) * WorldCamera.zoom;
+            //return p;
+        }
+        public Vector2 ScreenToWorld(Vector2 pos)
+        {
+            return Raylib.GetScreenToWorld2D(pos, GetCamera());// + Origin * BaseSize;
+            //float zoomFactor = 1 / WorldCamera.zoom;
+            //Vector2 p = relativePos * zoomFactor;
+            //Vector2 cPos = WorldCamera.target - WorldCamera.offset * zoomFactor;
+            //p += cPos;
+            //return p;
+        }
+
+
+        public Rect GetArea()
+        {
+            var c = GetCamera();
+            float zoomFactor = 1f / c.zoom;
+            Vector2 size = BaseSize * zoomFactor;
+            return new(c.target, size, Origin);
+        }
+        public Camera2D GetCamera() { return WorldCamera; }
+
+        public float GetZoomFactor() { return WorldCamera.zoom; }
+        public float GetZoomFactorInverse() { return 1f / WorldCamera.zoom; }
+
+        //public bool IsPixelSmoothingCameraEnabled() { return false; }
+        //public Camera2D GetPixelSmoothingCamera() { return WorldCamera; }
+    }
+
+}
+
+
+
+
+
+/*
+    public interface ICamera
+    {
         public Rect GetArea();
         public Vector2 TransformPositionToUI(Vector2 gamePos, float gameToUIFactor);
         public Vector2 TransformPositionToGame(Vector2 uiPos, float uiToGameFactor);
@@ -49,7 +160,7 @@ namespace ShapeScreen
         {
             Vector2 rawCameraOffset = BaseOffset + Translation;
             float rawCameraRotationDeg = BaseRotationDeg + RotationDeg;
-            float rawCameraZoom = (BaseZoom /* *ZoomStretchFactor */) * ZoomFactor;
+            float rawCameraZoom = (BaseZoom) * ZoomFactor;
             Vector2 rawCameraTarget =  WorldCamera.target;
 
             var c = new Camera2D();
@@ -308,13 +419,7 @@ namespace ShapeScreen
         public Camera2D GetPixelSmoothingCamera() { return ScreenCamera; }
         public Camera2D GetCamera() { return WorldCamera; }
     }
-
-}
-
-
-
-
-
+    */
 /*
 public class CameraOrder
 {

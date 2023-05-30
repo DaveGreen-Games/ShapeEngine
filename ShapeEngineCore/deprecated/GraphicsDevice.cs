@@ -1,4 +1,5 @@
-﻿using Raylib_CsLo;
+﻿/*
+using Raylib_CsLo;
 using System.Numerics;
 using ShapeCore;
 
@@ -453,7 +454,7 @@ namespace ShapeScreen
        
     }
 }
-
+*/
 
 /*
     public interface IGraphicsDevice
