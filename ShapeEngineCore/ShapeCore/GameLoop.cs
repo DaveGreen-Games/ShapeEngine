@@ -931,8 +931,9 @@ namespace ShapeCore
     }
     
     
-    // fullscreen does not work correctly with adjusting textures size
-    // textureToScreen and ScreenToTexture factors are not working yet when for instance using them to scale a circe (circle should have the same size on the screen no matter what texture the circle is drawn to)
+
+    //ScreenToWorld and WorldToScreen may have to be switched...
+
     public interface ICamera2
     {
         public Vector2 WorldToScreen(Vector2 absolutePos);
@@ -1032,15 +1033,47 @@ namespace ShapeCore
     }
     public class ScreenTexture3
     {
-        public float TextureToScreen { get; private set; } = 1f;
-        public float ScreenToTexture { get; private set; } = 1f;
+        /// <summary>
+        /// Can be used for scaling sizes from this texture to match the screen.
+        /// </summary>
+        public float TextureToScreenSizeScale { get; private set; } = 1f;
+        /// <summary>
+        /// Can be used for scaling sizes from screen to match this texture.
+        /// </summary>
+        public float ScreenToTextureSizeScale { get; private set; } = 1f;
+
+        /// <summary>
+        /// The ID of this texture. It is automatically assigned in the constructor.
+        /// </summary>
         public uint ID { get; private set; }
+        /// <summary>
+        /// The draw order for drawing the texture to screen. Lower number are drawn first to the screen.
+        /// </summary>
         public int DrawOrder { get; set; } = 0;
+        /// <summary>
+        /// The blend mode of this texture used when drawing the texture to the screen.
+        /// </summary>
         public int BlendMode { get; set; } = -1;
+        /// <summary>
+        /// The relative mouse pos of this texture.
+        /// </summary>
         public Vector2 MousePos { get; set; } = new(0f);
+        /// <summary>
+        /// The clear color for drawing to this texture.
+        /// </summary>
         public Color BackgroundColor { get; set; } = new(0, 0, 0, 0);
+        /// <summary>
+        /// A tint for this texture.
+        /// </summary>
         public Color Tint { get; set; } = WHITE;
+        /// <summary>
+        /// The base size specified in the constructor.
+        /// </summary>
         public (int width, int height) BaseSize;
+        
+        /// <summary>
+        /// The shader device that returns all active shaders for drawing to the screen.
+        /// </summary>
         public IShaderDevice? ShaderDevice { private get; set; } = null;
         private ICamera2? camera = null;
 
@@ -1066,13 +1099,19 @@ namespace ShapeCore
                 new(width, height)
             };
         }
+        /// <summary>
+        /// Adjust this textures size to the target size. Matches the aspect ratio of the target size, with the closest representation of the base size of the texture.
+        /// If this textures base size aspect ratio matches the target size aspect ratio than the size is not changed.
+        /// </summary>
+        /// <param name="targetWidth">The target width to match.</param>
+        /// <param name="targetHeight">The target height to match.</param>
         public void AdjustSize(int targetWidth, int targetHeight)
         {
             float fWidth = (float)targetWidth / (float)targetHeight;
             float fHeight = (float)targetHeight / (float)targetWidth;
 
-            int w = BaseSize.width; //GetTextureWidth();
-            int h = BaseSize.height; // GetTextureHeight();
+            int w = BaseSize.width;
+            int h = BaseSize.height;
 
             float newWidth = ((h * fWidth) + w) * 0.5f;
             float newHeight = ((w * fHeight) +(h)) * 0.5f;
@@ -1093,14 +1132,22 @@ namespace ShapeCore
             }
             float tw = GetSize().X;
             float sw = (float)targetWidth;
-            ScreenToTexture = tw / sw;
-            TextureToScreen = sw / tw;
+            ScreenToTextureSizeScale = sw / tw;
+            TextureToScreenSizeScale = tw / sw;
         }
+
+        /// <summary>
+        /// Set the cur camera of this texture.
+        /// </summary>
+        /// <param name="camera"></param>
         public void SetCamera(ICamera2 camera) 
         {
             this.camera = camera;
             this.camera.AdjustSize(GetSize());
         }
+        /// <summary>
+        /// Sets the camera to null.
+        /// </summary>
         public void ClearCamera() { camera = null; }
         public void Update(float dt)
         {
@@ -1112,6 +1159,12 @@ namespace ShapeCore
 
             }
         }
+        /// <summary>
+        /// Draw this texture onto another surface like the screen.
+        /// </summary>
+        /// <param name="targetWidth">The target width of the surface to draw to.</param>
+        /// <param name="targetHeight">The target height of the surface to draw to.</param>
+        /// <param name="blendMode">The blend mode for drawing to the surface.</param>
         public void DrawTexture(int targetWidth, int targetHeight, int blendMode = -1)
         {
             var destRec = new Rectangle();
@@ -1135,6 +1188,9 @@ namespace ShapeCore
                 EndBlendMode();
             }
         }
+        /// <summary>
+        /// Close this texture. Unloads the texture and the screen buffers.
+        /// </summary>
         public void Close()
         {
             UnloadRenderTexture(texture);
@@ -1145,6 +1201,9 @@ namespace ShapeCore
             screenBuffers = new ScreenBuffer[0];
         }
 
+        /// <summary>
+        /// Start to draw on this texture.
+        /// </summary>
         public void BeginTextureMode()
         {
             if (camera != null)
@@ -1159,6 +1218,9 @@ namespace ShapeCore
                 ClearBackground(BackgroundColor);
             }
         }
+        /// <summary>
+        /// End the drawing to this texture.
+        /// </summary>
         public void EndTextureMode()
         {
             if (camera != null)
@@ -1185,6 +1247,11 @@ namespace ShapeCore
                 Raylib.EndTextureMode();
             }
         }
+        /// <summary>
+        /// Draws the texture to the screen with all active shaders applied.
+        /// </summary>
+        /// <param name="targetWidth">The width of the screen.</param>
+        /// <param name="targetHeight">The height of the screen.</param>
         public void DrawToScreen(int targetWidth, int targetHeight)
         {
             if (camera != null && camera.IsPixelSmoothingCameraEnabled())
@@ -1259,26 +1326,53 @@ namespace ShapeCore
             if (camera != null && camera.IsPixelSmoothingCameraEnabled()) EndMode2D();
         }
 
+        /// <summary>
+        /// Get the size of the screen texture.
+        /// </summary>
+        /// <returns></returns>
         public Vector2 GetSize() { return new(texture.texture.width, texture.texture.height); }
+        /// <summary>
+        /// Get the width of the screen texture.
+        /// </summary>
+        /// <returns></returns>
         public int GetTextureWidth() { return texture.texture.width; }
+        /// <summary>
+        /// Get the height of the screen texture.
+        /// </summary>
+        /// <returns></returns>
         public int GetTextureHeight() { return texture.texture.height; }
-        public float GetSizeFactor(Vector2 targetSize) { return targetSize.X / GetSize().X; }
-        public float GetSizeFactor(ScreenTexture3 target) { return target.GetSize().X / GetSize().X; }
-        public Vector2 ScalePosition(Vector2 pos, Vector2 fromSize)
-        {
-            Vector2 textureSize = GetSize();
-            Vector2 f = new
-                (
-                textureSize.X / fromSize.X,
-                textureSize.Y / fromSize.Y
-                );
-            return ScreenToWorld(pos * f);
-        }
-        public Vector2 ScalePosition(Vector2 pos, ScreenTexture3 to)
-        {
-            float f = GetSizeFactor(to.GetSize());
-            return to.ScreenToWorld(WorldToScreen(pos) * f);
-        }
+        /// <summary>
+        /// Get a factor for scaling a a position relative to this texture to a position relative to "toSize".
+        /// </summary>
+        /// <param name="toSize">The target size for the scale factor.</param>
+        /// <returns>Returns a factor for scaling positions.</returns>
+        public float GetScaleFactorTo(Vector2 toSize) { return toSize.X / GetSize().X; }
+        /// <summary>
+        /// Get a factor for scaling a position relative to this texture to another texture.
+        /// </summary>
+        /// <param name="to">The target texture for the scale factor.</param>
+        /// <returns>Returns a factor for scaling positions.</returns>
+        public float GetScaleFactorTo(ScreenTexture3 to) { return to.GetSize().X / GetSize().X; }
+        /// <summary>
+        /// Get a factor for scaling a position relative to "fromSize" to this texture.
+        /// </summary>
+        /// <param name="fromSize"></param>
+        /// <returns>Returns a factor for scaling positions.</returns>
+        public float GetScaleFactorFrom(Vector2 fromSize) { return GetSize().X / fromSize.X; }
+        /// <summary>
+        /// Scale a position from "fromSize" to this texture.
+        /// </summary>
+        /// <param name="pos">The position to scale.</param>
+        /// <param name="fromSize">The size the position is relative to.</param>
+        /// <returns>Returns the scaled position in world space.</returns>
+        public Vector2 ScalePosition(Vector2 pos, Vector2 fromSize) { return ScreenToWorld(pos * GetScaleFactorFrom(fromSize)); }
+        /// <summary>
+        /// Scales a position from this texture to the target texture.
+        /// </summary>
+        /// <param name="pos">The position to scale.</param>
+        /// <param name="to">The target texture to scale to.</param>
+        /// <returns>Return the position scaled to the target texture in world space.</returns>
+        public Vector2 ScalePosition(Vector2 pos, ScreenTexture3 to) { return to.ScreenToWorld(WorldToScreen(pos) * GetScaleFactorTo(to.GetSize())); }
 
 
         /// <summary>
@@ -1302,13 +1396,21 @@ namespace ShapeCore
             else return pos;
         }
 
-
+        /// <summary>
+        /// Add a flash to this texture for a certain duration. The color of the flash lerps from start to end color.
+        /// </summary>
+        /// <param name="duration">Must be bigger than 0.</param>
+        /// <param name="startColor">The flash start color.</param>
+        /// <param name="endColor">The flash end color.</param>
         public void Flash(float duration, Color startColor, Color endColor)
         {
             if (duration <= 0.0f) return;
             ScreenFlash flash = new(duration, startColor, endColor);
             screenFlashes.Add(flash);
         }
+        /// <summary>
+        /// Stop all current flashes.
+        /// </summary>
         public void StopFlash() { screenFlashes.Clear(); }
 
 
