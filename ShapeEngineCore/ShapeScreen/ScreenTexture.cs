@@ -172,12 +172,13 @@ namespace ShapeScreen
         public void ClearCamera() { camera = null; }
         public void Update(float dt)
         {
+            if(camera != null) camera.Update(dt);
+
             for (int i = screenFlashes.Count() - 1; i >= 0; i--)
             {
                 var flash = screenFlashes[i];
                 flash.Update(dt);
                 if (flash.IsFinished()) { screenFlashes.RemoveAt(i); }
-
             }
         }
         /// <summary>

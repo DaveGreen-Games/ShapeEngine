@@ -76,6 +76,12 @@ namespace ShapeCore
         public ExitCode(bool restart) { this.restart = restart; }
 
     }
+    
+    //make gameloop hierarchy
+    //  -> gameloop (no screen texture and just basic stuff for the start)
+    //      -> gameloop basic (scene system and game/ui screen texture)
+    //      -> gameloop light (no scene system and screen texture dictionary)
+    
     public abstract class GameLoop
     {
         public static readonly string CURRENT_DIRECTORY = Environment.CurrentDirectory;
