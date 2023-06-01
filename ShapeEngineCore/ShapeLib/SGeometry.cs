@@ -118,7 +118,7 @@ namespace ShapeLib
             else if (shape is Triangle t) return OverlapShape(seg, t);
             else if (shape is Rect r) return OverlapShape(seg, r);
             else if (shape is Polygon p) return OverlapShape(seg, p);
-            else if (shape is PolyLine pl) return Overlap(seg, pl);
+            else if (shape is PolyLine pl) return OverlapShape(seg, pl);
             else return seg.OverlapShape(shape.GetBoundingBox());
         }
         public static bool Overlap(this Circle circle, IShape shape)
@@ -128,7 +128,7 @@ namespace ShapeLib
             else if (shape is Triangle t) return OverlapShape(circle, t);
             else if (shape is Rect r) return OverlapShape(circle, r);
             else if (shape is Polygon p) return OverlapShape(circle, p);
-            else if (shape is PolyLine pl) return Overlap(circle, pl);
+            else if (shape is PolyLine pl) return OverlapShape(circle, pl);
             else return circle.OverlapShape(shape.GetBoundingBox());
         }
         public static bool Overlap(this Triangle triangle, IShape shape)
@@ -138,7 +138,7 @@ namespace ShapeLib
             else if (shape is Triangle t) return OverlapShape(triangle, t);
             else if (shape is Rect r) return OverlapShape(triangle, r);
             else if (shape is Polygon p) return OverlapShape(triangle, p);
-            else if (shape is PolyLine pl) return Overlap(triangle, pl);
+            else if (shape is PolyLine pl) return OverlapShape(triangle, pl);
             else return triangle.OverlapShape(shape.GetBoundingBox());
         }
         public static bool Overlap(this Rect rect, IShape shape)
@@ -148,7 +148,7 @@ namespace ShapeLib
             else if(shape is Triangle t)    return OverlapShape(t, rect);
             else if(shape is Rect r)        return OverlapShape(r, rect);
             else if(shape is Polygon p)     return OverlapShape(p, rect);
-            else if (shape is PolyLine pl) return Overlap(rect, pl);
+            else if (shape is PolyLine pl) return OverlapShape(rect, pl);
             else return rect.OverlapShape(shape.GetBoundingBox());
         }
         public static bool Overlap(this Polygon poly, IShape shape)
@@ -158,7 +158,7 @@ namespace ShapeLib
             else if (shape is Triangle t) return OverlapShape(poly, t);
             else if (shape is Rect r) return OverlapShape(poly, r);
             else if (shape is Polygon p) return OverlapShape(poly, p);
-            else if (shape is PolyLine pl) return Overlap(poly, pl);
+            else if (shape is PolyLine pl) return OverlapShape(poly, pl);
             else return poly.OverlapShape(shape.GetBoundingBox());
         }
         public static bool Overlap(this PolyLine pl, IShape shape)

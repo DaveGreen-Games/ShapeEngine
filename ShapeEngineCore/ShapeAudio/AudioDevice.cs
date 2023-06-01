@@ -10,6 +10,7 @@ namespace ShapeAudio
     
     public class AudioDevice
     {
+        private static bool initialized = false;
         public event Action<string>? PlaylistStarted;
         public event Action<string, string>? PlaylistSongStarted;
         public static readonly uint BUS_MASTER = SID.NextID;
@@ -28,6 +29,11 @@ namespace ShapeAudio
 
         public AudioDevice()
         {
+            if (!initialized)
+            {
+                InitAudioDevice();
+                initialized = true;
+            }
             BusAdd(BUS_MASTER, 1f);
         }
         //MAIN

@@ -293,7 +293,7 @@ namespace ShapeCore
         public float height;
 
         public Vector2 TopLeft { get { return new Vector2(x, y); } }
-        public Vector2 TopRight { get { return new Vector2(x + width, 0); } }
+        public Vector2 TopRight { get { return new Vector2(x + width, y); } }
         public Vector2 BottomRight { get { return new Vector2(x + width, y + height); } }
         public Vector2 BottomLeft { get { return new Vector2(x, y + height); } }
         public Vector2 Center { get { return new Vector2(x + width * 0.5f, y + height * 0.5f); } }

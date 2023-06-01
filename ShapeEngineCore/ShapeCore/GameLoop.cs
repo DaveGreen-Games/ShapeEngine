@@ -128,7 +128,7 @@ namespace ShapeCore
         public GameLoop()
         {
             InitWindow(0, 0, "");
-
+            
             ClearWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
             SetWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
 
