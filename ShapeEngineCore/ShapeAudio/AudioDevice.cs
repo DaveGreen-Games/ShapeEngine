@@ -6,12 +6,8 @@ using ShapeLib;
 
 namespace ShapeAudio
 {
-    //should each screen texture or each camera have an audio device?
-    //audio device hierarchy
-    //  -> just bus system + sounds
-    //      -> spatial override system
-    //          -> looping sounds
-    //              -> playlist system
+    //each screen texture can have an audio device?
+    
     public class AudioDevice
     {
         public event Action<string>? PlaylistStarted;

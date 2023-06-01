@@ -22,9 +22,9 @@ namespace ShapeCore
         public void Start();// { }
         public void Close();// { }
 
-        public void HandleInput();// { }
+        public void HandleInput(float dt);// { }
         public void Update(float dt, Vector2 mousePosGame);// { }
-        public void Draw(Vector2 mousePosGame);// { }
+        public void Draw(Vector2 gameSize, Vector2 mousePosGame);// { }
         public void DrawUI(Vector2 uiSize, Vector2 mousePosUI);// { }
 
     }

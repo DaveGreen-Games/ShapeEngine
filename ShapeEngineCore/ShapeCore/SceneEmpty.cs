@@ -11,12 +11,12 @@ namespace ShapeCore
         public virtual void Activate(IScene oldScene) { }
         public virtual void Close() { }
         public virtual void Deactivate() { }
-        public virtual void Draw(Vector2 mousePosGame) { }
+        public virtual void Update(float dt, Vector2 mousePosGame) { }
+        public virtual void HandleInput(float dt) { }
+        public virtual void Draw(Vector2 gameSIze, Vector2 mousePosGame) { }
         public virtual void DrawUI(Vector2 uiSize, Vector2 mousePosUI) { }
         public virtual Area? GetCurArea() { return null; }
-        public virtual void HandleInput() { }
         public virtual void Start() { }
-        public virtual void Update(float dt, Vector2 mousePosGame) { }
     }
     public sealed class SceneEmpty : Scene
     {

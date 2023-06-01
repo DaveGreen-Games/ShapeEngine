@@ -60,7 +60,10 @@ namespace ShapeScreen
         /// </summary>
         public float TextureToScreenInverse { get; private set; } = 1f;
 
-
+        /// <summary>
+        /// Determines if the texture should be updated and used for drawing.
+        /// </summary>
+        public bool Active { get; set; } = true;
         /// <summary>
         /// The ID of this texture. It is automatically assigned in the constructor.
         /// </summary>
@@ -170,6 +173,10 @@ namespace ShapeScreen
         /// Sets the camera to null.
         /// </summary>
         public void ClearCamera() { camera = null; }
+        /// <summary>
+        /// Updates the current screen flashes and the camera.
+        /// </summary>
+        /// <param name="dt"></param>
         public void Update(float dt)
         {
             if(camera != null) camera.Update(dt);
