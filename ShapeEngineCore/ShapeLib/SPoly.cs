@@ -243,32 +243,38 @@ namespace ShapeLib
             }
             return r;
         }
-        public static Triangle GetBoundingTriangle(IEnumerable<Vector2> points, float margin = 3f)
+        
+        public static Triangle GetBoundingTriangle(IEnumerable<Vector2> points, float marginFactor = 1f)
         {
             var bounds = GetBoundingBox(points);
-            float dMax = SVec.Max(bounds.BottomRight - bounds.BottomLeft) * margin; //  Mathf.Max(bounds.maxX - bounds.minX, bounds.maxY - bounds.minY) * Margin;
+            float dMax = SVec.Max(bounds.Size) * marginFactor; // SVec.Max(bounds.BottomRight - bounds.BottomLeft) + margin; //  Mathf.Max(bounds.maxX - bounds.minX, bounds.maxY - bounds.minY) * Margin;
             Vector2 center = bounds.Center;
 
-            ///The float 0.866 is an arbitrary value determined for optimum supra triangle conditions.
-            float x1 = center.X - 0.866f * dMax;
-            float x2 = center.X + 0.866f * dMax;
-            float x3 = center.X;
+            ////The float 0.866 is an arbitrary value determined for optimum supra triangle conditions.
+            //float x1 = center.X - 0.866f * dMax;
+            //float x2 = center.X + 0.866f * dMax;
+            //float x3 = center.X;
+            //
+            //float y1 = center.Y - 0.5f * dMax;
+            //float y2 = center.Y - 0.5f * dMax;
+            //float y3 = center.Y + dMax;
+            //
+            //Vector2 a = new(x1, y1);
+            //Vector2 b = new(x2, y2);
+            //Vector2 c = new(x3, y3);
 
-            float y1 = center.Y - 0.5f * dMax;
-            float y2 = center.Y - 0.5f * dMax;
-            float y3 = center.Y + dMax;
+            Vector2 a = new Vector2(center.X, bounds.BottomLeft.Y + dMax);
+            Vector2 b = new Vector2(center.X - dMax * 1.25f, bounds.TopLeft.Y - dMax / 4);
+            Vector2 c = new Vector2(center.X + dMax * 1.25f, bounds.TopLeft.Y - dMax / 4);
 
-            Vector2 pointA = new(x1, y1);
-            Vector2 pointB = new(x2, y2);
-            Vector2 pointC = new(x3, y3);
 
-            return new Triangle(pointA, pointB, pointC);
+            return new Triangle(a, b, c);
         }
         public static Triangulation TriangulateDelaunay(IEnumerable<Vector2> points)
         {
             Triangulation triangles = new();
 
-            Triangle supraTriangle = GetBoundingTriangle(points);
+            Triangle supraTriangle = GetBoundingTriangle(points, 2f);
             triangles.Add(supraTriangle);
             
             foreach (var p in points)
@@ -282,8 +288,8 @@ namespace ShapeLib
 
                     //A 'bad triangle' is defined as a triangle who's CircumCentre contains the current point
                     var circumCircle = triangle.GetCircumCircle();
-                    float dist = Vector2.Distance(p, circumCircle.center);
-                    if (dist < circumCircle.radius)
+                    float distSq = Vector2.DistanceSquared(p, circumCircle.center);
+                    if (distSq < circumCircle.radius * circumCircle.radius)
                     {
                         badTriangles.Add(triangle);
                         triangles.RemoveAt(triIndex);

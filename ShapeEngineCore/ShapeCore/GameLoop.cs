@@ -276,6 +276,12 @@ namespace ShapeCore
         {
             while (!quit)
             {
+                if (WindowShouldClose())
+                {
+                    Quit();
+                    continue;
+                }
+
                 CheckWindowSizeChanged();
 
                 var mp = GetMousePosition();

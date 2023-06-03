@@ -236,7 +236,7 @@ namespace ShapeCore
 
         public Circle GetCircumCircle()
         {
-            Vector2 SqrA = new Vector2(a.X * a.X, a.Y + a.Y);
+            Vector2 SqrA = new Vector2(a.X * a.X, a.Y * a.Y);
             Vector2 SqrB = new Vector2(b.X * b.X, b.Y * b.Y); 
             Vector2 SqrC = new Vector2(c.X * c.X, c.Y * c.Y);
 
@@ -641,7 +641,7 @@ namespace ShapeCore
                     Vector2 ba = b - a;
                     Vector2 ca = c - a;
 
-                    if (ba.Cross(ca) < 0f) continue;
+                    if (ba.Cross(ca) > 0f) continue;
 
                     Triangle t = new(a, b, c);
 
