@@ -39,7 +39,11 @@ namespace ShapeLib
             }
             Raylib.DrawCircleV(segments[segments.Count - 1].end, thickness / 2, colors[(segments.Count - 1) % colors.Count]);
         }
-        
+        public static void DrawVertices(this Segment segment, float vertexRadius, Color color)
+        {
+            DrawCircleV(segment.start, vertexRadius, color);
+            DrawCircleV(segment.end, vertexRadius, color);
+        }
         public static Segments CreateLightningLine(this Segment segment, int segments = 10, float maxSway = 80f)
         {
             Segments result = new();
@@ -583,6 +587,14 @@ namespace ShapeLib
             }
         }
 
+        public static void DrawVertices(this Rect rect, float vertexRadius, Color color)
+        {
+            DrawCircleV(rect.TopLeft, vertexRadius, color);
+            DrawCircleV(rect.TopRight, vertexRadius, color);
+            DrawCircleV(rect.BottomLeft, vertexRadius, color);
+            DrawCircleV(rect.BottomRight, vertexRadius, color);
+        }
+
         public static void DrawRounded(this Rect rect, float roundness, int segments, Color color) => Raylib.DrawRectangleRounded(rect.Rectangle, roundness, segments, color);
         public static void DrawRoundedLines(this Rect rect, float roundness, float lineThickness, int segments, Color color) => Raylib.DrawRectangleRoundedLines(rect.Rectangle, roundness, segments, lineThickness, color);
 
@@ -855,7 +867,14 @@ namespace ShapeLib
 
         public static void Draw(this Triangle t, Color color) => Raylib.DrawTriangle(t.a, t.b, t.c, color);
         public static void DrawLines(this Triangle t, float lineThickness, Color color) { t.GetEdges().Draw(lineThickness, color); }
-        
+
+        public static void DrawVertices(this Triangle t, float vertexRadius, Color color)
+        {
+            DrawCircleV(t.a, vertexRadius, color);
+            DrawCircleV(t.b, vertexRadius, color);
+            DrawCircleV(t.c, vertexRadius, color);
+        }
+
         public static void Draw(this Triangulation triangles, Color color) { foreach (var t in triangles) t.Draw(color); }
         public static void DrawLines(this Triangulation triangles, float lineThickness, Color color) { foreach (var t in triangles) t.DrawLines(lineThickness, color); }
         #endregion
@@ -940,6 +959,13 @@ namespace ShapeLib
             DrawLineEx(pos + SVec.Rotate(poly[poly.Count - 1] * size, rotDeg * SUtils.DEGTORAD), pos + SVec.Rotate(poly[0] * size, rotDeg * SUtils.DEGTORAD), lineThickness, outlineColor);
         }
         
+        public static void DrawVertices(this Polygon poly, float vertexRadius, Color color)
+        {
+            foreach (var p in poly)
+            {
+                DrawCircleV(p, vertexRadius, color);
+            }
+        }
         public static void DrawCornered(this Polygon poly, float lineThickness, Color color, float cornerLength)
         {
             for (int i = 0; i < poly.Count; i++)
@@ -993,6 +1019,15 @@ namespace ShapeLib
         #region Polyline
         public static void Draw(this PolyLine polyline, float thickness, Color color) { polyline.GetEdges().Draw(thickness, color); }
         public static void Draw(this PolyLine polyline, float thickness, List<Color> colors) { polyline.GetEdges().Draw(thickness, colors); }
+
+        public static void DrawVertices(this PolyLine polyline, float vertexRadius, Color color)
+        {
+            foreach (var p in polyline)
+            {
+                DrawCircleV(p, vertexRadius, color);
+            }
+        }
+
         public static void DrawDotted(this PolyLine polyline, int gaps, float thickness, Color color, bool roundedLineEdges = false) { polyline.GetEdges().DrawDotted(gaps, thickness, color, roundedLineEdges); }
         public static void DrawDotted(this PolyLine polyline, int gaps, float gapSizeF, float thickness, Color color, bool roundedLineEdges = false) { polyline.GetEdges().DrawDotted(gaps, gapSizeF, thickness, color, roundedLineEdges); }
         public static void DrawGlow(this PolyLine polyline, float width, float endWidth, Color color, Color endColor, int steps) { polyline.GetEdges().DrawGlow(width, endWidth, color, endColor, steps); }

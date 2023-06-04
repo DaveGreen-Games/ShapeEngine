@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Raylib_CsLo;
@@ -419,7 +420,23 @@ namespace ShapeCore
         public Circle GetBoundingCircle() { return ToPolygon().GetBoundingCircle(); }
         public float GetCircumference() { return MathF.Sqrt(GetCircumferenceSquared()); }
         public float GetCircumferenceSquared() { return A.LengthSquared() + B.LengthSquared() + C.LengthSquared(); }
-        public float GetArea() { return MathF.Abs( (a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X) ); }
+        public float GetArea() 
+        {
+            //float al = A.Length();
+            //float bl = B.Length();
+            //float cl = C.Length();
+            //
+            //
+            //float i = (al + bl + cl) / 2f;
+            //float area1 = MathF.Sqrt(i * (i - al) * (i - bl) * (i - cl));
+            //float area2 = MathF.Abs((a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X)) / 2f;
+            //if(MathF.Abs(area1 - area2) > 1)
+            //{
+            //    int breakpoint = 0;
+            //}
+
+            return MathF.Abs((a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X)) / 2f;
+        }
         public Rect GetBoundingBox() { return new Rect(a.X, a.Y, 0, 0).Enlarge(b).Enlarge(c); }
         public bool IsPointInside(Vector2 p) { return SGeometry.IsPointInTriangle(a, b, c, p); }
         public Vector2 GetClosestPoint(Vector2 p) { return ToPolygon().GetClosestPoint(p); }
@@ -892,38 +909,96 @@ namespace ShapeCore
             return triangles;
         }
 
+
+
         /// <summary>
-        /// Triangulate this polygon. 
+        /// Triangulates and subdivides the triangulation until the area of triangles reaches the min area limit.
         /// </summary>
-        /// <param name="minArea">The minimum area a triangle must have to be further subdivided. Does not affect the initial triangulation.</param>
-        /// <param name="subdivisions">A subdivision triangulates all triangles from the previous triangulation. (Do not go big!) </param>
+        /// <param name="areaThresholdFactor">Used to calculate the min area limit. The threshold factor is multiplied with the total area of the polygon to recieve the min area limit.</param>
         /// <returns></returns>
-        public Triangulation Fracture(float minArea = -1, int subdivisions = 0)
+        public Triangulation Fracture(float areaThresholdFactor = 0f)
         {
             var triangulation = Triangulate();
-            //triangulation.Remove(minArea);
-            if (subdivisions <= 0) return triangulation;
-            else
-            {
-                return Subdivide(triangulation, subdivisions, minArea);
-            }
+            if(areaThresholdFactor <= 0f || areaThresholdFactor >= 1f) return triangulation;
+
+            float totalArea = triangulation.GetArea();
+            float minArea = totalArea * areaThresholdFactor;
+            
+            ////var1
+            //Triangulation final = new();
+            //foreach (var tri in triangulation)
+            //{
+            //    final.AddRange(Subdivide(tri, minArea));
+            //}
+            //return final;
+            
+            //var2
+            return Subdivide(triangulation, minArea);
         }
-        private Triangulation Subdivide(Triangulation triangles, int remaining, float minArea = -1)
+        private Triangulation Subdivide(Triangulation triangles, float minArea)
         {
-            if(remaining <= 0) return triangles;
             Triangulation subdivision = new();
+            Triangulation final = new();
             foreach (var tri in triangles)
             {
                 var area = tri.GetArea();
-                //tri.GetRandomPoint()
-                if(minArea <= 0 || tri.GetArea() >= minArea) subdivision.AddRange(tri.Triangulate());
-                else subdivision.Add(tri);
-
+                if (minArea >= area / 3) final.Add(tri);
+                else subdivision.AddRange(tri.Triangulate());
             }
-            return Subdivide(subdivision, remaining - 1, minArea);
+
+            if(subdivision.Count > 0) final.AddRange(Subdivide(subdivision, minArea));
+
+            return final;
         }
+
+        //private Triangulation Subdivide(Triangle triangle, float minArea)
+        //{
+        //    var area = triangle.GetArea();
+        //    Triangulation final = new();
+        //    if (minArea > area / 3)
+        //    {
+        //        final.Add(triangle);
+        //    }
+        //    else
+        //    {
+        //        var triangulation = triangle.Triangulate();
+        //        foreach (var tri in triangulation)
+        //        {
+        //            final.AddRange(Subdivide(tri, minArea));
+        //        }
+        //    }
+        //    return final;
+        //}
         
-        
+        ///// <summary>
+        ///// Triangulate this polygon. 
+        ///// </summary>
+        ///// <param name="minArea">The minimum area a triangle must have to be further subdivided. Does not affect the initial triangulation.</param>
+        ///// <param name="subdivisions">A subdivision triangulates all triangles from the previous triangulation. (Do not go big!) </param>
+        ///// <returns></returns>
+        //public Triangulation Fracture(float minArea = -1, int subdivisions = 0)
+        //{
+        //    var triangulation = Triangulate();
+        //    if (subdivisions <= 0) return triangulation;
+        //    else
+        //    {
+        //        return Subdivide(triangulation, subdivisions, minArea);
+        //    }
+        //}
+        //private Triangulation Subdivide(Triangulation triangles, int remaining, float minArea = -1)
+        //{
+        //    if(remaining <= 0) return triangles;
+        //    Triangulation subdivision = new();
+        //    foreach (var tri in triangles)
+        //    {
+        //        var area = tri.GetArea();
+        //        //tri.GetRandomPoint()
+        //        if(minArea <= 0 || tri.GetArea() >= minArea) subdivision.AddRange(tri.Triangulate());
+        //        else subdivision.Add(tri);
+        //
+        //    }
+        //    return Subdivide(subdivision, remaining - 1, minArea);
+        //}
         /*
         //only works with simple polygons that is why the ear clipper algorithm is used.
         public Triangulation Fracture(int fractureComplexity = 0)//fix delauny triangulation
@@ -935,7 +1010,8 @@ namespace ShapeCore
             points.AddRange(GetRandomPoints(fractureComplexity));
             return SPoly.TriangulateDelaunay(points);
         }*/
-        
+
+
         public Segments GetEdges()
         {
             if (Count <= 1) return new();
