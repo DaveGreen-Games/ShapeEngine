@@ -12,7 +12,7 @@ namespace ShapeRandom
         public WeightedItem(T item,  int weight)
         {
             this.item = item;
-            this.weight = weight;
+            this.weight = SUtils.AbsInt(weight);
         }
     }
 
@@ -93,7 +93,89 @@ namespace ShapeRandom
 
             return "";
         }
+        
+        public List<T> PickRandomItems<T>(int amount, params WeightedItem<T>[] items)
+        {
+            List<T> chosen = new();
+            int totalWeight = 0;
+            foreach (var item in items)
+            {
+                totalWeight += item.weight;
+            }
 
+            for (int i = 0; i < amount; i++)
+            {
+                int ticket = randI(0, totalWeight);
+
+                int curWeight = 0;
+                foreach (var item in items)
+                {
+                    curWeight += item.weight;
+                    if (ticket <= curWeight) 
+                    { 
+                        chosen.Add(item.item);
+                        break;
+                    }
+                }
+            }
+            return chosen;
+        }
+        public List<T> PickRandomItems<T>(int amount, params (T item, int weight)[] items)
+        {
+            List<T> chosen = new();
+            int totalWeight = 0;
+            foreach (var item in items)
+            {
+                totalWeight += item.weight;
+            }
+
+
+            for (int i = 0; i < amount; i++)
+            {
+                int ticket = randI(0, totalWeight);
+
+                int curWeight = 0;
+                foreach (var item in items)
+                {
+                    curWeight += item.weight;
+                    if (ticket <= curWeight)
+                    {
+                        chosen.Add(item.item);
+                        break;
+                    }
+                }
+            }
+
+            return chosen;
+        }
+        public List<string> PickRandomItems(int amount, params (string id, int weight)[] items)
+        {
+            List<string> chosen = new();
+            int totalWeight = 0;
+            foreach (var item in items)
+            {
+                totalWeight += item.weight;
+            }
+
+
+            for (int i = 0; i < amount; i++)
+            {
+                int ticket = randI(0, totalWeight);
+
+                int curWeight = 0;
+                foreach (var item in items)
+                {
+                    curWeight += item.weight;
+                    if (ticket <= curWeight)
+                    {
+                        chosen.Add(item.id);
+                        break;
+                    }
+                }
+            }
+
+            return chosen;
+        }
 
         public bool chance(float value) { return randF() < value; }
         public float randAngleRad() { return randF(0f, 2f * RayMath.PI); }

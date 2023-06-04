@@ -18,15 +18,26 @@ namespace ShapeLib
         {
            return rand.PickRandomItem(items);
         }
+        public static List<T> PickRandomItems<T>(int amount, params WeightedItem<T>[] items)
+        {
+            return rand.PickRandomItems(amount, items);
+        }
         public static T? PickRandomItem<T>(params (T item, int weight)[] items)
         {
             return rand.PickRandomItem(items);
+        }
+        public static List<T> PickRandomItems<T>(int amount, params (T item, int weight)[] items)
+        {
+            return rand.PickRandomItems<T>(amount, items);
         }
         public static string PickRandomItem(params (string id, int weight)[] items)
         {
             return rand.PickRandomItem(items);
         }
-
+        public static List<string> PickRandomItems(int amount, params (string id, int weight)[] items)
+        {
+            return rand.PickRandomItems(amount, items);
+        }
 
         public static bool chance(float value) { return rand.chance(value); }
         public static float randAngleRad() { return rand.randAngleRad(); }

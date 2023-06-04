@@ -218,6 +218,7 @@ namespace ShapeLib
         public static Polygons Combine(this Polygon poly, Polygon other) { return SClipper.Union(poly, other).ToPolygons(); }
         public static Polygons Combine(params Polygon[] polygons) { return SClipper.Union(new Polygons(polygons)).ToPolygons(); }
 
+        //rework-------------------------------??
         public static Polygons Fracture(this Polygon poly, Vector2 cutPos, float minCutRadius, float maxCutRadius, int pointCount = 16)
         {
             var cut = Generate(cutPos, pointCount, minCutRadius, maxCutRadius);
@@ -228,7 +229,7 @@ namespace ShapeLib
             var cut = Generate(cutLine, minMagnitude, maxMagnitude, minSectionLength, maxSectionLength);
             return poly.Cut(cut);
         }
-
+        //--------------------------------------
 
 
         public static Rect GetBoundingBox(IEnumerable<Vector2> points)
@@ -270,7 +271,7 @@ namespace ShapeLib
 
             return new Triangle(a, b, c);
         }
-        public static Triangulation TriangulateDelaunay(IEnumerable<Vector2> points)
+        public static Triangulation TriangulateDelaunay(IEnumerable<Vector2> points)//does not work!!!!----------------------------------------------------------------------------------------------------------------
         {
             Triangulation triangles = new();
 

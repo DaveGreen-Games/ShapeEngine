@@ -23,10 +23,18 @@ namespace ShapeLib
         }
         public static Vector2 GetPoint(this Triangle t, float f1, float f2)
         {
-            float f1Sq = MathF.Sqrt(f1);
-            float x = (1f - f1Sq) * t.a.X + (f1Sq * (1f - f2)) * t.b.X + (f1Sq * f2) * t.c.X;
-            float y = (1f - f1Sq) * t.a.Y + (f1Sq * (1f - f2)) * t.b.Y + (f1Sq * f2) * t.c.Y;
-            return new(x, y);
+            if((f1 + f2) > 1)
+            {
+                f1 = 1f - f1;
+                f2 = 1f - f2;
+            }
+            Vector2 ac = (t.c - t.a) * f1;
+            Vector2 ab = (t.b - t.a) * f2;
+            return t.a + ac + ab;
+            //float f1Sq = MathF.Sqrt(f1);
+            //float x = (1f - f1Sq) * t.a.X + (f1Sq * (1f - f2)) * t.b.X + (f1Sq * f2) * t.c.X;
+            //float y = (1f - f1Sq) * t.a.Y + (f1Sq * (1f - f2)) * t.b.Y + (f1Sq * f2) * t.c.Y;
+            //return new(x, y);
         }
 
         public static Triangle Rotate(this Triangle t, float rad) { return Rotate(t, t.GetCentroid(), rad); }

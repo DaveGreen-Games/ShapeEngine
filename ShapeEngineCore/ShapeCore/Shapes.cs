@@ -135,9 +135,27 @@ namespace ShapeCore
             return disSqA <= disSqB ? start : end;
         }
         public Vector2 GetRandomPoint() { return this.GetPoint(SRNG.randF()); }
+        public List<Vector2> GetRandomPoints(int amount)
+        {
+            var points = new List<Vector2>();
+            for (int i = 0; i < amount; i++)
+            {
+                points.Add(GetRandomPoint());
+            }
+            return points;
+        }
         public Vector2 GetRandomVertex() { return SRNG.chance(0.5f) ? start : end; }
         public Segment GetRandomEdge() { return this; }
         public Vector2 GetRandomPointOnEdge() { return GetRandomPoint(); }
+        public List<Vector2> GetRandomPointsOnEdge(int amount)
+        {
+            var points = new List<Vector2>();
+            for (int i = 0; i < amount; i++)
+            {
+                points.Add(GetRandomPointOnEdge());
+            }
+            return points;
+        }
         public void DrawShape(float linethickness, Color color) => this.Draw(linethickness, color);
 
 
@@ -184,10 +202,27 @@ namespace ShapeCore
             var randDir = SVec.VecFromAngleRad(randAngle);
             return center + randDir * SRNG.randF(0, radius);
         }
+        public List<Vector2> GetRandomPoints(int amount)
+        {
+            var points = new List<Vector2>();
+            for (int i = 0; i < amount; i++)
+            {
+                points.Add(GetRandomPoint());
+            }
+            return points;
+        }
         public Vector2 GetRandomVertex() { return GetRandomPoint(); }
         public Segment GetRandomEdge() { return SRNG.randCollection(GetEdges(), false); }
         public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
-
+        public List<Vector2> GetRandomPointsOnEdge(int amount)
+        {
+            var points = new List<Vector2>();
+            for (int i = 0; i < amount; i++)
+            {
+                points.Add(GetRandomPointOnEdge());
+            }
+            return points;
+        }
         public void DrawShape(float linethickness, Color color) => this.DrawLines(linethickness, color);
 
 
@@ -270,15 +305,51 @@ namespace ShapeCore
         public Circle GetBoundingCircle() { return ToPolygon().GetBoundingCircle(); }
         public float GetCircumference() { return MathF.Sqrt(GetCircumferenceSquared()); }
         public float GetCircumferenceSquared() { return A.LengthSquared() + B.LengthSquared() + C.LengthSquared(); }
-        public float GetArea() { return (a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X); }
+        public float GetArea() { return MathF.Abs( (a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X) ); }
         public Rect GetBoundingBox() { return new Rect(a.X, a.Y, 0, 0).Enlarge(b).Enlarge(c); }
         public bool IsPointInside(Vector2 p) { return SGeometry.IsPointInTriangle(a, b, c, p); }
         public Vector2 GetClosestPoint(Vector2 p) { return ToPolygon().GetClosestPoint(p); }
         public Vector2 GetClosestVertex(Vector2 p) { return ToPolygon().GetClosestVertex(p); }
         public Vector2 GetRandomPoint() { return this.GetPoint(SRNG.randF(), SRNG.randF()); }
+        public List<Vector2> GetRandomPoints(int amount)
+        {
+            var points = new List<Vector2>();
+            for (int i = 0; i < amount; i++)
+            {
+                points.Add(GetRandomPoint());
+            }
+            return points;
+        }
         public Vector2 GetRandomVertex() { return GetRandomPoint(); }
-        public Segment GetRandomEdge() { return SRNG.randCollection(GetEdges(), false); }
+        public Segment GetRandomEdge() 
+        {
+            var edges = GetEdges();
+            List<WeightedItem<Segment>> items = new(edges.Count);
+            foreach (var edge in edges)
+            {
+                items.Add(new(edge, (int)edge.LengthSquared));
+            }
+            return SRNG.PickRandomItem(items.ToArray());
+            //return SRNG.randCollection(GetEdges(), false); 
+        }
         public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
+        public List<Vector2> GetRandomPointsOnEdge(int amount)
+        {
+            List<WeightedItem<Segment>> items = new(amount);
+            var edges = GetEdges();
+            foreach (var edge in edges)
+            {
+                items.Add(new(edge, (int)edge.LengthSquared));
+            }
+            var pickedEdges = SRNG.PickRandomItems(amount, items.ToArray());
+            var randomPoints = new List<Vector2>();
+            foreach (var edge in pickedEdges)
+            {
+                randomPoints.Add(edge.GetRandomPoint());
+            }
+            return randomPoints;
+        }
+        
         public void DrawShape(float linethickness, Color color) => this.DrawLines(linethickness, color);
 
         //public SegmentShape GetSegmentShape() { return new(GetCentroid(), new(a, b), new(b, c), new(c, a) ); }
@@ -366,10 +437,45 @@ namespace ShapeCore
         public Vector2 GetClosestPoint(Vector2 p) { return ToPolygon().GetClosestPoint(p); }
         public Vector2 GetClosestVertex(Vector2 p) { return ToPolygon().GetClosestVertex(p); }
         public Vector2 GetRandomPoint() { return new(SRNG.randF(x, x + width), SRNG.randF(y, y + height)); }
+        public List<Vector2> GetRandomPoints(int amount)
+        {
+            var points = new List<Vector2>();
+            for (int i = 0; i < amount; i++)
+            {
+                points.Add(GetRandomPoint());
+            }
+            return points;
+        }
         public Vector2 GetRandomVertex() { return ToPolygon().GetRandomPoint(); }
-        public Segment GetRandomEdge() { return SRNG.randCollection(GetEdges(), false); }
+        public Segment GetRandomEdge()
+        {
+            var edges = GetEdges();
+            List<WeightedItem<Segment>> items = new(edges.Count);
+            foreach (var edge in edges)
+            {
+                items.Add(new(edge, (int)edge.LengthSquared));
+            }
+            return SRNG.PickRandomItem(items.ToArray());
+            //return SRNG.randCollection(GetEdges(), false); 
+        }
         public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
-        
+        public List<Vector2> GetRandomPointsOnEdge(int amount)
+        {
+            List<WeightedItem<Segment>> items = new(amount);
+            var edges = GetEdges();
+            foreach (var edge in edges)
+            {
+                items.Add(new(edge, (int)edge.LengthSquared));
+            }
+            var pickedEdges = SRNG.PickRandomItems(amount, items.ToArray());
+            var randomPoints = new List<Vector2>();
+            foreach (var edge in pickedEdges)
+            {
+                randomPoints.Add(edge.GetRandomPoint());
+            }
+            return randomPoints;
+        }
+
         public void DrawShape(float linethickness, Color color) => this.DrawLines(linethickness, color);
 
         //public Vector2 GetReferencePoint() { return Center; }
@@ -632,8 +738,10 @@ namespace ShapeCore
             vertices.AddRange(this);
             while (vertices.Count > 3)
             {
-                for (int i = 0; i < vertices.Count; i++)
+                
+                for (int count = 0; count < vertices.Count; count++)
                 {
+                    int i = SRNG.randI(0, vertices.Count);
                     Vector2 a = vertices[i];
                     Vector2 b = SUtils.GetItem(vertices, i + 1);
                     Vector2 c = SUtils.GetItem(vertices, i - 1);
@@ -669,7 +777,35 @@ namespace ShapeCore
 
             return triangles;
         }
-        public Triangulation TriangulateDelaunay() { return SPoly.TriangulateDelaunay(this); }
+        public Triangulation Triangulate(int subdivisions = 0)
+        {
+            var triangulation = Triangulate();
+            if (subdivisions <= 0) return triangulation;
+            else
+            {
+                return Subdivide(triangulation, subdivisions);
+            }
+        }
+        private Triangulation Subdivide(Triangulation triangles, int remaining)
+        {
+            if(remaining <= 0) return triangles;
+            Triangulation subdivision = new();
+            foreach (var tri in triangles)
+            {
+                //tri.GetRandomPoint()
+                subdivision.AddRange(tri.Triangulate());
+            }
+            return Subdivide(subdivision, remaining - 1);
+        }
+        public Triangulation Fracture(int fractureComplexity = 0)//fix delauny triangulation
+        {
+            if (fractureComplexity <= 0) return SPoly.TriangulateDelaunay(this);
+
+            List<Vector2> points = new();
+            points.AddRange(this);
+            points.AddRange(GetRandomPoints(fractureComplexity));
+            return SPoly.TriangulateDelaunay(points);
+        }
         public Segments GetEdges()
         {
             if (Count <= 1) return new();
@@ -794,9 +930,52 @@ namespace ShapeCore
             var item = SRNG.PickRandomItem(items.ToArray());
             return item.GetRandomPoint();
         }
+        public List<Vector2> GetRandomPoints(int amount)
+        {
+            var triangles = Triangulate();
+            WeightedItem<Triangle>[] items = new WeightedItem<Triangle>[triangles.Count];
+            for (int i = 0; i < items.Length; i++)
+            {
+                var t = triangles[i];
+                items[i] = new(t, (int)t.GetArea());
+            }
+
+
+            List<Triangle> pickedTriangles = SRNG.PickRandomItems(amount, items);
+            List<Vector2> randomPoints = new();
+            foreach (var tri in pickedTriangles) randomPoints.Add(tri.GetRandomPoint());
+
+            return randomPoints;
+        }
         public Vector2 GetRandomVertex() { return SRNG.randCollection(this, false); }
-        public Segment GetRandomEdge() { return SRNG.randCollection(GetEdges(), false); }
+        public Segment GetRandomEdge()
+        {
+            var edges = GetEdges();
+            List<WeightedItem<Segment>> items = new(edges.Count);
+            foreach (var edge in edges)
+            {
+                items.Add(new(edge, (int)edge.LengthSquared));
+            }
+            return SRNG.PickRandomItem(items.ToArray());
+            //return SRNG.randCollection(GetEdges(), false); 
+        }
         public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
+        public List<Vector2> GetRandomPointsOnEdge(int amount)
+        {
+            List<WeightedItem<Segment>> items = new(amount);
+            var edges = GetEdges();
+            foreach (var edge in edges)
+            {
+                items.Add(new(edge, (int)edge.LengthSquared));
+            }
+            var pickedEdges = SRNG.PickRandomItems(amount, items.ToArray());
+            var randomPoints = new List<Vector2>();
+            foreach (var edge in pickedEdges)
+            {
+                randomPoints.Add(edge.GetRandomPoint());
+            }
+            return randomPoints;
+        }
 
         public void DrawShape(float linethickness, Color color) => SDrawing.DrawLines(this, linethickness, color);
         
@@ -1000,9 +1179,44 @@ namespace ShapeCore
             return closest;
         }
         public Vector2 GetRandomPoint() { return GetRandomPointOnEdge(); }
+        public List<Vector2> GetRandomPoints(int amount)
+        {
+            var points = new List<Vector2>();
+            for (int i = 0; i < amount; i++)
+            {
+                points.Add(GetRandomPoint());
+            }
+            return points;
+        }
         public Vector2 GetRandomVertex() { return SRNG.randCollection(this, false); }
-        public Segment GetRandomEdge() { return SRNG.randCollection(GetEdges(), false); }
+        public Segment GetRandomEdge()
+        {
+            var edges = GetEdges();
+            List<WeightedItem<Segment>> items = new(edges.Count);
+            foreach (var edge in edges)
+            {
+                items.Add(new(edge, (int)edge.LengthSquared));
+            }
+            return SRNG.PickRandomItem(items.ToArray());
+            //return SRNG.randCollection(GetEdges(), false); 
+        }
         public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
+        public List<Vector2> GetRandomPointsOnEdge(int amount)
+        {
+            List<WeightedItem<Segment>> items = new(amount);
+            var edges = GetEdges();
+            foreach (var edge in edges)
+            {
+                items.Add(new(edge, (int)edge.LengthSquared));
+            }
+            var pickedEdges = SRNG.PickRandomItems(amount, items.ToArray());
+            var randomPoints = new List<Vector2>();
+            foreach (var edge in pickedEdges)
+            {
+                randomPoints.Add(edge.GetRandomPoint());
+            }
+            return randomPoints;
+        }
 
         public void DrawShape(float linethickness, Color color) => this.Draw(linethickness, color);
 

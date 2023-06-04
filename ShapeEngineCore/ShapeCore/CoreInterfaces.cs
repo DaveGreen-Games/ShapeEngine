@@ -182,9 +182,11 @@ namespace ShapeCore
         public Vector2 GetClosestPoint(Vector2 p);
         public Vector2 GetClosestVertex(Vector2 p);
         public Vector2 GetRandomPoint();
+        public List<Vector2> GetRandomPoints(int amount);
         public Vector2 GetRandomVertex();
         public Segment GetRandomEdge();
         public Vector2 GetRandomPointOnEdge();
+        public List<Vector2> GetRandomPointsOnEdge(int amount);
         public void DrawShape(float linethickness, Color color);
         //public SegmentShape GetSegmentShape();
         //public Vector2 GetReferencePoint();
