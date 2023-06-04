@@ -14,25 +14,21 @@ namespace ShapeCore
         public Segments(params Segment[] edges) { AddRange(edges); }
         public Segments(IEnumerable<Segment> edges) {  AddRange(edges); }
 
-        /// <summary>
-        /// Only add the segment if it not already contained in the list.
-        /// </summary>
-        /// <param name="seg"></param>
-        public void AddUnique(Segment seg)
+
+        public Segments GetUniqueSegments()
         {
-            if (!ContainsSegment(seg)) Add(seg);
-        }
-        /// <summary>
-        /// Only add the segments that are not already contained in the list.
-        /// </summary>
-        /// <param name="edges"></param>
-        public void AddUnique(IEnumerable<Segment> edges)
-        {
-            foreach (var edge in edges)
+            Segments uniqueEdges = new();
+            for (int i = Count - 1; i >= 0; i--)
             {
-                AddUnique(edge);
+                var edge = this[i];
+                if (IsUnique(edge))
+                {
+                    uniqueEdges.Add(edge);
+                }
             }
+            return uniqueEdges;
         }
+
         /// <summary>
         /// Counts how often the specified segment appears in the list.
         /// </summary>
@@ -64,6 +60,30 @@ namespace ShapeCore
             foreach (var segment in this) { if (segment.IsSame(seg)) return true; }
             return false;
         }
+        
+        
+        
+        /*
+        /// <summary>
+        /// Only add the segment if it not already contained in the list.
+        /// </summary>
+        /// <param name="seg"></param>
+        public void AddUnique(Segment seg)
+        {
+            if (!ContainsSegment(seg)) Add(seg);
+        }
+        /// <summary>
+        /// Only add the segments that are not already contained in the list.
+        /// </summary>
+        /// <param name="edges"></param>
+        public void AddUnique(IEnumerable<Segment> edges)
+        {
+            foreach (var edge in edges)
+            {
+                AddUnique(edge);
+            }
+        }
+        */
     }
    
     public class Triangulation : List<Triangle>
@@ -72,6 +92,80 @@ namespace ShapeCore
         public Triangulation(IShape shape) { AddRange(shape.Triangulate()); }
         public Triangulation(params Triangle[] triangles) { AddRange(triangles); }
         public Triangulation(IEnumerable<Triangle> triangles) { AddRange(triangles); }
+
+        /// <summary>
+        /// Get the total area of all triangles in this triangulation.
+        /// </summary>
+        /// <returns></returns>
+        public float GetArea()
+        {
+            float total = 0f;
+            foreach (var t in this)
+            {
+                total += t.GetArea();
+            }
+            return total;
+        }
+
+        /// <summary>
+        /// Remove all triangles with an area less than the threshold. If threshold is <= 0, nothing happens.
+        /// </summary>
+        /// <param name="areaThreshold"></param>
+        /// <returns></returns>
+        public int Remove(float areaThreshold)
+        {
+            if (areaThreshold <= 0f) return 0;
+
+            int count = 0;
+            for (int i = Count - 1; i >= 0; i--)
+            {
+                if (this[i].GetArea() < areaThreshold)
+                {
+                    RemoveAt(i);
+                    count++;
+                }
+            }
+
+            return count;
+        }
+        
+        //public int RemoveNarrow(float margin)
+        //{
+        //    int count = 0;
+        //    for (int i = Count - 1; i >= 0; i--)
+        //    {
+        //        float a = this[i].GetWidestAngle();
+        //        if (a < margin)
+        //        {
+        //            RemoveAt(i);
+        //            count++;
+        //        }
+        //    }
+        //
+        //    return count;
+        //}
+
+        /// <summary>
+        /// Get a new triangulation with triangles with an area >= areaThreshold.
+        /// </summary>
+        /// <param name="areaThreshold"></param>
+        /// <returns></returns>
+        public Triangulation Get(float areaThreshold)
+        {
+            Triangulation newTriangulation = new();
+            if (areaThreshold <= 0f) return newTriangulation;
+
+            for (int i = Count - 1; i >= 0; i--)
+            {
+                var t = this[i];
+                if (t.GetArea() >= areaThreshold)
+                {
+                    newTriangulation.Add(t);
+                }
+            }
+
+            return newTriangulation;
+        }
     }
     
     public struct Segment : IShape
@@ -102,7 +196,10 @@ namespace ShapeCore
         //{
         //    return base.GetHashCode();
         //}
-        public bool IsSame(Segment other) { return other.start == start && other.end == end; }
+        public bool IsSame(Segment other) 
+        {
+            return Center == other.Center; 
+        }
         public Vector2 GetCentroid() { return Center; }
         public float GetArea() { return 0f; }
         public float GetCircumference() { return Length; }
@@ -296,6 +393,23 @@ namespace ShapeCore
         }
         public bool SharesVertex(Triangle t) { return SharesVertex(t.a) || SharesVertex(t.b) || SharesVertex(t.c); }
         
+        //public float GetWidestAngle()
+        //{
+        //    float angleA = MathF.Abs((b - a).Cross(c - a));
+        //    float angleB = MathF.Abs((c - b).Cross(a - b));
+        //    float angleC = MathF.Abs((a - c).Cross(b - c));
+        //    if(angleA < angleB)
+        //    {
+        //        if (angleA < angleC) return angleA;
+        //        else return angleC;
+        //    }
+        //    else
+        //    {
+        //        if (angleB < angleC) return angleB;
+        //        else return angleC;
+        //    }
+        //}
+
         public bool IsValid() { return GetArea() > 0f; }
         public Vector2 GetCentroid() { return (a + b + c) / 3; }
         public Polygon ToPolygon() { return new(a, b, c); }
@@ -632,7 +746,7 @@ namespace ShapeCore
     }
     
     /// <summary>
-    /// Points shoud be in CCW order!!!
+    /// Points shoud be in CCW order.
     /// </summary>
     public class Polygon : List<Vector2>, IShape
     {
@@ -777,26 +891,41 @@ namespace ShapeCore
 
             return triangles;
         }
-        public Triangulation Triangulate(int subdivisions = 0)
+
+        /// <summary>
+        /// Triangulate this polygon. 
+        /// </summary>
+        /// <param name="minArea">The minimum area a triangle must have to be further subdivided. Does not affect the initial triangulation.</param>
+        /// <param name="subdivisions">A subdivision triangulates all triangles from the previous triangulation. (Do not go big!) </param>
+        /// <returns></returns>
+        public Triangulation Fracture(float minArea = -1, int subdivisions = 0)
         {
             var triangulation = Triangulate();
+            //triangulation.Remove(minArea);
             if (subdivisions <= 0) return triangulation;
             else
             {
-                return Subdivide(triangulation, subdivisions);
+                return Subdivide(triangulation, subdivisions, minArea);
             }
         }
-        private Triangulation Subdivide(Triangulation triangles, int remaining)
+        private Triangulation Subdivide(Triangulation triangles, int remaining, float minArea = -1)
         {
             if(remaining <= 0) return triangles;
             Triangulation subdivision = new();
             foreach (var tri in triangles)
             {
+                var area = tri.GetArea();
                 //tri.GetRandomPoint()
-                subdivision.AddRange(tri.Triangulate());
+                if(minArea <= 0 || tri.GetArea() >= minArea) subdivision.AddRange(tri.Triangulate());
+                else subdivision.Add(tri);
+
             }
-            return Subdivide(subdivision, remaining - 1);
+            return Subdivide(subdivision, remaining - 1, minArea);
         }
+        
+        
+        /*
+        //only works with simple polygons that is why the ear clipper algorithm is used.
         public Triangulation Fracture(int fractureComplexity = 0)//fix delauny triangulation
         {
             if (fractureComplexity <= 0) return SPoly.TriangulateDelaunay(this);
@@ -805,7 +934,8 @@ namespace ShapeCore
             points.AddRange(this);
             points.AddRange(GetRandomPoints(fractureComplexity));
             return SPoly.TriangulateDelaunay(points);
-        }
+        }*/
+        
         public Segments GetEdges()
         {
             if (Count <= 1) return new();

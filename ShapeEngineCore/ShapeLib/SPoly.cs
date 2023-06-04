@@ -218,20 +218,28 @@ namespace ShapeLib
         public static Polygons Combine(this Polygon poly, Polygon other) { return SClipper.Union(poly, other).ToPolygons(); }
         public static Polygons Combine(params Polygon[] polygons) { return SClipper.Union(new Polygons(polygons)).ToPolygons(); }
 
-        //rework-------------------------------??
-        public static Polygons Fracture(this Polygon poly, Vector2 cutPos, float minCutRadius, float maxCutRadius, int pointCount = 16)
+
+
+       
+        public static Polygons CutSimple(this Polygon poly, Vector2 cutPos, float minCutRadius, float maxCutRadius, int pointCount = 16)
         {
             var cut = Generate(cutPos, pointCount, minCutRadius, maxCutRadius);
             return poly.Cut(cut);
         }
-        public static Polygons Fracture(this Polygon poly, Segment cutLine, float minSectionLength = 0.025f, float maxSectionLength = 0.1f, float minMagnitude = 0.05f, float maxMagnitude = 0.25f)
+        public static Polygons CutSimple(this Polygon poly, Segment cutLine, float minSectionLength = 0.025f, float maxSectionLength = 0.1f, float minMagnitude = 0.05f, float maxMagnitude = 0.25f)
         {
             var cut = Generate(cutLine, minMagnitude, maxMagnitude, minSectionLength, maxSectionLength);
             return poly.Cut(cut);
         }
-        //--------------------------------------
+        
 
-
+        
+        
+        /// <summary>
+        /// Get a rect that encapsulates all points.
+        /// </summary>
+        /// <param name="points"></param>
+        /// <returns></returns>
         public static Rect GetBoundingBox(IEnumerable<Vector2> points)
         {
             if (points.Count() < 2) return new();
@@ -245,6 +253,12 @@ namespace ShapeLib
             return r;
         }
         
+        /// <summary>
+        /// Get a triangle the encapsulates all points.
+        /// </summary>
+        /// <param name="points"></param>
+        /// <param name="marginFactor"> A factor for scaling the final triangle.</param>
+        /// <returns></returns>
         public static Triangle GetBoundingTriangle(IEnumerable<Vector2> points, float marginFactor = 1f)
         {
             var bounds = GetBoundingBox(points);
@@ -271,7 +285,13 @@ namespace ShapeLib
 
             return new Triangle(a, b, c);
         }
-        public static Triangulation TriangulateDelaunay(IEnumerable<Vector2> points)//does not work!!!!----------------------------------------------------------------------------------------------------------------
+        
+        /// <summary>
+        /// Triangulates a set of points. Only works with non self intersecting shapes.
+        /// </summary>
+        /// <param name="points">The points to triangulate. Can be any set of points. (polygons as well) </param>
+        /// <returns></returns>
+        public static Triangulation TriangulateDelaunay(IEnumerable<Vector2> points)
         {
             Triangulation triangles = new();
 
@@ -299,18 +319,8 @@ namespace ShapeLib
 
                 Segments allEdges = new();
                 foreach (var badTriangle in badTriangles) { allEdges.AddRange(badTriangle.GetEdges()); }
-                
-                Segments uniqueEdges = new();
-                for (int i = allEdges.Count - 1; i >= 0; i--)
-                {
-                    var edge = allEdges[i];
-                    if (allEdges.IsUnique(edge))
-                    {
-                        uniqueEdges.Add(edge);
-                        allEdges.RemoveAt(i);
-                    }
-                }
 
+                Segments uniqueEdges = allEdges.GetUniqueSegments();
                 //Create new triangles
                 for (int i = 0; i < uniqueEdges.Count; i++)
                 {
