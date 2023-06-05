@@ -1076,7 +1076,28 @@ namespace ShapeCore
 
         public Polygon ToPolygon() { return new( this ); }
         public PolyLine ToPolyLine() { return new(this); }
-        
+
+        public int GetClosestIndex(Vector2 p)
+        {
+            if (Count <= 0) return -1;
+            if (Count == 1) return 0;
+
+            float minD = float.PositiveInfinity;
+            var edges = GetEdges();
+            int closestIndex = -1;
+            for (int i = 0; i < edges.Count; i++)
+            {
+                Vector2 c = edges[i].GetClosestPoint(p);
+                float d = (c - p).LengthSquared();
+                if (d < minD)
+                {
+                    closestIndex = i;
+                    minD = d;
+                }
+            }
+            return closestIndex;
+        }
+
         public bool IsPointInside(Vector2 p) { return SGeometry.IsPointInPoly(p, this); }
         public Vector2 GetClosestPoint(Vector2 p)
         {
@@ -1320,6 +1341,29 @@ namespace ShapeCore
             }
             return true;
         }
+
+
+        public int GetClosestIndex(Vector2 p)
+        {
+            if (Count <= 0) return -1;
+            if (Count == 1) return 0;
+
+            float minD = float.PositiveInfinity;
+            var edges = GetEdges();
+            int closestIndex = -1;
+            for (int i = 0; i < edges.Count; i++)
+            {
+                Vector2 c = edges[i].GetClosestPoint(p);
+                float d = (c - p).LengthSquared();
+                if (d < minD)
+                {
+                    closestIndex = i;
+                    minD = d;
+                }
+            }
+            return closestIndex;
+        }
+
 
         public PolyLine ToPolyLine() { return this; }
         public Polygon ToPolygon()

@@ -13,7 +13,12 @@ namespace ShapeLib
         public Polygons(params Polygon[] polygons) { AddRange(polygons); }
         public Polygons(IEnumerable<Polygon> polygons) { AddRange(polygons); }
     }
-
+    public class Polylines : List<PolyLine>
+    {
+        public Polylines() { }
+        public Polylines(params PolyLine[] polylines) { AddRange(polylines); }
+        public Polylines(IEnumerable<PolyLine> polylines) { AddRange(polylines); }
+    }
     public static class SClipper
     {
         public static PathsD ClipRect(this Rect rect, Polygon poly, int precision = 2, bool convexOnly = false)
@@ -117,7 +122,10 @@ namespace ShapeLib
             return result;
         }
 
-
+        public static PathsD Inflate(this PolyLine polyline, float delta, JoinType joinType = JoinType.Square, EndType endType = EndType.Square, float miterLimit = 2f, int precision = 2)
+        {
+            return Clipper.InflatePaths(polyline.ToClipperPaths(), delta, joinType, endType, miterLimit, precision);
+        }
         public static PathsD Inflate(this Polygon poly, float delta, JoinType joinType = JoinType.Square, EndType endType = EndType.Polygon, float miterLimit = 2f, int precision = 2)
         {
             return Clipper.InflatePaths(poly.ToClipperPaths(), delta, joinType, endType, miterLimit, precision);
@@ -204,6 +212,50 @@ namespace ShapeLib
             }
             return result;
         }
+
+        public static PolyLine ToPolyline(this PathD path)
+        {
+            var polyline = new PolyLine();
+            foreach (var point in path)
+            {
+                polyline.Add(point.ToVec2());
+            }
+            return polyline;
+        }
+        public static Polylines ToPolylines(this PathsD paths, bool removeHoles = false)
+        {
+            var polylines = new Polylines();
+            foreach (var path in paths)
+            {
+                if (!removeHoles || !IsHole(path))
+                {
+                    polylines.Add(path.ToPolyline());
+                }
+            }
+            return polylines;
+        }
+        public static PathD ToClipperPath(this PolyLine polyline)
+        {
+            var path = new PathD();
+            foreach (var vertex in polyline)
+            {
+                path.Add(vertex.ToClipperPoint());
+            }
+            return path;
+        }
+        public static PathsD ToClipperPaths(this PolyLine polyline) { return new PathsD() { polyline.ToClipperPath() }; }
+        public static PathsD ToClipperPaths(params PolyLine[] polylines) { return polylines.ToClipperPaths(); }
+        public static PathsD ToClipperPaths(this IEnumerable<PolyLine> polylines)
+        {
+            var result = new PathsD();
+            foreach (var polyline in polylines)
+            {
+                result.Add(polyline.ToClipperPath());
+            }
+            return result;
+        }
+
+
         
         //public static List<PathsD> ToClipperPathsList(this IEnumerable<Polygon> polygons)
         //{
