@@ -923,7 +923,7 @@ namespace ShapeCore
 
             float totalArea = triangulation.GetArea();
             float minArea = totalArea * areaThresholdFactor;
-            
+
             ////var1
             //Triangulation final = new();
             //foreach (var tri in triangulation)
@@ -931,25 +931,11 @@ namespace ShapeCore
             //    final.AddRange(Subdivide(tri, minArea));
             //}
             //return final;
-            
+
             //var2
-            return Subdivide(triangulation, minArea);
+            return triangulation.Subdivide(minArea); // SPoly.Subdivide(triangulation, minArea);
         }
-        private Triangulation Subdivide(Triangulation triangles, float minArea)
-        {
-            Triangulation subdivision = new();
-            Triangulation final = new();
-            foreach (var tri in triangles)
-            {
-                var area = tri.GetArea();
-                if (minArea >= area / 3) final.Add(tri);
-                else subdivision.AddRange(tri.Triangulate());
-            }
-
-            if(subdivision.Count > 0) final.AddRange(Subdivide(subdivision, minArea));
-
-            return final;
-        }
+        
 
         //private Triangulation Subdivide(Triangle triangle, float minArea)
         //{

@@ -220,7 +220,12 @@ namespace ShapeLib
 
 
 
-       
+
+
+        //cut simple should return the final polygons + the shape that was cut out---------------------------------------------------------------------------------------------------------------------------------
+
+
+        //do the same for combine
         public static Polygons CutSimple(this Polygon poly, Vector2 cutPos, float minCutRadius, float maxCutRadius, int pointCount = 16)
         {
             var cut = Generate(cutPos, pointCount, minCutRadius, maxCutRadius);
@@ -232,7 +237,7 @@ namespace ShapeLib
             return poly.Cut(cut);
         }
         
-
+        //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         
         
         /// <summary>
@@ -340,6 +345,27 @@ namespace ShapeLib
             return triangles;
         }
 
+        /// <summary>
+        /// Subdivide the triangulation until all triangles are smaller than min area.
+        /// </summary>
+        /// <param name="triangles"></param>
+        /// <param name="minArea"></param>
+        /// <returns></returns>
+        public static Triangulation Subdivide(this Triangulation triangles, float minArea)
+        {
+            Triangulation subdivision = new();
+            Triangulation final = new();
+            foreach (var tri in triangles)
+            {
+                var area = tri.GetArea();
+                if (minArea >= area) final.Add(tri);
+                else subdivision.AddRange(tri.Triangulate());
+            }
+
+            if (subdivision.Count > 0) final.AddRange(Subdivide(subdivision, minArea));
+
+            return final;
+        }
 
         public static Polygon GetShape(this Polygon relative, Vector2 pos, float rotRad, Vector2 scale)
         {

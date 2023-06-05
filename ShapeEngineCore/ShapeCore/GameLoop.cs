@@ -6,6 +6,7 @@ using Raylib_CsLo;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using ShapeLib;
+using System.Threading;
 
 namespace ShapeCore
 {
@@ -121,6 +122,8 @@ namespace ShapeCore
         public (int width, int height) CurWindowSize { get; private set; } = (0, 0);
         public (int width, int height) WindowedWindowSize { get; private set; } = (0, 0);
         public (int width, int height) WindowMinSize { get; } = (128, 128);
+
+        private bool windowMaximized = false;
 
         public MonitorDevice Monitor { get; private set; }
         public ICursor Cursor { get; private set; } = new NullCursor();
@@ -521,6 +524,33 @@ namespace ShapeCore
             }
 
             return IsFullscreen();
+        }
+
+        public bool IsWindowMaximized() { return windowMaximized; }
+        public void SetWindowMaximized(bool maximized)
+        {
+            if (windowMaximized)
+            {
+                windowMaximized = false;
+                ChangeWindowDimensions(WindowedWindowSize.width, WindowedWindowSize.height, true);
+                ClearWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
+                SetWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
+            }
+            else
+            {
+                windowMaximized = true;
+                var monitor = Monitor.CurMonitor();
+                ClearWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
+                SetWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
+                ChangeWindowDimensions(monitor.width, monitor.height, true);
+
+            }
+        }
+        public bool ToggleWindowMaximize()
+        {
+            if (IsWindowMaximized()) SetWindowMaximized(false);
+            else SetWindowMaximized(true);
+            return windowMaximized;
         }
 
         private void MonitorChanged(MonitorInfo monitor)
