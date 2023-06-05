@@ -124,6 +124,8 @@ namespace ShapeCore
         public (int width, int height) WindowMinSize { get; } = (128, 128);
 
         private bool windowMaximized = false;
+        private bool resizableState = false;
+        private bool undecoratedState = false;
 
         public MonitorDevice Monitor { get; private set; }
         public ICursor Cursor { get; private set; } = new NullCursor();
@@ -153,6 +155,9 @@ namespace ShapeCore
 
             if (resizable) SetWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
             else ClearWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
+
+            undecoratedState = undecorated;
+            resizableState = resizable;
         }
 
         /// <summary>
@@ -526,30 +531,79 @@ namespace ShapeCore
             return IsFullscreen();
         }
 
-        public bool IsWindowMaximized() { return windowMaximized; }
-        public void SetWindowMaximized(bool maximized)
+        public bool IsWindowUndecorated() { return undecoratedState; }
+        public bool IsWindowResizable() { return resizableState; }
+
+        public void SetWindowUndecorated(bool undecorated)
         {
-            if (windowMaximized)
+            if (windowMaximized) return;
+            if (undecoratedState == undecorated) return;
+            if (undecorated)
             {
-                windowMaximized = false;
-                ChangeWindowDimensions(WindowedWindowSize.width, WindowedWindowSize.height, true);
+                undecoratedState = true;
+                SetWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
+            }
+            else
+            {
+                undecoratedState = false;
                 ClearWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
+            }
+        }
+        public void SetWindowResizable(bool resizable)
+        {
+            if (windowMaximized) return;
+            if (resizableState == resizable) return;
+            if (resizable)
+            {
+                resizableState= true;
                 SetWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
             }
             else
             {
+                resizableState = false;
+                ClearWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
+            }
+        }
+
+        public bool ToggleWindowUndecorated() 
+        { 
+            SetWindowUndecorated(!undecoratedState); 
+            return undecoratedState; 
+        }
+        public bool ToggleWindowResizable()
+        {
+            SetWindowResizable(!resizableState);
+            return resizableState;
+        }
+        
+        public bool IsWindowMaximized() { return windowMaximized; }
+        public void SetWindowMaximized(bool maximized)
+        {
+            if (windowMaximized == maximized) return;
+
+            if (maximized)
+            {
                 windowMaximized = true;
                 var monitor = Monitor.CurMonitor();
-                ClearWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
-                SetWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
+
+                if(resizableState) ClearWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
+                if(!undecoratedState) SetWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
                 ChangeWindowDimensions(monitor.width, monitor.height, true);
+            }
+            else
+            {
+                windowMaximized = false;
+                ChangeWindowDimensions(WindowedWindowSize.width, WindowedWindowSize.height, true);
+                if(resizableState) SetWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
+                if(!undecoratedState) ClearWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
+
+
 
             }
         }
         public bool ToggleWindowMaximize()
         {
-            if (IsWindowMaximized()) SetWindowMaximized(false);
-            else SetWindowMaximized(true);
+            SetWindowMaximized(!windowMaximized);
             return windowMaximized;
         }
 
