@@ -206,7 +206,7 @@ namespace ShapeCore
         public float GetCircumference() { return Length; }
         public float GetCircumferenceSquared() { return LengthSquared; }
         public Polygon ToPolygon() { return new(start, end); }
-        public PolyLine ToPolyLine() { return new(start, end); }
+        public Polyline ToPolyline() { return new(start, end); }
         public Segments GetEdges() { return new(this); }
         //public Segments GetEdges(Vector2 normalReferencePoint)
         //{
@@ -284,7 +284,7 @@ namespace ShapeCore
         public Vector2 GetCentroid() { return center; }
         public Segments GetEdges() { return this.GetEdges(16); }
         public Polygon ToPolygon() { return this.GetPoints(16); }
-        public PolyLine ToPolyLine() { return this.GetPolyLinePoints(16); }
+        public Polyline ToPolyline() { return this.GetPolylinePoints(16); }
         public Triangulation Triangulate() { return ToPolygon().Triangulate(); }
         public Circle GetBoundingCircle() { return this; }
         public float GetArea() { return MathF.PI * radius * radius; }
@@ -414,7 +414,7 @@ namespace ShapeCore
         public bool IsValid() { return GetArea() > 0f; }
         public Vector2 GetCentroid() { return (a + b + c) / 3; }
         public Polygon ToPolygon() { return new(a, b, c); }
-        public PolyLine ToPolyLine() { return new(a, b, c); }
+        public Polyline ToPolyline() { return new(a, b, c); }
         public Segments GetEdges() { return new() { new(a, b), new(b, c), new(c, a) }; }
         public Triangulation Triangulate() { return this.Triangulate(GetCentroid()); }
         public Circle GetBoundingCircle() { return ToPolygon().GetBoundingCircle(); }
@@ -556,7 +556,7 @@ namespace ShapeCore
 
         public Vector2 GetCentroid() { return Center; }
         public Polygon ToPolygon() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
-        public PolyLine ToPolyLine() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
+        public Polyline ToPolyline() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
         public Segments GetEdges() { return new() { new(TopLeft, BottomLeft), new(BottomLeft, BottomRight), new(BottomRight, TopRight), new(TopRight, TopLeft) }; }
         public Triangulation Triangulate() { return ToPolygon().Triangulate(); }
         public Circle GetBoundingCircle() { return ToPolygon().GetBoundingCircle(); }
@@ -784,7 +784,7 @@ namespace ShapeCore
         /// <param name="points"></param>
         public Polygon(IShape shape) { AddRange(shape.ToPolygon()); }
         public Polygon(Polygon poly) { AddRange(poly); }
-        public Polygon(PolyLine polyLine) { AddRange(polyLine); }
+        public Polygon(Polyline polyLine) { AddRange(polyLine); }
 
         public void FixWindingOrder() { if (this.IsClockwise()) this.Reverse(); }
         public void ReduceVertexCount(int newCount)
@@ -1075,7 +1075,7 @@ namespace ShapeCore
         }
 
         public Polygon ToPolygon() { return new( this ); }
-        public PolyLine ToPolyLine() { return new(this); }
+        public Polyline ToPolyline() { return new(this); }
 
         public int GetClosestIndex(Vector2 p)
         {
@@ -1216,26 +1216,26 @@ namespace ShapeCore
         //public SegmentShape GetSegmentShape() { return new(GetEdges(), this.GetCentroid()); }
     }
 
-    public class PolyLine : List<Vector2>, IShape
+    public class Polyline : List<Vector2>, IShape
     {
-        public PolyLine() { }
+        public Polyline() { }
         /// <summary>
         /// Points should be in CCW order. Use Reverse if they are in CW order.
         /// </summary>
         /// <param name="points"></param>
-        public PolyLine(params Vector2[] points) { AddRange(points); }
+        public Polyline(params Vector2[] points) { AddRange(points); }
         /// <summary>
         /// Points should be in CCW order. Use Reverse if they are in CW order.
         /// </summary>
         /// <param name="points"></param>
-        public PolyLine(IEnumerable<Vector2> edges) { AddRange(edges); }
+        public Polyline(IEnumerable<Vector2> edges) { AddRange(edges); }
         /// <summary>
         /// Points should be in CCW order. Use Reverse if they are in CW order.
         /// </summary>
         /// <param name="points"></param>
-        public PolyLine(IShape shape) { AddRange(shape.ToPolyLine()); }
-        public PolyLine(PolyLine polyLine) { AddRange(polyLine); }
-        public PolyLine(Polygon poly) { AddRange(poly); }
+        public Polyline(IShape shape) { AddRange(shape.ToPolyline()); }
+        public Polyline(Polyline polyLine) { AddRange(polyLine); }
+        public Polyline(Polygon poly) { AddRange(poly); }
         public Vector2 GetVertex(int index)
         {
             return this[SUtils.WrapIndex(Count, index)];
@@ -1365,7 +1365,7 @@ namespace ShapeCore
         }
 
 
-        public PolyLine ToPolyLine() { return this; }
+        public Polyline ToPolyline() { return this; }
         public Polygon ToPolygon()
         {
             var polygon = new Polygon();

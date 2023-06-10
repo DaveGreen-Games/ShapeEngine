@@ -108,7 +108,7 @@ namespace ShapeLib
             else if (a is Triangle t) return Overlap(t, b);
             else if (a is Rect r) return Overlap(r, b);
             else if (a is Polygon p) return Overlap(p, b);
-            else if (a is PolyLine pl) return Overlap(pl, b);
+            else if (a is Polyline pl) return Overlap(pl, b);
             else return a.GetBoundingBox().Overlap(b);
         }
         public static bool Overlap(this Segment seg, IShape shape)
@@ -118,7 +118,7 @@ namespace ShapeLib
             else if (shape is Triangle t) return OverlapShape(seg, t);
             else if (shape is Rect r) return OverlapShape(seg, r);
             else if (shape is Polygon p) return OverlapShape(seg, p);
-            else if (shape is PolyLine pl) return OverlapShape(seg, pl);
+            else if (shape is Polyline pl) return OverlapShape(seg, pl);
             else return seg.OverlapShape(shape.GetBoundingBox());
         }
         public static bool Overlap(this Circle circle, IShape shape)
@@ -128,7 +128,7 @@ namespace ShapeLib
             else if (shape is Triangle t) return OverlapShape(circle, t);
             else if (shape is Rect r) return OverlapShape(circle, r);
             else if (shape is Polygon p) return OverlapShape(circle, p);
-            else if (shape is PolyLine pl) return OverlapShape(circle, pl);
+            else if (shape is Polyline pl) return OverlapShape(circle, pl);
             else return circle.OverlapShape(shape.GetBoundingBox());
         }
         public static bool Overlap(this Triangle triangle, IShape shape)
@@ -138,7 +138,7 @@ namespace ShapeLib
             else if (shape is Triangle t) return OverlapShape(triangle, t);
             else if (shape is Rect r) return OverlapShape(triangle, r);
             else if (shape is Polygon p) return OverlapShape(triangle, p);
-            else if (shape is PolyLine pl) return OverlapShape(triangle, pl);
+            else if (shape is Polyline pl) return OverlapShape(triangle, pl);
             else return triangle.OverlapShape(shape.GetBoundingBox());
         }
         public static bool Overlap(this Rect rect, IShape shape)
@@ -148,7 +148,7 @@ namespace ShapeLib
             else if(shape is Triangle t)    return OverlapShape(t, rect);
             else if(shape is Rect r)        return OverlapShape(r, rect);
             else if(shape is Polygon p)     return OverlapShape(p, rect);
-            else if (shape is PolyLine pl) return OverlapShape(rect, pl);
+            else if (shape is Polyline pl) return OverlapShape(rect, pl);
             else return rect.OverlapShape(shape.GetBoundingBox());
         }
         public static bool Overlap(this Polygon poly, IShape shape)
@@ -158,17 +158,17 @@ namespace ShapeLib
             else if (shape is Triangle t) return OverlapShape(poly, t);
             else if (shape is Rect r) return OverlapShape(poly, r);
             else if (shape is Polygon p) return OverlapShape(poly, p);
-            else if (shape is PolyLine pl) return OverlapShape(poly, pl);
+            else if (shape is Polyline pl) return OverlapShape(poly, pl);
             else return poly.OverlapShape(shape.GetBoundingBox());
         }
-        public static bool Overlap(this PolyLine pl, IShape shape)
+        public static bool Overlap(this Polyline pl, IShape shape)
         {
             if (shape is Segment s) return OverlapShape(pl, s);
             else if (shape is Circle c) return OverlapShape(pl, c);
             else if (shape is Triangle t) return OverlapShape(pl, t);
             else if (shape is Rect r) return OverlapShape(pl, r);
             else if (shape is Polygon p) return OverlapShape(pl, p);
-            else if (shape is PolyLine otherPl) return OverlapShape(pl, otherPl);
+            else if (shape is Polyline otherPl) return OverlapShape(pl, otherPl);
             else return pl.OverlapShape(shape.GetBoundingBox());
         }
         public static bool OverlapBoundingBox(this ICollider a, ICollider b) { return OverlapShape(a.GetShape().GetBoundingBox(), b.GetShape().GetBoundingBox()); }
@@ -200,7 +200,7 @@ namespace ShapeLib
             else if (a is Triangle t) return Intersect(t, b);
             else if (a is Rect r) return Intersect(r, b);
             else if (a is Polygon p) return Intersect(p, b);
-            else if (a is PolyLine pl) return Intersect(pl, b);
+            else if (a is Polyline pl) return Intersect(pl, b);
             else return Intersect(a.GetBoundingBox(), b);
         }
         public static Intersection Intersect(this Segment seg, IShape shape)
@@ -210,7 +210,7 @@ namespace ShapeLib
             else if (shape is Triangle t) return IntersectShape(seg, t);
             else if (shape is Rect r) return IntersectShape(seg, r);
             else if (shape is Polygon p) return IntersectShape(seg, p);
-            else if (shape is PolyLine pl) return IntersectShape(seg, pl);
+            else if (shape is Polyline pl) return IntersectShape(seg, pl);
             else return seg.IntersectShape(shape.GetBoundingBox());// new();
         }
         public static Intersection Intersect(this Circle circle, IShape shape)
@@ -220,7 +220,7 @@ namespace ShapeLib
             else if (shape is Triangle t)   return IntersectShape(circle, t);
             else if (shape is Rect r)       return IntersectShape(circle, r);
             else if (shape is Polygon p)    return IntersectShape(circle, p);
-            else if (shape is PolyLine pl)  return IntersectShape(circle, pl);
+            else if (shape is Polyline pl)  return IntersectShape(circle, pl);
             else return circle.IntersectShape(shape.GetBoundingBox());// new();
         }
         public static Intersection Intersect(this Triangle triangle, IShape shape)
@@ -230,7 +230,7 @@ namespace ShapeLib
             else if (shape is Triangle t)   return IntersectShape(triangle, t);
             else if (shape is Rect r)       return IntersectShape(triangle, r);
             else if (shape is Polygon p)    return IntersectShape(triangle, p);
-            else if (shape is PolyLine pl)  return IntersectShape(triangle, pl);
+            else if (shape is Polyline pl)  return IntersectShape(triangle, pl);
             else return triangle.IntersectShape(shape.GetBoundingBox());// new();
         }
         public static Intersection Intersect(this Rect rect, IShape shape)
@@ -240,7 +240,7 @@ namespace ShapeLib
             else if (shape is Triangle t)   return IntersectShape(rect, t);
             else if (shape is Rect r)       return IntersectShape(rect, r);
             else if (shape is Polygon p)    return IntersectShape(rect, p);
-            else if (shape is PolyLine pl)  return IntersectShape(rect, pl);
+            else if (shape is Polyline pl)  return IntersectShape(rect, pl);
             else return rect.IntersectShape(shape.GetBoundingBox());// new();
         }
         public static Intersection Intersect(this Polygon poly, IShape shape)
@@ -250,17 +250,17 @@ namespace ShapeLib
             else if (shape is Triangle t)   return IntersectShape(poly, t);
             else if (shape is Rect r)       return IntersectShape(poly, r);
             else if (shape is Polygon p)    return IntersectShape(poly, p);
-            else if (shape is PolyLine pl)  return IntersectShape(poly, pl);
+            else if (shape is Polyline pl)  return IntersectShape(poly, pl);
             else return poly.IntersectShape(shape.GetBoundingBox());// new();
         }
-        public static Intersection Intersect(this PolyLine pl, IShape shape)
+        public static Intersection Intersect(this Polyline pl, IShape shape)
         {
             if (shape is Segment s) return IntersectShape(pl, s);
             else if (shape is Circle c) return IntersectShape(pl, c);
             else if (shape is Triangle t) return IntersectShape(pl, t);
             else if (shape is Rect r) return IntersectShape(pl, r);
             else if (shape is Polygon p) return IntersectShape(pl, p);
-            else if (shape is PolyLine otherPl) return IntersectShape(pl, otherPl);
+            else if (shape is Polyline otherPl) return IntersectShape(pl, otherPl);
             else return pl.IntersectShape(shape.GetBoundingBox());
         }
         public static Intersection IntersectBoundingBoxes(this ICollider a, ICollider b) { return IntersectShape(a.GetShape().GetBoundingBox(), b.GetShape().GetBoundingBox()); }
@@ -283,7 +283,7 @@ namespace ShapeLib
         public static bool OverlapShape(this Segments segments, Triangle t) { return t.OverlapShape(segments); }
         public static bool OverlapShape(this Segments segments, Rect r) { return r.OverlapShape(segments); }
         public static bool OverlapShape(this Segments segments, Polygon poly) { return poly.OverlapShape(segments); }
-        public static bool OverlapShape(this Segments segments, PolyLine pl) { return pl.OverlapShape(segments); }
+        public static bool OverlapShape(this Segments segments, Polyline pl) { return pl.OverlapShape(segments); }
         public static bool OverlapShape(this Segment s, Segments segments)
         {
             foreach (var seg in segments)
@@ -339,7 +339,7 @@ namespace ShapeLib
             return SRect.OverlappingRange(rectRange, segmentRange);
         }
         public static bool OverlapShape(this Segment s, Polygon poly) { return OverlapShape(poly, s); }
-        public static bool OverlapShape(this Segment s, PolyLine pl) { return OverlapShape(pl, s); }
+        public static bool OverlapShape(this Segment s, Polyline pl) { return OverlapShape(pl, s); }
         public static bool OverlapSegmentLine(this Segment s, Vector2 linePos, Vector2 lineDir) { return !SRect.SegmentOnOneSide(linePos, lineDir, s.start, s.end); }
         public static bool OverlapLineLine(Vector2 aPos, Vector2 aDir, Vector2 bPos, Vector2 bDir)
         {
@@ -454,7 +454,7 @@ namespace ShapeLib
         public static Intersection IntersectShape(this Segment s, Triangle t) { return IntersectShape(s, t.GetEdges()); }
         public static Intersection IntersectShape(this Segment s, Rect rect) { return IntersectShape(s, rect.GetEdges()); }
         public static Intersection IntersectShape(this Segment s, Polygon p) { return IntersectShape(s, p.GetEdges()); }
-        public static Intersection IntersectShape(this Segment s, PolyLine pl) { return s.IntersectShape(pl.GetEdges()); }
+        public static Intersection IntersectShape(this Segment s, Polyline pl) { return s.IntersectShape(pl.GetEdges()); }
         
         public static Intersection IntersectShape(this Segment s, Segments shape)
         {
@@ -598,7 +598,7 @@ namespace ShapeLib
             return c.IsPointInside(r.ClampOnRect(c.center));
         }
         public static bool OverlapShape(this Circle c, Polygon poly) { return poly.OverlapShape(c); }
-        public static bool OverlapShape(this Circle c, PolyLine pl) { return OverlapShape(pl, c); }
+        public static bool OverlapShape(this Circle c, Polyline pl) { return OverlapShape(pl, c); }
         public static bool OverlapCircleLine(this Circle c, Vector2 linePos, Vector2 lineDir)
         {
             Vector2 lc = c.center - linePos;
@@ -863,7 +863,7 @@ namespace ShapeLib
                 return new(points[0].p, points[0].n, points);
             }
         }
-        public static Intersection IntersectShape(this Circle c, PolyLine pl) { return c.IntersectShape(pl.GetEdges()); }
+        public static Intersection IntersectShape(this Circle c, Polyline pl) { return c.IntersectShape(pl.GetEdges()); }
 
         #endregion
 
@@ -885,7 +885,7 @@ namespace ShapeLib
         public static bool OverlapShape(this Triangle a, Triangle b) { return OverlapShape(a.ToPolygon(), b.ToPolygon()); }
         public static bool OverlapShape(this Triangle t, Rect r) { return OverlapShape(t.ToPolygon(), r); }
         public static bool OverlapShape(this Triangle t, Polygon poly) { return OverlapShape(t.ToPolygon(), poly); }
-        public static bool OverlapShape(this Triangle t, PolyLine pl) { return OverlapShape(pl, t); }
+        public static bool OverlapShape(this Triangle t, Polyline pl) { return OverlapShape(pl, t); }
 
 
         #endregion
@@ -896,7 +896,7 @@ namespace ShapeLib
         public static Intersection IntersectShape(this Triangle a, Triangle b) { return IntersectShape(a.ToPolygon(), b.ToPolygon()); }
         public static Intersection IntersectShape(this Triangle t, Rect r) { return IntersectShape(t.ToPolygon(), r.ToPolygon()); }
         public static Intersection IntersectShape(this Triangle t, Polygon p) { return IntersectShape(t.ToPolygon(), p); }
-        public static Intersection IntersectShape(this Triangle t, PolyLine pl) { return t.GetEdges().IntersectShape(pl.GetEdges()); }
+        public static Intersection IntersectShape(this Triangle t, Polyline pl) { return t.GetEdges().IntersectShape(pl.GetEdges()); }
         #endregion
 
         #endregion
@@ -926,7 +926,7 @@ namespace ShapeLib
                 SRect.OverlappingRange(aTopLeft.Y, aBottomRight.Y, bTopLeft.Y, bBottomRight.Y);
         }
         public static bool OverlapShape(this Rect r, Polygon poly) { return OverlapShape(poly, r); }
-        public static bool OverlapShape(this Rect r, PolyLine pl) { return OverlapShape(pl, r); }
+        public static bool OverlapShape(this Rect r, Polyline pl) { return OverlapShape(pl, r); }
         public static bool OverlapRectLine(this Rect rect, Vector2 linePos, Vector2 lineDir)
         {
             Vector2 n = SVec.Rotate90CCW(lineDir);
@@ -958,7 +958,7 @@ namespace ShapeLib
         public static Intersection IntersectShape(this Rect r, Triangle t) { return IntersectShape(r.GetEdges(), t.GetEdges()); }
         public static Intersection IntersectShape(this Rect a, Rect b) { return IntersectShape(a.GetEdges(), b.GetEdges()); }
         public static Intersection IntersectShape(this Rect r, Polygon p) { return IntersectShape(r.GetEdges(), p.GetEdges()); }
-        public static Intersection IntersectShape(this Rect r, PolyLine pl) { return r.GetEdges().IntersectShape(pl.GetEdges()); }
+        public static Intersection IntersectShape(this Rect r, Polyline pl) { return r.GetEdges().IntersectShape(pl.GetEdges()); }
 
         #endregion
 
@@ -1032,7 +1032,7 @@ namespace ShapeLib
             }
             return false;
         }
-        public static bool OverlapShape(this Polygon poly, PolyLine pl) { return OverlapShape(pl, poly); }
+        public static bool OverlapShape(this Polygon poly, Polyline pl) { return OverlapShape(pl, poly); }
 
 
        
@@ -1044,7 +1044,7 @@ namespace ShapeLib
         public static Intersection IntersectShape(this Polygon p, Triangle t) { return IntersectShape(p.GetEdges(), t.GetEdges()); }
         public static Intersection IntersectShape(this Polygon p, Rect r) { return IntersectShape(p.GetEdges(), r.GetEdges()); }
         public static Intersection IntersectShape(this Polygon a, Polygon b) { return IntersectShape(a.GetEdges(), b.GetEdges()); }
-        public static Intersection IntersectShape(this Polygon p, PolyLine pl) { return p.GetEdges().IntersectShape(pl.GetEdges()); }
+        public static Intersection IntersectShape(this Polygon p, Polyline pl) { return p.GetEdges().IntersectShape(pl.GetEdges()); }
 
         #endregion
 
@@ -1055,13 +1055,13 @@ namespace ShapeLib
         #region Polyline
 
         #region Overlap
-        public static bool OverlapShape(this PolyLine pl, Segments segments) { return pl.GetEdges().OverlapShape(segments); }
-        public static bool OverlapShape(this PolyLine pl, Segment s) { return pl.GetEdges().OverlapShape(s); }
-        public static bool OverlapShape(this PolyLine pl, Circle c) { return pl.GetEdges().OverlapShape(c); }
-        public static bool OverlapShape(this PolyLine pl, Triangle t) { return pl.GetEdges().OverlapShape(t); }
-        public static bool OverlapShape(this PolyLine pl, Rect r) { return pl.GetEdges().OverlapShape(r); }
-        public static bool OverlapShape(this PolyLine pl, Polygon p) { return pl.GetEdges().OverlapShape(p); }
-        public static bool OverlapShape(this PolyLine a, PolyLine b) { return a.GetEdges().OverlapShape(b.GetEdges()); }
+        public static bool OverlapShape(this Polyline pl, Segments segments) { return pl.GetEdges().OverlapShape(segments); }
+        public static bool OverlapShape(this Polyline pl, Segment s) { return pl.GetEdges().OverlapShape(s); }
+        public static bool OverlapShape(this Polyline pl, Circle c) { return pl.GetEdges().OverlapShape(c); }
+        public static bool OverlapShape(this Polyline pl, Triangle t) { return pl.GetEdges().OverlapShape(t); }
+        public static bool OverlapShape(this Polyline pl, Rect r) { return pl.GetEdges().OverlapShape(r); }
+        public static bool OverlapShape(this Polyline pl, Polygon p) { return pl.GetEdges().OverlapShape(p); }
+        public static bool OverlapShape(this Polyline a, Polyline b) { return a.GetEdges().OverlapShape(b.GetEdges()); }
 
 
 
@@ -1069,12 +1069,12 @@ namespace ShapeLib
 
         #region Intersection
         //other shape center is used for checking segment normal and if necessary normal is flipped
-        public static Intersection IntersectShape(this PolyLine pl, Segment s) { return pl.GetEdges().IntersectShape(s); }
-        public static Intersection IntersectShape(this PolyLine pl, Circle c) { return pl.GetEdges().IntersectShape(c); }
-        public static Intersection IntersectShape(this PolyLine pl, Triangle t) { return pl.GetEdges().IntersectShape(t.GetEdges()); }
-        public static Intersection IntersectShape(this PolyLine pl, Rect r) { return pl.GetEdges().IntersectShape(r.GetEdges()); }
-        public static Intersection IntersectShape(this PolyLine pl, Polygon p) { return pl.GetEdges().IntersectShape(p.GetEdges()); }
-        public static Intersection IntersectShape(this PolyLine a, PolyLine b) { return a.GetEdges().IntersectShape(b.GetEdges()); }
+        public static Intersection IntersectShape(this Polyline pl, Segment s) { return pl.GetEdges().IntersectShape(s); }
+        public static Intersection IntersectShape(this Polyline pl, Circle c) { return pl.GetEdges().IntersectShape(c); }
+        public static Intersection IntersectShape(this Polyline pl, Triangle t) { return pl.GetEdges().IntersectShape(t.GetEdges()); }
+        public static Intersection IntersectShape(this Polyline pl, Rect r) { return pl.GetEdges().IntersectShape(r.GetEdges()); }
+        public static Intersection IntersectShape(this Polyline pl, Polygon p) { return pl.GetEdges().IntersectShape(p.GetEdges()); }
+        public static Intersection IntersectShape(this Polyline a, Polyline b) { return a.GetEdges().IntersectShape(b.GetEdges()); }
         #endregion
 
         #endregion

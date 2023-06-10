@@ -13,11 +13,11 @@ namespace ShapeLib
         public Polygons(params Polygon[] polygons) { AddRange(polygons); }
         public Polygons(IEnumerable<Polygon> polygons) { AddRange(polygons); }
     }
-    public class Polylines : List<PolyLine>
+    public class Polylines : List<Polyline>
     {
         public Polylines() { }
-        public Polylines(params PolyLine[] polylines) { AddRange(polylines); }
-        public Polylines(IEnumerable<PolyLine> polylines) { AddRange(polylines); }
+        public Polylines(params Polyline[] polylines) { AddRange(polylines); }
+        public Polylines(IEnumerable<Polyline> polylines) { AddRange(polylines); }
     }
     public static class SClipper
     {
@@ -122,7 +122,7 @@ namespace ShapeLib
             return result;
         }
 
-        public static PathsD Inflate(this PolyLine polyline, float delta, JoinType joinType = JoinType.Square, EndType endType = EndType.Square, float miterLimit = 2f, int precision = 2)
+        public static PathsD Inflate(this Polyline polyline, float delta, JoinType joinType = JoinType.Square, EndType endType = EndType.Square, float miterLimit = 2f, int precision = 2)
         {
             return Clipper.InflatePaths(polyline.ToClipperPaths(), delta, joinType, endType, miterLimit, precision);
         }
@@ -213,9 +213,9 @@ namespace ShapeLib
             return result;
         }
 
-        public static PolyLine ToPolyline(this PathD path)
+        public static Polyline ToPolyline(this PathD path)
         {
-            var polyline = new PolyLine();
+            var polyline = new Polyline();
             foreach (var point in path)
             {
                 polyline.Add(point.ToVec2());
@@ -234,7 +234,7 @@ namespace ShapeLib
             }
             return polylines;
         }
-        public static PathD ToClipperPath(this PolyLine polyline)
+        public static PathD ToClipperPath(this Polyline polyline)
         {
             var path = new PathD();
             foreach (var vertex in polyline)
@@ -243,9 +243,9 @@ namespace ShapeLib
             }
             return path;
         }
-        public static PathsD ToClipperPaths(this PolyLine polyline) { return new PathsD() { polyline.ToClipperPath() }; }
-        public static PathsD ToClipperPaths(params PolyLine[] polylines) { return polylines.ToClipperPaths(); }
-        public static PathsD ToClipperPaths(this IEnumerable<PolyLine> polylines)
+        public static PathsD ToClipperPaths(this Polyline polyline) { return new PathsD() { polyline.ToClipperPath() }; }
+        public static PathsD ToClipperPaths(params Polyline[] polylines) { return polylines.ToClipperPaths(); }
+        public static PathsD ToClipperPaths(this IEnumerable<Polyline> polylines)
         {
             var result = new PathsD();
             foreach (var polyline in polylines)

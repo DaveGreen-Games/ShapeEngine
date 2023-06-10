@@ -403,7 +403,7 @@ namespace ShapeCore
     }
     public class PolylineCollider : Collider
     {
-        private PolyLine shape;
+        private Polyline shape;
         public override Vector2 Pos
         {
             get { return cur.pos; } 
@@ -437,8 +437,8 @@ namespace ShapeCore
         private Transform2D prev = new();
 
 
-        public PolylineCollider(PolyLine shape) { this.shape = shape; }
-        public PolylineCollider(PolyLine shape, Vector2 vel)
+        public PolylineCollider(Polyline shape) { this.shape = shape; }
+        public PolylineCollider(Polyline shape, Vector2 vel)
         {
             this.shape = shape;
             this.Vel = vel;
@@ -448,7 +448,7 @@ namespace ShapeCore
             this.shape = new(shape);
             this.Vel = vel;
         }
-        public PolylineCollider(PolyLine shape, Vector2 pos, Vector2 vel)
+        public PolylineCollider(Polyline shape, Vector2 pos, Vector2 vel)
         {
             this.shape = shape;
             this.cur = new(pos);
@@ -462,7 +462,7 @@ namespace ShapeCore
             this.Vel = vel;
             this.shape = new(shape);
         }
-        public PolylineCollider(PolyLine shape, Vector2 pos, float rotRad, float scale, Vector2 vel)
+        public PolylineCollider(Polyline shape, Vector2 pos, float rotRad, float scale, Vector2 vel)
         {
             this.shape = shape;
             this.Vel = vel;
@@ -483,7 +483,7 @@ namespace ShapeCore
         public override IShape GetShape() 
         {
             if(dirty) UpdateShape();
-            return new PolyLine(shape); 
+            return new Polyline(shape); 
         }
         public Polygon GetPolygonShape() 
         {

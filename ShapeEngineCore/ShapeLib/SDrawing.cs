@@ -1017,10 +1017,10 @@ namespace ShapeLib
         #endregion
 
         #region Polyline
-        public static void Draw(this PolyLine polyline, float thickness, Color color) { polyline.GetEdges().Draw(thickness, color); }
-        public static void Draw(this PolyLine polyline, float thickness, List<Color> colors) { polyline.GetEdges().Draw(thickness, colors); }
+        public static void Draw(this Polyline polyline, float thickness, Color color) { polyline.GetEdges().Draw(thickness, color); }
+        public static void Draw(this Polyline polyline, float thickness, List<Color> colors) { polyline.GetEdges().Draw(thickness, colors); }
 
-        public static void DrawVertices(this PolyLine polyline, float vertexRadius, Color color)
+        public static void DrawVertices(this Polyline polyline, float vertexRadius, Color color)
         {
             foreach (var p in polyline)
             {
@@ -1028,9 +1028,9 @@ namespace ShapeLib
             }
         }
 
-        public static void DrawDotted(this PolyLine polyline, int gaps, float thickness, Color color, bool roundedLineEdges = false) { polyline.GetEdges().DrawDotted(gaps, thickness, color, roundedLineEdges); }
-        public static void DrawDotted(this PolyLine polyline, int gaps, float gapSizeF, float thickness, Color color, bool roundedLineEdges = false) { polyline.GetEdges().DrawDotted(gaps, gapSizeF, thickness, color, roundedLineEdges); }
-        public static void DrawGlow(this PolyLine polyline, float width, float endWidth, Color color, Color endColor, int steps) { polyline.GetEdges().DrawGlow(width, endWidth, color, endColor, steps); }
+        public static void DrawDotted(this Polyline polyline, int gaps, float thickness, Color color, bool roundedLineEdges = false) { polyline.GetEdges().DrawDotted(gaps, thickness, color, roundedLineEdges); }
+        public static void DrawDotted(this Polyline polyline, int gaps, float gapSizeF, float thickness, Color color, bool roundedLineEdges = false) { polyline.GetEdges().DrawDotted(gaps, gapSizeF, thickness, color, roundedLineEdges); }
+        public static void DrawGlow(this Polyline polyline, float width, float endWidth, Color color, Color endColor, int steps) { polyline.GetEdges().DrawGlow(width, endWidth, color, endColor, steps); }
 
         #endregion
 

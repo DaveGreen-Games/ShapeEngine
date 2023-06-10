@@ -172,7 +172,7 @@ namespace ShapeCore
         public float GetCircumference();
         public float GetCircumferenceSquared();
         public Polygon ToPolygon();
-        public PolyLine ToPolyLine();
+        public Polyline ToPolyline();
         public Segments GetEdges();
         //public Segments GetEdges(Vector2 normalReferencePoint);
         public Triangulation Triangulate();
