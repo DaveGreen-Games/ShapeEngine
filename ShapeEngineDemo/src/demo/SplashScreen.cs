@@ -20,12 +20,12 @@ namespace ShapeEngineDemo
             fadeColor.a = 0;
             Action start = () => { timer = maxTime; started = true; };
             Demo.TIMER.Add(1f, start);
-            Action flash = () => ScreenHandler.UI.Flash(0.5f, Demo.PALETTES.C(ColorIDs.Player), fadeColor);
+            Action flash = () => GraphicsDevice.UITexture.Flash(0.5f, Demo.PALETTES.C(ColorIDs.Player), fadeColor);
             Demo.TIMER.Add(1f, flash);
             Action action = () => ShapeEngine.GAMELOOP.GoToScene("mainmenu");
             Demo.TIMER.Add(2f, action);
             
-            ShapeEngine.GAMELOOP.backgroundColor = Demo.PALETTES.C(ColorIDs.Background1);
+            ShapeEngine.GAMELOOP.BackgroundColor = Demo.PALETTES.C(ColorIDs.Background1);
         }
 
         public override void Deactivate(Scene? newScene)

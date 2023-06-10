@@ -24,7 +24,7 @@ namespace ShapeEngineDemo
 
         public override void Update(float dt)
         {
-            List<ICollidable> bodies = GAMELOOP.CUR_SCENE.GetCurArea().colHandler.CastSpace(pos, radius, false, collisionMask);
+            List<ICollidable> bodies = GAMELOOP.CUR_SCENE.GetCurArea().Col.CastSpace(pos, radius, false, collisionMask);
             foreach (ICollidable body in bodies)
             {
                 Collider col = body.GetCollider();

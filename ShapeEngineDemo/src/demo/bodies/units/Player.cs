@@ -298,7 +298,7 @@ namespace ShapeEngineDemo.Bodies
             //hpBar.SetColors(Demo.PALETTES.C(ColorIDs.Enemy), Demo.PALETTES.C(ColorIDs.Neutral), Demo.PALETTES.C(ColorIDs.Flash));
             //pwrBar.SetColors(Demo.PALETTES.C(ColorIDs.Player), Demo.PALETTES.C(ColorIDs.Energy));
             
-            ScreenHandler.CAMERA.AddCameraOrderChain("player translation", new CameraOrder(1f, new Vector2(250f, 0f), new Vector2(0f, 0f), EasingType.BOUNCE_OUT));
+            GraphicsDevice.Camera.AddCameraOrderChain("player translation", new CameraOrder(1f, new Vector2(250f, 0f), new Vector2(0f, 0f), EasingType.BOUNCE_OUT));
 
             //UpdateSlowResistance = 0f;
         }
@@ -378,7 +378,7 @@ namespace ShapeEngineDemo.Bodies
         {
             if (IsDead())
             {
-                Demo.TIMER.Add(5f, () => { ScreenHandler.CAMERA.ClearCameraOrderChains(); GAMELOOP.GoToScene("mainmenu"); });
+                Demo.TIMER.Add(5f, () => { GraphicsDevice.Camera.ClearCameraOrderChains(); GAMELOOP.GoToScene("mainmenu"); });
             }
         }
         protected override void WasKilled()
@@ -391,7 +391,7 @@ namespace ShapeEngineDemo.Bodies
                 GAMELOOP.AddGameObject(particle);
             }
             Demo.INPUT.AddVibration(0.5f, 0.5f, 1.5f);
-            ScreenHandler.CAMERA.AddCameraOrderChain("player died", false, new CameraOrder(5f, 1f, 2f));
+            GraphicsDevice.Camera.AddCameraOrderChain("player died", false, new CameraOrder(5f, 1f, 2f));
         }
         public override void WasDamaged(DamageInfo info)
         {
@@ -408,10 +408,10 @@ namespace ShapeEngineDemo.Bodies
                 GAMELOOP.AddGameObject(particle);
             }
             Demo.INPUT.AddVibration(0f, 0.25f, 0.5f);
-            ScreenHandler.CAMERA.Shake(0.5f, new(20f, 20f), 1f, 0f, 0.75f);
+            GraphicsDevice.Camera.Shake(0.5f, new(20f, 20f), 1f, 0f, 0.75f);
             //ScreenHandler.Flash(0.3f, ColorPalette.Cur.enemy, BLANK, true);
             //ScreenHandler.FlashTint(0.3f, BLACK, false);
-            ScreenHandler.Flash(0.5f, new(225, 25, 50, 150), new(50, 0, 0, 50), true);
+            GraphicsDevice.Flash(0.5f, new(225, 25, 50, 150), new(50, 0, 0, 50), true);
             GAMELOOP.GetCurArea().Slow("player hurt", 0.25f, 0.5f);
             //GAMELOOP.Slow(0.3f, 0.5f, 0.1f);
             //GAMELOOP.GetCurArea().UpdateSlowFactor = 0.3f;
@@ -619,9 +619,9 @@ namespace ShapeEngineDemo.Bodies
                 }
             }
 
-            Vector2 miniBarSize = new Vector2(stats.Get("size") * 2f, stats.Get("size") * 0.2f) * ScreenHandler.GAME_TO_UI * ScreenHandler.CAMERA.RawZoom;
+            Vector2 miniBarSize = new Vector2(stats.Get("size") * 2f, stats.Get("size") * 0.2f) * GraphicsDevice.GameToUI * GraphicsDevice.Camera.RawZoom;
             Vector2 miniBarOffset = new Vector2(0, stats.Get("size") * 2f);
-            Vector2 miniBarPos = ScreenHandler.TransformPositionToUI(collider.Pos - miniBarOffset);
+            Vector2 miniBarPos = GraphicsDevice.TransformPositionToUI(collider.Pos - miniBarOffset);
             //hpBarMini.SetSize();
             //pwrBarMini.SetSize(new Vector2(size * 2f, size * 0.2f) * ScreenHandler.GAME_TO_UI);
 
@@ -761,12 +761,12 @@ namespace ShapeEngineDemo.Bodies
         private void BoostStarted()
         {
             Demo.INPUT.AddVibration(0.1f, 0.05f, -1f, "boost");
-            ScreenHandler.CAMERA.AddCameraOrderChain("player boost", false, new CameraOrder(0.4f, 1f, 1.1f));
+            GraphicsDevice.Camera.AddCameraOrderChain("player boost", false, new CameraOrder(0.4f, 1f, 1.1f));
         }
         private void BoostEnded()
         {
             Demo.INPUT.RemoveVibration("boost");
-            ScreenHandler.CAMERA.AddCameraOrderChain("player boost", true, new CameraOrder(0.4f, 1.1f, 1f));
+            GraphicsDevice.Camera.AddCameraOrderChain("player boost", true, new CameraOrder(0.4f, 1.1f, 1f));
         }
 
         private void CoreTrigger(string triggerName, params float[] values)

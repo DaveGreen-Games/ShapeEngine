@@ -135,7 +135,7 @@ namespace ShapeEngineDemo
             if (GAMELOOP.CUR_SCENE == null) return null;
             var area = GAMELOOP.CUR_SCENE.GetCurArea();
             if (area == null) return null;
-            var bodies = area.colHandler.CastSpace(this.pos, targetingRange, false, this.mask);
+            var bodies = area.Col.CastSpace(this.pos, targetingRange, false, this.mask);
             return Filter(bodies);
         }
         private ICollidable? Filter(List<ICollidable> bodies)

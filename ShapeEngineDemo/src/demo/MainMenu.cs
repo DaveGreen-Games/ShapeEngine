@@ -95,7 +95,7 @@ namespace ShapeEngineDemo
         {
             base.Activate(oldScene);
             Demo.CURSOR.Switch(Demo.CURSOR_UI);
-            GAMELOOP.backgroundColor = Demo.PALETTES.C(ColorIDs.Background2);
+            GAMELOOP.BackgroundColor = Demo.PALETTES.C(ColorIDs.Background2);
             
             Demo.INPUT.SetGroupDisabled(InputIDs.GROUP_Player, true);
             Demo.INPUT.SetGroupDisabled(InputIDs.GROUP_Level, true);
@@ -111,7 +111,7 @@ namespace ShapeEngineDemo
         }
         public override void Update(float dt)
         {
-            Vector2 uiSize = ScreenHandler.UISize();
+            Vector2 uiSize = GraphicsDevice.UISize();
             Rectangle r = SRect.ConstructRect(uiSize * 0.5f, uiSize * new Vector2(0.3f, 0.4f), new Vector2(0.5f, 0.25f));
             buttonContainer.UpdateRect(r);
             buttonContainer.Update(dt, Demo.MousePosUI);
@@ -129,7 +129,7 @@ namespace ShapeEngineDemo
             }
             if (quitButton.Released)
             {
-                GAMELOOP.QUIT = true;
+                GAMELOOP.quit = true;
             }
         }
         public override void Draw()
@@ -139,7 +139,7 @@ namespace ShapeEngineDemo
         public override void DrawUI(Vector2 uiSize)
         {
 
-            Rectangle uiArea = ScreenHandler.UIArea();
+            Rectangle uiArea = GraphicsDevice.UIArea();
             DrawRectangleRec(uiArea, Demo.PALETTES.C(ColorIDs.Background1));
             SDrawing.DrawTextAligned("MAIN MENU", uiSize * new Vector2(0.5f, 0.21f), uiSize * new Vector2(0.5f, 0.5f), 1, Demo.PALETTES.C(ColorIDs.Background2), Demo.FONT.GetFont(Demo.FONT_Huge), new(0.5f));
             SDrawing.DrawTextAligned("MAIN MENU", uiSize * new Vector2(0.5f, 0.2f), uiSize * new Vector2(0.5f, 0.5f), 1, Demo.PALETTES.C(ColorIDs.Header), Demo.FONT.GetFont(Demo.FONT_Huge), new(0.5f));
@@ -153,10 +153,10 @@ namespace ShapeEngineDemo
             Vector2 gap = uiSize * new Vector2(0, 0.04f);
             Vector2 textSize = uiSize * new Vector2(0.2f, 0.05f);
             var font = Demo.FONT.GetFont(Demo.FONT_Medium);
-            SDrawing.DrawTextAligned(String.Format("UI Size: {0}", ScreenHandler.UISize()), start, textSize, 1, WHITE, font, new(0, 0.5f));
-            SDrawing.DrawTextAligned(String.Format("Dev Res: {0}", ScreenHandler.DEVELOPMENT_RESOLUTION), start + gap, textSize, 1, WHITE, font, new(0, 0.5f));
-            SDrawing.DrawTextAligned(String.Format("Target Res: {0}", ScreenHandler.UI.TARGET_RESOLUTION), start + gap * 2, textSize, 1, WHITE, font, new(0, 0.5f));
-            SDrawing.DrawTextAligned(String.Format("Win Size: {0}", ScreenHandler.CUR_WINDOW_SIZE), start + gap * 3, textSize, 1, WHITE, font, new(0, 0.5f));
+            SDrawing.DrawTextAligned(String.Format("UI Size: {0}", GraphicsDevice.UISize()), start, textSize, 1, WHITE, font, new(0, 0.5f));
+            SDrawing.DrawTextAligned(String.Format("Dev Res: {0}", GraphicsDevice.DevResolution), start + gap, textSize, 1, WHITE, font, new(0, 0.5f));
+            SDrawing.DrawTextAligned(String.Format("Target Res: {0}", GraphicsDevice.UITexture.TARGET_RESOLUTION), start + gap * 2, textSize, 1, WHITE, font, new(0, 0.5f));
+            SDrawing.DrawTextAligned(String.Format("Win Size: {0}", GraphicsDevice.CurWindowSize), start + gap * 3, textSize, 1, WHITE, font, new(0, 0.5f));
             //SDrawing.DrawTextAligned(String.Format("Stretch F: {0}", stretchFactor), start + gap * 4, textSize, 1, WHITE, font, new(0, 0.5f));
 
             if(ShapeEngine.IsWindows()) SDrawing.DrawTextAligned("Windows", start + gap * 5, textSize, 1, WHITE, font, new(0, 0.5f));

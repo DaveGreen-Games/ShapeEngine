@@ -72,7 +72,7 @@ namespace ShapeEngineDemo.Bodies
             }
             collider = new(pos, vel, this.size);
             collider.Mass = size / 2;
-            polygon = SPoly.GeneratePolygon(SRNG.randI(10, 15), new(), this.size * 0.75f, this.size*1.25f);
+            polygon = SPoly.GeneratePoints(SRNG.randI(10, 15), new(), this.size * 0.75f, this.size*1.25f);
         }
         public Asteroid(Vector2 pos, Vector2 vel, string asteroidType)
         {
@@ -90,7 +90,7 @@ namespace ShapeEngineDemo.Bodies
             }
             collider = new(pos, vel, this.size);
             collider.Mass = size / 2;
-            polygon = SPoly.GeneratePolygon(SRNG.randI(10, 15), new(), this.size * 0.75f, this.size * 1.25f);
+            polygon = SPoly.GeneratePoints(SRNG.randI(10, 15), new(), this.size * 0.75f, this.size * 1.25f);
         }
         public override void Overlap(CollisionInfo info)
         {
@@ -177,7 +177,7 @@ namespace ShapeEngineDemo.Bodies
         }
         public override void Draw()
         {
-            SDrawing.DrawPolygon(polygon, 2f, Demo.PALETTES.C(ColorIDs.Neutral), collider.Pos);
+            SDrawing.DrawPolygonLines(polygon, 2f, Demo.PALETTES.C(ColorIDs.Neutral), collider.Pos);
             if (DEBUG_DRAWCOLLIDERS)
             {
                 if(collider.IsEnabled()) collider.DrawDebugShape(DEBUG_ColliderColor);

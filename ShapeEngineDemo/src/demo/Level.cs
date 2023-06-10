@@ -183,18 +183,18 @@ namespace ShapeEngineDemo
 
             ArmoryInfo armoryInfo = new("minigun", "bouncer", "basic");
             player = new(armoryInfo, "starter");
-            ScreenHandler.CAMERA.SetTarget(player);
+            GraphicsDevice.Camera.SetTarget(player);
             //ScreenHandler.Cam.ZoomFactor = 0.35f;
         }
 
         public override void Activate(Scene? oldScene)
         {
-            ScreenHandler.GAME.Flash(0.25f, new(0, 0, 0, 255), new(0, 0, 0, 0));
+            GraphicsDevice.GameTexture.Flash(0.25f, new(0, 0, 0, 255), new(0, 0, 0, 0));
             //Action action = () => ScreenHandler.Cam.Shake(0.25f, new(75.0f, 75.0f), 1, 0, 0.75f);
             //TimerHandler.Add(0.25f, action);
             //AudioHandler.PlaySFX("explosion");
             Demo.CURSOR.Switch(Demo.CURSOR_Game);
-            GAMELOOP.backgroundColor = Demo.PALETTES.C(ColorIDs.Background1);
+            GAMELOOP.BackgroundColor = Demo.PALETTES.C(ColorIDs.Background1);
             Demo.INPUT.SetGroupDisabled(InputIDs.GROUP_Player, false);
             Demo.INPUT.SetGroupDisabled(InputIDs.GROUP_Level, false);
             Demo.INPUT.SetGroupDisabled(InputIDs.GROUP_Debug, false);
@@ -205,9 +205,9 @@ namespace ShapeEngineDemo
         public override void Deactivate(Scene? newScene)
         {
             if (newScene == null) return;
-            ScreenHandler.GAME.Flash(0.25f, new(0, 0, 0, 255), new(0, 0, 0, 255));
+            GraphicsDevice.GameTexture.Flash(0.25f, new(0, 0, 0, 255), new(0, 0, 0, 255));
             Action action = () => GAMELOOP.SwitchScene(this, newScene);
-            ScreenHandler.CAMERA.ResetZoom();
+            GraphicsDevice.Camera.ResetZoom();
             Demo.TIMER.Add(0.25f, action);
 
         }
@@ -239,8 +239,8 @@ namespace ShapeEngineDemo
                 if (Demo.INPUT.GetActionState(InputIDs.DEBUG_ToggleDrawColliders).released) DEBUG_DRAWCOLLIDERS = !DEBUG_DRAWCOLLIDERS;
                 if (Demo.INPUT.GetActionState(InputIDs.DEBUG_CycleZoom).released)
                 {
-                    ScreenHandler.CAMERA.ZoomBy(0.25f);
-                    if (ScreenHandler.CAMERA.ZoomFactor > 2) ScreenHandler.CAMERA.ZoomFactor = 0.25f;
+                    GraphicsDevice.Camera.ZoomBy(0.25f);
+                    if (GraphicsDevice.Camera.ZoomFactor > 2) GraphicsDevice.Camera.ZoomFactor = 0.25f;
                 }
 
                 //if (Raylib.IsKeyReleased(KeyboardKey.KEY_P)) TogglePause();
@@ -250,7 +250,7 @@ namespace ShapeEngineDemo
         {
             //if (IsPaused()) return;
             if (area == null) return;
-            ScreenHandler.UpdateCamera(dt);
+            GraphicsDevice.UpdateCamera(dt);
 
             if(player != null && !player.IsDead()) area.UpdateLayerParallaxe(player.GetPos());
             area.Update(dt);

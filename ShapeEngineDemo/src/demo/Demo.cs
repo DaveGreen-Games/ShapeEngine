@@ -74,7 +74,7 @@ namespace ShapeEngineDemo
         private int curResIndex = 0;
         private int curFrameRateLimitIndex = 0;
 
-        public static AudioHandler AUDIO = new();
+        public static AudioDevice AUDIO = new();
         public static ResourceManager RESOURCES = new("", "resources.txt");
         public static SavegameHandler SAVEGAME = new("solobytegames", "shape-engine-demo");
         public static DataHandler DATA = new();
@@ -181,9 +181,9 @@ namespace ShapeEngineDemo
             //ScreenHandler.SHADERS.SetScreenShaderValueFloat("blur", "renderHeight", ScreenHandler.CUR_WINDOW_SIZE.height);
             //ScreenHandler.SHADERS.SetScreenShaderValueFloat("blur", "scale", 1.25f);
             var crt = RESOURCES.LoadFragmentShader("resources/shaders/crt-shader.fs");
-            ScreenHandler.SHADERS.AddScreenShader(SHADER_CRT, crt, true, 3);
-            ScreenHandler.SHADERS.SetScreenShaderValueFloat(SHADER_CRT, "renderWidth", ScreenHandler.CUR_WINDOW_SIZE.width);
-            ScreenHandler.SHADERS.SetScreenShaderValueFloat(SHADER_CRT, "renderHeight", ScreenHandler.CUR_WINDOW_SIZE.height);
+            GraphicsDevice.Shader.AddScreenShader(SHADER_CRT, crt, true, 3);
+            GraphicsDevice.Shader.SetScreenShaderValueFloat(SHADER_CRT, "renderWidth", GraphicsDevice.CurWindowSize.width);
+            GraphicsDevice.Shader.SetScreenShaderValueFloat(SHADER_CRT, "renderHeight", GraphicsDevice.CurWindowSize.height);
             
             
             var light = RESOURCES.LoadFont("resources/fonts/teko-light.ttf", 200);
@@ -228,23 +228,23 @@ namespace ShapeEngineDemo
 
 
             //SOUNDS
-            AUDIO.SFXAdd(SoundIDs.UI_Click, buttonClick, 0.25f,                     1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.UI_Hover, buttonHover, 0.5f,                      1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.PLAYER_Boost, boost, 0.5f,                        1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.PLAYER_Slow, slow, 0.5f,                          1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.PLAYER_Hurt, playerHurt, 0.5f,                    1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.PLAYER_Die, playerDie, 0.5f,                      1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.PLAYER_StunEnded, playerStunEnded, 0.5f,          1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.PLAYER_Healed, playerHealed, 0.5f,                1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.PLAYER_PowerDown, playerPwrDown, 1.0f,            1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.PLAYER_PowerUp, playerPwrUp, 1.0f,                1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Pierce, projectilePierce, 0.7f,        1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Bounce, projectileBounce, 0.6f,        1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Impact, projectileImpact, 0.8f,        1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Explosion, projectileExplosion, 1f,    1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Crit, projectileCrit, 0.6f,            1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Shoot, bullet, 0.25f,                  1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
-            AUDIO.SFXAdd(SoundIDs.ASTEROID_Die, asteroidDie, 0.55f,                 1f, AudioHandler.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.UI_Click, buttonClick, 0.25f,                     1f, AudioDevice.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.UI_Hover, buttonHover, 0.5f,                      1f, AudioDevice.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PLAYER_Boost, boost, 0.5f,                        1f, AudioDevice.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PLAYER_Slow, slow, 0.5f,                          1f, AudioDevice.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PLAYER_Hurt, playerHurt, 0.5f,                    1f, AudioDevice.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PLAYER_Die, playerDie, 0.5f,                      1f, AudioDevice.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PLAYER_StunEnded, playerStunEnded, 0.5f,          1f, AudioDevice.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PLAYER_Healed, playerHealed, 0.5f,                1f, AudioDevice.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PLAYER_PowerDown, playerPwrDown, 1.0f,            1f, AudioDevice.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PLAYER_PowerUp, playerPwrUp, 1.0f,                1f, AudioDevice.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Pierce, projectilePierce, 0.7f,        1f, AudioDevice.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Bounce, projectileBounce, 0.6f,        1f, AudioDevice.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Impact, projectileImpact, 0.8f,        1f, AudioDevice.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Explosion, projectileExplosion, 1f,    1f, AudioDevice.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Crit, projectileCrit, 0.6f,            1f, AudioDevice.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.PROJECTILE_Shoot, bullet, 0.25f,                  1f, AudioDevice.BUS_MASTER, SoundIDs.BUS_SOUND);
+            AUDIO.SFXAdd(SoundIDs.ASTEROID_Die, asteroidDie, 0.55f,                 1f, AudioDevice.BUS_MASTER, SoundIDs.BUS_SOUND);
 
 
 
@@ -294,8 +294,8 @@ namespace ShapeEngineDemo
             INPUT.SetGroupDisabled(InputIDs.GROUP_Level, true);
             INPUT.SetGroupDisabled(InputIDs.GROUP_Debug, true);
 
-            ScreenHandler.OnWindowSizeChanged += OnWindowSizeChanged;
-            ScreenHandler.CAMERA.BaseZoom = 1.5f;
+            GraphicsDevice.OnWindowSizeChanged += OnWindowSizeChanged;
+            GraphicsDevice.Camera.BaseZoom = 1.5f;
 
             
             //Achievements
@@ -330,39 +330,39 @@ namespace ShapeEngineDemo
         }
         
 
-        public override void PostDrawUI(Vector2 uiSize)
+        public override void EndDrawUI(Vector2 uiSize)
         {
             CURSOR.Draw(uiSize, MousePosUI);
             Rectangle r = SRect.ConstructRect(uiSize * new Vector2(0.97f), uiSize * new Vector2(0.2f, 0.08f), new(1, 1));
             ACHIEVEMENTS.Draw(FONT.GetFont(Demo.FONT_Medium), r, GRAY, WHITE, BLUE, YELLOW);
             
         }
-        public override void PreUpdate(float dt)
+        public override void BeginUpdate(float dt)
         {
             TIMER.Update(dt);
             ACHIEVEMENTS.Update(dt);
-            AUDIO.Update(dt, ScreenHandler.CAMERA.RawPos);
+            AUDIO.Update(dt, GraphicsDevice.Camera.RawPos);
             INPUT.Update(dt);
             MousePos = INPUT.MousePos;
-            MousePosUI = ScreenHandler.UI.ScalePositionV(MousePos);
-            MousePosGame = ScreenHandler.TransformPositionToGame(MousePosUI);
+            MousePosUI = GraphicsDevice.UITexture.ScalePositionV(MousePos);
+            MousePosGame = GraphicsDevice.TransformPositionToGame(MousePosUI);
         }
 
-        public override void PreHandleInput()
+        public override void BeginHandleInput()
         {
 
-            if (INPUT.GetActionState(InputIDs.OPTIONS_Fullscreen).released) { ScreenHandler.ToggleFullscreen(); }
-            if (INPUT.GetActionState(InputIDs.OPTIONS_NextMonitor).released) { ScreenHandler.NextMonitor(); }
-            if (INPUT.GetActionState(InputIDs.OPTIONS_Vsync).released) { ScreenHandler.ToggleVsync(); }
+            if (INPUT.GetActionState(InputIDs.OPTIONS_Fullscreen).released) { GraphicsDevice.ToggleFullscreen(); }
+            if (INPUT.GetActionState(InputIDs.OPTIONS_NextMonitor).released) { GraphicsDevice.NextMonitor(); }
+            if (INPUT.GetActionState(InputIDs.OPTIONS_Vsync).released) { GraphicsDevice.ToggleVsync(); }
             if (INPUT.GetActionState(InputIDs.OPTIONS_CycleFrameRateLimit).released)
             {
                 List<int> frameRateLimits = new List<int>() { 30, 60, 72, 90, 120, 144, 180, 240 };
                 curFrameRateLimitIndex += 1;
                 if (curFrameRateLimitIndex >= frameRateLimits.Count) curFrameRateLimitIndex = 0;
-                ScreenHandler.SetFrameRateLimit(frameRateLimits[curFrameRateLimitIndex]);
+                GraphicsDevice.SetFrameRateLimit(frameRateLimits[curFrameRateLimitIndex]);
 
             }
-            if (INPUT.GetActionState(InputIDs.OPTIONS_CycleRes).released && !ScreenHandler.IsFullscreen())
+            if (INPUT.GetActionState(InputIDs.OPTIONS_CycleRes).released && !GraphicsDevice.IsFullscreen())
             {
                 List<(int width, int height)> supportedResolutions = new()
                 {
@@ -378,22 +378,22 @@ namespace ShapeEngineDemo
                     //21:9
                     (1280, 540), (1600,675), (2560, 1080), (3440, 1440)
                 };
-                var monitor = ScreenHandler.MONITOR_HANDLER.CurMonitor();
+                var monitor = GraphicsDevice.Monitor.CurMonitor();
                 int width = monitor.width;
                 int height = monitor.height;
                 List<(int width, int height)> resolutions = supportedResolutions.FindAll(((int width, int height) res) => res.width <= width && res.height <= height);
                 curResIndex += 1;
                 if (curResIndex >= resolutions.Count) curResIndex = 0;
                 var res = resolutions[curResIndex];
-                ScreenHandler.ResizeWindow(res.width, res.height);
+                GraphicsDevice.ResizeWindow(res.width, res.height);
 
             }
         }
 
         private void OnWindowSizeChanged(int w, int h)
         {
-            ScreenHandler.SHADERS.SetScreenShaderValueFloat(SHADER_CRT, "renderWidth", w);
-            ScreenHandler.SHADERS.SetScreenShaderValueFloat(SHADER_CRT, "renderHeight", h);
+            GraphicsDevice.Shader.SetScreenShaderValueFloat(SHADER_CRT, "renderWidth", w);
+            GraphicsDevice.Shader.SetScreenShaderValueFloat(SHADER_CRT, "renderHeight", h);
             //ScreenHandler.SHADERS.SetScreenShaderValueFloat("pixelizer", "renderWidth", w);
             //ScreenHandler.SHADERS.SetScreenShaderValueFloat("pixelizer", "renderHeight", h);
             //ScreenHandler.SHADERS.SetScreenShaderValueFloat("blur", "renderWidth", w);
@@ -407,7 +407,7 @@ namespace ShapeEngineDemo
         }
         public override void End()
         {
-            ScreenHandler.OnWindowSizeChanged -= OnWindowSizeChanged;
+            GraphicsDevice.OnWindowSizeChanged -= OnWindowSizeChanged;
             INPUT.OnInputTypeChanged -= OnInputTypeChanged;
             RESOURCES.Close();
             AUDIO.Close();
