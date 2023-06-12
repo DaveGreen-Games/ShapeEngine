@@ -13,27 +13,135 @@ namespace Examples
 {
     public static class Program
     {
+        public static GameloopExamples GAMELOOP = new GameloopExamples();
         public static void Main(string[] args)
         {
-            //var g = new GameloopTest();
-            //g.SetupWindow("TTT", false, true);
-            //g.Run(args);
-
-            //var g = new GameloopCollisionTest(1920/2, 1080/2, 1920, 1080);
-            //g.SetupWindow("Col Test", false, true);
-            //g.Run(args);
-
-            //var g = new GameloopTriangulationTest(1920 / 2, 1080 / 2, 1920, 1080);
-            //g.SetupWindow("Triangulation Test", false, true);
-            //g.Run(args);
-
-            var g = new GameloopPolylineInflationTest();
-            g.SetupWindow("Polyline Inflation Test", false, true);
-            g.Run(args);
+            GAMELOOP.SetupWindow("Shape Engine Examples", false, true);
+            GAMELOOP.Run(args);
         }
     }
 
-    //polyline collision test + segment collision test (how it works with the normals etc.)
+    public class GameloopExamples : GameLoopScene
+    {
+        public Font FontDefault { get; private set; }
+
+        private MainScene mainScene;
+        private int sceneIndex = -1;
+        private List<ExampleScene> scenes = new();
+
+        public GameloopExamples() : base(960, 540, 1920, 1080) 
+        {
+            FontDefault = GetFontDefault();
+
+            mainScene = new MainScene();
+            GoToScene(mainScene);
+            
+            scenes.Add(new PolylineInflationScene());
+            scenes.Add(new PolylineInflationScene2());
+            scenes.Add(new PolylineInflationScene3());
+        }
+
+        protected override void HandleInput(float dt)
+        {
+
+            if (IsKeyPressed(KeyboardKey.KEY_ESCAPE))
+            {
+                if (CurScene != mainScene) GoToScene(mainScene);
+            }
+
+            if (IsKeyPressed(KeyboardKey.KEY_R))
+            {
+                if(CurScene == mainScene)
+                {
+                    for (int i = 0; i < scenes.Count; i++)
+                    {
+                        scenes[i] = scenes[i].Reset();
+                    }
+                }
+                else scenes[sceneIndex] = scenes[sceneIndex].Reset();
+            }
+
+            if (IsKeyPressed(KeyboardKey.KEY_LEFT)) PrevScene();
+            else if (IsKeyPressed(KeyboardKey.KEY_RIGHT)) NextScene();
+
+
+            base.HandleInput(dt);
+        }
+        
+        public void NextScene() 
+        {
+            sceneIndex++;
+            if (sceneIndex >= scenes.Count) sceneIndex = 0;
+            GoToScene(scenes[sceneIndex]);
+        }
+        public void PrevScene() 
+        {
+            sceneIndex--;
+            if (sceneIndex < 0) sceneIndex = scenes.Count - 1;
+            GoToScene(scenes[sceneIndex]);
+        }
+    }
+    public class MainScene : Scene
+    {
+        //should display names/description of all examples
+        //left half lists all examples vertical / right half displays short info
+        //up/ down navigates through all examples scenes + mouse click
+        //esc goes back to main scene
+        //r always resets cur example scene
+        //r in main scene resets all example scenes
+        public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
+        {
+            string text = "Shape Engine Examples";
+            Rect r = new Rect(uiSize * new Vector2(0.5f, 0.1f), uiSize / 2, new Vector2(0.5f));
+            text.Draw(r, 10f, WHITE, GAMELOOP.FontDefault, new(0.5f));
+        }
+
+        
+    }
+    public class ExampleScene : Scene
+    {
+        public string Title { get; protected set; } = "Title Goes Here";
+        public string Description { get; protected set; } = "No Description Yet.";
+
+        public virtual ExampleScene Reset() { return new ExampleScene(); }
+
+        public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
+        {
+            Segment s = new(uiSize * new Vector2(0f, 0.07f), uiSize * new Vector2(1f, 0.07f));
+            s.Draw(2f, WHITE);
+            Rect r = new Rect(uiSize * new Vector2(0.5f, 0.05f), uiSize / 4, new Vector2(0.5f));
+            Title.Draw(r, 10f, WHITE, GAMELOOP.FontDefault, new(0.5f));
+        }
+    }
+    
+    //temp
+    public class PolylineInflationScene : ExampleScene
+    {
+        public PolylineInflationScene()
+        {
+            Title = "Polyline Inflation #1";
+        }
+        public override ExampleScene Reset() { return new PolylineInflationScene(); }
+    }
+    public class PolylineInflationScene2 : ExampleScene
+    {
+        public PolylineInflationScene2()
+        {
+            Title = "Polyline Inflation #2";
+        }
+        public override ExampleScene Reset() { return new PolylineInflationScene2(); }
+    }
+    public class PolylineInflationScene3 : ExampleScene
+    {
+        public PolylineInflationScene3()
+        {
+            Title = "Polyline Inflation #3";
+        }
+        public override ExampleScene Reset() { return new PolylineInflationScene3(); }
+    }
+
+
+
 
     public class GameloopPolylineInflationTest : GameLoop
     {
@@ -456,6 +564,7 @@ namespace Examples
         }
     }
 
+    /*
     public class GameloopTest : GameLoop
     {
         ScreenTexture uiTexture;
@@ -607,6 +716,7 @@ namespace Examples
 
     }
 
+    */
     /*
     public class CollisionTest : Scene
     {

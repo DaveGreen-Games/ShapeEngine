@@ -701,7 +701,7 @@ namespace ShapeEngine
         /// <summary>
         /// The cur scene that is used. Only 1 scene can be active at any time. Use GoToScene function for changing between scenes.
         /// </summary>
-        public IScene CUR_SCENE { get; private set; } = new SceneEmpty();
+        public IScene CurScene { get; private set; } = new SceneEmpty();
 
 
         public GameLoopScene(int gameTextureWidth, int gameTextureHeight, int uiTextureWidth, int uiTextureHeight) : base()
@@ -722,36 +722,41 @@ namespace ShapeEngine
         public void GoToScene(IScene newScene)
         {
             if (newScene == null) return;
-            if (newScene == CUR_SCENE) return;
-            CUR_SCENE.Deactivate();
-            newScene.Activate(CUR_SCENE);
-            CUR_SCENE = newScene;
+            if (newScene == CurScene) return;
+            CurScene.Deactivate();
+            newScene.Activate(CurScene);
+            CurScene = newScene;
         }
 
         protected override void HandleInput(float dt) { HandleInputScene(dt);}
         protected override void Update(float dt) { UpdateScence(dt); }
         protected override void Draw(ScreenTexture screenTexture) { DrawScene(screenTexture); }
-        
+        protected override void DrawToScreen(Vector2 screenSize) { DrawSceneToScreen(screenSize, MousePos); }
         /// <summary>
         /// Calls HandleInput on the Cur Scene.
         /// </summary>
         /// <param name="dt"></param>
-        protected void HandleInputScene(float dt) { CUR_SCENE.HandleInput(dt); }
+        protected void HandleInputScene(float dt) { CurScene.HandleInput(dt); }
         /// <summary>
         /// Calls Update on the Cur Scene.
         /// </summary>
         /// <param name="dt"></param>
-        protected void UpdateScence(float dt) { CUR_SCENE.Update(dt, Game.MousePos); }
+        protected void UpdateScence(float dt) { CurScene.Update(dt, Game.MousePos); }
         /// <summary>
         /// Calls Draw or DrawUI on the Cur Scene based on the screen texture parameter.
         /// </summary>
         /// <param name="screenTexture"></param>
         protected void DrawScene(ScreenTexture screenTexture) 
         {
-            if (screenTexture == Game) CUR_SCENE.Draw(Game.GetSize(), Game.MousePos);
-            else if (screenTexture == UI) CUR_SCENE.DrawUI(UI.GetSize(), UI.MousePos);
+            if (screenTexture == Game) CurScene.Draw(Game.GetSize(), Game.MousePos);
+            else if (screenTexture == UI) CurScene.DrawUI(UI.GetSize(), UI.MousePos);
         }
-
+        /// <summary>
+        /// Calls DrawToScene on the current active scene.
+        /// </summary>
+        /// <param name="screenSize"></param>
+        /// <param name="mousePos"></param>
+        protected void DrawSceneToScreen(Vector2 screenSize, Vector2 mousePos) { CurScene.DrawToScreen(screenSize, mousePos); }
     }
 }
 

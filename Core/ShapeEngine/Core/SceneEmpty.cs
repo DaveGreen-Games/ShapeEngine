@@ -15,6 +15,7 @@ namespace ShapeEngine.Core
         public virtual void HandleInput(float dt) { }
         public virtual void Draw(Vector2 gameSIze, Vector2 mousePosGame) { }
         public virtual void DrawUI(Vector2 uiSize, Vector2 mousePosUI) { }
+        public virtual void DrawToScreen(Vector2 screenSize, Vector2 mousePos) { }
         public virtual Area? GetCurArea() { return null; }
         public virtual void Start() { }
     }
