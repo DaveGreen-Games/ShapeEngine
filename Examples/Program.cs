@@ -8,6 +8,7 @@ using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 using System.Numerics;
+using ShapeEngine.UI;
 
 namespace Examples
 {
@@ -26,61 +27,92 @@ namespace Examples
         public Font FontDefault { get; private set; }
 
         private MainScene mainScene;
-        private int sceneIndex = -1;
-        private List<ExampleScene> scenes = new();
-
+        
         public GameloopExamples() : base(960, 540, 1920, 1080) 
         {
             FontDefault = GetFontDefault();
 
             mainScene = new MainScene();
             GoToScene(mainScene);
-            
-            scenes.Add(new PolylineInflationScene());
-            scenes.Add(new PolylineInflationScene2());
-            scenes.Add(new PolylineInflationScene3());
         }
 
-        protected override void HandleInput(float dt)
+        public void GoToMainScene()
         {
-
-            if (IsKeyPressed(KeyboardKey.KEY_ESCAPE))
-            {
-                if (CurScene != mainScene) GoToScene(mainScene);
-            }
-
-            if (IsKeyPressed(KeyboardKey.KEY_R))
-            {
-                if(CurScene == mainScene)
-                {
-                    for (int i = 0; i < scenes.Count; i++)
-                    {
-                        scenes[i] = scenes[i].Reset();
-                    }
-                }
-                else scenes[sceneIndex] = scenes[sceneIndex].Reset();
-            }
-
-            if (IsKeyPressed(KeyboardKey.KEY_LEFT)) PrevScene();
-            else if (IsKeyPressed(KeyboardKey.KEY_RIGHT)) NextScene();
-
-
-            base.HandleInput(dt);
-        }
-        
-        public void NextScene() 
-        {
-            sceneIndex++;
-            if (sceneIndex >= scenes.Count) sceneIndex = 0;
-            GoToScene(scenes[sceneIndex]);
-        }
-        public void PrevScene() 
-        {
-            sceneIndex--;
-            if (sceneIndex < 0) sceneIndex = scenes.Count - 1;
-            GoToScene(scenes[sceneIndex]);
+            if (CurScene == mainScene) return;
+            GoToScene(mainScene);
         }
     }
+    
+    
+    //implement for back button in example scene
+    public class BasicButton : UIElement { }
+    //rename to scene button
+    public class Button : UIElement
+    {
+        //public string Text { get; set; } = "Button";
+        private Vector2 prevMousePos = new();
+        public ExampleScene? Scene { get; private set; } = null;
+
+        public Button() { Hidden = true; DisabledSelection = true; }
+
+        public void SetScene(ExampleScene? newScene)
+        {
+            Scene = newScene;
+            Hidden = newScene == null;
+            DisabledSelection = Hidden;
+            
+        }
+        protected override bool CheckMousePressed()
+        {
+            if (Hidden || Scene == null) return false;
+            return IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT);
+        }
+
+        protected override bool CheckPressed()
+        {
+            if (Hidden || Scene == null) return false;
+            return IsKeyPressed(KeyboardKey.KEY_SPACE) || IsKeyPressed(KeyboardKey.KEY_ENTER);
+        }
+        public override void Update(float dt, Vector2 mousePosUI)
+        {
+            Check(prevMousePos, mousePosUI, false, 5f);
+            prevMousePos = mousePosUI;
+        }
+        public override void Draw()
+        {
+            if (Hidden || Scene == null) return;
+            
+            var r = GetRect();
+            var text = Scene.Title;
+
+            if (Selected)
+            {
+                //r.DrawLines(4f, GREEN);
+                text.Draw(r, 5f, GREEN, GAMELOOP.FontDefault, new(0f));
+            }
+            else if (Pressed)
+            {
+                //r.DrawLines(4f, YELLOW);
+                text.Draw(r, 5f, YELLOW, GAMELOOP.FontDefault, new(0f));
+            }
+            else 
+            {
+                //r.DrawLines(4f, WHITE);
+                text.Draw(r, 5f, WHITE, GAMELOOP.FontDefault, new(0f));
+            } 
+            
+
+        }
+        protected override void PressedChanged(bool pressed)
+        {
+            if(Hidden || Scene == null) return;
+            if (pressed)
+            {
+                GAMELOOP.GoToScene(Scene);
+            }
+        }
+    }
+    
     public class MainScene : Scene
     {
         //should display names/description of all examples
@@ -89,28 +121,193 @@ namespace Examples
         //esc goes back to main scene
         //r always resets cur example scene
         //r in main scene resets all example scenes
-        public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
+
+        private int curPageIndex = 0;
+        private List<ExampleScene> examples = new();
+        private List<Button> buttons = new();
+        private UIElement curButton;
+        public MainScene()
         {
-            string text = "Shape Engine Examples";
-            Rect r = new Rect(uiSize * new Vector2(0.5f, 0.1f), uiSize / 2, new Vector2(0.5f));
-            text.Draw(r, 10f, WHITE, GAMELOOP.FontDefault, new(0.5f));
+            for (int i = 0; i < 10; i++)
+            {
+                Button b = new Button();
+                buttons.Add(b);
+                b.WasSelected += OnButtonSelected;
+            }
+            curButton = buttons[0];
+            examples.Add(new PolylineInflationScene());
+            examples.Add(new PolylineInflationScene2());
+            examples.Add(new PolylineInflationScene3());
+            examples.Add(new PolylineInflationScene4());
+            examples.Add(new PolylineInflationScene5());
+            examples.Add(new PolylineInflationScene6());
+            examples.Add(new PolylineInflationScene());
+            examples.Add(new PolylineInflationScene2());
+            examples.Add(new PolylineInflationScene3());
+            examples.Add(new PolylineInflationScene4());
+            examples.Add(new PolylineInflationScene5());
+            examples.Add(new PolylineInflationScene6());
+            SetupButtons();
         }
 
-        
+        public override void HandleInput(float dt)
+        {
+            if (IsKeyPressed(KeyboardKey.KEY_R))
+            {
+                for (int i = 0; i < examples.Count; i++)
+                {
+                    examples[i].Reset();
+                }
+            }
+
+            if (IsKeyPressed(KeyboardKey.KEY_Q)) PrevPage();
+            else if (IsKeyPressed(KeyboardKey.KEY_E)) NextPage();
+
+            if(IsKeyPressed(KeyboardKey.KEY_W)) PrevButton();
+            else if (IsKeyPressed(KeyboardKey.KEY_S)) NextButton();
+        }
+
+        public override void Update(float dt, Vector2 mousePosGame)
+        {
+            foreach (var b in buttons)
+            {
+                b.Update(dt, GAMELOOP.UI.MousePos);
+            }
+        }
+        public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
+        {
+            Vector2 start = uiSize * new Vector2(0.02f, 0.25f);
+            Vector2 size = uiSize * new Vector2(0.45f, 0.05f);
+            Vector2 gap = uiSize * new Vector2(0f, 0.07f);
+            for (int i = 0; i < buttons.Count; i++)
+            {
+                var b = buttons[i];
+                b.UpdateRect(start + gap * i, size, new Vector2(0f));
+                b.Draw();
+            }
+
+
+            string text = "Shape Engine Examples";
+            Rect titleRect = new Rect(uiSize * new Vector2(0.5f, 0.01f), uiSize * new Vector2(0.75f, 0.08f), new Vector2(0.5f, 0f));
+            text.Draw(titleRect, 10f, WHITE, GAMELOOP.FontDefault, new(0.5f));
+
+            string pagesText = String.Format("[Q] <- Page #{0}/{1} -> [E]", curPageIndex + 1, GetMaxPages());
+            Rect pageRect = new Rect(uiSize * new Vector2(0.02f, 0.12f), uiSize * new Vector2(0.3f, 0.06f), new Vector2(0f, 0f));
+            pagesText.Draw(pageRect, 4f, RED, GAMELOOP.FontDefault, new(0.5f));
+
+            Segment s = new(uiSize * new Vector2(0f, 0.2f), uiSize * new Vector2(1f, 0.2f));
+            s.Draw(4f, RED);
+        }
+        private void OnButtonSelected(UIElement button)
+        {
+            if (curButton != button)
+            {
+                curButton.Deselect();
+                curButton = button;
+            }
+        }
+        private int GetCurButtonIndex()
+        {
+            for (int i = 0; i < buttons.Count; i++)
+            {
+                var b = buttons[i];
+                if (b.Selected) return i;
+            }
+            return -1;
+        }
+        private int GetVisibleButtonCount()
+        {
+            int count = 0;
+            foreach (var b in buttons)
+            {
+                if (!b.Hidden) count++;
+            }
+            return count;
+        }
+        private int GetMaxPages() 
+        {
+            if (buttons.Count <= 0 || examples.Count <= 0) return 1;
+            int pages = (examples.Count - 1) / buttons.Count;
+            if (pages < 1) return 1;
+            else return pages + 1;
+        }
+        private void SetupButtons()
+        {
+            int startIndex = curPageIndex * buttons.Count;
+            int endIndex = startIndex + buttons.Count;
+            int buttonIndex = 0;
+            for (int i = curPageIndex * buttons.Count; i < endIndex; i++)
+            {
+                var b = buttons[buttonIndex];
+                buttonIndex++;
+                if(i < examples.Count) b.SetScene(examples[i]);
+                else b.SetScene(null);
+            }
+            
+            buttons[0].Select();
+        }
+        private void NextButton() 
+        {
+            int curButtonIndex = GetCurButtonIndex();
+            if (curButtonIndex < 0) return;
+            curButtonIndex++;
+            int buttonCount = GetVisibleButtonCount();
+            if (curButtonIndex >= buttonCount) curButtonIndex = 0;
+            buttons[curButtonIndex].Select();
+        }
+        private void PrevButton() 
+        {
+            int curButtonIndex = GetCurButtonIndex();
+            if (curButtonIndex < 0) return;
+            curButtonIndex--;
+            int buttonCount = GetVisibleButtonCount();
+            if (curButtonIndex < 0) curButtonIndex = buttonCount - 1;
+            buttons[curButtonIndex].Select();
+        }
+        private void NextPage()
+        {
+            int maxPages = GetMaxPages();
+            if (maxPages <= 1) return;
+
+            curPageIndex++;
+            if (curPageIndex >= maxPages) curPageIndex = 0;
+            SetupButtons();
+        }
+        private void PrevPage()
+        {
+            int maxPages = GetMaxPages();
+            if (maxPages <= 1) return;
+
+            curPageIndex--;
+            if (curPageIndex < 0) curPageIndex = maxPages - 1;
+            SetupButtons();
+        }
     }
     public class ExampleScene : Scene
     {
         public string Title { get; protected set; } = "Title Goes Here";
         public string Description { get; protected set; } = "No Description Yet.";
 
-        public virtual ExampleScene Reset() { return new ExampleScene(); }
+
+        public virtual void Reset() { }
+
+        public override void HandleInput(float dt)
+        {
+            if (IsKeyPressed(KeyboardKey.KEY_R)) Reset();
+            if (IsKeyPressed(KeyboardKey.KEY_ESCAPE)) GAMELOOP.GoToMainScene();
+        }
 
         public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
         {
             Segment s = new(uiSize * new Vector2(0f, 0.07f), uiSize * new Vector2(1f, 0.07f));
             s.Draw(2f, WHITE);
-            Rect r = new Rect(uiSize * new Vector2(0.5f, 0.05f), uiSize / 4, new Vector2(0.5f));
+            
+            Rect r = new Rect(uiSize * new Vector2(0.5f, 0.02f), uiSize * new Vector2(0.5f, 0.05f), new Vector2(0.5f, 0f));
             Title.Draw(r, 10f, WHITE, GAMELOOP.FontDefault, new(0.5f));
+
+            string backText = "Back [ESC]";
+            Rect backRect = new Rect(uiSize * new Vector2(0.02f, 0.02f), uiSize * new Vector2(0.25f, 0.03f), new Vector2(0f));
+            backText.Draw(backRect, 4f, RED, GAMELOOP.FontDefault, new Vector2(0.5f));
         }
     }
     
@@ -121,7 +318,6 @@ namespace Examples
         {
             Title = "Polyline Inflation #1";
         }
-        public override ExampleScene Reset() { return new PolylineInflationScene(); }
     }
     public class PolylineInflationScene2 : ExampleScene
     {
@@ -129,7 +325,6 @@ namespace Examples
         {
             Title = "Polyline Inflation #2";
         }
-        public override ExampleScene Reset() { return new PolylineInflationScene2(); }
     }
     public class PolylineInflationScene3 : ExampleScene
     {
@@ -137,10 +332,29 @@ namespace Examples
         {
             Title = "Polyline Inflation #3";
         }
-        public override ExampleScene Reset() { return new PolylineInflationScene3(); }
     }
 
-
+    public class PolylineInflationScene4 : ExampleScene
+    {
+        public PolylineInflationScene4()
+        {
+            Title = "Polyline Inflation #4";
+        }
+    }
+    public class PolylineInflationScene5 : ExampleScene
+    {
+        public PolylineInflationScene5()
+        {
+            Title = "Polyline Inflation #5";
+        }
+    }
+    public class PolylineInflationScene6 : ExampleScene
+    {
+        public PolylineInflationScene6()
+        {
+            Title = "Polyline Inflation #6";
+        }
+    }
 
 
     public class GameloopPolylineInflationTest : GameLoop

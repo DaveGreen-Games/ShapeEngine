@@ -8,6 +8,7 @@ namespace ShapeEngine.UI
     public abstract class UIElement
     {
         public event Action<UIElement>? WasSelected;
+        //public event Action<UIElement>? WasPressed;
 
         protected Rect rect;
 
@@ -74,6 +75,7 @@ namespace ShapeEngine.UI
         {
             if(Pressed) return;
             Pressed = true;
+            //WasPressed?.Invoke(this);
             PressedChanged(true);
         }
         public void Release()
