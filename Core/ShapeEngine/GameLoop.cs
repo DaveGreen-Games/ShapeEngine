@@ -740,7 +740,7 @@ namespace ShapeEngine
         /// Calls Update on the Cur Scene.
         /// </summary>
         /// <param name="dt"></param>
-        protected void UpdateScence(float dt) { CurScene.Update(dt, Game.MousePos); }
+        protected void UpdateScence(float dt) { CurScene.Update(dt, Game.MousePos, UI.MousePos); }
         /// <summary>
         /// Calls Draw or DrawUI on the Cur Scene based on the screen texture parameter.
         /// </summary>

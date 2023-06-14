@@ -42,6 +42,7 @@ namespace Examples
         
 
         private Dictionary<int, Font> fonts = new();
+        private List<string> fontNames = new();
         private MainScene? mainScene = null;
         
         public GameloopExamples() : base(960, 540, 1920, 1080) 
@@ -60,7 +61,18 @@ namespace Examples
             fonts.Add(FontIDs.PromptRegular, ContentLoader.LoadFont("fonts/Prompt-Regular.ttf"));
             fonts.Add(FontIDs.PromptThin, ContentLoader.LoadFont("fonts/Prompt-Thin.ttf"));
             fonts.Add(FontIDs.TekoMedium, ContentLoader.LoadFont("fonts/Teko-Medium.ttf"));
-            
+
+            fontNames.Add("Abel Regular");
+            fontNames.Add("Gruppo Regular");
+            fontNames.Add("Indie Flower Regular");
+            fontNames.Add("Orbit Regular");
+            fontNames.Add("Orbitron Bold");
+            fontNames.Add("Orbitron Regular");
+            fontNames.Add("Prompt Light Italic");
+            fontNames.Add("Prompt Regular");
+            fontNames.Add("Prompt Thin");
+            fontNames.Add("Teko Medium");
+
             FontDefault = GetFont(FontIDs.IndieFlowerRegular);
 
         }
@@ -83,7 +95,9 @@ namespace Examples
             base.HandleInput(dt);
         }
 
+        public int GetFontCount() { return  fonts.Count; }
         public Font GetFont(int id) { return fonts[id]; }
+        public string GetFontName(int id) { return fontNames[id]; }
         public Font GetRandomFont() 
         { 
             Font? randFont = SRNG.randCollection<Font>(fonts.Values.ToList(), false);
@@ -223,7 +237,7 @@ namespace Examples
             else if (IsKeyPressed(KeyboardKey.KEY_S)) NextButton();
         }
 
-        public override void Update(float dt, Vector2 mousePosGame)
+        public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             foreach (var b in buttons)
             {
@@ -376,9 +390,71 @@ namespace Examples
     
     public class TextScalingExample : ExampleScene
     {
+        Vector2 topLeft = new();
+        Vector2 bottomRight = new();
+        
+        bool draggingTopLeft = false;
+        bool draggingBottomRight = false;
+
+        float pointRadius = 8f;
+        float interactionRadius = 24f;
+
+        string text = "Test Text";
+        int fontSpacing = 1;
+        int maxFontSpacing = 25;
+        Font font;
+        int fontIndex = 0;
+
         public TextScalingExample()
         {
             Title = "Text Scaling Example";
+            var s = GAMELOOP.UI.GetSize();
+            topLeft = s * new Vector2(0.1f, 0.1f);
+            bottomRight = s * new Vector2(0.9f, 0.9f);
+            font = GAMELOOP.GetFont(fontIndex);
+        }
+
+        public override void HandleInput(float dt)
+        {
+            if (IsKeyPressed(KeyboardKey.KEY_W)) NextFont();
+            else if (IsKeyPressed(KeyboardKey.KEY_S)) PrevFont();
+
+            if (IsKeyPressed(KeyboardKey.KEY_D)) ChangeFontSpacing(1);
+            else if (IsKeyPressed(KeyboardKey.KEY_A)) ChangeFontSpacing(-1);
+        }
+        public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        {
+
+        }
+        public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
+        {
+            Rect r = new(topLeft, bottomRight);
+            r.DrawLines(4f, new Color(255, 0, 0, 150));
+            text.Draw(r, fontSpacing, WHITE, font, new Vector2(0.5f, 0.5f));
+
+            string info = String.Format("[{0}] - Spacing [{1}]", GAMELOOP.GetFontName(fontIndex), fontSpacing);
+            Rect infoRect = new(uiSize * new Vector2(0.5f, 0.98f), uiSize * new Vector2(0.4f, 0.1f), new Vector2(0.5f, 1f));
+            info.Draw(infoRect, 4f, YELLOW, font, new Vector2(0.5f, 0.5f));
+        }
+        private void ChangeFontSpacing(int amount)
+        {
+            fontSpacing += amount;
+            if (fontSpacing < 1) fontSpacing = maxFontSpacing;
+            else if (fontSpacing > maxFontSpacing) fontSpacing = 1;
+        }
+        private void NextFont()
+        {
+            int fontCount = GAMELOOP.GetFontCount();
+            fontIndex++;
+            if (fontIndex >= fontCount) fontIndex = 0;
+            font = GAMELOOP.GetFont(fontIndex);
+        }
+        private void PrevFont()
+        {
+            int fontCount = GAMELOOP.GetFontCount();
+            fontIndex--;
+            if (fontIndex < 0) fontIndex = fontCount - 1;
+            font = GAMELOOP.GetFont(fontIndex);
         }
     }
     public class PolylineInflationExample : ExampleScene

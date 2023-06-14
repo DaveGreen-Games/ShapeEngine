@@ -25,7 +25,7 @@ namespace ShapeEngine.Core
         public void Close();
 
         public void HandleInput(float dt);// { }
-        public void Update(float dt, Vector2 mousePosGame);// { }
+        public void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI);// { }
         public void Draw(Vector2 gameSize, Vector2 mousePosGame);// { }
         public void DrawUI(Vector2 uiSize, Vector2 mousePosUI);// { }
         public void DrawToScreen(Vector2 screenSize, Vector2 mousePos);

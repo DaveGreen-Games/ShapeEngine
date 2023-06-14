@@ -511,27 +511,32 @@ namespace ShapeEngine.Core
         public Rect(Rect r) { x = r.x; y = r.y; width = r.width; height = r.height; }
         public Rect(Vector2 topLeft, Vector2 bottomRight)
         {
-            if (topLeft.X > bottomRight.X)
-            {
-                this.x = bottomRight.X;
-                this.width = topLeft.X - bottomRight.X;
-            }
-            else
-            {
-                this.x = topLeft.X;
-                this.width = bottomRight.X - topLeft.X;
-            }
-
-            if (topLeft.Y > bottomRight.Y)
-            {
-                this.y = bottomRight.Y;
-                this.height = topLeft.Y - bottomRight.Y;
-            }
-            else
-            {
-                this.y = topLeft.Y;
-                this.height = bottomRight.Y - topLeft.Y;
-            }
+            var final = SRect.Fix(topLeft, bottomRight);
+            this.x = final.topLeft.X;
+            this.y = final.topLeft.Y;
+            this.width = final.bottomRight.X - this.x;
+            this.height = final.bottomRight.Y - this.y;
+            //if (topLeft.X > bottomRight.X)
+            //{
+            //    this.x = bottomRight.X;
+            //    this.width = topLeft.X - bottomRight.X;
+            //}
+            //else
+            //{
+            //    this.x = topLeft.X;
+            //    this.width = bottomRight.X - topLeft.X;
+            //}
+            //
+            //if (topLeft.Y > bottomRight.Y)
+            //{
+            //    this.y = bottomRight.Y;
+            //    this.height = topLeft.Y - bottomRight.Y;
+            //}
+            //else
+            //{
+            //    this.y = topLeft.Y;
+            //    this.height = bottomRight.Y - topLeft.Y;
+            //}
         }
         public Rect(Vector2 pos, Vector2 size, Vector2 alignement)
         {

@@ -338,7 +338,31 @@ namespace ShapeEngine.Lib
                     SUtils.Clamp(p.Y, r.y, r.y + r.height)
                 );
         }
-        
+        /// <summary>
+        /// Checks if the top left point is further up & left than the bottom right point and returns the correct points if necessary.
+        /// </summary>
+        /// <param name="topLeft"></param>
+        /// <param name="bottomRight"></param>
+        /// <returns></returns>
+        public static (Vector2 topLeft, Vector2 bottomRight) Fix(Vector2 topLeft, Vector2 bottomRight)
+        {
+            Vector2 tl = topLeft;// r.TopLeft;
+            Vector2 br = bottomRight;// r.BottomRight;
+            
+            Vector2 newTopLeft = new
+                (
+                    MathF.Min(tl.X, br.X),
+                    MathF.Min(tl.Y, br.Y)
+                );
+            Vector2 newBottomRight = new
+                (
+                    MathF.Max(tl.X, br.X),
+                    MathF.Max(tl.Y, br.Y)
+                );
+
+
+            return (newTopLeft, newBottomRight);
+        }
         public static Rect Clamp(this Rect r, Rect bounds)
         {
             Vector2 tl = ClampOnRect(bounds, r.TopLeft);
