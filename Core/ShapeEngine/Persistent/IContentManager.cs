@@ -107,7 +107,7 @@ namespace ShapeEngine.Persistent
         }
         public Music LoadMusic(string filePath)
         {
-            Music m = ContentLoader.LoadMusic(filePath);
+            Music m = ContentLoader.LoadMusicStream(filePath);
             musicToUnload.Add(m);
             return m;
         }

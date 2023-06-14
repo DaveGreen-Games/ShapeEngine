@@ -703,7 +703,6 @@ namespace ShapeEngine
         /// </summary>
         public IScene CurScene { get; private set; } = new SceneEmpty();
 
-
         public GameLoopScene(int gameTextureWidth, int gameTextureHeight, int uiTextureWidth, int uiTextureHeight) : base()
         {
             Game = new ScreenTexture(gameTextureWidth, gameTextureHeight, 0);
@@ -728,7 +727,7 @@ namespace ShapeEngine
             CurScene = newScene;
         }
 
-        protected override void HandleInput(float dt) { HandleInputScene(dt);}
+        protected override void HandleInput(float dt){ HandleInputScene(dt); }
         protected override void Update(float dt) { UpdateScence(dt); }
         protected override void Draw(ScreenTexture screenTexture) { DrawScene(screenTexture); }
         protected override void DrawToScreen(Vector2 screenSize) { DrawSceneToScreen(screenSize, MousePos); }

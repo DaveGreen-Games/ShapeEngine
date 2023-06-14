@@ -1,4 +1,5 @@
 ﻿using Raylib_CsLo;
+using System.Collections;
 
 namespace ShapeEngine.Persistent
 {
@@ -47,7 +48,7 @@ namespace ShapeEngine.Persistent
             Sound s = Raylib.LoadSound(filePath);
             return s;
         }
-        public static Music LoadMusic(string filePath)
+        public static Music LoadMusicStream(string filePath)
         {
             Music m = Raylib.LoadMusicStream(filePath);
             return m;
@@ -57,6 +58,28 @@ namespace ShapeEngine.Persistent
             return File.ReadAllText(filePath);
         }
 
+
+        public static void UnloadFont(Font font) { Raylib.UnloadFont(font); }
+        public static void UnloadFonts(IEnumerable<Font> fonts) { foreach (var font in fonts) UnloadFont(font); }
+
+        public static void UnloadShader(Shader shader) { Raylib.UnloadShader(shader); }
+        public static void UnloadShaders(IEnumerable<Shader> shaders) { foreach (var shader in shaders) UnloadShader(shader); }
+
+
+        public static void UnloadTexture(Texture texture) { Raylib.UnloadTexture(texture); }
+        public static void UnloadTextures(IEnumerable<Texture> textures) { foreach (var texture in textures) UnloadTexture(texture); }
+
+        public static void UnloadImage(Image image) { Raylib.UnloadImage(image); }
+        public static void UnloadImages(IEnumerable<Image> images) { foreach (var image in images) UnloadImage(image); }
+
+        public static void UnloadWave(Wave wave) { Raylib.UnloadWave(wave); }
+        public static void UnloadWaves(IEnumerable<Wave> waves) { foreach (var wave in waves) UnloadWave(wave); }
+
+        public static void UnloadSound(Sound sound) { Raylib.UnloadSound(sound); }
+        public static void UnloadSounds(IEnumerable<Sound> sounds) { foreach (var sound in sounds) UnloadSound(sound); }
+
+        public static void UnloadMusicStream(Music musicStream) { Raylib.UnloadMusicStream(musicStream); }
+        public static void UnloadMusicStreams(IEnumerable<Music> musicStreams) { foreach (var musicStream in musicStreams) UnloadMusicStream(musicStream); }
     }
 
 }

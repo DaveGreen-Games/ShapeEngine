@@ -8,8 +8,9 @@ namespace ShapeEngine.Core
         public bool CallHandleInput { get; set; } = true;
         public bool CallDraw { get; set; } = true;
 
-        public virtual void Activate(IScene oldScene) { }
         public virtual void Close() { }
+
+        public virtual void Activate(IScene oldScene) { }
         public virtual void Deactivate() { }
         public virtual void Update(float dt, Vector2 mousePosGame) { }
         public virtual void HandleInput(float dt) { }
@@ -17,7 +18,6 @@ namespace ShapeEngine.Core
         public virtual void DrawUI(Vector2 uiSize, Vector2 mousePosUI) { }
         public virtual void DrawToScreen(Vector2 screenSize, Vector2 mousePos) { }
         public virtual Area? GetCurArea() { return null; }
-        public virtual void Start() { }
     }
     public sealed class SceneEmpty : Scene
     {
