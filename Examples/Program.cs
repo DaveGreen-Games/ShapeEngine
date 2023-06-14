@@ -9,6 +9,7 @@ using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 using System.Numerics;
 using ShapeEngine.UI;
+using ShapeEngine.Persistent;
 
 namespace Examples
 {
@@ -21,23 +22,76 @@ namespace Examples
             GAMELOOP.Run(args);
         }
     }
-
+    public static class FontIDs
+    {
+        public static readonly int AbelRegular = 0;
+        public static readonly int GruppoRegular = 1;
+        public static readonly int IndieFlowerRegular = 2;
+        public static readonly int OrbitRegular = 3;
+        public static readonly int OrbitronBold = 4;
+        public static readonly int OrbitronRegular = 5;
+        public static readonly int PromptLightItalic = 6;
+        public static readonly int PromptRegular = 7;
+        public static readonly int PromptThin = 8;
+        public static readonly int TekoMedium = 9;
+    }
     public class GameloopExamples : GameLoopScene
     {
         public Font FontDefault { get; private set; }
 
-        private MainScene mainScene;
+        
+
+        private Dictionary<int, Font> fonts = new();
+        private MainScene? mainScene = null;
         
         public GameloopExamples() : base(960, 540, 1920, 1080) 
         {
-            FontDefault = GetFontDefault();
+            
+        }
+        protected override void LoadContent()
+        {
+            fonts.Add(FontIDs.AbelRegular, ContentLoader.LoadFont("fonts/Abel-Regular.ttf"));
+            fonts.Add(FontIDs.GruppoRegular, ContentLoader.LoadFont("fonts/Gruppo-Regular.ttf"));
+            fonts.Add(FontIDs.IndieFlowerRegular, ContentLoader.LoadFont("fonts/IndieFlower-Regular.ttf"));
+            fonts.Add(FontIDs.OrbitRegular, ContentLoader.LoadFont("fonts/Orbit-Regular.ttf"));
+            fonts.Add(FontIDs.OrbitronBold, ContentLoader.LoadFont("fonts/Orbitron-Bold.ttf"));
+            fonts.Add(FontIDs.OrbitronRegular, ContentLoader.LoadFont("fonts/Orbitron-Regular.ttf"));
+            fonts.Add(FontIDs.PromptLightItalic, ContentLoader.LoadFont("fonts/Prompt-LightItalic.ttf"));
+            fonts.Add(FontIDs.PromptRegular, ContentLoader.LoadFont("fonts/Prompt-Regular.ttf"));
+            fonts.Add(FontIDs.PromptThin, ContentLoader.LoadFont("fonts/Prompt-Thin.ttf"));
+            fonts.Add(FontIDs.TekoMedium, ContentLoader.LoadFont("fonts/Teko-Medium.ttf"));
+            
+            FontDefault = GetFont(FontIDs.IndieFlowerRegular);
 
+        }
+        protected override void UnloadContent()
+        {
+            ContentLoader.UnloadFonts(fonts.Values);
+        }
+        protected override void BeginRun()
+        {
             mainScene = new MainScene();
             GoToScene(mainScene);
         }
 
+        protected override void HandleInput(float dt)
+        {
+            if (IsKeyPressed(KeyboardKey.KEY_F))
+            {
+                GAMELOOP.ToggleWindowMaximize();
+            }
+            base.HandleInput(dt);
+        }
+
+        public Font GetFont(int id) { return fonts[id]; }
+        public Font GetRandomFont() 
+        { 
+            Font? randFont = SRNG.randCollection<Font>(fonts.Values.ToList(), false);
+            return randFont != null ? (Font)randFont : FontDefault;
+        }
         public void GoToMainScene()
         {
+            if (mainScene == null) return;
             if (CurScene == mainScene) return;
             GoToScene(mainScene);
         }
@@ -47,13 +101,19 @@ namespace Examples
     //implement for back button in example scene
     public class BasicButton : UIElement { }
     //rename to scene button
-    public class Button : UIElement
+    public class ExampleSelectionButton : UIElement
     {
         //public string Text { get; set; } = "Button";
         private Vector2 prevMousePos = new();
         public ExampleScene? Scene { get; private set; } = null;
+        private Font font;
+        public ExampleSelectionButton() 
+        { 
+            Hidden = true; 
+            DisabledSelection = true;
+            font = GAMELOOP.FontDefault; // GAMELOOP.GetFont(GameloopExamples.FONT_IndieFlowerRegular);
 
-        public Button() { Hidden = true; DisabledSelection = true; }
+        }
 
         public void SetScene(ExampleScene? newScene)
         {
@@ -65,13 +125,13 @@ namespace Examples
         protected override bool CheckMousePressed()
         {
             if (Hidden || Scene == null) return false;
-            return IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT);
+            return IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT);
         }
 
         protected override bool CheckPressed()
         {
             if (Hidden || Scene == null) return false;
-            return IsKeyPressed(KeyboardKey.KEY_SPACE) || IsKeyPressed(KeyboardKey.KEY_ENTER);
+            return IsKeyReleased(KeyboardKey.KEY_SPACE) || IsKeyPressed(KeyboardKey.KEY_ENTER);
         }
         public override void Update(float dt, Vector2 mousePosUI)
         {
@@ -88,17 +148,17 @@ namespace Examples
             if (Selected)
             {
                 //r.DrawLines(4f, GREEN);
-                text.Draw(r, 5f, GREEN, GAMELOOP.FontDefault, new(0f));
+                text.Draw(r, 5f, GREEN, font, new(0f));
             }
             else if (Pressed)
             {
                 //r.DrawLines(4f, YELLOW);
-                text.Draw(r, 5f, YELLOW, GAMELOOP.FontDefault, new(0f));
+                text.Draw(r, 5f, YELLOW, font, new(0f));
             }
             else 
             {
                 //r.DrawLines(4f, WHITE);
-                text.Draw(r, 5f, WHITE, GAMELOOP.FontDefault, new(0f));
+                text.Draw(r, 5f, WHITE, font, new(0f));
             } 
             
 
@@ -124,31 +184,27 @@ namespace Examples
 
         private int curPageIndex = 0;
         private List<ExampleScene> examples = new();
-        private List<Button> buttons = new();
+        private List<ExampleSelectionButton> buttons = new();
         private UIElement curButton;
+        private Font titleFont;
         public MainScene()
         {
             for (int i = 0; i < 10; i++)
             {
-                Button b = new Button();
+                ExampleSelectionButton b = new ExampleSelectionButton();
                 buttons.Add(b);
                 b.WasSelected += OnButtonSelected;
             }
             curButton = buttons[0];
-            examples.Add(new PolylineInflationScene());
-            examples.Add(new PolylineInflationScene2());
-            examples.Add(new PolylineInflationScene3());
-            examples.Add(new PolylineInflationScene4());
-            examples.Add(new PolylineInflationScene5());
-            examples.Add(new PolylineInflationScene6());
-            examples.Add(new PolylineInflationScene());
-            examples.Add(new PolylineInflationScene2());
-            examples.Add(new PolylineInflationScene3());
-            examples.Add(new PolylineInflationScene4());
-            examples.Add(new PolylineInflationScene5());
-            examples.Add(new PolylineInflationScene6());
+            examples.Add(new PolylineInflationExample());
+            examples.Add(new TextScalingExample());
+
+            titleFont = GAMELOOP.FontDefault; // GAMELOOP.GetFont(GameloopExamples.FONT_IndieFlowerRegular);
+
             SetupButtons();
         }
+
+        
 
         public override void HandleInput(float dt)
         {
@@ -188,14 +244,15 @@ namespace Examples
 
 
             string text = "Shape Engine Examples";
-            Rect titleRect = new Rect(uiSize * new Vector2(0.5f, 0.01f), uiSize * new Vector2(0.75f, 0.08f), new Vector2(0.5f, 0f));
-            text.Draw(titleRect, 10f, WHITE, GAMELOOP.FontDefault, new(0.5f));
+            Rect titleRect = new Rect(uiSize * new Vector2(0.5f, 0.01f), uiSize * new Vector2(0.75f, 0.1f), new Vector2(0.5f, 0f));
+            text.Draw(titleRect, 10f, WHITE, titleFont, new(0.5f));
 
-            string pagesText = String.Format("[Q] <- Page #{0}/{1} -> [E]", curPageIndex + 1, GetMaxPages());
-            Rect pageRect = new Rect(uiSize * new Vector2(0.02f, 0.12f), uiSize * new Vector2(0.3f, 0.06f), new Vector2(0f, 0f));
-            pagesText.Draw(pageRect, 4f, RED, GAMELOOP.FontDefault, new(0.5f));
+            int pages = GetMaxPages();
+            string pagesText = pages <= 1 ? "Page 1/1" : String.Format("[Q] <- Page #{0}/{1} -> [E]", curPageIndex + 1, pages);
+            Rect pageRect = new Rect(uiSize * new Vector2(0.02f, 0.1f), uiSize * new Vector2(0.3f, 0.05f), new Vector2(0f, 0f));
+            pagesText.Draw(pageRect, 4f, RED, titleFont, new(0f, 0.5f));
 
-            Segment s = new(uiSize * new Vector2(0f, 0.2f), uiSize * new Vector2(1f, 0.2f));
+            Segment s = new(uiSize * new Vector2(0f, 0.17f), uiSize * new Vector2(1f, 0.17f));
             s.Draw(4f, RED);
         }
         private void OnButtonSelected(UIElement button)
@@ -288,6 +345,12 @@ namespace Examples
         public string Title { get; protected set; } = "Title Goes Here";
         public string Description { get; protected set; } = "No Description Yet.";
 
+        protected Font titleFont;
+
+        public ExampleScene()
+        {
+            titleFont = GAMELOOP.FontDefault;// GAMELOOP.GetFont(GameloopExamples.FONT_IndieFlowerRegular);
+        }
 
         public virtual void Reset() { }
 
@@ -303,60 +366,170 @@ namespace Examples
             s.Draw(2f, WHITE);
             
             Rect r = new Rect(uiSize * new Vector2(0.5f, 0.02f), uiSize * new Vector2(0.5f, 0.05f), new Vector2(0.5f, 0f));
-            Title.Draw(r, 10f, WHITE, GAMELOOP.FontDefault, new(0.5f));
+            Title.Draw(r, 10f, WHITE, titleFont, new(0.5f));
 
             string backText = "Back [ESC]";
             Rect backRect = new Rect(uiSize * new Vector2(0.02f, 0.02f), uiSize * new Vector2(0.25f, 0.03f), new Vector2(0f));
-            backText.Draw(backRect, 4f, RED, GAMELOOP.FontDefault, new Vector2(0.5f));
+            backText.Draw(backRect, 4f, RED, titleFont, new Vector2(0.5f));
         }
     }
     
-    //temp
-    public class PolylineInflationScene : ExampleScene
+    public class TextScalingExample : ExampleScene
     {
-        public PolylineInflationScene()
+        public TextScalingExample()
         {
-            Title = "Polyline Inflation #1";
+            Title = "Text Scaling Example";
         }
     }
-    public class PolylineInflationScene2 : ExampleScene
+    public class PolylineInflationExample : ExampleScene
     {
-        public PolylineInflationScene2()
+        ScreenTexture game;
+        Polyline polyline = new();
+        int dragIndex = -1;
+        float offsetDelta = 0f;
+        float lerpOffsetDelta = 0f;
+        
+        public PolylineInflationExample()
         {
-            Title = "Polyline Inflation #2";
+            Title = "Polyline Inflation Example";
+            game = GAMELOOP.Game;
+            game.SetCamera(new BasicCamera(new Vector2(0f), new Vector2(1920, 1080), new Vector2(0.5f), 1f, 0f));
         }
-    }
-    public class PolylineInflationScene3 : ExampleScene
-    {
-        public PolylineInflationScene3()
+        public override void Reset()
         {
-            Title = "Polyline Inflation #3";
+            polyline = new();
+            dragIndex = -1;
+            offsetDelta = 0f;
+            lerpOffsetDelta = 0f;
         }
-    }
+        public override void HandleInput(float dt)
+        {
+            base.HandleInput(dt);
+            if (IsKeyPressed(KeyboardKey.KEY_R)) { polyline = new(); }
 
-    public class PolylineInflationScene4 : ExampleScene
-    {
-        public PolylineInflationScene4()
-        {
-            Title = "Polyline Inflation #4";
+            if (GetMouseWheelMove() > 0)
+            {
+                offsetDelta += 10f;
+            }
+            else if (GetMouseWheelMove() < 0)
+            {
+                offsetDelta -= 10f;
+            }
+
+            lerpOffsetDelta = Lerp(lerpOffsetDelta, offsetDelta, dt * 2f);
+
+            offsetDelta = Clamp(offsetDelta, 0f, 300f);
         }
-    }
-    public class PolylineInflationScene5 : ExampleScene
-    {
-        public PolylineInflationScene5()
+        public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
         {
-            Title = "Polyline Inflation #5";
-        }
-    }
-    public class PolylineInflationScene6 : ExampleScene
-    {
-        public PolylineInflationScene6()
-        {
-            Title = "Polyline Inflation #6";
-        }
-    }
+            base.DrawUI(uiSize, mousePosUI);
+            Vector2 mousePos = mousePosUI;
+
+            float vertexRadius = 8f;
+            int pickedVertex = -1;
+
+            bool isMouseOnLine = false; // polyline.OverlapShape(new Circle(mousePos, vertexRadius * 2f));
+            var closest = polyline.GetClosestPoint(mousePos);
+            int closestIndex = polyline.GetClosestIndex(mousePos);
+            bool drawClosest = true;
 
 
+            for (int i = 0; i < polyline.Count; i++)
+            {
+                var p = polyline[i];
+                float disSq = (mousePos - p).LengthSquared();
+                if (pickedVertex == -1 && disSq < (vertexRadius * vertexRadius) * 2f)
+                {
+                    DrawCircleV(p, vertexRadius * 2f, GREEN);
+                    pickedVertex = i;
+                }
+                else DrawCircleV(p, vertexRadius, GRAY);
+                if (drawClosest)
+                {
+                    disSq = (closest - p).LengthSquared();
+                    if (disSq < (vertexRadius * vertexRadius) * 4f)
+                    {
+                        drawClosest = false;
+                    }
+                }
+
+            }
+
+            if (drawClosest)
+            {
+                float disSq = (closest - mousePos).LengthSquared();
+
+                float tresholdSq = 30 * 30;
+                if (disSq > tresholdSq)
+                {
+                    drawClosest = false;
+                }
+                else isMouseOnLine = true;
+            }
+
+
+            if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT))
+            {
+                if (pickedVertex == -1)
+                {
+                    if (isMouseOnLine)
+                    {
+                        polyline.Insert(closestIndex + 1, mousePos);
+                    }
+                    else polyline.Add(mousePos);
+
+                }
+                else
+                {
+                    dragIndex = pickedVertex;
+                }
+            }
+            else if (IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT))
+            {
+                dragIndex = -1;
+            }
+            else if (dragIndex == -1 && IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT))
+            {
+                if (pickedVertex > -1)
+                {
+                    polyline.RemoveAt(pickedVertex);
+                }
+            }
+
+            if (dragIndex > -1) polyline[dragIndex] = mousePos;
+
+            //polyline.Draw(4f, WHITE);
+            var segments = polyline.GetEdges();
+            for (int i = 0; i < segments.Count; i++)
+            {
+                var segment = segments[i];
+
+                if (drawClosest)
+                {
+                    if (closestIndex == i) segment.Draw(4f, BLUE);
+                    else segment.Draw(4f, WHITE);
+                }
+                else segment.Draw(4f, WHITE);
+
+
+
+            }
+
+            if (drawClosest) DrawCircleV(closest, vertexRadius, RED);
+
+            if (lerpOffsetDelta > 10f)
+            {
+                var polygons = SClipper.Inflate(polyline, lerpOffsetDelta).ToPolygons();
+                foreach (var polygon in polygons)
+                {
+                    polygon.DrawLines(3f, GOLD);
+                }
+            }
+
+        }
+    }
+    
+    /*
     public class GameloopPolylineInflationTest : GameLoop
     {
         ScreenTexture game;
@@ -777,7 +950,7 @@ namespace Examples
 
         }
     }
-
+    */
     /*
     public class GameloopTest : GameLoop
     {

@@ -1,9 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
+	<RunWorkingDirectory>$(MSBuildThisFileDirectory)</RunWorkingDirectory>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
@@ -11,4 +12,10 @@
     <ProjectReference Include="..\Core\Core.csproj" />
   </ItemGroup>
 
+	<ItemGroup>
+		<Content Include="fonts\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+	
 </Project>
