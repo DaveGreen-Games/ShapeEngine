@@ -10,7 +10,7 @@ using ShapeEngine.Screen;
 using System.Numerics;
 using ShapeEngine.UI;
 using ShapeEngine.Persistent;
-
+//put scenes in their own files!!!
 namespace Examples
 {
     public static class Program
@@ -51,16 +51,16 @@ namespace Examples
         }
         protected override void LoadContent()
         {
-            fonts.Add(FontIDs.AbelRegular, ContentLoader.LoadFont("fonts/Abel-Regular.ttf"));
-            fonts.Add(FontIDs.GruppoRegular, ContentLoader.LoadFont("fonts/Gruppo-Regular.ttf"));
-            fonts.Add(FontIDs.IndieFlowerRegular, ContentLoader.LoadFont("fonts/IndieFlower-Regular.ttf"));
-            fonts.Add(FontIDs.OrbitRegular, ContentLoader.LoadFont("fonts/Orbit-Regular.ttf"));
-            fonts.Add(FontIDs.OrbitronBold, ContentLoader.LoadFont("fonts/Orbitron-Bold.ttf"));
-            fonts.Add(FontIDs.OrbitronRegular, ContentLoader.LoadFont("fonts/Orbitron-Regular.ttf"));
-            fonts.Add(FontIDs.PromptLightItalic, ContentLoader.LoadFont("fonts/Prompt-LightItalic.ttf"));
-            fonts.Add(FontIDs.PromptRegular, ContentLoader.LoadFont("fonts/Prompt-Regular.ttf"));
-            fonts.Add(FontIDs.PromptThin, ContentLoader.LoadFont("fonts/Prompt-Thin.ttf"));
-            fonts.Add(FontIDs.TekoMedium, ContentLoader.LoadFont("fonts/Teko-Medium.ttf"));
+            fonts.Add(FontIDs.AbelRegular, ContentLoader.LoadFont("fonts/Abel-Regular.ttf", 200));
+            fonts.Add(FontIDs.GruppoRegular, ContentLoader.LoadFont("fonts/Gruppo-Regular.ttf", 200));
+            fonts.Add(FontIDs.IndieFlowerRegular, ContentLoader.LoadFont("fonts/IndieFlower-Regular.ttf", 200));
+            fonts.Add(FontIDs.OrbitRegular, ContentLoader.LoadFont("fonts/Orbit-Regular.ttf", 200));
+            fonts.Add(FontIDs.OrbitronBold, ContentLoader.LoadFont("fonts/Orbitron-Bold.ttf", 200));
+            fonts.Add(FontIDs.OrbitronRegular, ContentLoader.LoadFont("fonts/Orbitron-Regular.ttf", 200));
+            fonts.Add(FontIDs.PromptLightItalic, ContentLoader.LoadFont("fonts/Prompt-LightItalic.ttf", 200));
+            fonts.Add(FontIDs.PromptRegular, ContentLoader.LoadFont("fonts/Prompt-Regular.ttf", 200));
+            fonts.Add(FontIDs.PromptThin, ContentLoader.LoadFont("fonts/Prompt-Thin.ttf", 200));
+            fonts.Add(FontIDs.TekoMedium, ContentLoader.LoadFont("fonts/Teko-Medium.ttf", 200));
 
             fontNames.Add("Abel Regular");
             fontNames.Add("Gruppo Regular");
@@ -392,14 +392,17 @@ namespace Examples
     {
         Vector2 topLeft = new();
         Vector2 bottomRight = new();
-        
+
+        bool mouseInsideTopLeft = false;
+        bool mouseInsideBottomRight = false;
+
         bool draggingTopLeft = false;
         bool draggingBottomRight = false;
 
         float pointRadius = 8f;
         float interactionRadius = 24f;
 
-        string text = "Test Text";
+        string text = "Longer Test Text.";
         int fontSpacing = 1;
         int maxFontSpacing = 25;
         Font font;
@@ -421,16 +424,118 @@ namespace Examples
 
             if (IsKeyPressed(KeyboardKey.KEY_D)) ChangeFontSpacing(1);
             else if (IsKeyPressed(KeyboardKey.KEY_A)) ChangeFontSpacing(-1);
+
+            if (mouseInsideTopLeft)
+            {
+                if (draggingTopLeft)
+                {
+                    if (IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT)) draggingTopLeft = false;
+                }
+                else
+                {
+                    if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)) draggingTopLeft = true;
+                }
+                
+            }
+            else if (mouseInsideBottomRight)
+            {
+                if (draggingBottomRight)
+                {
+                    if (IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT)) draggingBottomRight = false;
+                }
+                else
+                {
+                    if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)) draggingBottomRight = true;
+                }
+            }
         }
         public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
+            if(draggingTopLeft || draggingBottomRight)
+            {
+                if (draggingTopLeft) topLeft = mousePosUI;
+                else if (draggingBottomRight) bottomRight = mousePosUI;
+            }
+            else
+            {
+                float topLeftDisSq = (topLeft - mousePosUI).LengthSquared();
+                mouseInsideTopLeft = topLeftDisSq <= interactionRadius * interactionRadius;
 
+                if (!mouseInsideTopLeft)
+                {
+                    float bottomRightDisSq = (bottomRight - mousePosUI).LengthSquared();
+                    mouseInsideBottomRight = bottomRightDisSq <= interactionRadius * interactionRadius;
+                }
+            }
+            
         }
         public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
         {
+            
+
             Rect r = new(topLeft, bottomRight);
-            r.DrawLines(4f, new Color(255, 0, 0, 150));
+            r.DrawLines(8f, new Color(255, 0, 0, 150));
             text.Draw(r, fontSpacing, WHITE, font, new Vector2(0.5f, 0.5f));
+
+            Circle topLeftPoint = new(topLeft, pointRadius);
+            Circle topLeftInteractionCircle = new(topLeft, interactionRadius);
+
+            Circle bottomRightPoint = new(bottomRight, pointRadius);
+            Circle bottomRightInteractionCircle = new(bottomRight, interactionRadius);
+
+            if (draggingTopLeft)
+            {
+                topLeftInteractionCircle.Draw(GREEN);
+            }
+            else if (mouseInsideTopLeft)
+            {
+                topLeftPoint.Draw(WHITE);
+                topLeftInteractionCircle.radius *= 2f;
+                topLeftInteractionCircle.DrawLines(2f, GREEN, 4f);
+            }
+            else
+            {
+                topLeftPoint.Draw(WHITE);
+                topLeftInteractionCircle.DrawLines(2f, WHITE, 4f);
+            }
+
+            if (draggingBottomRight)
+            {
+                bottomRightInteractionCircle.Draw(GREEN);
+            }
+            else if (mouseInsideBottomRight)
+            {
+                bottomRightPoint.Draw(WHITE);
+                bottomRightInteractionCircle.radius *= 2f;
+                bottomRightInteractionCircle.DrawLines(2f, GREEN, 4f);
+            }
+            else
+            {
+                bottomRightPoint.Draw(WHITE);
+                bottomRightInteractionCircle.DrawLines(2f, WHITE, 4f);
+            }
+            //float fontSize = font.baseSize;
+            //float fontSpacingWidth = (text.Length - 1) * fontSpacing;
+            //Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, 0);
+            //Vector2 size = r.Size;
+            ////Vector2 f = size / fontDimensions;
+            //float f = (size.X - fontSpacingWidth) / fontDimensions.X;
+            ////float difX = fontDimensions.X - size.X;
+            ////float difY = fontDimensions.Y - size.Y;
+            ////if (difX > 0 && difY > 0) f = difX > difY ? size.X / fontDimensions.X : size.Y / fontDimensions.Y;
+            ////else if (difX > 0) f = size.X / fontDimensions.X;
+            ////else if (difY > 0) f = size.Y / fontDimensions.Y;
+            ////else f = difX < difY ? size.X / fontDimensions.X : size.Y / fontDimensions.Y;
+            //
+            //Rect rectFontDimensionsBasic = new(topLeft, fontDimensions, new Vector2(0f));
+            //rectFontDimensionsBasic.DrawLines(2f, GREEN);
+            //
+            //Rect rectFontDimensionsScaled = new(topLeft, fontDimensions * f, new Vector2(0f));
+            //rectFontDimensionsScaled.DrawLines(2f, RED);
+            //
+            //Raylib.DrawTextEx(font, text, topLeft, fontSize, fontSpacing, GREEN);
+            //Raylib.DrawTextEx(font, text, topLeft, fontSize * f, fontSpacing, RED);
+
 
             string info = String.Format("[{0}] - Spacing [{1}]", GAMELOOP.GetFontName(fontIndex), fontSpacing);
             Rect infoRect = new(uiSize * new Vector2(0.5f, 0.98f), uiSize * new Vector2(0.4f, 0.1f), new Vector2(0.5f, 1f));

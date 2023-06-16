@@ -62,7 +62,18 @@ namespace ShapeEngine.UI
             }
             fonts.Clear();
         }
-
+        
+        /*
+        public (float fontSize, float fontSpacing) GetDynamicFontInfo(uint fontID, string text, Vector2 size, float fontSpacing)
+        {
+            return GetDynamicFontInfo(GetFont(fontID), text, size, fontSpacing);
+        }
+        public Vector2 GetTextSize(string text, float fontSize, float fontSpacing, uint fontID)
+        {
+            return MeasureTextEx(GetFont(fontID), text, fontSize, fontSpacing);
+        }
+        */
+        /*
         public float CalculateDynamicFontSize(string text, Vector2 size, uint fontID, float fontSpacing = 1f)
         {
             float baseSize = GetFont(fontID).baseSize;
@@ -75,10 +86,6 @@ namespace ShapeEngine.UI
             Vector2 textSize = MeasureTextEx(GetFont(fontID), text, baseSize * scalingFactor, fontSpacing);
             float correctionFactor = MathF.Min(size.X / textSize.X, 1f);
             return scalingFactor * correctionFactor;
-        }
-        public Vector2 GetTextSize(string text, float fontSize, float fontSpacing, uint fontID)
-        {
-            return MeasureTextEx(GetFont(fontID), text, fontSize, fontSpacing);
         }
         public static float CalculateDynamicFontSize(string text, Vector2 size, Font font, float fontSpacing = 1f)
         {
@@ -94,11 +101,7 @@ namespace ShapeEngine.UI
             float correctionFactor = MathF.Min(size.X / textSize.X, 1f);
             return scalingFactor * correctionFactor;
         }
-        public static Vector2 GetTextSize(string text, float fontSize, float fontSpacing, Font font)
-        {
-            return MeasureTextEx(font, text, fontSize, fontSpacing);
-        }
-        
+        */
         /*
         public float CalculateDynamicFontSize(float height, uint fontID)
         {
