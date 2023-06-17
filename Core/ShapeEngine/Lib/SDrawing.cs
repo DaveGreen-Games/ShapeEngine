@@ -12,6 +12,9 @@ namespace ShapeEngine.Lib
 {
     public static class SDrawing
     {
+        public static readonly float FontMinSize = 25f;
+        //public static readonly float MaxFontSize = 1000f;
+
 
         #region Pixel
         public static void DrawPixel(Vector2 pos, Raylib_CsLo.Color color) => Raylib.DrawPixelV(pos, color); 
@@ -1107,9 +1110,34 @@ namespace ShapeEngine.Lib
         {
             Raylib.DrawTextCodepoint(font, c, pos, fontSize, color);
         }
-        
+        public static void DrawTextWrappedChar(this Font font, string text, Rect rect, float fontSpacing, Raylib_CsLo.Color color)
+        {
+            float safetyMargin = 0.85f;
+            Vector2 rectSize = rect.Size;
+            Vector2 textSize = font.GetTextSize(text, font.baseSize, fontSpacing);
+            float rectArea = rectSize.GetArea() * safetyMargin;
+            float textArea = textSize.GetArea();
+            
+            float f = MathF.Sqrt(rectArea / textArea);
+            fontSpacing *= f;
+            float fontSize = font.baseSize * f;
 
-        public static void DrawTextWrappedSimple(this Font font, string text, Rect rect, float fontSize, float fontSpacing, float lineSpacing, Raylib_CsLo.Color color)
+            Vector2 pos = rect.TopLeft;
+            for (int i = 0; i < text.Length; i++)
+            {
+                var c = text[i];
+                var charBaseSize = font.GetCharBaseSize(c);
+                float glyphWidth = charBaseSize.X * f;
+                if (pos.X + glyphWidth >= rect.TopLeft.X + rectSize.X)
+                {
+                    pos.X = rect.TopLeft.X;
+                    pos.Y += fontSize;
+                }
+                font.DrawChar(c, pos, fontSize, color);
+                pos.X += glyphWidth + fontSpacing;
+            }
+        }
+        public static void DrawTextWrappedChar(this Font font, string text, Rect rect, float fontSize, float fontSpacing, float lineSpacing, Raylib_CsLo.Color color)
         {
             float f = fontSize / (float)font.baseSize;
             Vector2 pos = rect.TopLeft;
@@ -1131,17 +1159,21 @@ namespace ShapeEngine.Lib
                 pos.X += glyphWidth + fontSpacing;
             }
         }
-        public static void DrawTextWrapped(this Font font, string text, Rect rect, float fontSize, float fontSpacing, float lineSpacing, Raylib_CsLo.Color color)
+        //word wrap with dynamic font size?
+        
+        public static void DrawTextWrappedWord(this Font font, string text, Rect rect, float fontSize, float fontSpacing, float lineSpacing, Raylib_CsLo.Color color)
         {
-            Char[] breakers = new Char[] { ' ','.', ';', ',', '!', '?', '-' };
+            if (rect.height < FontMinSize) return;
 
+            fontSize = MathF.Max(fontSize, FontMinSize);
+            if (rect.height < fontSize) fontSize *= (rect.height / fontSize);
+            
             float f = fontSize / (float)font.baseSize;
             Vector2 pos = rect.TopLeft;
 
             string curLine = string.Empty;
             string curWord = string.Empty;
             float curWidth = 0f;
-            float lastBreakerWidth = 0f;
 
             for (int i = 0; i < text.Length; i++)
             {
@@ -1150,11 +1182,10 @@ namespace ShapeEngine.Lib
                 if(c != '\n')
                 {
                     curWord += c;
-                    if (breakers.Contains(c))
+                    if (c == ' ')
                     {
                         curLine += curWord;
                         curWord = "";
-                        lastBreakerWidth = curWidth;
                     }
                     var charBaseSize = font.GetCharBaseSize(c);
                     float glyphWidth = charBaseSize.X * f;
@@ -1164,8 +1195,9 @@ namespace ShapeEngine.Lib
                         curLine = curLine.Trim();
                         Raylib.DrawTextEx(font, curLine, pos, fontSize, fontSpacing, color);
 
-                        curWidth = curWidth - lastBreakerWidth;
-                        lastBreakerWidth = 0f;
+                        curWidth = 0;
+                        i -= curWord.Length;
+                        curWord = string.Empty;
                         curLine = string.Empty;
                         
                         pos.Y += fontSize + lineSpacing;
@@ -1174,8 +1206,7 @@ namespace ShapeEngine.Lib
                             return;
                         }
                     }
-                    //font.DrawChar(c, pos, fontSize, color);
-                    curWidth += glyphWidth + fontSpacing;
+                    else curWidth += glyphWidth + fontSpacing;
                 }
                 else
                 {
@@ -1184,7 +1215,6 @@ namespace ShapeEngine.Lib
                     Raylib.DrawTextEx(font, curLine, pos, fontSize, fontSpacing, color);
 
                     curWidth = 0f;
-                    lastBreakerWidth = 0f;
                     curLine = string.Empty;
                     curWord = string.Empty;
 
@@ -1195,37 +1225,15 @@ namespace ShapeEngine.Lib
                     }
                 }
             }
-        }
-        
-        public static void DrawTextWrapped(this Font font, string text, Rect rect, float fontSpacing, float lineSpacing, Raylib_CsLo.Color color)
-        {
-            fontSpacing = 0;
-            lineSpacing = 0;
 
-            Vector2 rectSize = rect.Size;
-            Vector2 textSize = font.GetTextSize(text, font.baseSize, 0);
-            float rectArea = rectSize.GetArea();
-            float textArea = textSize.GetArea();
             
-            float f = rectArea / textArea;
+            curLine += curWord;
+            curLine = curLine.Trim();
+            Raylib.DrawTextEx(font, curLine, pos, fontSize, fontSpacing, color);
 
-            float fontSize = font.baseSize * f;
-
-            Vector2 pos = rect.TopLeft;
-            for (int i = 0; i < text.Length; i++)
-            {
-                var c = text[i];
-                var charBaseSize = font.GetCharBaseSize(c);
-                float glyphWidth = charBaseSize.X * f;
-                if (pos.X + glyphWidth >= rect.TopLeft.X + rectSize.X)
-                {
-                    pos.X = rect.TopLeft.X;
-                    pos.Y += fontSize;// + lineSpacing;
-                }
-                font.DrawChar(c, pos, fontSize, color);
-                pos.X += glyphWidth + fontSpacing;
-            }
         }
+
+        
         
         
         
