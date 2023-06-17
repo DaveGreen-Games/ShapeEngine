@@ -579,7 +579,7 @@ namespace Examples
         float pointRadius = 8f;
         float interactionRadius = 24f;
 
-        string text = "This is a very long example text to properly and thouroghly test the complete and bug-free function of the word wrap draw text function.\n Sentence should be in a new line.";
+        string text = "This is a very long example text to properly and thoroughly test the word wrap function. Another very important sentence is written here, followed by a few words!";
         int lineSpacing = 0;
         int lineSpacingIncrement = 5;
         int maxLineSpacing = 100;
@@ -665,7 +665,8 @@ namespace Examples
             r.DrawLines(8f, new Color(255, 0, 0, 150));
             //font.DrawTextWrapped(text, r, fontSpacing, WHITE); //works
             //font.DrawTextWrappedChar(text, r, fontSize, fontSpacing, lineSpacing, WHITE); //works
-            font.DrawTextWrappedWord(text, r, fontSize, fontSpacing, lineSpacing, WHITE);
+            //font.DrawTextWrappedWord(text, r, fontSize, fontSpacing, lineSpacing, WHITE);
+            font.DrawTextWrappedWord(text, r, fontSpacing, WHITE);
             Circle topLeftPoint = new(topLeft, pointRadius);
             Circle topLeftInteractionCircle = new(topLeft, interactionRadius);
 

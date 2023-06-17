@@ -1064,9 +1064,27 @@ namespace ShapeEngine.Lib
             float f = MathF.Min(fX, fY);
             return (fontSize * f, fontSpacing, MeasureTextEx(font, text, fontSize * f, fontSpacing));
         }
-        public static Vector2 GetTextSize(this  Font font, string text, float fontSize, float fontSpacing)
+        public static Vector2 GetTextSize(this Font font, string text, float fontSize, float fontSpacing)
         {
-            return MeasureTextEx(font, text, fontSize, fontSpacing);
+            float totalWidth = 0f;
+
+            for (int i = 0; i < text.Length; i++)
+            {
+                var c = text[i];
+                if (c == '\n') continue;
+                float w = font.GetCharWidth(c, fontSize);
+                totalWidth += w;
+            }
+            float fontSpacingWidth = (text.Length - 1) * fontSpacing;
+            totalWidth += fontSpacingWidth;
+            return new Vector2(totalWidth, fontSize);
+            //return MeasureTextEx(font, text, fontSize, fontSpacing);
+        }
+        public static float GetCharWidth(this Font font, Char c, float fontSize)
+        {
+            float baseWidth = font.GetCharBaseWidth(c);
+            float f = fontSize / (float)font.baseSize;
+            return baseWidth * f;
         }
         public static Vector2 GetCharSize(this Font font, Char c, float fontSize)
         {
@@ -1081,6 +1099,16 @@ namespace ShapeEngine.Lib
             var baseSize = font.GetCharBaseSize(c);
             float f = fontSize / (float)font.baseSize;
             return baseSize * f;
+        }
+        public static float GetCharBaseWidth(this Font font, Char c)
+        {
+            unsafe
+            {
+                int index = GetGlyphIndex(font, c);
+                var glyphInfo = GetGlyphInfo(font, index);
+                float glyphWidth = (font.glyphs[index].advanceX == 0) ? font.recs[index].width : font.glyphs[index].advanceX;
+                return glyphWidth;
+            }
         }
         public static Vector2 GetCharBaseSize(this Font font, Char c)
         {
@@ -1159,8 +1187,19 @@ namespace ShapeEngine.Lib
                 pos.X += glyphWidth + fontSpacing;
             }
         }
-        //word wrap with dynamic font size?
-        
+        public static void DrawTextWrappedWord(this Font font, string text, Rect rect, float fontSpacing, Raylib_CsLo.Color color)
+        {
+            float safetyMargin = 0.75f;
+            Vector2 rectSize = rect.Size;
+            Vector2 textSize = font.GetTextSize(text, font.baseSize, fontSpacing);
+            float rectArea = rectSize.GetArea() * safetyMargin;
+            float textArea = textSize.GetArea();
+
+            float f = MathF.Sqrt(rectArea / textArea);
+            fontSpacing *= f;
+            float fontSize = font.baseSize * f;
+            DrawTextWrappedWord(font, text, rect, fontSize, fontSpacing, 0f, color);
+        }
         public static void DrawTextWrappedWord(this Font font, string text, Rect rect, float fontSize, float fontSpacing, float lineSpacing, Raylib_CsLo.Color color)
         {
             if (rect.height < FontMinSize) return;
