@@ -113,7 +113,8 @@ namespace ShapeEngine.UI
 
                 if (commandHistory.Count > 0)
                 {
-                    commandHistory[0].Draw(historyRect, 1f, caretColor, font, textAlignement);
+                    font.DrawText(commandHistory[0], historyRect, 1f, textAlignement, caretColor);
+                    //commandHistory[0].Draw(historyRect, 1f, caretColor, font, textAlignement);
                 }
                 SDrawing.DrawTextBox(textBoxRect, "Enter Command...", textEntry.characters, 1f, font, textColor, true, textEntry.CaretPosition, 2f, caretColor, textAlignement);
                 consoleRect.DrawLines(4f, caretColor);

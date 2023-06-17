@@ -1,5 +1,7 @@
 ﻿
+using System.Drawing;
 using System.Numerics;
+using Clipper2Lib;
 using Raylib_CsLo;
 using ShapeEngine.Core;
 using ShapeEngine.UI;
@@ -1036,39 +1038,8 @@ namespace ShapeEngine.Lib
 
         #region Text
 
-        public static void DrawTextBox(this Rect rect, string emptyText, List<char> chars, float fontSpacing, Font font, Raylib_CsLo.Color textColor, bool drawCaret, int caretPosition, float caretWidth, Raylib_CsLo.Color caretColor, Vector2 textAlignement)
-        {
-            //fix alignement
-            //alignement = new(0, 0.5f);
-            if (chars.Count <= 0)
-            {
-                SDrawing.Draw(emptyText, rect, fontSpacing, textColor, font, textAlignement);
-            }
-            else
-            {
-                string text = String.Concat(chars);
-                SDrawing.Draw(text, rect, fontSpacing, textColor, font, textAlignement);
 
-                if (drawCaret)
-                {
-                    //float fontSize = FontHandler.CalculateDynamicFontSize(text, new Vector2(rect.width, rect.height), font, fontSpacing);
-                    var info = text.GetDynamicFontSize(rect.Size, fontSpacing, font);
-                    //Vector2 textSize = MeasureTextEx(font, text, fontSize, fontSpacing);
-                    Vector2 uiPos = rect.GetPoint(textAlignement);
-                    Vector2 topLeft = uiPos - textAlignement * info.textSize;
-                    //Vector2 topLeft = new(rect.x, rect.y);
-
-                    string caretText = String.Concat(chars.GetRange(0, caretPosition));
-                    Vector2 caretTextSize = MeasureTextEx(font, caretText, info.fontSize, info.fontSpacing);
-
-                    Vector2 caretTop = topLeft + new Vector2(caretTextSize.X + fontSpacing * 0.5f, 0f);
-                    Vector2 caretBottom = topLeft + new Vector2(caretTextSize.X + fontSpacing * 0.5f, rect.height);
-                    DrawLineEx(caretTop, caretBottom, caretWidth, caretColor);
-                }
-            }
-        }
-
-        public static (float fontSize, float fontSpacing, Vector2 textSize) GetDynamicFontSize(this string text, Vector2 size, float fontSpacing, Font font)
+        public static (float fontSize, float fontSpacing, Vector2 textSize) GetDynamicFontSize(this Font font, string text, Vector2 size, float fontSpacing)
         {
             float fontSize = font.baseSize;
             float fontSpacingWidth = (text.Length - 1) * fontSpacing;
@@ -1088,22 +1059,180 @@ namespace ShapeEngine.Lib
             float f = MathF.Min(fX, fY);
             return (fontSize * f, fontSpacing, MeasureTextEx(font, text, fontSize * f, fontSpacing));
         }
-        public static Vector2 GetTextSize(this string text, float fontSize, float fontSpacing, Font font)
+        public static Vector2 GetTextSize(this  Font font, string text, float fontSize, float fontSpacing)
         {
             return MeasureTextEx(font, text, fontSize, fontSpacing);
         }
-        public static void Draw(this string text, Rect rect, float fontSpacing, Raylib_CsLo.Color color, Font font, Vector2 alignement)
+        public static void DrawText(this Font font, string text, Rect rect, float fontSpacing, Vector2 alignement, Raylib_CsLo.Color color)
         {
-            var info = text.GetDynamicFontSize(rect.Size, fontSpacing, font);
-            //Vector2 textDimensions = MeasureTextEx(font, text, info.fontSize, info.fontSpacing);
+            var info = font.GetDynamicFontSize(text, rect.Size, fontSpacing);
             Vector2 uiPos = rect.GetPoint(alignement);
             Vector2 topLeft = uiPos - alignement * info.textSize;
             DrawTextEx(font, text, topLeft, info.fontSize, info.fontSpacing, color);
         }
+        public static void DrawText(this Font font, string text, float fontSize, float fontSpacing, Vector2 pos, Vector2 alignement, Raylib_CsLo.Color color)
+        {
+            Vector2 size = font.GetTextSize(text, fontSize, fontSpacing);
+            Rect r = new(pos, size, alignement);
+            DrawTextEx(font, text, r.TopLeft, fontSize, fontSpacing, color);
+        }
+        public static void DrawTextWrapped(this Font font, string text, Rect rect, float fontSpacing, float lineSpacing, Raylib_CsLo.Color color)
+        {
+            Vector2 rectSize = rect.Size;
+            Vector2 textSize = font.GetTextSize(text, font.baseSize, fontSpacing);
+            int lines = (int)MathF.Max(MathF.Ceiling(textSize.X / rectSize.X), 1);
+            float lineSpacingHeight = (lines - 1) * lineSpacing;
 
+            if (lineSpacingHeight > rectSize.Y * 0.5f)
+            {
+                float lineSpacingFactor = (rectSize.Y * 0.5f) / lineSpacingHeight;
+                lineSpacingHeight *= lineSpacingFactor;
+                lineSpacing *= lineSpacingFactor;
+            }
+            float totalHeight = lines * font.baseSize;
+            float f = (rectSize.Y - lineSpacingHeight) / totalHeight;
+            float fontSize = font.baseSize * f;
+            unsafe
+            {
+                Vector2 pos = rect.TopLeft;
+                for (int i = 0; i < text.Length; i++)
+                {
+                    var c = text[i];
+                    int index = GetGlyphIndex(font, c);
+                    var glyphInfo = GetGlyphInfo(font, index);
+
+                    Raylib.DrawTextCodepoint(font, c, pos, fontSize, color);
+                    float glyphWidth = (font.glyphs[index].advanceX == 0) ? font.recs[index].width * f : font.glyphs[index].advanceX * f;
+                    
+                    if(pos.X + glyphWidth + fontSpacing >= rect.TopLeft.X + rectSize.X)
+                    {
+                        pos.X = rect.TopLeft.X;
+                        pos.Y += fontSize + lineSpacing;
+                    }
+                    else
+                    {
+                        pos.X += glyphWidth + fontSpacing;
+                    }
+                }
+            }
+        }
+        
+        
+        
+        
+        //function for drawing plane text (1Color) with wordwrap
+        //function for drawing text multicolored with dynamic and static font size
+        //function for drawing text multicolored with wordwrap
+
+
+
+
+        public struct StringColorInfo
+        {
+            public int startIndex;
+            public int endIndex;
+            public Raylib_CsLo.Color color;
+        }
+        public class StringColored
+        {
+            public string text;
+            public StringColorInfo[] colorInfos;
+
+            public StringColored(string text, StringColorInfo[] colorInfos)
+            {
+                this.text = text;
+                this.colorInfos = colorInfos;
+            }
+            public StringColored(string codedText, Raylib_CsLo.Color baseColor, Raylib_CsLo.Color[] colors)
+            {
+                //generate text & color info array
+                //code: <id|word>
+                string finalText = "";
+                //int.Parse
+                bool started = false;
+                int id = 0;
+                int start = -1;
+                int end = -1;
+                for (int i = 0; i < codedText.Length; i++)
+                {
+                    var c = codedText[i];
+                    if(!started)
+                    {
+                        if (c == '<') started = true;
+                    }
+                    else
+                    {
+
+                    }
+                }
+            }
+
+            public Raylib_CsLo.Color GetColor(int index)
+            {
+                return new();
+            }
+
+        }
+        public static void Draw(this StringColored coloredText, Vector2 pos, float fontSize, float fontSpacing, Font font)
+        {
+            float scaleFactor = fontSize / (float)font.baseSize;
+            unsafe
+            {
+                int i = 0;
+                foreach (var c in coloredText.text)
+                {
+                    int index = GetGlyphIndex(font, c);
+                    var glyphInfo = GetGlyphInfo(font, index);
+
+                    Raylib.DrawTextCodepoint(font, c, pos, fontSize, coloredText.GetColor(i));
+                    float glyphWidth = (font.glyphs[index].advanceX == 0) ? font.recs[index].width * scaleFactor : font.glyphs[index].advanceX * scaleFactor;
+                    pos += new Vector2(glyphWidth + fontSpacing, 0f);
+                    i++;
+                }
+            }
+        }
+
+
+        
+        
+        
+        
+        //turn the text into a list of text and color
+        // <|word|colorID>
+        //word is used as the text and colorID is the index to the colors list
+        //every text outside is matched with base color
+        public static List<(string text, Raylib_CsLo.Color color) > Parser(string text, Raylib_CsLo.Color baseColor, List<Raylib_CsLo.Color> colors)
+        {
+            return new();
+        }
+        public static void DrawChars(this string text, Rect rect, float fontSize, float fontSpacing, Font font)
+        {
+            float scaleFactor = fontSize / (float)font.baseSize;
+            unsafe
+            {
+                Vector2 pos = rect.TopLeft;
+                foreach (var c in text)
+                {
+                    int index = GetGlyphIndex(font, c);
+                    var glyphInfo = GetGlyphInfo(font, index);
+
+                    Raylib.DrawTextCodepoint(font, c, pos, fontSize, SRNG.randColor(255));
+                    float glyphWidth = (font.glyphs[index].advanceX == 0) ? font.recs[index].width * scaleFactor : font.glyphs[index].advanceX * scaleFactor;
+                    pos += new Vector2(glyphWidth + fontSpacing, 0f);
+                    
+                }
+            }
+            
+        }
         //function for auto line break as well
         //function for drawing text with different colors
         
+
+
+
+
+        //--------------OLD--------------------------
+
         //disabled right now
         public static void DrawTextMultiColor(List<string> texts, Rect rect, float fontSpacing, List<Raylib_CsLo.Color> colors, Font font, Vector2 alignement)
         {
@@ -1126,9 +1255,40 @@ namespace ShapeEngine.Lib
             }
         }
 
+        public static void DrawTextBox(this Rect rect, string emptyText, List<char> chars, float fontSpacing, Font font, Raylib_CsLo.Color textColor, bool drawCaret, int caretPosition, float caretWidth, Raylib_CsLo.Color caretColor, Vector2 textAlignement)
+        {
+            //fix alignement
+            //alignement = new(0, 0.5f);
+            if (chars.Count <= 0)
+            {
+                SDrawing.DrawText(font, emptyText, rect, fontSpacing, textAlignement, textColor);
+            }
+            else
+            {
+                string text = String.Concat(chars);
+                SDrawing.DrawText(font, text, rect, fontSpacing, textAlignement, textColor);
+
+                if (drawCaret)
+                {
+                    //float fontSize = FontHandler.CalculateDynamicFontSize(text, new Vector2(rect.width, rect.height), font, fontSpacing);
+                    var info = font.GetDynamicFontSize(text, rect.Size, fontSpacing);
+                    //Vector2 textSize = MeasureTextEx(font, text, fontSize, fontSpacing);
+                    Vector2 uiPos = rect.GetPoint(textAlignement);
+                    Vector2 topLeft = uiPos - textAlignement * info.textSize;
+                    //Vector2 topLeft = new(rect.x, rect.y);
+
+                    string caretText = String.Concat(chars.GetRange(0, caretPosition));
+                    Vector2 caretTextSize = MeasureTextEx(font, caretText, info.fontSize, info.fontSpacing);
+
+                    Vector2 caretTop = topLeft + new Vector2(caretTextSize.X + fontSpacing * 0.5f, 0f);
+                    Vector2 caretBottom = topLeft + new Vector2(caretTextSize.X + fontSpacing * 0.5f, rect.height);
+                    DrawLineEx(caretTop, caretBottom, caretWidth, caretColor);
+                }
+            }
+        }
         public static void Draw(this string text, Rect rect, float rotDeg, float fontSpacing, Raylib_CsLo.Color color, Font font, Vector2 alignement)
         {
-            var info = text.GetDynamicFontSize(rect.Size, fontSpacing, font);
+            var info = font.GetDynamicFontSize(text, rect.Size, fontSpacing);
             Vector2 uiPos = rect.GetPoint(alignement);
             Vector2 originOffset = alignement * info.textSize;
             Vector2 topLeft = uiPos - originOffset;
@@ -1157,7 +1317,7 @@ namespace ShapeEngine.Lib
             DrawTextPro(font, text, uiPos, originOffset, rotDeg, fontSize, fontSpacing, color);
         }
         
-        
+        //-------------------------------------------
         
         
         #endregion
