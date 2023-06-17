@@ -580,9 +580,15 @@ namespace Examples
         float interactionRadius = 24f;
 
         string text = "This is a very long example text to properly and thouroghly test the complete and bug-free function of the word wrap draw text function.";
-        int lineSpacing = 1;
-        int maxLineSpacing = 25;
-        float fontSpacing = 1f;
+        int lineSpacing = 0;
+        int lineSpacingIncrement = 5;
+        int maxLineSpacing = 100;
+        int fontSpacing = 0;
+        int fontSpacingIncrement = 5;
+        int maxFontSpacing = 100;
+        int fontSize = 50;
+        int fontSizeIncrement = 25;
+        int maxFontSize = 300;
         Font font;
         int fontIndex = 0;
 
@@ -600,8 +606,11 @@ namespace Examples
             if (IsKeyPressed(KeyboardKey.KEY_W)) NextFont();
             else if (IsKeyPressed(KeyboardKey.KEY_S)) PrevFont();
 
-            if (IsKeyPressed(KeyboardKey.KEY_D)) ChangeLineSpacing(1);
-            else if (IsKeyPressed(KeyboardKey.KEY_A)) ChangeLineSpacing(-1);
+            if (IsKeyPressed(KeyboardKey.KEY_ONE)) ChangeFontSize();
+
+            if (IsKeyPressed(KeyboardKey.KEY_TWO)) ChangeFontSpacing();
+
+            if (IsKeyPressed(KeyboardKey.KEY_THREE)) ChangeLineSpacing();
 
             if (mouseInsideTopLeft)
             {
@@ -654,7 +663,8 @@ namespace Examples
 
             Rect r = new(topLeft, bottomRight);
             r.DrawLines(8f, new Color(255, 0, 0, 150));
-            font.DrawTextWrapped(text, r, fontSpacing, lineSpacing, WHITE);
+            //font.DrawTextWrapped(text, r, fontSpacing, lineSpacing, WHITE);
+            font.DrawTextWrapped(text, r, fontSize, fontSpacing, lineSpacing, WHITE);
             Circle topLeftPoint = new(topLeft, pointRadius);
             Circle topLeftInteractionCircle = new(topLeft, interactionRadius);
 
@@ -692,15 +702,27 @@ namespace Examples
                 bottomRightPoint.Draw(WHITE);
                 bottomRightInteractionCircle.DrawLines(2f, WHITE, 4f);
             }
-            string info = String.Format("[{0}] - Spacing [{1}]", GAMELOOP.GetFontName(fontIndex), lineSpacing);
-            Rect infoRect = new(uiSize * new Vector2(0.5f, 0.98f), uiSize * new Vector2(0.4f, 0.1f), new Vector2(0.5f, 1f));
+            string info = String.Format("[{0}] - Size [{1}] | F Spacing [{2}] | L Spacing [{3}] ", GAMELOOP.GetFontName(fontIndex), fontSize, fontSpacing, lineSpacing);
+            Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.8f, 0.15f), new Vector2(0.5f, 1f));
             font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), YELLOW);
         }
-        private void ChangeLineSpacing(int amount)
+        private void ChangeLineSpacing()
         {
-            lineSpacing += amount;
-            if (lineSpacing < 1) lineSpacing = maxLineSpacing;
-            else if (lineSpacing > maxLineSpacing) lineSpacing = 1;
+            lineSpacing += lineSpacingIncrement;
+            if (lineSpacing < 0) lineSpacing = maxLineSpacing;
+            else if (lineSpacing > maxLineSpacing) lineSpacing = 0;
+        }
+        private void ChangeFontSpacing()
+        {
+            fontSpacing += fontSpacingIncrement;
+            if (fontSpacing < 0) fontSpacing = maxFontSpacing;
+            else if (fontSpacing > maxFontSpacing) fontSpacing = 0;
+        }
+        private void ChangeFontSize()
+        {
+            fontSize += fontSizeIncrement;
+            if (fontSize < 50) fontSize = maxFontSize;
+            else if (fontSize > maxFontSize) fontSize = 50;
         }
         private void NextFont()
         {

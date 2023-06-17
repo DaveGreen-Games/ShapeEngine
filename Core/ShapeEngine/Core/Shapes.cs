@@ -498,6 +498,10 @@ namespace ShapeEngine.Core
         public Vector2 BottomLeft { get { return new Vector2(x, y + height); } }
         public Vector2 Center { get { return new Vector2(x + width * 0.5f, y + height * 0.5f); } }
 
+        public float Top { get { return y; } }
+        public float Bottom { get { return y + height; } }
+        public float Left { get { return x; } }
+        public float Right { get { return x + width; } }
         public Vector2 Size { get { return new Vector2(width, height); } }
         public Rectangle Rectangle { get { return new(x, y, width, height); } }
 

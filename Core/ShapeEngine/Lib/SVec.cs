@@ -21,6 +21,7 @@ namespace ShapeEngine.Lib
             return prevCur.Cross(nextCur) == 0f;
         }
 
+        public static float GetArea(this Vector2 v) { return v.X * v.Y; }
 
         public static bool IsNan(this Vector2 v) { return float.IsNaN(v.X) || float.IsNaN(v.Y); }
         public static Vector2 Right() { return new(1.0f, 0.0f); }
