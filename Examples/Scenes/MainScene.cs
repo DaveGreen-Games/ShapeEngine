@@ -34,7 +34,7 @@ namespace Examples.Scenes
             examples.Add(new PolylineInflationExample());
             examples.Add(new TextScalingExample());
             examples.Add(new TextWrapExample());
-
+            examples.Add(new TextMultiColorExample());
             titleFont = GAMELOOP.FontDefault; // GAMELOOP.GetFont(GameloopExamples.FONT_IndieFlowerRegular);
 
             SetupButtons();

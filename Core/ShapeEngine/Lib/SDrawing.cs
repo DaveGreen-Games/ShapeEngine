@@ -1,11 +1,40 @@
 ﻿
+using System.Drawing;
 using System.Numerics;
+using Clipper2Lib;
 using Raylib_CsLo;
 using ShapeEngine.Core;
 using ShapeEngine.UI;
 
 namespace ShapeEngine.Lib
 {
+    public enum EmphasisType
+    {
+        None = 0,
+        Underlined = 1,
+        Strikethrough = 2
+    }
+    public struct WordEmphasis
+    {
+        public Raylib_CsLo.Color Color;
+        public List<int> WordIndices;
+        public EmphasisType EmphasisType;
+        public WordEmphasis(Raylib_CsLo.Color color, params int[] wordIndices)
+        {
+            this.Color = color;
+            this.WordIndices = wordIndices.ToList();
+            this.EmphasisType = EmphasisType.None;
+        }
+        public WordEmphasis(Raylib_CsLo.Color color, EmphasisType emphasisType, params int[] wordIndices)
+        {
+            this.Color = color;
+            this.WordIndices = wordIndices.ToList();
+            this.EmphasisType = emphasisType;
+        }
+        public bool Contains(int index) { return WordIndices.Contains(index); }
+    }
+
+
     public static class SDrawing
     {
         public static float FontMinSize = 25f;
@@ -1124,6 +1153,8 @@ namespace ShapeEngine.Lib
             }
         }
         
+
+
         public static void DrawText(this Font font, string text, Rect rect, float fontSpacing, Vector2 alignement, Raylib_CsLo.Color color)
         {
             var info = font.GetDynamicFontSize(text, rect.Size, fontSpacing);
@@ -1140,10 +1171,86 @@ namespace ShapeEngine.Lib
             DrawTextEx(font, text, r.TopLeft, fontSize, fontSpacing, color);
         }
         
-        public static void DrawChar(this Font font, Char c, Vector2 pos, float fontSize, Raylib_CsLo.Color color)
+        public static void DrawChar(this Font font, Char c, Vector2 pos, float fontSize, Raylib_CsLo.Color color, EmphasisType emphasis = EmphasisType.None)
         {
-            Raylib.DrawTextCodepoint(font, c, pos, fontSize, color);
+            if(emphasis == EmphasisType.None)
+            {
+                Raylib.DrawTextCodepoint(font, c, pos, fontSize, color);
+            }
+            else if (emphasis == EmphasisType.Underlined)
+            {
+                Vector2 charSize = font.GetCharSize(c, fontSize);
+                float thickness = charSize.Y * 0.05f;
+                Vector2 start = pos + new Vector2(0f, charSize.Y);
+                Vector2 end = pos + charSize;
+                Segment s = new(start, end);
+                
+                Raylib.DrawTextCodepoint(font, c, pos, fontSize, color);
+                s.Draw(thickness, color);
+            }
+            else if (emphasis == EmphasisType.Strikethrough)
+            {
+                Vector2 charSize = font.GetCharSize(c, fontSize);
+                float thickness = charSize.Y * 0.05f;
+                Vector2 start = pos + new Vector2(0f, charSize.Y / 2);
+                Vector2 end = pos + new Vector2(charSize.X, charSize.Y / 2);
+                Segment s = new(start, end);
+
+                Raylib.DrawTextCodepoint(font, c, pos, fontSize, color);
+                s.Draw(thickness, color);
+            }
+            //else if(emphasis == EmphasisType.Caps)
+            //{
+            //    Raylib.DrawTextCodepoint(font, Char.ToUpper(c), pos, fontSize, color);
+            //}
+            
         }
+        public static void DrawChar(this Font font, Char c, Vector2 pos, float fontSize, WordEmphasis wordEmphasis)
+        {
+            DrawChar(font, c, pos, fontSize, wordEmphasis.Color, wordEmphasis.EmphasisType);
+        }
+        public static void DrawWord(this Font font, string word, Vector2 pos, float fontSize, float fontSpacing, Raylib_CsLo.Color color, EmphasisType emphasis = EmphasisType.None)
+        {
+            if(emphasis == EmphasisType.None)
+            {
+                DrawTextEx(font, word, pos, fontSize, fontSpacing, color);
+            }
+            else if (emphasis == EmphasisType.Underlined)
+            {
+                Vector2 wordSize = font.GetTextSize(word, fontSize, fontSpacing);
+                float thickness = wordSize.Y * 0.05f;
+                Circle start = new(pos + new Vector2(0f, wordSize.Y), thickness / 2);
+                Circle end = new(pos + wordSize, thickness / 2);
+                Segment s = new(start.center, end.center);
+
+                DrawTextEx(font, word, pos, fontSize, fontSpacing, color);
+                s.Draw(thickness, color);
+                start.Draw(color);
+                end.Draw(color);
+            }
+            else if (emphasis == EmphasisType.Strikethrough)
+            {
+                Vector2 wordSize = font.GetTextSize(word, fontSize, fontSpacing);
+                float thickness = wordSize.Y * 0.05f;
+                Circle start = new(pos + new Vector2(0f, wordSize.Y / 2), thickness / 2);
+                Circle end = new(pos + new Vector2(wordSize.X, wordSize.Y / 2), thickness / 2);
+                Segment s = new(start.center, end.center);
+
+                DrawTextEx(font, word, pos, fontSize, fontSpacing, color);
+                s.Draw(thickness, color);
+                start.Draw(color);
+                end.Draw(color);
+            }
+            //else if(emphasis == EmphasisType.Caps)
+            //{
+            //    DrawTextEx(font, word.ToUpper(), pos, fontSize, fontSpacing, color);
+            //}
+        }
+        public static void DrawWord(this Font font, string word, Vector2 pos, float fontSize, float fontSpacing, WordEmphasis wordEmphasis)
+        {
+            DrawWord(font, word, pos, fontSize, fontSpacing, wordEmphasis.Color, wordEmphasis.EmphasisType);
+        }
+
         public static void DrawTextWrappedChar(this Font font, string text, Rect rect, float fontSpacing, Raylib_CsLo.Color color)
         {
             fontSpacing = MathF.Min(fontSpacing, font.baseSize * FontSpacingMaxFactor);
@@ -1291,60 +1398,83 @@ namespace ShapeEngine.Lib
 
         }
 
-        public struct TextColor
+
+        private static WordEmphasis? GetWordEmphasis(int index, params WordEmphasis[] wordEmphasis)
         {
-            public Raylib_CsLo.Color Color;
-            public List<int> WordIndices;
-            public TextColor(Raylib_CsLo.Color color, params int[] wordIndices)
+            foreach (var emphasis in wordEmphasis)
             {
-                this.Color = color;
-                this.WordIndices = wordIndices.ToList();
+                if (emphasis.Contains(index))
+                {
+                    return emphasis;
+                }
             }
-            public bool Contains(int index) { return WordIndices.Contains(index); }
+            return null;
         }
-        public static void DrawTextMultiColor(this Font font, string text, Rect rect, float fontSpacing, Vector2 alignement, Raylib_CsLo.Color baseColor, params TextColor[] wordColors)
+        
+        public static void DrawTextMultiColor(this Font font, string text, Rect rect, float fontSpacing, Vector2 alignement, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
         {
             var info = font.GetDynamicFontSize(text, rect.Size, fontSpacing);
             Vector2 uiPos = rect.GetPoint(alignement);
             Vector2 topLeft = uiPos - alignement * info.textSize;
+            DrawTextMultiColor(font, text, info.fontSize, info.fontSpacing, topLeft, alignement, baseEmphasis, wordEmphasis);
+            
+            //Vector2 pos = topLeft;
+            //string curWord = string.Empty;
+            //int curWordIndex = 0;
+            //float curWordWidth = 0f;
+            //WordEmphasis? curEmphasis = null;
+            //for (int i = 0; i < text.Length; i++)
+            //{
+            //    var c = text[i];
+            //    float w = GetCharWidth(font, c, info.fontSize) + info.fontSpacing;
+            //    curWordWidth += w;
+            //    if (c == ' ')
+            //    {
+            //        curEmphasis = GetWordEmphasis(curWordIndex, wordEmphasis);
+            //        DrawWord(font, curWord, pos, info.fontSize, info.fontSpacing, curEmphasis != null ? (WordEmphasis)curEmphasis : baseEmphasis);
+            //
+            //        curWord = string.Empty;
+            //        curWordIndex++;
+            //        pos += new Vector2(curWordWidth, 0f);
+            //        curWordWidth = 0f;
+            //    }
+            //    else curWord += c;
+            //    
+            //}
+            //curEmphasis = GetWordEmphasis(curWordIndex, wordEmphasis);
+            //DrawWord(font, curWord, pos, info.fontSize, info.fontSpacing, curEmphasis != null ? (WordEmphasis)curEmphasis : baseEmphasis);
 
-            Vector2 pos = topLeft;
+        }
+        public static void DrawTextMultiColor(this Font font, string text, float fontSize, float fontSpacing, Vector2 pos, Vector2 alignement, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
+        {
+            Vector2 textSize = font.GetTextSize(text, fontSize, fontSpacing);
+            Vector2 topLeft = pos - alignement * textSize;
+
+            Vector2 curWordPos = topLeft;
             string curWord = string.Empty;
             int curWordIndex = 0;
             float curWordWidth = 0f;
+            WordEmphasis? curEmphasis = null;
             for (int i = 0; i < text.Length; i++)
             {
                 var c = text[i];
-                curWord += c;
-                float w = GetCharWidth(font, c, info.fontSize) + fontSpacing;
+                float w = GetCharWidth(font, c, fontSize) + fontSpacing;
                 curWordWidth += w;
-                if(c == ' ')
+                if (c == ' ')
                 {
-                    Raylib_CsLo.Color color = baseColor;
-                    foreach (var wordColor in wordColors)
-                    {
-                        if (wordColor.Contains(curWordIndex))
-                        {
-                            color = wordColor.Color;
-                            break;
-                        }
-                    }
-                    DrawTextEx(font, curWord, pos, info.fontSize, info.fontSpacing, color);
+                    curEmphasis = GetWordEmphasis(curWordIndex, wordEmphasis);
+                    DrawWord(font, curWord, curWordPos, fontSize, fontSpacing, curEmphasis != null ? (WordEmphasis)curEmphasis : baseEmphasis);
 
                     curWord = string.Empty;
                     curWordIndex++;
-                    pos += new Vector2(curWordWidth, 0f);
+                    curWordPos += new Vector2(curWordWidth, 0f);
                     curWordWidth = 0f;
                 }
+                else curWord += c;
 
             }
-            
-        }
-        public static void DrawTextMultiColor(this Font font, string text, float fontSize, float fontSpacing, Vector2 pos, Vector2 alignement, Raylib_CsLo.Color baseColor, params TextColor[] wordColors)
-        {
-            Vector2 size = font.GetTextSize(text, fontSize, fontSpacing);
-            Rect r = new(pos, size, alignement);
-            DrawTextEx(font, text, r.TopLeft, fontSize, fontSpacing, baseColor);
+            curEmphasis = GetWordEmphasis(curWordIndex, wordEmphasis);
+            DrawWord(font, curWord, curWordPos, fontSize, fontSpacing, curEmphasis != null ? (WordEmphasis)curEmphasis : baseEmphasis);
         }
 
 
