@@ -167,6 +167,38 @@ namespace ShapeEngine.Lib
         public const float RADTODEG = 180f / MathF.PI;
 
 
+        public static string GetTextInput(string curText, int caretPosition = -1)
+        {
+            List<Char> characters = curText.ToList();
+            int unicode = Raylib.GetCharPressed();
+            while (unicode != 0)
+            {
+                var c = (char)unicode;
+                if (caretPosition < 0 || caretPosition >= characters.Count) characters.Add(c);
+                else
+                {
+                    characters.Insert(caretPosition, c);
+                    caretPosition++;
+                }
+
+                unicode = Raylib.GetCharPressed();
+            }
+            return new string(characters.ToArray());
+        }
+        public static string GetTextInput(string curText)
+        {
+            int unicode = Raylib.GetCharPressed();
+            while (unicode != 0)
+            {
+                var c = (char)unicode;
+                curText += c;
+
+                unicode = Raylib.GetCharPressed();
+            }
+            return curText;
+        }
+
+
         public static int WrapIndex(int count, int index)
         {
             if (index >= count) return index % count;

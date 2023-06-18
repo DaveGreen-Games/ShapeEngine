@@ -21,7 +21,7 @@ namespace ShapeEngine.UI
             this.maxCharacters = maxCharacters;
         }
 
-
+        
 
         public void Update(float dt)
         {

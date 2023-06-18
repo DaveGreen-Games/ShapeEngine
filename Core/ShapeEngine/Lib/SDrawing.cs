@@ -1134,6 +1134,7 @@ namespace ShapeEngine.Lib
             Rect r = new(pos, size, alignement);
             DrawTextEx(font, text, r.TopLeft, fontSize, fontSpacing, color);
         }
+        
         public static void DrawChar(this Font font, Char c, Vector2 pos, float fontSize, Raylib_CsLo.Color color)
         {
             Raylib.DrawTextCodepoint(font, c, pos, fontSize, color);
@@ -1272,12 +1273,66 @@ namespace ShapeEngine.Lib
 
         }
 
-        
-        
-        
-        
-        
-        
+        public struct TextColor
+        {
+            public Raylib_CsLo.Color Color;
+            public List<int> WordIndices;
+            public TextColor(Raylib_CsLo.Color color, params int[] wordIndices)
+            {
+                this.Color = color;
+                this.WordIndices = wordIndices.ToList();
+            }
+            public bool Contains(int index) { return WordIndices.Contains(index); }
+        }
+        public static void DrawTextMultiColor(this Font font, string text, Rect rect, float fontSpacing, Vector2 alignement, Raylib_CsLo.Color baseColor, params TextColor[] wordColors)
+        {
+            var info = font.GetDynamicFontSize(text, rect.Size, fontSpacing);
+            Vector2 uiPos = rect.GetPoint(alignement);
+            Vector2 topLeft = uiPos - alignement * info.textSize;
+
+            Vector2 pos = topLeft;
+            string curWord = string.Empty;
+            int curWordIndex = 0;
+            float curWordWidth = 0f;
+            for (int i = 0; i < text.Length; i++)
+            {
+                var c = text[i];
+                curWord += c;
+                float w = GetCharWidth(font, c, info.fontSize) + fontSpacing;
+                curWordWidth += w;
+                if(c == ' ')
+                {
+                    Raylib_CsLo.Color color = baseColor;
+                    foreach (var wordColor in wordColors)
+                    {
+                        if (wordColor.Contains(curWordIndex))
+                        {
+                            color = wordColor.Color;
+                            break;
+                        }
+                    }
+                    DrawTextEx(font, curWord, pos, info.fontSize, info.fontSpacing, color);
+
+                    curWord = string.Empty;
+                    curWordIndex++;
+                    pos += new Vector2(curWordWidth, 0f);
+                    curWordWidth = 0f;
+                }
+
+            }
+            
+        }
+        public static void DrawTextMultiColor(this Font font, string text, float fontSize, float fontSpacing, Vector2 pos, Vector2 alignement, Raylib_CsLo.Color baseColor, params TextColor[] wordColors)
+        {
+            Vector2 size = font.GetTextSize(text, fontSize, fontSpacing);
+            Rect r = new(pos, size, alignement);
+            DrawTextEx(font, text, r.TopLeft, fontSize, fontSpacing, baseColor);
+        }
+
+
+
+
+
         //public static void DrawTextWrapped(this Font font, string text, Rect rect, float fontSpacing, float lineSpacing, Raylib_CsLo.Color color)
         //{
         //    Vector2 rectSize = rect.Size;
@@ -1312,10 +1367,10 @@ namespace ShapeEngine.Lib
         //        }
         //    }
         //}
-        
-        
-        
-        
+
+
+
+
         //function for drawing plane text (1Color) with wordwrap
         //function for drawing text multicolored with dynamic and static font size
         //function for drawing text multicolored with wordwrap
@@ -1389,10 +1444,10 @@ namespace ShapeEngine.Lib
         }
 
         */
-        
-        
-        
-        
+
+
+
+
         //turn the text into a list of text and color
         // <|word|colorID>
         //word is used as the text and colorID is the index to the colors list
@@ -1422,7 +1477,7 @@ namespace ShapeEngine.Lib
         //}
         //function for auto line break as well
         //function for drawing text with different colors
-        
+
 
 
 
