@@ -53,6 +53,10 @@ namespace Examples.Scenes.ExampleScenes
                     if (text.Length <= 0) text = prevText;
                     prevText = string.Empty;
                 }
+                else if (IsKeyPressed(KeyboardKey.KEY_DELETE))
+                {
+                    text = string.Empty;
+                }
                 else
                 {
                     text = SUtils.GetTextInput(text);
@@ -68,7 +72,7 @@ namespace Examples.Scenes.ExampleScenes
                     mouseInsideBottomRight = false;
                     mouseInsideTopLeft = false;
                     prevText = text;
-                    text = string.Empty;
+                    //text = string.Empty;
                     return;
                 }
                 if (IsKeyPressed(KeyboardKey.KEY_W)) NextFont();
@@ -178,7 +182,7 @@ namespace Examples.Scenes.ExampleScenes
             }
             else
             {
-                string info = "TEXT ENTRY MODE ACTIVE | [ESC] Cancel | [Enter] Accept";
+                string info = "TEXT ENTRY MODE ACTIVE | [ESC] Cancel | [Enter] Accept | [Del] Clear Text";
                 Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
                 font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), YELLOW);
             }

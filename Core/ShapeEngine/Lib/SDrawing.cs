@@ -1,18 +1,16 @@
 ﻿
-using System.Drawing;
 using System.Numerics;
-using System.Runtime.CompilerServices;
-using Clipper2Lib;
 using Raylib_CsLo;
 using ShapeEngine.Core;
 using ShapeEngine.UI;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace ShapeEngine.Lib
 {
     public static class SDrawing
     {
-        public static readonly float FontMinSize = 25f;
+        public static float FontMinSize = 25f;
+        public static float LineSpacingMaxFactor = 1f;
+        public static float FontSpacingMaxFactor = 1f;
         //public static readonly float MaxFontSize = 1000f;
 
 
@@ -1048,7 +1046,7 @@ namespace ShapeEngine.Lib
         {
             
             float fontSize = font.baseSize;
-            fontSpacing = MathF.Min(fontSpacing, fontSize * 2f);
+            fontSpacing = MathF.Min(fontSpacing, fontSize * FontSpacingMaxFactor);
             //float fontSpacingWidth = (text.Length - 1) * fontSpacing;
             //
             //if (fontSpacingWidth > size.X * 0.2f)
@@ -1135,6 +1133,8 @@ namespace ShapeEngine.Lib
         }
         public static void DrawText(this Font font, string text, float fontSize, float fontSpacing, Vector2 pos, Vector2 alignement, Raylib_CsLo.Color color)
         {
+            fontSize = MathF.Max(fontSize, FontMinSize);
+            fontSpacing = MathF.Min(fontSpacing, fontSize * FontSpacingMaxFactor);
             Vector2 size = font.GetTextSize(text, fontSize, fontSpacing);
             Rect r = new(pos, size, alignement);
             DrawTextEx(font, text, r.TopLeft, fontSize, fontSpacing, color);
@@ -1146,6 +1146,8 @@ namespace ShapeEngine.Lib
         }
         public static void DrawTextWrappedChar(this Font font, string text, Rect rect, float fontSpacing, Raylib_CsLo.Color color)
         {
+            fontSpacing = MathF.Min(fontSpacing, font.baseSize * FontSpacingMaxFactor);
+
             float safetyMargin = 0.85f;
             Vector2 rectSize = rect.Size;
             Vector2 textSize = font.GetTextSize(text, font.baseSize, fontSpacing);
@@ -1155,6 +1157,7 @@ namespace ShapeEngine.Lib
             float f = MathF.Sqrt(rectArea / textArea);
             fontSpacing *= f;
             float fontSize = font.baseSize * f;
+            fontSize = MathF.Max(fontSize, FontMinSize);
 
             Vector2 pos = rect.TopLeft;
             for (int i = 0; i < text.Length; i++)
@@ -1173,6 +1176,10 @@ namespace ShapeEngine.Lib
         }
         public static void DrawTextWrappedChar(this Font font, string text, Rect rect, float fontSize, float fontSpacing, float lineSpacing, Raylib_CsLo.Color color)
         {
+            fontSize = MathF.Max(fontSize, FontMinSize);
+            fontSpacing = MathF.Min(fontSpacing, fontSize * FontSpacingMaxFactor);
+            lineSpacing = MathF.Min(lineSpacing, fontSize * LineSpacingMaxFactor);
+
             float f = fontSize / (float)font.baseSize;
             Vector2 pos = rect.TopLeft;
             for (int i = 0; i < text.Length; i++)
@@ -1195,6 +1202,8 @@ namespace ShapeEngine.Lib
         }
         public static void DrawTextWrappedWord(this Font font, string text, Rect rect, float fontSpacing, Raylib_CsLo.Color color)
         {
+            fontSpacing = MathF.Min(fontSpacing, font.baseSize * FontSpacingMaxFactor);
+
             float safetyMargin = 0.75f;
             Vector2 rectSize = rect.Size;
             Vector2 textSize = font.GetTextSize(text, font.baseSize, fontSpacing);
@@ -1204,6 +1213,7 @@ namespace ShapeEngine.Lib
             float f = MathF.Sqrt(rectArea / textArea);
             fontSpacing *= f;
             float fontSize = font.baseSize * f;
+            fontSize = MathF.Max(fontSize, FontMinSize);
             DrawTextWrappedWord(font, text, rect, fontSize, fontSpacing, 0f, color);
         }
         public static void DrawTextWrappedWord(this Font font, string text, Rect rect, float fontSize, float fontSpacing, float lineSpacing, Raylib_CsLo.Color color)
@@ -1211,6 +1221,9 @@ namespace ShapeEngine.Lib
             if (rect.height < FontMinSize) return;
 
             fontSize = MathF.Max(fontSize, FontMinSize);
+            fontSpacing = MathF.Min(fontSpacing, fontSize * FontSpacingMaxFactor);
+            lineSpacing = MathF.Min(lineSpacing, fontSize * LineSpacingMaxFactor);
+
             if (rect.height < fontSize) fontSize *= (rect.height / fontSize);
             
             float f = fontSize / (float)font.baseSize;
