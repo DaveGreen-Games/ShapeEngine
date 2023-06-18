@@ -1046,23 +1046,28 @@ namespace ShapeEngine.Lib
 
         public static (float fontSize, float fontSpacing, Vector2 textSize) GetDynamicFontSize(this Font font, string text, Vector2 size, float fontSpacing)
         {
+            
             float fontSize = font.baseSize;
-            float fontSpacingWidth = (text.Length - 1) * fontSpacing;
+            fontSpacing = MathF.Min(fontSpacing, fontSize * 2f);
+            //float fontSpacingWidth = (text.Length - 1) * fontSpacing;
+            //
+            //if (fontSpacingWidth > size.X * 0.2f)
+            //{
+            //    float fontSpacingFactor = (size.X * 0.2f) / fontSpacingWidth;
+            //    //finalSizeX = size.X - fontSpacingWidth * fontSpacingFactor;
+            //    fontSpacingWidth *= fontSpacingFactor;
+            //    fontSpacing *= fontSpacingFactor;
+            //}
+            //float finalSizeX = size.X - fontSpacingWidth;
 
-            if (fontSpacingWidth > size.X * 0.2f)
-            {
-                float fontSpacingFactor = (size.X * 0.2f) / fontSpacingWidth;
-                //finalSizeX = size.X - fontSpacingWidth * fontSpacingFactor;
-                fontSpacingWidth *= fontSpacingFactor;
-                fontSpacing *= fontSpacingFactor;
-            }
-            float finalSizeX = size.X - fontSpacingWidth;
-
-            Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, 0);
-            float fX = finalSizeX / fontDimensions.X;
+            Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
+            float fX = size.X / fontDimensions.X;
             float fY = size.Y / fontDimensions.Y;
             float f = MathF.Min(fX, fY);
-            return (fontSize * f, fontSpacing, MeasureTextEx(font, text, fontSize * f, fontSpacing));
+
+            float scaledFontSize = MathF.Max(fontSize * f, FontMinSize);
+            float scaledFontSpacing = fontSpacing * f;
+            return (scaledFontSize, scaledFontSpacing, font.GetTextSize(text, scaledFontSize, scaledFontSpacing));
         }
         public static Vector2 GetTextSize(this Font font, string text, float fontSize, float fontSpacing)
         {

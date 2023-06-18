@@ -57,14 +57,14 @@ namespace Examples
             GoToScene(mainScene);
         }
 
-        protected override void HandleInput(float dt)
-        {
-            if (IsKeyPressed(KeyboardKey.KEY_F))
-            {
-                GAMELOOP.ToggleWindowMaximize();
-            }
-            base.HandleInput(dt);
-        }
+        //protected override void HandleInput(float dt)
+        //{
+        //    if (IsKeyPressed(KeyboardKey.KEY_F))
+        //    {
+        //        GAMELOOP.ToggleWindowMaximize();
+        //    }
+        //    base.HandleInput(dt);
+        //}
 
         public int GetFontCount() { return fonts.Count; }
         public Font GetFont(int id) { return fonts[id]; }

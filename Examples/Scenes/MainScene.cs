@@ -51,6 +51,8 @@ namespace Examples.Scenes
                     examples[i].Reset();
                 }
             }
+            if (IsKeyPressed(KeyboardKey.KEY_M)) GAMELOOP.ToggleWindowMaximize();
+            if (IsKeyPressed(KeyboardKey.KEY_F)) GAMELOOP.ToggleFullscreen();
 
             if (IsKeyPressed(KeyboardKey.KEY_Q)) PrevPage();
             else if (IsKeyPressed(KeyboardKey.KEY_E)) NextPage();

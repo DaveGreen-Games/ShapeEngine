@@ -23,6 +23,8 @@ namespace Examples.Scenes
         {
             if (IsKeyPressed(KeyboardKey.KEY_R)) Reset();
             if (IsKeyPressed(KeyboardKey.KEY_ESCAPE)) GAMELOOP.GoToMainScene();
+            if (IsKeyPressed(KeyboardKey.KEY_M)) GAMELOOP.ToggleWindowMaximize();
+            if (IsKeyPressed(KeyboardKey.KEY_F)) GAMELOOP.ToggleFullscreen();
         }
 
         public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)

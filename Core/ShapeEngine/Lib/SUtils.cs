@@ -187,6 +187,7 @@ namespace ShapeEngine.Lib
         }
         public static string GetTextInput(string curText)
         {
+            if (IsKeyPressed(KeyboardKey.KEY_BACKSPACE)) curText = curText.Remove(curText.Length - 1);
             int unicode = Raylib.GetCharPressed();
             while (unicode != 0)
             {

@@ -21,10 +21,12 @@ namespace Examples.Scenes.ExampleScenes
         float interactionRadius = 24f;
 
         string text = "Longer Test Text.";
+        string prevText = string.Empty;
         int fontSpacing = 1;
         int maxFontSpacing = 50;
         Font font;
         int fontIndex = 0;
+        bool textEntryActive = false;
 
         public TextScalingExample()
         {
@@ -37,38 +39,74 @@ namespace Examples.Scenes.ExampleScenes
 
         public override void HandleInput(float dt)
         {
-            if (IsKeyPressed(KeyboardKey.KEY_W)) NextFont();
-
-            if (IsKeyPressed(KeyboardKey.KEY_D)) ChangeFontSpacing(1);
-            else if (IsKeyPressed(KeyboardKey.KEY_A)) ChangeFontSpacing(-1);
-
-            if (mouseInsideTopLeft)
+            if (textEntryActive)
             {
-                if (draggingTopLeft)
+                if (IsKeyPressed(KeyboardKey.KEY_ESCAPE))
                 {
-                    if (IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT)) draggingTopLeft = false;
+                    textEntryActive = false;
+                    text = prevText;
+                    prevText = string.Empty;
+                }
+                else if (IsKeyPressed(KeyboardKey.KEY_ENTER))
+                {
+                    textEntryActive = false;
+                    if (text.Length <= 0) text = prevText;
+                    prevText = string.Empty;
                 }
                 else
                 {
-                    if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)) draggingTopLeft = true;
+                    text = SUtils.GetTextInput(text);
+                }
+            }
+            else
+            {
+                if (IsKeyPressed(KeyboardKey.KEY_ENTER))
+                {
+                    textEntryActive = true;
+                    draggingBottomRight = false;
+                    draggingTopLeft = false;
+                    mouseInsideBottomRight = false;
+                    mouseInsideTopLeft = false;
+                    prevText = text;
+                    text = string.Empty;
+                    return;
+                }
+                if (IsKeyPressed(KeyboardKey.KEY_W)) NextFont();
+
+                if (IsKeyPressed(KeyboardKey.KEY_D)) ChangeFontSpacing(1);
+                else if (IsKeyPressed(KeyboardKey.KEY_A)) ChangeFontSpacing(-1);
+
+                if (mouseInsideTopLeft)
+                {
+                    if (draggingTopLeft)
+                    {
+                        if (IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT)) draggingTopLeft = false;
+                    }
+                    else
+                    {
+                        if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)) draggingTopLeft = true;
+                    }
+
+                }
+                else if (mouseInsideBottomRight)
+                {
+                    if (draggingBottomRight)
+                    {
+                        if (IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT)) draggingBottomRight = false;
+                    }
+                    else
+                    {
+                        if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)) draggingBottomRight = true;
+                    }
                 }
 
+                base.HandleInput(dt);
             }
-            else if (mouseInsideBottomRight)
-            {
-                if (draggingBottomRight)
-                {
-                    if (IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT)) draggingBottomRight = false;
-                }
-                else
-                {
-                    if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)) draggingBottomRight = true;
-                }
-            }
-            base.HandleInput(dt);
+            
         }
         public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
+            if (textEntryActive) return;
             if (draggingTopLeft || draggingBottomRight)
             {
                 if (draggingTopLeft) topLeft = mousePosUI;
@@ -94,48 +132,58 @@ namespace Examples.Scenes.ExampleScenes
             Rect r = new(topLeft, bottomRight);
             r.DrawLines(8f, new Color(255, 0, 0, 150));
             font.DrawText(text, r, fontSpacing, new Vector2(0.5f, 0.5f), WHITE);
-            //text = "abcdefghijklmnop";
-            //text.DrawChars(r, 100, fontSpacing, font);
-            Circle topLeftPoint = new(topLeft, pointRadius);
-            Circle topLeftInteractionCircle = new(topLeft, interactionRadius);
 
-            Circle bottomRightPoint = new(bottomRight, pointRadius);
-            Circle bottomRightInteractionCircle = new(bottomRight, interactionRadius);
 
-            if (draggingTopLeft)
+            if (!textEntryActive)
             {
-                topLeftInteractionCircle.Draw(GREEN);
-            }
-            else if (mouseInsideTopLeft)
-            {
-                topLeftPoint.Draw(WHITE);
-                topLeftInteractionCircle.radius *= 2f;
-                topLeftInteractionCircle.DrawLines(2f, GREEN, 4f);
+                Circle topLeftPoint = new(topLeft, pointRadius);
+                Circle topLeftInteractionCircle = new(topLeft, interactionRadius);
+                if (draggingTopLeft)
+                {
+                    topLeftInteractionCircle.Draw(GREEN);
+                }
+                else if (mouseInsideTopLeft)
+                {
+                    topLeftPoint.Draw(WHITE);
+                    topLeftInteractionCircle.radius *= 2f;
+                    topLeftInteractionCircle.DrawLines(2f, GREEN, 4f);
+                }
+                else
+                {
+                    topLeftPoint.Draw(WHITE);
+                    topLeftInteractionCircle.DrawLines(2f, WHITE, 4f);
+                }
+
+                Circle bottomRightPoint = new(bottomRight, pointRadius);
+                Circle bottomRightInteractionCircle = new(bottomRight, interactionRadius);
+                if (draggingBottomRight)
+                {
+                    bottomRightInteractionCircle.Draw(GREEN);
+                }
+                else if (mouseInsideBottomRight)
+                {
+                    bottomRightPoint.Draw(WHITE);
+                    bottomRightInteractionCircle.radius *= 2f;
+                    bottomRightInteractionCircle.DrawLines(2f, GREEN, 4f);
+                }
+                else
+                {
+                    bottomRightPoint.Draw(WHITE);
+                    bottomRightInteractionCircle.DrawLines(2f, WHITE, 4f);
+                }
+
+                string info = String.Format("[W] Font: {0} | [A/D] Font Spacing: {1} | [Enter] Write Custom Text", GAMELOOP.GetFontName(fontIndex), fontSpacing);
+                Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
+                font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), YELLOW);
             }
             else
             {
-                topLeftPoint.Draw(WHITE);
-                topLeftInteractionCircle.DrawLines(2f, WHITE, 4f);
+                string info = "TEXT ENTRY MODE ACTIVE | [ESC] Cancel | [Enter] Accept";
+                Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
+                font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), YELLOW);
             }
 
-            if (draggingBottomRight)
-            {
-                bottomRightInteractionCircle.Draw(GREEN);
-            }
-            else if (mouseInsideBottomRight)
-            {
-                bottomRightPoint.Draw(WHITE);
-                bottomRightInteractionCircle.radius *= 2f;
-                bottomRightInteractionCircle.DrawLines(2f, GREEN, 4f);
-            }
-            else
-            {
-                bottomRightPoint.Draw(WHITE);
-                bottomRightInteractionCircle.DrawLines(2f, WHITE, 4f);
-            }
-            string info = String.Format("[W] Font: {0} | [A/D] Font Spacing: {1}", GAMELOOP.GetFontName(fontIndex), fontSpacing);
-            Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.9f, 0.075f), new Vector2(0.5f, 1f));
-            font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), YELLOW);
+            
         }
         private void ChangeFontSpacing(int amount)
         {
