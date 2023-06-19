@@ -1,12 +1,13 @@
 ﻿
-using ShapeEngine.Lib;
+
 using Raylib_CsLo;
 using ShapeEngine.Core;
+using ShapeEngine.Lib;
 using System.Numerics;
 
 namespace Examples.Scenes.ExampleScenes
 {
-    public class TextWrapExample : ExampleScene
+    public class WordEmphasisStaticExample : ExampleScene
     {
         Vector2 topLeft = new();
         Vector2 bottomRight = new();
@@ -20,25 +21,27 @@ namespace Examples.Scenes.ExampleScenes
         float pointRadius = 8f;
         float interactionRadius = 24f;
 
-        string text = "This is a very long example text to properly and thoroughly test the word wrap function. Another very important sentence is written here, followed by a few words!";
-        int lineSpacing = 0;
-        int lineSpacingIncrement = 5;
-        int maxLineSpacing = 100;
-        int fontSpacing = 0;
-        int fontSpacingIncrement = 5;
+        int fontSpacing = 1;
+        int fontSpacingIncrement = 2;
         int maxFontSpacing = 100;
+        Font font;
+        int fontIndex = 0;
+
         int fontSize = 50;
         int fontSizeIncrement = 25;
         int maxFontSize = 300;
-        Font font;
-        int fontIndex = 0;
-        bool wrapModeChar = true;
-        bool autoSize = false;
+
+        TextEmphasisType curEmphasisType = TextEmphasisType.Corner;
+        TextEmphasisAlignement curEmphasisAlignement = TextEmphasisAlignement.TopLeft;
+        Vector2 curAlignement = new(0f);
+        int curAlignementIndex = 0;
+
         bool textEntryActive = false;
+        string text = "Longer Test Text.";
         string prevText = string.Empty;
-        public TextWrapExample()
+        public WordEmphasisStaticExample()
         {
-            Title = "Text Wrap Example";
+            Title = "Word Emphasis Static Example";
             var s = GAMELOOP.UI.GetSize();
             topLeft = s * new Vector2(0.1f, 0.1f);
             bottomRight = s * new Vector2(0.9f, 0.8f);
@@ -47,7 +50,6 @@ namespace Examples.Scenes.ExampleScenes
 
         public override void HandleInput(float dt)
         {
-
             if (textEntryActive)
             {
                 if (IsKeyPressed(KeyboardKey.KEY_ESCAPE))
@@ -84,17 +86,15 @@ namespace Examples.Scenes.ExampleScenes
                     //text = string.Empty;
                     return;
                 }
+
                 if (IsKeyPressed(KeyboardKey.KEY_W)) NextFont();
 
-                if (!autoSize && IsKeyPressed(KeyboardKey.KEY_ONE)) ChangeFontSize();
+                if (IsKeyPressed(KeyboardKey.KEY_D)) ChangeFontSize();
+                if (IsKeyPressed(KeyboardKey.KEY_A)) ChangeFontSpacing();
 
-                if (IsKeyPressed(KeyboardKey.KEY_TWO)) ChangeFontSpacing();
-
-                if (!autoSize && IsKeyPressed(KeyboardKey.KEY_THREE)) ChangeLineSpacing();
-
-                if (IsKeyPressed(KeyboardKey.KEY_Q)) wrapModeChar = !wrapModeChar;
-
-                if (IsKeyPressed(KeyboardKey.KEY_E)) autoSize = !autoSize;
+                if (IsKeyPressed(KeyboardKey.KEY_Q)) NextTextEmphasisType();
+                if (IsKeyPressed(KeyboardKey.KEY_E)) NextTextEmphasisAlignement();
+                if (IsKeyPressed(KeyboardKey.KEY_S)) NextAlignement();
 
                 if (mouseInsideTopLeft)
                 {
@@ -119,11 +119,11 @@ namespace Examples.Scenes.ExampleScenes
                         if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)) draggingBottomRight = true;
                     }
                 }
-                base.HandleInput(dt);
 
+                base.HandleInput(dt);
             }
 
-            
+
         }
         public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
@@ -152,40 +152,15 @@ namespace Examples.Scenes.ExampleScenes
 
             Rect r = new(topLeft, bottomRight);
             r.DrawLines(8f, new Color(255, 0, 0, 150));
-            if (autoSize)
-            {
-                if (wrapModeChar)
-                {
-                    font.DrawTextWrappedChar(text, r, fontSpacing, WHITE);
-                }
-                else
-                {
-                    font.DrawTextWrappedWord(text, r, fontSpacing, WHITE);
-                }
-            }
-            else
-            {
-                if (wrapModeChar)
-                {
-                    font.DrawTextWrappedChar(text, r, fontSize, fontSpacing, lineSpacing, WHITE);
-                }
-                else
-                {
-                    font.DrawTextWrappedWord(text, r, fontSize, fontSpacing, lineSpacing, WHITE);
-                }
-            }
-            
 
-            
+            WordEmphasis we = new(RED, curEmphasisType, curEmphasisAlignement);
+            font.DrawWord(text, fontSize, fontSpacing, r.GetPoint(curAlignement), curAlignement, we);
+
 
             if (!textEntryActive)
             {
                 Circle topLeftPoint = new(topLeft, pointRadius);
                 Circle topLeftInteractionCircle = new(topLeft, interactionRadius);
-
-                Circle bottomRightPoint = new(bottomRight, pointRadius);
-                Circle bottomRightInteractionCircle = new(bottomRight, interactionRadius);
-
                 if (draggingTopLeft)
                 {
                     topLeftInteractionCircle.Draw(GREEN);
@@ -202,6 +177,8 @@ namespace Examples.Scenes.ExampleScenes
                     topLeftInteractionCircle.DrawLines(2f, WHITE, 4f);
                 }
 
+                Circle bottomRightPoint = new(bottomRight, pointRadius);
+                Circle bottomRightInteractionCircle = new(bottomRight, interactionRadius);
                 if (draggingBottomRight)
                 {
                     bottomRightInteractionCircle.Draw(GREEN);
@@ -218,31 +195,20 @@ namespace Examples.Scenes.ExampleScenes
                     bottomRightInteractionCircle.DrawLines(2f, WHITE, 4f);
                 }
 
-                string textWrapMode = wrapModeChar ? "Char" : "Word";
-                string autoSizeMode = autoSize ? "On" : "Off";
-                string modeInfo = String.Format("[Q] Mode: {0} | [E] Auto Size: {1} | [Enter] Write Custom Text", textWrapMode, autoSizeMode);
-                string fontInfo = String.Format("[W] Font: {0} | [1]Font Size: {1} | [2]Font Spacing {2} | Line Spacing {3}", GAMELOOP.GetFontName(fontIndex), fontSize, fontSpacing, lineSpacing);
+                string info2 = String.Format("[S] Text Align: {0} | [Q] Type: {1} | [E] Align: {2}", curAlignement, curEmphasisType, curEmphasisAlignement);
+                Rect infoRect2 = new(uiSize * new Vector2(0.5f, 0.95f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
+                font.DrawText(info2, infoRect2, 4f, new Vector2(0.5f, 0.5f), ORANGE);
 
-                Rect modeInfoRect = new(uiSize * new Vector2(0.5f, 0.94f), uiSize * new Vector2(0.4f, 0.1f), new Vector2(0.5f, 1f));
-                font.DrawText(modeInfo, modeInfoRect, 4f, new Vector2(0.5f, 0.5f), RED);
-
-                Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.1f), new Vector2(0.5f, 1f));
-                font.DrawText(fontInfo, infoRect, 4f, new Vector2(0.5f, 0.5f), YELLOW);
+                string info = String.Format("[W] Font: {0} | [A] Spacing: {1} | [D] Size: {2} | [Enter] Write Custom Text", GAMELOOP.GetFontName(fontIndex), fontSpacing, fontSize);
+                Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
+                font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), YELLOW);
             }
-
             else
             {
                 string info = "TEXT ENTRY MODE ACTIVE | [ESC] Cancel | [Enter] Accept | [Del] Clear Text";
                 Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
                 font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), YELLOW);
             }
-
-        }
-        private void ChangeLineSpacing()
-        {
-            lineSpacing += lineSpacingIncrement;
-            if (lineSpacing < 0) lineSpacing = maxLineSpacing;
-            else if (lineSpacing > maxLineSpacing) lineSpacing = 0;
         }
         private void ChangeFontSpacing()
         {
@@ -250,13 +216,6 @@ namespace Examples.Scenes.ExampleScenes
             if (fontSpacing < 0) fontSpacing = maxFontSpacing;
             else if (fontSpacing > maxFontSpacing) fontSpacing = 0;
         }
-        private void ChangeFontSize()
-        {
-            fontSize += fontSizeIncrement;
-            if (fontSize < 50) fontSize = maxFontSize;
-            else if (fontSize > maxFontSize) fontSize = 50;
-        }
-        
         private void NextFont()
         {
             int fontCount = GAMELOOP.GetFontCount();
@@ -264,13 +223,45 @@ namespace Examples.Scenes.ExampleScenes
             if (fontIndex >= fontCount) fontIndex = 0;
             font = GAMELOOP.GetFont(fontIndex);
         }
-        private void PrevFont()
-        {
-            int fontCount = GAMELOOP.GetFontCount();
-            fontIndex--;
-            if (fontIndex < 0) fontIndex = fontCount - 1;
-            font = GAMELOOP.GetFont(fontIndex);
-        }
-    }
 
+        private void NextAlignement()
+        {
+            curAlignementIndex++;
+            if (curAlignementIndex > 8) curAlignementIndex = 0;
+            else if (curAlignementIndex < 0) curAlignementIndex = 8;
+
+            if (curAlignementIndex == 0) curAlignement = new Vector2(0f); //top left
+            else if (curAlignementIndex == 1) curAlignement = new Vector2(0.5f, 0f); //top
+            else if (curAlignementIndex == 2) curAlignement = new Vector2(1f, 0f); //top right
+            else if (curAlignementIndex == 3) curAlignement = new Vector2(1f, 0.5f); //right
+            else if (curAlignementIndex == 4) curAlignement = new Vector2(1f, 1f); //bottom right
+            else if (curAlignementIndex == 5) curAlignement = new Vector2(0.5f, 1f); //bottom
+            else if (curAlignementIndex == 6) curAlignement = new Vector2(0f, 1f); //bottom left
+            else if (curAlignementIndex == 7) curAlignement = new Vector2(0f, 0.5f); //left
+            else if (curAlignementIndex == 8) curAlignement = new Vector2(0.5f, 0.5f); //center
+        }
+        private void NextTextEmphasisType()
+        {
+            int cur = (int)curEmphasisType;
+            cur++;
+            if (cur > 2) cur = 0;
+            else if (cur < 0) cur = 2;
+            curEmphasisType = (TextEmphasisType)cur;
+        }
+        private void NextTextEmphasisAlignement()
+        {
+            int cur = (int)curEmphasisAlignement;
+            cur++;
+            if (cur > 9) cur = 0;
+            else if (cur < 0) cur = 9;
+            curEmphasisAlignement = (TextEmphasisAlignement)cur;
+        }
+        private void ChangeFontSize()
+        {
+            fontSize += fontSizeIncrement;
+            if (fontSize < 50) fontSize = maxFontSize;
+            else if (fontSize > maxFontSize) fontSize = 50;
+        }
+
+    }
 }

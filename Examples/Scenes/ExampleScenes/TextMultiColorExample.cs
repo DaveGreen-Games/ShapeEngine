@@ -31,6 +31,11 @@ namespace Examples.Scenes.ExampleScenes
         float interval = 2f;
         float percentage = 50f;
 
+        TextEmphasisType curEmphasisType = TextEmphasisType.Corner;
+        TextEmphasisAlignement curEmphasisAlignement = TextEmphasisAlignement.TopLeft;
+        Vector2 curAlignement = new(0f);
+        int curAlignementIndex = 0;
+
         public TextMultiColorExample()
         {
             Title = "Text Multi Color Example";
@@ -46,6 +51,10 @@ namespace Examples.Scenes.ExampleScenes
 
             if (IsKeyPressed(KeyboardKey.KEY_D)) ChangeFontSpacing(1);
             else if (IsKeyPressed(KeyboardKey.KEY_A)) ChangeFontSpacing(-1);
+
+            if (IsKeyPressed(KeyboardKey.KEY_Q)) NextTextEmphasisType();
+            if (IsKeyPressed(KeyboardKey.KEY_E)) NextTextEmphasisAlignement();
+            if (IsKeyPressed(KeyboardKey.KEY_S)) NextAlignement();
 
             if (mouseInsideTopLeft)
             {
@@ -78,7 +87,7 @@ namespace Examples.Scenes.ExampleScenes
         {
 
             timer += dt;
-            if(timer >= interval)
+            if (timer >= interval)
             {
                 timer = 0f;
                 percentage = SRNG.randI(10, 90);
@@ -109,11 +118,11 @@ namespace Examples.Scenes.ExampleScenes
             Rect r = new(topLeft, bottomRight);
             r.DrawLines(8f, new Color(255, 0, 0, 150));
 
-            WordEmphasis basic = new(WHITE);
-            WordEmphasis red = new(RED, EmphasisType.Underlined, 1, 4);
-            WordEmphasis yellow = new(YELLOW, EmphasisType.None, 5, 6);
-            string curText = String.Format(text, percentage);
-            font.DrawTextMultiColor(curText, r, fontSpacing, new Vector2(0.5f), basic, red, yellow);
+            //WordEmphasis basic = new(WHITE);
+            //WordEmphasis red = new(RED, EmphasisType.Underlined, 1, 4);
+            //WordEmphasis yellow = new(YELLOW, EmphasisType.None, 5, 6);
+            //string curText = String.Format(text, percentage);
+            //font.DrawTextMultiColor(curText, r, fontSpacing, new Vector2(0.5f), basic, red, yellow);
 
             Circle topLeftPoint = new(topLeft, pointRadius);
             Circle topLeftInteractionCircle = new(topLeft, interactionRadius);
@@ -169,6 +178,39 @@ namespace Examples.Scenes.ExampleScenes
             fontIndex++;
             if (fontIndex >= fontCount) fontIndex = 0;
             font = GAMELOOP.GetFont(fontIndex);
+        }
+
+        private void NextAlignement()
+        {
+            curAlignementIndex++;
+            if (curAlignementIndex > 8) curAlignementIndex = 0;
+            else if (curAlignementIndex < 0) curAlignementIndex = 8;
+
+            if (curAlignementIndex == 0) curAlignement = new Vector2(0f); //top left
+            else if (curAlignementIndex == 1) curAlignement = new Vector2(0.5f, 0f); //top
+            else if (curAlignementIndex == 2) curAlignement = new Vector2(1f, 0f); //top right
+            else if (curAlignementIndex == 3) curAlignement = new Vector2(1f, 0.5f); //right
+            else if (curAlignementIndex == 4) curAlignement = new Vector2(1f, 1f); //bottom right
+            else if (curAlignementIndex == 5) curAlignement = new Vector2(0.5f, 1f); //bottom
+            else if (curAlignementIndex == 6) curAlignement = new Vector2(0f, 1f); //bottom left
+            else if (curAlignementIndex == 7) curAlignement = new Vector2(0f, 0.5f); //left
+            else if (curAlignementIndex == 8) curAlignement = new Vector2(0.5f, 0.5f); //center
+        }
+        private void NextTextEmphasisType()
+        {
+            int cur = (int)curEmphasisType;
+            cur++;
+            if (cur > 2) cur = 0;
+            else if (cur < 0) cur = 2;
+            curEmphasisType = (TextEmphasisType)cur;
+        }
+        private void NextTextEmphasisAlignement()
+        {
+            int cur = (int)curEmphasisAlignement;
+            cur++;
+            if (cur > 9) cur = 0;
+            else if (cur < 0) cur = 9;
+            curEmphasisAlignement = (TextEmphasisAlignement)cur;
         }
     }
 }
