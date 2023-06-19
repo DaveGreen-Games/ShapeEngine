@@ -1,6 +1,8 @@
 ﻿
 using System.Drawing;
 using System.Numerics;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using Clipper2Lib;
 using Raylib_CsLo;
 using ShapeEngine.Core;
@@ -8,28 +10,59 @@ using ShapeEngine.UI;
 
 namespace ShapeEngine.Lib
 {
-    public enum EmphasisType
+    public enum TextEmphasisType
     {
         None = 0,
-        Underlined = 1,
-        Strikethrough = 2
+        Line = 1,
+        Corner = 2,
+        Corner_Dot = 3
     }
+    public enum TextEmphasisAlignement
+    {
+        TopLeft = 1,
+        Top = 2,
+        TopRight = 3,
+        Right = 4,
+        BottomRight = 5,
+        Bottom = 6,
+        BottomLeft = 7,
+        Left = 8,
+        Center = 9,
+        Boxed = 10
+    }
+    //public enum EmphasisType
+    //{
+    //    None = 0,
+    //    Underlined = 1,
+    //    Strikethrough = 2,
+    //    Boxed = 3,
+    //    Cornered = 4,
+    //    Cornered_Left = 5,
+    //    Cornered_Right = 6,
+    //    Cornered_Top = 7,
+    //    Cornered_Bottom = 8,
+    //    Cornered_TLBR = 9,
+    //    Cornered_BLTR = 10
+    //}
     public struct WordEmphasis
     {
         public Raylib_CsLo.Color Color;
         public List<int> WordIndices;
-        public EmphasisType EmphasisType;
+        public TextEmphasisType EmphasisType;
+        public TextEmphasisAlignement EmphasisAlignement;
         public WordEmphasis(Raylib_CsLo.Color color, params int[] wordIndices)
         {
             this.Color = color;
             this.WordIndices = wordIndices.ToList();
-            this.EmphasisType = EmphasisType.None;
+            this.EmphasisType = TextEmphasisType.None;
+            this.EmphasisAlignement = TextEmphasisAlignement.Boxed;//irelevant because type == none
         }
-        public WordEmphasis(Raylib_CsLo.Color color, EmphasisType emphasisType, params int[] wordIndices)
+        public WordEmphasis(Raylib_CsLo.Color color, TextEmphasisType emphasisType, TextEmphasisAlignement alignement, params int[] wordIndices)
         {
             this.Color = color;
             this.WordIndices = wordIndices.ToList();
             this.EmphasisType = emphasisType;
+            this.EmphasisAlignement = alignement;
         }
         public bool Contains(int index) { return WordIndices.Contains(index); }
     }
@@ -1153,62 +1186,225 @@ namespace ShapeEngine.Lib
             }
         }
         
-
-
-        public static void DrawText(this Font font, string text, Rect rect, float fontSpacing, Vector2 alignement, Raylib_CsLo.Color color)
+        private static WordEmphasis? GetWordEmphasis(int index, params WordEmphasis[] wordEmphasis)
         {
-            var info = font.GetDynamicFontSize(text, rect.Size, fontSpacing);
-            Vector2 uiPos = rect.GetPoint(alignement);
-            Vector2 topLeft = uiPos - alignement * info.textSize;
-            DrawTextEx(font, text, topLeft, info.fontSize, info.fontSpacing, color);
+            foreach (var emphasis in wordEmphasis)
+            {
+                if (emphasis.Contains(index))
+                {
+                    return emphasis;
+                }
+            }
+            return null;
         }
-        public static void DrawText(this Font font, string text, float fontSize, float fontSpacing, Vector2 pos, Vector2 alignement, Raylib_CsLo.Color color)
-        {
-            fontSize = MathF.Max(fontSize, FontMinSize);
-            fontSpacing = MathF.Min(fontSpacing, fontSize * FontSpacingMaxFactor);
-            Vector2 size = font.GetTextSize(text, fontSize, fontSpacing);
-            Rect r = new(pos, size, alignement);
-            DrawTextEx(font, text, r.TopLeft, fontSize, fontSpacing, color);
-        }
-        
-        public static void DrawChar(this Font font, Char c, Vector2 pos, float fontSize, Raylib_CsLo.Color color, EmphasisType emphasis = EmphasisType.None)
-        {
-            if(emphasis == EmphasisType.None)
-            {
-                Raylib.DrawTextCodepoint(font, c, pos, fontSize, color);
-            }
-            else if (emphasis == EmphasisType.Underlined)
-            {
-                Vector2 charSize = font.GetCharSize(c, fontSize);
-                float thickness = charSize.Y * 0.05f;
-                Vector2 start = pos + new Vector2(0f, charSize.Y);
-                Vector2 end = pos + charSize;
-                Segment s = new(start, end);
-                
-                Raylib.DrawTextCodepoint(font, c, pos, fontSize, color);
-                s.Draw(thickness, color);
-            }
-            else if (emphasis == EmphasisType.Strikethrough)
-            {
-                Vector2 charSize = font.GetCharSize(c, fontSize);
-                float thickness = charSize.Y * 0.05f;
-                Vector2 start = pos + new Vector2(0f, charSize.Y / 2);
-                Vector2 end = pos + new Vector2(charSize.X, charSize.Y / 2);
-                Segment s = new(start, end);
 
-                Raylib.DrawTextCodepoint(font, c, pos, fontSize, color);
+        private static void DrawEmphasisLine(Rect rect, TextEmphasisAlignement alignement, Raylib_CsLo.Color color)
+        {
+            float thickness = rect.Size.Y * 0.05f;
+            float radius = thickness * 0.5f;
+            if (alignement == TextEmphasisAlignement.Top)
+            {
+                s = new(rect.TopLeft, rect.TopRight);
                 s.Draw(thickness, color);
+
+                Circle start = new(s.start, radius);
+                Circle end = new(s.end, radius);
+
+                start.Draw(color);
+                end.Draw(color);
             }
-            //else if(emphasis == EmphasisType.Caps)
-            //{
-            //    Raylib.DrawTextCodepoint(font, Char.ToUpper(c), pos, fontSize, color);
-            //}
+            else if (alignement == TextEmphasisAlignement.Right)
+            {
+                Segment s = new(rect.TopRight, rect.BottomRight);
+                s.Draw(thickness, color);
+
+                Circle start = new(s.start, radius);
+                Circle end = new(s.end, radius);
+
+                start.Draw(color);
+                end.Draw(color);
+            }
+            else if (alignement == TextEmphasisAlignement.Bottom)
+            {
+                Segment s = new(rect.BottomLeft, rect.BottomRight);
+                s.Draw(thickness, color);
+
+                Circle start = new(s.start, radius);
+                Circle end = new(s.end, radius);
+
+                start.Draw(color);
+                end.Draw(color);
+            }
+            else if (alignement == TextEmphasisAlignement.Left)
+            {
+                Segment s = new(rect.TopLeft, rect.BottomLeft);
+                s.Draw(thickness, color);
+
+                Circle start = new(s.start, radius);
+                Circle end = new(s.end, radius);
+
+                start.Draw(color);
+                end.Draw(color);
+            }
+            else if (alignement == TextEmphasisAlignement.Center)
+            {
+                Segment s = new(rect.GetPoint(new Vector2(0f, 0.5f)), rect.GetPoint(new Vector2(1f, 0.5f)));
+                s.Draw(thickness, color);
+
+                Circle start = new(s.start, radius);
+                Circle end = new(s.end, radius);
+
+                start.Draw(color);
+                end.Draw(color);
+            }
+            else if(alignement == TextEmphasisAlignement.Boxed)
+            {
+                rect.DrawLines(thickness, color);
+            }
+
             
+        }
+        private static void DrawEmphasisCorner(Rect rect, TextEmphasisAlignement alignement, Raylib_CsLo.Color color)
+        {
+            float thickness = rect.Size.Y * 0.05f;
+            float cornerSize = thickness * 6f;
+
+            if(alignement == TextEmphasisAlignement.TopLeft)
+            {
+                rect.DrawCorners(thickness, color, cornerSize, 0f, 0f, 0f);
+            }
+            else if (alignement == TextEmphasisAlignement.Top)
+            {
+                rect.DrawCorners(thickness, color, cornerSize, cornerSize, 0f, 0f);
+            }
+            else if (alignement == TextEmphasisAlignement.TopRight)
+            {
+                rect.DrawCorners(thickness, color, 0f, cornerSize, 0f, 0f);
+            }
+            else if (alignement == TextEmphasisAlignement.Right)
+            {
+                rect.DrawCorners(thickness, color, 0f, cornerSize, cornerSize, 0f);
+            }
+            else if (alignement == TextEmphasisAlignement.BottomRight)
+            {
+                rect.DrawCorners(thickness, color, 0f, 0f, cornerSize, 0f);
+            }
+            else if (alignement == TextEmphasisAlignement.Bottom)
+            {
+                rect.DrawCorners(thickness, color, 0f, 0f, cornerSize, cornerSize);
+            }
+            else if (alignement == TextEmphasisAlignement.BottomLeft)
+            {
+                rect.DrawCorners(thickness, color, 0f, 0f, 0f, cornerSize);
+            }
+            else if (alignement == TextEmphasisAlignement.Left)
+            {
+                rect.DrawCorners(thickness, color, cornerSize, 0f, 0f, cornerSize);
+            }
+            else if(alignement == TextEmphasisAlignement.Boxed)
+            {
+                rect.DrawCorners(thickness, color, cornerSize);
+            }
+        }
+        private static void DrawEmphasisCornerDot(Rect rect, TextEmphasisAlignement alignement, Raylib_CsLo.Color color)
+        {
+            float radius = rect.Size.Y * 0.05f;
+            if (alignement == TextEmphasisAlignement.TopLeft)
+            {
+                Circle c = new(rect.TopLeft, radius);
+                c.Draw(color);
+            }
+            else if (alignement == TextEmphasisAlignement.Top)
+            {
+                Circle a = new(rect.TopLeft, radius);
+                a.Draw(color);
+                Circle b = new(rect.TopRight, radius);
+                b.Draw(color);
+            }
+            else if (alignement == TextEmphasisAlignement.TopRight)
+            {
+                Circle c = new(rect.TopRight, radius);
+                c.Draw(color);
+            }
+            else if (alignement == TextEmphasisAlignement.Right)
+            {
+                Circle a = new(rect.TopRight, radius);
+                a.Draw(color);
+                Circle b = new(rect.BottomRight, radius);
+                b.Draw(color);
+            }
+            else if (alignement == TextEmphasisAlignement.BottomRight)
+            {
+                Circle c = new(rect.BottomRight, radius);
+                c.Draw(color);
+            }
+            else if (alignement == TextEmphasisAlignement.Bottom)
+            {
+                Circle a = new(rect.BottomLeft, radius);
+                a.Draw(color);
+                Circle b = new(rect.BottomRight, radius);
+                b.Draw(color);
+            }
+            else if (alignement == TextEmphasisAlignement.BottomLeft)
+            {
+                Circle c = new(rect.BottomLeft, radius);
+                c.Draw(color);
+            }
+            else if (alignement == TextEmphasisAlignement.Left)
+            {
+                Circle a = new(rect.TopLeft, radius);
+                a.Draw(color);
+                Circle b = new(rect.BottomLeft, radius);
+                b.Draw(color);
+            }
+            else if (alignement == TextEmphasisAlignement.Center)
+            {
+                Circle a = new(rect.GetPoint(new Vector2(0f, 0.5f)), radius);
+                a.Draw(color);
+                Circle b = new(rect.GetPoint(new Vector2(1f, 0.5f)), radius);
+                b.Draw(color);
+            }
+            else if (alignement == TextEmphasisAlignement.Boxed)
+            {
+                Circle a = new(rect.TopLeft, radius);
+                a.Draw(color);
+                Circle b = new(rect.TopRight, radius);
+                b.Draw(color);
+                Circle c = new(rect.BottomRight, radius);
+                c.Draw(color);
+                Circle d = new(rect.BottomLeft, radius);
+                d.Draw(color);
+            }
+        }
+        private static void DrawEmphasis(Rect rect, TextEmphasisType emphasisType, TextEmphasisAlignement alignement, Raylib_CsLo.Color color)
+        {
+            if (emphasisType == TextEmphasisType.None) return;
+            else if (emphasisType == TextEmphasisType.Line) DrawEmphasisLine(rect, alignement, color);
+            else if (emphasisType == TextEmphasisType.Corner) DrawEmphasisCorner(rect, alignement, color);
+            else if (emphasisType == TextEmphasisType.Corner_Dot) DrawEmphasisCornerDot(rect, alignement, color);
+        }
+
+        //auto fontsize + alignement
+
+        //remove that one -> word emphasis parameter is enough
+        public static void DrawChar(this Font font, Char c, Vector2 pos, float fontSize, Raylib_CsLo.Color color, TextEmphasisType emphasisType = TextEmphasisType.None, TextEmphasisAlignement emphasisAlignement = TextEmphasisAlignement.TopLeft)
+        {
+            Raylib.DrawTextCodepoint(font, c, pos, fontSize, color);
+            if(emphasisType != TextEmphasisType.None)
+            {
+                Vector2 charSize = font.GetCharSize(c, fontSize);
+                DrawEmphasis(new Rect(pos, pos + charSize), emphasisType, emphasisAlignement, color);
+            }
         }
         public static void DrawChar(this Font font, Char c, Vector2 pos, float fontSize, WordEmphasis wordEmphasis)
         {
             DrawChar(font, c, pos, fontSize, wordEmphasis.Color, wordEmphasis.EmphasisType);
         }
+        
+        //single emphasis
+        //auto fontsize + alignement
+
+        //remove that one -> word emphasis parameter is enough
         public static void DrawWord(this Font font, string word, Vector2 pos, float fontSize, float fontSpacing, Raylib_CsLo.Color color, EmphasisType emphasis = EmphasisType.None)
         {
             if(emphasis == EmphasisType.None)
@@ -1250,6 +1446,25 @@ namespace ShapeEngine.Lib
         {
             DrawWord(font, word, pos, fontSize, fontSpacing, wordEmphasis.Color, wordEmphasis.EmphasisType);
         }
+        
+        //params of emphasis (text = multiple words)
+        public static void DrawText(this Font font, string text, Rect rect, float fontSpacing, Vector2 alignement, Raylib_CsLo.Color color)
+        {
+            var info = font.GetDynamicFontSize(text, rect.Size, fontSpacing);
+            Vector2 uiPos = rect.GetPoint(alignement);
+            Vector2 topLeft = uiPos - alignement * info.textSize;
+            DrawTextEx(font, text, topLeft, info.fontSize, info.fontSpacing, color);
+        }
+        public static void DrawText(this Font font, string text, float fontSize, float fontSpacing, Vector2 pos, Vector2 alignement, Raylib_CsLo.Color color)
+        {
+            fontSize = MathF.Max(fontSize, FontMinSize);
+            fontSpacing = MathF.Min(fontSpacing, fontSize * FontSpacingMaxFactor);
+            Vector2 size = font.GetTextSize(text, fontSize, fontSpacing);
+            Rect r = new(pos, size, alignement);
+            DrawTextEx(font, text, r.TopLeft, fontSize, fontSpacing, color);
+        }
+        
+
 
         public static void DrawTextWrappedChar(this Font font, string text, Rect rect, float fontSpacing, Raylib_CsLo.Color color)
         {
@@ -1399,17 +1614,6 @@ namespace ShapeEngine.Lib
         }
 
 
-        private static WordEmphasis? GetWordEmphasis(int index, params WordEmphasis[] wordEmphasis)
-        {
-            foreach (var emphasis in wordEmphasis)
-            {
-                if (emphasis.Contains(index))
-                {
-                    return emphasis;
-                }
-            }
-            return null;
-        }
         
         public static void DrawTextMultiColor(this Font font, string text, Rect rect, float fontSpacing, Vector2 alignement, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
         {
