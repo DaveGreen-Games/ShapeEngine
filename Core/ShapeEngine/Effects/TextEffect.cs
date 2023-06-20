@@ -13,7 +13,7 @@ namespace ShapeEngine.Effects
 
         protected void DrawText(Raylib_CsLo.Color color, Font font, Vector2 alignement) 
         { 
-            SDrawing.Draw(Text, GetBoundingBox(), RotRad * SUtils.RADTODEG, 1f, color, font, alignement); 
+            SDrawing.DrawText(font, Text, GetBoundingBox(), 1f, RotRad * SUtils.RADTODEG, alignement, color); 
         }
     }
 

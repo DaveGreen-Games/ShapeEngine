@@ -1214,83 +1214,6 @@ namespace ShapeEngine.Lib
             }
         }
         
-        //private static void DrawEmphasisCornerDot(Rect rect, TextEmphasisAlignement alignement, Raylib_CsLo.Color color)
-        //{
-        //    float radius = rect.Size.Y * 0.05f;
-        //    if (alignement == TextEmphasisAlignement.TopLeft)
-        //    {
-        //        Circle c = new(rect.TopLeft, radius);
-        //        c.Draw(color);
-        //    }
-        //    else if (alignement == TextEmphasisAlignement.Top)
-        //    {
-        //        Circle a = new(rect.TopLeft, radius);
-        //        a.Draw(color);
-        //        Circle b = new(rect.TopRight, radius);
-        //        b.Draw(color);
-        //    }
-        //    else if (alignement == TextEmphasisAlignement.TopRight)
-        //    {
-        //        Circle c = new(rect.TopRight, radius);
-        //        c.Draw(color);
-        //    }
-        //    else if (alignement == TextEmphasisAlignement.Right)
-        //    {
-        //        Circle a = new(rect.TopRight, radius);
-        //        a.Draw(color);
-        //        Circle b = new(rect.BottomRight, radius);
-        //        b.Draw(color);
-        //    }
-        //    else if (alignement == TextEmphasisAlignement.BottomRight)
-        //    {
-        //        Circle c = new(rect.BottomRight, radius);
-        //        c.Draw(color);
-        //    }
-        //    else if (alignement == TextEmphasisAlignement.Bottom)
-        //    {
-        //        Circle a = new(rect.BottomLeft, radius);
-        //        a.Draw(color);
-        //        Circle b = new(rect.BottomRight, radius);
-        //        b.Draw(color);
-        //    }
-        //    else if (alignement == TextEmphasisAlignement.BottomLeft)
-        //    {
-        //        Circle c = new(rect.BottomLeft, radius);
-        //        c.Draw(color);
-        //    }
-        //    else if (alignement == TextEmphasisAlignement.Left)
-        //    {
-        //        Circle a = new(rect.TopLeft, radius);
-        //        a.Draw(color);
-        //        Circle b = new(rect.BottomLeft, radius);
-        //        b.Draw(color);
-        //    }
-        //    else if (alignement == TextEmphasisAlignement.Center)
-        //    {
-        //        Circle a = new(rect.GetPoint(new Vector2(0f, 0.5f)), radius);
-        //        a.Draw(color);
-        //        Circle b = new(rect.GetPoint(new Vector2(1f, 0.5f)), radius);
-        //        b.Draw(color);
-        //    }
-        //    else if (alignement == TextEmphasisAlignement.Boxed)
-        //    {
-        //        Circle a = new(rect.TopLeft, radius);
-        //        a.Draw(color);
-        //        Circle b = new(rect.TopRight, radius);
-        //        b.Draw(color);
-        //        Circle c = new(rect.BottomRight, radius);
-        //        c.Draw(color);
-        //        Circle d = new(rect.BottomLeft, radius);
-        //        d.Draw(color);
-        //    }
-        //}
-        //private static void DrawEmphasis(Rect rect, TextEmphasisType emphasisType, TextEmphasisAlignement alignement, Raylib_CsLo.Color color)
-        //{
-        //    if (emphasisType == TextEmphasisType.None) return;
-        //    else if (emphasisType == TextEmphasisType.Line) DrawEmphasisLine(rect, alignement, color);
-        //    else if (emphasisType == TextEmphasisType.Corner) DrawEmphasisCorner(rect, alignement, color);
-        //    //else if (emphasisType == TextEmphasisType.Corner_Dot) DrawEmphasisCornerDot(rect, alignement, color);
-        //}
         private static (int emphasisIndex, bool connected) CheckWordEmphasis(int index, params WordEmphasis[] wordEmphasis)
         {
             for (int i = 0; i < wordEmphasis.Length; i++)
@@ -1488,7 +1411,8 @@ namespace ShapeEngine.Lib
             else if (emphasis.EmphasisType == TextEmphasisType.Corner) DrawEmphasisCorner(rect, emphasis.EmphasisAlignement, thickness, emphasis.Color);
         }
 
-        //add rotation to DrawChar, DrawWord, DrawText
+
+
         public static void DrawChar(this Font font, Char c, float fontSize, Vector2 topLeft, Raylib_CsLo.Color color)
         {
             Raylib.DrawTextCodepoint(font, c, topLeft, fontSize, color);
@@ -1559,13 +1483,10 @@ namespace ShapeEngine.Lib
             //}
         }
 
-        public static void DrawText(this Font font, string text, Rect rect, float fontSpacing, Vector2 alignement, Raylib_CsLo.Color color)
+
+        public static void DrawText(this Font font, string text, float fontSize, float fontSpacing, Vector2 topleft, Raylib_CsLo.Color color)
         {
-            var info = font.GetDynamicFontSize(text, rect.Size, fontSpacing);
-            Rect r = new(rect.GetPoint(alignement), info.textSize, alignement);
-            //Vector2 uiPos = rect.GetPoint(alignement);
-            //Vector2 topLeft = uiPos - alignement * info.textSize;
-            DrawTextEx(font, text, r.TopLeft, info.fontSize, info.fontSpacing, color);
+            DrawText(font, text, fontSize, fontSpacing, topleft, new Vector2(0f), color);
         }
         public static void DrawText(this Font font, string text, float fontSize, float fontSpacing, Vector2 pos, Vector2 alignement, Raylib_CsLo.Color color)
         {
@@ -1575,17 +1496,37 @@ namespace ShapeEngine.Lib
             Rect r = new(pos, size, alignement);
             DrawTextEx(font, text, r.TopLeft, fontSize, fontSpacing, color);
         }
-        public static void DrawText(this Font font, string text, float fontSize, float fontSpacing, Vector2 topleft, Raylib_CsLo.Color color)
-        {
-            DrawText(font, text, fontSize, fontSpacing, topleft, new Vector2(0f), color);
-        }
-        public static void DrawText(this Font font, string text, Rect rect, float fontSpacing, Vector2 alignement, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
+        public static void DrawText(this Font font, string text, Rect rect, float fontSpacing, Vector2 alignement, Raylib_CsLo.Color color)
         {
             var info = font.GetDynamicFontSize(text, rect.Size, fontSpacing);
-            Vector2 uiPos = rect.GetPoint(alignement);
-            Vector2 topLeft = uiPos - alignement * info.textSize;
-            DrawText(font, text, info.fontSize, info.fontSpacing, topLeft, alignement, baseEmphasis, wordEmphasis);
+            Rect r = new(rect.GetPoint(alignement), info.textSize, alignement);
+            //Vector2 uiPos = rect.GetPoint(alignement);
+            //Vector2 topLeft = uiPos - alignement * info.textSize;
+            DrawTextEx(font, text, r.TopLeft, info.fontSize, info.fontSpacing, color);
+        }
 
+        public static void DrawText(this Font font, string text, float fontSize, float fontSpacing, Vector2 pos, float rotDeg, Vector2 alignement, Raylib_CsLo.Color color)
+        {
+            fontSize = MathF.Max(fontSize, FontMinSize);
+            fontSpacing = MathF.Min(fontSpacing, fontSize * FontSpacingMaxFactor);
+            Vector2 size = font.GetTextSize(text, fontSize, fontSpacing);
+            Vector2 originOffset = alignement * size;
+            Rect r = new(pos, size, alignement);
+            DrawCircleV(r.TopLeft, 15f, YELLOW);
+            DrawCircleV(r.TopLeft + originOffset, 15f, ORANGE);
+            DrawTextPro(font, text, r.TopLeft, originOffset, rotDeg, fontSize, fontSpacing, color);
+        }
+        public static void DrawText(this Font font, string text, Rect rect, float fontSpacing, float rotDeg, Vector2 alignement, Raylib_CsLo.Color color)
+        {
+            var info = font.GetDynamicFontSize(text, rect.Size, fontSpacing);
+            Rect r = new(rect.GetPoint(alignement), info.textSize, alignement);
+            Vector2 originOffset = alignement * rect.Size; // info.textSize;
+            DrawTextPro(font, text, r.TopLeft, originOffset, rotDeg, info.fontSize, info.fontSpacing, color);
+        }
+
+        public static void DrawText(this Font font, string text, float fontSize, float fontSpacing, Vector2 topleft, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
+        {
+            DrawText(font, text, fontSize, fontSpacing, topleft, new Vector2(0f), baseEmphasis, wordEmphasis);
         }
         public static void DrawText(this Font font, string text, float fontSize, float fontSpacing, Vector2 pos, Vector2 alignement, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
         {
@@ -1627,12 +1568,17 @@ namespace ShapeEngine.Lib
             var resultLast = CheckWordEmphasis(curWordIndex, wordEmphasis);
             DrawWord(font, curWord, fontSize, fontSpacing, curWordPos, resultLast.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[resultLast.emphasisIndex]);
         }
-        public static void DrawText(this Font font, string text, float fontSize, float fontSpacing, Vector2 topleft, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
+        public static void DrawText(this Font font, string text, Rect rect, float fontSpacing, Vector2 alignement, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
         {
-            DrawText(font, text, fontSize, fontSpacing, topleft, new Vector2(0f), baseEmphasis, wordEmphasis);
+            var info = font.GetDynamicFontSize(text, rect.Size, fontSpacing);
+            Vector2 uiPos = rect.GetPoint(alignement);
+            Vector2 topLeft = uiPos - alignement * info.textSize;
+            DrawText(font, text, info.fontSize, info.fontSpacing, topLeft, alignement, baseEmphasis, wordEmphasis);
+
         }
 
 
+        //implement emphasis system
         public static void DrawTextWrappedChar(this Font font, string text, Rect rect, float fontSpacing, Raylib_CsLo.Color color)
         {
             fontSpacing = MathF.Min(fontSpacing, font.baseSize * FontSpacingMaxFactor);
@@ -1779,8 +1725,99 @@ namespace ShapeEngine.Lib
             Raylib.DrawTextEx(font, curLine, pos, fontSize, fontSpacing, color);
 
         }
+        //------------------------
+
+        
+
+        //fix and overhaul
+        public static void DrawTextBox(this Rect rect, string emptyText, List<char> chars, float fontSpacing, Font font, Raylib_CsLo.Color textColor, bool drawCaret, int caretPosition, float caretWidth, Raylib_CsLo.Color caretColor, Vector2 textAlignement)
+        {
+            //fix alignement
+            //alignement = new(0, 0.5f);
+            if (chars.Count <= 0)
+            {
+                SDrawing.DrawText(font, emptyText, rect, fontSpacing, textAlignement, textColor);
+            }
+            else
+            {
+                string text = String.Concat(chars);
+                SDrawing.DrawText(font, text, rect, fontSpacing, textAlignement, textColor);
+
+                if (drawCaret)
+                {
+                    //float fontSize = FontHandler.CalculateDynamicFontSize(text, new Vector2(rect.width, rect.height), font, fontSpacing);
+                    var info = font.GetDynamicFontSize(text, rect.Size, fontSpacing);
+                    //Vector2 textSize = MeasureTextEx(font, text, fontSize, fontSpacing);
+                    Vector2 uiPos = rect.GetPoint(textAlignement);
+                    Vector2 topLeft = uiPos - textAlignement * info.textSize;
+                    //Vector2 topLeft = new(rect.x, rect.y);
+
+                    string caretText = String.Concat(chars.GetRange(0, caretPosition));
+                    Vector2 caretTextSize = MeasureTextEx(font, caretText, info.fontSize, info.fontSpacing);
+
+                    Vector2 caretTop = topLeft + new Vector2(caretTextSize.X + fontSpacing * 0.5f, 0f);
+                    Vector2 caretBottom = topLeft + new Vector2(caretTextSize.X + fontSpacing * 0.5f, rect.height);
+                    DrawLineEx(caretTop, caretBottom, caretWidth, caretColor);
+                }
+            }
+        }
+        
 
 
+        /*
+        public static void DrawTextMultiColor(List<string> texts, Rect rect, float fontSpacing, List<Raylib_CsLo.Color> colors, Font font, Vector2 alignement)
+        {
+            string text = "";
+            foreach (var t in texts)
+            {
+                text += t;
+            }
+            Vector2 textSize = rect.Size;
+            Vector2 uiPos = rect.GetPoint(alignement);
+            float fontSize = 0f;// FontHandler.CalculateDynamicFontSize(text, textSize, font, fontSpacing);
+            Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
+            Vector2 curPos = uiPos - alignement * fontDimensions;
+            for (int i = 0; i < texts.Count; i++)
+            {
+                string curText = texts[i];
+                float w = MeasureTextEx(font, curText, fontSize, fontSpacing).X;
+                DrawTextEx(font, curText, curPos, fontSize, fontSpacing, colors[i % colors.Count]);
+                curPos += new Vector2(w, 0f);
+            }
+        }
+        */
+        /*
+        public static void Draw(this string text, Rect rect, float rotDeg, float fontSpacing, Raylib_CsLo.Color color, Font font, Vector2 alignement)
+        {
+            var info = font.GetDynamicFontSize(text, rect.Size, fontSpacing);
+            Vector2 uiPos = rect.GetPoint(alignement);
+            Vector2 originOffset = alignement * info.textSize;
+            Vector2 topLeft = uiPos - originOffset;
+            DrawTextPro(font, text, topLeft, originOffset, rotDeg, info.fontSize, info.fontSpacing, color);
+            
+            
+            //Vector2 textSize = rect.Size;
+            //Vector2 uiPos = rect.GetPoint(alignement);
+            //float fontSize = FontHandler.CalculateDynamicFontSize(text, textSize, font, fontSpacing);
+            //Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
+            //Vector2 originOffset = alignement * fontDimensions;
+            //Vector2 topLeft = uiPos - alignement * fontDimensions;
+            //DrawTextPro(font, text, topLeft, originOffset, rotDeg, fontSize, fontSpacing, color);
+        }
+        public static void Draw(this string text, Vector2 uiPos, float fontSize, float fontSpacing, Raylib_CsLo.Color color, Font font, Vector2 alignement)
+        {
+            Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
+            Vector2 topLeft = uiPos - alignement * fontDimensions;
+            DrawTextEx(font, text, topLeft, fontSize, fontSpacing, color);
+            DrawRectangleLinesEx(new(topLeft.X, topLeft.Y, fontDimensions.X, fontDimensions.Y), 5f, WHITE);
+        }
+        public static void Draw(this string text, Vector2 uiPos, float rotDeg, float fontSize, float fontSpacing, Raylib_CsLo.Color color, Font font, Vector2 alignement)
+        {
+            Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
+            Vector2 originOffset = alignement * fontDimensions;
+            DrawTextPro(font, text, uiPos, originOffset, rotDeg, fontSize, fontSpacing, color);
+        }
+        */
         /*
         public static void DrawTextMultiColor(this Font font, string text, Rect rect, float fontSpacing, Vector2 alignement, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
         {
@@ -1848,11 +1885,8 @@ namespace ShapeEngine.Lib
             curEmphasis = GetWordEmphasis(curWordIndex, wordEmphasis);
             DrawWord(font, curWord, fontSize, fontSpacing, curWordPos, curEmphasis != null ? (WordEmphasis)curEmphasis : baseEmphasis);
         }
+
         */
-        
-
-
-
         //public static void DrawTextWrapped(this Font font, string text, Rect rect, float fontSpacing, float lineSpacing, Raylib_CsLo.Color color)
         //{
         //    Vector2 rectSize = rect.Size;
@@ -2005,92 +2039,88 @@ namespace ShapeEngine.Lib
         //--------------OLD--------------------------
 
         //disabled right now
-        public static void DrawTextMultiColor(List<string> texts, Rect rect, float fontSpacing, List<Raylib_CsLo.Color> colors, Font font, Vector2 alignement)
-        {
-            string text = "";
-            foreach (var t in texts)
-            {
-                text += t;
-            }
-            Vector2 textSize = rect.Size;
-            Vector2 uiPos = rect.GetPoint(alignement);
-            float fontSize = 0f;// FontHandler.CalculateDynamicFontSize(text, textSize, font, fontSpacing);
-            Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
-            Vector2 curPos = uiPos - alignement * fontDimensions;
-            for (int i = 0; i < texts.Count; i++)
-            {
-                string curText = texts[i];
-                float w = MeasureTextEx(font, curText, fontSize, fontSpacing).X;
-                DrawTextEx(font, curText, curPos, fontSize, fontSpacing, colors[i % colors.Count]);
-                curPos += new Vector2(w, 0f);
-            }
-        }
-
-        public static void DrawTextBox(this Rect rect, string emptyText, List<char> chars, float fontSpacing, Font font, Raylib_CsLo.Color textColor, bool drawCaret, int caretPosition, float caretWidth, Raylib_CsLo.Color caretColor, Vector2 textAlignement)
-        {
-            //fix alignement
-            //alignement = new(0, 0.5f);
-            if (chars.Count <= 0)
-            {
-                SDrawing.DrawText(font, emptyText, rect, fontSpacing, textAlignement, textColor);
-            }
-            else
-            {
-                string text = String.Concat(chars);
-                SDrawing.DrawText(font, text, rect, fontSpacing, textAlignement, textColor);
-
-                if (drawCaret)
-                {
-                    //float fontSize = FontHandler.CalculateDynamicFontSize(text, new Vector2(rect.width, rect.height), font, fontSpacing);
-                    var info = font.GetDynamicFontSize(text, rect.Size, fontSpacing);
-                    //Vector2 textSize = MeasureTextEx(font, text, fontSize, fontSpacing);
-                    Vector2 uiPos = rect.GetPoint(textAlignement);
-                    Vector2 topLeft = uiPos - textAlignement * info.textSize;
-                    //Vector2 topLeft = new(rect.x, rect.y);
-
-                    string caretText = String.Concat(chars.GetRange(0, caretPosition));
-                    Vector2 caretTextSize = MeasureTextEx(font, caretText, info.fontSize, info.fontSpacing);
-
-                    Vector2 caretTop = topLeft + new Vector2(caretTextSize.X + fontSpacing * 0.5f, 0f);
-                    Vector2 caretBottom = topLeft + new Vector2(caretTextSize.X + fontSpacing * 0.5f, rect.height);
-                    DrawLineEx(caretTop, caretBottom, caretWidth, caretColor);
-                }
-            }
-        }
-        public static void Draw(this string text, Rect rect, float rotDeg, float fontSpacing, Raylib_CsLo.Color color, Font font, Vector2 alignement)
-        {
-            var info = font.GetDynamicFontSize(text, rect.Size, fontSpacing);
-            Vector2 uiPos = rect.GetPoint(alignement);
-            Vector2 originOffset = alignement * info.textSize;
-            Vector2 topLeft = uiPos - originOffset;
-            DrawTextPro(font, text, topLeft, originOffset, rotDeg, info.fontSize, info.fontSpacing, color);
-            
-            
-            //Vector2 textSize = rect.Size;
-            //Vector2 uiPos = rect.GetPoint(alignement);
-            //float fontSize = FontHandler.CalculateDynamicFontSize(text, textSize, font, fontSpacing);
-            //Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
-            //Vector2 originOffset = alignement * fontDimensions;
-            //Vector2 topLeft = uiPos - alignement * fontDimensions;
-            //DrawTextPro(font, text, topLeft, originOffset, rotDeg, fontSize, fontSpacing, color);
-        }
-        public static void Draw(this string text, Vector2 uiPos, float fontSize, float fontSpacing, Raylib_CsLo.Color color, Font font, Vector2 alignement)
-        {
-            Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
-            Vector2 topLeft = uiPos - alignement * fontDimensions;
-            DrawTextEx(font, text, topLeft, fontSize, fontSpacing, color);
-            DrawRectangleLinesEx(new(topLeft.X, topLeft.Y, fontDimensions.X, fontDimensions.Y), 5f, WHITE);
-        }
-        public static void Draw(this string text, Vector2 uiPos, float rotDeg, float fontSize, float fontSpacing, Raylib_CsLo.Color color, Font font, Vector2 alignement)
-        {
-            Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
-            Vector2 originOffset = alignement * fontDimensions;
-            DrawTextPro(font, text, uiPos, originOffset, rotDeg, fontSize, fontSpacing, color);
-        }
         
-        //-------------------------------------------
-        
-        
+        /*
+        //private static void DrawEmphasisCornerDot(Rect rect, TextEmphasisAlignement alignement, Raylib_CsLo.Color color)
+        //{
+        //    float radius = rect.Size.Y * 0.05f;
+        //    if (alignement == TextEmphasisAlignement.TopLeft)
+        //    {
+        //        Circle c = new(rect.TopLeft, radius);
+        //        c.Draw(color);
+        //    }
+        //    else if (alignement == TextEmphasisAlignement.Top)
+        //    {
+        //        Circle a = new(rect.TopLeft, radius);
+        //        a.Draw(color);
+        //        Circle b = new(rect.TopRight, radius);
+        //        b.Draw(color);
+        //    }
+        //    else if (alignement == TextEmphasisAlignement.TopRight)
+        //    {
+        //        Circle c = new(rect.TopRight, radius);
+        //        c.Draw(color);
+        //    }
+        //    else if (alignement == TextEmphasisAlignement.Right)
+        //    {
+        //        Circle a = new(rect.TopRight, radius);
+        //        a.Draw(color);
+        //        Circle b = new(rect.BottomRight, radius);
+        //        b.Draw(color);
+        //    }
+        //    else if (alignement == TextEmphasisAlignement.BottomRight)
+        //    {
+        //        Circle c = new(rect.BottomRight, radius);
+        //        c.Draw(color);
+        //    }
+        //    else if (alignement == TextEmphasisAlignement.Bottom)
+        //    {
+        //        Circle a = new(rect.BottomLeft, radius);
+        //        a.Draw(color);
+        //        Circle b = new(rect.BottomRight, radius);
+        //        b.Draw(color);
+        //    }
+        //    else if (alignement == TextEmphasisAlignement.BottomLeft)
+        //    {
+        //        Circle c = new(rect.BottomLeft, radius);
+        //        c.Draw(color);
+        //    }
+        //    else if (alignement == TextEmphasisAlignement.Left)
+        //    {
+        //        Circle a = new(rect.TopLeft, radius);
+        //        a.Draw(color);
+        //        Circle b = new(rect.BottomLeft, radius);
+        //        b.Draw(color);
+        //    }
+        //    else if (alignement == TextEmphasisAlignement.Center)
+        //    {
+        //        Circle a = new(rect.GetPoint(new Vector2(0f, 0.5f)), radius);
+        //        a.Draw(color);
+        //        Circle b = new(rect.GetPoint(new Vector2(1f, 0.5f)), radius);
+        //        b.Draw(color);
+        //    }
+        //    else if (alignement == TextEmphasisAlignement.Boxed)
+        //    {
+        //        Circle a = new(rect.TopLeft, radius);
+        //        a.Draw(color);
+        //        Circle b = new(rect.TopRight, radius);
+        //        b.Draw(color);
+        //        Circle c = new(rect.BottomRight, radius);
+        //        c.Draw(color);
+        //        Circle d = new(rect.BottomLeft, radius);
+        //        d.Draw(color);
+        //    }
+        //}
+        //private static void DrawEmphasis(Rect rect, TextEmphasisType emphasisType, TextEmphasisAlignement alignement, Raylib_CsLo.Color color)
+        //{
+        //    if (emphasisType == TextEmphasisType.None) return;
+        //    else if (emphasisType == TextEmphasisType.Line) DrawEmphasisLine(rect, alignement, color);
+        //    else if (emphasisType == TextEmphasisType.Corner) DrawEmphasisCorner(rect, alignement, color);
+        //    //else if (emphasisType == TextEmphasisType.Corner_Dot) DrawEmphasisCornerDot(rect, alignement, color);
+        //}
+        */
+
+
         #endregion
 
         #region UI

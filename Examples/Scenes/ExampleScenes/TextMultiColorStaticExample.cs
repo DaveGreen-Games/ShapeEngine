@@ -36,6 +36,8 @@ namespace Examples.Scenes.ExampleScenes
         float interval = 2f;
         float percentage = 50f;
 
+        float rotDeg = 0f;
+
         TextEmphasisType curEmphasisType = TextEmphasisType.Corner;
         TextEmphasisAlignement curEmphasisAlignement = TextEmphasisAlignement.TopLeft;
         Vector2 curAlignement = new(0f);
@@ -118,7 +120,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
         {
-
+            rotDeg = SVec.AngleDeg((uiSize * 0.5f) - mousePosUI);
 
             Rect r = new(topLeft, bottomRight);
             r.DrawLines(8f, new Color(255, 0, 0, 150));
@@ -127,8 +129,8 @@ namespace Examples.Scenes.ExampleScenes
             WordEmphasis red = new(RED, TextEmphasisType.Line, TextEmphasisAlignement.Bottom, 1, 4);
             WordEmphasis yellow = new(YELLOW, curEmphasisType, curEmphasisAlignement, 5, 6);
             string curText = String.Format(text, percentage);
-            font.DrawText(curText, fontSize, fontSpacing, r.GetPoint(curAlignement), curAlignement, basic, red, yellow);
-
+            //font.DrawText(curText, fontSize, fontSpacing, r.GetPoint(curAlignement), curAlignement, basic, red, yellow);
+            font.DrawText(curText, fontSize, fontSpacing, r.GetPoint(curAlignement), rotDeg, curAlignement, RED);
             Circle topLeftPoint = new(topLeft, pointRadius);
             Circle topLeftInteractionCircle = new(topLeft, interactionRadius);
             if (draggingTopLeft)
