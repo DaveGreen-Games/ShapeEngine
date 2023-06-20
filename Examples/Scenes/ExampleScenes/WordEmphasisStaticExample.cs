@@ -252,8 +252,8 @@ namespace Examples.Scenes.ExampleScenes
         {
             int cur = (int)curEmphasisAlignement;
             cur++;
-            if (cur > 9) cur = 0;
-            else if (cur < 0) cur = 9;
+            if (cur > 11) cur = 0;
+            else if (cur < 0) cur = 11;
             curEmphasisAlignement = (TextEmphasisAlignement)cur;
         }
         private void ChangeFontSize()

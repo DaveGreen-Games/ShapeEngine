@@ -24,9 +24,11 @@ namespace Examples.Scenes.ExampleScenes
         int lineSpacing = 0;
         int lineSpacingIncrement = 5;
         int maxLineSpacing = 100;
+
         int fontSpacing = 0;
         int fontSpacingIncrement = 5;
         int maxFontSpacing = 100;
+
         int fontSize = 50;
         int fontSizeIncrement = 25;
         int maxFontSize = 300;
