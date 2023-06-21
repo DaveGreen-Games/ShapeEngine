@@ -1512,16 +1512,15 @@ namespace ShapeEngine.Lib
             Vector2 size = font.GetTextSize(text, fontSize, fontSpacing);
             Vector2 originOffset = alignement * size;
             Rect r = new(pos, size, alignement);
-            DrawCircleV(r.TopLeft, 15f, YELLOW);
-            DrawCircleV(r.TopLeft + originOffset, 15f, ORANGE);
-            DrawTextPro(font, text, r.TopLeft, originOffset, rotDeg, fontSize, fontSpacing, color);
+            
+            DrawTextPro(font, text, r.TopLeft + originOffset, originOffset, rotDeg, fontSize, fontSpacing, color);
         }
         public static void DrawText(this Font font, string text, Rect rect, float fontSpacing, float rotDeg, Vector2 alignement, Raylib_CsLo.Color color)
         {
             var info = font.GetDynamicFontSize(text, rect.Size, fontSpacing);
             Rect r = new(rect.GetPoint(alignement), info.textSize, alignement);
-            Vector2 originOffset = alignement * rect.Size; // info.textSize;
-            DrawTextPro(font, text, r.TopLeft, originOffset, rotDeg, info.fontSize, info.fontSpacing, color);
+            Vector2 originOffset = alignement * info.textSize;
+            DrawTextPro(font, text, r.TopLeft + originOffset, originOffset, rotDeg, info.fontSize, info.fontSpacing, color);
         }
 
         public static void DrawText(this Font font, string text, float fontSize, float fontSpacing, Vector2 topleft, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)

@@ -7,7 +7,7 @@ using System.Numerics;
 
 namespace Examples.Scenes.ExampleScenes
 {
-    public class TextMultiColorStaticExample : ExampleScene
+    public class TextMultiColorExample : ExampleScene
     {
         Vector2 topLeft = new();
         Vector2 bottomRight = new();
@@ -43,7 +43,7 @@ namespace Examples.Scenes.ExampleScenes
         Vector2 curAlignement = new(0f);
         int curAlignementIndex = 0;
 
-        public TextMultiColorStaticExample()
+        public TextMultiColorExample()
         {
             Title = "Text Multi Color Example";
             var s = GAMELOOP.UI.GetSize();
@@ -129,8 +129,7 @@ namespace Examples.Scenes.ExampleScenes
             WordEmphasis red = new(RED, TextEmphasisType.Line, TextEmphasisAlignement.Bottom, 1, 4);
             WordEmphasis yellow = new(YELLOW, curEmphasisType, curEmphasisAlignement, 5, 6);
             string curText = String.Format(text, percentage);
-            //font.DrawText(curText, fontSize, fontSpacing, r.GetPoint(curAlignement), curAlignement, basic, red, yellow);
-            font.DrawText(curText, fontSize, fontSpacing, r.GetPoint(curAlignement), rotDeg, curAlignement, RED);
+            font.DrawText(curText, fontSize, fontSpacing, r.GetPoint(curAlignement), curAlignement, basic, red, yellow);
             Circle topLeftPoint = new(topLeft, pointRadius);
             Circle topLeftInteractionCircle = new(topLeft, interactionRadius);
             if (draggingTopLeft)
