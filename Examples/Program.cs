@@ -2,15 +2,7 @@
 global using static Raylib_CsLo.RayMath;
 global using static Examples.Program;
 
-using Raylib_CsLo;
-using ShapeEngine;
-using ShapeEngine.Core;
-using ShapeEngine.Lib;
-using ShapeEngine.Screen;
-using System.Numerics;
-using ShapeEngine.UI;
-using ShapeEngine.Persistent;
-//put scenes in their own files!!!
+
 namespace Examples
 {
     public static class Program

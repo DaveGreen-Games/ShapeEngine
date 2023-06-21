@@ -6,7 +6,7 @@ using System.Numerics;
 
 namespace Examples.Scenes.ExampleScenes
 {
-    public class TextWrapExample : ExampleScene
+    public class TextWrapEmphasisExample : ExampleScene
     {
         Vector2 topLeft = new();
         Vector2 bottomRight = new();
@@ -38,9 +38,9 @@ namespace Examples.Scenes.ExampleScenes
         bool autoSize = false;
         bool textEntryActive = false;
         string prevText = string.Empty;
-        public TextWrapExample()
+        public TextWrapEmphasisExample()
         {
-            Title = "Text Wrap Example";
+            Title = "Text Wrap Multi Color Example";
             var s = GAMELOOP.UI.GetSize();
             topLeft = s * new Vector2(0.1f, 0.1f);
             bottomRight = s * new Vector2(0.9f, 0.8f);
@@ -125,7 +125,7 @@ namespace Examples.Scenes.ExampleScenes
 
             }
 
-            
+
         }
         public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
@@ -176,9 +176,9 @@ namespace Examples.Scenes.ExampleScenes
                     font.DrawTextWrappedWord(text, r, fontSize, fontSpacing, lineSpacing, WHITE);
                 }
             }
-            
 
-            
+
+
 
             if (!textEntryActive)
             {
@@ -258,7 +258,7 @@ namespace Examples.Scenes.ExampleScenes
             if (fontSize < 50) fontSize = maxFontSize;
             else if (fontSize > maxFontSize) fontSize = 50;
         }
-        
+
         private void NextFont()
         {
             int fontCount = GAMELOOP.GetFontCount();

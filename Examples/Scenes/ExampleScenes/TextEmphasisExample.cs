@@ -7,7 +7,7 @@ using System.Numerics;
 
 namespace Examples.Scenes.ExampleScenes
 {
-    public class TextMultiColorExample : ExampleScene
+    public class TextEmphasisExample : ExampleScene
     {
         Vector2 topLeft = new();
         Vector2 bottomRight = new();
@@ -43,7 +43,7 @@ namespace Examples.Scenes.ExampleScenes
         Vector2 curAlignement = new(0f);
         int curAlignementIndex = 0;
 
-        public TextMultiColorExample()
+        public TextEmphasisExample()
         {
             Title = "Text Multi Color Example";
             var s = GAMELOOP.UI.GetSize();

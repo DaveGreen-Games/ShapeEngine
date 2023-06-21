@@ -1684,11 +1684,19 @@ namespace ShapeEngine.Lib
 
                     if (curWidth + glyphWidth >= rect.width)
                     {
+                        if (curLine == string.Empty)//width was overshot within the first word
+                        {
+                            curWord = curWord.Remove(curWord.Length - 1);
+                            curLine = curWord;
+                            i--;
+                        }
+                        else i -= curWord.Length;
+
                         curLine = curLine.Trim();
                         Raylib.DrawTextEx(font, curLine, pos, fontSize, fontSpacing, color);
 
                         curWidth = 0;
-                        i -= curWord.Length;
+                        
                         curWord = string.Empty;
                         curLine = string.Empty;
                         
@@ -1724,6 +1732,8 @@ namespace ShapeEngine.Lib
             Raylib.DrawTextEx(font, curLine, pos, fontSize, fontSpacing, color);
 
         }
+        
+        
         //------------------------
 
         
