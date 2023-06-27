@@ -20,7 +20,7 @@ namespace Examples.Scenes.ExampleScenes
         float pointRadius = 8f;
         float interactionRadius = 24f;
 
-        string text = "Damaging an enemy with Rupture creates a pool that does Bleed damage over six seconds. Enemies in the pool take 10% increased Bleed damage.";
+        string text = "Damaging an enemy with Rupture creates a pool that does Bleed damage over 6 seconds. Enemies in the pool take 10% increased Bleed damage.";
         int lineSpacing = 0;
         int lineSpacingIncrement = 5;
         int maxLineSpacing = 100;
@@ -38,6 +38,12 @@ namespace Examples.Scenes.ExampleScenes
         bool autoSize = false;
         bool textEntryActive = false;
         string prevText = string.Empty;
+
+        WordEmphasis baseEmphasis = new(WHITE);
+        WordEmphasis skill = new(YELLOW, 4);
+        WordEmphasis bleed = new(RED, 10, 11, 22, 23);
+        WordEmphasis numbers = new(new(150, 150, 200, 255), 13, 14, 20, 100);
+
         public TextWrapEmphasisExample()
         {
             Title = "Text Wrap Multi Color Example";
@@ -158,7 +164,8 @@ namespace Examples.Scenes.ExampleScenes
             {
                 if (wrapModeChar)
                 {
-                    font.DrawTextWrappedChar(text, r, fontSpacing, WHITE);
+                    
+                    font.DrawTextWrappedChar(text, r, fontSpacing, baseEmphasis, skill, bleed, numbers);
                 }
                 else
                 {
@@ -169,7 +176,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 if (wrapModeChar)
                 {
-                    font.DrawTextWrappedChar(text, r, fontSize, fontSpacing, lineSpacing, WHITE);
+                    font.DrawTextWrappedChar(text, r, fontSize, fontSpacing, lineSpacing, baseEmphasis, skill, bleed, numbers);
                 }
                 else
                 {

@@ -1,14 +1,8 @@
 ﻿
-using System.Drawing;
 using System.Numerics;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using Clipper2Lib;
 using Raylib_CsLo;
 using ShapeEngine.Core;
 using ShapeEngine.UI;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace ShapeEngine.Lib
 {
@@ -1577,7 +1571,189 @@ namespace ShapeEngine.Lib
         }
 
 
-        //implement emphasis system
+        //emphasis variants
+        public static void DrawTextWrappedChar(this Font font, string text, Rect rect, float fontSpacing, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
+        {
+            fontSpacing = MathF.Min(fontSpacing, font.baseSize * FontSpacingMaxFactor);
+
+            float safetyMargin = 0.85f;
+            Vector2 rectSize = rect.Size;
+            Vector2 textSize = font.GetTextSize(text, font.baseSize, fontSpacing);
+            float rectArea = rectSize.GetArea() * safetyMargin;
+            float textArea = textSize.GetArea();
+
+            float f = MathF.Sqrt(rectArea / textArea);
+            fontSpacing *= f;
+            float fontSize = font.baseSize * f;
+            fontSize = MathF.Max(fontSize, FontMinSize);
+
+            int curWordIndex = 0;
+
+            Vector2 pos = rect.TopLeft;
+            for (int i = 0; i < text.Length; i++)
+            {
+                var c = text[i];
+                var charBaseSize = font.GetCharBaseSize(c);
+                float glyphWidth = charBaseSize.X * f;
+                if (pos.X + glyphWidth >= rect.TopLeft.X + rectSize.X)
+                {
+                    pos.X = rect.TopLeft.X;
+                    pos.Y += fontSize;
+                }
+                if (c == ' ')
+                {
+                    curWordIndex++;
+                }
+                else
+                {
+                    var result = CheckWordEmphasis(curWordIndex, wordEmphasis);
+                    Raylib_CsLo.Color color = result.emphasisIndex < 0 ? baseEmphasis.Color : wordEmphasis[result.emphasisIndex].Color;
+
+                    font.DrawChar(c, fontSize, pos, color);
+                }
+                
+                pos.X += glyphWidth + fontSpacing;
+            }
+        }
+        public static void DrawTextWrappedChar(this Font font, string text, Rect rect, float fontSize, float fontSpacing, float lineSpacing, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
+        {
+            fontSize = MathF.Max(fontSize, FontMinSize);
+            fontSpacing = MathF.Min(fontSpacing, fontSize * FontSpacingMaxFactor);
+            lineSpacing = MathF.Min(lineSpacing, fontSize * LineSpacingMaxFactor);
+
+            float f = fontSize / (float)font.baseSize;
+            int curWordIndex = 0;
+            Vector2 pos = rect.TopLeft;
+            for (int i = 0; i < text.Length; i++)
+            {
+                var c = text[i];
+                var charBaseSize = font.GetCharBaseSize(c);
+                float glyphWidth = charBaseSize.X * f;
+                if (pos.X + glyphWidth >= rect.Right)
+                {
+                    pos.X = rect.TopLeft.X;
+                    pos.Y += fontSize + lineSpacing;
+                    if (pos.Y + fontSize >= rect.Bottom)
+                    {
+                        return;
+                    }
+                }
+                if (c == ' ')
+                {
+                    curWordIndex++;
+                }
+                else
+                {
+                    var result = CheckWordEmphasis(curWordIndex, wordEmphasis);
+                    Raylib_CsLo.Color color = result.emphasisIndex < 0 ? baseEmphasis.Color : wordEmphasis[result.emphasisIndex].Color;
+
+                    font.DrawChar(c, fontSize, pos, color);
+                }
+                pos.X += glyphWidth + fontSpacing;
+            }
+        }
+        public static void DrawTextWrappedWord(this Font font, string text, Rect rect, float fontSpacing, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
+        {
+            fontSpacing = MathF.Min(fontSpacing, font.baseSize * FontSpacingMaxFactor);
+
+            float safetyMargin = 0.75f;
+            Vector2 rectSize = rect.Size;
+            Vector2 textSize = font.GetTextSize(text, font.baseSize, fontSpacing);
+            float rectArea = rectSize.GetArea() * safetyMargin;
+            float textArea = textSize.GetArea();
+
+            float f = MathF.Sqrt(rectArea / textArea);
+            fontSpacing *= f;
+            float fontSize = font.baseSize * f;
+            fontSize = MathF.Max(fontSize, FontMinSize);
+            DrawTextWrappedWord(font, text, rect, fontSize, fontSpacing, 0f, baseEmphasis, wordEmphasis);
+        }
+        public static void DrawTextWrappedWord(this Font font, string text, Rect rect, float fontSize, float fontSpacing, float lineSpacing, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
+        {
+            if (rect.height < FontMinSize) return;
+
+            fontSize = MathF.Max(fontSize, FontMinSize);
+            fontSpacing = MathF.Min(fontSpacing, fontSize * FontSpacingMaxFactor);
+            lineSpacing = MathF.Min(lineSpacing, fontSize * LineSpacingMaxFactor);
+
+            if (rect.height < fontSize) fontSize *= (rect.height / fontSize);
+
+            float f = fontSize / (float)font.baseSize;
+            Vector2 pos = rect.TopLeft;
+
+            string curLine = string.Empty;
+            string curWord = string.Empty;
+            float curWidth = 0f;
+
+            Raylib_CsLo.Color color = baseEmphasis.Color;
+
+            for (int i = 0; i < text.Length; i++)
+            {
+                var c = text[i];
+
+                if (c != '\n')
+                {
+                    curWord += c;
+                    if (c == ' ')
+                    {
+                        curLine += curWord;
+                        curWord = "";
+                    }
+                    var charBaseSize = font.GetCharBaseSize(c);
+                    float glyphWidth = charBaseSize.X * f;
+
+                    if (curWidth + glyphWidth >= rect.width)
+                    {
+                        if (curLine == string.Empty)//width was overshot within the first word
+                        {
+                            curWord = curWord.Remove(curWord.Length - 1);
+                            curLine = curWord;
+                            i--;
+                        }
+                        else i -= curWord.Length;
+
+                        curLine = curLine.Trim();
+                        Raylib.DrawTextEx(font, curLine, pos, fontSize, fontSpacing, color);
+
+                        curWidth = 0;
+
+                        curWord = string.Empty;
+                        curLine = string.Empty;
+
+                        pos.Y += fontSize + lineSpacing;
+                        if (pos.Y + fontSize >= rect.Bottom)
+                        {
+                            return;
+                        }
+                    }
+                    else curWidth += glyphWidth + fontSpacing;
+                }
+                else
+                {
+                    curLine += curWord;
+                    curLine = curLine.Trim();
+                    Raylib.DrawTextEx(font, curLine, pos, fontSize, fontSpacing, color);
+
+                    curWidth = 0f;
+                    curLine = string.Empty;
+                    curWord = string.Empty;
+
+                    pos.Y += fontSize + lineSpacing;
+                    if (pos.Y + fontSize >= rect.Bottom)
+                    {
+                        return;
+                    }
+                }
+            }
+
+
+            curLine += curWord;
+            curLine = curLine.Trim();
+            Raylib.DrawTextEx(font, curLine, pos, fontSize, fontSpacing, color);
+
+        }
+
+        //------------------------
         public static void DrawTextWrappedChar(this Font font, string text, Rect rect, float fontSpacing, Raylib_CsLo.Color color)
         {
             fontSpacing = MathF.Min(fontSpacing, font.baseSize * FontSpacingMaxFactor);
@@ -1734,7 +1910,7 @@ namespace ShapeEngine.Lib
         }
         
         
-        //------------------------
+        //------------------------b
 
         
 
