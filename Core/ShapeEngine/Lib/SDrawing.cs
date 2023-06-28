@@ -1573,6 +1573,7 @@ namespace ShapeEngine.Lib
 
 
         //emphasis variants
+        //fix emphasis drawing
         public static void DrawTextWrappedChar(this Font font, string text, Rect rect, float fontSpacing, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
         {
             fontSpacing = MathF.Min(fontSpacing, font.baseSize * FontSpacingMaxFactor);
@@ -1653,11 +1654,12 @@ namespace ShapeEngine.Lib
                 pos.X += glyphWidth + fontSpacing;
             }
         }
+        
         public static void DrawTextWrappedWord(this Font font, string text, Rect rect, float fontSpacing, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
         {
             fontSpacing = MathF.Min(fontSpacing, font.baseSize * FontSpacingMaxFactor);
 
-            float safetyMargin = 0.75f;
+            float safetyMargin = 0.65f;
             Vector2 rectSize = rect.Size;
             Vector2 textSize = font.GetTextSize(text, font.baseSize, fontSpacing);
             float rectArea = rectSize.GetArea() * safetyMargin;
@@ -1669,9 +1671,6 @@ namespace ShapeEngine.Lib
             fontSize = MathF.Max(fontSize, FontMinSize);
             DrawTextWrappedWord(font, text, rect, fontSize, fontSpacing, 0f, baseEmphasis, wordEmphasis);
         }
-        
-        
-        /*
         public static void DrawTextWrappedWord(this Font font, string text, Rect rect, float fontSize, float fontSpacing, float lineSpacing, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
         {
             if (rect.height < FontMinSize) return;
@@ -1687,11 +1686,9 @@ namespace ShapeEngine.Lib
 
             int curWordIndex = 0;
             string curWord = string.Empty;
-            string connectedWord = string.Empty;
-            float connectedWordWidth = 0f;
+            string backlog = string.Empty;
             float curWordWidth = 0f;
             float curLineWidth = 0f;
-            bool lineFirstWord = true;
 
             for (int i = 0; i < text.Length; i++)
             {
@@ -1700,162 +1697,89 @@ namespace ShapeEngine.Lib
 
                 var charBaseSize = font.GetCharBaseSize(c);
                 float glyphWidth = charBaseSize.X * f;
-
+                
                 if (curLineWidth + curWordWidth + glyphWidth >= rect.width)//break line
                 {
                     bool charBreak = false;
-                    if(lineFirstWord)//break line on first word
+                    if(backlog != string.Empty)
                     {
                         var result = CheckWordEmphasis(curWordIndex, wordEmphasis);
-                        
-                        DrawWord(font,connectedWord + curWord, fontSize, fontSpacing, pos, result.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[result.emphasisIndex]);
-
-                        connectedWord = string.Empty;
-                        curWord = string.Empty;
-                        curWordWidth = 0f;
-                        connectedWordWidth = 0f;
-                        charBreak = true;
+                        DrawWord(font, backlog, fontSize, fontSpacing, pos, result.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[result.emphasisIndex]);
+                        backlog = string.Empty;
                     }
-                    else if(connectedWord != string.Empty)
+                    else
                     {
-                        var result = CheckWordEmphasis(curWordIndex, wordEmphasis);
+                        if (curLineWidth <= 0f)//break line on first word
+                        {
+                            var result = CheckWordEmphasis(curWordIndex, wordEmphasis);
 
-                        DrawWord(font, connectedWord, fontSize, fontSpacing, pos, result.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[result.emphasisIndex]);
-                        connectedWord = string.Empty;
-                        curWordWidth -= connectedWordWidth;
-                        connectedWordWidth = 0f;
+                            DrawWord(font, curWord, fontSize, fontSpacing, pos, result.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[result.emphasisIndex]);
+
+                            curWord = string.Empty;
+                            curWordWidth = 0f;
+                            charBreak = true;
+                        }
                     }
+                    
                     pos.Y += fontSize + lineSpacing;
                     pos.X = rect.TopLeft.X;
                     curLineWidth = 0f;
-                    lineFirstWord = true;
+                    
                     if (pos.Y + fontSize >= rect.Bottom)
                     {
                         return;
                     }
-                    if (charBreak) continue;
+                    
+                    if (charBreak) 
+                    {
+                        if (c != ' ')
+                        {
+                            curWord += c;
+                            curWordWidth += glyphWidth;
+                        }
+                        else curWordIndex++;
+
+                        continue; 
+                    }
                 }
 
-                curWordWidth += glyphWidth;
+                curWordWidth += glyphWidth + fontSpacing;
                 if (c == ' ')
                 {
-                    if (lineFirstWord) lineFirstWord = false;
-
                     var result = CheckWordEmphasis(curWordIndex, wordEmphasis);
 
                     if (result.emphasisIndex != -1 && result.connected)
                     {
-                        curWord += c;//add the space
-                        connectedWord += curWord;
-                        connectedWordWidth += curWordWidth;
+                        curLineWidth += curWordWidth;
+                        curWordWidth = 0f;
+
+                        curWord += c;
+                        backlog += curWord;
                         curWord = string.Empty;
+
                         curWordIndex++;
                         continue;
                     }
-                    DrawWord(font, connectedWord + curWord, fontSize, fontSpacing, pos, result.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[result.emphasisIndex]);
+                    DrawWord(font, backlog + curWord, fontSize, fontSpacing, pos, result.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[result.emphasisIndex]);
 
-                    connectedWord = string.Empty;
                     curWord = string.Empty;
+                    backlog = string.Empty;
                     curWordIndex++;
-                    pos.X += curWordWidth;
                     curLineWidth += curWordWidth;
+                    pos.X = rect.TopLeft.X + curLineWidth; // curWordWidth;
                     curWordWidth = 0f;
-                    connectedWordWidth = 0f;
                 }
                 else curWord += c;
             }
 
             //draw last word
             var resultLast = CheckWordEmphasis(curWordIndex, wordEmphasis);
-            DrawWord(font, connectedWord + curWord, fontSize, fontSpacing, pos, resultLast.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[resultLast.emphasisIndex]);
+            DrawWord(font, backlog + curWord, fontSize, fontSpacing, pos, resultLast.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[resultLast.emphasisIndex]);
 
         }
-        */
 
-        //figure out how to connect emphasis words
-        //emphasis words should be connected if possible,
-        //if connected word goes over width, draw previous words with emphasis and break line
-        //continue with cur word as normal in the next line
-        //connceted word should advance line width somehow so it is not treated as the first word in the line
         
-        public static void DrawTextWrappedWord(this Font font, string text, Rect rect, float fontSize, float fontSpacing, float lineSpacing, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
-        {
-            if (rect.height < FontMinSize) return;
-
-            fontSize = MathF.Max(fontSize, FontMinSize);
-            fontSpacing = MathF.Min(fontSpacing, fontSize * FontSpacingMaxFactor);
-            lineSpacing = MathF.Min(lineSpacing, fontSize * LineSpacingMaxFactor);
-
-            if (rect.height < fontSize) fontSize *= (rect.height / fontSize);
-
-            float f = fontSize / (float)font.baseSize;
-            Vector2 pos = rect.TopLeft;
-
-            int curWordIndex = 0;
-            string curWord = string.Empty;
-            float curWordWidth = 0f;
-            float curLineWidth = 0f;
-
-            for (int i = 0; i < text.Length; i++)
-            {
-                var c = text[i];
-                if (c == '\n') continue;
-
-                var charBaseSize = font.GetCharBaseSize(c);
-                float glyphWidth = charBaseSize.X * f;
-
-                if (curLineWidth + curWordWidth + glyphWidth >= rect.width)//break line
-                {
-                    bool charBreak = false;
-                    if(curLineWidth <= 0f)//break line on first word
-                    {
-                        var result = CheckWordEmphasis(curWordIndex, wordEmphasis);
-
-                        DrawWord(font, curWord, fontSize, fontSpacing, pos, result.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[result.emphasisIndex]);
-
-                        curWord = string.Empty;
-                        curWordWidth = 0f;
-                        charBreak = true;
-                    }
-                    pos.Y += fontSize + lineSpacing;
-                    pos.X = rect.TopLeft.X;
-                    curLineWidth = 0f;
-                    if (pos.Y + fontSize >= rect.Bottom)
-                    {
-                        return;
-                    }
-                    if (charBreak) continue;
-                }
-
-                curWordWidth += glyphWidth;
-                if (c == ' ')
-                {
-                    var result = CheckWordEmphasis(curWordIndex, wordEmphasis);
-
-                    //if (result.emphasisIndex != -1 && result.connected)
-                    //{
-                    //    curWord += c;
-                    //    curWordIndex++;
-                    //    continue;
-                    //}
-                    DrawWord(font, curWord, fontSize, fontSpacing, pos, result.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[result.emphasisIndex]);
-
-                    curWord = string.Empty;
-                    curWordIndex++;
-                    pos.X += curWordWidth;
-                    curLineWidth += curWordWidth;
-                    curWordWidth = 0f;
-                }
-                else curWord += c;
-            }
-
-            //draw last word
-            var resultLast = CheckWordEmphasis(curWordIndex, wordEmphasis);
-            DrawWord(font, curWord, fontSize, fontSpacing, pos, resultLast.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[resultLast.emphasisIndex]);
-
-        }
-
-        //------------------------
+        
         public static void DrawTextWrappedChar(this Font font, string text, Rect rect, float fontSpacing, Raylib_CsLo.Color color)
         {
             fontSpacing = MathF.Min(fontSpacing, font.baseSize * FontSpacingMaxFactor);
@@ -2011,9 +1935,6 @@ namespace ShapeEngine.Lib
 
         }
         
-        
-        //------------------------b
-
         
 
         //fix and overhaul
