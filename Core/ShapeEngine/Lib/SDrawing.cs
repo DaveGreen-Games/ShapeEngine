@@ -95,9 +95,25 @@ namespace ShapeEngine.Lib
 
     public static class SDrawing
     {
+        /// <summary>
+        /// The minimum font size SDrawing uses. Font sizes are clamped to this min size if they are lower.
+        /// </summary>
         public static float FontMinSize = 25f;
+        /// <summary>
+        /// Factor based on the font size to determine the max line spacing. (1 means line spacing can not exceed the font size)
+        /// </summary>
         public static float LineSpacingMaxFactor = 1f;
+        /// <summary>
+        /// Factor based on the font size to determine the max font spacing. (1 means font spacing can not exceed the font size)
+        /// </summary>
         public static float FontSpacingMaxFactor = 1f;
+        /// <summary>
+        /// Text Wrapping Functions that automatically calculate the font size based on the text and a rect use
+        /// this value to make sure the text fits into the rect. Lower values are more conservative, meaning the make sure
+        /// no text overflows but the rect might not be completely filled. Value range should stay between 0 - 1!
+        /// (Does not affect text drawing functions without word wrap functionality)
+        /// </summary>
+        public static float TextWrappingAutoFontSizeSafetyMargin = 0.65f;
 
         #region Pixel
         public static void DrawPixel(Vector2 pos, Raylib_CsLo.Color color) => Raylib.DrawPixelV(pos, color); 
@@ -1572,13 +1588,11 @@ namespace ShapeEngine.Lib
         }
 
 
-        //emphasis variants
-        //fix emphasis drawing
         public static void DrawTextWrappedChar(this Font font, string text, Rect rect, float fontSpacing, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
         {
             fontSpacing = MathF.Min(fontSpacing, font.baseSize * FontSpacingMaxFactor);
 
-            float safetyMargin = 0.85f;
+            float safetyMargin = TextWrappingAutoFontSizeSafetyMargin;
             Vector2 rectSize = rect.Size;
             Vector2 textSize = font.GetTextSize(text, font.baseSize, fontSpacing);
             float rectArea = rectSize.GetArea() * safetyMargin;
@@ -1589,34 +1603,36 @@ namespace ShapeEngine.Lib
             float fontSize = font.baseSize * f;
             fontSize = MathF.Max(fontSize, FontMinSize);
 
-            int curWordIndex = 0;
-
-            Vector2 pos = rect.TopLeft;
-            for (int i = 0; i < text.Length; i++)
-            {
-                var c = text[i];
-                var charBaseSize = font.GetCharBaseSize(c);
-                float glyphWidth = charBaseSize.X * f;
-                if (pos.X + glyphWidth >= rect.TopLeft.X + rectSize.X)
-                {
-                    pos.X = rect.TopLeft.X;
-                    pos.Y += fontSize;
-                }
-                if (c == ' ')
-                {
-                    curWordIndex++;
-                }
-                else
-                {
-                    var result = CheckWordEmphasis(curWordIndex, wordEmphasis);
-                    Raylib_CsLo.Color color = result.emphasisIndex < 0 ? baseEmphasis.Color : wordEmphasis[result.emphasisIndex].Color;
-
-                    font.DrawChar(c, fontSize, pos, color);
-                }
-                
-                pos.X += glyphWidth + fontSpacing;
-            }
+            DrawTextWrappedChar(font, text, rect, fontSize, fontSpacing, 0f, baseEmphasis, wordEmphasis);
+            //int curWordIndex = 0;
+            //
+            //Vector2 pos = rect.TopLeft;
+            //for (int i = 0; i < text.Length; i++)
+            //{
+            //    var c = text[i];
+            //    var charBaseSize = font.GetCharBaseSize(c);
+            //    float glyphWidth = charBaseSize.X * f;
+            //    if (pos.X + glyphWidth >= rect.TopLeft.X + rectSize.X)
+            //    {
+            //        pos.X = rect.TopLeft.X;
+            //        pos.Y += fontSize;
+            //    }
+            //    if (c == ' ')
+            //    {
+            //        curWordIndex++;
+            //    }
+            //    else
+            //    {
+            //        var result = CheckWordEmphasis(curWordIndex, wordEmphasis);
+            //        Raylib_CsLo.Color color = result.emphasisIndex < 0 ? baseEmphasis.Color : wordEmphasis[result.emphasisIndex].Color;
+            //
+            //        font.DrawChar(c, fontSize, pos, color);
+            //    }
+            //    
+            //    pos.X += glyphWidth + fontSpacing;
+            //}
         }
+        //fix emphasis drawing
         public static void DrawTextWrappedChar(this Font font, string text, Rect rect, float fontSize, float fontSpacing, float lineSpacing, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
         {
             fontSize = MathF.Max(fontSize, FontMinSize);
@@ -1659,7 +1675,7 @@ namespace ShapeEngine.Lib
         {
             fontSpacing = MathF.Min(fontSpacing, font.baseSize * FontSpacingMaxFactor);
 
-            float safetyMargin = 0.65f;
+            float safetyMargin = TextWrappingAutoFontSizeSafetyMargin;
             Vector2 rectSize = rect.Size;
             Vector2 textSize = font.GetTextSize(text, font.baseSize, fontSpacing);
             float rectArea = rectSize.GetArea() * safetyMargin;
