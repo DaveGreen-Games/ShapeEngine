@@ -41,7 +41,7 @@ namespace Examples.Scenes.ExampleScenes
 
         WordEmphasis baseEmphasis = new(WHITE);
         WordEmphasis skill = new(YELLOW, 4);
-        WordEmphasis bleed = new(RED, 10, 11, 22, 23);
+        WordEmphasis bleed = new(RED, TextEmphasisType.Line, TextEmphasisAlignement.Boxed, 10, 11, 22, 23);
         WordEmphasis numbers = new(new(150, 150, 200, 255), 13, 14, 20, 100);
 
         public TextWrapEmphasisExample()
@@ -169,7 +169,7 @@ namespace Examples.Scenes.ExampleScenes
                 }
                 else
                 {
-                    font.DrawTextWrappedWord(text, r, fontSpacing, WHITE);
+                    font.DrawTextWrappedWord(text, r, fontSpacing, baseEmphasis, skill, bleed, numbers);
                 }
             }
             else
@@ -180,7 +180,7 @@ namespace Examples.Scenes.ExampleScenes
                 }
                 else
                 {
-                    font.DrawTextWrappedWord(text, r, fontSize, fontSpacing, lineSpacing, WHITE);
+                    font.DrawTextWrappedWord(text, r, fontSize, fontSpacing, lineSpacing, baseEmphasis, skill, bleed, numbers);
                 }
             }
 

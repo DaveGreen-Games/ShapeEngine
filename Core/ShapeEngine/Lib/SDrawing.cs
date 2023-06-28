@@ -1,5 +1,6 @@
 ﻿
 using System.Numerics;
+using System.Reflection.Metadata.Ecma335;
 using Raylib_CsLo;
 using ShapeEngine.Core;
 using ShapeEngine.UI;
@@ -1668,6 +1669,9 @@ namespace ShapeEngine.Lib
             fontSize = MathF.Max(fontSize, FontMinSize);
             DrawTextWrappedWord(font, text, rect, fontSize, fontSpacing, 0f, baseEmphasis, wordEmphasis);
         }
+        
+        
+        /*
         public static void DrawTextWrappedWord(this Font font, string text, Rect rect, float fontSize, float fontSpacing, float lineSpacing, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
         {
             if (rect.height < FontMinSize) return;
@@ -1681,75 +1685,173 @@ namespace ShapeEngine.Lib
             float f = fontSize / (float)font.baseSize;
             Vector2 pos = rect.TopLeft;
 
-            string curLine = string.Empty;
+            int curWordIndex = 0;
             string curWord = string.Empty;
-            float curWidth = 0f;
-
-            Raylib_CsLo.Color color = baseEmphasis.Color;
+            string connectedWord = string.Empty;
+            float connectedWordWidth = 0f;
+            float curWordWidth = 0f;
+            float curLineWidth = 0f;
+            bool lineFirstWord = true;
 
             for (int i = 0; i < text.Length; i++)
             {
                 var c = text[i];
+                if (c == '\n') continue;
 
-                if (c != '\n')
+                var charBaseSize = font.GetCharBaseSize(c);
+                float glyphWidth = charBaseSize.X * f;
+
+                if (curLineWidth + curWordWidth + glyphWidth >= rect.width)//break line
                 {
-                    curWord += c;
-                    if (c == ' ')
+                    bool charBreak = false;
+                    if(lineFirstWord)//break line on first word
                     {
-                        curLine += curWord;
-                        curWord = "";
-                    }
-                    var charBaseSize = font.GetCharBaseSize(c);
-                    float glyphWidth = charBaseSize.X * f;
+                        var result = CheckWordEmphasis(curWordIndex, wordEmphasis);
+                        
+                        DrawWord(font,connectedWord + curWord, fontSize, fontSpacing, pos, result.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[result.emphasisIndex]);
 
-                    if (curWidth + glyphWidth >= rect.width)
-                    {
-                        if (curLine == string.Empty)//width was overshot within the first word
-                        {
-                            curWord = curWord.Remove(curWord.Length - 1);
-                            curLine = curWord;
-                            i--;
-                        }
-                        else i -= curWord.Length;
-
-                        curLine = curLine.Trim();
-                        Raylib.DrawTextEx(font, curLine, pos, fontSize, fontSpacing, color);
-
-                        curWidth = 0;
-
+                        connectedWord = string.Empty;
                         curWord = string.Empty;
-                        curLine = string.Empty;
-
-                        pos.Y += fontSize + lineSpacing;
-                        if (pos.Y + fontSize >= rect.Bottom)
-                        {
-                            return;
-                        }
+                        curWordWidth = 0f;
+                        connectedWordWidth = 0f;
+                        charBreak = true;
                     }
-                    else curWidth += glyphWidth + fontSpacing;
-                }
-                else
-                {
-                    curLine += curWord;
-                    curLine = curLine.Trim();
-                    Raylib.DrawTextEx(font, curLine, pos, fontSize, fontSpacing, color);
+                    else if(connectedWord != string.Empty)
+                    {
+                        var result = CheckWordEmphasis(curWordIndex, wordEmphasis);
 
-                    curWidth = 0f;
-                    curLine = string.Empty;
-                    curWord = string.Empty;
-
+                        DrawWord(font, connectedWord, fontSize, fontSpacing, pos, result.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[result.emphasisIndex]);
+                        connectedWord = string.Empty;
+                        curWordWidth -= connectedWordWidth;
+                        connectedWordWidth = 0f;
+                    }
                     pos.Y += fontSize + lineSpacing;
+                    pos.X = rect.TopLeft.X;
+                    curLineWidth = 0f;
+                    lineFirstWord = true;
                     if (pos.Y + fontSize >= rect.Bottom)
                     {
                         return;
                     }
+                    if (charBreak) continue;
                 }
+
+                curWordWidth += glyphWidth;
+                if (c == ' ')
+                {
+                    if (lineFirstWord) lineFirstWord = false;
+
+                    var result = CheckWordEmphasis(curWordIndex, wordEmphasis);
+
+                    if (result.emphasisIndex != -1 && result.connected)
+                    {
+                        curWord += c;//add the space
+                        connectedWord += curWord;
+                        connectedWordWidth += curWordWidth;
+                        curWord = string.Empty;
+                        curWordIndex++;
+                        continue;
+                    }
+                    DrawWord(font, connectedWord + curWord, fontSize, fontSpacing, pos, result.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[result.emphasisIndex]);
+
+                    connectedWord = string.Empty;
+                    curWord = string.Empty;
+                    curWordIndex++;
+                    pos.X += curWordWidth;
+                    curLineWidth += curWordWidth;
+                    curWordWidth = 0f;
+                    connectedWordWidth = 0f;
+                }
+                else curWord += c;
             }
 
+            //draw last word
+            var resultLast = CheckWordEmphasis(curWordIndex, wordEmphasis);
+            DrawWord(font, connectedWord + curWord, fontSize, fontSpacing, pos, resultLast.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[resultLast.emphasisIndex]);
 
-            curLine += curWord;
-            curLine = curLine.Trim();
-            Raylib.DrawTextEx(font, curLine, pos, fontSize, fontSpacing, color);
+        }
+        */
+
+        //figure out how to connect emphasis words
+        //emphasis words should be connected if possible,
+        //if connected word goes over width, draw previous words with emphasis and break line
+        //continue with cur word as normal in the next line
+        //connceted word should advance line width somehow so it is not treated as the first word in the line
+        
+        public static void DrawTextWrappedWord(this Font font, string text, Rect rect, float fontSize, float fontSpacing, float lineSpacing, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
+        {
+            if (rect.height < FontMinSize) return;
+
+            fontSize = MathF.Max(fontSize, FontMinSize);
+            fontSpacing = MathF.Min(fontSpacing, fontSize * FontSpacingMaxFactor);
+            lineSpacing = MathF.Min(lineSpacing, fontSize * LineSpacingMaxFactor);
+
+            if (rect.height < fontSize) fontSize *= (rect.height / fontSize);
+
+            float f = fontSize / (float)font.baseSize;
+            Vector2 pos = rect.TopLeft;
+
+            int curWordIndex = 0;
+            string curWord = string.Empty;
+            float curWordWidth = 0f;
+            float curLineWidth = 0f;
+
+            for (int i = 0; i < text.Length; i++)
+            {
+                var c = text[i];
+                if (c == '\n') continue;
+
+                var charBaseSize = font.GetCharBaseSize(c);
+                float glyphWidth = charBaseSize.X * f;
+
+                if (curLineWidth + curWordWidth + glyphWidth >= rect.width)//break line
+                {
+                    bool charBreak = false;
+                    if(curLineWidth <= 0f)//break line on first word
+                    {
+                        var result = CheckWordEmphasis(curWordIndex, wordEmphasis);
+
+                        DrawWord(font, curWord, fontSize, fontSpacing, pos, result.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[result.emphasisIndex]);
+
+                        curWord = string.Empty;
+                        curWordWidth = 0f;
+                        charBreak = true;
+                    }
+                    pos.Y += fontSize + lineSpacing;
+                    pos.X = rect.TopLeft.X;
+                    curLineWidth = 0f;
+                    if (pos.Y + fontSize >= rect.Bottom)
+                    {
+                        return;
+                    }
+                    if (charBreak) continue;
+                }
+
+                curWordWidth += glyphWidth;
+                if (c == ' ')
+                {
+                    var result = CheckWordEmphasis(curWordIndex, wordEmphasis);
+
+                    //if (result.emphasisIndex != -1 && result.connected)
+                    //{
+                    //    curWord += c;
+                    //    curWordIndex++;
+                    //    continue;
+                    //}
+                    DrawWord(font, curWord, fontSize, fontSpacing, pos, result.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[result.emphasisIndex]);
+
+                    curWord = string.Empty;
+                    curWordIndex++;
+                    pos.X += curWordWidth;
+                    curLineWidth += curWordWidth;
+                    curWordWidth = 0f;
+                }
+                else curWord += c;
+            }
+
+            //draw last word
+            var resultLast = CheckWordEmphasis(curWordIndex, wordEmphasis);
+            DrawWord(font, curWord, fontSize, fontSpacing, pos, resultLast.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[resultLast.emphasisIndex]);
 
         }
 
