@@ -113,7 +113,7 @@ namespace ShapeEngine.Lib
         /// no text overflows but the rect might not be completely filled. Value range should stay between 0 - 1!
         /// (Does not affect text drawing functions without word wrap functionality)
         /// </summary>
-        public static float TextWrappingAutoFontSizeSafetyMargin = 0.65f;
+        public static float TextWrappingAutoFontSizeSafetyMargin = 0.7f;
 
         #region Pixel
         public static void DrawPixel(Vector2 pos, Raylib_CsLo.Color color) => Raylib.DrawPixelV(pos, color); 
@@ -1632,45 +1632,94 @@ namespace ShapeEngine.Lib
             //    pos.X += glyphWidth + fontSpacing;
             //}
         }
-        //fix emphasis drawing
         public static void DrawTextWrappedChar(this Font font, string text, Rect rect, float fontSize, float fontSpacing, float lineSpacing, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
         {
+            if (rect.height < FontMinSize) return;
+
             fontSize = MathF.Max(fontSize, FontMinSize);
             fontSpacing = MathF.Min(fontSpacing, fontSize * FontSpacingMaxFactor);
             lineSpacing = MathF.Min(lineSpacing, fontSize * LineSpacingMaxFactor);
 
+            if (rect.height < fontSize) fontSize *= (rect.height / fontSize);
+
             float f = fontSize / (float)font.baseSize;
-            int curWordIndex = 0;
             Vector2 pos = rect.TopLeft;
+
+            int curWordIndex = 0;
+            string curWord = string.Empty;
+            string backlog = string.Empty;
+            float curWordWidth = 0f;
+            float curLineWidth = 0f;
+
             for (int i = 0; i < text.Length; i++)
             {
                 var c = text[i];
+                if (c == '\n') continue;
+
                 var charBaseSize = font.GetCharBaseSize(c);
                 float glyphWidth = charBaseSize.X * f;
-                if (pos.X + glyphWidth >= rect.Right)
+
+                if (curLineWidth + curWordWidth + glyphWidth >= rect.width)//break line
                 {
-                    pos.X = rect.TopLeft.X;
+                    var backlogResult = CheckWordEmphasis(curWordIndex, wordEmphasis);
+                    DrawWord(font, backlog + curWord, fontSize, fontSpacing, pos, backlogResult.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[backlogResult.emphasisIndex]);
+                    backlog = string.Empty;
+                    curWord = string.Empty;
+
                     pos.Y += fontSize + lineSpacing;
+                    pos.X = rect.TopLeft.X;
+                    curLineWidth = 0f;
+                    curWordWidth = 0f;
+
                     if (pos.Y + fontSize >= rect.Bottom)
                     {
                         return;
                     }
+
+                    if (c == ' ') curWordIndex++;
+                    else
+                    {
+                        curWord += c;
+                        curWordWidth += glyphWidth + fontSpacing;
+                    }
+
+                    continue;
                 }
+
+                curWordWidth += glyphWidth + fontSpacing;
                 if (c == ' ')
                 {
-                    curWordIndex++;
-                }
-                else
-                {
                     var result = CheckWordEmphasis(curWordIndex, wordEmphasis);
-                    Raylib_CsLo.Color color = result.emphasisIndex < 0 ? baseEmphasis.Color : wordEmphasis[result.emphasisIndex].Color;
 
-                    font.DrawChar(c, fontSize, pos, color);
+                    if (result.emphasisIndex != -1 && result.connected)
+                    {
+                        curLineWidth += curWordWidth;
+                        curWordWidth = 0f;
+
+                        curWord += c;
+                        backlog += curWord;
+                        curWord = string.Empty;
+
+                        curWordIndex++;
+                        continue;
+                    }
+                    DrawWord(font, backlog + curWord, fontSize, fontSpacing, pos, result.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[result.emphasisIndex]);
+
+                    curWord = string.Empty;
+                    backlog = string.Empty;
+                    curWordIndex++;
+                    curLineWidth += curWordWidth;
+                    pos.X = rect.TopLeft.X + curLineWidth; // curWordWidth;
+                    curWordWidth = 0f;
                 }
-                pos.X += glyphWidth + fontSpacing;
+                else curWord += c;
             }
+
+            //draw last word
+            var resultLast = CheckWordEmphasis(curWordIndex, wordEmphasis);
+            DrawWord(font, backlog + curWord, fontSize, fontSpacing, pos, resultLast.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[resultLast.emphasisIndex]);
+
         }
-        
         public static void DrawTextWrappedWord(this Font font, string text, Rect rect, float fontSpacing, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
         {
             fontSpacing = MathF.Min(fontSpacing, font.baseSize * FontSpacingMaxFactor);
@@ -1794,7 +1843,6 @@ namespace ShapeEngine.Lib
 
         }
 
-        
         
         public static void DrawTextWrappedChar(this Font font, string text, Rect rect, float fontSpacing, Raylib_CsLo.Color color)
         {
@@ -2473,6 +2521,45 @@ namespace ShapeEngine.Lib
 }
 
 
+/*
+        public static void DrawTextWrappedCharOld(this Font font, string text, Rect rect, float fontSize, float fontSpacing, float lineSpacing, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
+        {
+            fontSize = MathF.Max(fontSize, FontMinSize);
+            fontSpacing = MathF.Min(fontSpacing, fontSize * FontSpacingMaxFactor);
+            lineSpacing = MathF.Min(lineSpacing, fontSize * LineSpacingMaxFactor);
+
+            float f = fontSize / (float)font.baseSize;
+            int curWordIndex = 0;
+            Vector2 pos = rect.TopLeft;
+            for (int i = 0; i < text.Length; i++)
+            {
+                var c = text[i];
+                var charBaseSize = font.GetCharBaseSize(c);
+                float glyphWidth = charBaseSize.X * f;
+                if (pos.X + glyphWidth >= rect.Right)
+                {
+                    pos.X = rect.TopLeft.X;
+                    pos.Y += fontSize + lineSpacing;
+                    if (pos.Y + fontSize >= rect.Bottom)
+                    {
+                        return;
+                    }
+                }
+                if (c == ' ')
+                {
+                    curWordIndex++;
+                }
+                else
+                {
+                    var result = CheckWordEmphasis(curWordIndex, wordEmphasis);
+                    Raylib_CsLo.Color color = result.emphasisIndex < 0 ? baseEmphasis.Color : wordEmphasis[result.emphasisIndex].Color;
+
+                    font.DrawChar(c, fontSize, pos, color);
+                }
+                pos.X += glyphWidth + fontSpacing;
+            }
+        }
+        */
 
 
 /*
