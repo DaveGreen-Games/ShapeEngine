@@ -42,8 +42,8 @@ namespace Examples.Scenes.ExampleScenes
 
         public override void HandleInput(float dt)
         {
-            TextBoxInfo tb = new(text, caretIndex, textEntryActive);
-            TextBoxInfo updated = tb.UpdateTextBoxInfo(new TextBoxKeys());
+            TextBox tb = new(text, caretIndex, textEntryActive);
+            TextBox updated = tb.UpdateTextBox(new TextBoxKeys());
             if(textEntryActive && !updated.Active)
             {
                 if (updated.Text == string.Empty)
@@ -282,8 +282,12 @@ namespace Examples.Scenes.ExampleScenes
             }
             else
             {
-                TextCaret caret = new(caretIndex, 5f, RED);
-                font.DrawTextBox(r, "Write Your Text Here.", text.ToList<Char>(), fontSpacing, WHITE, new Vector2(0.5f), caret);
+                //TextCaret caret = new(caretIndex, 5f, RED);
+                //font.DrawTextBox(r, "Write Your Text Here.", text.ToList<Char>(), fontSpacing, WHITE, new Vector2(0.5f), caret);
+                Vector2 alignment = new Vector2(0.5f);
+                string textBoxText = text.Length <= 0 ? "Write your text here." : text;
+                font.DrawText(textBoxText, r, fontSpacing, alignment, WHITE);
+                font.DrawCaret(r, textBoxText, fontSpacing, alignment, caretIndex, 5f, RED);
 
                 string info = "TEXT ENTRY MODE ACTIVE | [ESC] Cancel | [Enter] Accept | [Del] Clear Text";
                 Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));

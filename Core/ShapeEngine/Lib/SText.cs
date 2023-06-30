@@ -5,14 +5,24 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace ShapeEngine.Lib
 {
-    public struct TextBoxInfo
+    //public struct TextBox
+    //{
+    //    public Font Font;
+    //    public string Text;
+    //    public int CaretIndex;
+    //    public float CaretWidth;
+    //    public TextBoxKeys Keys;
+    //    public Raylib_CsLo.Color TextColor;
+    //    public Raylib_CsLo.Color CaretColor;
+    //
+    //}
+    public struct TextBox
     {
         public string Text;
         public int CaretIndex;
         public bool Active;
         
-
-        public TextBoxInfo(string text, int caretIndex, bool Active)
+        public TextBox(string text, int caretIndex, bool Active)
         {
             this.Text = text;
             this.CaretIndex = caretIndex;
@@ -33,7 +43,7 @@ namespace ShapeEngine.Lib
     
     public static class SText
     {
-        public static TextBoxInfo UpdateTextBoxInfo(this TextBoxInfo textBox, TextBoxKeys keys)
+        public static TextBox UpdateTextBox(this TextBox textBox, TextBoxKeys keys)
         {
             if (!textBox.Active)
             {
@@ -86,6 +96,69 @@ namespace ShapeEngine.Lib
 
             
         }
+
+        public static TextBox IncreaseCaretIndex(this TextBox textBox) { return ChangeCaretIndex(textBox, 1); }
+        public static TextBox DecreaseCaretIndex(this TextBox textBox) { return ChangeCaretIndex(textBox, -1); }
+        public static TextBox ChangeCaretIndex(this TextBox textBox, int amount)
+        {
+            textBox.CaretIndex += amount;
+            if (textBox.CaretIndex < 0) textBox.CaretIndex = textBox.Text.Length;
+            else if (textBox.CaretIndex > textBox.Text.Length) textBox.CaretIndex = 0;
+            return textBox;
+        }
+        public static TextBox TextBackspace(this TextBox textBox)
+        {
+            if (textBox.CaretIndex < 0 || textBox.CaretIndex > textBox.Text.Length) return textBox;
+            if (textBox.Text.Length <= 0) return textBox;
+
+            if (textBox.CaretIndex > 0)
+            {
+                textBox.CaretIndex -= 1;
+                textBox.Text = textBox.Text.Remove(textBox.CaretIndex, 1);
+            }
+            else
+            {
+                textBox.Text = textBox.Text.Remove(textBox.CaretIndex, 1);
+            }
+            return textBox;
+        }
+        public static TextBox TextDelete(this TextBox textBox)
+        {
+            if (textBox.CaretIndex < 0 || textBox.CaretIndex > textBox.Text.Length) return textBox;
+            if (textBox.Text.Length <= 0) return textBox;
+
+            if (textBox.CaretIndex < textBox.Text.Length)
+            {
+                textBox.Text = textBox.Text.Remove(textBox.CaretIndex, 1);
+            }
+            else
+            {
+                textBox.CaretIndex -= 1;
+                textBox.Text = textBox.Text.Remove(textBox.CaretIndex, 1);
+            }
+            return textBox;
+        }
+        public static TextBox GetTextInput(this TextBox textBox)
+        {
+            List<Char> characters = textBox.Text.ToList();
+            int unicode = Raylib.GetCharPressed();
+            while (unicode != 0)
+            {
+                var c = (char)unicode;
+                if (textBox.CaretIndex < 0 || textBox.CaretIndex >= characters.Count) characters.Add(c);
+                else
+                {
+                    characters.Insert(textBox.CaretIndex, c);
+
+                }
+                textBox.CaretIndex++;
+                unicode = Raylib.GetCharPressed();
+            }
+            textBox.Text = new string(characters.ToArray());
+            return textBox;
+        }
+        
+
 
         public static int IncreaseCaretIndex(int caretIndex, int textLength) { return ChangeCaretIndex(caretIndex, 1, textLength); }
         public static int DecreaseCaretIndex(int caretIndex, int textLength) { return ChangeCaretIndex(caretIndex, -1, textLength); }

@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Numerics;
 using ShapeEngine.Lib;
 using ShapeEngine.Core;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace ShapeEngine.UI
 {
@@ -116,7 +117,14 @@ namespace ShapeEngine.UI
                     font.DrawText(commandHistory[0], historyRect, 1f, textAlignement, caretColor);
                     //commandHistory[0].Draw(historyRect, 1f, caretColor, font, textAlignement);
                 }
-                SDrawing.DrawTextBox(textBoxRect, "Enter Command...", textEntry.characters, 1f, font, textColor, true, textEntry.CaretPosition, 2f, caretColor, textAlignement);
+                //SDrawing.DrawTextBox(textBoxRect, "Enter Command...", textEntry.characters, 1f, font, textColor, true, textEntry.CaretPosition, 2f, caretColor, textAlignement);
+
+                
+                string textBoxText = textEntry.Text.Length <= 0 ? "Enter Command..." : textEntry.Text;
+                font.DrawText(textBoxText, textBoxRect, 1f, textAlignement, textColor);
+                font.DrawCaret(textBoxRect, textBoxText, 1f, textAlignement, textEntry.CaretPosition, 2f, caretColor);
+
+
                 consoleRect.DrawLines(4f, caretColor);
             }
         }
