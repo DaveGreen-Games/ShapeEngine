@@ -6,7 +6,8 @@ using System.Numerics;
 
 namespace Examples.Scenes.ExampleScenes
 {
-    public class TextScalingExample : ExampleScene
+    //test alignement!!!!
+    public class TextBoxExample : ExampleScene
     {
         Vector2 topLeft = new();
         Vector2 bottomRight = new();
@@ -20,7 +21,7 @@ namespace Examples.Scenes.ExampleScenes
         float pointRadius = 8f;
         float interactionRadius = 24f;
 
-        string text = "Longer Test Text.";
+        string text = "";
         string prevText = string.Empty;
         int fontSpacing = 1;
         int maxFontSpacing = 50;
@@ -28,9 +29,11 @@ namespace Examples.Scenes.ExampleScenes
         int fontIndex = 0;
         bool textEntryActive = false;
 
-        public TextScalingExample()
+        int caretIndex = 0;
+
+        public TextBoxExample()
         {
-            Title = "Text Scaling Example";
+            Title = "Text Box Example";
             var s = GAMELOOP.UI.GetSize();
             topLeft = s * new Vector2(0.1f, 0.1f);
             bottomRight = s * new Vector2(0.9f, 0.8f);
@@ -39,30 +42,30 @@ namespace Examples.Scenes.ExampleScenes
 
         public override void HandleInput(float dt)
         {
-            if (textEntryActive)
+            TextBoxInfo tb = new(text, caretIndex, textEntryActive);
+            TextBoxInfo updated = tb.UpdateTextBoxInfo(new TextBoxKeys());
+            if(textEntryActive && !updated.Active)
             {
-                if (IsKeyPressed(KeyboardKey.KEY_ESCAPE))
+                if (updated.Text == string.Empty)
                 {
-                    textEntryActive = false;
                     text = prevText;
                     prevText = string.Empty;
                 }
-                else if (IsKeyPressed(KeyboardKey.KEY_ENTER))
-                {
-                    textEntryActive = false;
-                    if (text.Length <= 0) text = prevText;
-                    prevText = string.Empty;
-                }
-                else if (IsKeyPressed(KeyboardKey.KEY_DELETE))
-                {
-                    text = string.Empty;
-                }
                 else
                 {
-                    text = SText.GetTextInput(text);
+                    prevText =  string.Empty;
+                    text = updated.Text;
+                    
                 }
             }
             else
+            {
+                text = updated.Text;
+            }
+
+            
+
+            if (!textEntryActive)
             {
                 if (IsKeyPressed(KeyboardKey.KEY_ENTER))
                 {
@@ -106,7 +109,97 @@ namespace Examples.Scenes.ExampleScenes
 
                 base.HandleInput(dt);
             }
-            
+
+            //text = updated.Text;
+            caretIndex = updated.CaretIndex;
+            textEntryActive = updated.Active;
+
+            //if (textEntryActive)
+            //{
+            //    if (IsKeyPressed(KeyboardKey.KEY_ESCAPE))
+            //    {
+            //        textEntryActive = false;
+            //        text = prevText;
+            //        prevText = string.Empty;
+            //    }
+            //    else if (IsKeyPressed(KeyboardKey.KEY_ENTER))
+            //    {
+            //        textEntryActive = false;
+            //        if (text.Length <= 0) text = prevText;
+            //        prevText = string.Empty;
+            //    }
+            //    else if (IsKeyPressed(KeyboardKey.KEY_DELETE))
+            //    {
+            //        var info = SText.TextDelete(text, caretIndex);
+            //        text = info.text;
+            //        caretIndex = info.caretIndex;
+            //    }
+            //    else if (IsKeyPressed(KeyboardKey.KEY_BACKSPACE))
+            //    {
+            //        var info = SText.TextBackspace(text, caretIndex);
+            //        text = info.text;
+            //        caretIndex = info.caretIndex;
+            //    }
+            //    else if (IsKeyPressed(KeyboardKey.KEY_LEFT))
+            //    {
+            //        caretIndex = SText.DecreaseCaretIndex(caretIndex, text.Length);
+            //    }
+            //    else if (IsKeyPressed(KeyboardKey.KEY_RIGHT))
+            //    {
+            //        caretIndex = SText.IncreaseCaretIndex(caretIndex, text.Length);
+            //    }
+            //    else
+            //    {
+            //        var info = SText.GetTextInput(text, caretIndex);
+            //        text = info.text;
+            //        caretIndex = info.newCaretPosition;
+            //    }
+            //}
+            //else
+            //{
+            //    if (IsKeyPressed(KeyboardKey.KEY_ENTER))
+            //    {
+            //        textEntryActive = true;
+            //        draggingBottomRight = false;
+            //        draggingTopLeft = false;
+            //        mouseInsideBottomRight = false;
+            //        mouseInsideTopLeft = false;
+            //        prevText = text;
+            //        //text = string.Empty;
+            //        return;
+            //    }
+            //    if (IsKeyPressed(KeyboardKey.KEY_W)) NextFont();
+            //
+            //    if (IsKeyPressed(KeyboardKey.KEY_D)) ChangeFontSpacing(1);
+            //    else if (IsKeyPressed(KeyboardKey.KEY_A)) ChangeFontSpacing(-1);
+            //
+            //    if (mouseInsideTopLeft)
+            //    {
+            //        if (draggingTopLeft)
+            //        {
+            //            if (IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT)) draggingTopLeft = false;
+            //        }
+            //        else
+            //        {
+            //            if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)) draggingTopLeft = true;
+            //        }
+            //
+            //    }
+            //    else if (mouseInsideBottomRight)
+            //    {
+            //        if (draggingBottomRight)
+            //        {
+            //            if (IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT)) draggingBottomRight = false;
+            //        }
+            //        else
+            //        {
+            //            if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)) draggingBottomRight = true;
+            //        }
+            //    }
+            //
+            //    base.HandleInput(dt);
+            //}
+
         }
         public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
@@ -135,11 +228,18 @@ namespace Examples.Scenes.ExampleScenes
 
             Rect r = new(topLeft, bottomRight);
             r.DrawLines(8f, new Color(255, 0, 0, 150));
-            font.DrawText(text, r, fontSpacing, new Vector2(0.5f, 0.5f), WHITE);
+            
+            
 
 
             if (!textEntryActive)
             {
+                if(text == string.Empty)
+                {
+                    font.DrawText("Press [Enter] to write", r, fontSpacing, new Vector2(0.5f, 0.5f), WHITE);
+                }
+                else font.DrawText(text, r, fontSpacing, new Vector2(0.5f, 0.5f), WHITE);
+
                 Circle topLeftPoint = new(topLeft, pointRadius);
                 Circle topLeftInteractionCircle = new(topLeft, interactionRadius);
                 if (draggingTopLeft)
@@ -182,12 +282,19 @@ namespace Examples.Scenes.ExampleScenes
             }
             else
             {
+                TextCaret caret = new(caretIndex, 5f, RED);
+                font.DrawTextBox(r, "Write Your Text Here.", text.ToList<Char>(), fontSpacing, WHITE, new Vector2(0.5f), caret);
+
                 string info = "TEXT ENTRY MODE ACTIVE | [ESC] Cancel | [Enter] Accept | [Del] Clear Text";
                 Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
                 font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), YELLOW);
+
+                string caretIndexInfo = String.Format("Index: {0}", caretIndex);
+                Rect caretIndexInfoRect = new(uiSize * new Vector2(0.5f, 0.95f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
+                font.DrawText(caretIndexInfo, caretIndexInfoRect, 4f, new Vector2(0.5f, 0.5f), RED);
             }
 
-            
+
         }
         private void ChangeFontSpacing(int amount)
         {

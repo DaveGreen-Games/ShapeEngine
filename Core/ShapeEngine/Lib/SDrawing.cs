@@ -4,9 +4,11 @@ using System.Reflection.Metadata.Ecma335;
 using Raylib_CsLo;
 using ShapeEngine.Core;
 using ShapeEngine.UI;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace ShapeEngine.Lib
 {
+
     public enum TextEmphasisType
     {
         None = 0,
@@ -92,6 +94,28 @@ namespace ShapeEngine.Lib
         }
     }
 
+    public struct TextCaret
+    {
+        public bool Draw = true;
+        public int Index;
+        public float Width;
+        public Raylib_CsLo.Color Color = WHITE;
+
+        public TextCaret()
+        {
+            Draw = false;
+            Index = 0;
+            Width = 0f;
+            Color = WHITE;
+        }
+        public TextCaret(int indexPosition, float width, Raylib_CsLo.Color color)
+        {
+            Draw = true;
+            Index = indexPosition;
+            Width = width;
+            Color = color;
+        }
+    }
 
     public static class SDrawing
     {
@@ -1998,10 +2022,35 @@ namespace ShapeEngine.Lib
             Raylib.DrawTextEx(font, curLine, pos, fontSize, fontSpacing, color);
 
         }
-        
-        
 
-        //fix and overhaul
+
+        public static void DrawTextBox(this Font font, Rect rect, string emptyText, List<char> chars, float fontSpacing, Raylib_CsLo.Color textColor, Vector2 textAlignement, TextCaret caret)
+        {
+            //fix alignement
+            //alignement = new(0, 0.5f);
+            bool empty = chars.Count <= 0;
+            string text = empty ? emptyText : String.Concat(chars);
+            
+            SDrawing.DrawText(font, text, rect, fontSpacing, textAlignement, textColor);
+
+            if (caret.Draw)
+            {
+                var info = font.GetDynamicFontSize(text, rect.Size, fontSpacing);
+                Vector2 uiPos = rect.GetPoint(textAlignement);
+                Vector2 topLeft = uiPos - textAlignement * info.textSize;
+
+                string caretText = String.Concat(chars.GetRange(0, empty ? 0 : caret.Index));
+                Vector2 caretTextSize = SDrawing.GetTextSize(font, caretText, info.fontSize, info.fontSpacing); // MeasureTextEx(font, caretText, info.fontSize, info.fontSpacing);
+
+                Vector2 caretTop = topLeft + new Vector2(caretTextSize.X + fontSpacing * 0.5f, 0f);
+                Vector2 caretBottom = topLeft + new Vector2(caretTextSize.X + fontSpacing * 0.5f, info.textSize.Y);
+                DrawLineEx(caretTop, caretBottom, caret.Width, caret.Color);
+            }
+        }
+
+
+
+        //delete
         public static void DrawTextBox(this Rect rect, string emptyText, List<char> chars, float fontSpacing, Font font, Raylib_CsLo.Color textColor, bool drawCaret, int caretPosition, float caretWidth, Raylib_CsLo.Color caretColor, Vector2 textAlignement)
         {
             //fix alignement

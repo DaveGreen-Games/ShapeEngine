@@ -39,6 +39,7 @@ namespace Examples.Scenes
             examples.Add(new WordEmphasisStaticExample());
             examples.Add(new TextEmphasisExample());
             examples.Add(new TextRotationExample());
+            examples.Add(new TextBoxExample()); 
             titleFont = GAMELOOP.FontDefault; // GAMELOOP.GetFont(GameloopExamples.FONT_IndieFlowerRegular);
 
             SetupButtons();

@@ -65,7 +65,7 @@ namespace Examples.Scenes.ExampleScenes
                 }
                 else
                 {
-                    text = SUtils.GetTextInput(text);
+                    text = SText.GetTextInput(text);
                 }
             }
             else
