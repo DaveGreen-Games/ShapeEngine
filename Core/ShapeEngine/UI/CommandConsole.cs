@@ -122,7 +122,7 @@ namespace ShapeEngine.UI
                 
                 string textBoxText = textEntry.Text.Length <= 0 ? "Enter Command..." : textEntry.Text;
                 font.DrawText(textBoxText, textBoxRect, 1f, textAlignement, textColor);
-                font.DrawCaret(textBoxRect, textBoxText, 1f, textAlignement, textEntry.CaretPosition, 2f, caretColor);
+                font.DrawCaret(textBoxText, textBoxRect, 1f, textAlignement, textEntry.CaretPosition, 2f, caretColor);
 
 
                 consoleRect.DrawLines(4f, caretColor);

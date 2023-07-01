@@ -2026,7 +2026,7 @@ namespace ShapeEngine.Lib
         }
 
 
-        public static void DrawCaret(this Font font, Rect rect, string text, float fontSpacing, Vector2 textAlignment, int caretIndex, float caretWidth, Raylib_CsLo.Color caretColor)
+        public static void DrawCaret(this Font font, string text, Rect rect, float fontSpacing, Vector2 textAlignment, int caretIndex, float caretWidth, Raylib_CsLo.Color caretColor)
         {
             var info = font.GetDynamicFontSize(text, rect.Size, fontSpacing);
             Vector2 uiPos = rect.GetPoint(textAlignment);
@@ -2040,6 +2040,17 @@ namespace ShapeEngine.Lib
             //DrawLineEx(caretTop, caretBottom, caretWidth, caretColor);
 
         }
+        public static void DrawCaret(this Font font, string text, Rect rect, float fontSize, float fontSpacing, Vector2 textAlignment, int caretIndex, float caretWidth, Raylib_CsLo.Color caretColor)
+        {
+            Vector2 uiPos = rect.GetPoint(textAlignment);
+            Vector2 topLeft = uiPos - textAlignment * GetTextSize(font, text, fontSize, fontSpacing);
+            DrawCaret(font, text, topLeft, fontSize, fontSpacing, caretIndex, caretWidth, caretColor);
+        }
+        public static void DrawCaret(this Font font, string text, float fontSize, float fontSpacing, Vector2 pos, Vector2 textAlignment, int caretIndex, float caretWidth, Raylib_CsLo.Color caretColor)
+        {
+            Vector2 topLeft = pos - textAlignment * GetTextSize(font, text, fontSize, fontSpacing);
+            DrawCaret(font, text, topLeft, fontSize, fontSpacing, caretIndex, caretWidth, caretColor);
+        }
         public static void DrawCaret(this Font font, string text, Vector2 topLeft, float fontSize, float fontSpacing, int caretIndex, float caretWidth, Raylib_CsLo.Color caretColor)
         {
             string caretText = text.Substring(0, caretIndex);
@@ -2049,11 +2060,24 @@ namespace ShapeEngine.Lib
             Vector2 caretBottom = topLeft + new Vector2(caretTextSize.X + fontSpacing * 0.5f, fontSize);
             DrawLineEx(caretTop, caretBottom, caretWidth, caretColor);
         }
-        public static void DrawTextBox(this Font font, Rect rect, string emptyText, string text, float fontSpacing, Vector2 textAlignment, Raylib_CsLo.Color textColor, int caretIndex, float caretWidth, Raylib_CsLo.Color caretColor)
+        
+        public static void DrawTextBox(this Font font, string emptyText, string text, Rect rect, float fontSpacing, Vector2 textAlignment, Raylib_CsLo.Color textColor, int caretIndex, float caretWidth, Raylib_CsLo.Color caretColor)
         {
             string textBoxText = text.Length <= 0 ? emptyText : text;
             font.DrawText(textBoxText, rect, fontSpacing, textAlignment, textColor);
-            font.DrawCaret(rect, textBoxText, fontSpacing, textAlignment, caretIndex, caretWidth, caretColor);
+            font.DrawCaret(textBoxText, rect, fontSpacing, textAlignment, caretIndex, caretWidth, caretColor);
+        }
+        public static void DrawTextBox(this Font font, string emptyText, string text, Rect rect, float fontSize, float fontSpacing, Vector2 textAlignment, Raylib_CsLo.Color textColor, int caretIndex, float caretWidth, Raylib_CsLo.Color caretColor)
+        {
+            string textBoxText = text.Length <= 0 ? emptyText : text;
+            font.DrawText(textBoxText, fontSize, fontSpacing, rect.GetPoint(textAlignment), textAlignment, textColor);
+            font.DrawCaret(textBoxText, fontSize, fontSpacing, rect.GetPoint(textAlignment), textAlignment, caretIndex, caretWidth, caretColor);
+        }
+        public static void DrawTextBox(this Font font, string emptyText, string text, float fontSize, float fontSpacing, Vector2 pos, Vector2 textAlignment, Raylib_CsLo.Color textColor, int caretIndex, float caretWidth, Raylib_CsLo.Color caretColor)
+        {
+            string textBoxText = text.Length <= 0 ? emptyText : text;
+            font.DrawText(textBoxText, fontSize, fontSpacing,  pos, textAlignment, textColor);
+            font.DrawCaret(textBoxText, fontSize, fontSpacing, pos, textAlignment, caretIndex, caretWidth, caretColor);
         }
         /*
         public static void DrawTextBox(this Font font, Rect rect, string emptyText, List<char> chars, float fontSpacing, Raylib_CsLo.Color textColor, Vector2 textAlignement, TextCaret caret)

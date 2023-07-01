@@ -31,6 +31,9 @@ namespace Examples.Scenes.ExampleScenes
 
         int caretIndex = 0;
 
+        Vector2 curAlignement = new(0f);
+        int curAlignementIndex = 0;
+
         public TextBoxExample()
         {
             Title = "Text Box Example";
@@ -82,7 +85,7 @@ namespace Examples.Scenes.ExampleScenes
 
                 if (IsKeyPressed(KeyboardKey.KEY_D)) ChangeFontSpacing(1);
                 else if (IsKeyPressed(KeyboardKey.KEY_A)) ChangeFontSpacing(-1);
-
+                if (IsKeyPressed(KeyboardKey.KEY_S)) NextAlignement();
                 if (mouseInsideTopLeft)
                 {
                     if (draggingTopLeft)
@@ -236,9 +239,9 @@ namespace Examples.Scenes.ExampleScenes
             {
                 if(text == string.Empty)
                 {
-                    font.DrawText("Press [Enter] to write", r, fontSpacing, new Vector2(0.5f, 0.5f), WHITE);
+                    font.DrawText("Press [Enter] to write", 50, fontSpacing, r.GetPoint(curAlignement), curAlignement, WHITE);
                 }
-                else font.DrawText(text, r, fontSpacing, new Vector2(0.5f, 0.5f), WHITE);
+                else font.DrawText(text, 50, fontSpacing, r.GetPoint(curAlignement), curAlignement, WHITE);
 
                 Circle topLeftPoint = new(topLeft, pointRadius);
                 Circle topLeftInteractionCircle = new(topLeft, interactionRadius);
@@ -279,22 +282,25 @@ namespace Examples.Scenes.ExampleScenes
                 string info = String.Format("[W] Font: {0} | [A/D] Font Spacing: {1} | [Enter] Write Custom Text", GAMELOOP.GetFontName(fontIndex), fontSpacing);
                 Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
                 font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), YELLOW);
+
+                string alignmentInfo = String.Format("[S] Alignment: {0}", curAlignement);
+                Rect alignmentInfoRect = new(uiSize * new Vector2(0.5f, 0.94f), uiSize * new Vector2(0.5f, 0.07f), new Vector2(0.5f, 1f));
+                font.DrawText(alignmentInfo, alignmentInfoRect, 4f, new Vector2(0.5f, 0.5f), RED);
             }
             else
             {
                 //TextCaret caret = new(caretIndex, 5f, RED);
                 //font.DrawTextBox(r, "Write Your Text Here.", text.ToList<Char>(), fontSpacing, WHITE, new Vector2(0.5f), caret);
-                Vector2 alignment = new Vector2(0.5f);
                 string textBoxText = text.Length <= 0 ? "Write your text here." : text;
-                font.DrawText(textBoxText, r, fontSpacing, alignment, WHITE);
-                font.DrawCaret(r, textBoxText, fontSpacing, alignment, caretIndex, 5f, RED);
+                font.DrawText(textBoxText, 50, fontSpacing, r.GetPoint(curAlignement), curAlignement, WHITE);
+                font.DrawCaret(textBoxText, r, 50, fontSpacing, curAlignement, caretIndex, 5f, RED);
 
                 string info = "TEXT ENTRY MODE ACTIVE | [ESC] Cancel | [Enter] Accept | [Del] Clear Text";
                 Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
                 font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), YELLOW);
 
-                string caretIndexInfo = String.Format("Index: {0}", caretIndex);
-                Rect caretIndexInfoRect = new(uiSize * new Vector2(0.5f, 0.95f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
+                string caretIndexInfo = String.Format("[S] Alignment: {0} | Caret Position: {1}", curAlignement, caretIndex);
+                Rect caretIndexInfoRect = new(uiSize * new Vector2(0.5f, 0.94f), uiSize * new Vector2(0.5f, 0.07f), new Vector2(0.5f, 1f));
                 font.DrawText(caretIndexInfo, caretIndexInfoRect, 4f, new Vector2(0.5f, 0.5f), RED);
             }
 
@@ -319,6 +325,23 @@ namespace Examples.Scenes.ExampleScenes
             fontIndex--;
             if (fontIndex < 0) fontIndex = fontCount - 1;
             font = GAMELOOP.GetFont(fontIndex);
+        }
+
+        private void NextAlignement()
+        {
+            curAlignementIndex++;
+            if (curAlignementIndex > 8) curAlignementIndex = 0;
+            else if (curAlignementIndex < 0) curAlignementIndex = 8;
+
+            if (curAlignementIndex == 0) curAlignement = new Vector2(0f); //top left
+            else if (curAlignementIndex == 1) curAlignement = new Vector2(0.5f, 0f); //top
+            else if (curAlignementIndex == 2) curAlignement = new Vector2(1f, 0f); //top right
+            else if (curAlignementIndex == 3) curAlignement = new Vector2(1f, 0.5f); //right
+            else if (curAlignementIndex == 4) curAlignement = new Vector2(1f, 1f); //bottom right
+            else if (curAlignementIndex == 5) curAlignement = new Vector2(0.5f, 1f); //bottom
+            else if (curAlignementIndex == 6) curAlignement = new Vector2(0f, 1f); //bottom left
+            else if (curAlignementIndex == 7) curAlignement = new Vector2(0f, 0.5f); //left
+            else if (curAlignementIndex == 8) curAlignement = new Vector2(0.5f, 0.5f); //center
         }
     }
 
