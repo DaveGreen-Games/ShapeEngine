@@ -14,6 +14,7 @@ namespace Examples
         public static readonly int PromptRegular = 6;
         public static readonly int PromptThin = 7;
         public static readonly int TekoMedium = 8;
+        public static readonly int JetBrains = 9;
     }
 
 }

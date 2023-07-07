@@ -32,7 +32,7 @@ namespace Examples
             fonts.Add(FontIDs.PromptRegular, ContentLoader.LoadFont("fonts/Prompt-Regular.ttf", 200));
             fonts.Add(FontIDs.PromptThin, ContentLoader.LoadFont("fonts/Prompt-Thin.ttf", 200));
             fonts.Add(FontIDs.TekoMedium, ContentLoader.LoadFont("fonts/Teko-Medium.ttf", 200));
-
+            fonts.Add(FontIDs.JetBrains, ContentLoader.LoadFont("fonts/JetBrainsMono.ttf", 500));
             //fontNames.Add("Abel Regular");
             fontNames.Add("Gruppo Regular");
             fontNames.Add("Indie Flower Regular");
@@ -43,8 +43,9 @@ namespace Examples
             fontNames.Add("Prompt Regular");
             fontNames.Add("Prompt Thin");
             fontNames.Add("Teko Medium");
+            fontNames.Add("Jet Brains Mono");
 
-            FontDefault = GetFont(FontIDs.OrbitRegular);
+            FontDefault = GetFont(FontIDs.JetBrains);
 
         }
         protected override void UnloadContent()
