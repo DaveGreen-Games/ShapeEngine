@@ -39,10 +39,10 @@ namespace Examples.Scenes.ExampleScenes
         bool textEntryActive = false;
         string prevText = string.Empty;
 
-        WordEmphasis baseEmphasis = new(WHITE);
-        WordEmphasis skill = new(YELLOW, 4);
-        WordEmphasis bleed = new(RED, TextEmphasisType.Line, TextEmphasisAlignement.Boxed, 10, 11, 22, 23);
-        WordEmphasis numbers = new(new(150, 150, 200, 255), 13, 14, 20, 100);
+        WordEmphasis baseEmphasis = new(ColorHighlight1);
+        WordEmphasis skill = new(SColor.HexToColor("E7A09B"), 4);
+        WordEmphasis bleed = new(ColorHighlight2, TextEmphasisType.Line, TextEmphasisAlignement.Boxed, 10, 11, 22, 23);
+        WordEmphasis numbers = new(ColorLight, 13, 14, 20, 100);
 
         public TextWrapEmphasisExample()
         {
@@ -156,10 +156,10 @@ namespace Examples.Scenes.ExampleScenes
         }
         public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
         {
-
+            base.DrawUI(uiSize, mousePosUI);
 
             Rect r = new(topLeft, bottomRight);
-            r.DrawLines(8f, new Color(255, 0, 0, 150));
+            r.DrawLines(6f, ColorMedium);
             if (autoSize)
             {
                 if (wrapModeChar)
@@ -201,30 +201,30 @@ namespace Examples.Scenes.ExampleScenes
                 }
                 else if (mouseInsideTopLeft)
                 {
-                    topLeftPoint.Draw(WHITE);
+                    topLeftPoint.Draw(ColorMedium);
                     topLeftInteractionCircle.radius *= 2f;
-                    topLeftInteractionCircle.DrawLines(2f, GREEN, 4f);
+                    topLeftInteractionCircle.DrawLines(2f, ColorHighlight2, 4f);
                 }
                 else
                 {
-                    topLeftPoint.Draw(WHITE);
-                    topLeftInteractionCircle.DrawLines(2f, WHITE, 4f);
+                    topLeftPoint.Draw(ColorMedium);
+                    topLeftInteractionCircle.DrawLines(2f, ColorMedium, 4f);
                 }
 
                 if (draggingBottomRight)
                 {
-                    bottomRightInteractionCircle.Draw(GREEN);
+                    bottomRightInteractionCircle.Draw(ColorHighlight2);
                 }
                 else if (mouseInsideBottomRight)
                 {
-                    bottomRightPoint.Draw(WHITE);
+                    bottomRightPoint.Draw(ColorMedium);
                     bottomRightInteractionCircle.radius *= 2f;
                     bottomRightInteractionCircle.DrawLines(2f, GREEN, 4f);
                 }
                 else
                 {
-                    bottomRightPoint.Draw(WHITE);
-                    bottomRightInteractionCircle.DrawLines(2f, WHITE, 4f);
+                    bottomRightPoint.Draw(ColorMedium);
+                    bottomRightInteractionCircle.DrawLines(2f, ColorMedium, 4f);
                 }
 
                 string textWrapMode = wrapModeChar ? "Char" : "Word";
@@ -232,18 +232,18 @@ namespace Examples.Scenes.ExampleScenes
                 string modeInfo = String.Format("[Q] Mode: {0} | [E] Auto Size: {1} | [Enter] Write Custom Text", textWrapMode, autoSizeMode);
                 string fontInfo = String.Format("[W] Font: {0} | [1]Font Size: {1} | [2]Font Spacing {2} | Line Spacing {3}", GAMELOOP.GetFontName(fontIndex), fontSize, fontSpacing, lineSpacing);
 
-                Rect modeInfoRect = new(uiSize * new Vector2(0.5f, 0.94f), uiSize * new Vector2(0.4f, 0.1f), new Vector2(0.5f, 1f));
-                font.DrawText(modeInfo, modeInfoRect, 4f, new Vector2(0.5f, 0.5f), RED);
+                Rect modeInfoRect = new(uiSize * new Vector2(0.5f, 0.94f), uiSize * new Vector2(0.6f, 0.12f), new Vector2(0.5f, 1f));
+                font.DrawText(modeInfo, modeInfoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
 
                 Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.1f), new Vector2(0.5f, 1f));
-                font.DrawText(fontInfo, infoRect, 4f, new Vector2(0.5f, 0.5f), YELLOW);
+                font.DrawText(fontInfo, infoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
             }
 
             else
             {
                 string info = "TEXT ENTRY MODE ACTIVE | [ESC] Cancel | [Enter] Accept | [Del] Clear Text";
                 Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
-                font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), YELLOW);
+                font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
             }
 
         }

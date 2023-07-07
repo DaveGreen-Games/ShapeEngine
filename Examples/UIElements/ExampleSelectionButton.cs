@@ -53,17 +53,17 @@ namespace Examples.UIElements
             if (Selected)
             {
                 //r.DrawLines(4f, GREEN);
-                font.DrawText(text, r, 5f, new(0f), GREEN);
+                font.DrawText(text, r, 5f, new(0f), ExampleScene.ColorHighlight2);
             }
             else if (Pressed)
             {
                 //r.DrawLines(4f, YELLOW);
-                font.DrawText(text, r, 5f, new(0f), YELLOW);
+                font.DrawText(text, r, 5f, new(0f), ExampleScene.ColorHighlight1);
             }
             else
             {
                 //r.DrawLines(4f, WHITE);
-                font.DrawText(text, r, 5f, new(0f), WHITE);
+                font.DrawText(text, r, 5f, new(0f), ExampleScene.ColorHighlight1);
             }
 
 

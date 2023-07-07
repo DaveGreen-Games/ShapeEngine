@@ -44,7 +44,7 @@ namespace Examples
             fontNames.Add("Prompt Thin");
             fontNames.Add("Teko Medium");
 
-            FontDefault = GetFont(FontIDs.IndieFlowerRegular);
+            FontDefault = GetFont(FontIDs.OrbitRegular);
 
         }
         protected override void UnloadContent()

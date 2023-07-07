@@ -227,10 +227,10 @@ namespace Examples.Scenes.ExampleScenes
         }
         public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
         {
-
+            base.DrawUI(uiSize, mousePosUI);
 
             Rect r = new(topLeft, bottomRight);
-            r.DrawLines(8f, new Color(255, 0, 0, 150));
+            r.DrawLines(6f, ColorMedium);
             
             
 
@@ -239,69 +239,69 @@ namespace Examples.Scenes.ExampleScenes
             {
                 if(text == string.Empty)
                 {
-                    font.DrawText("Press [Enter] to write", 50, fontSpacing, r.GetPoint(curAlignement), curAlignement, WHITE);
+                    font.DrawText("Press [Enter] to write", 50, fontSpacing, r.GetPoint(curAlignement), curAlignement, ColorHighlight1);
                 }
-                else font.DrawText(text, 50, fontSpacing, r.GetPoint(curAlignement), curAlignement, WHITE);
+                else font.DrawText(text, 50, fontSpacing, r.GetPoint(curAlignement), curAlignement, ColorHighlight1);
 
                 Circle topLeftPoint = new(topLeft, pointRadius);
                 Circle topLeftInteractionCircle = new(topLeft, interactionRadius);
                 if (draggingTopLeft)
                 {
-                    topLeftInteractionCircle.Draw(GREEN);
+                    topLeftInteractionCircle.Draw(ColorHighlight2);
                 }
                 else if (mouseInsideTopLeft)
                 {
-                    topLeftPoint.Draw(WHITE);
+                    topLeftPoint.Draw(ColorMedium);
                     topLeftInteractionCircle.radius *= 2f;
-                    topLeftInteractionCircle.DrawLines(2f, GREEN, 4f);
+                    topLeftInteractionCircle.DrawLines(2f, ColorHighlight2, 4f);
                 }
                 else
                 {
-                    topLeftPoint.Draw(WHITE);
-                    topLeftInteractionCircle.DrawLines(2f, WHITE, 4f);
+                    topLeftPoint.Draw(ColorMedium);
+                    topLeftInteractionCircle.DrawLines(2f, ColorMedium, 4f);
                 }
 
                 Circle bottomRightPoint = new(bottomRight, pointRadius);
                 Circle bottomRightInteractionCircle = new(bottomRight, interactionRadius);
                 if (draggingBottomRight)
                 {
-                    bottomRightInteractionCircle.Draw(GREEN);
+                    bottomRightInteractionCircle.Draw(ColorHighlight2);
                 }
                 else if (mouseInsideBottomRight)
                 {
-                    bottomRightPoint.Draw(WHITE);
+                    bottomRightPoint.Draw(ColorMedium);
                     bottomRightInteractionCircle.radius *= 2f;
-                    bottomRightInteractionCircle.DrawLines(2f, GREEN, 4f);
+                    bottomRightInteractionCircle.DrawLines(2f, ColorHighlight2, 4f);
                 }
                 else
                 {
-                    bottomRightPoint.Draw(WHITE);
-                    bottomRightInteractionCircle.DrawLines(2f, WHITE, 4f);
+                    bottomRightPoint.Draw(ColorMedium);
+                    bottomRightInteractionCircle.DrawLines(2f, ColorMedium, 4f);
                 }
 
                 string info = String.Format("[W] Font: {0} | [A/D] Font Spacing: {1} | [Enter] Write Custom Text", GAMELOOP.GetFontName(fontIndex), fontSpacing);
                 Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
-                font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), YELLOW);
+                font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
 
                 string alignmentInfo = String.Format("[S] Alignment: {0}", curAlignement);
-                Rect alignmentInfoRect = new(uiSize * new Vector2(0.5f, 0.94f), uiSize * new Vector2(0.5f, 0.07f), new Vector2(0.5f, 1f));
-                font.DrawText(alignmentInfo, alignmentInfoRect, 4f, new Vector2(0.5f, 0.5f), RED);
+                Rect alignmentInfoRect = new(uiSize * new Vector2(0.5f, 0.94f), uiSize * new Vector2(0.6f, 0.06f), new Vector2(0.5f, 1f));
+                font.DrawText(alignmentInfo, alignmentInfoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
             }
             else
             {
                 //TextCaret caret = new(caretIndex, 5f, RED);
                 //font.DrawTextBox(r, "Write Your Text Here.", text.ToList<Char>(), fontSpacing, WHITE, new Vector2(0.5f), caret);
                 string textBoxText = text.Length <= 0 ? "Write your text here." : text;
-                font.DrawText(textBoxText, 50, fontSpacing, r.GetPoint(curAlignement), curAlignement, WHITE);
-                font.DrawCaret(textBoxText, r, 50, fontSpacing, curAlignement, caretIndex, 5f, RED);
+                font.DrawText(textBoxText, 50, fontSpacing, r.GetPoint(curAlignement), curAlignement, ColorLight);
+                font.DrawCaret(textBoxText, r, 50, fontSpacing, curAlignement, caretIndex, 5f, ColorHighlight2);
 
                 string info = "TEXT ENTRY MODE ACTIVE | [ESC] Cancel | [Enter] Accept | [Del] Clear Text";
                 Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
-                font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), YELLOW);
+                font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
 
-                string caretIndexInfo = String.Format("[S] Alignment: {0} | Caret Position: {1}", curAlignement, caretIndex);
-                Rect caretIndexInfoRect = new(uiSize * new Vector2(0.5f, 0.94f), uiSize * new Vector2(0.5f, 0.07f), new Vector2(0.5f, 1f));
-                font.DrawText(caretIndexInfo, caretIndexInfoRect, 4f, new Vector2(0.5f, 0.5f), RED);
+                string caretIndexInfo = String.Format("Caret Position: {0}", caretIndex);
+                Rect caretIndexInfoRect = new(uiSize * new Vector2(0.5f, 0.94f), uiSize * new Vector2(0.5f, 0.06f), new Vector2(0.5f, 1f));
+                font.DrawText(caretIndexInfo, caretIndexInfoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
             }
 
 

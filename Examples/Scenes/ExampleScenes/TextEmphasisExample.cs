@@ -40,8 +40,8 @@ namespace Examples.Scenes.ExampleScenes
 
         TextEmphasisType curEmphasisType = TextEmphasisType.Corner;
         TextEmphasisAlignement curEmphasisAlignement = TextEmphasisAlignement.TopLeft;
-        Vector2 curAlignement = new(0f);
-        int curAlignementIndex = 0;
+        Vector2 curAlignement = new(0.5f);
+        int curAlignementIndex = 8;
 
         public TextEmphasisExample()
         {
@@ -120,50 +120,53 @@ namespace Examples.Scenes.ExampleScenes
         }
         public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
         {
+            base.DrawUI(uiSize, mousePosUI);
             rotDeg = SVec.AngleDeg((uiSize * 0.5f) - mousePosUI);
 
             Rect r = new(topLeft, bottomRight);
-            r.DrawLines(8f, new Color(255, 0, 0, 150));
+            r.DrawLines(6f, ColorMedium);
 
-            WordEmphasis basic = new(WHITE);
-            WordEmphasis red = new(RED, TextEmphasisType.Line, TextEmphasisAlignement.Bottom, 1, 4);
-            WordEmphasis yellow = new(YELLOW, curEmphasisType, curEmphasisAlignement, 5, 6);
+            DrawCross(r.GetPoint(curAlignement), 100f);
+
+            WordEmphasis basic = new(ColorHighlight1);
+            WordEmphasis red = new(ColorHighlight2, TextEmphasisType.Line, TextEmphasisAlignement.Bottom, 1, 4);
+            WordEmphasis yellow = new(ColorLight, curEmphasisType, curEmphasisAlignement, 5, 6);
             string curText = String.Format(text, percentage);
             font.DrawText(curText, fontSize, fontSpacing, r.GetPoint(curAlignement), curAlignement, basic, red, yellow);
             Circle topLeftPoint = new(topLeft, pointRadius);
             Circle topLeftInteractionCircle = new(topLeft, interactionRadius);
             if (draggingTopLeft)
             {
-                topLeftInteractionCircle.Draw(GREEN);
+                topLeftInteractionCircle.Draw(ColorHighlight2);
             }
             else if (mouseInsideTopLeft)
             {
-                topLeftPoint.Draw(WHITE);
+                topLeftPoint.Draw(ColorMedium);
                 topLeftInteractionCircle.radius *= 2f;
-                topLeftInteractionCircle.DrawLines(2f, GREEN, 4f);
+                topLeftInteractionCircle.DrawLines(2f, ColorHighlight2, 4f);
             }
             else
             {
-                topLeftPoint.Draw(WHITE);
-                topLeftInteractionCircle.DrawLines(2f, WHITE, 4f);
+                topLeftPoint.Draw(ColorMedium);
+                topLeftInteractionCircle.DrawLines(2f, ColorMedium, 4f);
             }
 
             Circle bottomRightPoint = new(bottomRight, pointRadius);
             Circle bottomRightInteractionCircle = new(bottomRight, interactionRadius);
             if (draggingBottomRight)
             {
-                bottomRightInteractionCircle.Draw(GREEN);
+                bottomRightInteractionCircle.Draw(ColorHighlight2);
             }
             else if (mouseInsideBottomRight)
             {
-                bottomRightPoint.Draw(WHITE);
+                bottomRightPoint.Draw(ColorMedium);
                 bottomRightInteractionCircle.radius *= 2f;
-                bottomRightInteractionCircle.DrawLines(2f, GREEN, 4f);
+                bottomRightInteractionCircle.DrawLines(2f, ColorHighlight2, 4f);
             }
             else
             {
-                bottomRightPoint.Draw(WHITE);
-                bottomRightInteractionCircle.DrawLines(2f, WHITE, 4f);
+                bottomRightPoint.Draw(ColorMedium);
+                bottomRightInteractionCircle.DrawLines(2f, ColorMedium, 4f);
             }
 
             //string info = String.Format("[W] Font: {0} | [A/D] Font Spacing: {1}", GAMELOOP.GetFontName(fontIndex), fontSpacing);
@@ -172,11 +175,11 @@ namespace Examples.Scenes.ExampleScenes
 
             string info2 = String.Format("[S] Text Align: {0} | [Q] Type: {1} | [E] Align: {2}", curAlignement, curEmphasisType, curEmphasisAlignement);
             Rect infoRect2 = new(uiSize * new Vector2(0.5f, 0.95f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
-            font.DrawText(info2, infoRect2, 4f, new Vector2(0.5f, 0.5f), ORANGE);
+            font.DrawText(info2, infoRect2, 4f, new Vector2(0.5f, 0.5f), ColorLight);
 
             string info = String.Format("[W] Font: {0} | [A] Spacing: {1} | [D] Size: {2}", GAMELOOP.GetFontName(fontIndex), fontSpacing, fontSize);
             Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
-            font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), YELLOW);
+            font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
 
         }
         private void ChangeFontSpacing()
