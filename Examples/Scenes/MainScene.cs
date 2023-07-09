@@ -32,6 +32,7 @@ namespace Examples.Scenes
             }
             curButton = buttons[0];
             examples.Add(new PolylineInflationExample());
+            examples.Add(new PolylineCollisionExample());
             examples.Add(new TextScalingExample());
             examples.Add(new TextWrapExample());
             examples.Add(new TextWrapEmphasisExample());

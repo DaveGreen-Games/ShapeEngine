@@ -311,6 +311,27 @@ namespace ShapeEngine.Lib
                     finalBottomRight.Y - finalTopLeft.Y
                 );
         }
+        public static Rect ApplyMarginsAbsolute(this Rect rect, float left, float right, float top, float bottom)
+        {
+            Vector2 tl = new(rect.x, rect.y);
+            Vector2 size = new(rect.width, rect.height);
+            Vector2 br = tl + size;
+
+            tl.X += left;
+            tl.Y += top;
+            br.X -= right;
+            br.Y -= bottom;
+
+            Vector2 finalTopLeft = new(MathF.Min(tl.X, br.X), MathF.Min(tl.Y, br.Y));
+            Vector2 finalBottomRight = new(MathF.Max(tl.X, br.X), MathF.Max(tl.Y, br.Y));
+            return new
+                (
+                    finalTopLeft.X,
+                    finalTopLeft.Y,
+                    finalBottomRight.X - finalTopLeft.X,
+                    finalBottomRight.Y - finalTopLeft.Y
+                );
+        }
         public static Rect ScaleSize(this Rect r, float scale, Vector2 alignement) { return new(r.GetPoint(alignement), r.Size * scale, alignement); }
         public static Rect ScaleSize(this Rect r, Vector2 scale, Vector2 alignement) { return new(r.GetPoint(alignement), r.Size * scale, alignement); }
         public static Rect ChangeSize(this Rect r, float amount, Vector2 alignement) { return new(r.GetPoint(alignement), new(r.width + amount, r.height + amount), alignement); }
