@@ -6,7 +6,9 @@ namespace ShapeEngine.Lib
     public static class SVec
     {
         
+        public static Vector2 Flip(this Vector2 v) { return v * -1f; }
         public static bool IsFacingTheSameDirection(this Vector2 a,  Vector2 b) { return a.Dot(b) > 0; }
+        public static bool IsFacingTheOppositeDirection(this Vector2 a, Vector2 b) { return a.Dot(b) < 0; }
         public static bool IsNormalFacingOutward(this Vector2 normal, Vector2 outwardDirection) { return normal.IsFacingTheSameDirection(outwardDirection); }
         public static Vector2 GetOutwardFacingNormal(this Vector2 normal, Vector2 outwardDirection)
         {
