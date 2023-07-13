@@ -170,7 +170,11 @@ namespace ShapeEngine.Core
 
     public interface IShape
     {
-        public bool InsideNormals { get; set; }
+        /// <summary>
+        /// All normals face outwards of shapes per default or face right along the direction of segments.
+        /// If flipped normals is true all normals face inwards of shapes or face left along the direction of segments.
+        /// </summary>
+        public bool FlippedNormals { get; set; }
         public Vector2 GetCentroid();
         public float GetArea();
         public float GetCircumference();

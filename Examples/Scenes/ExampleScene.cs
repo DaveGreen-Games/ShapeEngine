@@ -48,6 +48,10 @@ namespace Examples.Scenes
             string backText = "Back [ESC]";
             Rect backRect = new Rect(uiSize * new Vector2(0.02f, 0.06f), uiSize * new Vector2(0.3f, 0.04f), new Vector2(0f, 1f));
             titleFont.DrawText(backText, backRect, 4f, new Vector2(0f, 0.5f), ColorHighlight2);
+
+            string fpsText = String.Format("Fps: {0}", GetFPS());
+            Rect fpsRect = new Rect(uiSize * new Vector2(0.98f, 0.06f), uiSize * new Vector2(0.3f, 0.04f), new Vector2(1f, 1f));
+            titleFont.DrawText(fpsText, fpsRect, 4f, new Vector2(1f, 0.5f), ColorHighlight2);
         }
 
         protected void DrawCross(Vector2 center, float length)

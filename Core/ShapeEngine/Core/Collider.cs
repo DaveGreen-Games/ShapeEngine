@@ -108,7 +108,7 @@ namespace ShapeEngine.Core
         public Circle GetCircleShape() 
         {
             var c = new Circle(Pos, radius);
-            c.InsideNormals = InsideNormals;
+            c.FlippedNormals = InsideNormals;
             return c;
         }
         public override bool CheckOverlap(ICollider other)
@@ -293,7 +293,7 @@ namespace ShapeEngine.Core
         public Rect GetRectShape()
         {
             var r = new Rect(Pos, Size, Alignement);
-            r.InsideNormals = InsideNormals;
+            r.FlippedNormals = InsideNormals;
             return r;
         }
         public override bool CheckOverlap(ICollider other)
@@ -406,7 +406,7 @@ namespace ShapeEngine.Core
         { 
             if(dirty) UpdateShape();
             var p = new Polygon(shape);
-            p.InsideNormals = InsideNormals;
+            p.FlippedNormals = InsideNormals;
             return p;
         }
 
@@ -537,14 +537,14 @@ namespace ShapeEngine.Core
             if(dirty) UpdateShape();
 
             var pl = new Polyline(shape);
-            pl.InsideNormals = InsideNormals;
+            pl.FlippedNormals = InsideNormals;
             return pl;
         }
         public Polygon GetPolygonShape() 
         {
             if (dirty) UpdateShape();
             var p = new Polygon(shape);
-            p.InsideNormals = InsideNormals;
+            p.FlippedNormals = InsideNormals;
             return p; 
         }
 

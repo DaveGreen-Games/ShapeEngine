@@ -50,7 +50,7 @@ namespace Examples.Scenes.ExampleScenes
 
             var cameraRect = camera.GetArea();
             boundaryRect = SRect.ApplyMarginsAbsolute(cameraRect, 25f, 25f, 75 * 2f, 75 * 2f);
-            boundaryRect.InsideNormals = true;
+            boundaryRect.FlippedNormals = true;
             boundary = boundaryRect.GetEdges();
 
             ball = new CircleCollider(boundaryRect.Center, 25f);
@@ -62,6 +62,9 @@ namespace Examples.Scenes.ExampleScenes
             rect.ComputeIntersections = true;
             rect.ComputeCollision = true;
             rect.Vel = SRNG.randVec2(150, 300);
+
+            polyline.AutomaticNormals = true;
+            polyline.FlippedNormals = true;
         }
         public override void Reset()
         {

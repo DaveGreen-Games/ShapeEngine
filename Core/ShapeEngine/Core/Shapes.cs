@@ -172,9 +172,9 @@ namespace ShapeEngine.Core
         public Vector2 start;
         public Vector2 end;
         public Vector2 n;
-        private bool automaticNormal = true;//not implemented
+        public bool AutomaticNormals { get; private set; } = true;
 
-        public bool InsideNormals { get { return false; } set { } }
+        public bool FlippedNormals { get { return false; } set { } }
         public Vector2 Center { get { return (start + end) * 0.5f; } }
         public Vector2 Dir { get { return Displacement.Normalize(); } }
         public Vector2 Displacement { get { return end - start; } }
@@ -200,7 +200,7 @@ namespace ShapeEngine.Core
             this.start = start; 
             this.end = end; 
             this.n = n;
-            this.automaticNormal = false;
+            this.AutomaticNormals = false;
         }
         public Segment(float startX, float startY, float endX, float endY) 
         { 
@@ -208,7 +208,7 @@ namespace ShapeEngine.Core
             this.end = new(endX, endY); 
             this.n = (this.end - this.start).GetPerpendicularRight().Normalize(); 
         }
-        public Segment(Segment s) { start = s.start; end = s.end; n = s.n; automaticNormal = s.automaticNormal; }
+        public Segment(Segment s) { start = s.start; end = s.end; n = s.n; AutomaticNormals = s.AutomaticNormals; }
 
         
         //public static bool operator ==(Segment s1, Segment s2) { return s2.start == s1.start && s2.end == s1.end; }
@@ -299,14 +299,14 @@ namespace ShapeEngine.Core
         public float radius;
 
         public float Diameter { get { return radius * 2f; } }
-        public bool InsideNormals { get; set; } = false;
+        public bool FlippedNormals { get; set; } = false;
         public Circle(Vector2 center, float radius) { this.center = center; this.radius = radius; }
         public Circle(float x, float y, float radius) { this.center = new(x, y); this.radius = radius; }
         public Circle(Circle c) { center = c.center; radius = c.radius; }
         public Circle(Rect r) { center = r.Center; radius = MathF.Max(r.width, r.height); }
 
         public Vector2 GetCentroid() { return center; }
-        public Segments GetEdges() { return this.GetEdges(16, InsideNormals); }
+        public Segments GetEdges() { return this.GetEdges(16, FlippedNormals); }
         public Polygon ToPolygon() { return this.GetPoints(16); }
         public Polyline ToPolyline() { return this.GetPolylinePoints(16); }
         public Triangulation Triangulate() { return ToPolygon().Triangulate(); }
@@ -363,7 +363,7 @@ namespace ShapeEngine.Core
         public Vector2 A { get { return b - a; } }
         public Vector2 B { get { return c - b; } }
         public Vector2 C { get { return a - c; } }
-        public bool InsideNormals { get; set; } = false;
+        public bool FlippedNormals { get; set; } = false;
 
         /// <summary>
         /// Points should be in ccw order!
@@ -442,7 +442,7 @@ namespace ShapeEngine.Core
         public Polyline ToPolyline() { return new(a, b, c); }
         public Segments GetEdges() 
         {
-            if (InsideNormals)
+            if (FlippedNormals)
             {
                 Segment A = new Segment(a, b, (b - a).GetPerpendicularLeft().Normalize());
                 Segment B = new Segment(b, c, (c - b).GetPerpendicularLeft().Normalize());
@@ -535,7 +535,7 @@ namespace ShapeEngine.Core
         public float y;
         public float width;
         public float height;
-        public bool InsideNormals { get; set; } = false;
+        public bool FlippedNormals { get; set; } = false;
         public Vector2 TopLeft { get { return new Vector2(x, y); } }
         public Vector2 TopRight { get { return new Vector2(x + width, y); } }
         public Vector2 BottomRight { get { return new Vector2(x + width, y + height); } }
@@ -615,7 +615,7 @@ namespace ShapeEngine.Core
             Vector2 C = BottomRight;
             Vector2 D = TopRight;
 
-            if (InsideNormals)
+            if (FlippedNormals)
             {
                 Segment left = new(A, B, (B - A).GetPerpendicularLeft().Normalize());
                 Segment bottom = new(B, C, (C - B).GetPerpendicularLeft().Normalize());
@@ -860,7 +860,7 @@ namespace ShapeEngine.Core
         public Polygon(Polygon poly) { AddRange(poly); }
         public Polygon(Polyline polyLine) { AddRange(polyLine); }
 
-        public bool InsideNormals { get; set; } = false;
+        public bool FlippedNormals { get; set; } = false;
 
         public void FixWindingOrder() { if (this.IsClockwise()) this.Reverse(); }
         public void ReduceVertexCount(int newCount)
@@ -1087,7 +1087,7 @@ namespace ShapeEngine.Core
                 Vector2 B = this[1];
 
                 Vector2 n = (B - A);
-                if (InsideNormals) n = n.GetPerpendicularLeft().Normalize();
+                if (FlippedNormals) n = n.GetPerpendicularLeft().Normalize();
                 else n = n.GetPerpendicularRight().Normalize();
                 return new() { new(A, B, n) };
             }
@@ -1097,7 +1097,7 @@ namespace ShapeEngine.Core
                 Vector2 start = this[i];
                 Vector2 end = this[(i + 1) % Count];
                 Vector2 n = (end - start);
-                if (InsideNormals) n = n.GetPerpendicularLeft().Normalize();
+                if (FlippedNormals) n = n.GetPerpendicularLeft().Normalize();
                 else n = n.GetPerpendicularRight().Normalize();
                 segments.Add(new(start, end, n));
             }
@@ -1327,12 +1327,12 @@ namespace ShapeEngine.Core
         public Polyline(Polygon poly) { AddRange(poly); }
 
         
-        //public bool AutomatedNormal = true;
+        public bool AutomaticNormals = true;
         /// <summary>
         /// Flips the calculated normals for each segment. 
         /// false means default is used. (facing right)
         /// </summary>
-        public bool InsideNormals { get; set; } = false;
+        public bool FlippedNormals { get; set; } = false;
         public Vector2 GetVertex(int index)
         {
             return this[SUtils.WrapIndex(Count, index)];
@@ -1377,21 +1377,21 @@ namespace ShapeEngine.Core
             {
                 Vector2 A = this[0];
                 Vector2 B = this[1];
-                //if (AutomatedNormal)
-                //{
-                //    return new() { new(A, B) };
-                //}
-                //else
-                //{
-                //    Vector2 n = (B - A);
-                //    if (InsideNormals) n = n.GetPerpendicularLeft().Normalize();
-                //    else n = n.GetPerpendicularRight().Normalize();
-                //    return new() { new(A, B, n) };
-                //}
-                Vector2 n = (B - A);
-                if (InsideNormals) n = n.GetPerpendicularLeft().Normalize();
-                else n = n.GetPerpendicularRight().Normalize();
-                return new() { new(A, B, n) };
+                if (AutomaticNormals)
+                {
+                    return new() { new(A, B) };
+                }
+                else
+                {
+                    Vector2 n = (B - A);
+                    if (FlippedNormals) n = n.GetPerpendicularLeft().Normalize();
+                    else n = n.GetPerpendicularRight().Normalize();
+                    return new() { new(A, B, n) };
+                }
+                //Vector2 n = (B - A);
+                //if (InsideNormals) n = n.GetPerpendicularLeft().Normalize();
+                //else n = n.GetPerpendicularRight().Normalize();
+                //return new() { new(A, B, n) };
 
             }
 
@@ -1401,21 +1401,21 @@ namespace ShapeEngine.Core
                 Vector2 start = this[i];
                 Vector2 end = this[(i + 1) % Count];
 
-                //if (AutomatedNormal)
-                //{
-                //    segments.Add(new(start, end));
-                //}
-                //else
-                //{
-                //    Vector2 n = (end - start);
-                //    if (InsideNormals) n = n.GetPerpendicularLeft().Normalize();
-                //    else n = n.GetPerpendicularRight().Normalize();
-                //    segments.Add(new(start, end, n));
-                //}
-                Vector2 n = (end - start);
-                if (InsideNormals) n = n.GetPerpendicularLeft().Normalize();
-                else n = n.GetPerpendicularRight().Normalize();
-                segments.Add(new(start, end, n));
+                if (AutomaticNormals)
+                {
+                    segments.Add(new(start, end));
+                }
+                else
+                {
+                    Vector2 n = (end - start);
+                    if (FlippedNormals) n = n.GetPerpendicularLeft().Normalize();
+                    else n = n.GetPerpendicularRight().Normalize();
+                    segments.Add(new(start, end, n));
+                }
+                //Vector2 n = (end - start);
+                //if (InsideNormals) n = n.GetPerpendicularLeft().Normalize();
+                //else n = n.GetPerpendicularRight().Normalize();
+                //segments.Add(new(start, end, n));
 
             }
             return segments;
