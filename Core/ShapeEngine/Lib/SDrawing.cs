@@ -141,6 +141,17 @@ namespace ShapeEngine.Lib
         /// </summary>
         public static float TextWrappingAutoFontSizeSafetyMargin = 0.7f;
 
+
+        public static void Draw(this Intersection intersection, float lineThickness, Raylib_CsLo.Color intersectColor, Raylib_CsLo.Color normalColor)
+        {
+            foreach (var i in intersection.points)
+            {
+                DrawCircleV(i.p, lineThickness * 2, intersectColor);
+                Segment normal = new(i.p, i.p + i.n * lineThickness * 10f);
+                normal.Draw(lineThickness, normalColor);
+            }
+        }
+
         #region Pixel
         public static void DrawPixel(Vector2 pos, Raylib_CsLo.Color color) => Raylib.DrawPixelV(pos, color); 
         public static void DrawPixel(float x, float y, Raylib_CsLo.Color color) => Raylib.DrawPixelV(new(x, y), color);

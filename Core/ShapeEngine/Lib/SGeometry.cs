@@ -193,6 +193,21 @@ namespace ShapeEngine.Lib
             //
             //return intersectionInfo.i;
         }
+
+        public static Intersection Intersect(this IShape a, IShape b, Vector2 aVelocity)
+        {
+            var intersection = a.Intersect(b);
+            if (intersection.valid)
+            {
+                //implement the automatic normals here!!!!
+                if (intersection.n.IsFacingTheSameDirection(aVelocity))
+                {
+                    return new();
+                }
+            }
+            return intersection;
+        }
+
         public static Intersection Intersect(this IShape a, IShape b)
         {
             if (a is Segment s) return Intersect(s, b);
@@ -203,6 +218,7 @@ namespace ShapeEngine.Lib
             else if (a is Polyline pl) return Intersect(pl, b);
             else return Intersect(a.GetBoundingBox(), b);
         }
+        
         public static Intersection Intersect(this Segment seg, IShape shape)
         {
             if (shape is Segment s) return IntersectShape(seg, s);
@@ -473,8 +489,7 @@ namespace ShapeEngine.Lib
             else if (points.Count == 2)
             {
                 var combinedSegment = new Segment(points[0].p, points[1].p);
-                //var info = ConstructNormalOpposite(points[0].p, points[1].p, shape.referencePoint);
-                return new(combinedSegment.GetPoint(0.5f), combinedSegment.n, points);
+                return new(combinedSegment.Center, (points[0].n + points[1].n) / 2, points);
             }
             else return new(points[0].p, points[0].n, points);
         }
@@ -484,7 +499,7 @@ namespace ShapeEngine.Lib
 
             foreach (var seg in segments)
             {
-                var intersection = seg.IntersectShape(s); // IntersectSegmentSegment(seg, s); //, shape.referencePoint, false);
+                var intersection = seg.IntersectShape(s);
                 if (intersection.valid)
                 {
                     points.Add((intersection.p, intersection.n));
@@ -495,10 +510,9 @@ namespace ShapeEngine.Lib
             else if (points.Count == 2)
             {
                 var combinedSegment = new Segment(points[0].p, points[1].p);
-                //var info = ConstructNormal(points[0].p, points[1].p, s.GetReferencePoint());
-                return new(combinedSegment.GetPoint(0.5f), combinedSegment.n, points);
+                return new(combinedSegment.Center, s.n, points);
             }
-            else return new(points[0].p, points[1].n, points);
+            else return new(points[0].p, points[0].n, points);
         }
         public static Intersection IntersectShape(this Segments segments, Circle c)
         {
@@ -520,8 +534,8 @@ namespace ShapeEngine.Lib
             else if (points.Count == 2)
             {
                 var combinedSegment = new Segment(points[0].p, points[1].p);
-                //var info = ConstructNormalOpposite(points[0].p, points[1].p, c.center);
-                return new(c.center + combinedSegment.n * c.radius, combinedSegment.n, points);
+                Vector2 normal = (combinedSegment.Center - c.center).Normalize();
+                return new(c.center + normal * c.radius, normal, points);
             }
             else
             {
@@ -545,8 +559,7 @@ namespace ShapeEngine.Lib
             else if (points.Count == 2)
             {
                 var combinedSegment = new Segment(points[0].p, points[1].p);
-                //var info = ConstructNormalOpposite(points[0].p, points[1].p, b.referencePoint);
-                return new(combinedSegment.GetPoint(0.5f), combinedSegment.n, points);
+                return new(combinedSegment.Center, (points[0].n + points[1].n) / 2, points);
             }
             else return new(points[0].p, points[0].n, points);
         }
@@ -755,6 +768,16 @@ namespace ShapeEngine.Lib
 
             float dX = bX - aX;
             float dY = bY - aY;
+
+            Vector2 segmentNormal = s.n;
+            //if (s.automaticNormal)
+            //{
+            //    Vector2 dir = c.center - s.Center;
+            //
+            //    if (segmentNormal.IsFacingTheSameDirection(dir)) segmentNormal = segmentNormal.Flip();
+            //}
+
+
             if ((dX == 0) && (dY == 0))
             {
                 // A and B are the same points, no way to calculate intersection
@@ -781,7 +804,7 @@ namespace ShapeEngine.Lib
                     // intersection point is not actually within line segment
                     Vector2 ip = new(iX, iY);
                     //Vector2 n = SUtils.GetNormal(new Vector2(aX, aY), new Vector2(bX, bY), ip, new Vector2(cX, cY));
-                    return new(ip, s.n, new() { (ip, s.n) });
+                    return new(ip, segmentNormal, new() { (ip, segmentNormal) });
                 }
                 else return new();
             }
@@ -798,7 +821,7 @@ namespace ShapeEngine.Lib
                     // intersection point is actually within line segment
                     Vector2 ip = new(i1X, i1Y);
                     //Vector2 n = SUtils.GetNormal(new Vector2(aX, aY), new Vector2(bX, bY), ip, new Vector2(cX, cY));
-                    points.Add((ip, s.n));
+                    points.Add((ip, segmentNormal));
                 }
 
                 // intersection point farthest from A
@@ -809,7 +832,7 @@ namespace ShapeEngine.Lib
                 {
                     Vector2 ip = new(i2X, i2Y);
                     //Vector2 n = SUtils.GetNormal(new Vector2(aX, aY), new Vector2(bX, bY), ip, new Vector2(cX, cY));
-                    points.Add((ip, s.n));
+                    points.Add((ip, segmentNormal));
                 }
 
                 if (points.Count <= 0) return new();
@@ -821,7 +844,7 @@ namespace ShapeEngine.Lib
                     Vector2 dir = w / l;
                     Vector2 p = points[0].p + dir * l * 0.5f;
                     //Vector2 n = SUtils.GetNormal(points[0].p, points[1].p, p, new Vector2(cX, cY));
-                    return new(p, s.n, points);
+                    return new(p, segmentNormal, points);
                 }
             }
             else
@@ -838,12 +861,16 @@ namespace ShapeEngine.Lib
             List<(Vector2 p, Vector2 n)> points = new();
             foreach (var seg in shape)
             {
-                //var intersection = IntersectionCircleSegment(circlePos, circleRadius, seg.start, seg.end);
-                //if (intersection.valid) points.AddRange(intersection.points);
                 var intersectPoints = IntersectCircleSegment(c.center, c.radius, seg.start, seg.end);
                 foreach (var p in intersectPoints)
                 {
-                    //Vector2 n = SUtils.GetNormalOpposite(seg.start, seg.end, p, shape.referencePoint);
+                    //Vector2 segmentNormal = seg.n;
+                    //if (seg.automaticNormal)
+                    //{
+                    //    Vector2 dir = c.center - seg.Center;
+                    //
+                    //    if (segmentNormal.IsFacingTheSameDirection(dir)) segmentNormal = segmentNormal.Flip();
+                    //}
                     points.Add((p, seg.n));
                 }
             }
@@ -855,8 +882,7 @@ namespace ShapeEngine.Lib
             else if (points.Count == 2)
             {
                 var combinedSegment = new Segment(points[0].p, points[1].p);
-                //var info = ConstructNormalOpposite(points[0].p, points[1].p, shape.referencePoint);
-                return new(combinedSegment.GetPoint(0.5f), combinedSegment.n, points);
+                return new(combinedSegment.Center, (points[0].n + points[1].n) / 2, points);
             }
             else
             {

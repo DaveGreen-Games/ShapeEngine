@@ -16,7 +16,7 @@ namespace Examples
         private List<string> fontNames = new();
         private MainScene? mainScene = null;
 
-        public GameloopExamples() : base(960, 540, 1920, 1080)
+        public GameloopExamples() : base(960 * 2, 540 * 2, 1920, 1080)
         {
 
         }

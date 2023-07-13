@@ -170,6 +170,7 @@ namespace ShapeEngine.Core
 
     public interface IShape
     {
+        public bool InsideNormals { get; set; }
         public Vector2 GetCentroid();
         public float GetArea();
         public float GetCircumference();

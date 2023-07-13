@@ -1,14 +1,16 @@
 ﻿
-
-using Microsoft.VisualBasic;
 using Raylib_CsLo;
 using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 using System.Numerics;
 
+
+
+
 namespace Examples.Scenes.ExampleScenes
 {
+
     public class PolylineCollisionExample : ExampleScene
     {
         ScreenTexture game;
@@ -16,22 +18,22 @@ namespace Examples.Scenes.ExampleScenes
         int dragIndex = -1;
 
         Segments boundary = new();
-        Segments colSegments = new();
 
         Rect boundaryRect;
 
         CircleCollider ball;
         float collisionTimer = -1f;
         const float collisionTime = 1f;
-        List<Circle> vertices = new();
 
         Vector2 lastNormal = new();
-        Vector2 lastIntersection = new();
+        Vector2 lastIntersectionPoint = new();
 
         Font font;
 
-        bool segmentModeActive = false;
+        RectCollider rect;
+        Intersection lastIntersection = new();
 
+        List<Circle> vertices = new();
         float vertexRadius = 8f;
         int pickedVertex = -1;
         bool drawClosest = true;
@@ -47,14 +49,19 @@ namespace Examples.Scenes.ExampleScenes
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
 
             var cameraRect = camera.GetArea();
-            boundaryRect = SRect.ApplyMarginsAbsolute(cameraRect, 25f, 25f, 75f, 75f);
-
+            boundaryRect = SRect.ApplyMarginsAbsolute(cameraRect, 25f, 25f, 75 * 2f, 75 * 2f);
+            boundaryRect.InsideNormals = true;
             boundary = boundaryRect.GetEdges();
 
             ball = new CircleCollider(boundaryRect.Center, 25f);
             ball.ComputeCollision = true;
             ball.ComputeIntersections = true;
             ball.Vel = SRNG.randVec2(150, 300);
+
+            rect = new RectCollider(boundaryRect.Center, new Vector2(100, 100), new Vector2(0.5f));
+            rect.ComputeIntersections = true;
+            rect.ComputeCollision = true;
+            rect.Vel = SRNG.randVec2(150, 300);
         }
         public override void Reset()
         {
@@ -62,6 +69,8 @@ namespace Examples.Scenes.ExampleScenes
             dragIndex = -1;
             ball.Pos = boundaryRect.Center;
             ball.Vel = SRNG.randVec2(150, 300);
+            rect.Pos = ball.Pos;
+            rect.Vel = SRNG.randVec2(150, 300);
         }
         public override void HandleInput(float dt)
         {
@@ -77,6 +86,7 @@ namespace Examples.Scenes.ExampleScenes
             UpdatePolyline(mousePosGame);
 
             ball.UpdateState(dt);
+            rect.UpdateState(dt);
 
             var ballShape = ball.GetShape();
             Segments allSegments = new();
@@ -88,35 +98,40 @@ namespace Examples.Scenes.ExampleScenes
                 bool overlap = ballShape.Overlap(segment);
                 if (overlap)
                 {
-                    var intersection = ballShape.Intersect(segment);
+                    var intersection = ballShape.Intersect(segment, ball.Vel);
                     if (intersection.valid)
                     {
-                        Vector2 normal = intersection.n.Flip();
-                        lastNormal = normal;
-                        lastIntersection = intersection.p;
-                        if (normal.IsFacingTheOppositeDirection(ball.Vel))
-                        {
-                            ball.Vel = ball.Vel.Reflect(normal);
-                        }
-
+                        Vector2 normal = intersection.n;
+                        //lastNormal = normal;
+                        //lastIntersection = intersection.p;
+                        ball.Vel = ball.Vel.Reflect(normal);
 
                         collisionTimer = collisionTime;
-                        //break;
+                        break;
                     }
                 }
 
             }
 
-            //if(polyline.Count > 1)
-            //{
-            //    var polyLineIntersection = ballShape.Intersect(polyline);
-            //    if (polyLineIntersection.valid)
-            //    {
-            //        ball.Vel = ball.Vel.Reflect(polyLineIntersection.n);
-            //        collisionTimer = collisionTime;
-            //    }
-            //}
+            var rectShape = rect.GetShape();
+            foreach (var segment in allSegments)
+            {
+                bool overlap = rectShape.Overlap(segment);
+                if (overlap)
+                {
+                    var intersection = rectShape.Intersect(segment, rect.Vel);
+                    if (intersection.valid)
+                    {
+                        Vector2 normal = intersection.n;
+                        lastNormal = normal;
+                        lastIntersectionPoint = intersection.p;
+                        rect.Vel = rect.Vel.Reflect(normal);
+                        lastIntersection = intersection;
+                        break;
+                    }
+                }
 
+            }
 
             if (collisionTimer > 0f)
             {
@@ -132,7 +147,12 @@ namespace Examples.Scenes.ExampleScenes
             base.Draw(gameSIze, mousePosGame);
 
             boundary.Draw(4f, ColorMedium);
-            colSegments.Draw(2f, ColorLight);
+            foreach (var seg in boundary)
+            {
+                Segment normal = new(seg.Center, seg.Center + seg.n * 25f);
+                normal.Draw(2f, BLUE);
+            }
+            //colSegments.Draw(2f, ColorLight);
             DrawPolyline();
 
             float colF = collisionTimer > 0f ? collisionTimer / collisionTime : 0f;
@@ -140,13 +160,15 @@ namespace Examples.Scenes.ExampleScenes
             //Color ballColor = ColorHighlight2.Lerp(ColorHighlight1, colF * colF);
             Color ballColor = STween.Tween(ColorHighlight2, ColorHighlight1, colF, TweenType.QUAD_IN);
             ball.GetShape().DrawShape(2f, ballColor);
-
+            rect.GetShape().DrawShape(2f, ballColor);
             if(lastNormal.X != 0f || lastNormal.Y != 0f)
             {
-                DrawCircleV(lastIntersection, 6f, ColorHighlight2);
-                Segment s = new(lastIntersection, lastIntersection + lastNormal * 25f);
+                DrawCircleV(lastIntersectionPoint, 6f, ColorHighlight2);
+                Segment s = new(lastIntersectionPoint, lastIntersectionPoint + lastNormal * 25f);
                 s.Draw(2f, ColorHighlight2);
             }
+            lastIntersection.Draw(2f, RED, BLUE);
+            
         }
         public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
         {
@@ -259,6 +281,9 @@ namespace Examples.Scenes.ExampleScenes
                     else segment.Draw(4f, ColorLight);
                 }
                 else segment.Draw(4f, ColorLight);
+
+                Segment normal = new(segment.Center, segment.Center + segment.n * 25f);
+                normal.Draw(2f, BLUE);
             }
 
             if (drawClosest) DrawCircleV(closest, vertexRadius, ColorHighlight1);

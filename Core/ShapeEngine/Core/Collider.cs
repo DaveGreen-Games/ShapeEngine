@@ -60,6 +60,7 @@ namespace ShapeEngine.Core
         public Collider(float x, float y) { Pos = new(x, y); }
         public Collider(Vector2 pos, Vector2 vel) { Pos = pos; Vel = vel; }
 
+        public bool InsideNormals { get; set; } = false;
         public float Mass { get; set; } = 1.0f;
         public Vector2 Vel { get; set; }
         public virtual Vector2 Pos { get; set; }
@@ -100,8 +101,16 @@ namespace ShapeEngine.Core
         //public float GetCircumference() { return MathF.PI * Radius * 2.0f; }
         //public override void DrawDebugShape(Color color) { new Circle(Pos, radius).dr SDrawing.DrawCircleLines(Pos, Radius, 5f, color, 4f); }
         //public override Rect GetBoundingBox() { return new Circle(Pos, radius).GetBoundingBox(); }
-        public override IShape GetShape() { return new Circle(Pos, radius); }
-        public Circle GetCircleShape() { return new Circle(Pos, radius); }
+        public override IShape GetShape() 
+        {
+            return GetCircleShape();
+        }
+        public Circle GetCircleShape() 
+        {
+            var c = new Circle(Pos, radius);
+            c.InsideNormals = InsideNormals;
+            return c;
+        }
         public override bool CheckOverlap(ICollider other)
         {
             Circle shape = new(Pos, radius);
@@ -117,7 +126,7 @@ namespace ShapeEngine.Core
         public override Intersection CheckIntersection(ICollider other)
         {
             Circle shape = new(Pos, radius);
-            return shape.Intersect(other.GetShape());
+            return shape.Intersect(other.GetShape(), Vel);
             //var otherShape = other.GetShape();
             //if (otherShape is Circle c) return (true, shape.IntersectShape(c));
             //else if (otherShape is Segment s) return (true, shape.IntersectShape(s));
@@ -131,6 +140,8 @@ namespace ShapeEngine.Core
     }
     public class SegmentCollider : Collider
     {
+        private enum NormalFacingDirection { Automatic, Right, Left};
+        private NormalFacingDirection normalFacingDirection = NormalFacingDirection.Automatic;
         public SegmentCollider() { }
         public SegmentCollider(Vector2 start, Vector2 end) : base(start, new(0.0f, 0.0f))
         {
@@ -138,8 +149,27 @@ namespace ShapeEngine.Core
             Dir = Vector2.Normalize(v);
             Length = v.Length();
         }
-        public SegmentCollider(Vector2 start, Vector2 dir, float length) : base(start, new(0.0f, 0.0f)) { Dir = dir; Length = length; }
+        /// <summary>
+        /// Create a segment collider with a fixed normal direction. The normal direction is based on the direction of the segment.
+        /// A right facing normal faces right in the direction of the segment and left facing normal faces left in the direction of the segment.
+        /// </summary>
+        /// <param name="start">The start point of the segment.</param>
+        /// <param name="end">The end point of the segment.</param>
+        /// <param name="normalAlwaysFacesRight">Sets the direction the normal faces.</param>
+        public SegmentCollider(Vector2 start, Vector2 end, bool normalAlwaysFacesRight = true) : base(start, new(0.0f, 0.0f))
+        {
+            Vector2 v = end - start;
+            Dir = Vector2.Normalize(v);
+            Length = v.Length();
+            normalFacingDirection = normalAlwaysFacesRight ? NormalFacingDirection.Right : NormalFacingDirection.Left;
+        }
+        public SegmentCollider(Vector2 start, Vector2 dir, float length) : base(start, new(0.0f, 0.0f)) 
+        { 
+            Dir = dir; 
+            Length = length; 
+        }
 
+        
         public Vector2 Dir { get; set; }
         public float Length { get; set; }
         public Vector2 Start { get { return Pos; } }
@@ -148,8 +178,21 @@ namespace ShapeEngine.Core
         public Vector2 Displacement { get { return End - Pos; } }
 
 
-        public override IShape GetShape() { return new Segment(Pos, End); }
-        public Segment GetSegmentShape() { return new Segment(Pos, End); }
+        public override IShape GetShape() 
+        {
+            return GetSegmentShape();
+        }
+        public Segment GetSegmentShape()
+        {
+            if (normalFacingDirection == NormalFacingDirection.Automatic) return new Segment(Pos, End);
+            else
+            {
+                Vector2 n = (End - Pos);
+                if (normalFacingDirection == NormalFacingDirection.Right) n = n.GetPerpendicularRight().Normalize();
+                else n = n.GetPerpendicularLeft().Normalize();
+                return new Segment(Pos, End, n);
+            }
+        }
         public override bool CheckOverlap(ICollider other)
         {
             Segment shape = GetSegmentShape();
@@ -165,7 +208,7 @@ namespace ShapeEngine.Core
         public override Intersection CheckIntersection(ICollider other)
         {
             Segment shape = GetSegmentShape();
-            return shape.Intersect(other.GetShape());
+            return shape.Intersect(other.GetShape(), Vel);
             //var otherShape = other.GetShape();
             //if (otherShape is Circle c) return (true, shape.IntersectShape(c));
             //else if (otherShape is Segment s) return (true, shape.IntersectShape(s));
@@ -243,8 +286,16 @@ namespace ShapeEngine.Core
         //    Raylib.DrawRectangleLinesEx(Rect.Rectangle, 5f, color);
         //}
 
-        public override IShape GetShape() { return new Rect(Pos, Size, Alignement); }
-        public Rect GetRectShape() { return new Rect(Pos, Size, Alignement); }
+        public override IShape GetShape() 
+        {
+            return GetRectShape();  
+        }
+        public Rect GetRectShape()
+        {
+            var r = new Rect(Pos, Size, Alignement);
+            r.InsideNormals = InsideNormals;
+            return r;
+        }
         public override bool CheckOverlap(ICollider other)
         {
             Rect shape = GetRectShape();
@@ -260,7 +311,7 @@ namespace ShapeEngine.Core
         public override Intersection CheckIntersection(ICollider other)
         {
             Rect shape = GetRectShape();
-            return shape.Intersect(other.GetShape());
+            return shape.Intersect(other.GetShape(), Vel);
             //var otherShape = other.GetShape();
             //if (otherShape is Circle c) return (true, shape.IntersectShape(c));
             //else if (otherShape is Segment s) return (true, shape.IntersectShape(s));
@@ -349,13 +400,14 @@ namespace ShapeEngine.Core
         public void SetNewShape(Polygon newShape) { this.shape = newShape; }
         public override IShape GetShape() 
         {
-            if (dirty) UpdateShape();
-            return new Polygon(shape); 
+            return GetPolygonShape();
         }
         public Polygon GetPolygonShape() 
         { 
             if(dirty) UpdateShape();
-            return new Polygon(shape); 
+            var p = new Polygon(shape);
+            p.InsideNormals = InsideNormals;
+            return p;
         }
 
         public override bool CheckOverlap(ICollider other)
@@ -373,7 +425,7 @@ namespace ShapeEngine.Core
         public override Intersection CheckIntersection(ICollider other)
         {
             Polygon shape = GetPolygonShape();
-            return shape.Intersect(other.GetShape());
+            return shape.Intersect(other.GetShape(), Vel);
             //var otherShape = other.GetShape();
             //if (otherShape is Circle c) return (true, shape.IntersectShape(c));
             //else if (otherShape is Segment s) return (true, shape.IntersectShape(s));
@@ -483,16 +535,21 @@ namespace ShapeEngine.Core
         public override IShape GetShape() 
         {
             if(dirty) UpdateShape();
-            return new Polyline(shape); 
+
+            var pl = new Polyline(shape);
+            pl.InsideNormals = InsideNormals;
+            return pl;
         }
         public Polygon GetPolygonShape() 
         {
             if (dirty) UpdateShape();
-            return new Polygon(shape); 
+            var p = new Polygon(shape);
+            p.InsideNormals = InsideNormals;
+            return p; 
         }
 
         public override bool CheckOverlap(ICollider other) { return shape.Overlap(other.GetShape()); }
-        public override Intersection CheckIntersection(ICollider other) { return shape.Intersect(other.GetShape()); }
+        public override Intersection CheckIntersection(ICollider other) { return shape.Intersect(other.GetShape(), Vel); }
         public override bool CheckOverlapRect(Rect rect) { return shape.Overlap(rect); }
 
         private void UpdateShape()
