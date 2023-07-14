@@ -10,6 +10,108 @@ using System.Numerics;
 
 namespace Examples.Scenes.ExampleScenes
 {
+    public class ShapeCollider
+    {
+        const float collisionTime = 1f;
+
+        public Collider Collider { get; private set; }
+        public IShape Shape { get { return Collider.GetShape(); } }
+
+
+        float collisionTimer = -1f;
+        
+        Intersection lastIntersection = new();
+        
+        public ShapeCollider(int shapeIndex, Vector2 pos, float size)
+        {
+            if(shapeIndex == 1)//segment
+            {
+                Vector2 dir = SRNG.randVec2();
+                Vector2 start = pos - dir * size * 0.5f;
+                Vector2 end = pos + dir * size * 0.5f;
+                SegmentCollider sc = new(start, end);
+                Collider = sc;
+            }
+            else if (shapeIndex == 2)//circle
+            {
+                CircleCollider cc = new(pos, size * 0.5f);
+                Collider = cc;
+            }
+            else if (shapeIndex == 3)//triangle
+            {
+                Vector2 dir = SRNG.randVec2();
+                Vector2 A = pos + dir * size * 0.5f;
+                
+                Vector2 p = pos - dir * size * 0.5f;
+                Vector2 left = dir.GetPerpendicularLeft();
+                Vector2 right = dir.GetPerpendicularRight();
+                Vector2 B = p + left * SRNG.randF(size * 0.1f, size * 0.5f);
+                Vector2 C = p + right * SRNG.randF(size * 0.1f, size * 0.5f);
+                PolyCollider pc = new(pos, new(0f), A, B, C);
+                Collider = pc;
+            }
+            else if (shapeIndex == 4)//rect
+            {
+                RectCollider rc = new RectCollider(pos, new Vector2(size, size) * 0.5f, new Vector2(0.5f));
+                Collider = rc;
+            }
+            else if (shapeIndex == 5)//rect poly
+            {
+                Rect r = new (pos, new Vector2(size, size) * 0.5f, new Vector2(0.5f));
+                var points = r.ToPolygon();
+                points.RotateSelf(pos, SRNG.randAngleRad());
+                Collider = new PolyCollider(points, pos, new(0f));
+            }
+            else if (shapeIndex == 6)//poly
+            {
+                var poly = SPoly.Generate(pos, SRNG.randI(6, 24), size * 0.1f, size * 0.5f);
+                Collider = new PolyCollider(poly, pos, new(0f));
+            }
+            else if (shapeIndex == 7)//polyline
+            {
+                var poly = SPoly.Generate(pos, SRNG.randI(6, 24), size * 0.1f, size * 0.5f);
+                Collider = new PolylineCollider(poly.ToPolyline(), pos, new(0f));
+            }
+            else
+            {
+                CircleCollider cc = new(pos, size * 0.5f);
+                Collider = cc;
+            }
+
+            Collider.ComputeCollision = true;
+            Collider.ComputeIntersections = true;
+            Collider.Vel = SRNG.randVec2(50, 300);
+        }
+       
+        public void Collision(Intersection intersection)
+        {
+            Collider.Vel = Collider.Vel.Reflect(intersection.n);
+            collisionTimer = collisionTime;
+            lastIntersection = intersection;
+        }
+        public void Update(float dt)
+        {
+            Collider.UpdateState(dt);
+
+            if (collisionTimer > 0f)
+            {
+                collisionTimer -= dt;
+                if (collisionTimer <= 0f)
+                {
+                    collisionTimer = -1f;
+                }
+            }
+        }
+        public void Draw()
+        {
+            float colF = collisionTimer > 0f ? collisionTimer / collisionTime : 0f;
+            Color color = STween.Tween(ExampleScene.ColorHighlight2, ExampleScene.ColorHighlight1, colF, TweenType.QUAD_IN);
+
+            Collider.GetShape().DrawShape(4f, color);
+            lastIntersection.Draw(2f, ExampleScene.ColorLight, ExampleScene.ColorLight);
+        }
+    }
+
 
     public class PolylineCollisionExample : ExampleScene
     {
@@ -17,28 +119,29 @@ namespace Examples.Scenes.ExampleScenes
         Polyline polyline = new();
         int dragIndex = -1;
 
+        Rect boundaryRect;
         Segments boundary = new();
 
-        Rect boundaryRect;
 
-        CircleCollider ball;
-        float collisionTimer = -1f;
-        const float collisionTime = 1f;
+        //CircleCollider ball;
+        //RectCollider rect;
+        //
+        //float collisionTimer = -1f;
+        //const float collisionTime = 1f;
+        //Vector2 lastNormal = new();
+        //Vector2 lastIntersectionPoint = new();
+        //Intersection lastIntersection = new();
+        List<ShapeCollider> colliders = new();
 
-        Vector2 lastNormal = new();
-        Vector2 lastIntersectionPoint = new();
 
         Font font;
-
-        RectCollider rect;
-        Intersection lastIntersection = new();
-
         List<Circle> vertices = new();
         float vertexRadius = 8f;
         int pickedVertex = -1;
         bool drawClosest = true;
         Vector2 closest = new();
         int closestIndex = -1;
+        
         public PolylineCollisionExample()
         {
             Title = "Polyline Collision Example";
@@ -53,33 +156,48 @@ namespace Examples.Scenes.ExampleScenes
             boundaryRect.FlippedNormals = true;
             boundary = boundaryRect.GetEdges();
 
-            ball = new CircleCollider(boundaryRect.Center, 25f);
-            ball.ComputeCollision = true;
-            ball.ComputeIntersections = true;
-            ball.Vel = SRNG.randVec2(150, 300);
-
-            rect = new RectCollider(boundaryRect.Center, new Vector2(100, 100), new Vector2(0.5f));
-            rect.ComputeIntersections = true;
-            rect.ComputeCollision = true;
-            rect.Vel = SRNG.randVec2(150, 300);
-
-            polyline.AutomaticNormals = true;
-            polyline.FlippedNormals = true;
+            //polyline.AutomaticNormals = true;
         }
         public override void Reset()
         {
             polyline = new();
             dragIndex = -1;
-            ball.Pos = boundaryRect.Center;
-            ball.Vel = SRNG.randVec2(150, 300);
-            rect.Pos = ball.Pos;
-            rect.Vel = SRNG.randVec2(150, 300);
+            colliders.Clear();
         }
         public override void HandleInput(float dt)
         {
             base.HandleInput(dt);
-            if (IsKeyPressed(KeyboardKey.KEY_R)) { polyline = new(); }
+            //if (IsKeyPressed(KeyboardKey.KEY_R)) { polyline = new(); }
 
+            float shapeSize = 100; // SRNG.randF(50, 100);
+            if (IsKeyPressed(KeyboardKey.KEY_ONE))
+            {
+                colliders.Add(new ShapeCollider(1, game.MousePos, shapeSize));
+            }
+            else if (IsKeyPressed(KeyboardKey.KEY_TWO))
+            {
+                colliders.Add(new ShapeCollider(2, game.MousePos, shapeSize));
+            }
+            else if (IsKeyPressed(KeyboardKey.KEY_THREE))
+            {
+                colliders.Add(new ShapeCollider(3, game.MousePos, shapeSize));
+            }
+            else if (IsKeyPressed(KeyboardKey.KEY_FOUR))
+            {
+                colliders.Add(new ShapeCollider(4, game.MousePos, shapeSize));
+            }
+            else if (IsKeyPressed(KeyboardKey.KEY_FIVE))
+            {
+                colliders.Add(new ShapeCollider(5, game.MousePos, shapeSize));
+            }
+            else if (IsKeyPressed(KeyboardKey.KEY_SIX))
+            {
+                colliders.Add(new ShapeCollider(6, game.MousePos, shapeSize));
+            }
+            else if (IsKeyPressed(KeyboardKey.KEY_SEVEN))
+            {
+                colliders.Add(new ShapeCollider(7, game.MousePos, shapeSize));
+            }
         }
 
         public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
@@ -88,60 +206,25 @@ namespace Examples.Scenes.ExampleScenes
 
             UpdatePolyline(mousePosGame);
 
-            ball.UpdateState(dt);
-            rect.UpdateState(dt);
-
-            var ballShape = ball.GetShape();
             Segments allSegments = new();
             allSegments.AddRange(boundary);
             allSegments.AddRange(polyline.GetEdges());
 
-            foreach (var segment in allSegments)
+            foreach (var col in colliders)
             {
-                bool overlap = ballShape.Overlap(segment);
-                if (overlap)
+                col.Update(dt);
+                var shape = col.Shape;
+                foreach (var segment in allSegments)
                 {
-                    var intersection = ballShape.Intersect(segment, ball.Vel);
-                    if (intersection.valid)
+                    bool overlap = shape.Overlap(segment);
+                    if (overlap)
                     {
-                        Vector2 normal = intersection.n;
-                        //lastNormal = normal;
-                        //lastIntersection = intersection.p;
-                        ball.Vel = ball.Vel.Reflect(normal);
-
-                        collisionTimer = collisionTime;
-                        break;
+                        var intersection = shape.Intersect(segment, col.Collider.Vel);
+                        if (intersection.valid)
+                        {
+                            col.Collision(intersection);
+                        }
                     }
-                }
-
-            }
-
-            var rectShape = rect.GetShape();
-            foreach (var segment in allSegments)
-            {
-                bool overlap = rectShape.Overlap(segment);
-                if (overlap)
-                {
-                    var intersection = rectShape.Intersect(segment, rect.Vel);
-                    if (intersection.valid)
-                    {
-                        Vector2 normal = intersection.n;
-                        lastNormal = normal;
-                        lastIntersectionPoint = intersection.p;
-                        rect.Vel = rect.Vel.Reflect(normal);
-                        lastIntersection = intersection;
-                        break;
-                    }
-                }
-
-            }
-
-            if (collisionTimer > 0f)
-            {
-                collisionTimer -= dt;
-                if (collisionTimer <= 0f)
-                { 
-                    collisionTimer = -1f;
                 }
             }
         }
@@ -155,22 +238,13 @@ namespace Examples.Scenes.ExampleScenes
                 Segment normal = new(seg.Center, seg.Center + seg.n * 25f);
                 normal.Draw(2f, BLUE);
             }
-            //colSegments.Draw(2f, ColorLight);
             DrawPolyline();
 
-            float colF = collisionTimer > 0f ? collisionTimer / collisionTime : 0f;
-            
-            //Color ballColor = ColorHighlight2.Lerp(ColorHighlight1, colF * colF);
-            Color ballColor = STween.Tween(ColorHighlight2, ColorHighlight1, colF, TweenType.QUAD_IN);
-            ball.GetShape().DrawShape(2f, ballColor);
-            rect.GetShape().DrawShape(2f, ballColor);
-            if(lastNormal.X != 0f || lastNormal.Y != 0f)
+
+            foreach (var col in colliders)
             {
-                DrawCircleV(lastIntersectionPoint, 6f, ColorHighlight2);
-                Segment s = new(lastIntersectionPoint, lastIntersectionPoint + lastNormal * 25f);
-                s.Draw(2f, ColorHighlight2);
+                col.Draw();
             }
-            lastIntersection.Draw(2f, RED, BLUE);
             
         }
         public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
@@ -181,7 +255,7 @@ namespace Examples.Scenes.ExampleScenes
 
 
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
-            string infoText = "[LMB] Add point - [RMB] Remove point - [Space] Add Segment";
+            string infoText = String.Format("[LMB] Add point | [RMB] Remove point | [1 - 7] Add Shape | Shapes: {0}", colliders.Count);
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
             
         }

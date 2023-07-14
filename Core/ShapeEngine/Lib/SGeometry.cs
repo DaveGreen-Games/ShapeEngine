@@ -267,11 +267,6 @@ namespace ShapeEngine.Lib
                     }
                 }
                 intersection.CheckVelocity(aVelocity);
-                //implement the automatic normals here!!!!
-                //if shape b has automatic normals active, then go through all intersection point normals and flip them if necessary
-                //alternative would be to only have segments and polylines with automatic normals?
-                //check if shape b is segment or polyline and than check for automatic normals -> better!!!
-                //create new intersection from that
             }
             return intersection;
         }

@@ -60,7 +60,7 @@ namespace ShapeEngine.Core
         public Collider(float x, float y) { Pos = new(x, y); }
         public Collider(Vector2 pos, Vector2 vel) { Pos = pos; Vel = vel; }
 
-        public bool InsideNormals { get; set; } = false;
+        public bool FlippedNormals { get; set; } = false;
         public float Mass { get; set; } = 1.0f;
         public Vector2 Vel { get; set; }
         public virtual Vector2 Pos { get; set; }
@@ -108,7 +108,7 @@ namespace ShapeEngine.Core
         public Circle GetCircleShape() 
         {
             var c = new Circle(Pos, radius);
-            c.FlippedNormals = InsideNormals;
+            c.FlippedNormals = FlippedNormals;
             return c;
         }
         public override bool CheckOverlap(ICollider other)
@@ -293,7 +293,7 @@ namespace ShapeEngine.Core
         public Rect GetRectShape()
         {
             var r = new Rect(Pos, Size, Alignement);
-            r.FlippedNormals = InsideNormals;
+            r.FlippedNormals = FlippedNormals;
             return r;
         }
         public override bool CheckOverlap(ICollider other)
@@ -406,7 +406,7 @@ namespace ShapeEngine.Core
         { 
             if(dirty) UpdateShape();
             var p = new Polygon(shape);
-            p.FlippedNormals = InsideNormals;
+            p.FlippedNormals = FlippedNormals;
             return p;
         }
 
@@ -446,7 +446,7 @@ namespace ShapeEngine.Core
             {
                 Vector2 newPos = shape[i] + difference.pos;//translation
                 Vector2 w = newPos - cur.pos;
-                shape[i] = cur.pos + w.Rotate(difference.rotRad) * difference.scale;
+                shape[i] = cur.pos + w.Rotate(difference.rotRad) * cur.scale;
             }
 
         }
@@ -537,14 +537,14 @@ namespace ShapeEngine.Core
             if(dirty) UpdateShape();
 
             var pl = new Polyline(shape);
-            pl.FlippedNormals = InsideNormals;
+            pl.FlippedNormals = FlippedNormals;
             return pl;
         }
         public Polygon GetPolygonShape() 
         {
             if (dirty) UpdateShape();
             var p = new Polygon(shape);
-            p.FlippedNormals = InsideNormals;
+            p.FlippedNormals = FlippedNormals;
             return p; 
         }
 
@@ -562,7 +562,7 @@ namespace ShapeEngine.Core
             {
                 Vector2 newPos = shape[i] + difference.pos;//translation
                 Vector2 w = newPos - cur.pos;
-                shape[i] = cur.pos + w.Rotate(difference.rotRad) * difference.scale;
+                shape[i] = cur.pos + w.Rotate(difference.rotRad) * cur.scale;
             }
 
         }
