@@ -921,7 +921,8 @@ namespace ShapeEngine.Core
             {
                 Vector2 a = this[i];
                 Vector2 b = this[(i + 1) % Count];
-                float factor = a.X * b.Y - b.X * a.Y;
+                //float factor = a.X * b.Y - b.X * a.Y; //clockwise 
+                float factor = a.Y * b.X - a.X * b.Y; //counter clockwise
                 result.X += (a.X + b.X) * factor;
                 result.Y += (a.Y + b.Y) * factor;
             }
@@ -1136,7 +1137,7 @@ namespace ShapeEngine.Core
         {
             if (this.Count < 3) return 0f;
             float lengthSq = 0f;
-            for (int i = 0; i < Count - 1; i++)
+            for (int i = 0; i < Count; i++)
             {
                 Vector2 w = this[(i + 1)%Count] - this[i];
                 lengthSq += w.LengthSquared();
@@ -1337,28 +1338,41 @@ namespace ShapeEngine.Core
         {
             return this[SUtils.WrapIndex(Count, index)];
         }
-
-        public Vector2 GetCentroid()
+        public Vector2 GetCentroidOnLine()
         {
-            if(Count < 2) return new Vector2();
+            if (Count <= 0) return new(0f);
+            else if (Count == 1) return this[0];
             float halfLengthSq = GetCircumferenceSquared() * 0.5f;
             var segments = GetEdges();
             float curLengthSq = 0f; 
             foreach (var seg in segments)
             {
                 float segLengthSq = seg.LengthSquared;
-                if (curLengthSq + segLengthSq >= halfLengthSq)
+                curLengthSq += segLengthSq;
+                if (curLengthSq >= halfLengthSq)
                 {
-                    float dif = halfLengthSq - curLengthSq;
-                    return seg.start + seg.Dir * dif;
+                    float dif = curLengthSq - halfLengthSq;
+                    return seg.Center + seg.Dir * MathF.Sqrt(dif);
                 }
-                else curLengthSq += segLengthSq;
             }
             return new Vector2();
+        }
+        public Vector2 GetCentroid()
+        {
+            //if(Count < 2) return new Vector2();
+            //
+            //Vector2 c = new();
+            //foreach (var p in this)
+            //{
+            //    c += p;
+            //}
+            //return c / Count;
+            return GetCentroidMean();
         }
         public Vector2 GetCentroidMean()
         {
             if (Count <= 0) return new(0f);
+            else if (Count == 1) return this[0];
             Vector2 total = new(0f);
             foreach (Vector2 p in this) { total += p; }
             return total / Count;
@@ -1450,11 +1464,11 @@ namespace ShapeEngine.Core
         public float GetCircumference() { return MathF.Sqrt(GetCircumferenceSquared()); }
         public float GetCircumferenceSquared()
         {
-            if (this.Count < 3) return 0f;
+            if (this.Count < 2) return 0f;
             float lengthSq = 0f;
             for (int i = 0; i < Count - 1; i++)
             {
-                Vector2 w = this[(i + 1) % Count] - this[i];
+                Vector2 w = this[i+1] - this[i];
                 lengthSq += w.LengthSquared();
             }
             return lengthSq;

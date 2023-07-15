@@ -109,6 +109,9 @@ namespace Examples.Scenes.ExampleScenes
 
             Collider.GetShape().DrawShape(4f, color);
             lastIntersection.Draw(2f, ExampleScene.ColorLight, ExampleScene.ColorLight);
+
+            //DrawCircleV(Collider.Pos, 25, BLUE);
+            DrawCircleV(Shape.GetCentroid(), 2, ExampleScene.ColorHighlight2);
         }
     }
 
@@ -156,11 +159,11 @@ namespace Examples.Scenes.ExampleScenes
             boundaryRect.FlippedNormals = true;
             boundary = boundaryRect.GetEdges();
 
-            //polyline.AutomaticNormals = true;
+            polyline.AutomaticNormals = true;
         }
         public override void Reset()
         {
-            polyline = new();
+            polyline.Clear();
             dragIndex = -1;
             colliders.Clear();
         }
@@ -169,7 +172,9 @@ namespace Examples.Scenes.ExampleScenes
             base.HandleInput(dt);
             //if (IsKeyPressed(KeyboardKey.KEY_R)) { polyline = new(); }
 
-            float shapeSize = 100; // SRNG.randF(50, 100);
+            if (IsKeyPressed(KeyboardKey.KEY_SPACE)) polyline.AutomaticNormals = !polyline.AutomaticNormals;
+
+            float shapeSize = SRNG.randF(75, 150);
             if (IsKeyPressed(KeyboardKey.KEY_ONE))
             {
                 colliders.Add(new ShapeCollider(1, game.MousePos, shapeSize));
@@ -255,7 +260,7 @@ namespace Examples.Scenes.ExampleScenes
 
 
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
-            string infoText = String.Format("[LMB] Add point | [RMB] Remove point | [1 - 7] Add Shape | Shapes: {0}", colliders.Count);
+            string infoText = String.Format("[LMB] Add point | [RMB] Remove point | [Space] AutoNormals: {0} | [1 - 7] Add Shape | Shapes: {1}",polyline.AutomaticNormals ? "On" : "Off", colliders.Count);
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
             
         }
@@ -359,11 +364,16 @@ namespace Examples.Scenes.ExampleScenes
                 }
                 else segment.Draw(4f, ColorLight);
 
-                Segment normal = new(segment.Center, segment.Center + segment.n * 25f);
-                normal.Draw(2f, BLUE);
+                if (!polyline.AutomaticNormals)
+                {
+                    Segment normal = new(segment.Center, segment.Center + segment.n * 25f);
+                    normal.Draw(2f, BLUE);
+                }
             }
 
             if (drawClosest) DrawCircleV(closest, vertexRadius, ColorHighlight1);
+
+            //DrawCircleV(polyline.GetCentroid(), 15f, YELLOW);
         }
     }
 }
