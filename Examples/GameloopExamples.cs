@@ -33,6 +33,7 @@ namespace Examples
             fonts.Add(FontIDs.PromptThin, ContentLoader.LoadFont("fonts/Prompt-Thin.ttf", 200));
             fonts.Add(FontIDs.TekoMedium, ContentLoader.LoadFont("fonts/Teko-Medium.ttf", 200));
             fonts.Add(FontIDs.JetBrains, ContentLoader.LoadFont("fonts/JetBrainsMono.ttf", 500));
+            
             //fontNames.Add("Abel Regular");
             fontNames.Add("Gruppo Regular");
             fontNames.Add("Indie Flower Regular");
