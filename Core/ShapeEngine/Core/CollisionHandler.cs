@@ -1,7 +1,6 @@
 ﻿using ShapeEngine.Lib;
 using System.Numerics;
-
-
+using System.Xml.Schema;
 
 namespace ShapeEngine.Core
 {
@@ -98,12 +97,27 @@ namespace ShapeEngine.Core
 
             for (int i = 0; i < collidables.Count; i++)
             {
-                ICollidable collider = collidables[i];
-                if (!collider.GetCollider().Enabled || !collider.GetCollider().ComputeCollision) continue;
-                uint[] collisionMask = collider.GetCollisionMask();
+                ICollidable collidable = collidables[i];
+                var collider = collidable.GetCollider();
+                
+                if (!collider.Enabled || !collider.ComputeCollision) continue;
+                uint[] collisionMask = collidable.GetCollisionMask();
+
+                if (collider.CCD)
+                {
+                    Segment centerRay = new(collider.GetPrevPos(), collider.Pos);
+                    var centerQuery = QuerySpace(centerRay, true, collisionMask);
+                    if(centerQuery.Count > 0)
+                    {
+                        var closest = centerQuery[0].intersection.p;
+                        var r = collider.GetShape().GetBoundingCircle().radius;
+                        collider.Pos = closest - centerRay.Dir * r;
+                    }
+                }
 
                 List<ICollidable> collisions = new();
                 List<ICollidable> others = spatialHash.GetObjects(collider);
+               
                 foreach (ICollidable other in others)
                 {
                     if(!other.GetCollider().Enabled) continue;
@@ -114,12 +128,12 @@ namespace ShapeEngine.Core
                         if (!collisionMask.Contains(otherLayer)) continue;
                     }//else collide with everything
 
-                    var selfC = collider.GetCollider();
 
                     //either do bounding box / circle check here or within funcion
-                    var info = SGeometry.GetCollisionInfo(collider, other);
 
-                    if (overlaps.ContainsKey(collider) && overlaps[collider].Contains(other))//collision has happend last frame as well
+                    var info = SGeometry.GetCollisionInfo(collidable, other);
+
+                    if (overlaps.ContainsKey(collidable) && overlaps[collidable].Contains(other))//collision has happend last frame as well
                     {
                         if (info.overlapping)//has overlapped last frame and this frame
                         {
@@ -129,7 +143,7 @@ namespace ShapeEngine.Core
                         else//has overlapped last frame but not this frame -> overlap ended
                         {
                             //overlap ended
-                            overlapEnded.Add((collider, other));
+                            overlapEnded.Add((collidable, other));
                         }
                     }
                     else //collision has not happend last frame
@@ -150,20 +164,20 @@ namespace ShapeEngine.Core
                 //update overlaps dictionary for the current collider
                 if(collisions.Count > 0)
                 {
-                    if (overlaps.ContainsKey(collider))
+                    if (overlaps.ContainsKey(collidable))
                     {
-                        overlaps[collider] = collisions;
+                        overlaps[collidable] = collisions;
                     }
                     else
                     {
-                        overlaps.Add(collider, collisions);
+                        overlaps.Add(collidable, collisions);
                     }
                 }
                 else
                 {
-                    if(overlaps.ContainsKey(collider))
+                    if(overlaps.ContainsKey(collidable))
                     {
-                        overlaps[collider].Clear();
+                        overlaps[collidable].Clear();
                     }
                 }
 

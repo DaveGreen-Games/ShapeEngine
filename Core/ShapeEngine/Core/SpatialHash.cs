@@ -132,34 +132,34 @@ namespace ShapeEngine.Core
         }
 
         
-        public List<int> GetCellIDs(ICollider col)
-        {
-            return GetCellIDs(col.GetShape());
-
-            //Rect boundingRect = col.GetShape().GetBoundingBox();
-            //List<int> hashes = new List<int>();
-            //(int x, int y) topLeft = GetCellCoordinate(boundingRect.x, boundingRect.y);
-            //(int x, int y) bottomRight = GetCellCoordinate(boundingRect.x + boundingRect.width, boundingRect.y + boundingRect.height);
-            //
-            //for (int j = topLeft.y; j <= bottomRight.y; j++)
-            //{
-            //    for (int i = topLeft.x; i <= bottomRight.x; i++)
-            //    {
-            //        int id = GetCellID(i, j);
-            //
-            //        if (!hashes.Contains(id))
-            //        {
-            //            if (SGeometry.Overlap(GetCellRectangle(id), col))
-            //                hashes.Add(id);
-            //            //if (SGeometry.OverlapShape(GetCellRectangle(id), boundingRect))
-            //            //{
-            //            //    
-            //            //}
-            //        }
-            //    }
-            //}
-            //return hashes;
-        }
+        //public List<int> GetCellIDs(ICollider col)
+        //{
+        //    return GetCellIDs(col.GetShape());
+        //
+        //    //Rect boundingRect = col.GetShape().GetBoundingBox();
+        //    //List<int> hashes = new List<int>();
+        //    //(int x, int y) topLeft = GetCellCoordinate(boundingRect.x, boundingRect.y);
+        //    //(int x, int y) bottomRight = GetCellCoordinate(boundingRect.x + boundingRect.width, boundingRect.y + boundingRect.height);
+        //    //
+        //    //for (int j = topLeft.y; j <= bottomRight.y; j++)
+        //    //{
+        //    //    for (int i = topLeft.x; i <= bottomRight.x; i++)
+        //    //    {
+        //    //        int id = GetCellID(i, j);
+        //    //
+        //    //        if (!hashes.Contains(id))
+        //    //        {
+        //    //            if (SGeometry.Overlap(GetCellRectangle(id), col))
+        //    //                hashes.Add(id);
+        //    //            //if (SGeometry.OverlapShape(GetCellRectangle(id), boundingRect))
+        //    //            //{
+        //    //            //    
+        //    //            //}
+        //    //        }
+        //    //    }
+        //    //}
+        //    //return hashes;
+        //}
         public List<int> GetCellIDs(IShape shape)
         {
             Rect boundingRect = shape.GetBoundingBox();
@@ -196,7 +196,7 @@ namespace ShapeEngine.Core
         }
         public void Add(ICollidable collider)
         {
-            var hashes = GetCellIDs(collider.GetCollider());
+            var hashes = GetCellIDs(collider.GetCollider().GetShape());
             foreach (int hash in hashes)
             {
                 if (!buckets[hash].Contains(collider)) { buckets[hash].Add(collider); }
@@ -205,7 +205,7 @@ namespace ShapeEngine.Core
 
         public void Remove(ICollidable collider)
         {
-            var hashes = GetCellIDs(collider.GetCollider());
+            var hashes = GetCellIDs(collider.GetCollider().GetShape());
             foreach (int hash in hashes)
             {
                 buckets[hash].Remove(collider);
@@ -238,6 +238,53 @@ namespace ShapeEngine.Core
         //    return objects.Distinct().ToList();
         //}
 
+
+        public List<ICollidable> GetObjects(IShape shape)
+        {
+            HashSet<ICollidable> result = new();
+            var hashes = GetCellIDs(shape);
+            foreach (int hash in hashes)
+            {
+                foreach (var obj in buckets[hash]) result.Add(obj);
+            }
+            return result.ToList();
+        }
+        public List<ICollidable> GetObjects(ICollider col, params IShape[] shapes)
+        {
+            HashSet<ICollidable> uniqueObjects = new();
+            foreach (var shape in shapes)
+            {
+                var hashes = GetCellIDs(shape);
+                foreach (int hash in hashes)
+                {
+                    foreach (var obj in buckets[hash])
+                    {
+                        if (obj.GetCollider() == col) continue;
+                        uniqueObjects.Add(obj);
+                    }
+                }
+            }
+            return uniqueObjects.ToList();
+        }
+        public List<ICollidable> GetObjects(ICollider col)
+        {
+            return GetObjects(col, col.GetShape());
+        }
+        public List<ICollidable> GetObjects(ICollidable collider)
+        {
+            return GetObjects(collider.GetCollider());
+            //List<ICollidable> objects = new();
+            //var hashes = GetCellIDs(collider.GetCollider());
+            //foreach (int hash in hashes)
+            //{
+            //    objects.AddRange(buckets[hash]);
+            //}
+            //objects = objects.Distinct().ToList();
+            //objects.Remove(collider);
+            //return objects;
+        }
+
+        /* old versions
         public List<ICollidable> GetObjects(IShape shape)
         {
             HashSet<ICollidable> result = new();
@@ -274,7 +321,7 @@ namespace ShapeEngine.Core
             objects.Remove(collider);
             return objects;
         }
-
+        */
 
         /*public int GetNotEmptyCount()
         {

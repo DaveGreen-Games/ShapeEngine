@@ -1,5 +1,6 @@
 ﻿
 using Raylib_CsLo;
+using Raylib_CsLo.InternalHelpers;
 using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Screen;
@@ -14,13 +15,18 @@ namespace Examples.Scenes.ExampleScenes
     {
         const float collisionTime = 1f;
 
+        public bool CCD = true;
+        private Vector2 prevPos = new();
         public CircleCollider Collider { get; private set; }
         public IShape Shape { get { return Collider.GetShape(); } }
 
+        //Points prevPoints = new();
 
         float collisionTimer = -1f;
 
         Intersection lastIntersection = new();
+
+        
 
         public Bullet(Vector2 pos, Vector2 vel, float r)
         {
@@ -29,7 +35,14 @@ namespace Examples.Scenes.ExampleScenes
             Collider.ComputeIntersections = true;
             Collider.Vel = vel;
         }
-
+        public void UpdatePrevPos()
+        {
+            prevPos = Collider.Pos;
+        }
+        public Vector2 GetPrevPos()
+        {
+            return prevPos;
+        }
         public void Collision(Intersection intersection)
         {
             Collider.Vel = Collider.Vel.Reflect(intersection.n);
@@ -39,7 +52,7 @@ namespace Examples.Scenes.ExampleScenes
         public void Update(float dt)
         {
             Collider.UpdateState(dt);
-
+            //prevPoints.Add(Collider.PrevPos);
             if (collisionTimer > 0f)
             {
                 collisionTimer -= dt;
@@ -59,6 +72,8 @@ namespace Examples.Scenes.ExampleScenes
 
             //DrawCircleV(Collider.Pos, 25, BLUE);
             DrawCircleV(Shape.GetCentroid(), 2, ExampleScene.ColorHighlight2);
+
+            //prevPoints.Draw(5f, RED);
         }
     }
 
@@ -126,10 +141,76 @@ namespace Examples.Scenes.ExampleScenes
 
             foreach (var bullet in bullets)
             {
+                bullet.UpdatePrevPos();
                 bullet.Update(dt);
                 var shape = bullet.Shape;
+                var collider = bullet.Collider;
+
+                
+
+                if (bullet.CCD)
+                {
+                    Vector2 prevPos = bullet.GetPrevPos();
+                    Segment centerRay = new(prevPos, collider.Pos);
+                    float r = shape.GetBoundingCircle().radius;
+                    float r2 = r + r;
+
+                    List<Vector2> points = new();
+                    foreach (var seg in allSegments)
+                    {
+                        //moved more than twice the shapes radius -> means gap between last & cur frame
+                        if (centerRay.LengthSquared > r2 * r2)
+                        {
+                            var i = centerRay.Intersect(seg);
+                            if (i.valid)
+                            {
+                                foreach (var p in i.points)
+                                {
+                                    points.Add(p.p);
+                                }
+                            }
+                        }
+                    }
+
+                    if (points.Count > 0)
+                    {
+                        points.Sort
+                        (
+                            (a, b) =>
+                            {
+                                Vector2 pos = prevPos;
+                                float la = (pos - a).LengthSquared();
+                                float lb = (pos - b).LengthSquared();
+
+                                if (la > lb) return 1;
+                                else if (la == lb) return 0;
+                                else return -1;
+                            }
+                        );
+
+                        Vector2 closestPoint = points[0];
+                        collider.Pos = closestPoint - centerRay.Dir * r;
+                        shape = collider.GetShape();
+                    }
+                }
+                
+
                 foreach (var segment in allSegments)
                 {
+                    //if (bullet.CCD)
+                    //{
+                    //    //moved more than twice the shapes radius -> means gap between last & cur frame
+                    //    if (centerRay.LengthSquared > r2 * r2)
+                    //    {
+                    //        var i = centerRay.Intersect(segment);
+                    //        if (i.valid)
+                    //        {
+                    //            collider.Pos = i.p - centerRay.Dir * r;
+                    //            shape = collider.GetShape();
+                    //        }
+                    //    }
+                    //}
+                    
                     bool overlap = shape.Overlap(segment);
                     if (overlap)
                     {
@@ -142,6 +223,7 @@ namespace Examples.Scenes.ExampleScenes
                 }
             }
         }
+
         public override void Draw(Vector2 gameSIze, Vector2 mousePosGame)
         {
             base.Draw(gameSIze, mousePosGame);
@@ -191,8 +273,8 @@ namespace Examples.Scenes.ExampleScenes
         }
         private void IncreaseBulletSpeed()
         {
-            bulletSpeed += 100f;
-            if (bulletSpeed > 5000f) bulletSpeed = 1000f;
+            bulletSpeed += 1000f;
+            if (bulletSpeed > 15000f) bulletSpeed = 1000f;
         }
         private void DecreaseBulletR()
         {

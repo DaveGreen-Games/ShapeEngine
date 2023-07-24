@@ -126,6 +126,45 @@ namespace ShapeEngine.Lib
             return new();
         }
 
+        public static bool CheckCCDDistance(this Circle c, Vector2 prevPos)
+        {
+            float disSq = (c.center - prevPos).LengthSquared();
+            float r = c.radius;
+            float r2 = r + r;
+            return disSq > r2 * r2;
+        }
+        public static Vector2 CheckCCD(this ICollider col, ICollider other)
+        {
+            return CheckCCD(col.GetShape().GetBoundingCircle(), col.GetPrevPos(), other.GetShape());
+        }
+        public static Vector2 CheckCCD(this IShape shape, Vector2 prevPos, IShape other)
+        {
+            if(shape is Circle c)
+            {
+                return CheckCCD(c, prevPos, other);
+            }
+            else
+            {
+                return CheckCCD(shape.GetBoundingCircle(), prevPos, other);
+            }
+        }
+        public static Vector2 CheckCCD(this Circle c, Vector2 prevPos, IShape other)
+        {
+            Segment centerRay = new(prevPos, c.center);
+            float r = c.radius;
+            float r2 = r + r;
+            //moved more than twice the shapes radius -> means gap between last & cur frame
+            if (centerRay.LengthSquared > r2 * r2)
+            {
+                var i = centerRay.Intersect(other);
+                if (i.valid)
+                {
+                    return i.p - centerRay.Dir * r;
+                }
+            }
+            return c.center;
+        }
+
         public static bool Overlap(this ICollidable a, ICollidable b)
         {
             if (a == b) return false;

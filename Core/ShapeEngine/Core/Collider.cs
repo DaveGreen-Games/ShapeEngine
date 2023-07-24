@@ -65,17 +65,20 @@ namespace ShapeEngine.Core
         public Vector2 Vel { get; set; }
 
         public virtual Vector2 Pos { get; set; }
-        //previous pos
         public Vector2 ConstAcceleration { get; set; } = new(0f);
         public float Drag { get; set; } = 0f;
         public bool Enabled { get; set; } = true;
-        public bool ComputeCollision { get; set; } = true;
-        public bool ComputeIntersections { get; set; } = false;
-        //ccd
 
+        /// <summary>
+        /// If false this shape does not take part in collision detection.
+        /// </summary>
+        public bool ComputeCollision { get; set; } = true;
+        /// <summary>
+        /// If false only overlaps will be reported but no further details on the intersection.
+        /// </summary>
+        public bool ComputeIntersections { get; set; } = false;
+        
         public abstract IShape GetShape();
-        //public abstract Rect GetBoundingBox();
-        //public abstract void DrawDebugShape(Color color);
         public abstract bool CheckOverlap(ICollider other);
         public abstract Intersection CheckIntersection(ICollider other);
         public abstract bool CheckOverlapRect(Rect other);
@@ -86,7 +89,7 @@ namespace ShapeEngine.Core
         public void ClearAccumulatedForce() { accumulatedForce = new(0f); }
         public void AddForce(Vector2 force) { accumulatedForce = SPhysics.AddForce(this, force); }
         public void AddImpulse(Vector2 force) { SPhysics.AddImpuls(this, force); }
-        public void UpdateState(float dt) { SPhysics.UpdateState(this, dt); }
+        public virtual void UpdateState(float dt) { SPhysics.UpdateState(this, dt); }
 
     }
     public class CircleCollider : Collider
@@ -99,7 +102,27 @@ namespace ShapeEngine.Core
         private float radius = 0.0f;
         public float Radius { get { return radius; } set { radius = value; RadiusSquared = value * value; } }
         public float RadiusSquared { get; private set; }
-
+        private Vector2 prevPos = new();
+        public Vector2 GetPrevPos() { return prevPos; }
+        public void UpdatePrevPos() { prevPos = Pos; }
+        private bool ccd = false;
+        public bool CCD
+        {
+            get 
+            {
+                if (!ccd) return ccd;
+                else
+                {
+                    return SGeometry.CheckCCDDistance(GetCircleShape(), GetPrevPos());
+                }
+            }
+            set { ccd = value; }
+        }
+        public override void UpdateState(float dt) 
+        {
+            UpdatePrevPos();
+            SPhysics.UpdateState(this, dt); 
+        }
         //public float GetArea() { return MathF.PI * RadiusSquared; }
         //public float GetCircumference() { return MathF.PI * Radius * 2.0f; }
         //public override void DrawDebugShape(Color color) { new Circle(Pos, radius).dr SDrawing.DrawCircleLines(Pos, Radius, 5f, color, 4f); }

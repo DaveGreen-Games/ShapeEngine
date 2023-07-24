@@ -218,10 +218,17 @@ namespace ShapeEngine.Core
     }
     public interface ICollider : IPhysicsObject
     {
+        //public Vector2 PrevPos { get; set; }
         public bool Enabled { get; set; }
         public bool ComputeCollision { get; set; }
         public bool ComputeIntersections { get; set; }
-
+        /// <summary>
+        /// Enables Continous Collision Detection. Works best for small & fast objects that might tunnel through other shapes especially segments.
+        /// Tunneling occurs when a shape does not collide in the current frame and then moves to the other side of an object in the next frame.
+        /// </summary>
+        public virtual bool CCD { get { return false; } set { } }
+        public virtual Vector2 GetPrevPos() { return Pos; }
+        public virtual void UpdatePrevPos() { }
         public IShape GetShape();
 
         public bool CheckOverlap(ICollider other) { return GetShape().Overlap(other.GetShape()); }
