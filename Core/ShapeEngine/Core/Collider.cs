@@ -63,12 +63,15 @@ namespace ShapeEngine.Core
         public bool FlippedNormals { get; set; } = false;
         public float Mass { get; set; } = 1.0f;
         public Vector2 Vel { get; set; }
+
         public virtual Vector2 Pos { get; set; }
+        //previous pos
         public Vector2 ConstAcceleration { get; set; } = new(0f);
         public float Drag { get; set; } = 0f;
         public bool Enabled { get; set; } = true;
         public bool ComputeCollision { get; set; } = true;
         public bool ComputeIntersections { get; set; } = false;
+        //ccd
 
         public abstract IShape GetShape();
         //public abstract Rect GetBoundingBox();

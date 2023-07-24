@@ -115,6 +115,8 @@ namespace ShapeEngine.Core
                     }//else collide with everything
 
                     var selfC = collider.GetCollider();
+
+                    //either do bounding box / circle check here or within funcion
                     var info = SGeometry.GetCollisionInfo(collider, other);
 
                     if (overlaps.ContainsKey(collider) && overlaps[collider].Contains(other))//collision has happend last frame as well

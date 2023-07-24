@@ -33,6 +33,7 @@ namespace Examples.Scenes
             curButton = buttons[0];
             examples.Add(new PolylineInflationExample());
             examples.Add(new PolylineCollisionExample());
+            examples.Add(new CCDExample());
             examples.Add(new TextScalingExample());
             examples.Add(new TextWrapExample());
             examples.Add(new TextWrapEmphasisExample());
@@ -89,19 +90,19 @@ namespace Examples.Scenes
 
 
             string text = "Shape Engine Examples";
-            Rect titleRect = new Rect(uiSize * new Vector2(0.5f, 0.01f), uiSize * new Vector2(0.75f, 0.1f), new Vector2(0.5f, 0f));
+            Rect titleRect = new Rect(uiSize * new Vector2(0.5f, 0.01f), uiSize * new Vector2(0.75f, 0.09f), new Vector2(0.5f, 0f));
             titleFont.DrawText(text, titleRect, 10, new(0.5f), ExampleScene.ColorLight);
 
             int pages = GetMaxPages();
             string pagesText = pages <= 1 ? "Page 1/1" : String.Format("[Q] <- Page #{0}/{1} -> [E]", curPageIndex + 1, pages);
-            Rect pageRect = new Rect(uiSize * new Vector2(0.01f, 0.07f), uiSize * new Vector2(0.3f, 0.06f), new Vector2(0f, 0f));
+            Rect pageRect = new Rect(uiSize * new Vector2(0.01f, 0.12f), uiSize * new Vector2(0.3f, 0.06f), new Vector2(0f, 0f));
             titleFont.DrawText(pagesText, pageRect, 4f, new(0f, 0.5f), ExampleScene.ColorHighlight2);
 
-            Segment s = new(uiSize * new Vector2(0f, 0.17f), uiSize * new Vector2(1f, 0.17f));
+            Segment s = new(uiSize * new Vector2(0f, 0.22f), uiSize * new Vector2(1f, 0.22f));
             s.Draw(4f, ExampleScene.ColorLight);
 
             string backText = "Back [ESC]";
-            Rect backRect = new Rect(uiSize * new Vector2(0.01f, 0.125f), uiSize * new Vector2(0.2f, 0.04f), new Vector2(0f, 0f));
+            Rect backRect = new Rect(uiSize * new Vector2(0.01f, 0.17f), uiSize * new Vector2(0.2f, 0.04f), new Vector2(0f, 0f));
             titleFont.DrawText(backText, backRect, 4f, new Vector2(0f, 0f), ExampleScene.ColorHighlight2);
         }
         private void OnButtonSelected(UIElement button)

@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Diagnostics;
+using System.Numerics;
 using ShapeEngine.Core;
 
 
@@ -115,6 +116,8 @@ namespace ShapeEngine.Lib
         {
             if (self == other) return new();
 
+            //bounding circle or bounding box check should go here
+
             bool overlap = self.Overlap(other);
             if (overlap)
             {
@@ -122,7 +125,7 @@ namespace ShapeEngine.Lib
             }
             return new();
         }
-        
+
         public static bool Overlap(this ICollidable a, ICollidable b)
         {
             if (a == b) return false;
