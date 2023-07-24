@@ -6,6 +6,11 @@ using ShapeEngine.Random;
 
 namespace ShapeEngine.Core
 {
+    public class Points : List<Vector2>
+    {
+        public Points(params Vector2[] points) { AddRange(points); }
+        public Points(IEnumerable<Vector2> points) { AddRange(points); }
+    }
     public class Segments : List<Segment>
     {
         public Segments() { }

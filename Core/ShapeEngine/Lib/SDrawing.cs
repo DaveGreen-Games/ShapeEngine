@@ -151,7 +151,13 @@ namespace ShapeEngine.Lib
                 normal.Draw(lineThickness, normalColor);
             }
         }
-
+        public static void Draw(this Points points, float r, Raylib_CsLo.Color color)
+        {
+            foreach (var p in points)
+            {
+                DrawCircleV(p, r, color);
+            }
+        }
         #region Pixel
         public static void DrawPixel(Vector2 pos, Raylib_CsLo.Color color) => Raylib.DrawPixelV(pos, color); 
         public static void DrawPixel(float x, float y, Raylib_CsLo.Color color) => Raylib.DrawPixelV(new(x, y), color);
