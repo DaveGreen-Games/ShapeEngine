@@ -158,7 +158,15 @@ namespace ShapeEngine.Core
             }
         }
         
-        
+        public void AddCollider(ICollidable collider)
+        {
+            AddGameObject(collider);
+            Col.Add(collider);
+        }
+        public void AddColliders(params ICollidable[] colliders)
+        {
+            foreach (var col in colliders) AddCollider(col);
+        }
         public void AddGameObject(IGameObject gameObject) 
         {
             int layer = gameObject.AreaLayer;
@@ -217,13 +225,11 @@ namespace ShapeEngine.Core
             if (layers.ContainsKey(layer))
             {
                 var layerGroup = layers[layer];
-                foreach (var obj in layerGroup.objs)
+                for (int i = layerGroup.objs.Count - 1; i >= 0; i--)
                 {
-                    layerGroup.Remove(obj);
-                    if (obj is ICollidable collidable)
-                    {
-                        Col.Remove(collidable);
-                    }
+                    var obj = layerGroup.objs[i];
+                    if (obj is ICollidable col) Col.Remove(col);
+                    layerGroup.Remove(i);
                 }
                 layerGroup.objs.Clear();
             }
@@ -338,9 +344,9 @@ namespace ShapeEngine.Core
                 //float curSlowFactor =  UpdateSlowFactors.Total * layer.GetTotalUpdateSlowFactor(obj);
                 float dif = dt - delta; // (dt * curSlowFactor);
                 dif *= obj.UpdateSlowResistance;
-                
-                if(dif > 0f) obj.Update(dt - dif, mousePosGame, mousePosUI);
 
+                if (dif > 0f) obj.Update(dt - dif, mousePosGame, mousePosUI);
+                else obj.Update(dt, mousePosGame, mousePosUI);
                 //bool insideInner = InnerRect.OverlapShape(obj.GetBoundingBox());
                 //bool insideOuter = false;
                 //if (insideInner) insideOuter = true;
