@@ -24,7 +24,7 @@ namespace ShapeEngine.Core
         /// </summary>
         public void Close();
 
-        public void HandleInput(float dt);// { }
+        //public void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI);// { }
         public void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI);// { }
         public void Draw(Vector2 gameSize, Vector2 mousePosGame);// { }
         public void DrawUI(Vector2 uiSize, Vector2 mousePosUI);// { }
@@ -57,7 +57,7 @@ namespace ShapeEngine.Core
         /// Called every frame.
         /// </summary>
         /// <param name="dt"></param>
-        public virtual void Update(float dt) {  }
+        public virtual void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI) {  }
     }
     public interface IDrawable
     {
@@ -68,12 +68,12 @@ namespace ShapeEngine.Core
         /// <summary>
         /// Called every frame to draw the object.
         /// </summary>
-        public virtual void Draw() {  }
+        public virtual void Draw(Vector2 gameSize, Vector2 mousePosGame) {  }
         /// <summary>
         /// Called every frame after Draw was called, if DrawToUI is true.
         /// </summary>
         /// <param name="uiSize">The current size of the UI texture.</param>
-        public virtual void DrawUI(Vector2 uiSize) {  }
+        public virtual void DrawUI(Vector2 uiSize, Vector2 mousePosUI) {  }
     }
     public interface IAreaObject
     {
@@ -120,10 +120,16 @@ namespace ShapeEngine.Core
         /// <returns></returns>
         public bool IsDead();
     }
+
+    //public interface IInputReciever
+    //{
+    //    public virtual bool RecievesInput() { return false; }
+    //    public void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI);
+    //}
     /// <summary>
     /// Used by the area. Each IGameObject is updated and drawn by the area. If it dies it is removed from the area.
     /// </summary>
-    public interface IGameObject : ILocation, IBehaviorReceiver, IUpdateable, IDrawable, IAreaObject, IKillable
+    public interface IGameObject : ILocation, IBehaviorReceiver, IUpdateable, IDrawable, IAreaObject, IKillable//, IInputReciever
     {
         /// <summary>
         /// The camera calls this function on its target object. Used to determine the next position for the camera to follow.
@@ -220,15 +226,34 @@ namespace ShapeEngine.Core
     {
         //public Vector2 PrevPos { get; set; }
         public bool Enabled { get; set; }
+
+        /// <summary>
+        /// If disabled this collider will not take part in collision detection.
+        /// </summary>
         public bool ComputeCollision { get; set; }
+
+        /// <summary>
+        /// Should this collider compute intersections with other shapes or just overlaps.
+        /// </summary>
         public bool ComputeIntersections { get; set; }
+
+        /// <summary>
+        /// Treat all other closed shapes as circles. (not segment or polyline)
+        /// Still uses the actual shape for this collider.
+        /// If used with CCD any closed shape collision will be a circle/ circle collision
+        /// </summary>
+        public bool SimplifyCollision { get; set; }
+        
         /// <summary>
         /// Enables Continous Collision Detection. Works best for small & fast objects that might tunnel through other shapes especially segments.
+        /// Only works for closed shapes. (not segments or polylines)
+        /// Automatically uses the bounding circle for collision checking, not the actual shape.
         /// Tunneling occurs when a shape does not collide in the current frame and then moves to the other side of an object in the next frame.
         /// </summary>
-        public virtual bool CCD { get { return false; } set { } }
-        public virtual Vector2 GetPrevPos() { return Pos; }
-        public virtual void UpdatePrevPos() { }
+        public bool CCD { get; set; }
+        
+        public Vector2 GetPrevPos(); // { return Pos; }
+        public void UpdatePrevPos();// { }
         public IShape GetShape();
 
         public bool CheckOverlap(ICollider other) { return GetShape().Overlap(other.GetShape()); }

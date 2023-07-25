@@ -167,9 +167,9 @@ namespace Examples.Scenes.ExampleScenes
             dragIndex = -1;
             colliders.Clear();
         }
-        public override void HandleInput(float dt)
+        public override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            base.HandleInput(dt);
+            base.HandleInput(dt, mousePosGame, mousePosUI);
             //if (IsKeyPressed(KeyboardKey.KEY_R)) { polyline = new(); }
 
             if (IsKeyPressed(KeyboardKey.KEY_SPACE)) polyline.AutomaticNormals = !polyline.AutomaticNormals;

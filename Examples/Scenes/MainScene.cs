@@ -34,6 +34,7 @@ namespace Examples.Scenes
             examples.Add(new PolylineInflationExample());
             examples.Add(new PolylineCollisionExample());
             examples.Add(new CCDExample());
+            examples.Add(new AreaExample());
             examples.Add(new TextScalingExample());
             examples.Add(new TextWrapExample());
             examples.Add(new TextWrapEmphasisExample());
@@ -49,7 +50,7 @@ namespace Examples.Scenes
 
 
 
-        public override void HandleInput(float dt)
+        public void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             if (IsKeyPressed(KeyboardKey.KEY_ESCAPE)) GAMELOOP.Quit();
             if (IsKeyPressed(KeyboardKey.KEY_R))
@@ -71,6 +72,7 @@ namespace Examples.Scenes
 
         public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
+            HandleInput(dt, mousePosGame, mousePosUI);
             foreach (var b in buttons)
             {
                 b.Update(dt, GAMELOOP.UI.MousePos);

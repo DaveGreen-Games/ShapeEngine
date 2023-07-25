@@ -12,7 +12,7 @@ namespace ShapeEngine.Core
 
         public virtual void Activate(IScene oldScene) { }
         public virtual void Deactivate() { }
-        public virtual void HandleInput(float dt) { }
+        //public virtual void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI) { }
         public virtual void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI) { }
         public virtual void Draw(Vector2 gameSIze, Vector2 mousePosGame) { }
         public virtual void DrawUI(Vector2 uiSize, Vector2 mousePosUI) { }

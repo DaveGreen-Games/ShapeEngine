@@ -1,6 +1,7 @@
 ﻿using Raylib_CsLo;
 using ShapeEngine.Core;
 using ShapeEngine.Lib;
+using System.ComponentModel;
 using System.Numerics;
 
 namespace Examples.Scenes
@@ -29,7 +30,11 @@ namespace Examples.Scenes
 
         public virtual void Reset() { }
 
-        public override void HandleInput(float dt)
+        public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        {
+            HandleInput(dt, mousePosGame, mousePosUI);
+        }
+        public virtual void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             if (IsKeyPressed(KeyboardKey.KEY_R)) Reset();
             if (IsKeyPressed(KeyboardKey.KEY_ESCAPE)) GAMELOOP.GoToMainScene();

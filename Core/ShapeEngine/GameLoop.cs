@@ -298,7 +298,7 @@ namespace ShapeEngine
 
                 float dt = GetFrameTime();
 
-                HandleInput(dt);
+                //HandleInput(dt);
 
                 UpdateMonitorDevice(dt);
                 Update(dt);
@@ -420,7 +420,7 @@ namespace ShapeEngine
         /// </summary>
         protected virtual void BeginRun() { }
 
-        protected virtual void HandleInput(float dt) { }
+        //protected virtual void HandleInput(float dt) { }
         protected virtual void Update(float dt) { }
         protected virtual void Draw(ScreenTexture screenTexture) { }
         protected virtual void DrawToScreen(Vector2 screenSize) { }
@@ -727,15 +727,15 @@ namespace ShapeEngine
             CurScene = newScene;
         }
 
-        protected override void HandleInput(float dt){ HandleInputScene(dt); }
+        //protected override void HandleInput(float dt){ HandleInputScene(dt); }
         protected override void Update(float dt) { UpdateScence(dt); }
         protected override void Draw(ScreenTexture screenTexture) { DrawScene(screenTexture); }
         protected override void DrawToScreen(Vector2 screenSize) { DrawSceneToScreen(screenSize, MousePos); }
-        /// <summary>
-        /// Calls HandleInput on the Cur Scene.
-        /// </summary>
-        /// <param name="dt"></param>
-        protected void HandleInputScene(float dt) { CurScene.HandleInput(dt); }
+   ///// <summary>
+   ///// Calls HandleInput on the Cur Scene.
+   ///// </summary>
+   ///// <param name="dt"></param>
+   ////protected void HandleInputScene(float dt) { CurScene.HandleInput(dt, Game.MousePos, UI.MousePos); }
         /// <summary>
         /// Calls Update on the Cur Scene.
         /// </summary>

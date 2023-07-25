@@ -43,7 +43,7 @@ namespace Examples.Scenes.ExampleScenes
             font = GAMELOOP.GetFont(fontIndex);
         }
 
-        public override void HandleInput(float dt)
+        public override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             TextBox tb = new(text, caretIndex, textEntryActive);
             TextBox updated = tb.UpdateTextBox(new TextBoxKeys());
@@ -110,102 +110,18 @@ namespace Examples.Scenes.ExampleScenes
                     }
                 }
 
-                base.HandleInput(dt);
+                base.HandleInput(dt, mousePosGame, mousePosUI);
             }
 
             //text = updated.Text;
             caretIndex = updated.CaretIndex;
             textEntryActive = updated.Active;
 
-            //if (textEntryActive)
-            //{
-            //    if (IsKeyPressed(KeyboardKey.KEY_ESCAPE))
-            //    {
-            //        textEntryActive = false;
-            //        text = prevText;
-            //        prevText = string.Empty;
-            //    }
-            //    else if (IsKeyPressed(KeyboardKey.KEY_ENTER))
-            //    {
-            //        textEntryActive = false;
-            //        if (text.Length <= 0) text = prevText;
-            //        prevText = string.Empty;
-            //    }
-            //    else if (IsKeyPressed(KeyboardKey.KEY_DELETE))
-            //    {
-            //        var info = SText.TextDelete(text, caretIndex);
-            //        text = info.text;
-            //        caretIndex = info.caretIndex;
-            //    }
-            //    else if (IsKeyPressed(KeyboardKey.KEY_BACKSPACE))
-            //    {
-            //        var info = SText.TextBackspace(text, caretIndex);
-            //        text = info.text;
-            //        caretIndex = info.caretIndex;
-            //    }
-            //    else if (IsKeyPressed(KeyboardKey.KEY_LEFT))
-            //    {
-            //        caretIndex = SText.DecreaseCaretIndex(caretIndex, text.Length);
-            //    }
-            //    else if (IsKeyPressed(KeyboardKey.KEY_RIGHT))
-            //    {
-            //        caretIndex = SText.IncreaseCaretIndex(caretIndex, text.Length);
-            //    }
-            //    else
-            //    {
-            //        var info = SText.GetTextInput(text, caretIndex);
-            //        text = info.text;
-            //        caretIndex = info.newCaretPosition;
-            //    }
-            //}
-            //else
-            //{
-            //    if (IsKeyPressed(KeyboardKey.KEY_ENTER))
-            //    {
-            //        textEntryActive = true;
-            //        draggingBottomRight = false;
-            //        draggingTopLeft = false;
-            //        mouseInsideBottomRight = false;
-            //        mouseInsideTopLeft = false;
-            //        prevText = text;
-            //        //text = string.Empty;
-            //        return;
-            //    }
-            //    if (IsKeyPressed(KeyboardKey.KEY_W)) NextFont();
-            //
-            //    if (IsKeyPressed(KeyboardKey.KEY_D)) ChangeFontSpacing(1);
-            //    else if (IsKeyPressed(KeyboardKey.KEY_A)) ChangeFontSpacing(-1);
-            //
-            //    if (mouseInsideTopLeft)
-            //    {
-            //        if (draggingTopLeft)
-            //        {
-            //            if (IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT)) draggingTopLeft = false;
-            //        }
-            //        else
-            //        {
-            //            if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)) draggingTopLeft = true;
-            //        }
-            //
-            //    }
-            //    else if (mouseInsideBottomRight)
-            //    {
-            //        if (draggingBottomRight)
-            //        {
-            //            if (IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT)) draggingBottomRight = false;
-            //        }
-            //        else
-            //        {
-            //            if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)) draggingBottomRight = true;
-            //        }
-            //    }
-            //
-            //    base.HandleInput(dt);
-            //}
-
+            
         }
         public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
+            base.Update(dt, mousePosGame, mousePosUI);
             if (textEntryActive) return;
             if (draggingTopLeft || draggingBottomRight)
             {

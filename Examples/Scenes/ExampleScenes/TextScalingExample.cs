@@ -37,7 +37,7 @@ namespace Examples.Scenes.ExampleScenes
             font = GAMELOOP.GetFont(fontIndex);
         }
 
-        public override void HandleInput(float dt)
+        public override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             if (textEntryActive)
             {
@@ -104,12 +104,13 @@ namespace Examples.Scenes.ExampleScenes
                     }
                 }
 
-                base.HandleInput(dt);
+                base.HandleInput(dt, mousePosGame, mousePosUI);
             }
             
         }
         public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
+            base.Update(dt, mousePosGame, mousePosUI);
             if (textEntryActive) return;
             if (draggingTopLeft || draggingBottomRight)
             {

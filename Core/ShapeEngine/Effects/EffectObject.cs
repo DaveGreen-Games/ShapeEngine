@@ -64,6 +64,8 @@ namespace ShapeEngine.Effects
         public virtual bool HasBehaviors() { return false; }
         public virtual bool AddBehavior(IBehavior behavior) { return false; }
         public virtual bool RemoveBehavior(IBehavior behavior) { return false; }
+
+        //public void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI) { }
     }
 
     

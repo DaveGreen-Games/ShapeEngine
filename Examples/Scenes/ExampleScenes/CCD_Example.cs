@@ -117,9 +117,9 @@ namespace Examples.Scenes.ExampleScenes
             if (bullets.Count <= 0) segments.Clear();
             else bullets.Clear();
         }
-        public override void HandleInput(float dt)
+        public override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            base.HandleInput(dt);
+            base.HandleInput(dt, mousePosGame, mousePosUI);
 
             if (IsKeyPressed(KeyboardKey.KEY_SPACE)) Shoot();
             if(IsKeyPressed(KeyboardKey.KEY_ONE)) IncreaseBulletSpeed();
@@ -197,20 +197,6 @@ namespace Examples.Scenes.ExampleScenes
 
                 foreach (var segment in allSegments)
                 {
-                    //if (bullet.CCD)
-                    //{
-                    //    //moved more than twice the shapes radius -> means gap between last & cur frame
-                    //    if (centerRay.LengthSquared > r2 * r2)
-                    //    {
-                    //        var i = centerRay.Intersect(segment);
-                    //        if (i.valid)
-                    //        {
-                    //            collider.Pos = i.p - centerRay.Dir * r;
-                    //            shape = collider.GetShape();
-                    //        }
-                    //    }
-                    //}
-                    
                     bool overlap = shape.Overlap(segment);
                     if (overlap)
                     {

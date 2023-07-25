@@ -9,9 +9,10 @@ namespace ShapeEngine.Effects
         public float Mass { get; set; }
         public float Drag { get; set; }
         public Vector2 ConstAcceleration { get; set; }
-        public bool Enabled { get; set; }
-        public bool ComputeCollision { get; set; }
-        public bool ComputeIntersections { get; set; }
+        public bool Enabled { get; set; } = true;
+        public bool ComputeCollision { get; set; } = false;
+        public bool ComputeIntersections { get; set; } = false;
+        public bool SimplifyCollision { get; set; } = false;
 
         protected Vector2 accumulatedForce = new(0f);
 
@@ -21,12 +22,25 @@ namespace ShapeEngine.Effects
         public PhysicsParticle(Vector2 pos, Vector2 size, Vector2 vel, float lifetime) : base(pos, size, vel, lifetime) { }
         public PhysicsParticle(Vector2 pos, Vector2 size, float angleDeg, float lifetime) : base(pos, size, angleDeg, lifetime) { }
 
+        private Vector2 prevPos = new();
+        public Vector2 GetPrevPos() { return prevPos; }
+        public void UpdatePrevPos() { prevPos = Pos; }
+        public virtual bool CCD
+        {
+            get { return false; }
+            set {  }
+        }
+
 
         public Vector2 GetAccumulatedForce() { return accumulatedForce; }
         public void ClearAccumulatedForce() { accumulatedForce = new(0f); }
         public void AddForce(Vector2 force) { accumulatedForce = SPhysics.AddForce(this, force); }
         public void AddImpulse(Vector2 force) { SPhysics.AddImpuls(this, force); }
-        public void UpdateState(float dt) { SPhysics.UpdateState(this, dt); }
+        public void UpdateState(float dt) 
+        {
+            UpdatePrevPos();
+            SPhysics.UpdateState(this, dt); 
+        }
 
         public override bool Update(float dt)
         {

@@ -240,7 +240,21 @@ namespace ShapeEngine.Core
             Clear();
             Col.Close();
         }
-        public virtual void Update(float dt)
+        //public virtual void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        //{
+        //    for (int i = 0; i < layers.Count; i++)
+        //    {
+        //        var layer = layers[i];
+        //
+        //        for (int j = 0; j < layer.objs.Count; j++)
+        //        {
+        //            var obj = layer.objs[j];
+        //            if(obj.RecievesInput())
+        //                obj.HandleInput(dt, mousePosGame, mousePosGame);
+        //        }
+        //    }
+        //}
+        public virtual void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             Col.Update(dt);
             
@@ -249,7 +263,7 @@ namespace ShapeEngine.Core
             for (int i = 0; i < layers.Count; i++)
             {
                 var layer = layers[i];
-                if(layer.objs.Count > 0) UpdateLayer(dt, layer);
+                if(layer.objs.Count > 0) UpdateLayer(dt, mousePosGame, mousePosUI, layer);
             }
         }
         
@@ -259,7 +273,7 @@ namespace ShapeEngine.Core
             Col.DebugDrawGrid(collisionGridColor, collisionGridFillColor);
         }
 
-        public virtual void Draw()
+        public virtual void Draw(Vector2 gameSize, Vector2 mousePosGame)
         {
             uiObjects.Clear();
             for (int i = 0; i < layers.Count; i++)
@@ -269,16 +283,16 @@ namespace ShapeEngine.Core
                 for (int j = 0; j < layer.objs.Count; j++)
                 {
                     var obj = layer.objs[j];
-                    obj.Draw();
+                    obj.Draw(gameSize, mousePosGame);
                     if (obj.DrawToUI) uiObjects.Add(obj);
                 }
             }
         }
-        public virtual void DrawUI(Vector2 uiSize)
+        public virtual void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
         {
             foreach (var obj in uiObjects)
             {
-                obj.DrawUI(uiSize);
+                obj.DrawUI(uiSize, mousePosUI);
             }
         }
         
@@ -293,7 +307,7 @@ namespace ShapeEngine.Core
             }
             return result;
         }
-        protected virtual void UpdateLayer(float dt, AreaLayer layer)
+        protected virtual void UpdateLayer(float dt, Vector2 mousePosGame, Vector2 mousePosUI, AreaLayer layer)
         {
             var behaviors = GetLayerBehaviors(layer.Layer);
             
@@ -305,6 +319,8 @@ namespace ShapeEngine.Core
                     layer.Remove(i);
                     return;
                 }
+
+                //if(obj.RecievesInput()) obj.HandleInput(dt, mousePosGame, mousePosUI);
 
                 obj.UpdateParallaxe(ParallaxePosition);
 
@@ -323,7 +339,7 @@ namespace ShapeEngine.Core
                 float dif = dt - delta; // (dt * curSlowFactor);
                 dif *= obj.UpdateSlowResistance;
                 
-                if(dif > 0f) obj.Update(dt - dif);
+                if(dif > 0f) obj.Update(dt - dif, mousePosGame, mousePosUI);
 
                 //bool insideInner = InnerRect.OverlapShape(obj.GetBoundingBox());
                 //bool insideOuter = false;
