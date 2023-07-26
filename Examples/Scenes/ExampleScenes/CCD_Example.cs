@@ -15,7 +15,7 @@ namespace Examples.Scenes.ExampleScenes
     {
         const float collisionTime = 1f;
 
-        public bool CCD = true;
+        
         private Vector2 prevPos = new();
         public CircleCollider Collider { get; private set; }
         public IShape Shape { get { return Collider.GetShape(); } }
@@ -77,6 +77,7 @@ namespace Examples.Scenes.ExampleScenes
         }
     }
 
+    
 
     public class CCDExample : ExampleScene
     {
@@ -97,6 +98,8 @@ namespace Examples.Scenes.ExampleScenes
         float bulletR = 15f;
 
         Font font;
+
+        bool CCD = true;
 
         public CCDExample()
         {
@@ -124,6 +127,7 @@ namespace Examples.Scenes.ExampleScenes
             if (IsKeyPressed(KeyboardKey.KEY_SPACE)) Shoot();
             if(IsKeyPressed(KeyboardKey.KEY_ONE)) IncreaseBulletSpeed();
             if(IsKeyReleased(KeyboardKey.KEY_TWO)) DecreaseBulletR();
+            if (IsKeyPressed(KeyboardKey.KEY_C)) CCD = !CCD;
 
         }
 
@@ -146,9 +150,8 @@ namespace Examples.Scenes.ExampleScenes
                 var shape = bullet.Shape;
                 var collider = bullet.Collider;
 
-                
 
-                if (bullet.CCD)
+                if (CCD)
                 {
                     Vector2 prevPos = bullet.GetPrevPos();
                     Segment centerRay = new(prevPos, collider.Pos);
@@ -194,7 +197,6 @@ namespace Examples.Scenes.ExampleScenes
                     }
                 }
                 
-
                 foreach (var segment in allSegments)
                 {
                     bool overlap = shape.Overlap(segment);
@@ -244,8 +246,8 @@ namespace Examples.Scenes.ExampleScenes
         {
             base.DrawUI(uiSize, mousePosUI);
 
-            Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
-            string infoText = String.Format("[LMB] Add Segment | [RMB] Cancel Segment | [Space] Shoot | [1] BulletSpeed: {0} | [2] Bullet R: {1}", bulletSpeed, bulletR);
+            Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.98f, 0.11f), new Vector2(0.5f, 1f));
+            string infoText = String.Format("[LMB] Add Segment [RMB] Cancel Segment [Space] Shoot [1] Speed: {0} [2] Size: {1} [C] CCD: {2}", bulletSpeed, bulletR, CCD ? "ON" : "OFF");
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
 
         }
