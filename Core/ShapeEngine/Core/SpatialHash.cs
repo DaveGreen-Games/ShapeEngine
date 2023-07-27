@@ -194,12 +194,12 @@ namespace ShapeEngine.Core
                 Add(collider);
             }
         }
-        public void Add(ICollidable collider)
+        public void Add(ICollidable collidable)
         {
-            var hashes = GetCellIDs(collider.GetCollider().GetShape());
+            var hashes = GetCellIDs(collidable.GetCollider().GetShape());
             foreach (int hash in hashes)
             {
-                if (!buckets[hash].Contains(collider)) { buckets[hash].Add(collider); }
+                if (!buckets[hash].Contains(collidable)) { buckets[hash].Add(collidable); }
             }
         }
 

@@ -109,6 +109,7 @@ namespace Examples.Scenes.ExampleScenes
             
 
             int shapeIndex = SRNG.randI(0, 4);
+            shapeIndex = 0;
             if(shapeIndex == 0)
             {
                 this.collider = new CircleCollider(pos, vel, size * 0.5f);
@@ -132,8 +133,8 @@ namespace Examples.Scenes.ExampleScenes
             this.collider.ComputeCollision = true;
             this.collider.ComputeIntersections = true;
             this.collider.Enabled = true;
-            this.collider.CCD = false;
-            this.collisionMask = new uint[] { WALL_ID , ROCK_ID};
+            this.collider.CCD = true;
+            this.collisionMask = new uint[] { WALL_ID};
         }
 
         public override uint GetCollisionLayer()
@@ -219,7 +220,7 @@ namespace Examples.Scenes.ExampleScenes
             //boundary = boundaryRect.GetEdges();
             //boundaryRect = SRect.ApplyMarginsAbsolute(r, 25f, 25f, 75 * 2f, 75 * 2f);
             boundaryRect = new(new Vector2(0, 0), new Vector2(1800, 800), new Vector2(0.5f));
-            area = new(boundaryRect.ScaleSize(1.05f, new Vector2(0.5f)), 4, 4);
+            area = new(boundaryRect.ScaleSize(1.05f, new Vector2(0.5f)), 8, 8);
             AddBoundaryWalls();
         }
         public override void Reset()
@@ -234,9 +235,15 @@ namespace Examples.Scenes.ExampleScenes
 
             if (IsKeyPressed(KeyboardKey.KEY_SPACE))
             {
-                Rock r = new(mousePosGame, SRNG.randVec2() * 100, 70);// SRNG.randF(10, 50));
+                //for (int i = 0; i < 25; i++)
+                //{
+                //    Rock r = new(mousePosGame + SRNG.randVec2(0, 250), SRNG.randVec2() * 100, SRNG.randF(10, 15));// SRNG.randF(10, 50));
+                //    area.AddCollider(r);
+                //}
+
+                Rock r = new(mousePosGame, SRNG.randVec2() * 2000, 25);
                 area.AddCollider(r);
-                
+
             }
 
             if(IsKeyPressed(KeyboardKey.KEY_ZERO)) { drawDebug = !drawDebug; }

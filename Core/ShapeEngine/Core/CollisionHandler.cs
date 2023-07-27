@@ -105,13 +105,21 @@ namespace ShapeEngine.Core
 
                 if (collider.CCD)
                 {
+                    float r = collider.GetShape().GetBoundingCircle().radius;
                     Segment centerRay = new(collider.GetPrevPos(), collider.Pos);
-                    var centerQuery = QuerySpace(centerRay, true, collisionMask);
-                    if(centerQuery.Count > 0)
+                    if(centerRay.LengthSquared > r * r)
                     {
-                        var closest = centerQuery[0].intersection.p;
-                        var r = collider.GetShape().GetBoundingCircle().radius;
-                        collider.Pos = closest - centerRay.Dir * r;
+                        var centerQuery = QuerySpace(centerRay, true, collisionMask);
+                
+                        foreach (var qi in centerQuery)
+                        {
+                            if (qi.collidable != collidable)
+                            {
+                                var closest = qi.intersection.p;
+                                collider.Pos = closest - centerRay.Dir * r;
+                                break;
+                            }
+                        }
                     }
                 }
 
@@ -297,6 +305,48 @@ namespace ShapeEngine.Core
             List<ICollidable> objects = spatialHash.GetObjects(shape);
             foreach (ICollidable obj in objects)
             {
+                if (collisionMask.Length <= 0)
+                {
+                    var intersection = SGeometry.Intersect(shape, obj.GetCollider().GetShape());
+                    if (intersection.valid) infos.Add(new(obj, intersection));
+                }
+                else
+                {
+                    if (collisionMask.Contains(obj.GetCollisionLayer()))
+                    {
+                        var intersection = SGeometry.Intersect(shape, obj.GetCollider().GetShape());
+                        if (intersection.valid) infos.Add(new(obj, intersection));
+                    }
+                }
+            }
+
+            if (sorted && infos.Count > 1)
+            {
+                infos.Sort
+                (
+                    (a, b) =>
+                    {
+                        Vector2 pos = shape.GetCentroid();
+                        float la = (pos - a.intersection.p).LengthSquared();
+                        float lb = (pos - b.intersection.p).LengthSquared();
+
+                        if (la > lb) return 1;
+                        else if (la == lb) return 0;
+                        else return -1;
+                    }
+                );
+            }
+
+            return infos;
+        }
+        public List<QueryInfo> QuerySpace(IShape shape, ICollidable[] exceptions, bool sorted = false, params uint[] collisionMask)
+        {
+            List<QueryInfo> infos = new();
+            List<ICollidable> objects = spatialHash.GetObjects(shape);
+            foreach (ICollidable obj in objects)
+            {
+                if(exceptions.Contains(obj)) continue;
+
                 if (collisionMask.Length <= 0)
                 {
                     var intersection = SGeometry.Intersect(shape, obj.GetCollider().GetShape());

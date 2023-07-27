@@ -95,17 +95,31 @@ namespace ShapeEngine.Lib
             this.points = newPoints;
             this.n = points[0].n;
         }
-        public void CheckVelocity(Vector2 vel)
+        
+        public Intersection CheckVelocityNew(Vector2 vel)
         {
-            foreach (var intersection in points)
+            List<(Vector2 p, Vector2 n)> newPoints = new();
+            
+            for (int i = points.Count - 1; i >= 0; i--)
             {
-                if (intersection.n.IsFacingTheSameDirection(vel))
-                {
-                    this.valid = false;
-                    return;
-                }
+                var intersection = points[i];
+                if (intersection.n.IsFacingTheSameDirection(vel)) continue;
+                newPoints.Add(intersection);
             }
+            return new(newPoints);
         }
+        //public void CheckVelocity(Vector2 vel)
+        //{
+        //    
+        //    foreach (var intersection in points)
+        //    {
+        //        if (intersection.n.IsFacingTheSameDirection(vel))
+        //        {
+        //            this.valid = false;
+        //            return;
+        //        }
+        //    }
+        //}
     }
     
     public static class SGeometry
@@ -312,7 +326,7 @@ namespace ShapeEngine.Lib
                         intersection.FlipNormals(a.GetCentroid());
                     }
                 }
-                intersection.CheckVelocity(aVelocity);
+                intersection = intersection.CheckVelocityNew(aVelocity);
             }
             return intersection;
         }
