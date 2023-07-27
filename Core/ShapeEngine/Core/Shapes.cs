@@ -1,12 +1,13 @@
 ﻿
 using System.Numerics;
+using Microsoft.Win32.SafeHandles;
 using Raylib_CsLo;
 using ShapeEngine.Lib;
 using ShapeEngine.Random;
 
 namespace ShapeEngine.Core
 {
-    public class Points : List<Vector2>
+    public class Points  : List<Vector2>
     {
         public Points(params Vector2[] points) { AddRange(points); }
         public Points(IEnumerable<Vector2> points) { AddRange(points); }
@@ -319,7 +320,7 @@ namespace ShapeEngine.Core
         public float GetArea() { return MathF.PI * radius * radius; }
         public float GetCircumference() { return MathF.PI * radius * 2f; }
         public float GetCircumferenceSquared() { return GetCircumference() * GetCircumference(); }
-        public Rect GetBoundingBox() { return new Rect(center, new(radius, radius), new(0.5f)); }
+        public Rect GetBoundingBox() { return new Rect(center, new Vector2(radius, radius) * 2f, new(0.5f)); }
         public bool IsPointInside(Vector2 p) { return SGeometry.IsPointInCircle(p, center, radius); }
         public Vector2 GetClosestPoint(Vector2 p) { return (p - center).Normalize() * radius; }
         public Vector2 GetClosestVertex(Vector2 p) { return (p - center).Normalize() * radius; }
@@ -464,7 +465,7 @@ namespace ShapeEngine.Core
             
         }
         public Triangulation Triangulate() { return this.Triangulate(GetCentroid()); }
-        public Circle GetBoundingCircle() { return ToPolygon().GetBoundingCircle(); }
+        public Circle GetBoundingCircle() { return GetCircumCircle(); } // ToPolygon().GetBoundingCircle(); }
         public float GetCircumference() { return MathF.Sqrt(GetCircumferenceSquared()); }
         public float GetCircumferenceSquared() { return A.LengthSquared() + B.LengthSquared() + C.LengthSquared(); }
         public float GetArea() 
@@ -1115,7 +1116,8 @@ namespace ShapeEngine.Core
             int num = this.Count;
             Vector2 origin = new();
             for (int i = 0; i < num; i++) { origin += this[i]; }
-            origin *= (1f / (float)num);
+            origin = origin / num;
+            //origin *= (1f / (float)num);
             for (int i = 0; i < num; i++)
             {
                 float d = (origin - this[i]).LengthSquared();

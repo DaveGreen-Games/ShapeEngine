@@ -51,11 +51,11 @@ namespace Examples.Scenes.ExampleScenes
             return false;
         }
 
-        public void Draw(Vector2 gameSize, Vector2 mousePosGame)
+        public virtual void Draw(Vector2 gameSize, Vector2 mousePosGame)
         {
-            collider.GetShape().DrawShape(4f, ExampleScene.ColorHighlight1);
+            //collider.GetShape().DrawShape(6f, ExampleScene.ColorHighlight1);
         }
-        public void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        public virtual void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             collider.UpdateState(dt);
         }
@@ -88,18 +88,52 @@ namespace Examples.Scenes.ExampleScenes
         {
             return WALL_ID;
         }
+        public override void Draw(Vector2 gameSize, Vector2 mousePosGame)
+        {
+            collider.GetShape().DrawShape(2f, ExampleScene.ColorHighlight1);
+        }
     }
     internal class Rock : Gameobject
     {
+        Intersection lastIntersection = new();
+        Vector2 lastVel = new();
+        //Vector2 curFrameVel = new();
+
+        //int limit = 250;
+        //Points prevPositions = new();
+        //Points curPositions = new();
+
         public Rock(Vector2 pos, Vector2 vel, float size)
         {
-            var shape = SPoly.Generate(pos, 8, size * 0.5f, size);
-            this.collider = new PolyCollider(shape, pos, vel);
+            
+            
+
+            int shapeIndex = SRNG.randI(0, 4);
+            if(shapeIndex == 0)
+            {
+                this.collider = new CircleCollider(pos, vel, size * 0.5f);
+            }
+            else if(shapeIndex == 1)
+            {
+                this.collider = new RectCollider(pos, vel, new Vector2(size, size), new Vector2(0.5f));
+            }
+            else if (shapeIndex == 2)
+            {
+                var shape = SPoly.Generate(pos, 3, size * 0.5f, size);
+                this.collider = new PolyCollider(shape, pos, vel);
+            }
+            else if (shapeIndex == 3)
+            {
+                var shape = SPoly.Generate(pos, SRNG.randI(6, 12), size * 0.5f, size);
+                this.collider = new PolyCollider(shape, pos, vel);
+            }
+            else this.collider = new CircleCollider(pos, vel, size * 0.5f);
+
             this.collider.ComputeCollision = true;
             this.collider.ComputeIntersections = true;
             this.collider.Enabled = true;
-            this.collider.CCD = true;
-            this.collisionMask = new uint[] { WALL_ID };
+            this.collider.CCD = false;
+            this.collisionMask = new uint[] { WALL_ID , ROCK_ID};
         }
 
         public override uint GetCollisionLayer()
@@ -108,13 +142,52 @@ namespace Examples.Scenes.ExampleScenes
         }
         public override void Overlap(CollisionInfo info)
         {
-            if (info.overlapping)
+            
+            if (info.collision)
             {
                 if (info.intersection.valid)
                 {
+                    lastIntersection = info.intersection;
+                    lastVel = collider.Vel;
                     collider.Vel = collider.Vel.Reflect(info.intersection.n);
                 }
             }
+        }
+        //public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        //{
+        //    base.Update(dt, mousePosGame, mousePosUI);
+        //    //curFrameVel = collider.Vel * dt;
+        //    //prevPositions.Add(collider.GetPrevPos());
+        //    //curPositions.Add(collider.Pos);
+        //    //if (prevPositions.Count > limit) prevPositions.RemoveAt(0);
+        //    //if(curPositions.Count > limit) curPositions.RemoveAt(0);
+        //}
+        private void DrawBoundingShapes()
+        {
+            var shape = collider.GetShape();
+            shape.GetBoundingBox().DrawLines(2f, BLUE);
+            shape.GetBoundingCircle().DrawLines(2f, GREEN);
+        }
+        public override void Draw(Vector2 gameSize, Vector2 mousePosGame)
+        {
+            base.Draw(gameSize, mousePosGame);
+
+            collider.GetShape().DrawShape(4f, ExampleScene.ColorHighlight2);
+
+            //DrawBoundingShapes();
+            
+            //if (lastIntersection.valid)
+            //{
+            //    lastIntersection.Draw(2f, RED, BLUE);
+            //    Segment v = new(lastIntersection.p, lastIntersection.p + lastVel);
+            //    v.Draw(2f, GREEN);
+            //}
+            //collider.GetShape().GetBoundingBox().DrawLines(4f, BLUE);
+            //Segment vel = new(collider.Pos, collider.Pos + curFrameVel);
+            //vel.Draw(2f, ORANGE);
+
+            //prevPositions.Draw(6, ORANGE);
+            //curPositions.Draw(4, GREEN);
         }
     }
 
@@ -141,12 +214,12 @@ namespace Examples.Scenes.ExampleScenes
 
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
 
-            var cameraRect = cam.GetArea();
-            boundaryRect = SRect.ApplyMarginsAbsolute(cameraRect, 25f, 25f, 75 * 2f, 75 * 2f);
+            //var cameraRect = cam.GetArea();
             //boundaryRect.FlippedNormals = true;
             //boundary = boundaryRect.GetEdges();
-
-            area = new(boundaryRect, 10, 10);
+            //boundaryRect = SRect.ApplyMarginsAbsolute(r, 25f, 25f, 75 * 2f, 75 * 2f);
+            boundaryRect = new(new Vector2(0, 0), new Vector2(1800, 800), new Vector2(0.5f));
+            area = new(boundaryRect.ScaleSize(1.05f, new Vector2(0.5f)), 4, 4);
             AddBoundaryWalls();
         }
         public override void Reset()
@@ -161,7 +234,7 @@ namespace Examples.Scenes.ExampleScenes
 
             if (IsKeyPressed(KeyboardKey.KEY_SPACE))
             {
-                Rock r = new(mousePosGame, SRNG.randVec2(50, 250), SRNG.randF(10, 50));
+                Rock r = new(mousePosGame, SRNG.randVec2() * 100, 70);// SRNG.randF(10, 50));
                 area.AddCollider(r);
                 
             }
