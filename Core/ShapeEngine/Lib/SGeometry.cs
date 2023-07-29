@@ -134,8 +134,6 @@ namespace ShapeEngine.Lib
         {
             if (self == other) return new();
 
-            //bounding circle or bounding box check should go here
-
             bool overlap = self.Overlap(other);
             if (overlap)
             {
@@ -151,10 +149,10 @@ namespace ShapeEngine.Lib
             //float r2 = r + r;
             return disSq > r * r;// r2 * r2;
         }
-        public static Vector2 CheckCCD(this ICollider col, ICollider other)
-        {
-            return CheckCCD(col.GetShape().GetBoundingCircle(), col.GetPrevPos(), other.GetShape());
-        }
+        //public static Vector2 CheckCCD(this ICollider col, ICollider other)
+        //{
+        //    return CheckCCD(col.GetShape().GetBoundingCircle(), col.GetPrevPos(), other.GetShape());
+        //}
         public static Vector2 CheckCCD(this IShape shape, Vector2 prevPos, IShape other)
         {
             if(shape is Circle c)
@@ -193,7 +191,7 @@ namespace ShapeEngine.Lib
         {
             if (colA == colB) return false;
             if (colA == null || colB == null) return false;
-            if (!colA.Enabled || !colB.Enabled) return false;
+            //if (!colA.Enabled || !colB.Enabled) return false;
 
             return colA.CheckOverlap(colB);
 

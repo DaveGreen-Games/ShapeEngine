@@ -147,6 +147,19 @@ namespace ShapeEngine.Core
             }
             return objects;
         }
+        public int GetGameobjectCount()
+        {
+            int count = 0;
+            foreach (var layerGroup in layers.Values)
+            {
+                count += layerGroup.objs.Count;
+            }
+            return count;
+        }
+        public int GetCollidableCount()
+        {
+            return Col.Count;
+        }
         public List<IGameObject> GetAllGameObjects(Predicate<IGameObject> match) { return GetAllGameObjects().FindAll(match); }
         
         protected void AddLayer(int layer)

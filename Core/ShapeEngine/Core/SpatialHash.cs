@@ -19,8 +19,8 @@ namespace ShapeEngine.Core
         private int rows = 0;
         private int cols = 0;
 
-        private List<ICollidable>[] buckets; //change to hashset<ICollidable>[]
-
+        //private List<ICollidable>[] buckets; //change to hashset<ICollidable>[]
+        private HashSet<ICollidable>[] buckets;
         //figure out something better than spacing (is not always divisable by screen size)
         public SpatialHash(float x, float y, float w, float h, int rows, int cols)
         {
@@ -37,10 +37,10 @@ namespace ShapeEngine.Core
             this.rows = rows;// (int)Math.Floor(height / spacing);
             this.cols = cols;// (int)Math.Floor(width / spacing); 
             bucket_size = rows * cols;
-            buckets = new List<ICollidable>[bucket_size];
+            buckets = new HashSet<ICollidable>[bucket_size];
             for (int i = 0; i < bucket_size; i++)
             {
-                buckets[i] = new List<ICollidable>();
+                buckets[i] = new HashSet<ICollidable>();
             }
         }
         public SpatialHash(Rect bounds, int rows, int cols)
@@ -58,10 +58,10 @@ namespace ShapeEngine.Core
             this.rows = rows;// (int)Math.Floor(height / spacing);
             this.cols = cols;// (int)Math.Floor(width / spacing); 
             bucket_size = rows * cols;
-            buckets = new List<ICollidable>[bucket_size];
+            buckets = new HashSet<ICollidable>[bucket_size];
             for (int i = 0; i < bucket_size; i++)
             {
-                buckets[i] = new List<ICollidable>();
+                buckets[i] = new HashSet<ICollidable>();
             }
         }
         
@@ -173,21 +173,21 @@ namespace ShapeEngine.Core
                 {
                     int id = GetCellID(i, j);
 
-                    if (!hashes.Contains(id))
-                    {
-                        if (SGeometry.Overlap(GetCellRectangle(id), shape))
-                            hashes.Add(id);
+                    //if (!hashes.Contains(id))
+                    //{
+                    if (SGeometry.Overlap(GetCellRectangle(id), shape))
+                        hashes.Add(id);
                         //if (SGeometry.OverlapShape(GetCellRectangle(id), boundingRect))
                         //{
                         //    
                         //}
-                    }
+                    //}
                 }
             }
             return hashes;
         }
 
-        public void AddRange(List<ICollidable> colliders)
+        public void AddRange(IEnumerable<ICollidable> colliders)
         {
             foreach (ICollidable collider in colliders)
             {
@@ -196,10 +196,12 @@ namespace ShapeEngine.Core
         }
         public void Add(ICollidable collidable)
         {
+            if (!collidable.GetCollider().Enabled) return;
             var hashes = GetCellIDs(collidable.GetCollider().GetShape());
             foreach (int hash in hashes)
             {
-                if (!buckets[hash].Contains(collidable)) { buckets[hash].Add(collidable); }
+                buckets[hash].Add(collidable);
+                //if (!buckets[hash].Contains(collidable)) { buckets[hash].Add(collidable); }
             }
         }
 
@@ -221,7 +223,7 @@ namespace ShapeEngine.Core
         public void Close()
         {
             Clear();
-            buckets = new List<ICollidable>[0];
+            buckets = new HashSet<ICollidable>[0];
         }
 
         //public List<ICollidable> GetObjects(Collider shape, bool dynamicBoundingBox = false)
@@ -245,7 +247,12 @@ namespace ShapeEngine.Core
             var hashes = GetCellIDs(shape);
             foreach (int hash in hashes)
             {
-                foreach (var obj in buckets[hash]) result.Add(obj);
+                foreach (var obj in buckets[hash])
+                {
+                    //var collider = obj.GetCollider();
+                    //if (!collider.Enabled) continue;
+                    result.Add(obj);
+                }
             }
             return result.ToList();
         }
@@ -259,6 +266,7 @@ namespace ShapeEngine.Core
                 {
                     foreach (var obj in buckets[hash])
                     {
+                        //var collider = obj.GetCollider();
                         if (obj.GetCollider() == col) continue;
                         uniqueObjects.Add(obj);
                     }

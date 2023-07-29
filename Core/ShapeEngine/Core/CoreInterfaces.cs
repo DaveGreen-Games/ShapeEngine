@@ -148,6 +148,7 @@ namespace ShapeEngine.Core
         public uint[] GetCollisionMask();
         public Vector2 GetVelocity() { return GetCollider().Vel; }
         Rect ILocation.GetBoundingBox() { return GetCollider().GetShape().GetBoundingBox(); }
+        public Circle GetBoundingCircle() { return GetCollider().GetShape().GetBoundingCircle(); }
         Vector2 ILocation.GetPosition() { return GetCollider().Pos; }
         //public Vector2 GetPos();
     }
@@ -192,6 +193,7 @@ namespace ShapeEngine.Core
         public Triangulation Triangulate();
         public Rect GetBoundingBox();
         public Circle GetBoundingCircle();
+        //public IShape GetSimplifiedShape();
         public bool IsPointInside(Vector2 p);
         public Vector2 GetClosestPoint(Vector2 p);
         public Vector2 GetClosestVertex(Vector2 p);
@@ -225,10 +227,14 @@ namespace ShapeEngine.Core
     public interface ICollider : IPhysicsObject
     {
         //public Vector2 PrevPos { get; set; }
-        public bool Enabled { get; set; }
 
         /// <summary>
         /// If disabled this collider will not take part in collision detection.
+        /// </summary>
+        public bool Enabled { get; set; }
+
+        /// <summary>
+        /// If disabled this collider will not compute collision but other colliders can still collide with it.
         /// </summary>
         public bool ComputeCollision { get; set; }
 
@@ -244,25 +250,32 @@ namespace ShapeEngine.Core
         /// </summary>
         public bool SimplifyCollision { get; set; }
         
-        /// <summary>
-        /// Enables Continous Collision Detection. Works best for small & fast objects that might tunnel through other shapes especially segments.
-        /// Only works for closed shapes. (not segments or polylines)
-        /// Automatically uses the bounding circle for collision checking, not the actual shape.
-        /// Tunneling occurs when a shape does not collide in the current frame and then moves to the other side of an object in the next frame.
-        /// </summary>
-        public bool CCD { get; set; }
+        ///// <summary>
+        ///// Enables Continous Collision Detection. Works best for small & fast objects that might tunnel through other shapes especially segments.
+        ///// Only works for closed shapes. (not segments or polylines)
+        ///// Automatically uses the bounding circle for collision checking, not the actual shape.
+        ///// Tunneling occurs when a shape does not collide in the current frame and then moves to the other side of an object in the next frame.
+        ///// </summary>
+        //public bool CCD { get; set; }
         
-        public Vector2 GetPrevPos(); // { return Pos; }
-        public void UpdatePrevPos();// { }
+        //public Vector2 GetPrevPos(); // { return Pos; }
+        //public void UpdatePrevPos(float dt);// { }
         public IShape GetShape();
-
-        public bool CheckOverlap(ICollider other) { return GetShape().Overlap(other.GetShape()); }
-        public Intersection CheckIntersection(ICollider other) { return GetShape().Intersect(other.GetShape()); }
-        public bool CheckOverlapRect(Rect rect) { return rect.Overlap(GetShape()); }
-
-        //public Rect GetBoundingBox();
-        //public void DrawDebugShape(Color color);
-        //todo get segments intersection/overlap
+        public IShape GetSimplifiedShape();
+        public bool CheckOverlap(ICollider other);
+        //{
+        //    if (SimplifyCollision)
+        //    {
+        //        return GetShape().Overlap(other.GetShape().GetBoundingCircle());
+        //    }
+        //    else return GetShape().Overlap(other.GetShape()); 
+        //}
+        public Intersection CheckIntersection(ICollider other);// { return GetShape().Intersect(other.GetShape()); }
+        public bool CheckOverlapRect(Rect rect);// { return rect.Overlap(GetShape()); }
+        public bool CheckOverlapBoundingCirlce(ICollider other);
+        //{
+        //    return GetShape().GetBoundingCircle().Overlap(other.GetShape().GetBoundingCircle());
+        //}
     }
 
 }

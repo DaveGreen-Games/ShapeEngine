@@ -7,10 +7,6 @@ using System.Numerics;
 namespace Examples.Scenes.ExampleScenes
 {
 
-    //fix CCD for rock
-    //implement simplified collision
-    //implement bounding circle check
-    //make stress tests
 
 
     internal abstract class Gameobject : ICollidable
@@ -77,7 +73,7 @@ namespace Examples.Scenes.ExampleScenes
         public Wall(Vector2 start, Vector2 end)
         {
             this.collider = new SegmentCollider(start, end);
-            this.collider.ComputeCollision = true;
+            this.collider.ComputeCollision = false;
             this.collider.ComputeIntersections = false;
             this.collider.Enabled = true;
             
@@ -95,8 +91,8 @@ namespace Examples.Scenes.ExampleScenes
     }
     internal class Rock : Gameobject
     {
-        Intersection lastIntersection = new();
-        Vector2 lastVel = new();
+        //Intersection lastIntersection = new();
+        //Vector2 lastVel = new();
         //Vector2 curFrameVel = new();
 
         //int limit = 250;
@@ -105,11 +101,8 @@ namespace Examples.Scenes.ExampleScenes
 
         public Rock(Vector2 pos, Vector2 vel, float size)
         {
-            
-            
-
             int shapeIndex = SRNG.randI(0, 4);
-            shapeIndex = 0;
+            shapeIndex = 3;
             if(shapeIndex == 0)
             {
                 this.collider = new CircleCollider(pos, vel, size * 0.5f);
@@ -125,7 +118,7 @@ namespace Examples.Scenes.ExampleScenes
             }
             else if (shapeIndex == 3)
             {
-                var shape = SPoly.Generate(pos, SRNG.randI(6, 12), size * 0.5f, size);
+                var shape = SPoly.Generate(pos, 12, size * 0.5f, size);
                 this.collider = new PolyCollider(shape, pos, vel);
             }
             else this.collider = new CircleCollider(pos, vel, size * 0.5f);
@@ -133,7 +126,8 @@ namespace Examples.Scenes.ExampleScenes
             this.collider.ComputeCollision = true;
             this.collider.ComputeIntersections = true;
             this.collider.Enabled = true;
-            this.collider.CCD = true;
+            this.collider.SimplifyCollision = false;
+            //this.collider.CCD = true;
             this.collisionMask = new uint[] { WALL_ID};
         }
 
@@ -148,9 +142,10 @@ namespace Examples.Scenes.ExampleScenes
             {
                 if (info.intersection.valid)
                 {
-                    lastIntersection = info.intersection;
-                    lastVel = collider.Vel;
+                    //lastIntersection = info.intersection;
+                    //lastVel = collider.Vel;
                     collider.Vel = collider.Vel.Reflect(info.intersection.n);
+                    //collider.Pos = collider.GetPrevPos();
                 }
             }
         }
@@ -174,7 +169,6 @@ namespace Examples.Scenes.ExampleScenes
             base.Draw(gameSize, mousePosGame);
 
             collider.GetShape().DrawShape(4f, ExampleScene.ColorHighlight2);
-
             //DrawBoundingShapes();
             
             //if (lastIntersection.valid)
@@ -220,7 +214,7 @@ namespace Examples.Scenes.ExampleScenes
             //boundary = boundaryRect.GetEdges();
             //boundaryRect = SRect.ApplyMarginsAbsolute(r, 25f, 25f, 75 * 2f, 75 * 2f);
             boundaryRect = new(new Vector2(0, 0), new Vector2(1800, 800), new Vector2(0.5f));
-            area = new(boundaryRect.ScaleSize(1.05f, new Vector2(0.5f)), 8, 8);
+            area = new(boundaryRect.ScaleSize(1.05f, new Vector2(0.5f)), 24, 24);
             AddBoundaryWalls();
         }
         public override void Reset()
@@ -235,14 +229,14 @@ namespace Examples.Scenes.ExampleScenes
 
             if (IsKeyPressed(KeyboardKey.KEY_SPACE))
             {
-                //for (int i = 0; i < 25; i++)
-                //{
-                //    Rock r = new(mousePosGame + SRNG.randVec2(0, 250), SRNG.randVec2() * 100, SRNG.randF(10, 15));// SRNG.randF(10, 50));
-                //    area.AddCollider(r);
-                //}
+                for (int i = 0; i < 25; i++)
+                {
+                    Rock r = new(mousePosGame + SRNG.randVec2(0, 250), SRNG.randVec2() * 100, 15);// SRNG.randF(10, 50));
+                    area.AddCollider(r);
+                }
 
-                Rock r = new(mousePosGame, SRNG.randVec2() * 2000, 25);
-                area.AddCollider(r);
+                //Rock r = new(mousePosGame, SRNG.randVec2() * 200, 50);
+                //area.AddCollider(r);
 
             }
 
@@ -287,7 +281,7 @@ namespace Examples.Scenes.ExampleScenes
             area.DrawUI(uiSize, mousePosUI);
 
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
-            string infoText = String.Format("[LMB] Add Segment | [RMB] Cancel Segment | [Space] Shoot");
+            string infoText = String.Format("[LMB] Add Segment | [RMB] Cancel Segment | [Space] Shoot | Objs: {0}", area.GetCollidableCount() );
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
 

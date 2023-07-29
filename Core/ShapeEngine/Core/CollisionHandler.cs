@@ -33,6 +33,7 @@ namespace ShapeEngine.Core
 
         protected Dictionary<ICollidable, List<ICollidable>> overlaps = new();
 
+        public int Count { get { return collidables.Count; } }
 
         public CollisionHandler(float x, float y, float w, float h, int rows, int cols) { spatialHash = new(x, y, w, h, rows, cols); }
         public CollisionHandler(Rect bounds, int rows, int cols) { spatialHash = new(bounds.x, bounds.y, bounds.width, bounds.height, rows, cols); }
@@ -86,27 +87,64 @@ namespace ShapeEngine.Core
         {
             spatialHash.Clear();
 
+            List<ICollidable> activeCollidables = new();
+            //List<ICollidable> ccdCollidables = new();
+
+            //fill spatial hash and filter out all disabled colliders
             for (int i = collidables.Count - 1; i >= 0; i--)
             {
-                var collider = collidables[i];
-                if (collider.GetCollider().Enabled)
+                var collidable = collidables[i];
+                var collider = collidable.GetCollider();
+                if (collider.Enabled)
                 {
-                    spatialHash.Add(collider);
+                    spatialHash.Add(collidable);
+                    if (collider.ComputeCollision)
+                    {
+                        activeCollidables.Add(collidable);
+                    }
                 }
+                
             }
-
-            for (int i = 0; i < collidables.Count; i++)
+            /*
+            //reposition ccd enabled collidables
+            //foreach (var collidable in ccdCollidables)
+            //{
+            //    var collider = collidable.GetCollider();
+            //    float r = collider.GetShape().GetBoundingCircle().radius;
+            //    Segment centerRay = new(collider.GetPrevPos(), collider.Pos);
+            //    if (centerRay.LengthSquared > r * r)
+            //    {
+            //        var centerQuery = QuerySpace(centerRay, true, collidable.GetCollisionMask());
+            //
+            //        foreach (var qi in centerQuery)
+            //        {
+            //            if (qi.collidable != collidable)
+            //            {
+            //                var closest = qi.intersection.p;
+            //                collider.Pos = closest - centerRay.Dir * r;
+            //                break;
+            //            }
+            //        }
+            //    }
+            //}
+            */
+            
+            for (int i = 0; i < activeCollidables.Count; i++)
             {
-                ICollidable collidable = collidables[i];
+                ICollidable collidable = activeCollidables[i];
                 var collider = collidable.GetCollider();
                 
-                if (!collider.Enabled || !collider.ComputeCollision) continue;
+                //if (!collider.Enabled || !collider.ComputeCollision) continue;
                 uint[] collisionMask = collidable.GetCollisionMask();
+                List<ICollidable> collisions = new();
 
-                if (collider.CCD)
+                /*
+                //How to do ccd? ----------------------------------------------
+                bool ccdFinish = false;
+                if (collider.CCD && collider.ComputeIntersections)
                 {
                     float r = collider.GetShape().GetBoundingCircle().radius;
-                    Segment centerRay = new(collider.GetPrevPos(), collider.Pos);
+                    Segment centerRay = new(collider.Pos - collider.Vel.Normalize() * r, collider.GetPrevPos() + collider.Vel.Normalize() * r);
                     if(centerRay.LengthSquared > r * r)
                     {
                         var centerQuery = QuerySpace(centerRay, true, collisionMask);
@@ -115,20 +153,27 @@ namespace ShapeEngine.Core
                         {
                             if (qi.collidable != collidable)
                             {
-                                var closest = qi.intersection.p;
-                                collider.Pos = closest - centerRay.Dir * r;
-                                break;
+                                CollisionInfo info = new(true, collidable, qi.collidable, qi.intersection);
+                                info = CheckCollision(collidable, qi.collidable, info, collisions);
+                                UpdateCollisionEntry(collidable, collisions);
+                                ccdFinish = true;
+                                
+                                //var closest = qi.intersection.p;
+                                //collider.Pos = closest - centerRay.Dir * r;
+                                //break;
                             }
                         }
                     }
                 }
+                if (ccdFinish) continue;
+                //-------------------------------------------------------------
+                */
 
-                List<ICollidable> collisions = new();
                 List<ICollidable> others = spatialHash.GetObjects(collider);
                
                 foreach (ICollidable other in others)
                 {
-                    if(!other.GetCollider().Enabled) continue;
+                    //if(!other.GetCollider().Enabled) continue;
 
                     uint otherLayer = other.GetCollisionLayer();
                     if (collisionMask.Length > 0)
@@ -136,62 +181,75 @@ namespace ShapeEngine.Core
                         if (!collisionMask.Contains(otherLayer)) continue;
                     }//else collide with everything
 
-
-                    //either do bounding box / circle check here or within funcion
-
-                    var info = SGeometry.GetCollisionInfo(collidable, other);
-
-                    if (overlaps.ContainsKey(collidable) && overlaps[collidable].Contains(other))//collision has happend last frame as well
+                    CollisionInfo info = new();
+                    if (collidable.GetCollider().CheckOverlapBoundingCirlce(other.GetCollider()))
                     {
-                        if (info.overlapping)//has overlapped last frame and this frame
-                        {
-                            overlapInfos.Add(info);
-                            collisions.Add(other);
-                        }
-                        else//has overlapped last frame but not this frame -> overlap ended
-                        {
-                            //overlap ended
-                            overlapEnded.Add((collidable, other));
-                        }
+                        info = SGeometry.GetCollisionInfo(collidable, other);
                     }
-                    else //collision has not happend last frame
-                    {
-                        if (info.overlapping)//overlapping for the first time => called collision
-                        {
-                            info.collision = true;
-                            info.overlapping = false;
-                            overlapInfos.Add(info);
-                            collisions.Add(other);
-                        }
-                        //else no overlap last frame or this frame => nothing happens
-                    }
-
+                    info = CheckCollision(collidable, other, info, collisions);
                 }
 
 
                 //update overlaps dictionary for the current collider
-                if(collisions.Count > 0)
-                {
-                    if (overlaps.ContainsKey(collidable))
-                    {
-                        overlaps[collidable] = collisions;
-                    }
-                    else
-                    {
-                        overlaps.Add(collidable, collisions);
-                    }
-                }
-                else
-                {
-                    if(overlaps.ContainsKey(collidable))
-                    {
-                        overlaps[collidable].Clear();
-                    }
-                }
+                UpdateCollisionEntry(collidable, collisions);
 
             }
             Resolve();
         }
+
+        private CollisionInfo CheckCollision(ICollidable collidable, ICollidable other, CollisionInfo info, List<ICollidable> collisions)
+        {
+            if (overlaps.ContainsKey(collidable) && overlaps[collidable].Contains(other))//collision has happend last frame as well
+            {
+                if (info.overlapping)//has overlapped last frame and this frame
+                {
+                    overlapInfos.Add(info);
+                    collisions.Add(other);
+                    //return true;
+                }
+                else//has overlapped last frame but not this frame -> overlap ended
+                {
+                    overlapEnded.Add((collidable, other));
+                }
+            }
+            else //collision has not happend last frame
+            {
+                if (info.overlapping)//overlapping for the first time => called collision
+                {
+                    info.collision = true;
+                    info.overlapping = false;
+                    overlapInfos.Add(info);
+                    collisions.Add(other);
+                    //return true;
+                }
+                //else no overlap last frame or this frame => nothing happens
+            }
+            return info;
+            //return false;
+        }
+        private void UpdateCollisionEntry(ICollidable collidable, List<ICollidable> collisions)
+        {
+            if (collisions.Count > 0)
+            {
+                if (overlaps.ContainsKey(collidable))
+                {
+                    overlaps[collidable] = collisions;
+                }
+                else
+                {
+                    overlaps.Add(collidable, collisions);
+                }
+            }
+            else
+            {
+                if (overlaps.ContainsKey(collidable))
+                {
+                    overlaps[collidable].Clear();
+                }
+            }
+        }
+        
+
         protected virtual void Resolve()
         {
             //collidables.AddRange(tempHolding);

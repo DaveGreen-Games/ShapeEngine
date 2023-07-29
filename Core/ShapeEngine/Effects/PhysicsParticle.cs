@@ -24,7 +24,7 @@ namespace ShapeEngine.Effects
 
         private Vector2 prevPos = new();
         public Vector2 GetPrevPos() { return prevPos; }
-        public void UpdatePrevPos() { prevPos = Pos; }
+        public void UpdatePrevPos(float dt) { prevPos = Pos; }
         public virtual bool CCD
         {
             get { return false; }
@@ -38,7 +38,7 @@ namespace ShapeEngine.Effects
         public void AddImpulse(Vector2 force) { SPhysics.AddImpuls(this, force); }
         public void UpdateState(float dt) 
         {
-            UpdatePrevPos();
+            UpdatePrevPos(dt);
             SPhysics.UpdateState(this, dt); 
         }
 
@@ -74,6 +74,18 @@ namespace ShapeEngine.Effects
             IShape shape = GetShape();
             IShape otherShape = other.GetShape();
             return shape.Intersect(otherShape);
+        }
+
+        public abstract IShape GetSimplifiedShape();
+
+        public bool CheckOverlapRect(Rect rect)
+        {
+            return rect.Overlap(GetShape());
+        }
+
+        public bool CheckOverlapBoundingCirlce(ICollider other)
+        {
+            return GetShape().GetBoundingCircle().Overlap(other.GetShape().GetBoundingCircle());
         }
         //public bool CheckOverlapRect(Rect rect) { return rect.Overlap(GetShape()); }// GetBoundingBox().OverlapRectRect(rect); }
 
