@@ -1029,6 +1029,7 @@ namespace ShapeEngine.Lib
         #endregion
 
         #region Polygon
+
         public static void DrawPolygonConvex(this Polygon poly, Raylib_CsLo.Color color, bool clockwise = false) { DrawPolygonConvex(poly, poly.GetCentroid(), color, clockwise); }
         public static void DrawPolygonConvex(this Polygon poly, Vector2 center, Raylib_CsLo.Color color, bool clockwise = false)
         {
@@ -1089,10 +1090,20 @@ namespace ShapeEngine.Lib
         {
             for (int i = 0; i < poly.Count - 1; i++)
             {
-                DrawCircleV(poly[i], lineThickness * 0.5f, color);
+                //DrawCircleV(poly[i], lineThickness * 0.5f, color);
+                Raylib.DrawCircleSector(poly[i], lineThickness * 0.5f, 0, 360, 6, color);
                 DrawLineEx(poly[i], poly[i + 1], lineThickness, color);
             }
-            DrawCircleV(poly[poly.Count - 1], lineThickness * 0.5f, color);
+            //DrawCircleV(poly[poly.Count - 1], lineThickness * 0.5f, color);
+            Raylib.DrawCircleSector(poly[poly.Count - 1], lineThickness * 0.5f, 0, 360, 6, color);
+            DrawLineEx(poly[poly.Count - 1], poly[0], lineThickness, color);
+        }
+        public static void DrawLinesSimple(this Polygon poly, float lineThickness, Raylib_CsLo.Color color)
+        {
+            for (int i = 0; i < poly.Count - 1; i++)
+            {
+                DrawLineEx(poly[i], poly[i + 1], lineThickness, color);
+            }
             DrawLineEx(poly[poly.Count - 1], poly[0], lineThickness, color);
         }
         public static void DrawLines(this Polygon poly, Vector2 pos, Vector2 size, float rotDeg, float lineThickness, Raylib_CsLo.Color outlineColor)

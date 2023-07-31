@@ -263,18 +263,18 @@ namespace ShapeEngine.Core
         public IShape GetShape();
         public IShape GetSimplifiedShape();
         public bool CheckOverlap(ICollider other);
+        public Intersection CheckIntersection(ICollider other);
+        public bool CheckOverlapRect(Rect rect);
+        //public bool CheckOverlapBoundingCirlce(ICollider other);
+        //{
+        //    return GetShape().GetBoundingCircle().Overlap(other.GetShape().GetBoundingCircle());
+        //}
         //{
         //    if (SimplifyCollision)
         //    {
         //        return GetShape().Overlap(other.GetShape().GetBoundingCircle());
         //    }
         //    else return GetShape().Overlap(other.GetShape()); 
-        //}
-        public Intersection CheckIntersection(ICollider other);// { return GetShape().Intersect(other.GetShape()); }
-        public bool CheckOverlapRect(Rect rect);// { return rect.Overlap(GetShape()); }
-        public bool CheckOverlapBoundingCirlce(ICollider other);
-        //{
-        //    return GetShape().GetBoundingCircle().Overlap(other.GetShape().GetBoundingCircle());
         //}
     }
 

@@ -35,6 +35,7 @@ namespace Examples.Scenes
             examples.Add(new PolylineCollisionExample());
             examples.Add(new CCDExample());
             examples.Add(new AreaExample());
+            examples.Add(new BouncyCircles());
             examples.Add(new TextScalingExample());
             examples.Add(new TextWrapExample());
             examples.Add(new TextWrapEmphasisExample());

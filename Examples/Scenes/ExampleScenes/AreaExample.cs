@@ -7,8 +7,6 @@ using System.Numerics;
 namespace Examples.Scenes.ExampleScenes
 {
 
-
-
     internal abstract class Gameobject : ICollidable
     {
         public static readonly uint WALL_ID = 1;
@@ -67,6 +65,8 @@ namespace Examples.Scenes.ExampleScenes
         }
         
         public bool RemoveBehavior(IBehavior behavior) { return false; }
+
+        
     }
     internal class Wall : Gameobject
     {
@@ -77,7 +77,7 @@ namespace Examples.Scenes.ExampleScenes
             this.collider.ComputeIntersections = false;
             this.collider.Enabled = true;
             
-            this.collisionMask = new uint[] { ROCK_ID };
+            this.collisionMask = new uint[] { };
         }
 
         public override uint GetCollisionLayer()
@@ -89,20 +89,48 @@ namespace Examples.Scenes.ExampleScenes
             collider.GetShape().DrawShape(2f, ExampleScene.ColorHighlight1);
         }
     }
+    internal class PolyWall : Gameobject
+    {
+        public PolyWall(Vector2 start, Vector2 end)
+        {
+            float w = 25f;
+            Segment s = new(start, end);
+            Vector2 dir = s.Dir;
+            Vector2 left = dir.GetPerpendicularLeft();
+            Vector2 right = dir.GetPerpendicularRight();
+            Vector2 a = start + left * w;
+            Vector2 b = start + right * w;
+            Vector2 c = end + right * w;
+            Vector2 d = end + left * w;
+            
+            this.collider = new PolyCollider(s.Center, new Vector2(0f), a, b, c, d);
+            this.collider.ComputeCollision = false;
+            this.collider.ComputeIntersections = false;
+            this.collider.Enabled = true;
+
+            this.collisionMask = new uint[] { };
+        }
+
+        public override uint GetCollisionLayer()
+        {
+            return WALL_ID;
+        }
+        public override void Draw(Vector2 gameSize, Vector2 mousePosGame)
+        {
+            //var shape = collider.GetShape();
+            //if( shape is Polygon p)
+            //{
+            //    p.Draw(ExampleScene.ColorHighlight1);
+            //}
+            collider.GetShape().DrawShape(2f, ExampleScene.ColorHighlight1);
+        }
+    }
     internal class Rock : Gameobject
     {
-        //Intersection lastIntersection = new();
-        //Vector2 lastVel = new();
-        //Vector2 curFrameVel = new();
-
-        //int limit = 250;
-        //Points prevPositions = new();
-        //Points curPositions = new();
-
         public Rock(Vector2 pos, Vector2 vel, float size)
         {
             int shapeIndex = SRNG.randI(0, 4);
-            shapeIndex = 3;
+            shapeIndex = 0;
             if(shapeIndex == 0)
             {
                 this.collider = new CircleCollider(pos, vel, size * 0.5f);
@@ -128,7 +156,7 @@ namespace Examples.Scenes.ExampleScenes
             this.collider.Enabled = true;
             this.collider.SimplifyCollision = false;
             //this.collider.CCD = true;
-            this.collisionMask = new uint[] { WALL_ID};
+            this.collisionMask = new uint[] { WALL_ID };
         }
 
         public override uint GetCollisionLayer()
@@ -140,24 +168,14 @@ namespace Examples.Scenes.ExampleScenes
             
             if (info.collision)
             {
+                if (info.other is Rock) return;
+
                 if (info.intersection.valid)
                 {
-                    //lastIntersection = info.intersection;
-                    //lastVel = collider.Vel;
                     collider.Vel = collider.Vel.Reflect(info.intersection.n);
-                    //collider.Pos = collider.GetPrevPos();
                 }
             }
         }
-        //public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
-        //{
-        //    base.Update(dt, mousePosGame, mousePosUI);
-        //    //curFrameVel = collider.Vel * dt;
-        //    //prevPositions.Add(collider.GetPrevPos());
-        //    //curPositions.Add(collider.Pos);
-        //    //if (prevPositions.Count > limit) prevPositions.RemoveAt(0);
-        //    //if(curPositions.Count > limit) curPositions.RemoveAt(0);
-        //}
         private void DrawBoundingShapes()
         {
             var shape = collider.GetShape();
@@ -167,22 +185,11 @@ namespace Examples.Scenes.ExampleScenes
         public override void Draw(Vector2 gameSize, Vector2 mousePosGame)
         {
             base.Draw(gameSize, mousePosGame);
-
-            collider.GetShape().DrawShape(4f, ExampleScene.ColorHighlight2);
-            //DrawBoundingShapes();
+            collider.GetShape().DrawShape(2f, ExampleScene.ColorHighlight2);
             
-            //if (lastIntersection.valid)
-            //{
-            //    lastIntersection.Draw(2f, RED, BLUE);
-            //    Segment v = new(lastIntersection.p, lastIntersection.p + lastVel);
-            //    v.Draw(2f, GREEN);
-            //}
-            //collider.GetShape().GetBoundingBox().DrawLines(4f, BLUE);
-            //Segment vel = new(collider.Pos, collider.Pos + curFrameVel);
-            //vel.Draw(2f, ORANGE);
-
-            //prevPositions.Draw(6, ORANGE);
-            //curPositions.Draw(4, GREEN);
+            //Rect r = new(collider.Pos, new Vector2(10), new Vector2(0.5f));
+            //r.Draw(ExampleScene.ColorHighlight2);
+            //r.DrawLines(2f, GREEN);
         }
     }
 
@@ -209,12 +216,8 @@ namespace Examples.Scenes.ExampleScenes
 
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
 
-            //var cameraRect = cam.GetArea();
-            //boundaryRect.FlippedNormals = true;
-            //boundary = boundaryRect.GetEdges();
-            //boundaryRect = SRect.ApplyMarginsAbsolute(r, 25f, 25f, 75 * 2f, 75 * 2f);
-            boundaryRect = new(new Vector2(0, 0), new Vector2(1800, 800), new Vector2(0.5f));
-            area = new(boundaryRect.ScaleSize(1.05f, new Vector2(0.5f)), 24, 24);
+            boundaryRect = new(new Vector2(0, -45), new Vector2(1800, 810), new Vector2(0.5f));
+            area = new(boundaryRect.ScaleSize(1.05f, new Vector2(0.5f)), 16, 16);
             AddBoundaryWalls();
         }
         public override void Reset()
@@ -229,9 +232,9 @@ namespace Examples.Scenes.ExampleScenes
 
             if (IsKeyPressed(KeyboardKey.KEY_SPACE))
             {
-                for (int i = 0; i < 25; i++)
+                for (int i = 0; i < 500; i++)
                 {
-                    Rock r = new(mousePosGame + SRNG.randVec2(0, 250), SRNG.randVec2() * 100, 15);// SRNG.randF(10, 50));
+                    Rock r = new(mousePosGame + SRNG.randVec2(0, 50), SRNG.randVec2() * 50, 20);// SRNG.randF(10, 50));
                     area.AddCollider(r);
                 }
 
@@ -280,7 +283,11 @@ namespace Examples.Scenes.ExampleScenes
 
             area.DrawUI(uiSize, mousePosUI);
 
-            Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
+            Rect checksRect = new Rect(uiSize * new Vector2(0.5f, 0.92f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));
+            string checks = string.Format("{0} | {1}", area.Col.ChecksPerFrame, area.Col.CollisionChecksPerFrame);
+            font.DrawText(checks, checksRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+
+            Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
             string infoText = String.Format("[LMB] Add Segment | [RMB] Cancel Segment | [Space] Shoot | Objs: {0}", area.GetCollidableCount() );
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
@@ -313,7 +320,7 @@ namespace Examples.Scenes.ExampleScenes
                     float lSq = (mousePos - startPoint).LengthSquared();
                     if (lSq > 400)
                     {
-                        Wall w = new(startPoint, mousePos);
+                        PolyWall w = new(startPoint, mousePos);
                         area.AddCollider(w);
                     }
 

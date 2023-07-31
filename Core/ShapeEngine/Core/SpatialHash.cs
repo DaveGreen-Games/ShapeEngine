@@ -20,8 +20,10 @@ namespace ShapeEngine.Core
         private int cols = 0;
 
         //private List<ICollidable>[] buckets; //change to hashset<ICollidable>[]
-        private HashSet<ICollidable>[] buckets;
         //figure out something better than spacing (is not always divisable by screen size)
+        
+        public HashSet<ICollidable>[] buckets { get; private set; }
+
         public SpatialHash(float x, float y, float w, float h, int rows, int cols)
         {
             origin_x = x;
@@ -172,16 +174,8 @@ namespace ShapeEngine.Core
                 for (int i = topLeft.x; i <= bottomRight.x; i++)
                 {
                     int id = GetCellID(i, j);
-
-                    //if (!hashes.Contains(id))
-                    //{
                     if (SGeometry.Overlap(GetCellRectangle(id), shape))
                         hashes.Add(id);
-                        //if (SGeometry.OverlapShape(GetCellRectangle(id), boundingRect))
-                        //{
-                        //    
-                        //}
-                    //}
                 }
             }
             return hashes;
@@ -255,6 +249,23 @@ namespace ShapeEngine.Core
                 }
             }
             return result.ToList();
+        }
+        public List<ICollidable> GetObjects(params IShape[] shapes)
+        {
+            HashSet<ICollidable> result = new();
+            foreach (var shape in shapes)
+            {
+                var hashes = GetCellIDs(shape);
+                foreach (int hash in hashes)
+                {
+                    foreach (var obj in buckets[hash])
+                    {
+                        result.Add(obj);
+                    }
+                }
+            }
+            return result.ToList();
+            
         }
         public List<ICollidable> GetObjects(ICollider col, params IShape[] shapes)
         {

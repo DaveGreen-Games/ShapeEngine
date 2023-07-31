@@ -23,6 +23,8 @@ namespace ShapeEngine.Core
 
     public class CollisionHandler
     {
+        public int ChecksPerFrame = 0;
+        public int CollisionChecksPerFrame = 0;
         protected List<ICollidable> collidables = new();
         protected List<ICollidable> tempHolding = new();
         protected List<ICollidable> tempRemoving = new();
@@ -87,9 +89,6 @@ namespace ShapeEngine.Core
         {
             spatialHash.Clear();
 
-            List<ICollidable> activeCollidables = new();
-            //List<ICollidable> ccdCollidables = new();
-
             //fill spatial hash and filter out all disabled colliders
             for (int i = collidables.Count - 1; i >= 0; i--)
             {
@@ -98,10 +97,6 @@ namespace ShapeEngine.Core
                 if (collider.Enabled)
                 {
                     spatialHash.Add(collidable);
-                    if (collider.ComputeCollision)
-                    {
-                        activeCollidables.Add(collidable);
-                    }
                 }
                 
             }
@@ -128,70 +123,53 @@ namespace ShapeEngine.Core
             //    }
             //}
             */
-            
-            for (int i = 0; i < activeCollidables.Count; i++)
+
+            ChecksPerFrame = 0;
+            CollisionChecksPerFrame = 0;
+
+            var allBuckets = spatialHash.buckets;
+            foreach (var bucket in allBuckets)
             {
-                ICollidable collidable = activeCollidables[i];
-                var collider = collidable.GetCollider();
-                
-                //if (!collider.Enabled || !collider.ComputeCollision) continue;
-                uint[] collisionMask = collidable.GetCollisionMask();
-                List<ICollidable> collisions = new();
-
-                /*
-                //How to do ccd? ----------------------------------------------
-                bool ccdFinish = false;
-                if (collider.CCD && collider.ComputeIntersections)
+                Dictionary<uint, HashSet<ICollidable>> layers = new();
+                HashSet<ICollidable> active = new();
+                foreach (var collidable in bucket)
                 {
-                    float r = collider.GetShape().GetBoundingCircle().radius;
-                    Segment centerRay = new(collider.Pos - collider.Vel.Normalize() * r, collider.GetPrevPos() + collider.Vel.Normalize() * r);
-                    if(centerRay.LengthSquared > r * r)
+                    var layer = collidable.GetCollisionLayer();
+                    if (collidable.GetCollider().ComputeCollision) active.Add(collidable);
+                    if (layers.ContainsKey(layer))
                     {
-                        var centerQuery = QuerySpace(centerRay, true, collisionMask);
-                
-                        foreach (var qi in centerQuery)
-                        {
-                            if (qi.collidable != collidable)
-                            {
-                                CollisionInfo info = new(true, collidable, qi.collidable, qi.intersection);
-                                info = CheckCollision(collidable, qi.collidable, info, collisions);
-                                UpdateCollisionEntry(collidable, collisions);
-                                ccdFinish = true;
-                                
-                                //var closest = qi.intersection.p;
-                                //collider.Pos = closest - centerRay.Dir * r;
-                                //break;
-                            }
-                        }
+                        layers[layer].Add(collidable);
                     }
+                    else
+                    {
+                        layers.Add(layer, new() { collidable });
+                    }
+                    ChecksPerFrame++;
+
                 }
-                if (ccdFinish) continue;
-                //-------------------------------------------------------------
-                */
 
-                List<ICollidable> others = spatialHash.GetObjects(collider);
-               
-                foreach (ICollidable other in others)
+                foreach (var collidable in active)
                 {
-                    //if(!other.GetCollider().Enabled) continue;
+                    List<ICollidable> others = new();
+                    List<ICollidable> collisions = new();
+                    var mask = collidable.GetCollisionMask();
+                    if (mask.Length <= 0) continue;
 
-                    uint otherLayer = other.GetCollisionLayer();
-                    if (collisionMask.Length > 0)
+                    foreach (var layer in mask)
                     {
-                        if (!collisionMask.Contains(otherLayer)) continue;
-                    }//else collide with everything
+                        if (layers.ContainsKey(layer)) others.AddRange(layers[layer]);
+                    }
 
-                    CollisionInfo info = new();
-                    if (collidable.GetCollider().CheckOverlapBoundingCirlce(other.GetCollider()))
+                    foreach (var other in others)
                     {
+                        CollisionInfo info = new();
+                        ChecksPerFrame++;
+                        CollisionChecksPerFrame++;
                         info = SGeometry.GetCollisionInfo(collidable, other);
+                        info = CheckCollision(collidable, other, info, collisions);
                     }
-                    info = CheckCollision(collidable, other, info, collisions);
+                    UpdateCollisionEntry(collidable, collisions);
                 }
-
-
-                //update overlaps dictionary for the current collider
-                UpdateCollisionEntry(collidable, collisions);
 
             }
             Resolve();
