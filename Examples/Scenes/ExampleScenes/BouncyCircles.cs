@@ -52,6 +52,7 @@ namespace Examples.Scenes.ExampleScenes
         public void Draw()
         {
             DrawCircleSector(Pos, Radius, 0, 360, 12, RED);
+            //DrawPoly(Pos, 12, Radius, 0f, GREEN);
             //Circle circle = new(Pos, Radius);
             //circle.Draw(ExampleScene.ColorHighlight2);
             //circle.DrawLines(2f, ExampleScene.ColorHighlight2);
@@ -128,7 +129,7 @@ namespace Examples.Scenes.ExampleScenes
 
             if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT))
             {
-                for (int i = 0; i < 250; i++)
+                for (int i = 0; i < 2500; i++)
                 {
                     Vector2 randPos = mousePosGame + SRNG.randVec2(0, 250);
                     Vector2 vel = SRNG.randVec2(50, 100);

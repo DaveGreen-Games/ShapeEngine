@@ -185,11 +185,12 @@ namespace Examples.Scenes.ExampleScenes
         public override void Draw(Vector2 gameSize, Vector2 mousePosGame)
         {
             base.Draw(gameSize, mousePosGame);
-            collider.GetShape().DrawShape(2f, ExampleScene.ColorHighlight2);
+            //collider.GetShape().DrawShape(2f, ExampleScene.ColorHighlight2);
             
-            //Rect r = new(collider.Pos, new Vector2(10), new Vector2(0.5f));
-            //r.Draw(ExampleScene.ColorHighlight2);
+            Rect r = new(collider.Pos, new Vector2(10), new Vector2(0.5f));
+            r.Draw(ExampleScene.ColorHighlight2);
             //r.DrawLines(2f, GREEN);
+            
         }
     }
 
