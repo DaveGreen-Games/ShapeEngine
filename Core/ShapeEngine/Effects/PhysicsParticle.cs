@@ -55,7 +55,7 @@ namespace ShapeEngine.Effects
 
         //public uint GetID() { return }
         public ICollider GetCollider() { return this; }
-        public abstract void Overlap(CollisionInfo info);
+        public abstract void Overlap(List<CollisionInfo> infos);
         public abstract void OverlapEnded(ICollidable other);
         public abstract uint GetCollisionLayer();
         public abstract uint[] GetCollisionMask();

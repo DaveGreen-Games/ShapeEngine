@@ -142,7 +142,7 @@ namespace ShapeEngine.Core
     {
         //public uint GetID();
         public ICollider GetCollider();
-        public void Overlap(CollisionInfo info);
+        public void Overlap(List<CollisionInfo> infos);
         public void OverlapEnded(ICollidable other);
         public uint GetCollisionLayer();
         public uint[] GetCollisionMask();

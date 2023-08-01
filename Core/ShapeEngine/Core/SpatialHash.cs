@@ -4,8 +4,101 @@ using ShapeEngine.Lib;
 
 namespace ShapeEngine.Core
 {
+    public class BucketInfo
+    {
+        public bool Valid { get; private set; }
+        public Dictionary<uint, HashSet<ICollidable>> Layers;
+        public HashSet<ICollidable> Active;
+        public BucketInfo(HashSet<ICollidable> active, Dictionary<uint, HashSet<ICollidable>> layers)
+        {
+            this.Active = active;
+            this.Layers = layers;
+            this.Valid = true;
+        }
+        public BucketInfo()
+        {
+            this.Layers = new();
+            this.Active = new();
+            this.Valid = false;
+        }
+
+        public List<ICollidable> GetOthers(ICollidable collidable)
+        {
+            List<ICollidable> others = new();
+            var mask = collidable.GetCollisionMask();
+            if (mask.Length <= 0) return new();
+
+            foreach (var layer in mask)
+            {
+                if (Layers.ContainsKey(layer)) others.AddRange(Layers[layer]);
+            }
+            return others;
+        }
+
+    }
+   
     public class SpatialHash
     {
+        internal class Bucket
+        {
+            public Dictionary<uint, HashSet<ICollidable>> Layers = new();
+            public HashSet<ICollidable> Collidables = new();
+            public int Count { get { return Collidables.Count; } }
+
+            public void Clear()
+            {
+                Layers.Clear();
+                Collidables.Clear();
+            }
+            public void Add(ICollidable collidable)
+            {
+                var layer = collidable.GetCollisionLayer();
+                if (Layers.ContainsKey(layer)) Layers[layer].Add(collidable);
+                else Layers.Add(layer, new() { collidable });
+                Collidables.Add(collidable);
+            }
+            public void Remove(ICollidable collidable)
+            {
+                var layer = collidable.GetCollisionLayer();
+                if (Layers.ContainsKey(layer)) Layers[layer].Remove(collidable);
+                Collidables.Remove(collidable);
+            }
+            
+            public HashSet<ICollidable> GetObjects(params uint[] mask)
+            {
+                HashSet<ICollidable> objects = new();
+                foreach (var entry in mask)
+                {
+                    if (Layers.ContainsKey(entry)) objects.UnionWith(Layers[entry]);
+                }
+                return objects;
+            }
+            public BucketInfo GetBucketInfo()
+            {
+                HashSet<ICollidable> active = new();
+                List<uint> availableLayers = Layers.Keys.ToList();
+                foreach (var collidable in Collidables)
+                {
+                    if (collidable.GetCollider().ComputeCollision)
+                    {
+                        var mask = collidable.GetCollisionMask();
+                        foreach (var entry in mask)
+                        {
+                            if (availableLayers.Contains(entry))
+                            {
+                                active.Add(collidable);
+                                break;
+                            }
+                        }
+
+                    }
+                }
+
+                return new(active, Layers);
+            }
+
+        }
+      
         private float origin_x;
         private float origin_y;
 
@@ -15,14 +108,14 @@ namespace ShapeEngine.Core
         private float spacing_x;
         private float spacing_y;
 
-        private int bucket_size = 0;
+        private int bucketCount = 0;
         private int rows = 0;
         private int cols = 0;
 
         //private List<ICollidable>[] buckets; //change to hashset<ICollidable>[]
         //figure out something better than spacing (is not always divisable by screen size)
-        
-        public HashSet<ICollidable>[] buckets { get; private set; }
+
+        private Bucket[] buckets;
 
         public SpatialHash(float x, float y, float w, float h, int rows, int cols)
         {
@@ -38,11 +131,12 @@ namespace ShapeEngine.Core
 
             this.rows = rows;// (int)Math.Floor(height / spacing);
             this.cols = cols;// (int)Math.Floor(width / spacing); 
-            bucket_size = rows * cols;
-            buckets = new HashSet<ICollidable>[bucket_size];
-            for (int i = 0; i < bucket_size; i++)
+            bucketCount = rows * cols;
+            //buckets = new HashSet<ICollidable>[bucketCount];
+            buckets = new Bucket[bucketCount];
+            for (int i = 0; i < bucketCount; i++)
             {
-                buckets[i] = new HashSet<ICollidable>();
+                buckets[i] = new(); // new HashSet<ICollidable>();
             }
         }
         public SpatialHash(Rect bounds, int rows, int cols)
@@ -59,23 +153,24 @@ namespace ShapeEngine.Core
 
             this.rows = rows;// (int)Math.Floor(height / spacing);
             this.cols = cols;// (int)Math.Floor(width / spacing); 
-            bucket_size = rows * cols;
-            buckets = new HashSet<ICollidable>[bucket_size];
-            for (int i = 0; i < bucket_size; i++)
+            bucketCount = rows * cols;
+            //buckets = new HashSet<ICollidable>[bucketCount];
+            buckets = new Bucket[bucketCount];
+            for (int i = 0; i < bucketCount; i++)
             {
-                buckets[i] = new HashSet<ICollidable>();
+                buckets[i] = new(); // new HashSet<ICollidable>();
             }
         }
         
         public int GetRows() { return rows; }
         public int GetCols() { return cols; }
-        public int GetBucketSize() { return bucket_size; }
+        public int GetBucketCount() { return bucketCount; }
 
         public SpatialHash Resize(Rect newBounds) { return new(newBounds, rows, cols); }
 
         public void DebugDrawGrid(Raylib_CsLo.Color border, Raylib_CsLo.Color fill)
         {
-            for (int i = 0; i < bucket_size; i++)
+            for (int i = 0; i < bucketCount; i++)
             {
                 var coords = GetCoordinatesGrid(i);
                 var rect = new Rectangle(origin_x + coords.x * spacing_x, origin_y + coords.y * spacing_y, spacing_x, spacing_y);
@@ -195,10 +290,10 @@ namespace ShapeEngine.Core
             foreach (int hash in hashes)
             {
                 buckets[hash].Add(collidable);
-                //if (!buckets[hash].Contains(collidable)) { buckets[hash].Add(collidable); }
             }
         }
 
+        /*
         public void Remove(ICollidable collider)
         {
             var hashes = GetCellIDs(collider.GetCollider().GetShape());
@@ -207,9 +302,10 @@ namespace ShapeEngine.Core
                 buckets[hash].Remove(collider);
             }
         }
+        */
         public void Clear()
         {
-            for (int i = 0; i < bucket_size; i++)
+            for (int i = 0; i < bucketCount; i++)
             {
                 buckets[i].Clear();
             }
@@ -217,31 +313,47 @@ namespace ShapeEngine.Core
         public void Close()
         {
             Clear();
-            buckets = new HashSet<ICollidable>[0];
+            buckets = new Bucket[0];  //new HashSet<ICollidable>[0];
         }
 
-        //public List<ICollidable> GetObjects(Collider shape, bool dynamicBoundingBox = false)
-        //{
-        //    //HashSet<ICollidable> uniqueObjects = new();
-        //    List<ICollidable> objects = new List<ICollidable>();
-        //    var hashes = GetCellIDs(shape, dynamicBoundingBox);
-        //    foreach (int hash in hashes)
-        //    {
-        //        objects.AddRange(bucketsDynamic[hash]);
-        //        objects.AddRange(bucketsStatic[hash]);
-        //    }
-        //    
-        //    return objects.Distinct().ToList();
-        //}
+        public BucketInfo GetBucketInfo(int bucketIndex)
+        {
+            if (bucketIndex < 0 || bucketIndex >= bucketCount) return new();
+            var bucket = buckets[bucketIndex];
+            return bucket.GetBucketInfo();
+        }
+
+        public List<ICollidable> GetObjects(ICollidable collidable)
+        {
+            return GetObjects(collidable.GetCollider(), collidable.GetCollisionMask());
+        }
+        public List<ICollidable> GetObjects(ICollider collider, params uint[] mask)
+        {
+            return GetObjects(collider.GetShape(), mask);
+        }
+        public List<ICollidable> GetObjects(IShape shape, params uint[] mask)
+        {
+            HashSet<ICollidable> uniqueObjects = new();
+
+            var bucketIDs = GetCellIDs(shape);
+            foreach (var id in bucketIDs)
+            {
+                var bucket = buckets[id];
+                uniqueObjects.UnionWith(bucket.GetObjects(mask));
+            }
+
+            return uniqueObjects.ToList();
+        }
 
 
+        /*
         public List<ICollidable> GetObjects(IShape shape)
         {
             HashSet<ICollidable> result = new();
             var hashes = GetCellIDs(shape);
             foreach (int hash in hashes)
             {
-                foreach (var obj in buckets[hash])
+                foreach (var obj in buckets[hash].Collidables)
                 {
                     //var collider = obj.GetCollider();
                     //if (!collider.Enabled) continue;
@@ -258,7 +370,7 @@ namespace ShapeEngine.Core
                 var hashes = GetCellIDs(shape);
                 foreach (int hash in hashes)
                 {
-                    foreach (var obj in buckets[hash])
+                    foreach (var obj in buckets[hash].Collidables)
                     {
                         result.Add(obj);
                     }
@@ -275,7 +387,7 @@ namespace ShapeEngine.Core
                 var hashes = GetCellIDs(shape);
                 foreach (int hash in hashes)
                 {
-                    foreach (var obj in buckets[hash])
+                    foreach (var obj in buckets[hash].Collidables)
                     {
                         //var collider = obj.GetCollider();
                         if (obj.GetCollider() == col) continue;
@@ -292,16 +404,8 @@ namespace ShapeEngine.Core
         public List<ICollidable> GetObjects(ICollidable collider)
         {
             return GetObjects(collider.GetCollider());
-            //List<ICollidable> objects = new();
-            //var hashes = GetCellIDs(collider.GetCollider());
-            //foreach (int hash in hashes)
-            //{
-            //    objects.AddRange(buckets[hash]);
-            //}
-            //objects = objects.Distinct().ToList();
-            //objects.Remove(collider);
-            //return objects;
         }
+        */
 
         /* old versions
         public List<ICollidable> GetObjects(IShape shape)
