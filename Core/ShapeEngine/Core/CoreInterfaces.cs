@@ -150,7 +150,6 @@ namespace ShapeEngine.Core
         Rect ILocation.GetBoundingBox() { return GetCollider().GetShape().GetBoundingBox(); }
         public Circle GetBoundingCircle() { return GetCollider().GetShape().GetBoundingCircle(); }
         Vector2 ILocation.GetPosition() { return GetCollider().Pos; }
-        //public Vector2 GetPos();
     }
 
 
@@ -189,11 +188,9 @@ namespace ShapeEngine.Core
         public Polygon ToPolygon();
         public Polyline ToPolyline();
         public Segments GetEdges();
-        //public Segments GetEdges(Vector2 normalReferencePoint);
         public Triangulation Triangulate();
         public Rect GetBoundingBox();
         public Circle GetBoundingCircle();
-        //public IShape GetSimplifiedShape();
         public bool IsPointInside(Vector2 p);
         public Vector2 GetClosestPoint(Vector2 p);
         public Vector2 GetClosestVertex(Vector2 p);
@@ -204,11 +201,6 @@ namespace ShapeEngine.Core
         public Vector2 GetRandomPointOnEdge();
         public List<Vector2> GetRandomPointsOnEdge(int amount);
         public void DrawShape(float linethickness, Raylib_CsLo.Color color);
-        //public SegmentShape GetSegmentShape();
-        //public Vector2 GetReferencePoint();
-        //public void SetPosition(Vector2 position);
-        //public bool Equals(IShape other);
-        //public Circle GetBoundingCircle();
     }
     public interface IPhysicsObject
     {
@@ -263,20 +255,6 @@ namespace ShapeEngine.Core
         public IShape GetShape();
         public IShape GetSimplifiedShape();
         
-        //public bool CheckOverlap(ICollider other);
-        //public CollisionPoints CheckIntersection(ICollider other);
-        //public bool CheckOverlapRect(Rect rect);
-        //public bool CheckOverlapBoundingCirlce(ICollider other);
-        //{
-        //    return GetShape().GetBoundingCircle().Overlap(other.GetShape().GetBoundingCircle());
-        //}
-        //{
-        //    if (SimplifyCollision)
-        //    {
-        //        return GetShape().Overlap(other.GetShape().GetBoundingCircle());
-        //    }
-        //    else return GetShape().Overlap(other.GetShape()); 
-        //}
     }
 
 }

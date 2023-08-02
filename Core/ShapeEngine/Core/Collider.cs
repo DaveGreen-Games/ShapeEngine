@@ -78,31 +78,8 @@ namespace ShapeEngine.Core
         /// </summary>
         public bool ComputeIntersections { get; set; } = false;
         public bool SimplifyCollision{ get; set; } = false;
-        //private Vector2 prevPos = new();
-        //public Vector2 GetPrevPos() { return prevPos; }
-        //public void UpdatePrevPos(float dt) 
-        //{
-        //    prevPos = Pos;// + Vel * dt; 
-        //}
-        //private bool ccd = false;
-        //public virtual bool CCD
-        //{
-        //    get
-        //    {
-        //        if (!ccd) return false;
-        //        else
-        //        {
-        //            return SGeometry.CheckCCDDistance(GetShape().GetBoundingCircle(), GetPrevPos());
-        //        }
-        //    }
-        //    set { ccd = value; }
-        //}
         
         public abstract IShape GetShape();
-        //public abstract bool CheckOverlap(ICollider other);
-        //public abstract Intersection CheckIntersection(ICollider other);
-        //public abstract bool CheckOverlapRect(Rect other);
-        //public abstract bool CheckOverlapBoundingCirlce(ICollider other);
         public abstract IShape GetSimplifiedShape();
 
         protected Vector2 accumulatedForce = new(0f);
@@ -112,7 +89,6 @@ namespace ShapeEngine.Core
         public void AddImpulse(Vector2 force) { SPhysics.AddImpuls(this, force); }
         public virtual void UpdateState(float dt) 
         {
-            //UpdatePrevPos(dt);
             SPhysics.UpdateState(this, dt);
         }
 
@@ -143,33 +119,7 @@ namespace ShapeEngine.Core
             c.FlippedNormals = FlippedNormals;
             return c;
         }
-        //public override bool CheckOverlap(ICollider other)
-        //{
-        //    Circle shape = new(Pos, radius);
-        //    if (SimplifyCollision)
-        //    {
-        //        return shape.Overlap(other.GetSimplifiedShape());
-        //    }
-        //    else return shape.Overlap(other.GetShape());
-        //}
-        //public override Intersection CheckIntersection(ICollider other)
-        //{
-        //    Circle shape = new(Pos, radius);
-        //    if (SimplifyCollision)
-        //    {
-        //        return shape.Intersect(other.GetSimplifiedShape(), Vel);
-        //    }
-        //    else return shape.Intersect(other.GetShape(), Vel);
-        //}
-        //public override bool CheckOverlapRect(Rect rect) { return rect.OverlapShape(new Circle(Pos, radius)); }
-
-        //public override bool CheckOverlapBoundingCirlce(ICollider other)
-        //{
-        //    Circle shape = new(Pos, radius);
-        //    return shape.Overlap(other.GetSimplifiedShape());
-        //
-        //}
-
+        
        
     }
     public class SegmentCollider : Collider
@@ -231,32 +181,6 @@ namespace ShapeEngine.Core
                 return new Segment(Pos, End, n);
             }
         }
-        //public override bool CheckOverlap(ICollider other)
-        //{
-        //    Segment shape = GetSegmentShape();
-        //    if (SimplifyCollision)
-        //    {
-        //        return shape.Overlap(other.GetSimplifiedShape());
-        //    }
-        //    else return shape.Overlap(other.GetShape());
-        //}
-        //public override Intersection CheckIntersection(ICollider other)
-        //{
-        //    Segment shape = GetSegmentShape();
-        //    if (SimplifyCollision)
-        //    {
-        //        return shape.Intersect(other.GetSimplifiedShape(), Vel);
-        //    }
-        //    else return shape.Intersect(other.GetShape(), Vel);
-        //}
-        //public override bool CheckOverlapRect(Rect rect) { return rect.OverlapShape( GetSegmentShape() ); }
-
-        //public override bool CheckOverlapBoundingCirlce(ICollider other)
-        //{
-        //    var shape = GetShape();
-        //    return shape.Overlap(other.GetSimplifiedShape());
-        //}
-
         
     }
     public class RectCollider : Collider
@@ -316,30 +240,6 @@ namespace ShapeEngine.Core
             return r;
         }
         
-        //public override bool CheckOverlap(ICollider other)
-        //{
-        //    Rect shape = GetRectShape();
-        //    if (SimplifyCollision)
-        //    {
-        //        return shape.Overlap(other.GetSimplifiedShape());
-        //    }
-        //    else return shape.Overlap(other.GetShape());
-        //}
-        //public override Intersection CheckIntersection(ICollider other)
-        //{
-        //    Rect shape = GetRectShape();
-        //    if (SimplifyCollision)
-        //    {
-        //        return shape.Intersect(other.GetSimplifiedShape(), Vel);
-        //    }
-        //    else return shape.Intersect(other.GetShape(), Vel);
-        //}
-        //public override bool CheckOverlapRect(Rect rect) { return rect.OverlapShape(GetRectShape()); }
-        //public override bool CheckOverlapBoundingCirlce(ICollider other)
-        //{
-        //    return GetRectShape().GetBoundingCircle().Overlap(other.GetSimplifiedShape());
-        //}
-
     }
     public class PolyCollider : Collider
     {
@@ -433,29 +333,6 @@ namespace ShapeEngine.Core
             return p;
         }
 
-        //public override bool CheckOverlap(ICollider other)
-        //{
-        //    Polygon shape = GetPolygonShape();
-        //    if (SimplifyCollision)
-        //    {
-        //        return shape.Overlap(other.GetSimplifiedShape());
-        //    }
-        //    else return shape.Overlap(other.GetShape());
-        //}
-        //public override Intersection CheckIntersection(ICollider other)
-        //{
-        //    Polygon shape = GetPolygonShape();
-        //    if (SimplifyCollision)
-        //    {
-        //        return shape.Intersect(other.GetSimplifiedShape(), Vel);
-        //    }
-        //    else return shape.Intersect(other.GetShape(), Vel);
-        //}
-        //public override bool CheckOverlapRect(Rect rect) { return rect.OverlapShape(GetPolygonShape()); }
-        //public override bool CheckOverlapBoundingCirlce(ICollider other)
-        //{
-        //    return GetShape().GetBoundingCircle().Overlap(other.GetSimplifiedShape());
-        //}
         private void UpdateShape()
         {
             dirty = false;
@@ -471,13 +348,10 @@ namespace ShapeEngine.Core
 
         }
 
-       
-
     }
     public class PolylineCollider : Collider
     {
         private Polyline shape;
-        //public override bool CCD { get { return false; } set { } }
         public override Vector2 Pos
         {
             get { return cur.pos; } 
@@ -574,27 +448,6 @@ namespace ShapeEngine.Core
             return p; 
         }
 
-        //public override bool CheckOverlap(ICollider other) 
-        //{
-        //    if (SimplifyCollision)
-        //    {
-        //        return shape.Overlap(other.GetSimplifiedShape());
-        //    }
-        //    else return shape.Overlap(other.GetShape()); 
-        //}
-        //public override Intersection CheckIntersection(ICollider other) 
-        //{
-        //    if (SimplifyCollision)
-        //    {
-        //        return shape.Intersect(other.GetSimplifiedShape(), Vel);
-        //    }
-        //    else return shape.Intersect(other.GetShape(), Vel); 
-        //}
-        //public override bool CheckOverlapRect(Rect rect) { return shape.Overlap(rect); }
-        //public override bool CheckOverlapBoundingCirlce(ICollider other)
-        //{
-        //    return shape.GetBoundingCircle().Overlap(other.GetSimplifiedShape()); 
-        //}
         private void UpdateShape()
         {
             dirty = false;
@@ -609,352 +462,5 @@ namespace ShapeEngine.Core
             }
 
         }
-
-        
-
-        
     }
 }
-
-
-//private Polygon shape;
-//private Vector2 pos;
-//private float rotRad = 0f;
-//private float scale = 1f;
-//private bool dirty = false;
-/*
-private void GenerateShape()
-{
-    shape = SPoly.GetShape(points, Pos, RotRad, new(Scale));
-    dirty = false;
-}
-private static Polygon GenerateDisplacements(Polygon shape, Vector2 center)
-{
-    Polygon displacements = new();
-    for (int i = 0; i < shape.Count; i++)
-    {
-        displacements.Add(shape[i] - center);
-    }
-    return displacements;
-}
-*/
-/*
-public override Vector2 Pos 
-{
-    get { return pos; }
-    set { pos = value; dirty = true; } 
-}
-public float RotRad 
-{
-    get { return rotRad; } 
-    set { rotRad = value; dirty = true; }
-}
-public float Scale 
-{
-    get { return scale; }
-    set { scale = value; dirty = true; } 
-}
-public List<Vector2> Shape 
-{ 
-    get 
-    {
-        if (dirty) GenerateShape();
-        return shape; 
-    } 
-}
-*/
-/*
-public PolyCollider(float x, float y, List<Vector2> points, float rotRad = 0f) : base(x, y)
-{
-    this.RotRad = rotRad;
-    this.points = points;
-
-}
-public PolyCollider(Vector2 pos, List<Vector2> points, float rotRad = 0f) : base(pos, new(0f))
-{
-    this.RotRad = rotRad;
-    this.points = points;
-}
-public PolyCollider(Vector2 pos, Vector2 vel, List<Vector2> points, float rotRad = 0f) : base(pos, vel)
-{
-    this.RotRad = rotRad;
-    this.points = points;
-}
-public PolyCollider(Rect rect, float rotRad = 0f) : base(rect.Center, new(0f))
-{
-    this.points = rect.GetPointsRelative(rect.Center);
-    this.RotRad = rotRad;
-}
-public PolyCollider(Rect rect, Vector2 vel, float rotRad = 0f) : base(rect.Center, vel)
-{
-    this.points = rect.GetPointsRelative(rect.Center);
-    this.RotRad = RotRad;
-    this.Vel = vel;
-}
-*/
-//{
-//    get
-//    {
-//        List<Vector2> shape = new();
-//        for (int i = 0; i < points.Count; i++)
-//        {
-//            shape.Add(Pos + SVec.Rotate(points[i], RotRad));
-//        }
-//        return shape;
-//    }
-//}
-//public override Rect GetBoundingBox()
-//{
-//    return SPoly.GetBoundingBox(Shape);
-//}
-//public override void DrawDebugShape(Color color)
-//{
-//    SDrawing.DrawPolygonLines(Shape, 5f, color);
-//}
-
-/*
-public interface ICollider : IPhysicsObject
-    {
-        public bool Enabled { get; set; }
-        public bool ComputeCollision { get; set; }
-        public bool ComputeIntersections { get; set; }
-
-        public IShape GetShape();
-        //public Rect GetBoundingBox();
-        //public void DrawDebugShape(Color color);
-        public (bool valid, bool overlap) CheckOverlap(ICollider other);
-        public (bool valid, Intersection i) CheckIntersection(ICollider other);
-        public bool CheckOverlapRect(Rect rect);
-
-        //todo getsegments intersection/overlap
-    }
-    
-    public abstract class Collider : ICollider
-    {
-        //public Collider() { }
-        //public Collider(float x, float y) { Pos = new(x, y); }
-        //public Collider(Vector2 pos, Vector2 vel) { Pos = pos; Vel = vel; }
-
-        public float Mass { get; set; } = 1.0f;
-        public Vector2 Vel { get; set; }
-        public virtual Vector2 Pos { get; set; }
-        public Vector2 ConstAcceleration { get; set; } = new(0f);
-        public float Drag { get; set; } = 0f;
-        public bool Enabled { get; set; } = true;
-        public bool ComputeCollision { get; set; } = true;
-        public bool ComputeIntersections { get; set; } = false;
-        //public abstract Rect GetBoundingBox();
-        //public abstract void DrawDebugShape(Color color);
-        public abstract IShape GetShape();
-        public abstract (bool valid, bool overlap) CheckOverlap(ICollider other);
-        public abstract (bool valid, Intersection i) CheckIntersection(ICollider other);
-        public abstract bool CheckOverlapRect(Rect other);
-
-        
-        protected Vector2 accumulatedForce = new(0f);
-        public Vector2 GetAccumulatedForce() { return accumulatedForce; }
-        public void ClearAccumulatedForce() { accumulatedForce = new(0f); }
-        public void AddForce(Vector2 force) { accumulatedForce = SPhysics.AddForce(this, force); }
-        public void AddImpulse(Vector2 force) { SPhysics.AddImpuls(this, force); }
-        public void UpdateState(float dt) { SPhysics.UpdateState(this, dt); }
-
-    }
-    public class CircleCollider : Collider
-    {
-        private Circle circle;
-
-        public CircleCollider(Circle c) { this.circle = c; }
-
-        public override Vector2 Pos { get => circle.center; set => circle.center = value; }
-
-        public override IShape GetShape() { return circle; }
-        public override (bool valid, bool overlap) CheckOverlap(ICollider other)
-        {
-            IShape otherShape = other.GetShape();
-            if (otherShape is Circle c)         return (true, circle.OverlapShape(c));
-            else if (otherShape is Segment s)   return (true, circle.OverlapShape(s));
-            else if(otherShape is Triangle t)   return (true, circle.OverlapShape(t));
-            else if (otherShape is Rect r)      return (true, circle.OverlapShape(r));
-            else if (otherShape is Polygon p)   return (true, circle.OverlapShape(p));
-            return (false, false);
-        }
-        public override (bool valid, Intersection i) CheckIntersection(ICollider other)
-        {
-            IShape otherShape = other.GetShape();
-            if (otherShape is Circle c) return (true, circle.IntersectShape(c));
-            else if (otherShape is Segment s) return (true, circle.IntersectShape(s));
-            else if (otherShape is Triangle t) return (true, circle.IntersectShape(t));
-            else if (otherShape is Rect r) return (true, circle.IntersectShape(r));
-            else if (otherShape is Polygon p) return (true, circle.IntersectShape(p));
-            return (false, new());
-        }
-        public override bool CheckOverlapRect(Rect rect) { return rect.OverlapShape(circle); }
-       
-    
-    }
-    public class SegmentCollider : Collider
-{
-    private Segment segment;
-
-    public SegmentCollider(Segment s) { this.segment = s; }
-
-    public override Vector2 Pos { get => segment.start; set => segment.SetPosition(value); }
-    public override IShape GetShape() { return segment; }
-    public override (bool valid, bool overlap) CheckOverlap(ICollider other)
-    {
-        IShape otherShape = other.GetShape();
-        if (otherShape is Circle c) return (true, segment.OverlapShape(c));
-        else if (otherShape is Segment s) return (true, segment.OverlapShape(s));
-        else if (otherShape is Triangle t) return (true, segment.OverlapShape(t));
-        else if (otherShape is Rect r) return (true, segment.OverlapShape(r));
-        else if (otherShape is Polygon p) return (true, segment.OverlapShape(p));
-        return (false, false);
-    }
-    public override (bool valid, Intersection i) CheckIntersection(ICollider other)
-    {
-        IShape otherShape = other.GetShape();
-        if (otherShape is Circle c) return (true, segment.IntersectShape(c));
-        else if (otherShape is Segment s) return (true, segment.IntersectShape(s));
-        else if (otherShape is Triangle t) return (true, segment.IntersectShape(t));
-        else if (otherShape is Rect r) return (true, segment.IntersectShape(r));
-        else if (otherShape is Polygon p) return (true, segment.IntersectShape(p));
-        return (false, new());
-    }
-    public override bool CheckOverlapRect(Rect rect) { return rect.OverlapShape(segment); }
-
-    
-}
-public class RectCollider : Collider
-{
-    private Rect rect;//rect needs alignement?
-
-    public RectCollider(Rect r) { this.rect = r; }
-
-    public override Vector2 Pos { get => rect.Center; set => rect.SetPosition(value); }
-    public override IShape GetShape() { return rect; }
-    public override (bool valid, bool overlap) CheckOverlap(ICollider other)
-    {
-        IShape otherShape = other.GetShape();
-        if (otherShape is Circle c) return (true, rect.OverlapShape(c));
-        else if (otherShape is Segment s) return (true, rect.OverlapShape(s));
-        else if (otherShape is Triangle t) return (true, rect.OverlapShape(t));
-        else if (otherShape is Rect r) return (true, rect.OverlapShape(r));
-        else if (otherShape is Polygon p) return (true, rect.OverlapShape(p));
-        return (false, false);
-    }
-    public override (bool valid, Intersection i) CheckIntersection(ICollider other)
-    {
-        IShape otherShape = other.GetShape();
-        if (otherShape is Circle c) return (true, rect.IntersectShape(c));
-        else if (otherShape is Segment s) return (true, rect.IntersectShape(s));
-        else if (otherShape is Triangle t) return (true, rect.IntersectShape(t));
-        else if (otherShape is Rect r) return (true, rect.IntersectShape(r));
-        else if (otherShape is Polygon p) return (true, rect.IntersectShape(p));
-        return (false, new());
-    }
-    public override bool CheckOverlapRect(Rect rect) { return rect.OverlapShape(this.rect); }
-
-
-
-
-}
-public class PolyCollider : Collider
-{
-    List<Vector2> points;
-    public float RotRad { get; set; }
-    public float Scale { get; set; } = 1f;
-    public List<Vector2> Shape { get { return SPoly.GetShape(points, Pos, RotRad, new(Scale)); } }
-    //{
-    //    get
-    //    {
-    //        List<Vector2> shape = new();
-    //        for (int i = 0; i < points.Count; i++)
-    //        {
-    //            shape.Add(Pos + SVec.Rotate(points[i], RotRad));
-    //        }
-    //        return shape;
-    //    }
-    //}
-    public PolyCollider(float x, float y, List<Vector2> points, float rotRad = 0f) : base(x, y)
-    {
-        this.RotRad = rotRad;
-        this.points = points;
-
-    }
-    public PolyCollider(Vector2 pos, List<Vector2> points, float rotRad = 0f) : base(pos, new(0f))
-    {
-        this.RotRad = rotRad;
-        this.points = points;
-    }
-    public PolyCollider(Vector2 pos, Vector2 vel, List<Vector2> points, float rotRad = 0f) : base(pos, vel)
-    {
-        this.RotRad = rotRad;
-        this.points = points;
-    }
-    public PolyCollider(Rect rect, float rotRad = 0f) : base(rect.Center, new(0f))
-    {
-        this.points = rect.GetPointsRelative(rect.Center);
-        this.RotRad = rotRad;
-    }
-    public PolyCollider(Rect rect, Vector2 vel, float rotRad = 0f) : base(rect.Center, vel)
-    {
-        this.points = rect.GetPointsRelative(rect.Center);
-        this.RotRad = RotRad;
-        this.Vel = vel;
-    }
-    public override Rect GetBoundingBox()
-    {
-        return SPoly.GetBoundingBox(Shape);
-    }
-    public override void DrawDebugShape(Color color)
-    {
-        SDrawing.DrawPolygonLines(Shape, 5f, color);
-    }
-
-    public override (bool valid, bool overlap) CheckOverlap(ICollider other)
-    {
-        if (other is CircleCollider c)
-        {
-            return (true, this.OverlapCollider(c));
-        }
-        else if (other is SegmentCollider s)
-        {
-            return (true, this.OverlapCollider(s));
-        }
-        else if (other is RectCollider r)
-        {
-            return (true, this.OverlapCollider(r));
-        }
-        else if (other is PolyCollider p)
-        {
-            return (true, this.OverlapCollider(p));
-        }
-        return (false, false);
-    }
-    public override (bool valid, Intersection i) CheckIntersection(ICollider other)
-    {
-
-        if (other is CircleCollider c)
-        {
-            return (true, this.IntersectionPolyCircle(c));
-        }
-        else if (other is SegmentCollider s)
-        {
-            return (true, this.IntersectionPolySegment(s));
-        }
-        else if (other is RectCollider r)
-        {
-            return (true, this.IntersectionPolyRect(r));
-        }
-        else if (other is PolyCollider p)
-        {
-            return (true, this.IntersectionPolyPoly(p));
-        }
-        return (false, new());
-    }
-    public override bool CheckOverlapRect(Rect rect) { return rect.OverlapRectPoly(this); }
-
-}
-
-
-*/

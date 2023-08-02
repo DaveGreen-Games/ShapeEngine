@@ -150,7 +150,6 @@ namespace ShapeEngine.Core
                     List<Collision> cols = new();
                     foreach (var other in others)
                     {
-                        //CollisionInfo info = new();
                         ChecksPerFrame++;
 
                         bool overlap = SGeometry.Overlap(collidable, other);
@@ -170,9 +169,7 @@ namespace ShapeEngine.Core
                                 Collision c = new(collidable, other, firstContact);
                                 cols.Add(c);
                             }
-                            
                         }
-
                     }
 
                     if(cols.Count > 0)
@@ -180,8 +177,6 @@ namespace ShapeEngine.Core
                         CollisionInformation collisionInfo = new(cols, computeIntersections);
                         collisionStack[collidable] = collisionInfo;
                     }
-                    
-                    
                 }
             }
             Resolve();

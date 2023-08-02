@@ -127,6 +127,7 @@ namespace Examples.Scenes.ExampleScenes
     }
     internal class Rock : Gameobject
     {
+        float timer = 0f;
         public Rock(Vector2 pos, Vector2 vel, float size)
         {
             int shapeIndex = SRNG.randI(0, 4);
@@ -167,8 +168,8 @@ namespace Examples.Scenes.ExampleScenes
         {
             if (info.CollisionSurface.Valid)
             {
+                timer = 0.25f;
                 collider.Vel = collider.Vel.Reflect(info.CollisionSurface.Normal);
-                
             }
         }
         private void DrawBoundingShapes()
@@ -177,11 +178,21 @@ namespace Examples.Scenes.ExampleScenes
             shape.GetBoundingBox().DrawLines(2f, BLUE);
             shape.GetBoundingCircle().DrawLines(2f, GREEN);
         }
+        public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        {
+            base.Update(dt, mousePosGame, mousePosUI);
+            if(timer > 0f)
+            {
+                timer -= dt;
+            }
+        }
         public override void Draw(Vector2 gameSize, Vector2 mousePosGame)
         {
             base.Draw(gameSize, mousePosGame);
-            //collider.GetShape().DrawShape(2f, ExampleScene.ColorHighlight2);
-            SDrawing.DrawCircleFast(collider.Pos, 5, ExampleScene.ColorHighlight2);
+            Color color = ExampleScene.ColorHighlight2;
+            if (timer > 0) color = ExampleScene.ColorHighlight1;
+            //collider.GetShape().DrawShape(2f, color);
+            SDrawing.DrawCircleFast(collider.Pos, 5, color);
 
         }
     }
@@ -227,7 +238,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 for (int i = 0; i < 50; i++)
                 {
-                    Rock r = new(mousePosGame + SRNG.randVec2(0, 50), SRNG.randVec2() * 100, 10);// SRNG.randF(10, 50));
+                    Rock r = new(mousePosGame + SRNG.randVec2(0, 50), SRNG.randVec2() * 100, 2);// SRNG.randF(10, 50));
                     area.AddCollider(r);
                 }
 
