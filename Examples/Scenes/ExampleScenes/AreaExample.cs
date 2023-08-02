@@ -247,7 +247,7 @@ namespace Examples.Scenes.ExampleScenes
     }
     internal class Ball : Gameobject
     {
-        const float maxHealth = 500000f;
+        const float maxHealth = 50000;
         float curHealth = maxHealth;
         public Ball(Vector2 pos, Vector2 vel, float size)
         {
@@ -274,6 +274,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 curHealth -= 1;
                 if(curHealth < 0) curHealth = 0;
+
                 collider.Vel = collider.Vel.Reflect(info.CollisionSurface.Normal);
             }
         }
@@ -308,6 +309,19 @@ namespace Examples.Scenes.ExampleScenes
         Vector2 startPoint = new();
         bool segmentStarted = false;
         bool drawDebug = false;
+
+        int collisionAvg = 0;
+        int collisionsTotal = 0;
+
+        int iterationsAvg = 0;
+        int iterationsTotal = 0;
+
+        int closestPointAvg = 0;
+        int closestPointTotal = 0;
+
+        int avgSteps = 0;
+        float avgTimer = 0f;
+
         public AreaExample()
         {
             Title = "Area Example";
@@ -324,7 +338,6 @@ namespace Examples.Scenes.ExampleScenes
         public override void Reset()
         {
             area.Clear();
-
             AddBoundaryWalls();
         }
         public override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
@@ -354,7 +367,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 for (int i = 0; i < 15; i++)
                 {
-                    Ball b = new(mousePosGame + SRNG.randVec2(0, 5), SRNG.randVec2() * 100, 10);
+                    Ball b = new(mousePosGame + SRNG.randVec2(0, 5), SRNG.randVec2() * 500, 10);
                     area.AddCollider(b);
                 }
 
@@ -371,7 +384,25 @@ namespace Examples.Scenes.ExampleScenes
             HandleWalls(mousePosGame);
 
             area.Update(dt, mousePosGame, mousePosUI);
-            
+
+
+            collisionsTotal += area.Col.CollisionChecksPerFrame;
+            iterationsTotal += area.Col.IterationsPerFrame;
+            closestPointTotal += area.Col.ClosestPointChecksPerFrame;
+            avgSteps++;
+            avgTimer += dt;
+            if(avgTimer >= 1f)
+            {
+                collisionAvg = collisionsTotal / avgSteps;
+                iterationsAvg = iterationsTotal / avgSteps;
+                closestPointAvg = closestPointTotal / avgSteps;
+
+                collisionsTotal = 0;
+                iterationsTotal = 0;
+                closestPointTotal = 0;
+                avgTimer = 0f;
+                avgSteps = 0;
+            }
             
         }
 
@@ -401,8 +432,9 @@ namespace Examples.Scenes.ExampleScenes
             area.DrawUI(uiSize, mousePosUI);
 
             Rect checksRect = new Rect(uiSize * new Vector2(0.5f, 0.92f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));
-            string checks = string.Format("Iteration: {0} | Collisions: {1}", area.Col.IterationsPerFrame, area.Col.CollisionChecksPerFrame);
+            string checks = string.Format("Iteration: {0} | Collisions: {1} | CP: {2}", iterationsAvg.ToString("D6"), collisionAvg.ToString("D6"), closestPointAvg.ToString("D6"));
             font.DrawText(checks, checksRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+
 
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
             string infoText = String.Format("[LMB] Add Segment | [RMB] Cancel Segment | [Space] Shoot | Objs: {0}", area.GetCollidableCount() );

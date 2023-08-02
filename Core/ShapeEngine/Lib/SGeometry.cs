@@ -56,17 +56,16 @@ namespace ShapeEngine.Lib
                 int count = 0;
                 foreach (var col in collisions)
                 {
-                    if (col.FirstContact)
+                    //if (col.FirstContact)
+                    //{
+                    if (col.Intersection.Valid)
                     {
-                        if (col.Intersection.Valid)
-                        {
-                            count++;
-                            var surface = col.Intersection.CollisionSurface;
-                            avgPoint += surface.Point;
-                            avgNormal += surface.Normal;
-
-                        }
+                        count++;
+                        var surface = col.Intersection.CollisionSurface;
+                        avgPoint += surface.Point;
+                        avgNormal += surface.Normal;
                     }
+                    //}
                 }
 
                 if (count > 0)
@@ -180,9 +179,6 @@ namespace ShapeEngine.Lib
             }
             else
             {
-                this.Valid = true;
-                this.ColPoints = points;
-
                 Vector2 avgPoint = new();
                 Vector2 avgNormal = new();
                 int count = 0;
@@ -196,11 +192,18 @@ namespace ShapeEngine.Lib
                 }
                 if (count > 0)
                 {
+                    this.Valid = true;
+                    this.ColPoints = points;
                     avgPoint /= count;
                     avgNormal = avgNormal.Normalize();
                     this.CollisionSurface = new(avgPoint, avgNormal);
                 }
-                else this.CollisionSurface = new();
+                else
+                {
+                    this.Valid = false;
+                    this.ColPoints = points;
+                    this.CollisionSurface = new();
+                }
             }
         }
         public Intersection(CollisionPoints points)

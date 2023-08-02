@@ -62,6 +62,7 @@ namespace ShapeEngine.Core
 
         public int IterationsPerFrame = 0;
         public int CollisionChecksPerFrame = 0;
+        public int ClosestPointChecksPerFrame = 0;
         protected List<ICollidable> collidables = new();
         protected List<ICollidable> tempHolding = new();
         protected List<ICollidable> tempRemoving = new();
@@ -121,6 +122,7 @@ namespace ShapeEngine.Core
         {
             IterationsPerFrame = 0;
             CollisionChecksPerFrame = 0;
+            ClosestPointChecksPerFrame = 0;
             spatialHash.Clear();
 
             //fill spatial hash and filter out all disabled colliders
@@ -168,8 +170,14 @@ namespace ShapeEngine.Core
                                 if(collisionPoints.Count <= 0)
                                 {
                                     Vector2 refPoint = collidable.GetCollider().GetPreviousPosition();
-                                    CollisionPoint closest = other.GetCollider().GetShape().GetClosestPoint(refPoint);
-                                    collisionPoints.Add(closest);
+                                    var shape = other.GetCollider().GetShape();
+                                    if (!shape.IsPointInside(refPoint))
+                                    {
+                                        CollisionPoint closest = shape.GetClosestPoint(refPoint);
+                                        collisionPoints.Add(closest);
+                                        ClosestPointChecksPerFrame++;
+                                    }
+                                    
                                 }
 
                                 Collision c = new(collidable, other, firstContact, collisionPoints);
@@ -209,6 +217,13 @@ namespace ShapeEngine.Core
 
             foreach (var kvp in collisionStack)
             {
+                //if (kvp.Value.CollisionSurface.Valid)
+                //{
+                //    if (kvp.Value.CollisionSurface.Normal.IsNan())
+                //    {
+                //        bool fuck = true;
+                //    }
+                //}
                 kvp.Key.Overlap(kvp.Value);
             }
             collisionStack.Clear();
