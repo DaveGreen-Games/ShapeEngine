@@ -1,5 +1,6 @@
 ﻿using ShapeEngine.Core;
 using ShapeEngine.Lib;
+using System.Net.Http.Headers;
 using System.Numerics;
 
 namespace ShapeEngine.Effects
@@ -16,6 +17,7 @@ namespace ShapeEngine.Effects
 
         protected Vector2 accumulatedForce = new(0f);
 
+        private Vector2 prevPos = new();
 
         public PhysicsParticle(Vector2 pos, Vector2 size) : base(pos, size) { }
         public PhysicsParticle(Vector2 pos, Vector2 size, float lifetime) : base(pos, size, lifetime) { }
@@ -34,6 +36,8 @@ namespace ShapeEngine.Effects
 
         public override bool Update(float dt)
         {
+            UpdatePreviousPosition(dt);
+
             bool cancel = base.Update(dt);
             if (cancel) return true;
             else
@@ -52,5 +56,15 @@ namespace ShapeEngine.Effects
         public abstract IShape GetShape();
         public abstract IShape GetSimplifiedShape();
         public abstract void DrawDebugShape(Raylib_CsLo.Color color);
+
+        public Vector2 GetPreviousPosition()
+        {
+            return prevPos;
+        }
+
+        public void UpdatePreviousPosition(float dt)
+        {
+            prevPos = Pos;
+        }
     }
 }

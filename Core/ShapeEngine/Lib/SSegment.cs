@@ -61,6 +61,33 @@ namespace ShapeEngine.Lib
         public static Segment Move(this Segment s, Vector2 offset, float f) { return new(s.start + (offset * (1f - f)), s.end + (offset * (f))); }
         public static Segment Move(this Segment s, Vector2 offset) { return new(s.start + offset, s.end + offset); }
         public static Segment Move(this Segment s, float x, float y) { return Move(s, new Vector2(x, y)); }
-       
+
+
+        public static Polygon CreatePolyWall(this Segment s, float thickness)
+        {
+            float w = thickness;
+            Vector2 dir = s.Dir;
+            Vector2 left = dir.GetPerpendicularLeft();
+            Vector2 right = dir.GetPerpendicularRight();
+            Vector2 a = s.start + left * w;
+            Vector2 b = s.start + right * w;
+            Vector2 c = s.end + right * w;
+            Vector2 d = s.end + left * w;
+
+            return new(a, b, c, d);
+        }
+        public static Points CreateWall(this Segment s, float thickness)
+        {
+            float w = thickness;
+            Vector2 dir = s.Dir;
+            Vector2 left = dir.GetPerpendicularLeft();
+            Vector2 right = dir.GetPerpendicularRight();
+            Vector2 a = s.start + left * w;
+            Vector2 b = s.start + right * w;
+            Vector2 c = s.end + right * w;
+            Vector2 d = s.end + left * w;
+
+            return new() { a, b, c, d };
+        }
     }
 }

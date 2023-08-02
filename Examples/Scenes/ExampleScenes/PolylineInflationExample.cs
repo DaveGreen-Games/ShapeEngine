@@ -56,7 +56,7 @@ namespace Examples.Scenes.ExampleScenes
             int pickedVertex = -1;
 
             bool isMouseOnLine = false; // polyline.OverlapShape(new Circle(mousePos, vertexRadius * 2f));
-            var closest = polyline.GetClosestPoint(mousePos);
+            var closest = polyline.GetClosestPoint(mousePos).Point;
             int closestIndex = polyline.GetClosestIndex(mousePos);
             bool drawClosest = true;
 

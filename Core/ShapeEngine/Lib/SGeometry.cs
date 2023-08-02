@@ -295,6 +295,13 @@ namespace ShapeEngine.Lib
         {
             return new(Point, Normal.Flip());
         }
+        public CollisionPoint FlipNormal(Vector2 referencePoint)
+        {
+            Vector2 dir = referencePoint - Point;
+            if (dir.IsFacingTheOppositeDirection(Normal)) return FlipNormal();
+
+            return this;
+        }
     }
     
     public class CollisionPoints : List<CollisionPoint> 

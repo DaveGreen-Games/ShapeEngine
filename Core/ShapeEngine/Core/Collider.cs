@@ -60,10 +60,11 @@ namespace ShapeEngine.Core
         public Collider(float x, float y) { Pos = new(x, y); }
         public Collider(Vector2 pos, Vector2 vel) { Pos = pos; Vel = vel; }
 
+        private Vector2 prevPos;
+
         public bool FlippedNormals { get; set; } = false;
         public float Mass { get; set; } = 1.0f;
         public Vector2 Vel { get; set; }
-
         public virtual Vector2 Pos { get; set; }
         public Vector2 ConstAcceleration { get; set; } = new(0f);
         public float Drag { get; set; } = 0f;
@@ -89,10 +90,19 @@ namespace ShapeEngine.Core
         public void AddImpulse(Vector2 force) { SPhysics.AddImpuls(this, force); }
         public virtual void UpdateState(float dt) 
         {
+            UpdatePreviousPosition(dt);
             SPhysics.UpdateState(this, dt);
         }
 
-        
+        public Vector2 GetPreviousPosition()
+        {
+            return prevPos;
+        }
+
+        public void UpdatePreviousPosition(float dt)
+        {
+            prevPos = Pos;
+        }
     }
     public class CircleCollider : Collider
     {

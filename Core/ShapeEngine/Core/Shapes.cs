@@ -194,13 +194,6 @@ namespace ShapeEngine.Core
             this.end = end; 
             this.n = (end - start).GetPerpendicularRight().Normalize(); 
         }
-        //public Segment(Vector2 start, Vector2 end, bool automaticNormal = false)
-        //{
-        //    this.start = start;
-        //    this.end = end;
-        //    this.n = (end - start).GetPerpendicularRight().Normalize();
-        //    this.automaticNormal = false;
-        //}
         public Segment(Vector2 start, Vector2 end, Vector2 n) 
         { 
             this.start = start; 
@@ -216,17 +209,6 @@ namespace ShapeEngine.Core
         }
         public Segment(Segment s) { start = s.start; end = s.end; n = s.n; AutomaticNormals = s.AutomaticNormals; }
 
-        
-        //public static bool operator ==(Segment s1, Segment s2) { return s2.start == s1.start && s2.end == s1.end; }
-        //public static bool operator !=(Segment s1, Segment s2) { return s2.start != s1.start || s2.end != s1.end; }
-        //public override bool Equals([NotNullWhen(true)] object? obj)
-        //{
-        //    return base.Equals(obj);
-        //}
-        //public override int GetHashCode()
-        //{
-        //    return base.GetHashCode();
-        //}
         public bool IsSame(Segment other) 
         {
             return Center == other.Center; 
@@ -238,23 +220,22 @@ namespace ShapeEngine.Core
         public Polygon ToPolygon() { return new(start, end); }
         public Polyline ToPolyline() { return new(start, end); }
         public Segments GetEdges() { return new(this); }
-        //public Segments GetEdges(Vector2 normalReferencePoint)
-        //{
-        //    var s = new Segment(this);
-        //    s.FixNormal(normalReferencePoint);
-        //    return new(s);
-        //}
+        
         public Triangulation Triangulate() { return new(); }
         public Circle GetBoundingCircle() { return ToPolygon().GetBoundingCircle(); }
         public Rect GetBoundingBox() { return new(start, end); }
         public bool IsPointInside(Vector2 p) { return SGeometry.IsPointOnSegment(p, start, end); }
-        public Vector2 GetClosestPoint(Vector2 p)
+        public CollisionPoint GetClosestPoint(Vector2 p)
         {
+            CollisionPoint c;
             var w = Displacement;
             float t = (p - start).Dot(w) / w.LengthSquared();
-            if (t < 0f) return start;
-            else if (t > 1f) return end;
-            else return start + w * t;
+            if (t < 0f) c = new(start, n); 
+            else if (t > 1f) c = new(end, n);
+            else c = new(start + w * t, n);
+
+            if (AutomaticNormals) return c.FlipNormal(p);
+            return c;
         }
         public Vector2 GetClosestVertex(Vector2 p)
         {
@@ -286,17 +267,6 @@ namespace ShapeEngine.Core
         }
         public void DrawShape(float linethickness, Raylib_CsLo.Color color) => this.Draw(linethickness, color);
 
-
-
-        //public SegmentShape GetSegmentShape() { return new(start, this); }
-        //public Vector2 GetReferencePoint() { return Center; }
-        //public Segment ChangePosition(Vector2 newPos) { return new(newPos, newPos + Displacement); }
-        //public void SetPosition(Vector2 newPosition)
-        //{
-        //    Vector2 w = Displacement;
-        //    start = newPosition;
-        //    end = newPosition + w;
-        //}
     }
     
     public struct Circle : IShape
@@ -322,8 +292,13 @@ namespace ShapeEngine.Core
         public float GetCircumferenceSquared() { return GetCircumference() * GetCircumference(); }
         public Rect GetBoundingBox() { return new Rect(center, new Vector2(radius, radius) * 2f, new(0.5f)); }
         public bool IsPointInside(Vector2 p) { return SGeometry.IsPointInCircle(p, center, radius); }
-        public Vector2 GetClosestPoint(Vector2 p) { return (p - center).Normalize() * radius; }
-        public Vector2 GetClosestVertex(Vector2 p) { return (p - center).Normalize() * radius; }
+        public CollisionPoint GetClosestPoint(Vector2 p) 
+        {
+            Vector2 normal = (p - center).Normalize();
+            Vector2 point = center + normal * radius;
+            return new(point, normal);
+        }
+        public Vector2 GetClosestVertex(Vector2 p) { return center + (p - center).Normalize() * radius; }
         public Vector2 GetRandomPoint()
         {
             float randAngle = SRNG.randAngleRad();
@@ -487,7 +462,7 @@ namespace ShapeEngine.Core
         }
         public Rect GetBoundingBox() { return new Rect(a.X, a.Y, 0, 0).Enlarge(b).Enlarge(c); }
         public bool IsPointInside(Vector2 p) { return SGeometry.IsPointInTriangle(a, b, c, p); }
-        public Vector2 GetClosestPoint(Vector2 p) { return ToPolygon().GetClosestPoint(p); }
+        public CollisionPoint GetClosestPoint(Vector2 p) { return ToPolygon().GetClosestPoint(p); }
         public Vector2 GetClosestVertex(Vector2 p) { return ToPolygon().GetClosestVertex(p); }
         public Vector2 GetRandomPoint() { return this.GetPoint(SRNG.randF(), SRNG.randF()); }
         public List<Vector2> GetRandomPoints(int amount)
@@ -645,7 +620,7 @@ namespace ShapeEngine.Core
         public float GetArea() { return width * height; }
         public Rect GetBoundingBox() { return this; }
         public bool IsPointInside(Vector2 p) { return SGeometry.IsPointInRect(p, TopLeft, Size); }
-        public Vector2 GetClosestPoint(Vector2 p) { return ToPolygon().GetClosestPoint(p); }
+        public CollisionPoint GetClosestPoint(Vector2 p) { return ToPolygon().GetClosestPoint(p); }
         public Vector2 GetClosestVertex(Vector2 p) { return ToPolygon().GetClosestVertex(p); }
         public Vector2 GetRandomPoint() { return new(SRNG.randF(x, x + width), SRNG.randF(y, y + height)); }
         public List<Vector2> GetRandomPoints(int amount)
@@ -1174,6 +1149,7 @@ namespace ShapeEngine.Core
         public Polygon ToPolygon() { return new( this ); }
         public Polyline ToPolyline() { return new(this); }
 
+
         public int GetClosestIndex(Vector2 p)
         {
             if (Count <= 0) return -1;
@@ -1184,7 +1160,7 @@ namespace ShapeEngine.Core
             int closestIndex = -1;
             for (int i = 0; i < edges.Count; i++)
             {
-                Vector2 c = edges[i].GetClosestPoint(p);
+                Vector2 c = edges[i].GetClosestPoint(p).Point;
                 float d = (c - p).LengthSquared();
                 if (d < minD)
                 {
@@ -1194,18 +1170,16 @@ namespace ShapeEngine.Core
             }
             return closestIndex;
         }
-
-        public bool IsPointInside(Vector2 p) { return SGeometry.IsPointInPoly(p, this); }
-        public Vector2 GetClosestPoint(Vector2 p)
+        public CollisionPoint GetClosestPoint(Vector2 p)
         {
             float minD = float.PositiveInfinity;
             var edges = GetEdges();
-            Vector2 closest = new();
+            CollisionPoint closest = new();
 
             for (int i = 0; i < edges.Count; i++)
             {
-                Vector2 c = edges[i].GetClosestPoint(p);
-                float d = (c - p).LengthSquared();
+                CollisionPoint c = edges[i].GetClosestPoint(p);
+                float d = (c.Point - p).LengthSquared();
                 if (d < minD)
                 {
                     closest = c;
@@ -1229,6 +1203,9 @@ namespace ShapeEngine.Core
             }
             return closest;
         }
+
+
+        public bool IsPointInside(Vector2 p) { return SGeometry.IsPointInPoly(p, this); }
         public Vector2 GetRandomPoint()
         {
             var triangles = Triangulate();
@@ -1501,6 +1478,25 @@ namespace ShapeEngine.Core
         }
 
 
+
+        public Polyline ToPolyline() { return this; }
+        public Polygon ToPolygon()
+        {
+            var polygon = new Polygon();
+            polygon.AddRange(this);
+            return polygon;
+        }
+        
+        public bool IsPointInside(Vector2 p)
+        {
+            var segments = GetEdges();
+            foreach (var segment in segments)
+            {
+                if (segment.IsPointInside(p)) return true;
+            }
+            return false;
+        }
+
         public int GetClosestIndex(Vector2 p)
         {
             if (Count <= 0) return -1;
@@ -1511,7 +1507,7 @@ namespace ShapeEngine.Core
             int closestIndex = -1;
             for (int i = 0; i < edges.Count; i++)
             {
-                Vector2 c = edges[i].GetClosestPoint(p);
+                Vector2 c = edges[i].GetClosestPoint(p).Point;
                 float d = (c - p).LengthSquared();
                 if (d < minD)
                 {
@@ -1521,34 +1517,16 @@ namespace ShapeEngine.Core
             }
             return closestIndex;
         }
-
-
-        public Polyline ToPolyline() { return this; }
-        public Polygon ToPolygon()
-        {
-            var polygon = new Polygon();
-            polygon.AddRange(this);
-            return polygon;
-        }
-        public bool IsPointInside(Vector2 p)
-        {
-            var segments = GetEdges();
-            foreach (var segment in segments)
-            {
-                if (segment.IsPointInside(p)) return true;
-            }
-            return false;
-        }
-        public Vector2 GetClosestPoint(Vector2 p)
+        public CollisionPoint GetClosestPoint(Vector2 p)
         {
             float minD = float.PositiveInfinity;
             var edges = GetEdges();
-            Vector2 closest = new();
+            CollisionPoint closest = new();
 
             for (int i = 0; i < edges.Count; i++)
             {
-                Vector2 c = edges[i].GetClosestPoint(p);
-                float d = (c - p).LengthSquared();
+                CollisionPoint c = edges[i].GetClosestPoint(p);
+                float d = (c.Point - p).LengthSquared();
                 if (d < minD)
                 {
                     closest = c;
@@ -1572,6 +1550,7 @@ namespace ShapeEngine.Core
             }
             return closest;
         }
+        
         public Vector2 GetRandomPoint() { return GetRandomPointOnEdge(); }
         public List<Vector2> GetRandomPoints(int amount)
         {

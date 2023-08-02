@@ -11,7 +11,9 @@ namespace Examples.Scenes.ExampleScenes
     {
         public static readonly uint WALL_ID = 1;
         public static readonly uint ROCK_ID = 2;
-        
+        public static readonly uint BOX_ID = 3;
+        public static readonly uint BALL_ID = 4;
+
         protected ICollider collider;
         protected uint[] collisionMask = new uint[] { };
 
@@ -70,9 +72,14 @@ namespace Examples.Scenes.ExampleScenes
     }
     internal class Wall : Gameobject
     {
+        
         public Wall(Vector2 start, Vector2 end)
         {
-            this.collider = new SegmentCollider(start, end);
+            Segment s = new(start, end);
+            var wall = SSegment.CreateWall(s, 12);
+
+            this.collider = new PolyCollider(s.Center, new Vector2(0f), wall.ToArray());
+            //this.collider = new SegmentCollider(start, end);
             this.collider.ComputeCollision = false;
             this.collider.ComputeIntersections = false;
             this.collider.Enabled = true;
@@ -93,17 +100,10 @@ namespace Examples.Scenes.ExampleScenes
     {
         public PolyWall(Vector2 start, Vector2 end)
         {
-            float w = 25f;
             Segment s = new(start, end);
-            Vector2 dir = s.Dir;
-            Vector2 left = dir.GetPerpendicularLeft();
-            Vector2 right = dir.GetPerpendicularRight();
-            Vector2 a = start + left * w;
-            Vector2 b = start + right * w;
-            Vector2 c = end + right * w;
-            Vector2 d = end + left * w;
-            
-            this.collider = new PolyCollider(s.Center, new Vector2(0f), a, b, c, d);
+            var wall = SSegment.CreateWall(s, 20);
+
+            this.collider = new PolyCollider(s.Center, new Vector2(0f), wall.ToArray());
             this.collider.ComputeCollision = false;
             this.collider.ComputeIntersections = false;
             this.collider.Enabled = true;
@@ -156,7 +156,6 @@ namespace Examples.Scenes.ExampleScenes
             this.collider.ComputeIntersections = true;
             this.collider.Enabled = true;
             this.collider.SimplifyCollision = false;
-            //this.collider.CCD = true;
             this.collisionMask = new uint[] { WALL_ID };
         }
 
@@ -189,11 +188,109 @@ namespace Examples.Scenes.ExampleScenes
         public override void Draw(Vector2 gameSize, Vector2 mousePosGame)
         {
             base.Draw(gameSize, mousePosGame);
-            Color color = ExampleScene.ColorHighlight2;
+            Color color = BLUE;
+            if (timer > 0) color = ExampleScene.ColorHighlight1;
+            collider.GetShape().DrawShape(2f, color);
+            //SDrawing.DrawCircleFast(collider.Pos, 5, color);
+
+        }
+    }
+    internal class Box : Gameobject
+    {
+        float timer = 0f;
+        public Box(Vector2 pos, Vector2 vel, float size)
+        {
+            this.collider = new RectCollider(pos, vel, new Vector2(size, size), new Vector2(0.5f));
+
+            this.collider.ComputeCollision = true;
+            this.collider.ComputeIntersections = true;
+            this.collider.Enabled = true;
+            this.collider.SimplifyCollision = false;
+            this.collisionMask = new uint[] { WALL_ID };
+        }
+
+        public override uint GetCollisionLayer()
+        {
+            return BOX_ID;
+        }
+        public override void Overlap(CollisionInformation info)
+        {
+            if (info.CollisionSurface.Valid)
+            {
+                timer = 0.25f;
+                collider.Vel = collider.Vel.Reflect(info.CollisionSurface.Normal);
+            }
+        }
+        public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        {
+            base.Update(dt, mousePosGame, mousePosUI);
+            if (timer > 0f)
+            {
+                timer -= dt;
+            }
+        }
+        public override void Draw(Vector2 gameSize, Vector2 mousePosGame)
+        {
+            base.Draw(gameSize, mousePosGame);
+            Color color = PURPLE;
             if (timer > 0) color = ExampleScene.ColorHighlight1;
             //collider.GetShape().DrawShape(2f, color);
-            SDrawing.DrawCircleFast(collider.Pos, 5, color);
 
+            if(collider is RectCollider r)
+            {
+                Rect shape = r.GetRectShape();
+                shape.DrawLines(2f, color);
+            }
+
+
+        }
+    }
+    internal class Ball : Gameobject
+    {
+        const float maxHealth = 500000f;
+        float curHealth = maxHealth;
+        public Ball(Vector2 pos, Vector2 vel, float size)
+        {
+            this.collider = new CircleCollider(pos, vel, size);
+
+            this.collider.ComputeCollision = true;
+            this.collider.ComputeIntersections = true;
+            this.collider.Enabled = true;
+            this.collider.SimplifyCollision = false;
+            this.collisionMask = new uint[] { WALL_ID, ROCK_ID, BOX_ID };
+        }
+
+        public override bool IsDead()
+        {
+            return curHealth <= 0;
+        }
+        public override uint GetCollisionLayer()
+        {
+            return BALL_ID;
+        }
+        public override void Overlap(CollisionInformation info)
+        {
+            if (info.CollisionSurface.Valid)
+            {
+                curHealth -= 1;
+                if(curHealth < 0) curHealth = 0;
+                collider.Vel = collider.Vel.Reflect(info.CollisionSurface.Normal);
+            }
+        }
+        public override void Draw(Vector2 gameSize, Vector2 mousePosGame)
+        {
+            base.Draw(gameSize, mousePosGame);
+            
+            float f = curHealth / maxHealth;
+            Color maxColor = GREEN;
+            Color endColor = RED;
+            Color color = maxColor.Lerp(endColor, 1 - f);
+
+            if (collider is CircleCollider c)
+            {
+                Rect r = new(c.Pos, new Vector2(c.Radius) * 2f, new(0.5f));
+                r.DrawLines(2f, color);
+            }
         }
     }
 
@@ -234,20 +331,36 @@ namespace Examples.Scenes.ExampleScenes
         {
             base.HandleInput(dt, mousePosGame, mousePosUI);
 
-            if (IsKeyPressed(KeyboardKey.KEY_SPACE))
+            if (IsKeyPressed(KeyboardKey.KEY_ONE))
             {
                 for (int i = 0; i < 50; i++)
                 {
-                    Rock r = new(mousePosGame + SRNG.randVec2(0, 50), SRNG.randVec2() * 100, 2);// SRNG.randF(10, 50));
+                    Rock r = new(mousePosGame + SRNG.randVec2(0, 50), SRNG.randVec2() * 200, 40);
                     area.AddCollider(r);
                 }
 
-                //Rock r = new(mousePosGame, SRNG.randVec2() * 200, 50);
-                //area.AddCollider(r);
+            }
+
+            if (IsKeyDown(KeyboardKey.KEY_TWO))
+            {
+                for (int i = 0; i < 5; i++)
+                {
+                    Box b = new(mousePosGame + SRNG.randVec2(0, 10), SRNG.randVec2() * 50, 25);
+                    area.AddCollider(b);
+                }
+
+            }
+            if (IsKeyDown(KeyboardKey.KEY_THREE))
+            {
+                for (int i = 0; i < 15; i++)
+                {
+                    Ball b = new(mousePosGame + SRNG.randVec2(0, 5), SRNG.randVec2() * 100, 10);
+                    area.AddCollider(b);
+                }
 
             }
 
-            if(IsKeyPressed(KeyboardKey.KEY_ZERO)) { drawDebug = !drawDebug; }
+            if (IsKeyPressed(KeyboardKey.KEY_ZERO)) { drawDebug = !drawDebug; }
         
         }
 
@@ -288,7 +401,7 @@ namespace Examples.Scenes.ExampleScenes
             area.DrawUI(uiSize, mousePosUI);
 
             Rect checksRect = new Rect(uiSize * new Vector2(0.5f, 0.92f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));
-            string checks = string.Format("{0} | {1}", area.Col.ChecksPerFrame, area.Col.CollisionChecksPerFrame);
+            string checks = string.Format("Iteration: {0} | Collisions: {1}", area.Col.IterationsPerFrame, area.Col.CollisionChecksPerFrame);
             font.DrawText(checks, checksRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
 
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));

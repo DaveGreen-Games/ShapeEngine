@@ -192,7 +192,7 @@ namespace ShapeEngine.Core
         public Rect GetBoundingBox();
         public Circle GetBoundingCircle();
         public bool IsPointInside(Vector2 p);
-        public Vector2 GetClosestPoint(Vector2 p);
+        public CollisionPoint GetClosestPoint(Vector2 p);
         public Vector2 GetClosestVertex(Vector2 p);
         public Vector2 GetRandomPoint();
         public List<Vector2> GetRandomPoints(int amount);
@@ -254,7 +254,9 @@ namespace ShapeEngine.Core
         //public void UpdatePrevPos(float dt);// { }
         public IShape GetShape();
         public IShape GetSimplifiedShape();
-        
+
+        public Vector2 GetPreviousPosition();
+        public void UpdatePreviousPosition(float dt);
     }
 
 }

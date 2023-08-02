@@ -60,7 +60,7 @@ namespace ShapeEngine.Core
             }
         }
 
-        public int ChecksPerFrame = 0;
+        public int IterationsPerFrame = 0;
         public int CollisionChecksPerFrame = 0;
         protected List<ICollidable> collidables = new();
         protected List<ICollidable> tempHolding = new();
@@ -119,6 +119,8 @@ namespace ShapeEngine.Core
         
         public virtual void Update(float dt)
         {
+            IterationsPerFrame = 0;
+            CollisionChecksPerFrame = 0;
             spatialHash.Clear();
 
             //fill spatial hash and filter out all disabled colliders
@@ -130,11 +132,10 @@ namespace ShapeEngine.Core
                 {
                     spatialHash.Add(collidable);
                 }
+                IterationsPerFrame++;
                 
             }
 
-            ChecksPerFrame = 0;
-            CollisionChecksPerFrame = 0;
 
             int bucketCount = spatialHash.GetBucketCount();
             for (int i = 0; i < bucketCount; i++)
@@ -150,7 +151,7 @@ namespace ShapeEngine.Core
                     List<Collision> cols = new();
                     foreach (var other in others)
                     {
-                        ChecksPerFrame++;
+                        IterationsPerFrame++;
 
                         bool overlap = SGeometry.Overlap(collidable, other);
                         if (overlap)
@@ -161,6 +162,16 @@ namespace ShapeEngine.Core
                             {
                                 CollisionChecksPerFrame++;
                                 var collisionPoints = SGeometry.Intersect(collidable, other);
+
+                                //shapes overlap but no collision points means collidable is completely inside other
+                                //closest point on bounds of other are now used for collision point
+                                if(collisionPoints.Count <= 0)
+                                {
+                                    Vector2 refPoint = collidable.GetCollider().GetPreviousPosition();
+                                    CollisionPoint closest = other.GetCollider().GetShape().GetClosestPoint(refPoint);
+                                    collisionPoints.Add(closest);
+                                }
+
                                 Collision c = new(collidable, other, firstContact, collisionPoints);
                                 cols.Add(c);
                             }
