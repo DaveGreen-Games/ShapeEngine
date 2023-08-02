@@ -144,10 +144,10 @@ namespace ShapeEngine.Lib
 
         public static void Draw(this Intersection intersection, float lineThickness, Raylib_CsLo.Color intersectColor, Raylib_CsLo.Color normalColor)
         {
-            foreach (var i in intersection.points)
+            foreach (var i in intersection.ColPoints)
             {
-                DrawCircleV(i.p, lineThickness * 2, intersectColor);
-                Segment normal = new(i.p, i.p + i.n * lineThickness * 10f);
+                DrawCircle(i.Point, lineThickness * 2f, intersectColor);
+                Segment normal = new(i.Point, i.Point + i.Normal * lineThickness * 10f);
                 normal.Draw(lineThickness, normalColor);
             }
         }
@@ -155,7 +155,7 @@ namespace ShapeEngine.Lib
         {
             foreach (var p in points)
             {
-                DrawCircleV(p, r, color);
+                DrawCircle(p, r, color);
             }
         }
         #region Pixel
@@ -167,31 +167,47 @@ namespace ShapeEngine.Lib
         public static void DrawSegment(float x1, float y1, float x2, float y2, float thickness, Raylib_CsLo.Color color) => Raylib.DrawLineEx(new(x1, y1), new(x2, y2), thickness, color);
         public static void DrawSegment(Vector2 start, Vector2 end, float thickness, Raylib_CsLo.Color color) => Raylib.DrawLineEx(start, end, thickness, color);
         public static void Draw(this Segment segment, float thickness, Raylib_CsLo.Color color) => Raylib.DrawLineEx(segment.start, segment.end, thickness, color);
+        public static void Draw(this Segment segment, float thickness, Raylib_CsLo.Color color, int endCapSegments)
+        {
+            segment.Draw(thickness, color);
+            segment.DrawVertices(thickness * 0.5f, color, endCapSegments);
+        }
         public static void Draw(this Segments segments, float thickness, Raylib_CsLo.Color color) 
         {
-            if(segments.Count <= 0) return;
+            segments.Draw(thickness, color, 8);
+        }
+        public static void Draw(this Segments segments, float thickness, Raylib_CsLo.Color color, int cornerSegments)
+        {
+            if (segments.Count <= 0) return;
             foreach (var seg in segments)
             {
-                Raylib.DrawCircleV(seg.start, thickness / 2, color);
+                if (cornerSegments > 5) DrawCircle(seg.start, thickness * 0.5f, color, cornerSegments);
                 seg.Draw(thickness, color);
             }
-            Raylib.DrawCircleV(segments[segments.Count - 1].end, thickness / 2, color);
+            if (cornerSegments > 5) DrawCircle(segments[segments.Count - 1].end, thickness * 0.5f, color, cornerSegments);
         }
-        public static void Draw(this Segments segments, float thickness, List<Raylib_CsLo.Color> colors)
+        public static void Draw(this Segments segments, float thickness, List<Raylib_CsLo.Color> colors, int cornerSegments = 8)
         {
             if (segments.Count <= 0 || colors.Count <= 0) return;
             for (int i = 0; i < segments.Count; i++)
             {
                 Raylib_CsLo.Color c = colors[i % colors.Count];
-                Raylib.DrawCircleV(segments[i].start, thickness / 2, c);
+                if(cornerSegments > 5) DrawCircle(segments[i].start, thickness * 0.5f, c, cornerSegments);
                 segments[i].Draw(thickness, c);
             }
-            Raylib.DrawCircleV(segments[segments.Count - 1].end, thickness / 2, colors[(segments.Count - 1) % colors.Count]);
+            if(cornerSegments > 5) DrawCircle(segments[segments.Count - 1].end, thickness * 0.5f, colors[(segments.Count - 1) % colors.Count], cornerSegments);
         }
         public static void DrawVertices(this Segment segment, float vertexRadius, Raylib_CsLo.Color color)
         {
-            DrawCircleV(segment.start, vertexRadius, color);
-            DrawCircleV(segment.end, vertexRadius, color);
+            segment.DrawVertices(vertexRadius, color, 8);
+        }
+        public static void DrawVertices(this Segment segment, float vertexRadius, Raylib_CsLo.Color color, int endCapSegments)
+        {
+            if (endCapSegments > 5)
+            {
+                DrawCircle(segment.start, vertexRadius, color, endCapSegments);
+                DrawCircle(segment.end, vertexRadius, color, endCapSegments);
+            }
         }
         public static Segments CreateLightningLine(this Segment segment, int segments = 10, float maxSway = 80f)
         {
@@ -289,7 +305,7 @@ namespace ShapeEngine.Lib
             return result;
         }
         
-        public static void DrawSegmentDotted(Vector2 start, Vector2 end, int gaps, float thickness, Raylib_CsLo.Color color, bool roundedLineEdges = false)
+        public static void DrawSegmentDotted(Vector2 start, Vector2 end, int gaps, float thickness, Raylib_CsLo.Color color, int endCapSegments = 8)
         {
             if (gaps <= 0) DrawLineEx(start, end, thickness, color);
             else
@@ -307,10 +323,10 @@ namespace ShapeEngine.Lib
                     if (i % 2 == 0)
                     {
                         Vector2 next = cur + offset;
-                        if (roundedLineEdges)
+                        if (endCapSegments > 5)
                         {
-                            DrawCircleV(cur, thickness * 0.5f, color);
-                            DrawCircleV(next, thickness * 0.5f, color);
+                            DrawCircle(cur, thickness * 0.5f, color , endCapSegments);
+                            DrawCircle(next, thickness * 0.5f, color, endCapSegments);
                         }
                         DrawLineEx(cur, next, thickness, color);
                         cur = next;
@@ -323,7 +339,7 @@ namespace ShapeEngine.Lib
                 }
             }
         }
-        public static void DrawSegmentDotted(Vector2 start, Vector2 end, int gaps, float gapSizeF, float thickness, Raylib_CsLo.Color color, bool roundedLineEdges = false)
+        public static void DrawSegmentDotted(Vector2 start, Vector2 end, int gaps, float gapSizeF, float thickness, Raylib_CsLo.Color color, int endCapSegments = 8)
         {
             if (gaps <= 0) DrawLineEx(start, end, thickness, color);
             else
@@ -347,10 +363,10 @@ namespace ShapeEngine.Lib
                     if (i % 2 == 0)
                     {
                         Vector2 next = cur + offset;
-                        if (roundedLineEdges)
+                        if (endCapSegments > 5)
                         {
-                            DrawCircleV(cur, thickness * 0.5f, color);
-                            DrawCircleV(next, thickness * 0.5f, color);
+                            DrawCircle(cur, thickness * 0.5f, color , endCapSegments);
+                            DrawCircle(next, thickness * 0.5f, color, endCapSegments);
                         }
                         DrawLineEx(cur, next, thickness, color);
                         cur = next;
@@ -386,26 +402,26 @@ namespace ShapeEngine.Lib
                 );
             }
         }
-        public static void DrawDotted(this Segment segment, int gaps, float thickness, Raylib_CsLo.Color color, bool roundedLineEdges = false)
+        public static void DrawDotted(this Segment segment, int gaps, float thickness, Raylib_CsLo.Color color, int endCapSegments = 8)
         {
-            DrawSegmentDotted(segment.start, segment.end, gaps, thickness, color, roundedLineEdges);
+            DrawSegmentDotted(segment.start, segment.end, gaps, thickness, color, endCapSegments);
         }
-        public static void DrawDotted(this Segment segment, int gaps, float gapSizeF, float thickness, Raylib_CsLo.Color color, bool roundedLineEdges = false)
+        public static void DrawDotted(this Segment segment, int gaps, float gapSizeF, float thickness, Raylib_CsLo.Color color, int endCapSegments = 8)
         {
-            DrawSegmentDotted(segment.start, segment.end, gaps, gapSizeF, thickness, color, roundedLineEdges);
+            DrawSegmentDotted(segment.start, segment.end, gaps, gapSizeF, thickness, color, endCapSegments);
         }
-        public static void DrawDotted(this Segments segments, int gaps, float thickness, Raylib_CsLo.Color color, bool roundedLineEdges = false)
+        public static void DrawDotted(this Segments segments, int gaps, float thickness, Raylib_CsLo.Color color, int endCapSegments = 8)
         {
             foreach (var seg in segments)
             {
-                seg.DrawDotted(gaps, thickness, color, roundedLineEdges);
+                seg.DrawDotted(gaps, thickness, color, endCapSegments);
             }
         }
-        public static void DrawDotted(this Segments segments, int gaps, float gapSizeF, float thickness, Raylib_CsLo.Color color, bool roundedLineEdges = false)
+        public static void DrawDotted(this Segments segments, int gaps, float gapSizeF, float thickness, Raylib_CsLo.Color color, int endCapSegments = 8)
         {
             foreach (var seg in segments)
             {
-                seg.DrawDotted(gaps, gapSizeF, thickness, color, roundedLineEdges);
+                seg.DrawDotted(gaps, gapSizeF, thickness, color, endCapSegments);
             }
         }
 
@@ -425,7 +441,14 @@ namespace ShapeEngine.Lib
         #endregion
 
         #region Circle
-        public static void Draw(this Circle c, Raylib_CsLo.Color color) => Raylib.DrawCircleV(c.center, c.radius, color);
+        public static void Draw(this Circle c, Raylib_CsLo.Color color)
+        {
+            DrawCircle(c.center, c.radius, color);
+        } 
+        public static void Draw(this Circle c, Raylib_CsLo.Color color, int segments)
+        {
+            DrawCircle(c.center, c.radius, color, segments);
+        }
         public static void DrawLines(this Circle c, float lineThickness, int sides, Raylib_CsLo.Color color) => DrawPolyLinesEx(c.center, sides, c.radius, 0f, lineThickness, color);
         public static void DrawLines(this Circle c, float lineThickness, float rotDeg, int sides, Raylib_CsLo.Color color) => DrawPolyLinesEx(c.center, sides, c.radius, rotDeg, lineThickness, color);
         public static void DrawLines(this Circle c, float lineThickness, Raylib_CsLo.Color color, float sideLength = 8f)
@@ -434,7 +457,27 @@ namespace ShapeEngine.Lib
             DrawPolyLinesEx(c.center, sides, c.radius, 0f, lineThickness, color);
         }
         
-        public static void DrawCircle(Vector2 center, float radius, Raylib_CsLo.Color color) => Raylib.DrawCircleV(center, radius, color);
+        public static void DrawCircle(Vector2 center, float radius, Raylib_CsLo.Color color)
+        {
+            Raylib.DrawCircleSector(center, radius, 0, 360, 18, color);
+        }
+        public static void DrawCircle(Vector2 center, float radius, Raylib_CsLo.Color color, int segments)
+        {
+            if (segments < 6) segments = 6;
+            Raylib.DrawCircleSector(center, radius, 0, 360, segments, color);
+        }
+        /// <summary>
+        /// Very usefull for drawing small/tiny circles. Drawing the circle as rect increases performance a lot.
+        /// </summary>
+        /// <param name="center"></param>
+        /// <param name="radius"></param>
+        /// <param name="color"></param>
+        public static void DrawCircleFast(Vector2 center, float radius, Raylib_CsLo.Color color)
+        {
+            Rect r = new(center, new Vector2(radius * 2f), new Vector2(0.5f));
+            r.Draw(color);
+        }
+        
         public static void DrawCircleLines(Vector2 center, float radius, float lineThickness, int sides, Raylib_CsLo.Color color) => DrawPolyLinesEx(center, sides, radius, 0f, lineThickness, color);
         public static void DrawCircleLines(Vector2 center, float radius, float lineThickness, float rotDeg, int sides, Raylib_CsLo.Color color) => DrawPolyLinesEx(center, sides, radius, rotDeg, lineThickness, color);
         public static void DrawCircleLines(Vector2 center, float radius, float lineThickness, Raylib_CsLo.Color color, float sideLength = 8f)
@@ -521,7 +564,7 @@ namespace ShapeEngine.Lib
             DrawCircleSectorLines(center, radius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, sides, lineThickness, color, closed);
         }
 
-        public static void DrawCircleLinesDotted(Vector2 center, float radius, int sidesPerGap, float lineThickness, Raylib_CsLo.Color color, float sideLength = 8f, bool roundedLineEdges = false)
+        public static void DrawCircleLinesDotted(Vector2 center, float radius, int sidesPerGap, float lineThickness, Raylib_CsLo.Color color, float sideLength = 8f, int endCapSegments = 8)
         {
             float anglePieceRad = 360 * SUtils.DEGTORAD;
             int sides = GetCircleArcSideCount(radius, MathF.Abs(anglePieceRad * RAD2DEG), sideLength);
@@ -539,10 +582,10 @@ namespace ShapeEngine.Lib
                 {
                     Vector2 start = center + SVec.Rotate(SVec.Right() * radius, angleStep * i);
                     Vector2 end = center + SVec.Rotate(SVec.Right() * radius, angleStep * (i + 1));
-                    if (roundedLineEdges)
+                    if (endCapSegments > 5)
                     {
-                        DrawCircleV(start, lineThickness * 0.5f, color);
-                        DrawCircleV(end, lineThickness * 0.5f, color);
+                        DrawCircle(start, lineThickness * 0.5f, color, endCapSegments);
+                        DrawCircle(end, lineThickness * 0.5f, color, endCapSegments);
                     }
                     DrawLineEx(start, end, lineThickness, color);
                 }
@@ -555,7 +598,7 @@ namespace ShapeEngine.Lib
                 }
             }
         }
-        public static void DrawCircleCheckeredLines(Vector2 pos, Vector2 alignement, float radius, float spacing, float lineThickness, float angleDeg, Raylib_CsLo.Color lineColor, Raylib_CsLo.Color bgColor)
+        public static void DrawCircleCheckeredLines(Vector2 pos, Vector2 alignement, float radius, float spacing, float lineThickness, float angleDeg, Raylib_CsLo.Color lineColor, Raylib_CsLo.Color bgColor, int circleSegments)
         {
 
             float maxDimension = radius;
@@ -564,7 +607,7 @@ namespace ShapeEngine.Lib
             Vector2 center = pos - aVector + size / 2;
             float rotRad = angleDeg * SUtils.DEGTORAD;
 
-            if (bgColor.a > 0) DrawCircleV(center, radius, bgColor);
+            if (bgColor.a > 0) DrawCircle(center, radius, bgColor, circleSegments);
 
             Vector2 cur = new(-spacing / 2, 0f);
             while (cur.X > -maxDimension)
@@ -738,12 +781,15 @@ namespace ShapeEngine.Lib
 
         public static void DrawVertices(this Rect rect, float vertexRadius, Raylib_CsLo.Color color)
         {
-            DrawCircleV(rect.TopLeft, vertexRadius, color);
-            DrawCircleV(rect.TopRight, vertexRadius, color);
-            DrawCircleV(rect.BottomLeft, vertexRadius, color);
-            DrawCircleV(rect.BottomRight, vertexRadius, color);
+            rect.DrawVertices(vertexRadius, color, 8);
         }
-
+        public static void DrawVertices(this Rect rect, float vertexRadius, Raylib_CsLo.Color color, int circleSegments = 8)
+        {
+            DrawCircle(rect.TopLeft, vertexRadius, color    , circleSegments);
+            DrawCircle(rect.TopRight, vertexRadius, color   , circleSegments);
+            DrawCircle(rect.BottomLeft, vertexRadius, color , circleSegments);
+            DrawCircle(rect.BottomRight, vertexRadius, color, circleSegments);
+        }
         public static void DrawRounded(this Rect rect, float roundness, int segments, Raylib_CsLo.Color color) => Raylib.DrawRectangleRounded(rect.Rectangle, roundness, segments, color);
         public static void DrawRoundedLines(this Rect rect, float roundness, float lineThickness, int segments, Raylib_CsLo.Color color) => Raylib.DrawRectangleRoundedLines(rect.Rectangle, roundness, segments, lineThickness, color);
 
@@ -940,9 +986,9 @@ namespace ShapeEngine.Lib
                 Vector2 down = new(0f, maxDimension * 2);
                 Vector2 start = p + SVec.Rotate(up, rotRad);
                 Vector2 end = p + SVec.Rotate(down, rotRad);
-                List<(Vector2 p, Vector2 n)> intersections = SGeometry.IntersectShape(new Segment(start, end), rect).points; // SGeometry.IntersectionSegmentRect(center, start, end, tl, tr, br, bl).points;
+                CollisionPoints collisionPoints = SGeometry.IntersectShape(new Segment(start, end), rect); // SGeometry.IntersectionSegmentRect(center, start, end, tl, tr, br, bl).points;
 
-                if (intersections.Count >= 2) DrawLineEx(intersections[0].p, intersections[1].p, lineThickness, lineColor);
+                if (collisionPoints.Count >= 2) DrawLineEx(collisionPoints[0].Point, collisionPoints[1].Point, lineThickness, lineColor);
                 else break;
                 cur.X -= spacing;
                 whileCounter++;
@@ -958,8 +1004,8 @@ namespace ShapeEngine.Lib
                 Vector2 down = new(0f, maxDimension * 2);
                 Vector2 start = p + SVec.Rotate(up, rotRad);
                 Vector2 end = p + SVec.Rotate(down, rotRad);
-                List<(Vector2 p, Vector2 n)> intersections = SGeometry.IntersectShape(new Segment(start, end), rect).points; //SGeometry.IntersectionSegmentRect(center, start, end, tl, tr, br, bl).points;
-                if (intersections.Count >= 2) DrawLineEx(intersections[0].p, intersections[1].p, lineThickness, lineColor);
+                CollisionPoints collisionPoints = SGeometry.IntersectShape(new Segment(start, end), rect); //SGeometry.IntersectionSegmentRect(center, start, end, tl, tr, br, bl).points;
+                if (collisionPoints.Count >= 2) DrawLineEx(collisionPoints[0].Point, collisionPoints[1].Point, lineThickness, lineColor);
                 else break;
                 cur.X += spacing;
                 whileCounter++;
@@ -968,42 +1014,42 @@ namespace ShapeEngine.Lib
             if (outlineColor.a > 0) DrawLines(rect, new Vector2(0.5f, 0.5f), 0f, lineThickness, outlineColor);
         }
 
-        public static void DrawLinesDotted(this Rect rect, int gapsPerSide, float lineThickness, Raylib_CsLo.Color color, bool cornersRounded = false, bool roundedLineEdges = false)
+        public static void DrawLinesDotted(this Rect rect, int gapsPerSide, float lineThickness, Raylib_CsLo.Color color, int cornerCircleSectors = 8)
         {
-            if (cornersRounded)
+            if (cornerCircleSectors > 5)
             {
                 var corners = SRect.GetCorners(rect);
                 float r = lineThickness * 0.5f;
-                DrawCircleV(corners.tl, r, color);
-                DrawCircleV(corners.tr, r, color);
-                DrawCircleV(corners.br, r, color);
-                DrawCircleV(corners.bl, r, color);
+                DrawCircle(corners.tl, r, color, cornerCircleSectors);
+                DrawCircle(corners.tr, r, color, cornerCircleSectors);
+                DrawCircle(corners.br, r, color, cornerCircleSectors);
+                DrawCircle(corners.bl, r, color, cornerCircleSectors);
             }
 
 
             var segments = rect.GetEdges();// SRect.GetEdges(rect);
             foreach (var s in segments)
             {
-                DrawSegmentDotted(s.start, s.end, gapsPerSide, lineThickness, color, roundedLineEdges);
+                DrawSegmentDotted(s.start, s.end, gapsPerSide, lineThickness, color, cornerCircleSectors);
             }
         }
-        public static void DrawLinesDotted(this Rect rect, int gapsPerSide, float gapSizeF, float lineThickness, Raylib_CsLo.Color color, bool cornersRounded = false, bool roundedLineEdges = false)
+        public static void DrawLinesDotted(this Rect rect, int gapsPerSide, float gapSizeF, float lineThickness, Raylib_CsLo.Color color, int cornerCircleSegments = 8)
         {
-            if (cornersRounded)
+            if (cornerCircleSegments > 5)
             {
                 var corners = SRect.GetCorners(rect);
                 float r = lineThickness * 0.5f;
-                DrawCircleV(corners.tl, r, color);
-                DrawCircleV(corners.tr, r, color);
-                DrawCircleV(corners.br, r, color);
-                DrawCircleV(corners.bl, r, color);
+                DrawCircle(corners.tl, r, color, cornerCircleSegments);
+                DrawCircle(corners.tr, r, color, cornerCircleSegments);
+                DrawCircle(corners.br, r, color, cornerCircleSegments);
+                DrawCircle(corners.bl, r, color, cornerCircleSegments);
             }
 
 
             var segments = rect.GetEdges(); // SRect.GetEdges(rect);
             foreach (var s in segments)
             {
-                DrawSegmentDotted(s.start, s.end, gapsPerSide, gapSizeF, lineThickness, color, roundedLineEdges);
+                DrawSegmentDotted(s.start, s.end, gapsPerSide, gapSizeF, lineThickness, color, cornerCircleSegments);
             }
         }
 
@@ -1019,11 +1065,14 @@ namespace ShapeEngine.Lib
 
         public static void DrawVertices(this Triangle t, float vertexRadius, Raylib_CsLo.Color color)
         {
-            DrawCircleV(t.a, vertexRadius, color);
-            DrawCircleV(t.b, vertexRadius, color);
-            DrawCircleV(t.c, vertexRadius, color);
+            t.DrawVertices(vertexRadius, color, 8);
         }
-
+        public static void DrawVertices(this Triangle t, float vertexRadius, Raylib_CsLo.Color color, int circleSegments = 8)
+        {
+            DrawCircle(t.a, vertexRadius, color, circleSegments);
+            DrawCircle(t.b, vertexRadius, color, circleSegments);
+            DrawCircle(t.c, vertexRadius, color, circleSegments);
+        }
         public static void Draw(this Triangulation triangles, Raylib_CsLo.Color color) { foreach (var t in triangles) t.Draw(color); }
         public static void DrawLines(this Triangulation triangles, float lineThickness, Raylib_CsLo.Color color) { foreach (var t in triangles) t.DrawLines(lineThickness, color); }
         #endregion
@@ -1088,44 +1137,48 @@ namespace ShapeEngine.Lib
 
         public static void DrawLines(this Polygon poly, float lineThickness, Raylib_CsLo.Color color)
         {
-            for (int i = 0; i < poly.Count - 1; i++)
-            {
-                //DrawCircleV(poly[i], lineThickness * 0.5f, color);
-                Raylib.DrawCircleSector(poly[i], lineThickness * 0.5f, 0, 360, 6, color);
-                DrawLineEx(poly[i], poly[i + 1], lineThickness, color);
-            }
-            //DrawCircleV(poly[poly.Count - 1], lineThickness * 0.5f, color);
-            Raylib.DrawCircleSector(poly[poly.Count - 1], lineThickness * 0.5f, 0, 360, 6, color);
-            DrawLineEx(poly[poly.Count - 1], poly[0], lineThickness, color);
+            poly.DrawLines(lineThickness, color, 8);
         }
-        public static void DrawLinesSimple(this Polygon poly, float lineThickness, Raylib_CsLo.Color color)
+        public static void DrawLines(this Polygon poly, float lineThickness, Raylib_CsLo.Color color, int cornerSegments)
         {
             for (int i = 0; i < poly.Count - 1; i++)
             {
+                Raylib.DrawCircleSector(poly[i], lineThickness * 0.5f, 0, 360, 6, color);
+                if(cornerSegments > 5) DrawCircle(poly[i], lineThickness * 0.5f, color, cornerSegments);
                 DrawLineEx(poly[i], poly[i + 1], lineThickness, color);
             }
+            if (cornerSegments > 5) DrawCircle(poly[poly.Count - 1], lineThickness * 0.5f, color, cornerSegments);
             DrawLineEx(poly[poly.Count - 1], poly[0], lineThickness, color);
         }
+        
         public static void DrawLines(this Polygon poly, Vector2 pos, Vector2 size, float rotDeg, float lineThickness, Raylib_CsLo.Color outlineColor)
+        {
+            poly.DrawLines(pos, size, rotDeg, lineThickness, outlineColor, 8);
+        }
+        public static void DrawLines(this Polygon poly, Vector2 pos, Vector2 size, float rotDeg, float lineThickness, Raylib_CsLo.Color outlineColor, int cornerSegments)
         {
             for (int i = 0; i < poly.Count - 1; i++)
             {
                 Vector2 p1 = pos + SVec.Rotate(poly[i] * size, rotDeg * SUtils.DEGTORAD);
                 Vector2 p2 = pos + SVec.Rotate(poly[i + 1] * size, rotDeg * SUtils.DEGTORAD);
-                DrawCircleV(p1, lineThickness * 0.5f, outlineColor);
+                if(cornerSegments > 5) DrawCircle(p1, lineThickness * 0.5f, outlineColor, 8);
                 DrawLineEx(p1, p2, lineThickness, outlineColor);
             }
-            DrawCircleV(pos + SVec.Rotate(poly[poly.Count - 1] * size, rotDeg * SUtils.DEGTORAD), lineThickness * 0.5f, outlineColor);
+            if (cornerSegments > 5) DrawCircle(pos + SVec.Rotate(poly[poly.Count - 1] * size, rotDeg * SUtils.DEGTORAD), lineThickness * 0.5f, outlineColor, 8);
             DrawLineEx(pos + SVec.Rotate(poly[poly.Count - 1] * size, rotDeg * SUtils.DEGTORAD), pos + SVec.Rotate(poly[0] * size, rotDeg * SUtils.DEGTORAD), lineThickness, outlineColor);
         }
-        
         public static void DrawVertices(this Polygon poly, float vertexRadius, Raylib_CsLo.Color color)
+        {
+            poly.DrawVertices(vertexRadius, color, 18);
+        }
+        public static void DrawVertices(this Polygon poly, float vertexRadius, Raylib_CsLo.Color color, int circleSegments)
         {
             foreach (var p in poly)
             {
-                DrawCircleV(p, vertexRadius, color);
+                DrawCircle(p, vertexRadius, color, circleSegments);
             }
         }
+        
         public static void DrawCornered(this Polygon poly, float lineThickness, Raylib_CsLo.Color color, float cornerLength)
         {
             for (int i = 0; i < poly.Count; i++)
@@ -1182,14 +1235,18 @@ namespace ShapeEngine.Lib
 
         public static void DrawVertices(this Polyline polyline, float vertexRadius, Raylib_CsLo.Color color)
         {
+            polyline.DrawVertices(vertexRadius, color, 18);
+        }
+        public static void DrawVertices(this Polyline polyline, float vertexRadius, Raylib_CsLo.Color color, int circleSegments)
+        {
             foreach (var p in polyline)
             {
-                DrawCircleV(p, vertexRadius, color);
+                DrawCircle(p, vertexRadius, color, circleSegments);
             }
         }
 
-        public static void DrawDotted(this Polyline polyline, int gaps, float thickness, Raylib_CsLo.Color color, bool roundedLineEdges = false) { polyline.GetEdges().DrawDotted(gaps, thickness, color, roundedLineEdges); }
-        public static void DrawDotted(this Polyline polyline, int gaps, float gapSizeF, float thickness, Raylib_CsLo.Color color, bool roundedLineEdges = false) { polyline.GetEdges().DrawDotted(gaps, gapSizeF, thickness, color, roundedLineEdges); }
+        public static void DrawDotted(this Polyline polyline, int gaps, float thickness, Raylib_CsLo.Color color, int endCapSegments = 8) { polyline.GetEdges().DrawDotted(gaps, thickness, color, endCapSegments); }
+        public static void DrawDotted(this Polyline polyline, int gaps, float gapSizeF, float thickness, Raylib_CsLo.Color color, int endCapSegments = 8) { polyline.GetEdges().DrawDotted(gaps, gapSizeF, thickness, color, endCapSegments); }
         public static void DrawGlow(this Polyline polyline, float width, float endWidth, Raylib_CsLo.Color color, Raylib_CsLo.Color endColor, int steps) { polyline.GetEdges().DrawGlow(width, endWidth, color, endColor, steps); }
 
         #endregion
@@ -2649,475 +2706,3 @@ namespace ShapeEngine.Lib
 
     }
 }
-
-
-/*
-        public static void DrawTextWrappedCharOld(this Font font, string text, Rect rect, float fontSize, float fontSpacing, float lineSpacing, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
-        {
-            fontSize = MathF.Max(fontSize, FontMinSize);
-            fontSpacing = MathF.Min(fontSpacing, fontSize * FontSpacingMaxFactor);
-            lineSpacing = MathF.Min(lineSpacing, fontSize * LineSpacingMaxFactor);
-
-            float f = fontSize / (float)font.baseSize;
-            int curWordIndex = 0;
-            Vector2 pos = rect.TopLeft;
-            for (int i = 0; i < text.Length; i++)
-            {
-                var c = text[i];
-                var charBaseSize = font.GetCharBaseSize(c);
-                float glyphWidth = charBaseSize.X * f;
-                if (pos.X + glyphWidth >= rect.Right)
-                {
-                    pos.X = rect.TopLeft.X;
-                    pos.Y += fontSize + lineSpacing;
-                    if (pos.Y + fontSize >= rect.Bottom)
-                    {
-                        return;
-                    }
-                }
-                if (c == ' ')
-                {
-                    curWordIndex++;
-                }
-                else
-                {
-                    var result = CheckWordEmphasis(curWordIndex, wordEmphasis);
-                    Raylib_CsLo.Color color = result.emphasisIndex < 0 ? baseEmphasis.Color : wordEmphasis[result.emphasisIndex].Color;
-
-                    font.DrawChar(c, fontSize, pos, color);
-                }
-                pos.X += glyphWidth + fontSpacing;
-            }
-        }
-        */
-
-
-/*
-        public static void DrawBar(Vector2 pos, Vector2 size, Vector2 alignement, float f, Color barColor, Color bgColor, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
-        {
-            DrawBar(new(pos, size, alignement), f, barColor, bgColor, left, right, top, bottom);
-        }
-        public static void DrawBar(Vector2 pos, Vector2 size, Vector2 alignement, Vector2 pivot, float angleDeg, float f, Color barColor, Color bgColor, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
-        {
-            DrawBar(new(pos, size, alignement), pivot, angleDeg, f, barColor, bgColor, left, right, top, bottom);
-        }
-        */
-//public static void DrawRectangleOutlineBar(Vector2 pos, Vector2 size, Vector2 alignement, float thickness, float f, Color color)
-//{
-//    DrawRectangleOutlineBar(new(pos, size, alignement), thickness, f, color);
-//}
-//public static void DrawRectangleOutlineBar(Vector2 pos, Vector2 size, Vector2 alignement, Vector2 pivot, float angleDeg, float thickness, float f, Color color)
-//{
-//    DrawRectangleOutlineBar(new(pos, size, alignement), pivot, angleDeg, thickness, f, color);
-//}
-
-
-/*
-        public static void DrawTextAligned(string text, Vector2 uiPos, Vector2 textSize, float fontSpacing, Color color, Font font, Vector2 alignement)
-        {
-            float fontSize = FontHandler.CalculateDynamicFontSize(text, textSize, font, fontSpacing);
-            Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
-            Vector2 topLeft = uiPos - alignement * fontDimensions;
-            DrawTextEx(font, text, topLeft, fontSize, fontSpacing, color);
-            //DrawRectangleLinesEx(new(topLeft.X, topLeft.Y, fontDimensions.X, fontDimensions.Y), 5f, WHITE);
-        }
-        public static void DrawTextAligned(string text, Vector2 uiPos, float textHeight, float fontSpacing, Color color, Font font, Vector2 alignement)
-        {
-            float fontSize = FontHandler.CalculateDynamicFontSize(textHeight, font);
-            Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
-            DrawTextEx(font, text, uiPos - alignement * fontDimensions, fontSize, fontSpacing, color);
-        }
-        public static void DrawTextAligned2(string text, Vector2 uiPos, float textWidth, float fontSpacing, Color color, Font font, Vector2 alignement)
-        {
-            float fontSize = FontHandler.CalculateDynamicFontSize(text, textWidth, font, fontSpacing);
-            Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
-            DrawTextEx(font, text, uiPos - alignement * fontDimensions, fontSize, fontSpacing, color);
-        }
-        */
-/*
-public static void DrawTextAlignedPro(string text, Vector2 uiPos, float rotDeg, Vector2 textSize, float fontSpacing, Color color, Font font, Vector2 alignement)
-{
-    float fontSize = FontHandler.CalculateDynamicFontSize(text, textSize, font, fontSpacing);
-    Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
-    Vector2 originOffset = alignement * fontDimensions;
-    DrawTextPro(font, text, uiPos, originOffset, rotDeg, fontSize, fontSpacing, color);
-
-    // DrawRectangleLinesEx(new())
-}
-public static void DrawTextAlignedPro(string text, Vector2 uiPos, float rotDeg, float textHeight, float fontSpacing, Color color, Font font, Vector2 alignement)
-{
-    float fontSize = FontHandler.CalculateDynamicFontSize(textHeight, font);
-    Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
-    Vector2 originOffset = alignement * fontDimensions;
-    DrawTextPro(font, text, uiPos, originOffset, rotDeg, fontSize, fontSpacing, color);
-}
-public static void DrawTextAlignedPro2(string text, Vector2 uiPos, float rotDeg, float textWidth, float fontSpacing, Color color, Font font, Vector2 alignement)
-{
-    float fontSize = FontHandler.CalculateDynamicFontSize(text, textWidth, font, fontSpacing);
-    Vector2 fontDimensions = MeasureTextEx(font, text, fontSize, fontSpacing);
-    Vector2 originOffset = alignement * fontDimensions;
-    DrawTextPro(font, text, uiPos, originOffset, rotDeg, fontSize, 1, color);
-}
-*/
-
-//public static void DrawRectCheckered(Vector2 pos, Vector2 size, Vector2 alignement, float spacing, float lineThickness, float angleDeg, Color lineColor, Color outlineColor, Color bgColor)
-//{
-//    Rect rect = new(pos, size, alignement);
-//    DrawRectCheckered(rect, spacing, lineThickness, angleDeg, lineColor, outlineColor, bgColor);
-//}
-/*
-public static void DrawRectangleCornered(Rect rect, float lineThickness, Color outlineColor, Color fillColor, Vector2 topF, Vector2 rightF, Vector2 bottomF, Vector2 leftF)
-{
-    var points = GetRectangleCorneredPoints(rect, topF, rightF, bottomF, leftF);
-    Vector2 center = new(rect.x + rect.width / 2, rect.y + rect.height / 2);
-    DrawPolygon(points, center, fillColor, true);
-    DrawPolygon(points, lineThickness, outlineColor);
-}
-public static void DrawRectangleCorneredLine(Rect rect, float lineThickness, Color color, Vector2 topF, Vector2 rightF, Vector2 bottomF, Vector2 leftF)
-{
-    DrawPolygon(GetRectangleCorneredPoints(rect, topF, rightF, bottomF, leftF), lineThickness, color);
-}
-public static void DrawRectangleCorneredFilled(Rect rect, Color color, Vector2 topF, Vector2 rightF, Vector2 bottomF, Vector2 leftF)
-{
-    Vector2 center = new(rect.x + rect.width / 2, rect.y + rect.height / 2);
-    DrawPolygon(GetRectangleCorneredPoints(rect, topF, rightF, bottomF, leftF), center, color, true);
-}
-*/
-/*
-private static List<Vector2> GetRectangleCorneredPoints(Rect rect, Vector2 topF, Vector2 rightF, Vector2 bottomF, Vector2 leftF)
-{
-    List<Vector2> poly = new();
-
-    Vector2 tl = new(rect.x, rect.y);
-    Vector2 tr = new(rect.x + rect.width, rect.y);
-    Vector2 br = new(rect.x + rect.width, rect.y + rect.height);
-    Vector2 bl = new(rect.x, rect.y + rect.height);
-
-
-    if (topF.X <= 0f && leftF.Y <= 0f)
-    {
-        poly.Add(tl);
-    }
-    else
-    {
-        poly.Add(tl + new Vector2(0f, rect.height * leftF.Y));
-        poly.Add(tl + new Vector2(rect.width * topF.X, 0f));
-    }
-
-    if (topF.Y <= 0f && rightF.X <= 0f)
-    {
-        poly.Add(tr);
-    }
-    else
-    {
-        poly.Add(tr - new Vector2(rect.width * topF.Y, 0f));
-        poly.Add(tr + new Vector2(0f, rect.height * rightF.X));
-    }
-
-    if (rightF.Y <= 0f && bottomF.X <= 0f)
-    {
-        poly.Add(br);
-    }
-    else
-    {
-        poly.Add(br - new Vector2(0f, rect.height * rightF.Y));
-        poly.Add(br - new Vector2(rect.width * bottomF.X, 0f));
-    }
-
-    if (bottomF.Y <= 0f && leftF.X <= 0f)
-    {
-        poly.Add(bl);
-    }
-    else
-    {
-        poly.Add(bl + new Vector2(rect.width * bottomF.Y, 0f));
-        poly.Add(bl - new Vector2(0f, rect.height * leftF.X));
-    }
-
-    return poly;
-}
-*/
-/*
-public static void DrawRectangleCorners(Rect rect, float lineThickness, Color color, Vector2 topF, Vector2 rightF, Vector2 bottomF, Vector2 leftF)
-{
-    Vector2 tl = new(rect.x, rect.y);
-    Vector2 tr = new(rect.x + rect.width, rect.y);
-    Vector2 br = new(rect.x + rect.width, rect.y + rect.height);
-    Vector2 bl = new(rect.x, rect.y + rect.height);
-
-
-    if (topF.X > 0 || leftF.Y > 0) DrawCircleV(tl, lineThickness / 2, color);
-    if (topF.Y > 0 || rightF.X > 0) DrawCircleV(tr, lineThickness / 2, color);
-    if (bottomF.X > 0 || rightF.Y > 0) DrawCircleV(br, lineThickness / 2, color);
-    if (bottomF.Y > 0 || leftF.X > 0) DrawCircleV(bl, lineThickness / 2, color);
-
-    if (topF.X > 0 && topF.X <= 1f) DrawLineEx(tl, tl + new Vector2(rect.width * topF.X, 0f), lineThickness, color);
-    else if (topF.X > 1f) DrawLineEx(tl, tl + new Vector2(topF.X, 0f), lineThickness, color);
-
-    if (topF.Y > 0 && topF.Y <= 1f) DrawLineEx(tr, tr - new Vector2(rect.width * topF.Y, 0f), lineThickness, color);
-    else if (topF.Y > 1f) DrawLineEx(tr, tr - new Vector2(topF.Y, 0f), lineThickness, color);
-
-    if (bottomF.X > 0 && bottomF.X <= 1f) DrawLineEx(br, br - new Vector2(rect.width * bottomF.X, 0f), lineThickness, color);
-    else if (bottomF.X > 1f) DrawLineEx(br, br - new Vector2(bottomF.X, 0f), lineThickness, color);
-
-    if (bottomF.Y > 0 && bottomF.Y <= 1f) DrawLineEx(bl, bl + new Vector2(rect.width * bottomF.Y, 0f), lineThickness, color);
-    else if (bottomF.Y > 1f) DrawLineEx(bl, bl + new Vector2(bottomF.Y, 0f), lineThickness, color);
-
-    if (rightF.X > 0 && rightF.X <= 1f) DrawLineEx(tr, tr + new Vector2(0f, rect.height * rightF.X), lineThickness, color);
-    else if (rightF.X > 1f) DrawLineEx(tr, tr + new Vector2(0f, rightF.X), lineThickness, color);
-
-    if (rightF.Y > 0 && rightF.Y <= 1f) DrawLineEx(br, br - new Vector2(0f, rect.height * rightF.Y), lineThickness, color);
-    else if (rightF.Y > 1f) DrawLineEx(br, br - new Vector2(0f, rightF.Y), lineThickness, color);
-
-    if (leftF.X > 0 && leftF.X <= 1f) DrawLineEx(bl, bl - new Vector2(0f, rect.height * leftF.X), lineThickness, color);
-    else if (leftF.X > 1f) DrawLineEx(bl, bl - new Vector2(0f, leftF.X), lineThickness, color);
-
-    if (leftF.Y > 0 && leftF.Y <= 1f) DrawLineEx(tl, tl + new Vector2(0f, rect.height * leftF.Y), lineThickness, color);
-    else if (leftF.Y > 1f) DrawLineEx(tl, tl + new Vector2(0f, leftF.Y), lineThickness, color);
-
-}
-public static void DrawRectangleCorners(Rect rect, float lineThickness, Color color, float length)
-{
-    DrawRectangleCorners(rect, lineThickness, color, new(length), new(length), new(length), new(length));
-}
-public static void DrawRectangleCorners(Vector2 pos, Vector2 size, Vector2 alignement, float lineThickness, Color color, float length)
-{
-    DrawRectangleCorners(new(pos, size, alignement), lineThickness, color, length);
-}
-public static void DrawRectangleCorners(Vector2 pos, Vector2 size, Vector2 alignement, float lineThickness, Color color, Vector2 topF, Vector2 rightF, Vector2 bottomF, Vector2 leftF)
-{
-    DrawRectangleCorners(new(pos, size, alignement), lineThickness, color, topF, rightF, bottomF, leftF);
-}
-*/
-/*
-public static void DrawRect(Vector2 pos, Vector2 size, Vector2 alignement, Color color)
-{
-    DrawRect(new(pos, size, alignement), color);
-}
-public static void DrawRect(Vector2 pos, Vector2 size, Vector2 alignement, Vector2 pivot, float rotDeg, float lineThickness, Color color)
-{
-    Vector2 leftExtension = SVec.Rotate(new Vector2(-lineThickness / 2, 0f), rotDeg * SUtils.DEGTORAD);
-    Vector2 rightExtension = SVec.Rotate(new Vector2(lineThickness / 2, 0f), rotDeg * SUtils.DEGTORAD);
-
-    var rr = SRect.RotateRect(pos, size, alignement, pivot, rotDeg);
-    DrawLineEx(rr.tl + leftExtension, rr.tr + rightExtension, lineThickness, color);
-    DrawLineEx(rr.bl + leftExtension, rr.br + rightExtension, lineThickness, color);
-    DrawLineEx(rr.tl, rr.bl, lineThickness, color);
-    DrawLineEx(rr.tr, rr.br, lineThickness, color);
-}
-public static void DrawRect(Vector2 pos, Vector2 size, Vector2 alignement, Vector2 pivot, float rotDeg, Color color)
-{
-    DrawRect(new(pos, size, alignement), pivot, rotDeg, color);
-}
-*/
-
-
-//public static void DrawLine(this Vector2 start, Vector2 end, float lineThickness, Color color) { Raylib.DrawLineEx(start, end, lineThickness, color); }
-//public static void DrawLines(List<Vector2> points, float lineThickness, Color color)
-//{
-//    if(points.Count < 2) return;
-//    for (int i = 0; i < points.Count - 1; i++)
-//    {
-//        DrawLine(points[i], points[i+1], lineThickness, color); 
-//    }
-//}
-//public static List<Vector2> CreateLightningLine(Vector2 start, Vector2 end, float segmentLength = 5f, float maxSway = 80f)
-//{
-//    List<Vector2> result = new();
-//    Vector2 tangent = end - start;
-//    Vector2 normal = Vector2.Normalize(new Vector2(tangent.Y, -tangent.X));
-//    float length = tangent.Length();
-//    List<float> positions = new() { 0 };
-//    for (int i = 0; i < length / segmentLength; i++)
-//        positions.Add(SRNG.randF());
-//    positions.Sort();
-//    float Sway = maxSway;
-//    float Jaggedness = 1 / Sway;
-//    float prevDisplacement = 0;
-//    result.Add(start);
-//    for (int i = 1; i < positions.Count; i++)
-//    {
-//        float pos = positions[i];
-//        // used to prevent sharp angles by ensuring very close positions also have small perpendicular variation. 
-//        float scale = (length * Jaggedness) * (pos - positions[i - 1]);
-//        // defines an envelope. Points near the middle of the bolt can be further from the central line. 
-//        float envelope = pos > 0.95f ? 20 * (1 - pos) : 1;
-//        float displacement = SRNG.randF(-Sway, Sway);
-//        displacement -= (displacement - prevDisplacement) * (1 - scale);
-//        displacement *= envelope;
-//        Vector2 point = start + pos * tangent + displacement * normal;
-//        result.Add(point);
-//        prevDisplacement = displacement;
-//    }
-//    result.Add(end); 
-//    return result;
-//}
-//public static void DrawLineLightning(Vector2 start, Vector2 end, float lineThickness, Color color, float segmentLength = 5f, float maxSway = 80)
-//{
-//    Vector2 tangent = end - start;
-//    Vector2 normal = Vector2.Normalize(new Vector2(tangent.Y, -tangent.X));
-//    float length = tangent.Length();
-//    List<float> positions = new() { 0 };
-//    for (int i = 0; i < length / segmentLength; i++)
-//        positions.Add(SRNG.randF());
-//    positions.Sort();
-//    float Sway = maxSway;
-//    float Jaggedness = 1 / Sway;
-//    Vector2 prevPoint = start;
-//    float prevDisplacement = 0;
-//    for (int i = 1; i < positions.Count; i++)
-//    {
-//        float pos = positions[i];
-//        // used to prevent sharp angles by ensuring very close positions also have small perpendicular variation. 
-//        float scale = (length * Jaggedness) * (pos - positions[i - 1]);
-//        // defines an envelope. Points near the middle of the bolt can be further from the central line. 
-//        float envelope = pos > 0.95f ? 20 * (1 - pos) : 1;
-//        float displacement = SRNG.randF(-Sway, Sway);
-//        displacement -= (displacement - prevDisplacement) * (1 - scale);
-//        displacement *= envelope;
-//        Vector2 point = start + pos * tangent + displacement * normal;
-//        DrawLineEx(prevPoint, point, lineThickness, color);
-//        prevPoint = point;
-//        prevDisplacement = displacement;
-//    }
-//    DrawLineEx(prevPoint, end, lineThickness, color);
-//    DrawCircleV(start, lineThickness * 2, color);
-//    DrawCircleV(end, lineThickness * 2, color);
-//    //results.Add(new Line(prevPoint, dest, thickness));
-//}
-//public static void DrawLineLightning(Vector2 start, Vector2 end, float maxAngleDeg, Vector2 sizeFRange, float lineThickness, Color color)
-//{
-//    
-//    Vector2 w = (end - start);
-//    float l = w.Length();
-//    Vector2 dir = w / l;
-//    float maxAngleRad = maxAngleDeg * SUtils.DEGTORAD;
-//
-//    float minSize = sizeFRange.X * l;
-//    float maxSize = sizeFRange.Y * l;
-//
-//    DrawCircleV(start, lineThickness * 4, RED);
-//    DrawCircleV(end, lineThickness * 4, RED);
-//    DrawCircleV(end, minSize, new(255, 0, 0, 50));
-//    DrawLineEx(start, end, lineThickness * 2, RED);
-//    Vector2 cur = start;
-//    Vector2 curGuide = cur;
-//    float remainingLength = l;
-//    while(true)
-//    {
-//        float randSize = SRNG.randF(minSize, maxSize);
-//        remainingLength -= randSize;
-//        if(remainingLength <= minSize)
-//        {
-//            DrawLineEx(cur, end, lineThickness, color);
-//            break;
-//        }
-//        Vector2 randP = curGuide + dir * randSize;
-//        DrawCircleV(randP, lineThickness * 4, RED);
-//        Vector2 next = SVec.Rotate(randP, SRNG.randF(-maxAngleRad, maxAngleRad));
-//        //Vector2 randDisplacement = SVec.Rotate(randP, SRNG.randF(-maxAngleRad, maxAngleRad));
-//        //Vector2 next = cur + randDisplacement;
-//        DrawLineEx(cur, next, lineThickness, color);
-//        cur = next;
-//        curGuide = randP;
-//    }
-//    //DrawLineEx(cur, end, lineThickness, color);
-//}
-//public static void DrawLines(List<Vector2> points, float lineThickness, Color color, bool smoothJoints = false)
-//{
-//    if (points.Count < 2) return;
-//    if (smoothJoints) DrawCircleV(points[0], lineThickness / 2, color);
-//    for (int i = 0; i < points.Count - 1; i++)
-//    {
-//        Vector2 cur = points[i];
-//        Vector2 next = points[i + 1];
-//        DrawCircleV(next, lineThickness / 2, color);
-//        DrawLineEx(cur, next, lineThickness, color);
-//    }
-//}
-
-/*
-        public static void Draw(this Polygon p, Color color, bool clockwise = false) => DrawPolygon(p, p.GetCentroid(), color, clockwise);
-        public static void Draw(this Polygon p, Vector2 pos, float scale, float rotDeg, Color color, bool clockwise = false) => DrawPolygon(p, p.GetCentroid() + pos, scale, rotDeg, color, clockwise);
-
-        public static void DrawLines(this Polygon p, float lineThickness, Color color) => DrawPolygonLines(p, lineThickness, color);
-        public static void DrawLines(this Polygon p, Vector2 pos, Vector2 size, float rotDeg, float lineThickness, Color color) => DrawPolygonLines(p, p.GetCentroid() + pos, size, rotDeg, lineThickness, color);
-
-        public static void DrawPolygonCornered(this Polygon p, float lineThickness, Color color, float cornerLength) => DrawPolygonCornered(p, lineThickness, color, cornerLength);
-        public static void DrawPolygonCornered(this Polygon p, float lineThickness, Color color, List<float> cornerLengths) => DrawPolygonCornered(p, lineThickness, color, cornerLengths);
-        public static void DrawPolygonCorneredRelative(this Polygon p, float lineThickness, Color color, float cornerF) => DrawPolygonCorneredRelative(p, lineThickness, color, cornerF);
-        public static void DrawPolygonCorneredRelative(this Polygon p, float lineThickness, Color color, List<float> cornerFactors) => DrawPolygonCorneredRelative(p, lineThickness, color, cornerFactors);
-        */
-/*
-        public static void DrawPolygonCentered(List<Vector2> points, Vector2 center, Color fillColor, bool clockwise = true)
-        {
-            if (clockwise)
-            {
-                for (int i = 0; i < points.Count - 1; i++)
-                {
-                    Raylib.DrawTriangle(center + points[i], center, center + points[i + 1], fillColor);
-                }
-                Raylib.DrawTriangle(center + points[points.Count - 1], center, center + points[0], fillColor);
-            }
-            else
-            {
-                for (int i = 0; i < points.Count - 1; i++)
-                {
-                    Raylib.DrawTriangle(center + points[i], center + points[i + 1], center, fillColor);
-                }
-                Raylib.DrawTriangle(center + points[points.Count - 1], center + points[0], center, fillColor);
-            }
-        }
-        */
-/*
-        public static void DrawPolygon(List<Vector2> points, Vector2 center, Color fillColor, float lineThickness, Color outlineColor, bool clockwise = true)
-        {
-            DrawPolygon(points, center, fillColor, clockwise);
-            DrawPolygonLines(points, lineThickness, outlineColor, center);
-        }
-        public static void DrawPolygonCentered(List<Vector2> points, Vector2 center, Color fillColor, float lineThickness, Color outlineColor, bool clockwise = true)
-        {
-            DrawPolygonCentered(points, center, fillColor, clockwise);
-            DrawPolygonLines(points, lineThickness, outlineColor, center);
-        }
-        public static void DrawPolygonCentered(List<Vector2> points, Vector2 center, float scale, float rotDeg, Color fillColor, float lineThickness, Color outlineColor, bool clockwise = true)
-        {
-            DrawPolygon(points, center, scale, rotDeg, fillColor, clockwise);
-            DrawPolygonLines(points, lineThickness, outlineColor, center, scale, rotDeg);
-        }
-        */
-/*
-        public static void DrawPolygonLines(List<Vector2> points, float lineThickness, Color color, Vector2 center)
-        {
-            for (int i = 0; i < points.Count - 1; i++)
-            {
-                DrawCircleV(center + points[i], lineThickness * 0.5f, color);
-                DrawLineEx(center + points[i], center + points[i + 1], lineThickness, color);
-            }
-            DrawCircleV(center + points[points.Count - 1], lineThickness * 0.5f, color);
-            DrawLineEx(center + points[points.Count - 1], center + points[0], lineThickness, color);
-        }
-        public static void DrawPolygonLines(List<Vector2> points, float lineThickness, Color color, Vector2 center, float scale)
-        {
-            for (int i = 0; i < points.Count - 1; i++)
-            {
-                DrawCircleV(center + points[i] * scale, lineThickness * 0.5f * scale, color);
-                DrawLineEx(center + points[i] * scale, center + points[i + 1] * scale, lineThickness * scale, color);
-            }
-            DrawCircleV(center + points[points.Count - 1] * scale, lineThickness * 0.5f * scale, color);
-            DrawLineEx(center + points[points.Count - 1] * scale, center + points[0] * scale, lineThickness * scale, color);
-        }
-        public static void DrawPolygonLines(List<Vector2> points, float lineThickness, Color color, Vector2 center, float scale, float rotDeg)
-        {
-            float lt = lineThickness * scale;
-            for (int i = 0; i < points.Count - 1; i++)
-            {
-                Vector2 p1 = center + SVec.Rotate(points[i] * scale, rotDeg * SUtils.DEGTORAD);
-                Vector2 p2 = center + SVec.Rotate(points[i + 1] * scale, rotDeg * SUtils.DEGTORAD);
-                DrawCircleV(p1, lt * 0.5f, color);
-                DrawLineEx(p1, p2, lt, color);
-            }
-            DrawCircleV(center + SVec.Rotate(points[points.Count - 1] * scale, rotDeg * SUtils.DEGTORAD), lt * 0.5f, color);
-            DrawLineEx(center + SVec.Rotate(points[points.Count - 1] * scale, rotDeg * SUtils.DEGTORAD), center + SVec.Rotate(points[0] * scale, rotDeg * SUtils.DEGTORAD), lt, color);
-        }
-        */

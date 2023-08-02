@@ -99,9 +99,9 @@ namespace ShapeEngine.Core
         //}
         
         public abstract IShape GetShape();
-        public abstract bool CheckOverlap(ICollider other);
-        public abstract Intersection CheckIntersection(ICollider other);
-        public abstract bool CheckOverlapRect(Rect other);
+        //public abstract bool CheckOverlap(ICollider other);
+        //public abstract Intersection CheckIntersection(ICollider other);
+        //public abstract bool CheckOverlapRect(Rect other);
         //public abstract bool CheckOverlapBoundingCirlce(ICollider other);
         public abstract IShape GetSimplifiedShape();
 
@@ -143,25 +143,25 @@ namespace ShapeEngine.Core
             c.FlippedNormals = FlippedNormals;
             return c;
         }
-        public override bool CheckOverlap(ICollider other)
-        {
-            Circle shape = new(Pos, radius);
-            if (SimplifyCollision)
-            {
-                return shape.Overlap(other.GetSimplifiedShape());
-            }
-            else return shape.Overlap(other.GetShape());
-        }
-        public override Intersection CheckIntersection(ICollider other)
-        {
-            Circle shape = new(Pos, radius);
-            if (SimplifyCollision)
-            {
-                return shape.Intersect(other.GetSimplifiedShape(), Vel);
-            }
-            else return shape.Intersect(other.GetShape(), Vel);
-        }
-        public override bool CheckOverlapRect(Rect rect) { return rect.OverlapShape(new Circle(Pos, radius)); }
+        //public override bool CheckOverlap(ICollider other)
+        //{
+        //    Circle shape = new(Pos, radius);
+        //    if (SimplifyCollision)
+        //    {
+        //        return shape.Overlap(other.GetSimplifiedShape());
+        //    }
+        //    else return shape.Overlap(other.GetShape());
+        //}
+        //public override Intersection CheckIntersection(ICollider other)
+        //{
+        //    Circle shape = new(Pos, radius);
+        //    if (SimplifyCollision)
+        //    {
+        //        return shape.Intersect(other.GetSimplifiedShape(), Vel);
+        //    }
+        //    else return shape.Intersect(other.GetShape(), Vel);
+        //}
+        //public override bool CheckOverlapRect(Rect rect) { return rect.OverlapShape(new Circle(Pos, radius)); }
 
         //public override bool CheckOverlapBoundingCirlce(ICollider other)
         //{
@@ -231,25 +231,25 @@ namespace ShapeEngine.Core
                 return new Segment(Pos, End, n);
             }
         }
-        public override bool CheckOverlap(ICollider other)
-        {
-            Segment shape = GetSegmentShape();
-            if (SimplifyCollision)
-            {
-                return shape.Overlap(other.GetSimplifiedShape());
-            }
-            else return shape.Overlap(other.GetShape());
-        }
-        public override Intersection CheckIntersection(ICollider other)
-        {
-            Segment shape = GetSegmentShape();
-            if (SimplifyCollision)
-            {
-                return shape.Intersect(other.GetSimplifiedShape(), Vel);
-            }
-            else return shape.Intersect(other.GetShape(), Vel);
-        }
-        public override bool CheckOverlapRect(Rect rect) { return rect.OverlapShape( GetSegmentShape() ); }
+        //public override bool CheckOverlap(ICollider other)
+        //{
+        //    Segment shape = GetSegmentShape();
+        //    if (SimplifyCollision)
+        //    {
+        //        return shape.Overlap(other.GetSimplifiedShape());
+        //    }
+        //    else return shape.Overlap(other.GetShape());
+        //}
+        //public override Intersection CheckIntersection(ICollider other)
+        //{
+        //    Segment shape = GetSegmentShape();
+        //    if (SimplifyCollision)
+        //    {
+        //        return shape.Intersect(other.GetSimplifiedShape(), Vel);
+        //    }
+        //    else return shape.Intersect(other.GetShape(), Vel);
+        //}
+        //public override bool CheckOverlapRect(Rect rect) { return rect.OverlapShape( GetSegmentShape() ); }
 
         //public override bool CheckOverlapBoundingCirlce(ICollider other)
         //{
@@ -315,25 +315,26 @@ namespace ShapeEngine.Core
             r.FlippedNormals = FlippedNormals;
             return r;
         }
-        public override bool CheckOverlap(ICollider other)
-        {
-            Rect shape = GetRectShape();
-            if (SimplifyCollision)
-            {
-                return shape.Overlap(other.GetSimplifiedShape());
-            }
-            else return shape.Overlap(other.GetShape());
-        }
-        public override Intersection CheckIntersection(ICollider other)
-        {
-            Rect shape = GetRectShape();
-            if (SimplifyCollision)
-            {
-                return shape.Intersect(other.GetSimplifiedShape(), Vel);
-            }
-            else return shape.Intersect(other.GetShape(), Vel);
-        }
-        public override bool CheckOverlapRect(Rect rect) { return rect.OverlapShape(GetRectShape()); }
+        
+        //public override bool CheckOverlap(ICollider other)
+        //{
+        //    Rect shape = GetRectShape();
+        //    if (SimplifyCollision)
+        //    {
+        //        return shape.Overlap(other.GetSimplifiedShape());
+        //    }
+        //    else return shape.Overlap(other.GetShape());
+        //}
+        //public override Intersection CheckIntersection(ICollider other)
+        //{
+        //    Rect shape = GetRectShape();
+        //    if (SimplifyCollision)
+        //    {
+        //        return shape.Intersect(other.GetSimplifiedShape(), Vel);
+        //    }
+        //    else return shape.Intersect(other.GetShape(), Vel);
+        //}
+        //public override bool CheckOverlapRect(Rect rect) { return rect.OverlapShape(GetRectShape()); }
         //public override bool CheckOverlapBoundingCirlce(ICollider other)
         //{
         //    return GetRectShape().GetBoundingCircle().Overlap(other.GetSimplifiedShape());
@@ -432,25 +433,25 @@ namespace ShapeEngine.Core
             return p;
         }
 
-        public override bool CheckOverlap(ICollider other)
-        {
-            Polygon shape = GetPolygonShape();
-            if (SimplifyCollision)
-            {
-                return shape.Overlap(other.GetSimplifiedShape());
-            }
-            else return shape.Overlap(other.GetShape());
-        }
-        public override Intersection CheckIntersection(ICollider other)
-        {
-            Polygon shape = GetPolygonShape();
-            if (SimplifyCollision)
-            {
-                return shape.Intersect(other.GetSimplifiedShape(), Vel);
-            }
-            else return shape.Intersect(other.GetShape(), Vel);
-        }
-        public override bool CheckOverlapRect(Rect rect) { return rect.OverlapShape(GetPolygonShape()); }
+        //public override bool CheckOverlap(ICollider other)
+        //{
+        //    Polygon shape = GetPolygonShape();
+        //    if (SimplifyCollision)
+        //    {
+        //        return shape.Overlap(other.GetSimplifiedShape());
+        //    }
+        //    else return shape.Overlap(other.GetShape());
+        //}
+        //public override Intersection CheckIntersection(ICollider other)
+        //{
+        //    Polygon shape = GetPolygonShape();
+        //    if (SimplifyCollision)
+        //    {
+        //        return shape.Intersect(other.GetSimplifiedShape(), Vel);
+        //    }
+        //    else return shape.Intersect(other.GetShape(), Vel);
+        //}
+        //public override bool CheckOverlapRect(Rect rect) { return rect.OverlapShape(GetPolygonShape()); }
         //public override bool CheckOverlapBoundingCirlce(ICollider other)
         //{
         //    return GetShape().GetBoundingCircle().Overlap(other.GetSimplifiedShape());
@@ -573,23 +574,23 @@ namespace ShapeEngine.Core
             return p; 
         }
 
-        public override bool CheckOverlap(ICollider other) 
-        {
-            if (SimplifyCollision)
-            {
-                return shape.Overlap(other.GetSimplifiedShape());
-            }
-            else return shape.Overlap(other.GetShape()); 
-        }
-        public override Intersection CheckIntersection(ICollider other) 
-        {
-            if (SimplifyCollision)
-            {
-                return shape.Intersect(other.GetSimplifiedShape(), Vel);
-            }
-            else return shape.Intersect(other.GetShape(), Vel); 
-        }
-        public override bool CheckOverlapRect(Rect rect) { return shape.Overlap(rect); }
+        //public override bool CheckOverlap(ICollider other) 
+        //{
+        //    if (SimplifyCollision)
+        //    {
+        //        return shape.Overlap(other.GetSimplifiedShape());
+        //    }
+        //    else return shape.Overlap(other.GetShape()); 
+        //}
+        //public override Intersection CheckIntersection(ICollider other) 
+        //{
+        //    if (SimplifyCollision)
+        //    {
+        //        return shape.Intersect(other.GetSimplifiedShape(), Vel);
+        //    }
+        //    else return shape.Intersect(other.GetShape(), Vel); 
+        //}
+        //public override bool CheckOverlapRect(Rect rect) { return shape.Overlap(rect); }
         //public override bool CheckOverlapBoundingCirlce(ICollider other)
         //{
         //    return shape.GetBoundingCircle().Overlap(other.GetSimplifiedShape()); 

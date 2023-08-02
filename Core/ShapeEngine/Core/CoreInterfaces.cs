@@ -142,7 +142,7 @@ namespace ShapeEngine.Core
     {
         //public uint GetID();
         public ICollider GetCollider();
-        public void Overlap(List<CollisionInfo> infos);
+        public void Overlap(CollisionInformation info);
         public void OverlapEnded(ICollidable other);
         public uint GetCollisionLayer();
         public uint[] GetCollisionMask();
@@ -262,9 +262,10 @@ namespace ShapeEngine.Core
         //public void UpdatePrevPos(float dt);// { }
         public IShape GetShape();
         public IShape GetSimplifiedShape();
-        public bool CheckOverlap(ICollider other);
-        public Intersection CheckIntersection(ICollider other);
-        public bool CheckOverlapRect(Rect rect);
+        
+        //public bool CheckOverlap(ICollider other);
+        //public CollisionPoints CheckIntersection(ICollider other);
+        //public bool CheckOverlapRect(Rect rect);
         //public bool CheckOverlapBoundingCirlce(ICollider other);
         //{
         //    return GetShape().GetBoundingCircle().Overlap(other.GetShape().GetBoundingCircle());

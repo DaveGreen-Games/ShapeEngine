@@ -45,7 +45,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         public void Collision(Intersection intersection)
         {
-            Collider.Vel = Collider.Vel.Reflect(intersection.n);
+            Collider.Vel = Collider.Vel.Reflect(intersection.CollisionSurface.Normal);
             collisionTimer = collisionTime;
             lastIntersection = intersection;
         }
@@ -165,11 +165,11 @@ namespace Examples.Scenes.ExampleScenes
                         if (centerRay.LengthSquared > r2 * r2)
                         {
                             var i = centerRay.Intersect(seg);
-                            if (i.valid)
+                            if (i.Valid)
                             {
-                                foreach (var p in i.points)
+                                foreach (var p in i)
                                 {
-                                    points.Add(p.p);
+                                    points.Add(p.Point);
                                 }
                             }
                         }
@@ -202,10 +202,10 @@ namespace Examples.Scenes.ExampleScenes
                     bool overlap = shape.Overlap(segment);
                     if (overlap)
                     {
-                        var intersection = shape.Intersect(segment, bullet.Collider.Vel);
-                        if (intersection.valid)
+                        var intersection = shape.Intersect(segment);
+                        if (intersection.Valid)
                         {
-                            bullet.Collision(intersection);
+                            bullet.Collision(new(intersection, bullet.Collider.Vel));
                         }
                     }
                 }

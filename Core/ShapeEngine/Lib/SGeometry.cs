@@ -1,10 +1,13 @@
 ﻿using System.Diagnostics;
 using System.Numerics;
+using System.Security.Cryptography;
+using Microsoft.VisualBasic;
 using ShapeEngine.Core;
 
 
 namespace ShapeEngine.Lib
 {
+    /*
     public struct CollisionInfo
     {
         public bool overlapping;
@@ -35,93 +38,281 @@ namespace ShapeEngine.Lib
             this.intersection = intersection;
         }
     }
-    public struct Intersection
-    {
-        public bool valid;
-        public Vector2 p;
-        public Vector2 n;
-        public List<(Vector2 p, Vector2 n)> points;
-        public Intersection() { this.valid = false; this.p = new(0f); this.n = new(0f); this.points = new(); }
-        //public Intersection(Vector2 intersectionPoint, Vector2 normal, List<(Vector2 p, Vector2 n)> points)
-        //{
-        //    this.valid = true;
-        //    this.p = intersectionPoint;
-        //    this.n = normal;
-        //    this.points = points;
-        //}
+    */
 
-        public Intersection(List<(Vector2 p, Vector2 n)> points)
+
+    public struct CollisionInformation
+    {
+        public List<Collision> Collisions;
+        public CollisionSurface CollisionSurface;
+        public CollisionInformation(List<Collision> collisions, bool computesIntersections)
         {
-            if(points.Count <= 0)
-            {
-                this.valid = false;
-                this.p = new(0f);
-                this.n = new(0f);
-                this.points = new();
-            }
+            this.Collisions = collisions;
+            if (!computesIntersections) this.CollisionSurface = new();
             else
             {
-                this.valid = true;
-                this.points = points;
-
-                if (points.Count == 2)
+                Vector2 avgPoint = new();
+                Vector2 avgNormal = new();
+                int count = 0;
+                foreach (var col in collisions)
                 {
-                    Segment combined = new(points[0].p, points[1].p);
-                    this.p = combined.Center;
+                    if (col.FirstContact)
+                    {
+                        if (col.Intersection.Valid)
+                        {
+                            count++;
+                            var surface = col.Intersection.CollisionSurface;
+                            avgPoint += surface.Point;
+                            avgNormal += surface.Normal;
 
-                    //get the average normal
-                    //because only the direction is important and the length is always 1 (normalized)
-                    //the vector addition does not have to be divided by 2!
-                    this.n = (points[0].n + points[1].n).Normalize();// / 2;
+                        }
+                    }
+                }
+
+                if (count > 0)
+                {
+                    avgPoint /= count;
+                    avgNormal = avgNormal.Normalize();
+                    this.CollisionSurface = new(avgPoint, avgNormal);
                 }
                 else
                 {
-                    this.p = points[0].p;
-                    this.n = points[0].n;
+                    this.CollisionSurface = new();
                 }
             }
-        }
-        public void FlipNormals(Vector2 refPoint)
-        {
-            if (points.Count <= 0) return;
-
-            List<(Vector2 p, Vector2 n)> newPoints = new();
-            foreach (var p in points)
-            {
-                Vector2 dir = refPoint - p.p;
-                if (dir.IsFacingTheOppositeDirection(p.n)) newPoints.Add((p.p, p.n.Flip()));
-                else newPoints.Add(p);
-            }
-            this.points = newPoints;
-            this.n = points[0].n;
+            
         }
         
-        public Intersection CheckVelocityNew(Vector2 vel)
+        public bool ContainsCollidable(ICollidable other)
         {
-            List<(Vector2 p, Vector2 n)> newPoints = new();
-            
-            for (int i = points.Count - 1; i >= 0; i--)
+            foreach (var c in Collisions)
             {
-                var intersection = points[i];
-                if (intersection.n.IsFacingTheSameDirection(vel)) continue;
-                newPoints.Add(intersection);
+                if (c.Other == other) return true;
             }
-            return new(newPoints);
+            return false;
         }
-        //public void CheckVelocity(Vector2 vel)
+        public List<Collision> FilterCollisions(Predicate<Collision> match)
+        {
+            List<Collision> filtered = new();
+            foreach (var c in Collisions)
+            {
+                if(match(c)) filtered.Add(c);
+            }
+            return filtered;
+        }
+        public List<ICollidable> FilterObjects(Predicate<ICollidable> match)
+        {
+            HashSet<ICollidable> filtered = new();
+            foreach (var c in Collisions)
+            {
+                if (match(c.Other)) filtered.Add(c.Other);
+            }
+            return filtered.ToList();
+        }
+        public List<ICollidable> GetAllObjects()
+        {
+            HashSet<ICollidable> others = new();
+            foreach (var c in Collisions)
+            {
+                others.Add(c.Other);
+
+            }
+            return others.ToList();
+        }
+        public List<Collision> GetFirstContactCollisions()
+        {
+            return FilterCollisions((c) => c.FirstContact);
+        }
+        public List<ICollidable> GetFirstContactObjects()
+        {
+            var filtered = GetFirstContactCollisions();
+            HashSet<ICollidable> others = new();
+            foreach (var c in filtered)
+            {
+                others.Add(c.Other);
+            }
+            return others.ToList();
+        }
+    }
+    public struct Collision
+    {
+        public bool FirstContact;
+        public ICollidable Self;
+        public ICollidable Other;
+        public Vector2 SelfVel;
+        public Vector2 OtherVel;
+        public Intersection Intersection;
+
+        public Collision(ICollidable self, ICollidable other, bool firstContact)
+        {
+            this.Self = self;
+            this.Other = other;
+            this.SelfVel = self.GetVelocity();
+            this.OtherVel = other.GetVelocity();
+            this.Intersection = new();
+            this.FirstContact = firstContact;
+        }
+        public Collision(ICollidable self, ICollidable other, bool firstContact, CollisionPoints collisionPoints)
+        {
+            this.Self = self;
+            this.Other = other;
+            this.SelfVel = self.GetVelocity();
+            this.OtherVel = other.GetVelocity();
+            this.Intersection = new(collisionPoints, SelfVel);
+            this.FirstContact = firstContact;
+        }
+
+    }
+    public struct Intersection
+    {
+        public bool Valid;
+        public CollisionSurface CollisionSurface;
+        public CollisionPoints ColPoints;
+        
+        public Intersection() { this.Valid = false; this.CollisionSurface = new(); this.ColPoints = new(); }
+        public Intersection(CollisionPoints points, Vector2 vel)
+        {
+            if(points.Count <= 0)
+            {
+                this.Valid = false;
+                this.CollisionSurface = new();
+                this.ColPoints = new();
+            }
+            else
+            {
+                this.Valid = true;
+                this.ColPoints = points;
+
+                Vector2 avgPoint = new();
+                Vector2 avgNormal = new();
+                int count = 0;
+                foreach (var p in points)
+                {
+                    if (DiscardNormal(p.Normal, vel)) continue;
+
+                    count++;
+                    avgPoint += p.Point;
+                    avgNormal += p.Normal;
+                }
+                if (count > 0)
+                {
+                    avgPoint /= count;
+                    avgNormal = avgNormal.Normalize();
+                    this.CollisionSurface = new(avgPoint, avgNormal);
+                }
+                else this.CollisionSurface = new();
+            }
+        }
+        public Intersection(CollisionPoints points)
+        {
+            if (points.Count <= 0)
+            {
+                this.Valid = false;
+                this.CollisionSurface = new();
+                this.ColPoints = new();
+            }
+            else
+            {
+                this.Valid = true;
+                this.ColPoints = points;
+
+                Vector2 avgPoint = new();
+                Vector2 avgNormal = new();
+                foreach (var p in points)
+                {
+                    avgPoint += p.Point;
+                    avgNormal += p.Normal;
+                }
+                if (points.Count > 0)
+                {
+                    avgPoint /= points.Count;
+                    avgNormal = avgNormal.Normalize();
+                    this.CollisionSurface = new(avgPoint, avgNormal);
+                }
+                else this.CollisionSurface = new();
+            }
+        }
+
+
+        private static bool DiscardNormal(Vector2 n, Vector2 vel)
+        {
+            return n.IsFacingTheSameDirection(vel);
+        }
+
+
+        //public void FlipNormals(Vector2 refPoint)
         //{
-        //    
-        //    foreach (var intersection in points)
+        //    if (points.Count <= 0) return;
+        //
+        //    List<(Vector2 p, Vector2 n)> newPoints = new();
+        //    foreach (var p in points)
         //    {
-        //        if (intersection.n.IsFacingTheSameDirection(vel))
-        //        {
-        //            this.valid = false;
-        //            return;
-        //        }
+        //        Vector2 dir = refPoint - p.p;
+        //        if (dir.IsFacingTheOppositeDirection(p.n)) newPoints.Add((p.p, p.n.Flip()));
+        //        else newPoints.Add(p);
         //    }
+        //    this.points = newPoints;
+        //    this.n = points[0].n;
         //}
+        //public Intersection CheckVelocityNew(Vector2 vel)
+        //{
+        //    List<(Vector2 p, Vector2 n)> newPoints = new();
+        //    
+        //    for (int i = points.Count - 1; i >= 0; i--)
+        //    {
+        //        var intersection = points[i];
+        //        if (intersection.n.IsFacingTheSameDirection(vel)) continue;
+        //        newPoints.Add(intersection);
+        //    }
+        //    return new(newPoints);
+        //}
+        
+    }
+    public struct CollisionSurface
+    {
+        public Vector2 Point;
+        public Vector2 Normal;
+        public bool Valid;
+
+        public CollisionSurface() { Point = new(); Normal = new(); Valid = false; }
+        public CollisionSurface(Vector2 point, Vector2 normal)
+        {
+            this.Point = point;
+            this.Normal = normal;
+            this.Valid = true;
+        }
+
+    }
+    public struct CollisionPoint
+    {
+        public Vector2 Point;
+        public Vector2 Normal;
+        
+        public CollisionPoint() { Point = new(); Normal = new(); }
+        public CollisionPoint(Vector2 p, Vector2 n) { Point = p; Normal = n; }
+
+        public CollisionPoint FlipNormal()
+        {
+            return new(Point, Normal.Flip());
+        }
     }
     
+    public class CollisionPoints : List<CollisionPoint> 
+    {
+        public bool Valid { get { return Count > 0; } }
+        public void FlipNormals(Vector2 referencePoint)
+        {
+            for (int i = 0; i < Count; i++)
+            {
+                var p = this[i];
+                Vector2 dir = referencePoint - p.Point;
+                if (dir.IsFacingTheOppositeDirection(p.Normal))
+                    this[i] = this[i].FlipNormal();
+            }
+        }
+    }
+    
+
     public static class SGeometry
     {
         /// <summary>
@@ -130,17 +321,17 @@ namespace ShapeEngine.Lib
         public static float POINT_RADIUS = float.Epsilon;
 
         #region CollisionHandler
-        public static CollisionInfo GetCollisionInfo(this ICollidable self, ICollidable other)
-        {
-            if (self == other) return new();
-
-            bool overlap = self.Overlap(other);
-            if (overlap)
-            {
-                return new(true, self, other, self.GetCollider().Intersect(other.GetCollider()));
-            }
-            return new();
-        }
+        //public static CollisionInfo GetCollisionInfo(this ICollidable self, ICollidable other)
+        //{
+        //    if (self == other) return new();
+        //
+        //    bool overlap = self.Overlap(other);
+        //    if (overlap)
+        //    {
+        //        return new(true, self, other, self.GetCollider().Intersect(other.GetCollider()));
+        //    }
+        //    return new();
+        //}
 
         public static bool CheckCCDDistance(this Circle c, Vector2 prevPos)
         {
@@ -172,45 +363,38 @@ namespace ShapeEngine.Lib
             //moved more than twice the shapes radius -> means gap between last & cur frame
             if (centerRay.LengthSquared > r2 * r2)
             {
-                var i = centerRay.Intersect(other);
-                if (i.valid)
+                var collisionPoints = centerRay.Intersect(other);
+                if (collisionPoints.Valid)
                 {
-                    return i.p - centerRay.Dir * r;
+                    Intersection intersection = new(collisionPoints);
+                    if (intersection.Valid && intersection.CollisionSurface.Valid)
+                    {
+                        return intersection.CollisionSurface.Point - centerRay.Dir * r;
+                    }
                 }
+                
             }
             return c.center;
         }
 
         public static bool Overlap(this ICollidable a, ICollidable b)
         {
-            if (a == b) return false;
-            if (a == null || b == null) return false;
+            //if (a == b) return false;
+            //if (a == null || b == null) return false;
             return Overlap(a.GetCollider(), b.GetCollider());
         }
         public static bool Overlap(this ICollider colA, ICollider colB)
         {
-            if (colA == colB) return false;
-            if (colA == null || colB == null) return false;
-            //if (!colA.Enabled || !colB.Enabled) return false;
-
-            return colA.CheckOverlap(colB);
-
-            //var overlapInfo = colA.CheckOverlap(colB);
-            //if (!overlapInfo.valid)
-            //{
-            //    overlapInfo = colB.CheckOverlap(colA);
-            //    if (!overlapInfo.valid)
-            //    {
-            //        return OverlapBoundingBox(colA, colB);
-            //    }
-            //}
-            //return overlapInfo.overlap;
+            //if (colA == colB) return false;
+            //if (colA == null || colB == null) return false;
+            //return colA.CheckOverlap(colB);
+            return colA.GetShape().Overlap(colB.GetShape());
         }
         public static bool Overlap(this Rect rect, ICollider col)
         {
-            if (col == null) return false;
-            if (!col.Enabled) return false;
-            return col.CheckOverlapRect(rect);
+            //if (col == null) return false;
+            //if (!col.Enabled) return false;
+            return col.GetShape().Overlap(rect);
         }
         public static bool Overlap(this IShape a, IShape b)
         {
@@ -284,52 +468,7 @@ namespace ShapeEngine.Lib
         }
         public static bool OverlapBoundingBox(this ICollider a, ICollider b) { return OverlapShape(a.GetShape().GetBoundingBox(), b.GetShape().GetBoundingBox()); }
 
-        public static Intersection Intersect(this ICollider colA, ICollider colB)
-        {
-            if (colA == colB) return new();
-            if (colA == null || colB == null) return new();
-            if (!colA.Enabled || !colB.Enabled) return new();
-            if (!colA.ComputeIntersections) return new();
-
-            return colA.CheckIntersection(colB);
-            //var intersectionInfo = colA.CheckIntersection(colB);
-            //if (!intersectionInfo.valid)
-            //{
-            //    intersectionInfo = colB.CheckIntersection(colA);
-            //    if (!intersectionInfo.valid)
-            //    {
-            //        return IntersectBoundingBoxes(colA, colB);
-            //    }
-            //}
-            //
-            //return intersectionInfo.i;
-        }
-
-        public static Intersection Intersect(this IShape a, IShape b, Vector2 aVelocity)
-        {
-            var intersection = a.Intersect(b);
-            if (intersection.valid)
-            {
-                if(b is Segment seg)
-                {
-                    if (seg.AutomaticNormals)
-                    {
-                        intersection.FlipNormals(a.GetCentroid());
-                    }
-                }
-                else if(b is Polyline pl)
-                {
-                    if (pl.AutomaticNormals)
-                    {
-                        intersection.FlipNormals(a.GetCentroid());
-                    }
-                }
-                intersection = intersection.CheckVelocityNew(aVelocity);
-            }
-            return intersection;
-        }
-
-        public static Intersection Intersect(this IShape a, IShape b)
+        private static CollisionPoints GetCollisionPoints(this IShape a, IShape b)
         {
             if (a is Segment s) return Intersect(s, b);
             else if (a is Circle c) return Intersect(c, b);
@@ -339,8 +478,39 @@ namespace ShapeEngine.Lib
             else if (a is Polyline pl) return Intersect(pl, b);
             else return Intersect(a.GetBoundingBox(), b);
         }
-        
-        public static Intersection Intersect(this Segment seg, IShape shape)
+        public static CollisionPoints Intersect(this ICollidable a, ICollidable b)
+        {
+            return Intersect(a.GetCollider(), b.GetCollider());
+        }
+        public static CollisionPoints Intersect(this ICollider colA, ICollider colB)
+        {
+            //return colA.CheckIntersection(colB);
+            return colA.GetShape().Intersect(colA.SimplifyCollision ? colB.GetSimplifiedShape() : colB.GetShape());
+        }
+        public static CollisionPoints Intersect(this IShape a, IShape b)
+        {
+            var collisionPoints = a.GetCollisionPoints(b);
+            if (collisionPoints.Valid)
+            {
+                if(b is Segment seg)
+                {
+                    if (seg.AutomaticNormals)
+                    {
+                        collisionPoints.FlipNormals(a.GetCentroid());
+                    }
+                }
+                else if(b is Polyline pl)
+                {
+                    if (pl.AutomaticNormals)
+                    {
+                        collisionPoints.FlipNormals(a.GetCentroid());
+                    }
+                }
+                //intersection = intersection.CheckVelocityNew(aVelocity);
+            }
+            return collisionPoints;
+        }
+        public static CollisionPoints Intersect(this Segment seg, IShape shape)
         {
             if (shape is Segment s) return IntersectShape(seg, s);
             else if (shape is Circle c) return IntersectShape(seg, c);
@@ -350,7 +520,7 @@ namespace ShapeEngine.Lib
             else if (shape is Polyline pl) return IntersectShape(seg, pl);
             else return seg.IntersectShape(shape.GetBoundingBox());// new();
         }
-        public static Intersection Intersect(this Circle circle, IShape shape)
+        public static CollisionPoints Intersect(this Circle circle, IShape shape)
         {
             if (shape is Segment s)         return IntersectShape(circle, s);
             else if (shape is Circle c)     return IntersectShape(circle, c);
@@ -360,7 +530,7 @@ namespace ShapeEngine.Lib
             else if (shape is Polyline pl)  return IntersectShape(circle, pl);
             else return circle.IntersectShape(shape.GetBoundingBox());// new();
         }
-        public static Intersection Intersect(this Triangle triangle, IShape shape)
+        public static CollisionPoints Intersect(this Triangle triangle, IShape shape)
         {
             if (shape is Segment s)         return IntersectShape(triangle, s);
             else if (shape is Circle c)     return IntersectShape(triangle, c);
@@ -370,7 +540,7 @@ namespace ShapeEngine.Lib
             else if (shape is Polyline pl)  return IntersectShape(triangle, pl);
             else return triangle.IntersectShape(shape.GetBoundingBox());// new();
         }
-        public static Intersection Intersect(this Rect rect, IShape shape)
+        public static CollisionPoints Intersect(this Rect rect, IShape shape)
         {
             if (shape is Segment s)         return IntersectShape(rect, s);
             else if (shape is Circle c)     return IntersectShape(rect, c);
@@ -380,7 +550,7 @@ namespace ShapeEngine.Lib
             else if (shape is Polyline pl)  return IntersectShape(rect, pl);
             else return rect.IntersectShape(shape.GetBoundingBox());// new();
         }
-        public static Intersection Intersect(this Polygon poly, IShape shape)
+        public static CollisionPoints Intersect(this Polygon poly, IShape shape)
         {
             if (shape is Segment s)         return IntersectShape(poly, s);
             else if (shape is Circle c)     return IntersectShape(poly, c);
@@ -390,7 +560,7 @@ namespace ShapeEngine.Lib
             else if (shape is Polyline pl)  return IntersectShape(poly, pl);
             else return poly.IntersectShape(shape.GetBoundingBox());// new();
         }
-        public static Intersection Intersect(this Polyline pl, IShape shape)
+        public static CollisionPoints Intersect(this Polyline pl, IShape shape)
         {
             if (shape is Segment s) return IntersectShape(pl, s);
             else if (shape is Circle c) return IntersectShape(pl, c);
@@ -400,7 +570,7 @@ namespace ShapeEngine.Lib
             else if (shape is Polyline otherPl) return IntersectShape(pl, otherPl);
             else return pl.IntersectShape(shape.GetBoundingBox());
         }
-        public static Intersection IntersectBoundingBoxes(this ICollider a, ICollider b) { return IntersectShape(a.GetShape().GetBoundingBox(), b.GetShape().GetBoundingBox()); }
+        public static CollisionPoints IntersectBoundingBoxes(this ICollider a, ICollider b) { return IntersectShape(a.GetShape().GetBoundingBox(), b.GetShape().GetBoundingBox()); }
         #endregion
 
         #region Line
@@ -492,17 +662,16 @@ namespace ShapeEngine.Lib
         #endregion
 
         #region Intersect
-        public static Intersection IntersectShape(this Segment a, Segment b)
+        public static CollisionPoints IntersectShape(this Segment a, Segment b)
         {
             var info = IntersectSegmentSegmentInfo(a.start, a.end, b.start, b.end);
             if (info.intersected)
             {
-                //Vector2 n = opposite ? SUtils.GetNormalOpposite(b.start, b.end, info.intersectPoint, referencePoint) : SUtils.GetNormal(b.start, b.end, info.intersectPoint, referencePoint);
-                return new(new() { (info.intersectPoint, b.n) });
+                return new() { new(info.intersectPoint, b.n) };
             }
             return new();
         }
-        public static Intersection IntersectShape(this Segment s, Circle c)
+        public static CollisionPoints IntersectShape(this Segment s, Circle c)
         {
             float aX = s.start.X;
             float aY = s.start.Y;
@@ -540,14 +709,14 @@ namespace ShapeEngine.Lib
                 {
                     // intersection point is not actually within line segment
                     Vector2 ip = new(iX, iY);
-                    Vector2 n = SVec.Normalize(ip - new Vector2(cX, cY)); // SUtils.GetNormal(new Vector2(aX, aY), new Vector2(bX, bY), ip, new Vector2(cX, cY));
-                    return new(new() { (ip, n) });
+                    Vector2 n = SVec.Normalize(ip - new Vector2(cX, cY));
+                    return new() { new(ip, n) };
                 }
                 else return new();
             }
             else if (dist < R)
             {
-                List<(Vector2 p, Vector2 n)> points = new();
+                CollisionPoints points = new();
                 // two possible intersection points
 
                 float dt = MathF.Sqrt(R * R - dist * dist) / MathF.Sqrt(dl);
@@ -561,7 +730,7 @@ namespace ShapeEngine.Lib
                     // intersection point is actually within line segment
                     Vector2 ip = new(i1X, i1Y);
                     Vector2 n = SVec.Normalize(ip - new Vector2(cX, cY)); // SUtils.GetNormal(new Vector2(aX, aY), new Vector2(bX, bY), ip, new Vector2(cX, cY));
-                    points.Add((ip, n));
+                    points.Add(new(ip, n));
                 }
                 float t2 = t + dt;
                 float i2X = aX + t2 * dX;
@@ -570,18 +739,11 @@ namespace ShapeEngine.Lib
                 {
                     Vector2 ip = new(i2X, i2Y);
                     Vector2 n = SVec.Normalize(ip - new Vector2(cX, cY));
-                    points.Add((ip, n));
+                    points.Add(new(ip, n));
                 }
 
                 if (points.Count <= 0) return new();
-                else return new(points);
-                //else if (points.Count == 1) return new(points[0].p, points[0].n, points);
-                //else
-                //{
-                //    var combinedSegment = new Segment(points[0].p, points[1].p);
-                //    //var info = ConstructNormalOpposite(points[0].p, points[1].p, new Vector2(cX, cY));
-                //    return new(new Vector2(cX, cY) + combinedSegment.n * R, combinedSegment.n, points);
-                //}
+                else return points;
             }
             else
             {
@@ -589,69 +751,64 @@ namespace ShapeEngine.Lib
                 return new();
             }
         }
-        public static Intersection IntersectShape(this Segment s, Triangle t) { return IntersectShape(s, t.GetEdges()); }
-        public static Intersection IntersectShape(this Segment s, Rect rect) { return IntersectShape(s, rect.GetEdges()); }
-        public static Intersection IntersectShape(this Segment s, Polygon p) { return IntersectShape(s, p.GetEdges()); }
-        public static Intersection IntersectShape(this Segment s, Polyline pl) { return s.IntersectShape(pl.GetEdges()); }
-        
-        public static Intersection IntersectShape(this Segment s, Segments shape)
+        public static CollisionPoints IntersectShape(this Segment s, Triangle t) { return IntersectShape(s, t.GetEdges()); }
+        public static CollisionPoints IntersectShape(this Segment s, Rect rect) { return IntersectShape(s, rect.GetEdges()); }
+        public static CollisionPoints IntersectShape(this Segment s, Polygon p) { return IntersectShape(s, p.GetEdges()); }
+        public static CollisionPoints IntersectShape(this Segment s, Polyline pl) { return s.IntersectShape(pl.GetEdges()); }
+        public static CollisionPoints IntersectShape(this Segment s, Segments shape)
         {
-            List<(Vector2 p, Vector2 n)> points = new();
+            CollisionPoints points = new();
 
             foreach (var seg in shape)
             {
-                var intersection = s.IntersectShape(seg);
-                if (intersection.valid)
+                var collisionPoints = s.IntersectShape(seg);
+                if (collisionPoints.Valid)
                 {
-                    points.Add((intersection.p, intersection.n));
+                    points.AddRange(collisionPoints);
                 }
             }
-            if (points.Count <= 0) return new();
-            else return new(points);
+            return points;
         }
-        public static Intersection IntersectShape(this Segments segments, Segment s)
+        public static CollisionPoints IntersectShape(this Segments segments, Segment s)
         {
-            List<(Vector2 p, Vector2 n)> points = new();
+            CollisionPoints points = new();
 
             foreach (var seg in segments)
             {
-                var intersection = seg.IntersectShape(s);
-                if (intersection.valid)
+                var collisionPoints = seg.IntersectShape(s);
+                if (collisionPoints.Valid)
                 {
-                    points.Add((intersection.p, intersection.n));
+                    points.AddRange(collisionPoints);
                 }
             }
-            if (points.Count <= 0) return new();
-            else return new(points);
+            return points;
         }
-        public static Intersection IntersectShape(this Segments segments, Circle c)
+        public static CollisionPoints IntersectShape(this Segments segments, Circle c)
         {
-            List<(Vector2 p, Vector2 n)> points = new();
+            CollisionPoints points = new();
             foreach (var seg in segments)
             {
                 var intersectPoints = IntersectSegmentCircle(seg.start, seg.end, c.center, c.radius);
                 foreach (var p in intersectPoints)
                 {
                     Vector2 n = SVec.Normalize(p - c.center);
-                    points.Add((p, n));
+                    points.Add(new(p, n));
                 }
             }
-            if (points.Count <= 0) return new();
-            else return new(points);
+            return points;
         }
-        public static Intersection IntersectShape(this Segments a, Segments b)
+        public static CollisionPoints IntersectShape(this Segments a, Segments b)
         {
-            List<(Vector2 p, Vector2 n)> points = new();
+            CollisionPoints points = new();
             foreach (var seg in a)
             {
-                var intersection = IntersectShape(seg, b);
-                if (intersection.valid)
+                var collisionPoints = IntersectShape(seg, b);
+                if (collisionPoints.Valid)
                 {
-                    points.AddRange(intersection.points);
+                    points.AddRange(collisionPoints);
                 }
             }
-            if (points.Count <= 0) return new();
-            else return new(points);
+            return points;
         }
 
         #endregion
@@ -776,7 +933,7 @@ namespace ShapeEngine.Lib
         #endregion
 
         #region Intersect
-        public static Intersection IntersectShape(this Circle cA, Circle cB)
+        public static CollisionPoints IntersectShape(this Circle cA, Circle cB)
         {
             float cx0 = cA.center.X; 
             float cy0 = cA.center.Y;
@@ -827,29 +984,21 @@ namespace ShapeEngine.Lib
                 if (dist == radius0 + radius1)
                 {
                     Vector2 n = SVec.Normalize(intersection1 - new Vector2(cx1, cy1));
-                    return new(new() { (intersection1, n) });
+                    return new() { new(intersection1, n) };
                 }
                 else
                 {
                     Vector2 otherPos = new Vector2(cx1, cy1);
-                    //Vector2 w = intersection2 - intersection1;
-                    //float l = w.Length();
-                    //Vector2 dir = w / l;
-
-                    //combined 
-                    //Vector2 p = intersection1 + dir * l * 0.5f;
-                    //Vector2 n = SVec.Normalize(p - otherPos);
-
                     Vector2 n1 = SVec.Normalize(intersection1 - otherPos);
                     Vector2 n2 = SVec.Normalize(intersection2 - otherPos);
                     //if problems occur add that back (David)
                     //p,n
-                    return new(new() { (intersection1, n1), (intersection2, n2) });
+                    return new() { new(intersection1, n1), new(intersection2, n2) };
                 }
             }
 
         }
-        public static Intersection IntersectShape(this Circle c, Segment s)
+        public static CollisionPoints IntersectShape(this Circle c, Segment s)
         {
             float cX = c.center.X;
             float cY = c.center.Y;
@@ -863,13 +1012,6 @@ namespace ShapeEngine.Lib
             float dY = bY - aY;
 
             Vector2 segmentNormal = s.n;
-            //if (s.automaticNormal)
-            //{
-            //    Vector2 dir = c.center - s.Center;
-            //
-            //    if (segmentNormal.IsFacingTheSameDirection(dir)) segmentNormal = segmentNormal.Flip();
-            //}
-
 
             if ((dX == 0) && (dY == 0))
             {
@@ -896,15 +1038,15 @@ namespace ShapeEngine.Lib
                 {
                     // intersection point is not actually within line segment
                     Vector2 ip = new(iX, iY);
-                    //Vector2 n = SUtils.GetNormal(new Vector2(aX, aY), new Vector2(bX, bY), ip, new Vector2(cX, cY));
-                    return new(new() { (ip, segmentNormal) });
+                    return new() { new(ip, segmentNormal) };
                 }
                 else return new();
             }
             else if (dist < R)
             {
+                CollisionPoints points = new();
                 float dt = MathF.Sqrt(R * R - dist * dist) / MathF.Sqrt(dl);
-                List<(Vector2 p, Vector2 n)> points = new();
+                
                 // intersection point nearest to A
                 float t1 = t - dt;
                 float i1X = aX + t1 * dX;
@@ -913,8 +1055,7 @@ namespace ShapeEngine.Lib
                 {
                     // intersection point is actually within line segment
                     Vector2 ip = new(i1X, i1Y);
-                    //Vector2 n = SUtils.GetNormal(new Vector2(aX, aY), new Vector2(bX, bY), ip, new Vector2(cX, cY));
-                    points.Add((ip, segmentNormal));
+                    points.Add(new(ip, segmentNormal));
                 }
 
                 // intersection point farthest from A
@@ -924,22 +1065,10 @@ namespace ShapeEngine.Lib
                 if (t2 >= 0f && t2 <= 1f)
                 {
                     Vector2 ip = new(i2X, i2Y);
-                    //Vector2 n = SUtils.GetNormal(new Vector2(aX, aY), new Vector2(bX, bY), ip, new Vector2(cX, cY));
-                    points.Add((ip, segmentNormal));
+                    points.Add(new(ip, segmentNormal));
                 }
 
-                if (points.Count <= 0) return new();
-                else return new(points);
-                //else if (points.Count == 1) return new(points[0].p, points[0].n, points);
-                //else
-                //{
-                //    Vector2 w = points[1].p - points[0].p;
-                //    float l = w.Length();
-                //    Vector2 dir = w / l;
-                //    Vector2 p = points[0].p + dir * l * 0.5f;
-                //    //Vector2 n = SUtils.GetNormal(points[0].p, points[1].p, p, new Vector2(cX, cY));
-                //    return new(p, segmentNormal, points);
-                //}
+                return points;
             }
             else
             {
@@ -947,44 +1076,23 @@ namespace ShapeEngine.Lib
                 return new();
             }
         }
-        public static Intersection IntersectShape(this Circle c, Triangle t) { return IntersectShape(c, t.GetEdges()); }
-        public static Intersection IntersectShape(this Circle c, Rect r) { return IntersectShape(c, r.GetEdges()); }
-        public static Intersection IntersectShape(this Circle c, Polygon p) { return IntersectShape(c, p.GetEdges()); }
-        public static Intersection IntersectShape(this Circle c, Segments shape)
+        public static CollisionPoints IntersectShape(this Circle c, Triangle t) { return IntersectShape(c, t.GetEdges()); }
+        public static CollisionPoints IntersectShape(this Circle c, Rect r) { return IntersectShape(c, r.GetEdges()); }
+        public static CollisionPoints IntersectShape(this Circle c, Polygon p) { return IntersectShape(c, p.GetEdges()); }
+        public static CollisionPoints IntersectShape(this Circle c, Segments shape)
         {
-            List<(Vector2 p, Vector2 n)> points = new();
+            CollisionPoints points = new();
             foreach (var seg in shape)
             {
                 var intersectPoints = IntersectCircleSegment(c.center, c.radius, seg.start, seg.end);
                 foreach (var p in intersectPoints)
                 {
-                    //Vector2 segmentNormal = seg.n;
-                    //if (seg.automaticNormal)
-                    //{
-                    //    Vector2 dir = c.center - seg.Center;
-                    //
-                    //    if (segmentNormal.IsFacingTheSameDirection(dir)) segmentNormal = segmentNormal.Flip();
-                    //}
-                    points.Add((p, seg.n));
+                    points.Add(new(p, seg.n));
                 }
             }
-            if (points.Count <= 0) return new();
-            else return new(points);
-            //else if (points.Count == 1)
-            //{
-            //    return new(points[0].p, points[0].n, points);
-            //}
-            //else if (points.Count == 2)
-            //{
-            //    var combinedSegment = new Segment(points[0].p, points[1].p);
-            //    return new(combinedSegment.Center, (points[0].n + points[1].n) / 2, points);
-            //}
-            //else
-            //{
-            //    return new(points[0].p, points[0].n, points);
-            //}
+            return points;
         }
-        public static Intersection IntersectShape(this Circle c, Polyline pl) { return c.IntersectShape(pl.GetEdges()); }
+        public static CollisionPoints IntersectShape(this Circle c, Polyline pl) { return c.IntersectShape(pl.GetEdges()); }
 
         #endregion
 
@@ -1012,12 +1120,12 @@ namespace ShapeEngine.Lib
         #endregion
 
         #region Intersect
-        public static Intersection IntersectShape(this Triangle t, Segment s) { return IntersectShape(t.GetEdges(), s); }
-        public static Intersection IntersectShape(this Triangle t, Circle c) { return IntersectShape(t.ToPolygon(), c); }
-        public static Intersection IntersectShape(this Triangle a, Triangle b) { return IntersectShape(a.ToPolygon(), b.ToPolygon()); }
-        public static Intersection IntersectShape(this Triangle t, Rect r) { return IntersectShape(t.ToPolygon(), r.ToPolygon()); }
-        public static Intersection IntersectShape(this Triangle t, Polygon p) { return IntersectShape(t.ToPolygon(), p); }
-        public static Intersection IntersectShape(this Triangle t, Polyline pl) { return t.GetEdges().IntersectShape(pl.GetEdges()); }
+        public static CollisionPoints IntersectShape(this Triangle t, Segment s) { return IntersectShape(t.GetEdges(), s); }
+        public static CollisionPoints IntersectShape(this Triangle t, Circle c) { return IntersectShape(t.ToPolygon(), c); }
+        public static CollisionPoints IntersectShape(this Triangle a, Triangle b) { return IntersectShape(a.ToPolygon(), b.ToPolygon()); }
+        public static CollisionPoints IntersectShape(this Triangle t, Rect r) { return IntersectShape(t.ToPolygon(), r.ToPolygon()); }
+        public static CollisionPoints IntersectShape(this Triangle t, Polygon p) { return IntersectShape(t.ToPolygon(), p); }
+        public static CollisionPoints IntersectShape(this Triangle t, Polyline pl) { return t.GetEdges().IntersectShape(pl.GetEdges()); }
         #endregion
 
         #endregion
@@ -1074,12 +1182,12 @@ namespace ShapeEngine.Lib
         #endregion
 
         #region Intersect
-        public static Intersection IntersectShape(this Rect r, Segment s) { return IntersectShape(r.GetEdges(), s); }
-        public static Intersection IntersectShape(this Rect r, Circle c) { return IntersectShape(r.GetEdges(), c); }
-        public static Intersection IntersectShape(this Rect r, Triangle t) { return IntersectShape(r.GetEdges(), t.GetEdges()); }
-        public static Intersection IntersectShape(this Rect a, Rect b) { return IntersectShape(a.GetEdges(), b.GetEdges()); }
-        public static Intersection IntersectShape(this Rect r, Polygon p) { return IntersectShape(r.GetEdges(), p.GetEdges()); }
-        public static Intersection IntersectShape(this Rect r, Polyline pl) { return r.GetEdges().IntersectShape(pl.GetEdges()); }
+        public static CollisionPoints IntersectShape(this Rect r, Segment s) { return IntersectShape(r.GetEdges(), s); }
+        public static CollisionPoints IntersectShape(this Rect r, Circle c) { return IntersectShape(r.GetEdges(), c); }
+        public static CollisionPoints IntersectShape(this Rect r, Triangle t) { return IntersectShape(r.GetEdges(), t.GetEdges()); }
+        public static CollisionPoints IntersectShape(this Rect a, Rect b) { return IntersectShape(a.GetEdges(), b.GetEdges()); }
+        public static CollisionPoints IntersectShape(this Rect r, Polygon p) { return IntersectShape(r.GetEdges(), p.GetEdges()); }
+        public static CollisionPoints IntersectShape(this Rect r, Polyline pl) { return r.GetEdges().IntersectShape(pl.GetEdges()); }
 
         #endregion
 
@@ -1160,19 +1268,17 @@ namespace ShapeEngine.Lib
         #endregion
 
         #region Intersect
-        public static Intersection IntersectShape(this Polygon p, Segment s) { return IntersectShape(p.GetEdges(), s); }
-        public static Intersection IntersectShape(this Polygon p, Circle c) { return IntersectShape(p.GetEdges(), c); }
-        public static Intersection IntersectShape(this Polygon p, Triangle t) { return IntersectShape(p.GetEdges(), t.GetEdges()); }
-        public static Intersection IntersectShape(this Polygon p, Rect r) { return IntersectShape(p.GetEdges(), r.GetEdges()); }
-        public static Intersection IntersectShape(this Polygon a, Polygon b) { return IntersectShape(a.GetEdges(), b.GetEdges()); }
-        public static Intersection IntersectShape(this Polygon p, Polyline pl) { return p.GetEdges().IntersectShape(pl.GetEdges()); }
+        public static CollisionPoints IntersectShape(this Polygon p, Segment s) { return IntersectShape(p.GetEdges(), s); }
+        public static CollisionPoints IntersectShape(this Polygon p, Circle c) { return IntersectShape(p.GetEdges(), c); }
+        public static CollisionPoints IntersectShape(this Polygon p, Triangle t) { return IntersectShape(p.GetEdges(), t.GetEdges()); }
+        public static CollisionPoints IntersectShape(this Polygon p, Rect r) { return IntersectShape(p.GetEdges(), r.GetEdges()); }
+        public static CollisionPoints IntersectShape(this Polygon a, Polygon b) { return IntersectShape(a.GetEdges(), b.GetEdges()); }
+        public static CollisionPoints IntersectShape(this Polygon p, Polyline pl) { return p.GetEdges().IntersectShape(pl.GetEdges()); }
 
         #endregion
 
         #endregion
 
-        
-        
         #region Polyline
 
         #region Overlap
@@ -1190,15 +1296,16 @@ namespace ShapeEngine.Lib
 
         #region Intersection
         //other shape center is used for checking segment normal and if necessary normal is flipped
-        public static Intersection IntersectShape(this Polyline pl, Segment s) { return pl.GetEdges().IntersectShape(s); }
-        public static Intersection IntersectShape(this Polyline pl, Circle c) { return pl.GetEdges().IntersectShape(c); }
-        public static Intersection IntersectShape(this Polyline pl, Triangle t) { return pl.GetEdges().IntersectShape(t.GetEdges()); }
-        public static Intersection IntersectShape(this Polyline pl, Rect r) { return pl.GetEdges().IntersectShape(r.GetEdges()); }
-        public static Intersection IntersectShape(this Polyline pl, Polygon p) { return pl.GetEdges().IntersectShape(p.GetEdges()); }
-        public static Intersection IntersectShape(this Polyline a, Polyline b) { return a.GetEdges().IntersectShape(b.GetEdges()); }
+        public static CollisionPoints IntersectShape(this Polyline pl, Segment s) { return pl.GetEdges().IntersectShape(s); }
+        public static CollisionPoints IntersectShape(this Polyline pl, Circle c) { return pl.GetEdges().IntersectShape(c); }
+        public static CollisionPoints IntersectShape(this Polyline pl, Triangle t) { return pl.GetEdges().IntersectShape(t.GetEdges()); }
+        public static CollisionPoints IntersectShape(this Polyline pl, Rect r) { return pl.GetEdges().IntersectShape(r.GetEdges()); }
+        public static CollisionPoints IntersectShape(this Polyline pl, Polygon p) { return pl.GetEdges().IntersectShape(p.GetEdges()); }
+        public static CollisionPoints IntersectShape(this Polyline a, Polyline b) { return a.GetEdges().IntersectShape(b.GetEdges()); }
         #endregion
 
         #endregion
+
 
 
         #region IsPointInside

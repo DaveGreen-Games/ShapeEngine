@@ -1,6 +1,6 @@
 ﻿using ShapeEngine.Lib;
+using System.Collections.Generic;
 using System.Numerics;
-using System.Xml.Schema;
 
 namespace ShapeEngine.Core
 {
@@ -13,16 +13,53 @@ namespace ShapeEngine.Core
             this.collidable = collidable;
             this.intersection = new();
         }
-        public QueryInfo(ICollidable collidable, Intersection intersection)
+        public QueryInfo(ICollidable collidable, CollisionPoints points)
         {
             this.collidable = collidable;
-            this.intersection = intersection;
+            this.intersection = new(points);
         }
 
     }
 
     public class CollisionHandler
     {
+        internal class OverlapRegister : Dictionary<ICollidable, HashSet<ICollidable>>
+        {
+            public bool AddRegister(ICollidable self, ICollidable other)
+            {
+                if (ContainsKey(self))
+                {
+                    return this[self].Add(other);
+                }
+
+                Add(self, new() { other });
+                return true;
+            }
+            public bool RemoveRegister(ICollidable self, ICollidable other)
+            {
+                if (ContainsKey(self))
+                {
+                    return this[self].Remove(other);
+                }
+
+                return false;
+            }
+        
+            public List<(ICollidable self, ICollidable other)> GetPairs()
+            {
+                List<(ICollidable self, ICollidable other)> pairs = new();
+                foreach (var kvp in this)
+                {
+                    var self = kvp.Key;
+                    foreach (var other in kvp.Value)
+                    {
+                        pairs.Add((self, other));
+                    }
+                }
+                return pairs;
+            }
+        }
+
         public int ChecksPerFrame = 0;
         public int CollisionChecksPerFrame = 0;
         protected List<ICollidable> collidables = new();
@@ -31,12 +68,10 @@ namespace ShapeEngine.Core
         protected SpatialHash spatialHash;
 
 
-        //change all of that!!!
-        //protected List<CollisionInfo> collisionInfos = new();
-        protected Dictionary<ICollidable, List<CollisionInfo>> collisionStack = new();
-        protected List<(ICollidable collider, ICollidable other)> overlapEnded= new();
-        protected Dictionary<ICollidable, List<ICollidable>> overlaps = new();
-        //----------------------------------------------
+
+        protected Dictionary<ICollidable, CollisionInformation> collisionStack = new();
+        private OverlapRegister Active = new();
+        private OverlapRegister Old = new();
 
 
         public int Count { get { return collidables.Count; } }
@@ -46,15 +81,7 @@ namespace ShapeEngine.Core
         
         
         public void UpdateBounds(Rect newBounds) { spatialHash = spatialHash.Resize(newBounds); }
-        //{
-        //    int rows = spatialHash.GetRows();
-        //    int cols = spatialHash.GetCols();
-        //    spatialHash.Close();
-        //    spatialHash = new(newBounds.x, newBounds.y, newBounds.width, newBounds.height, rows, cols);
-        //}
         
-        
-        //public SpatialHash GetSpatialHash() { return spatialHash; }
         public void Add(ICollidable collider)
         {
             if (collidables.Contains(collider)) return;
@@ -105,29 +132,6 @@ namespace ShapeEngine.Core
                 }
                 
             }
-            /*
-            //reposition ccd enabled collidables
-            //foreach (var collidable in ccdCollidables)
-            //{
-            //    var collider = collidable.GetCollider();
-            //    float r = collider.GetShape().GetBoundingCircle().radius;
-            //    Segment centerRay = new(collider.GetPrevPos(), collider.Pos);
-            //    if (centerRay.LengthSquared > r * r)
-            //    {
-            //        var centerQuery = QuerySpace(centerRay, true, collidable.GetCollisionMask());
-            //
-            //        foreach (var qi in centerQuery)
-            //        {
-            //            if (qi.collidable != collidable)
-            //            {
-            //                var closest = qi.intersection.p;
-            //                collider.Pos = closest - centerRay.Dir * r;
-            //                break;
-            //            }
-            //        }
-            //    }
-            //}
-            */
 
             ChecksPerFrame = 0;
             CollisionChecksPerFrame = 0;
@@ -140,165 +144,77 @@ namespace ShapeEngine.Core
 
                 foreach (var collidable in bucketInfo.Active)
                 {
-                    List<ICollidable> collisions = new();
-                    List<ICollidable> others = bucketInfo.GetOthers(collidable); 
+                    List<ICollidable> others = bucketInfo.GetOthers(collidable);
 
+                    bool computeIntersections = collidable.GetCollider().ComputeIntersections;
+                    List<Collision> cols = new();
                     foreach (var other in others)
                     {
-                        CollisionInfo info = new();
+                        //CollisionInfo info = new();
                         ChecksPerFrame++;
-                        CollisionChecksPerFrame++;
-                        info = SGeometry.GetCollisionInfo(collidable, other);
-                        info = CheckCollision(collidable, other, info, collisions);
-                        //if (info.collision || info.overlapping) break;
 
+                        bool overlap = SGeometry.Overlap(collidable, other);
+                        if (overlap)
+                        {
+                            bool firstContact = !Old.RemoveRegister(collidable, other);
+                            Active.AddRegister(collidable, other);
+                            if(computeIntersections)
+                            {
+                                CollisionChecksPerFrame++;
+                                var collisionPoints = SGeometry.Intersect(collidable, other);
+                                Collision c = new(collidable, other, firstContact, collisionPoints);
+                                cols.Add(c);
+                            }
+                            else
+                            {
+                                Collision c = new(collidable, other, firstContact);
+                                cols.Add(c);
+                            }
+                            
+                        }
+
+                    }
+
+                    if(cols.Count > 0)
+                    {
+                        CollisionInformation collisionInfo = new(cols, computeIntersections);
+                        collisionStack[collidable] = collisionInfo;
                     }
                     
-                    UpdateCollisionEntry(collidable, collisions);
-
+                    
                 }
             }
-            /*
-            var allBuckets = spatialHash.buckets;
-            foreach (var bucket in allBuckets)
-            {
-                Dictionary<uint, HashSet<ICollidable>> layers = new();
-                HashSet<ICollidable> active = new();
-                foreach (var collidable in bucket)
-                {
-                    var layer = collidable.GetCollisionLayer();
-                    if (collidable.GetCollider().ComputeCollision) active.Add(collidable);
-                    if (layers.ContainsKey(layer))
-                    {
-                        layers[layer].Add(collidable);
-                    }
-                    else
-                    {
-                        layers.Add(layer, new() { collidable });
-                    }
-                    ChecksPerFrame++;
-
-                }
-
-                foreach (var collidable in active)
-                {
-                    List<ICollidable> others = new();
-                    List<ICollidable> collisions = new();
-                    var mask = collidable.GetCollisionMask();
-                    if (mask.Length <= 0) continue;
-
-                    foreach (var layer in mask)
-                    {
-                        if (layers.ContainsKey(layer)) others.AddRange(layers[layer]);
-                    }
-
-                    foreach (var other in others)
-                    {
-                        CollisionInfo info = new();
-                        ChecksPerFrame++;
-                        CollisionChecksPerFrame++;
-                        info = SGeometry.GetCollisionInfo(collidable, other);
-                        info = CheckCollision(collidable, other, info, collisions);
-                    }
-                    UpdateCollisionEntry(collidable, collisions);
-                }
-
-            }
-            */
             Resolve();
         }
 
-        private CollisionInfo CheckCollision(ICollidable collidable, ICollidable other, CollisionInfo info, List<ICollidable> collisions)
-        {
-            if (overlaps.ContainsKey(collidable) && overlaps[collidable].Contains(other))//collision has happend last frame as well
-            {
-                if (info.overlapping)//has overlapped last frame and this frame
-                {
-                    if (collisionStack.ContainsKey(collidable)) collisionStack[collidable].Add(info);
-                    else collisionStack.Add(collidable, new() { info });
-                    //collisionInfos.Add(info);
-                    collisions.Add(other);
-                }
-                else//has overlapped last frame but not this frame -> overlap ended
-                {
-                    overlapEnded.Add((collidable, other));
-                }
-            }
-            else //collision has not happend last frame
-            {
-                if (info.overlapping)//overlapping for the first time => called collision
-                {
-                    info.collision = true;
-                    info.overlapping = false;
-                    //collisionInfos.Add(info);
-                    if (collisionStack.ContainsKey(collidable)) collisionStack[collidable].Add(info);
-                    else collisionStack.Add(collidable, new() { info });
-                    collisions.Add(other);
-                }
-                //else no overlap last frame or this frame => nothing happens
-            }
-            return info;
-        }
-        private void UpdateCollisionEntry(ICollidable collidable, List<ICollidable> collisions)
-        {
-            if (collisions.Count > 0)
-            {
-                if (overlaps.ContainsKey(collidable))
-                {
-                    overlaps[collidable] = collisions;
-                }
-                else
-                {
-                    overlaps.Add(collidable, collisions);
-                }
-            }
-            else
-            {
-                if (overlaps.ContainsKey(collidable))
-                {
-                    overlaps[collidable].Clear();
-                }
-            }
-        }
-        
-
         protected virtual void Resolve()
         {
-            //collidables.AddRange(tempHolding);
-            foreach (var collider in tempHolding)
+            foreach (var collidable in tempHolding)
             {
-                collidables.Add(collider);
+                collidables.Add(collidable);
             }
             tempHolding.Clear();
 
-            foreach (var collider in tempRemoving)
+            foreach (var collidable in tempRemoving)
             {
-                collidables.Remove(collider);
-                overlaps.Remove(collider);
+                collidables.Remove(collidable);
             }
             tempRemoving.Clear();
 
-
-            //foreach (CollisionInfo info in collisionInfos)
-            //{
-            //    if (info.other == null || info.self == null) continue;
-            //    //info.other.Overlap(info);
-            //    info.self.Overlap(info);
-            //}
-            //collisionInfos.Clear();
             foreach (var kvp in collisionStack)
             {
                 kvp.Key.Overlap(kvp.Value);
             }
             collisionStack.Clear();
 
-            foreach (var pair in overlapEnded)
+            List<(ICollidable self, ICollidable other)> overlapEndedPairs = Old.GetPairs();
+            foreach (var pair in overlapEndedPairs)
             {
-                if (pair.collider == null || pair.other == null) continue;
-                pair.collider.OverlapEnded(pair.other);
+                pair.self.OverlapEnded(pair.other);
             }
-            overlapEnded.Clear();
 
+            Old = Active;
+            Active = new();
         }
 
         /*
@@ -339,8 +255,8 @@ namespace ShapeEngine.Core
             foreach (ICollidable obj in objects)
             {
                 if (obj.GetCollider() == caster) continue;
-                var intersection = SGeometry.Intersect(caster, obj.GetCollider());
-                if (intersection.valid) infos.Add(new(obj, intersection));
+                var collisionPoints = SGeometry.Intersect(caster, obj.GetCollider());
+                if (collisionPoints.Valid) infos.Add(new(obj, collisionPoints));
             }
 
             if (sorted && infos.Count > 1)
@@ -350,8 +266,8 @@ namespace ShapeEngine.Core
                     (a, b) =>
                     {
                         Vector2 pos = caster.Pos;
-                        float la = (pos - a.intersection.p).LengthSquared();
-                        float lb = (pos - b.intersection.p).LengthSquared();
+                        float la = (pos - a.intersection.CollisionSurface.Point).LengthSquared();
+                        float lb = (pos - b.intersection.CollisionSurface.Point).LengthSquared();
 
                         if (la > lb) return 1;
                         else if (la == lb) return 0;
@@ -368,8 +284,8 @@ namespace ShapeEngine.Core
             List<ICollidable> objects = spatialHash.GetObjects(shape, collisionMask);
             foreach (ICollidable obj in objects)
             {
-                var intersection = SGeometry.Intersect(shape, obj.GetCollider().GetShape());
-                if (intersection.valid) infos.Add(new(obj, intersection));
+                var collisionPoints = SGeometry.Intersect(shape, obj.GetCollider().GetShape());
+                if (collisionPoints.Valid) infos.Add(new(obj, collisionPoints));
             }
 
             if (sorted && infos.Count > 1)
@@ -379,8 +295,8 @@ namespace ShapeEngine.Core
                     (a, b) =>
                     {
                         Vector2 pos = shape.GetCentroid();
-                        float la = (pos - a.intersection.p).LengthSquared();
-                        float lb = (pos - b.intersection.p).LengthSquared();
+                        float la = (pos - a.intersection.CollisionSurface.Point).LengthSquared();
+                        float lb = (pos - b.intersection.CollisionSurface.Point).LengthSquared();
 
                         if (la > lb) return 1;
                         else if (la == lb) return 0;
@@ -399,8 +315,8 @@ namespace ShapeEngine.Core
             {
                 if(exceptions.Contains(obj)) continue;
 
-                var intersection = SGeometry.Intersect(shape, obj.GetCollider().GetShape());
-                if (intersection.valid) infos.Add(new(obj, intersection));
+                var collisionPoints = SGeometry.Intersect(shape, obj.GetCollider().GetShape());
+                if (collisionPoints.Valid) infos.Add(new(obj, collisionPoints));
             }
 
             if (sorted && infos.Count > 1)
@@ -410,8 +326,8 @@ namespace ShapeEngine.Core
                     (a, b) =>
                     {
                         Vector2 pos = shape.GetCentroid();
-                        float la = (pos - a.intersection.p).LengthSquared();
-                        float lb = (pos - b.intersection.p).LengthSquared();
+                        float la = (pos - a.intersection.CollisionSurface.Point).LengthSquared();
+                        float lb = (pos - b.intersection.CollisionSurface.Point).LengthSquared();
 
                         if (la > lb) return 1;
                         else if (la == lb) return 0;

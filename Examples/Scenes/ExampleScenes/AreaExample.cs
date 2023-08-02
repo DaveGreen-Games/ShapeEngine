@@ -54,7 +54,7 @@ namespace Examples.Scenes.ExampleScenes
             collider.UpdateState(dt);
         }
 
-        public virtual void Overlap(List<CollisionInfo> infos)
+        public virtual void Overlap(CollisionInformation info)
         {
             
         }
@@ -163,28 +163,13 @@ namespace Examples.Scenes.ExampleScenes
         {
             return ROCK_ID;
         }
-        public override void Overlap(List<CollisionInfo> infos)
+        public override void Overlap(CollisionInformation info)
         {
-            foreach (var info in infos)
+            if (info.CollisionSurface.Valid)
             {
-                if (info.collision)
-                {
-                    if (info.intersection.valid)
-                    {
-                        collider.Vel = collider.Vel.Reflect(info.intersection.n);
-                        break;
-                    }
-                }
+                collider.Vel = collider.Vel.Reflect(info.CollisionSurface.Normal);
+                
             }
-            //if (info.collision)
-            //{
-            //    if (info.other is Rock) return;
-            //
-            //    if (info.intersection.valid)
-            //    {
-            //        collider.Vel = collider.Vel.Reflect(info.intersection.n);
-            //    }
-            //}
         }
         private void DrawBoundingShapes()
         {
@@ -195,12 +180,9 @@ namespace Examples.Scenes.ExampleScenes
         public override void Draw(Vector2 gameSize, Vector2 mousePosGame)
         {
             base.Draw(gameSize, mousePosGame);
-            collider.GetShape().DrawShape(2f, ExampleScene.ColorHighlight2);
-            
-            //Rect r = new(collider.Pos, new Vector2(5), new Vector2(0.5f));
-            //r.Draw(ExampleScene.ColorHighlight2);
-            //r.DrawLines(2f, GREEN);
-            
+            //collider.GetShape().DrawShape(2f, ExampleScene.ColorHighlight2);
+            SDrawing.DrawCircleFast(collider.Pos, 5, ExampleScene.ColorHighlight2);
+
         }
     }
 
@@ -245,7 +227,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 for (int i = 0; i < 50; i++)
                 {
-                    Rock r = new(mousePosGame + SRNG.randVec2(0, 50), SRNG.randVec2() * 50, 50);// SRNG.randF(10, 50));
+                    Rock r = new(mousePosGame + SRNG.randVec2(0, 50), SRNG.randVec2() * 100, 10);// SRNG.randF(10, 50));
                     area.AddCollider(r);
                 }
 
