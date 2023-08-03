@@ -241,7 +241,9 @@ namespace ShapeEngine.Core
         /// If used with CCD any closed shape collision will be a circle/ circle collision
         /// </summary>
         public bool SimplifyCollision { get; set; }
-        
+
+        public bool FlippedNormals { get; set; }
+
         ///// <summary>
         ///// Enables Continous Collision Detection. Works best for small & fast objects that might tunnel through other shapes especially segments.
         ///// Only works for closed shapes. (not segments or polylines)
@@ -249,7 +251,7 @@ namespace ShapeEngine.Core
         ///// Tunneling occurs when a shape does not collide in the current frame and then moves to the other side of an object in the next frame.
         ///// </summary>
         //public bool CCD { get; set; }
-        
+
         //public Vector2 GetPrevPos(); // { return Pos; }
         //public void UpdatePrevPos(float dt);// { }
         public IShape GetShape();

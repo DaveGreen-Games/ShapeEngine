@@ -79,7 +79,6 @@ namespace ShapeEngine.Lib
                     this.CollisionSurface = new();
                 }
             }
-            
         }
         
         public bool ContainsCollidable(ICollidable other)

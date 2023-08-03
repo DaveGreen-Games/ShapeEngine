@@ -25,7 +25,7 @@ namespace ShapeEngine.Core
     {
         internal class OverlapRegister : Dictionary<ICollidable, HashSet<ICollidable>>
         {
-            public bool AddRegister(ICollidable self, ICollidable other)
+            public bool AddEntry(ICollidable self, ICollidable other)
             {
                 if (ContainsKey(self))
                 {
@@ -35,7 +35,7 @@ namespace ShapeEngine.Core
                 Add(self, new() { other });
                 return true;
             }
-            public bool RemoveRegister(ICollidable self, ICollidable other)
+            public bool RemoveEntry(ICollidable self, ICollidable other)
             {
                 if (ContainsKey(self))
                 {
@@ -63,16 +63,14 @@ namespace ShapeEngine.Core
         public int IterationsPerFrame = 0;
         public int CollisionChecksPerFrame = 0;
         public int ClosestPointChecksPerFrame = 0;
+        
         protected List<ICollidable> collidables = new();
         protected List<ICollidable> tempHolding = new();
         protected List<ICollidable> tempRemoving = new();
         protected SpatialHash spatialHash;
-
-
-
-        protected Dictionary<ICollidable, CollisionInformation> collisionStack = new();
-        private OverlapRegister Active = new();
-        private OverlapRegister Old = new();
+        protected Dictionary<ICollidable, List<Collision>> collisionStack = new();
+        private OverlapRegister activeRegister = new();
+        private OverlapRegister oldRegister = new();
 
 
         public int Count { get { return collidables.Count; } }
@@ -158,8 +156,8 @@ namespace ShapeEngine.Core
                         bool overlap = SGeometry.Overlap(collidable, other);
                         if (overlap)
                         {
-                            bool firstContact = !Old.RemoveRegister(collidable, other);
-                            Active.AddRegister(collidable, other);
+                            bool firstContact = !oldRegister.RemoveEntry(collidable, other);
+                            activeRegister.AddEntry(collidable, other);
                             if(computeIntersections)
                             {
                                 CollisionChecksPerFrame++;
@@ -193,8 +191,11 @@ namespace ShapeEngine.Core
 
                     if(cols.Count > 0)
                     {
-                        CollisionInformation collisionInfo = new(cols, computeIntersections);
-                        collisionStack[collidable] = collisionInfo;
+                        if (collisionStack.ContainsKey(collidable))
+                        {
+                            collisionStack[collidable].AddRange(cols);
+                        }
+                        else collisionStack.Add(collidable, cols);
                     }
                 }
             }
@@ -215,27 +216,27 @@ namespace ShapeEngine.Core
             }
             tempRemoving.Clear();
 
+
             foreach (var kvp in collisionStack)
             {
-                //if (kvp.Value.CollisionSurface.Valid)
-                //{
-                //    if (kvp.Value.CollisionSurface.Normal.IsNan())
-                //    {
-                //        bool fuck = true;
-                //    }
-                //}
-                kvp.Key.Overlap(kvp.Value);
+                var collidable = kvp.Key;
+                var cols = kvp.Value;
+                if(cols.Count > 0)
+                {
+                    CollisionInformation collisionInfo = new(cols, collidable.GetCollider().ComputeIntersections);
+                    collidable.Overlap(collisionInfo);
+                }
             }
             collisionStack.Clear();
 
-            List<(ICollidable self, ICollidable other)> overlapEndedPairs = Old.GetPairs();
+            List<(ICollidable self, ICollidable other)> overlapEndedPairs = oldRegister.GetPairs();
             foreach (var pair in overlapEndedPairs)
             {
                 pair.self.OverlapEnded(pair.other);
             }
 
-            Old = Active;
-            Active = new();
+            oldRegister = activeRegister;
+            activeRegister = new();
         }
 
         /*

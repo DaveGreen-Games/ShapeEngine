@@ -13,6 +13,27 @@ namespace Examples.Scenes.ExampleScenes
         public static readonly uint ROCK_ID = 2;
         public static readonly uint BOX_ID = 3;
         public static readonly uint BALL_ID = 4;
+        public static readonly uint AURA_ID = 5;
+
+        protected bool buffed = false;
+        protected Color buffColor = YELLOW;
+        protected float startSpeed = 0f;
+        private float totalSpeedFactor = 1f;
+        public void Buff(float f)
+        {
+            if (totalSpeedFactor < 0.01f) return;
+
+            totalSpeedFactor *= f;
+            collider.Vel = collider.Vel.Normalize() * startSpeed * totalSpeedFactor;
+
+            if (totalSpeedFactor != 1f) buffed = true;
+        }
+        public void EndBuff(float f)
+        {
+            totalSpeedFactor /= f;
+            collider.Vel = collider.Vel.Normalize() * startSpeed * totalSpeedFactor;
+            if (totalSpeedFactor == 1f) buffed = false;
+        }
 
         protected ICollider collider;
         protected uint[] collisionMask = new uint[] { };
@@ -70,6 +91,7 @@ namespace Examples.Scenes.ExampleScenes
 
         
     }
+
     internal class Wall : Gameobject
     {
         
@@ -85,6 +107,7 @@ namespace Examples.Scenes.ExampleScenes
             this.collider.Enabled = true;
             
             this.collisionMask = new uint[] { };
+            this.startSpeed = 0f;
         }
 
         public override uint GetCollisionLayer()
@@ -107,8 +130,8 @@ namespace Examples.Scenes.ExampleScenes
             this.collider.ComputeCollision = false;
             this.collider.ComputeIntersections = false;
             this.collider.Enabled = true;
-
             this.collisionMask = new uint[] { };
+            this.startSpeed = 0f;
         }
 
         public override uint GetCollisionLayer()
@@ -123,6 +146,84 @@ namespace Examples.Scenes.ExampleScenes
             //    p.Draw(ExampleScene.ColorHighlight1);
             //}
             collider.GetShape().DrawShape(2f, ExampleScene.ColorHighlight1);
+        }
+    }
+    internal class Trap : Gameobject
+    {
+        public Trap(Vector2 pos, Vector2 size)
+        {
+            this.collider = new RectCollider(pos, size, new Vector2(0.5f));
+            this.collider.ComputeCollision = false;
+            this.collider.ComputeIntersections = false;
+            this.collider.Enabled = true;
+            this.collider.FlippedNormals = true;
+            this.collisionMask = new uint[] { };
+            this.startSpeed = 0f;
+        }
+
+        public override uint GetCollisionLayer()
+        {
+            return WALL_ID;
+        }
+        public override void Draw(Vector2 gameSize, Vector2 mousePosGame)
+        {
+            collider.GetShape().DrawShape(2f, ExampleScene.ColorHighlight2);
+        }
+    }
+    internal class Aura : Gameobject
+    {
+        float buffFactor = 1f;
+        HashSet<ICollidable> others = new();
+        public Aura(Vector2 pos, float radius, float f)
+        {
+            this.collider = new CircleCollider(pos, radius);
+            this.collider.ComputeCollision = true;
+            this.collider.ComputeIntersections = false;
+            this.collider.Enabled = true;
+            this.collisionMask = new uint[] { ROCK_ID, BALL_ID, BOX_ID };
+            this.buffFactor = f;
+            this.startSpeed = 0;
+        }
+
+        public override void Overlap(CollisionInformation info)
+        {
+            foreach (var c in info.Collisions)
+            {
+                //if(others.Add(c.Other))
+                if (c.FirstContact)
+                {
+                    others.Add(c.Other);
+                    if (c.Other is Gameobject g) g.Buff(buffFactor);
+                }
+                else others.Remove(c.Other);
+            }
+        }
+        public override void OverlapEnded(ICollidable other)
+        {
+            //others.Remove(other);
+            if (other is Gameobject g) g.EndBuff(buffFactor);
+        }
+        
+        public override uint GetCollisionLayer()
+        {
+            return AURA_ID;
+        }
+        public override void Draw(Vector2 gameSize, Vector2 mousePosGame)
+        {
+            var shape = collider.GetShape();
+            shape.DrawShape(2f, ExampleScene.ColorHighlight1);
+
+
+            foreach (var other in others)
+            {
+                Segment s = new(collider.Pos, other.GetPosition());
+                s.Draw(1f, RED);
+            }
+
+            //string text = String.Format("{0} | {1}", others.Count, lastColCount);
+            //SDrawing.DrawText(GAMELOOP.FontDefault, text, shape.GetBoundingBox(), 1f, new Vector2(0.5f), RED);
+            //shape.GetBoundingBox().DrawLines(2f, RED);
+            //shape.GetBoundingCircle().DrawLines(2f, ORANGE);
         }
     }
     internal class Rock : Gameobject
@@ -157,6 +258,7 @@ namespace Examples.Scenes.ExampleScenes
             this.collider.Enabled = true;
             this.collider.SimplifyCollision = false;
             this.collisionMask = new uint[] { WALL_ID };
+            this.startSpeed = vel.Length();
         }
 
         public override uint GetCollisionLayer()
@@ -190,6 +292,7 @@ namespace Examples.Scenes.ExampleScenes
             base.Draw(gameSize, mousePosGame);
             Color color = BLUE;
             if (timer > 0) color = ExampleScene.ColorHighlight1;
+            if (buffed) color = buffColor;
             collider.GetShape().DrawShape(2f, color);
             //SDrawing.DrawCircleFast(collider.Pos, 5, color);
 
@@ -206,7 +309,8 @@ namespace Examples.Scenes.ExampleScenes
             this.collider.ComputeIntersections = true;
             this.collider.Enabled = true;
             this.collider.SimplifyCollision = false;
-            this.collisionMask = new uint[] { WALL_ID };
+            this.collisionMask = new uint[] { WALL_ID, BALL_ID };
+            this.startSpeed = vel.Length();
         }
 
         public override uint GetCollisionLayer()
@@ -235,7 +339,7 @@ namespace Examples.Scenes.ExampleScenes
             Color color = PURPLE;
             if (timer > 0) color = ExampleScene.ColorHighlight1;
             //collider.GetShape().DrawShape(2f, color);
-
+            if (buffed) color = buffColor;
             if(collider is RectCollider r)
             {
                 Rect shape = r.GetRectShape();
@@ -247,7 +351,7 @@ namespace Examples.Scenes.ExampleScenes
     }
     internal class Ball : Gameobject
     {
-        const float maxHealth = 50000;
+        const float maxHealth = 100;
         float curHealth = maxHealth;
         public Ball(Vector2 pos, Vector2 vel, float size)
         {
@@ -257,7 +361,8 @@ namespace Examples.Scenes.ExampleScenes
             this.collider.ComputeIntersections = true;
             this.collider.Enabled = true;
             this.collider.SimplifyCollision = false;
-            this.collisionMask = new uint[] { WALL_ID, ROCK_ID, BOX_ID };
+            this.collisionMask = new uint[] { WALL_ID, BOX_ID };
+            this.startSpeed = vel.Length();
         }
 
         public override bool IsDead()
@@ -286,7 +391,7 @@ namespace Examples.Scenes.ExampleScenes
             Color maxColor = GREEN;
             Color endColor = RED;
             Color color = maxColor.Lerp(endColor, 1 - f);
-
+            if (buffed) color = buffColor;
             if (collider is CircleCollider c)
             {
                 Rect r = new(c.Pos, new Vector2(c.Radius) * 2f, new(0.5f));
@@ -348,7 +453,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 for (int i = 0; i < 50; i++)
                 {
-                    Rock r = new(mousePosGame + SRNG.randVec2(0, 50), SRNG.randVec2() * 200, 40);
+                    Rock r = new(mousePosGame + SRNG.randVec2(0, 50), SRNG.randVec2() * 150, 40);
                     area.AddCollider(r);
                 }
 
@@ -358,7 +463,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 for (int i = 0; i < 5; i++)
                 {
-                    Box b = new(mousePosGame + SRNG.randVec2(0, 10), SRNG.randVec2() * 50, 25);
+                    Box b = new(mousePosGame + SRNG.randVec2(0, 10), SRNG.randVec2() * 75, 25);
                     area.AddCollider(b);
                 }
 
@@ -367,10 +472,20 @@ namespace Examples.Scenes.ExampleScenes
             {
                 for (int i = 0; i < 15; i++)
                 {
-                    Ball b = new(mousePosGame + SRNG.randVec2(0, 5), SRNG.randVec2() * 500, 10);
+                    Ball b = new(mousePosGame + SRNG.randVec2(0, 5), SRNG.randVec2() * 250, 10);
                     area.AddCollider(b);
                 }
 
+            }
+            if (IsKeyPressed(KeyboardKey.KEY_FOUR))
+            {
+                Trap t = new(mousePosGame, new Vector2(250, 250));
+                area.AddCollider(t);
+            }
+            if (IsKeyPressed(KeyboardKey.KEY_FIVE))
+            {
+                Aura a = new(mousePosGame, 300, 0.5f);
+                area.AddCollider(a);
             }
 
             if (IsKeyPressed(KeyboardKey.KEY_ZERO)) { drawDebug = !drawDebug; }

@@ -14,6 +14,7 @@ namespace ShapeEngine.Effects
         public bool ComputeCollision { get; set; } = false;
         public bool ComputeIntersections { get; set; } = false;
         public bool SimplifyCollision { get; set; } = false;
+        public bool FlippedNormals { get; set; } = false;
 
         protected Vector2 accumulatedForce = new(0f);
 
