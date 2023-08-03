@@ -192,10 +192,10 @@ namespace Examples.Scenes.ExampleScenes
                 //if(others.Add(c.Other))
                 if (c.FirstContact)
                 {
-                    others.Add(c.Other);
+                    //others.Add(c.Other);
                     if (c.Other is Gameobject g) g.Buff(buffFactor);
                 }
-                else others.Remove(c.Other);
+                //else others.Remove(c.Other);
             }
         }
         public override void OverlapEnded(ICollidable other)
@@ -214,11 +214,11 @@ namespace Examples.Scenes.ExampleScenes
             shape.DrawShape(2f, ExampleScene.ColorHighlight1);
 
 
-            foreach (var other in others)
-            {
-                Segment s = new(collider.Pos, other.GetPosition());
-                s.Draw(1f, RED);
-            }
+            //foreach (var other in others)
+            //{
+            //    Segment s = new(collider.Pos, other.GetPosition());
+            //    s.Draw(1f, RED);
+            //}
 
             //string text = String.Format("{0} | {1}", others.Count, lastColCount);
             //SDrawing.DrawText(GAMELOOP.FontDefault, text, shape.GetBoundingBox(), 1f, new Vector2(0.5f), RED);
@@ -351,7 +351,7 @@ namespace Examples.Scenes.ExampleScenes
     }
     internal class Ball : Gameobject
     {
-        const float maxHealth = 100;
+        const float maxHealth = 30000;
         float curHealth = maxHealth;
         public Ball(Vector2 pos, Vector2 vel, float size)
         {
@@ -437,7 +437,7 @@ namespace Examples.Scenes.ExampleScenes
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
 
             boundaryRect = new(new Vector2(0, -45), new Vector2(1800, 810), new Vector2(0.5f));
-            area = new(boundaryRect.ScaleSize(1.05f, new Vector2(0.5f)), 16, 16);
+            area = new(boundaryRect.ScaleSize(1.05f, new Vector2(0.5f)), 32, 32);
             AddBoundaryWalls();
         }
         public override void Reset()
@@ -453,7 +453,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 for (int i = 0; i < 50; i++)
                 {
-                    Rock r = new(mousePosGame + SRNG.randVec2(0, 50), SRNG.randVec2() * 150, 40);
+                    Rock r = new(mousePosGame + SRNG.randVec2(0, 50), SRNG.randVec2() * 150, 60);
                     area.AddCollider(r);
                 }
 
@@ -477,18 +477,29 @@ namespace Examples.Scenes.ExampleScenes
                 }
 
             }
+
             if (IsKeyPressed(KeyboardKey.KEY_FOUR))
             {
                 Trap t = new(mousePosGame, new Vector2(250, 250));
                 area.AddCollider(t);
             }
+
             if (IsKeyPressed(KeyboardKey.KEY_FIVE))
             {
-                Aura a = new(mousePosGame, 300, 0.5f);
+                Aura a = new(mousePosGame, 150, 0.75f);
                 area.AddCollider(a);
             }
 
             if (IsKeyPressed(KeyboardKey.KEY_ZERO)) { drawDebug = !drawDebug; }
+
+            if (IsKeyPressed(KeyboardKey.KEY_SPACE))
+            {
+                cam.Position += new Vector2(100, 0);
+                float z = cam.Zoom;
+                z *= 0.9f;
+                if (z < 0.001f) z = 1;
+                cam.Zoom = z;
+            }
         
         }
 

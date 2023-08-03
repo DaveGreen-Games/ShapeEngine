@@ -322,7 +322,7 @@ namespace ShapeEngine.Core
             var bucket = buckets[bucketIndex];
             return bucket.GetBucketInfo();
         }
-
+        
         public List<ICollidable> GetObjects(ICollidable collidable)
         {
             return GetObjects(collidable.GetCollider(), collidable.GetCollisionMask());

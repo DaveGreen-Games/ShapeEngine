@@ -44,7 +44,14 @@ namespace ShapeEngine.Core
 
                 return false;
             }
-        
+            public bool HasEntry(ICollidable self, ICollidable other)
+            {
+                if (ContainsKey(self))
+                {
+                    return this[self].Contains(other);
+                }
+                return false;
+            }
             public List<(ICollidable self, ICollidable other)> GetPairs()
             {
                 List<(ICollidable self, ICollidable other)> pairs = new();
@@ -59,6 +66,14 @@ namespace ShapeEngine.Core
                 return pairs;
             }
         }
+
+       /// <summary>
+       /// Bucket First algorithm iterates over all buckets and checks collision within each indiviual bucket.
+       /// Does not scale well with increase bucket count. If you use large areas with a lot of rows/columns this algorithm might perform worse!
+       /// If false the default algorithm is used. The default algorithm iterates over all collidables and checks for other collidables that are 
+       /// in the surounding buckets. 
+       /// </summary>
+        public bool BucketFirstAlgorithm = false;
 
         public int IterationsPerFrame = 0;
         public int CollisionChecksPerFrame = 0;
@@ -121,6 +136,16 @@ namespace ShapeEngine.Core
             IterationsPerFrame = 0;
             CollisionChecksPerFrame = 0;
             ClosestPointChecksPerFrame = 0;
+            FillSpatialHash();
+            
+            if (BucketFirstAlgorithm) ProcessCollisionsBucketFirst();
+            else ProcessCollisionsCollidableFirst();
+            
+            Resolve();
+        }
+
+        protected virtual void FillSpatialHash()
+        {
             spatialHash.Clear();
 
             //fill spatial hash and filter out all disabled colliders
@@ -133,15 +158,16 @@ namespace ShapeEngine.Core
                     spatialHash.Add(collidable);
                 }
                 IterationsPerFrame++;
-                
+
             }
-
-
+        }
+        protected virtual void ProcessCollisionsBucketFirst()
+        {
             int bucketCount = spatialHash.GetBucketCount();
             for (int i = 0; i < bucketCount; i++)
             {
                 var bucketInfo = spatialHash.GetBucketInfo(i);
-                if(!bucketInfo.Valid) continue;
+                if (!bucketInfo.Valid) continue;
 
                 foreach (var collidable in bucketInfo.Active)
                 {
@@ -152,20 +178,21 @@ namespace ShapeEngine.Core
                     foreach (var other in others)
                     {
                         IterationsPerFrame++;
+                        if (activeRegister.HasEntry(collidable, other)) continue;
 
                         bool overlap = SGeometry.Overlap(collidable, other);
                         if (overlap)
                         {
                             bool firstContact = !oldRegister.RemoveEntry(collidable, other);
                             activeRegister.AddEntry(collidable, other);
-                            if(computeIntersections)
+                            if (computeIntersections)
                             {
                                 CollisionChecksPerFrame++;
                                 var collisionPoints = SGeometry.Intersect(collidable, other);
 
                                 //shapes overlap but no collision points means collidable is completely inside other
                                 //closest point on bounds of other are now used for collision point
-                                if(collisionPoints.Count <= 0)
+                                if (collisionPoints.Count <= 0)
                                 {
                                     Vector2 refPoint = collidable.GetCollider().GetPreviousPosition();
                                     var shape = other.GetCollider().GetShape();
@@ -175,7 +202,7 @@ namespace ShapeEngine.Core
                                         collisionPoints.Add(closest);
                                         ClosestPointChecksPerFrame++;
                                     }
-                                    
+
                                 }
 
                                 Collision c = new(collidable, other, firstContact, collisionPoints);
@@ -189,7 +216,7 @@ namespace ShapeEngine.Core
                         }
                     }
 
-                    if(cols.Count > 0)
+                    if (cols.Count > 0)
                     {
                         if (collisionStack.ContainsKey(collidable))
                         {
@@ -198,8 +225,66 @@ namespace ShapeEngine.Core
                         else collisionStack.Add(collidable, cols);
                     }
                 }
+                //IterationsPerFrame++;
             }
-            Resolve();
+
+        }
+        protected virtual void ProcessCollisionsCollidableFirst()
+        {
+            foreach (var collidable in collidables)
+            {
+                var others = spatialHash.GetObjects(collidable);
+                bool computeIntersections = collidable.GetCollider().ComputeIntersections;
+                List<Collision> cols = new();
+                foreach (var other in others)
+                {
+                    IterationsPerFrame++;
+
+                    bool overlap = SGeometry.Overlap(collidable, other);
+                    if (overlap)
+                    {
+                        bool firstContact = !oldRegister.RemoveEntry(collidable, other);
+                        activeRegister.AddEntry(collidable, other);
+                        if (computeIntersections)
+                        {
+                            CollisionChecksPerFrame++;
+                            var collisionPoints = SGeometry.Intersect(collidable, other);
+
+                            //shapes overlap but no collision points means collidable is completely inside other
+                            //closest point on bounds of other are now used for collision point
+                            if (collisionPoints.Count <= 0)
+                            {
+                                Vector2 refPoint = collidable.GetCollider().GetPreviousPosition();
+                                var shape = other.GetCollider().GetShape();
+                                if (!shape.IsPointInside(refPoint))
+                                {
+                                    CollisionPoint closest = shape.GetClosestPoint(refPoint);
+                                    collisionPoints.Add(closest);
+                                    ClosestPointChecksPerFrame++;
+                                }
+
+                            }
+
+                            Collision c = new(collidable, other, firstContact, collisionPoints);
+                            cols.Add(c);
+                        }
+                        else
+                        {
+                            Collision c = new(collidable, other, firstContact);
+                            cols.Add(c);
+                        }
+                    }
+                }
+
+                if (cols.Count > 0)
+                {
+                    if (collisionStack.ContainsKey(collidable))
+                    {
+                        collisionStack[collidable].AddRange(cols);
+                    }
+                    else collisionStack.Add(collidable, cols);
+                }
+            }
         }
 
         protected virtual void Resolve()
@@ -239,32 +324,6 @@ namespace ShapeEngine.Core
             activeRegister = new();
         }
 
-        /*
-        public static void SortQueryInfoPoints(Vector2 p, QueryInfo info)
-        {
-            if (!info.intersection.valid) return;
-            if (info.intersection.points.Count <= 1) return;
-            info.intersection.points.Sort
-            (
-                (a, b) =>
-                {
-                    float la = (p - a.p).LengthSquared();
-                    float lb = (p - b.p).LengthSquared();
-
-                    if (la > lb) return 1;
-                    else if (la == lb) return 0;
-                    else return -1;
-                }
-            );
-        }
-        public static void SortQueryInfoPoints(Vector2 p, List<QueryInfo> infos)
-        {
-            foreach (var info in infos)
-            {
-                SortQueryInfoPoints(p, info);
-            }
-        }
-        */
         
         public List<QueryInfo> QuerySpace(ICollidable caster, bool sorted = false)
         {
@@ -437,6 +496,32 @@ namespace ShapeEngine.Core
 }
 
 
+/*
+        public static void SortQueryInfoPoints(Vector2 p, QueryInfo info)
+        {
+            if (!info.intersection.valid) return;
+            if (info.intersection.points.Count <= 1) return;
+            info.intersection.points.Sort
+            (
+                (a, b) =>
+                {
+                    float la = (p - a.p).LengthSquared();
+                    float lb = (p - b.p).LengthSquared();
+
+                    if (la > lb) return 1;
+                    else if (la == lb) return 0;
+                    else return -1;
+                }
+            );
+        }
+        public static void SortQueryInfoPoints(Vector2 p, List<QueryInfo> infos)
+        {
+            foreach (var info in infos)
+            {
+                SortQueryInfoPoints(p, info);
+            }
+        }
+        */
 
 
 
