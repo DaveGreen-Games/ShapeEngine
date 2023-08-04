@@ -56,8 +56,6 @@ namespace ShapeEngine.Lib
                 int count = 0;
                 foreach (var col in collisions)
                 {
-                    //if (col.FirstContact)
-                    //{
                     if (col.Intersection.Valid)
                     {
                         count++;
@@ -65,7 +63,6 @@ namespace ShapeEngine.Lib
                         avgPoint += surface.Point;
                         avgNormal += surface.Normal;
                     }
-                    //}
                 }
 
                 if (count > 0)

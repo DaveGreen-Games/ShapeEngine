@@ -97,11 +97,8 @@ namespace Examples.Scenes.ExampleScenes
         
         public Wall(Vector2 start, Vector2 end)
         {
-            Segment s = new(start, end);
-            var wall = SSegment.CreateWall(s, 12);
-
-            this.collider = new PolyCollider(s.Center, new Vector2(0f), wall.ToArray());
-            //this.collider = new SegmentCollider(start, end);
+            var col = new PolyCollider(new Segment(start, end), 10f, 1f);
+            this.collider = col;
             this.collider.ComputeCollision = false;
             this.collider.ComputeIntersections = false;
             this.collider.Enabled = true;
@@ -123,10 +120,9 @@ namespace Examples.Scenes.ExampleScenes
     {
         public PolyWall(Vector2 start, Vector2 end)
         {
-            Segment s = new(start, end);
-            var wall = SSegment.CreateWall(s, 20);
+            var col = new PolyCollider(new Segment(start, end), 32, 0.5f);
+            this.collider = col;
 
-            this.collider = new PolyCollider(s.Center, new Vector2(0f), wall.ToArray());
             this.collider.ComputeCollision = false;
             this.collider.ComputeIntersections = false;
             this.collider.Enabled = true;
@@ -140,11 +136,6 @@ namespace Examples.Scenes.ExampleScenes
         }
         public override void Draw(Vector2 gameSize, Vector2 mousePosGame)
         {
-            //var shape = collider.GetShape();
-            //if( shape is Polygon p)
-            //{
-            //    p.Draw(ExampleScene.ColorHighlight1);
-            //}
             collider.GetShape().DrawShape(2f, ExampleScene.ColorHighlight1);
         }
     }
@@ -396,6 +387,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 Rect r = new(c.Pos, new Vector2(c.Radius) * 2f, new(0.5f));
                 r.DrawLines(2f, color);
+                //r.Draw(color);
             }
         }
     }
@@ -492,14 +484,16 @@ namespace Examples.Scenes.ExampleScenes
 
             if (IsKeyPressed(KeyboardKey.KEY_ZERO)) { drawDebug = !drawDebug; }
 
-            if (IsKeyPressed(KeyboardKey.KEY_SPACE))
-            {
-                cam.Position += new Vector2(100, 0);
-                float z = cam.Zoom;
-                z *= 0.9f;
-                if (z < 0.001f) z = 1;
-                cam.Zoom = z;
-            }
+
+            ////add camera movement and zoom input here
+            //if (IsKeyPressed(KeyboardKey.KEY_SPACE))
+            //{
+            //    cam.Position += new Vector2(100, 0);
+            //    float z = cam.Zoom;
+            //    z *= 0.9f;
+            //    if (z < 0.001f) z = 1;
+            //    cam.Zoom = z;
+            //}
         
         }
 
@@ -570,9 +564,9 @@ namespace Examples.Scenes.ExampleScenes
         private void AddBoundaryWalls()
         {
             Wall top = new(boundaryRect.TopLeft, boundaryRect.TopRight);
-            Wall bottom = new(boundaryRect.BottomLeft, boundaryRect.BottomRight);
+            Wall bottom = new(boundaryRect.BottomRight, boundaryRect.BottomLeft);
             Wall left = new(boundaryRect.TopLeft, boundaryRect.BottomLeft);
-            Wall right = new(boundaryRect.TopRight, boundaryRect.BottomRight);
+            Wall right = new(boundaryRect.BottomRight, boundaryRect.TopRight);
             area.AddColliders(top, right, bottom, left);
         }
         private void DrawWalls(Vector2 mousePos)

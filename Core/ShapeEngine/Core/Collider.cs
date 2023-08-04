@@ -136,6 +136,7 @@ namespace ShapeEngine.Core
     {
         private enum NormalFacingDirection { Automatic, Right, Left};
         private NormalFacingDirection normalFacingDirection = NormalFacingDirection.Automatic;
+
         public SegmentCollider() { }
         public SegmentCollider(Vector2 start, Vector2 end) : base(start, new(0.0f, 0.0f))
         {
@@ -163,7 +164,6 @@ namespace ShapeEngine.Core
             Length = length; 
         }
 
-        //public override bool CCD { get { return false; } set { } }
         public Vector2 Dir { get; set; }
         public float Length { get; set; }
         public Vector2 Start { get { return Pos; } }
@@ -185,6 +185,7 @@ namespace ShapeEngine.Core
             if (normalFacingDirection == NormalFacingDirection.Automatic) return new Segment(Pos, End);
             else
             {
+                
                 Vector2 n = (End - Pos);
                 if (normalFacingDirection == NormalFacingDirection.Right) n = n.GetPerpendicularRight().Normalize();
                 else n = n.GetPerpendicularLeft().Normalize();
@@ -286,16 +287,28 @@ namespace ShapeEngine.Core
         private Transform2D cur;
         private Transform2D prev;
 
-        public PolyCollider(Polygon shape) { this.shape = shape; }
+        public PolyCollider(Polygon shape) 
+        { 
+            this.shape = shape;
+            var pos = this.shape.GetCentroid();
+            this.cur = new(pos);
+            this.prev = new(pos);
+        }
         public PolyCollider(Polygon shape, Vector2 vel)
         {
             this.shape = shape;
             this.Vel = vel;
+            var pos = this.shape.GetCentroid();
+            this.cur = new(pos);
+            this.prev = new(pos);
         }
         public PolyCollider(Vector2 vel, params Vector2[] shape)
         {
             this.shape = new(shape);
             this.Vel = vel;
+            var pos = this.shape.GetCentroid();
+            this.cur = new(pos);
+            this.prev = new(pos);
         }
         public PolyCollider(Polygon shape, Vector2 pos, Vector2 vel)
         {
@@ -325,6 +338,17 @@ namespace ShapeEngine.Core
             this.Vel = vel;
         }
         
+        public PolyCollider(Segment s, float inflation, float alignement = 0.5f)
+        {
+            this.shape = s.Inflate(inflation, alignement).ToPolygon();
+            var pos = this.shape.GetCentroid();
+            this.cur = new(pos);
+            this.prev = new(pos);
+        }
+        public PolyCollider(Polyline pl, float inflation)
+        {
+            this.shape = SClipper.Inflate(pl, inflation, Clipper2Lib.JoinType.Square, Clipper2Lib.EndType.Square, 2, 2).ToPolygons()[0];
+        }
         public void SetNewShape(Polygon newShape) { this.shape = newShape; }
         public override IShape GetShape() 
         {
@@ -394,7 +418,6 @@ namespace ShapeEngine.Core
         private Transform2D cur = new();
         private Transform2D prev = new();
 
-
         public PolylineCollider(Polyline shape) { this.shape = shape; }
         public PolylineCollider(Polyline shape, Vector2 vel)
         {
@@ -436,9 +459,9 @@ namespace ShapeEngine.Core
             this.cur = new(pos, rotRad, scale);
             this.prev = new(pos, rotRad, scale);
         }
-        
-        
-        public override IShape GetShape() 
+
+
+        public override IShape GetShape()
         {
             if(dirty) UpdateShape();
 

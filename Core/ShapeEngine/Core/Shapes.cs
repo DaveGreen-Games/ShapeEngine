@@ -11,6 +11,11 @@ namespace ShapeEngine.Core
     {
         public Points(params Vector2[] points) { AddRange(points); }
         public Points(IEnumerable<Vector2> points) { AddRange(points); }
+
+        public Polygon ToPolygon()
+        {
+            return new Polygon(this);
+        }
     }
     public class Segments : List<Segment>
     {
@@ -178,6 +183,7 @@ namespace ShapeEngine.Core
         public Vector2 start;
         public Vector2 end;
         public Vector2 n;
+        
         public bool AutomaticNormals { get; private set; } = true;
 
         public bool FlippedNormals { get { return false; } set { } }
@@ -832,7 +838,7 @@ namespace ShapeEngine.Core
         /// Points should be in CCW order. Use Reverse if they are in CW order.
         /// </summary>
         /// <param name="points"></param>
-        public Polygon(IEnumerable<Vector2> edges) { AddRange(edges); }
+        public Polygon(IEnumerable<Vector2> points) { AddRange(points); }
         /// <summary>
         /// Points should be in CCW order. Use Reverse if they are in CW order.
         /// </summary>
