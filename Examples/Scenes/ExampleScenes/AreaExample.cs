@@ -120,7 +120,7 @@ namespace Examples.Scenes.ExampleScenes
     {
         public PolyWall(Vector2 start, Vector2 end)
         {
-            var col = new PolyCollider(new Segment(start, end), 32, 0.5f);
+            var col = new PolyCollider(new Segment(start, end), 2, 0.5f);
             this.collider = col;
 
             //var segmentCollider = new SegmentCollider(start, end, false);

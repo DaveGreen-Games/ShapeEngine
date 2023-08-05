@@ -205,7 +205,7 @@ namespace Examples.Scenes.ExampleScenes
                         var intersection = shape.Intersect(segment);
                         if (intersection.Valid)
                         {
-                            bullet.Collision(new(intersection, bullet.Collider.Vel));
+                            bullet.Collision(new(intersection, bullet.Collider.Vel, bullet.Collider.Pos));
                         }
                     }
                 }

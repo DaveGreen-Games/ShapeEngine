@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Numerics;
+using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography;
 using Microsoft.VisualBasic;
 using ShapeEngine.Core;
@@ -153,7 +154,7 @@ namespace ShapeEngine.Lib
             this.Other = other;
             this.SelfVel = self.GetVelocity();
             this.OtherVel = other.GetVelocity();
-            this.Intersection = new(collisionPoints, SelfVel);
+            this.Intersection = new(collisionPoints, SelfVel, self.GetCollider().Pos);
             this.FirstContact = firstContact;
         }
 
@@ -165,7 +166,7 @@ namespace ShapeEngine.Lib
         public CollisionPoints ColPoints;
         
         public Intersection() { this.Valid = false; this.CollisionSurface = new(); this.ColPoints = new(); }
-        public Intersection(CollisionPoints points, Vector2 vel)
+        public Intersection(CollisionPoints points, Vector2 vel, Vector2 refPoint)
         {
             if(points.Count <= 0)
             {
@@ -181,6 +182,7 @@ namespace ShapeEngine.Lib
                 foreach (var p in points)
                 {
                     if (DiscardNormal(p.Normal, vel)) continue;
+                    if (DiscardNormal(p, refPoint)) continue;
 
                     count++;
                     avgPoint += p.Point;
@@ -237,7 +239,11 @@ namespace ShapeEngine.Lib
         {
             return n.IsFacingTheSameDirection(vel);
         }
-
+        private static bool DiscardNormal(CollisionPoint p, Vector2 refPoint)
+        {
+            Vector2 dir = p.Point - refPoint;
+            return p.Normal.IsFacingTheSameDirection(dir);
+        }
 
         //public void FlipNormals(Vector2 refPoint)
         //{
@@ -265,7 +271,7 @@ namespace ShapeEngine.Lib
         //    }
         //    return new(newPoints);
         //}
-        
+
     }
     public struct CollisionSurface
     {

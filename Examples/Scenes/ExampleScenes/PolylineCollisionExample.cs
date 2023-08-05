@@ -227,7 +227,7 @@ namespace Examples.Scenes.ExampleScenes
                         var intersection = shape.Intersect(segment);
                         if (intersection.Valid)
                         {
-                            col.Collision(new(intersection, col.Collider.Vel));
+                            col.Collision(new(intersection, col.Collider.Vel, col.Collider.Pos));
                         }
                     }
                 }
