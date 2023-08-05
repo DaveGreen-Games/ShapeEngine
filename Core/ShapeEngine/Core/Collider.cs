@@ -134,8 +134,8 @@ namespace ShapeEngine.Core
     }
     public class SegmentCollider : Collider
     {
-        private enum NormalFacingDirection { Automatic, Right, Left};
-        private NormalFacingDirection normalFacingDirection = NormalFacingDirection.Automatic;
+        //private enum NormalFacingDirection { Automatic, Right, Left};
+        //private NormalFacingDirection normalFacingDirection = NormalFacingDirection.Automatic;
 
         public SegmentCollider() { }
         public SegmentCollider(Vector2 start, Vector2 end) : base(start, new(0.0f, 0.0f))
@@ -151,12 +151,13 @@ namespace ShapeEngine.Core
         /// <param name="start">The start point of the segment.</param>
         /// <param name="end">The end point of the segment.</param>
         /// <param name="normalAlwaysFacesRight">Sets the direction the normal faces.</param>
-        public SegmentCollider(Vector2 start, Vector2 end, bool normalAlwaysFacesRight = true) : base(start, new(0.0f, 0.0f))
+        public SegmentCollider(Vector2 start, Vector2 end, bool flippedNormals = false) : base(start, new(0.0f, 0.0f))
         {
             Vector2 v = end - start;
             Dir = Vector2.Normalize(v);
             Length = v.Length();
-            normalFacingDirection = normalAlwaysFacesRight ? NormalFacingDirection.Right : NormalFacingDirection.Left;
+            this.FlippedNormals = flippedNormals;
+            //normalFacingDirection = normalAlwaysFacesRight ? NormalFacingDirection.Right : NormalFacingDirection.Left;
         }
         public SegmentCollider(Vector2 start, Vector2 dir, float length) : base(start, new(0.0f, 0.0f)) 
         { 
@@ -182,15 +183,17 @@ namespace ShapeEngine.Core
         }
         public Segment GetSegmentShape()
         {
-            if (normalFacingDirection == NormalFacingDirection.Automatic) return new Segment(Pos, End);
-            else
-            {
-                
-                Vector2 n = (End - Pos);
-                if (normalFacingDirection == NormalFacingDirection.Right) n = n.GetPerpendicularRight().Normalize();
-                else n = n.GetPerpendicularLeft().Normalize();
-                return new Segment(Pos, End, n);
-            }
+            //if (normalFacingDirection == NormalFacingDirection.Automatic) return new Segment(Pos, End);
+            //else
+            //{
+            //    
+            //    Vector2 n = (End - Pos);
+            //    if (normalFacingDirection == NormalFacingDirection.Right) n = n.GetPerpendicularRight().Normalize();
+            //    else n = n.GetPerpendicularLeft().Normalize();
+            //    return new Segment(Pos, End, n);
+            //}
+
+            return new Segment(Pos, End, FlippedNormals);
         }
         
     }

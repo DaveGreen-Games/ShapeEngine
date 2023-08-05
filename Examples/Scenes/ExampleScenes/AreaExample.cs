@@ -123,6 +123,9 @@ namespace Examples.Scenes.ExampleScenes
             var col = new PolyCollider(new Segment(start, end), 32, 0.5f);
             this.collider = col;
 
+            //var segmentCollider = new SegmentCollider(start, end, false);
+            //this.collider = segmentCollider;
+            
             this.collider.ComputeCollision = false;
             this.collider.ComputeIntersections = false;
             this.collider.Enabled = true;

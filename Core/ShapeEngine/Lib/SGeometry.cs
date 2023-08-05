@@ -474,16 +474,16 @@ namespace ShapeEngine.Lib
         }
         public static bool OverlapBoundingBox(this ICollider a, ICollider b) { return OverlapShape(a.GetShape().GetBoundingBox(), b.GetShape().GetBoundingBox()); }
 
-        private static CollisionPoints GetCollisionPoints(this IShape a, IShape b)
-        {
-            if (a is Segment s) return Intersect(s, b);
-            else if (a is Circle c) return Intersect(c, b);
-            else if (a is Triangle t) return Intersect(t, b);
-            else if (a is Rect r) return Intersect(r, b);
-            else if (a is Polygon p) return Intersect(p, b);
-            else if (a is Polyline pl) return Intersect(pl, b);
-            else return Intersect(a.GetBoundingBox(), b);
-        }
+        //private static CollisionPoints GetCollisionPoints(this IShape a, IShape b)
+        //{
+        //    if (a is Segment s) return Intersect(s, b);
+        //    else if (a is Circle c) return Intersect(c, b);
+        //    else if (a is Triangle t) return Intersect(t, b);
+        //    else if (a is Rect r) return Intersect(r, b);
+        //    else if (a is Polygon p) return Intersect(p, b);
+        //    else if (a is Polyline pl) return Intersect(pl, b);
+        //    else return Intersect(a.GetBoundingBox(), b);
+        //}
         public static CollisionPoints Intersect(this ICollidable a, ICollidable b)
         {
             return Intersect(a.GetCollider(), b.GetCollider());
@@ -495,26 +495,34 @@ namespace ShapeEngine.Lib
         }
         public static CollisionPoints Intersect(this IShape a, IShape b)
         {
-            var collisionPoints = a.GetCollisionPoints(b);
-            if (collisionPoints.Valid)
-            {
-                if(b is Segment seg)
-                {
-                    if (seg.AutomaticNormals)
-                    {
-                        collisionPoints.FlipNormals(a.GetCentroid());
-                    }
-                }
-                else if(b is Polyline pl)
-                {
-                    if (pl.AutomaticNormals)
-                    {
-                        collisionPoints.FlipNormals(a.GetCentroid());
-                    }
-                }
-                //intersection = intersection.CheckVelocityNew(aVelocity);
-            }
-            return collisionPoints;
+            if (a is Segment s) return Intersect(s, b);
+            else if (a is Circle c) return Intersect(c, b);
+            else if (a is Triangle t) return Intersect(t, b);
+            else if (a is Rect r) return Intersect(r, b);
+            else if (a is Polygon p) return Intersect(p, b);
+            else if (a is Polyline pl) return Intersect(pl, b);
+            else return Intersect(a.GetBoundingBox(), b);
+
+            //var collisionPoints = a.GetCollisionPoints(b);
+            ////if (collisionPoints.Valid)
+            ////{
+            ////    if(b is Segment seg)
+            ////    {
+            ////        if (seg.AutomaticNormals)
+            ////        {
+            ////            collisionPoints.FlipNormals(a.GetCentroid());
+            ////        }
+            ////    }
+            ////    else if(b is Polyline pl)
+            ////    {
+            ////        if (pl.AutomaticNormals)
+            ////        {
+            ////            collisionPoints.FlipNormals(a.GetCentroid());
+            ////        }
+            ////    }
+            ////    //intersection = intersection.CheckVelocityNew(aVelocity);
+            ////}
+            //return collisionPoints;
         }
         public static CollisionPoints Intersect(this Segment seg, IShape shape)
         {

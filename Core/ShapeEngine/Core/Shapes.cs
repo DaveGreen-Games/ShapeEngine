@@ -1,5 +1,6 @@
 ﻿
 using System.Numerics;
+using System.Text;
 using Microsoft.Win32.SafeHandles;
 using Raylib_CsLo;
 using ShapeEngine.Lib;
@@ -183,10 +184,22 @@ namespace ShapeEngine.Core
         public Vector2 start;
         public Vector2 end;
         public Vector2 n;
-        
-        public bool AutomaticNormals { get; private set; } = true;
 
-        public bool FlippedNormals { get { return false; } set { } }
+        //public bool AutomaticNormals { get; private set; } = true;
+
+        private bool flippedNormals = false;
+        public bool FlippedNormals
+        {
+            get { return flippedNormals; }
+            set
+            {
+                if(value != flippedNormals)
+                {
+                    this.n = this.n.Flip();
+                    flippedNormals = value;
+                }
+            }
+        }
         public Vector2 Center { get { return (start + end) * 0.5f; } }
         public Vector2 Dir { get { return Displacement.Normalize(); } }
         public Vector2 Displacement { get { return end - start; } }
@@ -194,26 +207,31 @@ namespace ShapeEngine.Core
         public float LengthSquared { get { return Displacement.LengthSquared(); } }
 
 
-        public Segment(Vector2 start, Vector2 end) 
+        public Segment(Vector2 start, Vector2 end, bool flippedNormals = false) 
         { 
             this.start = start; 
             this.end = end; 
-            this.n = (end - start).GetPerpendicularRight().Normalize(); 
+            if(flippedNormals) this.n = (end - start).GetPerpendicularLeft().Normalize();
+            else this.n = (end - start).GetPerpendicularRight().Normalize();
+            this.FlippedNormals = flippedNormals;
         }
         public Segment(Vector2 start, Vector2 end, Vector2 n) 
         { 
             this.start = start; 
             this.end = end; 
             this.n = n;
-            this.AutomaticNormals = false;
+            //this.AutomaticNormals = false;
+            this.FlippedNormals = false;
         }
-        public Segment(float startX, float startY, float endX, float endY) 
+        public Segment(float startX, float startY, float endX, float endY, bool flippedNormals = false) 
         { 
             this.start = new(startX, startY); 
             this.end = new(endX, endY); 
-            this.n = (this.end - this.start).GetPerpendicularRight().Normalize(); 
+            if(flippedNormals) this.n = (this.end - this.start).GetPerpendicularLeft().Normalize();
+            else this.n = (this.end - this.start).GetPerpendicularRight().Normalize();
+            this.FlippedNormals = flippedNormals;
         }
-        public Segment(Segment s) { start = s.start; end = s.end; n = s.n; AutomaticNormals = s.AutomaticNormals; }
+        public Segment(Segment s) { start = s.start; end = s.end; n = s.n; }// AutomaticNormals = s.AutomaticNormals; }
 
         public bool IsSame(Segment other) 
         {
@@ -240,7 +258,7 @@ namespace ShapeEngine.Core
             else if (t > 1f) c = new(end, n);
             else c = new(start + w * t, n);
 
-            if (AutomaticNormals) return c.FlipNormal(p);
+            //if (AutomaticNormals) return c.FlipNormal(p);
             return c;
         }
         public Vector2 GetClosestVertex(Vector2 p)
