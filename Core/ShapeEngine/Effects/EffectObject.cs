@@ -23,7 +23,7 @@ namespace ShapeEngine.Effects
     }
     //-------------------------------------
     */
-    public abstract class EffectObject: IGameObject
+    public abstract class EffectObject : IAreaObject
     {
         public Vector2 Pos { get; set; }
         public Vector2 Size { get; protected set; }

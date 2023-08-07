@@ -7,7 +7,7 @@ using System.Numerics;
 namespace Examples.Scenes.ExampleScenes
 {
 
-    internal abstract class Gameobject : ICollidable
+    internal abstract class Gameobject : IAreaObject, ICollidable
     {
         public static readonly uint WALL_ID = 1;
         public static readonly uint ROCK_ID = 2;
@@ -89,10 +89,15 @@ namespace Examples.Scenes.ExampleScenes
         
         public bool RemoveBehavior(IBehavior behavior) { return false; }
 
-        
+        public Vector2 GetPosition() { return collider.Pos; }
+
+        public Rect GetBoundingBox() { return collider.GetShape().GetBoundingBox(); }
+
+        public bool HasCollidables() { return true; }
+        public List<ICollidable> GetCollidables() { return new() { this }; }
     }
 
-    internal class Wall : Gameobject
+    internal class Wall : Gameobject, ICollidable
     {
         
         public Wall(Vector2 start, Vector2 end)
@@ -115,6 +120,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             collider.GetShape().DrawShape(2f, ExampleScene.ColorHighlight1);
         }
+
     }
     internal class PolyWall : Gameobject
     {
@@ -170,7 +176,9 @@ namespace Examples.Scenes.ExampleScenes
         HashSet<ICollidable> others = new();
         public Aura(Vector2 pos, float radius, float f)
         {
-            this.collider = new CircleCollider(pos, radius);
+            var shape = SPoly.Generate(pos, 12, radius * 0.5f, radius);
+            this.collider = new PolyCollider(shape, pos, new Vector2(0f));
+            //this.collider = new CircleCollider(pos, radius);
             this.collider.ComputeCollision = true;
             this.collider.ComputeIntersections = false;
             this.collider.Enabled = true;
@@ -449,7 +457,7 @@ namespace Examples.Scenes.ExampleScenes
                 for (int i = 0; i < 50; i++)
                 {
                     Rock r = new(mousePosGame + SRNG.randVec2(0, 50), SRNG.randVec2() * 150, 60);
-                    area.AddCollider(r);
+                    area.AddGameObject(r);
                 }
 
             }
@@ -459,7 +467,7 @@ namespace Examples.Scenes.ExampleScenes
                 for (int i = 0; i < 5; i++)
                 {
                     Box b = new(mousePosGame + SRNG.randVec2(0, 10), SRNG.randVec2() * 75, 25);
-                    area.AddCollider(b);
+                    area.AddGameObject(b);
                 }
 
             }
@@ -468,7 +476,7 @@ namespace Examples.Scenes.ExampleScenes
                 for (int i = 0; i < 15; i++)
                 {
                     Ball b = new(mousePosGame + SRNG.randVec2(0, 5), SRNG.randVec2() * 250, 10);
-                    area.AddCollider(b);
+                    area.AddGameObject(b);
                 }
 
             }
@@ -476,13 +484,13 @@ namespace Examples.Scenes.ExampleScenes
             if (IsKeyPressed(KeyboardKey.KEY_FOUR))
             {
                 Trap t = new(mousePosGame, new Vector2(250, 250));
-                area.AddCollider(t);
+                area.AddGameObject(t);
             }
 
             if (IsKeyPressed(KeyboardKey.KEY_FIVE))
             {
                 Aura a = new(mousePosGame, 150, 0.75f);
-                area.AddCollider(a);
+                area.AddGameObject(a);
             }
 
             if (IsKeyPressed(KeyboardKey.KEY_ZERO)) { drawDebug = !drawDebug; }
@@ -570,7 +578,7 @@ namespace Examples.Scenes.ExampleScenes
             Wall bottom = new(boundaryRect.BottomRight, boundaryRect.BottomLeft);
             Wall left = new(boundaryRect.TopLeft, boundaryRect.BottomLeft);
             Wall right = new(boundaryRect.BottomRight, boundaryRect.TopRight);
-            area.AddColliders(top, right, bottom, left);
+            area.AddGameObjects(top, right, bottom, left);
         }
         private void DrawWalls(Vector2 mousePos)
         {
@@ -593,7 +601,7 @@ namespace Examples.Scenes.ExampleScenes
                     if (lSq > 400)
                     {
                         PolyWall w = new(startPoint, mousePos);
-                        area.AddCollider(w);
+                        area.AddGameObject(w);
                     }
 
                 }

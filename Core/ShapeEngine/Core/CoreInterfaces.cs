@@ -75,7 +75,7 @@ namespace ShapeEngine.Core
         /// <param name="uiSize">The current size of the UI texture.</param>
         public virtual void DrawUI(Vector2 uiSize, Vector2 mousePosUI) {  }
     }
-    public interface IAreaObject
+    public interface IAreaObject : ILocation, IUpdateable, IDrawable, IKillable, IBehaviorReceiver
     {
         /// <summary>
         /// The area layer the object is stored in. Higher layers are draw on top of lower layers.
@@ -106,6 +106,11 @@ namespace ShapeEngine.Core
         /// Called when the object leaves the outer bounds of the area. Can be used to destroy objects that have left the bounds.
         /// </summary>
         public virtual void LeftAreaBounds() { }
+
+        public virtual Vector2 GetCameraFollowPosition(Vector2 camPos) { return GetPosition(); }
+
+        public virtual bool HasCollidables() { return false; }
+        public virtual List<ICollidable> GetCollidables() { return new(); }
     }
     public interface IKillable
     {
@@ -129,27 +134,23 @@ namespace ShapeEngine.Core
     /// <summary>
     /// Used by the area. Each IGameObject is updated and drawn by the area. If it dies it is removed from the area.
     /// </summary>
-    public interface IGameObject : ILocation, IBehaviorReceiver, IUpdateable, IDrawable, IAreaObject, IKillable//, IInputReciever
+    //public interface IGameObject : ILocation, IUpdateable, IDrawable, IAreaObject, IKillable, IBehaviorReceiver//, IInputReciever
+    //{
+    //    /// <summary>
+    //    /// The camera calls this function on its target object. Used to determine the next position for the camera to follow.
+    //    /// </summary>
+    //    /// <param name="camPos">The current position of the camera.</param>
+    //    /// <returns>Returns the new position for the camera to follow.</returns>
+    //    public virtual Vector2 GetCameraFollowPosition(Vector2 camPos) { return GetPosition(); }//, float dt, float smoothness = 1f, float boundary = 0f) { return GetPosition(); }
+    //}
+    
+    public interface ICollidable
     {
-        /// <summary>
-        /// The camera calls this function on its target object. Used to determine the next position for the camera to follow.
-        /// </summary>
-        /// <param name="camPos">The current position of the camera.</param>
-        /// <returns>Returns the new position for the camera to follow.</returns>
-        public virtual Vector2 GetCameraFollowPosition(Vector2 camPos) { return GetPosition(); }//, float dt, float smoothness = 1f, float boundary = 0f) { return GetPosition(); }
-    }
-    public interface ICollidable : IGameObject
-    {
-        //public uint GetID();
         public ICollider GetCollider();
         public void Overlap(CollisionInformation info);
         public void OverlapEnded(ICollidable other);
         public uint GetCollisionLayer();
         public uint[] GetCollisionMask();
-        public Vector2 GetVelocity() { return GetCollider().Vel; }
-        Rect ILocation.GetBoundingBox() { return GetCollider().GetShape().GetBoundingBox(); }
-        public Circle GetBoundingCircle() { return GetCollider().GetShape().GetBoundingCircle(); }
-        Vector2 ILocation.GetPosition() { return GetCollider().Pos; }
     }
 
 
@@ -163,7 +164,7 @@ namespace ShapeEngine.Core
     {
         public HashSet<int> GetAffectedLayers();
         public void Update(float dt);
-        public BehaviorResult Apply(IGameObject obj, float delta);
+        public BehaviorResult Apply(IAreaObject obj, float delta);
     }
     public struct BehaviorResult
     {

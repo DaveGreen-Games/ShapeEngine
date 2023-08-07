@@ -445,8 +445,8 @@ namespace ShapeEngine.Core
                     (a, b) =>
                     {
                         Vector2 pos = caster.Pos;
-                        float la = (pos - a.GetPosition()).LengthSquared();
-                        float lb = (pos - b.GetPosition()).LengthSquared();
+                        float la = (pos - a.GetCollider().Pos).LengthSquared();
+                        float lb = (pos - b.GetCollider().Pos).LengthSquared();
 
                         if (la > lb) return 1;
                         else if (la == lb) return 0;
@@ -474,8 +474,8 @@ namespace ShapeEngine.Core
                     (a, b) =>
                     {
                         Vector2 pos = castShape.GetCentroid();
-                        float la = (pos - a.GetPosition()).LengthSquared();
-                        float lb = (pos - b.GetPosition()).LengthSquared();
+                        float la = (pos - a.GetCollider().Pos).LengthSquared();
+                        float lb = (pos - b.GetCollider().Pos).LengthSquared();
 
                         if (la > lb) return 1;
                         else if (la == lb) return 0;

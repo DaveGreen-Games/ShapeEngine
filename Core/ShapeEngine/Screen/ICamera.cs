@@ -163,8 +163,8 @@ namespace ShapeEngine.Screen
     }
     public class FollowCamera : EffectCamera
     {
-        public IGameObject? Target { get; private set; } = null;
-        public IGameObject? NewTarget { get; private set; } = null;
+        public IAreaObject? Target { get; private set; } = null;
+        public IAreaObject? NewTarget { get; private set; } = null;
         public float BoundaryDis { get; set; } = 0f;
         public float FollowSmoothness { get; set; } = 1f;
         public FollowCamera(Vector2 pos, Vector2 size, Vector2 origin, float baseZoom, float rotation) : base(pos, size, origin, baseZoom, rotation)
@@ -211,14 +211,14 @@ namespace ShapeEngine.Screen
             base.Update(dt);
         }
 
-        public void SetTarget(IGameObject target)
+        public void SetTarget(IAreaObject target)
         {
             this.Target = target;
             var wCam = WorldCamera;
             wCam.target = target.GetCameraFollowPosition(wCam.target);//, 0f, FollowSmoothness, BoundaryDis);
             WorldCamera = wCam;
         }
-        public void ChangeTarget(IGameObject newTarget)
+        public void ChangeTarget(IAreaObject newTarget)
         {
             if (Target == null)
             {

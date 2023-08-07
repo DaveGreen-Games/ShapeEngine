@@ -23,7 +23,7 @@ namespace ShapeEngine.Audio
         private Dictionary<uint, Playlist> playlists = new();
         private Playlist? currentPlaylist = null;
         private Dictionary<uint, float> soundBlockers = new();
-        public  IGameObject? SpatialTargetOverride { get; set; } = null;
+        public  IAreaObject? SpatialTargetOverride { get; set; } = null;
 
         private Rect cameraRect = new Rect();
 
