@@ -7,7 +7,7 @@ namespace ShapeEngine.Core
         public bool CallUpdate { get; set; } = true;
         public bool CallHandleInput { get; set; } = true;
         public bool CallDraw { get; set; } = true;
-
+        protected IArea area = new AreaEmpty();
         public virtual void Close() { }
 
         public virtual void Activate(IScene oldScene) { }
@@ -17,7 +17,7 @@ namespace ShapeEngine.Core
         public virtual void Draw(Vector2 gameSIze, Vector2 mousePosGame) { }
         public virtual void DrawUI(Vector2 uiSize, Vector2 mousePosUI) { }
         public virtual void DrawToScreen(Vector2 screenSize, Vector2 mousePos) { }
-        public virtual Area? GetCurArea() { return null; }
+        public virtual IArea GetCurArea() { return area; }
     }
     public sealed class SceneEmpty : Scene
     {

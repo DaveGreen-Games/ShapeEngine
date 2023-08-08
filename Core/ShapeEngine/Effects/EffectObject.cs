@@ -61,9 +61,19 @@ namespace ShapeEngine.Effects
         protected Vector2 GetTweenVector2(Vector2 start, Vector2 end) { return start.Tween(end, LifetimeF, TweenType); }
         protected Raylib_CsLo.Color GetTweenColor(Raylib_CsLo.Color startColor, Raylib_CsLo.Color endColor) { return startColor.Tween(endColor, LifetimeF, TweenType); }
 
+        /*
         public virtual bool HasBehaviors() { return false; }
         public virtual bool AddBehavior(IBehavior behavior) { return false; }
         public virtual bool RemoveBehavior(IBehavior behavior) { return false; }
+        */
+        public void AddedToArea()     {}
+        public void RemovedFromArea() {}
+        public void LeftAreaBounds() { }
+        public Vector2 GetCameraFollowPosition(Vector2 camPos) { return GetPosition(); }
+
+        public abstract void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI);
+        public abstract void Draw(Vector2 gameSize, Vector2 mousePosGame);
+        public abstract void DrawUI(Vector2 uiSize, Vector2 mousePosUI);
 
         //public void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI) { }
     }

@@ -5,18 +5,18 @@ using System.Numerics;
 
 namespace ShapeEngine.Core
 {
-    public interface IScene
+    public interface IScene : IUpdateable, IDrawable
     {
         public bool CallUpdate { get; set; }
         public bool CallHandleInput { get; set; }
         public bool CallDraw { get; set; }
 
 
-        public Area? GetCurArea();// { return null; }
+        public IArea GetCurArea();
 
 
         public void Activate(IScene oldScene);// { }
-        public void Deactivate();// { }// { if (newScene != null) GAMELOOP.SwitchScene(this, newScene); }
+        public void Deactivate();
 
         
         /// <summary>
@@ -25,9 +25,9 @@ namespace ShapeEngine.Core
         public void Close();
 
         //public void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI);// { }
-        public void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI);// { }
-        public void Draw(Vector2 gameSize, Vector2 mousePosGame);// { }
-        public void DrawUI(Vector2 uiSize, Vector2 mousePosUI);// { }
+        //public void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI);// { }
+        //public void Draw(Vector2 gameSize, Vector2 mousePosGame);// { }
+        //public void DrawUI(Vector2 uiSize, Vector2 mousePosUI);// { }
         public void DrawToScreen(Vector2 screenSize, Vector2 mousePos);
 
     }
@@ -49,34 +49,38 @@ namespace ShapeEngine.Core
     }
     public interface IUpdateable
     {
+        /*
         /// <summary>
         /// Multiplier for the total slow factor. 2 means slow factor has twice the effect, 0.5 means half the effect.
         /// </summary>
         public float UpdateSlowResistance { get; set; }
+        */
         /// <summary>
         /// Called every frame.
         /// </summary>
         /// <param name="dt"></param>
-        public virtual void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI) {  }
+        public void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI);
     }
     public interface IDrawable
+    {
+
+        /// <summary>
+        /// Called every frame to draw the object.
+        /// </summary>
+        public void Draw(Vector2 gameSize, Vector2 mousePosGame);
+        /// <summary>
+        /// Called every frame after Draw was called, if DrawToUI is true.
+        /// </summary>
+        /// <param name="uiSize">The current size of the UI texture.</param>
+        public void DrawUI(Vector2 uiSize, Vector2 mousePosUI);
+    }
+    public interface IAreaObject : ILocation, IUpdateable, IDrawable, IKillable//, IBehaviorReceiver
     {
         /// <summary>
         /// Should DrawUI be called on this object.
         /// </summary>
         public bool DrawToUI { get; set; }
-        /// <summary>
-        /// Called every frame to draw the object.
-        /// </summary>
-        public virtual void Draw(Vector2 gameSize, Vector2 mousePosGame) {  }
-        /// <summary>
-        /// Called every frame after Draw was called, if DrawToUI is true.
-        /// </summary>
-        /// <param name="uiSize">The current size of the UI texture.</param>
-        public virtual void DrawUI(Vector2 uiSize, Vector2 mousePosUI) {  }
-    }
-    public interface IAreaObject : ILocation, IUpdateable, IDrawable, IKillable, IBehaviorReceiver
-    {
+
         /// <summary>
         /// The area layer the object is stored in. Higher layers are draw on top of lower layers.
         /// </summary>
@@ -97,17 +101,17 @@ namespace ShapeEngine.Core
         /// <summary>
         /// Is called when gameobject is added to an area.
         /// </summary>
-        public virtual void AreaEntered() { }
+        public void AddedToArea();
         /// <summary>
         /// Is called by the area once a game object is dead.
         /// </summary>
-        public virtual void AreaLeft() { }
+        public void RemovedFromArea();
         /// <summary>
         /// Called when the object leaves the outer bounds of the area. Can be used to destroy objects that have left the bounds.
         /// </summary>
-        public virtual void LeftAreaBounds() { }
+        public void LeftAreaBounds();
 
-        public virtual Vector2 GetCameraFollowPosition(Vector2 camPos) { return GetPosition(); }
+        public Vector2 GetCameraFollowPosition(Vector2 camPos);
 
         public virtual bool HasCollidables() { return false; }
         public virtual List<ICollidable> GetCollidables() { return new(); }
@@ -153,7 +157,7 @@ namespace ShapeEngine.Core
         public uint[] GetCollisionMask();
     }
 
-
+    /*
     public interface IBehaviorReceiver
     {
         public bool HasBehaviors();
@@ -173,7 +177,7 @@ namespace ShapeEngine.Core
 
         public BehaviorResult(bool finished, float newDelta) { this.finished = finished; this.newDelta = newDelta; }
     }
-   
+   */
 
     public interface IShape
     {
@@ -262,4 +266,101 @@ namespace ShapeEngine.Core
         public void UpdatePreviousPosition(float dt);
     }
 
+
+    public interface IArea : IUpdateable, IDrawable
+    {
+        public bool IsValid();
+        public Rect Bounds { get; }
+        public int Count { get; }
+
+        public ICollisionHandler CollisionHandler { get; }
+        public Vector2 ParallaxePosition { get; set; }
+
+
+        public List<IAreaObject> GetAreaObjects(int layer, Predicate<IAreaObject> match);
+        public List<IAreaObject> GetAllGameObjects();
+        public List<IAreaObject> GetAllGameObjects(Predicate<IAreaObject> match);
+
+
+        public bool HasLayer(int layer);
+
+        public void AddAreaObject(IAreaObject areaObjects);
+        public void AddAreaObjects(params IAreaObject[] areaObjects);
+        public void AddAreaObjects(IEnumerable<IAreaObject> areaObjects);
+
+        public void RemoveAreaObject(IAreaObject areaObject);
+        public void RemoveAreaObjects(Predicate<IAreaObject> match);
+        public void RemoveAreaObjects(int layer, Predicate<IAreaObject> match);
+        public void RemoveAreaObjects(params IAreaObject[] areaObjects);
+        public void RemoveAreaObjects(IEnumerable<IAreaObject> areaObjects);
+
+        public void Clear();
+        public void ClearLayer(int layer);
+
+        /*
+        public bool HasBehaviors() { return behaviors.Count > 0; }
+        public bool AddBehavior(IBehavior behavior) { return behaviors.Add(behavior); }
+        public bool RemoveBehavior(IBehavior behavior) { return behaviors.Remove(behavior); }
+        */
+
+        public void Start();
+        public void Close();
+
+        //public void DrawDebug(params Raylib_CsLo.Color[] colors);
+
+    }
+    public interface ICollisionHandler : IUpdateable
+    {
+        public int Count { get; }
+        public bool IsValid();
+
+        public void UpdateBounds(Rect newBounds);
+
+        public void Add(ICollidable collidable);
+        public void AddRange(IEnumerable<ICollidable> collidables);
+        public void AddRange(params ICollidable[] collidables);
+        public void Remove(ICollidable collidable);
+        public void RemoveRange(IEnumerable<ICollidable> collidables);
+        public void RemoveRange(params ICollidable[] collidables);
+
+        public void Clear();
+        public void Close();
+
+        //public void Update(float dt);
+
+        public List<QueryInfo> QuerySpace(ICollidable collidable, bool sorted = false);
+        public List<QueryInfo> QuerySpace(ICollider collider, bool sorted = false, params uint[] collisionMask);
+        public List<QueryInfo> QuerySpace(IShape shape, bool sorted = false, params uint[] collisionMask);
+        public List<QueryInfo> QuerySpace(IShape shape, ICollidable[] exceptions, bool sorted = false, params uint[] collisionMask);
+
+
+        public List<ICollidable> CastSpace(ICollidable collidable, bool sorted = false);
+        public List<ICollidable> CastSpace(ICollider collider, bool sorted = false, params uint[] collisionMask);
+        public List<ICollidable> CastSpace(IShape castShape, bool sorted = false, params uint[] collisionMask);
+
+
+        //public void DebugDraw(params Raylib_CsLo.Color[] colors);
+
+    }
+    
+    /*
+    public interface ISpatialHash
+    {
+        //public ISpatialHash<T> Resize(Rect newBounds);
+        //public BucketInfo GetBucketInfo(int bucketIndex);
+
+        public void DebugDraw(params Raylib_CsLo.Color[] colors);
+
+        public void AddRange(IEnumerable<ICollidable> colliders);
+        public void Add(ICollidable collidable);
+
+        public void Clear();
+        public void Close();
+
+        public List<ICollidable> GetObjects(ICollidable collidable);
+        public List<ICollidable> GetObjects(ICollider collider, params uint[] mask);
+        public List<ICollidable> GetObjects(IShape shape, params uint[] mask);
+
+    }
+    */
 }

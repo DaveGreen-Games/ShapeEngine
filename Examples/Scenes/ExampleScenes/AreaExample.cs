@@ -6,8 +6,7 @@ using System.Numerics;
 
 namespace Examples.Scenes.ExampleScenes
 {
-
-    internal abstract class Gameobject : IAreaObject, ICollidable
+    internal abstract class Collidable : ICollidable
     {
         public static readonly uint WALL_ID = 1;
         public static readonly uint ROCK_ID = 2;
@@ -15,6 +14,8 @@ namespace Examples.Scenes.ExampleScenes
         public static readonly uint BALL_ID = 4;
         public static readonly uint AURA_ID = 5;
 
+        protected ICollider collider;
+        protected uint[] collisionMask = new uint[] { };
         protected bool buffed = false;
         protected Color buffColor = YELLOW;
         protected float startSpeed = 0f;
@@ -24,25 +25,16 @@ namespace Examples.Scenes.ExampleScenes
             if (totalSpeedFactor < 0.01f) return;
 
             totalSpeedFactor *= f;
-            collider.Vel = collider.Vel.Normalize() * startSpeed * totalSpeedFactor;
+            GetCollider().Vel = collider.Vel.Normalize() * startSpeed * totalSpeedFactor;
 
             if (totalSpeedFactor != 1f) buffed = true;
         }
         public void EndBuff(float f)
         {
             totalSpeedFactor /= f;
-            collider.Vel = collider.Vel.Normalize() * startSpeed * totalSpeedFactor;
+            GetCollider().Vel = collider.Vel.Normalize() * startSpeed * totalSpeedFactor;
             if (totalSpeedFactor == 1f) buffed = false;
         }
-
-        protected ICollider collider;
-        protected uint[] collisionMask = new uint[] { };
-
-        public float UpdateSlowResistance { get; set; } = 1f;
-        public bool DrawToUI { get; set; } = false;
-        public int AreaLayer { get; set; } = 0;
-
-        public bool AddBehavior(IBehavior behavior) { return false; }
 
         public ICollider GetCollider()
         {
@@ -56,7 +48,28 @@ namespace Examples.Scenes.ExampleScenes
             return collisionMask;
         }
 
-        public bool HasBehaviors() { return false; }
+        public virtual void Overlap(CollisionInformation info) { }
+
+        public virtual void OverlapEnded(ICollidable other) { }
+
+        public virtual void Update(float dt)
+        {
+            //collider.UpdatePreviousPosition(dt);
+            collider.UpdateState(dt);
+        }
+        
+    }
+    internal abstract class Gameobject : IAreaObject
+    {
+       
+        
+        //public float UpdateSlowResistance { get; set; } = 1f;
+        public bool DrawToUI { get; set; } = false;
+        public int AreaLayer { get; set; } = 0;
+
+        //public bool AddBehavior(IBehavior behavior) { return false; }
+
+        
 
         public virtual bool IsDead()
         {
@@ -68,89 +81,152 @@ namespace Examples.Scenes.ExampleScenes
             return false;
         }
 
-        public virtual void Draw(Vector2 gameSize, Vector2 mousePosGame)
-        {
-            //collider.GetShape().DrawShape(6f, ExampleScene.ColorHighlight1);
-        }
+        public abstract void Draw(Vector2 gameSize, Vector2 mousePosGame);
         public virtual void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            collider.UpdateState(dt);
-        }
-
-        public virtual void Overlap(CollisionInformation info)
-        {
-            
-        }
-
-        public virtual void OverlapEnded(ICollidable other)
-        {
-            
+            var collidables = GetCollidables();
+            foreach (var c in collidables)
+            {
+                c.GetCollider().UpdateState(dt);
+            }
         }
         
-        public bool RemoveBehavior(IBehavior behavior) { return false; }
 
-        public Vector2 GetPosition() { return collider.Pos; }
+        public abstract Vector2 GetPosition();
 
-        public Rect GetBoundingBox() { return collider.GetShape().GetBoundingBox(); }
+        public abstract Rect GetBoundingBox();
 
-        public bool HasCollidables() { return true; }
-        public List<ICollidable> GetCollidables() { return new() { this }; }
+        public abstract bool HasCollidables();
+        public abstract List<ICollidable> GetCollidables();
+
+        
+        public virtual void AddedToArea() { }
+
+        public virtual void RemovedFromArea() { }
+
+        public virtual void LeftAreaBounds() { }
+
+        public abstract Vector2 GetCameraFollowPosition(Vector2 camPos);
+
+        public void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
+        {
+            
+        }
     }
 
-    internal class Wall : Gameobject, ICollidable
+    internal class WallCollidable : Collidable
     {
-        
-        public Wall(Vector2 start, Vector2 end)
+        public WallCollidable(Vector2 start, Vector2 end)
         {
             var col = new PolyCollider(new Segment(start, end), 10f, 1f);
             this.collider = col;
             this.collider.ComputeCollision = false;
             this.collider.ComputeIntersections = false;
             this.collider.Enabled = true;
-            
-            this.collisionMask = new uint[] { };
-            this.startSpeed = 0f;
-        }
 
+            this.collisionMask = new uint[] { };
+        }
         public override uint GetCollisionLayer()
         {
             return WALL_ID;
         }
+    }
+    internal class Wall : Gameobject
+    {
+        WallCollidable wallCollidable;
+        public Wall(Vector2 start, Vector2 end)
+        {
+            wallCollidable = new(start, end);
+        }
         public override void Draw(Vector2 gameSize, Vector2 mousePosGame)
         {
-            collider.GetShape().DrawShape(2f, ExampleScene.ColorHighlight1);
+            wallCollidable.GetCollider().GetShape().DrawShape(2f, ExampleScene.ColorHighlight1);
         }
 
-    }
-    internal class PolyWall : Gameobject
-    {
-        public PolyWall(Vector2 start, Vector2 end)
+        public override Rect GetBoundingBox()
         {
-            var col = new PolyCollider(new Segment(start, end), 2, 0.5f);
-            this.collider = col;
+            return wallCollidable.GetCollider().GetShape().GetBoundingBox();
+        }
 
-            //var segmentCollider = new SegmentCollider(start, end, false);
-            //this.collider = segmentCollider;
-            
+        public override Vector2 GetCameraFollowPosition(Vector2 camPos)
+        {
+            return GetPosition();
+        }
+
+        public override List<ICollidable> GetCollidables()
+        {
+            return new() { wallCollidable };
+        }
+
+        public override Vector2 GetPosition()
+        {
+            return wallCollidable.GetCollider().Pos;
+        }
+
+        public override bool HasCollidables()
+        {
+            return true;
+        }
+    }
+    
+    internal class PolyWallCollidable : Collidable
+    {
+        public PolyWallCollidable(Vector2 start, Vector2 end)
+        {
+            var col = new PolyCollider(new Segment(start, end), 40f, 0.5f);
+            this.collider = col;
             this.collider.ComputeCollision = false;
             this.collider.ComputeIntersections = false;
             this.collider.Enabled = true;
-            this.collisionMask = new uint[] { };
-            this.startSpeed = 0f;
-        }
 
+            this.collisionMask = new uint[] { };
+        }
         public override uint GetCollisionLayer()
         {
             return WALL_ID;
         }
+    }
+    internal class PolyWall : Gameobject
+    {
+        PolyWallCollidable wallCollidable;
+        public PolyWall(Vector2 start, Vector2 end)
+        {
+            wallCollidable = new(start, end);
+        }
         public override void Draw(Vector2 gameSize, Vector2 mousePosGame)
         {
-            collider.GetShape().DrawShape(2f, ExampleScene.ColorHighlight1);
+            wallCollidable.GetCollider().GetShape().DrawShape(2f, ExampleScene.ColorHighlight1);
+        }
+
+        public override Rect GetBoundingBox()
+        {
+            return wallCollidable.GetCollider().GetShape().GetBoundingBox();
+        }
+
+        public override Vector2 GetCameraFollowPosition(Vector2 camPos)
+        {
+            return GetPosition();
+        }
+
+        public override List<ICollidable> GetCollidables()
+        {
+            return new() { wallCollidable };
+        }
+
+        public override Vector2 GetPosition()
+        {
+            return wallCollidable.GetCollider().Pos;
+        }
+
+        public override bool HasCollidables()
+        {
+            return true;
         }
     }
-    internal class Trap : Gameobject
+
+    internal class TrapCollidable : Collidable
     {
-        public Trap(Vector2 pos, Vector2 size)
+        public TrapCollidable(Vector2 pos, Vector2 size)
         {
             this.collider = new RectCollider(pos, size, new Vector2(0.5f));
             this.collider.ComputeCollision = false;
@@ -158,103 +234,131 @@ namespace Examples.Scenes.ExampleScenes
             this.collider.Enabled = true;
             this.collider.FlippedNormals = true;
             this.collisionMask = new uint[] { };
-            this.startSpeed = 0f;
         }
-
         public override uint GetCollisionLayer()
         {
             return WALL_ID;
         }
+    }
+    internal class Trap : Gameobject
+    {
+        TrapCollidable trapCollidable;
+        public Trap(Vector2 pos, Vector2 size)
+        {
+            this.trapCollidable = new(pos, size);
+        }
         public override void Draw(Vector2 gameSize, Vector2 mousePosGame)
         {
-            collider.GetShape().DrawShape(2f, ExampleScene.ColorHighlight2);
+            trapCollidable.GetCollider().GetShape().DrawShape(2f, ExampleScene.ColorHighlight1);
+        }
+
+        public override Rect GetBoundingBox()
+        {
+            return trapCollidable.GetCollider().GetShape().GetBoundingBox();
+        }
+
+        public override Vector2 GetCameraFollowPosition(Vector2 camPos)
+        {
+            return GetPosition();
+        }
+
+        public override List<ICollidable> GetCollidables()
+        {
+            return new() { trapCollidable };
+        }
+
+        public override Vector2 GetPosition()
+        {
+            return trapCollidable.GetCollider().Pos;
+        }
+
+        public override bool HasCollidables()
+        {
+            return true;
         }
     }
-    internal class Aura : Gameobject
+
+    internal class AuraCollidable : Collidable
     {
         float buffFactor = 1f;
-        HashSet<ICollidable> others = new();
-        public Aura(Vector2 pos, float radius, float f)
+        //HashSet<ICollidable> others = new();
+        public AuraCollidable(Vector2 pos, float radius, float f)
         {
             var shape = SPoly.Generate(pos, 12, radius * 0.5f, radius);
             this.collider = new PolyCollider(shape, pos, new Vector2(0f));
-            //this.collider = new CircleCollider(pos, radius);
             this.collider.ComputeCollision = true;
             this.collider.ComputeIntersections = false;
             this.collider.Enabled = true;
             this.collisionMask = new uint[] { ROCK_ID, BALL_ID, BOX_ID };
-            this.buffFactor = f;
-            this.startSpeed = 0;
+            buffFactor= f;
         }
 
-        public override void Overlap(CollisionInformation info)
-        {
-            foreach (var c in info.Collisions)
-            {
-                //if(others.Add(c.Other))
-                if (c.FirstContact)
-                {
-                    //others.Add(c.Other);
-                    if (c.Other is Gameobject g) g.Buff(buffFactor);
-                }
-                //else others.Remove(c.Other);
-            }
-        }
-        public override void OverlapEnded(ICollidable other)
-        {
-            //others.Remove(other);
-            if (other is Gameobject g) g.EndBuff(buffFactor);
-        }
-        
         public override uint GetCollisionLayer()
         {
             return AURA_ID;
         }
-        public override void Draw(Vector2 gameSize, Vector2 mousePosGame)
+        public override void Overlap(CollisionInformation info)
         {
-            var shape = collider.GetShape();
-            shape.DrawShape(2f, ExampleScene.ColorHighlight1);
-
-
-            //foreach (var other in others)
-            //{
-            //    Segment s = new(collider.Pos, other.GetPosition());
-            //    s.Draw(1f, RED);
-            //}
-
-            //string text = String.Format("{0} | {1}", others.Count, lastColCount);
-            //SDrawing.DrawText(GAMELOOP.FontDefault, text, shape.GetBoundingBox(), 1f, new Vector2(0.5f), RED);
-            //shape.GetBoundingBox().DrawLines(2f, RED);
-            //shape.GetBoundingCircle().DrawLines(2f, ORANGE);
+            foreach (var c in info.Collisions)
+            {
+                if (c.FirstContact)
+                {
+                    if (c.Other is Collidable g) g.Buff(buffFactor);
+                }
+            }
+        }
+        public override void OverlapEnded(ICollidable other)
+        {
+            if (other is Collidable g) g.EndBuff(buffFactor);
         }
     }
-    internal class Rock : Gameobject
+    internal class Aura : Gameobject
+    {
+        AuraCollidable auraCollidable;
+        
+        public Aura(Vector2 pos, float radius, float f)
+        {
+            this.auraCollidable = new(pos, radius, f);
+            
+        }
+
+        public override void Draw(Vector2 gameSize, Vector2 mousePosGame)
+        {
+            auraCollidable.GetCollider().GetShape().DrawShape(2f, ExampleScene.ColorHighlight1);
+        }
+
+        public override Rect GetBoundingBox()
+        {
+            return auraCollidable.GetCollider().GetShape().GetBoundingBox();
+        }
+
+        public override Vector2 GetCameraFollowPosition(Vector2 camPos)
+        {
+            return GetPosition();
+        }
+
+        public override List<ICollidable> GetCollidables()
+        {
+            return new() { auraCollidable };
+        }
+
+        public override Vector2 GetPosition()
+        {
+            return auraCollidable.GetCollider().Pos;
+        }
+
+        public override bool HasCollidables()
+        {
+            return true;
+        }
+    }
+
+    internal class RockCollidable : Collidable
     {
         float timer = 0f;
-        public Rock(Vector2 pos, Vector2 vel, float size)
+        public RockCollidable(Vector2 pos, Vector2 vel, float size)
         {
-            int shapeIndex = SRNG.randI(0, 4);
-            shapeIndex = 0;
-            if(shapeIndex == 0)
-            {
-                this.collider = new CircleCollider(pos, vel, size * 0.5f);
-            }
-            else if(shapeIndex == 1)
-            {
-                this.collider = new RectCollider(pos, vel, new Vector2(size, size), new Vector2(0.5f));
-            }
-            else if (shapeIndex == 2)
-            {
-                var shape = SPoly.Generate(pos, 3, size * 0.5f, size);
-                this.collider = new PolyCollider(shape, pos, vel);
-            }
-            else if (shapeIndex == 3)
-            {
-                var shape = SPoly.Generate(pos, 12, size * 0.5f, size);
-                this.collider = new PolyCollider(shape, pos, vel);
-            }
-            else this.collider = new CircleCollider(pos, vel, size * 0.5f);
-
+            this.collider = new CircleCollider(pos, vel, size * 0.5f);
             this.collider.ComputeCollision = true;
             this.collider.ComputeIntersections = true;
             this.collider.Enabled = true;
@@ -262,7 +366,6 @@ namespace Examples.Scenes.ExampleScenes
             this.collisionMask = new uint[] { WALL_ID };
             this.startSpeed = vel.Length();
         }
-
         public override uint GetCollisionLayer()
         {
             return ROCK_ID;
@@ -275,35 +378,72 @@ namespace Examples.Scenes.ExampleScenes
                 collider.Vel = collider.Vel.Reflect(info.CollisionSurface.Normal);
             }
         }
-        private void DrawBoundingShapes()
+        public override void Update(float dt)
         {
-            var shape = collider.GetShape();
-            shape.GetBoundingBox().DrawLines(2f, BLUE);
-            shape.GetBoundingCircle().DrawLines(2f, GREEN);
-        }
-        public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
-        {
-            base.Update(dt, mousePosGame, mousePosUI);
-            if(timer > 0f)
+            if (timer > 0f)
             {
                 timer -= dt;
             }
         }
-        public override void Draw(Vector2 gameSize, Vector2 mousePosGame)
+        public void Draw()
         {
-            base.Draw(gameSize, mousePosGame);
             Color color = BLUE;
             if (timer > 0) color = ExampleScene.ColorHighlight1;
             if (buffed) color = buffColor;
             collider.GetShape().DrawShape(2f, color);
-            //SDrawing.DrawCircleFast(collider.Pos, 5, color);
 
         }
     }
-    internal class Box : Gameobject
+    internal class Rock : Gameobject
+    {
+        RockCollidable rockCollidable;
+        
+        public Rock(Vector2 pos, Vector2 vel, float size)
+        {
+            this.rockCollidable = new(pos, vel, size);
+            
+        }
+
+        public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        {
+            base.Update(dt, mousePosGame, mousePosUI);
+            rockCollidable.Update(dt);
+        }
+        public override void Draw(Vector2 gameSize, Vector2 mousePosGame)
+        {
+            rockCollidable.Draw();
+        }
+
+        public override Vector2 GetPosition()
+        {
+            return rockCollidable.GetCollider().Pos;
+        }
+
+        public override Rect GetBoundingBox()
+        {
+            return rockCollidable.GetCollider().GetShape().GetBoundingBox();
+        }
+
+        public override bool HasCollidables()
+        {
+            return true;
+        }
+
+        public override List<ICollidable> GetCollidables()
+        {
+            return new() { rockCollidable };
+        }
+
+        public override Vector2 GetCameraFollowPosition(Vector2 camPos)
+        {
+            return GetPosition();
+        }
+    }
+
+    internal class BoxCollidable : Collidable
     {
         float timer = 0f;
-        public Box(Vector2 pos, Vector2 vel, float size)
+        public BoxCollidable(Vector2 pos, Vector2 vel, float size)
         {
             this.collider = new RectCollider(pos, vel, new Vector2(size, size), new Vector2(0.5f));
 
@@ -314,7 +454,6 @@ namespace Examples.Scenes.ExampleScenes
             this.collisionMask = new uint[] { WALL_ID, BALL_ID };
             this.startSpeed = vel.Length();
         }
-
         public override uint GetCollisionLayer()
         {
             return BOX_ID;
@@ -327,35 +466,74 @@ namespace Examples.Scenes.ExampleScenes
                 collider.Vel = collider.Vel.Reflect(info.CollisionSurface.Normal);
             }
         }
-        public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        public override void Update(float dt)
         {
-            base.Update(dt, mousePosGame, mousePosUI);
             if (timer > 0f)
             {
                 timer -= dt;
             }
         }
-        public override void Draw(Vector2 gameSize, Vector2 mousePosGame)
+        public void Draw()
         {
-            base.Draw(gameSize, mousePosGame);
             Color color = PURPLE;
             if (timer > 0) color = ExampleScene.ColorHighlight1;
-            //collider.GetShape().DrawShape(2f, color);
             if (buffed) color = buffColor;
-            if(collider is RectCollider r)
+            if (collider is RectCollider r)
             {
                 Rect shape = r.GetRectShape();
                 shape.DrawLines(2f, color);
             }
-
-
         }
     }
-    internal class Ball : Gameobject
+    internal class Box : Gameobject
     {
-        const float maxHealth = 30000;
-        float curHealth = maxHealth;
-        public Ball(Vector2 pos, Vector2 vel, float size)
+        BoxCollidable boxCollidable;
+
+        public Box(Vector2 pos, Vector2 vel, float size)
+        {
+            this.boxCollidable = new(pos, vel, size);
+        }
+
+        public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        {
+            base.Update(dt, mousePosGame, mousePosUI);
+            boxCollidable.Update(dt);
+        }
+        public override void Draw(Vector2 gameSize, Vector2 mousePosGame)
+        {
+            boxCollidable.Draw();
+        }
+
+        public override Vector2 GetPosition()
+        {
+            return boxCollidable.GetCollider().Pos;
+        }
+
+        public override Rect GetBoundingBox()
+        {
+            return boxCollidable.GetCollider().GetShape().GetBoundingBox();
+        }
+
+        public override bool HasCollidables()
+        {
+            return true;
+        }
+
+        public override List<ICollidable> GetCollidables()
+        {
+            return new() { boxCollidable };
+        }
+
+        public override Vector2 GetCameraFollowPosition(Vector2 camPos)
+        {
+            return GetPosition();
+        }
+    }
+
+    internal class BallCollidable : Collidable
+    {
+        float timer = 0f;
+        public BallCollidable(Vector2 pos, Vector2 vel, float size)
         {
             this.collider = new CircleCollider(pos, vel, size);
 
@@ -366,11 +544,6 @@ namespace Examples.Scenes.ExampleScenes
             this.collisionMask = new uint[] { WALL_ID, BOX_ID };
             this.startSpeed = vel.Length();
         }
-
-        public override bool IsDead()
-        {
-            return curHealth <= 0;
-        }
         public override uint GetCollisionLayer()
         {
             return BALL_ID;
@@ -379,29 +552,77 @@ namespace Examples.Scenes.ExampleScenes
         {
             if (info.CollisionSurface.Valid)
             {
-                curHealth -= 1;
-                if(curHealth < 0) curHealth = 0;
-
+                timer = 0.25f;
                 collider.Vel = collider.Vel.Reflect(info.CollisionSurface.Normal);
             }
         }
-        public override void Draw(Vector2 gameSize, Vector2 mousePosGame)
+        public override void Update(float dt)
         {
-            base.Draw(gameSize, mousePosGame);
-            
-            float f = curHealth / maxHealth;
-            Color maxColor = GREEN;
-            Color endColor = RED;
-            Color color = maxColor.Lerp(endColor, 1 - f);
-            if (buffed) color = buffColor;
-            if (collider is CircleCollider c)
+            if (timer > 0f)
             {
-                Rect r = new(c.Pos, new Vector2(c.Radius) * 2f, new(0.5f));
-                r.DrawLines(2f, color);
-                //r.Draw(color);
+                timer -= dt;
+            }
+        }
+        public void Draw()
+        {
+            Color color = GREEN;
+            if (timer > 0) color = ExampleScene.ColorHighlight1;
+            if (buffed) color = buffColor;
+
+            if(collider is CircleCollider c)
+            {
+                SDrawing.DrawCircleFast(c.Pos, c.Radius, color);
+
             }
         }
     }
+    internal class Ball : Gameobject
+    {
+        BallCollidable ballCollidable;
+
+        public Ball(Vector2 pos, Vector2 vel, float size)
+        {
+            this.ballCollidable = new(pos, vel, size);
+        }
+        
+
+        public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        {
+            base.Update(dt, mousePosGame, mousePosUI);
+            ballCollidable.Update(dt);
+        }
+        public override void Draw(Vector2 gameSize, Vector2 mousePosGame)
+        {
+            ballCollidable.Draw();
+        }
+
+        public override Vector2 GetPosition()
+        {
+            return ballCollidable.GetCollider().Pos;
+        }
+
+        public override Rect GetBoundingBox()
+        {
+            return ballCollidable.GetCollider().GetShape().GetBoundingBox();
+        }
+
+        public override bool HasCollidables()
+        {
+            return true;
+        }
+
+        public override List<ICollidable> GetCollidables()
+        {
+            return new() { ballCollidable };
+        }
+
+        public override Vector2 GetCameraFollowPosition(Vector2 camPos)
+        {
+            return GetPosition();
+        }
+    }
+
+    
 
     public class AreaExample : ExampleScene
     {
@@ -418,17 +639,17 @@ namespace Examples.Scenes.ExampleScenes
         bool segmentStarted = false;
         bool drawDebug = false;
 
-        int collisionAvg = 0;
-        int collisionsTotal = 0;
-
-        int iterationsAvg = 0;
-        int iterationsTotal = 0;
-
-        int closestPointAvg = 0;
-        int closestPointTotal = 0;
-
-        int avgSteps = 0;
-        float avgTimer = 0f;
+        //int collisionAvg = 0;
+        //int collisionsTotal = 0;
+        //
+        //int iterationsAvg = 0;
+        //int iterationsTotal = 0;
+        //
+        //int closestPointAvg = 0;
+        //int closestPointTotal = 0;
+        //
+        //int avgSteps = 0;
+        //float avgTimer = 0f;
 
         public AreaExample()
         {
@@ -457,7 +678,7 @@ namespace Examples.Scenes.ExampleScenes
                 for (int i = 0; i < 50; i++)
                 {
                     Rock r = new(mousePosGame + SRNG.randVec2(0, 50), SRNG.randVec2() * 150, 60);
-                    area.AddGameObject(r);
+                    area.AddAreaObject(r);
                 }
 
             }
@@ -467,7 +688,7 @@ namespace Examples.Scenes.ExampleScenes
                 for (int i = 0; i < 5; i++)
                 {
                     Box b = new(mousePosGame + SRNG.randVec2(0, 10), SRNG.randVec2() * 75, 25);
-                    area.AddGameObject(b);
+                    area.AddAreaObject(b);
                 }
 
             }
@@ -475,8 +696,8 @@ namespace Examples.Scenes.ExampleScenes
             {
                 for (int i = 0; i < 15; i++)
                 {
-                    Ball b = new(mousePosGame + SRNG.randVec2(0, 5), SRNG.randVec2() * 250, 10);
-                    area.AddGameObject(b);
+                    Ball b = new(mousePosGame + SRNG.randVec2(0, 5), SRNG.randVec2() * 1000, 10);
+                    area.AddAreaObject(b);
                 }
 
             }
@@ -484,13 +705,13 @@ namespace Examples.Scenes.ExampleScenes
             if (IsKeyPressed(KeyboardKey.KEY_FOUR))
             {
                 Trap t = new(mousePosGame, new Vector2(250, 250));
-                area.AddGameObject(t);
+                area.AddAreaObject(t);
             }
 
             if (IsKeyPressed(KeyboardKey.KEY_FIVE))
             {
                 Aura a = new(mousePosGame, 150, 0.75f);
-                area.AddGameObject(a);
+                area.AddAreaObject(a);
             }
 
             if (IsKeyPressed(KeyboardKey.KEY_ZERO)) { drawDebug = !drawDebug; }
@@ -517,23 +738,23 @@ namespace Examples.Scenes.ExampleScenes
             area.Update(dt, mousePosGame, mousePosUI);
 
 
-            collisionsTotal += area.Col.CollisionChecksPerFrame;
-            iterationsTotal += area.Col.IterationsPerFrame;
-            closestPointTotal += area.Col.ClosestPointChecksPerFrame;
-            avgSteps++;
-            avgTimer += dt;
-            if(avgTimer >= 1f)
-            {
-                collisionAvg = collisionsTotal / avgSteps;
-                iterationsAvg = iterationsTotal / avgSteps;
-                closestPointAvg = closestPointTotal / avgSteps;
-
-                collisionsTotal = 0;
-                iterationsTotal = 0;
-                closestPointTotal = 0;
-                avgTimer = 0f;
-                avgSteps = 0;
-            }
+            //collisionsTotal += area.Col.CollisionChecksPerFrame;
+            //iterationsTotal += area.Col.IterationsPerFrame;
+            //closestPointTotal += area.Col.ClosestPointChecksPerFrame;
+            //avgSteps++;
+            //avgTimer += dt;
+            //if(avgTimer >= 1f)
+            //{
+            //    collisionAvg = collisionsTotal / avgSteps;
+            //    iterationsAvg = iterationsTotal / avgSteps;
+            //    closestPointAvg = closestPointTotal / avgSteps;
+            //
+            //    collisionsTotal = 0;
+            //    iterationsTotal = 0;
+            //    closestPointTotal = 0;
+            //    avgTimer = 0f;
+            //    avgSteps = 0;
+            //}
             
         }
 
@@ -546,7 +767,7 @@ namespace Examples.Scenes.ExampleScenes
                 Color boundsColor = ColorLight;
                 Color gridColor = ColorLight;
                 Color fillColor = ColorMedium.ChangeAlpha(100);
-                area.DrawDebugHelpers(boundsColor, gridColor, fillColor);
+                area.DrawDebug(boundsColor, gridColor, fillColor);
             }
 
             DrawWalls(mousePosGame);
@@ -562,13 +783,13 @@ namespace Examples.Scenes.ExampleScenes
 
             area.DrawUI(uiSize, mousePosUI);
 
-            Rect checksRect = new Rect(uiSize * new Vector2(0.5f, 0.92f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));
-            string checks = string.Format("Iteration: {0} | Collisions: {1} | CP: {2}", iterationsAvg.ToString("D6"), collisionAvg.ToString("D6"), closestPointAvg.ToString("D6"));
-            font.DrawText(checks, checksRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+            //Rect checksRect = new Rect(uiSize * new Vector2(0.5f, 0.92f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));
+            //string checks = string.Format("Iteration: {0} | Collisions: {1} | CP: {2}", iterationsAvg.ToString("D6"), collisionAvg.ToString("D6"), closestPointAvg.ToString("D6"));
+            //font.DrawText(checks, checksRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
 
 
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
-            string infoText = String.Format("[LMB] Add Segment | [RMB] Cancel Segment | [Space] Shoot | Objs: {0}", area.GetCollidableCount() );
+            string infoText = String.Format("[LMB] Add Segment | [RMB] Cancel Segment | [Space] Shoot | Objs: {0}", area.CollisionHandler.Count );
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
 
@@ -578,7 +799,7 @@ namespace Examples.Scenes.ExampleScenes
             Wall bottom = new(boundaryRect.BottomRight, boundaryRect.BottomLeft);
             Wall left = new(boundaryRect.TopLeft, boundaryRect.BottomLeft);
             Wall right = new(boundaryRect.BottomRight, boundaryRect.TopRight);
-            area.AddGameObjects(top, right, bottom, left);
+            area.AddAreaObjects(top, right, bottom, left);
         }
         private void DrawWalls(Vector2 mousePos)
         {
@@ -601,7 +822,7 @@ namespace Examples.Scenes.ExampleScenes
                     if (lSq > 400)
                     {
                         PolyWall w = new(startPoint, mousePos);
-                        area.AddGameObject(w);
+                        area.AddAreaObject(w);
                     }
 
                 }

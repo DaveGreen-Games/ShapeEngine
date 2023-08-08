@@ -15,6 +15,18 @@ namespace ShapeEngine.Effects
         public Effect(Vector2 pos, Vector2 size, float rotRad) : base(pos, size) { RotRad = rotRad; }
         public Effect(Vector2 pos, Vector2 size, float rotRad, float lifeTime) : base(pos, size, lifeTime) { RotRad = rotRad; }
 
+        public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        {
+        }
+
+        public override void Draw(Vector2 gameSize, Vector2 mousePosGame)
+        {
+        }
+
+        public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
+        {
+        }
+
         //public virtual bool Draw()
         //{
         //    if(IsDead()) return true;

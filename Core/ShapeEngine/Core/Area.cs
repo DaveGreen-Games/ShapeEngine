@@ -1,10 +1,12 @@
 ﻿using ShapeEngine.Lib;
 using ShapeEngine.Timing;
 using System.Collections;
+using System.Net.Sockets;
 using System.Numerics;
 
 namespace ShapeEngine.Core
 {
+    /*
     public class AreaSlowBehavior : IBehavior
     {
         public SequencerTimedFloat<TimedFloat> UpdateSlowFactors = new();
@@ -19,8 +21,8 @@ namespace ShapeEngine.Core
         public HashSet<int> GetAffectedLayers() { return affectedLayers; }
         public void Update(float dt) { UpdateSlowFactors.Update(dt); }
     }
-
-    
+    */
+    /*
     public class AreaObjects : List<IAreaObject>
     {
         internal class IAreaObjectComparer : Comparer<IAreaObject>
@@ -41,34 +43,78 @@ namespace ShapeEngine.Core
             this.Insert((x >= 0) ? x : ~x, value);
         }
     }
+    */
 
-    //Collision handler/ spatial hash are generic classes or generic interfaces
     
-    public interface IGenericSpatialHash<T> where T : ICollidable
+    public class AreaEmpty : IArea
     {
+        public bool IsValid() { return false; }
+        public Rect Bounds { get { return new(); } }
 
-    }
-    public interface IGenericCollisionHandler<T> where T : ICollidable
-    {
-        public IGenericSpatialHash<T> GetSpatialHash();
-    }
-    public interface IArea<T, A> : IBehaviorReceiver where T : IAreaObject where A : ICollidable
-    {
-        public IGenericCollisionHandler<A> GetCollisionHandler();
-    }
-    public interface IGenericScene<T, A> where T : IAreaObject where A : ICollidable
-    {
-        public IArea<T, A> GetArea();
-    }
+        public int Count { get { return 0; } }
 
+        private CollisionHandlerEmpty collisionHandlerEmpty = new();
+        public ICollisionHandler CollisionHandler { get { return collisionHandlerEmpty; } }
 
+        public Vector2 ParallaxePosition { get { return new Vector2(); } set { } }
+        public float UpdateSlowResistance { get { return 1f; } set { } }
+        public bool DrawToUI { get { return false; } set { } }
 
-    public class Area : IBehaviorReceiver
+        public void AddAreaObject(IAreaObject areaObjects) { }
+
+        public void AddAreaObjects(params IAreaObject[] areaObjects) { }
+
+        public void AddAreaObjects(IEnumerable<IAreaObject> areaObjects) { }
+
+        public void Clear() { }
+
+        public void ClearLayer(int layer) { }
+
+        public void Close() { }
+
+        //public void DrawDebug(params Raylib_CsLo.Color[] colors) { }
+
+        public List<IAreaObject> GetAllGameObjects() { return new(); }
+
+        public List<IAreaObject> GetAllGameObjects(Predicate<IAreaObject> match) { return new(); }
+
+        public List<IAreaObject> GetAreaObjects(int layer, Predicate<IAreaObject> match) { return new(); }
+
+        public bool HasLayer(int layer) { return false; }
+
+        public void RemoveAreaObject(IAreaObject areaObject) { }
+
+        public void RemoveAreaObjects(Predicate<IAreaObject> match) { }
+
+        public void RemoveAreaObjects(int layer, Predicate<IAreaObject> match) { }
+
+        public void RemoveAreaObjects(params IAreaObject[] areaObjects) { }
+
+        public void RemoveAreaObjects(IEnumerable<IAreaObject> areaObjects) { }
+
+        public void Start() { }
+
+        public void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        {
+            
+        }
+
+        public void Draw(Vector2 gameSize, Vector2 mousePosGame)
+        {
+            
+        }
+
+        public void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
+        {
+            
+        }
+    }
+    public class Area : IArea
     {
         protected class AreaLayer
         {
             public List<IAreaObject> objs = new();
-            public List<IBehavior> behaviors = new();
+            //public List<IBehavior> behaviors = new();
             public int Layer { get; private set; }
             public AreaLayer(int layer) { this.Layer = layer; }
             
@@ -132,50 +178,63 @@ namespace ShapeEngine.Core
             public bool Remove(IAreaObject obj)
             {
                 bool removed = objs.Remove(obj);
-                obj.AreaLeft();
+                obj.RemovedFromArea();
                 return removed;
             }
             public bool Remove(int index)
             {
                 if (index < 0 || index >= objs.Count) return false;
-                objs[index].AreaLeft();
+                objs[index].RemovedFromArea();
                 objs.RemoveAt(index);
                 return true;
 
             }
 
         }
-        
 
+        public int Count 
+        { 
+            get 
+            {
+                int count = 0;
+                foreach (var layerGroup in layers.Values)
+                {
+                    count += layerGroup.objs.Count;
+                }
+                return count;
+            } 
+        }
         public Rect Bounds { get; protected set; }
-        public CollisionHandler Col { get; protected set; }
+        protected CollisionHandler col;
+        public ICollisionHandler CollisionHandler { get { return col; } }
         public Vector2 ParallaxePosition { get; set; } = new(0f);
+        public float UpdateSlowResistance { get { return 1f; } set { } }
+        public bool DrawToUI { get { return false; } set { } }
 
-        
         protected SortedList<int, AreaLayer> layers = new();
-        protected HashSet<IBehavior> behaviors = new();
+        //protected HashSet<IBehavior> behaviors = new();
         protected List<IAreaObject> uiObjects = new();
-        
+        public bool IsValid() { return true; }
 
         public Area()
         {
             Bounds = new Rect();
-            Col = new(0,0,0,0,0,0);
+            col = new CollisionHandler(0,0,0,0,0,0);
         }
         public Area(float x, float y, float w, float h, int rows, int cols)
         {
             Bounds = new(x, y, w, h);
-            Col = new(Bounds, rows, cols);
+            col = new CollisionHandler(Bounds, rows, cols);
         }
         public Area(Rect bounds, int rows, int cols)
         {
             Bounds = bounds;
-            Col = new(bounds, rows, cols);
+            col = new CollisionHandler(bounds, rows, cols);
         }
        
 
         public bool HasLayer(int layer) { return layers.ContainsKey(layer); }
-        public List<IAreaObject> GetGameObjects(int layer, Predicate<IAreaObject> match) { return HasLayer(layer) ? layers[layer].objs.FindAll(match) : new(); }// gameObjects.ToList().FindAll(match); }
+        public List<IAreaObject> GetAreaObjects(int layer, Predicate<IAreaObject> match) { return HasLayer(layer) ? layers[layer].objs.FindAll(match) : new(); }// gameObjects.ToList().FindAll(match); }
         public List<IAreaObject> GetAllGameObjects()
         {
             List<IAreaObject> objects = new();
@@ -185,19 +244,19 @@ namespace ShapeEngine.Core
             }
             return objects;
         }
-        public int GetGameobjectCount()
-        {
-            int count = 0;
-            foreach (var layerGroup in layers.Values)
-            {
-                count += layerGroup.objs.Count;
-            }
-            return count;
-        }
-        public int GetCollidableCount()
-        {
-            return Col.Count;
-        }
+        //public int GetGameobjectCount()
+        //{
+        //    int count = 0;
+        //    foreach (var layerGroup in layers.Values)
+        //    {
+        //        count += layerGroup.objs.Count;
+        //    }
+        //    return count;
+        //}
+        //public int GetCollidableCount()
+        //{
+        //    return col.Count;
+        //}
         public List<IAreaObject> GetAllGameObjects(Predicate<IAreaObject> match) { return GetAllGameObjects().FindAll(match); }
         
         protected void AddLayer(int layer)
@@ -208,8 +267,8 @@ namespace ShapeEngine.Core
                 //SortAreaLayerGroups();
             }
         }
-        
-        public void AddCollidable(ICollidable collidable)
+        /*
+        public void AddCollidable(UCollidable collidable)
         {
             Col.Add(collidable);
         }
@@ -234,48 +293,60 @@ namespace ShapeEngine.Core
         {
             foreach (var col in collidables) RemoveCollidable(col);
         }
-
-        public void AddGameObject(IAreaObject gameObject) 
+        */
+        public void AddAreaObject(IAreaObject areaObject) 
         {
-            int layer = gameObject.AreaLayer;
+            int layer = areaObject.AreaLayer;
             if (!layers.ContainsKey(layer)) AddLayer(layer);
 
-            layers[layer].Add(gameObject);
-            if (gameObject.HasCollidables()) AddCollidables(gameObject.GetCollidables());
-            gameObject.AreaEntered();
+            layers[layer].Add(areaObject);
+            if (areaObject.HasCollidables()) col.AddRange(areaObject.GetCollidables());
+            areaObject.AddedToArea();
         }
-        public void AddGameObjects(params IAreaObject[] gameObjects) { foreach (var go in gameObjects) AddGameObject(go); }
-        
-        public bool RemoveGameObject(IAreaObject gameObject)
+        public void AddAreaObjects(params IAreaObject[] areaObjects) { foreach (var ao in areaObjects) AddAreaObject(ao); }
+        public void AddAreaObjects(IEnumerable<IAreaObject> areaObjects) { foreach (var ao in areaObjects) AddAreaObject(ao); }
+        public void RemoveAreaObject(IAreaObject areaObject)
         {
-            if (layers.ContainsKey(gameObject.AreaLayer))
+            if (layers.ContainsKey(areaObject.AreaLayer))
             {
-                bool removed = layers[gameObject.AreaLayer].Remove(gameObject);
+                bool removed = layers[areaObject.AreaLayer].Remove(areaObject);
                 if (removed)
                 {
-                    if (gameObject.HasCollidables()) RemoveCollidables(gameObject.GetCollidables());
+                    if (areaObject.HasCollidables()) col.RemoveRange(areaObject.GetCollidables());
                 }
-                return removed;
             }
-            return false;
         }
-        public void RemoveGameObjects(int layer, Predicate<IAreaObject> match)
+        public void RemoveAreaObjects(params IAreaObject[] areaObjects)
+        {
+            foreach (var ao in areaObjects)
+            {
+                RemoveAreaObject(ao);
+            }
+        }
+        public void RemoveAreaObjects(IEnumerable<IAreaObject> areaObjects)
+        {
+            foreach (var ao in areaObjects)
+            {
+                RemoveAreaObject(ao);
+            }
+        }
+        public void RemoveAreaObjects(int layer, Predicate<IAreaObject> match)
         {
             if (layers.ContainsKey(layer))
             {
-                var objs = GetGameObjects(layer, match);
+                var objs = GetAreaObjects(layer, match);
                 foreach (var o in objs)
                 {
-                    RemoveGameObject(o);
+                    RemoveAreaObject(o);
                 }
             }
         }
-        public void RemoveGameObjects(Predicate<IAreaObject> match)
+        public void RemoveAreaObjects(Predicate<IAreaObject> match)
         {
             var objs = GetAllGameObjects(match);
             foreach (var o in objs)
             {
-                RemoveGameObject(o);
+                RemoveAreaObject(o);
             }
         }
 
@@ -294,7 +365,7 @@ namespace ShapeEngine.Core
                 for (int i = layerGroup.objs.Count - 1; i >= 0; i--)
                 {
                     var obj = layerGroup.objs[i];
-                    if (obj.HasCollidables()) RemoveCollidables(obj.GetCollidables());
+                    if (obj.HasCollidables()) col.RemoveRange(obj.GetCollidables());
                     //if (obj is ICollidable col) Col.Remove(col);
                     
                     layerGroup.Remove(i);
@@ -303,16 +374,17 @@ namespace ShapeEngine.Core
             }
         }
 
+        /*
         public bool HasBehaviors() { return behaviors.Count > 0; }
         public bool AddBehavior(IBehavior behavior) { return behaviors.Add(behavior); }
         public bool RemoveBehavior(IBehavior behavior) { return behaviors.Remove(behavior); }
-
+        */
         
         public virtual void Start() { }
         public virtual void Close()
         {
             Clear();
-            Col.Close();
+            col.Close();
         }
         //public virtual void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         //{
@@ -330,9 +402,9 @@ namespace ShapeEngine.Core
         //}
         public virtual void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            Col.Update(dt);
+            col.Update(dt, mousePosGame, mousePosUI);
             
-            foreach (var b in behaviors) b.Update(dt);
+            //foreach (var b in behaviors) b.Update(dt);
 
             for (int i = 0; i < layers.Count; i++)
             {
@@ -341,10 +413,10 @@ namespace ShapeEngine.Core
             }
         }
         
-        public void DrawDebugHelpers(Raylib_CsLo.Color boundsColor, Raylib_CsLo.Color collisionGridColor, Raylib_CsLo.Color collisionGridFillColor)
+        public void DrawDebug(Raylib_CsLo.Color bounds, Raylib_CsLo.Color border, Raylib_CsLo.Color fill)
         {
-            DrawRectangleLinesEx(this.Bounds.Rectangle, 15f, boundsColor);
-            Col.DebugDrawGrid(collisionGridColor, collisionGridFillColor);
+            DrawRectangleLinesEx(this.Bounds.Rectangle, 15f, bounds);
+            col.DebugDraw(border, fill);
         }
 
         public virtual void Draw(Vector2 gameSize, Vector2 mousePosGame)
@@ -370,6 +442,7 @@ namespace ShapeEngine.Core
             }
         }
         
+        /*
         protected List<IBehavior> GetLayerBehaviors(int layer)
         {
             List<IBehavior> result = new();
@@ -381,9 +454,10 @@ namespace ShapeEngine.Core
             }
             return result;
         }
+        */
         protected virtual void UpdateLayer(float dt, Vector2 mousePosGame, Vector2 mousePosUI, AreaLayer layer)
         {
-            var behaviors = GetLayerBehaviors(layer.Layer);
+            //var behaviors = GetLayerBehaviors(layer.Layer);
             
             for (int i = layer.objs.Count - 1; i >= 0; i--)
             {
@@ -394,32 +468,25 @@ namespace ShapeEngine.Core
                     return;
                 }
 
-                //if(obj.RecievesInput()) obj.HandleInput(dt, mousePosGame, mousePosUI);
 
                 obj.UpdateParallaxe(ParallaxePosition);
 
-                
+                /*
                 float delta = dt;
                 for (int j = behaviors.Count - 1; j >= 0; j--)
                 {
                     var b = layer.behaviors[j];
-                    //delta = b.ChangeDelta(delta);
                     var result = b.Apply(obj, delta);
                     delta = result.newDelta;
                     if (result.finished) { layer.behaviors.RemoveAt(j); }
                 }
 
-                //float curSlowFactor =  UpdateSlowFactors.Total * layer.GetTotalUpdateSlowFactor(obj);
-                float dif = dt - delta; // (dt * curSlowFactor);
+                float dif = dt - delta;
                 dif *= obj.UpdateSlowResistance;
-
                 if (dif > 0f) obj.Update(dt - dif, mousePosGame, mousePosUI);
                 else obj.Update(dt, mousePosGame, mousePosUI);
-                //bool insideInner = InnerRect.OverlapShape(obj.GetBoundingBox());
-                //bool insideOuter = false;
-                //if (insideInner) insideOuter = true;
-                //else insideOuter = OuterRect.OverlapShape(obj.GetBoundingBox());
-                //obj.OnPlayfield(insideInner, insideOuter);
+                */
+                obj.Update(dt, mousePosGame, mousePosUI);
                 if (!obj.IsDead())
                 {
                     bool insideBounds = Bounds.OverlapShape(obj.GetBoundingBox());
@@ -427,15 +494,18 @@ namespace ShapeEngine.Core
                 }
                 else
                 {
-                    //obj.AreaLeft();
                     layer.Remove(i);
-                    if (obj is ICollidable collidable) Col.Remove(collidable);
+                    if (obj.HasCollidables()) col.RemoveRange(obj.GetCollidables());
+                    //if (obj is ICollidable collidable) Col.Remove(collidable);
                 }
                 
             }
         }
 
+        
     }
+
+
 }
 
 
