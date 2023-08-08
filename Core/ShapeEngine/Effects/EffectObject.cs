@@ -66,9 +66,9 @@ namespace ShapeEngine.Effects
         public virtual bool AddBehavior(IBehavior behavior) { return false; }
         public virtual bool RemoveBehavior(IBehavior behavior) { return false; }
         */
-        public void AddedToArea()     {}
-        public void RemovedFromArea() {}
-        public void LeftAreaBounds() { }
+        public void AddedToArea(IArea area)     {}
+        public void RemovedFromArea(IArea area) {}
+        public void LeftAreaBounds(Rect bounds) { }
         public Vector2 GetCameraFollowPosition(Vector2 camPos) { return GetPosition(); }
 
         public abstract void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI);

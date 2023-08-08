@@ -100,11 +100,11 @@ namespace Examples.Scenes.ExampleScenes
         public abstract List<ICollidable> GetCollidables();
 
         
-        public virtual void AddedToArea() { }
+        public virtual void AddedToArea(IArea area) { }
 
-        public virtual void RemovedFromArea() { }
+        public virtual void RemovedFromArea(IArea area) { }
 
-        public virtual void LeftAreaBounds() { }
+        public virtual void LeftAreaBounds(Rect bounds) { }
 
         public abstract Vector2 GetCameraFollowPosition(Vector2 camPos);
 
@@ -626,7 +626,7 @@ namespace Examples.Scenes.ExampleScenes
 
     public class AreaExample : ExampleScene
     {
-        Area area;
+        AreaCollision area;
         
         ScreenTexture game;
         BasicCamera cam;

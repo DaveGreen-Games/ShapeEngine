@@ -74,6 +74,19 @@ namespace ShapeEngine.Core
         /// <param name="uiSize">The current size of the UI texture.</param>
         public void DrawUI(Vector2 uiSize, Vector2 mousePosUI);
     }
+    public interface IKillable
+    {
+        /// <summary>
+        /// Try to kill the object.
+        /// </summary>
+        /// <returns>Return true if kill was successful.</returns>
+        public bool Kill();
+        /// <summary>
+        /// Check if object is dead.
+        /// </summary>
+        /// <returns></returns>
+        public bool IsDead();
+    }
     public interface IAreaObject : ILocation, IUpdateable, IDrawable, IKillable//, IBehaviorReceiver
     {
         /// <summary>
@@ -101,33 +114,20 @@ namespace ShapeEngine.Core
         /// <summary>
         /// Is called when gameobject is added to an area.
         /// </summary>
-        public void AddedToArea();
+        public void AddedToArea(IArea area);
         /// <summary>
         /// Is called by the area once a game object is dead.
         /// </summary>
-        public void RemovedFromArea();
+        public void RemovedFromArea(IArea area);
         /// <summary>
         /// Called when the object leaves the outer bounds of the area. Can be used to destroy objects that have left the bounds.
         /// </summary>
-        public void LeftAreaBounds();
+        public void LeftAreaBounds(Rect bounds);
 
         public Vector2 GetCameraFollowPosition(Vector2 camPos);
 
         public virtual bool HasCollidables() { return false; }
         public virtual List<ICollidable> GetCollidables() { return new(); }
-    }
-    public interface IKillable
-    {
-        /// <summary>
-        /// Try to kill the object.
-        /// </summary>
-        /// <returns>Return true if kill was successful.</returns>
-        public bool Kill();
-        /// <summary>
-        /// Check if object is dead.
-        /// </summary>
-        /// <returns></returns>
-        public bool IsDead();
     }
 
     //public interface IInputReciever
@@ -281,6 +281,7 @@ namespace ShapeEngine.Core
         public List<IAreaObject> GetAllGameObjects();
         public List<IAreaObject> GetAllGameObjects(Predicate<IAreaObject> match);
 
+        public void ResizeBounds(Rect newBounds);
 
         public bool HasLayer(int layer);
 
@@ -314,7 +315,7 @@ namespace ShapeEngine.Core
         public int Count { get; }
         public bool IsValid();
 
-        public void UpdateBounds(Rect newBounds);
+        public void ResizeBounds(Rect newBounds);
 
         public void Add(ICollidable collidable);
         public void AddRange(IEnumerable<ICollidable> collidables);

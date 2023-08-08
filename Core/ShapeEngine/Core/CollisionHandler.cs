@@ -40,7 +40,7 @@ namespace ShapeEngine.Core
 
         public void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI) { }
 
-        public void UpdateBounds(Rect newBounds) { }
+        public void ResizeBounds(Rect newBounds) { }
     }
     public class CollisionHandler : ICollisionHandler
     {
@@ -113,7 +113,7 @@ namespace ShapeEngine.Core
         public CollisionHandler(Rect bounds, int rows, int cols) { spatialHash = new(bounds.x, bounds.y, bounds.width, bounds.height, rows, cols); }
         
         
-        public void UpdateBounds(Rect newBounds) { spatialHash = spatialHash.Resize(newBounds); }
+        public void ResizeBounds(Rect newBounds) { spatialHash.ResizeBounds(newBounds); }
         
         public void Add(ICollidable collidable)
         {
