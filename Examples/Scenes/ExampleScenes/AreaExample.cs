@@ -696,7 +696,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 for (int i = 0; i < 15; i++)
                 {
-                    Ball b = new(mousePosGame + SRNG.randVec2(0, 5), SRNG.randVec2() * 1000, 10);
+                    Ball b = new(mousePosGame + SRNG.randVec2(0, 5), SRNG.randVec2() * 300, 10);
                     area.AddAreaObject(b);
                 }
 

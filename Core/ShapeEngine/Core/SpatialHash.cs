@@ -6,28 +6,28 @@ namespace ShapeEngine.Core
 {
 
     
-    /*
-    internal class BucketInfo<TCollidable> where TCollidable : ICollidable<TCollidable>
+    
+    public class SpatialHashBucketInfo
     {
         public bool Valid { get; private set; }
-        public Dictionary<uint, HashSet<TCollidable>> Layers;
-        public HashSet<TCollidable> Active;
-        public BucketInfo(HashSet<TCollidable> active, Dictionary<uint, HashSet<TCollidable>> layers)
+        public Dictionary<uint, HashSet<ICollidable>> Layers;
+        public HashSet<ICollidable> Active;
+        public SpatialHashBucketInfo(HashSet<ICollidable> active, Dictionary<uint, HashSet<ICollidable>> layers)
         {
             this.Active = active;
             this.Layers = layers;
             this.Valid = true;
         }
-        public BucketInfo()
+        public SpatialHashBucketInfo()
         {
             this.Layers = new();
             this.Active = new();
             this.Valid = false;
         }
 
-        public List<TCollidable> GetOthers(TCollidable collidable)
+        public List<ICollidable> GetOthers(ICollidable collidable)
         {
-            List<TCollidable> others = new();
+            List<ICollidable> others = new();
             var mask = collidable.GetCollisionMask();
             if (mask.Length <= 0) return new();
 
@@ -39,71 +39,71 @@ namespace ShapeEngine.Core
         }
 
     }
-    */
+
+    public class SpatialHashBucket
+    {
+        public Dictionary<uint, HashSet<ICollidable>> Layers = new();
+        public HashSet<ICollidable> Collidables = new();
+        public int Count { get { return Collidables.Count; } }
+
+        public void Clear()
+        {
+            Layers.Clear();
+            Collidables.Clear();
+        }
+        public void Add(ICollidable collidable)
+        {
+            var layer = collidable.GetCollisionLayer();
+            if (Layers.ContainsKey(layer)) Layers[layer].Add(collidable);
+            else Layers.Add(layer, new() { collidable });
+            Collidables.Add(collidable);
+        }
+        public void Remove(ICollidable collidable)
+        {
+            var layer = collidable.GetCollisionLayer();
+            if (Layers.ContainsKey(layer)) Layers[layer].Remove(collidable);
+            Collidables.Remove(collidable);
+        }
+
+        public HashSet<ICollidable> GetObjects(params uint[] mask)
+        {
+            HashSet<ICollidable> objects = new();
+            foreach (var entry in mask)
+            {
+                if (Layers.ContainsKey(entry)) objects.UnionWith(Layers[entry]);
+            }
+            return objects;
+        }
+        
+        public SpatialHashBucketInfo GetBucketInfo()
+        {
+            HashSet<ICollidable> active = new();
+            List<uint> availableLayers = Layers.Keys.ToList();
+            foreach (var collidable in Collidables)
+            {
+                if (collidable.GetCollider().ComputeCollision)
+                {
+                    var mask = collidable.GetCollisionMask();
+                    foreach (var entry in mask)
+                    {
+                        if (availableLayers.Contains(entry))
+                        {
+                            active.Add(collidable);
+                            break;
+                        }
+                    }
+
+                }
+            }
+
+            return new(active, Layers);
+        }
+        
+    }
 
     public class SpatialHash
     {
-        internal class Bucket
-        {
-            public Dictionary<uint, HashSet<ICollidable>> Layers = new();
-            public HashSet<ICollidable> Collidables = new();
-            public int Count { get { return Collidables.Count; } }
-
-            public void Clear()
-            {
-                Layers.Clear();
-                Collidables.Clear();
-            }
-            public void Add(ICollidable collidable)
-            {
-                var layer = collidable.GetCollisionLayer();
-                if (Layers.ContainsKey(layer)) Layers[layer].Add(collidable);
-                else Layers.Add(layer, new() { collidable });
-                Collidables.Add(collidable);
-            }
-            public void Remove(ICollidable collidable)
-            {
-                var layer = collidable.GetCollisionLayer();
-                if (Layers.ContainsKey(layer)) Layers[layer].Remove(collidable);
-                Collidables.Remove(collidable);
-            }
-
-            public HashSet<ICollidable> GetObjects(params uint[] mask)
-            {
-                HashSet<ICollidable> objects = new();
-                foreach (var entry in mask)
-                {
-                    if (Layers.ContainsKey(entry)) objects.UnionWith(Layers[entry]);
-                }
-                return objects;
-            }
-            /*
-            public BucketInfo<UCollidable> GetBucketInfo()
-            {
-                HashSet<UCollidable> active = new();
-                List<uint> availableLayers = Layers.Keys.ToList();
-                foreach (var collidable in Collidables)
-                {
-                    if (collidable.GetCollider().ComputeCollision)
-                    {
-                        var mask = collidable.GetCollisionMask();
-                        foreach (var entry in mask)
-                        {
-                            if (availableLayers.Contains(entry))
-                            {
-                                active.Add(collidable);
-                                break;
-                            }
-                        }
-
-                    }
-                }
-
-                return new(active, Layers);
-            }
-            */
-        }
-
+        
         //rework this?
         private float origin_x;
         private float origin_y;
@@ -111,6 +111,7 @@ namespace ShapeEngine.Core
         private float width;
         private float height;
 
+        //Rect bounds;
         private float spacing_x;
         private float spacing_y;
 
@@ -118,7 +119,7 @@ namespace ShapeEngine.Core
         private int rows = 0;
         private int cols = 0;
 
-        private Bucket[] buckets;
+        private SpatialHashBucket[] buckets;
 
         public SpatialHash(float x, float y, float w, float h, int rows, int cols)
         {
@@ -135,7 +136,7 @@ namespace ShapeEngine.Core
             this.rows = rows;
             this.cols = cols;
             bucketCount = rows * cols;
-            buckets = new Bucket[bucketCount];
+            buckets = new SpatialHashBucket[bucketCount];
             for (int i = 0; i < bucketCount; i++)
             {
                 buckets[i] = new();
@@ -156,7 +157,7 @@ namespace ShapeEngine.Core
             this.rows = rows;
             this.cols = cols; 
             bucketCount = rows * cols;
-            buckets = new Bucket[bucketCount];
+            buckets = new SpatialHashBucket[bucketCount];
             for (int i = 0; i < bucketCount; i++)
             {
                 buckets[i] = new();
@@ -272,17 +273,17 @@ namespace ShapeEngine.Core
         public void Close()
         {
             Clear();
-            buckets = new Bucket[0];  //new HashSet<ICollidable>[0];
+            buckets = new SpatialHashBucket[0];  //new HashSet<ICollidable>[0];
         }
 
-        /*
-        internal BucketInfo<TCollidable> GetBucketInfo(int bucketIndex)
+        
+        public SpatialHashBucketInfo GetBucketInfo(int bucketIndex)
         {
             if (bucketIndex < 0 || bucketIndex >= bucketCount) return new();
             var bucket = buckets[bucketIndex];
             return bucket.GetBucketInfo();
         }
-        */
+        
 
         public List<ICollidable> GetObjects(ICollidable collidable)
         {
