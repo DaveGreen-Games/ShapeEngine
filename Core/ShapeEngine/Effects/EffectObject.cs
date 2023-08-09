@@ -75,6 +75,20 @@ namespace ShapeEngine.Effects
         public abstract void Draw(Vector2 gameSize, Vector2 mousePosGame);
         public abstract void DrawUI(Vector2 uiSize, Vector2 mousePosUI);
 
+        //public Circle GetBoundingCircle()
+        //{
+        //    return new Circle(Pos, Size.Max());
+        //}
+
+        public virtual bool CheckAreaBounds()
+        {
+            return false;
+        }
+
+        public virtual void LeftAreaBounds(Vector2 safePosition, CollisionPoints collisionPoints)
+        {
+        }
+
         //public void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI) { }
     }
 

@@ -61,16 +61,11 @@ namespace Examples.Scenes.ExampleScenes
     }
     internal abstract class Gameobject : IAreaObject
     {
-       
-        
-        //public float UpdateSlowResistance { get; set; } = 1f;
         public bool DrawToUI { get; set; } = false;
         public int AreaLayer { get; set; } = 0;
 
-        //public bool AddBehavior(IBehavior behavior) { return false; }
-
+        //protected float boundingRadius = 1f;
         
-
         public virtual bool IsDead()
         {
             return false;
@@ -104,11 +99,20 @@ namespace Examples.Scenes.ExampleScenes
 
         public virtual void RemovedFromArea(IArea area) { }
 
-        public virtual void LeftAreaBounds(Rect bounds) { }
 
         public abstract Vector2 GetCameraFollowPosition(Vector2 camPos);
 
         public void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
+        {
+            
+        }
+
+        public bool CheckAreaBounds()
+        {
+            return false;
+        }
+
+        public void LeftAreaBounds(Vector2 safePosition, CollisionPoints collisionPoints)
         {
             
         }
@@ -789,7 +793,7 @@ namespace Examples.Scenes.ExampleScenes
 
 
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
-            string infoText = String.Format("[LMB] Add Segment | [RMB] Cancel Segment | [Space] Shoot | Objs: {0}", area.CollisionHandler.Count );
+            string infoText = String.Format("[LMB] Add Segment | [RMB] Cancel Segment | [Space] Shoot | Objs: {0}", area.GetCollisionHandler().Count );
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
 

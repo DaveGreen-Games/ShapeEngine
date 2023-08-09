@@ -3,45 +3,7 @@ using System.Numerics;
 
 namespace ShapeEngine.Core
 {
-    public class CollisionHandlerEmpty : ICollisionHandler
-    {
-        public int Count { get { return 0; } }
-
-        public void Add(ICollidable collidable) { }
-
-        public void AddRange(IEnumerable<ICollidable> collidables) { }
-
-        public void AddRange(params ICollidable[] collidables) { }
-
-        public List<ICollidable> CastSpace(ICollidable collidable, bool sorted = false) { return new(); }
-
-        public List<ICollidable> CastSpace(ICollider collider, bool sorted = false, params uint[] collisionMask) { return new(); }
-
-        public List<ICollidable> CastSpace(IShape castShape, bool sorted = false, params uint[] collisionMask) { return new(); }
-
-        public void Clear() { }
-
-        public void Close() { }
-
-        public void DebugDraw(params Raylib_CsLo.Color[] colors) { }
-
-        public bool IsValid() { return false; }
-
-        public List<QueryInfo> QuerySpace(ICollidable collidable, bool sorted = false) { return new(); }
-        public List<QueryInfo> QuerySpace(ICollider collider, bool sorted = false, params uint[] collisionMask) { return new(); }
-        public List<QueryInfo> QuerySpace(IShape shape, bool sorted = false, params uint[] collisionMask) { return new(); }
-        public List<QueryInfo> QuerySpace(IShape shape, ICollidable[] exceptions, bool sorted = false, params uint[] collisionMask) { return new(); }
-
-        public void Remove(ICollidable collidable) { }
-
-        public void RemoveRange(IEnumerable<ICollidable> collidables) { }
-
-        public void RemoveRange(params ICollidable[] collidables) { }
-
-        public void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI) { }
-
-        public void ResizeBounds(Rect newBounds) { }
-    }
+ 
     public class CollisionHandler : ICollisionHandler
     {
         internal class OverlapRegister : Dictionary<ICollidable, HashSet<ICollidable>>
@@ -97,6 +59,7 @@ namespace ShapeEngine.Core
         /// </summary>
         public bool BucketFirstAlgorithm = false;
         */
+
         private List<ICollidable> collidables = new();
         private List<ICollidable> tempHolding = new();
         private List<ICollidable> tempRemoving = new();
@@ -107,7 +70,8 @@ namespace ShapeEngine.Core
 
 
         public int Count { get { return collidables.Count; } }
-        public bool IsValid() { return true; }
+
+        public Rect Bounds { get { return spatialHash.Bounds; } }
 
         public CollisionHandler(float x, float y, float w, float h, int rows, int cols) { spatialHash = new(x, y, w, h, rows, cols); }
         public CollisionHandler(Rect bounds, int rows, int cols) { spatialHash = new(bounds.x, bounds.y, bounds.width, bounds.height, rows, cols); }
@@ -521,88 +485,3 @@ namespace ShapeEngine.Core
 }
 
 
-/*
-        public static void SortQueryInfoPoints(Vector2 p, QueryInfo info)
-        {
-            if (!info.intersection.valid) return;
-            if (info.intersection.points.Count <= 1) return;
-            info.intersection.points.Sort
-            (
-                (a, b) =>
-                {
-                    float la = (p - a.p).LengthSquared();
-                    float lb = (p - b.p).LengthSquared();
-
-                    if (la > lb) return 1;
-                    else if (la == lb) return 0;
-                    else return -1;
-                }
-            );
-        }
-        public static void SortQueryInfoPoints(Vector2 p, List<QueryInfo> infos)
-        {
-            foreach (var info in infos)
-            {
-                SortQueryInfoPoints(p, info);
-            }
-        }
-        */
-
-
-
-
-/*
-        public List<ICollidable> CastSpace(Rect rect, bool sorted = false, params uint[] collisionMask)
-        {
-            RectCollider collider = new(rect);
-            return GetCastBodies(collider, sorted, collisionMask);
-        }
-        public List<ICollidable> CastSpace(Vector2 pos, float r, bool sorted = false, params uint[] collisionMask)
-        {
-            CircleCollider collider = new(pos, r);
-            return GetCastBodies(collider, sorted, collisionMask);
-        }
-        public List<ICollidable> CastSpace(Vector2 pos, Vector2 size, Vector2 alignement, bool sorted = false, params uint[] collisionMask)
-        {
-            RectCollider collider = new(pos, size, alignement);
-            return GetCastBodies(collider, sorted, collisionMask);
-        }
-        public List<ICollidable> CastSpace(Vector2 pos, Vector2 dir, float length, bool sorted = false, params uint[] collisionMask)
-        {
-            SegmentCollider collider = new(pos, dir, length);
-            return GetCastBodies(collider, sorted, collisionMask);
-        }
-        public List<ICollidable> CastSpace(Vector2 start, Vector2 end, bool sorted = false, params uint[] collisionMask)
-        {
-            SegmentCollider collider = new(start, end);
-            return GetCastBodies(collider, sorted, collisionMask);
-        }
-        */
-//public List<QueryInfo> QuerySpace(Rect rect, bool sorted = false, params uint[] collisionMask)
-        //{
-        //    return QuerySpace(rect, sorted, collisionMask);
-        //    //RectCollider collider = new(rect);
-        //    //return GetQueryInfo(collider, sorted, collisionMask);
-        //}
-        //public List<QueryInfo> QuerySpace(Vector2 pos, float r, bool sorted = false, params uint[] collisionMask)
-        //{
-        //    return QuerySpace(new Circle(pos, r), sorted, collisionMask);
-        //    //CircleCollider collider = new(pos, r);
-        //    //return GetQueryInfo(collider, sorted, collisionMask);
-        //}
-        //public List<QueryInfo> QuerySpace(Vector2 pos, Vector2 dir, float length, bool sorted = false, params uint[] collisionMask)
-        //{
-        //    SegmentCollider collider = new(pos, dir, length);
-        //    return GetQueryInfo(collider, sorted, collisionMask);
-        //}
-        //public List<QueryInfo> QuerySpace(Vector2 start, Vector2 end, bool sorted = false, params uint[] collisionMask)
-        //{
-        //    SegmentCollider collider = new(start, end);
-        //    return GetQueryInfo(collider, sorted, collisionMask);
-        //}
-//public List<QueryInfo> QuerySpace(Vector2 pos, Vector2 size, Vector2 alignement, bool sorted = false, params uint[] collisionMask)
-        //{
-        //    return QuerySpace(new Rect(pos, size, alignement), sorted, collisionMask);
-        //    //RectCollider collider = new(pos, size, alignement);
-        //    //return GetQueryInfo(collider, sorted, collisionMask);
-        //}

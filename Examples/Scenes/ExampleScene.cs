@@ -23,9 +23,9 @@ namespace Examples.Scenes
 
         public ExampleScene()
         {
-            titleFont = GAMELOOP.FontDefault;// GAMELOOP.GetFont(GameloopExamples.FONT_IndieFlowerRegular);
+            titleFont = GAMELOOP.FontDefault;
             GAMELOOP.Game.BackgroundColor = ColorDark;
-            
+
         }
 
         public virtual void Reset() { }

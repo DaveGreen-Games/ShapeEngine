@@ -12,7 +12,7 @@ namespace ShapeEngine.Core
         public bool CallDraw { get; set; }
 
 
-        public IArea GetCurArea();
+        public IArea? GetCurArea();
 
 
         public void Activate(IScene oldScene);// { }
@@ -34,18 +34,39 @@ namespace ShapeEngine.Core
     
 
 
-    public interface ILocation
+    public interface ISpatial
     {
         /// <summary>
         /// Get the current position of the object.
         /// </summary>
         /// <returns></returns>
         public Vector2 GetPosition();
+        /*
+        /// <summary>
+        /// The current bounding circle of the object.
+        /// </summary>
+        /// <returns></returns>
+        public Circle GetBoundingCircle();
+        */
         /// <summary>
         /// Get the current bounding box of the object.
         /// </summary>
         /// <returns></returns>
         public Rect GetBoundingBox();
+        /*
+        /// <summary>
+        /// The current bounding radius of the object. Is used to generate the bounding circle.
+        /// </summary>
+        /// <returns></returns>
+        public float GetBoundingRadius();
+        /// <summary>
+        /// The current bounding circle of the radius. Is constructed out of the position and bounding radius of the object.
+        /// </summary>
+        /// <returns></returns>
+        public Circle GetBoundingCircle();
+
+        
+        */
     }
     public interface IUpdateable
     {
@@ -87,7 +108,7 @@ namespace ShapeEngine.Core
         /// <returns></returns>
         public bool IsDead();
     }
-    public interface IAreaObject : ILocation, IUpdateable, IDrawable, IKillable//, IBehaviorReceiver
+    public interface IAreaObject : ISpatial, IUpdateable, IDrawable, IKillable//, IBehaviorReceiver
     {
         /// <summary>
         /// Should DrawUI be called on this object.
@@ -119,11 +140,19 @@ namespace ShapeEngine.Core
         /// Is called by the area once a game object is dead.
         /// </summary>
         public void RemovedFromArea(IArea area);
-        /// <summary>
-        /// Called when the object leaves the outer bounds of the area. Can be used to destroy objects that have left the bounds.
-        /// </summary>
-        public void LeftAreaBounds(Rect bounds);
 
+        /// <summary>
+        /// Should this object be checked for leaving the bounds of the area?
+        /// </summary>
+        /// <returns></returns>
+        public bool CheckAreaBounds();
+        /// <summary>
+        /// Will be called if the object left the bounds of the area. The BoundingCircle is used for this check.
+        /// </summary>
+        /// <param name="safePosition">The closest position within the bounds.</param>
+        /// <param name="collisionPoints">The points where the object left the bounds. Can be 1 or 2 max.</param>
+        public void LeftAreaBounds(Vector2 safePosition, CollisionPoints collisionPoints);
+        
         public Vector2 GetCameraFollowPosition(Vector2 camPos);
 
         public virtual bool HasCollidables() { return false; }
@@ -266,14 +295,18 @@ namespace ShapeEngine.Core
         public void UpdatePreviousPosition(float dt);
     }
 
-
-    public interface IArea : IUpdateable, IDrawable
+    public interface IBounds
     {
-        public bool IsValid();
         public Rect Bounds { get; }
+        public void ResizeBounds(Rect newBounds);
+    }
+    
+    
+    public interface IArea : IUpdateable, IDrawable, IBounds
+    {
         public int Count { get; }
 
-        public ICollisionHandler CollisionHandler { get; }
+        public ICollisionHandler? GetCollisionHandler();
         public Vector2 ParallaxePosition { get; set; }
 
 
@@ -281,7 +314,6 @@ namespace ShapeEngine.Core
         public List<IAreaObject> GetAllGameObjects();
         public List<IAreaObject> GetAllGameObjects(Predicate<IAreaObject> match);
 
-        public void ResizeBounds(Rect newBounds);
 
         public bool HasLayer(int layer);
 
@@ -298,11 +330,12 @@ namespace ShapeEngine.Core
         public void Clear();
         public void ClearLayer(int layer);
 
-        /*
-        public bool HasBehaviors() { return behaviors.Count > 0; }
-        public bool AddBehavior(IBehavior behavior) { return behaviors.Add(behavior); }
-        public bool RemoveBehavior(IBehavior behavior) { return behaviors.Remove(behavior); }
-        */
+        
+        
+        //public bool HasBehaviors() { return behaviors.Count > 0; }
+        //public bool AddBehavior(IBehavior behavior) { return behaviors.Add(behavior); }
+        //public bool RemoveBehavior(IBehavior behavior) { return behaviors.Remove(behavior); }
+        
 
         public void Start();
         public void Close();
@@ -310,12 +343,11 @@ namespace ShapeEngine.Core
         //public void DrawDebug(params Raylib_CsLo.Color[] colors);
 
     }
-    public interface ICollisionHandler : IUpdateable
+    
+    public interface ICollisionHandler : IUpdateable, IBounds
     {
         public int Count { get; }
-        public bool IsValid();
 
-        public void ResizeBounds(Rect newBounds);
 
         public void Add(ICollidable collidable);
         public void AddRange(IEnumerable<ICollidable> collidables);
@@ -327,7 +359,6 @@ namespace ShapeEngine.Core
         public void Clear();
         public void Close();
 
-        //public void Update(float dt);
 
         public List<QueryInfo> QuerySpace(ICollidable collidable, bool sorted = false);
         public List<QueryInfo> QuerySpace(ICollider collider, bool sorted = false, params uint[] collisionMask);
@@ -338,9 +369,6 @@ namespace ShapeEngine.Core
         public List<ICollidable> CastSpace(ICollidable collidable, bool sorted = false);
         public List<ICollidable> CastSpace(ICollider collider, bool sorted = false, params uint[] collisionMask);
         public List<ICollidable> CastSpace(IShape castShape, bool sorted = false, params uint[] collisionMask);
-
-
-        //public void DebugDraw(params Raylib_CsLo.Color[] colors);
 
     }
     

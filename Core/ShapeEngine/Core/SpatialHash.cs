@@ -101,7 +101,7 @@ namespace ShapeEngine.Core
         
     }
 
-    public class SpatialHash
+    public class SpatialHash : IBounds
     {
         public Rect Bounds { get; private set; }
         public float SpacingX { get; private set; }

@@ -349,6 +349,7 @@ namespace ShapeEngine
         }
         private void DrawGameloopToScreen(List<ScreenTexture> sortedTextures)
         {
+            
             Vector2 curScreenSize = new(CurWindowSize.width, CurWindowSize.height);
             BeginDrawing();
             ClearBackground(BackgroundColor);
@@ -757,6 +758,73 @@ namespace ShapeEngine
         /// <param name="mousePos"></param>
         protected void DrawSceneToScreen(Vector2 screenSize, Vector2 mousePos) { CurScene.DrawToScreen(screenSize, mousePos); }
     }
+
+    public abstract class GameLoopScene<TScene> : GameLoop where TScene : IScene
+    {
+        /// <summary>
+        /// Screen texture for drawing the game. Default draw order is 0. Default is basic camera.
+        /// </summary>
+        public ScreenTexture Game { get; private set; }
+        /// <summary>
+        /// Screen texture for drawing the ui. Default draw order is 1 (after game). Default is no camera.
+        /// </summary>
+        public ScreenTexture UI { get; private set; }
+        /// <summary>
+        /// The cur scene that is used. Only 1 scene can be active at any time. Use GoToScene function for changing between scenes.
+        /// </summary>
+        public TScene CurScene { get; private set; }
+
+        public GameLoopScene(int gameTextureWidth, int gameTextureHeight, int uiTextureWidth, int uiTextureHeight, TScene startScene) : base()
+        {
+            Game = new ScreenTexture(gameTextureWidth, gameTextureHeight, 0);
+            UI = new ScreenTexture(uiTextureWidth, uiTextureHeight, 1);
+
+            Game.SetCamera(new BasicCamera(new(0f), Game.GetSize(), new(0.5f), 1f, 0f));
+
+            AddScreenTexture(Game);
+            AddScreenTexture(UI);
+            CurScene = startScene;
+        }
+
+        /// <summary>
+        /// Switches to the new scene. Deactivate is called on the old scene and then Activate is called on the new scene.
+        /// </summary>
+        /// <param name="newScene"></param>
+        public void GoToScene(TScene newScene)
+        {
+            if (newScene == null) return;
+            CurScene.Deactivate();
+            newScene.Activate(CurScene);
+            CurScene = newScene;
+        }
+
+        //protected override void HandleInput(float dt){ HandleInputScene(dt); }
+        protected override void Update(float dt) { UpdateScence(dt); }
+        protected override void Draw(ScreenTexture screenTexture) { DrawScene(screenTexture); }
+        protected override void DrawToScreen(Vector2 screenSize) { DrawSceneToScreen(screenSize, MousePos); }
+        
+        /// <summary>
+        /// Calls Update on the Cur Scene.
+        /// </summary>
+        /// <param name="dt"></param>
+        protected void UpdateScence(float dt) { CurScene.Update(dt, Game.MousePos, UI.MousePos); }
+        /// <summary>
+        /// Calls Draw or DrawUI on the Cur Scene based on the screen texture parameter.
+        /// </summary>
+        /// <param name="screenTexture"></param>
+        protected void DrawScene(ScreenTexture screenTexture)
+        {
+            if (screenTexture == Game) CurScene.Draw(Game.GetSize(), Game.MousePos);
+            else if (screenTexture == UI) CurScene.DrawUI(UI.GetSize(), UI.MousePos);
+        }
+        /// <summary>
+        /// Calls DrawToScene on the current active scene.
+        /// </summary>
+        /// <param name="screenSize"></param>
+        /// <param name="mousePos"></param>
+        protected void DrawSceneToScreen(Vector2 screenSize, Vector2 mousePos) { CurScene.DrawToScreen(screenSize, mousePos); }
+    }
+
 }
 
 
