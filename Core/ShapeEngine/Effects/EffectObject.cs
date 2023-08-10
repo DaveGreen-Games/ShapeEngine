@@ -89,6 +89,11 @@ namespace ShapeEngine.Effects
         {
         }
 
+        public virtual void DeltaFactorApplied(float f)
+        {
+            
+        }
+
         //public void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI) { }
     }
 

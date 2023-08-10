@@ -116,6 +116,10 @@ namespace Examples.Scenes.ExampleScenes
         {
             
         }
+
+        public void DeltaFactorApplied(float f)
+        {
+        }
     }
 
     internal class WallCollidable : Collidable

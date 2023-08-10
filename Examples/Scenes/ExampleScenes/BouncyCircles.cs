@@ -14,6 +14,7 @@ namespace Examples.Scenes.ExampleScenes
         public float Radius;
         int areaLayer = SRNG.randI(1, 5);
         Color color = RED;
+        private bool deltaFactorApplied = false;
         public bool DrawToUI { get { return false; } set { } }
         public int AreaLayer { get { return areaLayer; } set { } }
 
@@ -24,32 +25,33 @@ namespace Examples.Scenes.ExampleScenes
             this.Radius = radius;
         }
 
-        public void Update(Rect boundary, float dt)
-        {
-            Pos += Vel * dt;
-
-            if(Pos.X + Radius > boundary.Right)
-            {
-                Vel.X = -Vel.X;
-                Pos.X = boundary.Right - Radius;
-            }
-            else if(Pos.X - Radius < boundary.Left)
-            {
-                Pos.X = boundary.Left + Radius;
-                Vel.X = -Vel.X;
-            }
-
-            if (Pos.Y + Radius > boundary.Bottom)
-            {
-                Vel.Y = -Vel.Y;
-                Pos.Y = boundary.Bottom - Radius;
-            }
-            else if (Pos.Y - Radius < boundary.Top)
-            {
-                Pos.Y = boundary.Top + Radius;
-                Vel.Y = -Vel.Y;
-            }
-        }
+        //public void Update(Rect boundary, float dt)
+        //{
+        //    
+        //    Pos += Vel * dt;
+        //
+        //    if(Pos.X + Radius > boundary.Right)
+        //    {
+        //        Vel.X = -Vel.X;
+        //        Pos.X = boundary.Right - Radius;
+        //    }
+        //    else if(Pos.X - Radius < boundary.Left)
+        //    {
+        //        Pos.X = boundary.Left + Radius;
+        //        Vel.X = -Vel.X;
+        //    }
+        //
+        //    if (Pos.Y + Radius > boundary.Bottom)
+        //    {
+        //        Vel.Y = -Vel.Y;
+        //        Pos.Y = boundary.Bottom - Radius;
+        //    }
+        //    else if (Pos.Y - Radius < boundary.Top)
+        //    {
+        //        Pos.Y = boundary.Top + Radius;
+        //        Vel.Y = -Vel.Y;
+        //    }
+        //}
         public void Draw()
         {
             DrawCircleSector(Pos, Radius, 0, 360, 12, RED);
@@ -80,34 +82,20 @@ namespace Examples.Scenes.ExampleScenes
 
         public void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
+            deltaFactorApplied = false;
             Pos += Vel * dt;
-
-            //if (Pos.X + Radius > boundary.Right)
-            //{
-            //    Vel.X = -Vel.X;
-            //    Pos.X = boundary.Right - Radius;
-            //}
-            //else if (Pos.X - Radius < boundary.Left)
-            //{
-            //    Pos.X = boundary.Left + Radius;
-            //    Vel.X = -Vel.X;
-            //}
-            //
-            //if (Pos.Y + Radius > boundary.Bottom)
-            //{
-            //    Vel.Y = -Vel.Y;
-            //    Pos.Y = boundary.Bottom - Radius;
-            //}
-            //else if (Pos.Y - Radius < boundary.Top)
-            //{
-            //    Pos.Y = boundary.Top + Radius;
-            //    Vel.Y = -Vel.Y;
-            //}
         }
 
         public void Draw(Vector2 gameSize, Vector2 mousePosGame)
         {
-            SDrawing.DrawCircleFast(Pos, Radius, color);
+            Color c = color;
+            float r = Radius;
+            if (deltaFactorApplied)
+            {
+                c = PURPLE;
+                r *= 2f;
+            }
+            SDrawing.DrawCircleFast(Pos, Radius, c);
         }
 
         public void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
@@ -138,6 +126,11 @@ namespace Examples.Scenes.ExampleScenes
                 else Vel.Y *= -1;
             }
         }
+
+        public void DeltaFactorApplied(float f)
+        {
+            deltaFactorApplied = true;
+        }
     }
     public class BouncyCircles : ExampleScene
     {
@@ -148,7 +141,7 @@ namespace Examples.Scenes.ExampleScenes
 
         Font font;
 
-        List<Circ> circles = new();
+        //List<Circ> circles = new();
         IArea area;
 
         public BouncyCircles()
@@ -167,7 +160,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         public override void Reset()
         {
-            circles.Clear();
+            //circles.Clear();
             area.Clear();
         }
         public override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
@@ -189,10 +182,10 @@ namespace Examples.Scenes.ExampleScenes
             if (IsKeyPressed(KeyboardKey.KEY_ONE))
             {
                 float slowFactor = 0.2f;
-                int[] layerMask = new int[] { };
-                AreaLayerDeltaFactor one = new(1f, slowFactor,              0.25f,  0f,         layerMask);
-                AreaLayerDeltaFactor two = new(slowFactor, slowFactor,      3f,     0.25f,      layerMask);
-                AreaLayerDeltaFactor three = new(slowFactor, 1f,            0.25f,  3.25f,      layerMask);
+                int[] layerMask = new int[] { 1, 3};
+                AreaDeltaFactor one = new(1f, slowFactor,              0.25f,  0f,         layerMask);
+                AreaDeltaFactor two = new(slowFactor, slowFactor,      3f,     0.25f,      layerMask);
+                AreaDeltaFactor three = new(slowFactor, 1f,            0.25f,  3.25f,      layerMask);
                 area.AddDeltaFactor(one);
                 area.AddDeltaFactor(two);
                 area.AddDeltaFactor(three);
@@ -203,10 +196,10 @@ namespace Examples.Scenes.ExampleScenes
         {
             base.Update(dt, mousePosGame, mousePosUI);
 
-            foreach (var c in circles)
-            {
-                c.Update(boundaryRect, dt);
-            }
+            //foreach (var c in circles)
+            //{
+            //    c.Update(boundaryRect, dt);
+            //}
 
             area.Update(dt, mousePosGame, mousePosUI);
         }
@@ -215,10 +208,10 @@ namespace Examples.Scenes.ExampleScenes
         {
             base.Draw(gameSize, mousePosGame);
             boundaryRect.DrawLines(4f, ColorLight);
-            foreach (var c in circles)
-            {
-                c.Draw();
-            }
+            //foreach (var c in circles)
+            //{
+            //    c.Draw();
+            //}
 
             area.Draw(gameSize, mousePosGame);
 
@@ -228,7 +221,7 @@ namespace Examples.Scenes.ExampleScenes
             base.DrawUI(uiSize, mousePosUI);
 
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));
-            string infoText = String.Format("[LMB] Spawn | Object Count: {0}", area.Count > 0 ? area.Count : circles.Count);
+            string infoText = String.Format("[LMB] Spawn | Object Count: {0}", area.Count);
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
 
             area.DrawUI(uiSize, mousePosUI);

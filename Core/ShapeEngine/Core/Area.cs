@@ -36,11 +36,14 @@ namespace ShapeEngine.Core
     /// The layers affected can be specified. If no layers are specified all layers are affected!
     /// The final factor can not be negative and will be clamped to 0.
     /// </summary>
-    public sealed class AreaLayerDeltaFactor
+    
+    
+    
+    public sealed class AreaDeltaFactor : IAreaDeltaFactor
     {
         private static uint idCounter = 0;
         private static uint NextID { get { return idCounter++; } }
-        public uint ID { get; private set; } = NextID;
+        private uint id  = NextID;
 
         private float delayTimer = 0f;
         private float cur;
@@ -52,6 +55,11 @@ namespace ShapeEngine.Core
         HashSet<int> layerMask;
 
         /// <summary>
+        /// Delta factors are applied from lowest first to highest last
+        /// </summary>
+        public int ApplyOrder { get; set; } = 0;
+
+        /// <summary>
         /// Create a new Area Layer Slow Factor. The slow factor affects the delta time of each area object in the affected layers.
         /// A slow factor > 1 speeds up objects, a slow factor < 1 slow objects down, and a slow factor == 1 does not affect the speed at all.
         /// </summary>
@@ -61,7 +69,7 @@ namespace ShapeEngine.Core
         /// <param name="delay">The delay until the duration starts and the factor is applied.</param>
         /// <param name="tweenType">The tweentype for the slow factor.</param>
         /// <param name="layerMask">The mask for all area layers that will be affected. An empty layer mask affects all layers!</param>
-        public AreaLayerDeltaFactor(float from, float to, float duration, float delay = -1f, TweenType tweenType = TweenType.LINEAR, params int[] layerMask)
+        public AreaDeltaFactor(float from, float to, float duration, float delay = -1f, TweenType tweenType = TweenType.LINEAR, params int[] layerMask)
         {
             this.delayTimer = delay;
             this.cur = from;
@@ -82,7 +90,7 @@ namespace ShapeEngine.Core
         /// <param name="duration">The duration of the slow effect. Duration <= 0 means infinite duration and no tweening!</param>
         /// <param name="delay">The delay until the duration starts and the factor is applied.</param>
         /// <param name="layerMask">The mask for all area layers that will be affected. An empty layer mask affects all layers!</param>
-        public AreaLayerDeltaFactor(float from, float to, float duration, float delay = -1f, params int[] layerMask)
+        public AreaDeltaFactor(float from, float to, float duration, float delay = -1f, params int[] layerMask)
         {
             this.delayTimer = delay;
             this.cur = from;
@@ -101,7 +109,7 @@ namespace ShapeEngine.Core
         /// <param name="factor">The slow factor that should be applied.</param>
         /// <param name="delay">The delay until the factor is applied.</param>
         /// <param name="layerMask">The mask for all area layers that will be affected. An empty layer mask affects all layers!</param>
-        public AreaLayerDeltaFactor(float factor, float delay, params int[] layerMask)
+        public AreaDeltaFactor(float factor, float delay, params int[] layerMask)
         {
             this.delayTimer = delay;
             this.cur = factor;
@@ -119,7 +127,7 @@ namespace ShapeEngine.Core
         /// </summary>
         /// <param name="factor">The slow factor that should be applied.</param>
         /// <param name="layerMask">The mask for all area layers that will be affected. An empty layer mask affects all layers!</param>
-        public AreaLayerDeltaFactor(float factor, params int[] layerMask)
+        public AreaDeltaFactor(float factor, params int[] layerMask)
         {
             this.delayTimer = -1f;
             this.cur = factor;
@@ -131,13 +139,13 @@ namespace ShapeEngine.Core
             this.layerMask = layerMask.ToHashSet();
         }
 
+        public uint GetID() { return id; }
         public bool IsAffectingLayer(int layer)
         {
             if (delayTimer > 0f) return false;
             if (layerMask.Count <= 0) return true;
             else return layerMask.Contains(layer);
         }
-        public bool IsFinished() { return timer <= 0f && duration > 0f; }
         public bool Update(float dt)
         {
             if (delayTimer > 0f)
@@ -159,11 +167,19 @@ namespace ShapeEngine.Core
             
             return IsFinished();
         }
-        public float GetCurFactor()
+        public float Apply(float totalDeltaFactor)
         {
-            if (cur <= 0f) return 0f;
-            else return cur;
+            if(cur <= 0f) return totalDeltaFactor;
+            else return totalDeltaFactor * cur;
         }
+        private bool IsFinished() { return timer <= 0f && duration > 0f; }
+        
+        
+        //public float GetCurFactor()
+        //{
+        //    if (cur <= 0f) return 0f;
+        //    else return cur;
+        //}
     }
 
 
@@ -190,7 +206,9 @@ namespace ShapeEngine.Core
 
         private SortedList<int, List<IAreaObject>> layers = new();
         private List<IAreaObject> uiObjects = new();
-        private Dictionary<uint, AreaLayerDeltaFactor> deltaFactors = new();
+        private Dictionary<uint, IAreaDeltaFactor> deltaFactors = new();
+        private List<IAreaDeltaFactor> sortedDeltaFactors = new();
+
         public Area()
         {
             Bounds = new Rect();
@@ -204,13 +222,13 @@ namespace ShapeEngine.Core
             Bounds = bounds;
         }
 
-        public void AddDeltaFactor(AreaLayerDeltaFactor deltaFactor)
+        public void AddDeltaFactor(IAreaDeltaFactor deltaFactor)
         {
-            var id = deltaFactor.ID;
+            var id = deltaFactor.GetID();
             if (deltaFactors.ContainsKey(id)) deltaFactors[id] = deltaFactor;
             else deltaFactors.Add(id, deltaFactor);
         }
-        public bool RemoveDeltaFactor(AreaLayerDeltaFactor deltaFactor) { return deltaFactors.Remove(deltaFactor.ID); }
+        public bool RemoveDeltaFactor(IAreaDeltaFactor deltaFactor) { return deltaFactors.Remove(deltaFactor.GetID()); }
         public bool RemoveDeltaFactor(uint id) { return deltaFactors.Remove(id); }
 
         public virtual void ResizeBounds(Rect newBounds) { Bounds = newBounds; }
@@ -359,13 +377,22 @@ namespace ShapeEngine.Core
 
         public virtual void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            List<AreaLayerDeltaFactor> allSlowFactors = deltaFactors.Values.ToList();
-            for (int i = allSlowFactors.Count - 1; i >= 0; i--)
+            List<IAreaDeltaFactor> allDeltaFactors = deltaFactors.Values.ToList();
+            for (int i = allDeltaFactors.Count - 1; i >= 0; i--)
             {
-                var slowFactor = allSlowFactors[i];
-                bool finished = slowFactor.Update(dt);
-                if (finished) RemoveDeltaFactor(slowFactor);
+                var deltaFactor = allDeltaFactors[i];
+                bool finished = deltaFactor.Update(dt);
+                if (finished) RemoveDeltaFactor(deltaFactor);
             }
+
+            allDeltaFactors.Sort((a, b) =>
+            {
+                if (a.ApplyOrder > b.ApplyOrder) return 1;
+                else if (a.ApplyOrder < b.ApplyOrder) return -1;
+                else return 0;
+            }
+            );
+            sortedDeltaFactors = allDeltaFactors;
 
             foreach (var layer in layers)
             {
@@ -408,11 +435,11 @@ namespace ShapeEngine.Core
             if (objs.Count <= 0) return;
 
             float totalDeltaFactor = 1f;
-            foreach (var deltaFactor in deltaFactors)
+            foreach (var deltaFactor in sortedDeltaFactors)
             {
-                if (deltaFactor.Value.IsAffectingLayer(layer))
+                if (deltaFactor.IsAffectingLayer(layer))
                 {
-                    totalDeltaFactor *= deltaFactor.Value.GetCurFactor();
+                    totalDeltaFactor = deltaFactor.Apply(totalDeltaFactor);
                 }
             }
 
@@ -430,6 +457,7 @@ namespace ShapeEngine.Core
 
                 obj.UpdateParallaxe(ParallaxePosition);
                 obj.Update(dt, mousePosGame, mousePosUI);
+                if(totalDeltaFactor != 1f) obj.DeltaFactorApplied(totalDeltaFactor);
                 if (obj.IsDead())
                 {
                     objs.RemoveAt(i);

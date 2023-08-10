@@ -109,6 +109,7 @@ namespace ShapeEngine.Core
         public bool IsDead();
     }
     
+    
     //how to tell object when delta factor was applied and when delta factor applying stopped?
     public interface IAreaObject : ISpatial, IUpdateable, IDrawable, IKillable//, IBehaviorReceiver
     {
@@ -159,6 +160,12 @@ namespace ShapeEngine.Core
 
         public virtual bool HasCollidables() { return false; }
         public virtual List<ICollidable> GetCollidables() { return new(); }
+
+        /// <summary>
+        ///  Is called right after update if a delta factor was applied to the objects dt.
+        /// </summary>
+        /// <param name="f">The factor that was applied.</param>
+        public void DeltaFactorApplied(float f);
     }
 
     
@@ -302,8 +309,30 @@ namespace ShapeEngine.Core
         public Rect Bounds { get; }
         public void ResizeBounds(Rect newBounds);
     }
-    
-    
+
+    public interface IAreaDeltaFactor
+    {
+        public int ApplyOrder { get; set; }
+
+        public uint GetID();
+       
+        public bool IsAffectingLayer(int layer);
+
+        /// <summary>
+        /// Update the delta factor.
+        /// </summary>
+        /// <param name="dt"></param>
+        /// <returns>Returns true when finished.</returns>
+        public bool Update(float dt);
+
+        /// <summary>
+        /// Recieves the current total delta factor.
+        /// </summary>
+        /// <param name="totalFactor">The current total delta factor.</param>
+        /// <returns>Returns the new total delta factor.</returns>
+        public float Apply(float totalFactor);
+    }
+
     public interface IArea : IUpdateable, IDrawable, IBounds
     {
         public int Count { get; }
@@ -316,8 +345,8 @@ namespace ShapeEngine.Core
         /// </summary>
         public Vector2 ParallaxePosition { get; set; }
 
-        public void AddDeltaFactor(AreaLayerDeltaFactor deltaFactor);
-        public bool RemoveDeltaFactor(AreaLayerDeltaFactor deltaFactor);
+        public void AddDeltaFactor(IAreaDeltaFactor deltaFactor);
+        public bool RemoveDeltaFactor(IAreaDeltaFactor deltaFactor);
         public bool RemoveDeltaFactor(uint id);
 
 
