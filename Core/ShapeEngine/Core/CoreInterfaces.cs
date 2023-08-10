@@ -108,6 +108,8 @@ namespace ShapeEngine.Core
         /// <returns></returns>
         public bool IsDead();
     }
+    
+    //how to tell object when delta factor was applied and when delta factor applying stopped?
     public interface IAreaObject : ISpatial, IUpdateable, IDrawable, IKillable//, IBehaviorReceiver
     {
         /// <summary>
@@ -159,6 +161,16 @@ namespace ShapeEngine.Core
         public virtual List<ICollidable> GetCollidables() { return new(); }
     }
 
+    
+    public interface ICollidable
+    {
+        public ICollider GetCollider();
+        public void Overlap(CollisionInformation info);
+        public void OverlapEnded(ICollidable other);
+        public uint GetCollisionLayer();
+        public uint[] GetCollisionMask();
+    }
+
     //public interface IInputReciever
     //{
     //    public virtual bool RecievesInput() { return false; }
@@ -176,16 +188,6 @@ namespace ShapeEngine.Core
     //    /// <returns>Returns the new position for the camera to follow.</returns>
     //    public virtual Vector2 GetCameraFollowPosition(Vector2 camPos) { return GetPosition(); }//, float dt, float smoothness = 1f, float boundary = 0f) { return GetPosition(); }
     //}
-    
-    public interface ICollidable
-    {
-        public ICollider GetCollider();
-        public void Overlap(CollisionInformation info);
-        public void OverlapEnded(ICollidable other);
-        public uint GetCollisionLayer();
-        public uint[] GetCollisionMask();
-    }
-
     /*
     public interface IBehaviorReceiver
     {
@@ -307,7 +309,16 @@ namespace ShapeEngine.Core
         public int Count { get; }
 
         public ICollisionHandler? GetCollisionHandler();
+
+        /// <summary>
+        /// The parallaxe position for this area. Every IAreaObject that uses parallaxe scales its position based on this position.
+        /// For instance could be set to the players position or the cameras position that follows the player.
+        /// </summary>
         public Vector2 ParallaxePosition { get; set; }
+
+        public void AddDeltaFactor(AreaLayerDeltaFactor deltaFactor);
+        public bool RemoveDeltaFactor(AreaLayerDeltaFactor deltaFactor);
+        public bool RemoveDeltaFactor(uint id);
 
 
         public List<IAreaObject> GetAreaObjects(int layer, Predicate<IAreaObject> match);

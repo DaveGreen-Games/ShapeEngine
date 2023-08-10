@@ -1,8 +1,172 @@
 ﻿using ShapeEngine.Lib;
+using ShapeEngine.Timing;
+using System.Net;
+using System.Net.NetworkInformation;
 using System.Numerics;
 
 namespace ShapeEngine.Core
 {
+    /*
+    public class AreaLayerInjector
+    {
+        public delegate void InjectorAction(float dt, List<IAreaObject> objs);
+        public InjectorAction Injector;
+        private float duration;
+        private float timer;
+
+        public AreaLayerInjector(InjectorAction injector, float duration)
+        {
+            this.Injector = injector;
+            this.duration = duration;
+            this.timer = duration;
+        }
+
+        public bool Update(float dt)
+        {
+            if (duration <= 0f) return false;
+            timer -= dt;
+            return timer <= 0f && duration > 0f;
+        }
+
+    }
+    */
+
+    /// <summary>
+    /// Can be used to manipulate the delta value each area object recieves. 
+    /// The layers affected can be specified. If no layers are specified all layers are affected!
+    /// The final factor can not be negative and will be clamped to 0.
+    /// </summary>
+    public sealed class AreaLayerDeltaFactor
+    {
+        private static uint idCounter = 0;
+        private static uint NextID { get { return idCounter++; } }
+        public uint ID { get; private set; } = NextID;
+
+        private float delayTimer = 0f;
+        private float cur;
+        private float timer;
+        private float duration;
+        private float from;
+        private float to;
+        private TweenType tweenType;
+        HashSet<int> layerMask;
+
+        /// <summary>
+        /// Create a new Area Layer Slow Factor. The slow factor affects the delta time of each area object in the affected layers.
+        /// A slow factor > 1 speeds up objects, a slow factor < 1 slow objects down, and a slow factor == 1 does not affect the speed at all.
+        /// </summary>
+        /// <param name="from">The start slow factor.</param>
+        /// <param name="to">The end slow factor.</param>
+        /// <param name="duration">The duration of the slow effect. Duration <= 0 means infinite duration and no tweening!</param>
+        /// <param name="delay">The delay until the duration starts and the factor is applied.</param>
+        /// <param name="tweenType">The tweentype for the slow factor.</param>
+        /// <param name="layerMask">The mask for all area layers that will be affected. An empty layer mask affects all layers!</param>
+        public AreaLayerDeltaFactor(float from, float to, float duration, float delay = -1f, TweenType tweenType = TweenType.LINEAR, params int[] layerMask)
+        {
+            this.delayTimer = delay;
+            this.cur = from;
+            this.from = from;
+            this.to = to;
+            this.duration = duration;
+            this.timer = duration;
+            this.tweenType = tweenType;
+            this.layerMask = layerMask.ToHashSet();
+        }
+        /// <summary>
+        /// Create a new Area Layer Slow Factor. The slow factor affects the delta time of each area object in the affected layers.
+        /// A slow factor > 1 speeds up objects, a slow factor < 1 slow objects down, and a slow factor == 1 does not affect the speed at all.
+        /// The linear tween type is used.
+        /// </summary>
+        /// <param name="from">The start slow factor.</param>
+        /// <param name="to">The end slow factor.</param>
+        /// <param name="duration">The duration of the slow effect. Duration <= 0 means infinite duration and no tweening!</param>
+        /// <param name="delay">The delay until the duration starts and the factor is applied.</param>
+        /// <param name="layerMask">The mask for all area layers that will be affected. An empty layer mask affects all layers!</param>
+        public AreaLayerDeltaFactor(float from, float to, float duration, float delay = -1f, params int[] layerMask)
+        {
+            this.delayTimer = delay;
+            this.cur = from;
+            this.from = from;
+            this.to = to;
+            this.duration = duration;
+            this.timer = duration;
+            this.tweenType = TweenType.LINEAR;
+            this.layerMask = layerMask.ToHashSet();
+        }
+        /// <summary>
+        /// Create a new Area Layer Slow Factor. The slow factor affects the delta time of each area object in the affected layers.
+        /// A slow factor > 1 speeds up objects, a slow factor < 1 slow objects down, and a slow factor == 1 does not affect the speed at all.
+        /// Creates a slow factor with infinite duration and therefore now tweening.
+        /// </summary>
+        /// <param name="factor">The slow factor that should be applied.</param>
+        /// <param name="delay">The delay until the factor is applied.</param>
+        /// <param name="layerMask">The mask for all area layers that will be affected. An empty layer mask affects all layers!</param>
+        public AreaLayerDeltaFactor(float factor, float delay, params int[] layerMask)
+        {
+            this.delayTimer = delay;
+            this.cur = factor;
+            this.from = -1;
+            this.to = -1f;
+            this.duration = -1;
+            this.timer = -1;
+            this.tweenType = TweenType.LINEAR;
+            this.layerMask = layerMask.ToHashSet();
+        }
+        /// <summary>
+        /// Create a new Area Layer Slow Factor. The slow factor affects the delta time of each area object in the affected layers.
+        /// A slow factor > 1 speeds up objects, a slow factor < 1 slow objects down, and a slow factor == 1 does not affect the speed at all.
+        /// Creates a slow factor with infinite duration and therefore now tweening.
+        /// </summary>
+        /// <param name="factor">The slow factor that should be applied.</param>
+        /// <param name="layerMask">The mask for all area layers that will be affected. An empty layer mask affects all layers!</param>
+        public AreaLayerDeltaFactor(float factor, params int[] layerMask)
+        {
+            this.delayTimer = -1f;
+            this.cur = factor;
+            this.from = -1;
+            this.to = -1f;
+            this.duration = -1;
+            this.timer = -1;
+            this.tweenType = TweenType.LINEAR;
+            this.layerMask = layerMask.ToHashSet();
+        }
+
+        public bool IsAffectingLayer(int layer)
+        {
+            if (delayTimer > 0f) return false;
+            if (layerMask.Count <= 0) return true;
+            else return layerMask.Contains(layer);
+        }
+        public bool IsFinished() { return timer <= 0f && duration > 0f; }
+        public bool Update(float dt)
+        {
+            if (delayTimer > 0f)
+            {
+                delayTimer -= dt;
+                return false;
+            }
+
+            if (duration <= 0f) return false;
+            
+            timer -= dt;
+            if (timer < 0f) timer = 0f;
+            
+            if(from != to)
+            {
+                float f = 1.0f - (timer / duration);
+                cur = STween.Tween(from, to, f, tweenType);
+            }
+            
+            return IsFinished();
+        }
+        public float GetCurFactor()
+        {
+            if (cur <= 0f) return 0f;
+            else return cur;
+        }
+    }
+
+
     /// <summary>
     /// Provides a simple area for managing adding/removing, updating, and drawing of area objects. Does not provide a collision system.
     /// </summary>
@@ -26,7 +190,7 @@ namespace ShapeEngine.Core
 
         private SortedList<int, List<IAreaObject>> layers = new();
         private List<IAreaObject> uiObjects = new();
-
+        private Dictionary<uint, AreaLayerDeltaFactor> deltaFactors = new();
         public Area()
         {
             Bounds = new Rect();
@@ -40,6 +204,14 @@ namespace ShapeEngine.Core
             Bounds = bounds;
         }
 
+        public void AddDeltaFactor(AreaLayerDeltaFactor deltaFactor)
+        {
+            var id = deltaFactor.ID;
+            if (deltaFactors.ContainsKey(id)) deltaFactors[id] = deltaFactor;
+            else deltaFactors.Add(id, deltaFactor);
+        }
+        public bool RemoveDeltaFactor(AreaLayerDeltaFactor deltaFactor) { return deltaFactors.Remove(deltaFactor.ID); }
+        public bool RemoveDeltaFactor(uint id) { return deltaFactors.Remove(id); }
 
         public virtual void ResizeBounds(Rect newBounds) { Bounds = newBounds; }
         public bool HasLayer(int layer) { return layers.ContainsKey(layer); }
@@ -187,9 +359,17 @@ namespace ShapeEngine.Core
 
         public virtual void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            foreach (var layer in layers.Values)
+            List<AreaLayerDeltaFactor> allSlowFactors = deltaFactors.Values.ToList();
+            for (int i = allSlowFactors.Count - 1; i >= 0; i--)
             {
-                if (layer.Count > 0) UpdateLayer(dt, mousePosGame, mousePosUI, layer);
+                var slowFactor = allSlowFactors[i];
+                bool finished = slowFactor.Update(dt);
+                if (finished) RemoveDeltaFactor(slowFactor);
+            }
+
+            foreach (var layer in layers)
+            {
+                UpdateLayer(dt, mousePosGame, mousePosUI, layer.Key);
             }
         }
         public virtual void Draw(Vector2 gameSize, Vector2 mousePosGame)
@@ -222,8 +402,22 @@ namespace ShapeEngine.Core
                 layers.Add(layer, new());
             }
         }
-        protected void UpdateLayer(float dt, Vector2 mousePosGame, Vector2 mousePosUI, List<IAreaObject> objs)
+        protected void UpdateLayer(float dt, Vector2 mousePosGame, Vector2 mousePosUI, int layer)
         {
+            List<IAreaObject> objs = layers[layer];
+            if (objs.Count <= 0) return;
+
+            float totalDeltaFactor = 1f;
+            foreach (var deltaFactor in deltaFactors)
+            {
+                if (deltaFactor.Value.IsAffectingLayer(layer))
+                {
+                    totalDeltaFactor *= deltaFactor.Value.GetCurFactor();
+                }
+            }
+
+            dt *= totalDeltaFactor;
+
             for (int i = objs.Count - 1; i >= 0; i--)
             {
                 IAreaObject obj = objs[i];

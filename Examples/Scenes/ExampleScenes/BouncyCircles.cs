@@ -12,21 +12,16 @@ namespace Examples.Scenes.ExampleScenes
         public Vector2 Pos;
         public Vector2 Vel;
         public float Radius;
-        int areaLayer = SRNG.randI(1, 250);
+        int areaLayer = SRNG.randI(1, 5);
         Color color = RED;
-        Rect boundary = new();
         public bool DrawToUI { get { return false; } set { } }
         public int AreaLayer { get { return areaLayer; } set { } }
 
-        //public Polygon relative;
-        //public Polygon poly;
-        public Circ(Vector2 pos, Vector2 vel, float radius, Rect boundary)
+        public Circ(Vector2 pos, Vector2 vel, float radius)
         {
             this.Pos = pos;
             this.Vel = vel;
             this.Radius = radius;
-            this.boundary = boundary;
-            //poly = SPoly.Generate(pos, 12, Radius * 0.1f, Radius);
         }
 
         public void Update(Rect boundary, float dt)
@@ -63,12 +58,10 @@ namespace Examples.Scenes.ExampleScenes
 
         public void AddedToArea(IArea area)
         {
-            //this.boundary = area.Bounds;
         }
 
         public void RemovedFromArea(IArea area)
         {
-            
         }
         public Vector2 GetCameraFollowPosition(Vector2 camPos)
         {
@@ -114,7 +107,6 @@ namespace Examples.Scenes.ExampleScenes
 
         public void Draw(Vector2 gameSize, Vector2 mousePosGame)
         {
-            //DrawCircleSector(Pos, Radius, 0, 360, 12, color);
             SDrawing.DrawCircleFast(Pos, Radius, color);
         }
 
@@ -187,11 +179,23 @@ namespace Examples.Scenes.ExampleScenes
                 for (int i = 0; i < 2500; i++)
                 {
                     Vector2 randPos = mousePosGame + SRNG.randVec2(0, 250);
-                    Vector2 vel = SRNG.randVec2(50, 100);
-                    Circ c = new(randPos, vel, 2, boundaryRect);
+                    Vector2 vel = SRNG.randVec2(100, 200);
+                    Circ c = new(randPos, vel, 2);
                     //circles.Add(c);
                     area.AddAreaObject(c);
                 }
+            }
+
+            if (IsKeyPressed(KeyboardKey.KEY_ONE))
+            {
+                float slowFactor = 0.2f;
+                int[] layerMask = new int[] { };
+                AreaLayerDeltaFactor one = new(1f, slowFactor,              0.25f,  0f,         layerMask);
+                AreaLayerDeltaFactor two = new(slowFactor, slowFactor,      3f,     0.25f,      layerMask);
+                AreaLayerDeltaFactor three = new(slowFactor, 1f,            0.25f,  3.25f,      layerMask);
+                area.AddDeltaFactor(one);
+                area.AddDeltaFactor(two);
+                area.AddDeltaFactor(three);
             }
         }
 
