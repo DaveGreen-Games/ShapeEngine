@@ -117,7 +117,12 @@ namespace ShapeEngine
         public event WindowSizeChanged? OnWindowSizeChanged;
 
         public int FrameRateLimit { get; private set; } = 60;
-        public int Fps { get; private set; }
+
+        public float DeltaTarget { get { return 1f / (float)FPSTarget; } }
+        public float DeltaCurrent { get; private set; }
+        public int FPSCurrent { get; private set; }
+        public int FPSTarget { get; private set; }
+
         public bool VSync { get; private set; } = true;
         public (int width, int height) CurWindowSize { get; private set; } = (0, 0);
         public (int width, int height) WindowedWindowSize { get; private set; } = (0, 0);
@@ -126,6 +131,9 @@ namespace ShapeEngine
         private bool windowMaximized = false;
         private bool resizableState = false;
         private bool undecoratedState = false;
+
+        //public float deltaCriticalTime = 0f;
+        //public int skipDrawCount = 0;
 
         public MonitorDevice Monitor { get; private set; }
         public ICursor Cursor { get; private set; } = new NullCursor();
@@ -298,7 +306,20 @@ namespace ShapeEngine
 
                 float dt = GetFrameTime();
 
-                //HandleInput(dt);
+                DeltaCurrent = dt;
+                FPSCurrent = (int) (1f / dt);
+
+                
+                //if(dt > 0f)
+                //{
+                //    float deltaFactor = dt / DeltaTarget;
+                //    if (deltaFactor > 1.01f)
+                //    {
+                //        deltaCriticalTime += dt; // * deltaFactor;
+                //    }
+                //    else deltaCriticalTime = 0f;
+                //}
+                
 
                 UpdateMonitorDevice(dt);
                 Update(dt);
@@ -306,6 +327,19 @@ namespace ShapeEngine
                 var sortedTextures = SortScreenTextures(GetActiveScreenTextures());
                 UpdateScreenTextures(sortedTextures, dt);
 
+                //if(deltaCriticalTime > 1f)
+                //{
+                //    skipDrawCount++;
+                //    if(skipDrawCount % 2 == 0)
+                //    {
+                //        DrawGameloopToTextures(sortedTextures);
+                //    }
+                //}
+                //else
+                //{
+                //    skipDrawCount = 0;
+                //    DrawGameloopToTextures(sortedTextures);
+                //}
                 DrawGameloopToTextures(sortedTextures);
                 DrawGameloopToScreen(sortedTextures);
 
@@ -455,6 +489,10 @@ namespace ShapeEngine
                 MonitorChanged(nextMonitor);
             }
         }
+        /// <summary>
+        /// Set the new frame rate limit. Only takes affect if Vsync is off!
+        /// </summary>
+        /// <param name="newLimit">Limit is clamped between 30 and 240!</param>
         public void SetFrameRateLimit(int newLimit)
         {
             if (newLimit < 30) newLimit = 30;
@@ -465,10 +503,11 @@ namespace ShapeEngine
                 SetFPS(FrameRateLimit);
             }
         }
+        
         private void SetFPS(int newFps)
         {
-            Fps = newFps;
-            SetTargetFPS(Fps);
+            FPSTarget = newFps;
+            SetTargetFPS(FPSTarget);
         }
         public void SetVsync(bool enabled)
         {
