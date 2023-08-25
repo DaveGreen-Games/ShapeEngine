@@ -5,10 +5,11 @@ using System.Numerics;
 using ShapeEngine.Lib;
 using Examples.Scenes.ExampleScenes;
 using Examples.UIElements;
+using ShapeEngine.Screen;
 
 namespace Examples.Scenes
 {
-    public class MainScene : Scene
+    public class MainScene : IScene
     {
         //should display names/description of all examples
         //left half lists all examples vertical / right half displays short info
@@ -71,15 +72,16 @@ namespace Examples.Scenes
             else if (IsKeyPressed(KeyboardKey.KEY_S)) NextButton();
         }
 
-        public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        public void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
         {
-            HandleInput(dt, mousePosGame, mousePosUI);
+            HandleInput(dt, game.MousePos, ui.MousePos);
             foreach (var b in buttons)
             {
-                b.Update(dt, GAMELOOP.UI.MousePos);
+                b.Update(dt, ui.MousePos);
             }
         }
-        public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
+        
+        public void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
         {
             Vector2 start = uiSize * new Vector2(0.02f, 0.25f);
             Vector2 size = uiSize * new Vector2(0.45f, 0.05f);
@@ -108,6 +110,7 @@ namespace Examples.Scenes
             Rect backRect = new Rect(uiSize * new Vector2(0.01f, 0.17f), uiSize * new Vector2(0.2f, 0.04f), new Vector2(0f, 0f));
             titleFont.DrawText(backText, backRect, 4f, new Vector2(0f, 0f), ExampleScene.ColorHighlight2);
         }
+        
         private void OnButtonSelected(UIElement button)
         {
             if (curButton != button)
@@ -191,6 +194,43 @@ namespace Examples.Scenes
             curPageIndex--;
             if (curPageIndex < 0) curPageIndex = maxPages - 1;
             SetupButtons();
+        }
+
+        public Area? GetCurArea()
+        {
+            return null;
+        }
+
+        public void Activate(IScene oldScene)
+        {
+           
+        }
+
+        public void Deactivate()
+        {
+            
+        }
+
+        public void Close()
+        {
+            
+        }
+
+        
+
+        public void DrawGame(Vector2 size, Vector2 mousePos)
+        {
+            
+        }
+
+        public void DrawToTexture(ScreenTexture texture)
+        {
+            
+        }
+
+        public void DrawToScreen(Vector2 size, Vector2 mousePos)
+        {
+            
         }
     }
 

@@ -167,7 +167,7 @@ namespace Examples.Scenes.ExampleScenes
             dragIndex = -1;
             colliders.Clear();
         }
-        public override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             base.HandleInput(dt, mousePosGame, mousePosUI);
             //if (IsKeyPressed(KeyboardKey.KEY_R)) { polyline = new(); }
@@ -205,11 +205,11 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
 
-        public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
         {
-            base.Update(dt, mousePosGame, mousePosUI);
+            base.Update(dt, mousePosScreen, game, ui);
 
-            UpdatePolyline(mousePosGame);
+            UpdatePolyline(game.MousePos);
 
             Segments allSegments = new();
             allSegments.AddRange(boundary);
@@ -233,9 +233,9 @@ namespace Examples.Scenes.ExampleScenes
                 }
             }
         }
-        public override void Draw(Vector2 gameSIze, Vector2 mousePosGame)
+        public override void DrawGame(Vector2 gameSIze, Vector2 mousePosGame)
         {
-            base.Draw(gameSIze, mousePosGame);
+            base.DrawGame(gameSIze, mousePosGame);
 
             boundary.Draw(4f, ColorMedium);
             foreach (var seg in boundary)

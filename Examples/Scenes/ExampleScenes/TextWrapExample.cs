@@ -3,6 +3,7 @@ using ShapeEngine.Lib;
 using Raylib_CsLo;
 using ShapeEngine.Core;
 using System.Numerics;
+using ShapeEngine.Screen;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -47,7 +48,7 @@ namespace Examples.Scenes.ExampleScenes
             font = GAMELOOP.GetFont(fontIndex);
         }
 
-        public override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
 
             if (textEntryActive)
@@ -127,9 +128,10 @@ namespace Examples.Scenes.ExampleScenes
 
             
         }
-        public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
         {
-            base.Update(dt, mousePosGame, mousePosUI);
+            base.Update(dt, mousePosScreen, game, ui);
+            Vector2 mousePosUI = ui.MousePos;
             if (textEntryActive) return;
             if (draggingTopLeft || draggingBottomRight)
             {

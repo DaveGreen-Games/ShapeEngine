@@ -3,6 +3,43 @@ using Raylib_CsLo;
 
 namespace ShapeEngine.Screen
 {
+
+    internal sealed class ScreenBufferArray
+    {
+        //private List<ScreenBuffer> screenBuffers = new();
+        public ScreenBuffer? A { get; private set; }
+        public ScreenBuffer? B { get; private set; }
+        public bool Loaded { get; private set; } = false;
+        public ScreenBuffer? GetByIndex(int index)
+        {
+            if (!Loaded) return null;
+            if (index == 0) return A;
+            if (index == 1) return B;
+            else return null;
+        }
+        public void Load(int width, int height)
+        {
+            
+            if (Loaded) Unload();
+
+            Loaded = true;
+            A = new ScreenBuffer(width, height);
+            B = new ScreenBuffer(width, height);
+        }
+        public void Unload()
+        {
+            if (!Loaded) return;
+            Loaded = false;
+
+            A.Unload();
+            B.Unload();
+
+            A = null;
+            B = null;
+        }
+
+    }
+
     internal sealed class ScreenBuffer
     {
         private Raylib_CsLo.Color clearColor = new(0, 0, 0, 255);
@@ -61,10 +98,6 @@ namespace ShapeEngine.Screen
 
 
         }
-
-
-
-
 
         private Vector2 GetDestRectSize(int width, int height)
         {

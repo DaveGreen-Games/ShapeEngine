@@ -79,7 +79,74 @@ namespace ShapeEngine
         public ExitCode(bool restart) { this.restart = restart; }
 
     }
-    
+
+
+    public class ScreenTextures : Dictionary<uint, ScreenTexture>
+    {
+        public ActiveScreenTextures GetActive(ScreenTextureMask screenTextureMask)
+        {
+            if (screenTextureMask.Count <= 0)
+                return new(this.Values.Where((st) => st.Active));
+            else
+                return new(this.Values.Where((st) => st.Active && screenTextureMask.Contains(st.ID)));
+        }
+        public ActiveScreenTextures GetActive()
+        {
+            return new(this.Values.Where((st) => st.Active));
+        }
+        public List<ScreenTexture> GetAll() { return this.Values.ToList(); }
+
+    }
+    public class ActiveScreenTextures : List<ScreenTexture>
+    {
+        public ActiveScreenTextures(IEnumerable<ScreenTexture> textures)
+        {
+            this.AddRange(textures);
+        }
+        public ActiveScreenTextures(params ScreenTexture[] textures)
+        {
+            this.AddRange(textures);
+        }
+        public ActiveScreenTextures SortDrawOrder()
+        {
+            this.Sort(delegate (ScreenTexture x, ScreenTexture y)
+            {
+                if (x == null || y == null) return 0;
+
+                if (x.DrawOrder < y.DrawOrder) return -1;
+                else if (x.DrawOrder > y.DrawOrder) return 1;
+                else return 0;
+            });
+            return this;
+        }
+    }
+    public class ScreenTextureMask : HashSet<uint>
+    {
+        public ScreenTextureMask() { }
+        public ScreenTextureMask(params uint[] mask)
+        {
+            foreach (var id in mask)
+            {
+                this.Add(id);
+            }
+        }
+        public ScreenTextureMask(IEnumerable<uint> mask)
+        {
+            foreach (var id in mask)
+            {
+                this.Add(id);
+            }
+        }
+        public ScreenTextureMask(HashSet<uint> mask)
+        {
+            foreach (var id in mask)
+            {
+                this.Add(id);
+            }
+        }
+    }
+
+
     /// <summary>
     /// Basic GameLoop class. Inherit this class override various methods for running your game/app. 
     /// Create your inherited GameLoop class, call CreateWindow and then Run() to start. 
@@ -108,7 +175,7 @@ namespace ShapeEngine
         protected bool quit = false;
         protected bool restart = false;
 
-        protected Dictionary<uint, ScreenTexture> screenTextures = new();
+        protected ScreenTextures screenTextures = new();
 
         private List<DeferredInfo> deferred = new();
 
@@ -310,38 +377,16 @@ namespace ShapeEngine
                 FPSCurrent = (int) (1f / dt);
 
                 
-                //if(dt > 0f)
-                //{
-                //    float deltaFactor = dt / DeltaTarget;
-                //    if (deltaFactor > 1.01f)
-                //    {
-                //        deltaCriticalTime += dt; // * deltaFactor;
-                //    }
-                //    else deltaCriticalTime = 0f;
-                //}
-                
-
                 UpdateMonitorDevice(dt);
+
+                var activeScreenTextures = screenTextures.GetActive();
+                activeScreenTextures.SortDrawOrder();
+
+                UpdateScreenTextures(activeScreenTextures, dt);
+
                 Update(dt);
-
-                var sortedTextures = SortScreenTextures(GetActiveScreenTextures());
-                UpdateScreenTextures(sortedTextures, dt);
-
-                //if(deltaCriticalTime > 1f)
-                //{
-                //    skipDrawCount++;
-                //    if(skipDrawCount % 2 == 0)
-                //    {
-                //        DrawGameloopToTextures(sortedTextures);
-                //    }
-                //}
-                //else
-                //{
-                //    skipDrawCount = 0;
-                //    DrawGameloopToTextures(sortedTextures);
-                //}
-                DrawGameloopToTextures(sortedTextures);
-                DrawGameloopToScreen(sortedTextures);
+                DrawGameloopToTextures(activeScreenTextures);
+                DrawGameloopToScreen(activeScreenTextures);
 
                 ResolveDeferred();
             }
@@ -350,7 +395,7 @@ namespace ShapeEngine
         {
             EndRun();
             UnloadContent();
-            foreach (var st in GetScreenTextures())
+            foreach (var st in screenTextures.GetAll())
             {
                 st.Close();
             }
@@ -364,7 +409,7 @@ namespace ShapeEngine
                 MonitorChanged(newMonitor);
             }
         }
-        private void UpdateScreenTextures(List<ScreenTexture> sortedTextures, float dt)
+        private void UpdateScreenTextures(ActiveScreenTextures sortedTextures, float dt)
         {
             foreach (var st in sortedTextures)
             {
@@ -372,16 +417,16 @@ namespace ShapeEngine
                 st.Update(dt);
             }
         }
-        private void DrawGameloopToTextures(List<ScreenTexture> sortedTextures)
+        private void DrawGameloopToTextures(ActiveScreenTextures sortedTextures)
         {
             foreach (var st in sortedTextures)
             {
                 st.BeginTextureMode();
-                Draw(st);
+                DrawToScreenTexture(st);
                 st.EndTextureMode();
             }
         }
-        private void DrawGameloopToScreen(List<ScreenTexture> sortedTextures)
+        private void DrawGameloopToScreen(ActiveScreenTextures sortedTextures)
         {
             
             Vector2 curScreenSize = new(CurWindowSize.width, CurWindowSize.height);
@@ -393,24 +438,13 @@ namespace ShapeEngine
                 st.DrawToScreen(CurWindowSize.width, CurWindowSize.height);
             }
 
-            DrawToScreen(curScreenSize);
+            DrawToScreen(curScreenSize, MousePos);
 
             DrawCursor(curScreenSize, MousePos);
 
             EndDrawing();
         }
-        private List<ScreenTexture> SortScreenTextures(List<ScreenTexture> textures)
-        {
-            textures.Sort(delegate (ScreenTexture x, ScreenTexture y)
-            {
-                if (x == null || y == null) return 0;
-
-                if (x.DrawOrder < y.DrawOrder) return -1;
-                else if (x.DrawOrder > y.DrawOrder) return 1;
-                else return 0;
-            });
-            return textures;
-        }
+       
         private void SetMousePos(Vector2 newPos)
         {
             MousePos = newPos;
@@ -436,15 +470,21 @@ namespace ShapeEngine
 
                 OnWindowSizeChanged?.Invoke(newW, newH);
 
-                foreach (var st in GetScreenTextures())
+                foreach (var st in screenTextures.GetAll())
                 {
                     st.AdjustSize(CurWindowSize.width, CurWindowSize.height);
                 }
             }
         }
 
-        protected List<ScreenTexture> GetScreenTextures() { return screenTextures.Values.ToList(); }
-        protected List<ScreenTexture> GetActiveScreenTextures() { return screenTextures.Values.Where((st) => st.Active).ToList(); }
+        public ActiveScreenTextures GetActiveScreenTextures(ScreenTextureMask mask)
+        {
+            return screenTextures.GetActive(mask);
+        }
+
+        //protected List<ScreenTexture> GetScreenTextures() { return screenTextures.Values.ToList(); }
+        //protected List<ScreenTexture> GetActiveScreenTextures() { return screenTextures.Values.Where((st) => st.Active).ToList(); }
+        
 
         /// <summary>
         /// Called first after starting the gameloop.
@@ -457,8 +497,8 @@ namespace ShapeEngine
 
         //protected virtual void HandleInput(float dt) { }
         protected virtual void Update(float dt) { }
-        protected virtual void Draw(ScreenTexture screenTexture) { }
-        protected virtual void DrawToScreen(Vector2 screenSize) { }
+        protected virtual void DrawToScreenTexture(ScreenTexture screenTexture) { }
+        protected virtual void DrawToScreen(Vector2 size, Vector2 mousePos) { }
 
         /// <summary>
         /// Called before UnloadContent is called after the main gameloop has been exited.
@@ -697,8 +737,7 @@ namespace ShapeEngine
 
             OnWindowSizeChanged?.Invoke(newWidth, newHeight);
             
-            var activeTextures = GetScreenTextures();
-            foreach (var st in activeTextures)
+            foreach (var st in screenTextures.GetAll())
             {
                 st.AdjustSize(CurWindowSize.width, CurWindowSize.height);
             }
@@ -730,6 +769,9 @@ namespace ShapeEngine
     /// </summary>
     public abstract class GameLoopScene : GameLoop
     {
+        //public static readonly uint GAME_ID = 800;
+        //public static readonly uint UI_ID = 900;
+
         /// <summary>
         /// Screen texture for drawing the game. Default draw order is 0. Default is basic camera.
         /// </summary>
@@ -745,8 +787,8 @@ namespace ShapeEngine
 
         public GameLoopScene(int gameTextureWidth, int gameTextureHeight, int uiTextureWidth, int uiTextureHeight) : base()
         {
-            Game = new ScreenTexture(gameTextureWidth, gameTextureHeight, 0);
-            UI = new ScreenTexture(uiTextureWidth, uiTextureHeight, 1);
+            Game = new ScreenTexture(gameTextureWidth, gameTextureHeight, 10);
+            UI = new ScreenTexture(uiTextureWidth, uiTextureHeight, 100);
             
             Game.SetCamera(new BasicCamera(new(0f), Game.GetSize(), new(0.5f), 1f, 0f));
             
@@ -767,35 +809,50 @@ namespace ShapeEngine
             CurScene = newScene;
         }
 
-        //protected override void HandleInput(float dt){ HandleInputScene(dt); }
-        protected override void Update(float dt) { UpdateScence(dt); }
-        protected override void Draw(ScreenTexture screenTexture) { DrawScene(screenTexture); }
-        protected override void DrawToScreen(Vector2 screenSize) { DrawSceneToScreen(screenSize, MousePos); }
-   ///// <summary>
-   ///// Calls HandleInput on the Cur Scene.
-   ///// </summary>
-   ///// <param name="dt"></param>
-   ////protected void HandleInputScene(float dt) { CurScene.HandleInput(dt, Game.MousePos, UI.MousePos); }
-        /// <summary>
-        /// Calls Update on the Cur Scene.
-        /// </summary>
-        /// <param name="dt"></param>
-        protected void UpdateScence(float dt) { CurScene.Update(dt, Game.MousePos, UI.MousePos); }
-        /// <summary>
-        /// Calls Draw or DrawUI on the Cur Scene based on the screen texture parameter.
-        /// </summary>
-        /// <param name="screenTexture"></param>
-        protected void DrawScene(ScreenTexture screenTexture) 
+        protected override void Update(float dt)
         {
-            if (screenTexture == Game) CurScene.Draw(Game.GetSize(), Game.MousePos);
-            else if (screenTexture == UI) CurScene.DrawUI(UI.GetSize(), UI.MousePos);
+            CurScene.Update(dt, MousePos, Game, UI);
+            var area = CurScene.GetCurArea();
+            if (area != null) area.Update(dt, MousePos, Game, UI);
         }
-        /// <summary>
-        /// Calls DrawToScene on the current active scene.
-        /// </summary>
-        /// <param name="screenSize"></param>
-        /// <param name="mousePos"></param>
-        protected void DrawSceneToScreen(Vector2 screenSize, Vector2 mousePos) { CurScene.DrawToScreen(screenSize, mousePos); }
+        protected override void DrawToScreenTexture(ScreenTexture screenTexture)
+        {
+            var area = CurScene.GetCurArea();
+            
+
+            if (screenTexture == Game)
+            {
+                Vector2 size = screenTexture.GetSize();
+                Vector2 mousePos = screenTexture.MousePos;
+                uint id = screenTexture.ID;
+
+                CurScene.DrawGame(size, mousePos);
+                if (area != null) area.DrawGame(size, mousePos);
+            }
+
+            else if (screenTexture == UI)
+            {
+                Vector2 size = screenTexture.GetSize();
+                Vector2 mousePos = screenTexture.MousePos;
+                uint id = screenTexture.ID;
+
+                CurScene.DrawUI(size, mousePos);
+                if (area != null) area.DrawUI(size, mousePos);
+            }
+            else
+            {
+                CurScene.DrawToTexture(screenTexture);
+                if (area != null) area.DrawToTexture(screenTexture);
+
+            }
+        }
+        protected override void DrawToScreen(Vector2 size, Vector2 mousePos)
+        {
+            CurScene.DrawToScreen(size, mousePos);
+            var area = CurScene.GetCurArea();
+            if (area != null) area.DrawToScreen(size, mousePos);
+        }
+    
     }
 
     public abstract class GameLoopScene<TScene> : GameLoop where TScene : IScene
@@ -837,31 +894,50 @@ namespace ShapeEngine
             CurScene = newScene;
         }
 
-        //protected override void HandleInput(float dt){ HandleInputScene(dt); }
-        protected override void Update(float dt) { UpdateScence(dt); }
-        protected override void Draw(ScreenTexture screenTexture) { DrawScene(screenTexture); }
-        protected override void DrawToScreen(Vector2 screenSize) { DrawSceneToScreen(screenSize, MousePos); }
-        
-        /// <summary>
-        /// Calls Update on the Cur Scene.
-        /// </summary>
-        /// <param name="dt"></param>
-        protected void UpdateScence(float dt) { CurScene.Update(dt, Game.MousePos, UI.MousePos); }
-        /// <summary>
-        /// Calls Draw or DrawUI on the Cur Scene based on the screen texture parameter.
-        /// </summary>
-        /// <param name="screenTexture"></param>
-        protected void DrawScene(ScreenTexture screenTexture)
+        protected override void Update(float dt)
         {
-            if (screenTexture == Game) CurScene.Draw(Game.GetSize(), Game.MousePos);
-            else if (screenTexture == UI) CurScene.DrawUI(UI.GetSize(), UI.MousePos);
+            CurScene.Update(dt, MousePos, Game, UI);
+            var area = CurScene.GetCurArea();
+            if (area != null) area.Update(dt, MousePos, Game, UI);
         }
-        /// <summary>
-        /// Calls DrawToScene on the current active scene.
-        /// </summary>
-        /// <param name="screenSize"></param>
-        /// <param name="mousePos"></param>
-        protected void DrawSceneToScreen(Vector2 screenSize, Vector2 mousePos) { CurScene.DrawToScreen(screenSize, mousePos); }
+        protected override void DrawToScreenTexture(ScreenTexture screenTexture)
+        {
+            var area = CurScene.GetCurArea();
+
+
+            if (screenTexture == Game)
+            {
+                Vector2 size = screenTexture.GetSize();
+                Vector2 mousePos = screenTexture.MousePos;
+                uint id = screenTexture.ID;
+
+                CurScene.DrawGame(size, mousePos);
+                if (area != null) area.DrawGame(size, mousePos);
+            }
+
+            else if (screenTexture == UI)
+            {
+                Vector2 size = screenTexture.GetSize();
+                Vector2 mousePos = screenTexture.MousePos;
+                uint id = screenTexture.ID;
+
+                CurScene.DrawUI(size, mousePos);
+                if (area != null) area.DrawUI(size, mousePos);
+            }
+            else
+            {
+                CurScene.DrawToTexture(screenTexture);
+                if (area != null) area.DrawToTexture(screenTexture);
+
+            }
+        }
+        protected override void DrawToScreen(Vector2 size, Vector2 mousePos)
+        {
+            CurScene.DrawToScreen(size, mousePos);
+            var area = CurScene.GetCurArea();
+            if (area != null) area.DrawToScreen(size, mousePos);
+        }
+
     }
 
 }

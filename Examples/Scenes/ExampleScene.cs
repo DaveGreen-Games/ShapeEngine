@@ -1,12 +1,13 @@
 ﻿using Raylib_CsLo;
 using ShapeEngine.Core;
 using ShapeEngine.Lib;
+using ShapeEngine.Screen;
 using System.ComponentModel;
 using System.Numerics;
 
 namespace Examples.Scenes
 {
-    public class ExampleScene : Scene
+    public class ExampleScene : IScene
     {
 
         public static Color ColorDark = SColor.HexToColor("0A131F");
@@ -30,11 +31,13 @@ namespace Examples.Scenes
 
         public virtual void Reset() { }
 
-        public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        
+        public virtual void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
         {
-            HandleInput(dt, mousePosGame, mousePosUI);
+            HandleInput(dt, game.MousePos, ui.MousePos);
         }
-        public virtual void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+
+        protected virtual void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             if (IsKeyPressed(KeyboardKey.KEY_R)) Reset();
             if (IsKeyPressed(KeyboardKey.KEY_ESCAPE)) GAMELOOP.GoToMainScene();
@@ -42,7 +45,7 @@ namespace Examples.Scenes
             if (IsKeyPressed(KeyboardKey.KEY_F)) GAMELOOP.ToggleFullscreen();
         }
 
-        public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
+        public virtual void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
         {
             Segment s = new(uiSize * new Vector2(0f, 0.07f), uiSize * new Vector2(1f, 0.07f));
             s.Draw(2f, ColorLight);
@@ -66,6 +69,40 @@ namespace Examples.Scenes
             Segment ver = new Segment(center - new Vector2(0f, length / 2), center + new Vector2(0f, length / 2));
             hor.Draw(2f, c);
             ver.Draw(2f, c);
+        }
+
+        public virtual Area? GetCurArea()
+        {
+            return null;
+        }
+
+        public virtual void Activate(IScene oldScene)
+        {
+            
+        }
+
+        public virtual void Deactivate()
+        {
+            
+        }
+
+        public virtual void Close()
+        {
+            
+        }
+
+        
+
+        public virtual void DrawGame(Vector2 size, Vector2 mousePos)
+        {
+        }
+
+        public virtual void DrawToTexture(ScreenTexture texture)
+        {
+        }
+
+        public virtual void DrawToScreen(Vector2 size, Vector2 mousePos)
+        {
         }
     }
 

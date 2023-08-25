@@ -1,4 +1,5 @@
 ﻿using Raylib_CsLo;
+using ShapeEngine;
 using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Screen;
@@ -15,7 +16,6 @@ namespace Examples.Scenes.ExampleScenes
         int areaLayer = SRNG.randI(1, 5);
         Color color = RED;
         private bool deltaFactorApplied = false;
-        public bool DrawToUI { get { return false; } set { } }
         public int AreaLayer { get { return areaLayer; } set { } }
 
         public Circ(Vector2 pos, Vector2 vel, float radius)
@@ -24,45 +24,11 @@ namespace Examples.Scenes.ExampleScenes
             this.Vel = vel;
             this.Radius = radius;
         }
-
-        //public void Update(Rect boundary, float dt)
-        //{
-        //    
-        //    Pos += Vel * dt;
-        //
-        //    if(Pos.X + Radius > boundary.Right)
-        //    {
-        //        Vel.X = -Vel.X;
-        //        Pos.X = boundary.Right - Radius;
-        //    }
-        //    else if(Pos.X - Radius < boundary.Left)
-        //    {
-        //        Pos.X = boundary.Left + Radius;
-        //        Vel.X = -Vel.X;
-        //    }
-        //
-        //    if (Pos.Y + Radius > boundary.Bottom)
-        //    {
-        //        Vel.Y = -Vel.Y;
-        //        Pos.Y = boundary.Bottom - Radius;
-        //    }
-        //    else if (Pos.Y - Radius < boundary.Top)
-        //    {
-        //        Pos.Y = boundary.Top + Radius;
-        //        Vel.Y = -Vel.Y;
-        //    }
-        //}
-        public void Draw()
-        {
-            DrawCircleSector(Pos, Radius, 0, 360, 12, RED);
-        }
-
-
-        public void AddedToArea(IArea area)
+        public void AddedToArea(Area area)
         {
         }
 
-        public void RemovedFromArea(IArea area)
+        public void RemovedFromArea(Area area)
         {
         }
         public Vector2 GetCameraFollowPosition(Vector2 camPos)
@@ -79,14 +45,20 @@ namespace Examples.Scenes.ExampleScenes
         {
             return new Rect(Pos, new Vector2(Radius) * 2, new Vector2(0.5f));
         }
+        
 
-        public void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        public void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
         {
             deltaFactorApplied = false;
             Pos += Vel * dt;
         }
 
-        public void Draw(Vector2 gameSize, Vector2 mousePosGame)
+        public void DrawToScreen(Vector2 size, Vector2 mousePos)
+        {
+           
+        }
+
+        public void DrawGame(Vector2 gameSize, Vector2 mousePosGame)
         {
             Color c = color;
             float r = Radius;
@@ -131,29 +103,40 @@ namespace Examples.Scenes.ExampleScenes
         {
             deltaFactorApplied = true;
         }
+
+        public bool IsDrawingToScreen()
+        {
+            return false;
+        }
+
+        public bool IsDrawingToGameTexture()
+        {
+            return true;
+        }
+
+        public bool IsDrawingToUITexture()
+        {
+            return false;
+        }
     }
     public class BouncyCircles : ExampleScene
     {
-        ScreenTexture game;
-        BasicCamera cam;
 
         Rect boundaryRect;
 
         Font font;
 
         //List<Circ> circles = new();
-        IArea area;
+        Area area;
 
         public BouncyCircles()
         {
             Title = "Bouncy Circles";
-            game = GAMELOOP.Game;
-            cam = new BasicCamera(new Vector2(0f), new Vector2(0), new Vector2(0.5f), 1f, 0f);
-            game.SetCamera(cam);
 
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
 
-            boundaryRect = cam.GetArea().ApplyMargins(0.025f, 0.025f, 0.1f, 0.1f);
+            
+            boundaryRect = GAMELOOP.GameCam.GetArea().ApplyMargins(0.025f, 0.025f, 0.1f, 0.1f);
 
             //area = new AreaTest(boundaryRect, 2, 2);
             area = new AreaCollision(boundaryRect, 2, 2);
@@ -163,7 +146,11 @@ namespace Examples.Scenes.ExampleScenes
             //circles.Clear();
             area.Clear();
         }
-        public override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        public override Area? GetCurArea()
+        {
+            return area;
+        }
+        protected override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             base.HandleInput(dt, mousePosGame, mousePosUI);
 
@@ -192,28 +179,12 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
 
-        public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        
+
+        public override void DrawGame(Vector2 gameSize, Vector2 mousePosGame)
         {
-            base.Update(dt, mousePosGame, mousePosUI);
-
-            //foreach (var c in circles)
-            //{
-            //    c.Update(boundaryRect, dt);
-            //}
-
-            area.Update(dt, mousePosGame, mousePosUI);
-        }
-
-        public override void Draw(Vector2 gameSize, Vector2 mousePosGame)
-        {
-            base.Draw(gameSize, mousePosGame);
+            base.DrawGame(gameSize, mousePosGame);
             boundaryRect.DrawLines(4f, ColorLight);
-            //foreach (var c in circles)
-            //{
-            //    c.Draw();
-            //}
-
-            area.Draw(gameSize, mousePosGame);
 
         }
         public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
@@ -224,8 +195,6 @@ namespace Examples.Scenes.ExampleScenes
             //string infoText = String.Format("[LMB] Spawn | Object Count: {0} | DC : {1} | SC: {2}", area.Count, MathF.Ceiling(GAMELOOP.deltaCriticalTime * 100) / 100, GAMELOOP.skipDrawCount);
             string infoText = String.Format("[LMB] Spawn | Object Count: {0}", area.Count);
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
-
-            area.DrawUI(uiSize, mousePosUI);
         }
 
     }

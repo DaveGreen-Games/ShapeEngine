@@ -93,18 +93,27 @@ namespace ShapeEngine.Screen
 
     public interface IShaderDevice
     {
-        public List<ScreenShader> GetCurActiveShaders();
+        public List<ScreenShader> GetActiveShaders();
+
+        public bool IsMultiShader();
         public void Update(float dt);
         public void Close();
     }
 
-    public sealed class ShaderDeviceBasic : IShaderDevice
+    public sealed class ShaderDeviceSingle : IShaderDevice
     {
         public void Close() { }
 
-        public List<ScreenShader> GetCurActiveShaders() { return new(); }
+        public ScreenShader? CurShader { get; set; } = null;
+        public List<ScreenShader> GetActiveShaders() 
+        {
+            if (CurShader == null) return new();
+            else return new() { CurShader };
+        }
 
         public void Update(float dt) { }
+
+        public bool IsMultiShader() { return false; }
     }
 
     public sealed class ShaderDevice : IShaderDevice
@@ -113,8 +122,10 @@ namespace ShapeEngine.Screen
         private Dictionary<uint, ScreenShader> screenShaders = new();
         private Dictionary<uint, Shader> shaders = new();
         private bool enabled = true;
-        
-        public List<ScreenShader> GetCurActiveShaders()
+
+        public bool IsMultiShader() { return true; }
+
+        public List<ScreenShader> GetActiveShaders()
         {
             if (!enabled) return new() { };
 

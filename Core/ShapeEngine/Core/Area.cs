@@ -1,44 +1,19 @@
 ﻿using ShapeEngine.Lib;
+using ShapeEngine.Screen;
 using ShapeEngine.Timing;
+using System.ComponentModel.Design;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Numerics;
 
 namespace ShapeEngine.Core
 {
-    /*
-    public class AreaLayerInjector
-    {
-        public delegate void InjectorAction(float dt, List<IAreaObject> objs);
-        public InjectorAction Injector;
-        private float duration;
-        private float timer;
-
-        public AreaLayerInjector(InjectorAction injector, float duration)
-        {
-            this.Injector = injector;
-            this.duration = duration;
-            this.timer = duration;
-        }
-
-        public bool Update(float dt)
-        {
-            if (duration <= 0f) return false;
-            timer -= dt;
-            return timer <= 0f && duration > 0f;
-        }
-
-    }
-    */
 
     /// <summary>
     /// Can be used to manipulate the delta value each area object recieves. 
     /// The layers affected can be specified. If no layers are specified all layers are affected!
     /// The final factor can not be negative and will be clamped to 0.
     /// </summary>
-    
-    
-    
     public sealed class AreaDeltaFactor : IAreaDeltaFactor
     {
         private static uint idCounter = 0;
@@ -186,14 +161,14 @@ namespace ShapeEngine.Core
     /// <summary>
     /// Provides a simple area for managing adding/removing, updating, and drawing of area objects. Does not provide a collision system.
     /// </summary>
-    public class Area : IArea
+    public class Area : IUpdateable, IDrawable, IBounds
     {
         public int Count
         {
             get
             {
                 int count = 0;
-                foreach (var objects in layers.Values)
+                foreach (var objects in allObjects.Values)
                 {
                     count += objects.Count;
                 }
@@ -201,11 +176,17 @@ namespace ShapeEngine.Core
             }
         }
         public Rect Bounds { get; protected set; }
-        public virtual ICollisionHandler? GetCollisionHandler() { return null; }
+        public virtual CollisionHandler? GetCollisionHandler() { return null; }
         public Vector2 ParallaxePosition { get; set; } = new(0f);
 
-        private SortedList<int, List<IAreaObject>> layers = new();
-        private List<IAreaObject> uiObjects = new();
+        private SortedList<int, List<IAreaObject>> allObjects = new();
+
+        //private Dictionary<uint, List<IAreaObject>> drawToScreenTextureObjects = new();
+        private List<IAreaObject> drawToScreenObjects = new();
+        private List<IAreaObject> drawToGameTextureObjects = new();
+        private List<IAreaObject> drawToUITextureObjects = new();
+
+
         private Dictionary<uint, IAreaDeltaFactor> deltaFactors = new();
         private List<IAreaDeltaFactor> sortedDeltaFactors = new();
 
@@ -232,12 +213,12 @@ namespace ShapeEngine.Core
         public bool RemoveDeltaFactor(uint id) { return deltaFactors.Remove(id); }
 
         public virtual void ResizeBounds(Rect newBounds) { Bounds = newBounds; }
-        public bool HasLayer(int layer) { return layers.ContainsKey(layer); }
-        public List<IAreaObject> GetAreaObjects(int layer, Predicate<IAreaObject> match) { return HasLayer(layer) ? layers[layer].FindAll(match) : new(); }
+        public bool HasLayer(int layer) { return allObjects.ContainsKey(layer); }
+        public List<IAreaObject> GetAreaObjects(int layer, Predicate<IAreaObject> match) { return HasLayer(layer) ? allObjects[layer].FindAll(match) : new(); }
         public List<IAreaObject> GetAllGameObjects()
         {
             List<IAreaObject> objects = new();
-            foreach (var layerGroup in layers.Values)
+            foreach (var layerGroup in allObjects.Values)
             {
                 objects.AddRange(layerGroup);
             }
@@ -248,9 +229,9 @@ namespace ShapeEngine.Core
         public void AddAreaObject(IAreaObject areaObject)
         {
             int layer = areaObject.AreaLayer;
-            if (!layers.ContainsKey(layer)) AddLayer(layer);
+            if (!allObjects.ContainsKey(layer)) AddLayer(layer);
 
-            layers[layer].Add(areaObject);
+            allObjects[layer].Add(areaObject);
             AreaObjectAdded(areaObject);
             areaObject.AddedToArea(this);
         }
@@ -258,9 +239,9 @@ namespace ShapeEngine.Core
         public void AddAreaObjects(IEnumerable<IAreaObject> areaObjects) { foreach (var ao in areaObjects) AddAreaObject(ao); }
         public void RemoveAreaObject(IAreaObject areaObject)
         {
-            if (layers.ContainsKey(areaObject.AreaLayer))
+            if (allObjects.ContainsKey(areaObject.AreaLayer))
             {
-                bool removed = layers[areaObject.AreaLayer].Remove(areaObject);
+                bool removed = allObjects[areaObject.AreaLayer].Remove(areaObject);
                 if (removed) AreaObjectRemoved(areaObject);
             }
         }
@@ -280,7 +261,7 @@ namespace ShapeEngine.Core
         }
         public void RemoveAreaObjects(int layer, Predicate<IAreaObject> match)
         {
-            if (layers.ContainsKey(layer))
+            if (allObjects.ContainsKey(layer))
             {
                 var objs = GetAreaObjects(layer, match);
                 foreach (var o in objs)
@@ -303,16 +284,21 @@ namespace ShapeEngine.Core
 
         public virtual void Clear()
         {
-            foreach (var layer in layers.Keys)
+            drawToScreenObjects.Clear();
+            //drawToScreenTextureObjects.Clear();
+            drawToGameTextureObjects.Clear();
+            drawToUITextureObjects.Clear();
+
+            foreach (var layer in allObjects.Keys)
             {
                 ClearLayer(layer);
             }
         }
         public virtual void ClearLayer(int layer)
         {
-            if (layers.ContainsKey(layer))
+            if (allObjects.ContainsKey(layer))
             {
-                var objects = layers[layer];
+                var objects = allObjects[layer];
                 for (int i = objects.Count - 1; i >= 0; i--)
                 {
                     var obj = objects[i];
@@ -375,8 +361,14 @@ namespace ShapeEngine.Core
             DrawRectangleLinesEx(this.Bounds.Rectangle, 15f, bounds);
         }
 
-        public virtual void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        
+        public virtual void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
         {
+            drawToScreenObjects.Clear();
+            //drawToScreenTextureObjects.Clear();
+            drawToGameTextureObjects.Clear();
+            drawToUITextureObjects.Clear();
+
             List<IAreaDeltaFactor> allDeltaFactors = deltaFactors.Values.ToList();
             for (int i = allDeltaFactors.Count - 1; i >= 0; i--)
             {
@@ -394,90 +386,126 @@ namespace ShapeEngine.Core
             );
             sortedDeltaFactors = allDeltaFactors;
 
-            foreach (var layer in layers)
+            foreach (var layer in allObjects)
             {
-                UpdateLayer(dt, mousePosGame, mousePosUI, layer.Key);
+                List<IAreaObject> objs = allObjects[layer.Key];
+                if (objs.Count <= 0) return;
+
+                float totalDeltaFactor = 1f;
+                foreach (var deltaFactor in sortedDeltaFactors)
+                {
+                    if (deltaFactor.IsAffectingLayer(layer.Key))
+                    {
+                        totalDeltaFactor = deltaFactor.Apply(totalDeltaFactor);
+                    }
+                }
+
+                dt *= totalDeltaFactor;
+
+                for (int i = objs.Count - 1; i >= 0; i--)
+                {
+                    IAreaObject obj = objs[i];
+                    if (obj == null)
+                    {
+                        objs.RemoveAt(i);
+                        return;
+                    }
+
+                    obj.UpdateParallaxe(ParallaxePosition);
+                    if (totalDeltaFactor != 1f) obj.DeltaFactorApplied(totalDeltaFactor);
+                    obj.Update(dt, mousePosScreen, game, ui);
+                    
+                    if (obj.IsDead())
+                    {
+                        objs.RemoveAt(i);
+
+                    }
+                    else
+                    {
+                        if (obj.CheckAreaBounds())
+                        {
+                            var check = HasLeftBounds(obj);
+                            if (check.points.Count > 0)
+                            {
+                                obj.LeftAreaBounds(check.safePosition, check.points);
+                            }
+                        }
+
+                        
+                        FilterObject(obj);
+                        
+                    }
+
+                }
             }
         }
-        public virtual void Draw(Vector2 gameSize, Vector2 mousePosGame)
+        public virtual void DrawGame(Vector2 gameSize, Vector2 mousePosGame)
         {
-            uiObjects.Clear();
-            foreach (var layer in layers.Values)
+            foreach (var obj in drawToGameTextureObjects)
             {
-                var objects = layer;
-
-                for (int j = 0; j < objects.Count; j++)
-                {
-                    var obj = objects[j];
-                    obj.Draw(gameSize, mousePosGame);
-                    if (obj.DrawToUI) uiObjects.Add(obj);
-                }
+                obj.DrawGame(gameSize, mousePosGame);
             }
         }
         public virtual void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
         {
-            foreach (var obj in uiObjects)
+            foreach (var obj in drawToUITextureObjects)
             {
                 obj.DrawUI(uiSize, mousePosUI);
             }
         }
+        public virtual void DrawToScreen(Vector2 size, Vector2 mousePos)
+        {
+            foreach (var obj in drawToScreenObjects)
+            {
+                obj.DrawToScreen(size, mousePos);
+            }
+        }
+        protected virtual void FilterObject(IAreaObject obj)
+        {
+            if (obj.IsDrawingToGameTexture()) drawToGameTextureObjects.Add(obj);
+            if (obj.IsDrawingToUITexture()) drawToUITextureObjects.Add(obj);
+            if (obj.IsDrawingToScreen()) drawToScreenObjects.Add(obj);
+            //var mask = obj.GetTextureMask();
+            //if (mask != null && mask.Count > 0)
+            //{
+            //
+            //    foreach (var id in mask)
+            //    {
+            //        if (drawToScreenTextureObjects.ContainsKey(id))
+            //        {
+            //            drawToScreenTextureObjects[id].Add(obj);
+            //        }
+            //        else
+            //        {
+            //            drawToScreenTextureObjects.Add(id, new() { obj });
+            //        }
+            //    }
+            //}
+        }
+        public virtual void DrawToTexture(ScreenTexture texture)
+        {
+            //if (drawToScreenTextureObjects.ContainsKey(texture.ID))
+            //{
+            //    foreach (var obj in drawToScreenTextureObjects[texture.ID])
+            //    {
+            //        obj.DrawToTexture(texture);
+            //    }
+            //}
+        }
+
+
+        
 
         protected void AddLayer(int layer)
         {
-            if (!layers.ContainsKey(layer))
+            if (!allObjects.ContainsKey(layer))
             {
-                layers.Add(layer, new());
+                allObjects.Add(layer, new());
             }
         }
-        protected void UpdateLayer(float dt, Vector2 mousePosGame, Vector2 mousePosUI, int layer)
-        {
-            List<IAreaObject> objs = layers[layer];
-            if (objs.Count <= 0) return;
+        
 
-            float totalDeltaFactor = 1f;
-            foreach (var deltaFactor in sortedDeltaFactors)
-            {
-                if (deltaFactor.IsAffectingLayer(layer))
-                {
-                    totalDeltaFactor = deltaFactor.Apply(totalDeltaFactor);
-                }
-            }
-
-            dt *= totalDeltaFactor;
-
-            for (int i = objs.Count - 1; i >= 0; i--)
-            {
-                IAreaObject obj = objs[i];
-                if (obj == null)
-                {
-                    objs.RemoveAt(i);
-                    return;
-                }
-
-
-                obj.UpdateParallaxe(ParallaxePosition);
-                obj.Update(dt, mousePosGame, mousePosUI);
-                if(totalDeltaFactor != 1f) obj.DeltaFactorApplied(totalDeltaFactor);
-                if (obj.IsDead())
-                {
-                    objs.RemoveAt(i);
-                }
-                else
-                {
-                    if (obj.CheckAreaBounds())
-                    {
-                        var check = HasLeftBounds(obj);
-                        if(check.points.Count > 0)
-                        {
-                            obj.LeftAreaBounds(check.safePosition, check.points);
-                        }
-                    }
-                }
-
-            }
-        }
-
-
+        
     }
     
     /// <summary>
@@ -485,56 +513,58 @@ namespace ShapeEngine.Core
     /// </summary>
     public class AreaCollision: Area
     {
-        public CollisionHandler Col { get; protected set; }
-        public override ICollisionHandler GetCollisionHandler() { return Col; }
+        protected CollisionHandler col;
+        public override CollisionHandler GetCollisionHandler() { return col; }
 
         
         public AreaCollision() : base()
         {
-            Col = new CollisionHandler(0,0,0,0,0,0);
+            col = new CollisionHandler(0,0,0,0,0,0);
         }
         public AreaCollision(float x, float y, float w, float h, int rows, int cols) : base(x, y, w, h)
         {
-            Col = new CollisionHandler(Bounds, rows, cols);
+            col = new CollisionHandler(Bounds, rows, cols);
         }
         public AreaCollision(Rect bounds, int rows, int cols) : base(bounds)
         {
-            Col = new CollisionHandler(bounds, rows, cols);
+            col = new CollisionHandler(bounds, rows, cols);
         }
 
-        public override void ResizeBounds(Rect newBounds) { Bounds = newBounds; Col.ResizeBounds(newBounds); }
+        public override void ResizeBounds(Rect newBounds) { Bounds = newBounds; col.ResizeBounds(newBounds); }
 
         protected override void AreaObjectAdded(IAreaObject obj)
         {
-            if (obj.HasCollidables()) Col.AddRange(obj.GetCollidables());
+            if (obj.HasCollidables()) col.AddRange(obj.GetCollidables());
         }
         protected override void AreaObjectRemoved(IAreaObject obj)
         {
-            if (obj.HasCollidables()) Col.RemoveRange(obj.GetCollidables());
+            if (obj.HasCollidables()) col.RemoveRange(obj.GetCollidables());
         }
         
         
         public override void Close()
         {
-            Clear();
-            Col.Close();
+            base.Close();
+            col.Close();
         }
 
-        public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
         {
-            Col.Update(dt, mousePosGame, mousePosUI);
+            col.Update(dt);
 
-            base.Update(dt, mousePosGame, mousePosUI);
+            base.Update(dt, mousePosScreen, game, ui);
         }
         
         public override void DrawDebug(Raylib_CsLo.Color bounds, Raylib_CsLo.Color border, Raylib_CsLo.Color fill)
         {
             base.DrawDebug(bounds, border, fill);
-            Col.DebugDraw(border, fill);
+            col.DebugDraw(border, fill);
         }
 
         
     }
+    
+    /*
     public class AreaCollision<TCollisionHandler> : Area where TCollisionHandler : ICollisionHandler
     {
         public TCollisionHandler Col { get; protected set; }
@@ -572,11 +602,11 @@ namespace ShapeEngine.Core
             Col.Close();
         }
 
-        public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
         {
-            Col.Update(dt, mousePosGame, mousePosUI);
+            Col.Update(dt);
 
-            base.Update(dt, mousePosGame, mousePosUI);
+            base.Update(dt, mousePosScreen, game, ui);
         }
 
         public override void DrawDebug(Raylib_CsLo.Color bounds, Raylib_CsLo.Color border, Raylib_CsLo.Color fill)
@@ -587,6 +617,7 @@ namespace ShapeEngine.Core
 
 
     }
+    */
 }
 
 

@@ -3,6 +3,7 @@
 using Raylib_CsLo;
 using ShapeEngine.Core;
 using ShapeEngine.Lib;
+using ShapeEngine.Screen;
 using System.Numerics;
 
 namespace Examples.Scenes.ExampleScenes
@@ -51,7 +52,7 @@ namespace Examples.Scenes.ExampleScenes
             font = GAMELOOP.GetFont(fontIndex);
         }
 
-        public override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             if (IsKeyPressed(KeyboardKey.KEY_W)) NextFont();
 
@@ -89,9 +90,10 @@ namespace Examples.Scenes.ExampleScenes
             base.HandleInput(dt, mousePosGame, mousePosUI);
 
         }
-        public override void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
         {
-            base.Update(dt, mousePosGame, mousePosUI);
+            base.Update(dt, mousePosScreen, game, ui);
+            Vector2 mousePosUI = ui.MousePos;
             timer += dt;
             if (timer >= interval)
             {

@@ -4,7 +4,7 @@ using System.Numerics;
 namespace ShapeEngine.Core
 {
  
-    public class CollisionHandler : ICollisionHandler
+    public class CollisionHandler : IBounds
     {
         internal class OverlapRegister : Dictionary<ICollidable, HashSet<ICollidable>>
         {
@@ -118,7 +118,7 @@ namespace ShapeEngine.Core
             spatialHash.Close();
         }
 
-        public void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        public void Update(float dt)
         {
             FillSpatialHash();
 

@@ -101,7 +101,8 @@ namespace ShapeEngine.Screen
 
         private RenderTexture texture;
         private Rectangle sourceRec;
-        private ScreenBuffer[] screenBuffers = new ScreenBuffer[0];
+        //private ScreenBuffer[] screenBuffers = new ScreenBuffer[0];
+        private ScreenBufferArray screenBuffers = new();
         private List<ScreenFlash> screenFlashes = new List<ScreenFlash>();
 
         public ScreenTexture(int width, int height, int drawOrder = 0)
@@ -111,15 +112,25 @@ namespace ShapeEngine.Screen
             this.Load(width, height);
             this.DrawOrder = drawOrder;
         }
+        public ScreenTexture(int width, int height, uint id, int drawOrder = 0)
+        {
+            this.ID = id;
+            this.BaseSize = (width, height);
+            this.Load(width, height);
+            this.DrawOrder = drawOrder;
+        }
         private void Load(int width, int height)
         {
             this.texture = LoadRenderTexture(width, height);
             this.sourceRec = new Rectangle(0, 0, width, -height);
-            screenBuffers = new ScreenBuffer[]
-            {
-                new(width, height),
-                new(width, height)
-            };
+
+            if(ShaderDevice != null && ShaderDevice.IsMultiShader())
+                this.screenBuffers.Load(width, height);
+            //screenBuffers = new ScreenBuffer[]
+            //{
+            //    new(width, height),
+            //    new(width, height)
+            //};
         }
         /// <summary>
         /// Adjust this textures size to the target size. Matches the aspect ratio of the target size, with the closest representation of the base size of the texture.
@@ -144,8 +155,9 @@ namespace ShapeEngine.Screen
             if (adjustedWidth != w || adjustedHeight != h)
             {
                 UnloadRenderTexture(texture);
-                screenBuffers[0].Unload();
-                screenBuffers[1].Unload();
+                //screenBuffers[0].Unload();
+                //screenBuffers[1].Unload();
+                screenBuffers.Unload();
                 Load(adjustedWidth, adjustedHeight);
                 if (camera != null)
                 {
@@ -223,11 +235,12 @@ namespace ShapeEngine.Screen
         public void Close()
         {
             UnloadRenderTexture(texture);
-            foreach (ScreenBuffer screenBuffer in screenBuffers)
-            {
-                screenBuffer.Unload();
-            }
-            screenBuffers = new ScreenBuffer[0];
+            screenBuffers.Unload();
+            //foreach (ScreenBuffer screenBuffer in screenBuffers)
+            //{
+            //    screenBuffer.Unload();
+            //}
+            //screenBuffers = new ScreenBuffer[0];
         }
 
         /// <summary>
@@ -287,7 +300,7 @@ namespace ShapeEngine.Screen
             //    BeginMode2D(camera.GetPixelSmoothingCamera());
 
 
-            List<ScreenShader> shadersToApply = ShaderDevice != null ? ShaderDevice.GetCurActiveShaders() : new();
+            List<ScreenShader> shadersToApply = ShaderDevice != null ? ShaderDevice.GetActiveShaders() : new();
             if (shadersToApply.Count <= 0)
             {
                 DrawTexture(targetWidth, targetHeight, BlendMode);
@@ -302,53 +315,61 @@ namespace ShapeEngine.Screen
             }
             else if (shadersToApply.Count == 2)
             {
-                ScreenShader s = shadersToApply[0];
-                screenBuffers[0].StartTextureMode();
-                BeginShaderMode(s.GetShader());
-                DrawTexture(GetTextureWidth(), GetTextureHeight());
-                EndShaderMode();
-                screenBuffers[0].EndTextureMode();
+                if (screenBuffers.Loaded)
+                {
+                    ScreenShader s = shadersToApply[0];
+                    screenBuffers.A.StartTextureMode();
+                    BeginShaderMode(s.GetShader());
+                    DrawTexture(GetTextureWidth(), GetTextureHeight());
+                    EndShaderMode();
+                    screenBuffers.A.EndTextureMode();
 
-                s = shadersToApply[1];
+                    s = shadersToApply[1];
 
-                BeginShaderMode(s.GetShader());
-                screenBuffers[0].DrawTexture(targetWidth, targetHeight, BlendMode);
-                EndShaderMode();
+                    BeginShaderMode(s.GetShader());
+                    screenBuffers.A.DrawTexture(targetWidth, targetHeight, BlendMode);
+                    EndShaderMode();
+                }
+                
             }
             else
             {
-                ScreenShader s = shadersToApply[0];
-                shadersToApply.RemoveAt(0);
-
-                ScreenShader endshader = shadersToApply[shadersToApply.Count - 1];
-                shadersToApply.RemoveAt(shadersToApply.Count - 1);
-
-                //draw game texture to first screenbuffer and first shader is already applied
-                screenBuffers[0].StartTextureMode();
-                BeginShaderMode(s.GetShader());
-                DrawTexture(GetTextureWidth(), GetTextureHeight());
-                EndShaderMode();
-                screenBuffers[0].EndTextureMode();
-
-                int currentIndex = 0;
-                int nextIndex = 0;
-                for (int i = 0; i < shadersToApply.Count; i++)
+                if (screenBuffers.Loaded)
                 {
-                    s = shadersToApply[i];
-                    nextIndex = currentIndex == 0 ? 1 : 0;
-                    ScreenBuffer current = screenBuffers[currentIndex];
-                    ScreenBuffer next = screenBuffers[nextIndex];
-                    next.StartTextureMode();
-                    BeginShaderMode(s.GetShader());
-                    current.DrawTexture(GetTextureWidth(), GetTextureHeight());
-                    EndShaderMode();
-                    next.EndTextureMode();
-                    currentIndex = currentIndex == 0 ? 1 : 0;
-                }
+                    ScreenShader s = shadersToApply[0];
+                    shadersToApply.RemoveAt(0);
 
-                BeginShaderMode(endshader.GetShader());
-                screenBuffers[nextIndex].DrawTexture(targetWidth, targetHeight, BlendMode);
-                EndShaderMode();
+                    ScreenShader endshader = shadersToApply[shadersToApply.Count - 1];
+                    shadersToApply.RemoveAt(shadersToApply.Count - 1);
+
+                    //draw game texture to first screenbuffer and first shader is already applied
+                    screenBuffers.A.StartTextureMode();
+                    BeginShaderMode(s.GetShader());
+                    DrawTexture(GetTextureWidth(), GetTextureHeight());
+                    EndShaderMode();
+                    screenBuffers.A.EndTextureMode();
+
+                    int currentIndex = 0;
+                    int nextIndex = 0;
+                    for (int i = 0; i < shadersToApply.Count; i++)
+                    {
+                        s = shadersToApply[i];
+                        nextIndex = currentIndex == 0 ? 1 : 0;
+                        ScreenBuffer current = screenBuffers.GetByIndex(currentIndex);
+                        ScreenBuffer next = screenBuffers.GetByIndex(nextIndex);
+                        next.StartTextureMode();
+                        BeginShaderMode(s.GetShader());
+                        current.DrawTexture(GetTextureWidth(), GetTextureHeight());
+                        EndShaderMode();
+                        next.EndTextureMode();
+                        currentIndex = currentIndex == 0 ? 1 : 0;
+                    }
+
+                    BeginShaderMode(endshader.GetShader());
+                    screenBuffers.GetByIndex(nextIndex).DrawTexture(targetWidth, targetHeight, BlendMode);
+                    EndShaderMode();
+                }
+                
             }
 
 

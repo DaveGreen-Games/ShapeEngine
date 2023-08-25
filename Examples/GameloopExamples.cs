@@ -3,13 +3,14 @@ using ShapeEngine.Lib;
 using ShapeEngine.Persistent;
 using ShapeEngine;
 using Examples.Scenes;
+using ShapeEngine.Screen;
 
 namespace Examples
 {
     public class GameloopExamples : GameLoopScene
     {
+        public BasicCamera GameCam { get; private set; }
         public Font FontDefault { get; private set; }
-
 
 
         private Dictionary<int, Font> fonts = new();
@@ -18,7 +19,8 @@ namespace Examples
 
         public GameloopExamples() : base(960 * 2, 540 * 2, 1920, 1080)
         {
-
+            GameCam = new BasicCamera(new(0f), Game.GetSize(), new(0.5f), 1f, 0f);
+            Game.SetCamera(GameCam);
         }
         protected override void LoadContent()
         {

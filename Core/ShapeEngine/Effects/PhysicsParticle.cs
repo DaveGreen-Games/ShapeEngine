@@ -1,5 +1,6 @@
 ﻿using ShapeEngine.Core;
 using ShapeEngine.Lib;
+using ShapeEngine.Screen;
 using System.Net.Http.Headers;
 using System.Numerics;
 
@@ -35,17 +36,11 @@ namespace ShapeEngine.Effects
             SPhysics.UpdateState(this, dt); 
         }
 
-        public override bool Update(float dt)
+        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
         {
+            base.Update(dt, mousePosScreen, game, ui);
             UpdatePreviousPosition(dt);
-
-            bool cancel = base.Update(dt);
-            if (cancel) return true;
-            else
-            {
-                UpdateState(dt);
-                return false;
-            }
+            UpdateState(dt);
         }
 
         public ICollider GetCollider() { return this; }

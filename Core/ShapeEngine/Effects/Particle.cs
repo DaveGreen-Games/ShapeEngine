@@ -3,12 +3,8 @@ using ShapeEngine.Lib;
 
 namespace ShapeEngine.Effects
 {
-    public abstract class Particle : EffectObject // IGameObject
+    public abstract class Particle : EffectObject
     {
-        //public delegate void Draw(Color color);
-        //public delegate void DrawParticle(Particle p);
-        //public DrawParticle? DrawParticleFunc = null;
-
         public Vector2 Vel { get; set; } = new(0f);
 
         public Particle(Vector2 pos, Vector2 size) : base(pos, size) { }
@@ -16,13 +12,6 @@ namespace ShapeEngine.Effects
         public Particle(Vector2 pos, Vector2 size, Vector2 vel, float lifetime) : base(pos, size, lifetime) { Vel = vel; }
         public Particle(Vector2 pos, Vector2 size, float angleDeg, float lifetime) : base(pos, size, lifetime) { Vel = SVec.Rotate(SVec.Right(), angleDeg * SUtils.DEGTORAD); }
 
-        
-        //public virtual bool Draw()
-        //{
-        //    if (IsDead()) return true;
-        //    if (DrawParticleFunc != null) DrawParticleFunc(this);
-        //    return false ;
-        //}
     }
     
 

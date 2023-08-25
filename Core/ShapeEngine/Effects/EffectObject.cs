@@ -1,5 +1,6 @@
 ﻿using ShapeEngine.Core;
 using ShapeEngine.Lib;
+using ShapeEngine.Screen;
 using ShapeEngine.Timing;
 using System.Numerics;
 
@@ -31,12 +32,7 @@ namespace ShapeEngine.Effects
         public float LifetimeF { get { return 1f - lifetimeTimer.F; } }
         protected BasicTimer lifetimeTimer = new();
 
-        public float DrawOrder { get; set; } = 0;
         public int AreaLayer { get; set; } = 0;
-        public bool DrawToUI { get; set; } = false;
-        public Vector2 ParallaxeOffset { get; set; } = new(0f);
-        public float UpdateSlowFactor { get; set; } = 1f;
-        public float UpdateSlowResistance { get; set; } = 1f;
 
         public EffectObject(Vector2 pos, Vector2 size) { this.Pos = pos; this.Size = size; }
         public EffectObject(Vector2 pos, Vector2 size, float lifeTime) { this.Pos = pos; this.Size = size; lifetimeTimer.Start(lifeTime); }
@@ -46,12 +42,6 @@ namespace ShapeEngine.Effects
             if (IsDead()) return false;
             lifetimeTimer.Stop();
             return true;
-        }
-        public virtual bool Update(float dt)
-        {
-            if (IsDead()) return true;
-            lifetimeTimer.Update(dt);
-            return false;
         }
         public bool IsDead() { return lifetimeTimer.IsFinished; }
 
@@ -66,19 +56,18 @@ namespace ShapeEngine.Effects
         public virtual bool AddBehavior(IBehavior behavior) { return false; }
         public virtual bool RemoveBehavior(IBehavior behavior) { return false; }
         */
-        public void AddedToArea(IArea area)     {}
-        public void RemovedFromArea(IArea area) {}
-        public void LeftAreaBounds(Rect bounds) { }
+        public void AddedToArea(Area area)     {}
+        public void RemovedFromArea(Area area) {}
+        
         public Vector2 GetCameraFollowPosition(Vector2 camPos) { return GetPosition(); }
 
-        public abstract void Update(float dt, Vector2 mousePosGame, Vector2 mousePosUI);
-        public abstract void Draw(Vector2 gameSize, Vector2 mousePosGame);
-        public abstract void DrawUI(Vector2 uiSize, Vector2 mousePosUI);
+        public virtual void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
+        {
+            lifetimeTimer.Update(dt);
+        }
+        public abstract void DrawGame(Vector2 gameSize, Vector2 mousePosGame);
+        public virtual void DrawUI(Vector2 uiSize, Vector2 mousePosUI) { }
 
-        //public Circle GetBoundingCircle()
-        //{
-        //    return new Circle(Pos, Size.Max());
-        //}
 
         public virtual bool CheckAreaBounds()
         {
@@ -94,7 +83,32 @@ namespace ShapeEngine.Effects
             
         }
 
-        //public void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI) { }
+        //public ScreenTextureMask? GetTextureMask()
+        //{
+        //    return null;
+        //}
+
+        public virtual bool IsDrawingToScreen()
+        {
+            return false;
+        }
+        public virtual bool IsDrawingToGameTexture()
+        {
+            return true;
+        }
+        public virtual bool IsDrawingToUITexture()
+        {
+            return false;
+        }
+        
+        //public void DrawToTexture(ScreenTexture texture)
+        //{
+        //    
+        //}
+        public virtual void DrawToScreen(Vector2 size, Vector2 mousePos)
+        {
+            
+        }
     }
 
     
