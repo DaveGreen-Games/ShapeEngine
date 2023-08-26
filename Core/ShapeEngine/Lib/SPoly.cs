@@ -213,10 +213,11 @@ namespace ShapeEngine.Lib
 
     public static class SPoly
     {
-        public static Polygons Cut(this Polygon poly, Polygon cut) { return SClipper.Intersect(poly, cut).ToPolygons().RemoveAllHoles(); }
-        public static Polygons Cut(this Polygon poly, Polygons cuts) { return SClipper.IntersectMany(poly, cuts).ToPolygons().RemoveAllHoles(); }
-        public static Polygons Combine(this Polygon poly, Polygon other) { return SClipper.Union(poly, other).ToPolygons(); }
-        public static Polygons Combine(params Polygon[] polygons) { return SClipper.Union(new Polygons(polygons)).ToPolygons(); }
+        public static Polygons Cut(this Polygon poly, Polygon cut) { return SClipper.Intersect(poly, cut).ToPolygons(true); }
+        public static Polygons Cut(this Polygon poly, Polygons cuts) { return SClipper.IntersectMany(poly, cuts).ToPolygons(true); }
+        public static Polygons Combine(this Polygon poly, Polygon other) { return SClipper.Union(poly, other).ToPolygons(true); }
+        public static Polygons Combine(this Polygon poly, Polygons others) { return SClipper.Union(poly, others).ToPolygons(true); }
+        //public static Polygons Combine(params Polygon[] polygons) { return SClipper.Union(new Polygons(polygons)).ToPolygons(); }
 
 
 

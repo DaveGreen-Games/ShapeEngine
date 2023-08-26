@@ -110,7 +110,7 @@ namespace Examples.Scenes.ExampleScenes
         private uint[] colMask = new uint[] { };
         private bool dead = false;
         public int AreaLayer { get; set; } = 0;
-
+        private bool overlapped = false;
         public Asteroid(Vector2 pos, params Vector2[] shape)
         {
             collider = new PolyCollider(pos, new(), shape);
@@ -126,24 +126,25 @@ namespace Examples.Scenes.ExampleScenes
             collider.ComputeIntersections = false;
             collidables.Add(this);
         }
-        public Polygon GetPolygon() { return collider.GetShape().ToPolygon(); }
+        public Polygon GetPolygon() { return collider.GetPolygonShape(); }
 
-
-        public Polygon Merge()
+        public void Overlapped()
         {
-            dead = true;
-            return GetPolygon();
+            overlapped = true;
         }
-        public List<Shard> Cut(Polygon shape)//also used for mining
-        {
-            return new();
-        }
+        
 
 
         public void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui) { }
         public void DrawGame(Vector2 size, Vector2 mousePos)
         {
-            collider.GetShape().DrawShape(4f, WHITE);
+            Color color = overlapped ? GREEN : WHITE;
+            collider.GetShape().DrawShape(4f, color);
+            //if(collider.GetShape() is Polygon p)
+            //{
+            //    p.DrawVertices(4f, RED);
+            //}
+            overlapped = false;
         }
         public bool Kill()
         {
@@ -201,7 +202,6 @@ namespace Examples.Scenes.ExampleScenes
         private Vector2 curPos = new();
         private float curRot = 0f;
         private float curSize = 50;
-
         public AsteroidMiningExample()
         {
             Title = "Asteroid Mining Example";
@@ -299,6 +299,9 @@ namespace Examples.Scenes.ExampleScenes
         {
             base.HandleInput(dt, mousePosGame, mousePosUI);
 
+            var col = area.GetCollisionHandler();
+            if (col == null) return;
+
             if (IsKeyPressed(KeyboardKey.KEY_TAB))//enter/exit poly mode
             {
                 polyModeActive = !polyModeActive;
@@ -311,37 +314,37 @@ namespace Examples.Scenes.ExampleScenes
                 SetCurPos(mousePosGame);
                 curShape.CenterSelf(curPos);
 
+                
+                var collidables = col.CastSpace(curShape, false, AsteriodLayer);
+                foreach (var collidable in collidables)
+                {
+                    if (collidable is Asteroid asteroid)
+                    {
+                        asteroid.Overlapped();
+                    }
+                }
+
                 if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)) //add polygon (merge)
                 {
-                    //use cur shape to cast 
-                    //get all polygons from all overlapping asteroids and kill them
-                    //merge all polygons with cur shape and create asteroid from that
-                    var col = area.GetCollisionHandler();
-                    if (col != null)
+                    Polygons polys = new();
+
+                    if (collidables.Count > 0)
                     {
-                        Polygons polys = new();
-                        var collidables = col.CastSpace(curShape, false, AsteriodLayer);
-                        if(collidables.Count > 0)
+                        foreach (var collidable in collidables)
                         {
-                            foreach (var collidable in collidables)
+                            if (collidable is Asteroid asteroid)
                             {
-                                if (collidable is Asteroid asteroid)
-                                {
-                                    polys.Add(asteroid.Merge());
-                                }
+                                area.RemoveAreaObject(asteroid);
+                                polys.Add(asteroid.GetPolygon());
                             }
-                            polys.Add(curShape);
-                            var finalShapes = SClipper.Union(polys).ToPolygons();
-                            if(finalShapes.Count > 0)
+                        }
+                        var finalShapes = SClipper.Union(curShape.ToPolygon(), polys, Clipper2Lib.FillRule.NonZero).ToPolygons(true);
+                        if (finalShapes.Count > 0)
+                        {
+                            foreach (var f in finalShapes)
                             {
-                                foreach (var f in finalShapes)
-                                {
-                                    if (!f.IsHole())
-                                    {
-                                        Asteroid a = new(f);
-                                        area.AddAreaObject(a);
-                                    }
-                                }
+                                Asteroid a = new(f);
+                                area.AddAreaObject(a);
                             }
                         }
                         else
@@ -349,16 +352,49 @@ namespace Examples.Scenes.ExampleScenes
                             Asteroid a = new(curShape.ToPolygon());
                             area.AddAreaObject(a);
                         }
-
-                        
                     }
-                    
+                    else
+                    {
+                        Asteroid a = new(curShape.ToPolygon());
+                        area.AddAreaObject(a);
+                    }
+
                 }
                 if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT)) //cut polygon
                 {
                     //use cur shape to cast
                     //go through all overlapping polygons and call cut on them
                     //accumulate all shards and add them to the area
+                    var cutShape = curShape.ToPolygon();
+                    foreach (var collidable in collidables)
+                    {
+                        if (collidable is Asteroid asteroid)
+                        {
+                            area.RemoveAreaObject(asteroid);
+                            var asteroidShape = asteroid.GetPolygon();
+                            
+                            var cutOut = asteroidShape.Cut(cutShape);
+                            Triangulation fracture = new();
+                            foreach (var piece in cutOut)
+                            {
+                                fracture.AddRange(piece.Triangulate());
+                            }
+                            
+                            var newShapes = SClipper.Difference(asteroidShape, cutShape).ToPolygons(true);
+                            if(newShapes.Count > 0)
+                            {
+                                foreach (var shape in newShapes)
+                                {
+                                    float shapeArea = shape.GetArea();
+                                    if(shapeArea > 10)
+                                    {
+                                        Asteroid a = new(shape);
+                                        area.AddAreaObject(a);
+                                    }
+                                }
+                            }
+                        }
+                    }
 
                 }
 
@@ -414,18 +450,7 @@ namespace Examples.Scenes.ExampleScenes
                     }
                     
                 }
-
-
-                
             }
-            
-
-            
-
-
-
-            
-            
         }
 
 
@@ -447,9 +472,9 @@ namespace Examples.Scenes.ExampleScenes
         {
             base.DrawUI(uiSize, mousePosUI);
 
-            //Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));
-            //string infoText = String.Format("[LMB] Spawn | Object Count: {0}", area.Count);
-            //font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+            Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));
+            string infoText = String.Format("Object Count: {0}", area.Count);
+            font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
 
     }

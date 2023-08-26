@@ -540,8 +540,13 @@ namespace ShapeEngine.Core
         {
             if (obj.HasCollidables()) col.RemoveRange(obj.GetCollidables());
         }
-        
-        
+
+        public override void Clear()
+        {
+            base.Clear();
+            col.Clear();
+        }
+
         public override void Close()
         {
             base.Close();

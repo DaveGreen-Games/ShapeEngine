@@ -1,9 +1,7 @@
 ﻿using System.Numerics;
 using ShapeEngine.Core;
 using Clipper2Lib;
-
-
-
+using System.Runtime.CompilerServices;
 
 namespace ShapeEngine.Lib
 {
@@ -25,7 +23,24 @@ namespace ShapeEngine.Lib
         {
             return Clipper.ExecuteRectClip(rect.ToClipperRect(), poly.ToClipperPath(), precision, convexOnly);
         }
-        public static PathsD Union(this Polygons polygons, FillRule fillRule = FillRule.NonZero) { return Clipper.Union(polygons.ToClipperPaths(), fillRule); }
+        //public static PathsD Union(this Polygons polygons, FillRule fillRule = FillRule.NonZero) 
+        //{
+        //    if (polygons.Count <= 0) return new();
+        //    else if(polygons.Count == 1) return polygons[0].ToClipperPaths();
+        //    else
+        //    {
+        //        var main = polygons[0];
+        //        polygons.RemoveAt(0);
+        //        return Union(main, polygons, fillRule);
+        //    
+        //    }
+        //
+        //    //return Clipper.Union(polygons.ToClipperPaths(), fillRule); 
+        //}
+        public static PathsD Union(this Polygon a, Polygons other, FillRule fillRule = FillRule.NonZero)
+        {
+            return Clipper.Union(a.ToClipperPaths(), other.ToClipperPaths(), fillRule);
+        }
         public static PathsD Union(this Polygon a, Polygon b, FillRule fillRule = FillRule.NonZero) { return Clipper.Union(ToClipperPaths(a), ToClipperPaths(b), fillRule); }
         
         public static PathsD Intersect(this Polygon subject, Polygon clip, FillRule fillRule = FillRule.NonZero, int precision = 2)
