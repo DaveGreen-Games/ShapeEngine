@@ -35,6 +35,7 @@ namespace Examples.Scenes
             examples.Add(new PolylineInflationExample());
             examples.Add(new PolylineCollisionExample());
             examples.Add(new CCDExample());
+            examples.Add(new AsteroidMiningExample());
             examples.Add(new AreaExample());
             examples.Add(new BouncyCircles());
             examples.Add(new TextScalingExample());
