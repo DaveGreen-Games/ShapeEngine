@@ -763,7 +763,7 @@ namespace Examples.Scenes.ExampleScenes
             base.Update(dt, mousePosScreen, game, ui);
 
             HandleWalls(game.MousePos);
-
+            area.Update(dt, mousePosScreen, game, ui);
 
             //collisionsTotal += area.Col.CollisionChecksPerFrame;
             //iterationsTotal += area.Col.IterationsPerFrame;
@@ -798,10 +798,16 @@ namespace Examples.Scenes.ExampleScenes
             }
 
             DrawWalls(mousePosGame);
+
+            area.DrawGame(gameSize, mousePosGame);
         }
         public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
         {
+
+            area.DrawUI(uiSize, mousePosUI);
+
             base.DrawUI(uiSize, mousePosUI);
+
             //Rect checksRect = new Rect(uiSize * new Vector2(0.5f, 0.92f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));
             //string checks = string.Format("Iteration: {0} | Collisions: {1} | CP: {2}", iterationsAvg.ToString("D6"), collisionAvg.ToString("D6"), closestPointAvg.ToString("D6"));
             //font.DrawText(checks, checksRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);

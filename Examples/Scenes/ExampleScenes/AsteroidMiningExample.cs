@@ -232,10 +232,9 @@ namespace Examples.Scenes.ExampleScenes
         {
             UpdateBoundaryRect(game);
             area.ResizeBounds(boundaryRect);
+            area.Update(dt, mousePosScreen, game, ui);
+
             base.Update(dt, mousePosScreen, game, ui); //calls area update therefore area bounds have to be updated before that
-
-
-            
         }
         private void SetCurPos(Vector2 pos)
         {
@@ -372,13 +371,17 @@ namespace Examples.Scenes.ExampleScenes
                         {
                             area.RemoveAreaObject(asteroid);
                             var asteroidShape = asteroid.GetPolygon();
+
+
+                            //gets stuck....
+                            //var cutOut = cutShape.Cut(asteroidShape); // asteroidShape.Cut(cutShape);
+                            //Triangulation fracture = new();
+                            //foreach (var piece in cutOut)
+                            //{
+                            //    
+                            //    fracture.AddRange(piece.Triangulate());
+                            //}
                             
-                            var cutOut = asteroidShape.Cut(cutShape);
-                            Triangulation fracture = new();
-                            foreach (var piece in cutOut)
-                            {
-                                fracture.AddRange(piece.Triangulate());
-                            }
                             
                             var newShapes = SClipper.Difference(asteroidShape, cutShape).ToPolygons(true);
                             if(newShapes.Count > 0)
@@ -466,10 +469,12 @@ namespace Examples.Scenes.ExampleScenes
             }
 
             //area.DrawDebug(GRAY, GOLD, GREEN);
+            area.DrawGame(gameSize, mousePosGame);
 
         }
         public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
         {
+            area.DrawUI(uiSize, mousePosUI);
             base.DrawUI(uiSize, mousePosUI);
 
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));

@@ -150,6 +150,11 @@ namespace Examples.Scenes.ExampleScenes
         {
             return area;
         }
+        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
+        {
+            base.Update(dt, mousePosScreen, game, ui);
+            area.Update(dt, mousePosScreen, game, ui);
+        }
         protected override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             base.HandleInput(dt, mousePosGame, mousePosUI);
@@ -185,12 +190,12 @@ namespace Examples.Scenes.ExampleScenes
         {
             base.DrawGame(gameSize, mousePosGame);
             boundaryRect.DrawLines(4f, ColorLight);
-
+            area.DrawGame(gameSize, mousePosGame);
         }
         public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
         {
+            area.DrawUI(uiSize, mousePosUI);
             base.DrawUI(uiSize, mousePosUI);
-
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));
             //string infoText = String.Format("[LMB] Spawn | Object Count: {0} | DC : {1} | SC: {2}", area.Count, MathF.Ceiling(GAMELOOP.deltaCriticalTime * 100) / 100, GAMELOOP.skipDrawCount);
             string infoText = String.Format("[LMB] Spawn | Object Count: {0}", area.Count);
