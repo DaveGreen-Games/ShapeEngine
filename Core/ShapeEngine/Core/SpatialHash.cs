@@ -110,11 +110,14 @@ namespace ShapeEngine.Core
         public int Rows { get; private set; }
         public int Cols { get; private set; }
 
-        private bool isClear = true;
-        public bool IsClear { get { return isClear; } }
+        //private bool isClear = true;
+        //public bool IsClear { get { return isClear; } }
 
+        
         private SpatialHashBucket[] buckets;
 
+        private bool boundsResizeQueued = false;
+        private Rect newBounds = new();
 
         public SpatialHash(float x, float y, float w, float h, int rows, int cols)
         {
@@ -151,9 +154,10 @@ namespace ShapeEngine.Core
         /// <param name="newBounds"></param>
         public void ResizeBounds(Rect newBounds) 
         {
-            if(!isClear) Clear();
-            Bounds = newBounds;
-            SetSpacing();
+            //if(!isClear) Clear();
+            this.newBounds = newBounds;
+            //Bounds = newBounds;
+            //SetSpacing();
         }
         
         /// <summary>
@@ -239,7 +243,7 @@ namespace ShapeEngine.Core
         public void Add(ICollidable collidable)
         {
             if (!collidable.GetCollider().Enabled) return;
-            isClear = false;
+            //isClear = false;
             var hashes = GetCellIDs(collidable.GetCollider().GetShape());
             foreach (int hash in hashes)
             {
@@ -250,13 +254,20 @@ namespace ShapeEngine.Core
 
         public void Clear()
         {
-            if(isClear) return;
+            //if(isClear) return;
 
             for (int i = 0; i < BucketCount; i++)
             {
                 buckets[i].Clear();
             }
-            isClear = true;
+
+            if (boundsResizeQueued)
+            {
+                boundsResizeQueued = false;
+                Bounds = newBounds;
+                SetSpacing();
+            }
+            //isClear = true;
         }
         public void Close()
         {

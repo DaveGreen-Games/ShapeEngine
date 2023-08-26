@@ -114,11 +114,16 @@ namespace Examples.Scenes.ExampleScenes
         public Asteroid(Vector2 pos, params Vector2[] shape)
         {
             collider = new PolyCollider(pos, new(), shape);
+            collider.ComputeCollision = false;
+            collider.ComputeIntersections = false;
             collidables.Add(this);
+
         }
         public Asteroid(Polygon shape)
         {
             collider = new PolyCollider(shape);
+            collider.ComputeCollision = false;
+            collider.ComputeIntersections = false;
             collidables.Add(this);
         }
         public Polygon GetPolygon() { return collider.GetShape().ToPolygon(); }
@@ -183,16 +188,16 @@ namespace Examples.Scenes.ExampleScenes
     {
         public static uint AsteriodLayer = 1;
 
-        internal enum TranslationMode { Translation = 1, Rotation = 2, Scaling = 3};
+        internal enum ShapeType { None = 0, Triangle = 1, Rect = 2, Poly = 3};
 
         private Font font;
         private AreaCollision area;
         private Rect boundaryRect = new();
 
         private bool polyModeActive = false;
-        private TranslationMode polyTranslationMode = TranslationMode.Translation;
+        private ShapeType curShapeType = ShapeType.None;
 
-        private Polygon? curShape = null;
+        private Polygon curShape = new();
         private Vector2 curPos = new();
         private float curRot = 0f;
         private float curSize = 50;
@@ -202,11 +207,16 @@ namespace Examples.Scenes.ExampleScenes
             Title = "Asteroid Mining Example";
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
             UpdateBoundaryRect(GAMELOOP.Game);
-            area = new AreaCollision(boundaryRect, 2, 2);
+            area = new AreaCollision(boundaryRect, 4, 4);
         }
         public override void Reset()
         {
             area.Clear();
+            polyModeActive = false;
+            curRot = 0f;
+            curSize = 50f;
+            curShapeType = ShapeType.Triangle;
+            RegenerateShape();
         }
         public override Area? GetCurArea()
         {
@@ -231,28 +241,59 @@ namespace Examples.Scenes.ExampleScenes
         {
             curPos = pos;
         }
-        private void SetCurRotation()
+        private void CycleRotation()
         {
-            Vector2 center = boundaryRect.Center;
-            Vector2 dir = (curPos - center);
-            curRot = dir.AngleDeg();
+            float step = 45f;
+            curRot += step;
+            curRot = Wrap(curRot, 0f, 360f);
         }
-        private void SetCurSize()
+        private void CycleSize()
         {
-            Vector2 center = boundaryRect.Center;
-            Vector2 dir = (curPos - center);
-            curSize = MathF.Max(dir.Length(), 15);
+            float step = 50f;
+            float min = 50f;
+            float max = 400;
+            curSize += step;
+            curSize = Wrap(curSize, min, max);
         }
-        private void PolyModeStarted(Vector2 mousePos)
+        private void RegenerateShape()
         {
-            SetCurPos(mousePos);
-            //curRot = 0f;
-            //curSize = 50f;
-            polyTranslationMode = TranslationMode.Translation;
+            if (curShapeType == ShapeType.Triangle)
+            {
+                GenerateTriangle();
+            }
+            else if (curShapeType == ShapeType.Rect)
+            {
+                GenerateRect();
+            }
+            else if (curShapeType == ShapeType.Poly)
+            {
+                GeneratePoly();
+            }
+        }
+        private void GenerateTriangle()
+        {
+            curShape = SPoly.Generate(curPos, 3, curSize / 2, curSize);
+        }
+        private void GenerateRect()
+        {
+            Rect r = new(curPos, new Vector2(curSize), new Vector2(0.5f));
+            curShape = r.RotateList(new Vector2(0.5f), curRot);
+        }
+        private void GeneratePoly()
+        {
+            curShape = SPoly.Generate(curPos, 16, curSize * 0.25f, curSize);
+        }
+        private void PolyModeStarted()
+        {
+            if (curShapeType == ShapeType.None)
+            {
+                curShapeType = ShapeType.Triangle;
+                RegenerateShape();
+            }
         }
         private void PolyModeEnded()
         {
-            curShape = null;
+
         }
         protected override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
@@ -261,21 +302,55 @@ namespace Examples.Scenes.ExampleScenes
             if (IsKeyPressed(KeyboardKey.KEY_TAB))//enter/exit poly mode
             {
                 polyModeActive = !polyModeActive;
-                if(polyModeActive) PolyModeStarted(mousePosGame);
+                if(polyModeActive) PolyModeStarted();
                 else PolyModeEnded();
             }
             
             if (polyModeActive)
             {
+                SetCurPos(mousePosGame);
+                curShape.CenterSelf(curPos);
+
                 if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)) //add polygon (merge)
                 {
                     //use cur shape to cast 
                     //get all polygons from all overlapping asteroids and kill them
                     //merge all polygons with cur shape and create asteroid from that
-                    if(curShape != null)
+                    var col = area.GetCollisionHandler();
+                    if (col != null)
                     {
-                        Asteroid a = new(curShape.ToPolygon());
-                        area.AddAreaObject(a);
+                        Polygons polys = new();
+                        var collidables = col.CastSpace(curShape, false, AsteriodLayer);
+                        if(collidables.Count > 0)
+                        {
+                            foreach (var collidable in collidables)
+                            {
+                                if (collidable is Asteroid asteroid)
+                                {
+                                    polys.Add(asteroid.Merge());
+                                }
+                            }
+                            polys.Add(curShape);
+                            var finalShapes = SClipper.Union(polys).ToPolygons();
+                            if(finalShapes.Count > 0)
+                            {
+                                foreach (var f in finalShapes)
+                                {
+                                    if (!f.IsHole())
+                                    {
+                                        Asteroid a = new(f);
+                                        area.AddAreaObject(a);
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            Asteroid a = new(curShape.ToPolygon());
+                            area.AddAreaObject(a);
+                        }
+
+                        
                     }
                     
                 }
@@ -287,55 +362,57 @@ namespace Examples.Scenes.ExampleScenes
 
                 }
 
-                if (IsKeyPressed(KeyboardKey.KEY_Q))//cycle translation
+                if (IsKeyPressed(KeyboardKey.KEY_Q))//regenerate
                 {
-                    if (polyTranslationMode == TranslationMode.Translation) polyTranslationMode = TranslationMode.Rotation;
-                    else if (polyTranslationMode == TranslationMode.Rotation) polyTranslationMode = TranslationMode.Scaling;
-                    else if(polyTranslationMode == TranslationMode.Scaling) polyTranslationMode = TranslationMode.Translation;
+                    RegenerateShape();
                 }
 
-                switch (polyTranslationMode)
+                if (IsKeyPressed(KeyboardKey.KEY_X))//rotate
                 {
-                    case TranslationMode.Translation:
-                        SetCurPos(mousePosGame);
-                        if(curShape != null)
-                        {
-                            curShape.CenterSelf(curPos);
-                        }
-                        break;
-                    case TranslationMode.Rotation:
-                        float oldRot = curRot;
-                        SetCurRotation();
-                        if (curShape != null)
-                        {
-                            float dif = curRot - oldRot;
-                            curShape.RotateSelf(new Vector2(0.5f), dif * DEG2RAD);
-                        }
-                        break;
-                    case TranslationMode.Scaling:
-                        float oldSize = curSize;
-                        SetCurSize();
-                        if (curShape != null)
-                        {
-                            float scale = curSize / oldSize;
-                            if(scale != 1f) curShape.ScaleSelf(scale);
-                        }
-                        break;
+                    float oldRot = curRot;
+                    CycleRotation();
+                    
+                    float dif = curRot - oldRot;
+                    curShape.RotateSelf(new Vector2(0.5f), dif * DEG2RAD);
+                    curShape.CenterSelf(curPos);
                 }
 
-                //-> pressing again generates new shape
+                if (IsKeyPressed(KeyboardKey.KEY_C))//scale
+                {
+                    float oldSize = curSize;
+                    CycleSize();
+                    float scale = curSize / oldSize;
+                    curShape.ScaleSelf(scale);
+                    curShape.CenterSelf(curPos);
+                }
+
+                
                 if (IsKeyPressed(KeyboardKey.KEY_ONE))//choose triangle
                 {
-                    curShape = SPoly.Generate(curPos, 3, curSize / 2, curSize);
+                    if(curShapeType != ShapeType.Triangle)
+                    {
+                        GenerateTriangle();
+                        curShapeType = ShapeType.Triangle;
+                    }
+                    
                 }
                 if (IsKeyPressed(KeyboardKey.KEY_TWO))//choose rectangle
                 {
-                    Rect r = new(curPos, new Vector2(curSize), new Vector2(0.5f));
-                    curShape = r.RotateList(new Vector2(0.5f), curRot);
+                    if(curShapeType != ShapeType.Rect)
+                    {
+                        GenerateRect();
+                        curShapeType = ShapeType.Rect;
+                    }
+                    
                 }
                 if (IsKeyPressed(KeyboardKey.KEY_THREE))//choose polygon 
                 {
-                    curShape = SPoly.Generate(curPos, 12, curSize / 2, curSize);
+                    if (curShapeType != ShapeType.Poly)
+                    {
+                        GeneratePoly();
+                        curShapeType = ShapeType.Poly;
+                    }
+                    
                 }
 
 
@@ -358,10 +435,12 @@ namespace Examples.Scenes.ExampleScenes
             base.DrawGame(gameSize, mousePosGame);
             boundaryRect.DrawLines(4f, ColorLight);
 
-            if(curShape != null)
+            if(polyModeActive && curShapeType != ShapeType.None)
             {
                 curShape.DrawLines(2f, RED);
             }
+
+            //area.DrawDebug(GRAY, GOLD, GREEN);
 
         }
         public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
