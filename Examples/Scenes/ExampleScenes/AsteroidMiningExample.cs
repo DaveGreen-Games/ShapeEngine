@@ -56,9 +56,9 @@ namespace Examples.Scenes.ExampleScenes
             this.rotDeg = 0f;
             this.pos = shape.GetCentroid();
             Vector2 dir = (pos - fractureCenter).Normalize();
-            this.vel = dir * SRNG.randF(50, 150);
-            this.angularVelDeg = SRNG.randF(-30, 30);
-            this.lifetime = SRNG.randF(3, 6);
+            this.vel = dir * SRNG.randF(100, 300);
+            this.angularVelDeg = SRNG.randF(-90, 90);
+            this.lifetime = SRNG.randF(1, 3);
             this.lifetimeTimer = this.lifetime;
         }
         public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
@@ -73,7 +73,7 @@ namespace Examples.Scenes.ExampleScenes
                 }
                 else
                 {
-                    lifetimeF = 1f - ( lifetimeTimer / lifetime );
+                    lifetimeF = 1f - (lifetimeTimer / lifetime);
                     float prevRotDeg = rotDeg;
                     pos += vel * dt;
                     rotDeg += angularVelDeg * dt;
@@ -96,12 +96,13 @@ namespace Examples.Scenes.ExampleScenes
     }
     public class Asteroid : SpaceObject, ICollidable
     {
+        private const float DamageThreshold = 250f;
+
         private PolyCollider collider;
         private List<ICollidable> collidables = new();
         private uint[] colMask = new uint[] { };
-        private bool dead = false;
-        public int AreaLayer { get; set; } = 0;
         private bool overlapped = false;
+        private float curThreshold = DamageThreshold;
         public Asteroid(Vector2 pos, params Vector2[] shape)
         {
             collider = new PolyCollider(pos, new(), shape);
@@ -124,7 +125,16 @@ namespace Examples.Scenes.ExampleScenes
             overlapped = true;
         }
         
+        public void Damage(float amount, Vector2 point)
+        {
+            curThreshold -= amount;
+            if(curThreshold <= 0f)
+            {
+                curThreshold = DamageThreshold + curThreshold;
 
+                //cut piece
+            }
+        }
 
         public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui) { }
         public override void DrawGame(Vector2 size, Vector2 mousePos)
@@ -149,10 +159,128 @@ namespace Examples.Scenes.ExampleScenes
         public uint[] GetCollisionMask() { return colMask; }
     }
 
+    public class LaserDevice : SpaceObject
+    {
+        private const float LaserRange = 750;
+        private const float DamagePerSecond = 100;
+        private bool aimingMode = true;
+        private bool hybernate = false;
+        private bool laserEnabled = false;
+
+        private Vector2 pos;
+        private float rotRad;
+        private float size;
+        private Triangle shape;
+        private Vector2 tip;
+        private Vector2 laserEndPoint;
+        private Vector2 aimDir = new();
+        private AreaCollision area;
+        public LaserDevice(Vector2 pos, float size, AreaCollision area) 
+        {
+            this.area = area;
+            this.pos = pos;
+            this.size = size;
+            this.rotRad = 0f;
+            UpdateTriangle();
+            this.laserEndPoint = tip;
+        }
+        public void SetHybernate(bool enabled)
+        {
+            if (enabled)
+            {
+                aimingMode = true;
+                hybernate = true;
+            }
+            else
+            {
+                aimingMode = true;
+                hybernate = false;
+            }
+            
+        }
+        public void SetAimingMode(bool enabled)
+        {
+            aimingMode = enabled;
+
+        }
+        
+        private void UpdateTriangle()
+        {
+            Vector2 a = pos + new Vector2(size / 2, 0f).Rotate(rotRad);
+            Vector2 b = pos + new Vector2(-size / 2, -size / 4).Rotate(rotRad);
+            Vector2 c = pos + new Vector2(-size / 2, size / 4).Rotate(rotRad);
+
+            this.shape = new Triangle(a, b, c);
+            this.tip = a;
+        }
+
+        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
+        {
+            laserEnabled = false;
+            if (hybernate) return;
+            
+            if (aimingMode)
+            {
+                Vector2 dir = game.MousePos - pos;
+                aimDir = dir.Normalize();
+                rotRad = dir.AngleRad();
+
+                laserEnabled = IsMouseButtonDown(MouseButton.MOUSE_BUTTON_RIGHT);
+            }
+            else
+            {
+                pos = game.MousePos;
+            }
+            
+            UpdateTriangle();
+
+            if (laserEnabled)
+            {
+                laserEndPoint = tip + aimDir * LaserRange;
+                var col = area.GetCollisionHandler();
+                if(col != null)
+                {
+                    var queryInfos = col.QuerySpace(new Segment(tip, laserEndPoint), true, AsteroidMiningExample.AsteriodLayer);
+                    if(queryInfos.Count > 0)
+                    {
+                        var closest = queryInfos[0];
+                        if (closest.intersection.Valid)
+                        {
+                            var other = closest.collidable;
+                            if (other != null && other is Asteroid a)
+                            {
+                                laserEndPoint = closest.intersection.ColPoints[0].Point;
+                                a.Damage(DamagePerSecond * dt, laserEndPoint);
+                            }
+                        }
+                        
+                    }
+                }
+
+            }
+        }
+        public override void DrawGame(Vector2 size, Vector2 mousePos)
+        {
+            shape.DrawLines(4f, RED);
+            SDrawing.DrawCircle(tip, 8f, RED);
+
+            if (laserEnabled)
+            {
+                Segment laser = new(tip, laserEndPoint);
+                laser.Draw(4f, RED);
+            }
+        }
+
+
+        public override Rect GetBoundingBox() { return shape.GetBoundingBox(); }
+        public override Vector2 GetCameraFollowPosition(Vector2 camPos) { return pos; }
+        public override Vector2 GetPosition() { return pos; }
+    }
 
     public class AsteroidMiningExample : ExampleScene
     {
         public static uint AsteriodLayer = 1;
+        private const float MinPieceArea = 3000f;
 
         internal enum ShapeType { None = 0, Triangle = 1, Rect = 2, Poly = 3};
 
@@ -168,13 +296,17 @@ namespace Examples.Scenes.ExampleScenes
         private float curRot = 0f;
         private float curSize = 50;
 
-        private const float MinPieceArea = 3000f;
+        private LaserDevice laserDevice;
+
         public AsteroidMiningExample()
         {
             Title = "Asteroid Mining Example";
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
             UpdateBoundaryRect(GAMELOOP.Game);
             area = new AreaCollision(boundaryRect, 4, 4);
+
+            laserDevice = new(GAMELOOP.Game.GetSize() / 2, 100, area);
+            area.AddAreaObject(laserDevice);
         }
         public override void Reset()
         {
@@ -184,6 +316,8 @@ namespace Examples.Scenes.ExampleScenes
             curSize = 50f;
             curShapeType = ShapeType.Triangle;
             RegenerateShape();
+            laserDevice = new(GAMELOOP.Game.GetSize() / 2, 100, area);
+            area.AddAreaObject(laserDevice);
         }
         public override Area? GetCurArea()
         {
@@ -256,10 +390,11 @@ namespace Examples.Scenes.ExampleScenes
                 curShapeType = ShapeType.Triangle;
                 RegenerateShape();
             }
+            laserDevice.SetHybernate(true);
         }
         private void PolyModeEnded()
         {
-
+            laserDevice.SetHybernate(false);
         }
         protected override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
@@ -428,6 +563,17 @@ namespace Examples.Scenes.ExampleScenes
                         curShapeType = ShapeType.Poly;
                     }
                     
+                }
+            }
+            else
+            {
+                if(IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT))
+                {
+                    laserDevice.SetAimingMode(false);
+                }
+                else if (IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT))
+                {
+                    laserDevice.SetAimingMode(true);
                 }
             }
         }
