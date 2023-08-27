@@ -6,104 +6,92 @@ using System.Numerics;
 
 namespace Examples.Scenes.ExampleScenes
 {
-    public class SpaceObject : IAreaObject
+    public abstract class SpaceObject : IAreaObject
     {
-        public int AreaLayer { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-        public void AddedToArea(Area area)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool CheckAreaBounds()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DeltaFactorApplied(float f)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DrawGame(Vector2 size, Vector2 mousePos)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DrawToScreen(Vector2 size, Vector2 mousePos)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DrawUI(Vector2 size, Vector2 mousePos)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Rect GetBoundingBox()
-        {
-            throw new NotImplementedException();
-        }
-
-        public Vector2 GetCameraFollowPosition(Vector2 camPos)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Vector2 GetPosition()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool IsDead()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool IsDrawingToGameTexture()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool IsDrawingToScreen()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool IsDrawingToUITexture()
-        {
-            throw new NotImplementedException();
-        }
-
+        protected bool dead = false;
+        public int AreaLayer { get; set; } = 0;
         public bool Kill()
         {
-            throw new NotImplementedException();
+            if (dead) return false;
+            dead = true;
+            return true;
         }
 
-        public void LeftAreaBounds(Vector2 safePosition, CollisionPoints collisionPoints)
-        {
-            throw new NotImplementedException();
-        }
+        public abstract Vector2 GetCameraFollowPosition(Vector2 camPos);
+        public abstract Vector2 GetPosition();
+        public abstract Rect GetBoundingBox();
 
-        public void RemovedFromArea(Area area)
-        {
-            throw new NotImplementedException();
-        }
+        public virtual void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui) { }
+        public virtual void DrawGame(Vector2 size, Vector2 mousePos) { }
+        public virtual void Overlap(CollisionInformation info) { }
+        public virtual void OverlapEnded(ICollidable other) { }
+        public virtual void AddedToArea(Area area) { }
+        public virtual void RemovedFromArea(Area area) { }
+        
+        public void DeltaFactorApplied(float f) { }
+        public void DrawToScreen(Vector2 size, Vector2 mousePos) { }
+        public void DrawUI(Vector2 size, Vector2 mousePos) { }
+        public bool IsDead() { return dead; }
+        public bool IsDrawingToGameTexture() { return true; }
+        public bool IsDrawingToScreen() { return false; }
+        public bool IsDrawingToUITexture() { return false; }
+        public bool CheckAreaBounds() { return false; }
+        public void LeftAreaBounds(Vector2 safePosition, CollisionPoints collisionPoints) { }
 
-        public void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
-        {
-            throw new NotImplementedException();
-        }
+        
     }
     public class Shard : SpaceObject
     {
-        public Shard()
+        private Polygon shape;
+        private Vector2 pos;
+        private Vector2 vel;
+        private float rot = 0f;
+        private float angularVel = 0f;
+        private float lifetimeTimer = 0f;
+        private float lifetime = 0f;
+
+        public Shard(Polygon shape, Vector2 fractureCenter)
         {
-
+            this.shape = shape;
+            this.rot = 0f;
+            this.pos = shape.GetCentroid();
+            Vector2 dir = pos - fractureCenter;
+            this.vel = dir * SRNG.randF(50, 250);
+            this.angularVel = SRNG.randF(-15, 15);
+            this.lifetime = SRNG.randF(4, 12);
+            this.lifetimeTimer = this.lifetime;
         }
+        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
+        {
+            base.Update(dt, mousePosScreen, game, ui);
+            if(lifetimeTimer > 0f)
+            {
+                lifetimeTimer -= dt;
+                if(lifetimeTimer <= 0f)
+                {
+                    lifetimeTimer = 0f;
+                    dead = true;
+                }
 
+                float lifetimeF = lifetimeTimer / lifetime;
+                float prevRot = rot;
+                pos += vel * dt;
+                rot += angularVel * dt;
+
+                float rotDif = rot - prevRot;
+                shape.CenterSelf(pos);
+                shape.RotateSelf(new Vector2(0.5f), rotDif);
+            }
+        }
+        public override void DrawGame(Vector2 size, Vector2 mousePos)
+        {
+            shape.DrawLines(2f, WHITE);
+        }
+        public override Rect GetBoundingBox() { return shape.GetBoundingBox(); }
+        public override Vector2 GetCameraFollowPosition(Vector2 camPos) { return pos; }
+        public override Vector2 GetPosition() { return pos; }
     }
-    public class Asteroid : IAreaObject, ICollidable
+    public class Asteroid : SpaceObject, ICollidable
     {
         private PolyCollider collider;
         private List<ICollidable> collidables = new();
@@ -135,8 +123,8 @@ namespace Examples.Scenes.ExampleScenes
         
 
 
-        public void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui) { }
-        public void DrawGame(Vector2 size, Vector2 mousePos)
+        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui) { }
+        public override void DrawGame(Vector2 size, Vector2 mousePos)
         {
             Color color = overlapped ? GREEN : WHITE;
             collider.GetShape().DrawShape(4f, color);
@@ -146,43 +134,16 @@ namespace Examples.Scenes.ExampleScenes
             //}
             overlapped = false;
         }
-        public bool Kill()
-        {
-            if (dead) return false;
-            dead = true;
-            return true;
-        }
+        
         public virtual bool HasCollidables() { return true; }
         public virtual List<ICollidable> GetCollidables() { return collidables; }
 
-        public void AddedToArea(Area area) { }
-        public bool CheckAreaBounds() { return false; }
-        public void DeltaFactorApplied(float f) { }
-        public void DrawToScreen(Vector2 size, Vector2 mousePos) { }
-        public void DrawUI(Vector2 size, Vector2 mousePos) { }
-
-        public Rect GetBoundingBox() { return collider.GetShape().GetBoundingBox(); }
-        public Vector2 GetCameraFollowPosition(Vector2 camPos) { return collider.Pos; }
+        public override Rect GetBoundingBox() { return collider.GetShape().GetBoundingBox(); }
+        public override Vector2 GetCameraFollowPosition(Vector2 camPos) { return collider.Pos; }
+        public override Vector2 GetPosition() { return collider.Pos; }
         public ICollider GetCollider() { return collider; }
         public uint GetCollisionLayer() { return AsteroidMiningExample.AsteriodLayer; }
         public uint[] GetCollisionMask() { return colMask; }
-        public Vector2 GetPosition() { return collider.Pos; }
-        public bool IsDead() { return dead; }
-        public bool IsDrawingToGameTexture() { return true; }
-        public bool IsDrawingToScreen() { return false; }
-        public bool IsDrawingToUITexture() { return false; }
-
-        
-
-        public void LeftAreaBounds(Vector2 safePosition, CollisionPoints collisionPoints) { }
-
-        public void Overlap(CollisionInformation info) { }
-
-        public void OverlapEnded(ICollidable other) { }
-
-        public void RemovedFromArea(Area area) { }
-
-        
     }
 
     public class AsteroidMiningExample : ExampleScene
@@ -374,13 +335,13 @@ namespace Examples.Scenes.ExampleScenes
 
 
                             //gets stuck....
-                            //var cutOut = cutShape.Cut(asteroidShape); // asteroidShape.Cut(cutShape);
-                            //Triangulation fracture = new();
-                            //foreach (var piece in cutOut)
-                            //{
-                            //    
-                            //    fracture.AddRange(piece.Triangulate());
-                            //}
+                            var cutOut = cutShape.Cut(asteroidShape); // asteroidShape.Cut(cutShape);
+                            Triangulation fracture = new();
+                            foreach (var piece in cutOut)
+                            {
+                                fracture.AddRange(SPoly.TriangulateDelaunay(piece));
+                                //fracture.AddRange(piece.Triangulate());
+                            }
                             
                             
                             var newShapes = SClipper.Difference(asteroidShape, cutShape).ToPolygons(true);
