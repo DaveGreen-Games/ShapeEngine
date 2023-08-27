@@ -951,9 +951,9 @@ namespace ShapeEngine.Core
             vertices.AddRange(this);
             while (vertices.Count > 3)
             {
-                
                 for (int count = 0; count < vertices.Count; count++)
                 {
+                    
                     int i = SRNG.randI(0, vertices.Count);
                     Vector2 a = vertices[i];
                     Vector2 b = SUtils.GetItem(vertices, i + 1);
@@ -962,7 +962,10 @@ namespace ShapeEngine.Core
                     Vector2 ba = b - a;
                     Vector2 ca = c - a;
 
-                    if (ba.Cross(ca) > 0f) continue;
+                    if (ba.Cross(ca) == 0f)
+                    {
+                        continue;
+                    }
 
                     Triangle t = new(a, b, c);
 
@@ -985,6 +988,8 @@ namespace ShapeEngine.Core
                     }
                 }
             }
+
+
             triangles.Add(new(vertices[0], vertices[1], vertices[2]));
 
 
