@@ -305,7 +305,7 @@ namespace Examples.Scenes.ExampleScenes
             UpdateBoundaryRect(GAMELOOP.Game);
             area = new AreaCollision(boundaryRect, 4, 4);
 
-            laserDevice = new(GAMELOOP.Game.GetSize() / 2, 100, area);
+            laserDevice = new(new Vector2(0f), 100, area);
             area.AddAreaObject(laserDevice);
         }
         public override void Reset()
@@ -316,7 +316,7 @@ namespace Examples.Scenes.ExampleScenes
             curSize = 50f;
             curShapeType = ShapeType.Triangle;
             RegenerateShape();
-            laserDevice = new(GAMELOOP.Game.GetSize() / 2, 100, area);
+            laserDevice = new(new Vector2(0), 100, area);
             area.AddAreaObject(laserDevice);
         }
         public override Area? GetCurArea()
