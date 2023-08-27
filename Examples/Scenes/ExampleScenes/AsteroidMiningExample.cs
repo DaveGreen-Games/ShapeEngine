@@ -40,30 +40,29 @@ namespace Examples.Scenes.ExampleScenes
 
         
     }
-    public class Shard : SpaceObject
+    public class AsteroidShard : SpaceObject
     {
         private Polygon shape;
         private Vector2 pos;
         private Vector2 vel;
-        private float rot = 0f;
-        private float angularVel = 0f;
+        private float rotDeg = 0f;
+        private float angularVelDeg = 0f;
         private float lifetimeTimer = 0f;
         private float lifetime = 0f;
-
-        public Shard(Polygon shape, Vector2 fractureCenter)
+        private float lifetimeF = 1f;
+        public AsteroidShard(Polygon shape, Vector2 fractureCenter)
         {
             this.shape = shape;
-            this.rot = 0f;
+            this.rotDeg = 0f;
             this.pos = shape.GetCentroid();
-            Vector2 dir = pos - fractureCenter;
-            this.vel = dir * SRNG.randF(50, 250);
-            this.angularVel = SRNG.randF(-15, 15);
-            this.lifetime = SRNG.randF(4, 12);
+            Vector2 dir = (pos - fractureCenter).Normalize();
+            this.vel = dir * SRNG.randF(50, 150);
+            this.angularVelDeg = SRNG.randF(-30, 30);
+            this.lifetime = SRNG.randF(3, 6);
             this.lifetimeTimer = this.lifetime;
         }
         public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
         {
-            base.Update(dt, mousePosScreen, game, ui);
             if(lifetimeTimer > 0f)
             {
                 lifetimeTimer -= dt;
@@ -72,20 +71,24 @@ namespace Examples.Scenes.ExampleScenes
                     lifetimeTimer = 0f;
                     dead = true;
                 }
+                else
+                {
+                    lifetimeF = 1f - ( lifetimeTimer / lifetime );
+                    float prevRotDeg = rotDeg;
+                    pos += vel * dt;
+                    rotDeg += angularVelDeg * dt;
 
-                float lifetimeF = lifetimeTimer / lifetime;
-                float prevRot = rot;
-                pos += vel * dt;
-                rot += angularVel * dt;
-
-                float rotDif = rot - prevRot;
-                shape.CenterSelf(pos);
-                shape.RotateSelf(new Vector2(0.5f), rotDif);
+                    float rotDifDeg = rotDeg - prevRotDeg;
+                    shape.CenterSelf(pos);
+                    shape.RotateSelf(new Vector2(0.5f), rotDifDeg * DEG2RAD);
+                }
             }
         }
         public override void DrawGame(Vector2 size, Vector2 mousePos)
         {
-            shape.DrawLines(2f, WHITE);
+            //SDrawing.DrawCircleFast(pos, 4f, RED);
+            Color color = WHITE.ChangeAlpha((int)(150 * lifetimeF));
+            shape.DrawLines(2f, color);
         }
         public override Rect GetBoundingBox() { return shape.GetBoundingBox(); }
         public override Vector2 GetCameraFollowPosition(Vector2 camPos) { return pos; }
@@ -146,6 +149,7 @@ namespace Examples.Scenes.ExampleScenes
         public uint[] GetCollisionMask() { return colMask; }
     }
 
+
     public class AsteroidMiningExample : ExampleScene
     {
         public static uint AsteriodLayer = 1;
@@ -163,6 +167,8 @@ namespace Examples.Scenes.ExampleScenes
         private Vector2 curPos = new();
         private float curRot = 0f;
         private float curSize = 50;
+
+        private const float MinPieceArea = 3000f;
         public AsteroidMiningExample()
         {
             Title = "Asteroid Mining Example";
@@ -334,12 +340,21 @@ namespace Examples.Scenes.ExampleScenes
                             var asteroidShape = asteroid.GetPolygon();
 
 
-                            //gets stuck....
                             var cutOut = cutShape.Cut(asteroidShape); // asteroidShape.Cut(cutShape);
-                            Triangulation fracture = new();
+                            //Triangulation fracture = new();
                             foreach (var piece in cutOut)
                             {
-                                fracture.AddRange(SPoly.TriangulateDelaunay(piece));
+                                float pieceArea = piece.GetArea();
+                                if (pieceArea < MinPieceArea) continue;
+
+                                Vector2 center = piece.GetCentroid();
+                                var triangulation = piece.Fracture(0.15f); //piece.Triangulate();
+                                foreach (var triangle in triangulation)
+                                {
+                                    AsteroidShard shard = new(triangle.ToPolygon(), center);
+                                    area.AddAreaObject(shard);
+                                }
+                                //fracture.AddRange(SPoly.TriangulateDelaunay(piece));
                                 //fracture.AddRange(piece.Triangulate());
                             }
                             
@@ -350,7 +365,7 @@ namespace Examples.Scenes.ExampleScenes
                                 foreach (var shape in newShapes)
                                 {
                                     float shapeArea = shape.GetArea();
-                                    if(shapeArea > 10)
+                                    if(shapeArea > MinPieceArea)
                                     {
                                         Asteroid a = new(shape);
                                         area.AddAreaObject(a);
