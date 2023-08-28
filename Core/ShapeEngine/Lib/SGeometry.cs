@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Net.Http.Headers;
+using System.Numerics;
 using ShapeEngine.Core;
 
 
@@ -371,7 +372,7 @@ namespace ShapeEngine.Lib
         public static bool OverlapShape(this Segments segments, Circle c) { return c.OverlapShape(segments); }
         public static bool OverlapShape(this Segments segments, Triangle t) { return t.OverlapShape(segments); }
         public static bool OverlapShape(this Segments segments, Rect r) { return r.OverlapShape(segments); }
-        public static bool OverlapShape(this Segments segments, Polygon poly) { return poly.OverlapShape(segments); }
+        //public static bool OverlapShape(this Segments segments, Polygon poly) { return poly.OverlapShape(segments); }
         public static bool OverlapShape(this Segments segments, Polyline pl) { return pl.OverlapShape(segments); }
         public static bool OverlapShape(this Segment s, Segments segments)
         {
@@ -978,14 +979,14 @@ namespace ShapeEngine.Lib
         #region Polygon
 
         #region Overlap
-        public static bool OverlapShape(this Polygon poly, Segments segments)
-        {
-            foreach (var seg in segments)
-            {
-                if (poly.OverlapShape(seg)) return true;
-            }
-            return false;
-        }
+        //public static bool OverlapShape(this Polygon poly, Segments segments)
+        //{
+        //    foreach (var seg in segments)
+        //    {
+        //        if (poly.OverlapShape(seg)) return true;
+        //    }
+        //    return false;
+        //}
         public static bool OverlapShape(this Polygon poly, Segment s) 
         {
             if (poly.Count < 3) return false;
@@ -1003,7 +1004,10 @@ namespace ShapeEngine.Lib
         {
             if (poly.Count < 3) return false;
             if (IsPointInPoly(c.center, poly)) return true;
-
+            foreach (var p in poly)
+            {
+                if (c.IsPointInside(p)) return true;
+            }
             for (int i = 0; i < poly.Count; i++)
             {
                 Vector2 start = poly[i];
@@ -1021,6 +1025,10 @@ namespace ShapeEngine.Lib
             {
                 if (IsPointInPoly(c, poly)) return true;
             }
+            foreach (var p in poly)
+            {
+                if (r.IsPointInside(p)) return true;
+            }
 
             for (int i = 0; i < poly.Count; i++)
             {
@@ -1032,14 +1040,25 @@ namespace ShapeEngine.Lib
         }
         public static bool OverlapShape(this Polygon a, Polygon b) 
         {
+            
             if (a.Count < 3 || b.Count < 3) return false;
-            foreach (var point in a)
+            Segments segmentsB = new();
+            for (int j = 0; j < b.Count; j++)
             {
-                if (IsPointInPoly(point, b)) return true;
+                Vector2 startB = b[j];
+                if (a.IsPointInside(startB)) return true;
+                Vector2 endB = b[(j + 1) % b.Count];
+                Segment segB = new(startB, endB);
+                segmentsB.Add(segB);
             }
-            foreach (var point in b)
+
+            for (int i = 0; i < a.Count; i++)
             {
-                if (IsPointInPoly(point, a)) return true;
+                Vector2 startA = a[i];
+                if (b.IsPointInside(startA)) return true;
+                Vector2 endA = a[(i + 1) % a.Count];
+                Segment segA = new(startA, endA);
+                segA.OverlapShape(segmentsB);
             }
             return false;
         }
@@ -1069,7 +1088,24 @@ namespace ShapeEngine.Lib
         public static bool OverlapShape(this Polyline pl, Circle c) { return pl.GetEdges().OverlapShape(c); }
         public static bool OverlapShape(this Polyline pl, Triangle t) { return pl.GetEdges().OverlapShape(t); }
         public static bool OverlapShape(this Polyline pl, Rect r) { return pl.GetEdges().OverlapShape(r); }
-        public static bool OverlapShape(this Polyline pl, Polygon p) { return pl.GetEdges().OverlapShape(p); }
+        public static bool OverlapShape(this Polyline pl, Polygon p) 
+        {
+            for (int i = 0; i < pl.Count - 1; i++)
+            {
+                Vector2 startPolyline = pl[i];
+                if (p.IsPointInside(startPolyline)) return true;
+                Vector2 endPolyline = pl[(i + 1)];
+                Segment segPolyline = new(startPolyline, endPolyline);
+                for (int j = 0; j < p.Count; j++)
+                {
+                    Vector2 startPoly = p[j];
+                    Vector2 endPoly = p[(j + 1) % p.Count];
+                    Segment segPoly = new(startPoly, endPoly);
+                    if (OverlapShape(segPolyline, segPoly)) return true;
+                }
+            }
+            return false;
+        }
         public static bool OverlapShape(this Polyline a, Polyline b) { return a.GetEdges().OverlapShape(b.GetEdges()); }
 
 
