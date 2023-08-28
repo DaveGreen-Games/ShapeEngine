@@ -269,22 +269,81 @@ namespace ShapeEngine.Core
             return this;
         }
     }
+    
+    public class QueryInfos : List<QueryInfo>
+    {
+        public void SortClosest(Vector2 origin)
+        {
+            if (Count > 1)
+            {
+                Sort
+                (
+                    (a, b) =>
+                    {
+                        if (!a.points.valid) return 1;
+                        else if (!b.points.valid) return -1;
+                        
+                        float la = (origin - a.points.closest.Point).LengthSquared();
+                        float lb = (origin - b.points.closest.Point).LengthSquared();
+            
+                        if (la > lb) return 1;
+                        else if (la == lb) return 0;
+                        else return -1;
+                    }
+                );
+            }
+        }
+    }
     public struct QueryInfo
     {
+        public Vector2 origin;
         public ICollidable collidable;
-        public Intersection intersection;
-        public QueryInfo(ICollidable collidable)
-        {
-            this.collidable = collidable;
-            this.intersection = new();
-        }
-        public QueryInfo(ICollidable collidable, CollisionPoints points)
-        {
-            this.collidable = collidable;
-            this.intersection = new(points);
-        }
+        public QueryPoints points;
 
+        public QueryInfo(ICollidable collidable, Vector2 origin)
+        {
+            this.collidable = collidable;
+            this.origin = origin;
+            this.points = new();
+        }
+        public QueryInfo(ICollidable collidable, Vector2 origin, CollisionPoints points)
+        {
+            this.collidable = collidable;
+            this.origin = origin;
+            this.points = new(points, origin);
+        }
     }
+    public struct QueryPoints
+    {
+        public bool valid;
+        public CollisionPoints points;
+        public CollisionPoint closest;
+
+        public QueryPoints()
+        {
+            this.valid = false;
+            this.points = new();
+            this.closest = new();
+        }
+        public QueryPoints(CollisionPoints points, Vector2 origin)
+        {
+            if(points.Count <= 0)
+            {
+                this.valid = false;
+                this.points = new();
+                this.closest = new();
+            }
+            else
+            {
+                this.valid = true;
+                points.SortClosest(origin);
+                this.points = points;
+                this.closest = points[0];
+            }
+        }
+    }
+    
+    
     public class CollisionPoints : List<CollisionPoint>
     {
         public bool Valid { get { return Count > 0; } }
@@ -298,8 +357,53 @@ namespace ShapeEngine.Core
                     this[i] = this[i].FlipNormal();
             }
         }
+        
+        
+        public CollisionPoints Copy()
+        {
+            CollisionPoints copy = new();
+            foreach (var item in this)
+            {
+                copy.Add(item);
+            }
+            return copy;
+        }
+        
+        public void SortClosest(Vector2 refPoint)
+        {
+            this.Sort
+                (
+                    (a, b) =>
+                    {
+                        float la = (refPoint - a.Point).LengthSquared();
+                        float lb = (refPoint - b.Point).LengthSquared();
+
+                        if (la > lb) return 1;
+                        else if (la == lb) return 0;
+                        else return -1;
+                    }
+                );
+        }
+
     }
 
 
 
 }
+
+    //public struct QueryInfo
+    //{
+    //    public ICollidable collidable;
+    //    public Intersection intersection;
+    //    public QueryInfo(ICollidable collidable)
+    //    {
+    //        this.collidable = collidable;
+    //        this.intersection = new();
+    //    }
+    //    public QueryInfo(ICollidable collidable, CollisionPoints points)
+    //    {
+    //        this.collidable = collidable;
+    //        this.intersection = new(points);
+    //    }
+    //
+    //}

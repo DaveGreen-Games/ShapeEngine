@@ -314,101 +314,52 @@ namespace ShapeEngine.Core
         */
 
         
-        public List<QueryInfo> QuerySpace(ICollidable collidable, bool sorted = false)
+        public QueryInfos QuerySpace(ICollidable collidable, Vector2 origin, bool sorted = true)
         {
-            return QuerySpace(collidable.GetCollider(), sorted, collidable.GetCollisionMask());
+            return QuerySpace(collidable.GetCollider(), origin, sorted, collidable.GetCollisionMask());
         }
-        public List<QueryInfo> QuerySpace(ICollider collider, bool sorted = false, params uint[] collisionMask)
+        public QueryInfos QuerySpace(ICollider collider, Vector2 origin, bool sorted = true, params uint[] collisionMask)
         {
-            List<QueryInfo> infos = new();
+            QueryInfos infos = new();
             var objects = spatialHash.GetObjects(collider, collisionMask);
             foreach (var obj in objects)
             {
                 if (obj.GetCollider() == collider) continue;
                 var collisionPoints = SGeometry.Intersect(collider, obj.GetCollider());
-                if (collisionPoints.Valid) infos.Add(new(obj, collisionPoints));
+                
+                if (collisionPoints.Valid) infos.Add(new(obj, origin, collisionPoints));
             }
-
-            if (sorted && infos.Count > 1)
-            {
-                infos.Sort
-                (
-                    (a, b) =>
-                    {
-                        Vector2 pos = collider.Pos;
-                        float la = (pos - a.intersection.CollisionSurface.Point).LengthSquared();
-                        float lb = (pos - b.intersection.CollisionSurface.Point).LengthSquared();
-
-                        if (la > lb) return 1;
-                        else if (la == lb) return 0;
-                        else return -1;
-                    }
-                );
-            }
-
+            if(sorted) infos.SortClosest(origin);
             return infos;
         }
-        public List<QueryInfo> QuerySpace(IShape shape, bool sorted = false, params uint[] collisionMask)
+        public QueryInfos QuerySpace(IShape shape, Vector2 origin, bool sorted = true, params uint[] collisionMask)
         {
-            List<QueryInfo> infos = new();
+            QueryInfos infos = new();
             var objects = spatialHash.GetObjects(shape, collisionMask);
             foreach (var obj in objects)
             {
                 var collisionPoints = SGeometry.Intersect(shape, obj.GetCollider().GetShape());
-                if (collisionPoints.Valid) infos.Add(new(obj, collisionPoints));
+                if (collisionPoints.Valid) infos.Add(new(obj, origin, collisionPoints));
             }
-
-            if (sorted && infos.Count > 1)
-            {
-                infos.Sort
-                (
-                    (a, b) =>
-                    {
-                        Vector2 pos = shape.GetCentroid();
-                        float la = (pos - a.intersection.CollisionSurface.Point).LengthSquared();
-                        float lb = (pos - b.intersection.CollisionSurface.Point).LengthSquared();
-
-                        if (la > lb) return 1;
-                        else if (la == lb) return 0;
-                        else return -1;
-                    }
-                );
-            }
-
+            if(sorted) infos.SortClosest(origin);
             return infos;
         }
-        public List<QueryInfo> QuerySpace(IShape shape, ICollidable[] exceptions, bool sorted = false, params uint[] collisionMask)
+        public QueryInfos QuerySpace(IShape shape, Vector2 origin, ICollidable[] exceptions, bool sorted = true, params uint[] collisionMask)
         {
-            List<QueryInfo> infos = new();
+            QueryInfos infos = new();
             var objects = spatialHash.GetObjects(shape, collisionMask);
             foreach (var obj in objects)
             {
                 if(exceptions.Contains(obj)) continue;
 
                 var collisionPoints = SGeometry.Intersect(shape, obj.GetCollider().GetShape());
-                if (collisionPoints.Valid) infos.Add(new(obj, collisionPoints));
+                if (collisionPoints.Valid) infos.Add(new(obj, origin, collisionPoints));
             }
-
-            if (sorted && infos.Count > 1)
-            {
-                infos.Sort
-                (
-                    (a, b) =>
-                    {
-                        Vector2 pos = shape.GetCentroid();
-                        float la = (pos - a.intersection.CollisionSurface.Point).LengthSquared();
-                        float lb = (pos - b.intersection.CollisionSurface.Point).LengthSquared();
-
-                        if (la > lb) return 1;
-                        else if (la == lb) return 0;
-                        else return -1;
-                    }
-                );
-            }
-
+            if (sorted) infos.SortClosest(origin);
             return infos;
         }
         
+
         public List<ICollidable> CastSpace(ICollidable collidable, bool sorted = false)
         {
             return CastSpace(collidable.GetCollider(), sorted, collidable.GetCollisionMask());

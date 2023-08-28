@@ -1,4 +1,5 @@
 ﻿using Raylib_CsLo;
+using Raylib_CsLo.InternalHelpers;
 using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Screen;
@@ -240,16 +241,17 @@ namespace Examples.Scenes.ExampleScenes
                 var col = area.GetCollisionHandler();
                 if(col != null)
                 {
-                    var queryInfos = col.QuerySpace(new Segment(tip, laserEndPoint), true, AsteroidMiningExample.AsteriodLayer);
+                    var queryInfos = col.QuerySpace(new Segment(tip, laserEndPoint), tip, true, AsteroidMiningExample.AsteriodLayer);
                     if(queryInfos.Count > 0)
                     {
                         var closest = queryInfos[0];
-                        if (closest.intersection.Valid)
+                        if (closest.points.valid)
                         {
                             var other = closest.collidable;
                             if (other != null && other is Asteroid a)
                             {
-                                laserEndPoint = closest.intersection.ColPoints[0].Point;
+                                //perfect naming:)
+                                laserEndPoint = closest.points.closest.Point;  //closest.intersection.ColPoints[0].Point;
                                 a.Damage(DamagePerSecond * dt, laserEndPoint);
                             }
                         }
