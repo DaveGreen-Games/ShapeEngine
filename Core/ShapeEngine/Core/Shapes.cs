@@ -920,8 +920,9 @@ namespace ShapeEngine.Core
 
         public Vector2 GetCentroid()
         {
+            //return GetCentroidMean();
             Vector2 result = new();
-
+            
             for (int i = 0; i < Count; i++)
             {
                 Vector2 a = this[i];
@@ -931,7 +932,7 @@ namespace ShapeEngine.Core
                 result.X += (a.X + b.X) * factor;
                 result.Y += (a.Y + b.Y) * factor;
             }
-
+            
             return result * (1f / (GetArea() * 6f));
         }
         public Vector2 GetCentroidMean()
@@ -949,43 +950,54 @@ namespace ShapeEngine.Core
             Triangulation triangles = new();
             List<Vector2> vertices = new();
             vertices.AddRange(this);
+            List<int> validIndices = new();
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                validIndices.Add(i);
+            }
             while (vertices.Count > 3)
             {
-                for (int count = 0; count < vertices.Count; count++)
+                if (validIndices.Count <= 0) 
+                    break;
+
+                int i = validIndices[SRNG.randI(0, validIndices.Count)];
+                Vector2 a = vertices[i];
+                Vector2 b = SUtils.GetItem(vertices, i + 1);
+                Vector2 c = SUtils.GetItem(vertices, i - 1);
+
+                Vector2 ba = b - a;
+                Vector2 ca = c - a;
+                float cross = ba.Cross(ca);
+                if (cross >= 0f)//makes sure that ear is not self intersecting
                 {
-                    
-                    int i = SRNG.randI(0, vertices.Count);
-                    Vector2 a = vertices[i];
-                    Vector2 b = SUtils.GetItem(vertices, i + 1);
-                    Vector2 c = SUtils.GetItem(vertices, i - 1);
+                    validIndices.Remove(i);
+                    continue;
+                }
 
-                    Vector2 ba = b - a;
-                    Vector2 ca = c - a;
+                Triangle t = new(a, b, c);
 
-                    if (ba.Cross(ca) == 0f)
+                bool isValid = true;
+                foreach (var p in this)
+                {
+                    if (p == a || p == b || p == c) continue;
+                    if (t.IsPointInside(p))
                     {
-                        continue;
-                    }
-
-                    Triangle t = new(a, b, c);
-
-                    bool isValid = true;
-                    foreach (var p in this)
-                    {
-                        if (p == a || p == b || p == c) continue;
-                        if (t.IsPointInside(p))
-                        {
-                            isValid = false;
-                            break;
-                        }
-                    }
-
-                    if (isValid)
-                    {
-                        triangles.Add(t);
-                        vertices.RemoveAt(i);
+                        isValid = false;
                         break;
                     }
+                }
+
+                if (isValid)
+                {
+                    triangles.Add(t);
+                    vertices.RemoveAt(i);
+
+                    validIndices.Clear();
+                    for (int j = 0; j < vertices.Count; j++)
+                    {
+                        validIndices.Add(j);
+                    }
+                    //break;
                 }
             }
 

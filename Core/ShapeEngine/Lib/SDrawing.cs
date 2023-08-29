@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Drawing;
 using System.Numerics;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.InteropServices;
@@ -1135,6 +1136,56 @@ namespace ShapeEngine.Lib
         
         public static void Draw(this Polygon poly, Raylib_CsLo.Color color) { poly.Triangulate().Draw(color); }
 
+        public static void DEBUG_DrawLinesCCW(this Polygon poly, float lineThickness, Raylib_CsLo.Color startColor, Raylib_CsLo.Color endColor)
+        {
+            if (poly.Count < 3) return;
+
+            var edges = poly.GetEdges();
+            int redStep =   (endColor.r - startColor.r) / edges.Count;
+            int greenStep = (endColor.g - startColor.g) / edges.Count;
+            int blueStep =  (endColor.b - startColor.b) / edges.Count;
+            int alphaStep = (endColor.a - startColor.a) / edges.Count;
+
+            for (int i = 0; i < edges.Count; i++)
+            {
+                var edge = edges[i];
+                Raylib_CsLo.Color finalColor = new
+                    (
+                        startColor.r + redStep * i,
+                        startColor.g + greenStep * i,
+                        startColor.b + blueStep * i,
+                        startColor.a + alphaStep * i
+                    );
+                edge.Draw(lineThickness, finalColor);
+            }
+            SDrawing.DrawCircle(poly[0], lineThickness * 2f, startColor);
+            SDrawing.DrawCircle(poly[poly.Count - 1], lineThickness * 2f, endColor);
+        }
+        
+        public static void DrawLines(this Polygon poly, float lineThickness, Raylib_CsLo.Color startColor, Raylib_CsLo.Color endColor, int cornerSegments)
+        {
+            if (poly.Count < 3) return;
+
+            var edges = poly.GetEdges();
+            int redStep = (endColor.r - startColor.r) / edges.Count;
+            int greenStep = (endColor.g - startColor.g) / edges.Count;
+            int blueStep = (endColor.b - startColor.b) / edges.Count;
+            int alphaStep = (endColor.a - startColor.a) / edges.Count;
+
+            for (int i = 0; i < edges.Count; i++)
+            {
+                var edge = edges[i];
+                Raylib_CsLo.Color finalColor = new
+                    (
+                        startColor.r + redStep * i,
+                        startColor.g + greenStep * i,
+                        startColor.b + blueStep * i,
+                        startColor.a + alphaStep * i
+                    );
+                if(cornerSegments > 5) DrawCircle(edge.start, lineThickness * 0.5f, finalColor, cornerSegments);
+                edge.Draw(lineThickness, finalColor);
+            }
+        }
         public static void DrawLines(this Polygon poly, float lineThickness, Raylib_CsLo.Color color)
         {
             poly.DrawLines(lineThickness, color, 8);
@@ -1143,7 +1194,7 @@ namespace ShapeEngine.Lib
         {
             for (int i = 0; i < poly.Count - 1; i++)
             {
-                Raylib.DrawCircleSector(poly[i], lineThickness * 0.5f, 0, 360, 6, color);
+                //Raylib.DrawCircleSector(poly[i], lineThickness * 0.5f, 0, 360, 6, color);
                 if(cornerSegments > 5) DrawCircle(poly[i], lineThickness * 0.5f, color, cornerSegments);
                 DrawLineEx(poly[i], poly[i + 1], lineThickness, color);
             }

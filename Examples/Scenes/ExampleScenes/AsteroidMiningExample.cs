@@ -4,6 +4,7 @@ using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 using System.Numerics;
+using System.Security;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -51,6 +52,8 @@ namespace Examples.Scenes.ExampleScenes
         private float lifetimeTimer = 0f;
         private float lifetime = 0f;
         private float lifetimeF = 1f;
+
+        private float delay = 1f;
         public AsteroidShard(Polygon shape, Vector2 fractureCenter)
         {
             this.shape = shape;
@@ -59,7 +62,9 @@ namespace Examples.Scenes.ExampleScenes
             Vector2 dir = (pos - fractureCenter).Normalize();
             this.vel = dir * SRNG.randF(100, 300);
             this.angularVelDeg = SRNG.randF(-90, 90);
-            this.lifetime = SRNG.randF(1, 3);
+            //this.lifetime = SRNG.randF(1.5, 3);
+            this.delay = SRNG.randF(0.25f, 1f);
+            this.lifetime = delay * 3f;
             this.lifetimeTimer = this.lifetime;
         }
         public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
@@ -74,21 +79,27 @@ namespace Examples.Scenes.ExampleScenes
                 }
                 else
                 {
-                    lifetimeF = 1f - (lifetimeTimer / lifetime);
-                    float prevRotDeg = rotDeg;
-                    pos += vel * dt;
-                    rotDeg += angularVelDeg * dt;
+                    lifetimeF = lifetimeTimer / lifetime;
 
-                    float rotDifDeg = rotDeg - prevRotDeg;
-                    shape.CenterSelf(pos);
-                    shape.RotateSelf(new Vector2(0.5f), rotDifDeg * DEG2RAD);
+                    if (lifetime - lifetimeTimer > delay)
+                    {
+                        
+                        float prevRotDeg = rotDeg;
+                        pos += vel * dt;
+                        rotDeg += angularVelDeg * dt;
+
+                        float rotDifDeg = rotDeg - prevRotDeg;
+                        shape.CenterSelf(pos);
+                        shape.RotateSelf(new Vector2(0.5f), rotDifDeg * DEG2RAD);
+                    }
+                    
                 }
             }
         }
         public override void DrawGame(Vector2 size, Vector2 mousePos)
         {
             //SDrawing.DrawCircleFast(pos, 4f, RED);
-            Color color = WHITE.ChangeAlpha((int)(150 * lifetimeF));
+            Color color = WHITE.ChangeAlpha((byte)(150 * lifetimeF));
             shape.DrawLines(2f, color);
         }
         public override Rect GetBoundingBox() { return shape.GetBoundingBox(); }
@@ -140,12 +151,22 @@ namespace Examples.Scenes.ExampleScenes
         public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui) { }
         public override void DrawGame(Vector2 size, Vector2 mousePos)
         {
-            Color color = overlapped ? GREEN : WHITE;
-            collider.GetShape().DrawShape(4f, color);
-            //if(collider.GetShape() is Polygon p)
-            //{
-            //    p.DrawVertices(4f, RED);
-            //}
+            //Color color = overlapped ? GREEN : WHITE;
+            //collider.GetShape().DrawShape(4f, color);
+            
+            if(collider.GetShape() is Polygon p)
+            {
+                if (overlapped)
+                {
+                    p.DrawLines(6f, GREEN, 12);
+                }
+                else
+                {
+                    p.DrawLines(3f, RED, 12);
+                }
+                //p.DrawVertices(4f, RED);
+            }
+
             overlapped = false;
         }
         
@@ -271,6 +292,8 @@ namespace Examples.Scenes.ExampleScenes
                 Segment laser = new(tip, laserEndPoint);
                 laser.Draw(4f, RED);
             }
+
+
         }
 
 
@@ -294,12 +317,14 @@ namespace Examples.Scenes.ExampleScenes
         private ShapeType curShapeType = ShapeType.None;
 
         private Polygon curShape = new();
+        private Polygons lastCutOuts = new();
         private Vector2 curPos = new();
         private float curRot = 0f;
         private float curSize = 50;
 
         private LaserDevice laserDevice;
 
+        //private float crossResult = 0f;
         public AsteroidMiningExample()
         {
             Title = "Asteroid Mining Example";
@@ -469,6 +494,7 @@ namespace Examples.Scenes.ExampleScenes
                     //go through all overlapping polygons and call cut on them
                     //accumulate all shards and add them to the area
                     var cutShape = curShape.ToPolygon();
+                    Polygons allCutOuts = new();
                     foreach (var collidable in collidables)
                     {
                         if (collidable is Asteroid asteroid)
@@ -478,12 +504,13 @@ namespace Examples.Scenes.ExampleScenes
 
 
                             var cutOut = cutShape.Cut(asteroidShape); // asteroidShape.Cut(cutShape);
-                            //Triangulation fracture = new();
+                            if (cutOut.Count > 0) allCutOuts.AddRange(cutOut);
+                            
                             foreach (var piece in cutOut)
                             {
                                 float pieceArea = piece.GetArea();
                                 if (pieceArea < MinPieceArea) continue;
-
+                            
                                 Vector2 center = piece.GetCentroid();
                                 var triangulation = piece.Fracture(0.15f); //piece.Triangulate();
                                 foreach (var triangle in triangulation)
@@ -511,7 +538,7 @@ namespace Examples.Scenes.ExampleScenes
                             }
                         }
                     }
-
+                    if (allCutOuts.Count > 0) lastCutOuts = allCutOuts;
                 }
 
                 if (IsKeyPressed(KeyboardKey.KEY_Q))//regenerate
@@ -595,6 +622,27 @@ namespace Examples.Scenes.ExampleScenes
             //area.DrawDebug(GRAY, GOLD, GREEN);
             area.DrawGame(gameSize, mousePosGame);
 
+            //foreach (var cutOut in lastCutOuts)
+            //{
+            //    //cutOut.DrawLines(4f, ORANGE);
+            //    cutOut.DrawLines(1f, YELLOW, 12);
+            //}
+            
+            
+            //Vector2 a = new Vector2(0, 0);
+            //Vector2 b = new Vector2(500, 0);
+            //Vector2 c = mousePosGame;
+            //
+            //Vector2 ba = b - a;
+            //Vector2 ca = c - a;
+            //crossResult = ba.Cross(ca);
+            //
+            //Segment left = new(a, b);
+            //Segment right = new(a, c);
+            //left.Draw(2f, BLUE);
+            //right.Draw(2f, RED);
+
+
         }
         public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
         {
@@ -602,7 +650,7 @@ namespace Examples.Scenes.ExampleScenes
             base.DrawUI(uiSize, mousePosUI);
 
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));
-            string infoText = String.Format("Object Count: {0}", area.Count);
+            string infoText = String.Format("Object Count: {0}", area.Count); // MathF.Floor(crossResult * 100) / 100);
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
 

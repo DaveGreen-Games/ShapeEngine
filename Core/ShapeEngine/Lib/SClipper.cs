@@ -39,6 +39,7 @@ namespace ShapeEngine.Lib
         //}
         public static PathsD Union(this Polygon a, Polygons other, FillRule fillRule = FillRule.NonZero)
         {
+            
             return Clipper.Union(a.ToClipperPaths(), other.ToClipperPaths(), fillRule);
         }
         public static PathsD Union(this Polygon a, Polygon b, FillRule fillRule = FillRule.NonZero) { return Clipper.Union(ToClipperPaths(a), ToClipperPaths(b), fillRule); }
@@ -182,8 +183,8 @@ namespace ShapeEngine.Lib
 
         public static Polygon CreateEllipse(Vector2 center, float radiusX, float radiusY = 0f, int steps = 0) { return Clipper.Ellipse(center.ToClipperPoint(), radiusX, radiusY, steps).ToPolygon(); }
 
-        public static Vector2 ToVec2(this PointD p) { return new((float)p.x, (float)p.y); }
-        public static PointD ToClipperPoint(this Vector2 v) { return new(v.X, v.Y); }
+        public static Vector2 ToVec2(this PointD p) { return new((float)p.x, -(float)p.y); }//flip of y necessary -> clipper up y is positve - raylib is negative
+        public static PointD ToClipperPoint(this Vector2 v) { return new(v.X, -v.Y); }
         public static RectD ToClipperRect(this Rect r) { return new RectD(r.x, r.y, r.x + r.width, r.y + r.height); }
         public static Rect ToRect(this RectD r) { return new Rect((float)r.left, (float)r.top, (float)r.Width, (float)r.Height); }
         public static Polygon ToPolygon(this PathD path)
