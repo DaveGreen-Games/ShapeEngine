@@ -324,6 +324,8 @@ namespace Examples.Scenes.ExampleScenes
 
         private LaserDevice laserDevice;
 
+        private FractureHelper fractureHelper = new(1000, 20000, 0.1f);
+
         //private float crossResult = 0f;
         public AsteroidMiningExample()
         {
@@ -466,7 +468,7 @@ namespace Examples.Scenes.ExampleScenes
                                 polys.Add(asteroid.GetPolygon());
                             }
                         }
-                        var finalShapes = SClipper.Union(curShape.ToPolygon(), polys, Clipper2Lib.FillRule.NonZero).ToPolygons(true);
+                        var finalShapes = SClipper.UnionMany(curShape.ToPolygon(), polys, Clipper2Lib.FillRule.NonZero).ToPolygons(true);
                         if (finalShapes.Count > 0)
                         {
                             foreach (var f in finalShapes)
@@ -490,9 +492,6 @@ namespace Examples.Scenes.ExampleScenes
                 }
                 if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT)) //cut polygon
                 {
-                    //use cur shape to cast
-                    //go through all overlapping polygons and call cut on them
-                    //accumulate all shards and add them to the area
                     var cutShape = curShape.ToPolygon();
                     Polygons allCutOuts = new();
                     foreach (var collidable in collidables)
@@ -502,31 +501,22 @@ namespace Examples.Scenes.ExampleScenes
                             area.RemoveAreaObject(asteroid);
                             var asteroidShape = asteroid.GetPolygon();
 
+                            var fracture = fractureHelper.Fracture(asteroidShape, cutShape);
 
-                            var cutOut = cutShape.Cut(asteroidShape); // asteroidShape.Cut(cutShape);
-                            if (cutOut.Count > 0) allCutOuts.AddRange(cutOut);
-                            
-                            foreach (var piece in cutOut)
+                            if (fracture.Cutouts.Count > 0) allCutOuts.AddRange(fracture.Cutouts);
+
+                            foreach (var piece in fracture.Pieces)
                             {
                                 float pieceArea = piece.GetArea();
-                                if (pieceArea < MinPieceArea) continue;
-                            
+                                //if (pieceArea < MinPieceArea) continue;
+
                                 Vector2 center = piece.GetCentroid();
-                                var triangulation = piece.Fracture(0.15f); //piece.Triangulate();
-                                foreach (var triangle in triangulation)
-                                {
-                                    AsteroidShard shard = new(triangle.ToPolygon(), center);
-                                    area.AddAreaObject(shard);
-                                }
-                                //fracture.AddRange(SPoly.TriangulateDelaunay(piece));
-                                //fracture.AddRange(piece.Triangulate());
+                                AsteroidShard shard = new(piece.ToPolygon(), center);
+                                area.AddAreaObject(shard);
                             }
-                            
-                            
-                            var newShapes = SClipper.Difference(asteroidShape, cutShape).ToPolygons(true);
-                            if(newShapes.Count > 0)
+                            if(fracture.NewShapes.Count > 0)
                             {
-                                foreach (var shape in newShapes)
+                                foreach (var shape in fracture.NewShapes)
                                 {
                                     float shapeArea = shape.GetArea();
                                     if(shapeArea > MinPieceArea)

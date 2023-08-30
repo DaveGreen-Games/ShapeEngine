@@ -37,7 +37,7 @@ namespace ShapeEngine.Lib
         //
         //    //return Clipper.Union(polygons.ToClipperPaths(), fillRule); 
         //}
-        public static PathsD Union(this Polygon a, Polygons other, FillRule fillRule = FillRule.NonZero)
+        public static PathsD UnionMany(this Polygon a, Polygons other, FillRule fillRule = FillRule.NonZero)
         {
             
             return Clipper.Union(a.ToClipperPaths(), other.ToClipperPaths(), fillRule);

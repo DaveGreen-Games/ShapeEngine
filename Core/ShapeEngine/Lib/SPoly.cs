@@ -210,37 +210,216 @@ namespace ShapeEngine.Lib
     }
     */
 
+    public struct FractureInfo
+    {
+        public Polygons NewShapes;
+        public Polygons Cutouts;
+        public Triangulation Pieces;
+
+        public FractureInfo(Polygons newShapes, Polygons cutouts, Triangulation pieces)
+        {
+            this.NewShapes = newShapes;
+            this.Cutouts = cutouts;
+            this.Pieces = pieces;
+        }
+    }
+    public class FractureHelper
+    {
+        public float MinArea { get; set; }
+        public float MaxArea { get; set; }
+        public float NarrowValue{ get; set; } = 0.2f;
+
+        //public float DivisionChance { get; set; } = 0.5f;
+        //public int MinDivisionCount { get; set; } = 3;
+        //public int MaxDivisionCount { get; set; } = 9;
+
+        public FractureHelper(float minArea, float maxArea, float narrowValue = 0.2f)
+        {
+            this.MinArea = minArea;
+            this.MaxArea = maxArea;
+            this.NarrowValue = narrowValue;
+        }
+        
+        public FractureInfo Fracture(Polygon shape, Polygon cutShape)
+        {
+            var cutOuts = SClipper.Intersect(shape, cutShape).ToPolygons(true);
+            var newShapes = SClipper.Difference(shape, cutShape).ToPolygons(true);
+            Triangulation pieces = new();
+            foreach (var cutOut in cutOuts)
+            {
+                var fracturePieces = cutOut.Triangulate().Subdivide(MinArea, MaxArea, NarrowValue);
+                pieces.AddRange(fracturePieces);
+            }
+
+            return new(newShapes, cutOuts, pieces);
+        }
+    }
+
+    
 
     public static class SPoly
     {
-        public static Polygons Cut(this Polygon poly, Polygon cut) { return SClipper.Intersect(poly, cut).ToPolygons(true); }
-        public static Polygons Cut(this Polygon poly, Polygons cuts) { return SClipper.IntersectMany(poly, cuts).ToPolygons(true); }
-        public static Polygons Combine(this Polygon poly, Polygon other) { return SClipper.Union(poly, other).ToPolygons(true); }
-        public static Polygons Combine(this Polygon poly, Polygons others) { return SClipper.Union(poly, others).ToPolygons(true); }
-        //public static Polygons Combine(params Polygon[] polygons) { return SClipper.Union(new Polygons(polygons)).ToPolygons(); }
 
 
+        public static (Polygons newShapes, Polygons cutOuts) Cut(this Polygon poly, Polygon cutShape) 
+        {
+            var cutOuts = SClipper.Intersect(poly, cutShape).ToPolygons(true);
+            var newShapes = SClipper.Difference(poly, cutShape).ToPolygons(true);
 
-
-
-        //cut simple should return the final polygons + the shape that was cut out---------------------------------------------------------------------------------------------------------------------------------
-
-
-        //do the same for combine
-        public static Polygons CutSimple(this Polygon poly, Vector2 cutPos, float minCutRadius, float maxCutRadius, int pointCount = 16)
+            return (newShapes, cutOuts);
+        }
+        public static (Polygons newShapes, Polygons cutOuts) CutMany(this Polygon poly, Polygons cutShapes) 
+        {
+            var cutOuts = SClipper.IntersectMany(poly, cutShapes).ToPolygons(true);
+            var newShapes = SClipper.DifferenceMany(poly, cutShapes).ToPolygons(true);
+            return (newShapes, cutOuts);
+        }
+        public static (Polygons newShapes, Polygons overlaps) Combine(this Polygon poly, Polygon other) 
+        {
+            var overlaps = SClipper.Intersect(poly, other).ToPolygons(true);
+            var newShapes = SClipper.Union(poly, other).ToPolygons(true);
+            return (newShapes, overlaps);
+        }
+        public static (Polygons newShapes, Polygons overlaps) Combine(this Polygon poly, Polygons others) 
+        { 
+            var overlaps = SClipper.IntersectMany(poly, others).ToPolygons(true);
+            var newShapes = SClipper.UnionMany(poly, others).ToPolygons(true);
+            return (newShapes, overlaps);
+        }
+        public static (Polygons newShapes, Polygons cutOuts) CutSimple(this Polygon poly, Vector2 cutPos, float minCutRadius, float maxCutRadius, int pointCount = 16)
         {
             var cut = Generate(cutPos, pointCount, minCutRadius, maxCutRadius);
             return poly.Cut(cut);
         }
-        public static Polygons CutSimple(this Polygon poly, Segment cutLine, float minSectionLength = 0.025f, float maxSectionLength = 0.1f, float minMagnitude = 0.05f, float maxMagnitude = 0.25f)
+        public static (Polygons newShapes, Polygons cutOuts) CutSimple(this Polygon poly, Segment cutLine, float minSectionLength = 0.025f, float maxSectionLength = 0.1f, float minMagnitude = 0.05f, float maxMagnitude = 0.25f)
         {
             var cut = Generate(cutLine, minMagnitude, maxMagnitude, minSectionLength, maxSectionLength);
             return poly.Cut(cut);
         }
         
-        //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        
-        
+
+
+        /// <summary>
+        /// Triangulates a set of points. Only works with non self intersecting shapes.
+        /// </summary>
+        /// <param name="points">The points to triangulate. Can be any set of points. (polygons as well) </param>
+        /// <returns></returns>
+        public static Triangulation TriangulateDelaunay(IEnumerable<Vector2> points)
+        {
+            Triangle supraTriangle = GetBoundingTriangle(points, 2f);
+            return TriangulateDelaunay(points, supraTriangle);
+        }
+
+        /// <summary>
+        /// Triangulates a set of points. Only works with non self intersecting shapes.
+        /// </summary>
+        /// <param name="points">The points to triangulate. Can be any set of points. (polygons as well) </param>
+        /// <param name="supraTriangle">The triangle that encapsulates all the points.</param>
+        /// <returns></returns>
+        public static Triangulation TriangulateDelaunay(IEnumerable<Vector2> points, Triangle supraTriangle)
+        {
+            Triangulation triangles = new();
+
+            triangles.Add(supraTriangle);
+
+            foreach (var p in points)
+            {
+                Triangulation badTriangles = new();
+
+                //Identify 'bad triangles'
+                for (int triIndex = triangles.Count - 1; triIndex >= 0; triIndex--)
+                {
+                    Triangle triangle = triangles[triIndex];
+
+                    //A 'bad triangle' is defined as a triangle who's CircumCentre contains the current point
+                    var circumCircle = triangle.GetCircumCircle();
+                    float distSq = Vector2.DistanceSquared(p, circumCircle.center);
+                    if (distSq < circumCircle.radius * circumCircle.radius)
+                    {
+                        badTriangles.Add(triangle);
+                        triangles.RemoveAt(triIndex);
+                    }
+                }
+
+                Segments allEdges = new();
+                foreach (var badTriangle in badTriangles) { allEdges.AddRange(badTriangle.GetEdges()); }
+
+                Segments uniqueEdges = allEdges.GetUniqueSegments();
+                //Create new triangles
+                for (int i = 0; i < uniqueEdges.Count; i++)
+                {
+                    var edge = uniqueEdges[i];
+                    triangles.Add(new(p, edge));
+                }
+            }
+
+            //Remove all triangles that share a vertex with the supra triangle to recieve the final triangulation
+            for (int i = triangles.Count - 1; i >= 0; i--)
+            {
+                var t = triangles[i];
+                if (t.SharesVertex(supraTriangle)) triangles.RemoveAt(i);
+            }
+
+
+            return triangles;
+        }
+
+
+        /*
+        /// <summary>
+        /// Subdivide the triangulation until all triangles are smaller than min area.
+        /// </summary>
+        /// <param name="triangles"></param>
+        /// <param name="minArea"></param>
+        /// <returns></returns>
+        public static Triangulation Subdivide(this Triangulation triangles, float minArea)
+        {
+            Triangulation subdivision = new();
+            Triangulation final = new();
+            foreach (var tri in triangles)
+            {
+                var area = tri.GetArea();
+                if (minArea >= area) final.Add(tri);
+                else subdivision.AddRange(tri.Triangulate());
+            }
+
+            if (subdivision.Count > 0) final.AddRange(Subdivide(subdivision, minArea));
+
+            return final;
+        }
+        */
+
+        /*
+        /// <summary>
+        /// Triangulates and subdivides the triangulation until the area of triangles reaches the min area limit.
+        /// </summary>
+        /// <param name="areaThresholdFactor">Used to calculate the min area limit. The threshold factor is multiplied with the total area of the polygon to recieve the min area limit.</param>
+        /// <returns></returns>
+        public Triangulation Fracture(float areaThresholdFactor = 0f)
+        {
+            var triangulation = Triangulate();
+            if (areaThresholdFactor <= 0f || areaThresholdFactor >= 1f) return triangulation;
+
+            float totalArea = triangulation.GetArea();
+            float minArea = totalArea * areaThresholdFactor;
+
+            ////var1
+            //Triangulation final = new();
+            //foreach (var tri in triangulation)
+            //{
+            //    final.AddRange(Subdivide(tri, minArea));
+            //}
+            //return final;
+
+            //var2
+            return triangulation.Subdivide(minArea); // SPoly.Subdivide(triangulation, minArea);
+        }
+        */
+
+
+
+
+
         /// <summary>
         /// Get a rect that encapsulates all points.
         /// </summary>
@@ -292,81 +471,6 @@ namespace ShapeEngine.Lib
             return new Triangle(a, b, c);
         }
         
-        /// <summary>
-        /// Triangulates a set of points. Only works with non self intersecting shapes.
-        /// </summary>
-        /// <param name="points">The points to triangulate. Can be any set of points. (polygons as well) </param>
-        /// <returns></returns>
-        public static Triangulation TriangulateDelaunay(IEnumerable<Vector2> points)
-        {
-            Triangulation triangles = new();
-
-            Triangle supraTriangle = GetBoundingTriangle(points, 2f);
-            triangles.Add(supraTriangle);
-            
-            foreach (var p in points)
-            {
-                Triangulation badTriangles = new();
-
-                //Identify 'bad triangles'
-                for (int triIndex = triangles.Count - 1; triIndex >= 0; triIndex--)
-                {
-                    Triangle triangle = triangles[triIndex];
-
-                    //A 'bad triangle' is defined as a triangle who's CircumCentre contains the current point
-                    var circumCircle = triangle.GetCircumCircle();
-                    float distSq = Vector2.DistanceSquared(p, circumCircle.center);
-                    if (distSq < circumCircle.radius * circumCircle.radius)
-                    {
-                        badTriangles.Add(triangle);
-                        triangles.RemoveAt(triIndex);
-                    }
-                }
-
-                Segments allEdges = new();
-                foreach (var badTriangle in badTriangles) { allEdges.AddRange(badTriangle.GetEdges()); }
-
-                Segments uniqueEdges = allEdges.GetUniqueSegments();
-                //Create new triangles
-                for (int i = 0; i < uniqueEdges.Count; i++)
-                {
-                    var edge = uniqueEdges[i];
-                    triangles.Add(new(p, edge));
-                }
-            }
-            
-            //Remove all triangles that share a vertex with the supra triangle to recieve the final triangulation
-            for (int i = triangles.Count - 1; i >= 0; i--)
-            {
-                var t = triangles[i];
-                if(t.SharesVertex(supraTriangle)) triangles.RemoveAt(i);
-            }
-            
-
-            return triangles;
-        }
-
-        /// <summary>
-        /// Subdivide the triangulation until all triangles are smaller than min area.
-        /// </summary>
-        /// <param name="triangles"></param>
-        /// <param name="minArea"></param>
-        /// <returns></returns>
-        public static Triangulation Subdivide(this Triangulation triangles, float minArea)
-        {
-            Triangulation subdivision = new();
-            Triangulation final = new();
-            foreach (var tri in triangles)
-            {
-                var area = tri.GetArea();
-                if (minArea >= area) final.Add(tri);
-                else subdivision.AddRange(tri.Triangulate());
-            }
-
-            if (subdivision.Count > 0) final.AddRange(Subdivide(subdivision, minArea));
-
-            return final;
-        }
 
         public static Polygon GetShape(this Polygon relative, Vector2 pos, float rotRad, Vector2 scale)
         {
@@ -378,7 +482,6 @@ namespace ShapeEngine.Lib
             }
             return shape;
         }
-        
         public static Polygon Center(this Polygon p, Vector2 newCenter)
         {
             var centroid = p.GetCentroid();

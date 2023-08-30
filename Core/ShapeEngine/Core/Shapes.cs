@@ -1,7 +1,5 @@
 ﻿
 using System.Numerics;
-using System.Text;
-using Microsoft.Win32.SafeHandles;
 using Raylib_CsLo;
 using ShapeEngine.Lib;
 using ShapeEngine.Random;
@@ -140,21 +138,7 @@ namespace ShapeEngine.Core
             return count;
         }
         
-        //public int RemoveNarrow(float margin)
-        //{
-        //    int count = 0;
-        //    for (int i = Count - 1; i >= 0; i--)
-        //    {
-        //        float a = this[i].GetWidestAngle();
-        //        if (a < margin)
-        //        {
-        //            RemoveAt(i);
-        //            count++;
-        //        }
-        //    }
-        //
-        //    return count;
-        //}
+
 
         /// <summary>
         /// Get a new triangulation with triangles with an area >= areaThreshold.
@@ -177,8 +161,73 @@ namespace ShapeEngine.Core
 
             return newTriangulation;
         }
+
+        /// <summary>
+        /// Subdivide the triangulation until all triangles are smaller than min area.
+        /// </summary>
+        /// <param name="minArea">A triangle will always be subdivided if the area is bigger than min area.s</param>
+        /// <returns></returns>
+        public Triangulation Subdivide(float minArea)
+        {
+            Triangulation final = new();
+
+            Triangulation queue = new();
+            queue.AddRange(this);
+            while (queue.Count > 0)
+            {
+                int endIndex = queue.Count - 1;
+                var tri = queue[endIndex];
+
+                var triArea = tri.GetArea();
+                if (triArea < minArea) final.Add(tri);
+                else queue.AddRange(tri.Triangulate(minArea));
+                queue.RemoveAt(endIndex);
+            }
+            return final;
+        }
+        
+        /// <summary>
+        /// Subdivide the triangles further based on the parameters.
+        /// </summary>
+        /// <param name="minArea">Triangles with an area smaller than min area will never be subdivided.</param>
+        /// <param name="maxArea">Triangles with an area bigger than maxArea will always be subdivided.</param>
+        /// <param name="narrowValue">Triangles that are considered narrow will not be subdivided.</param>
+        /// <returns></returns>
+        public Triangulation Subdivide(float minArea, float maxArea, float narrowValue = 0.2f)
+        {
+            Triangulation final = new();
+
+            Triangulation queue = new();
+            queue.AddRange(this);
+            while(queue.Count > 0)
+            {
+                int endIndex = queue.Count - 1;
+                var tri = queue[endIndex];
+                
+                var triArea = tri.GetArea();
+                if (triArea < minArea || tri.IsNarrow(narrowValue)) //too small or narrow
+                {
+                    final.Add(tri);
+                }
+                else if (triArea > maxArea) //always subdivide because too big
+                {
+                    //float pieceCount = triArea / minArea;
+                    //int points = (int)MathF.Floor((pieceCount - 1f) * 0.5f);
+                    //var subdivision = tri.Triangulate(points);
+                    queue.AddRange(tri.Triangulate(minArea));
+                }
+                else //subdivde or keep
+                {
+                    float keepChance = (triArea - minArea) / (maxArea - minArea);
+                    if (SRNG.chance(keepChance)) final.Add(tri);
+                    else queue.AddRange(tri.Triangulate(minArea));
+                }
+                queue.RemoveAt(endIndex);
+            }
+            return final;
+        }
     }
-    
+
     public struct Segment : IShape
     {
         public Vector2 start;
@@ -383,7 +432,7 @@ namespace ShapeEngine.Core
             Vector2 w = s.Displacement;
             Vector2 v = p - s.start;
             float cross = w.Cross(v);
-            if(cross >= 0f)
+            if(cross <= 0f)
             {
                 a = s.start;
                 b = s.end;
@@ -1008,34 +1057,6 @@ namespace ShapeEngine.Core
             return triangles;
         }
 
-
-
-        /// <summary>
-        /// Triangulates and subdivides the triangulation until the area of triangles reaches the min area limit.
-        /// </summary>
-        /// <param name="areaThresholdFactor">Used to calculate the min area limit. The threshold factor is multiplied with the total area of the polygon to recieve the min area limit.</param>
-        /// <returns></returns>
-        public Triangulation Fracture(float areaThresholdFactor = 0f)
-        {
-            var triangulation = Triangulate();
-            if(areaThresholdFactor <= 0f || areaThresholdFactor >= 1f) return triangulation;
-
-            float totalArea = triangulation.GetArea();
-            float minArea = totalArea * areaThresholdFactor;
-
-            ////var1
-            //Triangulation final = new();
-            //foreach (var tri in triangulation)
-            //{
-            //    final.AddRange(Subdivide(tri, minArea));
-            //}
-            //return final;
-
-            //var2
-            return triangulation.Subdivide(minArea); // SPoly.Subdivide(triangulation, minArea);
-        }
-        
-
         //private Triangulation Subdivide(Triangle triangle, float minArea)
         //{
         //    var area = triangle.GetArea();
@@ -1638,200 +1659,3 @@ namespace ShapeEngine.Core
     }
 }
 
-
-
-
-
-/*
-    public struct SegmentShape
-    {
-        public Segments segments = new();
-        public Vector2 referencePoint;
-        public SegmentShape(IEnumerable<Segment> segments, Vector2 referencePoint) { this.segments.AddRange(segments); this.referencePoint = referencePoint; }
-        public SegmentShape(Vector2 referencePoint, params Segment[] segments) { this.segments.AddRange(segments); this.referencePoint = referencePoint; }
-    }
-    */
-
-//public struct PolygonShape
-    //{
-    //    public List<Vector2> points;
-    //    public Vector2 referencePoint;
-    //
-    //    public PolygonShape(List<Vector2> points) { this.points = points; this.referencePoint = SPoly.GetCentroid(points); }
-    //    public PolygonShape(params Vector2[] points) { this.points = points.ToList(); this.referencePoint = SPoly.GetCentroid(points.ToList()); }
-    //    public PolygonShape(List<Vector2> points, Vector2 center) { this.points = points; this.referencePoint = center; }
-    //    public PolygonShape(Vector2 center, params Vector2[] points) { this.points = points.ToList(); this.referencePoint = center; }
-    //    public PolygonShape(Triangle t) { this.points = t.GetPolygon().points; this.referencePoint = t.Centroid; }
-    //    public PolygonShape(Rect r) { this.points = r.GetPolygon().points; this.referencePoint = r.Center; }
-    //}
-/// <summary>
-    /// Points should be in ccw order!
-    /// </summary>
-/*
-    public struct Polygon : IShape
-    {
-        public PolygonPath points;
-        public Vector2 center;
-
-        public Polygon(List<Vector2> points) { this.points = new(points); this.center = SPoly.GetCentroid(this.points); }
-        public Polygon(params Vector2[] points) { this.points = new(points); this.center = SPoly.GetCentroid(this.points); }
-        public Polygon(List<Vector2> points, Vector2 center) { this.points = new(points); this.center = center; }
-        public Polygon(Vector2 center, params Vector2[] points) { this.points = new(points); this.center = center; }
-        public Polygon(Triangle t) { this.points = t.GetPolygon().points; this.center = t.Centroid; }
-        public Polygon(Rect r) { this.points = r.GetPolygon().points; this.center = r.Center; }
-
-        public Vector2 GetReferencePoint() { return center; }
-        public float GetCircumference() { return points.GetCircumference(); }
-        public float GetCircumferenceSquared() { return points.GetCircumferenceSquared(); }
-        public float GetArea() { return points.GetArea(); }
-        public SegmentShape GetSegmentShape() { return new(points.GetEdges(), center); }
-        public Polygon GetPolygon() { return this; }
-        public Rect GetBoundingBox() { return points.GetBoundingBox(); }
-        public void DrawShape(float linethickness, Color color) => SDrawing.DrawPolygonLines(points, linethickness, color);
-        public bool IsPointOnShape(Vector2 p) { return SGeometry.IsPointInPoly(p, points); }// this.IsPointInside(p); }
-        
-        //public void SetPosition(Vector2 newPosition) { center = newPosition; }
-    }
-    */
-/*
-    public class Poly
-    {
-        List<Vector2> displacements = new();
-        private List<Vector2> shape = new();
-
-        
-        private Vector2 center;
-        private Vector2 scale;
-        private float rotRad;
-        bool dirty;
-
-        public Polygon GetShape()
-        {
-            if (dirty) UpdateShape();
-            return new Polygon(shape, center);
-        }
-        
-        public Vector2 GetPos() { return center; }
-        public Vector2 GetScale() { return scale; }
-        public float GetRotRad() { return rotRad; }
-
-        public void SetPos(Vector2 pos)
-        {
-            if (!dirty) dirty = true;
-            center = pos;
-        }
-        public void SetScale(Vector2 scale)
-        {
-            if (!dirty) dirty = true;
-            this.scale = scale;
-        }
-        public void SetRotation(float radians)
-        {
-            if (!dirty) dirty = true;
-            this.rotRad = radians;
-        }
-        private void UpdateShape()
-        {
-            dirty = false;
-            shape = SPoly.GetShape(displacements, center, rotRad, scale);
-        }
-    }
-    */
-/*
-
-    public struct Polygon : IShape
-    {
-        public List<Vector2> points;
-
-        
-        public float GetCircumference() { return SPoly.GetCircumference(points); }
-        public float GetCircumferenceSquared() { return SPoly.GetCircumferenceSquared(points); }
-        public float GetArea() { return width * height; }
-        public List<Line> GetSegments() { return SRect.GetRectSegments(this); }
-        public Rect GetBoundingBox() { return this; }
-        //public Circle GetBoundingCircle() { return new(Center, Length / 2); }
-        public void DrawShape(float linethickness, Color color)
-        {
-            throw new NotImplementedException();
-        }
-        //public Vector2 pos;
-        //public float rotRad;
-        //public Vector2 scale;
-
-        public List<Vector2> Shape
-        {
-            get
-            {
-                if (points.Count < 3) return new();
-                List<Vector2> shape = new();
-                for (int i = 0; i < points.Count; i++)
-                {
-                    shape.Add(pos + SVec.Rotate(points[i], rotRad) * scale);
-                }
-                return shape;
-            }
-        }
-        public float Circumference 
-        {
-            get
-            {
-                if (points.Count < 3) return 0f;
-                float lengthSq = 0f;
-                var shape = Shape;
-                shape.Add(shape[0]);
-                for (int i = 0; i < shape.Count - 1; i++)
-                {
-                    Vector2 w = shape[i + 1] - shape[i];
-                    lengthSq += w.LengthSquared();
-                }
-                ///Vector2 final = shape[0] - shape[shape.Count - 1];
-                ///lengthSq += final.LengthSquared();
-                return MathF.Sqrt(lengthSq);
-            } 
-        }
-        public float Area 
-        { 
-            get
-            {
-                if(points.Count < 3) return 0f;
-                var triangles = Triangulate();
-                float totalArea = 0f;
-                foreach (var t in triangles)
-                {
-                    totalArea += t.Area;
-                }
-                return totalArea;
-            } 
-        }
-        public List<Triangle> Triangulate()
-        {
-            if (points.Count < 3) return new();
-            List<Triangle> triangles = new();
-            var shape = Shape;
-            shape.Add(shape[0]);
-            for (int i = 0; i < shape.Count - 1; i++)
-            {
-                Vector2 a = shape[i];
-                Vector2 b = pos;
-                Vector2 c = shape[i + 1];
-                triangles.Add(new(a,b,c));
-            }
-            return triangles;
-        }
-        public Polygon(Vector2 pos, float rotRad, Vector2 scale, params Vector2[] points)
-        {
-            this.pos = pos;
-            this.rotRad = rotRad;
-            this.scale = scale;
-            this.points = points.ToList();
-        }
-        public Polygon(Vector2 pos, float rotRad, Vector2 scale, List<Vector2> points)
-        {
-            this.pos = pos;
-            this.rotRad = rotRad;
-            this.scale = scale;
-            this.points = points;
-        }
-
-    }
-        */

@@ -1,10 +1,54 @@
 ﻿using ShapeEngine.Core;
+using System;
 using System.Numerics;
 
 namespace ShapeEngine.Lib
 {
     public static class STriangle
     {
+        public static Triangulation Triangulate(this Triangle t, int pointCount)
+        {
+            if (pointCount < 0) return new() { t };
+
+            Points points = new() { t.a, t.b, t.c };
+            
+            for (int i = 0; i < pointCount; i++)
+            {
+                float f1 = SRNG.randF();
+                float f2 = SRNG.randF();
+                Vector2 randPoint = GetPoint(t, f1, f2);
+                points.Add(randPoint);
+            }
+
+            return SPoly.TriangulateDelaunay(points);
+        }
+        public static Triangulation Triangulate(this Triangle t, float minArea)
+        {
+            if(minArea <= 0) return new() { t };
+
+            float triArea = t.GetArea();
+            float pieceCount = triArea / minArea;
+            int points = (int)MathF.Floor((pieceCount - 1f) * 0.5f);
+            return t.Triangulate(points);
+        }
+
+        public static bool IsNarrow(this Triangle t, float narrowValue = 0.2f)
+        {
+            Points points = new() { t.a, t.b, t.c };
+            for (int i = 0; i < 3; i++)
+            {
+                Vector2 a = points[i];
+                Vector2 b = SUtils.GetItem(points, i + 1);
+                Vector2 c = SUtils.GetItem(points, i - 1);
+
+                Vector2 ba = (b - a).Normalize();
+                Vector2 ca = (c - a).Normalize();
+                float cross = ba.Cross(ca);
+                if (MathF.Abs(cross) < narrowValue) return true;
+            }
+            return false;
+        }
+
         public static Triangulation Triangulate(this Triangle t, Vector2 p)
         {
             return new()
@@ -21,6 +65,14 @@ namespace ShapeEngine.Lib
             Vector2 c = SVec.Lerp(t.c, t.a, caF);
             return new(a, b, c);
         }
+        
+        /// <summary>
+        /// Returns a point inside the triangle.
+        /// </summary>
+        /// <param name="t">The triangle to find a point in.</param>
+        /// <param name="f1">First value in the range 0 - 1.</param>
+        /// <param name="f2">Second value in the range 0 - 1.</param>
+        /// <returns></returns>
         public static Vector2 GetPoint(this Triangle t, float f1, float f2)
         {
             if((f1 + f2) > 1)
