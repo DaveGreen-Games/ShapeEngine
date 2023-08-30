@@ -1,10 +1,8 @@
 ﻿using Raylib_CsLo;
-using Raylib_CsLo.InternalHelpers;
 using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 using System.Numerics;
-using System.Security;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -54,7 +52,9 @@ namespace Examples.Scenes.ExampleScenes
         private float lifetimeF = 1f;
 
         private float delay = 1f;
-        public AsteroidShard(Polygon shape, Vector2 fractureCenter)
+
+        private Color color;
+        public AsteroidShard(Polygon shape, Vector2 fractureCenter, Color color)
         {
             this.shape = shape;
             this.rotDeg = 0f;
@@ -62,10 +62,12 @@ namespace Examples.Scenes.ExampleScenes
             Vector2 dir = (pos - fractureCenter).Normalize();
             this.vel = dir * SRNG.randF(100, 300);
             this.angularVelDeg = SRNG.randF(-90, 90);
-            //this.lifetime = SRNG.randF(1.5, 3);
-            this.delay = SRNG.randF(0.25f, 1f);
-            this.lifetime = delay * 3f;
+            this.lifetime = SRNG.randF(1.5f, 3f);
             this.lifetimeTimer = this.lifetime;
+            this.delay = 0.1f;
+            this.color = color;
+            //this.delay = SRNG.randF(0.25f, 1f);
+            //this.lifetime = delay * 3f;
         }
         public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
         {
@@ -99,7 +101,7 @@ namespace Examples.Scenes.ExampleScenes
         public override void DrawGame(Vector2 size, Vector2 mousePos)
         {
             //SDrawing.DrawCircleFast(pos, 4f, RED);
-            Color color = WHITE.ChangeAlpha((byte)(150 * lifetimeF));
+            Color color = this.color.ChangeAlpha((byte)(150 * lifetimeF));
             shape.DrawLines(2f, color);
         }
         public override Rect GetBoundingBox() { return shape.GetBoundingBox(); }
@@ -108,13 +110,17 @@ namespace Examples.Scenes.ExampleScenes
     }
     public class Asteroid : SpaceObject, ICollidable
     {
-        private const float DamageThreshold = 250f;
+        private const float DamageThreshold = 30f;
 
         private PolyCollider collider;
         private List<ICollidable> collidables = new();
         private uint[] colMask = new uint[] { };
         private bool overlapped = false;
         private float curThreshold = DamageThreshold;
+
+        public event Action<Asteroid, Vector2>? Fractured;
+        private Color curColor = RED;
+
         public Asteroid(Vector2 pos, params Vector2[] shape)
         {
             collider = new PolyCollider(pos, new(), shape);
@@ -136,15 +142,24 @@ namespace Examples.Scenes.ExampleScenes
         {
             overlapped = true;
         }
-        
+        public Color GetColor()
+        {
+            return curColor;
+        }
         public void Damage(float amount, Vector2 point)
         {
+            //find segments close to point
+            //fade the color from impact color to cur color over several segments
+
+
             curThreshold -= amount;
             if(curThreshold <= 0f)
             {
                 curThreshold = DamageThreshold + curThreshold;
-
+                Fractured?.Invoke(this, point);
                 //cut piece
+                //var cutShape = SPoly.Generate(point, SRNG.randI(6, 12), 50, 250);
+                
             }
         }
 
@@ -158,10 +173,12 @@ namespace Examples.Scenes.ExampleScenes
             {
                 if (overlapped)
                 {
+                    curColor = GREEN;
                     p.DrawLines(6f, GREEN, 12);
                 }
                 else
                 {
+                    curColor = RED;
                     p.DrawLines(3f, RED, 12);
                 }
                 //p.DrawVertices(4f, RED);
@@ -284,6 +301,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         public override void DrawGame(Vector2 size, Vector2 mousePos)
         {
+            if (hybernate) return;
             shape.DrawLines(4f, RED);
             SDrawing.DrawCircle(tip, 8f, RED);
 
@@ -324,7 +342,7 @@ namespace Examples.Scenes.ExampleScenes
 
         private LaserDevice laserDevice;
 
-        private FractureHelper fractureHelper = new(500, 5000, 0.75f, 0.1f);
+        private FractureHelper fractureHelper = new(250, 1500, 0.75f, 0.1f);
 
         //private float crossResult = 0f;
         public AsteroidMiningExample()
@@ -357,7 +375,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             boundaryRect = new Rect(new Vector2(0f), game.GetSize(), new Vector2(0.5f)).ApplyMargins(0.005f, 0.005f, 0.1f, 0.005f);
         }
-
+        
         public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
         {
             UpdateBoundaryRect(game);
@@ -365,6 +383,47 @@ namespace Examples.Scenes.ExampleScenes
             area.Update(dt, mousePosScreen, game, ui);
 
             base.Update(dt, mousePosScreen, game, ui); //calls area update therefore area bounds have to be updated before that
+        }
+        private void OnAsteroidFractured(Asteroid a, Vector2 point)
+        {
+            var cutShape = SPoly.Generate(point, SRNG.randI(6, 12), 25, 75);
+            FractureAsteroid(a, cutShape);
+        }
+        private void FractureAsteroid(Asteroid a, Polygon cutShape)
+        {
+            RemoveAsteroid(a);
+            var asteroidShape = a.GetPolygon();
+            Color color = a.GetColor();
+            var fracture = fractureHelper.Fracture(asteroidShape, cutShape);
+
+            foreach (var piece in fracture.Pieces)
+            {
+                Vector2 center = piece.GetCentroid();
+                AsteroidShard shard = new(piece.ToPolygon(), center, color);
+                area.AddAreaObject(shard);
+            }
+            if (fracture.NewShapes.Count > 0)
+            {
+                foreach (var shape in fracture.NewShapes)
+                {
+                    float shapeArea = shape.GetArea();
+                    if (shapeArea > MinPieceArea)
+                    {
+                        Asteroid newAsteroid = new(shape);
+                        AddAsteroid(newAsteroid);
+                    }
+                }
+            }
+        }
+        private void AddAsteroid(Asteroid a)
+        {
+            a.Fractured += OnAsteroidFractured;
+            area.AddAreaObject(a);
+        }
+        private void RemoveAsteroid(Asteroid a)
+        {
+            a.Fractured -= OnAsteroidFractured;
+            area.RemoveAreaObject(a);
         }
         private void SetCurPos(Vector2 pos)
         {
@@ -464,7 +523,8 @@ namespace Examples.Scenes.ExampleScenes
                         {
                             if (collidable is Asteroid asteroid)
                             {
-                                area.RemoveAreaObject(asteroid);
+                                //area.RemoveAreaObject(asteroid);
+                                RemoveAsteroid(asteroid);
                                 polys.Add(asteroid.GetPolygon());
                             }
                         }
@@ -474,19 +534,22 @@ namespace Examples.Scenes.ExampleScenes
                             foreach (var f in finalShapes)
                             {
                                 Asteroid a = new(f);
-                                area.AddAreaObject(a);
+                                AddAsteroid(a);
+                                //area.AddAreaObject(a);
                             }
                         }
                         else
                         {
                             Asteroid a = new(curShape.ToPolygon());
-                            area.AddAreaObject(a);
+                            AddAsteroid(a);
+                            //area.AddAreaObject(a);
                         }
                     }
                     else
                     {
                         Asteroid a = new(curShape.ToPolygon());
-                        area.AddAreaObject(a);
+                        AddAsteroid(a);
+                        //area.AddAreaObject(a);
                     }
 
                 }
@@ -498,7 +561,11 @@ namespace Examples.Scenes.ExampleScenes
                     {
                         if (collidable is Asteroid asteroid)
                         {
-                            area.RemoveAreaObject(asteroid);
+                            FractureAsteroid(asteroid, cutShape);
+
+                            /*
+                            //area.RemoveAreaObject(asteroid);
+                            RemoveAsteroid(asteroid);
                             var asteroidShape = asteroid.GetPolygon();
 
                             var fracture = fractureHelper.Fracture(asteroidShape, cutShape);
@@ -522,10 +589,12 @@ namespace Examples.Scenes.ExampleScenes
                                     if(shapeArea > MinPieceArea)
                                     {
                                         Asteroid a = new(shape);
-                                        area.AddAreaObject(a);
+                                        AddAsteroid(a);
+                                        //area.AddAreaObject(a);
                                     }
                                 }
                             }
+                            */
                         }
                     }
                     if (allCutOuts.Count > 0) lastCutOuts = allCutOuts;
