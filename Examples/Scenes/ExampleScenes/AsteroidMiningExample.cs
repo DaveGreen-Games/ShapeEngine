@@ -324,7 +324,7 @@ namespace Examples.Scenes.ExampleScenes
 
         private LaserDevice laserDevice;
 
-        private FractureHelper fractureHelper = new(1000, 20000, 0.1f);
+        private FractureHelper fractureHelper = new(500, 5000, 0.75f, 0.1f);
 
         //private float crossResult = 0f;
         public AsteroidMiningExample()

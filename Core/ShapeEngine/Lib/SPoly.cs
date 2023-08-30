@@ -227,16 +227,18 @@ namespace ShapeEngine.Lib
     {
         public float MinArea { get; set; }
         public float MaxArea { get; set; }
-        public float NarrowValue{ get; set; } = 0.2f;
+        public float KeepChance { get; set; }
+        public float NarrowValue{ get; set; }
 
         //public float DivisionChance { get; set; } = 0.5f;
         //public int MinDivisionCount { get; set; } = 3;
         //public int MaxDivisionCount { get; set; } = 9;
 
-        public FractureHelper(float minArea, float maxArea, float narrowValue = 0.2f)
+        public FractureHelper(float minArea, float maxArea, float keepChance = 0.5f, float narrowValue = 0.2f)
         {
             this.MinArea = minArea;
             this.MaxArea = maxArea;
+            this.KeepChance = keepChance;
             this.NarrowValue = narrowValue;
         }
         
@@ -247,7 +249,7 @@ namespace ShapeEngine.Lib
             Triangulation pieces = new();
             foreach (var cutOut in cutOuts)
             {
-                var fracturePieces = cutOut.Triangulate().Subdivide(MinArea, MaxArea, NarrowValue);
+                var fracturePieces = cutOut.Triangulate().Subdivide(MinArea, MaxArea, KeepChance, NarrowValue);
                 pieces.AddRange(fracturePieces);
             }
 

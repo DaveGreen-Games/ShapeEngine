@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Numerics;
 using Raylib_CsLo;
 using ShapeEngine.Lib;
@@ -193,13 +194,21 @@ namespace ShapeEngine.Core
         /// <param name="maxArea">Triangles with an area bigger than maxArea will always be subdivided.</param>
         /// <param name="narrowValue">Triangles that are considered narrow will not be subdivided.</param>
         /// <returns></returns>
-        public Triangulation Subdivide(float minArea, float maxArea, float narrowValue = 0.2f)
+        public Triangulation Subdivide(float minArea, float maxArea, float keepChance = 0.5f, float narrowValue = 0.2f)
         {
-            Triangulation final = new();
+            if (this.Count <= 0) return this;
 
+            Triangulation final = new();
             Triangulation queue = new();
-            queue.AddRange(this);
-            while(queue.Count > 0)
+
+            if(this.Count == 1)
+            {
+                queue.AddRange(this[0].Triangulate(minArea));
+            }
+            else queue.AddRange(this);
+
+
+            while (queue.Count > 0)
             {
                 int endIndex = queue.Count - 1;
                 var tri = queue[endIndex];
@@ -211,15 +220,17 @@ namespace ShapeEngine.Core
                 }
                 else if (triArea > maxArea) //always subdivide because too big
                 {
-                    //float pieceCount = triArea / minArea;
-                    //int points = (int)MathF.Floor((pieceCount - 1f) * 0.5f);
-                    //var subdivision = tri.Triangulate(points);
                     queue.AddRange(tri.Triangulate(minArea));
                 }
                 else //subdivde or keep
                 {
-                    float keepChance = (triArea - minArea) / (maxArea - minArea);
-                    if (SRNG.chance(keepChance)) final.Add(tri);
+                    float chance = keepChance;
+                    if(keepChance < 0 || keepChance > 1f)
+                    {
+                        chance = (triArea - minArea) / (maxArea - minArea);
+                    }
+                    
+                    if (SRNG.chance(chance)) final.Add(tri);
                     else queue.AddRange(tri.Triangulate(minArea));
                 }
                 queue.RemoveAt(endIndex);
