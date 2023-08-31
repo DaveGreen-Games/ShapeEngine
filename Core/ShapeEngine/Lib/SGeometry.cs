@@ -384,14 +384,16 @@ namespace ShapeEngine.Lib
         }
         public static bool OverlapShape(this Segment a, Segment b) 
         {
+            //var result = IntersectSegmentSegmentInfo(a.start, a.end, b.start, b.end);
+            //return result.intersected;
             Vector2 axisAPos = a.start;
             Vector2 axisADir = a.end - a.start;
             if (SRect.SegmentOnOneSide(axisAPos, axisADir, b.start, b.end)) return false;
-
+            
             Vector2 axisBPos = b.start;
             Vector2 axisBDir = b.end - b.start;
             if (SRect.SegmentOnOneSide(axisBPos, axisBDir, a.start, a.end)) return false;
-
+            
             if (SVec.Parallel(axisADir, axisBDir))
             {
                 RangeFloat rangeA = SRect.ProjectSegment(a.start, a.end, axisADir);
@@ -1042,6 +1044,8 @@ namespace ShapeEngine.Lib
         {
             
             if (a.Count < 3 || b.Count < 3) return false;
+            //return a.IntersectShape(b).Count > 0;
+
             Segments segmentsB = new();
             for (int j = 0; j < b.Count; j++)
             {
@@ -1058,7 +1062,7 @@ namespace ShapeEngine.Lib
                 if (b.IsPointInside(startA)) return true;
                 Vector2 endA = a[(i + 1) % a.Count];
                 Segment segA = new(startA, endA);
-                segA.OverlapShape(segmentsB);
+                if(segA.OverlapShape(segmentsB)) return true;
             }
             return false;
         }
