@@ -66,6 +66,7 @@ namespace Examples.Scenes.ExampleScenes
             this.lifetimeTimer = this.lifetime;
             this.delay = 0.5f;
             this.color = color;
+            this.color = YELLOW;
             //this.delay = SRNG.randF(0.25f, 1f);
             //this.lifetime = delay * 3f;
         }
@@ -886,8 +887,14 @@ namespace Examples.Scenes.ExampleScenes
             base.DrawUI(uiSize, mousePosUI);
 
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));
-            string infoText = String.Format("Object Count: {0}", area.Count); // MathF.Floor(crossResult * 100) / 100);
-            font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+
+            string polymodeText = "[Tab] Polymode | [LMB] Place/Merge | [RMB] Cut | [1] Triangle | [2] Rect | [3] Poly | [Q] Regenerate | [X] Rotate | [C] Scale";
+            string laserText = "[Tab] Lasermode | [LMB] Move | [RMB] Shoot Laser";
+            string text = polyModeActive ? polymodeText : laserText;
+            //string infoText = String.Format("Object Count: {0}", area.Count); // MathF.Floor(crossResult * 100) / 100);
+            
+            
+            font.DrawText(text, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
 
     }
