@@ -64,7 +64,7 @@ namespace Examples.Scenes.ExampleScenes
             this.angularVelDeg = SRNG.randF(-90, 90);
             this.lifetime = SRNG.randF(1.5f, 3f);
             this.lifetimeTimer = this.lifetime;
-            this.delay = 0.1f;
+            this.delay = 0.5f;
             this.color = color;
             //this.delay = SRNG.randF(0.25f, 1f);
             //this.lifetime = delay * 3f;
@@ -101,8 +101,9 @@ namespace Examples.Scenes.ExampleScenes
         public override void DrawGame(Vector2 size, Vector2 mousePos)
         {
             //SDrawing.DrawCircleFast(pos, 4f, RED);
-            Color color = this.color.ChangeAlpha((byte)(150 * lifetimeF));
-            shape.DrawLines(2f, color);
+            Color color = this.color.ChangeAlpha((byte)(255 * lifetimeF));
+            //color = this.color;
+            shape.DrawLines(2f * lifetimeF, color);
         }
         public override Rect GetBoundingBox() { return shape.GetBoundingBox(); }
         public override Vector2 GetCameraFollowPosition(Vector2 camPos) { return pos; }
@@ -200,8 +201,8 @@ namespace Examples.Scenes.ExampleScenes
 
     public class LaserDevice : SpaceObject
     {
-        private const float LaserRange = 750;
-        private const float DamagePerSecond = 100;
+        private const float LaserRange = 1200;
+        private const float DamagePerSecond = 50;
         private bool aimingMode = true;
         private bool hybernate = false;
         private bool laserEnabled = false;
@@ -210,8 +211,10 @@ namespace Examples.Scenes.ExampleScenes
         private float rotRad;
         private float size;
         private Triangle shape;
+
         private Vector2 tip;
-        private Vector2 laserEndPoint;
+        private Points laserPoints = new();
+        //private Vector2 laserEndPoint;
         private Vector2 aimDir = new();
         private AreaCollision area;
         public LaserDevice(Vector2 pos, float size, AreaCollision area) 
@@ -221,7 +224,7 @@ namespace Examples.Scenes.ExampleScenes
             this.size = size;
             this.rotRad = 0f;
             UpdateTriangle();
-            this.laserEndPoint = tip;
+            //this.laserEndPoint = tip;
         }
         public void SetHybernate(bool enabled)
         {
@@ -255,6 +258,7 @@ namespace Examples.Scenes.ExampleScenes
 
         public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
         {
+            laserPoints.Clear();
             laserEnabled = false;
             if (hybernate) return;
             
@@ -275,40 +279,79 @@ namespace Examples.Scenes.ExampleScenes
 
             if (laserEnabled)
             {
-                laserEndPoint = tip + aimDir * LaserRange;
+                //laserEndPoint = tip + aimDir * LaserRange;
                 var col = area.GetCollisionHandler();
                 if(col != null)
                 {
-                    var queryInfos = col.QuerySpace(new Segment(tip, laserEndPoint), tip, true, AsteroidMiningExample.AsteriodLayer);
-                    if(queryInfos.Count > 0)
+                    laserPoints.Add(tip);
+                    
+                    float remainingLength = LaserRange;
+                    Vector2 curLaserPos = tip;
+                    Vector2 curLaserDir = aimDir;
+                    float curDamagePerSecond = DamagePerSecond;
+                    while(remainingLength > 0) //reflecting laser
                     {
-                        var closest = queryInfos[0];
-                        if (closest.points.valid)
-                        {
-                            var other = closest.collidable;
-                            if (other != null && other is Asteroid a)
-                            {
-                                //perfect naming:)
-                                laserEndPoint = closest.points.closest.Point;  //closest.intersection.ColPoints[0].Point;
-                                a.Damage(DamagePerSecond * dt, laserEndPoint);
-                            }
-                        }
-                        
+                        var result = CastLaser(dt, curLaserPos, curLaserDir, remainingLength, curDamagePerSecond, col);
+                        laserPoints.Add(result.endPoint);
+                        curLaserPos = result.endPoint;
+                        remainingLength = result.remainingLength;
+                        curLaserDir = result.newDir;
+                        curDamagePerSecond *= 0.5f;
+                        remainingLength *= 0.5f;
+                        remainingLength = 0f; //reflecting turned off
                     }
+                    
                 }
 
             }
         }
+        private (Vector2 endPoint, float remainingLength, Vector2 newDir) CastLaser(float dt, Vector2 start, Vector2 dir, float length, float damagePerSecond, CollisionHandler col)
+        {
+            Vector2 endPoint = start + dir * length;
+            Vector2 newEndPoint = endPoint;
+            Vector2 newDir = dir;
+
+            var queryInfos = col.QuerySpace(new Segment(start, endPoint), start, true, AsteroidMiningExample.AsteriodLayer);
+            if (queryInfos.Count > 0)
+            {
+                var closest = queryInfos[0];
+                if (closest.points.valid)
+                {
+                    var other = closest.collidable;
+                    if (other != null && other is Asteroid a)
+                    {
+                        //perfect naming:)
+                        newDir = dir.Reflect(closest.points.closest.Normal);
+                        newEndPoint = closest.points.closest.Point;  //closest.intersection.ColPoints[0].Point;
+                        a.Damage(damagePerSecond * dt, newEndPoint);
+                    }
+                }
+            }
+
+            float usedLength = (newEndPoint - start).Length();
+            //if (usedLength < 10) return (newEndPoint, 0, dir);
+
+            float remainingLength = length - usedLength;
+            if (remainingLength <= 1) return new(newEndPoint, 0f, dir);
+            else return (newEndPoint - dir * 10f, remainingLength, newDir);
+            //return (newEndPoint, remainingLength, newDir);
+        }
+
         public override void DrawGame(Vector2 size, Vector2 mousePos)
         {
             if (hybernate) return;
             shape.DrawLines(4f, RED);
             SDrawing.DrawCircle(tip, 8f, RED);
 
-            if (laserEnabled)
+            if (laserEnabled && laserPoints.Count > 1)
             {
-                Segment laser = new(tip, laserEndPoint);
-                laser.Draw(4f, RED);
+                for (int i = 0; i < laserPoints.Count - 1; i++)
+                {
+                    Segment laserSegment = new(laserPoints[i], laserPoints[i + 1]);
+                    laserSegment.Draw(4f, RED);
+                    SDrawing.DrawCircle(laserPoints[i + 1], SRNG.randF(6f, 12f), RED, 12);
+                }
+                
             }
 
 
@@ -319,7 +362,33 @@ namespace Examples.Scenes.ExampleScenes
         public override Vector2 GetCameraFollowPosition(Vector2 camPos) { return pos; }
         public override Vector2 GetPosition() { return pos; }
     }
-
+    public class Cutout
+    {
+        
+        private Polygon shape;
+        private float timer;
+        private const float Lifetime = 0.5f;
+        public Cutout(Polygon shape)
+        {
+            this.shape = shape;
+            this.timer = Lifetime;
+        }
+        public bool IsFinished() { return timer <= 0f; }
+        public void Update(float dt)
+        {
+            if(timer > 0f)
+            {
+                timer -= dt;
+                if (timer <= 0f) timer = 0f;
+            }
+        }
+        public void Draw()
+        {
+            float f = timer / Lifetime;
+            //Color color = YELLOW.ChangeAlpha((byte)(255 * f));
+            shape.DrawLines(6f * f, YELLOW);
+        }
+    }
     public class AsteroidMiningExample : ExampleScene
     {
         public static uint AsteriodLayer = 1;
@@ -335,7 +404,7 @@ namespace Examples.Scenes.ExampleScenes
         private ShapeType curShapeType = ShapeType.None;
 
         private Polygon curShape = new();
-        private Polygons lastCutOuts = new();
+        private List<Cutout> lastCutOuts = new();
         private Vector2 curPos = new();
         private float curRot = 0f;
         private float curSize = 50;
@@ -382,11 +451,18 @@ namespace Examples.Scenes.ExampleScenes
             area.ResizeBounds(boundaryRect);
             area.Update(dt, mousePosScreen, game, ui);
 
+            for (int i = lastCutOuts.Count - 1; i >= 0; i--)
+            {
+                var c = lastCutOuts[i];
+                c.Update(dt);
+                if (c.IsFinished()) lastCutOuts.RemoveAt(i);
+            }
             base.Update(dt, mousePosScreen, game, ui); //calls area update therefore area bounds have to be updated before that
         }
         private void OnAsteroidFractured(Asteroid a, Vector2 point)
         {
-            var cutShape = SPoly.Generate(point, SRNG.randI(6, 12), 25, 75);
+            var cutShape = SPoly.Generate(point, SRNG.randI(6, 12), 35, 100);
+            
             FractureAsteroid(a, cutShape);
         }
         private void FractureAsteroid(Asteroid a, Polygon cutShape)
@@ -395,7 +471,10 @@ namespace Examples.Scenes.ExampleScenes
             var asteroidShape = a.GetPolygon();
             Color color = a.GetColor();
             var fracture = fractureHelper.Fracture(asteroidShape, cutShape);
-
+            foreach (var cutoutShape in fracture.Cutouts)
+            {
+                lastCutOuts.Add(new Cutout(cutoutShape));
+            }
             foreach (var piece in fracture.Pieces)
             {
                 Vector2 center = piece.GetCentroid();
@@ -597,7 +676,13 @@ namespace Examples.Scenes.ExampleScenes
                             */
                         }
                     }
-                    if (allCutOuts.Count > 0) lastCutOuts = allCutOuts;
+                    if (allCutOuts.Count > 0)
+                    {
+                        foreach (var cutoutShape in allCutOuts)
+                        {
+                            lastCutOuts.Add(new Cutout(cutoutShape));
+                        }
+                    }
                 }
 
                 if (IsKeyPressed(KeyboardKey.KEY_Q))//regenerate
@@ -681,11 +766,10 @@ namespace Examples.Scenes.ExampleScenes
             //area.DrawDebug(GRAY, GOLD, GREEN);
             area.DrawGame(gameSize, mousePosGame);
 
-            //foreach (var cutOut in lastCutOuts)
-            //{
-            //    //cutOut.DrawLines(4f, ORANGE);
-            //    cutOut.DrawLines(1f, YELLOW, 12);
-            //}
+            foreach (var cutOut in lastCutOuts)
+            {
+                cutOut.Draw();
+            }
             
             
             //Vector2 a = new Vector2(0, 0);
