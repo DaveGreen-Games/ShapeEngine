@@ -111,7 +111,80 @@ namespace Examples.Scenes.ExampleScenes
     }
     public class Asteroid : SpaceObject, ICollidable
     {
-        private const float DamageThreshold = 30f;
+        internal class DamagedSegment
+        {
+
+            public Segment Segment;
+            private float timer;
+            private const float Lifetime = 1f;
+            public DamagedSegment(Segment segment)
+            {
+                this.Segment = segment;
+                this.timer = Lifetime;
+            }
+            public bool IsFinished() { return timer <= 0f; }
+            public void Update(float dt)
+            {
+                if (timer > 0f)
+                {
+                    timer -= dt;
+                    if (timer <= 0f) timer = 0f;
+                }
+            }
+            public void Draw()
+            {
+                float f = timer / Lifetime;
+                //Color color = YELLOW.ChangeAlpha((byte)(255 * f));
+                Segment.Draw(SRNG.randF(4, 8) * f, YELLOW, 12);
+            }
+            public void Renew() { timer = Lifetime; }
+        }
+        internal class DamagedSegments : List<DamagedSegment>
+        {
+            public void AddSegment(Segment segment)
+            {
+                foreach (var seg in this)
+                {
+                    if (seg.Segment.IsSame(segment))
+                    {
+                        seg.Renew();
+                        return;
+                    }
+                }
+
+                Add(new(segment));
+            }
+            public bool ContainsSegment(Segment segment)
+            {
+                foreach (var seg in this)
+                {
+                    if (seg.Segment.IsSame(segment)) return true;
+                }
+                return false;
+            }
+
+            public void Update(float dt)
+            {
+                if (Count > 0)
+                {
+                    for (int i = Count - 1; i >= 0; i--)
+                    {
+                        var seg = this[i];
+                        seg.Update(dt);
+                        if (seg.IsFinished()) this.RemoveAt(i);
+                    }
+                }
+            }
+            public void Draw()
+            {
+                foreach (var seg in this)
+                {
+                    seg.Draw();
+                }
+            }
+        }
+        
+        private const float DamageThreshold = 50f;
 
         private PolyCollider collider;
         private List<ICollidable> collidables = new();
@@ -122,13 +195,15 @@ namespace Examples.Scenes.ExampleScenes
         public event Action<Asteroid, Vector2>? Fractured;
         private Color curColor = RED;
 
+        private DamagedSegments damagedSegments = new();
+
         public Asteroid(Vector2 pos, params Vector2[] shape)
         {
             collider = new PolyCollider(pos, new(), shape);
             collider.ComputeCollision = false;
             collider.ComputeIntersections = false;
             collidables.Add(this);
-
+            SetDamageTreshold(0f);
         }
         public Asteroid(Polygon shape)
         {
@@ -136,9 +211,14 @@ namespace Examples.Scenes.ExampleScenes
             collider.ComputeCollision = false;
             collider.ComputeIntersections = false;
             collidables.Add(this);
+            SetDamageTreshold(0f);
         }
         public Polygon GetPolygon() { return collider.GetPolygonShape(); }
 
+        private void SetDamageTreshold(float overshoot = 0f)
+        {
+            curThreshold = DamageThreshold * SRNG.randF(0.5f, 2f) + overshoot;
+        }
         public void Overlapped()
         {
             overlapped = true;
@@ -151,20 +231,29 @@ namespace Examples.Scenes.ExampleScenes
         {
             //find segments close to point
             //fade the color from impact color to cur color over several segments
+            if (amount <= 0) return;
 
+
+            Polygon shape = collider.GetPolygonShape();
+            Segment seg = shape.GetClosestSegment(point);
+            damagedSegments.AddSegment(seg);
 
             curThreshold -= amount;
             if(curThreshold <= 0f)
             {
-                curThreshold = DamageThreshold + curThreshold;
+                SetDamageTreshold(MathF.Abs(curThreshold));
                 Fractured?.Invoke(this, point);
+                
                 //cut piece
                 //var cutShape = SPoly.Generate(point, SRNG.randI(6, 12), 50, 250);
                 
             }
         }
 
-        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui) { }
+        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui) 
+        {
+            damagedSegments.Update(dt);
+        }
         public override void DrawGame(Vector2 size, Vector2 mousePos)
         {
             //Color color = overlapped ? GREEN : WHITE;
@@ -184,6 +273,8 @@ namespace Examples.Scenes.ExampleScenes
                 }
                 //p.DrawVertices(4f, RED);
             }
+
+            damagedSegments.Draw();
 
             overlapped = false;
         }
@@ -362,35 +453,37 @@ namespace Examples.Scenes.ExampleScenes
         public override Vector2 GetCameraFollowPosition(Vector2 camPos) { return pos; }
         public override Vector2 GetPosition() { return pos; }
     }
-    public class Cutout
-    {
-        
-        private Polygon shape;
-        private float timer;
-        private const float Lifetime = 0.5f;
-        public Cutout(Polygon shape)
-        {
-            this.shape = shape;
-            this.timer = Lifetime;
-        }
-        public bool IsFinished() { return timer <= 0f; }
-        public void Update(float dt)
-        {
-            if(timer > 0f)
-            {
-                timer -= dt;
-                if (timer <= 0f) timer = 0f;
-            }
-        }
-        public void Draw()
-        {
-            float f = timer / Lifetime;
-            //Color color = YELLOW.ChangeAlpha((byte)(255 * f));
-            shape.DrawLines(6f * f, YELLOW);
-        }
-    }
+    
     public class AsteroidMiningExample : ExampleScene
     {
+        internal class Cutout
+        {
+
+            private Polygon shape;
+            private float timer;
+            private const float Lifetime = 0.5f;
+            public Cutout(Polygon shape)
+            {
+                this.shape = shape;
+                this.timer = Lifetime;
+            }
+            public bool IsFinished() { return timer <= 0f; }
+            public void Update(float dt)
+            {
+                if (timer > 0f)
+                {
+                    timer -= dt;
+                    if (timer <= 0f) timer = 0f;
+                }
+            }
+            public void Draw()
+            {
+                float f = timer / Lifetime;
+                //Color color = YELLOW.ChangeAlpha((byte)(255 * f));
+                shape.DrawLines(6f * f, YELLOW);
+            }
+        }
+
         public static uint AsteriodLayer = 1;
         private const float MinPieceArea = 3000f;
 

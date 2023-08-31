@@ -1225,16 +1225,38 @@ namespace ShapeEngine.Core
 
         public int GetClosestIndex(Vector2 p)
         {
+            //if (Count <= 0) return -1;
+            //if (Count == 1) return 0;
+            //
+            //float minD = float.PositiveInfinity;
+            //var edges = GetEdges();
+            //int closestIndex = -1;
+            //for (int i = 0; i < edges.Count; i++)
+            //{
+            //    Vector2 c = edges[i].GetClosestPoint(p).Point;
+            //    float d = (c - p).LengthSquared();
+            //    if (d < minD)
+            //    {
+            //        closestIndex = i;
+            //        minD = d;
+            //    }
+            //}
+            //return closestIndex;
+
             if (Count <= 0) return -1;
             if (Count == 1) return 0;
 
             float minD = float.PositiveInfinity;
-            var edges = GetEdges();
             int closestIndex = -1;
-            for (int i = 0; i < edges.Count; i++)
+
+            for (int i = 0; i < Count; i++)
             {
-                Vector2 c = edges[i].GetClosestPoint(p).Point;
-                float d = (c - p).LengthSquared();
+                Vector2 start = this[i];
+                Vector2 end = this[(i + 1) % Count];
+                Segment edge = new Segment(start, end);
+
+                Vector2 closest = edge.GetClosestPoint(p).Point;
+                float d = (closest - p).LengthSquared();
                 if (d < minD)
                 {
                     closestIndex = i;
@@ -1263,20 +1285,61 @@ namespace ShapeEngine.Core
         }
         public Vector2 GetClosestVertex(Vector2 p)
         {
+            //float minD = float.PositiveInfinity;
+            //Vector2 closest = new();
+            //for (int i = 0; i < Count; i++)
+            //{
+            //    float d = (this[i] - p).LengthSquared();
+            //    if (d < minD)
+            //    {
+            //        closest = this[i];
+            //        minD = d;
+            //    }
+            //}
+            //return closest;
+
+            if (Count < 2) return new();
             float minD = float.PositiveInfinity;
-            Vector2 closest = new();
+            Vector2 closestPoint = new();
+
             for (int i = 0; i < Count; i++)
             {
-                float d = (this[i] - p).LengthSquared();
+                Vector2 start = this[i];
+                Vector2 end = this[(i + 1) % Count];
+                Segment edge = new Segment(start, end);
+
+                Vector2 closest = edge.GetClosestPoint(p).Point;
+                float d = (closest - p).LengthSquared();
                 if (d < minD)
                 {
-                    closest = this[i];
+                    closestPoint = closest;
                     minD = d;
                 }
             }
-            return closest;
+            return closestPoint;
         }
+        public Segment GetClosestSegment(Vector2 p)
+        {
+            if (Count < 2) return new();
+            float minD = float.PositiveInfinity;
+            Segment closestSegment = new();
 
+            for (int i = 0; i < Count; i++)
+            {
+                Vector2 start = this[i];
+                Vector2 end = this[(i + 1) % Count];
+                Segment edge = new Segment(start, end);
+                
+                Vector2 closest = edge.GetClosestPoint(p).Point;
+                float d = (closest - p).LengthSquared();
+                if (d < minD)
+                {
+                    closestSegment = edge;
+                    minD = d;
+                }
+            }
+            return closestSegment;
+        }
 
         public bool IsPointInside(Vector2 p) { return SGeometry.IsPointInPoly(p, this); }
         public Vector2 GetRandomPoint()
@@ -1576,12 +1639,16 @@ namespace ShapeEngine.Core
             if (Count == 1) return 0;
 
             float minD = float.PositiveInfinity;
-            var edges = GetEdges();
             int closestIndex = -1;
-            for (int i = 0; i < edges.Count; i++)
+
+            for (int i = 0; i < Count - 1; i++)
             {
-                Vector2 c = edges[i].GetClosestPoint(p).Point;
-                float d = (c - p).LengthSquared();
+                Vector2 start = this[i];
+                Vector2 end = this[i + 1];
+                Segment edge = new Segment(start, end);
+
+                Vector2 closest = edge.GetClosestPoint(p).Point;
+                float d = (closest - p).LengthSquared();
                 if (d < minD)
                 {
                     closestIndex = i;
@@ -1590,6 +1657,51 @@ namespace ShapeEngine.Core
             }
             return closestIndex;
         }
+        public Vector2 GetClosestVertex(Vector2 p)
+        {
+            if (Count < 2) return new();
+            float minD = float.PositiveInfinity;
+            Vector2 closestPoint = new();
+
+            for (int i = 0; i < Count - 1; i++)
+            {
+                Vector2 start = this[i];
+                Vector2 end = this[i + 1];
+                Segment edge = new Segment(start, end);
+
+                Vector2 closest = edge.GetClosestPoint(p).Point;
+                float d = (closest - p).LengthSquared();
+                if (d < minD)
+                {
+                    closestPoint = closest;
+                    minD = d;
+                }
+            }
+            return closestPoint;
+        }
+        public Segment GetClosestSegment(Vector2 p)
+        {
+            if (Count < 2) return new();
+            float minD = float.PositiveInfinity;
+            Segment closestSegment = new();
+
+            for (int i = 0; i < Count - 1; i++)
+            {
+                Vector2 start = this[i];
+                Vector2 end = this[i + 1];
+                Segment edge = new Segment(start, end);
+
+                Vector2 closest = edge.GetClosestPoint(p).Point;
+                float d = (closest - p).LengthSquared();
+                if (d < minD)
+                {
+                    closestSegment = edge;
+                    minD = d;
+                }
+            }
+            return closestSegment;
+        }
+        
         public CollisionPoint GetClosestPoint(Vector2 p)
         {
             float minD = float.PositiveInfinity;
@@ -1603,21 +1715,6 @@ namespace ShapeEngine.Core
                 if (d < minD)
                 {
                     closest = c;
-                    minD = d;
-                }
-            }
-            return closest;
-        }
-        public Vector2 GetClosestVertex(Vector2 p)
-        {
-            float minD = float.PositiveInfinity;
-            Vector2 closest = new();
-            for (int i = 0; i < Count; i++)
-            {
-                float d = (this[i] - p).LengthSquared();
-                if (d < minD)
-                {
-                    closest = this[i];
                     minD = d;
                 }
             }
@@ -1667,6 +1764,44 @@ namespace ShapeEngine.Core
         public void DrawShape(float linethickness, Raylib_CsLo.Color color) => this.Draw(linethickness, color);
 
 
+        /*
+        //old
+        public int GetClosestIndex(Vector2 p)
+        {
+            if (Count <= 0) return -1;
+            if (Count == 1) return 0;
+
+            float minD = float.PositiveInfinity;
+            var edges = GetEdges();
+            int closestIndex = -1;
+            for (int i = 0; i < edges.Count; i++)
+            {
+                Vector2 c = edges[i].GetClosestPoint(p).Point;
+                float d = (c - p).LengthSquared();
+                if (d < minD)
+                {
+                    closestIndex = i;
+                    minD = d;
+                }
+            }
+            return closestIndex;
+        }
+        public Vector2 GetClosestVertex(Vector2 p)
+        {
+            float minD = float.PositiveInfinity;
+            Vector2 closest = new();
+            for (int i = 0; i < Count; i++)
+            {
+                float d = (this[i] - p).LengthSquared();
+                if (d < minD)
+                {
+                    closest = this[i];
+                    minD = d;
+                }
+            }
+            return closest;
+        }
+        */
     }
 }
 
