@@ -185,8 +185,8 @@ namespace ShapeEngine.Lib
 
         public static Vector2 ToVec2(this PointD p) { return new((float)p.x, -(float)p.y); }//flip of y necessary -> clipper up y is positve - raylib is negative
         public static PointD ToClipperPoint(this Vector2 v) { return new(v.X, -v.Y); }
-        public static RectD ToClipperRect(this Rect r) { return new RectD(r.x, r.y, r.x + r.width, r.y + r.height); }
-        public static Rect ToRect(this RectD r) { return new Rect((float)r.left, (float)r.top, (float)r.Width, (float)r.Height); }
+        public static RectD ToClipperRect(this Rect r) { return new RectD(r.x, -r.y-r.height, r.x + r.width, -r.y); }
+        public static Rect ToRect(this RectD r) { return new Rect((float)r.left, (float)(-r.top-r.Height), (float)r.Width, (float)r.Height); }
         public static Polygon ToPolygon(this PathD path)
         {
             var poly = new Polygon();

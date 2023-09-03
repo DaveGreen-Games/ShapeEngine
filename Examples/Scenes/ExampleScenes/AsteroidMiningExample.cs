@@ -1,4 +1,5 @@
-﻿using Raylib_CsLo;
+﻿using Clipper2Lib;
+using Raylib_CsLo;
 using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Screen;
@@ -508,6 +509,10 @@ namespace Examples.Scenes.ExampleScenes
         private FractureHelper fractureHelper = new(250, 1500, 0.75f, 0.1f);
 
         //private float crossResult = 0f;
+
+        //Polygons testShapes = new();
+        //Rect clipRect = new();
+        //RectD clipperRect = new();
         public AsteroidMiningExample()
         {
             Title = "Asteroid Mining Example";
@@ -517,6 +522,8 @@ namespace Examples.Scenes.ExampleScenes
 
             laserDevice = new(new Vector2(0f), 100, area);
             area.AddAreaObject(laserDevice);
+
+            //testShapes.Add(SPoly.Generate(new Vector2(0f), 24, 50, 300));
         }
         public override void Reset()
         {
@@ -660,6 +667,25 @@ namespace Examples.Scenes.ExampleScenes
         protected override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             base.HandleInput(dt, mousePosGame, mousePosUI);
+
+            //clipRect = new(mousePosGame, new Vector2(100, 300), new Vector2(0f, 1f));
+            //clipperRect = clipRect.ToClipperRect();
+            //if (IsKeyPressed(KeyboardKey.KEY_NINE))
+            //{
+            //    Polygons newShapes = new Polygons();
+            //    foreach (var shape in testShapes)
+            //    {
+            //        if (shape.OverlapShape(clipRect))
+            //        {
+            //            var result = SClipper.ClipRect(clipRect, shape, 2, false).ToPolygons(true);
+            //            if (result.Count > 0) newShapes.AddRange(result);
+            //        }
+            //        else newShapes.Add(shape);
+            //    }
+            //    testShapes = newShapes;
+            //}
+            
+
 
             var col = area.GetCollisionHandler();
             if (col == null) return;
@@ -864,22 +890,25 @@ namespace Examples.Scenes.ExampleScenes
             {
                 cutOut.Draw();
             }
-            
-            
-            //Vector2 a = new Vector2(0, 0);
-            //Vector2 b = new Vector2(500, 0);
-            //Vector2 c = mousePosGame;
-            //
-            //Vector2 ba = b - a;
-            //Vector2 ca = c - a;
-            //crossResult = ba.Cross(ca);
-            //
-            //Segment left = new(a, b);
-            //Segment right = new(a, c);
-            //left.Draw(2f, BLUE);
-            //right.Draw(2f, RED);
 
 
+            //var ellipse = SClipper.CreateEllipse(mousePosGame, 500, 100, 0);
+            //ellipse.DEBUG_DrawLinesCCW(2f, BLUE, PURPLE);
+            //foreach (var shape in testShapes)
+            //{
+            //    shape.DEBUG_DrawLinesCCW(2f, BLUE, PURPLE);
+            //}
+            //clipRect.DrawLines(8f, RED);
+            //
+            //var conversionRect = clipperRect.ToRect();
+            //conversionRect.DrawLines(4f, YELLOW);
+            //
+            //Polygon clipperPolygon = new();
+            //clipperPolygon.Add(new Vector2((float)clipperRect.left, (float)clipperRect.top));
+            //clipperPolygon.Add(new Vector2((float)clipperRect.left, (float)clipperRect.bottom));
+            //clipperPolygon.Add(new Vector2((float)clipperRect.right, (float)clipperRect.bottom));
+            //clipperPolygon.Add(new Vector2((float)clipperRect.right, (float)clipperRect.top));
+            //clipperPolygon.DrawLines(2f, GREEN);
         }
         public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
         {
@@ -892,9 +921,12 @@ namespace Examples.Scenes.ExampleScenes
             string laserText = "[Tab] Lasermode | [LMB] Move | [RMB] Shoot Laser";
             string text = polyModeActive ? polymodeText : laserText;
             //string infoText = String.Format("Object Count: {0}", area.Count); // MathF.Floor(crossResult * 100) / 100);
-            
+
+            //text = String.Format("RPos: {0} | CRPos: {1}", new Vector2(clipRect.x, clipRect.y), new Vector2((float)clipperRect.left, (float)clipperRect.top));
             
             font.DrawText(text, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+            
+            
         }
 
     }
