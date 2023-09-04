@@ -337,11 +337,11 @@ namespace ShapeEngine.Core
         public CollisionPoint GetClosestPoint(Vector2 p);
         public Vector2 GetClosestVertex(Vector2 p);
         public Vector2 GetRandomPoint();
-        public List<Vector2> GetRandomPoints(int amount);
+        public Points GetRandomPoints(int amount);
         public Vector2 GetRandomVertex();
         public Segment GetRandomEdge();
         public Vector2 GetRandomPointOnEdge();
-        public List<Vector2> GetRandomPointsOnEdge(int amount);
+        public Points GetRandomPointsOnEdge(int amount);
         public void DrawShape(float linethickness, Raylib_CsLo.Color color);
     }
     public interface IPhysicsObject

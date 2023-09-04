@@ -1,5 +1,4 @@
 ﻿
-using System;
 using System.Numerics;
 using Raylib_CsLo;
 using ShapeEngine.Lib;
@@ -328,9 +327,9 @@ namespace ShapeEngine.Core
             return disSqA <= disSqB ? start : end;
         }
         public Vector2 GetRandomPoint() { return this.GetPoint(SRNG.randF()); }
-        public List<Vector2> GetRandomPoints(int amount)
+        public Points GetRandomPoints(int amount)
         {
-            var points = new List<Vector2>();
+            var points = new Points();
             for (int i = 0; i < amount; i++)
             {
                 points.Add(GetRandomPoint());
@@ -340,9 +339,9 @@ namespace ShapeEngine.Core
         public Vector2 GetRandomVertex() { return SRNG.chance(0.5f) ? start : end; }
         public Segment GetRandomEdge() { return this; }
         public Vector2 GetRandomPointOnEdge() { return GetRandomPoint(); }
-        public List<Vector2> GetRandomPointsOnEdge(int amount)
+        public Points GetRandomPointsOnEdge(int amount)
         {
-            var points = new List<Vector2>();
+            var points = new Points();
             for (int i = 0; i < amount; i++)
             {
                 points.Add(GetRandomPointOnEdge());
@@ -389,9 +388,9 @@ namespace ShapeEngine.Core
             var randDir = SVec.VecFromAngleRad(randAngle);
             return center + randDir * SRNG.randF(0, radius);
         }
-        public List<Vector2> GetRandomPoints(int amount)
+        public Points GetRandomPoints(int amount)
         {
-            var points = new List<Vector2>();
+            var points = new Points();
             for (int i = 0; i < amount; i++)
             {
                 points.Add(GetRandomPoint());
@@ -401,9 +400,9 @@ namespace ShapeEngine.Core
         public Vector2 GetRandomVertex() { return GetRandomPoint(); }
         public Segment GetRandomEdge() { return SRNG.randCollection(GetEdges(), false); }
         public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
-        public List<Vector2> GetRandomPointsOnEdge(int amount)
+        public Points GetRandomPointsOnEdge(int amount)
         {
-            var points = new List<Vector2>();
+            var points = new Points();
             for (int i = 0; i < amount; i++)
             {
                 points.Add(GetRandomPointOnEdge());
@@ -549,9 +548,9 @@ namespace ShapeEngine.Core
         public CollisionPoint GetClosestPoint(Vector2 p) { return ToPolygon().GetClosestPoint(p); }
         public Vector2 GetClosestVertex(Vector2 p) { return ToPolygon().GetClosestVertex(p); }
         public Vector2 GetRandomPoint() { return this.GetPoint(SRNG.randF(), SRNG.randF()); }
-        public List<Vector2> GetRandomPoints(int amount)
+        public Points GetRandomPoints(int amount)
         {
-            var points = new List<Vector2>();
+            var points = new Points();
             for (int i = 0; i < amount; i++)
             {
                 points.Add(GetRandomPoint());
@@ -571,7 +570,7 @@ namespace ShapeEngine.Core
             //return SRNG.randCollection(GetEdges(), false); 
         }
         public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
-        public List<Vector2> GetRandomPointsOnEdge(int amount)
+        public Points GetRandomPointsOnEdge(int amount)
         {
             List<WeightedItem<Segment>> items = new(amount);
             var edges = GetEdges();
@@ -580,7 +579,7 @@ namespace ShapeEngine.Core
                 items.Add(new(edge, (int)edge.LengthSquared));
             }
             var pickedEdges = SRNG.PickRandomItems(amount, items.ToArray());
-            var randomPoints = new List<Vector2>();
+            var randomPoints = new Points();
             foreach (var edge in pickedEdges)
             {
                 randomPoints.Add(edge.GetRandomPoint());
@@ -707,9 +706,9 @@ namespace ShapeEngine.Core
         public CollisionPoint GetClosestPoint(Vector2 p) { return ToPolygon().GetClosestPoint(p); }
         public Vector2 GetClosestVertex(Vector2 p) { return ToPolygon().GetClosestVertex(p); }
         public Vector2 GetRandomPoint() { return new(SRNG.randF(x, x + width), SRNG.randF(y, y + height)); }
-        public List<Vector2> GetRandomPoints(int amount)
+        public Points GetRandomPoints(int amount)
         {
-            var points = new List<Vector2>();
+            var points = new Points();
             for (int i = 0; i < amount; i++)
             {
                 points.Add(GetRandomPoint());
@@ -729,7 +728,7 @@ namespace ShapeEngine.Core
             //return SRNG.randCollection(GetEdges(), false); 
         }
         public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
-        public List<Vector2> GetRandomPointsOnEdge(int amount)
+        public Points GetRandomPointsOnEdge(int amount)
         {
             List<WeightedItem<Segment>> items = new(amount);
             var edges = GetEdges();
@@ -738,7 +737,7 @@ namespace ShapeEngine.Core
                 items.Add(new(edge, (int)edge.LengthSquared));
             }
             var pickedEdges = SRNG.PickRandomItems(amount, items.ToArray());
-            var randomPoints = new List<Vector2>();
+            var randomPoints = new Points();
             foreach (var edge in pickedEdges)
             {
                 randomPoints.Add(edge.GetRandomPoint());
@@ -1353,7 +1352,7 @@ namespace ShapeEngine.Core
             var item = SRNG.PickRandomItem(items.ToArray());
             return item.GetRandomPoint();
         }
-        public List<Vector2> GetRandomPoints(int amount)
+        public Points GetRandomPoints(int amount)
         {
             var triangles = Triangulate();
             WeightedItem<Triangle>[] items = new WeightedItem<Triangle>[triangles.Count];
@@ -1365,7 +1364,7 @@ namespace ShapeEngine.Core
 
 
             List<Triangle> pickedTriangles = SRNG.PickRandomItems(amount, items);
-            List<Vector2> randomPoints = new();
+            Points randomPoints = new();
             foreach (var tri in pickedTriangles) randomPoints.Add(tri.GetRandomPoint());
 
             return randomPoints;
@@ -1383,7 +1382,7 @@ namespace ShapeEngine.Core
             //return SRNG.randCollection(GetEdges(), false); 
         }
         public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
-        public List<Vector2> GetRandomPointsOnEdge(int amount)
+        public Points GetRandomPointsOnEdge(int amount)
         {
             List<WeightedItem<Segment>> items = new(amount);
             var edges = GetEdges();
@@ -1392,7 +1391,7 @@ namespace ShapeEngine.Core
                 items.Add(new(edge, (int)edge.LengthSquared));
             }
             var pickedEdges = SRNG.PickRandomItems(amount, items.ToArray());
-            var randomPoints = new List<Vector2>();
+            var randomPoints = new Points();
             foreach (var edge in pickedEdges)
             {
                 randomPoints.Add(edge.GetRandomPoint());
@@ -1722,9 +1721,9 @@ namespace ShapeEngine.Core
         }
         
         public Vector2 GetRandomPoint() { return GetRandomPointOnEdge(); }
-        public List<Vector2> GetRandomPoints(int amount)
+        public Points GetRandomPoints(int amount)
         {
-            var points = new List<Vector2>();
+            var points = new Points();
             for (int i = 0; i < amount; i++)
             {
                 points.Add(GetRandomPoint());
@@ -1744,7 +1743,7 @@ namespace ShapeEngine.Core
             //return SRNG.randCollection(GetEdges(), false); 
         }
         public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
-        public List<Vector2> GetRandomPointsOnEdge(int amount)
+        public Points GetRandomPointsOnEdge(int amount)
         {
             List<WeightedItem<Segment>> items = new(amount);
             var edges = GetEdges();
@@ -1753,7 +1752,7 @@ namespace ShapeEngine.Core
                 items.Add(new(edge, (int)edge.LengthSquared));
             }
             var pickedEdges = SRNG.PickRandomItems(amount, items.ToArray());
-            var randomPoints = new List<Vector2>();
+            var randomPoints = new Points();
             foreach (var edge in pickedEdges)
             {
                 randomPoints.Add(edge.GetRandomPoint());

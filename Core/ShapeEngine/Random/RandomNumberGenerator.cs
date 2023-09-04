@@ -36,6 +36,7 @@ namespace ShapeEngine.Random
         }
         public void SetSeed(int seed) { rand = new(seed); }
 
+        #region Weighted
         public T? PickRandomItem<T>(params WeightedItem<T>[] items)
         {
             int totalWeight = 0;
@@ -176,14 +177,23 @@ namespace ShapeEngine.Random
 
             return chosen;
         }
+        #endregion
 
+        #region Chance
         public bool chance(float value) { return randF() < value; }
+        #endregion
+
+        #region Angle
         public float randAngleRad() { return randF(0f, 2f * RayMath.PI); }
         public float randAngleDeg() { return randF(0f, 359f); }
+        #endregion
 
+        #region Direction
         public float randDirF() { return randF() < 0.5f ? -1.0f : 1.0f; }
         public int randDirI() { return randF() < 0.5f ? -1 : 1; }
+        #endregion
 
+        #region Float
         public float randF() { return rand.NextSingle(); }
         public float randF(float max)
         {
@@ -208,7 +218,9 @@ namespace ShapeEngine.Random
             }
             return min + (float)rand.NextDouble() * (max - min);
         }
+        #endregion
 
+        #region Int
         public int randI() { return rand.Next(); }
         public int randI(int max)
         {
@@ -233,7 +245,9 @@ namespace ShapeEngine.Random
             }
             return rand.Next(min, max);
         }
+        #endregion
 
+        #region Vector2
         public Vector2 randVec2()
         {
             float a = randF() * 2.0f * MathF.PI;
@@ -245,6 +259,9 @@ namespace ShapeEngine.Random
         //{
         //    return new(randF(rect.x, rect.x + rect.width), randF(rect.y, rect.y + rect.height));
         //}
+        #endregion
+
+        #region Color
         public Raylib_CsLo.Color randColor() { return randColor(0, 255); }
         public Raylib_CsLo.Color randColor(int alpha) { return randColor(0, 255, alpha); }
         public Raylib_CsLo.Color randColor(Raylib_CsLo.Color color)
@@ -270,14 +287,9 @@ namespace ShapeEngine.Random
             }
             return new Raylib_CsLo.Color(randI(min, max), randI(min, max), randI(min, max), alpha);
         }
+        #endregion
 
-
-        //public Vector2 randPoint(Rect rect)
-        //{
-        //    float x = randF(rect.x, rect.x + rect.width);
-        //    float y = randF(rect.y, rect.y + rect.height);
-        //    return new(x, y);
-        //}
+        #region Point
         public Vector2 randPoint(Vector2 start, Vector2 end)
         {
             return SVec.Lerp(start, end, randF());
@@ -294,7 +306,9 @@ namespace ShapeEngine.Random
         {
             return origin + randVec2(min, max);
         }
+        #endregion
 
+        #region Rect
         public Rect randRect(Vector2 alignement)
         {
             Vector2 pos = randVec2();
@@ -319,7 +333,9 @@ namespace ShapeEngine.Random
             Vector2 size = randVec2(sizeMin, sizeMax);
             return new(origin + pos, size, alignement);
         }
+        #endregion
 
+        #region Collections
         public T? randCollection<T>(List<T> list, bool pop = false)
         {
             if (list == null || list.Count <= 0) return default;
@@ -348,7 +364,7 @@ namespace ShapeEngine.Random
             if (array == null || array.Length <= 0) return default;
             return array[randI(0, array.Length)];
         }
-
+        #endregion
     }
 
 }
