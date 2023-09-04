@@ -3,7 +3,7 @@ using System.Numerics;
 
 namespace ShapeEngine.Core
 {
-    public struct CollisionInformation
+    public class CollisionInformation
     {
         public List<Collision> Collisions;
         public CollisionSurface CollisionSurface;
@@ -91,7 +91,7 @@ namespace ShapeEngine.Core
             return others.ToList();
         }
     }
-    public struct Collision
+    public class Collision
     {
         public bool FirstContact;
         public ICollidable Self;
@@ -120,7 +120,7 @@ namespace ShapeEngine.Core
         }
 
     }
-    public struct Intersection
+    public class Intersection
     {
         public bool Valid;
         public CollisionSurface CollisionSurface;
@@ -234,6 +234,7 @@ namespace ShapeEngine.Core
         //}
 
     }
+    
     public struct CollisionSurface
     {
         public Vector2 Point;
@@ -294,7 +295,7 @@ namespace ShapeEngine.Core
             }
         }
     }
-    public struct QueryInfo
+    public class QueryInfo
     {
         public Vector2 origin;
         public ICollidable collidable;

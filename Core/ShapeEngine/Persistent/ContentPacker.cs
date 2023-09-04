@@ -2,7 +2,7 @@
 
 namespace ShapeEngine.Persistent
 {
-    public struct ContentInfo
+    public class ContentInfo
     {
         public string extension;
         public byte[] data;
