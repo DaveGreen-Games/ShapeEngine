@@ -897,8 +897,8 @@ namespace ShapeEngine
         protected override void Update(float dt)
         {
             CurScene.Update(dt, MousePos, Game, UI);
-            var area = CurScene.GetCurArea();
-            if (area != null) area.Update(dt, MousePos, Game, UI);
+            //var area = CurScene.GetCurArea();
+            //if (area != null) area.Update(dt, MousePos, Game, UI);
         }
         protected override void DrawToScreenTexture(ScreenTexture screenTexture)
         {
@@ -912,7 +912,7 @@ namespace ShapeEngine
                 uint id = screenTexture.ID;
 
                 CurScene.DrawGame(size, mousePos);
-                if (area != null) area.DrawGame(size, mousePos);
+                //if (area != null) area.DrawGame(size, mousePos);
             }
 
             else if (screenTexture == UI)
@@ -922,20 +922,20 @@ namespace ShapeEngine
                 uint id = screenTexture.ID;
 
                 CurScene.DrawUI(size, mousePos);
-                if (area != null) area.DrawUI(size, mousePos);
+                //if (area != null) area.DrawUI(size, mousePos);
             }
             else
             {
                 CurScene.DrawToTexture(screenTexture);
-                if (area != null) area.DrawToTexture(screenTexture);
+                //if (area != null) area.DrawToTexture(screenTexture);
 
             }
         }
         protected override void DrawToScreen(Vector2 size, Vector2 mousePos)
         {
             CurScene.DrawToScreen(size, mousePos);
-            var area = CurScene.GetCurArea();
-            if (area != null) area.DrawToScreen(size, mousePos);
+            //var area = CurScene.GetCurArea();
+            //if (area != null) area.DrawToScreen(size, mousePos);
         }
 
     }

@@ -182,7 +182,7 @@ namespace ShapeEngine.Core
         private SortedList<int, List<IAreaObject>> allObjects = new();
 
         //private Dictionary<uint, List<IAreaObject>> drawToScreenTextureObjects = new();
-        private List<IAreaObject> drawToScreenObjects = new();
+        //private List<IAreaObject> drawToScreenObjects = new();
         private List<IAreaObject> drawToGameTextureObjects = new();
         private List<IAreaObject> drawToUITextureObjects = new();
 
@@ -284,7 +284,7 @@ namespace ShapeEngine.Core
 
         public virtual void Clear()
         {
-            drawToScreenObjects.Clear();
+            //drawToScreenObjects.Clear();
             //drawToScreenTextureObjects.Clear();
             drawToGameTextureObjects.Clear();
             drawToUITextureObjects.Clear();
@@ -364,7 +364,7 @@ namespace ShapeEngine.Core
         
         public virtual void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
         {
-            drawToScreenObjects.Clear();
+            //drawToScreenObjects.Clear();
             //drawToScreenTextureObjects.Clear();
             drawToGameTextureObjects.Clear();
             drawToUITextureObjects.Clear();
@@ -413,6 +413,15 @@ namespace ShapeEngine.Core
 
                     obj.UpdateParallaxe(ParallaxePosition);
                     if (totalDeltaFactor != 1f) obj.DeltaFactorApplied(totalDeltaFactor);
+
+                    //var cam = game.GetCamera();
+                    //if(cam != null)
+                    //{
+                    //    var camArea = cam.GetArea();
+                    //    var bb = obj.GetBoundingBox();
+                    //    var insideCameraArea = camArea.OverlapShape(bb);
+                    //}
+
                     obj.Update(dt, mousePosScreen, game, ui);
                     
                     if (obj.IsDead())
@@ -453,18 +462,18 @@ namespace ShapeEngine.Core
                 obj.DrawUI(uiSize, mousePosUI);
             }
         }
-        public virtual void DrawToScreen(Vector2 size, Vector2 mousePos)
-        {
-            foreach (var obj in drawToScreenObjects)
-            {
-                obj.DrawToScreen(size, mousePos);
-            }
-        }
+        //public virtual void DrawToScreen(Vector2 size, Vector2 mousePos)
+        //{
+        //    foreach (var obj in drawToScreenObjects)
+        //    {
+        //        obj.DrawToScreen(size, mousePos);
+        //    }
+        //}
         protected virtual void FilterObject(IAreaObject obj)
         {
             if (obj.IsDrawingToGameTexture()) drawToGameTextureObjects.Add(obj);
             if (obj.IsDrawingToUITexture()) drawToUITextureObjects.Add(obj);
-            if (obj.IsDrawingToScreen()) drawToScreenObjects.Add(obj);
+            //if (obj.IsDrawingToScreen()) drawToScreenObjects.Add(obj);
             //var mask = obj.GetTextureMask();
             //if (mask != null && mask.Count > 0)
             //{

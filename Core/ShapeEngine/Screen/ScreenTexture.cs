@@ -185,6 +185,17 @@ namespace ShapeEngine.Screen
         /// Sets the camera to null.
         /// </summary>
         public void ClearCamera() { camera = null; }
+        public ICamera? GetCamera()
+        {
+            return camera;
+        }
+        public T? GetCamera<T>() where T : ICamera
+        {
+            if (camera == null) return default(T);
+            if (camera is T t) return t;// (T)camera;
+            else return default(T);
+        }
+        
         /// <summary>
         /// Updates the current screen flashes and the camera.
         /// </summary>
