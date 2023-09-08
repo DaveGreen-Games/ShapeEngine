@@ -20,10 +20,12 @@ namespace Examples
         public GameloopExamples() : base(960 * 2, 540 * 2, 1920, 1080)
         {
             GameCam = new BasicCamera(new(0f), Game.GetSize(), new(0.5f), 1f, 0f);
-            Game.SetCamera(GameCam);
         }
         protected override void LoadContent()
         {
+            Game.SetCamera(GameCam);
+
+
             //fonts.Add(FontIDs.AbelRegular, ContentLoader.LoadFont("fonts/Abel-Regular.ttf", 200));
             fonts.Add(FontIDs.GruppoRegular, ContentLoader.LoadFont("fonts/Gruppo-Regular.ttf", 200));
             fonts.Add(FontIDs.IndieFlowerRegular, ContentLoader.LoadFont("fonts/IndieFlower-Regular.ttf", 200));

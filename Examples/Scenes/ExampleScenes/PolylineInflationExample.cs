@@ -20,7 +20,6 @@ namespace Examples.Scenes.ExampleScenes
         {
             Title = "Polyline Inflation Example";
             game = GAMELOOP.Game;
-            game.SetCamera(new BasicCamera(new Vector2(0f), new Vector2(1920, 1080), new Vector2(0.5f), 1f, 0f));
         }
         public override void Reset()
         {

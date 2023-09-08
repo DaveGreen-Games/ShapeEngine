@@ -119,7 +119,15 @@ namespace ShapeEngine.Lib
         public static Vector2 Min(this Vector2 v1, Vector2 v2) { return Vector2.Min(v1, v2); }
         public static Vector2 Max(this Vector2 v1, Vector2 v2) { return Vector2.Max(v1, v2); }
         public static Vector2 Clamp(this Vector2 v, Vector2 min, Vector2 max) { return Vector2.Clamp(v, min, max); }
-        public static Vector2 Normalize(this Vector2 v) { return Vector2.Normalize(v); } //return value / value.Length(); // RayMath.Vector2Normalize(v); }//return Vector2.Normalize(v); } //Vector2 normalize returns NaN sometimes???
+        
+        //return value / value.Length(); // RayMath.Vector2Normalize(v); }//return Vector2.Normalize(v); } //Vector2 normalize returns NaN sometimes???
+        public static Vector2 Normalize(this Vector2 v) 
+        {
+            //vector2 with length 0 can not be normalized (division by 0)
+            //and vector2 normalize does not check for that...
+            if (v.X == 0f && v.Y == 0f) return new Vector2(0f, 0f);
+            return Vector2.Normalize(v); 
+        } 
         public static Vector2 Reflect(this Vector2 v, Vector2 n) { return Vector2.Reflect(v, n); } //RayMath.Vector2Reflect(v, n);
         //public static Vector2 Scale(this Vector2 v, float amount) { return RayMath.Vector2Scale(v, amount); }
         public static Vector2 ScaleUniform(this Vector2 v, float distance)

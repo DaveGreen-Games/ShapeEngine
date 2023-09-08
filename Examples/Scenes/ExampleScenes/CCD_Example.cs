@@ -82,7 +82,7 @@ namespace Examples.Scenes.ExampleScenes
     public class CCDExample : ExampleScene
     {
         ScreenTexture game;
-        BasicCamera cam;
+        //BasicCamera cam;
 
         Rect boundaryRect;
         Segments boundary = new();
@@ -105,12 +105,12 @@ namespace Examples.Scenes.ExampleScenes
         {
             Title = "Continous Collision Detection Example";
             game = GAMELOOP.Game;
-            cam = new BasicCamera(new Vector2(0f), new Vector2(1920, 1080), new Vector2(0.5f), 1f, 0f);
-            game.SetCamera(cam);
+            //cam = new BasicCamera(new Vector2(0f), new Vector2(1920, 1080), new Vector2(0.5f), 1f, 0f);
+            //game.SetCamera(cam);
 
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
 
-            var cameraRect = cam.GetArea();
+            var cameraRect = GAMELOOP.GameCam.GetArea();
             boundaryRect = SRect.ApplyMarginsAbsolute(cameraRect, 25f, 25f, 75 * 2f, 75 * 2f);
             boundaryRect.FlippedNormals = true;
             boundary = boundaryRect.GetEdges();
@@ -135,7 +135,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             base.Update(dt, mousePosScreen, game, ui);
 
-            muzzlePos = cam.GetArea().GetPoint(new Vector2(0.05f, 0.5f)); // game.GetSize() * new Vector2(0.1f, 0.5f);
+            muzzlePos = GAMELOOP.GameCam.GetArea().GetPoint(new Vector2(0.05f, 0.5f)); // game.GetSize() * new Vector2(0.1f, 0.5f);
 
             HandleSegments(game.MousePos);
 

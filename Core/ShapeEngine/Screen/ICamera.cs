@@ -32,7 +32,7 @@ namespace ShapeEngine.Screen
         public float RotationDeg { get; set; } = 0f;
         public float Zoom { get; set; } = 1f;
 
-        public Camera2D WorldCamera { get; protected set; }
+        //public Camera2D WorldCamera { get; protected set; }
 
 
 
@@ -43,7 +43,7 @@ namespace ShapeEngine.Screen
             this.BaseOffset = size * origin;
             this.BaseZoom = baseZoom;
             this.BaseRotationDeg = rotation;
-            this.WorldCamera = new() { offset = BaseOffset, rotation = BaseRotationDeg, zoom = baseZoom * Zoom, target = pos };
+            //this.WorldCamera = new() { offset = BaseOffset, rotation = BaseRotationDeg, zoom = baseZoom * Zoom, target = pos };
         }
         public void AdjustSize(Vector2 newSize)
         {
@@ -55,16 +55,19 @@ namespace ShapeEngine.Screen
             this.Origin = newOrigin;
             this.BaseOffset = this.BaseSize * this.Origin;
         }
-        public virtual void Update(float dt) { WorldCamera = SetCameraValues(Position, BaseOffset + Translation, BaseZoom * Zoom, BaseRotationDeg + RotationDeg); }
-        protected Camera2D SetCameraValues(Vector2 target, Vector2 offset, float zoom, float rotationDeg)
-        {
-            var c = new Camera2D();
-            c.target = target;
-            c.offset = offset;
-            c.zoom = zoom;
-            c.rotation = rotationDeg;
-            return c;
+        public virtual void Update(float dt) 
+        { 
+            //WorldCamera = SetCameraValues(Position, BaseOffset + Translation, BaseZoom * Zoom, BaseRotationDeg + RotationDeg); 
         }
+        //protected Camera2D SetCameraValues(Vector2 target, Vector2 offset, float zoom, float rotationDeg)
+        //{
+        //    var c = new Camera2D();
+        //    c.target = target;
+        //    c.offset = offset;
+        //    c.zoom = zoom;
+        //    c.rotation = rotationDeg;
+        //    return c;
+        //}
         public void ResetZoom() { Zoom = 1f; }
         public void ResetRotation() { RotationDeg = 0f; }
         public void ResetTranslation() { Translation = new(0f); }
@@ -96,10 +99,14 @@ namespace ShapeEngine.Screen
             Vector2 size = BaseSize * zoomFactor;
             return new(c.target, size, Origin);
         }
-        public virtual Camera2D GetCamera() { return WorldCamera; }
+        public virtual Camera2D GetCamera() 
+        {
+            //Position, BaseOffset + Translation, BaseZoom* Zoom, BaseRotationDeg +RotationDeg
+            return new Camera2D { target = Position, offset = BaseOffset + Translation, zoom = BaseZoom * Zoom, rotation = BaseRotationDeg + RotationDeg }; 
+        }
 
-        public float GetZoomFactor() { return WorldCamera.zoom; }
-        public float GetZoomFactorInverse() { return 1f / WorldCamera.zoom; }
+        public float GetZoomFactor() { return GetCamera().zoom; }
+        public float GetZoomFactorInverse() { return 1f / GetCamera().zoom; }
 
         //public bool IsPixelSmoothingCameraEnabled() { return false; }
         //public Camera2D GetPixelSmoothingCamera() { return WorldCamera; }
@@ -119,6 +126,10 @@ namespace ShapeEngine.Screen
         private float cameraTweenTotalScale = 1f;
         private Vector2 cameraTweenTotalOffset = new();
 
+        protected Vector2 rawCameraOffset = new();
+        protected float rawCameraZoom = 1f;
+        protected float rawCameraRotationDeg = 0f;
+
         public EffectCamera(Vector2 pos, Vector2 size, Vector2 origin, float baseZoom, float rotation) : base(pos, size, origin, baseZoom, rotation)
         {
             this.CameraTweens.OnItemUpdated += OnCameraTweenUpdated;
@@ -129,14 +140,18 @@ namespace ShapeEngine.Screen
             CameraTweens.Update(dt);
             shake.Update(dt);
             Vector2 shakeOffset = new(shake.Get(ShakeX), shake.Get(ShakeY));
-            Vector2 rawCameraOffset = BaseOffset + shakeOffset + cameraTweenTotalOffset + Translation;
-            float rawCameraRotationDeg = BaseRotationDeg + shake.Get(ShakeRot) + RotationDeg + cameraTweenTotalRotationDeg;
-            float rawCameraZoom = ((BaseZoom + shake.Get(ShakeZoom)) * Zoom) / cameraTweenTotalScale;
+            this.rawCameraOffset = BaseOffset + shakeOffset + cameraTweenTotalOffset + Translation;
+            this.rawCameraRotationDeg = BaseRotationDeg + shake.Get(ShakeRot) + RotationDeg + cameraTweenTotalRotationDeg;
+            this.rawCameraZoom = ((BaseZoom + shake.Get(ShakeZoom)) * Zoom) / cameraTweenTotalScale;
             cameraTweenTotalOffset = new(0f);
             cameraTweenTotalRotationDeg = 0f;
             cameraTweenTotalScale = 1f;
 
-            WorldCamera = SetCameraValues(Position, rawCameraOffset, rawCameraZoom, rawCameraRotationDeg);
+            //WorldCamera = SetCameraValues(Position, rawCameraOffset, rawCameraZoom, rawCameraRotationDeg);
+        }
+        public override Camera2D GetCamera()
+        {
+            return new Camera2D() { target = Position, offset = rawCameraOffset, zoom = rawCameraZoom, rotation = rawCameraRotationDeg};
         }
         public void Shake(float duration, Vector2 strength, float zoomStrength = 0f, float rotStrength = 0f, float smoothness = 0.75f)
         {
@@ -214,9 +229,10 @@ namespace ShapeEngine.Screen
         public void SetTarget(IAreaObject target)
         {
             this.Target = target;
-            var wCam = WorldCamera;
-            wCam.target = target.GetCameraFollowPosition(wCam.target);//, 0f, FollowSmoothness, BoundaryDis);
-            WorldCamera = wCam;
+            Position = target.GetCameraFollowPosition(Position);
+            //var wCam = WorldCamera;
+            //wCam.target = target.GetCameraFollowPosition(wCam.target);//, 0f, FollowSmoothness, BoundaryDis);
+            //WorldCamera = wCam;
         }
         public void ChangeTarget(IAreaObject newTarget)
         {

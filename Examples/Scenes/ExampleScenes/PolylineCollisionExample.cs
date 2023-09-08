@@ -149,11 +149,11 @@ namespace Examples.Scenes.ExampleScenes
         {
             Title = "Polyline Collision Example";
             game = GAMELOOP.Game;
-            BasicCamera camera = new BasicCamera(new Vector2(0f), new Vector2(1920, 1080), new Vector2(0.5f), 1f, 0f);
-            game.SetCamera(camera);
+            //BasicCamera camera = new BasicCamera(new Vector2(0f), new Vector2(1920, 1080), new Vector2(0.5f), 1f, 0f);
+            //game.SetCamera(camera);
 
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
-
+            BasicCamera camera = GAMELOOP.GameCam;
             var cameraRect = camera.GetArea();
             boundaryRect = SRect.ApplyMarginsAbsolute(cameraRect, 25f, 25f, 75 * 2f, 75 * 2f);
             boundaryRect.FlippedNormals = true;
