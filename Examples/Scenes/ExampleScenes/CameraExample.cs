@@ -112,6 +112,7 @@ namespace Examples.Scenes.ExampleScenes
             if (rotDir != 0)
             {
                 camera.RotationDeg += rotDir * rotSpeedDeg * dt;
+                camera.RotationDeg = SUtils.WrapAngleDeg(camera.RotationDeg);
             }
         }
         private void HandleCameraPosition(float dt)

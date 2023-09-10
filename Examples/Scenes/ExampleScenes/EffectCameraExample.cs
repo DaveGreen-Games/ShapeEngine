@@ -3,6 +3,7 @@ using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Random;
 using ShapeEngine.Screen;
+using System.Net.NetworkInformation;
 using System.Numerics;
 
 namespace Examples.Scenes.ExampleScenes
@@ -85,11 +86,16 @@ namespace Examples.Scenes.ExampleScenes
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
 
             camera = new EffectCamera(new(0f), GAMELOOP.Game.GetSize(), new(0.5f), 1f, 0f);
-            
+
             //boundaryRect = new(new Vector2(0, -45), new Vector2(1800, 810), new Vector2(0.5f));
 
+            GenerateStars(2500);
+            GenerateComets(200);
             
-            for (int i = 0; i < 2500; i++)
+        }
+        private void GenerateStars(int amount)
+        {
+            for (int i = 0; i < amount; i++)
             {
                 //Vector2 pos = SRNG.randVec2(0, 5000);
                 Vector2 pos = universe.GetRandomPoint();
@@ -99,7 +105,10 @@ namespace Examples.Scenes.ExampleScenes
                 Star star = new(pos, size);
                 stars.Add(star);
             }
-            for (int i = 0; i < 100; i++)
+        }
+        private void GenerateComets(int amount)
+        {
+            for (int i = 0; i < amount; i++)
             {
                 Vector2 pos = universe.GetRandomPoint();
                 Comet comet = new(pos);
@@ -125,6 +134,12 @@ namespace Examples.Scenes.ExampleScenes
             camera.ResetRotation();
             camera.ResetTranslation();
             camera.ResetZoom();
+
+            stars.Clear();
+            comets.Clear();
+            GenerateStars(2500);
+            GenerateComets(200);
+
         }
         protected override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
@@ -148,6 +163,7 @@ namespace Examples.Scenes.ExampleScenes
             if (zoomDir != 0)
             {
                 camera.Zoom += zoomDir * zoomSpeed * dt;
+                camera.Zoom = Clamp(camera.Zoom, 0.1f, 5f);
             }
         }
         private void HandleRotation(float dt)
@@ -160,6 +176,8 @@ namespace Examples.Scenes.ExampleScenes
             if (rotDir != 0)
             {
                 camera.RotationDeg += rotDir * rotSpeedDeg * dt;
+                camera.RotationDeg = SUtils.WrapAngleDeg(camera.RotationDeg);
+               
             }
         }
         private void HandleCameraTranslation(float dt)
@@ -214,6 +232,8 @@ namespace Examples.Scenes.ExampleScenes
                     comets.RemoveAt(i);
                 }
             }
+
+            
             ship.center = camera.Position;
         }
 
