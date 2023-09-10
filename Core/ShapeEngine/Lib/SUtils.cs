@@ -165,7 +165,10 @@ namespace ShapeEngine.Lib
 
         public const float RADTODEG = 180f / MathF.PI;
 
-        
+        public static float GetFactor(float cur, float min, float max)
+        {
+            return (cur - min) / (max - min);
+        }
 
         public static int WrapIndex(int count, int index)
         {
