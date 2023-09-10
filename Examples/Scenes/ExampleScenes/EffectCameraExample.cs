@@ -135,6 +135,8 @@ namespace Examples.Scenes.ExampleScenes
             HandleZoom(dt);
             HandleRotation(dt);
 
+            if (IsKeyPressed(KeyboardKey.KEY_SPACE)) ShakeCamera();
+
         }
         private void HandleZoom(float dt)
         {
@@ -192,6 +194,10 @@ namespace Examples.Scenes.ExampleScenes
                 //camera.Translation += movement;
             }
         }
+        private void ShakeCamera()
+        {
+            camera.Shake(SRNG.randF(0.8f, 2f), new Vector2(100, 100), 0, 25, 0.75f);
+        }
         public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
         {
             base.Update(dt, mousePosScreen, game, ui);
@@ -240,9 +246,18 @@ namespace Examples.Scenes.ExampleScenes
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
 
             var pos = camera.Position;
-            var wc = camera.GetCamera();
-
-            string infoText = String.Format("[W/A/S/D] Move Camera | Camera Pos: {0} | Offset: {1}", pos, wc.target);
+            int x = (int)pos.X;
+            int y = (int)pos.Y;
+            int rot = (int)camera.RotationDeg;
+            int zoom = (int)(SUtils.GetFactor(camera.Zoom, 0.1f, 5f) * 100f);
+            //int transX = (int)camera.Translation.X;
+            //int transY = (int)camera.Translation.Y;
+            string moveText = String.Format("[W/A/S/D] Move ({0}/{1})", x, y);
+            string rotText = String.Format("[Q/E] Rotate ({0})", rot);
+            string scaleText = String.Format("[Y/X] Zoom ({0}%)", zoom);
+            //string transText = String.Format("[LMB] Offset ({0}/{1})", transX, transY);
+            string shakeText = String.Format("[Space] Shake Camera");
+            string infoText = String.Format("{0} | {1} | {2} | {3}", moveText, rotText, scaleText, shakeText);
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
 

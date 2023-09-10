@@ -291,6 +291,7 @@ namespace ShapeEngine
             }
         }
 
+        
         protected void Flash(ScreenTexture texture, float duration, Raylib_CsLo.Color startColor, Raylib_CsLo.Color endColor)
         {
             byte startColorAlpha = (byte)(startColor.a * ScreenEffectIntensity);

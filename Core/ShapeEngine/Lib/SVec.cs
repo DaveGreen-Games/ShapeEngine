@@ -84,7 +84,12 @@ namespace ShapeEngine.Lib
             Vector2 rotated = Rotate90CCW(a);
             return Vector2.Dot(rotated, b) == 0.0f;
         }
-        
+
+        public static Vector2 Align(this Vector2 pos, Vector2 size, Vector2 alignement)
+        {
+            return pos - size * alignement;
+        }
+
         public static float Max(this Vector2 v) { return MathF.Max(v.X, v.Y); }
         public static float Min(this Vector2 v) { return MathF.Min(v.X, v.Y); }
         public static Vector2 LerpDirection(this Vector2 from, Vector2 to, float t)
