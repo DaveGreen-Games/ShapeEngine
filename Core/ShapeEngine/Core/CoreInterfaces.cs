@@ -327,6 +327,7 @@ namespace ShapeEngine.Core
         public float GetArea();
         public float GetCircumference();
         public float GetCircumferenceSquared();
+        public Points GetVertices();
         public Polygon ToPolygon();
         public Polyline ToPolyline();
         public Segments GetEdges();

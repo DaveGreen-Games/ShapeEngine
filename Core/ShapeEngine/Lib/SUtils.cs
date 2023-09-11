@@ -165,6 +165,27 @@ namespace ShapeEngine.Lib
 
         public const float RADTODEG = 180f / MathF.PI;
 
+        public static bool IsEqual<T>(List<T>? a, List<T>? b) where T : IEquatable<T>
+        {
+            if (a == null || b == null) return false;
+            if (a.Count != b.Count) return false;
+            for (int i = 0; i < a.Count; i++)
+            {
+                if (!a[i].Equals(b[i])) return false;
+            }
+            return true;
+        }
+        public static int GetHashCode<T>(IEnumerable<T> collection)
+        {
+            HashCode hash = new();
+            foreach (var element in collection)
+            {
+                hash.Add(element);
+            }
+            return hash.ToHashCode();
+        }
+
+
         public static float GetFactor(float cur, float min, float max)
         {
             return (cur - min) / (max - min);

@@ -8,14 +8,14 @@ namespace ShapeEngine.Lib
         public static List<Segment> Split(this Segment seg, float f)
         {
             Vector2 p = GetPoint(seg, f);
-            return new() { new(seg.start, p), new(p, seg.end) };
+            return new() { new(seg.Start, p), new(p, seg.End) };
         }
-        public static Vector2 GetPoint(this Segment seg, float f) { return seg.start.Lerp(seg.end, f); }
+        public static Vector2 GetPoint(this Segment seg, float f) { return seg.Start.Lerp(seg.End, f); }
         public static Segment Rotate(this Segment seg, float pivot, float rad)
         {
             Vector2 p = GetPoint(seg, pivot);
-            Vector2 s = seg.start - p;
-            Vector2 e = seg.end - p;
+            Vector2 s = seg.Start - p;
+            Vector2 e = seg.End - p;
             return new Segment(p + s.Rotate(rad), p + e.Rotate(rad));
 
 
@@ -30,14 +30,14 @@ namespace ShapeEngine.Lib
             //Vector2 newEnd = p + (d * endLength).Rotate(rad);
             //return new Line(newStart, newEnd);
         }
-        public static Segment Scale(this Segment seg, float scale) { return new(seg.start * scale, seg.end * scale); }
-        public static Segment Scale(this Segment seg, Vector2 scale) { return new(seg.start * scale, seg.end * scale); }
-        public static Segment Scale(this Segment seg, float startScale, float endScale) { return new(seg.start * startScale, seg.end * endScale); }
+        public static Segment Scale(this Segment seg, float scale) { return new(seg.Start * scale, seg.End * scale); }
+        public static Segment Scale(this Segment seg, Vector2 scale) { return new(seg.Start * scale, seg.End * scale); }
+        public static Segment Scale(this Segment seg, float startScale, float endScale) { return new(seg.Start * startScale, seg.End * endScale); }
         public static Segment ScaleF(this Segment seg, float scale, float f)
         {
             Vector2 p = GetPoint(seg, f);
-            Vector2 s = seg.start - p;
-            Vector2 e = seg.end - p;
+            Vector2 s = seg.Start - p;
+            Vector2 e = seg.End - p;
             return new Segment(p + s * scale, p + e * scale);
 
             //float len = l.Length;
@@ -54,12 +54,12 @@ namespace ShapeEngine.Lib
         public static Segment ScaleF(this Segment seg, Vector2 scale, float f)
         {
             Vector2 p = GetPoint(seg, f);
-            Vector2 s = seg.start - p;
-            Vector2 e = seg.end - p;
+            Vector2 s = seg.Start - p;
+            Vector2 e = seg.End - p;
             return new Segment(p + s * scale, p + e * scale);
         }
-        public static Segment Move(this Segment s, Vector2 offset, float f) { return new(s.start + (offset * (1f - f)), s.end + (offset * (f))); }
-        public static Segment Move(this Segment s, Vector2 offset) { return new(s.start + offset, s.end + offset); }
+        public static Segment Move(this Segment s, Vector2 offset, float f) { return new(s.Start + (offset * (1f - f)), s.End + (offset * (f))); }
+        public static Segment Move(this Segment s, Vector2 offset) { return new(s.Start + offset, s.End + offset); }
         public static Segment Move(this Segment s, float x, float y) { return Move(s, new Vector2(x, y)); }
 
 
@@ -69,10 +69,10 @@ namespace ShapeEngine.Lib
             Vector2 dir = s.Dir;
             Vector2 left = dir.GetPerpendicularLeft();
             Vector2 right = dir.GetPerpendicularRight();
-            Vector2 a = s.start + left * w * alignement;
-            Vector2 b = s.start + right * w * (1 - alignement);
-            Vector2 c = s.end + right * w * (1 - alignement);
-            Vector2 d = s.end + left * w * alignement;
+            Vector2 a = s.Start + left * w * alignement;
+            Vector2 b = s.Start + right * w * (1 - alignement);
+            Vector2 c = s.End + right * w * (1 - alignement);
+            Vector2 d = s.End + left * w * alignement;
 
             return new() { a, b, c, d };
         }

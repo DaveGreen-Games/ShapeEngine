@@ -219,7 +219,7 @@ namespace Examples.Scenes.ExampleScenes
             boundary.Draw(4f, ColorMedium);
             foreach (var seg in boundary)
             {
-                Segment normal = new(seg.Center, seg.Center + seg.n * 25f);
+                Segment normal = new(seg.Center, seg.Center + seg.Normal * 25f);
                 normal.Draw(2f, BLUE);
             }
 

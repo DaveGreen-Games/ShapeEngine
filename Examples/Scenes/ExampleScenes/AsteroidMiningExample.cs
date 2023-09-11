@@ -147,7 +147,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 foreach (var seg in this)
                 {
-                    if (seg.Segment.IsSame(segment))
+                    if (seg.Segment.Equals(segment))
                     {
                         seg.Renew();
                         return;
@@ -160,7 +160,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 foreach (var seg in this)
                 {
-                    if (seg.Segment.IsSame(segment)) return true;
+                    if (seg.Segment.Equals(segment)) return true;
                 }
                 return false;
             }

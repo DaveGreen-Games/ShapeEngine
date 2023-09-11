@@ -1,5 +1,7 @@
 ﻿
+using System.Globalization;
 using System.Numerics;
+using System.Text;
 using Raylib_CsLo;
 using ShapeEngine.Lib;
 using ShapeEngine.Random;
@@ -11,9 +13,24 @@ namespace ShapeEngine.Core
         public Points(params Vector2[] points) { AddRange(points); }
         public Points(IEnumerable<Vector2> points) { AddRange(points); }
 
+        public override int GetHashCode() { return SUtils.GetHashCode(this); }
+        public bool Equals(Points? other)
+        {
+            if (other == null) return false;
+            if (Count != other.Count) return false;
+            for (int i = 0; i < Count; i++)
+            {
+                if (this[i] != other[i]) return false;
+            }
+            return true;
+        }
         public Polygon ToPolygon()
         {
             return new Polygon(this);
+        }
+        public Polyline ToPolyline()
+        {
+            return new Polyline(this);
         }
     }
     public class Segments : List<Segment>
@@ -23,7 +40,17 @@ namespace ShapeEngine.Core
         public Segments(params Segment[] edges) { AddRange(edges); }
         public Segments(IEnumerable<Segment> edges) {  AddRange(edges); }
 
-
+        public bool Equals(Segments? other)
+        {
+            if (other == null) return false;
+            if (Count != other.Count) return false;
+            for (int i = 0; i < Count; i++)
+            {
+                if (this[i] != other[i]) return false;
+            }
+            return true;
+        }
+        public override int GetHashCode() { return SUtils.GetHashCode(this); }
         public Segments GetUniqueSegments()
         {
             Segments uniqueEdges = new();
@@ -43,7 +70,7 @@ namespace ShapeEngine.Core
         /// </summary>
         /// <param name="seg"></param>
         /// <returns></returns>
-        public int GetCount(Segment seg) { return this.Count((s) => s.IsSame(seg)); }
+        public int GetCount(Segment seg) { return this.Count((s) => s.Equals(seg)); }
         /// <summary>
         /// 
         /// </summary>
@@ -54,7 +81,7 @@ namespace ShapeEngine.Core
             int counter = 0;
             foreach (var segment in this)
             {
-                if(segment.IsSame(seg)) counter++;
+                if(segment.Equals(seg)) counter++;
                 if (counter > 1) return false;
             }
             return true;
@@ -66,7 +93,7 @@ namespace ShapeEngine.Core
         /// <returns>Returns true if seg is already in the list.</returns>
         public bool ContainsSegment(Segment seg)
         {
-            foreach (var segment in this) { if (segment.IsSame(seg)) return true; }
+            foreach (var segment in this) { if (segment.Equals(seg)) return true; }
             return false;
         }
         
@@ -94,7 +121,6 @@ namespace ShapeEngine.Core
         }
         */
     }
-   
     public class Triangulation : List<Triangle>
     {
         public Triangulation() { }
@@ -102,6 +128,17 @@ namespace ShapeEngine.Core
         public Triangulation(params Triangle[] triangles) { AddRange(triangles); }
         public Triangulation(IEnumerable<Triangle> triangles) { AddRange(triangles); }
 
+        public override int GetHashCode() { return SUtils.GetHashCode(this); }
+        public bool Equals(Triangulation? other)
+        {
+            if (other == null) return false;
+            if (Count != other.Count) return false;
+            for (int i = 0; i < Count; i++)
+            {
+                if (this[i] != other[i]) return false;
+            }
+            return true;
+        }
         /// <summary>
         /// Get the total area of all triangles in this triangulation.
         /// </summary>
@@ -238,93 +275,109 @@ namespace ShapeEngine.Core
         }
     }
 
-    public struct Segment : IShape
+
+    public struct Segment : IShape, IEquatable<Segment>
     {
-        public Vector2 start;
-        public Vector2 end;
-        public Vector2 n;
+        public Vector2 Start;
+        public Vector2 End;
 
-        //public bool AutomaticNormals { get; private set; } = true;
-
-        private bool flippedNormals = false;
-        public bool FlippedNormals
-        {
-            get { return flippedNormals; }
-            set
+        //maybe needs to be cached
+        //if it is cached segment needs to be immutable... so normal is always correct
+        public Vector2 Normal 
+        { 
+            get 
             {
-                if(value != flippedNormals)
-                {
-                    this.n = this.n.Flip();
-                    flippedNormals = value;
-                }
-            }
+                return GetNormal();
+            } 
         }
-        public Vector2 Center { get { return (start + end) * 0.5f; } }
+        public bool FlippedNormals { get; set; } = false;
+        public Vector2 Center { get { return (Start + End) * 0.5f; } }
         public Vector2 Dir { get { return Displacement.Normalize(); } }
-        public Vector2 Displacement { get { return end - start; } }
+        public Vector2 Displacement { get { return End - Start; } }
         public float Length { get { return Displacement.Length(); } }
         public float LengthSquared { get { return Displacement.LengthSquared(); } }
 
 
         public Segment(Vector2 start, Vector2 end, bool flippedNormals = false) 
         { 
-            this.start = start; 
-            this.end = end; 
-            if(flippedNormals) this.n = (end - start).GetPerpendicularLeft().Normalize();
-            else this.n = (end - start).GetPerpendicularRight().Normalize();
+            this.Start = start; 
+            this.End = end;
+            //this.normal = GetNormal();
             this.FlippedNormals = flippedNormals;
-        }
-        public Segment(Vector2 start, Vector2 end, Vector2 n) 
-        { 
-            this.start = start; 
-            this.end = end; 
-            this.n = n;
-            //this.AutomaticNormals = false;
-            this.FlippedNormals = false;
         }
         public Segment(float startX, float startY, float endX, float endY, bool flippedNormals = false) 
         { 
-            this.start = new(startX, startY); 
-            this.end = new(endX, endY); 
-            if(flippedNormals) this.n = (this.end - this.start).GetPerpendicularLeft().Normalize();
-            else this.n = (this.end - this.start).GetPerpendicularRight().Normalize();
+            this.Start = new(startX, startY); 
+            this.End = new(endX, endY);
+            //this.normal = GetNormal();
             this.FlippedNormals = flippedNormals;
         }
-        public Segment(Segment s) { start = s.start; end = s.end; n = s.n; }// AutomaticNormals = s.AutomaticNormals; }
-
-        public bool IsSame(Segment other) 
+        
+        private Vector2 GetNormal()
         {
-            return Center == other.Center; 
+            if (FlippedNormals) return (End - Start).GetPerpendicularLeft().Normalize();
+            else return (End - Start).GetPerpendicularRight().Normalize();
         }
+        
+
+        public Segment Floor()
+        {
+            return new(Start.Floor(), End.Floor(), FlippedNormals);
+        }
+        public Segment Ceil()
+        {
+            return new(Start.Ceil(), End.Ceil(), FlippedNormals);
+        }
+        public Segment Round()
+        {
+            return new(Start.Round(), End.Round(), FlippedNormals);
+        }
+        public Segment Truncate()
+        {
+            return new(Start.Truncate(), End.Truncate(), FlippedNormals);
+        }
+
+        public Segments Split(float f)
+        {
+            return Split(this.GetPoint(f));
+        }
+        public Segments Split(Vector2 splitPoint)
+        {
+            Segment A = new(Start, splitPoint, FlippedNormals);
+            Segment B = new(splitPoint, End, FlippedNormals);
+            return new() { A, B };
+        }
+        
         public Vector2 GetCentroid() { return Center; }
         public float GetArea() { return 0f; }
         public float GetCircumference() { return Length; }
         public float GetCircumferenceSquared() { return LengthSquared; }
-        public Polygon ToPolygon() { return new(start, end); }
-        public Polyline ToPolyline() { return new(start, end); }
+        public Points GetVertices() { return new(Start, End); }
+        public Polygon ToPolygon() { return new(Start, End); }
+        public Polyline ToPolyline() { return new(Start, End); }
         public Segments GetEdges() { return new(this); }
         
         public Triangulation Triangulate() { return new(); }
         public Circle GetBoundingCircle() { return ToPolygon().GetBoundingCircle(); }
-        public Rect GetBoundingBox() { return new(start, end); }
-        public bool IsPointInside(Vector2 p) { return SGeometry.IsPointOnSegment(p, start, end); }
+        public Rect GetBoundingBox() { return new(Start, End); }
+        public bool IsPointInside(Vector2 p) { return SGeometry.IsPointOnSegment(p, Start, End); }
         public CollisionPoint GetClosestPoint(Vector2 p)
         {
             CollisionPoint c;
             var w = Displacement;
-            float t = (p - start).Dot(w) / w.LengthSquared();
-            if (t < 0f) c = new(start, n); 
-            else if (t > 1f) c = new(end, n);
-            else c = new(start + w * t, n);
+            float t = (p - Start).Dot(w) / w.LengthSquared();
+            if (t < 0f) c = new(Start, Normal); 
+            else if (t > 1f) c = new(End, Normal);
+            else c = new(Start + w * t, Normal);
 
             //if (AutomaticNormals) return c.FlipNormal(p);
             return c;
         }
         public Vector2 GetClosestVertex(Vector2 p)
         {
-            float disSqA = (p - start).LengthSquared();
-            float disSqB = (p - end).LengthSquared();
-            return disSqA <= disSqB ? start : end;
+            float disSqA = (p - Start).LengthSquared();
+            float disSqB = (p - End).LengthSquared();
+            return disSqA <= disSqB ? Start : End;
         }
         public Vector2 GetRandomPoint() { return this.GetPoint(SRNG.randF()); }
         public Points GetRandomPoints(int amount)
@@ -336,7 +389,7 @@ namespace ShapeEngine.Core
             }
             return points;
         }
-        public Vector2 GetRandomVertex() { return SRNG.chance(0.5f) ? start : end; }
+        public Vector2 GetRandomVertex() { return SRNG.chance(0.5f) ? Start : End; }
         public Segment GetRandomEdge() { return this; }
         public Vector2 GetRandomPointOnEdge() { return GetRandomPoint(); }
         public Points GetRandomPointsOnEdge(int amount)
@@ -350,9 +403,32 @@ namespace ShapeEngine.Core
         }
         public void DrawShape(float linethickness, Raylib_CsLo.Color color) => this.Draw(linethickness, color);
 
-    }
+        public bool Equals(Segment other)
+        {
+            return Start == other.Start && End == other.End;
+        }
+        public override readonly int GetHashCode()
+        {
+            return HashCode.Combine(Start, End);
+        }
+        public static bool operator ==(Segment left, Segment right)
+        {
+            return left.Equals(right);
+        }
+        public static bool operator !=(Segment left, Segment right)
+        {
+            return !(left == right);
+        }
+        public override bool Equals(object? obj)
+        {
+            if (obj == null) return false;
+            if (obj is Segment s) return Equals(s);
+            return false;
+        }
     
-    public struct Circle : IShape
+    }
+
+    public struct Circle : IShape, IEquatable<Circle>
     {
         public Vector2 center;
         public float radius;
@@ -364,9 +440,36 @@ namespace ShapeEngine.Core
         public Circle(Circle c) { center = c.center; radius = c.radius; }
         public Circle(Rect r) { center = r.Center; radius = MathF.Max(r.width, r.height); }
 
+        public bool Equals(Circle other)
+        {
+            return center == other.center && radius == other.radius;
+        }
+        public override readonly int GetHashCode()
+        {
+            return HashCode.Combine(center, radius);
+        }
+
+        public static bool operator ==(Circle left, Circle right)
+        {
+            return left.Equals(right);
+        }
+        public static bool operator !=(Circle left, Circle right)
+        {
+            return !(left == right);
+        }
+        public override bool Equals(object? obj)
+        {
+            if (obj == null) return false;
+            if (obj is Circle c) return Equals(c);
+            return false;
+        }
+
+
         public Vector2 GetCentroid() { return center; }
         public Segments GetEdges() { return this.GetEdges(16, FlippedNormals); }
-        public Polygon ToPolygon() { return this.GetPoints(16); }
+
+        public Points GetVertices() { return this.GetVertices(16); }
+        public Polygon ToPolygon() { return this.GetPolygonPoints(16); }
         public Polyline ToPolyline() { return this.GetPolylinePoints(16); }
         public Triangulation Triangulate() { return ToPolygon().Triangulate(); }
         public Circle GetBoundingCircle() { return this; }
@@ -397,7 +500,7 @@ namespace ShapeEngine.Core
             }
             return points;
         }
-        public Vector2 GetRandomVertex() { return GetRandomPoint(); }
+        public Vector2 GetRandomVertex() { return SRNG.randCollection(GetVertices(), false); }
         public Segment GetRandomEdge() { return SRNG.randCollection(GetEdges(), false); }
         public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
         public Points GetRandomPointsOnEdge(int amount)
@@ -419,7 +522,7 @@ namespace ShapeEngine.Core
     /// <summary>
     /// Class that represents a triangle by holding three points. Points a, b, c should be in ccw order!
     /// </summary>
-    public struct Triangle : IShape
+    public struct Triangle : IShape, IEquatable<Triangle>
     {
         public Vector2 a, b, c;
 
@@ -440,20 +543,44 @@ namespace ShapeEngine.Core
         public Triangle(Vector2 p, Segment s)
         {
             Vector2 w = s.Displacement;
-            Vector2 v = p - s.start;
+            Vector2 v = p - s.Start;
             float cross = w.Cross(v);
             if(cross <= 0f)
             {
-                a = s.start;
-                b = s.end;
+                a = s.Start;
+                b = s.End;
                 c = p;
             }
             else
             {
-                a = s.end;
-                b = s.start;
+                a = s.End;
+                b = s.Start;
                 c = p;
             }
+        }
+
+        public bool Equals(Triangle other)
+        {
+            return a == other.a && b == other.b && c == other.c;
+        }
+        public override readonly int GetHashCode()
+        {
+            return HashCode.Combine(a, b, c);
+        }
+
+        public static bool operator ==(Triangle left, Triangle right)
+        {
+            return left.Equals(right);
+        }
+        public static bool operator !=(Triangle left, Triangle right)
+        {
+            return !(left == right);
+        }
+        public override bool Equals(object? obj)
+        {
+            if (obj == null) return false;
+            if (obj is Triangle t) return Equals(t);
+            return false;
         }
 
         public Circle GetCircumCircle()
@@ -502,25 +629,15 @@ namespace ShapeEngine.Core
 
         public bool IsValid() { return GetArea() > 0f; }
         public Vector2 GetCentroid() { return (a + b + c) / 3; }
+        public Points GetVertices() { return new(a, b, c); }
         public Polygon ToPolygon() { return new(a, b, c); }
         public Polyline ToPolyline() { return new(a, b, c); }
         public Segments GetEdges() 
         {
-            if (FlippedNormals)
-            {
-                Segment A = new Segment(a, b, (b - a).GetPerpendicularLeft().Normalize());
-                Segment B = new Segment(b, c, (c - b).GetPerpendicularLeft().Normalize());
-                Segment C = new Segment(c, a, (a - c).GetPerpendicularLeft().Normalize());
-                return new() { A, B, C };
-            }
-            else
-            {
-                Segment A = new Segment(a, b, (b - a).GetPerpendicularRight().Normalize());
-                Segment B = new Segment(b, c, (c - b).GetPerpendicularRight().Normalize());
-                Segment C = new Segment(c, a, (a - c).GetPerpendicularRight().Normalize());
-                return new() { A, B, C };
-            }
-            
+            Segment A = new Segment(a, b, FlippedNormals);
+            Segment B = new Segment(b, c, FlippedNormals);
+            Segment C = new Segment(c, a, FlippedNormals);
+            return new() { A, B, C };
         }
         public Triangulation Triangulate() { return this.Triangulate(GetCentroid()); }
         public Circle GetBoundingCircle() { return GetCircumCircle(); } // ToPolygon().GetBoundingCircle(); }
@@ -557,7 +674,7 @@ namespace ShapeEngine.Core
             }
             return points;
         }
-        public Vector2 GetRandomVertex() { return GetRandomPoint(); }
+        public Vector2 GetRandomVertex() { return SRNG.randCollection(GetVertices(), false); }
         public Segment GetRandomEdge() 
         {
             var edges = GetEdges();
@@ -593,12 +710,16 @@ namespace ShapeEngine.Core
         //public Vector2 GetReferencePoint() { return GetCentroid(); }
     }
     
-    public struct Rect : IShape
+    public struct Rect : IShape, IEquatable<Rect>
     {
+        #region Members
         public float x;
         public float y;
         public float width;
         public float height;
+        #endregion
+
+        #region Getter Setter
         public bool FlippedNormals { get; set; } = false;
         public Vector2 TopLeft { get { return new Vector2(x, y); } }
         public Vector2 TopRight { get { return new Vector2(x + width, y); } }
@@ -612,7 +733,9 @@ namespace ShapeEngine.Core
         public float Right { get { return x + width; } }
         public Vector2 Size { get { return new Vector2(width, height); } }
         public Rectangle Rectangle { get { return new(x, y, width, height); } }
+        #endregion
 
+        #region Constructors
         public Rect(float x, float y, float width, float height)
         {
             this.x = x;
@@ -620,7 +743,6 @@ namespace ShapeEngine.Core
             this.width = width;
             this.height = height;
         }
-        public Rect(Rect r) { x = r.x; y = r.y; width = r.width; height = r.height; }
         public Rect(Vector2 topLeft, Vector2 bottomRight)
         {
             var final = SRect.Fix(topLeft, bottomRight);
@@ -659,8 +781,6 @@ namespace ShapeEngine.Core
             this.width = size.X;
             this.height = size.Y;
         }
-        public Rect(IShape shape) { this = shape.GetBoundingBox(); }// ???
-        public Rect(Polygon p) { this = p.GetBoundingBox(); }// ???
         public Rect(Rectangle rect)
         {
             this.x = rect.X;
@@ -668,8 +788,31 @@ namespace ShapeEngine.Core
             this.width = rect.width;
             this.height = rect.height;
         }
+        #endregion
+        public bool Equals(Rect other)
+        {
+            return x == other.x && y == other.y && width == other.width && height == other.height;
+        }
+        public static bool operator ==(Rect left, Rect right)
+        {
+            return left.Equals(right);
+        }
+        public static bool operator !=(Rect left, Rect right)
+        {
+            return !(left == right);
+        }
+        public override bool Equals(object? obj)
+        {
+            if (obj == null) return false;
+            if (obj is Rect r) return Equals(r);
+            return false;
+        }
 
+        public override readonly int GetHashCode() => HashCode.Combine(x, y, width, height);
+        
+        #region IShape
         public Vector2 GetCentroid() { return Center; }
+        public Points GetVertices() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
         public Polygon ToPolygon() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
         public Polyline ToPolyline() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
         public Segments GetEdges() 
@@ -679,22 +822,11 @@ namespace ShapeEngine.Core
             Vector2 C = BottomRight;
             Vector2 D = TopRight;
 
-            if (FlippedNormals)
-            {
-                Segment left = new(A, B, (B - A).GetPerpendicularLeft().Normalize());
-                Segment bottom = new(B, C, (C - B).GetPerpendicularLeft().Normalize());
-                Segment right = new(C, D, (D - C).GetPerpendicularLeft().Normalize());
-                Segment top = new(D, A, (A - D).GetPerpendicularLeft().Normalize());
-                return new() { left, bottom, right, top };
-            }
-            else
-            {
-                Segment left = new(A, B, (B - A).GetPerpendicularRight().Normalize());
-                Segment bottom = new(B, C, (C - B).GetPerpendicularRight().Normalize());
-                Segment right = new(C, D, (D - C).GetPerpendicularRight().Normalize());
-                Segment top = new(D, A, (A - D).GetPerpendicularRight().Normalize());
-                return new() { left, bottom, right, top };
-            }
+            Segment left = new(A, B, FlippedNormals);
+            Segment bottom = new(B, C, FlippedNormals);
+            Segment right = new(C, D, FlippedNormals);
+            Segment top = new(D, A, FlippedNormals);
+            return new() { left, bottom, right, top };
         }
         public Triangulation Triangulate() { return ToPolygon().Triangulate(); }
         public Circle GetBoundingCircle() { return ToPolygon().GetBoundingCircle(); }
@@ -715,7 +847,7 @@ namespace ShapeEngine.Core
             }
             return points;
         }
-        public Vector2 GetRandomVertex() { return ToPolygon().GetRandomPoint(); }
+        public Vector2 GetRandomVertex() { return SRNG.randCollection(ToPolygon(), false); }
         public Segment GetRandomEdge()
         {
             var edges = GetEdges();
@@ -746,164 +878,97 @@ namespace ShapeEngine.Core
         }
 
         public void DrawShape(float linethickness, Raylib_CsLo.Color color) => this.DrawLines(linethickness, color);
+        #endregion
 
-        //public Vector2 GetReferencePoint() { return Center; }
-        //public SegmentShape GetSegmentShape() { return new(GetEdges(), Center); }
-        //public void SetPosition(Vector2 newPosition) 
-        //{
-        //    Vector2 w = newPosition - Center;
-        //    x += w.X;
-        //    y += w.Y;
-        //}
-        /*
-        public Vector2 GetPoint(Vector2 alignement)
+        #region System.Drawing.Rectangle
+        /// <summary>
+        /// Creates a Rect that represents the intersection between this Rect and rect.
+        /// </summary>
+        public void Intersection(Rect rect)
         {
-            Vector2 offset = Size * alignement;
-            return TopLeft + offset;
+            Rect result = Intersection(rect, this);
+
+            x = result.x;
+            y = result.y;
+            width = result.width;
+            height = result.height;
         }
-        */
-        /*
-        public static bool operator ==(Rect left, Rect right)
+        /// <summary>
+        /// Creates a rect that represents the intersection between a and b. If there is no intersection, an
+        /// empty rect is returned.
+        /// </summary>
+        public static Rect Intersection(Rect a, Rect b)
         {
-            return (left.x == right.x)
-                && (left.y == right.y)
-                && (left.width == right.width)
-                && (left.height == right.height);
+            
+            float x1 = MathF.Max(a.x, b.x);
+            float x2 = MathF.Min(a.Right, b.Right);
+            float y1 = MathF.Max(a.y, b.y);
+            float y2 = MathF.Min(a.Bottom, b.Bottom);
+
+            if (x2 >= x1 && y2 >= y1)
+            {
+                return new Rect(x1, y1, x2 - x1, y2 - y1);
+            }
+
+            return new();
         }
-        public static bool operator !=(Rect left, Rect right)
-        { 
-            return !(left == right);
-        }
-        */
-        /*
-        public static Rect operator +(Rect left, Rect right)
+        /// <summary>
+        /// Creates a rectangle that represents the union between a and b.
+        /// </summary>
+        public static Rect Combine(Rect a, Rect b)
         {
-            return new Rect(
-                new Vector2(left.x + right.x, left.y + right.y) / 2,
-                new Vector2(left.width + right.width, left.height + right.height),
-                new Vector2(0.5f)
-            );
+            float x1 = MathF.Min(a.x, b.x);
+            float x2 = MathF.Max(a.Right, b.Right);
+            float y1 = MathF.Min(a.y, b.y);
+            float y2 = MathF.Max(a.Bottom, b.Bottom);
+
+            return new Rect(x1, y1, x2 - x1, y2 - y1);
         }
-        public static Rect operator -(Rect left, Rect right)
+        public readonly bool ContainsRect(Rect rect) =>
+            (x <= rect.x) && (rect.x + rect.width <= x + width) &&
+            (y <= rect.y) && (rect.y + rect.height <= y + height);
+        public static Rect Ceiling(Rect value)
         {
-            return new Rect(
-                new Vector2(left.x - right.x, left.y - right.y) / 2,
-                new Vector2(left.width - right.width, left.height - right.height),
-                new Vector2(0.5f)
-            );
+            unchecked
+            {
+                return new Rect(
+                    MathF.Ceiling(value.x),
+                    MathF.Ceiling(value.y),
+                    MathF.Ceiling(value.width),
+                    MathF.Ceiling(value.height));
+            }
         }
-        */
-        /*
-        public static Rect operator +(Rect left, Vector2 right)
+        public static Rect Truncate(Rect value)
         {
-            return new Rect(
-                new Vector2(left.x + right.x, left.y + right.y) / 2,
-                new Vector2(left.width + right.width, left.height + right.height),
-                new Vector2(0.5f)
-            );
+            unchecked
+            {
+                return new Rect(
+                    MathF.Truncate(value.x),
+                    MathF.Truncate(value.y),
+                    MathF.Truncate(value.width),
+                    MathF.Truncate(value.height));
+            }
         }
-        public static Rect operator +(Rect left, float right)
+        public static Rect Round(Rect value)
         {
-            return new Rect(
-                left.x,
-                left.y,
-                left.width + right,
-                left.height + right
-            );
+            unchecked
+            {
+                return new Rect(
+                    MathF.Round(value.x),
+                    MathF.Round(value.y),
+                    MathF.Round(value.width),
+                    MathF.Round(value.height));
+            }
         }
-        public static Rect operator -(Rect left, Vector2 right)
-        {
-            return new Rect(
-                left.x - right.X,
-                left.y - right.Y,
-                left.width,
-                left.height
-            );
-        }
-        public static Rect operator -(Rect left, float right)
-        {
-            return new Rect(
-                left.x,
-                left.y,
-                left.width - right,
-                left.height - right
-            );
-        }
-        public static Rect operator /(Rect left, Rect right)
-        {
-            return new Rect(
-                left.x / right.x,
-                left.y / right.y,
-                left.width / right.width,
-                left.height / right.height
-            );
-        }
-        public static Rect operator /(Rect left, Vector2 right)
-        {
-            return new Rect(
-                left.x / right.X,
-                left.y / right.Y,
-                left.width / right.X,
-                left.height / right.Y
-            );
-        }
-        public static Rect operator /(Rect value1, float value2)
-        {
-            return new Rect(
-                value1.x / value2,
-                value1.y / value2,
-                value1.width,
-                value1.height
-            );
-        }
-        public static Rect operator *(Rect left, Rect right)
-        {
-            return new Rect(
-                left.x * right.x,
-                left.y * right.y,
-                left.width * right.width,
-                left.height * right.height
-            );
-        }
-        public static Rect operator *(Rect left, Vector2 right)
-        {
-            return new Rect(
-                left.x * right.X,
-                left.y * right.Y,
-                left.width * right.X,
-                left.height * right.Y
-            );
-        }
-        public static Rect operator *(Rect left, float right)
-        {
-            return new Rect(
-                left.x,
-                left.y,
-                left.width * right,
-                left.height * right
-            );
-        }
-        public static Rect operator *(float left, Rect right)
-        {
-            return right * left;
-        }
-        //public static Rect operator -(Rect value)
-        //{
-        //    return new Rect(0,0,0,0) - value;
-        //}
-        //public bool IsPointInside(Vector2 p)
-        //{
-        //    Vector2 tl = TopLeft;
-        //    Vector2 br = BottomRight;
-        //    return p.X > tl.X && p.X < br.X && p.Y > tl.Y && p.Y < br.Y;
-        //}
-        */
+        #endregion
+
+
     }
-    
+
     /// <summary>
     /// Points shoud be in CCW order.
     /// </summary>
-    public class Polygon : List<Vector2>, IShape
+    public class Polygon : List<Vector2>, IShape, IEquatable<Polygon>
     {
         public Polygon() { }
         /// <summary>
@@ -923,6 +988,19 @@ namespace ShapeEngine.Core
         public Polygon(IShape shape) { AddRange(shape.ToPolygon()); }
         public Polygon(Polygon poly) { AddRange(poly); }
         public Polygon(Polyline polyLine) { AddRange(polyLine); }
+
+
+        public bool Equals(Polygon? other)
+        {
+            if (other == null) return false;
+            if (Count != other.Count) return false;
+            for (int i = 0; i < Count; i++)
+            {
+                if (this[i] != other[i]) return false;
+            }
+            return true;
+        }
+        public override int GetHashCode() { return SUtils.GetHashCode(this); }
 
         public bool FlippedNormals { get; set; } = false;
 
@@ -1140,20 +1218,14 @@ namespace ShapeEngine.Core
                 Vector2 A = this[0];
                 Vector2 B = this[1];
 
-                Vector2 n = (B - A);
-                if (FlippedNormals) n = n.GetPerpendicularLeft().Normalize();
-                else n = n.GetPerpendicularRight().Normalize();
-                return new() { new(A, B, n) };
+                return new() { new(A, B, FlippedNormals) };
             }
             Segments segments = new();
             for (int i = 0; i < Count; i++)
             {
                 Vector2 start = this[i];
                 Vector2 end = this[(i + 1) % Count];
-                Vector2 n = (end - start);
-                if (FlippedNormals) n = n.GetPerpendicularLeft().Normalize();
-                else n = n.GetPerpendicularRight().Normalize();
-                segments.Add(new(start, end, n));
+                segments.Add(new(start, end, FlippedNormals));
             }
             return segments;
         }
@@ -1218,6 +1290,7 @@ namespace ShapeEngine.Core
             return true;
         }
 
+        public Points GetVertices() { return new(this); }
         public Polygon ToPolygon() { return new( this ); }
         public Polyline ToPolyline() { return new(this); }
 
@@ -1425,7 +1498,7 @@ namespace ShapeEngine.Core
         //public SegmentShape GetSegmentShape() { return new(GetEdges(), this.GetCentroid()); }
     }
 
-    public class Polyline : List<Vector2>, IShape
+    public class Polyline : List<Vector2>, IShape, IEquatable<Polyline>
     {
         public Polyline() { }
         /// <summary>
@@ -1446,8 +1519,23 @@ namespace ShapeEngine.Core
         public Polyline(Polyline polyLine) { AddRange(polyLine); }
         public Polyline(Polygon poly) { AddRange(poly); }
 
-        
-        public bool AutomaticNormals = true;
+        public bool Equals(Polyline? other)
+        {
+            if (other == null) return false;
+            if (Count != other.Count) return false;
+            for (int i = 0; i < Count; i++)
+            {
+                if (this[i] != other[i]) return false;
+            }
+            return true;
+        }
+        public override int GetHashCode()
+        {
+            return SUtils.GetHashCode(this);
+        }
+
+        //public bool AutomaticNormals = true;
+
         /// <summary>
         /// Flips the calculated normals for each segment. 
         /// false means default is used. (facing right)
@@ -1510,22 +1598,15 @@ namespace ShapeEngine.Core
             {
                 Vector2 A = this[0];
                 Vector2 B = this[1];
-                if (AutomaticNormals)
-                {
-                    return new() { new(A, B) };
-                }
-                else
-                {
-                    Vector2 n = (B - A);
-                    if (FlippedNormals) n = n.GetPerpendicularLeft().Normalize();
-                    else n = n.GetPerpendicularRight().Normalize();
-                    return new() { new(A, B, n) };
-                }
-                //Vector2 n = (B - A);
-                //if (InsideNormals) n = n.GetPerpendicularLeft().Normalize();
-                //else n = n.GetPerpendicularRight().Normalize();
-                //return new() { new(A, B, n) };
-
+                return new() { new(A, B, FlippedNormals) };
+                //if (AutomaticNormals)
+                //{
+                //    return new() { new(A, B) };
+                //}
+                //else
+                //{
+                //    return new() { new(A, B, FlippedNormals) };
+                //}
             }
 
             Segments segments = new();
@@ -1533,22 +1614,16 @@ namespace ShapeEngine.Core
             {
                 Vector2 start = this[i];
                 Vector2 end = this[(i + 1) % Count];
+                segments.Add(new(start, end, FlippedNormals));
 
-                if (AutomaticNormals)
-                {
-                    segments.Add(new(start, end));
-                }
-                else
-                {
-                    Vector2 n = (end - start);
-                    if (FlippedNormals) n = n.GetPerpendicularLeft().Normalize();
-                    else n = n.GetPerpendicularRight().Normalize();
-                    segments.Add(new(start, end, n));
-                }
-                //Vector2 n = (end - start);
-                //if (InsideNormals) n = n.GetPerpendicularLeft().Normalize();
-                //else n = n.GetPerpendicularRight().Normalize();
-                //segments.Add(new(start, end, n));
+                //if (AutomaticNormals)
+                //{
+                //    segments.Add(new(start, end));
+                //}
+                //else
+                //{
+                //    segments.Add(new(start, end, FlippedNormals));
+                //}
 
             }
             return segments;
@@ -1613,7 +1688,7 @@ namespace ShapeEngine.Core
         }
 
 
-
+        public Points GetVertices() { return new(this); }
         public Polyline ToPolyline() { return this; }
         public Polygon ToPolygon()
         {

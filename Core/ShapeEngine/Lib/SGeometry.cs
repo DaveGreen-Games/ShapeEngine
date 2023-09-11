@@ -386,18 +386,18 @@ namespace ShapeEngine.Lib
         {
             //var result = IntersectSegmentSegmentInfo(a.start, a.end, b.start, b.end);
             //return result.intersected;
-            Vector2 axisAPos = a.start;
-            Vector2 axisADir = a.end - a.start;
-            if (SRect.SegmentOnOneSide(axisAPos, axisADir, b.start, b.end)) return false;
+            Vector2 axisAPos = a.Start;
+            Vector2 axisADir = a.End - a.Start;
+            if (SRect.SegmentOnOneSide(axisAPos, axisADir, b.Start, b.End)) return false;
             
-            Vector2 axisBPos = b.start;
-            Vector2 axisBDir = b.end - b.start;
-            if (SRect.SegmentOnOneSide(axisBPos, axisBDir, a.start, a.end)) return false;
+            Vector2 axisBPos = b.Start;
+            Vector2 axisBDir = b.End - b.Start;
+            if (SRect.SegmentOnOneSide(axisBPos, axisBDir, a.Start, a.End)) return false;
             
             if (SVec.Parallel(axisADir, axisBDir))
             {
-                RangeFloat rangeA = SRect.ProjectSegment(a.start, a.end, axisADir);
-                RangeFloat rangeB = SRect.ProjectSegment(b.start, b.end, axisADir);
+                RangeFloat rangeA = SRect.ProjectSegment(a.Start, a.End, axisADir);
+                RangeFloat rangeB = SRect.ProjectSegment(b.Start, b.End, axisADir);
                 return SRect.OverlappingRange(rangeA, rangeB);
             }
             return true;
@@ -406,7 +406,7 @@ namespace ShapeEngine.Lib
         public static bool OverlapShape(this Segment s, Triangle t) { return OverlapShape(t, s); }
         public static bool OverlapShape(this Segment s, Rect r)
         {
-            if (!OverlapRectLine(r, s.start, s.Displacement)) return false;
+            if (!OverlapRectLine(r, s.Start, s.Displacement)) return false;
             RangeFloat rectRange = new
                 (
                     r.x,
@@ -414,8 +414,8 @@ namespace ShapeEngine.Lib
                 );
             RangeFloat segmentRange = new
                 (
-                    s.start.X,
-                    s.end.X
+                    s.Start.X,
+                    s.End.X
                 );
 
             if (!SRect.OverlappingRange(rectRange, segmentRange)) return false;
@@ -424,15 +424,15 @@ namespace ShapeEngine.Lib
             rectRange.max = r.y + r.height;
             rectRange.Sort();
 
-            segmentRange.min = s.start.Y;
-            segmentRange.max = s.end.Y;
+            segmentRange.min = s.Start.Y;
+            segmentRange.max = s.End.Y;
             segmentRange.Sort();
 
             return SRect.OverlappingRange(rectRange, segmentRange);
         }
         public static bool OverlapShape(this Segment s, Polygon poly) { return OverlapShape(poly, s); }
         public static bool OverlapShape(this Segment s, Polyline pl) { return OverlapShape(pl, s); }
-        public static bool OverlapSegmentLine(this Segment s, Vector2 linePos, Vector2 lineDir) { return !SRect.SegmentOnOneSide(linePos, lineDir, s.start, s.end); }
+        public static bool OverlapSegmentLine(this Segment s, Vector2 linePos, Vector2 lineDir) { return !SRect.SegmentOnOneSide(linePos, lineDir, s.Start, s.End); }
         public static bool OverlapLineLine(Vector2 aPos, Vector2 aDir, Vector2 bPos, Vector2 bDir)
         {
             if (SVec.Parallel(aDir, bDir))
@@ -449,19 +449,19 @@ namespace ShapeEngine.Lib
         #region Intersect
         public static CollisionPoints IntersectShape(this Segment a, Segment b)
         {
-            var info = IntersectSegmentSegmentInfo(a.start, a.end, b.start, b.end);
+            var info = IntersectSegmentSegmentInfo(a.Start, a.End, b.Start, b.End);
             if (info.intersected)
             {
-                return new() { new(info.intersectPoint, b.n) };
+                return new() { new(info.intersectPoint, b.Normal) };
             }
             return new();
         }
         public static CollisionPoints IntersectShape(this Segment s, Circle c)
         {
-            float aX = s.start.X;
-            float aY = s.start.Y;
-            float bX = s.end.X;
-            float bY = s.end.Y;
+            float aX = s.Start.X;
+            float aY = s.Start.Y;
+            float bX = s.End.X;
+            float bY = s.End.Y;
             float cX = c.center.X;
             float cY = c.center.Y;
             float R = c.radius;
@@ -573,7 +573,7 @@ namespace ShapeEngine.Lib
             CollisionPoints points = new();
             foreach (var seg in segments)
             {
-                var intersectPoints = IntersectSegmentCircle(seg.start, seg.end, c.center, c.radius);
+                var intersectPoints = IntersectSegmentCircle(seg.Start, seg.End, c.center, c.radius);
                 foreach (var p in intersectPoints)
                 {
                     Vector2 n = SVec.Normalize(p - c.center);
@@ -614,13 +614,13 @@ namespace ShapeEngine.Lib
         public static bool OverlapShape(this Circle c, Segment s)
         {
             if (c.radius <= 0.0f) return s.IsPointInside(c.center); // IsPointInside(s, c.center);
-            if (c.IsPointInside(s.start)) return true;
-            if (c.IsPointInside(s.end)) return true;
+            if (c.IsPointInside(s.Start)) return true;
+            if (c.IsPointInside(s.End)) return true;
 
-            Vector2 d = s.end - s.start;
-            Vector2 lc = c.center - s.start;
+            Vector2 d = s.End - s.Start;
+            Vector2 lc = c.center - s.Start;
             Vector2 p = SVec.Project(lc, d);
-            Vector2 nearest = s.start + p;
+            Vector2 nearest = s.Start + p;
 
             return
                 c.IsPointInside(nearest) &&
@@ -788,15 +788,15 @@ namespace ShapeEngine.Lib
             float cX = c.center.X;
             float cY = c.center.Y;
             float R = c.radius;
-            float aX = s.start.X;
-            float aY = s.start.Y;
-            float bX = s.end.X;
-            float bY = s.end.Y;
+            float aX = s.Start.X;
+            float aY = s.Start.Y;
+            float bX = s.End.X;
+            float bY = s.End.Y;
 
             float dX = bX - aX;
             float dY = bY - aY;
 
-            Vector2 segmentNormal = s.n;
+            Vector2 segmentNormal = s.Normal;
 
             if ((dX == 0) && (dY == 0))
             {
@@ -869,10 +869,10 @@ namespace ShapeEngine.Lib
             CollisionPoints points = new();
             foreach (var seg in shape)
             {
-                var intersectPoints = IntersectCircleSegment(c.center, c.radius, seg.start, seg.end);
+                var intersectPoints = IntersectCircleSegment(c.center, c.radius, seg.Start, seg.End);
                 foreach (var p in intersectPoints)
                 {
-                    points.Add(new(p, seg.n));
+                    points.Add(new(p, seg.Normal));
                 }
             }
             return points;
@@ -992,8 +992,8 @@ namespace ShapeEngine.Lib
         public static bool OverlapShape(this Polygon poly, Segment s) 
         {
             if (poly.Count < 3) return false;
-            if (IsPointInPoly(s.start, poly)) return true;
-            if (IsPointInPoly(s.end, poly)) return true;
+            if (IsPointInPoly(s.Start, poly)) return true;
+            if (IsPointInPoly(s.End, poly)) return true;
             for (int i = 0; i < poly.Count; i++)
             {
                 Vector2 start = poly[i];

@@ -771,25 +771,25 @@ namespace ShapeEngine.Lib
         /// <returns>Returns the a generated polygon.</returns>
         public static Polygon Generate(Segment segment, float magMin = 0.1f, float magMax = 0.25f, float minSectionLength = 0.025f, float maxSectionLength = 0.1f)
         {
-            Polygon poly = new() { segment.start };
+            Polygon poly = new() { segment.Start };
             var dir = segment.Dir;
             var dirRight = dir.GetPerpendicularRight();
             var dirLeft = dir.GetPerpendicularLeft();
             float len = segment.Length;
             float minSectionLengthSq = (minSectionLength * len) * (minSectionLength * len);
-            Vector2 cur = segment.start;
+            Vector2 cur = segment.Start;
             while(true)
             {
                 cur += dir * SRNG.randF(minSectionLength, maxSectionLength) * len;
-                if ((cur - segment.end).LengthSquared() < minSectionLengthSq) break;
+                if ((cur - segment.End).LengthSquared() < minSectionLengthSq) break;
                 poly.Add(cur + dirRight * SRNG.randF(magMin, magMax));
             }
-            cur = segment.end;
+            cur = segment.End;
             poly.Add(cur);
             while (true)
             {
                 cur -= dir * SRNG.randF(minSectionLength, maxSectionLength) * len;
-                if ((cur - segment.start).LengthSquared() < minSectionLengthSq) break;
+                if ((cur - segment.Start).LengthSquared() < minSectionLengthSq) break;
                 poly.Add(cur + dirLeft * SRNG.randF(magMin, magMax));
             }
             return poly;
@@ -813,8 +813,8 @@ namespace ShapeEngine.Lib
             var ea = SRNG.randCollection(edges, true);
             var eb = SRNG.randCollection(edges);
 
-            var pa = ea.start.Lerp(ea.end, SRNG.randF());
-            var pb = eb.start.Lerp(eb.end, SRNG.randF());
+            var pa = ea.Start.Lerp(ea.End, SRNG.randF());
+            var pb = eb.Start.Lerp(eb.End, SRNG.randF());
             return pa.Lerp(pb, SRNG.randF());
         }
     

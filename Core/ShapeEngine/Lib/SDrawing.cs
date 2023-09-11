@@ -167,7 +167,7 @@ namespace ShapeEngine.Lib
         #region Segment
         public static void DrawSegment(float x1, float y1, float x2, float y2, float thickness, Raylib_CsLo.Color color) => Raylib.DrawLineEx(new(x1, y1), new(x2, y2), thickness, color);
         public static void DrawSegment(Vector2 start, Vector2 end, float thickness, Raylib_CsLo.Color color) => Raylib.DrawLineEx(start, end, thickness, color);
-        public static void Draw(this Segment segment, float thickness, Raylib_CsLo.Color color) => Raylib.DrawLineEx(segment.start, segment.end, thickness, color);
+        public static void Draw(this Segment segment, float thickness, Raylib_CsLo.Color color) => Raylib.DrawLineEx(segment.Start, segment.End, thickness, color);
         public static void Draw(this Segment segment, float thickness, Raylib_CsLo.Color color, int endCapSegments)
         {
             segment.Draw(thickness, color);
@@ -182,10 +182,10 @@ namespace ShapeEngine.Lib
             if (segments.Count <= 0) return;
             foreach (var seg in segments)
             {
-                if (cornerSegments > 5) DrawCircle(seg.start, thickness * 0.5f, color, cornerSegments);
+                if (cornerSegments > 5) DrawCircle(seg.Start, thickness * 0.5f, color, cornerSegments);
                 seg.Draw(thickness, color);
             }
-            if (cornerSegments > 5) DrawCircle(segments[segments.Count - 1].end, thickness * 0.5f, color, cornerSegments);
+            if (cornerSegments > 5) DrawCircle(segments[segments.Count - 1].End, thickness * 0.5f, color, cornerSegments);
         }
         public static void Draw(this Segments segments, float thickness, List<Raylib_CsLo.Color> colors, int cornerSegments = 8)
         {
@@ -193,10 +193,10 @@ namespace ShapeEngine.Lib
             for (int i = 0; i < segments.Count; i++)
             {
                 Raylib_CsLo.Color c = colors[i % colors.Count];
-                if(cornerSegments > 5) DrawCircle(segments[i].start, thickness * 0.5f, c, cornerSegments);
+                if(cornerSegments > 5) DrawCircle(segments[i].Start, thickness * 0.5f, c, cornerSegments);
                 segments[i].Draw(thickness, c);
             }
-            if(cornerSegments > 5) DrawCircle(segments[segments.Count - 1].end, thickness * 0.5f, colors[(segments.Count - 1) % colors.Count], cornerSegments);
+            if(cornerSegments > 5) DrawCircle(segments[segments.Count - 1].End, thickness * 0.5f, colors[(segments.Count - 1) % colors.Count], cornerSegments);
         }
         public static void DrawVertices(this Segment segment, float vertexRadius, Raylib_CsLo.Color color)
         {
@@ -206,27 +206,27 @@ namespace ShapeEngine.Lib
         {
             if (endCapSegments > 5)
             {
-                DrawCircle(segment.start, vertexRadius, color, endCapSegments);
-                DrawCircle(segment.end, vertexRadius, color, endCapSegments);
+                DrawCircle(segment.Start, vertexRadius, color, endCapSegments);
+                DrawCircle(segment.End, vertexRadius, color, endCapSegments);
             }
         }
         public static Segments CreateLightningLine(this Segment segment, int segments = 10, float maxSway = 80f)
         {
             Segments result = new();
-            Vector2 w = segment.end - segment.start;
+            Vector2 w = segment.End - segment.Start;
             Vector2 dir = SVec.Normalize(w);
             Vector2 n = new Vector2(dir.Y, -dir.X);
             float length = w.Length();
 
             float prevDisplacement = 0;
-            Vector2 cur = segment.start;
+            Vector2 cur = segment.Start;
             //result.Add(start);
 
             float segmentLength = length / segments;
             float remainingLength = length;
             List<Vector2> accumulator = new()
             {
-                segment.start
+                segment.Start
             };
             while (remainingLength > 0f)
             {
@@ -236,11 +236,11 @@ namespace ShapeEngine.Lib
                 {
                     if(accumulator.Count == 1)
                     {
-                        result.Add(new(accumulator[0], segment.end));
+                        result.Add(new(accumulator[0], segment.End));
                     }
                     else
                     {
-                        result.Add(new(result[result.Count - 1].end, segment.end));
+                        result.Add(new(result[result.Count - 1].End, segment.End));
                     }
                     break;
                 }
@@ -262,16 +262,16 @@ namespace ShapeEngine.Lib
         public static Segments CreateLightningLine(this Segment segment, float segmentLength = 5f, float maxSway = 80f)
         {
             Segments result = new();
-            Vector2 w = segment.end - segment.start;
+            Vector2 w = segment.End - segment.Start;
             Vector2 dir = SVec.Normalize(w);
             Vector2 n = new Vector2(dir.Y, -dir.X);
             float length = w.Length();
 
             float prevDisplacement = 0;
-            Vector2 cur = segment.start;
+            Vector2 cur = segment.Start;
             List<Vector2> accumulator = new()
             {
-                segment.start
+                segment.Start
             };
             float remainingLength = length;
             while (remainingLength > 0f)
@@ -282,11 +282,11 @@ namespace ShapeEngine.Lib
                 {
                     if (accumulator.Count == 1)
                     {
-                        result.Add(new(accumulator[0], segment.end));
+                        result.Add(new(accumulator[0], segment.End));
                     }
                     else
                     {
-                        result.Add(new(result[result.Count - 1].end, segment.end));
+                        result.Add(new(result[result.Count - 1].End, segment.End));
                     }
                     break;
                 }
@@ -405,11 +405,11 @@ namespace ShapeEngine.Lib
         }
         public static void DrawDotted(this Segment segment, int gaps, float thickness, Raylib_CsLo.Color color, int endCapSegments = 8)
         {
-            DrawSegmentDotted(segment.start, segment.end, gaps, thickness, color, endCapSegments);
+            DrawSegmentDotted(segment.Start, segment.End, gaps, thickness, color, endCapSegments);
         }
         public static void DrawDotted(this Segment segment, int gaps, float gapSizeF, float thickness, Raylib_CsLo.Color color, int endCapSegments = 8)
         {
-            DrawSegmentDotted(segment.start, segment.end, gaps, gapSizeF, thickness, color, endCapSegments);
+            DrawSegmentDotted(segment.Start, segment.End, gaps, gapSizeF, thickness, color, endCapSegments);
         }
         public static void DrawDotted(this Segments segments, int gaps, float thickness, Raylib_CsLo.Color color, int endCapSegments = 8)
         {
@@ -428,7 +428,7 @@ namespace ShapeEngine.Lib
 
         public static void DrawGlow(this Segment segment, float width, float endWidth, Raylib_CsLo.Color color, Raylib_CsLo.Color endColor, int steps)
         {
-            DrawLineGlow(segment.start, segment.end, width, endWidth, color, endColor, steps);
+            DrawLineGlow(segment.Start, segment.End, width, endWidth, color, endColor, steps);
         }
         public static void DrawGlow(this Segments segments, float width, float endWidth, Raylib_CsLo.Color color, Raylib_CsLo.Color endColor, int steps)
         {
@@ -1031,7 +1031,7 @@ namespace ShapeEngine.Lib
             var segments = rect.GetEdges();// SRect.GetEdges(rect);
             foreach (var s in segments)
             {
-                DrawSegmentDotted(s.start, s.end, gapsPerSide, lineThickness, color, cornerCircleSectors);
+                DrawSegmentDotted(s.Start, s.End, gapsPerSide, lineThickness, color, cornerCircleSectors);
             }
         }
         public static void DrawLinesDotted(this Rect rect, int gapsPerSide, float gapSizeF, float lineThickness, Raylib_CsLo.Color color, int cornerCircleSegments = 8)
@@ -1050,7 +1050,7 @@ namespace ShapeEngine.Lib
             var segments = rect.GetEdges(); // SRect.GetEdges(rect);
             foreach (var s in segments)
             {
-                DrawSegmentDotted(s.start, s.end, gapsPerSide, gapSizeF, lineThickness, color, cornerCircleSegments);
+                DrawSegmentDotted(s.Start, s.End, gapsPerSide, gapSizeF, lineThickness, color, cornerCircleSegments);
             }
         }
 
@@ -1182,7 +1182,7 @@ namespace ShapeEngine.Lib
                         startColor.b + blueStep * i,
                         startColor.a + alphaStep * i
                     );
-                if(cornerSegments > 5) DrawCircle(edge.start, lineThickness * 0.5f, finalColor, cornerSegments);
+                if(cornerSegments > 5) DrawCircle(edge.Start, lineThickness * 0.5f, finalColor, cornerSegments);
                 edge.Draw(lineThickness, finalColor);
             }
         }
@@ -1411,8 +1411,8 @@ namespace ShapeEngine.Lib
                 left.Draw(lineThickness, color);
 
                 Circle topLeft = new(rect.TopLeft, radius);
-                Circle topEnd = new(top.end, radius);
-                Circle leftEnd = new(left.end, radius);
+                Circle topEnd = new(top.End, radius);
+                Circle leftEnd = new(left.End, radius);
                 topLeft.Draw(color);
                 topEnd.Draw(color);
                 leftEnd.Draw(color);
@@ -1422,8 +1422,8 @@ namespace ShapeEngine.Lib
                 Segment s = new(rect.TopLeft, rect.TopRight);
                 s.Draw(lineThickness, color);
 
-                Circle start = new(s.start, radius);
-                Circle end = new(s.end, radius);
+                Circle start = new(s.Start, radius);
+                Circle end = new(s.End, radius);
 
                 start.Draw(color);
                 end.Draw(color);
@@ -1437,8 +1437,8 @@ namespace ShapeEngine.Lib
                 right.Draw(lineThickness, color);
 
                 Circle topRight = new(rect.TopRight, radius);
-                Circle topEnd = new(top.end, radius);
-                Circle rightEnd = new(right.end, radius);
+                Circle topEnd = new(top.End, radius);
+                Circle rightEnd = new(right.End, radius);
                 topRight.Draw(color);
                 topEnd.Draw(color);
                 rightEnd.Draw(color);
@@ -1448,8 +1448,8 @@ namespace ShapeEngine.Lib
                 Segment s = new(rect.TopRight, rect.BottomRight);
                 s.Draw(lineThickness, color);
 
-                Circle start = new(s.start, radius);
-                Circle end = new(s.end, radius);
+                Circle start = new(s.Start, radius);
+                Circle end = new(s.End, radius);
 
                 start.Draw(color);
                 end.Draw(color);
@@ -1463,8 +1463,8 @@ namespace ShapeEngine.Lib
                 right.Draw(lineThickness, color);
 
                 Circle bottomRight = new(rect.BottomRight, radius);
-                Circle bottomEnd = new(bottom.end, radius);
-                Circle rightEnd = new(right.end, radius);
+                Circle bottomEnd = new(bottom.End, radius);
+                Circle rightEnd = new(right.End, radius);
                 bottomRight.Draw(color);
                 bottomEnd.Draw(color);
                 rightEnd.Draw(color);
@@ -1474,8 +1474,8 @@ namespace ShapeEngine.Lib
                 Segment s = new(rect.BottomLeft, rect.BottomRight);
                 s.Draw(lineThickness, color);
 
-                Circle start = new(s.start, radius);
-                Circle end = new(s.end, radius);
+                Circle start = new(s.Start, radius);
+                Circle end = new(s.End, radius);
 
                 start.Draw(color);
                 end.Draw(color);
@@ -1489,8 +1489,8 @@ namespace ShapeEngine.Lib
                 left.Draw(lineThickness, color);
 
                 Circle bottomLeft = new(rect.BottomLeft, radius);
-                Circle bottomEnd = new(bottom.end, radius);
-                Circle leftEnd = new(left.end, radius);
+                Circle bottomEnd = new(bottom.End, radius);
+                Circle leftEnd = new(left.End, radius);
                 bottomLeft.Draw(color);
                 bottomEnd.Draw(color);
                 leftEnd.Draw(color);
@@ -1500,8 +1500,8 @@ namespace ShapeEngine.Lib
                 Segment s = new(rect.TopLeft, rect.BottomLeft);
                 s.Draw(lineThickness, color);
 
-                Circle start = new(s.start, radius);
-                Circle end = new(s.end, radius);
+                Circle start = new(s.Start, radius);
+                Circle end = new(s.End, radius);
 
                 start.Draw(color);
                 end.Draw(color);
@@ -1511,8 +1511,8 @@ namespace ShapeEngine.Lib
                 Segment s = new(rect.GetPoint(new Vector2(0f, 0.5f)), rect.GetPoint(new Vector2(1f, 0.5f)));
                 s.Draw(lineThickness, color);
 
-                Circle start = new(s.start, radius);
-                Circle end = new(s.end, radius);
+                Circle start = new(s.Start, radius);
+                Circle end = new(s.End, radius);
 
                 start.Draw(color);
                 end.Draw(color);

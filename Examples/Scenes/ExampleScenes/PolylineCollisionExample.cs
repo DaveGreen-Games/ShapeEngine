@@ -159,7 +159,7 @@ namespace Examples.Scenes.ExampleScenes
             boundaryRect.FlippedNormals = true;
             boundary = boundaryRect.GetEdges();
 
-            polyline.AutomaticNormals = true;
+            //polyline.AutomaticNormals = true;
         }
         public override void Reset()
         {
@@ -172,7 +172,7 @@ namespace Examples.Scenes.ExampleScenes
             base.HandleInput(dt, mousePosGame, mousePosUI);
             //if (IsKeyPressed(KeyboardKey.KEY_R)) { polyline = new(); }
 
-            if (IsKeyPressed(KeyboardKey.KEY_SPACE)) polyline.AutomaticNormals = !polyline.AutomaticNormals;
+            //if (IsKeyPressed(KeyboardKey.KEY_SPACE)) polyline.AutomaticNormals = !polyline.AutomaticNormals;
 
             float shapeSize = SRNG.randF(75, 150);
             if (IsKeyPressed(KeyboardKey.KEY_ONE))
@@ -240,7 +240,7 @@ namespace Examples.Scenes.ExampleScenes
             boundary.Draw(4f, ColorMedium);
             foreach (var seg in boundary)
             {
-                Segment normal = new(seg.Center, seg.Center + seg.n * 25f);
+                Segment normal = new(seg.Center, seg.Center + seg.Normal * 25f);
                 normal.Draw(2f, BLUE);
             }
             DrawPolyline();
@@ -260,7 +260,7 @@ namespace Examples.Scenes.ExampleScenes
 
 
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
-            string infoText = String.Format("[LMB] Add point | [RMB] Remove point | [Space] AutoNormals: {0} | [1 - 7] Add Shape | Shapes: {1}",polyline.AutomaticNormals ? "On" : "Off", colliders.Count);
+            string infoText = String.Format("[LMB] Add point | [RMB] Remove point | [1 - 7] Add Shape | Shapes: {0}", colliders.Count);
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
             
         }
@@ -364,11 +364,14 @@ namespace Examples.Scenes.ExampleScenes
                 }
                 else segment.Draw(4f, ColorLight);
 
-                if (!polyline.AutomaticNormals)
-                {
-                    Segment normal = new(segment.Center, segment.Center + segment.n * 25f);
-                    normal.Draw(2f, BLUE);
-                }
+                Segment normal = new(segment.Center, segment.Center + segment.Normal * 25f);
+                normal.Draw(2f, BLUE);
+
+                //if (!polyline.AutomaticNormals)
+                //{
+                //    Segment normal = new(segment.Center, segment.Center + segment.Normal * 25f);
+                //    normal.Draw(2f, BLUE);
+                //}
             }
 
             if (drawClosest) DrawCircleV(closest, vertexRadius, ColorHighlight1);

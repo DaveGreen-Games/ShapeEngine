@@ -15,11 +15,8 @@ namespace ShapeEngine.Lib
             {
                 Vector2 start = c.center + new Vector2(c.radius, 0f).Rotate(-angleStep * i);
                 Vector2 end = c.center + new Vector2(c.radius, 0f).Rotate(-angleStep * ((i + 1) % pointCount));
-                Vector2 n = (end - start);
-                if (insideNormals) n = n.GetPerpendicularLeft().Normalize();
-                else n = n.GetPerpendicularRight().Normalize();
 
-                segments.Add(new Segment(start, end, n));
+                segments.Add(new Segment(start, end, insideNormals));
             }
             return segments;
         }
