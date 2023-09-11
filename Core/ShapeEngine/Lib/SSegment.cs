@@ -5,6 +5,7 @@ namespace ShapeEngine.Lib
 {
     public static class SSegment
     {
+        /*
         public static List<Segment> Split(this Segment seg, float f)
         {
             Vector2 p = GetPoint(seg, f);
@@ -76,5 +77,7 @@ namespace ShapeEngine.Lib
 
             return new() { a, b, c, d };
         }
+    */
+    
     }
 }

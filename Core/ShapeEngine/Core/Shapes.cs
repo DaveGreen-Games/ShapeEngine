@@ -276,50 +276,51 @@ namespace ShapeEngine.Core
     }
 
 
-    public struct Segment : IShape, IEquatable<Segment>
+    public readonly struct Segment : IShape, IEquatable<Segment>
     {
-        public Vector2 Start;
-        public Vector2 End;
+        #region Members
+        public readonly Vector2 Start;
+        public readonly Vector2 End;
+        public readonly Vector2 Normal;
+        private readonly bool flippedNormals = false;
+        #endregion
 
+        #region Getter Setter
         //maybe needs to be cached
         //if it is cached segment needs to be immutable... so normal is always correct
-        public Vector2 Normal 
-        { 
-            get 
-            {
-                return GetNormal();
-            } 
-        }
-        public bool FlippedNormals { get; set; } = false;
+        //public Vector2 Normal 
+        //{ 
+        //    get 
+        //    {
+        //        return GetNormal();
+        //    } 
+        //}
+        public bool FlippedNormals { get { return flippedNormals; } readonly set { } }
         public Vector2 Center { get { return (Start + End) * 0.5f; } }
         public Vector2 Dir { get { return Displacement.Normalize(); } }
         public Vector2 Displacement { get { return End - Start; } }
         public float Length { get { return Displacement.Length(); } }
         public float LengthSquared { get { return Displacement.LengthSquared(); } }
+        #endregion
 
-
+        #region Constructor
         public Segment(Vector2 start, Vector2 end, bool flippedNormals = false) 
         { 
             this.Start = start; 
             this.End = end;
-            //this.normal = GetNormal();
-            this.FlippedNormals = flippedNormals;
+            this.Normal = GetNormal(start, end, flippedNormals);
+            this.flippedNormals = flippedNormals;
         }
         public Segment(float startX, float startY, float endX, float endY, bool flippedNormals = false) 
         { 
             this.Start = new(startX, startY); 
             this.End = new(endX, endY);
-            //this.normal = GetNormal();
-            this.FlippedNormals = flippedNormals;
+            this.Normal = GetNormal(Start, End, flippedNormals);
+            this.flippedNormals = flippedNormals;
         }
-        
-        private Vector2 GetNormal()
-        {
-            if (FlippedNormals) return (End - Start).GetPerpendicularLeft().Normalize();
-            else return (End - Start).GetPerpendicularRight().Normalize();
-        }
-        
+        #endregion
 
+        #region Public
         public Segment Floor()
         {
             return new(Start.Floor(), End.Floor(), FlippedNormals);
@@ -347,7 +348,65 @@ namespace ShapeEngine.Core
             Segment B = new(splitPoint, End, FlippedNormals);
             return new() { A, B };
         }
+
+        public Segment SetStart(Vector2 newStart) { return new(newStart, End, FlippedNormals); }
+        public Segment MoveStart(Vector2 translation) { return new(Start + translation, End, FlippedNormals); }
+        public Segment SetEnd(Vector2 newEnd) { return new(Start, newEnd, FlippedNormals); }
+        public Segment MoveEnd(Vector2 translation) { return new(Start, End + translation, FlippedNormals); }
         
+        public Vector2 GetPoint(float f) { return Start.Lerp(End, f); }
+        public Segment Rotate(float pivot, float rad)
+        {
+            Vector2 p = GetPoint(pivot);
+            Vector2 s = Start - p;
+            Vector2 e = End - p;
+            return new Segment(p + s.Rotate(rad), p + e.Rotate(rad));
+        }
+        public Segment Scale(float scale) { return new(Start * scale, End * scale); }
+        public Segment Scale(Vector2 scale) { return new(Start * scale, End * scale); }
+        public Segment Scale(float startScale, float endScale) { return new(Start * startScale, End * endScale); }
+        public Segment ScaleF(float scale, float f)
+        {
+            Vector2 p = GetPoint(f);
+            Vector2 s = Start - p;
+            Vector2 e = End - p;
+            return new Segment(p + s * scale, p + e * scale);
+        }
+        public Segment ScaleF(Vector2 scale, float f)
+        {
+            Vector2 p = GetPoint(f);
+            Vector2 s = Start - p;
+            Vector2 e = End - p;
+            return new Segment(p + s * scale, p + e * scale);
+        }
+        public Segment Move(Vector2 offset, float f) { return new(Start + (offset * (1f - f)), End + (offset * (f))); }
+        public Segment Move(Vector2 offset) { return new(Start + offset, End + offset); }
+        public Segment Move(float x, float y) { return Move(new Vector2(x, y)); }
+        public Points Inflate(float thickness, float alignement = 0.5f)
+        {
+            float w = thickness;
+            Vector2 dir = Dir;
+            Vector2 left = dir.GetPerpendicularLeft();
+            Vector2 right = dir.GetPerpendicularRight();
+            Vector2 a = Start + left * w * alignement;
+            Vector2 b = Start + right * w * (1 - alignement);
+            Vector2 c = End + right * w * (1 - alignement);
+            Vector2 d = End + left * w * alignement;
+
+            return new() { a, b, c, d };
+        }
+
+        #endregion
+
+        #region Private
+        private static Vector2 GetNormal(Vector2 start, Vector2 end, bool flippedNormals)
+        {
+            if (flippedNormals) return (end - start).GetPerpendicularLeft().Normalize();
+            else return (end - start).GetPerpendicularRight().Normalize();
+        }
+        #endregion
+
+        #region IShape
         public Vector2 GetCentroid() { return Center; }
         public float GetArea() { return 0f; }
         public float GetCircumference() { return Length; }
@@ -402,7 +461,9 @@ namespace ShapeEngine.Core
             return points;
         }
         public void DrawShape(float linethickness, Raylib_CsLo.Color color) => this.Draw(linethickness, color);
+        #endregion
 
+        #region Equality & HashCode
         public bool Equals(Segment other)
         {
             return Start == other.Start && End == other.End;
@@ -425,7 +486,7 @@ namespace ShapeEngine.Core
             if (obj is Segment s) return Equals(s);
             return false;
         }
-    
+        #endregion
     }
 
     public struct Circle : IShape, IEquatable<Circle>
