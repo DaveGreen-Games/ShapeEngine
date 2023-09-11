@@ -23,7 +23,18 @@ namespace ShapeEngine.Lib
             }
             return segments;
         }
-        public static Polygon GetPoints(this Circle c, int pointCount = 16)
+        public static Points GetVertices(this Circle c, int pointCount = 16)
+        {
+            float angleStep = (MathF.PI * 2f) / pointCount;
+            Points points = new();
+            for (int i = 0; i < pointCount; i++)
+            {
+                Vector2 p = c.center + new Vector2(c.radius, 0f).Rotate(angleStep * i);
+                points.Add(p);
+            }
+            return points;
+        }
+        public static Polygon GetPolygonPoints(this Circle c, int pointCount = 16)
         {
             float angleStep = (MathF.PI * 2f) / pointCount;
             Polygon points = new();

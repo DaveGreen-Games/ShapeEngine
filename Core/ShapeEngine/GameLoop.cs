@@ -7,9 +7,179 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using ShapeEngine.Lib;
 using ShapeEngine.Core;
+using System.Globalization;
+using System.Text;
 
 namespace ShapeEngine
 {
+
+    
+    public struct Dimension : IEquatable<Dimension>, IFormattable
+    {
+        public int Width;
+        public int Height;
+
+        public Dimension() { this.Width = 0; this.Height = 0; }
+        public Dimension(int value) { this.Width = value; this.Height = value; }
+        public Dimension(int width, int height) { this.Width = width; this.Height = height; }
+        public Dimension(float value) { this.Width = (int)value; this.Height = (int)value; }
+        public Dimension(float width, float height) { this.Width = (int)width; this.Height = (int)height; }
+        public Dimension(Vector2 v) { this.Width = (int)v.X; this.Height = (int)v.Y; }
+
+        public float Area { get => Width * Height; }
+        public int MaxDimension
+        {
+            get
+            {
+                if (Width > Height) return Width;
+                else return Height;
+            }
+        }
+        public int MinDimension
+        {
+            get
+            {
+                if (Width < Height) return Width;
+                else return Height;
+            }
+        }
+
+
+        public Vector2 ToVector2() { return new Vector2(Width, Height); }
+
+        public bool Equals(Dimension other)
+        {
+            return Width == other.Width && Height == other.Height;
+        }
+        public override bool Equals(object? obj)
+        {
+            if(obj != null && obj is Dimension d)
+            {
+                return Equals(d);
+            }
+            return false;
+        }
+        public override readonly string ToString()
+        {
+            return ToString("G", CultureInfo.CurrentCulture);
+        }
+        public readonly string ToString(string? format)
+        {
+            return ToString(format, CultureInfo.CurrentCulture);
+        }
+        public readonly string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            StringBuilder sb = new StringBuilder();
+            string separator = NumberFormatInfo.GetInstance(formatProvider).NumberGroupSeparator;
+            sb.Append('<');
+            sb.Append(Width.ToString(format, formatProvider));
+            sb.Append(separator);
+            sb.Append(' ');
+            sb.Append(Height.ToString(format, formatProvider));
+            sb.Append('>');
+            return sb.ToString();
+        }
+
+        public static Dimension operator +(Dimension left, Dimension right)
+        {
+            return new Vector2(
+                left.Width + right.Width,
+                left.Height + right.Height
+            );
+        }
+        public static Dimension operator /(Dimension left, Dimension right)
+        {
+            return new Vector2(
+                left.Width / right.Width,
+                left.Height / right.Height
+            );
+        }
+        public static Dimension operator /(Dimension value1, int value2)
+        {
+            return value1 / new Dimension(value2);
+        }
+        public static Dimension operator /(Dimension value1, float value2)
+        {
+            return new Dimension(value1.Width / value2, value1.Height / value2);
+        }
+        public static bool operator ==(Dimension left, Dimension right)
+        {
+            return (left.Width == right.Width)
+                && (left.Height == right.Height);
+        }
+        public static bool operator !=(Dimension left, Dimension right)
+        {
+            return !(left == right);
+        }
+        public static Dimension operator *(Dimension left, Dimension right)
+        {
+            return new Vector2(
+                left.Width * right.Width,
+                left.Height * right.Height
+            );
+        }
+        public static Dimension operator *(Dimension left, float right)
+        {
+            return new Dimension(left.Width * right, left.Height * right);
+        }
+        public static Dimension operator *(float left, Dimension right)
+        {
+            return right * left;
+        }
+        public static Dimension operator -(Dimension left, Dimension right)
+        {
+            return new Dimension(
+                left.Width - right.Width,
+                left.Height - right.Height
+            );
+        }
+        public static Dimension operator -(Dimension value)
+        {
+            return Zero - value;
+        }
+
+        
+        public static Dimension Abs(Dimension value)
+        {
+            return new Dimension(
+                (int)MathF.Abs(value.Width),
+                (int)MathF.Abs(value.Height)
+            );
+        }
+        public static Dimension Clamp(Dimension value1, Dimension min, Dimension max)
+        {
+            return Min(Max(value1, min), max);
+        }
+        public static Dimension Lerp(Dimension value1, Dimension value2, float amount)
+        {
+            return (value1 * (1.0f - amount)) + (value2 * amount);
+        }
+        public Dimension Max(Dimension value2)
+        {
+            return new Dimension(
+                (value1.Width > value2.Width) ? value1.Width : value2.Width,
+                (value1.Height > value2.Height) ? value1.Height : value2.Height
+            );
+        }
+        public Dimension Min(Dimension value2)
+        {
+            return new Dimension(
+                (value1.Width < value2.Width) ? value1.Width : value2.Width,
+                (value1.Height < value2.Height) ? value1.Height : value2.Height
+            );
+        }
+        
+        public override readonly int GetHashCode()
+        {
+            return HashCode.Combine(Width, Height);
+        }
+
+        
+    }
+
+
+
+
     internal class DelayedAction : ISequenceable
     {
         private Action action;

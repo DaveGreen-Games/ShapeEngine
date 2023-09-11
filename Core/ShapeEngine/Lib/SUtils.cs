@@ -240,6 +240,16 @@ namespace ShapeEngine.Lib
             }
         }
 
+        public static int MaxInt(int value1, int value2)
+        {
+            if (value1 > value2) return value1;
+            else return value2;
+        }
+        public static int MinInt(int value1, int value2)
+        {
+            if (value1 < value2) return value1;
+            else return value2;
+        }
         public static int AbsInt(int value)
         {
             return (int)MathF.Abs(value);
