@@ -96,7 +96,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             if (IsMouseButtonDown(MouseButton.MOUSE_BUTTON_LEFT))
             {
-                Vector2 windowSize = new(GAMELOOP.CurWindowSize.width, GAMELOOP.CurWindowSize.height);
+                Vector2 windowSize = GAMELOOP.CurWindowSize.ToVector2(); // new(GAMELOOP.CurWindowSize.width, GAMELOOP.CurWindowSize.height);
                 Vector2 sizeFactor = GAMELOOP.Game.GetSize() / windowSize;
                 Vector2 windowMousePos = GAMELOOP.MousePos.Align(windowSize, new Vector2(0.5f));
                 camera.Translation = windowMousePos * sizeFactor;

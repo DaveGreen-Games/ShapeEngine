@@ -91,7 +91,7 @@ namespace ShapeEngine.Screen
         /// <summary>
         /// The base size specified in the constructor.
         /// </summary>
-        public (int width, int height) BaseSize;
+        public Dimensions BaseSize;
 
         /// <summary>
         /// The shader device that returns all active shaders for drawing to the screen.
@@ -105,27 +105,27 @@ namespace ShapeEngine.Screen
         private ScreenBufferArray screenBuffers = new();
         private List<ScreenFlash> screenFlashes = new List<ScreenFlash>();
 
-        public ScreenTexture(int width, int height, int drawOrder = 0)
+        public ScreenTexture(Dimensions dimensions, int drawOrder = 0)
         {
             this.ID = SID.NextID;
-            this.BaseSize = (width, height);
-            this.Load(width, height);
+            this.BaseSize = dimensions;
+            this.Load(dimensions);
             this.DrawOrder = drawOrder;
         }
-        public ScreenTexture(int width, int height, uint id, int drawOrder = 0)
+        public ScreenTexture(Dimensions dimensions, uint id, int drawOrder = 0)
         {
             this.ID = id;
-            this.BaseSize = (width, height);
-            this.Load(width, height);
+            this.BaseSize = dimensions;
+            this.Load(dimensions);
             this.DrawOrder = drawOrder;
         }
-        private void Load(int width, int height)
+        private void Load(Dimensions dimensions)
         {
-            this.texture = LoadRenderTexture(width, height);
-            this.sourceRec = new Rectangle(0, 0, width, -height);
+            this.texture = LoadRenderTexture(dimensions.Width, dimensions.Height);
+            this.sourceRec = new Rectangle(0, 0, dimensions.Width, -dimensions.Height);
 
             if(ShaderDevice != null && ShaderDevice.IsMultiShader())
-                this.screenBuffers.Load(width, height);
+                this.screenBuffers.Load(dimensions);
             //screenBuffers = new ScreenBuffer[]
             //{
             //    new(width, height),
@@ -138,34 +138,35 @@ namespace ShapeEngine.Screen
         /// </summary>
         /// <param name="targetWidth">The target width to match.</param>
         /// <param name="targetHeight">The target height to match.</param>
-        public void AdjustSize(int targetWidth, int targetHeight)
+        public void AdjustSize(Dimensions targetDimensions)
         {
-            float fWidth = (float)targetWidth / (float)targetHeight;
-            float fHeight = (float)targetHeight / (float)targetWidth;
+            float fWidth = (float)targetDimensions.Width / (float)targetDimensions.Height;
+            float fHeight = (float)targetDimensions.Height / (float)targetDimensions.Width;
 
-            int w = BaseSize.width;
-            int h = BaseSize.height;
+            int w = BaseSize.Width;
+            int h = BaseSize.Height;
 
             float newWidth = ((h * fWidth) + w) * 0.5f;
             float newHeight = ((w * fHeight) + (h)) * 0.5f;
 
-            int adjustedWidth = (int)newWidth;
-            int adjustedHeight = (int)newHeight;
+            //int adjustedWidth = (int)newWidth;
+            //int adjustedHeight = (int)newHeight;
+            Dimensions adjustedDimensions = new(newWidth, newHeight);
 
-            if (adjustedWidth != w || adjustedHeight != h)
+            if (adjustedDimensions.Width != w || adjustedDimensions.Height != h)
             {
                 UnloadRenderTexture(texture);
                 //screenBuffers[0].Unload();
                 //screenBuffers[1].Unload();
                 screenBuffers.Unload();
-                Load(adjustedWidth, adjustedHeight);
+                Load(adjustedDimensions);
                 if (camera != null)
                 {
-                    camera.AdjustSize(new(adjustedWidth, adjustedHeight));
+                    camera.AdjustSize(adjustedDimensions.ToVector2());
                 }
             }
             float tw = GetSize().X;
-            float sw = (float)targetWidth;
+            float sw = (float)targetDimensions.Width;
             ScreenToTexture = sw / tw;
             TextureToScreen = tw / sw;
             ScreenToTextureInverse = 1 / ScreenToTexture;
@@ -217,17 +218,17 @@ namespace ShapeEngine.Screen
         /// <param name="targetWidth">The target width of the surface to draw to.</param>
         /// <param name="targetHeight">The target height of the surface to draw to.</param>
         /// <param name="blendMode">The blend mode for drawing to the surface.</param>
-        public void DrawTexture(int targetWidth, int targetHeight, int blendMode = -1)
+        public void DrawTexture(Dimensions targetDimensions, int blendMode = -1)
         {
             var destRec = new Rectangle();
-            destRec.x = targetWidth * 0.5f;
-            destRec.y = targetHeight * 0.5f;
-            destRec.width = targetWidth;
-            destRec.height = targetHeight;
+            destRec.x = targetDimensions.Width * 0.5f;
+            destRec.y = targetDimensions.Height * 0.5f;
+            destRec.width = targetDimensions.Width;
+            destRec.height = targetDimensions.Height;
 
             Vector2 origin = new();
-            origin.X = targetWidth * 0.5f;
-            origin.Y = targetHeight * 0.5f;
+            origin.X = targetDimensions.Width * 0.5f;
+            origin.Y = targetDimensions.Height * 0.5f;
 
             if (blendMode < 0)
             {
@@ -305,7 +306,7 @@ namespace ShapeEngine.Screen
         /// </summary>
         /// <param name="targetWidth">The width of the screen.</param>
         /// <param name="targetHeight">The height of the screen.</param>
-        public void DrawToScreen(int targetWidth, int targetHeight)
+        public void DrawToScreen(Dimensions targetDimensions)
         {
             //if (camera != null && camera.IsPixelSmoothingCameraEnabled())
             //    BeginMode2D(camera.GetPixelSmoothingCamera());
@@ -314,14 +315,14 @@ namespace ShapeEngine.Screen
             List<ScreenShader> shadersToApply = ShaderDevice != null ? ShaderDevice.GetActiveShaders() : new();
             if (shadersToApply.Count <= 0)
             {
-                DrawTexture(targetWidth, targetHeight, BlendMode);
+                DrawTexture(targetDimensions, BlendMode);
                 return;
             }
             else if (shadersToApply.Count == 1)
             {
                 ScreenShader s = shadersToApply[0];
                 BeginShaderMode(s.GetShader());
-                DrawTexture(targetWidth, targetHeight, BlendMode);
+                DrawTexture(targetDimensions, BlendMode);
                 EndShaderMode();
             }
             else if (shadersToApply.Count == 2)
@@ -331,14 +332,14 @@ namespace ShapeEngine.Screen
                     ScreenShader s = shadersToApply[0];
                     screenBuffers.A.StartTextureMode();
                     BeginShaderMode(s.GetShader());
-                    DrawTexture(GetTextureWidth(), GetTextureHeight());
+                    DrawTexture(GetTextureDimensions());
                     EndShaderMode();
                     screenBuffers.A.EndTextureMode();
 
                     s = shadersToApply[1];
 
                     BeginShaderMode(s.GetShader());
-                    screenBuffers.A.DrawTexture(targetWidth, targetHeight, BlendMode);
+                    screenBuffers.A.DrawTexture(targetDimensions, BlendMode);
                     EndShaderMode();
                 }
                 
@@ -356,7 +357,7 @@ namespace ShapeEngine.Screen
                     //draw game texture to first screenbuffer and first shader is already applied
                     screenBuffers.A.StartTextureMode();
                     BeginShaderMode(s.GetShader());
-                    DrawTexture(GetTextureWidth(), GetTextureHeight());
+                    DrawTexture(GetTextureDimensions());
                     EndShaderMode();
                     screenBuffers.A.EndTextureMode();
 
@@ -370,14 +371,14 @@ namespace ShapeEngine.Screen
                         ScreenBuffer next = screenBuffers.GetByIndex(nextIndex);
                         next.StartTextureMode();
                         BeginShaderMode(s.GetShader());
-                        current.DrawTexture(GetTextureWidth(), GetTextureHeight());
+                        current.DrawTexture(GetTextureDimensions());
                         EndShaderMode();
                         next.EndTextureMode();
                         currentIndex = currentIndex == 0 ? 1 : 0;
                     }
 
                     BeginShaderMode(endshader.GetShader());
-                    screenBuffers.GetByIndex(nextIndex).DrawTexture(targetWidth, targetHeight, BlendMode);
+                    screenBuffers.GetByIndex(nextIndex).DrawTexture(targetDimensions, BlendMode);
                     EndShaderMode();
                 }
                 
@@ -407,7 +408,7 @@ namespace ShapeEngine.Screen
         /// </summary>
         /// <param name="toSize">The target size for the scale factor.</param>
         /// <returns>Returns a factor for scaling positions.</returns>
-
+        public Dimensions GetTextureDimensions() { return new(texture.texture.width, texture.texture.height); }
         public float GetScaleFactorTo(Vector2 toSize) { return toSize.X / GetSize().X; }
         /// <summary>
         /// Get a factor for scaling a position relative to this texture to another texture.

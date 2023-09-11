@@ -17,7 +17,7 @@ namespace Examples
         private List<string> fontNames = new();
         private MainScene? mainScene = null;
 
-        public GameloopExamples() : base(960 * 2, 540 * 2, 1920, 1080)
+        public GameloopExamples() : base(new(960 * 2, 540 * 2), new(1920, 1080))
         {
             GameCam = new BasicCamera(new(0f), Game.GetSize(), new(0.5f), 1f, 0f);
         }

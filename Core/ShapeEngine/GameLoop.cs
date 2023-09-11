@@ -12,174 +12,6 @@ using System.Text;
 
 namespace ShapeEngine
 {
-
-    
-    public struct Dimension : IEquatable<Dimension>, IFormattable
-    {
-        public int Width;
-        public int Height;
-
-        public Dimension() { this.Width = 0; this.Height = 0; }
-        public Dimension(int value) { this.Width = value; this.Height = value; }
-        public Dimension(int width, int height) { this.Width = width; this.Height = height; }
-        public Dimension(float value) { this.Width = (int)value; this.Height = (int)value; }
-        public Dimension(float width, float height) { this.Width = (int)width; this.Height = (int)height; }
-        public Dimension(Vector2 v) { this.Width = (int)v.X; this.Height = (int)v.Y; }
-
-        public float Area { get => Width * Height; }
-        public int MaxDimension
-        {
-            get
-            {
-                if (Width > Height) return Width;
-                else return Height;
-            }
-        }
-        public int MinDimension
-        {
-            get
-            {
-                if (Width < Height) return Width;
-                else return Height;
-            }
-        }
-
-
-        public Vector2 ToVector2() { return new Vector2(Width, Height); }
-
-        public bool Equals(Dimension other)
-        {
-            return Width == other.Width && Height == other.Height;
-        }
-        public override bool Equals(object? obj)
-        {
-            if(obj != null && obj is Dimension d)
-            {
-                return Equals(d);
-            }
-            return false;
-        }
-        public override readonly string ToString()
-        {
-            return ToString("G", CultureInfo.CurrentCulture);
-        }
-        public readonly string ToString(string? format)
-        {
-            return ToString(format, CultureInfo.CurrentCulture);
-        }
-        public readonly string ToString(string? format, IFormatProvider? formatProvider)
-        {
-            StringBuilder sb = new StringBuilder();
-            string separator = NumberFormatInfo.GetInstance(formatProvider).NumberGroupSeparator;
-            sb.Append('<');
-            sb.Append(Width.ToString(format, formatProvider));
-            sb.Append(separator);
-            sb.Append(' ');
-            sb.Append(Height.ToString(format, formatProvider));
-            sb.Append('>');
-            return sb.ToString();
-        }
-
-        public static Dimension operator +(Dimension left, Dimension right)
-        {
-            return new Vector2(
-                left.Width + right.Width,
-                left.Height + right.Height
-            );
-        }
-        public static Dimension operator /(Dimension left, Dimension right)
-        {
-            return new Vector2(
-                left.Width / right.Width,
-                left.Height / right.Height
-            );
-        }
-        public static Dimension operator /(Dimension value1, int value2)
-        {
-            return value1 / new Dimension(value2);
-        }
-        public static Dimension operator /(Dimension value1, float value2)
-        {
-            return new Dimension(value1.Width / value2, value1.Height / value2);
-        }
-        public static bool operator ==(Dimension left, Dimension right)
-        {
-            return (left.Width == right.Width)
-                && (left.Height == right.Height);
-        }
-        public static bool operator !=(Dimension left, Dimension right)
-        {
-            return !(left == right);
-        }
-        public static Dimension operator *(Dimension left, Dimension right)
-        {
-            return new Vector2(
-                left.Width * right.Width,
-                left.Height * right.Height
-            );
-        }
-        public static Dimension operator *(Dimension left, float right)
-        {
-            return new Dimension(left.Width * right, left.Height * right);
-        }
-        public static Dimension operator *(float left, Dimension right)
-        {
-            return right * left;
-        }
-        public static Dimension operator -(Dimension left, Dimension right)
-        {
-            return new Dimension(
-                left.Width - right.Width,
-                left.Height - right.Height
-            );
-        }
-        public static Dimension operator -(Dimension value)
-        {
-            return Zero - value;
-        }
-
-        
-        public static Dimension Abs(Dimension value)
-        {
-            return new Dimension(
-                (int)MathF.Abs(value.Width),
-                (int)MathF.Abs(value.Height)
-            );
-        }
-        public static Dimension Clamp(Dimension value1, Dimension min, Dimension max)
-        {
-            return Min(Max(value1, min), max);
-        }
-        public static Dimension Lerp(Dimension value1, Dimension value2, float amount)
-        {
-            return (value1 * (1.0f - amount)) + (value2 * amount);
-        }
-        public Dimension Max(Dimension value2)
-        {
-            return new Dimension(
-                (value1.Width > value2.Width) ? value1.Width : value2.Width,
-                (value1.Height > value2.Height) ? value1.Height : value2.Height
-            );
-        }
-        public Dimension Min(Dimension value2)
-        {
-            return new Dimension(
-                (value1.Width < value2.Width) ? value1.Width : value2.Width,
-                (value1.Height < value2.Height) ? value1.Height : value2.Height
-            );
-        }
-        
-        public override readonly int GetHashCode()
-        {
-            return HashCode.Combine(Width, Height);
-        }
-
-        
-    }
-
-
-
-
     internal class DelayedAction : ISequenceable
     {
         private Action action;
@@ -248,6 +80,169 @@ namespace ShapeEngine
         public bool restart = false;
         public ExitCode(bool restart) { this.restart = restart; }
 
+    }
+    public struct Dimensions : IEquatable<Dimensions>, IFormattable
+    {
+        public int Width;
+        public int Height;
+
+        public Dimensions() { this.Width = 0; this.Height = 0; }
+        public Dimensions(int value) { this.Width = value; this.Height = value; }
+        public Dimensions(int width, int height) { this.Width = width; this.Height = height; }
+        public Dimensions(float value) { this.Width = (int)value; this.Height = (int)value; }
+        public Dimensions(float width, float height) { this.Width = (int)width; this.Height = (int)height; }
+        public Dimensions(Vector2 v) { this.Width = (int)v.X; this.Height = (int)v.Y; }
+
+        public bool IsValid() { return Width >= 0 && Height >= 0; }
+        public float Area { get => Width * Height; }
+        public int MaxDimension
+        {
+            get
+            {
+                if (Width > Height) return Width;
+                else return Height;
+            }
+        }
+        public int MinDimension
+        {
+            get
+            {
+                if (Width < Height) return Width;
+                else return Height;
+            }
+        }
+
+
+        public Vector2 ToVector2() { return new Vector2(Width, Height); }
+
+        public bool Equals(Dimensions other)
+        {
+            return Width == other.Width && Height == other.Height;
+        }
+        public override bool Equals(object? obj)
+        {
+            if(obj != null && obj is Dimensions d)
+            {
+                return Equals(d);
+            }
+            return false;
+        }
+        public override readonly string ToString()
+        {
+            return ToString("G", CultureInfo.CurrentCulture);
+        }
+        public readonly string ToString(string? format)
+        {
+            return ToString(format, CultureInfo.CurrentCulture);
+        }
+        public readonly string ToString(string? format, IFormatProvider? formatProvider)
+        {
+            StringBuilder sb = new StringBuilder();
+            string separator = NumberFormatInfo.GetInstance(formatProvider).NumberGroupSeparator;
+            sb.Append('<');
+            sb.Append(Width.ToString(format, formatProvider));
+            sb.Append(separator);
+            sb.Append(' ');
+            sb.Append(Height.ToString(format, formatProvider));
+            sb.Append('>');
+            return sb.ToString();
+        }
+
+        public static Dimensions operator +(Dimensions left, Dimensions right)
+        {
+            return new Dimensions(
+                left.Width + right.Width,
+                left.Height + right.Height
+            );
+        }
+        public static Dimensions operator /(Dimensions left, Dimensions right)
+        {
+            return new Dimensions(
+                left.Width / right.Width,
+                left.Height / right.Height
+            );
+        }
+        public static Dimensions operator /(Dimensions value1, int value2)
+        {
+            return value1 / new Dimensions(value2);
+        }
+        public static Dimensions operator /(Dimensions value1, float value2)
+        {
+            return new Dimensions(value1.Width / value2, value1.Height / value2);
+        }
+        public static bool operator ==(Dimensions left, Dimensions right)
+        {
+            return (left.Width == right.Width)
+                && (left.Height == right.Height);
+        }
+        public static bool operator !=(Dimensions left, Dimensions right)
+        {
+            return !(left == right);
+        }
+        public static Dimensions operator *(Dimensions left, Dimensions right)
+        {
+            return new Dimensions(
+                left.Width * right.Width,
+                left.Height * right.Height
+            );
+        }
+        public static Dimensions operator *(Dimensions left, float right)
+        {
+            return new Dimensions(left.Width * right, left.Height * right);
+        }
+        public static Dimensions operator *(float left, Dimensions right)
+        {
+            return right * left;
+        }
+        public static Dimensions operator -(Dimensions left, Dimensions right)
+        {
+            return new Dimensions(
+                left.Width - right.Width,
+                left.Height - right.Height
+            );
+        }
+        public static Dimensions operator -(Dimensions value)
+        {
+            return new Dimensions(0) - value;
+        }
+
+        
+        public static Dimensions Abs(Dimensions value)
+        {
+            return new Dimensions(
+                (int)MathF.Abs(value.Width),
+                (int)MathF.Abs(value.Height)
+            );
+        }
+        public static Dimensions Clamp(Dimensions value1, Dimensions min, Dimensions max)
+        {
+            return Min(Max(value1, min), max);
+        }
+        public static Dimensions Lerp(Dimensions value1, Dimensions value2, float amount)
+        {
+            return (value1 * (1.0f - amount)) + (value2 * amount);
+        }
+        public static Dimensions Max(Dimensions value1, Dimensions value2)
+        {
+            return new Dimensions(
+                (value1.Width > value2.Width) ? value1.Width : value2.Width,
+                (value1.Height > value2.Height) ? value1.Height : value2.Height
+            );
+        }
+        public static Dimensions Min(Dimensions value1, Dimensions value2)
+        {
+            return new Dimensions(
+                (value1.Width < value2.Width) ? value1.Width : value2.Width,
+                (value1.Height < value2.Height) ? value1.Height : value2.Height
+            );
+        }
+        
+        public override readonly int GetHashCode()
+        {
+            return HashCode.Combine(Width, Height);
+        }
+
+        
     }
 
 
@@ -350,7 +345,7 @@ namespace ShapeEngine
         private List<DeferredInfo> deferred = new();
 
 
-        public delegate void WindowSizeChanged(int w, int h);
+        public delegate void WindowSizeChanged(Dimensions newDimensions);
         public event WindowSizeChanged? OnWindowSizeChanged;
 
         public int FrameRateLimit { get; private set; } = 60;
@@ -361,9 +356,9 @@ namespace ShapeEngine
         public int FPSTarget { get; private set; }
 
         public bool VSync { get; private set; } = true;
-        public (int width, int height) CurWindowSize { get; private set; } = (0, 0);
-        public (int width, int height) WindowedWindowSize { get; private set; } = (0, 0);
-        public (int width, int height) WindowMinSize { get; } = (128, 128);
+        public Dimensions CurWindowSize { get; private set; } = new();
+        public Dimensions WindowedWindowSize { get; private set; } = new();
+        public Dimensions WindowMinSize { get; } = new (128, 128);
 
         private bool windowMaximized = false;
         private bool resizableState = false;
@@ -390,7 +385,7 @@ namespace ShapeEngine
 
             FrameRateLimit = 60;
             SetVsync(true);
-            Raylib.SetWindowMinSize(WindowMinSize.width, WindowMinSize.height);
+            Raylib.SetWindowMinSize(WindowMinSize.Width, WindowMinSize.Height);
         }
         public void SetupWindow(string windowName, bool undecorated, bool resizable)
         {
@@ -484,9 +479,9 @@ namespace ShapeEngine
         }
         private void DrawCursor(Vector2 screenSize, Vector2 pos) { if (Cursor != null) Cursor.Draw(screenSize, pos); }
 
-        public ScreenTexture AddScreenTexture(int width, int height, int drawOrder)
+        public ScreenTexture AddScreenTexture(Dimensions dimensions, int drawOrder)
         {
-            var newScreenTexture = new ScreenTexture(width, height, drawOrder);
+            var newScreenTexture = new ScreenTexture(dimensions, drawOrder);
 
             AddScreenTexture(newScreenTexture);
 
@@ -495,7 +490,7 @@ namespace ShapeEngine
         public bool AddScreenTexture(ScreenTexture newScreenTexture)
         {
             if (screenTextures.ContainsKey(newScreenTexture.ID)) return false;
-            newScreenTexture.AdjustSize(CurWindowSize.width, CurWindowSize.height);
+            newScreenTexture.AdjustSize(CurWindowSize);
             screenTextures.Add(newScreenTexture.ID, newScreenTexture);
             return true;
         }
@@ -575,7 +570,7 @@ namespace ShapeEngine
         {
 
             var newMonitor = Monitor.HasMonitorSetupChanged();
-            if (newMonitor.available)
+            if (newMonitor.Available)
             {
                 MonitorChanged(newMonitor);
             }
@@ -584,7 +579,7 @@ namespace ShapeEngine
         {
             foreach (var st in sortedTextures)
             {
-                st.MousePos = st.ScalePosition(MousePos, new Vector2(CurWindowSize.width, CurWindowSize.height));
+                st.MousePos = st.ScalePosition(MousePos, CurWindowSize.ToVector2());
                 st.Update(dt);
             }
         }
@@ -599,14 +594,14 @@ namespace ShapeEngine
         }
         private void DrawGameloopToScreen(ActiveScreenTextures sortedTextures)
         {
-            
-            Vector2 curScreenSize = new(CurWindowSize.width, CurWindowSize.height);
+
+            Vector2 curScreenSize = CurWindowSize.ToVector2();
             BeginDrawing();
             ClearBackground(BackgroundColor);
 
             foreach (var st in sortedTextures)
             {
-                st.DrawToScreen(CurWindowSize.width, CurWindowSize.height);
+                st.DrawToScreen(CurWindowSize);
             }
 
             DrawToScreen(curScreenSize, MousePos);
@@ -624,26 +619,29 @@ namespace ShapeEngine
         {
             if (IsFullscreen()) return;
 
-            int w = GetScreenWidth();
-            int h = GetScreenHeight();
+            //int w = GetScreenWidth();
+            //int h = GetScreenHeight();
+            Dimensions screenDim = new(GetScreenWidth(), GetScreenHeight());
 
             var monitor = Monitor.CurMonitor();
-            int maxW = monitor.width;
-            int maxH = monitor.height;
+            Dimensions maxDim = monitor.Dimensions;
+            //int maxW = monitor.Width;
+            //int maxH = monitor.Height;
 
-            if (CurWindowSize.width != w || CurWindowSize.height != h)
+            if (CurWindowSize.Width != screenDim.Width || CurWindowSize.Height != screenDim.Height)
             {
-                int newW = SUtils.Clamp(w, WindowMinSize.width, maxW);
-                int newH = SUtils.Clamp(h, WindowMinSize.height, maxH);
-                CurWindowSize = (newW, newH);
+                var newDim = Dimensions.Clamp(screenDim, WindowMinSize, maxDim);
+                //int newW = SUtils.Clamp(w, WindowMinSize.Width, maxW);
+                //int newH = SUtils.Clamp(h, WindowMinSize.Height, maxH);
+                CurWindowSize = newDim;// new Dimension(newW, newH);
 
                 WindowedWindowSize = CurWindowSize;
 
-                OnWindowSizeChanged?.Invoke(newW, newH);
+                OnWindowSizeChanged?.Invoke(newDim);
 
                 foreach (var st in screenTextures.GetAll())
                 {
-                    st.AdjustSize(CurWindowSize.width, CurWindowSize.height);
+                    st.AdjustSize(CurWindowSize);
                 }
             }
         }
@@ -685,7 +683,7 @@ namespace ShapeEngine
         public bool SetMonitor(int newMonitor)
         {
             var monitor = Monitor.SetMonitor(newMonitor);
-            if (monitor.available)
+            if (monitor.Available)
             {
                 MonitorChanged(monitor);
                 return true;
@@ -695,7 +693,7 @@ namespace ShapeEngine
         public void NextMonitor()
         {
             var nextMonitor = Monitor.NextMonitor();
-            if (nextMonitor.available)
+            if (nextMonitor.Available)
             {
                 MonitorChanged(nextMonitor);
             }
@@ -725,7 +723,7 @@ namespace ShapeEngine
             if (enabled)
             {
                 VSync = true;
-                SetFPS(Monitor.CurMonitor().refreshrate);
+                SetFPS(Monitor.CurMonitor().Refreshrate);
             }
             else
             {
@@ -738,9 +736,9 @@ namespace ShapeEngine
             SetVsync(!VSync);
             return VSync;
         }
-        public void ResizeWindow(int newWidth, int newHeight)
+        public void ResizeWindow(Dimensions newDimensions)
         {
-            ChangeWindowDimensions(newWidth, newHeight, false);
+            ChangeWindowDimensions(newDimensions, false);
         }
         public void ResetWindow()
         {
@@ -749,7 +747,7 @@ namespace ShapeEngine
                 Raylib.ToggleFullscreen();
             }
             var monitor = Monitor.CurMonitor();
-            ChangeWindowDimensions(monitor.width / 2, monitor.height / 2, false);
+            ChangeWindowDimensions(monitor.Dimensions / 2, false);
         }
         public bool IsFullscreen() { return IsWindowFullscreen(); }
         public void SetFullscreen(bool enabled)
@@ -765,17 +763,17 @@ namespace ShapeEngine
             if (IsWindowFullscreen())
             {
                 ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
-                if (WindowedWindowSize.width > monitor.width || WindowedWindowSize.height > monitor.height)
+                if (WindowedWindowSize.Width > monitor.Width || WindowedWindowSize.Height > monitor.Height)
                 {
-                    WindowedWindowSize = (monitor.width / 2, monitor.height / 2);
+                    WindowedWindowSize = monitor.Dimensions / 2; //new Dimension(monitor.width / 2, monitor.height / 2);
                 }
 
-                ChangeWindowDimensions(WindowedWindowSize.width, WindowedWindowSize.height, false);
-                ChangeWindowDimensions(WindowedWindowSize.width, WindowedWindowSize.height, false);//needed for some monitors ...
+                ChangeWindowDimensions(WindowedWindowSize, false);
+                ChangeWindowDimensions(WindowedWindowSize, false);//needed for some monitors ...
             }
             else
             {
-                ChangeWindowDimensions(monitor.width, monitor.height, true);
+                ChangeWindowDimensions(monitor.Dimensions, true);
                 SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
             }
 
@@ -839,12 +837,12 @@ namespace ShapeEngine
 
                 if(resizableState) ClearWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
                 if(!undecoratedState) SetWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
-                ChangeWindowDimensions(monitor.width, monitor.height, true);
+                ChangeWindowDimensions(monitor.Dimensions, true);
             }
             else
             {
                 windowMaximized = false;
-                ChangeWindowDimensions(WindowedWindowSize.width, WindowedWindowSize.height, true);
+                ChangeWindowDimensions(WindowedWindowSize, true);
                 if(resizableState) SetWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
                 if(!undecoratedState) ClearWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
 
@@ -860,77 +858,81 @@ namespace ShapeEngine
 
         private void MonitorChanged(MonitorInfo monitor)
         {
-            int prevWidth = CurWindowSize.width;
-            int prevHeight = CurWindowSize.height;
+            //int prevWidth = CurWindowSize.width;
+            //int prevHeight = CurWindowSize.height;
+            var prevDimensions = CurWindowSize;
 
             if (IsWindowFullscreen())
             {
-                SetWindowMonitor(monitor.index);
-                ChangeWindowDimensions(monitor.width, monitor.height, true);
+                SetWindowMonitor(monitor.Index);
+                ChangeWindowDimensions(monitor.Dimensions, true);
                 SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
             }
             else
             {
-                int windowWidth = prevWidth;
-                int windowHeight = prevHeight;
-                if (windowWidth > monitor.width || windowHeight > monitor.height)
+                //int windowWidth = prevWidth;
+                //int windowHeight = prevHeight;
+                var windowDimensions = prevDimensions;
+                if (windowDimensions.Width > monitor.Width || windowDimensions.Height > monitor.Height)
                 {
-                    windowWidth = monitor.width / 2;
-                    windowHeight = monitor.height / 2;
+                    //windowWidth = monitor.Width / 2;
+                    //windowHeight = monitor.Height / 2;
+                    windowDimensions = monitor.Dimensions / 2;
                 }
-                ChangeWindowDimensions(monitor.width, monitor.height, true);
+                ChangeWindowDimensions(monitor.Dimensions, true);
                 SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
-                SetWindowMonitor(monitor.index);
+                SetWindowMonitor(monitor.Index);
                 ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
-                ChangeWindowDimensions(windowWidth, windowHeight, false);
+                ChangeWindowDimensions(windowDimensions, false);
             }
             if (VSync)
             {
-                SetFPS(monitor.refreshrate);
+                SetFPS(monitor.Refreshrate);
             }
         }
-        private void ChangeWindowDimensions(int newWidth, int newHeight, bool fullscreenChange = false)
+        private void ChangeWindowDimensions(Dimensions dimensions, bool fullscreenChange = false)
         {
             //if (newWidth == CUR_WINDOW_SIZE.width && newHeight == CUR_WINDOW_SIZE.height) return;
 
-            CurWindowSize = (newWidth, newHeight);
-            if (!fullscreenChange) WindowedWindowSize = (newWidth, newHeight);
+            CurWindowSize = dimensions; // (newWidth, newHeight);
+            if (!fullscreenChange) WindowedWindowSize = dimensions; // (newWidth, newHeight);
             //GAME.ChangeWindowSize(newWidth, newHeight);
             //UI.ChangeWindowSize(newWidth, newHeight);
 
-            SetWindowSize(newWidth, newHeight);
+            SetWindowSize(dimensions.Width, dimensions.Height);
             var monitor = Monitor.CurMonitor();
 
-            int winPosX = monitor.width / 2 - newWidth / 2;
-            int winPosY = monitor.height / 2 - newHeight / 2;
+            int winPosX = monitor.Width / 2 - dimensions.Width / 2;
+            int winPosY = monitor.Height / 2 - dimensions.Height / 2;
             //SetWindowPosition(winPosX + (int)MONITOR_OFFSET.X, winPosY + (int)MONITOR_OFFSET.Y);
-            SetWindowPosition(winPosX + (int)monitor.position.X, winPosY + (int)monitor.position.Y);
+            SetWindowPosition(winPosX + (int)monitor.Position.X, winPosY + (int)monitor.Position.Y);
 
-            OnWindowSizeChanged?.Invoke(newWidth, newHeight);
+            OnWindowSizeChanged?.Invoke(dimensions);
             
             foreach (var st in screenTextures.GetAll())
             {
-                st.AdjustSize(CurWindowSize.width, CurWindowSize.height);
+                st.AdjustSize(CurWindowSize);
             }
         }
         private void SetupWindowDimensions()
         {
             var monitor = Monitor.CurMonitor();
-            int newWidth = monitor.width / 2;
-            int newHeight = monitor.height / 2;
+            //int newWidth = monitor.width / 2;
+            //int newHeight = monitor.height / 2;
+            Dimensions newDimensions = monitor.Dimensions / 2;
+            if (newDimensions == CurWindowSize) return;
+            //if (newWidth == CurWindowSize.width && newHeight == CurWindowSize.height) return;
 
-            if (newWidth == CurWindowSize.width && newHeight == CurWindowSize.height) return;
+            CurWindowSize = newDimensions; // (newWidth, newHeight);
+            WindowedWindowSize = newDimensions; // (newWidth, newHeight);
 
-            CurWindowSize = (newWidth, newHeight);
-            WindowedWindowSize = (newWidth, newHeight);
-
-            SetWindowSize(newWidth, newHeight);
-            int winPosX = monitor.width / 2 - newWidth / 2;
-            int winPosY = monitor.height / 2 - newHeight / 2;
+            SetWindowSize(newDimensions.Width, newDimensions.Height);
+            int winPosX = monitor.Width / 2 - newDimensions.Width / 2;
+            int winPosY = monitor.Height / 2 - newDimensions.Height / 2;
             //SetWindowPosition(winPosX + (int)MONITOR_OFFSET.X, winPosY + (int)MONITOR_OFFSET.Y);
-            SetWindowPosition(winPosX + (int)monitor.position.X, winPosY + (int)monitor.position.Y);
+            SetWindowPosition(winPosX + (int)monitor.Position.X, winPosY + (int)monitor.Position.Y);
 
-            OnWindowSizeChanged?.Invoke(newWidth, newHeight);
+            OnWindowSizeChanged?.Invoke(newDimensions);
         }
 
     }
@@ -956,10 +958,10 @@ namespace ShapeEngine
         /// </summary>
         public IScene CurScene { get; private set; } = new SceneEmpty();
 
-        public GameLoopScene(int gameTextureWidth, int gameTextureHeight, int uiTextureWidth, int uiTextureHeight) : base()
+        public GameLoopScene(Dimensions gameDimensions, Dimensions uiDimensions) : base()
         {
-            Game = new ScreenTexture(gameTextureWidth, gameTextureHeight, 10);
-            UI = new ScreenTexture(uiTextureWidth, uiTextureHeight, 100);
+            Game = new ScreenTexture(gameDimensions, 10);
+            UI = new ScreenTexture(uiDimensions, 100);
             
             Game.SetCamera(new BasicCamera(new(0f), Game.GetSize(), new(0.5f), 1f, 0f));
             
@@ -1041,10 +1043,10 @@ namespace ShapeEngine
         /// </summary>
         public TScene CurScene { get; private set; }
 
-        public GameLoopScene(int gameTextureWidth, int gameTextureHeight, int uiTextureWidth, int uiTextureHeight, TScene startScene) : base()
+        public GameLoopScene(Dimensions gameDimensions, Dimensions uiDimensions, TScene startScene) : base()
         {
-            Game = new ScreenTexture(gameTextureWidth, gameTextureHeight, 0);
-            UI = new ScreenTexture(uiTextureWidth, uiTextureHeight, 1);
+            Game = new ScreenTexture(gameDimensions, 0);
+            UI = new ScreenTexture(uiDimensions, 100);
 
             Game.SetCamera(new BasicCamera(new(0f), Game.GetSize(), new(0.5f), 1f, 0f));
 

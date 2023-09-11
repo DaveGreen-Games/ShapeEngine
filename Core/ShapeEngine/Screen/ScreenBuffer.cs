@@ -17,14 +17,14 @@ namespace ShapeEngine.Screen
             if (index == 1) return B;
             else return null;
         }
-        public void Load(int width, int height)
+        public void Load(Dimensions dimensions)
         {
             
             if (Loaded) Unload();
 
             Loaded = true;
-            A = new ScreenBuffer(width, height);
-            B = new ScreenBuffer(width, height);
+            A = new ScreenBuffer(dimensions);
+            B = new ScreenBuffer(dimensions);
         }
         public void Unload()
         {
@@ -56,7 +56,14 @@ namespace ShapeEngine.Screen
             //destRec = new Rectangle(targetWidth / 2, targetHeight / 2, targetWidth, targetHeight);
             //origin = new Vector2(targetWidth / 2, targetHeight / 2);
         }
+        public ScreenBuffer(Dimensions dimensions)//, int targetWidth, int targetHeight)
+        {
+            texture = LoadRenderTexture(dimensions.Width, dimensions.Height);
 
+            sourceRec = new Rectangle(0, 0, dimensions.Width, -dimensions.Height);
+            //destRec = new Rectangle(targetWidth / 2, targetHeight / 2, targetWidth, targetHeight);
+            //origin = new Vector2(targetWidth / 2, targetHeight / 2);
+        }
         public void StartTextureMode()
         {
             BeginTextureMode(texture);
@@ -67,16 +74,16 @@ namespace ShapeEngine.Screen
             Raylib.EndTextureMode();
         }
 
-        public void DrawTexture(int targetWidth, int targetHeight, int blendMode = -1)
+        public void DrawTexture(Dimensions targetdimensions, int blendMode = -1)
         {
 
-            Vector2 origin = new Vector2(targetWidth / 2, targetHeight / 2);
-            Vector2 size = GetDestRectSize(targetWidth, targetHeight);
+            Vector2 origin = new Vector2(targetdimensions.Width / 2, targetdimensions.Height / 2);
+            Vector2 size = GetDestRectSize(targetdimensions);
             float w = size.X;
             float h = size.Y;
             Rectangle destRec = new();
-            destRec.x = targetWidth * 0.5f;
-            destRec.y = targetHeight * 0.5f;
+            destRec.x = targetdimensions.Width * 0.5f;
+            destRec.y = targetdimensions.Height * 0.5f;
             destRec.width = w;
             destRec.height = h;
             origin.X = w * 0.5f;
@@ -99,20 +106,20 @@ namespace ShapeEngine.Screen
 
         }
 
-        private Vector2 GetDestRectSize(int width, int height)
+        private Vector2 GetDestRectSize(Dimensions dimensions)
         {
             float w, h;
-            float fWidth = width / (float)texture.texture.width;
-            float fHeight = height / (float)texture.texture.height;
+            float fWidth = dimensions.Width / (float)texture.texture.width;
+            float fHeight = dimensions.Width / (float)texture.texture.height;
             if (fWidth <= fHeight)
             {
-                w = width;
+                w = dimensions.Width;
                 float f = texture.texture.height / (float)texture.texture.width;
                 h = w * f;
             }
             else
             {
-                h = height;
+                h = dimensions.Height;
                 float f = texture.texture.width / (float)texture.texture.height;
                 w = h * f;
             }

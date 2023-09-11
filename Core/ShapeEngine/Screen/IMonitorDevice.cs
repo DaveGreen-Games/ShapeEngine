@@ -99,8 +99,8 @@ namespace ShapeEngine.Screen
                 GenerateInfo();
                 OnMonitorSetupChanged?.Invoke(monitors);
 
-                var monitor = monitors.Find((MonitorInfo mi) => mi.name == oldMonitor.name);
-                if (!monitor.available) //current monitor was removed
+                var monitor = monitors.Find((MonitorInfo mi) => mi.Name == oldMonitor.Name);
+                if (!monitor.Available) //current monitor was removed
                 {
                     var newMonitor = Get();
                     OnMonitorChanged?.Invoke(oldMonitor, newMonitor);
@@ -108,9 +108,9 @@ namespace ShapeEngine.Screen
                 }
                 else//current monitor is still in the list
                 {
-                    if(monitor.index != oldMonitor.index)//just update the index in case the monitors index has changed
+                    if(monitor.Index != oldMonitor.Index)//just update the index in case the monitors index has changed
                     {
-                        curIndex = monitor.index;
+                        curIndex = monitor.Index;
                     }
                     return new();
                 }
@@ -127,22 +127,23 @@ namespace ShapeEngine.Screen
             return true;
         }
         public int GetCurIndex() { return curIndex; }
-        public (int width, int height) GetSize(int monitorIndex)
+        public Dimensions GetSize(int monitorIndex)
         {
-            if (monitorIndex < 0 || monitorIndex >= monitors.Count) return (-1, -1);
-            return (monitors[monitorIndex].width, monitors[monitorIndex].height);
+            if (monitorIndex < 0 || monitorIndex >= monitors.Count) return new(-1, -1);
+            return monitors[monitorIndex].Dimensions;
+            //return (monitors[monitorIndex].width, monitors[monitorIndex].height);
         }
-        public (int width, int height) GetSize() { return GetSize(curIndex); }
+        public Dimensions GetSize() { return GetSize(curIndex); }
         public int GetRefreshrate(int monitorIndex)
         {
             if (monitorIndex < 0 || monitorIndex >= monitors.Count) return -1;
-            return monitors[monitorIndex].refreshrate;
+            return monitors[monitorIndex].Refreshrate;
         }
         public int GetRefreshrate() { return GetRefreshrate(curIndex); }
         public string GetName(int monitorIndex)
         {
             if (monitorIndex < 0 || monitorIndex >= monitors.Count) return "";
-            return monitors[monitorIndex].name;
+            return monitors[monitorIndex].Name;
         }
         public string GetName() { return GetName(curIndex); }
         public MonitorInfo Get(int monitorIndex)
@@ -179,32 +180,33 @@ namespace ShapeEngine.Screen
     }
     public struct MonitorInfo
     {
-        public bool available = false;
-        public string name = "";
-        public int width = -1;
-        public int height = -1;
-        public int refreshrate = -1;
-        public int index = -1;
-        public Vector2 position = new();
+        public bool Available = false;
+        public string Name = "";
+        public Dimensions Dimensions = new();
+        public int Refreshrate = -1;
+        public int Index = -1;
+        public Vector2 Position = new();
+
+        public int Width { get { return Dimensions.Width; } }
+        public int Height { get { return Dimensions.Height; } }
+
         public MonitorInfo()
         {
-            this.available = false;
-            this.name = "";
-            this.width = -1;
-            this.height = -1;
-            this.refreshrate = -1;
-            this.index = -1;
-            this.position = new();
+            this.Available = false;
+            this.Name = "";
+            this.Dimensions = new(-1, -1);
+            this.Refreshrate = -1;
+            this.Index = -1;
+            this.Position = new();
         }
         public MonitorInfo(string name, int w, int h, Vector2 pos, int refreshrate, int index)
         {
-            this.available = true;
-            this.name = name;
-            this.width = w;
-            this.height = h;
-            this.refreshrate = refreshrate;
-            this.index = index;
-            this.position = pos;
+            this.Available = true;
+            this.Name = name;
+            this.Dimensions = new(w, h);
+            this.Refreshrate = refreshrate;
+            this.Index = index;
+            this.Position = pos;
         }
     }
 
