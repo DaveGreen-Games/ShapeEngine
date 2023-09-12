@@ -39,6 +39,7 @@ namespace Examples.Scenes
             examples.Add(new AreaExample());
             examples.Add(new CameraExample());
             examples.Add(new EffectCameraExample());
+            examples.Add(new DelauneyExample());
             examples.Add(new BouncyCircles());
             examples.Add(new TextScalingExample());
             examples.Add(new TextWrapExample());

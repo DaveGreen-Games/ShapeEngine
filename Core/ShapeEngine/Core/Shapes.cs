@@ -195,7 +195,21 @@ namespace ShapeEngine.Core
         #endregion
 
         #region Equality & HashCode
+        /// <summary>
+        /// Checks the equality of 2 segments without the direction.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
         public bool Equals(Segment other)
+        {
+            return (Start == other.Start && End == other.End) || (Start == other.End && End == other.Start);
+        }
+        /// <summary>
+        /// Checks the equality of 2 segments with the direction.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
+        public bool EqualsExactly(Segment other)
         {
             return Start == other.Start && End == other.End;
         }
@@ -475,7 +489,7 @@ namespace ShapeEngine.Core
         }
         public readonly bool SharesVertex(Triangle t) { return SharesVertex(t.a) || SharesVertex(t.b) || SharesVertex(t.c); }
         
-        public bool IsValid() { return GetArea() > 0f; }
+        public readonly bool IsValid() { return GetArea() > 0f; }
         public readonly bool IsNarrow(float narrowValue = 0.2f)
         {
             Points points = new() { a, b, c };
@@ -545,7 +559,7 @@ namespace ShapeEngine.Core
 
             return Polygon.TriangulateDelaunay(points);
         }
-        public Triangulation Triangulate(float minArea)
+        public readonly Triangulation Triangulate(float minArea)
         {
             if (minArea <= 0) return new() { new(a,b,c,FlippedNormals) };
 
@@ -603,6 +617,7 @@ namespace ShapeEngine.Core
         #region Equality & HashCode
         public bool Equals(Triangle other)
         {
+
             return a == other.a && b == other.b && c == other.c;
         }
         public override readonly int GetHashCode()
@@ -641,7 +656,7 @@ namespace ShapeEngine.Core
         public Circle GetBoundingCircle() { return GetCircumCircle(); } // ToPolygon().GetBoundingCircle(); }
         public float GetCircumference() { return MathF.Sqrt(GetCircumferenceSquared()); }
         public float GetCircumferenceSquared() { return A.LengthSquared() + B.LengthSquared() + C.LengthSquared(); }
-        public float GetArea() 
+        public readonly float GetArea() 
         {
             //float al = A.Length();
             //float bl = B.Length();
