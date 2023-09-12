@@ -1,5 +1,6 @@
 ﻿
 using System.Numerics;
+using ShapeEngine.Core;
 
 namespace ShapeEngine.Screen
 {

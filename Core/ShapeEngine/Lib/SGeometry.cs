@@ -109,8 +109,8 @@ namespace ShapeEngine.Lib
 
         public static bool CheckCCDDistance(this Circle c, Vector2 prevPos)
         {
-            float disSq = (c.center - prevPos).LengthSquared();
-            float r = c.radius;
+            float disSq = (c.Center - prevPos).LengthSquared();
+            float r = c.Radius;
             //float r2 = r + r;
             return disSq > r * r;// r2 * r2;
         }
@@ -131,8 +131,8 @@ namespace ShapeEngine.Lib
         }
         public static Vector2 CheckCCD(this Circle c, Vector2 prevPos, IShape other)
         {
-            Segment centerRay = new(prevPos, c.center);
-            float r = c.radius;
+            Segment centerRay = new(prevPos, c.Center);
+            float r = c.Radius;
             float r2 = r + r;
             //moved more than twice the shapes radius -> means gap between last & cur frame
             if (centerRay.LengthSquared > r2 * r2)
@@ -148,7 +148,7 @@ namespace ShapeEngine.Lib
                 }
                 
             }
-            return c.center;
+            return c.Center;
         }
 
 
@@ -409,8 +409,8 @@ namespace ShapeEngine.Lib
             if (!OverlapRectLine(r, s.Start, s.Displacement)) return false;
             RangeFloat rectRange = new
                 (
-                    r.x,
-                    r.x + r.width
+                    r.X,
+                    r.X + r.Width
                 );
             RangeFloat segmentRange = new
                 (
@@ -420,8 +420,8 @@ namespace ShapeEngine.Lib
 
             if (!SRect.OverlappingRange(rectRange, segmentRange)) return false;
 
-            rectRange.min = r.y;
-            rectRange.max = r.y + r.height;
+            rectRange.min = r.Y;
+            rectRange.max = r.Y + r.Height;
             rectRange.Sort();
 
             segmentRange.min = s.Start.Y;
@@ -462,9 +462,9 @@ namespace ShapeEngine.Lib
             float aY = s.Start.Y;
             float bX = s.End.X;
             float bY = s.End.Y;
-            float cX = c.center.X;
-            float cY = c.center.Y;
-            float R = c.radius;
+            float cX = c.Center.X;
+            float cY = c.Center.Y;
+            float R = c.Radius;
 
 
             float dX = bX - aX;
@@ -573,10 +573,10 @@ namespace ShapeEngine.Lib
             CollisionPoints points = new();
             foreach (var seg in segments)
             {
-                var intersectPoints = IntersectSegmentCircle(seg.Start, seg.End, c.center, c.radius);
+                var intersectPoints = IntersectSegmentCircle(seg.Start, seg.End, c.Center, c.Radius);
                 foreach (var p in intersectPoints)
                 {
-                    Vector2 n = SVec.Normalize(p - c.center);
+                    Vector2 n = SVec.Normalize(p - c.Center);
                     points.Add(new(p, n));
                 }
             }
@@ -613,12 +613,12 @@ namespace ShapeEngine.Lib
         }
         public static bool OverlapShape(this Circle c, Segment s)
         {
-            if (c.radius <= 0.0f) return s.IsPointInside(c.center); // IsPointInside(s, c.center);
+            if (c.Radius <= 0.0f) return s.IsPointInside(c.Center); // IsPointInside(s, c.center);
             if (c.IsPointInside(s.Start)) return true;
             if (c.IsPointInside(s.End)) return true;
 
             Vector2 d = s.End - s.Start;
-            Vector2 lc = c.center - s.Start;
+            Vector2 lc = c.Center - s.Start;
             Vector2 p = SVec.Project(lc, d);
             Vector2 nearest = s.Start + p;
 
@@ -629,38 +629,38 @@ namespace ShapeEngine.Lib
         }
         public static bool OverlapShape(this Circle a, Circle b)
         {
-            if (a.radius <= 0.0f && b.radius > 0.0f) return b.IsPointInside(a.center);
-            else if (b.radius <= 0.0f && a.radius > 0.0f) return a.IsPointInside(b.center);
-            else if (a.radius <= 0.0f && b.radius <= 0.0f) return IsPointOnPoint(a.center, b.center);
-            float rSum = a.radius + b.radius;
+            if (a.Radius <= 0.0f && b.Radius > 0.0f) return b.IsPointInside(a.Center);
+            else if (b.Radius <= 0.0f && a.Radius > 0.0f) return a.IsPointInside(b.Center);
+            else if (a.Radius <= 0.0f && b.Radius <= 0.0f) return IsPointOnPoint(a.Center, b.Center);
+            float rSum = a.Radius + b.Radius;
 
-            return (a.center - b.center).LengthSquared() < rSum * rSum;
+            return (a.Center - b.Center).LengthSquared() < rSum * rSum;
         }
         public static bool OverlapShape(this Circle c, Triangle t) { return OverlapShape(t, c); }
         public static bool OverlapShape(this Circle c, Rect r)
         {
-            if (c.radius <= 0.0f) return r.IsPointInside(c.center);
-            return c.IsPointInside(r.ClampOnRect(c.center));
+            if (c.Radius <= 0.0f) return r.IsPointInside(c.Center);
+            return c.IsPointInside(r.ClampOnRect(c.Center));
         }
         public static bool OverlapShape(this Circle c, Polygon poly) { return poly.OverlapShape(c); }
         public static bool OverlapShape(this Circle c, Polyline pl) { return OverlapShape(pl, c); }
         public static bool OverlapCircleLine(this Circle c, Vector2 linePos, Vector2 lineDir)
         {
-            Vector2 lc = c.center - linePos;
+            Vector2 lc = c.Center - linePos;
             Vector2 p = SVec.Project(lc, lineDir);
             Vector2 nearest = linePos + p;
             return c.IsPointInside(nearest);
         }
         public static bool OverlapCircleRay(this Circle c, Vector2 rayPos, Vector2 rayDir)
         {
-            Vector2 w = c.center - rayPos;
+            Vector2 w = c.Center - rayPos;
             float p = w.X * rayDir.Y - w.Y * rayDir.X;
-            if (p < -c.radius || p > c.radius) return false;
+            if (p < -c.Radius || p > c.Radius) return false;
             float t = w.X * rayDir.X + w.Y * rayDir.Y;
             if (t < 0.0f)
             {
                 float d = w.LengthSquared();
-                if (d > c.radius * c.radius) return false;
+                if (d > c.Radius * c.Radius) return false;
             }
             return true;
         }
@@ -720,12 +720,12 @@ namespace ShapeEngine.Lib
         #region Intersect
         public static CollisionPoints IntersectShape(this Circle cA, Circle cB)
         {
-            float cx0 = cA.center.X; 
-            float cy0 = cA.center.Y;
-            float radius0 = cA.radius;
-            float cx1 = cB.center.X;
-            float cy1 = cB.center.Y;
-            float radius1 = cB.radius;
+            float cx0 = cA.Center.X; 
+            float cy0 = cA.Center.Y;
+            float radius0 = cA.Radius;
+            float cx1 = cB.Center.X;
+            float cy1 = cB.Center.Y;
+            float radius1 = cB.Radius;
             // Find the distance between the centers.
             float dx = cx0 - cx1;
             float dy = cy0 - cy1;
@@ -785,9 +785,9 @@ namespace ShapeEngine.Lib
         }
         public static CollisionPoints IntersectShape(this Circle c, Segment s)
         {
-            float cX = c.center.X;
-            float cY = c.center.Y;
-            float R = c.radius;
+            float cX = c.Center.X;
+            float cY = c.Center.Y;
+            float R = c.Radius;
             float aX = s.Start.X;
             float aY = s.Start.Y;
             float bX = s.End.X;
@@ -869,7 +869,7 @@ namespace ShapeEngine.Lib
             CollisionPoints points = new();
             foreach (var seg in shape)
             {
-                var intersectPoints = IntersectCircleSegment(c.center, c.radius, seg.Start, seg.End);
+                var intersectPoints = IntersectCircleSegment(c.Center, c.Radius, seg.Start, seg.End);
                 foreach (var p in intersectPoints)
                 {
                     points.Add(new(p, seg.Normal));
@@ -931,10 +931,10 @@ namespace ShapeEngine.Lib
         public static bool OverlapShape(this Rect r, Triangle t) { return OverlapShape(t, r); }
         public static bool OverlapShape(this Rect a, Rect b)
         {
-            Vector2 aTopLeft = new(a.x, a.y);
-            Vector2 aBottomRight = aTopLeft + new Vector2(a.width, a.height);
-            Vector2 bTopLeft = new(b.x, b.y);
-            Vector2 bBottomRight = bTopLeft + new Vector2(b.width, b.height);
+            Vector2 aTopLeft = new(a.X, a.Y);
+            Vector2 aBottomRight = aTopLeft + new Vector2(a.Width, a.Height);
+            Vector2 bTopLeft = new(b.X, b.Y);
+            Vector2 bBottomRight = bTopLeft + new Vector2(b.Width, b.Height);
             return
                 SRect.OverlappingRange(aTopLeft.X, aBottomRight.X, bTopLeft.X, bBottomRight.X) &&
                 SRect.OverlappingRange(aTopLeft.Y, aBottomRight.Y, bTopLeft.Y, bBottomRight.Y);
@@ -945,8 +945,8 @@ namespace ShapeEngine.Lib
         {
             Vector2 n = SVec.Rotate90CCW(lineDir);
 
-            Vector2 c1 = new(rect.x, rect.y);
-            Vector2 c2 = c1 + new Vector2(rect.width, rect.height);
+            Vector2 c1 = new(rect.X, rect.Y);
+            Vector2 c2 = c1 + new Vector2(rect.Width, rect.Height);
             Vector2 c3 = new(c2.X, c1.Y);
             Vector2 c4 = new(c1.X, c2.Y);
 
@@ -1005,7 +1005,7 @@ namespace ShapeEngine.Lib
         public static bool OverlapShape(this Polygon poly, Circle c) 
         {
             if (poly.Count < 3) return false;
-            if (IsPointInPoly(c.center, poly)) return true;
+            if (IsPointInPoly(c.Center, poly)) return true;
             foreach (var p in poly)
             {
                 if (c.IsPointInside(p)) return true;

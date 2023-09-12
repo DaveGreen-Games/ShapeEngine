@@ -93,8 +93,8 @@ namespace Examples.Scenes.ExampleScenes
                         rotDeg += angularVelDeg * dt;
 
                         float rotDifDeg = rotDeg - prevRotDeg;
-                        shape.CenterSelf(pos);
-                        shape.RotateSelf(new Vector2(0.5f), rotDifDeg * DEG2RAD);
+                        shape.Center(pos);
+                        shape.Rotate(new Vector2(0.5f), rotDifDeg * DEG2RAD);
                     }
                     
                 }
@@ -562,7 +562,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         private void OnAsteroidFractured(Asteroid a, Vector2 point)
         {
-            var cutShape = SPoly.Generate(point, SRNG.randI(6, 12), 35, 100);
+            var cutShape = Polygon.Generate(point, SRNG.randI(6, 12), 35, 100);
             
             FractureAsteroid(a, cutShape);
         }
@@ -640,7 +640,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         private void GenerateTriangle()
         {
-            curShape = SPoly.Generate(curPos, 3, curSize / 2, curSize);
+            curShape = Polygon.Generate(curPos, 3, curSize / 2, curSize);
         }
         private void GenerateRect()
         {
@@ -649,7 +649,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         private void GeneratePoly()
         {
-            curShape = SPoly.Generate(curPos, 16, curSize * 0.25f, curSize);
+            curShape = Polygon.Generate(curPos, 16, curSize * 0.25f, curSize);
         }
         private void PolyModeStarted()
         {
@@ -700,7 +700,7 @@ namespace Examples.Scenes.ExampleScenes
             if (polyModeActive)
             {
                 SetCurPos(mousePosGame);
-                curShape.CenterSelf(curPos);
+                curShape.Center(curPos);
 
                 
                 var collidables = col.CastSpace(curShape, false, AsteriodLayer);
@@ -816,8 +816,8 @@ namespace Examples.Scenes.ExampleScenes
                     CycleRotation();
                     
                     float dif = curRot - oldRot;
-                    curShape.RotateSelf(new Vector2(0.5f), dif * DEG2RAD);
-                    curShape.CenterSelf(curPos);
+                    curShape.Rotate(new Vector2(0.5f), dif * DEG2RAD);
+                    curShape.Center(curPos);
                 }
 
                 if (IsKeyPressed(KeyboardKey.KEY_C))//scale
@@ -825,8 +825,8 @@ namespace Examples.Scenes.ExampleScenes
                     float oldSize = curSize;
                     CycleSize();
                     float scale = curSize / oldSize;
-                    curShape.ScaleSelf(scale);
-                    curShape.CenterSelf(curPos);
+                    curShape.Scale(scale);
+                    curShape.Center(curPos);
                 }
 
                 

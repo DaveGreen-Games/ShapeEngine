@@ -210,59 +210,12 @@ namespace ShapeEngine.Lib
     }
     */
 
-    public struct FractureInfo
-    {
-        public Polygons NewShapes;
-        public Polygons Cutouts;
-        public Triangulation Pieces;
-
-        public FractureInfo(Polygons newShapes, Polygons cutouts, Triangulation pieces)
-        {
-            this.NewShapes = newShapes;
-            this.Cutouts = cutouts;
-            this.Pieces = pieces;
-        }
-    }
-    public class FractureHelper
-    {
-        public float MinArea { get; set; }
-        public float MaxArea { get; set; }
-        public float KeepChance { get; set; }
-        public float NarrowValue{ get; set; }
-
-        //public float DivisionChance { get; set; } = 0.5f;
-        //public int MinDivisionCount { get; set; } = 3;
-        //public int MaxDivisionCount { get; set; } = 9;
-
-        public FractureHelper(float minArea, float maxArea, float keepChance = 0.5f, float narrowValue = 0.2f)
-        {
-            this.MinArea = minArea;
-            this.MaxArea = maxArea;
-            this.KeepChance = keepChance;
-            this.NarrowValue = narrowValue;
-        }
-        
-        public FractureInfo Fracture(Polygon shape, Polygon cutShape)
-        {
-            var cutOuts = SClipper.Intersect(shape, cutShape).ToPolygons(true);
-            var newShapes = SClipper.Difference(shape, cutShape).ToPolygons(true);
-            Triangulation pieces = new();
-            foreach (var cutOut in cutOuts)
-            {
-                var fracturePieces = cutOut.Triangulate().Subdivide(MinArea, MaxArea, KeepChance, NarrowValue);
-                pieces.AddRange(fracturePieces);
-            }
-
-            return new(newShapes, cutOuts, pieces);
-        }
-    }
-
+    
     
 
     public static class SPoly
     {
-
-
+        /*
         public static (Polygons newShapes, Polygons cutOuts) Cut(this Polygon poly, Polygon cutShape) 
         {
             var cutOuts = SClipper.Intersect(poly, cutShape).ToPolygons(true);
@@ -298,8 +251,6 @@ namespace ShapeEngine.Lib
             var cut = Generate(cutLine, minMagnitude, maxMagnitude, minSectionLength, maxSectionLength);
             return poly.Cut(cut);
         }
-        
-
 
         /// <summary>
         /// Triangulates a set of points. Only works with non self intersecting shapes.
@@ -311,7 +262,6 @@ namespace ShapeEngine.Lib
             Triangle supraTriangle = GetBoundingTriangle(points, 2f);
             return TriangulateDelaunay(points, supraTriangle);
         }
-
         /// <summary>
         /// Triangulates a set of points. Only works with non self intersecting shapes.
         /// </summary>
@@ -335,8 +285,8 @@ namespace ShapeEngine.Lib
 
                     //A 'bad triangle' is defined as a triangle who's CircumCentre contains the current point
                     var circumCircle = triangle.GetCircumCircle();
-                    float distSq = Vector2.DistanceSquared(p, circumCircle.center);
-                    if (distSq < circumCircle.radius * circumCircle.radius)
+                    float distSq = Vector2.DistanceSquared(p, circumCircle.Center);
+                    if (distSq < circumCircle.Radius * circumCircle.Radius)
                     {
                         badTriangles.Add(triangle);
                         triangles.RemoveAt(triIndex);
@@ -366,62 +316,6 @@ namespace ShapeEngine.Lib
             return triangles;
         }
 
-
-        /*
-        /// <summary>
-        /// Subdivide the triangulation until all triangles are smaller than min area.
-        /// </summary>
-        /// <param name="triangles"></param>
-        /// <param name="minArea"></param>
-        /// <returns></returns>
-        public static Triangulation Subdivide(this Triangulation triangles, float minArea)
-        {
-            Triangulation subdivision = new();
-            Triangulation final = new();
-            foreach (var tri in triangles)
-            {
-                var area = tri.GetArea();
-                if (minArea >= area) final.Add(tri);
-                else subdivision.AddRange(tri.Triangulate());
-            }
-
-            if (subdivision.Count > 0) final.AddRange(Subdivide(subdivision, minArea));
-
-            return final;
-        }
-        */
-
-        /*
-        /// <summary>
-        /// Triangulates and subdivides the triangulation until the area of triangles reaches the min area limit.
-        /// </summary>
-        /// <param name="areaThresholdFactor">Used to calculate the min area limit. The threshold factor is multiplied with the total area of the polygon to recieve the min area limit.</param>
-        /// <returns></returns>
-        public Triangulation Fracture(float areaThresholdFactor = 0f)
-        {
-            var triangulation = Triangulate();
-            if (areaThresholdFactor <= 0f || areaThresholdFactor >= 1f) return triangulation;
-
-            float totalArea = triangulation.GetArea();
-            float minArea = totalArea * areaThresholdFactor;
-
-            ////var1
-            //Triangulation final = new();
-            //foreach (var tri in triangulation)
-            //{
-            //    final.AddRange(Subdivide(tri, minArea));
-            //}
-            //return final;
-
-            //var2
-            return triangulation.Subdivide(minArea); // SPoly.Subdivide(triangulation, minArea);
-        }
-        */
-
-
-
-
-
         /// <summary>
         /// Get a rect that encapsulates all points.
         /// </summary>
@@ -439,7 +333,6 @@ namespace ShapeEngine.Lib
             }
             return r;
         }
-        
         /// <summary>
         /// Get a triangle the encapsulates all points.
         /// </summary>
@@ -472,8 +365,6 @@ namespace ShapeEngine.Lib
 
             return new Triangle(a, b, c);
         }
-        
-
         public static Polygon GetShape(this Polygon relative, Vector2 pos, float rotRad, Vector2 scale)
         {
             if (relative.Count < 3) return new();
@@ -730,36 +621,6 @@ namespace ShapeEngine.Lib
             return points;
         }
 
-        /*public static Polygon Generate(Segment segment, float magMin, float magMax, int pointCount)
-        {
-            List<float> factors = new();
-            for (int i = 0; i < pointCount; i++) { factors.Add(SRNG.randF()); }
-            factors.Sort();
-            
-            List<Vector2> points = new();
-            var dir = segment.Dir;
-            var l = segment.Length;
-            foreach (var f in factors)
-            {
-                points.Add(dir * f * l);
-            }
-
-            Polygon poly = new() { segment.start };
-            var rightDir = dir.GetPerpendicularRight();
-            foreach (var p in points)
-            {
-                poly.Add(p + rightDir * SRNG.randF(magMin, magMax));
-            }
-            poly.Add(segment.end);
-            var leftDir = dir.GetPerpendicularLeft();
-            points.Reverse();
-            foreach (var p in points)
-            {
-                poly.Add(p + leftDir * SRNG.randF(magMin, magMax));
-            }
-            return poly;
-        }*/
-        
         /// <summary>
         /// Generates a polygon around the given segment. Points are generated ccw around the segment beginning with the segment start.
         /// </summary>
@@ -804,8 +665,6 @@ namespace ShapeEngine.Lib
         {
             return (p.GetCentroid() - (p[0].Lerp(p[1], 0.5f))).Length();
         }
-
-        
         public static Vector2 GetRandomPointConvex(this Polygon p)
         {
             //only work with convex polygons
@@ -817,7 +676,8 @@ namespace ShapeEngine.Lib
             var pb = eb.Start.Lerp(eb.End, SRNG.randF());
             return pa.Lerp(pb, SRNG.randF());
         }
-    
+        */
+
     }
 }
 //public static float GetAreaSigned(this Polygon p)

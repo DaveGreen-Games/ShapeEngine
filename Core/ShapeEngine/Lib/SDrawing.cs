@@ -444,18 +444,18 @@ namespace ShapeEngine.Lib
         #region Circle
         public static void Draw(this Circle c, Raylib_CsLo.Color color)
         {
-            DrawCircle(c.center, c.radius, color);
+            DrawCircle(c.Center, c.Radius, color);
         } 
         public static void Draw(this Circle c, Raylib_CsLo.Color color, int segments)
         {
-            DrawCircle(c.center, c.radius, color, segments);
+            DrawCircle(c.Center, c.Radius, color, segments);
         }
-        public static void DrawLines(this Circle c, float lineThickness, int sides, Raylib_CsLo.Color color) => DrawPolyLinesEx(c.center, sides, c.radius, 0f, lineThickness, color);
-        public static void DrawLines(this Circle c, float lineThickness, float rotDeg, int sides, Raylib_CsLo.Color color) => DrawPolyLinesEx(c.center, sides, c.radius, rotDeg, lineThickness, color);
+        public static void DrawLines(this Circle c, float lineThickness, int sides, Raylib_CsLo.Color color) => DrawPolyLinesEx(c.Center, sides, c.Radius, 0f, lineThickness, color);
+        public static void DrawLines(this Circle c, float lineThickness, float rotDeg, int sides, Raylib_CsLo.Color color) => DrawPolyLinesEx(c.Center, sides, c.Radius, rotDeg, lineThickness, color);
         public static void DrawLines(this Circle c, float lineThickness, Raylib_CsLo.Color color, float sideLength = 8f)
         {
-            int sides = GetCircleSideCount(c.radius, sideLength);
-            DrawPolyLinesEx(c.center, sides, c.radius, 0f, lineThickness, color);
+            int sides = GetCircleSideCount(c.Radius, sideLength);
+            DrawPolyLinesEx(c.Center, sides, c.Radius, 0f, lineThickness, color);
         }
         
         public static void DrawCircle(Vector2 center, float radius, Raylib_CsLo.Color color)
@@ -489,7 +489,7 @@ namespace ShapeEngine.Lib
 
         public static void DrawSector(this Circle c, float startAngleDeg, float endAngleDeg, int segments, Raylib_CsLo.Color color)
         {
-            Raylib.DrawCircleSector(c.center, c.radius, TransformAngleDeg(startAngleDeg), TransformAngleDeg(endAngleDeg), segments, color);
+            Raylib.DrawCircleSector(c.Center, c.Radius, TransformAngleDeg(startAngleDeg), TransformAngleDeg(endAngleDeg), segments, color);
         }
         public static void DrawCircleSector(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, int segments, Raylib_CsLo.Color color)
         {
@@ -498,19 +498,19 @@ namespace ShapeEngine.Lib
         
         public static void DrawSectorLines(this Circle c, float startAngleDeg, float endAngleDeg, float lineThickness, Raylib_CsLo.Color color, bool closed = true, float sideLength = 8f)
         {
-            DrawCircleSectorLines(c.center, c.radius, startAngleDeg, endAngleDeg, lineThickness, color, closed, sideLength);
+            DrawCircleSectorLines(c.Center, c.Radius, startAngleDeg, endAngleDeg, lineThickness, color, closed, sideLength);
         }
         public static void DrawSectorLines(this Circle c, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, float lineThickness, Raylib_CsLo.Color color, bool closed = true, float sideLength = 8f)
         {
-            DrawCircleSectorLines(c.center, c.radius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, lineThickness, color, closed, sideLength); ;
+            DrawCircleSectorLines(c.Center, c.Radius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, lineThickness, color, closed, sideLength); ;
         }
         public static void DrawSectorLines(this Circle c, float startAngleDeg, float endAngleDeg, int sides, float lineThickness, Raylib_CsLo.Color color, bool closed = true)
         {
-            DrawCircleSectorLines(c.center, c.radius, startAngleDeg, endAngleDeg, sides, lineThickness, color, closed);
+            DrawCircleSectorLines(c.Center, c.Radius, startAngleDeg, endAngleDeg, sides, lineThickness, color, closed);
         }
         public static void DrawSectorLines(this Circle c, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, int sides, float lineThickness, Raylib_CsLo.Color color, bool closed = true)
         {
-            DrawCircleSectorLines(c.center, c.radius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, sides, lineThickness, color, closed);
+            DrawCircleSectorLines(c.Center, c.Radius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, sides, lineThickness, color, closed);
         }
 
         public static void DrawCircleSectorLines(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, float lineThickness, Raylib_CsLo.Color color, bool closed = true, float sideLength = 8f)
@@ -721,12 +721,12 @@ namespace ShapeEngine.Lib
         {
             //float hGap = r.width / lines;
             //float vGap = r.height / lines;
-            Vector2 xOffset = new Vector2(r.width / lines, 0f);// * i;
-            Vector2 yOffset = new Vector2(0f, r.height / lines);// * i;
+            Vector2 xOffset = new Vector2(r.Width / lines, 0f);// * i;
+            Vector2 yOffset = new Vector2(0f, r.Height / lines);// * i;
             
             Vector2 tl = r.TopLeft;
-            Vector2 tr = tl + new Vector2(r.width, 0);
-            Vector2 bl = tl + new Vector2(0, r.height);
+            Vector2 tr = tl + new Vector2(r.Width, 0);
+            Vector2 bl = tl + new Vector2(0, r.Height);
 
             for (int i = 0; i < lines; i++)
             {
@@ -801,8 +801,11 @@ namespace ShapeEngine.Lib
         }
         public static void DrawSlantedCorners(this Rect rect, Vector2 pivot, float rotDeg, Raylib_CsLo.Color color, float tlCorner, float trCorner, float brCorner, float blCorner)
         {
-            var points = SPoly.Rotate(GetSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner), pivot, rotDeg * SUtils.DEGTORAD);
-            DrawPolygonConvex(points, rect.Center, color);
+            var poly = GetSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner);
+            poly.Rotate(pivot, rotDeg * SUtils.DEGTORAD);
+            DrawPolygonConvex(poly, rect.Center, color);
+            //var points = SPoly.Rotate(GetSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner), pivot, rotDeg * SUtils.DEGTORAD);
+            //DrawPolygonConvex(points, rect.Center, color);
         }
         public static void DrawSlantedCornersLines(this Rect rect, float lineThickness, Raylib_CsLo.Color color, float tlCorner, float trCorner, float brCorner, float blCorner)
         {
@@ -811,8 +814,11 @@ namespace ShapeEngine.Lib
         }
         public static void DrawSlantedCornersLines(this Rect rect, Vector2 pivot, float rotDeg, float lineThickness, Raylib_CsLo.Color color, float tlCorner, float trCorner, float brCorner, float blCorner)
         {
-            var points = SPoly.Rotate(GetSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner), pivot, rotDeg * SUtils.DEGTORAD);
-            DrawLines(points, lineThickness, color);
+            var poly = GetSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner);
+            poly.Rotate(pivot, rotDeg * SUtils.DEGTORAD);
+            DrawLines(poly, lineThickness, color);
+            //var points = SPoly.Rotate(GetSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner), pivot, rotDeg * SUtils.DEGTORAD);
+            //DrawLines(points, lineThickness, color);
         }
 
         /// <summary>
@@ -833,23 +839,23 @@ namespace ShapeEngine.Lib
             Polygon points = new();
             if (tlCorner > 0f && tlCorner < 1f)
             {
-                points.Add(tl + new Vector2(MathF.Min(tlCorner, rect.width), 0f));
-                points.Add(tl + new Vector2(0f, MathF.Min(tlCorner, rect.height)));
+                points.Add(tl + new Vector2(MathF.Min(tlCorner, rect.Width), 0f));
+                points.Add(tl + new Vector2(0f, MathF.Min(tlCorner, rect.Height)));
             }
             if (blCorner > 0f && blCorner < 1f)
             {
-                points.Add(bl - new Vector2(0f, MathF.Min(tlCorner, rect.height)));
-                points.Add(bl + new Vector2(MathF.Min(tlCorner, rect.width), 0f));
+                points.Add(bl - new Vector2(0f, MathF.Min(tlCorner, rect.Height)));
+                points.Add(bl + new Vector2(MathF.Min(tlCorner, rect.Width), 0f));
             }
             if (brCorner > 0f && brCorner < 1f)
             {
-                points.Add(br - new Vector2(MathF.Min(tlCorner, rect.width), 0f));
-                points.Add(br - new Vector2(0f, MathF.Min(tlCorner, rect.height)));
+                points.Add(br - new Vector2(MathF.Min(tlCorner, rect.Width), 0f));
+                points.Add(br - new Vector2(0f, MathF.Min(tlCorner, rect.Height)));
             }
             if (trCorner > 0f && trCorner < 1f)
             {
-                points.Add(tr + new Vector2(0f, MathF.Min(tlCorner, rect.height)));
-                points.Add(tr - new Vector2(MathF.Min(tlCorner, rect.width), 0f));
+                points.Add(tr + new Vector2(0f, MathF.Min(tlCorner, rect.Height)));
+                points.Add(tr - new Vector2(MathF.Min(tlCorner, rect.Width), 0f));
             }
             return points;
         }
@@ -871,23 +877,23 @@ namespace ShapeEngine.Lib
             Polygon points = new();
             if (tlCorner > 0f && tlCorner < 1f)
             {
-                points.Add(tl + new Vector2(tlCorner * rect.width, 0f));
-                points.Add(tl + new Vector2(0f, tlCorner * rect.height));
+                points.Add(tl + new Vector2(tlCorner * rect.Width, 0f));
+                points.Add(tl + new Vector2(0f, tlCorner * rect.Height));
             }
             if (blCorner > 0f && blCorner < 1f)
             {
-                points.Add(bl - new Vector2(0f, tlCorner * rect.height));
-                points.Add(bl + new Vector2(tlCorner * rect.width, 0f));
+                points.Add(bl - new Vector2(0f, tlCorner * rect.Height));
+                points.Add(bl + new Vector2(tlCorner * rect.Width, 0f));
             }
             if (brCorner > 0f && brCorner < 1f)
             {
-                points.Add(br - new Vector2(tlCorner * rect.width, 0f));
-                points.Add(br - new Vector2(0f, tlCorner * rect.height));
+                points.Add(br - new Vector2(tlCorner * rect.Width, 0f));
+                points.Add(br - new Vector2(0f, tlCorner * rect.Height));
             }
             if (trCorner > 0f && trCorner < 1f)
             {
-                points.Add(tr + new Vector2(0f, tlCorner * rect.height));
-                points.Add(tr - new Vector2(tlCorner * rect.width, 0f));
+                points.Add(tr + new Vector2(0f, tlCorner * rect.Height));
+                points.Add(tr - new Vector2(tlCorner * rect.Width, 0f));
             }
             return points;
         }
@@ -902,26 +908,26 @@ namespace ShapeEngine.Lib
             if (tlCorner > 0f)
             {
                 DrawCircle(tl, lineThickness / 2, color);
-                DrawSegment(tl, tl + new Vector2(MathF.Min(tlCorner, rect.width), 0f), lineThickness, color);
-                DrawSegment(tl, tl + new Vector2(0f, MathF.Min(tlCorner, rect.height)), lineThickness, color);
+                DrawSegment(tl, tl + new Vector2(MathF.Min(tlCorner, rect.Width), 0f), lineThickness, color);
+                DrawSegment(tl, tl + new Vector2(0f, MathF.Min(tlCorner, rect.Height)), lineThickness, color);
             }
             if (trCorner > 0f)
             {
                 DrawCircle(tr, lineThickness / 2, color);
-                DrawSegment(tr, tr - new Vector2(MathF.Min(trCorner, rect.width), 0f), lineThickness, color);
-                DrawSegment(tr, tr + new Vector2(0f, MathF.Min(trCorner, rect.height)), lineThickness, color);
+                DrawSegment(tr, tr - new Vector2(MathF.Min(trCorner, rect.Width), 0f), lineThickness, color);
+                DrawSegment(tr, tr + new Vector2(0f, MathF.Min(trCorner, rect.Height)), lineThickness, color);
             }
             if (brCorner > 0f)
             {
                 DrawCircle(br, lineThickness / 2, color);
-                DrawSegment(br, br - new Vector2(MathF.Min(brCorner, rect.width), 0f), lineThickness, color);
-                DrawSegment(br, br - new Vector2(0f, MathF.Min(brCorner, rect.height)), lineThickness, color);
+                DrawSegment(br, br - new Vector2(MathF.Min(brCorner, rect.Width), 0f), lineThickness, color);
+                DrawSegment(br, br - new Vector2(0f, MathF.Min(brCorner, rect.Height)), lineThickness, color);
             }
             if (blCorner > 0f)
             {
                 DrawCircle(bl, lineThickness / 2, color);
-                DrawSegment(bl, bl + new Vector2(MathF.Min(blCorner, rect.width), 0f), lineThickness, color);
-                DrawSegment(bl, bl - new Vector2(0f, MathF.Min(blCorner, rect.height)), lineThickness, color);
+                DrawSegment(bl, bl + new Vector2(MathF.Min(blCorner, rect.Width), 0f), lineThickness, color);
+                DrawSegment(bl, bl - new Vector2(0f, MathF.Min(blCorner, rect.Height)), lineThickness, color);
             }
         }
         public static void DrawCorners(this Rect rect, float lineThickness, Raylib_CsLo.Color color, float cornerLength) => DrawCorners(rect, lineThickness, color, cornerLength, cornerLength, cornerLength, cornerLength);
@@ -935,41 +941,41 @@ namespace ShapeEngine.Lib
             if (tlCorner > 0f && tlCorner < 1f)
             {
                 DrawCircle(tl, lineThickness / 2, color);
-                DrawSegment(tl, tl + new Vector2(tlCorner * rect.width, 0f), lineThickness, color);
-                DrawSegment(tl, tl + new Vector2(0f, tlCorner * rect.height), lineThickness, color);
+                DrawSegment(tl, tl + new Vector2(tlCorner * rect.Width, 0f), lineThickness, color);
+                DrawSegment(tl, tl + new Vector2(0f, tlCorner * rect.Height), lineThickness, color);
             }
             if (trCorner > 0f && trCorner < 1f)
             {
                 DrawCircle(tr, lineThickness / 2, color);
-                DrawSegment(tr, tr - new Vector2(tlCorner * rect.width, 0f), lineThickness, color);
-                DrawSegment(tr, tr + new Vector2(0f, tlCorner * rect.height), lineThickness, color);
+                DrawSegment(tr, tr - new Vector2(tlCorner * rect.Width, 0f), lineThickness, color);
+                DrawSegment(tr, tr + new Vector2(0f, tlCorner * rect.Height), lineThickness, color);
             }
             if (brCorner > 0f && brCorner < 1f)
             {
                 DrawCircle(br, lineThickness / 2, color);
-                DrawSegment(br, br - new Vector2(tlCorner * rect.width, 0f), lineThickness, color);
-                DrawSegment(br, br - new Vector2(0f, tlCorner * rect.height), lineThickness, color);
+                DrawSegment(br, br - new Vector2(tlCorner * rect.Width, 0f), lineThickness, color);
+                DrawSegment(br, br - new Vector2(0f, tlCorner * rect.Height), lineThickness, color);
             }
             if (blCorner > 0f && blCorner < 1f)
             {
                 DrawCircle(bl, lineThickness / 2, color);
-                DrawSegment(bl, bl + new Vector2(tlCorner * rect.width, 0f), lineThickness, color);
-                DrawSegment(bl, bl - new Vector2(0f, tlCorner * rect.height), lineThickness, color);
+                DrawSegment(bl, bl + new Vector2(tlCorner * rect.Width, 0f), lineThickness, color);
+                DrawSegment(bl, bl - new Vector2(0f, tlCorner * rect.Height), lineThickness, color);
             }
         }
         public static void DrawCornersRelative(this Rect rect, float lineThickness, Raylib_CsLo.Color color, float cornerLengthFactor) => DrawCornersRelative(rect, lineThickness, color, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor);
         
         public static void DrawCheckered(this Rect rect, float spacing, float lineThickness, float angleDeg, Raylib_CsLo.Color lineColor, Raylib_CsLo.Color outlineColor, Raylib_CsLo.Color bgColor)
         {
-            Vector2 size = new Vector2(rect.width, rect.height);
-            Vector2 center = new Vector2(rect.x, rect.y) + size / 2;
+            Vector2 size = new Vector2(rect.Width, rect.Height);
+            Vector2 center = new Vector2(rect.X, rect.Y) + size / 2;
             float maxDimension = MathF.Max(size.X, size.Y);
             float rotRad = angleDeg * SUtils.DEGTORAD;
 
-            Vector2 tl = new(rect.x, rect.y);
-            Vector2 tr = new(rect.x + rect.width, rect.y);
-            Vector2 bl = new(rect.x, rect.y + rect.height);
-            Vector2 br = new(rect.x + rect.width, rect.y + rect.height);
+            Vector2 tl = new(rect.X, rect.Y);
+            Vector2 tr = new(rect.X + rect.Width, rect.Y);
+            Vector2 bl = new(rect.X, rect.Y + rect.Height);
+            Vector2 br = new(rect.X + rect.Width, rect.Y + rect.Height);
 
             if (bgColor.a > 0) DrawRectangleRec(rect.Rectangle, bgColor);
 
@@ -1796,13 +1802,13 @@ namespace ShapeEngine.Lib
         }
         public static void DrawTextWrappedChar(this Font font, string text, Rect rect, float fontSize, float fontSpacing, float lineSpacing, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
         {
-            if (rect.height < FontMinSize) return;
+            if (rect.Height < FontMinSize) return;
 
             fontSize = MathF.Max(fontSize, FontMinSize);
             fontSpacing = MathF.Min(fontSpacing, fontSize * FontSpacingMaxFactor);
             lineSpacing = MathF.Min(lineSpacing, fontSize * LineSpacingMaxFactor);
 
-            if (rect.height < fontSize) fontSize *= (rect.height / fontSize);
+            if (rect.Height < fontSize) fontSize *= (rect.Height / fontSize);
 
             float f = fontSize / (float)font.baseSize;
             Vector2 pos = rect.TopLeft;
@@ -1821,7 +1827,7 @@ namespace ShapeEngine.Lib
                 var charBaseSize = font.GetCharBaseSize(c);
                 float glyphWidth = charBaseSize.X * f;
 
-                if (curLineWidth + curWordWidth + glyphWidth >= rect.width)//break line
+                if (curLineWidth + curWordWidth + glyphWidth >= rect.Width)//break line
                 {
                     var backlogResult = CheckWordEmphasis(curWordIndex, wordEmphasis);
                     DrawWord(font, backlog + curWord, fontSize, fontSpacing, pos, backlogResult.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[backlogResult.emphasisIndex]);
@@ -1900,13 +1906,13 @@ namespace ShapeEngine.Lib
         }
         public static void DrawTextWrappedWord(this Font font, string text, Rect rect, float fontSize, float fontSpacing, float lineSpacing, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
         {
-            if (rect.height < FontMinSize) return;
+            if (rect.Height < FontMinSize) return;
 
             fontSize = MathF.Max(fontSize, FontMinSize);
             fontSpacing = MathF.Min(fontSpacing, fontSize * FontSpacingMaxFactor);
             lineSpacing = MathF.Min(lineSpacing, fontSize * LineSpacingMaxFactor);
 
-            if (rect.height < fontSize) fontSize *= (rect.height / fontSize);
+            if (rect.Height < fontSize) fontSize *= (rect.Height / fontSize);
 
             float f = fontSize / (float)font.baseSize;
             Vector2 pos = rect.TopLeft;
@@ -1925,7 +1931,7 @@ namespace ShapeEngine.Lib
                 var charBaseSize = font.GetCharBaseSize(c);
                 float glyphWidth = charBaseSize.X * f;
                 
-                if (curLineWidth + curWordWidth + glyphWidth >= rect.width)//break line
+                if (curLineWidth + curWordWidth + glyphWidth >= rect.Width)//break line
                 {
                     bool charBreak = false;
                     if(backlog != string.Empty)
@@ -2080,13 +2086,13 @@ namespace ShapeEngine.Lib
         }
         public static void DrawTextWrappedWord(this Font font, string text, Rect rect, float fontSize, float fontSpacing, float lineSpacing, Raylib_CsLo.Color color)
         {
-            if (rect.height < FontMinSize) return;
+            if (rect.Height < FontMinSize) return;
 
             fontSize = MathF.Max(fontSize, FontMinSize);
             fontSpacing = MathF.Min(fontSpacing, fontSize * FontSpacingMaxFactor);
             lineSpacing = MathF.Min(lineSpacing, fontSize * LineSpacingMaxFactor);
 
-            if (rect.height < fontSize) fontSize *= (rect.height / fontSize);
+            if (rect.Height < fontSize) fontSize *= (rect.Height / fontSize);
             
             float f = fontSize / (float)font.baseSize;
             Vector2 pos = rect.TopLeft;
@@ -2110,7 +2116,7 @@ namespace ShapeEngine.Lib
                     var charBaseSize = font.GetCharBaseSize(c);
                     float glyphWidth = charBaseSize.X * f;
 
-                    if (curWidth + glyphWidth >= rect.width)
+                    if (curWidth + glyphWidth >= rect.Width)
                     {
                         if (curLine == string.Empty)//width was overshot within the first word
                         {
@@ -2639,10 +2645,10 @@ namespace ShapeEngine.Lib
             Vector2 thicknessOffsetX = new Vector2(thickness, 0f);
             Vector2 thicknessOffsetY = new Vector2(0f, thickness);
 
-            Vector2 tl = new(rect.x, rect.y);
-            Vector2 br = tl + new Vector2(rect.width, rect.height); ;
-            Vector2 tr = tl + new Vector2(rect.width, 0);
-            Vector2 bl = tl + new Vector2(0, rect.height);
+            Vector2 tl = new(rect.X, rect.Y);
+            Vector2 br = tl + new Vector2(rect.Width, rect.Height); ;
+            Vector2 tr = tl + new Vector2(rect.Width, 0);
+            Vector2 bl = tl + new Vector2(0, rect.Height);
 
             int lines = (int)MathF.Ceiling(4 * Clamp(f, 0f, 1f));
             float fMin = 0.25f * (lines - 1);
@@ -2729,11 +2735,11 @@ namespace ShapeEngine.Lib
 
         public static void DrawOutlineBar(this Circle c, float thickness, float f, Raylib_CsLo.Color color)
         {
-            DrawCircleSectorLines(c.center, c.radius, 0, 360 * f, thickness, color, false, 8f);
+            DrawCircleSectorLines(c.Center, c.Radius, 0, 360 * f, thickness, color, false, 8f);
         }
         public static void DrawOutlineBar(this Circle c, float startOffsetDeg, float thickness, float f, Raylib_CsLo.Color color)
         {
-            DrawCircleSectorLines(c.center, c.radius, 0, 360 * f, startOffsetDeg, thickness, color, false, 8f);
+            DrawCircleSectorLines(c.Center, c.Radius, 0, 360 * f, startOffsetDeg, thickness, color, false, 8f);
         }
 
         public static void DrawBar(this Rect rect, float f, Raylib_CsLo.Color barColor, Raylib_CsLo.Color bgColor, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)

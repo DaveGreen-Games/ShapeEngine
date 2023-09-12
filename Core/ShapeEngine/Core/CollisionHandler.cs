@@ -74,7 +74,7 @@ namespace ShapeEngine.Core
         public Rect Bounds { get { return spatialHash.Bounds; } }
 
         public CollisionHandler(float x, float y, float w, float h, int rows, int cols) { spatialHash = new(x, y, w, h, rows, cols); }
-        public CollisionHandler(Rect bounds, int rows, int cols) { spatialHash = new(bounds.x, bounds.y, bounds.width, bounds.height, rows, cols); }
+        public CollisionHandler(Rect bounds, int rows, int cols) { spatialHash = new(bounds.X, bounds.Y, bounds.Width, bounds.Height, rows, cols); }
         
         
         public void ResizeBounds(Rect newBounds) { spatialHash.ResizeBounds(newBounds); }

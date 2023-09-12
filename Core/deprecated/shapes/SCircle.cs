@@ -6,15 +6,16 @@ namespace ShapeEngine.Lib
     
     public static class SCircle
     {
-        public static Vector2 GetPoint(this Circle c, float angleRad, float f) { return c.center + new Vector2(c.radius * f, 0f).Rotate(angleRad); }
+        /*
+        public static Vector2 GetPoint(this Circle c, float angleRad, float f) { return c.Center + new Vector2(c.Radius * f, 0f).Rotate(angleRad); }
         public static Segments GetEdges(this Circle c, int pointCount = 16, bool insideNormals = false)
         {
             float angleStep = (MathF.PI * 2f) / pointCount;
             Segments segments = new();
             for (int i = 0; i < pointCount; i++)
             {
-                Vector2 start = c.center + new Vector2(c.radius, 0f).Rotate(-angleStep * i);
-                Vector2 end = c.center + new Vector2(c.radius, 0f).Rotate(-angleStep * ((i + 1) % pointCount));
+                Vector2 start = c.Center + new Vector2(c.Radius, 0f).Rotate(-angleStep * i);
+                Vector2 end = c.Center + new Vector2(c.Radius, 0f).Rotate(-angleStep * ((i + 1) % pointCount));
 
                 segments.Add(new Segment(start, end, insideNormals));
             }
@@ -26,7 +27,7 @@ namespace ShapeEngine.Lib
             Points points = new();
             for (int i = 0; i < pointCount; i++)
             {
-                Vector2 p = c.center + new Vector2(c.radius, 0f).Rotate(angleStep * i);
+                Vector2 p = c.Center + new Vector2(c.Radius, 0f).Rotate(angleStep * i);
                 points.Add(p);
             }
             return points;
@@ -37,7 +38,7 @@ namespace ShapeEngine.Lib
             Polygon points = new();
             for (int i = 0; i < pointCount; i++)
             {
-                Vector2 p = c.center + new Vector2(c.radius, 0f).Rotate(angleStep * i);
+                Vector2 p = c.Center + new Vector2(c.Radius, 0f).Rotate(angleStep * i);
                 points.Add(p);
             }
             return points;
@@ -48,16 +49,16 @@ namespace ShapeEngine.Lib
             Polyline points = new();
             for (int i = 0; i < pointCount; i++)
             {
-                Vector2 p = c.center + new Vector2(c.radius, 0f).Rotate(angleStep * i);
+                Vector2 p = c.Center + new Vector2(c.Radius, 0f).Rotate(angleStep * i);
                 points.Add(p);
             }
             return points;
         }
 
-        public static Circle ScaleRadius(this Circle c, float scale) { return new(c.center, c.radius * scale); }
-        public static Circle ChangeRadius(this Circle c, float amount) { return new(c.center, c.radius + amount); }
-        public static Circle Move(this Circle c, Vector2 offset) { return new(c.center + offset, c.radius); }
-        
+        public static Circle ScaleRadius(this Circle c, float scale) { return new(c.Center, c.Radius * scale); }
+        public static Circle ChangeRadius(this Circle c, float amount) { return new(c.Center, c.Radius + amount); }
+        public static Circle Move(this Circle c, Vector2 offset) { return new(c.Center + offset, c.Radius); }
+        */
         //public static Polygon ToPolygon(this Circle c, int pointCount = 16)
         //{
         //    float angleStep = (MathF.PI * 2f) / pointCount;

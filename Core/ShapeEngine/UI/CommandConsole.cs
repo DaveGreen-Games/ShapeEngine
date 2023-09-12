@@ -109,8 +109,8 @@ namespace ShapeEngine.UI
             {
                 consoleRect.Draw(boxColor);
                 Rect r = consoleRect.ScaleSize(0.9f, new(0.5f));
-                Rect historyRect = new(r.x, r.y, r.width, r.height * 0.5f);
-                Rect textBoxRect = new(r.x, r.y + r.height * 0.5f, r.width, r.height * 0.5f);
+                Rect historyRect = new(r.X, r.Y, r.Width, r.Height * 0.5f);
+                Rect textBoxRect = new(r.X, r.Y + r.Height * 0.5f, r.Width, r.Height * 0.5f);
 
                 if (commandHistory.Count > 0)
                 {

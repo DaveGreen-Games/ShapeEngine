@@ -191,7 +191,7 @@ namespace ShapeEngine.Core
         }
         public Rect GetCellRectangle(int x, int y)
         {
-            return new Rect(Bounds.x + x * SpacingX, Bounds.y + y * SpacingY, SpacingX, SpacingY);
+            return new Rect(Bounds.X + x * SpacingX, Bounds.Y + y * SpacingY, SpacingX, SpacingY);
         }
         public Rect GetCellRectangle(int index)
         {
@@ -203,22 +203,22 @@ namespace ShapeEngine.Core
         }
         public int GetCellID(float x, float y)
         {
-            int xi = Math.Clamp((int)Math.Floor((x - Bounds.x) / SpacingX), 0, Cols - 1);
-            int yi = Math.Clamp((int)Math.Floor((y - Bounds.y) / SpacingY), 0, Rows - 1);
+            int xi = Math.Clamp((int)Math.Floor((x - Bounds.X) / SpacingX), 0, Cols - 1);
+            int yi = Math.Clamp((int)Math.Floor((y - Bounds.Y) / SpacingY), 0, Rows - 1);
             return GetCellID(xi, yi);
         }
         public (int x, int y) GetCellCoordinate(float x, float y)
         {
-            int xi = Math.Clamp((int)Math.Floor((x - Bounds.x) / SpacingX), 0, Cols - 1);
-            int yi = Math.Clamp((int)Math.Floor((y - Bounds.y) / SpacingY), 0, Rows - 1);
+            int xi = Math.Clamp((int)Math.Floor((x - Bounds.X) / SpacingX), 0, Cols - 1);
+            int yi = Math.Clamp((int)Math.Floor((y - Bounds.Y) / SpacingY), 0, Rows - 1);
             return (xi, yi);
         }
         public List<int> GetCellIDs(IShape shape)
         {
             Rect boundingRect = shape.GetBoundingBox();
             List<int> hashes = new List<int>();
-            (int x, int y) topLeft = GetCellCoordinate(boundingRect.x, boundingRect.y);
-            (int x, int y) bottomRight = GetCellCoordinate(boundingRect.x + boundingRect.width, boundingRect.y + boundingRect.height);
+            (int x, int y) topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
+            (int x, int y) bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
 
             for (int j = topLeft.y; j <= bottomRight.y; j++)
             {
@@ -312,7 +312,7 @@ namespace ShapeEngine.Core
             for (int i = 0; i < BucketCount; i++)
             {
                 var coords = GetCoordinatesGrid(i);
-                var rect = new Rectangle(Bounds.x + coords.x * SpacingX, Bounds.y + coords.y * SpacingY, SpacingX, SpacingY);
+                var rect = new Rectangle(Bounds.X + coords.x * SpacingX, Bounds.Y + coords.y * SpacingY, SpacingX, SpacingY);
 
                 Raylib.DrawRectangleLinesEx(rect, 1, border);
                 int id = GetCellID(coords.x, coords.y);
@@ -328,8 +328,8 @@ namespace ShapeEngine.Core
 
         private void SetSpacing()
         {
-            SpacingX = Bounds.width / Cols;
-            SpacingY = Bounds.height / Rows;
+            SpacingX = Bounds.Width / Cols;
+            SpacingY = Bounds.Height / Rows;
         }
     }
 }

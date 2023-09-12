@@ -9,17 +9,17 @@ namespace ShapeEngine.Lib
         public static List<Rect> GetAlignedRectsHorizontal(this Rect rect, int count, float gapRelative = 0f, float maxElementSizeRel = 1f)
         {
             List<Rect> rects = new();
-            Vector2 startPos = new(rect.x, rect.y);
+            Vector2 startPos = new(rect.X, rect.Y);
             int gaps = count - 1;
 
-            float totalWidth = rect.width;
+            float totalWidth = rect.Width;
             float gapSize = totalWidth * gapRelative;
             float elementWidth = (totalWidth - gaps * gapSize) / count;
             Vector2 offset = new(0f, 0f);
             for (int i = 0; i < count; i++)
             {
-                Vector2 size = new(elementWidth, rect.height);
-                Vector2 maxSize = maxElementSizeRel * new Vector2(rect.width, rect.height);
+                Vector2 size = new(elementWidth, rect.Height);
+                Vector2 maxSize = maxElementSizeRel * new Vector2(rect.Width, rect.Height);
                 if (maxSize.X > 0f) size.X = MathF.Min(size.X, maxSize.X);
                 if (maxSize.Y > 0f) size.Y = MathF.Min(size.Y, maxSize.Y);
                 Rect r = new(startPos + offset, size, new(0f));
@@ -31,17 +31,17 @@ namespace ShapeEngine.Lib
         public static List<Rect> GetAlignedRectsVertical(this Rect rect, int count, float gapRelative = 0f, float maxElementSizeRel = 1f)
         {
             List<Rect> rects = new();
-            Vector2 startPos = new(rect.x, rect.y);
+            Vector2 startPos = new(rect.X, rect.Y);
             int gaps = count - 1;
 
-            float totalHeight = rect.height;
+            float totalHeight = rect.Height;
             float gapSize = totalHeight * gapRelative;
             float elementHeight = (totalHeight - gaps * gapSize) / count;
             Vector2 offset = new(0f, 0f);
             for (int i = 0; i < count; i++)
             {
-                Vector2 size = new(rect.width, elementHeight);
-                Vector2 maxSize = maxElementSizeRel * new Vector2(rect.width, rect.height);
+                Vector2 size = new(rect.Width, elementHeight);
+                Vector2 maxSize = maxElementSizeRel * new Vector2(rect.Width, rect.Height);
                 if (maxSize.X > 0f) size.X = MathF.Min(size.X, maxSize.X);
                 if (maxSize.Y > 0f) size.Y = MathF.Min(size.Y, maxSize.Y);
                 Rect r = new(startPos + offset, size, new(0f));
@@ -53,16 +53,16 @@ namespace ShapeEngine.Lib
         public static List<Rect> GetAlignedRectsGrid(this Rect rect, int columns, int rows, int count, float hGapRelative = 0f, float vGapRelative = 0f, bool leftToRight = true)
         {
             List<Rect> rects = new();
-            Vector2 startPos = new(rect.x, rect.y);
+            Vector2 startPos = new(rect.X, rect.Y);
 
             int hGaps = columns - 1;
-            float totalWidth = rect.width;
+            float totalWidth = rect.Width;
             float hGapSize = totalWidth * hGapRelative;
             float elementWidth = (totalWidth - hGaps * hGapSize) / columns;
             Vector2 hGap = new(hGapSize + elementWidth, 0);
 
             int vGaps = rows - 1;
-            float totalHeight = rect.height;
+            float totalHeight = rect.Height;
             float vGapSize = totalHeight * vGapRelative;
             float elementHeight = (totalHeight - vGaps * vGapSize) / rows;
             Vector2 vGap = new(0, vGapSize + elementHeight);
@@ -86,31 +86,31 @@ namespace ShapeEngine.Lib
             Vector2 hitPoint = objPos;
             Vector2 n = new(0f, 0f);
             Vector2 newPos = objPos;
-            if (objPos.X + objRadius > playfieldRect.x + playfieldRect.width)
+            if (objPos.X + objRadius > playfieldRect.X + playfieldRect.Width)
             {
-                hitPoint = new(playfieldRect.x + playfieldRect.width, objPos.Y);
+                hitPoint = new(playfieldRect.X + playfieldRect.Width, objPos.Y);
                 newPos.X = hitPoint.X - objRadius;
                 n = new(-1, 0);
                 collided = true;
             }
-            else if (objPos.X - objRadius < playfieldRect.x)
+            else if (objPos.X - objRadius < playfieldRect.X)
             {
-                hitPoint = new(playfieldRect.x, objPos.Y);
+                hitPoint = new(playfieldRect.X, objPos.Y);
                 newPos.X = hitPoint.X + objRadius;
                 n = new(1, 0);
                 collided = true;
             }
 
-            if (objPos.Y + objRadius > playfieldRect.y + playfieldRect.height)
+            if (objPos.Y + objRadius > playfieldRect.Y + playfieldRect.Height)
             {
-                hitPoint = new(objPos.X, playfieldRect.y + playfieldRect.height);
+                hitPoint = new(objPos.X, playfieldRect.Y + playfieldRect.Height);
                 newPos.Y = hitPoint.Y - objRadius;
                 n = new(0, -1);
                 collided = true;
             }
-            else if (objPos.Y - objRadius < playfieldRect.y)
+            else if (objPos.Y - objRadius < playfieldRect.Y)
             {
-                hitPoint = new(objPos.X, playfieldRect.y);
+                hitPoint = new(objPos.X, playfieldRect.Y);
                 newPos.Y = hitPoint.Y + objRadius;
                 n = new(0, 1);
                 collided = true;
@@ -122,25 +122,25 @@ namespace ShapeEngine.Lib
         {
             bool outOfBounds = false;
             Vector2 newPos = objPos;
-            if (objPos.X + objRadius > playfieldRect.x + playfieldRect.width)
+            if (objPos.X + objRadius > playfieldRect.X + playfieldRect.Width)
             {
-                newPos = new(playfieldRect.x, objPos.Y);
+                newPos = new(playfieldRect.X, objPos.Y);
                 outOfBounds = true;
             }
-            else if (objPos.X - objRadius < playfieldRect.x)
+            else if (objPos.X - objRadius < playfieldRect.X)
             {
-                newPos = new(playfieldRect.x + playfieldRect.width, objPos.Y);
+                newPos = new(playfieldRect.X + playfieldRect.Width, objPos.Y);
                 outOfBounds = true;
             }
 
-            if (objPos.Y + objRadius > playfieldRect.y + playfieldRect.height)
+            if (objPos.Y + objRadius > playfieldRect.Y + playfieldRect.Height)
             {
-                newPos = new(objPos.X, playfieldRect.y);
+                newPos = new(objPos.X, playfieldRect.Y);
                 outOfBounds = true;
             }
-            else if (objPos.Y - objRadius < playfieldRect.y)
+            else if (objPos.Y - objRadius < playfieldRect.Y)
             {
-                newPos = new(objPos.X, playfieldRect.y + playfieldRect.height);
+                newPos = new(objPos.X, playfieldRect.Y + playfieldRect.Height);
                 outOfBounds = true;
             }
 
@@ -161,35 +161,35 @@ namespace ShapeEngine.Lib
             List<Rect> tiles = new();
 
             //topLeft
-            Vector2 tl0 = new(outer.x, outer.y);
-            Vector2 br0 = new(inner.x, inner.y);
+            Vector2 tl0 = new(outer.X, outer.Y);
+            Vector2 br0 = new(inner.X, inner.Y);
             
             //topCenter
-            Vector2 tl1 = new(inner.x, outer.y);
-            Vector2 br1 = new(inner.x + inner.width, inner.y);
+            Vector2 tl1 = new(inner.X, outer.Y);
+            Vector2 br1 = new(inner.X + inner.Width, inner.Y);
             
             //topRight
-            Vector2 tl2 = new(inner.x + inner.width, outer.y);
-            Vector2 br2 = new(outer.x + outer.width, inner.y);
+            Vector2 tl2 = new(inner.X + inner.Width, outer.Y);
+            Vector2 br2 = new(outer.X + outer.Width, inner.Y);
            
             //rightCenter
             Vector2 tl3 = br1;
-            Vector2 br3 = new(outer.x + outer.width, inner.y + inner.height);
+            Vector2 br3 = new(outer.X + outer.Width, inner.Y + inner.Height);
             
             //bottomRight
-            Vector2 tl4 = new(inner.x + inner.width, inner.y + inner.height);
-            Vector2 br4 = new(outer.x + outer.width, outer.y + outer.height);
+            Vector2 tl4 = new(inner.X + inner.Width, inner.Y + inner.Height);
+            Vector2 br4 = new(outer.X + outer.Width, outer.Y + outer.Height);
             
             //bottomCenter
-            Vector2 tl5 = new(inner.x, inner.y + inner.height);
-            Vector2 br5 = new(inner.x + inner.width, outer.y + outer.height);
+            Vector2 tl5 = new(inner.X, inner.Y + inner.Height);
+            Vector2 br5 = new(inner.X + inner.Width, outer.Y + outer.Height);
             
             //bottomLeft
-            Vector2 tl6 = new(outer.x, inner.y + inner.height);
-            Vector2 br6 = new(inner.x, outer.y + outer.height);
+            Vector2 tl6 = new(outer.X, inner.Y + inner.Height);
+            Vector2 br6 = new(inner.X, outer.Y + outer.Height);
             
             //leftCenter
-            Vector2 tl7 = new(outer.x, inner.y);
+            Vector2 tl7 = new(outer.X, inner.Y);
             Vector2 br7 = tl5;
             
             tiles.Add(new(tl0, br0));//topLeft
@@ -214,7 +214,10 @@ namespace ShapeEngine.Lib
         /// <returns></returns>
         public static Polygon RotateList(this Rect rect, Vector2 pivot, float angleDeg)
         {
-            return SPoly.Rotate(rect.ToPolygon(), pivot, angleDeg);
+            var poly = rect.ToPolygon();
+            poly.Rotate(pivot, angleDeg * DEG2RAD);
+            return poly;
+            //return Polygon.Rotate(rect.ToPolygon(), pivot, angleDeg);
 
             //float rotRad = angleDeg * SUtils.DEGTORAD;
             //Vector2 size = new Vector2(rect.width, rect.height);
@@ -234,8 +237,11 @@ namespace ShapeEngine.Lib
         }
         public static (Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr) Rotate(this Rect rect, Vector2 pivot, float angleDeg)
         {
-            var rotated = SPoly.Rotate(rect.ToPolygon(), pivot, angleDeg);
-            return new(rotated[0], rotated[1], rotated[2], rotated[3]);
+            var poly = rect.ToPolygon();
+            poly.Rotate(pivot, angleDeg * DEG2RAD);
+            return new(poly[0], poly[1], poly[2], poly[3]);
+
+            //var rotated = SPoly.Rotate(rect.ToPolygon(), pivot, angleDeg);
 
             //float rotRad = angleDeg * SUtils.DEGTORAD;
             //Vector2 size = new Vector2(rect.width, rect.height);
@@ -283,17 +289,17 @@ namespace ShapeEngine.Lib
             return
                 new
                 (
-                    SUtils.LerpFloat(from.x, to.x, f),
-                    SUtils.LerpFloat(from.y, to.y, f),
-                    SUtils.LerpFloat(from.width, to.width, f),
-                    SUtils.LerpFloat(from.height, to.height, f)
+                    SUtils.LerpFloat(from.X, to.X, f),
+                    SUtils.LerpFloat(from.Y, to.Y, f),
+                    SUtils.LerpFloat(from.Width, to.Width, f),
+                    SUtils.LerpFloat(from.Height, to.Height, f)
                 );
         }
         public static Rect Align(this Rect r, Vector2 alignement) { return new(r.TopLeft, r.Size, alignement); }
         public static Rect ApplyMargins(this Rect rect, float left, float right, float top, float bottom)
         {
-            Vector2 tl = new(rect.x, rect.y);
-            Vector2 size = new(rect.width, rect.height);
+            Vector2 tl = new(rect.X, rect.Y);
+            Vector2 size = new(rect.Width, rect.Height);
             Vector2 br = tl + size;
 
             tl.X += size.X * left;
@@ -313,8 +319,8 @@ namespace ShapeEngine.Lib
         }
         public static Rect ApplyMarginsAbsolute(this Rect rect, float left, float right, float top, float bottom)
         {
-            Vector2 tl = new(rect.x, rect.y);
-            Vector2 size = new(rect.width, rect.height);
+            Vector2 tl = new(rect.X, rect.Y);
+            Vector2 size = new(rect.Width, rect.Height);
             Vector2 br = tl + size;
 
             tl.X += left;
@@ -334,20 +340,20 @@ namespace ShapeEngine.Lib
         }
         public static Rect ScaleSize(this Rect r, float scale, Vector2 alignement) { return new(r.GetPoint(alignement), r.Size * scale, alignement); }
         public static Rect ScaleSize(this Rect r, Vector2 scale, Vector2 alignement) { return new(r.GetPoint(alignement), r.Size * scale, alignement); }
-        public static Rect ChangeSize(this Rect r, float amount, Vector2 alignement) { return new(r.GetPoint(alignement), new(r.width + amount, r.height + amount), alignement); }
+        public static Rect ChangeSize(this Rect r, float amount, Vector2 alignement) { return new(r.GetPoint(alignement), new(r.Width + amount, r.Height + amount), alignement); }
         public static Rect ChangeSize(this Rect r, Vector2 amount, Vector2 alignement) { return new(r.GetPoint(alignement), r.Size + amount, alignement); }
         public static Rect Move(this Rect r, Vector2 amount) { return new( r.TopLeft + amount, r.Size, new(0f)); }
         public static Rect Enlarge(this Rect r, Vector2 p)
         {
             Vector2 tl = new
                 (
-                    MathF.Min(r.x, p.X),
-                    MathF.Min(r.y, p.Y)
+                    MathF.Min(r.X, p.X),
+                    MathF.Min(r.Y, p.Y)
                 );
             Vector2 br = new
                 (
-                    MathF.Max(r.x + r.width, p.X),
-                    MathF.Max(r.y + r.height, p.Y)
+                    MathF.Max(r.X + r.Width, p.X),
+                    MathF.Max(r.Y + r.Height, p.Y)
                 );
             return new(tl, br);
         }
@@ -355,8 +361,8 @@ namespace ShapeEngine.Lib
         {
             return new
                 (
-                    SUtils.Clamp(p.X, r.x, r.x + r.width),
-                    SUtils.Clamp(p.Y, r.y, r.y + r.height)
+                    SUtils.Clamp(p.X, r.X, r.X + r.Width),
+                    SUtils.Clamp(p.Y, r.Y, r.Y + r.Height)
                 );
         }
         /// <summary>

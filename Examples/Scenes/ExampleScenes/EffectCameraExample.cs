@@ -19,9 +19,9 @@ namespace Examples.Scenes.ExampleScenes
         public void Draw()
         {
             Color color = DARKGRAY;
-            if (circle.radius > 2f && circle.radius <= 3f) color = GRAY;
-            else if (circle.radius > 3f) color = WHITE;
-            SDrawing.DrawCircleFast(circle.center, circle.radius, color);
+            if (circle.Radius > 2f && circle.Radius <= 3f) color = GRAY;
+            else if (circle.Radius > 3f) color = WHITE;
+            SDrawing.DrawCircleFast(circle.Center, circle.Radius, color);
         }
     }
     internal class Comet
@@ -46,11 +46,11 @@ namespace Examples.Scenes.ExampleScenes
         }
         public void Update(float dt, Rect universe)
         {
-            circle.center += vel * dt;
+            circle.Center += vel * dt;
 
-            if (!universe.IsPointInside(circle.center))
+            if (!universe.IsPointInside(circle.Center))
             {
-                circle.center = -circle.center;
+                circle.Center = -circle.Center;
             }
         }
         public bool CheckCollision(Circle ship)
@@ -60,7 +60,7 @@ namespace Examples.Scenes.ExampleScenes
         public float GetCollisionIntensity()
         {
             float speedF = SUtils.GetFactor(speed, MinSpeed, MaxSpeed);
-            float sizeF = SUtils.GetFactor(circle.radius, MinSize, MaxSize);
+            float sizeF = SUtils.GetFactor(circle.Radius, MinSize, MaxSize);
             return speedF * sizeF;
         }
         public void Draw()
@@ -234,7 +234,7 @@ namespace Examples.Scenes.ExampleScenes
             }
 
             
-            ship.center = camera.Position;
+            ship.Center = camera.Position;
         }
 
         public override void DrawGame(Vector2 gameSize, Vector2 mousePosGame)
@@ -252,10 +252,10 @@ namespace Examples.Scenes.ExampleScenes
 
             Vector2 rightThruster = movementDir.RotateDeg(-25);
             Vector2 leftThruster = movementDir.RotateDeg(25);
-            DrawCircleV(ship.center - rightThruster * ship.radius, ship.radius / 6, RED);
-            DrawCircleV(ship.center - leftThruster * ship.radius, ship.radius / 6, RED);
+            DrawCircleV(ship.Center - rightThruster * ship.Radius, ship.Radius / 6, RED);
+            DrawCircleV(ship.Center - leftThruster * ship.Radius, ship.Radius / 6, RED);
             ship.Draw(BLUE);
-            DrawCircleV(ship.center + movementDir * ship.radius * 0.66f, ship.radius * 0.33f, SKYBLUE);
+            DrawCircleV(ship.Center + movementDir * ship.Radius * 0.66f, ship.Radius * 0.33f, SKYBLUE);
 
             ship.DrawLines(4f, RED);
         }

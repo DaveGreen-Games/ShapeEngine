@@ -117,7 +117,7 @@ namespace ShapeEngine.Lib
             return result;
         }
         public static Vector2 Floor(this Vector2 v) { return new(MathF.Floor(v.X), MathF.Floor(v.Y)); }
-        public static Vector2 Ceil(this Vector2 v) { return new(MathF.Ceiling(v.X), MathF.Ceiling(v.Y)); }
+        public static Vector2 Ceiling(this Vector2 v) { return new(MathF.Ceiling(v.X), MathF.Ceiling(v.Y)); }
         public static Vector2 Round(this Vector2 v) { return new(MathF.Round(v.X), MathF.Round(v.Y)); }
         public static Vector2 Truncate(this Vector2 v) { return new(MathF.Truncate(v.X), MathF.Truncate(v.Y)); }
         public static Vector2 Abs(this Vector2 v) { return Vector2.Abs(v); }

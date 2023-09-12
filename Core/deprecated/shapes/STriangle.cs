@@ -6,6 +6,7 @@ namespace ShapeEngine.Lib
 {
     public static class STriangle
     {
+        /*
         public static Triangulation Triangulate(this Triangle t, int pointCount)
         {
             if (pointCount < 0) return new() { t };
@@ -119,7 +120,7 @@ namespace ShapeEngine.Lib
         public static Triangle Move(this Triangle t, Vector2 aOffset, Vector2 bOffset, Vector2 cOffset) { return new(t.a + aOffset, t.b + bOffset, t.c + cOffset); }
         
         
-        
+        */
        
         
 

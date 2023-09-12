@@ -314,7 +314,7 @@ namespace Examples.Scenes.ExampleScenes
         //HashSet<ICollidable> others = new();
         public AuraCollidable(Vector2 pos, float radius, float f)
         {
-            var shape = SPoly.Generate(pos, 12, radius * 0.5f, radius);
+            var shape = Polygon.Generate(pos, 12, radius * 0.5f, radius);
             this.collider = new PolyCollider(shape, pos, new Vector2(0f));
             this.collider.ComputeCollision = true;
             this.collider.ComputeIntersections = false;

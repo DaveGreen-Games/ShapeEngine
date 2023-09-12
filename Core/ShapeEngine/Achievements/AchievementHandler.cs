@@ -115,10 +115,10 @@ namespace ShapeEngine.Achievements
         }
         public virtual void Draw(Font font, Rect rect, Raylib_CsLo.Color bgColor, Raylib_CsLo.Color textColor, Raylib_CsLo.Color progressColor, Raylib_CsLo.Color achievedColor)
         {
-            Rect left = new(rect.x, rect.y, rect.width * 0.25f, rect.height);
-            Rect leftTop = new(left.x, left.y, left.width, left.height * 0.5f);
-            Rect leftBottom = new(left.x, left.y +left.height * 0.5f, left.width, left.height * 0.5f);
-            Rect right = new(rect.x + rect.width * 0.28f, rect.y, rect.width * 0.72f, rect.height);
+            Rect left = new(rect.X, rect.Y, rect.Width * 0.25f, rect.Height);
+            Rect leftTop = new(left.X, left.Y, left.Width, left.Height * 0.5f);
+            Rect leftBottom = new(left.X, left.Y +left.Height * 0.5f, left.Width, left.Height * 0.5f);
+            Rect right = new(rect.X + rect.Width * 0.28f, rect.Y, rect.Width * 0.72f, rect.Height);
             SDrawing.DrawBar(rect, GetGoalPercentage(), progressColor, bgColor);
             if (achieved) rect.DrawLines(3f, achievedColor);// SDrawing.DrawRect(rect, new(0f), 0f, 3f, achievedColor);
             int value = stat.value;

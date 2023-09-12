@@ -127,7 +127,7 @@ namespace ShapeEngine.UI
         }
         public void UpdateRect(Rect rect, Vector2 alignement)
         {
-            UpdateRect(new Vector2(rect.x, rect.y), new Vector2(rect.width, rect.height), alignement);
+            UpdateRect(new Vector2(rect.X, rect.Y), new Vector2(rect.Width, rect.Height), alignement);
         }
         public void UpdateRect(Rect rect)
         {

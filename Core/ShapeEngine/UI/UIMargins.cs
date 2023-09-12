@@ -28,8 +28,8 @@ namespace ShapeEngine.UI
 
         public Rect Apply(Rect rect)
         {
-            Vector2 tl = new(rect.x, rect.y);
-            Vector2 size = new(rect.width, rect.height);
+            Vector2 tl = new(rect.X, rect.Y);
+            Vector2 size = new(rect.Width, rect.Height);
             Vector2 br = tl + size;
 
             tl.X += size.X * left;

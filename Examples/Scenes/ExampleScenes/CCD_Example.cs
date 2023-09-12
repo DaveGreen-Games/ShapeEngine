@@ -155,7 +155,7 @@ namespace Examples.Scenes.ExampleScenes
                 {
                     Vector2 prevPos = bullet.GetPrevPos();
                     Segment centerRay = new(prevPos, collider.Pos);
-                    float r = shape.GetBoundingCircle().radius;
+                    float r = shape.GetBoundingCircle().Radius;
                     float r2 = r + r;
 
                     List<Vector2> points = new();

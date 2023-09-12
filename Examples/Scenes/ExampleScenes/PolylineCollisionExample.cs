@@ -59,17 +59,17 @@ namespace Examples.Scenes.ExampleScenes
             {
                 Rect r = new (pos, new Vector2(size, size) * 0.5f, new Vector2(0.5f));
                 var points = r.ToPolygon();
-                points.RotateSelf(pos, SRNG.randAngleRad());
+                points.Rotate(pos, SRNG.randAngleRad());
                 Collider = new PolyCollider(points, pos, new(0f));
             }
             else if (shapeIndex == 6)//poly
             {
-                var poly = SPoly.Generate(pos, SRNG.randI(6, 24), size * 0.1f, size * 0.5f);
+                var poly = Polygon.Generate(pos, SRNG.randI(6, 24), size * 0.1f, size * 0.5f);
                 Collider = new PolyCollider(poly, pos, new(0f));
             }
             else if (shapeIndex == 7)//polyline
             {
-                var poly = SPoly.Generate(pos, SRNG.randI(6, 24), size * 0.1f, size * 0.5f);
+                var poly = Polygon.Generate(pos, SRNG.randI(6, 24), size * 0.1f, size * 0.5f);
                 Collider = new PolylineCollider(poly.ToPolyline(), pos, new(0f));
             }
             else
@@ -345,9 +345,9 @@ namespace Examples.Scenes.ExampleScenes
             
             foreach (var vertex in vertices)
             {
-                if (vertex.radius > 0f)
+                if (vertex.Radius > 0f)
                 {
-                    if (vertex.radius < vertexRadius * 2f) vertex.Draw(ColorLight);
+                    if (vertex.Radius < vertexRadius * 2f) vertex.Draw(ColorLight);
                     else vertex.Draw(ColorHighlight1);
                 }
             }

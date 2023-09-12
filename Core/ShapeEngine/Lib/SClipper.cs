@@ -178,14 +178,14 @@ namespace ShapeEngine.Lib
         public static PathsD MinkowskiDiff(this Polygon poly, Polygon path, bool isClosed = false) { return Clipper.MinkowskiDiff(poly.ToClipperPath(), path.ToClipperPath(), isClosed); }
         public static PathsD MinkowskiSum(this Polygon poly, Polygon path, bool isClosed = false) { return Clipper.MinkowskiSum(poly.ToClipperPath(), path.ToClipperPath(), isClosed); }
 
-        public static PathsD MinkowskiDiffOrigin(this Polygon poly, Polygon path, bool isClosed = false) { return Clipper.MinkowskiDiff(poly.ToClipperPath(), path.Center(new(0f)).ToClipperPath(), isClosed); }
-        public static PathsD MinkowskiSumOrigin(this Polygon poly, Polygon path, bool isClosed = false) { return Clipper.MinkowskiSum(poly.ToClipperPath(), path.Center(new(0f)).ToClipperPath(), isClosed); }
+        public static PathsD MinkowskiDiffOrigin(this Polygon poly, Polygon path, bool isClosed = false) { return Clipper.MinkowskiDiff(poly.ToClipperPath(), Polygon.Center(path,new(0f)).ToClipperPath(), isClosed); }
+        public static PathsD MinkowskiSumOrigin(this Polygon poly, Polygon path, bool isClosed = false) { return Clipper.MinkowskiSum(poly.ToClipperPath(), Polygon.Center(path, new(0f)).ToClipperPath(), isClosed); }
 
         public static Polygon CreateEllipse(Vector2 center, float radiusX, float radiusY = 0f, int steps = 0) { return Clipper.Ellipse(center.ToClipperPoint(), radiusX, radiusY, steps).ToPolygon(); }
 
         public static Vector2 ToVec2(this PointD p) { return new((float)p.x, -(float)p.y); }//flip of y necessary -> clipper up y is positve - raylib is negative
         public static PointD ToClipperPoint(this Vector2 v) { return new(v.X, -v.Y); }
-        public static RectD ToClipperRect(this Rect r) { return new RectD(r.x, -r.y-r.height, r.x + r.width, -r.y); }
+        public static RectD ToClipperRect(this Rect r) { return new RectD(r.X, -r.Y-r.Height, r.X + r.Width, -r.Y); }
         public static Rect ToRect(this RectD r) { return new Rect((float)r.left, (float)(-r.top-r.Height), (float)r.Width, (float)r.Height); }
         public static Polygon ToPolygon(this PathD path)
         {

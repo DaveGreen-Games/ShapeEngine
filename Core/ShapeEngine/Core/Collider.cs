@@ -222,15 +222,15 @@ namespace ShapeEngine.Core
         }
         public RectCollider(Rect rect)
         {
-            this.Pos = new(rect.x, rect.y);
-            this.Size = new(rect.width, rect.height);
+            this.Pos = new(rect.X, rect.Y);
+            this.Size = new(rect.Width, rect.Height);
             this.Vel = new(0f);
             this.Alignement = new(0f);
         }
         public RectCollider(Rect rect, Vector2 vel)
         {
-            this.Pos = new(rect.x, rect.y);
-            this.Size = new(rect.width, rect.height);
+            this.Pos = new(rect.X, rect.Y);
+            this.Size = new(rect.Width, rect.Height);
             this.Vel = vel;
             this.Alignement = new(0f);
         }

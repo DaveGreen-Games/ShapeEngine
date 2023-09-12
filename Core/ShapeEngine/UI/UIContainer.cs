@@ -434,14 +434,14 @@ namespace ShapeEngine.UI
             switch (dir)
             {
                 case UINeighbors.NeighborDirection.TOP:
-                    return new(self.x + self.width / 2, self.y + self.height);//bottom
+                    return new(self.X + self.Width / 2, self.Y + self.Height);//bottom
                 case UINeighbors.NeighborDirection.RIGHT:
-                    return new(self.x, self.y + self.height / 2); //left
+                    return new(self.X, self.Y + self.Height / 2); //left
                 case UINeighbors.NeighborDirection.BOTTOM:
-                    return new(self.x + self.width / 2, self.y);//top
+                    return new(self.X + self.Width / 2, self.Y);//top
                 case UINeighbors.NeighborDirection.LEFT:
-                    return new(self.x + self.width, self.y + self.height / 2);//right
-                default: return new(self.x + self.width / 2, self.y + self.height / 2); //center
+                    return new(self.X + self.Width, self.Y + self.Height / 2);//right
+                default: return new(self.X + self.Width / 2, self.Y + self.Height / 2); //center
             }
         }
         protected void UpdateNavigation(float dt)
@@ -519,7 +519,7 @@ namespace ShapeEngine.UI
 
         public static void AlignUIElementsHorizontal(Rect rect, List<UIElement> elements, int displayCount = -1, float gapRelative = 0f, float elementMaxSizeX = 1f, float elementMaxSizeY = 1f)
         {
-            Vector2 startPos = new(rect.x, rect.y);
+            Vector2 startPos = new(rect.X, rect.Y);
             Vector2 maxElementSizeRel = new(elementMaxSizeX, elementMaxSizeY);
             float stretchFactorTotal = 0f;
             int count = displayCount <= 0 ? elements.Count : displayCount;
@@ -533,15 +533,15 @@ namespace ShapeEngine.UI
             }
             int gaps = count - 1;
 
-            float totalWidth = rect.width;
+            float totalWidth = rect.Width;
             float gapSize = totalWidth * gapRelative;
             float elementWidth = (totalWidth - gaps * gapSize) / stretchFactorTotal;
             Vector2 offset = new(0f, 0f);
             foreach (var element in elements)
             {
                 float width = elementWidth * element.StretchFactor;
-                Vector2 size = new(width, rect.height);
-                Vector2 maxSize = maxElementSizeRel * new Vector2(rect.width, rect.height);
+                Vector2 size = new(width, rect.Height);
+                Vector2 maxSize = maxElementSizeRel * new Vector2(rect.Width, rect.Height);
                 if (maxSize.X > 0f) size.X = MathF.Min(size.X, maxSize.X);
                 if (maxSize.Y > 0f) size.Y = MathF.Min(size.Y, maxSize.Y);
                 element.UpdateRect(startPos + offset, size, new(0f));
@@ -551,7 +551,7 @@ namespace ShapeEngine.UI
         }
         public static void AlignUIElementsVertical(Rect rect, List<UIElement> elements, int displayCount = -1, float gapRelative = 0f, float elementMaxSizeX = 1f, float elementMaxSizeY = 1f)
         {
-            Vector2 startPos = new(rect.x, rect.y);
+            Vector2 startPos = new(rect.X, rect.Y);
             Vector2 maxElementSizeRel = new(elementMaxSizeX, elementMaxSizeY);
             float stretchFactorTotal = 0f;
             int count = displayCount <= 0 ? elements.Count : displayCount;
@@ -565,15 +565,15 @@ namespace ShapeEngine.UI
             }
             int gaps = count - 1;
 
-            float totalHeight = rect.height;
+            float totalHeight = rect.Height;
             float gapSize = totalHeight * gapRelative;
             float elementHeight = (totalHeight - gaps * gapSize) / stretchFactorTotal;
             Vector2 offset = new(0f, 0f);
             foreach (var element in elements)
             {
                 float height = elementHeight * element.StretchFactor;
-                Vector2 size = new(rect.width, height);
-                Vector2 maxSize = maxElementSizeRel * new Vector2(rect.width, rect.height);
+                Vector2 size = new(rect.Width, height);
+                Vector2 maxSize = maxElementSizeRel * new Vector2(rect.Width, rect.Height);
                 if (maxSize.X > 0f) size.X = MathF.Min(size.X, maxSize.X);
                 if (maxSize.Y > 0f) size.Y = MathF.Min(size.Y, maxSize.Y);
                 element.UpdateRect(startPos + offset, size, new(0f));
@@ -583,16 +583,16 @@ namespace ShapeEngine.UI
         }
         public static void AlignUIElementsGrid(Rect rect, List<UIElement> elements, int columns, int rows, float hGapRelative = 0f, float vGapRelative = 0f, bool leftToRight = true)
         {
-            Vector2 startPos = new(rect.x, rect.y);
+            Vector2 startPos = new(rect.X, rect.Y);
 
             int hGaps = columns - 1;
-            float totalWidth = rect.width;
+            float totalWidth = rect.Width;
             float hGapSize = totalWidth * hGapRelative;
             float elementWidth = (totalWidth - hGaps * hGapSize) / columns;
             Vector2 hGap = new(hGapSize + elementWidth, 0);
 
             int vGaps = rows - 1;
-            float totalHeight = rect.height;
+            float totalHeight = rect.Height;
             float vGapSize = totalHeight * vGapRelative;
             float elementHeight = (totalHeight - vGaps * vGapSize) / rows;
             Vector2 vGap = new(0, vGapSize + elementHeight);
