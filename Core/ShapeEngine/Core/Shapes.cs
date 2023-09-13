@@ -435,6 +435,10 @@ namespace ShapeEngine.Core
         public Vector2 SideA { get { return B - A; } }
         public Vector2 SideB { get { return C - B; } }
         public Vector2 SideC { get { return A - C; } }
+        public Segment SegmentA { get { return new Segment(A, B, FlippedNormals); } }
+        public Segment SegmentB { get { return new Segment(B, C, FlippedNormals); } }
+        public Segment SegmentC { get { return new Segment(C, A, FlippedNormals); } }
+           
         public bool FlippedNormals { get; set; } = false;
         #endregion
 
@@ -656,13 +660,7 @@ namespace ShapeEngine.Core
         public Points GetVertices() { return new(A, B, C); }
         public Polygon ToPolygon() { return new(A, B, C); }
         public Polyline ToPolyline() { return new(A, B, C); }
-        public Segments GetEdges() 
-        {
-            Segment segA = new Segment(A, B, FlippedNormals);
-            Segment segB = new Segment(B, C, FlippedNormals);
-            Segment segC = new Segment(C, A, FlippedNormals);
-            return new() { segA, segB, segC };
-        }
+        public Segments GetEdges() { return new() { SegmentA, SegmentB, SegmentC }; }
         public Triangulation Triangulate() { return this.Triangulate(GetCentroid()); }
         public Circle GetBoundingCircle() { return GetCircumCircle(); } // ToPolygon().GetBoundingCircle(); }
         public float GetCircumference() { return MathF.Sqrt(GetCircumferenceSquared()); }
@@ -1053,7 +1051,7 @@ namespace ShapeEngine.Core
     /// <summary>
     /// Points shoud be in CCW order.
     /// </summary>
-    public class Polygon : List<Vector2>, IShape, IEquatable<Polygon>
+    public class Polygon : Points, IShape, IEquatable<Polygon>
     {
         #region Constructors
         public Polygon() { }
@@ -1095,7 +1093,7 @@ namespace ShapeEngine.Core
         #endregion
 
         #region Public
-        public Polygon Copy() { return new(this); }
+        //public Polygon Copy() { return new(this); }
         public void FixWindingOrder() { if (this.IsClockwise()) this.Reverse(); }
         public void ReduceVertexCount(int newCount)
         {
@@ -1145,10 +1143,10 @@ namespace ShapeEngine.Core
             return this[SUtils.WrapIndex(Count, index)];
         }
 
-        public void Floor() { Points.Floor(this); }
-        public void Ceiling() { Points.Ceiling(this); }
-        public void Truncate() { Points.Truncate(this); }
-        public void Round() { Points.Round(this); }
+        //public void Floor() { Points.Floor(this); }
+        //public void Ceiling() { Points.Ceiling(this); }
+        //public void Truncate() { Points.Truncate(this); }
+        //public void Round() { Points.Round(this); }
 
         /// <summary>
         /// Computes the length of this polygon's apothem. This will only be valid if
@@ -1872,8 +1870,8 @@ namespace ShapeEngine.Core
         }
 
         public Points GetVertices() { return new(this); }
-        public Polygon ToPolygon() { return new( this ); }
-        public Polyline ToPolyline() { return new(this); }
+        //public Polygon ToPolygon() { return new( this ); }
+        //public Polyline ToPolyline() { return new(this); }
 
 
         public int GetClosestIndex(Vector2 p)
@@ -2081,7 +2079,7 @@ namespace ShapeEngine.Core
         //public SegmentShape GetSegmentShape() { return new(GetEdges(), this.GetCentroid()); }
     }
 
-    public class Polyline : List<Vector2>, IShape, IEquatable<Polyline>
+    public class Polyline : Points, IShape, IEquatable<Polyline>
     {
         #region Constructors
         public Polyline() { }
@@ -2130,11 +2128,11 @@ namespace ShapeEngine.Core
         #endregion
 
         #region Public
-        public Polyline Copy() { return new(this); }
-        public void Floor() { Points.Floor(this); }
-        public void Ceiling() { Points.Ceiling(this); }
-        public void Truncate() { Points.Truncate(this); }
-        public void Round() { Points.Round(this); }
+        //public Polyline Copy() { return new(this); }
+        //public void Floor() { Points.Floor(this); }
+        //public void Ceiling() { Points.Ceiling(this); }
+        //public void Truncate() { Points.Truncate(this); }
+        //public void Round() { Points.Round(this); }
         #endregion
 
         #region Static
@@ -2290,13 +2288,7 @@ namespace ShapeEngine.Core
 
 
         public Points GetVertices() { return new(this); }
-        public Polyline ToPolyline() { return this; }
-        public Polygon ToPolygon()
-        {
-            var polygon = new Polygon();
-            polygon.AddRange(this);
-            return polygon;
-        }
+        
         
         public bool IsPointInside(Vector2 p)
         {
