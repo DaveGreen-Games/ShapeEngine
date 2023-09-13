@@ -93,25 +93,28 @@ namespace Examples.Scenes.ExampleScenes
 
             
 
-            if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT) && closePointIndex < 0)
+            if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT))
             { 
-                points.Add(mousePosGame);
-                Triangulate();
-            }
-            else if(IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT))
-            {
-                if(closePointIndex >= 0)
+                if(closePointIndex < 0)
+                {
+                    points.Add(mousePosGame);
+                    Triangulate();
+                }
+                else
                 {
                     points.RemoveAt(closePointIndex);
                     closePointIndex = -1;
                     Triangulate();
                 }
-                else if(closeTriangleIndex >= 0)
+                
+            }
+            else if(IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT))
+            {
+                if(closeTriangleIndex >= 0)
                 {
                     Triangle t = curTriangulation[closeTriangleIndex];
-                    curTriangulation.RemoveAt(closeTriangleIndex);
-                    closeTriangleIndex = -1;
-                    curTriangulation.AddRange(t.Triangulate(3));
+                    points.AddRange(t.GetRandomPoints(3));
+                    Triangulate();
                 }
             }
         }
@@ -120,6 +123,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             if (points.Count < 3) return;
             curTriangulation = Polygon.TriangulateDelaunay(points);
+
         }
 
         public override void DrawGame(Vector2 gameSize, Vector2 mousePosGame)
@@ -130,15 +134,17 @@ namespace Examples.Scenes.ExampleScenes
             for (int i = 0; i < curTriangulation.Count; i++)
             {
                 var tri = curTriangulation[i];
-                if (i == closeTriangleIndex)
-                {
-                    tri.DrawLines(4f, GREEN);
-                }
-                else
-                {
-                    tri.DrawLines(2f, YELLOW);
-                }
+                if (i == closeTriangleIndex) continue;
+                tri.DrawLines(2f, WHITE);
+                //{
+                //    tri.DrawLines(4f, GREEN);
+                //}
+                //else
+                //{
+                //    tri.DrawLines(2f, YELLOW);
+                //}
             }
+            if(closeTriangleIndex >= 0) curTriangulation[closeTriangleIndex].DrawLines(6f, GREEN);
 
             for (int i = 0; i < points.Count; i++)
             {
@@ -157,12 +163,12 @@ namespace Examples.Scenes.ExampleScenes
         {
             base.DrawUI(uiSize, mousePosUI);
 
-            //Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));
-            //
+            Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));
+
             //string polymodeText = "[Tab] Polymode | [LMB] Place/Merge | [RMB] Cut | [1] Triangle | [2] Rect | [3] Poly | [Q] Regenerate | [X] Rotate | [C] Scale";
             //string laserText = "[Tab] Lasermode | [LMB] Move | [RMB] Shoot Laser";
-            //
-            //font.DrawText(text, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+            string text = String.Format("[LMB] Add Point / Remove Point | [RMB] Add 3 Points to Triangle");
+            font.DrawText(text, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
 
 
         }

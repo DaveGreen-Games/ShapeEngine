@@ -200,16 +200,17 @@ namespace ShapeEngine.Core
         /// </summary>
         /// <param name="other"></param>
         /// <returns></returns>
-        public bool Equals(Segment other)
+        public bool IsSimilar(Segment other)
         {
             return (Start == other.Start && End == other.End) || (Start == other.End && End == other.Start);
         }
+        
         /// <summary>
         /// Checks the equality of 2 segments with the direction.
         /// </summary>
         /// <param name="other"></param>
         /// <returns></returns>
-        public bool EqualsExactly(Segment other)
+        public bool Equals(Segment other)
         {
             return Start == other.Start && End == other.End;
         }
@@ -615,6 +616,16 @@ namespace ShapeEngine.Core
         #endregion
 
         #region Equality & HashCode
+        public bool IsSimilar(Triangle other)
+        {
+            return 
+                (A == other.A && B == other.B && C == other.C) || 
+                (C == other.A && A == other.B && B == other.C) || 
+                (B == other.A && C == other.B && A == other.C) ||
+                (B == other.A && A == other.B && C == other.C) ||
+                (C == other.A && B == other.B && A == other.C) ||
+                (A == other.A && C == other.B && B == other.C);
+        }
         public bool Equals(Triangle other)
         {
 
@@ -1360,7 +1371,7 @@ namespace ShapeEngine.Core
                 Segments allEdges = new();
                 foreach (var badTriangle in badTriangles) { allEdges.AddRange(badTriangle.GetEdges()); }
 
-                Segments uniqueEdges = allEdges.GetUniqueSegments();
+                Segments uniqueEdges = GetUniqueSegmentsDelauney(allEdges);
                 //Create new triangles
                 for (int i = 0; i < uniqueEdges.Count; i++)
                 {
@@ -1379,6 +1390,32 @@ namespace ShapeEngine.Core
 
             return triangles;
         }
+        private static Segments GetUniqueSegmentsDelauney(Segments segments)
+        {
+            Segments uniqueEdges = new();
+            for (int i = segments.Count - 1; i >= 0; i--)
+            {
+                var edge = segments[i];
+                if (IsSimilar(segments, edge))
+                {
+                    uniqueEdges.Add(edge);
+                }
+            }
+            return uniqueEdges;
+        }
+        private static bool IsSimilar(Segments segments, Segment seg)
+        {
+            int counter = 0;
+            foreach (var segment in segments)
+            {
+                if (segment.IsSimilar(seg)) counter++;
+                if (counter > 1) return false;
+            }
+            return true;
+        }
+
+
+
         /// <summary>
         /// Get a rect that encapsulates all points.
         /// </summary>

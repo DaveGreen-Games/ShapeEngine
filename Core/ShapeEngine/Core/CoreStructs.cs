@@ -96,7 +96,15 @@ namespace ShapeEngine.Core
         {
             AddRange(newPoints as IEnumerable<Vector2>);
         }
-
+        public Points GetUniquePoints()
+        {
+            HashSet<Vector2> uniqueVertices = new HashSet<Vector2>();
+            for (int i = 0; i < Count; i++)
+            {
+                uniqueVertices.Add(this[i]);
+            }
+            return new(uniqueVertices);
+        }
 
         public Polygon ToPolygon()
         {
@@ -149,16 +157,16 @@ namespace ShapeEngine.Core
         public Segments(IShape shape) { AddRange(shape.GetEdges()); }
         public Segments(params Segment[] edges) { AddRange(edges); }
         public Segments(IEnumerable<Segment> edges) { AddRange(edges); }
+
+
         public Segments Copy()
         {
             return new(this);
         }
-
         public void AddRange(params Segment[] newSegments)
         {
             AddRange(newSegments as IEnumerable<Segment>);
         }
-
         public bool Equals(Segments? other)
         {
             if (other == null) return false;
@@ -170,7 +178,6 @@ namespace ShapeEngine.Core
             return true;
         }
         public override int GetHashCode() { return SUtils.GetHashCode(this); }
-        
         public ClosestItem<Segment> GetClosestSegment(Vector2 p)
         {
             if (Count <= 0) return new();
@@ -192,22 +199,32 @@ namespace ShapeEngine.Core
 
             return new(closestSegment, minDisSquared);
         }
-        
+        public Points GetUniquePoints()
+        {
+            HashSet<Vector2> uniqueVertices = new HashSet<Vector2>();
+            for (int i = 0; i < Count; i++)
+            {
+                var seg = this[i];
+                uniqueVertices.Add(seg.Start);
+                uniqueVertices.Add(seg.End);
+            }
 
-
+            return new(uniqueVertices);
+        }
         public Segments GetUniqueSegments()
         {
-            Segments uniqueEdges = new();
-            for (int i = Count - 1; i >= 0; i--)
+            HashSet<Segment> uniqueSegments = new HashSet<Segment>();
+            for (int i = 0; i < Count; i++)
             {
-                var edge = this[i];
-                if (IsUnique(edge))
-                {
-                    uniqueEdges.Add(edge);
-                }
+                var seg = this[i];
+                uniqueSegments.Add(seg);
             }
-            return uniqueEdges;
+
+            return new(uniqueSegments);
         }
+
+
+
 
         /// <summary>
         /// Counts how often the specified segment appears in the list.
@@ -215,21 +232,14 @@ namespace ShapeEngine.Core
         /// <param name="seg"></param>
         /// <returns></returns>
         public int GetCount(Segment seg) { return this.Count((s) => s.Equals(seg)); }
+
         /// <summary>
-        /// 
+        /// Counts how often the specified segment appears in the list disregarding the direction of each segment.
         /// </summary>
-        /// <param name="seg">The segment to check.</param>
-        /// <returns>Returns true if seg exactly exists once in the list.</returns>
-        public bool IsUnique(Segment seg)
-        {
-            int counter = 0;
-            foreach (var segment in this)
-            {
-                if (segment.Equals(seg)) counter++;
-                if (counter > 1) return false;
-            }
-            return true;
-        }
+        /// <param name="seg"></param>
+        /// <returns></returns>
+        public int GetCountSimilar(Segment seg) { return this.Count((s) => s.IsSimilar(seg)); }
+
         /// <summary>
         /// 
         /// </summary>
@@ -240,7 +250,17 @@ namespace ShapeEngine.Core
             foreach (var segment in this) { if (segment.Equals(seg)) return true; }
             return false;
         }
-        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="seg"></param>
+        /// <returns>Returns true if similar segment is already in the list.</returns>
+        public bool ContainsSegmentSimilar(Segment seg)
+        {
+            foreach (var segment in this) { if (segment.IsSimilar(seg)) return true; }
+            return false;
+        }
+
 
 
         /*
@@ -274,46 +294,79 @@ namespace ShapeEngine.Core
 
         public void AddRange(params Triangle[] newTriangles) { AddRange(newTriangles as IEnumerable<Triangle>); }
         
-        //fix
         public ClosestItem<Triangle> GetClosestTriangle(Vector2 p)
         {
             if (Count <= 0) return new();
 
             float minDisSquared = float.PositiveInfinity;
             Triangle closestTriangle = new();
-
-            Triangle containingTriangle = new();
-            float containingDisSquared = -1f;
+            bool contained = false;
+            
 
             for (int i = 0; i < Count; i++)
             {
                 var tri = this[i];
+                bool containsPoint = tri.IsPointInside(p);
                 Vector2 closestPoint = tri.GetClosestPoint(p).Point;
                 float disSquared = (closestPoint - p).LengthSquared();
                 if (disSquared < minDisSquared)
                 {
-                    minDisSquared = disSquared;
-                    closestTriangle = tri;
-                    if (tri.IsPointInside(p))
+                    if(containsPoint || !contained)
                     {
-                        containingTriangle = tri;
-                        containingDisSquared = disSquared;
+                        minDisSquared = disSquared;
+                        closestTriangle = tri;
+                        if (containsPoint) contained = true;
+                    }
+                }
+                else
+                {
+                    if (containsPoint && !contained)
+                    {
+                        contained = true;
+                        minDisSquared = disSquared;
+                        closestTriangle = tri;
                     }
                 }
             }
-
-            if (containingDisSquared >= 0f) return new(containingTriangle, containingDisSquared);
-            else return new(closestTriangle, minDisSquared);
+            return new(closestTriangle, minDisSquared);
         }
         
         
-        //implement
-        public Points GetUniqueVertices()
+        public Points GetUniquePoints()
         {
-            return new();
-        }
+            HashSet<Vector2> uniqueVertices = new HashSet<Vector2>();
+            for (int i = 0; i < Count; i++)
+            {
+                var tri = this[i];
+                uniqueVertices.Add(tri.A);
+                uniqueVertices.Add(tri.B);
+                uniqueVertices.Add(tri.C);
+            }
 
-        //Triangulation GetContainingTriangles(Vector2 p)
+            return new(uniqueVertices);
+        }
+        public Triangulation GetUniqueTriangles()
+        {
+            HashSet<Triangle> uniqueTriangles = new HashSet<Triangle>();
+            for (int i = 0; i < Count; i++)
+            {
+                var tri = this[i];
+                uniqueTriangles.Add(tri);
+            }
+
+            return new(uniqueTriangles);
+        }
+        public Triangulation GetContainingTriangles(Vector2 p)
+        {
+            Triangulation result = new();
+            for (int i = 0; i < Count; i++)
+            {
+                var tri = this[i];
+                if (tri.IsPointInside(p)) result.Add(tri);
+            }
+            return result;
+        }
+        
 
         public override int GetHashCode() { return SUtils.GetHashCode(this); }
         public bool Equals(Triangulation? other)
@@ -1058,13 +1111,22 @@ namespace ShapeEngine.Core
         }
 
     }
-    public struct CollisionPoint
+    public struct CollisionPoint : IEquatable<CollisionPoint>
     {
         public Vector2 Point;
         public Vector2 Normal;
 
         public CollisionPoint() { Point = new(); Normal = new(); }
         public CollisionPoint(Vector2 p, Vector2 n) { Point = p; Normal = n; }
+
+        public bool Equals(CollisionPoint other)
+        {
+            return other.Point == Point && other.Normal == Normal;
+        }
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Point, Normal);
+        }
 
         public CollisionPoint FlipNormal()
         {
@@ -1200,7 +1262,38 @@ namespace ShapeEngine.Core
             return new(closestPoint, minDisSquared);
         }
 
-        
+        public override int GetHashCode() { return SUtils.GetHashCode(this); }
+        public bool Equals(CollisionPoints? other)
+        {
+            if (other == null) return false;
+            if (Count != other.Count) return false;
+            for (int i = 0; i < Count; i++)
+            {
+                if (this[i].Equals(other[i])) return false;
+            }
+            return true;
+        }
+
+
+        public Points GetUniquePoints()
+        {
+            HashSet<Vector2> uniqueVertices = new HashSet<Vector2>();
+            for (int i = 0; i < Count; i++)
+            {
+                uniqueVertices.Add(this[i].Point);
+            }
+            return new(uniqueVertices);
+        }
+        public CollisionPoints GetUniqueCollisionPoints()
+        {
+            HashSet<CollisionPoint> unique = new HashSet<CollisionPoint>();
+            for (int i = 0; i < Count; i++)
+            {
+                unique.Add(this[i]);
+            }
+            return new(unique);
+        }
+
         public void SortClosest(Vector2 refPoint)
         {
             this.Sort
