@@ -164,6 +164,13 @@ namespace ShapeEngine.Lib
         public static void DrawPixel(float x, float y, Raylib_CsLo.Color color) => Raylib.DrawPixelV(new(x, y), color);
         #endregion
 
+        #region Point
+        public static void Draw(this Vector2 p, float radius, Raylib_CsLo.Color color)
+        {
+            DrawCircle(p, radius, color, 16);
+        }
+        #endregion
+
         #region Segment
         public static void DrawSegment(float x1, float y1, float x2, float y2, float thickness, Raylib_CsLo.Color color) => Raylib.DrawLineEx(new(x1, y1), new(x2, y2), thickness, color);
         public static void DrawSegment(Vector2 start, Vector2 end, float thickness, Raylib_CsLo.Color color) => Raylib.DrawLineEx(start, end, thickness, color);
@@ -1067,7 +1074,7 @@ namespace ShapeEngine.Lib
         public static void DrawTriangle(Vector2 a, Vector2 b, Vector2 c, Raylib_CsLo.Color color) => Raylib.DrawTriangle(a, b, c, color);
         public static void DrawTriangleLines(Vector2 a, Vector2 b, Vector2 c, float lineThickness, Raylib_CsLo.Color color) { new Triangle(a, b, c).GetEdges().Draw(lineThickness, color); }
 
-        public static void Draw(this Triangle t, Raylib_CsLo.Color color) => Raylib.DrawTriangle(t.a, t.b, t.c, color);
+        public static void Draw(this Triangle t, Raylib_CsLo.Color color) => Raylib.DrawTriangle(t.A, t.B, t.C, color);
         public static void DrawLines(this Triangle t, float lineThickness, Raylib_CsLo.Color color) { t.GetEdges().Draw(lineThickness, color); }
 
         public static void DrawVertices(this Triangle t, float vertexRadius, Raylib_CsLo.Color color)
@@ -1076,9 +1083,9 @@ namespace ShapeEngine.Lib
         }
         public static void DrawVertices(this Triangle t, float vertexRadius, Raylib_CsLo.Color color, int circleSegments = 8)
         {
-            DrawCircle(t.a, vertexRadius, color, circleSegments);
-            DrawCircle(t.b, vertexRadius, color, circleSegments);
-            DrawCircle(t.c, vertexRadius, color, circleSegments);
+            DrawCircle(t.A, vertexRadius, color, circleSegments);
+            DrawCircle(t.B, vertexRadius, color, circleSegments);
+            DrawCircle(t.C, vertexRadius, color, circleSegments);
         }
         public static void Draw(this Triangulation triangles, Raylib_CsLo.Color color) { foreach (var t in triangles) t.Draw(color); }
         public static void DrawLines(this Triangulation triangles, float lineThickness, Raylib_CsLo.Color color) { foreach (var t in triangles) t.DrawLines(lineThickness, color); }

@@ -1,12 +1,58 @@
 ﻿using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 using ShapeEngine.Timing;
+using System.Diagnostics.SymbolStore;
 using System.Globalization;
 using System.Numerics;
 using System.Text;
 
 namespace ShapeEngine.Core
 {
+    public class ShapeList<T> : List<T>
+    {
+        public void AddRange(params T[] items) { AddRange(items as IEnumerable<T>);}
+        public ShapeList<T> Copy()
+        {
+            ShapeList<T> newList = new();
+            newList.AddRange(this);
+            return newList;
+        }
+        public bool IsIndexValid(int index)
+        {
+            if (index < 0 || index >= Count) return false;
+            return true;
+        }
+        public override int GetHashCode()
+        {
+            HashCode hash = new();
+            foreach (var element in this)
+            {
+                hash.Add(element);
+            }
+            return hash.ToHashCode();
+        }
+    }
+
+    public struct ClosestItem<T> where T : struct
+    {
+        public bool Valid;
+        public T Object;
+        public float DisSquared;
+
+        public ClosestItem()
+        {
+            Object = default(T);
+            DisSquared = 0f;
+            Valid = false;
+        }
+        public ClosestItem(T obj, float disSquared)
+        {
+            Object = obj;
+            DisSquared = disSquared;
+            Valid = true;
+        }
+    }
+
     public class Points : List<Vector2>, IEquatable<Points>
     {
         public Points(params Vector2[] points) { AddRange(points); }
@@ -23,9 +69,35 @@ namespace ShapeEngine.Core
             }
             return true;
         }
-        
+
+        public ClosestItem<Vector2> GetClosestPoint(Vector2 p)
+        {
+            if (Count <= 0) return new();
+
+            float minDisSquared = float.PositiveInfinity;
+            Vector2 closestPoint = new();
+
+            for (int i = 0; i < Count; i++)
+            {
+                var point = this[i];
+
+                float disSquared = (point - p).LengthSquared();
+                if (disSquared < minDisSquared)
+                {
+                    minDisSquared = disSquared;
+                    closestPoint = point;
+                }
+            }
+            return new(closestPoint, minDisSquared);
+        }
+
         public Points Copy() { return new Points(this); }
-        
+        public void AddRange(params Vector2[] newPoints)
+        {
+            AddRange(newPoints as IEnumerable<Vector2>);
+        }
+
+
         public Polygon ToPolygon()
         {
             return new Polygon(this);
@@ -77,6 +149,15 @@ namespace ShapeEngine.Core
         public Segments(IShape shape) { AddRange(shape.GetEdges()); }
         public Segments(params Segment[] edges) { AddRange(edges); }
         public Segments(IEnumerable<Segment> edges) { AddRange(edges); }
+        public Segments Copy()
+        {
+            return new(this);
+        }
+
+        public void AddRange(params Segment[] newSegments)
+        {
+            AddRange(newSegments as IEnumerable<Segment>);
+        }
 
         public bool Equals(Segments? other)
         {
@@ -89,6 +170,31 @@ namespace ShapeEngine.Core
             return true;
         }
         public override int GetHashCode() { return SUtils.GetHashCode(this); }
+        
+        public ClosestItem<Segment> GetClosestSegment(Vector2 p)
+        {
+            if (Count <= 0) return new();
+
+            float minDisSquared = float.PositiveInfinity;
+            Segment closestSegment = new();
+
+            for (int i = 0; i < Count; i++)
+            {
+                var seg = this[i];
+                Vector2 closestPoint = seg.GetClosestPoint(p).Point;
+                float disSquared = (closestPoint - p).LengthSquared();
+                if(disSquared < minDisSquared)
+                {
+                    minDisSquared = disSquared;
+                    closestSegment = seg;
+                }
+            }
+
+            return new(closestSegment, minDisSquared);
+        }
+        
+
+
         public Segments GetUniqueSegments()
         {
             Segments uniqueEdges = new();
@@ -134,7 +240,7 @@ namespace ShapeEngine.Core
             foreach (var segment in this) { if (segment.Equals(seg)) return true; }
             return false;
         }
-
+        
 
 
         /*
@@ -165,6 +271,49 @@ namespace ShapeEngine.Core
         public Triangulation(IShape shape) { AddRange(shape.Triangulate()); }
         public Triangulation(params Triangle[] triangles) { AddRange(triangles); }
         public Triangulation(IEnumerable<Triangle> triangles) { AddRange(triangles); }
+
+        public void AddRange(params Triangle[] newTriangles) { AddRange(newTriangles as IEnumerable<Triangle>); }
+        
+        //fix
+        public ClosestItem<Triangle> GetClosestTriangle(Vector2 p)
+        {
+            if (Count <= 0) return new();
+
+            float minDisSquared = float.PositiveInfinity;
+            Triangle closestTriangle = new();
+
+            Triangle containingTriangle = new();
+            float containingDisSquared = -1f;
+
+            for (int i = 0; i < Count; i++)
+            {
+                var tri = this[i];
+                Vector2 closestPoint = tri.GetClosestPoint(p).Point;
+                float disSquared = (closestPoint - p).LengthSquared();
+                if (disSquared < minDisSquared)
+                {
+                    minDisSquared = disSquared;
+                    closestTriangle = tri;
+                    if (tri.IsPointInside(p))
+                    {
+                        containingTriangle = tri;
+                        containingDisSquared = disSquared;
+                    }
+                }
+            }
+
+            if (containingDisSquared >= 0f) return new(containingTriangle, containingDisSquared);
+            else return new(closestTriangle, minDisSquared);
+        }
+        
+        
+        //implement
+        public Points GetUniqueVertices()
+        {
+            return new();
+        }
+
+        //Triangulation GetContainingTriangles(Vector2 p)
 
         public override int GetHashCode() { return SUtils.GetHashCode(this); }
         public bool Equals(Triangulation? other)
@@ -614,8 +763,6 @@ namespace ShapeEngine.Core
     }
 
 
-
-
     public struct FractureInfo
     {
         public Polygons NewShapes;
@@ -662,7 +809,6 @@ namespace ShapeEngine.Core
             return new(newShapes, cutOuts, pieces);
         }
     }
-
 
 
     public class CollisionInformation
@@ -935,6 +1081,12 @@ namespace ShapeEngine.Core
     
     public class QueryInfos : List<QueryInfo>
     {
+        public QueryInfos(params QueryInfo[] infos) { AddRange(infos); }
+        public QueryInfos(IEnumerable<QueryInfo> infos) { AddRange(infos); }
+
+
+        public void AddRange(params QueryInfo[] newInfos) { AddRange(newInfos as IEnumerable<QueryInfo>); }
+        public QueryInfos Copy() { return new(this); }
         public void SortClosest(Vector2 origin)
         {
             if (Count > 1)
@@ -976,7 +1128,7 @@ namespace ShapeEngine.Core
             this.points = new(points, origin);
         }
     }
-    public struct QueryPoints
+    public class QueryPoints
     {
         public bool valid;
         public CollisionPoints points;
@@ -1009,6 +1161,10 @@ namespace ShapeEngine.Core
     
     public class CollisionPoints : List<CollisionPoint>
     {
+        public CollisionPoints(params CollisionPoint[] points) { AddRange(points); }
+        public CollisionPoints(IEnumerable<CollisionPoint> points) { AddRange(points); }
+
+
         public bool Valid { get { return Count > 0; } }
         public void FlipNormals(Vector2 referencePoint)
         {
@@ -1021,16 +1177,29 @@ namespace ShapeEngine.Core
             }
         }
         
-        
-        public CollisionPoints Copy()
+        public void AddRange(params CollisionPoint[] newCollisionPoints) { AddRange(newCollisionPoints as IEnumerable<CollisionPoint>); }
+        public CollisionPoints Copy() { return new(this); }
+        public ClosestItem<CollisionPoint> GetClosestPoint(Vector2 p)
         {
-            CollisionPoints copy = new();
-            foreach (var item in this)
+            if (Count <= 0) return new();
+
+            float minDisSquared = float.PositiveInfinity;
+            CollisionPoint closestPoint = new();
+
+            for (int i = 0; i < Count; i++)
             {
-                copy.Add(item);
+                var point = this[i];
+
+                float disSquared = (point.Point - p).LengthSquared();
+                if (disSquared < minDisSquared)
+                {
+                    minDisSquared = disSquared;
+                    closestPoint = point;
+                }
             }
-            return copy;
+            return new(closestPoint, minDisSquared);
         }
+
         
         public void SortClosest(Vector2 refPoint)
         {

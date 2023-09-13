@@ -425,15 +425,15 @@ namespace ShapeEngine.Core
     public struct Triangle : IShape, IEquatable<Triangle>
     {
         #region Members
-        public Vector2 a;
-        public Vector2 b;
-        public Vector2 c;
+        public Vector2 A;
+        public Vector2 B;
+        public Vector2 C;
         #endregion
 
         #region Getter Setter
-        public Vector2 A { get { return b - a; } }
-        public Vector2 B { get { return c - b; } }
-        public Vector2 C { get { return a - c; } }
+        public Vector2 SideA { get { return B - A; } }
+        public Vector2 SideB { get { return C - B; } }
+        public Vector2 SideC { get { return A - C; } }
         public bool FlippedNormals { get; set; } = false;
         #endregion
 
@@ -446,9 +446,9 @@ namespace ShapeEngine.Core
         /// <param name="c"></param>
         public Triangle(Vector2 a, Vector2 b, Vector2 c, bool flippedNormals = false) 
         { 
-            this.a = a; 
-            this.b = b; 
-            this.c = c;
+            this.A = a; 
+            this.B = b; 
+            this.C = c;
             this.FlippedNormals = flippedNormals;
         }
         public Triangle(Vector2 p, Segment s, bool flippedNormals = false)
@@ -458,27 +458,27 @@ namespace ShapeEngine.Core
             float cross = w.Cross(v);
             if(cross <= 0f)
             {
-                a = s.Start;
-                b = s.End;
-                c = p;
+                A = s.Start;
+                B = s.End;
+                C = p;
             }
             else
             {
-                a = s.End;
-                b = s.Start;
-                c = p;
+                A = s.End;
+                B = s.Start;
+                C = p;
             }
             this.FlippedNormals = flippedNormals;
         }
         #endregion
 
         #region Public
-        public readonly Triangle Floor() { return new(a.Floor(), b.Floor(), c.Floor(), FlippedNormals); }
-        public readonly Triangle Ceiling() { return new(a.Ceiling(), b.Ceiling(), c.Ceiling(), FlippedNormals); }
-        public readonly Triangle Round() { return new(a.Round(), b.Round(), c.Round(), FlippedNormals); }
-        public readonly Triangle Truncate() { return new(a.Truncate(), b.Truncate(), c.Truncate(), FlippedNormals); }
+        public readonly Triangle Floor() { return new(A.Floor(), B.Floor(), C.Floor(), FlippedNormals); }
+        public readonly Triangle Ceiling() { return new(A.Ceiling(), B.Ceiling(), C.Ceiling(), FlippedNormals); }
+        public readonly Triangle Round() { return new(A.Round(), B.Round(), C.Round(), FlippedNormals); }
+        public readonly Triangle Truncate() { return new(A.Truncate(), B.Truncate(), C.Truncate(), FlippedNormals); }
         
-        public readonly bool SharesVertex(Vector2 p) { return a == p || b == p || c == p; }
+        public readonly bool SharesVertex(Vector2 p) { return A == p || B == p || C == p; }
         public readonly bool SharesVertex(IEnumerable<Vector2> points)
         {
             foreach (var p in points)
@@ -487,12 +487,12 @@ namespace ShapeEngine.Core
             }
             return false;
         }
-        public readonly bool SharesVertex(Triangle t) { return SharesVertex(t.a) || SharesVertex(t.b) || SharesVertex(t.c); }
+        public readonly bool SharesVertex(Triangle t) { return SharesVertex(t.A) || SharesVertex(t.B) || SharesVertex(t.C); }
         
         public readonly bool IsValid() { return GetArea() > 0f; }
         public readonly bool IsNarrow(float narrowValue = 0.2f)
         {
-            Points points = new() { a, b, c };
+            Points points = new() { A, B, C };
             for (int i = 0; i < 3; i++)
             {
                 Vector2 a = points[i];
@@ -520,9 +520,9 @@ namespace ShapeEngine.Core
                 f1 = 1f - f1;
                 f2 = 1f - f2;
             }
-            Vector2 ac = (c - a) * f1;
-            Vector2 ab = (b - a) * f2;
-            return a + ac + ab;
+            Vector2 ac = (C - A) * f1;
+            Vector2 ab = (B - A) * f2;
+            return A + ac + ab;
             //float f1Sq = MathF.Sqrt(f1);
             //float x = (1f - f1Sq) * t.a.X + (f1Sq * (1f - f2)) * t.b.X + (f1Sq * f2) * t.c.X;
             //float y = (1f - f1Sq) * t.a.Y + (f1Sq * (1f - f2)) * t.b.Y + (f1Sq * f2) * t.c.Y;
@@ -530,24 +530,24 @@ namespace ShapeEngine.Core
         }
         public readonly Circle GetCircumCircle()
         {
-            Vector2 SqrA = new Vector2(a.X * a.X, a.Y * a.Y);
-            Vector2 SqrB = new Vector2(b.X * b.X, b.Y * b.Y); 
-            Vector2 SqrC = new Vector2(c.X * c.X, c.Y * c.Y);
+            Vector2 SqrA = new Vector2(A.X * A.X, A.Y * A.Y);
+            Vector2 SqrB = new Vector2(B.X * B.X, B.Y * B.Y); 
+            Vector2 SqrC = new Vector2(C.X * C.X, C.Y * C.Y);
 
-            float D = (a.X * (b.Y - c.Y) + b.X * (c.Y - a.Y) + c.X * (a.Y - b.Y)) * 2f;
-            float x = ((SqrA.X + SqrA.Y) * (b.Y - c.Y) + (SqrB.X + SqrB.Y) * (c.Y - a.Y) + (SqrC.X + SqrC.Y) * (a.Y - b.Y)) / D;
-            float y = ((SqrA.X + SqrA.Y) * (c.X - b.X) + (SqrB.X + SqrB.Y) * (a.X - c.X) + (SqrC.X + SqrC.Y) * (b.X - a.X)) / D;
+            float D = (A.X * (B.Y - C.Y) + B.X * (C.Y - A.Y) + C.X * (A.Y - B.Y)) * 2f;
+            float x = ((SqrA.X + SqrA.Y) * (B.Y - C.Y) + (SqrB.X + SqrB.Y) * (C.Y - A.Y) + (SqrC.X + SqrC.Y) * (A.Y - B.Y)) / D;
+            float y = ((SqrA.X + SqrA.Y) * (C.X - B.X) + (SqrB.X + SqrB.Y) * (A.X - C.X) + (SqrC.X + SqrC.Y) * (B.X - A.X)) / D;
 
             Vector2 center = new Vector2(x, y);
-            float r = (a - center).Length();
+            float r = (A - center).Length();
             return new(center, r);
         }
 
         public readonly Triangulation Triangulate(int pointCount)
         {
-            if (pointCount < 0) return new() { new(a, b, c, FlippedNormals) };
+            if (pointCount < 0) return new() { new(A, B, C, FlippedNormals) };
 
-            Points points = new() { a, b, c };
+            Points points = new() { A, B, C };
 
             for (int i = 0; i < pointCount; i++)
             {
@@ -561,7 +561,7 @@ namespace ShapeEngine.Core
         }
         public readonly Triangulation Triangulate(float minArea)
         {
-            if (minArea <= 0) return new() { new(a,b,c,FlippedNormals) };
+            if (minArea <= 0) return new() { new(A,B,C,FlippedNormals) };
 
             float triArea = GetArea();
             float pieceCount = triArea / minArea;
@@ -572,17 +572,17 @@ namespace ShapeEngine.Core
         {
             return new()
             {
-                new(a, b, p),
-                new(b, c, p),
-                new(c, a, p)
+                new(A, B, p),
+                new(B, C, p),
+                new(C, A, p)
             };
         }
         
         public readonly Triangle GetInsideTriangle(float abF, float bcF, float caF)
         {
-            Vector2 newA = SVec.Lerp(a, b, abF);
-            Vector2 newB = SVec.Lerp(b, c, bcF);
-            Vector2 newC = SVec.Lerp(c, a, caF);
+            Vector2 newA = SVec.Lerp(A, B, abF);
+            Vector2 newB = SVec.Lerp(B, C, bcF);
+            Vector2 newC = SVec.Lerp(C, A, caF);
             return new(newA, newB, newC);
         }
 
@@ -590,39 +590,39 @@ namespace ShapeEngine.Core
         public Triangle Rotate(float rad) { return Rotate(GetCentroid(), rad); }
         public readonly Triangle Rotate(Vector2 pivot, float rad)
         {
-            Vector2 newA = pivot + (a - pivot).Rotate(rad);
-            Vector2 newB = pivot + (b - pivot).Rotate(rad);
-            Vector2 newC = pivot + (c - pivot).Rotate(rad);
+            Vector2 newA = pivot + (A - pivot).Rotate(rad);
+            Vector2 newB = pivot + (B - pivot).Rotate(rad);
+            Vector2 newC = pivot + (C - pivot).Rotate(rad);
             return new(newA, newB, newC, FlippedNormals);
         }
-        public readonly Triangle Scale(float scale) { return new(a * scale, b * scale, c * scale, FlippedNormals); }
-        public readonly Triangle Scale(Vector2 scale) { return new(a * scale, b * scale, c * scale, FlippedNormals); }
+        public readonly Triangle Scale(float scale) { return new(A * scale, B * scale, C * scale, FlippedNormals); }
+        public readonly Triangle Scale(Vector2 scale) { return new(A * scale, B * scale, C * scale, FlippedNormals); }
         public readonly Triangle Scale(Vector2 pivot, float scale)
         {
-            Vector2 newA = pivot + (a - pivot) * scale;
-            Vector2 newB = pivot + (b - pivot) * scale;
-            Vector2 newC = pivot + (c - pivot) * scale;
+            Vector2 newA = pivot + (A - pivot) * scale;
+            Vector2 newB = pivot + (B - pivot) * scale;
+            Vector2 newC = pivot + (C - pivot) * scale;
             return new(newA, newB, newC, FlippedNormals);
         }
         public readonly Triangle Scale(Vector2 pivot, Vector2 scale)
         {
-            Vector2 newA = pivot + (a - pivot) * scale;
-            Vector2 newB = pivot + (b - pivot) * scale;
-            Vector2 newC = pivot + (c - pivot) * scale;
+            Vector2 newA = pivot + (A - pivot) * scale;
+            Vector2 newB = pivot + (B - pivot) * scale;
+            Vector2 newC = pivot + (C - pivot) * scale;
             return new(newA, newB, newC, FlippedNormals);
         }
-        public readonly Triangle Move(Vector2 offset) { return new(a + offset, b + offset, c + offset, FlippedNormals); }
+        public readonly Triangle Move(Vector2 offset) { return new(A + offset, B + offset, C + offset, FlippedNormals); }
         #endregion
 
         #region Equality & HashCode
         public bool Equals(Triangle other)
         {
 
-            return a == other.a && b == other.b && c == other.c;
+            return A == other.A && B == other.B && C == other.C;
         }
         public override readonly int GetHashCode()
         {
-            return HashCode.Combine(a, b, c);
+            return HashCode.Combine(A, B, C);
         }
         public static bool operator ==(Triangle left, Triangle right)
         {
@@ -641,21 +641,21 @@ namespace ShapeEngine.Core
         #endregion
 
         #region IShape
-        public Vector2 GetCentroid() { return (a + b + c) / 3; }
-        public Points GetVertices() { return new(a, b, c); }
-        public Polygon ToPolygon() { return new(a, b, c); }
-        public Polyline ToPolyline() { return new(a, b, c); }
+        public Vector2 GetCentroid() { return (A + B + C) / 3; }
+        public Points GetVertices() { return new(A, B, C); }
+        public Polygon ToPolygon() { return new(A, B, C); }
+        public Polyline ToPolyline() { return new(A, B, C); }
         public Segments GetEdges() 
         {
-            Segment A = new Segment(a, b, FlippedNormals);
-            Segment B = new Segment(b, c, FlippedNormals);
-            Segment C = new Segment(c, a, FlippedNormals);
-            return new() { A, B, C };
+            Segment segA = new Segment(A, B, FlippedNormals);
+            Segment segB = new Segment(B, C, FlippedNormals);
+            Segment segC = new Segment(C, A, FlippedNormals);
+            return new() { segA, segB, segC };
         }
         public Triangulation Triangulate() { return this.Triangulate(GetCentroid()); }
         public Circle GetBoundingCircle() { return GetCircumCircle(); } // ToPolygon().GetBoundingCircle(); }
         public float GetCircumference() { return MathF.Sqrt(GetCircumferenceSquared()); }
-        public float GetCircumferenceSquared() { return A.LengthSquared() + B.LengthSquared() + C.LengthSquared(); }
+        public float GetCircumferenceSquared() { return SideA.LengthSquared() + SideB.LengthSquared() + SideC.LengthSquared(); }
         public readonly float GetArea() 
         {
             //float al = A.Length();
@@ -671,10 +671,10 @@ namespace ShapeEngine.Core
             //    int breakpoint = 0;
             //}
 
-            return MathF.Abs((a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X)) / 2f;
+            return MathF.Abs((A.X - C.X) * (B.Y - C.Y) - (A.Y - C.Y) * (B.X - C.X)) / 2f;
         }
-        public Rect GetBoundingBox() { return new Rect(a.X, a.Y, 0, 0).Enlarge(b).Enlarge(c); }
-        public bool IsPointInside(Vector2 p) { return SGeometry.IsPointInTriangle(a, b, c, p); }
+        public Rect GetBoundingBox() { return new Rect(A.X, A.Y, 0, 0).Enlarge(B).Enlarge(C); }
+        public bool IsPointInside(Vector2 p) { return SGeometry.IsPointInTriangle(A, B, C, p); }
         public CollisionPoint GetClosestPoint(Vector2 p) { return ToPolygon().GetClosestPoint(p); }
         public Vector2 GetClosestVertex(Vector2 p) { return ToPolygon().GetClosestVertex(p); }
         public Vector2 GetRandomPoint() { return this.GetPoint(SRNG.randF(), SRNG.randF()); }
