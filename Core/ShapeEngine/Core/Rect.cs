@@ -305,6 +305,43 @@ namespace ShapeEngine.Core
         public CollisionPoint GetClosestPoint(Vector2 p) { return ToPolygon().GetClosestPoint(p); }
         public Vector2 GetClosestVertex(Vector2 p) { return ToPolygon().GetClosestVertex(p); }
         public Vector2 GetRandomPoint() { return new(SRNG.randF(X, X + Width), SRNG.randF(Y, Y + Height)); }
+        public Segment GetClosestSegment(Vector2 p)
+        {
+            Segment closestSegment = new();
+            float minDisSquared = float.PositiveInfinity;
+
+            Segment seg = GetLeftSegment();
+            float l = (seg.GetClosestPoint(p).Point - p).LengthSquared();
+            if(l < minDisSquared)
+            {
+                minDisSquared = l;
+                closestSegment = seg;
+            }
+            seg = GetBotomSegment();
+            l = (seg.GetClosestPoint(p).Point - p).LengthSquared();
+            if (l < minDisSquared)
+            {
+                minDisSquared = l;
+                closestSegment = seg;
+            }
+            seg = GetRightSegment();
+            l = (seg.GetClosestPoint(p).Point - p).LengthSquared();
+            if (l < minDisSquared)
+            {
+                minDisSquared = l;
+                closestSegment = seg;
+            }
+            seg = GetTopSegment();
+            l = (seg.GetClosestPoint(p).Point - p).LengthSquared();
+            if (l < minDisSquared)
+            {
+                minDisSquared = l;
+                closestSegment = seg;
+            }
+
+            return closestSegment;
+
+        }
         public Points GetRandomPoints(int amount)
         {
             var points = new Points();

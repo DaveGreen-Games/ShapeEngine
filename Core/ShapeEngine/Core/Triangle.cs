@@ -96,6 +96,18 @@ namespace ShapeEngine.Core
             return true;
         }
 
+        /// <summary>
+        /// Construct an adjacent triangle on the closest side to the point p. If p is inside the triangle, the triangle is returned.
+        /// </summary>
+        /// <param name="p"></param>
+        /// <returns></returns>
+        public Triangle ConstructAdjacentTriangle(Vector2 p)
+        {
+            if(ContainsPoint(p)) return this;
+
+            var closest = GetClosestSegment(p);
+            return new Triangle(p, closest);
+        }
 
         public readonly Triangle Floor() { return new(A.Floor(), B.Floor(), C.Floor(), FlippedNormals); }
         public readonly Triangle Ceiling() { return new(A.Ceiling(), B.Ceiling(), C.Ceiling(), FlippedNormals); }
@@ -330,6 +342,35 @@ namespace ShapeEngine.Core
         public bool ContainsPoint(Vector2 p) { return IsPointInTriangle(A, B, C, p); }
         public CollisionPoint GetClosestPoint(Vector2 p) { return ToPolygon().GetClosestPoint(p); }
         public Vector2 GetClosestVertex(Vector2 p) { return ToPolygon().GetClosestVertex(p); }
+        public Segment GetClosestSegment(Vector2 p)
+        {
+            Segment closestSegment = new();
+            float minDisSquared = float.PositiveInfinity;
+
+            Segment seg = SegmentA;
+            float l = (seg.GetClosestPoint(p).Point - p).LengthSquared();
+            if (l < minDisSquared)
+            {
+                minDisSquared = l;
+                closestSegment = seg;
+            }
+            seg = SegmentB;
+            l = (seg.GetClosestPoint(p).Point - p).LengthSquared();
+            if (l < minDisSquared)
+            {
+                minDisSquared = l;
+                closestSegment = seg;
+            }
+            seg = SegmentC;
+            l = (seg.GetClosestPoint(p).Point - p).LengthSquared();
+            if (l < minDisSquared)
+            {
+                minDisSquared = l;
+                closestSegment = seg;
+            }
+            return closestSegment;
+
+        }
         public Vector2 GetRandomPoint() { return this.GetPoint(SRNG.randF(), SRNG.randF()); }
         public Points GetRandomPoints(int amount)
         {
