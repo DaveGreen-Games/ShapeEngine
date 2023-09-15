@@ -6,9 +6,6 @@ using ShapeEngine.Core;
 
 namespace ShapeEngine.Lib
 {
-
-
-
     public static class SGeometry
     {
         /// <summary>
@@ -82,18 +79,16 @@ namespace ShapeEngine.Lib
         }
         public static bool Overlap(this ICollider colA, ICollider colB)
         {
-            //if (colA == colB) return false;
-            //if (colA == null || colB == null) return false;
-            //return colA.CheckOverlap(colB);
-            return colA.GetShape().Overlap(colB.GetShape());
+            return Overlap(colA.GetShape(), colB.GetShape());
         }
         public static bool Overlap(this Rect rect, ICollider col)
         {
-            //if (col == null) return false;
-            //if (!col.Enabled) return false;
-            return col.GetShape().Overlap(rect);
+            return Overlap(rect, col.GetShape());
         }
-        public static bool Overlap(this IShape a, IShape b)
+        
+        //Most of the shapes implementing the IShape interface are structs
+        //to prevent frequent boxing, all functions using IShape as parameter type are generic
+        public static bool Overlap<T, U>(this T a, U b) where T : IShape where U : IShape
         {
             if (a is Segment s) return Overlap(s, b);
             else if (a is Circle c) return Overlap(c, b);
@@ -103,7 +98,7 @@ namespace ShapeEngine.Lib
             else if (a is Polyline pl) return Overlap(pl, b);
             else return a.GetBoundingBox().Overlap(b);
         }
-        public static bool Overlap(this Segment seg, IShape shape)
+        public static bool Overlap<T>(this Segment seg, T shape) where T : IShape
         {
             if (shape is Segment s) return seg.OverlapShape(s);
             else if (shape is Circle c) return seg.OverlapShape(c);
@@ -113,7 +108,7 @@ namespace ShapeEngine.Lib
             else if (shape is Polyline pl) return seg.OverlapShape(pl);
             else return seg.OverlapShape(shape.GetBoundingBox());
         }
-        public static bool Overlap(this Circle circle, IShape shape)
+        public static bool Overlap<T>(this Circle circle, T shape) where T : IShape
         {
             if (shape is Segment s) return circle.OverlapShape(s);
             else if (shape is Circle c) return circle.OverlapShape(c);
@@ -123,7 +118,7 @@ namespace ShapeEngine.Lib
             else if (shape is Polyline pl) return circle.OverlapShape(pl);
             else return circle.OverlapShape(shape.GetBoundingBox());
         }
-        public static bool Overlap(this Triangle triangle, IShape shape)
+        public static bool Overlap<T>(this Triangle triangle, T shape) where T : IShape
         {
             if (shape is Segment s) return triangle.OverlapShape(s);
             else if (shape is Circle c) return triangle.OverlapShape(c);
@@ -133,7 +128,7 @@ namespace ShapeEngine.Lib
             else if (shape is Polyline pl) return triangle.OverlapShape(pl);
             else return triangle.OverlapShape(shape.GetBoundingBox());
         }
-        public static bool Overlap(this Rect rect, IShape shape)
+        public static bool Overlap<T>(this Rect rect, T shape) where T : IShape
         {
             if (shape is Segment s)         return s.OverlapShape(rect);
             else if(shape is Circle c)      return c.OverlapShape(rect);
@@ -143,7 +138,7 @@ namespace ShapeEngine.Lib
             else if (shape is Polyline pl) return   rect.OverlapShape(pl);
             else return rect.OverlapShape(shape.GetBoundingBox());
         }
-        public static bool Overlap(this Polygon poly, IShape shape)
+        public static bool Overlap<T>(this Polygon poly, T shape) where T : IShape
         {
             if (shape is Segment s) return poly.OverlapShape(s);
             else if (shape is Circle c) return poly.OverlapShape(c);
@@ -153,7 +148,7 @@ namespace ShapeEngine.Lib
             else if (shape is Polyline pl) return   poly.OverlapShape(pl);
             else return poly.OverlapShape(shape.GetBoundingBox());
         }
-        public static bool Overlap(this Polyline pl, IShape shape)
+        public static bool Overlap<T>(this Polyline pl, T shape) where T : IShape
         {
             if (shape is Segment s) return pl.OverlapShape(s);
             else if (shape is Circle c) return pl.OverlapShape(c);
@@ -181,10 +176,10 @@ namespace ShapeEngine.Lib
         }
         public static CollisionPoints Intersect(this ICollider colA, ICollider colB)
         {
-            //return colA.CheckIntersection(colB);
-            return colA.GetShape().Intersect(colA.SimplifyCollision ? colB.GetSimplifiedShape() : colB.GetShape());
+            return Intersect(colA.GetShape(), colA.SimplifyCollision ? colB.GetSimplifiedShape() : colB.GetShape());
         }
-        public static CollisionPoints Intersect(this IShape a, IShape b)
+        
+        public static CollisionPoints Intersect<T, U>(this T a, U b) where T : IShape where U : IShape
         {
             if (a is Segment s) return Intersect(s, b);
             else if (a is Circle c) return Intersect(c, b);
@@ -215,7 +210,7 @@ namespace ShapeEngine.Lib
             ////}
             //return collisionPoints;
         }
-        public static CollisionPoints Intersect(this Segment seg, IShape shape)
+        public static CollisionPoints Intersect<T>(this Segment seg, T shape) where T : IShape
         {
             if (shape is Segment s) return seg.IntersectShape(s);
             else if (shape is Circle c) return seg.IntersectShape(c);
@@ -225,7 +220,7 @@ namespace ShapeEngine.Lib
             else if (shape is Polyline pl) return seg.IntersectShape(pl);
             else return seg.IntersectShape(shape.GetBoundingBox());
         }
-        public static CollisionPoints Intersect(this Circle circle, IShape shape)
+        public static CollisionPoints Intersect<T>(this Circle circle, T shape) where T : IShape
         {
             if (shape is Segment s)         return circle.IntersectShape(s);
             else if (shape is Circle c)     return circle.IntersectShape(c);
@@ -235,7 +230,7 @@ namespace ShapeEngine.Lib
             else if (shape is Polyline pl)  return circle.IntersectShape(pl);
             else return circle.IntersectShape(shape.GetBoundingBox());// new();
         }
-        public static CollisionPoints Intersect(this Triangle triangle, IShape shape)
+        public static CollisionPoints Intersect<T>(this Triangle triangle, T shape) where T : IShape
         {
             if (shape is Segment s)         return triangle.IntersectShape(s);
             else if (shape is Circle c)     return triangle.IntersectShape(c);
@@ -245,7 +240,7 @@ namespace ShapeEngine.Lib
             else if (shape is Polyline pl)  return triangle.IntersectShape(pl);
             else return triangle.IntersectShape(shape.GetBoundingBox());// new();
         }
-        public static CollisionPoints Intersect(this Rect rect, IShape shape)
+        public static CollisionPoints Intersect<T>(this Rect rect, T shape) where T : IShape
         {
             if (shape is Segment s)         return rect.IntersectShape(s);
             else if (shape is Circle c)     return rect.IntersectShape(c);
@@ -255,7 +250,7 @@ namespace ShapeEngine.Lib
             else if (shape is Polyline pl)  return rect.IntersectShape(pl);
             else return rect.IntersectShape(shape.GetBoundingBox());// new();
         }
-        public static CollisionPoints Intersect(this Polygon poly, IShape shape)
+        public static CollisionPoints Intersect<T>(this Polygon poly, T shape) where T : IShape
         {
             if (shape is Segment s)         return poly.IntersectShape(s);
             else if (shape is Circle c)     return poly.IntersectShape(c);
@@ -265,7 +260,7 @@ namespace ShapeEngine.Lib
             else if (shape is Polyline pl)  return poly.IntersectShape(pl);
             else return poly.IntersectShape(shape.GetBoundingBox());// new();
         }
-        public static CollisionPoints Intersect(this Polyline pl, IShape shape)
+        public static CollisionPoints Intersect<T>(this Polyline pl, T shape) where T : IShape
         {
             if (shape is Segment s) return pl.IntersectShape(s);
             else if (shape is Circle c) return pl.IntersectShape(c);

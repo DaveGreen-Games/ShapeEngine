@@ -221,10 +221,10 @@ namespace Examples.Scenes.ExampleScenes
                 var shape = col.Shape;
                 foreach (var segment in allSegments)
                 {
-                    bool overlap = shape.Overlap(segment);
+                    bool overlap = SGeometry.Overlap(shape, segment);
                     if (overlap)
                     {
-                        var intersection = shape.Intersect(segment);
+                        var intersection = SGeometry.Intersect(shape, segment);
                         if (intersection.Valid)
                         {
                             col.Collision(new(intersection, col.Collider.Vel, col.Collider.Pos));
