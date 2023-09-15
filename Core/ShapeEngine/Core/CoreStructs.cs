@@ -1,7 +1,6 @@
 ﻿using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 using ShapeEngine.Timing;
-using System.Diagnostics.SymbolStore;
 using System.Globalization;
 using System.Numerics;
 using System.Text;
@@ -523,6 +522,7 @@ namespace ShapeEngine.Core
             return final;
         }
     }
+
 
 
     internal class DelayedAction : ISequenceable

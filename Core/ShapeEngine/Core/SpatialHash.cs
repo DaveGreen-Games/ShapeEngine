@@ -5,7 +5,16 @@ using ShapeEngine.Lib;
 namespace ShapeEngine.Core
 {
 
-    
+    //keeps a list of all bucket ids an object is in foreach object
+    public class HashRegister : Dictionary<ICollider, HashSet<int>>
+    {
+        public void AddEntry(ICollider entry, HashSet<int> ids)
+        {
+            
+        }
+
+        
+    }
     
     public class SpatialHashBucketInfo
     {
