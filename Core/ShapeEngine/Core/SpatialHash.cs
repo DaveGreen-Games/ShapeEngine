@@ -6,15 +6,15 @@ namespace ShapeEngine.Core
 {
 
     //keeps a list of all bucket ids an object is in foreach object
-    public class HashRegister : Dictionary<ICollider, HashSet<int>>
-    {
-        public void AddEntry(ICollider entry, HashSet<int> ids)
-        {
-            
-        }
-
-        
-    }
+    //public class HashRegister : Dictionary<ICollider, HashSet<int>>
+    //{
+    //    public void AddEntry(ICollider entry, HashSet<int> ids)
+    //    {
+    //        
+    //    }
+    //
+    //    
+    //}
     
     public class SpatialHashBucketInfo
     {
@@ -222,7 +222,7 @@ namespace ShapeEngine.Core
             int yi = Math.Clamp((int)Math.Floor((y - Bounds.Y) / SpacingY), 0, Rows - 1);
             return (xi, yi);
         }
-        public List<int> GetCellIDs(IShape shape)
+        public List<int> GetCellIDs<T>(T shape) where T : IShape
         {
             Rect boundingRect = shape.GetBoundingBox();
             List<int> hashes = new List<int>();
@@ -301,7 +301,7 @@ namespace ShapeEngine.Core
         {
             return GetObjects(collider.GetShape(), mask);
         }
-        public List<ICollidable> GetObjects(IShape shape, params uint[] mask)
+        public List<ICollidable> GetObjects<T>(T shape, params uint[] mask) where T : IShape
         {
             HashSet<ICollidable> uniqueObjects = new();
 

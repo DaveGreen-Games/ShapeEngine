@@ -312,7 +312,7 @@ namespace ShapeEngine.Core
 
         }
         */
-
+        
         
         public QueryInfos QuerySpace(ICollidable collidable, Vector2 origin, bool sorted = true)
         {
@@ -332,7 +332,7 @@ namespace ShapeEngine.Core
             if(sorted) infos.SortClosest(origin);
             return infos;
         }
-        public QueryInfos QuerySpace(IShape shape, Vector2 origin, bool sorted = true, params uint[] collisionMask)
+        public QueryInfos QuerySpace<T>(T shape, Vector2 origin, bool sorted = true, params uint[] collisionMask) where T : IShape
         {
             QueryInfos infos = new();
             var objects = spatialHash.GetObjects(shape, collisionMask);
@@ -344,7 +344,7 @@ namespace ShapeEngine.Core
             if(sorted) infos.SortClosest(origin);
             return infos;
         }
-        public QueryInfos QuerySpace(IShape shape, Vector2 origin, ICollidable[] exceptions, bool sorted = true, params uint[] collisionMask)
+        public QueryInfos QuerySpace<T>(T shape, Vector2 origin, ICollidable[] exceptions, bool sorted = true, params uint[] collisionMask) where T : IShape
         {
             QueryInfos infos = new();
             var objects = spatialHash.GetObjects(shape, collisionMask);
@@ -395,7 +395,7 @@ namespace ShapeEngine.Core
             }
             return bodies;
         }
-        public List<ICollidable> CastSpace(IShape castShape, bool sorted = false, params uint[] collisionMask)
+        public List<ICollidable> CastSpace<T>(T castShape, bool sorted = false, params uint[] collisionMask) where T : IShape
         {
             List<ICollidable> bodies = new();
             var objects = spatialHash.GetObjects(castShape, collisionMask);
