@@ -109,6 +109,40 @@ namespace ShapeEngine.Core
         #endregion
 
         #region Public
+
+        public bool Contains(Segment other)
+        {
+            return Contains(other.Start) && Contains(other.End);
+        }
+        public bool Contains(Circle other)
+        {
+            var points = other.GetVertices(8);
+            return Contains(points);
+        }
+        public bool Contains(Rect other)
+        {
+            return Contains(other.TopLeft) &&
+                Contains(other.BottomLeft) &&
+                Contains(other.BottomRight) &&
+                Contains(other.TopRight);
+        }
+        public bool Contains(Triangle other)
+        {
+            return Contains(other.A) &&
+                Contains(other.B) &&
+                Contains(other.C);
+        }
+        public bool Contains(Points points)
+        {
+            if (points.Count <= 0) return false;
+            foreach (var p in points)
+            {
+                if (!Contains(p)) return false;
+            }
+            return true;
+        }
+
+
         public readonly Rect Floor()
         {
             unchecked
@@ -231,6 +265,18 @@ namespace ShapeEngine.Core
         }
         #endregion
 
+        #region Static
+        public static bool IsPointInRect(Vector2 point, Vector2 topLeft, Vector2 size)
+        {
+            float left = topLeft.X;
+            float top = topLeft.Y;
+            float right = topLeft.X + size.X;
+            float bottom = topLeft.Y + size.Y;
+
+            return left <= point.X && right >= point.X && top <= point.Y && bottom >= point.Y;
+        }
+        #endregion
+        
         #region IShape
         public Vector2 GetCentroid() { return Center; }
         public Points GetVertices() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
@@ -255,7 +301,7 @@ namespace ShapeEngine.Core
         public float GetCircumferenceSquared() { return GetCircumference() * GetCircumference(); }
         public float GetArea() { return Width * Height; }
         public Rect GetBoundingBox() { return this; }
-        public bool IsPointInside(Vector2 p) { return SGeometry.IsPointInRect(p, TopLeft, Size); }
+        public bool Contains(Vector2 p) { return IsPointInRect(p, TopLeft, Size); }
         public CollisionPoint GetClosestPoint(Vector2 p) { return ToPolygon().GetClosestPoint(p); }
         public Vector2 GetClosestVertex(Vector2 p) { return ToPolygon().GetClosestVertex(p); }
         public Vector2 GetRandomPoint() { return new(SRNG.randF(X, X + Width), SRNG.randF(Y, Y + Height)); }

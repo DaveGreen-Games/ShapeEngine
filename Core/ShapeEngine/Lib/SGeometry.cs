@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Linq;
+using System.Net.Http.Headers;
 using System.Numerics;
 using ShapeEngine.Core;
 
@@ -356,7 +357,7 @@ namespace ShapeEngine.Lib
         public static CollisionPoints IntersectBoundingBoxes(this ICollider a, ICollider b) { return IntersectShape(a.GetShape().GetBoundingBox(), b.GetShape().GetBoundingBox()); }
         #endregion
 
-        #region Line
+        #region Segment
 
         #region Overlap
         
@@ -613,9 +614,9 @@ namespace ShapeEngine.Lib
         }
         public static bool OverlapShape(this Circle c, Segment s)
         {
-            if (c.Radius <= 0.0f) return s.IsPointInside(c.Center); // IsPointInside(s, c.center);
-            if (c.IsPointInside(s.Start)) return true;
-            if (c.IsPointInside(s.End)) return true;
+            if (c.Radius <= 0.0f) return s.Contains(c.Center); // IsPointInside(s, c.center);
+            if (c.Contains(s.Start)) return true;
+            if (c.Contains(s.End)) return true;
 
             Vector2 d = s.End - s.Start;
             Vector2 lc = c.Center - s.Start;
@@ -623,15 +624,15 @@ namespace ShapeEngine.Lib
             Vector2 nearest = s.Start + p;
 
             return
-                c.IsPointInside(nearest) &&
+                c.Contains(nearest) &&
                 p.LengthSquared() <= d.LengthSquared() &&
                 Vector2.Dot(p, d) >= 0.0f;
         }
         public static bool OverlapShape(this Circle a, Circle b)
         {
-            if (a.Radius <= 0.0f && b.Radius > 0.0f) return b.IsPointInside(a.Center);
-            else if (b.Radius <= 0.0f && a.Radius > 0.0f) return a.IsPointInside(b.Center);
-            else if (a.Radius <= 0.0f && b.Radius <= 0.0f) return IsPointOnPoint(a.Center, b.Center);
+            if (a.Radius <= 0.0f && b.Radius > 0.0f) return b.Contains(a.Center);
+            else if (b.Radius <= 0.0f && a.Radius > 0.0f) return a.Contains(b.Center);
+            else if (a.Radius <= 0.0f && b.Radius <= 0.0f) return a.Center == b.Center; // IsPointOnPoint(a.Center, b.Center);
             float rSum = a.Radius + b.Radius;
 
             return (a.Center - b.Center).LengthSquared() < rSum * rSum;
@@ -639,8 +640,8 @@ namespace ShapeEngine.Lib
         public static bool OverlapShape(this Circle c, Triangle t) { return OverlapShape(t, c); }
         public static bool OverlapShape(this Circle c, Rect r)
         {
-            if (c.Radius <= 0.0f) return r.IsPointInside(c.Center);
-            return c.IsPointInside(r.ClampOnRect(c.Center));
+            if (c.Radius <= 0.0f) return r.Contains(c.Center);
+            return c.Contains(r.ClampOnRect(c.Center));
         }
         public static bool OverlapShape(this Circle c, Polygon poly) { return poly.OverlapShape(c); }
         public static bool OverlapShape(this Circle c, Polyline pl) { return OverlapShape(pl, c); }
@@ -649,7 +650,7 @@ namespace ShapeEngine.Lib
             Vector2 lc = c.Center - linePos;
             Vector2 p = SVec.Project(lc, lineDir);
             Vector2 nearest = linePos + p;
-            return c.IsPointInside(nearest);
+            return c.Contains(nearest);
         }
         public static bool OverlapCircleRay(this Circle c, Vector2 rayPos, Vector2 rayDir)
         {
@@ -992,8 +993,8 @@ namespace ShapeEngine.Lib
         public static bool OverlapShape(this Polygon poly, Segment s) 
         {
             if (poly.Count < 3) return false;
-            if (IsPointInPoly(s.Start, poly)) return true;
-            if (IsPointInPoly(s.End, poly)) return true;
+            if (poly.Contains(s.Start)) return true;
+            if (poly.Contains(s.End)) return true;
             for (int i = 0; i < poly.Count; i++)
             {
                 Vector2 start = poly[i];
@@ -1005,10 +1006,10 @@ namespace ShapeEngine.Lib
         public static bool OverlapShape(this Polygon poly, Circle c) 
         {
             if (poly.Count < 3) return false;
-            if (IsPointInPoly(c.Center, poly)) return true;
+            if (poly.Contains(c.Center)) return true;
             foreach (var p in poly)
             {
-                if (c.IsPointInside(p)) return true;
+                if (c.Contains(p)) return true;
             }
             for (int i = 0; i < poly.Count; i++)
             {
@@ -1025,11 +1026,11 @@ namespace ShapeEngine.Lib
             var corners = r.ToPolygon();
             foreach (var c in corners)
             {
-                if (IsPointInPoly(c, poly)) return true;
+                if (poly.Contains(c)) return true;
             }
             foreach (var p in poly)
             {
-                if (r.IsPointInside(p)) return true;
+                if (r.Contains(p)) return true;
             }
 
             for (int i = 0; i < poly.Count; i++)
@@ -1050,7 +1051,7 @@ namespace ShapeEngine.Lib
             for (int j = 0; j < b.Count; j++)
             {
                 Vector2 startB = b[j];
-                if (a.IsPointInside(startB)) return true;
+                if (a.Contains(startB)) return true;
                 Vector2 endB = b[(j + 1) % b.Count];
                 Segment segB = new(startB, endB);
                 segmentsB.Add(segB);
@@ -1059,7 +1060,7 @@ namespace ShapeEngine.Lib
             for (int i = 0; i < a.Count; i++)
             {
                 Vector2 startA = a[i];
-                if (b.IsPointInside(startA)) return true;
+                if (b.Contains(startA)) return true;
                 Vector2 endA = a[(i + 1) % a.Count];
                 Segment segA = new(startA, endA);
                 if(segA.OverlapShape(segmentsB)) return true;
@@ -1097,7 +1098,7 @@ namespace ShapeEngine.Lib
             for (int i = 0; i < pl.Count - 1; i++)
             {
                 Vector2 startPolyline = pl[i];
-                if (p.IsPointInside(startPolyline)) return true;
+                if (p.Contains(startPolyline)) return true;
                 Vector2 endPolyline = pl[(i + 1)];
                 Segment segPolyline = new(startPolyline, endPolyline);
                 for (int j = 0; j < p.Count; j++)
@@ -1130,98 +1131,8 @@ namespace ShapeEngine.Lib
 
 
 
-        #region IsPointInside
-        public static bool IsPointOnPoint(Vector2 pointA, Vector2 pointB) { return pointA.X == pointB.X && pointA.Y == pointB.Y; }
-        public static bool IsPointOnSegment(Vector2 point, Vector2 start, Vector2 end)
-        {
-            Vector2 d = end - start;
-            Vector2 lp = point - start;
-            Vector2 p = SVec.Project(lp, d);
-            return lp == p && p.LengthSquared() <= d.LengthSquared() && Vector2.Dot(p, d) >= 0.0f;
-        }
-        public static bool IsPointOnRay(Vector2 point, Vector2 start, Vector2 dir)
-        {
-            Vector2 displacement = point - start;
-            float p = dir.Y * displacement.X - dir.X * displacement.Y;
-            if (p != 0.0f) return false;
-            float d = displacement.X * dir.X + displacement.Y * dir.Y;
-            return d >= 0;
-        }
-        public static bool IsPointInCircle(Vector2 point, Vector2 circlePos, float circleRadius) { return (circlePos - point).LengthSquared() <= circleRadius * circleRadius; }
-        public static bool IsPointInTriangle(Vector2 a, Vector2 b, Vector2 c, Vector2 p)
-        {
-            Vector2 ab = b - a;
-            Vector2 bc = c - b;
-            Vector2 ca = a - c;
+        
 
-            Vector2 ap = p - a;
-            Vector2 bp = p - b;
-            Vector2 cp = p - c;
-
-            float c1 = SVec.Cross(ab, ap);
-            float c2 = SVec.Cross(bc, bp);
-            float c3 = SVec.Cross(ca, cp);
-
-            if (c1 < 0f && c2 < 0f && c3 < 0f)
-            {
-                return true;
-            }
-
-            return false;
-        }
-        public static bool IsPointInRect(Vector2 point, Vector2 topLeft, Vector2 size)
-        {
-            float left = topLeft.X;
-            float top = topLeft.Y;
-            float right = topLeft.X + size.X;
-            float bottom = topLeft.Y + size.Y;
-
-            return left <= point.X && right >= point.X && top <= point.Y && bottom >= point.Y;
-        }
-        public static bool IsPointInPoly(Vector2 point, Polygon poly)
-        {
-            bool oddNodes = false;
-            int num = poly.Count;
-            int j = num - 1;
-            for (int i = 0; i < num; i++)
-            {
-                var vi = poly[i];
-                var vj = poly[j];
-                if (vi.Y < point.Y && vj.Y >= point.Y || vj.Y < point.Y && vi.Y >= point.Y)
-                {
-                    if (vi.X + (point.Y - vi.Y) / (vj.Y - vi.Y) * (vj.X - vi.X) < point.X)
-                    {
-                        oddNodes = !oddNodes;
-                    }
-                }
-                j = i;
-            }
-
-            return oddNodes;
-        }
-        public static bool IsPolyInPoly(Polygon poly, Polygon otherPoly)
-        {
-            for (int i = 0; i < otherPoly.Count; i++)
-            {
-                if (!IsPointInPoly(otherPoly[i], poly)) return false;
-            }
-            return true;
-        }
-        public static bool IsCircleInPoly(Vector2 circlePos, float radius, Polygon poly)
-        {
-            if (poly.Count < 3) return false;
-            if (!IsPointInPoly(circlePos, poly)) return false;
-            for (int i = 0; i < poly.Count; i++)
-            {
-                Vector2 start = poly[i];
-                Vector2 end = poly[(i + 1) % poly.Count];
-                var points = IntersectSegmentCircle(start, end, circlePos, radius);
-                if (points.Count > 0) return false;
-            }
-            return true;
-        }
-
-        #endregion
 
         #region Intersection Helper
         private static float TriangleAreaSigned(Vector2 a, Vector2 b, Vector2 c) { return (a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X); }
@@ -1452,5 +1363,26 @@ namespace ShapeEngine.Lib
        
         #endregion
 
+        //public static bool IsPolyInPoly(Polygon poly, Polygon otherPoly)
+        //{
+        //    for (int i = 0; i < otherPoly.Count; i++)
+        //    {
+        //        if (!IsPointInPoly(otherPoly[i], poly)) return false;
+        //    }
+        //    return true;
+        //}
+        //public static bool IsCircleInPoly(Vector2 circlePos, float radius, Polygon poly)
+        //{
+        //    if (poly.Count < 3) return false;
+        //    if (!IsPointInPoly(circlePos, poly)) return false;
+        //    for (int i = 0; i < poly.Count; i++)
+        //    {
+        //        Vector2 start = poly[i];
+        //        Vector2 end = poly[(i + 1) % poly.Count];
+        //        var points = IntersectSegmentCircle(start, end, circlePos, radius);
+        //        if (points.Count > 0) return false;
+        //    }
+        //    return true;
+        //}
     }
 }

@@ -51,6 +51,42 @@ namespace ShapeEngine.Core
         #endregion
 
         #region Public
+        public bool Contains(Segment other)
+        {
+            return Contains(other.Start) && Contains(other.End);
+        }
+        public bool Contains(Circle other)
+        {
+            float rDif = Radius - other.Radius;
+            if(rDif <= 0) return false;
+
+            float disSquared = (Center - other.Center).LengthSquared();
+            return disSquared < rDif * rDif;
+        }
+        public bool Contains(Rect other)
+        {
+            return Contains(other.TopLeft) &&
+                Contains(other.BottomLeft) &&
+                Contains(other.BottomRight) &&
+                Contains(other.TopRight);
+        }
+        public bool Contains(Triangle other)
+        {
+            return Contains(other.A) &&
+                Contains(other.B) &&
+                Contains(other.C);
+        }
+        public bool Contains(Points points)
+        {
+            if (points.Count <= 0) return false;
+            foreach (var p in points)
+            {
+                if (!Contains(p)) return false;
+            }
+            return true;
+        }
+        
+        
         public readonly Circle Floor() { return new(Center.Floor(), MathF.Floor(Radius)); }
         public readonly Circle Ceiling() { return new(Center.Ceiling(), MathF.Ceiling(Radius)); }
         public readonly Circle Round() { return new(Center.Round(), MathF.Round(Radius)); }
@@ -70,11 +106,11 @@ namespace ShapeEngine.Core
             }
             return segments;
         }
-        public readonly Points GetVertices(int pointCount = 16)
+        public readonly Points GetVertices(int count = 16)
         {
-            float angleStep = (MathF.PI * 2f) / pointCount;
+            float angleStep = (MathF.PI * 2f) / count;
             Points points = new();
-            for (int i = 0; i < pointCount; i++)
+            for (int i = 0; i < count; i++)
             {
                 Vector2 p = Center + new Vector2(Radius, 0f).Rotate(angleStep * i);
                 points.Add(p);
@@ -134,6 +170,13 @@ namespace ShapeEngine.Core
         }
         #endregion
 
+        #region Static
+        public static bool IsPointInCircle(Vector2 point, Vector2 circlePos, float circleRadius) 
+        { 
+            return (circlePos - point).LengthSquared() <= circleRadius * circleRadius; 
+        }
+        #endregion
+
         #region IShape
         public Vector2 GetCentroid() { return Center; }
         public Segments GetEdges() { return GetEdges(16, FlippedNormals); }
@@ -147,7 +190,7 @@ namespace ShapeEngine.Core
         public float GetCircumference() { return MathF.PI * Radius * 2f; }
         public float GetCircumferenceSquared() { return GetCircumference() * GetCircumference(); }
         public Rect GetBoundingBox() { return new Rect(Center, new Vector2(Radius, Radius) * 2f, new(0.5f)); }
-        public bool IsPointInside(Vector2 p) { return SGeometry.IsPointInCircle(p, Center, Radius); }
+        public bool Contains(Vector2 p) { return IsPointInCircle(p, Center, Radius); }
         public CollisionPoint GetClosestPoint(Vector2 p) 
         {
             Vector2 normal = (p - Center).Normalize();

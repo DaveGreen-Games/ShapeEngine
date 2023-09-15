@@ -48,7 +48,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             circle.Center += vel * dt;
 
-            if (!universe.IsPointInside(circle.Center))
+            if (!universe.Contains(circle.Center))
             {
                 circle.Center = -circle.Center;
             }

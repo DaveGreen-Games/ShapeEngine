@@ -63,6 +63,40 @@ namespace ShapeEngine.Core
         #endregion
 
         #region Public
+
+        public bool Contains(Segment other)
+        {
+            return Contains(other.Start) && Contains(other.End);
+        }
+        public bool Contains(Circle other)
+        {
+            var points = other.GetVertices(8);
+            return Contains(points);
+        }
+        public bool Contains(Rect other)
+        {
+            return Contains(other.TopLeft) &&
+                Contains(other.BottomLeft) &&
+                Contains(other.BottomRight) &&
+                Contains(other.TopRight);
+        }
+        public bool Contains(Triangle other)
+        {
+            return Contains(other.A) &&
+                Contains(other.B) &&
+                Contains(other.C);
+        }
+        public bool Contains(Points points)
+        {
+            if (points.Count <= 0) return false;
+            foreach (var p in points)
+            {
+                if (!Contains(p)) return false;
+            }
+            return true;
+        }
+
+
         public readonly Triangle Floor() { return new(A.Floor(), B.Floor(), C.Floor(), FlippedNormals); }
         public readonly Triangle Ceiling() { return new(A.Ceiling(), B.Ceiling(), C.Ceiling(), FlippedNormals); }
         public readonly Triangle Round() { return new(A.Round(), B.Round(), C.Round(), FlippedNormals); }
@@ -204,6 +238,30 @@ namespace ShapeEngine.Core
         public readonly Triangle Move(Vector2 offset) { return new(A + offset, B + offset, C + offset, FlippedNormals); }
         #endregion
 
+        #region Static
+        public static bool IsPointInTriangle(Vector2 a, Vector2 b, Vector2 c, Vector2 p)
+        {
+            Vector2 ab = b - a;
+            Vector2 bc = c - b;
+            Vector2 ca = a - c;
+
+            Vector2 ap = p - a;
+            Vector2 bp = p - b;
+            Vector2 cp = p - c;
+
+            float c1 = SVec.Cross(ab, ap);
+            float c2 = SVec.Cross(bc, bp);
+            float c3 = SVec.Cross(ca, cp);
+
+            if (c1 < 0f && c2 < 0f && c3 < 0f)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        #endregion
         #region Equality & HashCode
         public bool IsSimilar(Triangle other)
         {
@@ -268,7 +326,7 @@ namespace ShapeEngine.Core
             return MathF.Abs((A.X - C.X) * (B.Y - C.Y) - (A.Y - C.Y) * (B.X - C.X)) / 2f;
         }
         public Rect GetBoundingBox() { return new Rect(A.X, A.Y, 0, 0).Enlarge(B).Enlarge(C); }
-        public bool IsPointInside(Vector2 p) { return SGeometry.IsPointInTriangle(A, B, C, p); }
+        public bool Contains(Vector2 p) { return IsPointInTriangle(A, B, C, p); }
         public CollisionPoint GetClosestPoint(Vector2 p) { return ToPolygon().GetClosestPoint(p); }
         public Vector2 GetClosestVertex(Vector2 p) { return ToPolygon().GetClosestVertex(p); }
         public Vector2 GetRandomPoint() { return this.GetPoint(SRNG.randF(), SRNG.randF()); }

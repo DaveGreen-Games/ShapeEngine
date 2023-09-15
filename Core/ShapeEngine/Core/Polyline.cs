@@ -216,12 +216,12 @@ namespace ShapeEngine.Core
         public Points GetVertices() { return new(this); }
         
         
-        public bool IsPointInside(Vector2 p)
+        public bool Contains(Vector2 p)
         {
             var segments = GetEdges();
             foreach (var segment in segments)
             {
-                if (segment.IsPointInside(p)) return true;
+                if (segment.Contains(p)) return true;
             }
             return false;
         }

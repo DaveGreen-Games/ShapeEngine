@@ -51,7 +51,38 @@ namespace ShapeEngine.Core
         #endregion
 
         #region Public
-        //public Polygon Copy() { return new(this); }
+        public bool Contains(Segment other)
+        {
+            return Contains(other.Start) && Contains(other.End);
+        }
+        public bool Contains(Circle other)
+        {
+            var points = other.GetVertices(8);
+            return Contains(points);
+        }
+        public bool Contains(Rect other)
+        {
+            return Contains(other.TopLeft) &&
+                Contains(other.BottomLeft) &&
+                Contains(other.BottomRight) &&
+                Contains(other.TopRight);
+        }
+        public bool Contains(Triangle other)
+        {
+            return Contains(other.A) &&
+                Contains(other.B) &&
+                Contains(other.C);
+        }
+        public bool Contains(Points points)
+        {
+            if (points.Count <= 0) return false;
+            foreach (var p in points)
+            {
+                if (!Contains(p)) return false;
+            }
+            return true;
+        }
+
         public void FixWindingOrder() { if (this.IsClockwise()) this.Reverse(); }
         public void ReduceVertexCount(int newCount)
         {
@@ -279,10 +310,32 @@ namespace ShapeEngine.Core
             var cut = Generate(cutLine, minMagnitude, maxMagnitude, minSectionLength, maxSectionLength);
             return this.Cut(cut);
         }
-       
+
         #endregion
 
         #region Static
+        public static bool IsPointInPoly(Vector2 point, Polygon poly)
+        {
+            bool oddNodes = false;
+            int num = poly.Count;
+            int j = num - 1;
+            for (int i = 0; i < num; i++)
+            {
+                var vi = poly[i];
+                var vj = poly[j];
+                if (vi.Y < point.Y && vj.Y >= point.Y || vj.Y < point.Y && vi.Y >= point.Y)
+                {
+                    if (vi.X + (point.Y - vi.Y) / (vj.Y - vi.Y) * (vj.X - vi.X) < point.X)
+                    {
+                        oddNodes = !oddNodes;
+                    }
+                }
+                j = i;
+            }
+
+            return oddNodes;
+        }
+
         /// <summary>
         /// Triangulates a set of points. Only works with non self intersecting shapes.
         /// </summary>
@@ -654,7 +707,7 @@ namespace ShapeEngine.Core
                 foreach (var p in this)
                 {
                     if (p == a || p == b || p == c) continue;
-                    if (t.IsPointInside(p))
+                    if (t.Contains(p))
                     {
                         isValid = false;
                         break;
@@ -950,7 +1003,7 @@ namespace ShapeEngine.Core
             return closestSegment;
         }
 
-        public bool IsPointInside(Vector2 p) { return SGeometry.IsPointInPoly(p, this); }
+        public bool Contains(Vector2 p) { return IsPointInPoly(p, this); }
         public Vector2 GetRandomPoint()
         {
             var triangles = Triangulate();

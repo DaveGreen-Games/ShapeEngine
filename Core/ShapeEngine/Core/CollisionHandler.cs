@@ -172,7 +172,7 @@ namespace ShapeEngine.Core
                             {
                                 Vector2 refPoint = collidable.GetCollider().GetPreviousPosition();
                                 var shape = other.GetCollider().GetShape();
-                                if (!shape.IsPointInside(refPoint))
+                                if (!shape.Contains(refPoint))
                                 {
                                     CollisionPoint closest = shape.GetClosestPoint(refPoint);
                                     collisionPoints.Add(closest);

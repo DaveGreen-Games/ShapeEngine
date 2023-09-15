@@ -50,6 +50,7 @@ namespace ShapeEngine.Core
         #endregion
 
         #region Public
+        
         public readonly Segment Floor()
         {
             return new(Start.Floor(), End.Floor(), FlippedNormals);
@@ -135,6 +136,29 @@ namespace ShapeEngine.Core
         }
         #endregion
 
+        #region Static
+        public static bool IsPointOnSegment(Vector2 point, Vector2 start, Vector2 end)
+        {
+            Vector2 d = end - start;
+            Vector2 lp = point - start;
+            Vector2 p = SVec.Project(lp, d);
+            return lp == p && p.LengthSquared() <= d.LengthSquared() && Vector2.Dot(p, d) >= 0.0f;
+        }
+        public static bool IsPointOnRay(Vector2 point, Vector2 start, Vector2 dir)
+        {
+            Vector2 displacement = point - start;
+            float p = dir.Y * displacement.X - dir.X * displacement.Y;
+            if (p != 0.0f) return false;
+            float d = displacement.X * dir.X + displacement.Y * dir.Y;
+            return d >= 0;
+        }
+        public static bool IsPointOnLine(Vector2 point, Vector2 start, Vector2 dir)
+        {
+            return IsPointOnRay(point, start, dir) || IsPointOnRay(point, start, -dir);
+        }
+
+        #endregion
+
         #region IShape
         public Vector2 GetCentroid() { return Center; }
         public float GetArea() { return 0f; }
@@ -148,7 +172,7 @@ namespace ShapeEngine.Core
         public Triangulation Triangulate() { return new(); }
         public Circle GetBoundingCircle() { return ToPolygon().GetBoundingCircle(); }
         public Rect GetBoundingBox() { return new(Start, End); }
-        public bool IsPointInside(Vector2 p) { return SGeometry.IsPointOnSegment(p, Start, End); }
+        public bool Contains(Vector2 p) { return IsPointOnSegment(p, Start, End); }
         public CollisionPoint GetClosestPoint(Vector2 p)
         {
             CollisionPoint c;
@@ -231,6 +255,12 @@ namespace ShapeEngine.Core
             return false;
         }
         #endregion
+
+        public void DrawNormal(float linethickness, float length, Raylib_CsLo.Color color)
+        {
+            Segment n = new(Center, Center + Normal * length);
+            n.Draw(linethickness, color);
+        }
     }
 }
 
