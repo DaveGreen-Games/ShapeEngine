@@ -8,7 +8,7 @@ using System.Numerics;
 
 namespace Examples.Scenes.ExampleScenes
 {
-    public class DelauneyExample : ExampleScene
+    public class DelaunayExample : ExampleScene
     {
         private const float PointDistance = 10f;
 
@@ -20,9 +20,9 @@ namespace Examples.Scenes.ExampleScenes
         int closePointIndex = -1;
         int closeTriangleIndex = -1;
 
-        public DelauneyExample()
+        public DelaunayExample()
         {
-            Title = "Delaunay Example";
+            Title = "Delaunay Triangulation Example";
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
             
         }
