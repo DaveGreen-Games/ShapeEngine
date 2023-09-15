@@ -1,13 +1,8 @@
 ﻿
-using System;
-using System.Drawing;
 using System.Numerics;
-using System.Reflection.Metadata.Ecma335;
-using System.Runtime.InteropServices;
 using Raylib_CsLo;
 using ShapeEngine.Core;
 using ShapeEngine.UI;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace ShapeEngine.Lib
 {
@@ -1000,7 +995,8 @@ namespace ShapeEngine.Lib
                 Vector2 down = new(0f, maxDimension * 2);
                 Vector2 start = p + SVec.Rotate(up, rotRad);
                 Vector2 end = p + SVec.Rotate(down, rotRad);
-                CollisionPoints collisionPoints = SGeometry.IntersectShape(new Segment(start, end), rect); // SGeometry.IntersectionSegmentRect(center, start, end, tl, tr, br, bl).points;
+                var seg = new Segment(start, end);
+                CollisionPoints collisionPoints = seg.IntersectShape(rect); // SGeometry.IntersectionSegmentRect(center, start, end, tl, tr, br, bl).points;
 
                 if (collisionPoints.Count >= 2) DrawLineEx(collisionPoints[0].Point, collisionPoints[1].Point, lineThickness, lineColor);
                 else break;
@@ -1018,7 +1014,8 @@ namespace ShapeEngine.Lib
                 Vector2 down = new(0f, maxDimension * 2);
                 Vector2 start = p + SVec.Rotate(up, rotRad);
                 Vector2 end = p + SVec.Rotate(down, rotRad);
-                CollisionPoints collisionPoints = SGeometry.IntersectShape(new Segment(start, end), rect); //SGeometry.IntersectionSegmentRect(center, start, end, tl, tr, br, bl).points;
+                var seg = new Segment(start, end);
+                CollisionPoints collisionPoints = seg.IntersectShape(rect); //SGeometry.IntersectionSegmentRect(center, start, end, tl, tr, br, bl).points;
                 if (collisionPoints.Count >= 2) DrawLineEx(collisionPoints[0].Point, collisionPoints[1].Point, lineThickness, lineColor);
                 else break;
                 cur.X += spacing;

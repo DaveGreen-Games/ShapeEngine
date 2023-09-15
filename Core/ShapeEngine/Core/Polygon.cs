@@ -1086,6 +1086,110 @@ namespace ShapeEngine.Core
         }
         #endregion
 
+        #region Overlap
+        //public static bool OverlapShape(this Polygon poly, Segments segments)
+        //{
+        //    foreach (var seg in segments)
+        //    {
+        //        if (poly.OverlapShape(seg)) return true;
+        //    }
+        //    return false;
+        //}
+        public bool OverlapShape(Segment s)
+        {
+            if (Count < 3) return false;
+            if (Contains(s.Start)) return true;
+            if (Contains(s.End)) return true;
+            for (int i = 0; i < Count; i++)
+            {
+                Vector2 start = Get(i); // this[i];
+                Vector2 end = Get(i + 1); //this[(i + 1) % Count];
+                var segment = new Segment(start, end);
+                if (segment.OverlapShape(s)) return true;
+            }
+            return false;
+        }
+        public bool OverlapShape(Circle c)
+        {
+            if (Count < 3) return false;
+            if (Contains(c.Center)) return true;
+            foreach (var p in this)
+            {
+                if (c.Contains(p)) return true;
+            }
+            for (int i = 0; i < Count; i++)
+            {
+                Vector2 start = Get(i); // this[i];
+                Vector2 end = Get(i + 1); // this[(i + 1) % Count];
+                if (c.OverlapShape(new Segment(start, end))) return true;
+            }
+            return false;
+        }
+        public bool OverlapShape(Triangle t) { return OverlapShape(t.ToPolygon()); }
+        public bool OverlapShape(Rect r)
+        {
+            if (Count < 3) return false;
+            var corners = r.ToPolygon();
+            foreach (var c in corners)
+            {
+                if (Contains(c)) return true;
+            }
+            foreach (var p in this)
+            {
+                if (r.Contains(p)) return true;
+            }
+
+            for (int i = 0; i < Count; i++)
+            {
+                Vector2 start = Get(i); // poly[i];
+                Vector2 end = Get(i + 1); // poly[(i + 1) % poly.Count];
+                if (r.OverlapShape(new Segment(start, end))) return true;
+            }
+            return false;
+        }
+        public bool OverlapShape(Polygon b)
+        {
+
+            if (Count < 3 || b.Count < 3) return false;
+            //return a.IntersectShape(b).Count > 0;
+
+            Segments segmentsB = new();
+            for (int j = 0; j < b.Count; j++)
+            {
+                Vector2 startB = b.Get(j); // b[j];
+                if (Contains(startB)) return true;
+                Vector2 endB = b.Get(j + 1);// b[(j + 1) % b.Count];
+                Segment segB = new(startB, endB);
+                segmentsB.Add(segB);
+            }
+
+            for (int i = 0; i < Count; i++)
+            {
+                Vector2 startA = Get(i); //  a[i];
+                if (b.Contains(startA)) return true;
+                Vector2 endA = Get(i + 1); // a[(i + 1) % a.Count];
+                Segment segA = new(startA, endA);
+                if (segA.OverlapShape(segmentsB)) return true;
+            }
+            return false;
+        }
+        public bool OverlapShape(Polyline pl) { return pl.OverlapShape(this); }
+
+
+
+        #endregion
+
+        #region Intersect
+        public CollisionPoints IntersectShape(Segment s) { return GetEdges().IntersectShape(s); }
+        public CollisionPoints IntersectShape(Circle c) { return GetEdges().IntersectShape(c); }
+        public CollisionPoints IntersectShape(Triangle t) { return GetEdges().IntersectShape(t.GetEdges()); }
+        public CollisionPoints IntersectShape(Rect r) { return GetEdges().IntersectShape(r.GetEdges()); }
+        public CollisionPoints IntersectShape(Polygon b) { return GetEdges().IntersectShape(b.GetEdges()); }
+        public CollisionPoints IntersectShape(Polyline pl) { return GetEdges().IntersectShape(pl.GetEdges()); }
+
+        #endregion
+
+
         //public Vector2 GetReferencePoint() { return GetCentroid(); }
         //public SegmentShape GetSegmentShape() { return new(GetEdges(), this.GetCentroid()); }
     }

@@ -262,6 +262,7 @@ namespace ShapeEngine.Core
         }
 
         #endregion
+
         #region Equality & HashCode
         public bool IsSimilar(Triangle other)
         {
@@ -371,27 +372,33 @@ namespace ShapeEngine.Core
         public void DrawShape(float linethickness, Raylib_CsLo.Color color) => this.DrawLines(linethickness, color);
         #endregion
 
+        #region Overlap
+        public bool OverlapShape(Segments segments)
+        {
+            foreach (var seg in segments)
+            {
+                if (seg.OverlapShape(this)) return true;
+            }
+            return false;
+        }
+        public bool OverlapShape(Segment s) { return ToPolygon().OverlapShape(s); }
+        public bool OverlapShape(Circle c) { return ToPolygon().OverlapShape(c); }
+        public bool OverlapShape(Triangle b) { return ToPolygon().OverlapShape(b.ToPolygon()); }
+        public bool OverlapShape(Rect r) { return ToPolygon().OverlapShape(r); }
+        public bool OverlapShape(Polygon poly) { return OverlapShape(poly); }
+        public bool OverlapShape(Polyline pl) { return pl.OverlapShape(this); }
 
 
+        #endregion
 
-        //public float GetWidestAngle()
-        //{
-        //    float angleA = MathF.Abs((b - a).Cross(c - a));
-        //    float angleB = MathF.Abs((c - b).Cross(a - b));
-        //    float angleC = MathF.Abs((a - c).Cross(b - c));
-        //    if(angleA < angleB)
-        //    {
-        //        if (angleA < angleC) return angleA;
-        //        else return angleC;
-        //    }
-        //    else
-        //    {
-        //        if (angleB < angleC) return angleB;
-        //        else return angleC;
-        //    }
-        //}
-        //public SegmentShape GetSegmentShape() { return new(GetCentroid(), new(a, b), new(b, c), new(c, a) ); }
-        //public Vector2 GetReferencePoint() { return GetCentroid(); }
+        #region Intersect
+        public CollisionPoints IntersectShape(Segment s) { return GetEdges().IntersectShape(s); }
+        public CollisionPoints IntersectShape(Circle c) { return ToPolygon().IntersectShape(c); }
+        public CollisionPoints IntersectShape(Triangle b) { return ToPolygon().IntersectShape(b.ToPolygon()); }
+        public CollisionPoints IntersectShape(Rect r) { return ToPolygon().IntersectShape(r.ToPolygon()); }
+        public CollisionPoints IntersectShape(Polygon p) { return ToPolygon().IntersectShape(p); }
+        public CollisionPoints IntersectShape(Polyline pl) { return GetEdges().IntersectShape(pl.GetEdges()); }
+        #endregion
     }
 }
 

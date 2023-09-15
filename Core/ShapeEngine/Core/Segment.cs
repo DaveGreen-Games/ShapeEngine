@@ -256,6 +256,188 @@ namespace ShapeEngine.Core
         }
         #endregion
 
+        #region Overlap
+        public bool OverlapShape(Segments segments)
+        {
+            foreach (var seg in segments)
+            {
+                if (seg.OverlapShape(this)) return true;
+            }
+            return false;
+        }
+        public bool OverlapShape(Segment b)
+        {
+            //var result = IntersectSegmentSegmentInfo(a.start, a.end, b.start, b.end);
+            //return result.intersected;
+            Vector2 axisAPos = Start;
+            Vector2 axisADir = End - Start;
+            if (SRect.SegmentOnOneSide(axisAPos, axisADir, b.Start, b.End)) return false;
+
+            Vector2 axisBPos = b.Start;
+            Vector2 axisBDir = b.End - b.Start;
+            if (SRect.SegmentOnOneSide(axisBPos, axisBDir, Start, End)) return false;
+
+            if (SVec.Parallel(axisADir, axisBDir))
+            {
+                RangeFloat rangeA = SRect.ProjectSegment(Start, End, axisADir);
+                RangeFloat rangeB = SRect.ProjectSegment(b.Start, b.End, axisADir);
+                return SRect.OverlappingRange(rangeA, rangeB);
+            }
+            return true;
+        }
+        public bool OverlapShape(Circle c) { return c.OverlapShape(this); }
+        public bool OverlapShape(Triangle t) { return t.OverlapShape(this); }
+        public bool OverlapShape(Rect r)
+        {
+            if (!r.OverlapRectLine(Start, Displacement)) return false;
+            RangeFloat rectRange = new
+                (
+                    r.X,
+                    r.X + r.Width
+                );
+            RangeFloat segmentRange = new
+                (
+                    Start.X,
+                    End.X
+                );
+
+            if (!SRect.OverlappingRange(rectRange, segmentRange)) return false;
+
+            rectRange.min = r.Y;
+            rectRange.max = r.Y + r.Height;
+            rectRange.Sort();
+
+            segmentRange.min = Start.Y;
+            segmentRange.max = End.Y;
+            segmentRange.Sort();
+
+            return SRect.OverlappingRange(rectRange, segmentRange);
+        }
+        public bool OverlapShape(Polygon poly) { return poly.OverlapShape(this); }
+        public bool OverlapShape(Polyline pl) { return pl.OverlapShape(this); }
+        public bool OverlapSegmentLine(Vector2 linePos, Vector2 lineDir) { return !SRect.SegmentOnOneSide(linePos, lineDir, Start, End); }
+        public static bool OverlapLineLine(Vector2 aPos, Vector2 aDir, Vector2 bPos, Vector2 bDir)
+        {
+            if (SVec.Parallel(aDir, bDir))
+            {
+                Vector2 displacement = aPos - bPos;
+                return SVec.Parallel(displacement, aDir);
+            }
+            return true;
+        }
+        #endregion
+
+        #region Intersection
+        public CollisionPoints IntersectShape(Segment b)
+        {
+            var info = SGeometry.IntersectSegmentSegmentInfo(Start, End, b.Start, b.End);
+            if (info.intersected)
+            {
+                return new() { new(info.intersectPoint, b.Normal) };
+            }
+            return new();
+        }
+        public CollisionPoints IntersectShape(Circle c)
+        {
+            float aX = Start.X;
+            float aY = Start.Y;
+            float bX = End.X;
+            float bY = End.Y;
+            float cX = c.Center.X;
+            float cY = c.Center.Y;
+            float R = c.Radius;
+
+
+            float dX = bX - aX;
+            float dY = bY - aY;
+            if ((dX == 0) && (dY == 0))
+            {
+                // A and B are the same points, no way to calculate intersection
+                return new();
+            }
+
+            float dl = (dX * dX + dY * dY);
+            float t = ((cX - aX) * dX + (cY - aY) * dY) / dl;
+
+            // point on a line nearest to circle center
+            float nearestX = aX + t * dX;
+            float nearestY = aY + t * dY;
+
+            float dist = (new Vector2(nearestX, nearestY) - new Vector2(cX, cY)).Length(); // point_dist(nearestX, nearestY, cX, cY);
+
+            if (dist == R)
+            {
+                // line segment touches circle; one intersection point
+                float iX = nearestX;
+                float iY = nearestY;
+
+                if (t >= 0f && t <= 1f)
+                {
+                    // intersection point is not actually within line segment
+                    Vector2 ip = new(iX, iY);
+                    Vector2 n = SVec.Normalize(ip - new Vector2(cX, cY));
+                    return new() { new(ip, n) };
+                }
+                else return new();
+            }
+            else if (dist < R)
+            {
+                CollisionPoints points = new();
+                // two possible intersection points
+
+                float dt = MathF.Sqrt(R * R - dist * dist) / MathF.Sqrt(dl);
+
+                // intersection point nearest to A
+                float t1 = t - dt;
+                float i1X = aX + t1 * dX;
+                float i1Y = aY + t1 * dY;
+                if (t1 >= 0f && t1 <= 1f)
+                {
+                    // intersection point is actually within line segment
+                    Vector2 ip = new(i1X, i1Y);
+                    Vector2 n = SVec.Normalize(ip - new Vector2(cX, cY)); // SUtils.GetNormal(new Vector2(aX, aY), new Vector2(bX, bY), ip, new Vector2(cX, cY));
+                    points.Add(new(ip, n));
+                }
+                float t2 = t + dt;
+                float i2X = aX + t2 * dX;
+                float i2Y = aY + t2 * dY;
+                if (t2 >= 0f && t2 <= 1f)
+                {
+                    Vector2 ip = new(i2X, i2Y);
+                    Vector2 n = SVec.Normalize(ip - new Vector2(cX, cY));
+                    points.Add(new(ip, n));
+                }
+
+                if (points.Count <= 0) return new();
+                else return points;
+            }
+            else
+            {
+                // no intersection
+                return new();
+            }
+        }
+        public CollisionPoints IntersectShape(Triangle t) { return IntersectShape(t.GetEdges()); }
+        public CollisionPoints IntersectShape(Rect rect) { return IntersectShape(rect.GetEdges()); }
+        public CollisionPoints IntersectShape(Polygon p) { return IntersectShape(p.GetEdges()); }
+        public CollisionPoints IntersectShape(Polyline pl) { return IntersectShape(pl.GetEdges()); }
+        public CollisionPoints IntersectShape(Segments shape)
+        {
+            CollisionPoints points = new();
+
+            foreach (var seg in shape)
+            {
+                var collisionPoints = IntersectShape(seg);
+                if (collisionPoints.Valid)
+                {
+                    points.AddRange(collisionPoints);
+                }
+            }
+            return points;
+        }
+
+        #endregion
+
         public void DrawNormal(float linethickness, float length, Raylib_CsLo.Color color)
         {
             Segment n = new(Center, Center + Normal * length);

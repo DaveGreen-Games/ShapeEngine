@@ -347,6 +347,62 @@ namespace ShapeEngine.Core
         public void DrawShape(float linethickness, Raylib_CsLo.Color color) => this.DrawLines(linethickness, color);
         #endregion
 
+        #region Overlap
+        public bool OverlapShape(Segments segments)
+        {
+            foreach (var seg in segments)
+            {
+                if (seg.OverlapShape(this)) return true;
+            }
+            return false;
+        }
+        public bool OverlapShape(Segment s) { return s.OverlapShape(this); }
+        public bool OverlapShape(Circle c) { return c.OverlapShape(this); }
+        public bool OverlapShape(Triangle t) { return t.OverlapShape(this); }
+        public bool OverlapShape(Rect b)
+        {
+            Vector2 aTopLeft = new(X, Y);
+            Vector2 aBottomRight = aTopLeft + new Vector2(Width, Height);
+            Vector2 bTopLeft = new(b.X, b.Y);
+            Vector2 bBottomRight = bTopLeft + new Vector2(b.Width, b.Height);
+            return
+                SRect.OverlappingRange(aTopLeft.X, aBottomRight.X, bTopLeft.X, bBottomRight.X) &&
+                SRect.OverlappingRange(aTopLeft.Y, aBottomRight.Y, bTopLeft.Y, bBottomRight.Y);
+        }
+        public bool OverlapShape(Polygon poly) { return poly.OverlapShape(this); }
+        public bool OverlapShape(Polyline pl) { return pl.OverlapShape(pl); }
+        public bool OverlapRectLine(Vector2 linePos, Vector2 lineDir)
+        {
+            Vector2 n = SVec.Rotate90CCW(lineDir);
+
+            Vector2 c1 = new(X, Y);
+            Vector2 c2 = c1 + new Vector2(Width, Height);
+            Vector2 c3 = new(c2.X, c1.Y);
+            Vector2 c4 = new(c1.X, c2.Y);
+
+            c1 -= linePos;
+            c2 -= linePos;
+            c3 -= linePos;
+            c4 -= linePos;
+
+            float dp1 = Vector2.Dot(n, c1);
+            float dp2 = Vector2.Dot(n, c2);
+            float dp3 = Vector2.Dot(n, c3);
+            float dp4 = Vector2.Dot(n, c4);
+
+            return dp1 * dp2 <= 0.0f || dp2 * dp3 <= 0.0f || dp3 * dp4 <= 0.0f;
+        }
+        #endregion
+
+        #region Intersect
+        public CollisionPoints IntersectShape(Segment s) { return GetEdges().IntersectShape(s); }
+        public CollisionPoints IntersectShape(Circle c) { return GetEdges().IntersectShape(c); }
+        public CollisionPoints IntersectShape(Triangle t) { return GetEdges().IntersectShape(t.GetEdges()); }
+        public CollisionPoints IntersectShape(Rect b) { return GetEdges().IntersectShape(b.GetEdges()); }
+        public CollisionPoints IntersectShape(Polygon p) { return GetEdges().IntersectShape(p.GetEdges()); }
+        public CollisionPoints IntersectShape(Polyline pl) { return GetEdges().IntersectShape(pl.GetEdges()); }
+        #endregion
+
     }
 }
 

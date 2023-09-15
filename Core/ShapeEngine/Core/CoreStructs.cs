@@ -81,6 +81,16 @@ namespace ShapeEngine.Core
         #endregion
 
         #region Public
+        /// <summary>
+        /// Gets the value at the specified index wrapping around if index is < 0 or >= count
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public Vector2 Get(int index) 
+        {
+            if (Count <= 0) return new();
+            return this[index % Count]; 
+        }
         public ClosestItem<Vector2> GetClosestItem(Vector2 p)
         {
             if (Count <= 0) return new();
@@ -263,6 +273,67 @@ namespace ShapeEngine.Core
         }
         #endregion
 
+        #region Overlap
+        public bool OverlapShape(Segments b)
+        {
+            foreach (var segA in this)
+            {
+                if (segA.OverlapShape(b)) return true;
+            }
+            return false;
+        }
+        public bool OverlapShape(Segment s) { return s.OverlapShape(this); }
+        public bool OverlapShape(Circle c) { return c.OverlapShape(this); }
+        public bool OverlapShape(Triangle t) { return t.OverlapShape(this); }
+        public bool OverlapShape(Rect r) { return r.OverlapShape(this); }
+        public bool OverlapShape(Polyline pl) { return pl.OverlapShape(this); }
+
+        #endregion
+
+        #region Intersection
+        public CollisionPoints IntersectShape(Segment s)
+        {
+            CollisionPoints points = new();
+
+            foreach (var seg in this)
+            {
+                var collisionPoints = seg.IntersectShape(s);
+                if (collisionPoints.Valid)
+                {
+                    points.AddRange(collisionPoints);
+                }
+            }
+            return points;
+        }
+        public CollisionPoints IntersectShape(Circle c)
+        {
+            CollisionPoints points = new();
+            foreach (var seg in this)
+            {
+                var intersectPoints = SGeometry.IntersectSegmentCircle(seg.Start, seg.End, c.Center, c.Radius);
+                foreach (var p in intersectPoints)
+                {
+                    Vector2 n = SVec.Normalize(p - c.Center);
+                    points.Add(new(p, n));
+                }
+            }
+            return points;
+        }
+        public CollisionPoints IntersectShape(Segments b)
+        {
+            CollisionPoints points = new();
+            foreach (var seg in this)
+            {
+                var collisionPoints = seg.IntersectShape(b);
+                if (collisionPoints.Valid)
+                {
+                    points.AddRange(collisionPoints);
+                }
+            }
+            return points;
+        }
+
+        #endregion
 
         /*
         /// <summary>

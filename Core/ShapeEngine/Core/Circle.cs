@@ -228,8 +228,234 @@ namespace ShapeEngine.Core
         public void DrawShape(float linethickness, Raylib_CsLo.Color color) => this.DrawLines(linethickness, color);
         #endregion
 
-        //public Vector2 GetReferencePoint() { return center; }
-        //public SegmentShape GetSegmentShape() { return new(this.GetEdges(), center); }
+
+        #region Overlap
+        public bool OverlapShape(Segments segments)
+        {
+            foreach (var seg in segments)
+            {
+                if (seg.OverlapShape(this)) return true;
+            }
+            return false;
+        }
+        public bool OverlapShape(Segment s)
+        {
+            if (Radius <= 0.0f) return Segment.IsPointOnSegment(Center, s.Start, s.End);
+            if (Contains(s.Start)) return true;
+            if (Contains(s.End)) return true;
+
+            Vector2 d = s.End - s.Start;
+            Vector2 lc = Center - s.Start;
+            Vector2 p = SVec.Project(lc, d);
+            Vector2 nearest = s.Start + p;
+
+            return
+                Contains(nearest) &&
+                p.LengthSquared() <= d.LengthSquared() &&
+                Vector2.Dot(p, d) >= 0.0f;
+        }
+        public bool OverlapShape(Circle b)
+        {
+            if (Radius <= 0.0f && b.Radius > 0.0f) return b.Contains(Center);
+            else if (b.Radius <= 0.0f && Radius > 0.0f) return Contains(b.Center);
+            else if (Radius <= 0.0f && b.Radius <= 0.0f) return Center == b.Center; // IsPointOnPoint(a.Center, b.Center);
+            float rSum = Radius + b.Radius;
+
+            return (Center - b.Center).LengthSquared() < rSum * rSum;
+        }
+        public bool OverlapShape(Triangle t) { return t.OverlapShape(this); }
+        public bool OverlapShape(Rect r)
+        {
+            if (Radius <= 0.0f) return r.Contains(Center);
+            return Contains(r.ClampOnRect(Center));
+        }
+        public bool OverlapShape(Polygon poly) { return poly.OverlapShape(this); }
+        public bool OverlapShape(Polyline pl) { return pl.OverlapShape(this); }
+        public bool OverlapCircleLine(Vector2 linePos, Vector2 lineDir)
+        {
+            Vector2 lc = Center - linePos;
+            Vector2 p = SVec.Project(lc, lineDir);
+            Vector2 nearest = linePos + p;
+            return Contains(nearest);
+        }
+        public bool OverlapCircleRay(Vector2 rayPos, Vector2 rayDir)
+        {
+            Vector2 w = Center - rayPos;
+            float p = w.X * rayDir.Y - w.Y * rayDir.X;
+            if (p < -Radius || p > Radius) return false;
+            float t = w.X * rayDir.X + w.Y * rayDir.Y;
+            if (t < 0.0f)
+            {
+                float d = w.LengthSquared();
+                if (d > Radius * Radius) return false;
+            }
+            return true;
+        }
+        #endregion
+
+        #region Intersect
+        public CollisionPoints IntersectShape(Circle cB)
+        {
+            float cx0 = Center.X;
+            float cy0 = Center.Y;
+            float radius0 = Radius;
+            float cx1 = cB.Center.X;
+            float cy1 = cB.Center.Y;
+            float radius1 = cB.Radius;
+            // Find the distance between the centers.
+            float dx = cx0 - cx1;
+            float dy = cy0 - cy1;
+            double dist = Math.Sqrt(dx * dx + dy * dy);
+
+            // See how many solutions there are.
+            if (dist > radius0 + radius1)
+            {
+                // No solutions, the circles are too far apart.
+                return new();
+            }
+            else if (dist < Math.Abs(radius0 - radius1))
+            {
+                // No solutions, one circle contains the other.
+                return new();
+            }
+            else if ((dist == 0) && (radius0 == radius1))
+            {
+                // No solutions, the circles coincide.
+                return new();
+            }
+            else
+            {
+                // Find a and h.
+                double a = (radius0 * radius0 - radius1 * radius1 + dist * dist) / (2 * dist);
+                double h = Math.Sqrt(radius0 * radius0 - a * a);
+
+                // Find P2.
+                double cx2 = cx0 + a * (cx1 - cx0) / dist;
+                double cy2 = cy0 + a * (cy1 - cy0) / dist;
+
+                // Get the points P3.
+                Vector2 intersection1 = new Vector2(
+                    (float)(cx2 + h * (cy1 - cy0) / dist),
+                    (float)(cy2 - h * (cx1 - cx0) / dist));
+                Vector2 intersection2 = new Vector2(
+                    (float)(cx2 - h * (cy1 - cy0) / dist),
+                    (float)(cy2 + h * (cx1 - cx0) / dist));
+
+                // See if we have 1 or 2 solutions.
+                if (dist == radius0 + radius1)
+                {
+                    Vector2 n = SVec.Normalize(intersection1 - new Vector2(cx1, cy1));
+                    return new() { new(intersection1, n) };
+                }
+                else
+                {
+                    Vector2 otherPos = new Vector2(cx1, cy1);
+                    Vector2 n1 = SVec.Normalize(intersection1 - otherPos);
+                    Vector2 n2 = SVec.Normalize(intersection2 - otherPos);
+                    //if problems occur add that back (David)
+                    //p,n
+                    return new() { new(intersection1, n1), new(intersection2, n2) };
+                }
+            }
+
+        }
+        public CollisionPoints IntersectShape(Segment s)
+        {
+            float cX = Center.X;
+            float cY = Center.Y;
+            float R = Radius;
+            float aX = s.Start.X;
+            float aY = s.Start.Y;
+            float bX = s.End.X;
+            float bY = s.End.Y;
+
+            float dX = bX - aX;
+            float dY = bY - aY;
+
+            Vector2 segmentNormal = s.Normal;
+
+            if ((dX == 0) && (dY == 0))
+            {
+                // A and B are the same points, no way to calculate intersection
+                return new();
+            }
+
+            float dl = (dX * dX + dY * dY);
+            float t = ((cX - aX) * dX + (cY - aY) * dY) / dl;
+
+            // point on a line nearest to circle center
+            float nearestX = aX + t * dX;
+            float nearestY = aY + t * dY;
+
+            float dist = (new Vector2(nearestX, nearestY) - new Vector2(cX, cY)).Length(); // point_dist(nearestX, nearestY, cX, cY);
+
+            if (dist == R)
+            {
+                // line segment touches circle; one intersection point
+                float iX = nearestX;
+                float iY = nearestY;
+
+                if (t >= 0f && t <= 1f)
+                {
+                    // intersection point is not actually within line segment
+                    Vector2 ip = new(iX, iY);
+                    return new() { new(ip, segmentNormal) };
+                }
+                else return new();
+            }
+            else if (dist < R)
+            {
+                CollisionPoints points = new();
+                float dt = MathF.Sqrt(R * R - dist * dist) / MathF.Sqrt(dl);
+
+                // intersection point nearest to A
+                float t1 = t - dt;
+                float i1X = aX + t1 * dX;
+                float i1Y = aY + t1 * dY;
+                if (t1 >= 0f && t1 <= 1f)
+                {
+                    // intersection point is actually within line segment
+                    Vector2 ip = new(i1X, i1Y);
+                    points.Add(new(ip, segmentNormal));
+                }
+
+                // intersection point farthest from A
+                float t2 = t + dt;
+                float i2X = aX + t2 * dX;
+                float i2Y = aY + t2 * dY;
+                if (t2 >= 0f && t2 <= 1f)
+                {
+                    Vector2 ip = new(i2X, i2Y);
+                    points.Add(new(ip, segmentNormal));
+                }
+
+                return points;
+            }
+            else
+            {
+                // no intersection
+                return new();
+            }
+        }
+        public CollisionPoints IntersectShape(Triangle t) { return IntersectShape(t.GetEdges()); }
+        public CollisionPoints IntersectShape(Rect r) { return IntersectShape(r.GetEdges()); }
+        public CollisionPoints IntersectShape(Polygon p) { return IntersectShape(p.GetEdges()); }
+        public CollisionPoints IntersectShape(Segments shape)
+        {
+            CollisionPoints points = new();
+            foreach (var seg in shape)
+            {
+                var intersectPoints = SGeometry.IntersectCircleSegment(Center, Radius, seg.Start, seg.End);
+                foreach (var p in intersectPoints)
+                {
+                    points.Add(new(p, seg.Normal));
+                }
+            }
+            return points;
+        }
+        public CollisionPoints IntersectShape(Polyline pl) { return IntersectShape(pl.GetEdges()); }
+
+        #endregion
     }
 }
 

@@ -355,7 +355,44 @@ namespace ShapeEngine.Core
         }
 
         public void DrawShape(float linethickness, Raylib_CsLo.Color color) => this.Draw(linethickness, color);
-#endregion
+        #endregion
+
+        #region Overlap
+        public bool OverlapShape(Segments segments) { return GetEdges().OverlapShape(segments); }
+        public bool OverlapShape(Segment s) { return GetEdges().OverlapShape(s); }
+        public bool OverlapShape(Circle c) { return GetEdges().OverlapShape(c); }
+        public bool OverlapShape(Triangle t) { return GetEdges().OverlapShape(t); }
+        public bool OverlapShape(Rect r) { return GetEdges().OverlapShape(r); }
+        public bool OverlapShape(Polygon p)
+        {
+            for (int i = 0; i < Count - 1; i++)
+            {
+                Vector2 startPolyline = Get(i); // pl[i];
+                if (p.Contains(startPolyline)) return true;
+                Vector2 endPolyline = Get(i + 1); // pl[(i + 1)];
+                Segment segPolyline = new(startPolyline, endPolyline);
+                for (int j = 0; j < p.Count; j++)
+                {
+                    Vector2 startPoly = p.Get(j); // p[j];
+                    Vector2 endPoly = p.Get(j); // p[(j + 1) % p.Count];
+                    Segment segPoly = new(startPoly, endPoly);
+                    if (segPolyline.OverlapShape(segPoly)) return true;
+                }
+            }
+            return false;
+        }
+        public bool OverlapShape(Polyline b) { return GetEdges().OverlapShape(b.GetEdges()); }
+        #endregion
+
+        #region Intersection
+        //other shape center is used for checking segment normal and if necessary normal is flipped
+        public CollisionPoints IntersectShape(Segment s) { return GetEdges().IntersectShape(s); }
+        public CollisionPoints IntersectShape(Circle c) { return GetEdges().IntersectShape(c); }
+        public CollisionPoints IntersectShape(Triangle t) { return GetEdges().IntersectShape(t.GetEdges()); }
+        public CollisionPoints IntersectShape(Rect r) { return GetEdges().IntersectShape(r.GetEdges()); }
+        public CollisionPoints IntersectShape(Polygon p) { return GetEdges().IntersectShape(p.GetEdges()); }
+        public CollisionPoints IntersectShape(Polyline b) { return GetEdges().IntersectShape(b.GetEdges()); }
+        #endregion
 
         /*
         //old
