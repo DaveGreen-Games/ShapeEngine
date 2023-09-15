@@ -135,7 +135,7 @@ namespace ShapeEngine.UI
         }
         public bool IsPointInside(Vector2 uiPos)
         {
-            return GetRect().Contains(uiPos);
+            return GetRect().ContainsPoint(uiPos);
             //return CheckCollisionPointRec(uiPos, GetRect().Rectangle);
         }
         public void Check(Vector2 prevMousePos, Vector2 mousePosUI, bool mouseDeselects = false, float mouseTolerance = 5f)

@@ -172,7 +172,7 @@ namespace ShapeEngine.Core
         public Triangulation Triangulate() { return new(); }
         public Circle GetBoundingCircle() { return ToPolygon().GetBoundingCircle(); }
         public Rect GetBoundingBox() { return new(Start, End); }
-        public bool Contains(Vector2 p) { return IsPointOnSegment(p, Start, End); }
+        public bool ContainsPoint(Vector2 p) { return IsPointOnSegment(p, Start, End); }
         public CollisionPoint GetClosestPoint(Vector2 p)
         {
             CollisionPoint c;

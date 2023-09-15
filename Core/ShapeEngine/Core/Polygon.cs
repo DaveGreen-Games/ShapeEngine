@@ -51,34 +51,34 @@ namespace ShapeEngine.Core
         #endregion
 
         #region Public
-        public bool Contains(Segment other)
+        public bool ContainsShape(Segment other)
         {
-            return Contains(other.Start) && Contains(other.End);
+            return ContainsPoint(other.Start) && ContainsPoint(other.End);
         }
-        public bool Contains(Circle other)
+        public bool ContainsShape(Circle other)
         {
             var points = other.GetVertices(8);
-            return Contains(points);
+            return ContainsShape(points);
         }
-        public bool Contains(Rect other)
+        public bool ContainsShape(Rect other)
         {
-            return Contains(other.TopLeft) &&
-                Contains(other.BottomLeft) &&
-                Contains(other.BottomRight) &&
-                Contains(other.TopRight);
+            return ContainsPoint(other.TopLeft) &&
+                ContainsPoint(other.BottomLeft) &&
+                ContainsPoint(other.BottomRight) &&
+                ContainsPoint(other.TopRight);
         }
-        public bool Contains(Triangle other)
+        public bool ContainsShape(Triangle other)
         {
-            return Contains(other.A) &&
-                Contains(other.B) &&
-                Contains(other.C);
+            return ContainsPoint(other.A) &&
+                ContainsPoint(other.B) &&
+                ContainsPoint(other.C);
         }
-        public bool Contains(Points points)
+        public bool ContainsShape(Points points)
         {
             if (points.Count <= 0) return false;
             foreach (var p in points)
             {
-                if (!Contains(p)) return false;
+                if (!ContainsPoint(p)) return false;
             }
             return true;
         }
@@ -707,7 +707,7 @@ namespace ShapeEngine.Core
                 foreach (var p in this)
                 {
                     if (p == a || p == b || p == c) continue;
-                    if (t.Contains(p))
+                    if (t.ContainsPoint(p))
                     {
                         isValid = false;
                         break;
@@ -1003,7 +1003,7 @@ namespace ShapeEngine.Core
             return closestSegment;
         }
 
-        public bool Contains(Vector2 p) { return IsPointInPoly(p, this); }
+        public bool ContainsPoint(Vector2 p) { return IsPointInPoly(p, this); }
         public Vector2 GetRandomPoint()
         {
             var triangles = Triangulate();
@@ -1098,8 +1098,8 @@ namespace ShapeEngine.Core
         public bool OverlapShape(Segment s)
         {
             if (Count < 3) return false;
-            if (Contains(s.Start)) return true;
-            if (Contains(s.End)) return true;
+            if (ContainsPoint(s.Start)) return true;
+            if (ContainsPoint(s.End)) return true;
             for (int i = 0; i < Count; i++)
             {
                 Vector2 start = Get(i); // this[i];
@@ -1112,10 +1112,10 @@ namespace ShapeEngine.Core
         public bool OverlapShape(Circle c)
         {
             if (Count < 3) return false;
-            if (Contains(c.Center)) return true;
+            if (ContainsPoint(c.Center)) return true;
             foreach (var p in this)
             {
-                if (c.Contains(p)) return true;
+                if (c.ContainsPoint(p)) return true;
             }
             for (int i = 0; i < Count; i++)
             {
@@ -1132,11 +1132,11 @@ namespace ShapeEngine.Core
             var corners = r.ToPolygon();
             foreach (var c in corners)
             {
-                if (Contains(c)) return true;
+                if (ContainsPoint(c)) return true;
             }
             foreach (var p in this)
             {
-                if (r.Contains(p)) return true;
+                if (r.ContainsPoint(p)) return true;
             }
 
             for (int i = 0; i < Count; i++)
@@ -1157,7 +1157,7 @@ namespace ShapeEngine.Core
             for (int j = 0; j < b.Count; j++)
             {
                 Vector2 startB = b.Get(j); // b[j];
-                if (Contains(startB)) return true;
+                if (ContainsPoint(startB)) return true;
                 Vector2 endB = b.Get(j + 1);// b[(j + 1) % b.Count];
                 Segment segB = new(startB, endB);
                 segmentsB.Add(segB);
@@ -1166,7 +1166,7 @@ namespace ShapeEngine.Core
             for (int i = 0; i < Count; i++)
             {
                 Vector2 startA = Get(i); //  a[i];
-                if (b.Contains(startA)) return true;
+                if (b.ContainsPoint(startA)) return true;
                 Vector2 endA = Get(i + 1); // a[(i + 1) % a.Count];
                 Segment segA = new(startA, endA);
                 if (segA.OverlapShape(segmentsB)) return true;

@@ -334,7 +334,7 @@ namespace ShapeEngine.Core
         public Triangulation Triangulate();
         public Rect GetBoundingBox();
         public Circle GetBoundingCircle();
-        public bool Contains(Vector2 p);
+        public bool ContainsPoint(Vector2 p);
         public CollisionPoint GetClosestPoint(Vector2 p);
         public Vector2 GetClosestVertex(Vector2 p);
         public Vector2 GetRandomPoint();

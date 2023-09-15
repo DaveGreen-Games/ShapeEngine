@@ -51,11 +51,11 @@ namespace ShapeEngine.Core
         #endregion
 
         #region Public
-        public bool Contains(Segment other)
+        public bool ContainsShape(Segment other)
         {
-            return Contains(other.Start) && Contains(other.End);
+            return ContainsPoint(other.Start) && ContainsPoint(other.End);
         }
-        public bool Contains(Circle other)
+        public bool ContainsShape(Circle other)
         {
             float rDif = Radius - other.Radius;
             if(rDif <= 0) return false;
@@ -63,25 +63,25 @@ namespace ShapeEngine.Core
             float disSquared = (Center - other.Center).LengthSquared();
             return disSquared < rDif * rDif;
         }
-        public bool Contains(Rect other)
+        public bool ContainsShape(Rect other)
         {
-            return Contains(other.TopLeft) &&
-                Contains(other.BottomLeft) &&
-                Contains(other.BottomRight) &&
-                Contains(other.TopRight);
+            return ContainsPoint(other.TopLeft) &&
+                ContainsPoint(other.BottomLeft) &&
+                ContainsPoint(other.BottomRight) &&
+                ContainsPoint(other.TopRight);
         }
-        public bool Contains(Triangle other)
+        public bool ContainsShape(Triangle other)
         {
-            return Contains(other.A) &&
-                Contains(other.B) &&
-                Contains(other.C);
+            return ContainsPoint(other.A) &&
+                ContainsPoint(other.B) &&
+                ContainsPoint(other.C);
         }
-        public bool Contains(Points points)
+        public bool ContainsShape(Points points)
         {
             if (points.Count <= 0) return false;
             foreach (var p in points)
             {
-                if (!Contains(p)) return false;
+                if (!ContainsPoint(p)) return false;
             }
             return true;
         }
@@ -190,7 +190,7 @@ namespace ShapeEngine.Core
         public float GetCircumference() { return MathF.PI * Radius * 2f; }
         public float GetCircumferenceSquared() { return GetCircumference() * GetCircumference(); }
         public Rect GetBoundingBox() { return new Rect(Center, new Vector2(Radius, Radius) * 2f, new(0.5f)); }
-        public bool Contains(Vector2 p) { return IsPointInCircle(p, Center, Radius); }
+        public bool ContainsPoint(Vector2 p) { return IsPointInCircle(p, Center, Radius); }
         public CollisionPoint GetClosestPoint(Vector2 p) 
         {
             Vector2 normal = (p - Center).Normalize();
@@ -241,8 +241,8 @@ namespace ShapeEngine.Core
         public bool OverlapShape(Segment s)
         {
             if (Radius <= 0.0f) return Segment.IsPointOnSegment(Center, s.Start, s.End);
-            if (Contains(s.Start)) return true;
-            if (Contains(s.End)) return true;
+            if (ContainsPoint(s.Start)) return true;
+            if (ContainsPoint(s.End)) return true;
 
             Vector2 d = s.End - s.Start;
             Vector2 lc = Center - s.Start;
@@ -250,14 +250,14 @@ namespace ShapeEngine.Core
             Vector2 nearest = s.Start + p;
 
             return
-                Contains(nearest) &&
+                ContainsPoint(nearest) &&
                 p.LengthSquared() <= d.LengthSquared() &&
                 Vector2.Dot(p, d) >= 0.0f;
         }
         public bool OverlapShape(Circle b)
         {
-            if (Radius <= 0.0f && b.Radius > 0.0f) return b.Contains(Center);
-            else if (b.Radius <= 0.0f && Radius > 0.0f) return Contains(b.Center);
+            if (Radius <= 0.0f && b.Radius > 0.0f) return b.ContainsPoint(Center);
+            else if (b.Radius <= 0.0f && Radius > 0.0f) return ContainsPoint(b.Center);
             else if (Radius <= 0.0f && b.Radius <= 0.0f) return Center == b.Center; // IsPointOnPoint(a.Center, b.Center);
             float rSum = Radius + b.Radius;
 
@@ -266,8 +266,8 @@ namespace ShapeEngine.Core
         public bool OverlapShape(Triangle t) { return t.OverlapShape(this); }
         public bool OverlapShape(Rect r)
         {
-            if (Radius <= 0.0f) return r.Contains(Center);
-            return Contains(r.ClampOnRect(Center));
+            if (Radius <= 0.0f) return r.ContainsPoint(Center);
+            return ContainsPoint(r.ClampOnRect(Center));
         }
         public bool OverlapShape(Polygon poly) { return poly.OverlapShape(this); }
         public bool OverlapShape(Polyline pl) { return pl.OverlapShape(this); }
@@ -276,7 +276,7 @@ namespace ShapeEngine.Core
             Vector2 lc = Center - linePos;
             Vector2 p = SVec.Project(lc, lineDir);
             Vector2 nearest = linePos + p;
-            return Contains(nearest);
+            return ContainsPoint(nearest);
         }
         public bool OverlapCircleRay(Vector2 rayPos, Vector2 rayDir)
         {

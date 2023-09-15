@@ -82,7 +82,7 @@ namespace Examples.Scenes.ExampleScenes
                 if (triangleResult.Valid)
                 {
                     var triangle = triangleResult.Object; 
-                    if(triangle.Contains(mousePosGame))
+                    if(triangle.ContainsPoint(mousePosGame))
                     {
                         closeTriangleIndex = curTriangulation.IndexOf(triangle);
                     }

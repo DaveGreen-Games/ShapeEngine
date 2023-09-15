@@ -110,34 +110,34 @@ namespace ShapeEngine.Core
 
         #region Public
 
-        public bool Contains(Segment other)
+        public bool ContainsShape(Segment other)
         {
-            return Contains(other.Start) && Contains(other.End);
+            return ContainsPoint(other.Start) && ContainsPoint(other.End);
         }
-        public bool Contains(Circle other)
+        public bool ContainsShape(Circle other)
         {
             var points = other.GetVertices(8);
-            return Contains(points);
+            return ContainsShape(points);
         }
-        public bool Contains(Rect other)
+        public bool ContainsShape(Rect other)
         {
-            return Contains(other.TopLeft) &&
-                Contains(other.BottomLeft) &&
-                Contains(other.BottomRight) &&
-                Contains(other.TopRight);
+            return ContainsPoint(other.TopLeft) &&
+                ContainsPoint(other.BottomLeft) &&
+                ContainsPoint(other.BottomRight) &&
+                ContainsPoint(other.TopRight);
         }
-        public bool Contains(Triangle other)
+        public bool ContainsShape(Triangle other)
         {
-            return Contains(other.A) &&
-                Contains(other.B) &&
-                Contains(other.C);
+            return ContainsPoint(other.A) &&
+                ContainsPoint(other.B) &&
+                ContainsPoint(other.C);
         }
-        public bool Contains(Points points)
+        public bool ContainsShape(Points points)
         {
             if (points.Count <= 0) return false;
             foreach (var p in points)
             {
-                if (!Contains(p)) return false;
+                if (!ContainsPoint(p)) return false;
             }
             return true;
         }
@@ -301,7 +301,7 @@ namespace ShapeEngine.Core
         public float GetCircumferenceSquared() { return GetCircumference() * GetCircumference(); }
         public float GetArea() { return Width * Height; }
         public Rect GetBoundingBox() { return this; }
-        public bool Contains(Vector2 p) { return IsPointInRect(p, TopLeft, Size); }
+        public bool ContainsPoint(Vector2 p) { return IsPointInRect(p, TopLeft, Size); }
         public CollisionPoint GetClosestPoint(Vector2 p) { return ToPolygon().GetClosestPoint(p); }
         public Vector2 GetClosestVertex(Vector2 p) { return ToPolygon().GetClosestVertex(p); }
         public Vector2 GetRandomPoint() { return new(SRNG.randF(X, X + Width), SRNG.randF(Y, Y + Height)); }

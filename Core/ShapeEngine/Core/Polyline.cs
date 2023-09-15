@@ -216,12 +216,12 @@ namespace ShapeEngine.Core
         public Points GetVertices() { return new(this); }
         
         
-        public bool Contains(Vector2 p)
+        public bool ContainsPoint(Vector2 p)
         {
             var segments = GetEdges();
             foreach (var segment in segments)
             {
-                if (segment.Contains(p)) return true;
+                if (segment.ContainsPoint(p)) return true;
             }
             return false;
         }
@@ -368,7 +368,7 @@ namespace ShapeEngine.Core
             for (int i = 0; i < Count - 1; i++)
             {
                 Vector2 startPolyline = Get(i); // pl[i];
-                if (p.Contains(startPolyline)) return true;
+                if (p.ContainsPoint(startPolyline)) return true;
                 Vector2 endPolyline = Get(i + 1); // pl[(i + 1)];
                 Segment segPolyline = new(startPolyline, endPolyline);
                 for (int j = 0; j < p.Count; j++)

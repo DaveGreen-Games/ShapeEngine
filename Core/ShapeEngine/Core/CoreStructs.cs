@@ -393,7 +393,7 @@ namespace ShapeEngine.Core
             for (int i = 0; i < Count; i++)
             {
                 var tri = this[i];
-                bool containsPoint = tri.Contains(p);
+                bool containsPoint = tri.ContainsPoint(p);
                 Vector2 closestPoint = tri.GetClosestPoint(p).Point;
                 float disSquared = (closestPoint - p).LengthSquared();
                 if (disSquared < minDisSquared)
@@ -463,7 +463,7 @@ namespace ShapeEngine.Core
             for (int i = 0; i < Count; i++)
             {
                 var tri = this[i];
-                if (tri.Contains(p)) result.Add(tri);
+                if (tri.ContainsPoint(p)) result.Add(tri);
             }
             return result;
         }
