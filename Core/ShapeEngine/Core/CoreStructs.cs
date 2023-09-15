@@ -61,9 +61,12 @@ namespace ShapeEngine.Core
     }
     public class Points : ShapeList<Vector2>, IEquatable<Points>
     {
+        #region Constructors
         public Points(params Vector2[] points) { AddRange(points); }
         public Points(IEnumerable<Vector2> points) { AddRange(points); }
+        #endregion
 
+        #region Equals & HashCode
         public override int GetHashCode() { return SUtils.GetHashCode(this); }
         public bool Equals(Points? other)
         {
@@ -75,7 +78,9 @@ namespace ShapeEngine.Core
             }
             return true;
         }
+        #endregion
 
+        #region Public
         public ClosestItem<Vector2> GetClosestItem(Vector2 p)
         {
             if (Count <= 0) return new();
@@ -106,7 +111,6 @@ namespace ShapeEngine.Core
             return new(uniqueVertices);
         }
 
-
         public Polygon ToPolygon()
         {
             return new Polygon(this);
@@ -120,8 +124,9 @@ namespace ShapeEngine.Core
         public void Ceiling() { Points.Ceiling(this); }
         public void Truncate() { Points.Truncate(this); }
         public void Round() { Points.Round(this); }
+        #endregion
 
-
+        #region Static
         public static void Floor(List<Vector2> points)
         {
             for (int i = 0; i < points.Count; i++)
@@ -150,15 +155,18 @@ namespace ShapeEngine.Core
                 points[i] = points[i].Truncate();
             }
         }
-
+        #endregion
     }
     public class Segments : ShapeList<Segment>
     {
+        #region Constructors
         public Segments() { }
         public Segments(IShape shape) { AddRange(shape.GetEdges()); }
         public Segments(params Segment[] edges) { AddRange(edges); }
         public Segments(IEnumerable<Segment> edges) { AddRange(edges); }
+        #endregion
 
+        #region Equals & HashCode
         public bool Equals(Segments? other)
         {
             if (other == null) return false;
@@ -170,6 +178,9 @@ namespace ShapeEngine.Core
             return true;
         }
         public override int GetHashCode() { return SUtils.GetHashCode(this); }
+        #endregion
+
+        #region Public
         public ClosestItem<Segment> GetClosestItem(Vector2 p)
         {
             if (Count <= 0) return new();
@@ -204,7 +215,6 @@ namespace ShapeEngine.Core
 
             return new(uniqueVertices);
         }
-        
         public Segments GetUniqueSegments()
         {
             HashSet<Segment> uniqueSegments = new HashSet<Segment>();
@@ -216,9 +226,6 @@ namespace ShapeEngine.Core
 
             return new(uniqueSegments);
         }
-
-
-
 
         /// <summary>
         /// Counts how often the specified segment appears in the list.
@@ -254,7 +261,7 @@ namespace ShapeEngine.Core
             foreach (var segment in this) { if (segment.IsSimilar(seg)) return true; }
             return false;
         }
-
+        #endregion
 
 
         /*
@@ -281,12 +288,28 @@ namespace ShapeEngine.Core
     }
     public class Triangulation : ShapeList<Triangle>
     {
+        #region Constructors
         public Triangulation() { }
         public Triangulation(IShape shape) { AddRange(shape.Triangulate()); }
         public Triangulation(params Triangle[] triangles) { AddRange(triangles); }
         public Triangulation(IEnumerable<Triangle> triangles) { AddRange(triangles); }
-
+        #endregion
         
+        #region Equals & HashCode
+        public override int GetHashCode() { return SUtils.GetHashCode(this); }
+        public bool Equals(Triangulation? other)
+        {
+            if (other == null) return false;
+            if (Count != other.Count) return false;
+            for (int i = 0; i < Count; i++)
+            {
+                if (this[i] != other[i]) return false;
+            }
+            return true;
+        }
+        #endregion
+
+        #region Public
         public ClosestItem<Triangle> GetClosestItem(Vector2 p)
         {
             if (Count <= 0) return new();
@@ -325,7 +348,6 @@ namespace ShapeEngine.Core
             }
             return new(closestTriangle, closestTrianglePoint, minDisSquared);
         }
-        
         
         public Points GetUniquePoints()
         {
@@ -374,19 +396,8 @@ namespace ShapeEngine.Core
             }
             return result;
         }
-        
 
-        public override int GetHashCode() { return SUtils.GetHashCode(this); }
-        public bool Equals(Triangulation? other)
-        {
-            if (other == null) return false;
-            if (Count != other.Count) return false;
-            for (int i = 0; i < Count; i++)
-            {
-                if (this[i] != other[i]) return false;
-            }
-            return true;
-        }
+        
         /// <summary>
         /// Get the total area of all triangles in this triangulation.
         /// </summary>
@@ -422,9 +433,9 @@ namespace ShapeEngine.Core
 
             return count;
         }
+        #endregion
 
-
-
+        #region Triangulation
         /// <summary>
         /// Get a new triangulation with triangles with an area >= areaThreshold.
         /// </summary>
@@ -521,6 +532,7 @@ namespace ShapeEngine.Core
             }
             return final;
         }
+        #endregion
     }
 
 
