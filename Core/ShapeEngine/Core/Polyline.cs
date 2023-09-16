@@ -17,12 +17,12 @@ namespace ShapeEngine.Core
         /// <summary>
         /// Points should be in CCW order. Use Reverse if they are in CW order.
         /// </summary>
-        /// <param name="points"></param>
+        /// <param name="edges"></param>
         public Polyline(IEnumerable<Vector2> edges) { AddRange(edges); }
         /// <summary>
         /// Points should be in CCW order. Use Reverse if they are in CW order.
         /// </summary>
-        /// <param name="points"></param>
+        /// <param name="shape"></param>
         public Polyline(IShape shape) { AddRange(shape.ToPolyline()); }
         public Polyline(Polyline polyLine) { AddRange(polyLine); }
         public Polyline(Polygon poly) { AddRange(poly); }
@@ -50,7 +50,7 @@ namespace ShapeEngine.Core
         /// Flips the calculated normals for each segment. 
         /// false means default is used. (facing right)
         /// </summary>
-        public bool FlippedNormals { get; set; } = false;
+        public bool FlippedNormals { get; set; }
         #endregion
 
         #region Public
@@ -159,7 +159,7 @@ namespace ShapeEngine.Core
             int num = this.Count;
             Vector2 origin = new();
             for (int i = 0; i < num; i++) { origin += this[i]; }
-            origin *= (1f / (float)num);
+            origin *= (1f / num);
             for (int i = 0; i < num; i++)
             {
                 float d = (origin - this[i]).LengthSquared();
@@ -324,7 +324,7 @@ namespace ShapeEngine.Core
             }
             return points;
         }
-        public Vector2 GetRandomVertex() { return SRNG.randCollection(this, false); }
+        public Vector2 GetRandomVertex() { return SRNG.randCollection(this); }
         public Segment GetRandomEdge()
         {
             var edges = GetEdges();

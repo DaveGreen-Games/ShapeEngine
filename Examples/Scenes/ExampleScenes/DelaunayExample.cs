@@ -69,19 +69,19 @@ namespace Examples.Scenes.ExampleScenes
             //}
 
 
-            var result = points.GetClosestItem(mousePosGame);
-            if(result.Valid && result.DisSquared <= pointDistanceSquared)
+            var result = points.GetClosest(mousePosGame);
+            if(result.Valid && result.DistanceSquared <= pointDistanceSquared)
             {
                 //rmb deletes point
-                closePointIndex = points.IndexOf(result.Object);
+                closePointIndex = points.IndexOf(result.Closest.Point);
             }
             else
             {
                 //rmb subdivides triangle
-                var triangleResult = curTriangulation.GetClosestItem(mousePosGame);
+                var triangleResult = curTriangulation.GetClosestTriangle(mousePosGame);
                 if (triangleResult.Valid)
                 {
-                    var triangle = triangleResult.Object; 
+                    var triangle = triangleResult.Item; 
                     if(triangle.ContainsPoint(mousePosGame))
                     {
                         closeTriangleIndex = curTriangulation.IndexOf(triangle);
