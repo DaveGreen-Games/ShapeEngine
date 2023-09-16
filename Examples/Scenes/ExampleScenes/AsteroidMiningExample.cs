@@ -408,14 +408,14 @@ namespace Examples.Scenes.ExampleScenes
             if (queryInfos.Count > 0)
             {
                 var closest = queryInfos[0];
-                if (closest.points.valid)
+                if (closest.Points.Valid)
                 {
-                    var other = closest.collidable;
+                    var other = closest.Collidable;
                     if (other != null && other is Asteroid a)
                     {
                         //perfect naming:)
-                        newDir = dir.Reflect(closest.points.closest.Normal);
-                        newEndPoint = closest.points.closest.Point;  //closest.intersection.ColPoints[0].Point;
+                        newDir = dir.Reflect(closest.Points.Closest.Normal);
+                        newEndPoint = closest.Points.Closest.Point;  //closest.intersection.ColPoints[0].Point;
                         a.Damage(damagePerSecond * dt, newEndPoint);
                     }
                 }

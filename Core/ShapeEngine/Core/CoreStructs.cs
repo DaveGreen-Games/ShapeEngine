@@ -46,8 +46,7 @@ namespace ShapeEngine.Core
         }
         public bool IsIndexValid(int index)
         {
-            if (index < 0 || index >= Count) return false;
-            return true;
+            return index >= 0 && index < Count;
         }
         public override int GetHashCode()
         {
@@ -86,10 +85,9 @@ namespace ShapeEngine.Core
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        public Vector2 Get(int index) 
+        public Vector2 Get(int index)
         {
-            if (Count <= 0) return new();
-            return this[index % Count]; 
+            return Count <= 0 ? new() : this[index % Count];
         }
         public ClosestItem<Vector2> GetClosestItem(Vector2 p)
         {
@@ -98,7 +96,7 @@ namespace ShapeEngine.Core
             float minDisSquared = float.PositiveInfinity;
             Vector2 closestPoint = new();
 
-            for (int i = 0; i < Count; i++)
+            for (var i = 0; i < Count; i++)
             {
                 var point = this[i];
 
@@ -113,8 +111,8 @@ namespace ShapeEngine.Core
         }
         public Points GetUniquePoints()
         {
-            HashSet<Vector2> uniqueVertices = new HashSet<Vector2>();
-            for (int i = 0; i < Count; i++)
+            var uniqueVertices = new HashSet<Vector2>();
+            for (var i = 0; i < Count; i++)
             {
                 uniqueVertices.Add(this[i]);
             }
@@ -181,7 +179,7 @@ namespace ShapeEngine.Core
         {
             if (other == null) return false;
             if (Count != other.Count) return false;
-            for (int i = 0; i < Count; i++)
+            for (var i = 0; i < Count; i++)
             {
                 if (this[i] != other[i]) return false;
             }
@@ -198,10 +196,10 @@ namespace ShapeEngine.Core
             float minDisSquared = float.PositiveInfinity;
             Segment closestSegment = new();
             Vector2 closestSegmentPoint = new();
-            for (int i = 0; i < Count; i++)
+            for (var i = 0; i < Count; i++)
             {
                 var seg = this[i];
-                Vector2 closestPoint = seg.GetClosestPoint(p).Point;
+                var closestPoint = seg.GetClosestPoint(p).Point;
                 float disSquared = (closestPoint - p).LengthSquared();
                 if(disSquared < minDisSquared)
                 {
@@ -215,7 +213,7 @@ namespace ShapeEngine.Core
         }
         public Points GetUniquePoints()
         {
-            HashSet<Vector2> uniqueVertices = new HashSet<Vector2>();
+            var uniqueVertices = new HashSet<Vector2>();
             for (int i = 0; i < Count; i++)
             {
                 var seg = this[i];
@@ -227,7 +225,7 @@ namespace ShapeEngine.Core
         }
         public Segments GetUniqueSegments()
         {
-            HashSet<Segment> uniqueSegments = new HashSet<Segment>();
+            var uniqueSegments = new HashSet<Segment>();
             for (int i = 0; i < Count; i++)
             {
                 var seg = this[i];
@@ -313,7 +311,7 @@ namespace ShapeEngine.Core
                 var intersectPoints = SGeometry.IntersectSegmentCircle(seg.Start, seg.End, c.Center, c.Radius);
                 foreach (var p in intersectPoints)
                 {
-                    Vector2 n = SVec.Normalize(p - c.Center);
+                    var n = SVec.Normalize(p - c.Center);
                     points.Add(new(p, n));
                 }
             }
@@ -372,7 +370,7 @@ namespace ShapeEngine.Core
         {
             if (other == null) return false;
             if (Count != other.Count) return false;
-            for (int i = 0; i < Count; i++)
+            for (var i = 0; i < Count; i++)
             {
                 if (this[i] != other[i]) return false;
             }
@@ -387,14 +385,14 @@ namespace ShapeEngine.Core
 
             float minDisSquared = float.PositiveInfinity;
             Triangle closestTriangle = new();
-            bool contained = false;
+            var contained = false;
             Vector2 closestTrianglePoint = new();
 
-            for (int i = 0; i < Count; i++)
+            for (var i = 0; i < Count; i++)
             {
                 var tri = this[i];
                 bool containsPoint = tri.ContainsPoint(p);
-                Vector2 closestPoint = tri.GetClosestPoint(p).Point;
+                var closestPoint = tri.GetClosestPoint(p).Point;
                 float disSquared = (closestPoint - p).LengthSquared();
                 if (disSquared < minDisSquared)
                 {
@@ -422,8 +420,8 @@ namespace ShapeEngine.Core
         
         public Points GetUniquePoints()
         {
-            HashSet<Vector2> uniqueVertices = new HashSet<Vector2>();
-            for (int i = 0; i < Count; i++)
+            var uniqueVertices = new HashSet<Vector2>();
+            for (var i = 0; i < Count; i++)
             {
                 var tri = this[i];
                 uniqueVertices.Add(tri.A);
@@ -435,8 +433,8 @@ namespace ShapeEngine.Core
         }
         public Segments GetUniqueSegments()
         {
-            HashSet<Segment> unique = new HashSet<Segment>();
-            for (int i = 0; i < Count; i++)
+            var unique = new HashSet<Segment>();
+            for (var i = 0; i < Count; i++)
             {
                 var tri = this[i];
                 unique.Add(tri.SegmentA);
@@ -448,8 +446,8 @@ namespace ShapeEngine.Core
         }
         public Triangulation GetUniqueTriangles()
         {
-            HashSet<Triangle> uniqueTriangles = new HashSet<Triangle>();
-            for (int i = 0; i < Count; i++)
+            var uniqueTriangles = new HashSet<Triangle>();
+            for (var i = 0; i < Count; i++)
             {
                 var tri = this[i];
                 uniqueTriangles.Add(tri);
@@ -460,7 +458,7 @@ namespace ShapeEngine.Core
         public Triangulation GetContainingTriangles(Vector2 p)
         {
             Triangulation result = new();
-            for (int i = 0; i < Count; i++)
+            for (var i = 0; i < Count; i++)
             {
                 var tri = this[i];
                 if (tri.ContainsPoint(p)) result.Add(tri);
@@ -475,7 +473,7 @@ namespace ShapeEngine.Core
         /// <returns></returns>
         public float GetArea()
         {
-            float total = 0f;
+            var total = 0f;
             foreach (var t in this)
             {
                 total += t.GetArea();
@@ -492,14 +490,12 @@ namespace ShapeEngine.Core
         {
             if (areaThreshold <= 0f) return 0;
 
-            int count = 0;
+            var count = 0;
             for (int i = Count - 1; i >= 0; i--)
             {
-                if (this[i].GetArea() < areaThreshold)
-                {
-                    RemoveAt(i);
-                    count++;
-                }
+                if (this[i].GetArea() >= areaThreshold) continue;
+                RemoveAt(i);
+                count++;
             }
 
             return count;
@@ -558,6 +554,7 @@ namespace ShapeEngine.Core
         /// </summary>
         /// <param name="minArea">Triangles with an area smaller than min area will never be subdivided.</param>
         /// <param name="maxArea">Triangles with an area bigger than maxArea will always be subdivided.</param>
+        /// <param name="keepChance">The chance to keep a triangle and not subdivide it.</param>
         /// <param name="narrowValue">Triangles that are considered narrow will not be subdivided.</param>
         /// <returns></returns>
         public Triangulation Subdivide(float minArea, float maxArea, float keepChance = 0.5f, float narrowValue = 0.2f)
@@ -567,11 +564,7 @@ namespace ShapeEngine.Core
             Triangulation final = new();
             Triangulation queue = new();
 
-            if (this.Count == 1)
-            {
-                queue.AddRange(this[0].Triangulate(minArea));
-            }
-            else queue.AddRange(this);
+            queue.AddRange(this.Count == 1 ? this[0].Triangulate(minArea) : this);
 
 
             while (queue.Count > 0)
@@ -610,7 +603,7 @@ namespace ShapeEngine.Core
 
     internal class DelayedAction : ISequenceable
     {
-        private Action action;
+        private readonly Action action;
         private float timer;
 
         public DelayedAction(float delay, Action action)
@@ -633,18 +626,15 @@ namespace ShapeEngine.Core
             else
             {
                 timer -= dt;
-                if (timer <= 0f)
-                {
-                    this.action.Invoke();
-                    return true;
-                }
+                if (timer > 0f) return false;
+                this.action.Invoke();
+                return true;
             }
-            return false;
         }
     }
     internal class DeferredInfo
     {
-        private Action action;
+        private readonly Action action;
         private int frames = 0;
         public DeferredInfo(Action action, int frames)
         {
@@ -671,16 +661,16 @@ namespace ShapeEngine.Core
     /// <summary>
     /// Returned by the Run() function in the GameLoop class.
     /// </summary>
-    public struct ExitCode
+    public readonly struct ExitCode
     {
-        public bool restart = false;
-        public ExitCode(bool restart) { this.restart = restart; }
+        public readonly bool Restart = false;
+        public ExitCode(bool restart) { this.Restart = restart; }
 
     }
-    public struct Dimensions : IEquatable<Dimensions>, IFormattable
+    public readonly struct Dimensions : IEquatable<Dimensions>, IFormattable
     {
-        public int Width;
-        public int Height;
+        public readonly int Width;
+        public readonly int Height;
 
         public Dimensions() { this.Width = 0; this.Height = 0; }
         public Dimensions(int value) { this.Width = value; this.Height = value; }
@@ -690,23 +680,10 @@ namespace ShapeEngine.Core
         public Dimensions(Vector2 v) { this.Width = (int)v.X; this.Height = (int)v.Y; }
 
         public bool IsValid() { return Width >= 0 && Height >= 0; }
-        public float Area { get => Width * Height; }
-        public int MaxDimension
-        {
-            get
-            {
-                if (Width > Height) return Width;
-                else return Height;
-            }
-        }
-        public int MinDimension
-        {
-            get
-            {
-                if (Width < Height) return Width;
-                else return Height;
-            }
-        }
+        public float Area => Width * Height;
+
+        public int MaxDimension => Width > Height ? Width : Height;
+        public int MinDimension => Width < Height ? Width : Height;
 
 
         public Vector2 ToVector2() { return new Vector2(Width, Height); }
@@ -717,13 +694,13 @@ namespace ShapeEngine.Core
         }
         public override bool Equals(object? obj)
         {
-            if (obj != null && obj is Dimensions d)
+            if (obj is Dimensions d)
             {
                 return Equals(d);
             }
             return false;
         }
-        public override readonly string ToString()
+        public readonly override string ToString()
         {
             return ToString("G", CultureInfo.CurrentCulture);
         }
@@ -833,7 +810,7 @@ namespace ShapeEngine.Core
             );
         }
 
-        public override readonly int GetHashCode()
+        public readonly override int GetHashCode()
         {
             return HashCode.Combine(Width, Height);
         }
@@ -872,7 +849,7 @@ namespace ShapeEngine.Core
         {
             this.Sort(delegate (ScreenTexture x, ScreenTexture y)
             {
-                if (x == null || y == null) return 0;
+                //if (x == null || y == null) return 0;
 
                 if (x.DrawOrder < y.DrawOrder) return -1;
                 else if (x.DrawOrder > y.DrawOrder) return 1;
@@ -910,9 +887,9 @@ namespace ShapeEngine.Core
 
     public class FractureInfo
     {
-        public Polygons NewShapes;
-        public Polygons Cutouts;
-        public Triangulation Pieces;
+        public readonly Polygons NewShapes;
+        public readonly Polygons Cutouts;
+        public readonly Triangulation Pieces;
 
         public FractureInfo(Polygons newShapes, Polygons cutouts, Triangulation pieces)
         {
@@ -958,8 +935,8 @@ namespace ShapeEngine.Core
 
     public class CollisionInformation
     {
-        public List<Collision> Collisions;
-        public CollisionSurface CollisionSurface;
+        public readonly List<Collision> Collisions;
+        public readonly CollisionSurface CollisionSurface;
         public CollisionInformation(List<Collision> collisions, bool computesIntersections)
         {
             this.Collisions = collisions;
@@ -968,7 +945,7 @@ namespace ShapeEngine.Core
             {
                 Vector2 avgPoint = new();
                 Vector2 avgNormal = new();
-                int count = 0;
+                var count = 0;
                 foreach (var col in collisions)
                 {
                     if (col.Intersection.Valid)
@@ -1046,12 +1023,12 @@ namespace ShapeEngine.Core
     }
     public class Collision
     {
-        public bool FirstContact;
-        public ICollidable Self;
-        public ICollidable Other;
-        public Vector2 SelfVel;
-        public Vector2 OtherVel;
-        public Intersection Intersection;
+        public readonly bool FirstContact;
+        public readonly ICollidable Self;
+        public readonly ICollidable Other;
+        public readonly Vector2 SelfVel;
+        public readonly Vector2 OtherVel;
+        public readonly Intersection Intersection;
 
         public Collision(ICollidable self, ICollidable other, bool firstContact)
         {
@@ -1075,9 +1052,9 @@ namespace ShapeEngine.Core
     }
     public class Intersection
     {
-        public bool Valid;
-        public CollisionSurface CollisionSurface;
-        public CollisionPoints ColPoints;
+        public readonly bool Valid;
+        public readonly CollisionSurface CollisionSurface;
+        public readonly CollisionPoints ColPoints;
 
         public Intersection() { this.Valid = false; this.CollisionSurface = new(); this.ColPoints = new(); }
         public Intersection(CollisionPoints points, Vector2 vel, Vector2 refPoint)
@@ -1092,7 +1069,7 @@ namespace ShapeEngine.Core
             {
                 Vector2 avgPoint = new();
                 Vector2 avgNormal = new();
-                int count = 0;
+                var count = 0;
                 foreach (var p in points)
                 {
                     if (DiscardNormal(p.Normal, vel)) continue;
@@ -1188,11 +1165,11 @@ namespace ShapeEngine.Core
 
     }
     
-    public struct CollisionSurface
+    public readonly struct CollisionSurface
     {
-        public Vector2 Point;
-        public Vector2 Normal;
-        public bool Valid;
+        public readonly Vector2 Point;
+        public readonly Vector2 Normal;
+        public readonly bool Valid;
 
         public CollisionSurface() { Point = new(); Normal = new(); Valid = false; }
         public CollisionSurface(Vector2 point, Vector2 normal)
@@ -1203,10 +1180,10 @@ namespace ShapeEngine.Core
         }
 
     }
-    public struct CollisionPoint : IEquatable<CollisionPoint>
+    public readonly struct CollisionPoint : IEquatable<CollisionPoint>
     {
-        public Vector2 Point;
-        public Vector2 Normal;
+        public readonly Vector2 Point;
+        public readonly Vector2 Normal;
 
         public CollisionPoint() { Point = new(); Normal = new(); }
         public CollisionPoint(Vector2 p, Vector2 n) { Point = p; Normal = n; }
@@ -1249,14 +1226,14 @@ namespace ShapeEngine.Core
                 (
                     (a, b) =>
                     {
-                        if (!a.points.valid) return 1;
-                        else if (!b.points.valid) return -1;
+                        if (!a.Points.Valid) return 1;
+                        else if (!b.Points.Valid) return -1;
                         
-                        float la = (origin - a.points.closest.Point).LengthSquared();
-                        float lb = (origin - b.points.closest.Point).LengthSquared();
+                        float la = (origin - a.Points.Closest.Point).LengthSquared();
+                        float lb = (origin - b.Points.Closest.Point).LengthSquared();
             
                         if (la > lb) return 1;
-                        else if (la == lb) return 0;
+                        else if (MathF.Abs(la - lb) < 0.01f) return 0;
                         else return -1;
                     }
                 );
@@ -1265,49 +1242,49 @@ namespace ShapeEngine.Core
     }
     public class QueryInfo
     {
-        public Vector2 origin;
-        public ICollidable collidable;
-        public QueryPoints points;
+        public readonly Vector2 Origin;
+        public readonly ICollidable Collidable;
+        public readonly QueryPoints Points;
 
         public QueryInfo(ICollidable collidable, Vector2 origin)
         {
-            this.collidable = collidable;
-            this.origin = origin;
-            this.points = new();
+            this.Collidable = collidable;
+            this.Origin = origin;
+            this.Points = new();
         }
         public QueryInfo(ICollidable collidable, Vector2 origin, CollisionPoints points)
         {
-            this.collidable = collidable;
-            this.origin = origin;
-            this.points = new(points, origin);
+            this.Collidable = collidable;
+            this.Origin = origin;
+            this.Points = new(points, origin);
         }
     }
     public class QueryPoints
     {
-        public bool valid;
-        public CollisionPoints points;
-        public CollisionPoint closest;
+        public readonly bool Valid;
+        public readonly CollisionPoints Points;
+        public readonly CollisionPoint Closest;
 
         public QueryPoints()
         {
-            this.valid = false;
-            this.points = new();
-            this.closest = new();
+            this.Valid = false;
+            this.Points = new();
+            this.Closest = new();
         }
         public QueryPoints(CollisionPoints points, Vector2 origin)
         {
             if(points.Count <= 0)
             {
-                this.valid = false;
-                this.points = new();
-                this.closest = new();
+                this.Valid = false;
+                this.Points = new();
+                this.Closest = new();
             }
             else
             {
-                this.valid = true;
+                this.Valid = true;
                 points.SortClosest(origin);
-                this.points = points;
-                this.closest = points[0];
+                this.Points = points;
+                this.Closest = points[0];
             }
         }
     }
@@ -1319,13 +1296,14 @@ namespace ShapeEngine.Core
         public CollisionPoints(IEnumerable<CollisionPoint> points) { AddRange(points); }
 
 
-        public bool Valid { get { return Count > 0; } }
+        public bool Valid => Count > 0;
+
         public void FlipNormals(Vector2 referencePoint)
         {
-            for (int i = 0; i < Count; i++)
+            for (var i = 0; i < Count; i++)
             {
                 var p = this[i];
-                Vector2 dir = referencePoint - p.Point;
+                var dir = referencePoint - p.Point;
                 if (dir.IsFacingTheOppositeDirection(p.Normal))
                     this[i] = this[i].FlipNormal();
             }
@@ -1339,16 +1317,14 @@ namespace ShapeEngine.Core
             float minDisSquared = float.PositiveInfinity;
             CollisionPoint closestPoint = new();
 
-            for (int i = 0; i < Count; i++)
+            for (var i = 0; i < Count; i++)
             {
                 var point = this[i];
 
                 float disSquared = (point.Point - p).LengthSquared();
-                if (disSquared < minDisSquared)
-                {
-                    minDisSquared = disSquared;
-                    closestPoint = point;
-                }
+                if (disSquared > minDisSquared) continue;
+                minDisSquared = disSquared;
+                closestPoint = point;
             }
             return new(closestPoint, closestPoint.Point, minDisSquared);
         }
@@ -1358,7 +1334,7 @@ namespace ShapeEngine.Core
         {
             if (other == null) return false;
             if (Count != other.Count) return false;
-            for (int i = 0; i < Count; i++)
+            for (var i = 0; i < Count; i++)
             {
                 if (this[i].Equals(other[i])) return false;
             }
@@ -1368,8 +1344,8 @@ namespace ShapeEngine.Core
 
         public Points GetUniquePoints()
         {
-            HashSet<Vector2> uniqueVertices = new HashSet<Vector2>();
-            for (int i = 0; i < Count; i++)
+            var uniqueVertices = new HashSet<Vector2>();
+            for (var i = 0; i < Count; i++)
             {
                 uniqueVertices.Add(this[i].Point);
             }
@@ -1377,8 +1353,8 @@ namespace ShapeEngine.Core
         }
         public CollisionPoints GetUniqueCollisionPoints()
         {
-            HashSet<CollisionPoint> unique = new HashSet<CollisionPoint>();
-            for (int i = 0; i < Count; i++)
+            var unique = new HashSet<CollisionPoint>();
+            for (var i = 0; i < Count; i++)
             {
                 unique.Add(this[i]);
             }
@@ -1389,13 +1365,13 @@ namespace ShapeEngine.Core
         {
             this.Sort
                 (
-                    (a, b) =>
+                    comparison: (a, b) =>
                     {
                         float la = (refPoint - a.Point).LengthSquared();
                         float lb = (refPoint - b.Point).LengthSquared();
 
                         if (la > lb) return 1;
-                        else if (la == lb) return 0;
+                        else if (MathF.Abs(x: la - lb) < 0.01f) return 0;
                         else return -1;
                     }
                 );
