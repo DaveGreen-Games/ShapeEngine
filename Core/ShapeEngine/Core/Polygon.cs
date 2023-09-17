@@ -316,6 +316,7 @@ namespace ShapeEngine.Core
         #region Static
         public static bool IsPointInPoly(Vector2 point, Polygon poly)
         {
+            
             bool oddNodes = false;
             int num = poly.Count;
             int j = num - 1;

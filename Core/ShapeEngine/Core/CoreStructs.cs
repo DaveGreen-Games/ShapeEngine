@@ -7,33 +7,7 @@ using System.Text;
 
 namespace ShapeEngine.Core
 {
-    /*//public interface IClosest
-    //{
-    //    public Vector2 GetClosestPoint(Vector2 p);
-    //}
-    public struct ClosestItem<T> where T : struct
-    {
-        public bool Valid;
-        public Vector2 ClosestPoint;
-        public T Object;
-        public float DisSquared;
-
-        public ClosestItem()
-        {
-            Object = default(T);
-            ClosestPoint = new();
-            DisSquared = 0f;
-            Valid = false;
-        }
-        public ClosestItem(T obj, Vector2 closestPoint, float disSquared)
-        {
-            Object = obj;
-            ClosestPoint = closestPoint;
-            DisSquared = disSquared;
-            Valid = true;
-        }
-    }*/
-
+    
     public readonly struct ClosestPoint
     {
         public readonly bool Valid => Closest.Valid;
