@@ -1,7 +1,7 @@
 ﻿using Raylib_CsLo;
 using ShapeEngine.Lib;
 using ShapeEngine.Persistent;
-using ShapeEngine;
+using ShapeEngine.Core;
 using Examples.Scenes;
 using ShapeEngine.Screen;
 
@@ -27,16 +27,16 @@ namespace Examples
 
 
             //fonts.Add(FontIDs.AbelRegular, ContentLoader.LoadFont("fonts/Abel-Regular.ttf", 200));
-            fonts.Add(FontIDs.GruppoRegular, ContentLoader.LoadFont("fonts/Gruppo-Regular.ttf", 200));
-            fonts.Add(FontIDs.IndieFlowerRegular, ContentLoader.LoadFont("fonts/IndieFlower-Regular.ttf", 200));
-            fonts.Add(FontIDs.OrbitRegular, ContentLoader.LoadFont("fonts/Orbit-Regular.ttf", 200));
-            fonts.Add(FontIDs.OrbitronBold, ContentLoader.LoadFont("fonts/Orbitron-Bold.ttf", 200));
-            fonts.Add(FontIDs.OrbitronRegular, ContentLoader.LoadFont("fonts/Orbitron-Regular.ttf", 200));
-            fonts.Add(FontIDs.PromptLightItalic, ContentLoader.LoadFont("fonts/Prompt-LightItalic.ttf", 200));
-            fonts.Add(FontIDs.PromptRegular, ContentLoader.LoadFont("fonts/Prompt-Regular.ttf", 200));
-            fonts.Add(FontIDs.PromptThin, ContentLoader.LoadFont("fonts/Prompt-Thin.ttf", 200));
-            fonts.Add(FontIDs.TekoMedium, ContentLoader.LoadFont("fonts/Teko-Medium.ttf", 200));
-            fonts.Add(FontIDs.JetBrains, ContentLoader.LoadFont("fonts/JetBrainsMono.ttf", 500));
+            fonts.Add(FontIDs.GruppoRegular, ContentLoader.LoadFont("fonts/Gruppo-Regular.ttf", 100));
+            fonts.Add(FontIDs.IndieFlowerRegular, ContentLoader.LoadFont("fonts/IndieFlower-Regular.ttf", 100));
+            fonts.Add(FontIDs.OrbitRegular, ContentLoader.LoadFont("fonts/Orbit-Regular.ttf", 100));
+            fonts.Add(FontIDs.OrbitronBold, ContentLoader.LoadFont("fonts/Orbitron-Bold.ttf", 100));
+            fonts.Add(FontIDs.OrbitronRegular, ContentLoader.LoadFont("fonts/Orbitron-Regular.ttf", 100));
+            fonts.Add(FontIDs.PromptLightItalic, ContentLoader.LoadFont("fonts/Prompt-LightItalic.ttf", 100));
+            fonts.Add(FontIDs.PromptRegular, ContentLoader.LoadFont("fonts/Prompt-Regular.ttf", 100));
+            fonts.Add(FontIDs.PromptThin, ContentLoader.LoadFont("fonts/Prompt-Thin.ttf", 100));
+            fonts.Add(FontIDs.TekoMedium, ContentLoader.LoadFont("fonts/Teko-Medium.ttf", 100));
+            fonts.Add(FontIDs.JetBrains, ContentLoader.LoadFont("fonts/JetBrainsMono.ttf", 100));
             
             //fontNames.Add("Abel Regular");
             fontNames.Add("Gruppo Regular");
