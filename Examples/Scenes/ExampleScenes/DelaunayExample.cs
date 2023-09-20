@@ -113,7 +113,7 @@ namespace Examples.Scenes.ExampleScenes
                 if(closeTriangleIndex >= 0)
                 {
                     Triangle t = curTriangulation[closeTriangleIndex];
-                    points.AddRange(t.GetRandomPoints(3));
+                    points.AddRange(t.GetRandomPointsInside(3));
                     Triangulate();
                 }
             }

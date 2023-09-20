@@ -43,7 +43,7 @@ namespace Examples.Scenes.ExampleScenes
             for (int i = 0; i < 250; i++)
             {
                 //Vector2 pos = SRNG.randVec2(0, 5000);
-                Vector2 pos = universe.GetRandomPoint();
+                Vector2 pos = universe.GetRandomPointInside();
                 float size = SRNG.randF(25, 100);
                 Pillar p = new(pos, size);
                 pillars.Add(p);

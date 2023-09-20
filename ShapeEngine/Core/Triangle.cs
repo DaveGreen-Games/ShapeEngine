@@ -17,12 +17,12 @@ namespace ShapeEngine.Core
         #endregion
 
         #region Getter Setter
-        public Vector2 SideA { get { return B - A; } }
-        public Vector2 SideB { get { return C - B; } }
-        public Vector2 SideC { get { return A - C; } }
-        public Segment SegmentA { get { return new Segment(A, B, FlippedNormals); } }
-        public Segment SegmentB { get { return new Segment(B, C, FlippedNormals); } }
-        public Segment SegmentC { get { return new Segment(C, A, FlippedNormals); } }
+        public readonly Vector2 SideA { get { return B - A; } }
+        public readonly Vector2 SideB { get { return C - B; } }
+        public readonly Vector2 SideC { get { return A - C; } }
+        public readonly Segment SegmentA { get { return new Segment(A, B, FlippedNormals); } }
+        public readonly Segment SegmentB { get { return new Segment(B, C, FlippedNormals); } }
+        public readonly Segment SegmentC { get { return new Segment(C, A, FlippedNormals); } }
            
         public bool FlippedNormals { get; set; } = false;
         #endregion
@@ -34,6 +34,7 @@ namespace ShapeEngine.Core
         /// <param name="a"></param>
         /// <param name="b"></param>
         /// <param name="c"></param>
+        /// <param name="flippedNormals"></param>
         public Triangle(Vector2 a, Vector2 b, Vector2 c, bool flippedNormals = false) 
         { 
             this.A = a; 
@@ -64,29 +65,29 @@ namespace ShapeEngine.Core
 
         #region Public
 
-        public bool ContainsShape(Segment other)
+        public readonly bool ContainsShape(Segment other)
         {
             return ContainsPoint(other.Start) && ContainsPoint(other.End);
         }
-        public bool ContainsShape(Circle other)
+        public readonly bool ContainsShape(Circle other)
         {
             var points = other.GetVertices(8);
             return ContainsShape(points);
         }
-        public bool ContainsShape(Rect other)
+        public readonly bool ContainsShape(Rect other)
         {
             return ContainsPoint(other.TopLeft) &&
                 ContainsPoint(other.BottomLeft) &&
                 ContainsPoint(other.BottomRight) &&
                 ContainsPoint(other.TopRight);
         }
-        public bool ContainsShape(Triangle other)
+        public readonly bool ContainsShape(Triangle other)
         {
             return ContainsPoint(other.A) &&
                 ContainsPoint(other.B) &&
                 ContainsPoint(other.C);
         }
-        public bool ContainsShape(Points points)
+        public readonly bool ContainsShape(Points points)
         {
             if (points.Count <= 0) return false;
             foreach (var p in points)
@@ -101,7 +102,7 @@ namespace ShapeEngine.Core
         /// </summary>
         /// <param name="p"></param>
         /// <returns></returns>
-        public Triangle ConstructAdjacentTriangle(Vector2 p)
+        public readonly Triangle ConstructAdjacentTriangle(Vector2 p)
         {
             if(ContainsPoint(p)) return this;
 
@@ -145,7 +146,6 @@ namespace ShapeEngine.Core
         /// <summary>
         /// Returns a point inside the triangle.
         /// </summary>
-        /// <param name="t">The triangle to find a point in.</param>
         /// <param name="f1">First value in the range 0 - 1.</param>
         /// <param name="f2">Second value in the range 0 - 1.</param>
         /// <returns></returns>
@@ -223,7 +223,7 @@ namespace ShapeEngine.Core
         }
 
         
-        public Triangle Rotate(float rad) { return Rotate(GetCentroid(), rad); }
+        public readonly Triangle Rotate(float rad) { return Rotate(GetCentroid(), rad); }
         public readonly Triangle Rotate(Vector2 pivot, float rad)
         {
             Vector2 newA = pivot + (A - pivot).Rotate(rad);
@@ -248,6 +248,99 @@ namespace ShapeEngine.Core
             return new(newA, newB, newC, FlippedNormals);
         }
         public readonly Triangle Move(Vector2 offset) { return new(A + offset, B + offset, C + offset, FlippedNormals); }
+        
+        public readonly Points GetVertices() { return new Points() {A, B, C}; }
+        public readonly Polygon ToPolygon() { return new Polygon() {A, B, C}; }
+        public readonly Segments GetEdges() { return new() { SegmentA, SegmentB, SegmentC }; }
+        public readonly Triangulation Triangulate() { return this.Triangulate(GetCentroid()); }
+        public readonly float GetCircumference() { return MathF.Sqrt(GetCircumferenceSquared()); }
+        public readonly float GetCircumferenceSquared() { return SideA.LengthSquared() + SideB.LengthSquared() + SideC.LengthSquared(); }
+        public readonly float GetArea() 
+        {
+            //float al = A.Length();
+            //float bl = B.Length();
+            //float cl = C.Length();
+            //
+            //
+            //float i = (al + bl + cl) / 2f;
+            //float area1 = MathF.Sqrt(i * (i - al) * (i - bl) * (i - cl));
+            //float area2 = MathF.Abs((a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X)) / 2f;
+            //if(MathF.Abs(area1 - area2) > 1)
+            //{
+            //    int breakpoint = 0;
+            //}
+
+            return MathF.Abs((A.X - C.X) * (B.Y - C.Y) - (A.Y - C.Y) * (B.X - C.X)) / 2f;
+        }
+        public readonly Vector2 GetClosestVertex(Vector2 p) { return ToPolygon().GetClosestVertex(p); }
+        public readonly Segment GetClosestSegment(Vector2 p)
+        {
+            Segment closestSegment = new();
+            float minDisSquared = float.PositiveInfinity;
+
+            Segment seg = SegmentA;
+            float l = (seg.GetClosestPoint(p).Point - p).LengthSquared();
+            if (l < minDisSquared)
+            {
+                minDisSquared = l;
+                closestSegment = seg;
+            }
+            seg = SegmentB;
+            l = (seg.GetClosestPoint(p).Point - p).LengthSquared();
+            if (l < minDisSquared)
+            {
+                minDisSquared = l;
+                closestSegment = seg;
+            }
+            seg = SegmentC;
+            l = (seg.GetClosestPoint(p).Point - p).LengthSquared();
+            if (l < minDisSquared)
+            {
+                //minDisSquared = l;
+                closestSegment = seg;
+            }
+            return closestSegment;
+
+        }
+        public readonly Vector2 GetRandomPointInside() { return this.GetPoint(SRNG.randF(), SRNG.randF()); }
+        public readonly Points GetRandomPointsInside(int amount)
+        {
+            var points = new Points();
+            for (int i = 0; i < amount; i++)
+            {
+                points.Add(GetRandomPointInside());
+            }
+            return points;
+        }
+        public readonly Vector2 GetRandomVertex() { return SRNG.randCollection(GetVertices()); }
+        public readonly Segment GetRandomEdge() 
+        {
+            var edges = GetEdges();
+            List<WeightedItem<Segment>> items = new(edges.Count);
+            foreach (var edge in edges)
+            {
+                items.Add(new(edge, (int)edge.LengthSquared));
+            }
+            return SRNG.PickRandomItem(items.ToArray());
+            //return SRNG.randCollection(GetEdges(), false); 
+        }
+        public readonly Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
+        public readonly Points GetRandomPointsOnEdge(int amount)
+        {
+            List<WeightedItem<Segment>> items = new(amount);
+            var edges = GetEdges();
+            foreach (var edge in edges)
+            {
+                items.Add(new(edge, (int)edge.LengthSquared));
+            }
+            var pickedEdges = SRNG.PickRandomItems(amount, items.ToArray());
+            var randomPoints = new Points();
+            foreach (var edge in pickedEdges)
+            {
+                randomPoints.Add(edge.GetRandomPoint());
+            }
+            return randomPoints;
+        }
         #endregion
 
         #region Static
@@ -312,109 +405,15 @@ namespace ShapeEngine.Core
         #endregion
 
         #region IShape
-        public Vector2 GetCentroid() { return (A + B + C) / 3; }
-        public Points GetVertices() { return new(A, B, C); }
-        public Polygon ToPolygon() { return new(A, B, C); }
-        public Polyline ToPolyline() { return new(A, B, C); }
-        public Segments GetEdges() { return new() { SegmentA, SegmentB, SegmentC }; }
-        public Triangulation Triangulate() { return this.Triangulate(GetCentroid()); }
-        public Circle GetBoundingCircle() { return GetCircumCircle(); } // ToPolygon().GetBoundingCircle(); }
-        public float GetCircumference() { return MathF.Sqrt(GetCircumferenceSquared()); }
-        public float GetCircumferenceSquared() { return SideA.LengthSquared() + SideB.LengthSquared() + SideC.LengthSquared(); }
-        public readonly float GetArea() 
-        {
-            //float al = A.Length();
-            //float bl = B.Length();
-            //float cl = C.Length();
-            //
-            //
-            //float i = (al + bl + cl) / 2f;
-            //float area1 = MathF.Sqrt(i * (i - al) * (i - bl) * (i - cl));
-            //float area2 = MathF.Abs((a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X)) / 2f;
-            //if(MathF.Abs(area1 - area2) > 1)
-            //{
-            //    int breakpoint = 0;
-            //}
-
-            return MathF.Abs((A.X - C.X) * (B.Y - C.Y) - (A.Y - C.Y) * (B.X - C.X)) / 2f;
-        }
-        public Rect GetBoundingBox() { return new Rect(A.X, A.Y, 0, 0).Enlarge(B).Enlarge(C); }
-        public bool ContainsPoint(Vector2 p) { return IsPointInTriangle(A, B, C, p); }
-        public CollisionPoint GetClosestPoint(Vector2 p) { return ToPolygon().GetClosestPoint(p); }
-        public Vector2 GetClosestVertex(Vector2 p) { return ToPolygon().GetClosestVertex(p); }
-        public Segment GetClosestSegment(Vector2 p)
-        {
-            Segment closestSegment = new();
-            float minDisSquared = float.PositiveInfinity;
-
-            Segment seg = SegmentA;
-            float l = (seg.GetClosestPoint(p).Point - p).LengthSquared();
-            if (l < minDisSquared)
-            {
-                minDisSquared = l;
-                closestSegment = seg;
-            }
-            seg = SegmentB;
-            l = (seg.GetClosestPoint(p).Point - p).LengthSquared();
-            if (l < minDisSquared)
-            {
-                minDisSquared = l;
-                closestSegment = seg;
-            }
-            seg = SegmentC;
-            l = (seg.GetClosestPoint(p).Point - p).LengthSquared();
-            if (l < minDisSquared)
-            {
-                minDisSquared = l;
-                closestSegment = seg;
-            }
-            return closestSegment;
-
-        }
-        public Vector2 GetRandomPoint() { return this.GetPoint(SRNG.randF(), SRNG.randF()); }
-        public Points GetRandomPoints(int amount)
-        {
-            var points = new Points();
-            for (int i = 0; i < amount; i++)
-            {
-                points.Add(GetRandomPoint());
-            }
-            return points;
-        }
-        public Vector2 GetRandomVertex() { return SRNG.randCollection(GetVertices(), false); }
-        public Segment GetRandomEdge() 
-        {
-            var edges = GetEdges();
-            List<WeightedItem<Segment>> items = new(edges.Count);
-            foreach (var edge in edges)
-            {
-                items.Add(new(edge, (int)edge.LengthSquared));
-            }
-            return SRNG.PickRandomItem(items.ToArray());
-            //return SRNG.randCollection(GetEdges(), false); 
-        }
-        public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
-        public Points GetRandomPointsOnEdge(int amount)
-        {
-            List<WeightedItem<Segment>> items = new(amount);
-            var edges = GetEdges();
-            foreach (var edge in edges)
-            {
-                items.Add(new(edge, (int)edge.LengthSquared));
-            }
-            var pickedEdges = SRNG.PickRandomItems(amount, items.ToArray());
-            var randomPoints = new Points();
-            foreach (var edge in pickedEdges)
-            {
-                randomPoints.Add(edge.GetRandomPoint());
-            }
-            return randomPoints;
-        }
-        public void DrawShape(float linethickness, Raylib_CsLo.Color color) => this.DrawLines(linethickness, color);
+        public readonly Vector2 GetCentroid() { return (A + B + C) / 3; }
+        public readonly Rect GetBoundingBox() { return new Rect(A.X, A.Y, 0, 0).Enlarge(B).Enlarge(C); }
+        public readonly bool ContainsPoint(Vector2 p) { return IsPointInTriangle(A, B, C, p); }
+        public readonly CollisionPoint GetClosestPoint(Vector2 p) { return ToPolygon().GetClosestPoint(p); }
+        public readonly Circle GetBoundingCircle() { return GetCircumCircle(); } // ToPolygon().GetBoundingCircle(); }
         #endregion
 
         #region Overlap
-        public bool OverlapShape(Segments segments)
+        public readonly bool OverlapShape(Segments segments)
         {
             foreach (var seg in segments)
             {
@@ -422,23 +421,23 @@ namespace ShapeEngine.Core
             }
             return false;
         }
-        public bool OverlapShape(Segment s) { return ToPolygon().OverlapShape(s); }
-        public bool OverlapShape(Circle c) { return ToPolygon().OverlapShape(c); }
-        public bool OverlapShape(Triangle b) { return ToPolygon().OverlapShape(b.ToPolygon()); }
-        public bool OverlapShape(Rect r) { return ToPolygon().OverlapShape(r); }
-        public bool OverlapShape(Polygon poly) { return OverlapShape(poly); }
-        public bool OverlapShape(Polyline pl) { return pl.OverlapShape(this); }
+        public readonly bool OverlapShape(Segment s) { return ToPolygon().OverlapShape(s); }
+        public readonly bool OverlapShape(Circle c) { return ToPolygon().OverlapShape(c); }
+        public readonly bool OverlapShape(Triangle b) { return ToPolygon().OverlapShape(b.ToPolygon()); }
+        public readonly bool OverlapShape(Rect r) { return ToPolygon().OverlapShape(r); }
+        public readonly bool OverlapShape(Polygon poly) { return poly.OverlapShape(this); }
+        public readonly bool OverlapShape(Polyline pl) { return pl.OverlapShape(this); }
 
 
         #endregion
 
         #region Intersect
-        public CollisionPoints IntersectShape(Segment s) { return GetEdges().IntersectShape(s); }
-        public CollisionPoints IntersectShape(Circle c) { return ToPolygon().IntersectShape(c); }
-        public CollisionPoints IntersectShape(Triangle b) { return ToPolygon().IntersectShape(b.ToPolygon()); }
-        public CollisionPoints IntersectShape(Rect r) { return ToPolygon().IntersectShape(r.ToPolygon()); }
-        public CollisionPoints IntersectShape(Polygon p) { return ToPolygon().IntersectShape(p); }
-        public CollisionPoints IntersectShape(Polyline pl) { return GetEdges().IntersectShape(pl.GetEdges()); }
+        public readonly CollisionPoints IntersectShape(Segment s) { return GetEdges().IntersectShape(s); }
+        public readonly CollisionPoints IntersectShape(Circle c) { return ToPolygon().IntersectShape(c); }
+        public readonly CollisionPoints IntersectShape(Triangle b) { return ToPolygon().IntersectShape(b.ToPolygon()); }
+        public readonly CollisionPoints IntersectShape(Rect r) { return ToPolygon().IntersectShape(r.ToPolygon()); }
+        public readonly CollisionPoints IntersectShape(Polygon p) { return ToPolygon().IntersectShape(p); }
+        public readonly CollisionPoints IntersectShape(Polyline pl) { return GetEdges().IntersectShape(pl.GetEdges()); }
         #endregion
     }
 }

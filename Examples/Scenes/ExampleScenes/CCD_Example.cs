@@ -67,7 +67,7 @@ namespace Examples.Scenes.ExampleScenes
             float colF = collisionTimer > 0f ? collisionTimer / collisionTime : 0f;
             Color color = STween.Tween(ExampleScene.ColorHighlight2, ExampleScene.ColorHighlight1, colF, TweenType.QUAD_IN);
 
-            Collider.GetShape().DrawShape(4f, color);
+            Collider.DrawShape(4f, color);
             lastIntersection.Draw(2f, ExampleScene.ColorLight, ExampleScene.ColorLight);
 
             //DrawCircleV(Collider.Pos, 25, BLUE);

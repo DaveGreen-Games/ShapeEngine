@@ -5,6 +5,14 @@ using System.Globalization;
 using System.Numerics;
 using System.Text;
 
+//Stopwatch functionality
+//using System.Diagnostics;
+//public readonly Stopwatch watch = new();
+//watch.Restart();
+//watch.Stop();
+//var ms = watch.Elapsed.TotalMilliseconds;
+//Console.WriteLine(ms);
+
 namespace ShapeEngine.Core
 {
     
@@ -108,7 +116,7 @@ namespace ShapeEngine.Core
     public class Points : ShapeList<Vector2>, IEquatable<Points>
     {
         #region Constructors
-        public Points(params Vector2[] points) { AddRange(points); }
+        public Points(){}
         public Points(IEnumerable<Vector2> points) { AddRange(points); }
         #endregion
 
@@ -216,8 +224,7 @@ namespace ShapeEngine.Core
     {
         #region Constructors
         public Segments() { }
-        public Segments(IShape shape) { AddRange(shape.GetEdges()); }
-        public Segments(params Segment[] edges) { AddRange(edges); }
+        //public Segments(IShape shape) { AddRange(shape.GetEdges()); }
         public Segments(IEnumerable<Segment> edges) { AddRange(edges); }
         #endregion
 
@@ -406,8 +413,7 @@ namespace ShapeEngine.Core
     {
         #region Constructors
         public Triangulation() { }
-        public Triangulation(IShape shape) { AddRange(shape.Triangulate()); }
-        public Triangulation(params Triangle[] triangles) { AddRange(triangles); }
+        //public Triangulation(IShape shape) { AddRange(shape.Triangulate()); }
         public Triangulation(IEnumerable<Triangle> triangles) { AddRange(triangles); }
         #endregion
         

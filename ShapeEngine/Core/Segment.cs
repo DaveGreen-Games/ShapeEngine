@@ -23,7 +23,8 @@ namespace ShapeEngine.Core
         //        return GetNormal();
         //    } 
         //}
-        public bool FlippedNormals { get { return flippedNormals; } readonly set { } }
+        public bool FlippedNormals { get { return flippedNormals; }
+            set { } }
         public Vector2 Center { get { return (Start + End) * 0.5f; } }
         public Vector2 Dir { get { return Displacement.Normalize(); } }
         public Vector2 Displacement { get { return End - Start; } }
@@ -51,80 +52,108 @@ namespace ShapeEngine.Core
 
         #region Public
         
-        public readonly Segment Floor()
+        public Segment Floor()
         {
             return new(Start.Floor(), End.Floor(), FlippedNormals);
         }
-        public readonly Segment Ceiling()
+        public Segment Ceiling()
         {
             return new(Start.Ceiling(), End.Ceiling(), FlippedNormals);
         }
-        public readonly Segment Round()
+        public Segment Round()
         {
             return new(Start.Round(), End.Round(), FlippedNormals);
         }
-        public readonly Segment Truncate()
+        public Segment Truncate()
         {
             return new(Start.Truncate(), End.Truncate(), FlippedNormals);
         }
 
-        public readonly Segments Split(float f)
+        public Segments Split(float f)
         {
             return Split(this.GetPoint(f));
         }
-        public readonly Segments Split(Vector2 splitPoint)
+        public Segments Split(Vector2 splitPoint)
         {
             Segment A = new(Start, splitPoint, FlippedNormals);
             Segment B = new(splitPoint, End, FlippedNormals);
             return new() { A, B };
         }
 
-        public readonly Segment SetStart(Vector2 newStart) { return new(newStart, End, FlippedNormals); }
-        public readonly Segment MoveStart(Vector2 translation) { return new(Start + translation, End, FlippedNormals); }
-        public readonly Segment SetEnd(Vector2 newEnd) { return new(Start, newEnd, FlippedNormals); }
-        public readonly Segment MoveEnd(Vector2 translation) { return new(Start, End + translation, FlippedNormals); }
+        public Segment SetStart(Vector2 newStart) { return new(newStart, End, FlippedNormals); }
+        public Segment MoveStart(Vector2 translation) { return new(Start + translation, End, FlippedNormals); }
+        public Segment SetEnd(Vector2 newEnd) { return new(Start, newEnd, FlippedNormals); }
+        public Segment MoveEnd(Vector2 translation) { return new(Start, End + translation, FlippedNormals); }
         
-        public readonly Vector2 GetPoint(float f) { return Start.Lerp(End, f); }
-        public readonly Segment Rotate(float pivot, float rad)
+        public Vector2 GetPoint(float f) { return Start.Lerp(End, f); }
+        public Segment Rotate(float pivot, float rad)
         {
             Vector2 p = GetPoint(pivot);
             Vector2 s = Start - p;
             Vector2 e = End - p;
             return new Segment(p + s.Rotate(rad), p + e.Rotate(rad));
         }
-        public readonly Segment Scale(float scale) { return new(Start * scale, End * scale); }
-        public readonly Segment Scale(Vector2 scale) { return new(Start * scale, End * scale); }
-        public readonly Segment Scale(float startScale, float endScale) { return new(Start * startScale, End * endScale); }
-        public readonly Segment ScaleF(float scale, float f)
+        public Segment Scale(float scale) { return new(Start * scale, End * scale); }
+        public Segment Scale(Vector2 scale) { return new(Start * scale, End * scale); }
+        public Segment Scale(float startScale, float endScale) { return new(Start * startScale, End * endScale); }
+        public Segment ScaleF(float scale, float f)
         {
             Vector2 p = GetPoint(f);
             Vector2 s = Start - p;
             Vector2 e = End - p;
             return new Segment(p + s * scale, p + e * scale);
         }
-        public readonly Segment ScaleF(Vector2 scale, float f)
+        public Segment ScaleF(Vector2 scale, float f)
         {
             Vector2 p = GetPoint(f);
             Vector2 s = Start - p;
             Vector2 e = End - p;
             return new Segment(p + s * scale, p + e * scale);
         }
-        public readonly Segment Move(Vector2 offset, float f) { return new(Start + (offset * (1f - f)), End + (offset * (f))); }
-        public readonly Segment Move(Vector2 offset) { return new(Start + offset, End + offset); }
-        public readonly Segment Move(float x, float y) { return Move(new Vector2(x, y)); }
-        public readonly Points Inflate(float thickness, float alignement = 0.5f)
+        public Segment Move(Vector2 offset, float f) { return new(Start + (offset * (1f - f)), End + (offset * (f))); }
+        public Segment Move(Vector2 offset) { return new(Start + offset, End + offset); }
+        public Segment Move(float x, float y) { return Move(new Vector2(x, y)); }
+        public Points Inflate(float thickness, float alignement = 0.5f)
         {
-            float w = thickness;
-            Vector2 dir = Dir;
-            Vector2 left = dir.GetPerpendicularLeft();
-            Vector2 right = dir.GetPerpendicularRight();
-            Vector2 a = Start + left * w * alignement;
-            Vector2 b = Start + right * w * (1 - alignement);
-            Vector2 c = End + right * w * (1 - alignement);
-            Vector2 d = End + left * w * alignement;
+            var dir = Dir;
+            var left = dir.GetPerpendicularLeft();
+            var right = dir.GetPerpendicularRight();
+            var a = Start + left * thickness * alignement;
+            var b = Start + right * thickness * (1 - alignement);
+            var c = End + right * thickness * (1 - alignement);
+            var d = End + left * thickness * alignement;
 
             return new() { a, b, c, d };
         }
+
+        public Points GetVertices()
+        {
+            var points = new Points
+            {
+                Start,
+                End
+            };
+            return points;
+        }
+        public Polyline ToPolyline() { return new Polyline() {Start, End}; }
+        public Segments GetEdges() { return new Segments(){this}; }
+        public Vector2 GetClosestVertex(Vector2 p)
+        {
+            float disSqA = (p - Start).LengthSquared();
+            float disSqB = (p - End).LengthSquared();
+            return disSqA <= disSqB ? Start : End;
+        }
+        public Vector2 GetRandomPoint() { return this.GetPoint(SRNG.randF()); }
+        public Points GetRandomPoints(int amount)
+        {
+            var points = new Points();
+            for (int i = 0; i < amount; i++)
+            {
+                points.Add(GetRandomPoint());
+            }
+            return points;
+        }
+        public Vector2 GetRandomVertex() { return SRNG.chance(0.5f) ? Start : End; }
 
         #endregion
 
@@ -160,18 +189,9 @@ namespace ShapeEngine.Core
         #endregion
 
         #region IShape
-        public Vector2 GetCentroid() { return Center; }
-        public float GetArea() { return 0f; }
-        public float GetCircumference() { return Length; }
-        public float GetCircumferenceSquared() { return LengthSquared; }
-        public Points GetVertices() { return new(Start, End); }
-        public Polygon ToPolygon() { return new(Start, End); }
-        public Polyline ToPolyline() { return new(Start, End); }
-        public Segments GetEdges() { return new(this); }
-        
-        public Triangulation Triangulate() { return new(); }
-        public Circle GetBoundingCircle() { return ToPolygon().GetBoundingCircle(); }
         public Rect GetBoundingBox() { return new(Start, End); }
+        public Circle GetBoundingCircle() { return ToPolyline().GetBoundingCircle(); }
+        public Vector2 GetCentroid() { return Center; }
         public bool ContainsPoint(Vector2 p) { return IsPointOnSegment(p, Start, End); }
         public CollisionPoint GetClosestPoint(Vector2 p)
         {
@@ -185,35 +205,6 @@ namespace ShapeEngine.Core
             //if (AutomaticNormals) return c.FlipNormal(p);
             return c;
         }
-        public Vector2 GetClosestVertex(Vector2 p)
-        {
-            float disSqA = (p - Start).LengthSquared();
-            float disSqB = (p - End).LengthSquared();
-            return disSqA <= disSqB ? Start : End;
-        }
-        public Vector2 GetRandomPoint() { return this.GetPoint(SRNG.randF()); }
-        public Points GetRandomPoints(int amount)
-        {
-            var points = new Points();
-            for (int i = 0; i < amount; i++)
-            {
-                points.Add(GetRandomPoint());
-            }
-            return points;
-        }
-        public Vector2 GetRandomVertex() { return SRNG.chance(0.5f) ? Start : End; }
-        public Segment GetRandomEdge() { return this; }
-        public Vector2 GetRandomPointOnEdge() { return GetRandomPoint(); }
-        public Points GetRandomPointsOnEdge(int amount)
-        {
-            var points = new Points();
-            for (int i = 0; i < amount; i++)
-            {
-                points.Add(GetRandomPointOnEdge());
-            }
-            return points;
-        }
-        public void DrawShape(float linethickness, Raylib_CsLo.Color color) => this.Draw(linethickness, color);
         #endregion
 
         #region Equality & HashCode
@@ -236,7 +227,7 @@ namespace ShapeEngine.Core
         {
             return Start == other.Start && End == other.End;
         }
-        public override readonly int GetHashCode()
+        public override int GetHashCode()
         {
             return HashCode.Combine(Start, End);
         }
@@ -365,16 +356,14 @@ namespace ShapeEngine.Core
 
             float dist = (new Vector2(nearestX, nearestY) - new Vector2(cX, cY)).Length(); // point_dist(nearestX, nearestY, cX, cY);
 
-            if (dist == R)
+            if (Math.Abs(dist - R) < 0.01f)
             {
                 // line segment touches circle; one intersection point
-                float iX = nearestX;
-                float iY = nearestY;
 
                 if (t >= 0f && t <= 1f)
                 {
                     // intersection point is not actually within line segment
-                    Vector2 ip = new(iX, iY);
+                    Vector2 ip = new(nearestX, nearestY);
                     Vector2 n = SVec.Normalize(ip - new Vector2(cX, cY));
                     return new() { new(ip, n) };
                 }
@@ -438,10 +427,10 @@ namespace ShapeEngine.Core
 
         #endregion
 
-        public void DrawNormal(float linethickness, float length, Raylib_CsLo.Color color)
+        public void DrawNormal(float lineThickness, float length, Raylib_CsLo.Color color)
         {
             Segment n = new(Center, Center + Normal * length);
-            n.Draw(linethickness, color);
+            n.Draw(lineThickness, color);
         }
     }
 }

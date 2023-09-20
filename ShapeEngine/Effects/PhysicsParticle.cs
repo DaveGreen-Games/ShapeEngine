@@ -62,5 +62,7 @@ namespace ShapeEngine.Effects
         {
             prevPos = Pos;
         }
+
+        public abstract void DrawShape(float lineThickness, Raylib_CsLo.Color color);
     }
 }

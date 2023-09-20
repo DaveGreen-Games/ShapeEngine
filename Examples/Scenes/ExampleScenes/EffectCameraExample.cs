@@ -98,7 +98,7 @@ namespace Examples.Scenes.ExampleScenes
             for (int i = 0; i < amount; i++)
             {
                 //Vector2 pos = SRNG.randVec2(0, 5000);
-                Vector2 pos = universe.GetRandomPoint();
+                Vector2 pos = universe.GetRandomPointInside();
 
                 ChanceList<float> sizes = new((45, 1.5f), (25, 2f), (15, 2.5f), (10, 3f), (3, 3.5f), (2, 4f));
                 float size = sizes.Next();
@@ -110,7 +110,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             for (int i = 0; i < amount; i++)
             {
-                Vector2 pos = universe.GetRandomPoint();
+                Vector2 pos = universe.GetRandomPointInside();
                 Comet comet = new(pos);
                 comets.Add(comet);
             }

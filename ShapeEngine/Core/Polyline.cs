@@ -9,21 +9,13 @@ namespace ShapeEngine.Core
     {
         #region Constructors
         public Polyline() { }
-        /// <summary>
-        /// Points should be in CCW order. Use Reverse if they are in CW order.
-        /// </summary>
-        /// <param name="points"></param>
-        public Polyline(params Vector2[] points) { AddRange(points); }
+        
         /// <summary>
         /// Points should be in CCW order. Use Reverse if they are in CW order.
         /// </summary>
         /// <param name="edges"></param>
         public Polyline(IEnumerable<Vector2> edges) { AddRange(edges); }
-        /// <summary>
-        /// Points should be in CCW order. Use Reverse if they are in CW order.
-        /// </summary>
-        /// <param name="shape"></param>
-        public Polyline(IShape shape) { AddRange(shape.ToPolyline()); }
+        
         public Polyline(Polyline polyLine) { AddRange(polyLine); }
         public Polyline(Polygon poly) { AddRange(poly); }
         #endregion

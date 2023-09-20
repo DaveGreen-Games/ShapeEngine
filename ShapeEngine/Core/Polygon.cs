@@ -13,21 +13,13 @@ namespace ShapeEngine.Core
     {
         #region Constructors
         public Polygon() { }
-        /// <summary>
-        /// Points should be in CCW order. Use Reverse if they are in CW order.
-        /// </summary>
-        /// <param name="points"></param>
-        public Polygon(params Vector2[] points) { AddRange(points); }
+        
         /// <summary>
         /// Points should be in CCW order. Use Reverse if they are in CW order.
         /// </summary>
         /// <param name="points"></param>
         public Polygon(IEnumerable<Vector2> points) { AddRange(points); }
-        /// <summary>
-        /// Points should be in CCW order. Use Reverse if they are in CW order.
-        /// </summary>
-        /// <param name="points"></param>
-        public Polygon(IShape shape) { AddRange(shape.ToPolygon()); }
+        
         public Polygon(Polygon poly) { AddRange(poly); }
         public Polygon(Polyline polyLine) { AddRange(polyLine); }
         #endregion
@@ -1014,7 +1006,7 @@ namespace ShapeEngine.Core
                 items.Add(new(t, (int)t.GetArea()));
             }
             var item = SRNG.PickRandomItem(items.ToArray());
-            return item.GetRandomPoint();
+            return item.GetRandomPointInside();
         }
         public Points GetRandomPoints(int amount)
         {
@@ -1029,7 +1021,7 @@ namespace ShapeEngine.Core
 
             List<Triangle> pickedTriangles = SRNG.PickRandomItems(amount, items);
             Points randomPoints = new();
-            foreach (var tri in pickedTriangles) randomPoints.Add(tri.GetRandomPoint());
+            foreach (var tri in pickedTriangles) randomPoints.Add(tri.GetRandomPointInside());
 
             return randomPoints;
         }

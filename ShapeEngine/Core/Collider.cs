@@ -103,6 +103,8 @@ namespace ShapeEngine.Core
         {
             prevPos = Pos;
         }
+        
+        public abstract void DrawShape(float lineThickness, Raylib_CsLo.Color color);
     }
     public class CircleCollider : Collider
     {
@@ -129,8 +131,12 @@ namespace ShapeEngine.Core
             c.FlippedNormals = FlippedNormals;
             return c;
         }
-        
-       
+
+        public override void DrawShape(float lineThickness, Raylib_CsLo.Color color)
+        {
+            var shape = GetCircleShape();
+            shape.DrawLines(lineThickness, color);
+        }
     }
     public class SegmentCollider : Collider
     {
@@ -195,7 +201,11 @@ namespace ShapeEngine.Core
 
             return new Segment(Pos, End, FlippedNormals);
         }
-        
+        public override void DrawShape(float lineThickness, Raylib_CsLo.Color color)
+        {
+            var shape = GetSegmentShape();
+            shape.Draw(lineThickness, color);
+        }
     }
     public class RectCollider : Collider
     {
@@ -253,7 +263,11 @@ namespace ShapeEngine.Core
             r.FlippedNormals = FlippedNormals;
             return r;
         }
-        
+        public override void DrawShape(float lineThickness, Raylib_CsLo.Color color)
+        {
+            var shape = GetRectShape();
+            shape.DrawLines(lineThickness, color);
+        }
     }
     public class PolyCollider : Collider
     {
@@ -369,7 +383,11 @@ namespace ShapeEngine.Core
             p.FlippedNormals = FlippedNormals;
             return p;
         }
-
+        public override void DrawShape(float lineThickness, Raylib_CsLo.Color color)
+        {
+            var shape = GetPolygonShape();
+            shape.DrawLines(lineThickness, color);
+        }
         private void UpdateShape()
         {
             dirty = false;
@@ -474,16 +492,20 @@ namespace ShapeEngine.Core
         }
         public override IShape GetSimplifiedShape()
         {
-            return GetPolygonShape().GetBoundingCircle();
+            return GetPolylineShape().GetBoundingCircle();
         }
-        public Polygon GetPolygonShape() 
+        public Polyline GetPolylineShape() 
         {
             if (dirty) UpdateShape();
-            var p = new Polygon(shape);
+            var p = new Polyline(shape);
             p.FlippedNormals = FlippedNormals;
             return p; 
         }
-
+        public override void DrawShape(float lineThickness, Raylib_CsLo.Color color)
+        {
+            var shape = GetPolylineShape();
+            shape.Draw(lineThickness, color);
+        }
         private void UpdateShape()
         {
             dirty = false;

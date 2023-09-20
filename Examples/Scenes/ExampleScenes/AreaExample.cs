@@ -15,7 +15,7 @@ namespace Examples.Scenes.ExampleScenes
         public static readonly uint BALL_ID = 4;
         public static readonly uint AURA_ID = 5;
 
-        protected ICollider collider;
+        protected ICollider collider = null!;
         protected uint[] collisionMask = new uint[] { };
         protected bool buffed = false;
         protected Color buffColor = YELLOW;
@@ -58,6 +58,7 @@ namespace Examples.Scenes.ExampleScenes
             //collider.UpdatePreviousPosition(dt);
             collider.UpdateState(dt);
         }
+
         
     }
     internal abstract class Gameobject : IAreaObject
@@ -170,7 +171,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         public override void DrawGame(Vector2 gameSize, Vector2 mousePosGame)
         {
-            wallCollidable.GetCollider().GetShape().DrawShape(2f, ExampleScene.ColorHighlight1);
+            wallCollidable.GetCollider().DrawShape(2f, ExampleScene.ColorHighlight1);
         }
 
         public override Rect GetBoundingBox()
@@ -225,7 +226,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         public override void DrawGame(Vector2 gameSize, Vector2 mousePosGame)
         {
-            wallCollidable.GetCollider().GetShape().DrawShape(2f, ExampleScene.ColorHighlight1);
+            wallCollidable.GetCollider().DrawShape(2f, ExampleScene.ColorHighlight1);
         }
 
         public override Rect GetBoundingBox()
@@ -279,7 +280,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         public override void DrawGame(Vector2 gameSize, Vector2 mousePosGame)
         {
-            trapCollidable.GetCollider().GetShape().DrawShape(2f, ExampleScene.ColorHighlight1);
+            trapCollidable.GetCollider().DrawShape(2f, ExampleScene.ColorHighlight1);
         }
 
         public override Rect GetBoundingBox()
@@ -354,7 +355,7 @@ namespace Examples.Scenes.ExampleScenes
 
         public override void DrawGame(Vector2 gameSize, Vector2 mousePosGame)
         {
-            auraCollidable.GetCollider().GetShape().DrawShape(2f, ExampleScene.ColorHighlight1);
+            auraCollidable.GetCollider().DrawShape(2f, ExampleScene.ColorHighlight1);
         }
 
         public override Rect GetBoundingBox()
@@ -420,7 +421,7 @@ namespace Examples.Scenes.ExampleScenes
             Color color = BLUE;
             if (timer > 0) color = ExampleScene.ColorHighlight1;
             if (buffed) color = buffColor;
-            collider.GetShape().DrawShape(2f, color);
+            collider.DrawShape(2f, color);
 
         }
     }
