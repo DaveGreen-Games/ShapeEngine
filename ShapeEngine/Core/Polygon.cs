@@ -39,7 +39,7 @@ namespace ShapeEngine.Core
         #endregion
 
         #region Getter Setter
-        public bool FlippedNormals { get; set; } = false;
+        public bool FlippedNormals { get; set; }
         #endregion
 
         #region Public
@@ -97,7 +97,7 @@ namespace ShapeEngine.Core
             }
 
         }
-        public void ReduceVertexCount(float factor) { ReduceVertexCount(Count - (int)Count * factor); }
+        public void ReduceVertexCount(float factor) { ReduceVertexCount(Count - (int)(Count * factor)); }
         public void IncreaseVertexCount(int newCount)
         {
             if (newCount <= Count) return;
@@ -123,17 +123,10 @@ namespace ShapeEngine.Core
         {
             return this[SUtils.WrapIndex(Count, index)];
         }
-
-        //public void Floor() { Points.Floor(this); }
-        //public void Ceiling() { Points.Ceiling(this); }
-        //public void Truncate() { Points.Truncate(this); }
-        //public void Round() { Points.Round(this); }
-
         /// <summary>
         /// Computes the length of this polygon's apothem. This will only be valid if
         /// the polygon is regular. More info: http://en.wikipedia.org/wiki/Apothem
         /// </summary>
-        /// <param name="p"></param>
         /// <returns>Return the length of the apothem.</returns>
         public float GetApothem()
         {
@@ -303,6 +296,295 @@ namespace ShapeEngine.Core
             return this.Cut(cut);
         }
 
+        public Vector2 GetCentroidMean()
+        {
+            if (Count <= 0) return new(0f);
+            Vector2 total = new(0f);
+            foreach (Vector2 p in this) { total += p; }
+            return total / Count;
+        }
+        public Triangulation Triangulate()
+        {
+            if (Count < 3) return new();
+            else if (Count == 3) return new() { new(this[0], this[1], this[2]) };
+
+            Triangulation triangles = new();
+            List<Vector2> vertices = new();
+            vertices.AddRange(this);
+            List<int> validIndices = new();
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                validIndices.Add(i);
+            }
+            while (vertices.Count > 3)
+            {
+                if (validIndices.Count <= 0) 
+                    break;
+
+                int i = validIndices[SRNG.randI(0, validIndices.Count)];
+                Vector2 a = vertices[i];
+                Vector2 b = SUtils.GetItem(vertices, i + 1);
+                Vector2 c = SUtils.GetItem(vertices, i - 1);
+
+                Vector2 ba = b - a;
+                Vector2 ca = c - a;
+                float cross = ba.Cross(ca);
+                if (cross >= 0f)//makes sure that ear is not self intersecting
+                {
+                    validIndices.Remove(i);
+                    continue;
+                }
+
+                Triangle t = new(a, b, c);
+
+                bool isValid = true;
+                foreach (var p in this)
+                {
+                    if (p == a || p == b || p == c) continue;
+                    if (t.ContainsPoint(p))
+                    {
+                        isValid = false;
+                        break;
+                    }
+                }
+
+                if (isValid)
+                {
+                    triangles.Add(t);
+                    vertices.RemoveAt(i);
+
+                    validIndices.Clear();
+                    for (int j = 0; j < vertices.Count; j++)
+                    {
+                        validIndices.Add(j);
+                    }
+                    //break;
+                }
+            }
+
+
+            triangles.Add(new(vertices[0], vertices[1], vertices[2]));
+
+
+            return triangles;
+        }
+
+        /// <summary>
+        /// Return the segments of the polygon. If the points are in ccw winding order the normals face outward when InsideNormals = false 
+        /// and face inside otherwise.
+        /// </summary>
+        /// <returns></returns>
+        public Segments GetEdges()
+        {
+            if (Count <= 1) return new();
+            else if (Count == 2)
+            {
+                Vector2 A = this[0];
+                Vector2 B = this[1];
+
+                return new() { new(A, B, FlippedNormals) };
+            }
+            Segments segments = new();
+            for (int i = 0; i < Count; i++)
+            {
+                Vector2 start = this[i];
+                Vector2 end = this[(i + 1) % Count];
+                segments.Add(new(start, end, FlippedNormals));
+            }
+            return segments;
+        }
+        
+        public Triangle GetBoundingTriangle(float margin = 3f) { return Polygon.GetBoundingTriangle(this, margin); }
+        public float GetCircumference() { return MathF.Sqrt(GetCircumferenceSquared()); }
+        public float GetCircumferenceSquared()
+        {
+            if (this.Count < 3) return 0f;
+            float lengthSq = 0f;
+            for (int i = 0; i < Count; i++)
+            {
+                Vector2 w = this[(i + 1)%Count] - this[i];
+                lengthSq += w.LengthSquared();
+            }
+            return lengthSq;
+        }
+        public float GetArea() { return MathF.Abs(GetAreaSigned()); }
+        public bool IsClockwise() { return GetAreaSigned() > 0f; }
+        public bool IsConvex()
+        {
+            int num = this.Count;
+            bool isPositive = false;
+
+            for (int i = 0; i < num; i++)
+            {
+                int prevIndex = (i == 0) ? num - 1 : i - 1;
+                int nextIndex = (i == num - 1) ? 0 : i + 1;
+                var d0 = this[i] - this[prevIndex];
+                var d1 = this[nextIndex] - this[i];
+                var newIsP = d0.Cross(d1) > 0f;
+                if (i == 0) isPositive = true;
+                else if (isPositive != newIsP) return false;
+            }
+            return true;
+        }
+        public Points GetVertices() { return new(this); }
+        public int GetClosestIndex(Vector2 p)
+        {
+            //if (Count <= 0) return -1;
+            //if (Count == 1) return 0;
+            //
+            //float minD = float.PositiveInfinity;
+            //var edges = GetEdges();
+            //int closestIndex = -1;
+            //for (int i = 0; i < edges.Count; i++)
+            //{
+            //    Vector2 c = edges[i].GetClosestPoint(p).Point;
+            //    float d = (c - p).LengthSquared();
+            //    if (d < minD)
+            //    {
+            //        closestIndex = i;
+            //        minD = d;
+            //    }
+            //}
+            //return closestIndex;
+
+            if (Count <= 0) return -1;
+            if (Count == 1) return 0;
+
+            float minD = float.PositiveInfinity;
+            int closestIndex = -1;
+
+            for (int i = 0; i < Count; i++)
+            {
+                Vector2 start = this[i];
+                Vector2 end = this[(i + 1) % Count];
+                Segment edge = new Segment(start, end);
+
+                Vector2 closest = edge.GetClosestPoint(p).Point;
+                float d = (closest - p).LengthSquared();
+                if (d < minD)
+                {
+                    closestIndex = i;
+                    minD = d;
+                }
+            }
+            return closestIndex;
+        }
+        public Vector2 GetClosestVertex(Vector2 p)
+        {
+            //float minD = float.PositiveInfinity;
+            //Vector2 closest = new();
+            //for (int i = 0; i < Count; i++)
+            //{
+            //    float d = (this[i] - p).LengthSquared();
+            //    if (d < minD)
+            //    {
+            //        closest = this[i];
+            //        minD = d;
+            //    }
+            //}
+            //return closest;
+
+            if (Count < 2) return new();
+            float minD = float.PositiveInfinity;
+            Vector2 closestPoint = new();
+
+            for (int i = 0; i < Count; i++)
+            {
+                Vector2 start = this[i];
+                Vector2 end = this[(i + 1) % Count];
+                Segment edge = new Segment(start, end);
+
+                Vector2 closest = edge.GetClosestPoint(p).Point;
+                float d = (closest - p).LengthSquared();
+                if (d < minD)
+                {
+                    closestPoint = closest;
+                    minD = d;
+                }
+            }
+            return closestPoint;
+        }
+        public Segment GetClosestSegment(Vector2 p)
+        {
+            if (Count < 2) return new();
+            float minD = float.PositiveInfinity;
+            Segment closestSegment = new();
+
+            for (int i = 0; i < Count; i++)
+            {
+                Vector2 start = this[i];
+                Vector2 end = this[(i + 1) % Count];
+                Segment edge = new Segment(start, end);
+                
+                Vector2 closest = edge.GetClosestPoint(p).Point;
+                float d = (closest - p).LengthSquared();
+                if (d < minD)
+                {
+                    closestSegment = edge;
+                    minD = d;
+                }
+            }
+            return closestSegment;
+        }
+        
+        public Vector2 GetRandomPointInside()
+        {
+            var triangles = Triangulate();
+            List<WeightedItem<Triangle>> items = new();
+            foreach (var t in triangles)
+            {
+                items.Add(new(t, (int)t.GetArea()));
+            }
+            var item = SRNG.PickRandomItem(items.ToArray());
+            return item.GetRandomPointInside();
+        }
+        public Points GetRandomPointsInside(int amount)
+        {
+            var triangles = Triangulate();
+            WeightedItem<Triangle>[] items = new WeightedItem<Triangle>[triangles.Count];
+            for (int i = 0; i < items.Length; i++)
+            {
+                var t = triangles[i];
+                items[i] = new(t, (int)t.GetArea());
+            }
+
+
+            List<Triangle> pickedTriangles = SRNG.PickRandomItems(amount, items);
+            Points randomPoints = new();
+            foreach (var tri in pickedTriangles) randomPoints.Add(tri.GetRandomPointInside());
+
+            return randomPoints;
+        }
+        public Vector2 GetRandomVertex() { return SRNG.randCollection(this); }
+        public Segment GetRandomEdge()
+        {
+            var edges = GetEdges();
+            List<WeightedItem<Segment>> items = new(edges.Count);
+            foreach (var edge in edges)
+            {
+                items.Add(new(edge, (int)edge.LengthSquared));
+            }
+            return SRNG.PickRandomItem(items.ToArray());
+            //return SRNG.randCollection(GetEdges(), false); 
+        }
+        public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
+        public Points GetRandomPointsOnEdge(int amount)
+        {
+            List<WeightedItem<Segment>> items = new(amount);
+            var edges = GetEdges();
+            foreach (var edge in edges)
+            {
+                items.Add(new(edge, (int)edge.LengthSquared));
+            }
+            var pickedEdges = SRNG.PickRandomItems(amount, items.ToArray());
+            var randomPoints = new Points();
+            foreach (var edge in pickedEdges)
+            {
+                randomPoints.Add(edge.GetRandomPoint());
+            }
+            return randomPoints;
+        }
+
         #endregion
 
         #region Static
@@ -336,8 +618,9 @@ namespace ShapeEngine.Core
         /// <returns></returns>
         public static Triangulation TriangulateDelaunay(IEnumerable<Vector2> points)
         {
-            Triangle supraTriangle = GetBoundingTriangle(points, 2f);
-            return TriangulateDelaunay(points, supraTriangle);
+            var enumerable = points.ToList();
+            var supraTriangle = GetBoundingTriangle(enumerable, 2f);
+            return TriangulateDelaunay(enumerable, supraTriangle);
         }
         /// <summary>
         /// Triangulates a set of points. Only works with non self intersecting shapes.
@@ -347,9 +630,7 @@ namespace ShapeEngine.Core
         /// <returns></returns>
         public static Triangulation TriangulateDelaunay(IEnumerable<Vector2> points, Triangle supraTriangle)
         {
-            Triangulation triangles = new();
-
-            triangles.Add(supraTriangle);
+            Triangulation triangles = new() { supraTriangle };
 
             foreach (var p in points)
             {
@@ -373,7 +654,7 @@ namespace ShapeEngine.Core
                 Segments allEdges = new();
                 foreach (var badTriangle in badTriangles) { allEdges.AddRange(badTriangle.GetEdges()); }
 
-                Segments uniqueEdges = GetUniqueSegmentsDelauney(allEdges);
+                Segments uniqueEdges = GetUniqueSegmentsDelaunay(allEdges);
                 //Create new triangles
                 for (int i = 0; i < uniqueEdges.Count; i++)
                 {
@@ -392,7 +673,7 @@ namespace ShapeEngine.Core
 
             return triangles;
         }
-        private static Segments GetUniqueSegmentsDelauney(Segments segments)
+        private static Segments GetUniqueSegmentsDelaunay(Segments segments)
         {
             Segments uniqueEdges = new();
             for (int i = segments.Count - 1; i >= 0; i--)
@@ -407,7 +688,7 @@ namespace ShapeEngine.Core
         }
         private static bool IsSimilar(Segments segments, Segment seg)
         {
-            int counter = 0;
+            var counter = 0;
             foreach (var segment in segments)
             {
                 if (segment.IsSimilar(seg)) counter++;
@@ -425,13 +706,14 @@ namespace ShapeEngine.Core
         /// <returns></returns>
         public static Rect GetBoundingBox(IEnumerable<Vector2> points)
         {
-            if (points.Count() < 2) return new();
-            Vector2 start = points.First();
+            var enumerable = points as Vector2[] ?? points.ToArray();
+            if (enumerable.Length < 2) return new();
+            var start = enumerable.First();
             Rect r = new(start.X, start.Y, 0, 0);
 
-            foreach (var p in points)
+            foreach (var p in enumerable)
             {
-                r = SRect.Enlarge(r, p);
+                r = r.Enlarge(p);
             }
             return r;
         }
@@ -638,179 +920,23 @@ namespace ShapeEngine.Core
         #endregion
 
         #region IShape
-        public Vector2 GetCentroid()
+        public CollisionPoint GetClosestPoint(Vector2 p)
         {
-            //return GetCentroidMean();
-            Vector2 result = new();
-            
-            for (int i = 0; i < Count; i++)
+            float minD = float.PositiveInfinity;
+            var edges = GetEdges();
+            CollisionPoint closest = new();
+
+            for (int i = 0; i < edges.Count; i++)
             {
-                Vector2 a = this[i];
-                Vector2 b = this[(i + 1) % Count];
-                //float factor = a.X * b.Y - b.X * a.Y; //clockwise 
-                float factor = a.Y * b.X - a.X * b.Y; //counter clockwise
-                result.X += (a.X + b.X) * factor;
-                result.Y += (a.Y + b.Y) * factor;
-            }
-            
-            return result * (1f / (GetArea() * 6f));
-        }
-        public Vector2 GetCentroidMean()
-        {
-            if (Count <= 0) return new(0f);
-            Vector2 total = new(0f);
-            foreach (Vector2 p in this) { total += p; }
-            return total / Count;
-        }
-        public Triangulation Triangulate()
-        {
-            if (Count < 3) return new();
-            else if (Count == 3) return new() { new(this[0], this[1], this[2]) };
-
-            Triangulation triangles = new();
-            List<Vector2> vertices = new();
-            vertices.AddRange(this);
-            List<int> validIndices = new();
-            for (int i = 0; i < vertices.Count; i++)
-            {
-                validIndices.Add(i);
-            }
-            while (vertices.Count > 3)
-            {
-                if (validIndices.Count <= 0) 
-                    break;
-
-                int i = validIndices[SRNG.randI(0, validIndices.Count)];
-                Vector2 a = vertices[i];
-                Vector2 b = SUtils.GetItem(vertices, i + 1);
-                Vector2 c = SUtils.GetItem(vertices, i - 1);
-
-                Vector2 ba = b - a;
-                Vector2 ca = c - a;
-                float cross = ba.Cross(ca);
-                if (cross >= 0f)//makes sure that ear is not self intersecting
+                CollisionPoint c = edges[i].GetClosestPoint(p);
+                float d = (c.Point - p).LengthSquared();
+                if (d < minD)
                 {
-                    validIndices.Remove(i);
-                    continue;
-                }
-
-                Triangle t = new(a, b, c);
-
-                bool isValid = true;
-                foreach (var p in this)
-                {
-                    if (p == a || p == b || p == c) continue;
-                    if (t.ContainsPoint(p))
-                    {
-                        isValid = false;
-                        break;
-                    }
-                }
-
-                if (isValid)
-                {
-                    triangles.Add(t);
-                    vertices.RemoveAt(i);
-
-                    validIndices.Clear();
-                    for (int j = 0; j < vertices.Count; j++)
-                    {
-                        validIndices.Add(j);
-                    }
-                    //break;
+                    closest = c;
+                    minD = d;
                 }
             }
-
-
-            triangles.Add(new(vertices[0], vertices[1], vertices[2]));
-
-
-            return triangles;
-        }
-
-        //private Triangulation Subdivide(Triangle triangle, float minArea)
-        //{
-        //    var area = triangle.GetArea();
-        //    Triangulation final = new();
-        //    if (minArea > area / 3)
-        //    {
-        //        final.Add(triangle);
-        //    }
-        //    else
-        //    {
-        //        var triangulation = triangle.Triangulate();
-        //        foreach (var tri in triangulation)
-        //        {
-        //            final.AddRange(Subdivide(tri, minArea));
-        //        }
-        //    }
-        //    return final;
-        //}
-        
-        ///// <summary>
-        ///// Triangulate this polygon. 
-        ///// </summary>
-        ///// <param name="minArea">The minimum area a triangle must have to be further subdivided. Does not affect the initial triangulation.</param>
-        ///// <param name="subdivisions">A subdivision triangulates all triangles from the previous triangulation. (Do not go big!) </param>
-        ///// <returns></returns>
-        //public Triangulation Fracture(float minArea = -1, int subdivisions = 0)
-        //{
-        //    var triangulation = Triangulate();
-        //    if (subdivisions <= 0) return triangulation;
-        //    else
-        //    {
-        //        return Subdivide(triangulation, subdivisions, minArea);
-        //    }
-        //}
-        //private Triangulation Subdivide(Triangulation triangles, int remaining, float minArea = -1)
-        //{
-        //    if(remaining <= 0) return triangles;
-        //    Triangulation subdivision = new();
-        //    foreach (var tri in triangles)
-        //    {
-        //        var area = tri.GetArea();
-        //        //tri.GetRandomPoint()
-        //        if(minArea <= 0 || tri.GetArea() >= minArea) subdivision.AddRange(tri.Triangulate());
-        //        else subdivision.Add(tri);
-        //
-        //    }
-        //    return Subdivide(subdivision, remaining - 1, minArea);
-        //}
-        /*
-        //only works with simple polygons that is why the ear clipper algorithm is used.
-        public Triangulation Fracture(int fractureComplexity = 0)//fix delauny triangulation
-        {
-            if (fractureComplexity <= 0) return SPoly.TriangulateDelaunay(this);
-
-            List<Vector2> points = new();
-            points.AddRange(this);
-            points.AddRange(GetRandomPoints(fractureComplexity));
-            return SPoly.TriangulateDelaunay(points);
-        }*/
-
-        /// <summary>
-        /// Return the segments of the polygon. If the points are in ccw winding order the normals face outward when InsideNormals = false 
-        /// and face inside otherwise.
-        /// </summary>
-        /// <returns></returns>
-        public Segments GetEdges()
-        {
-            if (Count <= 1) return new();
-            else if (Count == 2)
-            {
-                Vector2 A = this[0];
-                Vector2 B = this[1];
-
-                return new() { new(A, B, FlippedNormals) };
-            }
-            Segments segments = new();
-            for (int i = 0; i < Count; i++)
-            {
-                Vector2 start = this[i];
-                Vector2 end = this[(i + 1) % Count];
-                segments.Add(new(start, end, FlippedNormals));
-            }
-            return segments;
+            return closest;
         }
         public Circle GetBoundingCircle()
         {
@@ -840,222 +966,25 @@ namespace ShapeEngine.Core
             }
             return r;
         }
-        public Triangle GetBoundingTriangle(float margin = 3f) { return Polygon.GetBoundingTriangle(this, margin); }
-        public float GetCircumference() { return MathF.Sqrt(GetCircumferenceSquared()); }
-        public float GetCircumferenceSquared()
-        {
-            if (this.Count < 3) return 0f;
-            float lengthSq = 0f;
-            for (int i = 0; i < Count; i++)
-            {
-                Vector2 w = this[(i + 1)%Count] - this[i];
-                lengthSq += w.LengthSquared();
-            }
-            return lengthSq;
-        }
-        public float GetArea() { return MathF.Abs(GetAreaSigned()); }
-        public bool IsClockwise() { return GetAreaSigned() > 0f; }
-        public bool IsConvex()
-        {
-            int num = this.Count;
-            bool isPositive = false;
-
-            for (int i = 0; i < num; i++)
-            {
-                int prevIndex = (i == 0) ? num - 1 : i - 1;
-                int nextIndex = (i == num - 1) ? 0 : i + 1;
-                var d0 = this[i] - this[prevIndex];
-                var d1 = this[nextIndex] - this[i];
-                var newIsP = d0.Cross(d1) > 0f;
-                if (i == 0) isPositive = true;
-                else if (isPositive != newIsP) return false;
-            }
-            return true;
-        }
-
-        public Points GetVertices() { return new(this); }
-        //public Polygon ToPolygon() { return new( this ); }
-        //public Polyline ToPolyline() { return new(this); }
-
-
-        public int GetClosestIndex(Vector2 p)
-        {
-            //if (Count <= 0) return -1;
-            //if (Count == 1) return 0;
-            //
-            //float minD = float.PositiveInfinity;
-            //var edges = GetEdges();
-            //int closestIndex = -1;
-            //for (int i = 0; i < edges.Count; i++)
-            //{
-            //    Vector2 c = edges[i].GetClosestPoint(p).Point;
-            //    float d = (c - p).LengthSquared();
-            //    if (d < minD)
-            //    {
-            //        closestIndex = i;
-            //        minD = d;
-            //    }
-            //}
-            //return closestIndex;
-
-            if (Count <= 0) return -1;
-            if (Count == 1) return 0;
-
-            float minD = float.PositiveInfinity;
-            int closestIndex = -1;
-
-            for (int i = 0; i < Count; i++)
-            {
-                Vector2 start = this[i];
-                Vector2 end = this[(i + 1) % Count];
-                Segment edge = new Segment(start, end);
-
-                Vector2 closest = edge.GetClosestPoint(p).Point;
-                float d = (closest - p).LengthSquared();
-                if (d < minD)
-                {
-                    closestIndex = i;
-                    minD = d;
-                }
-            }
-            return closestIndex;
-        }
-        public CollisionPoint GetClosestPoint(Vector2 p)
-        {
-            float minD = float.PositiveInfinity;
-            var edges = GetEdges();
-            CollisionPoint closest = new();
-
-            for (int i = 0; i < edges.Count; i++)
-            {
-                CollisionPoint c = edges[i].GetClosestPoint(p);
-                float d = (c.Point - p).LengthSquared();
-                if (d < minD)
-                {
-                    closest = c;
-                    minD = d;
-                }
-            }
-            return closest;
-        }
-        public Vector2 GetClosestVertex(Vector2 p)
-        {
-            //float minD = float.PositiveInfinity;
-            //Vector2 closest = new();
-            //for (int i = 0; i < Count; i++)
-            //{
-            //    float d = (this[i] - p).LengthSquared();
-            //    if (d < minD)
-            //    {
-            //        closest = this[i];
-            //        minD = d;
-            //    }
-            //}
-            //return closest;
-
-            if (Count < 2) return new();
-            float minD = float.PositiveInfinity;
-            Vector2 closestPoint = new();
-
-            for (int i = 0; i < Count; i++)
-            {
-                Vector2 start = this[i];
-                Vector2 end = this[(i + 1) % Count];
-                Segment edge = new Segment(start, end);
-
-                Vector2 closest = edge.GetClosestPoint(p).Point;
-                float d = (closest - p).LengthSquared();
-                if (d < minD)
-                {
-                    closestPoint = closest;
-                    minD = d;
-                }
-            }
-            return closestPoint;
-        }
-        public Segment GetClosestSegment(Vector2 p)
-        {
-            if (Count < 2) return new();
-            float minD = float.PositiveInfinity;
-            Segment closestSegment = new();
-
-            for (int i = 0; i < Count; i++)
-            {
-                Vector2 start = this[i];
-                Vector2 end = this[(i + 1) % Count];
-                Segment edge = new Segment(start, end);
-                
-                Vector2 closest = edge.GetClosestPoint(p).Point;
-                float d = (closest - p).LengthSquared();
-                if (d < minD)
-                {
-                    closestSegment = edge;
-                    minD = d;
-                }
-            }
-            return closestSegment;
-        }
-
         public bool ContainsPoint(Vector2 p) { return IsPointInPoly(p, this); }
-        public Vector2 GetRandomPoint()
+        public Vector2 GetCentroid()
         {
-            var triangles = Triangulate();
-            List<WeightedItem<Triangle>> items = new();
-            foreach (var t in triangles)
+            //return GetCentroidMean();
+            Vector2 result = new();
+            
+            for (int i = 0; i < Count; i++)
             {
-                items.Add(new(t, (int)t.GetArea()));
+                Vector2 a = this[i];
+                Vector2 b = this[(i + 1) % Count];
+                //float factor = a.X * b.Y - b.X * a.Y; //clockwise 
+                float factor = a.Y * b.X - a.X * b.Y; //counter clockwise
+                result.X += (a.X + b.X) * factor;
+                result.Y += (a.Y + b.Y) * factor;
             }
-            var item = SRNG.PickRandomItem(items.ToArray());
-            return item.GetRandomPointInside();
+            
+            return result * (1f / (GetArea() * 6f));
         }
-        public Points GetRandomPoints(int amount)
-        {
-            var triangles = Triangulate();
-            WeightedItem<Triangle>[] items = new WeightedItem<Triangle>[triangles.Count];
-            for (int i = 0; i < items.Length; i++)
-            {
-                var t = triangles[i];
-                items[i] = new(t, (int)t.GetArea());
-            }
-
-
-            List<Triangle> pickedTriangles = SRNG.PickRandomItems(amount, items);
-            Points randomPoints = new();
-            foreach (var tri in pickedTriangles) randomPoints.Add(tri.GetRandomPointInside());
-
-            return randomPoints;
-        }
-        public Vector2 GetRandomVertex() { return SRNG.randCollection(this, false); }
-        public Segment GetRandomEdge()
-        {
-            var edges = GetEdges();
-            List<WeightedItem<Segment>> items = new(edges.Count);
-            foreach (var edge in edges)
-            {
-                items.Add(new(edge, (int)edge.LengthSquared));
-            }
-            return SRNG.PickRandomItem(items.ToArray());
-            //return SRNG.randCollection(GetEdges(), false); 
-        }
-        public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
-        public Points GetRandomPointsOnEdge(int amount)
-        {
-            List<WeightedItem<Segment>> items = new(amount);
-            var edges = GetEdges();
-            foreach (var edge in edges)
-            {
-                items.Add(new(edge, (int)edge.LengthSquared));
-            }
-            var pickedEdges = SRNG.PickRandomItems(amount, items.ToArray());
-            var randomPoints = new Points();
-            foreach (var edge in pickedEdges)
-            {
-                randomPoints.Add(edge.GetRandomPoint());
-            }
-            return randomPoints;
-        }
-
-        public void DrawShape(float linethickness, Raylib_CsLo.Color color) => SDrawing.DrawLines(this, linethickness, color);
+        
         #endregion
 
         #region Private
@@ -1183,8 +1112,68 @@ namespace ShapeEngine.Core
         #endregion
 
 
-        //public Vector2 GetReferencePoint() { return GetCentroid(); }
-        //public SegmentShape GetSegmentShape() { return new(GetEdges(), this.GetCentroid()); }
+        
     }
 }
 
+//private Triangulation Subdivide(Triangle triangle, float minArea)
+        //{
+        //    var area = triangle.GetArea();
+        //    Triangulation final = new();
+        //    if (minArea > area / 3)
+        //    {
+        //        final.Add(triangle);
+        //    }
+        //    else
+        //    {
+        //        var triangulation = triangle.Triangulate();
+        //        foreach (var tri in triangulation)
+        //        {
+        //            final.AddRange(Subdivide(tri, minArea));
+        //        }
+        //    }
+        //    return final;
+        //}
+        
+        ///// <summary>
+        ///// Triangulate this polygon. 
+        ///// </summary>
+        ///// <param name="minArea">The minimum area a triangle must have to be further subdivided. Does not affect the initial triangulation.</param>
+        ///// <param name="subdivisions">A subdivision triangulates all triangles from the previous triangulation. (Do not go big!) </param>
+        ///// <returns></returns>
+        //public Triangulation Fracture(float minArea = -1, int subdivisions = 0)
+        //{
+        //    var triangulation = Triangulate();
+        //    if (subdivisions <= 0) return triangulation;
+        //    else
+        //    {
+        //        return Subdivide(triangulation, subdivisions, minArea);
+        //    }
+        //}
+        //private Triangulation Subdivide(Triangulation triangles, int remaining, float minArea = -1)
+        //{
+        //    if(remaining <= 0) return triangles;
+        //    Triangulation subdivision = new();
+        //    foreach (var tri in triangles)
+        //    {
+        //        var area = tri.GetArea();
+        //        //tri.GetRandomPoint()
+        //        if(minArea <= 0 || tri.GetArea() >= minArea) subdivision.AddRange(tri.Triangulate());
+        //        else subdivision.Add(tri);
+        //
+        //    }
+        //    return Subdivide(subdivision, remaining - 1, minArea);
+        //}
+/*
+        //only works with simple polygons that is why the ear clipper algorithm is used.
+        public Triangulation Fracture(int fractureComplexity = 0)//fix delauny triangulation
+        {
+            if (fractureComplexity <= 0) return SPoly.TriangulateDelaunay(this);
+
+            List<Vector2> points = new();
+            points.AddRange(this);
+            points.AddRange(GetRandomPoints(fractureComplexity));
+            return SPoly.TriangulateDelaunay(points);
+        }*/
+//public Vector2 GetReferencePoint() { return GetCentroid(); }
+//public SegmentShape GetSegmentShape() { return new(GetEdges(), this.GetCentroid()); }

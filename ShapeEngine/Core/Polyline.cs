@@ -386,7 +386,11 @@ namespace ShapeEngine.Core
         public CollisionPoints IntersectShape(Polyline b) { return GetEdges().IntersectShape(b.GetEdges()); }
         #endregion
 
-        /*
+        
+    }
+
+}
+/*
         //old
         public int GetClosestIndex(Vector2 p)
         {
@@ -424,7 +428,3 @@ namespace ShapeEngine.Core
             return closest;
         }
         */
-    }
-
-}
-
