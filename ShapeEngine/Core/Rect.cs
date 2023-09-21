@@ -88,13 +88,19 @@ namespace ShapeEngine.Core
         #endregion
 
         #region Equality & HashCode
+        
         public bool Equals(Rect other)
         {
             return 
-                Math.Abs(X - other.X) < GameLoop.FloatComparisonTolerance && 
-                Math.Abs(Y - other.Y) < GameLoop.FloatComparisonTolerance && 
-                Math.Abs(Width - other.Width) < GameLoop.FloatComparisonTolerance && 
-                Math.Abs(Height - other.Height) < GameLoop.FloatComparisonTolerance;
+                SUtils.IsSimilar(X, other.X) && 
+                SUtils.IsSimilar(Y, other.Y) && 
+                SUtils.IsSimilar(Width, other.Width) && 
+                SUtils.IsSimilar(Height, other.Height);
+            //return 
+            //    Math.Abs(X - other.X) < GameLoop.FloatComparisonTolerance && 
+            //    Math.Abs(Y - other.Y) < GameLoop.FloatComparisonTolerance && 
+            //    Math.Abs(Width - other.Width) < GameLoop.FloatComparisonTolerance && 
+            //    Math.Abs(Height - other.Height) < GameLoop.FloatComparisonTolerance;
         }
         public static bool operator ==(Rect left, Rect right)
         {
@@ -243,7 +249,7 @@ namespace ShapeEngine.Core
         public readonly Segment GetBottomSegment() => new(BottomLeft, BottomRight, FlippedNormals);
         public readonly Segment GetRightSegment() => new(BottomRight, TopRight, FlippedNormals);
         public readonly Segment GetTopSegment() => new(TopRight, TopLeft, FlippedNormals);
-public readonly Points GetVertices() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
+        public readonly Points ToPoints() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
         public readonly Polygon ToPolygon() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
         public readonly Polyline ToPolyline() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
         public readonly Segments GetEdges() 
@@ -317,35 +323,18 @@ public readonly Points GetVertices() { return new() { TopLeft, BottomLeft, Botto
             }
             return points;
         }
-        public readonly Vector2 GetRandomVertex() { return SRNG.randCollection(ToPolygon()); }
-        public readonly Segment GetRandomEdge()
+
+        public readonly Vector2 GetRandomVertex()
         {
-            var edges = GetEdges();
-            List<WeightedItem<Segment>> items = new(edges.Count);
-            foreach (var edge in edges)
-            {
-                items.Add(new(edge, (int)edge.LengthSquared));
-            }
-            return SRNG.PickRandomItem(items.ToArray());
-            //return SRNG.randCollection(GetEdges(), false); 
+            int randIndex = SRNG.randI(0, 3);
+            if (randIndex == 0) return TopLeft;
+            else if (randIndex == 1) return BottomLeft;
+            else if (randIndex == 2) return BottomRight;
+            else return TopRight;
         }
-        public readonly Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
-        public readonly Points GetRandomPointsOnEdge(int amount)
-        {
-            List<WeightedItem<Segment>> items = new(amount);
-            var edges = GetEdges();
-            foreach (var edge in edges)
-            {
-                items.Add(new(edge, (int)edge.LengthSquared));
-            }
-            var pickedEdges = SRNG.PickRandomItems(amount, items.ToArray());
-            var randomPoints = new Points();
-            foreach (var edge in pickedEdges)
-            {
-                randomPoints.Add(edge.GetRandomPoint());
-            }
-            return randomPoints;
-        }
+        public Segment GetRandomEdge() => GetEdges().GetRandomSegment();
+        public Vector2 GetRandomPointOnEdge() => GetRandomEdge().GetRandomPoint();
+        public Points GetRandomPointsOnEdge(int amount) => GetEdges().GetRandomPoints(amount);
 
         #endregion
 

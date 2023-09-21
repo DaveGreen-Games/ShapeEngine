@@ -29,9 +29,10 @@ namespace ShapeEngine.Core
         {
             if (other == null) return false;
             if (Count != other.Count) return false;
-            for (int i = 0; i < Count; i++)
+            for (var i = 0; i < Count; i++)
             {
-                if (this[i] != other[i]) return false;
+                if (!this[i].IsSimilar(other[i])) return false;
+                //if (this[i] != other[i]) return false;
             }
             return true;
         }
@@ -426,7 +427,7 @@ namespace ShapeEngine.Core
             }
             return true;
         }
-        public Points GetVertices() { return new(this); }
+        public Points ToPoints() { return new(this); }
         public int GetClosestIndex(Vector2 p)
         {
             //if (Count <= 0) return -1;
@@ -556,41 +557,15 @@ namespace ShapeEngine.Core
             return randomPoints;
         }
         public Vector2 GetRandomVertex() { return SRNG.randCollection(this); }
-        public Segment GetRandomEdge()
-        {
-            var edges = GetEdges();
-            List<WeightedItem<Segment>> items = new(edges.Count);
-            foreach (var edge in edges)
-            {
-                items.Add(new(edge, (int)edge.LengthSquared));
-            }
-            return SRNG.PickRandomItem(items.ToArray());
-            //return SRNG.randCollection(GetEdges(), false); 
-        }
-        public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
-        public Points GetRandomPointsOnEdge(int amount)
-        {
-            List<WeightedItem<Segment>> items = new(amount);
-            var edges = GetEdges();
-            foreach (var edge in edges)
-            {
-                items.Add(new(edge, (int)edge.LengthSquared));
-            }
-            var pickedEdges = SRNG.PickRandomItems(amount, items.ToArray());
-            var randomPoints = new Points();
-            foreach (var edge in pickedEdges)
-            {
-                randomPoints.Add(edge.GetRandomPoint());
-            }
-            return randomPoints;
-        }
+        public Segment GetRandomEdge() => GetEdges().GetRandomSegment();
+        public Vector2 GetRandomPointOnEdge() => GetRandomEdge().GetRandomPoint();
+        public Points GetRandomPointsOnEdge(int amount) => GetEdges().GetRandomPoints(amount);
 
         #endregion
 
         #region Static
         public static bool IsPointInPoly(Vector2 point, Polygon poly)
         {
-            
             bool oddNodes = false;
             int num = poly.Count;
             int j = num - 1;
@@ -1024,8 +999,8 @@ namespace ShapeEngine.Core
             if (ContainsPoint(s.End)) return true;
             for (int i = 0; i < Count; i++)
             {
-                Vector2 start = Get(i); // this[i];
-                Vector2 end = Get(i + 1); //this[(i + 1) % Count];
+                Vector2 start = GetPoint(i); // this[i];
+                Vector2 end = GetPoint(i + 1); //this[(i + 1) % Count];
                 var segment = new Segment(start, end);
                 if (segment.OverlapShape(s)) return true;
             }
@@ -1041,8 +1016,8 @@ namespace ShapeEngine.Core
             }
             for (int i = 0; i < Count; i++)
             {
-                Vector2 start = Get(i); // this[i];
-                Vector2 end = Get(i + 1); // this[(i + 1) % Count];
+                Vector2 start = GetPoint(i); // this[i];
+                Vector2 end = GetPoint(i + 1); // this[(i + 1) % Count];
                 if (c.OverlapShape(new Segment(start, end))) return true;
             }
             return false;
@@ -1063,8 +1038,8 @@ namespace ShapeEngine.Core
 
             for (int i = 0; i < Count; i++)
             {
-                Vector2 start = Get(i); // poly[i];
-                Vector2 end = Get(i + 1); // poly[(i + 1) % poly.Count];
+                Vector2 start = GetPoint(i); // poly[i];
+                Vector2 end = GetPoint(i + 1); // poly[(i + 1) % poly.Count];
                 if (r.OverlapShape(new Segment(start, end))) return true;
             }
             return false;
@@ -1078,18 +1053,18 @@ namespace ShapeEngine.Core
             Segments segmentsB = new();
             for (int j = 0; j < b.Count; j++)
             {
-                Vector2 startB = b.Get(j); // b[j];
+                Vector2 startB = b.GetPoint(j); // b[j];
                 if (ContainsPoint(startB)) return true;
-                Vector2 endB = b.Get(j + 1);// b[(j + 1) % b.Count];
+                Vector2 endB = b.GetPoint(j + 1);// b[(j + 1) % b.Count];
                 Segment segB = new(startB, endB);
                 segmentsB.Add(segB);
             }
 
             for (int i = 0; i < Count; i++)
             {
-                Vector2 startA = Get(i); //  a[i];
+                Vector2 startA = GetPoint(i); //  a[i];
                 if (b.ContainsPoint(startA)) return true;
-                Vector2 endA = Get(i + 1); // a[(i + 1) % a.Count];
+                Vector2 endA = GetPoint(i + 1); // a[(i + 1) % a.Count];
                 Segment segA = new(startA, endA);
                 if (segA.OverlapShape(segmentsB)) return true;
             }

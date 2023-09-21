@@ -4,6 +4,7 @@ using ShapeEngine.Timing;
 using System.Globalization;
 using System.Numerics;
 using System.Text;
+using ShapeEngine.Random;
 
 //Stopwatch functionality
 //using System.Diagnostics;
@@ -112,6 +113,11 @@ namespace ShapeEngine.Core
             }
             return hash.ToHashCode();
         }
+
+        public T? GetRandomItem() => SRNG.randCollection(this);
+
+        public List<T> GetRandomItems(int amount) => SRNG.randCollection(this, amount);
+        public T? GetItem(int index) => Count <= 0 ? default(T) : this[SUtils.WrapIndex(Count, index)];
     }
     public class Points : ShapeList<Vector2>, IEquatable<Points>
     {
@@ -126,9 +132,10 @@ namespace ShapeEngine.Core
         {
             if (other == null) return false;
             if (Count != other.Count) return false;
-            for (int i = 0; i < Count; i++)
+            for (var i = 0; i < Count; i++)
             {
-                if (this[i] != other[i]) return false;
+                if (!this[i].IsSimilar(other[i])) return false;
+                //if (this[i] != other[i]) return false;
             }
             return true;
         }
@@ -140,9 +147,10 @@ namespace ShapeEngine.Core
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        public Vector2 Get(int index)
+        public Vector2 GetPoint(int index)
         {
-            return Count <= 0 ? new() : this[index % Count];
+            return GetItem(index);
+            //return Count <= 0 ? new() : this[index % Count];
         }
         public ClosestPoint GetClosest(Vector2 p)
         {
@@ -174,6 +182,8 @@ namespace ShapeEngine.Core
             return new(uniqueVertices);
         }
 
+        public Vector2 GetRandomPoint() => GetRandomItem();
+        public List<Vector2> GetRandomPoints(int amount) => GetRandomItems(amount);
         public Polygon ToPolygon()
         {
             return new Polygon(this);
@@ -289,6 +299,34 @@ namespace ShapeEngine.Core
             return new(uniqueSegments);
         }
 
+        public Segment GetRandomSegment()
+        {
+            var items = new WeightedItem<Segment>[Count];
+            for (var i = 0; i < Count; i++)
+            {
+                var seg = this[i];
+                items[i] = new(seg, (int)seg.LengthSquared);
+            }
+            return SRNG.PickRandomItem(items);
+        }
+        public Vector2 GetRandomPoint() => GetRandomSegment().GetRandomPoint();
+        public Points GetRandomPoints(int amount)
+        {
+            var items = new WeightedItem<Segment>[Count];
+            for (var i = 0; i < Count; i++)
+            {
+                var seg = this[i];
+                items[i] = new(seg, (int)seg.LengthSquared);
+            }
+            var pickedSegments = SRNG.PickRandomItems(amount, items);
+            var randomPoints = new Points();
+            foreach (var seg in pickedSegments)
+            {
+                randomPoints.Add(seg.GetRandomPoint());
+            }
+            return randomPoints;
+        }
+        
         /// <summary>
         /// Counts how often the specified segment appears in the list.
         /// </summary>

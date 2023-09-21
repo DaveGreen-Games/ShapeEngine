@@ -168,10 +168,10 @@ namespace ShapeEngine.Core
         #region Static
         public static bool IsPointOnSegment(Vector2 point, Vector2 start, Vector2 end)
         {
-            Vector2 d = end - start;
-            Vector2 lp = point - start;
-            Vector2 p = SVec.Project(lp, d);
-            return lp == p && p.LengthSquared() <= d.LengthSquared() && Vector2.Dot(p, d) >= 0.0f;
+            var d = end - start;
+            var lp = point - start;
+            var p = lp.Project(d);
+            return lp.IsSimilar(p) && p.LengthSquared() <= d.LengthSquared() && Vector2.Dot(p, d) >= 0.0f;
         }
         public static bool IsPointOnRay(Vector2 point, Vector2 start, Vector2 dir)
         {
@@ -215,7 +215,10 @@ namespace ShapeEngine.Core
         /// <returns></returns>
         public bool IsSimilar(Segment other)
         {
-            return (Start == other.Start && End == other.End) || (Start == other.End && End == other.Start);
+            return 
+                (Start.IsSimilar(other.Start) && End.IsSimilar(other.End)) ||
+                (Start.IsSimilar(other.End) && End.IsSimilar(other.Start));
+            //return (Start == other.Start && End == other.End) || (Start == other.End && End == other.Start);
         }
         
         /// <summary>
@@ -225,7 +228,7 @@ namespace ShapeEngine.Core
         /// <returns></returns>
         public bool Equals(Segment other)
         {
-            return Start == other.Start && End == other.End;
+            return Start.IsSimilar(other.Start) && End.IsSimilar(other.End);// Start == other.Start && End == other.End;
         }
         public override int GetHashCode()
         {

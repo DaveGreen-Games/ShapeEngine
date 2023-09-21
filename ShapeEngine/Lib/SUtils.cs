@@ -161,6 +161,8 @@ namespace ShapeEngine.Lib
     
     public static class SUtils
     {
+        public const float FloatComparisonTolerance = 0.001f;
+        
         public const float DEGTORAD = MathF.PI / 180f;
 
         public const float RADTODEG = 180f / MathF.PI;
@@ -169,7 +171,7 @@ namespace ShapeEngine.Lib
         {
             if (a == null || b == null) return false;
             if (a.Count != b.Count) return false;
-            for (int i = 0; i < a.Count; i++)
+            for (var i = 0; i < a.Count; i++)
             {
                 if (!a[i].Equals(b[i])) return false;
             }
@@ -185,6 +187,7 @@ namespace ShapeEngine.Lib
             return hash.ToHashCode();
         }
 
+        public static bool IsSimilar(float a, float b, float tolerance = FloatComparisonTolerance) => MathF.Abs(a - b) <= tolerance;
 
         public static float GetFactor(float cur, float min, float max)
         {
@@ -196,7 +199,6 @@ namespace ShapeEngine.Lib
             if (index >= count) return index % count;
             else if (index < 0) return (index % count) + count;
             else return index;
-
         }
         public static T GetItem<T>(List<T> collection, int index)
         {

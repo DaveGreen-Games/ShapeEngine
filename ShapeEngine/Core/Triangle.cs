@@ -249,12 +249,15 @@ namespace ShapeEngine.Core
         }
         public readonly Triangle Move(Vector2 offset) { return new(A + offset, B + offset, C + offset, FlippedNormals); }
         
-        public readonly Points GetVertices() { return new Points() {A, B, C}; }
-        public readonly Polygon ToPolygon() { return new Polygon() {A, B, C}; }
-        public readonly Segments GetEdges() { return new() { SegmentA, SegmentB, SegmentC }; }
-        public readonly Triangulation Triangulate() { return this.Triangulate(GetCentroid()); }
-        public readonly float GetCircumference() { return MathF.Sqrt(GetCircumferenceSquared()); }
-        public readonly float GetCircumferenceSquared() { return SideA.LengthSquared() + SideB.LengthSquared() + SideC.LengthSquared(); }
+        public readonly Points ToPoints() => new() {A, B, C};
+        public readonly Polygon ToPolygon() => new() {A, B, C};
+
+        public readonly Polyline ToPolyline() => new() { A, B, C };
+        public readonly Segments GetEdges() => new() { SegmentA, SegmentB, SegmentC };
+        public readonly Triangulation Triangulate() => this.Triangulate(GetCentroid());
+        public readonly float GetCircumference() => MathF.Sqrt(GetCircumferenceSquared());
+        public readonly float GetCircumferenceSquared() => SideA.LengthSquared() + SideB.LengthSquared() + SideC.LengthSquared();
+
         public readonly float GetArea() 
         {
             //float al = A.Length();
@@ -272,7 +275,8 @@ namespace ShapeEngine.Core
 
             return MathF.Abs((A.X - C.X) * (B.Y - C.Y) - (A.Y - C.Y) * (B.X - C.X)) / 2f;
         }
-        public readonly Vector2 GetClosestVertex(Vector2 p) { return ToPolygon().GetClosestVertex(p); }
+        public readonly Vector2 GetClosestVertex(Vector2 p) => ToPolygon().GetClosestVertex(p);
+
         public readonly Segment GetClosestSegment(Vector2 p)
         {
             Segment closestSegment = new();
@@ -302,7 +306,8 @@ namespace ShapeEngine.Core
             return closestSegment;
 
         }
-        public readonly Vector2 GetRandomPointInside() { return this.GetPoint(SRNG.randF(), SRNG.randF()); }
+        public readonly Vector2 GetRandomPointInside() => this.GetPoint(SRNG.randF(), SRNG.randF());
+
         public readonly Points GetRandomPointsInside(int amount)
         {
             var points = new Points();
@@ -312,35 +317,18 @@ namespace ShapeEngine.Core
             }
             return points;
         }
-        public readonly Vector2 GetRandomVertex() { return SRNG.randCollection(GetVertices()); }
-        public readonly Segment GetRandomEdge() 
+
+        public readonly Vector2 GetRandomVertex()
         {
-            var edges = GetEdges();
-            List<WeightedItem<Segment>> items = new(edges.Count);
-            foreach (var edge in edges)
-            {
-                items.Add(new(edge, (int)edge.LengthSquared));
-            }
-            return SRNG.PickRandomItem(items.ToArray());
-            //return SRNG.randCollection(GetEdges(), false); 
+            var randIndex = SRNG.randI(0, 2);
+            if (randIndex == 0) return A;
+            else if (randIndex == 1) return B;
+            else return C;
         }
-        public readonly Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
-        public readonly Points GetRandomPointsOnEdge(int amount)
-        {
-            List<WeightedItem<Segment>> items = new(amount);
-            var edges = GetEdges();
-            foreach (var edge in edges)
-            {
-                items.Add(new(edge, (int)edge.LengthSquared));
-            }
-            var pickedEdges = SRNG.PickRandomItems(amount, items.ToArray());
-            var randomPoints = new Points();
-            foreach (var edge in pickedEdges)
-            {
-                randomPoints.Add(edge.GetRandomPoint());
-            }
-            return randomPoints;
-        }
+        public Segment GetRandomEdge() => GetEdges().GetRandomSegment();
+        public Vector2 GetRandomPointOnEdge() => GetRandomEdge().GetRandomPoint();
+        public Points GetRandomPointsOnEdge(int amount) => GetEdges().GetRandomPoints(amount);
+
         #endregion
 
         #region Static
@@ -372,17 +360,24 @@ namespace ShapeEngine.Core
         public bool IsSimilar(Triangle other)
         {
             return 
-                (A == other.A && B == other.B && C == other.C) || 
-                (C == other.A && A == other.B && B == other.C) || 
-                (B == other.A && C == other.B && A == other.C) ||
-                (B == other.A && A == other.B && C == other.C) ||
-                (C == other.A && B == other.B && A == other.C) ||
-                (A == other.A && C == other.B && B == other.C);
+                (A.IsSimilar(A) && B.IsSimilar(B) && C.IsSimilar(C) ) || 
+                (C.IsSimilar(A) && A.IsSimilar(B) && B.IsSimilar(C) ) || 
+                (B.IsSimilar(A) && C.IsSimilar(B) && A.IsSimilar(C) ) ||
+                (B.IsSimilar(A) && A.IsSimilar(B) && C.IsSimilar(C) ) ||
+                (C.IsSimilar(A) && B.IsSimilar(B) && A.IsSimilar(C) ) ||
+                (A.IsSimilar(A) && C.IsSimilar(B) && B.IsSimilar(C) );
+            
+            //return 
+            //    (A == other.A && B == other.B && C == other.C) || 
+            //    (C == other.A && A == other.B && B == other.C) || 
+            //    (B == other.A && C == other.B && A == other.C) ||
+            //    (B == other.A && A == other.B && C == other.C) ||
+            //    (C == other.A && B == other.B && A == other.C) ||
+            //    (A == other.A && C == other.B && B == other.C);
         }
         public bool Equals(Triangle other)
         {
-
-            return A == other.A && B == other.B && C == other.C;
+            return A.IsSimilar(other.A) && B.IsSimilar(other.B) && C.IsSimilar(other.C);
         }
         public override readonly int GetHashCode()
         {

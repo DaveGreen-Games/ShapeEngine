@@ -21,9 +21,6 @@ namespace ShapeEngine.Core
     /// </summary>
     public abstract class GameLoop
     {
-
-        public static float FloatComparisonTolerance = 0.001f;
-        
         public static readonly string CURRENT_DIRECTORY = Environment.CurrentDirectory;
         public static bool EDITORMODE { get; private set; } = Directory.Exists("resources");
 
