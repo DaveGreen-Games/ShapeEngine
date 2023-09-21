@@ -78,7 +78,7 @@ namespace Examples.Scenes.ExampleScenes
             else
             {
                 //rmb subdivides triangle
-                var triangleResult = curTriangulation.GetClosestTriangle(mousePosGame);
+                var triangleResult = curTriangulation.GetClosest(mousePosGame);
                 if (triangleResult.Valid)
                 {
                     var triangle = triangleResult.Item; 

@@ -428,39 +428,23 @@ namespace ShapeEngine.Core
             return true;
         }
         public Points ToPoints() { return new(this); }
-        public int GetClosestIndex(Vector2 p)
+        
+        
+        public int GetClosestIndexOnEdge(Vector2 p)
         {
-            //if (Count <= 0) return -1;
-            //if (Count == 1) return 0;
-            //
-            //float minD = float.PositiveInfinity;
-            //var edges = GetEdges();
-            //int closestIndex = -1;
-            //for (int i = 0; i < edges.Count; i++)
-            //{
-            //    Vector2 c = edges[i].GetClosestPoint(p).Point;
-            //    float d = (c - p).LengthSquared();
-            //    if (d < minD)
-            //    {
-            //        closestIndex = i;
-            //        minD = d;
-            //    }
-            //}
-            //return closestIndex;
-
             if (Count <= 0) return -1;
             if (Count == 1) return 0;
 
             float minD = float.PositiveInfinity;
             int closestIndex = -1;
 
-            for (int i = 0; i < Count; i++)
+            for (var i = 0; i < Count; i++)
             {
-                Vector2 start = this[i];
-                Vector2 end = this[(i + 1) % Count];
-                Segment edge = new Segment(start, end);
+                var start = this[i];
+                var end = this[(i + 1) % Count];
+                var edge = new Segment(start, end);
 
-                Vector2 closest = edge.GetClosestPoint(p).Point;
+                Vector2 closest = edge.GetClosestCollisionPoint(p).Point;
                 float d = (closest - p).LengthSquared();
                 if (d < minD)
                 {
@@ -470,63 +454,13 @@ namespace ShapeEngine.Core
             }
             return closestIndex;
         }
-        public Vector2 GetClosestVertex(Vector2 p)
+        public ClosestPoint GetClosestPoint(Vector2 p)
         {
-            //float minD = float.PositiveInfinity;
-            //Vector2 closest = new();
-            //for (int i = 0; i < Count; i++)
-            //{
-            //    float d = (this[i] - p).LengthSquared();
-            //    if (d < minD)
-            //    {
-            //        closest = this[i];
-            //        minD = d;
-            //    }
-            //}
-            //return closest;
-
-            if (Count < 2) return new();
-            float minD = float.PositiveInfinity;
-            Vector2 closestPoint = new();
-
-            for (int i = 0; i < Count; i++)
-            {
-                Vector2 start = this[i];
-                Vector2 end = this[(i + 1) % Count];
-                Segment edge = new Segment(start, end);
-
-                Vector2 closest = edge.GetClosestPoint(p).Point;
-                float d = (closest - p).LengthSquared();
-                if (d < minD)
-                {
-                    closestPoint = closest;
-                    minD = d;
-                }
-            }
-            return closestPoint;
+            var cp = GetEdges().GetClosestCollisionPoint(p);
+            return new(cp, (cp.Point - p).Length());
         }
-        public Segment GetClosestSegment(Vector2 p)
-        {
-            if (Count < 2) return new();
-            float minD = float.PositiveInfinity;
-            Segment closestSegment = new();
-
-            for (int i = 0; i < Count; i++)
-            {
-                Vector2 start = this[i];
-                Vector2 end = this[(i + 1) % Count];
-                Segment edge = new Segment(start, end);
-                
-                Vector2 closest = edge.GetClosestPoint(p).Point;
-                float d = (closest - p).LengthSquared();
-                if (d < minD)
-                {
-                    closestSegment = edge;
-                    minD = d;
-                }
-            }
-            return closestSegment;
-        }
+        public CollisionPoint GetClosestCollisionPoint(Vector2 p) => GetEdges().GetClosestCollisionPoint(p);
+        public ClosestSegment GetClosestSegment(Vector2 p) => GetEdges().GetClosest(p);
         
         public Vector2 GetRandomPointInside()
         {
@@ -895,24 +829,6 @@ namespace ShapeEngine.Core
         #endregion
 
         #region IShape
-        public CollisionPoint GetClosestPoint(Vector2 p)
-        {
-            float minD = float.PositiveInfinity;
-            var edges = GetEdges();
-            CollisionPoint closest = new();
-
-            for (int i = 0; i < edges.Count; i++)
-            {
-                CollisionPoint c = edges[i].GetClosestPoint(p);
-                float d = (c.Point - p).LengthSquared();
-                if (d < minD)
-                {
-                    closest = c;
-                    minD = d;
-                }
-            }
-            return closest;
-        }
         public Circle GetBoundingCircle()
         {
             float maxD = 0f;

@@ -107,7 +107,7 @@ namespace ShapeEngine.Core
             if(ContainsPoint(p)) return this;
 
             var closest = GetClosestSegment(p);
-            return new Triangle(p, closest);
+            return new Triangle(p, closest.Segment);
         }
 
         public readonly Triangle Floor() { return new(A.Floor(), B.Floor(), C.Floor(), FlippedNormals); }
@@ -275,37 +275,79 @@ namespace ShapeEngine.Core
 
             return MathF.Abs((A.X - C.X) * (B.Y - C.Y) - (A.Y - C.Y) * (B.X - C.X)) / 2f;
         }
-        public readonly Vector2 GetClosestVertex(Vector2 p) => ToPolygon().GetClosestVertex(p);
 
-        public readonly Segment GetClosestSegment(Vector2 p)
+        public readonly Vector2 GetClosestVertex(Vector2 p)
         {
-            Segment closestSegment = new();
-            float minDisSquared = float.PositiveInfinity;
+            var closest = A;
+            float minDisSquared = (A - p).LengthSquared();
 
-            Segment seg = SegmentA;
-            float l = (seg.GetClosestPoint(p).Point - p).LengthSquared();
+            float l = (B - p).LengthSquared();
+            if (l < minDisSquared)
+            {
+                closest = B;
+                minDisSquared = l;
+            }
+
+            l = (C - p).LengthSquared();
+            if (l < minDisSquared) closest = C;
+
+            return closest;
+        }
+
+        public readonly ClosestPoint GetClosestPoint(Vector2 p)
+        {
+            var cp = GetClosestCollisionPoint(p);
+            return new(cp, (cp.Point - p).Length());
+        }
+        public readonly ClosestSegment GetClosestSegment(Vector2 p)
+        {
+            var closestSegment = SegmentA;
+            var cp = SegmentA.GetClosestCollisionPoint(p);
+            float minDisSquared = (cp.Point - p).LengthSquared();
+
+            var curCP = SegmentB.GetClosestCollisionPoint(p);
+            float l = (curCP.Point - p).LengthSquared();
             if (l < minDisSquared)
             {
                 minDisSquared = l;
-                closestSegment = seg;
+                closestSegment = SegmentB;
+                cp = curCP;
             }
-            seg = SegmentB;
-            l = (seg.GetClosestPoint(p).Point - p).LengthSquared();
+            curCP = SegmentC.GetClosestCollisionPoint(p);
+            l = (curCP.Point - p).LengthSquared();
             if (l < minDisSquared)
             {
                 minDisSquared = l;
-                closestSegment = seg;
+                closestSegment = SegmentC;
+                cp = curCP;
             }
-            seg = SegmentC;
-            l = (seg.GetClosestPoint(p).Point - p).LengthSquared();
-            if (l < minDisSquared)
-            {
-                //minDisSquared = l;
-                closestSegment = seg;
-            }
-            return closestSegment;
+            return new(closestSegment, cp, MathF.Sqrt(minDisSquared));
 
         }
+        public readonly CollisionPoint GetClosestCollisionPoint(Vector2 p)
+        {
+            var cp = SegmentA.GetClosestCollisionPoint(p);
+            float minDisSquared = (cp.Point - p).LengthSquared();
+
+            var curCP = SegmentB.GetClosestCollisionPoint(p);
+            float l = (curCP.Point - p).LengthSquared();
+            if (l < minDisSquared)
+            {
+                minDisSquared = l;
+                cp = curCP;
+            }
+            curCP = SegmentC.GetClosestCollisionPoint(p);
+            l = (curCP.Point - p).LengthSquared();
+            if (l < minDisSquared)
+            {
+                minDisSquared = l;
+                cp = curCP;
+            }
+
+            return cp;
+        }
+
+        
         public readonly Vector2 GetRandomPointInside() => this.GetPoint(SRNG.randF(), SRNG.randF());
 
         public readonly Points GetRandomPointsInside(int amount)
@@ -403,7 +445,8 @@ namespace ShapeEngine.Core
         public readonly Vector2 GetCentroid() { return (A + B + C) / 3; }
         public readonly Rect GetBoundingBox() { return new Rect(A.X, A.Y, 0, 0).Enlarge(B).Enlarge(C); }
         public readonly bool ContainsPoint(Vector2 p) { return IsPointInTriangle(A, B, C, p); }
-        public readonly CollisionPoint GetClosestPoint(Vector2 p) { return ToPolygon().GetClosestPoint(p); }
+
+        
         public readonly Circle GetBoundingCircle() { return GetCircumCircle(); } // ToPolygon().GetBoundingCircle(); }
         #endregion
 

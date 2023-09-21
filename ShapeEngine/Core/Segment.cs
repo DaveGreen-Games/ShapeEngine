@@ -189,11 +189,11 @@ namespace ShapeEngine.Core
         #endregion
 
         #region IShape
-        public Rect GetBoundingBox() { return new(Start, End); }
-        public Circle GetBoundingCircle() { return ToPolyline().GetBoundingCircle(); }
-        public Vector2 GetCentroid() { return Center; }
-        public bool ContainsPoint(Vector2 p) { return IsPointOnSegment(p, Start, End); }
-        public CollisionPoint GetClosestPoint(Vector2 p)
+        public readonly Rect GetBoundingBox() { return new(Start, End); }
+        public readonly Circle GetBoundingCircle() { return ToPolyline().GetBoundingCircle(); }
+        public readonly Vector2 GetCentroid() { return Center; }
+        public readonly bool ContainsPoint(Vector2 p) { return IsPointOnSegment(p, Start, End); }
+        public readonly CollisionPoint GetClosestCollisionPoint(Vector2 p)
         {
             CollisionPoint c;
             var w = Displacement;
@@ -205,6 +205,14 @@ namespace ShapeEngine.Core
             //if (AutomaticNormals) return c.FlipNormal(p);
             return c;
         }
+
+        public readonly ClosestPoint GetClosestPoint(Vector2 p)
+        {
+            var cp = GetClosestCollisionPoint(p);
+            return new(cp, (cp.Point - p).Length());
+        }
+        
+        
         #endregion
 
         #region Equality & HashCode

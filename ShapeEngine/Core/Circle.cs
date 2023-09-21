@@ -191,7 +191,7 @@ namespace ShapeEngine.Core
         public float GetCircumferenceSquared() { return GetCircumference() * GetCircumference(); }
         public Rect GetBoundingBox() { return new Rect(Center, new Vector2(Radius, Radius) * 2f, new(0.5f)); }
         public bool ContainsPoint(Vector2 p) { return IsPointInCircle(p, Center, Radius); }
-        public CollisionPoint GetClosestPoint(Vector2 p) 
+        public CollisionPoint GetClosestCollisionPoint(Vector2 p) 
         {
             Vector2 normal = (p - Center).Normalize();
             Vector2 point = Center + normal * Radius;

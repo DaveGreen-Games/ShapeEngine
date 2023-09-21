@@ -152,6 +152,7 @@ namespace ShapeEngine.Core
             return GetItem(index);
             //return Count <= 0 ? new() : this[index % Count];
         }
+        
         public ClosestPoint GetClosest(Vector2 p)
         {
             if (Count <= 0) return new();
@@ -172,6 +173,45 @@ namespace ShapeEngine.Core
             }
             return new(closestPoint, (p -closestPoint), MathF.Sqrt(minDisSquared));
         }
+        public int GetClosestIndex(Vector2 p)
+        {
+            if (Count <= 0) return -1;
+            else if (Count == 1) return 0;
+            
+            float minDistanceSquared = float.PositiveInfinity;
+            int closestIndex = -1;
+
+            for (var i = 0; i < Count; i++)
+            {
+                float disSquared = (this[i] - p).LengthSquared();
+                if (disSquared < minDistanceSquared)
+                {
+                    closestIndex = i;
+                    minDistanceSquared = disSquared;
+                }
+            }
+            return closestIndex;
+        }
+        public Vector2 GetClosestVertex(Vector2 p)
+        {
+            if (Count <= 0) return new();
+            else if (Count == 1) return this[0];
+            
+            float minDistanceSquared = float.PositiveInfinity;
+            Vector2 closestPoint = new();
+
+            for (var i = 0; i < Count; i++)
+            {
+                float disSquared = (this[i] - p).LengthSquared();
+                if (disSquared < minDistanceSquared)
+                {
+                    closestPoint = this[i];
+                    minDistanceSquared = disSquared;
+                }
+            }
+            return closestPoint;
+        }
+        
         public Points GetUniquePoints()
         {
             var uniqueVertices = new HashSet<Vector2>();
@@ -253,7 +293,7 @@ namespace ShapeEngine.Core
         #endregion
 
         #region Public
-        public ClosestSegment GetClosestSegment(Vector2 p)
+        public ClosestSegment GetClosest(Vector2 p)
         {
             if (Count <= 0) return new();
 
@@ -263,7 +303,7 @@ namespace ShapeEngine.Core
             for (var i = 0; i < Count; i++)
             {
                 var seg = this[i];
-                var closestPoint = seg.GetClosestPoint(p).Point;
+                var closestPoint = seg.GetClosestCollisionPoint(p).Point;
                 float disSquared = (closestPoint - p).LengthSquared();
                 if(disSquared < minDisSquared)
                 {
@@ -275,6 +315,47 @@ namespace ShapeEngine.Core
 
             return new(closestSegment, closestSegmentPoint, MathF.Sqrt(minDisSquared));
         }
+        public CollisionPoint GetClosestCollisionPoint(Vector2 p)
+        {
+            float minD = float.PositiveInfinity;
+            
+            CollisionPoint closest = new();
+
+            for (int i = 0; i < Count; i++)
+            {
+                CollisionPoint c = this[i].GetClosestCollisionPoint(p);
+                float d = (c.Point - p).LengthSquared();
+                if (d < minD)
+                {
+                    closest = c;
+                    minD = d;
+                }
+            }
+            return closest;
+        }
+        public int GetClosestIndexOnEdge(Vector2 p)
+        {
+            if (Count <= 0) return -1;
+            if (Count == 1) return 0;
+
+            float minD = float.PositiveInfinity;
+            int closestIndex = -1;
+
+            for (var i = 0; i < Count; i++)
+            {
+                var edge = this[i];
+                var closest = edge.GetClosestCollisionPoint(p).Point;
+                float d = (closest - p).LengthSquared();
+                if (d < minD)
+                {
+                    closestIndex = i;
+                    minD = d;
+                }
+            }
+            return closestIndex;
+        }
+        
+        
         public Points GetUniquePoints()
         {
             var uniqueVertices = new HashSet<Vector2>();
@@ -470,7 +551,7 @@ namespace ShapeEngine.Core
         #endregion
 
         #region Public
-        public ClosestItem<Triangle> GetClosestTriangle(Vector2 p)
+        public ClosestItem<Triangle> GetClosest(Vector2 p)
         {
             if (Count <= 0) return new();
 
@@ -483,7 +564,7 @@ namespace ShapeEngine.Core
             {
                 var tri = this[i];
                 bool containsPoint = tri.ContainsPoint(p);
-                var closestPoint = tri.GetClosestPoint(p);
+                var closestPoint = tri.GetClosestCollisionPoint(p);
                 float disSquared = (closestPoint.Point - p).LengthSquared();
                 if (disSquared < minDisSquared)
                 {

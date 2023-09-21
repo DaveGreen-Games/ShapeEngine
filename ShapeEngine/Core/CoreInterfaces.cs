@@ -259,7 +259,7 @@ namespace ShapeEngine.Core
         public Rect GetBoundingBox();
         public Circle GetBoundingCircle();
         public Vector2 GetCentroid();
-        public CollisionPoint GetClosestPoint(Vector2 p);
+        public CollisionPoint GetClosestCollisionPoint(Vector2 p);
         public bool ContainsPoint(Vector2 p);
         
         //public Points GetVertices();

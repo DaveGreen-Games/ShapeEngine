@@ -174,7 +174,7 @@ namespace ShapeEngine.Core
                                 var shape = other.GetCollider().GetShape();
                                 if (!shape.ContainsPoint(refPoint))
                                 {
-                                    CollisionPoint closest = shape.GetClosestPoint(refPoint);
+                                    CollisionPoint closest = shape.GetClosestCollisionPoint(refPoint);
                                     collisionPoints.Add(closest);
                                     //ClosestPointChecksPerFrame++;
                                 }

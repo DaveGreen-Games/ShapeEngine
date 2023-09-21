@@ -270,8 +270,8 @@ namespace Examples.Scenes.ExampleScenes
             bool isMouseOnLine = false;
             drawClosest = true;
 
-            closest = polyline.GetClosestPoint(mousePos).Point;
-            closestIndex = polyline.GetClosestIndex(mousePos);
+            closest = polyline.GetClosestCollisionPoint(mousePos).Point;
+            closestIndex = polyline.GetClosestIndexOnEdge(mousePos);
             pickedVertex = -1;
             vertices.Clear();
 

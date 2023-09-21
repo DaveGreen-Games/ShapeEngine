@@ -27,6 +27,11 @@ namespace ShapeEngine.Core
         public readonly float Bottom => Y + Height;
         public readonly float Left => X;
         public readonly float Right => X + Width;
+        
+        public readonly Segment LeftSegment => new(TopLeft, BottomLeft, FlippedNormals);
+        public readonly Segment BottomSegment => new(BottomLeft, BottomRight, FlippedNormals);
+        public readonly Segment RightSegment => new(BottomRight, TopRight, FlippedNormals);
+        public readonly Segment TopSegment => new(TopRight, TopLeft, FlippedNormals);
         public readonly Vector2 Size => new(Width, Height);
         public readonly Rectangle Rectangle => new(X, Y, Width, Height);
 
@@ -245,10 +250,7 @@ namespace ShapeEngine.Core
             return (top.left, bottom.left, bottom.right, top.right);
         }
 
-        public readonly Segment GetLeftSegment() => new(TopLeft, BottomLeft, FlippedNormals);
-        public readonly Segment GetBottomSegment() => new(BottomLeft, BottomRight, FlippedNormals);
-        public readonly Segment GetRightSegment() => new(BottomRight, TopRight, FlippedNormals);
-        public readonly Segment GetTopSegment() => new(TopRight, TopLeft, FlippedNormals);
+       
         public readonly Points ToPoints() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
         public readonly Polygon ToPolygon() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
         public readonly Polyline ToPolyline() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
@@ -275,45 +277,105 @@ namespace ShapeEngine.Core
         public readonly float GetCircumference() { return Width * 2 + Height * 2; }
         public readonly float GetCircumferenceSquared() { return GetCircumference() * GetCircumference(); }
         public readonly float GetArea() { return Width * Height; }
-        public readonly Vector2 GetClosestVertex(Vector2 p) { return ToPolygon().GetClosestVertex(p); }
-        public readonly Vector2 GetRandomPointInside() { return new(SRNG.randF(X, X + Width), SRNG.randF(Y, Y + Height)); }
-        public readonly Segment GetClosestSegment(Vector2 p)
+        
+        
+        public readonly Vector2 GetClosestVertex(Vector2 p)
         {
-            Segment closestSegment = new();
-            float minDisSquared = float.PositiveInfinity;
+            var closest = TopLeft;
+            float minDisSquared = (TopLeft - p).LengthSquared();
 
-            Segment seg = GetLeftSegment();
-            float l = (seg.GetClosestPoint(p).Point - p).LengthSquared();
-            if(l < minDisSquared)
-            {
-                minDisSquared = l;
-                closestSegment = seg;
-            }
-            seg = GetBottomSegment();
-            l = (seg.GetClosestPoint(p).Point - p).LengthSquared();
+            float l = (BottomLeft - p).LengthSquared();
             if (l < minDisSquared)
             {
+                closest = BottomLeft;
                 minDisSquared = l;
-                closestSegment = seg;
             }
-            seg = GetRightSegment();
-            l = (seg.GetClosestPoint(p).Point - p).LengthSquared();
+            l = (BottomRight - p).LengthSquared();
             if (l < minDisSquared)
             {
+                closest = BottomRight;
                 minDisSquared = l;
-                closestSegment = seg;
-            }
-            seg = GetTopSegment();
-            l = (seg.GetClosestPoint(p).Point - p).LengthSquared();
-            if (l < minDisSquared)
-            {
-                //minDisSquared = l;
-                closestSegment = seg;
             }
 
-            return closestSegment;
+            l = (TopRight - p).LengthSquared();
+            if (l < minDisSquared) closest = TopRight;
+
+            return closest;
+        }
+        public readonly ClosestPoint GetClosestPoint(Vector2 p)
+        {
+            var cp = GetClosestCollisionPoint(p);
+            return new(cp, (cp.Point - p).Length());
+        }
+        public readonly ClosestSegment GetClosestSegment(Vector2 p)
+        {
+            var closestSegment = LeftSegment;
+            var curSegment = closestSegment;
+            var cp = curSegment.GetClosestCollisionPoint(p);
+            float minDisSquared = (cp.Point - p).LengthSquared();
+
+            curSegment = BottomSegment;
+            var curCP = curSegment.GetClosestCollisionPoint(p);
+            float l = (curCP.Point - p).LengthSquared();
+            if (l < minDisSquared)
+            {
+                minDisSquared = l;
+                closestSegment = curSegment;
+                cp = curCP;
+            }
+            
+            curSegment = RightSegment;
+            curCP = curSegment.GetClosestCollisionPoint(p);
+            l = (curCP.Point - p).LengthSquared();
+            if (l < minDisSquared)
+            {
+                minDisSquared = l;
+                closestSegment = curSegment;
+                cp = curCP;
+            }
+            
+            curSegment = TopSegment;
+            curCP = curSegment.GetClosestCollisionPoint(p);
+            l = (curCP.Point - p).LengthSquared();
+            if (l < minDisSquared)
+            {
+                closestSegment = curSegment;
+                cp = curCP;
+            }
+            
+            return new(closestSegment, cp, MathF.Sqrt(minDisSquared));
 
         }
+        public readonly CollisionPoint GetClosestCollisionPoint(Vector2 p)
+        {
+            var cp = LeftSegment.GetClosestCollisionPoint(p);
+            float minDisSquared = (cp.Point - p).LengthSquared();
+
+            var curCP = BottomSegment.GetClosestCollisionPoint(p);
+            float l = (curCP.Point - p).LengthSquared();
+            if (l < minDisSquared)
+            {
+                minDisSquared = l;
+                cp = curCP;
+            }
+            curCP = RightSegment.GetClosestCollisionPoint(p);
+            l = (curCP.Point - p).LengthSquared();
+            if (l < minDisSquared)
+            {
+                minDisSquared = l;
+                cp = curCP;
+            }
+            
+            curCP = TopSegment.GetClosestCollisionPoint(p);
+            l = (curCP.Point - p).LengthSquared();
+            if (l < minDisSquared) return curCP;
+            
+            return cp;
+        }
+
+        
+        public readonly Vector2 GetRandomPointInside() { return new(SRNG.randF(X, X + Width), SRNG.randF(Y, Y + Height)); }
+        
         public readonly Points GetRandomPointsInside(int amount)
         {
             var points = new Points();
@@ -355,7 +417,6 @@ namespace ShapeEngine.Core
         public readonly Rect GetBoundingBox() { return this; }
         public readonly Circle GetBoundingCircle() { return ToPolygon().GetBoundingCircle(); }
         public readonly bool ContainsPoint(Vector2 p) { return IsPointInRect(p, TopLeft, Size); }
-        public readonly CollisionPoint GetClosestPoint(Vector2 p) { return ToPolygon().GetClosestPoint(p); }
         #endregion
 
         #region Overlap

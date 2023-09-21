@@ -236,9 +236,9 @@ namespace Examples.Scenes.ExampleScenes
             if (amount <= 0) return;
 
 
-            Polygon shape = collider.GetPolygonShape();
-            Segment seg = shape.GetClosestSegment(point);
-            damagedSegments.AddSegment(seg);
+            var shape = collider.GetPolygonShape();
+            var seg = shape.GetClosestSegment(point);
+            damagedSegments.AddSegment(seg.Segment);
 
             curThreshold -= amount;
             if(curThreshold <= 0f)
