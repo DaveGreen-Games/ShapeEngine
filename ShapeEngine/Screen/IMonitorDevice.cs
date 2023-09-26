@@ -209,6 +209,13 @@ namespace ShapeEngine.Screen
             this.Index = index;
             this.Position = pos;
         }
+
+        public void WriteDebugInfo()
+        {
+            Console.WriteLine("---Monitor Info---");
+            Console.WriteLine($"{Name}: x({Dimensions.Width}) y({Dimensions.Height}) i({Index}) rr({Refreshrate}) ");
+            Console.WriteLine("------------------");
+        }
     }
 
 }

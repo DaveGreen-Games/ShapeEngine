@@ -637,6 +637,37 @@ namespace ShapeEngine.Core
             OnWindowSizeChanged?.Invoke(newDimensions);
         }
 
+        private void WriteDebugInfo()
+        {
+            Console.WriteLine("--------Shape Engine Monitor Info--------");
+            if(IsFullscreen())Console.WriteLine("Fullscreen is Enabled");
+            else Console.WriteLine("Fullscreen is Disabled");
+            
+            if(IsWindowMaximized()) Console.WriteLine("Window is Maximized");
+            else Console.WriteLine("Window is NOT Maximized");
+            
+            var dpi = Raylib.GetWindowScaleDPI();
+            Console.WriteLine($"DPI: {dpi.X}/{dpi.Y}");
+
+            var sWidth = Raylib.GetScreenWidth();
+            var sHeight = Raylib.GetScreenHeight();
+            Console.WriteLine($"Screen: {sWidth}/{sHeight}");
+
+            var monitor = Raylib.GetCurrentMonitor();
+            var mWidth = Raylib.GetMonitorWidth(monitor);
+            var mHeight = Raylib.GetMonitorHeight(monitor);
+            var mpWidth = Raylib.GetMonitorPhysicalWidth(monitor);
+            var mpHeight = Raylib.GetMonitorPhysicalHeight(monitor);
+            Console.WriteLine($"[{monitor}] Monitor: {mWidth}/{mHeight} Physical: {mpWidth}/{mpHeight}");
+
+
+            var rWidth = Raylib.GetRenderWidth();
+            var rHeight = Raylib.GetRenderHeight();
+            Console.WriteLine($"Render Size: {rWidth}/{rHeight}");
+
+            Monitor.CurMonitor().WriteDebugInfo();
+            Console.WriteLine("---------------------------------------");
+        }
     }
 
     /// <summary>
