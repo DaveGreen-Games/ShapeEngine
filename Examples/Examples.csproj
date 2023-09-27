@@ -19,13 +19,9 @@
   </ItemGroup>
 
 	<ItemGroup>
-		<Content Include="fonts\**">
+		<Content Include="Resources\**">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Remove="fonts\JetBrainsMono.ttf" />
 	</ItemGroup>
 	
 </Project>

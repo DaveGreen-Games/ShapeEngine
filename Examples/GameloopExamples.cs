@@ -16,7 +16,8 @@ namespace Examples
         private Dictionary<int, Font> fonts = new();
         private List<string> fontNames = new();
         private MainScene? mainScene = null;
-
+        //private Shader shader;
+        
         public GameloopExamples() : base(new(960 * 2, 540 * 2), new(1920, 1080))
         {
             GameCam = new BasicCamera(new(0f), Game.GetSize(), new(0.5f), 1f, 0f);
@@ -25,18 +26,19 @@ namespace Examples
         {
             Game.SetCamera(GameCam);
 
-
+            //shader = ContentLoader.LoadFragmentShader("Resources/Shaders/CRTShader.fs");
+            
             //fonts.Add(FontIDs.AbelRegular, ContentLoader.LoadFont("fonts/Abel-Regular.ttf", 200));
-            fonts.Add(FontIDs.GruppoRegular, ContentLoader.LoadFont("fonts/Gruppo-Regular.ttf", 100));
-            fonts.Add(FontIDs.IndieFlowerRegular, ContentLoader.LoadFont("fonts/IndieFlower-Regular.ttf", 100));
-            fonts.Add(FontIDs.OrbitRegular, ContentLoader.LoadFont("fonts/Orbit-Regular.ttf", 100));
-            fonts.Add(FontIDs.OrbitronBold, ContentLoader.LoadFont("fonts/Orbitron-Bold.ttf", 100));
-            fonts.Add(FontIDs.OrbitronRegular, ContentLoader.LoadFont("fonts/Orbitron-Regular.ttf", 100));
-            fonts.Add(FontIDs.PromptLightItalic, ContentLoader.LoadFont("fonts/Prompt-LightItalic.ttf", 100));
-            fonts.Add(FontIDs.PromptRegular, ContentLoader.LoadFont("fonts/Prompt-Regular.ttf", 100));
-            fonts.Add(FontIDs.PromptThin, ContentLoader.LoadFont("fonts/Prompt-Thin.ttf", 100));
-            fonts.Add(FontIDs.TekoMedium, ContentLoader.LoadFont("fonts/Teko-Medium.ttf", 100));
-            fonts.Add(FontIDs.JetBrains, ContentLoader.LoadFont("fonts/JetBrainsMono.ttf", 100));
+            fonts.Add(FontIDs.GruppoRegular, ContentLoader.LoadFont("Resources/Fonts/Gruppo-Regular.ttf", 100));
+            fonts.Add(FontIDs.IndieFlowerRegular, ContentLoader.LoadFont("Resources/Fonts/IndieFlower-Regular.ttf", 100));
+            fonts.Add(FontIDs.OrbitRegular, ContentLoader.LoadFont("Resources/Fonts/Orbit-Regular.ttf", 100));
+            fonts.Add(FontIDs.OrbitronBold, ContentLoader.LoadFont("Resources/Fonts/Orbitron-Bold.ttf", 100));
+            fonts.Add(FontIDs.OrbitronRegular, ContentLoader.LoadFont("Resources/Fonts/Orbitron-Regular.ttf", 100));
+            fonts.Add(FontIDs.PromptLightItalic, ContentLoader.LoadFont("Resources/Fonts/Prompt-LightItalic.ttf", 100));
+            fonts.Add(FontIDs.PromptRegular, ContentLoader.LoadFont("Resources/Fonts/Prompt-Regular.ttf", 100));
+            fonts.Add(FontIDs.PromptThin, ContentLoader.LoadFont("Resources/Fonts/Prompt-Thin.ttf", 100));
+            fonts.Add(FontIDs.TekoMedium, ContentLoader.LoadFont("Resources/Fonts/Teko-Medium.ttf", 100));
+            fonts.Add(FontIDs.JetBrains, ContentLoader.LoadFont("Resources/Fonts/JetBrainsMono.ttf", 100));
             
             //fontNames.Add("Abel Regular");
             fontNames.Add("Gruppo Regular");
@@ -51,10 +53,13 @@ namespace Examples
             fontNames.Add("Jet Brains Mono");
 
             FontDefault = GetFont(FontIDs.JetBrains);
-
+            
+            this.SetVsync(false);
+            this.SetFrameRateLimit(60);
         }
         protected override void UnloadContent()
         {
+            //ContentLoader.UnloadShader(shader);
             ContentLoader.UnloadFonts(fonts.Values);
         }
         protected override void BeginRun()

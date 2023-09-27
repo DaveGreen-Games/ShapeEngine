@@ -7,7 +7,7 @@ using Raylib_CsLo;
 
 namespace ScreenSystem2
 {
-    /*public class ShapeTexture
+    public class ShapeTexture
     {
         public static readonly float MinResolutionFactor = 0.25f;
         public static readonly float MaxResolutionFactor = 4f;
@@ -16,18 +16,8 @@ namespace ScreenSystem2
         public RenderTexture RenderTexture { get; private set; } = new();
         public int Width { get; private set; } = 0;
         public int Height { get; private set; } = 0;
-        public Color BackgroundColor = BLACK;
-        public float ResolutionFactor { get; private set; } = 1f;
-        private int originalWidth = 0;
-        private int originalHeight = 0;
 
         public ShapeTexture(){}
-        public ShapeTexture(float resolutionFactor)
-        {
-            ResolutionFactor = resolutionFactor;
-            if (ResolutionFactor < MinResolutionFactor) ResolutionFactor = MinResolutionFactor;
-            else if (ResolutionFactor > MaxResolutionFactor) ResolutionFactor = MaxResolutionFactor;
-        }
 
         public void Load(int w, int h)
         {
@@ -47,52 +37,59 @@ namespace ScreenSystem2
         {
             if (!Valid) return;
 
-            if (originalWidth == w && originalHeight == h) return;
+            if (Width == w && Height == h) return;
             
             UnloadRenderTexture(RenderTexture);
             SetTexture(w, h);
         }
-
-        private void SetTexture(int w, int h)
-        {
-            originalWidth = w;
-            originalHeight = h;
-            var scaledW = (int)(w * ResolutionFactor);
-            var scaledH = (int)(h * ResolutionFactor);
-            Width = scaledW;
-            Height = scaledH;
-            RenderTexture = LoadRenderTexture(scaledW, scaledH);
-        }
-        
-        
-        public void DrawTexture(int targetWidth, int targetHeight)
+        public void Draw()
         {
             var destRec = new Rectangle
             {
-                x = targetWidth * 0.5f,
-                y = targetHeight * 0.5f,
-                width = targetWidth,
-                height = targetHeight
+            x = Width * 0.5f,
+            y = Height * 0.5f,
+            width = Width,
+            height = Height
             };
-
             Vector2 origin = new()
             {
-                X = targetWidth * 0.5f,
-                Y = targetHeight * 0.5f
+            X = Width * 0.5f,
+            Y = Height * 0.5f
             };
-            
-            
             
             var sourceRec = new Rectangle(0, 0, Width, -Height);
             
             DrawTexturePro(RenderTexture.texture, sourceRec, destRec, origin, 0f, WHITE);
         }
         
-        
-        
-
-    }*/
-
+        private void SetTexture(int w, int h)
+        {
+            Width = w;
+            Height = h;
+            RenderTexture = LoadRenderTexture(Width, Height);
+        }
+        //public void DrawTexture(int targetWidth, int targetHeight)
+        //{
+            //var destRec = new Rectangle
+            //{
+            //    x = targetWidth * 0.5f,
+            //    y = targetHeight * 0.5f,
+            //    width = targetWidth,
+            //    height = targetHeight
+            //};
+            //Vector2 origin = new()
+            //{
+            //    X = targetWidth * 0.5f,
+            //    Y = targetHeight * 0.5f
+            //};
+            //
+            //
+            //
+            //var sourceRec = new Rectangle(0, 0, Width, -Height);
+            //
+            //DrawTexturePro(RenderTexture.texture, sourceRec, destRec, origin, 0f, WHITE);
+        //
+    }
     public class ShapeCamera
     {
         public static float MinZoomLevel = 0.1f;
@@ -235,6 +232,7 @@ namespace ScreenSystem2
     {
         public static (int width, int height) CurScreenSize = (800, 800);
         public static ShapeCamera Camera = new();
+        public static ShapeTexture GameTexture = new();
         
         public static Player Player = new(new(), 14);
         public static Vector2[] Stars = CreateStars(10000, 5000, 5000);
@@ -265,7 +263,8 @@ namespace ScreenSystem2
             InitWindow(CurScreenSize.width, CurScreenSize.height, "Screen System 2.0");
             ClearWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
             SetWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
-
+            
+            GameTexture.Load(CurScreenSize.width, CurScreenSize.height);
             
             while (!WindowShouldClose())
             {
@@ -281,14 +280,19 @@ namespace ScreenSystem2
                 
                 Update(dt, cameraArea);
 
+                BeginTextureMode(GameTexture.RenderTexture);
+                ClearBackground(new(0,0,0,0));
                 
-                BeginDrawing();
-                ClearBackground(BLACK);
-
                 BeginMode2D(Camera.Camera);
                 DrawGame(cameraArea, mousePosGame);
                 EndMode2D();
                 
+                EndTextureMode();
+                
+                BeginDrawing();
+                ClearBackground(BLACK);
+
+                GameTexture.Draw();
                 DrawUI(screenArea, mousePosScreen);
                 
                 EndDrawing();
