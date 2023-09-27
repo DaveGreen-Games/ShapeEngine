@@ -1,0 +1,684 @@
+using ShapeEngine.Screen;
+using Raylib_CsLo;
+using System.Numerics;
+using System.Runtime.InteropServices;
+using ShapeEngine.Lib;
+
+namespace ShapeEngine.Core;
+
+internal sealed class ShapeFlash
+    {
+        private float maxDuration = 0.0f;
+        private float flashTimer = 0.0f;
+        private Raylib_CsLo.Color startColor = new(0, 0, 0, 0);
+        private Raylib_CsLo.Color endColor = new(0, 0, 0, 0);
+        private Raylib_CsLo.Color curColor = new(0, 0, 0, 0);
+
+        public ShapeFlash(float duration, Raylib_CsLo.Color start, Raylib_CsLo.Color end)
+        {
+
+            maxDuration = duration;
+            flashTimer = duration;
+            startColor = start;
+            curColor = start;
+            endColor = end;
+        }
+
+        public void Update(float dt)
+        {
+            if (flashTimer > 0.0f)
+            {
+                flashTimer -= dt;
+                float f = 1.0f - flashTimer / maxDuration;
+                curColor = startColor.Lerp(endColor, f); // SColor.LerpColor(startColor, endColor, f);
+                if (flashTimer <= 0.0f)
+                {
+                    flashTimer = 0.0f;
+                    curColor = endColor;
+                }
+            }
+        }
+        public bool IsFinished() { return flashTimer <= 0.0f; }
+        public Raylib_CsLo.Color GetColor() { return curColor; }
+
+    }
+internal sealed class ShapeTexture
+    {
+        public static readonly float MinResolutionFactor = 0.25f;
+        public static readonly float MaxResolutionFactor = 4f;
+        
+        public bool Valid { get; private set; } = false;
+        public RenderTexture RenderTexture { get; private set; } = new();
+        public int Width { get; private set; } = 0;
+        public int Height { get; private set; } = 0;
+
+        public ShapeTexture(){}
+
+        public void Load(int w, int h)
+        {
+            if (Valid) return;
+            Valid = true;
+            SetTexture(w, h);
+        }
+
+        public void Unload()
+        {
+            if (!Valid) return;
+            Valid = false;
+            UnloadRenderTexture(RenderTexture);
+        }
+        
+        public void Update(int w, int h)
+        {
+            if (!Valid) return;
+
+            if (Width == w && Height == h) return;
+            
+            UnloadRenderTexture(RenderTexture);
+            SetTexture(w, h);
+        }
+        public void Draw()
+        {
+            var destRec = new Rectangle
+            {
+            x = Width * 0.5f,
+            y = Height * 0.5f,
+            width = Width,
+            height = Height
+            };
+            Vector2 origin = new()
+            {
+            X = Width * 0.5f,
+            Y = Height * 0.5f
+            };
+            
+            var sourceRec = new Rectangle(0, 0, Width, -Height);
+            
+            DrawTexturePro(RenderTexture.texture, sourceRec, destRec, origin, 0f, WHITE);
+        }
+        
+        private void SetTexture(int w, int h)
+        {
+            Width = w;
+            Height = h;
+            RenderTexture = LoadRenderTexture(Width, Height);
+        }
+        //public void DrawTexture(int targetWidth, int targetHeight)
+        //{
+            //var destRec = new Rectangle
+            //{
+            //    x = targetWidth * 0.5f,
+            //    y = targetHeight * 0.5f,
+            //    width = targetWidth,
+            //    height = targetHeight
+            //};
+            //Vector2 origin = new()
+            //{
+            //    X = targetWidth * 0.5f,
+            //    Y = targetHeight * 0.5f
+            //};
+            //
+            //
+            //
+            //var sourceRec = new Rectangle(0, 0, Width, -Height);
+            //
+            //DrawTexturePro(RenderTexture.texture, sourceRec, destRec, origin, 0f, WHITE);
+        //
+    }
+public sealed class ShapeCamera
+    {
+        public static float MinZoomLevel = 0.1f;
+        public static float MaxZoomLevel = 10f;
+        
+        
+        public Vector2 Position { get; set; }= new();
+        public Vector2 Size { get; private set; }= new();
+        public Vector2 Alignement{ get; private set; } = new(0.5f);
+        public Vector2 Offset => Size * Alignement;
+        public float ZoomLevel { get; private set; }= 1f;
+        public float RotationDeg { get; private set; }= 0f;
+
+        
+        public ShapeCamera() { }
+        public ShapeCamera(Vector2 pos)
+        {
+            this.Position = pos;
+        }
+        public ShapeCamera(Vector2 pos, Vector2 alignement)
+        {
+            this.Position = pos;
+            this.SetAlignement(alignement);
+        }
+        public ShapeCamera(Vector2 pos, Vector2 alignement, float zoomLevel)
+        {
+            this.Position = pos;
+            this.SetAlignement(alignement);
+            this.SetZoom(zoomLevel);
+        }
+        public ShapeCamera(Vector2 pos, Vector2 alignement, float zoomLevel, float rotationDeg)
+        {
+            this.Position = pos;
+            this.SetAlignement(alignement);
+            this.SetZoom(zoomLevel);
+            this.SetRotation(rotationDeg);
+        }
+        public ShapeCamera(Vector2 pos, float zoomLevel)
+        {
+            this.Position = pos;
+            this.SetZoom(zoomLevel);
+        }
+
+        public Rect Area => new
+        (
+            Position.X - Offset.X * ZoomFactor, 
+            Position.Y - Offset.Y * ZoomFactor, 
+            Size.X * ZoomFactor,
+            Size.Y * ZoomFactor
+        );
+        public Camera2D Camera => new()
+        {
+            target = Position,
+            offset = Offset,
+            zoom = ZoomLevel,
+            rotation = RotationDeg
+        };
+
+        public float ZoomFactor => 1f / ZoomLevel;
+
+        
+        public void Update(float dt, int screenWidth, int screenHeight)
+        {
+            Size = new(screenWidth, screenHeight);
+        }
+        
+        public void Reset()
+        {
+            Position = new();
+            Alignement = new(0.5f);
+            ZoomLevel = 1f;
+            RotationDeg = 0f;
+        }
+        
+        public void Zoom(float change) => SetZoom(ZoomLevel + change);
+        public void SetZoom(float zoomLevel)
+        {
+            ZoomLevel = zoomLevel;
+            if (ZoomLevel > MaxZoomLevel) ZoomLevel = MaxZoomLevel;
+            else if (ZoomLevel < MinZoomLevel) ZoomLevel = MinZoomLevel;
+        }
+
+        public void Rotate(float deg) => SetRotation(RotationDeg + deg);
+        public void SetRotation(float deg)
+        {
+            RotationDeg = deg;
+            RotationDeg = Wrap(RotationDeg, 0f, 360f);
+        }
+
+        public void SetAlignement(Vector2 newAlignement) => Alignement = Vector2.Clamp(newAlignement, Vector2.Zero, Vector2.One);
+
+        public Vector2 ScreenToWorld(Vector2 pos) => GetScreenToWorld2D(pos, Camera);
+        public Vector2 WorldToScreen(Vector2 pos) => GetWorldToScreen2D(pos, Camera);
+        private static float Wrap(float value, float min, float max) => value - (max - min) * MathF.Floor((float) (( value -  min) / ( max -  min)));
+    }
+public class ShapeLoop
+    {
+        public static readonly string CURRENT_DIRECTORY = AppDomain.CurrentDomain.BaseDirectory; // Environment.CurrentDirectory;
+        public static OSPlatform OS_PLATFORM { get; private set; } =
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? OSPlatform.Windows :
+            RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? OSPlatform.Linux :
+            RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? OSPlatform.OSX :
+            OSPlatform.FreeBSD;
+        
+        public static bool IsWindows() => OS_PLATFORM == OSPlatform.Windows;
+        public static bool IsLinux() => OS_PLATFORM == OSPlatform.Linux;
+        public static bool IsOSX() => OS_PLATFORM == OSPlatform.OSX;
+        
+        public delegate void WindowSizeChanged(Dimensions newDimensions);
+        public event WindowSizeChanged? OnWindowSizeChanged;
+        public string[] LaunchParams { get; protected set; } = Array.Empty<string>();
+
+        
+        private ShapeTexture GameTexture = new();
+        public ShapeCamera Camera { get; private set; } = new ShapeCamera();
+        public Dimensions CurScreenSize { get; private set; } = new();
+        public Dimensions WindowMinSize { get; } = new (128, 128);
+        public Rect ScreenArea { get; private set; } = new();
+        public Rect CameraArea { get; private set; } = new();
+        
+        public Vector2 MousePosGame { get; private set; } = new(0f);
+        public Vector2 MousePosUI { get; private set; } = new(0f);
+        
+        public float Delta { get; private set; } = 0f;
+        
+        public Raylib_CsLo.Color BackgroundColor = BLACK;
+        
+        public float ScreenEffectIntensity = 1.0f;
+        
+        protected bool quit = false;
+        protected bool restart = false;
+        
+        public MonitorDevice Monitor { get; private set; }
+        public ICursor Cursor { get; private set; } = new NullCursor();
+        public IScene CurScene { get; private set; } = new SceneEmpty();
+        private List<ShapeFlash> shapeFlashes = new();
+        private List<DeferredInfo> deferred = new();
+
+        private int frameRateLimit = 60;
+        public int FrameRateLimit
+        {
+            get => frameRateLimit;
+            set
+            {
+                if (value < 30) frameRateLimit = 30;
+                else if (value > 240) frameRateLimit = 240;
+                
+                if(!VSync) Raylib.SetTargetFPS(frameRateLimit);
+            }
+        }
+        public int FPS => Raylib.GetFPS();
+        public bool VSync
+        {
+            get =>Raylib.IsWindowState(ConfigFlags.FLAG_VSYNC_HINT);
+            
+            set
+            {
+                if (Raylib.IsWindowState(ConfigFlags.FLAG_VSYNC_HINT) == value) return;
+                if (value)
+                {
+                    Raylib.SetWindowState(ConfigFlags.FLAG_VSYNC_HINT);
+                    SetTargetFPS(Monitor.CurMonitor().Refreshrate);
+                }
+                else
+                {
+                    Raylib.ClearWindowState(ConfigFlags.FLAG_VSYNC_HINT);
+                    SetTargetFPS(frameRateLimit);
+                }
+            }
+        }
+        public bool Fullscreen
+        {
+            get => Raylib.IsWindowFullscreen();
+            set
+            {
+                if (value == Raylib.IsWindowFullscreen()) return;
+                if(value)Raylib.SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+                else
+                {
+                    Raylib.ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+                    Raylib.SetWindowSize(windowSize.Width, windowSize.Height);
+                    CenterWindow();
+                }
+                InvokeWindowSizeChanged();
+            }
+        }
+
+        public bool Maximized
+        {
+            get => Raylib.IsWindowMaximized();
+            set
+            {
+                if (value == Raylib.IsWindowMaximized()) return;
+                if(value)Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_MAXIMIZED);
+                else Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_MAXIMIZED);
+                InvokeWindowSizeChanged();
+            }
+        }
+
+        private Dimensions windowSize = new();
+        public Dimensions WindowSize
+        {
+            get => windowSize;
+            set
+            {
+                var maxSize = Monitor.CurMonitor().Dimensions;
+                int w = value.Width;
+                if (w < WindowMinSize.Width) w = WindowMinSize.Width;
+                else if (w > maxSize.Width) w = maxSize.Width;
+                int h = value.Height;
+                if (h < WindowMinSize.Height) h = WindowMinSize.Height;
+                else if (h > maxSize.Height) h = maxSize.Height;
+                
+                windowSize = new(w, h);
+                
+                if (Fullscreen) return;
+                SetWindowSize(windowSize.Width, windowSize.Height);
+                CenterWindow();
+
+                InvokeWindowSizeChanged();
+            }
+        }
+        public void CenterWindow()
+        {
+            if (Fullscreen) return;
+            var monitor = Monitor.CurMonitor();
+
+            int winPosX = monitor.Width / 2 - windowSize.Width / 2;
+            int winPosY = monitor.Height / 2 - windowSize.Height / 2;
+            SetWindowPosition(winPosX + (int)monitor.Position.X, winPosY + (int)monitor.Position.Y);
+        }
+        public void ResizeWindow(Dimensions newDimensions) => WindowSize = newDimensions;
+        public void ResetWindow()
+        {
+            if (Fullscreen) Raylib.ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+            WindowSize = Monitor.CurMonitor().Dimensions / 2;
+        }
+
+        
+        
+        public ShapeLoop()
+        {
+            InitWindow(0, 0, "");
+            
+            ClearWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
+            SetWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
+
+            VSync = true;
+            FrameRateLimit = 60;
+
+            Monitor = new MonitorDevice();
+            SetupWindowDimensions();
+            Raylib.SetWindowMinSize(WindowMinSize.Width, WindowMinSize.Height);
+
+
+        }
+        public void SetupWindow(string windowName, bool undecorated, bool resizable, bool vsync = true, int fps = 60)
+        {
+            SetWindowTitle(windowName);
+            if (undecorated) SetWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
+            else ClearWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
+
+            if (resizable) SetWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
+            else ClearWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
+
+            FrameRateLimit = fps;
+            VSync = vsync;
+        }
+        public ExitCode Run(params string[] launchParameters)
+        {
+            this.LaunchParams = launchParameters;
+
+            quit = false;
+            restart = false;
+            Raylib.SetExitKey(-1);
+
+            StartGameloop();
+            RunGameloop();
+            EndGameloop();
+            CloseWindow();
+
+            return new ExitCode(restart);
+        }
+        
+        public void Restart()
+        {
+            restart = true;
+            quit = true;
+        }
+        public void Quit()
+        {
+            restart = false;
+            quit = true;
+        }
+
+        /// <summary>
+        /// Switches to the new scene. Deactivate is called on the old scene and then Activate is called on the new scene.
+        /// </summary>
+        /// <param name="newScene"></param>
+        public void GoToScene(IScene newScene)
+        {
+            if (newScene == CurScene) return;
+            CurScene.Deactivate();
+            newScene.Activate(CurScene);
+            CurScene = newScene;
+        }
+
+        public void CallDeferred(Action action, int afterFrames = 0)
+        {
+            deferred.Add(new(action, afterFrames));
+        }
+        private void ResolveDeferred()
+        {
+            for (int i = deferred.Count - 1; i >= 0; i--)
+            {
+                var info = deferred[i];
+                if (info.Call()) deferred.RemoveAt(i);
+            }
+        }
+
+        
+        public void Flash(float duration, Raylib_CsLo.Color startColor, Raylib_CsLo.Color endColor)
+        {
+            if (duration <= 0.0f) return;
+            byte startColorAlpha = (byte)(startColor.a * ScreenEffectIntensity);
+            startColor.a = startColorAlpha;
+            byte endColorAlpha = (byte)(endColor.a * ScreenEffectIntensity);
+            endColor.a = endColorAlpha;
+
+            ShapeFlash flash = new(duration, startColor, endColor);
+            shapeFlashes.Add(flash);
+        }
+        public bool SwitchCursor(ICursor newCursor)
+        {
+            if (Cursor != newCursor)
+            {
+                Cursor.Deactivate();
+                newCursor.Activate(Cursor);
+                Cursor = newCursor;
+                return true;
+            }
+            return false;
+        }
+        private void DrawCursor(Vector2 screenSize, Vector2 pos) { if (Cursor != null) Cursor.Draw(screenSize, pos); }
+
+        private void CalculateCurScreenSize()
+        {
+            if (IsWindowFullscreen())
+            {
+                var monitor = GetCurrentMonitor();
+                var mw = GetMonitorWidth(monitor);
+                var mh = GetMonitorHeight(monitor);
+                var scaleFactor = GetWindowScaleDPI();
+                int scaleX = (int)scaleFactor.X;
+                int scaleY = (int)scaleFactor.Y;
+                CurScreenSize = new(mw * scaleX, mh * scaleY);
+            }
+            else
+            {
+                var w = GetScreenWidth();
+                var h = GetScreenHeight();
+                CurScreenSize = new(w, h);
+            }
+        }
+
+        private void StartGameloop()
+        {
+            LoadContent();
+            BeginRun();
+        }
+        private void RunGameloop()
+        {
+            while (!quit)
+            {
+                if (WindowShouldClose())
+                {
+                    Quit();
+                    continue;
+                }
+                var dt = GetFrameTime();
+                UpdateMonitorDevice(dt);
+                CalculateCurScreenSize();
+                Camera.Update(dt, CurScreenSize.Width, CurScreenSize.Height);
+                GameTexture.Update(CurScreenSize.Width, CurScreenSize.Height);
+                
+                var mousePosScreen = GetMousePosition();
+                var mousePosGame = Camera.ScreenToWorld(mousePosScreen);
+                ScreenArea = new(0, 0, CurScreenSize.Width, CurScreenSize.Height);
+                CameraArea = Camera.Area;
+                
+                Update(dt);
+
+                BeginTextureMode(GameTexture.RenderTexture);
+                ClearBackground(new(0,0,0,0));
+                
+                BeginMode2D(Camera.Camera);
+                DrawGame(CameraArea, mousePosGame);
+                EndMode2D();
+                
+                EndTextureMode();
+                
+                BeginDrawing();
+                ClearBackground(BackgroundColor);
+
+                GameTexture.Draw();
+                foreach (var flash in shapeFlashes) CameraArea.Draw(flash.GetColor());
+                DrawUI(ScreenArea, mousePosScreen);
+                DrawCursor(ScreenArea.Size, mousePosScreen);
+                EndDrawing();
+                
+                
+                //CheckWindowSizeChanged();
+
+                
+                ResolveDeferred();
+            }
+        }
+        private void EndGameloop()
+        {
+            EndRun();
+            UnloadContent();
+            GameTexture.Unload();
+        }
+        private void UpdateMonitorDevice(float dt)
+        {
+            var newMonitor = Monitor.HasMonitorSetupChanged();
+            if (newMonitor.Available)
+            {
+                MonitorChanged(newMonitor);
+            }
+        }
+        
+        
+        
+
+        #region Virtual
+
+        /// <summary>
+        /// Called first after starting the gameloop.
+        /// </summary>
+        protected virtual void LoadContent() { }
+        /// <summary>
+        /// Called after LoadContent but before the main loop has started.
+        /// </summary>
+        protected virtual void BeginRun() { }
+
+        //protected virtual void HandleInput(float dt) { }
+        protected virtual void Update(float dt) { }
+        protected virtual void DrawGame(Rect cameraArea, Vector2 mousePos) { }
+        protected virtual void DrawUI(Rect screenArea, Vector2 mousePos) { }
+
+        /// <summary>
+        /// Called before UnloadContent is called after the main gameloop has been exited.
+        /// </summary>
+        protected virtual void EndRun() { }
+        /// <summary>
+        /// Called after EndRun before the application terminates.
+        /// </summary>
+        protected virtual void UnloadContent() { }
+
+        protected void UpdateScene() => CurScene.Update(Delta, MousePosGame, MousePosUI);
+        protected void DrawGameScene() => CurScene.DrawGame(CameraArea, MousePosGame);
+        protected void DrawUIScene() => CurScene.DrawUI(ScreenArea, MousePosUI);
+        #endregion
+        
+        public bool SetMonitor(int newMonitor)
+        {
+            var monitor = Monitor.SetMonitor(newMonitor);
+            if (monitor.Available)
+            {
+                MonitorChanged(monitor);
+                return true;
+            }
+            return false;
+        }
+        public void NextMonitor()
+        {
+            var nextMonitor = Monitor.NextMonitor();
+            if (nextMonitor.Available)
+            {
+                MonitorChanged(nextMonitor);
+            }
+        }
+        private void MonitorChanged(MonitorInfo monitor)
+        {
+            // var prevDimensions = CurScreenSize;
+
+            // if (IsWindowFullscreen())
+            // {
+                // SetWindowMonitor(monitor.Index);
+                // ChangeWindowDimensions(monitor.Dimensions, true);
+                // SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+            // }
+            // else
+            // {
+                // var windowDimensions = prevDimensions;
+                // if (windowDimensions.Width > monitor.Width || windowDimensions.Height > monitor.Height)
+                // {
+                    // windowDimensions = monitor.Dimensions / 2;
+                // }
+                // ChangeWindowDimensions(monitor.Dimensions, true);
+                // SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+                // SetWindowMonitor(monitor.Index);
+                // ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+                // ChangeWindowDimensions(windowDimensions, false);
+            // }
+            // if (VSync)
+            // {
+                // SetFPS(monitor.Refreshrate);
+            // }
+        }
+        private void SetupWindowDimensions()
+        {
+            var monitor = Monitor.CurMonitor();
+            WindowSize = monitor.Dimensions;
+            CenterWindow();
+            CalculateCurScreenSize();
+        }
+        private void WriteDebugInfo()
+        {
+            Console.WriteLine("--------Shape Engine Monitor Info--------");
+            if(Fullscreen)Console.WriteLine("Fullscreen is Enabled");
+            else Console.WriteLine("Fullscreen is Disabled");
+            
+            if(IsWindowMaximized()) Console.WriteLine("Window is Maximized");
+            else Console.WriteLine("Window is NOT Maximized");
+            
+            var dpi = Raylib.GetWindowScaleDPI();
+            Console.WriteLine($"DPI: {dpi.X}/{dpi.Y}");
+
+            var sWidth = Raylib.GetScreenWidth();
+            var sHeight = Raylib.GetScreenHeight();
+            Console.WriteLine($"Screen: {sWidth}/{sHeight}");
+
+            var monitor = Raylib.GetCurrentMonitor();
+            var mWidth = Raylib.GetMonitorWidth(monitor);
+            var mHeight = Raylib.GetMonitorHeight(monitor);
+            var mpWidth = Raylib.GetMonitorPhysicalWidth(monitor);
+            var mpHeight = Raylib.GetMonitorPhysicalHeight(monitor);
+            Console.WriteLine($"[{monitor}] Monitor: {mWidth}/{mHeight} Physical: {mpWidth}/{mpHeight}");
+
+
+            var rWidth = Raylib.GetRenderWidth();
+            var rHeight = Raylib.GetRenderHeight();
+            Console.WriteLine($"Render Size: {rWidth}/{rHeight}");
+
+            Monitor.CurMonitor().WriteDebugInfo();
+            Console.WriteLine("---------------------------------------");
+        }
+        private void InvokeWindowSizeChanged()
+        {
+            var prev = CurScreenSize;
+            CalculateCurScreenSize();
+            if(prev != CurScreenSize) OnWindowSizeChanged?.Invoke(CurScreenSize);
+        }
+    }
+    
