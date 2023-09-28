@@ -48,7 +48,7 @@ namespace ShapeEngine.Core
     public interface IScene : IUpdateable, IDrawable
     {
 
-        public Area? GetCurArea();
+        public GameObjectHandler? GetGameObjectHandler();
 
 
         public void Activate(IScene oldScene);// { }
@@ -66,7 +66,7 @@ namespace ShapeEngine.Core
     }
     
 
-    public interface IAreaDeltaFactor
+    public interface IHandlerDeltaFactor
     {
         public int ApplyOrder { get; set; }
 
@@ -88,7 +88,7 @@ namespace ShapeEngine.Core
         /// <returns>Returns the new total delta factor.</returns>
         public float Apply(float totalFactor);
     }
-    public interface IAreaObject : ISpatial, IUpdateable, IDrawable, IKillable//, IBehaviorReceiver
+    public interface IGameObject : ISpatial, IUpdateable, IDrawable, IKillable//, IBehaviorReceiver
     {
 
         public bool DrawToGame(Rect gameArea);
@@ -97,7 +97,7 @@ namespace ShapeEngine.Core
         /// <summary>
         /// The area layer the object is stored in. Higher layers are draw on top of lower layers.
         /// </summary>
-        public int AreaLayer { get; set; }
+        public int Layer { get; set; }
         /// <summary>
         /// Is called by the area. Can be used to update the objects position based on the new parallax position.
         /// </summary>
@@ -109,28 +109,28 @@ namespace ShapeEngine.Core
         /// </summary>
         /// <param name="layer"></param>
         /// <returns></returns>
-        public sealed bool IsInLayer(int layer) { return this.AreaLayer == layer; }
+        public sealed bool IsInLayer(int layer) { return this.Layer == layer; }
 
         /// <summary>
         /// Is called when gameobject is added to an area.
         /// </summary>
-        public void AddedToArea(Area area);
+        public void AddedToHandler(GameObjectHandler gameObjectHandler);
         /// <summary>
         /// Is called by the area once a game object is dead.
         /// </summary>
-        public void RemovedFromArea(Area area);
+        public void RemovedFromArea(GameObjectHandler gameObjectHandler);
 
         /// <summary>
         /// Should this object be checked for leaving the bounds of the area?
         /// </summary>
         /// <returns></returns>
-        public bool CheckAreaBounds();
+        public bool CheckHandlerBounds();
         /// <summary>
         /// Will be called if the object left the bounds of the area. The BoundingCircle is used for this check.
         /// </summary>
         /// <param name="safePosition">The closest position within the bounds.</param>
         /// <param name="collisionPoints">The points where the object left the bounds. Can be 1 or 2 max.</param>
-        public void LeftAreaBounds(Vector2 safePosition, CollisionPoints collisionPoints);
+        public void LeftHandlerBounds(Vector2 safePosition, CollisionPoints collisionPoints);
         
         ///// <summary>
         ///// Can be used to adjust the follow position of an attached camera.

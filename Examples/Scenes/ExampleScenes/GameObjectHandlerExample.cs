@@ -62,9 +62,9 @@ namespace Examples.Scenes.ExampleScenes
 
         
     }
-    internal abstract class Gameobject : IAreaObject
+    internal abstract class Gameobject : IGameObject
     {
-        public int AreaLayer { get; set; } = 0;
+        public int Layer { get; set; } = 0;
 
         //protected float boundingRadius = 1f;
         
@@ -97,21 +97,21 @@ namespace Examples.Scenes.ExampleScenes
         public abstract List<ICollidable> GetCollidables();
 
         
-        public virtual void AddedToArea(Area area) { }
+        public virtual void AddedToHandler(GameObjectHandler gameObjectHandler) { }
 
-        public virtual void RemovedFromArea(Area area) { }
+        public virtual void RemovedFromArea(GameObjectHandler gameObjectHandler) { }
 
         public virtual void DrawUI(ScreenInfo ui)
         {
             
         }
 
-        public bool CheckAreaBounds()
+        public bool CheckHandlerBounds()
         {
             return false;
         }
 
-        public void LeftAreaBounds(Vector2 safePosition, CollisionPoints collisionPoints)
+        public void LeftHandlerBounds(Vector2 safePosition, CollisionPoints collisionPoints)
         {
             
         }
@@ -618,9 +618,9 @@ namespace Examples.Scenes.ExampleScenes
 
     
 
-    public class AreaExample : ExampleScene
+    public class GameObjectHandlerExample : ExampleScene
     {
-        AreaCollision area;
+        GameObjectHandlerCollision gameObjectHandler;
         
 
         Rect boundaryRect;
@@ -643,24 +643,25 @@ namespace Examples.Scenes.ExampleScenes
         //int avgSteps = 0;
         //float avgTimer = 0f;
 
-        public AreaExample()
+        public GameObjectHandlerExample()
         {
-            Title = "Area Example";
+            Title = "Gameobject Handler Example";
 
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
             
             boundaryRect = new(new Vector2(0, -45), new Vector2(1800, 810), new Vector2(0.5f));
-            area = new(boundaryRect.ScaleSize(1.05f, new Vector2(0.5f)), 32, 32);
+            gameObjectHandler = new(boundaryRect.ScaleSize(1.05f, new Vector2(0.5f)), 32, 32);
             AddBoundaryWalls();
         }
-        public override Area? GetCurArea()
+        public override GameObjectHandler? GetGameObjectHandler()
         {
-            return area;
+            return gameObjectHandler;
         }
         public override void Reset()
         {
-            area.Clear();
+            gameObjectHandler.Clear();
             AddBoundaryWalls();
+            drawDebug = false;
         }
 
         protected override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
@@ -672,7 +673,7 @@ namespace Examples.Scenes.ExampleScenes
                 for (int i = 0; i < 50; i++)
                 {
                     Rock r = new(mousePosGame + SRNG.randVec2(0, 50), SRNG.randVec2() * 150, 60);
-                    area.AddAreaObject(r);
+                    gameObjectHandler.AddAreaObject(r);
                 }
 
             }
@@ -682,7 +683,7 @@ namespace Examples.Scenes.ExampleScenes
                 for (int i = 0; i < 5; i++)
                 {
                     Box b = new(mousePosGame + SRNG.randVec2(0, 10), SRNG.randVec2() * 75, 25);
-                    area.AddAreaObject(b);
+                    gameObjectHandler.AddAreaObject(b);
                 }
 
             }
@@ -691,7 +692,7 @@ namespace Examples.Scenes.ExampleScenes
                 for (int i = 0; i < 15; i++)
                 {
                     Ball b = new(mousePosGame + SRNG.randVec2(0, 5), SRNG.randVec2() * 300, 10);
-                    area.AddAreaObject(b);
+                    gameObjectHandler.AddAreaObject(b);
                 }
 
             }
@@ -699,16 +700,16 @@ namespace Examples.Scenes.ExampleScenes
             if (IsKeyPressed(KeyboardKey.KEY_FOUR))
             {
                 Trap t = new(mousePosGame, new Vector2(250, 250));
-                area.AddAreaObject(t);
+                gameObjectHandler.AddAreaObject(t);
             }
 
             if (IsKeyPressed(KeyboardKey.KEY_FIVE))
             {
                 Aura a = new(mousePosGame, 150, 0.75f);
-                area.AddAreaObject(a);
+                gameObjectHandler.AddAreaObject(a);
             }
 
-            if (IsKeyPressed(KeyboardKey.KEY_ZERO)) { drawDebug = !drawDebug; }
+            if (IsKeyPressed(KeyboardKey.KEY_O)) { drawDebug = !drawDebug; }
 
         }
 
@@ -717,7 +718,7 @@ namespace Examples.Scenes.ExampleScenes
             base.Update(dt, game, ui);
 
             HandleWalls(game.MousePos);
-            area.Update(dt, game, ui);
+            gameObjectHandler.Update(dt, game, ui);
 
             //collisionsTotal += area.Col.CollisionChecksPerFrame;
             //iterationsTotal += area.Col.IterationsPerFrame;
@@ -748,41 +749,41 @@ namespace Examples.Scenes.ExampleScenes
                 Color boundsColor = ColorLight;
                 Color gridColor = ColorLight;
                 Color fillColor = ColorMedium.ChangeAlpha(100);
-                area.DrawDebug(boundsColor, gridColor, fillColor);
+                gameObjectHandler.DrawDebug(boundsColor, gridColor, fillColor);
             }
 
             DrawWalls(game.MousePos);
 
-            area.DrawGame(game);
+            gameObjectHandler.DrawGame(game);
         }
         public override void DrawUI(ScreenInfo ui)
         {
-            area.DrawUI(ui);
+            gameObjectHandler.DrawUI(ui);
 
             base.DrawUI(ui);
 
             Vector2 uiSize = ui.Area.Size;
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
             string infoText =
-                $"[LMB] Add Segment | [RMB] Cancel Segment | [Space] Shoot | Objs: {area.GetCollisionHandler().Count}";
+                $"[LMB] Add Segment | [RMB] Cancel Segment | [Space] Shoot | Objs: {gameObjectHandler.GetCollisionHandler().Count}";
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
 
 
-            Vector2 devSize = GAMELOOP.DevelopmentDimensions.ToVector2();
-            Vector2 camSize = GAMELOOP.CurScreenSize.ToVector2();
-            float devArea = MathF.Round( devSize.GetArea() * 100 ) / 100;
-            float screenArea = MathF.Round( camSize.GetArea() * 100 ) / 100;
-            float fds = MathF.Round( (devArea / screenArea) * 100 ) / 100;
-            float fsd = MathF.Round( (screenArea / devArea) * 100 ) / 100;
-
-            float zoom = MathF.Round( GAMELOOP.Camera.ZoomLevel * 100 ) / 100;
-            
-            Rect textRect = ui.Area.ApplyMargins(0.05f, 0.05f, 0.8f, 0.1f);
-            textRect.Draw(DARKGRAY);
-
-            string text = $"DS: {devSize} | CS: {camSize} | DA: {devArea} | SA: {screenArea} | FDS: {fds} | FSD: {fsd} | Z: {zoom}";
-            
-            font.DrawText(text, textRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+            // Vector2 devSize = GAMELOOP.DevelopmentDimensions.ToVector2();
+            // Vector2 camSize = GAMELOOP.CurScreenSize.ToVector2();
+            // float devArea = MathF.Round( devSize.GetArea() * 100 ) / 100;
+            // float screenArea = MathF.Round( camSize.GetArea() * 100 ) / 100;
+            // float fds = MathF.Round( (devArea / screenArea) * 100 ) / 100;
+            // float fsd = MathF.Round( (screenArea / devArea) * 100 ) / 100;
+            //
+            // float zoom = MathF.Round( GAMELOOP.Camera.ZoomLevel * 100 ) / 100;
+            //
+            // Rect textRect = ui.Area.ApplyMargins(0.05f, 0.05f, 0.8f, 0.1f);
+            // textRect.Draw(DARKGRAY);
+            //
+            // string text = $"DS: {devSize} | CS: {camSize} | DA: {devArea} | SA: {screenArea} | FDS: {fds} | FSD: {fsd} | Z: {zoom}";
+            //
+            // font.DrawText(text, textRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
 
         private void AddBoundaryWalls()
@@ -791,7 +792,7 @@ namespace Examples.Scenes.ExampleScenes
             Wall bottom = new(boundaryRect.BottomRight, boundaryRect.BottomLeft);
             Wall left = new(boundaryRect.TopLeft, boundaryRect.BottomLeft);
             Wall right = new(boundaryRect.BottomRight, boundaryRect.TopRight);
-            area.AddAreaObjects(top, right, bottom, left);
+            gameObjectHandler.AddAreaObjects(top, right, bottom, left);
         }
         private void DrawWalls(Vector2 mousePos)
         {
@@ -814,7 +815,7 @@ namespace Examples.Scenes.ExampleScenes
                     if (lSq > 400)
                     {
                         PolyWall w = new(startPoint, mousePos);
-                        area.AddAreaObject(w);
+                        gameObjectHandler.AddAreaObject(w);
                     }
 
                 }

@@ -9,7 +9,7 @@ namespace ShapeEngine.Core
 
         public virtual void Activate(IScene oldScene) { }
         public virtual void Deactivate() { }
-        public virtual Area? GetCurArea() { return null; }
+        public virtual GameObjectHandler? GetGameObjectHandler() { return null; }
 
 
         public void Update(float dt, ScreenInfo game, ScreenInfo ui) { }

@@ -14,7 +14,7 @@ namespace ShapeEngine.Core
     /// The layers affected can be specified. If no layers are specified all layers are affected!
     /// The final factor can not be negative and will be clamped to 0.
     /// </summary>
-    public sealed class AreaDeltaFactor : IAreaDeltaFactor
+    public sealed class HandlerDeltaFactor : IHandlerDeltaFactor
     {
         private static uint idCounter = 0;
         private static uint NextID { get { return idCounter++; } }
@@ -44,7 +44,7 @@ namespace ShapeEngine.Core
         /// <param name="delay">The delay until the duration starts and the factor is applied.</param>
         /// <param name="tweenType">The tweentype for the slow factor.</param>
         /// <param name="layerMask">The mask for all area layers that will be affected. An empty layer mask affects all layers!</param>
-        public AreaDeltaFactor(float from, float to, float duration, float delay = -1f, TweenType tweenType = TweenType.LINEAR, params int[] layerMask)
+        public HandlerDeltaFactor(float from, float to, float duration, float delay = -1f, TweenType tweenType = TweenType.LINEAR, params int[] layerMask)
         {
             this.delayTimer = delay;
             this.cur = from;
@@ -65,7 +65,7 @@ namespace ShapeEngine.Core
         /// <param name="duration">The duration of the slow effect. Duration <= 0 means infinite duration and no tweening!</param>
         /// <param name="delay">The delay until the duration starts and the factor is applied.</param>
         /// <param name="layerMask">The mask for all area layers that will be affected. An empty layer mask affects all layers!</param>
-        public AreaDeltaFactor(float from, float to, float duration, float delay = -1f, params int[] layerMask)
+        public HandlerDeltaFactor(float from, float to, float duration, float delay = -1f, params int[] layerMask)
         {
             this.delayTimer = delay;
             this.cur = from;
@@ -84,7 +84,7 @@ namespace ShapeEngine.Core
         /// <param name="factor">The slow factor that should be applied.</param>
         /// <param name="delay">The delay until the factor is applied.</param>
         /// <param name="layerMask">The mask for all area layers that will be affected. An empty layer mask affects all layers!</param>
-        public AreaDeltaFactor(float factor, float delay, params int[] layerMask)
+        public HandlerDeltaFactor(float factor, float delay, params int[] layerMask)
         {
             this.delayTimer = delay;
             this.cur = factor;
@@ -102,7 +102,7 @@ namespace ShapeEngine.Core
         /// </summary>
         /// <param name="factor">The slow factor that should be applied.</param>
         /// <param name="layerMask">The mask for all area layers that will be affected. An empty layer mask affects all layers!</param>
-        public AreaDeltaFactor(float factor, params int[] layerMask)
+        public HandlerDeltaFactor(float factor, params int[] layerMask)
         {
             this.delayTimer = -1f;
             this.cur = factor;
@@ -161,7 +161,7 @@ namespace ShapeEngine.Core
     /// <summary>
     /// Provides a simple area for managing adding/removing, updating, and drawing of area objects. Does not provide a collision system.
     /// </summary>
-    public class Area : IUpdateable, IDrawable, IBounds
+    public class GameObjectHandler : IUpdateable, IDrawable, IBounds
     {
         public int Count
         {
@@ -179,87 +179,87 @@ namespace ShapeEngine.Core
         public virtual CollisionHandler? GetCollisionHandler() { return null; }
         public Vector2 ParallaxePosition { get; set; } = new(0f);
 
-        private SortedList<int, List<IAreaObject>> allObjects = new();
+        private SortedList<int, List<IGameObject>> allObjects = new();
 
         //private Dictionary<uint, List<IAreaObject>> drawToScreenTextureObjects = new();
         //private List<IAreaObject> drawToScreenObjects = new();
-        private List<IAreaObject> drawToGameTextureObjects = new();
-        private List<IAreaObject> drawToUITextureObjects = new();
+        private List<IGameObject> drawToGameTextureObjects = new();
+        private List<IGameObject> drawToUITextureObjects = new();
 
 
-        private Dictionary<uint, IAreaDeltaFactor> deltaFactors = new();
-        private List<IAreaDeltaFactor> sortedDeltaFactors = new();
+        private Dictionary<uint, IHandlerDeltaFactor> deltaFactors = new();
+        private List<IHandlerDeltaFactor> sortedDeltaFactors = new();
 
-        public Area()
+        public GameObjectHandler()
         {
             Bounds = new Rect();
         }
-        public Area(float x, float y, float w, float h)
+        public GameObjectHandler(float x, float y, float w, float h)
         {
             Bounds = new(x, y, w, h);
         }
-        public Area(Rect bounds)
+        public GameObjectHandler(Rect bounds)
         {
             Bounds = bounds;
         }
 
-        public void AddDeltaFactor(IAreaDeltaFactor deltaFactor)
+        public void AddDeltaFactor(IHandlerDeltaFactor deltaFactor)
         {
             var id = deltaFactor.GetID();
             if (deltaFactors.ContainsKey(id)) deltaFactors[id] = deltaFactor;
             else deltaFactors.Add(id, deltaFactor);
         }
-        public bool RemoveDeltaFactor(IAreaDeltaFactor deltaFactor) { return deltaFactors.Remove(deltaFactor.GetID()); }
+        public bool RemoveDeltaFactor(IHandlerDeltaFactor deltaFactor) { return deltaFactors.Remove(deltaFactor.GetID()); }
         public bool RemoveDeltaFactor(uint id) { return deltaFactors.Remove(id); }
 
         public virtual void ResizeBounds(Rect newBounds) { Bounds = newBounds; }
         public bool HasLayer(int layer) { return allObjects.ContainsKey(layer); }
-        public List<IAreaObject> GetAreaObjects(int layer, Predicate<IAreaObject> match) { return HasLayer(layer) ? allObjects[layer].FindAll(match) : new(); }
-        public List<IAreaObject> GetAllGameObjects()
+        public List<IGameObject> GetAreaObjects(int layer, Predicate<IGameObject> match) { return HasLayer(layer) ? allObjects[layer].FindAll(match) : new(); }
+        public List<IGameObject> GetAllGameObjects()
         {
-            List<IAreaObject> objects = new();
+            List<IGameObject> objects = new();
             foreach (var layerGroup in allObjects.Values)
             {
                 objects.AddRange(layerGroup);
             }
             return objects;
         }
-        public List<IAreaObject> GetAllGameObjects(Predicate<IAreaObject> match) { return GetAllGameObjects().FindAll(match); }
+        public List<IGameObject> GetAllGameObjects(Predicate<IGameObject> match) { return GetAllGameObjects().FindAll(match); }
 
-        public void AddAreaObject(IAreaObject areaObject)
+        public void AddAreaObject(IGameObject gameObject)
         {
-            int layer = areaObject.AreaLayer;
+            int layer = gameObject.Layer;
             if (!allObjects.ContainsKey(layer)) AddLayer(layer);
 
-            allObjects[layer].Add(areaObject);
-            AreaObjectAdded(areaObject);
-            areaObject.AddedToArea(this);
+            allObjects[layer].Add(gameObject);
+            AreaObjectAdded(gameObject);
+            gameObject.AddedToHandler(this);
         }
-        public void AddAreaObjects(params IAreaObject[] areaObjects) { foreach (var ao in areaObjects) AddAreaObject(ao); }
-        public void AddAreaObjects(IEnumerable<IAreaObject> areaObjects) { foreach (var ao in areaObjects) AddAreaObject(ao); }
-        public void RemoveAreaObject(IAreaObject areaObject)
+        public void AddAreaObjects(params IGameObject[] areaObjects) { foreach (var ao in areaObjects) AddAreaObject(ao); }
+        public void AddAreaObjects(IEnumerable<IGameObject> areaObjects) { foreach (var ao in areaObjects) AddAreaObject(ao); }
+        public void RemoveAreaObject(IGameObject gameObject)
         {
-            if (allObjects.ContainsKey(areaObject.AreaLayer))
+            if (allObjects.ContainsKey(gameObject.Layer))
             {
-                bool removed = allObjects[areaObject.AreaLayer].Remove(areaObject);
-                if (removed) AreaObjectRemoved(areaObject);
+                bool removed = allObjects[gameObject.Layer].Remove(gameObject);
+                if (removed) AreaObjectRemoved(gameObject);
             }
         }
-        public void RemoveAreaObjects(params IAreaObject[] areaObjects)
-        {
-            foreach (var ao in areaObjects)
-            {
-                RemoveAreaObject(ao);
-            }
-        }
-        public void RemoveAreaObjects(IEnumerable<IAreaObject> areaObjects)
+        public void RemoveAreaObjects(params IGameObject[] areaObjects)
         {
             foreach (var ao in areaObjects)
             {
                 RemoveAreaObject(ao);
             }
         }
-        public void RemoveAreaObjects(int layer, Predicate<IAreaObject> match)
+        public void RemoveAreaObjects(IEnumerable<IGameObject> areaObjects)
+        {
+            foreach (var ao in areaObjects)
+            {
+                RemoveAreaObject(ao);
+            }
+        }
+        public void RemoveAreaObjects(int layer, Predicate<IGameObject> match)
         {
             if (allObjects.ContainsKey(layer))
             {
@@ -270,7 +270,7 @@ namespace ShapeEngine.Core
                 }
             }
         }
-        public void RemoveAreaObjects(Predicate<IAreaObject> match)
+        public void RemoveAreaObjects(Predicate<IGameObject> match)
         {
             var objs = GetAllGameObjects(match);
             foreach (var o in objs)
@@ -279,8 +279,8 @@ namespace ShapeEngine.Core
             }
         }
 
-        protected virtual void AreaObjectAdded(IAreaObject obj) { }
-        protected virtual void AreaObjectRemoved(IAreaObject obj) { }
+        protected virtual void AreaObjectAdded(IGameObject obj) { }
+        protected virtual void AreaObjectRemoved(IGameObject obj) { }
 
         public virtual void Clear()
         {
@@ -315,7 +315,7 @@ namespace ShapeEngine.Core
             Clear();
         }
         
-        protected (Vector2 safePosition, CollisionPoints points) HasLeftBounds(IAreaObject obj)
+        protected (Vector2 safePosition, CollisionPoints points) HasLeftBounds(IGameObject obj)
         {
             Rect bb = obj.GetBoundingBox();
             Vector2 pos = bb.Center;
@@ -367,7 +367,7 @@ namespace ShapeEngine.Core
             drawToGameTextureObjects.Clear();
             drawToUITextureObjects.Clear();
 
-            List<IAreaDeltaFactor> allDeltaFactors = deltaFactors.Values.ToList();
+            List<IHandlerDeltaFactor> allDeltaFactors = deltaFactors.Values.ToList();
             for (int i = allDeltaFactors.Count - 1; i >= 0; i--)
             {
                 var deltaFactor = allDeltaFactors[i];
@@ -386,7 +386,7 @@ namespace ShapeEngine.Core
 
             foreach (var layer in allObjects)
             {
-                List<IAreaObject> objs = allObjects[layer.Key];
+                List<IGameObject> objs = allObjects[layer.Key];
                 if (objs.Count <= 0) return;
 
                 float totalDeltaFactor = 1f;
@@ -402,7 +402,7 @@ namespace ShapeEngine.Core
 
                 for (int i = objs.Count - 1; i >= 0; i--)
                 {
-                    IAreaObject obj = objs[i];
+                    IGameObject obj = objs[i];
                     if (obj == null)
                     {
                         objs.RemoveAt(i);
@@ -424,12 +424,12 @@ namespace ShapeEngine.Core
                     }
                     else
                     {
-                        if (obj.CheckAreaBounds())
+                        if (obj.CheckHandlerBounds())
                         {
                             var check = HasLeftBounds(obj);
                             if (check.points.Count > 0)
                             {
-                                obj.LeftAreaBounds(check.safePosition, check.points);
+                                obj.LeftHandlerBounds(check.safePosition, check.points);
                             }
                         }
                     }
@@ -470,32 +470,32 @@ namespace ShapeEngine.Core
     /// <summary>
     /// Provides a simple area for managing adding/removing, updating, drawing, and colliding of area objects. 
     /// </summary>
-    public class AreaCollision: Area
+    public class GameObjectHandlerCollision: GameObjectHandler
     {
         protected CollisionHandler col;
         public override CollisionHandler GetCollisionHandler() { return col; }
 
         
-        public AreaCollision() : base()
+        public GameObjectHandlerCollision() : base()
         {
             col = new CollisionHandler(0,0,0,0,0,0);
         }
-        public AreaCollision(float x, float y, float w, float h, int rows, int cols) : base(x, y, w, h)
+        public GameObjectHandlerCollision(float x, float y, float w, float h, int rows, int cols) : base(x, y, w, h)
         {
             col = new CollisionHandler(Bounds, rows, cols);
         }
-        public AreaCollision(Rect bounds, int rows, int cols) : base(bounds)
+        public GameObjectHandlerCollision(Rect bounds, int rows, int cols) : base(bounds)
         {
             col = new CollisionHandler(bounds, rows, cols);
         }
 
         public override void ResizeBounds(Rect newBounds) { Bounds = newBounds; col.ResizeBounds(newBounds); }
 
-        protected override void AreaObjectAdded(IAreaObject obj)
+        protected override void AreaObjectAdded(IGameObject obj)
         {
             if (obj.HasCollidables()) col.AddRange(obj.GetCollidables());
         }
-        protected override void AreaObjectRemoved(IAreaObject obj)
+        protected override void AreaObjectRemoved(IGameObject obj)
         {
             if (obj.HasCollidables()) col.RemoveRange(obj.GetCollidables());
         }

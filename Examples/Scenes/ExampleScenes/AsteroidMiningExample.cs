@@ -7,10 +7,10 @@ using System.Numerics;
 
 namespace Examples.Scenes.ExampleScenes
 {
-    public abstract class SpaceObject : IAreaObject
+    public abstract class SpaceObject : IGameObject
     {
         protected bool dead = false;
-        public int AreaLayer { get; set; } = 0;
+        public int Layer { get; set; } = 0;
         public bool Kill()
         {
             if (dead) return false;
@@ -26,16 +26,16 @@ namespace Examples.Scenes.ExampleScenes
         public virtual void DrawUI(ScreenInfo ui) { }
         public virtual void Overlap(CollisionInformation info) { }
         public virtual void OverlapEnded(ICollidable other) { }
-        public virtual void AddedToArea(Area area) { }
-        public virtual void RemovedFromArea(Area area) { }
+        public virtual void AddedToHandler(GameObjectHandler gameObjectHandler) { }
+        public virtual void RemovedFromArea(GameObjectHandler gameObjectHandler) { }
         
         public void DeltaFactorApplied(float f) { }
         
         public bool IsDead() { return dead; }
         public bool DrawToGame(Rect gameArea) { return true; }
         public bool DrawToUI(Rect uiArea) { return false; }
-        public bool CheckAreaBounds() { return false; }
-        public void LeftAreaBounds(Vector2 safePosition, CollisionPoints collisionPoints) { }
+        public bool CheckHandlerBounds() { return false; }
+        public void LeftHandlerBounds(Vector2 safePosition, CollisionPoints collisionPoints) { }
 
         
     }
@@ -305,10 +305,10 @@ namespace Examples.Scenes.ExampleScenes
         private Points laserPoints = new();
         //private Vector2 laserEndPoint;
         private Vector2 aimDir = new();
-        private AreaCollision area;
-        public LaserDevice(Vector2 pos, float size, AreaCollision area) 
+        private GameObjectHandlerCollision gameObjectHandler;
+        public LaserDevice(Vector2 pos, float size, GameObjectHandlerCollision gameObjectHandler) 
         {
-            this.area = area;
+            this.gameObjectHandler = gameObjectHandler;
             this.pos = pos;
             this.size = size;
             this.rotRad = 0f;
@@ -369,7 +369,7 @@ namespace Examples.Scenes.ExampleScenes
             if (laserEnabled)
             {
                 //laserEndPoint = tip + aimDir * LaserRange;
-                var col = area.GetCollisionHandler();
+                var col = gameObjectHandler.GetCollisionHandler();
                 if(col != null)
                 {
                     laserPoints.Add(tip);
@@ -487,7 +487,7 @@ namespace Examples.Scenes.ExampleScenes
         internal enum ShapeType { None = 0, Triangle = 1, Rect = 2, Poly = 3};
 
         private Font font;
-        private AreaCollision area;
+        private GameObjectHandlerCollision gameObjectHandler;
         private Rect boundaryRect = new();
 
         private bool polyModeActive = false;
@@ -513,27 +513,27 @@ namespace Examples.Scenes.ExampleScenes
             Title = "Asteroid Mining Example";
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
             UpdateBoundaryRect(GAMELOOP.Game.Area);
-            area = new AreaCollision(boundaryRect, 4, 4);
+            gameObjectHandler = new GameObjectHandlerCollision(boundaryRect, 4, 4);
 
-            laserDevice = new(new Vector2(0f), 100, area);
-            area.AddAreaObject(laserDevice);
+            laserDevice = new(new Vector2(0f), 100, gameObjectHandler);
+            gameObjectHandler.AddAreaObject(laserDevice);
 
             //testShapes.Add(SPoly.Generate(new Vector2(0f), 24, 50, 300));
         }
         public override void Reset()
         {
-            area.Clear();
+            gameObjectHandler.Clear();
             polyModeActive = false;
             curRot = 0f;
             curSize = 50f;
             curShapeType = ShapeType.Triangle;
             RegenerateShape();
-            laserDevice = new(new Vector2(0), 100, area);
-            area.AddAreaObject(laserDevice);
+            laserDevice = new(new Vector2(0), 100, gameObjectHandler);
+            gameObjectHandler.AddAreaObject(laserDevice);
         }
-        public override Area? GetCurArea()
+        public override GameObjectHandler? GetGameObjectHandler()
         {
-            return area;
+            return gameObjectHandler;
         }
 
         private void UpdateBoundaryRect(Rect gameArea)
@@ -545,8 +545,8 @@ namespace Examples.Scenes.ExampleScenes
         public override void Update(float dt, ScreenInfo game, ScreenInfo ui)
         {
             UpdateBoundaryRect(game.Area);
-            area.ResizeBounds(boundaryRect);
-            area.Update(dt, game, ui);
+            gameObjectHandler.ResizeBounds(boundaryRect);
+            gameObjectHandler.Update(dt, game, ui);
 
             for (int i = lastCutOuts.Count - 1; i >= 0; i--)
             {
@@ -576,7 +576,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 Vector2 center = piece.GetCentroid();
                 AsteroidShard shard = new(piece.ToPolygon(), center, color);
-                area.AddAreaObject(shard);
+                gameObjectHandler.AddAreaObject(shard);
             }
             if (fracture.NewShapes.Count > 0)
             {
@@ -594,12 +594,12 @@ namespace Examples.Scenes.ExampleScenes
         private void AddAsteroid(Asteroid a)
         {
             a.Fractured += OnAsteroidFractured;
-            area.AddAreaObject(a);
+            gameObjectHandler.AddAreaObject(a);
         }
         private void RemoveAsteroid(Asteroid a)
         {
             a.Fractured -= OnAsteroidFractured;
-            area.RemoveAreaObject(a);
+            gameObjectHandler.RemoveAreaObject(a);
         }
         private void SetCurPos(Vector2 pos)
         {
@@ -683,7 +683,7 @@ namespace Examples.Scenes.ExampleScenes
             
 
 
-            var col = area.GetCollisionHandler();
+            var col = gameObjectHandler.GetCollisionHandler();
             if (col == null) return;
 
             if (IsKeyPressed(KeyboardKey.KEY_TAB))//enter/exit poly mode
@@ -879,7 +879,7 @@ namespace Examples.Scenes.ExampleScenes
                 curShape.DrawLines(2f, RED);
             }
 
-            area.DrawGame(game);
+            gameObjectHandler.DrawGame(game);
 
             foreach (var cutOut in lastCutOuts)
             {
@@ -906,7 +906,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         public override void DrawUI(ScreenInfo ui)
         {
-            area.DrawUI(ui);
+            gameObjectHandler.DrawUI(ui);
             base.DrawUI(ui);
             Vector2 uiSize = ui.Area.Size;
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));

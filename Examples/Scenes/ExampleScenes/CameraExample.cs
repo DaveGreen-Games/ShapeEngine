@@ -58,7 +58,7 @@ namespace Examples.Scenes.ExampleScenes
         {
 
         }
-        public override Area? GetCurArea()
+        public override GameObjectHandler? GetGameObjectHandler()
         {
             return null;
         }

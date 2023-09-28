@@ -24,7 +24,7 @@ namespace ShapeEngine.Effects
     }
     //-------------------------------------
     */
-    public abstract class EffectObject : IAreaObject
+    public abstract class EffectObject : IGameObject
     {
         public Vector2 Pos { get; set; }
         public Vector2 Size { get; protected set; }
@@ -32,7 +32,7 @@ namespace ShapeEngine.Effects
         public float LifetimeF { get { return 1f - lifetimeTimer.F; } }
         protected BasicTimer lifetimeTimer = new();
 
-        public int AreaLayer { get; set; } = 0;
+        public int Layer { get; set; } = 0;
 
         public EffectObject(Vector2 pos, Vector2 size) { this.Pos = pos; this.Size = size; }
         public EffectObject(Vector2 pos, Vector2 size, float lifeTime) { this.Pos = pos; this.Size = size; lifetimeTimer.Start(lifeTime); }
@@ -56,8 +56,8 @@ namespace ShapeEngine.Effects
         public virtual bool AddBehavior(IBehavior behavior) { return false; }
         public virtual bool RemoveBehavior(IBehavior behavior) { return false; }
         */
-        public void AddedToArea(Area area)     {}
-        public void RemovedFromArea(Area area) {}
+        public void AddedToHandler(GameObjectHandler gameObjectHandler)     {}
+        public void RemovedFromArea(GameObjectHandler gameObjectHandler) {}
         
         //public Vector2 GetCameraFollowPosition(Vector2 camPos) { return GetPosition(); }
 
@@ -69,12 +69,12 @@ namespace ShapeEngine.Effects
         public virtual void DrawUI(ScreenInfo ui) { }
 
 
-        public virtual bool CheckAreaBounds()
+        public virtual bool CheckHandlerBounds()
         {
             return false;
         }
 
-        public virtual void LeftAreaBounds(Vector2 safePosition, CollisionPoints collisionPoints)
+        public virtual void LeftHandlerBounds(Vector2 safePosition, CollisionPoints collisionPoints)
         {
         }
 

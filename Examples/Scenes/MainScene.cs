@@ -36,7 +36,7 @@ namespace Examples.Scenes
             examples.Add(new PolylineCollisionExample());
             examples.Add(new CCDExample());
             examples.Add(new AsteroidMiningExample());
-            examples.Add(new AreaExample());
+            examples.Add(new GameObjectHandlerExample());
             examples.Add(new CameraExample());
             examples.Add(new EffectCameraExample());
             examples.Add(new DelaunayExample());
@@ -205,7 +205,7 @@ namespace Examples.Scenes
             SetupButtons();
         }
 
-        public Area? GetCurArea()
+        public GameObjectHandler? GetGameObjectHandler()
         {
             return null;
         }

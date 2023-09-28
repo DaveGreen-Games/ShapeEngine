@@ -31,7 +31,7 @@ namespace Examples.Scenes.ExampleScenes
             points.Clear();
             curTriangulation.Clear();
         }
-        public override Area? GetCurArea()
+        public override GameObjectHandler? GetGameObjectHandler()
         {
             return null;
         }

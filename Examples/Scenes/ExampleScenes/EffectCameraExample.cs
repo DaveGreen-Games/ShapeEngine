@@ -119,7 +119,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             GAMELOOP.ResetCamera();
         }
-        public override Area? GetCurArea()
+        public override GameObjectHandler? GetGameObjectHandler()
         {
             return null;
         }

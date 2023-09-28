@@ -8,7 +8,7 @@ using System.Numerics;
 namespace Examples.Scenes.ExampleScenes
 {
 
-    public class Circ : IAreaObject
+    public class Circ : IGameObject
     {
         public Vector2 Pos;
         public Vector2 Vel;
@@ -16,7 +16,7 @@ namespace Examples.Scenes.ExampleScenes
         int areaLayer = SRNG.randI(1, 5);
         Color color = RED;
         private bool deltaFactorApplied = false;
-        public int AreaLayer { get { return areaLayer; } set { } }
+        public int Layer { get { return areaLayer; } set { } }
 
         public Circ(Vector2 pos, Vector2 vel, float radius)
         {
@@ -24,11 +24,11 @@ namespace Examples.Scenes.ExampleScenes
             this.Vel = vel;
             this.Radius = radius;
         }
-        public void AddedToArea(Area area)
+        public void AddedToHandler(GameObjectHandler gameObjectHandler)
         {
         }
 
-        public void RemovedFromArea(Area area)
+        public void RemovedFromArea(GameObjectHandler gameObjectHandler)
         {
         }
 
@@ -76,12 +76,12 @@ namespace Examples.Scenes.ExampleScenes
         {
             return false;
         }
-        public bool CheckAreaBounds()
+        public bool CheckHandlerBounds()
         {
             return true;
         }
 
-        public void LeftAreaBounds(Vector2 safePosition, CollisionPoints collisionPoints)
+        public void LeftHandlerBounds(Vector2 safePosition, CollisionPoints collisionPoints)
         {
             Pos = safePosition;
             foreach (var c in collisionPoints)
@@ -115,7 +115,7 @@ namespace Examples.Scenes.ExampleScenes
         Font font;
 
         //List<Circ> circles = new();
-        Area area;
+        GameObjectHandler gameObjectHandler;
 
         public BouncyCircles()
         {
@@ -127,16 +127,16 @@ namespace Examples.Scenes.ExampleScenes
             UpdateBoundaryRect(GAMELOOP.Game.Area);
 
             //area = new AreaTest(boundaryRect, 2, 2);
-            area = new AreaCollision(boundaryRect, 2, 2);
+            gameObjectHandler = new GameObjectHandlerCollision(boundaryRect, 2, 2);
         }
         public override void Reset()
         {
             //circles.Clear();
-            area.Clear();
+            gameObjectHandler.Clear();
         }
-        public override Area? GetCurArea()
+        public override GameObjectHandler? GetGameObjectHandler()
         {
-            return area;
+            return gameObjectHandler;
         }
 
         private void UpdateBoundaryRect(Rect gameArea)
@@ -147,8 +147,8 @@ namespace Examples.Scenes.ExampleScenes
         {
             base.Update(dt, game, ui);
             UpdateBoundaryRect(game.Area);
-            area.ResizeBounds(boundaryRect);
-            area.Update(dt, game, ui);
+            gameObjectHandler.ResizeBounds(boundaryRect);
+            gameObjectHandler.Update(dt, game, ui);
         }
         protected override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
@@ -162,7 +162,7 @@ namespace Examples.Scenes.ExampleScenes
                     Vector2 vel = SRNG.randVec2(100, 200);
                     Circ c = new(randPos, vel, 2);
                     //circles.Add(c);
-                    area.AddAreaObject(c);
+                    gameObjectHandler.AddAreaObject(c);
                 }
             }
 
@@ -170,12 +170,12 @@ namespace Examples.Scenes.ExampleScenes
             {
                 float slowFactor = 0.2f;
                 int[] layerMask = new int[] { 1, 3};
-                AreaDeltaFactor one = new(1f, slowFactor,              0.25f,  0f,         layerMask);
-                AreaDeltaFactor two = new(slowFactor, slowFactor,      3f,     0.25f,      layerMask);
-                AreaDeltaFactor three = new(slowFactor, 1f,            0.25f,  3.25f,      layerMask);
-                area.AddDeltaFactor(one);
-                area.AddDeltaFactor(two);
-                area.AddDeltaFactor(three);
+                HandlerDeltaFactor one = new(1f, slowFactor,              0.25f,  0f,         layerMask);
+                HandlerDeltaFactor two = new(slowFactor, slowFactor,      3f,     0.25f,      layerMask);
+                HandlerDeltaFactor three = new(slowFactor, 1f,            0.25f,  3.25f,      layerMask);
+                gameObjectHandler.AddDeltaFactor(one);
+                gameObjectHandler.AddDeltaFactor(two);
+                gameObjectHandler.AddDeltaFactor(three);
             }
         }
 
@@ -185,16 +185,16 @@ namespace Examples.Scenes.ExampleScenes
         {
             base.DrawGame(game);
             boundaryRect.DrawLines(4f, ColorLight);
-            area.DrawGame(game);
+            gameObjectHandler.DrawGame(game);
         }
         public override void DrawUI(ScreenInfo ui)
         {
-            area.DrawUI(ui);
+            gameObjectHandler.DrawUI(ui);
             base.DrawUI(ui);
             Vector2 uiSize = ui.Area.Size;
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));
             //string infoText = String.Format("[LMB] Spawn | Object Count: {0} | DC : {1} | SC: {2}", area.Count, MathF.Ceiling(GAMELOOP.deltaCriticalTime * 100) / 100, GAMELOOP.skipDrawCount);
-            string infoText = $"[LMB] Spawn | Object Count: {area.Count}";
+            string infoText = $"[LMB] Spawn | Object Count: {gameObjectHandler.Count}";
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
 

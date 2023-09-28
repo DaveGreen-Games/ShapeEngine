@@ -87,7 +87,7 @@ namespace Examples.Scenes
             ver.Draw(2f, c);
         }
 
-        public virtual Area? GetCurArea()
+        public virtual GameObjectHandler? GetGameObjectHandler()
         {
             return null;
         }
