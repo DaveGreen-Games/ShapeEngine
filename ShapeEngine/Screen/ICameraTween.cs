@@ -68,7 +68,7 @@ namespace ShapeEngine.Screen
             return t >= 1f;
         }
 
-        public float GetRoation() { return cur; }
+        public float GetRotationDeg() { return cur; }
     }
     public class CameraTweenScale : ICameraTween
     {

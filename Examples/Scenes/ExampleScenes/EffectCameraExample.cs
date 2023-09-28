@@ -79,7 +79,7 @@ namespace Examples.Scenes.ExampleScenes
         private ShapeCamera camera = new ShapeCamera();
         public EffectCameraExample()
         {
-            Title = "Effect Camera Example";
+            Title = "Screen Effects Example";
 
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
                 
@@ -218,6 +218,8 @@ namespace Examples.Scenes.ExampleScenes
                     float f = comet.GetCollisionIntensity();
                     camera.Shake(SRNG.randF(0.4f, 0.6f), new Vector2(150, 150) * f, 0, 10, 0.75f);
                     comets.RemoveAt(i);
+
+                    GAMELOOP.Flash(0.25f, new(255, 255, 255, 150), new(0,0,0,0));
                 }
             }
 

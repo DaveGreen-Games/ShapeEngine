@@ -657,6 +657,19 @@ namespace Examples.Scenes.ExampleScenes
         {
             return gameObjectHandler;
         }
+
+        public override void Activate(IScene oldScene)
+        {
+            CameraTweenScale scaleStart = new(1f, 1.25f, 0.25f, TweenType.LINEAR);
+            CameraTweenScale scaleHold = new(1.25f, 1.25f, 0.5f, TweenType.LINEAR);
+            CameraTweenScale scaleEnd = new(1.25f, 1f, 0.25f, TweenType.LINEAR);
+            CameraTweenOffset tweenRight = new(new(0), new(100, 0), 0.25f, TweenType.LINEAR);
+            CameraTweenOffset tweenLeft = new(new(100, 0), new(-25, 0), 0.25f, TweenType.LINEAR);
+            CameraTweenOffset tweenEnd = new(new(-25, 0), new(-0, 0), 0.25f, TweenType.LINEAR);
+            GAMELOOP.Camera.StartTweenSequence(scaleStart, scaleHold, scaleEnd);
+            GAMELOOP.Camera.StartTweenSequence(tweenRight, tweenLeft, tweenEnd);
+        }
+
         public override void Reset()
         {
             gameObjectHandler.Clear();

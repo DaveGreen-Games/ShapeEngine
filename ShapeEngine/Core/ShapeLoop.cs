@@ -127,6 +127,11 @@ internal sealed class ShapeTexture
             //DrawTexturePro(RenderTexture.texture, sourceRec, destRec, origin, 0f, WHITE);
         //
     }
+
+public interface ICameraFollowTarget
+{
+    public Vector2 GetCameraFollowPosition(Vector2 cameraPos);
+}
 public sealed class ShapeCamera
     {
         public static float MinZoomLevel = 0.1f;
@@ -140,7 +145,7 @@ public sealed class ShapeCamera
         private const int ShakeRot = 3;
         private Shake shake = new(4);
         
-        public Sequencer<ICameraTween> CameraTweens { get; private set; } = new();
+        private Sequencer<ICameraTween> cameraTweens = new();
         private float cameraTweenTotalRotationDeg = 0f;
         private float cameraTweenTotalScale = 1f;
         private Vector2 cameraTweenTotalOffset = new();
@@ -194,12 +199,12 @@ public sealed class ShapeCamera
 
         public void Activate()
         {
-            this.CameraTweens.OnItemUpdated += OnCameraTweenUpdated;
+            this.cameraTweens.OnItemUpdated += OnCameraTweenUpdated;
         }
 
         public void Deactive()
         {
-            this.CameraTweens.OnItemUpdated -= OnCameraTweenUpdated;
+            this.cameraTweens.OnItemUpdated -= OnCameraTweenUpdated;
         }
         public Rect Area => new
         (
@@ -233,7 +238,11 @@ public sealed class ShapeCamera
             zoomAdjustment = MathF.Sqrt( curArea / targetArea );
         }
 
-
+        public bool HasSequences() => cameraTweens.HasSequences();
+        public bool HasTweenSequence(uint id) => cameraTweens.HasSequence(id);
+        public uint StartTweenSequence(params ICameraTween[] tweens) => cameraTweens.StartSequence(tweens);
+        public void StopTweenSequence(uint id) => cameraTweens.CancelSequence(id);
+        public void StopTweens() => cameraTweens.Stop();
         public void Reset()
         {
             Position = new();
@@ -305,7 +314,7 @@ public sealed class ShapeCamera
         public void StopShake() { shake.Stop(); }
         private void UpdateShake(float dt)
         {
-            CameraTweens.Update(dt);
+            cameraTweens.Update(dt);
             shake.Update(dt);
             
             //TODO camera shake / tween not working
@@ -313,15 +322,15 @@ public sealed class ShapeCamera
             
             Offset = BaseOffset + shakeOffset + cameraTweenTotalOffset;
             RotationDeg = BaseRotationDeg + shake.Get(ShakeRot) + cameraTweenTotalRotationDeg;
-            ZoomLevel = ((shake.Get(ShakeZoom)) * BaseZoomLevel) / cameraTweenTotalScale;
-            
+            ZoomLevel = (shake.Get(ShakeZoom) + BaseZoomLevel) / cameraTweenTotalScale;
+            ZoomLevel *= zoomAdjustment;
             cameraTweenTotalOffset = new(0f);
             cameraTweenTotalRotationDeg = 0f;
             cameraTweenTotalScale = 1f;
             //--------------
-            Offset = BaseOffset;
-            RotationDeg = BaseRotationDeg;
-            ZoomLevel = BaseZoomLevel * zoomAdjustment;
+            // Offset = BaseOffset;
+            // RotationDeg = BaseRotationDeg;
+            // ZoomLevel = BaseZoomLevel * zoomAdjustment;
 
         }
         private void OnCameraTweenUpdated(ICameraTween tween)
@@ -609,6 +618,7 @@ public class ShapeLoop
         public void Flash(float duration, Raylib_CsLo.Color startColor, Raylib_CsLo.Color endColor)
         {
             if (duration <= 0.0f) return;
+            if (ScreenEffectIntensity <= 0f) return;
             byte startColorAlpha = (byte)(startColor.a * ScreenEffectIntensity);
             startColor.a = startColorAlpha;
             byte endColorAlpha = (byte)(endColor.a * ScreenEffectIntensity);
@@ -655,6 +665,7 @@ public class ShapeLoop
             LoadContent();
             BeginRun();
         }
+
         private void RunGameloop()
         {
             while (!quit)
@@ -680,6 +691,7 @@ public class ShapeLoop
                 Game = new(cameraArea, mousePosGame);
                 UI = new(screenArea, mousePosUI);
                 
+                UpdateFlashes(dt);
                 Update(dt);
 
                 BeginTextureMode(gameTexture.RenderTexture);
@@ -695,7 +707,8 @@ public class ShapeLoop
                 ClearBackground(BackgroundColor);
 
                 gameTexture.Draw();
-                foreach (var flash in shapeFlashes) cameraArea.Draw(flash.GetColor());
+                foreach (var flash in shapeFlashes) screenArea.Draw(flash.GetColor());
+                
                 DrawUI(UI);
                 DrawCursor(screenArea.Size, mousePosUI);
                 EndDrawing();
@@ -862,6 +875,15 @@ public class ShapeLoop
                 OnWindowDimensionsChanged?.Invoke(conversion);
                 WindowSizeChanged(conversion);
                 CurScene.WindowSizeChanged(conversion);
+            }
+        }
+        private void UpdateFlashes(float dt)
+        {
+            for (int i = shapeFlashes.Count() - 1; i >= 0; i--)
+            {
+                var flash = shapeFlashes[i];
+                flash.Update(dt);
+                if (flash.IsFinished()) { shapeFlashes.RemoveAt(i); }
             }
         }
 

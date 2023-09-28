@@ -25,7 +25,8 @@ namespace ShapeEngine.Timing
 
         public Sequencer() { }
 
-        public bool HasSequences() { return sequences.Count > 0; }
+        public bool HasSequences() => sequences.Count > 0;
+        public bool HasSequence(uint id) => sequences.ContainsKey(id);
         public uint StartSequence(params T[] items)
         {
             var id = NextID;
@@ -36,7 +37,8 @@ namespace ShapeEngine.Timing
         {
             if (sequences.ContainsKey(id)) sequences.Remove(id);
         }
-        public void Stop() { sequences.Clear(); }
+        public void Stop() => sequences.Clear();
+
         public void Update(float dt)
         {
             StartUpdate();
