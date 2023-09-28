@@ -68,7 +68,7 @@ namespace Examples.Scenes.ExampleScenes
             circle.DrawLines(6f, color);
         }
     }
-    public class EffectCameraExample : ExampleScene
+    public class ScreenEffectsExample : ExampleScene
     {
         Font font;
         Vector2 movementDir = new();
@@ -77,7 +77,7 @@ namespace Examples.Scenes.ExampleScenes
         List<Comet> comets = new();
         Circle ship = new(new Vector2(0f), 30f);
         private ShapeCamera camera = new ShapeCamera();
-        public EffectCameraExample()
+        public ScreenEffectsExample()
         {
             Title = "Screen Effects Example";
 
