@@ -7,17 +7,7 @@ using ShapeEngine.Timing;
 
 namespace ShapeEngine.Core;
 
-public readonly struct ScreenInfo
-{
-    public readonly Rect Area;
-    public readonly Vector2 MousePos;
 
-    public ScreenInfo(Rect area, Vector2 mousePos)
-    {
-        this.Area = area;
-        this.MousePos = mousePos;
-    }
-}
 internal sealed class ShapeFlash
     {
         private float maxDuration = 0.0f;
@@ -357,8 +347,8 @@ public class ShapeLoop
         public static bool IsLinux() => OS_PLATFORM == OSPlatform.Linux;
         public static bool IsOSX() => OS_PLATFORM == OSPlatform.OSX;
         
-        public delegate void WindowSizeChanged(Dimensions newDimensions);
-        public event WindowSizeChanged? OnWindowSizeChanged;
+        public delegate void DimensionsChanged(DimensionConversionFactors conversion);
+        public event DimensionsChanged? OnWindowDimensionsChanged;
         public string[] LaunchParams { get; protected set; } = Array.Empty<string>();
 
         
@@ -381,9 +371,17 @@ public class ShapeLoop
 
         public void ResetCamera() => Camera = basicCamera;
 
+        /// <summary>
+        /// Scaling factors from current screen size to development resolution.
+        /// </summary>
+        public DimensionConversionFactors ScreenToDevelopment { get; private set; } = new();
+        /// <summary>
+        /// Scaling factors from development resolution to the current screen size.
+        /// </summary>
+        public DimensionConversionFactors DevelopmentToScreen { get; private set; } = new();
         public Dimensions DevelopmentDimensions { get; private set; } = new();
         public Dimensions CurScreenSize { get; private set; } = new();
-        public Dimensions WindowMinSize { get; } = new (128, 128);
+        public Dimensions WindowMinSize { get; private set; } = new (128, 128);
 
         public ScreenInfo Game { get; private set; } = new();
         public ScreenInfo UI { get; private set; } = new();
@@ -453,7 +451,7 @@ public class ShapeLoop
                     Raylib.SetWindowSize(windowSize.Width, windowSize.Height);
                     CenterWindow();
                 }
-                InvokeWindowSizeChanged();
+                CheckWindowDimensionsChanged();
             }
         }
 
@@ -465,7 +463,7 @@ public class ShapeLoop
                 if (value == Raylib.IsWindowMaximized()) return;
                 if(value)Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_MAXIMIZED);
                 else Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_MAXIMIZED);
-                InvokeWindowSizeChanged();
+                CheckWindowDimensionsChanged();
             }
         }
 
@@ -489,7 +487,7 @@ public class ShapeLoop
                 SetWindowSize(windowSize.Width, windowSize.Height);
                 CenterWindow();
 
-                InvokeWindowSizeChanged();
+                CheckWindowDimensionsChanged();
             }
         }
         public void CenterWindow()
@@ -520,7 +518,10 @@ public class ShapeLoop
 
             Monitor = new MonitorDevice();
             SetupWindowDimensions();
+            WindowMinSize = DevelopmentDimensions * 0.2f;
             Raylib.SetWindowMinSize(WindowMinSize.Width, WindowMinSize.Height);
+            
+            SetConversionFactors();
             
             VSync = true;
             FrameRateLimit = 60;
@@ -536,6 +537,7 @@ public class ShapeLoop
 
             Game = new(cameraArea, mousePosGame);
             UI = new(screenArea, mousePosUI);
+            
             
             gameTexture.Load(CurScreenSize);
         }
@@ -665,7 +667,7 @@ public class ShapeLoop
                 var dt = GetFrameTime();
                 Delta = dt;
                 UpdateMonitorDevice(dt);
-                CalculateCurScreenSize();
+                CheckWindowDimensionsChanged();
                 Camera.SetSize(CurScreenSize, DevelopmentDimensions);
                 Camera.Update(dt);
                 gameTexture.Update(CurScreenSize);
@@ -748,22 +750,12 @@ public class ShapeLoop
         /// </summary>
         protected virtual void UnloadContent() { }
 
-        protected void UpdateScene()
-        {
-            CurScene.Update(Delta, Game, UI);
-        }
+        protected virtual void WindowSizeChanged(DimensionConversionFactors conversion) { }
+        protected void UpdateScene() => CurScene.Update(Delta, Game, UI);
 
-        protected void DrawGameScene()
-        {
-            CurScene.DrawGame(Game);
-            // Raylib.DrawCircleV(Game.MousePos, 20, RED);
-        }
+        protected void DrawGameScene() => CurScene.DrawGame(Game);
 
-        protected void DrawUIScene()
-        {
-            CurScene.DrawUI(UI);
-            // Raylib.DrawCircleV(UI.MousePos, 10, YELLOW);
-        }
+        protected void DrawUIScene() => CurScene.DrawUI(UI);
 
         #endregion
         
@@ -851,11 +843,32 @@ public class ShapeLoop
             Monitor.CurMonitor().WriteDebugInfo();
             Console.WriteLine("---------------------------------------");
         }
-        private void InvokeWindowSizeChanged()
+        private void CheckWindowDimensionsChanged()
         {
             var prev = CurScreenSize;
             CalculateCurScreenSize();
-            if(prev != CurScreenSize) OnWindowSizeChanged?.Invoke(CurScreenSize);
+            if (prev != CurScreenSize)
+            {
+                //TODO Matching aspect ratio
+                //if !fullscreen
+                //find matching resolution for dev aspect ratio
+                //set window size to it
+                //center window
+                //calculate cur screen size
+                
+                
+                SetConversionFactors();
+                var conversion = new DimensionConversionFactors(prev, CurScreenSize);
+                OnWindowDimensionsChanged?.Invoke(conversion);
+                WindowSizeChanged(conversion);
+                CurScene.WindowSizeChanged(conversion);
+            }
+        }
+
+        private void SetConversionFactors()
+        {
+            ScreenToDevelopment = new(CurScreenSize, DevelopmentDimensions);
+            DevelopmentToScreen = new(DevelopmentDimensions, CurScreenSize);
         }
     }
     

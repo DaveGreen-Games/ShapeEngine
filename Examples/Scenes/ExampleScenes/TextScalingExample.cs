@@ -37,7 +37,11 @@ namespace Examples.Scenes.ExampleScenes
             bottomRight = s * new Vector2(0.9f, 0.8f);
             font = GAMELOOP.GetFont(fontIndex);
         }
-
+        public override void WindowSizeChanged(DimensionConversionFactors conversionFactors)
+        {
+            topLeft *= conversionFactors.Factor;
+            bottomRight *= conversionFactors.Factor;
+        }
         public override void Activate(IScene oldScene)
         {
             var s = GAMELOOP.UI.Area.Size;
@@ -143,11 +147,11 @@ namespace Examples.Scenes.ExampleScenes
             base.DrawUI(ui);
 
             Rect r = new(topLeft, bottomRight);
-            r.DrawLines(6f, ColorMedium);
+            r.DrawLines(3f, ColorMedium);
             font.DrawText(text, r, fontSpacing, new Vector2(0.5f, 0.5f), ColorHighlight1);
 
             Vector2 uiSize = ui.Area.Size;
-
+            Rect infoRect = ui.Area.ApplyMargins(0.05f, 0.05f, 0.9f, 0.05f);
             if (!textEntryActive)
             {
                 Circle topLeftPoint = new(topLeft, pointRadius);
@@ -186,14 +190,13 @@ namespace Examples.Scenes.ExampleScenes
                     bottomRightInteractionCircle.DrawLines(2f, ColorMedium, 4f);
                 }
     
-                string info = String.Format("[W] Font: {0} | [A/D] Font Spacing: {1} | [Enter] Write Custom Text", GAMELOOP.GetFontName(fontIndex), fontSpacing);
-                Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
+                string info =
+                    $"[W] Font: {GAMELOOP.GetFontName(fontIndex)} | [A/D] Font Spacing: {fontSpacing} | [Enter] Write Custom Text";
                 font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
             }
             else
             {
                 string info = "TEXT ENTRY MODE ACTIVE | [ESC] Cancel | [Enter] Accept | [Del] Clear Text";
-                Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
                 font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
             }
 

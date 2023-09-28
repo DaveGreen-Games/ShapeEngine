@@ -29,6 +29,10 @@ namespace Examples.Scenes
 
         }
 
+        public virtual void WindowSizeChanged(DimensionConversionFactors conversionFactors)
+        {
+            
+        }
         public virtual void Reset() { }
 
         

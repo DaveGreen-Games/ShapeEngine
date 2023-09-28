@@ -54,7 +54,10 @@ namespace Examples.Scenes
             SetupButtons();
         }
 
-
+        public void WindowSizeChanged(DimensionConversionFactors conversionFactors)
+        {
+            
+        }
 
         public void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
@@ -113,7 +116,7 @@ namespace Examples.Scenes
             titleFont.DrawText(pagesText, pageRect, 4f, new(0f, 0.5f), ExampleScene.ColorHighlight2);
 
             Segment s = new(uiSize * new Vector2(0f, 0.22f), uiSize * new Vector2(1f, 0.22f));
-            s.Draw(4f, ExampleScene.ColorLight);
+            s.Draw(MathF.Max(4f * GAMELOOP.DevelopmentToScreen.AreaFactor, 0.5f), ExampleScene.ColorLight);
 
             string backText = "Back [ESC]";
             Rect backRect = new Rect(uiSize * new Vector2(0.01f, 0.17f), uiSize * new Vector2(0.2f, 0.04f), new Vector2(0f, 0f));

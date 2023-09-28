@@ -51,7 +51,11 @@ namespace Examples.Scenes.ExampleScenes
             bottomRight = s * new Vector2(0.9f, 0.8f);
             font = GAMELOOP.GetFont(fontIndex);
         }
-
+        public override void WindowSizeChanged(DimensionConversionFactors conversionFactors)
+        {
+            topLeft *= conversionFactors.Factor;
+            bottomRight *= conversionFactors.Factor;
+        }
         protected override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             if (IsKeyPressed(KeyboardKey.KEY_W)) NextFont();

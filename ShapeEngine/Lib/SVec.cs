@@ -31,6 +31,14 @@ namespace ShapeEngine.Lib
 
         public static float GetArea(this Vector2 v) { return v.X * v.Y; }
 
+        public static Vector2 DivideSafe(this Vector2 a, Vector2 b)
+        {
+            return new
+            (
+                b.X == 0f ? 1f : a.X / b.X,
+                b.Y == 0f ? 1f : a.Y / b.Y
+            );
+        }
         public static bool IsNan(this Vector2 v) { return float.IsNaN(v.X) || float.IsNaN(v.Y); }
         public static Vector2 Right() { return new(1.0f, 0.0f); }
         public static Vector2 Left() { return new(-1.0f, 0.0f); }

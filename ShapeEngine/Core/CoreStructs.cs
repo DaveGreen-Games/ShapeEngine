@@ -16,6 +16,47 @@ using ShapeEngine.Random;
 
 namespace ShapeEngine.Core
 {
+    public readonly struct DimensionConversionFactors
+    {
+        public readonly bool Valid;
+        public readonly Vector2 Factor;
+        public readonly float AreaFactor;
+        public readonly float AreaSideFactor;
+        public readonly Dimensions From;
+        public readonly Dimensions To;
+    
+        public DimensionConversionFactors()
+        {
+            Factor = new(1);
+            AreaFactor = 1f;
+            AreaSideFactor = 1f;
+            From = new();
+            To = new();
+            Valid = false;
+        }
+        public DimensionConversionFactors(Dimensions from, Dimensions to)
+        {
+            From = from;
+            To = to;
+            Factor = from.ScaleFactor(to);
+            AreaFactor = from.ScaleFactorArea(to);
+            AreaSideFactor = from.ScaleFactorAreaSide(to);
+            Valid = true;
+        }
+    }
+    public readonly struct ScreenInfo
+    {
+        public readonly Rect Area;
+        public readonly Vector2 MousePos;
+
+        public ScreenInfo(Rect area, Vector2 mousePos)
+        {
+            this.Area = area;
+            this.MousePos = mousePos;
+        }
+    }
+
+    
     
     public readonly struct ClosestPoint
     {
@@ -857,9 +898,19 @@ namespace ShapeEngine.Core
         public int MaxDimension => Width > Height ? Width : Height;
         public int MinDimension => Width < Height ? Width : Height;
 
+        public Vector2 ScaleFactor(Dimensions to) => to.ToVector2().DivideSafe(ToVector2());
+        public float ScaleFactorArea(Dimensions to)
+        {
+            var area = Area;
+            if (area <= 0) return 1f;
+            return to.Area / area;
+        }
+        public float ScaleFactorAreaSide(Dimensions to) => MathF.Sqrt(ScaleFactorArea(to));
+
+        public DimensionConversionFactors GetConversionFactors(Dimensions to) => new(this, to);
 
         public Vector2 ToVector2() { return new Vector2(Width, Height); }
-
+        
         public bool Equals(Dimensions other)
         {
             return Width == other.Width && Height == other.Height;

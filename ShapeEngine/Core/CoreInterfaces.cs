@@ -60,6 +60,7 @@ namespace ShapeEngine.Core
         /// </summary>
         public void Close();
 
+        public void WindowSizeChanged(DimensionConversionFactors conversionFactors);
         //public void DrawToTexture(ScreenTexture texture);
         //public void DrawToScreen(Vector2 size, Vector2 mousePos);
 

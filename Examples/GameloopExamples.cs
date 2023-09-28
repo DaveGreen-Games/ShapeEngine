@@ -72,6 +72,11 @@ namespace Examples
             GoToScene(mainScene);
         }
 
+        protected override void WindowSizeChanged(DimensionConversionFactors conversionFactors)
+        {
+            
+        }
+
         //protected override void HandleInput(float dt)
         //{
         //    if (IsKeyPressed(KeyboardKey.KEY_F))
