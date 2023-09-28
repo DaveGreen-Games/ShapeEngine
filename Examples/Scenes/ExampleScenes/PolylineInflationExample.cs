@@ -10,16 +10,15 @@ namespace Examples.Scenes.ExampleScenes
 {
     public class PolylineInflationExample : ExampleScene
     {
-        ScreenTexture game;
         Polyline polyline = new();
         int dragIndex = -1;
         float offsetDelta = 0f;
         float lerpOffsetDelta = 0f;
-
+        private Font font;
         public PolylineInflationExample()
         {
             Title = "Polyline Inflation Example";
-            game = GAMELOOP.Game;
+            font = GAMELOOP.GetFont(FontIDs.JetBrains);
         }
         public override void Reset()
         {
@@ -46,10 +45,10 @@ namespace Examples.Scenes.ExampleScenes
 
             offsetDelta = Clamp(offsetDelta, 0f, 300f);
         }
-        public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
+        public override void DrawUI(ScreenInfo ui)
         {
-            base.DrawUI(uiSize, mousePosUI);
-            Vector2 mousePos = mousePosUI;
+            base.DrawUI(ui);
+            Vector2 mousePos = ui.MousePos;
 
             float vertexRadius = 8f;
             int pickedVertex = -1;
@@ -152,6 +151,13 @@ namespace Examples.Scenes.ExampleScenes
                 }
             }
 
+            
+            Vector2 uiSize = ui.Area.Size;
+
+            Rect infoRect = ui.Area.ApplyMargins(0.05f, 0.05f, 0.9f, 0.05f);
+            string infoText =
+                $"[LMB/RMB] Add/Remove Point [Scroll] Inflate {MathF.Round(offsetDelta * 100) / 100}";
+            font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
     }
 

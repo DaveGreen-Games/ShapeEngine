@@ -4,6 +4,7 @@ using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 using System.Numerics;
+using System.Resources;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -76,7 +77,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             return false;
         }
-        public virtual void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
+        public virtual void Update(float dt, ScreenInfo game, ScreenInfo ui)
         {
             var collidables = GetCollidables();
             foreach (var c in collidables)
@@ -84,7 +85,7 @@ namespace Examples.Scenes.ExampleScenes
                 c.GetCollider().UpdateState(dt);
             }
         }
-        public abstract void DrawGame(Vector2 gameSize, Vector2 mousePosGame);
+        public abstract void DrawGame(ScreenInfo game);
         
         
 
@@ -100,10 +101,7 @@ namespace Examples.Scenes.ExampleScenes
 
         public virtual void RemovedFromArea(Area area) { }
 
-
-        public abstract Vector2 GetCameraFollowPosition(Vector2 camPos);
-
-        public void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
+        public virtual void DrawUI(ScreenInfo ui)
         {
             
         }
@@ -122,26 +120,14 @@ namespace Examples.Scenes.ExampleScenes
         {
         }
 
-        public bool IsDrawingToScreen()
-        {
-            return false;
-        }
-
-        public bool IsDrawingToGameTexture()
+        public bool DrawToGame(Rect gameArea)
         {
             return true;
         }
 
-        public bool IsDrawingToUITexture()
+        public bool DrawToUI(Rect screenArea)
         {
             return false;
-        }
-
-        
-
-        public void DrawToScreen(Vector2 size, Vector2 mousePos)
-        {
-            
         }
     }
 
@@ -169,7 +155,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             wallCollidable = new(start, end);
         }
-        public override void DrawGame(Vector2 gameSize, Vector2 mousePosGame)
+        public override void DrawGame(ScreenInfo game)
         {
             wallCollidable.GetCollider().DrawShape(2f, ExampleScene.ColorHighlight1);
         }
@@ -179,10 +165,6 @@ namespace Examples.Scenes.ExampleScenes
             return wallCollidable.GetCollider().GetShape().GetBoundingBox();
         }
 
-        public override Vector2 GetCameraFollowPosition(Vector2 camPos)
-        {
-            return GetPosition();
-        }
 
         public override List<ICollidable> GetCollidables()
         {
@@ -224,7 +206,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             wallCollidable = new(start, end);
         }
-        public override void DrawGame(Vector2 gameSize, Vector2 mousePosGame)
+        public override void DrawGame(ScreenInfo game)
         {
             wallCollidable.GetCollider().DrawShape(2f, ExampleScene.ColorHighlight1);
         }
@@ -234,10 +216,6 @@ namespace Examples.Scenes.ExampleScenes
             return wallCollidable.GetCollider().GetShape().GetBoundingBox();
         }
 
-        public override Vector2 GetCameraFollowPosition(Vector2 camPos)
-        {
-            return GetPosition();
-        }
 
         public override List<ICollidable> GetCollidables()
         {
@@ -278,7 +256,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             this.trapCollidable = new(pos, size);
         }
-        public override void DrawGame(Vector2 gameSize, Vector2 mousePosGame)
+        public override void DrawGame(ScreenInfo game)
         {
             trapCollidable.GetCollider().DrawShape(2f, ExampleScene.ColorHighlight1);
         }
@@ -288,11 +266,7 @@ namespace Examples.Scenes.ExampleScenes
             return trapCollidable.GetCollider().GetShape().GetBoundingBox();
         }
 
-        public override Vector2 GetCameraFollowPosition(Vector2 camPos)
-        {
-            return GetPosition();
-        }
-
+        
         public override List<ICollidable> GetCollidables()
         {
             return new() { trapCollidable };
@@ -353,7 +327,7 @@ namespace Examples.Scenes.ExampleScenes
             
         }
 
-        public override void DrawGame(Vector2 gameSize, Vector2 mousePosGame)
+        public override void DrawGame(ScreenInfo game)
         {
             auraCollidable.GetCollider().DrawShape(2f, ExampleScene.ColorHighlight1);
         }
@@ -363,10 +337,6 @@ namespace Examples.Scenes.ExampleScenes
             return auraCollidable.GetCollider().GetShape().GetBoundingBox();
         }
 
-        public override Vector2 GetCameraFollowPosition(Vector2 camPos)
-        {
-            return GetPosition();
-        }
 
         public override List<ICollidable> GetCollidables()
         {
@@ -435,15 +405,20 @@ namespace Examples.Scenes.ExampleScenes
             
         }
 
-        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
+        public override void Update(float dt, ScreenInfo game, ScreenInfo ui)
         {
-            base.Update(dt, mousePosScreen, game, ui);
+            base.Update(dt, game, ui);
             rockCollidable.Update(dt);
         }
-        public override void DrawGame(Vector2 gameSize, Vector2 mousePosGame)
+        public override void DrawGame(ScreenInfo game)
         {
             rockCollidable.Draw();
         }
+
+        // public override void DrawUI(ScreenInfo ui)
+        // {
+        //     GAMELOOP.Camera.WorldToScreen(GetBoundingBox()).DrawLines(2f, WHITE);
+        // }
 
         public override Vector2 GetPosition()
         {
@@ -465,10 +440,6 @@ namespace Examples.Scenes.ExampleScenes
             return new() { rockCollidable };
         }
 
-        public override Vector2 GetCameraFollowPosition(Vector2 camPos)
-        {
-            return GetPosition();
-        }
     }
 
     internal class BoxCollidable : Collidable
@@ -525,12 +496,12 @@ namespace Examples.Scenes.ExampleScenes
             this.boxCollidable = new(pos, vel, size);
         }
 
-        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
+        public override void Update(float dt, ScreenInfo game, ScreenInfo ui)
         {
-            base.Update(dt, mousePosScreen, game, ui);
+            base.Update(dt, game, ui);
             boxCollidable.Update(dt);
         }
-        public override void DrawGame(Vector2 gameSize, Vector2 mousePosGame)
+        public override void DrawGame(ScreenInfo game)
         {
             boxCollidable.Draw();
         }
@@ -555,10 +526,6 @@ namespace Examples.Scenes.ExampleScenes
             return new() { boxCollidable };
         }
 
-        public override Vector2 GetCameraFollowPosition(Vector2 camPos)
-        {
-            return GetPosition();
-        }
     }
 
     internal class BallCollidable : Collidable
@@ -617,12 +584,12 @@ namespace Examples.Scenes.ExampleScenes
         }
         
 
-        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
+        public override void Update(float dt, ScreenInfo game, ScreenInfo ui)
         {
-            base.Update(dt, mousePosScreen, game, ui);
+            base.Update(dt, game, ui);
             ballCollidable.Update(dt);
         }
-        public override void DrawGame(Vector2 gameSize, Vector2 mousePosGame)
+        public override void DrawGame(ScreenInfo game)
         {
             ballCollidable.Draw();
         }
@@ -647,10 +614,6 @@ namespace Examples.Scenes.ExampleScenes
             return new() { ballCollidable };
         }
 
-        public override Vector2 GetCameraFollowPosition(Vector2 camPos)
-        {
-            return GetPosition();
-        }
     }
 
     
@@ -699,6 +662,7 @@ namespace Examples.Scenes.ExampleScenes
             area.Clear();
             AddBoundaryWalls();
         }
+
         protected override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             base.HandleInput(dt, mousePosGame, mousePosUI);
@@ -746,25 +710,14 @@ namespace Examples.Scenes.ExampleScenes
 
             if (IsKeyPressed(KeyboardKey.KEY_ZERO)) { drawDebug = !drawDebug; }
 
-
-            ////add camera movement and zoom input here
-            //if (IsKeyPressed(KeyboardKey.KEY_SPACE))
-            //{
-            //    cam.Position += new Vector2(100, 0);
-            //    float z = cam.Zoom;
-            //    z *= 0.9f;
-            //    if (z < 0.001f) z = 1;
-            //    cam.Zoom = z;
-            //}
-        
         }
 
-        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
+        public override void Update(float dt,ScreenInfo game, ScreenInfo ui)
         {
-            base.Update(dt, mousePosScreen, game, ui);
+            base.Update(dt, game, ui);
 
             HandleWalls(game.MousePos);
-            area.Update(dt, mousePosScreen, game, ui);
+            area.Update(dt, game, ui);
 
             //collisionsTotal += area.Col.CollisionChecksPerFrame;
             //iterationsTotal += area.Col.IterationsPerFrame;
@@ -786,9 +739,9 @@ namespace Examples.Scenes.ExampleScenes
             
         }
 
-        public override void DrawGame(Vector2 gameSize, Vector2 mousePosGame)
+        public override void DrawGame(ScreenInfo game)
         {
-            base.DrawGame(gameSize, mousePosGame);
+            base.DrawGame(game);
 
             if (drawDebug)
             {
@@ -798,25 +751,38 @@ namespace Examples.Scenes.ExampleScenes
                 area.DrawDebug(boundsColor, gridColor, fillColor);
             }
 
-            DrawWalls(mousePosGame);
+            DrawWalls(game.MousePos);
 
-            area.DrawGame(gameSize, mousePosGame);
+            area.DrawGame(game);
         }
-        public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
+        public override void DrawUI(ScreenInfo ui)
         {
+            area.DrawUI(ui);
 
-            area.DrawUI(uiSize, mousePosUI);
+            base.DrawUI(ui);
 
-            base.DrawUI(uiSize, mousePosUI);
-
-            //Rect checksRect = new Rect(uiSize * new Vector2(0.5f, 0.92f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));
-            //string checks = string.Format("Iteration: {0} | Collisions: {1} | CP: {2}", iterationsAvg.ToString("D6"), collisionAvg.ToString("D6"), closestPointAvg.ToString("D6"));
-            //font.DrawText(checks, checksRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
-
-
+            Vector2 uiSize = ui.Area.Size;
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
-            string infoText = String.Format("[LMB] Add Segment | [RMB] Cancel Segment | [Space] Shoot | Objs: {0}", area.GetCollisionHandler().Count );
+            string infoText =
+                $"[LMB] Add Segment | [RMB] Cancel Segment | [Space] Shoot | Objs: {area.GetCollisionHandler().Count}";
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+
+
+            Vector2 devSize = GAMELOOP.DevelopmentDimensions.ToVector2();
+            Vector2 camSize = GAMELOOP.CurScreenSize.ToVector2();
+            float devArea = MathF.Round( devSize.GetArea() * 100 ) / 100;
+            float screenArea = MathF.Round( camSize.GetArea() * 100 ) / 100;
+            float fds = MathF.Round( (devArea / screenArea) * 100 ) / 100;
+            float fsd = MathF.Round( (screenArea / devArea) * 100 ) / 100;
+
+            float zoom = MathF.Round( GAMELOOP.Camera.ZoomLevel * 100 ) / 100;
+            
+            Rect textRect = ui.Area.ApplyMargins(0.05f, 0.05f, 0.8f, 0.1f);
+            textRect.Draw(DARKGRAY);
+
+            string text = $"DS: {devSize} | CS: {camSize} | DA: {devArea} | SA: {screenArea} | FDS: {fds} | FSD: {fsd} | Z: {zoom}";
+            
+            font.DrawText(text, textRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
 
         private void AddBoundaryWalls()

@@ -36,9 +36,9 @@ namespace ShapeEngine.Effects
             SPhysics.UpdateState(this, dt); 
         }
 
-        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
+        public override void Update(float dt, ScreenInfo game, ScreenInfo ui)
         {
-            base.Update(dt, mousePosScreen, game, ui);
+            base.Update(dt, game, ui);
             UpdatePreviousPosition(dt);
             UpdateState(dt);
         }

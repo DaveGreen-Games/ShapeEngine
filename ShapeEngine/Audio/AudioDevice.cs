@@ -55,9 +55,9 @@ namespace ShapeEngine.Audio
             soundBlockers.Clear();
             CloseAudioDevice();
         }
-        public void Update(float dt, ICamera camera)// Vector2 cameraPos)
+        public void Update(float dt, ShapeCamera camera)// Vector2 cameraPos)
         {
-            cameraRect = camera.GetArea();
+            cameraRect = camera.Area;
             if (currentPlaylist != null) currentPlaylist.Update(dt);
             //if(currentSong != null) UpdateMusicStream(currentSong.GetSong());
             //if (currentSong != null) currentSong.Update(dt);

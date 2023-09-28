@@ -18,24 +18,22 @@ namespace Examples.Scenes.ExampleScenes
             return true;
         }
 
-        public abstract Vector2 GetCameraFollowPosition(Vector2 camPos);
         public abstract Vector2 GetPosition();
         public abstract Rect GetBoundingBox();
 
-        public virtual void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui) { }
-        public virtual void DrawGame(Vector2 size, Vector2 mousePos) { }
+        public virtual void Update(float dt, ScreenInfo game, ScreenInfo ui) { }
+        public virtual void DrawGame(ScreenInfo game) { }
+        public virtual void DrawUI(ScreenInfo ui) { }
         public virtual void Overlap(CollisionInformation info) { }
         public virtual void OverlapEnded(ICollidable other) { }
         public virtual void AddedToArea(Area area) { }
         public virtual void RemovedFromArea(Area area) { }
         
         public void DeltaFactorApplied(float f) { }
-        public void DrawToScreen(Vector2 size, Vector2 mousePos) { }
-        public void DrawUI(Vector2 size, Vector2 mousePos) { }
+        
         public bool IsDead() { return dead; }
-        public bool IsDrawingToGameTexture() { return true; }
-        public bool IsDrawingToScreen() { return false; }
-        public bool IsDrawingToUITexture() { return false; }
+        public bool DrawToGame(Rect gameArea) { return true; }
+        public bool DrawToUI(Rect uiArea) { return false; }
         public bool CheckAreaBounds() { return false; }
         public void LeftAreaBounds(Vector2 safePosition, CollisionPoints collisionPoints) { }
 
@@ -71,7 +69,7 @@ namespace Examples.Scenes.ExampleScenes
             //this.delay = SRNG.randF(0.25f, 1f);
             //this.lifetime = delay * 3f;
         }
-        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
+        public override void Update(float dt, ScreenInfo game, ScreenInfo ui)
         {
             if(lifetimeTimer > 0f)
             {
@@ -100,7 +98,7 @@ namespace Examples.Scenes.ExampleScenes
                 }
             }
         }
-        public override void DrawGame(Vector2 size, Vector2 mousePos)
+        public override void DrawGame(ScreenInfo game)
         {
             //SDrawing.DrawCircleFast(pos, 4f, RED);
             Color color = this.color.ChangeAlpha((byte)(255 * lifetimeF));
@@ -108,7 +106,6 @@ namespace Examples.Scenes.ExampleScenes
             shape.DrawLines(2f * lifetimeF, color);
         }
         public override Rect GetBoundingBox() { return shape.GetBoundingBox(); }
-        public override Vector2 GetCameraFollowPosition(Vector2 camPos) { return pos; }
         public override Vector2 GetPosition() { return pos; }
     }
     public class Asteroid : SpaceObject, ICollidable
@@ -252,11 +249,11 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
 
-        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui) 
+        public override void Update(float dt, ScreenInfo game, ScreenInfo ui) 
         {
             damagedSegments.Update(dt);
         }
-        public override void DrawGame(Vector2 size, Vector2 mousePos)
+        public override void DrawGame(ScreenInfo game)
         {
             //Color color = overlapped ? GREEN : WHITE;
             //collider.GetShape().DrawShape(4f, color);
@@ -285,7 +282,6 @@ namespace Examples.Scenes.ExampleScenes
         public virtual List<ICollidable> GetCollidables() { return collidables; }
 
         public override Rect GetBoundingBox() { return collider.GetShape().GetBoundingBox(); }
-        public override Vector2 GetCameraFollowPosition(Vector2 camPos) { return collider.Pos; }
         public override Vector2 GetPosition() { return collider.Pos; }
         public ICollider GetCollider() { return collider; }
         public uint GetCollisionLayer() { return AsteroidMiningExample.AsteriodLayer; }
@@ -349,7 +345,7 @@ namespace Examples.Scenes.ExampleScenes
             this.tip = a;
         }
 
-        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
+        public override void Update(float dt, ScreenInfo game, ScreenInfo ui)
         {
             laserPoints.Clear();
             laserEnabled = false;
@@ -430,7 +426,7 @@ namespace Examples.Scenes.ExampleScenes
             //return (newEndPoint, remainingLength, newDir);
         }
 
-        public override void DrawGame(Vector2 size, Vector2 mousePos)
+        public override void DrawGame(ScreenInfo game)
         {
             if (hybernate) return;
             shape.DrawLines(4f, RED);
@@ -452,7 +448,6 @@ namespace Examples.Scenes.ExampleScenes
 
 
         public override Rect GetBoundingBox() { return shape.GetBoundingBox(); }
-        public override Vector2 GetCameraFollowPosition(Vector2 camPos) { return pos; }
         public override Vector2 GetPosition() { return pos; }
     }
     
@@ -517,7 +512,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             Title = "Asteroid Mining Example";
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
-            UpdateBoundaryRect(GAMELOOP.Game);
+            UpdateBoundaryRect(GAMELOOP.Game.Area);
             area = new AreaCollision(boundaryRect, 4, 4);
 
             laserDevice = new(new Vector2(0f), 100, area);
@@ -541,16 +536,17 @@ namespace Examples.Scenes.ExampleScenes
             return area;
         }
 
-        private void UpdateBoundaryRect(ScreenTexture game)
+        private void UpdateBoundaryRect(Rect gameArea)
         {
-            boundaryRect = new Rect(new Vector2(0f), game.GetSize(), new Vector2(0.5f)).ApplyMargins(0.005f, 0.005f, 0.1f, 0.005f);
+            //boundaryRect = new Rect(new Vector2(0f), game.GetSize(), new Vector2(0.5f)).ApplyMargins(0.005f, 0.005f, 0.1f, 0.005f);
+            boundaryRect = gameArea.ApplyMargins(0.005f, 0.005f, 0.1f, 0.005f);
         }
         
-        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
+        public override void Update(float dt, ScreenInfo game, ScreenInfo ui)
         {
-            UpdateBoundaryRect(game);
+            UpdateBoundaryRect(game.Area);
             area.ResizeBounds(boundaryRect);
-            area.Update(dt, mousePosScreen, game, ui);
+            area.Update(dt, game, ui);
 
             for (int i = lastCutOuts.Count - 1; i >= 0; i--)
             {
@@ -558,7 +554,7 @@ namespace Examples.Scenes.ExampleScenes
                 c.Update(dt);
                 if (c.IsFinished()) lastCutOuts.RemoveAt(i);
             }
-            base.Update(dt, mousePosScreen, game, ui); //calls area update therefore area bounds have to be updated before that
+            base.Update(dt, game, ui); //calls area update therefore area bounds have to be updated before that
         }
         private void OnAsteroidFractured(Asteroid a, Vector2 point)
         {
@@ -873,25 +869,23 @@ namespace Examples.Scenes.ExampleScenes
 
 
 
-        public override void DrawGame(Vector2 gameSize, Vector2 mousePosGame)
+        public override void DrawGame(ScreenInfo game)
         {
-            base.DrawGame(gameSize, mousePosGame);
+            base.DrawGame(game);
+            
             boundaryRect.DrawLines(4f, ColorLight);
-
             if(polyModeActive && curShapeType != ShapeType.None)
             {
                 curShape.DrawLines(2f, RED);
             }
 
-            //area.DrawDebug(GRAY, GOLD, GREEN);
-            area.DrawGame(gameSize, mousePosGame);
+            area.DrawGame(game);
 
             foreach (var cutOut in lastCutOuts)
             {
                 cutOut.Draw();
             }
-
-
+            
             //var ellipse = SClipper.CreateEllipse(mousePosGame, 500, 100, 0);
             //ellipse.DEBUG_DrawLinesCCW(2f, BLUE, PURPLE);
             //foreach (var shape in testShapes)
@@ -910,11 +904,11 @@ namespace Examples.Scenes.ExampleScenes
             //clipperPolygon.Add(new Vector2((float)clipperRect.right, (float)clipperRect.top));
             //clipperPolygon.DrawLines(2f, GREEN);
         }
-        public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
+        public override void DrawUI(ScreenInfo ui)
         {
-            area.DrawUI(uiSize, mousePosUI);
-            base.DrawUI(uiSize, mousePosUI);
-
+            area.DrawUI(ui);
+            base.DrawUI(ui);
+            Vector2 uiSize = ui.Area.Size;
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));
 
             string polymodeText = "[Tab] Polymode | [LMB] Place/Merge | [RMB] Cut | [1] Triangle | [2] Rect | [3] Poly | [Q] Regenerate | [X] Rotate | [C] Scale";

@@ -991,6 +991,7 @@ namespace ShapeEngine.Core
     }
 
 
+    /*
     public class ScreenTextures : Dictionary<uint, ScreenTexture>
     {
         public ActiveScreenTextures GetActive(ScreenTextureMask screenTextureMask)
@@ -1055,6 +1056,7 @@ namespace ShapeEngine.Core
             }
         }
     }
+    */
 
 
     public class FractureInfo

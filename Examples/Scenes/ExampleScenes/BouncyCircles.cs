@@ -31,10 +31,6 @@ namespace Examples.Scenes.ExampleScenes
         public void RemovedFromArea(Area area)
         {
         }
-        public Vector2 GetCameraFollowPosition(Vector2 camPos)
-        {
-            return Pos;
-        }
 
         public Vector2 GetPosition()
         {
@@ -47,18 +43,14 @@ namespace Examples.Scenes.ExampleScenes
         }
         
 
-        public void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
+        public void Update(float dt, ScreenInfo game, ScreenInfo ui)
         {
             deltaFactorApplied = false;
             Pos += Vel * dt;
         }
 
-        public void DrawToScreen(Vector2 size, Vector2 mousePos)
-        {
-           
-        }
 
-        public void DrawGame(Vector2 gameSize, Vector2 mousePosGame)
+        public void DrawGame(ScreenInfo game)
         {
             Color c = color;
             float r = Radius;
@@ -70,7 +62,7 @@ namespace Examples.Scenes.ExampleScenes
             SDrawing.DrawCircleFast(Pos, Radius, c);
         }
 
-        public void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
+        public void DrawUI(ScreenInfo ui)
         {
             
         }
@@ -104,17 +96,13 @@ namespace Examples.Scenes.ExampleScenes
             deltaFactorApplied = true;
         }
 
-        public bool IsDrawingToScreen()
-        {
-            return false;
-        }
-
-        public bool IsDrawingToGameTexture()
+        
+        public bool DrawToGame(Rect gameArea)
         {
             return true;
         }
 
-        public bool IsDrawingToUITexture()
+        public bool DrawToUI(Rect uiArea)
         {
             return false;
         }
@@ -136,7 +124,7 @@ namespace Examples.Scenes.ExampleScenes
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
 
             
-            boundaryRect = GAMELOOP.GameCam.GetArea().ApplyMargins(0.025f, 0.025f, 0.1f, 0.1f);
+            UpdateBoundaryRect(GAMELOOP.Game.Area);
 
             //area = new AreaTest(boundaryRect, 2, 2);
             area = new AreaCollision(boundaryRect, 2, 2);
@@ -150,10 +138,17 @@ namespace Examples.Scenes.ExampleScenes
         {
             return area;
         }
-        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
+
+        private void UpdateBoundaryRect(Rect gameArea)
         {
-            base.Update(dt, mousePosScreen, game, ui);
-            area.Update(dt, mousePosScreen, game, ui);
+            boundaryRect = gameArea.ApplyMargins(0.025f, 0.025f, 0.1f, 0.1f);
+        }
+        public override void Update(float dt, ScreenInfo game, ScreenInfo ui)
+        {
+            base.Update(dt, game, ui);
+            UpdateBoundaryRect(game.Area);
+            area.ResizeBounds(boundaryRect);
+            area.Update(dt, game, ui);
         }
         protected override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
@@ -186,19 +181,20 @@ namespace Examples.Scenes.ExampleScenes
 
         
 
-        public override void DrawGame(Vector2 gameSize, Vector2 mousePosGame)
+        public override void DrawGame(ScreenInfo game)
         {
-            base.DrawGame(gameSize, mousePosGame);
+            base.DrawGame(game);
             boundaryRect.DrawLines(4f, ColorLight);
-            area.DrawGame(gameSize, mousePosGame);
+            area.DrawGame(game);
         }
-        public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
+        public override void DrawUI(ScreenInfo ui)
         {
-            area.DrawUI(uiSize, mousePosUI);
-            base.DrawUI(uiSize, mousePosUI);
+            area.DrawUI(ui);
+            base.DrawUI(ui);
+            Vector2 uiSize = ui.Area.Size;
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));
             //string infoText = String.Format("[LMB] Spawn | Object Count: {0} | DC : {1} | SC: {2}", area.Count, MathF.Ceiling(GAMELOOP.deltaCriticalTime * 100) / 100, GAMELOOP.skipDrawCount);
-            string infoText = String.Format("[LMB] Spawn | Object Count: {0}", area.Count);
+            string infoText = $"[LMB] Spawn | Object Count: {area.Count}";
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
 

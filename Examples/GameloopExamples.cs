@@ -1,4 +1,5 @@
-﻿using Raylib_CsLo;
+﻿using System.Numerics;
+using Raylib_CsLo;
 using ShapeEngine.Lib;
 using ShapeEngine.Persistent;
 using ShapeEngine.Core;
@@ -7,9 +8,9 @@ using ShapeEngine.Screen;
 
 namespace Examples
 {
-    public class GameloopExamples : GameLoopScene
+    public class GameloopExamples : ShapeLoop
     {
-        public BasicCamera GameCam { get; private set; }
+        //public BasicCamera GameCam { get; private set; }
         public Font FontDefault { get; private set; }
 
 
@@ -18,13 +19,17 @@ namespace Examples
         private MainScene? mainScene = null;
         //private Shader shader;
         
-        public GameloopExamples() : base(new(960 * 2, 540 * 2), new(1920, 1080))
+        //public GameloopExamples() : base(new(960 * 2, 540 * 2), new(1920, 1080))
+        //{
+        //    GameCam = new BasicCamera(new(0f), Game.GetSize(), new(0.5f), 1f, 0f);
+        //}
+        public GameloopExamples() : base(new(1920, 1080))
         {
-            GameCam = new BasicCamera(new(0f), Game.GetSize(), new(0.5f), 1f, 0f);
+            
         }
         protected override void LoadContent()
         {
-            Game.SetCamera(GameCam);
+            //Game.SetCamera(GameCam);
 
             //shader = ContentLoader.LoadFragmentShader("Resources/Shaders/CRTShader.fs");
             
@@ -53,9 +58,8 @@ namespace Examples
             fontNames.Add("Jet Brains Mono");
 
             FontDefault = GetFont(FontIDs.JetBrains);
-            
-            this.SetVsync(false);
-            this.SetFrameRateLimit(60);
+            this.VSync = false;
+            this.FrameRateLimit = 60;
         }
         protected override void UnloadContent()
         {
@@ -76,6 +80,20 @@ namespace Examples
         //    }
         //    base.HandleInput(dt);
         //}
+        protected override void Update(float dt)
+        {
+            UpdateScene();
+        }
+
+        protected override void DrawGame(ScreenInfo game)
+        {
+            DrawGameScene();
+        }
+
+        protected override void DrawUI(ScreenInfo ui)
+        {
+            DrawUIScene();
+        }
 
         public int GetFontCount() { return fonts.Count; }
         public Font GetFont(int id) { return fonts[id]; }

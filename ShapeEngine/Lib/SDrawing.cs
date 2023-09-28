@@ -120,7 +120,7 @@ namespace ShapeEngine.Lib
         /// <summary>
         /// The minimum font size SDrawing uses. Font sizes are clamped to this min size if they are lower.
         /// </summary>
-        public static float FontMinSize = 25f;
+        public static float FontMinSize = 5f;
         /// <summary>
         /// Factor based on the font size to determine the max line spacing. (1 means line spacing can not exceed the font size)
         /// </summary>

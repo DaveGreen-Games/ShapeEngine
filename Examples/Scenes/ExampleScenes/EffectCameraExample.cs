@@ -70,29 +70,24 @@ namespace Examples.Scenes.ExampleScenes
     }
     public class EffectCameraExample : ExampleScene
     {
-        //Rect boundaryRect;
         Font font;
-        EffectCamera camera;
         Vector2 movementDir = new();
         Rect universe = new(new Vector2(0f), new Vector2(10000f), new Vector2(0.5f));
         List<Star> stars = new();
         List<Comet> comets = new();
         Circle ship = new(new Vector2(0f), 30f);
-
+        private ShapeCamera camera = new ShapeCamera();
         public EffectCameraExample()
         {
             Title = "Effect Camera Example";
 
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
-
-            camera = new EffectCamera(new(0f), GAMELOOP.Game.GetSize(), new(0.5f), 1f, 0f);
-
-            //boundaryRect = new(new Vector2(0, -45), new Vector2(1800, 810), new Vector2(0.5f));
-
+                
             GenerateStars(2500);
             GenerateComets(200);
             
         }
+        
         private void GenerateStars(int amount)
         {
             for (int i = 0; i < amount; i++)
@@ -117,12 +112,12 @@ namespace Examples.Scenes.ExampleScenes
         }
         public override void Activate(IScene oldScene)
         {
-            GAMELOOP.Game.SetCamera(camera);
+            GAMELOOP.Camera = camera;
         }
 
         public override void Deactivate()
         {
-            GAMELOOP.Game.SetCamera(GAMELOOP.GameCam);
+            GAMELOOP.ResetCamera();
         }
         public override Area? GetCurArea()
         {
@@ -130,11 +125,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         public override void Reset()
         {
-            camera.Position = new(0f);
-            camera.ResetRotation();
-            camera.ResetTranslation();
-            camera.ResetZoom();
-
+            camera.Reset();
             stars.Clear();
             comets.Clear();
             GenerateStars(2500);
@@ -162,8 +153,7 @@ namespace Examples.Scenes.ExampleScenes
 
             if (zoomDir != 0)
             {
-                camera.Zoom += zoomDir * zoomSpeed * dt;
-                camera.Zoom = Clamp(camera.Zoom, 0.1f, 5f);
+                camera.Zoom(zoomDir * zoomSpeed * dt);
             }
         }
         private void HandleRotation(float dt)
@@ -175,9 +165,7 @@ namespace Examples.Scenes.ExampleScenes
 
             if (rotDir != 0)
             {
-                camera.RotationDeg += rotDir * rotSpeedDeg * dt;
-                camera.RotationDeg = SUtils.WrapAngleDeg(camera.RotationDeg);
-               
+                camera.Rotate(rotDir * rotSpeedDeg * dt);
             }
         }
         private void HandleCameraTranslation(float dt)
@@ -216,9 +204,9 @@ namespace Examples.Scenes.ExampleScenes
         {
             camera.Shake(SRNG.randF(0.8f, 2f), new Vector2(100, 100), 0, 25, 0.75f);
         }
-        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
+        public override void Update(float dt, ScreenInfo game, ScreenInfo ui)
         {
-            base.Update(dt, mousePosScreen, game, ui);
+            base.Update(dt, game, ui);
 
             for (int i = comets.Count - 1; i >= 0; i--)
             {
@@ -237,9 +225,9 @@ namespace Examples.Scenes.ExampleScenes
             ship.Center = camera.Position;
         }
 
-        public override void DrawGame(Vector2 gameSize, Vector2 mousePosGame)
+        public override void DrawGame(ScreenInfo game)
         {
-            base.DrawGame(gameSize, mousePosGame);
+            base.DrawGame(game);
             foreach (var star in stars)
             {
                 star.Draw();
@@ -259,25 +247,25 @@ namespace Examples.Scenes.ExampleScenes
 
             ship.DrawLines(4f, RED);
         }
-        public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
+        public override void DrawUI(ScreenInfo ui)
         {
-            base.DrawUI(uiSize, mousePosUI);
-
+            base.DrawUI(ui);
+            Vector2 uiSize = ui.Area.Size;
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
 
             var pos = camera.Position;
             int x = (int)pos.X;
             int y = (int)pos.Y;
             int rot = (int)camera.RotationDeg;
-            int zoom = (int)(SUtils.GetFactor(camera.Zoom, 0.1f, 5f) * 100f);
+            int zoom = (int)(SUtils.GetFactor(camera.ZoomLevel, 0.1f, 5f) * 100f);
             //int transX = (int)camera.Translation.X;
             //int transY = (int)camera.Translation.Y;
-            string moveText = String.Format("[W/A/S/D] Move ({0}/{1})", x, y);
-            string rotText = String.Format("[Q/E] Rotate ({0})", rot);
-            string scaleText = String.Format("[Y/X] Zoom ({0}%)", zoom);
+            string moveText = $"[W/A/S/D] Move ({x}/{y})";
+            string rotText = $"[Q/E] Rotate ({rot})";
+            string scaleText = $"[Y/X] Zoom ({zoom}%)";
             //string transText = String.Format("[LMB] Offset ({0}/{1})", transX, transY);
-            string shakeText = String.Format("[Space] Shake Camera");
-            string infoText = String.Format("{0} | {1} | {2} | {3}", moveText, rotText, scaleText, shakeText);
+            string shakeText = "[Space] Shake Camera";
+            string infoText = $"{moveText} | {rotText} | {scaleText} | {shakeText}";
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
 

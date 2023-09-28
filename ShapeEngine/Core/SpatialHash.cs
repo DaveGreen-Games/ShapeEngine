@@ -157,16 +157,11 @@ namespace ShapeEngine.Core
         
 
 
-        /// <summary>
-        /// Resize the bounds. Clears the spatial hash!
-        /// </summary>
-        /// <param name="newBounds"></param>
+        
         public void ResizeBounds(Rect newBounds) 
         {
-            //if(!isClear) Clear();
             this.newBounds = newBounds;
-            //Bounds = newBounds;
-            //SetSpacing();
+            this.boundsResizeQueued = true;
         }
         
         /// <summary>

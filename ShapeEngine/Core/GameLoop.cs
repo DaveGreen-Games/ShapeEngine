@@ -1,203 +1,17 @@
 ﻿global using static Raylib_CsLo.Raylib;
 global using static Raylib_CsLo.RayMath;
 using ShapeEngine.Screen;
-using ShapeEngine.Timing;
 using Raylib_CsLo;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using ShapeEngine.Lib;
-using ShapeEngine.Core;
-using System.Globalization;
-using System.Text;
 
 namespace ShapeEngine.Core
 {
-
-    public sealed class ShapeTexture
-    {
-        public static readonly float MinResolutionFactor = 0.25f;
-        public static readonly float MaxResolutionFactor = 4f;
-        
-        public bool Valid { get; private set; } = false;
-        public RenderTexture RenderTexture { get; private set; } = new();
-        public int Width { get; private set; } = 0;
-        public int Height { get; private set; } = 0;
-
-        public ShapeTexture(){}
-
-        public void Load(int w, int h)
-        {
-            if (Valid) return;
-            Valid = true;
-            SetTexture(w, h);
-        }
-
-        public void Unload()
-        {
-            if (!Valid) return;
-            Valid = false;
-            UnloadRenderTexture(RenderTexture);
-        }
-        
-        public void Update(int w, int h)
-        {
-            if (!Valid) return;
-
-            if (Width == w && Height == h) return;
-            
-            UnloadRenderTexture(RenderTexture);
-            SetTexture(w, h);
-        }
-        public void Draw()
-        {
-            var destRec = new Rectangle
-            {
-            x = Width * 0.5f,
-            y = Height * 0.5f,
-            width = Width,
-            height = Height
-            };
-            Vector2 origin = new()
-            {
-            X = Width * 0.5f,
-            Y = Height * 0.5f
-            };
-            
-            var sourceRec = new Rectangle(0, 0, Width, -Height);
-            
-            DrawTexturePro(RenderTexture.texture, sourceRec, destRec, origin, 0f, WHITE);
-        }
-        
-        private void SetTexture(int w, int h)
-        {
-            Width = w;
-            Height = h;
-            RenderTexture = LoadRenderTexture(Width, Height);
-        }
-        //public void DrawTexture(int targetWidth, int targetHeight)
-        //{
-            //var destRec = new Rectangle
-            //{
-            //    x = targetWidth * 0.5f,
-            //    y = targetHeight * 0.5f,
-            //    width = targetWidth,
-            //    height = targetHeight
-            //};
-            //Vector2 origin = new()
-            //{
-            //    X = targetWidth * 0.5f,
-            //    Y = targetHeight * 0.5f
-            //};
-            //
-            //
-            //
-            //var sourceRec = new Rectangle(0, 0, Width, -Height);
-            //
-            //DrawTexturePro(RenderTexture.texture, sourceRec, destRec, origin, 0f, WHITE);
-        //
-    }
-    public sealed class ShapeCamera
-    {
-        public static float MinZoomLevel = 0.1f;
-        public static float MaxZoomLevel = 10f;
-        
-        
-        public Vector2 Position { get; set; }= new();
-        public Vector2 Size { get; private set; }= new();
-        public Vector2 Alignement{ get; private set; } = new(0.5f);
-        public Vector2 Offset => Size * Alignement;
-        public float ZoomLevel { get; private set; }= 1f;
-        public float RotationDeg { get; private set; }= 0f;
-
-        
-        public ShapeCamera() { }
-        public ShapeCamera(Vector2 pos)
-        {
-            this.Position = pos;
-        }
-        public ShapeCamera(Vector2 pos, Vector2 alignement)
-        {
-            this.Position = pos;
-            this.SetAlignement(alignement);
-        }
-        public ShapeCamera(Vector2 pos, Vector2 alignement, float zoomLevel)
-        {
-            this.Position = pos;
-            this.SetAlignement(alignement);
-            this.SetZoom(zoomLevel);
-        }
-        public ShapeCamera(Vector2 pos, Vector2 alignement, float zoomLevel, float rotationDeg)
-        {
-            this.Position = pos;
-            this.SetAlignement(alignement);
-            this.SetZoom(zoomLevel);
-            this.SetRotation(rotationDeg);
-        }
-        public ShapeCamera(Vector2 pos, float zoomLevel)
-        {
-            this.Position = pos;
-            this.SetZoom(zoomLevel);
-        }
-
-        public Rectangle Area => new
-        (
-            Position.X - Offset.X * ZoomFactor, 
-            Position.Y - Offset.Y * ZoomFactor, 
-            Size.X * ZoomFactor,
-            Size.Y * ZoomFactor
-        );
-        public Camera2D Camera => new()
-        {
-            target = Position,
-            offset = Offset,
-            zoom = ZoomLevel,
-            rotation = RotationDeg
-        };
-
-        public float ZoomFactor => 1f / ZoomLevel;
-
-        
-        public void Update(float dt, int screenWidth, int screenHeight)
-        {
-            Size = new(screenWidth, screenHeight);
-        }
-        
-        public void Reset()
-        {
-            Position = new();
-            Alignement = new(0.5f);
-            ZoomLevel = 1f;
-            RotationDeg = 0f;
-        }
-        
-        public void Zoom(float change) => SetZoom(ZoomLevel + change);
-        public void SetZoom(float zoomLevel)
-        {
-            ZoomLevel = zoomLevel;
-            if (ZoomLevel > MaxZoomLevel) ZoomLevel = MaxZoomLevel;
-            else if (ZoomLevel < MinZoomLevel) ZoomLevel = MinZoomLevel;
-        }
-
-        public void Rotate(float deg) => SetRotation(RotationDeg + deg);
-        public void SetRotation(float deg)
-        {
-            RotationDeg = deg;
-            RotationDeg = Wrap(RotationDeg, 0f, 360f);
-        }
-
-        public void SetAlignement(Vector2 newAlignement) => Alignement = Vector2.Clamp(newAlignement, Vector2.Zero, Vector2.One);
-
-        public Vector2 ScreenToWorld(Vector2 pos) => GetScreenToWorld2D(pos, Camera);
-        public Vector2 WorldToScreen(Vector2 pos) => GetWorldToScreen2D(pos, Camera);
-        private static float Wrap(float value, float min, float max) => value - (max - min) * MathF.Floor((float) (( value -  min) / ( max -  min)));
-    }
-
-    public class ShapeLoop
-    {
-        
-    }
     
     
+    
+    /*
     /// <summary>
     /// Basic GameLoop class. Inherit this class override various methods for running your game/app. 
     /// Create your inherited GameLoop class, call CreateWindow and then Run() to start. 
@@ -852,6 +666,7 @@ namespace ShapeEngine.Core
             Monitor.CurMonitor().WriteDebugInfo();
             Console.WriteLine("---------------------------------------");
         }
+        
     }
 
     /// <summary>
@@ -1029,5 +844,5 @@ namespace ShapeEngine.Core
         }
 
     }
-
+    */
 }

@@ -81,9 +81,6 @@ namespace Examples.Scenes.ExampleScenes
 
     public class CCDExample : ExampleScene
     {
-        ScreenTexture game;
-        //BasicCamera cam;
-
         Rect boundaryRect;
         Segments boundary = new();
 
@@ -104,14 +101,10 @@ namespace Examples.Scenes.ExampleScenes
         public CCDExample()
         {
             Title = "Continous Collision Detection Example";
-            game = GAMELOOP.Game;
-            //cam = new BasicCamera(new Vector2(0f), new Vector2(1920, 1080), new Vector2(0.5f), 1f, 0f);
-            //game.SetCamera(cam);
 
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
 
-            var cameraRect = GAMELOOP.GameCam.GetArea();
-            boundaryRect = SRect.ApplyMarginsAbsolute(cameraRect, 25f, 25f, 75 * 2f, 75 * 2f);
+            boundaryRect = new Rect(new(0), new(1920, 1080), new(0.5f)).ApplyMargins(0.05f, 0.05f, 0.1f, 0.1f);
             boundaryRect.FlippedNormals = true;
             boundary = boundaryRect.GetEdges();
         }
@@ -131,11 +124,11 @@ namespace Examples.Scenes.ExampleScenes
 
         }
 
-        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
+        public override void Update(float dt, ScreenInfo game, ScreenInfo ui)
         {
-            base.Update(dt, mousePosScreen, game, ui);
+            base.Update(dt, game, ui);
 
-            muzzlePos = GAMELOOP.GameCam.GetArea().GetPoint(new Vector2(0.05f, 0.5f)); // game.GetSize() * new Vector2(0.1f, 0.5f);
+            muzzlePos = GAMELOOP.Game.Area.GetPoint(new Vector2(0.05f, 0.5f)); // game.GetSize() * new Vector2(0.1f, 0.5f);
 
             HandleSegments(game.MousePos);
 
@@ -212,9 +205,9 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
 
-        public override void DrawGame(Vector2 gameSIze, Vector2 mousePosGame)
+        public override void DrawGame(ScreenInfo game)
         {
-            base.DrawGame(gameSIze, mousePosGame);
+            base.DrawGame(game);
 
             boundary.Draw(4f, ColorMedium);
             foreach (var seg in boundary)
@@ -229,7 +222,7 @@ namespace Examples.Scenes.ExampleScenes
             if (segmentStarted)
             {
                 DrawCircleV(startPoint, 15f, ColorHighlight1);
-                Segment s = new(startPoint, mousePosGame);
+                Segment s = new(startPoint, game.MousePos);
                 s.Draw(4, ColorHighlight1);
                 
             }
@@ -242,18 +235,19 @@ namespace Examples.Scenes.ExampleScenes
             }
 
         }
-        public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
+        public override void DrawUI(ScreenInfo ui)
         {
-            base.DrawUI(uiSize, mousePosUI);
-
+            base.DrawUI(ui);
+            Vector2 uiSize = ui.Area.Size;
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.98f, 0.11f), new Vector2(0.5f, 1f));
-            string infoText = String.Format("[LMB] Add Segment [RMB] Cancel Segment [Space] Shoot [1] Speed: {0} [2] Size: {1} [C] CCD: {2}", bulletSpeed, bulletR, CCD ? "ON" : "OFF");
+            string infoText =
+                $"[LMB] Add Segment [RMB] Cancel Segment [Space] Shoot [1] Speed: {bulletSpeed} [2] Size: {bulletR} [C] CCD: {(CCD ? "ON" : "OFF")}";
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
 
         }
         private void Shoot()
         {
-            Vector2 mousePos = game.MousePos;
+            Vector2 mousePos = GAMELOOP.Game.MousePos;
             Vector2 dir = (mousePos - muzzlePos).Normalize();
 
             Bullet b = new(muzzlePos, dir * bulletSpeed, bulletR);

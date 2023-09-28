@@ -65,9 +65,12 @@ namespace Examples.Scenes
                 {
                     examples[i].Reset();
                 }
+                GAMELOOP.Camera.Reset();
+                GAMELOOP.ResetCamera();
             }
-            if (IsKeyPressed(KeyboardKey.KEY_M)) GAMELOOP.ToggleWindowMaximize();
-            if (IsKeyPressed(KeyboardKey.KEY_F)) GAMELOOP.ToggleFullscreen();
+
+            if (IsKeyPressed(KeyboardKey.KEY_M)) GAMELOOP.Maximized = !GAMELOOP.Maximized;
+            if (IsKeyPressed(KeyboardKey.KEY_F)) GAMELOOP.Fullscreen = !GAMELOOP.Fullscreen;
 
             if (IsKeyPressed(KeyboardKey.KEY_Q)) PrevPage();
             else if (IsKeyPressed(KeyboardKey.KEY_E)) NextPage();
@@ -76,7 +79,7 @@ namespace Examples.Scenes
             else if (IsKeyPressed(KeyboardKey.KEY_S)) NextButton();
         }
 
-        public void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
+        public void Update(float dt, ScreenInfo game, ScreenInfo ui)
         {
             HandleInput(dt, game.MousePos, ui.MousePos);
             foreach (var b in buttons)
@@ -85,8 +88,10 @@ namespace Examples.Scenes
             }
         }
         
-        public void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
+        public void DrawUI(ScreenInfo ui)
         {
+            
+            Vector2 uiSize = ui.Area.Size;
             Vector2 start = uiSize * new Vector2(0.02f, 0.25f);
             Vector2 size = uiSize * new Vector2(0.45f, 0.05f);
             Vector2 gap = uiSize * new Vector2(0f, 0.07f);
@@ -103,7 +108,7 @@ namespace Examples.Scenes
             titleFont.DrawText(text, titleRect, 10, new(0.5f), ExampleScene.ColorLight);
 
             int pages = GetMaxPages();
-            string pagesText = pages <= 1 ? "Page 1/1" : String.Format("[Q] <- Page #{0}/{1} -> [E]", curPageIndex + 1, pages);
+            string pagesText = pages <= 1 ? "Page 1/1" : $"[Q] <- Page #{curPageIndex + 1}/{pages} -> [E]";
             Rect pageRect = new Rect(uiSize * new Vector2(0.01f, 0.12f), uiSize * new Vector2(0.3f, 0.06f), new Vector2(0f, 0f));
             titleFont.DrawText(pagesText, pageRect, 4f, new(0f, 0.5f), ExampleScene.ColorHighlight2);
 
@@ -222,17 +227,7 @@ namespace Examples.Scenes
 
         
 
-        public void DrawGame(Vector2 size, Vector2 mousePos)
-        {
-            
-        }
-
-        public void DrawToTexture(ScreenTexture texture)
-        {
-            
-        }
-
-        public void DrawToScreen(Vector2 size, Vector2 mousePos)
+        public void DrawGame(ScreenInfo game)
         {
             
         }

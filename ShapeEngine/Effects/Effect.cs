@@ -1,5 +1,6 @@
 ﻿using ShapeEngine.Screen;
 using System.Numerics;
+using ShapeEngine.Core;
 
 namespace ShapeEngine.Effects
 {
@@ -16,8 +17,7 @@ namespace ShapeEngine.Effects
         public Effect(Vector2 pos, Vector2 size, float rotRad) : base(pos, size) { RotRad = rotRad; }
         public Effect(Vector2 pos, Vector2 size, float rotRad, float lifeTime) : base(pos, size, lifeTime) { RotRad = rotRad; }
 
-        
-        public override void DrawGame(Vector2 gameSize, Vector2 mousePosGame)
+        public override void DrawGame(ScreenInfo game)
         {
         }
 

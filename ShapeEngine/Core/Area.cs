@@ -362,10 +362,8 @@ namespace ShapeEngine.Core
         }
 
         
-        public virtual void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
+        public virtual void Update(float dt, ScreenInfo game, ScreenInfo ui)
         {
-            //drawToScreenObjects.Clear();
-            //drawToScreenTextureObjects.Clear();
             drawToGameTextureObjects.Clear();
             drawToUITextureObjects.Clear();
 
@@ -413,16 +411,11 @@ namespace ShapeEngine.Core
 
                     obj.UpdateParallaxe(ParallaxePosition);
                     if (totalDeltaFactor != 1f) obj.DeltaFactorApplied(totalDeltaFactor);
-
-                    //var cam = game.GetCamera();
-                    //if(cam != null)
-                    //{
-                    //    var camArea = cam.GetArea();
-                    //    var bb = obj.GetBoundingBox();
-                    //    var insideCameraArea = camArea.OverlapShape(bb);
-                    //}
-
-                    obj.Update(dt, mousePosScreen, game, ui);
+                    
+                    if (obj.DrawToGame(game.Area)) drawToGameTextureObjects.Add(obj);
+                    if (obj.DrawToUI(ui.Area)) drawToUITextureObjects.Add(obj);
+                    
+                    obj.Update(dt, game, ui);
                     
                     if (obj.IsDead())
                     {
@@ -439,67 +432,24 @@ namespace ShapeEngine.Core
                                 obj.LeftAreaBounds(check.safePosition, check.points);
                             }
                         }
-
-                        
-                        FilterObject(obj);
-                        
                     }
 
                 }
             }
         }
-        public virtual void DrawGame(Vector2 gameSize, Vector2 mousePosGame)
+        public virtual void DrawGame(ScreenInfo game)
         {
             foreach (var obj in drawToGameTextureObjects)
             {
-                obj.DrawGame(gameSize, mousePosGame);
+                obj.DrawGame(game);
             }
         }
-        public virtual void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
+        public virtual void DrawUI(ScreenInfo ui)
         {
             foreach (var obj in drawToUITextureObjects)
             {
-                obj.DrawUI(uiSize, mousePosUI);
+                obj.DrawUI(ui);
             }
-        }
-        //public virtual void DrawToScreen(Vector2 size, Vector2 mousePos)
-        //{
-        //    foreach (var obj in drawToScreenObjects)
-        //    {
-        //        obj.DrawToScreen(size, mousePos);
-        //    }
-        //}
-        protected virtual void FilterObject(IAreaObject obj)
-        {
-            if (obj.IsDrawingToGameTexture()) drawToGameTextureObjects.Add(obj);
-            if (obj.IsDrawingToUITexture()) drawToUITextureObjects.Add(obj);
-            //if (obj.IsDrawingToScreen()) drawToScreenObjects.Add(obj);
-            //var mask = obj.GetTextureMask();
-            //if (mask != null && mask.Count > 0)
-            //{
-            //
-            //    foreach (var id in mask)
-            //    {
-            //        if (drawToScreenTextureObjects.ContainsKey(id))
-            //        {
-            //            drawToScreenTextureObjects[id].Add(obj);
-            //        }
-            //        else
-            //        {
-            //            drawToScreenTextureObjects.Add(id, new() { obj });
-            //        }
-            //    }
-            //}
-        }
-        public virtual void DrawToTexture(ScreenTexture texture)
-        {
-            //if (drawToScreenTextureObjects.ContainsKey(texture.ID))
-            //{
-            //    foreach (var obj in drawToScreenTextureObjects[texture.ID])
-            //    {
-            //        obj.DrawToTexture(texture);
-            //    }
-            //}
         }
 
 
@@ -562,11 +512,11 @@ namespace ShapeEngine.Core
             col.Close();
         }
 
-        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
+        public override void Update(float dt, ScreenInfo game, ScreenInfo ui)
         {
             col.Update(dt);
 
-            base.Update(dt, mousePosScreen, game, ui);
+            base.Update(dt, game, ui);
         }
         
         public override void DrawDebug(Raylib_CsLo.Color bounds, Raylib_CsLo.Color border, Raylib_CsLo.Color fill)

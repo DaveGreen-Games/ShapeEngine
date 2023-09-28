@@ -3,9 +3,21 @@ using Raylib_CsLo;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using ShapeEngine.Lib;
+using ShapeEngine.Timing;
 
 namespace ShapeEngine.Core;
 
+public readonly struct ScreenInfo
+{
+    public readonly Rect Area;
+    public readonly Vector2 MousePos;
+
+    public ScreenInfo(Rect area, Vector2 mousePos)
+    {
+        this.Area = area;
+        this.MousePos = mousePos;
+    }
+}
 internal sealed class ShapeFlash
     {
         private float maxDuration = 0.0f;
@@ -54,11 +66,11 @@ internal sealed class ShapeTexture
 
         public ShapeTexture(){}
 
-        public void Load(int w, int h)
+        public void Load(Dimensions dimensions)
         {
             if (Valid) return;
             Valid = true;
-            SetTexture(w, h);
+            SetTexture(dimensions);
         }
 
         public void Unload()
@@ -68,14 +80,14 @@ internal sealed class ShapeTexture
             UnloadRenderTexture(RenderTexture);
         }
         
-        public void Update(int w, int h)
+        public void Update(Dimensions dimensions)
         {
             if (!Valid) return;
-
-            if (Width == w && Height == h) return;
+    
+            if (Width == dimensions.Width && Height == dimensions.Height) return;
             
             UnloadRenderTexture(RenderTexture);
-            SetTexture(w, h);
+            SetTexture(dimensions);
         }
         public void Draw()
         {
@@ -97,10 +109,10 @@ internal sealed class ShapeTexture
             DrawTexturePro(RenderTexture.texture, sourceRec, destRec, origin, 0f, WHITE);
         }
         
-        private void SetTexture(int w, int h)
+        private void SetTexture(Dimensions dimensions)
         {
-            Width = w;
-            Height = h;
+            Width = dimensions.Width;
+            Height = dimensions.Height;
             RenderTexture = LoadRenderTexture(Width, Height);
         }
         //public void DrawTexture(int targetWidth, int targetHeight)
@@ -130,14 +142,36 @@ public sealed class ShapeCamera
         public static float MinZoomLevel = 0.1f;
         public static float MaxZoomLevel = 10f;
         
-        
-        public Vector2 Position { get; set; }= new();
-        public Vector2 Size { get; private set; }= new();
-        public Vector2 Alignement{ get; private set; } = new(0.5f);
-        public Vector2 Offset => Size * Alignement;
-        public float ZoomLevel { get; private set; }= 1f;
-        public float RotationDeg { get; private set; }= 0f;
+        public float CAMERA_SHAKE_INTENSITY = 1.0f;
 
+        private const int ShakeX = 0;
+        private const int ShakeY = 1;
+        private const int ShakeZoom = 2;
+        private const int ShakeRot = 3;
+        private Shake shake = new(4);
+        
+        public Sequencer<ICameraTween> CameraTweens { get; private set; } = new();
+        private float cameraTweenTotalRotationDeg = 0f;
+        private float cameraTweenTotalScale = 1f;
+        private Vector2 cameraTweenTotalOffset = new();
+
+        
+        public Vector2 Position { get; set; } = new();
+        
+        public Vector2 Size { get; private set; } = new();
+        public Vector2 Alignement{ get; private set; } = new(0.5f);
+        
+        public Vector2 BaseOffset => Size * Alignement;
+        public Vector2 Offset { get; private set; } = new();
+        
+        public float BaseRotationDeg { get; private set; } = 0f;
+        public float RotationDeg { get; private set; } = 0f;
+        
+        public float BaseZoomLevel { get; private set; } = 1f;
+        public float ZoomLevel { get; private set; } = 1f;
+
+        private float zoomAdjustment = 1f;
+        
         
         public ShapeCamera() { }
         public ShapeCamera(Vector2 pos)
@@ -168,6 +202,15 @@ public sealed class ShapeCamera
             this.SetZoom(zoomLevel);
         }
 
+        public void Activate()
+        {
+            this.CameraTweens.OnItemUpdated += OnCameraTweenUpdated;
+        }
+
+        public void Deactive()
+        {
+            this.CameraTweens.OnItemUpdated -= OnCameraTweenUpdated;
+        }
         public Rect Area => new
         (
             Position.X - Offset.X * ZoomFactor, 
@@ -186,39 +229,120 @@ public sealed class ShapeCamera
         public float ZoomFactor => 1f / ZoomLevel;
 
         
-        public void Update(float dt, int screenWidth, int screenHeight)
+        internal void Update(float dt)
         {
-            Size = new(screenWidth, screenHeight);
+            UpdateShake(dt);
         }
-        
+        internal void SetSize(Dimensions curScreenSize, Dimensions targetDimensions)
+        {
+            Size = curScreenSize.ToVector2();
+
+            float curArea = curScreenSize.Area;
+            float targetArea = targetDimensions.Area;
+
+            zoomAdjustment = MathF.Sqrt( curArea / targetArea );
+        }
+
+
         public void Reset()
         {
             Position = new();
             Alignement = new(0.5f);
-            ZoomLevel = 1f;
-            RotationDeg = 0f;
+            BaseZoomLevel = 1f;
+            BaseRotationDeg = 0f;
         }
         
-        public void Zoom(float change) => SetZoom(ZoomLevel + change);
+        public void Zoom(float change) => SetZoom(BaseZoomLevel + change);
         public void SetZoom(float zoomLevel)
         {
-            ZoomLevel = zoomLevel;
-            if (ZoomLevel > MaxZoomLevel) ZoomLevel = MaxZoomLevel;
-            else if (ZoomLevel < MinZoomLevel) ZoomLevel = MinZoomLevel;
+            BaseZoomLevel = zoomLevel;
+            if (BaseZoomLevel > MaxZoomLevel) BaseZoomLevel = MaxZoomLevel;
+            else if (BaseZoomLevel < MinZoomLevel) BaseZoomLevel = MinZoomLevel;
         }
 
-        public void Rotate(float deg) => SetRotation(RotationDeg + deg);
+        public void Rotate(float deg) => SetRotation(BaseRotationDeg + deg);
         public void SetRotation(float deg)
         {
-            RotationDeg = deg;
-            RotationDeg = Wrap(RotationDeg, 0f, 360f);
+            BaseRotationDeg = deg;
+            //RotationDeg = Wrap(RotationDeg, 0f, 360f);
+            BaseRotationDeg = SUtils.WrapAngleDeg(BaseRotationDeg);
         }
 
         public void SetAlignement(Vector2 newAlignement) => Alignement = Vector2.Clamp(newAlignement, Vector2.Zero, Vector2.One);
 
-        public Vector2 ScreenToWorld(Vector2 pos) => GetScreenToWorld2D(pos, Camera);
-        public Vector2 WorldToScreen(Vector2 pos) => GetWorldToScreen2D(pos, Camera);
+        public Vector2 ScreenToWorld(Vector2 pos)
+        {
+            var returnValue = GetScreenToWorld2D(pos, Camera);
+            if (returnValue.IsNan()) return pos;
+            else return returnValue;
+        }
+
+        public Vector2 WorldToScreen(Vector2 pos)
+        {
+            var returnValue = GetWorldToScreen2D(pos, Camera);
+            if (returnValue.IsNan()) return pos;
+            else return returnValue;
+        }
+
+        public Rect ScreenToWorld(Rect r)
+        {
+            var newPos = ScreenToWorld(r.TopLeft);
+            var newSize = r.Size * ZoomFactor;
+            return new(newPos, newSize, new(0f));
+        }
+
+        public Rect WorldToScreen(Rect r)
+        {
+            var newPos = WorldToScreen(r.TopLeft);
+            var newSize = r.Size / ZoomFactor;
+            return new(newPos, newSize, new(0f));
+        }
+        
+        
+        public void Shake(float duration, Vector2 strength, float zoomStrength = 0f, float rotStrength = 0f, float smoothness = 0.75f)
+        {
+            float intensity = CAMERA_SHAKE_INTENSITY;
+            shake.Start
+            (
+                duration,
+                smoothness,
+                strength.X * intensity,
+                strength.Y * intensity,
+                zoomStrength * intensity,
+                rotStrength * intensity
+            );
+        }
+        public void StopShake() { shake.Stop(); }
+        private void UpdateShake(float dt)
+        {
+            CameraTweens.Update(dt);
+            shake.Update(dt);
+            
+            //TODO camera shake / tween not working
+            Vector2 shakeOffset = new(shake.Get(ShakeX), shake.Get(ShakeY));
+            
+            Offset = BaseOffset + shakeOffset + cameraTweenTotalOffset;
+            RotationDeg = BaseRotationDeg + shake.Get(ShakeRot) + cameraTweenTotalRotationDeg;
+            ZoomLevel = ((shake.Get(ShakeZoom)) * BaseZoomLevel) / cameraTweenTotalScale;
+            
+            cameraTweenTotalOffset = new(0f);
+            cameraTweenTotalRotationDeg = 0f;
+            cameraTweenTotalScale = 1f;
+            //--------------
+            Offset = BaseOffset;
+            RotationDeg = BaseRotationDeg;
+            ZoomLevel = BaseZoomLevel * zoomAdjustment;
+
+        }
+        private void OnCameraTweenUpdated(ICameraTween tween)
+        {
+            cameraTweenTotalOffset += tween.GetOffset();
+            cameraTweenTotalRotationDeg += tween.GetRotationDeg();
+            cameraTweenTotalScale *= tween.GetScale();
+
+        }
         private static float Wrap(float value, float min, float max) => value - (max - min) * MathF.Floor((float) (( value -  min) / ( max -  min)));
+        
     }
 public class ShapeLoop
     {
@@ -238,15 +362,36 @@ public class ShapeLoop
         public string[] LaunchParams { get; protected set; } = Array.Empty<string>();
 
         
-        private ShapeTexture GameTexture = new();
-        public ShapeCamera Camera { get; private set; } = new ShapeCamera();
+        private readonly ShapeTexture gameTexture = new();
+
+        private readonly ShapeCamera basicCamera = new ShapeCamera();
+        private ShapeCamera curCamera;
+        public ShapeCamera Camera
+        {
+            get => curCamera;
+            set
+            {
+                if (value == curCamera) return;
+                curCamera.Deactive();
+                curCamera = value;
+                curCamera.Activate();
+                curCamera.SetSize(CurScreenSize, DevelopmentDimensions);
+            }
+        }
+
+        public void ResetCamera() => Camera = basicCamera;
+
+        public Dimensions DevelopmentDimensions { get; private set; } = new();
         public Dimensions CurScreenSize { get; private set; } = new();
         public Dimensions WindowMinSize { get; } = new (128, 128);
-        public Rect ScreenArea { get; private set; } = new();
-        public Rect CameraArea { get; private set; } = new();
+
+        public ScreenInfo Game { get; private set; } = new();
+        public ScreenInfo UI { get; private set; } = new();
+        //public Rect ScreenArea { get; private set; } = new();
+        //public Rect CameraArea { get; private set; } = new();
         
-        public Vector2 MousePosGame { get; private set; } = new(0f);
-        public Vector2 MousePosUI { get; private set; } = new(0f);
+        //public Vector2 MousePosGame { get; private set; } = new(0f);
+        //public Vector2 MousePosUI { get; private set; } = new(0f);
         
         public float Delta { get; private set; } = 0f;
         
@@ -365,21 +510,34 @@ public class ShapeLoop
 
         
         
-        public ShapeLoop()
+        public ShapeLoop(Dimensions developmentDimensions)
         {
+            this.DevelopmentDimensions = developmentDimensions;
             InitWindow(0, 0, "");
             
             ClearWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
             SetWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
 
-            VSync = true;
-            FrameRateLimit = 60;
-
             Monitor = new MonitorDevice();
             SetupWindowDimensions();
             Raylib.SetWindowMinSize(WindowMinSize.Width, WindowMinSize.Height);
+            
+            VSync = true;
+            FrameRateLimit = 60;
 
+            curCamera = basicCamera;
+            Camera.Activate();
+            Camera.SetSize(CurScreenSize, DevelopmentDimensions);
+            
+            var mousePosUI = GetMousePosition();
+            var mousePosGame = Camera.ScreenToWorld(mousePosUI);
+            var screenArea = new Rect(0, 0, CurScreenSize.Width, CurScreenSize.Height);
+            var cameraArea = Camera.Area;
 
+            Game = new(cameraArea, mousePosGame);
+            UI = new(screenArea, mousePosUI);
+            
+            gameTexture.Load(CurScreenSize);
         }
         public void SetupWindow(string windowName, bool undecorated, bool resizable, bool vsync = true, int fps = 60)
         {
@@ -505,23 +663,28 @@ public class ShapeLoop
                     continue;
                 }
                 var dt = GetFrameTime();
+                Delta = dt;
                 UpdateMonitorDevice(dt);
                 CalculateCurScreenSize();
-                Camera.Update(dt, CurScreenSize.Width, CurScreenSize.Height);
-                GameTexture.Update(CurScreenSize.Width, CurScreenSize.Height);
+                Camera.SetSize(CurScreenSize, DevelopmentDimensions);
+                Camera.Update(dt);
+                gameTexture.Update(CurScreenSize);
                 
-                var mousePosScreen = GetMousePosition();
-                var mousePosGame = Camera.ScreenToWorld(mousePosScreen);
-                ScreenArea = new(0, 0, CurScreenSize.Width, CurScreenSize.Height);
-                CameraArea = Camera.Area;
+                var mousePosUI = GetMousePosition();
+                var mousePosGame = Camera.ScreenToWorld(mousePosUI);
+                var screenArea = new Rect(0, 0, CurScreenSize.Width, CurScreenSize.Height);
+                var cameraArea = Camera.Area;
+
+                Game = new(cameraArea, mousePosGame);
+                UI = new(screenArea, mousePosUI);
                 
                 Update(dt);
 
-                BeginTextureMode(GameTexture.RenderTexture);
+                BeginTextureMode(gameTexture.RenderTexture);
                 ClearBackground(new(0,0,0,0));
                 
                 BeginMode2D(Camera.Camera);
-                DrawGame(CameraArea, mousePosGame);
+                DrawGame(Game);
                 EndMode2D();
                 
                 EndTextureMode();
@@ -529,10 +692,10 @@ public class ShapeLoop
                 BeginDrawing();
                 ClearBackground(BackgroundColor);
 
-                GameTexture.Draw();
-                foreach (var flash in shapeFlashes) CameraArea.Draw(flash.GetColor());
-                DrawUI(ScreenArea, mousePosScreen);
-                DrawCursor(ScreenArea.Size, mousePosScreen);
+                gameTexture.Draw();
+                foreach (var flash in shapeFlashes) cameraArea.Draw(flash.GetColor());
+                DrawUI(UI);
+                DrawCursor(screenArea.Size, mousePosUI);
                 EndDrawing();
                 
                 
@@ -546,7 +709,7 @@ public class ShapeLoop
         {
             EndRun();
             UnloadContent();
-            GameTexture.Unload();
+            gameTexture.Unload();
         }
         private void UpdateMonitorDevice(float dt)
         {
@@ -573,8 +736,8 @@ public class ShapeLoop
 
         //protected virtual void HandleInput(float dt) { }
         protected virtual void Update(float dt) { }
-        protected virtual void DrawGame(Rect cameraArea, Vector2 mousePos) { }
-        protected virtual void DrawUI(Rect screenArea, Vector2 mousePos) { }
+        protected virtual void DrawGame(ScreenInfo game) { }
+        protected virtual void DrawUI(ScreenInfo ui) { }
 
         /// <summary>
         /// Called before UnloadContent is called after the main gameloop has been exited.
@@ -585,9 +748,23 @@ public class ShapeLoop
         /// </summary>
         protected virtual void UnloadContent() { }
 
-        protected void UpdateScene() => CurScene.Update(Delta, MousePosGame, MousePosUI);
-        protected void DrawGameScene() => CurScene.DrawGame(CameraArea, MousePosGame);
-        protected void DrawUIScene() => CurScene.DrawUI(ScreenArea, MousePosUI);
+        protected void UpdateScene()
+        {
+            CurScene.Update(Delta, Game, UI);
+        }
+
+        protected void DrawGameScene()
+        {
+            CurScene.DrawGame(Game);
+            // Raylib.DrawCircleV(Game.MousePos, 20, RED);
+        }
+
+        protected void DrawUIScene()
+        {
+            CurScene.DrawUI(UI);
+            // Raylib.DrawCircleV(UI.MousePos, 10, YELLOW);
+        }
+
         #endregion
         
         public bool SetMonitor(int newMonitor)
@@ -639,7 +816,7 @@ public class ShapeLoop
         private void SetupWindowDimensions()
         {
             var monitor = Monitor.CurMonitor();
-            WindowSize = monitor.Dimensions;
+            WindowSize = monitor.Dimensions / 2;
             CenterWindow();
             CalculateCurScreenSize();
         }

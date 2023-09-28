@@ -118,22 +118,12 @@ namespace Examples.Scenes.ExampleScenes
 
     public class PolylineCollisionExample : ExampleScene
     {
-        ScreenTexture game;
         Polyline polyline = new();
         int dragIndex = -1;
 
         Rect boundaryRect;
         Segments boundary = new();
 
-
-        //CircleCollider ball;
-        //RectCollider rect;
-        //
-        //float collisionTimer = -1f;
-        //const float collisionTime = 1f;
-        //Vector2 lastNormal = new();
-        //Vector2 lastIntersectionPoint = new();
-        //Intersection lastIntersection = new();
         List<ShapeCollider> colliders = new();
 
 
@@ -148,19 +138,16 @@ namespace Examples.Scenes.ExampleScenes
         public PolylineCollisionExample()
         {
             Title = "Polyline Collision Example";
-            game = GAMELOOP.Game;
-            //BasicCamera camera = new BasicCamera(new Vector2(0f), new Vector2(1920, 1080), new Vector2(0.5f), 1f, 0f);
-            //game.SetCamera(camera);
 
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
-            BasicCamera camera = GAMELOOP.GameCam;
-            var cameraRect = camera.GetArea();
-            boundaryRect = SRect.ApplyMarginsAbsolute(cameraRect, 25f, 25f, 75 * 2f, 75 * 2f);
+
+
+            boundaryRect = new Rect(new(0), new(1920, 1080), new(0.5f)).ApplyMargins(0.05f, 0.05f, 0.1f, 0.1f);
             boundaryRect.FlippedNormals = true;
             boundary = boundaryRect.GetEdges();
 
-            //polyline.AutomaticNormals = true;
         }
+
         public override void Reset()
         {
             polyline.Clear();
@@ -177,37 +164,37 @@ namespace Examples.Scenes.ExampleScenes
             float shapeSize = SRNG.randF(75, 150);
             if (IsKeyPressed(KeyboardKey.KEY_ONE))
             {
-                colliders.Add(new ShapeCollider(1, game.MousePos, shapeSize));
+                colliders.Add(new ShapeCollider(1, mousePosGame, shapeSize));
             }
             else if (IsKeyPressed(KeyboardKey.KEY_TWO))
             {
-                colliders.Add(new ShapeCollider(2, game.MousePos, shapeSize));
+                colliders.Add(new ShapeCollider(2, mousePosGame, shapeSize));
             }
             else if (IsKeyPressed(KeyboardKey.KEY_THREE))
             {
-                colliders.Add(new ShapeCollider(3, game.MousePos, shapeSize));
+                colliders.Add(new ShapeCollider(3, mousePosGame, shapeSize));
             }
             else if (IsKeyPressed(KeyboardKey.KEY_FOUR))
             {
-                colliders.Add(new ShapeCollider(4, game.MousePos, shapeSize));
+                colliders.Add(new ShapeCollider(4, mousePosGame, shapeSize));
             }
             else if (IsKeyPressed(KeyboardKey.KEY_FIVE))
             {
-                colliders.Add(new ShapeCollider(5, game.MousePos, shapeSize));
+                colliders.Add(new ShapeCollider(5, mousePosGame, shapeSize));
             }
             else if (IsKeyPressed(KeyboardKey.KEY_SIX))
             {
-                colliders.Add(new ShapeCollider(6, game.MousePos, shapeSize));
+                colliders.Add(new ShapeCollider(6, mousePosGame, shapeSize));
             }
             else if (IsKeyPressed(KeyboardKey.KEY_SEVEN))
             {
-                colliders.Add(new ShapeCollider(7, game.MousePos, shapeSize));
+                colliders.Add(new ShapeCollider(7, mousePosGame, shapeSize));
             }
         }
 
-        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
+        public override void Update(float dt, ScreenInfo game, ScreenInfo ui)
         {
-            base.Update(dt, mousePosScreen, game, ui);
+            base.Update(dt, game, ui);
 
             UpdatePolyline(game.MousePos);
 
@@ -233,9 +220,9 @@ namespace Examples.Scenes.ExampleScenes
                 }
             }
         }
-        public override void DrawGame(Vector2 gameSIze, Vector2 mousePosGame)
+        public override void DrawGame(ScreenInfo game)
         {
-            base.DrawGame(gameSIze, mousePosGame);
+            base.DrawGame(game);
 
             boundary.Draw(4f, ColorMedium);
             foreach (var seg in boundary)
@@ -252,15 +239,15 @@ namespace Examples.Scenes.ExampleScenes
             }
             
         }
-        public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
+        public override void DrawUI(ScreenInfo ui)
         {
-            base.DrawUI(uiSize, mousePosUI);
-
-            
+            base.DrawUI(ui);
 
 
+
+            Vector2 uiSize = ui.Area.Size;
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
-            string infoText = String.Format("[LMB] Add point | [RMB] Remove point | [1 - 7] Add Shape | Shapes: {0}", colliders.Count);
+            string infoText = $"[LMB] Add point | [RMB] Remove point | [1 - 7] Add Shape | Shapes: {colliders.Count}";
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
             
         }

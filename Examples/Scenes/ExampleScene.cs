@@ -25,28 +25,44 @@ namespace Examples.Scenes
         public ExampleScene()
         {
             titleFont = GAMELOOP.FontDefault;
-            GAMELOOP.Game.BackgroundColor = ColorDark;
+            GAMELOOP.BackgroundColor = ColorDark;
 
         }
 
         public virtual void Reset() { }
 
         
-        public virtual void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
+        public virtual void Update(float dt, ScreenInfo game, ScreenInfo ui)
         {
             HandleInput(dt, game.MousePos, ui.MousePos);
         }
 
         protected virtual void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            if (IsKeyPressed(KeyboardKey.KEY_R)) Reset();
+            if (IsKeyPressed(KeyboardKey.KEY_R))
+            {
+                Reset();
+                GAMELOOP.Camera.Reset();
+            }
             if (IsKeyPressed(KeyboardKey.KEY_ESCAPE)) GAMELOOP.GoToMainScene();
-            if (IsKeyPressed(KeyboardKey.KEY_M)) GAMELOOP.ToggleWindowMaximize();
-            if (IsKeyPressed(KeyboardKey.KEY_F)) GAMELOOP.ToggleFullscreen();
+            if (IsKeyPressed(KeyboardKey.KEY_M)) GAMELOOP.Maximized = !GAMELOOP.Maximized;
+            if (IsKeyPressed(KeyboardKey.KEY_F)) GAMELOOP.Fullscreen = !GAMELOOP.Fullscreen;
+            
+            float increment = 0.05f;
+
+            if (IsKeyPressed(KeyboardKey.KEY_NINE)) //zoom out
+            {
+                GAMELOOP.Camera.Zoom(increment);
+            }
+            else if (IsKeyPressed(KeyboardKey.KEY_ZERO))//zoom in
+            {
+                GAMELOOP.Camera.Zoom(-increment);
+            }
         }
 
-        public virtual void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
+        public virtual void DrawUI(ScreenInfo ui)
         {
+            Vector2 uiSize = ui.Area.Size;
             Segment s = new(uiSize * new Vector2(0f, 0.07f), uiSize * new Vector2(1f, 0.07f));
             s.Draw(2f, ColorLight);
 
@@ -57,7 +73,7 @@ namespace Examples.Scenes
             Rect backRect = new Rect(uiSize * new Vector2(0.02f, 0.06f), uiSize * new Vector2(0.3f, 0.04f), new Vector2(0f, 1f));
             titleFont.DrawText(backText, backRect, 4f, new Vector2(0f, 0.5f), ColorHighlight2);
 
-            string fpsText = String.Format("Fps: {0}", GetFPS());
+            string fpsText = $"Fps: {Raylib.GetFPS()}";
             Rect fpsRect = new Rect(uiSize * new Vector2(0.98f, 0.06f), uiSize * new Vector2(0.3f, 0.04f), new Vector2(1f, 1f));
             titleFont.DrawText(fpsText, fpsRect, 4f, new Vector2(1f, 0.5f), ColorHighlight2);
         }
@@ -78,12 +94,13 @@ namespace Examples.Scenes
 
         public virtual void Activate(IScene oldScene)
         {
-            
+            GAMELOOP.Camera.Reset();
         }
 
         public virtual void Deactivate()
         {
-            
+            GAMELOOP.Camera.Reset();
+            GAMELOOP.ResetCamera();
         }
 
         public virtual void Close()
@@ -93,15 +110,7 @@ namespace Examples.Scenes
 
         
 
-        public virtual void DrawGame(Vector2 size, Vector2 mousePos)
-        {
-        }
-
-        public virtual void DrawToTexture(ScreenTexture texture)
-        {
-        }
-
-        public virtual void DrawToScreen(Vector2 size, Vector2 mousePos)
+        public virtual void DrawGame(ScreenInfo game)
         {
         }
     }

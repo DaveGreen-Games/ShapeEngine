@@ -12,11 +12,9 @@ namespace ShapeEngine.Core
         public virtual Area? GetCurArea() { return null; }
 
 
-        public void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui) { }
-        public virtual void DrawGame(Vector2 gameSIze, Vector2 mousePosGame) { }
-        public virtual void DrawUI(Vector2 uiSize, Vector2 mousePosUI) { }
-        public void DrawToTexture(ScreenTexture texture) { }
-        public virtual void DrawToScreen(Vector2 screenSize, Vector2 mousePos) { }
+        public void Update(float dt, ScreenInfo game, ScreenInfo ui) { }
+        public virtual void DrawGame(ScreenInfo game) { }
+        public virtual void DrawUI(ScreenInfo ui) { }
     }
    
     public sealed class SceneEmpty : Scene
@@ -24,17 +22,4 @@ namespace ShapeEngine.Core
         public SceneEmpty() { }
     }
 
-    /*
-    public class Scene<TArea> : Scene where TArea : IArea
-    {
-        public TArea Area { get; protected set; }
-
-        public Scene(TArea area)
-        {
-            Area = area;
-        }
-
-        public override IArea GetCurArea() { return Area; }
-    }
-    */
 }

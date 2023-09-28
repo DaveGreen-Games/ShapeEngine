@@ -38,7 +38,7 @@ namespace Examples.Scenes.ExampleScenes
         public TextBoxExample()
         {
             Title = "Text Box Example";
-            var s = GAMELOOP.UI.GetSize();
+            var s = GAMELOOP.UI.Area.Size;
             topLeft = s * new Vector2(0.1f, 0.1f);
             bottomRight = s * new Vector2(0.9f, 0.8f);
             font = GAMELOOP.GetFont(fontIndex);
@@ -120,37 +120,36 @@ namespace Examples.Scenes.ExampleScenes
 
             
         }
-        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
+        public override void Update(float dt, ScreenInfo game, ScreenInfo ui)
         {
-            base.Update(dt, mousePosScreen, game, ui);
-            Vector2 mousePosUI = ui.MousePos;
+            base.Update(dt, game, ui);
             if (textEntryActive) return;
             if (draggingTopLeft || draggingBottomRight)
             {
-                if (draggingTopLeft) topLeft = mousePosUI;
-                else if (draggingBottomRight) bottomRight = mousePosUI;
+                if (draggingTopLeft) topLeft = ui.MousePos;
+                else if (draggingBottomRight) bottomRight = ui.MousePos;
             }
             else
             {
-                float topLeftDisSq = (topLeft - mousePosUI).LengthSquared();
+                float topLeftDisSq = (topLeft - ui.MousePos).LengthSquared();
                 mouseInsideTopLeft = topLeftDisSq <= interactionRadius * interactionRadius;
 
                 if (!mouseInsideTopLeft)
                 {
-                    float bottomRightDisSq = (bottomRight - mousePosUI).LengthSquared();
+                    float bottomRightDisSq = (bottomRight - ui.MousePos).LengthSquared();
                     mouseInsideBottomRight = bottomRightDisSq <= interactionRadius * interactionRadius;
                 }
             }
 
         }
-        public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
+        public override void DrawUI(ScreenInfo ui)
         {
-            base.DrawUI(uiSize, mousePosUI);
+            base.DrawUI(ui);
 
             Rect r = new(topLeft, bottomRight);
             r.DrawLines(6f, ColorMedium);
-            
-            
+
+            Vector2 uiSize = ui.Area.Size;
 
 
             if (!textEntryActive)
@@ -197,11 +196,12 @@ namespace Examples.Scenes.ExampleScenes
                     bottomRightInteractionCircle.DrawLines(2f, ColorMedium, 4f);
                 }
 
-                string info = String.Format("[W] Font: {0} | [A/D] Font Spacing: {1} | [Enter] Write Custom Text", GAMELOOP.GetFontName(fontIndex), fontSpacing);
+                string info =
+                    $"[W] Font: {GAMELOOP.GetFontName(fontIndex)} | [A/D] Font Spacing: {fontSpacing} | [Enter] Write Custom Text";
                 Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
                 font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
 
-                string alignmentInfo = String.Format("[S] Alignment: {0}", curAlignement);
+                string alignmentInfo = $"[S] Alignment: {curAlignement}";
                 Rect alignmentInfoRect = new(uiSize * new Vector2(0.5f, 0.94f), uiSize * new Vector2(0.6f, 0.06f), new Vector2(0.5f, 1f));
                 font.DrawText(alignmentInfo, alignmentInfoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
             }
@@ -217,7 +217,7 @@ namespace Examples.Scenes.ExampleScenes
                 Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
                 font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
 
-                string caretIndexInfo = String.Format("Caret Position: {0}", caretIndex);
+                string caretIndexInfo = $"Caret Position: {caretIndex}";
                 Rect caretIndexInfoRect = new(uiSize * new Vector2(0.5f, 0.94f), uiSize * new Vector2(0.5f, 0.06f), new Vector2(0.5f, 1f));
                 font.DrawText(caretIndexInfo, caretIndexInfoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
             }

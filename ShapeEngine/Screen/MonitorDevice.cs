@@ -4,7 +4,7 @@ using ShapeEngine.Core;
 
 namespace ShapeEngine.Screen
 {
-    public interface IMonitorDevice
+    /*public interface IMonitorDevice
     {
         public delegate void MonitorChanged(MonitorInfo oldMonitor, MonitorInfo newMonitor);
         public event MonitorChanged? OnMonitorChanged;
@@ -20,22 +20,18 @@ namespace ShapeEngine.Screen
         public MonitorInfo NextMonitor();
         public MonitorInfo PrevMonitor();
 
-    }
-    public sealed class MonitorDevice : IMonitorDevice
+    }*/
+    public sealed class MonitorDevice // : IMonitorDevice
     {
-        
-        //public delegate void MonitorChanged(MonitorInfo oldMonitor, MonitorInfo newMonitor);
-        //public event MonitorChanged? OnMonitorChanged;
-        //
-        //public delegate void MonitorSetupChanged(List<MonitorInfo> newSetup);
-        //public event MonitorSetupChanged? OnMonitorSetupChanged;
+        public delegate void MonitorChanged(MonitorInfo oldMonitor, MonitorInfo newMonitor);
+        public event MonitorChanged? OnMonitorChanged;
 
+        public delegate void MonitorSetupChanged(List<MonitorInfo> newSetup);
+        public event MonitorSetupChanged? OnMonitorSetupChanged;
+        
         private List<MonitorInfo> monitors = new();
         private int curIndex = 0;
         private int monitorCount = 0;
-
-        public event IMonitorDevice.MonitorChanged? OnMonitorChanged;
-        public event IMonitorDevice.MonitorSetupChanged? OnMonitorSetupChanged;
 
         public MonitorDevice()
         {

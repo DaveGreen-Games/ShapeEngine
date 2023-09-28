@@ -12,41 +12,22 @@ namespace ShapeEngine.Core
         /// </summary>
         /// <returns></returns>
         public Vector2 GetPosition();
-        /*
-        /// <summary>
-        /// The current bounding circle of the object.
-        /// </summary>
-        /// <returns></returns>
-        public Circle GetBoundingCircle();
-        */
+        
         /// <summary>
         /// Get the current bounding box of the object.
         /// </summary>
         /// <returns></returns>
         public Rect GetBoundingBox();
-        /*
-        /// <summary>
-        /// The current bounding radius of the object. Is used to generate the bounding circle.
-        /// </summary>
-        /// <returns></returns>
-        public float GetBoundingRadius();
-        /// <summary>
-        /// The current bounding circle of the radius. Is constructed out of the position and bounding radius of the object.
-        /// </summary>
-        /// <returns></returns>
-        public Circle GetBoundingCircle();
-
         
-        */
     }
     public interface IUpdateable
     {
-        public void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui);
+        public void Update(float dt, ScreenInfo game, ScreenInfo ui);
     }
     public interface IDrawable
     {
-        public void DrawGame(Vector2 size, Vector2 mousePos);
-        public void DrawUI(Vector2 size, Vector2 mousePos);
+        public void DrawGame(ScreenInfo game);
+        public void DrawUI(ScreenInfo ui);
         //public void DrawToTexture(ScreenTexture texture);
         //public void DrawToScreen(Vector2 size, Vector2 mousePos);
     }
@@ -79,8 +60,8 @@ namespace ShapeEngine.Core
         /// </summary>
         public void Close();
 
-        public void DrawToTexture(ScreenTexture texture);
-        public void DrawToScreen(Vector2 size, Vector2 mousePos);
+        //public void DrawToTexture(ScreenTexture texture);
+        //public void DrawToScreen(Vector2 size, Vector2 mousePos);
 
     }
     
@@ -109,20 +90,10 @@ namespace ShapeEngine.Core
     }
     public interface IAreaObject : ISpatial, IUpdateable, IDrawable, IKillable//, IBehaviorReceiver
     {
-        
-        //public bool IsDrawingToScreen();
-        /// <summary>
-        /// Tells the area to call DrawGame on this object. Can be used to temporarily not draw the object to the screen,
-        /// for instance when it is not inside the camera area.
-        /// </summary>
-        /// <returns></returns>
-        public bool IsDrawingToGameTexture();
-        /// <summary>
-        /// Tells the area to call DrawUI on this object.
-        /// </summary>
-        /// <returns></returns>
-        public bool IsDrawingToUITexture();
 
+        public bool DrawToGame(Rect gameArea);
+        public bool DrawToUI(Rect screenArea);
+        
         /// <summary>
         /// The area layer the object is stored in. Higher layers are draw on top of lower layers.
         /// </summary>
@@ -161,12 +132,12 @@ namespace ShapeEngine.Core
         /// <param name="collisionPoints">The points where the object left the bounds. Can be 1 or 2 max.</param>
         public void LeftAreaBounds(Vector2 safePosition, CollisionPoints collisionPoints);
         
-        /// <summary>
-        /// Can be used to adjust the follow position of an attached camera.
-        /// </summary>
-        /// <param name="camPos"></param>
-        /// <returns></returns>
-        public Vector2 GetCameraFollowPosition(Vector2 camPos);
+        ///// <summary>
+        ///// Can be used to adjust the follow position of an attached camera.
+        ///// </summary>
+        ///// <param name="camPos"></param>
+        ///// <returns></returns>
+        //public Vector2 GetCameraFollowPosition(Vector2 camPos);
 
         /// <summary>
         /// Should the area add the collidables from this object to the collision system on area entry.

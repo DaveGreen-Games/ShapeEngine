@@ -38,11 +38,11 @@ namespace Examples.Scenes.ExampleScenes
 
         
 
-        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
-        {
-            
-            base.Update(dt, mousePosScreen, game, ui); //calls area update therefore area bounds have to be updated before that
-        }
+        //public override void Update(float dt, ScreenInfo game, ScreenInfo ui)
+        //{
+        //    
+        //    base.Update(dt, game, ui); //calls area update therefore area bounds have to be updated before that
+        //}
         private Triangle GenerateTriangle(Vector2 pos, float size)
         {
             var poly = Polygon.Generate(pos, 3, size / 2, size);
@@ -125,10 +125,10 @@ namespace Examples.Scenes.ExampleScenes
             curTriangulation = Polygon.TriangulateDelaunay(points);
 
         }
-
-        public override void DrawGame(Vector2 gameSize, Vector2 mousePosGame)
+        
+        public override void DrawGame(ScreenInfo game)
         {
-            base.DrawGame(gameSize, mousePosGame);
+            base.DrawGame(game);
 
             
             for (int i = 0; i < curTriangulation.Count; i++)
@@ -159,10 +159,10 @@ namespace Examples.Scenes.ExampleScenes
                 }
             }
         }
-        public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
+        public override void DrawUI(ScreenInfo ui)
         {
-            base.DrawUI(uiSize, mousePosUI);
-
+            base.DrawUI(ui);
+            Vector2 uiSize = ui.Area.Size;
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));
 
             //string polymodeText = "[Tab] Polymode | [LMB] Place/Merge | [RMB] Cut | [1] Triangle | [2] Rect | [3] Poly | [Q] Regenerate | [X] Rotate | [C] Scale";

@@ -25,7 +25,7 @@ namespace Examples.Scenes.ExampleScenes
     public class CameraExample : ExampleScene
     {
         Font font;
-        BasicCamera camera;
+        ShapeCamera camera;
         Rect universe = new(new Vector2(0f), new Vector2(10000f), new Vector2(0.5f));
 
         List<Pillar> pillars = new();
@@ -37,7 +37,7 @@ namespace Examples.Scenes.ExampleScenes
 
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
 
-            camera = GAMELOOP.GameCam;
+            camera = GAMELOOP.Camera;
             //boundaryRect = new(new Vector2(0, -45), new Vector2(1800, 810), new Vector2(0.5f));
 
             for (int i = 0; i < 250; i++)
@@ -64,10 +64,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         public override void Reset()
         {
-            camera.Position = new(0f);
-            camera.ResetRotation();
-            camera.ResetTranslation();
-            camera.ResetZoom();
+            camera.Reset();
         }
         protected override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
@@ -88,18 +85,14 @@ namespace Examples.Scenes.ExampleScenes
 
             if (zoomDir != 0)
             {
-                camera.Zoom += zoomDir * zoomSpeed * dt;
-                camera.Zoom = Clamp(camera.Zoom, 0.1f, 5f);
+                camera.Zoom(zoomDir * zoomSpeed * dt);
             }
         }
         private void HandleCameraTranslation(float dt, Vector2 mousePos)
         {
             if (IsMouseButtonDown(MouseButton.MOUSE_BUTTON_LEFT))
             {
-                Vector2 windowSize = GAMELOOP.CurWindowSize.ToVector2(); // new(GAMELOOP.CurWindowSize.width, GAMELOOP.CurWindowSize.height);
-                Vector2 sizeFactor = GAMELOOP.Game.GetSize() / windowSize;
-                Vector2 windowMousePos = GAMELOOP.MousePos.Align(windowSize, new Vector2(0.5f));
-                camera.Translation = windowMousePos * sizeFactor;
+                camera.Position = mousePos;
             }
         }
         private void HandleCameraRotation(float dt)
@@ -111,8 +104,7 @@ namespace Examples.Scenes.ExampleScenes
 
             if (rotDir != 0)
             {
-                camera.RotationDeg += rotDir * rotSpeedDeg * dt;
-                camera.RotationDeg = SUtils.WrapAngleDeg(camera.RotationDeg);
+                camera.Rotate(rotDir * rotSpeedDeg * dt);
             }
         }
         private void HandleCameraPosition(float dt)
@@ -145,20 +137,16 @@ namespace Examples.Scenes.ExampleScenes
                 //camera.Translation += movement;
             }
         }
-        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
+        
+        public override void DrawGame(ScreenInfo game)
         {
-            base.Update(dt, mousePosScreen, game, ui);
-        }
-
-        public override void DrawGame(Vector2 gameSize, Vector2 mousePosGame)
-        {
-            base.DrawGame(gameSize, mousePosGame);
+            base.DrawGame(game);
             foreach (var pillar in pillars)
             {
                 pillar.Draw();
             }
 
-            float f = camera.GetZoomFactorInverse();
+            float f = camera.ZoomFactor;
             DrawCircleV(camera.Position, 8f * f, BLUE);
             SDrawing.DrawCircleLines(camera.Position, 64 * f, 2f * f, BLUE);
             Segment hor = new(camera.Position - new Vector2(3000 * f, 0), camera.Position + new Vector2(3000 * f, 0));
@@ -166,24 +154,24 @@ namespace Examples.Scenes.ExampleScenes
             Segment ver = new(camera.Position - new Vector2(0, 3000 * f), camera.Position + new Vector2(0, 3000 * f));
             ver.Draw(2f * f, BLUE);
         }
-        public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
+        public override void DrawUI(ScreenInfo ui)
         {
-            base.DrawUI(uiSize, mousePosUI);
-
+            base.DrawUI(ui);
+            Vector2 uiSize = ui.Area.Size;
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
             
             var pos = camera.Position;
             int x = (int)pos.X;
             int y = (int)pos.Y;
-            int rot = (int)camera.RotationDeg;
-            int zoom = (int)(SUtils.GetFactor(camera.Zoom, 0.1f, 5f) * 100f);
-            int transX = (int)camera.Translation.X;
-            int transY = (int)camera.Translation.Y;
-            string moveText = String.Format("[W/A/S/D] Move ({0}/{1})", x, y);
-            string rotText = String.Format("[Q/E] Rotate ({0})", rot);
-            string scaleText = String.Format("[Y/X] Zoom ({0}%)", zoom);
-            string transText = String.Format("[LMB] Offset ({0}/{1})", transX, transY);
-            string infoText = String.Format("{0} | {1} | {2} | {3}", moveText, rotText, scaleText, transText);
+            int rot = (int)camera.BaseRotationDeg;
+            int zoom = (int)(SUtils.GetFactor(camera.ZoomLevel, 0.1f, 5f) * 100f);
+            int transX = (int)camera.Position.X;
+            int transY = (int)camera.Position.Y;
+            string moveText = $"[W/A/S/D] Move ({x}/{y})";
+            string rotText = $"[Q/E] Rotate ({rot})";
+            string scaleText = $"[Y/X] Zoom ({zoom}%)";
+            string transText = $"[LMB] Offset ({transX}/{transY})";
+            string infoText = $"{moveText} | {rotText} | {scaleText} | {transText}";
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
 

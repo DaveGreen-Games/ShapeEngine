@@ -59,14 +59,14 @@ namespace ShapeEngine.Effects
         public void AddedToArea(Area area)     {}
         public void RemovedFromArea(Area area) {}
         
-        public Vector2 GetCameraFollowPosition(Vector2 camPos) { return GetPosition(); }
+        //public Vector2 GetCameraFollowPosition(Vector2 camPos) { return GetPosition(); }
 
-        public virtual void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
+        public virtual void Update(float dt, ScreenInfo game, ScreenInfo ui)
         {
             lifetimeTimer.Update(dt);
         }
-        public abstract void DrawGame(Vector2 gameSize, Vector2 mousePosGame);
-        public virtual void DrawUI(Vector2 uiSize, Vector2 mousePosUI) { }
+        public abstract void DrawGame(ScreenInfo game);
+        public virtual void DrawUI(ScreenInfo ui) { }
 
 
         public virtual bool CheckAreaBounds()
@@ -83,31 +83,14 @@ namespace ShapeEngine.Effects
             
         }
 
-        //public ScreenTextureMask? GetTextureMask()
-        //{
-        //    return null;
-        //}
-
-        public virtual bool IsDrawingToScreen()
-        {
-            return false;
-        }
-        public virtual bool IsDrawingToGameTexture()
+        
+        public virtual bool DrawToGame(Rect gameArea)
         {
             return true;
         }
-        public virtual bool IsDrawingToUITexture()
+        public virtual bool DrawToUI(Rect uiArea)
         {
             return false;
-        }
-        
-        //public void DrawToTexture(ScreenTexture texture)
-        //{
-        //    
-        //}
-        public virtual void DrawToScreen(Vector2 size, Vector2 mousePos)
-        {
-            
         }
     }
 

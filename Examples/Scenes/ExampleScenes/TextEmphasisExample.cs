@@ -47,7 +47,7 @@ namespace Examples.Scenes.ExampleScenes
         public TextEmphasisExample()
         {
             Title = "Text Multi Color Example";
-            var s = GAMELOOP.UI.GetSize();
+            var s = GAMELOOP.UI.Area.Size;
             topLeft = s * new Vector2(0.1f, 0.1f);
             bottomRight = s * new Vector2(0.9f, 0.8f);
             font = GAMELOOP.GetFont(fontIndex);
@@ -91,10 +91,10 @@ namespace Examples.Scenes.ExampleScenes
             base.HandleInput(dt, mousePosGame, mousePosUI);
 
         }
-        public override void Update(float dt, Vector2 mousePosScreen, ScreenTexture game, ScreenTexture ui)
+        public override void Update(float dt, ScreenInfo game, ScreenInfo ui)
         {
-            base.Update(dt, mousePosScreen, game, ui);
-            Vector2 mousePosUI = ui.MousePos;
+            base.Update(dt, game, ui);
+            
             timer += dt;
             if (timer >= interval)
             {
@@ -104,26 +104,27 @@ namespace Examples.Scenes.ExampleScenes
 
             if (draggingTopLeft || draggingBottomRight)
             {
-                if (draggingTopLeft) topLeft = mousePosUI;
-                else if (draggingBottomRight) bottomRight = mousePosUI;
+                if (draggingTopLeft) topLeft = ui.MousePos;
+                else if (draggingBottomRight) bottomRight = ui.MousePos;
             }
             else
             {
-                float topLeftDisSq = (topLeft - mousePosUI).LengthSquared();
+                float topLeftDisSq = (topLeft - ui.MousePos).LengthSquared();
                 mouseInsideTopLeft = topLeftDisSq <= interactionRadius * interactionRadius;
 
                 if (!mouseInsideTopLeft)
                 {
-                    float bottomRightDisSq = (bottomRight - mousePosUI).LengthSquared();
+                    float bottomRightDisSq = (bottomRight - ui.MousePos).LengthSquared();
                     mouseInsideBottomRight = bottomRightDisSq <= interactionRadius * interactionRadius;
                 }
             }
 
         }
-        public override void DrawUI(Vector2 uiSize, Vector2 mousePosUI)
+        public override void DrawUI(ScreenInfo ui)
         {
-            base.DrawUI(uiSize, mousePosUI);
-            rotDeg = SVec.AngleDeg((uiSize * 0.5f) - mousePosUI);
+            base.DrawUI(ui);
+            Vector2 uiSize = ui.Area.Size;
+            rotDeg = SVec.AngleDeg((uiSize * 0.5f) - ui.MousePos);
 
             Rect r = new(topLeft, bottomRight);
             r.DrawLines(6f, ColorMedium);
