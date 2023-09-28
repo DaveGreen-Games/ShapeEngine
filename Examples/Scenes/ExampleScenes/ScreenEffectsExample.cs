@@ -68,6 +68,25 @@ namespace Examples.Scenes.ExampleScenes
             circle.DrawLines(6f, color);
         }
     }
+
+    //TODO add ship for testing cameras follow system
+    internal class Ship : ICameraFollowTarget
+    {
+        public void FollowStarted()
+        {
+            
+        }
+
+        public void FollowEnded()
+        {
+            
+        }
+
+        public Vector2 GetCameraFollowPosition()
+        {
+            return new();
+        }
+    }
     public class ScreenEffectsExample : ExampleScene
     {
         Font font;
@@ -75,7 +94,10 @@ namespace Examples.Scenes.ExampleScenes
         Rect universe = new(new Vector2(0f), new Vector2(10000f), new Vector2(0.5f));
         List<Star> stars = new();
         List<Comet> comets = new();
+
         Circle ship = new(new Vector2(0f), 30f);
+        private Ship ship2 = new();
+        
         private ShapeCamera camera = new ShapeCamera();
         public ScreenEffectsExample()
         {
@@ -113,6 +135,7 @@ namespace Examples.Scenes.ExampleScenes
         public override void Activate(IScene oldScene)
         {
             GAMELOOP.Camera = camera;
+            camera.Follower.SetTarget(ship2);
         }
 
         public override void Deactivate()
@@ -126,6 +149,7 @@ namespace Examples.Scenes.ExampleScenes
         public override void Reset()
         {
             camera.Reset();
+            camera.Follower.SetTarget(ship2);
             stars.Clear();
             comets.Clear();
             GenerateStars(2500);

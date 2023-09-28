@@ -57,7 +57,7 @@ namespace ShapeEngine.Effects
         public virtual bool RemoveBehavior(IBehavior behavior) { return false; }
         */
         public void AddedToHandler(GameObjectHandler gameObjectHandler)     {}
-        public void RemovedFromArea(GameObjectHandler gameObjectHandler) {}
+        public void RemovedFromHandler(GameObjectHandler gameObjectHandler) {}
         
         //public Vector2 GetCameraFollowPosition(Vector2 camPos) { return GetPosition(); }
 

@@ -99,7 +99,7 @@ namespace Examples.Scenes.ExampleScenes
         
         public virtual void AddedToHandler(GameObjectHandler gameObjectHandler) { }
 
-        public virtual void RemovedFromArea(GameObjectHandler gameObjectHandler) { }
+        public virtual void RemovedFromHandler(GameObjectHandler gameObjectHandler) { }
 
         public virtual void DrawUI(ScreenInfo ui)
         {

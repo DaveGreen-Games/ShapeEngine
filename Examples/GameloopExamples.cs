@@ -8,6 +8,7 @@ using ShapeEngine.Screen;
 
 namespace Examples
 {
+    
     public class GameloopExamples : ShapeLoop
     {
         //public BasicCamera GameCam { get; private set; }

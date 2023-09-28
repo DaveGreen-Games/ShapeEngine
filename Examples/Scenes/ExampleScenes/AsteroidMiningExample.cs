@@ -27,7 +27,7 @@ namespace Examples.Scenes.ExampleScenes
         public virtual void Overlap(CollisionInformation info) { }
         public virtual void OverlapEnded(ICollidable other) { }
         public virtual void AddedToHandler(GameObjectHandler gameObjectHandler) { }
-        public virtual void RemovedFromArea(GameObjectHandler gameObjectHandler) { }
+        public virtual void RemovedFromHandler(GameObjectHandler gameObjectHandler) { }
         
         public void DeltaFactorApplied(float f) { }
         

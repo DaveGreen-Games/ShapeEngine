@@ -11,8 +11,7 @@ namespace ShapeEngine.Timing
         public bool Update(float dt);
     }
 
-
-
+    
     public class Sequencer <T>  where T : ISequenceable
     {
         private static uint idCounter = 0;

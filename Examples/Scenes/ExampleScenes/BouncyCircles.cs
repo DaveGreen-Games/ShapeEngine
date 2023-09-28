@@ -28,7 +28,7 @@ namespace Examples.Scenes.ExampleScenes
         {
         }
 
-        public void RemovedFromArea(GameObjectHandler gameObjectHandler)
+        public void RemovedFromHandler(GameObjectHandler gameObjectHandler)
         {
         }
 

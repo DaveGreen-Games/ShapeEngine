@@ -5,6 +5,12 @@ using System.Numerics;
 
 namespace ShapeEngine.Core
 {
+    public interface ICameraFollowTarget
+    {
+        public void FollowStarted();
+        public void FollowEnded();
+        public Vector2 GetCameraFollowPosition();
+    }
     public interface ISpatial
     {
         /// <summary>
@@ -119,7 +125,7 @@ namespace ShapeEngine.Core
         /// <summary>
         /// Is called by the area once a game object is dead.
         /// </summary>
-        public void RemovedFromArea(GameObjectHandler gameObjectHandler);
+        public void RemovedFromHandler(GameObjectHandler gameObjectHandler);
 
         /// <summary>
         /// Should this object be checked for leaving the bounds of the area?
