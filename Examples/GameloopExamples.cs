@@ -18,23 +18,15 @@ namespace Examples
         private Dictionary<int, Font> fonts = new();
         private List<string> fontNames = new();
         private MainScene? mainScene = null;
-        //private Shader shader;
+
+        private uint crtShaderID = SID.NextID;
         
-        //public GameloopExamples() : base(new(960 * 2, 540 * 2), new(1920, 1080))
-        //{
-        //    GameCam = new BasicCamera(new(0f), Game.GetSize(), new(0.5f), 1f, 0f);
-        //}
-        public GameloopExamples() : base(new(1920, 1080))
+        public GameloopExamples() : base(new(1920, 1080), true, true)
         {
             
         }
         protected override void LoadContent()
         {
-            //Game.SetCamera(GameCam);
-
-            //shader = ContentLoader.LoadFragmentShader("Resources/Shaders/CRTShader.fs");
-            
-            //fonts.Add(FontIDs.AbelRegular, ContentLoader.LoadFont("fonts/Abel-Regular.ttf", 200));
             fonts.Add(FontIDs.GruppoRegular, ContentLoader.LoadFont("Resources/Fonts/Gruppo-Regular.ttf", 100));
             fonts.Add(FontIDs.IndieFlowerRegular, ContentLoader.LoadFont("Resources/Fonts/IndieFlower-Regular.ttf", 100));
             fonts.Add(FontIDs.OrbitRegular, ContentLoader.LoadFont("Resources/Fonts/Orbit-Regular.ttf", 100));
@@ -46,7 +38,6 @@ namespace Examples
             fonts.Add(FontIDs.TekoMedium, ContentLoader.LoadFont("Resources/Fonts/Teko-Medium.ttf", 100));
             fonts.Add(FontIDs.JetBrains, ContentLoader.LoadFont("Resources/Fonts/JetBrainsMono.ttf", 100));
             
-            //fontNames.Add("Abel Regular");
             fontNames.Add("Gruppo Regular");
             fontNames.Add("Indie Flower Regular");
             fontNames.Add("Orbit Regular");
@@ -58,13 +49,22 @@ namespace Examples
             fontNames.Add("Teko Medium");
             fontNames.Add("Jet Brains Mono");
 
+
+            Shader crt = ContentLoader.LoadFragmentShader("Resources/Shaders/CRTShader.fs");
+            ShapeShader crtShader = new(crt, crtShaderID, true, 1);
+            ShapeShader.SetValueFloat(crtShader.Shader, "renderWidth", CurScreenSize.Width);
+            ShapeShader.SetValueFloat(crtShader.Shader, "renderHeight", CurScreenSize.Height);
+            ShapeShader.SetValueVector4(crtShader.Shader, "cornerColor", 1, 0, 0, 1);
+            ShapeShader.SetValueFloat(crtShader.Shader, "vignetteOpacity", 1f);
+            ShapeShader.SetValueVector2(crtShader.Shader, "curvatureAmount", 6, 4);//smaller values = bigger curvature
+            ScreenShaders.Add(crtShader);
+            
             FontDefault = GetFont(FontIDs.JetBrains);
             this.VSync = false;
             this.FrameRateLimit = 60;
         }
         protected override void UnloadContent()
         {
-            //ContentLoader.UnloadShader(shader);
             ContentLoader.UnloadFonts(fonts.Values);
         }
         protected override void BeginRun()
@@ -75,7 +75,12 @@ namespace Examples
 
         protected override void WindowSizeChanged(DimensionConversionFactors conversionFactors)
         {
-            
+            var crtShader = ScreenShaders.Get(crtShaderID);
+            if (crtShader != null)
+            {
+                ShapeShader.SetValueFloat(crtShader.Shader, "renderWidth", CurScreenSize.Width);
+                ShapeShader.SetValueFloat(crtShader.Shader, "renderHeight", CurScreenSize.Height);
+            }
         }
 
         //protected override void HandleInput(float dt)

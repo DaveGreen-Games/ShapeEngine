@@ -23,7 +23,14 @@ public class ShapeShader
         this.Order = order;
         this.Loaded = true;
     }
-
+    public ShapeShader(Shader shader, uint id, bool enabled = true, int order = 0)
+    {
+        this.Shader = shader;
+        this.Enabled = enabled;
+        this.ID = id;
+        this.Order = order;
+        this.Loaded = true;
+    }
     public bool Unload()
     {
         if (!Loaded) return false;
@@ -68,19 +75,20 @@ public class ShapeShader
         SetShaderValue(shader, valueLocation, new float[] {color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f}, ShaderUniformDataType.SHADER_UNIFORM_VEC4);
     }
 }
-
-public class ShapeShaderContainer
+public class ShaderContainer
 {
     private Dictionary<uint, ShapeShader> shaders = new();
     
-    public void AddShader(ShapeShader shader)
+    public uint Add(ShapeShader shader)
     {
         if (shaders.ContainsKey(shader.ID)) shaders[shader.ID] = shader;
         else shaders.Add(shader.ID, shader);
-        
+        return shader.ID;
     }
-    public bool RemoveShader(uint id) => shaders.Remove(id);
-    public bool RemoveShader(ShapeShader shader) => shaders.Remove(shader.ID);
+
+    public ShapeShader? Get(uint id) => HasShader(id) ? shaders[id] : null;
+    public bool Remove(uint id) => shaders.Remove(id);
+    public bool Remove(ShapeShader shader) => shaders.Remove(shader.ID);
     public bool HasShaders() => shaders.Count > 0;
     public bool HasShader(uint id) => shaders.ContainsKey(id);
     public bool HasShader(ShapeShader shader) => shaders.ContainsKey(shader.ID);
@@ -108,89 +116,6 @@ public class ShapeShaderContainer
     public List<ShapeShader> GetAllShaders() => shaders.Values.ToList();
     public List<uint> GetAllIDs() => shaders.Keys.ToList();
 }
-
-/*
-public class Test
-{
-    public void DrawToScreen(Dimensions targetDimensions)
-    {
-        List<ScreenShader> shadersToApply = ShaderDevice != null ? ShaderDevice.GetActiveShaders() : new();
-        if (shadersToApply.Count <= 0)
-        {
-            DrawTexture(targetDimensions, BlendMode);
-            return;
-        }
-        else if (shadersToApply.Count == 1)
-        {
-            ScreenShader s = shadersToApply[0];
-            BeginShaderMode(s.GetShader());
-            DrawTexture(targetDimensions, BlendMode);
-            EndShaderMode();
-        }
-        else if (shadersToApply.Count == 2)
-        {
-            if (screenBuffers.Loaded)
-            {
-                ScreenShader s = shadersToApply[0];
-                screenBuffers.A.StartTextureMode();
-                BeginShaderMode(s.GetShader());
-                DrawTexture(GetTextureDimensions());
-                EndShaderMode();
-                screenBuffers.A.EndTextureMode();
-
-                s = shadersToApply[1];
-
-                BeginShaderMode(s.GetShader());
-                screenBuffers.A.DrawTexture(targetDimensions, BlendMode);
-                EndShaderMode();
-            }
-            
-        }
-        else
-        {
-            if (screenBuffers.Loaded)
-            {
-                ScreenShader s = shadersToApply[0];
-                shadersToApply.RemoveAt(0);
-
-                ScreenShader endshader = shadersToApply[shadersToApply.Count - 1];
-                shadersToApply.RemoveAt(shadersToApply.Count - 1);
-
-                //draw game texture to first screenbuffer and first shader is already applied
-                screenBuffers.A.StartTextureMode();
-                BeginShaderMode(s.GetShader());
-                DrawTexture(GetTextureDimensions());
-                EndShaderMode();
-                screenBuffers.A.EndTextureMode();
-
-                int currentIndex = 0;
-                int nextIndex = 0;
-                for (int i = 0; i < shadersToApply.Count; i++)
-                {
-                    s = shadersToApply[i];
-                    nextIndex = currentIndex == 0 ? 1 : 0;
-                    ScreenBuffer current = screenBuffers.GetByIndex(currentIndex);
-                    ScreenBuffer next = screenBuffers.GetByIndex(nextIndex);
-                    next.StartTextureMode();
-                    BeginShaderMode(s.GetShader());
-                    current.DrawTexture(GetTextureDimensions());
-                    EndShaderMode();
-                    next.EndTextureMode();
-                    currentIndex = currentIndex == 0 ? 1 : 0;
-                }
-
-                BeginShaderMode(endshader.GetShader());
-                screenBuffers.GetByIndex(nextIndex).DrawTexture(targetDimensions, BlendMode);
-                EndShaderMode();
-            }
-            
-        }
-    }
-}
-*/
-
-
-
 internal sealed class ShapeFlash
 {
     private float maxDuration = 0.0f;
@@ -229,10 +154,7 @@ internal sealed class ShapeFlash
 }
 internal sealed class ShapeTexture
 {
-    public static readonly float MinResolutionFactor = 0.25f;
-    public static readonly float MaxResolutionFactor = 4f;
-    
-    public bool Valid { get; private set; } = false;
+    public bool Loaded { get; private set; } = false;
     public RenderTexture RenderTexture { get; private set; } = new();
     public int Width { get; private set; } = 0;
     public int Height { get; private set; } = 0;
@@ -241,21 +163,19 @@ internal sealed class ShapeTexture
 
     public void Load(Dimensions dimensions)
     {
-        if (Valid) return;
-        Valid = true;
+        if (Loaded) return;
+        Loaded = true;
         SetTexture(dimensions);
     }
-
     public void Unload()
     {
-        if (!Valid) return;
-        Valid = false;
+        if (!Loaded) return;
+        Loaded = false;
         UnloadRenderTexture(RenderTexture);
     }
-    
-    public void Update(Dimensions dimensions)
+    public void UpdateDimensions(Dimensions dimensions)
     {
-        if (!Valid) return;
+        if (!Loaded) return;
 
         if (Width == dimensions.Width && Height == dimensions.Height) return;
         
@@ -288,6 +208,7 @@ internal sealed class ShapeTexture
         Height = dimensions.Height;
         RenderTexture = LoadRenderTexture(Width, Height);
     }
+    
     //public void DrawTexture(int targetWidth, int targetHeight)
     //{
         //var destRec = new Rectangle
@@ -593,6 +514,8 @@ public sealed class ShapeCamera
     private static float Wrap(float value, float min, float max) => value - (max - min) * MathF.Floor((float) (( value -  min) / ( max -  min)));
     
 }
+
+
 public class ShapeLoop
 {
     public static readonly string CURRENT_DIRECTORY = AppDomain.CurrentDomain.BaseDirectory; // Environment.CurrentDirectory;
@@ -618,8 +541,11 @@ public class ShapeLoop
     public string[] LaunchParams { get; protected set; } = Array.Empty<string>();
 
     
+    public readonly ShaderContainer ScreenShaders = new();
     private readonly ShapeTexture gameTexture = new();
-
+    
+    private readonly ShapeTexture screenShaderBuffer = new();
+    
     private readonly ShapeCamera basicCamera = new ShapeCamera();
     private ShapeCamera curCamera;
     public ShapeCamera Camera
@@ -653,10 +579,10 @@ public class ShapeLoop
     public ScreenInfo UI { get; private set; } = new();
     
     public float Delta { get; private set; } = 0f;
-    
-    protected bool quit = false;
-    protected bool restart = false;
-    
+
+    private bool screenShaderAffectsUI = false;
+    private bool quit = false;
+    private bool restart = false;
     public MonitorDevice Monitor { get; private set; }
     public ICursor Cursor { get; private set; } = new NullCursor();
     public IScene CurScene { get; private set; } = new SceneEmpty();
@@ -764,13 +690,14 @@ public class ShapeLoop
 
     
     
-    public ShapeLoop(Dimensions developmentDimensions)
+    public ShapeLoop(Dimensions developmentDimensions, bool multiShaderSupport = false, bool screenShadersAffectUI = false)
     {
         #if DEBUG
         DebugMode = true;
         ReleaseMode = false;
         #endif
-        
+
+        this.screenShaderAffectsUI = screenShadersAffectUI;
         this.DevelopmentDimensions = developmentDimensions;
         InitWindow(0, 0, "");
         
@@ -801,6 +728,7 @@ public class ShapeLoop
         
         
         gameTexture.Load(CurScreenSize);
+        if (multiShaderSupport) screenShaderBuffer.Load(CurScreenSize);
     }
     public void SetupWindow(string windowName, bool undecorated, bool resizable, bool vsync = true, int fps = 60)
     {
@@ -934,7 +862,8 @@ public class ShapeLoop
             CheckWindowDimensionsChanged();
             Camera.SetSize(CurScreenSize, DevelopmentDimensions);
             Camera.Update(dt);
-            gameTexture.Update(CurScreenSize);
+            gameTexture.UpdateDimensions(CurScreenSize);
+            screenShaderBuffer.UpdateDimensions(CurScreenSize);
             
             var mousePosUI = GetMousePosition();
             var mousePosGame = Camera.ScreenToWorld(mousePosUI);
@@ -954,17 +883,36 @@ public class ShapeLoop
             DrawGame(Game);
             EndMode2D();
             
-            EndTextureMode();
-            
-            BeginDrawing();
-            ClearBackground(BackgroundColor);
-
-            gameTexture.Draw();
             foreach (var flash in shapeFlashes) screenArea.Draw(flash.GetColor());
-            
-            DrawUI(UI);
-            DrawCursor(screenArea.Size, mousePosUI);
-            EndDrawing();
+            if (screenShaderAffectsUI)
+            {
+                DrawUI(UI);
+                DrawCursor(screenArea.Size, mousePosUI);
+            }
+            EndTextureMode();
+
+            DrawToScreen(screenArea, mousePosUI);
+            // var activeScreenShaders = ScreenShaders.GetActiveShaders();
+            //
+            // BeginDrawing();
+            // ClearBackground(BackgroundColor);
+            //
+            // if (activeScreenShaders.Count > 0)
+            // {
+            //     BeginShaderMode(activeScreenShaders[0].Shader);
+            //     gameTexture.Draw();
+            //     EndShaderMode();
+            // }
+            // else
+            // {
+            //     gameTexture.Draw();
+            // }
+            //
+            // //foreach (var flash in shapeFlashes) screenArea.Draw(flash.GetColor());
+            //
+            // DrawUI(UI);
+            // DrawCursor(screenArea.Size, mousePosUI);
+            // EndDrawing();
             
             
             //CheckWindowSizeChanged();
@@ -973,10 +921,79 @@ public class ShapeLoop
             ResolveDeferred();
         }
     }
+    private void DrawToScreen(Rect screenArea, Vector2 mousePosUI)
+    {
+        var activeScreenShaders = ScreenShaders.GetActiveShaders();
+        
+        //multi shader support enabled and multiple screen shaders are active
+        if (activeScreenShaders.Count > 1 && screenShaderBuffer.Loaded)
+        {
+            int lastIndex = activeScreenShaders.Count - 1;
+            ShapeShader lastShader = activeScreenShaders[lastIndex];
+            activeScreenShaders.RemoveAt(lastIndex);
+            
+            ShapeTexture source = gameTexture;
+            ShapeTexture target = screenShaderBuffer;
+            ShapeTexture temp;
+            foreach (var shader in activeScreenShaders)
+            {
+                BeginTextureMode(target.RenderTexture);
+                ClearBackground(new(0,0,0,0));
+                BeginShaderMode(shader.Shader);
+                source.Draw();
+                EndShaderMode();
+                EndTextureMode();
+                temp = source;
+                source = target;
+                target = temp;
+            }
+            
+            BeginDrawing();
+            ClearBackground(BackgroundColor);
+
+            BeginShaderMode(lastShader.Shader);
+            target.Draw();
+            EndShaderMode();
+
+            if (!screenShaderAffectsUI)
+            {
+                DrawUI(UI);
+                DrawCursor(screenArea.Size, mousePosUI);
+            }
+            
+            EndDrawing();
+            
+        }
+        else //single shader mode or only 1 screen shader is active
+        {
+            BeginDrawing();
+            ClearBackground(BackgroundColor);
+
+            if (activeScreenShaders.Count > 0)
+            {
+                BeginShaderMode(activeScreenShaders[0].Shader);
+                gameTexture.Draw();
+                EndShaderMode();
+            }
+            else
+            {
+                gameTexture.Draw();
+            }
+            
+            if (!screenShaderAffectsUI)
+            {
+                DrawUI(UI);
+                DrawCursor(screenArea.Size, mousePosUI);
+            }
+            EndDrawing();
+            
+        }
+    }
     private void EndGameloop()
     {
         EndRun();
         UnloadContent();
+        screenShaderBuffer.Unload();
         gameTexture.Unload();
     }
     private void UpdateMonitorDevice(float dt)

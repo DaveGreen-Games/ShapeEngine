@@ -64,6 +64,10 @@ namespace Examples.Scenes
             if (IsKeyPressed(KeyboardKey.KEY_ESCAPE)) GAMELOOP.Quit();
             if (IsKeyPressed(KeyboardKey.KEY_R))
             {
+                // if (GAMELOOP.CurScene == this)
+                // {
+                //     
+                // }
                 for (int i = 0; i < examples.Count; i++)
                 {
                     examples[i].Reset();
