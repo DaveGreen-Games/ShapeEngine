@@ -419,6 +419,10 @@ public class ShapeLoop
         RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? OSPlatform.Linux :
         RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? OSPlatform.OSX :
         OSPlatform.FreeBSD;
+
+    public static bool DebugMode { get; private set; } = false;
+    public static bool ReleaseMode { get; private set; } = true;
+    
     
     public static bool IsWindows() => OS_PLATFORM == OSPlatform.Windows;
     public static bool IsLinux() => OS_PLATFORM == OSPlatform.Linux;
@@ -581,6 +585,11 @@ public class ShapeLoop
     
     public ShapeLoop(Dimensions developmentDimensions)
     {
+        #if DEBUG
+        DebugMode = true;
+        ReleaseMode = false;
+        #endif
+        
         this.DevelopmentDimensions = developmentDimensions;
         InitWindow(0, 0, "");
         
