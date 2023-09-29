@@ -207,8 +207,7 @@ public sealed class ShapeCamera
     public static float MinZoomLevel = 0.1f;
     public static float MaxZoomLevel = 10f;
     
-    public float CAMERA_SHAKE_INTENSITY = 1.0f;
-    internal float effectIntensity = 1f;
+    public float Intensity = 1.0f;
 
     private const int ShakeX = 0;
     private const int ShakeY = 1;
@@ -389,16 +388,15 @@ public sealed class ShapeCamera
     
     public void Shake(float duration, Vector2 strength, float zoomStrength = 0f, float rotStrength = 0f, float smoothness = 0.75f)
     {
-        float intensity = CAMERA_SHAKE_INTENSITY * effectIntensity;
-        if (intensity <= 0) return;
+        if (Intensity <= 0) return;
         shake.Start
         (
             duration,
             smoothness,
-            strength.X * intensity,
-            strength.Y * intensity,
-            zoomStrength * intensity,
-            rotStrength * intensity
+            strength.X * Intensity,
+            strength.Y * Intensity,
+            zoomStrength * Intensity,
+            rotStrength * Intensity
         );
     }
     public void StopShake() { shake.Stop(); }
@@ -448,7 +446,6 @@ public class ShapeLoop
             curCamera = value;
             curCamera.Activate();
             curCamera.SetSize(CurScreenSize, DevelopmentDimensions);
-            curCamera.effectIntensity = ScreenEffectIntensity;
         }
     }
 

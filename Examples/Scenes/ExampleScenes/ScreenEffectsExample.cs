@@ -5,6 +5,7 @@ using ShapeEngine.Random;
 using ShapeEngine.Screen;
 using System.Net.NetworkInformation;
 using System.Numerics;
+using ShapeEngine.UI;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -69,22 +70,115 @@ namespace Examples.Scenes.ExampleScenes
         }
     }
 
-    //TODO add ship for testing cameras follow system
+    internal class Slider
+    {
+        public float CurValue { get; private set; } = 0f;
+        public string Title { get; set; } = "";
+        private Rect background = new();
+        private Rect fill = new();
+        private Font font;
+
+        public Slider(float startValue, string title, Font font)
+        {
+            this.Title = title;
+            this.CurValue = SUtils.Clamp(startValue, 0f, 1f);
+            this.font = font;
+        }
+        
+        public void Update(float dt, Rect r, Vector2 mousePos)
+        {
+            background = r; // ui.Area.ApplyMargins(0.025f, 0.6f, 0.1f, 0.85f);
+            if (background.ContainsPoint(mousePos))
+            {
+                if (IsMouseButtonDown(MouseButton.MOUSE_BUTTON_LEFT))
+                {
+                    float intensity = background.GetWidthPointFactor(mousePos.X);
+                    CurValue = intensity;
+                    fill = background.SetSize(background.Size * new Vector2(intensity, 1f));
+                }
+                else fill = background.SetSize(background.Size * new Vector2(CurValue, 1f));
+            }
+            else fill = background.SetSize(background.Size * new Vector2(CurValue, 1f));
+        }
+        public void Draw()
+        {
+            background.Draw(DARKGRAY);
+            fill.Draw(GRAY);
+            int textValue = (int)(CurValue * 100);
+            font.DrawText($"{Title} {textValue}", background, 1f, new Vector2(0f, 0.5f), YELLOW);
+        }
+    }
     internal class Ship : ICameraFollowTarget
     {
+        public Circle Hull { get; private set; }
+        private Vector2 movementDir;
+        private float speed = 500;
+        
+        public Ship(Vector2 pos, float r)
+        {
+            Hull = new(pos, r);
+        }
+
+        public void Reset(Vector2 pos, float r)
+        {
+            Hull = new(pos, r);
+        } 
+        
+        public void Update(float dt, float cameraRotationDeg)
+        {
+            int dirX = 0;
+            int dirY = 0;
+
+            if (IsKeyDown(KeyboardKey.KEY_A))
+            {
+                dirX = -1;
+            }
+            else if (IsKeyDown(KeyboardKey.KEY_D))
+            {
+                dirX = 1;
+            }
+
+            if (IsKeyDown(KeyboardKey.KEY_W))
+            {
+                dirY = -1;
+            }
+            else if (IsKeyDown(KeyboardKey.KEY_S))
+            {
+                dirY = 1;
+            }
+            
+            if (dirX != 0 || dirY != 0)
+            {
+                movementDir = new Vector2(dirX, dirY).Normalize();
+                movementDir = movementDir.RotateDeg(-cameraRotationDeg);
+                Vector2 movement = movementDir * speed * dt;
+                Hull = new Circle(Hull.Center + movement, Hull.Radius);
+            }
+            
+        }
+        public void Draw()
+        {
+            Vector2 rightThruster = movementDir.RotateDeg(-25);
+            Vector2 leftThruster = movementDir.RotateDeg(25);
+            DrawCircleV(Hull.Center - rightThruster * Hull.Radius, Hull.Radius / 6, RED);
+            DrawCircleV(Hull.Center - leftThruster * Hull.Radius, Hull.Radius / 6, RED);
+            Hull.Draw(BLUE);
+            DrawCircleV(Hull.Center + movementDir * Hull.Radius * 0.66f, Hull.Radius * 0.33f, SKYBLUE);
+
+            Hull.DrawLines(4f, RED);
+        }
+        
         public void FollowStarted()
         {
             
         }
-
         public void FollowEnded()
         {
             
         }
-
         public Vector2 GetCameraFollowPosition()
         {
-            return new();
+            return Hull.Center;
         }
     }
     public class ScreenEffectsExample : ExampleScene
@@ -95,8 +189,13 @@ namespace Examples.Scenes.ExampleScenes
         List<Star> stars = new();
         List<Comet> comets = new();
 
-        Circle ship = new(new Vector2(0f), 30f);
-        private Ship ship2 = new();
+        private Ship ship = new(new Vector2(0f), 30f);
+
+        private Rect slider = new();
+        private Rect sliderFill = new();
+
+        private Slider intensitySlider;
+        private Slider cameraFollowSlider;
         
         private ShapeCamera camera = new ShapeCamera();
         public ScreenEffectsExample()
@@ -107,9 +206,21 @@ namespace Examples.Scenes.ExampleScenes
                 
             GenerateStars(2500);
             GenerateComets(200);
-            
+
+            camera.Follower.BoundaryDis = 45f;
+
+            intensitySlider = new(1f, "Intensity", font);
+            cameraFollowSlider = new(1f, "Camera Follow", font);
+            SetSliderValues();
         }
-        
+
+        private void SetSliderValues()
+        {
+            float intensity = intensitySlider.CurValue;
+            GAMELOOP.ScreenEffectIntensity = intensity;
+            camera.Intensity = intensity;
+            camera.Follower.FollowSmoothness = SUtils.LerpFloat(0.5f, 4f, cameraFollowSlider.CurValue);
+        }
         private void GenerateStars(int amount)
         {
             for (int i = 0; i < amount; i++)
@@ -135,7 +246,7 @@ namespace Examples.Scenes.ExampleScenes
         public override void Activate(IScene oldScene)
         {
             GAMELOOP.Camera = camera;
-            camera.Follower.SetTarget(ship2);
+            camera.Follower.SetTarget(ship);
         }
 
         public override void Deactivate()
@@ -148,8 +259,10 @@ namespace Examples.Scenes.ExampleScenes
         }
         public override void Reset()
         {
+            GAMELOOP.ScreenEffectIntensity = 1f;
             camera.Reset();
-            camera.Follower.SetTarget(ship2);
+            ship.Reset(new Vector2(0), 30f);
+            camera.Follower.SetTarget(ship);
             stars.Clear();
             comets.Clear();
             GenerateStars(2500);
@@ -160,8 +273,6 @@ namespace Examples.Scenes.ExampleScenes
         {
             base.HandleInput(dt, mousePosGame, mousePosUI);
 
-
-            HandleCameraTranslation(dt);
             HandleZoom(dt);
             HandleRotation(dt);
 
@@ -192,38 +303,38 @@ namespace Examples.Scenes.ExampleScenes
                 camera.Rotate(rotDir * rotSpeedDeg * dt);
             }
         }
-        private void HandleCameraTranslation(float dt)
-        {
-            float speed = 500;
-            int dirX = 0;
-            int dirY = 0;
-
-            if (IsKeyDown(KeyboardKey.KEY_A))
-            {
-                dirX = -1;
-            }
-            else if (IsKeyDown(KeyboardKey.KEY_D))
-            {
-                dirX = 1;
-            }
-
-            if (IsKeyDown(KeyboardKey.KEY_W))
-            {
-                dirY = -1;
-            }
-            else if (IsKeyDown(KeyboardKey.KEY_S))
-            {
-                dirY = 1;
-            }
-            if (dirX != 0 || dirY != 0)
-            {
-                movementDir = new Vector2(dirX, dirY).Normalize();
-                movementDir = movementDir.RotateDeg(-camera.RotationDeg);
-                Vector2 movement = movementDir * speed * dt;
-                camera.Position += movement;
-                //camera.Translation += movement;
-            }
-        }
+        // private void HandleCameraTranslation(float dt)
+        // {
+        //     float speed = 500;
+        //     int dirX = 0;
+        //     int dirY = 0;
+        //
+        //     if (IsKeyDown(KeyboardKey.KEY_A))
+        //     {
+        //         dirX = -1;
+        //     }
+        //     else if (IsKeyDown(KeyboardKey.KEY_D))
+        //     {
+        //         dirX = 1;
+        //     }
+        //
+        //     if (IsKeyDown(KeyboardKey.KEY_W))
+        //     {
+        //         dirY = -1;
+        //     }
+        //     else if (IsKeyDown(KeyboardKey.KEY_S))
+        //     {
+        //         dirY = 1;
+        //     }
+        //     if (dirX != 0 || dirY != 0)
+        //     {
+        //         movementDir = new Vector2(dirX, dirY).Normalize();
+        //         movementDir = movementDir.RotateDeg(-camera.RotationDeg);
+        //         Vector2 movement = movementDir * speed * dt;
+        //         camera.Position += movement;
+        //         //camera.Translation += movement;
+        //     }
+        // }
         private void ShakeCamera()
         {
             camera.Shake(SRNG.randF(0.8f, 2f), new Vector2(100, 100), 0, 25, 0.75f);
@@ -232,12 +343,18 @@ namespace Examples.Scenes.ExampleScenes
         {
             base.Update(dt, game, ui);
 
+            intensitySlider.Update(dt, ui.Area.ApplyMargins(0.025f, 0.6f, 0.1f, 0.85f), ui.MousePos);
+            cameraFollowSlider.Update(dt, ui.Area.ApplyMargins(0.025f, 0.6f, 0.16f, 0.79f), ui.MousePos);
+            SetSliderValues();
+            
+            ship.Update(dt, camera.RotationDeg);
+            
             for (int i = comets.Count - 1; i >= 0; i--)
             {
                 Comet comet = comets[i];
                 comet.Update(dt, universe);
 
-                if (comet.CheckCollision(ship))
+                if (comet.CheckCollision(ship.Hull))
                 {
                     float f = comet.GetCollisionIntensity();
                     camera.Shake(SRNG.randF(0.4f, 0.6f), new Vector2(150, 150) * f, 0, 10, 0.75f);
@@ -246,9 +363,6 @@ namespace Examples.Scenes.ExampleScenes
                     GAMELOOP.Flash(0.25f, new(255, 255, 255, 150), new(0,0,0,0));
                 }
             }
-
-            
-            ship.Center = camera.Position;
         }
 
         public override void DrawGame(ScreenInfo game)
@@ -263,15 +377,8 @@ namespace Examples.Scenes.ExampleScenes
             {
                 comet.Draw();
             }
-
-            Vector2 rightThruster = movementDir.RotateDeg(-25);
-            Vector2 leftThruster = movementDir.RotateDeg(25);
-            DrawCircleV(ship.Center - rightThruster * ship.Radius, ship.Radius / 6, RED);
-            DrawCircleV(ship.Center - leftThruster * ship.Radius, ship.Radius / 6, RED);
-            ship.Draw(BLUE);
-            DrawCircleV(ship.Center + movementDir * ship.Radius * 0.66f, ship.Radius * 0.33f, SKYBLUE);
-
-            ship.DrawLines(4f, RED);
+            
+            ship.Draw();
         }
         public override void DrawUI(ScreenInfo ui)
         {
@@ -284,8 +391,6 @@ namespace Examples.Scenes.ExampleScenes
             int y = (int)pos.Y;
             int rot = (int)camera.RotationDeg;
             int zoom = (int)(SUtils.GetFactor(camera.ZoomLevel, 0.1f, 5f) * 100f);
-            //int transX = (int)camera.Translation.X;
-            //int transY = (int)camera.Translation.Y;
             string moveText = $"[W/A/S/D] Move ({x}/{y})";
             string rotText = $"[Q/E] Rotate ({rot})";
             string scaleText = $"[Y/X] Zoom ({zoom}%)";
@@ -293,6 +398,9 @@ namespace Examples.Scenes.ExampleScenes
             string shakeText = "[Space] Shake Camera";
             string infoText = $"{moveText} | {rotText} | {scaleText} | {shakeText}";
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+            
+            intensitySlider.Draw();
+            cameraFollowSlider.Draw();
         }
 
     }

@@ -343,6 +343,51 @@ namespace ShapeEngine.Lib
         public static Rect ChangeSize(this Rect r, float amount, Vector2 alignement) { return new(r.GetPoint(alignement), new(r.Width + amount, r.Height + amount), alignement); }
         public static Rect ChangeSize(this Rect r, Vector2 amount, Vector2 alignement) { return new(r.GetPoint(alignement), r.Size + amount, alignement); }
         public static Rect Move(this Rect r, Vector2 amount) { return new( r.TopLeft + amount, r.Size, new(0f)); }
+
+        public static Rect SetSize(this Rect r, Vector2 newSize) => new(r.X, r.Y, newSize.X, newSize.Y);
+
+        /// <summary>
+        /// Returns a value between 0 - 1 for x & y axis based on where the point is within the rect.
+        /// topleft is considered (0,0) and bottomright is considered (1,1).
+        /// </summary>
+        /// <param name="r"></param>
+        /// <param name="p"></param>
+        /// <returns></returns>
+        public static Vector2 GetPointFactors(this Rect r, Vector2 p)
+        {
+            Vector2 dif = p - r.TopLeft;
+            Vector2 intensity = dif / r.Size;
+
+            float xFactor = intensity.X < 0f ? 0f : intensity.X > 1f ? 1f : intensity.X;
+            float yFactor = intensity.Y < 0f ? 0f : intensity.Y > 1f ? 1f : intensity.Y;
+            return new Vector2(xFactor, yFactor);
+        }
+        /// <summary>
+        /// Returns a value between 0 - 1 for x axis based on where the point is within the rect.
+        /// topleft is considered (0,0) and bottomright is considered (1,1).
+        /// </summary>
+        /// <param name="r"></param>
+        /// <param name="x"></param>
+        /// <returns></returns>
+        public static float GetWidthPointFactor(this Rect r, float x)
+        {
+            float dif = x - r.Left;
+            float intensity = dif / r.Width;
+            return intensity < 0f ? 0f : intensity > 1f ? 1f : intensity;
+        }
+        /// <summary>
+        /// Returns a value between 0 - 1 for y axis based on where the point is within the rect.
+        /// topleft is considered (0,0) and bottomright is considered (1,1).
+        /// </summary>
+        /// <param name="r"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public static float GetHeightPointFactor(this Rect r, float y)
+        {
+            float dif = y - r.Top;
+            float intensity = dif / r.Height;
+            return intensity < 0f ? 0f : intensity > 1f ? 1f : intensity;
+        }
         public static Rect Enlarge(this Rect r, Vector2 p)
         {
             Vector2 tl = new
