@@ -7,6 +7,188 @@ using ShapeEngine.Timing;
 
 namespace ShapeEngine.Core;
 
+public class ShapeShader
+{
+    public Shader Shader { get; private set; }
+    public bool Enabled { get; set; }
+    public uint ID { get; private set; }
+    public int Order { get; set; }
+    public bool Loaded { get; private set; }
+    
+    public ShapeShader(Shader shader, bool enabled = true, int order = 0)
+    {
+        this.Shader = shader;
+        this.Enabled = enabled;
+        this.ID = SID.NextID;
+        this.Order = order;
+        this.Loaded = true;
+    }
+
+    public bool Unload()
+    {
+        if (!Loaded) return false;
+        Loaded = false;
+        UnloadShader(Shader);
+        return true;
+    }
+    
+    public static void SetValueFloat(Shader shader, string propertyName, float value)
+    {
+        int valueLocation = GetShaderLocation(shader, propertyName);
+        SetShaderValue(shader, valueLocation, value, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
+    }
+    public static void SetValueVec(Shader shader, string propertyName, float[] values, ShaderUniformDataType dataType)
+    {
+        int valueLocation = GetShaderLocation(shader, propertyName);
+        SetShaderValue(shader, valueLocation, values, dataType);
+    }
+    public static void SetValueVector2(Shader shader, string propertyName, float v1, float v2)
+    {
+        int valueLocation = GetShaderLocation(shader, propertyName);
+        SetShaderValue(shader, valueLocation, new float[] { v1, v2 }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
+    }
+    public static void SetValueVector3(Shader shader, string propertyName, float v1, float v2, float v3)
+    {
+        int valueLocation = GetShaderLocation(shader, propertyName);
+        SetShaderValue(shader, valueLocation, new float[] { v1, v2, v3 }, ShaderUniformDataType.SHADER_UNIFORM_VEC3);
+    }
+    public static void SetValueVector4(Shader shader, string propertyName, float v1, float v2, float v3, float v4)
+    {
+        int valueLocation = GetShaderLocation(shader, propertyName);
+        SetShaderValue(shader, valueLocation, new float[] { v1, v2, v3, v4 }, ShaderUniformDataType.SHADER_UNIFORM_VEC4);
+    }
+    public static void SetValueVector2(Shader shader, string propertyName, Vector2 vec)
+    {
+        int valueLocation = GetShaderLocation(shader, propertyName);
+        SetShaderValue(shader, valueLocation, new float[] { vec.X, vec.Y}, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
+    }
+    public static void SetValueColor(Shader shader, string propertyName, Raylib_CsLo.Color color)
+    {
+        int valueLocation = GetShaderLocation(shader, propertyName);
+        SetShaderValue(shader, valueLocation, new float[] {color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f}, ShaderUniformDataType.SHADER_UNIFORM_VEC4);
+    }
+}
+
+public class ShapeShaderContainer
+{
+    private Dictionary<uint, ShapeShader> shaders = new();
+    
+    public void AddShader(ShapeShader shader)
+    {
+        if (shaders.ContainsKey(shader.ID)) shaders[shader.ID] = shader;
+        else shaders.Add(shader.ID, shader);
+        
+    }
+    public bool RemoveShader(uint id) => shaders.Remove(id);
+    public bool RemoveShader(ShapeShader shader) => shaders.Remove(shader.ID);
+    public bool HasShaders() => shaders.Count > 0;
+    public bool HasShader(uint id) => shaders.ContainsKey(id);
+    public bool HasShader(ShapeShader shader) => shaders.ContainsKey(shader.ID);
+
+    public void Close()
+    {
+        foreach (var shader in shaders.Values)
+        {
+            shader.Unload();
+        }
+    }
+    
+    public List<ShapeShader> GetActiveShaders()
+    {
+        var shadersToApply = shaders.Values.ToList().FindAll(s => s.Enabled);
+        shadersToApply.Sort(delegate (ShapeShader a, ShapeShader b)
+        {
+            if (a.Order < b.Order) return -1;
+            else if (a.Order > b.Order) return 1;
+            else return 0;
+        });
+        return shadersToApply;
+    }
+
+    public List<ShapeShader> GetAllShaders() => shaders.Values.ToList();
+    public List<uint> GetAllIDs() => shaders.Keys.ToList();
+}
+
+/*
+public class Test
+{
+    public void DrawToScreen(Dimensions targetDimensions)
+    {
+        List<ScreenShader> shadersToApply = ShaderDevice != null ? ShaderDevice.GetActiveShaders() : new();
+        if (shadersToApply.Count <= 0)
+        {
+            DrawTexture(targetDimensions, BlendMode);
+            return;
+        }
+        else if (shadersToApply.Count == 1)
+        {
+            ScreenShader s = shadersToApply[0];
+            BeginShaderMode(s.GetShader());
+            DrawTexture(targetDimensions, BlendMode);
+            EndShaderMode();
+        }
+        else if (shadersToApply.Count == 2)
+        {
+            if (screenBuffers.Loaded)
+            {
+                ScreenShader s = shadersToApply[0];
+                screenBuffers.A.StartTextureMode();
+                BeginShaderMode(s.GetShader());
+                DrawTexture(GetTextureDimensions());
+                EndShaderMode();
+                screenBuffers.A.EndTextureMode();
+
+                s = shadersToApply[1];
+
+                BeginShaderMode(s.GetShader());
+                screenBuffers.A.DrawTexture(targetDimensions, BlendMode);
+                EndShaderMode();
+            }
+            
+        }
+        else
+        {
+            if (screenBuffers.Loaded)
+            {
+                ScreenShader s = shadersToApply[0];
+                shadersToApply.RemoveAt(0);
+
+                ScreenShader endshader = shadersToApply[shadersToApply.Count - 1];
+                shadersToApply.RemoveAt(shadersToApply.Count - 1);
+
+                //draw game texture to first screenbuffer and first shader is already applied
+                screenBuffers.A.StartTextureMode();
+                BeginShaderMode(s.GetShader());
+                DrawTexture(GetTextureDimensions());
+                EndShaderMode();
+                screenBuffers.A.EndTextureMode();
+
+                int currentIndex = 0;
+                int nextIndex = 0;
+                for (int i = 0; i < shadersToApply.Count; i++)
+                {
+                    s = shadersToApply[i];
+                    nextIndex = currentIndex == 0 ? 1 : 0;
+                    ScreenBuffer current = screenBuffers.GetByIndex(currentIndex);
+                    ScreenBuffer next = screenBuffers.GetByIndex(nextIndex);
+                    next.StartTextureMode();
+                    BeginShaderMode(s.GetShader());
+                    current.DrawTexture(GetTextureDimensions());
+                    EndShaderMode();
+                    next.EndTextureMode();
+                    currentIndex = currentIndex == 0 ? 1 : 0;
+                }
+
+                BeginShaderMode(endshader.GetShader());
+                screenBuffers.GetByIndex(nextIndex).DrawTexture(targetDimensions, BlendMode);
+                EndShaderMode();
+            }
+            
+        }
+    }
+}
+*/
+
 
 
 internal sealed class ShapeFlash
@@ -529,7 +711,6 @@ public class ShapeLoop
             CheckWindowDimensionsChanged();
         }
     }
-
     public bool Maximized
     {
         get => Raylib.IsWindowMaximized();

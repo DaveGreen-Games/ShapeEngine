@@ -380,5 +380,7 @@ namespace ShapeEngine.Screen
             int valueLocation = GetShaderLocation(shader, propertyName);
             SetShaderValue(shader, valueLocation, new float[] { color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f }, ShaderUniformDataType.SHADER_UNIFORM_VEC4);
         }
+        
     }
+    
 }
