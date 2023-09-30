@@ -5,7 +5,10 @@ using System.Numerics;
 using ShapeEngine.Lib;
 using Examples.Scenes.ExampleScenes;
 using Examples.UIElements;
+using ShapeEngine.Core.Interfaces;
+using ShapeEngine.Core.Structs;
 using ShapeEngine.Screen;
+using ShapeEngine.Core.Shapes;
 
 namespace Examples.Scenes
 {

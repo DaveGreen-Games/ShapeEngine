@@ -5,7 +5,10 @@ using ShapeEngine.Random;
 using ShapeEngine.Screen;
 using System.Net.NetworkInformation;
 using System.Numerics;
+using ShapeEngine.Core.Interfaces;
+using ShapeEngine.Core.Structs;
 using ShapeEngine.UI;
+using ShapeEngine.Core.Shapes;
 
 namespace Examples.Scenes.ExampleScenes
 {

@@ -2,6 +2,8 @@
 using System.Numerics;
 using Raylib_CsLo;
 using ShapeEngine.Core;
+using ShapeEngine.Core.Collision;
+using ShapeEngine.Core.Shapes;
 using ShapeEngine.UI;
 
 namespace ShapeEngine.Lib

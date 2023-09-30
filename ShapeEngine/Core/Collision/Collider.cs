@@ -1,8 +1,11 @@
 ﻿
 using System.Numerics;
+using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Lib;
+using ShapeEngine.Core.Shapes;
+using ShapeEngine.Core.Interfaces;
 
-namespace ShapeEngine.Core
+namespace ShapeEngine.Core.Collision
 {
     public struct Transform2D
     {

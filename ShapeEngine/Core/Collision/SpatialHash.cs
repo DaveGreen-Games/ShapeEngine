@@ -1,8 +1,9 @@
 ﻿using System.Numerics;
 using Raylib_CsLo;
+using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Lib;
-
-namespace ShapeEngine.Core
+using ShapeEngine.Core.Shapes;
+namespace ShapeEngine.Core.Collision
 {
 
     //keeps a list of all bucket ids an object is in foreach object

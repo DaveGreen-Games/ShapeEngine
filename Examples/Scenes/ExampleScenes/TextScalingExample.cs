@@ -3,7 +3,10 @@ using ShapeEngine.Lib;
 using Raylib_CsLo;
 using ShapeEngine.Core;
 using System.Numerics;
+using ShapeEngine.Core.Interfaces;
+using ShapeEngine.Core.Structs;
 using ShapeEngine.Screen;
+using ShapeEngine.Core.Shapes;
 
 namespace Examples.Scenes.ExampleScenes
 {

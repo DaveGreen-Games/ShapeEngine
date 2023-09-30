@@ -1,6 +1,7 @@
 ﻿using ShapeEngine.Screen;
 using System.Numerics;
 using ShapeEngine.Core;
+using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.Effects
 {

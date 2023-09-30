@@ -1,10 +1,9 @@
 ﻿using ShapeEngine.Lib;
-using ShapeEngine.Screen;
-using ShapeEngine.Timing;
-using System.ComponentModel.Design;
-using System.Net;
-using System.Net.NetworkInformation;
+using ShapeEngine.Core.Shapes;
 using System.Numerics;
+using ShapeEngine.Core.Collision;
+using ShapeEngine.Core.Interfaces;
+using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.Core
 {

@@ -5,7 +5,9 @@ using ShapeEngine.Lib;
 using ShapeEngine.Persistent;
 using ShapeEngine.Core;
 using Examples.Scenes;
+using ShapeEngine.Core.Structs;
 using ShapeEngine.Screen;
+using ShapeEngine.Core.Shapes;
 
 namespace Examples
 {

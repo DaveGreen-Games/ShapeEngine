@@ -1,6 +1,7 @@
 ﻿
 using ShapeEngine.Core;
 using System.Numerics;
+using ShapeEngine.Core.Interfaces;
 
 namespace ShapeEngine.Lib
 {

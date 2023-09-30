@@ -2,8 +2,7 @@
 using System.Globalization;
 using System.Numerics;
 using ShapeEngine.Lib;
-using ShapeEngine.Core;
-using static System.Net.Mime.MediaTypeNames;
+using ShapeEngine.Core.Shapes;
 
 namespace ShapeEngine.UI
 {

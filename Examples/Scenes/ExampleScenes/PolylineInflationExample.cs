@@ -5,6 +5,8 @@ using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 using System.Numerics;
+using ShapeEngine.Core.Structs;
+using ShapeEngine.Core.Shapes;
 
 namespace Examples.Scenes.ExampleScenes
 {

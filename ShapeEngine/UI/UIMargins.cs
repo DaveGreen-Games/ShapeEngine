@@ -1,4 +1,4 @@
-﻿using ShapeEngine.Core;
+﻿using ShapeEngine.Core.Shapes;
 using System.Numerics;
 
 namespace ShapeEngine.UI

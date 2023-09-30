@@ -1,9 +1,13 @@
 ﻿
 using System.Numerics;
+using ShapeEngine.Core.Collision;
+using ShapeEngine.Core.Interfaces;
+using ShapeEngine.Core.Shapes;
+using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
 using ShapeEngine.Random;
 
-namespace ShapeEngine.Core
+namespace ShapeEngine.Core.Shapes
 {
     /// <summary>
     /// Class that represents a triangle by holding three points. Points a, b, c should be in ccw order!

@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using ShapeEngine.Core;
+using ShapeEngine.Core.Shapes;
 using Clipper2Lib;
-using System.Runtime.CompilerServices;
 
 namespace ShapeEngine.Lib
 {

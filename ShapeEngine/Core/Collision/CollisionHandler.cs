@@ -1,7 +1,10 @@
 ﻿using ShapeEngine.Lib;
 using System.Numerics;
+using ShapeEngine.Core.Shapes;
+using ShapeEngine.Core.Interfaces;
+using ShapeEngine.Core.Structs;
 
-namespace ShapeEngine.Core
+namespace ShapeEngine.Core.Collision
 {
  
     public class CollisionHandler : IBounds

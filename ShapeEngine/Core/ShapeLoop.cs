@@ -5,7 +5,10 @@ using ShapeEngine.Screen;
 using Raylib_CsLo;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using ShapeEngine.Core.Interfaces;
+using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
+using ShapeEngine.Core.Shapes;
 
 namespace ShapeEngine.Core;
 

@@ -1,7 +1,7 @@
 ﻿
-using ShapeEngine.Core;
-using ShapeEngine.Lib;
+using ShapeEngine.Core.Shapes;
 using System.Numerics;
+using ShapeEngine.Lib;
 
 namespace ShapeEngine.UI
 {

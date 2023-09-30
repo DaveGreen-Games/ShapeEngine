@@ -2,6 +2,9 @@
 using System.Net.Http.Headers;
 using System.Numerics;
 using ShapeEngine.Core;
+using ShapeEngine.Core.Collision;
+using ShapeEngine.Core.Interfaces;
+using ShapeEngine.Core.Shapes;
 
 
 namespace ShapeEngine.Lib

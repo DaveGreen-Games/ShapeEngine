@@ -5,6 +5,10 @@ using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 using System.Numerics;
 using System.Resources;
+using ShapeEngine.Core.Collision;
+using ShapeEngine.Core.Interfaces;
+using ShapeEngine.Core.Structs;
+using ShapeEngine.Core.Shapes;
 
 namespace Examples.Scenes.ExampleScenes
 {

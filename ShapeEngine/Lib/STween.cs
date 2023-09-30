@@ -4,6 +4,7 @@
 using Raylib_CsLo;
 using System.Numerics;
 using ShapeEngine.Core;
+using ShapeEngine.Core.Shapes;
 
 namespace ShapeEngine.Lib
 {

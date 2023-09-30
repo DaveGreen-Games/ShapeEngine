@@ -1,8 +1,12 @@
 ﻿
 using System.Numerics;
+using ShapeEngine.Core.Collision;
+using ShapeEngine.Core.Interfaces;
+using ShapeEngine.Core.Shapes;
+using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
 
-namespace ShapeEngine.Core
+namespace ShapeEngine.Core.Shapes
 {
     public class Polyline : Points, IShape, IEquatable<Polyline>
     {

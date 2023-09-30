@@ -2,6 +2,7 @@
 using ShapeEngine.Core;
 using System.Numerics;
 using ShapeEngine.Lib;
+using ShapeEngine.Core.Shapes;
 
 namespace ShapeEngine.Timing
 {
