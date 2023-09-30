@@ -820,8 +820,9 @@ public class ShapeLoop
         }
         return false;
     }
-    private void DrawCursor(Vector2 screenSize, Vector2 pos) { if (Cursor != null) Cursor.Draw(screenSize, pos); }
 
+    public void HideCursor() => SwitchCursor(new NullCursor());
+    
     private void CalculateCurScreenSize()
     {
         if (IsWindowFullscreen())
@@ -874,6 +875,7 @@ public class ShapeLoop
             UI = new(screenArea, mousePosUI);
             
             UpdateFlashes(dt);
+            Cursor.Update(dt, UI);
             Update(dt);
 
             BeginTextureMode(gameTexture.RenderTexture);
@@ -887,7 +889,7 @@ public class ShapeLoop
             if (screenShaderAffectsUI)
             {
                 DrawUI(UI);
-                DrawCursor(screenArea.Size, mousePosUI);
+                Cursor.Draw(UI);
             }
             EndTextureMode();
 
@@ -958,7 +960,7 @@ public class ShapeLoop
             if (!screenShaderAffectsUI)
             {
                 DrawUI(UI);
-                DrawCursor(screenArea.Size, mousePosUI);
+                Cursor.Draw(UI);
             }
             
             EndDrawing();
@@ -983,7 +985,7 @@ public class ShapeLoop
             if (!screenShaderAffectsUI)
             {
                 DrawUI(UI);
-                DrawCursor(screenArea.Size, mousePosUI);
+                Cursor.Draw(UI);
             }
             EndDrawing();
             

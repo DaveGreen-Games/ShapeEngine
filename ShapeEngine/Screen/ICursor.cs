@@ -1,31 +1,32 @@
 ﻿using ShapeEngine.Lib;
 using System.Numerics;
+using ShapeEngine.Core;
 
 namespace ShapeEngine.Screen
 {
     public interface ICursor
     {
         public uint GetID();
-        public void Draw(Vector2 uiSize, Vector2 pos);
-        public void Update(float dt);
+        public void Draw(ScreenInfo ui);
+        public void Update(float dt, ScreenInfo ui);
         public void Deactivate();
         public void Activate(ICursor oldCursor);
     }
 
     public class NullCursor : ICursor 
     {
-        private uint id = SID.NextID;
+        private readonly uint id = SID.NextID;
         public NullCursor() { }
 
         public void Activate(ICursor oldCursor) { }
 
         public void Deactivate() { }
 
-        public void Draw(Vector2 uiSize, Vector2 pos) { }
+        public void Draw(ScreenInfo ui) { }
 
         public uint GetID() { return id; }
 
-        public void Update(float dt) { }
+        public void Update(float dt, ScreenInfo ui) { }
     }
 
 

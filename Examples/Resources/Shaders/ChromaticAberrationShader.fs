@@ -13,7 +13,7 @@ uniform sampler2D texture0;
 out vec4 finalColor;
 
 // NOTE: Add here your custom variables
-const vec2 amount = vec2(1.2, 1.2);
+uniform vec2 amount = vec2(1.2, 1.2);
 
 void main()
 {

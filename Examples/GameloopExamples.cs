@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Runtime.Serialization.Json;
 using Raylib_CsLo;
 using ShapeEngine.Lib;
 using ShapeEngine.Persistent;
@@ -8,7 +9,42 @@ using ShapeEngine.Screen;
 
 namespace Examples
 {
-    
+    internal class SimpleCursor : ICursor
+    {
+        public uint GetID()
+        {
+            return 0;
+        }
+
+        public void Draw(ScreenInfo ui)
+        {
+            Vector2 center = ui.MousePos;
+            float size = ui.Area.Size.Min() * 0.02f;
+            Vector2 a = center;
+            Vector2 b = center + new Vector2(0, size);
+            Vector2 c = center + new Vector2(size, size);
+            //SDrawing.DrawTriangle(a, b, c, RED);
+            Triangle cursor = new(a, b, c);
+            cursor.Draw(ExampleScene.ColorHighlight2);
+            cursor.DrawLines(1f, ExampleScene.ColorHighlight1);
+            //SDrawing.DrawCircle(center, 4, RED);
+        }
+
+        public void Update(float dt, ScreenInfo ui)
+        {
+            
+        }
+
+        public void Deactivate()
+        {
+            
+        }
+
+        public void Activate(ICursor oldCursor)
+        {
+            
+        }
+    }
     public class GameloopExamples : ShapeLoop
     {
         //public BasicCamera GameCam { get; private set; }
@@ -20,10 +56,12 @@ namespace Examples
         private MainScene? mainScene = null;
 
         private uint crtShaderID = SID.NextID;
+        private Vector2 crtCurvature = new(6, 4);
         
         public GameloopExamples() : base(new(1920, 1080), true, true)
         {
             
+            BackgroundColor = ExampleScene.ColorDark;
         }
         protected override void LoadContent()
         {
@@ -54,14 +92,18 @@ namespace Examples
             ShapeShader crtShader = new(crt, crtShaderID, true, 1);
             ShapeShader.SetValueFloat(crtShader.Shader, "renderWidth", CurScreenSize.Width);
             ShapeShader.SetValueFloat(crtShader.Shader, "renderHeight", CurScreenSize.Height);
-            ShapeShader.SetValueVector4(crtShader.Shader, "cornerColor", 1, 0, 0, 1);
-            ShapeShader.SetValueFloat(crtShader.Shader, "vignetteOpacity", 1f);
-            ShapeShader.SetValueVector2(crtShader.Shader, "curvatureAmount", 6, 4);//smaller values = bigger curvature
+            var bgColor = BackgroundColor;
+            ShapeShader.SetValueColor(crtShader.Shader, "cornerColor", bgColor);// 1, 0, 0, 1);
+            ShapeShader.SetValueFloat(crtShader.Shader, "vignetteOpacity", 0.35f);
+            ShapeShader.SetValueVector2(crtShader.Shader, "curvatureAmount", crtCurvature.X, crtCurvature.Y);//smaller values = bigger curvature
             ScreenShaders.Add(crtShader);
             
             FontDefault = GetFont(FontIDs.JetBrains);
             this.VSync = false;
             this.FrameRateLimit = 60;
+
+            Raylib.HideCursor();
+            SwitchCursor(new SimpleCursor());
         }
         protected override void UnloadContent()
         {
@@ -94,6 +136,33 @@ namespace Examples
         protected override void Update(float dt)
         {
             UpdateScene();
+
+            int speed = 2;
+            int movement = 0;
+            if (IsKeyDown(KeyboardKey.KEY_J))
+            {
+                movement = 1;
+            }
+            else if (IsKeyDown(KeyboardKey.KEY_K))
+            {
+                movement = -1;
+            }
+
+
+            if (movement != 0)
+            {
+                float change = movement * speed * dt;
+                crtCurvature = (crtCurvature + new Vector2(change)).Clamp(new Vector2(1.5f, 1f), new Vector2(12, 8));
+                
+                var crtShader = ScreenShaders.Get(crtShaderID);
+                if (crtShader != null)
+                {
+                    ShapeShader.SetValueVector2(crtShader.Shader, "curvatureAmount", crtCurvature.X, crtCurvature.Y);
+                }
+            }
+            
+            
+            
         }
 
         protected override void DrawGame(ScreenInfo game)

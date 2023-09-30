@@ -102,10 +102,10 @@ namespace Examples.Scenes.ExampleScenes
         }
         public void Draw()
         {
-            background.Draw(DARKGRAY);
-            fill.Draw(GRAY);
+            background.DrawRounded(4f, 4, ExampleScene.ColorDarkB);
+            fill.DrawRounded(4f, 4, ExampleScene.ColorMedium);
             int textValue = (int)(CurValue * 100);
-            font.DrawText($"{Title} {textValue}", background, 1f, new Vector2(0f, 0.5f), YELLOW);
+            font.DrawText($"{Title} {textValue}", background, 1f, new Vector2(0.1f, 0.5f), ExampleScene.ColorHighlight3);
         }
     }
     internal class Ship : ICameraFollowTarget

@@ -104,6 +104,22 @@ namespace ShapeEngine.Lib
             return pos - size * alignement;
         }
 
+        public static Vector2 Wrap(this Vector2 v, Vector2 min, Vector2 max)
+        {
+            return new
+            (
+                SUtils.WrapF(v.X, min.X, max.X),
+                SUtils.WrapF(v.Y, min.Y, max.Y)
+            );
+        }
+        public static Vector2 Wrap(this Vector2 v, float min, float max)
+        {
+            return new
+            (
+                SUtils.WrapF(v.X, min, max),
+                SUtils.WrapF(v.Y, min, max)
+            );
+        }
         public static float Max(this Vector2 v) { return MathF.Max(v.X, v.Y); }
         public static float Min(this Vector2 v) { return MathF.Min(v.X, v.Y); }
         public static Vector2 LerpDirection(this Vector2 from, Vector2 to, float t)
@@ -139,7 +155,7 @@ namespace ShapeEngine.Lib
         public static Vector2 Min(this Vector2 v1, Vector2 v2) { return Vector2.Min(v1, v2); }
         public static Vector2 Max(this Vector2 v1, Vector2 v2) { return Vector2.Max(v1, v2); }
         public static Vector2 Clamp(this Vector2 v, Vector2 min, Vector2 max) { return Vector2.Clamp(v, min, max); }
-        
+        public static Vector2 Clamp(this Vector2 v, float min, float max) { return Vector2.Clamp(v, new(min), new(max)); }
         //return value / value.Length(); // RayMath.Vector2Normalize(v); }//return Vector2.Normalize(v); } //Vector2 normalize returns NaN sometimes???
         public static Vector2 Normalize(this Vector2 v) 
         {

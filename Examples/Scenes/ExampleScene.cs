@@ -11,23 +11,19 @@ namespace Examples.Scenes
     {
 
         public static Color ColorDark = SColor.HexToColor("0A131F");
+        public static Color ColorDarkB = SColor.HexToColor("#121F2B");
         public static Color ColorMedium = SColor.HexToColor("1F3847");
         public static Color ColorLight = SColor.HexToColor("B6E0E2");
         public static Color ColorHighlight1 = SColor.HexToColor("E5F6DF");
         public static Color ColorHighlight2 = SColor.HexToColor("E94957");
+        public static Color ColorHighlight3 = SColor.HexToColor("#FCA311");
+        public static Color ColorRustyRed = SColor.HexToColor("#DE3C4B");
 
 
         public string Title { get; protected set; } = "Title Goes Here";
         public string Description { get; protected set; } = "No Description Yet.";
 
-        protected Font titleFont;
-
-        public ExampleScene()
-        {
-            titleFont = GAMELOOP.FontDefault;
-            GAMELOOP.BackgroundColor = ColorDark;
-
-        }
+        protected Font titleFont = GAMELOOP.FontDefault;
 
         public virtual void WindowSizeChanged(DimensionConversionFactors conversionFactors)
         {
