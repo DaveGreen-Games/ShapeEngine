@@ -41,7 +41,9 @@ namespace Examples.Scenes
             examples.Add(new AsteroidMiningExample());
             examples.Add(new GameObjectHandlerExample());
             examples.Add(new CameraExample());
+            examples.Add(new CameraAreaDrawExample());
             examples.Add(new ScreenEffectsExample());
+            
             examples.Add(new DelaunayExample());
             examples.Add(new BouncyCircles());
             examples.Add(new TextScalingExample());

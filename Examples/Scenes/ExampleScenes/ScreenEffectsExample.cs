@@ -3,11 +3,9 @@ using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Random;
 using ShapeEngine.Screen;
-using System.Net.NetworkInformation;
 using System.Numerics;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.UI;
 using ShapeEngine.Core.Shapes;
 
 namespace Examples.Scenes.ExampleScenes
@@ -20,6 +18,8 @@ namespace Examples.Scenes.ExampleScenes
             circle = new(pos, size);
         }
 
+        public Rect GetBoundingBox() => circle.GetBoundingBox();
+
         public void Draw()
         {
             Color color = DARKGRAY;
@@ -27,6 +27,7 @@ namespace Examples.Scenes.ExampleScenes
             else if (circle.Radius > 3f) color = WHITE;
             SDrawing.DrawCircleFast(circle.Center, circle.Radius, color);
         }
+        public void Draw(Color c) => SDrawing.DrawCircleFast(circle.Center, circle.Radius, c);
     }
     internal class Comet
     {

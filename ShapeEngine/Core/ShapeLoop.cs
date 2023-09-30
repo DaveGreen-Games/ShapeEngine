@@ -628,12 +628,14 @@ public class ShapeLoop
         CalculateCurScreenSize();
         if (prev != CurScreenSize)
         {
-            //TODO Matching aspect ratio
-            //if !fullscreen
-            //find matching resolution for dev aspect ratio
-            //set window size to it
-            //center window
-            //calculate cur screen size
+            //matches aspect ratio from cur screen size to development dimensions
+            // if (!Fullscreen)
+            // {
+            //     var newScreenSize = CurScreenSize.MatchAspectRatio(DevelopmentDimensions);
+            //     CurScreenSize = newScreenSize;
+            //     SetWindowSize(newScreenSize.Width, newScreenSize.Height);
+            //     CenterWindow();
+            // }
             
             
             SetConversionFactors();

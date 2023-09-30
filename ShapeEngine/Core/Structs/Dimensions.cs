@@ -23,6 +23,26 @@ public readonly struct Dimensions : IEquatable<Dimensions>, IFormattable
     public int MaxDimension => Width > Height ? Width : Height;
     public int MinDimension => Width < Height ? Width : Height;
 
+    public Dimensions MatchAspectRatio(Dimensions targetDimensions)
+    {
+        if (Width == targetDimensions.Width && Height == targetDimensions.Height) return targetDimensions;
+        
+        float fWidth = (float)targetDimensions.Width / (float)targetDimensions.Height;
+        float fHeight = (float)targetDimensions.Height / (float)targetDimensions.Width;
+
+        int w = Width;
+        int h = Height;
+
+        float newWidth = ((h * fWidth) + w) * 0.5f;
+        float newHeight = ((w * fHeight) + (h)) * 0.5f;
+
+        Dimensions adjustedDimensions = new(newWidth, newHeight);
+        return adjustedDimensions;
+    }
+    
+    
+    
+    
     public Vector2 ScaleFactor(Dimensions to) => to.ToVector2().DivideSafe(ToVector2());
     public float ScaleFactorArea(Dimensions to)
     {
