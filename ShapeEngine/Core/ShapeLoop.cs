@@ -1,3 +1,6 @@
+global using static Raylib_CsLo.Raylib;
+global using static Raylib_CsLo.RayMath;
+
 using ShapeEngine.Screen;
 using Raylib_CsLo;
 using System.Numerics;
