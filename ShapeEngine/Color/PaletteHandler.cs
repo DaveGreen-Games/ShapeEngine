@@ -135,11 +135,11 @@ namespace ShapeEngine.Color
 
         public static ColorPalette GeneratePalette(uint paletteID, int[] colors, params uint[] colorIDs)
         {
-            return new(paletteID, SColor.GeneratePalette(colors, colorIDs));
+            return new(paletteID, ShapeColor.GeneratePalette(colors, colorIDs));
         }
         public static ColorPalette GeneratePalette(uint paletteID, string[] hexColors, params uint[] colorIDs)
         {
-            return new(paletteID, SColor.GeneratePalette(hexColors, colorIDs));
+            return new(paletteID, ShapeColor.GeneratePalette(hexColors, colorIDs));
         }
 
     }

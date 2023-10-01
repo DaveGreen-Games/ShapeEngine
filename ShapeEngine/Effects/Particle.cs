@@ -10,7 +10,7 @@ namespace ShapeEngine.Effects
         public Particle(Vector2 pos, Vector2 size) : base(pos, size) { }
         public Particle(Vector2 pos, Vector2 size, float lifetime) : base(pos, size, lifetime) { }
         public Particle(Vector2 pos, Vector2 size, Vector2 vel, float lifetime) : base(pos, size, lifetime) { Vel = vel; }
-        public Particle(Vector2 pos, Vector2 size, float angleDeg, float lifetime) : base(pos, size, lifetime) { Vel = SVec.Rotate(SVec.Right(), angleDeg * SUtils.DEGTORAD); }
+        public Particle(Vector2 pos, Vector2 size, float angleDeg, float lifetime) : base(pos, size, lifetime) { Vel = ShapeVec.Rotate(ShapeVec.Right(), angleDeg * ShapeMath.DEGTORAD); }
 
     }
     

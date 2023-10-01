@@ -44,7 +44,7 @@ namespace Examples.Scenes.ExampleScenes
         string prevText = string.Empty;
 
         WordEmphasis baseEmphasis = new(ColorHighlight1);
-        WordEmphasis skill = new(SColor.HexToColor("E7A09B"), 4);
+        WordEmphasis skill = new(ShapeColor.HexToColor("E7A09B"), 4);
         WordEmphasis bleed = new(ColorHighlight2, TextEmphasisType.Line, TextEmphasisAlignement.Boxed, 10, 11, 22, 23);
         WordEmphasis numbers = new(ColorLight, 13, 14, 20, 100);
 
@@ -90,7 +90,7 @@ namespace Examples.Scenes.ExampleScenes
                 }
                 else
                 {
-                    text = SText.GetTextInput(text);
+                    text = ShapeText.GetTextInput(text);
                 }
             }
             else

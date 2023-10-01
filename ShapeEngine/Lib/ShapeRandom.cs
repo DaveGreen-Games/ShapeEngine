@@ -5,7 +5,7 @@ namespace ShapeEngine.Lib
 {
     
 
-    public static class SRNG
+    public static class ShapeRandom
     {
         //private static Random rand = new Random();
         private static RandomNumberGenerator rand = new RandomNumberGenerator();

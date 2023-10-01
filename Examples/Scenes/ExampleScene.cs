@@ -13,14 +13,14 @@ namespace Examples.Scenes
     public class ExampleScene : IScene
     {
 
-        public static Color ColorDark = SColor.HexToColor("0A131F");
-        public static Color ColorDarkB = SColor.HexToColor("#121F2B");
-        public static Color ColorMedium = SColor.HexToColor("1F3847");
-        public static Color ColorLight = SColor.HexToColor("B6E0E2");
-        public static Color ColorHighlight1 = SColor.HexToColor("E5F6DF");
-        public static Color ColorHighlight2 = SColor.HexToColor("E94957");
-        public static Color ColorHighlight3 = SColor.HexToColor("#FCA311");
-        public static Color ColorRustyRed = SColor.HexToColor("#DE3C4B");
+        public static Color ColorDark = ShapeColor.HexToColor("0A131F");
+        public static Color ColorDarkB = ShapeColor.HexToColor("#121F2B");
+        public static Color ColorMedium = ShapeColor.HexToColor("1F3847");
+        public static Color ColorLight = ShapeColor.HexToColor("B6E0E2");
+        public static Color ColorHighlight1 = ShapeColor.HexToColor("E5F6DF");
+        public static Color ColorHighlight2 = ShapeColor.HexToColor("E94957");
+        public static Color ColorHighlight3 = ShapeColor.HexToColor("#FCA311");
+        public static Color ColorRustyRed = ShapeColor.HexToColor("#DE3C4B");
 
 
         public string Title { get; protected set; } = "Title Goes Here";

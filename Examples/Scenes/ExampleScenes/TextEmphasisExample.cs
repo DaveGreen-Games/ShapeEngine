@@ -106,7 +106,7 @@ namespace Examples.Scenes.ExampleScenes
             if (timer >= interval)
             {
                 timer = 0f;
-                percentage = SRNG.randI(10, 90);
+                percentage = ShapeRandom.randI(10, 90);
             }
 
             if (draggingTopLeft || draggingBottomRight)
@@ -131,7 +131,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             base.DrawUI(ui);
             Vector2 uiSize = ui.Area.Size;
-            rotDeg = SVec.AngleDeg((uiSize * 0.5f) - ui.MousePos);
+            rotDeg = ShapeVec.AngleDeg((uiSize * 0.5f) - ui.MousePos);
 
             Rect r = new(topLeft, bottomRight);
             r.DrawLines(6f, ColorMedium);

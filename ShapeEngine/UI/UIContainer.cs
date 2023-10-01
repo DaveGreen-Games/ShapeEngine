@@ -603,7 +603,7 @@ namespace ShapeEngine.UI
             for (int i = 0; i < count; i++)
             {
                 var item = elements[i];
-                var coords = SUtils.TransformIndexToCoordinates(i, rows, columns, leftToRight);
+                var coords = ShapeUtils.TransformIndexToCoordinates(i, rows, columns, leftToRight);
 
                 item.UpdateRect(startPos + hGap * coords.col + vGap * coords.row, elementSize, new(0f));
             }

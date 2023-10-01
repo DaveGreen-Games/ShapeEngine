@@ -137,8 +137,8 @@ namespace ShapeEngine.Core.Shapes
             for (int i = 0; i < 3; i++)
             {
                 Vector2 a = points[i];
-                Vector2 b = SUtils.GetItem(points, i + 1);
-                Vector2 c = SUtils.GetItem(points, i - 1);
+                Vector2 b = ShapeUtils.GetItem(points, i + 1);
+                Vector2 c = ShapeUtils.GetItem(points, i - 1);
 
                 Vector2 ba = (b - a).Normalize();
                 Vector2 ca = (c - a).Normalize();
@@ -191,8 +191,8 @@ namespace ShapeEngine.Core.Shapes
 
             for (int i = 0; i < pointCount; i++)
             {
-                float f1 = SRNG.randF();
-                float f2 = SRNG.randF();
+                float f1 = ShapeRandom.randF();
+                float f2 = ShapeRandom.randF();
                 Vector2 randPoint = GetPoint(f1, f2);
                 points.Add(randPoint);
             }
@@ -220,9 +220,9 @@ namespace ShapeEngine.Core.Shapes
         
         public readonly Triangle GetInsideTriangle(float abF, float bcF, float caF)
         {
-            Vector2 newA = SVec.Lerp(A, B, abF);
-            Vector2 newB = SVec.Lerp(B, C, bcF);
-            Vector2 newC = SVec.Lerp(C, A, caF);
+            Vector2 newA = ShapeVec.Lerp(A, B, abF);
+            Vector2 newB = ShapeVec.Lerp(B, C, bcF);
+            Vector2 newC = ShapeVec.Lerp(C, A, caF);
             return new(newA, newB, newC);
         }
 
@@ -352,7 +352,7 @@ namespace ShapeEngine.Core.Shapes
         }
 
         
-        public readonly Vector2 GetRandomPointInside() => this.GetPoint(SRNG.randF(), SRNG.randF());
+        public readonly Vector2 GetRandomPointInside() => this.GetPoint(ShapeRandom.randF(), ShapeRandom.randF());
 
         public readonly Points GetRandomPointsInside(int amount)
         {
@@ -366,7 +366,7 @@ namespace ShapeEngine.Core.Shapes
 
         public readonly Vector2 GetRandomVertex()
         {
-            var randIndex = SRNG.randI(0, 2);
+            var randIndex = ShapeRandom.randI(0, 2);
             if (randIndex == 0) return A;
             else if (randIndex == 1) return B;
             else return C;
@@ -388,9 +388,9 @@ namespace ShapeEngine.Core.Shapes
             Vector2 bp = p - b;
             Vector2 cp = p - c;
 
-            float c1 = SVec.Cross(ab, ap);
-            float c2 = SVec.Cross(bc, bp);
-            float c3 = SVec.Cross(ca, cp);
+            float c1 = ShapeVec.Cross(ab, ap);
+            float c2 = ShapeVec.Cross(bc, bp);
+            float c3 = ShapeVec.Cross(ca, cp);
 
             if (c1 < 0f && c2 < 0f && c3 < 0f)
             {

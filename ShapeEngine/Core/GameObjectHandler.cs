@@ -136,7 +136,7 @@ namespace ShapeEngine.Core
             if(from != to)
             {
                 float f = 1.0f - (timer / duration);
-                cur = STween.Tween(from, to, f, tweenType);
+                cur = ShapeTween.Tween(from, to, f, tweenType);
             }
             
             return IsFinished();

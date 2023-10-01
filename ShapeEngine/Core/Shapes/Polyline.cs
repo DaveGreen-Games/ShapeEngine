@@ -37,7 +37,7 @@ namespace ShapeEngine.Core.Shapes
         }
         public override int GetHashCode()
         {
-            return SUtils.GetHashCode(this);
+            return ShapeUtils.GetHashCode(this);
         }
         #endregion
 
@@ -171,7 +171,7 @@ namespace ShapeEngine.Core.Shapes
         public CollisionPoint GetClosestCollisionPoint(Vector2 p) => GetEdges().GetClosestCollisionPoint(p);
         public ClosestSegment GetClosestSegment(Vector2 p) => GetEdges().GetClosest(p);
 
-        public Vector2 GetRandomVertex() { return SRNG.randCollection(this); }
+        public Vector2 GetRandomVertex() { return ShapeRandom.randCollection(this); }
         public Segment GetRandomEdge() => GetEdges().GetRandomSegment();
         //public Vector2 GetRandomPoint() => GetRandomEdge().GetRandomPoint();
         //public Points GetRandomPoints(int amount) => GetEdges().GetRandomPoints(amount);
@@ -215,7 +215,7 @@ namespace ShapeEngine.Core.Shapes
 
             foreach (var p in this)
             {
-                r = SRect.Enlarge(r, p);
+                r = ShapeRect.Enlarge(r, p);
             }
             return r;
         }

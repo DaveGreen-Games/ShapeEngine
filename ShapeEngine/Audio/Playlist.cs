@@ -86,7 +86,7 @@ namespace ShapeEngine.Audio
         private uint PopNextID()
         {
             if (queue.Count <= 0) Refill();
-            int index = SRNG.randI(0, queue.Count);
+            int index = ShapeRandom.randI(0, queue.Count);
             uint nextID = queue[index];
             queue.RemoveAt(index);
             return nextID;

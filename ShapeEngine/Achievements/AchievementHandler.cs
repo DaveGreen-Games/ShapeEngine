@@ -120,18 +120,18 @@ namespace ShapeEngine.Achievements
             Rect leftTop = new(left.X, left.Y, left.Width, left.Height * 0.5f);
             Rect leftBottom = new(left.X, left.Y +left.Height * 0.5f, left.Width, left.Height * 0.5f);
             Rect right = new(rect.X + rect.Width * 0.28f, rect.Y, rect.Width * 0.72f, rect.Height);
-            SDrawing.DrawBar(rect, GetGoalPercentage(), progressColor, bgColor);
+            ShapeDrawing.DrawBar(rect, GetGoalPercentage(), progressColor, bgColor);
             if (achieved) rect.DrawLines(3f, achievedColor);// SDrawing.DrawRect(rect, new(0f), 0f, 3f, achievedColor);
             int value = stat.value;
             int max = end;
-            SDrawing.DrawText(font, String.Format("{0}", value), leftTop, 1f, new(0.5f) ,textColor);
-            SDrawing.DrawText(font, String.Format("{0}", max), leftBottom, 1f, new(0.5f),textColor);
+            ShapeDrawing.DrawText(font, String.Format("{0}", value), leftTop, 1f, new(0.5f) ,textColor);
+            ShapeDrawing.DrawText(font, String.Format("{0}", max), leftBottom, 1f, new(0.5f),textColor);
             if (hidden)
             {
-                if(achieved) SDrawing.DrawText(font, displayName, right, 1f, new(0.5f), achieved ? achievedColor : textColor);
-                else SDrawing.DrawText(font, "???", right, 1f, new(0.5f), textColor);
+                if(achieved) ShapeDrawing.DrawText(font, displayName, right, 1f, new(0.5f), achieved ? achievedColor : textColor);
+                else ShapeDrawing.DrawText(font, "???", right, 1f, new(0.5f), textColor);
             }
-            else SDrawing.DrawText(font, displayName, right, 1f, new(0.5f), achieved ? achievedColor : textColor);
+            else ShapeDrawing.DrawText(font, displayName, right, 1f, new(0.5f), achieved ? achievedColor : textColor);
         }
     }
 

@@ -13,7 +13,7 @@ namespace ShapeEngine.Random
         public WeightedItem(T item,  int weight)
         {
             this.item = item;
-            this.weight = SUtils.AbsInt(weight);
+            this.weight = ShapeMath.AbsInt(weight);
         }
     }
 
@@ -22,7 +22,7 @@ namespace ShapeEngine.Random
     {
         private System.Random rand;
 
-        /// <summary>Initializes a new instance of the <see cref="SRNG"/> class using a default seed value.</summary>
+        /// <summary>Initializes a new instance of the <see cref="ShapeRandom"/> class using a default seed value.</summary>
         public RandomNumberGenerator() { rand = new System.Random(); }
 
 
@@ -293,7 +293,7 @@ namespace ShapeEngine.Random
         #region Point
         public Vector2 randPoint(Vector2 start, Vector2 end)
         {
-            return SVec.Lerp(start, end, randF());
+            return ShapeVec.Lerp(start, end, randF());
         }
         public Vector2 randPoint(Vector2 origin)
         {

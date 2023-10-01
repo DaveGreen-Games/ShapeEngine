@@ -51,7 +51,7 @@ namespace ShapeEngine.Core.Shapes
         }
         public Rect(Vector2 topLeft, Vector2 bottomRight)
         {
-            var final = SRect.Fix(topLeft, bottomRight);
+            var final = ShapeRect.Fix(topLeft, bottomRight);
             this.X = final.topLeft.X;
             this.Y = final.topLeft.Y;
             this.Width = final.bottomRight.X - this.X;
@@ -101,10 +101,10 @@ namespace ShapeEngine.Core.Shapes
         public bool Equals(Rect other)
         {
             return 
-                SUtils.IsSimilar(X, other.X) && 
-                SUtils.IsSimilar(Y, other.Y) && 
-                SUtils.IsSimilar(Width, other.Width) && 
-                SUtils.IsSimilar(Height, other.Height);
+                ShapeUtils.IsSimilar(X, other.X) && 
+                ShapeUtils.IsSimilar(Y, other.Y) && 
+                ShapeUtils.IsSimilar(Width, other.Width) && 
+                ShapeUtils.IsSimilar(Height, other.Height);
             //return 
             //    Math.Abs(X - other.X) < GameLoop.FloatComparisonTolerance && 
             //    Math.Abs(Y - other.Y) < GameLoop.FloatComparisonTolerance && 
@@ -378,7 +378,7 @@ namespace ShapeEngine.Core.Shapes
         }
 
         
-        public readonly Vector2 GetRandomPointInside() { return new(SRNG.randF(X, X + Width), SRNG.randF(Y, Y + Height)); }
+        public readonly Vector2 GetRandomPointInside() { return new(ShapeRandom.randF(X, X + Width), ShapeRandom.randF(Y, Y + Height)); }
         
         public readonly Points GetRandomPointsInside(int amount)
         {
@@ -392,7 +392,7 @@ namespace ShapeEngine.Core.Shapes
 
         public readonly Vector2 GetRandomVertex()
         {
-            int randIndex = SRNG.randI(0, 3);
+            int randIndex = ShapeRandom.randI(0, 3);
             if (randIndex == 0) return TopLeft;
             else if (randIndex == 1) return BottomLeft;
             else if (randIndex == 2) return BottomRight;
@@ -442,14 +442,14 @@ namespace ShapeEngine.Core.Shapes
             Vector2 bTopLeft = new(b.X, b.Y);
             Vector2 bBottomRight = bTopLeft + new Vector2(b.Width, b.Height);
             return
-                SRect.OverlappingRange(aTopLeft.X, aBottomRight.X, bTopLeft.X, bBottomRight.X) &&
-                SRect.OverlappingRange(aTopLeft.Y, aBottomRight.Y, bTopLeft.Y, bBottomRight.Y);
+                ShapeRect.OverlappingRange(aTopLeft.X, aBottomRight.X, bTopLeft.X, bBottomRight.X) &&
+                ShapeRect.OverlappingRange(aTopLeft.Y, aBottomRight.Y, bTopLeft.Y, bBottomRight.Y);
         }
         public readonly bool OverlapShape(Polygon poly) { return poly.OverlapShape(this); }
         public readonly bool OverlapShape(Polyline pl) { return pl.OverlapShape(this); }
         public readonly bool OverlapRectLine(Vector2 linePos, Vector2 lineDir)
         {
-            Vector2 n = SVec.Rotate90CCW(lineDir);
+            Vector2 n = ShapeVec.Rotate90CCW(lineDir);
 
             Vector2 c1 = new(X, Y);
             Vector2 c2 = c1 + new Vector2(Width, Height);

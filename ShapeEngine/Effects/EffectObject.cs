@@ -51,7 +51,7 @@ namespace ShapeEngine.Effects
 
         public virtual Vector2 GetPosition() { return Pos; }
         public virtual Rect GetBoundingBox() { return new(Pos, Size, new(0.5f)); }
-        protected float GetTweenFloat(float start, float end) { return STween.Tween(start, end, LifetimeF, TweenType); }
+        protected float GetTweenFloat(float start, float end) { return ShapeTween.Tween(start, end, LifetimeF, TweenType); }
         protected Vector2 GetTweenVector2(Vector2 start, Vector2 end) { return start.Tween(end, LifetimeF, TweenType); }
         protected Raylib_CsLo.Color GetTweenColor(Raylib_CsLo.Color startColor, Raylib_CsLo.Color endColor) { return startColor.Tween(endColor, LifetimeF, TweenType); }
 

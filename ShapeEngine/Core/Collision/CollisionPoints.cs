@@ -120,7 +120,7 @@ namespace ShapeEngine.Core.Collision
             return new(closestPoint, minDisSquared);
         }
 
-        public override int GetHashCode() { return SUtils.GetHashCode(this); }
+        public override int GetHashCode() { return ShapeUtils.GetHashCode(this); }
         public bool Equals(CollisionPoints? other)
         {
             if (other == null) return false;

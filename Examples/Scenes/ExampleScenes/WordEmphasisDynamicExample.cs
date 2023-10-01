@@ -80,7 +80,7 @@ namespace Examples.Scenes.ExampleScenes
                 }
                 else
                 {
-                    text = SText.GetTextInput(text);
+                    text = ShapeText.GetTextInput(text);
                 }
             }
             else

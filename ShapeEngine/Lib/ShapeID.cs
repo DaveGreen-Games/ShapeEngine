@@ -1,7 +1,7 @@
 ﻿
 namespace ShapeEngine.Lib
 {
-    public static class SID
+    public static class ShapeID
     {
         private static uint idCounter = 10;
 

@@ -29,7 +29,7 @@ namespace ShapeEngine.Timing
         {
             if (duration <= 0f) return true;
             float t = Clamp(timer / duration, 0f, 1f);
-            float f = STween.Tween(t, tweenType);
+            float f = ShapeTween.Tween(t, tweenType);
 
             timer += dt;
             return func(f) || t >= 1f;
@@ -63,7 +63,7 @@ namespace ShapeEngine.Timing
             if (duration <= 0f) return true;
             float t = Clamp(timer / duration, 0f, 1f);
             timer += dt;
-            Vector2 result = STween.Tween(from, to, t, tweenType);
+            Vector2 result = ShapeTween.Tween(from, to, t, tweenType);
 
             return func(result) || t >= 1f;
         }
@@ -94,7 +94,7 @@ namespace ShapeEngine.Timing
             if (duration <= 0f) return true;
             float t = Clamp(timer / duration, 0f, 1f);
             timer += dt;
-            int result = STween.Tween(from, to, t, tweenType);
+            int result = ShapeTween.Tween(from, to, t, tweenType);
 
             return func(result) || t >= 1f;
         }
@@ -125,7 +125,7 @@ namespace ShapeEngine.Timing
             if (duration <= 0f) return true;
             float t = Clamp(timer / duration, 0f, 1f);
             timer += dt;
-            float result = STween.Tween(from, to, t, tweenType);
+            float result = ShapeTween.Tween(from, to, t, tweenType);
 
             return func(result) || t >= 1f;
         }
@@ -156,7 +156,7 @@ namespace ShapeEngine.Timing
             if (duration <= 0f) return true;
             float t = Clamp(timer / duration, 0f, 1f);
             timer += dt;
-            Raylib_CsLo.Color result = STween.Tween(from, to, t, tweenType);
+            Raylib_CsLo.Color result = ShapeTween.Tween(from, to, t, tweenType);
 
             return func(result) || t >= 1f;
         }
@@ -187,7 +187,7 @@ namespace ShapeEngine.Timing
             if (duration <= 0f) return true;
             float t = Clamp(timer / duration, 0f, 1f);
             timer += dt;
-            Rect result = STween.Tween(from, to, t, tweenType);
+            Rect result = ShapeTween.Tween(from, to, t, tweenType);
 
             return func(result) || t >= 1f;
         }

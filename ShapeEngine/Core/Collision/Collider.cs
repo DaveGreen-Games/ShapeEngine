@@ -89,12 +89,12 @@ namespace ShapeEngine.Core.Collision
         protected Vector2 accumulatedForce = new(0f);
         public Vector2 GetAccumulatedForce() { return accumulatedForce; }
         public void ClearAccumulatedForce() { accumulatedForce = new(0f); }
-        public void AddForce(Vector2 force) { accumulatedForce = SPhysics.AddForce(this, force); }
-        public void AddImpulse(Vector2 force) { SPhysics.AddImpuls(this, force); }
+        public void AddForce(Vector2 force) { accumulatedForce = ShapePhysics.AddForce(this, force); }
+        public void AddImpulse(Vector2 force) { ShapePhysics.AddImpuls(this, force); }
         public virtual void UpdateState(float dt) 
         {
             UpdatePreviousPosition(dt);
-            SPhysics.UpdateState(this, dt);
+            ShapePhysics.UpdateState(this, dt);
         }
 
         public Vector2 GetPreviousPosition()
@@ -367,7 +367,7 @@ namespace ShapeEngine.Core.Collision
         }
         public PolyCollider(Polyline pl, float inflation)
         {
-            this.shape = SClipper.Inflate(pl, inflation, Clipper2Lib.JoinType.Square, Clipper2Lib.EndType.Square, 2, 2).ToPolygons()[0];
+            this.shape = ShapeClipper.Inflate(pl, inflation, Clipper2Lib.JoinType.Square, Clipper2Lib.EndType.Square, 2, 2).ToPolygons()[0];
         }
         public void SetNewShape(Polygon newShape) { this.shape = newShape; }
         public override IShape GetShape() 

@@ -204,9 +204,9 @@ namespace ShapeEngine.Core.Shapes
         public Vector2 GetClosestVertex(Vector2 p) { return Center + (p - Center).Normalize() * Radius; }
         public Vector2 GetRandomPoint()
         {
-            float randAngle = SRNG.randAngleRad();
-            var randDir = SVec.VecFromAngleRad(randAngle);
-            return Center + randDir * SRNG.randF(0, Radius);
+            float randAngle = ShapeRandom.randAngleRad();
+            var randDir = ShapeVec.VecFromAngleRad(randAngle);
+            return Center + randDir * ShapeRandom.randF(0, Radius);
         }
         public Points GetRandomPoints(int amount)
         {
@@ -217,8 +217,8 @@ namespace ShapeEngine.Core.Shapes
             }
             return points;
         }
-        public Vector2 GetRandomVertex() { return SRNG.randCollection(GetVertices(), false); }
-        public Segment GetRandomEdge() { return SRNG.randCollection(GetEdges(), false); }
+        public Vector2 GetRandomVertex() { return ShapeRandom.randCollection(GetVertices(), false); }
+        public Segment GetRandomEdge() { return ShapeRandom.randCollection(GetEdges(), false); }
         public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
         public Points GetRandomPointsOnEdge(int amount)
         {
@@ -250,7 +250,7 @@ namespace ShapeEngine.Core.Shapes
 
             Vector2 d = s.End - s.Start;
             Vector2 lc = Center - s.Start;
-            Vector2 p = SVec.Project(lc, d);
+            Vector2 p = ShapeVec.Project(lc, d);
             Vector2 nearest = s.Start + p;
 
             return
@@ -278,7 +278,7 @@ namespace ShapeEngine.Core.Shapes
         public bool OverlapCircleLine(Vector2 linePos, Vector2 lineDir)
         {
             Vector2 lc = Center - linePos;
-            Vector2 p = SVec.Project(lc, lineDir);
+            Vector2 p = ShapeVec.Project(lc, lineDir);
             Vector2 nearest = linePos + p;
             return ContainsPoint(nearest);
         }
@@ -348,14 +348,14 @@ namespace ShapeEngine.Core.Shapes
                 // See if we have 1 or 2 solutions.
                 if (dist == radius0 + radius1)
                 {
-                    Vector2 n = SVec.Normalize(intersection1 - new Vector2(cx1, cy1));
+                    Vector2 n = ShapeVec.Normalize(intersection1 - new Vector2(cx1, cy1));
                     return new() { new(intersection1, n) };
                 }
                 else
                 {
                     Vector2 otherPos = new Vector2(cx1, cy1);
-                    Vector2 n1 = SVec.Normalize(intersection1 - otherPos);
-                    Vector2 n2 = SVec.Normalize(intersection2 - otherPos);
+                    Vector2 n1 = ShapeVec.Normalize(intersection1 - otherPos);
+                    Vector2 n2 = ShapeVec.Normalize(intersection2 - otherPos);
                     //if problems occur add that back (David)
                     //p,n
                     return new() { new(intersection1, n1), new(intersection2, n2) };
@@ -449,7 +449,7 @@ namespace ShapeEngine.Core.Shapes
             CollisionPoints points = new();
             foreach (var seg in shape)
             {
-                var intersectPoints = SGeometry.IntersectCircleSegment(Center, Radius, seg.Start, seg.End);
+                var intersectPoints = ShapeGeometry.IntersectCircleSegment(Center, Radius, seg.Start, seg.End);
                 foreach (var p in intersectPoints)
                 {
                     points.Add(new(p, seg.Normal));

@@ -33,7 +33,7 @@ namespace ShapeEngine.Screen
             if (duration <= 0f) return true;
             float t = Clamp(timer / duration, 0f, 1f);
             timer += dt;
-            cur = STween.Tween(from, to, t, tweenType);
+            cur = ShapeTween.Tween(from, to, t, tweenType);
 
             return t >= 1f;
         }
@@ -63,7 +63,7 @@ namespace ShapeEngine.Screen
             if (duration <= 0f) return true;
             float t = Clamp(timer / duration, 0f, 1f);
             timer += dt;
-            cur = STween.Tween(from, to, t, tweenType);
+            cur = ShapeTween.Tween(from, to, t, tweenType);
 
             return t >= 1f;
         }
@@ -93,7 +93,7 @@ namespace ShapeEngine.Screen
             if (duration <= 0f) return true;
             float t = Clamp(timer / duration, 0f, 1f);
             timer += dt;
-            cur = STween.Tween(from, to, t, tweenType);
+            cur = ShapeTween.Tween(from, to, t, tweenType);
 
             return t >= 1f;
         }

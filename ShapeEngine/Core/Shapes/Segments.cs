@@ -25,7 +25,7 @@ public class Segments : ShapeList<Segment>
         }
         return true;
     }
-    public override int GetHashCode() { return SUtils.GetHashCode(this); }
+    public override int GetHashCode() { return ShapeUtils.GetHashCode(this); }
     #endregion
 
     #region Public
@@ -124,7 +124,7 @@ public class Segments : ShapeList<Segment>
             var seg = this[i];
             items[i] = new(seg, (int)seg.LengthSquared);
         }
-        return SRNG.PickRandomItem(items);
+        return ShapeRandom.PickRandomItem(items);
     }
     public Vector2 GetRandomPoint() => GetRandomSegment().GetRandomPoint();
     public Points GetRandomPoints(int amount)
@@ -135,7 +135,7 @@ public class Segments : ShapeList<Segment>
             var seg = this[i];
             items[i] = new(seg, (int)seg.LengthSquared);
         }
-        var pickedSegments = SRNG.PickRandomItems(amount, items);
+        var pickedSegments = ShapeRandom.PickRandomItems(amount, items);
         var randomPoints = new Points();
         foreach (var seg in pickedSegments)
         {
@@ -217,10 +217,10 @@ public class Segments : ShapeList<Segment>
         CollisionPoints points = new();
         foreach (var seg in this)
         {
-            var intersectPoints = SGeometry.IntersectSegmentCircle(seg.Start, seg.End, c.Center, c.Radius);
+            var intersectPoints = ShapeGeometry.IntersectSegmentCircle(seg.Start, seg.End, c.Center, c.Radius);
             foreach (var p in intersectPoints)
             {
-                var n = SVec.Normalize(p - c.Center);
+                var n = ShapeVec.Normalize(p - c.Center);
                 points.Add(new(p, n));
             }
         }

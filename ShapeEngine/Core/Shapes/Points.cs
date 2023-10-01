@@ -12,7 +12,7 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
     #endregion
 
     #region Equals & HashCode
-    public override int GetHashCode() { return SUtils.GetHashCode(this); }
+    public override int GetHashCode() { return ShapeUtils.GetHashCode(this); }
     public bool Equals(Points? other)
     {
         if (other == null) return false;

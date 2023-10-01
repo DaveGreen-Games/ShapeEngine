@@ -103,7 +103,7 @@ namespace Examples.Scenes.ExampleScenes
             if (timer >= interval)
             {
                 timer = 0f;
-                percentage = SRNG.randI(10, 90);
+                percentage = ShapeRandom.randI(10, 90);
             }
 
             if (draggingTopLeft || draggingBottomRight)
@@ -223,12 +223,12 @@ namespace Examples.Scenes.ExampleScenes
         private void RotateLeft()
         {
             rotDeg -= rotDegIncrement;
-            rotDeg = SUtils.WrapAngleDeg(rotDeg);
+            rotDeg = ShapeMath.WrapAngleDeg(rotDeg);
         }
         private void RotateRight()
         {
             rotDeg += rotDegIncrement;
-            rotDeg = SUtils.WrapAngleDeg(rotDeg);
+            rotDeg = ShapeMath.WrapAngleDeg(rotDeg);
         }
     }
 }

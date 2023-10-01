@@ -15,7 +15,7 @@ namespace ShapeEngine.Audio
         private static bool initialized = false;
         public event Action<string>? PlaylistStarted;
         public event Action<string, string>? PlaylistSongStarted;
-        public static readonly uint BUS_MASTER = SID.NextID;
+        public static readonly uint BUS_MASTER = ShapeID.NextID;
 
         private Dictionary<uint, Bus> buses = new();
         private Dictionary<uint, SFX> sounds = new();
@@ -312,7 +312,7 @@ namespace ShapeEngine.Audio
             float spatialVolumeFactor = 1f;
             if(disSq > minSquared)
             {
-                spatialVolumeFactor = 1f - SUtils.LerpInverseFloat(minSquared, maxSquared, disSq);
+                spatialVolumeFactor = 1f - ShapeMath.LerpInverseFloat(minSquared, maxSquared, disSq);
             }
 
             sounds[id].Play(volume * spatialVolumeFactor, pitch);

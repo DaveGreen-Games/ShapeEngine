@@ -4,7 +4,7 @@ using ShapeEngine.Core;
 
 namespace ShapeEngine.Lib
 {
-    public static class SVec
+    public static class ShapeVec
     {
         public static bool IsSimilar(this Vector2 a, Vector2 b, float tolerance = 0.001f)
         {
@@ -60,7 +60,7 @@ namespace ShapeEngine.Lib
         }
         public static Vector2 VecFromAngleDeg(float angleDeg)
         {
-            return VecFromAngleRad(angleDeg * SUtils.DEGTORAD);
+            return VecFromAngleRad(angleDeg * ShapeMath.DEGTORAD);
         }
 
         public static Vector2 FindArithmeticMean(IEnumerable<Vector2> vertices)
@@ -108,25 +108,25 @@ namespace ShapeEngine.Lib
         {
             return new
             (
-                SUtils.WrapF(v.X, min.X, max.X),
-                SUtils.WrapF(v.Y, min.Y, max.Y)
+                ShapeMath.WrapF(v.X, min.X, max.X),
+                ShapeMath.WrapF(v.Y, min.Y, max.Y)
             );
         }
         public static Vector2 Wrap(this Vector2 v, float min, float max)
         {
             return new
             (
-                SUtils.WrapF(v.X, min, max),
-                SUtils.WrapF(v.Y, min, max)
+                ShapeMath.WrapF(v.X, min, max),
+                ShapeMath.WrapF(v.Y, min, max)
             );
         }
         public static float Max(this Vector2 v) { return MathF.Max(v.X, v.Y); }
         public static float Min(this Vector2 v) { return MathF.Min(v.X, v.Y); }
         public static Vector2 LerpDirection(this Vector2 from, Vector2 to, float t)
         {
-            float angleA = SVec.AngleRad(from);
-            float angle = SUtils.GetShortestAngleRad(angleA, SVec.AngleRad(to));
-            return SVec.Rotate(from, SUtils.LerpFloat(0, angle, t));
+            float angleA = ShapeVec.AngleRad(from);
+            float angle = ShapeMath.GetShortestAngleRad(angleA, ShapeVec.AngleRad(to));
+            return ShapeVec.Rotate(from, ShapeMath.LerpFloat(0, angle, t));
         }
         public static Vector2 Lerp(this Vector2 from, Vector2 to, float t) { return Vector2.Lerp(from, to, t); } //RayMath.Vector2Lerp(v1, v2, t);
         public static Vector2 MoveTowards(this Vector2 from, Vector2 to, float maxDistance) 
@@ -186,9 +186,9 @@ namespace ShapeEngine.Lib
 
             //return RayMath.Vector2Rotate(v, angleRad); 
         } //radians
-        public static Vector2 RotateDeg(this Vector2 v, float angleDeg) { return Rotate(v, angleDeg * SUtils.DEGTORAD); }
-        public static float AngleDeg(this Vector2 v1, Vector2 v2) { return AngleRad(v1, v2) * SUtils.RADTODEG; }
-        public static float AngleDeg(this Vector2 v) { return AngleRad(v) * SUtils.RADTODEG; }
+        public static Vector2 RotateDeg(this Vector2 v, float angleDeg) { return Rotate(v, angleDeg * ShapeMath.DEGTORAD); }
+        public static float AngleDeg(this Vector2 v1, Vector2 v2) { return AngleRad(v1, v2) * ShapeMath.RADTODEG; }
+        public static float AngleDeg(this Vector2 v) { return AngleRad(v) * ShapeMath.RADTODEG; }
         public static float AngleRad(this Vector2 v) { return AngleRad(Zero(), v); }
         public static float AngleRad(this Vector2 v1, Vector2 v2) { return MathF.Atan2(v2.Y, v2.X) - MathF.Atan2(v1.Y, v1.X); }// return RayMath.Vector2Angle(v1, v2); }
         public static float Distance(this Vector2 v1, Vector2 v2) { return Vector2.Distance(v1, v2); }// RayMath.Vector2Distance(v1, v2); }

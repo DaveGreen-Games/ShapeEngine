@@ -17,7 +17,7 @@ namespace Examples.Scenes.ExampleScenes
         public Vector2 Pos;
         public Vector2 Vel;
         public float Radius;
-        int areaLayer = SRNG.randI(1, 5);
+        int areaLayer = ShapeRandom.randI(1, 5);
         Color color = RED;
         private bool deltaFactorApplied = false;
         public int Layer { get { return areaLayer; } set { } }
@@ -63,7 +63,7 @@ namespace Examples.Scenes.ExampleScenes
                 c = PURPLE;
                 r *= 2f;
             }
-            SDrawing.DrawCircleFast(Pos, Radius, c);
+            ShapeDrawing.DrawCircleFast(Pos, Radius, c);
         }
 
         public void DrawUI(ScreenInfo ui)
@@ -162,8 +162,8 @@ namespace Examples.Scenes.ExampleScenes
             {
                 for (int i = 0; i < 2500; i++)
                 {
-                    Vector2 randPos = mousePosGame + SRNG.randVec2(0, 250);
-                    Vector2 vel = SRNG.randVec2(100, 200);
+                    Vector2 randPos = mousePosGame + ShapeRandom.randVec2(0, 250);
+                    Vector2 vel = ShapeRandom.randVec2(100, 200);
                     Circ c = new(randPos, vel, 2);
                     //circles.Add(c);
                     gameObjectHandler.AddAreaObject(c);

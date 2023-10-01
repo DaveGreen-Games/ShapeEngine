@@ -40,7 +40,7 @@ namespace ShapeEngine.Core.Shapes
             }
             return true;
         }
-        public override int GetHashCode() { return SUtils.GetHashCode(this); }
+        public override int GetHashCode() { return ShapeUtils.GetHashCode(this); }
         #endregion
 
         #region Getter Setter
@@ -126,7 +126,7 @@ namespace ShapeEngine.Core.Shapes
         }
         public Vector2 GetVertex(int index)
         {
-            return this[SUtils.WrapIndex(Count, index)];
+            return this[ShapeMath.WrapIndex(Count, index)];
         }
         /// <summary>
         /// Computes the length of this polygon's apothem. This will only be valid if
@@ -140,12 +140,12 @@ namespace ShapeEngine.Core.Shapes
         public Vector2 GetRandomPointConvex()
         {
             var edges = GetEdges();
-            var ea = SRNG.randCollection(edges, true);
-            var eb = SRNG.randCollection(edges);
+            var ea = ShapeRandom.randCollection(edges, true);
+            var eb = ShapeRandom.randCollection(edges);
 
-            var pa = ea.Start.Lerp(ea.End, SRNG.randF());
-            var pb = eb.Start.Lerp(eb.End, SRNG.randF());
-            return pa.Lerp(pb, SRNG.randF());
+            var pa = ea.Start.Lerp(ea.End, ShapeRandom.randF());
+            var pb = eb.Start.Lerp(eb.End, ShapeRandom.randF());
+            return pa.Lerp(pb, ShapeRandom.randF());
         }
 
         public void Center(Vector2 newCenter)
@@ -212,7 +212,7 @@ namespace ShapeEngine.Core.Shapes
         {
             for (int i = 0; i < Count; i++)
             {
-                this[i] = SVec.ScaleUniform(this[i], distance);
+                this[i] = ShapeVec.ScaleUniform(this[i], distance);
             }
         }
 
@@ -223,8 +223,8 @@ namespace ShapeEngine.Core.Shapes
             for (int i = 0; i < Count; i++)
             {
                 Vector2 cur = this[i];
-                Vector2 prev = SUtils.GetItem(this, i - 1);
-                Vector2 next = SUtils.GetItem(this, i + 1);
+                Vector2 prev = ShapeUtils.GetItem(this, i - 1);
+                Vector2 next = ShapeUtils.GetItem(this, i + 1);
 
                 Vector2 prevCur = prev - cur;
                 Vector2 nextCur = next - cur;
@@ -241,7 +241,7 @@ namespace ShapeEngine.Core.Shapes
             for (int i = 0; i < Count; i++)
             {
                 Vector2 cur = this[i];
-                Vector2 next = SUtils.GetItem(this, i + 1);
+                Vector2 next = ShapeUtils.GetItem(this, i + 1);
                 if ((cur - next).LengthSquared() > toleranceSquared) result.Add(cur);
             }
             Clear();
@@ -255,8 +255,8 @@ namespace ShapeEngine.Core.Shapes
             for (int i = 0; i < Count; i++)
             {
                 Vector2 cur = this[i];
-                Vector2 prev = this[SUtils.WrapIndex(Count, i - 1)];
-                Vector2 next = this[SUtils.WrapIndex(Count, i + 1)];
+                Vector2 prev = this[ShapeMath.WrapIndex(Count, i - 1)];
+                Vector2 next = this[ShapeMath.WrapIndex(Count, i + 1)];
                 Vector2 dir = (prev - cur) + (next - cur) + ((cur - centroid) * baseWeight);
                 result.Add(cur + dir * amount);
             }
@@ -267,27 +267,27 @@ namespace ShapeEngine.Core.Shapes
 
         public (Polygons newShapes, Polygons cutOuts) Cut(Polygon cutShape)
         {
-            var cutOuts = SClipper.Intersect(this, cutShape).ToPolygons(true);
-            var newShapes = SClipper.Difference(this, cutShape).ToPolygons(true);
+            var cutOuts = ShapeClipper.Intersect(this, cutShape).ToPolygons(true);
+            var newShapes = ShapeClipper.Difference(this, cutShape).ToPolygons(true);
 
             return (newShapes, cutOuts);
         }
         public (Polygons newShapes, Polygons cutOuts) CutMany(Polygons cutShapes)
         {
-            var cutOuts = SClipper.IntersectMany(this, cutShapes).ToPolygons(true);
-            var newShapes = SClipper.DifferenceMany(this, cutShapes).ToPolygons(true);
+            var cutOuts = ShapeClipper.IntersectMany(this, cutShapes).ToPolygons(true);
+            var newShapes = ShapeClipper.DifferenceMany(this, cutShapes).ToPolygons(true);
             return (newShapes, cutOuts);
         }
         public (Polygons newShapes, Polygons overlaps) Combine(Polygon other)
         {
-            var overlaps = SClipper.Intersect(this, other).ToPolygons(true);
-            var newShapes = SClipper.Union(this, other).ToPolygons(true);
+            var overlaps = ShapeClipper.Intersect(this, other).ToPolygons(true);
+            var newShapes = ShapeClipper.Union(this, other).ToPolygons(true);
             return (newShapes, overlaps);
         }
         public (Polygons newShapes, Polygons overlaps) Combine(Polygons others)
         {
-            var overlaps = SClipper.IntersectMany(this, others).ToPolygons(true);
-            var newShapes = SClipper.UnionMany(this, others).ToPolygons(true);
+            var overlaps = ShapeClipper.IntersectMany(this, others).ToPolygons(true);
+            var newShapes = ShapeClipper.UnionMany(this, others).ToPolygons(true);
             return (newShapes, overlaps);
         }
         public (Polygons newShapes, Polygons cutOuts) CutSimple(Vector2 cutPos, float minCutRadius, float maxCutRadius, int pointCount = 16)
@@ -326,10 +326,10 @@ namespace ShapeEngine.Core.Shapes
                 if (validIndices.Count <= 0) 
                     break;
 
-                int i = validIndices[SRNG.randI(0, validIndices.Count)];
+                int i = validIndices[ShapeRandom.randI(0, validIndices.Count)];
                 Vector2 a = vertices[i];
-                Vector2 b = SUtils.GetItem(vertices, i + 1);
-                Vector2 c = SUtils.GetItem(vertices, i - 1);
+                Vector2 b = ShapeUtils.GetItem(vertices, i + 1);
+                Vector2 c = ShapeUtils.GetItem(vertices, i - 1);
 
                 Vector2 ba = b - a;
                 Vector2 ca = c - a;
@@ -474,7 +474,7 @@ namespace ShapeEngine.Core.Shapes
             {
                 items.Add(new(t, (int)t.GetArea()));
             }
-            var item = SRNG.PickRandomItem(items.ToArray());
+            var item = ShapeRandom.PickRandomItem(items.ToArray());
             return item.GetRandomPointInside();
         }
         public Points GetRandomPointsInside(int amount)
@@ -488,13 +488,13 @@ namespace ShapeEngine.Core.Shapes
             }
 
 
-            List<Triangle> pickedTriangles = SRNG.PickRandomItems(amount, items);
+            List<Triangle> pickedTriangles = ShapeRandom.PickRandomItems(amount, items);
             Points randomPoints = new();
             foreach (var tri in pickedTriangles) randomPoints.Add(tri.GetRandomPointInside());
 
             return randomPoints;
         }
-        public Vector2 GetRandomVertex() { return SRNG.randCollection(this); }
+        public Vector2 GetRandomVertex() { return ShapeRandom.randCollection(this); }
         public Segment GetRandomEdge() => GetEdges().GetRandomSegment();
         public Vector2 GetRandomPointOnEdge() => GetRandomEdge().GetRandomPoint();
         public Points GetRandomPointsOnEdge(int amount) => GetEdges().GetRandomPoints(amount);
@@ -639,7 +639,7 @@ namespace ShapeEngine.Core.Shapes
         public static Triangle GetBoundingTriangle(IEnumerable<Vector2> points, float marginFactor = 1f)
         {
             var bounds = GetBoundingBox(points);
-            float dMax = SVec.Max(bounds.Size) * marginFactor; // SVec.Max(bounds.BottomRight - bounds.BottomLeft) + margin; //  Mathf.Max(bounds.maxX - bounds.minX, bounds.maxY - bounds.minY) * Margin;
+            float dMax = ShapeVec.Max(bounds.Size) * marginFactor; // SVec.Max(bounds.BottomRight - bounds.BottomLeft) + margin; //  Mathf.Max(bounds.maxX - bounds.minX, bounds.maxY - bounds.minY) * Margin;
             Vector2 center = bounds.Center;
 
             ////The float 0.866 is an arbitrary value determined for optimum supra triangle conditions.
@@ -677,7 +677,7 @@ namespace ShapeEngine.Core.Shapes
                 Vector2 start = p[i];
                 Vector2 end = p[(i + 1) % p.Count];
                 Vector2 a = end - start;
-                axis.Add(normalized ? SVec.Normalize(a) : a);
+                axis.Add(normalized ? ShapeVec.Normalize(a) : a);
             }
             return axis;
         }
@@ -697,7 +697,7 @@ namespace ShapeEngine.Core.Shapes
             Polygon shape = new();
             for (int i = 0; i < relative.Count; i++)
             {
-                shape.Add(pos + SVec.Rotate(relative[i], rotRad) * scale);
+                shape.Add(pos + ShapeVec.Rotate(relative[i], rotRad) * scale);
             }
             return shape;
         }
@@ -708,8 +708,8 @@ namespace ShapeEngine.Core.Shapes
 
             for (int i = 0; i < pointCount; i++)
             {
-                float randLength = SRNG.randF(minLength, maxLength);
-                Vector2 p = SVec.Rotate(SVec.Right(), -angleStep * i) * randLength;
+                float randLength = ShapeRandom.randF(minLength, maxLength);
+                Vector2 p = ShapeVec.Rotate(ShapeVec.Right(), -angleStep * i) * randLength;
                 points.Add(p);
             }
             return points;
@@ -722,8 +722,8 @@ namespace ShapeEngine.Core.Shapes
 
             for (int i = 0; i < pointCount; i++)
             {
-                float randLength = SRNG.randF(minLength, maxLength);
-                Vector2 p = SVec.Rotate(SVec.Right(), -angleStep * i) * randLength;
+                float randLength = ShapeRandom.randF(minLength, maxLength);
+                Vector2 p = ShapeVec.Rotate(ShapeVec.Right(), -angleStep * i) * randLength;
                 p += center;
                 points.Add(p);
             }
@@ -749,17 +749,17 @@ namespace ShapeEngine.Core.Shapes
             Vector2 cur = segment.Start;
             while (true)
             {
-                cur += dir * SRNG.randF(minSectionLength, maxSectionLength) * len;
+                cur += dir * ShapeRandom.randF(minSectionLength, maxSectionLength) * len;
                 if ((cur - segment.End).LengthSquared() < minSectionLengthSq) break;
-                poly.Add(cur + dirRight * SRNG.randF(magMin, magMax));
+                poly.Add(cur + dirRight * ShapeRandom.randF(magMin, magMax));
             }
             cur = segment.End;
             poly.Add(cur);
             while (true)
             {
-                cur -= dir * SRNG.randF(minSectionLength, maxSectionLength) * len;
+                cur -= dir * ShapeRandom.randF(minSectionLength, maxSectionLength) * len;
                 if ((cur - segment.Start).LengthSquared() < minSectionLengthSq) break;
-                poly.Add(cur + dirLeft * SRNG.randF(magMin, magMax));
+                poly.Add(cur + dirLeft * ShapeRandom.randF(magMin, magMax));
             }
             return poly;
         }
@@ -826,7 +826,7 @@ namespace ShapeEngine.Core.Shapes
             Polygon shape = new();
             for (int i = 0; i < p.Count; i++)
             {
-                shape.Add(SVec.ScaleUniform(p[i], distance));
+                shape.Add(ShapeVec.ScaleUniform(p[i], distance));
             }
             return shape;
         }
@@ -857,7 +857,7 @@ namespace ShapeEngine.Core.Shapes
 
             foreach (var p in this)
             {
-                r = SRect.Enlarge(r, p);
+                r = ShapeRect.Enlarge(r, p);
             }
             return r;
         }

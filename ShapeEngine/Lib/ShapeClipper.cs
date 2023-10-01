@@ -17,7 +17,7 @@ namespace ShapeEngine.Lib
         public Polylines(params Polyline[] polylines) { AddRange(polylines); }
         public Polylines(IEnumerable<Polyline> polylines) { AddRange(polylines); }
     }
-    public static class SClipper
+    public static class ShapeClipper
     {
         public static PathsD ClipRect(this Rect rect, Polygon poly, int precision = 2, bool convexOnly = false)
         {

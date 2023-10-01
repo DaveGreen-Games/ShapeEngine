@@ -230,7 +230,7 @@ namespace ShapeEngine.Core.Collision
                 for (int i = topLeft.x; i <= bottomRight.x; i++)
                 {
                     int id = GetCellID(i, j);
-                    if (SGeometry.Overlap(GetCellRectangle(id), shape))
+                    if (ShapeGeometry.Overlap(GetCellRectangle(id), shape))
                         hashes.Add(id);
                 }
             }

@@ -147,7 +147,7 @@ namespace ShapeEngine.Audio
                     float spatialVolumeFactor = 1f;
                     if (disSq > minSquared)
                     {
-                        spatialVolumeFactor = 1f - SUtils.LerpInverseFloat(minSquared, maxSquared, disSq);
+                        spatialVolumeFactor = 1f - ShapeMath.LerpInverseFloat(minSquared, maxSquared, disSq);
                     }
                     SetSoundVolume(Sound, BaseVolume * spatialVolumeFactor);
                 }

@@ -37,7 +37,7 @@ namespace ShapeEngine.Lib
         ELASTIC_INOUT = 27
     }
 
-    public static class STween
+    public static class ShapeTween
     {
         public static float Tween(float t, TweenType tweenType)
         {
@@ -73,11 +73,11 @@ namespace ShapeEngine.Lib
         }
         public static float Tween(float from, float to, float t, TweenType tweenType)
         {
-            return SUtils.LerpFloat(from, to, Tween(t, tweenType));
+            return ShapeMath.LerpFloat(from, to, Tween(t, tweenType));
         }
         public static int Tween(int from, int to, float t, TweenType tweenType)
         {
-            return SUtils.LerpInt(from, to, Tween(t, tweenType));
+            return ShapeMath.LerpInt(from, to, Tween(t, tweenType));
         }
         public static Vector2 Tween(this Vector2 from, Vector2 to, float t, TweenType tweenType)
         {

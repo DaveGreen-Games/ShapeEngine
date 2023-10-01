@@ -57,13 +57,13 @@ namespace ShapeEngine.Persistent
         public IDataObject? GetRandomEntry()
         {
             if (data.Count <= 0) return null;
-            int randIndex = SRNG.randI(data.Count);
+            int randIndex = ShapeRandom.randI(data.Count);
             return data.ElementAt(randIndex).Value;
         }
         public T? GetRandomEntry<T>()
         {
             if (data.Count <= 0) return default(T);
-            int randIndex = SRNG.randI(data.Count);
+            int randIndex = ShapeRandom.randI(data.Count);
             if (data.ElementAt(randIndex).Value is T t) return t;
             return default(T);
         }

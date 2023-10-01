@@ -67,7 +67,7 @@ namespace Examples.Scenes.ExampleScenes
         public void Draw()
         {
             float colF = collisionTimer > 0f ? collisionTimer / collisionTime : 0f;
-            Color color = STween.Tween(ExampleScene.ColorHighlight2, ExampleScene.ColorHighlight1, colF, TweenType.QUAD_IN);
+            Color color = ShapeTween.Tween(ExampleScene.ColorHighlight2, ExampleScene.ColorHighlight1, colF, TweenType.QUAD_IN);
 
             Collider.DrawShape(4f, color);
             lastIntersection.Draw(2f, ExampleScene.ColorLight, ExampleScene.ColorLight);
@@ -194,10 +194,10 @@ namespace Examples.Scenes.ExampleScenes
                 
                 foreach (var segment in allSegments)
                 {
-                    bool overlap = SGeometry.Overlap(shape, segment);
+                    bool overlap = ShapeGeometry.Overlap(shape, segment);
                     if (overlap)
                     {
-                        var intersection = SGeometry.Intersect(shape, segment);
+                        var intersection = ShapeGeometry.Intersect(shape, segment);
                         if (intersection.Valid)
                         {
                             bullet.Collision(new(intersection, bullet.Collider.Vel, bullet.Collider.Pos));

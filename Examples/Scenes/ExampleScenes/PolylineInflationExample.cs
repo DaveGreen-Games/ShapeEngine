@@ -146,7 +146,7 @@ namespace Examples.Scenes.ExampleScenes
 
             if (lerpOffsetDelta > 10f)
             {
-                var polygons = SClipper.Inflate(polyline, lerpOffsetDelta).ToPolygons();
+                var polygons = ShapeClipper.Inflate(polyline, lerpOffsetDelta).ToPolygons();
                 foreach (var polygon in polygons)
                 {
                     polygon.DrawLines(3f, GOLD);

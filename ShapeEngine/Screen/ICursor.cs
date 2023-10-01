@@ -16,7 +16,7 @@ namespace ShapeEngine.Screen
 
     public class NullCursor : ICursor 
     {
-        private readonly uint id = SID.NextID;
+        private readonly uint id = ShapeID.NextID;
         public NullCursor() { }
 
         public void Activate(ICursor oldCursor) { }

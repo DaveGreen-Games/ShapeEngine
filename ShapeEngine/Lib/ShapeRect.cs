@@ -4,7 +4,7 @@ using ShapeEngine.Core.Shapes;
 
 namespace ShapeEngine.Lib
 {
-    public static class SRect
+    public static class ShapeRect
     {
         #region UI
         public static List<Rect> GetAlignedRectsHorizontal(this Rect rect, int count, float gapRelative = 0f, float maxElementSizeRel = 1f)
@@ -72,7 +72,7 @@ namespace ShapeEngine.Lib
 
             for (int i = 0; i < count; i++)
             {
-                var coords = SUtils.TransformIndexToCoordinates(i, rows, columns, leftToRight);
+                var coords = ShapeUtils.TransformIndexToCoordinates(i, rows, columns, leftToRight);
                 Rect r = new(startPos + hGap * coords.col + vGap * coords.row, elementSize, new(0f));
                 rects.Add(r);
             }
@@ -290,10 +290,10 @@ namespace ShapeEngine.Lib
             return
                 new
                 (
-                    SUtils.LerpFloat(from.X, to.X, f),
-                    SUtils.LerpFloat(from.Y, to.Y, f),
-                    SUtils.LerpFloat(from.Width, to.Width, f),
-                    SUtils.LerpFloat(from.Height, to.Height, f)
+                    ShapeMath.LerpFloat(from.X, to.X, f),
+                    ShapeMath.LerpFloat(from.Y, to.Y, f),
+                    ShapeMath.LerpFloat(from.Width, to.Width, f),
+                    ShapeMath.LerpFloat(from.Height, to.Height, f)
                 );
         }
         public static Rect Align(this Rect r, Vector2 alignement) { return new(r.TopLeft, r.Size, alignement); }
@@ -407,8 +407,8 @@ namespace ShapeEngine.Lib
         {
             return new
                 (
-                    SUtils.Clamp(p.X, r.X, r.X + r.Width),
-                    SUtils.Clamp(p.Y, r.Y, r.Y + r.Height)
+                    ShapeMath.Clamp(p.X, r.X, r.X + r.Width),
+                    ShapeMath.Clamp(p.Y, r.Y, r.Y + r.Height)
                 );
         }
         /// <summary>
@@ -530,14 +530,14 @@ namespace ShapeEngine.Lib
         public static RangeFloat ProjectSegment(Vector2 aPos, Vector2 aEnd, Vector2 onto)
         {
             Vector2 unitOnto = Vector2.Normalize(onto);
-            RangeFloat r = new(SVec.Dot(unitOnto, aPos), SVec.Dot(unitOnto, aEnd));
+            RangeFloat r = new(ShapeVec.Dot(unitOnto, aPos), ShapeVec.Dot(unitOnto, aEnd));
             return r;
         }
         public static bool SegmentOnOneSide(Vector2 axisPos, Vector2 axisDir, Vector2 segmentPos, Vector2 segmentEnd)
         {
             Vector2 d1 = segmentPos - axisPos;
             Vector2 d2 = segmentEnd - axisPos;
-            Vector2 n = SVec.Rotate90CCW(axisDir);// new(-axisDir.Y, axisDir.X);
+            Vector2 n = ShapeVec.Rotate90CCW(axisDir);// new(-axisDir.Y, axisDir.X);
             return Vector2.Dot(n, d1) * Vector2.Dot(n, d2) > 0.0f;
         }
 

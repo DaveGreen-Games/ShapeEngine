@@ -57,7 +57,7 @@ namespace Examples
         private List<string> fontNames = new();
         private MainScene? mainScene = null;
 
-        private uint crtShaderID = SID.NextID;
+        private uint crtShaderID = ShapeID.NextID;
         private Vector2 crtCurvature = new(6, 4);
         
         public GameloopExamples() : base(new(1920, 1080), true, true)
@@ -182,7 +182,7 @@ namespace Examples
         public string GetFontName(int id) { return fontNames[id]; }
         public Font GetRandomFont()
         {
-            Font? randFont = SRNG.randCollection<Font>(fonts.Values.ToList(), false);
+            Font? randFont = ShapeRandom.randCollection<Font>(fonts.Values.ToList(), false);
             return randFont != null ? (Font)randFont : FontDefault;
         }
         public void GoToMainScene()

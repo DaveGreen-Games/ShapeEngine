@@ -5,7 +5,7 @@ using ShapeEngine.Core.Interfaces;
 
 namespace ShapeEngine.Lib
 {
-    public static class SPhysics
+    public static class ShapePhysics
     {
         private static void ApplyAccumulatedForce(this IPhysicsObject p, float dt)
         {
@@ -16,7 +16,7 @@ namespace ShapeEngine.Lib
         {
             Vector2 force = p.ConstAcceleration * dt;
             p.Vel += force;
-            p.Vel = SPhysics.ApplyDragForce(p.Vel, p.Drag, dt);
+            p.Vel = ShapePhysics.ApplyDragForce(p.Vel, p.Drag, dt);
         }
 
         /// <summary>
@@ -134,7 +134,7 @@ namespace ShapeEngine.Lib
             Vector2 w = center - otherPos;
             float disSq = w.LengthSquared();
             float f = 1.0f - disSq / (r * r);
-            Vector2 force = SVec.Normalize(w) * strength;// * f;
+            Vector2 force = ShapeVec.Normalize(w) * strength;// * f;
             Vector2 stop = -otherVel * friction * f;
             return force + stop;
         }

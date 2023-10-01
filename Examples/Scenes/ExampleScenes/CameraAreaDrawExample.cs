@@ -29,9 +29,9 @@ namespace Examples.Scenes.ExampleScenes
 
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
                 
-            GenerateStars(SRNG.randI(15000, 30000));
-            camera.Follower.BoundaryDis = 45f;
-            camera.Follower.FollowSpeed = 15f;
+            GenerateStars(ShapeRandom.randI(15000, 30000));
+            camera.Follower.BoundaryDis = 150f;
+            camera.Follower.FollowSpeed = 6f;
         }
 
         private void GenerateStars(int amount)
@@ -41,7 +41,7 @@ namespace Examples.Scenes.ExampleScenes
                 Vector2 pos = universe.GetRandomPointInside();
 
                 //ChanceList<float> sizes = new((45, 1.5f), (25, 2f), (15, 2.5f), (10, 3f), (3, 3.5f), (2, 4f));
-                float size = SRNG.randF(1.5f, 3f);// sizes.Next();
+                float size = ShapeRandom.randF(1.5f, 3f);// sizes.Next();
                 Star star = new(pos, size);
                 stars.Add(star);
             }
@@ -68,7 +68,7 @@ namespace Examples.Scenes.ExampleScenes
             ship.Reset(new Vector2(0), 30f);
             camera.Follower.SetTarget(ship);
             stars.Clear();
-            GenerateStars(SRNG.randI(15000, 30000));
+            GenerateStars(ShapeRandom.randI(15000, 30000));
 
         }
         protected override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)

@@ -23,8 +23,8 @@ public class FractureHelper
 
     public FractureInfo Fracture(Polygon shape, Polygon cutShape)
     {
-        var cutOuts = SClipper.Intersect(shape, cutShape).ToPolygons(true);
-        var newShapes = SClipper.Difference(shape, cutShape).ToPolygons(true);
+        var cutOuts = ShapeClipper.Intersect(shape, cutShape).ToPolygons(true);
+        var newShapes = ShapeClipper.Difference(shape, cutShape).ToPolygons(true);
         Triangulation pieces = new();
         foreach (var cutOut in cutOuts)
         {

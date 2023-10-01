@@ -13,7 +13,7 @@ public class Triangulation : ShapeList<Triangle>
     #endregion
         
     #region Equals & HashCode
-    public override int GetHashCode() { return SUtils.GetHashCode(this); }
+    public override int GetHashCode() { return ShapeUtils.GetHashCode(this); }
     public bool Equals(Triangulation? other)
     {
         if (other == null) return false;
@@ -237,7 +237,7 @@ public class Triangulation : ShapeList<Triangle>
                     chance = (triArea - minArea) / (maxArea - minArea);
                 }
 
-                if (SRNG.chance(chance)) final.Add(tri);
+                if (ShapeRandom.chance(chance)) final.Add(tri);
                 else queue.AddRange(tri.Triangulate(minArea));
             }
             queue.RemoveAt(endIndex);

@@ -16,7 +16,7 @@ public class ShapeShader
     {
         this.Shader = shader;
         this.Enabled = enabled;
-        this.ID = SID.NextID;
+        this.ID = ShapeID.NextID;
         this.Order = order;
         this.Loaded = true;
     }

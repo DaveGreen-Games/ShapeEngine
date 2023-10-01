@@ -47,7 +47,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 //Vector2 pos = SRNG.randVec2(0, 5000);
                 Vector2 pos = universe.GetRandomPointInside();
-                float size = SRNG.randF(25, 100);
+                float size = ShapeRandom.randF(25, 100);
                 Pillar p = new(pos, size);
                 pillars.Add(p);
             }
@@ -151,7 +151,7 @@ namespace Examples.Scenes.ExampleScenes
 
             float f = camera.ZoomFactor;
             DrawCircleV(camera.Position, 8f * f, BLUE);
-            SDrawing.DrawCircleLines(camera.Position, 64 * f, 2f * f, BLUE);
+            ShapeDrawing.DrawCircleLines(camera.Position, 64 * f, 2f * f, BLUE);
             Segment hor = new(camera.Position - new Vector2(3000 * f, 0), camera.Position + new Vector2(3000 * f, 0));
             hor.Draw(2f * f, BLUE);
             Segment ver = new(camera.Position - new Vector2(0, 3000 * f), camera.Position + new Vector2(0, 3000 * f));
@@ -167,7 +167,7 @@ namespace Examples.Scenes.ExampleScenes
             int x = (int)pos.X;
             int y = (int)pos.Y;
             int rot = (int)camera.BaseRotationDeg;
-            int zoom = (int)(SUtils.GetFactor(camera.ZoomLevel, 0.1f, 5f) * 100f);
+            int zoom = (int)(ShapeUtils.GetFactor(camera.ZoomLevel, 0.1f, 5f) * 100f);
             int transX = (int)camera.Position.X;
             int transY = (int)camera.Position.Y;
             string moveText = $"[W/A/S/D] Move ({x}/{y})";

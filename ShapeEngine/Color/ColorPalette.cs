@@ -41,7 +41,7 @@ namespace ShapeEngine.Color
             this.id = paletteID;
             for (int i = 0; i < ids.Length; i++)
             {
-                palette.Add(ids[i], SColor.HexToColor(hexColors[i]));
+                palette.Add(ids[i], ShapeColor.HexToColor(hexColors[i]));
             }
         }
         public ColorPalette(uint paletteID, Dictionary<uint, Raylib_CsLo.Color> palette)
@@ -70,7 +70,7 @@ namespace ShapeEngine.Color
             Dictionary<uint, Raylib_CsLo.Color> result = new();
             foreach (var key in palette.Keys)
             {
-                result.Add(key, SRNG.randCollection(colors, true));
+                result.Add(key, ShapeRandom.randCollection(colors, true));
             }
             return result;
         }

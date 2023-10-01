@@ -7,15 +7,15 @@ namespace ShapeEngine.Persistent
         public string Path { get; private set; }
         public SavegameFolder(params string[] folders)
         {
-            Path = SSavegame.ConstructPath(folders);
+            Path = ShapeSavegame.ConstructPath(folders);
         }
         public SavegameFolder(SavegameFolder root,  params string[] folders)
         {
-            Path = root.Path + SSavegame.ConstructPath(folders);
+            Path = root.Path + ShapeSavegame.ConstructPath(folders);
         }
 
-        public bool Save<T>(T data, string filename) { return SSavegame.Save(data, Path, filename); }
-        public T? Load<T>(string filename) { return SSavegame.Load<T>(Path, filename); }
+        public bool Save<T>(T data, string filename) { return ShapeSavegame.Save(data, Path, filename); }
+        public T? Load<T>(string filename) { return ShapeSavegame.Load<T>(Path, filename); }
     }
 
 

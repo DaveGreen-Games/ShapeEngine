@@ -9,7 +9,7 @@ using ShapeEngine.Core.Shapes;
 
 namespace ShapeEngine.Lib
 {
-    public static class SGeometry
+    public static class ShapeGeometry
     {
         /// <summary>
         /// Used for point overlap functions to give the point a small area (circle with very small radius)

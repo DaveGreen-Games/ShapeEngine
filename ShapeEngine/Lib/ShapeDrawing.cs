@@ -117,7 +117,7 @@ namespace ShapeEngine.Lib
     //    }
     //}
 
-    public static class SDrawing
+    public static class ShapeDrawing
     {
         /// <summary>
         /// The minimum font size SDrawing uses. Font sizes are clamped to this min size if they are lower.
@@ -218,7 +218,7 @@ namespace ShapeEngine.Lib
         {
             Segments result = new();
             Vector2 w = segment.End - segment.Start;
-            Vector2 dir = SVec.Normalize(w);
+            Vector2 dir = ShapeVec.Normalize(w);
             Vector2 n = new Vector2(dir.Y, -dir.X);
             float length = w.Length();
 
@@ -234,7 +234,7 @@ namespace ShapeEngine.Lib
             };
             while (remainingLength > 0f)
             {
-                float randSegmentLength = SRNG.randF() * segmentLength;
+                float randSegmentLength = ShapeRandom.randF() * segmentLength;
                 remainingLength -= randSegmentLength;
                 if (remainingLength <= 0f)
                 {
@@ -249,7 +249,7 @@ namespace ShapeEngine.Lib
                     break;
                 }
                 float scale = randSegmentLength / segmentLength;
-                float displacement = SRNG.randF(-maxSway, maxSway);
+                float displacement = ShapeRandom.randF(-maxSway, maxSway);
                 displacement -= (displacement - prevDisplacement) * (1 - scale);
                 cur = cur + dir * randSegmentLength;
                 Vector2 p = cur + displacement * n;
@@ -267,7 +267,7 @@ namespace ShapeEngine.Lib
         {
             Segments result = new();
             Vector2 w = segment.End - segment.Start;
-            Vector2 dir = SVec.Normalize(w);
+            Vector2 dir = ShapeVec.Normalize(w);
             Vector2 n = new Vector2(dir.Y, -dir.X);
             float length = w.Length();
 
@@ -280,7 +280,7 @@ namespace ShapeEngine.Lib
             float remainingLength = length;
             while (remainingLength > 0f)
             {
-                float randSegmentLength = SRNG.randF() * segmentLength;
+                float randSegmentLength = ShapeRandom.randF() * segmentLength;
                 remainingLength -= randSegmentLength;
                 if (remainingLength <= 0f)
                 {
@@ -295,7 +295,7 @@ namespace ShapeEngine.Lib
                     break;
                 }
                 float scale = randSegmentLength / segmentLength;
-                float displacement = SRNG.randF(-maxSway, maxSway);
+                float displacement = ShapeRandom.randF(-maxSway, maxSway);
                 displacement -= (displacement - prevDisplacement) * (1 - scale);
                 cur = cur + dir * randSegmentLength;
                 Vector2 p = cur + displacement * n;
@@ -519,23 +519,23 @@ namespace ShapeEngine.Lib
 
         public static void DrawCircleSectorLines(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, float lineThickness, Raylib_CsLo.Color color, bool closed = true, float sideLength = 8f)
         {
-            float startAngleRad = startAngleDeg * SUtils.DEGTORAD;
-            float endAngleRad = endAngleDeg * SUtils.DEGTORAD;
+            float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
+            float endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
             float anglePiece = endAngleRad - startAngleRad;
             int sides = GetCircleArcSideCount(radius, MathF.Abs(anglePiece * RAD2DEG), sideLength);
             float angleStep = anglePiece / sides;
             if (closed)
             {
-                Vector2 sectorStart = center + SVec.Rotate(SVec.Right() * radius + new Vector2(lineThickness / 2, 0), startAngleRad);
+                Vector2 sectorStart = center + ShapeVec.Rotate(ShapeVec.Right() * radius + new Vector2(lineThickness / 2, 0), startAngleRad);
                 DrawLineEx(center, sectorStart, lineThickness, color);
 
-                Vector2 sectorEnd = center + SVec.Rotate(SVec.Right() * radius + new Vector2(lineThickness / 2, 0), endAngleRad);
+                Vector2 sectorEnd = center + ShapeVec.Rotate(ShapeVec.Right() * radius + new Vector2(lineThickness / 2, 0), endAngleRad);
                 DrawLineEx(center, sectorEnd, lineThickness, color);
             }
             for (int i = 0; i < sides; i++)
             {
-                Vector2 start = center + SVec.Rotate(SVec.Right() * radius, startAngleRad + angleStep * i);
-                Vector2 end = center + SVec.Rotate(SVec.Right() * radius, startAngleRad + angleStep * (i + 1));
+                Vector2 start = center + ShapeVec.Rotate(ShapeVec.Right() * radius, startAngleRad + angleStep * i);
+                Vector2 end = center + ShapeVec.Rotate(ShapeVec.Right() * radius, startAngleRad + angleStep * (i + 1));
                 DrawLineEx(start, end, lineThickness, color);
             }
         }
@@ -545,22 +545,22 @@ namespace ShapeEngine.Lib
         }
         public static void DrawCircleSectorLines(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, int sides, float lineThickness, Raylib_CsLo.Color color, bool closed = true)
         {
-            float startAngleRad = startAngleDeg * SUtils.DEGTORAD;
-            float endAngleRad = endAngleDeg * SUtils.DEGTORAD;
+            float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
+            float endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
             float anglePiece = endAngleDeg - startAngleRad;
             float angleStep = MathF.Abs(anglePiece) / sides;
             if (closed)
             {
-                Vector2 sectorStart = center + SVec.Rotate(SVec.Right() * radius + new Vector2(lineThickness / 2, 0), startAngleRad);
+                Vector2 sectorStart = center + ShapeVec.Rotate(ShapeVec.Right() * radius + new Vector2(lineThickness / 2, 0), startAngleRad);
                 DrawLineEx(center, sectorStart, lineThickness, color);
 
-                Vector2 sectorEnd = center + SVec.Rotate(SVec.Right() * radius + new Vector2(lineThickness / 2, 0), endAngleRad);
+                Vector2 sectorEnd = center + ShapeVec.Rotate(ShapeVec.Right() * radius + new Vector2(lineThickness / 2, 0), endAngleRad);
                 DrawLineEx(center, sectorEnd, lineThickness, color);
             }
             for (int i = 0; i < sides; i++)
             {
-                Vector2 start = center + SVec.Rotate(SVec.Right() * radius, startAngleRad + angleStep * i);
-                Vector2 end = center + SVec.Rotate(SVec.Right() * radius, startAngleRad + angleStep * (i + 1));
+                Vector2 start = center + ShapeVec.Rotate(ShapeVec.Right() * radius, startAngleRad + angleStep * i);
+                Vector2 end = center + ShapeVec.Rotate(ShapeVec.Right() * radius, startAngleRad + angleStep * (i + 1));
                 DrawLineEx(start, end, lineThickness, color);
             }
         }
@@ -571,7 +571,7 @@ namespace ShapeEngine.Lib
 
         public static void DrawCircleLinesDotted(Vector2 center, float radius, int sidesPerGap, float lineThickness, Raylib_CsLo.Color color, float sideLength = 8f, int endCapSegments = 8)
         {
-            float anglePieceRad = 360 * SUtils.DEGTORAD;
+            float anglePieceRad = 360 * ShapeMath.DEGTORAD;
             int sides = GetCircleArcSideCount(radius, MathF.Abs(anglePieceRad * RAD2DEG), sideLength);
             float angleStep = anglePieceRad / sides;
 
@@ -585,8 +585,8 @@ namespace ShapeEngine.Lib
             {
                 if (!gap)
                 {
-                    Vector2 start = center + SVec.Rotate(SVec.Right() * radius, angleStep * i);
-                    Vector2 end = center + SVec.Rotate(SVec.Right() * radius, angleStep * (i + 1));
+                    Vector2 start = center + ShapeVec.Rotate(ShapeVec.Right() * radius, angleStep * i);
+                    Vector2 end = center + ShapeVec.Rotate(ShapeVec.Right() * radius, angleStep * (i + 1));
                     if (endCapSegments > 5)
                     {
                         DrawCircle(start, lineThickness * 0.5f, color, endCapSegments);
@@ -610,14 +610,14 @@ namespace ShapeEngine.Lib
             Vector2 size = new Vector2(radius, radius) * 2f;
             Vector2 aVector = alignement * size;
             Vector2 center = pos - aVector + size / 2;
-            float rotRad = angleDeg * SUtils.DEGTORAD;
+            float rotRad = angleDeg * ShapeMath.DEGTORAD;
 
             if (bgColor.a > 0) DrawCircle(center, radius, bgColor, circleSegments);
 
             Vector2 cur = new(-spacing / 2, 0f);
             while (cur.X > -maxDimension)
             {
-                Vector2 p = center + SVec.Rotate(cur, rotRad);
+                Vector2 p = center + ShapeVec.Rotate(cur, rotRad);
 
                 //float y = MathF.Sqrt((radius * radius) - (cur.X * cur.X));
                 float angle = MathF.Acos(cur.X / radius);
@@ -625,8 +625,8 @@ namespace ShapeEngine.Lib
 
                 Vector2 up = new(0f, -y);
                 Vector2 down = new(0f, y);
-                Vector2 start = p + SVec.Rotate(up, rotRad);
-                Vector2 end = p + SVec.Rotate(down, rotRad);
+                Vector2 start = p + ShapeVec.Rotate(up, rotRad);
+                Vector2 end = p + ShapeVec.Rotate(down, rotRad);
                 DrawLineEx(start, end, lineThickness, lineColor);
                 cur.X -= spacing;
             }
@@ -634,15 +634,15 @@ namespace ShapeEngine.Lib
             cur = new(spacing / 2, 0f);
             while (cur.X < maxDimension)
             {
-                Vector2 p = center + SVec.Rotate(cur, rotRad);
+                Vector2 p = center + ShapeVec.Rotate(cur, rotRad);
                 //float y = MathF.Sqrt((radius * radius) - (cur.X * cur.X));
                 float angle = MathF.Acos(cur.X / radius);
                 float y = radius * MathF.Sin(angle);
 
                 Vector2 up = new(0f, -y);
                 Vector2 down = new(0f, y);
-                Vector2 start = p + SVec.Rotate(up, rotRad);
-                Vector2 end = p + SVec.Rotate(down, rotRad);
+                Vector2 start = p + ShapeVec.Rotate(up, rotRad);
+                Vector2 end = p + ShapeVec.Rotate(down, rotRad);
                 DrawLineEx(start, end, lineThickness, lineColor);
                 cur.X += spacing;
             }
@@ -675,14 +675,14 @@ namespace ShapeEngine.Lib
             DrawCircleSectorLines(center, innerRadius, startAngleDeg, endAngleDeg, lineThickness, color, false, sideLength);
             DrawCircleSectorLines(center, outerRadius, startAngleDeg, endAngleDeg, lineThickness, color, false, sideLength);
 
-            float startAngleRad = startAngleDeg * SUtils.DEGTORAD;
-            float endAngleRad = endAngleDeg * SUtils.DEGTORAD;
-            Vector2 innerStart = center + SVec.Rotate(SVec.Right() * innerRadius - new Vector2(lineThickness / 2, 0), startAngleRad);
-            Vector2 outerStart = center + SVec.Rotate(SVec.Right() * outerRadius + new Vector2(lineThickness / 2, 0), startAngleRad);
+            float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
+            float endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
+            Vector2 innerStart = center + ShapeVec.Rotate(ShapeVec.Right() * innerRadius - new Vector2(lineThickness / 2, 0), startAngleRad);
+            Vector2 outerStart = center + ShapeVec.Rotate(ShapeVec.Right() * outerRadius + new Vector2(lineThickness / 2, 0), startAngleRad);
             DrawLineEx(innerStart, outerStart, lineThickness, color);
 
-            Vector2 innerEnd = center + SVec.Rotate(SVec.Right() * innerRadius - new Vector2(lineThickness / 2, 0), endAngleRad);
-            Vector2 outerEnd = center + SVec.Rotate(SVec.Right() * outerRadius + new Vector2(lineThickness / 2, 0), endAngleRad);
+            Vector2 innerEnd = center + ShapeVec.Rotate(ShapeVec.Right() * innerRadius - new Vector2(lineThickness / 2, 0), endAngleRad);
+            Vector2 outerEnd = center + ShapeVec.Rotate(ShapeVec.Right() * outerRadius + new Vector2(lineThickness / 2, 0), endAngleRad);
             DrawLineEx(innerEnd, outerEnd, lineThickness, color);
         }
         public static void DrawRingLines(Vector2 center, float innerRadius, float outerRadius, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, float lineThickness, Raylib_CsLo.Color color, float sideLength = 8f)
@@ -758,7 +758,7 @@ namespace ShapeEngine.Lib
         public static void DrawLines(this Rect rect, float lineThickness, Raylib_CsLo.Color color) => Raylib.DrawRectangleLinesEx(rect.Rectangle, lineThickness, color);
         public static void DrawLines(this Rect rect, Vector2 pivot, float rotDeg, float lineThickness, Raylib_CsLo.Color color, bool rounded = false)
         {
-            var rr = SRect.Rotate(rect, pivot, rotDeg);
+            var rr = ShapeRect.Rotate(rect, pivot, rotDeg);
 
             if (rounded)
             {
@@ -774,8 +774,8 @@ namespace ShapeEngine.Lib
             }
             else
             {
-                Vector2 leftExtension = SVec.Rotate(new Vector2(-lineThickness / 2, 0f), rotDeg * SUtils.DEGTORAD);
-                Vector2 rightExtension = SVec.Rotate(new Vector2(lineThickness / 2, 0f), rotDeg * SUtils.DEGTORAD);
+                Vector2 leftExtension = ShapeVec.Rotate(new Vector2(-lineThickness / 2, 0f), rotDeg * ShapeMath.DEGTORAD);
+                Vector2 rightExtension = ShapeVec.Rotate(new Vector2(lineThickness / 2, 0f), rotDeg * ShapeMath.DEGTORAD);
                
                 DrawLineEx(rr.tl + leftExtension, rr.tr + rightExtension, lineThickness, color);
                 DrawLineEx(rr.bl + leftExtension, rr.br + rightExtension, lineThickness, color);
@@ -806,7 +806,7 @@ namespace ShapeEngine.Lib
         public static void DrawSlantedCorners(this Rect rect, Vector2 pivot, float rotDeg, Raylib_CsLo.Color color, float tlCorner, float trCorner, float brCorner, float blCorner)
         {
             var poly = GetSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner);
-            poly.Rotate(pivot, rotDeg * SUtils.DEGTORAD);
+            poly.Rotate(pivot, rotDeg * ShapeMath.DEGTORAD);
             DrawPolygonConvex(poly, rect.Center, color);
             //var points = SPoly.Rotate(GetSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner), pivot, rotDeg * SUtils.DEGTORAD);
             //DrawPolygonConvex(points, rect.Center, color);
@@ -819,7 +819,7 @@ namespace ShapeEngine.Lib
         public static void DrawSlantedCornersLines(this Rect rect, Vector2 pivot, float rotDeg, float lineThickness, Raylib_CsLo.Color color, float tlCorner, float trCorner, float brCorner, float blCorner)
         {
             var poly = GetSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner);
-            poly.Rotate(pivot, rotDeg * SUtils.DEGTORAD);
+            poly.Rotate(pivot, rotDeg * ShapeMath.DEGTORAD);
             DrawLines(poly, lineThickness, color);
             //var points = SPoly.Rotate(GetSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner), pivot, rotDeg * SUtils.DEGTORAD);
             //DrawLines(points, lineThickness, color);
@@ -974,7 +974,7 @@ namespace ShapeEngine.Lib
             Vector2 size = new Vector2(rect.Width, rect.Height);
             Vector2 center = new Vector2(rect.X, rect.Y) + size / 2;
             float maxDimension = MathF.Max(size.X, size.Y);
-            float rotRad = angleDeg * SUtils.DEGTORAD;
+            float rotRad = angleDeg * ShapeMath.DEGTORAD;
 
             Vector2 tl = new(rect.X, rect.Y);
             Vector2 tr = new(rect.X + rect.Width, rect.Y);
@@ -992,11 +992,11 @@ namespace ShapeEngine.Lib
             //left half of rectangle
             while (whileCounter < whileMaxCount)
             {
-                Vector2 p = center + SVec.Rotate(cur, rotRad);
+                Vector2 p = center + ShapeVec.Rotate(cur, rotRad);
                 Vector2 up = new(0f, -maxDimension * 2);//make sure that lines are going outside of the rectangle
                 Vector2 down = new(0f, maxDimension * 2);
-                Vector2 start = p + SVec.Rotate(up, rotRad);
-                Vector2 end = p + SVec.Rotate(down, rotRad);
+                Vector2 start = p + ShapeVec.Rotate(up, rotRad);
+                Vector2 end = p + ShapeVec.Rotate(down, rotRad);
                 var seg = new Segment(start, end);
                 CollisionPoints collisionPoints = seg.IntersectShape(rect); // SGeometry.IntersectionSegmentRect(center, start, end, tl, tr, br, bl).points;
 
@@ -1011,11 +1011,11 @@ namespace ShapeEngine.Lib
             //right half of rectangle
             while (whileCounter < whileMaxCount)
             {
-                Vector2 p = center + SVec.Rotate(cur, rotRad);
+                Vector2 p = center + ShapeVec.Rotate(cur, rotRad);
                 Vector2 up = new(0f, -maxDimension * 2);
                 Vector2 down = new(0f, maxDimension * 2);
-                Vector2 start = p + SVec.Rotate(up, rotRad);
-                Vector2 end = p + SVec.Rotate(down, rotRad);
+                Vector2 start = p + ShapeVec.Rotate(up, rotRad);
+                Vector2 end = p + ShapeVec.Rotate(down, rotRad);
                 var seg = new Segment(start, end);
                 CollisionPoints collisionPoints = seg.IntersectShape(rect); //SGeometry.IntersectionSegmentRect(center, start, end, tl, tr, br, bl).points;
                 if (collisionPoints.Count >= 2) DrawLineEx(collisionPoints[0].Point, collisionPoints[1].Point, lineThickness, lineColor);
@@ -1031,7 +1031,7 @@ namespace ShapeEngine.Lib
         {
             if (cornerCircleSectors > 5)
             {
-                var corners = SRect.GetCorners(rect);
+                var corners = ShapeRect.GetCorners(rect);
                 float r = lineThickness * 0.5f;
                 DrawCircle(corners.tl, r, color, cornerCircleSectors);
                 DrawCircle(corners.tr, r, color, cornerCircleSectors);
@@ -1050,7 +1050,7 @@ namespace ShapeEngine.Lib
         {
             if (cornerCircleSegments > 5)
             {
-                var corners = SRect.GetCorners(rect);
+                var corners = ShapeRect.GetCorners(rect);
                 float r = lineThickness * 0.5f;
                 DrawCircle(corners.tl, r, color, cornerCircleSegments);
                 DrawCircle(corners.tr, r, color, cornerCircleSegments);
@@ -1118,29 +1118,29 @@ namespace ShapeEngine.Lib
             {
                 for (int i = 0; i < relativePoly.Count - 1; i++)
                 {
-                    Vector2 a = pos + SVec.Rotate(relativePoly[i] * scale, rotDeg * SUtils.DEGTORAD);
+                    Vector2 a = pos + ShapeVec.Rotate(relativePoly[i] * scale, rotDeg * ShapeMath.DEGTORAD);
                     Vector2 b = pos;
-                    Vector2 c = pos + SVec.Rotate(relativePoly[i + 1] * scale, rotDeg * SUtils.DEGTORAD);
+                    Vector2 c = pos + ShapeVec.Rotate(relativePoly[i + 1] * scale, rotDeg * ShapeMath.DEGTORAD);
                     Raylib.DrawTriangle(a, b, c, color);
                 }
 
-                Vector2 aFinal = pos + SVec.Rotate(relativePoly[relativePoly.Count - 1] * scale, rotDeg * SUtils.DEGTORAD);
+                Vector2 aFinal = pos + ShapeVec.Rotate(relativePoly[relativePoly.Count - 1] * scale, rotDeg * ShapeMath.DEGTORAD);
                 Vector2 bFinal = pos;
-                Vector2 cFinal = pos + SVec.Rotate(relativePoly[0] * scale, rotDeg * SUtils.DEGTORAD);
+                Vector2 cFinal = pos + ShapeVec.Rotate(relativePoly[0] * scale, rotDeg * ShapeMath.DEGTORAD);
                 Raylib.DrawTriangle(aFinal, bFinal, cFinal, color);
             }
             else
             {
                 for (int i = 0; i < relativePoly.Count - 1; i++)
                 {
-                    Vector2 a = pos + SVec.Rotate(relativePoly[i] * scale, rotDeg * SUtils.DEGTORAD);
-                    Vector2 b = pos + SVec.Rotate(relativePoly[i + 1] * scale, rotDeg * SUtils.DEGTORAD);
+                    Vector2 a = pos + ShapeVec.Rotate(relativePoly[i] * scale, rotDeg * ShapeMath.DEGTORAD);
+                    Vector2 b = pos + ShapeVec.Rotate(relativePoly[i + 1] * scale, rotDeg * ShapeMath.DEGTORAD);
                     Vector2 c = pos;
                     Raylib.DrawTriangle(a, b, c, color);
                 }
 
-                Vector2 aFinal = pos + SVec.Rotate(relativePoly[relativePoly.Count - 1] * scale, rotDeg * SUtils.DEGTORAD);
-                Vector2 bFinal = pos + SVec.Rotate(relativePoly[0] * scale, rotDeg * SUtils.DEGTORAD);
+                Vector2 aFinal = pos + ShapeVec.Rotate(relativePoly[relativePoly.Count - 1] * scale, rotDeg * ShapeMath.DEGTORAD);
+                Vector2 bFinal = pos + ShapeVec.Rotate(relativePoly[0] * scale, rotDeg * ShapeMath.DEGTORAD);
                 Vector2 cFinal = pos;
                 Raylib.DrawTriangle(aFinal, bFinal, cFinal, color);
             }
@@ -1170,8 +1170,8 @@ namespace ShapeEngine.Lib
                     );
                 edge.Draw(lineThickness, finalColor);
             }
-            SDrawing.DrawCircle(poly[0], lineThickness * 2f, startColor);
-            SDrawing.DrawCircle(poly[poly.Count - 1], lineThickness * 2f, endColor);
+            ShapeDrawing.DrawCircle(poly[0], lineThickness * 2f, startColor);
+            ShapeDrawing.DrawCircle(poly[poly.Count - 1], lineThickness * 2f, endColor);
         }
         
         public static void DrawLines(this Polygon poly, float lineThickness, Raylib_CsLo.Color startColor, Raylib_CsLo.Color endColor, int cornerSegments)
@@ -1222,13 +1222,13 @@ namespace ShapeEngine.Lib
         {
             for (int i = 0; i < poly.Count - 1; i++)
             {
-                Vector2 p1 = pos + SVec.Rotate(poly[i] * size, rotDeg * SUtils.DEGTORAD);
-                Vector2 p2 = pos + SVec.Rotate(poly[i + 1] * size, rotDeg * SUtils.DEGTORAD);
+                Vector2 p1 = pos + ShapeVec.Rotate(poly[i] * size, rotDeg * ShapeMath.DEGTORAD);
+                Vector2 p2 = pos + ShapeVec.Rotate(poly[i + 1] * size, rotDeg * ShapeMath.DEGTORAD);
                 if(cornerSegments > 5) DrawCircle(p1, lineThickness * 0.5f, outlineColor, 8);
                 DrawLineEx(p1, p2, lineThickness, outlineColor);
             }
-            if (cornerSegments > 5) DrawCircle(pos + SVec.Rotate(poly[poly.Count - 1] * size, rotDeg * SUtils.DEGTORAD), lineThickness * 0.5f, outlineColor, 8);
-            DrawLineEx(pos + SVec.Rotate(poly[poly.Count - 1] * size, rotDeg * SUtils.DEGTORAD), pos + SVec.Rotate(poly[0] * size, rotDeg * SUtils.DEGTORAD), lineThickness, outlineColor);
+            if (cornerSegments > 5) DrawCircle(pos + ShapeVec.Rotate(poly[poly.Count - 1] * size, rotDeg * ShapeMath.DEGTORAD), lineThickness * 0.5f, outlineColor, 8);
+            DrawLineEx(pos + ShapeVec.Rotate(poly[poly.Count - 1] * size, rotDeg * ShapeMath.DEGTORAD), pos + ShapeVec.Rotate(poly[0] * size, rotDeg * ShapeMath.DEGTORAD), lineThickness, outlineColor);
         }
         public static void DrawVertices(this Polygon poly, float vertexRadius, Raylib_CsLo.Color color)
         {
@@ -2202,7 +2202,7 @@ namespace ShapeEngine.Lib
         public static void DrawCaret(this Font font, string text, Vector2 topLeft, float fontSize, float fontSpacing, int caretIndex, float caretWidth, Raylib_CsLo.Color caretColor)
         {
             string caretText = text.Substring(0, caretIndex);
-            Vector2 caretTextSize = SDrawing.GetTextSize(font, caretText, fontSize, fontSpacing);
+            Vector2 caretTextSize = ShapeDrawing.GetTextSize(font, caretText, fontSize, fontSpacing);
 
             Vector2 caretTop = topLeft + new Vector2(caretTextSize.X + fontSpacing * 0.5f, 0f);
             Vector2 caretBottom = topLeft + new Vector2(caretTextSize.X + fontSpacing * 0.5f, fontSize);
@@ -2659,7 +2659,7 @@ namespace ShapeEngine.Lib
             int lines = (int)MathF.Ceiling(4 * Clamp(f, 0f, 1f));
             float fMin = 0.25f * (lines - 1);
             float fMax = fMin + 0.25f;
-            float newF = SUtils.RemapFloat(f, fMin, fMax, 0f, 1f);
+            float newF = ShapeMath.RemapFloat(f, fMin, fMax, 0f, 1f);
             for (int i = 0; i < lines; i++)
             {
                 Vector2 end;
@@ -2686,18 +2686,18 @@ namespace ShapeEngine.Lib
                 }
 
                 //last line
-                if (i == lines - 1) end = SVec.Lerp(start, end, newF);
+                if (i == lines - 1) end = ShapeVec.Lerp(start, end, newF);
                 DrawLineEx(start, end, thickness, color);
             }
         }
         public static void DrawOutlineBar(this Rect rect, Vector2 pivot, float angleDeg, float thickness, float f, Raylib_CsLo.Color color)
         {
-            var rr = SRect.Rotate(rect, pivot, angleDeg);
+            var rr = ShapeRect.Rotate(rect, pivot, angleDeg);
             //Vector2 thicknessOffsetX = new Vector2(thickness, 0f);
             //Vector2 thicknessOffsetY = new Vector2(0f, thickness);
 
-            Vector2 leftExtension = SVec.Rotate(new Vector2(-thickness / 2, 0f), angleDeg * SUtils.DEGTORAD);
-            Vector2 rightExtension = SVec.Rotate(new Vector2(thickness / 2, 0f), angleDeg * SUtils.DEGTORAD);
+            Vector2 leftExtension = ShapeVec.Rotate(new Vector2(-thickness / 2, 0f), angleDeg * ShapeMath.DEGTORAD);
+            Vector2 rightExtension = ShapeVec.Rotate(new Vector2(thickness / 2, 0f), angleDeg * ShapeMath.DEGTORAD);
 
             Vector2 tl = rr.tl;
             Vector2 br = rr.br;
@@ -2707,7 +2707,7 @@ namespace ShapeEngine.Lib
             int lines = (int)MathF.Ceiling(4 * Clamp(f, 0f, 1f));
             float fMin = 0.25f * (lines - 1);
             float fMax = fMin + 0.25f;
-            float newF = SUtils.RemapFloat(f, fMin, fMax, 0f, 1f);
+            float newF = ShapeMath.RemapFloat(f, fMin, fMax, 0f, 1f);
             for (int i = 0; i < lines; i++)
             {
                 Vector2 end;
@@ -2734,7 +2734,7 @@ namespace ShapeEngine.Lib
                 }
 
                 //last line
-                if (i == lines - 1) end = SVec.Lerp(start, end, newF);
+                if (i == lines - 1) end = ShapeVec.Lerp(start, end, newF);
                 DrawLineEx(start, end, thickness, color);
             }
         }
@@ -2753,16 +2753,16 @@ namespace ShapeEngine.Lib
             f = 1.0f - f;
             UIMargins progressMargins = new(f * top, f * right, f * bottom, f * left);
             var progressRect = progressMargins.Apply(rect);
-            SDrawing.Draw(rect, bgColor);
-            SDrawing.Draw(progressRect, barColor);
+            ShapeDrawing.Draw(rect, bgColor);
+            ShapeDrawing.Draw(progressRect, barColor);
         }
         public static void DrawBar(this Rect rect, Vector2 pivot, float angleDeg, float f, Raylib_CsLo.Color barColor, Raylib_CsLo.Color bgColor, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
         {
             f = 1.0f - f;
             UIMargins progressMargins = new(f * top, f * right, f * bottom, f * left);
             var progressRect = progressMargins.Apply(rect);
-            SDrawing.Draw(rect, pivot, angleDeg, bgColor);
-            SDrawing.Draw(progressRect, pivot, angleDeg, barColor);
+            ShapeDrawing.Draw(rect, pivot, angleDeg, bgColor);
+            ShapeDrawing.Draw(progressRect, pivot, angleDeg, barColor);
         }
         
         #endregion

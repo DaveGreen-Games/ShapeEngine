@@ -25,9 +25,9 @@ namespace Examples.Scenes.ExampleScenes
             Color color = DARKGRAY;
             if (circle.Radius > 2f && circle.Radius <= 3f) color = GRAY;
             else if (circle.Radius > 3f) color = WHITE;
-            SDrawing.DrawCircleFast(circle.Center, circle.Radius, color);
+            ShapeDrawing.DrawCircleFast(circle.Center, circle.Radius, color);
         }
-        public void Draw(Color c) => SDrawing.DrawCircleFast(circle.Center, circle.Radius, c);
+        public void Draw(Color c) => ShapeDrawing.DrawCircleFast(circle.Center, circle.Radius, c);
     }
     internal class Comet
     {
@@ -43,9 +43,9 @@ namespace Examples.Scenes.ExampleScenes
         float speed = 0f;
         public Comet(Vector2 pos)
         {
-            this.circle = new(pos, SRNG.randF(MinSize, MaxSize));
+            this.circle = new(pos, ShapeRandom.randF(MinSize, MaxSize));
             this.speed = speeds.Next();
-            this.vel = SRNG.randVec2() * this.speed;
+            this.vel = ShapeRandom.randVec2() * this.speed;
             this.color = colors.Next();
 
         }
@@ -64,8 +64,8 @@ namespace Examples.Scenes.ExampleScenes
         }
         public float GetCollisionIntensity()
         {
-            float speedF = SUtils.GetFactor(speed, MinSpeed, MaxSpeed);
-            float sizeF = SUtils.GetFactor(circle.Radius, MinSize, MaxSize);
+            float speedF = ShapeUtils.GetFactor(speed, MinSpeed, MaxSpeed);
+            float sizeF = ShapeUtils.GetFactor(circle.Radius, MinSize, MaxSize);
             return speedF * sizeF;
         }
         public void Draw()
@@ -85,7 +85,7 @@ namespace Examples.Scenes.ExampleScenes
         public Slider(float startValue, string title, Font font)
         {
             this.Title = title;
-            this.CurValue = SUtils.Clamp(startValue, 0f, 1f);
+            this.CurValue = ShapeMath.Clamp(startValue, 0f, 1f);
             this.font = font;
         }
         
@@ -223,7 +223,7 @@ namespace Examples.Scenes.ExampleScenes
             float intensity = intensitySlider.CurValue;
             GAMELOOP.ScreenEffectIntensity = intensity;
             camera.Intensity = intensity;
-            camera.Follower.FollowSpeed = SUtils.LerpFloat(0.5f, 4f, cameraFollowSlider.CurValue);
+            camera.Follower.FollowSpeed = ShapeMath.LerpFloat(0.5f, 4f, cameraFollowSlider.CurValue);
         }
         private void GenerateStars(int amount)
         {
@@ -341,7 +341,7 @@ namespace Examples.Scenes.ExampleScenes
         // }
         private void ShakeCamera()
         {
-            camera.Shake(SRNG.randF(0.8f, 2f), new Vector2(100, 100), 0, 25, 0.75f);
+            camera.Shake(ShapeRandom.randF(0.8f, 2f), new Vector2(100, 100), 0, 25, 0.75f);
         }
         public override void Update(float dt, ScreenInfo game, ScreenInfo ui)
         {
@@ -361,7 +361,7 @@ namespace Examples.Scenes.ExampleScenes
                 if (comet.CheckCollision(ship.Hull))
                 {
                     float f = comet.GetCollisionIntensity();
-                    camera.Shake(SRNG.randF(0.4f, 0.6f), new Vector2(150, 150) * f, 0, 10, 0.75f);
+                    camera.Shake(ShapeRandom.randF(0.4f, 0.6f), new Vector2(150, 150) * f, 0, 10, 0.75f);
                     comets.RemoveAt(i);
 
                     GAMELOOP.Flash(0.25f, new(255, 255, 255, 150), new(0,0,0,0));
@@ -394,7 +394,7 @@ namespace Examples.Scenes.ExampleScenes
             int x = (int)pos.X;
             int y = (int)pos.Y;
             int rot = (int)camera.RotationDeg;
-            int zoom = (int)(SUtils.GetFactor(camera.ZoomLevel, 0.1f, 5f) * 100f);
+            int zoom = (int)(ShapeUtils.GetFactor(camera.ZoomLevel, 0.1f, 5f) * 100f);
             string moveText = $"[W/A/S/D] Move ({x}/{y})";
             string rotText = $"[Q/E] Rotate ({rot})";
             string scaleText = $"[Y/X] Zoom ({zoom}%)";

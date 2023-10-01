@@ -573,7 +573,7 @@ namespace Examples.Scenes.ExampleScenes
 
             if(collider is CircleCollider c)
             {
-                SDrawing.DrawCircleFast(c.Pos, c.Radius, color);
+                ShapeDrawing.DrawCircleFast(c.Pos, c.Radius, color);
 
             }
         }
@@ -689,7 +689,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 for (int i = 0; i < 50; i++)
                 {
-                    Rock r = new(mousePosGame + SRNG.randVec2(0, 50), SRNG.randVec2() * 150, 60);
+                    Rock r = new(mousePosGame + ShapeRandom.randVec2(0, 50), ShapeRandom.randVec2() * 150, 60);
                     gameObjectHandler.AddAreaObject(r);
                 }
 
@@ -699,7 +699,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 for (int i = 0; i < 5; i++)
                 {
-                    Box b = new(mousePosGame + SRNG.randVec2(0, 10), SRNG.randVec2() * 75, 25);
+                    Box b = new(mousePosGame + ShapeRandom.randVec2(0, 10), ShapeRandom.randVec2() * 75, 25);
                     gameObjectHandler.AddAreaObject(b);
                 }
 
@@ -708,7 +708,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 for (int i = 0; i < 15; i++)
                 {
-                    Ball b = new(mousePosGame + SRNG.randVec2(0, 5), SRNG.randVec2() * 300, 10);
+                    Ball b = new(mousePosGame + ShapeRandom.randVec2(0, 5), ShapeRandom.randVec2() * 300, 10);
                     gameObjectHandler.AddAreaObject(b);
                 }
 

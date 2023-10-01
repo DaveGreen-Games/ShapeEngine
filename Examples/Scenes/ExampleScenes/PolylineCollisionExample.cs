@@ -28,7 +28,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             if(shapeIndex == 1)//segment
             {
-                Vector2 dir = SRNG.randVec2();
+                Vector2 dir = ShapeRandom.randVec2();
                 Vector2 start = pos - dir * size * 0.5f;
                 Vector2 end = pos + dir * size * 0.5f;
                 SegmentCollider sc = new(start, end);
@@ -41,14 +41,14 @@ namespace Examples.Scenes.ExampleScenes
             }
             else if (shapeIndex == 3)//triangle
             {
-                Vector2 dir = SRNG.randVec2();
+                Vector2 dir = ShapeRandom.randVec2();
                 Vector2 A = pos + dir * size * 0.5f;
                 
                 Vector2 p = pos - dir * size * 0.5f;
                 Vector2 left = dir.GetPerpendicularLeft();
                 Vector2 right = dir.GetPerpendicularRight();
-                Vector2 B = p + left * SRNG.randF(size * 0.1f, size * 0.5f);
-                Vector2 C = p + right * SRNG.randF(size * 0.1f, size * 0.5f);
+                Vector2 B = p + left * ShapeRandom.randF(size * 0.1f, size * 0.5f);
+                Vector2 C = p + right * ShapeRandom.randF(size * 0.1f, size * 0.5f);
                 PolyCollider pc = new(pos, new(0f), A, B, C);
                 Collider = pc;
             }
@@ -61,17 +61,17 @@ namespace Examples.Scenes.ExampleScenes
             {
                 Rect r = new (pos, new Vector2(size, size) * 0.5f, new Vector2(0.5f));
                 var points = r.ToPolygon();
-                points.Rotate(pos, SRNG.randAngleRad());
+                points.Rotate(pos, ShapeRandom.randAngleRad());
                 Collider = new PolyCollider(points, pos, new(0f));
             }
             else if (shapeIndex == 6)//poly
             {
-                var poly = Polygon.Generate(pos, SRNG.randI(6, 24), size * 0.1f, size * 0.5f);
+                var poly = Polygon.Generate(pos, ShapeRandom.randI(6, 24), size * 0.1f, size * 0.5f);
                 Collider = new PolyCollider(poly, pos, new(0f));
             }
             else if (shapeIndex == 7)//polyline
             {
-                var poly = Polygon.Generate(pos, SRNG.randI(6, 24), size * 0.1f, size * 0.5f);
+                var poly = Polygon.Generate(pos, ShapeRandom.randI(6, 24), size * 0.1f, size * 0.5f);
                 Collider = new PolylineCollider(poly.ToPolyline(), pos, new(0f));
             }
             else
@@ -82,7 +82,7 @@ namespace Examples.Scenes.ExampleScenes
 
             Collider.ComputeCollision = true;
             Collider.ComputeIntersections = true;
-            Collider.Vel = SRNG.randVec2(50, 300);
+            Collider.Vel = ShapeRandom.randVec2(50, 300);
         }
        
         public void Collision(Intersection intersection)
@@ -107,7 +107,7 @@ namespace Examples.Scenes.ExampleScenes
         public void Draw()
         {
             float colF = collisionTimer > 0f ? collisionTimer / collisionTime : 0f;
-            Color color = STween.Tween(ExampleScene.ColorHighlight2, ExampleScene.ColorHighlight1, colF, TweenType.QUAD_IN);
+            Color color = ShapeTween.Tween(ExampleScene.ColorHighlight2, ExampleScene.ColorHighlight1, colF, TweenType.QUAD_IN);
 
             Collider.DrawShape(4f, color);
             lastIntersection.Draw(2f, ExampleScene.ColorLight, ExampleScene.ColorLight);
@@ -163,7 +163,7 @@ namespace Examples.Scenes.ExampleScenes
 
             //if (IsKeyPressed(KeyboardKey.KEY_SPACE)) polyline.AutomaticNormals = !polyline.AutomaticNormals;
 
-            float shapeSize = SRNG.randF(75, 150);
+            float shapeSize = ShapeRandom.randF(75, 150);
             if (IsKeyPressed(KeyboardKey.KEY_ONE))
             {
                 colliders.Add(new ShapeCollider(1, mousePosGame, shapeSize));
@@ -210,10 +210,10 @@ namespace Examples.Scenes.ExampleScenes
                 var shape = col.Shape;
                 foreach (var segment in allSegments)
                 {
-                    bool overlap = SGeometry.Overlap(shape, segment);
+                    bool overlap = ShapeGeometry.Overlap(shape, segment);
                     if (overlap)
                     {
-                        var intersection = SGeometry.Intersect(shape, segment);
+                        var intersection = ShapeGeometry.Intersect(shape, segment);
                         if (intersection.Valid)
                         {
                             col.Collision(new(intersection, col.Collider.Vel, col.Collider.Pos));

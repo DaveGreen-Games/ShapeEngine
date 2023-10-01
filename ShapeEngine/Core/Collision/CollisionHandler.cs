@@ -159,7 +159,7 @@ namespace ShapeEngine.Core.Collision
                 {
                     //IterationsPerFrame++;
 
-                    bool overlap = SGeometry.Overlap(collidable, other);
+                    bool overlap = ShapeGeometry.Overlap(collidable, other);
                     if (overlap)
                     {
                         bool firstContact = !oldRegister.RemoveEntry(collidable, other);
@@ -167,7 +167,7 @@ namespace ShapeEngine.Core.Collision
                         if (computeIntersections)
                         {
                             //CollisionChecksPerFrame++;
-                            var collisionPoints = SGeometry.Intersect(collidable, other);
+                            var collisionPoints = ShapeGeometry.Intersect(collidable, other);
 
                             //shapes overlap but no collision points means collidable is completely inside other
                             //closest point on bounds of other are now used for collision point
@@ -328,7 +328,7 @@ namespace ShapeEngine.Core.Collision
             foreach (var obj in objects)
             {
                 if (obj.GetCollider() == collider) continue;
-                var collisionPoints = SGeometry.Intersect(collider, obj.GetCollider());
+                var collisionPoints = ShapeGeometry.Intersect(collider, obj.GetCollider());
                 
                 if (collisionPoints.Valid) infos.Add(new(obj, origin, collisionPoints));
             }
@@ -341,7 +341,7 @@ namespace ShapeEngine.Core.Collision
             var objects = spatialHash.GetObjects(shape, collisionMask);
             foreach (var obj in objects)
             {
-                var collisionPoints = SGeometry.Intersect(shape, obj.GetCollider().GetShape());
+                var collisionPoints = ShapeGeometry.Intersect(shape, obj.GetCollider().GetShape());
                 if (collisionPoints.Valid) infos.Add(new(obj, origin, collisionPoints));
             }
             if(sorted) infos.SortClosest(origin);
@@ -355,7 +355,7 @@ namespace ShapeEngine.Core.Collision
             {
                 if(exceptions.Contains(obj)) continue;
 
-                var collisionPoints = SGeometry.Intersect(shape, obj.GetCollider().GetShape());
+                var collisionPoints = ShapeGeometry.Intersect(shape, obj.GetCollider().GetShape());
                 if (collisionPoints.Valid) infos.Add(new(obj, origin, collisionPoints));
             }
             if (sorted) infos.SortClosest(origin);
@@ -375,7 +375,7 @@ namespace ShapeEngine.Core.Collision
             {
                 if(obj.GetCollider() == collider) continue;
 
-                if (SGeometry.Overlap(collider, obj.GetCollider()))
+                if (ShapeGeometry.Overlap(collider, obj.GetCollider()))
                 {
                     bodies.Add(obj);
                 }
@@ -404,7 +404,7 @@ namespace ShapeEngine.Core.Collision
             var objects = spatialHash.GetObjects(castShape, collisionMask);
             foreach (var obj in objects)
             {
-                if (SGeometry.Overlap(castShape, obj.GetCollider().GetShape()))
+                if (ShapeGeometry.Overlap(castShape, obj.GetCollider().GetShape()))
                 {
                     bodies.Add(obj);
                 }

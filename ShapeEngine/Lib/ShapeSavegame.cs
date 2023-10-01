@@ -2,7 +2,7 @@
 
 namespace ShapeEngine.Lib
 {
-    public static class SSavegame
+    public static class ShapeSavegame
     {
         public static string APPLICATION_DATA_PATH = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 

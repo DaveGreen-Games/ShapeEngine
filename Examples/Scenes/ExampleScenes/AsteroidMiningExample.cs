@@ -63,9 +63,9 @@ namespace Examples.Scenes.ExampleScenes
             this.rotDeg = 0f;
             this.pos = shape.GetCentroid();
             Vector2 dir = (pos - fractureCenter).Normalize();
-            this.vel = dir * SRNG.randF(100, 300);
-            this.angularVelDeg = SRNG.randF(-90, 90);
-            this.lifetime = SRNG.randF(1.5f, 3f);
+            this.vel = dir * ShapeRandom.randF(100, 300);
+            this.angularVelDeg = ShapeRandom.randF(-90, 90);
+            this.lifetime = ShapeRandom.randF(1.5f, 3f);
             this.lifetimeTimer = this.lifetime;
             this.delay = 0.5f;
             this.color = color;
@@ -138,7 +138,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 float f = timer / Lifetime;
                 //Color color = YELLOW.ChangeAlpha((byte)(255 * f));
-                Segment.Draw(SRNG.randF(4, 8) * f, YELLOW, 12);
+                Segment.Draw(ShapeRandom.randF(4, 8) * f, YELLOW, 12);
             }
             public void Renew() { timer = Lifetime; }
         }
@@ -220,7 +220,7 @@ namespace Examples.Scenes.ExampleScenes
 
         private void SetDamageTreshold(float overshoot = 0f)
         {
-            curThreshold = DamageThreshold * SRNG.randF(0.5f, 2f) + overshoot;
+            curThreshold = DamageThreshold * ShapeRandom.randF(0.5f, 2f) + overshoot;
         }
         public void Overlapped()
         {
@@ -434,7 +434,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             if (hybernate) return;
             shape.DrawLines(4f, RED);
-            SDrawing.DrawCircle(tip, 8f, RED);
+            ShapeDrawing.DrawCircle(tip, 8f, RED);
 
             if (laserEnabled && laserPoints.Count > 1)
             {
@@ -442,7 +442,7 @@ namespace Examples.Scenes.ExampleScenes
                 {
                     Segment laserSegment = new(laserPoints[i], laserPoints[i + 1]);
                     laserSegment.Draw(4f, RED);
-                    SDrawing.DrawCircle(laserPoints[i + 1], SRNG.randF(6f, 12f), RED, 12);
+                    ShapeDrawing.DrawCircle(laserPoints[i + 1], ShapeRandom.randF(6f, 12f), RED, 12);
                 }
                 
             }
@@ -562,7 +562,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         private void OnAsteroidFractured(Asteroid a, Vector2 point)
         {
-            var cutShape = Polygon.Generate(point, SRNG.randI(6, 12), 35, 100);
+            var cutShape = Polygon.Generate(point, ShapeRandom.randI(6, 12), 35, 100);
             
             FractureAsteroid(a, cutShape);
         }
@@ -727,7 +727,7 @@ namespace Examples.Scenes.ExampleScenes
                                 polys.Add(asteroid.GetPolygon());
                             }
                         }
-                        var finalShapes = SClipper.UnionMany(curShape.ToPolygon(), polys, Clipper2Lib.FillRule.NonZero).ToPolygons(true);
+                        var finalShapes = ShapeClipper.UnionMany(curShape.ToPolygon(), polys, Clipper2Lib.FillRule.NonZero).ToPolygons(true);
                         if (finalShapes.Count > 0)
                         {
                             foreach (var f in finalShapes)

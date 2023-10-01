@@ -5,17 +5,6 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace ShapeEngine.Lib
 {
-    //public struct TextBox
-    //{
-    //    public Font Font;
-    //    public string Text;
-    //    public int CaretIndex;
-    //    public float CaretWidth;
-    //    public TextBoxKeys Keys;
-    //    public Raylib_CsLo.Color TextColor;
-    //    public Raylib_CsLo.Color CaretColor;
-    //
-    //}
     public struct TextBox
     {
         public string Text;
@@ -41,7 +30,7 @@ namespace ShapeEngine.Lib
         public TextBoxKeys() { }
     }
     
-    public static class SText
+    public static class ShapeText
     {
         public static TextBox UpdateTextBox(this TextBox textBox, TextBoxKeys keys)
         {
@@ -67,27 +56,27 @@ namespace ShapeEngine.Lib
                 }
                 else if (IsKeyPressed(keys.KeyDelete))
                 {
-                    var info = SText.TextDelete(textBox.Text, textBox.CaretIndex);
+                    var info = ShapeText.TextDelete(textBox.Text, textBox.CaretIndex);
                     textBox.Text = info.text;
                     textBox.CaretIndex = info.caretIndex;
                 }
                 else if (IsKeyPressed(keys.KeyBackspace))
                 {
-                    var info = SText.TextBackspace(textBox.Text, textBox.CaretIndex);
+                    var info = ShapeText.TextBackspace(textBox.Text, textBox.CaretIndex);
                     textBox.Text = info.text;
                     textBox.CaretIndex = info.caretIndex;
                 }
                 else if (IsKeyPressed(keys.KeyLeft))
                 {
-                    textBox.CaretIndex = SText.DecreaseCaretIndex(textBox.CaretIndex, textBox.Text.Length);
+                    textBox.CaretIndex = ShapeText.DecreaseCaretIndex(textBox.CaretIndex, textBox.Text.Length);
                 }
                 else if (IsKeyPressed(keys.KeyRight))
                 {
-                    textBox.CaretIndex = SText.IncreaseCaretIndex(textBox.CaretIndex, textBox.Text.Length);
+                    textBox.CaretIndex = ShapeText.IncreaseCaretIndex(textBox.CaretIndex, textBox.Text.Length);
                 }
                 else
                 {
-                    var info = SText.GetTextInput(textBox.Text, textBox.CaretIndex);
+                    var info = ShapeText.GetTextInput(textBox.Text, textBox.CaretIndex);
                     textBox.Text = info.text;
                     textBox.CaretIndex = info.newCaretPosition;
                 }

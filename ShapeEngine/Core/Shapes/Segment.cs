@@ -147,7 +147,7 @@ namespace ShapeEngine.Core.Shapes
             float disSqB = (p - End).LengthSquared();
             return disSqA <= disSqB ? Start : End;
         }
-        public Vector2 GetRandomPoint() { return this.GetPoint(SRNG.randF()); }
+        public Vector2 GetRandomPoint() { return this.GetPoint(ShapeRandom.randF()); }
         public Points GetRandomPoints(int amount)
         {
             var points = new Points();
@@ -157,7 +157,7 @@ namespace ShapeEngine.Core.Shapes
             }
             return points;
         }
-        public Vector2 GetRandomVertex() { return SRNG.chance(0.5f) ? Start : End; }
+        public Vector2 GetRandomVertex() { return ShapeRandom.chance(0.5f) ? Start : End; }
 
         #endregion
 
@@ -277,17 +277,17 @@ namespace ShapeEngine.Core.Shapes
             //return result.intersected;
             Vector2 axisAPos = Start;
             Vector2 axisADir = End - Start;
-            if (SRect.SegmentOnOneSide(axisAPos, axisADir, b.Start, b.End)) return false;
+            if (ShapeRect.SegmentOnOneSide(axisAPos, axisADir, b.Start, b.End)) return false;
 
             Vector2 axisBPos = b.Start;
             Vector2 axisBDir = b.End - b.Start;
-            if (SRect.SegmentOnOneSide(axisBPos, axisBDir, Start, End)) return false;
+            if (ShapeRect.SegmentOnOneSide(axisBPos, axisBDir, Start, End)) return false;
 
-            if (SVec.Parallel(axisADir, axisBDir))
+            if (ShapeVec.Parallel(axisADir, axisBDir))
             {
-                RangeFloat rangeA = SRect.ProjectSegment(Start, End, axisADir);
-                RangeFloat rangeB = SRect.ProjectSegment(b.Start, b.End, axisADir);
-                return SRect.OverlappingRange(rangeA, rangeB);
+                RangeFloat rangeA = ShapeRect.ProjectSegment(Start, End, axisADir);
+                RangeFloat rangeB = ShapeRect.ProjectSegment(b.Start, b.End, axisADir);
+                return ShapeRect.OverlappingRange(rangeA, rangeB);
             }
             return true;
         }
@@ -307,7 +307,7 @@ namespace ShapeEngine.Core.Shapes
                     End.X
                 );
 
-            if (!SRect.OverlappingRange(rectRange, segmentRange)) return false;
+            if (!ShapeRect.OverlappingRange(rectRange, segmentRange)) return false;
 
             rectRange.min = r.Y;
             rectRange.max = r.Y + r.Height;
@@ -317,17 +317,17 @@ namespace ShapeEngine.Core.Shapes
             segmentRange.max = End.Y;
             segmentRange.Sort();
 
-            return SRect.OverlappingRange(rectRange, segmentRange);
+            return ShapeRect.OverlappingRange(rectRange, segmentRange);
         }
         public bool OverlapShape(Polygon poly) { return poly.OverlapShape(this); }
         public bool OverlapShape(Polyline pl) { return pl.OverlapShape(this); }
-        public bool OverlapSegmentLine(Vector2 linePos, Vector2 lineDir) { return !SRect.SegmentOnOneSide(linePos, lineDir, Start, End); }
+        public bool OverlapSegmentLine(Vector2 linePos, Vector2 lineDir) { return !ShapeRect.SegmentOnOneSide(linePos, lineDir, Start, End); }
         public static bool OverlapLineLine(Vector2 aPos, Vector2 aDir, Vector2 bPos, Vector2 bDir)
         {
-            if (SVec.Parallel(aDir, bDir))
+            if (ShapeVec.Parallel(aDir, bDir))
             {
                 Vector2 displacement = aPos - bPos;
-                return SVec.Parallel(displacement, aDir);
+                return ShapeVec.Parallel(displacement, aDir);
             }
             return true;
         }
@@ -336,7 +336,7 @@ namespace ShapeEngine.Core.Shapes
         #region Intersection
         public CollisionPoints IntersectShape(Segment b)
         {
-            var info = SGeometry.IntersectSegmentSegmentInfo(Start, End, b.Start, b.End);
+            var info = ShapeGeometry.IntersectSegmentSegmentInfo(Start, End, b.Start, b.End);
             if (info.intersected)
             {
                 return new() { new(info.intersectPoint, b.Normal) };
@@ -379,7 +379,7 @@ namespace ShapeEngine.Core.Shapes
                 {
                     // intersection point is not actually within line segment
                     Vector2 ip = new(nearestX, nearestY);
-                    Vector2 n = SVec.Normalize(ip - new Vector2(cX, cY));
+                    Vector2 n = ShapeVec.Normalize(ip - new Vector2(cX, cY));
                     return new() { new(ip, n) };
                 }
                 else return new();
@@ -399,7 +399,7 @@ namespace ShapeEngine.Core.Shapes
                 {
                     // intersection point is actually within line segment
                     Vector2 ip = new(i1X, i1Y);
-                    Vector2 n = SVec.Normalize(ip - new Vector2(cX, cY)); // SUtils.GetNormal(new Vector2(aX, aY), new Vector2(bX, bY), ip, new Vector2(cX, cY));
+                    Vector2 n = ShapeVec.Normalize(ip - new Vector2(cX, cY)); // SUtils.GetNormal(new Vector2(aX, aY), new Vector2(bX, bY), ip, new Vector2(cX, cY));
                     points.Add(new(ip, n));
                 }
                 float t2 = t + dt;
@@ -408,7 +408,7 @@ namespace ShapeEngine.Core.Shapes
                 if (t2 >= 0f && t2 <= 1f)
                 {
                     Vector2 ip = new(i2X, i2Y);
-                    Vector2 n = SVec.Normalize(ip - new Vector2(cX, cY));
+                    Vector2 n = ShapeVec.Normalize(ip - new Vector2(cX, cY));
                     points.Add(new(ip, n));
                 }
 

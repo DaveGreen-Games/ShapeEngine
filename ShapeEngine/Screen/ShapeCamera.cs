@@ -158,7 +158,7 @@ public sealed class ShapeCamera
     {
         BaseRotationDeg = deg;
         //RotationDeg = Wrap(RotationDeg, 0f, 360f);
-        BaseRotationDeg = SUtils.WrapAngleDeg(BaseRotationDeg);
+        BaseRotationDeg = ShapeMath.WrapAngleDeg(BaseRotationDeg);
     }
 
     public void SetAlignement(Vector2 newAlignement) => Alignement = Vector2.Clamp(newAlignement, Vector2.Zero, Vector2.One);

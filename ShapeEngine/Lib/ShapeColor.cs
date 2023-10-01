@@ -2,7 +2,7 @@
 
 namespace ShapeEngine.Lib
 {
-    public static class SColor
+    public static class ShapeColor
     {
         public static Raylib_CsLo.Color Lerp(this Raylib_CsLo.Color a, Raylib_CsLo.Color b, float f)
         {
