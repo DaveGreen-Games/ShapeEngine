@@ -373,7 +373,7 @@ public class ShapeLoop
             UpdateFlashes(dt);
             Cursor.Update(dt, UI);
             Update(dt);
-
+            
             BeginTextureMode(gameTexture.RenderTexture);
             ClearBackground(new(0,0,0,0));
             
@@ -390,27 +390,6 @@ public class ShapeLoop
             EndTextureMode();
 
             DrawToScreen(screenArea, mousePosUI);
-            // var activeScreenShaders = ScreenShaders.GetActiveShaders();
-            //
-            // BeginDrawing();
-            // ClearBackground(BackgroundColor);
-            //
-            // if (activeScreenShaders.Count > 0)
-            // {
-            //     BeginShaderMode(activeScreenShaders[0].Shader);
-            //     gameTexture.Draw();
-            //     EndShaderMode();
-            // }
-            // else
-            // {
-            //     gameTexture.Draw();
-            // }
-            //
-            // //foreach (var flash in shapeFlashes) screenArea.Draw(flash.GetColor());
-            //
-            // DrawUI(UI);
-            // DrawCursor(screenArea.Size, mousePosUI);
-            // EndDrawing();
             
             
             //CheckWindowSizeChanged();

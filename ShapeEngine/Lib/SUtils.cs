@@ -167,6 +167,8 @@ namespace ShapeEngine.Lib
 
         public const float RADTODEG = 180f / MathF.PI;
 
+        
+        
         public static bool IsEqual<T>(List<T>? a, List<T>? b) where T : IEquatable<T>
         {
             if (a == null || b == null) return false;
@@ -186,53 +188,20 @@ namespace ShapeEngine.Lib
             }
             return hash.ToHashCode();
         }
-
         public static bool IsSimilar(float a, float b, float tolerance = FloatComparisonTolerance) => MathF.Abs(a - b) <= tolerance;
-
         public static float GetFactor(float cur, float min, float max)
         {
             return (cur - min) / (max - min);
-        }
-
-        public static int WrapIndex(int count, int index)
-        {
-            if (index >= count) return index % count;
-            else if (index < 0) return (index % count) + count;
-            else return index;
         }
         public static T GetItem<T>(List<T> collection, int index)
         {
             int i = WrapIndex(collection.Count, index);
             return collection[i];
         }
-        public static T LerpCollection<T>(List<T> collection, float f)
-        {
-            int index = WrapIndex(collection.Count, (int)(collection.Count * f));
-            return collection[index];
-        }
-
-        public static float Clamp(float value, float min, float max)
-        {
-            if (value < min) return min;
-            else if (value > max) return max;
-            else return value;
-        }
-        public static int Clamp(int value, int min, int max)
-        {
-            if (value < min) return min;
-            else if (value > max) return max;
-            else return value;
-        }
-        
         public static bool Blinking(float timer, float interval)
         {
             if (interval <= 0f) return false;
             return (int)(timer / interval) % 2 == 0;
-        }
-        public static float CalculateFrameIndependentLerpFactor(float lerpPercentage, float dt)
-        {
-            float rate = 1f - MathF.Pow(1f - lerpPercentage, dt);
-            return rate;
         }
         public static (int col, int row) TransformIndexToCoordinates(int index, int rows, int cols, bool leftToRight = true)
         {
@@ -250,7 +219,6 @@ namespace ShapeEngine.Lib
             }
             
         }
-
         public static int TransformCoordinatesToIndex(int row, int col, int rows, int cols, bool leftToRight = true)
         {
             if (leftToRight)
@@ -263,6 +231,19 @@ namespace ShapeEngine.Lib
             }
         }
 
+        
+        public static float Clamp(float value, float min, float max)
+        {
+            if (value < min) return min;
+            else if (value > max) return max;
+            else return value;
+        }
+        public static int Clamp(int value, int min, int max)
+        {
+            if (value < min) return min;
+            else if (value > max) return max;
+            else return value;
+        }
         public static int MaxInt(int value1, int value2)
         {
             if (value1 > value2) return value1;
@@ -277,6 +258,14 @@ namespace ShapeEngine.Lib
         {
             return (int)MathF.Abs(value);
         }
+        
+        
+        
+        public static T LerpCollection<T>(List<T> collection, float f)
+        {
+            int index = WrapIndex(collection.Count, (int)(collection.Count * f));
+            return collection[index];
+        }
         public static dynamic LerpDynamic(dynamic from, dynamic to, float f)
         {
             if (from is float) return LerpFloat(from, to, f);
@@ -285,6 +274,18 @@ namespace ShapeEngine.Lib
             else if (from is Raylib_CsLo.Color) return SColor.Lerp(from, to, f);
             else return from;
         }
+        //TODO implement improved lerp -------------------------------------------
+        private static Vector2 ImprovedLerp(Vector2 from, Vector2 to, float smooth, float dt)
+        {
+            float rate = MathF.Pow(-smooth * dt, 2f);
+            return from.Lerp(to, rate);
+        }
+        public static float CalculateFrameIndependentLerpFactor(float lerpPercentage, float dt)
+        {
+            float rate = 1f - MathF.Pow(1f - lerpPercentage, dt);
+            return rate;
+        }
+        //------------------------------------------------------------------------
         public static float LerpFloat(float from, float to, float f)
         {
             return (1.0f - f) * from + to * f;
@@ -308,17 +309,26 @@ namespace ShapeEngine.Lib
             float max = (float)(to - from);
             return cur / max;
         }
+        public static float LerpAngleRad(float from, float to, float f)
+        {
+            return from + GetShortestAngleRad(from, to) * f;
+        }
+        public static float LerpAngleDeg(float from, float to, float f)
+        {
+            return from + GetShortestAngleDeg(from, to) * f;
+        }
         public static int RemapInt(int value, int minOld, int maxOld, int minNew, int maxNew)
         {
             return LerpInt(minNew, maxNew, LerpInverseInt(minOld, maxOld, value));
         }
-        public static float WrapAngleRad(float amount)
+       
+        
+        
+        public static int WrapIndex(int count, int index)
         {
-            return WrapF(amount, 0f, 2.0f * MathF.PI);
-        }
-        public static float WrapAngleDeg(float amount)
-        {
-            return WrapF(amount, 0f, 360f);
+            if (index >= count) return index % count;
+            else if (index < 0) return (index % count) + count;
+            else return index;
         }
         public static float WrapF(float value, float min, float max)
         {
@@ -330,13 +340,15 @@ namespace ShapeEngine.Lib
             int range = max - min;
             return range == 0 ? min : value - range * (int)MathF.Floor((value - min) / range);
         }
-        public static float LerpAngleRad(float from, float to, float f)
+
+        
+        public static float WrapAngleRad(float amount)
         {
-            return from + GetShortestAngleRad(from, to) * f;
+            return WrapF(amount, 0f, 2.0f * MathF.PI);
         }
-        public static float LerpAngleDeg(float from, float to, float f)
+        public static float WrapAngleDeg(float amount)
         {
-            return from + GetShortestAngleDeg(from, to) * f;
+            return WrapF(amount, 0f, 360f);
         }
         public static float GetShortestAngleRad(float from, float to)
         {
@@ -362,8 +374,6 @@ namespace ShapeEngine.Lib
             }
             return dif;
         }
-
-
         
         public static float AimAt(Vector2 pos, Vector2 targetPos, float curAngleRad, float rotSpeedRad, float dt)
         {

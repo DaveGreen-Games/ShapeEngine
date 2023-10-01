@@ -211,7 +211,7 @@ namespace Examples.Scenes.ExampleScenes
             GenerateStars(2500);
             GenerateComets(200);
 
-            camera.Follower.BoundaryDis = 45f;
+            camera.Follower.BoundaryDis = 0f;//45f;
 
             intensitySlider = new(1f, "Intensity", font);
             cameraFollowSlider = new(1f, "Camera Follow", font);
@@ -223,7 +223,7 @@ namespace Examples.Scenes.ExampleScenes
             float intensity = intensitySlider.CurValue;
             GAMELOOP.ScreenEffectIntensity = intensity;
             camera.Intensity = intensity;
-            camera.Follower.FollowSmoothness = SUtils.LerpFloat(0.5f, 4f, cameraFollowSlider.CurValue);
+            camera.Follower.FollowSpeed = SUtils.LerpFloat(0.5f, 4f, cameraFollowSlider.CurValue);
         }
         private void GenerateStars(int amount)
         {

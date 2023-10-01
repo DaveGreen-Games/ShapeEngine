@@ -31,7 +31,7 @@ namespace Examples.Scenes.ExampleScenes
                 
             GenerateStars(SRNG.randI(15000, 30000));
             camera.Follower.BoundaryDis = 45f;
-            camera.Follower.FollowSmoothness = 15f;
+            camera.Follower.FollowSpeed = 15f;
         }
 
         private void GenerateStars(int amount)
