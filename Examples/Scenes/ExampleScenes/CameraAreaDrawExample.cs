@@ -30,8 +30,8 @@ namespace Examples.Scenes.ExampleScenes
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
                 
             GenerateStars(ShapeRandom.randI(15000, 30000));
-            camera.Follower.BoundaryDis = 150f;
-            camera.Follower.FollowSpeed = 6f;
+            camera.Follower.BoundaryDis = new(200, 400);
+            camera.Follower.FollowSpeed = ship.Speed * 0.75f;
         }
 
         private void GenerateStars(int amount)
@@ -112,6 +112,11 @@ namespace Examples.Scenes.ExampleScenes
                 star.Draw(new Color(20, 150, 150, 200));
             }
             ship.Draw();
+
+            Circle cameraBoundaryMin = new(camera.Position, camera.Follower.BoundaryDis.Min);
+            cameraBoundaryMin.DrawLines(2f, ColorHighlight3);
+            Circle cameraBoundaryMax = new(camera.Position, camera.Follower.BoundaryDis.Max);
+            cameraBoundaryMax.DrawLines(2f, ColorHighlight2);
         }
         public override void DrawUI(ScreenInfo ui)
         {

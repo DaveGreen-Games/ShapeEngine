@@ -517,14 +517,14 @@ namespace ShapeEngine.Lib
         }
         public static bool OverlappingRange(RangeFloat a, RangeFloat b)
         {
-            return OverlappingRange(a.min, a.max, b.min, b.max);
+            return OverlappingRange(a.Min, a.Max, b.Min, b.Max);
         }
         private static RangeFloat RangeHull(RangeFloat a, RangeFloat b)
         {
             return new
                 (
-                    a.min < b.min ? a.min : b.min,
-                    a.max > b.max ? a.max : b.max
+                    a.Min < b.Min ? a.Min : b.Min,
+                    a.Max > b.Max ? a.Max : b.Max
                 );
         }
         public static RangeFloat ProjectSegment(Vector2 aPos, Vector2 aEnd, Vector2 onto)

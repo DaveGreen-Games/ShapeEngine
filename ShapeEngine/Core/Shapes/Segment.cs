@@ -309,12 +309,12 @@ namespace ShapeEngine.Core.Shapes
 
             if (!ShapeRect.OverlappingRange(rectRange, segmentRange)) return false;
 
-            rectRange.min = r.Y;
-            rectRange.max = r.Y + r.Height;
+            rectRange.Min = r.Y;
+            rectRange.Max = r.Y + r.Height;
             rectRange.Sort();
 
-            segmentRange.min = Start.Y;
-            segmentRange.max = End.Y;
+            segmentRange.Min = Start.Y;
+            segmentRange.Max = End.Y;
             segmentRange.Sort();
 
             return ShapeRect.OverlappingRange(rectRange, segmentRange);

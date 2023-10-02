@@ -116,7 +116,7 @@ namespace Examples.Scenes.ExampleScenes
     {
         public Circle Hull { get; private set; }
         private Vector2 movementDir;
-        private float speed = 500;
+        public float Speed = 500;
         
         public Ship(Vector2 pos, float r)
         {
@@ -155,7 +155,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 movementDir = new Vector2(dirX, dirY).Normalize();
                 movementDir = movementDir.RotateDeg(-cameraRotationDeg);
-                Vector2 movement = movementDir * speed * dt;
+                Vector2 movement = movementDir * Speed * dt;
                 Hull = new Circle(Hull.Center + movement, Hull.Radius);
             }
             
@@ -211,7 +211,7 @@ namespace Examples.Scenes.ExampleScenes
             GenerateStars(2500);
             GenerateComets(200);
 
-            camera.Follower.BoundaryDis = 0f;//45f;
+            //camera.Follower.BoundaryDis = 0f;//45f;
 
             intensitySlider = new(1f, "Intensity", font);
             cameraFollowSlider = new(1f, "Camera Follow", font);
