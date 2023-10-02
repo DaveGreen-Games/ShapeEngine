@@ -1,6 +1,6 @@
 global using static Raylib_CsLo.Raylib;
 global using static Raylib_CsLo.RayMath;
-
+using System.ComponentModel;
 using ShapeEngine.Screen;
 using Raylib_CsLo;
 using System.Numerics;
@@ -564,6 +564,13 @@ public class ShapeLoop
     
     public bool SetMonitor(int newMonitor)
     {
+        if (!Fullscreen)
+        {
+            //throw new WarningException("Monitor changing is only allowed in fullscreen mode!");
+            Console.WriteLine("Monitor changing is only allowed in fullscreen mode!");
+            return false;
+        }
+        
         var monitor = Monitor.SetMonitor(newMonitor);
         if (monitor.Available)
         {
@@ -574,6 +581,13 @@ public class ShapeLoop
     }
     public void NextMonitor()
     {
+        if (!Fullscreen)
+        {
+            // throw new WarningException("Monitor changing is only allowed in fullscreen mode!");
+            Console.WriteLine("Monitor changing is only allowed in fullscreen mode!");
+            return;
+        }
+        
         var nextMonitor = Monitor.NextMonitor();
         if (nextMonitor.Available)
         {
@@ -582,30 +596,92 @@ public class ShapeLoop
     }
     private void MonitorChanged(MonitorInfo monitor)
     {
+        if (!Fullscreen)
+        {
+            Console.WriteLine("Monitor changing is only allowed in fullscreen mode!");
+            return;
+        }
+        
+        Raylib.SetWindowMonitor(monitor.Index);
+        SetWindowSize(monitor.Dimensions.Width, monitor.Dimensions.Height);
+        SetWindowPosition((int)monitor.Position.X, (int)monitor.Position.Y);
+        SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+        
+        var windowDimensions = WindowSize;
+        if (windowDimensions.Width > monitor.Width || windowDimensions.Height > monitor.Height)
+        {
+            windowDimensions = monitor.Dimensions / 2;
+        }
+
+        WindowSize = windowDimensions;
+
+        int winPosX = monitor.Width / 2 - windowSize.Width / 2;
+        int winPosY = monitor.Height / 2 - windowSize.Height / 2;
+        
+        prevFullscreenWindowSize = windowDimensions;
+        prevFullscreenWindowPosition = new(winPosX + (int)monitor.Position.X, winPosY + (int)monitor.Position.Y);
+        prevFullscreenWindowMaximized = false;
+        
+        //RestoreWindow();
+        // CenterWindow();
+        //prevFullscreenWindowSize = CurScreenSize;
+        //prevFullscreenWindowMaximized = false;
+        
+        
+        //VAR 1
+        // if (Fullscreen)
+        // {
+        //     Raylib.SetWindowMonitor(monitor.Index);
+        //     SetWindowSize(monitor.Dimensions.Width, monitor.Dimensions.Height);
+        //     SetWindowPosition((int)monitor.Position.X, (int)monitor.Position.Y);
+        //     SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+        //     WindowSize = monitor.Dimensions / 2;
+        // }
+        // else
+        // {
+        //     var windowDimensions = WindowSize;
+        //     if (windowDimensions.Width > monitor.Width || windowDimensions.Height > monitor.Height)
+        //     {
+        //         windowDimensions = monitor.Dimensions / 2;
+        //     }
+        //
+        //     SetWindowSize(monitor.Dimensions.Width, monitor.Dimensions.Height);
+        //     SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+        //     SetWindowMonitor(monitor.Index);
+        //     ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+        //     WindowSize = windowDimensions;
+        //     CenterWindow();
+        // }
+        //
+        // prevFullscreenWindowPosition = GetWindowPosition();
+        // prevFullscreenWindowSize = CurScreenSize;
+        // prevFullscreenWindowMaximized = false;
+
+        //OLD
         // var prevDimensions = CurScreenSize;
 
         // if (IsWindowFullscreen())
         // {
-            // SetWindowMonitor(monitor.Index);
-            // ChangeWindowDimensions(monitor.Dimensions, true);
-            // SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+        // SetWindowMonitor(monitor.Index);
+        // ChangeWindowDimensions(monitor.Dimensions, true);
+        // SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
         // }
         // else
         // {
-            // var windowDimensions = prevDimensions;
-            // if (windowDimensions.Width > monitor.Width || windowDimensions.Height > monitor.Height)
-            // {
-                // windowDimensions = monitor.Dimensions / 2;
-            // }
-            // ChangeWindowDimensions(monitor.Dimensions, true);
-            // SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
-            // SetWindowMonitor(monitor.Index);
-            // ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
-            // ChangeWindowDimensions(windowDimensions, false);
+        // var windowDimensions = prevDimensions;
+        // if (windowDimensions.Width > monitor.Width || windowDimensions.Height > monitor.Height)
+        // {
+        // windowDimensions = monitor.Dimensions / 2;
+        // }
+        // ChangeWindowDimensions(monitor.Dimensions, true);
+        // SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+        // SetWindowMonitor(monitor.Index);
+        // ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+        // ChangeWindowDimensions(windowDimensions, false);
         // }
         // if (VSync)
         // {
-            // SetFPS(monitor.Refreshrate);
+        // SetFPS(monitor.Refreshrate);
         // }
     }
     private void SetupWindowDimensions()

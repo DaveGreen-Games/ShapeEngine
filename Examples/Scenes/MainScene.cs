@@ -89,6 +89,8 @@ namespace Examples.Scenes
 
             if (IsKeyPressed(KeyboardKey.KEY_W)) PrevButton();
             else if (IsKeyPressed(KeyboardKey.KEY_S)) NextButton();
+            
+            //if(IsKeyPressed(KeyboardKey.KEY_T)) GAMELOOP.NextMonitor();
         }
 
         public void Update(float dt, ScreenInfo game, ScreenInfo ui)
