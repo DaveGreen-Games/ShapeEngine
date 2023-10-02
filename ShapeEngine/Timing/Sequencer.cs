@@ -47,9 +47,9 @@ namespace ShapeEngine.Timing
                 var sequenceList = sequences[id];
                 if (sequenceList.Count > 0)
                 {
-                    var seqence = sequenceList[sequenceList.Count - 1];//list is reversed
-                    var finished = UpdateSequence(seqence, dt); // seqence.Update(dt);
-                    OnItemUpdated?.Invoke(seqence);
+                    var sequence = sequenceList[sequenceList.Count - 1];//list is reversed
+                    var finished = UpdateSequence(sequence, dt); // seqence.Update(dt);
+                    OnItemUpdated?.Invoke(sequence);
                     if (finished) sequenceList.RemoveAt(sequenceList.Count - 1);
                 }
                 else

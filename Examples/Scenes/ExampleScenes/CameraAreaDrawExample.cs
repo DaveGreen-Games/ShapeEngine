@@ -88,10 +88,10 @@ namespace Examples.Scenes.ExampleScenes
             if (IsKeyPressed(KeyboardKey.KEY_B))
             {
                 camera.StopTweenSequence(prevCameraTweenID);
-                CameraTweenScale zoomOut = new(1f, 4f, 0.25f, TweenType.LINEAR);
-                CameraTweenScale zoomIn = new(4f, 0.75f, 0.75f, TweenType.LINEAR);
-                CameraTweenScale zoomFinal = new(0.75f, 1f, 0.25f, TweenType.LINEAR);
-                prevCameraTweenID = camera.StartTweenSequence(zoomOut, zoomIn, zoomFinal);
+                CameraTweenZoomFactor zoomFactorOut = new(1f, 0.5f, 0.25f, TweenType.LINEAR);
+                CameraTweenZoomFactor zoomFactorIn = new(0.5f, 1.25f, 0.75f, TweenType.LINEAR);
+                CameraTweenZoomFactor zoomFactorFinal = new(1.25f, 1f, 0.25f, TweenType.LINEAR);
+                prevCameraTweenID = camera.StartTweenSequence(zoomFactorOut, zoomFactorIn, zoomFactorFinal);
                 
                 if (currentShip == ship)
                 {

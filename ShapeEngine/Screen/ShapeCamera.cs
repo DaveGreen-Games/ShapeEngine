@@ -23,7 +23,7 @@ public sealed class ShapeCamera
     
     private Sequencer<ICameraTween> cameraTweens = new();
     private float cameraTweenTotalRotationDeg = 0f;
-    private float cameraTweenTotalScale = 1f;
+    private float cameraTweenTotalZoomFactor = 1f;
     private Vector2 cameraTweenTotalOffset = new();
 
     public CameraFollower Follower { get; private set; } = new();
@@ -112,11 +112,11 @@ public sealed class ShapeCamera
         
         Offset = BaseOffset + shakeOffset + cameraTweenTotalOffset;
         RotationDeg = BaseRotationDeg + shake.Get(ShakeRot) + cameraTweenTotalRotationDeg;
-        ZoomLevel = (shake.Get(ShakeZoom) + BaseZoomLevel) / cameraTweenTotalScale;
+        ZoomLevel = (shake.Get(ShakeZoom) + BaseZoomLevel) * cameraTweenTotalZoomFactor;
         ZoomLevel *= zoomAdjustment;
         cameraTweenTotalOffset = new(0f);
         cameraTweenTotalRotationDeg = 0f;
-        cameraTweenTotalScale = 1f;
+        cameraTweenTotalZoomFactor = 1f;
 
         if (Follower.IsFollowing) Position = Follower.Position;
     }
@@ -211,8 +211,8 @@ public sealed class ShapeCamera
     {
         cameraTweenTotalOffset += tween.GetOffset();
         cameraTweenTotalRotationDeg += tween.GetRotationDeg();
-        cameraTweenTotalScale *= tween.GetScale();
-
+        cameraTweenTotalZoomFactor *= tween.GetZoomFactor();
+        cameraTweenTotalZoomFactor = MathF.Max(cameraTweenTotalZoomFactor, 0.05f); //cant be zero!!!
     }
     private static float Wrap(float value, float min, float max) => value - (max - min) * MathF.Floor((float) (( value -  min) / ( max -  min)));
     

@@ -664,13 +664,13 @@ namespace Examples.Scenes.ExampleScenes
 
         public override void Activate(IScene oldScene)
         {
-            CameraTweenScale scaleStart = new(1f, 1.25f, 0.25f, TweenType.LINEAR);
-            CameraTweenScale scaleHold = new(1.25f, 1.25f, 0.5f, TweenType.LINEAR);
-            CameraTweenScale scaleEnd = new(1.25f, 1f, 0.25f, TweenType.LINEAR);
+            CameraTweenZoomFactor zoomFactorStart = new(1f, 0.75f, 0.25f, TweenType.LINEAR);
+            CameraTweenZoomFactor zoomFactorHold = new(0.75f, 0.75f, 0.5f, TweenType.LINEAR);
+            CameraTweenZoomFactor zoomFactorEnd = new(0.75f, 1f, 0.25f, TweenType.LINEAR);
             CameraTweenOffset tweenRight = new(new(0), new(100, 0), 0.25f, TweenType.LINEAR);
             CameraTweenOffset tweenLeft = new(new(100, 0), new(-25, 0), 0.25f, TweenType.LINEAR);
             CameraTweenOffset tweenEnd = new(new(-25, 0), new(-0, 0), 0.25f, TweenType.LINEAR);
-            GAMELOOP.Camera.StartTweenSequence(scaleStart, scaleHold, scaleEnd);
+            GAMELOOP.Camera.StartTweenSequence(zoomFactorStart, zoomFactorHold, zoomFactorEnd);
             GAMELOOP.Camera.StartTweenSequence(tweenRight, tweenLeft, tweenEnd);
         }
 
