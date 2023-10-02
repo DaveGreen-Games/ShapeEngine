@@ -56,7 +56,9 @@ public class CameraFollower
         // Position += rate;
 
         Vector2 w = targetPostion - Position;
-        float l = w.Length();
+        float lSquared = w.LengthSquared();
+        if (lSquared <= 0f) return;
+        float l = MathF.Sqrt(lSquared);// w.Length();
         float speed = ShapeMath.Clamp(FollowSpeed * dt * f, 0f, l);
         Vector2 dir = w / l;
         Vector2 movement = dir * speed;
@@ -90,7 +92,7 @@ public class CameraFollower
         else if(Target != null) //Follow current target
         {
             Vector2 newPos = Target.GetCameraFollowPosition();
-            if (BoundaryDis.Min > 0f || BoundaryDis.Max > 0f)
+            if (BoundaryDis.Max > 0f)
             {
                 float disSq = (Position - newPos).LengthSquared();
                 float minBoundarySq = BoundaryDis.Min * BoundaryDis.Min;

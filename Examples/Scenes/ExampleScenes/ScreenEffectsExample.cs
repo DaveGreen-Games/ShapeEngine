@@ -1,4 +1,5 @@
-﻿using Raylib_CsLo;
+﻿using System.IO.Pipes;
+using Raylib_CsLo;
 using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Random;
@@ -117,12 +118,22 @@ namespace Examples.Scenes.ExampleScenes
         public Circle Hull { get; private set; }
         private Vector2 movementDir;
         public float Speed = 500;
+
+        private Color hullColor = BLUE;
+        private Color outlineColor = RED;
+        private Color cockpitColor = SKYBLUE;
         
         public Ship(Vector2 pos, float r)
         {
             Hull = new(pos, r);
         }
-
+        public Ship(Vector2 pos, float r, Color hullColor, Color cockpitColor, Color outlineColor)
+        {
+            Hull = new(pos, r);
+            this.hullColor = hullColor;
+            this.cockpitColor = cockpitColor;
+            this.outlineColor = outlineColor;
+        }
         public void Reset(Vector2 pos, float r)
         {
             Hull = new(pos, r);
@@ -164,12 +175,12 @@ namespace Examples.Scenes.ExampleScenes
         {
             Vector2 rightThruster = movementDir.RotateDeg(-25);
             Vector2 leftThruster = movementDir.RotateDeg(25);
-            DrawCircleV(Hull.Center - rightThruster * Hull.Radius, Hull.Radius / 6, RED);
-            DrawCircleV(Hull.Center - leftThruster * Hull.Radius, Hull.Radius / 6, RED);
-            Hull.Draw(BLUE);
-            DrawCircleV(Hull.Center + movementDir * Hull.Radius * 0.66f, Hull.Radius * 0.33f, SKYBLUE);
+            DrawCircleV(Hull.Center - rightThruster * Hull.Radius, Hull.Radius / 6, outlineColor);
+            DrawCircleV(Hull.Center - leftThruster * Hull.Radius, Hull.Radius / 6, outlineColor);
+            Hull.Draw(hullColor);
+            DrawCircleV(Hull.Center + movementDir * Hull.Radius * 0.66f, Hull.Radius * 0.33f, cockpitColor);
 
-            Hull.DrawLines(4f, RED);
+            Hull.DrawLines(4f, outlineColor);
         }
         
         public void FollowStarted()
@@ -188,7 +199,7 @@ namespace Examples.Scenes.ExampleScenes
     public class ScreenEffectsExample : ExampleScene
     {
         Font font;
-        Vector2 movementDir = new();
+        //Vector2 movementDir = new();
         Rect universe = new(new Vector2(0f), new Vector2(10000f), new Vector2(0.5f));
         List<Star> stars = new();
         List<Comet> comets = new();
@@ -211,8 +222,7 @@ namespace Examples.Scenes.ExampleScenes
             GenerateStars(2500);
             GenerateComets(200);
 
-            //camera.Follower.BoundaryDis = 0f;//45f;
-
+            camera.Follower.BoundaryDis = new(100, 300);
             intensitySlider = new(1f, "Intensity", font);
             cameraFollowSlider = new(1f, "Camera Follow", font);
             SetSliderValues();
@@ -223,7 +233,7 @@ namespace Examples.Scenes.ExampleScenes
             float intensity = intensitySlider.CurValue;
             GAMELOOP.ScreenEffectIntensity = intensity;
             camera.Intensity = intensity;
-            camera.Follower.FollowSpeed = ShapeMath.LerpFloat(0.5f, 4f, cameraFollowSlider.CurValue);
+            camera.Follower.FollowSpeed = ShapeMath.LerpFloat(0.5f, 2f, cameraFollowSlider.CurValue) * ship.Speed;
         }
         private void GenerateStars(int amount)
         {

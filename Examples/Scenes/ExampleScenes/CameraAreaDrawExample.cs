@@ -20,10 +20,11 @@ namespace Examples.Scenes.ExampleScenes
         List<Star> stars = new();
         private List<Star> drawStars = new();
         
-        private Ship ship = new(new Vector2(0f), 30f);
-        private Ship ship2 = new(new Vector2(100, 0), 30f);
+        private Ship ship = new(new Vector2(0f), 30f, ColorMedium, ColorLight, ColorHighlight1);
+        private Ship ship2 = new(new Vector2(100, 0), 30f, ColorMedium, ColorHighlight2, ColorHighlight3);
         private Ship currentShip;
-
+        private uint prevCameraTweenID = 0;
+        
         private ShapeCamera camera = new ShapeCamera();
         public CameraAreaDrawExample()
         {
@@ -86,7 +87,12 @@ namespace Examples.Scenes.ExampleScenes
 
             if (IsKeyPressed(KeyboardKey.KEY_B))
             {
-                //tween here with camera zoom (out & in)
+                camera.StopTweenSequence(prevCameraTweenID);
+                CameraTweenScale zoomOut = new(1f, 4f, 0.25f, TweenType.LINEAR);
+                CameraTweenScale zoomIn = new(4f, 0.75f, 0.75f, TweenType.LINEAR);
+                CameraTweenScale zoomFinal = new(0.75f, 1f, 0.25f, TweenType.LINEAR);
+                prevCameraTweenID = camera.StartTweenSequence(zoomOut, zoomIn, zoomFinal);
+                
                 if (currentShip == ship)
                 {
                     currentShip = ship2;
@@ -145,9 +151,14 @@ namespace Examples.Scenes.ExampleScenes
         {
             base.DrawUI(ui);
             Vector2 uiSize = ui.Area.Size;
-            Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
-            string infoText = $"Zoom [Y X] | Move [W A S D] | Total Stars {stars.Count} | Drawn Stars {drawStars.Count} | Camera Size {camera.Area.Size.Round()}";
+            Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.1f), new Vector2(0.5f, 1f));
+            string infoText = $"Zoom [Y X] | Total Stars {stars.Count} | Drawn Stars {drawStars.Count} | Camera Size {camera.Area.Size.Round()}";
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+
+            Rect shipInfoRect = ui.Area.ApplyMargins(0.1f, 0.1f, 0.08f, 0.88f);// new Rect(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
+            string shipInfoText = $"Move Ship [W A S D] | Switch Ship [B]";
+            font.DrawText(shipInfoText, shipInfoRect, 1f, new Vector2(0.5f, 0.5f), ColorHighlight3);
+            
             // var pos = camera.Position;
             // int x = (int)pos.X;
             // int y = (int)pos.Y;
