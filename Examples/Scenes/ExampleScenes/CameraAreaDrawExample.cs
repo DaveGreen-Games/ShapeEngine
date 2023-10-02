@@ -21,6 +21,8 @@ namespace Examples.Scenes.ExampleScenes
         private List<Star> drawStars = new();
         
         private Ship ship = new(new Vector2(0f), 30f);
+        private Ship ship2 = new(new Vector2(100, 0), 30f);
+        private Ship currentShip;
 
         private ShapeCamera camera = new ShapeCamera();
         public CameraAreaDrawExample()
@@ -31,7 +33,9 @@ namespace Examples.Scenes.ExampleScenes
                 
             GenerateStars(ShapeRandom.randI(15000, 30000));
             camera.Follower.BoundaryDis = new(200, 400);
-            camera.Follower.FollowSpeed = ship.Speed * 0.75f;
+            camera.Follower.FollowSpeed = ship.Speed * 1.1f;
+
+            currentShip = ship;
         }
 
         private void GenerateStars(int amount)
@@ -51,6 +55,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             GAMELOOP.Camera = camera;
             camera.Follower.SetTarget(ship);
+            currentShip = ship;
         }
 
         public override void Deactivate()
@@ -66,7 +71,9 @@ namespace Examples.Scenes.ExampleScenes
             GAMELOOP.ScreenEffectIntensity = 1f;
             camera.Reset();
             ship.Reset(new Vector2(0), 30f);
+            ship2.Reset(new Vector2(100, 0), 30f);
             camera.Follower.SetTarget(ship);
+            currentShip = ship;
             stars.Clear();
             GenerateStars(ShapeRandom.randI(15000, 30000));
 
@@ -76,6 +83,21 @@ namespace Examples.Scenes.ExampleScenes
             base.HandleInput(dt, mousePosGame, mousePosUI);
 
             HandleZoom(dt);
+
+            if (IsKeyPressed(KeyboardKey.KEY_B))
+            {
+                //tween here with camera zoom (out & in)
+                if (currentShip == ship)
+                {
+                    currentShip = ship2;
+                    camera.Follower.ChangeTarget(ship2, 1f);
+                }
+                else
+                {
+                    currentShip = ship;
+                    camera.Follower.ChangeTarget(ship, 1f);
+                }
+            }
 
         }
         private void HandleZoom(float dt)
@@ -94,7 +116,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             base.Update(dt, game, ui);
 
-            ship.Update(dt, camera.RotationDeg);
+            currentShip.Update(dt, camera.RotationDeg);
 
             drawStars.Clear();
             Rect cameraArea = game.Area;
@@ -112,11 +134,12 @@ namespace Examples.Scenes.ExampleScenes
                 star.Draw(new Color(20, 150, 150, 200));
             }
             ship.Draw();
-
-            Circle cameraBoundaryMin = new(camera.Position, camera.Follower.BoundaryDis.Min);
-            cameraBoundaryMin.DrawLines(2f, ColorHighlight3);
-            Circle cameraBoundaryMax = new(camera.Position, camera.Follower.BoundaryDis.Max);
-            cameraBoundaryMax.DrawLines(2f, ColorHighlight2);
+            ship2.Draw();
+            
+            // Circle cameraBoundaryMin = new(camera.Position, camera.Follower.BoundaryDis.Min);
+            // cameraBoundaryMin.DrawLines(2f, ColorHighlight3);
+            // Circle cameraBoundaryMax = new(camera.Position, camera.Follower.BoundaryDis.Max);
+            // cameraBoundaryMax.DrawLines(2f, ColorHighlight2);
         }
         public override void DrawUI(ScreenInfo ui)
         {

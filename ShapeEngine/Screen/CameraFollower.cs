@@ -10,15 +10,25 @@ public class CameraFollower
     public bool IsFollowing => Target != null;
     public ICameraFollowTarget? Target { get; private set; } = null;
     public ICameraFollowTarget? NewTarget { get; private set; } = null;
+    
+    /// <summary>
+    /// As long as the target is within the minimum boundary the camera will not follow.
+    /// In between the minimum & maximum boundary the follow speed is linear interpolated.
+    /// Outside of the maximum boundary dis the camera follows with 100% of the FollowSpeed;
+    /// </summary>
     public RangeFloat BoundaryDis = new(0, 0);
     
     /// <summary>
     /// Speed in pixels per second that the camera follows the target.
     /// </summary>
     public float FollowSpeed { get; set; } = 1f;
+
+    private float changeTargetDuration = 0f;
+    private float changeTargetTimer = 0f;
+    private Vector2 changeTargetStartPosition = new();
     public Vector2 Position { get; private set; } = new();
 
-    private const float positionReachedToleranceSquared = 1f;
+    //private const float positionReachedToleranceSquared = 1f;
 
     private void SetNewPosition(Vector2 targetPostion, float dt, float f = 1f)
     {
@@ -55,49 +65,51 @@ public class CameraFollower
     
     internal void Update(float dt)
     {
-        if (Target != null)
+        if (NewTarget != null) //change target in progress
         {
-            if (NewTarget != null)
+            if (changeTargetTimer > 0f)
             {
-                Vector2 newPos = NewTarget.GetCameraFollowPosition();
-                float disSq = (newPos - Position).LengthSquared();
-                if (disSq < positionReachedToleranceSquared)
+                changeTargetTimer -= dt;
+                if (changeTargetTimer <= 0f)
                 {
-                    Target.FollowEnded();
+                    changeTargetDuration = 0f;
+                    changeTargetTimer = 0f;
+                    Target?.FollowEnded();
                     Target = NewTarget;
                     NewTarget = null;
-                    Position = newPos;
+                    Position = Target.GetCameraFollowPosition();
                     Target.FollowStarted();
                 }
                 else
                 {
+                    float f = 1f - (changeTargetTimer / changeTargetDuration);
+                    Position = changeTargetStartPosition.Lerp(NewTarget.GetCameraFollowPosition(), f);
+                }
+            }
+        }
+        else if(Target != null) //Follow current target
+        {
+            Vector2 newPos = Target.GetCameraFollowPosition();
+            if (BoundaryDis.Min > 0f || BoundaryDis.Max > 0f)
+            {
+                float disSq = (Position - newPos).LengthSquared();
+                float minBoundarySq = BoundaryDis.Min * BoundaryDis.Min;
+                float maxBoundarySq = BoundaryDis.Max * BoundaryDis.Max;
+                if (disSq < minBoundarySq)
+                {
+                    //dont follow
+                }
+                else if (disSq < maxBoundarySq)
+                {
+                    float f = ShapeUtils.GetFactor(disSq, minBoundarySq, maxBoundarySq);
+                    SetNewPosition(newPos, dt, f);
+                }
+                else 
+                {
                     SetNewPosition(newPos, dt);
                 }
             }
-            else
-            {
-                Vector2 newPos = Target.GetCameraFollowPosition();
-                if (BoundaryDis.Min > 0f || BoundaryDis.Max > 0f)
-                {
-                    float disSq = (Position - newPos).LengthSquared();
-                    float minBoundarySq = BoundaryDis.Min * BoundaryDis.Min;
-                    float maxBoundarySq = BoundaryDis.Max * BoundaryDis.Max;
-                    if (disSq < minBoundarySq)
-                    {
-                        //dont follow
-                    }
-                    else if (disSq < maxBoundarySq)
-                    {
-                        float f = ShapeUtils.GetFactor(disSq, minBoundarySq, maxBoundarySq);
-                        SetNewPosition(newPos, dt, f);
-                    }
-                    else 
-                    {
-                        SetNewPosition(newPos, dt);
-                    }
-                }
-                else SetNewPosition(newPos, dt);
-            }
+            else SetNewPosition(newPos, dt);
         }
     }
 
@@ -107,14 +119,20 @@ public class CameraFollower
         Target.FollowStarted();
         Position = Target.GetCameraFollowPosition();
     }
-    public void ChangeTarget(ICameraFollowTarget newTarget)
+    public void ChangeTarget(ICameraFollowTarget newTarget, float changeDuration = 1f)
     {
-        if (Target == null)
+        if (changeDuration <= 0f)
         {
+            changeTargetDuration = 0f;
+            changeTargetTimer = 0f;
+            changeTargetStartPosition = new();
             SetTarget(newTarget);
         }
         else
         {
+            changeTargetDuration = changeDuration;
+            changeTargetTimer = changeDuration;
+            changeTargetStartPosition = Position;
             NewTarget = newTarget;
         }
     }
@@ -123,14 +141,15 @@ public class CameraFollower
         Target?.FollowEnded();
         Target = null; 
         NewTarget = null;
+        changeTargetDuration = 0f;
+        changeTargetTimer = 0f;
     }
 }
 
 
 /*
 Vector2 newPos = Target.GetCameraFollowPosition();
-   //TODO fix boundary problems (maybe tween)
-   //TODO try tween system
+  
    //var 1
    if (BoundaryDis > 0f)
    {
