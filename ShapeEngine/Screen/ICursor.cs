@@ -9,6 +9,7 @@ namespace ShapeEngine.Screen
     {
         public uint GetID();
         public void Draw(ScreenInfo ui);
+        public void DrawLast(ScreenInfo ui);
         public void Update(float dt, ScreenInfo ui);
         public void Deactivate();
         public void Activate(ICursor oldCursor);
@@ -24,6 +25,7 @@ namespace ShapeEngine.Screen
         public void Deactivate() { }
 
         public void Draw(ScreenInfo ui) { }
+        public void DrawLast(ScreenInfo ui) { }
 
         public uint GetID() { return id; }
 

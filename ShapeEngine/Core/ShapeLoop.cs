@@ -70,13 +70,17 @@ public class ShapeLoop
     public Dimensions DevelopmentDimensions { get; private set; } = new();
     public Dimensions CurScreenSize { get; private set; } = new();
     public Dimensions WindowMinSize { get; private set; } = new (128, 128);
-
+    
+    private Dimensions prevFullscreenWindowSize = new(-1, -1);
+    private Vector2 prevFullscreenWindowPosition = new(-1, -1);
+    private bool prevFullscreenWindowMaximized = false;
+    
     public ScreenInfo Game { get; private set; } = new();
     public ScreenInfo UI { get; private set; } = new();
     
     public float Delta { get; private set; } = 0f;
 
-    private bool screenShaderAffectsUI = false;
+    public bool ScreenShaderAffectsUI { get; set; } = false;
     private bool quit = false;
     private bool restart = false;
     public MonitorDevice Monitor { get; private set; }
@@ -123,12 +127,48 @@ public class ShapeLoop
         set
         {
             if (value == Raylib.IsWindowFullscreen()) return;
-            if(value)Raylib.SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+            if (value)
+            {
+                prevFullscreenWindowMaximized = Maximized;
+                Maximized = false;
+                prevFullscreenWindowPosition = Raylib.GetWindowPosition();
+                prevFullscreenWindowSize = CurScreenSize;
+                var mDim = Monitor.CurMonitor().Dimensions;
+                Raylib.SetWindowSize(mDim.Width, mDim.Height);
+                Raylib.SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+            }
             else
             {
                 Raylib.ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
-                Raylib.SetWindowSize(windowSize.Width, windowSize.Height);
-                CenterWindow();
+                
+                if(prevFullscreenWindowSize.IsValid()) Raylib.SetWindowSize(prevFullscreenWindowSize.Width, prevFullscreenWindowSize.Height);
+                else Raylib.SetWindowSize(windowSize.Width, windowSize.Height);
+                
+                if(prevFullscreenWindowPosition.X >= 0f && prevFullscreenWindowPosition.Y >= 0f) Raylib.SetWindowPosition((int)prevFullscreenWindowPosition.X, (int)prevFullscreenWindowPosition.Y);
+                else CenterWindow();
+                
+                if (prevFullscreenWindowMaximized) Maximized = true;
+                
+                prevFullscreenWindowSize = new(-1, -1);
+                prevFullscreenWindowMaximized = false;
+                prevFullscreenWindowPosition = new(-1, -1);
+                
+                // if (prevFullscreenWindowSize.IsValid())
+                // {
+                //     Raylib.SetWindowSize(prevFullscreenWindowSize.Width, prevFullscreenWindowSize.Height);
+                //     Raylib.SetWindowPosition((int)prevFullscreenWindowPosition.X, (int)prevFullscreenWindowPosition.Y);
+                //     if (prevFullscreenWindowMaximized) Maximized = true;
+                //     //CenterWindow();
+                //     prevFullscreenWindowSize = new(-1, -1);
+                //     prevFullscreenWindowMaximized = false;
+                //     prevFullscreenWindowPosition = new(-1, -1);
+                // }
+                // else
+                // {
+                //     Raylib.SetWindowSize(windowSize.Width, windowSize.Height);
+                //     CenterWindow();
+                // }
+                
             }
             CheckWindowDimensionsChanged();
         }
@@ -139,6 +179,7 @@ public class ShapeLoop
         set
         {
             if (value == Raylib.IsWindowMaximized()) return;
+            if (Fullscreen) Fullscreen = false;
             if(value)Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_MAXIMIZED);
             else Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_MAXIMIZED);
             CheckWindowDimensionsChanged();
@@ -193,7 +234,7 @@ public class ShapeLoop
         ReleaseMode = false;
         #endif
 
-        this.screenShaderAffectsUI = screenShadersAffectUI;
+        this.ScreenShaderAffectsUI = screenShadersAffectUI;
         this.DevelopmentDimensions = developmentDimensions;
         InitWindow(0, 0, "");
         
@@ -382,7 +423,7 @@ public class ShapeLoop
             EndMode2D();
             
             foreach (var flash in shapeFlashes) screenArea.Draw(flash.GetColor());
-            if (screenShaderAffectsUI)
+            if (ScreenShaderAffectsUI)
             {
                 DrawUI(UI);
                 Cursor.Draw(UI);
@@ -432,12 +473,13 @@ public class ShapeLoop
             target.Draw();
             EndShaderMode();
 
-            if (!screenShaderAffectsUI)
+            if (!ScreenShaderAffectsUI)
             {
                 DrawUI(UI);
                 Cursor.Draw(UI);
             }
-            
+            DrawUILast(UI);
+            Cursor.DrawLast(UI);
             EndDrawing();
             
         }
@@ -457,11 +499,13 @@ public class ShapeLoop
                 gameTexture.Draw();
             }
             
-            if (!screenShaderAffectsUI)
+            if (!ScreenShaderAffectsUI)
             {
                 DrawUI(UI);
                 Cursor.Draw(UI);
             }
+            DrawUILast(UI);
+            Cursor.DrawLast(UI);
             EndDrawing();
             
         }
@@ -498,6 +542,7 @@ public class ShapeLoop
     protected virtual void Update(float dt) { }
     protected virtual void DrawGame(ScreenInfo game) { }
     protected virtual void DrawUI(ScreenInfo ui) { }
+    protected virtual void DrawUILast(ScreenInfo ui){}
 
     /// <summary>
     /// Called before UnloadContent is called after the main gameloop has been exited.

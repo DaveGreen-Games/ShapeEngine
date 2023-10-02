@@ -31,7 +31,7 @@ namespace Examples
             cursor.DrawLines(1f, ExampleScene.ColorHighlight1);
             //SDrawing.DrawCircle(center, 4, RED);
         }
-
+        public void DrawLast(ScreenInfo ui){}
         public void Update(float dt, ScreenInfo ui)
         {
             
@@ -150,6 +150,7 @@ namespace Examples
                 movement = -1;
             }
 
+            if (IsKeyPressed(KeyboardKey.KEY_L)) ScreenShaderAffectsUI = !ScreenShaderAffectsUI;
 
             if (movement != 0)
             {
