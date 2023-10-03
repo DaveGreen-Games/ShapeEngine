@@ -28,10 +28,19 @@ namespace Examples.Scenes
 
         protected Font titleFont = GAMELOOP.FontDefault;
 
-        public virtual void WindowSizeChanged(DimensionConversionFactors conversionFactors)
+        public virtual void OnWindowSizeChanged(DimensionConversionFactors conversionFactors)
         {
             
         }
+
+        public void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos)
+        {
+        }
+
+        public void OnMonitorChanged(MonitorInfo newMonitor)
+        {
+        }
+
         public virtual void Reset() { }
 
         
@@ -61,6 +70,8 @@ namespace Examples.Scenes
             {
                 GAMELOOP.Camera.Zoom(-increment);
             }
+            
+            if(IsKeyPressed(KeyboardKey.KEY_T)) GAMELOOP.NextMonitor();
         }
 
         public virtual void DrawUI(ScreenInfo ui)

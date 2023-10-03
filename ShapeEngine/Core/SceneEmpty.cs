@@ -13,7 +13,10 @@ namespace ShapeEngine.Core
         public virtual void Deactivate() { }
         public virtual GameObjectHandler? GetGameObjectHandler() { return null; }
 
-        public virtual void WindowSizeChanged(DimensionConversionFactors conversionFactors) { }
+        public virtual void OnWindowSizeChanged(DimensionConversionFactors conversionFactors) { }
+        public void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos){}
+        public void OnMonitorChanged(MonitorInfo newMonitor){}
+
         public virtual void Update(float dt, ScreenInfo game, ScreenInfo ui) { }
         public virtual void DrawGame(ScreenInfo game) { }
         public virtual void DrawUI(ScreenInfo ui) { }

@@ -59,9 +59,17 @@ namespace Examples.Scenes
             SetupButtons();
         }
 
-        public void WindowSizeChanged(DimensionConversionFactors conversionFactors)
+        public void OnWindowSizeChanged(DimensionConversionFactors conversionFactors)
         {
             
+        }
+
+        public void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos)
+        {
+        }
+
+        public void OnMonitorChanged(MonitorInfo newMonitor)
+        {
         }
 
         public void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
@@ -90,7 +98,7 @@ namespace Examples.Scenes
             if (IsKeyPressed(KeyboardKey.KEY_W)) PrevButton();
             else if (IsKeyPressed(KeyboardKey.KEY_S)) NextButton();
             
-            //if(IsKeyPressed(KeyboardKey.KEY_T)) GAMELOOP.NextMonitor();
+            if(IsKeyPressed(KeyboardKey.KEY_T)) GAMELOOP.NextMonitor();
         }
 
         public void Update(float dt, ScreenInfo game, ScreenInfo ui)

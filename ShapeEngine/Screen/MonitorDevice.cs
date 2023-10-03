@@ -1,5 +1,6 @@
 ﻿
 using System.Numerics;
+using Raylib_CsLo;
 using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
 
@@ -78,44 +79,61 @@ namespace ShapeEngine.Screen
             return (false, -1, -1);
         }
 
-        public MonitorInfo HasMonitorSetupChanged()
+        
+        public MonitorInfo HasMonitorChanged()
         {
-
+            MonitorInfo nextMonitor = CurMonitor();
             int currentMonitorCount = GetMonitorCount();
-            if (currentMonitorCount == monitorCount) return new();
-            int dif = currentMonitorCount - monitorCount;
-            if (dif > 0) //new monitors added -> only update monitor list
+            if (currentMonitorCount != monitorCount)
             {
-                GenerateInfo();
-                OnMonitorSetupChanged?.Invoke(monitors);
-                return new();
-            }
-            else //monitors removed
-            {
-                //string currentMonitorName = GetName();
-                var oldMonitor = Get();
-                GenerateInfo();
-                OnMonitorSetupChanged?.Invoke(monitors);
-
-                var monitor = monitors.Find((MonitorInfo mi) => mi.Name == oldMonitor.Name);
-                if (!monitor.Available) //current monitor was removed
+                int dif = currentMonitorCount - monitorCount;
+                if (dif > 0) //new monitors added -> only update monitor list
                 {
-                    var newMonitor = Get();
-                    OnMonitorChanged?.Invoke(oldMonitor, newMonitor);
-                    return newMonitor;
+                    GenerateInfo();
+                    OnMonitorSetupChanged?.Invoke(monitors);
+                    // return new();
                 }
-                else//current monitor is still in the list
+                else //monitors removed
                 {
-                    if(monitor.Index != oldMonitor.Index)//just update the index in case the monitors index has changed
+                    //string currentMonitorName = GetName();
+                    var oldMonitor = Get();
+                    GenerateInfo();
+                    OnMonitorSetupChanged?.Invoke(monitors);
+
+                    var monitor = monitors.Find((MonitorInfo mi) => mi.Name == oldMonitor.Name);
+                    if (!monitor.Available) //current monitor was removed
                     {
-                        curIndex = monitor.Index;
+                        var newMonitor = Get();
+                        // OnMonitorChanged?.Invoke(oldMonitor, newMonitor);
+                        nextMonitor = newMonitor;
                     }
-                    return new();
+                    else//current monitor is still in the list
+                    {
+                        if(monitor.Index != oldMonitor.Index)//just update the index in case the monitors index has changed
+                        {
+                            curIndex = monitor.Index;
+                        }
+                        //return new();
+                    }
                 }
 
-                //if (currentMonitorName != GetName()) return Get();//the current monitor was removed
-                //else return new();//current monitor still exists so it was not removed
             }
+            
+            int curMonitorIndex = Raylib.GetCurrentMonitor();
+            if (curMonitorIndex != nextMonitor.Index)
+            {
+                nextMonitor = Get(curMonitorIndex);
+            }
+
+            if (nextMonitor.Index != CurMonitor().Index)
+            {
+                OnMonitorChanged?.Invoke(CurMonitor(), nextMonitor);
+                curIndex = nextMonitor.Index;
+                return nextMonitor;
+            }
+        
+            return new();
+
         }
 
         public bool SetCurIndex(int index)

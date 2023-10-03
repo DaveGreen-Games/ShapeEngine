@@ -14,6 +14,7 @@ namespace ShapeEngine.Core;
 
 public class ShapeLoop
 {
+    #region Static
     public static readonly string CURRENT_DIRECTORY = AppDomain.CurrentDomain.BaseDirectory; // Environment.CurrentDirectory;
     public static OSPlatform OS_PLATFORM { get; private set; } =
         RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? OSPlatform.Windows :
@@ -24,26 +25,18 @@ public class ShapeLoop
     public static bool DebugMode { get; private set; } = false;
     public static bool ReleaseMode { get; private set; } = true;
     
-    
     public static bool IsWindows() => OS_PLATFORM == OSPlatform.Windows;
     public static bool IsLinux() => OS_PLATFORM == OSPlatform.Linux;
     public static bool IsOSX() => OS_PLATFORM == OSPlatform.OSX;
+    #endregion
+    
+    #region Public Members
+    public string[] LaunchParams { get; protected set; } = Array.Empty<string>();
     
     public Raylib_CsLo.Color BackgroundColor = BLACK;
     public float ScreenEffectIntensity = 1.0f;
-    
-    public delegate void DimensionsChanged(DimensionConversionFactors conversion);
-    public event DimensionsChanged? OnWindowDimensionsChanged;
-    public string[] LaunchParams { get; protected set; } = Array.Empty<string>();
 
-    
     public readonly ShaderContainer ScreenShaders = new();
-    private readonly ShapeTexture gameTexture = new();
-    
-    private readonly ShapeTexture screenShaderBuffer = new();
-    
-    private readonly ShapeCamera basicCamera = new ShapeCamera();
-    private ShapeCamera curCamera;
     public ShapeCamera Camera
     {
         get => curCamera;
@@ -57,8 +50,6 @@ public class ShapeLoop
         }
     }
 
-    public void ResetCamera() => Camera = basicCamera;
-
     /// <summary>
     /// Scaling factors from current screen size to development resolution.
     /// </summary>
@@ -70,26 +61,14 @@ public class ShapeLoop
     public Dimensions DevelopmentDimensions { get; private set; } = new();
     public Dimensions CurScreenSize { get; private set; } = new();
     public Dimensions WindowMinSize { get; private set; } = new (128, 128);
-    
-    private Dimensions prevFullscreenWindowSize = new(-1, -1);
-    private Vector2 prevFullscreenWindowPosition = new(-1, -1);
-    private bool prevFullscreenWindowMaximized = false;
-    
+    public Vector2 WindowPosition { get; private set; } = new();
     public ScreenInfo Game { get; private set; } = new();
     public ScreenInfo UI { get; private set; } = new();
-    
     public float Delta { get; private set; } = 0f;
-
     public bool ScreenShaderAffectsUI { get; set; } = false;
-    private bool quit = false;
-    private bool restart = false;
     public MonitorDevice Monitor { get; private set; }
     public ICursor Cursor { get; private set; } = new NullCursor();
     public IScene CurScene { get; private set; } = new SceneEmpty();
-    private List<ShapeFlash> shapeFlashes = new();
-    private List<DeferredInfo> deferred = new();
-
-    private int frameRateLimit = 60;
     public int FrameRateLimit
     {
         get => frameRateLimit;
@@ -140,37 +119,12 @@ public class ShapeLoop
             else
             {
                 Raylib.ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
-                
-                if(prevFullscreenWindowSize.IsValid()) Raylib.SetWindowSize(prevFullscreenWindowSize.Width, prevFullscreenWindowSize.Height);
-                else Raylib.SetWindowSize(windowSize.Width, windowSize.Height);
-                
-                if(prevFullscreenWindowPosition.X >= 0f && prevFullscreenWindowPosition.Y >= 0f) Raylib.SetWindowPosition((int)prevFullscreenWindowPosition.X, (int)prevFullscreenWindowPosition.Y);
-                else CenterWindow();
+                Raylib.SetWindowSize(prevFullscreenWindowSize.Width, prevFullscreenWindowSize.Height);
+                Raylib.SetWindowPosition((int)prevFullscreenWindowPosition.X, (int)prevFullscreenWindowPosition.Y);
                 
                 if (prevFullscreenWindowMaximized) Maximized = true;
                 
-                prevFullscreenWindowSize = new(-1, -1);
-                prevFullscreenWindowMaximized = false;
-                prevFullscreenWindowPosition = new(-1, -1);
-                
-                // if (prevFullscreenWindowSize.IsValid())
-                // {
-                //     Raylib.SetWindowSize(prevFullscreenWindowSize.Width, prevFullscreenWindowSize.Height);
-                //     Raylib.SetWindowPosition((int)prevFullscreenWindowPosition.X, (int)prevFullscreenWindowPosition.Y);
-                //     if (prevFullscreenWindowMaximized) Maximized = true;
-                //     //CenterWindow();
-                //     prevFullscreenWindowSize = new(-1, -1);
-                //     prevFullscreenWindowMaximized = false;
-                //     prevFullscreenWindowPosition = new(-1, -1);
-                // }
-                // else
-                // {
-                //     Raylib.SetWindowSize(windowSize.Width, windowSize.Height);
-                //     CenterWindow();
-                // }
-                
             }
-            CheckWindowDimensionsChanged();
         }
     }
     public bool Maximized
@@ -182,11 +136,9 @@ public class ShapeLoop
             if (Fullscreen) Fullscreen = false;
             if(value)Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_MAXIMIZED);
             else Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_MAXIMIZED);
-            CheckWindowDimensionsChanged();
+            //CheckForWindowChanges();
         }
     }
-
-    private Dimensions windowSize = new();
     public Dimensions WindowSize
     {
         get => windowSize;
@@ -206,27 +158,29 @@ public class ShapeLoop
             SetWindowSize(windowSize.Width, windowSize.Height);
             CenterWindow();
 
-            CheckWindowDimensionsChanged();
+            //CheckForWindowChanges();
         }
     }
-    public void CenterWindow()
-    {
-        if (Fullscreen) return;
-        var monitor = Monitor.CurMonitor();
+    #endregion
 
-        int winPosX = monitor.Width / 2 - windowSize.Width / 2;
-        int winPosY = monitor.Height / 2 - windowSize.Height / 2;
-        SetWindowPosition(winPosX + (int)monitor.Position.X, winPosY + (int)monitor.Position.Y);
-    }
-    public void ResizeWindow(Dimensions newDimensions) => WindowSize = newDimensions;
-    public void ResetWindow()
-    {
-        if (Fullscreen) Raylib.ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
-        WindowSize = Monitor.CurMonitor().Dimensions / 2;
-    }
-
+    #region Private Members
+    private readonly ShapeTexture gameTexture = new();
+    private readonly ShapeTexture screenShaderBuffer = new();
+    private readonly ShapeCamera basicCamera = new ShapeCamera();
+    private ShapeCamera curCamera;
+    private Vector2 prevWindowPosition = new();
+    private Dimensions prevFullscreenWindowSize = new(128, 128);
+    private Vector2 prevFullscreenWindowPosition = new(0);
+    private bool prevFullscreenWindowMaximized = false;
+    private bool quit = false;
+    private bool restart = false;
+    private List<ShapeFlash> shapeFlashes = new();
+    private List<DeferredInfo> deferred = new();
+    private int frameRateLimit = 60;
+    private Dimensions windowSize = new();
+    #endregion
     
-    
+    #region Setup
     public ShapeLoop(Dimensions developmentDimensions, bool multiShaderSupport = false, bool screenShadersAffectUI = false)
     {
         #if DEBUG
@@ -294,7 +248,9 @@ public class ShapeLoop
 
         return new ExitCode(restart);
     }
-    
+    #endregion
+
+    #region Public
     public void Restart()
     {
         restart = true;
@@ -331,7 +287,6 @@ public class ShapeLoop
         }
     }
 
-    
     public void Flash(float duration, Raylib_CsLo.Color startColor, Raylib_CsLo.Color endColor)
     {
         if (duration <= 0.0f) return;
@@ -346,6 +301,7 @@ public class ShapeLoop
     }
 
     public void ClearFlashes() => shapeFlashes.Clear();
+    
     public bool SwitchCursor(ICursor newCursor)
     {
         if (Cursor != newCursor)
@@ -359,27 +315,26 @@ public class ShapeLoop
     }
 
     public void HideCursor() => SwitchCursor(new NullCursor());
-    
-    private void CalculateCurScreenSize()
+    public void CenterWindow()
     {
-        if (IsWindowFullscreen())
-        {
-            var monitor = GetCurrentMonitor();
-            var mw = GetMonitorWidth(monitor);
-            var mh = GetMonitorHeight(monitor);
-            var scaleFactor = GetWindowScaleDPI();
-            int scaleX = (int)scaleFactor.X;
-            int scaleY = (int)scaleFactor.Y;
-            CurScreenSize = new(mw * scaleX, mh * scaleY);
-        }
-        else
-        {
-            var w = GetScreenWidth();
-            var h = GetScreenHeight();
-            CurScreenSize = new(w, h);
-        }
-    }
+        if (Fullscreen) return;
+        var monitor = Monitor.CurMonitor();
 
+        int winPosX = monitor.Width / 2 - windowSize.Width / 2;
+        int winPosY = monitor.Height / 2 - windowSize.Height / 2;
+        SetWindowPosition(winPosX + (int)monitor.Position.X, winPosY + (int)monitor.Position.Y);
+    }
+    public void ResizeWindow(Dimensions newDimensions) => WindowSize = newDimensions;
+    public void ResetWindow()
+    {
+        if (Fullscreen) Raylib.ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+        WindowSize = Monitor.CurMonitor().Dimensions / 2;
+    }
+    public void ResetCamera() => Camera = basicCamera;
+
+    #endregion
+    
+    #region  Gameloop
     private void StartGameloop()
     {
         LoadContent();
@@ -396,10 +351,18 @@ public class ShapeLoop
             }
             var dt = GetFrameTime();
             Delta = dt;
-            UpdateMonitorDevice(dt);
-            CheckWindowDimensionsChanged();
+            
+            var newMonitor = Monitor.HasMonitorChanged();
+            if (newMonitor.Available)
+            {
+                ChangeMonitor(newMonitor);
+            }
+            
+            CheckForWindowChanges();
+            
             Camera.SetSize(CurScreenSize, DevelopmentDimensions);
             Camera.Update(dt);
+            
             gameTexture.UpdateDimensions(CurScreenSize);
             screenShaderBuffer.UpdateDimensions(CurScreenSize);
             
@@ -517,15 +480,7 @@ public class ShapeLoop
         screenShaderBuffer.Unload();
         gameTexture.Unload();
     }
-    private void UpdateMonitorDevice(float dt)
-    {
-        var newMonitor = Monitor.HasMonitorSetupChanged();
-        if (newMonitor.Available)
-        {
-            MonitorChanged(newMonitor);
-        }
-    }
-    
+    #endregion
 
     #region Virtual
 
@@ -553,7 +508,10 @@ public class ShapeLoop
     /// </summary>
     protected virtual void UnloadContent() { }
 
-    protected virtual void WindowSizeChanged(DimensionConversionFactors conversion) { }
+    protected virtual void OnWindowSizeChanged(DimensionConversionFactors conversion) { }
+    protected virtual void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos) { }
+    protected virtual void OnMonitorChanged(MonitorInfo newMonitor) { }
+    
     protected void UpdateScene() => CurScene.Update(Delta, Game, UI);
 
     protected void DrawGameScene() => CurScene.DrawGame(Game);
@@ -561,136 +519,133 @@ public class ShapeLoop
     protected void DrawUIScene() => CurScene.DrawUI(UI);
 
     #endregion
-    
+
+    #region Monitor
     public bool SetMonitor(int newMonitor)
     {
-        if (!Fullscreen)
-        {
-            //throw new WarningException("Monitor changing is only allowed in fullscreen mode!");
-            Console.WriteLine("Monitor changing is only allowed in fullscreen mode!");
-            return false;
-        }
-        
         var monitor = Monitor.SetMonitor(newMonitor);
         if (monitor.Available)
         {
-            MonitorChanged(monitor);
+            ChangeMonitor(monitor);
             return true;
         }
         return false;
     }
     public void NextMonitor()
     {
-        if (!Fullscreen)
-        {
-            // throw new WarningException("Monitor changing is only allowed in fullscreen mode!");
-            Console.WriteLine("Monitor changing is only allowed in fullscreen mode!");
-            return;
-        }
-        
         var nextMonitor = Monitor.NextMonitor();
         if (nextMonitor.Available)
         {
-            MonitorChanged(nextMonitor);
+            ChangeMonitor(nextMonitor);
         }
     }
-    private void MonitorChanged(MonitorInfo monitor)
+    private void ChangeMonitor(MonitorInfo monitor)
     {
-        if (!Fullscreen)
+        if (Fullscreen)
         {
-            Console.WriteLine("Monitor changing is only allowed in fullscreen mode!");
-            return;
+            Raylib.SetWindowMonitor(monitor.Index);
+            SetWindowSize(monitor.Dimensions.Width, monitor.Dimensions.Height);
+            SetWindowPosition((int)monitor.Position.X, (int)monitor.Position.Y);
+            SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
         }
-        
-        Raylib.SetWindowMonitor(monitor.Index);
-        SetWindowSize(monitor.Dimensions.Width, monitor.Dimensions.Height);
-        SetWindowPosition((int)monitor.Position.X, (int)monitor.Position.Y);
-        SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
-        
-        var windowDimensions = WindowSize;
+
+        var windowDimensions = windowSize;
         if (windowDimensions.Width > monitor.Width || windowDimensions.Height > monitor.Height)
         {
             windowDimensions = monitor.Dimensions / 2;
         }
-
-        WindowSize = windowDimensions;
-
-        int winPosX = monitor.Width / 2 - windowSize.Width / 2;
-        int winPosY = monitor.Height / 2 - windowSize.Height / 2;
+        
+        windowSize = windowDimensions;
+        
+        int winPosX = monitor.Width / 2 - windowDimensions.Width / 2;
+        int winPosY = monitor.Height / 2 - windowDimensions.Height / 2;
+        int x = winPosX + (int)monitor.Position.X;
+        int y = winPosY + (int)monitor.Position.Y;
         
         prevFullscreenWindowSize = windowDimensions;
-        prevFullscreenWindowPosition = new(winPosX + (int)monitor.Position.X, winPosY + (int)monitor.Position.Y);
         prevFullscreenWindowMaximized = false;
+        prevFullscreenWindowPosition =new(x, y);
         
-        //RestoreWindow();
-        // CenterWindow();
-        //prevFullscreenWindowSize = CurScreenSize;
-        //prevFullscreenWindowMaximized = false;
+        if (!Fullscreen)
+        {
+            SetWindowPosition(x, y);
+            SetWindowSize(windowDimensions.Width, windowDimensions.Height);
+        }
         
         
-        //VAR 1
-        // if (Fullscreen)
-        // {
-        //     Raylib.SetWindowMonitor(monitor.Index);
-        //     SetWindowSize(monitor.Dimensions.Width, monitor.Dimensions.Height);
-        //     SetWindowPosition((int)monitor.Position.X, (int)monitor.Position.Y);
-        //     SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
-        //     WindowSize = monitor.Dimensions / 2;
-        // }
-        // else
-        // {
-        //     var windowDimensions = WindowSize;
-        //     if (windowDimensions.Width > monitor.Width || windowDimensions.Height > monitor.Height)
-        //     {
-        //         windowDimensions = monitor.Dimensions / 2;
-        //     }
-        //
-        //     SetWindowSize(monitor.Dimensions.Width, monitor.Dimensions.Height);
-        //     SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
-        //     SetWindowMonitor(monitor.Index);
-        //     ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
-        //     WindowSize = windowDimensions;
-        //     CenterWindow();
-        // }
-        //
-        // prevFullscreenWindowPosition = GetWindowPosition();
-        // prevFullscreenWindowSize = CurScreenSize;
-        // prevFullscreenWindowMaximized = false;
-
-        //OLD
-        // var prevDimensions = CurScreenSize;
-
-        // if (IsWindowFullscreen())
-        // {
-        // SetWindowMonitor(monitor.Index);
-        // ChangeWindowDimensions(monitor.Dimensions, true);
-        // SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
-        // }
-        // else
-        // {
-        // var windowDimensions = prevDimensions;
-        // if (windowDimensions.Width > monitor.Width || windowDimensions.Height > monitor.Height)
-        // {
-        // windowDimensions = monitor.Dimensions / 2;
-        // }
-        // ChangeWindowDimensions(monitor.Dimensions, true);
-        // SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
-        // SetWindowMonitor(monitor.Index);
-        // ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
-        // ChangeWindowDimensions(windowDimensions, false);
-        // }
-        // if (VSync)
-        // {
-        // SetFPS(monitor.Refreshrate);
-        // }
+        OnMonitorChanged(monitor);
     }
+    #endregion
+
+    #region Private Functions
     private void SetupWindowDimensions()
     {
         var monitor = Monitor.CurMonitor();
         WindowSize = monitor.Dimensions / 2;
-        CenterWindow();
+        prevFullscreenWindowSize = windowSize;
+        //CenterWindow();
+        WindowPosition = GetWindowPosition();
+        prevWindowPosition = WindowPosition;
+        prevFullscreenWindowPosition = WindowPosition;
         CalculateCurScreenSize();
     }
+    private void CheckForWindowChanges()
+    {
+        var prev = CurScreenSize;
+        CalculateCurScreenSize();
+        if (prev != CurScreenSize)
+        {
+            if (!Maximized && !Fullscreen) windowSize = CurScreenSize;
+            SetConversionFactors();
+            var conversion = new DimensionConversionFactors(prev, CurScreenSize);
+            //OnWindowDimensionsChanged?.Invoke(conversion);
+            OnWindowSizeChanged(conversion);
+            //CurScene.OnWindowSizeChanged(conversion);
+        }
+
+        var curWindowPosition = Raylib.GetWindowPosition();
+        if (curWindowPosition != WindowPosition)
+        {
+            prevWindowPosition = WindowPosition;
+            WindowPosition = curWindowPosition;
+            OnWindowPositionChanged(WindowPosition, curWindowPosition);
+        }
+    }
+    private void CalculateCurScreenSize()
+    {
+        if (IsWindowFullscreen())
+        {
+            var monitor = GetCurrentMonitor();
+            var mw = GetMonitorWidth(monitor);
+            var mh = GetMonitorHeight(monitor);
+            var scaleFactor = GetWindowScaleDPI();
+            int scaleX = (int)scaleFactor.X;
+            int scaleY = (int)scaleFactor.Y;
+            CurScreenSize = new(mw * scaleX, mh * scaleY);
+        }
+        else
+        {
+            var w = GetScreenWidth();
+            var h = GetScreenHeight();
+            CurScreenSize = new(w, h);
+        }
+    }
+    private void SetConversionFactors()
+    {
+        ScreenToDevelopment = new(CurScreenSize, DevelopmentDimensions);
+        DevelopmentToScreen = new(DevelopmentDimensions, CurScreenSize);
+    }
+    
+    private void UpdateFlashes(float dt)
+    {
+        for (int i = shapeFlashes.Count() - 1; i >= 0; i--)
+        {
+            var flash = shapeFlashes[i];
+            flash.Update(dt);
+            if (flash.IsFinished()) { shapeFlashes.RemoveAt(i); }
+        }
+    }
+    
     private void WriteDebugInfo()
     {
         Console.WriteLine("--------Shape Engine Monitor Info--------");
@@ -722,43 +677,6 @@ public class ShapeLoop
         Monitor.CurMonitor().WriteDebugInfo();
         Console.WriteLine("---------------------------------------");
     }
-    private void CheckWindowDimensionsChanged()
-    {
-        var prev = CurScreenSize;
-        CalculateCurScreenSize();
-        if (prev != CurScreenSize)
-        {
-            //matches aspect ratio from cur screen size to development dimensions
-            // if (!Fullscreen)
-            // {
-            //     var newScreenSize = CurScreenSize.MatchAspectRatio(DevelopmentDimensions);
-            //     CurScreenSize = newScreenSize;
-            //     SetWindowSize(newScreenSize.Width, newScreenSize.Height);
-            //     CenterWindow();
-            // }
-            
-            
-            SetConversionFactors();
-            var conversion = new DimensionConversionFactors(prev, CurScreenSize);
-            OnWindowDimensionsChanged?.Invoke(conversion);
-            WindowSizeChanged(conversion);
-            CurScene.WindowSizeChanged(conversion);
-        }
-    }
-    private void UpdateFlashes(float dt)
-    {
-        for (int i = shapeFlashes.Count() - 1; i >= 0; i--)
-        {
-            var flash = shapeFlashes[i];
-            flash.Update(dt);
-            if (flash.IsFinished()) { shapeFlashes.RemoveAt(i); }
-        }
-    }
-
-    private void SetConversionFactors()
-    {
-        ScreenToDevelopment = new(CurScreenSize, DevelopmentDimensions);
-        DevelopmentToScreen = new(DevelopmentDimensions, CurScreenSize);
-    }
+    #endregion
 }
     

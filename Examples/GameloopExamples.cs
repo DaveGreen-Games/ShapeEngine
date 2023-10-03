@@ -117,7 +117,7 @@ namespace Examples
             GoToScene(mainScene);
         }
 
-        protected override void WindowSizeChanged(DimensionConversionFactors conversionFactors)
+        protected override void OnWindowSizeChanged(DimensionConversionFactors conversionFactors)
         {
             var crtShader = ScreenShaders.Get(crtShaderID);
             if (crtShader != null)
@@ -125,6 +125,18 @@ namespace Examples
                 ShapeShader.SetValueFloat(crtShader.Shader, "renderWidth", CurScreenSize.Width);
                 ShapeShader.SetValueFloat(crtShader.Shader, "renderHeight", CurScreenSize.Height);
             }
+            
+            CurScene.OnWindowSizeChanged(conversionFactors);
+        }
+
+        protected override void OnMonitorChanged(MonitorInfo newMonitor)
+        {
+            CurScene.OnMonitorChanged(newMonitor);
+        }
+
+        protected override void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos)
+        {
+            CurScene.OnWindowPositionChanged(oldPos, newPos);
         }
 
         //protected override void HandleInput(float dt)

@@ -40,7 +40,7 @@ namespace Examples.Scenes.ExampleScenes
             bottomRight = s * new Vector2(0.9f, 0.8f);
             font = GAMELOOP.GetFont(fontIndex);
         }
-        public override void WindowSizeChanged(DimensionConversionFactors conversionFactors)
+        public override void OnWindowSizeChanged(DimensionConversionFactors conversionFactors)
         {
             topLeft *= conversionFactors.Factor;
             bottomRight *= conversionFactors.Factor;
