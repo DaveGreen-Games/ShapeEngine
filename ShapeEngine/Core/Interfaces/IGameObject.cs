@@ -65,10 +65,4 @@ public interface IGameObject : ISpatial, IUpdateable, IDrawable, IKillable//, IB
     /// <returns></returns>
     public virtual List<ICollidable> GetCollidables() { return new(); }
 
-
-    /// <summary>
-    ///  Is called right after update if a delta factor was applied to the objects dt.
-    /// </summary>
-    /// <param name="f">The factor that was applied.</param>
-    public void DeltaFactorApplied(float f);
 }

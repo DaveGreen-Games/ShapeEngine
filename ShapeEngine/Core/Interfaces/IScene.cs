@@ -12,7 +12,7 @@ public interface IScene : IUpdateable, IDrawable
 
     public void Activate(IScene oldScene);// { }
     public void Deactivate();
-
+    public void OnPauseChanged(bool paused);
         
     /// <summary>
     /// Used for cleanup. Should be called once right before the scene gets deleted.

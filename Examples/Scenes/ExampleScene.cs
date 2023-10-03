@@ -43,14 +43,30 @@ namespace Examples.Scenes
 
         public virtual void Reset() { }
 
+        public virtual void OnPauseChanged(bool paused){}
         
-        public virtual void Update(float dt, ScreenInfo game, ScreenInfo ui)
+        public virtual void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
             HandleInput(dt, game.MousePos, ui.MousePos);
-        }
 
+            if (GAMELOOP.Paused) return;
+            HandleInputExample(dt, game.MousePos, ui.MousePos);
+            UpdateExample(dt, deltaSlow, game, ui);
+        }
         protected virtual void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
+            if (GAMELOOP.Paused)
+            {
+                if (IsKeyPressed(KeyboardKey.KEY_P)) GAMELOOP.Paused = false;
+                return;
+            }
+
+            if (IsKeyPressed(KeyboardKey.KEY_P))
+            {
+                GAMELOOP.Paused = true;
+                return;
+            }
+            
             if (IsKeyPressed(KeyboardKey.KEY_R))
             {
                 Reset();
@@ -72,10 +88,24 @@ namespace Examples.Scenes
             }
             
             if(IsKeyPressed(KeyboardKey.KEY_T)) GAMELOOP.NextMonitor();
-        }
 
+            
+        }
         public virtual void DrawUI(ScreenInfo ui)
         {
+            if (GAMELOOP.Paused)
+            {
+                ui.Area.Draw(ColorDark.ChangeAlpha((byte)150));
+                
+                var pausedRect = ui.Area.ApplyMargins(0.05f, 0.05f, 0.15f, 0.55f);
+                titleFont.DrawText("PAUSED", pausedRect, 30f, new(0.5f), ColorRustyRed);
+                
+                return;
+                
+            }
+            
+            DrawUIExampe(ui);
+            
             Vector2 uiSize = ui.Area.Size;
             Segment s = new(uiSize * new Vector2(0f, 0.07f), uiSize * new Vector2(1f, 0.07f));
             s.Draw(2f, ColorLight);
@@ -91,7 +121,17 @@ namespace Examples.Scenes
             Rect fpsRect = new Rect(uiSize * new Vector2(0.98f, 0.06f), uiSize * new Vector2(0.3f, 0.04f), new Vector2(1f, 1f));
             titleFont.DrawText(fpsText, fpsRect, 4f, new Vector2(1f, 0.5f), ColorHighlight2);
         }
-
+        public virtual void DrawGame(ScreenInfo game)
+        {
+            DrawGameExample(game);
+        }
+        
+        protected virtual void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI) { }
+        protected virtual void UpdateExample(float dt, float slowDelta, ScreenInfo game, ScreenInfo ui) { }
+        protected virtual void DrawUIExampe(ScreenInfo ui) { }
+        protected virtual void DrawGameExample(ScreenInfo game) { }
+        
+        
         protected void DrawCross(Vector2 center, float length)
         {
             Color c = ColorLight.ChangeAlpha((byte)125);
@@ -124,9 +164,7 @@ namespace Examples.Scenes
 
         
 
-        public virtual void DrawGame(ScreenInfo game)
-        {
-        }
+       
     }
 
 }

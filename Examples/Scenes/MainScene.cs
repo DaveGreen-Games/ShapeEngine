@@ -71,7 +71,7 @@ namespace Examples.Scenes
         public void OnMonitorChanged(MonitorInfo newMonitor)
         {
         }
-
+        public void OnPauseChanged(bool paused){}
         public void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             if (IsKeyPressed(KeyboardKey.KEY_ESCAPE)) GAMELOOP.Quit();
@@ -101,7 +101,7 @@ namespace Examples.Scenes
             if(IsKeyPressed(KeyboardKey.KEY_T)) GAMELOOP.NextMonitor();
         }
 
-        public void Update(float dt, ScreenInfo game, ScreenInfo ui)
+        public void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
             HandleInput(dt, game.MousePos, ui.MousePos);
             foreach (var b in buttons)

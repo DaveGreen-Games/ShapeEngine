@@ -121,7 +121,7 @@ namespace ShapeEngine.Core.Collision
             spatialHash.Close();
         }
 
-        public void Update(float dt)
+        public void Update()
         {
             FillSpatialHash();
 

@@ -81,7 +81,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             return false;
         }
-        public virtual void Update(float dt, ScreenInfo game, ScreenInfo ui)
+        public virtual void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
             var collidables = GetCollidables();
             foreach (var c in collidables)
@@ -409,9 +409,9 @@ namespace Examples.Scenes.ExampleScenes
             
         }
 
-        public override void Update(float dt, ScreenInfo game, ScreenInfo ui)
+        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            base.Update(dt, game, ui);
+            base.Update(dt, deltaSlow, game, ui);
             rockCollidable.Update(dt);
         }
         public override void DrawGame(ScreenInfo game)
@@ -500,9 +500,9 @@ namespace Examples.Scenes.ExampleScenes
             this.boxCollidable = new(pos, vel, size);
         }
 
-        public override void Update(float dt, ScreenInfo game, ScreenInfo ui)
+        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            base.Update(dt, game, ui);
+            base.Update(dt, deltaSlow, game, ui);
             boxCollidable.Update(dt);
         }
         public override void DrawGame(ScreenInfo game)
@@ -588,9 +588,9 @@ namespace Examples.Scenes.ExampleScenes
         }
         
 
-        public override void Update(float dt, ScreenInfo game, ScreenInfo ui)
+        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            base.Update(dt, game, ui);
+            base.Update(dt, deltaSlow, game, ui);
             ballCollidable.Update(dt);
         }
         public override void DrawGame(ScreenInfo game)
@@ -730,12 +730,12 @@ namespace Examples.Scenes.ExampleScenes
 
         }
 
-        public override void Update(float dt,ScreenInfo game, ScreenInfo ui)
+        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            base.Update(dt, game, ui);
+            base.Update(dt, deltaSlow, game, ui);
 
             HandleWalls(game.MousePos);
-            gameObjectHandler.Update(dt, game, ui);
+            gameObjectHandler.Update(dt, deltaSlow, game, ui);
 
             //collisionsTotal += area.Col.CollisionChecksPerFrame;
             //iterationsTotal += area.Col.IterationsPerFrame;

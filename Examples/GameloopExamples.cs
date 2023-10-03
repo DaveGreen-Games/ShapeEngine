@@ -147,10 +147,10 @@ namespace Examples
         //    }
         //    base.HandleInput(dt);
         //}
-        protected override void Update(float dt)
+        protected override void Update(float dt, float deltaSlow)
         {
             UpdateScene();
-
+            if (Paused) return;
             int speed = 2;
             int movement = 0;
             if (IsKeyDown(KeyboardKey.KEY_J))

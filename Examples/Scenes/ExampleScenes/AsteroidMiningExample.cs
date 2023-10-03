@@ -25,7 +25,7 @@ namespace Examples.Scenes.ExampleScenes
         public abstract Vector2 GetPosition();
         public abstract Rect GetBoundingBox();
 
-        public virtual void Update(float dt, ScreenInfo game, ScreenInfo ui) { }
+        public virtual void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui) { }
         public virtual void DrawGame(ScreenInfo game) { }
         public virtual void DrawUI(ScreenInfo ui) { }
         public virtual void Overlap(CollisionInformation info) { }
@@ -33,7 +33,6 @@ namespace Examples.Scenes.ExampleScenes
         public virtual void AddedToHandler(GameObjectHandler gameObjectHandler) { }
         public virtual void RemovedFromHandler(GameObjectHandler gameObjectHandler) { }
         
-        public void DeltaFactorApplied(float f) { }
         
         public bool IsDead() { return dead; }
         public bool DrawToGame(Rect gameArea) { return true; }
@@ -73,7 +72,7 @@ namespace Examples.Scenes.ExampleScenes
             //this.delay = SRNG.randF(0.25f, 1f);
             //this.lifetime = delay * 3f;
         }
-        public override void Update(float dt, ScreenInfo game, ScreenInfo ui)
+        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
             if(lifetimeTimer > 0f)
             {
@@ -253,7 +252,7 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
 
-        public override void Update(float dt, ScreenInfo game, ScreenInfo ui) 
+        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui) 
         {
             damagedSegments.Update(dt);
         }
@@ -349,7 +348,7 @@ namespace Examples.Scenes.ExampleScenes
             this.tip = a;
         }
 
-        public override void Update(float dt, ScreenInfo game, ScreenInfo ui)
+        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
             laserPoints.Clear();
             laserEnabled = false;
@@ -546,11 +545,11 @@ namespace Examples.Scenes.ExampleScenes
             boundaryRect = gameArea.ApplyMargins(0.005f, 0.005f, 0.1f, 0.005f);
         }
         
-        public override void Update(float dt, ScreenInfo game, ScreenInfo ui)
+        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
             UpdateBoundaryRect(game.Area);
             gameObjectHandler.ResizeBounds(boundaryRect);
-            gameObjectHandler.Update(dt, game, ui);
+            gameObjectHandler.Update(dt, deltaSlow, game, ui);
 
             for (int i = lastCutOuts.Count - 1; i >= 0; i--)
             {
@@ -558,7 +557,7 @@ namespace Examples.Scenes.ExampleScenes
                 c.Update(dt);
                 if (c.IsFinished()) lastCutOuts.RemoveAt(i);
             }
-            base.Update(dt, game, ui); //calls area update therefore area bounds have to be updated before that
+            base.Update(dt, deltaSlow, game, ui); //calls area update therefore area bounds have to be updated before that
         }
         private void OnAsteroidFractured(Asteroid a, Vector2 point)
         {

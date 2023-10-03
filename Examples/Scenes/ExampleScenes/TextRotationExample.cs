@@ -96,9 +96,9 @@ namespace Examples.Scenes.ExampleScenes
             base.HandleInput(dt, mousePosGame, mousePosUI);
 
         }
-        public override void Update(float dt, ScreenInfo game, ScreenInfo ui)
+        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            base.Update(dt, game, ui);
+            base.Update(dt, deltaSlow, game, ui);
             timer += dt;
             if (timer >= interval)
             {

@@ -13,9 +13,119 @@ using ShapeEngine.Core.Shapes;
 namespace ShapeEngine.Core;
 
 
+public sealed class SlowMotionState
+{
+    internal readonly List<SlowMotion.Container> Containers;
+    internal SlowMotionState(IEnumerable<SlowMotion.Container> containers)
+    {
+        Containers = containers.ToList();
+        
+    }
+}
 public sealed class SlowMotion
 {
-    private readonly Dictionary<uint, SlowItemContainer> slowItemContainers = new();
+    public const uint TagDefault = 0;
+    
+    internal class Container : List<Item>
+    {
+        public uint Tag { get; private set; }
+        public float TotalFactor { get; private set; } = 1f;
+
+        public Container(uint tag)
+        {
+            Tag = tag;
+        }
+        
+        public Container Copy()
+        {
+            var copy = new Container(Tag);
+
+            foreach (var item in this)
+            {
+                copy.Add(item.Copy());
+            }
+
+            return copy;
+        }
+        public void Update(float dt)
+        {
+            float totalFactor = 1f;
+            for (int i = Count - 1; i >= 0; i--)
+            {
+                var item = this[i];
+                item.Update(dt);
+                if (item.Finished) RemoveAt(i);
+                else totalFactor *= item.Factor;
+
+            }
+
+            TotalFactor = totalFactor;
+        }
+
+        public bool RemoveID(uint id)
+        {
+            for (int i = Count - 1; i >= 0; i--)
+            {
+                if (this[i].ID == id)
+                {
+                    RemoveAt(i);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
+    internal class Item
+    {
+        public uint ID { get; private set; }
+        public uint Tag { get; private set; }
+        public float Factor { get; private set; }
+
+        private float timer = 0f;
+
+        public Item(float factor, float duration, uint tag)
+        {
+            ID = ShapeID.NextID;
+            Tag = tag;
+            Factor = MathF.Max(0f, factor);
+            if (duration > 0f)
+            {
+                // this.duration = duration;
+                this.timer = duration;
+            }
+        }
+        private Item(float factor, float duration, uint tag, uint id)
+        {
+            ID = id;
+            Tag = tag;
+            Factor = MathF.Max(0f, factor);
+            if (duration > 0f)
+            {
+                // this.duration = duration;
+                this.timer = duration;
+            }
+        }
+
+        public Item Copy()
+        {
+            var copy = new Item(Factor, timer, Tag, ID);
+            return copy;
+        }
+
+    
+        public virtual bool Finished => timer < 0f;
+        public virtual void Update(float dt)
+        {
+            if (timer <= 0f) return;
+
+            timer -= dt;
+            if (timer <= 0f) timer = -1f;
+        }
+    }
+
+    
+    private readonly Dictionary<uint, Container> slowItemContainers = new();
 
     public void Update(float dt)
     {
@@ -27,15 +137,46 @@ public sealed class SlowMotion
     
     public uint Add(float factor, float duration, uint tag)
     {
-        var slowItem = new SlowItem(factor, duration, tag);
+        var slowItem = new Item(factor, duration, tag);
         
         if(slowItemContainers.ContainsKey(tag)) slowItemContainers[tag].Add(slowItem);
-        else slowItemContainers.Add(tag, new SlowItemContainer(){slowItem});
+        else slowItemContainers.Add(tag, new Container(tag){slowItem});
 
         return slowItem.ID;
     }
+    public uint Add(float factor, float duration) => Add(factor, duration, TagDefault);
 
-    public void Clear() => slowItemContainers.Clear();
+    public SlowMotionState Clear()
+    {
+        var state = new SlowMotionState(slowItemContainers.Values);
+        slowItemContainers.Clear();
+        return state;
+    }
+
+    public SlowMotionState Clear(params uint[] tags)
+    {
+        List<Container> removed = new();
+        foreach (uint tag in tags)
+        {
+            if(!slowItemContainers.ContainsKey(tag)) continue;
+            var container = slowItemContainers[tag];
+            slowItemContainers.Remove(tag);
+            removed.Add(container);
+        }
+        return new SlowMotionState(removed);
+    }
+    public void ApplyState(SlowMotionState state)
+    {
+        foreach (var container in state.Containers)
+        {
+            if(!slowItemContainers.ContainsKey(container.Tag)) slowItemContainers.Add(container.Tag, container);
+            else
+            {
+                slowItemContainers[container.Tag].AddRange(container);
+            }
+        }
+    }
+
     public bool RemoveTag(uint tag) => slowItemContainers.Remove(tag);
     public void Remove(uint id, uint tag)
     {
@@ -67,86 +208,6 @@ public sealed class SlowMotion
         return totalFactor;
     }
     
-}
-internal class SlowItemContainer : List<SlowItem>
-{
-    public float TotalFactor { get; private set; } = 1f;
-    
-    public void Update(float dt)
-    {
-        float totalFactor = 1f;
-        for (int i = Count - 1; i >= 0; i--)
-        {
-            var item = this[i];
-            item.Update(dt);
-            if (item.Finished) RemoveAt(i);
-            else totalFactor *= item.Factor;
-
-        }
-
-        TotalFactor = totalFactor;
-    }
-
-    public bool RemoveID(uint id)
-    {
-        for (int i = Count - 1; i >= 0; i--)
-        {
-            if (this[i].ID == id)
-            {
-                RemoveAt(i);
-                return true;
-            }
-        }
-
-        return false;
-    }
-}
-internal class SlowItem
-{
-    public uint ID { get; private set; }
-    public uint Tag { get; private set; }
-    public float Factor { get; private set; }
-
-    private float timer = 0f;
-
-    public SlowItem(float factor, float duration, uint tag)
-    {
-        ID = ShapeID.NextID;
-        Tag = tag;
-        Factor = factor;
-        if (duration > 0f)
-        {
-            // this.duration = duration;
-            this.timer = duration;
-        }
-    }
-    private SlowItem(float factor, float duration, uint tag, uint id)
-    {
-        ID = id;
-        Tag = tag;
-        Factor = factor;
-        if (duration > 0f)
-        {
-            // this.duration = duration;
-            this.timer = duration;
-        }
-    }
-
-    public SlowItem Copy()
-    {
-        var copy = new SlowItem(Factor, timer, Tag, ID);
-        return copy;
-    }
-
-    
-    public virtual bool Finished => timer < 0f;
-    public virtual void Update(float dt)
-    {
-        if (timer <= 0f) return;
-
-        timer -= dt;
-        if (timer <= 0f) timer = -1f;
-    }
 }
 
 
@@ -204,7 +265,7 @@ public class ShapeLoop
     public ScreenInfo Game { get; private set; } = new();
     public ScreenInfo UI { get; private set; } = new();
     public float Delta { get; private set; } = 0f;
-    // public float DeltaSlowFactor { get; private set; } = 1f;
+    public float DeltaSlow { get; private set; } = 0f;
     public bool ScreenShaderAffectsUI { get; set; } = false;
     public MonitorDevice Monitor { get; private set; }
     public ICursor Cursor { get; private set; } = new NullCursor();
@@ -301,6 +362,21 @@ public class ShapeLoop
             //CheckForWindowChanges();
         }
     }
+    private bool paused = false;
+    public bool Paused
+    {
+        get => paused;
+        set
+        {
+            if (value != paused)
+            {
+                paused = value;
+                OnPausedChanged(paused);
+            }
+            
+        }
+    }
+    public SlowMotion SlowMotion { get; private set; } = new SlowMotion();
     #endregion
 
     #region Private Members
@@ -514,9 +590,12 @@ public class ShapeLoop
             Game = new(cameraArea, mousePosGame);
             UI = new(screenArea, mousePosUI);
             
+            SlowMotion.Update(dt);
+            var defaultFactor = SlowMotion.GetFactor(SlowMotion.TagDefault);
+            DeltaSlow = Delta * defaultFactor;
             UpdateFlashes(dt);
             Cursor.Update(dt, UI);
-            Update(dt);
+            Update(dt, DeltaSlow);
             
             BeginTextureMode(gameTexture.RenderTexture);
             ClearBackground(new(0,0,0,0));
@@ -634,7 +713,8 @@ public class ShapeLoop
     protected virtual void BeginRun() { }
 
     //protected virtual void HandleInput(float dt) { }
-    protected virtual void Update(float dt) { }
+    //protected virtual void PausedUpdate(float dt) { }
+    protected virtual void Update(float dt, float deltaSlow) { }
     protected virtual void DrawGame(ScreenInfo game) { }
     protected virtual void DrawUI(ScreenInfo ui) { }
     protected virtual void DrawUILast(ScreenInfo ui){}
@@ -651,8 +731,8 @@ public class ShapeLoop
     protected virtual void OnWindowSizeChanged(DimensionConversionFactors conversion) { }
     protected virtual void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos) { }
     protected virtual void OnMonitorChanged(MonitorInfo newMonitor) { }
-    
-    protected void UpdateScene() => CurScene.Update(Delta, Game, UI);
+    protected virtual void OnPausedChanged(bool newPaused) { }
+    protected void UpdateScene() => CurScene.Update(Delta, DeltaSlow, Game, UI);
 
     protected void DrawGameScene() => CurScene.DrawGame(Game);
 

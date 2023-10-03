@@ -8,154 +8,6 @@ using ShapeEngine.Core.Structs;
 namespace ShapeEngine.Core
 {
 
-    /// <summary>
-    /// Can be used to manipulate the delta value each area object recieves. 
-    /// The layers affected can be specified. If no layers are specified all layers are affected!
-    /// The final factor can not be negative and will be clamped to 0.
-    /// </summary>
-    public sealed class HandlerDeltaFactor : IHandlerDeltaFactor
-    {
-        private static uint idCounter = 0;
-        private static uint NextID { get { return idCounter++; } }
-        private uint id  = NextID;
-
-        private float delayTimer = 0f;
-        private float cur;
-        private float timer;
-        private float duration;
-        private float from;
-        private float to;
-        private TweenType tweenType;
-        HashSet<int> layerMask;
-
-        /// <summary>
-        /// Delta factors are applied from lowest first to highest last
-        /// </summary>
-        public int ApplyOrder { get; set; } = 0;
-
-        /// <summary>
-        /// Create a new Area Layer Slow Factor. The slow factor affects the delta time of each area object in the affected layers.
-        /// A slow factor > 1 speeds up objects, a slow factor < 1 slow objects down, and a slow factor == 1 does not affect the speed at all.
-        /// </summary>
-        /// <param name="from">The start slow factor.</param>
-        /// <param name="to">The end slow factor.</param>
-        /// <param name="duration">The duration of the slow effect. Duration <= 0 means infinite duration and no tweening!</param>
-        /// <param name="delay">The delay until the duration starts and the factor is applied.</param>
-        /// <param name="tweenType">The tweentype for the slow factor.</param>
-        /// <param name="layerMask">The mask for all area layers that will be affected. An empty layer mask affects all layers!</param>
-        public HandlerDeltaFactor(float from, float to, float duration, float delay = -1f, TweenType tweenType = TweenType.LINEAR, params int[] layerMask)
-        {
-            this.delayTimer = delay;
-            this.cur = from;
-            this.from = from;
-            this.to = to;
-            this.duration = duration;
-            this.timer = duration;
-            this.tweenType = tweenType;
-            this.layerMask = layerMask.ToHashSet();
-        }
-        /// <summary>
-        /// Create a new Area Layer Slow Factor. The slow factor affects the delta time of each area object in the affected layers.
-        /// A slow factor > 1 speeds up objects, a slow factor < 1 slow objects down, and a slow factor == 1 does not affect the speed at all.
-        /// The linear tween type is used.
-        /// </summary>
-        /// <param name="from">The start slow factor.</param>
-        /// <param name="to">The end slow factor.</param>
-        /// <param name="duration">The duration of the slow effect. Duration <= 0 means infinite duration and no tweening!</param>
-        /// <param name="delay">The delay until the duration starts and the factor is applied.</param>
-        /// <param name="layerMask">The mask for all area layers that will be affected. An empty layer mask affects all layers!</param>
-        public HandlerDeltaFactor(float from, float to, float duration, float delay = -1f, params int[] layerMask)
-        {
-            this.delayTimer = delay;
-            this.cur = from;
-            this.from = from;
-            this.to = to;
-            this.duration = duration;
-            this.timer = duration;
-            this.tweenType = TweenType.LINEAR;
-            this.layerMask = layerMask.ToHashSet();
-        }
-        /// <summary>
-        /// Create a new Area Layer Slow Factor. The slow factor affects the delta time of each area object in the affected layers.
-        /// A slow factor > 1 speeds up objects, a slow factor < 1 slow objects down, and a slow factor == 1 does not affect the speed at all.
-        /// Creates a slow factor with infinite duration and therefore now tweening.
-        /// </summary>
-        /// <param name="factor">The slow factor that should be applied.</param>
-        /// <param name="delay">The delay until the factor is applied.</param>
-        /// <param name="layerMask">The mask for all area layers that will be affected. An empty layer mask affects all layers!</param>
-        public HandlerDeltaFactor(float factor, float delay, params int[] layerMask)
-        {
-            this.delayTimer = delay;
-            this.cur = factor;
-            this.from = -1;
-            this.to = -1f;
-            this.duration = -1;
-            this.timer = -1;
-            this.tweenType = TweenType.LINEAR;
-            this.layerMask = layerMask.ToHashSet();
-        }
-        /// <summary>
-        /// Create a new Area Layer Slow Factor. The slow factor affects the delta time of each area object in the affected layers.
-        /// A slow factor > 1 speeds up objects, a slow factor < 1 slow objects down, and a slow factor == 1 does not affect the speed at all.
-        /// Creates a slow factor with infinite duration and therefore now tweening.
-        /// </summary>
-        /// <param name="factor">The slow factor that should be applied.</param>
-        /// <param name="layerMask">The mask for all area layers that will be affected. An empty layer mask affects all layers!</param>
-        public HandlerDeltaFactor(float factor, params int[] layerMask)
-        {
-            this.delayTimer = -1f;
-            this.cur = factor;
-            this.from = -1;
-            this.to = -1f;
-            this.duration = -1;
-            this.timer = -1;
-            this.tweenType = TweenType.LINEAR;
-            this.layerMask = layerMask.ToHashSet();
-        }
-
-        public uint GetID() { return id; }
-        public bool IsAffectingLayer(int layer)
-        {
-            if (delayTimer > 0f) return false;
-            if (layerMask.Count <= 0) return true;
-            else return layerMask.Contains(layer);
-        }
-        public bool Update(float dt)
-        {
-            if (delayTimer > 0f)
-            {
-                delayTimer -= dt;
-                return false;
-            }
-
-            if (duration <= 0f) return false;
-            
-            timer -= dt;
-            if (timer < 0f) timer = 0f;
-            
-            if(from != to)
-            {
-                float f = 1.0f - (timer / duration);
-                cur = ShapeTween.Tween(from, to, f, tweenType);
-            }
-            
-            return IsFinished();
-        }
-        public float Apply(float totalDeltaFactor)
-        {
-            if(cur <= 0f) return totalDeltaFactor;
-            else return totalDeltaFactor * cur;
-        }
-        private bool IsFinished() { return timer <= 0f && duration > 0f; }
-        
-        
-        //public float GetCurFactor()
-        //{
-        //    if (cur <= 0f) return 0f;
-        //    else return cur;
-        //}
-    }
-
 
     /// <summary>
     /// Provides a simple area for managing adding/removing, updating, and drawing of area objects. Does not provide a collision system.
@@ -186,8 +38,8 @@ namespace ShapeEngine.Core
         private List<IGameObject> drawToUITextureObjects = new();
 
 
-        private Dictionary<uint, IHandlerDeltaFactor> deltaFactors = new();
-        private List<IHandlerDeltaFactor> sortedDeltaFactors = new();
+        // private Dictionary<uint, IHandlerDeltaFactor> deltaFactors = new();
+        // private List<IHandlerDeltaFactor> sortedDeltaFactors = new();
 
         public GameObjectHandler()
         {
@@ -202,14 +54,14 @@ namespace ShapeEngine.Core
             Bounds = bounds;
         }
 
-        public void AddDeltaFactor(IHandlerDeltaFactor deltaFactor)
-        {
-            var id = deltaFactor.GetID();
-            if (deltaFactors.ContainsKey(id)) deltaFactors[id] = deltaFactor;
-            else deltaFactors.Add(id, deltaFactor);
-        }
-        public bool RemoveDeltaFactor(IHandlerDeltaFactor deltaFactor) { return deltaFactors.Remove(deltaFactor.GetID()); }
-        public bool RemoveDeltaFactor(uint id) { return deltaFactors.Remove(id); }
+        // public void AddDeltaFactor(IHandlerDeltaFactor deltaFactor)
+        // {
+        //     var id = deltaFactor.GetID();
+        //     if (deltaFactors.ContainsKey(id)) deltaFactors[id] = deltaFactor;
+        //     else deltaFactors.Add(id, deltaFactor);
+        // }
+        // public bool RemoveDeltaFactor(IHandlerDeltaFactor deltaFactor) { return deltaFactors.Remove(deltaFactor.GetID()); }
+        // public bool RemoveDeltaFactor(uint id) { return deltaFactors.Remove(id); }
 
         public virtual void ResizeBounds(Rect newBounds) { Bounds = newBounds; }
         public bool HasLayer(int layer) { return allObjects.ContainsKey(layer); }
@@ -361,43 +213,15 @@ namespace ShapeEngine.Core
         }
 
         
-        public virtual void Update(float dt, ScreenInfo game, ScreenInfo ui)
+        public virtual void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
             drawToGameTextureObjects.Clear();
             drawToUITextureObjects.Clear();
-
-            List<IHandlerDeltaFactor> allDeltaFactors = deltaFactors.Values.ToList();
-            for (int i = allDeltaFactors.Count - 1; i >= 0; i--)
-            {
-                var deltaFactor = allDeltaFactors[i];
-                bool finished = deltaFactor.Update(dt);
-                if (finished) RemoveDeltaFactor(deltaFactor);
-            }
-
-            allDeltaFactors.Sort((a, b) =>
-            {
-                if (a.ApplyOrder > b.ApplyOrder) return 1;
-                else if (a.ApplyOrder < b.ApplyOrder) return -1;
-                else return 0;
-            }
-            );
-            sortedDeltaFactors = allDeltaFactors;
-
+            
             foreach (var layer in allObjects)
             {
                 List<IGameObject> objs = allObjects[layer.Key];
                 if (objs.Count <= 0) return;
-
-                float totalDeltaFactor = 1f;
-                foreach (var deltaFactor in sortedDeltaFactors)
-                {
-                    if (deltaFactor.IsAffectingLayer(layer.Key))
-                    {
-                        totalDeltaFactor = deltaFactor.Apply(totalDeltaFactor);
-                    }
-                }
-
-                dt *= totalDeltaFactor;
 
                 for (int i = objs.Count - 1; i >= 0; i--)
                 {
@@ -409,12 +233,11 @@ namespace ShapeEngine.Core
                     }
 
                     obj.UpdateParallaxe(ParallaxePosition);
-                    if (totalDeltaFactor != 1f) obj.DeltaFactorApplied(totalDeltaFactor);
                     
                     if (obj.DrawToGame(game.Area)) drawToGameTextureObjects.Add(obj);
                     if (obj.DrawToUI(ui.Area)) drawToUITextureObjects.Add(obj);
                     
-                    obj.Update(dt, game, ui);
+                    obj.Update(dt,deltaSlow, game, ui);
                     
                     if (obj.IsDead())
                     {
@@ -511,11 +334,11 @@ namespace ShapeEngine.Core
             col.Close();
         }
 
-        public override void Update(float dt, ScreenInfo game, ScreenInfo ui)
+        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            col.Update(dt);
+            col.Update();
 
-            base.Update(dt, game, ui);
+            base.Update(dt, deltaSlow, game, ui);
         }
         
         public override void DrawDebug(Raylib_CsLo.Color bounds, Raylib_CsLo.Color border, Raylib_CsLo.Color fill)

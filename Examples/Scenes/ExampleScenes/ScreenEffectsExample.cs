@@ -353,9 +353,9 @@ namespace Examples.Scenes.ExampleScenes
         {
             camera.Shake(ShapeRandom.randF(0.8f, 2f), new Vector2(100, 100), 0, 25, 0.75f);
         }
-        public override void Update(float dt, ScreenInfo game, ScreenInfo ui)
+        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            base.Update(dt, game, ui);
+            base.Update(dt, deltaSlow, game, ui);
 
             intensitySlider.Update(dt, ui.Area.ApplyMargins(0.025f, 0.6f, 0.1f, 0.85f), ui.MousePos);
             cameraFollowSlider.Update(dt, ui.Area.ApplyMargins(0.025f, 0.6f, 0.16f, 0.79f), ui.MousePos);

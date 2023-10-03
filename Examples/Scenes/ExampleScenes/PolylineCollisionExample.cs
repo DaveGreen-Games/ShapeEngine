@@ -194,9 +194,9 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
 
-        public override void Update(float dt, ScreenInfo game, ScreenInfo ui)
+        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            base.Update(dt, game, ui);
+            base.Update(dt, deltaSlow, game, ui);
 
             UpdatePolyline(game.MousePos);
 
