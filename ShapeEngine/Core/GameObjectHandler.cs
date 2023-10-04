@@ -235,7 +235,7 @@ namespace ShapeEngine.Core
                     obj.UpdateParallaxe(ParallaxePosition);
                     
                     if (obj.DrawToGame(game.Area)) drawToGameTextureObjects.Add(obj);
-                    if (obj.DrawToUI(ui.Area)) drawToUITextureObjects.Add(obj);
+                    if (obj.DrawToGameUI(ui.Area)) drawToUITextureObjects.Add(obj);
                     
                     obj.Update(dt,deltaSlow, game, ui);
                     
@@ -266,11 +266,11 @@ namespace ShapeEngine.Core
                 obj.DrawGame(game);
             }
         }
-        public virtual void DrawUI(ScreenInfo ui)
+        public virtual void DrawGameUI(ScreenInfo ui)
         {
             foreach (var obj in drawToUITextureObjects)
             {
-                obj.DrawUI(ui);
+                obj.DrawGameUI(ui);
             }
         }
 

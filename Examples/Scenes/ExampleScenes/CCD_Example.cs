@@ -115,10 +115,8 @@ namespace Examples.Scenes.ExampleScenes
             if (bullets.Count <= 0) segments.Clear();
             else bullets.Clear();
         }
-        protected override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            base.HandleInput(dt, mousePosGame, mousePosUI);
-
             if (IsKeyPressed(KeyboardKey.KEY_SPACE)) Shoot();
             if(IsKeyPressed(KeyboardKey.KEY_ONE)) IncreaseBulletSpeed();
             if(IsKeyReleased(KeyboardKey.KEY_TWO)) DecreaseBulletR();
@@ -126,10 +124,8 @@ namespace Examples.Scenes.ExampleScenes
 
         }
 
-        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            base.Update(dt, deltaSlow, game, ui);
-
             muzzlePos = GAMELOOP.Game.Area.GetPoint(new Vector2(0.05f, 0.5f)); // game.GetSize() * new Vector2(0.1f, 0.5f);
 
             HandleSegments(game.MousePos);
@@ -207,10 +203,8 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
 
-        public override void DrawGame(ScreenInfo game)
+        protected override void DrawGameExample(ScreenInfo game)
         {
-            base.DrawGame(game);
-
             boundary.Draw(4f, ColorMedium);
             foreach (var seg in boundary)
             {
@@ -237,16 +231,20 @@ namespace Examples.Scenes.ExampleScenes
             }
 
         }
-        public override void DrawUI(ScreenInfo ui)
+        protected override void DrawGameUIExample(ScreenInfo ui)
         {
-            base.DrawUI(ui);
+            
+        }
+
+        protected override void DrawUIExample(ScreenInfo ui)
+        {
             Vector2 uiSize = ui.Area.Size;
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.98f, 0.11f), new Vector2(0.5f, 1f));
             string infoText =
                 $"[LMB] Add Segment [RMB] Cancel Segment [Space] Shoot [1] Speed: {bulletSpeed} [2] Size: {bulletR} [C] CCD: {(CCD ? "ON" : "OFF")}";
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
-
         }
+
         private void Shoot()
         {
             Vector2 mousePos = GAMELOOP.Game.MousePos;

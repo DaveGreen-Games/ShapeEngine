@@ -10,6 +10,7 @@ namespace ShapeEngine.Core
         public virtual void OnPauseChanged(bool paused){}
 
         public virtual void Close() { }
+        
 
         public virtual void Activate(IScene oldScene) { }
         public virtual void Deactivate() { }
@@ -21,6 +22,7 @@ namespace ShapeEngine.Core
 
         public virtual void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui) { }
         public virtual void DrawGame(ScreenInfo game) { }
+        public virtual void DrawGameUI(ScreenInfo ui) { }
         public virtual void DrawUI(ScreenInfo ui) { }
     }
    

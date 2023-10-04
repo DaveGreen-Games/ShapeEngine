@@ -19,6 +19,12 @@ public interface IScene : IUpdateable, IDrawable
     /// </summary>
     public void Close();
 
+    /// <summary>
+    /// Draw your main ui. Is NOT affected by screen shaders and NOT affected by the camera.
+    /// </summary>
+    /// <param name="ui"></param>
+    public void DrawUI(ScreenInfo ui);
+
     public void OnWindowSizeChanged(DimensionConversionFactors conversionFactors);
 
     public void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos);

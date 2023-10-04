@@ -58,7 +58,7 @@ namespace Examples.Scenes
 
             SetupButtons();
         }
-
+        
         public void OnWindowSizeChanged(DimensionConversionFactors conversionFactors)
         {
             
@@ -110,9 +110,14 @@ namespace Examples.Scenes
             }
         }
         
-        public void DrawUI(ScreenInfo ui)
+        public void DrawGameUI(ScreenInfo ui)
         {
             
+           
+        }
+
+        public void DrawUI(ScreenInfo ui)
+        {
             Vector2 uiSize = ui.Area.Size;
             Vector2 start = uiSize * new Vector2(0.02f, 0.25f);
             Vector2 size = uiSize * new Vector2(0.45f, 0.05f);
@@ -141,6 +146,7 @@ namespace Examples.Scenes
             Rect backRect = new Rect(uiSize * new Vector2(0.01f, 0.17f), uiSize * new Vector2(0.2f, 0.04f), new Vector2(0f, 0f));
             titleFont.DrawText(backText, backRect, 4f, new Vector2(0f, 0f), ExampleScene.ColorHighlight2);
         }
+        
         
         private void OnButtonSelected(UIElement button)
         {
@@ -234,12 +240,12 @@ namespace Examples.Scenes
 
         public void Activate(IScene oldScene)
         {
-           
+            GAMELOOP.SwitchCursor(new SimpleCursorUI());
         }
 
         public void Deactivate()
         {
-            
+            GAMELOOP.SwitchCursor(new SimpleCursorGameUI());
         }
 
         public void Close()

@@ -29,7 +29,7 @@ namespace Examples.Scenes.ExampleScenes
             offsetDelta = 0f;
             lerpOffsetDelta = 0f;
         }
-        protected override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             base.HandleInput(dt, mousePosGame, mousePosUI);
             if (IsKeyPressed(KeyboardKey.KEY_R)) { polyline = new(); }
@@ -47,10 +47,9 @@ namespace Examples.Scenes.ExampleScenes
 
             offsetDelta = Clamp(offsetDelta, 0f, 300f);
         }
-        public override void DrawUI(ScreenInfo ui)
+        protected override void DrawGameExample(ScreenInfo game)
         {
-            base.DrawUI(ui);
-            Vector2 mousePos = ui.MousePos;
+            Vector2 mousePos = game.MousePos;
 
             float vertexRadius = 8f;
             int pickedVertex = -1;
@@ -125,7 +124,6 @@ namespace Examples.Scenes.ExampleScenes
 
             if (dragIndex > -1) polyline[dragIndex] = mousePos;
 
-            //polyline.Draw(4f, WHITE);
             var segments = polyline.GetEdges();
             for (int i = 0; i < segments.Count; i++)
             {
@@ -137,9 +135,6 @@ namespace Examples.Scenes.ExampleScenes
                     else segment.Draw(4f, WHITE);
                 }
                 else segment.Draw(4f, WHITE);
-
-
-
             }
 
             if (drawClosest) DrawCircleV(closest, vertexRadius, RED);
@@ -152,8 +147,13 @@ namespace Examples.Scenes.ExampleScenes
                     polygon.DrawLines(3f, GOLD);
                 }
             }
-
+        }
+        protected override void DrawGameUIExample(ScreenInfo ui)
+        {
             
+        }
+        protected override void DrawUIExample(ScreenInfo ui)
+        {
             Vector2 uiSize = ui.Area.Size;
 
             Rect infoRect = ui.Area.ApplyMargins(0.05f, 0.05f, 0.9f, 0.05f);

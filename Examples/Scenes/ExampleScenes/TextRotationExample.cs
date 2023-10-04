@@ -58,7 +58,7 @@ namespace Examples.Scenes.ExampleScenes
             topLeft *= conversionFactors.Factor;
             bottomRight *= conversionFactors.Factor;
         }
-        protected override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             if (IsKeyPressed(KeyboardKey.KEY_W)) NextFont();
 
@@ -93,12 +93,9 @@ namespace Examples.Scenes.ExampleScenes
                 }
             }
 
-            base.HandleInput(dt, mousePosGame, mousePosUI);
-
         }
-        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            base.Update(dt, deltaSlow, game, ui);
             timer += dt;
             if (timer >= interval)
             {
@@ -124,9 +121,8 @@ namespace Examples.Scenes.ExampleScenes
             }
 
         }
-        public override void DrawUI(ScreenInfo ui)
+        protected override void DrawGameUIExample(ScreenInfo ui)
         {
-            base.DrawUI(ui);
             Rect r = new(topLeft, bottomRight);
             r.DrawLines(6f, ColorMedium);
 
@@ -172,17 +168,21 @@ namespace Examples.Scenes.ExampleScenes
                 bottomRightPoint.Draw(ColorMedium);
                 bottomRightInteractionCircle.DrawLines(2f, ColorMedium, 4f);
             }
+        }
 
+        protected override void DrawUIExample(ScreenInfo ui)
+        {
             Vector2 uiSize = ui.Area.Size;
-            string info2 = String.Format("[S] Text Align: {0} | [Q/E] Rotate: {1}", curAlignement, MathF.Floor(rotDeg));
+            string info2 = $"[S] Text Align: {curAlignement} | [Q/E] Rotate: {MathF.Floor(rotDeg)}";
             Rect infoRect2 = new(uiSize * new Vector2(0.5f, 0.95f), uiSize * new Vector2(0.5f, 0.075f), new Vector2(0.5f, 1f));
             font.DrawText(info2, infoRect2, 4f, new Vector2(0.5f, 0.5f), ColorLight);
 
-            string info = String.Format("[W] Font: {0} | [A] Spacing: {1} | [D] Size: {2}", GAMELOOP.GetFontName(fontIndex), fontSpacing, fontSize);
+            string info =
+                $"[W] Font: {GAMELOOP.GetFontName(fontIndex)} | [A] Spacing: {fontSpacing} | [D] Size: {fontSize}";
             Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
             font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
-
         }
+
         private void ChangeFontSpacing()
         {
             fontSpacing += fontSpacingIncrement;

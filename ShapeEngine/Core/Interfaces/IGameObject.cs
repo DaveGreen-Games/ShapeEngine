@@ -7,7 +7,7 @@ public interface IGameObject : ISpatial, IUpdateable, IDrawable, IKillable//, IB
 {
 
     public bool DrawToGame(Rect gameArea);
-    public bool DrawToUI(Rect screenArea);
+    public bool DrawToGameUI(Rect screenArea);
         
     /// <summary>
     /// The area layer the object is stored in. Higher layers are draw on top of lower layers.

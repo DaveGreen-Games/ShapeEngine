@@ -52,7 +52,7 @@ namespace Examples.Scenes.ExampleScenes
             bottomRight = s * new Vector2(0.9f, 0.8f);
         }
 
-        protected override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             if (textEntryActive)
             {
@@ -119,13 +119,10 @@ namespace Examples.Scenes.ExampleScenes
                     }
                 }
 
-                base.HandleInput(dt, mousePosGame, mousePosUI);
             }
-            
         }
-        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            base.Update(dt, deltaSlow, game, ui);
             if (textEntryActive) return;
             if (draggingTopLeft || draggingBottomRight)
             {
@@ -145,16 +142,12 @@ namespace Examples.Scenes.ExampleScenes
             }
 
         }
-        public override void DrawUI(ScreenInfo ui)
+        protected override void DrawGameUIExample(ScreenInfo ui)
         {
-            base.DrawUI(ui);
-
             Rect r = new(topLeft, bottomRight);
             r.DrawLines(3f, ColorMedium);
             font.DrawText(text, r, fontSpacing, new Vector2(0.5f, 0.5f), ColorHighlight1);
 
-            Vector2 uiSize = ui.Area.Size;
-            Rect infoRect = ui.Area.ApplyMargins(0.05f, 0.05f, 0.9f, 0.05f);
             if (!textEntryActive)
             {
                 Circle topLeftPoint = new(topLeft, pointRadius);
@@ -192,7 +185,16 @@ namespace Examples.Scenes.ExampleScenes
                     bottomRightPoint.Draw(ColorMedium);
                     bottomRightInteractionCircle.DrawLines(2f, ColorMedium, 4f);
                 }
-    
+            }
+
+            
+        }
+
+        protected override void DrawUIExample(ScreenInfo ui)
+        {
+            Rect infoRect = ui.Area.ApplyMargins(0.05f, 0.05f, 0.9f, 0.05f);
+            if (!textEntryActive)
+            {
                 string info =
                     $"[W] Font: {GAMELOOP.GetFontName(fontIndex)} | [A/D] Font Spacing: {fontSpacing} | [Enter] Write Custom Text";
                 font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
@@ -202,9 +204,8 @@ namespace Examples.Scenes.ExampleScenes
                 string info = "TEXT ENTRY MODE ACTIVE | [ESC] Cancel | [Enter] Accept | [Del] Clear Text";
                 font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
             }
-
-            
         }
+
         private void ChangeFontSpacing(int amount)
         {
             fontSpacing += amount;

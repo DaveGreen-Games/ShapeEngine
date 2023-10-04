@@ -99,7 +99,7 @@ namespace Examples.Scenes.ExampleScenes
             ShapeDrawing.DrawCircleFast(Pos, Radius, c);
         }
 
-        public void DrawUI(ScreenInfo ui)
+        public void DrawGameUI(ScreenInfo ui)
         {
             
         }
@@ -134,7 +134,7 @@ namespace Examples.Scenes.ExampleScenes
             return true;
         }
 
-        public bool DrawToUI(Rect uiArea)
+        public bool DrawToGameUI(Rect uiArea)
         {
             return false;
         }
@@ -175,9 +175,8 @@ namespace Examples.Scenes.ExampleScenes
         {
             boundaryRect = gameArea.ApplyMargins(0.025f, 0.025f, 0.1f, 0.1f);
         }
-        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            base.Update(dt, deltaSlow, game, ui);
             UpdateBoundaryRect(game.Area);
             gameObjectHandler.ResizeBounds(boundaryRect);
             if (GAMELOOP.Paused) return;
@@ -189,10 +188,8 @@ namespace Examples.Scenes.ExampleScenes
             
         }
 
-        protected override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            base.HandleInput(dt, mousePosGame, mousePosUI);
-            if (GAMELOOP.Paused) return;
             if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT))
             {
                 for (int i = 0; i < 2500; i++)
@@ -241,23 +238,24 @@ namespace Examples.Scenes.ExampleScenes
             slowMotionState = GAMELOOP.SlowMotion.Clear();
         }
 
-        public override void DrawGame(ScreenInfo game)
+        protected override void DrawGameExample(ScreenInfo game)
         {
-            base.DrawGame(game);
             boundaryRect.DrawLines(4f, ColorLight);
             gameObjectHandler.DrawGame(game);
         }
-        public override void DrawUI(ScreenInfo ui)
+        protected override void DrawGameUIExample(ScreenInfo ui)
         {
-            base.DrawUI(ui);
-            if (GAMELOOP.Paused) return;
-            gameObjectHandler.DrawUI(ui);
+            gameObjectHandler.DrawGameUI(ui);
+            
+        }
+
+        protected override void DrawUIExample(ScreenInfo ui)
+        {
             Vector2 uiSize = ui.Area.Size;
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));
             //string infoText = String.Format("[LMB] Spawn | Object Count: {0} | DC : {1} | SC: {2}", area.Count, MathF.Ceiling(GAMELOOP.deltaCriticalTime * 100) / 100, GAMELOOP.skipDrawCount);
             string infoText = $"[LMB] Spawn | Object Count: {gameObjectHandler.Count}";
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
-
     }
 }

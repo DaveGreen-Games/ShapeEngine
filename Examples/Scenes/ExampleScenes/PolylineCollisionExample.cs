@@ -156,13 +156,8 @@ namespace Examples.Scenes.ExampleScenes
             dragIndex = -1;
             colliders.Clear();
         }
-        protected override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            base.HandleInput(dt, mousePosGame, mousePosUI);
-            //if (IsKeyPressed(KeyboardKey.KEY_R)) { polyline = new(); }
-
-            //if (IsKeyPressed(KeyboardKey.KEY_SPACE)) polyline.AutomaticNormals = !polyline.AutomaticNormals;
-
             float shapeSize = ShapeRandom.randF(75, 150);
             if (IsKeyPressed(KeyboardKey.KEY_ONE))
             {
@@ -194,10 +189,8 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
 
-        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            base.Update(dt, deltaSlow, game, ui);
-
             UpdatePolyline(game.MousePos);
 
             Segments allSegments = new();
@@ -222,10 +215,8 @@ namespace Examples.Scenes.ExampleScenes
                 }
             }
         }
-        public override void DrawGame(ScreenInfo game)
+        protected override void DrawGameExample(ScreenInfo game)
         {
-            base.DrawGame(game);
-
             boundary.Draw(4f, ColorMedium);
             foreach (var seg in boundary)
             {
@@ -241,17 +232,18 @@ namespace Examples.Scenes.ExampleScenes
             }
             
         }
-        public override void DrawUI(ScreenInfo ui)
+        protected override void DrawGameUIExample(ScreenInfo ui)
         {
-            base.DrawUI(ui);
+            
+            
+        }
 
-
-
+        protected override void DrawUIExample(ScreenInfo ui)
+        {
             Vector2 uiSize = ui.Area.Size;
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
             string infoText = $"[LMB] Add point | [RMB] Remove point | [1 - 7] Add Shape | Shapes: {colliders.Count}";
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
-            
         }
 
         private void UpdatePolyline(Vector2 mousePos)

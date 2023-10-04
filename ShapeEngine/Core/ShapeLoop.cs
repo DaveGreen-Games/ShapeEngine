@@ -266,7 +266,7 @@ public class ShapeLoop
     public ScreenInfo UI { get; private set; } = new();
     public float Delta { get; private set; } = 0f;
     public float DeltaSlow { get; private set; } = 0f;
-    public bool ScreenShaderAffectsUI { get; set; } = false;
+    //public bool ScreenShaderAffectsUI { get; set; } = false;
     public MonitorDevice Monitor { get; private set; }
     public ICursor Cursor { get; private set; } = new NullCursor();
     public IScene CurScene { get; private set; } = new SceneEmpty();
@@ -397,14 +397,13 @@ public class ShapeLoop
     #endregion
     
     #region Setup
-    public ShapeLoop(Dimensions developmentDimensions, bool multiShaderSupport = false, bool screenShadersAffectUI = false)
+    public ShapeLoop(Dimensions developmentDimensions, bool multiShaderSupport = false)
     {
         #if DEBUG
         DebugMode = true;
         ReleaseMode = false;
         #endif
 
-        this.ScreenShaderAffectsUI = screenShadersAffectUI;
         this.DevelopmentDimensions = developmentDimensions;
         InitWindow(0, 0, "");
         
@@ -577,7 +576,7 @@ public class ShapeLoop
             CheckForWindowChanges();
             
             Camera.SetSize(CurScreenSize, DevelopmentDimensions);
-            Camera.Update(dt);
+            if(!Paused) Camera.Update(dt);
             
             gameTexture.UpdateDimensions(CurScreenSize);
             screenShaderBuffer.UpdateDimensions(CurScreenSize);
@@ -589,11 +588,14 @@ public class ShapeLoop
 
             Game = new(cameraArea, mousePosGame);
             UI = new(screenArea, mousePosUI);
-            
-            SlowMotion.Update(dt);
+
+            if (!Paused)
+            {
+                SlowMotion.Update(dt);
+                UpdateFlashes(dt);
+            }
             var defaultFactor = SlowMotion.GetFactor(SlowMotion.TagDefault);
             DeltaSlow = Delta * defaultFactor;
-            UpdateFlashes(dt);
             Cursor.Update(dt, UI);
             Update(dt, DeltaSlow);
             
@@ -605,17 +607,11 @@ public class ShapeLoop
             EndMode2D();
             
             foreach (var flash in shapeFlashes) screenArea.Draw(flash.GetColor());
-            if (ScreenShaderAffectsUI)
-            {
-                DrawUI(UI);
-                Cursor.Draw(UI);
-            }
+            DrawGameUI(UI);
+            Cursor.DrawGameUI(UI);
             EndTextureMode();
-
+            
             DrawToScreen(screenArea, mousePosUI);
-            
-            
-            //CheckWindowSizeChanged();
 
             
             ResolveDeferred();
@@ -655,13 +651,8 @@ public class ShapeLoop
             target.Draw();
             EndShaderMode();
 
-            if (!ScreenShaderAffectsUI)
-            {
-                DrawUI(UI);
-                Cursor.Draw(UI);
-            }
-            DrawUILast(UI);
-            Cursor.DrawLast(UI);
+            DrawUI(UI);
+            Cursor.DrawUI(UI);
             EndDrawing();
             
         }
@@ -681,13 +672,8 @@ public class ShapeLoop
                 gameTexture.Draw();
             }
             
-            if (!ScreenShaderAffectsUI)
-            {
-                DrawUI(UI);
-                Cursor.Draw(UI);
-            }
-            DrawUILast(UI);
-            Cursor.DrawLast(UI);
+            DrawUI(UI);
+            Cursor.DrawUI(UI);
             EndDrawing();
             
         }
@@ -716,8 +702,8 @@ public class ShapeLoop
     //protected virtual void PausedUpdate(float dt) { }
     protected virtual void Update(float dt, float deltaSlow) { }
     protected virtual void DrawGame(ScreenInfo game) { }
+    protected virtual void DrawGameUI(ScreenInfo ui) { }
     protected virtual void DrawUI(ScreenInfo ui) { }
-    protected virtual void DrawUILast(ScreenInfo ui){}
 
     /// <summary>
     /// Called before UnloadContent is called after the main gameloop has been exited.
@@ -732,10 +718,11 @@ public class ShapeLoop
     protected virtual void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos) { }
     protected virtual void OnMonitorChanged(MonitorInfo newMonitor) { }
     protected virtual void OnPausedChanged(bool newPaused) { }
+    
     protected void UpdateScene() => CurScene.Update(Delta, DeltaSlow, Game, UI);
-
     protected void DrawGameScene() => CurScene.DrawGame(Game);
 
+    protected void DrawGameUIScene() => CurScene.DrawGameUI(UI);
     protected void DrawUIScene() => CurScene.DrawUI(UI);
 
     #endregion

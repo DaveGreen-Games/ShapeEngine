@@ -70,7 +70,7 @@ namespace ShapeEngine.Effects
             lifetimeTimer.Update(dt);
         }
         public abstract void DrawGame(ScreenInfo game);
-        public virtual void DrawUI(ScreenInfo ui) { }
+        public virtual void DrawGameUI(ScreenInfo ui) { }
 
 
         public virtual bool CheckHandlerBounds()
@@ -92,7 +92,7 @@ namespace ShapeEngine.Effects
         {
             return true;
         }
-        public virtual bool DrawToUI(Rect uiArea)
+        public virtual bool DrawToGameUI(Rect uiArea)
         {
             return false;
         }

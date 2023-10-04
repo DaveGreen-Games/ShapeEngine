@@ -69,11 +69,8 @@ namespace Examples.Scenes.ExampleScenes
         {
             camera.Reset();
         }
-        protected override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            base.HandleInput(dt, mousePosGame, mousePosUI);
-
-
             HandleCameraPosition(dt);
             HandleCameraZoom(dt);
             HandleCameraRotation(dt);
@@ -141,9 +138,8 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
         
-        public override void DrawGame(ScreenInfo game)
+        protected override void DrawGameExample(ScreenInfo game)
         {
-            base.DrawGame(game);
             foreach (var pillar in pillars)
             {
                 pillar.Draw();
@@ -157,27 +153,30 @@ namespace Examples.Scenes.ExampleScenes
             Segment ver = new(camera.Position - new Vector2(0, 3000 * f), camera.Position + new Vector2(0, 3000 * f));
             ver.Draw(2f * f, BLUE);
         }
-        public override void DrawUI(ScreenInfo ui)
+        protected override void DrawGameUIExample(ScreenInfo ui)
         {
-            base.DrawUI(ui);
+            
+        }
+
+        protected override void DrawUIExample(ScreenInfo ui)
+        {
             Vector2 uiSize = ui.Area.Size;
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
             
             var pos = camera.Position;
-            int x = (int)pos.X;
-            int y = (int)pos.Y;
-            int rot = (int)camera.BaseRotationDeg;
-            int zoom = (int)(ShapeUtils.GetFactor(camera.ZoomLevel, 0.1f, 5f) * 100f);
-            int transX = (int)camera.Position.X;
-            int transY = (int)camera.Position.Y;
-            string moveText = $"[W/A/S/D] Move ({x}/{y})";
-            string rotText = $"[Q/E] Rotate ({rot})";
-            string scaleText = $"[Y/X] Zoom ({zoom}%)";
-            string transText = $"[LMB] Offset ({transX}/{transY})";
-            string infoText = $"{moveText} | {rotText} | {scaleText} | {transText}";
+            var x = (int)pos.X;
+            var y = (int)pos.Y;
+            var rot = (int)camera.BaseRotationDeg;
+            var zoom = (int)(ShapeUtils.GetFactor(camera.ZoomLevel, 0.1f, 5f) * 100f);
+            var transX = (int)camera.Position.X;
+            var transY = (int)camera.Position.Y;
+            var moveText = $"[W/A/S/D] Move ({x}/{y})";
+            var rotText = $"[Q/E] Rotate ({rot})";
+            var scaleText = $"[Y/X] Zoom ({zoom}%)";
+            var transText = $"[LMB] Offset ({transX}/{transY})";
+            var infoText = $"{moveText} | {rotText} | {scaleText} | {transText}";
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
-
     }
 
 }

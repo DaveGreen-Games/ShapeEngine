@@ -11,27 +11,25 @@ using ShapeEngine.Core.Shapes;
 
 namespace Examples
 {
-    internal class SimpleCursor : ICursor
+    internal class SimpleCursorGameUI : ICursor
     {
         public uint GetID()
         {
             return 0;
         }
 
-        public void Draw(ScreenInfo ui)
+        public void DrawGameUI(ScreenInfo ui)
         {
             Vector2 center = ui.MousePos;
             float size = ui.Area.Size.Min() * 0.02f;
             Vector2 a = center;
             Vector2 b = center + new Vector2(0, size);
             Vector2 c = center + new Vector2(size, size);
-            //SDrawing.DrawTriangle(a, b, c, RED);
             Triangle cursor = new(a, b, c);
             cursor.Draw(ExampleScene.ColorHighlight2);
             cursor.DrawLines(1f, ExampleScene.ColorHighlight1);
-            //SDrawing.DrawCircle(center, 4, RED);
         }
-        public void DrawLast(ScreenInfo ui){}
+        public void DrawUI(ScreenInfo ui){}
         public void Update(float dt, ScreenInfo ui)
         {
             
@@ -47,6 +45,46 @@ namespace Examples
             
         }
     }
+    internal class SimpleCursorUI : ICursor
+    {
+        public uint GetID()
+        {
+            return 0;
+        }
+
+        public void DrawGameUI(ScreenInfo ui)
+        {
+            
+        }
+
+        public void DrawUI(ScreenInfo ui)
+        {
+            Vector2 center = ui.MousePos;
+            float size = ui.Area.Size.Min() * 0.02f;
+            Vector2 a = center;
+            Vector2 b = center + new Vector2(0, size);
+            Vector2 c = center + new Vector2(size, size);
+            Triangle cursor = new(a, b, c);
+            cursor.Draw(ExampleScene.ColorHighlight2);
+            cursor.DrawLines(1f, ExampleScene.ColorHighlight1);
+        }
+        public void Update(float dt, ScreenInfo ui)
+        {
+            
+        }
+
+        public void Deactivate()
+        {
+            
+        }
+
+        public void Activate(ICursor oldCursor)
+        {
+            
+        }
+    }
+
+    
     public class GameloopExamples : ShapeLoop
     {
         //public BasicCamera GameCam { get; private set; }
@@ -60,7 +98,7 @@ namespace Examples
         private uint crtShaderID = ShapeID.NextID;
         private Vector2 crtCurvature = new(6, 4);
         
-        public GameloopExamples() : base(new(1920, 1080), true, true)
+        public GameloopExamples() : base(new(1920, 1080), true)
         {
             
             BackgroundColor = ExampleScene.ColorDark;
@@ -105,7 +143,7 @@ namespace Examples
             this.FrameRateLimit = 60;
 
             Raylib.HideCursor();
-            SwitchCursor(new SimpleCursor());
+            SwitchCursor(new SimpleCursorGameUI());
         }
         protected override void UnloadContent()
         {
@@ -162,7 +200,7 @@ namespace Examples
                 movement = -1;
             }
 
-            if (IsKeyPressed(KeyboardKey.KEY_L)) ScreenShaderAffectsUI = !ScreenShaderAffectsUI;
+            //if (IsKeyPressed(KeyboardKey.KEY_L)) ScreenShaderAffectsUI = !ScreenShaderAffectsUI;
 
             if (movement != 0)
             {
@@ -183,6 +221,11 @@ namespace Examples
         protected override void DrawGame(ScreenInfo game)
         {
             DrawGameScene();
+        }
+
+        protected override void DrawGameUI(ScreenInfo ui)
+        {
+            DrawGameUIScene();   
         }
 
         protected override void DrawUI(ScreenInfo ui)

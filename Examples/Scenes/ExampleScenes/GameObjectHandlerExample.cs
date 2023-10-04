@@ -105,7 +105,7 @@ namespace Examples.Scenes.ExampleScenes
 
         public virtual void RemovedFromHandler(GameObjectHandler gameObjectHandler) { }
 
-        public virtual void DrawUI(ScreenInfo ui)
+        public virtual void DrawGameUI(ScreenInfo ui)
         {
             
         }
@@ -129,7 +129,7 @@ namespace Examples.Scenes.ExampleScenes
             return true;
         }
 
-        public bool DrawToUI(Rect screenArea)
+        public bool DrawToGameUI(Rect screenArea)
         {
             return false;
         }
@@ -681,10 +681,8 @@ namespace Examples.Scenes.ExampleScenes
             drawDebug = false;
         }
 
-        protected override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            base.HandleInput(dt, mousePosGame, mousePosUI);
-
             if (IsKeyPressed(KeyboardKey.KEY_ONE))
             {
                 for (int i = 0; i < 50; i++)
@@ -730,37 +728,14 @@ namespace Examples.Scenes.ExampleScenes
 
         }
 
-        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            base.Update(dt, deltaSlow, game, ui);
-
             HandleWalls(game.MousePos);
             gameObjectHandler.Update(dt, deltaSlow, game, ui);
-
-            //collisionsTotal += area.Col.CollisionChecksPerFrame;
-            //iterationsTotal += area.Col.IterationsPerFrame;
-            //closestPointTotal += area.Col.ClosestPointChecksPerFrame;
-            //avgSteps++;
-            //avgTimer += dt;
-            //if(avgTimer >= 1f)
-            //{
-            //    collisionAvg = collisionsTotal / avgSteps;
-            //    iterationsAvg = iterationsTotal / avgSteps;
-            //    closestPointAvg = closestPointTotal / avgSteps;
-            //
-            //    collisionsTotal = 0;
-            //    iterationsTotal = 0;
-            //    closestPointTotal = 0;
-            //    avgTimer = 0f;
-            //    avgSteps = 0;
-            //}
-            
         }
 
-        public override void DrawGame(ScreenInfo game)
+        protected override void DrawGameExample(ScreenInfo game)
         {
-            base.DrawGame(game);
-
             if (drawDebug)
             {
                 Color boundsColor = ColorLight;
@@ -773,34 +748,18 @@ namespace Examples.Scenes.ExampleScenes
 
             gameObjectHandler.DrawGame(game);
         }
-        public override void DrawUI(ScreenInfo ui)
+        protected override void DrawGameUIExample(ScreenInfo ui)
         {
-            gameObjectHandler.DrawUI(ui);
+            gameObjectHandler.DrawGameUI(ui);
+        }
 
-            base.DrawUI(ui);
-
+        protected override void DrawUIExample(ScreenInfo ui)
+        {
             Vector2 uiSize = ui.Area.Size;
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
             string infoText =
                 $"[LMB] Add Segment | [RMB] Cancel Segment | [Space] Shoot | Objs: {gameObjectHandler.GetCollisionHandler().Count}";
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
-
-
-            // Vector2 devSize = GAMELOOP.DevelopmentDimensions.ToVector2();
-            // Vector2 camSize = GAMELOOP.CurScreenSize.ToVector2();
-            // float devArea = MathF.Round( devSize.GetArea() * 100 ) / 100;
-            // float screenArea = MathF.Round( camSize.GetArea() * 100 ) / 100;
-            // float fds = MathF.Round( (devArea / screenArea) * 100 ) / 100;
-            // float fsd = MathF.Round( (screenArea / devArea) * 100 ) / 100;
-            //
-            // float zoom = MathF.Round( GAMELOOP.Camera.ZoomLevel * 100 ) / 100;
-            //
-            // Rect textRect = ui.Area.ApplyMargins(0.05f, 0.05f, 0.8f, 0.1f);
-            // textRect.Draw(DARKGRAY);
-            //
-            // string text = $"DS: {devSize} | CS: {camSize} | DA: {devArea} | SA: {screenArea} | FDS: {fds} | FSD: {fsd} | Z: {zoom}";
-            //
-            // font.DrawText(text, textRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
 
         private void AddBoundaryWalls()

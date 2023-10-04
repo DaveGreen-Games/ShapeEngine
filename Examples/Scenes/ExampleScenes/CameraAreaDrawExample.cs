@@ -79,10 +79,8 @@ namespace Examples.Scenes.ExampleScenes
             GenerateStars(ShapeRandom.randI(15000, 30000));
 
         }
-        protected override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            base.HandleInput(dt, mousePosGame, mousePosUI);
-
             HandleZoom(dt);
 
             if (IsKeyPressed(KeyboardKey.KEY_B))
@@ -118,10 +116,8 @@ namespace Examples.Scenes.ExampleScenes
                 camera.Zoom(zoomDir * zoomSpeed * dt);
             }
         }
-        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            base.Update(dt, deltaSlow, game, ui);
-
             currentShip.Update(dt, camera.RotationDeg);
 
             drawStars.Clear();
@@ -132,9 +128,8 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
 
-        public override void DrawGame(ScreenInfo game)
+        protected override void DrawGameExample(ScreenInfo game)
         {
-            base.DrawGame(game);
             foreach (var star in drawStars)
             {
                 star.Draw(new Color(20, 150, 150, 200));
@@ -147,33 +142,22 @@ namespace Examples.Scenes.ExampleScenes
             // Circle cameraBoundaryMax = new(camera.Position, camera.Follower.BoundaryDis.Max);
             // cameraBoundaryMax.DrawLines(2f, ColorHighlight2);
         }
-        public override void DrawUI(ScreenInfo ui)
+        protected override void DrawGameUIExample(ScreenInfo ui)
         {
-            base.DrawUI(ui);
+            Rect shipInfoRect = ui.Area.ApplyMargins(0.1f, 0.1f, 0.08f, 0.88f);// new Rect(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
+            string shipInfoText = $"Move Ship [W A S D] | Switch Ship [B]";
+            font.DrawText(shipInfoText, shipInfoRect, 1f, new Vector2(0.5f, 0.5f), ColorHighlight3);
+        }
+
+        protected override void DrawUIExample(ScreenInfo ui)
+        {
             Vector2 uiSize = ui.Area.Size;
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.1f), new Vector2(0.5f, 1f));
             string infoText = $"Zoom [Y X] | Total Stars {stars.Count} | Drawn Stars {drawStars.Count} | Camera Size {camera.Area.Size.Round()}";
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
 
-            Rect shipInfoRect = ui.Area.ApplyMargins(0.1f, 0.1f, 0.08f, 0.88f);// new Rect(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
-            string shipInfoText = $"Move Ship [W A S D] | Switch Ship [B]";
-            font.DrawText(shipInfoText, shipInfoRect, 1f, new Vector2(0.5f, 0.5f), ColorHighlight3);
-            
-            // var pos = camera.Position;
-            // int x = (int)pos.X;
-            // int y = (int)pos.Y;
-            // int rot = (int)camera.RotationDeg;
-            // int zoom = (int)(SUtils.GetFactor(camera.ZoomLevel, 0.1f, 5f) * 100f);
-            // string moveText = $"[W/A/S/D] Move ({x}/{y})";
-            // string rotText = $"[Q/E] Rotate ({rot})";
-            // string scaleText = $"[Y/X] Zoom ({zoom}%)";
-            // //string transText = String.Format("[LMB] Offset ({0}/{1})", transX, transY);
-            // string shakeText = "[Space] Shake Camera";
-            // string infoText = $"{moveText} | {rotText} | {scaleText} | {shakeText}";
-            // font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
             
         }
-
     }
 
 }

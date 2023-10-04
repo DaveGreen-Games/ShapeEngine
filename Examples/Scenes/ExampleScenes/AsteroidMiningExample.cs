@@ -27,7 +27,7 @@ namespace Examples.Scenes.ExampleScenes
 
         public virtual void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui) { }
         public virtual void DrawGame(ScreenInfo game) { }
-        public virtual void DrawUI(ScreenInfo ui) { }
+        public virtual void DrawGameUI(ScreenInfo ui) { }
         public virtual void Overlap(CollisionInformation info) { }
         public virtual void OverlapEnded(ICollidable other) { }
         public virtual void AddedToHandler(GameObjectHandler gameObjectHandler) { }
@@ -36,7 +36,7 @@ namespace Examples.Scenes.ExampleScenes
         
         public bool IsDead() { return dead; }
         public bool DrawToGame(Rect gameArea) { return true; }
-        public bool DrawToUI(Rect uiArea) { return false; }
+        public bool DrawToGameUI(Rect uiArea) { return false; }
         public bool CheckHandlerBounds() { return false; }
         public void LeftHandlerBounds(Vector2 safePosition, CollisionPoints collisionPoints) { }
 
@@ -545,7 +545,7 @@ namespace Examples.Scenes.ExampleScenes
             boundaryRect = gameArea.ApplyMargins(0.005f, 0.005f, 0.1f, 0.005f);
         }
         
-        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
             UpdateBoundaryRect(game.Area);
             gameObjectHandler.ResizeBounds(boundaryRect);
@@ -557,7 +557,6 @@ namespace Examples.Scenes.ExampleScenes
                 c.Update(dt);
                 if (c.IsFinished()) lastCutOuts.RemoveAt(i);
             }
-            base.Update(dt, deltaSlow, game, ui); //calls area update therefore area bounds have to be updated before that
         }
         private void OnAsteroidFractured(Asteroid a, Vector2 point)
         {
@@ -663,10 +662,8 @@ namespace Examples.Scenes.ExampleScenes
         {
             laserDevice.SetHybernate(false);
         }
-        protected override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            base.HandleInput(dt, mousePosGame, mousePosUI);
-
             //clipRect = new(mousePosGame, new Vector2(100, 300), new Vector2(0f, 1f));
             //clipperRect = clipRect.ToClipperRect();
             //if (IsKeyPressed(KeyboardKey.KEY_NINE))
@@ -683,8 +680,6 @@ namespace Examples.Scenes.ExampleScenes
             //    }
             //    testShapes = newShapes;
             //}
-            
-
 
             var col = gameObjectHandler.GetCollisionHandler();
             if (col == null) return;
@@ -872,9 +867,8 @@ namespace Examples.Scenes.ExampleScenes
 
 
 
-        public override void DrawGame(ScreenInfo game)
+        protected override void DrawGameExample(ScreenInfo game)
         {
-            base.DrawGame(game);
             
             boundaryRect.DrawLines(4f, ColorLight);
             if(polyModeActive && curShapeType != ShapeType.None)
@@ -888,43 +882,22 @@ namespace Examples.Scenes.ExampleScenes
             {
                 cutOut.Draw();
             }
-            
-            //var ellipse = SClipper.CreateEllipse(mousePosGame, 500, 100, 0);
-            //ellipse.DEBUG_DrawLinesCCW(2f, BLUE, PURPLE);
-            //foreach (var shape in testShapes)
-            //{
-            //    shape.DEBUG_DrawLinesCCW(2f, BLUE, PURPLE);
-            //}
-            //clipRect.DrawLines(8f, RED);
-            //
-            //var conversionRect = clipperRect.ToRect();
-            //conversionRect.DrawLines(4f, YELLOW);
-            //
-            //Polygon clipperPolygon = new();
-            //clipperPolygon.Add(new Vector2((float)clipperRect.left, (float)clipperRect.top));
-            //clipperPolygon.Add(new Vector2((float)clipperRect.left, (float)clipperRect.bottom));
-            //clipperPolygon.Add(new Vector2((float)clipperRect.right, (float)clipperRect.bottom));
-            //clipperPolygon.Add(new Vector2((float)clipperRect.right, (float)clipperRect.top));
-            //clipperPolygon.DrawLines(2f, GREEN);
         }
-        public override void DrawUI(ScreenInfo ui)
+        protected override void DrawGameUIExample(ScreenInfo ui)
         {
-            gameObjectHandler.DrawUI(ui);
-            base.DrawUI(ui);
+            gameObjectHandler.DrawGameUI(ui);
+        }
+
+        protected override void DrawUIExample(ScreenInfo ui)
+        {
             Vector2 uiSize = ui.Area.Size;
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));
 
             string polymodeText = "[Tab] Polymode | [LMB] Place/Merge | [RMB] Cut | [1] Triangle | [2] Rect | [3] Poly | [Q] Regenerate | [X] Rotate | [C] Scale";
             string laserText = "[Tab] Lasermode | [LMB] Move | [RMB] Shoot Laser";
             string text = polyModeActive ? polymodeText : laserText;
-            //string infoText = String.Format("Object Count: {0}", area.Count); // MathF.Floor(crossResult * 100) / 100);
-
-            //text = String.Format("RPos: {0} | CRPos: {1}", new Vector2(clipRect.x, clipRect.y), new Vector2((float)clipperRect.left, (float)clipperRect.top));
             
             font.DrawText(text, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
-            
-            
         }
-
     }
 }

@@ -46,7 +46,7 @@ namespace Examples.Scenes.ExampleScenes
             font = GAMELOOP.GetFont(fontIndex);
         }
 
-        protected override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             TextBox tb = new(text, caretIndex, textEntryActive);
             TextBox updated = tb.UpdateTextBox(new TextBoxKeys());
@@ -113,7 +113,6 @@ namespace Examples.Scenes.ExampleScenes
                     }
                 }
 
-                base.HandleInput(dt, mousePosGame, mousePosUI);
             }
 
             //text = updated.Text;
@@ -122,9 +121,8 @@ namespace Examples.Scenes.ExampleScenes
 
             
         }
-        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            base.Update(dt, deltaSlow, game, ui);
             if (textEntryActive) return;
             if (draggingTopLeft || draggingBottomRight)
             {
@@ -144,15 +142,10 @@ namespace Examples.Scenes.ExampleScenes
             }
 
         }
-        public override void DrawUI(ScreenInfo ui)
+        protected override void DrawGameUIExample(ScreenInfo ui)
         {
-            base.DrawUI(ui);
-
             Rect r = new(topLeft, bottomRight);
             r.DrawLines(6f, ColorMedium);
-
-            Vector2 uiSize = ui.Area.Size;
-
 
             if (!textEntryActive)
             {
@@ -197,7 +190,22 @@ namespace Examples.Scenes.ExampleScenes
                     bottomRightPoint.Draw(ColorMedium);
                     bottomRightInteractionCircle.DrawLines(2f, ColorMedium, 4f);
                 }
+            }
+            else
+            {
+                string textBoxText = text.Length <= 0 ? "Write your text here." : text;
+                font.DrawText(textBoxText, 50, fontSpacing, r.GetPoint(curAlignement), curAlignement, ColorLight);
+                font.DrawCaret(textBoxText, r, 50, fontSpacing, curAlignement, caretIndex, 5f, ColorHighlight2);
+            }
 
+
+        }
+
+        protected override void DrawUIExample(ScreenInfo ui)
+        {
+            Vector2 uiSize = ui.Area.Size;
+            if (!textEntryActive)
+            {
                 string info =
                     $"[W] Font: {GAMELOOP.GetFontName(fontIndex)} | [A/D] Font Spacing: {fontSpacing} | [Enter] Write Custom Text";
                 Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
@@ -209,12 +217,6 @@ namespace Examples.Scenes.ExampleScenes
             }
             else
             {
-                //TextCaret caret = new(caretIndex, 5f, RED);
-                //font.DrawTextBox(r, "Write Your Text Here.", text.ToList<Char>(), fontSpacing, WHITE, new Vector2(0.5f), caret);
-                string textBoxText = text.Length <= 0 ? "Write your text here." : text;
-                font.DrawText(textBoxText, 50, fontSpacing, r.GetPoint(curAlignement), curAlignement, ColorLight);
-                font.DrawCaret(textBoxText, r, 50, fontSpacing, curAlignement, caretIndex, 5f, ColorHighlight2);
-
                 string info = "TEXT ENTRY MODE ACTIVE | [ESC] Cancel | [Enter] Accept | [Del] Clear Text";
                 Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
                 font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
@@ -226,6 +228,7 @@ namespace Examples.Scenes.ExampleScenes
 
 
         }
+
         private void ChangeFontSpacing(int amount)
         {
             fontSpacing += amount;

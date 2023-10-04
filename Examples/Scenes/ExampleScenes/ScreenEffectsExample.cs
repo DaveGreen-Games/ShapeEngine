@@ -283,16 +283,7 @@ namespace Examples.Scenes.ExampleScenes
             GenerateComets(200);
 
         }
-        protected override void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
-        {
-            base.HandleInput(dt, mousePosGame, mousePosUI);
-
-            HandleZoom(dt);
-            HandleRotation(dt);
-
-            if (IsKeyPressed(KeyboardKey.KEY_SPACE)) ShakeCamera();
-
-        }
+        
         private void HandleZoom(float dt)
         {
             float zoomSpeed = 1f;
@@ -317,46 +308,22 @@ namespace Examples.Scenes.ExampleScenes
                 camera.Rotate(rotDir * rotSpeedDeg * dt);
             }
         }
-        // private void HandleCameraTranslation(float dt)
-        // {
-        //     float speed = 500;
-        //     int dirX = 0;
-        //     int dirY = 0;
-        //
-        //     if (IsKeyDown(KeyboardKey.KEY_A))
-        //     {
-        //         dirX = -1;
-        //     }
-        //     else if (IsKeyDown(KeyboardKey.KEY_D))
-        //     {
-        //         dirX = 1;
-        //     }
-        //
-        //     if (IsKeyDown(KeyboardKey.KEY_W))
-        //     {
-        //         dirY = -1;
-        //     }
-        //     else if (IsKeyDown(KeyboardKey.KEY_S))
-        //     {
-        //         dirY = 1;
-        //     }
-        //     if (dirX != 0 || dirY != 0)
-        //     {
-        //         movementDir = new Vector2(dirX, dirY).Normalize();
-        //         movementDir = movementDir.RotateDeg(-camera.RotationDeg);
-        //         Vector2 movement = movementDir * speed * dt;
-        //         camera.Position += movement;
-        //         //camera.Translation += movement;
-        //     }
-        // }
         private void ShakeCamera()
         {
             camera.Shake(ShapeRandom.randF(0.8f, 2f), new Vector2(100, 100), 0, 25, 0.75f);
         }
-        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        
+        
+        protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            base.Update(dt, deltaSlow, game, ui);
+            HandleZoom(dt);
+            HandleRotation(dt);
 
+            if (IsKeyPressed(KeyboardKey.KEY_SPACE)) ShakeCamera();
+
+        }
+        protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        {
             intensitySlider.Update(dt, ui.Area.ApplyMargins(0.025f, 0.6f, 0.1f, 0.85f), ui.MousePos);
             cameraFollowSlider.Update(dt, ui.Area.ApplyMargins(0.025f, 0.6f, 0.16f, 0.79f), ui.MousePos);
             SetSliderValues();
@@ -378,10 +345,8 @@ namespace Examples.Scenes.ExampleScenes
                 }
             }
         }
-
-        public override void DrawGame(ScreenInfo game)
+        protected override void DrawGameExample(ScreenInfo game)
         {
-            base.DrawGame(game);
             foreach (var star in stars)
             {
                 star.Draw();
@@ -394,9 +359,14 @@ namespace Examples.Scenes.ExampleScenes
             
             ship.Draw();
         }
-        public override void DrawUI(ScreenInfo ui)
+        protected override void DrawGameUIExample(ScreenInfo ui)
         {
-            base.DrawUI(ui);
+            
+            intensitySlider.Draw();
+            cameraFollowSlider.Draw();
+        }
+        protected override void DrawUIExample(ScreenInfo ui)
+        {
             Vector2 uiSize = ui.Area.Size;
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
 
@@ -412,11 +382,8 @@ namespace Examples.Scenes.ExampleScenes
             string shakeText = "[Space] Shake Camera";
             string infoText = $"{moveText} | {rotText} | {scaleText} | {shakeText}";
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
-            
-            intensitySlider.Draw();
-            cameraFollowSlider.Draw();
-        }
 
+        }
     }
 
 }

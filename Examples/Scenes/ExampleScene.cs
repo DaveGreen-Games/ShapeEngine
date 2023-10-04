@@ -22,7 +22,6 @@ namespace Examples.Scenes
         public static Color ColorHighlight3 = ShapeColor.HexToColor("#FCA311");
         public static Color ColorRustyRed = ShapeColor.HexToColor("#DE3C4B");
 
-
         public string Title { get; protected set; } = "Title Goes Here";
         public string Description { get; protected set; } = "No Description Yet.";
 
@@ -45,15 +44,7 @@ namespace Examples.Scenes
 
         public virtual void OnPauseChanged(bool paused){}
         
-        public virtual void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
-        {
-            HandleInput(dt, game.MousePos, ui.MousePos);
-
-            if (GAMELOOP.Paused) return;
-            HandleInputExample(dt, game.MousePos, ui.MousePos);
-            UpdateExample(dt, deltaSlow, game, ui);
-        }
-        protected virtual void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             if (GAMELOOP.Paused)
             {
@@ -91,7 +82,20 @@ namespace Examples.Scenes
 
             
         }
-        public virtual void DrawUI(ScreenInfo ui)
+
+        public void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        {
+            HandleInput(dt, game.MousePos, ui.MousePos);
+
+            if (GAMELOOP.Paused) return;
+            HandleInputExample(dt, game.MousePos, ui.MousePos);
+            UpdateExample(dt, deltaSlow, game, ui);
+        }
+        public void DrawGame(ScreenInfo game)
+        {
+            DrawGameExample(game);
+        }
+        public void DrawGameUI(ScreenInfo ui)
         {
             if (GAMELOOP.Paused)
             {
@@ -104,7 +108,7 @@ namespace Examples.Scenes
                 
             }
             
-            DrawUIExampe(ui);
+            DrawGameUIExample(ui);
             
             Vector2 uiSize = ui.Area.Size;
             Segment s = new(uiSize * new Vector2(0f, 0.07f), uiSize * new Vector2(1f, 0.07f));
@@ -121,14 +125,18 @@ namespace Examples.Scenes
             Rect fpsRect = new Rect(uiSize * new Vector2(0.98f, 0.06f), uiSize * new Vector2(0.3f, 0.04f), new Vector2(1f, 1f));
             titleFont.DrawText(fpsText, fpsRect, 4f, new Vector2(1f, 0.5f), ColorHighlight2);
         }
-        public virtual void DrawGame(ScreenInfo game)
+        public void DrawUI(ScreenInfo ui)
         {
-            DrawGameExample(game);
+            if (GAMELOOP.Paused) return;
+            
+            DrawUIExample(ui);
+            
         }
         
         protected virtual void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI) { }
         protected virtual void UpdateExample(float dt, float slowDelta, ScreenInfo game, ScreenInfo ui) { }
-        protected virtual void DrawUIExampe(ScreenInfo ui) { }
+        protected virtual void DrawGameUIExample(ScreenInfo ui) { }
+        protected virtual void DrawUIExample(ScreenInfo ui) { }
         protected virtual void DrawGameExample(ScreenInfo game) { }
         
         
