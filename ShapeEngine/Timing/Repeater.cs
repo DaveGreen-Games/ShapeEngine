@@ -23,6 +23,15 @@ namespace ShapeEngine.Timing
             this.timer = 0f;
             this.remainingRepeats = repeats;
         }
+        public Repeater(Repeater repeater)
+        {
+            this.repeaterFunc = repeater.repeaterFunc;
+            this.duration = repeater.duration;
+            this.timer = repeater.duration;
+            this.remainingRepeats = repeater.remainingRepeats;
+        }
+
+        public ISequenceable Copy() => new Repeater(this);
         public bool Update(float dt)
         {
             if (duration <= 0f) return true;

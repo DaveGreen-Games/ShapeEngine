@@ -15,7 +15,14 @@ namespace ShapeEngine.Timing
             this.duration = duration;
             this.timer = 0f;
         }
+        private Actionable(Actionable actionable)
+        {
+            this.duration = actionable.duration;
+            this.timer = actionable.timer;
+            this.action = actionable.action;
+        }
 
+        public ISequenceable Copy() => new Actionable(this);
         public bool Update(float dt)
         {
             if (duration <= 0f) return true;

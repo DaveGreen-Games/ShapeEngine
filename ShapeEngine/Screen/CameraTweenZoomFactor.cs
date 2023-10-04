@@ -1,4 +1,5 @@
 using ShapeEngine.Lib;
+using ShapeEngine.Timing;
 
 namespace ShapeEngine.Screen;
 
@@ -20,7 +21,17 @@ public class CameraTweenZoomFactor : ICameraTween
         this.to = to;
         this.cur = from;
     }
+    private CameraTweenZoomFactor(CameraTweenZoomFactor cameraTween)
+    {
+        this.duration = cameraTween.duration;
+        this.timer = cameraTween.timer;
+        this.tweenType = cameraTween.tweenType;
+        this.from = cameraTween.from;
+        this.to = cameraTween.to;
+        this.cur = cameraTween.from;
+    }
 
+    public ISequenceable Copy() => new CameraTweenZoomFactor(this);
     public bool Update(float dt)
     {
         if (duration <= 0f) return true;

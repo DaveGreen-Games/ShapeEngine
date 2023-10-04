@@ -21,6 +21,14 @@ internal class DelayedAction : ISequenceable
             this.action = action;
         }
     }
+
+    private DelayedAction(DelayedAction action)
+    {
+        this.timer = action.timer;
+        this.action = action.action;
+    }
+
+    public ISequenceable Copy() => new DelayedAction(this);
     public bool Update(float dt)
     {
         if (timer <= 0f) return true;

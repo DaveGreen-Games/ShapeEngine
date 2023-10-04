@@ -1,16 +1,36 @@
 ﻿
 namespace ShapeEngine.Timing
 {
-    public interface ISequenceable
+   
+    public sealed class SequencerState<T> where T : ISequenceable
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="dt"></param>
-        /// <returns>Returns if finished.</returns>
-        public bool Update(float dt);
+        internal readonly Sequences<T> state = new();
+
+        internal SequencerState(Sequences<T> sequences)
+        {
+            state = sequences.Copy();
+        }
     }
 
+    internal sealed class Sequences<T> : Dictionary<uint, List<T>> where T : ISequenceable
+    {
+        public Sequences<T> Copy()
+        {
+            Sequences<T> returnValue = new();
+            foreach (var key in this.Keys)
+            {
+                var copy = new List<T>();
+                foreach (var item in this[key])
+                {
+                    copy.Add((T)item.Copy());
+                }
+                if(returnValue.ContainsKey(key)) returnValue[key].AddRange(copy);
+                else returnValue.Add(key, copy);
+            }
+
+            return returnValue;
+        }
+    }
     
     public class Sequencer <T>  where T : ISequenceable
     {
@@ -20,10 +40,23 @@ namespace ShapeEngine.Timing
         public event Action<uint>? OnSequenceFinished;
         public event Action<T>? OnItemUpdated;
 
-        protected Dictionary<uint, List<T>> sequences = new();
+        private Sequences<T> sequences = new();
 
         public Sequencer() { }
 
+        public SequencerState<T> GetState() => new(sequences);
+        public SequencerState<T> Clear()
+        {
+            var state = new SequencerState<T>(sequences);
+            sequences.Clear();
+            return state;
+        }
+
+        public void ApplyState(SequencerState<T> state)
+        {
+            sequences = state.state;
+        }
+        
         public bool HasSequences() => sequences.Count > 0;
         public bool HasSequence(uint id) => sequences.ContainsKey(id);
         public uint StartSequence(params T[] items)
@@ -48,7 +81,7 @@ namespace ShapeEngine.Timing
                 if (sequenceList.Count > 0)
                 {
                     var sequence = sequenceList[sequenceList.Count - 1];//list is reversed
-                    var finished = UpdateSequence(sequence, dt); // seqence.Update(dt);
+                    var finished = UpdateSequence(sequence, dt);
                     OnItemUpdated?.Invoke(sequence);
                     if (finished) sequenceList.RemoveAt(sequenceList.Count - 1);
                 }
@@ -71,24 +104,3 @@ namespace ShapeEngine.Timing
 
     
 }
-
-//doesnt work
-    //public interface ISequencer<T> where T : ISequenceable
-    //{
-    //    public event Action<uint>? OnSequenceFinished;
-    //    public event Action<T>? OnItemUpdated;
-    //
-    //
-    //    protected static uint idCounter = 0;
-    //    protected static uint NextID { get { return idCounter++; } }
-    //
-    //
-    //    public bool HasSequences();
-    //    public uint StartSequence(params T[] actionables);
-    //    public void CancelSequence(uint id);
-    //    public void Stop();
-    //    public void Update(float dt);
-    //    //protected virtual bool UpdateSequence(T sequence, float dt) { return sequence.Update(dt); }
-    //    //protected virtual void StartUpdate() { }
-    //    //protected virtual void EndUpdate() { }
-    //}

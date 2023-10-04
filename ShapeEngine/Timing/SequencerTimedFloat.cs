@@ -16,7 +16,13 @@ namespace ShapeEngine.Timing
             this.timer = duration;
             this.value = value;
         }
+        public TimedFloat(TimedFloat timed)
+        {
+            this.timer = timed.timer;
+            this.value = timed.value;
+        }
 
+        public ISequenceable Copy() => new TimedFloat(this);
         public float ApplyValue(float total) { return total * value; }
         public bool Update(float dt)
         {

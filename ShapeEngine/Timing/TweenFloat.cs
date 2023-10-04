@@ -1,45 +1,45 @@
 using ShapeEngine.Lib;
-using ShapeEngine.Timing;
 
-namespace ShapeEngine.Screen;
+namespace ShapeEngine.Timing;
 
-public class CameraTweenRotation : ICameraTween
+public class TweenFloat : ISequenceable
 {
+    public delegate bool TweenFunc(float result);
+
+    private TweenFunc func;
     private float duration;
     private float timer;
     private TweenType tweenType;
     private float from;
     private float to;
-    private float cur;
-    public CameraTweenRotation(float fromDeg, float toDeg, float duration, TweenType tweenType)
+
+    public TweenFloat(TweenFunc tweenFunc, float from, float to, float duration, TweenType tweenType)
     {
+        this.func = tweenFunc;
         this.duration = duration;
         this.timer = 0f;
         this.tweenType = tweenType;
-        this.from = fromDeg;
-        this.to = toDeg;
-        this.cur = from;
+        this.from = from;
+        this.to = to;
     }
-    private CameraTweenRotation(CameraTweenRotation tween)
+    public TweenFloat(TweenFloat tween)
     {
+        this.func = tween.func;
         this.duration = tween.duration;
         this.timer = tween.timer;
         this.tweenType = tween.tweenType;
         this.from = tween.from;
         this.to = tween.to;
-        this.cur = tween.cur;
     }
 
-    public ISequenceable Copy() => new CameraTweenRotation(this);
+    public ISequenceable Copy() => new TweenFloat(this);
     public bool Update(float dt)
     {
         if (duration <= 0f) return true;
         float t = Clamp(timer / duration, 0f, 1f);
         timer += dt;
-        cur = ShapeTween.Tween(from, to, t, tweenType);
+        float result = ShapeTween.Tween(from, to, t, tweenType);
 
-        return t >= 1f;
+        return func(result) || t >= 1f;
     }
-
-    public float GetRotationDeg() { return cur; }
 }

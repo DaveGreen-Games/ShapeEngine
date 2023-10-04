@@ -224,7 +224,7 @@ namespace Examples.Scenes.ExampleScenes
             }
             if (IsKeyPressed(KeyboardKey.KEY_FOUR))
             {
-                GAMELOOP.SlowMotion.Add(0f, 6f);
+                GAMELOOP.SlowMotion.Add(0f, 4f, SlowMotion.TagDefault);
             }
         }
 
