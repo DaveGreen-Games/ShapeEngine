@@ -120,7 +120,7 @@ public interface IShapeInputType
 
 public class ShapeKeyboardButtonInput : IShapeInputType
 {
-    private ShapeKeyboardButton button;
+    private readonly ShapeKeyboardButton button;
     private ShapeInputState state = new();
     public ShapeKeyboardButtonInput(ShapeKeyboardButton button)
     {
@@ -129,9 +129,7 @@ public class ShapeKeyboardButtonInput : IShapeInputType
 
     public void Update(float dt, int gamepadIndex)
     {
-        bool down = IsKeyDown((int)button);
-        ShapeInputState current = new(down, !down, 0f, gamepadIndex);
-        state = new(state, current);
+        state = GetState(button, state);
     }
     public string GetName(bool shorthand = true) => GetKeyboardButtonName(button, shorthand);
     public ShapeInputState GetState() => state;
@@ -158,68 +156,68 @@ public class ShapeKeyboardButtonInput : IShapeInputType
                 case ShapeKeyboardButton.NINE: return shortHand ? "9" : "Nine";
                 case ShapeKeyboardButton.SEMICOLON: return shortHand ? ";" : "Semi Colon";
                 case ShapeKeyboardButton.EQUAL: return shortHand ? "=" : "Equal";
-                case ShapeKeyboardButton.A: return shortHand ? "A" : "A";
-                case ShapeKeyboardButton.B: return shortHand ? "B" : "B";
-                case ShapeKeyboardButton.C: return shortHand ? "C" : "C";
-                case ShapeKeyboardButton.D: return shortHand ? "D" : "D";
-                case ShapeKeyboardButton.E: return shortHand ? "E" : "E";
-                case ShapeKeyboardButton.F: return shortHand ? "F" : "F";
-                case ShapeKeyboardButton.G: return shortHand ? "G" : "G";
-                case ShapeKeyboardButton.H: return shortHand ? "H" : "H";
-                case ShapeKeyboardButton.I: return shortHand ? "I" : "I";
-                case ShapeKeyboardButton.J: return shortHand ? "J" : "J";
-                case ShapeKeyboardButton.K: return shortHand ? "K" : "K";
-                case ShapeKeyboardButton.L: return shortHand ? "L" : "L";
-                case ShapeKeyboardButton.M: return shortHand ? "M" : "M";
-                case ShapeKeyboardButton.N: return shortHand ? "N" : "N";
-                case ShapeKeyboardButton.O: return shortHand ? "O" : "O";
-                case ShapeKeyboardButton.P: return shortHand ? "P" : "P";
-                case ShapeKeyboardButton.Q: return shortHand ? "Q" : "Q";
-                case ShapeKeyboardButton.R: return shortHand ? "R" : "R";
-                case ShapeKeyboardButton.S: return shortHand ? "S" : "S";
-                case ShapeKeyboardButton.T: return shortHand ? "T" : "T";
-                case ShapeKeyboardButton.U: return shortHand ? "U" : "U";
-                case ShapeKeyboardButton.V: return shortHand ? "V" : "V";
-                case ShapeKeyboardButton.W: return shortHand ? "W" : "W";
-                case ShapeKeyboardButton.X: return shortHand ? "X" : "X";
-                case ShapeKeyboardButton.Y: return shortHand ? "Y" : "Y";
-                case ShapeKeyboardButton.Z: return shortHand ? "Z" : "Z";
+                case ShapeKeyboardButton.A: return "A";
+                case ShapeKeyboardButton.B: return "B";
+                case ShapeKeyboardButton.C: return "C";
+                case ShapeKeyboardButton.D: return "D";
+                case ShapeKeyboardButton.E: return "E";
+                case ShapeKeyboardButton.F: return "F";
+                case ShapeKeyboardButton.G: return "G";
+                case ShapeKeyboardButton.H: return "H";
+                case ShapeKeyboardButton.I: return "I";
+                case ShapeKeyboardButton.J: return "J";
+                case ShapeKeyboardButton.K: return "K";
+                case ShapeKeyboardButton.L: return "L";
+                case ShapeKeyboardButton.M: return "M";
+                case ShapeKeyboardButton.N: return "N";
+                case ShapeKeyboardButton.O: return "O";
+                case ShapeKeyboardButton.P: return "P";
+                case ShapeKeyboardButton.Q: return "Q";
+                case ShapeKeyboardButton.R: return "R";
+                case ShapeKeyboardButton.S: return "S";
+                case ShapeKeyboardButton.T: return "T";
+                case ShapeKeyboardButton.U: return "U";
+                case ShapeKeyboardButton.V: return "V";
+                case ShapeKeyboardButton.W: return "W";
+                case ShapeKeyboardButton.X: return "X";
+                case ShapeKeyboardButton.Y: return "Y";
+                case ShapeKeyboardButton.Z: return "Z";
                 case ShapeKeyboardButton.LEFT_BRACKET: return shortHand ? "[" : "Left Bracket";
                 case ShapeKeyboardButton.BACKSLASH: return shortHand ? "\\" : "Backslash";
                 case ShapeKeyboardButton.RIGHT_BRACKET: return shortHand ? "]" : "Right Bracket";
                 case ShapeKeyboardButton.GRAVE: return shortHand ? "`" : "Grave";//Check
-                case ShapeKeyboardButton.SPACE: return shortHand ? "Space" : "Space";
+                case ShapeKeyboardButton.SPACE: return shortHand ? "Spc" : "Space";
                 case ShapeKeyboardButton.ESCAPE: return shortHand ? "Esc" : "Escape";
-                case ShapeKeyboardButton.ENTER: return shortHand ? "Enter" : "Enter";
+                case ShapeKeyboardButton.ENTER: return shortHand ? "Ent" : "Enter";
                 case ShapeKeyboardButton.TAB: return shortHand ? "Tab" : "Tab";
-                case ShapeKeyboardButton.BACKSPACE: return shortHand ? "Backspc" : "Backspace";
+                case ShapeKeyboardButton.BACKSPACE: return shortHand ? "Bckspc" : "Backspace";
                 case ShapeKeyboardButton.INSERT: return shortHand ? "Ins" : "Insert";
                 case ShapeKeyboardButton.DELETE: return shortHand ? "Del" : "Delete";
-                case ShapeKeyboardButton.RIGHT: return shortHand ? "Right" : "Right";
-                case ShapeKeyboardButton.LEFT: return shortHand ? "Left" : "Left";
-                case ShapeKeyboardButton.DOWN: return shortHand ? "Down" : "Down";
+                case ShapeKeyboardButton.RIGHT: return shortHand ? "Rgt" : "Right";
+                case ShapeKeyboardButton.LEFT: return shortHand ? "Lft" : "Left";
+                case ShapeKeyboardButton.DOWN: return shortHand ? "Dwn" : "Down";
                 case ShapeKeyboardButton.UP: return shortHand ? "Up" : "Up";
                 case ShapeKeyboardButton.PAGE_UP: return shortHand ? "PUp" : "Page Up";
-                case ShapeKeyboardButton.PAGE_DOWN: return shortHand ? "PDo" : "";
+                case ShapeKeyboardButton.PAGE_DOWN: return shortHand ? "PDwn" : "Page Down";
                 case ShapeKeyboardButton.HOME: return shortHand ? "Home" : "Home";
                 case ShapeKeyboardButton.END: return shortHand ? "End" : "End";
                 case ShapeKeyboardButton.CAPS_LOCK: return shortHand ? "CpsL" : "Caps Lock";
                 case ShapeKeyboardButton.SCROLL_LOCK: return shortHand ? "ScrL" : "Scroll Lock";
                 case ShapeKeyboardButton.NUM_LOCK: return shortHand ? "NumL" : "Num Lock";
-                case ShapeKeyboardButton.PRINT_SCREEN: return shortHand ? "Print" : "Print Screen";
+                case ShapeKeyboardButton.PRINT_SCREEN: return shortHand ? "Prnt" : "Print Screen";
                 case ShapeKeyboardButton.PAUSE: return shortHand ? "Pause" : "Pause";
-                case ShapeKeyboardButton.F1: return shortHand ? "F1" : "F1";
-                case ShapeKeyboardButton.F2: return shortHand ? "F2" : "F2";
-                case ShapeKeyboardButton.F3: return shortHand ? "F3" : "F3";
-                case ShapeKeyboardButton.F4: return shortHand ? "F4" : "F4";
-                case ShapeKeyboardButton.F5: return shortHand ? "F5" : "F5";
-                case ShapeKeyboardButton.F6: return shortHand ? "F6" : "F6";
-                case ShapeKeyboardButton.F7: return shortHand ? "F7" : "F7";
-                case ShapeKeyboardButton.F8: return shortHand ? "F8" : "F8";
-                case ShapeKeyboardButton.F9: return shortHand ? "F9" : "F9";
-                case ShapeKeyboardButton.F10: return shortHand ? "F10" : "F10";
-                case ShapeKeyboardButton.F11: return shortHand ? "F11" : "F11";
-                case ShapeKeyboardButton.F12: return shortHand ? "F12" : "F12";
+                case ShapeKeyboardButton.F1: return shortHand ? "F1" : "Function 1";
+                case ShapeKeyboardButton.F2: return shortHand ? "F2" : "Function 2";
+                case ShapeKeyboardButton.F3: return shortHand ? "F3" : "Function 3";
+                case ShapeKeyboardButton.F4: return shortHand ? "F4" : "Function 4";
+                case ShapeKeyboardButton.F5: return shortHand ? "F5" : "Function 5";
+                case ShapeKeyboardButton.F6: return shortHand ? "F6" : "Function 6";
+                case ShapeKeyboardButton.F7: return shortHand ? "F7" : "Function 7";
+                case ShapeKeyboardButton.F8: return shortHand ? "F8" : "Function 8";
+                case ShapeKeyboardButton.F9: return shortHand ? "F9" : "Function 9";
+                case ShapeKeyboardButton.F10: return shortHand ? "F10" : "Function 10";
+                case ShapeKeyboardButton.F11: return shortHand ? "F11" : "Function 11";
+                case ShapeKeyboardButton.F12: return shortHand ? "F12" : "Function 12";
                 case ShapeKeyboardButton.LEFT_SHIFT: return shortHand ? "LShift" : "Left Shift";
                 case ShapeKeyboardButton.LEFT_CONTROL: return shortHand ? "LCtrl" : "Left Control";
                 case ShapeKeyboardButton.LEFT_ALT: return shortHand ? "LAlt" : "Left Alt";
@@ -248,26 +246,33 @@ public class ShapeKeyboardButtonInput : IShapeInputType
                 case ShapeKeyboardButton.KP_EQUAL: return shortHand ? "KPEqual" : "Keypad Equal";
                 case ShapeKeyboardButton.VOLUME_UP: return shortHand ? "Vol+" : "Volume Up";
                 case ShapeKeyboardButton.VOLUME_DOWN: return shortHand ? "Vol-" : "Volume Down";
-                case ShapeKeyboardButton.BACK: return shortHand ? "Back" : "Back";
+                case ShapeKeyboardButton.BACK: return shortHand ? "Bck" : "Back";
                 case ShapeKeyboardButton.NULL: return shortHand ? "Null" : "Null";
                 case ShapeKeyboardButton.MENU: return shortHand ? "Menu" : "Menu";
-                default: return shortHand ? "No Key" : "No Key";
+                default: return "No Key";
             }
         }
-        
+
+    private static bool IsDown(ShapeKeyboardButton button) => IsKeyDown((int)button);
+    public static ShapeInputState GetState(ShapeKeyboardButton button)
+    {
+        bool down = IsDown(button);
+        return new(down, !down, 0f, -1);
+    }
+    public static ShapeInputState GetState(ShapeKeyboardButton button, ShapeInputState previousState)
+    {
+        return new(previousState, GetState(button));
+    }
 }
 public class ShapeMouseButtonInput : IShapeInputType
     {
-        private ShapeMouseButton button;
+        private readonly ShapeMouseButton button;
         private ShapeInputState state = new();
         public ShapeMouseButtonInput(ShapeMouseButton button) { this.button = button; }
 
         public void Update(float dt, int gamepadIndex)
         {
-            bool down = IsDown();
-            ShapeInputState current = new(down, !down, 0f, gamepadIndex);
-            
-            state = new(state, current);
+            state = GetState(button, state);
         }
         public string GetName(bool shorthand = true) => GetMouseButtonName(button, shorthand);
 
@@ -275,7 +280,26 @@ public class ShapeMouseButtonInput : IShapeInputType
 
         public IShapeInputType Copy() => new ShapeMouseButtonInput(button);
         
-        private bool IsDown()
+        
+        public static string GetMouseButtonName(ShapeMouseButton button, bool shortHand = true)
+        {
+            switch (button)
+            {
+                case ShapeMouseButton.LEFT: return shortHand ? "LMB" : "Left Mouse Button";
+                case ShapeMouseButton.RIGHT: return shortHand ? "RMB" : "Right Mouse Button";
+                case ShapeMouseButton.MIDDLE: return shortHand ? "MMB" : "Middle Mouse Button";
+                case ShapeMouseButton.SIDE: return shortHand ? "SMB" : "Side Mouse Button";
+                case ShapeMouseButton.EXTRA: return shortHand ? "EMB" : "Extra Mouse Button";
+                case ShapeMouseButton.FORWARD: return shortHand ? "FMB" : "Forward Mouse Button";
+                case ShapeMouseButton.BACK: return shortHand ? "BMB" : "Back Mouse Button";
+                case ShapeMouseButton.MW_UP: return shortHand ? "MW U" : "Mouse Wheel Up";
+                case ShapeMouseButton.MW_DOWN: return shortHand ? "MW D" : "Mouse Wheel Down";
+                case ShapeMouseButton.MW_LEFT: return shortHand ? "MW L" : "Mouse Wheel Left";
+                case ShapeMouseButton.MW_RIGHT: return shortHand ? "MW R" : "Mouse Wheel Right";
+                default: return "No Key";
+            }
+        }
+        private static bool IsDown(ShapeMouseButton button)
         {
             var id = (int)button;
             if (id >= 10)
@@ -293,31 +317,21 @@ public class ShapeMouseButtonInput : IShapeInputType
             
             return IsMouseButtonDown(id);
         }
-        public static string GetMouseButtonName(ShapeMouseButton button, bool shortHand = true)
+        public static ShapeInputState GetState(ShapeMouseButton button)
         {
-            switch (button)
-            {
-                case ShapeMouseButton.LEFT: return shortHand ? "LMB" : "Left Mouse Button";
-                case ShapeMouseButton.RIGHT: return shortHand ? "RMB" : "Right Mouse Button";
-                case ShapeMouseButton.MIDDLE: return shortHand ? "MMB" : "Middle Mouse Button";
-                case ShapeMouseButton.SIDE: return shortHand ? "SMB" : "Side Mouse Button";
-                case ShapeMouseButton.EXTRA: return shortHand ? "EMB" : "Extra Mouse Button";
-                case ShapeMouseButton.FORWARD: return shortHand ? "FMB" : "Forward Mouse Button";
-                case ShapeMouseButton.BACK: return shortHand ? "BMB" : "Back Mouse Button";
-                case ShapeMouseButton.MW_UP: return shortHand ? "MW U" : "Mouse Wheel Up";
-                case ShapeMouseButton.MW_DOWN: return shortHand ? "MW D" : "Mouse Wheel Down";
-                case ShapeMouseButton.MW_LEFT: return shortHand ? "MW L" : "Mouse Wheel Left";
-                case ShapeMouseButton.MW_RIGHT: return shortHand ? "MW R" : "Mouse Wheel Right";
-                default: return shortHand ? "No Key" : "No Key";
-            }
+            bool down = IsDown(button);
+            return new(down, !down, 0f, -1);
         }
-
+        public static ShapeInputState GetState(ShapeMouseButton button, ShapeInputState previousState)
+        {
+            return new(previousState, GetState(button));
+        }
     }
 public class ShapeGamepadButtonInput : IShapeInputType
 {
-    private ShapeGamepadButton button;
+    private readonly ShapeGamepadButton button;
     private ShapeInputState state = new();
-    private float deadzone;
+    private readonly float deadzone;
 
     public ShapeGamepadButtonInput(ShapeGamepadButton button, float deadzone = 0.2f)
     {
@@ -329,12 +343,11 @@ public class ShapeGamepadButtonInput : IShapeInputType
     public string GetName(bool shorthand = true) => GetGamepadButtonName(button, shorthand);
     public void Update(float dt, int gamepadIndex)
     {
-        bool down = IsDown(gamepadIndex);
-        ShapeInputState current = new(down, !down, 0f, gamepadIndex);
+        state = GetState(button, state, gamepadIndex, deadzone);
     }
     public ShapeInputState GetState() => state;
     
-    private bool IsDown(int gamepadIndex)
+    private static bool IsDown(ShapeGamepadButton button, int gamepadIndex, float deadzone = 0.2f)
     {
         var id = (int)button;
         if (id >= 30 && id <= 33)
@@ -355,8 +368,17 @@ public class ShapeGamepadButtonInput : IShapeInputType
         
         return IsGamepadButtonDown(gamepadIndex, id);
     }
-    
-    
+    public static ShapeInputState GetState(ShapeGamepadButton button, int gamepadIndex, float deadzone = 0.2f)
+    {
+        bool down = IsDown(button, gamepadIndex, deadzone);
+        return new(down, !down, 0f, gamepadIndex);
+    }
+
+    public static ShapeInputState GetState(ShapeGamepadButton button, ShapeInputState previousState, int gamepadIndex,
+        float deadzone = 0.2f)
+    {
+        return new(previousState, GetState(button, gamepadIndex, deadzone));
+    }
     public static string GetGamepadButtonName(ShapeGamepadButton button, bool shortHand = true)
         {
             switch (button)
@@ -387,15 +409,15 @@ public class ShapeGamepadButtonInput : IShapeInputType
                 case ShapeGamepadButton.RIGHT_STICK_LEFT: return shortHand ? "RS L" : "Right Stick Left";
                 case ShapeGamepadButton.RIGHT_STICK_DOWN: return shortHand ? "RS D" : "Right Stick Down";
                 case ShapeGamepadButton.RIGHT_STICK_UP: return shortHand ? "RS U" : "Right Stick Up";
-                default: return shortHand ? "No Key" : "No Key";
+                default: return "No Key";
             }
         }
 
 }
 public class ShapeKeyboardButtonAxisInput : IShapeInputType
 {
-    private ShapeKeyboardButton neg;
-    private ShapeKeyboardButton pos;
+    private readonly ShapeKeyboardButton neg;
+    private readonly ShapeKeyboardButton pos;
     private ShapeInputState state = new();
 
     public ShapeKeyboardButtonAxisInput(ShapeKeyboardButton neg, ShapeKeyboardButton pos)
@@ -417,24 +439,33 @@ public class ShapeKeyboardButtonAxisInput : IShapeInputType
     }
     public void Update(float dt, int gamepadIndex)
     {
-        float axis = GetAxis();
-        bool down = axis != 0f;
-        ShapeInputState current = new(down, !down, axis, gamepadIndex);
-        state = new(state, current);
+        state = GetState(neg, pos, state);
     }
     public ShapeInputState GetState() => state;
     
-    private float GetAxis()
+    private static float GetAxis(ShapeKeyboardButton neg, ShapeKeyboardButton pos)
     {
         float vNegative = IsKeyDown((int)neg) ? 1f : 0f;
         float vPositive = IsKeyDown((int)pos) ? 1f : 0f;
         return vPositive - vNegative;
     }
+    public static ShapeInputState GetState(ShapeKeyboardButton neg, ShapeKeyboardButton pos)
+    {
+        float axis = GetAxis(neg, pos);
+        bool down = axis != 0f;
+        return new(down, !down, axis, -1);
+    }
+    public static ShapeInputState GetState(ShapeKeyboardButton neg, ShapeKeyboardButton pos,
+        ShapeInputState previousState)
+    {
+        return new(previousState, GetState(neg, pos));
+    }
+    
 }
 public class ShapeMouseButtonAxisInput : IShapeInputType
 {
-    private ShapeMouseButton neg;
-    private ShapeMouseButton pos;
+    private readonly ShapeMouseButton neg;
+    private readonly ShapeMouseButton pos;
     private ShapeInputState state = new();
 
     public ShapeMouseButtonAxisInput(ShapeMouseButton neg, ShapeMouseButton pos)
@@ -455,40 +486,50 @@ public class ShapeMouseButtonAxisInput : IShapeInputType
     }
     public void Update(float dt, int gamepadIndex)
     {
-        float axis = GetAxis();
-        bool down = axis != 0f;
-        ShapeInputState current = new(down, !down, axis, gamepadIndex);
-        state = new(state, current);
+        state = GetState(neg, pos, state);
     }
     public ShapeInputState GetState() => state;
     public IShapeInputType Copy() => new ShapeMouseButtonAxisInput(neg, pos);
 
-    private float GetAxis()
+    private static float GetAxis(ShapeMouseButton neg, ShapeMouseButton pos)
     {
         float vNegative = GetValue(neg);
         float vPositive = GetValue(pos);
         return vPositive - vNegative;
     }
-    private float GetValue(ShapeMouseButton button)
+    private static float GetValue(ShapeMouseButton button)
     {
         int id = (int)button;
         if (id >= 10)
         {
             Vector2 value = GetMouseWheelMoveV();
             if (button == ShapeMouseButton.MW_LEFT) return MathF.Abs(value.X);
-            else if (button == ShapeMouseButton.MW_RIGHT) return value.X;
-            else if (button == ShapeMouseButton.MW_UP) return MathF.Abs(value.Y);
-            else if (button == ShapeMouseButton.MW_DOWN) return value.Y;
-            else return 0f;
+            if (button == ShapeMouseButton.MW_RIGHT) return value.X;
+            if (button == ShapeMouseButton.MW_UP) return MathF.Abs(value.Y);
+            if (button == ShapeMouseButton.MW_DOWN) return value.Y;
+            return 0f;
         }
-        else return IsMouseButtonDown(id) ? 1f : 0f;
+        return IsMouseButtonDown(id) ? 1f : 0f;
     }
+    
+    public static ShapeInputState GetState(ShapeMouseButton neg, ShapeMouseButton pos)
+    {
+        float axis = GetAxis(neg, pos);
+        bool down = axis != 0f;
+        return new(down, !down, axis, -1);
+    }
+    public static ShapeInputState GetState(ShapeMouseButton neg, ShapeMouseButton pos,
+        ShapeInputState previousState)
+    {
+        return new(previousState, GetState(neg, pos));
+    }
+
 }
 public class ShapeGamepadButtonAxisInput : IShapeInputType
 {
-    private ShapeGamepadButton neg;
-    private ShapeGamepadButton pos;
-    private float deadzone;
+    private readonly ShapeGamepadButton neg;
+    private readonly ShapeGamepadButton pos;
+    private readonly float deadzone;
     private ShapeInputState state = new();
 
     public ShapeGamepadButtonAxisInput(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = 0.2f)
@@ -511,22 +552,19 @@ public class ShapeGamepadButtonAxisInput : IShapeInputType
 
     public void Update(float dt, int gamepadIndex)
     {
-        float axis = GetAxis(gamepadIndex);
-        bool down = axis != 0f;
-        ShapeInputState current = new(down, !down, axis, gamepadIndex);
-        state = new(state, current);
+        state = GetState(neg, pos, state, gamepadIndex, deadzone);
     }
     public ShapeInputState GetState() => state;
 
     public IShapeInputType Copy() => new ShapeGamepadButtonAxisInput(neg, pos, deadzone);
 
-    private float GetAxis(int gamepadIndex)
+    private static float GetAxis(ShapeGamepadButton neg, ShapeGamepadButton pos, int gamepadIndex, float deadzone = 0.2f)
     {
-        float vNegative = GetValue(gamepadIndex, neg);
-        float vPositive = GetValue(gamepadIndex, pos);
+        float vNegative = GetValue(neg, gamepadIndex, deadzone);
+        float vPositive = GetValue(pos, gamepadIndex, deadzone);
         return vPositive - vNegative;
     }
-    private float GetValue(int gamepadIndex, ShapeGamepadButton button)
+    private static float GetValue(ShapeGamepadButton button, int gamepadIndex, float deadzone = 0.2f)
     {
         if (gamepadIndex < 0) return 0f;
 
@@ -553,10 +591,22 @@ public class ShapeGamepadButtonAxisInput : IShapeInputType
         
         return IsGamepadButtonDown(gamepadIndex, id) ? 1f : 0f;
     }
+    public static ShapeInputState GetState(ShapeGamepadButton neg, ShapeGamepadButton pos, int gamepadIndex, float deadzone = 0.2f)
+    {
+        float axis = GetAxis(neg, pos, gamepadIndex, deadzone);
+        bool down = axis != 0f;
+        return new(down, !down, axis, -1);
+    }
+    public static ShapeInputState GetState(ShapeGamepadButton neg, ShapeGamepadButton pos,
+        ShapeInputState previousState, int gamepadIndex, float deadzone = 0.2f)
+    {
+        return new(previousState, GetState(neg, pos, gamepadIndex, deadzone));
+    }
+    
 }
 public class ShapeMouseWheelAxisInput : IShapeInputType
 {
-    private ShapeMouseWheelAxis axis;
+    private readonly ShapeMouseWheelAxis axis;
     private ShapeInputState state = new();
 
     public ShapeMouseWheelAxisInput(ShapeMouseWheelAxis axis)
@@ -567,20 +617,28 @@ public class ShapeMouseWheelAxisInput : IShapeInputType
     public string GetName(bool shorthand = true) => GetMouseWheelAxisName(axis, shorthand);
     public void Update(float dt, int gamepadIndex)
     {
-        float axisValue = GetValue();
-        bool down = axisValue != 0f;
-        ShapeInputState current = new(down, !down, axisValue, gamepadIndex);
-        state = new(state, current);
+        state = GetState(axis, state);
     }
     public ShapeInputState GetState() => state;
     public IShapeInputType Copy() => new ShapeMouseWheelAxisInput(axis);
 
-    private float GetValue()
+    private static float GetValue(ShapeMouseWheelAxis axis)
     {
         Vector2 value = GetMouseWheelMoveV();
         return axis == ShapeMouseWheelAxis.VERTICAL ? value.Y : value.X;
     }
     
+    public static ShapeInputState GetState(ShapeMouseWheelAxis axis)
+    {
+        float axisValue = GetValue(axis);
+        bool down = axisValue != 0f;
+        return new(down, !down, axisValue, -1);
+    }
+    public static ShapeInputState GetState(ShapeMouseWheelAxis axis, ShapeInputState previousState)
+    {
+        return new(previousState, GetState(axis));
+    }
+
     public static string GetMouseWheelAxisName(ShapeMouseWheelAxis axis, bool shortHand = true)
     {
         switch (axis)
@@ -594,8 +652,8 @@ public class ShapeMouseWheelAxisInput : IShapeInputType
 }
 public class ShapeGamepadAxisInput : IShapeInputType
 {
-    private ShapeGamepadAxis axis;
-    private float deadzone;
+    private readonly ShapeGamepadAxis axis;
+    private readonly float deadzone;
     private ShapeInputState state = new();
 
     public ShapeGamepadAxisInput(ShapeGamepadAxis axis, float deadzone = 0.2f)
@@ -607,21 +665,28 @@ public class ShapeGamepadAxisInput : IShapeInputType
     public string GetName(bool shorthand = true) => GetGamepadAxisName(axis, shorthand);
     public void Update(float dt, int gamepadIndex)
     {
-        float axisValue = GetValue(gamepadIndex);
-        bool down = axisValue != 0f;
-        ShapeInputState current = new(down, !down, axisValue, gamepadIndex);
-        state = new(state, current);
+        state = GetState(axis, state, gamepadIndex, deadzone);
     }
     public ShapeInputState GetState() => state;
     public IShapeInputType Copy() => new ShapeGamepadAxisInput(axis);
 
-    private float GetValue(int gamepadIndex)
+    private static float GetValue(ShapeGamepadAxis axis, int gamepadIndex, float deadzone = 0.2f)
     {
         float value = GetGamepadAxisMovement(gamepadIndex, (int)axis);
         if (MathF.Abs(value) < deadzone) return 0f;
         return value;
     }
-    
+    public static ShapeInputState GetState(ShapeGamepadAxis axis, int gamepadIndex, float deadzone = 0.2f)
+    {
+        float axisValue = GetValue(axis, gamepadIndex, deadzone);
+        bool down = axisValue != 0f;
+        return new(down, !down, axisValue, -1);
+    }
+    public static ShapeInputState GetState(ShapeGamepadAxis axis, ShapeInputState previousState, int gamepadIndex,
+        float deadzone = 0.2f)
+    {
+        return new(previousState, GetState(axis, gamepadIndex, deadzone));
+    }
     public static string GetGamepadAxisName(ShapeGamepadAxis axis, bool shortHand = true)
     {
         switch (axis)
@@ -642,6 +707,7 @@ public class ShapeGamepadAxisInput : IShapeInputType
 public class ShapeButton
 {
     public IShapeInputType InputType { get; private set; }
+    
     
     public ShapeButton(IShapeInputType inputType)
     {
@@ -723,6 +789,7 @@ public class ShapeButton
         InputType = button.InputType.Copy();
     }
 
+   
     
     public ShapeButton Copy() => new ShapeButton(this);
     public void Update(float dt, int gamepadIndex) => InputType.Update(dt, gamepadIndex);
@@ -733,9 +800,15 @@ public class ShapeInputAction
     public uint ID { get; private set; }
     public uint AccessTag { get; private set; } = ShapeInput.AllAccessTag;
     public int GamepadIndex { get; set; } = -1;
-
+    private bool consumed = false;
     public ShapeInputState State { get; private set; } = new();
-
+    public ShapeInputState Consume()
+    {
+        if (consumed) return new();
+        consumed = true;
+        return State;
+    }
+    
     public readonly List<ShapeButton> Inputs = new();
 
     public ShapeInputAction()
@@ -793,6 +866,7 @@ public class ShapeInputAction
     
     public void Update(float dt)
     {
+        consumed = false;
         ShapeInputState current = new();
         foreach (var input in Inputs)
         {
@@ -810,8 +884,18 @@ public static class ShapeInput
 {
     public static readonly uint AllAccessTag = 0;
     public static bool Locked { get; private set; } = false;
-    private static List<uint> lockExceptionTags = new();
+    private static readonly List<uint> lockExceptionTags = new();
+    private static readonly Dictionary<uint, ShapeInputAction> inputActions = new();
 
+    private static readonly Dictionary<ShapeKeyboardButton, ShapeInputState> keyboardButtonStates = new();
+    private static readonly Dictionary<ShapeMouseButton, ShapeInputState> mouseButtonStates = new();
+    private static readonly Dictionary<ShapeGamepadButton, ShapeInputState> gamepadButtonStates = new();
+    private static readonly Dictionary<ShapeMouseWheelAxis, ShapeInputState> mouseWheelAxisStates = new();
+    private static readonly Dictionary<ShapeGamepadAxis, ShapeInputState> gamepadAxisStates = new();
+    private static readonly Dictionary<int, ShapeInputState> keyboardButtonAxisStates = new();
+    private static readonly Dictionary<int, ShapeInputState> mouseButtonAxisStates = new();
+    private static readonly Dictionary<int, ShapeInputState> gamepadButtonAxisStates = new();
+    
     #region Lock System
     public static void Lock()
     {
@@ -833,70 +917,159 @@ public static class ShapeInput
     #endregion
     
     #region Input Actions
+    public static bool HasAction(uint id) => inputActions.ContainsKey(id);
+    public static uint AddAction(ShapeInputAction newAction)
+    {
+        var id = newAction.ID;
+        if (HasAction(id)) inputActions[id] = newAction;
+        else inputActions.Add(id, newAction);
+        return id;
+    }
+    public static bool RemoveAction(uint id) => inputActions.Remove(id);
 
-    //works for all gamepad / keyboard / mouse buttons -> action is device independent
-    // IsPressed(uint mapID, uint actionID) -> map has access tag for locked system
-    // IsReleased
-    // IsDown
-    // IsUp
-    
-    //works for all axis
-    // GetAxis
+    public static ShapeInputState GetActionState(uint id)
+    {
+        if (!HasAction(id)) return new();
+        var action = inputActions[id];
+        return Locked && !HasAccess(action.AccessTag) ? new() : action.State;
+    }
+    public static ShapeInputState ConsumeAction(uint id)
+    {
+        if (!HasAction(id)) return new();
+        var action = inputActions[id];
+        return Locked && !HasAccess(action.AccessTag) ? new() : action.Consume();
+    }
 
+    public static ShapeInputAction? GetAction(uint id)
+    {
+        return !inputActions.ContainsKey(id) ? null : inputActions[id];
+    }
     #endregion
 
 
     #region Basic
-    //GetAxis(GamepadAxis, accessTag)
-    //Mouse Down/Up/Released/Pressed
-
-    public static bool IsKeyPressed(KeyboardKey key)
+    public static ShapeInputState GetState(ShapeKeyboardButton button, uint accessTag)
     {
-        if (Locked) return false;
+        if (Locked && !HasAccess(accessTag)) return new();
+        if (!keyboardButtonStates.ContainsKey(button))
+        {
+            var state = ShapeKeyboardButtonInput.GetState(button);
+            keyboardButtonStates.Add(button, state);
+            return state;
+        }
 
-        return Raylib.IsKeyPressed(key);
+        var previousState = keyboardButtonStates[button];
+        var newState = ShapeKeyboardButtonInput.GetState(button, previousState);
+        keyboardButtonStates[button] = newState;
+        return newState;
     }
-    public static bool IsKeyReleased(KeyboardKey key)
+    public static ShapeInputState GetState(ShapeMouseButton button, uint accessTag)
     {
-        if (Locked) return false;
+        if (Locked && !HasAccess(accessTag)) return new();
+        if (!mouseButtonStates.ContainsKey(button))
+        {
+            var state = ShapeMouseButtonInput.GetState(button);
+            mouseButtonStates.Add(button, state);
+            return state;
+        }
 
-        return Raylib.IsKeyReleased(key);
+        var previousState = mouseButtonStates[button];
+        var newState = ShapeMouseButtonInput.GetState(button, previousState);
+        mouseButtonStates[button] = newState;
+        return newState;
     }
-    public static bool IsKeyDown(KeyboardKey key)
+    public static ShapeInputState GetState(ShapeGamepadButton button, uint accessTag, int gamepadIndex, float deadzone = 0.2f)
     {
-        if (Locked) return false;
+        if (Locked && !HasAccess(accessTag)) return new();
+        if (!gamepadButtonStates.ContainsKey(button))
+        {
+            var state = ShapeGamepadButtonInput.GetState(button, gamepadIndex, deadzone);
+            gamepadButtonStates.Add(button, state);
+            return state;
+        }
 
-        return Raylib.IsKeyDown(key);
+        var previousState = gamepadButtonStates[button];
+        var newState = ShapeGamepadButtonInput.GetState(button, previousState, gamepadIndex, deadzone);
+        gamepadButtonStates[button] = newState;
+        return newState;
     }
-    public static bool IsKeyUp(KeyboardKey key)
+    public static ShapeInputState GetState(ShapeKeyboardButton neg, ShapeKeyboardButton pos, uint accessTag)
     {
-        if (Locked) return false;
+        if (Locked && !HasAccess(accessTag)) return new();
+        int hashCode = HashCode.Combine((int)neg, (int)pos);
+        if (!keyboardButtonAxisStates.ContainsKey(hashCode))
+        {
+            var state = ShapeKeyboardButtonAxisInput.GetState(neg, pos);
+            keyboardButtonAxisStates.Add(hashCode, state);
+            return state;
+        }
 
-        return Raylib.IsKeyUp(key);
+        var previousState = keyboardButtonAxisStates[hashCode];
+        var newState = ShapeKeyboardButtonAxisInput.GetState(neg, pos, previousState);
+        keyboardButtonAxisStates[hashCode] = newState;
+        return newState;
     }
-    public static bool IsKeyPressed(KeyboardKey key, uint accessTag)
+    public static ShapeInputState GetState(ShapeMouseButton neg, ShapeMouseButton pos, uint accessTag)
     {
-        if (Locked && !HasAccess(accessTag)) return false;
+        if (Locked && !HasAccess(accessTag)) return new();
+        int hashCode = HashCode.Combine((int)neg, (int)pos);
+        if (!mouseButtonAxisStates.ContainsKey(hashCode))
+        {
+            var state = ShapeMouseButtonAxisInput.GetState(neg, pos);
+            mouseButtonAxisStates.Add(hashCode, state);
+            return state;
+        }
 
-        return Raylib.IsKeyPressed(key);
+        var previousState = mouseButtonAxisStates[hashCode];
+        var newState = ShapeMouseButtonAxisInput.GetState(neg, pos, previousState);
+        mouseButtonAxisStates[hashCode] = newState;
+        return newState;
     }
-    public static bool IsKeyReleased(KeyboardKey key, uint accessTag)
+    public static ShapeInputState GetState(ShapeGamepadButton neg, ShapeGamepadButton pos, uint accessTag, int gamepadIndex, float deadzone = 0.2f)
     {
-        if (Locked && !HasAccess(accessTag)) return false;
+        if (Locked && !HasAccess(accessTag)) return new();
+        int hashCode = HashCode.Combine((int)neg, (int)pos);
+        if (!gamepadButtonAxisStates.ContainsKey(hashCode))
+        {
+            var state = ShapeGamepadButtonAxisInput.GetState(neg, pos, gamepadIndex, deadzone);
+            gamepadButtonAxisStates.Add(hashCode, state);
+            return state;
+        }
 
-        return Raylib.IsKeyReleased(key);
+        var previousState = gamepadButtonAxisStates[hashCode];
+        var newState = ShapeGamepadButtonAxisInput.GetState(neg, pos, previousState, gamepadIndex, deadzone);
+        gamepadButtonAxisStates[hashCode] = newState;
+        return newState;
     }
-    public static bool IsKeyDown(KeyboardKey key, uint accessTag)
+    public static ShapeInputState GetState(ShapeMouseWheelAxis axis, uint accessTag)
     {
-        if (Locked && !HasAccess(accessTag)) return false;
+        if (Locked && !HasAccess(accessTag)) return new();
+        if (!mouseWheelAxisStates.ContainsKey(axis))
+        {
+            var state = ShapeMouseWheelAxisInput.GetState(axis);
+            mouseWheelAxisStates.Add(axis, state);
+            return state;
+        }
 
-        return Raylib.IsKeyDown(key);
+        var previousState = mouseWheelAxisStates[axis];
+        var newState = ShapeMouseWheelAxisInput.GetState(axis, previousState);
+        mouseWheelAxisStates[axis] = newState;
+        return newState;
     }
-    public static bool IsKeyUp(KeyboardKey key, uint accessTag)
+    public static ShapeInputState GetState(ShapeGamepadAxis axis, uint accessTag, int gamepadIndex, float deadzone = 0.2f)
     {
-        if (Locked && !HasAccess(accessTag)) return false;
+        if (Locked && !HasAccess(accessTag)) return new();
+        if (!gamepadAxisStates.ContainsKey(axis))
+        {
+            var state = ShapeGamepadAxisInput.GetState(axis, gamepadIndex, deadzone);
+            gamepadAxisStates.Add(axis, state);
+            return state;
+        }
 
-        return Raylib.IsKeyUp(key);
+        var previousState = gamepadAxisStates[axis];
+        var newState = ShapeGamepadAxisInput.GetState(axis, previousState, gamepadIndex, deadzone);
+        gamepadAxisStates[axis] = newState;
+        return newState;
     }
     
     public static List<char> GetKeyboardStreamChar()
@@ -1071,63 +1244,62 @@ public enum ShapeKeyboardButton
         NULL = 8,
         MENU = 9,
     }
-    public enum ShapeMouseButton
-    {
-        LEFT = 0,
-        RIGHT = 1,
-        MIDDLE = 2,
-        SIDE = 3,
-        EXTRA = 4,
-        FORWARD = 5,
-        BACK = 6,
-        MW_UP = 10,
-        MW_DOWN = 11,
-        MW_LEFT = 12,
-        MW_RIGHT = 13,
-    }
-    public enum ShapeGamepadButton
-    {
-        UNKNOWN = 0,
-        LEFT_FACE_UP = 1,
-        LEFT_FACE_RIGHT = 2,
-        LEFT_FACE_DOWN = 3,
-        LEFT_FACE_LEFT = 4,
-        RIGHT_FACE_UP = 5,
-        RIGHT_FACE_RIGHT = 6,
-        RIGHT_FACE_DOWN = 7,
-        RIGHT_FACE_LEFT = 8,
-        LEFT_TRIGGER_TOP = 9,
-        LEFT_TRIGGER_BOTTOM = 10,
-        RIGHT_TRIGGER_TOP = 11,
-        RIGHT_TRIGGER_BOTTOM = 12,
-        MIDDLE_LEFT = 13,
-        MIDDLE = 14,
-        MIDDLE_RIGHT = 15,
-        LEFT_THUMB = 16,
-        RIGHT_THUMB = 17,
+public enum ShapeMouseButton
+{
+    LEFT = 0,
+    RIGHT = 1,
+    MIDDLE = 2,
+    SIDE = 3,
+    EXTRA = 4,
+    FORWARD = 5,
+    BACK = 6,
+    MW_UP = 10,
+    MW_DOWN = 11,
+    MW_LEFT = 12,
+    MW_RIGHT = 13,
+}
+public enum ShapeGamepadButton
+{
+    UNKNOWN = 0,
+    LEFT_FACE_UP = 1,
+    LEFT_FACE_RIGHT = 2,
+    LEFT_FACE_DOWN = 3,
+    LEFT_FACE_LEFT = 4,
+    RIGHT_FACE_UP = 5,
+    RIGHT_FACE_RIGHT = 6,
+    RIGHT_FACE_DOWN = 7,
+    RIGHT_FACE_LEFT = 8,
+    LEFT_TRIGGER_TOP = 9,
+    LEFT_TRIGGER_BOTTOM = 10,
+    RIGHT_TRIGGER_TOP = 11,
+    RIGHT_TRIGGER_BOTTOM = 12,
+    MIDDLE_LEFT = 13,
+    MIDDLE = 14,
+    MIDDLE_RIGHT = 15,
+    LEFT_THUMB = 16,
+    RIGHT_THUMB = 17,
 
-        LEFT_STICK_RIGHT = 30,
-        LEFT_STICK_LEFT = 40,
-        LEFT_STICK_DOWN = 31,
-        LEFT_STICK_UP = 41,
+    LEFT_STICK_RIGHT = 30,
+    LEFT_STICK_LEFT = 40,
+    LEFT_STICK_DOWN = 31,
+    LEFT_STICK_UP = 41,
 
-        RIGHT_STICK_RIGHT = 32,
-        RIGHT_STICK_LEFT = 42,
-        RIGHT_STICK_DOWN = 33,
-        RIGHT_STICK_UP = 43,
-    }
-    public enum ShapeMouseWheelAxis
-    {
-        HORIZONTAL = 0,
-        VERTICAL = 1,
-    }
-    public enum ShapeGamepadAxis
-    {
-        LEFT_X = 0,
-        LEFT_Y = 1,
-        RIGHT_X = 2,
-        RIGHT_Y = 3,
-        LEFT_TRIGGER = 4,
-        RIGHT_TRIGGER = 5,
-    }
-    
+    RIGHT_STICK_RIGHT = 32,
+    RIGHT_STICK_LEFT = 42,
+    RIGHT_STICK_DOWN = 33,
+    RIGHT_STICK_UP = 43,
+}
+public enum ShapeMouseWheelAxis
+{
+    HORIZONTAL = 0,
+    VERTICAL = 1,
+}
+public enum ShapeGamepadAxis
+{
+    LEFT_X = 0,
+    LEFT_Y = 1,
+    RIGHT_X = 2,
+    RIGHT_Y = 3,
+    LEFT_TRIGGER = 4,
+    RIGHT_TRIGGER = 5,
+}

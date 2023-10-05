@@ -14,6 +14,12 @@ namespace ShapeEngine.Core;
 
 public class ShapeLoop
 {
+    //TODO implement system for detecting keyboard/mouse/gamepad used
+    //OnKeyboardUsed() / OnMouseUsed() / OnGamepadUsed(int index) virtual functions
+    //system for handling connected gamepads, keeping gamepads up to date
+    //int LastGamepadIndex
+    
+    
     #region Static
     public static readonly string CURRENT_DIRECTORY = AppDomain.CurrentDomain.BaseDirectory; // Environment.CurrentDirectory;
     public static OSPlatform OS_PLATFORM { get; private set; } =
