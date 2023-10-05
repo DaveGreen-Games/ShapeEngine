@@ -9,17 +9,12 @@ using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
 using ShapeEngine.Core.Shapes;
+using ShapeEngine.Input;
 
 namespace ShapeEngine.Core;
 
 public class ShapeLoop
 {
-    //TODO implement system for detecting keyboard/mouse/gamepad used
-    //OnKeyboardUsed() / OnMouseUsed() / OnGamepadUsed(int index) virtual functions
-    //system for handling connected gamepads, keeping gamepads up to date
-    //int LastGamepadIndex
-    
-    
     #region Static
     public static readonly string CURRENT_DIRECTORY = AppDomain.CurrentDomain.BaseDirectory; // Environment.CurrentDirectory;
     public static OSPlatform OS_PLATFORM { get; private set; } =
@@ -183,6 +178,8 @@ public class ShapeLoop
         }
     }
     public SlowMotion SlowMotion { get; private set; } = new SlowMotion();
+    public InputDevice CurrentInputDevice { get; private set; } = InputDevice.Keyboard;
+    public readonly int MaxGamepads = 4;
     #endregion
 
     #region Private Members
@@ -200,10 +197,11 @@ public class ShapeLoop
     private List<DeferredInfo> deferred = new();
     private int frameRateLimit = 60;
     private Dimensions windowSize = new();
+    private List<int> connectedGamepads = new();
     #endregion
     
     #region Setup
-    public ShapeLoop(Dimensions developmentDimensions, bool multiShaderSupport = false)
+    public ShapeLoop(Dimensions developmentDimensions, bool multiShaderSupport = false, int maxGamepads = 4)
     {
         #if DEBUG
         DebugMode = true;
@@ -241,6 +239,12 @@ public class ShapeLoop
         
         gameTexture.Load(CurScreenSize);
         if (multiShaderSupport) screenShaderBuffer.Load(CurScreenSize);
+
+        this.MaxGamepads = maxGamepads;
+        for (int i = 0; i < MaxGamepads; i++)
+        {
+            if(Raylib.IsGamepadAvailable(i)) connectedGamepads.Add(i);
+        }
     }
     public void SetupWindow(string windowName, bool undecorated, bool resizable, bool vsync = true, int fps = 60)
     {
@@ -352,7 +356,7 @@ public class ShapeLoop
         WindowSize = Monitor.CurMonitor().Dimensions / 2;
     }
     public void ResetCamera() => Camera = basicCamera;
-
+    public bool IsGamepadConnected(int gamepad) => connectedGamepads.Contains(gamepad);
     #endregion
     
     #region  Gameloop
@@ -380,6 +384,8 @@ public class ShapeLoop
             }
             
             CheckForWindowChanges();
+            CheckGamepadConnections();
+            CheckInputDevice();
             
             Camera.SetSize(CurScreenSize, DevelopmentDimensions);
             if(!Paused) Camera.Update(dt);
@@ -403,6 +409,7 @@ public class ShapeLoop
             var defaultFactor = SlowMotion.GetFactor(SlowMotion.TagDefault);
             DeltaSlow = Delta * defaultFactor;
             Cursor.Update(dt, UI);
+            
             Update(dt, DeltaSlow);
             
             BeginTextureMode(gameTexture.RenderTexture);
@@ -525,6 +532,10 @@ public class ShapeLoop
     protected virtual void OnMonitorChanged(MonitorInfo newMonitor) { }
     protected virtual void OnPausedChanged(bool newPaused) { }
     
+    protected virtual void OnInputDeviceChanged(InputDevice prevDevice, InputDevice newDevice) { }
+    protected virtual void OnGamepadConnected(int index) { }
+    protected virtual void OnGamepadRemoved(int index) { }
+    
     protected void UpdateScene() => CurScene.Update(Delta, DeltaSlow, Game, UI);
     protected void DrawGameScene() => CurScene.DrawGame(Game);
 
@@ -591,6 +602,53 @@ public class ShapeLoop
     #endregion
 
     #region Private Functions
+    private void CheckInputDevice()
+    {
+        var prevInputDevice = CurrentInputDevice;
+        if (CurrentInputDevice == InputDevice.Keyboard)
+        {
+            if (ShapeInput.WasMouseUsed(5f, 1f)) CurrentInputDevice = InputDevice.Mouse;
+            else if (ShapeInput.WasGamepadUsed(connectedGamepads, 0.2f)) CurrentInputDevice = InputDevice.Gamepad;
+        }
+        else if (CurrentInputDevice == InputDevice.Mouse)
+        {
+            if (ShapeInput.WasKeyboardUsed()) CurrentInputDevice = InputDevice.Keyboard;
+            else if (ShapeInput.WasGamepadUsed(connectedGamepads, 0.2f)) CurrentInputDevice = InputDevice.Gamepad;
+        }
+        else //gamepad
+        {
+            if (ShapeInput.WasMouseUsed(5f, 1f)) CurrentInputDevice = InputDevice.Mouse;
+            else if (ShapeInput.WasKeyboardUsed()) CurrentInputDevice = InputDevice.Keyboard;
+        }
+
+        if (CurrentInputDevice != prevInputDevice)
+        {
+            OnInputDeviceChanged(prevInputDevice, CurrentInputDevice);
+        }
+    }
+    private void CheckGamepadConnections()
+    {
+        for (int i = 0; i < MaxGamepads; i++)
+        {
+            if (Raylib.IsGamepadAvailable(i))
+            {
+                if (!connectedGamepads.Contains(i))
+                {
+                    connectedGamepads.Add(i);
+                    OnGamepadConnected(i);
+                }
+            }
+            else
+            {
+                if (connectedGamepads.Contains(i))
+                {
+                    connectedGamepads.Remove(i);
+                    OnGamepadRemoved(i);
+                }
+            }
+        }
+    }
+
     private void SetupWindowDimensions()
     {
         var monitor = Monitor.CurMonitor();

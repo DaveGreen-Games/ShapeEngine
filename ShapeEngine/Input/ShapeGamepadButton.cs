@@ -1,0 +1,33 @@
+namespace ShapeEngine.Input;
+
+public enum ShapeGamepadButton
+{
+    UNKNOWN = 0,
+    LEFT_FACE_UP = 1,
+    LEFT_FACE_RIGHT = 2,
+    LEFT_FACE_DOWN = 3,
+    LEFT_FACE_LEFT = 4,
+    RIGHT_FACE_UP = 5,
+    RIGHT_FACE_RIGHT = 6,
+    RIGHT_FACE_DOWN = 7,
+    RIGHT_FACE_LEFT = 8,
+    LEFT_TRIGGER_TOP = 9,
+    LEFT_TRIGGER_BOTTOM = 10,
+    RIGHT_TRIGGER_TOP = 11,
+    RIGHT_TRIGGER_BOTTOM = 12,
+    MIDDLE_LEFT = 13,
+    MIDDLE = 14,
+    MIDDLE_RIGHT = 15,
+    LEFT_THUMB = 16,
+    RIGHT_THUMB = 17,
+
+    LEFT_STICK_RIGHT = 30,
+    LEFT_STICK_LEFT = 40,
+    LEFT_STICK_DOWN = 31,
+    LEFT_STICK_UP = 41,
+
+    RIGHT_STICK_RIGHT = 32,
+    RIGHT_STICK_LEFT = 42,
+    RIGHT_STICK_DOWN = 33,
+    RIGHT_STICK_UP = 43,
+}
