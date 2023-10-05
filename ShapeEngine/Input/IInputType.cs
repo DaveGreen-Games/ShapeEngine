@@ -44,6 +44,7 @@ namespace ShapeEngine.Input
                 default: return shortHand ? "No Key" : "No Key";
             }
         }
+        
         public static string GetKeyboardButtonName(SKeyboardButton button, bool shortHand = true)
         {
             switch (button)
@@ -161,6 +162,7 @@ namespace ShapeEngine.Input
                 default: return shortHand ? "No Key" : "No Key";
             }
         }
+        
         public static string GetGamepadButtonName(SGamepadButton button, bool shortHand = true)
         {
             switch (button)
@@ -209,6 +211,7 @@ namespace ShapeEngine.Input
                 default: return shortHand ? "No Key" : "No Key";
             }
         }
+        
         public static string GetMouseWheelAxisName(SMouseWheelAxis axis, bool shortHand = true)
         {
             switch (axis)
@@ -708,6 +711,7 @@ namespace ShapeEngine.Input
         //    return IsKeyUp((int)neg) && IsKeyUp((int)pos);
         //}
     }
+    
     internal class MouseButtonAxisInput : IInputType
     {
         private SMouseButton neg;
@@ -767,6 +771,7 @@ namespace ShapeEngine.Input
         //    return GetValue(gamepadIndex, neg) <= 0f && GetValue(gamepadIndex, pos) <= 0f;
         //}
     }
+    
     internal class GamepadButtonAxisInput : IInputType
     {
         private SGamepadButton neg;
@@ -877,6 +882,7 @@ namespace ShapeEngine.Input
         //    return GetValue(gamepadIndex);
         //}
     }
+    
     internal class GamepadAxisInput : IInputType
     {
         private SGamepadAxis axis;
