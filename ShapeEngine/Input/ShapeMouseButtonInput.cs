@@ -4,7 +4,9 @@ public class ShapeMouseButtonInput : IShapeInputType
 {
     private readonly ShapeMouseButton button;
     public ShapeMouseButtonInput(ShapeMouseButton button) { this.button = button; }
+    public float GetDeadzone() => 0f;
 
+    public void SetDeadzone(float value) { }
     public ShapeInputState GetState(int gamepad = -1)
     {
         if (gamepad > 0) return new();

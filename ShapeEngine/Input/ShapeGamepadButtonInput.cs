@@ -1,26 +1,34 @@
+using ShapeEngine.Lib;
+
 namespace ShapeEngine.Input;
 
 public class ShapeGamepadButtonInput : IShapeInputType
 {
     private readonly ShapeGamepadButton button;
-    public float Deadzone { get; set; }
+    private float deadzone;
 
     public ShapeGamepadButtonInput(ShapeGamepadButton button, float deadzone = 0.2f)
     {
         this.button = button; 
-        this.Deadzone = deadzone;
+        this.deadzone = deadzone;
     }
     
-    public IShapeInputType Copy() => new ShapeGamepadButtonInput(button, Deadzone);
+    public IShapeInputType Copy() => new ShapeGamepadButtonInput(button, deadzone);
     public string GetName(bool shorthand = true) => GetGamepadButtonName(button, shorthand);
+    public float GetDeadzone() => deadzone;
+
+    public void SetDeadzone(float value)
+    {
+        deadzone = ShapeMath.Clamp(value, 0f, 1f);
+    }
     public ShapeInputState GetState(int gamepad = -1)
     {
-        return GetState(button, gamepad, Deadzone);
+        return GetState(button, gamepad, deadzone);
     }
 
     public ShapeInputState GetState(ShapeInputState prev, int gamepad = -1)
     {
-        return GetState(button, prev, gamepad, Deadzone);
+        return GetState(button, prev, gamepad, deadzone);
     }
     public InputDevice GetInputDevice() => InputDevice.Gamepad;
     private static bool IsDown(ShapeGamepadButton button, int gamepad, float deadzone = 0.2f)

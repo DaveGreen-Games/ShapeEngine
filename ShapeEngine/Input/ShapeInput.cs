@@ -197,10 +197,3 @@ public class ShapeInput
     }
     #endregion
 }
-
-public enum InputDevice
-{
-    Keyboard = 1,
-    Mouse = 2,
-    Gamepad = 3
-}

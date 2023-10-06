@@ -2,6 +2,7 @@ using ShapeEngine.Lib;
 
 namespace ShapeEngine.Input;
 
+
 public class ShapeInputAction
 {
     public uint ID { get; private set; }

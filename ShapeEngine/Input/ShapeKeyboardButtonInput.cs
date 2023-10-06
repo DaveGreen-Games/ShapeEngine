@@ -7,7 +7,9 @@ public class ShapeKeyboardButtonInput : IShapeInputType
     {
         this.button = button;
     }
+    public float GetDeadzone() => 0f;
 
+    public void SetDeadzone(float value) { }
     public ShapeInputState GetState(int gamepad = -1)
     {
         if (gamepad > 0) return new();

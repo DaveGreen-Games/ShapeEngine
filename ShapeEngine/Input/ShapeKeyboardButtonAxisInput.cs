@@ -24,6 +24,10 @@ public class ShapeKeyboardButtonAxisInput : IShapeInputType
         b.Append(posName);
         return b.ToString();
     }
+    public float GetDeadzone() => 0f;
+
+    public void SetDeadzone(float value) { }
+
     public ShapeInputState GetState(int gamepad = -1)
     {
         if (gamepad > 0) return new();

@@ -10,7 +10,9 @@ public class ShapeMouseWheelAxisInput : IShapeInputType
     {
         this.axis = axis;
     }
+    public float GetDeadzone() => 0f;
 
+    public void SetDeadzone(float value) { }
     public string GetName(bool shorthand = true) => GetMouseWheelAxisName(axis, shorthand);
     public ShapeInputState GetState(int gamepad = -1)
     {

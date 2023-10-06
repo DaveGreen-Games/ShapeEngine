@@ -1,4 +1,5 @@
 using System.Text;
+using ShapeEngine.Lib;
 
 namespace ShapeEngine.Input;
 
@@ -6,13 +7,13 @@ public class ShapeGamepadButtonAxisInput : IShapeInputType
 {
     private readonly ShapeGamepadButton neg;
     private readonly ShapeGamepadButton pos;
-    public float Deadzone { get; set; }
+    private float deadzone;
 
     public ShapeGamepadButtonAxisInput(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = 0.2f)
     {
         this.neg = neg;
         this.pos = pos;
-        this.Deadzone = deadzone;
+        this.deadzone = deadzone;
     }
 
     public string GetName(bool shorthand = true)
@@ -26,19 +27,25 @@ public class ShapeGamepadButtonAxisInput : IShapeInputType
         return b.ToString();
     }
 
+    public float GetDeadzone() => deadzone;
+
+    public void SetDeadzone(float value)
+    {
+        deadzone = ShapeMath.Clamp(value, 0f, 1f);
+    }
     public ShapeInputState GetState(int gamepad = -1)
     {
-        return GetState(neg, pos, gamepad, Deadzone);
+        return GetState(neg, pos, gamepad, deadzone);
     }
 
     public ShapeInputState GetState(ShapeInputState prev, int gamepad = -1)
     {
-        return GetState(neg, pos, prev, gamepad, Deadzone);
+        return GetState(neg, pos, prev, gamepad, deadzone);
     }
 
     public InputDevice GetInputDevice() => InputDevice.Gamepad;
 
-    public IShapeInputType Copy() => new ShapeGamepadButtonAxisInput(neg, pos, Deadzone);
+    public IShapeInputType Copy() => new ShapeGamepadButtonAxisInput(neg, pos, deadzone);
 
     private static float GetAxis(ShapeGamepadButton neg, ShapeGamepadButton pos, int gamepad, float deadzone = 0.2f)
     {

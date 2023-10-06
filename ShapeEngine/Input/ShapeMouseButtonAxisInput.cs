@@ -13,7 +13,9 @@ public class ShapeMouseButtonAxisInput : IShapeInputType
         this.neg = neg;
         this.pos = pos;
     }
+    public float GetDeadzone() => 0f;
 
+    public void SetDeadzone(float value) { }
     public string GetName(bool shorthand = true)
     {
         string negName = ShapeMouseButtonInput.GetMouseButtonName(neg, shorthand);
