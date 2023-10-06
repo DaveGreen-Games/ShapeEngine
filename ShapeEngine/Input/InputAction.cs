@@ -9,9 +9,19 @@ public class InputAction
     public uint AccessTag { get; private set; } = ShapeInput.AllAccessTag;
     
     public int Gamepad = -1;
-    
-    public float AxisSensitivity { get; set; } = 1f;
-    public float AxisGravity { get; set; } = 1f;
+
+    private float axisSensitivity = 1f;
+    private float axisGravitiy = 1f;
+    public float AxisSensitivity 
+    {
+        get => axisSensitivity;
+        set => axisSensitivity = MathF.Max(0f, value);
+    }
+    public float AxisGravity 
+    {
+        get => axisGravitiy;
+        set => axisGravitiy = MathF.Max(0f, value);
+    }
     
     public InputState State { get; private set; } = new();
     public InputState Consume()
@@ -82,32 +92,37 @@ public class InputAction
             var state = input.GetState(Gamepad);
             current = current.Accumulate(state);
         }
-
-        // float axis = current.Axis;
-        // if (State.Axis == 0f && AxisSensitivity > 0)//prev was at 0
-        // {
-        //     if (axis > 0f)
-        //     {
-        //         axis = MathF.Min(1f, State.Axis + (1f / AxisSensitivity) * dt);
-        //     }
-        //     else if(axis < 0)
-        //     {
-        //         axis = MathF.Max(-1f, State.Axis - (1f / AxisSensitivity) * dt);
-        //     }
-        // }
-        // else if(AxisGravity > 0)
-        // {
-        //     if (axis > 0f)
-        //     {
-        //         axis = MathF.Max(0f, State.Axis - (1f / AxisGravity) * dt);
-        //     }
-        //     else if(axis < 0)
-        //     {
-        //         axis = MathF.Min(0f, State.Axis + (1f / AxisGravity) * dt);
-        //     }
-        // }
-        
         State = new(State, current);
+
+        if (axisSensitivity > 0 || axisGravitiy > 0)
+        {
+            int raw = MathF.Sign(State.AxisRaw);
+            int exact = MathF.Sign(State.Axis);
+            int dif = raw - exact;
+
+            if (dif != 0)
+            {
+                var axisChange = 0f;
+                if (dif > 1 || dif < -1) //snap
+                {
+                    axisChange = -State.Axis;//snapping to 0
+                    axisChange += dif * AxisSensitivity * dt;
+                }
+                else //move
+                {
+                    if (raw == 0)//gravity
+                    {
+                        axisChange = dif * AxisGravity * dt;
+                    }
+                    else//sensitivity
+                    {
+                        axisChange = dif * AxisSensitivity * dt;
+                    }
+                }
+            
+                if(axisChange != 0f) State = State.AdjustAxis(axisChange);
+            }
+        }
     }
     
     
