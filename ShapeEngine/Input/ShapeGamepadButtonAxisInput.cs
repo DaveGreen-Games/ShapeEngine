@@ -6,14 +6,13 @@ public class ShapeGamepadButtonAxisInput : IShapeInputType
 {
     private readonly ShapeGamepadButton neg;
     private readonly ShapeGamepadButton pos;
-    private readonly float deadzone;
-    private ShapeInputState state = new();
+    public float Deadzone { get; set; }
 
     public ShapeGamepadButtonAxisInput(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = 0.2f)
     {
         this.neg = neg;
         this.pos = pos;
-        this.deadzone = deadzone;
+        this.Deadzone = deadzone;
     }
 
     public string GetName(bool shorthand = true)
@@ -27,29 +26,35 @@ public class ShapeGamepadButtonAxisInput : IShapeInputType
         return b.ToString();
     }
 
-    public void Update(float dt, int gamepadIndex)
+    public ShapeInputState GetState(int gamepad = -1)
     {
-        state = GetState(neg, pos, state, gamepadIndex, deadzone);
+        return GetState(neg, pos, gamepad, Deadzone);
     }
-    public ShapeInputState GetState() => state;
 
-    public IShapeInputType Copy() => new ShapeGamepadButtonAxisInput(neg, pos, deadzone);
-
-    private static float GetAxis(ShapeGamepadButton neg, ShapeGamepadButton pos, int gamepadIndex, float deadzone = 0.2f)
+    public ShapeInputState GetState(ShapeInputState prev, int gamepad = -1)
     {
-        float vNegative = GetValue(neg, gamepadIndex, deadzone);
-        float vPositive = GetValue(pos, gamepadIndex, deadzone);
+        return GetState(neg, pos, prev, gamepad, Deadzone);
+    }
+
+    public InputDevice GetInputDevice() => InputDevice.Gamepad;
+
+    public IShapeInputType Copy() => new ShapeGamepadButtonAxisInput(neg, pos, Deadzone);
+
+    private static float GetAxis(ShapeGamepadButton neg, ShapeGamepadButton pos, int gamepad, float deadzone = 0.2f)
+    {
+        float vNegative = GetValue(neg, gamepad, deadzone);
+        float vPositive = GetValue(pos, gamepad, deadzone);
         return vPositive - vNegative;
     }
-    private static float GetValue(ShapeGamepadButton button, int gamepadIndex, float deadzone = 0.2f)
+    private static float GetValue(ShapeGamepadButton button, int gamepad, float deadzone = 0.2f)
     {
-        if (gamepadIndex < 0) return 0f;
+        if (gamepad < 0) return 0f;
 
         int id = (int)button;
         if (id >= 30 && id <= 33)
         {
             id -= 30;
-            float value = GetGamepadAxisMovement(gamepadIndex, id);
+            float value = GetGamepadAxisMovement(gamepad, id);
             if (MathF.Abs(value) < deadzone) return 0f;
             if (value > 0f) return value;
             
@@ -59,25 +64,25 @@ public class ShapeGamepadButtonAxisInput : IShapeInputType
         if (id >= 40 && id <= 43)
         {
             id -= 40;
-            float value = GetGamepadAxisMovement(gamepadIndex, id);
+            float value = GetGamepadAxisMovement(gamepad, id);
             if (MathF.Abs(value) < deadzone) return 0f;
             if (value < 0) return MathF.Abs(value);
             
             return 0f;
         }
         
-        return IsGamepadButtonDown(gamepadIndex, id) ? 1f : 0f;
+        return IsGamepadButtonDown(gamepad, id) ? 1f : 0f;
     }
-    public static ShapeInputState GetState(ShapeGamepadButton neg, ShapeGamepadButton pos, int gamepadIndex, float deadzone = 0.2f)
+    public static ShapeInputState GetState(ShapeGamepadButton neg, ShapeGamepadButton pos, int gamepad, float deadzone = 0.2f)
     {
-        float axis = GetAxis(neg, pos, gamepadIndex, deadzone);
+        float axis = GetAxis(neg, pos, gamepad, deadzone);
         bool down = axis != 0f;
-        return new(down, !down, axis, -1);
+        return new(down, !down, axis, gamepad);
     }
     public static ShapeInputState GetState(ShapeGamepadButton neg, ShapeGamepadButton pos,
-        ShapeInputState previousState, int gamepadIndex, float deadzone = 0.2f)
+        ShapeInputState previousState, int gamepad, float deadzone = 0.2f)
     {
-        return new(previousState, GetState(neg, pos, gamepadIndex, deadzone));
+        return new(previousState, GetState(neg, pos, gamepad, deadzone));
     }
     
 }

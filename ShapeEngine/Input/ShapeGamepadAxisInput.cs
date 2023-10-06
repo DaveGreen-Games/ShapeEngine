@@ -3,39 +3,47 @@ namespace ShapeEngine.Input;
 public class ShapeGamepadAxisInput : IShapeInputType
 {
     private readonly ShapeGamepadAxis axis;
-    private readonly float deadzone;
-    private ShapeInputState state = new();
+    public float Deadzone { get; set; }
 
     public ShapeGamepadAxisInput(ShapeGamepadAxis axis, float deadzone = 0.2f)
     {
         this.axis = axis; 
-        this.deadzone = deadzone;
+        this.Deadzone = deadzone;
     }
 
     public string GetName(bool shorthand = true) => GetGamepadAxisName(axis, shorthand);
-    public void Update(float dt, int gamepadIndex)
+   
+
+    public ShapeInputState GetState(int gamepad = -1)
     {
-        state = GetState(axis, state, gamepadIndex, deadzone);
+        return GetState(axis, gamepad, Deadzone);
     }
-    public ShapeInputState GetState() => state;
+
+    public ShapeInputState GetState(ShapeInputState prev, int gamepad = -1)
+    {
+        return GetState(axis, prev, gamepad, Deadzone);
+    }
+
+    public InputDevice GetInputDevice() => InputDevice.Gamepad;
     public IShapeInputType Copy() => new ShapeGamepadAxisInput(axis);
 
-    private static float GetValue(ShapeGamepadAxis axis, int gamepadIndex, float deadzone = 0.2f)
+    private static float GetValue(ShapeGamepadAxis axis, int gamepad, float deadzone = 0.2f)
     {
-        float value = GetGamepadAxisMovement(gamepadIndex, (int)axis);
+        if (gamepad < 0) return 0f;
+        float value = GetGamepadAxisMovement(gamepad, (int)axis);
         if (MathF.Abs(value) < deadzone) return 0f;
         return value;
     }
-    public static ShapeInputState GetState(ShapeGamepadAxis axis, int gamepadIndex, float deadzone = 0.2f)
+    public static ShapeInputState GetState(ShapeGamepadAxis axis, int gamepad, float deadzone = 0.2f)
     {
-        float axisValue = GetValue(axis, gamepadIndex, deadzone);
+        float axisValue = GetValue(axis, gamepad, deadzone);
         bool down = axisValue != 0f;
-        return new(down, !down, axisValue, -1);
+        return new(down, !down, axisValue, gamepad);
     }
-    public static ShapeInputState GetState(ShapeGamepadAxis axis, ShapeInputState previousState, int gamepadIndex,
+    public static ShapeInputState GetState(ShapeGamepadAxis axis, ShapeInputState previousState, int gamepad,
         float deadzone = 0.2f)
     {
-        return new(previousState, GetState(axis, gamepadIndex, deadzone));
+        return new(previousState, GetState(axis, gamepad, deadzone));
     }
     public static string GetGamepadAxisName(ShapeGamepadAxis axis, bool shortHand = true)
     {

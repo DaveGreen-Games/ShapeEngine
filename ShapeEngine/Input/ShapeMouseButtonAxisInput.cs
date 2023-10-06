@@ -7,7 +7,6 @@ public class ShapeMouseButtonAxisInput : IShapeInputType
 {
     private readonly ShapeMouseButton neg;
     private readonly ShapeMouseButton pos;
-    private ShapeInputState state = new();
 
     public ShapeMouseButtonAxisInput(ShapeMouseButton neg, ShapeMouseButton pos)
     {
@@ -25,11 +24,18 @@ public class ShapeMouseButtonAxisInput : IShapeInputType
         b.Append(posName);
         return b.ToString();
     }
-    public void Update(float dt, int gamepadIndex)
+    public ShapeInputState GetState(int gamepad = -1)
     {
-        state = GetState(neg, pos, state);
+        if (gamepad > 0) return new();
+        return GetState(neg, pos);
     }
-    public ShapeInputState GetState() => state;
+
+    public ShapeInputState GetState(ShapeInputState prev, int gamepad = -1)
+    {
+        if (gamepad > 0) return new();
+        return GetState(neg, pos, prev);
+    }
+    public InputDevice GetInputDevice() => InputDevice.Mouse;
     public IShapeInputType Copy() => new ShapeMouseButtonAxisInput(neg, pos);
 
     private static float GetAxis(ShapeMouseButton neg, ShapeMouseButton pos)

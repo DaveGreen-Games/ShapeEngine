@@ -1,6 +1,5 @@
 global using static Raylib_CsLo.Raylib;
 global using static Raylib_CsLo.RayMath;
-using System.ComponentModel;
 using ShapeEngine.Screen;
 using Raylib_CsLo;
 using System.Numerics;
@@ -179,7 +178,9 @@ public class ShapeLoop
     }
     public SlowMotion SlowMotion { get; private set; } = new SlowMotion();
     public InputDevice CurrentInputDevice { get; private set; } = InputDevice.Keyboard;
-    public readonly int MaxGamepads = 4;
+    
+
+    public readonly ShapeInput Input = new();
     #endregion
 
     #region Private Members
@@ -198,10 +199,11 @@ public class ShapeLoop
     private int frameRateLimit = 60;
     private Dimensions windowSize = new();
     private List<int> connectedGamepads = new();
+    private readonly int maxGamepads = 8;
     #endregion
     
     #region Setup
-    public ShapeLoop(Dimensions developmentDimensions, bool multiShaderSupport = false, int maxGamepads = 4)
+    public ShapeLoop(Dimensions developmentDimensions, bool multiShaderSupport = false)
     {
         #if DEBUG
         DebugMode = true;
@@ -240,8 +242,7 @@ public class ShapeLoop
         gameTexture.Load(CurScreenSize);
         if (multiShaderSupport) screenShaderBuffer.Load(CurScreenSize);
 
-        this.MaxGamepads = maxGamepads;
-        for (int i = 0; i < MaxGamepads; i++)
+        for (var i = 0; i < this.maxGamepads; i++)
         {
             if(Raylib.IsGamepadAvailable(i)) connectedGamepads.Add(i);
         }
@@ -356,7 +357,12 @@ public class ShapeLoop
         WindowSize = Monitor.CurMonitor().Dimensions / 2;
     }
     public void ResetCamera() => Camera = basicCamera;
+    
     public bool IsGamepadConnected(int gamepad) => connectedGamepads.Contains(gamepad);
+    
+    //TODO Gamepad relevant functions needed
+    //get connected gamepads
+    //get next available gamepad => claim system ?
     #endregion
     
     #region  Gameloop
@@ -628,7 +634,7 @@ public class ShapeLoop
     }
     private void CheckGamepadConnections()
     {
-        for (int i = 0; i < MaxGamepads; i++)
+        for (int i = 0; i < maxGamepads; i++)
         {
             if (Raylib.IsGamepadAvailable(i))
             {

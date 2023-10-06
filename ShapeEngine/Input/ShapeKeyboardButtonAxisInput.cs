@@ -6,7 +6,6 @@ public class ShapeKeyboardButtonAxisInput : IShapeInputType
 {
     private readonly ShapeKeyboardButton neg;
     private readonly ShapeKeyboardButton pos;
-    private ShapeInputState state = new();
 
     public ShapeKeyboardButtonAxisInput(ShapeKeyboardButton neg, ShapeKeyboardButton pos)
     {
@@ -25,11 +24,18 @@ public class ShapeKeyboardButtonAxisInput : IShapeInputType
         b.Append(posName);
         return b.ToString();
     }
-    public void Update(float dt, int gamepadIndex)
+    public ShapeInputState GetState(int gamepad = -1)
     {
-        state = GetState(neg, pos, state);
+        if (gamepad > 0) return new();
+        return GetState(neg, pos);
     }
-    public ShapeInputState GetState() => state;
+
+    public ShapeInputState GetState(ShapeInputState prev, int gamepad = -1)
+    {
+        if (gamepad > 0) return new();
+        return GetState(neg, pos, prev);
+    }
+    public InputDevice GetInputDevice() => InputDevice.Keyboard;
     
     private static float GetAxis(ShapeKeyboardButton neg, ShapeKeyboardButton pos)
     {

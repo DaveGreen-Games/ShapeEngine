@@ -5,7 +5,6 @@ namespace ShapeEngine.Input;
 public class ShapeMouseWheelAxisInput : IShapeInputType
 {
     private readonly ShapeMouseWheelAxis axis;
-    private ShapeInputState state = new();
 
     public ShapeMouseWheelAxisInput(ShapeMouseWheelAxis axis)
     {
@@ -13,11 +12,18 @@ public class ShapeMouseWheelAxisInput : IShapeInputType
     }
 
     public string GetName(bool shorthand = true) => GetMouseWheelAxisName(axis, shorthand);
-    public void Update(float dt, int gamepadIndex)
+    public ShapeInputState GetState(int gamepad = -1)
     {
-        state = GetState(axis, state);
+        if (gamepad > 0) return new();
+        return GetState(axis);
     }
-    public ShapeInputState GetState() => state;
+
+    public ShapeInputState GetState(ShapeInputState prev, int gamepad = -1)
+    {
+        if (gamepad > 0) return new();
+        return GetState(axis, prev);
+    }
+    public InputDevice GetInputDevice() => InputDevice.Mouse;
     public IShapeInputType Copy() => new ShapeMouseWheelAxisInput(axis);
 
     private static float GetValue(ShapeMouseWheelAxis axis)

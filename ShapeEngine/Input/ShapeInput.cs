@@ -1,204 +1,111 @@
-using System.Numerics;
 using System.Text;
 using Raylib_CsLo;
 
 namespace ShapeEngine.Input;
 
-public static class ShapeInput
+public class ShapeInput
 {
     #region Members
-    
     public static readonly uint AllAccessTag = 0;
-    public static bool Locked { get; private set; } = false;
-    private static readonly List<uint> lockExceptionTags = new();
-    private static readonly Dictionary<uint, ShapeInputAction> inputActions = new();
-
-    private static readonly Dictionary<ShapeKeyboardButton, ShapeInputState> keyboardButtonStates = new();
-    private static readonly Dictionary<ShapeMouseButton, ShapeInputState> mouseButtonStates = new();
-    private static readonly Dictionary<ShapeGamepadButton, ShapeInputState> gamepadButtonStates = new();
-    private static readonly Dictionary<ShapeMouseWheelAxis, ShapeInputState> mouseWheelAxisStates = new();
-    private static readonly Dictionary<ShapeGamepadAxis, ShapeInputState> gamepadAxisStates = new();
-    private static readonly Dictionary<int, ShapeInputState> keyboardButtonAxisStates = new();
-    private static readonly Dictionary<int, ShapeInputState> mouseButtonAxisStates = new();
-    private static readonly Dictionary<int, ShapeInputState> gamepadButtonAxisStates = new();
+    
+    public bool Locked { get; private set; } = false;
+    private readonly List<uint> lockExceptionTags = new();
+    private readonly Dictionary<uint, ShapeInputAction> inputActions = new();
     #endregion
     
     #region Lock System
-    public static void Lock()
+    public void Lock()
     {
         Locked = true;
         lockExceptionTags.Clear();
     }
-    public static void Lock(params uint[] exceptionTags)
+    public void Lock(params uint[] exceptionTags)
     {
         Locked = true;
         lockExceptionTags.Clear();
         if(exceptionTags.Length > 0) lockExceptionTags.AddRange(exceptionTags);
     }
-    public static void Unlock()
+    public void Unlock()
     {
         Locked = false;
         lockExceptionTags.Clear();
     }
-    public static bool HasAccess(uint tag) => tag == AllAccessTag || lockExceptionTags.Contains(tag);
+    public bool HasAccess(uint tag) => tag == AllAccessTag || lockExceptionTags.Contains(tag);
     #endregion
     
     #region Input Actions
-    public static bool HasAction(uint id) => inputActions.ContainsKey(id);
-    public static uint AddAction(ShapeInputAction newAction)
+    public bool HasAction(uint id) => inputActions.ContainsKey(id);
+    public uint AddAction(ShapeInputAction newAction)
     {
         var id = newAction.ID;
         if (HasAction(id)) inputActions[id] = newAction;
         else inputActions.Add(id, newAction);
         return id;
     }
-    public static bool RemoveAction(uint id) => inputActions.Remove(id);
+    public bool RemoveAction(uint id) => inputActions.Remove(id);
 
-    public static ShapeInputState GetActionState(uint id)
+    public ShapeInputState GetActionState(uint id)
     {
         if (!HasAction(id)) return new();
         var action = inputActions[id];
         return Locked && !HasAccess(action.AccessTag) ? new() : action.State;
     }
-    public static ShapeInputState ConsumeAction(uint id)
+    public ShapeInputState ConsumeAction(uint id)
     {
         if (!HasAction(id)) return new();
         var action = inputActions[id];
         return Locked && !HasAccess(action.AccessTag) ? new() : action.Consume();
     }
 
-    public static ShapeInputAction? GetAction(uint id)
+    public ShapeInputAction? GetAction(uint id)
     {
         return !inputActions.ContainsKey(id) ? null : inputActions[id];
     }
     #endregion
 
     #region Basic
-    public static ShapeInputState GetState(ShapeKeyboardButton button, uint accessTag)
+    public ShapeInputState GetState(ShapeKeyboardButton button, uint accessTag)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        if (!keyboardButtonStates.ContainsKey(button))
-        {
-            var state = ShapeKeyboardButtonInput.GetState(button);
-            keyboardButtonStates.Add(button, state);
-            return state;
-        }
-
-        var previousState = keyboardButtonStates[button];
-        var newState = ShapeKeyboardButtonInput.GetState(button, previousState);
-        keyboardButtonStates[button] = newState;
-        return newState;
+        return ShapeKeyboardButtonInput.GetState(button);
     }
-    public static ShapeInputState GetState(ShapeMouseButton button, uint accessTag)
+    public ShapeInputState GetState(ShapeMouseButton button, uint accessTag)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        if (!mouseButtonStates.ContainsKey(button))
-        {
-            var state = ShapeMouseButtonInput.GetState(button);
-            mouseButtonStates.Add(button, state);
-            return state;
-        }
-
-        var previousState = mouseButtonStates[button];
-        var newState = ShapeMouseButtonInput.GetState(button, previousState);
-        mouseButtonStates[button] = newState;
-        return newState;
+        return ShapeMouseButtonInput.GetState(button);
     }
-    public static ShapeInputState GetState(ShapeGamepadButton button, uint accessTag, int gamepadIndex, float deadzone = 0.2f)
+    public ShapeInputState GetState(ShapeGamepadButton button, uint accessTag, int gamepad, float deadzone = 0.2f)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        if (!gamepadButtonStates.ContainsKey(button))
-        {
-            var state = ShapeGamepadButtonInput.GetState(button, gamepadIndex, deadzone);
-            gamepadButtonStates.Add(button, state);
-            return state;
-        }
-
-        var previousState = gamepadButtonStates[button];
-        var newState = ShapeGamepadButtonInput.GetState(button, previousState, gamepadIndex, deadzone);
-        gamepadButtonStates[button] = newState;
-        return newState;
+        return ShapeGamepadButtonInput.GetState(button, gamepad, deadzone);
     }
-    public static ShapeInputState GetState(ShapeKeyboardButton neg, ShapeKeyboardButton pos, uint accessTag)
+    public ShapeInputState GetState(ShapeKeyboardButton neg, ShapeKeyboardButton pos, uint accessTag)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        int hashCode = HashCode.Combine((int)neg, (int)pos);
-        if (!keyboardButtonAxisStates.ContainsKey(hashCode))
-        {
-            var state = ShapeKeyboardButtonAxisInput.GetState(neg, pos);
-            keyboardButtonAxisStates.Add(hashCode, state);
-            return state;
-        }
-
-        var previousState = keyboardButtonAxisStates[hashCode];
-        var newState = ShapeKeyboardButtonAxisInput.GetState(neg, pos, previousState);
-        keyboardButtonAxisStates[hashCode] = newState;
-        return newState;
+        return ShapeKeyboardButtonAxisInput.GetState(neg, pos);
     }
-    public static ShapeInputState GetState(ShapeMouseButton neg, ShapeMouseButton pos, uint accessTag)
+    public ShapeInputState GetState(ShapeMouseButton neg, ShapeMouseButton pos, uint accessTag)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        int hashCode = HashCode.Combine((int)neg, (int)pos);
-        if (!mouseButtonAxisStates.ContainsKey(hashCode))
-        {
-            var state = ShapeMouseButtonAxisInput.GetState(neg, pos);
-            mouseButtonAxisStates.Add(hashCode, state);
-            return state;
-        }
-
-        var previousState = mouseButtonAxisStates[hashCode];
-        var newState = ShapeMouseButtonAxisInput.GetState(neg, pos, previousState);
-        mouseButtonAxisStates[hashCode] = newState;
-        return newState;
+        return ShapeMouseButtonAxisInput.GetState(neg, pos);
     }
-    public static ShapeInputState GetState(ShapeGamepadButton neg, ShapeGamepadButton pos, uint accessTag, int gamepadIndex, float deadzone = 0.2f)
+    public ShapeInputState GetState(ShapeGamepadButton neg, ShapeGamepadButton pos, uint accessTag, int gamepad, float deadzone = 0.2f)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        int hashCode = HashCode.Combine((int)neg, (int)pos);
-        if (!gamepadButtonAxisStates.ContainsKey(hashCode))
-        {
-            var state = ShapeGamepadButtonAxisInput.GetState(neg, pos, gamepadIndex, deadzone);
-            gamepadButtonAxisStates.Add(hashCode, state);
-            return state;
-        }
-
-        var previousState = gamepadButtonAxisStates[hashCode];
-        var newState = ShapeGamepadButtonAxisInput.GetState(neg, pos, previousState, gamepadIndex, deadzone);
-        gamepadButtonAxisStates[hashCode] = newState;
-        return newState;
+        return ShapeGamepadButtonAxisInput.GetState(neg, pos, gamepad, deadzone);
     }
-    public static ShapeInputState GetState(ShapeMouseWheelAxis axis, uint accessTag)
+    public ShapeInputState GetState(ShapeMouseWheelAxis axis, uint accessTag)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        if (!mouseWheelAxisStates.ContainsKey(axis))
-        {
-            var state = ShapeMouseWheelAxisInput.GetState(axis);
-            mouseWheelAxisStates.Add(axis, state);
-            return state;
-        }
-
-        var previousState = mouseWheelAxisStates[axis];
-        var newState = ShapeMouseWheelAxisInput.GetState(axis, previousState);
-        mouseWheelAxisStates[axis] = newState;
-        return newState;
+        return ShapeMouseWheelAxisInput.GetState(axis);
     }
-    public static ShapeInputState GetState(ShapeGamepadAxis axis, uint accessTag, int gamepadIndex, float deadzone = 0.2f)
+    public ShapeInputState GetState(ShapeGamepadAxis axis, uint accessTag, int gamepad, float deadzone = 0.2f)
     {
         if (Locked && !HasAccess(accessTag)) return new();
-        if (!gamepadAxisStates.ContainsKey(axis))
-        {
-            var state = ShapeGamepadAxisInput.GetState(axis, gamepadIndex, deadzone);
-            gamepadAxisStates.Add(axis, state);
-            return state;
-        }
-
-        var previousState = gamepadAxisStates[axis];
-        var newState = ShapeGamepadAxisInput.GetState(axis, previousState, gamepadIndex, deadzone);
-        gamepadAxisStates[axis] = newState;
-        return newState;
+        return ShapeGamepadAxisInput.GetState(axis, gamepad, deadzone);
     }
     
-    public static List<char> GetKeyboardStreamChar()
+    public List<char> GetKeyboardStreamChar()
     {
         if (Locked) return new();
         int unicode = Raylib.GetCharPressed();
@@ -212,7 +119,7 @@ public static class ShapeInput
         }
         return chars;
     }
-    public static List<char> GetKeyboardStreamChar(uint accessTag)
+    public List<char> GetKeyboardStreamChar(uint accessTag)
     {
         if (Locked && !HasAccess(accessTag)) return new();
         int unicode = Raylib.GetCharPressed();
@@ -226,7 +133,7 @@ public static class ShapeInput
         }
         return chars;
     }
-    public static string GetKeyboardStream(uint accessTag)
+    public string GetKeyboardStream(uint accessTag)
     {
         if (Locked && !HasAccess(accessTag)) return "";
         int unicode = Raylib.GetCharPressed();
@@ -243,7 +150,7 @@ public static class ShapeInput
         b.Append(chars);
         return b.ToString();
     }
-    public static string GetKeyboardStream(string curText, uint accessTag)
+    public string GetKeyboardStream(string curText, uint accessTag)
     {
         if (Locked && !HasAccess(accessTag)) return "";
         var chars = GetKeyboardStreamChar(accessTag);
@@ -290,12 +197,6 @@ public static class ShapeInput
     }
     #endregion
 }
-
-// public class Gamepad
-// {
-//     public int Index { get; internal set; } = -1;
-//     public bool Claimed { get; internal set; } = false;
-// }
 
 public enum InputDevice
 {

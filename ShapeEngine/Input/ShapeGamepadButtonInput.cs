@@ -3,30 +3,35 @@ namespace ShapeEngine.Input;
 public class ShapeGamepadButtonInput : IShapeInputType
 {
     private readonly ShapeGamepadButton button;
-    private ShapeInputState state = new();
-    private readonly float deadzone;
+    public float Deadzone { get; set; }
 
     public ShapeGamepadButtonInput(ShapeGamepadButton button, float deadzone = 0.2f)
     {
         this.button = button; 
-        this.deadzone = deadzone;
+        this.Deadzone = deadzone;
     }
     
-    public IShapeInputType Copy() => new ShapeGamepadButtonInput(button, deadzone);
+    public IShapeInputType Copy() => new ShapeGamepadButtonInput(button, Deadzone);
     public string GetName(bool shorthand = true) => GetGamepadButtonName(button, shorthand);
-    public void Update(float dt, int gamepadIndex)
+    public ShapeInputState GetState(int gamepad = -1)
     {
-        state = GetState(button, state, gamepadIndex, deadzone);
+        return GetState(button, gamepad, Deadzone);
     }
-    public ShapeInputState GetState() => state;
-    
-    private static bool IsDown(ShapeGamepadButton button, int gamepadIndex, float deadzone = 0.2f)
+
+    public ShapeInputState GetState(ShapeInputState prev, int gamepad = -1)
     {
+        return GetState(button, prev, gamepad, Deadzone);
+    }
+    public InputDevice GetInputDevice() => InputDevice.Gamepad;
+    private static bool IsDown(ShapeGamepadButton button, int gamepad, float deadzone = 0.2f)
+    {
+        if (gamepad < 0) return false;
+        
         var id = (int)button;
         if (id >= 30 && id <= 33)
         {
             id -= 30;
-            float value = GetGamepadAxisMovement(gamepadIndex, id);
+            float value = GetGamepadAxisMovement(gamepad, id);
             if (MathF.Abs(value) < deadzone) value = 0f;
             return value > 0f;
         }
@@ -34,23 +39,22 @@ public class ShapeGamepadButtonInput : IShapeInputType
         if (id >= 40 && id <= 43)
         {
             id -= 40;
-            float value = GetGamepadAxisMovement(gamepadIndex, id);
+            float value = GetGamepadAxisMovement(gamepad, id);
             if (MathF.Abs(value) < deadzone) value = 0f;
             return value < 0f;
         }
         
-        return IsGamepadButtonDown(gamepadIndex, id);
+        return IsGamepadButtonDown(gamepad, id);
     }
-    public static ShapeInputState GetState(ShapeGamepadButton button, int gamepadIndex, float deadzone = 0.2f)
+    public static ShapeInputState GetState(ShapeGamepadButton button, int gamepad, float deadzone = 0.2f)
     {
-        bool down = IsDown(button, gamepadIndex, deadzone);
-        return new(down, !down, 0f, gamepadIndex);
+        bool down = IsDown(button, gamepad, deadzone);
+        return new(down, !down, 0f, gamepad);
     }
-
-    public static ShapeInputState GetState(ShapeGamepadButton button, ShapeInputState previousState, int gamepadIndex,
+    public static ShapeInputState GetState(ShapeGamepadButton button, ShapeInputState previousState, int gamepad,
         float deadzone = 0.2f)
     {
-        return new(previousState, GetState(button, gamepadIndex, deadzone));
+        return new(previousState, GetState(button, gamepad, deadzone));
     }
     public static string GetGamepadButtonName(ShapeGamepadButton button, bool shortHand = true)
     {

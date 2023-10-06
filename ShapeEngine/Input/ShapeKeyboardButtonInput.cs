@@ -3,18 +3,24 @@ namespace ShapeEngine.Input;
 public class ShapeKeyboardButtonInput : IShapeInputType
 {
     private readonly ShapeKeyboardButton button;
-    private ShapeInputState state = new();
     public ShapeKeyboardButtonInput(ShapeKeyboardButton button)
     {
         this.button = button;
     }
 
-    public void Update(float dt, int gamepadIndex)
+    public ShapeInputState GetState(int gamepad = -1)
     {
-        state = GetState(button, state);
+        if (gamepad > 0) return new();
+        return GetState(button);
+    }
+
+    public ShapeInputState GetState(ShapeInputState prev, int gamepad = -1)
+    {
+        if (gamepad > 0) return new();
+        return GetState(button, prev);
     }
     public string GetName(bool shorthand = true) => GetKeyboardButtonName(button, shorthand);
-    public ShapeInputState GetState() => state;
+    public InputDevice GetInputDevice() => InputDevice.Keyboard;
     public IShapeInputType Copy() => new ShapeKeyboardButtonInput(button);
     
     public static string GetKeyboardButtonName(ShapeKeyboardButton button, bool shortHand = true)

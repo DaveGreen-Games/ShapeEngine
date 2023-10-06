@@ -3,16 +3,21 @@ namespace ShapeEngine.Input;
 public class ShapeMouseButtonInput : IShapeInputType
 {
     private readonly ShapeMouseButton button;
-    private ShapeInputState state = new();
     public ShapeMouseButtonInput(ShapeMouseButton button) { this.button = button; }
 
-    public void Update(float dt, int gamepadIndex)
+    public ShapeInputState GetState(int gamepad = -1)
     {
-        state = GetState(button, state);
+        if (gamepad > 0) return new();
+        return GetState(button);
+    }
+
+    public ShapeInputState GetState(ShapeInputState prev, int gamepad = -1)
+    {
+        if (gamepad > 0) return new();
+        return GetState(button, prev);
     }
     public string GetName(bool shorthand = true) => GetMouseButtonName(button, shorthand);
-
-    public ShapeInputState GetState() => state;
+    public InputDevice GetInputDevice() => InputDevice.Mouse;
 
     public IShapeInputType Copy() => new ShapeMouseButtonInput(button);
         
