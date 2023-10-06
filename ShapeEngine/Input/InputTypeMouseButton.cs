@@ -1,19 +1,19 @@
 namespace ShapeEngine.Input;
 
-public class ShapeMouseButtonInput : IShapeInputType
+public class InputTypeMouseButton : IInputType
 {
     private readonly ShapeMouseButton button;
-    public ShapeMouseButtonInput(ShapeMouseButton button) { this.button = button; }
+    public InputTypeMouseButton(ShapeMouseButton button) { this.button = button; }
     public float GetDeadzone() => 0f;
 
     public void SetDeadzone(float value) { }
-    public ShapeInputState GetState(int gamepad = -1)
+    public InputState GetState(int gamepad = -1)
     {
         if (gamepad > 0) return new();
         return GetState(button);
     }
 
-    public ShapeInputState GetState(ShapeInputState prev, int gamepad = -1)
+    public InputState GetState(InputState prev, int gamepad = -1)
     {
         if (gamepad > 0) return new();
         return GetState(button, prev);
@@ -21,7 +21,7 @@ public class ShapeMouseButtonInput : IShapeInputType
     public string GetName(bool shorthand = true) => GetMouseButtonName(button, shorthand);
     public InputDevice GetInputDevice() => InputDevice.Mouse;
 
-    public IShapeInputType Copy() => new ShapeMouseButtonInput(button);
+    public IInputType Copy() => new InputTypeMouseButton(button);
         
         
     public static string GetMouseButtonName(ShapeMouseButton button, bool shortHand = true)
@@ -60,12 +60,12 @@ public class ShapeMouseButtonInput : IShapeInputType
             
         return IsMouseButtonDown(id);
     }
-    public static ShapeInputState GetState(ShapeMouseButton button)
+    public static InputState GetState(ShapeMouseButton button)
     {
         bool down = IsDown(button);
         return new(down, !down, 0f, -1);
     }
-    public static ShapeInputState GetState(ShapeMouseButton button, ShapeInputState previousState)
+    public static InputState GetState(ShapeMouseButton button, InputState previousState)
     {
         return new(previousState, GetState(button));
     }

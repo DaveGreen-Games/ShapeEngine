@@ -2,11 +2,11 @@ using System.Numerics;
 
 namespace ShapeEngine.Input;
 
-public class ShapeMouseWheelAxisInput : IShapeInputType
+public class InputTypeMouseWheelAxis : IInputType
 {
     private readonly ShapeMouseWheelAxis axis;
 
-    public ShapeMouseWheelAxisInput(ShapeMouseWheelAxis axis)
+    public InputTypeMouseWheelAxis(ShapeMouseWheelAxis axis)
     {
         this.axis = axis;
     }
@@ -14,19 +14,19 @@ public class ShapeMouseWheelAxisInput : IShapeInputType
 
     public void SetDeadzone(float value) { }
     public string GetName(bool shorthand = true) => GetMouseWheelAxisName(axis, shorthand);
-    public ShapeInputState GetState(int gamepad = -1)
+    public InputState GetState(int gamepad = -1)
     {
         if (gamepad > 0) return new();
         return GetState(axis);
     }
 
-    public ShapeInputState GetState(ShapeInputState prev, int gamepad = -1)
+    public InputState GetState(InputState prev, int gamepad = -1)
     {
         if (gamepad > 0) return new();
         return GetState(axis, prev);
     }
     public InputDevice GetInputDevice() => InputDevice.Mouse;
-    public IShapeInputType Copy() => new ShapeMouseWheelAxisInput(axis);
+    public IInputType Copy() => new InputTypeMouseWheelAxis(axis);
 
     private static float GetValue(ShapeMouseWheelAxis axis)
     {
@@ -34,13 +34,13 @@ public class ShapeMouseWheelAxisInput : IShapeInputType
         return axis == ShapeMouseWheelAxis.VERTICAL ? value.Y : value.X;
     }
     
-    public static ShapeInputState GetState(ShapeMouseWheelAxis axis)
+    public static InputState GetState(ShapeMouseWheelAxis axis)
     {
         float axisValue = GetValue(axis);
         bool down = axisValue != 0f;
         return new(down, !down, axisValue, -1);
     }
-    public static ShapeInputState GetState(ShapeMouseWheelAxis axis, ShapeInputState previousState)
+    public static InputState GetState(ShapeMouseWheelAxis axis, InputState previousState)
     {
         return new(previousState, GetState(axis));
     }

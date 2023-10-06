@@ -2,7 +2,7 @@ using ShapeEngine.Lib;
 
 namespace ShapeEngine.Input;
 
-public readonly struct ShapeInputState
+public readonly struct InputState
 {
     public readonly  bool Down;
     public readonly bool Up;
@@ -12,7 +12,7 @@ public readonly struct ShapeInputState
     public readonly int Gamepad;
     public readonly bool Consumed;
 
-    public ShapeInputState()
+    public InputState()
     {
         Down = false;
         Up = true;
@@ -22,7 +22,7 @@ public readonly struct ShapeInputState
         Gamepad = -1;
         Consumed = false;
     }
-    public ShapeInputState(bool down, bool up, float axis, int gamepad)
+    public InputState(bool down, bool up, float axis, int gamepad)
     {
         Down = down;
         Up = up;
@@ -32,7 +32,7 @@ public readonly struct ShapeInputState
         Gamepad = gamepad;
         Consumed = false;
     }
-    public ShapeInputState(ShapeInputState prev, ShapeInputState cur)
+    public InputState(InputState prev, InputState cur)
     {
         Gamepad = cur.Gamepad;
         Axis = cur.Axis;
@@ -42,14 +42,14 @@ public readonly struct ShapeInputState
         Released = prev.Down && cur.Up;
         Consumed = false;
     }
-    public ShapeInputState Accumulate(ShapeInputState other)
+    public InputState Accumulate(InputState other)
     {
         float axis = ShapeMath.Clamp(Axis + other.Axis, 0f, 1f);
         bool down = Down || other.Down;
         bool up = Up && other.Up;
         return new(down, up, axis, Gamepad);
     }
-    private ShapeInputState(ShapeInputState other, bool consumed)
+    private InputState(InputState other, bool consumed)
     {
         Down = other.Down;
         Up = other.Up;
@@ -61,5 +61,5 @@ public readonly struct ShapeInputState
     }
     
     
-    public ShapeInputState Consume() => new(this, true);
+    public InputState Consume() => new(this, true);
 }

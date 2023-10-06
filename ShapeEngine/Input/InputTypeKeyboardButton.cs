@@ -1,29 +1,29 @@
 namespace ShapeEngine.Input;
 
-public class ShapeKeyboardButtonInput : IShapeInputType
+public class InputTypeKeyboardButton : IInputType
 {
     private readonly ShapeKeyboardButton button;
-    public ShapeKeyboardButtonInput(ShapeKeyboardButton button)
+    public InputTypeKeyboardButton(ShapeKeyboardButton button)
     {
         this.button = button;
     }
     public float GetDeadzone() => 0f;
 
     public void SetDeadzone(float value) { }
-    public ShapeInputState GetState(int gamepad = -1)
+    public InputState GetState(int gamepad = -1)
     {
         if (gamepad > 0) return new();
         return GetState(button);
     }
 
-    public ShapeInputState GetState(ShapeInputState prev, int gamepad = -1)
+    public InputState GetState(InputState prev, int gamepad = -1)
     {
         if (gamepad > 0) return new();
         return GetState(button, prev);
     }
     public string GetName(bool shorthand = true) => GetKeyboardButtonName(button, shorthand);
     public InputDevice GetInputDevice() => InputDevice.Keyboard;
-    public IShapeInputType Copy() => new ShapeKeyboardButtonInput(button);
+    public IInputType Copy() => new InputTypeKeyboardButton(button);
     
     public static string GetKeyboardButtonName(ShapeKeyboardButton button, bool shortHand = true)
     {
@@ -144,12 +144,12 @@ public class ShapeKeyboardButtonInput : IShapeInputType
     }
 
     private static bool IsDown(ShapeKeyboardButton button) => IsKeyDown((int)button);
-    public static ShapeInputState GetState(ShapeKeyboardButton button)
+    public static InputState GetState(ShapeKeyboardButton button)
     {
         bool down = IsDown(button);
         return new(down, !down, 0f, -1);
     }
-    public static ShapeInputState GetState(ShapeKeyboardButton button, ShapeInputState previousState)
+    public static InputState GetState(ShapeKeyboardButton button, InputState previousState)
     {
         return new(previousState, GetState(button));
     }

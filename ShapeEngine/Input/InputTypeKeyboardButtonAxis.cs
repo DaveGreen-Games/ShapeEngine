@@ -2,22 +2,22 @@ using System.Text;
 
 namespace ShapeEngine.Input;
 
-public class ShapeKeyboardButtonAxisInput : IShapeInputType
+public class InputTypeKeyboardButtonAxis : IInputType
 {
     private readonly ShapeKeyboardButton neg;
     private readonly ShapeKeyboardButton pos;
 
-    public ShapeKeyboardButtonAxisInput(ShapeKeyboardButton neg, ShapeKeyboardButton pos)
+    public InputTypeKeyboardButtonAxis(ShapeKeyboardButton neg, ShapeKeyboardButton pos)
     {
         this.neg = neg;
         this.pos = pos;
     }
 
-    public IShapeInputType Copy() => new ShapeKeyboardButtonAxisInput(neg, pos);
+    public IInputType Copy() => new InputTypeKeyboardButtonAxis(neg, pos);
     public string GetName(bool shorthand = true)
     {
-        string negName = ShapeKeyboardButtonInput.GetKeyboardButtonName(neg, shorthand);
-        string posName = ShapeKeyboardButtonInput.GetKeyboardButtonName(pos, shorthand);
+        string negName = InputTypeKeyboardButton.GetKeyboardButtonName(neg, shorthand);
+        string posName = InputTypeKeyboardButton.GetKeyboardButtonName(pos, shorthand);
         StringBuilder b = new(negName.Length + posName.Length + 4);
         b.Append(negName);
         b.Append(" <> ");
@@ -28,13 +28,13 @@ public class ShapeKeyboardButtonAxisInput : IShapeInputType
 
     public void SetDeadzone(float value) { }
 
-    public ShapeInputState GetState(int gamepad = -1)
+    public InputState GetState(int gamepad = -1)
     {
         if (gamepad > 0) return new();
         return GetState(neg, pos);
     }
 
-    public ShapeInputState GetState(ShapeInputState prev, int gamepad = -1)
+    public InputState GetState(InputState prev, int gamepad = -1)
     {
         if (gamepad > 0) return new();
         return GetState(neg, pos, prev);
@@ -47,14 +47,14 @@ public class ShapeKeyboardButtonAxisInput : IShapeInputType
         float vPositive = IsKeyDown((int)pos) ? 1f : 0f;
         return vPositive - vNegative;
     }
-    public static ShapeInputState GetState(ShapeKeyboardButton neg, ShapeKeyboardButton pos)
+    public static InputState GetState(ShapeKeyboardButton neg, ShapeKeyboardButton pos)
     {
         float axis = GetAxis(neg, pos);
         bool down = axis != 0f;
         return new(down, !down, axis, -1);
     }
-    public static ShapeInputState GetState(ShapeKeyboardButton neg, ShapeKeyboardButton pos,
-        ShapeInputState previousState)
+    public static InputState GetState(ShapeKeyboardButton neg, ShapeKeyboardButton pos,
+        InputState previousState)
     {
         return new(previousState, GetState(neg, pos));
     }

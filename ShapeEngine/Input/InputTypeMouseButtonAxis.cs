@@ -3,12 +3,12 @@ using System.Text;
 
 namespace ShapeEngine.Input;
 
-public class ShapeMouseButtonAxisInput : IShapeInputType
+public class InputTypeMouseButtonAxis : IInputType
 {
     private readonly ShapeMouseButton neg;
     private readonly ShapeMouseButton pos;
 
-    public ShapeMouseButtonAxisInput(ShapeMouseButton neg, ShapeMouseButton pos)
+    public InputTypeMouseButtonAxis(ShapeMouseButton neg, ShapeMouseButton pos)
     {
         this.neg = neg;
         this.pos = pos;
@@ -18,27 +18,27 @@ public class ShapeMouseButtonAxisInput : IShapeInputType
     public void SetDeadzone(float value) { }
     public string GetName(bool shorthand = true)
     {
-        string negName = ShapeMouseButtonInput.GetMouseButtonName(neg, shorthand);
-        string posName = ShapeMouseButtonInput.GetMouseButtonName(pos, shorthand);
+        string negName = InputTypeMouseButton.GetMouseButtonName(neg, shorthand);
+        string posName = InputTypeMouseButton.GetMouseButtonName(pos, shorthand);
         StringBuilder b = new(posName.Length + negName.Length + 4);
         b.Append(negName);
         b.Append(" <> ");
         b.Append(posName);
         return b.ToString();
     }
-    public ShapeInputState GetState(int gamepad = -1)
+    public InputState GetState(int gamepad = -1)
     {
         if (gamepad > 0) return new();
         return GetState(neg, pos);
     }
 
-    public ShapeInputState GetState(ShapeInputState prev, int gamepad = -1)
+    public InputState GetState(InputState prev, int gamepad = -1)
     {
         if (gamepad > 0) return new();
         return GetState(neg, pos, prev);
     }
     public InputDevice GetInputDevice() => InputDevice.Mouse;
-    public IShapeInputType Copy() => new ShapeMouseButtonAxisInput(neg, pos);
+    public IInputType Copy() => new InputTypeMouseButtonAxis(neg, pos);
 
     private static float GetAxis(ShapeMouseButton neg, ShapeMouseButton pos)
     {
@@ -61,14 +61,14 @@ public class ShapeMouseButtonAxisInput : IShapeInputType
         return IsMouseButtonDown(id) ? 1f : 0f;
     }
     
-    public static ShapeInputState GetState(ShapeMouseButton neg, ShapeMouseButton pos)
+    public static InputState GetState(ShapeMouseButton neg, ShapeMouseButton pos)
     {
         float axis = GetAxis(neg, pos);
         bool down = axis != 0f;
         return new(down, !down, axis, -1);
     }
-    public static ShapeInputState GetState(ShapeMouseButton neg, ShapeMouseButton pos,
-        ShapeInputState previousState)
+    public static InputState GetState(ShapeMouseButton neg, ShapeMouseButton pos,
+        InputState previousState)
     {
         return new(previousState, GetState(neg, pos));
     }

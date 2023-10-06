@@ -2,12 +2,12 @@ using ShapeEngine.Lib;
 
 namespace ShapeEngine.Input;
 
-public class ShapeGamepadAxisInput : IShapeInputType
+public class InputTypeGamepadAxis : IInputType
 {
     private readonly ShapeGamepadAxis axis;
     private float deadzone;
 
-    public ShapeGamepadAxisInput(ShapeGamepadAxis axis, float deadzone = 0.2f)
+    public InputTypeGamepadAxis(ShapeGamepadAxis axis, float deadzone = 0.2f)
     {
         this.axis = axis; 
         this.deadzone = deadzone;
@@ -22,18 +22,18 @@ public class ShapeGamepadAxisInput : IShapeInputType
         deadzone = ShapeMath.Clamp(value, 0f, 1f);
     }
 
-    public ShapeInputState GetState(int gamepad = -1)
+    public InputState GetState(int gamepad = -1)
     {
         return GetState(axis, gamepad, deadzone);
     }
 
-    public ShapeInputState GetState(ShapeInputState prev, int gamepad = -1)
+    public InputState GetState(InputState prev, int gamepad = -1)
     {
         return GetState(axis, prev, gamepad, deadzone);
     }
 
     public InputDevice GetInputDevice() => InputDevice.Gamepad;
-    public IShapeInputType Copy() => new ShapeGamepadAxisInput(axis);
+    public IInputType Copy() => new InputTypeGamepadAxis(axis);
 
     private static float GetValue(ShapeGamepadAxis axis, int gamepad, float deadzone = 0.2f)
     {
@@ -42,13 +42,13 @@ public class ShapeGamepadAxisInput : IShapeInputType
         if (MathF.Abs(value) < deadzone) return 0f;
         return value;
     }
-    public static ShapeInputState GetState(ShapeGamepadAxis axis, int gamepad, float deadzone = 0.2f)
+    public static InputState GetState(ShapeGamepadAxis axis, int gamepad, float deadzone = 0.2f)
     {
         float axisValue = GetValue(axis, gamepad, deadzone);
         bool down = axisValue != 0f;
         return new(down, !down, axisValue, gamepad);
     }
-    public static ShapeInputState GetState(ShapeGamepadAxis axis, ShapeInputState previousState, int gamepad,
+    public static InputState GetState(ShapeGamepadAxis axis, InputState previousState, int gamepad,
         float deadzone = 0.2f)
     {
         return new(previousState, GetState(axis, gamepad, deadzone));
