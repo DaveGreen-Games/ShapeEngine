@@ -72,10 +72,10 @@ public readonly struct InputState
     }
     public InputState Accumulate(InputState other)
     {
-        float axis = MathF.Max(AxisRaw, other.AxisRaw); // ShapeMath.Clamp(Axis + other.Axis, 0f, 1f);
+        float axis = ShapeMath.Clamp(AxisRaw + other.AxisRaw, -1f, 1f); // MathF.Max(AxisRaw, other.AxisRaw); // ShapeMath.Clamp(Axis + other.Axis, 0f, 1f);
         bool down = Down || other.Down;
         bool up = Up && other.Up;
-        return new(down, up, axis, Gamepad);
+        return new(down, up, axis, other.Gamepad);
     }
     public InputState AdjustAxis(float value) => value == 0f ? this : new InputState(this, Axis + value);
     public InputState Consume() => new(this, true);

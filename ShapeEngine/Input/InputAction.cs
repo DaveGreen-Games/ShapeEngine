@@ -101,34 +101,42 @@ public class InputAction
             current = current.Accumulate(state);
         }
         State = new(State, current);
-
+        
         if (axisSensitivity > 0 || axisGravitiy > 0)
         {
             int raw = MathF.Sign(State.AxisRaw);
-            int exact = MathF.Sign(State.Axis);
-            int dif = raw - exact;
+            float dif = State.AxisRaw - State.Axis;
+            int difSign = MathF.Sign(dif);
+            //int exact = MathF.Sign(State.Axis);
+            //int dif = raw - exact;
 
-            if (dif != 0)
+            if (difSign != 0)
             {
                 var axisChange = 0f;
-                if (dif > 1 || dif < -1) //snap
+                var snapValue = 0f;
+                if (difSign > 1 || difSign < -1) //snap
                 {
-                    axisChange = -State.Axis;//snapping to 0
-                    axisChange += dif * AxisSensitivity * dt;
+                    snapValue = -State.AxisRaw;//snapping to 0
+                    axisChange = difSign * AxisSensitivity * dt;
                 }
                 else //move
                 {
                     if (raw == 0)//gravity
                     {
-                        axisChange = dif * AxisGravity * dt;
+                        axisChange = difSign * AxisGravity * dt;
                     }
                     else//sensitivity
                     {
-                        axisChange = dif * AxisSensitivity * dt;
+                        axisChange = difSign * AxisSensitivity * dt;
                     }
                 }
-            
-                if(axisChange != 0f) State = State.AdjustAxis(axisChange);
+
+                if (axisChange != 0f)
+                {
+
+                    if (MathF.Abs(axisChange) > MathF.Abs(dif)) axisChange = dif - snapValue;
+                    State = State.AdjustAxis(axisChange + snapValue);
+                }
             }
         }
     }
@@ -141,5 +149,7 @@ public class InputAction
     public static IInputType CreateInputType(ShapeMouseButton neg, ShapeMouseButton pos) => new InputTypeMouseButtonAxis(neg, pos);
     public static IInputType CreateInputType(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = 0.2f) => new InputTypeGamepadButtonAxis(neg, pos, deadzone);
     public static IInputType CreateInputType(ShapeMouseWheelAxis mouseWheelAxis) => new InputTypeMouseWheelAxis(mouseWheelAxis);
+    public static IInputType CreateInputType(ShapeMouseAxis mouseAxis) => new InputTypeMouseAxis(mouseAxis);
+
     public static IInputType CreateInputType(ShapeGamepadAxis gamepadAxis, float deadzone = 0.2f) => new InputTypeGamepadAxis(gamepadAxis, deadzone);
 }

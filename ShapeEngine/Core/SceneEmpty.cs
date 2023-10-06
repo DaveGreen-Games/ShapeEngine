@@ -2,6 +2,7 @@
 using System.Numerics;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Input;
 
 namespace ShapeEngine.Core
 {
@@ -17,8 +18,13 @@ namespace ShapeEngine.Core
         public virtual GameObjectHandler? GetGameObjectHandler() { return null; }
 
         public virtual void OnWindowSizeChanged(DimensionConversionFactors conversionFactors) { }
-        public void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos){}
-        public void OnMonitorChanged(MonitorInfo newMonitor){}
+        public virtual void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos){}
+        public virtual void OnMonitorChanged(MonitorInfo newMonitor){}
+        public virtual void OnGamepadConnected(Gamepad gamepad){}
+
+        public virtual void OnGamepadDisconnected(Gamepad gamepad){}
+
+        public virtual void OnInputDeviceChanged(InputDevice prevDevice, InputDevice curDevice){}
 
         public virtual void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui) { }
         public virtual void DrawGame(ScreenInfo game) { }

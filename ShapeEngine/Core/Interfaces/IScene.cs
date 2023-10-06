@@ -1,5 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Input;
 using ShapeEngine.Screen;
 
 namespace ShapeEngine.Core.Interfaces;
@@ -30,6 +31,12 @@ public interface IScene : IUpdateable, IDrawable
     public void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos);
 
     public void OnMonitorChanged(MonitorInfo newMonitor);
+
+    public void OnGamepadConnected(Gamepad gamepad);
+
+    public void OnGamepadDisconnected(Gamepad gamepad);
+
+    public void OnInputDeviceChanged(InputDevice prevDevice, InputDevice curDevice);
     //public void DrawToTexture(ScreenTexture texture);
     //public void DrawToScreen(Vector2 size, Vector2 mousePos);
 

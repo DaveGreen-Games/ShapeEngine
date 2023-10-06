@@ -9,6 +9,7 @@ using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Screen;
 using ShapeEngine.Core.Shapes;
+using ShapeEngine.Input;
 
 namespace Examples.Scenes
 {
@@ -74,6 +75,19 @@ namespace Examples.Scenes
         public void OnMonitorChanged(MonitorInfo newMonitor)
         {
         }
+
+        public void OnGamepadConnected(Gamepad gamepad)
+        {
+        }
+
+        public void OnGamepadDisconnected(Gamepad gamepad)
+        {
+        }
+
+        public void OnInputDeviceChanged(InputDevice prevDevice, InputDevice curDevice)
+        {
+        }
+
         public void OnPauseChanged(bool paused){}
         public void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {

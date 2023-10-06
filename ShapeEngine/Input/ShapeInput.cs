@@ -162,13 +162,13 @@ public class ShapeInput
     #endregion
 
     #region Input Used
-    public static bool WasKeyboardUsed() => Raylib.GetKeyPressed() < 0;
-    public static bool WasMouseUsed(float moveThreshold = 5f, float mouseWheelThreshold = 1f)
+    public static bool WasKeyboardUsed() => Raylib.GetKeyPressed() > 0;
+    public static bool WasMouseUsed(float moveThreshold = 0.5f, float mouseWheelThreshold = 0.25f)
     {
         var mouseDelta = Raylib.GetMouseDelta();
         if (mouseDelta.LengthSquared() > moveThreshold * moveThreshold) return true;
         var mouseWheel = Raylib.GetMouseWheelMoveV();
-        if (mouseWheel.X > mouseWheelThreshold || mouseWheel.Y > mouseWheelThreshold) return true;
+        if (mouseWheel.LengthSquared() > mouseWheelThreshold * mouseWheelThreshold) return true;
 
         if (Raylib.IsMouseButtonDown(MouseButton.MOUSE_BUTTON_LEFT)) return true;
         if (Raylib.IsMouseButtonDown(MouseButton.MOUSE_BUTTON_RIGHT)) return true;
@@ -182,13 +182,13 @@ public class ShapeInput
     }
     public static bool WasGamepadUsed(List<int> connectedGamepads, float deadzone = 0.2f)
     {
-        if (Raylib.GetGamepadButtonPressed() < 0) return true;
+        if (Raylib.GetGamepadButtonPressed() > 0) return true;
         foreach (int gamepad in connectedGamepads)
         {
-            if (Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_X) > deadzone) return true;
-            if (Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_Y) > deadzone) return true;
-            if (Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_X) > deadzone) return true;
-            if (Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_Y) > deadzone) return true;
+            if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_X)) > deadzone) return true;
+            if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_Y)) > deadzone) return true;
+            if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_X)) > deadzone) return true;
+            if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_Y)) > deadzone) return true;
             if (Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_TRIGGER) > deadzone) return true;
             if (Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_TRIGGER) > deadzone) return true;
         }

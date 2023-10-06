@@ -234,7 +234,7 @@ public class ShapeLoop
             if (value != paused)
             {
                 paused = value;
-                OnPausedChanged(paused);
+                ResolveOnPausedChanged(paused);
             }
             
         }
@@ -421,12 +421,34 @@ public class ShapeLoop
         WindowSize = Monitor.CurMonitor().Dimensions / 2;
     }
     public void ResetCamera() => Camera = basicCamera;
-    
-    public bool IsGamepadConnected(int gamepad) => (gamepad >= 0 && gamepad < gamepads.Length) && gamepads[gamepad].Connected; //.ContainsKey(gamepad);
-    
-    //TODO Gamepad relevant functions needed
-    //get connected gamepads
-    //get next available gamepad => claim system ?
+
+    public bool HasGamepad(int index) => index >= 0 && index < gamepads.Length;
+    public bool IsGamepadConnected(int index) => HasGamepad(index) && gamepads[index].Connected;
+    public Gamepad? GetGamepad(int index)
+    {
+        if (!HasGamepad(index)) return null;
+        return gamepads[index];
+    }
+    public Gamepad? RequestGamepad(int preferredIndex = -1)
+    {
+        var preferredGamepad = GetGamepad(preferredIndex);
+        if (preferredGamepad is { Connected: true, Available: true })
+        {
+            preferredGamepad.Claim();
+            return preferredGamepad;
+        }
+
+        foreach (var gamepad in gamepads)
+        {
+            if (gamepad is { Connected: true, Available: true })
+            {
+                gamepad.Claim();
+                return gamepad;
+            }
+        }
+        return null;
+    }
+    public void ReturnGamepad(int index) => GetGamepad(index)?.Free();
     #endregion
     
     #region  Gameloop
@@ -480,17 +502,17 @@ public class ShapeLoop
             DeltaSlow = Delta * defaultFactor;
             Cursor.Update(dt, UI);
             
-            Update(dt, DeltaSlow);
+            ResolveUpdate(dt, DeltaSlow, Game, UI);
             
             BeginTextureMode(gameTexture.RenderTexture);
             ClearBackground(new(0,0,0,0));
             
             BeginMode2D(Camera.Camera);
-            DrawGame(Game);
+            ResolveDrawGame(Game);
             EndMode2D();
             
             foreach (var flash in shapeFlashes) screenArea.Draw(flash.GetColor());
-            DrawGameUI(UI);
+            ResolveDrawGameUI(UI);
             Cursor.DrawGameUI(UI);
             EndTextureMode();
             
@@ -534,7 +556,7 @@ public class ShapeLoop
             target.Draw();
             EndShaderMode();
 
-            DrawUI(UI);
+            ResolveDrawUI(UI);
             Cursor.DrawUI(UI);
             EndDrawing();
             
@@ -555,7 +577,7 @@ public class ShapeLoop
                 gameTexture.Draw();
             }
             
-            DrawUI(UI);
+            ResolveDrawUI(UI);
             Cursor.DrawUI(UI);
             EndDrawing();
             
@@ -581,9 +603,7 @@ public class ShapeLoop
     /// </summary>
     protected virtual void BeginRun() { }
 
-    //protected virtual void HandleInput(float dt) { }
-    //protected virtual void PausedUpdate(float dt) { }
-    protected virtual void Update(float dt, float deltaSlow) { }
+    protected virtual void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui) { }
     protected virtual void DrawGame(ScreenInfo game) { }
     protected virtual void DrawGameUI(ScreenInfo ui) { }
     protected virtual void DrawUI(ScreenInfo ui) { }
@@ -606,14 +626,10 @@ public class ShapeLoop
     protected virtual void OnGamepadConnected(Gamepad gamepad) { }
     protected virtual void OnGamepadDisconnected(Gamepad gamepad) { }
     
-    protected void UpdateScene() => CurScene.Update(Delta, DeltaSlow, Game, UI);
-    protected void DrawGameScene() => CurScene.DrawGame(Game);
-
-    protected void DrawGameUIScene() => CurScene.DrawGameUI(UI);
-    protected void DrawUIScene() => CurScene.DrawUI(UI);
-
     #endregion
 
+    
+    
     #region Monitor
     public bool SetMonitor(int newMonitor)
     {
@@ -667,7 +683,7 @@ public class ShapeLoop
         }
         
         
-        OnMonitorChanged(monitor);
+        ResolveOnMonitorChanged(monitor);
     }
     #endregion
 
@@ -677,7 +693,7 @@ public class ShapeLoop
         var prevInputDevice = CurrentInputDevice;
         if (CurrentInputDevice == InputDevice.Keyboard)
         {
-            if (ShapeInput.WasMouseUsed(5f, 1f)) CurrentInputDevice = InputDevice.Mouse;
+            if (ShapeInput.WasMouseUsed()) CurrentInputDevice = InputDevice.Mouse;
             else if (ShapeInput.WasGamepadUsed(connectedGamepadIndices, 0.2f)) CurrentInputDevice = InputDevice.Gamepad;
         }
         else if (CurrentInputDevice == InputDevice.Mouse)
@@ -687,13 +703,13 @@ public class ShapeLoop
         }
         else //gamepad
         {
-            if (ShapeInput.WasMouseUsed(5f, 1f)) CurrentInputDevice = InputDevice.Mouse;
+            if (ShapeInput.WasMouseUsed()) CurrentInputDevice = InputDevice.Mouse;
             else if (ShapeInput.WasKeyboardUsed()) CurrentInputDevice = InputDevice.Keyboard;
         }
 
         if (CurrentInputDevice != prevInputDevice)
         {
-            OnInputDeviceChanged(prevInputDevice, CurrentInputDevice);
+            ResolveOnInputDeviceChanged(prevInputDevice, CurrentInputDevice);
         }
     }
     private void CheckGamepadConnections()
@@ -707,7 +723,7 @@ public class ShapeLoop
                 if (!gamepad.Connected)
                 {
                     gamepad.Connect();
-                    OnGamepadConnected(gamepad);
+                    ResolveOnGamepadConnected(gamepad);
                 }
                 connectedGamepadIndices.Add(i);
             }
@@ -716,7 +732,7 @@ public class ShapeLoop
                 if (gamepad.Connected)
                 {
                     gamepad.Disconnect();
-                    OnGamepadDisconnected(gamepad);
+                    ResolveOnGamepadDisconnected(gamepad);
                 }
             }
         }
@@ -744,7 +760,7 @@ public class ShapeLoop
             SetConversionFactors();
             var conversion = new DimensionConversionFactors(prev, CurScreenSize);
             //OnWindowDimensionsChanged?.Invoke(conversion);
-            OnWindowSizeChanged(conversion);
+            ResolveOnWindowSizeChanged(conversion);
             //CurScene.OnWindowSizeChanged(conversion);
         }
 
@@ -753,7 +769,7 @@ public class ShapeLoop
         {
             prevWindowPosition = WindowPosition;
             WindowPosition = curWindowPosition;
-            OnWindowPositionChanged(WindowPosition, curWindowPosition);
+            ResolveOnWindowPositionChanged(WindowPosition, curWindowPosition);
         }
     }
     private void CalculateCurScreenSize()
@@ -781,6 +797,7 @@ public class ShapeLoop
         DevelopmentToScreen = new(DevelopmentDimensions, CurScreenSize);
     }
     
+    //TODO remove all resolve functions
     private void UpdateFlashes(float dt)
     {
         for (int i = shapeFlashes.Count() - 1; i >= 0; i--)
@@ -789,6 +806,61 @@ public class ShapeLoop
             flash.Update(dt);
             if (flash.IsFinished()) { shapeFlashes.RemoveAt(i); }
         }
+    }
+    private void ResolveUpdate(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+    {
+        Update(dt, deltaSlow, game, ui);
+        CurScene.Update(dt, deltaSlow, Game, UI);
+    }
+    private void ResolveDrawGame(ScreenInfo game)
+    {
+        DrawGame(game);
+        CurScene.DrawGame(game);
+    }
+    private void ResolveDrawGameUI(ScreenInfo ui)
+    {
+        DrawGameUI(ui);
+        CurScene.DrawGameUI(ui);
+    }
+    private void ResolveDrawUI(ScreenInfo ui)
+    {
+        DrawUI(ui);
+        CurScene.DrawUI(ui);
+    }
+    private void ResolveOnWindowSizeChanged(DimensionConversionFactors conversion)
+    {
+        OnWindowSizeChanged(conversion);
+        CurScene.OnWindowSizeChanged(conversion);
+    }
+    private void ResolveOnWindowPositionChanged(Vector2 oldPos, Vector2 newPos)
+    {
+        OnWindowPositionChanged(oldPos, newPos);
+        CurScene.OnWindowPositionChanged(oldPos, newPos);
+    }
+    private void ResolveOnMonitorChanged(MonitorInfo newMonitor)
+    {
+        OnMonitorChanged(newMonitor);
+        CurScene.OnMonitorChanged(newMonitor);
+    }
+    private void ResolveOnPausedChanged(bool newPaused)
+    {
+        OnPausedChanged(newPaused);
+        CurScene.OnPauseChanged(newPaused);
+    }
+    private void ResolveOnInputDeviceChanged(InputDevice prevDevice, InputDevice newDevice)
+    {
+        OnInputDeviceChanged(prevDevice, newDevice);
+        CurScene.OnInputDeviceChanged(prevDevice, newDevice);
+    }
+    private void ResolveOnGamepadConnected(Gamepad gamepad)
+    {
+        OnGamepadConnected(gamepad);
+        CurScene.OnGamepadConnected(gamepad);
+    }
+    private void ResolveOnGamepadDisconnected(Gamepad gamepad)
+    {
+        OnGamepadDisconnected(gamepad);
+        CurScene.OnGamepadDisconnected(gamepad);
     }
     
     private void WriteDebugInfo()

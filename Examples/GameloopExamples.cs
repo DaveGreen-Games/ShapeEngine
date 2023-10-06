@@ -185,9 +185,9 @@ namespace Examples
         //    }
         //    base.HandleInput(dt);
         //}
-        protected override void Update(float dt, float deltaSlow)
+        protected override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            UpdateScene();
+            //UpdateScene();
             if (Paused) return;
             int speed = 2;
             int movement = 0;
@@ -218,20 +218,20 @@ namespace Examples
             
         }
 
-        protected override void DrawGame(ScreenInfo game)
-        {
-            DrawGameScene();
-        }
-
-        protected override void DrawGameUI(ScreenInfo ui)
-        {
-            DrawGameUIScene();   
-        }
-
-        protected override void DrawUI(ScreenInfo ui)
-        {
-            DrawUIScene();
-        }
+        // protected override void DrawGame(ScreenInfo game)
+        // {
+        //     DrawGameScene();
+        // }
+        //
+        // protected override void DrawGameUI(ScreenInfo ui)
+        // {
+        //     DrawGameUIScene();   
+        // }
+        //
+        // protected override void DrawUI(ScreenInfo ui)
+        // {
+        //     DrawUIScene();
+        // }
 
         public int GetFontCount() { return fonts.Count; }
         public Font GetFont(int id) { return fonts[id]; }

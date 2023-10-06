@@ -7,6 +7,7 @@ using System.Numerics;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
+using ShapeEngine.Input;
 
 namespace Examples.Scenes
 {
@@ -32,11 +33,23 @@ namespace Examples.Scenes
             
         }
 
-        public void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos)
+        public virtual void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos)
         {
         }
 
-        public void OnMonitorChanged(MonitorInfo newMonitor)
+        public virtual void OnMonitorChanged(MonitorInfo newMonitor)
+        {
+        }
+
+        public virtual void OnGamepadConnected(Gamepad gamepad)
+        {
+        }
+
+        public virtual void OnGamepadDisconnected(Gamepad gamepad)
+        {
+        }
+
+        public virtual void OnInputDeviceChanged(InputDevice prevDevice, InputDevice curDevice)
         {
         }
 
