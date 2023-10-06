@@ -13,4 +13,8 @@ public enum ShapeMouseButton
     MW_DOWN = 11,
     MW_LEFT = 12,
     MW_RIGHT = 13,
+    UP_AXIS = 20,
+    DOWN_AXIS = 21,
+    LEFT_AXIS = 22,
+    RIGHT_AXIS = 23
 }

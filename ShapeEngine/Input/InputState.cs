@@ -44,7 +44,7 @@ public readonly struct InputState
     }
     public InputState Accumulate(InputState other)
     {
-        float axis = ShapeMath.Clamp(Axis + other.Axis, 0f, 1f);
+        float axis = MathF.Max(Axis, other.Axis); // ShapeMath.Clamp(Axis + other.Axis, 0f, 1f);
         bool down = Down || other.Down;
         bool up = Up && other.Up;
         return new(down, up, axis, Gamepad);

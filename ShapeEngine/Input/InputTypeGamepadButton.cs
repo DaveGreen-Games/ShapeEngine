@@ -6,7 +6,6 @@ public class InputTypeGamepadButton : IInputType
 {
     private readonly ShapeGamepadButton button;
     private float deadzone;
-
     public InputTypeGamepadButton(ShapeGamepadButton button, float deadzone = 0.2f)
     {
         this.button = button; 
@@ -57,7 +56,7 @@ public class InputTypeGamepadButton : IInputType
     public static InputState GetState(ShapeGamepadButton button, int gamepad, float deadzone = 0.2f)
     {
         bool down = IsDown(button, gamepad, deadzone);
-        return new(down, !down, 0f, gamepad);
+        return new(down, !down, down ? 1f : 0f, gamepad);
     }
     public static InputState GetState(ShapeGamepadButton button, InputState previousState, int gamepad,
         float deadzone = 0.2f)

@@ -49,13 +49,23 @@ public class InputTypeMouseButtonAxis : IInputType
     private static float GetValue(ShapeMouseButton button)
     {
         int id = (int)button;
-        if (id >= 10)
+        if (id is >= 10 and < 20)
         {
+            //TODO is this working or do I need to change it to axis system?
             Vector2 value = GetMouseWheelMoveV();
             if (button == ShapeMouseButton.MW_LEFT) return MathF.Abs(value.X);
             if (button == ShapeMouseButton.MW_RIGHT) return value.X;
             if (button == ShapeMouseButton.MW_UP) return MathF.Abs(value.Y);
             if (button == ShapeMouseButton.MW_DOWN) return value.Y;
+            return 0f;
+        }
+        if (id >= 20)
+        {
+            Vector2 mouseDelta = GetMouseDelta();
+            if (button == ShapeMouseButton.LEFT_AXIS) return mouseDelta.X < 0f ? MathF.Abs(mouseDelta.X) : 0f;
+            if(button == ShapeMouseButton.RIGHT_AXIS) return mouseDelta.X > 0f ? mouseDelta.X : 0f;
+            if(button == ShapeMouseButton.UP_AXIS) return mouseDelta.Y < 0f ? MathF.Abs(mouseDelta.X) : 0f;
+            if(button == ShapeMouseButton.DOWN_AXIS) return mouseDelta.Y > 0f ? mouseDelta.Y : 0f;
             return 0f;
         }
         return IsMouseButtonDown(id) ? 1f : 0f;

@@ -10,6 +10,9 @@ public class InputAction
     
     public int Gamepad = -1;
     
+    public float AxisSensitivity { get; set; } = 1f;
+    public float AxisGravity { get; set; } = 1f;
+    
     public InputState State { get; private set; } = new();
     public InputState Consume()
     {
@@ -76,9 +79,34 @@ public class InputAction
         InputState current = new();
         foreach (var input in Inputs)
         {
-            var state = input.GetState(Gamepad); // input.Update(dt, Gamepad);
+            var state = input.GetState(Gamepad);
             current = current.Accumulate(state);
         }
+
+        // float axis = current.Axis;
+        // if (State.Axis == 0f && AxisSensitivity > 0)//prev was at 0
+        // {
+        //     if (axis > 0f)
+        //     {
+        //         axis = MathF.Min(1f, State.Axis + (1f / AxisSensitivity) * dt);
+        //     }
+        //     else if(axis < 0)
+        //     {
+        //         axis = MathF.Max(-1f, State.Axis - (1f / AxisSensitivity) * dt);
+        //     }
+        // }
+        // else if(AxisGravity > 0)
+        // {
+        //     if (axis > 0f)
+        //     {
+        //         axis = MathF.Max(0f, State.Axis - (1f / AxisGravity) * dt);
+        //     }
+        //     else if(axis < 0)
+        //     {
+        //         axis = MathF.Min(0f, State.Axis + (1f / AxisGravity) * dt);
+        //     }
+        // }
+        
         State = new(State, current);
     }
     

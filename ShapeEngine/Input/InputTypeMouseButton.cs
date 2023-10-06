@@ -63,7 +63,7 @@ public class InputTypeMouseButton : IInputType
     public static InputState GetState(ShapeMouseButton button)
     {
         bool down = IsDown(button);
-        return new(down, !down, 0f, -1);
+        return new(down, !down, down ? 1f : 0f, -1);
     }
     public static InputState GetState(ShapeMouseButton button, InputState previousState)
     {
