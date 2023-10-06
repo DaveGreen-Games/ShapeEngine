@@ -12,11 +12,19 @@ public class InputAction
 
     private float axisSensitivity = 1f;
     private float axisGravitiy = 1f;
+    /// <summary>
+    /// How fast an axis moves towards the max value (1 / -1) in seconds.
+    /// Used for calculating InputState.Axis values.
+    /// </summary>
     public float AxisSensitivity 
     {
         get => axisSensitivity;
         set => axisSensitivity = MathF.Max(0f, value);
     }
+    /// <summary>
+    /// How fast an axis moves towards 0 after no input is detected.
+    /// Used for calculating InputState.Axis values.
+    /// </summary>
     public float AxisGravity 
     {
         get => axisGravitiy;

@@ -12,6 +12,69 @@ using ShapeEngine.Input;
 
 namespace ShapeEngine.Core;
 
+public class Gamepad
+{
+    public readonly int Index;
+    
+    public bool Available { get; private set; } = true;
+    public bool Connected { get; private set; }
+
+    public string Name { get; private set; } = "No Device";
+    public int AxisCount { get; private set; } = 0;
+    
+    public event Action? OnConnectionChanged;
+    public event Action? OnAvailabilityChanged;
+    
+    public Gamepad(int index, bool connected)
+    {
+        Index = index;
+        Connected = connected;
+        if (Connected)
+        {
+            unsafe
+            {
+                Name = Raylib.GetGamepadName(index)->ToString();
+            }
+
+            AxisCount = Raylib.GetGamepadAxisCount(index);
+        }
+        
+    }
+
+    public void Connect()
+    {
+        if (Connected) return;
+        Connected = true;
+        unsafe
+        {
+            Name = Raylib.GetGamepadName(Index)->ToString();
+        }
+
+        AxisCount = Raylib.GetGamepadAxisCount(Index);
+        OnConnectionChanged?.Invoke();
+    }
+    public void Disconnect()
+    {
+        if (!Connected) return;
+        Connected = false;
+        OnConnectionChanged?.Invoke();
+    }
+    public bool Claim()
+    {
+        if (!Connected || !Available) return false;
+        Available = false;
+        OnAvailabilityChanged?.Invoke();
+        return true;
+    }
+    public bool Free()
+    {
+        if (Available) return false;
+        Available = true;
+        OnAvailabilityChanged?.Invoke();
+        return true;
+    }
+}
+
 public class ShapeLoop
 {
     #region Static
@@ -179,7 +242,7 @@ public class ShapeLoop
     public SlowMotion SlowMotion { get; private set; } = new SlowMotion();
     public InputDevice CurrentInputDevice { get; private set; } = InputDevice.Keyboard;
     
-
+    public int MaxGamepads => gamepads.Length;
     public readonly ShapeInput Input = new();
     #endregion
 
@@ -198,8 +261,9 @@ public class ShapeLoop
     private List<DeferredInfo> deferred = new();
     private int frameRateLimit = 60;
     private Dimensions windowSize = new();
-    private List<int> connectedGamepads = new();
-    private readonly int maxGamepads = 8;
+    
+    private readonly Gamepad[] gamepads = new Gamepad[8];
+    private readonly List<int> connectedGamepadIndices = new();
     #endregion
     
     #region Setup
@@ -242,9 +306,9 @@ public class ShapeLoop
         gameTexture.Load(CurScreenSize);
         if (multiShaderSupport) screenShaderBuffer.Load(CurScreenSize);
 
-        for (var i = 0; i < this.maxGamepads; i++)
+        for (var i = 0; i < gamepads.Length; i++)
         {
-            if(Raylib.IsGamepadAvailable(i)) connectedGamepads.Add(i);
+            gamepads[i] = new Gamepad(i, Raylib.IsGamepadAvailable(i));
         }
     }
     public void SetupWindow(string windowName, bool undecorated, bool resizable, bool vsync = true, int fps = 60)
@@ -358,7 +422,7 @@ public class ShapeLoop
     }
     public void ResetCamera() => Camera = basicCamera;
     
-    public bool IsGamepadConnected(int gamepad) => connectedGamepads.Contains(gamepad);
+    public bool IsGamepadConnected(int gamepad) => (gamepad >= 0 && gamepad < gamepads.Length) && gamepads[gamepad].Connected; //.ContainsKey(gamepad);
     
     //TODO Gamepad relevant functions needed
     //get connected gamepads
@@ -539,8 +603,8 @@ public class ShapeLoop
     protected virtual void OnPausedChanged(bool newPaused) { }
     
     protected virtual void OnInputDeviceChanged(InputDevice prevDevice, InputDevice newDevice) { }
-    protected virtual void OnGamepadConnected(int index) { }
-    protected virtual void OnGamepadRemoved(int index) { }
+    protected virtual void OnGamepadConnected(Gamepad gamepad) { }
+    protected virtual void OnGamepadDisconnected(Gamepad gamepad) { }
     
     protected void UpdateScene() => CurScene.Update(Delta, DeltaSlow, Game, UI);
     protected void DrawGameScene() => CurScene.DrawGame(Game);
@@ -614,12 +678,12 @@ public class ShapeLoop
         if (CurrentInputDevice == InputDevice.Keyboard)
         {
             if (ShapeInput.WasMouseUsed(5f, 1f)) CurrentInputDevice = InputDevice.Mouse;
-            else if (ShapeInput.WasGamepadUsed(connectedGamepads, 0.2f)) CurrentInputDevice = InputDevice.Gamepad;
+            else if (ShapeInput.WasGamepadUsed(connectedGamepadIndices, 0.2f)) CurrentInputDevice = InputDevice.Gamepad;
         }
         else if (CurrentInputDevice == InputDevice.Mouse)
         {
             if (ShapeInput.WasKeyboardUsed()) CurrentInputDevice = InputDevice.Keyboard;
-            else if (ShapeInput.WasGamepadUsed(connectedGamepads, 0.2f)) CurrentInputDevice = InputDevice.Gamepad;
+            else if (ShapeInput.WasGamepadUsed(connectedGamepadIndices, 0.2f)) CurrentInputDevice = InputDevice.Gamepad;
         }
         else //gamepad
         {
@@ -634,25 +698,29 @@ public class ShapeLoop
     }
     private void CheckGamepadConnections()
     {
-        for (int i = 0; i < maxGamepads; i++)
+        connectedGamepadIndices.Clear();
+        for (var i = 0; i < gamepads.Length; i++)
         {
+            var gamepad = gamepads[i];
             if (Raylib.IsGamepadAvailable(i))
             {
-                if (!connectedGamepads.Contains(i))
+                if (!gamepad.Connected)
                 {
-                    connectedGamepads.Add(i);
-                    OnGamepadConnected(i);
+                    gamepad.Connect();
+                    OnGamepadConnected(gamepad);
                 }
+                connectedGamepadIndices.Add(i);
             }
             else
             {
-                if (connectedGamepads.Contains(i))
+                if (gamepad.Connected)
                 {
-                    connectedGamepads.Remove(i);
-                    OnGamepadRemoved(i);
+                    gamepad.Disconnect();
+                    OnGamepadDisconnected(gamepad);
                 }
             }
         }
+        
     }
 
     private void SetupWindowDimensions()
