@@ -36,16 +36,16 @@ namespace Examples.Scenes
             }
             curButton = buttons[0];
             examples.Add(new PolylineInflationExample());
-            examples.Add(new PolylineCollisionExample());
-            examples.Add(new CCDExample());
             examples.Add(new AsteroidMiningExample());
             examples.Add(new GameObjectHandlerExample());
             examples.Add(new CameraExample());
             examples.Add(new CameraAreaDrawExample());
             examples.Add(new ScreenEffectsExample());
-            
             examples.Add(new DelaunayExample());
             examples.Add(new BouncyCircles());
+            examples.Add(new InputExample());
+            examples.Add(new ShipInputExample());
+            
             examples.Add(new TextScalingExample());
             examples.Add(new TextWrapExample());
             examples.Add(new TextWrapEmphasisExample());
@@ -54,6 +54,9 @@ namespace Examples.Scenes
             examples.Add(new TextEmphasisExample());
             examples.Add(new TextRotationExample());
             examples.Add(new TextBoxExample()); 
+            
+            examples.Add(new PolylineCollisionExample());
+            examples.Add(new CCDExample());
             titleFont = GAMELOOP.FontDefault; // GAMELOOP.GetFont(GameloopExamples.FONT_IndieFlowerRegular);
 
             SetupButtons();
