@@ -13,7 +13,7 @@ public class InputTypeGamepadAxis : IInputType
         this.deadzone = deadzone;
     }
 
-    public string GetName(bool shorthand = true) => GetGamepadAxisName(axis, shorthand);
+    public virtual string GetName(bool shorthand = true) => GetGamepadAxisName(axis, shorthand);
 
     public float GetDeadzone() => deadzone;
 

@@ -16,13 +16,13 @@ public class InputTypeGamepadButtonAxis : IInputType
         this.deadzone = deadzone;
     }
 
-    public string GetName(bool shorthand = true)
+    public virtual string GetName(bool shorthand = true)
     {
         string negName = InputTypeGamepadButton.GetGamepadButtonName(neg, shorthand);
         string posName = InputTypeGamepadButton.GetGamepadButtonName(pos, shorthand);
         StringBuilder b = new(negName.Length + posName.Length + 4);
         b.Append(negName);
-        b.Append(" <> ");
+        b.Append('/');
         b.Append(posName);
         return b.ToString();
     }

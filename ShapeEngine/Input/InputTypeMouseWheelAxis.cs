@@ -18,7 +18,7 @@ public class InputTypeMouseWheelAxis : IInputType
     {
         deadzone = ShapeMath.Clamp(value, 0f, 1f);
     }
-    public string GetName(bool shorthand = true) => GetMouseWheelAxisName(axis, shorthand);
+    public virtual string GetName(bool shorthand = true) => GetMouseWheelAxisName(axis, shorthand);
     public InputState GetState(int gamepad = -1)
     {
         if (gamepad > 0) return new();

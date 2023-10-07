@@ -16,13 +16,13 @@ public class InputTypeMouseButtonAxis : IInputType
     public float GetDeadzone() => 0f;
 
     public void SetDeadzone(float value) { }
-    public string GetName(bool shorthand = true)
+    public virtual string GetName(bool shorthand = true)
     {
         string negName = InputTypeMouseButton.GetMouseButtonName(neg, shorthand);
         string posName = InputTypeMouseButton.GetMouseButtonName(pos, shorthand);
         StringBuilder b = new(posName.Length + negName.Length + 4);
         b.Append(negName);
-        b.Append(" <> ");
+        b.Append('/');
         b.Append(posName);
         return b.ToString();
     }

@@ -21,7 +21,7 @@ public class InputTypeKeyboardButton : IInputType
         if (gamepad > 0) return new();
         return GetState(button, prev);
     }
-    public string GetName(bool shorthand = true) => GetKeyboardButtonName(button, shorthand);
+    public virtual string GetName(bool shorthand = true) => GetKeyboardButtonName(button, shorthand);
     public InputDevice GetInputDevice() => InputDevice.Keyboard;
     public IInputType Copy() => new InputTypeKeyboardButton(button);
     

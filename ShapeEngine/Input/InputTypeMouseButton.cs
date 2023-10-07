@@ -18,7 +18,7 @@ public class InputTypeMouseButton : IInputType
         if (gamepad > 0) return new();
         return GetState(button, prev);
     }
-    public string GetName(bool shorthand = true) => GetMouseButtonName(button, shorthand);
+    public virtual string GetName(bool shorthand = true) => GetMouseButtonName(button, shorthand);
     public InputDevice GetInputDevice() => InputDevice.Mouse;
 
     public IInputType Copy() => new InputTypeMouseButton(button);

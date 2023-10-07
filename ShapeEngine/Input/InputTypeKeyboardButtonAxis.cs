@@ -14,13 +14,13 @@ public class InputTypeKeyboardButtonAxis : IInputType
     }
 
     public IInputType Copy() => new InputTypeKeyboardButtonAxis(neg, pos);
-    public string GetName(bool shorthand = true)
+    public virtual string GetName(bool shorthand = true)
     {
         string negName = InputTypeKeyboardButton.GetKeyboardButtonName(neg, shorthand);
         string posName = InputTypeKeyboardButton.GetKeyboardButtonName(pos, shorthand);
         StringBuilder b = new(negName.Length + posName.Length + 4);
         b.Append(negName);
-        b.Append(" <> ");
+        b.Append('/');
         b.Append(posName);
         return b.ToString();
     }

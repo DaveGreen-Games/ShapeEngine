@@ -13,7 +13,7 @@ public class InputTypeGamepadButton : IInputType
     }
     
     public IInputType Copy() => new InputTypeGamepadButton(button, deadzone);
-    public string GetName(bool shorthand = true) => GetGamepadButtonName(button, shorthand);
+    public virtual string GetName(bool shorthand = true) => GetGamepadButtonName(button, shorthand);
     public float GetDeadzone() => deadzone;
 
     public void SetDeadzone(float value)
