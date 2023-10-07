@@ -230,7 +230,7 @@ namespace ShapeEngine.Core.Shapes
             return new Rect(x1, y1, x2 - x1, y2 - y1);
         }
 
-        public readonly (Rect left, Rect right) SplitVertical(float f)
+        public readonly (Rect left, Rect right) SplitV(float f)
         {
             var topPoint = TopLeft.Lerp(TopRight, f);
             var bottomPoint = BottomLeft.Lerp(BottomRight, f);
@@ -238,7 +238,7 @@ namespace ShapeEngine.Core.Shapes
             Rect right = new(topPoint, BottomRight);
             return (left, right);
         }
-        public readonly (Rect top, Rect bottom) SplitHorizontal(float f)
+        public readonly (Rect top, Rect bottom) SplitH(float f)
         {
             var leftPoint = TopLeft.Lerp(BottomLeft, f);
             var rightPoint = TopRight.Lerp(BottomRight, f);
@@ -248,12 +248,96 @@ namespace ShapeEngine.Core.Shapes
         }
         public readonly (Rect topLeft, Rect bottomLeft, Rect bottomRight, Rect TopRight) Split(float horizontal, float vertical)
         {
-            var hor = SplitHorizontal(horizontal);
-            var top = hor.top.SplitVertical(vertical);
-            var bottom = hor.bottom.SplitVertical(vertical);
+            var hor = SplitH(horizontal);
+            var top = hor.top.SplitV(vertical);
+            var bottom = hor.bottom.SplitV(vertical);
             return (top.left, bottom.left, bottom.right, top.right);
         }
 
+        public List<Rect> SplitH(int columns)
+        {
+            if (columns < 2) return new() { this };
+            List<Rect> rects = new();
+            Vector2 startPos = new(X, Y);
+
+            float elementWidth = Width / columns;
+            Vector2 offset = new(0f, 0f);
+            for (int i = 0; i < columns; i++)
+            {
+                Vector2 size = new(elementWidth, Height);
+                Rect r = new(startPos + offset, size, new(0f));
+                rects.Add(r);
+                offset += new Vector2(elementWidth, 0f);
+            }
+            return rects;
+        }
+        public List<Rect> SplitV(int rows)
+        {
+            List<Rect> rects = new();
+            Vector2 startPos = new(X, Y);
+
+            float elementHeight = Height / rows;
+            Vector2 offset = new(0f, 0f);
+            for (int i = 0; i < rows; i++)
+            {
+                Vector2 size = new(Width, elementHeight);
+                Rect r = new(startPos + offset, size, new(0f));
+                rects.Add(r);
+                offset += new Vector2(0, elementHeight);
+            }
+            return rects;
+        }
+        public List<Rect> Split (int columns, int rows, bool leftToRight = true)
+        {
+            var rects = new List<Rect>();
+            if (leftToRight)
+            {
+                var verticals = SplitV(rows);
+                foreach (var vertical in verticals)
+                {
+                    rects.AddRange(vertical.SplitH(columns));
+                }
+            }
+            else
+            {
+                var horizontals = SplitH(columns);
+                foreach (var horizontal in horizontals)
+                {
+                    rects.AddRange(horizontal.SplitV(rows));
+                }
+            }
+            
+
+            return rects;
+
+
+            // List<Rect> rects = new();
+            // Vector2 startPos = new(rect.X, rect.Y);
+            //
+            // int hGaps = columns - 1;
+            // float totalWidth = rect.Width;
+            // float hGapSize = totalWidth * hGapRelative;
+            // float elementWidth = (totalWidth - hGaps * hGapSize) / columns;
+            // Vector2 hGap = new(hGapSize + elementWidth, 0);
+            //
+            // int vGaps = rows - 1;
+            // float totalHeight = rect.Height;
+            // float vGapSize = totalHeight * vGapRelative;
+            // float elementHeight = (totalHeight - vGaps * vGapSize) / rows;
+            // Vector2 vGap = new(0, vGapSize + elementHeight);
+            //
+            // Vector2 elementSize = new(elementWidth, elementHeight);
+            //
+            // for (int i = 0; i < count; i++)
+            // {
+            //     var coords = ShapeUtils.TransformIndexToCoordinates(i, rows, columns, leftToRight);
+            //     Rect r = new(startPos + hGap * coords.col + vGap * coords.row, elementSize, new(0f));
+            //     rects.Add(r);
+            // }
+            // return rects;
+        }
+        
+        
        
         public readonly Points ToPoints() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
         public readonly Polygon ToPolygon() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
@@ -403,7 +487,7 @@ namespace ShapeEngine.Core.Shapes
         public Points GetRandomPointsOnEdge(int amount) => GetEdges().GetRandomPoints(amount);
 
         #endregion
-
+        
         #region Static
         public static bool IsPointInRect(Vector2 point, Vector2 topLeft, Vector2 size)
         {
@@ -414,6 +498,8 @@ namespace ShapeEngine.Core.Shapes
 
             return left <= point.X && right >= point.X && top <= point.Y && bottom >= point.Y;
         }
+
+        public static Rect Empty => new();
         #endregion
         
         #region IShape

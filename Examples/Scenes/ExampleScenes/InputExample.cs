@@ -28,7 +28,7 @@ namespace Examples.Scenes.ExampleScenes
             this.font = font;
             if (left)
             {
-                title = "LEFT AXIS";
+                title = "AXIS LEFT";
                 var keyboardHorizontal = InputAction.CreateInputType(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
                 var keyboardVertical = InputAction.CreateInputType(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
             
@@ -45,13 +45,18 @@ namespace Examples.Scenes.ExampleScenes
 
                 // var mouseHorizontal = InputAction.CreateInputType(ShapeMouseAxis.HORIZONTAL);
                 // var mouseVertical = InputAction.CreateInputType(ShapeMouseAxis.VERTICAL);
-            
-                joystickHorizontal = new(keyboardHorizontal, gamepadButtonHorizontal, gamepadHorizontal );//, mouseWheelHorizontal, mouseHorizontal);
-                joystickVertical = new(keyboardVertical, gamepadButtonVertical, gamepadVertical );//, mouseWheelVertical, mouseVertical);
+
+                // var mouseButtonAxisHorizontal =
+                //     InputAction.CreateInputType(ShapeMouseButton.LEFT_AXIS, ShapeMouseButton.RIGHT_AXIS);
+                // var mouseButtonAxisVertical =
+                //     InputAction.CreateInputType(ShapeMouseButton.UP_AXIS, ShapeMouseButton.DOWN_AXIS);
+                
+                joystickHorizontal = new(keyboardHorizontal, gamepadButtonHorizontal, gamepadHorizontal);//, mouseButtonAxisHorizontal );//, mouseWheelHorizontal, mouseHorizontal);
+                joystickVertical = new(keyboardVertical, gamepadButtonVertical, gamepadVertical);//, mouseButtonAxisVertical );//, mouseWheelVertical, mouseVertical);
             }
             else
             {
-                title = "RIGHT AXIS";
+                title = "AXIS RIGHT";
                 var keyboardHorizontal = InputAction.CreateInputType(ShapeKeyboardButton.LEFT, ShapeKeyboardButton.RIGHT);
                 var keyboardVertical = InputAction.CreateInputType(ShapeKeyboardButton.UP, ShapeKeyboardButton.DOWN);
             
@@ -63,14 +68,19 @@ namespace Examples.Scenes.ExampleScenes
                 var gamepadHorizontal = InputAction.CreateInputType(ShapeGamepadAxis.RIGHT_X, 0.2f);
                 var gamepadVertical = InputAction.CreateInputType(ShapeGamepadAxis.RIGHT_Y, 0.2f);
 
+                // var mouseWheelButtonAxisHorizontal =
+                //     InputAction.CreateInputType(ShapeMouseButton.MW_LEFT, ShapeMouseButton.MW_RIGHT);
+                // var mouseWheelButtonAxisVertical =
+                //     InputAction.CreateInputType(ShapeMouseButton.MW_UP, ShapeMouseButton.MW_DOWN);
+                //
                 // var mouseWheelHorizontal = InputAction.CreateInputType(ShapeMouseWheelAxis.HORIZONTAL);
                 // var mouseWheelVertical = InputAction.CreateInputType(ShapeMouseWheelAxis.VERTICAL);
 
                 // var mouseHorizontal = InputAction.CreateInputType(ShapeMouseAxis.HORIZONTAL);
                 // var mouseVertical = InputAction.CreateInputType(ShapeMouseAxis.VERTICAL);
             
-                joystickHorizontal = new(keyboardHorizontal, gamepadButtonHorizontal, gamepadHorizontal ); //, mouseWheelHorizontal, mouseHorizontal);
-                joystickVertical = new(keyboardVertical, gamepadButtonVertical, gamepadVertical );//, mouseWheelVertical, mouseVertical);
+                joystickHorizontal = new(keyboardHorizontal, gamepadButtonHorizontal, gamepadHorizontal );//, mouseWheelButtonAxisHorizontal ); //, mouseWheelHorizontal, mouseHorizontal);
+                joystickVertical = new(keyboardVertical, gamepadButtonVertical, gamepadVertical );//, mouseWheelButtonAxisVertical );//, mouseWheelVertical, mouseVertical);
             }
 
             joystickHorizontal.AxisGravity = 4f;
@@ -123,7 +133,7 @@ namespace Examples.Scenes.ExampleScenes
             var inputs = joystickHorizontal.GetInputs(curInputDevice);
             inputs.AddRange(joystickVertical.GetInputs(curInputDevice));
             var inputNamesRect = insideBottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
-            var rects = inputNamesRect.GetAlignedRectsVertical(inputs.Count, 0f, 1f);
+            var rects = inputNamesRect.SplitV(inputs.Count); // inputNamesRect.GetAlignedRectsVertical(inputs.Count, 0f, 1f);
             for (var i = 0; i < inputs.Count; i++)
             {
                 font.DrawText(inputs[i].GetName(true), rects[i], 1f, new Vector2(0.5f, 0f), ExampleScene.ColorMedium);
@@ -174,7 +184,6 @@ namespace Examples.Scenes.ExampleScenes
             font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), flashColor1);
         }
     }
-
     internal class AxisVisualizer : InputVisualizer
     {
         public override void Update(float dt, int gamepad, InputDevice inputDevice)
@@ -187,7 +196,6 @@ namespace Examples.Scenes.ExampleScenes
             
         }
     }
-    
     internal class TriggerVisualizer : InputVisualizer
     {
         public override void Update(float dt, int gamepad, InputDevice inputDevice)
@@ -200,17 +208,97 @@ namespace Examples.Scenes.ExampleScenes
             
         }
     }
-
     internal class ButtonVisualizer : InputVisualizer
     {
+        private string title;
+        private Font font;
+        private float flashTimer = 0f;
+        private const float flashDuration = 1f;
+        private InputDevice curInputDevice = InputDevice.Keyboard;
+
+        private InputAction button;
+        
+        public ButtonVisualizer(bool left, Font font)
+        {
+            this.font = font;
+            
+
+            if (left)
+            {
+                this.title = "BUTTON LEFT";
+                var tab = new InputTypeKeyboardButton(ShapeKeyboardButton.TAB);
+                var select = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_LEFT);
+                var lmb = new InputTypeMouseButton(ShapeMouseButton.LEFT);
+                button = new(tab, select, lmb);
+            }
+            else
+            {
+                this.title = "BUTTON RIGHT";
+                var space = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
+                var start = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_RIGHT);
+                var rmb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
+                button = new(space, start, rmb);
+            }
+        }
         public override void Update(float dt, int gamepad, InputDevice inputDevice)
         {
+            if (button.HasInput(inputDevice))
+            {
+                curInputDevice = inputDevice;
+            }
             
+            button.Gamepad = gamepad;
+            button.Update(dt);
+            
+
+            if (button.State.Down)
+            {
+                flashTimer = flashDuration;
+            }
+
+            if (flashTimer > 0f)
+            {
+                flashTimer -= dt;
+                if (flashTimer <= 0) flashTimer = 0f;
+            }
         }
-        
+
         public override void Draw(Rect area)
         {
+            float flashF = flashTimer / flashDuration;
+            Color flashColor1 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight1, flashF);
+            Color flashColor2 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight2, flashF);
+            Color flashColor3 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight3, flashF);
             
+            
+            float lineThicknessMax = area.Size.Min() * 0.05f;
+            
+            Rect top = area.ApplyMargins(0, 0, 0, 0.8f);
+            Rect bottom = area.ApplyMargins(0, 0, 0.2f, 0);
+            float marginSize = bottom.Size.Min() * 0.025f;
+            Rect insideBottom = bottom.ApplyMarginsAbsolute(marginSize, marginSize, marginSize, marginSize);//  bottom.ApplyMargins(0.025f, 0.025f, 0.025f, 0.025f);
+            
+            var insideRect = insideBottom.ScaleSize(0f, new(0.5f)).Lerp(insideBottom, MathF.Abs(button.State.Axis));
+            insideRect.Draw(flashColor2);
+            
+            var inputs = button.GetInputs(curInputDevice);
+            var inputNamesRect = insideBottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
+            var rects = inputNamesRect.SplitV(inputs.Count); // inputNamesRect.GetAlignedRectsVertical(inputs.Count, 0f, 1f);
+            for (var i = 0; i < inputs.Count; i++)
+            {
+                font.DrawText(inputs[i].GetName(true), rects[i], 1f, new Vector2(0.5f, 0f), ExampleScene.ColorMedium);
+            }
+            
+            insideBottom.DrawLines(lineThicknessMax /3, flashColor1);
+
+            if (button.State.Down)
+            {
+                bottom.DrawLines(lineThicknessMax, ExampleScene.ColorHighlight2);
+            }
+
+            
+            
+            font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), flashColor1);
         }
     }
     
@@ -223,6 +311,8 @@ namespace Examples.Scenes.ExampleScenes
 
         private JoystickVisualizer joystickLeft;
         private JoystickVisualizer joystickRight;
+        private ButtonVisualizer buttonLeft;
+        private ButtonVisualizer buttonRight;
         public InputExample()
         {
             Title = "Input Example";
@@ -230,6 +320,8 @@ namespace Examples.Scenes.ExampleScenes
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
             joystickLeft = new(true, font);
             joystickRight = new(false, font);
+            buttonLeft = new(true, font);
+            buttonRight = new(false, font);
         }
 
         
@@ -287,11 +379,13 @@ namespace Examples.Scenes.ExampleScenes
             if (gamepad != null)
             {
                 gamepadIndex = gamepad.Index;
-                gamepadIndex = gamepad.Index;
             }
             
             joystickLeft.Update(dt, gamepadIndex, currentInputDevice);
             joystickRight.Update(dt, gamepadIndex, currentInputDevice);
+            
+            buttonLeft.Update(dt, gamepadIndex, currentInputDevice);
+            buttonRight.Update(dt, gamepadIndex, currentInputDevice);
         }
         protected override void DrawGameExample(ScreenInfo game)
         {
@@ -300,11 +394,19 @@ namespace Examples.Scenes.ExampleScenes
         protected override void DrawGameUIExample(ScreenInfo ui)
         {
             var screenArea = ui.Area;
+            
             var joystickLeftRect = screenArea.ApplyMargins(0.025f, 0.75f, 0.6f, 0.05f);
             var joystickRightRect = screenArea.ApplyMargins(0.75f, 0.025f, 0.6f, 0.05f);
             
             joystickLeft.Draw(joystickLeftRect);
             joystickRight.Draw(joystickRightRect);
+
+
+            var buttonLeftRect = screenArea.ApplyMargins(0.05f, 0.75f, 0.4f, 0.45f);
+            var buttonRightRect = screenArea.ApplyMargins(0.75f, 0.05f, 0.4f, 0.45f);
+            
+            buttonLeft.Draw(buttonLeftRect);
+            buttonRight.Draw(buttonRightRect);
             
             DrawGamepadInfo(ui.Area);
             DrawInputDeviceInfo(ui.Area);

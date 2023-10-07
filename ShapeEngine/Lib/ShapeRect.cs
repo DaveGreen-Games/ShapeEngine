@@ -78,6 +78,7 @@ namespace ShapeEngine.Lib
             }
             return rects;
         }
+        
         #endregion
 
         #region Collision

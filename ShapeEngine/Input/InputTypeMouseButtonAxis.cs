@@ -53,10 +53,10 @@ public class InputTypeMouseButtonAxis : IInputType
         {
             //TODO is this working or do I need to change it to axis system?
             Vector2 value = GetMouseWheelMoveV();
-            if (button == ShapeMouseButton.MW_LEFT) return MathF.Abs(value.X);
-            if (button == ShapeMouseButton.MW_RIGHT) return value.X;
-            if (button == ShapeMouseButton.MW_UP) return MathF.Abs(value.Y);
-            if (button == ShapeMouseButton.MW_DOWN) return value.Y;
+            if (button == ShapeMouseButton.MW_LEFT) return value.X < 0f ? MathF.Abs(value.X) : 0f;
+            if (button == ShapeMouseButton.MW_RIGHT) return value.X > 0 ? value.X : 0f;
+            if (button == ShapeMouseButton.MW_UP) return value.Y < 0f ? MathF.Abs(value.Y) : 0f;
+            if (button == ShapeMouseButton.MW_DOWN) return value.Y > 0 ? value.Y : 0f;
             return 0f;
         }
         if (id >= 20)
