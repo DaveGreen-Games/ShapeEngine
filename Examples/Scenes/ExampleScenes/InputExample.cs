@@ -9,6 +9,63 @@ using ShapeEngine.Lib;
 
 namespace Examples.Scenes.ExampleScenes
 {
+    internal abstract class InputVisualizer
+    {
+        public abstract void Update(float dt, int gamepad, InputDevice inputDevice);
+        public abstract void Draw(Rect area);
+    }
+    internal class JoystickVisualizer : InputVisualizer
+    {
+        public override void Update(float dt, int gamepad, InputDevice inputDevice)
+        {
+            
+        }
+
+        public override void Draw(Rect area)
+        {
+            
+        }
+    }
+
+    internal class AxisVisualizer : InputVisualizer
+    {
+        public override void Update(float dt, int gamepad, InputDevice inputDevice)
+        {
+            
+        }
+        
+        public override void Draw(Rect area)
+        {
+            
+        }
+    }
+    
+    internal class TriggerVisualizer : InputVisualizer
+    {
+        public override void Update(float dt, int gamepad, InputDevice inputDevice)
+        {
+            
+        }
+        
+        public override void Draw(Rect area)
+        {
+            
+        }
+    }
+
+    internal class ButtonVisualizer : InputVisualizer
+    {
+        public override void Update(float dt, int gamepad, InputDevice inputDevice)
+        {
+            
+        }
+        
+        public override void Draw(Rect area)
+        {
+            
+        }
+    }
+    
     public class InputExample : ExampleScene
     {
         Font font;
