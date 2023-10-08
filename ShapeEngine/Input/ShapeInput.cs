@@ -42,6 +42,13 @@ public class ShapeInput
         else inputActions.Add(id, newAction);
         return id;
     }
+    public void AddActions(params InputAction[] newActions)
+    {
+        foreach (var action in newActions)
+        {
+            AddAction(action);
+        }
+    }
     public bool RemoveAction(uint id) => inputActions.Remove(id);
 
     public InputState GetActionState(uint id)
@@ -180,20 +187,55 @@ public class ShapeInput
 
         return false;
     }
-    public static bool WasGamepadUsed(List<int> connectedGamepads, float deadzone = 0.05f)
+    public static int WasGamepadUsed(List<int> connectedGamepads, float deadzone = 0.05f)
     {
-        if (Raylib.GetGamepadButtonPressed() > 0) return true;
+        var gamepadButton = WasGamepadButtonUsed(connectedGamepads);
+        if (gamepadButton >= 0) return gamepadButton;
+        //if (Raylib.GetGamepadButtonPressed() > 0) return true;
         foreach (int gamepad in connectedGamepads)
         {
-            if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_X)) > deadzone) return true;
-            if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_Y)) > deadzone) return true;
-            if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_X)) > deadzone) return true;
-            if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_Y)) > deadzone) return true;
-            if ((Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_TRIGGER) + 1f) / 2f > deadzone / 2) return true;
-            if ((Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_TRIGGER) + 1f) / 2f > deadzone / 2) return true;
+            if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_X)) > deadzone) return gamepad;
+            if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_Y)) > deadzone) return gamepad;
+            if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_X)) > deadzone) return gamepad;
+            if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_Y)) > deadzone) return gamepad;
+            if ((Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_TRIGGER) + 1f) / 2f > deadzone / 2) return gamepad;
+            if ((Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_TRIGGER) + 1f) / 2f > deadzone / 2) return gamepad;
         }
 
-        return false;
+        return -1;
+    }
+
+    public static int WasGamepadButtonUsed(List<int> connectedGamepads)
+    {
+        var values = Enum.GetValues<GamepadButton>();
+        foreach (var gamepad in connectedGamepads)
+        {
+            foreach (var b in  values)
+            {
+                if (Raylib.IsGamepadButtonDown(gamepad, b)) return gamepad;
+            }
+        }
+
+        return -1;
+        
+        // GAMEPAD_BUTTON_UNKNOWN,
+        // GAMEPAD_BUTTON_LEFT_FACE_UP,
+        // GAMEPAD_BUTTON_LEFT_FACE_RIGHT,
+        // GAMEPAD_BUTTON_LEFT_FACE_DOWN,
+        // GAMEPAD_BUTTON_LEFT_FACE_LEFT,
+        // GAMEPAD_BUTTON_RIGHT_FACE_UP,
+        // GAMEPAD_BUTTON_RIGHT_FACE_RIGHT,
+        // GAMEPAD_BUTTON_RIGHT_FACE_DOWN,
+        // GAMEPAD_BUTTON_RIGHT_FACE_LEFT,
+        // GAMEPAD_BUTTON_LEFT_TRIGGER_1,
+        // GAMEPAD_BUTTON_LEFT_TRIGGER_2,
+        // GAMEPAD_BUTTON_RIGHT_TRIGGER_1,
+        // GAMEPAD_BUTTON_RIGHT_TRIGGER_2,
+        // GAMEPAD_BUTTON_MIDDLE_LEFT,
+        // GAMEPAD_BUTTON_MIDDLE,
+        // GAMEPAD_BUTTON_MIDDLE_RIGHT,
+        // GAMEPAD_BUTTON_LEFT_THUMB,
+        // GAMEPAD_BUTTON_RIGHT_THUMB,
     }
     #endregion
 }

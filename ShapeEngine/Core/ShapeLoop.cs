@@ -244,6 +244,7 @@ public class ShapeLoop
     
     public int MaxGamepads => gamepads.Length;
     public readonly ShapeInput Input = new();
+    public Gamepad? LastUsedGamepad { get; private set; } = null;
     #endregion
 
     #region Private Members
@@ -484,9 +485,11 @@ public class ShapeLoop
             
             gameTexture.UpdateDimensions(CurScreenSize);
             screenShaderBuffer.UpdateDimensions(CurScreenSize);
-            
-            var mousePosUI = GetMousePosition();
+            var mousePos = ChangeMousePos(dt, GetMousePosition());
+            Raylib.SetMousePosition((int)mousePos.X, (int)mousePos.Y);
+            var mousePosUI = mousePos;// GetMousePosition();
             var mousePosGame = Camera.ScreenToWorld(mousePosUI);
+            
             var screenArea = new Rect(0, 0, CurScreenSize.Width, CurScreenSize.Height);
             var cameraArea = Camera.Area;
 
@@ -625,7 +628,14 @@ public class ShapeLoop
     protected virtual void OnInputDeviceChanged(InputDevice prevDevice, InputDevice newDevice) { }
     protected virtual void OnGamepadConnected(Gamepad gamepad) { }
     protected virtual void OnGamepadDisconnected(Gamepad gamepad) { }
-    
+
+    /// <summary>
+    /// Override this function to manipulate the final mouse position that is used for the rest of the frame.
+    /// </summary>
+    /// <param name="dt">The current delta time.</param>
+    /// <param name="mousePos">The raw mouse position for this frame.</param>
+    /// <returns>Return the new mouse position that should be used.</returns>
+    protected virtual Vector2 ChangeMousePos(float dt, Vector2 mousePos) => mousePos;
     #endregion
 
     
@@ -694,12 +704,30 @@ public class ShapeLoop
         if (CurrentInputDevice == InputDevice.Keyboard)
         {
             if (ShapeInput.WasMouseUsed()) CurrentInputDevice = InputDevice.Mouse;
-            else if (ShapeInput.WasGamepadUsed(connectedGamepadIndices)) CurrentInputDevice = InputDevice.Gamepad;
+            else
+            {
+                var index = ShapeInput.WasGamepadUsed(connectedGamepadIndices);
+                if (index >= 0)
+                {
+                    CurrentInputDevice = InputDevice.Gamepad;
+                    LastUsedGamepad = GetGamepad(index);
+                }
+            }
+            //else if (ShapeInput.WasGamepadUsed(connectedGamepadIndices)) CurrentInputDevice = InputDevice.Gamepad;
         }
         else if (CurrentInputDevice == InputDevice.Mouse)
         {
             if (ShapeInput.WasKeyboardUsed()) CurrentInputDevice = InputDevice.Keyboard;
-            else if (ShapeInput.WasGamepadUsed(connectedGamepadIndices)) CurrentInputDevice = InputDevice.Gamepad;
+            else
+            {
+                var index = ShapeInput.WasGamepadUsed(connectedGamepadIndices);
+                if (index >= 0)
+                {
+                    CurrentInputDevice = InputDevice.Gamepad;
+                    LastUsedGamepad = GetGamepad(index);
+                }
+            }
+            //else if (ShapeInput.WasGamepadUsed(connectedGamepadIndices)) CurrentInputDevice = InputDevice.Gamepad;
         }
         else //gamepad
         {

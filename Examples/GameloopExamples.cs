@@ -8,6 +8,7 @@ using Examples.Scenes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Screen;
 using ShapeEngine.Core.Shapes;
+using ShapeEngine.Input;
 
 namespace Examples
 {
@@ -97,11 +98,57 @@ namespace Examples
 
         private uint crtShaderID = ShapeID.NextID;
         private Vector2 crtCurvature = new(6, 4);
+
+        public readonly uint UIAccessTag = 100;
+        public readonly uint MainAccessTag = 200;
+        public readonly uint SceneAccessTag = 300;
+        
+        public readonly uint InputUICancel = 110;
+        public readonly uint InputUIBack = 111;
+        public readonly uint InputUIAccept = 112;
+        public readonly uint InputUILeft = 113;
+        public readonly uint InputUIRight = 114;
+        public readonly uint InputUIUp = 115;
+        public readonly uint InputUIDown = 116;
+        public readonly uint InputFullscreen = 210;
+        public readonly uint InputMaximize = 211;
+        public readonly uint InputNextMonitor = 212;
+        public readonly uint InputCRTChange = 213;
+        public readonly uint InputCRTToggle = 214;
+        public readonly uint InputZoomIn = 310;
+        public readonly uint InputZoomOut = 311;
+        public readonly uint InputPause = 312;
+        
         
         public GameloopExamples() : base(new(1920, 1080), true)
         {
             
             BackgroundColor = ExampleScene.ColorDark;
+
+            InputAction uiCancel = new();
+            InputAction uiBack = new();
+            InputAction uiAccept = new();
+            InputAction uiLeft = new();
+            InputAction uiRight = new();
+            InputAction uiUp = new();
+            InputAction uiDown = new();
+            InputAction fullscreen = new();
+            InputAction maximize = new();
+            InputAction nextMonitor = new();
+            InputAction crtChange = new();
+            InputAction crtToggle = new();
+            InputAction zoomIn = new();
+            InputAction zoomOut = new();
+            InputAction pause = new();
+            
+            Input.AddActions
+            (
+                uiCancel, uiBack, uiAccept, uiLeft, uiRight, uiUp, uiDown,
+                fullscreen, maximize, nextMonitor,
+                crtChange, crtToggle,
+                zoomIn, zoomOut,
+                pause
+            );
         }
         protected override void LoadContent()
         {
@@ -145,6 +192,27 @@ namespace Examples
             Raylib.HideCursor();
             SwitchCursor(new SimpleCursorGameUI());
         }
+
+        protected override Vector2 ChangeMousePos(float dt, Vector2 mousePos)
+        {
+            if (CurrentInputDevice == InputDevice.Gamepad && LastUsedGamepad != null)
+            {
+                float speed = 500f * dt;
+                int gamepad = LastUsedGamepad.Index;
+                var x =Input.GetState(ShapeGamepadAxis.LEFT_X, ShapeInput.AllAccessTag, gamepad, 0.05f).AxisRaw;
+                var y =Input.GetState(ShapeGamepadAxis.LEFT_Y, ShapeInput.AllAccessTag, gamepad, 0.05f).AxisRaw;
+
+                var movement = new Vector2(x, y);
+                float l = movement.Length();
+                if (l <= 0f) return mousePos;
+                
+                var dir = movement / l;
+                return mousePos + dir * l * speed;
+            }
+
+            return mousePos;
+        }
+
         protected override void UnloadContent()
         {
             ContentLoader.UnloadFonts(fonts.Values);
