@@ -180,7 +180,7 @@ public class ShapeInput
 
         return false;
     }
-    public static bool WasGamepadUsed(List<int> connectedGamepads, float deadzone = 0.2f)
+    public static bool WasGamepadUsed(List<int> connectedGamepads, float deadzone = 0.05f)
     {
         if (Raylib.GetGamepadButtonPressed() > 0) return true;
         foreach (int gamepad in connectedGamepads)
@@ -189,8 +189,8 @@ public class ShapeInput
             if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_Y)) > deadzone) return true;
             if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_X)) > deadzone) return true;
             if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_Y)) > deadzone) return true;
-            if (Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_TRIGGER) > deadzone) return true;
-            if (Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_TRIGGER) > deadzone) return true;
+            if ((Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_TRIGGER) + 1f) / 2f > deadzone / 2) return true;
+            if ((Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_TRIGGER) + 1f) / 2f > deadzone / 2) return true;
         }
 
         return false;

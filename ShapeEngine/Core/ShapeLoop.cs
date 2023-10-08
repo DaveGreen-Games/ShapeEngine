@@ -694,12 +694,12 @@ public class ShapeLoop
         if (CurrentInputDevice == InputDevice.Keyboard)
         {
             if (ShapeInput.WasMouseUsed()) CurrentInputDevice = InputDevice.Mouse;
-            else if (ShapeInput.WasGamepadUsed(connectedGamepadIndices, 0.2f)) CurrentInputDevice = InputDevice.Gamepad;
+            else if (ShapeInput.WasGamepadUsed(connectedGamepadIndices)) CurrentInputDevice = InputDevice.Gamepad;
         }
         else if (CurrentInputDevice == InputDevice.Mouse)
         {
             if (ShapeInput.WasKeyboardUsed()) CurrentInputDevice = InputDevice.Keyboard;
-            else if (ShapeInput.WasGamepadUsed(connectedGamepadIndices, 0.2f)) CurrentInputDevice = InputDevice.Gamepad;
+            else if (ShapeInput.WasGamepadUsed(connectedGamepadIndices)) CurrentInputDevice = InputDevice.Gamepad;
         }
         else //gamepad
         {

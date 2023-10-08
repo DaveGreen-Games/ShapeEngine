@@ -12,7 +12,7 @@ namespace Examples.Scenes.ExampleScenes
     internal abstract class InputVisualizer
     {
         public abstract void Update(float dt, int gamepad, InputDevice inputDevice);
-        public abstract void Draw(Rect area);
+        public abstract void Draw(Rect area, float lineThickness);
     }
     internal class JoystickVisualizer : InputVisualizer
     {
@@ -33,12 +33,12 @@ namespace Examples.Scenes.ExampleScenes
                 var keyboardVertical = InputAction.CreateInputType(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
             
                 var gamepadButtonHorizontal = 
-                    InputAction.CreateInputType(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT, 0.2f);
+                    InputAction.CreateInputType(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT, 0f);
                 var gamepadButtonVertical = 
-                    InputAction.CreateInputType(ShapeGamepadButton.LEFT_FACE_UP, ShapeGamepadButton.LEFT_FACE_DOWN, 0.2f);
+                    InputAction.CreateInputType(ShapeGamepadButton.LEFT_FACE_UP, ShapeGamepadButton.LEFT_FACE_DOWN, 0f);
 
-                var gamepadHorizontal = InputAction.CreateInputType(ShapeGamepadAxis.LEFT_X, 0.2f);
-                var gamepadVertical = InputAction.CreateInputType(ShapeGamepadAxis.LEFT_Y, 0.2f);
+                var gamepadHorizontal = InputAction.CreateInputType(ShapeGamepadAxis.LEFT_X, 0f);
+                var gamepadVertical = InputAction.CreateInputType(ShapeGamepadAxis.LEFT_Y, 0f);
 
                 // var mouseWheelHorizontal = InputAction.CreateInputType(ShapeMouseWheelAxis.HORIZONTAL);
                 // var mouseWheelVertical = InputAction.CreateInputType(ShapeMouseWheelAxis.VERTICAL);
@@ -61,12 +61,12 @@ namespace Examples.Scenes.ExampleScenes
                 var keyboardVertical = InputAction.CreateInputType(ShapeKeyboardButton.UP, ShapeKeyboardButton.DOWN);
             
                 var gamepadButtonHorizontal = 
-                    InputAction.CreateInputType(ShapeGamepadButton.RIGHT_FACE_LEFT, ShapeGamepadButton.RIGHT_FACE_RIGHT, 0.2f);
+                    InputAction.CreateInputType(ShapeGamepadButton.RIGHT_FACE_LEFT, ShapeGamepadButton.RIGHT_FACE_RIGHT, 0f);
                 var gamepadButtonVertical = 
-                    InputAction.CreateInputType(ShapeGamepadButton.RIGHT_FACE_UP, ShapeGamepadButton.RIGHT_FACE_DOWN, 0.2f);
+                    InputAction.CreateInputType(ShapeGamepadButton.RIGHT_FACE_UP, ShapeGamepadButton.RIGHT_FACE_DOWN, 0f);
 
-                var gamepadHorizontal = InputAction.CreateInputType(ShapeGamepadAxis.RIGHT_X, 0.2f);
-                var gamepadVertical = InputAction.CreateInputType(ShapeGamepadAxis.RIGHT_Y, 0.2f);
+                var gamepadHorizontal = InputAction.CreateInputType(ShapeGamepadAxis.RIGHT_X, 0f);
+                var gamepadVertical = InputAction.CreateInputType(ShapeGamepadAxis.RIGHT_Y, 0f);
 
                 // var mouseWheelButtonAxisHorizontal =
                 //     InputAction.CreateInputType(ShapeMouseButton.MW_LEFT, ShapeMouseButton.MW_RIGHT);
@@ -83,10 +83,10 @@ namespace Examples.Scenes.ExampleScenes
                 joystickVertical = new(keyboardVertical, gamepadButtonVertical, gamepadVertical );//, mouseWheelButtonAxisVertical );//, mouseWheelVertical, mouseVertical);
             }
 
-            joystickHorizontal.AxisGravity = 4f;
-            joystickHorizontal.AxisSensitivity = 2f;
-            joystickVertical.AxisGravity = 4f;
-            joystickVertical.AxisSensitivity = 2f;
+            joystickHorizontal.AxisGravity = 0.25f;
+            joystickHorizontal.AxisSensitivity = 0.5f;
+            joystickVertical.AxisGravity = 0.25f;
+            joystickVertical.AxisSensitivity = 0.5f;
 
         }
         public override void Update(float dt, int gamepad, InputDevice inputDevice)
@@ -102,6 +102,13 @@ namespace Examples.Scenes.ExampleScenes
             joystickHorizontal.Update(dt);
             joystickVertical.Update(dt);
             
+            float deadzone = 0.1f;
+            if (MathF.Abs(joystickHorizontal.State.AxisRaw) < deadzone &&
+                MathF.Abs(joystickVertical.State.AxisRaw) < deadzone)
+            {
+                joystickHorizontal.ClearState();
+                joystickVertical.ClearState();
+            }
 
             if (joystickHorizontal.State.Down || joystickVertical.State.Down)
             {
@@ -115,7 +122,7 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
 
-        public override void Draw(Rect area)
+        public override void Draw(Rect area, float lineThickness)
         {
             float flashF = flashTimer / flashDuration;
             Color flashColor1 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight1, flashF);
@@ -123,12 +130,12 @@ namespace Examples.Scenes.ExampleScenes
             Color flashColor3 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight3, flashF);
             
             
-            float lineThicknessMax = area.Size.Min() * 0.025f;
-            
             Rect top = area.ApplyMargins(0, 0, 0, 0.8f);
             Rect bottom = area.ApplyMargins(0, 0, 0.2f, 0);
-            float marginSize = bottom.Size.Min() * 0.025f;
+            float marginSize = bottom.Size.Max() * 0.025f;
             Rect insideBottom = bottom.ApplyMarginsAbsolute(marginSize, marginSize, marginSize, marginSize);//  bottom.ApplyMargins(0.025f, 0.025f, 0.025f, 0.025f);
+            
+            
             
             var inputs = joystickHorizontal.GetInputs(curInputDevice);
             inputs.AddRange(joystickVertical.GetInputs(curInputDevice));
@@ -139,7 +146,7 @@ namespace Examples.Scenes.ExampleScenes
                 font.DrawText(inputs[i].GetName(true), rects[i], 1f, new Vector2(0.5f, 0f), ExampleScene.ColorMedium);
             }
             
-            insideBottom.DrawLines(lineThicknessMax /3, flashColor1);
+            insideBottom.DrawLines(lineThickness / 2, flashColor1);
 
             var segments = bottom.GetEdges();
             var leftSegment = segments[0];
@@ -149,14 +156,14 @@ namespace Examples.Scenes.ExampleScenes
 
             if (joystickHorizontal.State.Down)
             {
-                leftSegment.Draw(lineThicknessMax, ExampleScene.ColorHighlight2);
-                rightSegment.Draw(lineThicknessMax, ExampleScene.ColorHighlight2);
+                leftSegment.Draw(lineThickness, ExampleScene.ColorHighlight2);
+                rightSegment.Draw(lineThickness, ExampleScene.ColorHighlight2);
             }
 
             if (joystickVertical.State.Down)
             {
-                bottomSegment.Draw(lineThicknessMax, ExampleScene.ColorHighlight2);
-                topSegment.Draw(lineThicknessMax, ExampleScene.ColorHighlight2);
+                bottomSegment.Draw(lineThickness, ExampleScene.ColorHighlight2);
+                topSegment.Draw(lineThickness, ExampleScene.ColorHighlight2);
             }
             
             Vector2 movementRaw = new
@@ -176,7 +183,7 @@ namespace Examples.Scenes.ExampleScenes
             Circle inputRawCircle = new(insideBottom.Center + movementRaw * insideBottom.Size * 0.5f, r);
             Circle inputCircle = new(insideBottom.Center + movement * insideBottom.Size * 0.5f, r * 0.5f);
             
-            inputRawCircle.DrawLines(lineThicknessMax / 2, flashColor2, 2f);
+            inputRawCircle.DrawLines(lineThickness / 2, flashColor2, 2f);
             inputCircle.Draw(flashColor3, 32);
 
             
@@ -184,28 +191,109 @@ namespace Examples.Scenes.ExampleScenes
             font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), flashColor1);
         }
     }
-    internal class AxisVisualizer : InputVisualizer
-    {
-        public override void Update(float dt, int gamepad, InputDevice inputDevice)
-        {
-            
-        }
-        
-        public override void Draw(Rect area)
-        {
-            
-        }
-    }
     internal class TriggerVisualizer : InputVisualizer
     {
+        private string title;
+        private Font font;
+        private float flashTimer = 0f;
+        private const float flashDuration = 1f;
+        private InputDevice curInputDevice = InputDevice.Keyboard;
+
+        private InputAction trigger;
+        
+        public TriggerVisualizer(bool left, Font font)
+        {
+            this.font = font;
+            
+
+            if (left)
+            {
+                this.title = "LT";
+                var triggerLeft = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_TRIGGER, 0.05f);
+                trigger = new();
+                trigger.AddInput(triggerLeft);
+            }
+            else
+            {
+                this.title = "RT";
+                var triggerRight = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_TRIGGER, 0.05f);
+                trigger = new();
+                trigger.AddInput(triggerRight);
+            }
+        }
         public override void Update(float dt, int gamepad, InputDevice inputDevice)
         {
+            if (trigger.HasInput(inputDevice))
+            {
+                curInputDevice = inputDevice;
+            }
             
+            trigger.Gamepad = gamepad;
+            trigger.Update(dt);
+            
+
+            if (trigger.State.Down)
+            {
+                flashTimer = flashDuration;
+            }
+
+            if (flashTimer > 0f)
+            {
+                flashTimer -= dt;
+                if (flashTimer <= 0) flashTimer = 0f;
+            }
+
+            trigger.AxisGravity = 0.25f;
+            trigger.AxisSensitivity = 0.25f;
         }
-        
-        public override void Draw(Rect area)
+
+        public override void Draw(Rect area, float lineThickness)
         {
+            float flashF = flashTimer / flashDuration;
+            Color flashColor1 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight1, flashF);
+            Color flashColor2 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight2, flashF);
+            Color flashColor3 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight3, flashF);
             
+            Rect top = area.ApplyMargins(0, 0, 0, 0.8f);
+            Rect bottom = area.ApplyMargins(0, 0, 0.2f, 0);
+            float marginSize = bottom.Size.Max() * 0.025f;
+            Rect insideBottom = bottom.ApplyMarginsAbsolute(marginSize, marginSize, marginSize, marginSize);//  bottom.ApplyMargins(0.025f, 0.025f, 0.025f, 0.025f);
+
+            insideBottom.DrawLines(lineThickness / 2, flashColor1);
+            
+            var startRect = insideBottom.ScaleSize(new Vector2(1f, 0f), new Vector2(0f, 1f));
+            //float axisValue = (trigger.State.Axis + 1f) / 2f;
+            var insideRect = startRect.Lerp(insideBottom, trigger.State.Axis);
+            insideRect.Draw(flashColor2);
+            
+            var inputs = trigger.GetInputs(curInputDevice);
+            var inputNamesRect = insideBottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
+            var count = inputs.Count + 1;
+            var rects = inputNamesRect.SplitV(count);
+            for (var i = 0; i < count; i++)
+            {
+                if (inputs.Count > i)
+                {
+                    font.DrawText(inputs[i].GetName(true), rects[i], 1f, new Vector2(0.5f, 0f), ExampleScene.ColorMedium);
+                }
+                else
+                {
+                    var p = (int)(trigger.State.Axis * 100f);
+                    var percentageText = $"{p}%";
+                    font.DrawText(percentageText, rects[i], 1f, new Vector2(0.5f, 1f), ExampleScene.ColorMedium);
+                }
+            }
+            
+            
+
+            if (trigger.State.Down)
+            {
+                bottom.DrawLines(lineThickness, ExampleScene.ColorHighlight2);
+            }
+
+            
+            
+            font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), flashColor1);
         }
     }
     internal class ButtonVisualizer : InputVisualizer
@@ -263,7 +351,7 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
 
-        public override void Draw(Rect area)
+        public override void Draw(Rect area, float lineThickness)
         {
             float flashF = flashTimer / flashDuration;
             Color flashColor1 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight1, flashF);
@@ -271,12 +359,12 @@ namespace Examples.Scenes.ExampleScenes
             Color flashColor3 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight3, flashF);
             
             
-            float lineThicknessMax = area.Size.Min() * 0.05f;
-            
             Rect top = area.ApplyMargins(0, 0, 0, 0.8f);
             Rect bottom = area.ApplyMargins(0, 0, 0.2f, 0);
-            float marginSize = bottom.Size.Min() * 0.025f;
+            float marginSize = bottom.Size.Max() * 0.025f;
             Rect insideBottom = bottom.ApplyMarginsAbsolute(marginSize, marginSize, marginSize, marginSize);//  bottom.ApplyMargins(0.025f, 0.025f, 0.025f, 0.025f);
+            
+            insideBottom.DrawLines(lineThickness / 2, flashColor1);
             
             var insideRect = insideBottom.ScaleSize(0f, new(0.5f)).Lerp(insideBottom, MathF.Abs(button.State.Axis));
             insideRect.Draw(flashColor2);
@@ -289,11 +377,11 @@ namespace Examples.Scenes.ExampleScenes
                 font.DrawText(inputs[i].GetName(true), rects[i], 1f, new Vector2(0.5f, 0f), ExampleScene.ColorMedium);
             }
             
-            insideBottom.DrawLines(lineThicknessMax /3, flashColor1);
+            
 
             if (button.State.Down)
             {
-                bottom.DrawLines(lineThicknessMax, ExampleScene.ColorHighlight2);
+                bottom.DrawLines(lineThickness, ExampleScene.ColorHighlight2);
             }
 
             
@@ -313,6 +401,8 @@ namespace Examples.Scenes.ExampleScenes
         private JoystickVisualizer joystickRight;
         private ButtonVisualizer buttonLeft;
         private ButtonVisualizer buttonRight;
+        private TriggerVisualizer triggerLeft;
+        private TriggerVisualizer triggerRight;
         public InputExample()
         {
             Title = "Input Example";
@@ -322,6 +412,8 @@ namespace Examples.Scenes.ExampleScenes
             joystickRight = new(false, font);
             buttonLeft = new(true, font);
             buttonRight = new(false, font);
+            triggerLeft = new(true, font);
+            triggerRight = new(false, font);
         }
 
         
@@ -386,6 +478,9 @@ namespace Examples.Scenes.ExampleScenes
             
             buttonLeft.Update(dt, gamepadIndex, currentInputDevice);
             buttonRight.Update(dt, gamepadIndex, currentInputDevice);
+            
+            triggerLeft.Update(dt, gamepadIndex, currentInputDevice);
+            triggerRight.Update(dt, gamepadIndex, currentInputDevice);
         }
         protected override void DrawGameExample(ScreenInfo game)
         {
@@ -395,18 +490,26 @@ namespace Examples.Scenes.ExampleScenes
         {
             var screenArea = ui.Area;
             
+            float lineThickness = MathF.Max(screenArea.Size.Max() * 0.005f, 2f);
+            
             var joystickLeftRect = screenArea.ApplyMargins(0.025f, 0.75f, 0.6f, 0.05f);
             var joystickRightRect = screenArea.ApplyMargins(0.75f, 0.025f, 0.6f, 0.05f);
             
-            joystickLeft.Draw(joystickLeftRect);
-            joystickRight.Draw(joystickRightRect);
+            joystickLeft.Draw(joystickLeftRect, lineThickness);
+            joystickRight.Draw(joystickRightRect, lineThickness);
 
 
             var buttonLeftRect = screenArea.ApplyMargins(0.05f, 0.75f, 0.4f, 0.45f);
             var buttonRightRect = screenArea.ApplyMargins(0.75f, 0.05f, 0.4f, 0.45f);
             
-            buttonLeft.Draw(buttonLeftRect);
-            buttonRight.Draw(buttonRightRect);
+            buttonLeft.Draw(buttonLeftRect, lineThickness);
+            buttonRight.Draw(buttonRightRect, lineThickness);
+            
+            var triggerLeftRect = screenArea.ApplyMargins(0.27f, 0.67f, 0.4f, 0.05f);
+            var triggerRightRect = screenArea.ApplyMargins(0.67f, 0.27f, 0.4f, 0.05f);
+            
+            triggerLeft.Draw(triggerLeftRect, lineThickness);
+            triggerRight.Draw(triggerRightRect, lineThickness);
             
             DrawGamepadInfo(ui.Area);
             DrawInputDeviceInfo(ui.Area);

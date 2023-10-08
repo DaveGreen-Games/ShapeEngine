@@ -9,7 +9,7 @@ public class InputTypeGamepadButtonAxis : IInputType
     private readonly ShapeGamepadButton pos;
     private float deadzone;
 
-    public InputTypeGamepadButtonAxis(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = 0.2f)
+    public InputTypeGamepadButtonAxis(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = 0.1f)
     {
         this.neg = neg;
         this.pos = pos;
@@ -47,13 +47,13 @@ public class InputTypeGamepadButtonAxis : IInputType
 
     public IInputType Copy() => new InputTypeGamepadButtonAxis(neg, pos, deadzone);
 
-    private static float GetAxis(ShapeGamepadButton neg, ShapeGamepadButton pos, int gamepad, float deadzone = 0.2f)
+    private static float GetAxis(ShapeGamepadButton neg, ShapeGamepadButton pos, int gamepad, float deadzone = 0.1f)
     {
         float vNegative = GetValue(neg, gamepad, deadzone);
         float vPositive = GetValue(pos, gamepad, deadzone);
         return vPositive - vNegative;
     }
-    private static float GetValue(ShapeGamepadButton button, int gamepad, float deadzone = 0.2f)
+    private static float GetValue(ShapeGamepadButton button, int gamepad, float deadzone = 0.1f)
     {
         if (gamepad < 0) return 0f;
 
@@ -80,7 +80,7 @@ public class InputTypeGamepadButtonAxis : IInputType
         
         return IsGamepadButtonDown(gamepad, id) ? 1f : 0f;
     }
-    public static InputState GetState(ShapeGamepadButton neg, ShapeGamepadButton pos, int gamepad, float deadzone = 0.2f)
+    public static InputState GetState(ShapeGamepadButton neg, ShapeGamepadButton pos, int gamepad, float deadzone = 0.1f)
     {
         float axis = GetAxis(neg, pos, gamepad, deadzone);
         bool down = axis != 0f;

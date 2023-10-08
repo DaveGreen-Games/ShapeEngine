@@ -7,7 +7,7 @@ public class InputTypeGamepadAxis : IInputType
     private readonly ShapeGamepadAxis axis;
     private float deadzone;
 
-    public InputTypeGamepadAxis(ShapeGamepadAxis axis, float deadzone = 0.2f)
+    public InputTypeGamepadAxis(ShapeGamepadAxis axis, float deadzone = 0.1f)
     {
         this.axis = axis; 
         this.deadzone = deadzone;
@@ -35,21 +35,24 @@ public class InputTypeGamepadAxis : IInputType
     public InputDevice GetInputDevice() => InputDevice.Gamepad;
     public IInputType Copy() => new InputTypeGamepadAxis(axis);
 
-    private static float GetValue(ShapeGamepadAxis axis, int gamepad, float deadzone = 0.2f)
+    private static float GetValue(ShapeGamepadAxis axis, int gamepad, float deadzone = 0.1f)
     {
         if (gamepad < 0) return 0f;
         float value = GetGamepadAxisMovement(gamepad, (int)axis);
-        if (MathF.Abs(value) < deadzone) return 0f;
-        return value;
+        if (axis is ShapeGamepadAxis.LEFT_TRIGGER or ShapeGamepadAxis.RIGHT_TRIGGER)
+        {
+            value = (value + 1f) / 2f;
+        }
+        return MathF.Abs(value) < deadzone ? 0f : value;
     }
-    public static InputState GetState(ShapeGamepadAxis axis, int gamepad, float deadzone = 0.2f)
+    public static InputState GetState(ShapeGamepadAxis axis, int gamepad, float deadzone = 0.1f)
     {
         float axisValue = GetValue(axis, gamepad, deadzone);
         bool down = axisValue != 0f;
         return new(down, !down, axisValue, gamepad);
     }
     public static InputState GetState(ShapeGamepadAxis axis, InputState previousState, int gamepad,
-        float deadzone = 0.2f)
+        float deadzone = 0.1f)
     {
         return new(previousState, GetState(axis, gamepad, deadzone));
     }

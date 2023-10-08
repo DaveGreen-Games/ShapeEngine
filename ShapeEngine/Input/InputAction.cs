@@ -91,6 +91,11 @@ public class InputAction
     }
     
     public InputState State { get; private set; } = new();
+
+    public void ClearState()
+    {
+        State = new InputState(false, true, 0f, Gamepad);
+    }
     public InputState Consume()
     {
         var returnValue = State;
@@ -172,20 +177,22 @@ public class InputAction
             {
                 var axisChange = 0f;
                 //var snapValue = 0f;
+                float gravity = axisGravitiy <= 0f ? 0f : 1f / axisGravitiy;
+                float sensitivity = axisSensitivity <= 0f ? 0f : 1f / axisSensitivity;
                 if (dif is > 1 or < -1) //snap
                 {
                     axisChange += -State.Axis;//snapping to 0
-                    axisChange += difSign * AxisSensitivity * dt;
+                    axisChange += difSign * sensitivity * dt;
                 }
                 else //move
                 {
                     if (raw == 0)//gravity
                     {
-                        axisChange += difSign * AxisGravity * dt;
+                        axisChange += difSign * gravity * dt;
                     }
                     else//sensitivity
                     {
-                        axisChange += difSign * AxisSensitivity * dt;
+                        axisChange += difSign * sensitivity * dt;
                     }
                 }
 

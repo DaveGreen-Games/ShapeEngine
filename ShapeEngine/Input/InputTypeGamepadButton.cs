@@ -6,7 +6,7 @@ public class InputTypeGamepadButton : IInputType
 {
     private readonly ShapeGamepadButton button;
     private float deadzone;
-    public InputTypeGamepadButton(ShapeGamepadButton button, float deadzone = 0.2f)
+    public InputTypeGamepadButton(ShapeGamepadButton button, float deadzone = 0.1f)
     {
         this.button = button; 
         this.deadzone = deadzone;
@@ -30,7 +30,7 @@ public class InputTypeGamepadButton : IInputType
         return GetState(button, prev, gamepad, deadzone);
     }
     public InputDevice GetInputDevice() => InputDevice.Gamepad;
-    private static bool IsDown(ShapeGamepadButton button, int gamepad, float deadzone = 0.2f)
+    private static bool IsDown(ShapeGamepadButton button, int gamepad, float deadzone = 0.1f)
     {
         if (gamepad < 0) return false;
         
@@ -53,13 +53,13 @@ public class InputTypeGamepadButton : IInputType
         
         return IsGamepadButtonDown(gamepad, id);
     }
-    public static InputState GetState(ShapeGamepadButton button, int gamepad, float deadzone = 0.2f)
+    public static InputState GetState(ShapeGamepadButton button, int gamepad, float deadzone = 0.1f)
     {
         bool down = IsDown(button, gamepad, deadzone);
         return new(down, !down, down ? 1f : 0f, gamepad);
     }
     public static InputState GetState(ShapeGamepadButton button, InputState previousState, int gamepad,
-        float deadzone = 0.2f)
+        float deadzone = 0.1f)
     {
         return new(previousState, GetState(button, gamepad, deadzone));
     }
