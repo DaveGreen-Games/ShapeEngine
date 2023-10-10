@@ -161,7 +161,7 @@ namespace ShapeEngine.Lib
         {
             //vector2 with length 0 can not be normalized (division by 0)
             //and vector2 normalize does not check for that...
-            if (v.X == 0f && v.Y == 0f) return new Vector2(0f, 0f);
+            if (v is { X: 0f, Y: 0f }) return new Vector2(0f, 0f);
             return Vector2.Normalize(v); 
         } 
         public static Vector2 Reflect(this Vector2 v, Vector2 n) { return Vector2.Reflect(v, n); } //RayMath.Vector2Reflect(v, n);
@@ -173,6 +173,18 @@ namespace ShapeEngine.Lib
 
             float scale = 1f + (distance / v.Length());
             return v * scale; // Scale(v, scale);
+        }
+
+        /// <summary>
+        /// Returns the product of v.Normalized() * v
+        /// </summary>
+        /// <param name="v"></param>
+        /// <returns></returns>
+        public static Vector2 NormalizeScaled(this Vector2 v)
+        {
+            float l = v.Length();
+            if (l <= 0f) return v;
+            return (v / l) * v;
         }
         public static Vector2 SquareRoot(this Vector2 v) { return Vector2.SquareRoot(v); }
         public static Vector2 Rotate(this Vector2 v, float angleRad) 

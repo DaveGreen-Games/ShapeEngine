@@ -68,8 +68,31 @@ public class ShapeInput
     {
         return !inputActions.ContainsKey(id) ? null : inputActions[id];
     }
+
+    public void UpdateActionGamepad(int gamepad)
+    {
+        foreach (var input in inputActions.Values)
+        {
+            input.Gamepad = gamepad;
+        }
+    }
+    public void UpdateActionGamepad(uint accessTag, int gamepad)
+    {
+        foreach (var input in inputActions.Values)
+        {
+            if(input.AccessTag != accessTag) continue;
+            input.Gamepad = gamepad;
+        }
+    }
     #endregion
 
+    public void Update(float dt)
+    {
+        foreach (var input in inputActions.Values)
+        {
+            input.Update(dt);
+        }
+    }
     #region Basic
     public InputState GetState(ShapeKeyboardButton button, uint accessTag)
     {

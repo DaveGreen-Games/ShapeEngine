@@ -394,7 +394,7 @@ namespace Examples.Scenes.ExampleScenes
     {
         Font font;
 
-        private Gamepad? gamepad = null;
+        //private Gamepad? gamepad = null;
         private InputDevice currentInputDevice = InputDevice.Keyboard;
 
         private JoystickVisualizer joystickLeft;
@@ -419,30 +419,30 @@ namespace Examples.Scenes.ExampleScenes
         
         public override void Activate(IScene oldScene)
         {
-            gamepad = GAMELOOP.RequestGamepad(0);
+            //gamepad = GAMELOOP.RequestGamepad(0);
             currentInputDevice = GAMELOOP.CurrentInputDevice;
         }
 
         public override void Deactivate()
         {
-            if(gamepad != null) GAMELOOP.ReturnGamepad(gamepad.Index);
+            //if(gamepad != null) GAMELOOP.ReturnGamepad(gamepad.Index);
         }
 
-        public override void OnGamepadConnected(Gamepad gamepad)
-        {
-            if (this.gamepad == null)
-            {
-               this.gamepad = GAMELOOP.RequestGamepad(0);
-            }
-        }
-
-        public override void OnGamepadDisconnected(Gamepad gamepad)
-        {
-            if (this.gamepad is { Connected: false })
-            {
-                this.gamepad = GAMELOOP.RequestGamepad(0);
-            }
-        }
+        // public override void OnGamepadConnected(Gamepad gamepad)
+        // {
+        //     if (this.gamepad == null)
+        //     {
+        //        this.gamepad = GAMELOOP.RequestGamepad(0);
+        //     }
+        // }
+        //
+        // public override void OnGamepadDisconnected(Gamepad gamepad)
+        // {
+        //     if (this.gamepad is { Connected: false })
+        //     {
+        //         this.gamepad = GAMELOOP.RequestGamepad(0);
+        //     }
+        // }
 
         public override void OnInputDeviceChanged(InputDevice prevDevice, InputDevice curDevice)
         {
@@ -468,9 +468,9 @@ namespace Examples.Scenes.ExampleScenes
         protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
             int gamepadIndex = -1;
-            if (gamepad != null)
+            if (GAMELOOP.CurGamepad != null)
             {
-                gamepadIndex = gamepad.Index;
+                gamepadIndex = GAMELOOP.CurGamepad.Index;
             }
             
             joystickLeft.Update(dt, gamepadIndex, currentInputDevice);
@@ -547,14 +547,14 @@ namespace Examples.Scenes.ExampleScenes
         private void DrawGamepadInfo(Rect rect)
         {
             string text = "No Gamepad Connected";
-            if (gamepad != null)
+            if (GAMELOOP.CurGamepad != null)
             {
-                var gamepadIndex = gamepad.Index;
+                var gamepadIndex = GAMELOOP.CurGamepad.Index;
                 text = $"Gamepad [{gamepadIndex}] Connected";
             }
             
             var textRect = rect.ApplyMargins(0f, 0.5f, 0.1f, 0.85f);
-            font.DrawText(text, textRect, 1f, new Vector2(0.05f, 0.5f), gamepad != null ? ColorHighlight3 : ColorMedium);
+            font.DrawText(text, textRect, 1f, new Vector2(0.05f, 0.5f), GAMELOOP.CurGamepad != null ? ColorHighlight3 : ColorMedium);
         }
     }
 

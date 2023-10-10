@@ -74,7 +74,6 @@ namespace Examples.Scenes
             if (IsKeyPressed(KeyboardKey.KEY_R))
             {
                 Reset();
-                //GAMELOOP.Camera.Reset();
             }
             if (IsKeyPressed(KeyboardKey.KEY_ESCAPE)) GAMELOOP.GoToMainScene();
             if (IsKeyPressed(KeyboardKey.KEY_M)) GAMELOOP.Maximized = !GAMELOOP.Maximized;

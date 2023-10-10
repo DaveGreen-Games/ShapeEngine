@@ -91,6 +91,14 @@ namespace Examples.Scenes
         public void OnPauseChanged(bool paused){}
         public void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
+
+            // if (IsKeyPressed(KeyboardKey.KEY_G))
+            // {
+            //     GAMELOOP.ResetWindow();
+            // }
+            //
+            
+            
             if (IsKeyPressed(KeyboardKey.KEY_ESCAPE)) GAMELOOP.Quit();
             if (IsKeyPressed(KeyboardKey.KEY_R))
             {
