@@ -1,3 +1,7 @@
+using System.IO.Pipes;
+using System.Numerics;
+using System.Text;
+using ShapeEngine.Core.Shapes;
 using ShapeEngine.Lib;
 
 namespace ShapeEngine.Input;
@@ -62,12 +66,25 @@ namespace ShapeEngine.Input;
     }
 }*/
 
+public readonly struct InputName
+{
+    public readonly string Name;
+    public readonly InputDevice InputDevice;
+
+    public InputName(string name, InputDevice inputDevice)
+    {
+        Name = name;
+        InputDevice = inputDevice;
+    }
+}
+
 public class InputAction
 {
     public uint ID { get; private set; }
     public uint AccessTag { get; private set; } = ShapeInput.AllAccessTag;
     
     public int Gamepad = -1;
+    public string Title = "Input Action";
 
     private float axisSensitivity = 1f;
     private float axisGravitiy = 1f;
@@ -289,8 +306,69 @@ public class InputAction
 
         return false;
     }
+
     
     
+    public string GetInputDescription(InputDevice inputDevice, bool shorthand)
+    {
+        StringBuilder b = new();
+        b.Append(Title);
+        var inputNames = GetInputNames(inputDevice, shorthand);
+        if (inputNames.Count > 0)
+        {
+            b.Append(": ");
+            foreach (string inputName in inputNames)
+            {
+                b.Append($"[{inputName}] ");
+            }
+        }
+        return b.ToString();
+    }
+   
+    public List<InputName> GetInputNames(bool shorthand = true)
+    {
+        var inputs = GetInputs();
+        var names = new List<InputName>();
+        foreach (var input in inputs)
+        {
+            var name = input.GetName(shorthand);
+            var type = input.GetInputDevice();
+            var inputName = new InputName(name, type);
+            names.Add(inputName);
+        }
+
+        return names;
+
+    }
+    public List<string> GetInputNames(InputDevice curInputDevice, bool shorthand = true)
+    {
+        var inputs = GetInputs(curInputDevice);
+        var names = new List<string>();
+        foreach (var input in inputs)
+        {
+            names.Add(input.GetName(shorthand));
+        }
+
+        return names;
+        // var inputs = GetInputs(curInputDevice);
+        // var rects = r.SplitV(inputs.Count);
+        // var final = new List<InputName>();
+        // for (var i = 0; i < inputs.Count; i++)
+        // {
+        //     var name = inputs[i].GetName(true);
+        //     final.Add(new(name, rects[i]));
+        // }
+        //
+        // return final;
+
+    }
+    public string GetInputName(InputDevice curInputDevice, bool shorthand = true)
+    {
+        var inputs = GetInputs(curInputDevice);
+        if (inputs.Count <= 0) return "No Input";
+        return inputs[0].GetName(shorthand);
+
+    }
     
     public static IInputType CreateInputType(ShapeKeyboardButton button) => new InputTypeKeyboardButton(button);
     public static IInputType CreateInputType(ShapeMouseButton button) => new InputTypeMouseButton(button);

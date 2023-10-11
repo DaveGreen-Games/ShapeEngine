@@ -102,33 +102,34 @@ namespace Examples
         
         public Gamepad? CurGamepad = null;
         
-        public readonly uint UIAccessTag = 100;
-        public readonly uint BasicAccessTag = 200;
+        public static readonly uint UIAccessTag = 100;
+        public static readonly uint BasicAccessTag = 200;
         
         //ui
-        public readonly uint InputUICancelID = 110;
-        public readonly uint InputUIBackID = 111;
-        public readonly uint InputUIAcceptID = 112;
-        public readonly uint InputUILeftID = 113;
-        public readonly uint InputUIRightID = 114;
-        public readonly uint InputUIUpID = 115;
-        public readonly uint InputUIDownID = 116;
-        public readonly uint InputUINextTab = 117;
-        public readonly uint InputUIPrevTab = 118;
-        public readonly uint InputUINextPage = 119;
-        public readonly uint InputUIPrevPage = 120;
+        public static readonly uint InputUICancelID = 110;
+        public static readonly uint InputUIBackID = 111;
+        public static readonly uint InputUIAcceptID = 112;
+        public static readonly uint InputUILeftID = 113;
+        public static readonly uint InputUIRightID = 114;
+        public static readonly uint InputUIUpID = 115;
+        public static readonly uint InputUIDownID = 116;
+        public static readonly uint InputUINextTab = 117;
+        public static readonly uint InputUIPrevTab = 118;
+        public static readonly uint InputUINextPage = 119;
+        public static readonly uint InputUIPrevPage = 120;
         
         //gameloop controlled
-        public readonly uint InputFullscreenID = 210;
-        public readonly uint InputMaximizeID = 211;
-        public readonly uint InputNextMonitorID = 212;
-        public readonly uint InputCRTMinusID = 213;
-        public readonly uint InputCRTPlusID = 214;
+        public static readonly uint InputFullscreenID = 210;
+        public static readonly uint InputMaximizeID = 211;
+        public static readonly uint InputNextMonitorID = 212;
+        public static readonly uint InputCRTMinusID = 213;
+        public static readonly uint InputCRTPlusID = 214;
         
         //example scene controlled
-        public readonly uint InputZoomInID = 310;
-        public readonly uint InputZoomOutID = 311;
-        public readonly uint InputPauseID = 312;
+        public static readonly uint InputZoomInID = 310;
+        public static readonly uint InputZoomOutID = 311;
+        public static readonly uint InputPauseID = 312;
+        public static readonly uint InputResetID = 313;
 
 
         public GameloopExamples() : base(new(1920, 1080), true) {}
@@ -406,9 +407,9 @@ namespace Examples
             var upGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP);
             InputAction uiUp = new(UIAccessTag, InputUIUpID, upKB, upKB2, upGB);
             
-            var downKB = new InputTypeKeyboardButton(ShapeKeyboardButton.A);
-            var downKB2 = new InputTypeKeyboardButton(ShapeKeyboardButton.LEFT);
-            var downGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT);
+            var downKB = new InputTypeKeyboardButton(ShapeKeyboardButton.S);
+            var downKB2 = new InputTypeKeyboardButton(ShapeKeyboardButton.DOWN);
+            var downGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN);
             InputAction uiDown = new(UIAccessTag, InputUIDownID, downKB, downKB2, downGB);
             
             var nextTabKB = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
@@ -454,12 +455,16 @@ namespace Examples
             
             //example scene only
             var zoomInKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ZERO);
-            var zoomInGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
+            var zoomInGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
             InputAction zoomIn = new(BasicAccessTag, InputZoomInID, zoomInKB, zoomInGB);
             
             var zoomOutKB = new InputTypeKeyboardButton(ShapeKeyboardButton.NINE);
-            var zoomOutGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
+            var zoomOutGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
             InputAction zoomOut = new(BasicAccessTag, InputZoomOutID, zoomOutKB, zoomOutGB);
+            
+            var resetKB = new InputTypeKeyboardButton(ShapeKeyboardButton.R);
+            var resetGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
+            InputAction reset = new(BasicAccessTag, InputResetID, resetKB, resetGB);
             
             Input.AddActions
             (
@@ -468,7 +473,7 @@ namespace Examples
                 fullscreen, maximize, nextMonitor,
                 crtMinus, crtPlus,
                 zoomIn, zoomOut,
-                pause
+                pause, reset
             );
         }
     }

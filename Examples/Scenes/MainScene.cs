@@ -91,21 +91,15 @@ namespace Examples.Scenes
         public void OnPauseChanged(bool paused){}
         public void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-
-            // if (IsKeyPressed(KeyboardKey.KEY_G))
-            // {
-            //     GAMELOOP.ResetWindow();
-            // }
-            //
-            
-            
-            if (IsKeyPressed(KeyboardKey.KEY_ESCAPE)) GAMELOOP.Quit();
-            if (IsKeyPressed(KeyboardKey.KEY_R))
+            var cancelState = GAMELOOP.Input.ConsumeAction(GameloopExamples.InputUICancelID);
+            if (cancelState is { Consumed: false, Pressed: true })
             {
-                // if (GAMELOOP.CurScene == this)
-                // {
-                //     
-                // }
+                GAMELOOP.Quit();
+            }
+
+            var resetState = GAMELOOP.Input.ConsumeAction(GameloopExamples.InputResetID);
+            if (resetState is { Consumed: false, Pressed: true })
+            {
                 for (int i = 0; i < examples.Count; i++)
                 {
                     examples[i].Reset();
@@ -114,16 +108,44 @@ namespace Examples.Scenes
                 GAMELOOP.ResetCamera();
             }
 
-            if (IsKeyPressed(KeyboardKey.KEY_M)) GAMELOOP.Maximized = !GAMELOOP.Maximized;
-            if (IsKeyPressed(KeyboardKey.KEY_F)) GAMELOOP.Fullscreen = !GAMELOOP.Fullscreen;
-
-            if (IsKeyPressed(KeyboardKey.KEY_Q)) PrevPage();
-            else if (IsKeyPressed(KeyboardKey.KEY_E)) NextPage();
-
-            if (IsKeyPressed(KeyboardKey.KEY_W)) PrevButton();
-            else if (IsKeyPressed(KeyboardKey.KEY_S)) NextButton();
+            var maximizedState = GAMELOOP.Input.ConsumeAction(GameloopExamples.InputMaximizeID);
+            if (maximizedState is { Consumed: false, Pressed: true })
+            { 
+                GAMELOOP.Maximized = !GAMELOOP.Maximized;
+            }
+            var fullscreenState = GAMELOOP.Input.ConsumeAction(GameloopExamples.InputFullscreenID);
+            if (fullscreenState is { Consumed: false, Pressed: true })
+            { 
+                GAMELOOP.Fullscreen = !GAMELOOP.Fullscreen;
+            }
             
-            if(IsKeyPressed(KeyboardKey.KEY_T)) GAMELOOP.NextMonitor();
+            var prevTabState = GAMELOOP.Input.ConsumeAction(GameloopExamples.InputUIPrevTab);
+            if (prevTabState is { Consumed: false, Pressed: true })
+            { 
+                PrevPage();
+            }
+            var nextTabState = GAMELOOP.Input.ConsumeAction(GameloopExamples.InputUINextTab);
+            if (nextTabState is { Consumed: false, Pressed: true })
+            { 
+                NextPage();
+            }
+
+            var uiDownState = GAMELOOP.Input.ConsumeAction(GameloopExamples.InputUIDownID);
+            if (uiDownState is { Consumed: false, Pressed: true })
+            { 
+                NextButton();
+            }
+            var uiUpState = GAMELOOP.Input.ConsumeAction(GameloopExamples.InputUIUpID);
+            if (uiUpState is { Consumed: false, Pressed: true })
+            { 
+                PrevButton();
+            }
+            
+            var nextMonitorState = GAMELOOP.Input.ConsumeAction(GameloopExamples.InputNextMonitorID);
+            if (nextMonitorState is { Consumed: false, Pressed: true })
+            { 
+                GAMELOOP.NextMonitor();
+            }
         }
 
         public void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
@@ -160,7 +182,13 @@ namespace Examples.Scenes
             titleFont.DrawText(text, titleRect, 10, new(0.5f), ExampleScene.ColorLight);
 
             int pages = GetMaxPages();
-            string pagesText = pages <= 1 ? "Page 1/1" : $"[Q] <- Page #{curPageIndex + 1}/{pages} -> [E]";
+            var prevAction = GAMELOOP.Input.GetAction(GameloopExamples.InputUIPrevTab);
+            var prevName = prevAction != null ? prevAction.GetInputName(GAMELOOP.CurrentInputDevice, true) : "";
+
+            var nextAction = GAMELOOP.Input.GetAction(GameloopExamples.InputUINextTab);
+            var nextName = nextAction != null ? nextAction.GetInputName(GAMELOOP.CurrentInputDevice, true) : "";
+            
+            string pagesText = pages <= 1 ? "Page 1/1" : $"[{prevName}] <- Page #{curPageIndex + 1}/{pages} -> [{nextName}]";
             Rect pageRect = new Rect(uiSize * new Vector2(0.01f, 0.12f), uiSize * new Vector2(0.3f, 0.06f), new Vector2(0f, 0f));
             titleFont.DrawText(pagesText, pageRect, 4f, new(0f, 0.5f), ExampleScene.ColorHighlight2);
 
@@ -170,6 +198,9 @@ namespace Examples.Scenes
             string backText = "Back [ESC]";
             Rect backRect = new Rect(uiSize * new Vector2(0.01f, 0.17f), uiSize * new Vector2(0.2f, 0.04f), new Vector2(0f, 0f));
             titleFont.DrawText(backText, backRect, 4f, new Vector2(0f, 0f), ExampleScene.ColorHighlight2);
+            
+            
+            
         }
         
         

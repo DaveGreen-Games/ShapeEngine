@@ -30,13 +30,18 @@ namespace Examples.UIElements
         protected override bool CheckMousePressed()
         {
             if (Hidden || Scene == null) return false;
+
+            var acceptState = GAMELOOP.Input.ConsumeAction(GameloopExamples.InputUIAcceptID);
+            return acceptState is { Consumed: false, Released: true };
             return IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT);
         }
 
         protected override bool CheckPressed()
         {
             if (Hidden || Scene == null) return false;
-            return IsKeyReleased(KeyboardKey.KEY_SPACE) || IsKeyPressed(KeyboardKey.KEY_ENTER);
+            var acceptState = GAMELOOP.Input.ConsumeAction(GameloopExamples.InputUIAcceptID);
+            return acceptState is { Consumed: false, Released: true };
+            //return IsKeyReleased(KeyboardKey.KEY_SPACE) || IsKeyPressed(KeyboardKey.KEY_ENTER);
         }
         public override void Update(float dt, Vector2 mousePosUI)
         {

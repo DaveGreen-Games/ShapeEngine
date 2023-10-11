@@ -84,6 +84,32 @@ public class ShapeInput
             input.Gamepad = gamepad;
         }
     }
+
+    public List<string> GetActionDescriptions(InputDevice inputDevice, bool shorthand,params uint[] actionIDs)
+    {
+        var actions = new List<InputAction>();
+        foreach (var id in actionIDs)
+        {
+            var action = GetAction(id);
+            if(action != null) actions.Add(action);
+        }
+
+        return GetActionDescriptions(inputDevice, shorthand, actions.ToArray());
+    }
+    public List<string> GetActionDescriptions(InputDevice inputDevice, bool shorthand, params InputAction[] actions)
+    {
+        var final = new List<string>();
+        foreach (var action in actions)
+        {
+            var description = action.GetInputDescription(inputDevice, shorthand);
+            
+            final.Add(description);
+        }
+
+        return final;
+    }
+
+    
     #endregion
 
     public void Update(float dt)
