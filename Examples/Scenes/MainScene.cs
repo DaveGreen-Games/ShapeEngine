@@ -27,6 +27,8 @@ namespace Examples.Scenes
         private List<ExampleSelectionButton> buttons = new();
         private UIElement curButton;
         private Font titleFont;
+
+        private float tabChangeMouseWheelLockTimer = 0f;
         public MainScene()
         {
             for (int i = 0; i < 10; i++)
@@ -89,6 +91,7 @@ namespace Examples.Scenes
         }
 
         public void OnPauseChanged(bool paused){}
+        
         public void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             var cancelState = GAMELOOP.Input.ConsumeAction(GameloopExamples.InputUICancelID);
@@ -121,13 +124,39 @@ namespace Examples.Scenes
             
             var prevTabState = GAMELOOP.Input.ConsumeAction(GameloopExamples.InputUIPrevTab);
             if (prevTabState is { Consumed: false, Pressed: true })
-            { 
-                PrevPage();
+            {
+                if (prevTabState.InputDevice == InputDevice.Mouse)
+                {
+                    if (tabChangeMouseWheelLockTimer <= 0)
+                    {
+                        PrevPage();
+                        tabChangeMouseWheelLockTimer = 0.5f;
+                    }
+                }
+                else
+                {
+                    PrevPage();
+                    tabChangeMouseWheelLockTimer = 0f;
+                }
+                //PrevPage();
             }
             var nextTabState = GAMELOOP.Input.ConsumeAction(GameloopExamples.InputUINextTab);
             if (nextTabState is { Consumed: false, Pressed: true })
             { 
-                NextPage();
+                if (nextTabState.InputDevice == InputDevice.Mouse)
+                {
+                    if (tabChangeMouseWheelLockTimer <= 0)
+                    {
+                        NextPage();
+                        tabChangeMouseWheelLockTimer = 0.5f;
+                    }
+                }
+                else
+                {
+                    NextPage();
+                    tabChangeMouseWheelLockTimer = 0f;
+                }
+                // NextPage();
             }
 
             var uiDownState = GAMELOOP.Input.ConsumeAction(GameloopExamples.InputUIDownID);
@@ -150,6 +179,11 @@ namespace Examples.Scenes
 
         public void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
+            if (tabChangeMouseWheelLockTimer > 0f)
+            {
+                tabChangeMouseWheelLockTimer -= dt;
+                if (tabChangeMouseWheelLockTimer <= 0f) tabChangeMouseWheelLockTimer = 0f;
+            }
             HandleInput(dt, game.MousePos, ui.MousePos);
             foreach (var b in buttons)
             {
@@ -198,9 +232,10 @@ namespace Examples.Scenes
             string backText = "Back [ESC]";
             Rect backRect = new Rect(uiSize * new Vector2(0.01f, 0.17f), uiSize * new Vector2(0.2f, 0.04f), new Vector2(0f, 0f));
             titleFont.DrawText(backText, backRect, 4f, new Vector2(0f, 0f), ExampleScene.ColorHighlight2);
-            
-            
-            
+
+
+            Rect r = ui.Area.ApplyMargins(0.75f, 0.025f, 0.17f, 0.79f);
+            titleFont.DrawText($"Cursor On Screen: {ShapeLoop.CursorOnScreen}", r, 1f, new Vector2(1f, 1f), ExampleScene.ColorHighlight2);
         }
         
         

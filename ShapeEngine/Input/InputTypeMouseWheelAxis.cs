@@ -1,4 +1,5 @@
 using System.Numerics;
+using ShapeEngine.Core;
 using ShapeEngine.Lib;
 
 namespace ShapeEngine.Input;
@@ -35,6 +36,7 @@ public class InputTypeMouseWheelAxis : IInputType
 
     private static float GetValue(ShapeMouseWheelAxis axis, float deadzone = 0.2f)
     {
+        if (!ShapeLoop.CursorOnScreen) return 0f;
         Vector2 value = GetMouseWheelMoveV();
         float returnValue = axis == ShapeMouseWheelAxis.VERTICAL ? value.Y : value.X;
         if (MathF.Abs(returnValue) < deadzone) return 0f;
@@ -43,9 +45,10 @@ public class InputTypeMouseWheelAxis : IInputType
     
     public static InputState GetState(ShapeMouseWheelAxis axis, float deadzone = 0.2f)
     {
+        
         float axisValue = GetValue(axis, deadzone);
         bool down = axisValue != 0f;
-        return new(down, !down, axisValue, -1);
+        return new(down, !down, axisValue, -1, InputDevice.Mouse);
     }
     public static InputState GetState(ShapeMouseWheelAxis axis, InputState previousState, float deadzone = 0.2f)
     {

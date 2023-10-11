@@ -214,7 +214,7 @@ public class ShapeLoop
 
     public bool CursorHidden { get; private set; } = false;
     public bool CursorLocked   {get; private set;}  = false;
-    public bool CursorOnScreen {get; private set;} = false;
+    public static bool CursorOnScreen {get; private set;} = false;//i dont like the static here but input system needs it...
     #endregion
 
     #region Private Members
@@ -278,9 +278,6 @@ public class ShapeLoop
         Game = new(cameraArea, mousePosGame);
         UI = new(screenArea, mousePosUI);
 
-        cursorState = GetCursorState();
-        windowState = GetWindowState();
-        
         gameTexture.Load(CurScreenSize);
         if (multiShaderSupport) screenShaderBuffer.Load(CurScreenSize);
 
@@ -288,6 +285,11 @@ public class ShapeLoop
         {
             gamepads[i] = new Gamepad(i, Raylib.IsGamepadAvailable(i));
         }
+
+        //CursorOnScreen = Fullscreen || Raylib.IsCursorOnScreen();
+        CursorOnScreen = Fullscreen || Raylib.IsCursorOnScreen() || ( Raylib.IsWindowFocused() && screenArea.ContainsPoint(GetMousePosition()) );
+        cursorState = GetCursorState();
+        windowState = GetWindowState();
         
     }
     public void SetupWindow(string windowName, bool undecorated, bool resizable, bool vsync = true, int fps = 60)
@@ -481,8 +483,10 @@ public class ShapeLoop
         LoadContent();
         BeginRun();
     }
+
     private void RunGameloop()
     {
+        
         while (!quit)
         {
             if (WindowShouldClose())
@@ -513,18 +517,20 @@ public class ShapeLoop
             var cameraArea = Camera.Area;
             
             var mousePos = GetMousePosition();
-            CursorOnScreen = screenArea.ContainsPoint(mousePos) && Raylib.IsCursorOnScreen();
+            CursorOnScreen = Fullscreen || Raylib.IsCursorOnScreen() || ( Raylib.IsWindowFocused() && screenArea.ContainsPoint(mousePos) );
+            //if (Raylib.IsWindowFocused() && screenArea.ContainsPoint(mousePos)) CursorOnScreen = true;
             
             if (CursorOnScreen)
             {
                 var prevMousePos = mousePos;
-                mousePos = ChangeMousePos(dt, mousePos);
+                mousePos = ChangeMousePos(dt, mousePos, screenArea);
                 
                 if (Fullscreen || (mousePos - prevMousePos).LengthSquared() > 0f)
                 {
                     mousePos = mousePos.Clamp(new Vector2(0, 0), CurScreenSize.ToVector2());
+                    Raylib.SetMousePosition((int)mousePos.X, (int)mousePos.Y);
                 }
-                Raylib.SetMousePosition((int)mousePos.X, (int)mousePos.Y);
+                
             }
             
             if (!CursorOnScreen)
@@ -619,7 +625,7 @@ public class ShapeLoop
             
             foreach (var flash in shapeFlashes) screenArea.Draw(flash.GetColor());
             ResolveDrawGameUI(UI);
-            Cursor.DrawGameUI(UI);
+            if(CursorOnScreen) Cursor.DrawGameUI(UI);
             EndTextureMode();
             
             DrawToScreen(screenArea, mousePosUI);
@@ -663,7 +669,7 @@ public class ShapeLoop
             EndShaderMode();
 
             ResolveDrawUI(UI);
-            Cursor.DrawUI(UI);
+            if(CursorOnScreen) Cursor.DrawUI(UI);
             EndDrawing();
             
         }
@@ -684,7 +690,7 @@ public class ShapeLoop
             }
             
             ResolveDrawUI(UI);
-            Cursor.DrawUI(UI);
+            if(CursorOnScreen) Cursor.DrawUI(UI);
             EndDrawing();
             
         }
@@ -748,7 +754,7 @@ public class ShapeLoop
     /// <param name="dt">The current delta time.</param>
     /// <param name="mousePos">The raw mouse position for this frame.</param>
     /// <returns>Return the new mouse position that should be used.</returns>
-    protected virtual Vector2 ChangeMousePos(float dt, Vector2 mousePos) => mousePos;
+    protected virtual Vector2 ChangeMousePos(float dt, Vector2 mousePos, Rect screenArea) => mousePos;
     #endregion
 
     

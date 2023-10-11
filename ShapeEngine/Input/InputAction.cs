@@ -94,12 +94,14 @@ public class InputAction
         get => axisGravitiy;
         set => axisGravitiy = MathF.Max(0f, value);
     }
-    
+
+    // public InputDevice LastInputDevice { get; private set; } = InputDevice.Keyboard;
+    // private float lastInputDeviceMagnitude = 0f;
     public InputState State { get; private set; } = new();
 
     public void ClearState()
     {
-        State = new InputState(false, true, 0f, Gamepad);
+        State = new InputState(false, true, 0f, Gamepad, InputDevice.Keyboard);
     }
     public InputState Consume()
     {
@@ -108,7 +110,6 @@ public class InputAction
         return returnValue;
     }
     
-    //TODO filter system for getting the names of inputs based on input device
     private readonly List<IInputType> inputs = new();
 
     public InputAction()
@@ -164,10 +165,21 @@ public class InputAction
 
     public void Update(float dt)
     {
+        // lastInputDeviceMagnitude = 0f;
+        
         InputState current = new();
         foreach (var input in inputs)
         {
             var state = input.GetState(Gamepad);
+            // if (state.Down)
+            // {
+            //     float magnitude = MathF.Abs(state.AxisRaw);
+            //     if (magnitude > lastInputDeviceMagnitude)
+            //     {
+            //         LastInputDevice = input.GetInputDevice();
+            //         lastInputDeviceMagnitude = magnitude;
+            //     }
+            // }
             current = current.Accumulate(state);
         }
         State = new(State, current);

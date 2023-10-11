@@ -421,10 +421,12 @@ namespace Examples.Scenes.ExampleScenes
         {
             //gamepad = GAMELOOP.RequestGamepad(0);
             currentInputDevice = GAMELOOP.CurrentInputDevice;
+            GAMELOOP.Input.Lock();
         }
 
         public override void Deactivate()
         {
+            GAMELOOP.Input.Unlock();
             //if(gamepad != null) GAMELOOP.ReturnGamepad(gamepad.Index);
         }
 

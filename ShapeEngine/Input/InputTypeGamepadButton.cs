@@ -56,7 +56,7 @@ public class InputTypeGamepadButton : IInputType
     public static InputState GetState(ShapeGamepadButton button, int gamepad, float deadzone = 0.1f)
     {
         bool down = IsDown(button, gamepad, deadzone);
-        return new(down, !down, down ? 1f : 0f, gamepad);
+        return new(down, !down, down ? 1f : 0f, gamepad, InputDevice.Gamepad);
     }
     public static InputState GetState(ShapeGamepadButton button, InputState previousState, int gamepad,
         float deadzone = 0.1f)

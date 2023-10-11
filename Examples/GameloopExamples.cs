@@ -104,7 +104,8 @@ namespace Examples
         
         public static readonly uint UIAccessTag = 100;
         public static readonly uint BasicAccessTag = 200;
-        
+
+        public static readonly uint GamepadMouseMovementTag = 1000;
         //ui
         public static readonly uint InputUICancelID = 110;
         public static readonly uint InputUIBackID = 111;
@@ -180,14 +181,14 @@ namespace Examples
             SwitchCursor(new SimpleCursorGameUI());
         }
 
-        protected override Vector2 ChangeMousePos(float dt, Vector2 mousePos)
+        protected override Vector2 ChangeMousePos(float dt, Vector2 mousePos, Rect screenArea)
         {
             if (CurrentInputDevice == InputDevice.Gamepad && LastUsedGamepad != null)
             {
-                float speed = 500f * dt;
+                float speed = screenArea.Size.Max() * 0.75f * dt; // 500f * dt;
                 int gamepad = LastUsedGamepad.Index;
-                var x =Input.GetState(ShapeGamepadAxis.LEFT_X, ShapeInput.AllAccessTag, gamepad, 0.05f).AxisRaw;
-                var y =Input.GetState(ShapeGamepadAxis.LEFT_Y, ShapeInput.AllAccessTag, gamepad, 0.05f).AxisRaw;
+                var x = Input.GetState(ShapeGamepadAxis.LEFT_X, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
+                var y = Input.GetState(ShapeGamepadAxis.LEFT_Y, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
 
                 var movement = new Vector2(x, y);
                 float l = movement.Length();
@@ -414,11 +415,13 @@ namespace Examples
             
             var nextTabKB = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
             var nextTabGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
-            InputAction nextTab = new(UIAccessTag, InputUINextTab, nextTabKB, nextTabGB);
+            var nextTabMW = new InputTypeMouseButton(ShapeMouseButton.MW_DOWN, 2f);
+            InputAction nextTab = new(UIAccessTag, InputUINextTab, nextTabKB, nextTabGB, nextTabMW);
             
             var prevTabKB = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
             var prevTabGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
-            InputAction prevTab = new(UIAccessTag, InputUIPrevTab, prevTabKB, prevTabGB);
+            var prevTabMW = new InputTypeMouseButton(ShapeMouseButton.MW_UP, 2f);
+            InputAction prevTab = new(UIAccessTag, InputUIPrevTab, prevTabKB, prevTabGB, prevTabMW);
             
             var nextPageKB = new InputTypeKeyboardButton(ShapeKeyboardButton.C);
             var nextPageGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM);
@@ -429,7 +432,7 @@ namespace Examples
             InputAction prevPage = new(UIAccessTag, InputUIPrevPage, prevPageKB, prevPageGB);
             
             //gameloop
-            var fullscreenKB = new InputTypeKeyboardButton(ShapeKeyboardButton.A);
+            var fullscreenKB = new InputTypeKeyboardButton(ShapeKeyboardButton.F);
             var fullscreenGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_THUMB);
             InputAction fullscreen = new(BasicAccessTag, InputFullscreenID, fullscreenKB, fullscreenGB);
             

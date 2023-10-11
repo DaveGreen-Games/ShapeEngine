@@ -84,7 +84,7 @@ public class InputTypeGamepadButtonAxis : IInputType
     {
         float axis = GetAxis(neg, pos, gamepad, deadzone);
         bool down = axis != 0f;
-        return new(down, !down, axis, gamepad);
+        return new(down, !down, axis, gamepad, InputDevice.Gamepad);
     }
     public static InputState GetState(ShapeGamepadButton neg, ShapeGamepadButton pos,
         InputState previousState, int gamepad, float deadzone = 0.2f)

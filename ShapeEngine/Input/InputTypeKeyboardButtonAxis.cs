@@ -51,7 +51,7 @@ public class InputTypeKeyboardButtonAxis : IInputType
     {
         float axis = GetAxis(neg, pos);
         bool down = axis != 0f;
-        return new(down, !down, axis, -1);
+        return new(down, !down, axis, -1, InputDevice.Keyboard);
     }
     public static InputState GetState(ShapeKeyboardButton neg, ShapeKeyboardButton pos,
         InputState previousState)

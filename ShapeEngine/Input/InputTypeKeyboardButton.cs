@@ -147,7 +147,7 @@ public class InputTypeKeyboardButton : IInputType
     public static InputState GetState(ShapeKeyboardButton button)
     {
         bool down = IsDown(button);
-        return new(down, !down, down ? 1f : 0f, -1);
+        return new(down, !down, down ? 1f : 0f, -1, InputDevice.Keyboard);
     }
     public static InputState GetState(ShapeKeyboardButton button, InputState previousState)
     {

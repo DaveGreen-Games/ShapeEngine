@@ -49,7 +49,7 @@ public class InputTypeGamepadAxis : IInputType
     {
         float axisValue = GetValue(axis, gamepad, deadzone);
         bool down = axisValue != 0f;
-        return new(down, !down, axisValue, gamepad);
+        return new(down, !down, axisValue, gamepad, InputDevice.Gamepad);
     }
     public static InputState GetState(ShapeGamepadAxis axis, InputState previousState, int gamepad,
         float deadzone = 0.1f)
