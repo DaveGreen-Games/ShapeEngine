@@ -12,89 +12,6 @@ using ShapeEngine.Input;
 
 namespace ShapeEngine.Core;
 
-public class Gamepad
-{
-    public readonly int Index;
-    
-    public bool Available { get; private set; } = true;
-    public bool Connected { get; private set; }
-
-    public string Name { get; private set; } = "No Device";
-    public int AxisCount { get; private set; } = 0;
-    
-    public event Action? OnConnectionChanged;
-    public event Action? OnAvailabilityChanged;
-    
-    public Gamepad(int index, bool connected)
-    {
-        Index = index;
-        Connected = connected;
-        if (Connected)
-        {
-            unsafe
-            {
-                Name = Raylib.GetGamepadName(index)->ToString();
-            }
-
-            AxisCount = Raylib.GetGamepadAxisCount(index);
-        }
-        
-    }
-
-    public void Connect()
-    {
-        if (Connected) return;
-        Connected = true;
-        unsafe
-        {
-            Name = Raylib.GetGamepadName(Index)->ToString();
-        }
-
-        AxisCount = Raylib.GetGamepadAxisCount(Index);
-        OnConnectionChanged?.Invoke();
-    }
-    public void Disconnect()
-    {
-        if (!Connected) return;
-        Connected = false;
-        OnConnectionChanged?.Invoke();
-    }
-    public bool Claim()
-    {
-        if (!Connected || !Available) return false;
-        Available = false;
-        OnAvailabilityChanged?.Invoke();
-        return true;
-    }
-    public bool Free()
-    {
-        if (Available) return false;
-        Available = true;
-        OnAvailabilityChanged?.Invoke();
-        return true;
-    }
-}
-
-public readonly struct CursorState
-{
-    public readonly bool Hidden;
-    public readonly bool Locked;
-    public readonly bool OnScreen;
-
-    public CursorState()
-    {
-        Hidden = false;
-        Locked = false;
-        OnScreen = true;
-    }
-
-    public CursorState(bool hidden, bool locked, bool onScreen)
-    {
-        Hidden = hidden;
-        Locked = locked;
-        OnScreen = onScreen;
-    }
-}
 // public enum WindowType
 // {
 //     Default = 0,
@@ -103,44 +20,6 @@ public readonly struct CursorState
 //     Maximized = 3,
 //     Fullscreen = 4
 // }
-public readonly struct WindowState
-{
-    // public readonly WindowType WindowType;
-    public readonly bool Minimized;
-    public readonly bool Maximized;
-    public readonly bool Fullscreen;
-    public readonly bool Hidden;
-    public readonly bool Focused;
-
-    public WindowState()
-    {
-        // WindowType = WindowType.Default;
-        Minimized = false;
-        Maximized = false;
-        Fullscreen = false;
-        Hidden = false;
-        Focused = true;
-    }
-
-    public WindowState(bool minimized, bool maximized, bool fullscreen, bool hidden, bool focused)
-    {
-        Minimized = minimized;
-        Maximized = maximized;
-        Fullscreen = fullscreen;
-        Hidden = hidden;
-        Focused = focused;
-    }
-    // public WindowState(WindowType windowType, bool focused)
-    // {
-    //     WindowType = windowType;
-    //     // if (windowState == WindowState.Hidden || windowState == WindowState.Minimized)
-    //     // {
-    //     //     Focused = false;
-    //     // }
-    //     // else Focused = focused;
-    //     Focused = focused;
-    // }
-}
 
 public class ShapeLoop
 {
