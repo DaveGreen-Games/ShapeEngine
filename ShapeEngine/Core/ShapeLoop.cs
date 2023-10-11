@@ -634,7 +634,7 @@ public class ShapeLoop
             var cameraArea = Camera.Area;
             
             var mousePos = GetMousePosition();
-            CursorOnScreen = screenArea.ContainsPoint(mousePos); // Raylib.IsCursorOnScreen();
+            CursorOnScreen = screenArea.ContainsPoint(mousePos) && Raylib.IsCursorOnScreen();
             
             if (CursorOnScreen)
             {
@@ -676,11 +676,11 @@ public class ShapeLoop
             
             if (curWindowState.Focused && !windowState.Focused)
             {
-                OnWindowFocuseChanged(true);
+                OnWindowFocusChanged(true);
             }
             else if (!curWindowState.Focused && windowState.Focused)
             {
-                OnWindowFocuseChanged(false);
+                OnWindowFocusChanged(false);
             }
 
             if (curWindowState.Maximized && !windowState.Maximized)
@@ -857,7 +857,7 @@ public class ShapeLoop
     protected virtual void OnCursorLeftScreen() { }
     protected virtual void OnCursorHiddenChanged(bool hidden) { }
     protected virtual void OnCursorLockChanged(bool locked) { }
-    protected virtual void OnWindowFocuseChanged(bool focused) { }
+    protected virtual void OnWindowFocusChanged(bool focused) { }
     protected virtual void OnWindowFullscreenChanged(bool fullscreen) { }
     protected virtual void OnWindowMaximizeChanged(bool maximized) { }
     //protected virtual void OnWindowMinimizeChanged(bool minimized) { }
