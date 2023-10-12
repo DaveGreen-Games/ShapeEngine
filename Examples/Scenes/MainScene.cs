@@ -17,10 +17,6 @@ namespace Examples.Scenes
     {
         //should display names/description of all examples
         //left half lists all examples vertical / right half displays short info
-        //up/ down navigates through all examples scenes + mouse click
-        //esc goes back to main scene
-        //r always resets cur example scene
-        //r in main scene resets all example scenes
 
         private int curPageIndex = 0;
         private List<ExampleScene> examples = new();

@@ -421,7 +421,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             //gamepad = GAMELOOP.RequestGamepad(0);
             currentInputDevice = GAMELOOP.CurrentInputDevice;
-            GAMELOOP.Input.Lock(GameloopExamples.GameloopAccessTag);
+            GAMELOOP.Input.LockWhitelist(GameloopExamples.GameloopAccessTag);
         }
 
         public override void Deactivate()

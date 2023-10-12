@@ -9,28 +9,51 @@ public class ShapeInput
     public static readonly uint AllAccessTag = 0;
     
     public bool Locked { get; private set; } = false;
-    private readonly List<uint> lockExceptionTags = new();
+    private readonly List<uint> lockWhitelist = new();
+    private readonly List<uint> lockBlacklist = new();
     private readonly Dictionary<uint, InputAction> inputActions = new();
     #endregion
+    
+    //TODO last input device & last gamepad used should go here as well from shape loop!
     
     #region Lock System
     public void Lock()
     {
         Locked = true;
-        lockExceptionTags.Clear();
+        lockWhitelist.Clear();
+        lockBlacklist.Clear();
     }
-    public void Lock(params uint[] exceptionTags)
+
+    public void Lock(uint[] whitelist, uint[] blacklist)
     {
         Locked = true;
-        lockExceptionTags.Clear();
-        if(exceptionTags.Length > 0) lockExceptionTags.AddRange(exceptionTags);
+        lockWhitelist.Clear();
+        lockBlacklist.Clear();
+        if(whitelist.Length > 0) lockWhitelist.AddRange(whitelist);
+        if(blacklist.Length > 0) lockWhitelist.AddRange(blacklist);
+    }
+    public void LockWhitelist(params uint[] whitelist)
+    {
+        Locked = true;
+        lockWhitelist.Clear();
+        lockBlacklist.Clear();
+        if(whitelist.Length > 0) lockWhitelist.AddRange(whitelist);
+        
+    }
+    public void LockBlacklist(params uint[] blacklist)
+    {
+        Locked = true;
+        lockWhitelist.Clear();
+        lockBlacklist.Clear();
+        if(blacklist.Length > 0) lockWhitelist.AddRange(blacklist);
     }
     public void Unlock()
     {
         Locked = false;
-        lockExceptionTags.Clear();
+        lockWhitelist.Clear();
+        lockBlacklist.Clear();
     }
-    public bool HasAccess(uint tag) => tag == AllAccessTag || lockExceptionTags.Contains(tag);
+    public bool HasAccess(uint tag) => tag == AllAccessTag || (lockWhitelist.Contains(tag) && !lockBlacklist.Contains(tag));
     #endregion
     
     #region Input Actions
