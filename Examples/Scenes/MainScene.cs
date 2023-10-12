@@ -236,9 +236,32 @@ namespace Examples.Scenes
 
             Rect r = ui.Area.ApplyMargins(0.75f, 0.025f, 0.17f, 0.79f);
             titleFont.DrawText($"Cursor On Screen: {ShapeLoop.CursorOnScreen}", r, 1f, new Vector2(1f, 1f), ExampleScene.ColorHighlight2);
+
         }
-        
-        
+
+        private void DrawSreenInfoDebug(Rect uiArea)
+        {
+            Rect rightHalf = uiArea.ApplyMargins(0.6f, 0.025f, 0.25f, 0.025f);
+            //rightHalf.DrawLines(2f, RED);
+
+            List<string> infos = new();
+            
+            int monitor = Raylib.GetCurrentMonitor();
+            infos.Add($"[{monitor}] Monitor Size: {Raylib.GetMonitorWidth(monitor)}|{Raylib.GetMonitorHeight(monitor)}");
+            infos.Add($"Window(Screen) Size: {Raylib.GetScreenWidth()}|{Raylib.GetScreenHeight()}");
+            infos.Add($"Render Size: {Raylib.GetRenderWidth()}|{Raylib.GetRenderHeight()}");
+            infos.Add($"Scale DPI: {Raylib.GetWindowScaleDPI().X}|{Raylib.GetWindowScaleDPI().Y}");
+            infos.Add($"HIGH Dpi: {Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_HIGHDPI)}");
+
+            List<Rect> rects = rightHalf.SplitV(infos.Count);
+
+            for (int i = 0; i < infos.Count; i++)
+            {
+                var infoText = infos[i];
+                var rect = rects[i];
+                titleFont.DrawText(infoText, rect, 1f, new Vector2(0.95f, 0.5f), WHITE);
+            }
+        }
         private void OnButtonSelected(UIElement button)
         {
             if (curButton != button)

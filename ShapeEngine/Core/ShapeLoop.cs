@@ -251,8 +251,11 @@ public class ShapeLoop
         #endif
 
         this.DevelopmentDimensions = developmentDimensions;
+        // SetWindowState(ConfigFlags.FLAG_MSAA_4X_HINT);
+        // SetWindowState(ConfigFlags.FLAG_WINDOW_HIGHDPI);
         InitWindow(0, 0, "");
         
+        SetWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
         ClearWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
         SetWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
 
@@ -933,9 +936,13 @@ public class ShapeLoop
         }
         else
         {
+            // var scaleFactor = GetWindowScaleDPI();
+            // int scaleX = (int)scaleFactor.X;
+            // int scaleY = (int)scaleFactor.Y;
+            
             var w = GetScreenWidth();
             var h = GetScreenHeight();
-            CurScreenSize = new(w, h);
+            CurScreenSize = new(w , h);
         }
     }
     private void SetConversionFactors()
