@@ -36,38 +36,74 @@ namespace Examples.Scenes
         
         protected void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            if (GAMELOOP.Paused)
+            var cancelState = input.ConsumeAction(GameloopExamples.InputUICancelID);
+            if (cancelState is { Consumed: false, Pressed: true })
             {
-                if (IsKeyPressed(KeyboardKey.KEY_P)) GAMELOOP.Paused = false;
-                return;
-            }
-
-            if (IsKeyPressed(KeyboardKey.KEY_P))
-            {
-                GAMELOOP.Paused = true;
-                return;
+                if(GAMELOOP.Paused) GAMELOOP.Paused = false;
+                GAMELOOP.GoToMainScene();
             }
             
-            if (IsKeyPressed(KeyboardKey.KEY_R))
+            var pausedState = input.ConsumeAction(GameloopExamples.InputPauseID);
+            if (pausedState is { Consumed: false, Pressed: true })
+            {
+                GAMELOOP.Paused = !GAMELOOP.Paused;
+            }
+
+            if (GAMELOOP.Paused) return;
+            
+            
+            var resetState = input.ConsumeAction(GameloopExamples.InputResetID);
+            if (resetState is { Consumed: false, Pressed: true })
             {
                 Reset();
             }
-            if (IsKeyPressed(KeyboardKey.KEY_ESCAPE)) GAMELOOP.GoToMainScene();
-            if (IsKeyPressed(KeyboardKey.KEY_M)) GAMELOOP.Maximized = !GAMELOOP.Maximized;
-            if (IsKeyPressed(KeyboardKey.KEY_F)) GAMELOOP.Fullscreen = !GAMELOOP.Fullscreen;
             
-            float increment = 0.05f;
-
-            if (IsKeyPressed(KeyboardKey.KEY_NINE)) //zoom out
+            float zoomIncrement = 0.05f;
+            var zoomInState = input.ConsumeAction(GameloopExamples.InputZoomInID);
+            if (zoomInState is { Consumed: false, Pressed: true })
             {
-                GAMELOOP.Camera.Zoom(increment);
-            }
-            else if (IsKeyPressed(KeyboardKey.KEY_ZERO))//zoom in
-            {
-                GAMELOOP.Camera.Zoom(-increment);
+                GAMELOOP.Camera.Zoom(-zoomIncrement);
             }
             
-            if(IsKeyPressed(KeyboardKey.KEY_T)) GAMELOOP.NextMonitor();
+            var zoomOutState = input.ConsumeAction(GameloopExamples.InputZoomOutID);
+            if (zoomOutState is { Consumed: false, Pressed: true })
+            {
+                GAMELOOP.Camera.Zoom(zoomIncrement);
+            }
+            
+            
+            // if (GAMELOOP.Paused)
+            // {
+            //     if (IsKeyPressed(KeyboardKey.KEY_P)) GAMELOOP.Paused = false;
+            //     return;
+            // }
+            //
+            // if (IsKeyPressed(KeyboardKey.KEY_P))
+            // {
+            //     GAMELOOP.Paused = true;
+            //     return;
+            // }
+            //
+            // if (IsKeyPressed(KeyboardKey.KEY_R))
+            // {
+            //     Reset();
+            // }
+            // if (IsKeyPressed(KeyboardKey.KEY_ESCAPE)) GAMELOOP.GoToMainScene();
+            // if (IsKeyPressed(KeyboardKey.KEY_M)) GAMELOOP.Maximized = !GAMELOOP.Maximized;
+            // if (IsKeyPressed(KeyboardKey.KEY_F)) GAMELOOP.Fullscreen = !GAMELOOP.Fullscreen;
+            //
+            // float increment = 0.05f;
+            //
+            // if (IsKeyPressed(KeyboardKey.KEY_NINE)) //zoom out
+            // {
+            //     GAMELOOP.Camera.Zoom(increment);
+            // }
+            // else if (IsKeyPressed(KeyboardKey.KEY_ZERO))//zoom in
+            // {
+            //     GAMELOOP.Camera.Zoom(-increment);
+            // }
+            //
+            // if(IsKeyPressed(KeyboardKey.KEY_T)) GAMELOOP.NextMonitor();
 
             
         }

@@ -295,9 +295,27 @@ namespace Examples
 
         protected override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            //TODO gameloop input comes here
-            if (Paused) return;
+            
+            
+            var fullscreenState = Input.ConsumeAction(InputFullscreenID);
+            if (fullscreenState is { Consumed: false, Pressed: true })
+            {
+                GAMELOOP.Fullscreen = !GAMELOOP.Fullscreen;
+            }
+            var maximizeState = Input.ConsumeAction(InputMaximizeID);
+            if (maximizeState is { Consumed: false, Pressed: true })
+            {
+                GAMELOOP.Maximized = !GAMELOOP.Maximized;
+            }
+            var nextMonitorState = Input.ConsumeAction(InputNextMonitorID);
+            if (nextMonitorState is { Consumed: false, Pressed: true })
+            {
+                GAMELOOP.NextMonitor();
+            }
 
+            if (GAMELOOP.Paused) return;
+            
+            
             var crtDefault = new Vector2(6, 4);
             var crtSpeed = crtDefault * 0.5f * dt;
             
