@@ -540,7 +540,7 @@ public class ShapeLoop
             {
                 if (cursorState.OnScreen)
                 {
-                    OnCursorLeftScreen();
+                    ResolveOnCursorLeftScreen();
                     if(wasCursorHidden == null) wasCursorHidden = cursorState.Hidden;
                     if(wasCursorLocked == null) wasCursorLocked = cursorState.Locked;
                     UnlockOSCursor();
@@ -551,7 +551,7 @@ public class ShapeLoop
             {
                 if (!cursorState.OnScreen)
                 {
-                    OnCursorEnteredScreen();
+                    ResolveOnCursorEnteredScreen();
                     if (wasCursorHidden != null && wasCursorHidden == true) HideOSCursor();
                     if (wasCursorLocked != null && wasCursorLocked == true) LockOSCursor();
 
@@ -564,40 +564,40 @@ public class ShapeLoop
             
             if (curWindowState.Focused && !windowState.Focused)
             {
-                OnWindowFocusChanged(true);
+                ResolveOnWindowFocusChanged(true);
             }
             else if (!curWindowState.Focused && windowState.Focused)
             {
-                OnWindowFocusChanged(false);
+                ResolveOnWindowFocusChanged(false);
             }
 
             if (curWindowState.Maximized && !windowState.Maximized)
             {
-                OnWindowMaximizeChanged(true);
+                ResolveOnWindowMaximizeChanged(true);
             }
             else if (!curWindowState.Maximized && windowState.Maximized)
             {
-                OnWindowMaximizeChanged(false);
+                ResolveOnWindowMaximizeChanged(false);
             }
             
             if (curWindowState.Fullscreen && !windowState.Fullscreen)
             {
-                OnWindowFullscreenChanged(true);
+                ResolveOnWindowFullscreenChanged(true);
             }
             else if (!curWindowState.Fullscreen && windowState.Fullscreen)
             {
-                OnWindowFullscreenChanged(false);
+                ResolveOnWindowFullscreenChanged(false);
             }
 
             //safety measure
             if (CursorHidden != Raylib.IsCursorHidden()) CursorHidden = Raylib.IsCursorHidden();
             
             var curCursorState = GetCursorState();
-            if (curCursorState.Hidden && !cursorState.Hidden) OnCursorHiddenChanged(true);
-            else if (!curCursorState.Hidden && cursorState.Hidden) OnCursorHiddenChanged(false);
+            if (curCursorState.Hidden && !cursorState.Hidden) ResolveOnCursorHiddenChanged(true);
+            else if (!curCursorState.Hidden && cursorState.Hidden) ResolveOnCursorHiddenChanged(false);
             
-            if (curCursorState.Locked && !cursorState.Locked) OnCursorLockChanged(true);
-            else if (!curCursorState.Locked && cursorState.Locked) OnCursorLockChanged(false);
+            if (curCursorState.Locked && !cursorState.Locked) ResolveOnCursorLockChanged(true);
+            else if (!curCursorState.Locked && cursorState.Locked) ResolveOnCursorLockChanged(false);
 
             cursorState = curCursorState;
             windowState = curWindowState;
@@ -617,6 +617,8 @@ public class ShapeLoop
             DeltaSlow = Delta * defaultFactor;
             Cursor.Update(dt, UI);
             
+            
+            //TODO add ShapeInput parameter to update system
             ResolveUpdate(dt, DeltaSlow, Game, UI);
             
             BeginTextureMode(gameTexture.RenderTexture);
@@ -736,11 +738,9 @@ public class ShapeLoop
     protected virtual void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos) { }
     protected virtual void OnMonitorChanged(MonitorInfo newMonitor) { }
     protected virtual void OnPausedChanged(bool newPaused) { }
-    
     protected virtual void OnInputDeviceChanged(InputDevice prevDevice, InputDevice newDevice) { }
     protected virtual void OnGamepadConnected(Gamepad gamepad) { }
     protected virtual void OnGamepadDisconnected(Gamepad gamepad) { }
-
     protected virtual void OnCursorEnteredScreen() { }
     protected virtual void OnCursorLeftScreen() { }
     protected virtual void OnCursorHiddenChanged(bool hidden) { }
@@ -1015,7 +1015,44 @@ public class ShapeLoop
         OnGamepadDisconnected(gamepad);
         CurScene.OnGamepadDisconnected(gamepad);
     }
-
+    private void ResolveOnCursorEnteredScreen()
+    {
+        OnCursorEnteredScreen();
+        CurScene.OnCursorEnteredScreen();
+    }
+    private void ResolveOnCursorLeftScreen()
+    {
+        OnCursorLeftScreen();
+        CurScene.OnCursorLeftScreen();
+    }
+    private void ResolveOnCursorHiddenChanged(bool hidden)
+    {
+        OnCursorHiddenChanged(hidden);
+        CurScene.OnCursorHiddenChanged(hidden);
+    }
+    private void ResolveOnCursorLockChanged(bool locked)
+    {
+        OnCursorLockChanged(locked);
+        CurScene.OnCursorLockChanged(locked);
+    }
+    private void ResolveOnWindowFocusChanged(bool focused)
+    {
+        OnWindowFocusChanged(focused);
+        CurScene.OnWindowFocusChanged(focused);
+    }
+    private void ResolveOnWindowFullscreenChanged(bool fullscreen)
+    {
+        OnWindowFullscreenChanged(fullscreen);
+        CurScene.OnWindowFullscreenChanged(fullscreen);
+    }
+    private void ResolveOnWindowMaximizeChanged(bool maximized)
+    {
+        OnWindowMaximizeChanged(maximized);
+        CurScene.OnWindowMaximizeChanged(maximized);
+        
+    }
+    
+    
     private CursorState GetCursorState()
     {
         // var cursorHidden = CursorHidden; // Raylib.IsCursorHidden();

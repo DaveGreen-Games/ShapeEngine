@@ -28,30 +28,7 @@ namespace Examples.Scenes
 
         protected Font titleFont = GAMELOOP.FontDefault;
 
-        public virtual void OnWindowSizeChanged(DimensionConversionFactors conversionFactors)
-        {
-            
-        }
-
-        public virtual void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos)
-        {
-        }
-
-        public virtual void OnMonitorChanged(MonitorInfo newMonitor)
-        {
-        }
-
-        public virtual void OnGamepadConnected(Gamepad gamepad)
-        {
-        }
-
-        public virtual void OnGamepadDisconnected(Gamepad gamepad)
-        {
-        }
-
-        public virtual void OnInputDeviceChanged(InputDevice prevDevice, InputDevice curDevice)
-        {
-        }
+        
 
         public virtual void Reset() { }
 
@@ -151,7 +128,28 @@ namespace Examples.Scenes
         protected virtual void DrawUIExample(ScreenInfo ui) { }
         protected virtual void DrawGameExample(ScreenInfo game) { }
         
-        
+        public virtual void OnWindowSizeChanged(DimensionConversionFactors conversionFactors)
+        {
+            // var cancelState = GAMELOOP.Input.ConsumeAction(GameloopExamples.InputUICancelID);
+            // if (cancelState is { Consumed: false, Pressed: true })
+            // {
+            //     GAMELOOP.Quit();
+            // }
+        }
+        public virtual void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos){}
+        public virtual void OnMonitorChanged(MonitorInfo newMonitor){}
+        public virtual void OnGamepadConnected(Gamepad gamepad){}
+        public virtual void OnGamepadDisconnected(Gamepad gamepad){}
+        public virtual void OnInputDeviceChanged(InputDevice prevDevice, InputDevice curDevice){}
+        public virtual void OnWindowMaximizeChanged(bool maximized){}
+        public virtual void OnWindowFullscreenChanged(bool fullscreen){}
+        public virtual void OnPausedChanged(bool newPaused){}
+        public virtual void OnCursorEnteredScreen(){}
+        public virtual void OnCursorHiddenChanged(bool hidden){}
+        public virtual void OnCursorLeftScreen(){}
+        public virtual void OnCursorLockChanged(bool locked){}
+        public virtual void OnWindowFocusChanged(bool focused){}
+
         protected void DrawCross(Vector2 center, float length)
         {
             Color c = ColorLight.ChangeAlpha((byte)125);
@@ -160,31 +158,24 @@ namespace Examples.Scenes
             hor.Draw(2f, c);
             ver.Draw(2f, c);
         }
-
         public virtual GameObjectHandler? GetGameObjectHandler()
         {
             return null;
         }
-
         public virtual void Activate(IScene oldScene)
         {
             GAMELOOP.Camera.Reset();
         }
-
         public virtual void Deactivate()
         {
             GAMELOOP.Camera.Reset();
             GAMELOOP.ResetCamera();
         }
-
         public virtual void Close()
         {
             
         }
 
-        
-
-       
     }
 
 }

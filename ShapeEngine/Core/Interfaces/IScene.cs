@@ -26,18 +26,19 @@ public interface IScene : IUpdateable, IDrawable
     /// <param name="ui"></param>
     public void DrawUI(ScreenInfo ui);
 
-    public void OnWindowSizeChanged(DimensionConversionFactors conversionFactors);
-
-    public void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos);
-
-    public void OnMonitorChanged(MonitorInfo newMonitor);
-
-    public void OnGamepadConnected(Gamepad gamepad);
-
-    public void OnGamepadDisconnected(Gamepad gamepad);
-
-    public void OnInputDeviceChanged(InputDevice prevDevice, InputDevice curDevice);
-    //public void DrawToTexture(ScreenTexture texture);
-    //public void DrawToScreen(Vector2 size, Vector2 mousePos);
+    public virtual void OnWindowSizeChanged(DimensionConversionFactors conversionFactors){}
+    public virtual void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos){}
+    public virtual void OnMonitorChanged(MonitorInfo newMonitor){}
+    public virtual void OnGamepadConnected(Gamepad gamepad){}
+    public virtual void OnGamepadDisconnected(Gamepad gamepad){}
+    public virtual void OnInputDeviceChanged(InputDevice prevDevice, InputDevice curDevice){}
+    public virtual void OnPausedChanged(bool newPaused) { }
+    public virtual void OnCursorEnteredScreen() { }
+    public virtual void OnCursorLeftScreen() { }
+    public virtual void OnCursorHiddenChanged(bool hidden) { }
+    public virtual void OnCursorLockChanged(bool locked) { }
+    public virtual void OnWindowFocusChanged(bool focused) { }
+    public virtual void OnWindowFullscreenChanged(bool fullscreen) { }
+    public virtual void OnWindowMaximizeChanged(bool maximized) { }
 
 }

@@ -103,8 +103,8 @@ namespace Examples
         public Gamepad? CurGamepad = null;
         
         public static readonly uint UIAccessTag = 100;
-        public static readonly uint BasicAccessTag = 200;
-
+        public static readonly uint GameloopAccessTag = 200;
+        public static readonly uint SceneAccessTag = 300;
         public static readonly uint GamepadMouseMovementTag = 1000;
         //ui
         public static readonly uint InputUICancelID = 110;
@@ -295,6 +295,7 @@ namespace Examples
 
         protected override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
+            //TODO gameloop input comes here
             if (Paused) return;
 
             var crtDefault = new Vector2(6, 4);
@@ -358,6 +359,8 @@ namespace Examples
             //     }
             // }
         }
+        
+        
         public int GetFontCount() { return fonts.Count; }
         public Font GetFont(int id) { return fonts[id]; }
         public string GetFontName(int id) { return fontNames[id]; }
@@ -380,7 +383,33 @@ namespace Examples
             var cancelKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ESCAPE);
             var cancelGB = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_LEFT);
             InputAction uiCancel = new(ShapeInput.AllAccessTag, InputUICancelID, cancelKB, cancelGB);
-
+          
+            var fullscreenKB = new InputTypeKeyboardButton(ShapeKeyboardButton.F);
+            var fullscreenGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_THUMB);
+            InputAction fullscreen = new(GameloopAccessTag, InputFullscreenID, fullscreenKB, fullscreenGB);
+            
+            var maximizeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.M);
+            var maximizeGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_THUMB);
+            InputAction maximize = new(GameloopAccessTag, InputMaximizeID, maximizeKB, maximizeGB);
+            
+            var nextMonitorKB = new InputTypeKeyboardButton(ShapeKeyboardButton.N);
+            //var nextMonitorGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_THUMB);
+            InputAction nextMonitor = new(GameloopAccessTag, InputNextMonitorID, nextMonitorKB);
+            
+            var crtMinusKB = new InputTypeKeyboardButton(ShapeKeyboardButton.J);
+            //var crtPluseGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_THUMB);
+            InputAction crtMinus = new(GameloopAccessTag, InputCRTMinusID, crtMinusKB);
+            
+            var crtPlusKB = new InputTypeKeyboardButton(ShapeKeyboardButton.K);
+            //var crtMinusGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_THUMB);
+            InputAction crtPlus = new(GameloopAccessTag, InputCRTPlusID, crtPlusKB);
+            
+            var pauseKB = new InputTypeKeyboardButton(ShapeKeyboardButton.P);
+            var pauseGB = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_RIGHT);
+            InputAction pause = new(GameloopAccessTag, InputPauseID, pauseKB, pauseGB);
+            
+            
+            
             //main scene
             var backKB = new InputTypeKeyboardButton(ShapeKeyboardButton.TAB);
             var backGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
@@ -431,43 +460,21 @@ namespace Examples
             var prevPageGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_BOTTOM);
             InputAction prevPage = new(UIAccessTag, InputUIPrevPage, prevPageKB, prevPageGB);
             
-            //gameloop
-            var fullscreenKB = new InputTypeKeyboardButton(ShapeKeyboardButton.F);
-            var fullscreenGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_THUMB);
-            InputAction fullscreen = new(BasicAccessTag, InputFullscreenID, fullscreenKB, fullscreenGB);
             
-            var maximizeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.M);
-            var maximizeGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_THUMB);
-            InputAction maximize = new(BasicAccessTag, InputMaximizeID, maximizeKB, maximizeGB);
-            
-            var nextMonitorKB = new InputTypeKeyboardButton(ShapeKeyboardButton.N);
-            //var nextMonitorGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_THUMB);
-            InputAction nextMonitor = new(BasicAccessTag, InputNextMonitorID, nextMonitorKB);
-            
-            var crtMinusKB = new InputTypeKeyboardButton(ShapeKeyboardButton.J);
-            //var crtPluseGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_THUMB);
-            InputAction crtMinus = new(BasicAccessTag, InputCRTMinusID, crtMinusKB);
-            
-            var crtPlusKB = new InputTypeKeyboardButton(ShapeKeyboardButton.K);
-            //var crtMinusGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_THUMB);
-            InputAction crtPlus = new(BasicAccessTag, InputCRTPlusID, crtPlusKB);
-            
-            var pauseKB = new InputTypeKeyboardButton(ShapeKeyboardButton.P);
-            var pauseGB = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_RIGHT);
-            InputAction pause = new(BasicAccessTag, InputPauseID, pauseKB, pauseGB);
             
             //example scene only
             var zoomInKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ZERO);
             var zoomInGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
-            InputAction zoomIn = new(BasicAccessTag, InputZoomInID, zoomInKB, zoomInGB);
+            InputAction zoomIn = new(SceneAccessTag, InputZoomInID, zoomInKB, zoomInGB);
             
             var zoomOutKB = new InputTypeKeyboardButton(ShapeKeyboardButton.NINE);
             var zoomOutGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
-            InputAction zoomOut = new(BasicAccessTag, InputZoomOutID, zoomOutKB, zoomOutGB);
+            InputAction zoomOut = new(SceneAccessTag, InputZoomOutID, zoomOutKB, zoomOutGB);
             
             var resetKB = new InputTypeKeyboardButton(ShapeKeyboardButton.R);
             var resetGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
-            InputAction reset = new(BasicAccessTag, InputResetID, resetKB, resetGB);
+            InputAction reset = new(SceneAccessTag, InputResetID, resetKB, resetGB);
+            
             
             Input.AddActions
             (
