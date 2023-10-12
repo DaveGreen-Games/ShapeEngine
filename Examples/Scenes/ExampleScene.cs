@@ -28,7 +28,7 @@ namespace Examples.Scenes
 
         protected Font titleFont = GAMELOOP.FontDefault;
 
-        
+        protected readonly ShapeInput input = GAMELOOP.Input;
 
         public virtual void Reset() { }
 
@@ -162,6 +162,12 @@ namespace Examples.Scenes
         {
             return null;
         }
+
+        public void SetInput(ShapeInput input)
+        {
+            //this.input = input;
+        }
+
         public virtual void Activate(IScene oldScene)
         {
             GAMELOOP.Camera.Reset();

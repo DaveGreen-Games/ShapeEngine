@@ -350,6 +350,7 @@ public class ShapeLoop
     {
         if (newScene == CurScene) return;
         CurScene.Deactivate();
+        newScene.SetInput(Input);
         newScene.Activate(CurScene);
         CurScene = newScene;
     }

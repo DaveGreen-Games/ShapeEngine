@@ -25,6 +25,7 @@ namespace Examples.Scenes
         private Font titleFont;
 
         private float tabChangeMouseWheelLockTimer = 0f;
+        private ShapeInput input;
         public MainScene()
         {
             for (int i = 0; i < 10; i++)
@@ -90,13 +91,13 @@ namespace Examples.Scenes
         
         public void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            var cancelState = GAMELOOP.Input.ConsumeAction(GameloopExamples.InputUICancelID);
+            var cancelState = input.ConsumeAction(GameloopExamples.InputUICancelID);
             if (cancelState is { Consumed: false, Pressed: true })
             {
                 GAMELOOP.Quit();
             }
 
-            var resetState = GAMELOOP.Input.ConsumeAction(GameloopExamples.InputResetID);
+            var resetState = input.ConsumeAction(GameloopExamples.InputResetID);
             if (resetState is { Consumed: false, Pressed: true })
             {
                 for (int i = 0; i < examples.Count; i++)
@@ -107,18 +108,18 @@ namespace Examples.Scenes
                 GAMELOOP.ResetCamera();
             }
 
-            var maximizedState = GAMELOOP.Input.ConsumeAction(GameloopExamples.InputMaximizeID);
+            var maximizedState = input.ConsumeAction(GameloopExamples.InputMaximizeID);
             if (maximizedState is { Consumed: false, Pressed: true })
             { 
                 GAMELOOP.Maximized = !GAMELOOP.Maximized;
             }
-            var fullscreenState = GAMELOOP.Input.ConsumeAction(GameloopExamples.InputFullscreenID);
+            var fullscreenState = input.ConsumeAction(GameloopExamples.InputFullscreenID);
             if (fullscreenState is { Consumed: false, Pressed: true })
             { 
                 GAMELOOP.Fullscreen = !GAMELOOP.Fullscreen;
             }
             
-            var prevTabState = GAMELOOP.Input.ConsumeAction(GameloopExamples.InputUIPrevTab);
+            var prevTabState = input.ConsumeAction(GameloopExamples.InputUIPrevTab);
             if (prevTabState is { Consumed: false, Pressed: true })
             {
                 if (prevTabState.InputDevice == InputDevice.Mouse)
@@ -136,7 +137,7 @@ namespace Examples.Scenes
                 }
                 //PrevPage();
             }
-            var nextTabState = GAMELOOP.Input.ConsumeAction(GameloopExamples.InputUINextTab);
+            var nextTabState = input.ConsumeAction(GameloopExamples.InputUINextTab);
             if (nextTabState is { Consumed: false, Pressed: true })
             { 
                 if (nextTabState.InputDevice == InputDevice.Mouse)
@@ -155,18 +156,18 @@ namespace Examples.Scenes
                 // NextPage();
             }
 
-            var uiDownState = GAMELOOP.Input.ConsumeAction(GameloopExamples.InputUIDownID);
+            var uiDownState = input.ConsumeAction(GameloopExamples.InputUIDownID);
             if (uiDownState is { Consumed: false, Pressed: true })
             { 
                 NextButton();
             }
-            var uiUpState = GAMELOOP.Input.ConsumeAction(GameloopExamples.InputUIUpID);
+            var uiUpState = input.ConsumeAction(GameloopExamples.InputUIUpID);
             if (uiUpState is { Consumed: false, Pressed: true })
             { 
                 PrevButton();
             }
             
-            var nextMonitorState = GAMELOOP.Input.ConsumeAction(GameloopExamples.InputNextMonitorID);
+            var nextMonitorState = input.ConsumeAction(GameloopExamples.InputNextMonitorID);
             if (nextMonitorState is { Consumed: false, Pressed: true })
             { 
                 GAMELOOP.NextMonitor();
@@ -212,11 +213,11 @@ namespace Examples.Scenes
             titleFont.DrawText(text, titleRect, 10, new(0.5f), ExampleScene.ColorLight);
 
             int pages = GetMaxPages();
-            var prevAction = GAMELOOP.Input.GetAction(GameloopExamples.InputUIPrevTab);
-            var prevName = prevAction != null ? prevAction.GetInputName(GAMELOOP.Input.CurrentInputDevice, true) : "";
+            var prevAction = input.GetAction(GameloopExamples.InputUIPrevTab);
+            var prevName = prevAction != null ? prevAction.GetInputName(input.CurrentInputDevice, true) : "";
 
-            var nextAction = GAMELOOP.Input.GetAction(GameloopExamples.InputUINextTab);
-            var nextName = nextAction != null ? nextAction.GetInputName(GAMELOOP.Input.CurrentInputDevice, true) : "";
+            var nextAction = input.GetAction(GameloopExamples.InputUINextTab);
+            var nextName = nextAction != null ? nextAction.GetInputName(input.CurrentInputDevice, true) : "";
             
             string pagesText = pages <= 1 ? "Page 1/1" : $"[{prevName}] <- Page #{curPageIndex + 1}/{pages} -> [{nextName}]";
             Rect pageRect = new Rect(uiSize * new Vector2(0.01f, 0.12f), uiSize * new Vector2(0.3f, 0.06f), new Vector2(0f, 0f));
@@ -348,8 +349,14 @@ namespace Examples.Scenes
             return null;
         }
 
+        public void SetInput(ShapeInput input)
+        {
+            this.input = input;
+        }
+
         public void Activate(IScene oldScene)
         {
+            
             GAMELOOP.SwitchCursor(new SimpleCursorUI());
         }
 

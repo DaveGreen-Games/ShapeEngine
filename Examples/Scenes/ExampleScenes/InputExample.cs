@@ -395,7 +395,7 @@ namespace Examples.Scenes.ExampleScenes
         Font font;
 
         //private Gamepad? gamepad = null;
-        private InputDevice currentInputDevice = InputDevice.Keyboard;
+        //private InputDevice currentInputDevice = InputDevice.Keyboard;
 
         private JoystickVisualizer joystickLeft;
         private JoystickVisualizer joystickRight;
@@ -419,14 +419,13 @@ namespace Examples.Scenes.ExampleScenes
         
         public override void Activate(IScene oldScene)
         {
-            //gamepad = GAMELOOP.RequestGamepad(0);
-            currentInputDevice = GAMELOOP.Input.CurrentInputDevice;
-            GAMELOOP.Input.LockWhitelist(GameloopExamples.GameloopAccessTag);
+            //currentInputDevice = GAMELOOP.Input.CurrentInputDevice;
+            input.LockWhitelist(GameloopExamples.GameloopAccessTag);
         }
 
         public override void Deactivate()
         {
-            GAMELOOP.Input.Unlock();
+            input.Unlock();
             //if(gamepad != null) GAMELOOP.ReturnGamepad(gamepad.Index);
         }
 
@@ -446,10 +445,10 @@ namespace Examples.Scenes.ExampleScenes
         //     }
         // }
 
-        public override void OnInputDeviceChanged(InputDevice prevDevice, InputDevice curDevice)
-        {
-            currentInputDevice = curDevice;
-        }
+        // public override void OnInputDeviceChanged(InputDevice prevDevice, InputDevice curDevice)
+        // {
+        //     currentInputDevice = curDevice;
+        // }
 
         public override GameObjectHandler? GetGameObjectHandler()
         {
@@ -475,14 +474,14 @@ namespace Examples.Scenes.ExampleScenes
                 gamepadIndex = GAMELOOP.CurGamepad.Index;
             }
             
-            joystickLeft.Update(dt, gamepadIndex, currentInputDevice);
-            joystickRight.Update(dt, gamepadIndex, currentInputDevice);
+            joystickLeft.Update(dt, gamepadIndex, input.CurrentInputDevice);
+            joystickRight.Update(dt, gamepadIndex, input.CurrentInputDevice);
             
-            buttonLeft.Update(dt, gamepadIndex, currentInputDevice);
-            buttonRight.Update(dt, gamepadIndex, currentInputDevice);
+            buttonLeft.Update(dt, gamepadIndex, input.CurrentInputDevice);
+            buttonRight.Update(dt, gamepadIndex, input.CurrentInputDevice);
             
-            triggerLeft.Update(dt, gamepadIndex, currentInputDevice);
-            triggerRight.Update(dt, gamepadIndex, currentInputDevice);
+            triggerLeft.Update(dt, gamepadIndex, input.CurrentInputDevice);
+            triggerRight.Update(dt, gamepadIndex, input.CurrentInputDevice);
         }
         protected override void DrawGameExample(ScreenInfo game)
         {
@@ -541,8 +540,8 @@ namespace Examples.Scenes.ExampleScenes
         private void DrawInputDeviceInfo(Rect rect)
         {
             var text = 
-                GAMELOOP.Input.CurrentInputDevice == InputDevice.Gamepad ? "GAMEPAD" :
-                GAMELOOP.Input.CurrentInputDevice == InputDevice.Keyboard ? "KEYBOARD" : "MOUSE";
+                input.CurrentInputDevice == InputDevice.Gamepad ? "GAMEPAD" :
+                input.CurrentInputDevice == InputDevice.Keyboard ? "KEYBOARD" : "MOUSE";
             var textRect = rect.ApplyMargins(0f, 0.5f, 0.15f, 0.8f);
             font.DrawText(text, textRect, 1f, new Vector2(0.05f, 0.5f), ColorHighlight3);
         }

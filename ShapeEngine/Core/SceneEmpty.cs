@@ -11,7 +11,8 @@ namespace ShapeEngine.Core
         public virtual void OnPauseChanged(bool paused){}
 
         public virtual void Close() { }
-        
+
+        public virtual void SetInput(ShapeInput input){}
 
         public virtual void Activate(IScene oldScene) { }
         public virtual void Deactivate() { }
