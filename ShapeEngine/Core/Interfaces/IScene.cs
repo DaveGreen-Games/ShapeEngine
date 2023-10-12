@@ -5,6 +5,7 @@ using ShapeEngine.Screen;
 
 namespace ShapeEngine.Core.Interfaces;
 
+
 public interface IScene : IUpdateable, IDrawable
 {
 

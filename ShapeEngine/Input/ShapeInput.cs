@@ -3,7 +3,7 @@ using Raylib_CsLo;
 
 namespace ShapeEngine.Input;
 
-public class ShapeInput
+public sealed class ShapeInput
 {
     #region Members
     public static readonly uint AllAccessTag = 0;
@@ -12,9 +12,25 @@ public class ShapeInput
     private readonly List<uint> lockWhitelist = new();
     private readonly List<uint> lockBlacklist = new();
     private readonly Dictionary<uint, InputAction> inputActions = new();
-    #endregion
     
-    //TODO last input device & last gamepad used should go here as well from shape loop!
+    private readonly Gamepad[] gamepads = new Gamepad[8];
+    private readonly List<int> connectedGamepadIndices = new();
+    public InputDevice CurrentInputDevice { get; private set; } = InputDevice.Keyboard;
+    public int MaxGamepads => gamepads.Length;
+    public Gamepad? LastUsedGamepad { get; private set; } = null;
+    #endregion
+
+    public event Action<Gamepad, bool>? OnGamepadConnectionChanged;
+    public event Action<InputDevice, InputDevice>? OnInputDeviceChanged;
+
+    public ShapeInput()
+    {
+        for (var i = 0; i < gamepads.Length; i++)
+        {
+            gamepads[i] = new Gamepad(i, Raylib.IsGamepadAvailable(i));
+        }
+
+    }
     
     #region Lock System
     public void Lock()
@@ -135,13 +151,47 @@ public class ShapeInput
     
     #endregion
 
+    #region Gamepad
+
+    public bool HasGamepad(int index) => index >= 0 && index < gamepads.Length;
+    public bool IsGamepadConnected(int index) => HasGamepad(index) && gamepads[index].Connected;
+    public Gamepad? GetGamepad(int index)
+    {
+        if (!HasGamepad(index)) return null;
+        return gamepads[index];
+    }
+    public Gamepad? RequestGamepad(int preferredIndex = -1)
+    {
+        var preferredGamepad = GetGamepad(preferredIndex);
+        if (preferredGamepad is { Connected: true, Available: true })
+        {
+            preferredGamepad.Claim();
+            return preferredGamepad;
+        }
+
+        foreach (var gamepad in gamepads)
+        {
+            if (gamepad is { Connected: true, Available: true })
+            {
+                gamepad.Claim();
+                return gamepad;
+            }
+        }
+        return null;
+    }
+    public void ReturnGamepad(int index) => GetGamepad(index)?.Free();
+
+    #endregion
     public void Update(float dt)
     {
+        CheckGamepadConnections();
+        CheckInputDevice();
         foreach (var input in inputActions.Values)
         {
             input.Update(dt);
         }
     }
+    
     #region Basic
     public InputState GetState(ShapeKeyboardButton button, uint accessTag)
     {
@@ -240,6 +290,80 @@ public class ShapeInput
     }
     #endregion
 
+    #region Private
+
+    private void CheckInputDevice()
+    {
+        var prevInputDevice = CurrentInputDevice;
+        if (CurrentInputDevice == InputDevice.Keyboard)
+        {
+            if (ShapeInput.WasMouseUsed()) CurrentInputDevice = InputDevice.Mouse;
+            else
+            {
+                var index = ShapeInput.WasGamepadUsed(connectedGamepadIndices);
+                if (index >= 0)
+                {
+                    CurrentInputDevice = InputDevice.Gamepad;
+                    LastUsedGamepad = GetGamepad(index);
+                }
+            }
+            //else if (ShapeInput.WasGamepadUsed(connectedGamepadIndices)) CurrentInputDevice = InputDevice.Gamepad;
+        }
+        else if (CurrentInputDevice == InputDevice.Mouse)
+        {
+            if (ShapeInput.WasKeyboardUsed()) CurrentInputDevice = InputDevice.Keyboard;
+            else
+            {
+                var index = ShapeInput.WasGamepadUsed(connectedGamepadIndices);
+                if (index >= 0)
+                {
+                    CurrentInputDevice = InputDevice.Gamepad;
+                    LastUsedGamepad = GetGamepad(index);
+                }
+            }
+            //else if (ShapeInput.WasGamepadUsed(connectedGamepadIndices)) CurrentInputDevice = InputDevice.Gamepad;
+        }
+        else //gamepad
+        {
+            if (ShapeInput.WasMouseUsed()) CurrentInputDevice = InputDevice.Mouse;
+            else if (ShapeInput.WasKeyboardUsed()) CurrentInputDevice = InputDevice.Keyboard;
+        }
+
+        if (CurrentInputDevice != prevInputDevice)
+        {
+            OnInputDeviceChanged?.Invoke(prevInputDevice, CurrentInputDevice);
+        }
+    }
+    private void CheckGamepadConnections()
+    {
+        connectedGamepadIndices.Clear();
+        for (var i = 0; i < gamepads.Length; i++)
+        {
+            var gamepad = gamepads[i];
+            if (Raylib.IsGamepadAvailable(i))
+            {
+                if (!gamepad.Connected)
+                {
+                    gamepad.Connect();
+                    OnGamepadConnectionChanged?.Invoke(gamepad, true);
+                }
+                connectedGamepadIndices.Add(i);
+            }
+            else
+            {
+                if (gamepad.Connected)
+                {
+                    gamepad.Disconnect();
+                    OnGamepadConnectionChanged?.Invoke(gamepad, false);
+                }
+            }
+        }
+        
+    }
+
+
+    #endregion
+    
     #region Input Used
     public static bool WasKeyboardUsed() => Raylib.GetKeyPressed() > 0;
     public static bool WasMouseUsed(float moveThreshold = 0.5f, float mouseWheelThreshold = 0.25f)

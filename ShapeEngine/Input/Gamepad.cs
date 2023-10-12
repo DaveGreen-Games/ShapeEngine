@@ -1,6 +1,6 @@
 using Raylib_CsLo;
 
-namespace ShapeEngine.Core;
+namespace ShapeEngine.Input;
 
 public class Gamepad
 {

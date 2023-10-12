@@ -420,7 +420,7 @@ namespace Examples.Scenes.ExampleScenes
         public override void Activate(IScene oldScene)
         {
             //gamepad = GAMELOOP.RequestGamepad(0);
-            currentInputDevice = GAMELOOP.CurrentInputDevice;
+            currentInputDevice = GAMELOOP.Input.CurrentInputDevice;
             GAMELOOP.Input.LockWhitelist(GameloopExamples.GameloopAccessTag);
         }
 
@@ -541,8 +541,8 @@ namespace Examples.Scenes.ExampleScenes
         private void DrawInputDeviceInfo(Rect rect)
         {
             var text = 
-                GAMELOOP.CurrentInputDevice == InputDevice.Gamepad ? "GAMEPAD" :
-                GAMELOOP.CurrentInputDevice == InputDevice.Keyboard ? "KEYBOARD" : "MOUSE";
+                GAMELOOP.Input.CurrentInputDevice == InputDevice.Gamepad ? "GAMEPAD" :
+                GAMELOOP.Input.CurrentInputDevice == InputDevice.Keyboard ? "KEYBOARD" : "MOUSE";
             var textRect = rect.ApplyMargins(0f, 0.5f, 0.15f, 0.8f);
             font.DrawText(text, textRect, 1f, new Vector2(0.05f, 0.5f), ColorHighlight3);
         }

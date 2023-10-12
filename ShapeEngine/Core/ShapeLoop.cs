@@ -206,11 +206,11 @@ public class ShapeLoop
         }
     }
     public SlowMotion SlowMotion { get; private set; } = new SlowMotion();
-    public InputDevice CurrentInputDevice { get; private set; } = InputDevice.Keyboard;
     
-    public int MaxGamepads => gamepads.Length;
-    public readonly ShapeInput Input = new();
-    public Gamepad? LastUsedGamepad { get; private set; } = null;
+    public readonly ShapeInput Input;
+    // public InputDevice CurrentInputDevice { get; private set; } = InputDevice.Keyboard;
+    // public int MaxGamepads => gamepads.Length;
+    // public Gamepad? LastUsedGamepad { get; private set; } = null;
 
     public bool CursorHidden { get; private set; } = false;
     public bool CursorLocked   {get; private set;}  = false;
@@ -233,8 +233,8 @@ public class ShapeLoop
     private int frameRateLimit = 60;
     private Dimensions windowSize = new();
     
-    private readonly Gamepad[] gamepads = new Gamepad[8];
-    private readonly List<int> connectedGamepadIndices = new();
+    // private readonly Gamepad[] gamepads = new Gamepad[8];
+    // private readonly List<int> connectedGamepadIndices = new();
     private bool? wasCursorLocked = null;
     private bool? wasCursorHidden = null;
     
@@ -284,11 +284,17 @@ public class ShapeLoop
         gameTexture.Load(CurScreenSize);
         if (multiShaderSupport) screenShaderBuffer.Load(CurScreenSize);
 
-        for (var i = 0; i < gamepads.Length; i++)
-        {
-            gamepads[i] = new Gamepad(i, Raylib.IsGamepadAvailable(i));
-        }
-
+        
+        // for (var i = 0; i < gamepads.Length; i++)
+        // {
+        //     gamepads[i] = new Gamepad(i, Raylib.IsGamepadAvailable(i));
+        // }
+        
+        Input = new();
+        Input.OnGamepadConnectionChanged += OnInputGamepadConnectionChanged;
+        Input.OnInputDeviceChanged += OnInputInputDeviceChanged;
+        
+        
         //CursorOnScreen = Fullscreen || Raylib.IsCursorOnScreen();
         CursorOnScreen = Fullscreen || Raylib.IsCursorOnScreen() || ( Raylib.IsWindowFocused() && screenArea.ContainsPoint(GetMousePosition()) );
         cursorState = GetCursorState();
@@ -451,33 +457,7 @@ public class ShapeLoop
     }
     public void ResetCamera() => Camera = basicCamera;
 
-    public bool HasGamepad(int index) => index >= 0 && index < gamepads.Length;
-    public bool IsGamepadConnected(int index) => HasGamepad(index) && gamepads[index].Connected;
-    public Gamepad? GetGamepad(int index)
-    {
-        if (!HasGamepad(index)) return null;
-        return gamepads[index];
-    }
-    public Gamepad? RequestGamepad(int preferredIndex = -1)
-    {
-        var preferredGamepad = GetGamepad(preferredIndex);
-        if (preferredGamepad is { Connected: true, Available: true })
-        {
-            preferredGamepad.Claim();
-            return preferredGamepad;
-        }
-
-        foreach (var gamepad in gamepads)
-        {
-            if (gamepad is { Connected: true, Available: true })
-            {
-                gamepad.Claim();
-                return gamepad;
-            }
-        }
-        return null;
-    }
-    public void ReturnGamepad(int index) => GetGamepad(index)?.Free();
+    
     #endregion
     
     #region  Gameloop
@@ -507,8 +487,8 @@ public class ShapeLoop
             }
             
             CheckForWindowChanges();
-            CheckGamepadConnections();
-            CheckInputDevice();
+            // CheckGamepadConnections();
+            // CheckInputDevice();
             Input.Update(dt);
             Camera.SetSize(CurScreenSize, DevelopmentDimensions);
             if(!Paused) Camera.Update(dt);
@@ -617,8 +597,6 @@ public class ShapeLoop
             DeltaSlow = Delta * defaultFactor;
             Cursor.Update(dt, UI);
             
-            
-            //TODO add ShapeInput parameter to update system
             ResolveUpdate(dt, DeltaSlow, Game, UI);
             
             BeginTextureMode(gameTexture.RenderTexture);
@@ -820,75 +798,7 @@ public class ShapeLoop
     #endregion
 
     #region Private Functions
-    private void CheckInputDevice()
-    {
-        var prevInputDevice = CurrentInputDevice;
-        if (CurrentInputDevice == InputDevice.Keyboard)
-        {
-            if (ShapeInput.WasMouseUsed()) CurrentInputDevice = InputDevice.Mouse;
-            else
-            {
-                var index = ShapeInput.WasGamepadUsed(connectedGamepadIndices);
-                if (index >= 0)
-                {
-                    CurrentInputDevice = InputDevice.Gamepad;
-                    LastUsedGamepad = GetGamepad(index);
-                }
-            }
-            //else if (ShapeInput.WasGamepadUsed(connectedGamepadIndices)) CurrentInputDevice = InputDevice.Gamepad;
-        }
-        else if (CurrentInputDevice == InputDevice.Mouse)
-        {
-            if (ShapeInput.WasKeyboardUsed()) CurrentInputDevice = InputDevice.Keyboard;
-            else
-            {
-                var index = ShapeInput.WasGamepadUsed(connectedGamepadIndices);
-                if (index >= 0)
-                {
-                    CurrentInputDevice = InputDevice.Gamepad;
-                    LastUsedGamepad = GetGamepad(index);
-                }
-            }
-            //else if (ShapeInput.WasGamepadUsed(connectedGamepadIndices)) CurrentInputDevice = InputDevice.Gamepad;
-        }
-        else //gamepad
-        {
-            if (ShapeInput.WasMouseUsed()) CurrentInputDevice = InputDevice.Mouse;
-            else if (ShapeInput.WasKeyboardUsed()) CurrentInputDevice = InputDevice.Keyboard;
-        }
-
-        if (CurrentInputDevice != prevInputDevice)
-        {
-            ResolveOnInputDeviceChanged(prevInputDevice, CurrentInputDevice);
-        }
-    }
-    private void CheckGamepadConnections()
-    {
-        connectedGamepadIndices.Clear();
-        for (var i = 0; i < gamepads.Length; i++)
-        {
-            var gamepad = gamepads[i];
-            if (Raylib.IsGamepadAvailable(i))
-            {
-                if (!gamepad.Connected)
-                {
-                    gamepad.Connect();
-                    ResolveOnGamepadConnected(gamepad);
-                }
-                connectedGamepadIndices.Add(i);
-            }
-            else
-            {
-                if (gamepad.Connected)
-                {
-                    gamepad.Disconnect();
-                    ResolveOnGamepadDisconnected(gamepad);
-                }
-            }
-        }
-        
-    }
-
+    
     private void SetupWindowDimensions()
     {
         var monitor = Monitor.CurMonitor();
@@ -1000,21 +910,6 @@ public class ShapeLoop
         OnPausedChanged(newPaused);
         CurScene.OnPauseChanged(newPaused);
     }
-    private void ResolveOnInputDeviceChanged(InputDevice prevDevice, InputDevice newDevice)
-    {
-        OnInputDeviceChanged(prevDevice, newDevice);
-        CurScene.OnInputDeviceChanged(prevDevice, newDevice);
-    }
-    private void ResolveOnGamepadConnected(Gamepad gamepad)
-    {
-        OnGamepadConnected(gamepad);
-        CurScene.OnGamepadConnected(gamepad);
-    }
-    private void ResolveOnGamepadDisconnected(Gamepad gamepad)
-    {
-        OnGamepadDisconnected(gamepad);
-        CurScene.OnGamepadDisconnected(gamepad);
-    }
     private void ResolveOnCursorEnteredScreen()
     {
         OnCursorEnteredScreen();
@@ -1051,7 +946,24 @@ public class ShapeLoop
         CurScene.OnWindowMaximizeChanged(maximized);
         
     }
-    
+    private void OnInputGamepadConnectionChanged(Gamepad gamepad, bool connected)
+    {
+        if (connected)
+        {
+            OnGamepadConnected(gamepad);
+            CurScene.OnGamepadConnected(gamepad);
+        }
+        else
+        {
+            OnGamepadDisconnected(gamepad);
+            CurScene.OnGamepadDisconnected(gamepad);
+        }
+    }
+    private void OnInputInputDeviceChanged(InputDevice prevDevice, InputDevice newDevice)
+    {
+        OnInputDeviceChanged(prevDevice, newDevice);
+        CurScene.OnInputDeviceChanged(prevDevice, newDevice);
+    }
     
     private CursorState GetCursorState()
     {
@@ -1102,4 +1014,106 @@ public class ShapeLoop
     }
     #endregion
 }
+   
+// private void CheckInputDevice()
+    // {
+    //     var prevInputDevice = CurrentInputDevice;
+    //     if (CurrentInputDevice == InputDevice.Keyboard)
+    //     {
+    //         if (ShapeInput.WasMouseUsed()) CurrentInputDevice = InputDevice.Mouse;
+    //         else
+    //         {
+    //             var index = ShapeInput.WasGamepadUsed(connectedGamepadIndices);
+    //             if (index >= 0)
+    //             {
+    //                 CurrentInputDevice = InputDevice.Gamepad;
+    //                 LastUsedGamepad = GetGamepad(index);
+    //             }
+    //         }
+    //         //else if (ShapeInput.WasGamepadUsed(connectedGamepadIndices)) CurrentInputDevice = InputDevice.Gamepad;
+    //     }
+    //     else if (CurrentInputDevice == InputDevice.Mouse)
+    //     {
+    //         if (ShapeInput.WasKeyboardUsed()) CurrentInputDevice = InputDevice.Keyboard;
+    //         else
+    //         {
+    //             var index = ShapeInput.WasGamepadUsed(connectedGamepadIndices);
+    //             if (index >= 0)
+    //             {
+    //                 CurrentInputDevice = InputDevice.Gamepad;
+    //                 LastUsedGamepad = GetGamepad(index);
+    //             }
+    //         }
+    //         //else if (ShapeInput.WasGamepadUsed(connectedGamepadIndices)) CurrentInputDevice = InputDevice.Gamepad;
+    //     }
+    //     else //gamepad
+    //     {
+    //         if (ShapeInput.WasMouseUsed()) CurrentInputDevice = InputDevice.Mouse;
+    //         else if (ShapeInput.WasKeyboardUsed()) CurrentInputDevice = InputDevice.Keyboard;
+    //     }
+    //
+    //     if (CurrentInputDevice != prevInputDevice)
+    //     {
+    //         ResolveOnInputDeviceChanged(prevInputDevice, CurrentInputDevice);
+    //     }
+    // }
+    // private void CheckGamepadConnections()
+    // {
+    //     connectedGamepadIndices.Clear();
+    //     for (var i = 0; i < gamepads.Length; i++)
+    //     {
+    //         var gamepad = gamepads[i];
+    //         if (Raylib.IsGamepadAvailable(i))
+    //         {
+    //             if (!gamepad.Connected)
+    //             {
+    //                 gamepad.Connect();
+    //                 ResolveOnGamepadConnected(gamepad);
+    //             }
+    //             connectedGamepadIndices.Add(i);
+    //         }
+    //         else
+    //         {
+    //             if (gamepad.Connected)
+    //             {
+    //                 gamepad.Disconnect();
+    //                 ResolveOnGamepadDisconnected(gamepad);
+    //             }
+    //         }
+    //     }
+    //     
+    // }
+
+// public bool HasGamepad(int index) => index >= 0 && index < gamepads.Length;
+// public bool IsGamepadConnected(int index) => HasGamepad(index) && gamepads[index].Connected;
+// public Gamepad? GetGamepad(int index)
+// {
+//     if (!HasGamepad(index)) return null;
+//     return gamepads[index];
+// }
+// public Gamepad? RequestGamepad(int preferredIndex = -1)
+// {
+//     var preferredGamepad = GetGamepad(preferredIndex);
+//     if (preferredGamepad is { Connected: true, Available: true })
+//     {
+//         preferredGamepad.Claim();
+//         return preferredGamepad;
+//     }
+//
+//     foreach (var gamepad in gamepads)
+//     {
+//         if (gamepad is { Connected: true, Available: true })
+//         {
+//             gamepad.Claim();
+//             return gamepad;
+//         }
+//     }
+//     return null;
+// }
+// public void ReturnGamepad(int index) => GetGamepad(index)?.Free();
+
+    
+    
+    
+    
     

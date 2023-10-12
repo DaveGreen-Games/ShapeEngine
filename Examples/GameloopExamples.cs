@@ -183,10 +183,10 @@ namespace Examples
 
         protected override Vector2 ChangeMousePos(float dt, Vector2 mousePos, Rect screenArea)
         {
-            if (CurrentInputDevice == InputDevice.Gamepad && LastUsedGamepad != null)
+            if (Input.CurrentInputDevice == InputDevice.Gamepad && Input.LastUsedGamepad != null)
             {
                 float speed = screenArea.Size.Max() * 0.75f * dt; // 500f * dt;
-                int gamepad = LastUsedGamepad.Index;
+                int gamepad = Input.LastUsedGamepad.Index;
                 var x = Input.GetState(ShapeGamepadAxis.LEFT_X, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
                 var y = Input.GetState(ShapeGamepadAxis.LEFT_Y, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
 
@@ -209,7 +209,7 @@ namespace Examples
         {
             SetupInput();
             
-            CurGamepad = RequestGamepad(0);
+            CurGamepad = Input.RequestGamepad(0);
             if (CurGamepad != null)
             {
                 Input.UpdateActionGamepad(CurGamepad.Index);
@@ -232,7 +232,7 @@ namespace Examples
         protected override void OnGamepadConnected(Gamepad gamepad)
         {
             if (CurGamepad != null) return;
-            CurGamepad = RequestGamepad(0);
+            CurGamepad = Input.RequestGamepad(0);
             
             if (CurGamepad != null)
             {
@@ -245,7 +245,7 @@ namespace Examples
             if (CurGamepad == null) return;
             if (CurGamepad.Index == gamepad.Index)
             {
-                CurGamepad = RequestGamepad(0);
+                CurGamepad = Input.RequestGamepad(0);
 
                 if (CurGamepad == null)
                 {
