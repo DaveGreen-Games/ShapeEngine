@@ -369,7 +369,14 @@ public class InputAction
         return inputs[0].GetName(shorthand);
 
     }
-    
+    // public string GetInputNameMouseKeyboard(bool shorthand = true)
+    // {
+    //     var inputs = GetInputs(InputDevice.Mouse);
+    //     if(inputs.Count <= 0) inputs.AddRange(GetInputs(InputDevice.Keyboard));
+    //     if (inputs.Count <= 0) return "No Input";
+    //     return inputs[0].GetName(shorthand);
+    //
+    // }
     public static IInputType CreateInputType(ShapeKeyboardButton button) => new InputTypeKeyboardButton(button);
     public static IInputType CreateInputType(ShapeMouseButton button) => new InputTypeMouseButton(button);
     public static IInputType CreateInputType(ShapeGamepadButton button, float deadzone = 0.2f) => new InputTypeGamepadButton(button, deadzone);

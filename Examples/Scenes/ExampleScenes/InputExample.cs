@@ -512,8 +512,8 @@ namespace Examples.Scenes.ExampleScenes
             triggerLeft.Draw(triggerLeftRect, lineThickness);
             triggerRight.Draw(triggerRightRect, lineThickness);
             
-            DrawGamepadInfo(ui.Area);
-            DrawInputDeviceInfo(ui.Area);
+            // DrawGamepadInfo(ui.Area);
+            // DrawInputDeviceInfo(ui.Area);
         }
 
         private Vector2 lastMouseDelta = new();
@@ -537,26 +537,26 @@ namespace Examples.Scenes.ExampleScenes
 
         }
 
-        private void DrawInputDeviceInfo(Rect rect)
-        {
-            var text = 
-                input.CurrentInputDevice == InputDevice.Gamepad ? "GAMEPAD" :
-                input.CurrentInputDevice == InputDevice.Keyboard ? "KEYBOARD" : "MOUSE";
-            var textRect = rect.ApplyMargins(0f, 0.5f, 0.15f, 0.8f);
-            font.DrawText(text, textRect, 1f, new Vector2(0.05f, 0.5f), ColorHighlight3);
-        }
-        private void DrawGamepadInfo(Rect rect)
-        {
-            string text = "No Gamepad Connected";
-            if (GAMELOOP.CurGamepad != null)
-            {
-                var gamepadIndex = GAMELOOP.CurGamepad.Index;
-                text = $"Gamepad [{gamepadIndex}] Connected";
-            }
-            
-            var textRect = rect.ApplyMargins(0f, 0.5f, 0.1f, 0.85f);
-            font.DrawText(text, textRect, 1f, new Vector2(0.05f, 0.5f), GAMELOOP.CurGamepad != null ? ColorHighlight3 : ColorMedium);
-        }
+        // private void DrawInputDeviceInfo(Rect rect)
+        // {
+        //     var text = 
+        //         input.CurrentInputDevice == InputDevice.Gamepad ? "GAMEPAD" :
+        //         input.CurrentInputDevice == InputDevice.Keyboard ? "KEYBOARD" : "MOUSE";
+        //     var textRect = rect.ApplyMargins(0f, 0.5f, 0.15f, 0.8f);
+        //     font.DrawText(text, textRect, 1f, new Vector2(0.05f, 0.5f), ColorHighlight3);
+        // }
+        // private void DrawGamepadInfo(Rect rect)
+        // {
+        //     string text = "No Gamepad Connected";
+        //     if (GAMELOOP.CurGamepad != null)
+        //     {
+        //         var gamepadIndex = GAMELOOP.CurGamepad.Index;
+        //         text = $"Gamepad [{gamepadIndex}] Connected";
+        //     }
+        //     
+        //     var textRect = rect.ApplyMargins(0f, 0.5f, 0.1f, 0.85f);
+        //     font.DrawText(text, textRect, 1f, new Vector2(0.05f, 0.5f), GAMELOOP.CurGamepad != null ? ColorHighlight3 : ColorMedium);
+        // }
     }
 
 }

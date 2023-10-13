@@ -127,8 +127,9 @@ namespace Examples
         public static readonly uint InputCRTPlusID = 214;
         
         //example scene controlled
-        public static readonly uint InputZoomInID = 310;
-        public static readonly uint InputZoomOutID = 311;
+        public static readonly uint InputZoomID = 310;
+        // public static readonly uint InputZoomInID = 310;
+        // public static readonly uint InputZoomOutID = 311;
         public static readonly uint InputPauseID = 312;
         public static readonly uint InputResetID = 313;
 
@@ -481,13 +482,19 @@ namespace Examples
             
             
             //example scene only
-            var zoomInKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ZERO);
-            var zoomInGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
-            InputAction zoomIn = new(SceneAccessTag, InputZoomInID, zoomInKB, zoomInGB);
+
+            var zoomKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.NINE, ShapeKeyboardButton.ZERO);
+            // var zoomMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL);
+            var zoomGP = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_Y, 0.2f);
+            InputAction zoom = new(SceneAccessTag, InputZoomID, zoomKB, zoomGP);
             
-            var zoomOutKB = new InputTypeKeyboardButton(ShapeKeyboardButton.NINE);
-            var zoomOutGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
-            InputAction zoomOut = new(SceneAccessTag, InputZoomOutID, zoomOutKB, zoomOutGB);
+            // var zoomInKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ZERO);
+            // var zoomInGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
+            // InputAction zoomIn = new(SceneAccessTag, InputZoomInID, zoomInKB, zoomInGB);
+            
+            // var zoomOutKB = new InputTypeKeyboardButton(ShapeKeyboardButton.NINE);
+            // var zoomOutGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
+            // InputAction zoomOut = new(SceneAccessTag, InputZoomOutID, zoomOutKB, zoomOutGB);
             
             var resetKB = new InputTypeKeyboardButton(ShapeKeyboardButton.R);
             var resetGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
@@ -500,7 +507,7 @@ namespace Examples
                 prevTab, nextTab, prevPage, nextPage,
                 fullscreen, maximize, nextMonitor,
                 crtMinus, crtPlus,
-                zoomIn, zoomOut,
+                zoom,
                 pause, reset
             );
         }

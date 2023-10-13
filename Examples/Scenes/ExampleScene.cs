@@ -34,6 +34,23 @@ namespace Examples.Scenes
 
         public virtual void OnPauseChanged(bool paused){}
         
+        private void HandleZoom(float dt)
+        {
+            float zoomSpeed = 1f;
+            float zoomDir = 0;
+            
+            var zoomState = input.ConsumeAction(GameloopExamples.InputZoomID);
+            if (!zoomState.Consumed)
+            {
+                zoomDir = zoomState.AxisRaw;
+            }
+            
+            if (zoomDir != 0)
+            {
+                GAMELOOP.Camera.Zoom(zoomDir * zoomSpeed * dt);
+            }
+        }
+        
         protected void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             var cancelState = input.ConsumeAction(GameloopExamples.InputUICancelID);
@@ -58,54 +75,19 @@ namespace Examples.Scenes
                 Reset();
             }
             
-            float zoomIncrement = 0.05f;
-            var zoomInState = input.ConsumeAction(GameloopExamples.InputZoomInID);
-            if (zoomInState is { Consumed: false, Pressed: true })
-            {
-                GAMELOOP.Camera.Zoom(-zoomIncrement);
-            }
-            
-            var zoomOutState = input.ConsumeAction(GameloopExamples.InputZoomOutID);
-            if (zoomOutState is { Consumed: false, Pressed: true })
-            {
-                GAMELOOP.Camera.Zoom(zoomIncrement);
-            }
-            
-            
-            // if (GAMELOOP.Paused)
+            HandleZoom(dt);
+            // float zoomIncrement = 0.05f;
+            // var zoomInState = input.ConsumeAction(GameloopExamples.InputZoomInID);
+            // if (zoomInState is { Consumed: false, Pressed: true })
             // {
-            //     if (IsKeyPressed(KeyboardKey.KEY_P)) GAMELOOP.Paused = false;
-            //     return;
+            //     GAMELOOP.Camera.Zoom(-zoomIncrement);
             // }
             //
-            // if (IsKeyPressed(KeyboardKey.KEY_P))
+            // var zoomOutState = input.ConsumeAction(GameloopExamples.InputZoomOutID);
+            // if (zoomOutState is { Consumed: false, Pressed: true })
             // {
-            //     GAMELOOP.Paused = true;
-            //     return;
+            //     GAMELOOP.Camera.Zoom(zoomIncrement);
             // }
-            //
-            // if (IsKeyPressed(KeyboardKey.KEY_R))
-            // {
-            //     Reset();
-            // }
-            // if (IsKeyPressed(KeyboardKey.KEY_ESCAPE)) GAMELOOP.GoToMainScene();
-            // if (IsKeyPressed(KeyboardKey.KEY_M)) GAMELOOP.Maximized = !GAMELOOP.Maximized;
-            // if (IsKeyPressed(KeyboardKey.KEY_F)) GAMELOOP.Fullscreen = !GAMELOOP.Fullscreen;
-            //
-            // float increment = 0.05f;
-            //
-            // if (IsKeyPressed(KeyboardKey.KEY_NINE)) //zoom out
-            // {
-            //     GAMELOOP.Camera.Zoom(increment);
-            // }
-            // else if (IsKeyPressed(KeyboardKey.KEY_ZERO))//zoom in
-            // {
-            //     GAMELOOP.Camera.Zoom(-increment);
-            // }
-            //
-            // if(IsKeyPressed(KeyboardKey.KEY_T)) GAMELOOP.NextMonitor();
-
-            
         }
 
         public void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
@@ -149,6 +131,8 @@ namespace Examples.Scenes
             string fpsText = $"Fps: {Raylib.GetFPS()}";
             Rect fpsRect = new Rect(uiSize * new Vector2(0.98f, 0.06f), uiSize * new Vector2(0.3f, 0.04f), new Vector2(1f, 1f));
             titleFont.DrawText(fpsText, fpsRect, 4f, new Vector2(1f, 0.5f), ColorHighlight2);
+            
+            DrawInputDeviceInfo(ui.Area);
         }
         public void DrawUI(ScreenInfo ui)
         {
@@ -194,6 +178,28 @@ namespace Examples.Scenes
             hor.Draw(2f, c);
             ver.Draw(2f, c);
         }
+        private void DrawInputDeviceInfo(Rect rect)
+        {
+            var infoRect = rect.ApplyMargins(0.01f, 0.75f, 0.08f, 0.84f);
+            var split = infoRect.SplitV(2);
+            var deviceRect = split[0];
+            var gamepadRect = split[1];
+            
+            var deviceText = ShapeInput.GetInputDeviceGenericName(input.CurrentInputDevice);
+            // var deviceRect = rect.ApplyMargins(0.01f, 0.7f, 0.1f, 0.85f);
+            titleFont.DrawText(deviceText, deviceRect, 1f, new Vector2(0.01f, 0.5f), ColorHighlight3);
+            
+            string gamepadText = "No Gamepad Connected";
+            if (GAMELOOP.CurGamepad != null)
+            {
+                var gamepadIndex = GAMELOOP.CurGamepad.Index;
+                gamepadText = $"Gamepad [{gamepadIndex}] Connected";
+            }
+            
+            // var textRect = rect.ApplyMargins(0f, 0.5f, 0.1f, 0.85f);
+            titleFont.DrawText(gamepadText, gamepadRect, 1f, new Vector2(0.01f, 0.5f), GAMELOOP.CurGamepad != null ? ColorHighlight3 : ColorMedium);
+        }
+        
         public virtual GameObjectHandler? GetGameObjectHandler()
         {
             return null;

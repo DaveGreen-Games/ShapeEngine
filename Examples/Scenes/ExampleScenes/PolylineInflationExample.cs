@@ -7,20 +7,42 @@ using ShapeEngine.Screen;
 using System.Numerics;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
+using ShapeEngine.Input;
 
 namespace Examples.Scenes.ExampleScenes
 {
     public class PolylineInflationExample : ExampleScene
     {
+        private const float MaxOffset = 1000;
         Polyline polyline = new();
         int dragIndex = -1;
         float offsetDelta = 0f;
         float lerpOffsetDelta = 0f;
         private Font font;
+
+        private InputAction createPoint;
+        private InputAction deletePoint;
+        private InputAction changeOffset;
+        
         public PolylineInflationExample()
         {
             Title = "Polyline Inflation Example";
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
+
+
+            var createMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
+            var createGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
+            createPoint = new(createMB, createGP);
+
+            var deleteMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
+            var deleteGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
+            deletePoint = new(deleteMB, deleteGP);
+
+            var offsetMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f);
+            //var offsetKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.S, ShapeKeyboardButton.W);
+            var offsetGP = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_DOWN, ShapeGamepadButton.LEFT_FACE_UP);
+            changeOffset = new(offsetMW, offsetGP);
+
         }
         public override void Reset()
         {
@@ -32,26 +54,29 @@ namespace Examples.Scenes.ExampleScenes
         protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             base.HandleInput(dt, mousePosGame, mousePosUI);
-            if (IsKeyPressed(KeyboardKey.KEY_R)) { polyline = new(); }
+            createPoint.Gamepad = GAMELOOP.CurGamepad?.Index ?? -1;
+            createPoint.Update(dt);
+            
+            deletePoint.Gamepad = GAMELOOP.CurGamepad?.Index ?? -1;
+            deletePoint.Update(dt);
+            
+            changeOffset.Gamepad = GAMELOOP.CurGamepad?.Index ?? -1;
+            changeOffset.Update(dt);
 
-            if (GetMouseWheelMove() > 0)
-            {
-                offsetDelta += 10f;
-            }
-            else if (GetMouseWheelMove() < 0)
-            {
-                offsetDelta -= 10f;
-            }
+            var offsetState = changeOffset.State;
+            offsetDelta += offsetState.AxisRaw * dt * 250f;
 
             lerpOffsetDelta = Lerp(lerpOffsetDelta, offsetDelta, dt * 2f);
 
-            offsetDelta = Clamp(offsetDelta, 0f, 300f);
+            offsetDelta = Clamp(offsetDelta, 0f, MaxOffset);
         }
         protected override void DrawGameExample(ScreenInfo game)
         {
             Vector2 mousePos = game.MousePos;
 
-            float vertexRadius = 8f;
+            float relativeSize = MathF.Min( game.Area.Size.Max() * 0.003f, 15f);
+
+            float vertexRadius = relativeSize * 1.5f; // 8f;
             int pickedVertex = -1;
 
             bool isMouseOnLine = false; // polyline.OverlapShape(new Circle(mousePos, vertexRadius * 2f));
@@ -59,6 +84,8 @@ namespace Examples.Scenes.ExampleScenes
             int closestIndex = polyline.GetClosestIndexOnEdge(mousePos);
             bool drawClosest = true;
 
+            var createState = createPoint.State;
+            var deleteState = deletePoint.State;
 
             for (int i = 0; i < polyline.Count; i++)
             {
@@ -94,7 +121,7 @@ namespace Examples.Scenes.ExampleScenes
             }
 
 
-            if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT))
+            if (createState.Pressed)// IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT))
             {
                 if (pickedVertex == -1)
                 {
@@ -110,11 +137,11 @@ namespace Examples.Scenes.ExampleScenes
                     dragIndex = pickedVertex;
                 }
             }
-            else if (IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT))
+            else if (createState.Released)// IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT))
             {
                 dragIndex = -1;
             }
-            else if (dragIndex == -1 && IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT))
+            else if (dragIndex == -1 && deleteState.Pressed)// IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT))
             {
                 if (pickedVertex > -1)
                 {
@@ -131,10 +158,22 @@ namespace Examples.Scenes.ExampleScenes
 
                 if (drawClosest)
                 {
-                    if (closestIndex == i) segment.Draw(4f, BLUE);
-                    else segment.Draw(4f, WHITE);
+                    if (closestIndex == i)
+                    {
+                        segment.Start.Draw(relativeSize / 2, BLUE);
+                        segment.Draw(relativeSize, BLUE);
+                    }
+                    else
+                    {
+                        segment.Start.Draw(relativeSize / 2, WHITE);
+                        segment.Draw(relativeSize, WHITE);
+                    }
                 }
-                else segment.Draw(4f, WHITE);
+                else
+                {
+                    segment.Start.Draw(relativeSize / 2, WHITE);
+                    segment.Draw(relativeSize, WHITE);
+                }
             }
 
             if (drawClosest) DrawCircleV(closest, vertexRadius, RED);
@@ -144,7 +183,7 @@ namespace Examples.Scenes.ExampleScenes
                 var polygons = ShapeClipper.Inflate(polyline, lerpOffsetDelta).ToPolygons();
                 foreach (var polygon in polygons)
                 {
-                    polygon.DrawLines(3f, GOLD);
+                    polygon.DrawLines(relativeSize, GOLD);
                 }
             }
         }
@@ -156,9 +195,14 @@ namespace Examples.Scenes.ExampleScenes
         {
             Vector2 uiSize = ui.Area.Size;
 
+            
+            var create = createPoint.GetInputName( input.CurrentInputDevice == InputDevice.Keyboard ? InputDevice.Mouse : input.CurrentInputDevice); // input.CurrentInputDevice);
+            var delete = deletePoint.GetInputName( input.CurrentInputDevice == InputDevice.Keyboard ? InputDevice.Mouse : input.CurrentInputDevice); // input.CurrentInputDevice);
+            var offset = changeOffset.GetInputName(input.CurrentInputDevice == InputDevice.Keyboard ? InputDevice.Mouse : input.CurrentInputDevice); // input.CurrentInputDevice);
+            
             Rect infoRect = ui.Area.ApplyMargins(0.05f, 0.05f, 0.9f, 0.05f);
             string infoText =
-                $"[LMB/RMB] Add/Remove Point [Scroll] Inflate {MathF.Round(offsetDelta * 100) / 100}";
+                $"[{create}/{delete}] Add/Remove Point [{offset}] Inflate {MathF.Round(offsetDelta * 100) / 100}";
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
     }
