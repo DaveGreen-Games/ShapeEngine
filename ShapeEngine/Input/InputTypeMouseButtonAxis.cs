@@ -84,5 +84,7 @@ public class InputTypeMouseButtonAxis : IInputType
     {
         return new(previousState, GetState(neg, pos, deadzone));
     }
+    
+    
 
 }

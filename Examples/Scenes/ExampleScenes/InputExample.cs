@@ -29,17 +29,18 @@ namespace Examples.Scenes.ExampleScenes
             if (left)
             {
                 title = "AXIS LEFT";
-                var keyboardHorizontal = InputAction.CreateInputType(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
-                var keyboardVertical = InputAction.CreateInputType(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
+                var keyboardHorizontal = IInputType.Create(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
+                var keyboardVertical = IInputType.Create(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
             
                 var gamepadButtonHorizontal = 
-                    InputAction.CreateInputType(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT, 0f);
+                    IInputType.Create(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT, 0f);
                 var gamepadButtonVertical = 
-                    InputAction.CreateInputType(ShapeGamepadButton.LEFT_FACE_UP, ShapeGamepadButton.LEFT_FACE_DOWN, 0f);
+                    IInputType.Create(ShapeGamepadButton.LEFT_FACE_UP, ShapeGamepadButton.LEFT_FACE_DOWN, 0f);
 
-                var gamepadHorizontal = InputAction.CreateInputType(ShapeGamepadAxis.LEFT_X, 0f);
-                var gamepadVertical = InputAction.CreateInputType(ShapeGamepadAxis.LEFT_Y, 0f);
+                var gamepadHorizontal = IInputType.Create(ShapeGamepadAxis.LEFT_X, 0f);
+                var gamepadVertical = IInputType.Create(ShapeGamepadAxis.LEFT_Y, 0f);
 
+                
                 // var mouseWheelHorizontal = InputAction.CreateInputType(ShapeMouseWheelAxis.HORIZONTAL);
                 // var mouseWheelVertical = InputAction.CreateInputType(ShapeMouseWheelAxis.VERTICAL);
 
@@ -57,16 +58,16 @@ namespace Examples.Scenes.ExampleScenes
             else
             {
                 title = "AXIS RIGHT";
-                var keyboardHorizontal = InputAction.CreateInputType(ShapeKeyboardButton.LEFT, ShapeKeyboardButton.RIGHT);
-                var keyboardVertical = InputAction.CreateInputType(ShapeKeyboardButton.UP, ShapeKeyboardButton.DOWN);
+                var keyboardHorizontal = IInputType.Create(ShapeKeyboardButton.LEFT, ShapeKeyboardButton.RIGHT);
+                var keyboardVertical = IInputType.Create(ShapeKeyboardButton.UP, ShapeKeyboardButton.DOWN);
             
                 var gamepadButtonHorizontal = 
-                    InputAction.CreateInputType(ShapeGamepadButton.RIGHT_FACE_LEFT, ShapeGamepadButton.RIGHT_FACE_RIGHT, 0f);
+                    IInputType.Create(ShapeGamepadButton.RIGHT_FACE_LEFT, ShapeGamepadButton.RIGHT_FACE_RIGHT, 0f);
                 var gamepadButtonVertical = 
-                    InputAction.CreateInputType(ShapeGamepadButton.RIGHT_FACE_UP, ShapeGamepadButton.RIGHT_FACE_DOWN, 0f);
+                    IInputType.Create(ShapeGamepadButton.RIGHT_FACE_UP, ShapeGamepadButton.RIGHT_FACE_DOWN, 0f);
 
-                var gamepadHorizontal = InputAction.CreateInputType(ShapeGamepadAxis.RIGHT_X, 0f);
-                var gamepadVertical = InputAction.CreateInputType(ShapeGamepadAxis.RIGHT_Y, 0f);
+                var gamepadHorizontal = IInputType.Create(ShapeGamepadAxis.RIGHT_X, 0f);
+                var gamepadVertical = IInputType.Create(ShapeGamepadAxis.RIGHT_Y, 0f);
 
                 // var mouseWheelButtonAxisHorizontal =
                 //     InputAction.CreateInputType(ShapeMouseButton.MW_LEFT, ShapeMouseButton.MW_RIGHT);

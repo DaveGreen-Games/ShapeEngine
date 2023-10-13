@@ -364,6 +364,7 @@ public sealed class ShapeInput
 
     #endregion
 
+    #region Static
     public static string GetInputDeviceGenericName(InputDevice device)
     {
         return
@@ -371,6 +372,9 @@ public sealed class ShapeInput
             device == InputDevice.Keyboard ? "Keyboard" : "Mouse";
         
     }
+
+    #endregion
+    
     
     #region Input Used
     public static bool WasKeyboardUsed() => Raylib.GetKeyPressed() > 0;

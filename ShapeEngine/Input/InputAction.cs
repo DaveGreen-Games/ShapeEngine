@@ -6,66 +6,6 @@ using ShapeEngine.Lib;
 
 namespace ShapeEngine.Input;
 
-/*public class InputLayout
-{
-    public uint ID { get; private set; }
-    public InputState State { get; private set; } = new();
-    private readonly List<IInputType> inputs;
-    
-    public InputLayout(uint id, params IInputType[] inputTypes)
-    {
-        this.ID = id;
-        inputs = inputTypes.ToList();
-    }
-    
-    public void Update(float dt, int gamepad, float axisSensitivity, float axisGravitiy)
-    {
-        InputState current = new();
-        foreach (var input in inputs)
-        {
-            var state = input.GetState(gamepad);
-            current = current.Accumulate(state);
-        }
-        State = new(State, current);
-        
-        if (axisSensitivity > 0 || axisGravitiy > 0)
-        {
-            int raw = MathF.Sign(State.AxisRaw);
-            float dif = State.AxisRaw - State.Axis;
-            int difSign = MathF.Sign(dif);
-
-            if (difSign != 0)
-            {
-                var axisChange = 0f;
-                var snapValue = 0f;
-                if (difSign > 1 || difSign < -1) //snap
-                {
-                    snapValue = -State.AxisRaw;//snapping to 0
-                    axisChange = difSign * axisSensitivity * dt;
-                }
-                else //move
-                {
-                    if (raw == 0)//gravity
-                    {
-                        axisChange = difSign * axisGravitiy * dt;
-                    }
-                    else//sensitivity
-                    {
-                        axisChange = difSign * axisSensitivity * dt;
-                    }
-                }
-
-                if (axisChange != 0f)
-                {
-
-                    if (MathF.Abs(axisChange) > MathF.Abs(dif)) axisChange = dif - snapValue;
-                    State = State.AdjustAxis(axisChange + snapValue);
-                }
-            }
-        }
-    }
-}*/
-
 public class InputAction
 {
     public uint ID { get; private set; }
@@ -377,13 +317,29 @@ public class InputAction
     //     return inputs[0].GetName(shorthand);
     //
     // }
-    public static IInputType CreateInputType(ShapeKeyboardButton button) => new InputTypeKeyboardButton(button);
-    public static IInputType CreateInputType(ShapeMouseButton button) => new InputTypeMouseButton(button);
-    public static IInputType CreateInputType(ShapeGamepadButton button, float deadzone = 0.2f) => new InputTypeGamepadButton(button, deadzone);
-    public static IInputType CreateInputType(ShapeKeyboardButton neg, ShapeKeyboardButton pos) => new InputTypeKeyboardButtonAxis(neg, pos);
-    public static IInputType CreateInputType(ShapeMouseButton neg, ShapeMouseButton pos) => new InputTypeMouseButtonAxis(neg, pos);
-    public static IInputType CreateInputType(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = 0.2f) => new InputTypeGamepadButtonAxis(neg, pos, deadzone);
-    public static IInputType CreateInputType(ShapeMouseWheelAxis mouseWheelAxis) => new InputTypeMouseWheelAxis(mouseWheelAxis);
-    public static IInputType CreateInputType(ShapeMouseAxis mouseAxis) => new InputTypeMouseAxis(mouseAxis);
-    public static IInputType CreateInputType(ShapeGamepadAxis gamepadAxis, float deadzone = 0.2f) => new InputTypeGamepadAxis(gamepadAxis, deadzone);
+    // public static IInputType CreateInputType(ShapeKeyboardButton button) => new InputTypeKeyboardButton(button);
+    // public static IInputType CreateInputType(ShapeMouseButton button) => new InputTypeMouseButton(button);
+    // public static IInputType CreateInputType(ShapeGamepadButton button, float deadzone = 0.2f) => new InputTypeGamepadButton(button, deadzone);
+    // public static IInputType CreateInputType(ShapeKeyboardButton neg, ShapeKeyboardButton pos) => new InputTypeKeyboardButtonAxis(neg, pos);
+    // public static IInputType CreateInputType(ShapeMouseButton neg, ShapeMouseButton pos) => new InputTypeMouseButtonAxis(neg, pos);
+    // public static IInputType CreateInputType(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = 0.2f) => new InputTypeGamepadButtonAxis(neg, pos, deadzone);
+    // public static IInputType CreateInputType(ShapeMouseWheelAxis mouseWheelAxis) => new InputTypeMouseWheelAxis(mouseWheelAxis);
+    // public static IInputType CreateInputType(ShapeMouseAxis mouseAxis) => new InputTypeMouseAxis(mouseAxis);
+    // public static IInputType CreateInputType(ShapeGamepadAxis gamepadAxis, float deadzone = 0.2f) => new InputTypeGamepadAxis(gamepadAxis, deadzone);
+    //
 }
+
+
+// public static class InputTypeFactory
+// {
+//     public static IInputType Create(ShapeKeyboardButton button) => new InputTypeKeyboardButton(button);
+//     public static IInputType Create(ShapeMouseButton button) => new InputTypeMouseButton(button);
+//     public static IInputType Create(ShapeGamepadButton button, float deadzone = 0.2f) => new InputTypeGamepadButton(button, deadzone);
+//     public static IInputType Create(ShapeKeyboardButton neg, ShapeKeyboardButton pos) => new InputTypeKeyboardButtonAxis(neg, pos);
+//     public static IInputType Create(ShapeMouseButton neg, ShapeMouseButton pos) => new InputTypeMouseButtonAxis(neg, pos);
+//     public static IInputType Create(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = 0.2f) => new InputTypeGamepadButtonAxis(neg, pos, deadzone);
+//     public static IInputType Create(ShapeMouseWheelAxis mouseWheelAxis) => new InputTypeMouseWheelAxis(mouseWheelAxis);
+//     public static IInputType Create(ShapeMouseAxis mouseAxis) => new InputTypeMouseAxis(mouseAxis);
+//     public static IInputType Create(ShapeGamepadAxis gamepadAxis, float deadzone = 0.2f) => new InputTypeGamepadAxis(gamepadAxis, deadzone);
+//
+// }
