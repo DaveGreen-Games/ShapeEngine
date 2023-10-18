@@ -264,7 +264,22 @@ public class InputAction
         }
         return b.ToString();
     }
-   
+    public string GetInputDescription(bool shorthand)
+    {
+        StringBuilder b = new();
+        b.Append(Title);
+        var inputNames = GetInputNames(shorthand);
+        if (inputNames.Count > 0)
+        {
+            b.Append(": ");
+            foreach (var inputName in inputNames)
+            {
+                b.Append($"[{inputName.Name}] ");
+            }
+        }
+        return b.ToString();
+    }
+    
     public List<InputName> GetInputNames(bool shorthand = true)
     {
         var inputs = GetInputs();
@@ -302,6 +317,7 @@ public class InputAction
         // return final;
 
     }
+    
     public string GetInputName(InputDevice curInputDevice, bool shorthand = true)
     {
         var inputs = GetInputs(curInputDevice);
@@ -309,6 +325,31 @@ public class InputAction
         return inputs[0].GetName(shorthand);
 
     }
+    public string GetInputName(bool shorthand)
+    {
+        
+        StringBuilder b = new();
+        var inputNames = GetInputNames(shorthand);
+        if (inputNames.Count > 0)
+        {
+            foreach (var inputName in inputNames)
+            {
+                b.Append($"[{inputName.Name}] ");
+            }
+        }
+        return b.ToString();
+    }
+
+    
+    //title + cur input device
+    //title + all of cur input device
+    //title + all 
+    
+    //no title + cur input device
+    //no title + all of cur input device
+    //no title + all 
+    
+    
     // public string GetInputNameMouseKeyboard(bool shorthand = true)
     // {
     //     var inputs = GetInputs(InputDevice.Mouse);

@@ -5,6 +5,7 @@ using ShapeEngine.Lib;
 using ShapeEngine.Persistent;
 using ShapeEngine.Core;
 using Examples.Scenes;
+using Examples.UIElements;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Screen;
 using ShapeEngine.Core.Shapes;
@@ -133,6 +134,7 @@ namespace Examples
         public static readonly uint InputPauseID = 312;
         public static readonly uint InputResetID = 313;
 
+        private FPSLabel fpsLabel = new(GetFontDefault(), ExampleScene.ColorHighlight3);
 
         public GameloopExamples() : base(new(1920, 1080), true) {}
 
@@ -174,6 +176,7 @@ namespace Examples
             ScreenShaders.Add(crtShader);
             
             FontDefault = GetFont(FontIDs.JetBrains);
+            fpsLabel.Font = FontDefault;
             this.VSync = false;
             this.FrameRateLimit = 60;
 
@@ -378,8 +381,15 @@ namespace Examples
             //     }
             // }
         }
-        
-        
+
+        protected override void DrawUI(ScreenInfo ui)
+        {
+            // Vector2 uiSize = ui.Area.Size;
+            //var fpsRect = new Rect(uiSize * new Vector2(0.98f, 0.06f), uiSize * new Vector2(0.3f, 0.04f), new Vector2(1f, 1f));
+            var r = ui.Area.ApplyMargins(0.90f, 0.012f, 0.012f, 0.95f);
+            fpsLabel.Draw(r, new(1f, 0f), 1f);
+        }
+
         public int GetFontCount() { return fonts.Count; }
         public Font GetFont(int id) { return fonts[id]; }
         public string GetFontName(int id) { return fontNames[id]; }
@@ -402,6 +412,7 @@ namespace Examples
             var cancelKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ESCAPE);
             var cancelGB = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_LEFT);
             InputAction uiCancel = new(ShapeInput.AllAccessTag, InputUICancelID, cancelKB, cancelGB);
+            
           
             var fullscreenKB = new InputTypeKeyboardButton(ShapeKeyboardButton.F);
             var fullscreenGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_THUMB);

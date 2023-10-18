@@ -2,12 +2,13 @@
 using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Screen;
-using System.ComponentModel;
 using System.Numerics;
+using Examples.UIElements;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
+using ShapeEngine.UI;
 
 namespace Examples.Scenes
 {
@@ -29,7 +30,13 @@ namespace Examples.Scenes
         protected Font titleFont = GAMELOOP.FontDefault;
 
         protected readonly ShapeInput input = GAMELOOP.Input;
+        private InputActionLabel backLabel;
 
+        public ExampleScene()
+        {
+            var action = GAMELOOP.Input.GetAction(GameloopExamples.InputUICancelID);
+            backLabel = new(action, "BACK", GAMELOOP.FontDefault, ExampleScene.ColorHighlight3);
+        }
         public virtual void Reset() { }
 
         public virtual void OnPauseChanged(bool paused){}
@@ -124,18 +131,31 @@ namespace Examples.Scenes
             Rect r = new Rect(uiSize * new Vector2(0.5f, 0.01f), uiSize * new Vector2(0.6f, 0.06f), new Vector2(0.5f, 0f));
             titleFont.DrawText(Title, r, 10f, new(0.5f), ColorLight);
 
-            string backText = "Back [ESC]";
-            Rect backRect = new Rect(uiSize * new Vector2(0.02f, 0.06f), uiSize * new Vector2(0.3f, 0.04f), new Vector2(0f, 1f));
-            titleFont.DrawText(backText, backRect, 4f, new Vector2(0f, 0.5f), ColorHighlight2);
-
-            string fpsText = $"Fps: {Raylib.GetFPS()}";
-            Rect fpsRect = new Rect(uiSize * new Vector2(0.98f, 0.06f), uiSize * new Vector2(0.3f, 0.04f), new Vector2(1f, 1f));
-            titleFont.DrawText(fpsText, fpsRect, 4f, new Vector2(1f, 0.5f), ColorHighlight2);
+            // string backText = "Back [ESC]";
+            //Rect backRect = new Rect(uiSize * new Vector2(0.02f, 0.06f), uiSize * new Vector2(0.3f, 0.04f), new Vector2(0f, 1f));
+            // titleFont.DrawText(backText, backRect, 4f, new Vector2(0f, 0.5f), ColorHighlight2);
+            var backRect = ui.Area.ApplyMargins(0.012f, 0.85f, 0.012f, 0.95f);
+            var curInputDevice = input.CurrentInputDevice == InputDevice.Mouse
+                ? InputDevice.Keyboard
+                : input.CurrentInputDevice;
+            backLabel.Color = ExampleScene.ColorMedium;
+            backLabel.Draw(backRect, new(0f, 0f), curInputDevice, 4);
+            
+            // string fpsText = $"Fps: {Raylib.GetFPS()}";
+            // Rect fpsRect = new Rect(uiSize * new Vector2(0.98f, 0.06f), uiSize * new Vector2(0.3f, 0.04f), new Vector2(1f, 1f));
+            // titleFont.DrawText(fpsText, fpsRect, 4f, new Vector2(1f, 0.5f), ColorHighlight2);
             
             DrawInputDeviceInfo(ui.Area);
         }
         public void DrawUI(ScreenInfo ui)
         {
+            var backRect = ui.Area.ApplyMargins(0.012f, 0.85f, 0.012f, 0.95f);
+            var curInputDevice = input.CurrentInputDevice == InputDevice.Mouse
+                ? InputDevice.Keyboard
+                : input.CurrentInputDevice;
+            backLabel.Color = ExampleScene.ColorHighlight3;
+            backLabel.Draw(backRect, new(0f, 0f), curInputDevice, 4);
+            
             if (GAMELOOP.Paused) return;
             
             DrawUIExample(ui);

@@ -26,6 +26,7 @@ namespace Examples.Scenes
 
         private float tabChangeMouseWheelLockTimer = 0f;
         private ShapeInput input;
+        private InputActionLabel quitLabel;
         public MainScene()
         {
             for (int i = 0; i < 10; i++)
@@ -60,6 +61,9 @@ namespace Examples.Scenes
             titleFont = GAMELOOP.FontDefault; // GAMELOOP.GetFont(GameloopExamples.FONT_IndieFlowerRegular);
 
             SetupButtons();
+
+            var action = GAMELOOP.Input.GetAction(GameloopExamples.InputUICancelID);
+            quitLabel = new(action, "Quit", GAMELOOP.FontDefault, ExampleScene.ColorHighlight3);
         }
         
         public void OnWindowSizeChanged(DimensionConversionFactors conversionFactors)
@@ -226,10 +230,13 @@ namespace Examples.Scenes
             Segment s = new(uiSize * new Vector2(0f, 0.22f), uiSize * new Vector2(1f, 0.22f));
             s.Draw(MathF.Max(4f * GAMELOOP.DevelopmentToScreen.AreaFactor, 0.5f), ExampleScene.ColorLight);
 
-            string backText = "Back [ESC]";
+            // string backText = "Back [ESC]";
             Rect backRect = new Rect(uiSize * new Vector2(0.01f, 0.17f), uiSize * new Vector2(0.2f, 0.04f), new Vector2(0f, 0f));
-            titleFont.DrawText(backText, backRect, 4f, new Vector2(0f, 0f), ExampleScene.ColorHighlight2);
-
+            // titleFont.DrawText(backText, backRect, 4f, new Vector2(0f, 0f), ExampleScene.ColorHighlight2);
+            var curInputDevice = input.CurrentInputDevice == InputDevice.Mouse
+                ? InputDevice.Keyboard
+                : input.CurrentInputDevice;
+            quitLabel.Draw(backRect, new Vector2(0f), curInputDevice, 1f);
 
             Rect r = ui.Area.ApplyMargins(0.75f, 0.025f, 0.17f, 0.79f);
             titleFont.DrawText($"Cursor On Screen: {ShapeLoop.CursorOnScreen}", r, 1f, new Vector2(1f, 1f), ExampleScene.ColorHighlight2);
