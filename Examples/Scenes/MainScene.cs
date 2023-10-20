@@ -218,12 +218,12 @@ namespace Examples.Scenes
 
             int pages = GetMaxPages();
             var prevAction = input.GetAction(GameloopExamples.InputUIPrevTab);
-            var prevName = prevAction != null ? prevAction.GetInputName(input.CurrentInputDevice, true) : "";
+            var prevName = prevAction != null ? prevAction.GetInputTypeDescription(input.CurrentInputDevice, true, 1, false) : "";
 
             var nextAction = input.GetAction(GameloopExamples.InputUINextTab);
-            var nextName = nextAction != null ? nextAction.GetInputName(input.CurrentInputDevice, true) : "";
+            var nextName = nextAction != null ? nextAction.GetInputTypeDescription(input.CurrentInputDevice, true, 1, false) : "";
             
-            string pagesText = pages <= 1 ? "Page 1/1" : $"[{prevName}] <- Page #{curPageIndex + 1}/{pages} -> [{nextName}]";
+            string pagesText = pages <= 1 ? "Page 1/1" : $"{prevName} <- Page #{curPageIndex + 1}/{pages} -> {nextName}";
             Rect pageRect = new Rect(uiSize * new Vector2(0.01f, 0.12f), uiSize * new Vector2(0.3f, 0.06f), new Vector2(0f, 0f));
             titleFont.DrawText(pagesText, pageRect, 4f, new(0f, 0.5f), ExampleScene.ColorHighlight2);
 

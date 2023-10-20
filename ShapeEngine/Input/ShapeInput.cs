@@ -124,7 +124,8 @@ public sealed class ShapeInput
         }
     }
 
-    public List<string> GetActionDescriptions(InputDevice inputDevice, bool shorthand,params uint[] actionIDs)
+    
+    public List<string> GetActionDescriptions(InputDevice inputDevice, bool shorthand, int typesPerActionCount, params uint[] actionIDs)
     {
         var actions = new List<InputAction>();
         foreach (var id in actionIDs)
@@ -133,14 +134,14 @@ public sealed class ShapeInput
             if(action != null) actions.Add(action);
         }
 
-        return GetActionDescriptions(inputDevice, shorthand, actions.ToArray());
+        return GetActionDescriptions(inputDevice, shorthand, typesPerActionCount, actions.ToArray());
     }
-    public List<string> GetActionDescriptions(InputDevice inputDevice, bool shorthand, params InputAction[] actions)
+    public List<string> GetActionDescriptions(InputDevice inputDevice, bool shorthand, int typesPerActionCount, params InputAction[] actions)
     {
         var final = new List<string>();
         foreach (var action in actions)
         {
-            var description = action.GetInputDescription(inputDevice, shorthand);
+            var description = action.GetInputTypeDescription(inputDevice, shorthand, typesPerActionCount, true);
             
             final.Add(description);
         }

@@ -216,6 +216,27 @@ public class InputAction
         }
         return filtered;
     }
+    public List<IInputType> GetInputs(int maxCount)
+    {
+        if (inputs.Count <= 0) return new();
+        
+        var list = new List<IInputType>();
+        if(maxCount > 0 && maxCount < inputs.Count) list.AddRange(inputs.GetRange(0, maxCount));
+        else list.AddRange(inputs);
+        return list;
+    }
+    public List<IInputType> GetInputs(InputDevice filter, int maxCount)
+    {
+        if (inputs.Count <= 0) return new();
+        
+        var filtered = new List<IInputType>();
+        foreach (var input in inputs)
+        {
+            if (filtered.Count >= maxCount && maxCount > 0) return filtered;
+            if(input.GetInputDevice() == filter)filtered.Add(input);
+        }
+        return filtered;
+    }
 
     public void ClearInputs() => inputs.Clear();
     public bool RemoveInput(IInputType inputType) => inputs.Remove(inputType);
@@ -248,39 +269,138 @@ public class InputAction
     }
 
     
-    
-    public string GetInputDescription(InputDevice inputDevice, bool shorthand)
+    /// <summary>
+    /// Generate a description for this action based on the parameters. Layout-> "Title: [type a][type b][type c] ..."
+    /// </summary>
+    /// <param name="device">Only input types of the specified device are used.</param>
+    /// <param name="shorthand">Should the shorthand name or full name of the input type be used?</param>
+    /// <param name="count">Limits the amount input types used. If count is smaller or equal to 0 all input types are used.</param>
+    /// <param name="useTitle">Should the title of this input action be used as a prefix? "Title: [input type]"</param>
+    /// <returns>The combined names of all input types.</returns>
+    public string GetInputTypeDescription(InputDevice device, bool shorthand, int count = 1, bool useTitle = false)
     {
         StringBuilder b = new();
-        b.Append(Title);
-        var inputNames = GetInputNames(inputDevice, shorthand);
+        if(useTitle) b.Append(Title);
+        var inputNames = GetInputTypeNames(device, shorthand, count);
         if (inputNames.Count > 0)
         {
-            b.Append(": ");
+            if(useTitle) b.Append(": ");
             foreach (string inputName in inputNames)
             {
-                b.Append($"[{inputName}] ");
+                b.Append($"[{inputName}]");
             }
         }
         return b.ToString();
     }
-    public string GetInputDescription(bool shorthand)
+    /// <summary>
+    /// Generate a description for this action based on the parameters. Layout-> "Title: [type a][type b][type c] ..."
+    /// </summary>
+    /// <param name="shorthand">Should the shorthand name or full name of the input type be used?</param>
+    /// <param name="count">Limits the amount input types used. If count is smaller or equal to 0 all input types are used.</param>
+    /// <param name="useTitle">Should the title of this input action be used as a prefix? "Title: [input type]"</param>
+    /// <returns>The combined names of all input types.</returns>
+    public string GetInputTypeDescription(bool shorthand, int count = 1, bool useTitle = false)
     {
         StringBuilder b = new();
-        b.Append(Title);
-        var inputNames = GetInputNames(shorthand);
+        if(useTitle) b.Append(Title);
+        var inputNames = GetInputTypeNamesLimited(shorthand, count);
         if (inputNames.Count > 0)
         {
-            b.Append(": ");
-            foreach (var inputName in inputNames)
+            if(useTitle) b.Append(": ");
+            foreach (string inputName in inputNames)
             {
-                b.Append($"[{inputName.Name}] ");
+                b.Append($"[{inputName}]");
             }
         }
         return b.ToString();
     }
-    
-    public List<InputName> GetInputNames(bool shorthand = true)
+    /// <summary>
+    /// Generate a description for this action based on the parameters. Layout-> "Title: [type a][type b][type c] ..."
+    /// </summary>
+    /// <param name="shorthand">Should the shorthand name or full name of the input type be used?</param>
+    /// <param name="count">Limits the amount input types used per input device.
+    /// A count of 1 means 1 input type per available input device is used.
+    /// If count is smaller or equal to 0 all input types are used.</param>
+    /// <param name="useTitle">Should the title of this input action be used as a prefix? "Title: [input type]"</param>
+    /// <returns>The combined names of all input types.</returns>
+    public string GetInputTypeDescriptionPerDevice(bool shorthand, int count = 1, bool useTitle = false)
+    {
+        StringBuilder b = new();
+        if(useTitle) b.Append(Title);
+        var inputNames = new List<string>();
+        inputNames.AddRange(GetInputTypeNames(InputDevice.Keyboard, shorthand, count));
+        inputNames.AddRange(GetInputTypeNames(InputDevice.Mouse, shorthand, count));
+        inputNames.AddRange(GetInputTypeNames(InputDevice.Gamepad, shorthand, count));
+        
+        if (inputNames.Count > 0)
+        {
+            if(useTitle) b.Append(": ");
+            foreach (string inputName in inputNames)
+            {
+                b.Append($"[{inputName}]");
+            }
+        }
+        return b.ToString();
+    }
+    /// <summary>
+    /// Get the names of all input types used in this input action.
+    /// </summary>
+    /// <param name="device">Only input types of the specified device are used.</param>
+    /// <param name="shorthand">Should the shorthand name or full name of the input type be used?</param>
+    /// <param name="count">Limits the amount input types used. If count is smaller or equal to 0 all input types are used.</param>
+    /// <returns>A list of all the input type names found in the action based on the parameters</returns>
+    public List<string> GetInputTypeNames(InputDevice device, bool shorthand = true, int count = -1)
+    {
+        var inputs = GetInputs(device, count);
+        var names = new List<string>();
+        foreach (var input in inputs)
+        {
+            //if (names.Count >= count && count > 0) return names;
+            names.Add(input.GetName(shorthand));
+        }
+        return names;
+    }
+    /// <summary>
+    /// Get the names of all input types used in this input action.
+    /// </summary>
+    /// <param name="shorthand">Should the shorthand name or full name of the input type be used?</param>
+    /// <param name="count">Limits the amount input types used. If count is smaller or equal to 0 all input types are used.</param>
+    /// <returns>A list of all the input type names found in the action based on the parameters</returns>
+    public List<string> GetInputTypeNamesLimited(bool shorthand = true, int count = -1)
+    {
+        var inputs = GetInputs(count);
+        var names = new List<string>();
+        foreach (var input in inputs)
+        {
+            names.Add(input.GetName(shorthand));
+        }
+        return names;
+    }
+    /// <summary>
+    /// Get the names of all input types used in this input action.
+    /// </summary>
+    /// <param name="shorthand">Should the shorthand name or full name of the input type be used?</param>
+    /// <param name="count">Limits the amount input types used per input device. If count is smaller or equal to 0 all input types are used.</param>
+    /// <returns>A list of all the input type names found in the action based on the parameters</returns>
+    public List<string> GetInputTypeNamesLimitedPerDevice(bool shorthand = true, int count = -1)
+    {
+        var names = new List<string>();
+        names.AddRange(GetInputTypeNames(InputDevice.Keyboard, shorthand, count));
+        names.AddRange(GetInputTypeNames(InputDevice.Mouse, shorthand, count));
+        names.AddRange(GetInputTypeNames(InputDevice.Gamepad, shorthand, count));
+        
+        foreach (var input in inputs)
+        {
+            names.Add(input.GetName(shorthand));
+        }
+        return names;
+    }
+    /// <summary>
+    /// Get a list of a input device and name for each input type used in this action.
+    /// </summary>
+    /// <param name="shorthand">Should the shorthand name or full name of the input type be used?</param>
+    /// <returns>A list of all the input types device and name found</returns>
+    public List<InputName> GetInputTypeNames(bool shorthand = true)
     {
         var inputs = GetInputs();
         var names = new List<InputName>();
@@ -295,92 +415,5 @@ public class InputAction
         return names;
 
     }
-    public List<string> GetInputNames(InputDevice curInputDevice, bool shorthand = true)
-    {
-        var inputs = GetInputs(curInputDevice);
-        var names = new List<string>();
-        foreach (var input in inputs)
-        {
-            names.Add(input.GetName(shorthand));
-        }
-
-        return names;
-        // var inputs = GetInputs(curInputDevice);
-        // var rects = r.SplitV(inputs.Count);
-        // var final = new List<InputName>();
-        // for (var i = 0; i < inputs.Count; i++)
-        // {
-        //     var name = inputs[i].GetName(true);
-        //     final.Add(new(name, rects[i]));
-        // }
-        //
-        // return final;
-
-    }
     
-    public string GetInputName(InputDevice curInputDevice, bool shorthand = true)
-    {
-        var inputs = GetInputs(curInputDevice);
-        if (inputs.Count <= 0) return "No Input";
-        return inputs[0].GetName(shorthand);
-
-    }
-    public string GetInputName(bool shorthand)
-    {
-        
-        StringBuilder b = new();
-        var inputNames = GetInputNames(shorthand);
-        if (inputNames.Count > 0)
-        {
-            foreach (var inputName in inputNames)
-            {
-                b.Append($"[{inputName.Name}] ");
-            }
-        }
-        return b.ToString();
-    }
-
-    
-    //title + cur input device
-    //title + all of cur input device
-    //title + all 
-    
-    //no title + cur input device
-    //no title + all of cur input device
-    //no title + all 
-    
-    
-    // public string GetInputNameMouseKeyboard(bool shorthand = true)
-    // {
-    //     var inputs = GetInputs(InputDevice.Mouse);
-    //     if(inputs.Count <= 0) inputs.AddRange(GetInputs(InputDevice.Keyboard));
-    //     if (inputs.Count <= 0) return "No Input";
-    //     return inputs[0].GetName(shorthand);
-    //
-    // }
-    // public static IInputType CreateInputType(ShapeKeyboardButton button) => new InputTypeKeyboardButton(button);
-    // public static IInputType CreateInputType(ShapeMouseButton button) => new InputTypeMouseButton(button);
-    // public static IInputType CreateInputType(ShapeGamepadButton button, float deadzone = 0.2f) => new InputTypeGamepadButton(button, deadzone);
-    // public static IInputType CreateInputType(ShapeKeyboardButton neg, ShapeKeyboardButton pos) => new InputTypeKeyboardButtonAxis(neg, pos);
-    // public static IInputType CreateInputType(ShapeMouseButton neg, ShapeMouseButton pos) => new InputTypeMouseButtonAxis(neg, pos);
-    // public static IInputType CreateInputType(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = 0.2f) => new InputTypeGamepadButtonAxis(neg, pos, deadzone);
-    // public static IInputType CreateInputType(ShapeMouseWheelAxis mouseWheelAxis) => new InputTypeMouseWheelAxis(mouseWheelAxis);
-    // public static IInputType CreateInputType(ShapeMouseAxis mouseAxis) => new InputTypeMouseAxis(mouseAxis);
-    // public static IInputType CreateInputType(ShapeGamepadAxis gamepadAxis, float deadzone = 0.2f) => new InputTypeGamepadAxis(gamepadAxis, deadzone);
-    //
 }
-
-
-// public static class InputTypeFactory
-// {
-//     public static IInputType Create(ShapeKeyboardButton button) => new InputTypeKeyboardButton(button);
-//     public static IInputType Create(ShapeMouseButton button) => new InputTypeMouseButton(button);
-//     public static IInputType Create(ShapeGamepadButton button, float deadzone = 0.2f) => new InputTypeGamepadButton(button, deadzone);
-//     public static IInputType Create(ShapeKeyboardButton neg, ShapeKeyboardButton pos) => new InputTypeKeyboardButtonAxis(neg, pos);
-//     public static IInputType Create(ShapeMouseButton neg, ShapeMouseButton pos) => new InputTypeMouseButtonAxis(neg, pos);
-//     public static IInputType Create(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = 0.2f) => new InputTypeGamepadButtonAxis(neg, pos, deadzone);
-//     public static IInputType Create(ShapeMouseWheelAxis mouseWheelAxis) => new InputTypeMouseWheelAxis(mouseWheelAxis);
-//     public static IInputType Create(ShapeMouseAxis mouseAxis) => new InputTypeMouseAxis(mouseAxis);
-//     public static IInputType Create(ShapeGamepadAxis gamepadAxis, float deadzone = 0.2f) => new InputTypeGamepadAxis(gamepadAxis, deadzone);
-//
-// }

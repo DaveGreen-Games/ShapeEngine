@@ -22,13 +22,13 @@ public class InputActionLabel
     }
     public void Draw(Rect r, Vector2 textAlignement, InputDevice curInputDevice, float fontSpacing = 1f)
     {
-        string text = InputAction.GetInputName(curInputDevice, true);
+        string text = InputAction.GetInputTypeDescription(curInputDevice, true, 1, false);
         StringBuilder b = new(text.Length + Title.Length + 3);
         b.Append(Title);
         b.Append(' ');
-        b.Append('[');
+        //b.Append('[');
         b.Append(text);
-        b.Append(']');
+        //b.Append(']');
         Font.DrawText(b.ToString(), r, fontSpacing, textAlignement, Color);
     }
 }

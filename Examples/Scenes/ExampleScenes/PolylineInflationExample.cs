@@ -196,13 +196,13 @@ namespace Examples.Scenes.ExampleScenes
             Vector2 uiSize = ui.Area.Size;
 
             
-            var create = createPoint.GetInputName( input.CurrentInputDevice == InputDevice.Keyboard ? InputDevice.Mouse : input.CurrentInputDevice); // input.CurrentInputDevice);
-            var delete = deletePoint.GetInputName( input.CurrentInputDevice == InputDevice.Keyboard ? InputDevice.Mouse : input.CurrentInputDevice); // input.CurrentInputDevice);
-            var offset = changeOffset.GetInputName(input.CurrentInputDevice == InputDevice.Keyboard ? InputDevice.Mouse : input.CurrentInputDevice); // input.CurrentInputDevice);
+            var create = createPoint. GetInputTypeDescription( input.CurrentInputDevice == InputDevice.Keyboard ? InputDevice.Mouse : input.CurrentInputDevice , true, 1, false); // input.CurrentInputDevice);
+            var delete = deletePoint. GetInputTypeDescription( input.CurrentInputDevice == InputDevice.Keyboard ? InputDevice.Mouse : input.CurrentInputDevice , true, 1, false); // input.CurrentInputDevice);
+            var offset = changeOffset.GetInputTypeDescription(input.CurrentInputDevice == InputDevice.Keyboard ? InputDevice.Mouse : input.CurrentInputDevice  , true, 1, false); // input.CurrentInputDevice);
             
             Rect infoRect = ui.Area.ApplyMargins(0.05f, 0.05f, 0.9f, 0.05f);
             string infoText =
-                $"[{create}/{delete}] Add/Remove Point [{offset}] Inflate {MathF.Round(offsetDelta * 100) / 100}";
+                $"Add Point {create} | Remove Point {delete} | Inflate {offset} {MathF.Round(offsetDelta * 100) / 100}";
             font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
     }
