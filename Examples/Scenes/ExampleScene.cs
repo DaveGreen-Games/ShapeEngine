@@ -124,28 +124,29 @@ namespace Examples.Scenes
             
             DrawGameUIExample(ui);
             
-            Vector2 uiSize = ui.Area.Size;
-            Segment s = new(uiSize * new Vector2(0f, 0.07f), uiSize * new Vector2(1f, 0.07f));
-            s.Draw(2f, ColorLight);
-
-            Rect r = new Rect(uiSize * new Vector2(0.5f, 0.01f), uiSize * new Vector2(0.6f, 0.06f), new Vector2(0.5f, 0f));
-            titleFont.DrawText(Title, r, 10f, new(0.5f), ColorLight);
+            //Vector2 uiSize = ui.Area.Size;
+            // Segment s = new(uiSize * new Vector2(0f, 0.07f), uiSize * new Vector2(1f, 0.07f));
+            // GAMELOOP.UIZones.TopLeft.CombineWith(GAMELOOP.UIZones.TopCenter).CombineWith(GAMELOOP.UIZones.TopRight).BottomSegment.Draw(2f, ColorLight);
+            //GAMELOOP.RectTop.BottomSegment.Draw(2f, ColorLight);
+            GAMELOOP.UIZones.Top.BottomSegment.Draw(2f, ColorLight);
+            //Rect r = new Rect(uiSize * new Vector2(0.5f, 0.01f), uiSize * new Vector2(0.6f, 0.06f), new Vector2(0.5f, 0f));
+            titleFont.DrawText(Title, GAMELOOP.UIZones.TopCenter, 10f, new(0.5f), ColorLight);
 
             // string backText = "Back [ESC]";
             //Rect backRect = new Rect(uiSize * new Vector2(0.02f, 0.06f), uiSize * new Vector2(0.3f, 0.04f), new Vector2(0f, 1f));
             // titleFont.DrawText(backText, backRect, 4f, new Vector2(0f, 0.5f), ColorHighlight2);
-            var backRect = ui.Area.ApplyMargins(0.012f, 0.85f, 0.012f, 0.95f);
-            var curInputDevice = input.CurrentInputDevice == InputDevice.Mouse
-                ? InputDevice.Keyboard
-                : input.CurrentInputDevice;
-            backLabel.Color = ExampleScene.ColorMedium;
-            backLabel.Draw(backRect, new(0f, 0f), curInputDevice, 4);
+            //var backRect = ui.Area.ApplyMargins(0.012f, 0.85f, 0.012f, 0.95f);
+            // var curInputDevice = input.CurrentInputDevice == InputDevice.Mouse
+            //     ? InputDevice.Keyboard
+            //     : input.CurrentInputDevice;
+            // backLabel.Color = ExampleScene.ColorMedium;
+            // backLabel.Draw(GAMELOOP.RectTopLeft.SplitH(0.75f).top, new(0f, 0f), curInputDevice, 4);
             
             // string fpsText = $"Fps: {Raylib.GetFPS()}";
             // Rect fpsRect = new Rect(uiSize * new Vector2(0.98f, 0.06f), uiSize * new Vector2(0.3f, 0.04f), new Vector2(1f, 1f));
             // titleFont.DrawText(fpsText, fpsRect, 4f, new Vector2(1f, 0.5f), ColorHighlight2);
             
-            DrawInputDeviceInfo(ui.Area);
+            //DrawInputDeviceInfo(GAMELOOP.RectBottomLeft);
         }
         public void DrawUI(ScreenInfo ui)
         {
@@ -153,10 +154,12 @@ namespace Examples.Scenes
             var curInputDevice = input.CurrentInputDevice == InputDevice.Mouse
                 ? InputDevice.Keyboard
                 : input.CurrentInputDevice;
-            backLabel.Color = ExampleScene.ColorHighlight3;
-            backLabel.Draw(backRect, new(0f, 0f), curInputDevice, 4);
+            //backLabel.Color = ExampleScene.ColorHighlight3;
+            backLabel.Draw(GAMELOOP.UIZones.TopLeft.SplitV(0.75f).top, new(0f, 0f), curInputDevice, 4);
             
             if (GAMELOOP.Paused) return;
+            
+            DrawInputDeviceInfo(GAMELOOP.UIZones.BottomLeft);
             
             DrawUIExample(ui);
             
@@ -200,7 +203,7 @@ namespace Examples.Scenes
         }
         private void DrawInputDeviceInfo(Rect rect)
         {
-            var infoRect = rect.ApplyMargins(0.01f, 0.75f, 0.08f, 0.84f);
+            var infoRect = rect;//.ApplyMargins(0.01f, 0.75f, 0.08f, 0.84f);
             var split = infoRect.SplitV(2);
             var deviceRect = split[0];
             var gamepadRect = split[1];

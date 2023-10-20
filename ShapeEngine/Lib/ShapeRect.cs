@@ -300,6 +300,12 @@ namespace ShapeEngine.Lib
         public static Rect Align(this Rect r, Vector2 alignement) { return new(r.TopLeft, r.Size, alignement); }
         public static Rect ApplyMargins(this Rect rect, float left, float right, float top, float bottom)
         {
+            left = ShapeMath.Clamp(left, -1f, 1f);
+            right = ShapeMath.Clamp(right, -1f, 1f);
+            top = ShapeMath.Clamp(top, -1f, 1f);
+            bottom = ShapeMath.Clamp(bottom, -1f, 1f);
+            
+            
             Vector2 tl = new(rect.X, rect.Y);
             Vector2 size = new(rect.Width, rect.Height);
             Vector2 br = tl + size;
@@ -325,6 +331,11 @@ namespace ShapeEngine.Lib
             Vector2 size = new(rect.Width, rect.Height);
             Vector2 br = tl + size;
 
+            left = ShapeMath.Clamp(left, -size.X, size.X);
+            right = ShapeMath.Clamp(right, -size.X, size.X);
+            top = ShapeMath.Clamp(top, -size.Y, size.Y);
+            bottom = ShapeMath.Clamp(bottom, -size.Y, size.Y);
+            
             tl.X += left;
             tl.Y += top;
             br.X -= right;

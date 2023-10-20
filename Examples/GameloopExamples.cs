@@ -102,6 +102,16 @@ namespace Examples
 
         
         public Gamepad? CurGamepad = null;
+
+        public NinePatchRect UIZones { get; private set; } = new();
+        // public Rect RectTop { get; private set; } = new();
+        // public Rect RectBottom { get; private set; } = new();
+        // public Rect RectTopCenter { get; private set; } = new();
+        // public Rect RectTopLeft { get; private set; } = new();
+        // public Rect RectTopRight { get; private set; } = new();
+        // public Rect RectBottomLeft { get; private set; } = new();
+        // public Rect RectBottomCenter { get; private set; } = new();
+        // public Rect RectBottomRight { get; private set; } = new();
         
         public static readonly uint UIAccessTag = 100;
         public static readonly uint GameloopAccessTag = 200;
@@ -299,6 +309,22 @@ namespace Examples
 
         protected override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
+            UIZones = new(ui.Area, 0.2f, 0.6f, 0.06f, 0.88f, 0.01f, 0.01f);
+            // RectTop = ui.Area.ApplyMargins(0.01f, 0.01f, 0.01f, 0.94f);
+            // var topRects = RectTop.SplitV(0.15f, 0.05f, 0.6f, 0.05f);
+            // RectTopLeft = topRects[0];
+            // RectTopCenter = topRects[2];
+            // RectTopRight = topRects[4];
+            //
+            // RectBottom = ui.Area.ApplyMargins(0.01f, 0.01f, 0.94f, 0.01f);
+            // var bottomRects = RectBottom.SplitV(0.175f, 0.025f, 0.6f, 0.025f);
+            // RectBottomLeft = bottomRects[0];
+            // RectBottomCenter = bottomRects[2];
+            // RectBottomRight = bottomRects[4];
+            // var bottomRects = RectBottom.SplitV(0.2f);
+            // RectBottomLeft = bottomRects.left;
+            // RectBottomRight = bottomRects.right;
+            
             
             
             var fullscreenState = Input.ConsumeAction(InputFullscreenID);
@@ -384,10 +410,9 @@ namespace Examples
 
         protected override void DrawUI(ScreenInfo ui)
         {
-            // Vector2 uiSize = ui.Area.Size;
-            //var fpsRect = new Rect(uiSize * new Vector2(0.98f, 0.06f), uiSize * new Vector2(0.3f, 0.04f), new Vector2(1f, 1f));
-            var r = ui.Area.ApplyMargins(0.90f, 0.012f, 0.012f, 0.95f);
-            fpsLabel.Draw(r, new(1f, 0f), 1f);
+            fpsLabel.Draw(UIZones.TopRight.SplitV(0.75f).top, new(1f, 0f), 1f);
+            
+            //UIZones.DrawLines(4f, 2f, WHITE, BLUE);
         }
 
         public int GetFontCount() { return fonts.Count; }

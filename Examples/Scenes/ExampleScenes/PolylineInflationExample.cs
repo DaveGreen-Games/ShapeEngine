@@ -200,10 +200,10 @@ namespace Examples.Scenes.ExampleScenes
             var delete = deletePoint. GetInputTypeDescription( input.CurrentInputDevice == InputDevice.Keyboard ? InputDevice.Mouse : input.CurrentInputDevice , true, 1, false); // input.CurrentInputDevice);
             var offset = changeOffset.GetInputTypeDescription(input.CurrentInputDevice == InputDevice.Keyboard ? InputDevice.Mouse : input.CurrentInputDevice  , true, 1, false); // input.CurrentInputDevice);
             
-            Rect infoRect = ui.Area.ApplyMargins(0.05f, 0.05f, 0.9f, 0.05f);
+            //Rect infoRect = ui.Area.ApplyMargins(0.05f, 0.05f, 0.9f, 0.05f);
             string infoText =
                 $"Add Point {create} | Remove Point {delete} | Inflate {offset} {MathF.Round(offsetDelta * 100) / 100}";
-            font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+            font.DrawText(infoText, GAMELOOP.UIZones.BottomCenter, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
     }
 

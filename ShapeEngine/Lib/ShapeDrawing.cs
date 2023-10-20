@@ -740,6 +740,42 @@ namespace ShapeEngine.Lib
         #endregion
 
         #region Rectangle
+
+        public static void Draw(this NinePatchRect npr, Raylib_CsLo.Color color)
+        {
+            var rects = npr.Rects;
+            foreach (var r in rects)
+            {
+                r.Draw(color);
+            }
+        }
+        public static void Draw(this NinePatchRect npr, Raylib_CsLo.Color sourceColor, Raylib_CsLo.Color patchColor)
+        {
+            npr.Source.Draw(sourceColor);
+            var rects = npr.Rects;
+            foreach (var r in rects)
+            {
+                r.Draw(patchColor);
+            }
+        }
+        public static void DrawLines(this NinePatchRect npr, float lineThickness, Raylib_CsLo.Color color)
+        {
+            var rects = npr.Rects;
+            foreach (var r in rects)
+            {
+                r.DrawLines(lineThickness, color);
+            }
+        }
+        public static void DrawLines(this NinePatchRect npr, float sourceLineThickness, float patchLineThickness, Raylib_CsLo.Color sourceColor, Raylib_CsLo.Color patchColor)
+        {
+            npr.Source.DrawLines(sourceLineThickness, sourceColor);
+            var rects = npr.Rects;
+            foreach (var r in rects)
+            {
+                r.DrawLines(patchLineThickness, patchColor);
+            }
+        }
+        
         public static void DrawGrid(this Rect r, int lines, float lineThickness, Raylib_CsLo.Color color)
         {
             //float hGap = r.width / lines;
