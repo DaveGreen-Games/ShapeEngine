@@ -13,6 +13,24 @@ using ShapeEngine.Input;
 
 namespace Examples.Scenes
 {
+    // public class UIBox
+    // {
+    //     public Rect Rect;
+    //     //private List<UIBox> children = new();
+    //
+    //     public virtual void Update(float dt, Rect parentRect)
+    //     {
+    //
+    //     }
+    //     public virtual void Draw()
+    //     {
+    //         
+    //     }
+    // }
+    
+    
+    
+    
     public class MainScene : IScene
     {
         //should display names/description of all examples
