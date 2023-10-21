@@ -117,6 +117,7 @@ namespace Examples
         public static readonly uint GameloopAccessTag = 200;
         public static readonly uint SceneAccessTag = 300;
         public static readonly uint GamepadMouseMovementTag = 1000;
+        public static readonly uint KeyboardMouseMovementTag = 2000;
         //ui
         public static readonly uint InputUICancelID = 110;
         public static readonly uint InputUIBackID = 111;
@@ -478,24 +479,24 @@ namespace Examples
             InputAction uiAccept = new(UIAccessTag, InputUIAcceptID, acceptKB, acceptKB2, acceptGB, acceptMB);
 
             var leftKB = new InputTypeKeyboardButton(ShapeKeyboardButton.A);
-            var leftKB2 = new InputTypeKeyboardButton(ShapeKeyboardButton.LEFT);
+            //var leftKB2 = new InputTypeKeyboardButton(ShapeKeyboardButton.LEFT);
             var leftGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT);
-            InputAction uiLeft = new(UIAccessTag, InputUILeftID, leftKB, leftKB2, leftGB);
+            InputAction uiLeft = new(UIAccessTag, InputUILeftID, leftKB, leftGB);
             
             var rightKB = new InputTypeKeyboardButton(ShapeKeyboardButton.D);
-            var rightKB2 = new InputTypeKeyboardButton(ShapeKeyboardButton.RIGHT);
+            //var rightKB2 = new InputTypeKeyboardButton(ShapeKeyboardButton.RIGHT);
             var rightGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT);
-            InputAction uiRight = new(UIAccessTag, InputUIRightID, rightKB, rightKB2, rightGB);
+            InputAction uiRight = new(UIAccessTag, InputUIRightID, rightKB, rightGB);
             
             var upKB = new InputTypeKeyboardButton(ShapeKeyboardButton.W);
-            var upKB2 = new InputTypeKeyboardButton(ShapeKeyboardButton.UP);
+            //var upKB2 = new InputTypeKeyboardButton(ShapeKeyboardButton.UP);
             var upGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP);
-            InputAction uiUp = new(UIAccessTag, InputUIUpID, upKB, upKB2, upGB);
+            InputAction uiUp = new(UIAccessTag, InputUIUpID, upKB, upGB);
             
             var downKB = new InputTypeKeyboardButton(ShapeKeyboardButton.S);
-            var downKB2 = new InputTypeKeyboardButton(ShapeKeyboardButton.DOWN);
+            //var downKB2 = new InputTypeKeyboardButton(ShapeKeyboardButton.DOWN);
             var downGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN);
-            InputAction uiDown = new(UIAccessTag, InputUIDownID, downKB, downKB2, downGB);
+            InputAction uiDown = new(UIAccessTag, InputUIDownID, downKB, downGB);
             
             var nextTabKB = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
             var nextTabGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);

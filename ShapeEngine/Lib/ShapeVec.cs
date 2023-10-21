@@ -159,10 +159,18 @@ namespace ShapeEngine.Lib
         //return value / value.Length(); // RayMath.Vector2Normalize(v); }//return Vector2.Normalize(v); } //Vector2 normalize returns NaN sometimes???
         public static Vector2 Normalize(this Vector2 v) 
         {
-            //vector2 with length 0 can not be normalized (division by 0)
-            //and vector2 normalize does not check for that...
-            if (v is { X: 0f, Y: 0f }) return new Vector2(0f, 0f);
-            return Vector2.Normalize(v); 
+            // //vector2 with length 0 can not be normalized (division by 0)
+            // //and vector2 normalize does not check for that...
+            // if (v is { X: 0f, Y: 0f }) return new Vector2(0f, 0f);
+            // return Vector2.Normalize(v); 
+
+            float ls = v.LengthSquared();
+            return ls <= 0f ? new() : v / MathF.Sqrt(ls);
+            
+            // float l = MathF.Sqrt(v.X * v.X + v.Y * v.Y);
+            // if (l <= 0.0f) return new();
+            // float f = 1f / l;
+            // return v * f;
         } 
         public static Vector2 Reflect(this Vector2 v, Vector2 n) { return Vector2.Reflect(v, n); } //RayMath.Vector2Reflect(v, n);
         //public static Vector2 Scale(this Vector2 v, float amount) { return RayMath.Vector2Scale(v, amount); }

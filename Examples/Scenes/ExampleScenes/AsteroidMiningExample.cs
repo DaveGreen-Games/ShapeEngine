@@ -8,6 +8,7 @@ using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Input;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -309,6 +310,7 @@ namespace Examples.Scenes.ExampleScenes
         //private Vector2 laserEndPoint;
         private Vector2 aimDir = new();
         private GameObjectHandlerCollision gameObjectHandler;
+        private InputAction iaShootLaser;
         public LaserDevice(Vector2 pos, float size, GameObjectHandlerCollision gameObjectHandler) 
         {
             this.gameObjectHandler = gameObjectHandler;
@@ -511,6 +513,19 @@ namespace Examples.Scenes.ExampleScenes
         //Polygons testShapes = new();
         //Rect clipRect = new();
         //RectD clipperRect = new();
+
+        private readonly InputAction iaModeChange;
+        private readonly InputAction iaAddShape;
+        private readonly InputAction iaCutShape;
+        private readonly InputAction iaRegenerateShape;
+        private readonly InputAction iaRotateShape;
+        private readonly InputAction iaScaleShape;
+        private readonly InputAction iaPickTriangleShape;
+        private readonly InputAction iaPickRectangleShape;
+        private readonly InputAction iaPickPolygonShape;
+        private readonly InputAction iaDragLaser;
+        private readonly List<InputAction> inputActions;
+        
         public AsteroidMiningExample()
         {
             Title = "Asteroid Mining Example";
@@ -521,7 +536,40 @@ namespace Examples.Scenes.ExampleScenes
             laserDevice = new(new Vector2(0f), 100, gameObjectHandler);
             gameObjectHandler.AddAreaObject(laserDevice);
 
-            //testShapes.Add(SPoly.Generate(new Vector2(0f), 24, 50, 300));
+            var modeChangeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.TAB);
+            var modeChangeGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
+            iaModeChange = new(modeChangeKB, modeChangeGP);
+
+            var addShapeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
+            var addShapeMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
+            var addShapeGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
+            iaAddShape = new(addShapeKB, addShapeMB, addShapeGP);
+
+            var cutShapeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.C);
+            var cutShapeMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
+            var cutShapeGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
+            iaCutShape = new(cutShapeKB, cutShapeMB, cutShapeGP);
+            iaRegenerateShape = new();
+            iaRotateShape = new();
+            iaScaleShape = new();
+            iaPickTriangleShape = new();
+            iaPickRectangleShape = new();
+            iaPickPolygonShape = new();
+            iaDragLaser = new();
+            
+            inputActions = new()
+            {
+                iaModeChange,
+                iaAddShape,
+                iaCutShape,
+                iaRegenerateShape,
+                iaRotateShape,
+                iaScaleShape,
+                iaPickTriangleShape,
+                iaPickRectangleShape,
+                iaPickPolygonShape,
+                iaDragLaser
+            };
         }
         public override void Reset()
         {
@@ -683,6 +731,13 @@ namespace Examples.Scenes.ExampleScenes
 
             var col = gameObjectHandler.GetCollisionHandler();
             if (col == null) return;
+            
+            int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
+            foreach (var ia in inputActions)
+            {
+                ia.Gamepad = gamepadIndex;
+                ia.Update(dt);
+            }
 
             if (IsKeyPressed(KeyboardKey.KEY_TAB))//enter/exit poly mode
             {

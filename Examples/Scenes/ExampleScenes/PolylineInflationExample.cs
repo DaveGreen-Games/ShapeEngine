@@ -54,13 +54,14 @@ namespace Examples.Scenes.ExampleScenes
         protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             base.HandleInput(dt, mousePosGame, mousePosUI);
-            createPoint.Gamepad = GAMELOOP.CurGamepad?.Index ?? -1;
+            int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
+            createPoint.Gamepad = gamepadIndex;
             createPoint.Update(dt);
             
-            deletePoint.Gamepad = GAMELOOP.CurGamepad?.Index ?? -1;
+            deletePoint.Gamepad = gamepadIndex;
             deletePoint.Update(dt);
             
-            changeOffset.Gamepad = GAMELOOP.CurGamepad?.Index ?? -1;
+            changeOffset.Gamepad = gamepadIndex;
             changeOffset.Update(dt);
 
             var offsetState = changeOffset.State;
