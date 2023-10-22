@@ -7,6 +7,23 @@ public static class ShapeMath
     public const float DEGTORAD = MathF.PI / 180f;
     public const float RADTODEG = 180f / MathF.PI;
 
+    public static float RoundToDecimals(float number, int decimals)
+    {
+        if (decimals <= 0) return MathF.Round(number);
+        float value = MathF.Pow(10, decimals);
+        return MathF.Round(number * value) / value;
+    }
+    public static Vector2 RoundToDecimals(Vector2 v, int decimals)
+    {
+
+        if (decimals <= 0) return v.Round();
+        float value = MathF.Pow(10, decimals);
+        return new
+        (
+            MathF.Round(v.X * value) / value,
+            MathF.Round(v.Y * value) / value
+        );
+    }
     public static float Clamp(float value, float min, float max)
     {
         if (value < min) return min;

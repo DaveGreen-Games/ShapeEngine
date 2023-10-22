@@ -32,16 +32,18 @@ namespace Examples.Scenes.ExampleScenes
 
             var createMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
             var createGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
-            createPoint = new(createMB, createGP);
+            var createKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
+            createPoint = new(createMB, createGP, createKB);
 
             var deleteMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
             var deleteGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
-            deletePoint = new(deleteMB, deleteGP);
+            var deleteKB = new InputTypeKeyboardButton(ShapeKeyboardButton.C);
+            deletePoint = new(deleteMB, deleteGP, deleteKB);
 
             var offsetMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f);
-            //var offsetKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.S, ShapeKeyboardButton.W);
+            var offsetKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.S, ShapeKeyboardButton.W);
             var offsetGP = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_DOWN, ShapeGamepadButton.LEFT_FACE_UP);
-            changeOffset = new(offsetMW, offsetGP);
+            changeOffset = new(offsetMW, offsetGP, offsetKB);
 
         }
         public override void Reset()
@@ -196,10 +198,12 @@ namespace Examples.Scenes.ExampleScenes
         {
             Vector2 uiSize = ui.Area.Size;
 
-            
-            var create = createPoint. GetInputTypeDescription( input.CurrentInputDevice == InputDevice.Keyboard ? InputDevice.Mouse : input.CurrentInputDevice , true, 1, false); // input.CurrentInputDevice);
-            var delete = deletePoint. GetInputTypeDescription( input.CurrentInputDevice == InputDevice.Keyboard ? InputDevice.Mouse : input.CurrentInputDevice , true, 1, false); // input.CurrentInputDevice);
-            var offset = changeOffset.GetInputTypeDescription(input.CurrentInputDevice == InputDevice.Keyboard ? InputDevice.Mouse : input.CurrentInputDevice  , true, 1, false); // input.CurrentInputDevice);
+            // var device = input.CurrentInputDevice == InputDevice.Keyboard
+                // ? InputDevice.Mouse
+                // : input.CurrentInputDevice;
+            var create = createPoint. GetInputTypeDescription( input.CurrentInputDevice, true, 1, false); // input.CurrentInputDevice);
+            var delete = deletePoint. GetInputTypeDescription( input.CurrentInputDevice, true, 1, false); // input.CurrentInputDevice);
+            var offset = changeOffset.GetInputTypeDescription( input.CurrentInputDevice , true, 1, false); // input.CurrentInputDevice);
             
             //Rect infoRect = ui.Area.ApplyMargins(0.05f, 0.05f, 0.9f, 0.05f);
             string infoText =

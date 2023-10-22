@@ -218,6 +218,8 @@ public class ShapeLoop
     #endregion
 
     #region Private Members
+
+    private Vector2 mouseMovementPosition = new();
     private readonly ShapeTexture gameTexture = new();
     private readonly ShapeTexture screenShaderBuffer = new();
     private readonly ShapeCamera basicCamera = new ShapeCamera();
@@ -464,13 +466,13 @@ public class ShapeLoop
     #region  Gameloop
     private void StartGameloop()
     {
+        mouseMovementPosition = GetMousePosition();
         LoadContent();
         BeginRun();
     }
 
     private void RunGameloop()
     {
-        
         while (!quit)
         {
             if (WindowShouldClose())
@@ -499,22 +501,31 @@ public class ShapeLoop
             
             var screenArea = new Rect(0, 0, CurScreenSize.Width, CurScreenSize.Height);
             var cameraArea = Camera.Area;
-            
-            var mousePos = GetMousePosition();
+
+            //fix for mouse movement with gamepad/keyboard -> because setting raylib mouse position happens with int
+            //precision is lost that results in wrong mouse movement -> to fix that I store an actual vector2 for the current
+            //mouse position and update it with the mouse movement delta from the last frame
+            mouseMovementPosition += GetMouseDelta(); 
+            var mousePos = mouseMovementPosition;// GetMousePosition();
             CursorOnScreen = Fullscreen || Raylib.IsCursorOnScreen() || ( Raylib.IsWindowFocused() && screenArea.ContainsPoint(mousePos) );
-            //if (Raylib.IsWindowFocused() && screenArea.ContainsPoint(mousePos)) CursorOnScreen = true;
             
             if (CursorOnScreen)
             {
                 var prevMousePos = mousePos;
                 mousePos = ChangeMousePos(dt, mousePos, screenArea);
-                
+
                 if (Fullscreen || (mousePos - prevMousePos).LengthSquared() > 0f)
                 {
                     mousePos = mousePos.Clamp(new Vector2(0, 0), CurScreenSize.ToVector2());
-                    Raylib.SetMousePosition((int)mousePos.X, (int)mousePos.Y);
+
+                    mouseMovementPosition = mousePos;
+                    
+                    var mx = (int) MathF.Round(mousePos.X);
+                    var my = (int) MathF.Round(mousePos.Y);
+                    Raylib.SetMousePosition(mx, my);
+
                 }
-                
+
             }
             
             if (!CursorOnScreen)

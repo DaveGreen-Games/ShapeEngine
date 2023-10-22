@@ -89,7 +89,6 @@ namespace Examples
     
     public class GameloopExamples : ShapeLoop
     {
-        //public BasicCamera GameCam { get; private set; }
         public Font FontDefault { get; private set; }
 
 
@@ -103,15 +102,9 @@ namespace Examples
         
         public Gamepad? CurGamepad = null;
 
+        //TODO dont use nine path rect for ui like this (not flexible at all!)
+        //dictionary with id / rect for flexible system ?
         public NinePatchRect UIZones { get; private set; } = new();
-        // public Rect RectTop { get; private set; } = new();
-        // public Rect RectBottom { get; private set; } = new();
-        // public Rect RectTopCenter { get; private set; } = new();
-        // public Rect RectTopLeft { get; private set; } = new();
-        // public Rect RectTopRight { get; private set; } = new();
-        // public Rect RectBottomLeft { get; private set; } = new();
-        // public Rect RectBottomCenter { get; private set; } = new();
-        // public Rect RectBottomRight { get; private set; } = new();
         
         public static readonly uint UIAccessTag = 100;
         public static readonly uint GameloopAccessTag = 200;
@@ -147,6 +140,9 @@ namespace Examples
 
         private FPSLabel fpsLabel = new(GetFontDefault(), ExampleScene.ColorHighlight3);
 
+        private float mouseMovementTimer = 0f;
+        private const float mouseMovementDuration = 2f;
+        
         public GameloopExamples() : base(new(1920, 1080), true) {}
 
         protected override void LoadContent()
@@ -200,7 +196,8 @@ namespace Examples
         {
             if (Input.CurrentInputDevice == InputDevice.Gamepad && Input.LastUsedGamepad != null)
             {
-                float speed = screenArea.Size.Max() * 0.75f * dt; // 500f * dt;
+                mouseMovementTimer = 0f;
+                float speed = screenArea.Size.Max() * 0.75f * dt;
                 int gamepad = Input.LastUsedGamepad.Index;
                 var x = Input.GetState(ShapeGamepadAxis.LEFT_X, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
                 var y = Input.GetState(ShapeGamepadAxis.LEFT_Y, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
@@ -212,7 +209,23 @@ namespace Examples
                 var dir = movement / l;
                 return mousePos + dir * l * speed;
             }
+            
+            if (Input.CurrentInputDevice == InputDevice.Keyboard)
+            {
+                mouseMovementTimer += dt;
+                if (mouseMovementTimer >= mouseMovementDuration) mouseMovementTimer = mouseMovementDuration;
+                float t = mouseMovementTimer / mouseMovementDuration; 
+                float f = ShapeMath.LerpFloat(0.2f, 1f, t);
+                float speed = screenArea.Size.Max() * 0.5f * dt * f;
+                var x = Input.GetState(ShapeKeyboardButton.LEFT, ShapeKeyboardButton.RIGHT, KeyboardMouseMovementTag).AxisRaw;
+                var y = Input.GetState(ShapeKeyboardButton.UP, ShapeKeyboardButton.DOWN, KeyboardMouseMovementTag).AxisRaw;
 
+                var movement = new Vector2(x, y);
+                if (movement.LengthSquared() <= 0f) mouseMovementTimer = 0f;
+                return mousePos + movement.Normalize() * speed;
+            }
+
+            mouseMovementTimer = 0f;
             return mousePos;
         }
 
@@ -409,10 +422,26 @@ namespace Examples
             // }
         }
 
+        
         protected override void DrawUI(ScreenInfo ui)
         {
             fpsLabel.Draw(UIZones.TopRight.SplitV(0.75f).top, new(1f, 0f), 1f);
-            
+
+
+            // var rect = ui.Area.ApplyMargins(0.5f, 0.025f, 0.3f, 0.5f);
+            // var raw = ShapeMath.RoundToDecimals(keyboardMouseMovementRaw, 1);
+            // var norm = ShapeMath.RoundToDecimals(keyboardMouseMovementNormalized, 1);
+            // var l = ShapeMath.RoundToDecimals(keyboardMouseMovementRawLength, 1);
+            // var move = ShapeMath.RoundToDecimals(keyboardMouseMovement, 1);
+            // var s = ShapeMath.RoundToDecimals(keyboardMouseMovementSpeed, 1);
+            // var moveL = ShapeMath.RoundToDecimals(move.Length(), 1);
+            // var dif = ShapeMath.RoundToDecimals(mPos - prevMPos, 1);
+            // var difL = ShapeMath.RoundToDecimals(dif.Length(), 1);
+            //
+            // string text = $"Raw {raw} | L {l} | Norm {norm} | Move {move} | Speed {s}/{moveL}";
+            // string text2 = $"Dif {dif} | Dif L {difL} | Speed {s} | Move S {moveL}";
+            // rect.Draw(BLACK);
+            // FontDefault.DrawText(text2, rect, 1f, new Vector2(0.5f), WHITE);
             //UIZones.DrawLines(4f, 2f, WHITE, BLUE);
         }
 

@@ -10,13 +10,6 @@ using ShapeEngine.Random;
 
 namespace ShapeEngine.Core.Shapes
 {
-
-    // public class UIZone
-    // {
-    //     public Rect Rect;
-    //     public List<UIZone> Children = new();
-    //     
-    // }
     public readonly struct NinePatchRect
     {
         public readonly Rect TopLeft;
