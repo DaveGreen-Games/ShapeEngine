@@ -1,266 +1,35 @@
 using System.Numerics;
-using Raylib_CsLo;
 using ShapeEngine.Core.Shapes;
-using ShapeEngine.Core.Structs;
-using ShapeEngine.Input;
-using ShapeEngine.Lib;
-using ShapeEngine.Screen;
 
 namespace ShapeEngine.UI;
 
-public abstract class SceneElement
-{
-    private SceneElement? parent = null;
-    private HashSet<SceneElement> children = new();
+// 1) build simple ui element that supports children first (update & draws children)
 
-    private bool visible = true;
-    public bool Visible
-    {
-        get => visible;
-        set
-        {
-            if (value == visible) return;
-            visible = value;
-            OnVisibledChanged(value);
-        }
-    }
+// 2) figure out system for Visible, Active, SelectFilter, MouseFilter
+// visible just does not draw itself and children
+// active just does not update itself and children
+// how to deal with parent that is hidden but navigator needs to know if children are hidden?
+// for all this states the child could go through all parents to look for a false state and stop
 
-    private bool active = true;
-    public bool Active
-    {
-        get => active;
-        set
-        {
-            if (active == value) return;
-            active = value;
-            OnActiveChanged(value);
-        }
-    }
 
-    public bool SetParent(SceneElement? newParent)
-    {
-        if (newParent == parent) return false;
-        
-        var prevParent = parent;
-        parent = newParent;
-        OnParentChanged(prevParent, newParent);
-        return true;
-    }
-    public bool AddChild(SceneElement child)
-    {
-        if (!children.Add(child)) return false;
-        SetParent(this);
-        return true;
-    }
-    public bool RemoveChild(SceneElement child)
-    {
-        if (!children.Remove(child)) return false;
-        SetParent(null);
-        return true;
-    }
-    public bool TransferChildren(SceneElement from, SceneElement to)
-    {
-        if (from == to) return false;
-        foreach (var child in from.children)
-        {
-            to.AddChild(child);
-        }
-        from.children = new();
+// 3) Select Filter (None, Mouse, Navigation, All) How can element be selected?
 
-        return true;
-    }
-    internal void Activate(SceneElement old)
-    {
-        OnActivated(old);
-        foreach (var child in children)
-        {
-            child.Activate(old);
-        }
-    }
-    internal void Deactivate()
-    {
-        OnDeactivated();
-        foreach (var child in children)
-        {
-            child.Deactivate();
-        }
-    }
-    internal void Update(float dt, float deltaSow, ScreenInfo game, ScreenInfo ui)
-    {
-        if (!Active) return;
-        if (!ProcessUpdate(dt, deltaSow, game, ui)) return;
-        foreach (var child in children)
-        {
-            child.Update(dt, deltaSow, game, ui);
-        }
-    }
-    internal void DrawGame(ScreenInfo game)
-    {
-        if (!Visible) return;
-        if (!ProcessDrawGame(game)) return;
-        foreach (var child in children)
-        {
-            child.DrawGame(game);
-        }
-    }
-    internal void DrawGameUI(ScreenInfo ui)
-    {
-        if (!Visible) return;
-        if (!ProcessDrawGameUI(ui)) return;
-        foreach (var child in children)
-        {
-            child.DrawGameUI(ui);
-        }
-    }
-    internal void DrawUI(ScreenInfo ui)
-    {
-        if (!Visible) return;
-        if (!ProcessDrawUI(ui)) return;
-        foreach (var child in children)
-        {
-            child.DrawUI(ui);
-        }
-    }
-    internal void WindowSizeChanged(DimensionConversionFactors conversionFactors)
-    {
-        OnWindowSizeChanged(conversionFactors);
-        foreach (var child in children)
-        {
-            child.WindowSizeChanged(conversionFactors);
-        }
-    }
-    internal void WindowPositionChanged(Vector2 oldPos, Vector2 newPos)
-    {
-        OnWindowPositionChanged(oldPos, newPos);
-        foreach (var child in children)
-        {
-            child.WindowPositionChanged(oldPos, newPos);
-        }
-    }
-    internal void MonitorChanged(MonitorInfo newMonitor)
-    {
-        OnMonitorChanged(newMonitor);
-        foreach (var child in children)
-        {
-            child.MonitorChanged(newMonitor);
-        }
-    }
-    internal void GamepadConnected(Gamepad gamepad)
-    {
-        OnGamepadConnected(gamepad);
-        foreach (var child in children)
-        {
-            child.GamepadConnected(gamepad);
-        }
-    }
-    internal void GamepadDisconnected(Gamepad gamepad)
-    {
-        OnGamepadDisconnected(gamepad);
-        foreach (var child in children)
-        {
-            child.GamepadDisconnected(gamepad);
-        }
-    }
-    internal void InputDeviceChanged(InputDevice prevDevice, InputDevice curDevice)
-    {
-        OnInputDeviceChanged(prevDevice, curDevice);
-        foreach (var child in children)
-        {
-            child.InputDeviceChanged(prevDevice, curDevice);
-        }
-    }
-    internal void CursorEnteredScreen()
-    {
-        OnCursorEnteredScreen();
-        foreach (var child in children)
-        {
-            child.CursorEnteredScreen();
-        }
-    }
-    internal void CursorLeftScreen()
-    {
-        OnCursorLeftScreen();
-        foreach (var child in children)
-        {
-            child.CursorLeftScreen();
-        }
-    }
-    internal void CursorHiddenChanged(bool hidden)
-    {
-        OnCursorHiddenChanged(hidden);
-        foreach (var child in children)
-        {
-            child.CursorHiddenChanged(hidden);
-        }
-    }
-    internal void CursorLockChanged(bool locked)
-    {
-        OnCursorLockChanged(locked);
-        foreach (var child in children)
-        {
-            child.CursorLockChanged(locked);
-        }
-    }
-    internal void WindowFocusChanged(bool focused)
-    {
-        OnWindowFocusChanged(focused);
-        foreach (var child in children)
-        {
-            child.WindowFocusChanged(focused);
-        }
-    }
-    internal void WindowFullscreenChanged(bool fullscreen)
-    {
-        OnWindowFullscreenChanged(fullscreen);
-        foreach (var child in children)
-        {
-            child.WindowFullscreenChanged(fullscreen);
-        }
-    }
-    internal void WindowMaximizeChanged(bool maximized)
-    {
-        OnWindowMaximizeChanged(maximized);
-        foreach (var child in children)
-        {
-            child.WindowMaximizeChanged(maximized);
-        }
-    }
-    internal void Close()
-    {
-        OnClosed();
-        foreach (var child in children)
-        {
-            child.Close();
-        }
-    }
+// 4) Mouse Filter (Ignore, Pass, Stop) What happens when mouse enters rect ?
+// check mouse function -> checks for itself and than for children based on mouse filter
+// mouse inside is its own flag -> select filter decides if it is also selected
 
-    protected virtual void OnActivated(SceneElement old) { }
-    protected virtual void OnDeactivated() { }
-    protected virtual void OnClosed() { }
-    protected virtual bool ProcessUpdate(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui) { return true; }
-    protected virtual bool ProcessDrawGame(ScreenInfo game) { return true; }
-    protected virtual bool ProcessDrawGameUI(ScreenInfo ui) { return true; }
-    protected virtual bool ProcessDrawUI(ScreenInfo ui) { return true; }
-    protected virtual void OnChildAdded(SceneElement child) { }
-    protected virtual void OnChildRemoved(SceneElement child) { }
-    protected virtual void OnParentChanged(SceneElement? prevParent, SceneElement? newParent) { }
-    protected virtual void OnVisibledChanged(bool value) { }
-    protected virtual void OnActiveChanged(bool value) { }
-    
-    protected virtual void OnWindowSizeChanged(DimensionConversionFactors conversionFactors){}
-    protected virtual void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos){}
-    protected virtual void OnMonitorChanged(MonitorInfo newMonitor){}
-    protected virtual void OnGamepadConnected(Gamepad gamepad){}
-    protected virtual void OnGamepadDisconnected(Gamepad gamepad){}
-    protected virtual void OnInputDeviceChanged(InputDevice prevDevice, InputDevice curDevice){}
-    protected virtual void OnCursorEnteredScreen() { }
-    protected virtual void OnCursorLeftScreen() { }
-    protected virtual void OnCursorHiddenChanged(bool hidden) { }
-    protected virtual void OnCursorLockChanged(bool locked) { }
-    protected virtual void OnWindowFocusChanged(bool focused) { }
-    protected virtual void OnWindowFullscreenChanged(bool fullscreen) { }
-    protected virtual void OnWindowMaximizeChanged(bool maximized) { }
-}
+// 5) Update Rect virtual function -> normally rects are just passed down but parent can change the rects of children
+// see rect container.
+
+// 6) Pressed virtual function -> how to handle short cut, keyboard, mouse pressed? All in one function?
+
+// 7) Is parent field/system necessary?
+
+// 8) Selected, Mouse Entered, Mouse Left, Activated, Deactivated, Hidden, Visible events
+
+// 9) CheckMouse() -> CheckInput() -> Update() -> Draw() ??? how to do the hierarchy...
+// 10)
+// 11)
 
 public abstract class CanvasElement
 {
@@ -554,6 +323,15 @@ public abstract class CanvasElement
     protected virtual void OnCursorLeft(Vector2 pos) { }
 }
 
+
+
+
+
+
+
+
+
+
 // public class RectContainer
 // {
 //     protected Rect rect = new();
@@ -633,10 +411,6 @@ public abstract class CanvasElement
 //     
 //     protected virtual void OnRectUpdated() { }
 // }
-
-
-//UICanvas -> UIElement -> UIContainer -> BoxContainer/GridContainer
-
 
 /*
 //ui elements cycle
@@ -1262,8 +1036,6 @@ public class UINavigator
 }
 */
 
-
-
 /*
 
    using System.ComponentModel.Design.Serialization;
@@ -1773,4 +1545,260 @@ public class UINavigator
    
    }
    * /
+*/
+
+/*
+public abstract class SceneElement
+{
+    private SceneElement? parent = null;
+    private HashSet<SceneElement> children = new();
+
+    private bool visible = true;
+    public bool Visible
+    {
+        get => visible;
+        set
+        {
+            if (value == visible) return;
+            visible = value;
+            OnVisibledChanged(value);
+        }
+    }
+
+    private bool active = true;
+    public bool Active
+    {
+        get => active;
+        set
+        {
+            if (active == value) return;
+            active = value;
+            OnActiveChanged(value);
+        }
+    }
+
+    public bool SetParent(SceneElement? newParent)
+    {
+        if (newParent == parent) return false;
+        
+        var prevParent = parent;
+        parent = newParent;
+        OnParentChanged(prevParent, newParent);
+        return true;
+    }
+    public bool AddChild(SceneElement child)
+    {
+        if (!children.Add(child)) return false;
+        SetParent(this);
+        return true;
+    }
+    public bool RemoveChild(SceneElement child)
+    {
+        if (!children.Remove(child)) return false;
+        SetParent(null);
+        return true;
+    }
+    public bool TransferChildren(SceneElement from, SceneElement to)
+    {
+        if (from == to) return false;
+        foreach (var child in from.children)
+        {
+            to.AddChild(child);
+        }
+        from.children = new();
+
+        return true;
+    }
+    internal void Activate(SceneElement old)
+    {
+        OnActivated(old);
+        foreach (var child in children)
+        {
+            child.Activate(old);
+        }
+    }
+    internal void Deactivate()
+    {
+        OnDeactivated();
+        foreach (var child in children)
+        {
+            child.Deactivate();
+        }
+    }
+    internal void Update(float dt, float deltaSow, ScreenInfo game, ScreenInfo ui)
+    {
+        if (!Active) return;
+        if (!ProcessUpdate(dt, deltaSow, game, ui)) return;
+        foreach (var child in children)
+        {
+            child.Update(dt, deltaSow, game, ui);
+        }
+    }
+    internal void DrawGame(ScreenInfo game)
+    {
+        if (!Visible) return;
+        if (!ProcessDrawGame(game)) return;
+        foreach (var child in children)
+        {
+            child.DrawGame(game);
+        }
+    }
+    internal void DrawGameUI(ScreenInfo ui)
+    {
+        if (!Visible) return;
+        if (!ProcessDrawGameUI(ui)) return;
+        foreach (var child in children)
+        {
+            child.DrawGameUI(ui);
+        }
+    }
+    internal void DrawUI(ScreenInfo ui)
+    {
+        if (!Visible) return;
+        if (!ProcessDrawUI(ui)) return;
+        foreach (var child in children)
+        {
+            child.DrawUI(ui);
+        }
+    }
+    internal void WindowSizeChanged(DimensionConversionFactors conversionFactors)
+    {
+        OnWindowSizeChanged(conversionFactors);
+        foreach (var child in children)
+        {
+            child.WindowSizeChanged(conversionFactors);
+        }
+    }
+    internal void WindowPositionChanged(Vector2 oldPos, Vector2 newPos)
+    {
+        OnWindowPositionChanged(oldPos, newPos);
+        foreach (var child in children)
+        {
+            child.WindowPositionChanged(oldPos, newPos);
+        }
+    }
+    internal void MonitorChanged(MonitorInfo newMonitor)
+    {
+        OnMonitorChanged(newMonitor);
+        foreach (var child in children)
+        {
+            child.MonitorChanged(newMonitor);
+        }
+    }
+    internal void GamepadConnected(Gamepad gamepad)
+    {
+        OnGamepadConnected(gamepad);
+        foreach (var child in children)
+        {
+            child.GamepadConnected(gamepad);
+        }
+    }
+    internal void GamepadDisconnected(Gamepad gamepad)
+    {
+        OnGamepadDisconnected(gamepad);
+        foreach (var child in children)
+        {
+            child.GamepadDisconnected(gamepad);
+        }
+    }
+    internal void InputDeviceChanged(InputDevice prevDevice, InputDevice curDevice)
+    {
+        OnInputDeviceChanged(prevDevice, curDevice);
+        foreach (var child in children)
+        {
+            child.InputDeviceChanged(prevDevice, curDevice);
+        }
+    }
+    internal void CursorEnteredScreen()
+    {
+        OnCursorEnteredScreen();
+        foreach (var child in children)
+        {
+            child.CursorEnteredScreen();
+        }
+    }
+    internal void CursorLeftScreen()
+    {
+        OnCursorLeftScreen();
+        foreach (var child in children)
+        {
+            child.CursorLeftScreen();
+        }
+    }
+    internal void CursorHiddenChanged(bool hidden)
+    {
+        OnCursorHiddenChanged(hidden);
+        foreach (var child in children)
+        {
+            child.CursorHiddenChanged(hidden);
+        }
+    }
+    internal void CursorLockChanged(bool locked)
+    {
+        OnCursorLockChanged(locked);
+        foreach (var child in children)
+        {
+            child.CursorLockChanged(locked);
+        }
+    }
+    internal void WindowFocusChanged(bool focused)
+    {
+        OnWindowFocusChanged(focused);
+        foreach (var child in children)
+        {
+            child.WindowFocusChanged(focused);
+        }
+    }
+    internal void WindowFullscreenChanged(bool fullscreen)
+    {
+        OnWindowFullscreenChanged(fullscreen);
+        foreach (var child in children)
+        {
+            child.WindowFullscreenChanged(fullscreen);
+        }
+    }
+    internal void WindowMaximizeChanged(bool maximized)
+    {
+        OnWindowMaximizeChanged(maximized);
+        foreach (var child in children)
+        {
+            child.WindowMaximizeChanged(maximized);
+        }
+    }
+    internal void Close()
+    {
+        OnClosed();
+        foreach (var child in children)
+        {
+            child.Close();
+        }
+    }
+
+    protected virtual void OnActivated(SceneElement old) { }
+    protected virtual void OnDeactivated() { }
+    protected virtual void OnClosed() { }
+    protected virtual bool ProcessUpdate(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui) { return true; }
+    protected virtual bool ProcessDrawGame(ScreenInfo game) { return true; }
+    protected virtual bool ProcessDrawGameUI(ScreenInfo ui) { return true; }
+    protected virtual bool ProcessDrawUI(ScreenInfo ui) { return true; }
+    protected virtual void OnChildAdded(SceneElement child) { }
+    protected virtual void OnChildRemoved(SceneElement child) { }
+    protected virtual void OnParentChanged(SceneElement? prevParent, SceneElement? newParent) { }
+    protected virtual void OnVisibledChanged(bool value) { }
+    protected virtual void OnActiveChanged(bool value) { }
+    
+    protected virtual void OnWindowSizeChanged(DimensionConversionFactors conversionFactors){}
+    protected virtual void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos){}
+    protected virtual void OnMonitorChanged(MonitorInfo newMonitor){}
+    protected virtual void OnGamepadConnected(Gamepad gamepad){}
+    protected virtual void OnGamepadDisconnected(Gamepad gamepad){}
+    protected virtual void OnInputDeviceChanged(InputDevice prevDevice, InputDevice curDevice){}
+    protected virtual void OnCursorEnteredScreen() { }
+    protected virtual void OnCursorLeftScreen() { }
+    protected virtual void OnCursorHiddenChanged(bool hidden) { }
+    protected virtual void OnCursorLockChanged(bool locked) { }
+    protected virtual void OnWindowFocusChanged(bool focused) { }
+    protected virtual void OnWindowFullscreenChanged(bool fullscreen) { }
+    protected virtual void OnWindowMaximizeChanged(bool maximized) { }
+}
 */
