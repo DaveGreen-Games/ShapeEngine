@@ -3,6 +3,7 @@ using Raylib_CsLo;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
+using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 
 namespace ShapeEngine.UI;
@@ -260,7 +261,6 @@ public abstract class SceneElement
     protected virtual void OnWindowFullscreenChanged(bool fullscreen) { }
     protected virtual void OnWindowMaximizeChanged(bool maximized) { }
 }
-
 
 public abstract class CanvasElement
 {
@@ -554,9 +554,85 @@ public abstract class CanvasElement
     protected virtual void OnCursorLeft(Vector2 pos) { }
 }
 
-
-
-
+// public class RectContainer
+// {
+//     protected Rect rect = new();
+//
+//     public Rect Rect
+//     {
+//         get => rect;
+//         set
+//         {
+//             var oldRect = rect;
+//             rect = value;
+//             OnRectUpdated(oldRect, rect);
+//         }
+//     }
+//     
+//     private RectContainer? parent = null;
+//     private Dictionary<string, RectContainer> children = new();
+//
+//     public RectContainer() { }
+//
+//     public RectContainer(params (RectContainer container, string name)[] items)
+//     {
+//         foreach (var item in items)
+//         {
+//             AddChild(item.container, item.name);
+//         }
+//     }
+//     public void AddChild(RectContainer container, string name)
+//     {
+//         if (children.ContainsKey(name))
+//         {
+//             children[name].parent = null;
+//             children[name] = container;
+//             container.parent = this;
+//         }
+//         else
+//         {
+//             children.Add(name, container);
+//             container.parent = this;
+//         }
+//     }
+//     public RectContainer? RemoveChild(string name)
+//     {
+//         if (children.ContainsKey(name))
+//         {
+//             var child = children[name];
+//             children.Remove(name);
+//             child.parent = null;
+//             return child;
+//         }
+//
+//         return null;
+//     }
+//     public RectContainer? GetChild(string name)
+//     {
+//         if (!children.ContainsKey(name)) return null;
+//         return children[name];
+//     }
+//     
+//     protected virtual void OnRectUpdated(Rect oldRect, Rect newRect) { }
+//     
+// }
+//
+// public class RectContainer2
+// {
+//     private Rect rect = new();
+//
+//     public Rect Rect
+//     {
+//         get => rect;
+//         set
+//         {
+//             rect = value;
+//             OnRectUpdated();
+//         }
+//     }
+//     
+//     protected virtual void OnRectUpdated() { }
+// }
 
 
 //UICanvas -> UIElement -> UIContainer -> BoxContainer/GridContainer

@@ -128,9 +128,11 @@ namespace Examples.Scenes
             // Segment s = new(uiSize * new Vector2(0f, 0.07f), uiSize * new Vector2(1f, 0.07f));
             // GAMELOOP.UIZones.TopLeft.CombineWith(GAMELOOP.UIZones.TopCenter).CombineWith(GAMELOOP.UIZones.TopRight).BottomSegment.Draw(2f, ColorLight);
             //GAMELOOP.RectTop.BottomSegment.Draw(2f, ColorLight);
-            GAMELOOP.UIZones.Top.BottomSegment.Draw(2f, ColorLight);
-            //Rect r = new Rect(uiSize * new Vector2(0.5f, 0.01f), uiSize * new Vector2(0.6f, 0.06f), new Vector2(0.5f, 0f));
-            titleFont.DrawText(Title, GAMELOOP.UIZones.TopCenter, 10f, new(0.5f), ColorLight);
+            var topLine = GAMELOOP.UIRects.GetRectSingle("top").BottomSegment;
+            topLine.Draw(2f, ColorLight);
+
+            var topCenterRect = GAMELOOP.UIRects.GetRect("top center"); // Get("top").Get("center").GetRect();
+            titleFont.DrawText(Title, topCenterRect, 10f, new(0.5f), ColorLight);
 
             // string backText = "Back [ESC]";
             //Rect backRect = new Rect(uiSize * new Vector2(0.02f, 0.06f), uiSize * new Vector2(0.3f, 0.04f), new Vector2(0f, 1f));
@@ -155,11 +157,13 @@ namespace Examples.Scenes
                 ? InputDevice.Keyboard
                 : input.CurrentInputDevice;
             //backLabel.Color = ExampleScene.ColorHighlight3;
-            backLabel.Draw(GAMELOOP.UIZones.TopLeft.SplitV(0.75f).top, new(0f, 0f), curInputDevice, 4);
+            var backLabelRect = GAMELOOP.UIRects.GetRect("top left top"); // GetRect("top", "left", "top"); // Get("top").Get("left").Get("top").GetRect();
+            backLabel.Draw(backLabelRect, new(0f, 0f), curInputDevice, 4);
             
             if (GAMELOOP.Paused) return;
-            
-            DrawInputDeviceInfo(GAMELOOP.UIZones.BottomLeft);
+
+            var deviceRect = GAMELOOP.UIRects.GetRect("bottom left"); // GetRect("bottom", "left"); // Get("bottom").Get("left").GetRect();
+            DrawInputDeviceInfo(deviceRect);
             
             DrawUIExample(ui);
             

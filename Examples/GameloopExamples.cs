@@ -10,6 +10,7 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Screen;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
+using ShapeEngine.UI;
 
 namespace Examples
 {
@@ -85,7 +86,79 @@ namespace Examples
             
         }
     }
-
+    
+    public class RectContainerMain : RectContainer
+    {
+        public RectContainerMain(string name) : base(name)
+        {
+            var top = new RectContainerH("top", 0.01f, 0.9f);
+               
+                var topLeft = new RectContainerV("left", 0.01f, 0.8f);
+                    var topLeftTop = new RectContainerH("top", 0f, 0.5f);
+                    var topLeftBottom = new RectContainerH("bottom", 0.5f, 0f);
+                    topLeft.AddChild(topLeftTop);
+                    topLeft.AddChild(topLeftBottom);
+                
+                var topCenter = new RectContainerV("center", 0.2f, 0.2f);
+                
+                var topRight = new RectContainerV("right", 0.8f, 0.01f);
+                    var topRightTop = new RectContainerH("top", 0f, 0.5f);
+                    var topRightBottom = new RectContainerH("bottom", 0.5f, 0f);
+                    topRight.AddChild(topRightTop);
+                    topRight.AddChild(topRightBottom);
+                
+                top.AddChild(topLeft);
+                top.AddChild(topCenter);
+                top.AddChild(topRight);
+            
+            var center = new RectContainerH("center", 0.1f, 0.1f);
+                var centerLeft = new RectContainerV("left", 0.01f, 0.5f);
+                var centerRight = new RectContainerV("right", 0.5f, 0.01f);
+                center.AddChild(centerLeft);
+                center.AddChild(centerRight);
+            
+            var bottom = new RectContainerH("bottom", 0.9f, 0.01f);
+                var bottomLeft = new RectContainerV("left", 0.01f, 0.8f);
+                var bottomCenter = new RectContainerV("center", 0.2f, 0.2f);
+                var bottomRight = new RectContainerV("right", 0.8f, 0.01f);
+                bottom.AddChild(bottomLeft);
+                bottom.AddChild(bottomCenter);
+                bottom.AddChild(bottomRight);
+            
+            AddChild(top);
+            AddChild(center);
+            AddChild(bottom);
+        }
+    }
+    public class RectContainerH : RectContainer
+    {
+        public float TopFactor;
+        public float BottomFactor;
+        public RectContainerH(string name, float topFactor, float bottomFactor) : base(name)
+        {
+            TopFactor = topFactor;
+            BottomFactor = bottomFactor;
+        }
+        protected override Rect OnRectUpdateRequested(Rect newRect)
+        {
+            return newRect.ApplyMargins(0.01f, 0.01f, TopFactor, BottomFactor);
+        }
+    }
+    public class RectContainerV : RectContainer
+    {
+        public float LeftFactor;
+        public float RightFactor;
+        public RectContainerV(string name, float leftFactor, float rightFactor) : base(name)
+        {
+            LeftFactor = leftFactor;
+            RightFactor = rightFactor;
+        }
+        protected override Rect OnRectUpdateRequested(Rect newRect)
+        {
+            return newRect.ApplyMargins(LeftFactor, RightFactor, 0.01f, 0.01f);
+        }
+    }
+    
     
     public class GameloopExamples : ShapeLoop
     {
@@ -102,9 +175,8 @@ namespace Examples
         
         public Gamepad? CurGamepad = null;
 
-        //TODO dont use nine path rect for ui like this (not flexible at all!)
-        //dictionary with id / rect for flexible system ?
-        public NinePatchRect UIZones { get; private set; } = new();
+        public RectContainerMain UIRects = new("main");
+        
         
         public static readonly uint UIAccessTag = 100;
         public static readonly uint GameloopAccessTag = 200;
@@ -190,6 +262,7 @@ namespace Examples
             HideOSCursor();
             //LockOSCursor();
             SwitchCursor(new SimpleCursorGameUI());
+
         }
 
         protected override Vector2 ChangeMousePos(float dt, Vector2 mousePos, Rect screenArea)
@@ -323,7 +396,18 @@ namespace Examples
 
         protected override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            UIZones = new(ui.Area, 0.2f, 0.6f, 0.06f, 0.88f, 0.01f, 0.01f);
+            //UIZones = new(ui.Area, 0.2f, 0.6f, 0.06f, 0.88f, 0.01f, 0.01f);
+            UIRects.SetRect(ui.Area);
+            //UIRects.Rect = ui.Area;
+            
+            // var top = UIRects.GetChild("top");
+            // var center = UIRects.GetChild("center");
+            // var bottom = UIRects.GetChild("bottom");
+            // if (top != null) top.Rect = ui.Area.ApplyMargins(0.01f, 0.01f, 0.01f, 0.9f);
+            // if (center != null) center.Rect = ui.Area.ApplyMargins(0.01f, 0.01f, 0.1f, 0.1f);
+            // if (bottom != null) bottom.Rect = ui.Area.ApplyMargins(0.01f, 0.01f, 0.9f, 0.01f);
+            
+            
             // RectTop = ui.Area.ApplyMargins(0.01f, 0.01f, 0.01f, 0.94f);
             // var topRects = RectTop.SplitV(0.15f, 0.05f, 0.6f, 0.05f);
             // RectTopLeft = topRects[0];
@@ -425,7 +509,10 @@ namespace Examples
         
         protected override void DrawUI(ScreenInfo ui)
         {
-            fpsLabel.Draw(UIZones.TopRight.SplitV(0.75f).top, new(1f, 0f), 1f);
+            //UIRects.Draw(new(50, 0, 0, 255), new(25,0,0,0));
+            
+            var fpsRect = UIRects.GetRect("top", "right", "top"); // Get("top").Get("right").Get("top").GetRect();
+            fpsLabel.Draw(fpsRect, new(1f, 0f), 1f);
 
 
             // var rect = ui.Area.ApplyMargins(0.5f, 0.025f, 0.3f, 0.5f);
