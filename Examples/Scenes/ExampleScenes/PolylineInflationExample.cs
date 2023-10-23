@@ -124,7 +124,7 @@ namespace Examples.Scenes.ExampleScenes
             }
 
 
-            if (createState.Pressed)// IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT))
+            if (createState.Pressed)// && createState.MultiTapCount > 0)// IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT))
             {
                 if (pickedVertex == -1)
                 {
@@ -144,7 +144,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 dragIndex = -1;
             }
-            else if (dragIndex == -1 && deleteState.Pressed)// IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT))
+            else if (dragIndex == -1 && deleteState.Pressed)// deleteState.HoldFinished)// IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT))
             {
                 if (pickedVertex > -1)
                 {

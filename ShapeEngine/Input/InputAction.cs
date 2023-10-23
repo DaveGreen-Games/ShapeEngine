@@ -14,6 +14,22 @@ public class InputAction
     public int Gamepad = -1;
     public string Title = "Input Action";
 
+    private float holdTimer = 0f;
+    private float doubleTapTimer = 0f;
+    private float holdDuration = 1f;
+    private float multiTapDuration = 0.25f;
+
+    public float HoldDuration
+    {
+        get => holdDuration;
+        set => holdDuration = MathF.Max(0f, value);
+    }
+    public float MultiTapDuration
+    {
+        get => multiTapDuration;
+        set => multiTapDuration = MathF.Max(0f, value);
+    }
+    
     private float axisSensitivity = 1f;
     private float axisGravitiy = 1f;
     /// <summary>
@@ -122,6 +138,44 @@ public class InputAction
             // }
             current = current.Accumulate(state);
         }
+
+        int multiTapCount = State.MultiTapCount;
+        if (doubleTapTimer > 0f)
+        {
+            doubleTapTimer -= dt;
+            if (doubleTapTimer <= 0f)
+            {
+                doubleTapTimer = 0f;
+                multiTapCount = 0;
+            }
+        }
+
+        float holdF = 0f;
+        if (holdDuration > 0f)
+        {
+            if (current.Down)
+            {
+                holdTimer += dt;
+                if (holdTimer >= holdDuration) holdTimer = holdDuration;
+            }
+            else
+            {
+                holdTimer = 0f;
+            }
+            holdF = holdTimer / holdDuration;
+        }
+        
+        if (State.Up && current.Down && multiTapDuration > 0f)
+        {
+            // if (doubleTapTimer > 0f) multiTapCount++;
+            // doubleTapTimer = DoubleTapDuration;
+            
+            if (doubleTapTimer <= 0f) doubleTapTimer = multiTapDuration;
+            else multiTapCount++;
+            
+        }
+        
+        current = new(current, holdF, multiTapCount);
         State = new(State, current);
         
         if (axisSensitivity > 0 || axisGravitiy > 0)

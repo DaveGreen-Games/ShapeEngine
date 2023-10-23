@@ -306,7 +306,6 @@ namespace Examples.Scenes.ExampleScenes
         private InputDevice curInputDevice = InputDevice.Keyboard;
 
         private InputAction button;
-        
         public ButtonVisualizer(bool left, Font font)
         {
             this.font = font;
@@ -350,6 +349,7 @@ namespace Examples.Scenes.ExampleScenes
                 flashTimer -= dt;
                 if (flashTimer <= 0) flashTimer = 0f;
             }
+
         }
 
         public override void Draw(Rect area, float lineThickness)
@@ -366,8 +366,8 @@ namespace Examples.Scenes.ExampleScenes
             Rect insideBottom = bottom.ApplyMarginsAbsolute(marginSize, marginSize, marginSize, marginSize);//  bottom.ApplyMargins(0.025f, 0.025f, 0.025f, 0.025f);
             
             insideBottom.DrawLines(lineThickness / 2, flashColor1);
-            
-            var insideRect = insideBottom.ScaleSize(0f, new(0.5f)).Lerp(insideBottom, MathF.Abs(button.State.Axis));
+
+            var insideRect = insideBottom.ScaleSize(0f, new(0.5f)).Lerp(insideBottom,  MathF.Abs(button.State.Axis));
             insideRect.Draw(flashColor2);
             
             var inputs = button.GetInputs(curInputDevice);
@@ -385,9 +385,10 @@ namespace Examples.Scenes.ExampleScenes
                 bottom.DrawLines(lineThickness, ExampleScene.ColorHighlight2);
             }
 
+
             
-            
-            font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), flashColor1);
+            var t = $"{title} {button.State.MultiTapCount}";
+            font.DrawText(t, top, 1f, new Vector2(0.5f, 0f), flashColor1);
         }
     }
     
