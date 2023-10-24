@@ -432,7 +432,7 @@ namespace Examples.Scenes.ExampleScenes
                 if (flashTimer <= 0) flashTimer = 0f;
             }
 
-            if (button.State.HoldFinished)
+            if (button.State.HoldState == MultiTapState.Completed)
             {
                 holdFinishedTimer = holdFinishedDuration;
             }
@@ -554,7 +554,8 @@ namespace Examples.Scenes.ExampleScenes
             //var rmb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
             button = new(q, x);
             button.MultiTapDuration = 0.25f;
-            button.MultiTapTarget = 4;
+            button.MultiTapTarget = 2;
+            button.HoldDuration = 1f;
         }
         public override void Update(float dt, int gamepad, InputDevice inputDevice)
         {
@@ -578,7 +579,7 @@ namespace Examples.Scenes.ExampleScenes
                 if (flashTimer <= 0) flashTimer = 0f;
             }
 
-            if (button.State.MultiTapCount > 100)
+            if (button.State.MultiTapState == MultiTapState.Completed)
             {
                 doubleTapFinishedTimer = doubleTapFinishedDuration;
             }
@@ -607,7 +608,24 @@ namespace Examples.Scenes.ExampleScenes
             var radius = bottom.Size.Min() * 0.5f;
             Circle circle = new(center, radius);
 
-            if (button.State.MultiTapCount <= 0 && button.State.Down)
+            var pressedType = button.State.GetPressedType();
+            switch (pressedType)
+            {
+               case PressedType.Hold:  Console.WriteLine("Hold"); break;
+               case PressedType.MultiTap:  Console.WriteLine("Double Tap"); break;
+               case PressedType.SingleTap:  Console.WriteLine("Single Tap"); break;
+               // case PressedType.None:  Console.WriteLine("None"); break;
+               
+            }
+            
+            // if(button.State.HoldFinished) 
+            // else if(button.State.MultiTapState == MultiTapState.Completed) Console.WriteLine("Double Tap");
+            // else if (button.State.HoldF <= 0f && button.State.MultiTapState == MultiTapState.Failed)
+            // {
+            //     Console.WriteLine("Normal Tap");
+            // }
+            
+            if (button.State.MultiTapState == MultiTapState.Failed)
             {
                 Circle outside = new(center, radius + lineThickness);
                 outside.DrawLines(lineThickness / 2, flashColor3);

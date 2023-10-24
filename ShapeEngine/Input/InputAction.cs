@@ -6,6 +6,15 @@ using ShapeEngine.Lib;
 
 namespace ShapeEngine.Input;
 
+//Todo change multi tap system
+// input state has multi tap f & multi tap finished
+// if f > 0 and not finished => in progress
+// f <= 0 => no multi tap in progress
+// f > 0 (technically 1) & finished => finished
+//down/up/pressed/released is not changed
+//user can do:
+
+
 public class InputAction
 {
     public uint ID { get; private set; }
@@ -146,16 +155,13 @@ public class InputAction
             current = current.Accumulate(state);
         }
 
-        bool multiTapFinished = false;
-        bool multiTapFailed = false;
+        float multiTapF = 0f;
         if (multiTapTimer > 0f)
         {
             multiTapTimer -= dt;
             if (multiTapTimer <= 0f)
             {
                 multiTapTimer = 0f;
-                //finalMultiTapCount = multiTapCount;
-                if(multiTapCount > 0) multiTapFailed = true;
                 multiTapCount = 0;
             }
         }
@@ -179,16 +185,26 @@ public class InputAction
         {
             if (multiTapTimer <= 0f) multiTapTimer = multiTapDuration;
             multiTapCount++;
+            // if (multiTapCount >= multiTapTarget)
+            // {
+            //     multiTapF = 1f;
+            // }
+            // else multiTapF = (float)multiTapCount / (float)multiTapTarget;
+        }
+
+        if (multiTapTimer > 0f)
+        {
             if (multiTapCount >= multiTapTarget)
             {
-                multiTapFinished = true;
+                multiTapF = 1f;
             }
+            else multiTapF = (float)multiTapCount / (float)multiTapTarget;
         }
         
-        current = new(current, holdF, multiTapCount, multiTapFinished, multiTapFailed);
+        current = new(current, holdF, multiTapF);
         State = new(State, current);
 
-        if (multiTapFinished) multiTapCount = 0;
+        if (multiTapF >= 1f) multiTapCount = 0;
         
         if (axisSensitivity > 0 || axisGravitiy > 0)
         {

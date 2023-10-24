@@ -3,7 +3,21 @@ using ShapeEngine.Lib;
 namespace ShapeEngine.Input;
 
 
+public enum MultiTapState
+{
+    None = 0,
+    InProgress = 1,
+    Completed = 2,
+    Failed = 3
+}
 
+public enum PressedType
+{
+    None = 0,
+    Hold = 1,
+    MultiTap = 2,
+    SingleTap = 3
+}
 public readonly struct InputState
 {
     public readonly bool Down;
@@ -19,9 +33,21 @@ public readonly struct InputState
     public readonly bool Consumed;
 
     public readonly float HoldF;
-    public readonly bool HoldFinished;
-    public readonly int MultiTapCount;
-    
+    public readonly MultiTapState HoldState;
+    //public readonly bool HoldFinished;
+    public readonly float MultiTapF;
+    public readonly MultiTapState MultiTapState;
+
+    public readonly PressedType GetPressedType()
+    {
+        if (HoldState == MultiTapState.Completed) return PressedType.Hold;
+        if (MultiTapState == MultiTapState.Completed) return PressedType.MultiTap;
+        if (HoldF <= 0f && MultiTapState == MultiTapState.Failed) return PressedType.SingleTap;
+        if (MultiTapF <= 0f && HoldState == MultiTapState.Failed) return PressedType.SingleTap;
+        //if(HoldF <= 0f && MultiTapF <= 0f && Pressed) return PressedType.SingleTap;
+        return PressedType.None;
+
+    }
     
     public InputState()
     {
@@ -35,8 +61,10 @@ public readonly struct InputState
         Consumed = false;
         InputDevice = InputDevice.Keyboard;
         HoldF = 0f;
-        HoldFinished = false;
-        MultiTapCount = 0;
+        HoldState = MultiTapState.None;
+        //HoldFinished = false;
+        MultiTapF = 0f;
+        MultiTapState = MultiTapState.None;
     }
     public InputState(bool down, bool up, float axisRaw, int gamepad, InputDevice inputDevice)
     {
@@ -50,43 +78,18 @@ public readonly struct InputState
         Consumed = false;
         InputDevice = inputDevice;
         HoldF = 0f;
-        HoldFinished = false;
-        MultiTapCount = 0;
+        HoldState = MultiTapState.None;
+        // HoldFinished = false;
+        MultiTapF = 0f;
+        MultiTapState = MultiTapState.None;
     }
 
-    public InputState(InputState state, float holdF, int multiTapCount, bool multiTapFinished, bool multiTapFailed)
+    public InputState(InputState state, float holdF, float multiTapF)
     {
-        if (multiTapFailed) //failed
-        {
-            Down = true;
-            Up = false;
-            Released = false;
-            Pressed = true;
-        }
-        else if (multiTapCount > 0)
-        {
-            if (multiTapFinished)
-            {
-                Down = true;
-                Up = false;
-                Released = false;
-                Pressed = true;
-            }
-            else
-            {
-                Down = false;
-                Up = true;
-                Released = false;
-                Pressed = false;
-            }
-        }
-        else
-        {
-            Down = state.Down;
-            Up = state.Up;
-            Released = state.Released;
-            Pressed = state.Pressed;
-        }
+        Down = state.Down;
+        Up = state.Up;
+        Released = state.Released;
+        Pressed = state.Pressed;
         
         
         Gamepad = state.Gamepad;
@@ -96,10 +99,11 @@ public readonly struct InputState
         InputDevice = state.InputDevice;
 
         HoldF = holdF;
-        HoldFinished = false;
-        if (multiTapFinished) MultiTapCount = multiTapCount;
-        else MultiTapCount = 0;
-        // MultiTapCount = multiTapCount;
+        HoldState = MultiTapState.None;
+        // HoldFinished = false;
+        MultiTapF = multiTapF;
+        MultiTapState = MultiTapState.None; 
+        
     }
     public InputState(InputState prev, InputState cur)
     {
@@ -113,11 +117,25 @@ public readonly struct InputState
         Consumed = false;
         InputDevice = cur.InputDevice;
 
-        if (prev.HoldF < 1f && cur.HoldF >= 1f) HoldFinished = true;
-        else HoldFinished = false;
+        // if (prev.HoldF < 1f && cur.HoldF >= 1f) HoldFinished = true;
+        // else HoldFinished = false;
+        if (prev.HoldF is > 0f and < 1f)
+        {
+            if(cur.HoldF >= 1f) HoldState = MultiTapState.Completed;
+            else if (cur.HoldF <= 0f) HoldState = MultiTapState.Failed;
+            else HoldState = MultiTapState.InProgress;
+        }
+        else HoldState = MultiTapState.None;
         HoldF = cur.HoldF;
 
-        MultiTapCount = cur.MultiTapCount;
+        if (prev.MultiTapF is > 0f and < 1f)
+        {
+            if(cur.MultiTapF >= 1f) MultiTapState = MultiTapState.Completed;
+            else if (cur.MultiTapF <= 0f) MultiTapState = MultiTapState.Failed;
+            else MultiTapState = MultiTapState.InProgress;
+        }
+        else MultiTapState = MultiTapState.None;
+        MultiTapF = cur.MultiTapF;
 
     }
     public InputState(InputState prev, InputState cur, InputDevice inputDevice)
@@ -132,11 +150,25 @@ public readonly struct InputState
         Consumed = false;
         InputDevice = inputDevice;
 
-        if (prev.HoldF < 1f && cur.HoldF >= 1f) HoldFinished = true;
-        else HoldFinished = false;
+        // if (prev.HoldF < 1f && cur.HoldF >= 1f) HoldFinished = true;
+        // else HoldFinished = false;
+        if (prev.HoldF is > 0f and < 1f)
+        {
+            if(cur.HoldF >= 1f) HoldState = MultiTapState.Completed;
+            else if (cur.HoldF <= 0f) HoldState = MultiTapState.Failed;
+            else HoldState = MultiTapState.InProgress;
+        }
+        else HoldState = MultiTapState.None;
         HoldF = cur.HoldF;
         
-        MultiTapCount = cur.MultiTapCount;
+        if (prev.MultiTapF is > 0f and < 1f)
+        {
+            if(cur.MultiTapF >= 1f) MultiTapState = MultiTapState.Completed;
+            else if (cur.MultiTapF <= 0f) MultiTapState = MultiTapState.Failed;
+            else MultiTapState = MultiTapState.InProgress;
+        }
+        else MultiTapState = MultiTapState.None;
+        MultiTapF = cur.MultiTapF;
     }
     private InputState(InputState other, bool consumed)
     {
@@ -151,8 +183,10 @@ public readonly struct InputState
         InputDevice = other.InputDevice;
 
         HoldF = other.HoldF;
-        HoldFinished = other.HoldFinished;
-        MultiTapCount = other.MultiTapCount;
+        HoldState = other.HoldState;
+        // HoldFinished = other.HoldFinished;
+        MultiTapF = other.MultiTapF;
+        MultiTapState = other.MultiTapState;
     }
     private InputState(InputState state, float axis)
     {
@@ -167,8 +201,10 @@ public readonly struct InputState
         InputDevice = state.InputDevice;
         
         HoldF = state.HoldF;
-        HoldFinished = state.HoldFinished;
-        MultiTapCount = state.MultiTapCount;
+        HoldState = state.HoldState;
+        // HoldFinished = state.HoldFinished;
+        MultiTapF = state.MultiTapF;
+        MultiTapState = state.MultiTapState;
     }
     public InputState Accumulate(InputState other)
     {
@@ -183,12 +219,14 @@ public readonly struct InputState
         bool down = Down || other.Down;
         bool up = Up && other.Up;
 
-        float holdF = MathF.Max(HoldF, other.HoldF);
+        //float holdF = MathF.Max(HoldF, other.HoldF);
         
         //bool holdFinished = HoldFinished || other.HoldFinished;
         //bool doubleTap = DoubleTap || other.DoubleTap;
-        InputState newState = new(down, up, axis, other.Gamepad, inputDevice);
-        return new(newState, holdF, 0, false, false);
+        
+        return new(down, up, axis, other.Gamepad, inputDevice);
+        // InputState newState = new(down, up, axis, other.Gamepad, inputDevice);
+        // return new(newState, holdF, 0, false, false);
     }
     public InputState AdjustAxis(float value) => value == 0f ? this : new InputState(this, Axis + value);
     public InputState Consume() => new(this, true);
