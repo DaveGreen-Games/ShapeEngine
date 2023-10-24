@@ -61,10 +61,10 @@ namespace Examples.Scenes.ExampleScenes
                 var keyboardHorizontal = IInputType.Create(ShapeKeyboardButton.LEFT, ShapeKeyboardButton.RIGHT);
                 var keyboardVertical = IInputType.Create(ShapeKeyboardButton.UP, ShapeKeyboardButton.DOWN);
             
-                var gamepadButtonHorizontal = 
-                    IInputType.Create(ShapeGamepadButton.RIGHT_FACE_LEFT, ShapeGamepadButton.RIGHT_FACE_RIGHT, 0f);
-                var gamepadButtonVertical = 
-                    IInputType.Create(ShapeGamepadButton.RIGHT_FACE_UP, ShapeGamepadButton.RIGHT_FACE_DOWN, 0f);
+                //var gamepadButtonHorizontal = 
+                //    IInputType.Create(ShapeGamepadButton.RIGHT_FACE_LEFT, ShapeGamepadButton.RIGHT_FACE_RIGHT, 0f);
+                //var gamepadButtonVertical = 
+                //    IInputType.Create(ShapeGamepadButton.RIGHT_FACE_UP, ShapeGamepadButton.RIGHT_FACE_DOWN, 0f);
 
                 var gamepadHorizontal = IInputType.Create(ShapeGamepadAxis.RIGHT_X, 0f);
                 var gamepadVertical = IInputType.Create(ShapeGamepadAxis.RIGHT_Y, 0f);
@@ -80,8 +80,8 @@ namespace Examples.Scenes.ExampleScenes
                 // var mouseHorizontal = InputAction.CreateInputType(ShapeMouseAxis.HORIZONTAL);
                 // var mouseVertical = InputAction.CreateInputType(ShapeMouseAxis.VERTICAL);
             
-                joystickHorizontal = new(keyboardHorizontal, gamepadButtonHorizontal, gamepadHorizontal );//, mouseWheelButtonAxisHorizontal ); //, mouseWheelHorizontal, mouseHorizontal);
-                joystickVertical = new(keyboardVertical, gamepadButtonVertical, gamepadVertical );//, mouseWheelButtonAxisVertical );//, mouseWheelVertical, mouseVertical);
+                joystickHorizontal = new(keyboardHorizontal, gamepadHorizontal );//, mouseWheelButtonAxisHorizontal ); //, mouseWheelHorizontal, mouseHorizontal);
+                joystickVertical = new(keyboardVertical, gamepadVertical );//, mouseWheelButtonAxisVertical );//, mouseWheelVertical, mouseVertical);
             }
 
             joystickHorizontal.AxisGravity = 0.25f;
@@ -298,35 +298,117 @@ namespace Examples.Scenes.ExampleScenes
         }
     }
     internal class ButtonVisualizer : InputVisualizer
+        {
+            private string title;
+            private Font font;
+            private float flashTimer = 0f;
+            private const float flashDuration = 1f;
+            private InputDevice curInputDevice = InputDevice.Keyboard;
+    
+            private InputAction button;
+            public ButtonVisualizer(bool left, Font font)
+            {
+                this.font = font;
+                
+    
+                if (left)
+                {
+                    this.title = "BUTTON LEFT";
+                    var tab = new InputTypeKeyboardButton(ShapeKeyboardButton.TAB);
+                    var select = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
+                    var lmb = new InputTypeMouseButton(ShapeMouseButton.LEFT);
+                    button = new(tab, select, lmb);
+                }
+                else
+                {
+                    this.title = "BUTTON RIGHT";
+                    var space = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
+                    var start = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
+                    var rmb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
+                    button = new(space, start, rmb);
+                }
+            }
+            public override void Update(float dt, int gamepad, InputDevice inputDevice)
+            {
+                if (button.HasInput(inputDevice))
+                {
+                    curInputDevice = inputDevice;
+                }
+                
+                button.Gamepad = gamepad;
+                button.Update(dt);
+                
+    
+                if (button.State.Down)
+                {
+                    flashTimer = flashDuration;
+                }
+    
+                if (flashTimer > 0f)
+                {
+                    flashTimer -= dt;
+                    if (flashTimer <= 0) flashTimer = 0f;
+                }
+    
+            }
+    
+            public override void Draw(Rect area, float lineThickness)
+            {
+                float flashF = flashTimer / flashDuration;
+                Color flashColor1 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight1, flashF);
+                Color flashColor2 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight2, flashF);
+                Color flashColor3 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight3, flashF);
+                
+                
+                Rect top = area.ApplyMargins(0, 0, 0, 0.8f);
+                Rect bottom = area.ApplyMargins(0, 0, 0.2f, 0);
+                float marginSize = bottom.Size.Max() * 0.025f;
+                Rect insideBottom = bottom.ApplyMarginsAbsolute(marginSize, marginSize, marginSize, marginSize);//  bottom.ApplyMargins(0.025f, 0.025f, 0.025f, 0.025f);
+                
+                insideBottom.DrawLines(lineThickness / 2, flashColor1);
+    
+                var insideRect = insideBottom.ScaleSize(0f, new(0.5f)).Lerp(insideBottom,  MathF.Abs(button.State.Axis));
+                insideRect.Draw(flashColor2);
+                
+                var inputs = button.GetInputs(curInputDevice);
+                var inputNamesRect = insideBottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
+                var rects = inputNamesRect.SplitV(inputs.Count); // inputNamesRect.GetAlignedRectsVertical(inputs.Count, 0f, 1f);
+                for (var i = 0; i < inputs.Count; i++)
+                {
+                    font.DrawText(inputs[i].GetName(true), rects[i], 1f, new Vector2(0.5f, 0f), ExampleScene.ColorMedium);
+                }
+                
+                
+    
+                if (button.State.Down)
+                {
+                    bottom.DrawLines(lineThickness, ExampleScene.ColorHighlight2);
+                }
+    
+                font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), flashColor1);
+            }
+        }
+    internal class ButtonHoldVisualizer : InputVisualizer
     {
         private string title;
         private Font font;
         private float flashTimer = 0f;
+        private float holdFinishedTimer = 0f;
+        private const float holdFinishedDuration = 1f;
+        
         private const float flashDuration = 1f;
         private InputDevice curInputDevice = InputDevice.Keyboard;
 
         private InputAction button;
-        public ButtonVisualizer(bool left, Font font)
+        public ButtonHoldVisualizer(Font font)
         {
             this.font = font;
             
-
-            if (left)
-            {
-                this.title = "BUTTON LEFT";
-                var tab = new InputTypeKeyboardButton(ShapeKeyboardButton.TAB);
-                var select = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_LEFT);
-                var lmb = new InputTypeMouseButton(ShapeMouseButton.LEFT);
-                button = new(tab, select, lmb);
-            }
-            else
-            {
-                this.title = "BUTTON RIGHT";
-                var space = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
-                var start = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_RIGHT);
-                var rmb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
-                button = new(space, start, rmb);
-            }
+            this.title = "HOLD";
+            var q = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
+            var x = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
+            //var rmb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
+            button = new(q, x);
         }
         public override void Update(float dt, int gamepad, InputDevice inputDevice)
         {
@@ -350,6 +432,19 @@ namespace Examples.Scenes.ExampleScenes
                 if (flashTimer <= 0) flashTimer = 0f;
             }
 
+            if (button.State.HoldFinished)
+            {
+                holdFinishedTimer = holdFinishedDuration;
+            }
+
+            if (holdFinishedTimer > 0f)
+            {
+                holdFinishedTimer -= dt;
+                if (holdFinishedTimer < 0f) holdFinishedTimer = 0f;
+            }
+
+            if (button.State.Up && holdFinishedTimer > 0f) holdFinishedTimer = 0f;
+
         }
 
         public override void Draw(Rect area, float lineThickness)
@@ -359,39 +454,197 @@ namespace Examples.Scenes.ExampleScenes
             Color flashColor2 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight2, flashF);
             Color flashColor3 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight3, flashF);
             
-            
             Rect top = area.ApplyMargins(0, 0, 0, 0.8f);
             Rect bottom = area.ApplyMargins(0, 0, 0.2f, 0);
-            float marginSize = bottom.Size.Max() * 0.025f;
-            Rect insideBottom = bottom.ApplyMarginsAbsolute(marginSize, marginSize, marginSize, marginSize);//  bottom.ApplyMargins(0.025f, 0.025f, 0.025f, 0.025f);
             
-            insideBottom.DrawLines(lineThickness / 2, flashColor1);
+            var center = bottom.Center;
+            var radius = bottom.Size.Min() * 0.5f;
+            Circle circle = new(center, radius);
 
-            var insideRect = insideBottom.ScaleSize(0f, new(0.5f)).Lerp(insideBottom,  MathF.Abs(button.State.Axis));
-            insideRect.Draw(flashColor2);
+            if (button.State.Down)
+            {
+                if (button.State.HoldF < 1f)
+                {
+                    float holdRadius = ShapeMath.LerpFloat(0, radius, button.State.HoldF);
+                    Circle holdCircle = new(center, holdRadius);
+                    holdCircle.Draw(flashColor2);
+                }
+                else
+                {
+                    Circle outside = new(center, radius + lineThickness);
+                    outside.DrawLines(lineThickness / 2, flashColor3);
+                }
+            }
+
+            if (holdFinishedTimer > 0f)
+            {
+                float f = holdFinishedTimer / holdFinishedDuration;
+                Color holdFinishedColor = ExampleScene.ColorHighlight1.Lerp(ExampleScene.ColorHighlight2, f);
+                float thickness = ShapeMath.LerpFloat(lineThickness / 2, lineThickness * 2, f);
+                
+                circle.DrawLines(thickness, holdFinishedColor);
+            
+                font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), holdFinishedColor);
+                
+            }
+            else
+            {
+                circle.DrawLines(lineThickness / 2, flashColor1);
+            
+                font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), flashColor1);
+            }
             
             var inputs = button.GetInputs(curInputDevice);
-            var inputNamesRect = insideBottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
-            var rects = inputNamesRect.SplitV(inputs.Count); // inputNamesRect.GetAlignedRectsVertical(inputs.Count, 0f, 1f);
+            var inputNamesRect = bottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
+            var rects = inputNamesRect.SplitV(inputs.Count);
             for (var i = 0; i < inputs.Count; i++)
             {
                 font.DrawText(inputs[i].GetName(true), rects[i], 1f, new Vector2(0.5f, 0f), ExampleScene.ColorMedium);
             }
             
             
+            
+            // Rect top = area.ApplyMargins(0, 0, 0, 0.8f);
+            // Rect bottom = area.ApplyMargins(0, 0, 0.2f, 0);
+            // float marginSize = bottom.Size.Max() * 0.025f;
+            // Rect insideBottom = bottom.ApplyMarginsAbsolute(marginSize, marginSize, marginSize, marginSize);//  bottom.ApplyMargins(0.025f, 0.025f, 0.025f, 0.025f);
+            //
+            // insideBottom.DrawLines(lineThickness / 2, flashColor1);
+            //
+            // var insideRect = insideBottom.ScaleSize(0f, new(0.5f)).Lerp(insideBottom,  MathF.Abs(button.State.Axis));
+            // insideRect.Draw(flashColor2);
+            //
+            // var inputs = button.GetInputs(curInputDevice);
+            // var inputNamesRect = insideBottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
+            // var rects = inputNamesRect.SplitV(inputs.Count); // inputNamesRect.GetAlignedRectsVertical(inputs.Count, 0f, 1f);
+            // for (var i = 0; i < inputs.Count; i++)
+            // {
+            //     font.DrawText(inputs[i].GetName(true), rects[i], 1f, new Vector2(0.5f, 0f), ExampleScene.ColorMedium);
+            // }
+            //
+            //
+            //
+            // if (button.State.Down)
+            // {
+            //     bottom.DrawLines(lineThickness, ExampleScene.ColorHighlight2);
+            // }
+
+            
+        }
+    }
+    internal class ButtonDoubleTapVisualizer : InputVisualizer
+    {
+        private string title;
+        private Font font;
+        private float flashTimer = 0f;
+        private float doubleTapFinishedTimer = 0f;
+        private const float doubleTapFinishedDuration = 1f;
+        
+        private const float flashDuration = 1f;
+        private InputDevice curInputDevice = InputDevice.Keyboard;
+
+        private InputAction button;
+        public ButtonDoubleTapVisualizer(Font font)
+        {
+            this.font = font;
+            
+            this.title = "Double Tap";
+            var q = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
+            var x = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
+            //var rmb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
+            button = new(q, x);
+            button.MultiTapDuration = 0.25f;
+            button.MultiTapTarget = 4;
+        }
+        public override void Update(float dt, int gamepad, InputDevice inputDevice)
+        {
+            if (button.HasInput(inputDevice))
+            {
+                curInputDevice = inputDevice;
+            }
+            
+            button.Gamepad = gamepad;
+            button.Update(dt);
+            
 
             if (button.State.Down)
             {
-                bottom.DrawLines(lineThickness, ExampleScene.ColorHighlight2);
+                flashTimer = flashDuration;
             }
 
+            if (flashTimer > 0f && doubleTapFinishedTimer <= 0f)
+            {
+                flashTimer -= dt;
+                if (flashTimer <= 0) flashTimer = 0f;
+            }
 
+            if (button.State.MultiTapCount > 100)
+            {
+                doubleTapFinishedTimer = doubleTapFinishedDuration;
+            }
+
+            if (doubleTapFinishedTimer > 0f)
+            {
+                doubleTapFinishedTimer -= dt;
+                if (doubleTapFinishedTimer < 0f) doubleTapFinishedTimer = 0f;
+            }
+
+            //if (button.State.Up && doubleTapFinishedTimer > 0f) doubleTapFinishedTimer = 0f;
+
+        }
+
+        public override void Draw(Rect area, float lineThickness)
+        {
+            float flashF = flashTimer / flashDuration;
+            Color flashColor1 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight1, flashF);
+            Color flashColor2 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight2, flashF);
+            Color flashColor3 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight3, flashF);
             
-            var t = $"{title} {button.State.MultiTapCount}";
-            font.DrawText(t, top, 1f, new Vector2(0.5f, 0f), flashColor1);
+            Rect top = area.ApplyMargins(0, 0, 0, 0.8f);
+            Rect bottom = area.ApplyMargins(0, 0, 0.2f, 0);
+            
+            var center = bottom.Center;
+            var radius = bottom.Size.Min() * 0.5f;
+            Circle circle = new(center, radius);
+
+            if (button.State.MultiTapCount <= 0 && button.State.Down)
+            {
+                Circle outside = new(center, radius + lineThickness);
+                outside.DrawLines(lineThickness / 2, flashColor3);
+            }
+
+            if (doubleTapFinishedTimer > 0f)
+            {
+                float f = doubleTapFinishedTimer / doubleTapFinishedDuration;
+                Color holdFinishedColor = ExampleScene.ColorHighlight1.Lerp(ExampleScene.ColorHighlight2, f);
+                float thickness = ShapeMath.LerpFloat(lineThickness / 2, lineThickness * 2, f);
+                
+                circle.DrawLines(thickness, holdFinishedColor);
+            
+                font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), holdFinishedColor);
+                
+            }
+            else
+            {
+                circle.DrawLines(lineThickness / 2, flashColor1);
+            
+                font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), flashColor1);
+            }
+            
+            
+            
+            var inputs = button.GetInputs(curInputDevice);
+            var inputNamesRect = bottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
+            var rects = inputNamesRect.SplitV(inputs.Count);
+            for (var i = 0; i < inputs.Count; i++)
+            {
+                font.DrawText(inputs[i].GetName(true), rects[i], 1f, new Vector2(0.5f, 0f), ExampleScene.ColorMedium);
+            }
+            
+            
         }
     }
-    
+      
     public class InputExample : ExampleScene
     {
         Font font;
@@ -405,6 +658,8 @@ namespace Examples.Scenes.ExampleScenes
         private ButtonVisualizer buttonRight;
         private TriggerVisualizer triggerLeft;
         private TriggerVisualizer triggerRight;
+        private ButtonHoldVisualizer buttonHold;
+        private ButtonDoubleTapVisualizer buttonDoubleTap;
         public InputExample()
         {
             Title = "Input Example";
@@ -416,6 +671,9 @@ namespace Examples.Scenes.ExampleScenes
             buttonRight = new(false, font);
             triggerLeft = new(true, font);
             triggerRight = new(false, font);
+
+            buttonHold = new(font);
+            buttonDoubleTap = new(font);
         }
 
         
@@ -484,6 +742,9 @@ namespace Examples.Scenes.ExampleScenes
             
             triggerLeft.Update(dt, gamepadIndex, input.CurrentInputDevice);
             triggerRight.Update(dt, gamepadIndex, input.CurrentInputDevice);
+            
+            buttonHold.Update(dt, gamepadIndex, input.CurrentInputDevice);
+            buttonDoubleTap.Update(dt, gamepadIndex, input.CurrentInputDevice);
         }
         protected override void DrawGameExample(ScreenInfo game)
         {
@@ -491,7 +752,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         protected override void DrawGameUIExample(ScreenInfo ui)
         {
-            var screenArea = ui.Area;
+            var screenArea = GAMELOOP.UIRects.GetRectSingle("center");// ui.Area;
             
             float lineThickness = MathF.Max(screenArea.Size.Max() * 0.005f, 2f);
             
@@ -514,6 +775,12 @@ namespace Examples.Scenes.ExampleScenes
             triggerLeft.Draw(triggerLeftRect, lineThickness);
             triggerRight.Draw(triggerRightRect, lineThickness);
             
+            
+            var buttonHoldRect = screenArea.ApplyMargins(0.4f, 0.4f, 0.6f, 0.1f);
+            buttonHold.Draw(buttonHoldRect, lineThickness);
+            
+            var buttonDoubleTapRect = screenArea.ApplyMargins(0.4f, 0.4f, 0.25f, 0.45f);
+            buttonDoubleTap.Draw(buttonDoubleTapRect, lineThickness);
             // DrawGamepadInfo(ui.Area);
             // DrawInputDeviceInfo(ui.Area);
         }

@@ -15,10 +15,17 @@ public class InputAction
     public string Title = "Input Action";
 
     private float holdTimer = 0f;
-    private float doubleTapTimer = 0f;
+    private float multiTapTimer = 0f;
     private float holdDuration = 1f;
     private float multiTapDuration = 0.25f;
+    private int multiTapCount = 0;
+    private int multiTapTarget = 0;
 
+    public int MultiTapTarget
+    {
+        get => multiTapTarget;
+        set => multiTapTarget = ShapeMath.MaxInt(0, value);
+    }
     public float HoldDuration
     {
         get => holdDuration;
@@ -139,13 +146,16 @@ public class InputAction
             current = current.Accumulate(state);
         }
 
-        int multiTapCount = State.MultiTapCount;
-        if (doubleTapTimer > 0f)
+        bool multiTapFinished = false;
+        bool multiTapFailed = false;
+        if (multiTapTimer > 0f)
         {
-            doubleTapTimer -= dt;
-            if (doubleTapTimer <= 0f)
+            multiTapTimer -= dt;
+            if (multiTapTimer <= 0f)
             {
-                doubleTapTimer = 0f;
+                multiTapTimer = 0f;
+                //finalMultiTapCount = multiTapCount;
+                if(multiTapCount > 0) multiTapFailed = true;
                 multiTapCount = 0;
             }
         }
@@ -165,18 +175,20 @@ public class InputAction
             holdF = holdTimer / holdDuration;
         }
         
-        if (State.Up && current.Down && multiTapDuration > 0f)
+        if (State.Up && current.Down && multiTapDuration > 0f && multiTapTarget > 1)
         {
-            // if (doubleTapTimer > 0f) multiTapCount++;
-            // doubleTapTimer = DoubleTapDuration;
-            
-            if (doubleTapTimer <= 0f) doubleTapTimer = multiTapDuration;
-            else multiTapCount++;
-            
+            if (multiTapTimer <= 0f) multiTapTimer = multiTapDuration;
+            multiTapCount++;
+            if (multiTapCount >= multiTapTarget)
+            {
+                multiTapFinished = true;
+            }
         }
         
-        current = new(current, holdF, multiTapCount);
+        current = new(current, holdF, multiTapCount, multiTapFinished, multiTapFailed);
         State = new(State, current);
+
+        if (multiTapFinished) multiTapCount = 0;
         
         if (axisSensitivity > 0 || axisGravitiy > 0)
         {

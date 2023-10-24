@@ -578,7 +578,7 @@ namespace Examples
             
             var pauseKB = new InputTypeKeyboardButton(ShapeKeyboardButton.P);
             var pauseGB = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_RIGHT);
-            InputAction pause = new(GameloopAccessTag, InputPauseID, pauseKB, pauseGB);
+            InputAction pause = new(SceneAccessTag, InputPauseID, pauseKB, pauseGB);
             
             
             

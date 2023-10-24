@@ -54,12 +54,41 @@ public readonly struct InputState
         MultiTapCount = 0;
     }
 
-    public InputState(InputState state, float holdF, int multiTapCount)
+    public InputState(InputState state, float holdF, int multiTapCount, bool multiTapFinished, bool multiTapFailed)
     {
-        Down = state.Down;
-        Up = state.Up;
-        Released = state.Released;
-        Pressed = state.Pressed;
+        if (multiTapFailed) //failed
+        {
+            Down = true;
+            Up = false;
+            Released = false;
+            Pressed = true;
+        }
+        else if (multiTapCount > 0)
+        {
+            if (multiTapFinished)
+            {
+                Down = true;
+                Up = false;
+                Released = false;
+                Pressed = true;
+            }
+            else
+            {
+                Down = false;
+                Up = true;
+                Released = false;
+                Pressed = false;
+            }
+        }
+        else
+        {
+            Down = state.Down;
+            Up = state.Up;
+            Released = state.Released;
+            Pressed = state.Pressed;
+        }
+        
+        
         Gamepad = state.Gamepad;
         AxisRaw = state.AxisRaw;
         Axis = state.Axis;
@@ -68,7 +97,9 @@ public readonly struct InputState
 
         HoldF = holdF;
         HoldFinished = false;
-        MultiTapCount = multiTapCount;
+        if (multiTapFinished) MultiTapCount = multiTapCount;
+        else MultiTapCount = 0;
+        // MultiTapCount = multiTapCount;
     }
     public InputState(InputState prev, InputState cur)
     {
@@ -157,7 +188,7 @@ public readonly struct InputState
         //bool holdFinished = HoldFinished || other.HoldFinished;
         //bool doubleTap = DoubleTap || other.DoubleTap;
         InputState newState = new(down, up, axis, other.Gamepad, inputDevice);
-        return new(newState, holdF, 0);
+        return new(newState, holdF, 0, false, false);
     }
     public InputState AdjustAxis(float value) => value == 0f ? this : new InputState(this, Axis + value);
     public InputState Consume() => new(this, true);
