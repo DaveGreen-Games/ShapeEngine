@@ -608,6 +608,7 @@ namespace Examples.Scenes.ExampleScenes
             var radius = bottom.Size.Min() * 0.5f;
             Circle circle = new(center, radius);
 
+            
             var pressedType = button.State.GetPressedType();
             switch (pressedType)
             {

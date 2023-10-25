@@ -42,9 +42,11 @@ public readonly struct InputState
     {
         if (HoldState == MultiTapState.Completed) return PressedType.Hold;
         if (MultiTapState == MultiTapState.Completed) return PressedType.MultiTap;
+        
         if (HoldF <= 0f && MultiTapState == MultiTapState.Failed) return PressedType.SingleTap;
         if (MultiTapF <= 0f && HoldState == MultiTapState.Failed) return PressedType.SingleTap;
-        //if(HoldF <= 0f && MultiTapF <= 0f && Pressed) return PressedType.SingleTap;
+        
+        
         return PressedType.None;
 
     }
@@ -117,8 +119,6 @@ public readonly struct InputState
         Consumed = false;
         InputDevice = cur.InputDevice;
 
-        // if (prev.HoldF < 1f && cur.HoldF >= 1f) HoldFinished = true;
-        // else HoldFinished = false;
         if (prev.HoldF is > 0f and < 1f)
         {
             if(cur.HoldF >= 1f) HoldState = MultiTapState.Completed;

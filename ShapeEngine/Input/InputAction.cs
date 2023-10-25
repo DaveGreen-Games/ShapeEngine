@@ -166,6 +166,14 @@ public class InputAction
             }
         }
 
+        //start the hold when pressed (prev up & cur down)
+        //set the timer to the duration and count down 
+        //timer is canceled when released (prev down & cur up)
+        //this way multi tap can cancel hold timer on success full multi tap 
+        //and the hold timer will only be started once released and pressed again
+        //right now the timer just keeps adding while it is down
+        //when player keeps holding button after successfull multi tap, the hold timer should not be counting until released again
+        
         float holdF = 0f;
         if (holdDuration > 0f)
         {
@@ -185,11 +193,6 @@ public class InputAction
         {
             if (multiTapTimer <= 0f) multiTapTimer = multiTapDuration;
             multiTapCount++;
-            // if (multiTapCount >= multiTapTarget)
-            // {
-            //     multiTapF = 1f;
-            // }
-            // else multiTapF = (float)multiTapCount / (float)multiTapTarget;
         }
 
         if (multiTapTimer > 0f)
