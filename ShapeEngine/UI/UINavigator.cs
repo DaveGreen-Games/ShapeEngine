@@ -3,6 +3,18 @@ using ShapeEngine.Core.Shapes;
 
 namespace ShapeEngine.UI;
 
+//just get the barebones nested ui element system working
+    //Update & Draw
+    //Checking Mouse Enter / Exit
+    //Hidden, Active, Mouse Filter, Select Filter
+
+
+//navigator just navigates supplied ui elements
+//ui element is a container of ui elements itself and therefore updates & draw its children as well
+//How to get ui element children into navigator?
+    //OnNavigatorEntered/Exited(Navigator navigator) virtual functions that are passed down to the children
+    //that way everyone in the hierarchy knows when a parent was added to a navigator and removed from a navigator
+
 // 1) build simple ui element that supports children first (update & draws children)
 
 // 2) figure out system for Visible, Active, SelectFilter, MouseFilter
@@ -28,8 +40,6 @@ namespace ShapeEngine.UI;
 // 8) Selected, Mouse Entered, Mouse Left, Activated, Deactivated, Hidden, Visible events
 
 // 9) CheckMouse() -> CheckInput() -> Update() -> Draw() ??? how to do the hierarchy...
-// 10)
-// 11)
 
 public abstract class CanvasElement
 {

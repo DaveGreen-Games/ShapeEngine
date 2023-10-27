@@ -544,6 +544,9 @@ namespace Examples.Scenes.ExampleScenes
         private InputDevice curInputDevice = InputDevice.Keyboard;
 
         private InputAction button;
+        // private string lastAction = string.Empty;
+        // private float lastActionTimer = 0f;
+        // private float lastActionDuration = 1f;
         public ButtonDoubleTapVisualizer(Font font)
         {
             this.font = font;
@@ -590,8 +593,36 @@ namespace Examples.Scenes.ExampleScenes
                 if (doubleTapFinishedTimer < 0f) doubleTapFinishedTimer = 0f;
             }
 
-            //if (button.State.Up && doubleTapFinishedTimer > 0f) doubleTapFinishedTimer = 0f;
-
+            // var pressedType = button.State.GetPressedType();
+            // switch (pressedType)
+            // {
+            //     case PressedType.Hold:
+            //         lastAction = "Hold";
+            //         lastActionTimer = lastActionDuration;
+            //         // Console.WriteLine("Hold"); 
+            //         break;
+            //     case PressedType.MultiTap:
+            //         lastAction = "Double Tap";
+            //         lastActionTimer = lastActionDuration;
+            //         // Console.WriteLine("Double Tap"); 
+            //         break;
+            //     case PressedType.SingleTap:
+            //         lastAction = "Single Tap";
+            //         lastActionTimer = lastActionDuration;
+            //         // Console.WriteLine("Single Tap");
+            //         break;
+            //    
+            // }
+            //
+            // if (lastActionTimer > 0f)
+            // {
+            //     lastActionTimer -= dt;
+            //     if (lastActionTimer <= 0)
+            //     {
+            //         lastActionTimer = 0f;
+            //         lastAction = string.Empty;
+            //     }
+            // }
         }
 
         public override void Draw(Rect area, float lineThickness)
@@ -608,23 +639,6 @@ namespace Examples.Scenes.ExampleScenes
             var radius = bottom.Size.Min() * 0.5f;
             Circle circle = new(center, radius);
 
-            
-            var pressedType = button.State.GetPressedType();
-            switch (pressedType)
-            {
-               case PressedType.Hold:  Console.WriteLine("Hold"); break;
-               case PressedType.MultiTap:  Console.WriteLine("Double Tap"); break;
-               case PressedType.SingleTap:  Console.WriteLine("Single Tap"); break;
-               // case PressedType.None:  Console.WriteLine("None"); break;
-               
-            }
-            
-            // if(button.State.HoldFinished) 
-            // else if(button.State.MultiTapState == MultiTapState.Completed) Console.WriteLine("Double Tap");
-            // else if (button.State.HoldF <= 0f && button.State.MultiTapState == MultiTapState.Failed)
-            // {
-            //     Console.WriteLine("Normal Tap");
-            // }
             
             if (button.State.MultiTapState == MultiTapState.Failed)
             {

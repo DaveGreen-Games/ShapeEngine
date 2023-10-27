@@ -1,18 +1,7 @@
-using System.IO.Pipes;
-using System.Numerics;
 using System.Text;
-using ShapeEngine.Core.Shapes;
 using ShapeEngine.Lib;
 
 namespace ShapeEngine.Input;
-
-//Todo change multi tap system
-// input state has multi tap f & multi tap finished
-// if f > 0 and not finished => in progress
-// f <= 0 => no multi tap in progress
-// f > 0 (technically 1) & finished => finished
-//down/up/pressed/released is not changed
-//user can do:
 
 
 public class InputAction
@@ -137,24 +126,16 @@ public class InputAction
 
     public void Update(float dt)
     {
-        // lastInputDeviceMagnitude = 0f;
-        
+        //Accumulate All Input States From All Input Types
         InputState current = new();
         foreach (var input in inputs)
         {
             var state = input.GetState(Gamepad);
-            // if (state.Down)
-            // {
-            //     float magnitude = MathF.Abs(state.AxisRaw);
-            //     if (magnitude > lastInputDeviceMagnitude)
-            //     {
-            //         LastInputDevice = input.GetInputDevice();
-            //         lastInputDeviceMagnitude = magnitude;
-            //     }
-            // }
             current = current.Accumulate(state);
         }
 
+        
+        //Multi Tap & Hold System
         float multiTapF = 0f;
         if (multiTapTimer > 0f)
         {
@@ -165,50 +146,64 @@ public class InputAction
                 multiTapCount = 0;
             }
         }
-
-        //start the hold when pressed (prev up & cur down)
-        //set the timer to the duration and count down 
-        //timer is canceled when released (prev down & cur up)
-        //this way multi tap can cancel hold timer on success full multi tap 
-        //and the hold timer will only be started once released and pressed again
-        //right now the timer just keeps adding while it is down
-        //when player keeps holding button after successfull multi tap, the hold timer should not be counting until released again
         
         float holdF = 0f;
-        if (holdDuration > 0f)
+        if (State.Up && current.Down) //pressed
         {
-            if (current.Down)
+            if (holdDuration > 0)
             {
-                holdTimer += dt;
-                if (holdTimer >= holdDuration) holdTimer = holdDuration;
+                holdTimer = holdDuration;
             }
-            else
+            if (multiTapDuration > 0f && multiTapTarget > 1)
+            {
+                if (multiTapTimer <= 0f) multiTapTimer = multiTapDuration;
+                multiTapCount++;
+            }
+
+        }
+        else if (State.Down && current.Up) //released
+        {
+            if (holdTimer > 0f)
             {
                 holdTimer = 0f;
+                holdF = 0f;
             }
-            holdF = holdTimer / holdDuration;
-        }
-        
-        if (State.Up && current.Down && multiTapDuration > 0f && multiTapTarget > 1)
-        {
-            if (multiTapTimer <= 0f) multiTapTimer = multiTapDuration;
-            multiTapCount++;
+            
         }
 
+        if (holdTimer > 0f)
+        {
+            holdTimer -= dt;
+            if (holdTimer <= 0)
+            {
+                holdTimer = 0f;
+                holdF = 1f;
+            }
+            else holdF = 1f - (holdTimer / holdDuration);
+        }
+        
         if (multiTapTimer > 0f)
         {
             if (multiTapCount >= multiTapTarget)
             {
                 multiTapF = 1f;
+                if (holdTimer > 0f)
+                {
+                    holdTimer = 0f;
+                    holdF = 0f;
+                }
             }
             else multiTapF = (float)multiTapCount / (float)multiTapTarget;
         }
         
+        //Calculate New State
         current = new(current, holdF, multiTapF);
         State = new(State, current);
-
+        
+        //Reset Multitap Count On Successful Multitap
         if (multiTapF >= 1f) multiTapCount = 0;
         
+        //Axis Sensitivity & Gravity
         if (axisSensitivity > 0 || axisGravitiy > 0)
         {
             int raw = MathF.Sign(State.AxisRaw);
