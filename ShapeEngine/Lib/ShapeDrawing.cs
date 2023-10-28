@@ -26,6 +26,44 @@ namespace ShapeEngine.Lib
     }
     */
     
+    //public struct TextCaret
+    //{
+    //    public bool Draw = true;
+    //    public int Index;
+    //    public float Width;
+    //    public Raylib_CsLo.Color Color = WHITE;
+    //
+    //    public TextCaret()
+    //    {
+    //        Draw = false;
+    //        Index = 0;
+    //        Width = 0f;
+    //        Color = WHITE;
+    //    }
+    //    public TextCaret(int indexPosition, float width, Raylib_CsLo.Color color)
+    //    {
+    //        Draw = true;
+    //        Index = indexPosition;
+    //        Width = width;
+    //        Color = color;
+    //    }
+    //}
+        
+    //public enum EmphasisType
+    //{
+    //    None = 0,
+    //    Underlined = 1,
+    //    Strikethrough = 2,
+    //    Boxed = 3,
+    //    Cornered = 4,
+    //    Cornered_Left = 5,
+    //    Cornered_Right = 6,
+    //    Cornered_Top = 7,
+    //    Cornered_Bottom = 8,
+    //    Cornered_TLBR = 9,
+    //    Cornered_BLTR = 10
+    //}
+
     
     
     public enum TextEmphasisType
@@ -50,20 +88,6 @@ namespace ShapeEngine.Lib
         TLBR = 10,
         BLTR = 11
     }
-    //public enum EmphasisType
-    //{
-    //    None = 0,
-    //    Underlined = 1,
-    //    Strikethrough = 2,
-    //    Boxed = 3,
-    //    Cornered = 4,
-    //    Cornered_Left = 5,
-    //    Cornered_Right = 6,
-    //    Cornered_Top = 7,
-    //    Cornered_Bottom = 8,
-    //    Cornered_TLBR = 9,
-    //    Cornered_BLTR = 10
-    //}
     public struct WordEmphasis
     {
         public Raylib_CsLo.Color Color;
@@ -113,29 +137,13 @@ namespace ShapeEngine.Lib
         }
     }
 
-    //public struct TextCaret
-    //{
-    //    public bool Draw = true;
-    //    public int Index;
-    //    public float Width;
-    //    public Raylib_CsLo.Color Color = WHITE;
-    //
-    //    public TextCaret()
-    //    {
-    //        Draw = false;
-    //        Index = 0;
-    //        Width = 0f;
-    //        Color = WHITE;
-    //    }
-    //    public TextCaret(int indexPosition, float width, Raylib_CsLo.Color color)
-    //    {
-    //        Draw = true;
-    //        Index = indexPosition;
-    //        Width = width;
-    //        Color = color;
-    //    }
-    //}
-
+    public enum LineEndCapType
+    {
+        None = 0,
+        Extended = 1,
+        Capped = 2
+    }
+    
     public static class ShapeDrawing
     {
         /// <summary>
@@ -158,6 +166,7 @@ namespace ShapeEngine.Lib
         /// </summary>
         public static float TextWrappingAutoFontSizeSafetyMargin = 0.7f;
 
+        public static float LineMinThickness = 0.5f;
 
         public static void Draw(this Intersection intersection, float lineThickness, Raylib_CsLo.Color intersectColor, Raylib_CsLo.Color normalColor)
         {
@@ -175,6 +184,112 @@ namespace ShapeEngine.Lib
                 DrawCircle(p, r, color);
             }
         }
+
+        #region Custom Line Drawing
+        public static void DrawLine(float startX, float startY, float endX, float endY, float thickness, Raylib_CsLo.Color color, bool endcap = true)
+        {
+            if (thickness < LineMinThickness) thickness = LineMinThickness;
+            float wX = endX - startX;
+            float wY = endY - startY;
+            float lengthSquared = wX * wX + wY * wY;
+            if (lengthSquared <= 0f) return;
+
+            float length = MathF.Sqrt(lengthSquared);
+            float dirX = wX / length;
+            float dirY = wY / length;
+            float prX = -dirY;
+            float prY = dirX;
+            float plX = dirY;
+            float plY = -dirX;
+            
+            if (endcap)
+            {
+                startX = startX - dirX * thickness * 0.5f;
+                startY = startY - dirY * thickness * 0.5f;
+                
+                endX = endX + dirX * thickness * 0.5f;
+                endY = endY + dirY * thickness * 0.5f;
+            }
+
+            float aX = startX + plX * thickness;
+            float aY = startY + plY * thickness;
+            
+            float bX = startX + prX * thickness;
+            float bY = startY + prY * thickness;
+            
+            float cX = endX + prX * thickness;
+            float cY = endY + prY * thickness;
+            Raylib.DrawTriangle(new(aX, aY), new(bX, bY), new(cX, cY), color);
+
+            bX = cX;
+            bY = cY;
+
+            cX = endX + plX * thickness;
+            cY = endY + plY * thickness;
+            Raylib.DrawTriangle(new(aX, aY), new(bX, bY), new(cX, cY), color);
+        }
+        public static void DrawLine(Vector2 start, Vector2 end, float thickness, Raylib_CsLo.Color color, LineEndCapType lineEndCapType = LineEndCapType.None, int endCapPoints = 0)
+        {
+            if (thickness < LineMinThickness) thickness = LineMinThickness;
+            var w = (end - start);
+            if (w.LengthSquared() <= 0f) return;
+            
+            var dir = w.Normalize();
+            var pR = dir.GetPerpendicularRight();
+            var pL = dir.GetPerpendicularLeft();
+            
+            if (lineEndCapType == LineEndCapType.Extended)
+            {
+                start -= dir * thickness;
+                end += dir * thickness;
+            }
+            
+            var tl = start + pL * thickness;
+            var bl = start + pR * thickness;
+            var br = end + pR * thickness;
+            var tr = end + pL * thickness;
+            Raylib.DrawTriangle(tl, bl, br, color);
+            Raylib.DrawTriangle(tl, br, tr, color);
+            
+            if (lineEndCapType == LineEndCapType.Capped && endCapPoints > 0)
+            {
+                if (endCapPoints == 1)
+                {
+                    var capStart = start - dir * thickness;
+                    var capEnd = end + dir * thickness;
+                
+                    Raylib.DrawTriangle(tl, capStart, bl, color);
+                    Raylib.DrawTriangle(tr, br, capEnd, color);
+                }
+                else
+                {
+                    var curStart = tl;
+                    var curEnd = br;
+                    float angleStep = (180f / (endCapPoints + 1)) * ShapeMath.DEGTORAD;
+                    
+                    // DrawCircleV(curEnd, 6f, GREEN);
+                    for (var i = 1; i <= endCapPoints; i++)
+                    {
+                        var pStart = start + pL.Rotate(- angleStep * i) * thickness;
+                        Raylib.DrawTriangle(pStart, start, curStart, color);
+                        curStart = pStart;
+                        
+                        var pEnd = end + pR.Rotate(- angleStep * i) * thickness;
+                        Raylib.DrawTriangle(pEnd, end, curEnd, color);
+                        // DrawCircleV(pEnd, 6f, WHITE);
+                        curEnd = pEnd;
+                    }
+                    Raylib.DrawTriangle(curStart, bl, start, color);
+                    Raylib.DrawTriangle(curEnd, tr, end, color);
+                    // DrawCircleV(tr, 6f, RED);
+
+                }
+            }
+        }
+        
+        #endregion
+        
+        
         #region Pixel
         public static void DrawPixel(Vector2 pos, Raylib_CsLo.Color color) => Raylib.DrawPixelV(pos, color); 
         public static void DrawPixel(float x, float y, Raylib_CsLo.Color color) => Raylib.DrawPixelV(new(x, y), color);
@@ -1249,24 +1364,21 @@ namespace ShapeEngine.Lib
                         startColor.b + blueStep * i,
                         startColor.a + alphaStep * i
                     );
-                if(cornerSegments > 5) DrawCircle(edge.Start, lineThickness * 0.5f, finalColor, cornerSegments);
+                //if(cornerSegments > 5) DrawCircle(edge.Start, lineThickness * 0.5f, finalColor, cornerSegments);
                 edge.Draw(lineThickness, finalColor);
             }
         }
-        public static void DrawLines(this Polygon poly, float lineThickness, Raylib_CsLo.Color color)
-        {
-            poly.DrawLines(lineThickness, color, 8);
-        }
-        public static void DrawLines(this Polygon poly, float lineThickness, Raylib_CsLo.Color color, int cornerSegments)
+        // public static void DrawLines(this Polygon poly, float lineThickness, Raylib_CsLo.Color color)
+        // {
+        //     poly.DrawLines(lineThickness, color, 2);
+        // }
+        public static void DrawLines(this Polygon poly, float lineThickness, Raylib_CsLo.Color color, int endCapPoints = 2)
         {
             for (int i = 0; i < poly.Count - 1; i++)
             {
-                //Raylib.DrawCircleSector(poly[i], lineThickness * 0.5f, 0, 360, 6, color);
-                if(cornerSegments > 5) DrawCircle(poly[i], lineThickness * 0.5f, color, cornerSegments);
-                DrawLineEx(poly[i], poly[i + 1], lineThickness, color);
+                DrawLine(poly[i], poly[i + 1], lineThickness, color, LineEndCapType.Capped, endCapPoints);
             }
-            if (cornerSegments > 5) DrawCircle(poly[poly.Count - 1], lineThickness * 0.5f, color, cornerSegments);
-            DrawLineEx(poly[poly.Count - 1], poly[0], lineThickness, color);
+            DrawLine(poly[poly.Count - 1], poly[0], lineThickness, color, LineEndCapType.Capped, endCapPoints);
         }
         
         public static void DrawLines(this Polygon poly, Vector2 pos, Vector2 size, float rotDeg, float lineThickness, Raylib_CsLo.Color outlineColor)

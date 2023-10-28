@@ -1,4 +1,5 @@
-﻿using Raylib_CsLo;
+﻿using System.Formats.Tar;
+using Raylib_CsLo;
 using ShapeEngine.Core;
 using ShapeEngine.UI;
 using System.Numerics;
@@ -248,6 +249,11 @@ namespace Examples.Scenes
             Segment s = new(uiSize * new Vector2(0f, 0.22f), uiSize * new Vector2(1f, 0.22f));
             s.Draw(MathF.Max(4f * GAMELOOP.DevelopmentToScreen.AreaFactor, 0.5f), ExampleScene.ColorLight);
 
+            // Rect test = ui.Area.ApplyMargins(0.1f, 0.1f, 0.3f, 0.3f);
+            // var startTest = test.GetPoint(new Vector2(0f, 0.5f));
+            // var endTest = ui.MousePos; // test.GetPoint(new Vector2(1f, 1.0f));
+            // ShapeDrawing.DrawLine(startTest, endTest, 24f, ORANGE, LineEndCapType.Capped, 2);
+            
             // string backText = "Back [ESC]";
             Rect backRect = new Rect(uiSize * new Vector2(0.01f, 0.17f), uiSize * new Vector2(0.2f, 0.04f), new Vector2(0f, 0f));
             // titleFont.DrawText(backText, backRect, 4f, new Vector2(0f, 0f), ExampleScene.ColorHighlight2);
