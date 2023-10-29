@@ -137,13 +137,18 @@ namespace ShapeEngine.Lib
         }
     }
 
-    public enum LineEndCapType
+    public enum LineEndCap
     {
         None = 0,
         Extended = 1,
         Capped = 2
     }
     
+    //todo
+    //change all raylib line drawing function with custom line drawing function
+    //rect -> uses extended
+    //triangle lines/ circle lines/ circle segment lines/ poly lines, polyline => use capped with default 2 points
+    //draw segment gets new capped type & points parameter
     public static class ShapeDrawing
     {
         /// <summary>
@@ -186,59 +191,18 @@ namespace ShapeEngine.Lib
         }
 
         #region Custom Line Drawing
-        public static void DrawLine(float startX, float startY, float endX, float endY, float thickness, Raylib_CsLo.Color color, bool endcap = true)
+        public static void DrawLine(Vector2 start, Vector2 end, float thickness, Raylib_CsLo.Color color, LineEndCap lineEndCap = LineEndCap.None, int endCapPoints = 0)
         {
             if (thickness < LineMinThickness) thickness = LineMinThickness;
-            float wX = endX - startX;
-            float wY = endY - startY;
-            float lengthSquared = wX * wX + wY * wY;
-            if (lengthSquared <= 0f) return;
-
-            float length = MathF.Sqrt(lengthSquared);
-            float dirX = wX / length;
-            float dirY = wY / length;
-            float prX = -dirY;
-            float prY = dirX;
-            float plX = dirY;
-            float plY = -dirX;
+            var w = end - start;
+            float ls = w.X * w.X + w.Y * w.Y; // w.LengthSquared();
+            if (ls <= 0f) return;
             
-            if (endcap)
-            {
-                startX = startX - dirX * thickness * 0.5f;
-                startY = startY - dirY * thickness * 0.5f;
-                
-                endX = endX + dirX * thickness * 0.5f;
-                endY = endY + dirY * thickness * 0.5f;
-            }
-
-            float aX = startX + plX * thickness;
-            float aY = startY + plY * thickness;
+            var dir = w / MathF.Sqrt(ls);
+            var pR = new Vector2(-dir.Y, dir.X);//perpendicular right
+            var pL = new Vector2(dir.Y, -dir.X);//perpendicular left
             
-            float bX = startX + prX * thickness;
-            float bY = startY + prY * thickness;
-            
-            float cX = endX + prX * thickness;
-            float cY = endY + prY * thickness;
-            Raylib.DrawTriangle(new(aX, aY), new(bX, bY), new(cX, cY), color);
-
-            bX = cX;
-            bY = cY;
-
-            cX = endX + plX * thickness;
-            cY = endY + plY * thickness;
-            Raylib.DrawTriangle(new(aX, aY), new(bX, bY), new(cX, cY), color);
-        }
-        public static void DrawLine(Vector2 start, Vector2 end, float thickness, Raylib_CsLo.Color color, LineEndCapType lineEndCapType = LineEndCapType.None, int endCapPoints = 0)
-        {
-            if (thickness < LineMinThickness) thickness = LineMinThickness;
-            var w = (end - start);
-            if (w.LengthSquared() <= 0f) return;
-            
-            var dir = w.Normalize();
-            var pR = dir.GetPerpendicularRight();
-            var pL = dir.GetPerpendicularLeft();
-            
-            if (lineEndCapType == LineEndCapType.Extended)
+            if (lineEndCap == LineEndCap.Extended)
             {
                 start -= dir * thickness;
                 end += dir * thickness;
@@ -248,10 +212,11 @@ namespace ShapeEngine.Lib
             var bl = start + pR * thickness;
             var br = end + pR * thickness;
             var tr = end + pL * thickness;
+            
             Raylib.DrawTriangle(tl, bl, br, color);
             Raylib.DrawTriangle(tl, br, tr, color);
             
-            if (lineEndCapType == LineEndCapType.Capped && endCapPoints > 0)
+            if (lineEndCap == LineEndCap.Capped && endCapPoints > 0)
             {
                 if (endCapPoints == 1)
                 {
@@ -267,7 +232,6 @@ namespace ShapeEngine.Lib
                     var curEnd = br;
                     float angleStep = (180f / (endCapPoints + 1)) * ShapeMath.DEGTORAD;
                     
-                    // DrawCircleV(curEnd, 6f, GREEN);
                     for (var i = 1; i <= endCapPoints; i++)
                     {
                         var pStart = start + pL.Rotate(- angleStep * i) * thickness;
@@ -276,17 +240,72 @@ namespace ShapeEngine.Lib
                         
                         var pEnd = end + pR.Rotate(- angleStep * i) * thickness;
                         Raylib.DrawTriangle(pEnd, end, curEnd, color);
-                        // DrawCircleV(pEnd, 6f, WHITE);
                         curEnd = pEnd;
                     }
                     Raylib.DrawTriangle(curStart, bl, start, color);
                     Raylib.DrawTriangle(curEnd, tr, end, color);
-                    // DrawCircleV(tr, 6f, RED);
 
                 }
             }
         }
-        
+        // public static void DrawLineBackup(Vector2 start, Vector2 end, float thickness, Raylib_CsLo.Color color, LineEndCap lineEndCap = LineEndCap.None, int endCapPoints = 0)
+        // {
+        //     if (thickness < LineMinThickness) thickness = LineMinThickness;
+        //     var w = (end - start);
+        //     if (w.LengthSquared() <= 0f) return;
+        //     
+        //     var dir = w.Normalize();
+        //     var pR = dir.GetPerpendicularRight();
+        //     var pL = dir.GetPerpendicularLeft();
+        //     
+        //     if (lineEndCap == LineEndCap.Extended)
+        //     {
+        //         start -= dir * thickness;
+        //         end += dir * thickness;
+        //     }
+        //     
+        //     var tl = start + pL * thickness;
+        //     var bl = start + pR * thickness;
+        //     var br = end + pR * thickness;
+        //     var tr = end + pL * thickness;
+        //     Raylib.DrawTriangle(tl, bl, br, color);
+        //     Raylib.DrawTriangle(tl, br, tr, color);
+        //     
+        //     if (lineEndCap == LineEndCap.Capped && endCapPoints > 0)
+        //     {
+        //         if (endCapPoints == 1)
+        //         {
+        //             var capStart = start - dir * thickness;
+        //             var capEnd = end + dir * thickness;
+        //         
+        //             Raylib.DrawTriangle(tl, capStart, bl, color);
+        //             Raylib.DrawTriangle(tr, br, capEnd, color);
+        //         }
+        //         else
+        //         {
+        //             var curStart = tl;
+        //             var curEnd = br;
+        //             float angleStep = (180f / (endCapPoints + 1)) * ShapeMath.DEGTORAD;
+        //             
+        //             // DrawCircleV(curEnd, 6f, GREEN);
+        //             for (var i = 1; i <= endCapPoints; i++)
+        //             {
+        //                 var pStart = start + pL.Rotate(- angleStep * i) * thickness;
+        //                 Raylib.DrawTriangle(pStart, start, curStart, color);
+        //                 curStart = pStart;
+        //                 
+        //                 var pEnd = end + pR.Rotate(- angleStep * i) * thickness;
+        //                 Raylib.DrawTriangle(pEnd, end, curEnd, color);
+        //                 // DrawCircleV(pEnd, 6f, WHITE);
+        //                 curEnd = pEnd;
+        //             }
+        //             Raylib.DrawTriangle(curStart, bl, start, color);
+        //             Raylib.DrawTriangle(curEnd, tr, end, color);
+        //             // DrawCircleV(tr, 6f, RED);
+        //
+        //         }
+        //     }
+        // }
         #endregion
         
         
@@ -1376,9 +1395,9 @@ namespace ShapeEngine.Lib
         {
             for (int i = 0; i < poly.Count - 1; i++)
             {
-                DrawLine(poly[i], poly[i + 1], lineThickness, color, LineEndCapType.Capped, endCapPoints);
+                DrawLine(poly[i], poly[i + 1], lineThickness, color, LineEndCap.Capped, endCapPoints);
             }
-            DrawLine(poly[poly.Count - 1], poly[0], lineThickness, color, LineEndCapType.Capped, endCapPoints);
+            DrawLine(poly[poly.Count - 1], poly[0], lineThickness, color, LineEndCap.Capped, endCapPoints);
         }
         
         public static void DrawLines(this Polygon poly, Vector2 pos, Vector2 size, float rotDeg, float lineThickness, Raylib_CsLo.Color outlineColor)
