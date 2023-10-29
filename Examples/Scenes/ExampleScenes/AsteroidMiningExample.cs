@@ -138,7 +138,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 float f = timer / Lifetime;
                 //Color color = YELLOW.ChangeAlpha((byte)(255 * f));
-                Segment.Draw(ShapeRandom.randF(4, 8) * f, YELLOW, 12);
+                Segment.Draw(ShapeRandom.randF(4, 8) * f, YELLOW, LineCapType.CappedExtended, 3);
             }
             public void Renew() { timer = Lifetime; }
         }
@@ -267,12 +267,12 @@ namespace Examples.Scenes.ExampleScenes
                 if (overlapped)
                 {
                     curColor = GREEN;
-                    p.DrawLines(6f, GREEN, 12);
+                    p.DrawLines(6f, GREEN);
                 }
                 else
                 {
                     curColor = RED;
-                    p.DrawLines(3f, RED, 12);
+                    p.DrawLines(3f, RED);
                 }
                 //p.DrawVertices(4f, RED);
             }

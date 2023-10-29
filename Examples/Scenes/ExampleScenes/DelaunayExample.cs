@@ -121,9 +121,9 @@ namespace Examples.Scenes.ExampleScenes
             {
                 var tri = curTriangulation[i];
                 if (i == closeTriangleIndex) continue;
-                tri.DrawLines(2f, WHITE);
+                tri.DrawLines(2f, WHITE, LineCapType.CappedExtended, 4);
             }
-            if(closeTriangleIndex >= 0) curTriangulation[closeTriangleIndex].DrawLines(6f, GREEN);
+            if(closeTriangleIndex >= 0) curTriangulation[closeTriangleIndex].DrawLines(6f, GREEN, LineCapType.CappedExtended, 4);
 
             for (int i = 0; i < points.Count; i++)
             {

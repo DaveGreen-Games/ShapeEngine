@@ -163,19 +163,19 @@ namespace Examples.Scenes.ExampleScenes
                 {
                     if (closestIndex == i)
                     {
-                        segment.Start.Draw(relativeSize / 2, BLUE);
-                        segment.Draw(relativeSize, BLUE);
+                        // segment.Start.Draw(relativeSize / 2, BLUE);
+                        segment.Draw(relativeSize, BLUE, LineCapType.CappedExtended, 4);
                     }
                     else
                     {
-                        segment.Start.Draw(relativeSize / 2, WHITE);
-                        segment.Draw(relativeSize, WHITE);
+                        // segment.Start.Draw(relativeSize / 2, WHITE);
+                        segment.Draw(relativeSize, WHITE, LineCapType.CappedExtended, 4);
                     }
                 }
                 else
                 {
-                    segment.Start.Draw(relativeSize / 2, WHITE);
-                    segment.Draw(relativeSize, WHITE);
+                    // segment.Start.Draw(relativeSize / 2, WHITE);
+                    segment.Draw(relativeSize, WHITE, LineCapType.CappedExtended, 4);
                 }
             }
 
