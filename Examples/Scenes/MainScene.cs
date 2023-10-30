@@ -48,7 +48,7 @@ namespace Examples.Scenes
         private InputActionLabel quitLabel;
         public MainScene()
         {
-            for (int i = 0; i < 10; i++)
+            for (var i = 0; i < 10; i++)
             {
                 ExampleSelectionButton b = new ExampleSelectionButton();
                 buttons.Add(b);
@@ -219,10 +219,10 @@ namespace Examples.Scenes
 
         public void DrawUI(ScreenInfo ui)
         {
-            Vector2 uiSize = ui.Area.Size;
-            Vector2 start = uiSize * new Vector2(0.02f, 0.25f);
-            Vector2 size = uiSize * new Vector2(0.45f, 0.05f);
-            Vector2 gap = uiSize * new Vector2(0f, 0.07f);
+            var uiSize = ui.Area.Size;
+            var start = uiSize * new Vector2(0.02f, 0.25f);
+            var size = uiSize * new Vector2(0.45f, 0.05f);
+            var gap = uiSize * new Vector2(0f, 0.07f);
             for (int i = 0; i < buttons.Count; i++)
             {
                 var b = buttons[i];
@@ -231,19 +231,19 @@ namespace Examples.Scenes
             }
 
 
-            string text = "Shape Engine Examples";
-            Rect titleRect = new Rect(uiSize * new Vector2(0.5f, 0.01f), uiSize * new Vector2(0.75f, 0.09f), new Vector2(0.5f, 0f));
+            var text = "Shape Engine Examples";
+            var titleRect = new Rect(uiSize * new Vector2(0.5f, 0.01f), uiSize * new Vector2(0.75f, 0.09f), new Vector2(0.5f, 0f));
             titleFont.DrawText(text, titleRect, 10, new(0.5f), ExampleScene.ColorLight);
 
             int pages = GetMaxPages();
             var prevAction = input.GetAction(GameloopExamples.InputUIPrevTab);
-            var prevName = prevAction != null ? prevAction.GetInputTypeDescription(input.CurrentInputDevice, true, 1, false) : "";
+            string prevName = prevAction != null ? prevAction.GetInputTypeDescription(input.CurrentInputDevice, true, 1, false) : "";
 
             var nextAction = input.GetAction(GameloopExamples.InputUINextTab);
-            var nextName = nextAction != null ? nextAction.GetInputTypeDescription(input.CurrentInputDevice, true, 1, false) : "";
+            string nextName = nextAction != null ? nextAction.GetInputTypeDescription(input.CurrentInputDevice, true, 1, false) : "";
             
             string pagesText = pages <= 1 ? "Page 1/1" : $"{prevName} <- Page #{curPageIndex + 1}/{pages} -> {nextName}";
-            Rect pageRect = new Rect(uiSize * new Vector2(0.01f, 0.12f), uiSize * new Vector2(0.3f, 0.06f), new Vector2(0f, 0f));
+            var pageRect = new Rect(uiSize * new Vector2(0.01f, 0.12f), uiSize * new Vector2(0.3f, 0.06f), new Vector2(0f, 0f));
             titleFont.DrawText(pagesText, pageRect, 4f, new(0f, 0.5f), ExampleScene.ColorHighlight2);
 
             Segment s = new(uiSize * new Vector2(0f, 0.22f), uiSize * new Vector2(1f, 0.22f));
@@ -255,21 +255,21 @@ namespace Examples.Scenes
             // ShapeDrawing.DrawLine(startTest, endTest, 24f, ORANGE, LineEndCapType.Capped, 2);
             
             // string backText = "Back [ESC]";
-            Rect backRect = new Rect(uiSize * new Vector2(0.01f, 0.17f), uiSize * new Vector2(0.2f, 0.04f), new Vector2(0f, 0f));
+            var backRect = new Rect(uiSize * new Vector2(0.01f, 0.17f), uiSize * new Vector2(0.2f, 0.04f), new Vector2(0f, 0f));
             // titleFont.DrawText(backText, backRect, 4f, new Vector2(0f, 0f), ExampleScene.ColorHighlight2);
             var curInputDevice = input.CurrentInputDevice == InputDevice.Mouse
                 ? InputDevice.Keyboard
                 : input.CurrentInputDevice;
             quitLabel.Draw(backRect, new Vector2(0f), curInputDevice, 1f);
 
-            Rect r = ui.Area.ApplyMargins(0.75f, 0.025f, 0.17f, 0.79f);
+            var r = ui.Area.ApplyMargins(0.75f, 0.025f, 0.17f, 0.79f);
             titleFont.DrawText($"Cursor On Screen: {ShapeLoop.CursorOnScreen}", r, 1f, new Vector2(1f, 1f), ExampleScene.ColorHighlight2);
 
         }
 
-        private void DrawSreenInfoDebug(Rect uiArea)
+        private void DrawScreenInfoDebug(Rect uiArea)
         {
-            Rect rightHalf = uiArea.ApplyMargins(0.6f, 0.025f, 0.25f, 0.025f);
+            var rightHalf = uiArea.ApplyMargins(0.6f, 0.025f, 0.25f, 0.025f);
             //rightHalf.DrawLines(2f, RED);
 
             List<string> infos = new();
@@ -281,11 +281,11 @@ namespace Examples.Scenes
             infos.Add($"Scale DPI: {Raylib.GetWindowScaleDPI().X}|{Raylib.GetWindowScaleDPI().Y}");
             infos.Add($"HIGH Dpi: {Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_HIGHDPI)}");
 
-            List<Rect> rects = rightHalf.SplitV(infos.Count);
+            var rects = rightHalf.SplitV(infos.Count);
 
-            for (int i = 0; i < infos.Count; i++)
+            for (var i = 0; i < infos.Count; i++)
             {
-                var infoText = infos[i];
+                string infoText = infos[i];
                 var rect = rects[i];
                 titleFont.DrawText(infoText, rect, 1f, new Vector2(0.95f, 0.5f), WHITE);
             }
@@ -294,13 +294,14 @@ namespace Examples.Scenes
         {
             if (curButton != button)
             {
+                GAMELOOP.Cursor.TriggerEffect("scale");
                 curButton.Deselect();
                 curButton = button;
             }
         }
         private int GetCurButtonIndex()
         {
-            for (int i = 0; i < buttons.Count; i++)
+            for (var i = 0; i < buttons.Count; i++)
             {
                 var b = buttons[i];
                 if (b.Selected) return i;
@@ -309,7 +310,7 @@ namespace Examples.Scenes
         }
         private int GetVisibleButtonCount()
         {
-            int count = 0;
+            var count = 0;
             foreach (var b in buttons)
             {
                 if (!b.Hidden) count++;
@@ -327,7 +328,7 @@ namespace Examples.Scenes
         {
             int startIndex = curPageIndex * buttons.Count;
             int endIndex = startIndex + buttons.Count;
-            int buttonIndex = 0;
+            var buttonIndex = 0;
             for (int i = curPageIndex * buttons.Count; i < endIndex; i++)
             {
                 var b = buttons[buttonIndex];

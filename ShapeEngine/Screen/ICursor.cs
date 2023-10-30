@@ -11,6 +11,7 @@ namespace ShapeEngine.Screen
         public void DrawGameUI(ScreenInfo ui);
         public void DrawUI(ScreenInfo ui);
         public void Update(float dt, ScreenInfo ui);
+        public void TriggerEffect(string effect);
         public void Deactivate();
         public void Activate(ICursor oldCursor);
     }
@@ -21,6 +22,10 @@ namespace ShapeEngine.Screen
         public NullCursor() { }
 
         public void Activate(ICursor oldCursor) { }
+
+        public void TriggerEffect(string effect)
+        {
+        }
 
         public void Deactivate() { }
 

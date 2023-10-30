@@ -23,19 +23,26 @@ namespace Examples
 
         public void DrawGameUI(ScreenInfo ui)
         {
-            Vector2 center = ui.MousePos;
+            // Vector2 center = ui.MousePos;
+            // float size = ui.Area.Size.Min() * 0.02f;
+            // Vector2 a = center;
+            // Vector2 b = center + new Vector2(0, size);
+            // Vector2 c = center + new Vector2(size, size);
+            // Triangle cursor = new(a, b, c);
+            // cursor.Draw(ExampleScene.ColorHighlight2);
+            // cursor.DrawLines(1f, ExampleScene.ColorHighlight1);
             float size = ui.Area.Size.Min() * 0.02f;
-            Vector2 a = center;
-            Vector2 b = center + new Vector2(0, size);
-            Vector2 c = center + new Vector2(size, size);
-            Triangle cursor = new(a, b, c);
-            cursor.Draw(ExampleScene.ColorHighlight2);
-            cursor.DrawLines(1f, ExampleScene.ColorHighlight1);
+            SimpleCursorUI.DrawRoundedCursor(ui.MousePos, size, ExampleScene.ColorHighlight1);
         }
         public void DrawUI(ScreenInfo ui){}
         public void Update(float dt, ScreenInfo ui)
         {
             
+        }
+
+        public void TriggerEffect(string effect)
+        {
+            throw new NotImplementedException();
         }
 
         public void Deactivate()
@@ -50,6 +57,9 @@ namespace Examples
     }
     internal class SimpleCursorUI : ICursor
     {
+        private float effectTimer = 0f;
+        private const float EffectDuration = 0.25f;
+        
         public uint GetID()
         {
             return 0;
@@ -62,18 +72,32 @@ namespace Examples
 
         public void DrawUI(ScreenInfo ui)
         {
-            Vector2 center = ui.MousePos;
             float size = ui.Area.Size.Min() * 0.02f;
-            Vector2 a = center;
-            Vector2 b = center + new Vector2(0, size);
-            Vector2 c = center + new Vector2(size, size);
-            Triangle cursor = new(a, b, c);
-            cursor.Draw(ExampleScene.ColorHighlight2);
-            cursor.DrawLines(1f, ExampleScene.ColorHighlight1);
+            float t = 1f - (effectTimer / EffectDuration);
+            //var c = effectTimer <= 0f ? ExampleScene.ColorHighlight1 : ExampleScene.ColorHighlight2;
+            var c = ShapeColor.Lerp(ExampleScene.ColorHighlight2, ExampleScene.ColorHighlight1, t);
+            //float curSize = effectTimer <= 0f ? size : ShapeMath.LerpFloat(size, size * 1.5f, t);// ShapeTween.Tween(size, size * 1.5f, t, TweenType.BOUNCE_OUT);
+            
+            DrawRoundedCursor(ui.MousePos, size, c);
         }
         public void Update(float dt, ScreenInfo ui)
         {
-            
+            if (effectTimer > 0f)
+            {
+                effectTimer -= dt;
+                if (effectTimer <= 0f)
+                {
+                    effectTimer = 0f;
+                }
+            }   
+        }
+
+        public void TriggerEffect(string effect)
+        {
+            if (effect == "scale")
+            {
+                effectTimer = EffectDuration;
+            }
         }
 
         public void Deactivate()
@@ -83,7 +107,18 @@ namespace Examples
 
         public void Activate(ICursor oldCursor)
         {
-            
+            effectTimer = 0f;
+        }
+
+        internal static void DrawRoundedCursor(Vector2 tip, float size, Color color)
+        {
+            var dir = new Vector2(1, 1).Normalize();
+            var circleCenter = tip + dir * size * 2;
+            var left = circleCenter + new Vector2(-1, 0) * size;
+            var top = circleCenter + new Vector2(0, -1) * size;
+            ShapeDrawing.DrawLine(tip, left, 1f, color, LineCapType.CappedExtended, 3);
+            ShapeDrawing.DrawLine(tip, top, 1f, color, LineCapType.CappedExtended, 3);
+            ShapeDrawing.DrawCircleSectorLines(circleCenter, size, 180, 270, 1f, color, false, 4f);
         }
     }
     

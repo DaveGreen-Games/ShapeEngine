@@ -1,7 +1,6 @@
 ﻿
 using System.Numerics;
 using Raylib_CsLo;
-using ShapeEngine.Core;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.UI;
@@ -137,6 +136,7 @@ namespace ShapeEngine.Lib
         }
     }
 
+    
     /// <summary>
     /// Determines how the end of a line is drawn.
     /// </summary>
@@ -673,7 +673,8 @@ namespace ShapeEngine.Lib
         {
             DrawCircleSectorLines(c.Center, c.Radius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, sides, lineThickness, color, closed);
         }
-
+        
+        
         public static void DrawCircleSectorLines(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, float lineThickness, Raylib_CsLo.Color color, bool closed = true, float sideLength = 8f)
         {
             float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
@@ -814,6 +815,14 @@ namespace ShapeEngine.Lib
         private static float TransformAngleDeg(float angleDeg) { return 450f - angleDeg; }
         private static float TransformAngleRad(float angleRad) { return 2.5f * PI - angleRad; }
 
+        // private static Vector2 GetOffsetDir(Vector2 a, Vector2 b, Vector2 c, bool inside)
+        // {
+        //     var ab = b - a;
+        //     var bc = b - c;
+        //     var dir = (ab + bc).GetPerpendicularLeft().Normalize();
+        //     // var dir = (ab.GetPerpendicularLeft() + bc.GetPerpendicularLeft()).Normalize();
+        //     return inside ? dir : -dir;
+        // }
         #endregion
 
         #region Ring
@@ -1522,8 +1531,6 @@ namespace ShapeEngine.Lib
                 DrawLine(cur, cur.Lerp(prev, cornerF), lineThickness, color, capType, capPoints);
             }
         }
-
-
         #endregion
 
         #region Polyline

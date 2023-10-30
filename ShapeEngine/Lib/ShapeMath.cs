@@ -134,6 +134,7 @@ public static class ShapeMath
 
     public static int WrapIndex(int count, int index)
     {
+        if (count <= 0) return 0;
         if (index >= count) return index % count;
         else if (index < 0) return (index % count) + count;
         else return index;
