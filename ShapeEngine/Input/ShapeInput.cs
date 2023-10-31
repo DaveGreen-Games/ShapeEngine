@@ -108,6 +108,19 @@ public sealed class ShapeInput
         return !inputActions.ContainsKey(id) ? null : inputActions[id];
     }
 
+    public List<InputAction> GetActions(params uint[] ids)
+    {
+        var actions = new List<InputAction>();
+        
+        foreach (uint id in ids)
+        {
+            var action = GetAction(id);
+            if(action != null) actions.Add(action);
+        }
+
+        return actions;
+    }
+
     public void UpdateActionGamepad(int gamepad)
     {
         foreach (var input in inputActions.Values)

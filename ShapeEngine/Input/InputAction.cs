@@ -349,6 +349,7 @@ public class InputAction
     }
 
     
+    //TODO add encapsulation parameter $"[ ]" somehow to change bracket layout etc -> add to all similar functions
     /// <summary>
     /// Generate a description for this action based on the parameters. Layout-> "Title: [type a][type b][type c] ..."
     /// </summary>
@@ -356,8 +357,9 @@ public class InputAction
     /// <param name="shorthand">Should the shorthand name or full name of the input type be used?</param>
     /// <param name="count">Limits the amount input types used. If count is smaller or equal to 0 all input types are used.</param>
     /// <param name="useTitle">Should the title of this input action be used as a prefix? "Title: [input type]"</param>
+    /// <param name="brackets">Should the input type be encapsulated in square brackets ["Input Type"]?"</param>
     /// <returns>The combined names of all input types.</returns>
-    public string GetInputTypeDescription(InputDevice device, bool shorthand, int count = 1, bool useTitle = false)
+    public string GetInputTypeDescription(InputDevice device, bool shorthand, int count = 1, bool useTitle = false, bool brackets = true)
     {
         StringBuilder b = new();
         if(useTitle) b.Append(Title);
@@ -367,7 +369,8 @@ public class InputAction
             if(useTitle) b.Append(": ");
             foreach (string inputName in inputNames)
             {
-                b.Append($"[{inputName}]");
+                if(brackets) b.Append($"[{inputName}]");
+                else b.Append(inputName);
             }
         }
         return b.ToString();

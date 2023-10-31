@@ -29,7 +29,14 @@ namespace Examples.Scenes
     //     }
     // }
     
+    //Info box
+    //-General-
+    //Reset
+    //Fullscreen
     
+    //-Scene-
+    //Zoom
+    //CRT Shader
     
     
     public class MainScene : IScene
@@ -265,31 +272,12 @@ namespace Examples.Scenes
             var r = ui.Area.ApplyMargins(0.75f, 0.025f, 0.17f, 0.79f);
             titleFont.DrawText($"Cursor On Screen: {ShapeLoop.CursorOnScreen}", r, 1f, new Vector2(1f, 1f), ExampleScene.ColorHighlight2);
 
+            var centerRight = GAMELOOP.UIRects.GetRect("center right");
+            var inputInfoRect = centerRight.ApplyMargins(0.25f, -0.025f, 0.15f, 0.55f);
+            DrawInputInfoBox(inputInfoRect);
         }
 
-        private void DrawScreenInfoDebug(Rect uiArea)
-        {
-            var rightHalf = uiArea.ApplyMargins(0.6f, 0.025f, 0.25f, 0.025f);
-            //rightHalf.DrawLines(2f, RED);
-
-            List<string> infos = new();
-            
-            int monitor = Raylib.GetCurrentMonitor();
-            infos.Add($"[{monitor}] Monitor Size: {Raylib.GetMonitorWidth(monitor)}|{Raylib.GetMonitorHeight(monitor)}");
-            infos.Add($"Window(Screen) Size: {Raylib.GetScreenWidth()}|{Raylib.GetScreenHeight()}");
-            infos.Add($"Render Size: {Raylib.GetRenderWidth()}|{Raylib.GetRenderHeight()}");
-            infos.Add($"Scale DPI: {Raylib.GetWindowScaleDPI().X}|{Raylib.GetWindowScaleDPI().Y}");
-            infos.Add($"HIGH Dpi: {Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_HIGHDPI)}");
-
-            var rects = rightHalf.SplitV(infos.Count);
-
-            for (var i = 0; i < infos.Count; i++)
-            {
-                string infoText = infos[i];
-                var rect = rects[i];
-                titleFont.DrawText(infoText, rect, 1f, new Vector2(0.95f, 0.5f), WHITE);
-            }
-        }
+        
         private void OnButtonSelected(UIElement button)
         {
             if (curButton != button)
@@ -376,6 +364,81 @@ namespace Examples.Scenes
             SetupButtons();
         }
 
+        private void DrawInputInfoBox(Rect area)
+        {
+            //area.DrawLinesDotted(3, 1f, ExampleScene.ColorMedium, LineCapType.Capped, 3);
+            //area = area.ApplyMargins(0.05f, 0.05f, 0.01f, 0.01f);
+            var curInputDevice = GAMELOOP.Input.CurrentInputDevice;
+            if (curInputDevice == InputDevice.Mouse) curInputDevice = InputDevice.Keyboard;
+
+            var fullscreenAction = GAMELOOP.Input.GetAction(GameloopExamples.InputFullscreenID);
+            string fullscreenInputTypeName = fullscreenAction != null ? fullscreenAction.GetInputTypeDescription(curInputDevice, true, 1, false) : "";
+            var fullscreenInfo = $"Fullscreen {fullscreenInputTypeName}";
+            
+            var crtActionPlus = GAMELOOP.Input.GetAction(GameloopExamples.InputCRTPlusID);
+            var crtActionMinus = GAMELOOP.Input.GetAction(GameloopExamples.InputCRTMinusID);
+            string crtInputTypeNamesPlus = crtActionPlus != null ? crtActionPlus.GetInputTypeDescription(curInputDevice, true, 1, false, false) : "";
+            string crtInputTypeNamesMinus = crtActionMinus != null ? crtActionMinus.GetInputTypeDescription(curInputDevice, true, 1, false, false) : "";
+            var crtInfo = $"CRT Shader [{crtInputTypeNamesPlus}|{crtInputTypeNamesMinus}]";
+            
+            var zoomAction = GAMELOOP.Input.GetAction(GameloopExamples.InputZoomID);
+            string zoomInputTypeName = zoomAction != null ? zoomAction.GetInputTypeDescription(curInputDevice, true, 1, false) : "";
+            var zoomInfo = $"Zoom Example {zoomInputTypeName}";
+            
+            var pauseAction = GAMELOOP.Input.GetAction(GameloopExamples.InputPauseID);
+            string pauseInputTypeName = pauseAction != null ? pauseAction.GetInputTypeDescription(curInputDevice, true, 1, false) : "";
+            var pauseInfo = $"Pause Example {pauseInputTypeName}";
+            
+            var resetAction = GAMELOOP.Input.GetAction(GameloopExamples.InputResetID);
+            string resetInputTypeName = resetAction != null ? resetAction.GetInputTypeDescription(curInputDevice, true, 1, false) : "";
+            var resetInfo = $"Reset Example {resetInputTypeName}";
+
+            var rects = area.SplitV(5);
+
+            var color = ExampleScene.ColorMedium;
+            var alignement = new Vector2(1f, 0.05f);
+            titleFont.DrawText(fullscreenInfo, rects[0], 1f, alignement, color);
+            titleFont.DrawText(crtInfo, rects[1], 1f, alignement, color);
+            titleFont.DrawText(resetInfo, rects[2], 1f, alignement, color);
+            titleFont.DrawText(zoomInfo, rects[3], 1f, alignement, color);
+            titleFont.DrawText(pauseInfo, rects[4], 1f, alignement, color);
+            
+            // var actions = GAMELOOP.Input.GetActions
+            // (
+            //     GameloopExamples.InputFullscreenID,
+            //     GameloopExamples.InputCRTPlusID,
+            //     GameloopExamples.InputCRTMinusID,
+            //     GameloopExamples.InputZoomID,
+            //     GameloopExamples.InputPauseID,
+            //     GameloopExamples.InputResetID
+            // ).ToArray();
+            // var info = GAMELOOP.Input.GetActionDescriptions(curInputDevice, true, 1, actions);
+        }
+        
+        private void DrawScreenInfoDebug(Rect uiArea)
+        {
+            var rightHalf = uiArea.ApplyMargins(0.6f, 0.025f, 0.25f, 0.025f);
+            //rightHalf.DrawLines(2f, RED);
+
+            List<string> infos = new();
+            
+            int monitor = Raylib.GetCurrentMonitor();
+            infos.Add($"[{monitor}] Monitor Size: {Raylib.GetMonitorWidth(monitor)}|{Raylib.GetMonitorHeight(monitor)}");
+            infos.Add($"Window(Screen) Size: {Raylib.GetScreenWidth()}|{Raylib.GetScreenHeight()}");
+            infos.Add($"Render Size: {Raylib.GetRenderWidth()}|{Raylib.GetRenderHeight()}");
+            infos.Add($"Scale DPI: {Raylib.GetWindowScaleDPI().X}|{Raylib.GetWindowScaleDPI().Y}");
+            infos.Add($"HIGH Dpi: {Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_HIGHDPI)}");
+
+            var rects = rightHalf.SplitV(infos.Count);
+
+            for (var i = 0; i < infos.Count; i++)
+            {
+                string infoText = infos[i];
+                var rect = rects[i];
+                titleFont.DrawText(infoText, rect, 1f, new Vector2(0.95f, 0.5f), WHITE);
+            }
+        }
+        
         public GameObjectHandler? GetGameObjectHandler()
         {
             return null;
