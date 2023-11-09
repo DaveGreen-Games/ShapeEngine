@@ -24,7 +24,7 @@ public class InputTypeMouseButtonAxis : IInputType
         string posName = InputTypeMouseButton.GetMouseButtonName(pos, shorthand);
         StringBuilder b = new(posName.Length + negName.Length + 4);
         b.Append(negName);
-        b.Append('/');
+        b.Append('|');
         b.Append(posName);
         return b.ToString();
     }

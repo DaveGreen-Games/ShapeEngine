@@ -153,9 +153,9 @@ namespace Examples
                 center.AddChild(centerRight);
             
             var bottom = new RectContainerH("bottom", 0.9f, 0.01f);
-                var bottomLeft = new RectContainerV("left", 0.01f, 0.8f);
+                var bottomLeft = new RectContainerV("left", 0.01f, 0.85f);
                 var bottomCenter = new RectContainerV("center", 0.2f, 0.2f);
-                var bottomRight = new RectContainerV("right", 0.8f, 0.01f);
+                var bottomRight = new RectContainerV("right", 0.85f, 0.01f);
                 bottom.AddChild(bottomLeft);
                 bottom.AddChild(bottomCenter);
                 bottom.AddChild(bottomRight);

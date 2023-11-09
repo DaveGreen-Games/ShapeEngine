@@ -20,7 +20,7 @@ public class InputTypeKeyboardButtonAxis : IInputType
         string posName = InputTypeKeyboardButton.GetKeyboardButtonName(pos, shorthand);
         StringBuilder b = new(negName.Length + posName.Length + 4);
         b.Append(negName);
-        b.Append('/');
+        b.Append('|');
         b.Append(posName);
         return b.ToString();
     }

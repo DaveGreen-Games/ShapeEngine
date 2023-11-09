@@ -710,6 +710,8 @@ namespace Examples.Scenes.ExampleScenes
         {
             laserDevice.SetHybernate(false);
         }
+        
+        
         protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             //clipRect = new(mousePosGame, new Vector2(100, 300), new Vector2(0f, 1f));
@@ -925,7 +927,7 @@ namespace Examples.Scenes.ExampleScenes
         protected override void DrawGameExample(ScreenInfo game)
         {
             
-            boundaryRect.DrawLines(4f, ColorLight);
+            //boundaryRect.DrawLines(4f, ColorLight);
             if(polyModeActive && curShapeType != ShapeType.None)
             {
                 curShape.DrawLines(2f, RED);
@@ -945,14 +947,41 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void DrawUIExample(ScreenInfo ui)
         {
-            Vector2 uiSize = ui.Area.Size;
-            Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));
-
-            string polymodeText = "[Tab] Polymode | [LMB] Place/Merge | [RMB] Cut | [1] Triangle | [2] Rect | [3] Poly | [Q] Regenerate | [X] Rotate | [C] Scale";
-            string laserText = "[Tab] Lasermode | [LMB] Move | [RMB] Shoot Laser";
-            string text = polyModeActive ? polymodeText : laserText;
+            var infoRect = GAMELOOP.UIRects.GetRect("bottom center");//  new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));
+            DrawInputText(infoRect);
+            // var polymodeText = "[Tab] Polymode | [LMB] Place/Merge | [RMB] Cut | [1] Triangle | [2] Rect | [3] Poly | [Q] Regenerate | [X] Rotate | [C] Scale";
+            // var laserText = "[Tab] Lasermode | [LMB] Move | [RMB] Shoot Laser";
+            // string text = polyModeActive ? polymodeText : laserText;
             
-            font.DrawText(text, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+            // font.DrawText(text, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+        }
+
+        private void DrawInputText(Rect rect)
+        {
+            if (polyModeActive)
+            {
+                
+            }
+            else
+            {
+                
+            }
+            // var polymodeText = "[Tab] Polymode | [LMB] Place/Merge | [RMB] Cut | [1] Triangle | [2] Rect | [3] Poly | [Q] Regenerate | [X] Rotate | [C] Scale";
+            // var laserText = "[Tab] Lasermode | [LMB] Move | [RMB] Shoot Laser";
+            // string text = polyModeActive ? polymodeText : laserText;
+            
+            // font.DrawText(text, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+            
+            // Rect bottomCenter = GAMELOOP.UIRects.GetRect("bottom center");
+            
+            // var create = createPoint. GetInputTypeDescription( input.CurrentInputDevice, true, 1, false);
+            // var delete = deletePoint. GetInputTypeDescription( input.CurrentInputDevice, true, 1, false);
+            // var offset = changeOffset.GetInputTypeDescription( input.CurrentInputDevice , true, 1, false);
+            
+            // string infoText =
+                // $"Add Point {create} | Remove Point {delete} | Inflate {offset} {MathF.Round(offsetDelta * 100) / 100}";
+            
+            // font.DrawText(infoText, rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
     }
 }
