@@ -73,7 +73,7 @@ public sealed class ShapeInput
         Locked = true;
         lockWhitelist.Clear();
         lockBlacklist.Clear();
-        if(blacklist.Length > 0) lockWhitelist.AddRange(blacklist);
+        if(blacklist.Length > 0) lockBlacklist.AddRange(blacklist);
     }
     public void Unlock()
     {
