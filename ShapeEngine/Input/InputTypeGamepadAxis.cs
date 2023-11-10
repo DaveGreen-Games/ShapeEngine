@@ -1,3 +1,4 @@
+using System.Text;
 using ShapeEngine.Lib;
 
 namespace ShapeEngine.Input;
@@ -6,14 +7,27 @@ public class InputTypeGamepadAxis : IInputType
 {
     private readonly ShapeGamepadAxis axis;
     private float deadzone;
-
-    public InputTypeGamepadAxis(ShapeGamepadAxis axis, float deadzone = 0.1f)
+    private readonly ShapeGamepadButton modifier;
+    private readonly bool reverseModifier;
+    public InputTypeGamepadAxis(ShapeGamepadAxis axis, float deadzone = 0.1f, ShapeGamepadButton modifierKey = ShapeGamepadButton.NONE, bool reverseModifier = false)
     {
         this.axis = axis; 
         this.deadzone = deadzone;
+        this.modifier = modifierKey;
+        this.reverseModifier = reverseModifier;
     }
 
-    public virtual string GetName(bool shorthand = true) => GetGamepadAxisName(axis, shorthand);
+    public virtual string GetName(bool shorthand = true)
+    {
+        if(modifier == ShapeGamepadButton.NONE || reverseModifier) return GetGamepadAxisName(axis, shorthand);
+        StringBuilder sb = new();
+
+        sb.Append(InputTypeGamepadButton.GetGamepadButtonName(modifier, shorthand));
+        sb.Append('+');
+        sb.Append(GetGamepadAxisName(axis, shorthand));
+        
+        return sb.ToString();
+    }
 
     public float GetDeadzone() => deadzone;
 
@@ -24,20 +38,24 @@ public class InputTypeGamepadAxis : IInputType
 
     public InputState GetState(int gamepad = -1)
     {
-        return GetState(axis, gamepad, deadzone);
+        return GetState(axis, gamepad, deadzone, modifier, reverseModifier);
     }
 
     public InputState GetState(InputState prev, int gamepad = -1)
     {
-        return GetState(axis, prev, gamepad, deadzone);
+        return GetState(axis, prev, gamepad, deadzone, modifier, reverseModifier);
     }
 
     public InputDevice GetInputDevice() => InputDevice.Gamepad;
     public IInputType Copy() => new InputTypeGamepadAxis(axis);
 
-    private static float GetValue(ShapeGamepadAxis axis, int gamepad, float deadzone = 0.1f)
+    private static float GetValue(ShapeGamepadAxis axis, int gamepad, float deadzone = 0.1f, ShapeGamepadButton modifier = ShapeGamepadButton.NONE, bool reverseModifier = false)
     {
         if (gamepad < 0) return 0f;
+        if (modifier != ShapeGamepadButton.NONE)
+        {
+            if(InputTypeGamepadButton.IsDown(modifier, gamepad, deadzone) == reverseModifier) return 0f;
+        } 
         float value = GetGamepadAxisMovement(gamepad, (int)axis);
         if (axis is ShapeGamepadAxis.LEFT_TRIGGER or ShapeGamepadAxis.RIGHT_TRIGGER)
         {
@@ -45,16 +63,16 @@ public class InputTypeGamepadAxis : IInputType
         }
         return MathF.Abs(value) < deadzone ? 0f : value;
     }
-    public static InputState GetState(ShapeGamepadAxis axis, int gamepad, float deadzone = 0.1f)
+    public static InputState GetState(ShapeGamepadAxis axis, int gamepad, float deadzone = 0.1f, ShapeGamepadButton modifier = ShapeGamepadButton.NONE, bool reverseModifier = false)
     {
-        float axisValue = GetValue(axis, gamepad, deadzone);
+        float axisValue = GetValue(axis, gamepad, deadzone, modifier, reverseModifier);
         bool down = axisValue != 0f;
         return new(down, !down, axisValue, gamepad, InputDevice.Gamepad);
     }
     public static InputState GetState(ShapeGamepadAxis axis, InputState previousState, int gamepad,
-        float deadzone = 0.1f)
+        float deadzone = 0.1f, ShapeGamepadButton modifier = ShapeGamepadButton.NONE, bool reverseModifier = false)
     {
-        return new(previousState, GetState(axis, gamepad, deadzone));
+        return new(previousState, GetState(axis, gamepad, deadzone, modifier, reverseModifier));
     }
     public static string GetGamepadAxisName(ShapeGamepadAxis axis, bool shortHand = true)
     {

@@ -1,11 +1,15 @@
+using System.Text;
+
 namespace ShapeEngine.Input;
 
 public class InputTypeKeyboardButton : IInputType
 {
     private readonly ShapeKeyboardButton button;
-    public InputTypeKeyboardButton(ShapeKeyboardButton button)
+    private readonly ShapeKeyboardButton modifier;
+    public InputTypeKeyboardButton(ShapeKeyboardButton button, ShapeKeyboardButton modifierKey = ShapeKeyboardButton.None)
     {
         this.button = button;
+        this.modifier = modifierKey;
     }
     public float GetDeadzone() => 0f;
 
@@ -13,15 +17,25 @@ public class InputTypeKeyboardButton : IInputType
     public InputState GetState(int gamepad = -1)
     {
         if (gamepad > 0) return new();
-        return GetState(button);
+        return GetState(button, modifier);
     }
 
     public InputState GetState(InputState prev, int gamepad = -1)
     {
         if (gamepad > 0) return new();
-        return GetState(button, prev);
+        return GetState(button, prev, modifier);
     }
-    public virtual string GetName(bool shorthand = true) => GetKeyboardButtonName(button, shorthand);
+    public virtual string GetName(bool shorthand = true)
+    {
+        if(modifier == ShapeKeyboardButton.None) return GetKeyboardButtonName(button, shorthand);
+
+        StringBuilder sb = new();
+        sb.Append(GetKeyboardButtonName(modifier, shorthand));
+        sb.Append('+');
+        sb.Append(GetKeyboardButtonName(button, shorthand));
+        return sb.ToString();
+    }
+
     public InputDevice GetInputDevice() => InputDevice.Keyboard;
     public IInputType Copy() => new InputTypeKeyboardButton(button);
     
@@ -143,14 +157,37 @@ public class InputTypeKeyboardButton : IInputType
         }
     }
 
-    private static bool IsDown(ShapeKeyboardButton button) => IsKeyDown((int)button);
-    public static InputState GetState(ShapeKeyboardButton button)
+    // private static bool IsDown(ShapeKeyboardButton button)
+    // {
+    //     //if (button == ShapeKeyboardButton.None) return false;
+    //     return IsKeyDown((int)button);
+    // }
+    //
+    // public static InputState GetState(ShapeKeyboardButton button)
+    // {
+    //     bool down = IsDown(button);
+    //     return new(down, !down, down ? 1f : 0f, -1, InputDevice.Keyboard);
+    // }
+    // public static InputState GetState(ShapeKeyboardButton button, InputState previousState)
+    // {
+    //     return new(previousState, GetState(button));
+    // }
+    
+    private static bool IsDown(ShapeKeyboardButton button, ShapeKeyboardButton modifier = ShapeKeyboardButton.None)
     {
-        bool down = IsDown(button);
+        // if (button == ShapeKeyboardButton.None) return false;
+        if (modifier != ShapeKeyboardButton.None && !IsKeyDown((int)modifier)) return false;
+        
+        return IsKeyDown((int)button);
+    }
+
+    public static InputState GetState(ShapeKeyboardButton button, ShapeKeyboardButton modifier = ShapeKeyboardButton.None)
+    {
+        bool down = IsDown(button, modifier);
         return new(down, !down, down ? 1f : 0f, -1, InputDevice.Keyboard);
     }
-    public static InputState GetState(ShapeKeyboardButton button, InputState previousState)
+    public static InputState GetState(ShapeKeyboardButton button, InputState previousState, ShapeKeyboardButton modifier = ShapeKeyboardButton.None)
     {
-        return new(previousState, GetState(button));
+        return new(previousState, GetState(button, modifier));
     }
 }

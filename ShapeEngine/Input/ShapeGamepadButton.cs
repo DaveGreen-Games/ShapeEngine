@@ -2,6 +2,7 @@ namespace ShapeEngine.Input;
 
 public enum ShapeGamepadButton
 {
+    NONE = -1,
     UNKNOWN = 0,
     LEFT_FACE_UP = 1,
     LEFT_FACE_RIGHT = 2,

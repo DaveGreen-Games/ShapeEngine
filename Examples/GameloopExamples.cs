@@ -250,7 +250,7 @@ namespace Examples
         private float mouseMovementTimer = 0f;
         private const float mouseMovementDuration = 2f;
 
-        public bool UseMouseMovement = true;
+        // public bool UseMouseMovement = true;
         public GameloopExamples() : base(new(1920, 1080), true) {}
 
         protected override void LoadContent()
@@ -303,7 +303,7 @@ namespace Examples
 
         protected override Vector2 ChangeMousePos(float dt, Vector2 mousePos, Rect screenArea)
         {
-            if (!UseMouseMovement) return mousePos;
+            // if (!UseMouseMovement) return mousePos;
             
             if (Input.CurrentInputDevice == InputDevice.Gamepad && Input.LastUsedGamepad != null)
             {
@@ -607,12 +607,16 @@ namespace Examples
             InputAction nextMonitor = new(GameloopAccessTag, InputNextMonitorID, nextMonitorKB);
             
             var crtMinusKB = new InputTypeKeyboardButton(ShapeKeyboardButton.J);
+            var crtMinusGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN, 0f,
+                ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM);
             //var crtPluseGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_THUMB);
-            InputAction crtMinus = new(GameloopAccessTag, InputCRTMinusID, crtMinusKB);
+            InputAction crtMinus = new(GameloopAccessTag, InputCRTMinusID, crtMinusKB, crtMinusGP);
             
             var crtPlusKB = new InputTypeKeyboardButton(ShapeKeyboardButton.K);
+            var crtPlusGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP, 0f,
+                ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM);
             //var crtMinusGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_THUMB);
-            InputAction crtPlus = new(GameloopAccessTag, InputCRTPlusID, crtPlusKB);
+            InputAction crtPlus = new(GameloopAccessTag, InputCRTPlusID, crtPlusKB, crtPlusGP);
             
             var pauseKB = new InputTypeKeyboardButton(ShapeKeyboardButton.P);
             var pauseGB = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_RIGHT);
@@ -633,23 +637,19 @@ namespace Examples
             InputAction uiAccept = new(UIAccessTag, InputUIAcceptID, acceptKB, acceptKB2, acceptGB, acceptMB);
 
             var leftKB = new InputTypeKeyboardButton(ShapeKeyboardButton.A);
-            //var leftKB2 = new InputTypeKeyboardButton(ShapeKeyboardButton.LEFT);
-            var leftGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT);
+            var leftGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT);//reverse modifier!!!
             InputAction uiLeft = new(UIAccessTag, InputUILeftID, leftKB, leftGB);
             
             var rightKB = new InputTypeKeyboardButton(ShapeKeyboardButton.D);
-            //var rightKB2 = new InputTypeKeyboardButton(ShapeKeyboardButton.RIGHT);
-            var rightGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT);
+            var rightGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT);//reverse modifier!!!
             InputAction uiRight = new(UIAccessTag, InputUIRightID, rightKB, rightGB);
             
             var upKB = new InputTypeKeyboardButton(ShapeKeyboardButton.W);
-            //var upKB2 = new InputTypeKeyboardButton(ShapeKeyboardButton.UP);
-            var upGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP);
+            var upGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP);//reverse modifier!!!
             InputAction uiUp = new(UIAccessTag, InputUIUpID, upKB, upGB);
             
             var downKB = new InputTypeKeyboardButton(ShapeKeyboardButton.S);
-            //var downKB2 = new InputTypeKeyboardButton(ShapeKeyboardButton.DOWN);
-            var downGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN);
+            var downGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN);//reverse modifier!!!
             InputAction uiDown = new(UIAccessTag, InputUIDownID, downKB, downGB);
             
             var nextTabKB = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
@@ -663,11 +663,11 @@ namespace Examples
             InputAction prevTab = new(UIAccessTag, InputUIPrevTab, prevTabKB, prevTabGB, prevTabMW);
             
             var nextPageKB = new InputTypeKeyboardButton(ShapeKeyboardButton.C);
-            var nextPageGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM);
+            var nextPageGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT, 0.1f, ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM);
             InputAction nextPage = new(UIAccessTag, InputUINextPage, nextPageKB, nextPageGB);
             
             var prevPageKB = new InputTypeKeyboardButton(ShapeKeyboardButton.X);
-            var prevPageGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_BOTTOM);
+            var prevPageGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT, 0.1f, ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM);
             InputAction prevPage = new(UIAccessTag, InputUIPrevPage, prevPageKB, prevPageGB);
             
             
@@ -676,7 +676,7 @@ namespace Examples
 
             var zoomKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.NINE, ShapeKeyboardButton.ZERO);
             // var zoomMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL);
-            var zoomGP = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_Y, 0.2f);
+            var zoomGP = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_Y, 0.2f, ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, false);
             InputAction zoom = new(SceneAccessTag, InputZoomID, zoomKB, zoomGP);
             
             // var zoomInKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ZERO);

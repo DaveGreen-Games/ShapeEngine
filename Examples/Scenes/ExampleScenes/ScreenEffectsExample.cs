@@ -76,8 +76,7 @@ namespace Examples.Scenes.ExampleScenes
         }
     }
 
-    //todo slider needs keyboard & gamepad input !! (1 / 2, RB / LB)
-    //should only display input when the mouse is not used
+    
     internal class Slider
     {
         public float CurValue { get; private set; } = 0f;
@@ -99,7 +98,7 @@ namespace Examples.Scenes.ExampleScenes
             mouseInside = background.ContainsPoint(mousePos);
             if (mouseInside)
             {
-                if (IsMouseButtonDown(MouseButton.MOUSE_BUTTON_LEFT))
+                if (GAMELOOP.Input.GetActionState(GameloopExamples.InputUIAcceptID).Down)
                 {
                     float intensity = background.GetWidthPointFactor(mousePos.X);
                     CurValue = intensity;
@@ -133,18 +132,16 @@ namespace Examples.Scenes.ExampleScenes
         private void SetupInput()
         {
             var moveHorKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
-            var moveHor2KB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.LEFT, ShapeKeyboardButton.RIGHT);
             var moveHorGP =
-                new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT);
-            var moveHor2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X);
-            iaMoveHor = new(moveHorKB, moveHor2KB, moveHor2GP, moveHorGP);
+                new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT);//reverse modifier
+            var moveHor2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X, 0.1f, ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, true);
+            iaMoveHor = new(moveHorKB, moveHor2GP, moveHorGP);
             
             var moveVerKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
-            var moveVer2KB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.UP, ShapeKeyboardButton.DOWN);
             var moveVerGP =
-                new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_UP, ShapeGamepadButton.LEFT_FACE_DOWN);
-            var moveVer2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y);
-            iaMoveVer = new(moveVerKB, moveVer2KB, moveVer2GP, moveVerGP);
+                new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_UP, ShapeGamepadButton.LEFT_FACE_DOWN);//reverse modifier
+            var moveVer2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_Y, 0.1f, ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, true);
+            iaMoveVer = new(moveVerKB, moveVer2GP, moveVerGP);
         }
         public Ship(Vector2 pos, float r)
         {
@@ -274,13 +271,13 @@ namespace Examples.Scenes.ExampleScenes
             cameraFollowSlider = new(1f, "Camera Follow", font);
             SetSliderValues();
 
-            var shakeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
+            var shakeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.F);
             var shakeGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
-            var shakeMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
+            var shakeMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
             iaShakeCamera = new(shakeKB, shakeGP, shakeMB);
 
             var rotateKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.Q, ShapeKeyboardButton.E);
-            var rotateGB = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X);
+            var rotateGB = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X, 0.1f, ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, false);
             var rotateMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL);
             iaRotateCamera = new(rotateKB, rotateGB, rotateMW);
             
@@ -320,13 +317,13 @@ namespace Examples.Scenes.ExampleScenes
         {
             GAMELOOP.Camera = camera;
             camera.Follower.SetTarget(ship);
-            GAMELOOP.UseMouseMovement = false;
+            // GAMELOOP.UseMouseMovement = false;
         }
 
         public override void Deactivate()
         {
             GAMELOOP.ResetCamera();
-            GAMELOOP.UseMouseMovement = true;
+            // GAMELOOP.UseMouseMovement = true;
         }
         public override GameObjectHandler? GetGameObjectHandler()
         {

@@ -64,13 +64,13 @@ namespace Examples.Scenes.ExampleScenes
             GAMELOOP.Camera = camera;
             camera.Follower.SetTarget(ship);
             currentShip = ship;
-            GAMELOOP.UseMouseMovement = false;
+            // GAMELOOP.UseMouseMovement = false;
         }
 
         public override void Deactivate()
         {
             GAMELOOP.ResetCamera();
-            GAMELOOP.UseMouseMovement = true;
+            // GAMELOOP.UseMouseMovement = true;
         }
         public override GameObjectHandler? GetGameObjectHandler()
         {
