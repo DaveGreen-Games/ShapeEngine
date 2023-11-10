@@ -4,6 +4,7 @@ using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 using System.Numerics;
+using System.Text;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Shapes;
@@ -310,7 +311,7 @@ namespace Examples.Scenes.ExampleScenes
         //private Vector2 laserEndPoint;
         private Vector2 aimDir = new();
         private GameObjectHandlerCollision gameObjectHandler;
-        private InputAction iaShootLaser;
+        public InputAction iaShootLaser;
         public LaserDevice(Vector2 pos, float size, GameObjectHandlerCollision gameObjectHandler) 
         {
             this.gameObjectHandler = gameObjectHandler;
@@ -318,6 +319,11 @@ namespace Examples.Scenes.ExampleScenes
             this.size = size;
             this.rotRad = 0f;
             UpdateTriangle();
+
+            var shootKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
+            var shootGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM);
+            var shootMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
+            iaShootLaser = new(shootKB, shootGP, shootMB);
             //this.laserEndPoint = tip;
         }
         public void SetHybernate(bool enabled)
@@ -356,13 +362,17 @@ namespace Examples.Scenes.ExampleScenes
             laserEnabled = false;
             if (hybernate) return;
             
+            int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
+            iaShootLaser.Gamepad = gamepadIndex;
+            iaShootLaser.Update(dt);
+            
             if (aimingMode)
             {
                 Vector2 dir = game.MousePos - pos;
                 aimDir = dir.Normalize();
                 rotRad = dir.AngleRad();
 
-                laserEnabled = IsMouseButtonDown(MouseButton.MOUSE_BUTTON_RIGHT);
+                laserEnabled = iaShootLaser.State.Down; // IsMouseButtonDown(MouseButton.MOUSE_BUTTON_RIGHT);
             }
             else
             {
@@ -549,13 +559,35 @@ namespace Examples.Scenes.ExampleScenes
             var cutShapeMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
             var cutShapeGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
             iaCutShape = new(cutShapeKB, cutShapeMB, cutShapeGP);
-            iaRegenerateShape = new();
-            iaRotateShape = new();
-            iaScaleShape = new();
-            iaPickTriangleShape = new();
-            iaPickRectangleShape = new();
-            iaPickPolygonShape = new();
-            iaDragLaser = new();
+            
+            var regenShapeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
+            var regenShapeGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP);
+            iaRegenerateShape = new(regenShapeKB, regenShapeGP);
+            
+            var rotateShapeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.F);
+            var rotateShapeGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
+            iaRotateShape = new(rotateShapeKB, rotateShapeGP);
+            
+            var scaleShapeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.X);
+            var scaleShapeGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
+            iaScaleShape = new(scaleShapeKB, scaleShapeGP);
+            
+            var pickTriangleKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ONE);
+            var pickTriangleGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT);
+            iaPickTriangleShape = new(pickTriangleKB, pickTriangleGP);
+            
+            var pickRectangleKB = new InputTypeKeyboardButton(ShapeKeyboardButton.TWO);
+            var pickRectangleGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT);
+            iaPickRectangleShape = new(pickRectangleKB, pickRectangleGP);
+            
+            var pickPolygonKB = new InputTypeKeyboardButton(ShapeKeyboardButton.THREE);
+            var pickPolygonGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN);
+            iaPickPolygonShape = new(pickPolygonKB, pickPolygonGP);
+
+            var dragLaserKB = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
+            var dragLaserGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_BOTTOM);
+            var dragLaserMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
+            iaDragLaser = new(dragLaserMB, dragLaserKB, dragLaserGP);
             
             inputActions = new()
             {
@@ -741,7 +773,8 @@ namespace Examples.Scenes.ExampleScenes
                 ia.Update(dt);
             }
 
-            if (IsKeyPressed(KeyboardKey.KEY_TAB))//enter/exit poly mode
+            
+            if (iaModeChange.State.Pressed)
             {
                 polyModeActive = !polyModeActive;
                 if(polyModeActive) PolyModeStarted();
@@ -752,7 +785,6 @@ namespace Examples.Scenes.ExampleScenes
             {
                 SetCurPos(mousePosGame);
                 curShape.Center(curPos);
-
                 
                 var collidables = col.CastSpace(curShape, false, AsteriodLayer);
                 foreach (var collidable in collidables)
@@ -763,7 +795,7 @@ namespace Examples.Scenes.ExampleScenes
                     }
                 }
 
-                if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)) //add polygon (merge)
+                if (iaAddShape.State.Pressed) //add polygon (merge)
                 {
                     Polygons polys = new();
 
@@ -803,7 +835,7 @@ namespace Examples.Scenes.ExampleScenes
                     }
 
                 }
-                if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT)) //cut polygon
+                if (iaCutShape.State.Pressed) //cut polygon
                 {
                     var cutShape = curShape.ToPolygon();
                     Polygons allCutOuts = new();
@@ -856,12 +888,12 @@ namespace Examples.Scenes.ExampleScenes
                     }
                 }
 
-                if (IsKeyPressed(KeyboardKey.KEY_Q))//regenerate
+                if (iaRegenerateShape.State.Pressed)//regenerate
                 {
                     RegenerateShape();
                 }
 
-                if (IsKeyPressed(KeyboardKey.KEY_X))//rotate
+                if (iaRotateShape.State.Pressed)//rotate
                 {
                     float oldRot = curRot;
                     CycleRotation();
@@ -871,7 +903,7 @@ namespace Examples.Scenes.ExampleScenes
                     curShape.Center(curPos);
                 }
 
-                if (IsKeyPressed(KeyboardKey.KEY_C))//scale
+                if (iaScaleShape.State.Pressed)//scale
                 {
                     float oldSize = curSize;
                     CycleSize();
@@ -881,7 +913,7 @@ namespace Examples.Scenes.ExampleScenes
                 }
 
                 
-                if (IsKeyPressed(KeyboardKey.KEY_ONE))//choose triangle
+                if (iaPickTriangleShape.State.Pressed)//choose triangle
                 {
                     if(curShapeType != ShapeType.Triangle)
                     {
@@ -890,7 +922,7 @@ namespace Examples.Scenes.ExampleScenes
                     }
                     
                 }
-                if (IsKeyPressed(KeyboardKey.KEY_TWO))//choose rectangle
+                if (iaPickRectangleShape.State.Pressed)//choose rectangle
                 {
                     if(curShapeType != ShapeType.Rect)
                     {
@@ -899,7 +931,7 @@ namespace Examples.Scenes.ExampleScenes
                     }
                     
                 }
-                if (IsKeyPressed(KeyboardKey.KEY_THREE))//choose polygon 
+                if (iaPickPolygonShape.State.Pressed)//choose polygon 
                 {
                     if (curShapeType != ShapeType.Poly)
                     {
@@ -911,11 +943,11 @@ namespace Examples.Scenes.ExampleScenes
             }
             else
             {
-                if(IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT))
+                if(iaDragLaser.State.Pressed)
                 {
                     laserDevice.SetAimingMode(false);
                 }
-                else if (IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT))
+                else if (iaDragLaser.State.Released)
                 {
                     laserDevice.SetAimingMode(true);
                 }
@@ -947,8 +979,9 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void DrawUIExample(ScreenInfo ui)
         {
-            var infoRect = GAMELOOP.UIRects.GetRect("bottom center");//  new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));
+            var infoRect = GAMELOOP.UIRects.GetRect("bottom center");
             DrawInputText(infoRect);
+            
             // var polymodeText = "[Tab] Polymode | [LMB] Place/Merge | [RMB] Cut | [1] Triangle | [2] Rect | [3] Poly | [Q] Regenerate | [X] Rotate | [C] Scale";
             // var laserText = "[Tab] Lasermode | [LMB] Move | [RMB] Shoot Laser";
             // string text = polyModeActive ? polymodeText : laserText;
@@ -958,14 +991,41 @@ namespace Examples.Scenes.ExampleScenes
 
         private void DrawInputText(Rect rect)
         {
+            var sb = new StringBuilder();
+            var curInputDeviceAll = input.CurrentInputDevice;
+            var curInputDeviceNoMouse = input.CurrentInputDeviceNoMouse;
+            string changeModeText = iaModeChange.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            sb.Append($"Mode {changeModeText} | ");
+            
             if (polyModeActive)
             {
+                string placeText = iaAddShape.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
+                string cutText = iaCutShape.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
+                string pickTri = iaPickTriangleShape.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+                string pickRect = iaPickRectangleShape.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+                string pickPoly = iaPickPolygonShape.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+                string regenerateShape = iaRegenerateShape.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+                string rotateShape = iaRotateShape.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+                string scaleShape = iaScaleShape.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
                 
+                sb.Append($"Place {placeText} | ");
+                sb.Append($"Cut {cutText} | ");
+                sb.Append($"Triangle {pickTri} | ");
+                sb.Append($"Rect {pickRect} | ");
+                sb.Append($"Poly {pickPoly} | ");
+                sb.Append($"Regen {regenerateShape} | ");
+                sb.Append($"Rotate {rotateShape} | ");
+                sb.Append($"Scale {scaleShape}");
             }
             else
             {
-                
+                string moveLaser = iaDragLaser.GetInputTypeDescription(curInputDeviceAll, true, 1, false);   
+                string shootLaser = laserDevice.iaShootLaser.GetInputTypeDescription(curInputDeviceAll, true, 1, false);   
+                sb.Append($"Laser: Drag {moveLaser} | ");
+                sb.Append($"Shoot {shootLaser}");
             }
+            font.DrawText(sb.ToString(), rect, 1f, new Vector2(0.5f, 0.95f), ColorLight);
+            
             // var polymodeText = "[Tab] Polymode | [LMB] Place/Merge | [RMB] Cut | [1] Triangle | [2] Rect | [3] Poly | [Q] Regenerate | [X] Rotate | [C] Scale";
             // var laserText = "[Tab] Lasermode | [LMB] Move | [RMB] Shoot Laser";
             // string text = polyModeActive ? polymodeText : laserText;

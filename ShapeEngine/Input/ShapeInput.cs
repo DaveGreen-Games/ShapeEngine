@@ -16,6 +16,16 @@ public sealed class ShapeInput
     private readonly Gamepad[] gamepads = new Gamepad[8];
     private readonly List<int> connectedGamepadIndices = new();
     public InputDevice CurrentInputDevice { get; private set; } = InputDevice.Keyboard;
+
+    public InputDevice CurrentInputDeviceNoMouse => FilterInputDevice(CurrentInputDevice, InputDevice.Mouse, InputDevice.Keyboard);
+
+    public static InputDevice FilterInputDevice(InputDevice current, InputDevice replace, InputDevice with)
+    {
+        return current == replace
+            ? with
+            : current;
+    }
+
     public int MaxGamepads => gamepads.Length;
     public Gamepad? LastUsedGamepad { get; private set; } = null;
     #endregion
@@ -31,6 +41,8 @@ public sealed class ShapeInput
         }
 
     }
+
+    
     
     #region Lock System
     public void Lock()

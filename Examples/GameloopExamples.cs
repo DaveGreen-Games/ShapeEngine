@@ -249,7 +249,8 @@ namespace Examples
 
         private float mouseMovementTimer = 0f;
         private const float mouseMovementDuration = 2f;
-        
+
+        public bool UseMouseMovement = true;
         public GameloopExamples() : base(new(1920, 1080), true) {}
 
         protected override void LoadContent()
@@ -302,6 +303,8 @@ namespace Examples
 
         protected override Vector2 ChangeMousePos(float dt, Vector2 mousePos, Rect screenArea)
         {
+            if (!UseMouseMovement) return mousePos;
+            
             if (Input.CurrentInputDevice == InputDevice.Gamepad && Input.LastUsedGamepad != null)
             {
                 mouseMovementTimer = 0f;

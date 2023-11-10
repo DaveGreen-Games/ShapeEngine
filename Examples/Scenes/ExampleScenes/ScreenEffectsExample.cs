@@ -8,6 +8,7 @@ using System.Numerics;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
+using ShapeEngine.Input;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -75,6 +76,8 @@ namespace Examples.Scenes.ExampleScenes
         }
     }
 
+    //todo slider needs keyboard & gamepad input !! (1 / 2, RB / LB)
+    //should only display input when the mouse is not used
     internal class Slider
     {
         public float CurValue { get; private set; } = 0f;
@@ -82,7 +85,7 @@ namespace Examples.Scenes.ExampleScenes
         private Rect background = new();
         private Rect fill = new();
         private Font font;
-
+        private bool mouseInside = false;
         public Slider(float startValue, string title, Font font)
         {
             this.Title = title;
@@ -93,7 +96,8 @@ namespace Examples.Scenes.ExampleScenes
         public void Update(float dt, Rect r, Vector2 mousePos)
         {
             background = r; // ui.Area.ApplyMargins(0.025f, 0.6f, 0.1f, 0.85f);
-            if (background.ContainsPoint(mousePos))
+            mouseInside = background.ContainsPoint(mousePos);
+            if (mouseInside)
             {
                 if (IsMouseButtonDown(MouseButton.MOUSE_BUTTON_LEFT))
                 {
@@ -110,7 +114,7 @@ namespace Examples.Scenes.ExampleScenes
             background.DrawRounded(4f, 4, ExampleScene.ColorDarkB);
             fill.DrawRounded(4f, 4, ExampleScene.ColorMedium);
             int textValue = (int)(CurValue * 100);
-            font.DrawText($"{Title} {textValue}", background, 1f, new Vector2(0.1f, 0.5f), ExampleScene.ColorHighlight3);
+            font.DrawText($"{Title} {textValue}", background, 1f, new Vector2(0.1f, 0.5f), mouseInside ? ExampleScene.ColorHighlight2 : ExampleScene.ColorHighlight3);
         }
     }
     internal class Ship : ICameraFollowTarget
@@ -122,10 +126,30 @@ namespace Examples.Scenes.ExampleScenes
         private Color hullColor = BLUE;
         private Color outlineColor = RED;
         private Color cockpitColor = SKYBLUE;
-        
+
+        public InputAction iaMoveHor;
+        public InputAction iaMoveVer;
+
+        private void SetupInput()
+        {
+            var moveHorKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
+            var moveHor2KB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.LEFT, ShapeKeyboardButton.RIGHT);
+            var moveHorGP =
+                new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT);
+            var moveHor2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X);
+            iaMoveHor = new(moveHorKB, moveHor2KB, moveHor2GP, moveHorGP);
+            
+            var moveVerKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
+            var moveVer2KB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.UP, ShapeKeyboardButton.DOWN);
+            var moveVerGP =
+                new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_UP, ShapeGamepadButton.LEFT_FACE_DOWN);
+            var moveVer2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y);
+            iaMoveVer = new(moveVerKB, moveVer2KB, moveVer2GP, moveVerGP);
+        }
         public Ship(Vector2 pos, float r)
         {
             Hull = new(pos, r);
+            SetupInput();
         }
         public Ship(Vector2 pos, float r, Color hullColor, Color cockpitColor, Color outlineColor)
         {
@@ -133,6 +157,14 @@ namespace Examples.Scenes.ExampleScenes
             this.hullColor = hullColor;
             this.cockpitColor = cockpitColor;
             this.outlineColor = outlineColor;
+            SetupInput();
+        }
+
+        public string GetInputDescription(InputDevice inputDevice)
+        {
+            string hor = iaMoveHor.GetInputTypeDescription(inputDevice, true, 1, false, false);
+            string ver = iaMoveVer.GetInputTypeDescription(inputDevice, true, 1, false, false);
+            return $"Move Horizontal [{hor}] Vertical [{ver}]";
         }
         public void Reset(Vector2 pos, float r)
         {
@@ -141,40 +173,51 @@ namespace Examples.Scenes.ExampleScenes
         
         public void Update(float dt, float cameraRotationDeg)
         {
-            int dirX = 0;
-            int dirY = 0;
-
-            if (IsKeyDown(KeyboardKey.KEY_A))
-            {
-                dirX = -1;
-            }
-            else if (IsKeyDown(KeyboardKey.KEY_D))
-            {
-                dirX = 1;
-            }
-
-            if (IsKeyDown(KeyboardKey.KEY_W))
-            {
-                dirY = -1;
-            }
-            else if (IsKeyDown(KeyboardKey.KEY_S))
-            {
-                dirY = 1;
-            }
+            // int dirX = 0;
+            // int dirY = 0;
+            //
+            //
+            //
+            // if (IsKeyDown(KeyboardKey.KEY_A))
+            // {
+            //     dirX = -1;
+            // }
+            // else if (IsKeyDown(KeyboardKey.KEY_D))
+            // {
+            //     dirX = 1;
+            // }
+            //
+            // if (IsKeyDown(KeyboardKey.KEY_W))
+            // {
+            //     dirY = -1;
+            // }
+            // else if (IsKeyDown(KeyboardKey.KEY_S))
+            // {
+            //     dirY = 1;
+            // }
+            int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
             
-            if (dirX != 0 || dirY != 0)
+            iaMoveHor.Gamepad = gamepadIndex;
+            iaMoveHor.Update(dt);
+            
+            iaMoveVer.Gamepad = gamepadIndex;
+            iaMoveVer.Update(dt);
+            
+            Vector2 dir = new(iaMoveHor.State.AxisRaw, iaMoveVer.State.AxisRaw);
+            float lsq = dir.LengthSquared();
+            if (lsq > 0f)
             {
-                movementDir = new Vector2(dirX, dirY).Normalize();
+                movementDir = dir.Normalize();
                 movementDir = movementDir.RotateDeg(-cameraRotationDeg);
-                Vector2 movement = movementDir * Speed * dt;
+                var movement = movementDir * Speed * dt;
                 Hull = new Circle(Hull.Center + movement, Hull.Radius);
             }
             
         }
         public void Draw()
         {
-            Vector2 rightThruster = movementDir.RotateDeg(-25);
-            Vector2 leftThruster = movementDir.RotateDeg(25);
+            var rightThruster = movementDir.RotateDeg(-25);
+            var leftThruster = movementDir.RotateDeg(25);
             DrawCircleV(Hull.Center - rightThruster * Hull.Radius, Hull.Radius / 6, outlineColor);
             DrawCircleV(Hull.Center - leftThruster * Hull.Radius, Hull.Radius / 6, outlineColor);
             Hull.Draw(hullColor);
@@ -213,6 +256,10 @@ namespace Examples.Scenes.ExampleScenes
         private Slider cameraFollowSlider;
         
         private ShapeCamera camera = new ShapeCamera();
+
+        private InputAction iaShakeCamera;
+        private InputAction iaRotateCamera;
+        
         public ScreenEffectsExample()
         {
             Title = "Screen Effects Example";
@@ -226,6 +273,18 @@ namespace Examples.Scenes.ExampleScenes
             intensitySlider = new(1f, "Intensity", font);
             cameraFollowSlider = new(1f, "Camera Follow", font);
             SetSliderValues();
+
+            var shakeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
+            var shakeGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
+            var shakeMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
+            iaShakeCamera = new(shakeKB, shakeGP, shakeMB);
+
+            var rotateKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.Q, ShapeKeyboardButton.E);
+            var rotateGB = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X);
+            var rotateMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL);
+            iaRotateCamera = new(rotateKB, rotateGB, rotateMW);
+            
+            
         }
 
         private void SetSliderValues()
@@ -261,11 +320,13 @@ namespace Examples.Scenes.ExampleScenes
         {
             GAMELOOP.Camera = camera;
             camera.Follower.SetTarget(ship);
+            GAMELOOP.UseMouseMovement = false;
         }
 
         public override void Deactivate()
         {
             GAMELOOP.ResetCamera();
+            GAMELOOP.UseMouseMovement = true;
         }
         public override GameObjectHandler? GetGameObjectHandler()
         {
@@ -284,28 +345,25 @@ namespace Examples.Scenes.ExampleScenes
 
         }
         
-        private void HandleZoom(float dt)
-        {
-            float zoomSpeed = 1f;
-            int zoomDir = 0;
-            if (IsKeyDown(KeyboardKey.KEY_Z)) zoomDir = -1;
-            else if (IsKeyDown(KeyboardKey.KEY_X)) zoomDir = 1;
-
-            if (zoomDir != 0)
-            {
-                camera.Zoom(zoomDir * zoomSpeed * dt);
-            }
-        }
+        // private void HandleZoom(float dt)
+        // {
+        //     float zoomSpeed = 1f;
+        //     int zoomDir = 0;
+        //     if (IsKeyDown(KeyboardKey.KEY_Z)) zoomDir = -1;
+        //     else if (IsKeyDown(KeyboardKey.KEY_X)) zoomDir = 1;
+        //
+        //     if (zoomDir != 0)
+        //     {
+        //         camera.Zoom(zoomDir * zoomSpeed * dt);
+        //     }
+        // }
         private void HandleRotation(float dt)
         {
-            float rotSpeedDeg = 90f;
-            int rotDir = 0;
-            if (IsKeyDown(KeyboardKey.KEY_Q)) rotDir = -1;
-            else if (IsKeyDown(KeyboardKey.KEY_E)) rotDir = 1;
+            float rotDir = iaRotateCamera.State.AxisRaw;
 
             if (rotDir != 0)
             {
-                camera.Rotate(rotDir * rotSpeedDeg * dt);
+                camera.Rotate(rotDir * 90f * dt);
             }
         }
         private void ShakeCamera()
@@ -316,16 +374,26 @@ namespace Examples.Scenes.ExampleScenes
         
         protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            HandleZoom(dt);
+            // HandleZoom(dt);
             HandleRotation(dt);
 
-            if (IsKeyPressed(KeyboardKey.KEY_SPACE)) ShakeCamera();
+            if (iaShakeCamera.State.Pressed) ShakeCamera();
 
         }
         protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            intensitySlider.Update(dt, ui.Area.ApplyMargins(0.025f, 0.6f, 0.1f, 0.85f), ui.MousePos);
-            cameraFollowSlider.Update(dt, ui.Area.ApplyMargins(0.025f, 0.6f, 0.16f, 0.79f), ui.MousePos);
+            int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
+            iaShakeCamera.Gamepad = gamepadIndex;
+            iaShakeCamera.Update(dt);
+            
+            iaRotateCamera.Gamepad = gamepadIndex;
+            iaRotateCamera.Update(dt);
+            
+            Rect slider = GAMELOOP.UIRects.GetRect("center").ApplyMargins(0.025f, 0.025f, 0.02f, 0.93f);
+            Rect sliderLeft = slider.ApplyMargins(0f, 0.55f, 0f, 0f);
+            Rect sliderRight = slider.ApplyMargins(0.55f, 0f, 0f, 0f);
+            intensitySlider.Update(dt, sliderLeft, ui.MousePos);
+            cameraFollowSlider.Update(dt, sliderRight, ui.MousePos);
             SetSliderValues();
             
             ship.Update(dt, camera.RotationDeg);
@@ -358,31 +426,56 @@ namespace Examples.Scenes.ExampleScenes
             }
             
             ship.Draw();
+            
+            
         }
         protected override void DrawGameUIExample(ScreenInfo ui)
         {
-            
             intensitySlider.Draw();
             cameraFollowSlider.Draw();
+            
         }
         protected override void DrawUIExample(ScreenInfo ui)
         {
-            Vector2 uiSize = ui.Area.Size;
-            Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
+            DrawInputDescription(GAMELOOP.UIRects.GetRect("bottom center"));
+            DrawCameraInfo(GAMELOOP.UIRects.GetRect("bottom right"));
+            // Vector2 uiSize = ui.Area.Size;
+            // Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
+            //
+            // var pos = camera.Position;
+            // int x = (int)pos.X;
+            // int y = (int)pos.Y;
+            // int rot = (int)camera.RotationDeg;
+            // int zoom = (int)(ShapeUtils.GetFactor(camera.ZoomLevel, 0.1f, 5f) * 100f);
+            // string moveText = $"[W/A/S/D] Move ({x}/{y})";
+            // string rotText = $"[Q/E] Rotate ({rot})";
+            // string scaleText = $"[Y/X] Zoom ({zoom}%)";
+            // //string transText = String.Format("[LMB] Offset ({0}/{1})", transX, transY);
+            // string shakeText = "[Space] Shake Camera";
+            // string infoText = $"{moveText} | {rotText} | {scaleText} | {shakeText}";
+            // font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
 
+        }
+
+        private void DrawCameraInfo(Rect rect)
+        {
             var pos = camera.Position;
-            int x = (int)pos.X;
-            int y = (int)pos.Y;
-            int rot = (int)camera.RotationDeg;
-            int zoom = (int)(ShapeUtils.GetFactor(camera.ZoomLevel, 0.1f, 5f) * 100f);
-            string moveText = $"[W/A/S/D] Move ({x}/{y})";
-            string rotText = $"[Q/E] Rotate ({rot})";
-            string scaleText = $"[Y/X] Zoom ({zoom}%)";
-            //string transText = String.Format("[LMB] Offset ({0}/{1})", transX, transY);
-            string shakeText = "[Space] Shake Camera";
-            string infoText = $"{moveText} | {rotText} | {scaleText} | {shakeText}";
-            font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
-
+            var x = (int)pos.X;
+            var y = (int)pos.Y;
+            var rot = (int)camera.RotationDeg;
+            var zoom = (int)(ShapeUtils.GetFactor(camera.ZoomLevel, 0.1f, 5f) * 100f);
+            
+            string text = $"Pos {x}/{y} | Rot {rot} | Zoom {zoom}";
+            font.DrawText(text, rect, 1f, new Vector2(0.5f, 0.5f), ColorHighlight3);
+        }
+        private void DrawInputDescription(Rect rect)
+        {
+            
+            string shakeCameraText = iaShakeCamera.GetInputTypeDescription(input.CurrentInputDevice, true, 1, false);
+            string rotateCameraText = iaRotateCamera.GetInputTypeDescription(input.CurrentInputDevice, true, 1, false);
+            string moveText = ship.GetInputDescription(input.CurrentInputDeviceNoMouse);
+            string text = $"{moveText} | Shake {shakeCameraText} | Rotate {rotateCameraText}";
+            font.DrawText(text, rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
     }
 

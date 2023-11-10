@@ -6,6 +6,7 @@ using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
+using ShapeEngine.Input;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -149,6 +150,13 @@ namespace Examples.Scenes.ExampleScenes
         //List<Circ> circles = new();
         GameObjectHandler gameObjectHandler;
         private SlowMotionState? slowMotionState = null;
+
+        private InputAction iaAdd;
+        private InputAction iaSlow1;
+        private InputAction iaSlow2;
+        private InputAction iaSlow3;
+        private InputAction iaSlow4;
+        private List<InputAction> inputActions;
         public BouncyCircles()
         {
             Title = "Bouncy Circles";
@@ -160,6 +168,30 @@ namespace Examples.Scenes.ExampleScenes
 
             //area = new AreaTest(boundaryRect, 2, 2);
             gameObjectHandler = new GameObjectHandlerCollision(boundaryRect, 2, 2);
+
+            var addKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
+            var addMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
+            var addGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
+            iaAdd = new(addKB, addMB, addGP);
+
+            var slow1KB = new InputTypeKeyboardButton(ShapeKeyboardButton.ONE);
+            var slow1GB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP);
+            iaSlow1 = new(slow1GB, slow1KB);
+            
+            var slow2KB = new InputTypeKeyboardButton(ShapeKeyboardButton.TWO);
+            var slow2GB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT);
+            iaSlow2 = new(slow2GB, slow2KB);
+            
+            var slow3KB = new InputTypeKeyboardButton(ShapeKeyboardButton.THREE);
+            var slow3GB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN);
+            iaSlow3 = new(slow3GB, slow3KB);
+            
+            var slow4KB = new InputTypeKeyboardButton(ShapeKeyboardButton.FOUR);
+            var slow4GB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT);
+            iaSlow4 = new(slow4GB, slow4KB);
+
+            inputActions = new() { iaAdd, iaSlow1, iaSlow2, iaSlow3, iaSlow4 };
+
         }
         public override void Reset()
         {
@@ -180,6 +212,14 @@ namespace Examples.Scenes.ExampleScenes
             UpdateBoundaryRect(game.Area);
             gameObjectHandler.ResizeBounds(boundaryRect);
             if (GAMELOOP.Paused) return;
+            
+            int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
+            foreach (var ia in inputActions)
+            {
+                ia.Gamepad = gamepadIndex;
+                ia.Update(dt);
+            }
+            
             gameObjectHandler.Update(dt, deltaSlow, game, ui);
         }
 
@@ -190,39 +230,31 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT))
+            if (iaAdd.State.Pressed)
             {
-                for (int i = 0; i < 2500; i++)
+                for (var i = 0; i < 2500; i++)
                 {
-                    Vector2 randPos = mousePosGame + ShapeRandom.randVec2(0, 250);
-                    Vector2 vel = ShapeRandom.randVec2(100, 200);
+                    var randPos = mousePosGame + ShapeRandom.randVec2(0, 250);
+                    var vel = ShapeRandom.randVec2(100, 200);
                     Circ c = new(randPos, vel, 2);
                     //circles.Add(c);
                     gameObjectHandler.AddAreaObject(c);
                 }
             }
 
-            if (IsKeyPressed(KeyboardKey.KEY_ONE))
+            if (iaSlow1.State.Pressed)
             {
                 GAMELOOP.SlowMotion.Add(0.75f, 4f, Circ.SlowTag1);
-                // float slowFactor = 0.2f;
-                // int[] layerMask = new int[] { 1, 3};
-                // HandlerDeltaFactor one = new(1f, slowFactor,              0.25f,  0f,         layerMask);
-                // HandlerDeltaFactor two = new(slowFactor, slowFactor,      3f,     0.25f,      layerMask);
-                // HandlerDeltaFactor three = new(slowFactor, 1f,            0.25f,  3.25f,      layerMask);
-                // gameObjectHandler.AddDeltaFactor(one);
-                // gameObjectHandler.AddDeltaFactor(two);
-                // gameObjectHandler.AddDeltaFactor(three);
             }
-            if (IsKeyPressed(KeyboardKey.KEY_TWO))
+            if (iaSlow2.State.Pressed)
             {
                 GAMELOOP.SlowMotion.Add(0.5f, 4f, Circ.SlowTag2);
             }
-            if (IsKeyPressed(KeyboardKey.KEY_THREE))
+            if (iaSlow3.State.Pressed)
             {
                 GAMELOOP.SlowMotion.Add(0.25f, 4f, Circ.SlowTag3);
             }
-            if (IsKeyPressed(KeyboardKey.KEY_FOUR))
+            if (iaSlow4.State.Pressed)
             {
                 GAMELOOP.SlowMotion.Add(0f, 4f, SlowMotion.TagDefault);
             }
@@ -240,7 +272,7 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void DrawGameExample(ScreenInfo game)
         {
-            boundaryRect.DrawLines(4f, ColorLight);
+            //boundaryRect.DrawLines(4f, ColorLight);
             gameObjectHandler.DrawGame(game);
         }
         protected override void DrawGameUIExample(ScreenInfo ui)
@@ -251,11 +283,25 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void DrawUIExample(ScreenInfo ui)
         {
-            Vector2 uiSize = ui.Area.Size;
-            Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));
-            //string infoText = String.Format("[LMB] Spawn | Object Count: {0} | DC : {1} | SC: {2}", area.Count, MathF.Ceiling(GAMELOOP.deltaCriticalTime * 100) / 100, GAMELOOP.skipDrawCount);
-            string infoText = $"[LMB] Spawn | Object Count: {gameObjectHandler.Count}";
-            font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+            DrawInputDescription(GAMELOOP.UIRects.GetRect("bottom center"));
+            
+            var objectCountText = $"Object Count: {gameObjectHandler.Count}";
+            font.DrawText(objectCountText, GAMELOOP.UIRects.GetRect("bottom right"), 1f, new Vector2(0.98f, 0.98f), ColorHighlight3);
+        }
+
+        private void DrawInputDescription(Rect rect)
+        {
+            var curInputDeviceAll = input.CurrentInputDevice;
+            var curInputDeviceNoMouse = input.CurrentInputDeviceNoMouse;
+            
+            string addText = iaAdd.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
+            string slow1Text = iaSlow1.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
+            string slow2Text = iaSlow2.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
+            string slow3Text = iaSlow3.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
+            string slow4Text = iaSlow4.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
+            
+            var text = $"Add {addText} | Slow Motion : [{slow1Text} / {slow2Text} / {slow3Text} / {slow4Text}]";
+            font.DrawText(text, rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
     }
 }

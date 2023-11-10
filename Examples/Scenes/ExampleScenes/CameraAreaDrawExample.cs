@@ -9,6 +9,7 @@ using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.UI;
 using ShapeEngine.Core.Shapes;
+using ShapeEngine.Input;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -24,6 +25,7 @@ namespace Examples.Scenes.ExampleScenes
         private Ship ship2 = new(new Vector2(100, 0), 30f, ColorMedium, ColorHighlight2, ColorHighlight3);
         private Ship currentShip;
         private uint prevCameraTweenID = 0;
+        private InputAction iaChangeCameraTarget;
         
         private ShapeCamera camera = new ShapeCamera();
         public CameraAreaDrawExample()
@@ -37,6 +39,11 @@ namespace Examples.Scenes.ExampleScenes
             camera.Follower.FollowSpeed = ship.Speed * 1.1f;
 
             currentShip = ship;
+
+            var changeCameraTargetKB = new InputTypeKeyboardButton(ShapeKeyboardButton.B);
+            var changeCameraTargetGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
+            iaChangeCameraTarget = new(changeCameraTargetKB, changeCameraTargetGP);
+
         }
 
         private void GenerateStars(int amount)
@@ -57,11 +64,13 @@ namespace Examples.Scenes.ExampleScenes
             GAMELOOP.Camera = camera;
             camera.Follower.SetTarget(ship);
             currentShip = ship;
+            GAMELOOP.UseMouseMovement = false;
         }
 
         public override void Deactivate()
         {
             GAMELOOP.ResetCamera();
+            GAMELOOP.UseMouseMovement = true;
         }
         public override GameObjectHandler? GetGameObjectHandler()
         {
@@ -81,9 +90,11 @@ namespace Examples.Scenes.ExampleScenes
         }
         protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            HandleZoom(dt);
+            // HandleZoom(dt);
 
-            if (IsKeyPressed(KeyboardKey.KEY_B))
+            
+            
+            if (iaChangeCameraTarget.State.Pressed)
             {
                 camera.StopTweenSequence(prevCameraTweenID);
                 CameraTweenZoomFactor zoomFactorOut = new(1f, 0.5f, 0.25f, TweenType.LINEAR);
@@ -104,20 +115,24 @@ namespace Examples.Scenes.ExampleScenes
             }
 
         }
-        private void HandleZoom(float dt)
-        {
-            float zoomSpeed = 1f;
-            int zoomDir = 0;
-            if (IsKeyDown(KeyboardKey.KEY_Z)) zoomDir = -1;
-            else if (IsKeyDown(KeyboardKey.KEY_X)) zoomDir = 1;
-
-            if (zoomDir != 0)
-            {
-                camera.Zoom(zoomDir * zoomSpeed * dt);
-            }
-        }
+        // private void HandleZoom(float dt)
+        // {
+        //     float zoomSpeed = 1f;
+        //     int zoomDir = 0;
+        //     if (IsKeyDown(KeyboardKey.KEY_Z)) zoomDir = -1;
+        //     else if (IsKeyDown(KeyboardKey.KEY_X)) zoomDir = 1;
+        //
+        //     if (zoomDir != 0)
+        //     {
+        //         camera.Zoom(zoomDir * zoomSpeed * dt);
+        //     }
+        // }
         protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
+            int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
+            iaChangeCameraTarget.Gamepad = gamepadIndex;
+            iaChangeCameraTarget.Update(dt);
+            
             currentShip.Update(dt, camera.RotationDeg);
 
             drawStars.Clear();
@@ -144,19 +159,29 @@ namespace Examples.Scenes.ExampleScenes
         }
         protected override void DrawGameUIExample(ScreenInfo ui)
         {
-            Rect shipInfoRect = ui.Area.ApplyMargins(0.1f, 0.1f, 0.08f, 0.88f);// new Rect(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
-            string shipInfoText = $"Move Ship [W A S D] | Switch Ship [B]";
-            font.DrawText(shipInfoText, shipInfoRect, 1f, new Vector2(0.5f, 0.5f), ColorHighlight3);
+            var infoRect = GAMELOOP.UIRects.GetRect("center").ApplyMargins(0.025f, 0.025f, 0.01f, 0.95f);
+            DrawStarInfo(infoRect);
         }
 
         protected override void DrawUIExample(ScreenInfo ui)
         {
-            Vector2 uiSize = ui.Area.Size;
-            Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.1f), new Vector2(0.5f, 1f));
-            string infoText = $"Zoom [Y X] | Total Stars {stars.Count} | Drawn Stars {drawStars.Count} | Camera Size {camera.Area.Size.Round()}";
-            font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+            
+            DrawInputDescription(GAMELOOP.UIRects.GetRect("bottom center"));
 
             
+        }
+
+        private void DrawStarInfo(Rect rect)
+        {
+            string infoText = $"Total Stars {stars.Count} | Drawn Stars {drawStars.Count} | Camera Size {camera.Area.Size.Round()}";
+            font.DrawText(infoText, rect, 1f, new Vector2(0.5f, 0f), ColorHighlight3);
+        }
+        private void DrawInputDescription(Rect rect)
+        {
+            string changeTargetText = iaChangeCameraTarget.GetInputTypeDescription(input.CurrentInputDeviceNoMouse, true, 1, false);
+            string moveText = ship.GetInputDescription(input.CurrentInputDeviceNoMouse);
+            string shipInfoText = $"{moveText} | Switch Ship {changeTargetText}";
+            font.DrawText(shipInfoText, rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
     }
 
