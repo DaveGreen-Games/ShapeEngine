@@ -178,8 +178,8 @@ namespace Examples.Scenes.ExampleScenes
         }
         private void DrawInputDescription(Rect rect)
         {
-            string changeTargetText = iaChangeCameraTarget.GetInputTypeDescription(input.CurrentInputDeviceNoMouse, true, 1, false);
-            string moveText = ship.GetInputDescription(input.CurrentInputDeviceNoMouse);
+            string changeTargetText = iaChangeCameraTarget.GetInputTypeDescription(Input.CurrentInputDeviceNoMouse, true, 1, false);
+            string moveText = ship.GetInputDescription(Input.CurrentInputDeviceNoMouse);
             string shipInfoText = $"{moveText} | Switch Ship {changeTargetText}";
             font.DrawText(shipInfoText, rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }

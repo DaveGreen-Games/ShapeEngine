@@ -88,17 +88,17 @@ public class InputAction
         Gamepad = gamepad;
         AccessTag = accessTag;
     }
-    public InputAction(uint accessTag, uint id)
-    {
-        ID = id;
-        AccessTag = accessTag;
-    }
-    public InputAction(uint accessTag, uint id, int gamepad)
-    {
-        ID = id;
-        AccessTag = accessTag;
-        Gamepad = gamepad;
-    }
+    // public InputAction(uint accessTag, uint id)
+    // {
+    //     ID = id;
+    //     AccessTag = accessTag;
+    // }
+    // public InputAction(uint accessTag, uint id, int gamepad)
+    // {
+    //     ID = id;
+    //     AccessTag = accessTag;
+    //     Gamepad = gamepad;
+    // }
     public InputAction(params IInputType[] inputTypes)
     {
         ID = ShapeID.NextID;
@@ -110,15 +110,15 @@ public class InputAction
         AccessTag = accessTag;
         inputs.AddRange(inputTypes);
     }
-    public InputAction(uint accessTag, uint id, params IInputType[] inputTypes)
+    // public InputAction(uint accessTag, uint id, params IInputType[] inputTypes)
+    // {
+    //     ID = id;
+    //     AccessTag = accessTag;
+    //     inputs.AddRange(inputTypes);
+    // }
+    public InputAction(uint accessTag, int gamepad, params IInputType[] inputTypes)
     {
-        ID = id;
-        AccessTag = accessTag;
-        inputs.AddRange(inputTypes);
-    }
-    public InputAction(uint accessTag, uint id, int gamepad, params IInputType[] inputTypes)
-    {
-        ID = id;
+        ID = ShapeID.NextID;
         AccessTag = accessTag;
         Gamepad = gamepad;
         inputs.AddRange(inputTypes);
@@ -252,7 +252,7 @@ public class InputAction
     public InputAction Copy()
     {
         var copied = GetInputsCopied().ToArray();
-        var copy = new InputAction(AccessTag, ShapeID.NextID, Gamepad, copied)
+        var copy = new InputAction(AccessTag, Gamepad, copied)
         {
             axisSensitivity = axisSensitivity,
             axisGravitiy = axisGravitiy

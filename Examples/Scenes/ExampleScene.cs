@@ -29,12 +29,12 @@ namespace Examples.Scenes
 
         protected Font titleFont = GAMELOOP.FontDefault;
 
-        protected readonly ShapeInput input = GAMELOOP.Input;
+        //protected readonly ShapeInput input = GAMELOOP.Input;
         private InputActionLabel backLabel;
 
         public ExampleScene()
         {
-            var action = GAMELOOP.Input.GetAction(GameloopExamples.InputUICancelID);
+            var action = GAMELOOP.InputActionUICancel;
             backLabel = new(action, "BACK", GAMELOOP.FontDefault, ExampleScene.ColorHighlight3);
         }
         public virtual void Reset() { }
@@ -46,7 +46,7 @@ namespace Examples.Scenes
             float zoomSpeed = 1f;
             float zoomDir = 0;
             
-            var zoomState = input.ConsumeAction(GameloopExamples.InputZoomID);
+            var zoomState = Input.ConsumeAction(GAMELOOP.InputActionZoom);
             if (!zoomState.Consumed)
             {
                 zoomDir = zoomState.AxisRaw;
@@ -60,14 +60,14 @@ namespace Examples.Scenes
         
         protected void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            var cancelState = input.ConsumeAction(GameloopExamples.InputUICancelID);
+            var cancelState = Input.ConsumeAction(GAMELOOP.InputActionUICancel);
             if (cancelState is { Consumed: false, Pressed: true })
             {
                 if(GAMELOOP.Paused) GAMELOOP.Paused = false;
                 GAMELOOP.GoToMainScene();
             }
             
-            var pausedState = input.ConsumeAction(GameloopExamples.InputPauseID);
+            var pausedState = Input.ConsumeAction(GAMELOOP.InputActionPause);
             if (pausedState is { Consumed: false, Pressed: true })
             {
                 GAMELOOP.Paused = !GAMELOOP.Paused;
@@ -76,7 +76,7 @@ namespace Examples.Scenes
             if (GAMELOOP.Paused) return;
             
             
-            var resetState = input.ConsumeAction(GameloopExamples.InputResetID);
+            var resetState = Input.ConsumeAction(GAMELOOP.InputActionReset);
             if (resetState is { Consumed: false, Pressed: true })
             {
                 Reset();
@@ -153,10 +153,7 @@ namespace Examples.Scenes
         public void DrawUI(ScreenInfo ui)
         {
             var backRect = ui.Area.ApplyMargins(0.012f, 0.85f, 0.012f, 0.95f);
-            var curInputDevice = input.CurrentInputDevice == InputDevice.Mouse
-                ? InputDevice.Keyboard
-                : input.CurrentInputDevice;
-            //backLabel.Color = ExampleScene.ColorHighlight3;
+            var curInputDevice = Input.CurrentInputDeviceNoMouse;
             var backLabelRect = GAMELOOP.UIRects.GetRect("top left top"); // GetRect("top", "left", "top"); // Get("top").Get("left").Get("top").GetRect();
             backLabel.Draw(backLabelRect, new(0f, 0f), curInputDevice, 4);
             
@@ -211,8 +208,8 @@ namespace Examples.Scenes
             var split = infoRect.SplitV(2);
             var deviceRect = split[0];
             var gamepadRect = split[1];
-            
-            var deviceText = ShapeInput.GetInputDeviceGenericName(input.CurrentInputDevice);
+
+            var deviceText = Input.GetCurInputDeviceGenericName(); // ShapeInput.GetInputDeviceGenericName(Input.CurrentInputDevice);
             // var deviceRect = rect.ApplyMargins(0.01f, 0.7f, 0.1f, 0.85f);
             titleFont.DrawText(deviceText, deviceRect, 1f, new Vector2(0.01f, 0.5f), ColorHighlight3);
             
@@ -232,10 +229,10 @@ namespace Examples.Scenes
             return null;
         }
 
-        public void SetInput(ShapeInput input)
-        {
-            //this.input = input;
-        }
+        // public void SetInput(ShapeInput input)
+        // {
+        //     //this.input = input;
+        // }
 
         public virtual void Activate(IScene oldScene)
         {

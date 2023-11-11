@@ -1,5 +1,7 @@
 global using static Raylib_CsLo.Raylib;
 global using static Raylib_CsLo.RayMath;
+
+
 using ShapeEngine.Screen;
 using Raylib_CsLo;
 using System.Numerics;
@@ -207,7 +209,7 @@ public class ShapeLoop
     }
     public SlowMotion SlowMotion { get; private set; } = new SlowMotion();
     
-    public readonly ShapeInput Input;
+    public static readonly ShapeInput Input = new();
     // public InputDevice CurrentInputDevice { get; private set; } = InputDevice.Keyboard;
     // public int MaxGamepads => gamepads.Length;
     // public Gamepad? LastUsedGamepad { get; private set; } = null;
@@ -294,7 +296,7 @@ public class ShapeLoop
         //     gamepads[i] = new Gamepad(i, Raylib.IsGamepadAvailable(i));
         // }
         
-        Input = new();
+        //Input = new();
         Input.OnGamepadConnectionChanged += OnInputGamepadConnectionChanged;
         Input.OnInputDeviceChanged += OnInputInputDeviceChanged;
         
@@ -354,7 +356,7 @@ public class ShapeLoop
     {
         if (newScene == CurScene) return;
         CurScene.Deactivate();
-        newScene.SetInput(Input);
+        //newScene.SetInput(Input);
         newScene.Activate(CurScene);
         CurScene = newScene;
     }
@@ -491,9 +493,7 @@ public class ShapeLoop
             }
             
             CheckForWindowChanges();
-            // CheckGamepadConnections();
-            // CheckInputDevice();
-            Input.Update(dt);
+            Input.Update();
             Camera.SetSize(CurScreenSize, DevelopmentDimensions);
             if(!Paused) Camera.Update(dt);
             

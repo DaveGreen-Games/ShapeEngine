@@ -291,8 +291,8 @@ namespace Examples.Scenes.ExampleScenes
 
         private void DrawInputDescription(Rect rect)
         {
-            var curInputDeviceAll = input.CurrentInputDevice;
-            var curInputDeviceNoMouse = input.CurrentInputDeviceNoMouse;
+            var curInputDeviceAll = Input.CurrentInputDevice;
+            var curInputDeviceNoMouse = Input.CurrentInputDeviceNoMouse;
             
             string addText = iaAdd.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
             string slow1Text = iaSlow1.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);

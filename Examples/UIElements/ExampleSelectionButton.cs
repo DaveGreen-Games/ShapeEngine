@@ -31,7 +31,7 @@ namespace Examples.UIElements
         {
             if (Hidden || Scene == null) return false;
 
-            var acceptState = GAMELOOP.Input.ConsumeAction(GameloopExamples.InputUIAcceptID);
+            var acceptState = Input.ConsumeAction(GAMELOOP.InputActionUIAccept);
             return acceptState is { Consumed: false, Released: true };
             return IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT);
         }
@@ -39,7 +39,7 @@ namespace Examples.UIElements
         protected override bool CheckPressed()
         {
             if (Hidden || Scene == null) return false;
-            var acceptState = GAMELOOP.Input.ConsumeAction(GameloopExamples.InputUIAcceptID);
+            var acceptState = Input.ConsumeAction(GAMELOOP.InputActionUIAccept);
             return acceptState is { Consumed: false, Released: true };
             //return IsKeyReleased(KeyboardKey.KEY_SPACE) || IsKeyPressed(KeyboardKey.KEY_ENTER);
         }

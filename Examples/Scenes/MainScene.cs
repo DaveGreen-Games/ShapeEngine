@@ -51,7 +51,6 @@ namespace Examples.Scenes
         private Font titleFont;
 
         private float tabChangeMouseWheelLockTimer = 0f;
-        private ShapeInput input;
         private InputActionLabel quitLabel;
         public MainScene()
         {
@@ -88,7 +87,7 @@ namespace Examples.Scenes
 
             SetupButtons();
 
-            var action = GAMELOOP.Input.GetAction(GameloopExamples.InputUICancelID);
+            var action = GAMELOOP.InputActionUICancel;// GAMELOOP.Input.GetAction(GameloopExamples.InputUICancelID);
             quitLabel = new(action, "Quit", GAMELOOP.FontDefault, ExampleScene.ColorHighlight3);
         }
         
@@ -121,13 +120,13 @@ namespace Examples.Scenes
         
         public void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            var cancelState = input.ConsumeAction(GameloopExamples.InputUICancelID);
+            var cancelState = Input.ConsumeAction(GAMELOOP.InputActionUICancel);
             if (cancelState is { Consumed: false, Pressed: true })
             {
                 GAMELOOP.Quit();
             }
 
-            var resetState = input.ConsumeAction(GameloopExamples.InputResetID);
+            var resetState = Input.ConsumeAction(GAMELOOP.InputActionReset);
             if (resetState is { Consumed: false, Pressed: true })
             {
                 for (int i = 0; i < examples.Count; i++)
@@ -138,18 +137,18 @@ namespace Examples.Scenes
                 GAMELOOP.ResetCamera();
             }
 
-            var maximizedState = input.ConsumeAction(GameloopExamples.InputMaximizeID);
+            var maximizedState = Input.ConsumeAction(GAMELOOP.InputActionMaximize);
             if (maximizedState is { Consumed: false, Pressed: true })
             { 
                 GAMELOOP.Maximized = !GAMELOOP.Maximized;
             }
-            var fullscreenState = input.ConsumeAction(GameloopExamples.InputFullscreenID);
+            var fullscreenState = Input.ConsumeAction(GAMELOOP.InputActionFullscreen);
             if (fullscreenState is { Consumed: false, Pressed: true })
             { 
                 GAMELOOP.Fullscreen = !GAMELOOP.Fullscreen;
             }
             
-            var prevTabState = input.ConsumeAction(GameloopExamples.InputUIPrevTab);
+            var prevTabState = Input.ConsumeAction(GAMELOOP.InputActionUIPrevTab);
             if (prevTabState is { Consumed: false, Pressed: true })
             {
                 if (prevTabState.InputDevice == InputDevice.Mouse)
@@ -167,7 +166,7 @@ namespace Examples.Scenes
                 }
                 //PrevPage();
             }
-            var nextTabState = input.ConsumeAction(GameloopExamples.InputUINextTab);
+            var nextTabState = Input.ConsumeAction(GAMELOOP.InputActionUINextTab);
             if (nextTabState is { Consumed: false, Pressed: true })
             { 
                 if (nextTabState.InputDevice == InputDevice.Mouse)
@@ -186,18 +185,18 @@ namespace Examples.Scenes
                 // NextPage();
             }
 
-            var uiDownState = input.ConsumeAction(GameloopExamples.InputUIDownID);
+            var uiDownState = Input.ConsumeAction(GAMELOOP.InputActionUIDown);
             if (uiDownState is { Consumed: false, Pressed: true })
             { 
                 NextButton();
             }
-            var uiUpState = input.ConsumeAction(GameloopExamples.InputUIUpID);
+            var uiUpState = Input.ConsumeAction(GAMELOOP.InputActionUIUp);
             if (uiUpState is { Consumed: false, Pressed: true })
             { 
                 PrevButton();
             }
             
-            var nextMonitorState = input.ConsumeAction(GameloopExamples.InputNextMonitorID);
+            var nextMonitorState = Input.ConsumeAction(GAMELOOP.InputActionNextMonitor);
             if (nextMonitorState is { Consumed: false, Pressed: true })
             { 
                 GAMELOOP.NextMonitor();
@@ -243,11 +242,8 @@ namespace Examples.Scenes
             titleFont.DrawText(text, titleRect, 10, new(0.5f), ExampleScene.ColorLight);
 
             int pages = GetMaxPages();
-            var prevAction = input.GetAction(GameloopExamples.InputUIPrevTab);
-            string prevName = prevAction != null ? prevAction.GetInputTypeDescription(input.CurrentInputDevice, true, 1, false) : "";
-
-            var nextAction = input.GetAction(GameloopExamples.InputUINextTab);
-            string nextName = nextAction != null ? nextAction.GetInputTypeDescription(input.CurrentInputDevice, true, 1, false) : "";
+            string prevName = GAMELOOP.InputActionUIPrevTab.GetInputTypeDescription(Input.CurrentInputDevice, true, 1, false);
+            string nextName = GAMELOOP.InputActionUINextTab.GetInputTypeDescription(Input.CurrentInputDevice, true, 1, false);
             
             string pagesText = pages <= 1 ? "Page 1/1" : $"{prevName} <- Page #{curPageIndex + 1}/{pages} -> {nextName}";
             var pageRect = new Rect(uiSize * new Vector2(0.01f, 0.12f), uiSize * new Vector2(0.3f, 0.06f), new Vector2(0f, 0f));
@@ -256,17 +252,8 @@ namespace Examples.Scenes
             Segment s = new(uiSize * new Vector2(0f, 0.22f), uiSize * new Vector2(1f, 0.22f));
             s.Draw(MathF.Max(4f * GAMELOOP.DevelopmentToScreen.AreaFactor, 0.5f), ExampleScene.ColorLight);
 
-            // Rect test = ui.Area.ApplyMargins(0.1f, 0.1f, 0.3f, 0.3f);
-            // var startTest = test.GetPoint(new Vector2(0f, 0.5f));
-            // var endTest = ui.MousePos; // test.GetPoint(new Vector2(1f, 1.0f));
-            // ShapeDrawing.DrawLine(startTest, endTest, 24f, ORANGE, LineEndCapType.Capped, 2);
-            
-            // string backText = "Back [ESC]";
             var backRect = new Rect(uiSize * new Vector2(0.01f, 0.17f), uiSize * new Vector2(0.2f, 0.04f), new Vector2(0f, 0f));
-            // titleFont.DrawText(backText, backRect, 4f, new Vector2(0f, 0f), ExampleScene.ColorHighlight2);
-            var curInputDevice = input.CurrentInputDevice == InputDevice.Mouse
-                ? InputDevice.Keyboard
-                : input.CurrentInputDevice;
+            var curInputDevice = Input.CurrentInputDeviceNoMouse;
             quitLabel.Draw(backRect, new Vector2(0f), curInputDevice, 1f);
 
             var r = ui.Area.ApplyMargins(0.75f, 0.025f, 0.17f, 0.79f);
@@ -368,29 +355,23 @@ namespace Examples.Scenes
         {
             //area.DrawLinesDotted(3, 1f, ExampleScene.ColorMedium, LineCapType.Capped, 3);
             //area = area.ApplyMargins(0.05f, 0.05f, 0.01f, 0.01f);
-            var curInputDevice = GAMELOOP.Input.CurrentInputDevice;
+            var curInputDevice = Input.CurrentInputDevice;
             if (curInputDevice == InputDevice.Mouse) curInputDevice = InputDevice.Keyboard;
 
-            var fullscreenAction = GAMELOOP.Input.GetAction(GameloopExamples.InputFullscreenID);
-            string fullscreenInputTypeName = fullscreenAction != null ? fullscreenAction.GetInputTypeDescription(curInputDevice, true, 1, false) : "";
+            string fullscreenInputTypeName = GAMELOOP.InputActionFullscreen.GetInputTypeDescription(curInputDevice, true, 1, false);
             var fullscreenInfo = $"Fullscreen {fullscreenInputTypeName}";
             
-            var crtActionPlus = GAMELOOP.Input.GetAction(GameloopExamples.InputCRTPlusID);
-            var crtActionMinus = GAMELOOP.Input.GetAction(GameloopExamples.InputCRTMinusID);
-            string crtInputTypeNamesPlus = crtActionPlus != null ? crtActionPlus.GetInputTypeDescription(curInputDevice, true, 1, false, false) : "";
-            string crtInputTypeNamesMinus = crtActionMinus != null ? crtActionMinus.GetInputTypeDescription(curInputDevice, true, 1, false, false) : "";
+            string crtInputTypeNamesPlus = GAMELOOP.InputActionCRTPlus.GetInputTypeDescription(curInputDevice, true, 1, false, false);
+            string crtInputTypeNamesMinus = GAMELOOP.InputActionCRTMinus.GetInputTypeDescription(curInputDevice, true, 1, false, false);
             var crtInfo = $"CRT Shader [{crtInputTypeNamesPlus}|{crtInputTypeNamesMinus}]";
             
-            var zoomAction = GAMELOOP.Input.GetAction(GameloopExamples.InputZoomID);
-            string zoomInputTypeName = zoomAction != null ? zoomAction.GetInputTypeDescription(curInputDevice, true, 1, false) : "";
+            string zoomInputTypeName = GAMELOOP.InputActionZoom.GetInputTypeDescription(curInputDevice, true, 1, false);
             var zoomInfo = $"Zoom Example {zoomInputTypeName}";
             
-            var pauseAction = GAMELOOP.Input.GetAction(GameloopExamples.InputPauseID);
-            string pauseInputTypeName = pauseAction != null ? pauseAction.GetInputTypeDescription(curInputDevice, true, 1, false) : "";
+            string pauseInputTypeName = GAMELOOP.InputActionPause.GetInputTypeDescription(curInputDevice, true, 1, false);
             var pauseInfo = $"Pause Example {pauseInputTypeName}";
             
-            var resetAction = GAMELOOP.Input.GetAction(GameloopExamples.InputResetID);
-            string resetInputTypeName = resetAction != null ? resetAction.GetInputTypeDescription(curInputDevice, true, 1, false) : "";
+            string resetInputTypeName = GAMELOOP.InputActionReset.GetInputTypeDescription(curInputDevice, true, 1, false);
             var resetInfo = $"Reset Example {resetInputTypeName}";
 
             var rects = area.SplitV(5);
@@ -402,17 +383,6 @@ namespace Examples.Scenes
             titleFont.DrawText(resetInfo, rects[2], 1f, alignement, color);
             titleFont.DrawText(zoomInfo, rects[3], 1f, alignement, color);
             titleFont.DrawText(pauseInfo, rects[4], 1f, alignement, color);
-            
-            // var actions = GAMELOOP.Input.GetActions
-            // (
-            //     GameloopExamples.InputFullscreenID,
-            //     GameloopExamples.InputCRTPlusID,
-            //     GameloopExamples.InputCRTMinusID,
-            //     GameloopExamples.InputZoomID,
-            //     GameloopExamples.InputPauseID,
-            //     GameloopExamples.InputResetID
-            // ).ToArray();
-            // var info = GAMELOOP.Input.GetActionDescriptions(curInputDevice, true, 1, actions);
         }
         
         private void DrawScreenInfoDebug(Rect uiArea)
@@ -443,12 +413,6 @@ namespace Examples.Scenes
         {
             return null;
         }
-
-        public void SetInput(ShapeInput input)
-        {
-            this.input = input;
-        }
-
         public void Activate(IScene oldScene)
         {
             

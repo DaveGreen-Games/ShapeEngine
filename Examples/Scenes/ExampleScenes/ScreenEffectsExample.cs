@@ -98,7 +98,7 @@ namespace Examples.Scenes.ExampleScenes
             mouseInside = background.ContainsPoint(mousePos);
             if (mouseInside)
             {
-                if (GAMELOOP.Input.GetActionState(GameloopExamples.InputUIAcceptID).Down)
+                if (Input.GetActionState(GAMELOOP.InputActionUIAccept).Down)
                 {
                     float intensity = background.GetWidthPointFactor(mousePos.X);
                     CurValue = intensity;
@@ -132,16 +132,16 @@ namespace Examples.Scenes.ExampleScenes
         private void SetupInput()
         {
             var moveHorKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
-            var moveHorGP =
-                new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT);//reverse modifier
+            // var moveHorGP =
+                // new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT);//reverse modifier
             var moveHor2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X, 0.1f, ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, true);
-            iaMoveHor = new(moveHorKB, moveHor2GP, moveHorGP);
+            iaMoveHor = new(moveHorKB, moveHor2GP);
             
             var moveVerKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
-            var moveVerGP =
-                new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_UP, ShapeGamepadButton.LEFT_FACE_DOWN);//reverse modifier
+            // var moveVerGP =
+                // new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_UP, ShapeGamepadButton.LEFT_FACE_DOWN);//reverse modifier
             var moveVer2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_Y, 0.1f, ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, true);
-            iaMoveVer = new(moveVerKB, moveVer2GP, moveVerGP);
+            iaMoveVer = new(moveVerKB, moveVer2GP);
         }
         public Ship(Vector2 pos, float r)
         {
@@ -467,10 +467,10 @@ namespace Examples.Scenes.ExampleScenes
         }
         private void DrawInputDescription(Rect rect)
         {
-            
-            string shakeCameraText = iaShakeCamera.GetInputTypeDescription(input.CurrentInputDevice, true, 1, false);
-            string rotateCameraText = iaRotateCamera.GetInputTypeDescription(input.CurrentInputDevice, true, 1, false);
-            string moveText = ship.GetInputDescription(input.CurrentInputDeviceNoMouse);
+            var curDevice = Input.CurrentInputDevice;
+            string shakeCameraText = iaShakeCamera.GetInputTypeDescription(curDevice, true, 1, false);
+            string rotateCameraText = iaRotateCamera.GetInputTypeDescription(curDevice, true, 1, false);
+            string moveText = ship.GetInputDescription(Input.CurrentInputDeviceNoMouse);
             string text = $"{moveText} | Shake {shakeCameraText} | Rotate {rotateCameraText}";
             font.DrawText(text, rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }

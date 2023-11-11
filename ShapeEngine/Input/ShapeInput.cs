@@ -3,7 +3,8 @@ using Raylib_CsLo;
 
 namespace ShapeEngine.Input;
 
-public sealed class ShapeInput
+//does shape loop have a static ShapeInput member or should shape input be static?
+public class ShapeInput
 {
     #region Members
     public static readonly uint AllAccessTag = 0;
@@ -11,7 +12,7 @@ public sealed class ShapeInput
     public bool Locked { get; private set; } = false;
     private readonly List<uint> lockWhitelist = new();
     private readonly List<uint> lockBlacklist = new();
-    private readonly Dictionary<uint, InputAction> inputActions = new();
+    //private static readonly Dictionary<uint, InputAction> inputActions = new();
     
     private readonly Gamepad[] gamepads = new Gamepad[8];
     private readonly List<int> connectedGamepadIndices = new();
@@ -35,14 +36,25 @@ public sealed class ShapeInput
 
     public ShapeInput()
     {
-        for (var i = 0; i < gamepads.Length; i++)
-        {
-            gamepads[i] = new Gamepad(i, Raylib.IsGamepadAvailable(i));
-        }
-
+        GamepadSetup();
     }
-
-    
+    public void Update()
+    {
+        CheckGamepadConnections();
+        CheckInputDevice();
+    }
+    public string GetCurInputDeviceGenericName()
+    {
+        return
+            CurrentInputDevice == InputDevice.Gamepad ? "Gamepad" :
+            CurrentInputDevice == InputDevice.Keyboard ? "Keyboard" : "Mouse";
+    }
+    public string GetInputDeviceGenericName(InputDevice device)
+    {
+        return
+            device == InputDevice.Gamepad ? "Gamepad" :
+            device == InputDevice.Keyboard ? "Keyboard" : "Mouse";
+    }
     
     #region Lock System
     public void Lock()
@@ -82,84 +94,45 @@ public sealed class ShapeInput
         lockBlacklist.Clear();
     }
     public bool HasAccess(uint tag) => tag == AllAccessTag || (lockWhitelist.Contains(tag) && !lockBlacklist.Contains(tag));
+    public bool HasAccess(InputAction action) => HasAccess(action.AccessTag);
     #endregion
     
     #region Input Actions
-    public bool HasAction(uint id) => inputActions.ContainsKey(id);
-    public uint AddAction(InputAction newAction)
+    public InputState GetActionState(InputAction action)
     {
-        var id = newAction.ID;
-        if (HasAction(id)) inputActions[id] = newAction;
-        else inputActions.Add(id, newAction);
-        return id;
-    }
-    public void AddActions(params InputAction[] newActions)
-    {
-        foreach (var action in newActions)
-        {
-            AddAction(action);
-        }
-    }
-    public bool RemoveAction(uint id) => inputActions.Remove(id);
-
-    public InputState GetActionState(uint id)
-    {
-        if (!HasAction(id)) return new();
-        var action = inputActions[id];
         return Locked && !HasAccess(action.AccessTag) ? new() : action.State;
     }
-    public InputState ConsumeAction(uint id)
+    public InputState ConsumeAction(InputAction action)
     {
-        if (!HasAction(id)) return new();
-        var action = inputActions[id];
         return Locked && !HasAccess(action.AccessTag) ? new() : action.Consume();
     }
-
-    public InputAction? GetAction(uint id)
+    public void UpdateActions(float dt, int gamepad, params InputAction[] actions)
     {
-        return !inputActions.ContainsKey(id) ? null : inputActions[id];
-    }
-
-    public List<InputAction> GetActions(params uint[] ids)
-    {
-        var actions = new List<InputAction>();
-        
-        foreach (uint id in ids)
+        foreach (var action in actions)
         {
-            var action = GetAction(id);
-            if(action != null) actions.Add(action);
-        }
-
-        return actions;
-    }
-
-    public void UpdateActionGamepad(int gamepad)
-    {
-        foreach (var input in inputActions.Values)
-        {
-            input.Gamepad = gamepad;
+            action.Gamepad = gamepad;
+            action.Update(dt);
         }
     }
-    public void UpdateActionGamepad(uint accessTag, int gamepad)
+    public void UpdateActions(float dt, int gamepad, List<InputAction> actions)
     {
-        foreach (var input in inputActions.Values)
+        foreach (var action in actions)
         {
-            if(input.AccessTag != accessTag) continue;
-            input.Gamepad = gamepad;
+            action.Gamepad = gamepad;
+            action.Update(dt);
         }
     }
-
-    
-    public List<string> GetActionDescriptions(InputDevice inputDevice, bool shorthand, int typesPerActionCount, params uint[] actionIDs)
+    public List<string> GetActionDescriptions(InputDevice inputDevice, bool shorthand, int typesPerActionCount, List<InputAction> actions)
     {
-        var actions = new List<InputAction>();
-        foreach (var id in actionIDs)
+        var final = new List<string>();
+        foreach (var action in actions)
         {
-            var action = GetAction(id);
-            if(action != null) actions.Add(action);
+            var description = action.GetInputTypeDescription(inputDevice, shorthand, typesPerActionCount, true);
+            
+            final.Add(description);
         }
 
-        return GetActionDescriptions(inputDevice, shorthand, typesPerActionCount, actions.ToArray());
+        return final;
     }
     public List<string> GetActionDescriptions(InputDevice inputDevice, bool shorthand, int typesPerActionCount, params InputAction[] actions)
     {
@@ -178,7 +151,6 @@ public sealed class ShapeInput
     #endregion
 
     #region Gamepad
-
     public bool HasGamepad(int index) => index >= 0 && index < gamepads.Length;
     public bool IsGamepadConnected(int index) => HasGamepad(index) && gamepads[index].Connected;
     public Gamepad? GetGamepad(int index)
@@ -208,15 +180,6 @@ public sealed class ShapeInput
     public void ReturnGamepad(int index) => GetGamepad(index)?.Free();
 
     #endregion
-    public void Update(float dt)
-    {
-        CheckGamepadConnections();
-        CheckInputDevice();
-        foreach (var input in inputActions.Values)
-        {
-            input.Update(dt);
-        }
-    }
     
     #region Basic
     public InputState GetState(ShapeKeyboardButton button, uint accessTag)
@@ -386,22 +349,17 @@ public sealed class ShapeInput
         }
         
     }
-
-
-    #endregion
-
-    #region Static
-    public static string GetInputDeviceGenericName(InputDevice device)
+    private void GamepadSetup()
     {
-        return
-            device == InputDevice.Gamepad ? "Gamepad" :
-            device == InputDevice.Keyboard ? "Keyboard" : "Mouse";
-        
+        for (var i = 0; i < gamepads.Length; i++)
+        {
+            gamepads[i] = new Gamepad(i, Raylib.IsGamepadAvailable(i));
+        }
     }
 
+
     #endregion
-    
-    
+
     #region Input Used
     public static bool WasKeyboardUsed() => Raylib.GetKeyPressed() > 0;
     public static bool WasMouseUsed(float moveThreshold = 0.5f, float mouseWheelThreshold = 0.25f)

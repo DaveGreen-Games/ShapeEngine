@@ -992,8 +992,8 @@ namespace Examples.Scenes.ExampleScenes
         private void DrawInputText(Rect rect)
         {
             var sb = new StringBuilder();
-            var curInputDeviceAll = input.CurrentInputDevice;
-            var curInputDeviceNoMouse = input.CurrentInputDeviceNoMouse;
+            var curInputDeviceAll = ShapeLoop.Input.CurrentInputDevice;
+            var curInputDeviceNoMouse = ShapeLoop.Input.CurrentInputDeviceNoMouse;
             string changeModeText = iaModeChange.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
             sb.Append($"Mode {changeModeText} | ");
             

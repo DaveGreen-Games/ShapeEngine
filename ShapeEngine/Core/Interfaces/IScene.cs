@@ -11,7 +11,7 @@ public interface IScene : IUpdateable, IDrawable
 
     public GameObjectHandler? GetGameObjectHandler();
 
-    public void SetInput(ShapeInput input);
+    //public void SetInput(ShapeInput input);
     public void Activate(IScene oldScene);// { }
     public void Deactivate();
     public void OnPauseChanged(bool paused);

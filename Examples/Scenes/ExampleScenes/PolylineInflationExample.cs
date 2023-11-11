@@ -201,9 +201,10 @@ namespace Examples.Scenes.ExampleScenes
             // var device = input.CurrentInputDevice == InputDevice.Keyboard
                 // ? InputDevice.Mouse
                 // : input.CurrentInputDevice;
-            var create = createPoint. GetInputTypeDescription( input.CurrentInputDevice, true, 1, false); // input.CurrentInputDevice);
-            var delete = deletePoint. GetInputTypeDescription( input.CurrentInputDevice, true, 1, false); // input.CurrentInputDevice);
-            var offset = changeOffset.GetInputTypeDescription( input.CurrentInputDevice , true, 1, false); // input.CurrentInputDevice);
+            var curDevice = Input.CurrentInputDevice;
+            var create = createPoint. GetInputTypeDescription( curDevice, true, 1, false); 
+            var delete = deletePoint. GetInputTypeDescription( curDevice, true, 1, false); 
+            var offset = changeOffset.GetInputTypeDescription( curDevice , true, 1, false);
             
             //Rect infoRect = ui.Area.ApplyMargins(0.05f, 0.05f, 0.9f, 0.05f);
             // var bottomCenter = GAMELOOP.UIZones.BottomCenter;

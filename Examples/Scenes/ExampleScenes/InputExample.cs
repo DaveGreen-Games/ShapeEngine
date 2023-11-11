@@ -712,36 +712,13 @@ namespace Examples.Scenes.ExampleScenes
         
         public override void Activate(IScene oldScene)
         {
-            //currentInputDevice = GAMELOOP.Input.CurrentInputDevice;
-            input.LockWhitelist(GameloopExamples.GameloopAccessTag);
+            Input.LockWhitelist(GAMELOOP.GameloopAccessTag);
         }
 
         public override void Deactivate()
         {
-            input.Unlock();
-            //if(gamepad != null) GAMELOOP.ReturnGamepad(gamepad.Index);
+            Input.Unlock();
         }
-
-        // public override void OnGamepadConnected(Gamepad gamepad)
-        // {
-        //     if (this.gamepad == null)
-        //     {
-        //        this.gamepad = GAMELOOP.RequestGamepad(0);
-        //     }
-        // }
-        //
-        // public override void OnGamepadDisconnected(Gamepad gamepad)
-        // {
-        //     if (this.gamepad is { Connected: false })
-        //     {
-        //         this.gamepad = GAMELOOP.RequestGamepad(0);
-        //     }
-        // }
-
-        // public override void OnInputDeviceChanged(InputDevice prevDevice, InputDevice curDevice)
-        // {
-        //     currentInputDevice = curDevice;
-        // }
 
         public override GameObjectHandler? GetGameObjectHandler()
         {
@@ -766,18 +743,19 @@ namespace Examples.Scenes.ExampleScenes
             {
                 gamepadIndex = GAMELOOP.CurGamepad.Index;
             }
+
+            var curDevice = Input.CurrentInputDevice;
+            joystickLeft.Update(dt, gamepadIndex, curDevice);
+            joystickRight.Update(dt, gamepadIndex, curDevice);
             
-            joystickLeft.Update(dt, gamepadIndex, input.CurrentInputDevice);
-            joystickRight.Update(dt, gamepadIndex, input.CurrentInputDevice);
+            buttonLeft.Update(dt, gamepadIndex, curDevice);
+            buttonRight.Update(dt, gamepadIndex, curDevice);
             
-            buttonLeft.Update(dt, gamepadIndex, input.CurrentInputDevice);
-            buttonRight.Update(dt, gamepadIndex, input.CurrentInputDevice);
+            triggerLeft.Update(dt, gamepadIndex, curDevice);
+            triggerRight.Update(dt, gamepadIndex, curDevice);
             
-            triggerLeft.Update(dt, gamepadIndex, input.CurrentInputDevice);
-            triggerRight.Update(dt, gamepadIndex, input.CurrentInputDevice);
-            
-            buttonHold.Update(dt, gamepadIndex, input.CurrentInputDevice);
-            buttonDoubleTap.Update(dt, gamepadIndex, input.CurrentInputDevice);
+            buttonHold.Update(dt, gamepadIndex, curDevice);
+            buttonDoubleTap.Update(dt, gamepadIndex, curDevice);
         }
         protected override void DrawGameExample(ScreenInfo game)
         {
