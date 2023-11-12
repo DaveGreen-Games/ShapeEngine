@@ -9,17 +9,19 @@ public class InputTypeGamepadButtonAxis : IInputType
     private readonly ShapeGamepadButton pos;
     private float deadzone;
     private readonly ShapeGamepadButton modifier;
-    public InputTypeGamepadButtonAxis(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = 0.1f, ShapeGamepadButton modifier = ShapeGamepadButton.NONE)
+    private readonly bool reverseModifier;
+    public InputTypeGamepadButtonAxis(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = 0.1f, ShapeGamepadButton modifier = ShapeGamepadButton.NONE, bool reverseModifier = false)
     {
         this.neg = neg;
         this.pos = pos;
         this.deadzone = deadzone;
         this.modifier = modifier;
+        this.reverseModifier = reverseModifier;
     }
 
     public virtual string GetName(bool shorthand = true)
     {
-        string mod = modifier != ShapeGamepadButton.NONE
+        string mod = (modifier != ShapeGamepadButton.NONE && !reverseModifier)
             ? InputTypeGamepadButton.GetGamepadButtonName(modifier, shorthand)
             : "";
         string negName = InputTypeGamepadButton.GetGamepadButtonName(neg, shorthand);
@@ -44,22 +46,24 @@ public class InputTypeGamepadButtonAxis : IInputType
     }
     public InputState GetState(int gamepad = -1)
     {
-        return GetState(neg, pos, gamepad, deadzone, modifier);
+        return GetState(neg, pos, gamepad, deadzone, modifier, reverseModifier);
     }
 
     public InputState GetState(InputState prev, int gamepad = -1)
     {
-        return GetState(neg, pos, prev, gamepad, deadzone, modifier);
+        return GetState(neg, pos, prev, gamepad, deadzone, modifier, reverseModifier);
     }
 
     public InputDevice GetInputDevice() => InputDevice.Gamepad;
 
     public IInputType Copy() => new InputTypeGamepadButtonAxis(neg, pos, deadzone);
 
-    private static float GetAxis(ShapeGamepadButton neg, ShapeGamepadButton pos, int gamepad, float deadzone = 0.1f, ShapeGamepadButton modifier = ShapeGamepadButton.NONE)
+    private static float GetAxis(ShapeGamepadButton neg, ShapeGamepadButton pos, int gamepad, float deadzone = 0.1f, ShapeGamepadButton modifier = ShapeGamepadButton.NONE, bool reverseModifier = false)
     {
-        if (modifier != ShapeGamepadButton.NONE &&
-            !InputTypeGamepadButton.IsDown(modifier, gamepad, deadzone)) return 0f;
+        if (modifier != ShapeGamepadButton.NONE)
+        {
+            if (InputTypeGamepadButton.IsDown(modifier, gamepad, deadzone) == reverseModifier) return 0f;
+        }
         float vNegative = GetValue(neg, gamepad, deadzone);
         float vPositive = GetValue(pos, gamepad, deadzone);
         return vPositive - vNegative;
@@ -91,16 +95,16 @@ public class InputTypeGamepadButtonAxis : IInputType
         
         return IsGamepadButtonDown(gamepad, id) ? 1f : 0f;
     }
-    public static InputState GetState(ShapeGamepadButton neg, ShapeGamepadButton pos, int gamepad, float deadzone = 0.1f, ShapeGamepadButton modifier = ShapeGamepadButton.NONE)
+    public static InputState GetState(ShapeGamepadButton neg, ShapeGamepadButton pos, int gamepad, float deadzone = 0.1f, ShapeGamepadButton modifier = ShapeGamepadButton.NONE, bool reverseModifier = false)
     {
-        float axis = GetAxis(neg, pos, gamepad, deadzone, modifier);
+        float axis = GetAxis(neg, pos, gamepad, deadzone, modifier, reverseModifier);
         bool down = axis != 0f;
         return new(down, !down, axis, gamepad, InputDevice.Gamepad);
     }
     public static InputState GetState(ShapeGamepadButton neg, ShapeGamepadButton pos,
-        InputState previousState, int gamepad, float deadzone = 0.2f, ShapeGamepadButton modifier = ShapeGamepadButton.NONE)
+        InputState previousState, int gamepad, float deadzone = 0.2f, ShapeGamepadButton modifier = ShapeGamepadButton.NONE, bool reverseModifier = false)
     {
-        return new(previousState, GetState(neg, pos, gamepad, deadzone, modifier));
+        return new(previousState, GetState(neg, pos, gamepad, deadzone, modifier, reverseModifier));
     }
     
 }

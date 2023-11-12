@@ -551,19 +551,19 @@ namespace Examples
             InputActionUIAccept = new(UIAccessTag, acceptKB, acceptKB2, acceptGB, acceptMB);
 
             var leftKB = new InputTypeKeyboardButton(ShapeKeyboardButton.A);
-            var leftGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT);//reverse modifier!!!
+            var leftGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT, 0.1f, ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, true);
             InputActionUILeft = new(UIAccessTag, leftKB, leftGB);
             
             var rightKB = new InputTypeKeyboardButton(ShapeKeyboardButton.D);
-            var rightGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT);//reverse modifier!!!
+            var rightGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT, 0.1f, ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, true);
             InputActionUIRight = new(UIAccessTag, rightKB, rightGB);
             
             var upKB = new InputTypeKeyboardButton(ShapeKeyboardButton.W);
-            var upGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP);//reverse modifier!!!
+            var upGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP, 0.1f, ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, true);
             InputActionUIUp = new(UIAccessTag, upKB, upGB);
             
             var downKB = new InputTypeKeyboardButton(ShapeKeyboardButton.S);
-            var downGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN);//reverse modifier!!!
+            var downGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN, 0.1f, ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, true);
             InputActionUIDown = new(UIAccessTag, downKB, downGB);
             
             var nextTabKB = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
