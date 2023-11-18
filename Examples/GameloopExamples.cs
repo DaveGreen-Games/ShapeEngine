@@ -225,6 +225,7 @@ namespace Examples
         public InputAction InputActionUICancel   {get; private set;}
         public InputAction InputActionUIBack     {get; private set;}
         public InputAction InputActionUIAccept   {get; private set;}
+        public InputAction InputActionUIAcceptMouse { get; private set; }
         public InputAction InputActionUILeft     {get; private set;}
         public InputAction InputActionUIRight    {get; private set;}
         public InputAction InputActionUIUp       {get; private set;}
@@ -547,8 +548,10 @@ namespace Examples
             var acceptKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
             var acceptKB2 = new InputTypeKeyboardButton(ShapeKeyboardButton.ENTER);
             var acceptGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
+            InputActionUIAccept = new(UIAccessTag, acceptKB, acceptKB2, acceptGB);
+            
             var acceptMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
-            InputActionUIAccept = new(UIAccessTag, acceptKB, acceptKB2, acceptGB, acceptMB);
+            InputActionUIAcceptMouse = new(UIAccessTag, acceptMB);
 
             var leftKB = new InputTypeKeyboardButton(ShapeKeyboardButton.A);
             var leftGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT, 0.1f, ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, true);
@@ -596,6 +599,7 @@ namespace Examples
             inputActions.Add(InputActionUICancel);
             inputActions.Add(InputActionUIBack);
             inputActions.Add(InputActionUIAccept);
+            inputActions.Add(InputActionUIAcceptMouse);
             inputActions.Add(InputActionUILeft);
             inputActions.Add(InputActionUIRight);
             inputActions.Add(InputActionUIUp);

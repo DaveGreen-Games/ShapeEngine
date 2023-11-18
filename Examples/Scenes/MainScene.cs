@@ -73,16 +73,17 @@ namespace Examples.Scenes
             examples.Add(new ShipInputExample());
             
             examples.Add(new TextScalingExample());
-            examples.Add(new TextWrapExample());
             examples.Add(new TextWrapEmphasisExample());
             examples.Add(new WordEmphasisDynamicExample());
-            examples.Add(new WordEmphasisStaticExample());
-            examples.Add(new TextEmphasisExample());
-            examples.Add(new TextRotationExample());
             examples.Add(new TextBoxExample()); 
             
-            examples.Add(new PolylineCollisionExample());
-            examples.Add(new CCDExample());
+            //examples.Add(new TextEmphasisExample());
+            //examples.Add(new WordEmphasisStaticExample());
+            //examples.Add(new TextWrapExample());
+            //examples.Add(new TextRotationExample());
+            //examples.Add(new PolylineCollisionExample());
+            //examples.Add(new CCDExample());
+            
             titleFont = GAMELOOP.FontDefault; // GAMELOOP.GetFont(GameloopExamples.FONT_IndieFlowerRegular);
 
             SetupButtons();

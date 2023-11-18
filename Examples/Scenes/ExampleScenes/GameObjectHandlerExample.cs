@@ -1,14 +1,14 @@
 ﻿using Raylib_CsLo;
-using ShapeEngine;
 using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 using System.Numerics;
-using System.Resources;
+using System.Text;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
+using ShapeEngine.Input;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -635,23 +635,62 @@ namespace Examples.Scenes.ExampleScenes
         bool segmentStarted = false;
         bool drawDebug = false;
 
-        //int collisionAvg = 0;
-        //int collisionsTotal = 0;
-        //
-        //int iterationsAvg = 0;
-        //int iterationsTotal = 0;
-        //
-        //int closestPointAvg = 0;
-        //int closestPointTotal = 0;
-        //
-        //int avgSteps = 0;
-        //float avgTimer = 0f;
-
+        private readonly InputAction iaSpawnRock;
+        private readonly InputAction iaSpawnBox;
+        private readonly InputAction iaSpawnBall;
+        private readonly InputAction iaSpawnTrap;
+        private readonly InputAction iaSpawnAura;
+        private readonly InputAction iaToggleDebug;
+        private readonly InputAction iaPlaceWall;
+        private readonly InputAction iaCancelWall;
+        private readonly List<InputAction> inputActions;
+        
         public GameObjectHandlerExample()
         {
             Title = "Gameobject Handler Example";
 
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
+
+            var placeWallKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
+            var placeWallGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
+            var placeWallMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
+            iaPlaceWall = new(placeWallKB, placeWallGP, placeWallMB);
+            
+            var cancelWallKB = new InputTypeKeyboardButton(ShapeKeyboardButton.C);
+            var cancelWallGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
+            var cancelWallMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
+            iaCancelWall = new(cancelWallKB, cancelWallGP, cancelWallMB);
+            
+            var spawnRockKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ONE);
+            var spawnRockGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP);
+            iaSpawnRock = new(spawnRockKB, spawnRockGB);
+            
+            var spawnBoxKB = new InputTypeKeyboardButton(ShapeKeyboardButton.TWO);
+            var spawnBoxGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT);
+            iaSpawnBox = new(spawnBoxKB, spawnBoxGB);
+            
+            var spawnBallKB = new InputTypeKeyboardButton(ShapeKeyboardButton.THREE);
+            var spawnBallGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT);
+            iaSpawnBall = new(spawnBallKB, spawnBallGB);
+            
+            var spawnTrapKB = new InputTypeKeyboardButton(ShapeKeyboardButton.FOUR);
+            var spawnTrapGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN);
+            iaSpawnTrap = new(spawnTrapKB, spawnTrapGB);
+            
+            var spawnAuraKB = new InputTypeKeyboardButton(ShapeKeyboardButton.FIVE);
+            var spawnAuraGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
+            iaSpawnAura = new(spawnAuraKB, spawnAuraGB);
+            
+            var toggleDebugKB = new InputTypeKeyboardButton(ShapeKeyboardButton.D);
+            var toggleDebugGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
+            iaToggleDebug = new(toggleDebugKB, toggleDebugGP);
+
+            inputActions = new()
+            {
+                iaPlaceWall, iaCancelWall,
+                iaSpawnRock, iaSpawnBox, iaSpawnBall, iaSpawnTrap, iaSpawnAura,
+                iaToggleDebug
+            };
             
             boundaryRect = new(new Vector2(0, -45), new Vector2(1800, 810), new Vector2(0.5f));
             gameObjectHandler = new(boundaryRect.ScaleSize(1.05f, new Vector2(0.5f)), 32, 32);
@@ -683,7 +722,14 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            if (IsKeyPressed(KeyboardKey.KEY_ONE))
+            int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
+            foreach (var ia in inputActions)
+            {
+                ia.Gamepad = gamepadIndex;
+                ia.Update(dt);
+            }
+            
+            if (iaSpawnRock.State.Pressed)
             {
                 for (int i = 0; i < 50; i++)
                 {
@@ -693,7 +739,7 @@ namespace Examples.Scenes.ExampleScenes
 
             }
 
-            if (IsKeyDown(KeyboardKey.KEY_TWO))
+            if (iaSpawnBox.State.Pressed)
             {
                 for (int i = 0; i < 5; i++)
                 {
@@ -702,7 +748,7 @@ namespace Examples.Scenes.ExampleScenes
                 }
 
             }
-            if (IsKeyDown(KeyboardKey.KEY_THREE))
+            if (iaSpawnBall.State.Pressed)
             {
                 for (int i = 0; i < 15; i++)
                 {
@@ -712,25 +758,27 @@ namespace Examples.Scenes.ExampleScenes
 
             }
 
-            if (IsKeyPressed(KeyboardKey.KEY_FOUR))
+            if (iaSpawnTrap.State.Pressed)
             {
                 Trap t = new(mousePosGame, new Vector2(250, 250));
                 gameObjectHandler.AddAreaObject(t);
             }
 
-            if (IsKeyPressed(KeyboardKey.KEY_FIVE))
+            if (iaSpawnAura.State.Pressed)
             {
                 Aura a = new(mousePosGame, 150, 0.75f);
                 gameObjectHandler.AddAreaObject(a);
             }
 
-            if (IsKeyPressed(KeyboardKey.KEY_O)) { drawDebug = !drawDebug; }
+            if (iaToggleDebug.State.Pressed) { drawDebug = !drawDebug; }
 
+            HandleWalls(mousePosGame);
         }
 
         protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            HandleWalls(game.MousePos);
+            
+            
             gameObjectHandler.Update(dt, deltaSlow, game, ui);
         }
 
@@ -755,13 +803,43 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void DrawUIExample(ScreenInfo ui)
         {
-            Vector2 uiSize = ui.Area.Size;
-            Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
-            string infoText =
-                $"[LMB] Add Segment | [RMB] Cancel Segment | [Space] Shoot | Objs: {gameObjectHandler.GetCollisionHandler().Count}";
-            font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+            // Vector2 uiSize = ui.Area.Size;
+            // Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
+            // string infoText =
+            //     $"[LMB] Add Segment | [RMB] Cancel Segment | [Space] Shoot | Objs: {gameObjectHandler.GetCollisionHandler().Count}";
+            // font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+            
+            var bottomCenter = GAMELOOP.UIRects.GetRect("bottom center");
+            DrawInputText(bottomCenter);
         }
 
+        private void DrawInputText(Rect rect)
+        {
+            var sb = new StringBuilder();
+            var curInputDeviceAll = ShapeLoop.Input.CurrentInputDevice;
+            var curInputDeviceNoMouse = ShapeLoop.Input.CurrentInputDeviceNoMouse;
+            
+            string placeWallText = iaPlaceWall.GetInputTypeDescription(curInputDeviceAll, true, 1, false, false);
+            string cancelWallText = iaCancelWall.GetInputTypeDescription(curInputDeviceAll, true, 1, false, false);
+            string spawnRockText = iaSpawnRock.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            string spawnBoxText = iaSpawnBox.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            string spawnBallText = iaSpawnBall.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            string spawnTrapText = iaSpawnTrap.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            string spawnAuraText = iaSpawnAura.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            string toggleDebugText = iaToggleDebug.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+                
+            sb.Append($"Add/Cancel Segment {placeWallText}/{cancelWallText} | ");
+            sb.Append($"Spawn: ");
+            sb.Append($"Rock {spawnRockText} ");
+            sb.Append($"Box {spawnBoxText} ");
+            sb.Append($"Ball {spawnBallText} ");
+            sb.Append($"Trap {spawnTrapText} ");
+            sb.Append($"Aura {spawnAuraText} | ");
+            if(drawDebug) sb.Append($"Normal Mode {toggleDebugText}");
+            else sb.Append($"Debug Mode {toggleDebugText}");
+            
+            font.DrawText(sb.ToString(), rect, 1f, new Vector2(0.5f, 0.95f), ColorLight);
+        }
         private void AddBoundaryWalls()
         {
             Wall top = new(boundaryRect.TopLeft, boundaryRect.TopRight);
@@ -782,7 +860,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         private void HandleWalls(Vector2 mousePos)
         {
-            if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT))
+            if (iaPlaceWall.State.Pressed)
             {
                 if (segmentStarted)
                 {
@@ -801,7 +879,7 @@ namespace Examples.Scenes.ExampleScenes
                     segmentStarted = true;
                 }
             }
-            else if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT))
+            else if (iaCancelWall.State.Pressed)
             {
                 if (segmentStarted)
                 {

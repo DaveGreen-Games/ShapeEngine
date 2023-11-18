@@ -31,9 +31,9 @@ namespace Examples.UIElements
         {
             if (Hidden || Scene == null) return false;
 
-            var acceptState = Input.ConsumeAction(GAMELOOP.InputActionUIAccept);
+            var acceptState = Input.ConsumeAction(GAMELOOP.InputActionUIAcceptMouse);
             return acceptState is { Consumed: false, Released: true };
-            return IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT);
+            //return IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT);
         }
 
         protected override bool CheckPressed()
