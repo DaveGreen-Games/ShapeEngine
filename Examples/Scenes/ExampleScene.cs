@@ -49,7 +49,7 @@ namespace Examples.Scenes
             var zoomState = Input.ConsumeAction(GAMELOOP.InputActionZoom);
             if (!zoomState.Consumed)
             {
-                zoomDir = zoomState.AxisRaw;
+                zoomDir = -zoomState.AxisRaw;
             }
             
             if (zoomDir != 0)

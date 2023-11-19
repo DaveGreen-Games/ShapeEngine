@@ -161,7 +161,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         public override void DrawGame(ScreenInfo game)
         {
-            wallCollidable.GetCollider().DrawShape(2f, ExampleScene.ColorHighlight1);
+            wallCollidable.GetCollider().DrawShape(8f, ExampleScene.ColorHighlight2);
         }
 
         public override Rect GetBoundingBox()
@@ -212,7 +212,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         public override void DrawGame(ScreenInfo game)
         {
-            wallCollidable.GetCollider().DrawShape(2f, ExampleScene.ColorHighlight1);
+            wallCollidable.GetCollider().DrawShape(4f, ExampleScene.ColorHighlight1);
         }
 
         public override Rect GetBoundingBox()
@@ -237,55 +237,55 @@ namespace Examples.Scenes.ExampleScenes
         }
     }
 
-    internal class TrapCollidable : Collidable
-    {
-        public TrapCollidable(Vector2 pos, Vector2 size)
-        {
-            this.collider = new RectCollider(pos, size, new Vector2(0.5f));
-            this.collider.ComputeCollision = false;
-            this.collider.ComputeIntersections = false;
-            this.collider.Enabled = true;
-            this.collider.FlippedNormals = true;
-            this.collisionMask = new uint[] { };
-        }
-        public override uint GetCollisionLayer()
-        {
-            return WALL_ID;
-        }
-    }
-    internal class Trap : Gameobject
-    {
-        TrapCollidable trapCollidable;
-        public Trap(Vector2 pos, Vector2 size)
-        {
-            this.trapCollidable = new(pos, size);
-        }
-        public override void DrawGame(ScreenInfo game)
-        {
-            trapCollidable.GetCollider().DrawShape(2f, ExampleScene.ColorHighlight1);
-        }
-
-        public override Rect GetBoundingBox()
-        {
-            return trapCollidable.GetCollider().GetShape().GetBoundingBox();
-        }
-
-        
-        public override List<ICollidable> GetCollidables()
-        {
-            return new() { trapCollidable };
-        }
-
-        public override Vector2 GetPosition()
-        {
-            return trapCollidable.GetCollider().Pos;
-        }
-
-        public override bool HasCollidables()
-        {
-            return true;
-        }
-    }
+    // internal class TrapCollidable : Collidable
+    // {
+    //     public TrapCollidable(Vector2 pos, Vector2 size)
+    //     {
+    //         this.collider = new RectCollider(pos, size, new Vector2(0.5f));
+    //         this.collider.ComputeCollision = false;
+    //         this.collider.ComputeIntersections = false;
+    //         this.collider.Enabled = true;
+    //         this.collider.FlippedNormals = true;
+    //         this.collisionMask = new uint[] { };
+    //     }
+    //     public override uint GetCollisionLayer()
+    //     {
+    //         return WALL_ID;
+    //     }
+    // }
+    // internal class Trap : Gameobject
+    // {
+    //     TrapCollidable trapCollidable;
+    //     public Trap(Vector2 pos, Vector2 size)
+    //     {
+    //         this.trapCollidable = new(pos, size);
+    //     }
+    //     public override void DrawGame(ScreenInfo game)
+    //     {
+    //         trapCollidable.GetCollider().DrawShape(2f, ExampleScene.ColorHighlight1);
+    //     }
+    //
+    //     public override Rect GetBoundingBox()
+    //     {
+    //         return trapCollidable.GetCollider().GetShape().GetBoundingBox();
+    //     }
+    //
+    //     
+    //     public override List<ICollidable> GetCollidables()
+    //     {
+    //         return new() { trapCollidable };
+    //     }
+    //
+    //     public override Vector2 GetPosition()
+    //     {
+    //         return trapCollidable.GetCollider().Pos;
+    //     }
+    //
+    //     public override bool HasCollidables()
+    //     {
+    //         return true;
+    //     }
+    // }
 
     internal class AuraCollidable : Collidable
     {
@@ -628,7 +628,7 @@ namespace Examples.Scenes.ExampleScenes
         
 
         Rect boundaryRect;
-
+        // private List<Wall> boundaryWalls = new();
         Font font;
 
         Vector2 startPoint = new();
@@ -638,13 +638,14 @@ namespace Examples.Scenes.ExampleScenes
         private readonly InputAction iaSpawnRock;
         private readonly InputAction iaSpawnBox;
         private readonly InputAction iaSpawnBall;
-        private readonly InputAction iaSpawnTrap;
+        // private readonly InputAction iaSpawnTrap;
         private readonly InputAction iaSpawnAura;
         private readonly InputAction iaToggleDebug;
         private readonly InputAction iaPlaceWall;
         private readonly InputAction iaCancelWall;
+        private readonly InputAction iaMoveCameraH;
+        private readonly InputAction iaMoveCameraV;
         private readonly List<InputAction> inputActions;
-        
         public GameObjectHandlerExample()
         {
             Title = "Gameobject Handler Example";
@@ -662,39 +663,54 @@ namespace Examples.Scenes.ExampleScenes
             iaCancelWall = new(cancelWallKB, cancelWallGP, cancelWallMB);
             
             var spawnRockKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ONE);
-            var spawnRockGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP);
+            var spawnRockGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN, 0f, ShapeGamepadButton.LEFT_TRIGGER_BOTTOM, true);
             iaSpawnRock = new(spawnRockKB, spawnRockGB);
             
             var spawnBoxKB = new InputTypeKeyboardButton(ShapeKeyboardButton.TWO);
-            var spawnBoxGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT);
+            var spawnBoxGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT, 0f, ShapeGamepadButton.LEFT_TRIGGER_BOTTOM, true);
             iaSpawnBox = new(spawnBoxKB, spawnBoxGB);
             
             var spawnBallKB = new InputTypeKeyboardButton(ShapeKeyboardButton.THREE);
-            var spawnBallGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT);
+            var spawnBallGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT, 0f, ShapeGamepadButton.LEFT_TRIGGER_BOTTOM, true);
             iaSpawnBall = new(spawnBallKB, spawnBallGB);
             
-            var spawnTrapKB = new InputTypeKeyboardButton(ShapeKeyboardButton.FOUR);
-            var spawnTrapGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN);
-            iaSpawnTrap = new(spawnTrapKB, spawnTrapGB);
+            // var spawnTrapKB = new InputTypeKeyboardButton(ShapeKeyboardButton.FOUR);
+            // var spawnTrapGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP, 0f, ShapeGamepadButton.LEFT_TRIGGER_BOTTOM, true);
+            // iaSpawnTrap = new(spawnTrapKB, spawnTrapGB);
             
-            var spawnAuraKB = new InputTypeKeyboardButton(ShapeKeyboardButton.FIVE);
-            var spawnAuraGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
+            var spawnAuraKB = new InputTypeKeyboardButton(ShapeKeyboardButton.FOUR);
+            var spawnAuraGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP , 0f, ShapeGamepadButton.LEFT_TRIGGER_BOTTOM, true);
             iaSpawnAura = new(spawnAuraKB, spawnAuraGB);
             
-            var toggleDebugKB = new InputTypeKeyboardButton(ShapeKeyboardButton.D);
+            var toggleDebugKB = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
             var toggleDebugGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
             iaToggleDebug = new(toggleDebugKB, toggleDebugGP);
+
+            var cameraHorizontalKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
+            var cameraHorizontalGP =
+                new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X, 0.1f, ShapeGamepadButton.LEFT_TRIGGER_BOTTOM);
+            var cameraHorizontalGP2 = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT, 0f, ShapeGamepadButton.LEFT_TRIGGER_BOTTOM);
+            var cameraHorizontalMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f);
+            iaMoveCameraH = new(cameraHorizontalKB, cameraHorizontalGP, cameraHorizontalGP2, cameraHorizontalMW);
+            
+            var cameraVerticalKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
+            var cameraVerticalGP =
+                new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_Y, 0.1f, ShapeGamepadButton.LEFT_TRIGGER_BOTTOM);
+            var cameraVerticalGP2 = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_UP, ShapeGamepadButton.LEFT_FACE_DOWN, 0f, ShapeGamepadButton.LEFT_TRIGGER_BOTTOM);
+            var cameraVerticalMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f);
+            iaMoveCameraV = new(cameraVerticalKB, cameraVerticalGP, cameraVerticalGP2, cameraVerticalMW);
 
             inputActions = new()
             {
                 iaPlaceWall, iaCancelWall,
-                iaSpawnRock, iaSpawnBox, iaSpawnBall, iaSpawnTrap, iaSpawnAura,
-                iaToggleDebug
+                iaSpawnRock, iaSpawnBox, iaSpawnBall, iaSpawnAura,
+                iaToggleDebug,
+                iaMoveCameraH, iaMoveCameraV
             };
             
-            boundaryRect = new(new Vector2(0, -45), new Vector2(1800, 810), new Vector2(0.5f));
-            gameObjectHandler = new(boundaryRect.ScaleSize(1.05f, new Vector2(0.5f)), 32, 32);
-            AddBoundaryWalls();
+            boundaryRect = new(new(0f), new(5000,5000), new(0.5f));
+            gameObjectHandler = new(boundaryRect, 50, 50);
+            SetupBoundary();
         }
         public override GameObjectHandler? GetGameObjectHandler()
         {
@@ -703,20 +719,22 @@ namespace Examples.Scenes.ExampleScenes
 
         public override void Activate(IScene oldScene)
         {
-            CameraTweenZoomFactor zoomFactorStart = new(1f, 0.75f, 0.25f, TweenType.LINEAR);
-            CameraTweenZoomFactor zoomFactorHold = new(0.75f, 0.75f, 0.5f, TweenType.LINEAR);
-            CameraTweenZoomFactor zoomFactorEnd = new(0.75f, 1f, 0.25f, TweenType.LINEAR);
-            CameraTweenOffset tweenRight = new(new(0), new(100, 0), 0.25f, TweenType.LINEAR);
-            CameraTweenOffset tweenLeft = new(new(100, 0), new(-25, 0), 0.25f, TweenType.LINEAR);
-            CameraTweenOffset tweenEnd = new(new(-25, 0), new(-0, 0), 0.25f, TweenType.LINEAR);
-            GAMELOOP.Camera.StartTweenSequence(zoomFactorStart, zoomFactorHold, zoomFactorEnd);
-            GAMELOOP.Camera.StartTweenSequence(tweenRight, tweenLeft, tweenEnd);
+            // CameraTweenZoomFactor zoomFactorStart = new(1f, 0.75f, 0.25f, TweenType.LINEAR);
+            // CameraTweenZoomFactor zoomFactorHold = new(0.75f, 0.75f, 0.5f, TweenType.LINEAR);
+            // CameraTweenZoomFactor zoomFactorEnd = new(0.75f, 1f, 0.25f, TweenType.LINEAR);
+            // CameraTweenOffset tweenRight = new(new(0), new(100, 0), 0.25f, TweenType.LINEAR);
+            // CameraTweenOffset tweenLeft = new(new(100, 0), new(-25, 0), 0.25f, TweenType.LINEAR);
+            // CameraTweenOffset tweenEnd = new(new(-25, 0), new(-0, 0), 0.25f, TweenType.LINEAR);
+            // GAMELOOP.Camera.StartTweenSequence(zoomFactorStart, zoomFactorHold, zoomFactorEnd);
+            // GAMELOOP.Camera.StartTweenSequence(tweenRight, tweenLeft, tweenEnd);
         }
 
+        
+        
         public override void Reset()
         {
             gameObjectHandler.Clear();
-            AddBoundaryWalls();
+            SetupBoundary();
             drawDebug = false;
         }
 
@@ -748,7 +766,7 @@ namespace Examples.Scenes.ExampleScenes
                 }
 
             }
-            if (iaSpawnBall.State.Pressed)
+            if (iaSpawnBall.State.Down)
             {
                 for (int i = 0; i < 15; i++)
                 {
@@ -758,11 +776,11 @@ namespace Examples.Scenes.ExampleScenes
 
             }
 
-            if (iaSpawnTrap.State.Pressed)
-            {
-                Trap t = new(mousePosGame, new Vector2(250, 250));
-                gameObjectHandler.AddAreaObject(t);
-            }
+            // if (iaSpawnTrap.State.Pressed)
+            // {
+            //     Trap t = new(mousePosGame, new Vector2(250, 250));
+            //     gameObjectHandler.AddAreaObject(t);
+            // }
 
             if (iaSpawnAura.State.Pressed)
             {
@@ -772,6 +790,13 @@ namespace Examples.Scenes.ExampleScenes
 
             if (iaToggleDebug.State.Pressed) { drawDebug = !drawDebug; }
 
+
+            var moveCameraH = iaMoveCameraH.State.AxisRaw;
+            var moveCameraV = iaMoveCameraV.State.AxisRaw;
+            var moveCameraDir = new Vector2(moveCameraH, moveCameraV);
+            var cam = GAMELOOP.Camera;
+            cam.Position += moveCameraDir * 500 * dt;
+            
             HandleWalls(mousePosGame);
         }
 
@@ -795,6 +820,8 @@ namespace Examples.Scenes.ExampleScenes
             DrawWalls(game.MousePos);
 
             gameObjectHandler.DrawGame(game);
+            
+            // GAMELOOP.Camera.Area.DrawLines(12f, RED);
         }
         protected override void DrawGameUIExample(ScreenInfo ui)
         {
@@ -815,7 +842,11 @@ namespace Examples.Scenes.ExampleScenes
 
         private void DrawInputText(Rect rect)
         {
+            var top = rect.ApplyMargins(0, 0, 0, 0.5f);
+            var bottom = rect.ApplyMargins(0, 0, 0.5f, 0f);
+            
             var sb = new StringBuilder();
+            var sbCamera = new StringBuilder();
             var curInputDeviceAll = ShapeLoop.Input.CurrentInputDevice;
             var curInputDeviceNoMouse = ShapeLoop.Input.CurrentInputDeviceNoMouse;
             
@@ -824,23 +855,30 @@ namespace Examples.Scenes.ExampleScenes
             string spawnRockText = iaSpawnRock.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
             string spawnBoxText = iaSpawnBox.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
             string spawnBallText = iaSpawnBall.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
-            string spawnTrapText = iaSpawnTrap.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
             string spawnAuraText = iaSpawnAura.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            //string spawnTrapText = iaSpawnTrap.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
             string toggleDebugText = iaToggleDebug.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
-                
-            sb.Append($"Add/Cancel Segment {placeWallText}/{cancelWallText} | ");
+            
+            string moveCameraH = iaMoveCameraH.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
+            string moveCameraV = iaMoveCameraV.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
+            string zoomCamera = GAMELOOP.InputActionZoom.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            sbCamera.Append($"Zoom Camera {zoomCamera} | ");
+            sbCamera.Append($"Move Camera {moveCameraH} {moveCameraV}");
+            
+            sb.Append($"Add/Cancel Wall [{placeWallText}/{cancelWallText}] | ");
+            //sb.Append($"Spawn: Rock/Box/Ball/Aura [{spawnRockText}/{spawnBoxText}/{spawnBallText}/{spawnAuraText}] | ");
             sb.Append($"Spawn: ");
-            sb.Append($"Rock {spawnRockText} ");
-            sb.Append($"Box {spawnBoxText} ");
-            sb.Append($"Ball {spawnBallText} ");
-            sb.Append($"Trap {spawnTrapText} ");
+            sb.Append($"Rock {spawnRockText} - ");
+            sb.Append($"Box {spawnBoxText} - ");
+            sb.Append($"Ball {spawnBallText} - ");
             sb.Append($"Aura {spawnAuraText} | ");
             if(drawDebug) sb.Append($"Normal Mode {toggleDebugText}");
             else sb.Append($"Debug Mode {toggleDebugText}");
             
-            font.DrawText(sb.ToString(), rect, 1f, new Vector2(0.5f, 0.95f), ColorLight);
+            font.DrawText(sbCamera.ToString(), top, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+            font.DrawText(sb.ToString(), bottom, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
-        private void AddBoundaryWalls()
+        private void SetupBoundary()
         {
             Wall top = new(boundaryRect.TopLeft, boundaryRect.TopRight);
             Wall bottom = new(boundaryRect.BottomRight, boundaryRect.BottomLeft);
