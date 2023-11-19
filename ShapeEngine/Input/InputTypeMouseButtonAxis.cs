@@ -8,11 +8,15 @@ public class InputTypeMouseButtonAxis : IInputType
     private readonly ShapeMouseButton neg;
     private readonly ShapeMouseButton pos;
     private float deadzone;
-    public InputTypeMouseButtonAxis(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = 0f)
+    private readonly ShapeKeyboardButton modifier;
+    private readonly bool reverseModifier;
+    public InputTypeMouseButtonAxis(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = 0f, ShapeKeyboardButton modifierKey = ShapeKeyboardButton.None, bool reverseModifier = false)
     {
         this.neg = neg;
         this.pos = pos;
         this.deadzone = deadzone;
+        this.modifier = modifierKey;
+        this.reverseModifier = reverseModifier;
     }
     public float GetDeadzone() => deadzone;
 
@@ -22,28 +26,41 @@ public class InputTypeMouseButtonAxis : IInputType
     {
         string negName = InputTypeMouseButton.GetMouseButtonName(neg, shorthand);
         string posName = InputTypeMouseButton.GetMouseButtonName(pos, shorthand);
-        StringBuilder b = new(posName.Length + negName.Length + 4);
+        StringBuilder b = new(posName.Length + negName.Length);
+
+        if (modifier != ShapeKeyboardButton.None && !reverseModifier)
+        {
+            b.Append(InputTypeKeyboardButton.GetKeyboardButtonName(modifier, shorthand));
+            b.Append('+');
+        }
+        
         b.Append(negName);
         b.Append('|');
         b.Append(posName);
         return b.ToString();
+        
+        
     }
     public InputState GetState(int gamepad = -1)
     {
         if (gamepad > 0) return new();
-        return GetState(neg, pos, deadzone);
+        return GetState(neg, pos, deadzone, modifier, reverseModifier);
     }
 
     public InputState GetState(InputState prev, int gamepad = -1)
     {
         if (gamepad > 0) return new();
-        return GetState(neg, pos, prev, deadzone);
+        return GetState(neg, pos, prev, deadzone, modifier, reverseModifier);
     }
     public InputDevice GetInputDevice() => InputDevice.Mouse;
     public IInputType Copy() => new InputTypeMouseButtonAxis(neg, pos);
 
-    private static float GetAxis(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = 0f)
+    private static float GetAxis(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = 0f, ShapeKeyboardButton modifier = ShapeKeyboardButton.None, bool reverseModifier = false)
     {
+        if (modifier != ShapeKeyboardButton.None)
+        {
+            if(IsKeyDown((int)modifier) == reverseModifier) return 0f;
+        } 
         float vNegative = InputTypeMouseButton.GetValue(neg, deadzone);
         float vPositive = InputTypeMouseButton.GetValue(pos, deadzone);
         return vPositive - vNegative;
@@ -73,16 +90,16 @@ public class InputTypeMouseButtonAxis : IInputType
     //     return IsMouseButtonDown(id) ? 1f : 0f;
     // }
     //
-    public static InputState GetState(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = 0f)
+    public static InputState GetState(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = 0f, ShapeKeyboardButton modifier = ShapeKeyboardButton.None, bool reverseModifier = false)
     {
-        float axis = GetAxis(neg, pos, deadzone);
+        float axis = GetAxis(neg, pos, deadzone, modifier, reverseModifier);
         bool down = axis != 0f;
         return new(down, !down, axis, -1, InputDevice.Mouse);
     }
     public static InputState GetState(ShapeMouseButton neg, ShapeMouseButton pos,
-        InputState previousState, float deadzone = 0f)
+        InputState previousState, float deadzone = 0f, ShapeKeyboardButton modifier = ShapeKeyboardButton.None, bool reverseModifier = false)
     {
-        return new(previousState, GetState(neg, pos, deadzone));
+        return new(previousState, GetState(neg, pos, deadzone, modifier, reverseModifier));
     }
     
     

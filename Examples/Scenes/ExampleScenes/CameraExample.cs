@@ -50,23 +50,22 @@ namespace Examples.Scenes.ExampleScenes
             var cameraHorizontalGP =
                 new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X, 0.1f, ShapeGamepadButton.LEFT_TRIGGER_BOTTOM);
             var cameraHorizontalGP2 = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT, 0f, ShapeGamepadButton.LEFT_TRIGGER_BOTTOM);
-            var cameraHorizontalMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f);
+            var cameraHorizontalMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ShapeKeyboardButton.LEFT_SHIFT, true);
             iaMoveCameraH = new(cameraHorizontalKB, cameraHorizontalGP, cameraHorizontalGP2, cameraHorizontalMW);
             
             var cameraVerticalKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
             var cameraVerticalGP =
                 new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_Y, 0.1f, ShapeGamepadButton.LEFT_TRIGGER_BOTTOM);
             var cameraVerticalGP2 = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_UP, ShapeGamepadButton.LEFT_FACE_DOWN, 0f, ShapeGamepadButton.LEFT_TRIGGER_BOTTOM);
-            var cameraVerticalMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f);
+            var cameraVerticalMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ShapeKeyboardButton.LEFT_SHIFT, true);
             iaMoveCameraV = new(cameraVerticalKB, cameraVerticalGP, cameraVerticalGP2, cameraVerticalMW);
 
             var rotateCameraKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.Q, ShapeKeyboardButton.E);
             var rotateCameraGP =
                 new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X, 0.1f, ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM);
-            iaRotateCamera = new(rotateCameraKB, rotateCameraGP);
-            //move with mouse -> mw hor / mw ver
-            //rotate with mouse -> shift + mw horizontal
-            //zoom with mouse -> shift + mw vertical
+            var rotateCameraWW =
+                new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ShapeKeyboardButton.LEFT_SHIFT);
+            iaRotateCamera = new(rotateCameraKB, rotateCameraGP, rotateCameraWW);
 
             inputActions = new() { iaMoveCameraH, iaMoveCameraV, iaRotateCamera };
             
@@ -189,7 +188,7 @@ namespace Examples.Scenes.ExampleScenes
             var sbCamera = new StringBuilder();
             var sbInfo = new StringBuilder();
             var curInputDeviceAll = ShapeLoop.Input.CurrentInputDevice;
-            var curInputDeviceNoMouse = ShapeLoop.Input.CurrentInputDeviceNoMouse;
+            //var curInputDeviceNoMouse = ShapeLoop.Input.CurrentInputDeviceNoMouse;
             
             var pos = camera.Position;
             var x = (int)pos.X;
@@ -202,8 +201,8 @@ namespace Examples.Scenes.ExampleScenes
             sbInfo.Append($"Zoom {zoom}");
             string moveCameraH = iaMoveCameraH.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
             string moveCameraV = iaMoveCameraV.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
-            string zoomCamera = GAMELOOP.InputActionZoom.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
-            string rotateCamera = iaRotateCamera.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            string zoomCamera = GAMELOOP.InputActionZoom.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
+            string rotateCamera = iaRotateCamera.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
             sbCamera.Append($"Move {moveCameraH} {moveCameraV} | ");
             sbCamera.Append($"Zoom {zoomCamera} | ");
             sbCamera.Append($"Rotate {rotateCamera}");

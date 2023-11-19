@@ -590,7 +590,9 @@ namespace Examples
             //example scene only
             var zoomKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.NINE, ShapeKeyboardButton.ZERO);
             var zoomGP = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_Y, 0.2f, ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, false);
-            InputActionZoom = new(SceneAccessTag, zoomKB, zoomGP);
+            var zoomMW =
+                new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ShapeKeyboardButton.LEFT_SHIFT);
+            InputActionZoom = new(SceneAccessTag, zoomKB, zoomGP, zoomMW);
             
             var resetKB = new InputTypeKeyboardButton(ShapeKeyboardButton.R);
             var resetGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);

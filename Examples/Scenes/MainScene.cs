@@ -366,7 +366,7 @@ namespace Examples.Scenes
             string crtInputTypeNamesMinus = GAMELOOP.InputActionCRTMinus.GetInputTypeDescription(curInputDevice, true, 1, false, false);
             var crtInfo = $"CRT Shader [{crtInputTypeNamesPlus}|{crtInputTypeNamesMinus}]";
             
-            string zoomInputTypeName = GAMELOOP.InputActionZoom.GetInputTypeDescription(curInputDevice, true, 1, false);
+            string zoomInputTypeName = GAMELOOP.InputActionZoom.GetInputTypeDescription(ShapeLoop.Input.CurrentInputDevice, true, 1, false);
             var zoomInfo = $"Zoom Example {zoomInputTypeName}";
             
             string pauseInputTypeName = GAMELOOP.InputActionPause.GetInputTypeDescription(curInputDevice, true, 1, false);
