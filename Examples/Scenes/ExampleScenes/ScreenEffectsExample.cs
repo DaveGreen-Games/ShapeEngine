@@ -135,13 +135,15 @@ namespace Examples.Scenes.ExampleScenes
             // var moveHorGP =
                 // new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT);//reverse modifier
             var moveHor2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X, 0.1f, ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, true);
-            iaMoveHor = new(moveHorKB, moveHor2GP);
+            var moveHorMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ShapeKeyboardButton.LEFT_SHIFT, true);
+            iaMoveHor = new(moveHorKB, moveHor2GP, moveHorMW);
             
             var moveVerKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
             // var moveVerGP =
                 // new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_UP, ShapeGamepadButton.LEFT_FACE_DOWN);//reverse modifier
             var moveVer2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_Y, 0.1f, ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, true);
-            iaMoveVer = new(moveVerKB, moveVer2GP);
+            var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ShapeKeyboardButton.LEFT_SHIFT, true);
+            iaMoveVer = new(moveVerKB, moveVer2GP, moveVerMW);
         }
         public Ship(Vector2 pos, float r)
         {
@@ -271,14 +273,14 @@ namespace Examples.Scenes.ExampleScenes
             cameraFollowSlider = new(1f, "Camera Follow", font);
             SetSliderValues();
 
-            var shakeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.F);
+            var shakeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.G);
             var shakeGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
             var shakeMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
             iaShakeCamera = new(shakeKB, shakeGP, shakeMB);
 
             var rotateKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.Q, ShapeKeyboardButton.E);
             var rotateGB = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X, 0.1f, ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, false);
-            var rotateMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL);
+            var rotateMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ShapeKeyboardButton.LEFT_SHIFT);
             iaRotateCamera = new(rotateKB, rotateGB, rotateMW);
             
             
@@ -468,9 +470,10 @@ namespace Examples.Scenes.ExampleScenes
         private void DrawInputDescription(Rect rect)
         {
             var curDevice = Input.CurrentInputDevice;
+            // var curDeviceNoMouse = Input.CurrentInputDeviceNoMouse;
             string shakeCameraText = iaShakeCamera.GetInputTypeDescription(curDevice, true, 1, false);
             string rotateCameraText = iaRotateCamera.GetInputTypeDescription(curDevice, true, 1, false);
-            string moveText = ship.GetInputDescription(Input.CurrentInputDeviceNoMouse);
+            string moveText = ship.GetInputDescription(curDevice);
             string text = $"{moveText} | Shake {shakeCameraText} | Rotate {rotateCameraText}";
             font.DrawText(text, rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }

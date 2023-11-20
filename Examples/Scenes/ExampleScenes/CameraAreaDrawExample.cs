@@ -42,7 +42,8 @@ namespace Examples.Scenes.ExampleScenes
 
             var changeCameraTargetKB = new InputTypeKeyboardButton(ShapeKeyboardButton.B);
             var changeCameraTargetGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
-            iaChangeCameraTarget = new(changeCameraTargetKB, changeCameraTargetGP);
+            var changeCameraTargetMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
+            iaChangeCameraTarget = new(changeCameraTargetKB, changeCameraTargetGP, changeCameraTargetMB);
 
         }
 
@@ -157,16 +158,17 @@ namespace Examples.Scenes.ExampleScenes
             // Circle cameraBoundaryMax = new(camera.Position, camera.Follower.BoundaryDis.Max);
             // cameraBoundaryMax.DrawLines(2f, ColorHighlight2);
         }
-        protected override void DrawGameUIExample(ScreenInfo ui)
-        {
-            var infoRect = GAMELOOP.UIRects.GetRect("center").ApplyMargins(0.025f, 0.025f, 0.01f, 0.95f);
-            DrawStarInfo(infoRect);
-        }
+        // protected override void DrawGameUIExample(ScreenInfo ui)
+        // {
+        //     // var infoRect = GAMELOOP.UIRects.GetRect("center").ApplyMargins(0.025f, 0.025f, 0.01f, 0.95f);
+        //     // DrawStarInfo(infoRect);
+        // }
 
         protected override void DrawUIExample(ScreenInfo ui)
         {
-            
-            DrawInputDescription(GAMELOOP.UIRects.GetRect("bottom center"));
+            var rects = GAMELOOP.UIRects.GetRect("bottom center").SplitV(0.5f);
+            DrawStarInfo(rects.top);
+            DrawInputDescription(rects.bottom);
 
             
         }
@@ -174,12 +176,14 @@ namespace Examples.Scenes.ExampleScenes
         private void DrawStarInfo(Rect rect)
         {
             string infoText = $"Total Stars {stars.Count} | Drawn Stars {drawStars.Count} | Camera Size {camera.Area.Size.Round()}";
-            font.DrawText(infoText, rect, 1f, new Vector2(0.5f, 0f), ColorHighlight3);
+            font.DrawText(infoText, rect, 1f, new Vector2(0.5f, 0.5f), ColorHighlight3);
         }
         private void DrawInputDescription(Rect rect)
         {
-            string changeTargetText = iaChangeCameraTarget.GetInputTypeDescription(Input.CurrentInputDeviceNoMouse, true, 1, false);
-            string moveText = ship.GetInputDescription(Input.CurrentInputDeviceNoMouse);
+            var curDevice = Input.CurrentInputDevice;
+            // var curDeviceNoMouse = Input.CurrentInputDeviceNoMouse;
+            string changeTargetText = iaChangeCameraTarget.GetInputTypeDescription(curDevice, true, 1, false);
+            string moveText = ship.GetInputDescription(curDevice);
             string shipInfoText = $"{moveText} | Switch Ship {changeTargetText}";
             font.DrawText(shipInfoText, rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }

@@ -795,7 +795,8 @@ namespace Examples.Scenes.ExampleScenes
             var moveCameraV = iaMoveCameraV.State.AxisRaw;
             var moveCameraDir = new Vector2(moveCameraH, moveCameraV);
             var cam = GAMELOOP.Camera;
-            cam.Position += moveCameraDir * 500 * dt;
+            var f = cam.ZoomFactor;
+            cam.Position += moveCameraDir * 500 * dt * f;
             
             HandleWalls(mousePosGame);
         }

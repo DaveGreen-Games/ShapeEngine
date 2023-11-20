@@ -147,7 +147,7 @@ namespace Examples.Scenes.ExampleScenes
             // }
             if (dirX != 0 || dirY != 0)
             {
-                var movement = new Vector2(dirX, dirY).Normalize() * speed * dt;
+                var movement = new Vector2(dirX, dirY).Normalize() * speed * dt * camera.ZoomFactor;
                 movement = movement.Rotate(-camera.RotationDeg * DEG2RAD);
                 camera.Position += movement;
                 //camera.Translation += movement;
