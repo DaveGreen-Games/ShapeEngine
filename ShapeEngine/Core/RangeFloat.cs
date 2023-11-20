@@ -1,3 +1,4 @@
+using System.Numerics;
 using ShapeEngine.Lib;
 
 namespace ShapeEngine.Core;
@@ -8,6 +9,22 @@ public class RangeFloat
     public float Max;
 
     public RangeFloat() { Min = 0.0f; Max = 1.0f; }
+
+    public RangeFloat(Vector2 range)
+    {
+        float min = range.X;
+        float max = range.Y;
+        if (min > max)
+        {
+            this.Max = min;
+            this.Min = max;
+        }
+        else
+        {
+            this.Min = min;
+            this.Max = max;
+        }
+    }
     public RangeFloat(float min, float max)
     {
         if (min > max)
@@ -43,6 +60,8 @@ public class RangeFloat
             Min = temp;
         }
     }
+
+    public Vector2 ToVector2() => new Vector2(Min, Max);
     public float Rand() { return ShapeRandom.randF(Min, Max); }
     public float Lerp(float f) { return ShapeMath.LerpFloat(Min, Max, f); }
     public float Inverse(float value) { return (value - Min) / (Max - Min); }
