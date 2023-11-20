@@ -506,7 +506,28 @@ public class ShapeLoop
             var mousePos = GetMousePosition();
             if (mouseControlled) mousePos = lastControlledMousePosition;
             mouseControlled = false;
-            CursorOnScreen = Fullscreen || Raylib.IsCursorOnScreen() || ( Raylib.IsWindowFocused() && screenArea.ContainsPoint(mousePos) );
+
+            CursorOnScreen = false;
+            bool windowHidden = Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_HIDDEN);
+            bool windowMinimized = Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_MINIMIZED);
+            bool windowTopmost = Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
+            bool windowUnfocused = Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_UNFOCUSED);
+            bool windowMousePassthrough = Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_MOUSE_PASSTHROUGH);
+            bool windowTransparent = Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_TRANSPARENT);
+            // bool windowInterlaced = Raylib.IsWindowState(ConfigFlags.FLAG_INTERLACED_HINT);
+            
+            if (windowTopmost && !windowUnfocused && !windowHidden && !windowMinimized 
+                && !windowTransparent && !windowMousePassthrough)
+            {
+                if (Fullscreen || Raylib.IsCursorOnScreen() || screenArea.ContainsPoint(mousePos)) CursorOnScreen = true;
+            }
+            // if (Fullscreen) CursorOnScreen = true;
+            // else if (Raylib.IsWindowFocused())
+            // {
+            //     if (Raylib.IsCursorOnScreen() || screenArea.ContainsPoint(mousePos)) CursorOnScreen = true;
+            // }
+            
+            //CursorOnScreen = Fullscreen || Raylib.IsCursorOnScreen() || ( Raylib.IsWindowFocused() && screenArea.ContainsPoint(mousePos) );
             
             if (CursorOnScreen)
             {
@@ -576,10 +597,12 @@ public class ShapeLoop
             if (curWindowState.Focused && !windowState.Focused)
             {
                 ResolveOnWindowFocusChanged(true);
+                SetWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
             }
             else if (!curWindowState.Focused && windowState.Focused)
             {
                 ResolveOnWindowFocusChanged(false);
+                ClearWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
             }
 
             if (curWindowState.Maximized && !windowState.Maximized)
@@ -619,6 +642,7 @@ public class ShapeLoop
             Game = new(cameraArea, mousePosGame);
             UI = new(screenArea, mousePosUI);
 
+            
             if (!Paused)
             {
                 SlowMotion.Update(dt);
@@ -644,7 +668,6 @@ public class ShapeLoop
             
             DrawToScreen(screenArea, mousePosUI);
 
-            
             ResolveDeferred();
         }
     }
@@ -928,6 +951,7 @@ public class ShapeLoop
     }
     private void ResolveOnWindowPositionChanged(Vector2 oldPos, Vector2 newPos)
     {
+        //Console.WriteLine($"Window Pos: {Raylib.GetWindowPosition()}");
         OnWindowPositionChanged(oldPos, newPos);
         CurScene.OnWindowPositionChanged(oldPos, newPos);
     }
@@ -1010,6 +1034,34 @@ public class ShapeLoop
         var hidden = Raylib.IsWindowHidden();
         var focused = Raylib.IsWindowFocused();
         return new(minimized, maximized, fullscreen, hidden, focused);
+    }
+
+    public float GetScreenPercentage()
+    {
+        var screenSize = Monitor.CurMonitor().Dimensions.ToVector2();
+        var screenRect = new Rect(new(0f), screenSize, new(0f));
+
+        var windowSize = CurScreenSize.ToVector2();
+        var windowPos = Raylib.GetWindowPosition();
+        var windowRect = new Rect(windowPos, windowSize, new(0f));
+        float p = CalculateScreenPercentage(screenRect, windowRect);
+        return p;
+    }
+    /// <summary>
+    /// Reports how much of the window area is shown on the screen. 0 means window is not on the screen, 1 means whole window is on screen.
+    /// </summary>
+    /// <param name="screen"></param>
+    /// <param name="window"></param>
+    /// <returns></returns>
+    private float CalculateScreenPercentage(Rect screen, Rect window)
+    {
+        var intersection = screen.IntersectWith(window);
+        if (intersection.Width <= 0f && intersection.Height <= 0f) return 0f;
+        
+        var screenArea = screen.GetArea();
+        var intersectionArea = intersection.GetArea();
+        var f = intersectionArea / screenArea;
+        return f;
     }
     
     private void WriteDebugInfo()

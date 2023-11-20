@@ -121,6 +121,80 @@ namespace Examples.Scenes
         
         public void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
+            // if (Raylib.IsKeyPressed(KeyboardKey.KEY_ONE))
+            // {
+            //     if (IsWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST))
+            //     {
+            //         ClearWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
+            //     }
+            //     else SetWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
+            // }
+            // if (Raylib.IsKeyPressed(KeyboardKey.KEY_TWO))
+            // {
+            //     if (IsWindowState(ConfigFlags.FLAG_WINDOW_TRANSPARENT))
+            //     {
+            //         ClearWindowState(ConfigFlags.FLAG_WINDOW_TRANSPARENT);
+            //     }
+            //     else SetWindowState(ConfigFlags.FLAG_WINDOW_TRANSPARENT);
+            // }
+            // if (Raylib.IsKeyPressed(KeyboardKey.KEY_THREE))
+            // {
+            //     if (IsWindowState(ConfigFlags.FLAG_INTERLACED_HINT))
+            //     {
+            //         ClearWindowState(ConfigFlags.FLAG_INTERLACED_HINT);
+            //     }
+            //     else SetWindowState(ConfigFlags.FLAG_INTERLACED_HINT);
+            // }
+            // if (Raylib.IsKeyPressed(KeyboardKey.KEY_FOUR))
+            // {
+            //     if (IsWindowState(ConfigFlags.FLAG_WINDOW_MOUSE_PASSTHROUGH))
+            //     {
+            //         ClearWindowState(ConfigFlags.FLAG_WINDOW_MOUSE_PASSTHROUGH);
+            //     }
+            //     else SetWindowState(ConfigFlags.FLAG_WINDOW_MOUSE_PASSTHROUGH);
+            // }
+            // if (Raylib.IsKeyPressed(KeyboardKey.KEY_FIVE))
+            // {
+            //     if (IsWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED))
+            //     {
+            //         ClearWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
+            //     }
+            //     else SetWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
+            // }
+            // if (Raylib.IsKeyPressed(KeyboardKey.KEY_SIX))
+            // {
+            //     if (IsWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE))
+            //     {
+            //         ClearWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
+            //     }
+            //     else SetWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
+            // }
+            // if (Raylib.IsKeyPressed(KeyboardKey.KEY_SEVEN))
+            // {
+            //     if (IsWindowState(ConfigFlags.FLAG_WINDOW_UNFOCUSED))
+            //     {
+            //         ClearWindowState(ConfigFlags.FLAG_WINDOW_UNFOCUSED);
+            //     }
+            //     else SetWindowState(ConfigFlags.FLAG_WINDOW_UNFOCUSED);
+            // }
+            // if (Raylib.IsKeyPressed(KeyboardKey.KEY_EIGHT))
+            // {
+            //     if (IsWindowState(ConfigFlags.FLAG_WINDOW_UNFOCUSED))
+            //     {
+            //         ClearWindowState(ConfigFlags.FLAG_WINDOW_UNFOCUSED);
+            //     }
+            //     else SetWindowState(ConfigFlags.FLAG_WINDOW_UNFOCUSED);
+            // }
+            // if (Raylib.IsKeyPressed(KeyboardKey.KEY_NINE))
+            // {
+            //     if (IsWindowState(ConfigFlags.FLAG_WINDOW_UNFOCUSED))
+            //     {
+            //         ClearWindowState(ConfigFlags.FLAG_WINDOW_UNFOCUSED);
+            //     }
+            //     else SetWindowState(ConfigFlags.FLAG_WINDOW_UNFOCUSED);
+            // }
+            
+            
             var cancelState = Input.ConsumeAction(GAMELOOP.InputActionUICancel);
             if (cancelState is { Consumed: false, Pressed: true })
             {
@@ -257,9 +331,19 @@ namespace Examples.Scenes
             var curInputDevice = Input.CurrentInputDeviceNoMouse;
             quitLabel.Draw(backRect, new Vector2(0f), curInputDevice, 1f);
 
-            var r = ui.Area.ApplyMargins(0.75f, 0.025f, 0.17f, 0.79f);
-            titleFont.DrawText($"Cursor On Screen: {ShapeLoop.CursorOnScreen}", r, 1f, new Vector2(1f, 1f), ExampleScene.ColorHighlight2);
+            var infoArea = ui.Area.ApplyMargins(0.7f, 0.025f, 0.14f, 0.79f);
+            var infoAreaRects = infoArea.SplitV(0.5f);
+            float p = GAMELOOP.GetScreenPercentage();
+            int pi = (int)MathF.Round(p * 100);
+            titleFont.DrawText($"Window Focused: {Raylib.IsWindowFocused()} | [{pi}%]", infoAreaRects.top, 1f, new Vector2(1f, 1f), ExampleScene.ColorHighlight3);
+            titleFont.DrawText($"Cursor On Screen: {ShapeLoop.CursorOnScreen}", infoAreaRects.bottom, 1f, new Vector2(1f, 1f), ExampleScene.ColorHighlight3);
+            
+            // var r = ui.Area.ApplyMargins(0.75f, 0.025f, 0.17f, 0.79f);
+            // titleFont.DrawText($"Cursor On Screen: {ShapeLoop.CursorOnScreen}", r, 1f, new Vector2(1f, 1f), ExampleScene.ColorHighlight2);
 
+            
+            
+            
             var centerRight = GAMELOOP.UIRects.GetRect("center right");
             var inputInfoRect = centerRight.ApplyMargins(0.25f, -0.025f, 0.15f, 0.55f);
             DrawInputInfoBox(inputInfoRect);
