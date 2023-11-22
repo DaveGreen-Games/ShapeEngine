@@ -5,8 +5,10 @@ using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 using System.Numerics;
+using System.Text;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Input;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -14,19 +16,33 @@ namespace Examples.Scenes.ExampleScenes
     {
         private const float PointDistance = 10f;
 
-        private Font font;
+        private readonly Font font;
 
-        Points points = new();
-        Triangulation curTriangulation = new();
+        private readonly Points points = new();
+        private Triangulation curTriangulation = new();
 
-        int closePointIndex = -1;
-        int closeTriangleIndex = -1;
+        private int closePointIndex = -1;
+        private int closeTriangleIndex = -1;
+
+        private readonly InputAction iaAddPoint;
+        private readonly InputAction iaAddMultiplePoints;
+        
 
         public DelaunayExample()
         {
             Title = "Delaunay Triangulation Example";
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
+
+            var addPointKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
+            var addPointGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
+            var addPointMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
+            iaAddPoint = new(addPointKB, addPointGP, addPointMB);
             
+            var addMultiplePointsKB = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
+            var addMultiplePointsGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
+            var addMultiplePointsMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
+            iaAddMultiplePoints = new(addMultiplePointsKB, addMultiplePointsGP, addMultiplePointsMB);
+
         }
         public override void Reset()
         {
@@ -53,6 +69,14 @@ namespace Examples.Scenes.ExampleScenes
         
         protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
+            int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
+            
+            iaAddPoint.Gamepad = gamepadIndex;
+            iaAddPoint.Update(dt);
+            
+            iaAddMultiplePoints.Gamepad = gamepadIndex;
+            iaAddMultiplePoints.Update(dt);
+            
             float pointDistanceSquared = PointDistance * PointDistance;
 
             closePointIndex = -1;
@@ -82,7 +106,7 @@ namespace Examples.Scenes.ExampleScenes
 
             
 
-            if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT))
+            if (iaAddPoint.State.Pressed)
             { 
                 if(closePointIndex < 0)
                 {
@@ -97,7 +121,7 @@ namespace Examples.Scenes.ExampleScenes
                 }
                 
             }
-            else if(IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_RIGHT))
+            else if(iaAddMultiplePoints.State.Pressed)
             {
                 if(closeTriangleIndex >= 0)
                 {
@@ -117,13 +141,14 @@ namespace Examples.Scenes.ExampleScenes
         
         protected override void DrawGameExample(ScreenInfo game)
         {
+            float size = 2f * GAMELOOP.Camera.ZoomFactor;
             for (int i = 0; i < curTriangulation.Count; i++)
             {
                 var tri = curTriangulation[i];
                 if (i == closeTriangleIndex) continue;
-                tri.DrawLines(2f, WHITE, LineCapType.CappedExtended, 4);
+                tri.DrawLines(size, WHITE, LineCapType.CappedExtended, 4);
             }
-            if(closeTriangleIndex >= 0) curTriangulation[closeTriangleIndex].DrawLines(6f, GREEN, LineCapType.CappedExtended, 4);
+            if(closeTriangleIndex >= 0) curTriangulation[closeTriangleIndex].DrawLines(size * 3, GREEN, LineCapType.CappedExtended, 4);
 
             for (int i = 0; i < points.Count; i++)
             {
@@ -134,7 +159,7 @@ namespace Examples.Scenes.ExampleScenes
                 }
                 else
                 {
-                    p.Draw(5f, PURPLE);
+                    p.Draw(size * 1.5f, PURPLE);
                 }
             }
         }
@@ -143,13 +168,44 @@ namespace Examples.Scenes.ExampleScenes
             
         }
 
+        // protected override void DrawUIExample(ScreenInfo ui)
+        // {
+        //     Vector2 uiSize = ui.Area.Size;
+        //     Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));
+        //
+        //     string text = String.Format("[LMB] Add Point / Remove Point | [RMB] Add 3 Points to Triangle");
+        //     font.DrawText(text, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+        // }
+        
         protected override void DrawUIExample(ScreenInfo ui)
         {
-            Vector2 uiSize = ui.Area.Size;
-            Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.95f, 0.07f), new Vector2(0.5f, 1f));
+            var bottomCenter = GAMELOOP.UIRects.GetRect("bottom center");
+            DrawInputText(bottomCenter);
+        }
 
-            string text = String.Format("[LMB] Add Point / Remove Point | [RMB] Add 3 Points to Triangle");
-            font.DrawText(text, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+        private void DrawInputText(Rect rect)
+        {
+            var sb = new StringBuilder();
+            var curInputDeviceAll = Input.CurrentInputDevice;
+            
+            string addPointText = iaAddPoint.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
+            string addMultiplePointsText = iaAddMultiplePoints.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
+
+            if (curTriangulation.Count <= 0)
+            {
+                sb.Append($"Add Point{addPointText} | ");
+                sb.Append($"Triangles {curTriangulation.Count}");
+            }
+            else
+            {
+                sb.Append($"Add/Remove Point {addPointText} | ");
+                sb.Append($"Add Multiple Points {addMultiplePointsText} | ");
+                sb.Append($"Triangles {curTriangulation.Count}");
+            }
+            
+            
+            
+            font.DrawText(sb.ToString(), rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
     }
 
