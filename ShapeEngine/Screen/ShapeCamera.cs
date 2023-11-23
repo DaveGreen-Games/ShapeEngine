@@ -8,6 +8,73 @@ using ShapeEngine.Core.Shapes;
 
 namespace ShapeEngine.Screen;
 
+public readonly struct CameraFollowInformation
+{
+    public readonly bool Valid;
+    public readonly Vector2 Position;
+    public readonly Vector2 Alignement;
+    public readonly float ZoomFactor;
+
+    public CameraFollowInformation()
+    {
+        this.Valid = false;
+        this.Position = new();
+        this.Alignement = new();
+        this.ZoomFactor = 1f;
+    }
+
+    public CameraFollowInformation(Vector2 position, Vector2 alignement, float zoomFactor)
+    {
+        this.Valid = true;
+        this.Position = position;
+        this.Alignement = alignement;
+        this.ZoomFactor = zoomFactor;
+    }
+}
+public interface ICameraFollower
+{
+    public CameraFollowInformation GetFollowInformation();
+    public void Update(float dt);
+    public void Clear();
+}
+
+public class CameraFollowerSingle : ICameraFollower
+{
+    public CameraFollowInformation GetFollowInformation()
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Update(float dt)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Clear()
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class CameraFollowerMulti : ICameraFollower
+{
+    public CameraFollowInformation GetFollowInformation()
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Update(float dt)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Clear()
+    {
+        throw new NotImplementedException();
+    }
+}
+
+
 public sealed class ShapeCamera
 {
     public static float MinZoomLevel = 0.1f;
@@ -130,6 +197,17 @@ public sealed class ShapeCamera
         zoomAdjustment = MathF.Sqrt( curArea / targetArea );
     }
 
+    // public void SetCameraRect(Rect newRect)
+    // {
+    //     var pos = newRect.GetPoint(Alignement);
+    //     var size = newRect.Size;
+    //
+    //     var f = Size.GetArea() / size.GetArea();
+    //     ZoomLevel = 1f / f;
+    //     Position = pos;
+    //     
+    // }
+    
     public bool HasSequences() => cameraTweens.HasSequences();
     public bool HasTweenSequence(uint id) => cameraTweens.HasSequence(id);
     public uint StartTweenSequence(params ICameraTween[] tweens) => cameraTweens.StartSequence(tweens);

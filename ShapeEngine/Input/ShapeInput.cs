@@ -3,6 +3,62 @@ using Raylib_CsLo;
 
 namespace ShapeEngine.Input;
 
+public interface IModifierKey
+{
+    public bool IsActive();
+    public string GetName(bool shorthand = true);
+    public InputDevice GetInputDevice();
+}
+
+public class ModifierKeyKeyboardButton : IModifierKey
+{
+    private readonly ShapeKeyboardButton modifier;
+    private readonly bool reverseModifier;
+    
+    public ModifierKeyKeyboardButton(ShapeKeyboardButton modifierKey, bool reverseModifier = false)
+    {
+        this.modifier = modifierKey;
+        this.reverseModifier = reverseModifier;
+    }
+
+    public InputDevice GetInputDevice() => InputDevice.Keyboard;
+    public bool IsActive() => IsKeyDown((int)modifier) != reverseModifier;
+
+    public string GetName(bool shorthand = true) => reverseModifier ? "" : InputTypeKeyboardButton.GetKeyboardButtonName(modifier, shorthand);
+}
+public class ModifierKeyGamepadButton : IModifierKey
+{
+    private readonly ShapeGamepadButton modifier;
+    private readonly bool reverseModifier;
+    
+    public ModifierKeyGamepadButton(ShapeGamepadButton modifierKey, bool reverseModifier = false)
+    {
+        this.modifier = modifierKey;
+        this.reverseModifier = reverseModifier;
+    }
+    public InputDevice GetInputDevice() => InputDevice.Gamepad;
+    public bool IsActive() => IsKeyDown((int)modifier) != reverseModifier;
+
+    public string GetName(bool shorthand = true) => reverseModifier ? "" : InputTypeGamepadButton.GetGamepadButtonName(modifier, shorthand);
+}
+public class ModifierKeyMouseButton : IModifierKey
+{
+    private readonly ShapeMouseButton modifier;
+    private readonly bool reverseModifier;
+    
+    public ModifierKeyMouseButton(ShapeMouseButton modifierKey, bool reverseModifier = false)
+    {
+        this.modifier = modifierKey;
+        this.reverseModifier = reverseModifier;
+    }
+    public InputDevice GetInputDevice() => InputDevice.Mouse;
+    public bool IsActive() => IsKeyDown((int)modifier) != reverseModifier;
+
+    public string GetName(bool shorthand = true) => reverseModifier ? "" : InputTypeMouseButton.GetMouseButtonName(modifier, shorthand);
+}
+
+
+
 //does shape loop have a static ShapeInput member or should shape input be static?
 //I think shape input as static class makes more sense? most input stuff is global and for the current
 //application...
