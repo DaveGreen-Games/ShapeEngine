@@ -3,11 +3,38 @@ using Raylib_CsLo;
 
 namespace ShapeEngine.Input;
 
+public enum ModifierKeyOperator
+{
+    Or = 0,
+    And = 1
+}
 public interface IModifierKey
 {
     public bool IsActive();
     public string GetName(bool shorthand = true);
     public InputDevice GetInputDevice();
+
+    public static bool IsActive(ModifierKeyOperator modifierOperator, IModifierKey[] modifierKeys)
+    {
+        if (modifierKeys.Length <= 0) return true;
+        
+        foreach (var key in modifierKeys)
+        {
+            if (modifierOperator == ModifierKeyOperator.And)
+            {
+                if (!key.IsActive()) return false;
+            }
+            else
+            {
+                if (key.IsActive())
+                {
+                    return true;
+                }
+            }
+        }
+        
+        return modifierOperator == ModifierKeyOperator.And;
+    }
 }
 
 public class ModifierKeyKeyboardButton : IModifierKey
