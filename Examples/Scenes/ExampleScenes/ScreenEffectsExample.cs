@@ -281,10 +281,8 @@ namespace Examples.Scenes.ExampleScenes
             iaShakeCamera = new(shakeKB, shakeGP, shakeMB);
 
 
-            // var modifierGamepadTest1 = new ModifierKeyGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_BOTTOM, true);
-            // var modifierGamepadTest2 = new ModifierKeyKeyboardButton(ShapeKeyboardButton.RIGHT_SHIFT, true);
             var rotateKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.Q, ShapeKeyboardButton.E);
-            var rotateGB = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad);// ModifierKeyOperator.And, GameloopExamples.ModifierKeyGamepadReversed, modifierGamepadTest1, modifierGamepadTest2);
+            var rotateGB = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad);
             var rotateMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouse);
             iaRotateCamera = new(rotateKB, rotateGB, rotateMW);
 

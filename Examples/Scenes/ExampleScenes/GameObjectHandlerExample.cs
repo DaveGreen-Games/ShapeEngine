@@ -839,6 +839,11 @@ namespace Examples.Scenes.ExampleScenes
             
             var bottomCenter = GAMELOOP.UIRects.GetRect("bottom center");
             DrawInputText(bottomCenter);
+            
+            var bottomRight = GAMELOOP.UIRects.GetRect("bottom right");
+            var rects = bottomRight.SplitV(0.5f);
+            font.DrawText("Object Count", rects.top, 1f, new Vector2(0.5f, 0f), ColorHighlight3);
+            font.DrawText($"{gameObjectHandler.GetCollisionHandler().Count}", rects.bottom, 1f, new Vector2(0.5f, 0.5f), ColorHighlight3);
         }
 
         private void DrawInputText(Rect rect)

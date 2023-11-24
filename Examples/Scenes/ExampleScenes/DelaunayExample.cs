@@ -14,7 +14,7 @@ namespace Examples.Scenes.ExampleScenes
 {
     public class DelaunayExample : ExampleScene
     {
-        private const float PointDistance = 10f;
+        //private const float PointDistance = 10f;
 
         private readonly Font font;
 
@@ -26,8 +26,12 @@ namespace Examples.Scenes.ExampleScenes
 
         private readonly InputAction iaAddPoint;
         private readonly InputAction iaAddMultiplePoints;
-        
 
+        private float lineThickness = 0f;
+        private float lineThicknessBig = 0f;
+        private float vertexSize = 0f;
+        private float vertexSizeBig = 0f;
+        
         public DelaunayExample()
         {
             Title = "Delaunay Triangulation Example";
@@ -69,6 +73,12 @@ namespace Examples.Scenes.ExampleScenes
         
         protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
+            
+            lineThickness = 2f * GAMELOOP.Camera.ZoomFactor;
+            lineThicknessBig = lineThickness * 2f;
+            vertexSize = lineThickness * 3f;
+            vertexSizeBig = vertexSize * 2f;
+            
             int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
             
             iaAddPoint.Gamepad = gamepadIndex;
@@ -77,7 +87,7 @@ namespace Examples.Scenes.ExampleScenes
             iaAddMultiplePoints.Gamepad = gamepadIndex;
             iaAddMultiplePoints.Update(dt);
             
-            float pointDistanceSquared = PointDistance * PointDistance;
+            float pointDistanceSquared = vertexSizeBig * vertexSizeBig;
 
             closePointIndex = -1;
             closeTriangleIndex = -1;
@@ -141,25 +151,24 @@ namespace Examples.Scenes.ExampleScenes
         
         protected override void DrawGameExample(ScreenInfo game)
         {
-            float size = 2f * GAMELOOP.Camera.ZoomFactor;
             for (int i = 0; i < curTriangulation.Count; i++)
             {
                 var tri = curTriangulation[i];
                 if (i == closeTriangleIndex) continue;
-                tri.DrawLines(size, WHITE, LineCapType.CappedExtended, 4);
+                tri.DrawLines(lineThickness, WHITE, LineCapType.CappedExtended, 4);
             }
-            if(closeTriangleIndex >= 0) curTriangulation[closeTriangleIndex].DrawLines(size * 3, GREEN, LineCapType.CappedExtended, 4);
+            if(closeTriangleIndex >= 0) curTriangulation[closeTriangleIndex].DrawLines(lineThicknessBig, GREEN, LineCapType.CappedExtended, 4);
 
             for (int i = 0; i < points.Count; i++)
             {
                 var p = points[i];
                 if (i == closePointIndex)
                 {
-                    p.Draw(PointDistance, GREEN);
+                    p.Draw(vertexSizeBig, GREEN);
                 }
                 else
                 {
-                    p.Draw(size * 1.5f, PURPLE);
+                    p.Draw(vertexSize, PURPLE);
                 }
             }
         }
