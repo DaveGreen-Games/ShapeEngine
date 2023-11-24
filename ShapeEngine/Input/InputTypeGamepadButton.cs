@@ -8,26 +8,35 @@ public class InputTypeGamepadButton : IInputType
 {
     private readonly ShapeGamepadButton button;
     private float deadzone;
-    private readonly ShapeGamepadButton modifier;
-    private readonly bool reverseModifier;
-    public InputTypeGamepadButton(ShapeGamepadButton button, float deadzone = 0.1f, ShapeGamepadButton modifier = ShapeGamepadButton.NONE, bool reverseModifier = false)
+    private readonly IModifierKey[] modifierKeys;
+    private readonly ModifierKeyOperator modifierOperator;
+    public InputTypeGamepadButton(ShapeGamepadButton button, float deadzone = 0.1f)
     {
         this.button = button; 
         this.deadzone = deadzone;
-        this.modifier = modifier;
-        this.reverseModifier = reverseModifier;
+        this.modifierKeys = Array.Empty<IModifierKey>();
+        this.modifierOperator = ModifierKeyOperator.And;
     }
-    
+    public InputTypeGamepadButton(ShapeGamepadButton button, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    {
+        this.button = button; 
+        this.deadzone = deadzone;
+        this.modifierKeys = modifierKeys;
+        this.modifierOperator = modifierOperator;
+    }
+    public InputTypeGamepadButton(ShapeGamepadButton button, float deadzone, ModifierKeyOperator modifierOperator, IModifierKey modifierKey)
+    {
+        this.button = button; 
+        this.deadzone = deadzone;
+        this.modifierOperator = modifierOperator;
+        this.modifierKeys = new[]{ modifierKey };
+    }
     public IInputType Copy() => new InputTypeGamepadButton(button, deadzone);
     public virtual string GetName(bool shorthand = true)
     {
-        if(modifier == ShapeGamepadButton.NONE || reverseModifier) return GetGamepadButtonName(button, shorthand);
         StringBuilder sb = new();
-
-        sb.Append(GetGamepadButtonName(modifier, shorthand));
-        sb.Append('+');
+        IModifierKey.GetModifierKeyNames(sb, modifierKeys, modifierOperator, shorthand);
         sb.Append(GetGamepadButtonName(button, shorthand));
-
         return sb.ToString();
     }
 
@@ -39,21 +48,23 @@ public class InputTypeGamepadButton : IInputType
     }
     public InputState GetState(int gamepad = -1)
     {
-        return GetState(button, gamepad, deadzone, modifier, reverseModifier);
+        return GetState(button, gamepad, deadzone, modifierOperator, modifierKeys);
     }
 
     public InputState GetState(InputState prev, int gamepad = -1)
     {
-        return GetState(button, prev, gamepad, deadzone, modifier, reverseModifier);
+        return GetState(button, prev, gamepad, deadzone, modifierOperator, modifierKeys);
     }
     public InputDevice GetInputDevice() => InputDevice.Gamepad;
-    internal static bool IsDown(ShapeGamepadButton button, int gamepad, float deadzone = 0.1f, ShapeGamepadButton modifier = ShapeGamepadButton.NONE, bool reverseModifier = false)
+    internal static bool IsDown(ShapeGamepadButton button, int gamepad, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         if (gamepad < 0) return false;
-        if (modifier != ShapeGamepadButton.NONE)
-        {
-            if (IsDown(modifier, gamepad, deadzone) == reverseModifier) return false;
-        }
+        if (!IModifierKey.IsActive(modifierOperator, modifierKeys, gamepad)) return false;
+        return IsDown(button, gamepad, deadzone);
+    }
+    internal static bool IsDown(ShapeGamepadButton button, int gamepad, float deadzone = 0.1f)
+    {
+        if (gamepad < 0) return false;
         
         var id = (int)button;
         if (id >= 30 && id <= 33)
@@ -74,15 +85,23 @@ public class InputTypeGamepadButton : IInputType
         
         return IsGamepadButtonDown(gamepad, id);
     }
-    public static InputState GetState(ShapeGamepadButton button, int gamepad, float deadzone = 0.1f, ShapeGamepadButton modifier = ShapeGamepadButton.NONE, bool reverseModifier = false)
+    public static InputState GetState(ShapeGamepadButton button, int gamepad, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
-        bool down = IsDown(button, gamepad, deadzone, modifier, reverseModifier);
+        bool down = IsDown(button, gamepad, deadzone, modifierOperator, modifierKeys);
         return new(down, !down, down ? 1f : 0f, gamepad, InputDevice.Gamepad);
     }
-    public static InputState GetState(ShapeGamepadButton button, InputState previousState, int gamepad,
-        float deadzone = 0.1f, ShapeGamepadButton modifier = ShapeGamepadButton.NONE, bool reverseModifier = false)
+    public static InputState GetState(ShapeGamepadButton button, InputState previousState, int gamepad, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
-        return new(previousState, GetState(button, gamepad, deadzone, modifier, reverseModifier));
+        return new(previousState, GetState(button, gamepad, deadzone, modifierOperator, modifierKeys));
+    }
+    public static InputState GetState(ShapeGamepadButton button, int gamepad, float deadzone = 0.1f)
+    {
+        bool down = IsDown(button, gamepad, deadzone);
+        return new(down, !down, down ? 1f : 0f, gamepad, InputDevice.Gamepad);
+    }
+    public static InputState GetState(ShapeGamepadButton button, InputState previousState, int gamepad, float deadzone = 0.1f)
+    {
+        return new(previousState, GetState(button, gamepad, deadzone));
     }
     public static string GetGamepadButtonName(ShapeGamepadButton button, bool shortHand = true)
     {

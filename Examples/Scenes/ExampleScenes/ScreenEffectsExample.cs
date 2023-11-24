@@ -136,15 +136,15 @@ namespace Examples.Scenes.ExampleScenes
             var moveHorKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
             // var moveHorGP =
                 // new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT);//reverse modifier
-            var moveHor2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X, 0.1f, ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, true);
-            var moveHorMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ShapeKeyboardButton.LEFT_SHIFT, true);
+            var moveHor2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+            var moveHorMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
             iaMoveHor = new(moveHorKB, moveHor2GP, moveHorMW);
             
             var moveVerKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
             // var moveVerGP =
                 // new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_UP, ShapeGamepadButton.LEFT_FACE_DOWN);//reverse modifier
-            var moveVer2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_Y, 0.1f, ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, true);
-            var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ShapeKeyboardButton.LEFT_SHIFT, true);
+            var moveVer2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+            var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
             iaMoveVer = new(moveVerKB, moveVer2GP, moveVerMW);
         }
         public Ship(Vector2 pos, float r)
@@ -280,9 +280,12 @@ namespace Examples.Scenes.ExampleScenes
             var shakeMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
             iaShakeCamera = new(shakeKB, shakeGP, shakeMB);
 
+
+            // var modifierGamepadTest1 = new ModifierKeyGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_BOTTOM, true);
+            // var modifierGamepadTest2 = new ModifierKeyKeyboardButton(ShapeKeyboardButton.RIGHT_SHIFT, true);
             var rotateKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.Q, ShapeKeyboardButton.E);
-            var rotateGB = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X, 0.1f, ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, false);
-            var rotateMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ShapeKeyboardButton.LEFT_SHIFT);
+            var rotateGB = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad);// ModifierKeyOperator.And, GameloopExamples.ModifierKeyGamepadReversed, modifierGamepadTest1, modifierGamepadTest2);
+            var rotateMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouse);
             iaRotateCamera = new(rotateKB, rotateGB, rotateMW);
 
             var toggleDrawKB = new InputTypeKeyboardButton(ShapeKeyboardButton.T);

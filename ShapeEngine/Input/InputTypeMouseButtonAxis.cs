@@ -8,15 +8,31 @@ public class InputTypeMouseButtonAxis : IInputType
     private readonly ShapeMouseButton neg;
     private readonly ShapeMouseButton pos;
     private float deadzone;
-    private readonly ShapeKeyboardButton modifier;
-    private readonly bool reverseModifier;
-    public InputTypeMouseButtonAxis(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = 0f, ShapeKeyboardButton modifierKey = ShapeKeyboardButton.None, bool reverseModifier = false)
+    private readonly IModifierKey[] modifierKeys;
+    private readonly ModifierKeyOperator modifierOperator;
+    public InputTypeMouseButtonAxis(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = 0f)
     {
         this.neg = neg;
         this.pos = pos;
         this.deadzone = deadzone;
-        this.modifier = modifierKey;
-        this.reverseModifier = reverseModifier;
+        this.modifierKeys = Array.Empty<IModifierKey>();
+        this.modifierOperator = ModifierKeyOperator.And;
+    }
+    public InputTypeMouseButtonAxis(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    {
+        this.neg = neg;
+        this.pos = pos;
+        this.deadzone = deadzone;
+        this.modifierOperator = modifierOperator;
+        this.modifierKeys = modifierKeys;
+    }
+    public InputTypeMouseButtonAxis(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone, ModifierKeyOperator modifierOperator, IModifierKey modifierKey)
+    {
+        this.neg = neg;
+        this.pos = pos;
+        this.deadzone = deadzone;
+        this.modifierOperator = modifierOperator;
+        this.modifierKeys = new[]{ modifierKey };
     }
     public float GetDeadzone() => deadzone;
 
@@ -24,43 +40,38 @@ public class InputTypeMouseButtonAxis : IInputType
 
     public virtual string GetName(bool shorthand = true)
     {
+        StringBuilder sb = new();
+        IModifierKey.GetModifierKeyNames(sb, modifierKeys, modifierOperator, shorthand);
         string negName = InputTypeMouseButton.GetMouseButtonName(neg, shorthand);
         string posName = InputTypeMouseButton.GetMouseButtonName(pos, shorthand);
-        StringBuilder b = new(posName.Length + negName.Length);
-
-        if (modifier != ShapeKeyboardButton.None && !reverseModifier)
-        {
-            b.Append(InputTypeKeyboardButton.GetKeyboardButtonName(modifier, shorthand));
-            b.Append('+');
-        }
-        
-        b.Append(negName);
-        b.Append('|');
-        b.Append(posName);
-        return b.ToString();
+        sb.Append(negName);
+        sb.Append('|');
+        sb.Append(posName);
+        return sb.ToString();
         
         
     }
     public InputState GetState(int gamepad = -1)
     {
         if (gamepad > 0) return new();
-        return GetState(neg, pos, deadzone, modifier, reverseModifier);
+        return GetState(neg, pos, deadzone, modifierOperator, modifierKeys);
     }
 
     public InputState GetState(InputState prev, int gamepad = -1)
     {
         if (gamepad > 0) return new();
-        return GetState(neg, pos, prev, deadzone, modifier, reverseModifier);
+        return GetState(neg, pos, prev, deadzone, modifierOperator, modifierKeys);
     }
     public InputDevice GetInputDevice() => InputDevice.Mouse;
     public IInputType Copy() => new InputTypeMouseButtonAxis(neg, pos);
 
-    private static float GetAxis(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = 0f, ShapeKeyboardButton modifier = ShapeKeyboardButton.None, bool reverseModifier = false)
+    private static float GetAxis(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
-        if (modifier != ShapeKeyboardButton.None)
-        {
-            if(IsKeyDown((int)modifier) == reverseModifier) return 0f;
-        } 
+        if (!IModifierKey.IsActive(modifierOperator, modifierKeys, -1)) return 0f;
+        return GetAxis(neg, pos, deadzone);
+    }
+    private static float GetAxis(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = 0f)
+    {
         float vNegative = InputTypeMouseButton.GetValue(neg, deadzone);
         float vPositive = InputTypeMouseButton.GetValue(pos, deadzone);
         return vPositive - vNegative;
@@ -90,18 +101,26 @@ public class InputTypeMouseButtonAxis : IInputType
     //     return IsMouseButtonDown(id) ? 1f : 0f;
     // }
     //
-    public static InputState GetState(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = 0f, ShapeKeyboardButton modifier = ShapeKeyboardButton.None, bool reverseModifier = false)
+    public static InputState GetState(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
-        float axis = GetAxis(neg, pos, deadzone, modifier, reverseModifier);
+        float axis = GetAxis(neg, pos, deadzone, modifierOperator, modifierKeys);
         bool down = axis != 0f;
         return new(down, !down, axis, -1, InputDevice.Mouse);
     }
-    public static InputState GetState(ShapeMouseButton neg, ShapeMouseButton pos,
-        InputState previousState, float deadzone = 0f, ShapeKeyboardButton modifier = ShapeKeyboardButton.None, bool reverseModifier = false)
+    public static InputState GetState(ShapeMouseButton neg, ShapeMouseButton pos, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
-        return new(previousState, GetState(neg, pos, deadzone, modifier, reverseModifier));
+        return new(previousState, GetState(neg, pos, deadzone, modifierOperator, modifierKeys));
     }
-    
+    public static InputState GetState(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = 0f)
+    {
+        float axis = GetAxis(neg, pos, deadzone);
+        bool down = axis != 0f;
+        return new(down, !down, axis, -1, InputDevice.Mouse);
+    }
+    public static InputState GetState(ShapeMouseButton neg, ShapeMouseButton pos, InputState previousState, float deadzone = 0f)
+    {
+        return new(previousState, GetState(neg, pos, deadzone));
+    }
     
 
 }

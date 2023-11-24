@@ -2,7 +2,6 @@
 global using static ShapeEngine.Core.ShapeLoop;
 
 using System.Numerics;
-using System.Runtime.Serialization.Json;
 using Raylib_CsLo;
 using ShapeEngine.Lib;
 using ShapeEngine.Persistent;
@@ -222,6 +221,16 @@ namespace Examples
         public readonly uint GamepadMouseMovementTag = 1000;
         public readonly uint KeyboardMouseMovementTag = 2000;
         //ui
+       
+        public static IModifierKey  ModifierKeyGamepad = new ModifierKeyGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, false);
+        public static IModifierKey  ModifierKeyGamepadReversed = new ModifierKeyGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, true);
+        public static IModifierKey  ModifierKeyGamepad2 = new ModifierKeyGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_BOTTOM, false);
+        public static IModifierKey  ModifierKeyGamepad2Reversed = new ModifierKeyGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_BOTTOM, true);
+        public static IModifierKey  ModifierKeyKeyboard = new ModifierKeyKeyboardButton(ShapeKeyboardButton.LEFT_SHIFT, false);
+        public static IModifierKey  ModifierKeyKeyboardReversed = new ModifierKeyKeyboardButton(ShapeKeyboardButton.LEFT_SHIFT, true);
+        public static IModifierKey  ModifierKeyMouse = new ModifierKeyKeyboardButton(ShapeKeyboardButton.LEFT_SHIFT, false);
+        public static IModifierKey  ModifierKeyMouseReversed = new ModifierKeyKeyboardButton(ShapeKeyboardButton.LEFT_SHIFT, true);
+        
         public InputAction InputActionUICancel   {get; private set;}
         public InputAction InputActionUIBack     {get; private set;}
         public InputAction InputActionUIAccept   {get; private set;}
@@ -503,6 +512,13 @@ namespace Examples
 
         private void SetupInput()
         {
+            // ModifierKeyGamepad = new ModifierKeyGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, false);
+            // ModifierKeyGamepadReversed = new ModifierKeyGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, true);
+            // ModifierKeyKeyboard = new ModifierKeyKeyboardButton(ShapeKeyboardButton.LEFT_SHIFT, false);
+            // ModifierKeyKeyboardReversed = new ModifierKeyKeyboardButton(ShapeKeyboardButton.LEFT_SHIFT, true);
+            // ModifierKeyMouse = new ModifierKeyKeyboardButton(ShapeKeyboardButton.LEFT_SHIFT, false);
+            // ModifierKeyMouseReversed = new ModifierKeyKeyboardButton(ShapeKeyboardButton.LEFT_SHIFT, true);
+            
             //gameloop
             var cancelKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ESCAPE);
             var cancelGB = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_LEFT);
@@ -522,14 +538,12 @@ namespace Examples
             InputActionNextMonitor = new(GameloopAccessTag, nextMonitorKB);
             
             var crtMinusKB = new InputTypeKeyboardButton(ShapeKeyboardButton.J);
-            var crtMinusGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN, 0f,
-                ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM);
+            var crtMinusGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN, 0f, ModifierKeyOperator.Or, ModifierKeyGamepad);
             //var crtPluseGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_THUMB);
             InputActionCRTMinus = new(GameloopAccessTag, crtMinusKB, crtMinusGP);
             
             var crtPlusKB = new InputTypeKeyboardButton(ShapeKeyboardButton.K);
-            var crtPlusGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP, 0f,
-                ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM);
+            var crtPlusGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP, 0f, ModifierKeyOperator.Or, ModifierKeyGamepad);
             //var crtMinusGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_THUMB);
             InputActionCRTPlus = new(GameloopAccessTag, crtPlusKB, crtPlusGP);
             
@@ -554,19 +568,19 @@ namespace Examples
             InputActionUIAcceptMouse = new(UIAccessTag, acceptMB);
 
             var leftKB = new InputTypeKeyboardButton(ShapeKeyboardButton.A);
-            var leftGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT, 0.1f, ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, true);
+            var leftGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT, 0.1f, ModifierKeyOperator.Or, ModifierKeyGamepadReversed);
             InputActionUILeft = new(UIAccessTag, leftKB, leftGB);
             
             var rightKB = new InputTypeKeyboardButton(ShapeKeyboardButton.D);
-            var rightGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT, 0.1f, ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, true);
+            var rightGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT, 0.1f, ModifierKeyOperator.Or, ModifierKeyGamepadReversed);
             InputActionUIRight = new(UIAccessTag, rightKB, rightGB);
             
             var upKB = new InputTypeKeyboardButton(ShapeKeyboardButton.W);
-            var upGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP, 0.1f, ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, true);
+            var upGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP, 0.1f, ModifierKeyOperator.Or, ModifierKeyGamepadReversed);
             InputActionUIUp = new(UIAccessTag, upKB, upGB);
             
             var downKB = new InputTypeKeyboardButton(ShapeKeyboardButton.S);
-            var downGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN, 0.1f, ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, true);
+            var downGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN, 0.1f, ModifierKeyOperator.Or, ModifierKeyGamepadReversed);
             InputActionUIDown = new(UIAccessTag, downKB, downGB);
             
             var nextTabKB = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
@@ -580,18 +594,18 @@ namespace Examples
             InputActionUIPrevTab = new(UIAccessTag, prevTabKB, prevTabGB, prevTabMW);
             
             var nextPageKB = new InputTypeKeyboardButton(ShapeKeyboardButton.C);
-            var nextPageGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT, 0.1f, ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM);
+            var nextPageGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT, 0.1f, ModifierKeyOperator.Or, ModifierKeyGamepad);
             InputActionUINextPage = new(UIAccessTag, nextPageKB, nextPageGB);
             
             var prevPageKB = new InputTypeKeyboardButton(ShapeKeyboardButton.X);
-            var prevPageGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT, 0.1f, ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM);
+            var prevPageGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT, 0.1f, ModifierKeyOperator.Or, ModifierKeyGamepad);
             InputActionUIPrevPage = new(UIAccessTag, prevPageKB, prevPageGB);
             
             //example scene only
             var zoomKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.NINE, ShapeKeyboardButton.ZERO);
-            var zoomGP = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_Y, 0.2f, ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, false);
+            var zoomGP = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_Y, 0.2f, ModifierKeyOperator.Or, ModifierKeyGamepad);
             var zoomMW =
-                new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ShapeKeyboardButton.LEFT_SHIFT);
+                new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, ModifierKeyMouse);
             InputActionZoom = new(SceneAccessTag, zoomKB, zoomGP, zoomMW);
             
             var resetKB = new InputTypeKeyboardButton(ShapeKeyboardButton.R);

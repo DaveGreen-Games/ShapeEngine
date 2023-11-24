@@ -5,13 +5,25 @@ namespace ShapeEngine.Input;
 public class InputTypeKeyboardButton : IInputType
 {
     private readonly ShapeKeyboardButton button;
-    private readonly ShapeKeyboardButton modifier;
-    private readonly bool reverseModifier;
-    public InputTypeKeyboardButton(ShapeKeyboardButton button, ShapeKeyboardButton modifierKey = ShapeKeyboardButton.None, bool reverseModifier = false)
+    private readonly IModifierKey[] modifierKeys;
+    private readonly ModifierKeyOperator modifierOperator;
+    public InputTypeKeyboardButton(ShapeKeyboardButton button)
     {
         this.button = button;
-        this.modifier = modifierKey;
-        this.reverseModifier = reverseModifier;
+        this.modifierKeys = Array.Empty<IModifierKey>();
+        this.modifierOperator = ModifierKeyOperator.And;
+    }
+    public InputTypeKeyboardButton(ShapeKeyboardButton button, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    {
+        this.button = button;
+        this.modifierOperator = modifierOperator;
+        this.modifierKeys = modifierKeys;
+    }
+    public InputTypeKeyboardButton(ShapeKeyboardButton button, ModifierKeyOperator modifierOperator, IModifierKey modifierKey)
+    {
+        this.button = button;
+        this.modifierOperator = modifierOperator;
+        this.modifierKeys = new[]{ modifierKey };
     }
     public float GetDeadzone() => 0f;
 
@@ -19,23 +31,38 @@ public class InputTypeKeyboardButton : IInputType
     public InputState GetState(int gamepad = -1)
     {
         if (gamepad > 0) return new();
-        return GetState(button, modifier, reverseModifier);
+        return GetState(button, modifierOperator, modifierKeys);
     }
 
     public InputState GetState(InputState prev, int gamepad = -1)
     {
         if (gamepad > 0) return new();
-        return GetState(button, prev, modifier, reverseModifier);
+        return GetState(button, prev, modifierOperator, modifierKeys);
     }
     public virtual string GetName(bool shorthand = true)
     {
-        if(modifier == ShapeKeyboardButton.None || reverseModifier) return GetKeyboardButtonName(button, shorthand);
-
         StringBuilder sb = new();
-        sb.Append(GetKeyboardButtonName(modifier, shorthand));
-        sb.Append('+');
+        IModifierKey.GetModifierKeyNames(sb, modifierKeys, modifierOperator, shorthand);
         sb.Append(GetKeyboardButtonName(button, shorthand));
         return sb.ToString();
+        // if (modifierKeys.Length > 0f)
+        // {
+        //     StringBuilder sb = new();
+        //     foreach (var key in modifierKeys)
+        //     {
+        //         var name = key.GetName(shorthand);
+        //         if (name.Length > 0)
+        //         {
+        //             sb.Append($"{name} + ");
+        //         }
+        //     }
+        //     
+        //     sb.Append(GetKeyboardButtonName(button, shorthand));
+        //     return sb.ToString();
+        // }
+        // else return GetKeyboardButtonName(button, shorthand);
+
+        
     }
 
     public InputDevice GetInputDevice() => InputDevice.Keyboard;
@@ -175,23 +202,31 @@ public class InputTypeKeyboardButton : IInputType
     //     return new(previousState, GetState(button));
     // }
     
-    private static bool IsDown(ShapeKeyboardButton button, ShapeKeyboardButton modifier = ShapeKeyboardButton.None, bool reverseModifier = false)
+    private static bool IsDown(ShapeKeyboardButton button, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
-        // if (button == ShapeKeyboardButton.None) return false;
-        if (modifier != ShapeKeyboardButton.None)
-        {
-            if (IsKeyDown((int)modifier) == reverseModifier) return false;
-        }
-        
+        bool modifierActive = IModifierKey.IsActive(modifierOperator, modifierKeys, -1);
+        return modifierActive && IsKeyDown((int)button);
+    }
+    private static bool IsDown(ShapeKeyboardButton button)
+    {
         return IsKeyDown((int)button);
     }
-    public static InputState GetState(ShapeKeyboardButton button, ShapeKeyboardButton modifier = ShapeKeyboardButton.None, bool reverseModifier = false)
+    public static InputState GetState(ShapeKeyboardButton button, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
-        bool down = IsDown(button, modifier, reverseModifier);
+        bool down = IsDown(button, modifierOperator, modifierKeys);
         return new(down, !down, down ? 1f : 0f, -1, InputDevice.Keyboard);
     }
-    public static InputState GetState(ShapeKeyboardButton button, InputState previousState, ShapeKeyboardButton modifier = ShapeKeyboardButton.None, bool reverseModifier = false)
+    public static InputState GetState(ShapeKeyboardButton button, InputState previousState, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
-        return new(previousState, GetState(button, modifier, reverseModifier));
+        return new(previousState, GetState(button, modifierOperator, modifierKeys));
+    }
+    public static InputState GetState(ShapeKeyboardButton button)
+    {
+        bool down = IsDown(button);
+        return new(down, !down, down ? 1f : 0f, -1, InputDevice.Keyboard);
+    }
+    public static InputState GetState(ShapeKeyboardButton button, InputState previousState)
+    {
+        return new(previousState, GetState(button));
     }
 }

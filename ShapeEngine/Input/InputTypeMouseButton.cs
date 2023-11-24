@@ -9,16 +9,29 @@ public class InputTypeMouseButton : IInputType
 {
     private readonly ShapeMouseButton button;
     private float deadzone = 0f;
-    private readonly ShapeKeyboardButton modifier;
-    private readonly bool reverseModifier;
+    private readonly IModifierKey[] modifierKeys;
+    private readonly ModifierKeyOperator modifierOperator;
 
-    public InputTypeMouseButton(ShapeMouseButton button, float deadzone = 0f,
-        ShapeKeyboardButton modifierKey = ShapeKeyboardButton.None, bool reverseModifier = false)
+    public InputTypeMouseButton(ShapeMouseButton button, float deadzone = 0f)
     {
         this.button = button; 
         this.deadzone = deadzone;
-        this.modifier = modifierKey;
-        this.reverseModifier = reverseModifier;
+        this.modifierKeys = Array.Empty<IModifierKey>();
+        this.modifierOperator = ModifierKeyOperator.And;
+    }
+    public InputTypeMouseButton(ShapeMouseButton button, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    {
+        this.button = button; 
+        this.deadzone = deadzone;
+        this.modifierOperator = modifierOperator;
+        this.modifierKeys = modifierKeys;
+    }
+    public InputTypeMouseButton(ShapeMouseButton button, float deadzone, ModifierKeyOperator modifierOperator, IModifierKey modifierKey)
+    {
+        this.button = button; 
+        this.deadzone = deadzone;
+        this.modifierOperator = modifierOperator;
+        this.modifierKeys = new[]{ modifierKey };
     }
     public float GetDeadzone() => deadzone;
 
@@ -26,21 +39,18 @@ public class InputTypeMouseButton : IInputType
     public InputState GetState(int gamepad = -1)
     {
         if (gamepad > 0) return new();
-        return GetState(button, deadzone, modifier, reverseModifier);
+        return GetState(button, deadzone, modifierOperator, modifierKeys);
     }
 
     public InputState GetState(InputState prev, int gamepad = -1)
     {
         if (gamepad > 0) return new();
-        return GetState(button, prev, deadzone, modifier, reverseModifier);
+        return GetState(button, prev, deadzone, modifierOperator, modifierKeys);
     }
     public virtual string GetName(bool shorthand = true)
     {
-        if(modifier == ShapeKeyboardButton.None || reverseModifier) return GetMouseButtonName(button, shorthand);
-
         StringBuilder sb = new();
-        sb.Append(InputTypeKeyboardButton.GetKeyboardButtonName(modifier, shorthand));
-        sb.Append('+');
+        IModifierKey.GetModifierKeyNames(sb, modifierKeys, modifierOperator, shorthand);
         sb.Append(GetMouseButtonName(button, shorthand));
         return sb.ToString();
     }
@@ -92,13 +102,15 @@ public class InputTypeMouseButton : IInputType
     //     return GetValue(button, deadzone) != 0f;
     // }
     //
-    public static float GetValue(ShapeMouseButton button, float deadzone = 0f, ShapeKeyboardButton modifier = ShapeKeyboardButton.None, bool reverseModifier = false)
+    public static float GetValue(ShapeMouseButton button, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         if (!ShapeLoop.CursorOnScreen) return 0f;
-        if (modifier != ShapeKeyboardButton.None)
-        {
-            if(IsKeyDown((int)modifier) == reverseModifier) return 0f;
-        } 
+        if (!IModifierKey.IsActive(modifierOperator, modifierKeys, -1)) return 0f;
+        return GetValue(button, deadzone);
+    }
+    public static float GetValue(ShapeMouseButton button, float deadzone = 0f)
+    {
+        if (!ShapeLoop.CursorOnScreen) return 0f;
         int id = (int)button;
         if (id is >= 10 and < 20)
         {
@@ -121,15 +133,24 @@ public class InputTypeMouseButton : IInputType
         }
         return IsMouseButtonDown(id) ? 1f : 0f;
     }
-
-    public static InputState GetState(ShapeMouseButton button, float deadzone = 0f, ShapeKeyboardButton modifier = ShapeKeyboardButton.None, bool reverseModifier = false)
+    public static InputState GetState(ShapeMouseButton button, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
-        var value = GetValue(button, deadzone, modifier, reverseModifier);
+        var value = GetValue(button, deadzone, modifierOperator, modifierKeys);
         bool down = value != 0f;
         return new(down, !down, down ? 1f : 0f, -1, InputDevice.Mouse);
     }
-    public static InputState GetState(ShapeMouseButton button, InputState previousState, float deadzone = 0f, ShapeKeyboardButton modifier = ShapeKeyboardButton.None, bool reverseModifier = false)
+    public static InputState GetState(ShapeMouseButton button, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
-        return new(previousState, GetState(button, deadzone, modifier, reverseModifier));
+        return new(previousState, GetState(button, deadzone, modifierOperator, modifierKeys));
+    }
+    public static InputState GetState(ShapeMouseButton button, float deadzone = 0f)
+    {
+        var value = GetValue(button, deadzone);
+        bool down = value != 0f;
+        return new(down, !down, down ? 1f : 0f, -1, InputDevice.Mouse);
+    }
+    public static InputState GetState(ShapeMouseButton button, InputState previousState, float deadzone = 0f)
+    {
+        return new(previousState, GetState(button, deadzone));
     }
 }
