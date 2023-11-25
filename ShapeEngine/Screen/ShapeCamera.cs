@@ -8,71 +8,71 @@ using ShapeEngine.Core.Shapes;
 
 namespace ShapeEngine.Screen;
 
-public readonly struct CameraFollowInformation
-{
-    public readonly bool Valid;
-    public readonly Vector2 Position;
-    public readonly Vector2 Alignement;
-    public readonly float ZoomFactor;
-
-    public CameraFollowInformation()
-    {
-        this.Valid = false;
-        this.Position = new();
-        this.Alignement = new();
-        this.ZoomFactor = 1f;
-    }
-
-    public CameraFollowInformation(Vector2 position, Vector2 alignement, float zoomFactor)
-    {
-        this.Valid = true;
-        this.Position = position;
-        this.Alignement = alignement;
-        this.ZoomFactor = zoomFactor;
-    }
-}
-public interface ICameraFollower
-{
-    public CameraFollowInformation GetFollowInformation();
-    public void Update(float dt);
-    public void Clear();
-}
-
-public class CameraFollowerSingle : ICameraFollower
-{
-    public CameraFollowInformation GetFollowInformation()
-    {
-        throw new NotImplementedException();
-    }
-
-    public void Update(float dt)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void Clear()
-    {
-        throw new NotImplementedException();
-    }
-}
-
-public class CameraFollowerMulti : ICameraFollower
-{
-    public CameraFollowInformation GetFollowInformation()
-    {
-        throw new NotImplementedException();
-    }
-
-    public void Update(float dt)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void Clear()
-    {
-        throw new NotImplementedException();
-    }
-}
+// public readonly struct CameraFollowInformation
+// {
+//     public readonly bool Valid;
+//     public readonly Vector2 Position;
+//     public readonly Vector2 Alignement;
+//     public readonly float ZoomFactor;
+//
+//     public CameraFollowInformation()
+//     {
+//         this.Valid = false;
+//         this.Position = new();
+//         this.Alignement = new();
+//         this.ZoomFactor = 1f;
+//     }
+//
+//     public CameraFollowInformation(Vector2 position, Vector2 alignement, float zoomFactor)
+//     {
+//         this.Valid = true;
+//         this.Position = position;
+//         this.Alignement = alignement;
+//         this.ZoomFactor = zoomFactor;
+//     }
+// }
+// public interface ICameraFollower
+// {
+//     public CameraFollowInformation GetFollowInformation();
+//     public void Update(float dt);
+//     public void Clear();
+// }
+//
+// public class CameraFollowerSingle : ICameraFollower
+// {
+//     public CameraFollowInformation GetFollowInformation()
+//     {
+//         throw new NotImplementedException();
+//     }
+//
+//     public void Update(float dt)
+//     {
+//         throw new NotImplementedException();
+//     }
+//
+//     public void Clear()
+//     {
+//         throw new NotImplementedException();
+//     }
+// }
+//
+// public class CameraFollowerMulti : ICameraFollower
+// {
+//     public CameraFollowInformation GetFollowInformation()
+//     {
+//         throw new NotImplementedException();
+//     }
+//
+//     public void Update(float dt)
+//     {
+//         throw new NotImplementedException();
+//     }
+//
+//     public void Clear()
+//     {
+//         throw new NotImplementedException();
+//     }
+// }
 
 
 public sealed class ShapeCamera
