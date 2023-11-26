@@ -93,8 +93,17 @@ public sealed class ShapeCamera
     private float cameraTweenTotalZoomFactor = 1f;
     private Vector2 cameraTweenTotalOffset = new();
 
-    public CameraFollower Follower { get; private set; } = new();
-    
+    private ICameraFollower? follower = null;
+    public ICameraFollower? Follower
+    {
+        get => follower;
+        set
+        {
+            follower?.OnCameraDetached(this);
+            follower = value;
+            follower?.OnCameraAttached(this);
+        }
+    }
     public Vector2 Position { get; set; } = new();
     
     public Vector2 Size { get; private set; } = new();
@@ -144,12 +153,14 @@ public sealed class ShapeCamera
     public void Activate()
     {
         cameraTweens.OnItemUpdated += OnCameraTweenUpdated;
+        // Follower?.Activate();
     }
 
-    public void Deactive()
+    public void Deactivate()
     {
         cameraTweens.OnItemUpdated -= OnCameraTweenUpdated;
-        Follower.ClearTarget();
+        // Follower?.Deactivate();
+        // Follower.ClearTarget();
     }
     public Rect Area => new
     (
@@ -171,7 +182,6 @@ public sealed class ShapeCamera
     
     internal void Update(float dt)
     {
-        Follower.Update(dt);
         cameraTweens.Update(dt);
         shake.Update(dt);
         
@@ -185,7 +195,8 @@ public sealed class ShapeCamera
         cameraTweenTotalRotationDeg = 0f;
         cameraTweenTotalZoomFactor = 1f;
 
-        if (Follower.IsFollowing) Position = Follower.Position;
+        Follower?.Update(dt, this);
+        //if (Follower.IsFollowing) Position = Follower.Position;
     }
     internal void SetSize(Dimensions curScreenSize, Dimensions targetDimensions)
     {
@@ -216,7 +227,7 @@ public sealed class ShapeCamera
     
     public void Reset()
     {
-        Follower.ClearTarget();
+        Follower?.Reset();
         Position = new();
         Alignement = new(0.5f);
         BaseZoomLevel = 1f;

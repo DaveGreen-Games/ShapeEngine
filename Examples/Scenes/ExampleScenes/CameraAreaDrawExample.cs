@@ -26,18 +26,20 @@ namespace Examples.Scenes.ExampleScenes
         private Ship currentShip;
         private uint prevCameraTweenID = 0;
         private InputAction iaChangeCameraTarget;
-        
-        private ShapeCamera camera = new ShapeCamera();
+
+        private readonly ShapeCamera camera;
+        private readonly CameraFollowerSingle follower;
         public CameraAreaDrawExample()
         {
             Title = "Camera Area Draw Example";
 
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
-                
-            GenerateStars(ShapeRandom.randI(15000, 30000));
-            camera.Follower.BoundaryDis = new(200, 400);
-            camera.Follower.FollowSpeed = ship.Speed * 1.1f;
 
+            camera = new();
+            GenerateStars(ShapeRandom.randI(15000, 30000));
+            follower = new(ship.Speed * 1.1f, 200, 400);
+            camera.Follower = follower;
+            
             currentShip = ship;
 
             var changeCameraTargetKB = new InputTypeKeyboardButton(ShapeKeyboardButton.B);
@@ -63,7 +65,7 @@ namespace Examples.Scenes.ExampleScenes
         public override void Activate(IScene oldScene)
         {
             GAMELOOP.Camera = camera;
-            camera.Follower.SetTarget(ship);
+            follower.SetTarget(ship);
             currentShip = ship;
             // GAMELOOP.UseMouseMovement = false;
         }
@@ -83,7 +85,7 @@ namespace Examples.Scenes.ExampleScenes
             camera.Reset();
             ship.Reset(new Vector2(0), 30f);
             ship2.Reset(new Vector2(100, 0), 30f);
-            camera.Follower.SetTarget(ship);
+            follower.SetTarget(ship);
             currentShip = ship;
             stars.Clear();
             GenerateStars(ShapeRandom.randI(15000, 30000));
@@ -106,12 +108,12 @@ namespace Examples.Scenes.ExampleScenes
                 if (currentShip == ship)
                 {
                     currentShip = ship2;
-                    camera.Follower.ChangeTarget(ship2, 1f);
+                    follower.ChangeTarget(ship2, 1f);
                 }
                 else
                 {
                     currentShip = ship;
-                    camera.Follower.ChangeTarget(ship, 1f);
+                    follower.ChangeTarget(ship, 1f);
                 }
             }
 

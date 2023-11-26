@@ -256,15 +256,15 @@ namespace Examples.Scenes.ExampleScenes
 
         private readonly Slider intensitySlider;
         private readonly Slider cameraFollowSlider;
-        
-        private readonly ShapeCamera camera = new ShapeCamera();
+
+        private readonly ShapeCamera camera;
 
         private readonly InputAction iaShakeCamera;
         private readonly InputAction iaRotateCamera;
         private readonly InputAction iaToggleDrawCameraFollowBoundary;
         private bool drawCameraFollowBoundary = false;
 
-        private CameraFollowerSingle follower;
+        private readonly CameraFollowerSingle follower;
         
         public ScreenEffectsExample()
         {
@@ -275,10 +275,12 @@ namespace Examples.Scenes.ExampleScenes
             GenerateStars(2500);
             GenerateComets(200);
 
+            camera = new();
             intensitySlider = new(0.5f, "Intensity", font);
             cameraFollowSlider = new(0.5f, "Camera Follow", font);
             follower = new(0, 100, 500);
-            // follower2 = new(0, 100);
+            camera.Follower = follower;
+            
             UpdateFollower(GAMELOOP.UI.Area.Size.Min());
             SetSliderValues();
 
@@ -331,13 +333,13 @@ namespace Examples.Scenes.ExampleScenes
             UpdateFollower(GAMELOOP.UI.Area.Size.Min());
             
             follower.SetTarget(ship);
-            follower.Activate();
+            // follower.Activate();
         }
 
         public override void Deactivate()
         {
             GAMELOOP.ResetCamera();
-            follower.Deactivate();
+            // follower.Deactivate();
         }
         public override GameObjectHandler? GetGameObjectHandler()
         {
@@ -406,10 +408,10 @@ namespace Examples.Scenes.ExampleScenes
         private void UpdateFollower(float size)
         {
             var sliderF = cameraFollowSlider.CurValue;
-            var minBoundary = ShapeMath.LerpFloat(0.2f, 0.1f, sliderF) * size;
-            var maxBoundary = ShapeMath.LerpFloat(0.5f, 0.15f, sliderF) * size;
+            var minBoundary = 0.12f * size; // ShapeMath.LerpFloat(0.2f, 0.1f, sliderF) * size;
+            var maxBoundary = ShapeMath.LerpFloat(0.55f, 0.15f, sliderF) * size;
             var boundary = new Vector2(minBoundary, maxBoundary) * camera.ZoomFactor;
-            follower.Speed =  ship.Speed * Lerp(0.5f, 2f, sliderF);
+            follower.Speed = ship.Speed;// * Lerp(0.5f, 2f, sliderF);
             follower.BoundaryDis = new(boundary);
         }
         protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)

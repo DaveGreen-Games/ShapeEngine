@@ -54,7 +54,7 @@ public class ShapeLoop
         set
         {
             if (value == curCamera) return;
-            curCamera.Deactive();
+            curCamera.Deactivate();
             curCamera = value;
             curCamera.Activate();
             curCamera.SetSize(CurScreenSize, DevelopmentDimensions);

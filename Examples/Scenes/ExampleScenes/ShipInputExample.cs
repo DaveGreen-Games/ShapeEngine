@@ -136,16 +136,16 @@ namespace Examples.Scenes.ExampleScenes
             private readonly List<IFollowTarget> targets = new();
             private readonly ShapeCamera camera;
             private Vector2 followPosition = new();
-            public CameraFollower()
-            {
-                camera = new()
-                {
-                    Follower =
-                    {
-                        FollowSpeed = SpaceShip.Speed * 2f
-                    }
-                };
-            }
+            // public CameraFollower()
+            // {
+            //     camera = new()
+            //     {
+            //         Follower =
+            //         {
+            //             FollowSpeed = SpaceShip.Speed * 2f
+            //         }
+            //     };
+            // }
             public Vector2 GetRandomPosition()
             {
                 return camera.Area.GetRandomPointInside();
@@ -154,13 +154,13 @@ namespace Examples.Scenes.ExampleScenes
             public void Reset()
             {
                 camera.Reset();
-                camera.Follower.SetTarget(this);
+                // camera.Follower.SetTarget(this);
                 SetCameraValues();
             }
             public void Activate()
             {
                 GAMELOOP.Camera = camera;
-                camera.Follower.SetTarget(this);
+                // camera.Follower.SetTarget(this);
                 SetCameraValues();
             }
             public void Deactivate()
@@ -202,7 +202,7 @@ namespace Examples.Scenes.ExampleScenes
                 var rect = camera.Area;
                 float size = rect.Size.Min();
                 var boundary = new Vector2(size * 0.15f, size * 0.4f);
-                camera.Follower.BoundaryDis = new(boundary);
+                // camera.Follower.BoundaryDis = new(boundary);
             }
 
             private void SetCameraValues()
