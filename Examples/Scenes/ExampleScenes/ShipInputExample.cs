@@ -13,7 +13,7 @@ namespace Examples.Scenes.ExampleScenes
 {
     public class ShipInputExample : ExampleScene
     {
-        internal class SpaceShip : IFollowTarget
+        internal class SpaceShip : ICameraFollowTarget
         {
             public const float Speed = 500;
             
@@ -125,114 +125,129 @@ namespace Examples.Scenes.ExampleScenes
             {
                 return hull.Center;
             }
-        }
 
-        internal interface IFollowTarget
-        {
-            public Vector2 GetPosition();
-        }
-        internal class CameraFollower : ICameraFollowTarget
-        {
-            private readonly List<IFollowTarget> targets = new();
-            private readonly ShapeCamera camera;
-            private Vector2 followPosition = new();
-            // public CameraFollower()
-            // {
-            //     camera = new()
-            //     {
-            //         Follower =
-            //         {
-            //             FollowSpeed = SpaceShip.Speed * 2f
-            //         }
-            //     };
-            // }
-            public Vector2 GetRandomPosition()
-            {
-                return camera.Area.GetRandomPointInside();
-            }
-            
-            public void Reset()
-            {
-                camera.Reset();
-                // camera.Follower.SetTarget(this);
-                SetCameraValues();
-            }
-            public void Activate()
-            {
-                GAMELOOP.Camera = camera;
-                // camera.Follower.SetTarget(this);
-                SetCameraValues();
-            }
-            public void Deactivate()
-            {
-                GAMELOOP.ResetCamera();
-            }
-            
-            
-            public bool AddTarget(IFollowTarget newTarget)
-            {
-                if (targets.Contains(newTarget)) return false;
-                targets.Add(newTarget);
-                return true;
-            }
-
-            public bool RemoveTarget(IFollowTarget target)
-            {
-                return targets.Remove(target);
-            }
-
-            public void Update(float dt)
-            {
-                SetCameraValues();
-            }
             public void FollowStarted()
             {
-                
             }
+
             public void FollowEnded()
             {
-                
             }
+
             public Vector2 GetCameraFollowPosition()
             {
-                return followPosition;
-            }
-            private void UpdateCameraFollowBoundary()
-            {
-                var rect = camera.Area;
-                float size = rect.Size.Min();
-                var boundary = new Vector2(size * 0.15f, size * 0.4f);
-                // camera.Follower.BoundaryDis = new(boundary);
-            }
-
-            private void SetCameraValues()
-            {
-                var cameraArea = camera.Area;
-                var totalPosition = new Vector2();
-                var newCameraRect = new Rect(cameraArea.Center, new(), new(0.5f));
-                
-                foreach (var target in targets)
-                {
-                    var pos = target.GetPosition();
-                    totalPosition += pos;
-                    newCameraRect = newCameraRect.Enlarge(pos);
-                }
-
-                var curSize = cameraArea.Size;
-                var newSize = newCameraRect.Size;
-                float f = 1f - (newSize.GetArea() / curSize.GetArea());
-                camera.SetZoom(f);
-                followPosition = totalPosition / targets.Count;
-                
-                UpdateCameraFollowBoundary();
+                return GetPosition();
             }
         }
+
+        // internal interface IFollowTarget
+        // {
+        //     public Vector2 GetPosition();
+        // }
+        // internal class CameraFollower : ICameraFollowTarget
+        // {
+        //     private readonly List<IFollowTarget> targets = new();
+        //     private readonly ShapeCamera camera;
+        //     private Vector2 followPosition = new();
+        //     // public CameraFollower()
+        //     // {
+        //     //     camera = new()
+        //     //     {
+        //     //         Follower =
+        //     //         {
+        //     //             FollowSpeed = SpaceShip.Speed * 2f
+        //     //         }
+        //     //     };
+        //     // }
+        //     public Vector2 GetRandomPosition()
+        //     {
+        //         return camera.Area.GetRandomPointInside();
+        //     }
+        //     
+        //     public void Reset()
+        //     {
+        //         camera.Reset();
+        //         // camera.Follower.SetTarget(this);
+        //         SetCameraValues();
+        //     }
+        //     public void Activate()
+        //     {
+        //         GAMELOOP.Camera = camera;
+        //         // camera.Follower.SetTarget(this);
+        //         SetCameraValues();
+        //     }
+        //     public void Deactivate()
+        //     {
+        //         GAMELOOP.ResetCamera();
+        //     }
+        //     
+        //     
+        //     public bool AddTarget(IFollowTarget newTarget)
+        //     {
+        //         if (targets.Contains(newTarget)) return false;
+        //         targets.Add(newTarget);
+        //         return true;
+        //     }
+        //
+        //     public bool RemoveTarget(IFollowTarget target)
+        //     {
+        //         return targets.Remove(target);
+        //     }
+        //
+        //     public void Update(float dt)
+        //     {
+        //         SetCameraValues();
+        //     }
+        //     public void FollowStarted()
+        //     {
+        //         
+        //     }
+        //     public void FollowEnded()
+        //     {
+        //         
+        //     }
+        //     public Vector2 GetCameraFollowPosition()
+        //     {
+        //         return followPosition;
+        //     }
+        //     private void UpdateCameraFollowBoundary()
+        //     {
+        //         var rect = camera.Area;
+        //         float size = rect.Size.Min();
+        //         var boundary = new Vector2(size * 0.15f, size * 0.4f);
+        //         // camera.Follower.BoundaryDis = new(boundary);
+        //     }
+        //
+        //     private void SetCameraValues()
+        //     {
+        //         var cameraArea = camera.Area;
+        //         var totalPosition = new Vector2();
+        //         var newCameraRect = new Rect(cameraArea.Center, new(), new(0.5f));
+        //         
+        //         foreach (var target in targets)
+        //         {
+        //             var pos = target.GetPosition();
+        //             totalPosition += pos;
+        //             newCameraRect = newCameraRect.Enlarge(pos);
+        //         }
+        //
+        //         var curSize = cameraArea.Size;
+        //         var newSize = newCameraRect.Size;
+        //         float f = 1f - (newSize.GetArea() / curSize.GetArea());
+        //         camera.SetZoom(f);
+        //         followPosition = totalPosition / targets.Count;
+        //         
+        //         UpdateCameraFollowBoundary();
+        //     }
+        // }
+        //
         
         private readonly Font font;
         private readonly Rect universe = new(new Vector2(0f), new Vector2(10000f), new Vector2(0.5f));
         private readonly List<Star> stars = new();
 
-        private readonly CameraFollower cameraHandler = new();
+        private readonly CameraFollowerMulti cameraFollower = new();
+        private readonly ShapeCamera camera = new();
         private readonly List<SpaceShip> spaceShips = new();
         private bool setupFinished = false;
 
@@ -249,8 +264,9 @@ namespace Examples.Scenes.ExampleScenes
             var spaceShip2 = new SpaceShip(new Vector2(), 30f, GREEN, LIME, LIGHTGRAY);
             spaceShips.Add(spaceShip1);
             spaceShips.Add(spaceShip2);
-            cameraHandler.AddTarget(spaceShip1);
-            cameraHandler.AddTarget(spaceShip2);
+            cameraFollower.AddTarget(spaceShip1);
+            cameraFollower.AddTarget(spaceShip2);
+            camera.Follower = cameraFollower;
         }
         private void GenerateStars(int amount)
         {
@@ -269,20 +285,23 @@ namespace Examples.Scenes.ExampleScenes
         {
             if (!setupFinished)
             {
+                var area = camera.Area;
                 foreach (var ship in spaceShips)
                 {
-                    ship.Reset(cameraHandler.GetRandomPosition(), 30f);
+                    ship.Reset(area.GetRandomPointInside(), 30f);
                 }
 
                 setupFinished = true;
             }
             
-            cameraHandler.Activate();
+            // camera.Activate();
+            GAMELOOP.Camera = camera;
         }
 
         public override void Deactivate()
         {
-            cameraHandler.Deactivate();
+            // camera.Deactivate();
+            GAMELOOP.ResetCamera();
             
         }
         public override GameObjectHandler? GetGameObjectHandler()
@@ -292,15 +311,16 @@ namespace Examples.Scenes.ExampleScenes
         public override void Reset()
         {
             GAMELOOP.ScreenEffectIntensity = 1f;
-            
+            var area = camera.Area;
             foreach (var ship in spaceShips)
             {
-                ship.Reset(cameraHandler.GetRandomPosition(), 30f);
+                ship.Reset(area.GetRandomPointInside(), 30f);
             }
             stars.Clear();
             GenerateStars(2500);
             
-            cameraHandler.Reset();
+            camera.Reset();
+            cameraFollower.Reset();
         }
 
         
@@ -336,7 +356,6 @@ namespace Examples.Scenes.ExampleScenes
         
         protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            cameraHandler.Update(dt);
             foreach (var ship in spaceShips)
             {
                 ship.Update(dt);
@@ -354,6 +373,7 @@ namespace Examples.Scenes.ExampleScenes
                 ship.Draw();
             }
 
+            cameraFollower.Draw();
             // if (drawCameraFollowBoundary)
             // {
             //     float thickness = 2f * camera.ZoomFactor;
@@ -377,9 +397,20 @@ namespace Examples.Scenes.ExampleScenes
         protected override void DrawUIExample(ScreenInfo ui)
         {
             // DrawInputDescription(GAMELOOP.UIRects.GetRect("bottom center"));
+            DrawCameraInfo(GAMELOOP.UIRects.GetRect("bottom center"));
            
         }
-
+        private void DrawCameraInfo(Rect rect)
+        {
+            //var pos = camera.Position;
+            // var x = (int)pos.X;
+            // var y = (int)pos.Y;
+            // var rot = (int)camera.RotationDeg;
+            var zoomLevel = ShapeMath.RoundToDecimals(camera.ZoomLevel, 2);// (int)(ShapeUtils.GetFactor(camera.ZoomLevel, 0.1f, 5f) * 100f);
+            var zoomFactor = ShapeMath.RoundToDecimals(camera.ZoomFactor, 2);
+            string text = $"Zoom: Level {zoomLevel} - Factor {zoomFactor}";
+            font.DrawText(text, rect, 1f, new Vector2(0.5f, 0.5f), ColorHighlight3);
+        }
        
         // private void DrawInputDescription(Rect rect)
         // {
