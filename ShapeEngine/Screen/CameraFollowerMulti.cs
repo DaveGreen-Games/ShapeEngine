@@ -24,7 +24,7 @@ public class CameraFollowerMulti : ICameraFollower
     
     public void Reset()
     {
-        
+        ClearTargets();
     }
 
     public void Draw()
@@ -115,5 +115,9 @@ public class CameraFollowerMulti : ICameraFollower
     {
         return targets.Remove(target);
     }
-    
+
+    public void ClearTargets()
+    {
+        targets.Clear();
+    }
 }

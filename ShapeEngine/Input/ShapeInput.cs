@@ -179,7 +179,27 @@ public class ShapeInput
         }
         return null;
     }
+    // public Gamepad? RequestConnectedGamepad(int preferredIndex = -1)
+    // {
+    //     var preferredGamepad = GetGamepad(preferredIndex);
+    //     if (preferredGamepad is { Connected: true})
+    //     {
+    //         preferredGamepad.Claim();
+    //         return preferredGamepad;
+    //     }
+    //
+    //     foreach (var gamepad in gamepads)
+    //     {
+    //         if (gamepad is { Connected: true})
+    //         {
+    //             gamepad.Claim();
+    //             return gamepad;
+    //         }
+    //     }
+    //     return null;
+    // }
     public void ReturnGamepad(int index) => GetGamepad(index)?.Free();
+    public void ReturnGamepad(Gamepad gamepad) => GetGamepad(gamepad.Index)?.Free();
 
     #endregion
     

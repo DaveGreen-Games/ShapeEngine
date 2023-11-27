@@ -70,7 +70,7 @@ namespace Examples.Scenes
             examples.Add(new DelaunayExample());
             examples.Add(new BouncyCircles());
             examples.Add(new InputExample());
-            examples.Add(new ShipInputExample());
+            examples.Add(new CameraGroupFollowExample());
             
             examples.Add(new TextScalingExample());
             examples.Add(new TextWrapEmphasisExample());
