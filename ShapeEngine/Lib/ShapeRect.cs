@@ -331,10 +331,10 @@ namespace ShapeEngine.Lib
             Vector2 size = new(rect.Width, rect.Height);
             Vector2 br = tl + size;
 
-            left = ShapeMath.Clamp(left, -size.X, size.X);
-            right = ShapeMath.Clamp(right, -size.X, size.X);
-            top = ShapeMath.Clamp(top, -size.Y, size.Y);
-            bottom = ShapeMath.Clamp(bottom, -size.Y, size.Y);
+            // left = ShapeMath.Clamp(left, -size.X, size.X);
+            // right = ShapeMath.Clamp(right, -size.X, size.X);
+            // top = ShapeMath.Clamp(top, -size.Y, size.Y);
+            // bottom = ShapeMath.Clamp(bottom, -size.Y, size.Y);
             
             tl.X += left;
             tl.Y += top;

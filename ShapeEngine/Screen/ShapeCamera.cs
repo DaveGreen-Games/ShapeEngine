@@ -1,4 +1,5 @@
 using System.Numerics;
+using Microsoft.Win32.SafeHandles;
 using Raylib_CsLo;
 using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
@@ -77,8 +78,8 @@ namespace ShapeEngine.Screen;
 
 public sealed class ShapeCamera
 {
-    public static float MinZoomLevel = 0.1f;
-    public static float MaxZoomLevel = 10f;
+    public static float MinZoomLevel = 0.05f;
+    public static float MaxZoomLevel = 20f;
     
     public float Intensity = 1.0f;
 
@@ -107,6 +108,8 @@ public sealed class ShapeCamera
     public Vector2 Position { get; set; } = new();
     
     public Vector2 Size { get; private set; } = new();
+    // public Vector2 SizeRaw => Size / zoomAdjustment;
+    // private Vector2 sizeRaw => Size / zoomAdjustment;
     public Vector2 Alignement{ get; private set; } = new(0.5f);
     
     public Vector2 BaseOffset => Size * Alignement;
@@ -119,8 +122,8 @@ public sealed class ShapeCamera
     public float ZoomLevel { get; private set; } = 1f;
 
     private float zoomAdjustment = 1f;
-    
-    
+
+
     public ShapeCamera() { }
     public ShapeCamera(Vector2 pos)
     {
@@ -202,22 +205,47 @@ public sealed class ShapeCamera
     {
         Size = curScreenSize.ToVector2();
 
+        //VARIANT 2
+        // float xDif = curScreenSize.Width - targetDimensions.Width;
+        // float yDif = curScreenSize.Height - targetDimensions.Width;
+        // if (xDif > yDif)
+        // {
+        //     zoomAdjustment = (float)curScreenSize.Width / (float)targetDimensions.Width;
+        // }
+        // else
+        // {
+        //     zoomAdjustment = (float)curScreenSize.Height / (float)targetDimensions.Height;
+        // }
+
+        //VARIANT 1
         float curArea = curScreenSize.Area;
         float targetArea = targetDimensions.Area;
-
         zoomAdjustment = MathF.Sqrt( curArea / targetArea );
+        
+        //VARIANT 3
+        // var size = Size;
+        // var targetSize = targetDimensions.ToVector2();
+        // var fX = targetSize.X / size.X;
+        // var fY = targetSize.Y / size.Y;
+        // zoomAdjustment = fX > fY ? fX : fY;
+        
+        
+        // zoomAdjustment = 1f;
     }
 
-    // public void SetCameraRect(Rect newRect)
-    // {
-    //     var pos = newRect.GetPoint(Alignement);
-    //     var size = newRect.Size;
-    //
-    //     var f = Size.GetArea() / size.GetArea();
-    //     ZoomLevel = 1f / f;
-    //     Position = pos;
-    //     
-    // }
+    private float CalculateZoomLevel(Vector2 targetSize)
+    {
+        var size = Size / zoomAdjustment;
+        var fX = 1f / (targetSize.X / size.X);
+        var fY = 1f / (targetSize.Y / size.Y);
+        return fX < fY ? fX : fY;
+
+    }
+    public void SetCameraRect(Rect newRect)
+    {
+        Position = newRect.GetPoint(Alignement);
+        SetZoom( CalculateZoomLevel(newRect.Size) );
+    }
     
     public bool HasSequences() => cameraTweens.HasSequences();
     public bool HasTweenSequence(uint id) => cameraTweens.HasSequence(id);
