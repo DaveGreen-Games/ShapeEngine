@@ -19,8 +19,26 @@ namespace Examples.Scenes.ExampleScenes
     {
         internal class SpaceShip : ICameraFollowTarget
         {
-            public const float Speed = 500;
-            public bool Selected = false;
+            public const float Speed = 500f;
+            public const float Size = 30f;
+            public const float MaxDistance = 1500f;
+            public const float MinDistance = 250f;
+            public const float TurningSpeedDeg = 120f;
+
+            private bool selected = false;
+            public bool Selected
+            {
+                get => selected;
+                set
+                {
+                    if (value != selected)
+                    {
+                        invisibleTimer = 2f;
+                        selected = value;
+                    }
+                    
+                }
+            }
             
             private Circle hull;
             private Vector2 movementDir;
@@ -30,20 +48,19 @@ namespace Examples.Scenes.ExampleScenes
             private readonly Color cockpitColorActive = ColorHighlight3;
 
             private readonly Color hullColorInactive = ColorMedium;
-            private readonly Color outlineColorInactive = ColorLight;
-            private readonly Color cockpitColorInactive = ColorRustyRed;
+            private readonly Color outlineColorInactive = ColorMedium;
+            private readonly Color cockpitColorInactive = ColorHighlight2;
             
             private readonly InputAction iaMoveHor;
             private readonly InputAction iaMoveVer;
-            private readonly InputAction iaAddShip;
-            private readonly InputAction iaChangeShip;
+            private float outOfBoundsTimer = 0f;
+            private float invisibleTimer;
 
-            public event Action<Vector2>? OnSpawnShipRequested;
-            public event Action<SpaceShip>? OnShipChangeRequested;
-            public SpaceShip(Vector2 pos, float r)
+            public SpaceShip(Vector2 pos)
             {
-                hull = new(pos, r);
-                
+                hull = new(pos, Size);
+                movementDir = ShapeRandom.randVec2();
+                invisibleTimer = 2f;
                 
                 var moveHorKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
                 var moveHorGP = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
@@ -55,51 +72,50 @@ namespace Examples.Scenes.ExampleScenes
                 var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
                 iaMoveVer = new(moveVerKB, moveVerMW, moveVerGP);
                 
-                var addShipKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
-                var addShipGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
-                var addshipMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
-                iaAddShip = new(addShipKB, addshipMB, addShipGP);
                 
-                var nextShipKB = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
-                var nextShipGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
-                var nextShipMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
-                iaChangeShip = new(nextShipKB, nextShipMB, nextShipGP);
             }
 
+            public bool Overlap(SpaceShip other)
+            {
+                if (invisibleTimer > 0f) return false;
+                
+                return hull.OverlapShape(other.hull);
+            }
             public string GetInputDescription(InputDevice inputDevice)
             {
                 string hor = iaMoveHor.GetInputTypeDescription(inputDevice, true, 1, false, false);
                 string ver = iaMoveVer.GetInputTypeDescription(inputDevice, true, 1, false, false);
                 return $"Move Horizontal [{hor}] Vertical [{ver}]";
             }
-            public void Reset(Vector2 pos, float r)
-            {
-                hull = new(pos, r);
-            }
-
+            
             public void Destroy()
             {
                 //if(gamepad != null) ShapeLoop.Input.ReturnGamepad(gamepad);
             }
-            public void Update(float dt)
+            public void Update(float dt, Vector2 target)
             {
+                if (outOfBoundsTimer > 0f)
+                {
+                    outOfBoundsTimer -= dt;
+                    if (outOfBoundsTimer < 0f) outOfBoundsTimer = 0f;
+                }
 
+                if (invisibleTimer > 0f)
+                {
+                    invisibleTimer -= dt;
+                    if (invisibleTimer < 0f) invisibleTimer = 0f;
+                }
+                
+                float radius = Size * (Selected ? 1f : 0.75f);
                 if (Selected)
                 {
                     int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
                     iaMoveHor.Gamepad = gamepadIndex;
-                    iaMoveHor.Gamepad = gamepadIndex;
-                    iaMoveHor.Gamepad = gamepadIndex;
-                    iaChangeShip.Gamepad = gamepadIndex;
+                    iaMoveVer.Gamepad = gamepadIndex;
                 
                     iaMoveHor.Update(dt);
                     iaMoveVer.Update(dt);
-                    iaAddShip.Update(dt);
-                    iaChangeShip.Update(dt);
-                        
-                    if(iaChangeShip.State.Pressed) OnShipChangeRequested?.Invoke(this);
-                
-                    if(iaAddShip.State.Pressed) OnSpawnShipRequested?.Invoke(GetRandomSpawnPosition());
+                    
                     Vector2 dir = new(iaMoveHor.State.AxisRaw, iaMoveVer.State.AxisRaw);
                     
                     float lsq = dir.LengthSquared();
@@ -107,22 +123,58 @@ namespace Examples.Scenes.ExampleScenes
                     {
                         movementDir = dir.Normalize();
                         var movement = movementDir * Speed * dt;
-                        hull = new Circle(hull.Center + movement, hull.Radius);
+                        hull = new Circle(hull.Center + movement, radius);
+                    }
+                    else
+                    {
+                        hull = new Circle(hull.Center, radius);
                     }
                 }
                 else
                 {
-                    var dir = ShapeRandom.randVec2();
-                    movementDir = ShapeVec.Lerp(movementDir, dir, dt * 4).Normalize();
-                    var movement = movementDir * Speed * 0.25f * dt;
-                    hull = new Circle(hull.Center + movement, hull.Radius);
+                    Vector2 dir;
+                    float speed;
+                    float turnSpeedDeg;
+                    var targetDir = target - hull.Center;
+                    var targetDis = targetDir.LengthSquared();
+                    if (targetDis < MinDistance * MinDistance)
+                    {
+                        outOfBoundsTimer = 0;
+                        dir = ShapeRandom.randVec2();
+                        speed = Speed * 0.25f;
+                        turnSpeedDeg = TurningSpeedDeg; 
+                    }
+                    else if (targetDis > MaxDistance * MaxDistance || outOfBoundsTimer > 0)
+                    {
+                        dir = targetDir;
+                        speed = Speed * 2f;
+                        turnSpeedDeg = TurningSpeedDeg * 2f;
+                        if(outOfBoundsTimer <= 0) outOfBoundsTimer = 5f;
+                    }
+                    else
+                    {
+                        dir = ShapeRandom.randVec2();
+                        speed = Speed * 0.25f;
+                        turnSpeedDeg = TurningSpeedDeg;
+                    }
+                    
+                    var rotRad = ShapeUtils.AimAt(movementDir.AngleRad(), dir.AngleRad(), turnSpeedDeg * DEG2RAD, dt);
+                    movementDir = movementDir.Rotate(rotRad);
+                    // var angle = ShapeMath.GetShortestAngleRad(movementDir.AngleRad(), dir.AngleRad());
+                    // var angleMovementRad = MathF.Min(angle, TurningSpeed * DEG2RAD * dt);
+                    // movementDir = movementDir.Rotate(angleMovementRad);
+                    
+                    // movementDir = ShapeVec.Lerp(movementDir, dir, dt).Normalize();
+                    
+                    var movement = movementDir * speed * dt;
+                    hull = new Circle(hull.Center + movement, radius);
                 }
                 
                 
                 
             }
 
-            private Vector2 GetRandomSpawnPosition()
+            public Vector2 GetRandomSpawnPosition()
             {
                 return GetPosition() + ShapeRandom.randVec2(0, hull.Radius * 2);
             }
@@ -140,6 +192,12 @@ namespace Examples.Scenes.ExampleScenes
                 DrawCircleV(hull.Center + movementDir * hull.Radius * 0.66f, hull.Radius * 0.33f, cockpitColor);
 
                 hull.DrawLines(4f, outlineColor);
+
+                if (invisibleTimer > 0f)
+                {
+                    Circle shield = new(hull.Center, hull.Radius + 12f);
+                    shield.DrawLines(2f, ColorHighlight2);
+                }
             }
 
 
@@ -273,7 +331,8 @@ namespace Examples.Scenes.ExampleScenes
         private readonly List<SpaceShip> spaceShips = new();
         private SpaceShip? ActiveSpaceShip = null;
 
-        // private List<SpaceShip> spawned = new();
+        private readonly InputAction iaAddShip;
+        private readonly InputAction iaSelfDestruct;
         
         
         
@@ -286,17 +345,20 @@ namespace Examples.Scenes.ExampleScenes
             GenerateStars(2500);
             camera.Follower = cameraFollower;
 
-            AddShip(new(0));
+            AddShip();
             
-            
-            
-            // SetShipActive(spaceShip1);
+            var addShipKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
+            var addShipGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
+            var addshipMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
+            iaAddShip = new(addShipKB, addshipMB, addShipGP);
+                
+            var nextShipKB = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
+            var nextShipGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
+            var nextShipMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
+            iaSelfDestruct = new(nextShipKB, nextShipMB, nextShipGP);
         }
 
-        private void OnChangeShipRequested(SpaceShip ship)
-        {
-            if(ship == ActiveSpaceShip) NextShip();
-        }
+       
         private void SelectShip(SpaceShip ship)
         {
             if (!spaceShips.Contains(ship)) return;
@@ -320,31 +382,24 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
 
-        private void AddShip(Vector2 pos)
+        private void AddShip()
         {
-            var spaceShip = new SpaceShip(pos, 30f);
-            spaceShip.OnSpawnShipRequested += AddShip;
-            spaceShip.OnShipChangeRequested += OnChangeShipRequested;
+            var pos = ActiveSpaceShip?.GetRandomSpawnPosition() ?? new();
+            var spaceShip = new SpaceShip(pos);
             spaceShips.Add(spaceShip);
-            // spawned.Add(spaceShip);
             cameraFollower.AddTarget(spaceShip);
             if (ActiveSpaceShip == null)
             {
                 SelectShip(spaceShip);
             }
         }
+
+        
         private void DestroyShips()
         {
-            // var area = camera.Area;
-            // foreach (var ship in spaceShips)
-            // {
-            //     ship.Reset(area.GetRandomPointInside(), 30f);
-            // }
             foreach (var ship in spaceShips)
             {
                 ship.Destroy();
-                ship.OnSpawnShipRequested -= AddShip;
-                ship.OnShipChangeRequested -= OnChangeShipRequested;
             }
             ActiveSpaceShip = null;
             
@@ -388,7 +443,7 @@ namespace Examples.Scenes.ExampleScenes
             camera.Reset();
             cameraFollower.Reset();
             
-            AddShip(new(0));
+            AddShip();
         }
 
         
@@ -400,43 +455,67 @@ namespace Examples.Scenes.ExampleScenes
         
         protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            
-            // iaChangeShip.Update(dt);
-            // if (iaChangeShip.State.Pressed)
-            // {
-            //      NextShip();       
-            // }
-            // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
-            // iaShakeCamera.Gamepad = gamepadIndex;
-            // iaShakeCamera.Update(dt);
-            //
-            // iaRotateCamera.Gamepad = gamepadIndex;
-            // iaRotateCamera.Update(dt);
-            //
-            // iaToggleDrawCameraFollowBoundary.Gamepad = gamepadIndex;
-            // iaToggleDrawCameraFollowBoundary.Update(dt);
-            //
-            // if (iaToggleDrawCameraFollowBoundary.State.Pressed)
-            // {
-            //     drawCameraFollowBoundary = !drawCameraFollowBoundary;
-            // }
-            //
-            // HandleRotation(dt);
-            //
-            // if (iaShakeCamera.State.Pressed) ShakeCamera();
+            int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
+            iaAddShip.Gamepad = gamepadIndex;
+            iaSelfDestruct.Gamepad = gamepadIndex;
+                
+            iaAddShip.Update(dt);
+            iaSelfDestruct.Update(dt);
 
+            if (iaSelfDestruct.State.Pressed)
+            {
+                if (ActiveSpaceShip != null && spaceShips.Count > 1)
+                {
+                    var pos = ActiveSpaceShip.GetPosition();
+                    ActiveSpaceShip.Destroy();
+                    spaceShips.Remove(ActiveSpaceShip);
+                    cameraFollower.RemoveTarget(ActiveSpaceShip);
+                    ActiveSpaceShip = null;
+                    
+
+                    SpaceShip? next = null;
+                    float minDisSq = float.PositiveInfinity;
+                    foreach (var ship in spaceShips)
+                    {
+                        var dir = ship.GetPosition() - pos;
+                        var disSq = dir.LengthSquared();
+                        if (disSq < minDisSq)
+                        {
+                            minDisSq = disSq;
+                            next = ship;
+                        }
+                    }
+
+                    SelectShip(next ?? spaceShips[0]);
+                }
+            }
+
+            if (iaAddShip.State.Pressed)
+            {
+                AddShip();
+            }
         }
 
         
         protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
+            var targetPos = ActiveSpaceShip?.GetPosition() ?? new();
+
+            SpaceShip? next = null;
             for (int i = spaceShips.Count - 1; i >= 0; i--)
             {
                 var ship = spaceShips[i];
-                ship.Update(dt);
-            }
+                ship.Update(dt, targetPos);
 
-            
+
+                if (ActiveSpaceShip != null && ship != ActiveSpaceShip && ship.Overlap(ActiveSpaceShip))
+                {
+                    // ship.Destroy();
+                    // spaceShips.RemoveAt(i);
+                    next = ship;
+                }
+            }
+            if(next != null) SelectShip(next);
         }
         protected override void DrawGameExample(ScreenInfo game)
         {
@@ -459,13 +538,37 @@ namespace Examples.Scenes.ExampleScenes
         }
         protected override void DrawUIExample(ScreenInfo ui)
         {
-            // var rects = GAMELOOP.UIRects.GetRect("bottom center").SplitV(0.5f);
-            // DrawInputDescription(GAMELOOP.UIRects.GetRect("bottom center"));
-            // DrawCameraSizeInfo(rects.top);
-            // DrawCameraInfo(rects.bottom);
+            var rects = GAMELOOP.UIRects.GetRect("bottom center").SplitV(0.35f);
+            DrawDescription(rects.top);
+            DrawInputDescription(rects.bottom);
            
         }
 
+        private void DrawDescription(Rect rect)
+        {
+            font.DrawText("Bump into other ships to take control of them.", rect, 1f, new Vector2(0.5f, 0.5f), ColorMedium);
+        }
+        private void DrawInputDescription(Rect rect)
+        {
+            var curDevice = Input.CurrentInputDevice;
+            // var curDeviceNoMouse = Input.CurrentInputDeviceNoMouse;
+            string addShipText = iaAddShip.GetInputTypeDescription(curDevice, true, 1, false);
+            string selfDestructText = iaSelfDestruct.GetInputTypeDescription(curDevice, true, 1, false);
+            string moveText = ActiveSpaceShip != null ? ActiveSpaceShip.GetInputDescription(curDevice) : "";
+            
+            if (spaceShips.Count <= 1)
+            {
+                string textBottom = $"{moveText} | Add Ship {addShipText}";
+                font.DrawText(textBottom, rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+            }
+            else
+            {
+                string textBottom = $"{moveText} | Add Ship {addShipText} | Self Destruct Ship {selfDestructText}";
+                font.DrawText(textBottom, rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+            }
+            
+            
+        }
         // private void DrawCameraSizeInfo(Rect rect)
         // {
         //     var targetSize = ShapeMath.RoundToDecimals(camera.TargetSize, 2);
@@ -488,21 +591,7 @@ namespace Examples.Scenes.ExampleScenes
         //     font.DrawText(text, rect, 1f, new Vector2(0.5f, 0.5f), ColorHighlight3);
         // }
        
-        // private void DrawInputDescription(Rect rect)
-        // {
-        //     var rects = rect.SplitV(0.35f);
-        //     var curDevice = Input.CurrentInputDevice;
-        //     // var curDeviceNoMouse = Input.CurrentInputDeviceNoMouse;
-        //     string shakeCameraText = iaShakeCamera.GetInputTypeDescription(curDevice, true, 1, false);
-        //     string rotateCameraText = iaRotateCamera.GetInputTypeDescription(curDevice, true, 1, false);
-        //     string toggleDrawText = iaToggleDrawCameraFollowBoundary.GetInputTypeDescription(Input.CurrentInputDeviceNoMouse, true, 1, false);
-        //     string moveText = ship.GetInputDescription(curDevice);
-        //     string onText = drawCameraFollowBoundary ? "ON" : "OFF";
-        //     string textTop = $"Draw Camera Follow Boundary {onText} - Toggle {toggleDrawText}";
-        //     string textBottom = $"{moveText} | Shake {shakeCameraText} | Rotate {rotateCameraText}";
-        //     font.DrawText(textTop, rects.top, 1f, new Vector2(0.5f, 0.5f), ColorMedium);
-        //     font.DrawText(textBottom, rects.bottom, 1f, new Vector2(0.5f, 0.5f), ColorLight);
-        // }
+        
     }
 
 }
