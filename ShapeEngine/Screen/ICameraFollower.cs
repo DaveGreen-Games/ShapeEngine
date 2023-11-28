@@ -1,13 +1,20 @@
+using ShapeEngine.Core.Shapes;
+using ShapeEngine.Lib;
+
 namespace ShapeEngine.Screen;
 
 
 public interface ICameraFollower
 {
     public void Reset();
-    public void Update(float dt, ShapeCamera camera);
-    public void OnCameraAttached(ShapeCamera camera);
-    public void OnCameraDetached(ShapeCamera camera);
+    public Rect Update(float dt, Rect cameraRect);
+    
+    
+    public void OnCameraAttached();
+    public void OnCameraDetached();
 
+
+    //public Rect GetCameraRect(ShapeCamera camera);
 
 }
 

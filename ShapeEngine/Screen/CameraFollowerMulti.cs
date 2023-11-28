@@ -7,14 +7,14 @@ namespace ShapeEngine.Screen;
 
 public class CameraFollowerMulti : ICameraFollower
 {
+    public ICameraFollowTarget? CenterTarget = null;
     private readonly List<ICameraFollowTarget> targets = new();
 
-    private Rect bounds = new();
-    private ShapeCamera? camera = null;
-    
+    private Rect prevCameraRect = new();
     public float TargetMargin = 250f;
     public Vector2 MinSize = new(100, 100);
-    public float LerpSpeed = 0f; //instant
+    public float LerpSpeedPosition = 0f;
+    public float LerpSpeedSize = 0f;
     
     public CameraFollowerMulti()
     {
@@ -29,17 +29,17 @@ public class CameraFollowerMulti : ICameraFollower
 
     public void Draw()
     {
-        bounds.DrawLines(6f, RED);
-        bounds.Center.Draw(4f, GREEN);
-        // targetBounds.DrawLines(4f, WHITE);
+        prevCameraRect.DrawLines(6f, RED);
+        prevCameraRect.Center.Draw(4f, GREEN);
         
     }
-    public void Update(float dt, ShapeCamera camera)
+    public Rect Update(float dt, Rect cameraRect)
     {
-        if (targets.Count <= 0) return;
+        if (targets.Count <= 0) return cameraRect;
         // var cameraArea = camera.Area;
         
         var newCameraRect = new Rect(targets[0].GetCameraFollowPosition(), MinSize, new(0.5f));
+        
         for (var i = 1; i < targets.Count; i++)
         {
             var target = targets[i];
@@ -47,62 +47,50 @@ public class CameraFollowerMulti : ICameraFollower
             newCameraRect = newCameraRect.Enlarge(pos);
         }
 
+        if (CenterTarget != null)
+        {
+            var pos = CenterTarget.GetCameraFollowPosition();
+            float left = newCameraRect.Left;
+            float right = newCameraRect.Right;
+            float top = newCameraRect.Top;
+            float bottom = newCameraRect.Bottom;
+
+            float leftDif = MathF.Abs( left - pos.X );
+            float rightDif = MathF.Abs( right - pos.X);
+            float topDif = MathF.Abs( top - pos.Y);
+            float bottomDif = MathF.Abs( bottom - pos.Y);
+
+            float width = MathF.Max(leftDif, rightDif) * 2;
+            float height = MathF.Max(topDif, bottomDif) * 2;
+
+            newCameraRect = new(pos, new Vector2(width, height), new Vector2(0.5f, 0.5f));
+        }
+
         newCameraRect = newCameraRect.ApplyMarginsAbsolute(-TargetMargin, -TargetMargin, -TargetMargin, -TargetMargin);
-        camera.SetCameraRect(newCameraRect);
-        bounds = newCameraRect;
-        // VARIANT 1
-        // var curSize = camera.SizeRaw;
-        // var newSize = newCameraRect.Size;
-        // targetBounds = new(newCameraRect.Center, curSize, new(0.5f));
-        // float xDif = newSize.X - curSize.X;
-        // float yDif = newSize.Y - curSize.Y;
-        // if (xDif > yDif)
-        // {
-        //      float newZoomLevel = 1f / (newSize.X / curSize.X);
-        //      //prevZoomLevel = Lerp(prevZoomLevel, newZoomLevel, dt);
-        //      prevZoomLevel = newZoomLevel;
-        //      camera.SetZoom(prevZoomLevel);
-        //      hor = true;
-        // }
-        // else
-        // {
-        //      float newZoomLevel = 1f / (newSize.Y / curSize.Y);
-        //      //prevZoomLevel = Lerp(prevZoomLevel, newZoomLevel, dt);
-        //      prevZoomLevel = newZoomLevel;
-        //      camera.SetZoom(prevZoomLevel);
-        //      hor = false;
-        // }
+        if (LerpSpeedPosition <= 0f && LerpSpeedSize <= 0f)
+        {
+            prevCameraRect = newCameraRect;
+            return newCameraRect;
+        }
+        // var finalPosition = prevCameraRect.Center.LerpTowards(newCameraRect.Center, 0.25f, dt );
+        // var finalSize = prevCameraRect.Size.LerpTowards(newCameraRect.Size, 0.25f, dt);
         
-        
-        //// VARIANT 2
-        // var curSize = camera.SizeRaw;
-        // var newSize = newCameraRect.Size;
-        // float newZoomLevel = MathF.Sqrt( 1f / (newSize.GetArea() / curSize.GetArea()) );
-        // zoomLevel = newZoomLevel;
-        // camera.SetZoom(newZoomLevel);
-        
-        
-        
-        // var curSize = cameraArea.Size;
-        // var newSize = newCameraRect.Size;
-        // float f = 1f - (newSize.GetArea() / curSize.GetArea());
-        // camera.SetZoom(f);
-        
-        
-        // camera.Position = newCameraRect.Center;
-        
-        
-        
+        var finalPosition = LerpSpeedPosition > 0 ? prevCameraRect.Center.MoveTowards(newCameraRect.Center, LerpSpeedPosition * dt) : newCameraRect.Center;
+        var finalSize = LerpSpeedSize > 0 ? prevCameraRect.Size.MoveTowards(newCameraRect.Size, LerpSpeedSize * dt) : newCameraRect.Size;
+        prevCameraRect = new(finalPosition, finalSize, new(0.5f));
+        return prevCameraRect;
     }
 
 
-    public void OnCameraAttached(ShapeCamera camera)
+    public void OnCameraAttached()
     {
-        this.camera = camera; }
+        
+    }
 
-    public void OnCameraDetached(ShapeCamera camera)
+    public void OnCameraDetached()
     {
-        this.camera = null; }
+        
+    }
     
     public bool AddTarget(ICameraFollowTarget newTarget)
     {

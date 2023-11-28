@@ -129,23 +129,45 @@ namespace ShapeEngine.Lib
             return ShapeVec.Rotate(from, ShapeMath.LerpFloat(0, angle, t));
         }
         public static Vector2 Lerp(this Vector2 from, Vector2 to, float t) { return Vector2.Lerp(from, to, t); } //RayMath.Vector2Lerp(v1, v2, t);
-        public static Vector2 MoveTowards(this Vector2 from, Vector2 to, float maxDistance) 
-        {
-            
-            Vector2 result = new();
-            float difX = to.X - from.X;
-            float difY = to.Y - from.Y;
-            float lengthSq = difX * difX + difY * difY;
-            if (lengthSq == 0f || (maxDistance >= 0f && lengthSq <= maxDistance * maxDistance))
-            {
-                return to;
-            }
 
-            float length = MathF.Sqrt(lengthSq);
-            result.X = from.X + difX / length * maxDistance;
-            result.Y = from.Y + difY / length * maxDistance;
-            return result;
+        public static Vector2 LerpTowards(this Vector2 from, Vector2 to, float seconds, float dt)
+        {
+            var dir = to - from;
+            var lsq = dir.LengthSquared();
+            if (lsq <= 0f || seconds <= 0f) return to;
+
+            var l = MathF.Sqrt(lsq);
+            var step = (l / seconds) * dt;
+            if (step > l) return to;
+            return from + (dir / l) * step;
         }
+        public static Vector2 MoveTowards(this Vector2 from, Vector2 to, float speed)
+        {
+            var dir = to - from;
+            var lsq = dir.LengthSquared();
+            if (lsq <= 0f || speed <= 0f) return from;
+            if (speed * speed > lsq) return to;
+            
+            var l = MathF.Sqrt(lsq);
+            return from + (dir / l) * speed;
+        }
+        // public static Vector2 MoveTowards(this Vector2 from, Vector2 to, float maxDistance) 
+        // {
+        //     
+        //     Vector2 result = new();
+        //     float difX = to.X - from.X;
+        //     float difY = to.Y - from.Y;
+        //     float lengthSq = difX * difX + difY * difY;
+        //     if (lengthSq == 0f || (maxDistance >= 0f && lengthSq <= maxDistance * maxDistance))
+        //     {
+        //         return to;
+        //     }
+        //
+        //     float length = MathF.Sqrt(lengthSq);
+        //     result.X = from.X + difX / length * maxDistance;
+        //     result.Y = from.Y + difY / length * maxDistance;
+        //     return result;
+        // }
         public static Vector2 Floor(this Vector2 v) { return new(MathF.Floor(v.X), MathF.Floor(v.Y)); }
         public static Vector2 Ceiling(this Vector2 v) { return new(MathF.Ceiling(v.X), MathF.Ceiling(v.Y)); }
         public static Vector2 Round(this Vector2 v) { return new(MathF.Round(v.X), MathF.Round(v.Y)); }

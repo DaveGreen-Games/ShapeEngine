@@ -1,6 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Core;
 using ShapeEngine.Core.Interfaces;
+using ShapeEngine.Core.Shapes;
 using ShapeEngine.Lib;
 
 namespace ShapeEngine.Screen;
@@ -25,7 +26,7 @@ public class CameraFollowerSingle : ICameraFollower
         BoundaryDis = new(minBoundary, maxBoundary);
     }
 
-    public void Update(float dt, ShapeCamera camera)
+    public Rect Update(float dt, Rect cameraRect)
     {
         // if (!Active) return;
         
@@ -50,7 +51,8 @@ public class CameraFollowerSingle : ICameraFollower
                     curPosition = changeTargetStartPosition.Lerp(NewTarget.GetCameraFollowPosition(), f);
                 }
                 
-                camera.Position = curPosition;
+                //camera.Position = curPosition;
+                return new(curPosition, cameraRect.Size, new(0.5f));
             }
         }
         else if(Target != null && Speed > 0) //Follow current target
@@ -69,10 +71,11 @@ public class CameraFollowerSingle : ICameraFollower
             }
             else curPosition = LerpPosition(curPosition, newPos, Speed, dt);
             
-            camera.Position = curPosition;
+            //camera.Position = curPosition;
+            return new(curPosition, cameraRect.Size, new(0.5f));
         }
 
-        
+        return cameraRect;
     }
     
     // void ICameraFollower.Update(float dt, ShapeCamera camera)
@@ -90,9 +93,9 @@ public class CameraFollowerSingle : ICameraFollower
         curPosition = new();
     }
 
-    public void OnCameraAttached(ShapeCamera camera) { }
+    public void OnCameraAttached() { }
     
-    public void OnCameraDetached(ShapeCamera camera) { }
+    public void OnCameraDetached() { }
    
 
     public void SetTarget(ICameraFollowTarget target)

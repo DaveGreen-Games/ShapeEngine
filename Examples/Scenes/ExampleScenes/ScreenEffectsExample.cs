@@ -417,7 +417,7 @@ namespace Examples.Scenes.ExampleScenes
         protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
             UpdateFollower(ui.Area.Size.Min());
-            follower.Update(dt,camera);
+            //follower.Update(dt,camera);
             
             var slider = GAMELOOP.UIRects.GetRect("center").ApplyMargins(0.025f, 0.025f, 0.02f, 0.93f);
             var sliderLeft = slider.ApplyMargins(0f, 0.55f, 0f, 0f);

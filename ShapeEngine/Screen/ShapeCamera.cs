@@ -100,9 +100,9 @@ public sealed class ShapeCamera
         get => follower;
         set
         {
-            follower?.OnCameraDetached(this);
+            follower?.OnCameraDetached();
             follower = value;
-            follower?.OnCameraAttached(this);
+            follower?.OnCameraAttached();
         }
     }
     public Vector2 Position { get; set; } = new();
@@ -198,8 +198,11 @@ public sealed class ShapeCamera
         cameraTweenTotalRotationDeg = 0f;
         cameraTweenTotalZoomFactor = 1f;
 
-        Follower?.Update(dt, this);
-        //if (Follower.IsFollowing) Position = Follower.Position;
+        if (follower != null)
+        {
+            var rect = follower.Update(dt, Area);
+            SetCameraRect(rect);
+        }
     }
     internal void SetSize(Dimensions curScreenSize, Dimensions targetDimensions)
     {
