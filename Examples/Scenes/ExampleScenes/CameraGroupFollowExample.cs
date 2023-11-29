@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.Design.Serialization;
-using Raylib_CsLo;
+﻿using Raylib_CsLo;
 using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Random;
@@ -333,7 +332,7 @@ namespace Examples.Scenes.ExampleScenes
         private SpaceShip? ActiveSpaceShip = null;
 
         private readonly InputAction iaAddShip;
-        private readonly InputAction iaSelfDestruct;
+        private readonly InputAction iaNextShip;
         private readonly InputAction iaCenterTarget;
         private bool centerTargetActive = false;
         
@@ -357,7 +356,7 @@ namespace Examples.Scenes.ExampleScenes
             var nextShipKB = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
             var nextShipGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
             var nextShipMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
-            iaSelfDestruct = new(nextShipKB, nextShipMB, nextShipGP);
+            iaNextShip = new(nextShipKB, nextShipMB, nextShipGP);
             
             var centerTargetKB = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
             var centerTargetGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
@@ -460,16 +459,45 @@ namespace Examples.Scenes.ExampleScenes
         //     camera.Shake(ShapeRandom.randF(0.8f, 2f), new Vector2(100, 100), 0, 25, 0.75f);
         // }
         //
-        
+        private void DestroyShip(SpaceShip ship)
+        {
+            if (ActiveSpaceShip == null || ship == ActiveSpaceShip || spaceShips.Count < 2) return;
+
+            if (spaceShips.Remove(ship))
+            {
+                ship.Destroy();
+                cameraFollower.RemoveTarget(ship);
+            }
+        }
+
+        private SpaceShip? FindClosestShip(SpaceShip origin)
+        {
+            var pos = origin.GetPosition();
+            SpaceShip? next = null;
+            float minDisSq = float.PositiveInfinity;
+            foreach (var ship in spaceShips)
+            {
+                if(ship == origin) continue;
+                var dir = ship.GetPosition() - pos;
+                var disSq = dir.LengthSquared();
+                if (disSq < minDisSq)
+                {
+                    minDisSq = disSq;
+                    next = ship;
+                }
+            }
+
+            return next;
+        }
         protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
             iaAddShip.Gamepad = gamepadIndex;
-            iaSelfDestruct.Gamepad = gamepadIndex;
+            iaNextShip.Gamepad = gamepadIndex;
             iaCenterTarget.Gamepad = gamepadIndex;
                 
             iaAddShip.Update(dt);
-            iaSelfDestruct.Update(dt);
+            iaNextShip.Update(dt);
             iaCenterTarget.Update(dt);
 
             if (iaCenterTarget.State.Pressed)
@@ -485,31 +513,12 @@ namespace Examples.Scenes.ExampleScenes
                 }
             }
             
-            if (iaSelfDestruct.State.Pressed)
+            if (iaNextShip.State.Pressed)
             {
-                if (ActiveSpaceShip != null && spaceShips.Count > 1)
+                if (ActiveSpaceShip != null)
                 {
-                    var pos = ActiveSpaceShip.GetPosition();
-                    ActiveSpaceShip.Destroy();
-                    spaceShips.Remove(ActiveSpaceShip);
-                    cameraFollower.RemoveTarget(ActiveSpaceShip);
-                    ActiveSpaceShip = null;
-                    
-
-                    SpaceShip? next = null;
-                    float minDisSq = float.PositiveInfinity;
-                    foreach (var ship in spaceShips)
-                    {
-                        var dir = ship.GetPosition() - pos;
-                        var disSq = dir.LengthSquared();
-                        if (disSq < minDisSq)
-                        {
-                            minDisSq = disSq;
-                            next = ship;
-                        }
-                    }
-
-                    SelectShip(next ?? spaceShips[0]);
+                    var next = FindClosestShip(ActiveSpaceShip);
+                    if(next != null) SelectShip(next);
                 }
             }
 
@@ -533,9 +542,7 @@ namespace Examples.Scenes.ExampleScenes
 
                 if (ActiveSpaceShip != null && ship != ActiveSpaceShip && ship.Overlap(ActiveSpaceShip))
                 {
-                    // ship.Destroy();
-                    // spaceShips.RemoveAt(i);
-                    next = ship;
+                    DestroyShip(ship);
                 }
             }
             if(next != null) SelectShip(next);
@@ -569,14 +576,14 @@ namespace Examples.Scenes.ExampleScenes
 
         private void DrawDescription(Rect rect)
         {
-            font.DrawText("Bump into other ships to take control of them.", rect, 1f, new Vector2(0.5f, 0.5f), ColorMedium);
+            font.DrawText("Bump into other ships to destroy them.", rect, 1f, new Vector2(0.5f, 0.5f), ColorMedium);
         }
         private void DrawInputDescription(Rect rect)
         {
             var curDevice = Input.CurrentInputDevice;
             var curDeviceNoMouse = Input.CurrentInputDeviceNoMouse;
             string addShipText = iaAddShip.GetInputTypeDescription(curDevice, true, 1, false);
-            string selfDestructText = iaSelfDestruct.GetInputTypeDescription(curDevice, true, 1, false);
+            string nextShipText = iaNextShip.GetInputTypeDescription(curDevice, true, 1, false);
             string centerTargetText = iaCenterTarget.GetInputTypeDescription(curDeviceNoMouse, true, 1, false);
             string moveText = ActiveSpaceShip != null ? ActiveSpaceShip.GetInputDescription(curDevice) : "";
             
@@ -587,7 +594,7 @@ namespace Examples.Scenes.ExampleScenes
             }
             else
             {
-                string textBottom = $"{moveText} | Add Ship {addShipText} | Self Destruct Ship {selfDestructText} | Center Mode {centerTargetActive} {centerTargetText}";
+                string textBottom = $"{moveText} | Add Ship {addShipText} | Next Ship {nextShipText} | Center Mode {centerTargetActive} {centerTargetText}";
                 font.DrawText(textBottom, rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
             }
             
