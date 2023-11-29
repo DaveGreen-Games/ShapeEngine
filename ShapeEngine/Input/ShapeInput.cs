@@ -10,25 +10,22 @@ namespace ShapeEngine.Input;
 public class ShapeInput
 {
     #region Members
-    public static readonly GamepadButton[] AllGamepadButtons = Enum.GetValues<GamepadButton>();
-    public static readonly GamepadAxis[] AllGamepadAxis = Enum.GetValues<GamepadAxis>();
+    
     public static readonly KeyboardKey[] AllKeyboardKeys = Enum.GetValues<KeyboardKey>();
     public static readonly MouseButton[] AllMouseButtons = Enum.GetValues<MouseButton>();
     
-    public static readonly ShapeGamepadButton[] AllShapeGamepadButtons = Enum.GetValues<ShapeGamepadButton>();
-    public static readonly ShapeGamepadAxis[] AllShapeGamepadAxis = Enum.GetValues<ShapeGamepadAxis>();
+    
     public static readonly ShapeKeyboardButton[] AllShapeKeyboardButtons = Enum.GetValues<ShapeKeyboardButton>();
     public static readonly ShapeMouseButton[] AllShapeMouseButtons = Enum.GetValues<ShapeMouseButton>();
     
     public static readonly uint AllAccessTag = 0;
+
+    public GamepadManager Gamepads = new();
     
     public bool Locked { get; private set; } = false;
     private readonly List<uint> lockWhitelist = new();
     private readonly List<uint> lockBlacklist = new();
-    //private static readonly Dictionary<uint, InputAction> inputActions = new();
     
-    private readonly Gamepad[] gamepads = new Gamepad[8];
-    private readonly List<int> connectedGamepadIndices = new();
     public InputDevice CurrentInputDevice { get; private set; } = InputDevice.Keyboard;
 
     public InputDevice CurrentInputDeviceNoMouse => FilterInputDevice(CurrentInputDevice, InputDevice.Mouse, InputDevice.Keyboard);
@@ -40,20 +37,23 @@ public class ShapeInput
             : current;
     }
 
-    public int MaxGamepads => gamepads.Length;
-    public Gamepad? LastUsedGamepad { get; private set; } = null;
+    // private readonly Gamepad[] gamepads = new Gamepad[8];
+    // private readonly List<int> connectedGamepadIndices = new();
+    // public int MaxGamepads => gamepads.Length;
+    // public Gamepad? LastUsedGamepad { get; private set; } = null;
+    // public event Action<Gamepad, bool>? OnGamepadConnectionChanged;
     #endregion
 
-    public event Action<Gamepad, bool>? OnGamepadConnectionChanged;
     public event Action<InputDevice, InputDevice>? OnInputDeviceChanged;
 
-    public ShapeInput()
-    {
-        GamepadSetup();
-    }
+    // public ShapeInput()
+    // {
+    //     GamepadSetup();
+    // }
     public void Update()
     {
-        CheckGamepadConnections();
+        // CheckGamepadConnections();
+        Gamepads.Update();
         CheckInputDevice();
     }
     public string GetCurInputDeviceGenericName()
@@ -162,38 +162,20 @@ public class ShapeInput
 
     
     #endregion
-
-    #region Gamepad
-    public bool HasGamepad(int index) => index >= 0 && index < gamepads.Length;
-    public bool IsGamepadConnected(int index) => HasGamepad(index) && gamepads[index].Connected;
-    public Gamepad? GetGamepad(int index)
-    {
-        if (!HasGamepad(index)) return null;
-        return gamepads[index];
-    }
-    public Gamepad? RequestGamepad(int preferredIndex = -1)
-    {
-        var preferredGamepad = GetGamepad(preferredIndex);
-        if (preferredGamepad is { Connected: true, Available: true })
-        {
-            preferredGamepad.Claim();
-            return preferredGamepad;
-        }
-
-        foreach (var gamepad in gamepads)
-        {
-            if (gamepad is { Connected: true, Available: true })
-            {
-                gamepad.Claim();
-                return gamepad;
-            }
-        }
-        return null;
-    }
-    // public Gamepad? RequestConnectedGamepad(int preferredIndex = -1)
+   
+    //
+    // #region Gamepad
+    // public bool HasGamepad(int index) => index >= 0 && index < gamepads.Length;
+    // public bool IsGamepadConnected(int index) => HasGamepad(index) && gamepads[index].Connected;
+    // public Gamepad? GetGamepad(int index)
+    // {
+    //     if (!HasGamepad(index)) return null;
+    //     return gamepads[index];
+    // }
+    // public Gamepad? RequestGamepad(int preferredIndex = -1)
     // {
     //     var preferredGamepad = GetGamepad(preferredIndex);
-    //     if (preferredGamepad is { Connected: true})
+    //     if (preferredGamepad is { Connected: true, Available: true })
     //     {
     //         preferredGamepad.Claim();
     //         return preferredGamepad;
@@ -201,7 +183,7 @@ public class ShapeInput
     //
     //     foreach (var gamepad in gamepads)
     //     {
-    //         if (gamepad is { Connected: true})
+    //         if (gamepad is { Connected: true, Available: true })
     //         {
     //             gamepad.Claim();
     //             return gamepad;
@@ -209,10 +191,30 @@ public class ShapeInput
     //     }
     //     return null;
     // }
-    public void ReturnGamepad(int index) => GetGamepad(index)?.Free();
-    public void ReturnGamepad(Gamepad gamepad) => GetGamepad(gamepad.Index)?.Free();
-
-    #endregion
+    // // public Gamepad? RequestConnectedGamepad(int preferredIndex = -1)
+    // // {
+    // //     var preferredGamepad = GetGamepad(preferredIndex);
+    // //     if (preferredGamepad is { Connected: true})
+    // //     {
+    // //         preferredGamepad.Claim();
+    // //         return preferredGamepad;
+    // //     }
+    // //
+    // //     foreach (var gamepad in gamepads)
+    // //     {
+    // //         if (gamepad is { Connected: true})
+    // //         {
+    // //             gamepad.Claim();
+    // //             return gamepad;
+    // //         }
+    // //     }
+    // //     return null;
+    // // }
+    // public void ReturnGamepad(int index) => GetGamepad(index)?.Free();
+    // public void ReturnGamepad(Gamepad gamepad) => GetGamepad(gamepad.Index)?.Free();
+    //
+    // #endregion
+    //
     
     #region Basic
     public InputState GetState(ShapeKeyboardButton button, uint accessTag)
@@ -322,12 +324,16 @@ public class ShapeInput
             if (ShapeInput.WasMouseUsed()) CurrentInputDevice = InputDevice.Mouse;
             else
             {
-                var index = ShapeInput.WasGamepadUsed(connectedGamepadIndices);
-                if (index >= 0)
+                if (Gamepads.LastUsedGamepads.Count > 0)
                 {
                     CurrentInputDevice = InputDevice.Gamepad;
-                    LastUsedGamepad = GetGamepad(index);
                 }
+                // var index = ShapeInput.WasGamepadUsed(connectedGamepadIndices);
+                // if (index >= 0)
+                // {
+                //     CurrentInputDevice = InputDevice.Gamepad;
+                //     LastUsedGamepad = GetGamepad(index);
+                // }
             }
             //else if (ShapeInput.WasGamepadUsed(connectedGamepadIndices)) CurrentInputDevice = InputDevice.Gamepad;
         }
@@ -336,12 +342,16 @@ public class ShapeInput
             if (ShapeInput.WasKeyboardUsed()) CurrentInputDevice = InputDevice.Keyboard;
             else
             {
-                var index = ShapeInput.WasGamepadUsed(connectedGamepadIndices);
-                if (index >= 0)
+                if (Gamepads.LastUsedGamepads.Count > 0)
                 {
                     CurrentInputDevice = InputDevice.Gamepad;
-                    LastUsedGamepad = GetGamepad(index);
                 }
+                // var index = ShapeInput.WasGamepadUsed(connectedGamepadIndices);
+                // if (index >= 0)
+                // {
+                //     CurrentInputDevice = InputDevice.Gamepad;
+                //     LastUsedGamepad = GetGamepad(index);
+                // }
             }
             //else if (ShapeInput.WasGamepadUsed(connectedGamepadIndices)) CurrentInputDevice = InputDevice.Gamepad;
         }
@@ -356,39 +366,41 @@ public class ShapeInput
             OnInputDeviceChanged?.Invoke(prevInputDevice, CurrentInputDevice);
         }
     }
-    private void CheckGamepadConnections()
-    {
-        connectedGamepadIndices.Clear();
-        for (var i = 0; i < gamepads.Length; i++)
-        {
-            var gamepad = gamepads[i];
-            if (Raylib.IsGamepadAvailable(i))
-            {
-                if (!gamepad.Connected)
-                {
-                    gamepad.Connect();
-                    OnGamepadConnectionChanged?.Invoke(gamepad, true);
-                }
-                connectedGamepadIndices.Add(i);
-            }
-            else
-            {
-                if (gamepad.Connected)
-                {
-                    gamepad.Disconnect();
-                    OnGamepadConnectionChanged?.Invoke(gamepad, false);
-                }
-            }
-        }
-        
-    }
-    private void GamepadSetup()
-    {
-        for (var i = 0; i < gamepads.Length; i++)
-        {
-            gamepads[i] = new Gamepad(i, Raylib.IsGamepadAvailable(i));
-        }
-    }
+   
+    
+    // private void CheckGamepadConnections()
+    // {
+    //     connectedGamepadIndices.Clear();
+    //     for (var i = 0; i < gamepads.Length; i++)
+    //     {
+    //         var gamepad = gamepads[i];
+    //         if (Raylib.IsGamepadAvailable(i))
+    //         {
+    //             if (!gamepad.Connected)
+    //             {
+    //                 gamepad.Connect();
+    //                 OnGamepadConnectionChanged?.Invoke(gamepad, true);
+    //             }
+    //             connectedGamepadIndices.Add(i);
+    //         }
+    //         else
+    //         {
+    //             if (gamepad.Connected)
+    //             {
+    //                 gamepad.Disconnect();
+    //                 OnGamepadConnectionChanged?.Invoke(gamepad, false);
+    //             }
+    //         }
+    //     }
+    //     
+    // }
+    // private void GamepadSetup()
+    // {
+    //     for (var i = 0; i < gamepads.Length; i++)
+    //     {
+    //         gamepads[i] = new Gamepad(i, Raylib.IsGamepadAvailable(i));
+    //     }
+    // }
 
 
     #endregion
@@ -412,115 +424,117 @@ public class ShapeInput
 
         return false;
     }
-    public static int WasGamepadUsed(List<int> connectedGamepads, float deadzone = 0.05f)
-    {
-        foreach (var gamepad in connectedGamepads)
-        {
-            if (WasGamepadUsed(gamepad, deadzone)) return gamepad;
-        }
-        // var gamepadFromButton = WasGamepadButtonUsed(connectedGamepads);
-        // if (gamepadFromButton >= 0) return gamepadFromButton;
-        // //if (Raylib.GetGamepadButtonPressed() > 0) return true;
-        // foreach (int gamepad in connectedGamepads)
-        // {
-        //     if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_X)) > deadzone) return gamepad;
-        //     if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_Y)) > deadzone) return gamepad;
-        //     if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_X)) > deadzone) return gamepad;
-        //     if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_Y)) > deadzone) return gamepad;
-        //     if ((Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_TRIGGER) + 1f) / 2f > deadzone / 2) return gamepad;
-        //     if ((Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_TRIGGER) + 1f) / 2f > deadzone / 2) return gamepad;
-        // }
-
-        return -1;
-    }
-    public static int WasGamepadButtonUsed(List<int> connectedGamepads)
-    {
-        foreach (var gamepad in connectedGamepads)
-        {
-            if (WasGamepadButtonUsed(gamepad)) return gamepad;
-            // foreach (var b in  AllGamepadButtons)
-            // {
-            //     if (Raylib.IsGamepadButtonDown(gamepad, b)) return gamepad;
-            // }
-        }
-
-        return -1;
-    }
-    public static int WasGamepadAxisUsed(List<int> connectedGamepads, float deadzone = 0.05f)
-    {
-        foreach (var gamepad in connectedGamepads)
-        {
-            if (WasGamepadAxisUsed(gamepad, deadzone)) return gamepad;
-        }
-        // if (MathF.Abs(Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_X)) > deadzone) return true;
-        // if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_Y)) > deadzone) return true;
-        // if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_X)) > deadzone) return true;
-        // if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_Y)) > deadzone) return true;
-        // if ((Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_TRIGGER) + 1f) / 2f > deadzone / 2) return true;
-        // if ((Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_TRIGGER) + 1f) / 2f > deadzone / 2) return true;
-
-        return -1;
-    }
-    public static bool WasGamepadUsed(int gamepad, float deadzone = 0.05f)
-    {
-        return WasGamepadButtonUsed(gamepad) || WasGamepadAxisUsed(gamepad, deadzone);
-    }
-    public static bool WasGamepadButtonUsed(int gamepad)
-    {
-        foreach (var b in  AllGamepadButtons)
-        {
-            if (Raylib.IsGamepadButtonDown(gamepad, b)) return true;
-        }
-
-        return false;
-    }
-    public static bool WasGamepadAxisUsed(int gamepad, float deadzone = 0.05f)
-    {
-        if (MathF.Abs(Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_X)) > deadzone) return true;
-        if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_Y)) > deadzone) return true;
-        if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_X)) > deadzone) return true;
-        if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_Y)) > deadzone) return true;
-        if ((Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_TRIGGER) + 1f) / 2f > deadzone / 2) return true;
-        if ((Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_TRIGGER) + 1f) / 2f > deadzone / 2) return true;
-
-        return false;
-    }
-    public static List<int> GetUsedGamepads(List<int> connectedGamepads, float deadzone = 0.05f)
-    {
-        var usedGamepads = new List<int>();
-        foreach (var gamepad in connectedGamepads)
-        {
-            if(WasGamepadUsed(gamepad, deadzone)) usedGamepads.Add(gamepad);
-        }
-
-        return usedGamepads;
-    }
-    public static List<ShapeGamepadButton> GetUsedGamepadButtons(int gamepad)
-    {
-        var usedButtons = new List<ShapeGamepadButton>();
-        var values = Enum.GetValues<ShapeGamepadButton>();
-        foreach (var b in  values)
-        {
-            if (InputTypeGamepadButton.IsDown(b, gamepad, 0))
-            {
-                usedButtons.Add(b);
-            }
-        }
-        return usedButtons;
-    }
-    public static List<ShapeGamepadAxis> GetUsedGamepadAxis(int gamepad, float deadzone = 0.2f)
-    {
-        var usedAxis = new List<ShapeGamepadAxis>();
-        
-        if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_X)) > deadzone) usedAxis.Add(ShapeGamepadAxis.LEFT_X);
-        if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_Y)) > deadzone) usedAxis.Add(ShapeGamepadAxis.LEFT_Y);
-        if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_X)) > deadzone) usedAxis.Add(ShapeGamepadAxis.RIGHT_X);
-        if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_Y)) > deadzone) usedAxis.Add(ShapeGamepadAxis.RIGHT_Y);
-        if ((Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_TRIGGER) + 1f) / 2f > deadzone / 2) usedAxis.Add(ShapeGamepadAxis.LEFT_TRIGGER);
-        if ((Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_TRIGGER) + 1f) / 2f > deadzone / 2) usedAxis.Add(ShapeGamepadAxis.RIGHT_TRIGGER);
-
-        return usedAxis;
-    }
     
+    
+    // public static int WasGamepadUsed(List<int> connectedGamepads, float deadzone = 0.05f)
+    // {
+    //     foreach (var gamepad in connectedGamepads)
+    //     {
+    //         if (WasGamepadUsed(gamepad, deadzone)) return gamepad;
+    //     }
+    //     // var gamepadFromButton = WasGamepadButtonUsed(connectedGamepads);
+    //     // if (gamepadFromButton >= 0) return gamepadFromButton;
+    //     // //if (Raylib.GetGamepadButtonPressed() > 0) return true;
+    //     // foreach (int gamepad in connectedGamepads)
+    //     // {
+    //     //     if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_X)) > deadzone) return gamepad;
+    //     //     if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_Y)) > deadzone) return gamepad;
+    //     //     if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_X)) > deadzone) return gamepad;
+    //     //     if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_Y)) > deadzone) return gamepad;
+    //     //     if ((Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_TRIGGER) + 1f) / 2f > deadzone / 2) return gamepad;
+    //     //     if ((Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_TRIGGER) + 1f) / 2f > deadzone / 2) return gamepad;
+    //     // }
+    //
+    //     return -1;
+    // }
+    // public static int WasGamepadButtonUsed(List<int> connectedGamepads)
+    // {
+    //     foreach (var gamepad in connectedGamepads)
+    //     {
+    //         if (WasGamepadButtonUsed(gamepad)) return gamepad;
+    //         // foreach (var b in  AllGamepadButtons)
+    //         // {
+    //         //     if (Raylib.IsGamepadButtonDown(gamepad, b)) return gamepad;
+    //         // }
+    //     }
+    //
+    //     return -1;
+    // }
+    // public static int WasGamepadAxisUsed(List<int> connectedGamepads, float deadzone = 0.05f)
+    // {
+    //     foreach (var gamepad in connectedGamepads)
+    //     {
+    //         if (WasGamepadAxisUsed(gamepad, deadzone)) return gamepad;
+    //     }
+    //     // if (MathF.Abs(Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_X)) > deadzone) return true;
+    //     // if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_Y)) > deadzone) return true;
+    //     // if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_X)) > deadzone) return true;
+    //     // if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_Y)) > deadzone) return true;
+    //     // if ((Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_TRIGGER) + 1f) / 2f > deadzone / 2) return true;
+    //     // if ((Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_TRIGGER) + 1f) / 2f > deadzone / 2) return true;
+    //
+    //     return -1;
+    // }
+    // public static bool WasGamepadUsed(int gamepad, float deadzone = 0.05f)
+    // {
+    //     return WasGamepadButtonUsed(gamepad) || WasGamepadAxisUsed(gamepad, deadzone);
+    // }
+    // public static bool WasGamepadButtonUsed(int gamepad)
+    // {
+    //     foreach (var b in  AllGamepadButtons)
+    //     {
+    //         if (Raylib.IsGamepadButtonDown(gamepad, b)) return true;
+    //     }
+    //
+    //     return false;
+    // }
+    // public static bool WasGamepadAxisUsed(int gamepad, float deadzone = 0.05f)
+    // {
+    //     if (MathF.Abs(Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_X)) > deadzone) return true;
+    //     if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_Y)) > deadzone) return true;
+    //     if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_X)) > deadzone) return true;
+    //     if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_Y)) > deadzone) return true;
+    //     if ((Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_TRIGGER) + 1f) / 2f > deadzone / 2) return true;
+    //     if ((Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_TRIGGER) + 1f) / 2f > deadzone / 2) return true;
+    //
+    //     return false;
+    // }
+    // public static List<int> GetUsedGamepads(List<int> connectedGamepads, float deadzone = 0.05f)
+    // {
+    //     var usedGamepads = new List<int>();
+    //     foreach (var gamepad in connectedGamepads)
+    //     {
+    //         if(WasGamepadUsed(gamepad, deadzone)) usedGamepads.Add(gamepad);
+    //     }
+    //
+    //     return usedGamepads;
+    // }
+    // public static List<ShapeGamepadButton> GetUsedGamepadButtons(int gamepad)
+    // {
+    //     var usedButtons = new List<ShapeGamepadButton>();
+    //     var values = Enum.GetValues<ShapeGamepadButton>();
+    //     foreach (var b in  values)
+    //     {
+    //         if (InputTypeGamepadButton.IsDown(b, gamepad, 0))
+    //         {
+    //             usedButtons.Add(b);
+    //         }
+    //     }
+    //     return usedButtons;
+    // }
+    // public static List<ShapeGamepadAxis> GetUsedGamepadAxis(int gamepad, float deadzone = 0.2f)
+    // {
+    //     var usedAxis = new List<ShapeGamepadAxis>();
+    //     
+    //     if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_X)) > deadzone) usedAxis.Add(ShapeGamepadAxis.LEFT_X);
+    //     if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_Y)) > deadzone) usedAxis.Add(ShapeGamepadAxis.LEFT_Y);
+    //     if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_X)) > deadzone) usedAxis.Add(ShapeGamepadAxis.RIGHT_X);
+    //     if (MathF.Abs( Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_Y)) > deadzone) usedAxis.Add(ShapeGamepadAxis.RIGHT_Y);
+    //     if ((Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_LEFT_TRIGGER) + 1f) / 2f > deadzone / 2) usedAxis.Add(ShapeGamepadAxis.LEFT_TRIGGER);
+    //     if ((Raylib.GetGamepadAxisMovement(gamepad, GamepadAxis.GAMEPAD_AXIS_RIGHT_TRIGGER) + 1f) / 2f > deadzone / 2) usedAxis.Add(ShapeGamepadAxis.RIGHT_TRIGGER);
+    //
+    //     return usedAxis;
+    // }
+    //
     #endregion
 }

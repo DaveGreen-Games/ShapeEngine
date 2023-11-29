@@ -297,7 +297,7 @@ public class ShapeLoop
         // }
         
         //Input = new();
-        Input.OnGamepadConnectionChanged += OnInputGamepadConnectionChanged;
+        Input.Gamepads.OnGamepadConnectionChanged += OnInputGamepadConnectionChanged;
         Input.OnInputDeviceChanged += OnInputInputDeviceChanged;
         
         

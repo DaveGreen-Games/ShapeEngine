@@ -318,11 +318,11 @@ namespace Examples
         {
             // if (!UseMouseMovement) return mousePos;
             
-            if (Input.CurrentInputDevice == InputDevice.Gamepad && Input.LastUsedGamepad != null)
+            if (Input.CurrentInputDevice == InputDevice.Gamepad && Input.Gamepads.LastUsedGamepad != null)
             {
                 mouseMovementTimer = 0f;
                 float speed = screenArea.Size.Max() * 0.75f * dt;
-                int gamepad = Input.LastUsedGamepad.Index;
+                int gamepad = Input.Gamepads.LastUsedGamepad.Index;
                 var x = Input.GetState(ShapeGamepadAxis.LEFT_X, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
                 var y = Input.GetState(ShapeGamepadAxis.LEFT_Y, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
 
@@ -360,8 +360,8 @@ namespace Examples
         protected override void BeginRun()
         {
             SetupInput();
-            
-            CurGamepad = Input.RequestGamepad(0);
+
+            CurGamepad = Input.Gamepads.RequestGamepad(0); // Input.RequestGamepad(0);
             if (CurGamepad != null)
             {
                 foreach (var action in inputActions)
@@ -387,7 +387,7 @@ namespace Examples
         protected override void OnGamepadConnected(Gamepad gamepad)
         {
             if (CurGamepad != null) return;
-            CurGamepad = Input.RequestGamepad(0);
+            CurGamepad = Input.Gamepads.RequestGamepad(0);
             
             if (CurGamepad != null)
             {
@@ -403,7 +403,7 @@ namespace Examples
             if (CurGamepad == null) return;
             if (CurGamepad.Index == gamepad.Index)
             {
-                CurGamepad = Input.RequestGamepad(0);
+                CurGamepad = Input.Gamepads.RequestGamepad(0);
 
                 if (CurGamepad == null)
                 {

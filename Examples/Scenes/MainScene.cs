@@ -64,13 +64,15 @@ namespace Examples.Scenes
             examples.Add(new PolylineInflationExample());
             examples.Add(new AsteroidMiningExample());
             examples.Add(new GameObjectHandlerExample());
+            examples.Add(new ScreenEffectsExample());
+            examples.Add(new CameraGroupFollowExample());
+            examples.Add(new ShipInputExample());
+            
+            examples.Add(new InputExample());
             examples.Add(new CameraExample());
             examples.Add(new CameraAreaDrawExample());
-            examples.Add(new ScreenEffectsExample());
-            examples.Add(new DelaunayExample());
             examples.Add(new BouncyCircles());
-            examples.Add(new InputExample());
-            examples.Add(new CameraGroupFollowExample());
+            examples.Add(new DelaunayExample());
             
             examples.Add(new TextScalingExample());
             examples.Add(new TextWrapEmphasisExample());

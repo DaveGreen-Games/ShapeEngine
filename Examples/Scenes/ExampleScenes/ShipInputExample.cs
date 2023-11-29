@@ -61,12 +61,12 @@ namespace Examples.Scenes.ExampleScenes
                 movementDir = ShapeRandom.randVec2();
                 
                 // var moveHorKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
-                var moveHorGP = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+                var moveHorGP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f);
                 // var moveHorMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
                 iaMoveHor = new(moveHorGP);
                 
                 // var moveVerKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
-                var moveVerGP = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+                var moveVerGP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y, 0.1f);
                 // var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
                 iaMoveVer = new(moveVerGP);
 
@@ -91,7 +91,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 
             }
-            public void Update(float dt, Vector2 target)
+            public void Update(float dt)
             {
                 int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
                 iaMoveHor.Gamepad = gamepadIndex;
@@ -163,10 +163,9 @@ namespace Examples.Scenes.ExampleScenes
         private readonly CameraFollowerMulti cameraFollower = new();
         private readonly ShapeCamera camera = new();
         private readonly List<SpaceShip> spaceShips = new();
-        private readonly Gamepad[] gamepads = new Gamepad[8];
-        private readonly List<int> connectedGamepadIndices = new();
 
-        private readonly List<Gamepad> availableGamepads = new();
+        private readonly GamepadManager gamepads = new();
+        
         // private readonly InputAction iaAddShip;
         // private readonly InputAction iaNextShip;
         // private readonly InputAction iaCenterTarget;
@@ -181,10 +180,8 @@ namespace Examples.Scenes.ExampleScenes
                 
             GenerateStars(2500);
             camera.Follower = cameraFollower;
-            
-            GamepadSetup();
-            // AddShip();
-            
+            gamepads.OnGamepadConnectionChanged += OnGamepadConnectionChanged;
+
             // var addShipKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
             // var addShipGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
             // var addshipMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
@@ -201,29 +198,27 @@ namespace Examples.Scenes.ExampleScenes
         }
 
        
-        // private void AddShip()
-        // {
-        //     var pos = ActiveSpaceShip?.GetRandomSpawnPosition() ?? new();
-        //     var spaceShip = new SpaceShip(pos);
-        //     spaceShips.Add(spaceShip);
-        //     cameraFollower.AddTarget(spaceShip);
-        //     if (ActiveSpaceShip == null)
-        //     {
-        //         SelectShip(spaceShip);
-        //     }
-        // }
+        private void AddShip(Gamepad gamepad)
+        {
+            gamepad.Claim();
+            var ship = new SpaceShip(new(), gamepad);
+            spaceShips.Add(ship);
+            cameraFollower.AddTarget(ship);
+        }
         
-        // private void RemoveShip()
-        // {
-        //     foreach (var ship in spaceShips)
-        //     {
-        //         ship.Destroy();
-        //     }
-        //     ActiveSpaceShip = null;
-        //     
-        //     spaceShips.Clear();
-        //     cameraFollower.Reset();
-        // }
+        private void RemoveShip(Gamepad gamepad)
+        {
+            gamepad.Free();
+            for (int i = spaceShips.Count - 1; i >= 0 ; i--)
+            {
+                var ship = spaceShips[i];
+                if (ship.Gamepad == gamepad)
+                {
+                    spaceShips.RemoveAt(i);
+                    cameraFollower.RemoveTarget(ship);
+                }
+            }
+        }
         private void GenerateStars(int amount)
         {
             for (int i = 0; i < amount; i++)
@@ -240,12 +235,13 @@ namespace Examples.Scenes.ExampleScenes
         public override void Activate(IScene oldScene)
         {
             GAMELOOP.Camera = camera;
-            
+            ShapeLoop.Input.LockBlacklist(GAMELOOP.SceneAccessTag, GAMELOOP.GamepadMouseMovementTag);
         }
 
         public override void Deactivate()
         {
             GAMELOOP.ResetCamera();
+            ShapeLoop.Input.Unlock();
         }
         public override GameObjectHandler? GetGameObjectHandler()
         {
@@ -304,7 +300,29 @@ namespace Examples.Scenes.ExampleScenes
         
         protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            CheckGamepadConnections();
+            gamepads.Update();
+            foreach (var gamepad in gamepads.LastUsedGamepads)
+            {
+                if (gamepad.Available)
+                {
+                    if (gamepad.UsedButtons.Contains(ShapeGamepadButton.RIGHT_FACE_DOWN))//add
+                    {
+                        AddShip(gamepad);
+                    }
+                }
+                else
+                {
+                    if (gamepad.UsedButtons.Contains(ShapeGamepadButton.RIGHT_FACE_RIGHT))//remove
+                    {
+                        RemoveShip(gamepad);
+                    }
+                }
+            }
+
+            foreach (var ship in spaceShips)
+            {
+                ship.Update(dt);
+            }
             // var targetPos = ActiveSpaceShip?.GetPosition() ?? new();
             //
             // SpaceShip? next = null;
@@ -351,7 +369,7 @@ namespace Examples.Scenes.ExampleScenes
 
         private void DrawGamepadInfo(Rect rect)
         {
-            var text = $"Connected {connectedGamepadIndices.Count} | Available {availableGamepads.Count}";
+            var text = $"Connected {gamepads.GetConnectedGamepads().Count} | Available {gamepads.GetAvailableGamepads().Count}";
             font.DrawText(text, rect, 1f, new Vector2(0.5f, 0.5f), ColorHighlight3);
         }
         private void DrawDescription(Rect rect)
@@ -371,70 +389,14 @@ namespace Examples.Scenes.ExampleScenes
 
         private void OnGamepadConnectionChanged(Gamepad gamepad, bool connected)
         {
-            
-        }
-        private void CheckGamepadConnections()
-        {
-            connectedGamepadIndices.Clear();
-            for (var i = 0; i < gamepads.Length; i++)
+            if (!connected)
             {
-                var gamepad = gamepads[i];
-                if (Raylib.IsGamepadAvailable(i))
+                if (!gamepad.Available)
                 {
-                    if (!gamepad.Connected)
-                    {
-                        gamepad.Connect();
-                        OnGamepadConnectionChanged(gamepad, true);
-                    }
-                    connectedGamepadIndices.Add(i);
-                }
-                else
-                {
-                    if (gamepad.Connected)
-                    {
-                        gamepad.Disconnect();
-                        OnGamepadConnectionChanged(gamepad, false);
-                    }
+                    RemoveShip(gamepad);
                 }
             }
-        
         }
-        private void GamepadSetup()
-        {
-            for (var i = 0; i < gamepads.Length; i++)
-            {
-                gamepads[i] = new Gamepad(i, Raylib.IsGamepadAvailable(i));
-            }
-        }
-        private bool HasGamepad(int index) => index >= 0 && index < gamepads.Length;
-        private bool IsGamepadConnected(int index) => HasGamepad(index) && gamepads[index].Connected;
-        private Gamepad? GetGamepad(int index)
-        {
-            if (!HasGamepad(index)) return null;
-            return gamepads[index];
-        }
-        private Gamepad? RequestGamepad()
-        {
-            // var preferredGamepad = GetGamepad(preferredIndex);
-            // if (preferredGamepad is { Connected: true, Available: true })
-            // {
-            //     preferredGamepad.Claim();
-            //     return preferredGamepad;
-            // }
-
-            foreach (var gamepad in gamepads)
-            {
-                if (gamepad is { Connected: true, Available: true })
-                {
-                    gamepad.Claim();
-                    return gamepad;
-                }
-            }
-            return null;
-        }
-        private void ReturnGamepad(int index) => GetGamepad(index)?.Free();
-        private void ReturnGamepad(Gamepad gamepad) => GetGamepad(gamepad.Index)?.Free();
-
         
     }
     
