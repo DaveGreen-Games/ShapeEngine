@@ -79,12 +79,12 @@ namespace Examples.Scenes.ExampleScenes
             vertexSize = lineThickness * 3f;
             vertexSizeBig = vertexSize * 2f;
             
-            int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
-            
-            iaAddPoint.Gamepad = gamepadIndex;
+            // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
+            var gamepad = GAMELOOP.CurGamepad;
+            iaAddPoint.Gamepad = gamepad;
             iaAddPoint.Update(dt);
             
-            iaAddMultiplePoints.Gamepad = gamepadIndex;
+            iaAddMultiplePoints.Gamepad = gamepad;
             iaAddMultiplePoints.Update(dt);
             
             float pointDistanceSquared = vertexSizeBig * vertexSizeBig;
@@ -195,7 +195,7 @@ namespace Examples.Scenes.ExampleScenes
         private void DrawInputText(Rect rect)
         {
             var sb = new StringBuilder();
-            var curInputDeviceAll = Input.CurrentInputDevice;
+            var curInputDeviceAll = ShapeInput.CurrentInputDeviceType;
             
             string addPointText = iaAddPoint.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
             string addMultiplePointsText = iaAddMultiplePoints.GetInputTypeDescription(curInputDeviceAll, true, 1, false);

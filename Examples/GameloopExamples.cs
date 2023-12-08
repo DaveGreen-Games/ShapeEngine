@@ -210,7 +210,7 @@ namespace Examples
         private Vector2 crtCurvature = new(6, 4);
 
         
-        public Gamepad? CurGamepad = null;
+        public ShapeGamepadDevice? CurGamepad = null;
 
         public RectContainerMain UIRects = new("main");
         
@@ -318,13 +318,13 @@ namespace Examples
         {
             // if (!UseMouseMovement) return mousePos;
             
-            if (Input.CurrentInputDevice == InputDevice.Gamepad && Input.Gamepads.LastUsedGamepad != null)
+            if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Gamepad && ShapeInput.GamepadDeviceManager.LastUsedGamepad != null)
             {
                 mouseMovementTimer = 0f;
                 float speed = screenArea.Size.Max() * 0.75f * dt;
-                int gamepad = Input.Gamepads.LastUsedGamepad.Index;
-                var x = Input.GetState(ShapeGamepadAxis.LEFT_X, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
-                var y = Input.GetState(ShapeGamepadAxis.LEFT_Y, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
+                int gamepad = ShapeInput.GamepadDeviceManager.LastUsedGamepad.Index;
+                var x = InputAction.GetState(ShapeGamepadAxis.LEFT_X, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
+                var y = InputAction.GetState(ShapeGamepadAxis.LEFT_Y, GamepadMouseMovementTag, gamepad, 0.05f).AxisRaw;
 
                 var movement = new Vector2(x, y);
                 float l = movement.Length();
@@ -334,15 +334,15 @@ namespace Examples
                 return mousePos + dir * l * speed;
             }
             
-            if (Input.CurrentInputDevice == InputDevice.Keyboard)
+            if (ShapeInput.CurrentInputDeviceType == InputDeviceType.Keyboard)
             {
                 mouseMovementTimer += dt;
                 if (mouseMovementTimer >= mouseMovementDuration) mouseMovementTimer = mouseMovementDuration;
                 float t = mouseMovementTimer / mouseMovementDuration; 
                 float f = ShapeMath.LerpFloat(0.2f, 1f, t);
                 float speed = screenArea.Size.Max() * 0.5f * dt * f;
-                var x = Input.GetState(ShapeKeyboardButton.LEFT, ShapeKeyboardButton.RIGHT, KeyboardMouseMovementTag).AxisRaw;
-                var y = Input.GetState(ShapeKeyboardButton.UP, ShapeKeyboardButton.DOWN, KeyboardMouseMovementTag).AxisRaw;
+                var x = InputAction.GetState(ShapeKeyboardButton.LEFT, ShapeKeyboardButton.RIGHT, KeyboardMouseMovementTag).AxisRaw;
+                var y = InputAction.GetState(ShapeKeyboardButton.UP, ShapeKeyboardButton.DOWN, KeyboardMouseMovementTag).AxisRaw;
 
                 var movement = new Vector2(x, y);
                 if (movement.LengthSquared() <= 0f) mouseMovementTimer = 0f;
@@ -361,12 +361,12 @@ namespace Examples
         {
             SetupInput();
 
-            CurGamepad = Input.Gamepads.RequestGamepad(0); // Input.RequestGamepad(0);
+            CurGamepad = ShapeInput.GamepadDeviceManager.RequestGamepad(0); // Input.RequestGamepad(0);
             if (CurGamepad != null)
             {
                 foreach (var action in inputActions)
                 {
-                    action.Gamepad = CurGamepad.Index;
+                    action.Gamepad = CurGamepad;
                 }
             }
             
@@ -384,40 +384,30 @@ namespace Examples
             }
         }
 
-        protected override void OnGamepadConnected(Gamepad gamepad)
+        protected override void OnGamepadConnected(ShapeGamepadDevice gamepad)
         {
             if (CurGamepad != null) return;
-            CurGamepad = Input.Gamepads.RequestGamepad(0);
+            CurGamepad = ShapeInput.GamepadDeviceManager.RequestGamepad(0);
             
             if (CurGamepad != null)
             {
                 foreach (var action in inputActions)
                 {
-                    action.Gamepad = CurGamepad.Index;
+                    action.Gamepad = CurGamepad;
                 }
             }
         }
 
-        protected override void OnGamepadDisconnected(Gamepad gamepad)
+        protected override void OnGamepadDisconnected(ShapeGamepadDevice gamepad)
         {
             if (CurGamepad == null) return;
             if (CurGamepad.Index == gamepad.Index)
             {
-                CurGamepad = Input.Gamepads.RequestGamepad(0);
+                CurGamepad = ShapeInput.GamepadDeviceManager.RequestGamepad(0);
 
-                if (CurGamepad == null)
+                foreach (var action in inputActions)
                 {
-                    foreach (var action in inputActions)
-                    {
-                        action.Gamepad = -1;
-                    }
-                }
-                else
-                {
-                    foreach (var action in inputActions)
-                    {
-                        action.Gamepad = CurGamepad.Index;
-                    }
+                    action.Gamepad = CurGamepad;
                 }
             }
         }
@@ -426,20 +416,22 @@ namespace Examples
         {
             UIRects.SetRect(ui.Area);
 
-            int gamepadIndex = CurGamepad?.Index ?? -1;
-            Input.UpdateActions(dt, gamepadIndex, inputActions);
-            
-            var fullscreenState = Input.ConsumeAction(InputActionFullscreen);
+            //int gamepadIndex = CurGamepad?.Index ?? -1;
+            InputAction.UpdateActions(dt, CurGamepad, inputActions);
+
+            var fullscreenState = InputActionFullscreen.Consume();
             if (fullscreenState is { Consumed: false, Pressed: true })
             {
                 GAMELOOP.Fullscreen = !GAMELOOP.Fullscreen;
             }
-            var maximizeState = Input.ConsumeAction(InputActionMaximize);
+
+            var maximizeState = InputActionMaximize.Consume();
             if (maximizeState is { Consumed: false, Pressed: true })
             {
                 GAMELOOP.Maximized = !GAMELOOP.Maximized;
             }
-            var nextMonitorState = Input.ConsumeAction(InputActionNextMonitor);
+
+            var nextMonitorState = InputActionNextMonitor.Consume();
             if (nextMonitorState is { Consumed: false, Pressed: true })
             {
                 GAMELOOP.NextMonitor();
@@ -450,9 +442,9 @@ namespace Examples
             
             var crtDefault = new Vector2(6, 4);
             var crtSpeed = crtDefault * 0.5f * dt;
-            
-            
-            var crtPlusState = Input.ConsumeAction(InputActionCRTPlus);
+
+
+            var crtPlusState = InputActionCRTPlus.Consume();
             if (crtPlusState is { Consumed: false, Down: true })
             {
                 var crtShader = ScreenShaders.Get(crtShaderID);
@@ -469,7 +461,7 @@ namespace Examples
                 
             }
 
-            var crtMinusState = Input.ConsumeAction(InputActionCRTMinus);
+            var crtMinusState = InputActionCRTMinus.Consume();
             if (crtMinusState is { Consumed: false, Down: true })
             {
                 var crtShader = ScreenShaders.Get(crtShaderID);
@@ -522,7 +514,7 @@ namespace Examples
             //gameloop
             var cancelKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ESCAPE);
             var cancelGB = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_LEFT);
-            InputActionUICancel= new(ShapeInput.AllAccessTag, cancelKB, cancelGB);
+            InputActionUICancel= new(InputAction.AllAccessTag, cancelKB, cancelGB);
             
           
             var fullscreenKB = new InputTypeKeyboardButton(ShapeKeyboardButton.F);

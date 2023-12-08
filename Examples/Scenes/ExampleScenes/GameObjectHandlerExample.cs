@@ -740,12 +740,14 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
-            foreach (var ia in inputActions)
-            {
-                ia.Gamepad = gamepadIndex;
-                ia.Update(dt);
-            }
+            var gamepad = GAMELOOP.CurGamepad;
+            InputAction.UpdateActions(dt, gamepad, inputActions);
+            // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
+            // foreach (var ia in inputActions)
+            // {
+            //     ia.Gamepad = gamepadIndex;
+            //     ia.Update(dt);
+            // }
             
             if (iaSpawnRock.State.Pressed)
             {
@@ -853,8 +855,8 @@ namespace Examples.Scenes.ExampleScenes
             
             var sb = new StringBuilder();
             var sbCamera = new StringBuilder();
-            var curInputDeviceAll = ShapeLoop.Input.CurrentInputDevice;
-            var curInputDeviceNoMouse = ShapeLoop.Input.CurrentInputDeviceNoMouse;
+            var curInputDeviceAll = ShapeInput.CurrentInputDeviceType;
+            var curInputDeviceNoMouse = ShapeInput.CurrentInputDeviceTypeNoMouse;
             
             string placeWallText = iaPlaceWall.GetInputTypeDescription(curInputDeviceAll, true, 1, false, false);
             string cancelWallText = iaCancelWall.GetInputTypeDescription(curInputDeviceAll, true, 1, false, false);

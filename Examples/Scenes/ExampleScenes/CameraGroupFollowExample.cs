@@ -81,10 +81,10 @@ namespace Examples.Scenes.ExampleScenes
                 
                 return hull.OverlapShape(other.hull);
             }
-            public string GetInputDescription(InputDevice inputDevice)
+            public string GetInputDescription(InputDeviceType inputDeviceType)
             {
-                string hor = iaMoveHor.GetInputTypeDescription(inputDevice, true, 1, false, false);
-                string ver = iaMoveVer.GetInputTypeDescription(inputDevice, true, 1, false, false);
+                string hor = iaMoveHor.GetInputTypeDescription(inputDeviceType, true, 1, false, false);
+                string ver = iaMoveVer.GetInputTypeDescription(inputDeviceType, true, 1, false, false);
                 return $"Move Horizontal [{hor}] Vertical [{ver}]";
             }
             
@@ -109,9 +109,9 @@ namespace Examples.Scenes.ExampleScenes
                 float radius = Size * (Selected ? 1f : 0.75f);
                 if (Selected)
                 {
-                    int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
-                    iaMoveHor.Gamepad = gamepadIndex;
-                    iaMoveVer.Gamepad = gamepadIndex;
+                    // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
+                    iaMoveHor.Gamepad = GAMELOOP.CurGamepad;
+                    iaMoveVer.Gamepad = GAMELOOP.CurGamepad;
                 
                     iaMoveHor.Update(dt);
                     iaMoveVer.Update(dt);
@@ -491,10 +491,11 @@ namespace Examples.Scenes.ExampleScenes
         }
         protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
-            iaAddShip.Gamepad = gamepadIndex;
-            iaNextShip.Gamepad = gamepadIndex;
-            iaCenterTarget.Gamepad = gamepadIndex;
+            // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
+            var gamepad = GAMELOOP.CurGamepad;
+            iaAddShip.Gamepad = gamepad;
+            iaNextShip.Gamepad = gamepad;
+            iaCenterTarget.Gamepad = gamepad;
                 
             iaAddShip.Update(dt);
             iaNextShip.Update(dt);
@@ -580,8 +581,8 @@ namespace Examples.Scenes.ExampleScenes
         }
         private void DrawInputDescription(Rect rect)
         {
-            var curDevice = Input.CurrentInputDevice;
-            var curDeviceNoMouse = Input.CurrentInputDeviceNoMouse;
+            var curDevice = ShapeInput.CurrentInputDeviceType;
+            var curDeviceNoMouse = ShapeInput.CurrentInputDeviceTypeNoMouse;
             string addShipText = iaAddShip.GetInputTypeDescription(curDevice, true, 1, false);
             string nextShipText = iaNextShip.GetInputTypeDescription(curDevice, true, 1, false);
             string centerTargetText = iaCenterTarget.GetInputTypeDescription(curDeviceNoMouse, true, 1, false);

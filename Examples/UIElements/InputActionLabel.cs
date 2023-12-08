@@ -20,9 +20,9 @@ public class InputActionLabel
         this.Color = color;
         this.Title = title;
     }
-    public void Draw(Rect r, Vector2 textAlignement, InputDevice curInputDevice, float fontSpacing = 1f)
+    public void Draw(Rect r, Vector2 textAlignement, InputDeviceType curInputDeviceType, float fontSpacing = 1f)
     {
-        string text = InputAction.GetInputTypeDescription(curInputDevice, true, 1, false);
+        string text = InputAction.GetInputTypeDescription(curInputDeviceType, true, 1, false);
         StringBuilder b = new(text.Length + Title.Length + 3);
         b.Append(Title);
         b.Append(' ');

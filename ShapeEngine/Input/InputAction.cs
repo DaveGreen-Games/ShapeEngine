@@ -6,10 +6,11 @@ namespace ShapeEngine.Input;
 
 public class InputAction
 {
+    #region Members
     public uint ID { get; private set; }
-    public uint AccessTag { get; private set; } = ShapeInput.AllAccessTag;
-    
-    public int Gamepad = -1;
+    public uint AccessTag { get; private set; } = AllAccessTag;
+
+    public ShapeGamepadDevice? Gamepad = null;
     public string Title = "Input Action";
 
     private float holdTimer = 0f;
@@ -59,20 +60,10 @@ public class InputAction
     // public InputDevice LastInputDevice { get; private set; } = InputDevice.Keyboard;
     // private float lastInputDeviceMagnitude = 0f;
     public InputState State { get; private set; } = new();
-
-    public void ClearState()
-    {
-        State = new InputState(false, true, 0f, Gamepad, InputDevice.Keyboard);
-    }
-    public InputState Consume()
-    {
-        var returnValue = State;
-        State = State.Consume();
-        return returnValue;
-    }
-    
     private readonly List<IInputType> inputs = new();
+    #endregion
 
+    #region Constructors
     public InputAction()
     {
         ID = ShapeID.NextID;
@@ -82,23 +73,13 @@ public class InputAction
         ID = ShapeID.NextID;
         AccessTag = accessTag;
     }
-    public InputAction(uint accessTag, int gamepad)
+    public InputAction(uint accessTag, ShapeGamepadDevice gamepad)
     {
         ID = ShapeID.NextID;
         Gamepad = gamepad;
         AccessTag = accessTag;
     }
-    // public InputAction(uint accessTag, uint id)
-    // {
-    //     ID = id;
-    //     AccessTag = accessTag;
-    // }
-    // public InputAction(uint accessTag, uint id, int gamepad)
-    // {
-    //     ID = id;
-    //     AccessTag = accessTag;
-    //     Gamepad = gamepad;
-    // }
+   
     public InputAction(params IInputType[] inputTypes)
     {
         ID = ShapeID.NextID;
@@ -110,18 +91,28 @@ public class InputAction
         AccessTag = accessTag;
         inputs.AddRange(inputTypes);
     }
-    // public InputAction(uint accessTag, uint id, params IInputType[] inputTypes)
-    // {
-    //     ID = id;
-    //     AccessTag = accessTag;
-    //     inputs.AddRange(inputTypes);
-    // }
-    public InputAction(uint accessTag, int gamepad, params IInputType[] inputTypes)
+    
+    public InputAction(uint accessTag, ShapeGamepadDevice gamepad, params IInputType[] inputTypes)
     {
         ID = ShapeID.NextID;
         AccessTag = accessTag;
         Gamepad = gamepad;
         inputs.AddRange(inputTypes);
+    }
+    #endregion
+
+    #region Class
+
+    public int GetGamepadIndex() => Gamepad?.Index ?? -1;
+    public void ClearState()
+    {
+        State = new InputState(false, true, 0f, GetGamepadIndex(), InputDeviceType.Keyboard);
+    }
+    public InputState Consume()
+    {
+        var returnValue = State;
+        State = State.Consume();
+        return returnValue;
     }
 
     public void Update(float dt)
@@ -274,7 +265,7 @@ public class InputAction
         }
         return list;
     }
-    public List<IInputType> GetInputs(InputDevice filter)
+    public List<IInputType> GetInputs(InputDeviceType filter)
     {
         if (inputs.Count <= 0) return new();
         
@@ -285,7 +276,7 @@ public class InputAction
         }
         return filtered;
     }
-    public List<IInputType> GetInputsCopied(InputDevice filter)
+    public List<IInputType> GetInputsCopied(InputDeviceType filter)
     {
         if (inputs.Count <= 0) return new();
         
@@ -305,7 +296,7 @@ public class InputAction
         else list.AddRange(inputs);
         return list;
     }
-    public List<IInputType> GetInputs(InputDevice filter, int maxCount)
+    public List<IInputType> GetInputs(InputDeviceType filter, int maxCount)
     {
         if (inputs.Count <= 0) return new();
         
@@ -320,7 +311,7 @@ public class InputAction
 
     public void ClearInputs() => inputs.Clear();
     public bool RemoveInput(IInputType inputType) => inputs.Remove(inputType);
-    public List<IInputType> RemoveInputs(InputDevice filter)
+    public List<IInputType> RemoveInputs(InputDeviceType filter)
     {
         if (inputs.Count <= 0) return new();
         var removed = new List<IInputType>();
@@ -338,11 +329,11 @@ public class InputAction
     public void AddInput(IInputType newType) => inputs.Add(newType);
     public void AddInputs(params IInputType[] inputTypes) => inputs.AddRange(inputTypes);
     public bool HasInput(IInputType inputType) => inputs.Contains(inputType);
-    public bool HasInput(InputDevice inputDevice)
+    public bool HasInput(InputDeviceType inputDeviceType)
     {
         foreach (var input in inputs)
         {
-            if (input.GetInputDevice() == inputDevice) return true;
+            if (input.GetInputDevice() == inputDeviceType) return true;
         }
 
         return false;
@@ -353,17 +344,17 @@ public class InputAction
     /// <summary>
     /// Generate a description for this action based on the parameters. Layout-> "Title: [type a][type b][type c] ..."
     /// </summary>
-    /// <param name="device">Only input types of the specified device are used.</param>
+    /// <param name="deviceType">Only input types of the specified device are used.</param>
     /// <param name="shorthand">Should the shorthand name or full name of the input type be used?</param>
     /// <param name="count">Limits the amount input types used. If count is smaller or equal to 0 all input types are used.</param>
     /// <param name="useTitle">Should the title of this input action be used as a prefix? "Title: [input type]"</param>
     /// <param name="brackets">Should the input type be encapsulated in square brackets ["Input Type"]?"</param>
     /// <returns>The combined names of all input types.</returns>
-    public string GetInputTypeDescription(InputDevice device, bool shorthand, int count = 1, bool useTitle = false, bool brackets = true)
+    public string GetInputTypeDescription(InputDeviceType deviceType, bool shorthand, int count = 1, bool useTitle = false, bool brackets = true)
     {
         StringBuilder b = new();
         if(useTitle) b.Append(Title);
-        var inputNames = GetInputTypeNames(device, shorthand, count);
+        var inputNames = GetInputTypeNames(deviceType, shorthand, count);
         if (inputNames.Count > 0)
         {
             if(useTitle) b.Append(": ");
@@ -411,9 +402,9 @@ public class InputAction
         StringBuilder b = new();
         if(useTitle) b.Append(Title);
         var inputNames = new List<string>();
-        inputNames.AddRange(GetInputTypeNames(InputDevice.Keyboard, shorthand, count));
-        inputNames.AddRange(GetInputTypeNames(InputDevice.Mouse, shorthand, count));
-        inputNames.AddRange(GetInputTypeNames(InputDevice.Gamepad, shorthand, count));
+        inputNames.AddRange(GetInputTypeNames(InputDeviceType.Keyboard, shorthand, count));
+        inputNames.AddRange(GetInputTypeNames(InputDeviceType.Mouse, shorthand, count));
+        inputNames.AddRange(GetInputTypeNames(InputDeviceType.Gamepad, shorthand, count));
         
         if (inputNames.Count > 0)
         {
@@ -428,13 +419,13 @@ public class InputAction
     /// <summary>
     /// Get the names of all input types used in this input action.
     /// </summary>
-    /// <param name="device">Only input types of the specified device are used.</param>
+    /// <param name="deviceType">Only input types of the specified device are used.</param>
     /// <param name="shorthand">Should the shorthand name or full name of the input type be used?</param>
     /// <param name="count">Limits the amount input types used. If count is smaller or equal to 0 all input types are used.</param>
     /// <returns>A list of all the input type names found in the action based on the parameters</returns>
-    public List<string> GetInputTypeNames(InputDevice device, bool shorthand = true, int count = -1)
+    public List<string> GetInputTypeNames(InputDeviceType deviceType, bool shorthand = true, int count = -1)
     {
-        var inputs = GetInputs(device, count);
+        var inputs = GetInputs(deviceType, count);
         var names = new List<string>();
         foreach (var input in inputs)
         {
@@ -468,9 +459,9 @@ public class InputAction
     public List<string> GetInputTypeNamesLimitedPerDevice(bool shorthand = true, int count = -1)
     {
         var names = new List<string>();
-        names.AddRange(GetInputTypeNames(InputDevice.Keyboard, shorthand, count));
-        names.AddRange(GetInputTypeNames(InputDevice.Mouse, shorthand, count));
-        names.AddRange(GetInputTypeNames(InputDevice.Gamepad, shorthand, count));
+        names.AddRange(GetInputTypeNames(InputDeviceType.Keyboard, shorthand, count));
+        names.AddRange(GetInputTypeNames(InputDeviceType.Mouse, shorthand, count));
+        names.AddRange(GetInputTypeNames(InputDeviceType.Gamepad, shorthand, count));
         
         foreach (var input in inputs)
         {
@@ -498,5 +489,152 @@ public class InputAction
         return names;
 
     }
+    #endregion
+
+    #region Static
+
+    #region Members
+    public static readonly uint AllAccessTag = 0;
+    public static bool Locked { get; private set; } = false;
+    private static readonly List<uint> lockWhitelist = new();
+    private static readonly List<uint> lockBlacklist = new();
     
+
+    #endregion
+    
+    #region Lock System
+    public static void Lock()
+    {
+        Locked = true;
+        lockWhitelist.Clear();
+        lockBlacklist.Clear();
+    }
+
+    public static void Lock(uint[] whitelist, uint[] blacklist)
+    {
+        Locked = true;
+        lockWhitelist.Clear();
+        lockBlacklist.Clear();
+        if(whitelist.Length > 0) lockWhitelist.AddRange(whitelist);
+        if(blacklist.Length > 0) lockWhitelist.AddRange(blacklist);
+    }
+    public static void LockWhitelist(params uint[] whitelist)
+    {
+        Locked = true;
+        lockWhitelist.Clear();
+        lockBlacklist.Clear();
+        if(whitelist.Length > 0) lockWhitelist.AddRange(whitelist);
+        
+    }
+    public static void LockBlacklist(params uint[] blacklist)
+    {
+        Locked = true;
+        lockWhitelist.Clear();
+        lockBlacklist.Clear();
+        if(blacklist.Length > 0) lockBlacklist.AddRange(blacklist);
+    }
+    public static void Unlock()
+    {
+        Locked = false;
+        lockWhitelist.Clear();
+        lockBlacklist.Clear();
+    }
+    public static bool HasAccess(uint tag) => tag == AllAccessTag || (lockWhitelist.Contains(tag) && !lockBlacklist.Contains(tag));
+    public static bool HasAccess(InputAction action) => HasAccess(action.AccessTag);
+    #endregion
+    
+    #region Input Actions
+    public static void UpdateActions(float dt, ShapeGamepadDevice? gamepad, params InputAction[] actions)
+    {
+        foreach (var action in actions)
+        {
+            action.Gamepad = gamepad;
+            action.Update(dt);
+        }
+    }
+    public static void UpdateActions(float dt, ShapeGamepadDevice? gamepad, List<InputAction> actions)
+    {
+        foreach (var action in actions)
+        {
+            action.Gamepad = gamepad;
+            action.Update(dt);
+        }
+    }
+    public static List<string> GetActionDescriptions(InputDeviceType inputDeviceType, bool shorthand, int typesPerActionCount, List<InputAction> actions)
+    {
+        var final = new List<string>();
+        foreach (var action in actions)
+        {
+            var description = action.GetInputTypeDescription(inputDeviceType, shorthand, typesPerActionCount, true);
+            
+            final.Add(description);
+        }
+
+        return final;
+    }
+    public static List<string> GetActionDescriptions(InputDeviceType inputDeviceType, bool shorthand, int typesPerActionCount, params InputAction[] actions)
+    {
+        var final = new List<string>();
+        foreach (var action in actions)
+        {
+            var description = action.GetInputTypeDescription(inputDeviceType, shorthand, typesPerActionCount, true);
+            
+            final.Add(description);
+        }
+
+        return final;
+    }
+
+    #endregion
+   
+    #region Basic
+    public static InputState GetState(ShapeKeyboardButton button, uint accessTag)
+    {
+        if (Locked && !HasAccess(accessTag)) return new();
+        return ShapeInput.KeyboardDevice.GetState(button);// InputTypeKeyboardButton.GetState(button);
+    }
+    public static InputState GetState(ShapeMouseButton button, uint accessTag)
+    {
+        if (Locked && !HasAccess(accessTag)) return new();
+        return ShapeInput.MouseDevice.GetState(button); // InputTypeMouseButton.GetState(button);
+    }
+    public static InputState GetState(ShapeGamepadButton button, uint accessTag, int gamepadIndex, float deadzone = 0.2f)
+    {
+        if (Locked && !HasAccess(accessTag)) return new();
+        var gamepad = ShapeInput.GamepadDeviceManager.GetGamepad(gamepadIndex);
+        return gamepad == null ? new() : gamepad.GetState(button, deadzone); //  InputTypeGamepadButton.GetState(button, gamepad, deadzone);
+    }
+    public static InputState GetState(ShapeKeyboardButton neg, ShapeKeyboardButton pos, uint accessTag)
+    {
+        if (Locked && !HasAccess(accessTag)) return new();
+        return ShapeInput.KeyboardDevice.GetState(neg, pos); // InputTypeKeyboardButtonAxis.GetState(neg, pos);
+    }
+    public static InputState GetState(ShapeMouseButton neg, ShapeMouseButton pos, uint accessTag)
+    {
+        if (Locked && !HasAccess(accessTag)) return new();
+        return ShapeInput.MouseDevice.GetState(neg, pos); // InputTypeMouseButtonAxis.GetState(neg, pos);
+    }
+    public static InputState GetState(ShapeGamepadButton neg, ShapeGamepadButton pos, uint accessTag, int gamepadIndex, float deadzone = 0.2f)
+    {
+        if (Locked && !HasAccess(accessTag)) return new();
+        var gamepad = ShapeInput.GamepadDeviceManager.GetGamepad(gamepadIndex);
+        return gamepad == null ? new() : gamepad.GetState(neg, pos, deadzone);
+        // return InputTypeGamepadButtonAxis.GetState(neg, pos, gamepad, deadzone);
+    }
+    public static InputState GetState(ShapeMouseWheelAxis axis, uint accessTag, float deadzone = 1f)
+    {
+        if (Locked && !HasAccess(accessTag)) return new();
+        return ShapeInput.MouseDevice.GetState(axis, deadzone); // InputTypeMouseWheelAxis.GetState(axis);
+    }
+    public static InputState GetState(ShapeGamepadAxis axis, uint accessTag, int gamepadIndex, float deadzone = 0.2f)
+    {
+        if (Locked && !HasAccess(accessTag)) return new();
+        var gamepad = ShapeInput.GamepadDeviceManager.GetGamepad(gamepadIndex);
+        return gamepad == null ? new() : gamepad.GetState(axis, deadzone);
+        // return InputTypeGamepadAxis.GetState(axis, gamepad, deadzone);
+    }
+    
+    #endregion
+    
+    #endregion
 }

@@ -17,10 +17,10 @@ public interface IInputType
     /// </summary>
     /// <param name="seconds">How many seconds it takes.</param>
     public void SetGravitiy(float seconds);*/
-    public InputState GetState(int gamepad = -1);
-    public InputState GetState(InputState prev, int gamepad = -1);
+    public InputState GetState(ShapeGamepadDevice? gamepad = null);
+    public InputState GetState(InputState prev, ShapeGamepadDevice? gamepad = null);
     public string GetName(bool shorthand = true);
-    public InputDevice GetInputDevice();
+    public InputDeviceType GetInputDevice();
 
     public static IInputType Create(ShapeKeyboardButton button) => new InputTypeKeyboardButton(button);
     public static IInputType Create(ShapeMouseButton button) => new InputTypeMouseButton(button);

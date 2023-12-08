@@ -10,8 +10,9 @@ public class ModifierKeyGamepadButton : IModifierKey
         this.modifier = modifierKey;
         this.reverseModifier = reverseModifier;
     }
-    public InputDevice GetInputDevice() => InputDevice.Gamepad;
-    public bool IsActive(int gamepad) => InputTypeGamepadButton.IsDown(modifier, gamepad) != reverseModifier;
+    public InputDeviceType GetInputDevice() => InputDeviceType.Gamepad;
 
-    public string GetName(bool shorthand = true) => reverseModifier ? "" : InputTypeGamepadButton.GetGamepadButtonName(modifier, shorthand);
+    public bool IsActive(ShapeGamepadDevice? gamepad) => gamepad != null && gamepad.IsModifierActive(modifier, reverseModifier);
+
+    public string GetName(bool shorthand = true) => reverseModifier ? "" : ShapeGamepadDevice.GetButtonName(modifier, shorthand);
 }

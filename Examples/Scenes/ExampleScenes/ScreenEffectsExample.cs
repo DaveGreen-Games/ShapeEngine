@@ -101,7 +101,7 @@ namespace Examples.Scenes.ExampleScenes
             mouseInside = background.ContainsPoint(mousePos);
             if (mouseInside)
             {
-                if (Input.GetActionState(GAMELOOP.InputActionUIAccept).Down || Input.GetActionState(GAMELOOP.InputActionUIAcceptMouse).Down)
+                if (GAMELOOP.InputActionUIAccept.State.Down || GAMELOOP.InputActionUIAcceptMouse.State.Down)
                 {
                     float intensity = background.GetWidthPointFactor(mousePos.X);
                     CurValue = intensity;
@@ -163,10 +163,10 @@ namespace Examples.Scenes.ExampleScenes
             SetupInput();
         }
 
-        public string GetInputDescription(InputDevice inputDevice)
+        public string GetInputDescription(InputDeviceType inputDeviceType)
         {
-            string hor = iaMoveHor.GetInputTypeDescription(inputDevice, true, 1, false, false);
-            string ver = iaMoveVer.GetInputTypeDescription(inputDevice, true, 1, false, false);
+            string hor = iaMoveHor.GetInputTypeDescription(inputDeviceType, true, 1, false, false);
+            string ver = iaMoveVer.GetInputTypeDescription(inputDeviceType, true, 1, false, false);
             return $"Move Horizontal [{hor}] Vertical [{ver}]";
         }
         public void Reset(Vector2 pos, float r)
@@ -198,12 +198,12 @@ namespace Examples.Scenes.ExampleScenes
             // {
             //     dirY = 1;
             // }
-            int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
+            // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
             
-            iaMoveHor.Gamepad = gamepadIndex;
+            iaMoveHor.Gamepad = GAMELOOP.CurGamepad;
             iaMoveHor.Update(dt);
             
-            iaMoveVer.Gamepad = gamepadIndex;
+            iaMoveVer.Gamepad = GAMELOOP.CurGamepad;
             iaMoveVer.Update(dt);
             
             Vector2 dir = new(iaMoveHor.State.AxisRaw, iaMoveVer.State.AxisRaw);
@@ -384,14 +384,15 @@ namespace Examples.Scenes.ExampleScenes
         
         protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
-            iaShakeCamera.Gamepad = gamepadIndex;
+            // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
+            var gamepad = GAMELOOP.CurGamepad;
+            iaShakeCamera.Gamepad = gamepad;
             iaShakeCamera.Update(dt);
             
-            iaRotateCamera.Gamepad = gamepadIndex;
+            iaRotateCamera.Gamepad = gamepad;
             iaRotateCamera.Update(dt);
 
-            iaToggleDrawCameraFollowBoundary.Gamepad = gamepadIndex;
+            iaToggleDrawCameraFollowBoundary.Gamepad = gamepad;
             iaToggleDrawCameraFollowBoundary.Update(dt);
 
             if (iaToggleDrawCameraFollowBoundary.State.Pressed)
@@ -506,10 +507,10 @@ namespace Examples.Scenes.ExampleScenes
         private void DrawInputDescription(Rect rect)
         {
             var rects = rect.SplitV(0.35f);
-            var curDevice = Input.CurrentInputDevice;
+            var curDevice = ShapeInput.CurrentInputDeviceType;
             string shakeCameraText = iaShakeCamera.GetInputTypeDescription(curDevice, true, 1, false);
             string rotateCameraText = iaRotateCamera.GetInputTypeDescription(curDevice, true, 1, false);
-            string toggleDrawText = iaToggleDrawCameraFollowBoundary.GetInputTypeDescription(Input.CurrentInputDeviceNoMouse, true, 1, false);
+            string toggleDrawText = iaToggleDrawCameraFollowBoundary.GetInputTypeDescription(ShapeInput.CurrentInputDeviceTypeNoMouse, true, 1, false);
             string moveText = ship.GetInputDescription(curDevice);
             string onText = drawCameraFollowBoundary ? "ON" : "OFF";
             string textTop = $"Draw Camera Follow Boundary {onText} - Toggle {toggleDrawText}";

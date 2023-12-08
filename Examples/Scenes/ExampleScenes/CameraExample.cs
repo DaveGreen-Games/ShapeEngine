@@ -62,7 +62,7 @@ namespace Examples.Scenes.ExampleScenes
 
             var rotateCameraKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.Q, ShapeKeyboardButton.E);
             var rotateCameraGP =
-                new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad2);
+                new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepad);
             var rotateCameraWW =
                 new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouse);
             iaRotateCamera = new(rotateCameraKB, rotateCameraGP, rotateCameraWW);
@@ -100,12 +100,14 @@ namespace Examples.Scenes.ExampleScenes
         }
         protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
-            foreach (var ia in inputActions)
-            {
-                ia.Gamepad = gamepadIndex;
-                ia.Update(dt);
-            }
+            var gamepad = GAMELOOP.CurGamepad;
+            InputAction.UpdateActions(dt, gamepad, inputActions);
+            // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
+            // foreach (var ia in inputActions)
+            // {
+            //     ia.Gamepad = gamepadIndex;
+            //     ia.Update(dt);
+            // }
             HandleCameraPosition(dt);
             HandleCameraRotation(dt);
         }
@@ -187,7 +189,7 @@ namespace Examples.Scenes.ExampleScenes
             
             var sbCamera = new StringBuilder();
             var sbInfo = new StringBuilder();
-            var curInputDeviceAll = ShapeLoop.Input.CurrentInputDevice;
+            var curInputDeviceAll = ShapeInput.CurrentInputDeviceType;
             //var curInputDeviceNoMouse = ShapeLoop.Input.CurrentInputDeviceNoMouse;
             
             var pos = camera.Position;

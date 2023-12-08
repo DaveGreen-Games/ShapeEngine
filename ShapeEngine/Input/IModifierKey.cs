@@ -4,9 +4,9 @@ namespace ShapeEngine.Input;
 
 public interface IModifierKey
 {
-    public bool IsActive(int gamepad = -1);
+    public bool IsActive(ShapeGamepadDevice? gamepad = null);
     public string GetName(bool shorthand = true);
-    public InputDevice GetInputDevice();
+    public InputDeviceType GetInputDevice();
     public static string GetModifierKeyNames(IModifierKey[] modifierKeys, ModifierKeyOperator modifierOperator, bool shorthand = true)
     {
         if (modifierKeys.Length <= 0) return string.Empty;
@@ -66,7 +66,7 @@ public interface IModifierKey
         
         
     }
-    public static bool IsActive(ModifierKeyOperator modifierOperator, IModifierKey[] modifierKeys, int gamepad = -1)
+    public static bool IsActive(ModifierKeyOperator modifierOperator, IModifierKey[] modifierKeys, ShapeGamepadDevice? gamepad = null)
     {
         if (modifierKeys.Length <= 0) return true;
         

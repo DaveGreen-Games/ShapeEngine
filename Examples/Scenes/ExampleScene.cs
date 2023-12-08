@@ -45,8 +45,8 @@ namespace Examples.Scenes
         {
             float zoomSpeed = 1f;
             float zoomDir = 0;
-            
-            var zoomState = Input.ConsumeAction(GAMELOOP.InputActionZoom);
+
+            var zoomState = GAMELOOP.InputActionZoom.Consume();
             if (!zoomState.Consumed)
             {
                 zoomDir = -zoomState.AxisRaw;
@@ -60,23 +60,23 @@ namespace Examples.Scenes
         
         protected void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            var cancelState = Input.ConsumeAction(GAMELOOP.InputActionUICancel);
+            var cancelState = GAMELOOP.InputActionUICancel.Consume();
             if (cancelState is { Consumed: false, Pressed: true })
             {
                 if(GAMELOOP.Paused) GAMELOOP.Paused = false;
                 GAMELOOP.GoToMainScene();
             }
-            
-            var pausedState = Input.ConsumeAction(GAMELOOP.InputActionPause);
+
+            var pausedState = GAMELOOP.InputActionPause.Consume();
             if (pausedState is { Consumed: false, Pressed: true })
             {
                 GAMELOOP.Paused = !GAMELOOP.Paused;
             }
 
             if (GAMELOOP.Paused) return;
-            
-            
-            var resetState = Input.ConsumeAction(GAMELOOP.InputActionReset);
+
+
+            var resetState = GAMELOOP.InputActionReset.Consume();
             if (resetState is { Consumed: false, Pressed: true })
             {
                 Reset();
@@ -153,7 +153,7 @@ namespace Examples.Scenes
         public void DrawUI(ScreenInfo ui)
         {
             var backRect = ui.Area.ApplyMargins(0.012f, 0.85f, 0.012f, 0.95f);
-            var curInputDevice = Input.CurrentInputDeviceNoMouse;
+            var curInputDevice = ShapeInput.CurrentInputDeviceTypeNoMouse;
             var backLabelRect = GAMELOOP.UIRects.GetRect("top left top"); // GetRect("top", "left", "top"); // Get("top").Get("left").Get("top").GetRect();
             backLabel.Draw(backLabelRect, new(0f, 0f), curInputDevice, 4);
             
@@ -182,9 +182,9 @@ namespace Examples.Scenes
         }
         public virtual void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos){}
         public virtual void OnMonitorChanged(MonitorInfo newMonitor){}
-        public virtual void OnGamepadConnected(Gamepad gamepad){}
-        public virtual void OnGamepadDisconnected(Gamepad gamepad){}
-        public virtual void OnInputDeviceChanged(InputDevice prevDevice, InputDevice curDevice){}
+        public virtual void OnGamepadConnected(ShapeGamepadDevice gamepad){}
+        public virtual void OnGamepadDisconnected(ShapeGamepadDevice gamepad){}
+        public virtual void OnInputDeviceChanged(InputDeviceType prevDeviceType, InputDeviceType curDeviceType){}
         public virtual void OnWindowMaximizeChanged(bool maximized){}
         public virtual void OnWindowFullscreenChanged(bool fullscreen){}
         public virtual void OnPausedChanged(bool newPaused){}
@@ -204,13 +204,12 @@ namespace Examples.Scenes
         }
         private void DrawInputDeviceInfo(Rect rect)
         {
-            var infoRect = rect;//.ApplyMargins(0.01f, 0.75f, 0.08f, 0.84f);
+            var infoRect = rect;
             var split = infoRect.SplitV(2);
             var deviceRect = split[0];
             var gamepadRect = split[1];
 
-            var deviceText = Input.GetCurInputDeviceGenericName(); // ShapeInput.GetInputDeviceGenericName(Input.CurrentInputDevice);
-            // var deviceRect = rect.ApplyMargins(0.01f, 0.7f, 0.1f, 0.85f);
+            var deviceText = ShapeInput.GetCurInputDeviceGenericName();
             titleFont.DrawText(deviceText, deviceRect, 1f, new Vector2(0.01f, 0.5f), ColorHighlight3);
             
             string gamepadText = "No Gamepad Connected";
@@ -220,7 +219,6 @@ namespace Examples.Scenes
                 gamepadText = $"Gamepad [{gamepadIndex}] Connected";
             }
             
-            // var textRect = rect.ApplyMargins(0f, 0.5f, 0.1f, 0.85f);
             titleFont.DrawText(gamepadText, gamepadRect, 1f, new Vector2(0.01f, 0.5f), GAMELOOP.CurGamepad != null ? ColorHighlight3 : ColorMedium);
         }
         

@@ -2,6 +2,7 @@
 using Raylib_CsLo;
 using ShapeEngine.UI;
 using System.Numerics;
+using ShapeEngine.Input;
 using ShapeEngine.Lib;
 
 namespace Examples.UIElements
@@ -31,7 +32,7 @@ namespace Examples.UIElements
         {
             if (Hidden || Scene == null) return false;
 
-            var acceptState = Input.ConsumeAction(GAMELOOP.InputActionUIAcceptMouse);
+            var acceptState = GAMELOOP.InputActionUIAcceptMouse.Consume();// Input.ConsumeAction(GAMELOOP.InputActionUIAcceptMouse);
             return acceptState is { Consumed: false, Released: true };
             //return IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT);
         }
@@ -39,7 +40,7 @@ namespace Examples.UIElements
         protected override bool CheckPressed()
         {
             if (Hidden || Scene == null) return false;
-            var acceptState = Input.ConsumeAction(GAMELOOP.InputActionUIAccept);
+            var acceptState = GAMELOOP.InputActionUIAccept.Consume();// Input.ConsumeAction(GAMELOOP.InputActionUIAccept);
             return acceptState is { Consumed: false, Released: true };
             //return IsKeyReleased(KeyboardKey.KEY_SPACE) || IsKeyPressed(KeyboardKey.KEY_ENTER);
         }

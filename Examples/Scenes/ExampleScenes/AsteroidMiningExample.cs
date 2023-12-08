@@ -321,7 +321,7 @@ namespace Examples.Scenes.ExampleScenes
             UpdateTriangle();
 
             var shootKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
-            var shootGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM);
+            var shootGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
             var shootMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
             iaShootLaser = new(shootKB, shootGP, shootMB);
             //this.laserEndPoint = tip;
@@ -362,8 +362,8 @@ namespace Examples.Scenes.ExampleScenes
             laserEnabled = false;
             if (hybernate) return;
             
-            int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
-            iaShootLaser.Gamepad = gamepadIndex;
+            // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
+            iaShootLaser.Gamepad = GAMELOOP.CurGamepad;
             iaShootLaser.Update(dt);
             
             if (aimingMode)
@@ -564,7 +564,7 @@ namespace Examples.Scenes.ExampleScenes
             var regenShapeGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP);
             iaRegenerateShape = new(regenShapeKB, regenShapeGP);
             
-            var rotateShapeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.F);
+            var rotateShapeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
             var rotateShapeGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
             iaRotateShape = new(rotateShapeKB, rotateShapeGP);
             
@@ -765,13 +765,15 @@ namespace Examples.Scenes.ExampleScenes
 
             var col = gameObjectHandler.GetCollisionHandler();
             if (col == null) return;
-            
-            int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
-            foreach (var ia in inputActions)
-            {
-                ia.Gamepad = gamepadIndex;
-                ia.Update(dt);
-            }
+
+            var gamepad = GAMELOOP.CurGamepad;
+            InputAction.UpdateActions(dt, gamepad, inputActions);
+            // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
+            // foreach (var ia in inputActions)
+            // {
+            //     ia.Gamepad = gamepad;
+            //     ia.Update(dt);
+            // }
 
             
             if (iaModeChange.State.Pressed)
@@ -992,8 +994,8 @@ namespace Examples.Scenes.ExampleScenes
         private void DrawInputText(Rect rect)
         {
             var sb = new StringBuilder();
-            var curInputDeviceAll = ShapeLoop.Input.CurrentInputDevice;
-            var curInputDeviceNoMouse = ShapeLoop.Input.CurrentInputDeviceNoMouse;
+            var curInputDeviceAll = ShapeInput.CurrentInputDeviceType;
+            var curInputDeviceNoMouse = ShapeInput.CurrentInputDeviceTypeNoMouse;
             string changeModeText = iaModeChange.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
             sb.Append($"Mode {changeModeText} | ");
             

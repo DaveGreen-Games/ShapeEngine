@@ -39,6 +39,7 @@ namespace Examples.Scenes.ExampleScenes
             GenerateStars(ShapeRandom.randI(15000, 30000));
             follower = new(ship.Speed * 1.1f, 200, 400);
             camera.Follower = follower;
+            UpdateFollower(GAMELOOP.UI.Area.Size.Min());
             
             currentShip = ship;
 
@@ -49,6 +50,14 @@ namespace Examples.Scenes.ExampleScenes
 
         }
 
+        private void UpdateFollower(float size)
+        {
+            var minBoundary = 0.12f * size;
+            var maxBoundary = 0.25f * size;
+            var boundary = new Vector2(minBoundary, maxBoundary) * camera.ZoomFactor;
+            follower.Speed = ship.Speed * 1.1f;
+            follower.BoundaryDis = new(boundary);
+        }
         private void GenerateStars(int amount)
         {
             for (int i = 0; i < amount; i++)
@@ -67,6 +76,7 @@ namespace Examples.Scenes.ExampleScenes
             GAMELOOP.Camera = camera;
             follower.SetTarget(ship);
             currentShip = ship;
+            UpdateFollower(GAMELOOP.UI.Area.Size.Min());
             // GAMELOOP.UseMouseMovement = false;
         }
 
@@ -87,16 +97,13 @@ namespace Examples.Scenes.ExampleScenes
             ship2.Reset(new Vector2(100, 0), 30f);
             follower.SetTarget(ship);
             currentShip = ship;
+            UpdateFollower(GAMELOOP.UI.Area.Size.Min());
             stars.Clear();
             GenerateStars(ShapeRandom.randI(15000, 30000));
 
         }
         protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            // HandleZoom(dt);
-
-            
-            
             if (iaChangeCameraTarget.State.Pressed)
             {
                 camera.StopTweenSequence(prevCameraTweenID);
@@ -132,8 +139,9 @@ namespace Examples.Scenes.ExampleScenes
         // }
         protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
-            iaChangeCameraTarget.Gamepad = gamepadIndex;
+            UpdateFollower(ui.Area.Size.Min());
+            // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
+            iaChangeCameraTarget.Gamepad = GAMELOOP.CurGamepad;
             iaChangeCameraTarget.Update(dt);
             
             currentShip.Update(dt, camera.RotationDeg);
@@ -182,7 +190,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         private void DrawInputDescription(Rect rect)
         {
-            var curDevice = Input.CurrentInputDevice;
+            var curDevice = ShapeInput.CurrentInputDeviceType;
             // var curDeviceNoMouse = Input.CurrentInputDeviceNoMouse;
             string changeTargetText = iaChangeCameraTarget.GetInputTypeDescription(curDevice, true, 1, false);
             string moveText = ship.GetInputDescription(curDevice);

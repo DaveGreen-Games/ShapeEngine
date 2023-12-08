@@ -28,7 +28,7 @@ public readonly struct InputState
     public readonly float Axis;
     public readonly float AxisRaw;
     public readonly int Gamepad;
-    public readonly InputDevice InputDevice;
+    public readonly InputDeviceType InputDeviceType;
     
     public readonly bool Consumed;
 
@@ -61,14 +61,14 @@ public readonly struct InputState
         Axis = 0f;
         Gamepad = -1;
         Consumed = false;
-        InputDevice = InputDevice.Keyboard;
+        InputDeviceType = InputDeviceType.Keyboard;
         HoldF = 0f;
         HoldState = MultiTapState.None;
         //HoldFinished = false;
         MultiTapF = 0f;
         MultiTapState = MultiTapState.None;
     }
-    public InputState(bool down, bool up, float axisRaw, int gamepad, InputDevice inputDevice)
+    public InputState(bool down, bool up, float axisRaw, int gamepad, InputDeviceType inputDeviceType)
     {
         Down = down;
         Up = up;
@@ -78,7 +78,7 @@ public readonly struct InputState
         Axis = axisRaw;
         Gamepad = gamepad;
         Consumed = false;
-        InputDevice = inputDevice;
+        InputDeviceType = inputDeviceType;
         HoldF = 0f;
         HoldState = MultiTapState.None;
         // HoldFinished = false;
@@ -98,7 +98,7 @@ public readonly struct InputState
         AxisRaw = state.AxisRaw;
         Axis = state.Axis;
         Consumed = state.Consumed;
-        InputDevice = state.InputDevice;
+        InputDeviceType = state.InputDeviceType;
 
         HoldF = holdF;
         HoldState = MultiTapState.None;
@@ -117,7 +117,7 @@ public readonly struct InputState
         Pressed = prev.Up && cur.Down;
         Released = prev.Down && cur.Up;
         Consumed = false;
-        InputDevice = cur.InputDevice;
+        InputDeviceType = cur.InputDeviceType;
 
         if (prev.HoldF is > 0f and < 1f)
         {
@@ -138,7 +138,7 @@ public readonly struct InputState
         MultiTapF = cur.MultiTapF;
 
     }
-    public InputState(InputState prev, InputState cur, InputDevice inputDevice)
+    public InputState(InputState prev, InputState cur, InputDeviceType inputDeviceType)
     {
         Gamepad = cur.Gamepad;
         AxisRaw = cur.AxisRaw;
@@ -148,7 +148,7 @@ public readonly struct InputState
         Pressed = prev.Up && cur.Down;
         Released = prev.Down && cur.Up;
         Consumed = false;
-        InputDevice = inputDevice;
+        InputDeviceType = inputDeviceType;
 
         // if (prev.HoldF < 1f && cur.HoldF >= 1f) HoldFinished = true;
         // else HoldFinished = false;
@@ -180,7 +180,7 @@ public readonly struct InputState
         AxisRaw = other.AxisRaw;
         Axis = other.Axis;
         Consumed = consumed;
-        InputDevice = other.InputDevice;
+        InputDeviceType = other.InputDeviceType;
 
         HoldF = other.HoldF;
         HoldState = other.HoldState;
@@ -198,7 +198,7 @@ public readonly struct InputState
         AxisRaw = state.AxisRaw;
         Axis = ShapeMath.Clamp(axis, -1f, 1f);
         Consumed = state.Consumed;
-        InputDevice = state.InputDevice;
+        InputDeviceType = state.InputDeviceType;
         
         HoldF = state.HoldF;
         HoldState = state.HoldState;
@@ -208,10 +208,10 @@ public readonly struct InputState
     }
     public InputState Accumulate(InputState other)
     {
-        var inputDevice = InputDevice;
+        var inputDevice = InputDeviceType;
         if (other.Down)
         {
-            if(!Down || MathF.Abs(other.AxisRaw) > MathF.Abs(AxisRaw))inputDevice = other.InputDevice;
+            if(!Down || MathF.Abs(other.AxisRaw) > MathF.Abs(AxisRaw))inputDevice = other.InputDeviceType;
         }
 
         float axis = AxisRaw; // ShapeMath.Clamp(AxisRaw + other.AxisRaw, -1f, 1f); // MathF.Max(AxisRaw, other.AxisRaw); // ShapeMath.Clamp(Axis + other.Axis, 0f, 1f);

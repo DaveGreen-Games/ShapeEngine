@@ -14,17 +14,11 @@ using ShapeEngine.Input;
 
 namespace ShapeEngine.Core;
 
-// public enum WindowType
-// {
-//     Default = 0,
-//     Hidden = 1,
-//     Minimized = 2,
-//     Maximized = 3,
-//     Fullscreen = 4
-// }
 
 public class ShapeLoop
 {
+    
+    
     #region Static
     public static readonly string CURRENT_DIRECTORY = AppDomain.CurrentDomain.BaseDirectory; // Environment.CurrentDirectory;
     public static OSPlatform OS_PLATFORM { get; private set; } =
@@ -209,7 +203,7 @@ public class ShapeLoop
     }
     public SlowMotion SlowMotion { get; private set; } = new SlowMotion();
     
-    public static readonly ShapeInput Input = new();
+    //public static readonly ShapeInput Input = new();
     // public InputDevice CurrentInputDevice { get; private set; } = InputDevice.Keyboard;
     // public int MaxGamepads => gamepads.Length;
     // public Gamepad? LastUsedGamepad { get; private set; } = null;
@@ -251,6 +245,7 @@ public class ShapeLoop
     #region Setup
     public ShapeLoop(Dimensions developmentDimensions, bool multiShaderSupport = false)
     {
+        
         #if DEBUG
         DebugMode = true;
         ReleaseMode = false;
@@ -297,9 +292,10 @@ public class ShapeLoop
         // }
         
         //Input = new();
-        Input.Gamepads.OnGamepadConnectionChanged += OnInputGamepadConnectionChanged;
-        Input.OnInputDeviceChanged += OnInputInputDeviceChanged;
-        
+        // Input.InputDeviceManager.OnGamepadConnectionChanged += OnInputInputDeviceManagerConnectionChanged;
+        // Input.OnInputDeviceChanged += OnInputInputDeviceChanged;
+        ShapeInput.OnInputDeviceChanged += OnInputDeviceChanged;
+        ShapeInput.GamepadDeviceManager.OnGamepadConnectionChanged += OnGamepadConnectionChanged;
         
         //CursorOnScreen = Fullscreen || Raylib.IsCursorOnScreen();
         CursorOnScreen = Fullscreen || Raylib.IsCursorOnScreen() || ( Raylib.IsWindowFocused() && screenArea.ContainsPoint(GetMousePosition()) );
@@ -493,7 +489,7 @@ public class ShapeLoop
             }
             
             CheckForWindowChanges();
-            Input.Update();
+            ShapeInput.Update();
             Camera.SetSize(CurScreenSize, DevelopmentDimensions);
             if(!Paused) Camera.Update(dt);
             
@@ -531,7 +527,7 @@ public class ShapeLoop
             
             if (CursorOnScreen)
             {
-                if (Input.CurrentInputDevice is InputDevice.Keyboard or InputDevice.Gamepad)
+                if (ShapeInput.CurrentInputDeviceType is InputDeviceType.Keyboard or InputDeviceType.Gamepad)
                 {
                     mousePos = ChangeMousePos(dt, mousePos, screenArea);
                     mousePos = mousePos.Clamp(new Vector2(0, 0), CurScreenSize.ToVector2());
@@ -770,9 +766,9 @@ public class ShapeLoop
     protected virtual void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos) { }
     protected virtual void OnMonitorChanged(MonitorInfo newMonitor) { }
     protected virtual void OnPausedChanged(bool newPaused) { }
-    protected virtual void OnInputDeviceChanged(InputDevice prevDevice, InputDevice newDevice) { }
-    protected virtual void OnGamepadConnected(Gamepad gamepad) { }
-    protected virtual void OnGamepadDisconnected(Gamepad gamepad) { }
+    protected virtual void OnInputDeviceChanged(InputDeviceType prevDeviceType, InputDeviceType newDeviceType) { }
+    protected virtual void OnGamepadConnected(ShapeGamepadDevice gamepad) { }
+    protected virtual void OnGamepadDisconnected(ShapeGamepadDevice gamepad) { }
     protected virtual void OnCursorEnteredScreen() { }
     protected virtual void OnCursorLeftScreen() { }
     protected virtual void OnCursorHiddenChanged(bool hidden) { }
@@ -1001,7 +997,7 @@ public class ShapeLoop
         CurScene.OnWindowMaximizeChanged(maximized);
         
     }
-    private void OnInputGamepadConnectionChanged(Gamepad gamepad, bool connected)
+    private void OnGamepadConnectionChanged(ShapeGamepadDevice gamepad, bool connected)
     {
         if (connected)
         {
@@ -1014,10 +1010,10 @@ public class ShapeLoop
             CurScene.OnGamepadDisconnected(gamepad);
         }
     }
-    private void OnInputInputDeviceChanged(InputDevice prevDevice, InputDevice newDevice)
+    private void OnInputInputDeviceChanged(InputDeviceType prevDeviceType, InputDeviceType newDeviceType)
     {
-        OnInputDeviceChanged(prevDevice, newDevice);
-        CurScene.OnInputDeviceChanged(prevDevice, newDevice);
+        OnInputDeviceChanged(prevDeviceType, newDeviceType);
+        CurScene.OnInputDeviceChanged(prevDeviceType, newDeviceType);
     }
     
     private CursorState GetCursorState()

@@ -11,7 +11,7 @@ namespace Examples.Scenes.ExampleScenes
 {
     internal abstract class InputVisualizer
     {
-        public abstract void Update(float dt, int gamepad, InputDevice inputDevice);
+        public abstract void Update(float dt, ShapeGamepadDevice? gamepad, InputDeviceType inputDeviceType);
         public abstract void Draw(Rect area, float lineThickness);
     }
     internal class JoystickVisualizer : InputVisualizer
@@ -22,7 +22,7 @@ namespace Examples.Scenes.ExampleScenes
         private Font font;
         private float flashTimer = 0f;
         private const float flashDuration = 1f;
-        private InputDevice curInputDevice = InputDevice.Keyboard;
+        private InputDeviceType curInputDeviceType = InputDeviceType.Keyboard;
         public JoystickVisualizer(bool left, Font font)
         {
             this.font = font;
@@ -90,11 +90,11 @@ namespace Examples.Scenes.ExampleScenes
             joystickVertical.AxisSensitivity = 0.5f;
 
         }
-        public override void Update(float dt, int gamepad, InputDevice inputDevice)
+        public override void Update(float dt, ShapeGamepadDevice? gamepad, InputDeviceType inputDeviceType)
         {
-            if (joystickHorizontal.HasInput(inputDevice) || joystickVertical.HasInput(inputDevice))
+            if (joystickHorizontal.HasInput(inputDeviceType) || joystickVertical.HasInput(inputDeviceType))
             {
-                curInputDevice = inputDevice;
+                curInputDeviceType = inputDeviceType;
             }
             
             joystickHorizontal.Gamepad = gamepad;
@@ -138,8 +138,8 @@ namespace Examples.Scenes.ExampleScenes
             
             
             
-            var inputs = joystickHorizontal.GetInputs(curInputDevice);
-            inputs.AddRange(joystickVertical.GetInputs(curInputDevice));
+            var inputs = joystickHorizontal.GetInputs(curInputDeviceType);
+            inputs.AddRange(joystickVertical.GetInputs(curInputDeviceType));
             var inputNamesRect = insideBottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
             var rects = inputNamesRect.SplitV(inputs.Count); // inputNamesRect.GetAlignedRectsVertical(inputs.Count, 0f, 1f);
             for (var i = 0; i < inputs.Count; i++)
@@ -198,7 +198,7 @@ namespace Examples.Scenes.ExampleScenes
         private Font font;
         private float flashTimer = 0f;
         private const float flashDuration = 1f;
-        private InputDevice curInputDevice = InputDevice.Keyboard;
+        private InputDeviceType curInputDeviceType = InputDeviceType.Keyboard;
 
         private InputAction trigger;
         
@@ -222,11 +222,11 @@ namespace Examples.Scenes.ExampleScenes
                 trigger.AddInput(triggerRight);
             }
         }
-        public override void Update(float dt, int gamepad, InputDevice inputDevice)
+        public override void Update(float dt, ShapeGamepadDevice? gamepad, InputDeviceType inputDeviceType)
         {
-            if (trigger.HasInput(inputDevice))
+            if (trigger.HasInput(inputDeviceType))
             {
-                curInputDevice = inputDevice;
+                curInputDeviceType = inputDeviceType;
             }
             
             trigger.Gamepad = gamepad;
@@ -267,7 +267,7 @@ namespace Examples.Scenes.ExampleScenes
             var insideRect = startRect.Lerp(insideBottom, trigger.State.Axis);
             insideRect.Draw(flashColor2);
             
-            var inputs = trigger.GetInputs(curInputDevice);
+            var inputs = trigger.GetInputs(curInputDeviceType);
             var inputNamesRect = insideBottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
             var count = inputs.Count + 1;
             var rects = inputNamesRect.SplitV(count);
@@ -303,7 +303,7 @@ namespace Examples.Scenes.ExampleScenes
             private Font font;
             private float flashTimer = 0f;
             private const float flashDuration = 1f;
-            private InputDevice curInputDevice = InputDevice.Keyboard;
+            private InputDeviceType curInputDeviceType = InputDeviceType.Keyboard;
     
             private InputAction button;
             public ButtonVisualizer(bool left, Font font)
@@ -328,11 +328,11 @@ namespace Examples.Scenes.ExampleScenes
                     button = new(space, start, rmb);
                 }
             }
-            public override void Update(float dt, int gamepad, InputDevice inputDevice)
+            public override void Update(float dt, ShapeGamepadDevice? gamepad, InputDeviceType inputDeviceType)
             {
-                if (button.HasInput(inputDevice))
+                if (button.HasInput(inputDeviceType))
                 {
-                    curInputDevice = inputDevice;
+                    curInputDeviceType = inputDeviceType;
                 }
                 
                 button.Gamepad = gamepad;
@@ -370,7 +370,7 @@ namespace Examples.Scenes.ExampleScenes
                 var insideRect = insideBottom.ScaleSize(0f, new(0.5f)).Lerp(insideBottom,  MathF.Abs(button.State.Axis));
                 insideRect.Draw(flashColor2);
                 
-                var inputs = button.GetInputs(curInputDevice);
+                var inputs = button.GetInputs(curInputDeviceType);
                 var inputNamesRect = insideBottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
                 var rects = inputNamesRect.SplitV(inputs.Count); // inputNamesRect.GetAlignedRectsVertical(inputs.Count, 0f, 1f);
                 for (var i = 0; i < inputs.Count; i++)
@@ -397,7 +397,7 @@ namespace Examples.Scenes.ExampleScenes
         private const float holdFinishedDuration = 1f;
         
         private const float flashDuration = 1f;
-        private InputDevice curInputDevice = InputDevice.Keyboard;
+        private InputDeviceType curInputDeviceType = InputDeviceType.Keyboard;
 
         private InputAction button;
         public ButtonHoldVisualizer(Font font)
@@ -410,11 +410,11 @@ namespace Examples.Scenes.ExampleScenes
             //var rmb = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
             button = new(q, x);
         }
-        public override void Update(float dt, int gamepad, InputDevice inputDevice)
+        public override void Update(float dt, ShapeGamepadDevice? gamepad, InputDeviceType inputDeviceType)
         {
-            if (button.HasInput(inputDevice))
+            if (button.HasInput(inputDeviceType))
             {
-                curInputDevice = inputDevice;
+                curInputDeviceType = inputDeviceType;
             }
             
             button.Gamepad = gamepad;
@@ -494,7 +494,7 @@ namespace Examples.Scenes.ExampleScenes
                 font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), flashColor1);
             }
             
-            var inputs = button.GetInputs(curInputDevice);
+            var inputs = button.GetInputs(curInputDeviceType);
             var inputNamesRect = bottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
             var rects = inputNamesRect.SplitV(inputs.Count);
             for (var i = 0; i < inputs.Count; i++)
@@ -541,7 +541,7 @@ namespace Examples.Scenes.ExampleScenes
         private const float doubleTapFinishedDuration = 1f;
         
         private const float flashDuration = 1f;
-        private InputDevice curInputDevice = InputDevice.Keyboard;
+        private InputDeviceType curInputDeviceType = InputDeviceType.Keyboard;
 
         private InputAction button;
         // private string lastAction = string.Empty;
@@ -560,11 +560,11 @@ namespace Examples.Scenes.ExampleScenes
             button.MultiTapTarget = 2;
             button.HoldDuration = 1f;
         }
-        public override void Update(float dt, int gamepad, InputDevice inputDevice)
+        public override void Update(float dt, ShapeGamepadDevice? gamepad, InputDeviceType inputDeviceType)
         {
-            if (button.HasInput(inputDevice))
+            if (button.HasInput(inputDeviceType))
             {
-                curInputDevice = inputDevice;
+                curInputDeviceType = inputDeviceType;
             }
             
             button.Gamepad = gamepad;
@@ -666,7 +666,7 @@ namespace Examples.Scenes.ExampleScenes
             
             
             
-            var inputs = button.GetInputs(curInputDevice);
+            var inputs = button.GetInputs(curInputDeviceType);
             var inputNamesRect = bottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
             var rects = inputNamesRect.SplitV(inputs.Count);
             for (var i = 0; i < inputs.Count; i++)
@@ -712,12 +712,12 @@ namespace Examples.Scenes.ExampleScenes
         
         public override void Activate(IScene oldScene)
         {
-            Input.LockWhitelist(GAMELOOP.GameloopAccessTag);
+            InputAction.LockWhitelist(GAMELOOP.GameloopAccessTag);
         }
 
         public override void Deactivate()
         {
-            Input.Unlock();
+            InputAction.Unlock();
         }
 
         public override GameObjectHandler? GetGameObjectHandler()
@@ -738,24 +738,25 @@ namespace Examples.Scenes.ExampleScenes
         }
         protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            int gamepadIndex = -1;
-            if (GAMELOOP.CurGamepad != null)
-            {
-                gamepadIndex = GAMELOOP.CurGamepad.Index;
-            }
+            // int gamepadIndex = -1;
+            // if (GAMELOOP.CurGamepad != null)
+            // {
+            //     gamepadIndex = GAMELOOP.CurGamepad.Index;
+            // }
 
-            var curDevice = Input.CurrentInputDevice;
-            joystickLeft.Update(dt, gamepadIndex, curDevice);
-            joystickRight.Update(dt, gamepadIndex, curDevice);
+            var gamepad = GAMELOOP.CurGamepad;
+            var curDevice = ShapeInput.CurrentInputDeviceType;
+            joystickLeft.Update(dt, gamepad, curDevice);
+            joystickRight.Update(dt, gamepad, curDevice);
             
-            buttonLeft.Update(dt, gamepadIndex, curDevice);
-            buttonRight.Update(dt, gamepadIndex, curDevice);
+            buttonLeft.Update(dt, gamepad, curDevice);
+            buttonRight.Update(dt, gamepad, curDevice);
             
-            triggerLeft.Update(dt, gamepadIndex, curDevice);
-            triggerRight.Update(dt, gamepadIndex, curDevice);
+            triggerLeft.Update(dt, gamepad, curDevice);
+            triggerRight.Update(dt, gamepad, curDevice);
             
-            buttonHold.Update(dt, gamepadIndex, curDevice);
-            buttonDoubleTap.Update(dt, gamepadIndex, curDevice);
+            buttonHold.Update(dt, gamepad, curDevice);
+            buttonDoubleTap.Update(dt, gamepad, curDevice);
         }
         protected override void DrawGameExample(ScreenInfo game)
         {

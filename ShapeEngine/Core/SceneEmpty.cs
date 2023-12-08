@@ -12,7 +12,6 @@ namespace ShapeEngine.Core
 
         public virtual void Close() { }
 
-        public virtual void SetInput(ShapeInput input){}
 
         public virtual void Activate(IScene oldScene) { }
         public virtual void Deactivate() { }
@@ -21,9 +20,9 @@ namespace ShapeEngine.Core
         public virtual void OnWindowSizeChanged(DimensionConversionFactors conversionFactors) { }
         public virtual void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos){}
         public virtual void OnMonitorChanged(MonitorInfo newMonitor){}
-        public virtual void OnGamepadConnected(Gamepad gamepad){}
-        public virtual void OnGamepadDisconnected(Gamepad gamepad){}
-        public virtual void OnInputDeviceChanged(InputDevice prevDevice, InputDevice curDevice){}
+        public virtual void OnGamepadConnected(ShapeGamepadDevice gamepad){}
+        public virtual void OnGamepadDisconnected(ShapeGamepadDevice gamepad){}
+        public virtual void OnInputDeviceChanged(InputDeviceType prevDeviceType, InputDeviceType curDeviceType){}
         public virtual void OnWindowMaximizeChanged(bool maximized){}
         public virtual void OnWindowFullscreenChanged(bool fullscreen){}
         public virtual void OnPausedChanged(bool newPaused){}

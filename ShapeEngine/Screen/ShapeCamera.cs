@@ -200,6 +200,13 @@ public sealed class ShapeCamera
 
         if (follower != null)
         {
+            // var area = new Rect
+            // (
+            //     Position.X - Offset.X, 
+            //     Position.Y - Offset.Y, 
+            //     Size.X,
+            //     Size.Y
+            // );
             var rect = follower.Update(dt, Area);
             SetCameraRect(rect);
         }
@@ -247,7 +254,7 @@ public sealed class ShapeCamera
     public void SetCameraRect(Rect newRect)
     {
         Position = newRect.GetPoint(Alignement);
-        SetZoom( CalculateZoomLevel(newRect.Size) );
+        if (newRect.Size != Area.Size) SetZoom( CalculateZoomLevel(newRect.Size) );
     }
     
     public bool HasSequences() => cameraTweens.HasSequences();

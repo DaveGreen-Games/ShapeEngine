@@ -213,12 +213,15 @@ namespace Examples.Scenes.ExampleScenes
             gameObjectHandler.ResizeBounds(boundaryRect);
             if (GAMELOOP.Paused) return;
             
-            int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
-            foreach (var ia in inputActions)
-            {
-                ia.Gamepad = gamepadIndex;
-                ia.Update(dt);
-            }
+            var gamepad = GAMELOOP.CurGamepad;
+            InputAction.UpdateActions(dt, gamepad, inputActions);
+            
+            // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
+            // foreach (var ia in inputActions)
+            // {
+            //     ia.Gamepad = gamepadIndex;
+            //     ia.Update(dt);
+            // }
             
             gameObjectHandler.Update(dt, deltaSlow, game, ui);
         }
@@ -291,8 +294,8 @@ namespace Examples.Scenes.ExampleScenes
 
         private void DrawInputDescription(Rect rect)
         {
-            var curInputDeviceAll = Input.CurrentInputDevice;
-            var curInputDeviceNoMouse = Input.CurrentInputDeviceNoMouse;
+            var curInputDeviceAll = ShapeInput.CurrentInputDeviceType;
+            var curInputDeviceNoMouse = ShapeInput.CurrentInputDeviceTypeNoMouse;
             
             string addText = iaAdd.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
             string slow1Text = iaSlow1.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);

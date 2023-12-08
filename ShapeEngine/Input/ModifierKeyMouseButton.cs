@@ -10,8 +10,9 @@ public class ModifierKeyMouseButton : IModifierKey
         this.modifier = modifierKey;
         this.reverseModifier = reverseModifier;
     }
-    public InputDevice GetInputDevice() => InputDevice.Mouse;
-    public bool IsActive(int gamepad = -1) => IsKeyDown((int)modifier) != reverseModifier;
+    public InputDeviceType GetInputDevice() => InputDeviceType.Mouse;
 
-    public string GetName(bool shorthand = true) => reverseModifier ? "" : InputTypeMouseButton.GetMouseButtonName(modifier, shorthand);
+    public bool IsActive(ShapeGamepadDevice? gamepad = null) => ShapeInput.MouseDevice.IsModifierActive(modifier, reverseModifier);
+
+    public string GetName(bool shorthand = true) => reverseModifier ? "" : ShapeMouseDevice.GetButtonName(modifier, shorthand);
 }

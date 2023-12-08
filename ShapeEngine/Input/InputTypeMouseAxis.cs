@@ -5,7 +5,7 @@ using ShapeEngine.Lib;
 
 namespace ShapeEngine.Input;
 
-public class InputTypeMouseAxis : IInputType
+public sealed class InputTypeMouseAxis : IInputType
 {
     private readonly ShapeMouseAxis axis;
     private float deadzone;
@@ -38,71 +38,28 @@ public class InputTypeMouseAxis : IInputType
     {
         deadzone = ShapeMath.Clamp(value, 0f, 1f);
     }
-    public virtual string GetName(bool shorthand = true)
+    public string GetName(bool shorthand = true)
     {
         StringBuilder sb = new();
         IModifierKey.GetModifierKeyNames(sb, modifierKeys, modifierOperator, shorthand);
-        sb.Append(GetMouseAxisName(axis, shorthand));
+        sb.Append(ShapeMouseDevice.GetAxisName(axis, shorthand));
         return sb.ToString();
     }
 
-    public InputState GetState(int gamepad = -1)
+    public InputState GetState(ShapeGamepadDevice? gamepad = null)
     {
-        if (gamepad > 0) return new();
-        return GetState(axis, deadzone, modifierOperator, modifierKeys);
+        // if (gamepad != null) return new();
+        return ShapeInput.MouseDevice.GetState(axis, deadzone, modifierOperator, modifierKeys);
     }
 
-    public InputState GetState(InputState prev, int gamepad = -1)
+    public InputState GetState(InputState prev, ShapeGamepadDevice? gamepad = null)
     {
-        if (gamepad > 0) return new();
-        return GetState(axis, prev, deadzone, modifierOperator, modifierKeys);
+        // if (gamepad != null) return new();
+        return ShapeInput.MouseDevice.GetState(axis, prev, deadzone, modifierOperator, modifierKeys);
     }
-    public InputDevice GetInputDevice() => InputDevice.Mouse;
+    public InputDeviceType GetInputDevice() => InputDeviceType.Mouse;
     public IInputType Copy() => new InputTypeMouseAxis(axis);
 
-    private static float GetValue(ShapeMouseAxis axis, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
-    {
-        if (!ShapeLoop.CursorOnScreen) return 0f;
-        if (!IModifierKey.IsActive(modifierOperator, modifierKeys, -1)) return 0f;
-        return GetValue(axis, deadzone);
-    }
-    private static float GetValue(ShapeMouseAxis axis, float deadzone = 0.5f)
-    {
-        if (!ShapeLoop.CursorOnScreen) return 0f;
-       
-        Vector2 value = GetMouseDelta();
-        float returnValue = axis == ShapeMouseAxis.VERTICAL ? value.Y : value.X;
-        if (MathF.Abs(returnValue) < deadzone) return 0f;
-        return returnValue;
-    }
-    public static InputState GetState(ShapeMouseAxis axis, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
-    {
-        float axisValue = GetValue(axis, deadzone, modifierOperator, modifierKeys);
-        bool down = axisValue != 0f;
-        return new(down, !down, axisValue, -1, InputDevice.Mouse);
-    }
-    public static InputState GetState(ShapeMouseAxis axis, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
-    {
-        return new(previousState, GetState(axis, deadzone, modifierOperator, modifierKeys));
-    }
-    public static InputState GetState(ShapeMouseAxis axis, float deadzone = 0.5f)
-    {
-        float axisValue = GetValue(axis, deadzone);
-        bool down = axisValue != 0f;
-        return new(down, !down, axisValue, -1, InputDevice.Mouse);
-    }
-    public static InputState GetState(ShapeMouseAxis axis, InputState previousState, float deadzone = 0.5f)
-    {
-        return new(previousState, GetState(axis, deadzone));
-    }
-    public static string GetMouseAxisName(ShapeMouseAxis axis, bool shortHand = true)
-    {
-        switch (axis)
-        {
-            case ShapeMouseAxis.HORIZONTAL: return shortHand ? "Mx" : "Mouse Horizontal";
-            case ShapeMouseAxis.VERTICAL: return shortHand ? "My" : "Mouse Vertical";
-            default: return "No Key";
-        }
-    }
+    
 
 }

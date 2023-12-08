@@ -56,14 +56,15 @@ namespace Examples.Scenes.ExampleScenes
         protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             base.HandleInput(dt, mousePosGame, mousePosUI);
-            int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
-            createPoint.Gamepad = gamepadIndex;
+            // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
+            var gamepad = GAMELOOP.CurGamepad;
+            createPoint.Gamepad = gamepad;
             createPoint.Update(dt);
             
-            deletePoint.Gamepad = gamepadIndex;
+            deletePoint.Gamepad = gamepad;
             deletePoint.Update(dt);
             
-            changeOffset.Gamepad = gamepadIndex;
+            changeOffset.Gamepad = gamepad;
             changeOffset.Update(dt);
 
             var offsetState = changeOffset.State;
@@ -201,7 +202,7 @@ namespace Examples.Scenes.ExampleScenes
             // var device = input.CurrentInputDevice == InputDevice.Keyboard
                 // ? InputDevice.Mouse
                 // : input.CurrentInputDevice;
-            var curDevice = Input.CurrentInputDevice;
+            var curDevice = ShapeInput.CurrentInputDeviceType;
             var create = createPoint. GetInputTypeDescription( curDevice, true, 1, false); 
             var delete = deletePoint. GetInputTypeDescription( curDevice, true, 1, false); 
             var offset = changeOffset.GetInputTypeDescription( curDevice , true, 1, false);

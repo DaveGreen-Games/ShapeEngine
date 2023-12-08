@@ -11,8 +11,9 @@ public class ModifierKeyKeyboardButton : IModifierKey
         this.reverseModifier = reverseModifier;
     }
 
-    public InputDevice GetInputDevice() => InputDevice.Keyboard;
-    public bool IsActive(int gamepad = -1) => IsKeyDown((int)modifier) != reverseModifier;
+    public InputDeviceType GetInputDevice() => InputDeviceType.Keyboard;
 
-    public string GetName(bool shorthand = true) => reverseModifier ? "" : InputTypeKeyboardButton.GetKeyboardButtonName(modifier, shorthand);
+    public bool IsActive(ShapeGamepadDevice? gamepad = null) => ShapeInput.KeyboardDevice.IsModifierActive(modifier, reverseModifier);
+
+    public string GetName(bool shorthand = true) => reverseModifier ? "" : ShapeKeyboardDevice.GetButtonName(modifier, shorthand);
 }

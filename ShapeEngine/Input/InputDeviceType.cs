@@ -1,6 +1,6 @@
 namespace ShapeEngine.Input;
 
-public enum InputDevice
+public enum InputDeviceType
 {
     Keyboard = 1,
     Mouse = 2,
