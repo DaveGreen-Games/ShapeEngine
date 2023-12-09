@@ -3,31 +3,23 @@ using Raylib_CsLo;
 namespace ShapeEngine.Input;
 
 
-//TODO implement session system
-//each session has a list of gamepads & a list of last used gamepads
-//default session is created automatically
-//new sessions can be created or removed
-//session is a class that does most of what device manager does right now
-
-public class ShapeGamepadDeviceManager
+public sealed class ShapeGamepadDeviceManager
 {
-    
     public event Action<ShapeGamepadDevice, bool>? OnGamepadConnectionChanged;
     public int MaxGamepads => gamepads.Length;
     
-    private readonly ShapeGamepadDevice[] gamepads = new ShapeGamepadDevice[8];
-    //private readonly List<int> connectedGamepadIndices = new();
-    
+    private readonly ShapeGamepadDevice[] gamepads;// = new ShapeGamepadDevice[8];
     public readonly List<ShapeGamepadDevice> LastUsedGamepads = new();
 
     public ShapeGamepadDevice? LastUsedGamepad = null;
-        // LastUsedGamepads.Count > 0 ? LastUsedGamepads[^1] : null;
 
-    internal ShapeGamepadDeviceManager()
+    public ShapeGamepadDeviceManager(int maxGamepads = 8)
     {
+        if (maxGamepads <= 0) maxGamepads = 1;
+        gamepads = new ShapeGamepadDevice[maxGamepads];
         GamepadSetup();
     }
-    internal void Update()
+    public void Update()
     {
         CheckGamepadConnections();
     }
@@ -65,7 +57,6 @@ public class ShapeGamepadDeviceManager
         if (!HasGamepad(index)) return null;
         return gamepads[index];
     }
-    
     public ShapeGamepadDevice? RequestGamepad(int preferredIndex = -1)
     {
         var preferredGamepad = GetGamepad(preferredIndex);
@@ -144,40 +135,4 @@ public class ShapeGamepadDeviceManager
     }
     #endregion
     
-    // public static int WasGamepadUsed(List<int> connectedGamepads, float deadzone = 0.05f)
-    // {
-    //     foreach (var gamepad in connectedGamepads)
-    //     {
-    //         if (Gamepad.WasGamepadUsed(gamepad, deadzone)) return gamepad;
-    //     }
-    //     return -1;
-    // }
-    // public static int WasGamepadButtonUsed(List<int> connectedGamepads)
-    // {
-    //     foreach (var gamepad in connectedGamepads)
-    //     {
-    //         if (Gamepad.WasGamepadButtonUsed(gamepad)) return gamepad;
-    //     }
-    //
-    //     return -1;
-    // }
-    // public static int WasGamepadAxisUsed(List<int> connectedGamepads, float deadzone = 0.05f)
-    // {
-    //     foreach (var gamepad in connectedGamepads)
-    //     {
-    //         if (Gamepad.WasGamepadAxisUsed(gamepad, deadzone)) return gamepad;
-    //     }
-    //     return -1;
-    // }
-    // public static List<int> GetUsedGamepads(List<int> connectedGamepads, float deadzone = 0.05f)
-    // {
-    //     var usedGamepads = new List<int>();
-    //     foreach (var gamepad in connectedGamepads)
-    //     {
-    //         if(Gamepad.WasGamepadUsed(gamepad, deadzone)) usedGamepads.Add(gamepad);
-    //     }
-    //
-    //     return usedGamepads;
-    // }
-
 }

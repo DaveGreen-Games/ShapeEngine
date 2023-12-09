@@ -11,7 +11,6 @@ using ShapeEngine.Input;
 
 namespace Examples.Scenes.ExampleScenes
 {
-    
     public class ShipInputExample : ExampleScene
     {
         internal readonly struct ColorScheme
@@ -64,11 +63,13 @@ namespace Examples.Scenes.ExampleScenes
                 var moveHorGP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f);
                 // var moveHorMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
                 iaMoveHor = new(moveHorGP);
+                iaMoveHor.Gamepad = gamepad;
                 
                 // var moveVerKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
                 var moveVerGP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_Y, 0.1f);
                 // var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
                 iaMoveVer = new(moveVerGP);
+                iaMoveVer.Gamepad = gamepad;
 
                 Gamepad = gamepad;
                 colorScheme = ColorSchemes[gamepad.Index];
@@ -93,10 +94,6 @@ namespace Examples.Scenes.ExampleScenes
             }
             public void Update(float dt)
             {
-                // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
-                iaMoveHor.Gamepad = GAMELOOP.CurGamepad;
-                iaMoveVer.Gamepad = GAMELOOP.CurGamepad;
-                
                 iaMoveHor.Update(dt);
                 iaMoveVer.Update(dt);
                     
@@ -164,13 +161,12 @@ namespace Examples.Scenes.ExampleScenes
         private readonly ShapeCamera camera = new();
         private readonly List<SpaceShip> spaceShips = new();
 
-        // private readonly ShapeInputDeviceManager shapeInputDevices = new();
-        
         // private readonly InputAction iaAddShip;
         // private readonly InputAction iaNextShip;
         // private readonly InputAction iaCenterTarget;
-        // private bool centerTargetActive = false;
+        //private bool centerTargetActive = false;
         
+        private readonly ShapeGamepadDeviceManager GamepadManager = new(8);
         
         public ShipInputExample()
         {
@@ -180,13 +176,15 @@ namespace Examples.Scenes.ExampleScenes
                 
             GenerateStars(2500);
             camera.Follower = cameraFollower;
-            ShapeInput.GamepadDeviceManager.OnGamepadConnectionChanged += OnShapeGamepadDeviceConnectionChanged;
+            // ShapeInput.GamepadDeviceManager.OnGamepadConnectionChanged += OnShapeGamepadDeviceConnectionChanged;
+            
+            GamepadManager.OnGamepadConnectionChanged += OnShapeGamepadDeviceConnectionChanged;
             
             // var addShipKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
             // var addShipGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
             // var addshipMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
             // iaAddShip = new(addShipKB, addshipMB, addShipGP);
-            //     
+            //
             // var nextShipKB = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
             // var nextShipGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
             // var nextShipMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
@@ -205,7 +203,6 @@ namespace Examples.Scenes.ExampleScenes
             spaceShips.Add(ship);
             cameraFollower.AddTarget(ship);
         }
-        
         private void RemoveShip(ShapeGamepadDevice gamepad)
         {
             gamepad.Free();
@@ -296,7 +293,6 @@ namespace Examples.Scenes.ExampleScenes
             //     AddShip();
             // }
         }
-
         
         protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
@@ -320,9 +316,9 @@ namespace Examples.Scenes.ExampleScenes
             //     }
             // }
             
+            GamepadManager.Update();
             
-            //shapeInputDevices.Update();
-            foreach (var gamepad in ShapeInput.GamepadDeviceManager.LastUsedGamepads)
+            foreach (var gamepad in GamepadManager.LastUsedGamepads)
             {
                 if (gamepad.Available)
                 {
@@ -344,6 +340,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 ship.Update(dt);
             }
+            
             // var targetPos = ActiveSpaceShip?.GetPosition() ?? new();
             //
             // SpaceShip? next = null;
@@ -420,9 +417,6 @@ namespace Examples.Scenes.ExampleScenes
         }
         
     }
-    
-    
-    
     
     
     
@@ -972,5 +966,4 @@ namespace Examples.Scenes.ExampleScenes
     //     //     font.DrawText(textBottom, rects.bottom, 1f, new Vector2(0.5f, 0.5f), ColorLight);
     //     // }
     // }
-
 }
