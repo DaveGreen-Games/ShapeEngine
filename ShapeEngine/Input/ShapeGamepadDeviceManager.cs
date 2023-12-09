@@ -36,6 +36,10 @@ public sealed class ShapeGamepadDeviceManager
 
         return result;
     }
+    public List<ShapeGamepadDevice> GetAllGamepads()
+    {
+        return gamepads.ToList();
+    }
     public List<ShapeGamepadDevice> GetAvailableGamepads()
     {
         var result = new List<ShapeGamepadDevice>();

@@ -27,7 +27,7 @@ public class CameraFollowerMulti : ICameraFollower
         ClearTargets();
     }
 
-    public void Draw()
+    public void DrawDebugRect()
     {
         prevCameraRect.DrawLines(6f, RED);
         prevCameraRect.Center.Draw(4f, GREEN);

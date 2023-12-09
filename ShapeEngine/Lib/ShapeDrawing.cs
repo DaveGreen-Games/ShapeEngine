@@ -7,6 +7,15 @@ using ShapeEngine.UI;
 
 namespace ShapeEngine.Lib
 {
+
+    // public struct Label
+    // {
+    //     public Rect Rect;
+    //     public Font Font;
+    //     public float FontSpacing;
+    //     public Raylib_CsLo.Color Color;
+    // }
+    
     /*//TODO could be used for text drawing functions
     public struct Label
     {

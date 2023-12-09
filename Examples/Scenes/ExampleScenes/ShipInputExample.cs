@@ -152,6 +152,35 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
 
+        internal class InputActionHelper
+        {
+            public readonly InputAction Add;
+            public readonly InputAction Remove;
+            public readonly ShapeGamepadDevice Gamepad;
+
+            public InputActionHelper(ShapeGamepadDevice gamepad)
+            {
+                this.Gamepad = gamepad;
+                
+                var addShipInputType = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
+                Add = new(addShipInputType)
+                {
+                    Gamepad = gamepad
+                };
+                
+                var removeShipInputType = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
+                Remove = new(removeShipInputType)
+                {
+                    Gamepad = gamepad
+                };
+            }
+
+            public void Update(float dt)
+            {
+                Add.Update(dt);
+                Remove.Update(dt);
+            }
+        }
         
         private readonly Font font;
         private readonly Rect universe = new(new Vector2(0f), new Vector2(10000f), new Vector2(0.5f));
@@ -161,10 +190,7 @@ namespace Examples.Scenes.ExampleScenes
         private readonly ShapeCamera camera = new();
         private readonly List<SpaceShip> spaceShips = new();
 
-        // private readonly InputAction iaAddShip;
-        // private readonly InputAction iaNextShip;
-        // private readonly InputAction iaCenterTarget;
-        //private bool centerTargetActive = false;
+        private readonly List<InputActionHelper> inputActionHelpers = new();
         
         private readonly ShapeGamepadDeviceManager GamepadManager = new(8);
         
@@ -176,23 +202,13 @@ namespace Examples.Scenes.ExampleScenes
                 
             GenerateStars(2500);
             camera.Follower = cameraFollower;
-            // ShapeInput.GamepadDeviceManager.OnGamepadConnectionChanged += OnShapeGamepadDeviceConnectionChanged;
             
             GamepadManager.OnGamepadConnectionChanged += OnShapeGamepadDeviceConnectionChanged;
-            
-            // var addShipKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
-            // var addShipGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
-            // var addshipMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
-            // iaAddShip = new(addShipKB, addshipMB, addShipGP);
-            //
-            // var nextShipKB = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
-            // var nextShipGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
-            // var nextShipMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
-            // iaNextShip = new(nextShipKB, nextShipMB, nextShipGP);
-            //
-            // var centerTargetKB = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
-            // var centerTargetGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
-            // iaCenterTarget = new(centerTargetKB, centerTargetGP);
+            foreach (var gamepad in GamepadManager.GetAllGamepads())
+            {
+                var inputHelper = new InputActionHelper(gamepad);
+                inputActionHelpers.Add(inputHelper);
+            }
         }
 
        
@@ -228,7 +244,16 @@ namespace Examples.Scenes.ExampleScenes
                 stars.Add(star);
             }
         }
-        
+
+        private InputActionHelper? GetActiveInputActionHelper()
+        {
+            foreach (var helper in inputActionHelpers)
+            {
+                if (helper.Gamepad is { Connected: true, Available: false }) return helper;
+            }
+
+            return null;
+        }
         public override void Activate(IScene oldScene)
         {
             GAMELOOP.Camera = camera;
@@ -257,41 +282,30 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
-            // iaAddShip.Gamepad = gamepadIndex;
-            // iaNextShip.Gamepad = gamepadIndex;
-            // iaCenterTarget.Gamepad = gamepadIndex;
-            //     
-            // iaAddShip.Update(dt);
-            // iaNextShip.Update(dt);
-            // iaCenterTarget.Update(dt);
-            //
-            // if (iaCenterTarget.State.Pressed)
-            // {
-            //     centerTargetActive = !centerTargetActive;
-            //     if (!centerTargetActive)
-            //     {
-            //         cameraFollower.CenterTarget = null;
-            //     }
-            //     else
-            //     {
-            //         if (ActiveSpaceShip != null) cameraFollower.CenterTarget = ActiveSpaceShip;
-            //     }
-            // }
-            //
-            // if (iaNextShip.State.Pressed)
-            // {
-            //     if (ActiveSpaceShip != null)
-            //     {
-            //         var next = FindClosestShip(ActiveSpaceShip);
-            //         if(next != null) SelectShip(next);
-            //     }
-            // }
-            //
-            // if (iaAddShip.State.Pressed)
-            // {
-            //     AddShip();
-            // }
+            GamepadManager.Update();
+            
+            foreach (var inputHelper in inputActionHelpers)
+            {
+                var gamepad = inputHelper.Gamepad;
+                if (gamepad.Connected)
+                {
+                    inputHelper.Update(dt);
+                    if (gamepad.Available)
+                    {
+                        if (inputHelper.Add.State.Pressed)
+                        {
+                            AddShip(gamepad);
+                        }
+                    }
+                    else
+                    {
+                        if (inputHelper.Remove.State.Pressed)
+                        {
+                            RemoveShip(gamepad);
+                        }
+                    }
+                }
+            }
         }
         
         protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
@@ -316,46 +330,28 @@ namespace Examples.Scenes.ExampleScenes
             //     }
             // }
             
-            GamepadManager.Update();
-            
-            foreach (var gamepad in GamepadManager.LastUsedGamepads)
-            {
-                if (gamepad.Available)
-                {
-                    if (gamepad.UsedButtons.Contains(ShapeGamepadButton.RIGHT_FACE_DOWN))//add
-                    {
-                        AddShip(gamepad);
-                    }
-                }
-                else
-                {
-                    if (gamepad.UsedButtons.Contains(ShapeGamepadButton.RIGHT_FACE_RIGHT))//remove
-                    {
-                        RemoveShip(gamepad);
-                    }
-                }
-            }
+            // foreach (var gamepad in GamepadManager.LastUsedGamepads)
+            // {
+            //     if (gamepad.Available)
+            //     {
+            //         if (gamepad.UsedButtons.Contains(ShapeGamepadButton.RIGHT_FACE_DOWN))//add
+            //         {
+            //             AddShip(gamepad);
+            //         }
+            //     }
+            //     else
+            //     {
+            //         if (gamepad.UsedButtons.Contains(ShapeGamepadButton.RIGHT_FACE_RIGHT))//remove
+            //         {
+            //             RemoveShip(gamepad);
+            //         }
+            //     }
+            // }
 
             foreach (var ship in spaceShips)
             {
                 ship.Update(dt);
             }
-            
-            // var targetPos = ActiveSpaceShip?.GetPosition() ?? new();
-            //
-            // SpaceShip? next = null;
-            // for (int i = spaceShips.Count - 1; i >= 0; i--)
-            // {
-            //     var ship = spaceShips[i];
-            //     ship.Update(dt, targetPos);
-            //
-            //
-            //     if (ActiveSpaceShip != null && ship != ActiveSpaceShip && ship.Overlap(ActiveSpaceShip))
-            //     {
-            //         DestroyShip(ship);
-            //     }
-            // }
-            // if(next != null) SelectShip(next);
         }
         protected override void DrawGameExample(ScreenInfo game)
         {
@@ -369,7 +365,7 @@ namespace Examples.Scenes.ExampleScenes
                 ship.Draw();
             }
             
-            cameraFollower.Draw();
+            // cameraFollower.Draw();
             
         }
         protected override void DrawGameUIExample(ScreenInfo ui)
@@ -392,17 +388,23 @@ namespace Examples.Scenes.ExampleScenes
         }
         private void DrawDescription(Rect rect)
         {
-            font.DrawText("Press a button on a new controller to add a ship.", rect, 1f, new Vector2(0.5f, 0.5f), ColorMedium);
+            font.DrawText("Use multiple gamepads!", rect, 1f, new Vector2(0.5f, 0.5f), ColorMedium);
         }
         private void DrawInputDescription(Rect rect)
         {
-            var curDevice = ShapeInput.CurrentInputDeviceType;
-            var curDeviceNoMouse = ShapeInput.CurrentInputDeviceTypeNoMouse;
-            string addShipText = "No Text"; // iaAddShip.GetInputTypeDescription(curDevice, true, 1, false);
-            string moveText = "No Text"; //ActiveSpaceShip != null ? ActiveSpaceShip.GetInputDescription(curDevice) : "";
+            var helper = GetActiveInputActionHelper();
+            if (helper != null)
+            {
+                string addShipText = helper.Add.GetInputTypeDescription(InputDeviceType.Gamepad, true, 1, false);
+                string moveText = helper.Remove.GetInputTypeDescription(InputDeviceType.Gamepad, true, 1, false);
+                string textBottom = $"{moveText} | Add Ship {addShipText}";
+                font.DrawText("textBottom", rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+            }
+            else
+            {
+                font.DrawText("No gamepads connected.", rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+            }
             
-            string textBottom = $"{moveText} | Add Ship {addShipText}";
-            font.DrawText(textBottom, rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
 
         private void OnShapeGamepadDeviceConnectionChanged(ShapeGamepadDevice gamepad, bool connected)

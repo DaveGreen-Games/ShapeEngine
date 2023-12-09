@@ -560,7 +560,7 @@ namespace Examples.Scenes.ExampleScenes
                 ship.Draw();
             }
             
-            cameraFollower.Draw();
+            cameraFollower.DrawDebugRect();
             
         }
         protected override void DrawGameUIExample(ScreenInfo ui)
