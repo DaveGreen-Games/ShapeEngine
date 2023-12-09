@@ -7,6 +7,7 @@ using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Screen;
 using ShapeEngine.Core.Shapes;
+using ShapeEngine.Input;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -74,12 +75,14 @@ namespace Examples.Scenes.ExampleScenes
             {
                 if (IsKeyPressed(KeyboardKey.KEY_ESCAPE))
                 {
+                    InputAction.Unlock();
                     textEntryActive = false;
                     text = prevText;
                     prevText = string.Empty;
                 }
                 else if (IsKeyPressed(KeyboardKey.KEY_ENTER))
                 {
+                    InputAction.Unlock();
                     textEntryActive = false;
                     if (text.Length <= 0) text = prevText;
                     prevText = string.Empty;
@@ -97,6 +100,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 if (IsKeyPressed(KeyboardKey.KEY_ENTER))
                 {
+                    InputAction.Lock();
                     textEntryActive = true;
                     draggingBottomRight = false;
                     draggingTopLeft = false;
@@ -237,10 +241,15 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
 
+        
         protected override void DrawUIExample(ScreenInfo ui)
         {
-             Vector2 uiSize = ui.Area.Size;
-
+            var rects = GAMELOOP.UIRects.GetRect("bottom center").SplitV(0.35f);
+            DrawDescription(rects.top, rects.bottom);
+           
+        }
+        private void DrawDescription(Rect top, Rect bottom)
+        {
             if (!textEntryActive)
             {
                 string textWrapMode = wrapModeChar ? "Char" : "Word";
@@ -250,21 +259,21 @@ namespace Examples.Scenes.ExampleScenes
                 var fontInfo =
                     $"[W] Font: {GAMELOOP.GetFontName(fontIndex)} | [1]Font Size: {fontSize} | [2]Font Spacing {fontSpacing} | Line Spacing {lineSpacing}";
 
-                Rect modeInfoRect = new(uiSize * new Vector2(0.5f, 0.94f), uiSize * new Vector2(0.6f, 0.12f), new Vector2(0.5f, 1f));
-                font.DrawText(modeInfo, modeInfoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
+                font.DrawText(modeInfo, top, 4f, new Vector2(0.5f, 0.5f), ColorLight);
 
-                Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.1f), new Vector2(0.5f, 1f));
-                font.DrawText(fontInfo, infoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
+                font.DrawText(fontInfo, bottom, 4f, new Vector2(0.5f, 0.5f), ColorLight);
             }
-
             else
             {
-                var info = "TEXT ENTRY MODE ACTIVE | [ESC] Cancel | [Enter] Accept | [Del] Clear Text";
-                Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
-                font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
+                string info = "[ESC] Cancel | [Enter] Accept | [Del] Clear Text";
+                font.DrawText("Text Entry Mode Active", top, 4f, new Vector2(0.5f, 0.5f), ColorHighlight3);
+                font.DrawText(info, bottom, 4f, new Vector2(0.5f, 0.5f), ColorLight);
             }
         }
-
+        protected override bool IsCancelAllowed()
+        {
+            return !textEntryActive;
+        }
         private void ChangeLineSpacing()
         {
             lineSpacing += lineSpacingIncrement;

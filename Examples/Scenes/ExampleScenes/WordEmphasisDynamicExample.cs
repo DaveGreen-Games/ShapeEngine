@@ -8,6 +8,7 @@ using System.Numerics;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
+using ShapeEngine.Input;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -64,12 +65,14 @@ namespace Examples.Scenes.ExampleScenes
             {
                 if (IsKeyPressed(KeyboardKey.KEY_ESCAPE))
                 {
+                    InputAction.Unlock();
                     textEntryActive = false;
                     text = prevText;
                     prevText = string.Empty;
                 }
                 else if (IsKeyPressed(KeyboardKey.KEY_ENTER))
                 {
+                    InputAction.Unlock();
                     textEntryActive = false;
                     if (text.Length <= 0) text = prevText;
                     prevText = string.Empty;
@@ -87,6 +90,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 if (IsKeyPressed(KeyboardKey.KEY_ENTER))
                 {
+                    InputAction.Lock();
                     textEntryActive = true;
                     draggingBottomRight = false;
                     draggingTopLeft = false;
@@ -205,47 +209,52 @@ namespace Examples.Scenes.ExampleScenes
                     bottomRightInteractionCircle.DrawLines(2f, ColorMedium, 4f);
                 }
 
-                string info2 = String.Format("[S] Text Align: {0} | [Q] Type: {1} | [E] Align: {2}", curAlignement, curEmphasisType, curEmphasisAlignement);
-                Rect infoRect2 = new(uiSize * new Vector2(0.5f, 0.95f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
-                font.DrawText(info2, infoRect2, 4f, new Vector2(0.5f, 0.5f), ColorLight);
+                // string info2 = String.Format("[S] Text Align: {0} | [Q] Type: {1} | [E] Align: {2}", curAlignement, curEmphasisType, curEmphasisAlignement);
+                // Rect infoRect2 = new(uiSize * new Vector2(0.5f, 0.95f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
+                // font.DrawText(info2, infoRect2, 4f, new Vector2(0.5f, 0.5f), ColorLight);
 
-                string info = String.Format("[W] Font: {0} | [A/D] Font Spacing: {1} | [Enter] Write Custom Text", GAMELOOP.GetFontName(fontIndex), fontSpacing);
-                Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
-                font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
+                // string info = String.Format("[W] Font: {0} | [A/D] Font Spacing: {1} | [Enter] Write Custom Text", GAMELOOP.GetFontName(fontIndex), fontSpacing);
+                // Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
+                // font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
             }
-            else
-            {
-                string info = "TEXT ENTRY MODE ACTIVE | [ESC] Cancel | [Enter] Accept | [Del] Clear Text";
-                Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
-                font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
-            }
+            // else
+            // {
+            //     string info = "TEXT ENTRY MODE ACTIVE | [ESC] Cancel | [Enter] Accept | [Del] Clear Text";
+            //     Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
+            //     font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
+            // }
         }
 
+       
         protected override void DrawUIExample(ScreenInfo ui)
         {
-            Vector2 uiSize = ui.Area.Size;
-            
+            var rects = GAMELOOP.UIRects.GetRect("bottom center").SplitV(0.35f);
+            DrawDescription(rects.top, rects.bottom);
+           
+        }
+        private void DrawDescription(Rect top, Rect bottom)
+        {
             if (!textEntryActive)
             {
-
                 string info2 =
                     $"[S] Text Align: {curAlignement} | [Q] Type: {curEmphasisType} | [E] Align: {curEmphasisAlignement}";
-                Rect infoRect2 = new(uiSize * new Vector2(0.5f, 0.95f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
-                font.DrawText(info2, infoRect2, 4f, new Vector2(0.5f, 0.5f), ColorLight);
+                font.DrawText(info2, top, 4f, new Vector2(0.5f, 0.5f), ColorLight);
 
                 string info =
                     $"[W] Font: {GAMELOOP.GetFontName(fontIndex)} | [A/D] Font Spacing: {fontSpacing} | [Enter] Write Custom Text";
-                Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
-                font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
+                font.DrawText(info, bottom, 4f, new Vector2(0.5f, 0.5f), ColorLight);
             }
             else
             {
-                var info = "TEXT ENTRY MODE ACTIVE | [ESC] Cancel | [Enter] Accept | [Del] Clear Text";
-                Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
-                font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
+                string info = "[ESC] Cancel | [Enter] Accept | [Del] Clear Text";
+                font.DrawText("Text Entry Mode Active", top, 4f, new Vector2(0.5f, 0.5f), ColorHighlight3);
+                font.DrawText(info, bottom, 4f, new Vector2(0.5f, 0.5f), ColorLight);
             }
         }
-
+        protected override bool IsCancelAllowed()
+        {
+            return !textEntryActive;
+        }
         private void ChangeFontSpacing(int amount)
         {
             fontSpacing += amount;

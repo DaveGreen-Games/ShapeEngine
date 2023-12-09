@@ -57,14 +57,19 @@ namespace Examples.Scenes
                 GAMELOOP.Camera.Zoom(zoomDir * zoomSpeed * dt);
             }
         }
-        
+
+        protected virtual bool IsCancelAllowed() => true;
         protected void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             var cancelState = GAMELOOP.InputActionUICancel.Consume();
             if (cancelState is { Consumed: false, Pressed: true })
             {
-                if(GAMELOOP.Paused) GAMELOOP.Paused = false;
-                GAMELOOP.GoToMainScene();
+                if (IsCancelAllowed())
+                {
+                    if(GAMELOOP.Paused) GAMELOOP.Paused = false;
+                    GAMELOOP.GoToMainScene();
+                }
+                
             }
 
             var pausedState = GAMELOOP.InputActionPause.Consume();

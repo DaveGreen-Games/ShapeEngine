@@ -59,7 +59,19 @@ public class InputAction
 
     // public InputDevice LastInputDevice { get; private set; } = InputDevice.Keyboard;
     // private float lastInputDeviceMagnitude = 0f;
-    public InputState State { get; private set; } = new();
+
+    private InputState state = new();
+    public InputState State
+    {
+        get
+        {
+            if (Locked && !HasAccess(AccessTag)) return new();
+
+            return state;
+        }
+        private set => state = value;
+        
+    }
     private readonly List<IInputType> inputs = new();
     #endregion
 

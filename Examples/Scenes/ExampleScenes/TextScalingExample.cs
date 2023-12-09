@@ -1,12 +1,11 @@
 ﻿
 using ShapeEngine.Lib;
 using Raylib_CsLo;
-using ShapeEngine.Core;
 using System.Numerics;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Screen;
 using ShapeEngine.Core.Shapes;
+using ShapeEngine.Input;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -51,7 +50,8 @@ namespace Examples.Scenes.ExampleScenes
             topLeft = s * new Vector2(0.1f, 0.1f);
             bottomRight = s * new Vector2(0.9f, 0.8f);
         }
-
+        
+        
         protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             if (textEntryActive)
@@ -59,11 +59,13 @@ namespace Examples.Scenes.ExampleScenes
                 if (IsKeyPressed(KeyboardKey.KEY_ESCAPE))
                 {
                     textEntryActive = false;
+                    InputAction.Unlock();
                     text = prevText;
                     prevText = string.Empty;
                 }
                 else if (IsKeyPressed(KeyboardKey.KEY_ENTER))
                 {
+                    InputAction.Unlock();
                     textEntryActive = false;
                     if (text.Length <= 0) text = prevText;
                     prevText = string.Empty;
@@ -82,6 +84,7 @@ namespace Examples.Scenes.ExampleScenes
                 if (IsKeyPressed(KeyboardKey.KEY_ENTER))
                 {
                     textEntryActive = true;
+                    InputAction.Lock();
                     draggingBottomRight = false;
                     draggingTopLeft = false;
                     mouseInsideBottomRight = false;
@@ -142,6 +145,12 @@ namespace Examples.Scenes.ExampleScenes
             }
 
         }
+
+        protected override bool IsCancelAllowed()
+        {
+            return !textEntryActive;
+        }
+
         protected override void DrawGameUIExample(ScreenInfo ui)
         {
             Rect r = new(topLeft, bottomRight);
@@ -190,19 +199,27 @@ namespace Examples.Scenes.ExampleScenes
             
         }
 
+       
         protected override void DrawUIExample(ScreenInfo ui)
         {
-            Rect infoRect = ui.Area.ApplyMargins(0.05f, 0.05f, 0.9f, 0.05f);
+            var rects = GAMELOOP.UIRects.GetRect("bottom center").SplitV(0.35f);
+            DrawDescription(rects.top, rects.bottom);
+           
+        }
+        private void DrawDescription(Rect top, Rect bottom)
+        {
             if (!textEntryActive)
             {
                 string info =
                     $"[W] Font: {GAMELOOP.GetFontName(fontIndex)} | [A/D] Font Spacing: {fontSpacing} | [Enter] Write Custom Text";
-                font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
+                font.DrawText(info, bottom, 4f, new Vector2(0.5f, 0.5f), ColorLight);
+                font.DrawText("Text Visualization Active", top, 4f, new Vector2(0.5f, 0.5f), ColorMedium);
             }
             else
             {
-                string info = "TEXT ENTRY MODE ACTIVE | [ESC] Cancel | [Enter] Accept | [Del] Clear Text";
-                font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
+                string info = "[ESC] Cancel | [Enter] Accept | [Del] Clear Text";
+                font.DrawText("Text Entry Mode Active", top, 4f, new Vector2(0.5f, 0.5f), ColorHighlight3);
+                font.DrawText(info, bottom, 4f, new Vector2(0.5f, 0.5f), ColorLight);
             }
         }
 
