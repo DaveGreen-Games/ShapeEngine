@@ -82,7 +82,7 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
     }
     public string GetStream(string curText)
     {
-        if (isLocked) return String.Empty;
+        if (isLocked) return curText;;
         
         var chars = GetStreamChar();
         var b = new StringBuilder(chars.Count + curText.Length);
@@ -90,7 +90,27 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
         b.Append(chars);
         return b.ToString();
     }
+    public (string text, int caretIndex) GetStream(string curText, int caretIndex)
+    {
+        if (isLocked) return (curText, caretIndex);
+        
+        var characters = curText.ToList();
+        int unicode = Raylib.GetCharPressed();
+        while (unicode != 0)
+        {
+            var c = (char)unicode;
+            if (caretIndex < 0 || caretIndex >= characters.Count) characters.Add(c);
+            else
+            {
+                characters.Insert(caretIndex, c);
 
+            }
+            caretIndex++;
+            unicode = Raylib.GetCharPressed();
+        }
+
+        return (new string(characters.ToArray()), caretIndex);
+    }
     private bool WasKeyboardUsed() => !isLocked && Raylib.GetKeyPressed() > 0;
 
     #region Button

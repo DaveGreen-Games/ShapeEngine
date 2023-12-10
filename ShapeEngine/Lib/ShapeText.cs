@@ -1,10 +1,152 @@
 ﻿
 
+using System.Text;
 using Raylib_CsLo;
+using ShapeEngine.Input;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace ShapeEngine.Lib
 {
+    //struct for Font, FontSize, FontColor
+    //=> can calculate dynamic font size
+    //=> static shape text class has a Member for that struct that can be set to be used in all text drawing functions
+    //=> text drawing functions only need text, rect & emphasis anymore
+    //=>
+    
+    
+    public class ShapeTextBox
+    {
+        public string Text
+        {
+            get
+            {
+                if (Active)
+                {
+                    if (ActiveText.Length <= 0)
+                    {
+                        return EnteredText.Length <= 0 ? EmptyText : EnteredText;
+                    }
+                    else
+                    {
+                        return ActiveText;
+                    }
+                }
+                else
+                {
+                    return EnteredText.Length <= 0 ? EmptyText : EnteredText;
+                }
+            }
+        }
+        
+        public string ActiveText { get; private set; } = string.Empty;
+        public string EnteredText { get; private set; } = string.Empty;
+        public string EmptyText;
+        
+        public int CaretIndex { get; private set; } = 0;
+        public bool Active { get; private set; } = false;
+
+
+        public ShapeTextBox(string emptyText)
+        {
+            this.EmptyText = emptyText;
+        }
+
+        public bool StartEntry()
+        {
+            if (Active) return false;
+            Active = true;
+            ActiveText = EnteredText;
+            return true;
+        }
+        public bool StartEntryClean()
+        {
+            if (Active) return false;
+            Active = true;
+            ActiveText = string.Empty;
+            EnteredText = string.Empty;
+            CaretIndex = 0;
+            return true;
+        }
+        public string FinishEntry()
+        {
+            if (!Active) return string.Empty;
+            Active = false;
+            EnteredText = ActiveText;
+            ActiveText = string.Empty;
+            CaretIndex = EnteredText.Length;
+            return EnteredText;
+        }
+        public bool CancelEntry()
+        {
+            if (!Active) return false;
+            Active = false;
+            ActiveText = string.Empty;
+            CaretIndex = EnteredText.Length;
+            return true;
+        }
+        
+        public bool DeleteEntry()
+        {
+            if (!Active) return false;
+            ActiveText = string.Empty;
+            CaretIndex = 0;
+            return true;
+        }
+        public bool BackspaceCharacter()
+        {
+            if (CaretIndex <= 0 || ActiveText.Length <= 0) return false;
+
+            MoveCaret(-1, false);
+            ActiveText = ActiveText.Remove(CaretIndex, 1);
+            return true;
+        }
+        public bool DeleteCharacter()
+        {
+            if (CaretIndex >= ActiveText.Length || ActiveText.Length <= 0) return false;
+
+            ActiveText = ActiveText.Remove(CaretIndex, 1);
+            return true;
+        }
+
+        public bool AddCharacter(int unicode)
+        {
+            return AddCharacter((char)unicode);
+        }
+        public bool AddCharacter(char c)
+        {
+            if (!Active) return false;
+            
+            var characters = ActiveText.ToList();
+            
+            if (CaretIndex >= ActiveText.Length) characters.Add(c);
+            else characters.Insert(CaretIndex, c);
+
+            ActiveText =  characters.ToString();
+            return true;
+        }
+        public int MoveCaret(int spaces, bool wrapAround = false)
+        {
+            if (!Active) return CaretIndex;
+            CaretIndex += spaces;
+            if (wrapAround)
+            {
+                if (CaretIndex < 0) CaretIndex = ActiveText.Length;
+                else if (CaretIndex > ActiveText.Length) CaretIndex = 0;
+            }
+            else
+            {
+                if (CaretIndex < 0) CaretIndex = 0;
+                else if (CaretIndex > ActiveText.Length) CaretIndex = ActiveText.Length;
+            }
+            
+            return CaretIndex;
+        }
+        
+        
+    }
+    
+    
+    
     public struct TextBox
     {
         public string Text;
@@ -29,7 +171,8 @@ namespace ShapeEngine.Lib
         public KeyboardKey KeyBackspace = KeyboardKey.KEY_BACKSPACE;
         public TextBoxKeys() { }
     }
-    
+
+   
     public static class ShapeText
     {
         public static TextBox UpdateTextBox(this TextBox textBox, TextBoxKeys keys)
@@ -146,9 +289,6 @@ namespace ShapeEngine.Lib
             textBox.Text = new string(characters.ToArray());
             return textBox;
         }
-        
-
-
         public static int IncreaseCaretIndex(int caretIndex, int textLength) { return ChangeCaretIndex(caretIndex, 1, textLength); }
         public static int DecreaseCaretIndex(int caretIndex, int textLength) { return ChangeCaretIndex(caretIndex, -1, textLength); }
         public static int ChangeCaretIndex(int caretIndex, int amount, int textLength)
