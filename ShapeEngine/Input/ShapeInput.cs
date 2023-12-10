@@ -3,9 +3,6 @@ using Raylib_CsLo;
 
 namespace ShapeEngine.Input;
 
-//does shape loop have a static ShapeInput member or should shape input be static?
-//I think shape input as static class makes more sense? most input stuff is global and for the current
-//application...
 public static class ShapeInput
 {
     public static InputDeviceType CurrentInputDeviceType { get; private set; } = InputDeviceType.Keyboard;
