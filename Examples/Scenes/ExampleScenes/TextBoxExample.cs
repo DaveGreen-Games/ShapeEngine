@@ -82,7 +82,7 @@ namespace Examples.Scenes.ExampleScenes
                 action.Gamepad = gamepad;
                 action.Update(dt);
             }
-
+            textBox.Update(dt);
             if (!textEntryActive)
             {
                 if (iaEnterText.State.Pressed)
@@ -136,30 +136,43 @@ namespace Examples.Scenes.ExampleScenes
                     textBox.CancelEntry();
                     InputAction.Unlock();
                 }
-                else if (iaDelete.State.Pressed)
+                else if (iaDelete.State.Down)
                 {
-                    textBox.DeleteCharacter();
+                    textBox.DeleteCharacterStart(1);
                 }
-                else if (iaBackspace.State.Pressed)
+                else if (iaBackspace.State.Down)
                 {
-                    textBox.BackspaceCharacter();
+                    textBox.DeleteCharacterStart(-1);
                 }
-                else if (iaCaretPrev.State.Pressed)
+                else if (iaCaretPrev.State.Down)
                 {
-                    textBox.MoveCaret(-1, false);
+                    // textBox.MoveCaret(-1, false);
+                    textBox.MoveCaretStart(-1, false);
                 }
-                else if (iaCaretNext.State.Pressed)
+                else if (iaCaretNext.State.Down)
                 {
-                    textBox.MoveCaret(1, false);
+                    // textBox.MoveCaret(1, false);
+                    textBox.MoveCaretStart(1, false);
                 }
                 else
                 {
                     textBox.AddCharacters(ShapeInput.KeyboardDevice.GetStreamChar());
                 }
+
+                
+                if (iaCaretPrev.State.Released || iaCaretNext.State.Released)
+                {
+                    textBox.MoveCaretEnd();
+                }
+                else if (iaDelete.State.Released || iaBackspace.State.Released)
+                {
+                    textBox.DeleteCharacterEnd();
+                }
             }
         }
         protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
+            
             if (textEntryActive) return;
             if (draggingTopLeft || draggingBottomRight)
             {
@@ -186,13 +199,8 @@ namespace Examples.Scenes.ExampleScenes
 
             if (!textEntryActive)
             {
-                // if(text == string.Empty)
-                // {
-                //     font.DrawText("Press [Enter] to write", 50, fontSpacing, r.GetPoint(curAlignement), curAlignement, ColorHighlight1);
-                // }
-                // else font.DrawText(text, 50, fontSpacing, r.GetPoint(curAlignement), curAlignement, ColorHighlight1);
-
                 font.DrawText(textBox.Text, 50, fontSpacing, r.GetPoint(curAlignement), curAlignement, ColorHighlight1);
+                
                 Circle topLeftPoint = new(topLeft, pointRadius);
                 Circle topLeftInteractionCircle = new(topLeft, interactionRadius);
                 if (draggingTopLeft)
@@ -233,9 +241,11 @@ namespace Examples.Scenes.ExampleScenes
             {
                 // string textBoxText = text.Length <= 0 ? "Write your text here." : text;
                 font.DrawText(textBox.Text, 50, fontSpacing, r.GetPoint(curAlignement), curAlignement, ColorLight);
-                font.DrawCaret(textBox.Text, r, 50, fontSpacing, curAlignement, textBox.CaretIndex, 5f, ColorHighlight2);
+                
+                if(textBox.CaretVisible)
+                    font.DrawCaret(textBox.Text, r, 50, fontSpacing, curAlignement, textBox.CaretIndex, 5f, ColorHighlight2);
             }
-
+            // textBox.DrawText(font, r, fontSpacing, 5f, curAlignement, ColorLight, ColorHighlight2);
 
         }
 
