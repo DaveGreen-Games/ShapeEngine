@@ -1,14 +1,14 @@
 using System.Text;
+using ShapeEngine.Core;
 using ShapeEngine.Lib;
 
 namespace ShapeEngine.Input;
-
 
 public class InputAction
 {
     #region Members
     public uint ID { get; private set; }
-    public uint AccessTag { get; private set; } = AllAccessTag;
+    public uint AccessTag { get; private set; } = DefaultAccessTag;
 
     public ShapeGamepadDevice? Gamepad = null;
     public string Title = "Input Action";
@@ -506,11 +506,14 @@ public class InputAction
     #region Static
 
     #region Members
-    public static readonly uint AllAccessTag = 0;
+    public static readonly uint AllAccessTag = 1000;
+    public static readonly uint DefaultAccessTag = 1001;
     public static bool Locked { get; private set; } = false;
     private static readonly List<uint> lockWhitelist = new();
     private static readonly List<uint> lockBlacklist = new();
     
+    // private static readonly BitFlag lockWhitelist = new();
+    // private static readonly BitFlag lockBlacklist = new();
 
     #endregion
     
