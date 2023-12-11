@@ -10,7 +10,8 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
 
     private bool wasUsed = false;
     private bool isLocked = false;
-    
+
+    // private readonly Dictionary<ShapeKeyboardButton, InputState> buttonStates = new();
     internal ShapeKeyboardDevice() { }
     
     public bool IsLocked() => isLocked;
@@ -30,6 +31,12 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
     public void Update()
     {
         wasUsed = WasKeyboardUsed();
+        // foreach (var buttonStatePair in buttonStates)
+        // {
+        //     var previous = buttonStatePair.Value;
+        //     var current = GetCurrentButtonState(buttonStatePair.Key);
+        //     buttonStates[buttonStatePair.Key] = new InputState(previous, current);
+        // }
     }
     
     public void Calibrate(){}
@@ -49,7 +56,7 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
     }
     public string GetStream()
     {
-        if (isLocked) return String.Empty;
+        if (isLocked) return string.Empty;
         
         int unicode = Raylib.GetCharPressed();
         List<char> chars = new();
@@ -242,6 +249,28 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
         return IsKeyDown((int)button) ? 1f : 0f;
     }
 
+    
+    // /// <summary>
+    // /// This function takes the button state from last frame into account.
+    // /// </summary>
+    // /// <param name="button"></param>
+    // /// <returns> Returns the current button state for the specified keyboard button. </returns>
+    // public InputState GetCurrentButtonState(ShapeKeyboardButton button)
+    // {
+    //     if (!buttonStates.ContainsKey(button))
+    //     {
+    //         buttonStates.Add(button, GetState(button));
+    //         return new();
+    //     }
+    //
+    //     return buttonStates[button];
+    // }
+    //
+    public InputState GetState(ShapeKeyboardButton button)
+    {
+        bool down = IsDown(button);
+        return new(down, !down, down ? 1f : 0f, -1, InputDeviceType.Keyboard);
+    }
     public InputState GetState(ShapeKeyboardButton button, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         bool down = IsDown(button, modifierOperator, modifierKeys);
@@ -251,12 +280,6 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
     {
         return new(previousState, GetState(button, modifierOperator, modifierKeys));
     }
-    public InputState GetState(ShapeKeyboardButton button)
-    {
-        bool down = IsDown(button);
-        return new(down, !down, down ? 1f : 0f, -1, InputDeviceType.Keyboard);
-    }
-    
     public InputState GetState(ShapeKeyboardButton button, InputState previousState)
     {
         return new(previousState, GetState(button));

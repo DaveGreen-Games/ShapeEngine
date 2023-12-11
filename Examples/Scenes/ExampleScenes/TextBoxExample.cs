@@ -1,10 +1,8 @@
 ﻿
 using ShapeEngine.Lib;
 using Raylib_CsLo;
-using ShapeEngine.Core;
 using System.Numerics;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Screen;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
 
@@ -25,18 +23,29 @@ namespace Examples.Scenes.ExampleScenes
         float pointRadius = 8f;
         float interactionRadius = 24f;
 
-        string text = "";
-        string prevText = string.Empty;
+        // string text = "";
+        // string prevText = string.Empty;
         int fontSpacing = 1;
         int maxFontSpacing = 50;
         Font font;
         int fontIndex = 0;
-        bool textEntryActive = false;
+        private bool textEntryActive => textBox.Active;
 
-        int caretIndex = 0;
+        // int caretIndex = 0;
 
         Vector2 curAlignement = new(0f);
         int curAlignementIndex = 0;
+
+        private const uint accessTagTextBox = 2345;
+        private readonly ShapeTextBox textBox = new("Enter Text into this box");
+        private readonly InputAction iaEnterText;
+        private readonly InputAction iaCancelText;
+        private readonly InputAction iaFinishText;
+        private readonly InputAction iaDelete;
+        private readonly InputAction iaBackspace;
+        private readonly InputAction iaCaretPrev;
+        private readonly InputAction iaCaretNext;
+        private readonly List<InputAction> inputActions;
 
         public TextBoxExample()
         {
@@ -45,48 +54,46 @@ namespace Examples.Scenes.ExampleScenes
             topLeft = s * new Vector2(0.1f, 0.1f);
             bottomRight = s * new Vector2(0.9f, 0.8f);
             font = GAMELOOP.GetFont(fontIndex);
+
+            var enterTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ENTER);
+            iaEnterText = new(accessTagTextBox,enterTextKB);
+            var cancelTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ESCAPE);
+            iaCancelText = new(accessTagTextBox,cancelTextKB);
+            var finishTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ENTER);
+            iaFinishText = new(accessTagTextBox,finishTextKB);
+            var deleteTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.DELETE);
+            iaDelete = new(accessTagTextBox,deleteTextKB);
+            var backspaceTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.BACKSPACE);
+            iaBackspace = new(accessTagTextBox,backspaceTextKB);
+            var caretLeftKB = new InputTypeKeyboardButton(ShapeKeyboardButton.LEFT);
+            iaCaretPrev = new(accessTagTextBox,caretLeftKB);
+            var caretRightKB = new InputTypeKeyboardButton(ShapeKeyboardButton.RIGHT);
+            iaCaretNext = new(accessTagTextBox,caretRightKB);
+
+            inputActions = new()
+                { iaEnterText, iaCancelText, iaFinishText, iaDelete, iaBackspace, iaCaretPrev, iaCaretNext };
         }
 
         protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            TextBox tb = new(text, caretIndex, textEntryActive);
-            TextBox updated = tb.UpdateTextBox(new TextBoxKeys());
-            if(textEntryActive && !updated.Active)
+            var gamepad = GAMELOOP.CurGamepad;
+            foreach (var action in inputActions)
             {
-                if (updated.Text == string.Empty)
-                {
-                    text = prevText;
-                    prevText = string.Empty;
-                }
-                else
-                {
-                    prevText =  string.Empty;
-                    text = updated.Text;
-                    
-                }
-                
-                InputAction.Unlock();
+                action.Gamepad = gamepad;
+                action.Update(dt);
             }
-            else
-            {
-                text = updated.Text;
-            }
-
-            
 
             if (!textEntryActive)
             {
-                if (IsKeyPressed(KeyboardKey.KEY_ENTER))
+                if (iaEnterText.State.Pressed)
                 {
-                    textEntryActive = true;
-                    InputAction.Lock();
+                    textBox.StartEntry();
+                    InputAction.LockWhitelist(accessTagTextBox);
                     draggingBottomRight = false;
                     draggingTopLeft = false;
                     mouseInsideBottomRight = false;
                     mouseInsideTopLeft = false;
-                    prevText = text;
-                    //text = string.Empty;
-                    return;
+                    // prevText = text;
                 }
                 if (IsKeyPressed(KeyboardKey.KEY_W)) NextFont();
 
@@ -116,14 +123,40 @@ namespace Examples.Scenes.ExampleScenes
                         if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)) draggingBottomRight = true;
                     }
                 }
-
             }
-
-            //text = updated.Text;
-            caretIndex = updated.CaretIndex;
-            textEntryActive = updated.Active;
-
-            
+            else
+            {
+                if (iaFinishText.State.Pressed)
+                {
+                    textBox.FinishEntry();
+                    InputAction.Unlock();
+                }
+                else if (iaCancelText.State.Pressed)
+                {
+                    textBox.CancelEntry();
+                    InputAction.Unlock();
+                }
+                else if (iaDelete.State.Pressed)
+                {
+                    textBox.DeleteCharacter();
+                }
+                else if (iaBackspace.State.Pressed)
+                {
+                    textBox.BackspaceCharacter();
+                }
+                else if (iaCaretPrev.State.Pressed)
+                {
+                    textBox.MoveCaret(-1, false);
+                }
+                else if (iaCaretNext.State.Pressed)
+                {
+                    textBox.MoveCaret(1, false);
+                }
+                else
+                {
+                    textBox.AddCharacters(ShapeInput.KeyboardDevice.GetStreamChar());
+                }
+            }
         }
         protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
@@ -153,12 +186,13 @@ namespace Examples.Scenes.ExampleScenes
 
             if (!textEntryActive)
             {
-                if(text == string.Empty)
-                {
-                    font.DrawText("Press [Enter] to write", 50, fontSpacing, r.GetPoint(curAlignement), curAlignement, ColorHighlight1);
-                }
-                else font.DrawText(text, 50, fontSpacing, r.GetPoint(curAlignement), curAlignement, ColorHighlight1);
+                // if(text == string.Empty)
+                // {
+                //     font.DrawText("Press [Enter] to write", 50, fontSpacing, r.GetPoint(curAlignement), curAlignement, ColorHighlight1);
+                // }
+                // else font.DrawText(text, 50, fontSpacing, r.GetPoint(curAlignement), curAlignement, ColorHighlight1);
 
+                font.DrawText(textBox.Text, 50, fontSpacing, r.GetPoint(curAlignement), curAlignement, ColorHighlight1);
                 Circle topLeftPoint = new(topLeft, pointRadius);
                 Circle topLeftInteractionCircle = new(topLeft, interactionRadius);
                 if (draggingTopLeft)
@@ -197,9 +231,9 @@ namespace Examples.Scenes.ExampleScenes
             }
             else
             {
-                string textBoxText = text.Length <= 0 ? "Write your text here." : text;
-                font.DrawText(textBoxText, 50, fontSpacing, r.GetPoint(curAlignement), curAlignement, ColorLight);
-                font.DrawCaret(textBoxText, r, 50, fontSpacing, curAlignement, caretIndex, 5f, ColorHighlight2);
+                // string textBoxText = text.Length <= 0 ? "Write your text here." : text;
+                font.DrawText(textBox.Text, 50, fontSpacing, r.GetPoint(curAlignement), curAlignement, ColorLight);
+                font.DrawCaret(textBox.Text, r, 50, fontSpacing, curAlignement, textBox.CaretIndex, 5f, ColorHighlight2);
             }
 
 
@@ -226,7 +260,7 @@ namespace Examples.Scenes.ExampleScenes
             else
             {
                 string info = "[ESC] Cancel | [Enter] Accept | [Del] Clear Text";
-                font.DrawText($"Text Entry Mode Active | Caret Position {caretIndex}", top, 4f, new Vector2(0.5f, 0.5f), ColorHighlight3);
+                font.DrawText($"Text Entry Mode Active | Caret Position {textBox.CaretIndex}", top, 4f, new Vector2(0.5f, 0.5f), ColorHighlight3);
                 font.DrawText(info, bottom, 4f, new Vector2(0.5f, 0.5f), ColorLight);
             }
         }
