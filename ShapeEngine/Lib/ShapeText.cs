@@ -1,11 +1,4 @@
-﻿
-
-using System.Numerics;
-using System.Text;
-using Raylib_CsLo;
-using ShapeEngine.Core.Shapes;
-using ShapeEngine.Input;
-using static System.Net.Mime.MediaTypeNames;
+﻿using Raylib_CsLo;
 
 namespace ShapeEngine.Lib
 {
@@ -318,6 +311,24 @@ namespace ShapeEngine.Lib
    
     public static class ShapeText
     {
+        /// <summary>
+        /// Automatically scales all text that is drawn with functions from ShapeText.
+        /// 0.5 means text is draw at half the size, 2 means that text is drawn at twice the size.
+        /// </summary>
+        public static float FontSizeModifier = 1f;
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         public static TextBox UpdateTextBox(this TextBox textBox, TextBoxKeys keys)
         {
             if (!textBox.Active)
