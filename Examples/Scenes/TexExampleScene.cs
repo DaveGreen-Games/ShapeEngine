@@ -6,35 +6,23 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
 
-namespace Examples.Scenes.ExampleScenes
+namespace Examples.Scenes
 {
-    //test alignement!!!!
-    public class TextBoxExample : ExampleScene
+    public class TextExampleScene : ExampleScene
     {
-        Vector2 topLeft = new();
-        Vector2 bottomRight = new();
+        #region Members
+        private Vector2 topLeft = new();
+        private Vector2 bottomRight = new();
 
-        bool mouseInsideTopLeft = false;
-        bool mouseInsideBottomRight = false;
+        private bool mouseInsideTopLeft = false;
+        private bool mouseInsideBottomRight = false;
 
-        bool draggingTopLeft = false;
-        bool draggingBottomRight = false;
+        private bool draggingTopLeft = false;
+        private bool draggingBottomRight = false;
 
-        // float pointRadius = 8f;
-        // float interactionRadius = 24f;
-
-        // string text = "";
-        // string prevText = string.Empty;
-        int fontSpacing = 1;
-        int maxFontSpacing = 12;
-        Font font;
-        int fontIndex = 0;
+        private Font font;
+        private int fontIndex = 0;
         private bool textEntryActive => textBox.Active;
-
-        // int caretIndex = 0;
-
-        Vector2 curAlignement = new(0f);
-        int curAlignementIndex = 0;
 
         private const uint accessTagTextBox = 2345;
         private readonly ShapeTextBox textBox = new("Enter Text into this box");
@@ -48,19 +36,14 @@ namespace Examples.Scenes.ExampleScenes
         private readonly InputAction iaCaretNext;
         
         private readonly InputAction iaNextFont;
-        private readonly InputAction iaNextAlignement;
-        private readonly InputAction iaDeacreaseFontSpacing;
-        private readonly InputAction iaIncreaseFontSpacing;
         private readonly InputAction iaDrag;
         
+        protected readonly List<InputAction> inputActions;
+        #endregion
         
-        
-        
-        private readonly List<InputAction> inputActions;
-
-        public TextBoxExample()
+        public TextExampleScene()
         {
-            Title = "Text Box Example";
+            Title = "Text Example Scene";
             var s = GAMELOOP.UI.Area.Size;
             topLeft = s * new Vector2(0.1f, 0.2f);
             bottomRight = s * new Vector2(0.9f, 0.8f);
@@ -109,35 +92,45 @@ namespace Examples.Scenes.ExampleScenes
             var nextFontGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
             iaNextFont = new(accessTagTextBox,nextFontKB, nextFontGP);
             
-            var nextAlignementKB = new InputTypeKeyboardButton(ShapeKeyboardButton.D);
-            var nextAlignementGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
-            iaNextAlignement = new(accessTagTextBox,nextAlignementKB, nextAlignementGP);
-            
-            var decreaseFontSpacingKB = new InputTypeKeyboardButton(ShapeKeyboardButton.S);
-            var decreaseFontSpacingGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN);
-            iaDeacreaseFontSpacing = new(accessTagTextBox,decreaseFontSpacingKB, decreaseFontSpacingGP);
-            
-            var increaseFontSpacingKB = new InputTypeKeyboardButton(ShapeKeyboardButton.W);
-            var increaseFontSpacingGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP);
-            iaIncreaseFontSpacing = new(accessTagTextBox,increaseFontSpacingKB, increaseFontSpacingGP);
-            
-            
-            
             inputActions = new()
             {
                 iaEnterText, iaCancelText, iaFinishText, iaClear, iaDelete, iaBackspace, iaCaretPrev, iaCaretNext,
-                iaDrag, iaNextFont, iaNextAlignement, iaDeacreaseFontSpacing, iaIncreaseFontSpacing
+                iaDrag, iaNextFont
             };
         }
-
-        public override void OnWindowSizeChanged(DimensionConversionFactors conversionFactors)
+        
+        #region Virtual
+        protected virtual void HandleInputTextEntryInactive(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            topLeft *= conversionFactors.Factor;
-            bottomRight *=  conversionFactors.Factor;
-            // var topLeftRelative = topLeft * conversionFactors.Factor;
-            // var bottomRightRelative = topLeft * conversionFactors.Factor;
+            
         }
+        protected virtual void HandleInputTextEntryActive(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        {
+            
+        }
+        protected virtual void UpdateExampleTextEntryActive(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        {
+            
+        }
+        protected virtual void UpdateExampleTextEntryInactive(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        {
+            
+        }
+        protected virtual void DrawText(Rect rect)
+        {
+            
+        }
+        protected virtual void DrawTextEntry(Rect rect)
+        {
+            
+        }
+        protected virtual void DrawInputDescriptionBottom(Rect rect)
+        {
+            
+        }
+        #endregion
 
+        #region Base Class
         protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             var gamepad = GAMELOOP.CurGamepad;
@@ -147,6 +140,7 @@ namespace Examples.Scenes.ExampleScenes
                 action.Update(dt);
             }
             textBox.Update(dt);
+            
             if (!textEntryActive)
             {
                 if (iaEnterText.State.Pressed)
@@ -161,9 +155,6 @@ namespace Examples.Scenes.ExampleScenes
                 }
                 if (iaNextFont.State.Pressed) NextFont();
 
-                if (iaIncreaseFontSpacing.State.Pressed) ChangeFontSpacing(1);
-                else if (iaDeacreaseFontSpacing.State.Pressed) ChangeFontSpacing(-1);
-                if (iaNextAlignement.State.Pressed) NextAlignement();
                 if (mouseInsideTopLeft)
                 {
                     if (draggingTopLeft)
@@ -187,6 +178,8 @@ namespace Examples.Scenes.ExampleScenes
                         if (iaDrag.State.Pressed) draggingBottomRight = true;
                     }
                 }
+                
+                HandleInputTextEntryInactive(dt, mousePosGame, mousePosUI);
             }
             else
             {
@@ -236,13 +229,21 @@ namespace Examples.Scenes.ExampleScenes
                 {
                     textBox.DeleteCharacterEnd();
                 }
+                
+                HandleInputTextEntryActive(dt, mousePosGame, mousePosUI);
             }
         }
         protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
+            if (textEntryActive)
+            {
+                UpdateExampleTextEntryActive(dt, deltaSlow, game, ui);
+                return;
+            }
+            
             float lineThickness = ui.Area.Size.Min() * 0.01f;
             float interactionRadius = lineThickness * 4;
-            if (textEntryActive) return;
+            
             if (draggingTopLeft || draggingBottomRight)
             {
                 if (draggingTopLeft) topLeft = ui.MousePos;
@@ -259,20 +260,23 @@ namespace Examples.Scenes.ExampleScenes
                     mouseInsideBottomRight = bottomRightDisSq <= interactionRadius * interactionRadius;
                 }
             }
-
+            
+            UpdateExampleTextEntryInactive(dt, deltaSlow, game, ui);
         }
         protected override void DrawGameUIExample(ScreenInfo ui) 
         {
             Rect r = new(topLeft, bottomRight);
             float lineThickness = ui.Area.Size.Min() * 0.01f;
-            float fontSize = r.Width * 0.07f;
+            // float fontSize = r.Width * 0.05f;
             float pointRadius = lineThickness * 2f;
             float interactionRadius = lineThickness * 4;
             r.DrawLines(lineThickness, ColorMedium);
 
             if (!textEntryActive)
             {
-                font.DrawText(textBox.Text, fontSize, fontSpacing, r.GetPoint(curAlignement), curAlignement, ColorHighlight1);
+                //font.DrawText(textBox.Text, fontSize, fontSpacing, r.GetPoint(curAlignement), curAlignement, ColorHighlight1);
+                
+                DrawText(r);
                 
                 Circle topLeftPoint = new(topLeft, pointRadius);
                 Circle topLeftInteractionCircle = new(topLeft, interactionRadius);
@@ -312,23 +316,30 @@ namespace Examples.Scenes.ExampleScenes
             }
             else
             {
-                // string textBoxText = text.Length <= 0 ? "Write your text here." : text;
-                font.DrawText(textBox.Text, fontSize, fontSpacing, r.GetPoint(curAlignement), curAlignement, ColorLight);
+                DrawTextEntry(r);
+                // font.DrawText(textBox.Text, fontSize, fontSpacing, r.GetPoint(curAlignement), curAlignement, ColorLight);
                 
-                if(textBox.CaretVisible)
-                    font.DrawCaret(textBox.Text, r, fontSize, fontSpacing, curAlignement, textBox.CaretIndex, 5f, ColorHighlight2);
+                // if(textBox.CaretVisible)
+                    // font.DrawCaret(textBox.Text, r, fontSize, fontSpacing, curAlignement, textBox.CaretIndex, 5f, ColorHighlight2);
             }
-            // textBox.DrawText(font, r, fontSpacing, 5f, curAlignement, ColorLight, ColorHighlight2);
 
         }
-
-        
         protected override void DrawUIExample(ScreenInfo ui)
         {
             var rects = GAMELOOP.UIRects.GetRect("bottom center").SplitV(0.35f);
             DrawDescription(rects.top, rects.bottom);
            
         }
+        public override void OnWindowSizeChanged(DimensionConversionFactors conversionFactors)
+        {
+            topLeft *= conversionFactors.Factor;
+            bottomRight *=  conversionFactors.Factor;
+        }
+        protected override bool IsCancelAllowed()
+        {
+            return !textEntryActive;
+        }
+
         private void DrawDescription(Rect top, Rect bottom)
         {
             var curInputDeviceAll = ShapeInput.CurrentInputDeviceType;
@@ -336,10 +347,7 @@ namespace Examples.Scenes.ExampleScenes
 
             
             string dragText = iaDrag.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
-            string nextAlignementText = iaNextAlignement.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
             string nextFontText = iaNextFont.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
-            string decreaseFontSpacingText = iaDeacreaseFontSpacing.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
-            string increaseFontSpacingText = iaIncreaseFontSpacing.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
             string enterText = iaEnterText.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
             string finishText = iaFinishText.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
             string cancelText = iaCancelText.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
@@ -353,11 +361,12 @@ namespace Examples.Scenes.ExampleScenes
             if (!textEntryActive)
             {
                 string info =
-                    $"Write Custom Text {enterText} | Drag Rect Corners {dragText}";
+                    $"Write Custom Text {enterText} | Drag Rect Corners {dragText} | {nextFontText} Font: {GAMELOOP.GetFontName(fontIndex)}";
                 font.DrawText(info, top, 4f, new Vector2(0.5f, 0.5f), ColorLight);
 
-                string alignmentInfo = $"{nextFontText} Font: {GAMELOOP.GetFontName(fontIndex)} | [{decreaseFontSpacingText}/{increaseFontSpacingText}] Font Spacing: {fontSpacing} | {nextAlignementText} Alignment: {curAlignement}";
-                font.DrawText(alignmentInfo, bottom, 4f, new Vector2(0.5f, 0.5f), ColorLight);
+                DrawInputDescriptionBottom(bottom);
+                // string alignmentInfo = $"{nextFontText} Font: {GAMELOOP.GetFontName(fontIndex)} | [{decreaseFontSpacingText}/{increaseFontSpacingText}] Font Spacing: {fontSpacing} | {nextAlignementText} Alignment: {curAlignement}";
+                // font.DrawText(alignmentInfo, bottom, 4f, new Vector2(0.5f, 0.5f), ColorLight);
             }
             else
             {
@@ -366,16 +375,6 @@ namespace Examples.Scenes.ExampleScenes
                 font.DrawText(info, bottom, 4f, new Vector2(0.5f, 0.5f), ColorLight);
             }
         }
-        protected override bool IsCancelAllowed()
-        {
-            return !textEntryActive;
-        }
-        private void ChangeFontSpacing(int amount)
-        {
-            fontSpacing += amount;
-            if (fontSpacing < 0) fontSpacing = maxFontSpacing;
-            else if (fontSpacing > maxFontSpacing) fontSpacing = 0;
-        }
         private void NextFont()
         {
             int fontCount = GAMELOOP.GetFontCount();
@@ -383,30 +382,7 @@ namespace Examples.Scenes.ExampleScenes
             if (fontIndex >= fontCount) fontIndex = 0;
             font = GAMELOOP.GetFont(fontIndex);
         }
-        private void PrevFont()
-        {
-            int fontCount = GAMELOOP.GetFontCount();
-            fontIndex--;
-            if (fontIndex < 0) fontIndex = fontCount - 1;
-            font = GAMELOOP.GetFont(fontIndex);
-        }
-
-        private void NextAlignement()
-        {
-            curAlignementIndex++;
-            if (curAlignementIndex > 8) curAlignementIndex = 0;
-            else if (curAlignementIndex < 0) curAlignementIndex = 8;
-
-            if (curAlignementIndex == 0) curAlignement = new Vector2(0f); //top left
-            else if (curAlignementIndex == 1) curAlignement = new Vector2(0.5f, 0f); //top
-            else if (curAlignementIndex == 2) curAlignement = new Vector2(1f, 0f); //top right
-            else if (curAlignementIndex == 3) curAlignement = new Vector2(1f, 0.5f); //right
-            else if (curAlignementIndex == 4) curAlignement = new Vector2(1f, 1f); //bottom right
-            else if (curAlignementIndex == 5) curAlignement = new Vector2(0.5f, 1f); //bottom
-            else if (curAlignementIndex == 6) curAlignement = new Vector2(0f, 1f); //bottom left
-            else if (curAlignementIndex == 7) curAlignement = new Vector2(0f, 0.5f); //left
-            else if (curAlignementIndex == 8) curAlignement = new Vector2(0.5f, 0.5f); //center
-        }
+        #endregion
     }
 
 }
