@@ -20,13 +20,13 @@ namespace Examples.Scenes.ExampleScenes
         bool draggingTopLeft = false;
         bool draggingBottomRight = false;
 
-        float pointRadius = 8f;
-        float interactionRadius = 24f;
+        // float pointRadius = 8f;
+        // float interactionRadius = 24f;
 
         // string text = "";
         // string prevText = string.Empty;
         int fontSpacing = 1;
-        int maxFontSpacing = 50;
+        int maxFontSpacing = 12;
         Font font;
         int fontIndex = 0;
         private bool textEntryActive => textBox.Active;
@@ -62,7 +62,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             Title = "Text Box Example";
             var s = GAMELOOP.UI.Area.Size;
-            topLeft = s * new Vector2(0.1f, 0.1f);
+            topLeft = s * new Vector2(0.1f, 0.2f);
             bottomRight = s * new Vector2(0.9f, 0.8f);
             font = GAMELOOP.GetFont(fontIndex);
 
@@ -128,6 +128,14 @@ namespace Examples.Scenes.ExampleScenes
                 iaEnterText, iaCancelText, iaFinishText, iaClear, iaDelete, iaBackspace, iaCaretPrev, iaCaretNext,
                 iaDrag, iaNextFont, iaNextAlignement, iaDeacreaseFontSpacing, iaIncreaseFontSpacing
             };
+        }
+
+        public override void OnWindowSizeChanged(DimensionConversionFactors conversionFactors)
+        {
+            topLeft *= conversionFactors.Factor;
+            bottomRight *=  conversionFactors.Factor;
+            // var topLeftRelative = topLeft * conversionFactors.Factor;
+            // var bottomRightRelative = topLeft * conversionFactors.Factor;
         }
 
         protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
@@ -232,7 +240,8 @@ namespace Examples.Scenes.ExampleScenes
         }
         protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            
+            float lineThickness = ui.Area.Size.Min() * 0.01f;
+            float interactionRadius = lineThickness * 4;
             if (textEntryActive) return;
             if (draggingTopLeft || draggingBottomRight)
             {
@@ -252,14 +261,18 @@ namespace Examples.Scenes.ExampleScenes
             }
 
         }
-        protected override void DrawGameUIExample(ScreenInfo ui)
+        protected override void DrawGameUIExample(ScreenInfo ui) 
         {
             Rect r = new(topLeft, bottomRight);
-            r.DrawLines(6f, ColorMedium);
+            float lineThickness = ui.Area.Size.Min() * 0.01f;
+            float fontSize = r.Width * 0.05f;
+            float pointRadius = lineThickness * 2f;
+            float interactionRadius = lineThickness * 4;
+            r.DrawLines(lineThickness, ColorMedium);
 
             if (!textEntryActive)
             {
-                font.DrawText(textBox.Text, 50, fontSpacing, r.GetPoint(curAlignement), curAlignement, ColorHighlight1);
+                font.DrawText(textBox.Text, fontSize, fontSpacing, r.GetPoint(curAlignement), curAlignement, ColorHighlight1);
                 
                 Circle topLeftPoint = new(topLeft, pointRadius);
                 Circle topLeftInteractionCircle = new(topLeft, interactionRadius);
@@ -300,10 +313,10 @@ namespace Examples.Scenes.ExampleScenes
             else
             {
                 // string textBoxText = text.Length <= 0 ? "Write your text here." : text;
-                font.DrawText(textBox.Text, 50, fontSpacing, r.GetPoint(curAlignement), curAlignement, ColorLight);
+                font.DrawText(textBox.Text, fontSize, fontSpacing, r.GetPoint(curAlignement), curAlignement, ColorLight);
                 
                 if(textBox.CaretVisible)
-                    font.DrawCaret(textBox.Text, r, 50, fontSpacing, curAlignement, textBox.CaretIndex, 5f, ColorHighlight2);
+                    font.DrawCaret(textBox.Text, r, fontSize, fontSpacing, curAlignement, textBox.CaretIndex, 5f, ColorHighlight2);
             }
             // textBox.DrawText(font, r, fontSpacing, 5f, curAlignement, ColorLight, ColorHighlight2);
 
