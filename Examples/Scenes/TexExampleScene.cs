@@ -20,12 +20,13 @@ namespace Examples.Scenes
         private bool draggingTopLeft = false;
         private bool draggingBottomRight = false;
 
-        private Font font;
+        protected Font font;
         private int fontIndex = 0;
         private bool textEntryActive => textBox.Active;
 
-        private const uint accessTagTextBox = 2345;
-        private readonly ShapeTextBox textBox = new("Enter Text into this box");
+        protected readonly ShapeTextBox textBox = new("Enter Text into this box");
+        
+        protected const uint accessTagTextBox = 2345;
         private readonly InputAction iaEnterText;
         private readonly InputAction iaCancelText;
         private readonly InputAction iaFinishText;
@@ -361,7 +362,7 @@ namespace Examples.Scenes
             if (!textEntryActive)
             {
                 string info =
-                    $"Write Custom Text {enterText} | Drag Rect Corners {dragText} | {nextFontText} Font: {GAMELOOP.GetFontName(fontIndex)}";
+                    $"Write Custom Text {enterText} | Drag Rect Corners {dragText} | Change Font {nextFontText} ({GAMELOOP.GetFontName(fontIndex)})";
                 font.DrawText(info, top, 4f, new Vector2(0.5f, 0.5f), ColorLight);
 
                 DrawInputDescriptionBottom(bottom);
@@ -371,7 +372,7 @@ namespace Examples.Scenes
             else
             {
                 string info = $"Cancel {cancelText} | Accept {finishText} | Clear Text {clearText} | Delete {deleteText} | Backspace {backspaceText}";
-                font.DrawText($"Text Entry Mode Active | [{caretPrevText}/{caretNextText}] Caret Position {textBox.CaretIndex}", top, 4f, new Vector2(0.5f, 0.5f), ColorHighlight3);
+                font.DrawText($"Text Entry Mode Active |  Caret Position [{caretPrevText}/{caretNextText}] ({textBox.CaretIndex})", top, 4f, new Vector2(0.5f, 0.5f), ColorHighlight3);
                 font.DrawText(info, bottom, 4f, new Vector2(0.5f, 0.5f), ColorLight);
             }
         }

@@ -9,105 +9,20 @@ using ShapeEngine.Input;
 namespace Examples.Scenes.ExampleScenes
 {
     //test alignement!!!!
-    public class TextBoxExample : ExampleScene
+    public class TextBoxExample : TextExampleScene
     {
-        Vector2 topLeft = new();
-        Vector2 bottomRight = new();
+        private const int MaxFontSpacing = 12;
+        private int fontSpacing = 1;
+        private Vector2 curAlignement = new(0f);
+        private int curAlignementIndex = 0;
 
-        bool mouseInsideTopLeft = false;
-        bool mouseInsideBottomRight = false;
-
-        bool draggingTopLeft = false;
-        bool draggingBottomRight = false;
-
-        // float pointRadius = 8f;
-        // float interactionRadius = 24f;
-
-        // string text = "";
-        // string prevText = string.Empty;
-        int fontSpacing = 1;
-        int maxFontSpacing = 12;
-        Font font;
-        int fontIndex = 0;
-        private bool textEntryActive => textBox.Active;
-
-        // int caretIndex = 0;
-
-        Vector2 curAlignement = new(0f);
-        int curAlignementIndex = 0;
-
-        private const uint accessTagTextBox = 2345;
-        private readonly ShapeTextBox textBox = new("Enter Text into this box");
-        private readonly InputAction iaEnterText;
-        private readonly InputAction iaCancelText;
-        private readonly InputAction iaFinishText;
-        private readonly InputAction iaDelete;
-        private readonly InputAction iaBackspace;
-        private readonly InputAction iaClear;
-        private readonly InputAction iaCaretPrev;
-        private readonly InputAction iaCaretNext;
-        
-        private readonly InputAction iaNextFont;
         private readonly InputAction iaNextAlignement;
         private readonly InputAction iaDeacreaseFontSpacing;
         private readonly InputAction iaIncreaseFontSpacing;
-        private readonly InputAction iaDrag;
         
-        
-        
-        
-        private readonly List<InputAction> inputActions;
-
-        public TextBoxExample()
+        public TextBoxExample() : base()
         {
             Title = "Text Box Example";
-            var s = GAMELOOP.UI.Area.Size;
-            topLeft = s * new Vector2(0.1f, 0.2f);
-            bottomRight = s * new Vector2(0.9f, 0.8f);
-            font = GAMELOOP.GetFont(fontIndex);
-
-            var enterTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ENTER);
-            var enterTextGP = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_RIGHT);
-            iaEnterText = new(accessTagTextBox,enterTextKB, enterTextGP);
-            
-            var cancelTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ESCAPE);
-            var cancelTextGP = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_LEFT);
-            iaCancelText = new(accessTagTextBox,cancelTextKB, cancelTextGP);
-            
-            var finishTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ENTER);
-            var finishTextGP = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_RIGHT);
-            iaFinishText = new(accessTagTextBox,finishTextKB, finishTextGP);
-
-            var modifierKB = new ModifierKeyKeyboardButton(ShapeKeyboardButton.LEFT_SHIFT);
-            var modifierGP = new ModifierKeyGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_BOTTOM);
-            var clearTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.BACKSPACE, ModifierKeyOperator.Or, modifierKB);
-            var clearTextGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP, 0.1f, ModifierKeyOperator.Or, modifierGP);
-            iaClear = new(accessTagTextBox,clearTextKB, clearTextGP);
-            
-            var deleteTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.DELETE);
-            var deleteTextGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
-            iaDelete = new(accessTagTextBox,deleteTextKB, deleteTextGP);
-            
-            var backspaceTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.BACKSPACE);
-            var backspaceTextGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
-            iaBackspace = new(accessTagTextBox,backspaceTextKB, backspaceTextGP);
-            
-            var caretLeftKB = new InputTypeKeyboardButton(ShapeKeyboardButton.LEFT);
-            var caretLeftGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT);
-            iaCaretPrev = new(accessTagTextBox,caretLeftKB, caretLeftGP);
-
-            var caretRightKB = new InputTypeKeyboardButton(ShapeKeyboardButton.RIGHT);
-            var caretRightGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT);
-            iaCaretNext = new(accessTagTextBox,caretRightKB, caretRightGP);
-            
-            var dragMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
-            var dragKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
-            var dragGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
-            iaDrag = new(accessTagTextBox,dragGP, dragKB, dragMB);
-
-            var nextFontKB = new InputTypeKeyboardButton(ShapeKeyboardButton.A);
-            var nextFontGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
-            iaNextFont = new(accessTagTextBox,nextFontKB, nextFontGP);
             
             var nextAlignementKB = new InputTypeKeyboardButton(ShapeKeyboardButton.D);
             var nextAlignementGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
@@ -121,276 +36,49 @@ namespace Examples.Scenes.ExampleScenes
             var increaseFontSpacingGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP);
             iaIncreaseFontSpacing = new(accessTagTextBox,increaseFontSpacingKB, increaseFontSpacingGP);
             
-            
-            
-            inputActions = new()
-            {
-                iaEnterText, iaCancelText, iaFinishText, iaClear, iaDelete, iaBackspace, iaCaretPrev, iaCaretNext,
-                iaDrag, iaNextFont, iaNextAlignement, iaDeacreaseFontSpacing, iaIncreaseFontSpacing
-            };
+            inputActions.Add(iaNextAlignement);
+            inputActions.Add(iaDeacreaseFontSpacing);
+            inputActions.Add(iaIncreaseFontSpacing);
         }
 
-        public override void OnWindowSizeChanged(DimensionConversionFactors conversionFactors)
+        protected override void HandleInputTextEntryInactive(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            topLeft *= conversionFactors.Factor;
-            bottomRight *=  conversionFactors.Factor;
-            // var topLeftRelative = topLeft * conversionFactors.Factor;
-            // var bottomRightRelative = topLeft * conversionFactors.Factor;
+            if (iaIncreaseFontSpacing.State.Pressed) ChangeFontSpacing(1);
+            else if (iaDeacreaseFontSpacing.State.Pressed) ChangeFontSpacing(-1);
+            if (iaNextAlignement.State.Pressed) NextAlignement();
         }
 
-        protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void DrawText(Rect rect)
         {
-            var gamepad = GAMELOOP.CurGamepad;
-            foreach (var action in inputActions)
-            {
-                action.Gamepad = gamepad;
-                action.Update(dt);
-            }
-            textBox.Update(dt);
-            if (!textEntryActive)
-            {
-                if (iaEnterText.State.Pressed)
-                {
-                    textBox.StartEntry();
-                    InputAction.LockWhitelist(accessTagTextBox);
-                    draggingBottomRight = false;
-                    draggingTopLeft = false;
-                    mouseInsideBottomRight = false;
-                    mouseInsideTopLeft = false;
-                    // prevText = text;
-                }
-                if (iaNextFont.State.Pressed) NextFont();
+            float fontSize = rect.Width * 0.07f;
+            font.DrawText(textBox.Text, fontSize, fontSpacing, rect.GetPoint(curAlignement), curAlignement, ColorHighlight1);
+        }
 
-                if (iaIncreaseFontSpacing.State.Pressed) ChangeFontSpacing(1);
-                else if (iaDeacreaseFontSpacing.State.Pressed) ChangeFontSpacing(-1);
-                if (iaNextAlignement.State.Pressed) NextAlignement();
-                if (mouseInsideTopLeft)
-                {
-                    if (draggingTopLeft)
-                    {
-                        if (iaDrag.State.Released) draggingTopLeft = false;
-                    }
-                    else
-                    {
-                        if (iaDrag.State.Pressed) draggingTopLeft = true;
-                    }
-
-                }
-                else if (mouseInsideBottomRight)
-                {
-                    if (draggingBottomRight)
-                    {
-                        if (iaDrag.State.Released) draggingBottomRight = false;
-                    }
-                    else
-                    {
-                        if (iaDrag.State.Pressed) draggingBottomRight = true;
-                    }
-                }
-            }
-            else
-            {
-                if (iaFinishText.State.Pressed)
-                {
-                    textBox.FinishEntry();
-                    InputAction.Unlock();
-                }
-                else if (iaCancelText.State.Pressed)
-                {
-                    textBox.CancelEntry();
-                    InputAction.Unlock();
-                }
-                else if (iaClear.State.Pressed)
-                {
-                    textBox.DeleteEntry();
-                }
-                else if (iaDelete.State.Down)
-                {
-                    textBox.DeleteCharacterStart(1);
-                }
-                else if (iaBackspace.State.Down)
-                {
-                    textBox.DeleteCharacterStart(-1);
-                }
-                else if (iaCaretPrev.State.Down)
-                {
-                    // textBox.MoveCaret(-1, false);
-                    textBox.MoveCaretStart(-1, false);
-                }
-                else if (iaCaretNext.State.Down)
-                {
-                    // textBox.MoveCaret(1, false);
-                    textBox.MoveCaretStart(1, false);
-                }
-                else
-                {
-                    textBox.AddCharacters(ShapeInput.KeyboardDevice.GetStreamChar());
-                }
-
+        protected override void DrawTextEntry(Rect rect)
+        {
+            float fontSize = rect.Width * 0.07f;
+            font.DrawText(textBox.Text, fontSize, fontSpacing, rect.GetPoint(curAlignement), curAlignement, ColorLight);
                 
-                if (iaCaretPrev.State.Released || iaCaretNext.State.Released)
-                {
-                    textBox.MoveCaretEnd();
-                }
-                else if (iaDelete.State.Released || iaBackspace.State.Released)
-                {
-                    textBox.DeleteCharacterEnd();
-                }
-            }
-        }
-        protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
-        {
-            float lineThickness = ui.Area.Size.Min() * 0.01f;
-            float interactionRadius = lineThickness * 4;
-            if (textEntryActive) return;
-            if (draggingTopLeft || draggingBottomRight)
-            {
-                if (draggingTopLeft) topLeft = ui.MousePos;
-                else if (draggingBottomRight) bottomRight = ui.MousePos;
-            }
-            else
-            {
-                float topLeftDisSq = (topLeft - ui.MousePos).LengthSquared();
-                mouseInsideTopLeft = topLeftDisSq <= interactionRadius * interactionRadius;
-
-                if (!mouseInsideTopLeft)
-                {
-                    float bottomRightDisSq = (bottomRight - ui.MousePos).LengthSquared();
-                    mouseInsideBottomRight = bottomRightDisSq <= interactionRadius * interactionRadius;
-                }
-            }
-
-        }
-        protected override void DrawGameUIExample(ScreenInfo ui) 
-        {
-            Rect r = new(topLeft, bottomRight);
-            float lineThickness = ui.Area.Size.Min() * 0.01f;
-            float fontSize = r.Width * 0.07f;
-            float pointRadius = lineThickness * 2f;
-            float interactionRadius = lineThickness * 4;
-            r.DrawLines(lineThickness, ColorMedium);
-
-            if (!textEntryActive)
-            {
-                font.DrawText(textBox.Text, fontSize, fontSpacing, r.GetPoint(curAlignement), curAlignement, ColorHighlight1);
-                
-                Circle topLeftPoint = new(topLeft, pointRadius);
-                Circle topLeftInteractionCircle = new(topLeft, interactionRadius);
-                if (draggingTopLeft)
-                {
-                    topLeftInteractionCircle.Draw(ColorHighlight2);
-                }
-                else if (mouseInsideTopLeft)
-                {
-                    topLeftPoint.Draw(ColorMedium);
-                    topLeftInteractionCircle.Radius *= 2f;
-                    topLeftInteractionCircle.DrawLines(2f, ColorHighlight2, 4f);
-                }
-                else
-                {
-                    topLeftPoint.Draw(ColorMedium);
-                    topLeftInteractionCircle.DrawLines(2f, ColorMedium, 4f);
-                }
-
-                Circle bottomRightPoint = new(bottomRight, pointRadius);
-                Circle bottomRightInteractionCircle = new(bottomRight, interactionRadius);
-                if (draggingBottomRight)
-                {
-                    bottomRightInteractionCircle.Draw(ColorHighlight2);
-                }
-                else if (mouseInsideBottomRight)
-                {
-                    bottomRightPoint.Draw(ColorMedium);
-                    bottomRightInteractionCircle.Radius *= 2f;
-                    bottomRightInteractionCircle.DrawLines(2f, ColorHighlight2, 4f);
-                }
-                else
-                {
-                    bottomRightPoint.Draw(ColorMedium);
-                    bottomRightInteractionCircle.DrawLines(2f, ColorMedium, 4f);
-                }
-            }
-            else
-            {
-                // string textBoxText = text.Length <= 0 ? "Write your text here." : text;
-                font.DrawText(textBox.Text, fontSize, fontSpacing, r.GetPoint(curAlignement), curAlignement, ColorLight);
-                
-                if(textBox.CaretVisible)
-                    font.DrawCaret(textBox.Text, r, fontSize, fontSpacing, curAlignement, textBox.CaretIndex, 5f, ColorHighlight2);
-            }
-            // textBox.DrawText(font, r, fontSpacing, 5f, curAlignement, ColorLight, ColorHighlight2);
-
+            if(textBox.CaretVisible)
+                font.DrawCaret(textBox.Text, rect, fontSize, fontSpacing, curAlignement, textBox.CaretIndex, 5f, ColorHighlight2);
         }
 
-        
-        protected override void DrawUIExample(ScreenInfo ui)
+        protected override void DrawInputDescriptionBottom(Rect rect)
         {
-            var rects = GAMELOOP.UIRects.GetRect("bottom center").SplitV(0.35f);
-            DrawDescription(rects.top, rects.bottom);
-           
-        }
-        private void DrawDescription(Rect top, Rect bottom)
-        {
-            var curInputDeviceAll = ShapeInput.CurrentInputDeviceType;
             var curInputDeviceNoMouse = ShapeInput.CurrentInputDeviceTypeNoMouse;
-
-            
-            string dragText = iaDrag.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
             string nextAlignementText = iaNextAlignement.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
-            string nextFontText = iaNextFont.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
             string decreaseFontSpacingText = iaDeacreaseFontSpacing.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
             string increaseFontSpacingText = iaIncreaseFontSpacing.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
-            string enterText = iaEnterText.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
-            string finishText = iaFinishText.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
-            string cancelText = iaCancelText.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
-            string backspaceText = iaBackspace.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
-            string deleteText = iaDelete.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
-            string clearText = iaClear.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
-            string caretNextText = iaCaretNext.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
-            string caretPrevText = iaCaretPrev.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
-            
-            
-            if (!textEntryActive)
-            {
-                string info =
-                    $"Write Custom Text {enterText} | Drag Rect Corners {dragText}";
-                font.DrawText(info, top, 4f, new Vector2(0.5f, 0.5f), ColorLight);
-
-                string alignmentInfo = $"{nextFontText} Font: {GAMELOOP.GetFontName(fontIndex)} | [{decreaseFontSpacingText}/{increaseFontSpacingText}] Font Spacing: {fontSpacing} | {nextAlignementText} Alignment: {curAlignement}";
-                font.DrawText(alignmentInfo, bottom, 4f, new Vector2(0.5f, 0.5f), ColorLight);
-            }
-            else
-            {
-                string info = $"Cancel {cancelText} | Accept {finishText} | Clear Text {clearText} | Delete {deleteText} | Backspace {backspaceText}";
-                font.DrawText($"Text Entry Mode Active | [{caretPrevText}/{caretNextText}] Caret Position {textBox.CaretIndex}", top, 4f, new Vector2(0.5f, 0.5f), ColorHighlight3);
-                font.DrawText(info, bottom, 4f, new Vector2(0.5f, 0.5f), ColorLight);
-            }
+            string alignmentInfo = $"Font Spacing [{decreaseFontSpacingText}/{increaseFontSpacingText}] ({fontSpacing}) | Alignment {nextAlignementText} ({curAlignement})";
+            font.DrawText(alignmentInfo, rect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
         }
-        protected override bool IsCancelAllowed()
-        {
-            return !textEntryActive;
-        }
+        
         private void ChangeFontSpacing(int amount)
         {
             fontSpacing += amount;
-            if (fontSpacing < 0) fontSpacing = maxFontSpacing;
-            else if (fontSpacing > maxFontSpacing) fontSpacing = 0;
+            if (fontSpacing < 0) fontSpacing = MaxFontSpacing;
+            else if (fontSpacing > MaxFontSpacing) fontSpacing = 0;
         }
-        private void NextFont()
-        {
-            int fontCount = GAMELOOP.GetFontCount();
-            fontIndex++;
-            if (fontIndex >= fontCount) fontIndex = 0;
-            font = GAMELOOP.GetFont(fontIndex);
-        }
-        private void PrevFont()
-        {
-            int fontCount = GAMELOOP.GetFontCount();
-            fontIndex--;
-            if (fontIndex < 0) fontIndex = fontCount - 1;
-            font = GAMELOOP.GetFont(fontIndex);
-        }
-
         private void NextAlignement()
         {
             curAlignementIndex++;
