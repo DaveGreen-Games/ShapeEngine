@@ -43,8 +43,19 @@ namespace Examples.Scenes.ExampleScenes
         private readonly InputAction iaFinishText;
         private readonly InputAction iaDelete;
         private readonly InputAction iaBackspace;
+        private readonly InputAction iaClear;
         private readonly InputAction iaCaretPrev;
         private readonly InputAction iaCaretNext;
+        
+        private readonly InputAction iaNextFont;
+        private readonly InputAction iaNextAlignement;
+        private readonly InputAction iaDeacreaseFontSpacing;
+        private readonly InputAction iaIncreaseFontSpacing;
+        private readonly InputAction iaDrag;
+        
+        
+        
+        
         private readonly List<InputAction> inputActions;
 
         public TextBoxExample()
@@ -56,22 +67,67 @@ namespace Examples.Scenes.ExampleScenes
             font = GAMELOOP.GetFont(fontIndex);
 
             var enterTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ENTER);
-            iaEnterText = new(accessTagTextBox,enterTextKB);
+            var enterTextGP = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_RIGHT);
+            iaEnterText = new(accessTagTextBox,enterTextKB, enterTextGP);
+            
             var cancelTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ESCAPE);
-            iaCancelText = new(accessTagTextBox,cancelTextKB);
+            var cancelTextGP = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_LEFT);
+            iaCancelText = new(accessTagTextBox,cancelTextKB, cancelTextGP);
+            
             var finishTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ENTER);
-            iaFinishText = new(accessTagTextBox,finishTextKB);
-            var deleteTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.DELETE);
-            iaDelete = new(accessTagTextBox,deleteTextKB);
-            var backspaceTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.BACKSPACE);
-            iaBackspace = new(accessTagTextBox,backspaceTextKB);
-            var caretLeftKB = new InputTypeKeyboardButton(ShapeKeyboardButton.LEFT);
-            iaCaretPrev = new(accessTagTextBox,caretLeftKB);
-            var caretRightKB = new InputTypeKeyboardButton(ShapeKeyboardButton.RIGHT);
-            iaCaretNext = new(accessTagTextBox,caretRightKB);
+            var finishTextGP = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_RIGHT);
+            iaFinishText = new(accessTagTextBox,finishTextKB, finishTextGP);
 
+            var modifierKB = new ModifierKeyKeyboardButton(ShapeKeyboardButton.LEFT_SHIFT);
+            var modifierGP = new ModifierKeyGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_BOTTOM);
+            var clearTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.BACKSPACE, ModifierKeyOperator.Or, modifierKB);
+            var clearTextGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP, 0.1f, ModifierKeyOperator.Or, modifierGP);
+            iaClear = new(accessTagTextBox,clearTextKB, clearTextGP);
+            
+            var deleteTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.DELETE);
+            var deleteTextGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
+            iaDelete = new(accessTagTextBox,deleteTextKB, deleteTextGP);
+            
+            var backspaceTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.BACKSPACE);
+            var backspaceTextGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
+            iaBackspace = new(accessTagTextBox,backspaceTextKB, backspaceTextGP);
+            
+            var caretLeftKB = new InputTypeKeyboardButton(ShapeKeyboardButton.LEFT);
+            var caretLeftGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT);
+            iaCaretPrev = new(accessTagTextBox,caretLeftKB, caretLeftGP);
+
+            var caretRightKB = new InputTypeKeyboardButton(ShapeKeyboardButton.RIGHT);
+            var caretRightGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT);
+            iaCaretNext = new(accessTagTextBox,caretRightKB, caretRightGP);
+            
+            var dragMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
+            var dragKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
+            var dragGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
+            iaDrag = new(accessTagTextBox,dragGP, dragKB, dragMB);
+
+            var nextFontKB = new InputTypeKeyboardButton(ShapeKeyboardButton.A);
+            var nextFontGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
+            iaNextFont = new(accessTagTextBox,nextFontKB, nextFontGP);
+            
+            var nextAlignementKB = new InputTypeKeyboardButton(ShapeKeyboardButton.D);
+            var nextAlignementGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
+            iaNextAlignement = new(accessTagTextBox,nextAlignementKB, nextAlignementGP);
+            
+            var decreaseFontSpacingKB = new InputTypeKeyboardButton(ShapeKeyboardButton.S);
+            var decreaseFontSpacingGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN);
+            iaDeacreaseFontSpacing = new(accessTagTextBox,decreaseFontSpacingKB, decreaseFontSpacingGP);
+            
+            var increaseFontSpacingKB = new InputTypeKeyboardButton(ShapeKeyboardButton.W);
+            var increaseFontSpacingGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP);
+            iaIncreaseFontSpacing = new(accessTagTextBox,increaseFontSpacingKB, increaseFontSpacingGP);
+            
+            
+            
             inputActions = new()
-                { iaEnterText, iaCancelText, iaFinishText, iaDelete, iaBackspace, iaCaretPrev, iaCaretNext };
+            {
+                iaEnterText, iaCancelText, iaFinishText, iaClear, iaDelete, iaBackspace, iaCaretPrev, iaCaretNext,
+                iaDrag, iaNextFont, iaNextAlignement, iaDeacreaseFontSpacing, iaIncreaseFontSpacing
+            };
         }
 
         protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
@@ -95,20 +151,20 @@ namespace Examples.Scenes.ExampleScenes
                     mouseInsideTopLeft = false;
                     // prevText = text;
                 }
-                if (IsKeyPressed(KeyboardKey.KEY_W)) NextFont();
+                if (iaNextFont.State.Pressed) NextFont();
 
-                if (IsKeyPressed(KeyboardKey.KEY_D)) ChangeFontSpacing(1);
-                else if (IsKeyPressed(KeyboardKey.KEY_A)) ChangeFontSpacing(-1);
-                if (IsKeyPressed(KeyboardKey.KEY_S)) NextAlignement();
+                if (iaIncreaseFontSpacing.State.Pressed) ChangeFontSpacing(1);
+                else if (iaDeacreaseFontSpacing.State.Pressed) ChangeFontSpacing(-1);
+                if (iaNextAlignement.State.Pressed) NextAlignement();
                 if (mouseInsideTopLeft)
                 {
                     if (draggingTopLeft)
                     {
-                        if (IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT)) draggingTopLeft = false;
+                        if (iaDrag.State.Released) draggingTopLeft = false;
                     }
                     else
                     {
-                        if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)) draggingTopLeft = true;
+                        if (iaDrag.State.Pressed) draggingTopLeft = true;
                     }
 
                 }
@@ -116,11 +172,11 @@ namespace Examples.Scenes.ExampleScenes
                 {
                     if (draggingBottomRight)
                     {
-                        if (IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT)) draggingBottomRight = false;
+                        if (iaDrag.State.Released) draggingBottomRight = false;
                     }
                     else
                     {
-                        if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)) draggingBottomRight = true;
+                        if (iaDrag.State.Pressed) draggingBottomRight = true;
                     }
                 }
             }
@@ -135,6 +191,10 @@ namespace Examples.Scenes.ExampleScenes
                 {
                     textBox.CancelEntry();
                     InputAction.Unlock();
+                }
+                else if (iaClear.State.Pressed)
+                {
+                    textBox.DeleteEntry();
                 }
                 else if (iaDelete.State.Down)
                 {
@@ -258,19 +318,38 @@ namespace Examples.Scenes.ExampleScenes
         }
         private void DrawDescription(Rect top, Rect bottom)
         {
+            var curInputDeviceAll = ShapeInput.CurrentInputDeviceType;
+            var curInputDeviceNoMouse = ShapeInput.CurrentInputDeviceTypeNoMouse;
+
+            
+            string dragText = iaDrag.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
+            string nextAlignementText = iaNextAlignement.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            string nextFontText = iaNextFont.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            string decreaseFontSpacingText = iaDeacreaseFontSpacing.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
+            string increaseFontSpacingText = iaIncreaseFontSpacing.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
+            string enterText = iaEnterText.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            string finishText = iaFinishText.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            string cancelText = iaCancelText.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            string backspaceText = iaBackspace.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            string deleteText = iaDelete.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            string clearText = iaClear.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            string caretNextText = iaCaretNext.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
+            string caretPrevText = iaCaretPrev.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
+            
+            
             if (!textEntryActive)
             {
                 string info =
-                    $"[Enter] Write Custom Text";
+                    $"Write Custom Text {enterText} | Drag Rect Corners {dragText}";
                 font.DrawText(info, top, 4f, new Vector2(0.5f, 0.5f), ColorLight);
 
-                string alignmentInfo = $"[W] Font: {GAMELOOP.GetFontName(fontIndex)} | [A/D] Font Spacing: {fontSpacing} | [S] Alignment: {curAlignement}";
+                string alignmentInfo = $"{nextFontText} Font: {GAMELOOP.GetFontName(fontIndex)} | [{decreaseFontSpacingText}/{increaseFontSpacingText}] Font Spacing: {fontSpacing} | {nextAlignementText} Alignment: {curAlignement}";
                 font.DrawText(alignmentInfo, bottom, 4f, new Vector2(0.5f, 0.5f), ColorLight);
             }
             else
             {
-                string info = "[ESC] Cancel | [Enter] Accept | [Del] Clear Text";
-                font.DrawText($"Text Entry Mode Active | Caret Position {textBox.CaretIndex}", top, 4f, new Vector2(0.5f, 0.5f), ColorHighlight3);
+                string info = $"Cancel {cancelText} | Accept {finishText} | Clear Text {clearText} | Delete {deleteText} | Backspace {backspaceText}";
+                font.DrawText($"Text Entry Mode Active | [{caretPrevText}/{caretNextText}] Caret Position {textBox.CaretIndex}", top, 4f, new Vector2(0.5f, 0.5f), ColorHighlight3);
                 font.DrawText(info, bottom, 4f, new Vector2(0.5f, 0.5f), ColorLight);
             }
         }
