@@ -68,9 +68,9 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
             unicode = Raylib.GetCharPressed();
         }
 
-        StringBuilder b = new(chars.Count);
-        b.Append(chars);
-        return b.ToString();
+        // StringBuilder b = new(chars.Count);
+        // b.Append(chars);
+        return new string(chars.ToArray());// b.ToString();
     }
     public string GetStream(string curText)
     {
@@ -79,7 +79,7 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
         var chars = GetStreamChar();
         var b = new StringBuilder(chars.Count + curText.Length);
         b.Append(curText);
-        b.Append(chars);
+        b.Append( new string(chars.ToArray()) );
         return b.ToString();
     }
     public (string text, int caretIndex) GetStream(string curText, int caretIndex)

@@ -2,6 +2,7 @@
 using ShapeEngine.Lib;
 using Raylib_CsLo;
 using System.Numerics;
+using System.Text;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
@@ -50,6 +51,7 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void DrawText(Rect rect)
         {
+            
             float fontSize = rect.Width * 0.07f;
             font.DrawText(textBox.Text, fontSize, fontSpacing, rect.GetPoint(curAlignement), curAlignement, ColorHighlight1);
         }
