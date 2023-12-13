@@ -712,7 +712,7 @@ namespace Examples.Scenes.ExampleScenes
         
         public override void Activate(IScene oldScene)
         {
-            InputAction.LockWhitelist(GAMELOOP.GameloopAccessTag);
+            InputAction.LockWhitelist(GAMELOOP.GameloopAccessTag, InputAction.DefaultAccessTag);
         }
 
         public override void Deactivate()

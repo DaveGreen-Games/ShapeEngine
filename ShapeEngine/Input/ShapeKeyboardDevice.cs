@@ -11,6 +11,9 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
     private bool wasUsed = false;
     private bool isLocked = false;
 
+    public readonly List<char> UsedCharacters = new();
+    public readonly List<ShapeKeyboardButton> UsedButtons = new();
+    
     // private readonly Dictionary<ShapeKeyboardButton, InputState> buttonStates = new();
     internal ShapeKeyboardDevice() { }
     
@@ -30,6 +33,22 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
     
     public void Update()
     {
+        UsedButtons.Clear();
+        var keycode = Raylib.GetKeyPressed();
+        while (keycode > 0)
+        {
+            UsedButtons.Add((ShapeKeyboardButton)keycode);
+            keycode = Raylib.GetKeyPressed();
+        }
+        
+        UsedCharacters.Clear();
+        var unicode = Raylib.GetCharPressed();
+        while (unicode > 0)
+        {
+            UsedCharacters.Add((char)unicode);
+            unicode = Raylib.GetCharPressed();
+        }
+        
         wasUsed = WasKeyboardUsed();
         // foreach (var buttonStatePair in buttonStates)
         // {
@@ -40,57 +59,57 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
     }
     
     public void Calibrate(){}
+    
     public List<char> GetStreamChar()
     {
         if (isLocked) return new List<char>();
-        int unicode = Raylib.GetCharPressed();
-        List<char> chars = new();
-        while (unicode != 0)
-        {
-            var c = (char)unicode;
-            chars.Add(c);
-
-            unicode = Raylib.GetCharPressed();
-        }
-        return chars;
+        return UsedCharacters.ToList();
+        // int unicode = Raylib.GetCharPressed();
+        // List<char> chars = new();
+        // while (unicode != 0)
+        // {
+        //     var c = (char)unicode;
+        //     chars.Add(c);
+        //
+        //     unicode = Raylib.GetCharPressed();
+        // }
+        // return chars;
     }
     public string GetStream()
     {
         if (isLocked) return string.Empty;
-        
-        int unicode = Raylib.GetCharPressed();
-        List<char> chars = new();
-        while (unicode != 0)
-        {
-            var c = (char)unicode;
-            chars.Add(c);
-
-            unicode = Raylib.GetCharPressed();
-        }
-
-        // StringBuilder b = new(chars.Count);
-        // b.Append(chars);
-        return new string(chars.ToArray());// b.ToString();
+        return new string(UsedCharacters.ToArray());
+        // int unicode = Raylib.GetCharPressed();
+        // List<char> chars = new();
+        // while (unicode != 0)
+        // {
+        //     var c = (char)unicode;
+        //     chars.Add(c);
+        //
+        //     unicode = Raylib.GetCharPressed();
+        // }
+        // return new string(chars.ToArray());
     }
     public string GetStream(string curText)
     {
         if (isLocked) return curText;;
-        
-        var chars = GetStreamChar();
-        var b = new StringBuilder(chars.Count + curText.Length);
+        var b = new StringBuilder(UsedCharacters.Count + curText.Length);
         b.Append(curText);
-        b.Append( new string(chars.ToArray()) );
+        b.Append( new string(UsedCharacters.ToArray()) );
         return b.ToString();
+        // var chars = GetStreamChar();
+        // var b = new StringBuilder(chars.Count + curText.Length);
+        // b.Append(curText);
+        // b.Append( new string(chars.ToArray()) );
+        // return b.ToString();
     }
     public (string text, int caretIndex) GetStream(string curText, int caretIndex)
     {
         if (isLocked) return (curText, caretIndex);
-        
         var characters = curText.ToList();
-        int unicode = Raylib.GetCharPressed();
-        while (unicode != 0)
+        for (int i = 0; i < UsedCharacters.Count; i++)
         {
-            var c = (char)unicode;
+            var c = characters[i];
             if (caretIndex < 0 || caretIndex >= characters.Count) characters.Add(c);
             else
             {
@@ -98,12 +117,29 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
 
             }
             caretIndex++;
-            unicode = Raylib.GetCharPressed();
         }
-
         return (new string(characters.ToArray()), caretIndex);
+        
+        
+        // var characters = curText.ToList();
+        // int unicode = Raylib.GetCharPressed();
+        // while (unicode != 0)
+        // {
+        //     var c = (char)unicode;
+        //     if (caretIndex < 0 || caretIndex >= characters.Count) characters.Add(c);
+        //     else
+        //     {
+        //         characters.Insert(caretIndex, c);
+        //
+        //     }
+        //     caretIndex++;
+        //     unicode = Raylib.GetCharPressed();
+        // }
+        //
+        // return (new string(characters.ToArray()), caretIndex);
     }
-    private bool WasKeyboardUsed() => !isLocked && Raylib.GetKeyPressed() > 0;
+
+    private bool WasKeyboardUsed() => !isLocked && UsedButtons.Count > 0;// Raylib.GetKeyPressed() > 0;
 
     #region Button
 
