@@ -9,219 +9,64 @@ using ShapeEngine.Input;
 
 namespace Examples.Scenes.ExampleScenes
 {
-    public class TextScalingExample : ExampleScene
+    public class TextScalingExample : TextExampleScene
     {
-        Vector2 topLeft = new();
-        Vector2 bottomRight = new();
-
-        bool mouseInsideTopLeft = false;
-        bool mouseInsideBottomRight = false;
-
-        bool draggingTopLeft = false;
-        bool draggingBottomRight = false;
-
-        float pointRadius = 8f;
-        float interactionRadius = 24f;
-
-        string text = "Longer Test Text.";
-        string prevText = string.Empty;
+        // string text = "Longer Test Text.";
+        // string prevText = string.Empty;
         int fontSpacing = 1;
-        int maxFontSpacing = 50;
-        Font font;
-        int fontIndex = 0;
-        bool textEntryActive = false;
+        int maxFontSpacing = 15;
+        private readonly InputAction iaDeacreaseFontSpacing;
+        private readonly InputAction iaIncreaseFontSpacing;
 
-        public TextScalingExample()
+        public TextScalingExample() : base()
         {
             Title = "Text Scaling Example";
             var s = GAMELOOP.UI.Area.Size;
-            topLeft = s * new Vector2(0.1f, 0.1f);
-            bottomRight = s * new Vector2(0.9f, 0.8f);
-            font = GAMELOOP.GetFont(fontIndex);
-        }
-        public override void OnWindowSizeChanged(DimensionConversionFactors conversionFactors)
-        {
-            topLeft *= conversionFactors.Factor;
-            bottomRight *= conversionFactors.Factor;
-        }
-        public override void Activate(IScene oldScene)
-        {
-            var s = GAMELOOP.UI.Area.Size;
-            topLeft = s * new Vector2(0.1f, 0.1f);
-            bottomRight = s * new Vector2(0.9f, 0.8f);
-        }
-        
-        
-        protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
-        {
-            if (textEntryActive)
-            {
-                if (IsKeyPressed(KeyboardKey.KEY_ESCAPE))
-                {
-                    textEntryActive = false;
-                    InputAction.Unlock();
-                    text = prevText;
-                    prevText = string.Empty;
-                }
-                else if (IsKeyPressed(KeyboardKey.KEY_ENTER))
-                {
-                    InputAction.Unlock();
-                    textEntryActive = false;
-                    if (text.Length <= 0) text = prevText;
-                    prevText = string.Empty;
-                }
-                else if (IsKeyPressed(KeyboardKey.KEY_DELETE))
-                {
-                    text = string.Empty;
-                }
-                else
-                {
-                    text = ShapeText.GetTextInput(text);
-                }
-            }
-            else
-            {
-                if (IsKeyPressed(KeyboardKey.KEY_ENTER))
-                {
-                    textEntryActive = true;
-                    InputAction.Lock();
-                    draggingBottomRight = false;
-                    draggingTopLeft = false;
-                    mouseInsideBottomRight = false;
-                    mouseInsideTopLeft = false;
-                    prevText = text;
-                    //text = string.Empty;
-                    return;
-                }
-                if (IsKeyPressed(KeyboardKey.KEY_W)) NextFont();
-
-                if (IsKeyPressed(KeyboardKey.KEY_D)) ChangeFontSpacing(1);
-                else if (IsKeyPressed(KeyboardKey.KEY_A)) ChangeFontSpacing(-1);
-
-                if (mouseInsideTopLeft)
-                {
-                    if (draggingTopLeft)
-                    {
-                        if (IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT)) draggingTopLeft = false;
-                    }
-                    else
-                    {
-                        if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)) draggingTopLeft = true;
-                    }
-
-                }
-                else if (mouseInsideBottomRight)
-                {
-                    if (draggingBottomRight)
-                    {
-                        if (IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT)) draggingBottomRight = false;
-                    }
-                    else
-                    {
-                        if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)) draggingBottomRight = true;
-                    }
-                }
-
-            }
-        }
-        protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
-        {
-            if (textEntryActive) return;
-            if (draggingTopLeft || draggingBottomRight)
-            {
-                if (draggingTopLeft) topLeft = ui.MousePos;
-                else if (draggingBottomRight) bottomRight = ui.MousePos;
-            }
-            else
-            {
-                float topLeftDisSq = (topLeft - ui.MousePos).LengthSquared();
-                mouseInsideTopLeft = topLeftDisSq <= interactionRadius * interactionRadius;
-
-                if (!mouseInsideTopLeft)
-                {
-                    float bottomRightDisSq = (bottomRight - ui.MousePos).LengthSquared();
-                    mouseInsideBottomRight = bottomRightDisSq <= interactionRadius * interactionRadius;
-                }
-            }
-
-        }
-
-        protected override bool IsCancelAllowed()
-        {
-            return !textEntryActive;
-        }
-
-        protected override void DrawGameUIExample(ScreenInfo ui)
-        {
-            Rect r = new(topLeft, bottomRight);
-            r.DrawLines(3f, ColorMedium);
-            font.DrawText(text, r, fontSpacing, new Vector2(0.5f, 0.5f), ColorHighlight1);
-
-            if (!textEntryActive)
-            {
-                Circle topLeftPoint = new(topLeft, pointRadius);
-                Circle topLeftInteractionCircle = new(topLeft, interactionRadius);
-                if (draggingTopLeft)
-                {
-                    topLeftInteractionCircle.Draw(ColorHighlight2);
-                }
-                else if (mouseInsideTopLeft)
-                {
-                    topLeftPoint.Draw(ColorMedium);
-                    topLeftInteractionCircle.Radius *= 2f;
-                    topLeftInteractionCircle.DrawLines(2f, ColorHighlight2, 4f);
-                }
-                else
-                {
-                    topLeftPoint.Draw(ColorMedium);
-                    topLeftInteractionCircle.DrawLines(2f, ColorMedium, 4f);
-                }
-
-                Circle bottomRightPoint = new(bottomRight, pointRadius);
-                Circle bottomRightInteractionCircle = new(bottomRight, interactionRadius);
-                if (draggingBottomRight)
-                {
-                    bottomRightInteractionCircle.Draw(ColorHighlight2);
-                }
-                else if (mouseInsideBottomRight)
-                {
-                    bottomRightPoint.Draw(ColorMedium);
-                    bottomRightInteractionCircle.Radius *= 2f;
-                    bottomRightInteractionCircle.DrawLines(2f, ColorHighlight2, 4f);
-                }
-                else
-                {
-                    bottomRightPoint.Draw(ColorMedium);
-                    bottomRightInteractionCircle.DrawLines(2f, ColorMedium, 4f);
-                }
-            }
-
+            textBox.EmptyText = "Longer Test Text";
+            var decreaseFontSpacingKB = new InputTypeKeyboardButton(ShapeKeyboardButton.S);
+            var decreaseFontSpacingGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN);
+            iaDeacreaseFontSpacing = new(accessTagTextBox,decreaseFontSpacingKB, decreaseFontSpacingGP);
             
+            var increaseFontSpacingKB = new InputTypeKeyboardButton(ShapeKeyboardButton.W);
+            var increaseFontSpacingGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP);
+            iaIncreaseFontSpacing = new(accessTagTextBox,increaseFontSpacingKB, increaseFontSpacingGP);
+            
+            inputActions.Add(iaDeacreaseFontSpacing);
+            inputActions.Add(iaIncreaseFontSpacing);
+            
+            topLeft = s * new Vector2(0.025f, 0.2f);
+            bottomRight = s * new Vector2(0.975f, 0.35f);
         }
 
        
-        protected override void DrawUIExample(ScreenInfo ui)
+        protected override void HandleInputTextEntryInactive(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            var rects = GAMELOOP.UIRects.GetRect("bottom center").SplitV(0.35f);
-            DrawDescription(rects.top, rects.bottom);
-           
+            if (iaIncreaseFontSpacing.State.Pressed) ChangeFontSpacing(1);
+            else if (iaDeacreaseFontSpacing.State.Pressed) ChangeFontSpacing(-1);
         }
-        private void DrawDescription(Rect top, Rect bottom)
+
+        protected override void DrawText(Rect rect)
         {
-            if (!textEntryActive)
-            {
-                string info =
-                    $"[W] Font: {GAMELOOP.GetFontName(fontIndex)} | [A/D] Font Spacing: {fontSpacing} | [Enter] Write Custom Text";
-                font.DrawText(info, bottom, 4f, new Vector2(0.5f, 0.5f), ColorLight);
-                font.DrawText("Text Visualization Active", top, 4f, new Vector2(0.5f, 0.5f), ColorMedium);
-            }
-            else
-            {
-                string info = "[ESC] Cancel | [Enter] Accept | [Del] Clear Text";
-                font.DrawText("Text Entry Mode Active", top, 4f, new Vector2(0.5f, 0.5f), ColorHighlight3);
-                font.DrawText(info, bottom, 4f, new Vector2(0.5f, 0.5f), ColorLight);
-            }
+            font.DrawText(textBox.Text, rect, fontSpacing, new Vector2(0.5f, 0.5f), ColorHighlight1);
         }
+
+        protected override void DrawTextEntry(Rect rect)
+        {
+            font.DrawText(textBox.Text, rect, fontSpacing, new Vector2(0.5f, 0.5f), ColorLight);
+            
+            if(textBox.CaretVisible)
+                font.DrawCaret(textBox.Text, rect, fontSpacing, new Vector2(0.5f, 0.5f), textBox.CaretIndex, 5f, ColorHighlight2);
+        }
+
+        protected override void DrawInputDescriptionBottom(Rect rect)
+        {
+            var curInputDeviceNoMouse = ShapeInput.CurrentInputDeviceTypeNoMouse;
+            string decreaseFontSpacingText = iaDeacreaseFontSpacing.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
+            string increaseFontSpacingText = iaIncreaseFontSpacing.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
+            string alignmentInfo = $"Font Spacing [{decreaseFontSpacingText}/{increaseFontSpacingText}] ({fontSpacing})";
+            font.DrawText(alignmentInfo, rect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
+        }
+
 
         private void ChangeFontSpacing(int amount)
         {
@@ -229,20 +74,7 @@ namespace Examples.Scenes.ExampleScenes
             if (fontSpacing < 0) fontSpacing = maxFontSpacing;
             else if (fontSpacing > maxFontSpacing) fontSpacing = 0;
         }
-        private void NextFont()
-        {
-            int fontCount = GAMELOOP.GetFontCount();
-            fontIndex++;
-            if (fontIndex >= fontCount) fontIndex = 0;
-            font = GAMELOOP.GetFont(fontIndex);
-        }
-        private void PrevFont()
-        {
-            int fontCount = GAMELOOP.GetFontCount();
-            fontIndex--;
-            if (fontIndex < 0) fontIndex = fontCount - 1;
-            font = GAMELOOP.GetFont(fontIndex);
-        }
+        
     }
 
 }

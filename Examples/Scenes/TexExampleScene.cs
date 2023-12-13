@@ -11,8 +11,8 @@ namespace Examples.Scenes
     public class TextExampleScene : ExampleScene
     {
         #region Members
-        private Vector2 topLeft = new();
-        private Vector2 bottomRight = new();
+        protected Vector2 topLeft = new();
+        protected Vector2 bottomRight = new();
 
         private bool mouseInsideTopLeft = false;
         private bool mouseInsideBottomRight = false;
