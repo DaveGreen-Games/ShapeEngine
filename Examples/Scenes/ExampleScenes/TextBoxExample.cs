@@ -26,7 +26,7 @@ namespace Examples.Scenes.ExampleScenes
             Title = "Text Box Example";
             
             var nextAlignementKB = new InputTypeKeyboardButton(ShapeKeyboardButton.D);
-            var nextAlignementGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
+            var nextAlignementGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT);
             iaNextAlignement = new(accessTagTextBox,nextAlignementKB, nextAlignementGP);
             
             var decreaseFontSpacingKB = new InputTypeKeyboardButton(ShapeKeyboardButton.S);

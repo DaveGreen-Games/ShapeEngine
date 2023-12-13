@@ -90,6 +90,11 @@ namespace ShapeEngine.Lib
         #endregion
         
         #region Start / End / Delete Entry
+
+        public void SetEnteredText(string newEnteredText)
+        {
+            EnteredText = newEnteredText;
+        }
         public bool StartEntry()
         {
             if (Active) return false;

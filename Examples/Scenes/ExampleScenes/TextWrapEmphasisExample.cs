@@ -1,279 +1,180 @@
 ﻿
 using ShapeEngine.Lib;
 using Raylib_CsLo;
-using ShapeEngine.Core;
 using System.Numerics;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Screen;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
 
 namespace Examples.Scenes.ExampleScenes
 {
-    public class TextWrapEmphasisExample : ExampleScene
+    public class TextWrapEmphasisExample : TextExampleScene
     {
-        Vector2 topLeft = new();
-        Vector2 bottomRight = new();
 
-        bool mouseInsideTopLeft = false;
-        bool mouseInsideBottomRight = false;
 
-        bool draggingTopLeft = false;
-        bool draggingBottomRight = false;
-
-        float pointRadius = 8f;
-        float interactionRadius = 24f;
-
-        string text = "Damaging an enemy with Rupture creates a pool that does Bleed damage over 6 seconds. Enemies in the pool take 10% increased Bleed damage.";
+        //string text = "Damaging an enemy with Rupture creates a pool that does Bleed damage over 6 seconds. Enemies in the pool take 10% increased Bleed damage.";
         int lineSpacing = 0;
-        int lineSpacingIncrement = 5;
-        int maxLineSpacing = 100;
+        private const int lineSpacingIncrement = 1;
+        private const int maxLineSpacing = 15;
 
         int fontSpacing = 0;
-        int fontSpacingIncrement = 5;
-        int maxFontSpacing = 100;
+        private const int fontSpacingIncrement = 1;
+        private const int maxFontSpacing = 15;
 
-        int fontSize = 50;
-        int fontSizeIncrement = 25;
-        int maxFontSize = 300;
-        Font font;
-        int fontIndex = 0;
+        private const int fontSizeBase = 30;
+        private const int fontSizeIncrement = 5;
+        private const int maxFontSize = 90;
+        int fontSize = fontSizeBase;
+        
+        
         bool wrapModeChar = true;
         bool autoSize = false;
-        bool textEntryActive = false;
-        string prevText = string.Empty;
 
         WordEmphasis baseEmphasis = new(ColorHighlight1);
         WordEmphasis skill = new(ShapeColor.HexToColor("E7A09B"), 4);
         WordEmphasis bleed = new(ColorHighlight2, TextEmphasisType.Line, TextEmphasisAlignement.Boxed, 10, 11, 22, 23);
         WordEmphasis numbers = new(ColorLight, 13, 14, 20, 100);
 
-        public TextWrapEmphasisExample()
+        private readonly InputAction iaChangeFontSpacing;
+        private readonly InputAction iaChangeLineSpacing;
+        private readonly InputAction iaChangeFontSize;
+        
+        private readonly InputAction iaToggleAutoSize;
+        private readonly InputAction iaToggleWrapMode;
+        public TextWrapEmphasisExample() : base()
         {
             Title = "Text Wrap Multi Color Example";
-            var s = GAMELOOP.UI.Area.Size;
-            topLeft = s * new Vector2(0.1f, 0.1f);
-            bottomRight = s * new Vector2(0.9f, 0.8f);
-            font = GAMELOOP.GetFont(fontIndex);
+            textBox.EmptyText = "Enter Text...";
+            textBox.SetEnteredText("Damaging an enemy with Rupture creates a pool that does Bleed damage over 6 seconds. Enemies in the pool take 10% increased Bleed damage.");
+            
+            var changeFontSpacingKB = new InputTypeKeyboardButton(ShapeKeyboardButton.S);
+            var changeFontSpacingGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN);
+            iaChangeFontSpacing = new(accessTagTextBox,changeFontSpacingGP, changeFontSpacingKB);
+            
+            var changeLineSpacingKB = new InputTypeKeyboardButton(ShapeKeyboardButton.W);
+            var changeLineSpacingGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP);
+            iaChangeLineSpacing = new(accessTagTextBox,changeLineSpacingGP, changeLineSpacingKB);
+            
+            var changeFontSizeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.D);
+            var changeFontSizeGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT);
+            iaChangeFontSize = new(accessTagTextBox,changeFontSizeGP, changeFontSizeKB);
+            
+            var toggleAutoSizeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
+            var toggleAutoSizeGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
+            iaToggleAutoSize = new(accessTagTextBox,toggleAutoSizeKB, toggleAutoSizeGP);
+            
+            var toggleWrapModeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
+            var toggleWrapModeGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_TOP);
+            iaToggleWrapMode = new(accessTagTextBox,toggleWrapModeKB, toggleWrapModeGP);
+            
+            inputActions.Add(iaChangeFontSpacing);
+            inputActions.Add(iaChangeLineSpacing);
+            inputActions.Add(iaChangeFontSize);
+            inputActions.Add(iaToggleAutoSize);
+            inputActions.Add(iaToggleWrapMode);
         }
-        public override void OnWindowSizeChanged(DimensionConversionFactors conversionFactors)
+
+        protected override void HandleInputTextEntryInactive(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            topLeft *= conversionFactors.Factor;
-            bottomRight *= conversionFactors.Factor;
+            if (iaToggleWrapMode.State.Pressed) wrapModeChar = !wrapModeChar;
+
+            if (iaToggleAutoSize.State.Pressed) autoSize = !autoSize;
+            
+            if (!autoSize && iaChangeFontSize.State.Pressed) ChangeFontSize();
+
+            if (iaChangeFontSpacing.State.Pressed) ChangeFontSpacing();
+
+            if (!autoSize && iaChangeLineSpacing.State.Pressed) ChangeLineSpacing();
         }
-        public override void Activate(IScene oldScene)
+
+        protected override void DrawText(Rect rect)
         {
-            var s = GAMELOOP.UI.Area.Size;
-            topLeft = s * new Vector2(0.1f, 0.1f);
-            bottomRight = s * new Vector2(0.9f, 0.8f);
-        }
-        protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
-        {
-
-            if (textEntryActive)
-            {
-                if (IsKeyPressed(KeyboardKey.KEY_ESCAPE))
-                {
-                    InputAction.Unlock();
-                    textEntryActive = false;
-                    text = prevText;
-                    prevText = string.Empty;
-                }
-                else if (IsKeyPressed(KeyboardKey.KEY_ENTER))
-                {
-                    InputAction.Unlock();
-                    textEntryActive = false;
-                    if (text.Length <= 0) text = prevText;
-                    prevText = string.Empty;
-                }
-                else if (IsKeyPressed(KeyboardKey.KEY_DELETE))
-                {
-                    text = string.Empty;
-                }
-                else
-                {
-                    text = ShapeText.GetTextInput(text);
-                }
-            }
-            else
-            {
-                if (IsKeyPressed(KeyboardKey.KEY_ENTER))
-                {
-                    InputAction.Lock();
-                    textEntryActive = true;
-                    draggingBottomRight = false;
-                    draggingTopLeft = false;
-                    mouseInsideBottomRight = false;
-                    mouseInsideTopLeft = false;
-                    prevText = text;
-                    //text = string.Empty;
-                    return;
-                }
-                if (IsKeyPressed(KeyboardKey.KEY_W)) NextFont();
-
-                if (!autoSize && IsKeyPressed(KeyboardKey.KEY_ONE)) ChangeFontSize();
-
-                if (IsKeyPressed(KeyboardKey.KEY_TWO)) ChangeFontSpacing();
-
-                if (!autoSize && IsKeyPressed(KeyboardKey.KEY_THREE)) ChangeLineSpacing();
-
-                if (IsKeyPressed(KeyboardKey.KEY_Q)) wrapModeChar = !wrapModeChar;
-
-                if (IsKeyPressed(KeyboardKey.KEY_E)) autoSize = !autoSize;
-
-                if (mouseInsideTopLeft)
-                {
-                    if (draggingTopLeft)
-                    {
-                        if (IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT)) draggingTopLeft = false;
-                    }
-                    else
-                    {
-                        if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)) draggingTopLeft = true;
-                    }
-
-                }
-                else if (mouseInsideBottomRight)
-                {
-                    if (draggingBottomRight)
-                    {
-                        if (IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT)) draggingBottomRight = false;
-                    }
-                    else
-                    {
-                        if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)) draggingBottomRight = true;
-                    }
-                }
-            }
-        }
-        protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
-        {
-            if (textEntryActive) return;
-            if (draggingTopLeft || draggingBottomRight)
-            {
-                if (draggingTopLeft) topLeft = ui.MousePos;
-                else if (draggingBottomRight) bottomRight = ui.MousePos;
-            }
-            else
-            {
-                float topLeftDisSq = (topLeft - ui.MousePos).LengthSquared();
-                mouseInsideTopLeft = topLeftDisSq <= interactionRadius * interactionRadius;
-
-                if (!mouseInsideTopLeft)
-                {
-                    float bottomRightDisSq = (bottomRight - ui.MousePos).LengthSquared();
-                    mouseInsideBottomRight = bottomRightDisSq <= interactionRadius * interactionRadius;
-                }
-            }
-
-        }
-        protected override void DrawGameUIExample(ScreenInfo ui)
-        {
-            Rect r = new(topLeft, bottomRight);
-            r.DrawLines(6f, ColorMedium);
+            var text = textBox.Text;
             if (autoSize)
             {
                 if (wrapModeChar)
                 {
                     
-                    font.DrawTextWrappedChar(text, r, fontSpacing, baseEmphasis, skill, bleed, numbers);
+                    font.DrawTextWrappedChar(text, rect, fontSpacing, baseEmphasis, skill, bleed, numbers);
                 }
                 else
                 {
-                    font.DrawTextWrappedWord(text, r, fontSpacing, baseEmphasis, skill, bleed, numbers);
+                    font.DrawTextWrappedWord(text, rect, fontSpacing, baseEmphasis, skill, bleed, numbers);
                 }
             }
             else
             {
                 if (wrapModeChar)
                 {
-                    font.DrawTextWrappedChar(text, r, fontSize, fontSpacing, lineSpacing, baseEmphasis, skill, bleed, numbers);
+                    font.DrawTextWrappedChar(text, rect, fontSize, fontSpacing, lineSpacing, baseEmphasis, skill, bleed, numbers);
                 }
                 else
                 {
-                    font.DrawTextWrappedWord(text, r, fontSize, fontSpacing, lineSpacing, baseEmphasis, skill, bleed, numbers);
-                }
-            }
-
-
-
-
-            if (!textEntryActive)
-            {
-                Circle topLeftPoint = new(topLeft, pointRadius);
-                Circle topLeftInteractionCircle = new(topLeft, interactionRadius);
-
-                Circle bottomRightPoint = new(bottomRight, pointRadius);
-                Circle bottomRightInteractionCircle = new(bottomRight, interactionRadius);
-
-                if (draggingTopLeft)
-                {
-                    topLeftInteractionCircle.Draw(GREEN);
-                }
-                else if (mouseInsideTopLeft)
-                {
-                    topLeftPoint.Draw(ColorMedium);
-                    topLeftInteractionCircle.Radius *= 2f;
-                    topLeftInteractionCircle.DrawLines(2f, ColorHighlight2, 4f);
-                }
-                else
-                {
-                    topLeftPoint.Draw(ColorMedium);
-                    topLeftInteractionCircle.DrawLines(2f, ColorMedium, 4f);
-                }
-
-                if (draggingBottomRight)
-                {
-                    bottomRightInteractionCircle.Draw(ColorHighlight2);
-                }
-                else if (mouseInsideBottomRight)
-                {
-                    bottomRightPoint.Draw(ColorMedium);
-                    bottomRightInteractionCircle.Radius *= 2f;
-                    bottomRightInteractionCircle.DrawLines(2f, GREEN, 4f);
-                }
-                else
-                {
-                    bottomRightPoint.Draw(ColorMedium);
-                    bottomRightInteractionCircle.DrawLines(2f, ColorMedium, 4f);
+                    font.DrawTextWrappedWord(text, rect, fontSize, fontSpacing, lineSpacing, baseEmphasis, skill, bleed, numbers);
                 }
             }
         }
 
-        
-        protected override void DrawUIExample(ScreenInfo ui)
+        protected override void DrawTextEntry(Rect rect)
         {
-            var rects = GAMELOOP.UIRects.GetRect("bottom center").SplitV(0.35f);
-            DrawDescription(rects.top, rects.bottom);
-           
-        }
-        private void DrawDescription(Rect top, Rect bottom)
-        {
-            if (!textEntryActive)
+            var text = textBox.Text;
+            if (autoSize)
             {
-                string textWrapMode = wrapModeChar ? "Char" : "Word";
-                string autoSizeMode = autoSize ? "On" : "Off";
-                var modeInfo =
-                    $"[Q] Mode: {textWrapMode} | [E] Auto Size: {autoSizeMode} | [Enter] Write Custom Text";
-                var fontInfo =
-                    $"[W] Font: {GAMELOOP.GetFontName(fontIndex)} | [1]Font Size: {fontSize} | [2]Font Spacing {fontSpacing} | Line Spacing {lineSpacing}";
-
-                font.DrawText(modeInfo, top, 4f, new Vector2(0.5f, 0.5f), ColorLight);
-
-                font.DrawText(fontInfo, bottom, 4f, new Vector2(0.5f, 0.5f), ColorLight);
+                if (wrapModeChar)
+                {
+                    
+                    font.DrawTextWrappedChar(text, rect, fontSpacing, baseEmphasis, skill, bleed, numbers);
+                }
+                else
+                {
+                    font.DrawTextWrappedWord(text, rect, fontSpacing, baseEmphasis, skill, bleed, numbers);
+                }
             }
             else
             {
-                string info = "[ESC] Cancel | [Enter] Accept | [Del] Clear Text";
-                font.DrawText("Text Entry Mode Active", top, 4f, new Vector2(0.5f, 0.5f), ColorHighlight3);
-                font.DrawText(info, bottom, 4f, new Vector2(0.5f, 0.5f), ColorLight);
+                if (wrapModeChar)
+                {
+                    font.DrawTextWrappedChar(text, rect, fontSize, fontSpacing, lineSpacing, baseEmphasis, skill, bleed, numbers);
+                }
+                else
+                {
+                    font.DrawTextWrappedWord(text, rect, fontSize, fontSpacing, lineSpacing, baseEmphasis, skill, bleed, numbers);
+                }
             }
+            
+            if(textBox.CaretVisible)
+                font.DrawCaret(textBox.Text, rect, fontSize, fontSpacing, new(), textBox.CaretIndex, 5f, ColorHighlight2);
         }
-        protected override bool IsCancelAllowed()
+
+        protected override void DrawInputDescriptionBottom(Rect rect)
         {
-            return !textEntryActive;
+            var curInputDeviceNoMouse = ShapeInput.CurrentInputDeviceTypeNoMouse;
+            
+            string fontSpacingText = iaChangeFontSpacing.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            string autoSizeText = iaToggleAutoSize.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            string wrapModeText = iaToggleWrapMode.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            string textWrapMode = wrapModeChar ? "Char" : "Word";
+            string autoSizeMode = autoSize ? "On" : "Off";
+
+            if (autoSize)
+            {
+                string text = $"Font Spacing {fontSpacingText} ({fontSpacing}) | Wrap Mode {wrapModeText} ({textWrapMode}) | Auto Size {autoSizeText} ({autoSizeMode}))";
+                font.DrawText(text, rect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
+            }
+            else
+            {
+                string fontSizeText = iaChangeFontSize.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+                string lineSpacingText = iaChangeLineSpacing.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+                string text = $"Font Spacing {fontSpacingText} ({fontSpacing}) | Font Size {fontSizeText} ({fontSize}) | Line Spacing {lineSpacingText} ({lineSpacing}) | Wrap Mode {wrapModeText} ({textWrapMode}) | Auto Size {autoSizeText} ({autoSizeMode}))";
+                font.DrawText(text, rect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
+            }
+            
+            
         }
+
+        
+       
         private void ChangeLineSpacing()
         {
             lineSpacing += lineSpacingIncrement;
@@ -289,24 +190,11 @@ namespace Examples.Scenes.ExampleScenes
         private void ChangeFontSize()
         {
             fontSize += fontSizeIncrement;
-            if (fontSize < 50) fontSize = maxFontSize;
-            else if (fontSize > maxFontSize) fontSize = 50;
+            if (fontSize < fontSizeBase) fontSize = maxFontSize;
+            else if (fontSize > maxFontSize) fontSize = fontSizeBase;
         }
 
-        private void NextFont()
-        {
-            int fontCount = GAMELOOP.GetFontCount();
-            fontIndex++;
-            if (fontIndex >= fontCount) fontIndex = 0;
-            font = GAMELOOP.GetFont(fontIndex);
-        }
-        private void PrevFont()
-        {
-            int fontCount = GAMELOOP.GetFontCount();
-            fontIndex--;
-            if (fontIndex < 0) fontIndex = fontCount - 1;
-            font = GAMELOOP.GetFont(fontIndex);
-        }
+        
     }
 
 }
