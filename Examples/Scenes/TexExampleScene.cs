@@ -11,8 +11,10 @@ namespace Examples.Scenes
     public class TextExampleScene : ExampleScene
     {
         #region Members
-        protected Vector2 topLeft = new();
-        protected Vector2 bottomRight = new();
+        protected Vector2 topLeft { get; private set; } = new();
+        protected Vector2 bottomRight { get; private set; } = new();
+        protected Vector2 topLeftRelative = new();
+        protected Vector2 bottomRightRelative = new();
 
         private bool mouseInsideTopLeft = false;
         private bool mouseInsideBottomRight = false;
@@ -45,9 +47,13 @@ namespace Examples.Scenes
         public TextExampleScene()
         {
             Title = "Text Example Scene";
+            
             var s = GAMELOOP.UI.Area.Size;
-            topLeft = s * new Vector2(0.1f, 0.2f);
-            bottomRight = s * new Vector2(0.9f, 0.8f);
+            topLeftRelative = new Vector2(0.1f, 0.2f);
+            bottomRightRelative = new Vector2(0.9f, 0.8f);
+            topLeft = topLeftRelative * s;
+            bottomRight = bottomRightRelative * s;
+            
             font = GAMELOOP.GetFont(fontIndex);
 
             var enterTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ENTER);
@@ -236,22 +242,38 @@ namespace Examples.Scenes
         }
         protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
+            var uiSize = ui.Area.Size;
+            
             if (textEntryActive)
             {
+                topLeft = topLeftRelative * uiSize;
+                bottomRight = bottomRightRelative * uiSize;
                 UpdateExampleTextEntryActive(dt, deltaSlow, game, ui);
                 return;
             }
             
-            float lineThickness = ui.Area.Size.Min() * 0.01f;
+            float lineThickness = uiSize.Min() * 0.01f;
             float interactionRadius = lineThickness * 4;
             
             if (draggingTopLeft || draggingBottomRight)
             {
-                if (draggingTopLeft) topLeft = ui.MousePos;
-                else if (draggingBottomRight) bottomRight = ui.MousePos;
+                if (draggingTopLeft)
+                {
+                    topLeftRelative = (ui.MousePos / uiSize);
+                }
+                else if (draggingBottomRight)
+                {
+                    bottomRightRelative = (ui.MousePos / uiSize);
+                }
+
+                topLeft = topLeftRelative * uiSize;
+                bottomRight = bottomRightRelative * uiSize;
             }
             else
             {
+                topLeft = topLeftRelative * uiSize;
+                bottomRight = bottomRightRelative * uiSize;
+                
                 float topLeftDisSq = (topLeft - ui.MousePos).LengthSquared();
                 mouseInsideTopLeft = topLeftDisSq <= interactionRadius * interactionRadius;
 
@@ -264,10 +286,11 @@ namespace Examples.Scenes
             
             UpdateExampleTextEntryInactive(dt, deltaSlow, game, ui);
         }
-        protected override void DrawGameUIExample(ScreenInfo ui) 
+        protected override void DrawGameUIExample(ScreenInfo ui)
         {
+            var uiSize = ui.Area.Size;
             Rect r = new(topLeft, bottomRight);
-            float lineThickness = ui.Area.Size.Min() * 0.01f;
+            float lineThickness = uiSize.Min() * 0.01f;
             // float fontSize = r.Width * 0.05f;
             float pointRadius = lineThickness * 2f;
             float interactionRadius = lineThickness * 4;
@@ -331,11 +354,11 @@ namespace Examples.Scenes
             DrawDescription(rects.top, rects.bottom);
            
         }
-        public override void OnWindowSizeChanged(DimensionConversionFactors conversionFactors)
-        {
-            topLeft *= conversionFactors.Factor;
-            bottomRight *=  conversionFactors.Factor;
-        }
+        // public override void OnWindowSizeChanged(DimensionConversionFactors conversionFactors)
+        // {
+        //     topLeft *= conversionFactors.Factor;
+        //     bottomRight *=  conversionFactors.Factor;
+        // }
         protected override bool IsCancelAllowed()
         {
             return !textEntryActive;

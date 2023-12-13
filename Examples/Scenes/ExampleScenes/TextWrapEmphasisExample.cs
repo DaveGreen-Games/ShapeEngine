@@ -25,7 +25,7 @@ namespace Examples.Scenes.ExampleScenes
         private const int fontSizeBase = 30;
         private const int fontSizeIncrement = 5;
         private const int maxFontSize = 90;
-        int fontSize = fontSizeBase;
+        int fontSize = fontSizeBase + ((maxFontSize - fontSizeBase) / 2);
         
         
         bool wrapModeChar = true;

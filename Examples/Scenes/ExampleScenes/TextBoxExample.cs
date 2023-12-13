@@ -52,7 +52,7 @@ namespace Examples.Scenes.ExampleScenes
         protected override void DrawText(Rect rect)
         {
             
-            float fontSize = rect.Width * 0.07f;
+            float fontSize = MathF.Abs(rect.Width) * 0.07f;
             font.DrawText(textBox.Text, fontSize, fontSpacing, rect.GetPoint(curAlignement), curAlignement, ColorHighlight1);
         }
 

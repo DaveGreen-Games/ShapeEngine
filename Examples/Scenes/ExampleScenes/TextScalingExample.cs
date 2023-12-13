@@ -34,8 +34,8 @@ namespace Examples.Scenes.ExampleScenes
             inputActions.Add(iaDeacreaseFontSpacing);
             inputActions.Add(iaIncreaseFontSpacing);
             
-            topLeft = s * new Vector2(0.025f, 0.2f);
-            bottomRight = s * new Vector2(0.975f, 0.35f);
+            topLeftRelative = new Vector2(0.025f, 0.2f);
+            bottomRightRelative = new Vector2(0.975f, 0.35f);
         }
 
        
