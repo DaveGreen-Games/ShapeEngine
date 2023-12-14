@@ -10,263 +10,95 @@ using ShapeEngine.Input;
 
 namespace Examples.Scenes.ExampleScenes
 {
-    public class WordEmphasisDynamicExample : ExampleScene
+    public class WordEmphasisDynamicExample : TextExampleScene
     {
-        Vector2 topLeft = new();
-        Vector2 bottomRight = new();
 
-        bool mouseInsideTopLeft = false;
-        bool mouseInsideBottomRight = false;
-
-        bool draggingTopLeft = false;
-        bool draggingBottomRight = false;
-
-        float pointRadius = 8f;
-        float interactionRadius = 24f;
-
-        int fontSpacing = 1;
-        int maxFontSpacing = 50;
-        Font font;
-        int fontIndex = 0;
+        private int fontSpacing = 1;
+        private const int maxFontSpacing = 15;
 
         TextEmphasisType curEmphasisType = TextEmphasisType.Corner;
         TextEmphasisAlignement curEmphasisAlignement = TextEmphasisAlignement.TopLeft;
         Vector2 curAlignement = new(0.5f, 0.5f);
         int curAlignementIndex = 8;
 
-        bool textEntryActive = false;
-        string text = "Longer Test Text.";
-        string prevText = string.Empty;
+        private readonly InputAction iaNextAlignement;
+        // private readonly InputAction iaIncreaseFontSpacing;
+        private readonly InputAction iaNextEmphasisAlignement;
+        private readonly InputAction iaNextEmphasisType;
+        
         public WordEmphasisDynamicExample()
         {
             Title = "Word Emphasis Dynamic Example";
-            var s = GAMELOOP.UI.Area.Size;
-            topLeft = s * new Vector2(0.1f, 0.1f);
-            bottomRight = s * new Vector2(0.9f, 0.8f);
-            font = GAMELOOP.GetFont(fontIndex);
-        }
-        public override void OnWindowSizeChanged(DimensionConversionFactors conversionFactors)
-        {
-            topLeft *= conversionFactors.Factor;
-            bottomRight *= conversionFactors.Factor;
-        }
-        public override void Activate(IScene oldScene)
-        {
-            var s = GAMELOOP.UI.Area.Size;
-            topLeft = s * new Vector2(0.1f, 0.1f);
-            bottomRight = s * new Vector2(0.9f, 0.8f);
-        }
-        protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
-        {
-
-            if (textEntryActive)
-            {
-                if (IsKeyPressed(KeyboardKey.KEY_ESCAPE))
-                {
-                    InputAction.Unlock();
-                    textEntryActive = false;
-                    text = prevText;
-                    prevText = string.Empty;
-                }
-                else if (IsKeyPressed(KeyboardKey.KEY_ENTER))
-                {
-                    InputAction.Unlock();
-                    textEntryActive = false;
-                    if (text.Length <= 0) text = prevText;
-                    prevText = string.Empty;
-                }
-                else if (IsKeyPressed(KeyboardKey.KEY_DELETE))
-                {
-                    text = string.Empty;
-                }
-                else
-                {
-                    text = ShapeText.GetTextInput(text);
-                }
-            }
-            else
-            {
-                if (IsKeyPressed(KeyboardKey.KEY_ENTER))
-                {
-                    InputAction.Lock();
-                    textEntryActive = true;
-                    draggingBottomRight = false;
-                    draggingTopLeft = false;
-                    mouseInsideBottomRight = false;
-                    mouseInsideTopLeft = false;
-                    prevText = text;
-                    //text = string.Empty;
-                    return;
-                }
-
-                if (IsKeyPressed(KeyboardKey.KEY_W)) NextFont();
-
-                if (IsKeyPressed(KeyboardKey.KEY_D)) ChangeFontSpacing(1);
-                else if (IsKeyPressed(KeyboardKey.KEY_A)) ChangeFontSpacing(-1);
-
-                if (IsKeyPressed(KeyboardKey.KEY_Q)) NextTextEmphasisType();
-                if (IsKeyPressed(KeyboardKey.KEY_E)) NextTextEmphasisAlignement();
-                if (IsKeyPressed(KeyboardKey.KEY_S)) NextAlignement();
-
-                if (mouseInsideTopLeft)
-                {
-                    if (draggingTopLeft)
-                    {
-                        if (IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT)) draggingTopLeft = false;
-                    }
-                    else
-                    {
-                        if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)) draggingTopLeft = true;
-                    }
-
-                }
-                else if (mouseInsideBottomRight)
-                {
-                    if (draggingBottomRight)
-                    {
-                        if (IsMouseButtonReleased(MouseButton.MOUSE_BUTTON_LEFT)) draggingBottomRight = false;
-                    }
-                    else
-                    {
-                        if (IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT)) draggingBottomRight = true;
-                    }
-                }
-
-            }
-        }
-        protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
-        {
-            if (textEntryActive) return;
-            if (draggingTopLeft || draggingBottomRight)
-            {
-                if (draggingTopLeft) topLeft = ui.MousePos;
-                else if (draggingBottomRight) bottomRight = ui.MousePos;
-            }
-            else
-            {
-                float topLeftDisSq = (topLeft - ui.MousePos).LengthSquared();
-                mouseInsideTopLeft = topLeftDisSq <= interactionRadius * interactionRadius;
-
-                if (!mouseInsideTopLeft)
-                {
-                    float bottomRightDisSq = (bottomRight - ui.MousePos).LengthSquared();
-                    mouseInsideBottomRight = bottomRightDisSq <= interactionRadius * interactionRadius;
-                }
-            }
-
-        }
-        protected override void DrawGameUIExample(ScreenInfo ui)
-        {
-            Vector2 uiSize = ui.Area.Size;
-            Rect r = new(topLeft, bottomRight);
-            r.DrawLines(6f, ColorMedium);
-
-            DrawCross(r.GetPoint(curAlignement), 100f);
-
-            Color emphasisColor = textEntryActive ? ColorHighlight2 : ColorHighlight1;
-            WordEmphasis we = new(emphasisColor, curEmphasisType, curEmphasisAlignement);
-            font.DrawWord(text, r, fontSpacing, curAlignement, we);
             
+            var nextAlignementKB = new InputTypeKeyboardButton(ShapeKeyboardButton.S);
+            var nextAlignementGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN);
+            iaNextAlignement = new(accessTagTextBox,nextAlignementKB, nextAlignementGP);
             
-
-            if (!textEntryActive)
-            {
-                Circle topLeftPoint = new(topLeft, pointRadius);
-                Circle topLeftInteractionCircle = new(topLeft, interactionRadius);
-                if (draggingTopLeft)
-                {
-                    topLeftInteractionCircle.Draw(ColorHighlight2);
-                }
-                else if (mouseInsideTopLeft)
-                {
-                    topLeftPoint.Draw(ColorMedium);
-                    topLeftInteractionCircle.Radius *= 2f;
-                    topLeftInteractionCircle.DrawLines(2f, ColorHighlight2, 4f);
-                }
-                else
-                {
-                    topLeftPoint.Draw(ColorMedium);
-                    topLeftInteractionCircle.DrawLines(2f, ColorMedium, 4f);
-                }
-
-                Circle bottomRightPoint = new(bottomRight, pointRadius);
-                Circle bottomRightInteractionCircle = new(bottomRight, interactionRadius);
-                if (draggingBottomRight)
-                {
-                    bottomRightInteractionCircle.Draw(ColorHighlight2);
-                }
-                else if (mouseInsideBottomRight)
-                {
-                    bottomRightPoint.Draw(ColorMedium);
-                    bottomRightInteractionCircle.Radius *= 2f;
-                    bottomRightInteractionCircle.DrawLines(2f, ColorHighlight2, 4f);
-                }
-                else
-                {
-                    bottomRightPoint.Draw(ColorMedium);
-                    bottomRightInteractionCircle.DrawLines(2f, ColorMedium, 4f);
-                }
-
-                // string info2 = String.Format("[S] Text Align: {0} | [Q] Type: {1} | [E] Align: {2}", curAlignement, curEmphasisType, curEmphasisAlignement);
-                // Rect infoRect2 = new(uiSize * new Vector2(0.5f, 0.95f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
-                // font.DrawText(info2, infoRect2, 4f, new Vector2(0.5f, 0.5f), ColorLight);
-
-                // string info = String.Format("[W] Font: {0} | [A/D] Font Spacing: {1} | [Enter] Write Custom Text", GAMELOOP.GetFontName(fontIndex), fontSpacing);
-                // Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
-                // font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
-            }
-            // else
-            // {
-            //     string info = "TEXT ENTRY MODE ACTIVE | [ESC] Cancel | [Enter] Accept | [Del] Clear Text";
-            //     Rect infoRect = new(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.075f), new Vector2(0.5f, 1f));
-            //     font.DrawText(info, infoRect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
-            // }
+            // var increaseFontSpacingKB = new InputTypeKeyboardButton(ShapeKeyboardButton.W);
+            // var increaseFontSpacingGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP);
+            // iaIncreaseFontSpacing = new(accessTagTextBox,increaseFontSpacingGP, increaseFontSpacingKB);
+            
+            var nextEmphasisAlignementKB = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
+            var nextEmphasisAlignementGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT);
+            iaNextEmphasisAlignement = new(accessTagTextBox,nextEmphasisAlignementKB, nextEmphasisAlignementGP);
+            
+            var nextEmphasisKB = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
+            var nextEmphasisGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT);
+            iaNextEmphasisType = new(accessTagTextBox,nextEmphasisKB, nextEmphasisGP);
+            
+            inputActions.Add(iaNextAlignement);
+            // inputActions.Add(iaIncreaseFontSpacing);
+            inputActions.Add(iaNextEmphasisType);
+            inputActions.Add(iaNextEmphasisAlignement);
         }
 
-       
-        protected override void DrawUIExample(ScreenInfo ui)
+        
+        protected override void HandleInputTextEntryInactive(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            var rects = GAMELOOP.UIRects.GetRect("bottom center").SplitV(0.35f);
-            DrawDescription(rects.top, rects.bottom);
-           
-        }
-        private void DrawDescription(Rect top, Rect bottom)
-        {
-            if (!textEntryActive)
-            {
-                string info2 =
-                    $"[S] Text Align: {curAlignement} | [Q] Type: {curEmphasisType} | [E] Align: {curEmphasisAlignement}";
-                font.DrawText(info2, top, 4f, new Vector2(0.5f, 0.5f), ColorLight);
-
-                string info =
-                    $"[W] Font: {GAMELOOP.GetFontName(fontIndex)} | [A/D] Font Spacing: {fontSpacing} | [Enter] Write Custom Text";
-                font.DrawText(info, bottom, 4f, new Vector2(0.5f, 0.5f), ColorLight);
-            }
-            else
-            {
-                string info = "[ESC] Cancel | [Enter] Accept | [Del] Clear Text";
-                font.DrawText("Text Entry Mode Active", top, 4f, new Vector2(0.5f, 0.5f), ColorHighlight3);
-                font.DrawText(info, bottom, 4f, new Vector2(0.5f, 0.5f), ColorLight);
-            }
-        }
-        protected override bool IsCancelAllowed()
-        {
-            return !textEntryActive;
-        }
-        private void ChangeFontSpacing(int amount)
-        {
-            fontSpacing += amount;
-            if (fontSpacing < 0) fontSpacing = maxFontSpacing;
-            else if (fontSpacing > maxFontSpacing) fontSpacing = 0;
-        }
-        private void NextFont()
-        {
-            int fontCount = GAMELOOP.GetFontCount();
-            fontIndex++;
-            if (fontIndex >= fontCount) fontIndex = 0;
-            font = GAMELOOP.GetFont(fontIndex);
+            // if (iaIncreaseFontSpacing.State.Pressed) ChangeFontSpacing(1);
+            if (iaNextEmphasisType.State.Pressed) NextTextEmphasisType();
+            if (iaNextEmphasisAlignement.State.Pressed) NextTextEmphasisAlignement();
+            if (iaNextAlignement.State.Pressed) NextAlignement();
         }
 
+        protected override void DrawText(Rect rect)
+        {
+            DrawCross(rect.GetPoint(curAlignement), 100f);
+
+            WordEmphasis we = new(ColorHighlight1, curEmphasisType, curEmphasisAlignement);
+            font.DrawWord(textBox.Text, rect, fontSpacing, curAlignement, we);
+        }
+
+        protected override void DrawTextEntry(Rect rect)
+        {
+            DrawCross(rect.GetPoint(curAlignement), 100f);
+
+            WordEmphasis we = new(ColorLight, curEmphasisType, curEmphasisAlignement);
+            font.DrawWord(textBox.Text, rect, fontSpacing, curAlignement, we);
+            
+            if(textBox.CaretVisible)
+                font.DrawCaret(textBox.Text, rect, fontSpacing, curAlignement, textBox.CaretIndex, 5f, ColorHighlight2);
+        }
+
+        protected override void DrawInputDescriptionBottom(Rect rect)
+        {
+            var curInputDeviceNoMouse = ShapeInput.CurrentInputDeviceTypeNoMouse;
+            string nextAlignementText = iaNextAlignement.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            // string increaseFontSpacingText = iaIncreaseFontSpacing.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            string nextEmphasisTypeText = iaNextEmphasisType.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            string nextEmphasisAligenmentText = iaNextEmphasisAlignement.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            // string text = $"Font Spacing {increaseFontSpacingText} ({fontSpacing}) | Alignment {nextAlignementText} ({curAlignement}) | Emphasis Type {nextEmphasisTypeText} ({curEmphasisType}) | Emphasis Alignment {nextEmphasisAligenmentText} ({curEmphasisAlignement})";
+            string text = $"Emphasis Type {nextEmphasisTypeText} ({curEmphasisType}) | Emphasis Alignment {nextEmphasisAligenmentText} ({curEmphasisAlignement}) | Alignment {nextAlignementText} ({curAlignement})";
+            font.DrawText(text, rect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
+        }
+        
+        // private void ChangeFontSpacing(int amount)
+        // {
+        //     fontSpacing += amount;
+        //     if (fontSpacing < 0) fontSpacing = maxFontSpacing;
+        //     else if (fontSpacing > maxFontSpacing) fontSpacing = 0;
+        // }
+        //
         private void NextAlignement()
         {
             curAlignementIndex++;
