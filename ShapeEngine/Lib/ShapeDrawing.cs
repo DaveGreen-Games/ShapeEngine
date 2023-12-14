@@ -5,8 +5,8 @@ using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.UI;
 
-namespace ShapeEngine.Lib
-{
+namespace ShapeEngine.Lib;
+
 
     // public struct Label
     // {
@@ -2504,12 +2504,26 @@ namespace ShapeEngine.Lib
         public static void DrawCaret(this Font font, string text, Vector2 topLeft, float fontSize, float fontSpacing, int caretIndex, float caretWidth, Raylib_CsLo.Color caretColor)
         {
             string caretText = text.Substring(0, caretIndex);
-            Vector2 caretTextSize = ShapeDrawing.GetTextSize(font, caretText, fontSize, fontSpacing);
+            var caretTextSize = ShapeDrawing.GetTextSize(font, caretText, fontSize, fontSpacing);
 
-            Vector2 caretTop = topLeft + new Vector2(caretTextSize.X + fontSpacing * 0.5f, 0f);
-            Vector2 caretBottom = topLeft + new Vector2(caretTextSize.X + fontSpacing * 0.5f, fontSize);
-            DrawLineEx(caretTop, caretBottom, caretWidth, caretColor);
+            var caretTop = topLeft + new Vector2(caretTextSize.X + fontSpacing * 0.5f, 0f);
+            var caretBottom = topLeft + new Vector2(caretTextSize.X + fontSpacing * 0.5f, fontSize);
+            // DrawLineEx(caretTop, caretBottom, caretWidth, caretColor);
+            DrawCaret(caretTop, caretBottom, caretWidth, caretColor);
         }
+
+        public static void DrawCaret(Vector2 top, Vector2 bottom, float width, Raylib_CsLo.Color color)
+        {
+            DrawLineEx(top, bottom, width, color);
+        }
+        
+        //a function that calculates caret position (Vector2) with any text and any wrap mode
+        
+        //drawing the caret with wrap mode is more complicated!
+        //basically get substring to caret index and then calculate how far down & how far right the caret top point is
+        
+        
+        
         
         public static void DrawTextBox(this Font font, string emptyText, string text, Rect rect, float fontSpacing, Vector2 textAlignment, Raylib_CsLo.Color textColor, int caretIndex, float caretWidth, Raylib_CsLo.Color caretColor)
         {
@@ -2655,4 +2669,163 @@ namespace ShapeEngine.Lib
         #endregion
 
     }
-}
+
+
+    // public readonly struct FontInfo
+    // {
+    //     public readonly Font Font;
+    //     public readonly float Size;
+    //     public readonly float Spacing;
+    //     public readonly float LineSpacing;
+    //
+    //     public FontInfo(Font font, float fontSize, float fontSpacing, float lineSpacing)
+    //     {
+    //         this.Font = font;
+    //         this.Size = fontSize;
+    //         this.Spacing = fontSpacing;
+    //         this.LineSpacing = lineSpacing;
+    //     }
+    // }
+
+
+    // public class Word
+    // {
+    //     public string Text;
+    //     public int StartIndex;
+    //     public int WordIndex;
+    //
+    //     public Word(string text, int startIndex, int wordIndex)
+    //     {
+    //         this.Text = text;
+    //         this.StartIndex = startIndex;
+    //         this.WordIndex = wordIndex;
+    //     }
+    // }
+    // public class TextBlock
+    // {
+    //     public readonly List<Word> Words;
+    //     
+    //     public TextBlock(string text)
+    //     {
+    //         // text.Split(' ');
+    //         Words = new();
+    //         var curWord = string.Empty;
+    //         int curWordIndex = 0;
+    //         int curWordStartIndex = 0;
+    //
+    //         for (int i = 0; i < text.Length; i++)
+    //         {
+    //             var c = text[i];
+    //             if (c == ' ')
+    //             {
+    //                 if (curWord.Length > 0)
+    //                 {
+    //                     Word w = new(curWord, curWordStartIndex, curWordIndex);
+    //                     Words.Add(w);
+    //                     curWord = string.Empty;
+    //                     curWordStartIndex = 0;
+    //                     curWordIndex++;
+    //                 }
+    //             }
+    //             else
+    //             {
+    //                 if (curWord.Length <= 0) curWordStartIndex = i;
+    //                 curWord += c;
+    //
+    //             }
+    //         }
+    //     }
+    //
+    // }
+
+
+    // public class Word
+    // {
+    //     public readonly Vector2 TopLeft;
+    //     public readonly string Text;
+    //     public readonly float Width;
+    //     public readonly float Height;
+    //     public int Characters => Text.Length;
+    //
+    //     public Word(string text, Vector2 topLeft, Font font, float fontSize, float fontSpacing, float lineSpacing)
+    //     {
+    //         this.TopLeft = topLeft;
+    //         this.Text = text;
+    //         
+    //         var size = ShapeDrawing.GetTextSize(font, text, fontSize, fontSpacing);
+    //         Width = size.X;
+    //         Height = size.Y + lineSpacing;
+    //         
+    //
+    //     }
+    //     public Word(Vector2 topLeft, string text, float width, float height)
+    //     {
+    //         this.TopLeft = topLeft;
+    //         this.Text = text;
+    //         this.Width = width;
+    //         this.Height = height;
+    //     }
+    // }
+    // public class Sentence
+    // {
+    //     public bool Empty => Words.Count <= 0;
+    //     public Vector2 TopLeft;
+    //     public readonly List<Word> Words = new();
+    //     public float Width = 0;
+    //     public float Height = 0;
+    //     public int Characters = 0;
+    //
+    //     public Sentence() { }
+    //     public Sentence(params Word[] words)
+    //     {
+    //         foreach (var word in words)
+    //         {
+    //             Add(word);
+    //         }
+    //     }
+    //     public Sentence(IEnumerable<Word> words)
+    //     {
+    //         foreach (var word in words)
+    //         {
+    //             Add(word);
+    //         }
+    //     }
+    //
+    //     public void Add(Word word)
+    //     {
+    //         if (Empty) TopLeft = word.TopLeft;
+    //         Words.Add(word);
+    //         Width += word.Width;
+    //         Characters += word.Characters;
+    //         Height = MathF.Max(Height, word.Height);
+    //     }
+    //     
+    // }
+    //
+    // public class TextBlock
+    // {
+    //     public bool Empty => Sentences.Count <= 0;
+    //     public Vector2 TopLeft;
+    //     public float Width;
+    //     public float Height;
+    //     public float Length;
+    //     public int Characters;
+    //     
+    //     public readonly List<Sentence> Sentences = new();
+    //
+    //     public TextBlock()
+    //     {
+    //         
+    //     }
+    //
+    //     public void AddSentence(Sentence sentence)
+    //     {
+    //         if (Empty) TopLeft = sentence.TopLeft;
+    //         Sentences.Add(sentence);
+    //         Width = MathF.Max(Width, sentence.Width);
+    //         Height += sentence.Height;
+    //         Length += sentence.Characters;
+    //     }
+    // }
+    //
+    
