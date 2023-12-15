@@ -9,11 +9,10 @@ using ShapeEngine.Input;
 
 namespace Examples.Scenes.ExampleScenes
 {
-    //test alignement!!!!
     public class TextBoxExample : TextExampleScene
     {
         private const int MaxFontSpacing = 12;
-        private int fontSpacing = 1;
+        private int fontSpacing = 0;
         private Vector2 curAlignement = new(0f);
         private int curAlignementIndex = 0;
 

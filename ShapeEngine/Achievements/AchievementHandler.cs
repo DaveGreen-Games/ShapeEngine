@@ -124,14 +124,14 @@ namespace ShapeEngine.Achievements
             if (achieved) rect.DrawLines(3f, achievedColor);// SDrawing.DrawRect(rect, new(0f), 0f, 3f, achievedColor);
             int value = stat.value;
             int max = end;
-            ShapeDrawing.DrawText(font, String.Format("{0}", value), leftTop, 1f, new(0.5f) ,textColor);
-            ShapeDrawing.DrawText(font, String.Format("{0}", max), leftBottom, 1f, new(0.5f),textColor);
+            ShapeText.DrawText(font, String.Format("{0}", value), leftTop, 1f, new(0.5f) ,textColor);
+            ShapeText.DrawText(font, String.Format("{0}", max), leftBottom, 1f, new(0.5f),textColor);
             if (hidden)
             {
-                if(achieved) ShapeDrawing.DrawText(font, displayName, right, 1f, new(0.5f), achieved ? achievedColor : textColor);
-                else ShapeDrawing.DrawText(font, "???", right, 1f, new(0.5f), textColor);
+                if(achieved) ShapeText.DrawText(font, displayName, right, 1f, new(0.5f), achieved ? achievedColor : textColor);
+                else ShapeText.DrawText(font, "???", right, 1f, new(0.5f), textColor);
             }
-            else ShapeDrawing.DrawText(font, displayName, right, 1f, new(0.5f), achieved ? achievedColor : textColor);
+            else ShapeText.DrawText(font, displayName, right, 1f, new(0.5f), achieved ? achievedColor : textColor);
         }
     }
 
