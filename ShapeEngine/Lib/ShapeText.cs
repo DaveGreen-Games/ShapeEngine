@@ -1098,52 +1098,710 @@ public class TextEmphasis
     }
 }
 
-
-
-public class TextWord
+public enum TextWrapType
 {
-    public int StartIndex;
-    public int Length;
-    
+    None = 0,
+    Char = 1,
+    Word = 2
 }
-public class TextLine
+
+
+public class TextBlock
 {
-    public readonly List<Emphasis> Emphases = new();
+    #region Members
+    /// <summary>
+    /// The minimum font size possible for all text drawing functions. 
+    /// </summary>
+    public float FontMinSize = 5f;
+    /// <summary>
+    /// The maximum font size possible for all text drawing functions. 
+    /// </summary>
+    public float FontMaxSize = 150f;
+    /// <summary>
+    /// Factor based on the font size to determine the max line spacing. (1 means line spacing can not exceed the font size)
+    /// </summary>
+    public float LineSpacingMaxFactor = 1f;
+    /// <summary>
+    /// Factor based on the font size to determine the max font spacing. (1 means font spacing can not exceed the font size)
+    /// </summary>
+    public float FontSpacingMaxFactor = 1f;
+    /// <summary>
+    /// Text Wrapping Functions that automatically calculate the font size based on the text and a rect use
+    /// this value to make sure the text fits into the rect. Lower values are more conservative, meaning the make sure
+    /// no text overflows but the rect might not be completely filled. Value range should stay between 0 - 1!
+    /// (Does not affect text drawing functions without word wrap functionality)
+    /// </summary>
+    public float TextWrappingAutoFontSizeSafetyMargin = 0.7f;
+    /// <summary>
+    /// How much is added to the emphasis rect for drawing. 0.05f means 5% of the smaller dimension are added as a margin.
+    /// </summary>
+    public float EmphasisRectMargin = 0.05f;
     
-    public string Text;
-    public Rect Rect;
+    public readonly List<TextEmphasis> Emphases = new();
     
     public Font Font;
-    public float FontSpacing;
-
+    public float FontSpacing = 0;
+    public float LineSpacing = 0;
     public Raylib_CsLo.Color Color;
-    
-    private bool dirty = false;
+    #endregion
 
-
-    //split text into parts if emphasis exist and are found
-    //text block does the same
-    //string split function? 
-    //recalculate if emphasis change or text changes
-
-    public void Draw()
+    #region Main
+    public TextBlock(Font font)
     {
-        //if dirty
-            //calculate dynamic font size
-            //topleft position
-            
+        this.Font = font;
+    }
+    
+    public void Draw(char c, Rect r, Vector2 alignement)
+    {
+        float f = r.Size.Y / Font.baseSize;
+        float fontSize = Font.baseSize * f;
+        var charSize = GetCharSize(c, fontSize);
+        
+        var uiPos = r.GetPoint(alignement);
+        var charRect = new Rect(uiPos, charSize, alignement);
+        
+        Raylib.DrawTextCodepoint(Font, c, charRect.TopLeft, fontSize, Color);
+    }
+    public void Draw(string text, Rect rect, float rotDeg, Vector2 alignement)
+    {
+        var info = GetDynamicFontSize(text, rect.Size);
+        Rect r = new(rect.GetPoint(alignement), info.textSize, alignement);
+        var originOffset = alignement * info.textSize;
+        DrawTextPro(Font, text, r.TopLeft + originOffset, originOffset, rotDeg, info.fontSize, info.fontSpacing, Color);
+    }
+    public void Draw(string text, Rect rect, Vector2 alignement, TextWrapType textWrapType = TextWrapType.None)
+    {
+        if(textWrapType == TextWrapType.None)
+        {
+            DrawTextWrapNone(text, rect, alignement);
+        }
+        else if (textWrapType == TextWrapType.Char)
+        {
+            DrawTextWrapChar(text, rect ,alignement);
+        }
+        else
+        {
+            DrawTextWrapWord(text, rect, alignement);
+        }
         
     }
+    #endregion
+    
+    #region TextSize
+    public (float fontSize, float fontSpacing, Vector2 textSize) GetDynamicFontSize(string text, Vector2 size)
+    {
+        float fontSize = Font.baseSize;
+        float fontSpacing = MathF.Min(FontSpacing, fontSize * FontSpacingMaxFactor);
+        
+        var fontDimensions = MeasureTextEx(Font, text, fontSize, fontSpacing);
+        float fX = size.X / fontDimensions.X;
+        float fY = size.Y / fontDimensions.Y;
+        float f = MathF.Min(fX, fY);
+
+        float scaledFontSize = MathF.Max(fontSize * f, FontMinSize);
+        float scaledFontSpacing = fontSpacing * f;
+        return (scaledFontSize, scaledFontSpacing, GetTextSize(text, scaledFontSize));
+    }
+    public Vector2 GetTextSize(string text, float fontSize)
+    {
+        float totalWidth = 0f;
+
+        for (int i = 0; i < text.Length; i++)
+        {
+            var c = text[i];
+            if (c == '\n') continue;
+            float w = Font.GetCharWidth(c, fontSize);
+            totalWidth += w;
+        }
+        float fontSpacingWidth = (text.Length - 1) * FontSpacing;
+        totalWidth += fontSpacingWidth;
+        return new Vector2(totalWidth, fontSize);
+    }
+    public Vector2 GetCharSize(char c, float fontSize)
+    {
+        var baseSize = GetCharBaseSize(c);
+        float f = fontSize / (float)Font.baseSize;
+        return baseSize * f;
+    }
+    public Vector2 GetCharBaseSize(char c)
+    {
+        unsafe
+        {
+            int index = GetGlyphIndex(Font, c);
+            // var glyphInfo = GetGlyphInfo(font, index);
+            float glyphWidth = (Font.glyphs[index].advanceX == 0) ? Font.recs[index].width : Font.glyphs[index].advanceX;
+            return new Vector2(glyphWidth, Font.baseSize);
+        }
+    }
+    #endregion
+    
+    #region Private
+    private Emphasis? GetEmphasis(string word)
+    {
+        foreach (var e in Emphases)
+        {
+            if (e.HasKeyword(word)) return e.Emphasis;
+        }
+
+        return null;
+    }
+    private void DrawWord(string text, Rect rect, Vector2 alignement, Emphasis emphasis)
+    {
+        var info = GetDynamicFontSize(text, rect.Size);
+        Rect r = new(rect.GetPoint(alignement), info.textSize, alignement);
+        
+        float margin = r.Size.Min() * EmphasisRectMargin;
+        var emphasisRect = r.ApplyMarginsAbsolute(margin, margin, margin, margin);
+        
+        emphasis.DrawForeground(emphasisRect);
+        DrawTextEx(Font, text, r.TopLeft, info.fontSize, info.fontSpacing, Color);
+        emphasis.DrawBackground(emphasisRect);
+        
+    }
+    private void DrawWord(string text, Rect rect, Vector2 alignement)
+    {
+        var info = GetDynamicFontSize(text, rect.Size);
+        Rect r = new(rect.GetPoint(alignement), info.textSize, alignement);
+        
+        DrawTextEx(Font, text, r.TopLeft, info.fontSize, info.fontSpacing, Color);
+    }
+    private void DrawWord(string text, float fontSize, float fontSpacing, Vector2 topLeft, float width, Emphasis emphasis)
+    {
+        Rect r = new(topLeft, new Vector2(width, fontSize), new());
+        
+        float margin = r.Size.Min() * EmphasisRectMargin;
+        var emphasisRect = r.ApplyMarginsAbsolute(margin, margin, margin, margin);
+        
+        emphasis.DrawForeground(emphasisRect);
+        DrawTextEx(Font, text, r.TopLeft, fontSize, fontSpacing, Color);
+        emphasis.DrawBackground(emphasisRect);
+        
+    }
+    private void DrawWord(string text, float fontSize, float fontSpacing, Vector2 topLeft)
+    {
+        DrawTextEx(Font, text, topLeft, fontSize, fontSpacing, Color);
+    }
+    private void DrawTextWrapNone(string text, Rect rect, Vector2 alignement)
+    {
+        if(Emphases.Count <= 0) DrawWord(text, rect, alignement);
+        else
+        {
+            var info = GetDynamicFontSize(text, rect.Size);
+            var uiPos = rect.GetPoint(alignement);
+            var topLeft = uiPos - alignement * info.textSize;
+            
+            var curWordPos = topLeft;
+            var curWord = string.Empty;
+            var curWordWidth = 0f;
+            for (var i = 0; i < text.Length; i++)
+            {
+                var c = text[i];
+                float w = GetCharSize(c, info.fontSize).X + info.fontSpacing;
+                curWordWidth += w;
+                if (c == ' ')
+                {
+                    var wordEmphasis = GetEmphasis(curWord);
+
+                    if (wordEmphasis != null) DrawWord(curWord, info.fontSize, info.fontSpacing, curWordPos, curWordWidth, wordEmphasis);
+                    else DrawWord(curWord, info.fontSize, info.fontSpacing, curWordPos);
+                    
+                    curWord = string.Empty;
+                    curWordPos += new Vector2(curWordWidth, 0f);
+                    curWordWidth = 0f;
+                }
+                else curWord += c;
+
+            }
+            
+            var lastWordEmphasis = GetEmphasis(curWord);
+            if (lastWordEmphasis != null) DrawWord(curWord, info.fontSize, info.fontSpacing, curWordPos, curWordWidth, lastWordEmphasis);
+            else DrawWord(curWord, info.fontSize, info.fontSpacing, curWordPos);
+        }
+        
+    }
+    private void DrawTextWrapChar(string text, Rect rect, Vector2 alignement)
+    {
+        
+        
+    }
+    private void DrawTextWrapWord(string text, Rect rect, Vector2 alignement)
+    {
+        
+        
+    }
+    #endregion
+        
+    // public static void DrawTextWrappedChar(this Font font, string text, Rect rect, float fontSpacing, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
+    // {
+    //     fontSpacing = MathF.Min(fontSpacing, font.baseSize * FontSpacingMaxFactor);
+    //
+    //     float safetyMargin = TextWrappingAutoFontSizeSafetyMargin;
+    //     Vector2 rectSize = rect.Size;
+    //     Vector2 textSize = font.GetTextSize(text, font.baseSize, fontSpacing);
+    //     float rectArea = rectSize.GetArea() * safetyMargin;
+    //     float textArea = textSize.GetArea();
+    //
+    //     float f = MathF.Sqrt(rectArea / textArea);
+    //     fontSpacing *= f;
+    //     float fontSize = font.baseSize * f;
+    //     fontSize = MathF.Max(fontSize, FontMinSize);
+    //
+    //     DrawTextWrappedChar(font, text, rect, fontSize, fontSpacing, 0f, baseEmphasis, wordEmphasis);
+    // }
+    // public static void DrawTextWrappedChar(this Font font, string text, Rect rect, float fontSize, float fontSpacing, float lineSpacing, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
+    // {
+    //     if (rect.Height < FontMinSize) return;
+    //
+    //     fontSize = MathF.Max(fontSize, FontMinSize);
+    //     fontSpacing = MathF.Min(fontSpacing, fontSize * FontSpacingMaxFactor);
+    //     lineSpacing = MathF.Min(lineSpacing, fontSize * LineSpacingMaxFactor);
+    //
+    //     if (rect.Height < fontSize) fontSize *= (rect.Height / fontSize);
+    //
+    //     float f = fontSize / (float)font.baseSize;
+    //     Vector2 pos = rect.TopLeft;
+    //
+    //     int curWordIndex = 0;
+    //     string curWord = string.Empty;
+    //     string backlog = string.Empty;
+    //     float curWordWidth = 0f;
+    //     float curLineWidth = 0f;
+    //
+    //     for (int i = 0; i < text.Length; i++)
+    //     {
+    //         var c = text[i];
+    //         if (c == '\n') continue;
+    //
+    //         var charBaseSize = font.GetCharBaseSize(c);
+    //         float glyphWidth = charBaseSize.X * f;
+    //
+    //         if (curLineWidth + curWordWidth + glyphWidth >= rect.Width)//break line
+    //         {
+    //             var backlogResult = CheckWordEmphasis(curWordIndex, wordEmphasis);
+    //             DrawWord(font, backlog + curWord, fontSize, fontSpacing, pos, backlogResult.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[backlogResult.emphasisIndex]);
+    //             backlog = string.Empty;
+    //             curWord = string.Empty;
+    //
+    //             pos.Y += fontSize + lineSpacing;
+    //             pos.X = rect.TopLeft.X;
+    //             curLineWidth = 0f;
+    //             curWordWidth = 0f;
+    //
+    //             if (pos.Y + fontSize >= rect.Bottom)
+    //             {
+    //                 return;
+    //             }
+    //
+    //             if (c == ' ') curWordIndex++;
+    //             else
+    //             {
+    //                 curWord += c;
+    //                 curWordWidth += glyphWidth + fontSpacing;
+    //             }
+    //
+    //             continue;
+    //         }
+    //
+    //         curWordWidth += glyphWidth + fontSpacing;
+    //         if (c == ' ')
+    //         {
+    //             var result = CheckWordEmphasis(curWordIndex, wordEmphasis);
+    //
+    //             if (result.emphasisIndex != -1 && result.connected)
+    //             {
+    //                 curLineWidth += curWordWidth;
+    //                 curWordWidth = 0f;
+    //
+    //                 curWord += c;
+    //                 backlog += curWord;
+    //                 curWord = string.Empty;
+    //
+    //                 curWordIndex++;
+    //                 continue;
+    //             }
+    //             DrawWord(font, backlog + curWord, fontSize, fontSpacing, pos, result.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[result.emphasisIndex]);
+    //
+    //             curWord = string.Empty;
+    //             backlog = string.Empty;
+    //             curWordIndex++;
+    //             curLineWidth += curWordWidth;
+    //             pos.X = rect.TopLeft.X + curLineWidth; // curWordWidth;
+    //             curWordWidth = 0f;
+    //         }
+    //         else curWord += c;
+    //     }
+    //
+    //     //draw last word
+    //     var resultLast = CheckWordEmphasis(curWordIndex, wordEmphasis);
+    //     DrawWord(font, backlog + curWord, fontSize, fontSpacing, pos, resultLast.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[resultLast.emphasisIndex]);
+    //
+    // }
+    //
+    // public static void DrawTextWrappedWord(this Font font, string text, Rect rect, float fontSpacing, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
+    // {
+    //     fontSpacing = MathF.Min(fontSpacing, font.baseSize * FontSpacingMaxFactor);
+    //
+    //     float safetyMargin = TextWrappingAutoFontSizeSafetyMargin;
+    //     Vector2 rectSize = rect.Size;
+    //     Vector2 textSize = font.GetTextSize(text, font.baseSize, fontSpacing);
+    //     float rectArea = rectSize.GetArea() * safetyMargin;
+    //     float textArea = textSize.GetArea();
+    //
+    //     float f = MathF.Sqrt(rectArea / textArea);
+    //     fontSpacing *= f;
+    //     float fontSize = font.baseSize * f;
+    //     fontSize = MathF.Max(fontSize, FontMinSize);
+    //     DrawTextWrappedWord(font, text, rect, fontSize, fontSpacing, 0f, baseEmphasis, wordEmphasis);
+    // }
+    // public static void DrawTextWrappedWord(this Font font, string text, Rect rect, float fontSize, float fontSpacing, float lineSpacing, WordEmphasis baseEmphasis, params WordEmphasis[] wordEmphasis)
+    // {
+    //     if (rect.Height < FontMinSize) return;
+    //
+    //     fontSize = MathF.Max(fontSize, FontMinSize);
+    //     fontSpacing = MathF.Min(fontSpacing, fontSize * FontSpacingMaxFactor);
+    //     lineSpacing = MathF.Min(lineSpacing, fontSize * LineSpacingMaxFactor);
+    //
+    //     if (rect.Height < fontSize) fontSize *= (rect.Height / fontSize);
+    //
+    //     float f = fontSize / (float)font.baseSize;
+    //     Vector2 pos = rect.TopLeft;
+    //
+    //     int curWordIndex = 0;
+    //     string curWord = string.Empty;
+    //     string backlog = string.Empty;
+    //     float curWordWidth = 0f;
+    //     float curLineWidth = 0f;
+    //
+    //     for (int i = 0; i < text.Length; i++)
+    //     {
+    //         var c = text[i];
+    //         if (c == '\n') continue;
+    //
+    //         var charBaseSize = font.GetCharBaseSize(c);
+    //         float glyphWidth = charBaseSize.X * f;
+    //         
+    //         if (curLineWidth + curWordWidth + glyphWidth >= rect.Width)//break line
+    //         {
+    //             bool charBreak = false;
+    //             if(backlog != string.Empty)
+    //             {
+    //                 var result = CheckWordEmphasis(curWordIndex, wordEmphasis);
+    //                 DrawWord(font, backlog, fontSize, fontSpacing, pos, result.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[result.emphasisIndex]);
+    //                 backlog = string.Empty;
+    //             }
+    //             else
+    //             {
+    //                 if (curLineWidth <= 0f)//break line on first word
+    //                 {
+    //                     var result = CheckWordEmphasis(curWordIndex, wordEmphasis);
+    //
+    //                     DrawWord(font, curWord, fontSize, fontSpacing, pos, result.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[result.emphasisIndex]);
+    //
+    //                     curWord = string.Empty;
+    //                     curWordWidth = 0f;
+    //                     charBreak = true;
+    //                 }
+    //             }
+    //             
+    //             pos.Y += fontSize + lineSpacing;
+    //             pos.X = rect.TopLeft.X;
+    //             curLineWidth = 0f;
+    //             
+    //             if (pos.Y + fontSize >= rect.Bottom)
+    //             {
+    //                 return;
+    //             }
+    //             
+    //             if (charBreak) 
+    //             {
+    //                 if (c != ' ')
+    //                 {
+    //                     curWord += c;
+    //                     curWordWidth += glyphWidth;
+    //                 }
+    //                 else curWordIndex++;
+    //
+    //                 continue; 
+    //             }
+    //         }
+    //
+    //         curWordWidth += glyphWidth + fontSpacing;
+    //         if (c == ' ')
+    //         {
+    //             var result = CheckWordEmphasis(curWordIndex, wordEmphasis);
+    //
+    //             if (result.emphasisIndex != -1 && result.connected)
+    //             {
+    //                 curLineWidth += curWordWidth;
+    //                 curWordWidth = 0f;
+    //
+    //                 curWord += c;
+    //                 backlog += curWord;
+    //                 curWord = string.Empty;
+    //
+    //                 curWordIndex++;
+    //                 continue;
+    //             }
+    //             DrawWord(font, backlog + curWord, fontSize, fontSpacing, pos, result.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[result.emphasisIndex]);
+    //
+    //             curWord = string.Empty;
+    //             backlog = string.Empty;
+    //             curWordIndex++;
+    //             curLineWidth += curWordWidth;
+    //             pos.X = rect.TopLeft.X + curLineWidth; // curWordWidth;
+    //             curWordWidth = 0f;
+    //         }
+    //         else curWord += c;
+    //     }
+    //
+    //     //draw last word
+    //     var resultLast = CheckWordEmphasis(curWordIndex, wordEmphasis);
+    //     DrawWord(font, backlog + curWord, fontSize, fontSpacing, pos, resultLast.emphasisIndex < 0 ? baseEmphasis : wordEmphasis[resultLast.emphasisIndex]);
+    //
+    // }
+    //
+    // public static void DrawTextWrappedChar(this Font font, string text, Rect rect, float fontSpacing, Raylib_CsLo.Color color)
+    // {
+    //     fontSpacing = MathF.Min(fontSpacing, font.baseSize * FontSpacingMaxFactor);
+    //
+    //     float safetyMargin = 0.85f;
+    //     Vector2 rectSize = rect.Size;
+    //     Vector2 textSize = font.GetTextSize(text, font.baseSize, fontSpacing);
+    //     float rectArea = rectSize.GetArea() * safetyMargin;
+    //     float textArea = textSize.GetArea();
+    //     
+    //     float f = MathF.Sqrt(rectArea / textArea);
+    //     fontSpacing *= f;
+    //     float fontSize = font.baseSize * f;
+    //     fontSize = MathF.Max(fontSize, FontMinSize);
+    //
+    //     Vector2 pos = rect.TopLeft;
+    //     for (int i = 0; i < text.Length; i++)
+    //     {
+    //         var c = text[i];
+    //         var charBaseSize = font.GetCharBaseSize(c);
+    //         float glyphWidth = charBaseSize.X * f;
+    //         if (pos.X + glyphWidth >= rect.TopLeft.X + rectSize.X)
+    //         {
+    //             pos.X = rect.TopLeft.X;
+    //             pos.Y += fontSize;
+    //         }
+    //         font.DrawChar(c, fontSize, pos, color);
+    //         pos.X += glyphWidth + fontSpacing;
+    //     }
+    // }
+    // public static void DrawTextWrappedChar(this Font font, string text, Rect rect, float fontSize, float fontSpacing, float lineSpacing, Raylib_CsLo.Color color)
+    // {
+    //     fontSize = MathF.Max(fontSize, FontMinSize);
+    //     fontSpacing = MathF.Min(fontSpacing, fontSize * FontSpacingMaxFactor);
+    //     lineSpacing = MathF.Min(lineSpacing, fontSize * LineSpacingMaxFactor);
+    //
+    //     float f = fontSize / (float)font.baseSize;
+    //     Vector2 pos = rect.TopLeft;
+    //     for (int i = 0; i < text.Length; i++)
+    //     {
+    //         var c = text[i];
+    //         var charBaseSize = font.GetCharBaseSize(c);
+    //         float glyphWidth = charBaseSize.X * f;
+    //         if (pos.X + glyphWidth >= rect.Right)
+    //         {
+    //             pos.X = rect.TopLeft.X;
+    //             pos.Y += fontSize + lineSpacing;
+    //             if(pos.Y + fontSize >= rect.Bottom)
+    //             {
+    //                 return;
+    //             }
+    //         }
+    //         font.DrawChar(c, fontSize, pos, color);
+    //         pos.X += glyphWidth + fontSpacing;
+    //     }
+    // }
+    // public static void DrawTextWrappedWord(this Font font, string text, Rect rect, float fontSpacing, Raylib_CsLo.Color color)
+    // {
+    //     fontSpacing = MathF.Min(fontSpacing, font.baseSize * FontSpacingMaxFactor);
+    //
+    //     float safetyMargin = 0.75f;
+    //     Vector2 rectSize = rect.Size;
+    //     Vector2 textSize = font.GetTextSize(text, font.baseSize, fontSpacing);
+    //     float rectArea = rectSize.GetArea() * safetyMargin;
+    //     float textArea = textSize.GetArea();
+    //
+    //     float f = MathF.Sqrt(rectArea / textArea);
+    //     fontSpacing *= f;
+    //     float fontSize = font.baseSize * f;
+    //     fontSize = MathF.Max(fontSize, FontMinSize);
+    //     DrawTextWrappedWord(font, text, rect, fontSize, fontSpacing, 0f, color);
+    // }
+    // public static void DrawTextWrappedWord(this Font font, string text, Rect rect, float fontSize, float fontSpacing, float lineSpacing, Raylib_CsLo.Color color)
+    // {
+    //     if (rect.Height < FontMinSize) return;
+    //
+    //     fontSize = MathF.Max(fontSize, FontMinSize);
+    //     fontSpacing = MathF.Min(fontSpacing, fontSize * FontSpacingMaxFactor);
+    //     lineSpacing = MathF.Min(lineSpacing, fontSize * LineSpacingMaxFactor);
+    //
+    //     if (rect.Height < fontSize) fontSize *= (rect.Height / fontSize);
+    //     
+    //     float f = fontSize / (float)font.baseSize;
+    //     Vector2 pos = rect.TopLeft;
+    //
+    //     string curLine = string.Empty;
+    //     string curWord = string.Empty;
+    //     float curWidth = 0f;
+    //
+    //     for (int i = 0; i < text.Length; i++)
+    //     {
+    //         var c = text[i];
+    //         
+    //         if(c != '\n')
+    //         {
+    //             curWord += c;
+    //             if (c == ' ')
+    //             {
+    //                 curLine += curWord;
+    //                 curWord = "";
+    //             }
+    //             var charBaseSize = font.GetCharBaseSize(c);
+    //             float glyphWidth = charBaseSize.X * f;
+    //
+    //             if (curWidth + glyphWidth >= rect.Width)
+    //             {
+    //                 if (curLine == string.Empty)//width was overshot within the first word
+    //                 {
+    //                     curWord = curWord.Remove(curWord.Length - 1);
+    //                     curLine = curWord;
+    //                     i--;
+    //                 }
+    //                 else i -= curWord.Length;
+    //
+    //                 curLine = curLine.Trim();
+    //                 Raylib.DrawTextEx(font, curLine, pos, fontSize, fontSpacing, color);
+    //
+    //                 curWidth = 0;
+    //                 
+    //                 curWord = string.Empty;
+    //                 curLine = string.Empty;
+    //                 
+    //                 pos.Y += fontSize + lineSpacing;
+    //                 if (pos.Y + fontSize >= rect.Bottom)
+    //                 {
+    //                     return;
+    //                 }
+    //             }
+    //             else curWidth += glyphWidth + fontSpacing;
+    //         }
+    //         else
+    //         {
+    //             curLine += curWord;
+    //             curLine = curLine.Trim();
+    //             Raylib.DrawTextEx(font, curLine, pos, fontSize, fontSpacing, color);
+    //
+    //             curWidth = 0f;
+    //             curLine = string.Empty;
+    //             curWord = string.Empty;
+    //
+    //             pos.Y += fontSize + lineSpacing;
+    //             if (pos.Y + fontSize >= rect.Bottom)
+    //             {
+    //                 return;
+    //             }
+    //         }
+    //     }
+    //
+    //     
+    //     curLine += curWord;
+    //     curLine = curLine.Trim();
+    //     Raylib.DrawTextEx(font, curLine, pos, fontSize, fontSpacing, color);
+    //
+    // }
+
+
+    // public static void DrawCaret(this Font font, string text, Rect rect, float fontSpacing, Vector2 textAlignment, int caretIndex, float caretWidth, Raylib_CsLo.Color caretColor)
+    // {
+    //     var info = font.GetDynamicFontSize(text, rect.Size, fontSpacing);
+    //     Vector2 uiPos = rect.GetPoint(textAlignment);
+    //     Vector2 topLeft = uiPos - textAlignment * info.textSize;
+    //     DrawCaret(font, text, topLeft, info.fontSize, info.fontSpacing, caretIndex, caretWidth, caretColor);
+    //
+    //     //Vector2 caretTextSize = SDrawing.GetTextSize(font, text, info.fontSize, info.fontSpacing);
+    //     //
+    //     //Vector2 caretTop = topLeft + new Vector2(caretTextSize.X + fontSpacing * 0.5f, 0f);
+    //     //Vector2 caretBottom = topLeft + new Vector2(caretTextSize.X + fontSpacing * 0.5f, info.textSize.Y);
+    //     //DrawLineEx(caretTop, caretBottom, caretWidth, caretColor);
+    //
+    // }
+    // public static void DrawCaret(this Font font, string text, Rect rect, float fontSize, float fontSpacing, Vector2 textAlignment, int caretIndex, float caretWidth, Raylib_CsLo.Color caretColor)
+    // {
+    //     Vector2 uiPos = rect.GetPoint(textAlignment);
+    //     Vector2 topLeft = uiPos - textAlignment * GetTextSize(font, text, fontSize, fontSpacing);
+    //     DrawCaret(font, text, topLeft, fontSize, fontSpacing, caretIndex, caretWidth, caretColor);
+    // }
+    // public static void DrawCaret(this Font font, string text, float fontSize, float fontSpacing, Vector2 pos, Vector2 textAlignment, int caretIndex, float caretWidth, Raylib_CsLo.Color caretColor)
+    // {
+    //     Vector2 topLeft = pos - textAlignment * GetTextSize(font, text, fontSize, fontSpacing);
+    //     DrawCaret(font, text, topLeft, fontSize, fontSpacing, caretIndex, caretWidth, caretColor);
+    // }
+    // public static void DrawCaret(this Font font, string text, Vector2 topLeft, float fontSize, float fontSpacing, int caretIndex, float caretWidth, Raylib_CsLo.Color caretColor)
+    // {
+    //     string caretText = text.Substring(0, caretIndex);
+    //     var caretTextSize = GetTextSize(font, caretText, fontSize, fontSpacing);
+    //
+    //     var caretTop = topLeft + new Vector2(caretTextSize.X + fontSpacing * 0.5f, 0f);
+    //     var caretBottom = topLeft + new Vector2(caretTextSize.X + fontSpacing * 0.5f, fontSize);
+    //     // DrawLineEx(caretTop, caretBottom, caretWidth, caretColor);
+    //     DrawCaret(caretTop, caretBottom, caretWidth, caretColor);
+    // }
+    //
+    // public static void DrawCaret(Vector2 top, Vector2 bottom, float width, Raylib_CsLo.Color color)
+    // {
+    //     DrawLineEx(top, bottom, width, color);
+    // }
+    //
+
 }
 
-public class TextBlock : TextLine
-{
-    public float LineSpacing;
-    //word wrap type Char/Word
-}
 
-
-
+// public class TextWord
+// {
+//     public int StartIndex;
+//     public int Length;
+//     
+// }
+// public class TextLine
+// {
+//     public readonly List<Emphasis> Emphases = new();
+//     
+//     public string Text;
+//     public Rect Rect;
+//     
+//     public Font Font;
+//     public float FontSpacing;
+//
+//     public Raylib_CsLo.Color Color;
+//     
+//     private bool dirty = false;
+//
+//
+//     //split text into parts if emphasis exist and are found
+//     //text block does the same
+//     //string split function? 
+//     //recalculate if emphasis change or text changes
+//
+//     public void Draw()
+//     {
+//         //if dirty
+//             //calculate dynamic font size
+//             //topleft position
+//             
+//         
+//     }
+// }
+//
+// public class TextBlock : TextLine
+// {
+//     public float LineSpacing;
+//     //word wrap type Char/Word
+// }
 
 
 //struct for Font, FontSize, FontColor
@@ -1369,7 +2027,6 @@ public class TextBlock : TextLine
 //     }
 // }
 //
-
 
 
 //---------------OLD TEXT BOX SYSTEM---------------
