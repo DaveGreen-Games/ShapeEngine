@@ -1046,6 +1046,106 @@ public static class ShapeText
 
 
 
+public class ED_Underline : IEmphasisDrawer
+{
+    public void DrawBackground(Rect rect, Raylib_CsLo.Color color)
+    {
+    }
+
+    public void DrawForeground(Rect rect, Raylib_CsLo.Color color)
+    {
+        float lineThickness = rect.Size.Min() * 0.1f;
+        Segment s = new(rect.BottomLeft, rect.BottomRight);
+        s.Draw(lineThickness, color, LineCapType.Extended);
+
+    }
+}
+public interface IEmphasisDrawer
+{
+    public void DrawBackground(Rect rect, Raylib_CsLo.Color color);
+    public void DrawForeground(Rect rect, Raylib_CsLo.Color color);
+}
+public class Emphasis
+{
+    private readonly IEmphasisDrawer drawer;
+    public Raylib_CsLo.Color Color;
+    
+    public Emphasis(IEmphasisDrawer drawer, Raylib_CsLo.Color color)
+    {
+        this.drawer = drawer;
+        this.Color = color;
+    }
+
+    public void DrawForeground(Rect rect) => drawer.DrawForeground(rect, Color);
+    public void DrawBackground(Rect rect) =>  drawer.DrawBackground(rect, Color);
+}
+
+public class TextEmphasis
+{
+    private readonly string[] keywords;
+    public readonly Emphasis Emphasis;
+
+    public TextEmphasis(Emphasis emphasis, params string[] keywords)
+    {
+        this.Emphasis = emphasis;
+        this.keywords = keywords;
+    }
+
+    public bool HasKeyword(string word)
+    {
+        if (keywords.Length <= 0) return false;
+        return keywords.Contains(word);
+    }
+}
+
+
+
+public class TextWord
+{
+    public int StartIndex;
+    public int Length;
+    
+}
+public class TextLine
+{
+    public readonly List<Emphasis> Emphases = new();
+    
+    public string Text;
+    public Rect Rect;
+    
+    public Font Font;
+    public float FontSpacing;
+
+    public Raylib_CsLo.Color Color;
+    
+    private bool dirty = false;
+
+
+    //split text into parts if emphasis exist and are found
+    //text block does the same
+    //string split function? 
+    //recalculate if emphasis change or text changes
+
+    public void Draw()
+    {
+        //if dirty
+            //calculate dynamic font size
+            //topleft position
+            
+        
+    }
+}
+
+public class TextBlock : TextLine
+{
+    public float LineSpacing;
+    //word wrap type Char/Word
+}
+
+
+
+
+
 //struct for Font, FontSize, FontColor
 //=> can calculate dynamic font size
 //=> static shape text class has a Member for that struct that can be set to be used in all text drawing functions
@@ -1269,9 +1369,6 @@ public static class ShapeText
 //     }
 // }
 //
-
-
-
 
 
 
