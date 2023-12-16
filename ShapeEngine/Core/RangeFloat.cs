@@ -67,4 +67,9 @@ public class RangeFloat
     public float Inverse(float value) { return (value - Min) / (Max - Min); }
     public float Remap(RangeFloat to, float value) { return to.Lerp(Inverse(value)); }
     public float Remap(float newMin, float newMax, float value) { return ShapeMath.LerpFloat(newMin, newMax, Inverse(value)); }
+
+    public float Clamp(float value)
+    {
+        return ShapeMath.Clamp(value, Min, Max);
+    }
 }

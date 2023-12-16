@@ -40,4 +40,8 @@ public class RangeInt
     public float Inverse(int value) { return (value - Min) / (Max - Min); }
     public int Remap(RangeInt to, int value) { return to.Lerp(Inverse(value)); }
     public int Remap(int newMin, int newMax, int value) { return ShapeMath.LerpInt(newMin, newMax, Inverse(value)); }
+    public int Clamp(int value)
+    {
+        return ShapeMath.Clamp(value, Min, Max);
+    }
 }
