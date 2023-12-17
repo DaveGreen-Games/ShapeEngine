@@ -7,6 +7,7 @@ using ShapeEngine.UI;
 
 namespace ShapeEngine.Lib;
 
+#region OLD
 public enum TextEmphasisType
 {
     None = 0,
@@ -14,7 +15,6 @@ public enum TextEmphasisType
     Corner = 2,
     //Corner_Dot = 3
 }
-
 public enum TextEmphasisAlignement
 {
     TopLeft = 0,
@@ -30,7 +30,6 @@ public enum TextEmphasisAlignement
     TLBR = 10,
     BLTR = 11
 }
-
 public struct WordEmphasis
 {
     public Raylib_CsLo.Color Color;
@@ -1044,9 +1043,9 @@ public static class ShapeText
     
 
 }
+#endregion
 
-
-
+#region NEW
 public class ED_Block : IEmphasisDrawer
 {
     public void DrawBackground(Rect rect, Raylib_CsLo.Color color)
@@ -1129,15 +1128,12 @@ public class TextEmphasis
         // return isMatch || keywords.Contains(word);
     }
 }
-
 public enum TextWrapType
 {
     None = 0,
     Char = 1,
     Word = 2
 }
-
-
 public class TextBlock
 {
     #region Members
@@ -1635,10 +1631,6 @@ public class TextBlock
     }
     private void DrawTextWrapWord(string text, Rect rect, Vector2 alignement)
     {
-        // float fontSpacing = FontSpacing;// MathF.Min(FontSpacing, Font.baseSize * FontSpacingMaxFactor);
-        // float lineSpacing = 0f;
-        // var rectSize = rect.Size;// * TextWrappingAutoFontSizeSafetyMargin;
-        // var textSize = GetTextSize(text, Font.baseSize, fontSpacing);
         float fontSpacing = FontSpacing;
         float lineSpacing = LineSpacing;
         var rectSize = rect.Size;
@@ -1661,18 +1653,11 @@ public class TextBlock
             lineSpacing *= sizeF;
             fontSpacing *= sizeF;
             
-            // var lines = (int)MathF.Ceiling((textSize.X * 1.4f) / rectSize.X);
-            // var height = lines * Font.baseSize;
-            // var f =  MathF.Sqrt(rectSize.Y / height);
-            // fontSpacing *= f;
-            // float fontSize = Font.baseSize * f;
-            
             var pos = rect.TopLeft;
         
             var curWord = string.Empty;
             var curWordWidth = 0f;
             var curLineWidth = 0f;
-            // Emphasis? charBreakEmphasis = null;
             
             for (int i = 0; i < text.Length; i++)
             {
@@ -1684,39 +1669,10 @@ public class TextBlock
                 
                 if (curLineWidth + curWordWidth + glyphWidth >= rect.Width)//break line
                 {
-                    bool charBreak = false;
-                    
-                    if (curLineWidth <= 0f)//break line on first word
-                    {
-                        var wordEmphasis = GetEmphasis(curWord);
-                        
-                        if (wordEmphasis != null) DrawWord(curWord, fontSize, fontSpacing, pos, curWordWidth, wordEmphasis);
-                        else DrawWord(curWord, fontSize, fontSpacing, pos);
-        
-                        curWord = string.Empty;
-                        curWordWidth = 0f;
-                        charBreak = true;
-                    }
-                    
-                    
+                    if (curLineWidth <= 0) return;
                     pos.Y += fontSize + lineSpacing;
                     pos.X = rect.TopLeft.X;
                     curLineWidth = 0f;
-                    
-                    // if (pos.Y + fontSize >= rect.Bottom)
-                    // {
-                    //     return;
-                    // }
-                    
-                    if (charBreak) 
-                    {
-                        if (c != ' ')
-                        {
-                            curWord += c;
-                            curWordWidth += glyphWidth;
-                        }
-                        continue; 
-                    }
                 }
             
                 curWordWidth += glyphWidth + fontSpacing;
@@ -1724,7 +1680,7 @@ public class TextBlock
                 {
                     var wordEmphasis = GetEmphasis(curWord);
 
-                    if (wordEmphasis != null) DrawWord(curWord, fontSize, fontSpacing, pos, curWordWidth, wordEmphasis);
+                    if (wordEmphasis != null) DrawWord(curWord, fontSize, fontSpacing, pos, curWordWidth - glyphWidth, wordEmphasis);
                     else DrawWord(curWord, fontSize, fontSpacing, pos);
             
                     curWord = string.Empty;
@@ -1747,6 +1703,11 @@ public class TextBlock
     }
     #endregion
 }
+#endregion
+
+
+
+
 
 
 
