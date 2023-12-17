@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Text.RegularExpressions;
 using Raylib_CsLo;
 using ShapeEngine.Core;
 using ShapeEngine.Core.Shapes;
@@ -1104,19 +1105,28 @@ public class Emphasis
 }
 public class TextEmphasis
 {
-    private readonly string[] keywords;
+    // private readonly string[] keywords;
+    private readonly Regex regex;
     public readonly Emphasis Emphasis;
 
-    public TextEmphasis(Emphasis emphasis, params string[] keywords)
+    //params string[] keywords
+    public TextEmphasis(Emphasis emphasis, string regexPattern)
     {
         this.Emphasis = emphasis;
-        this.keywords = keywords;
+        this.regex = new(regexPattern, RegexOptions.IgnoreCase);
+        // this.keywords = keywords;
     }
 
     public bool HasKeyword(string word)
     {
-        if (keywords.Length <= 0) return false;
-        return keywords.Contains(word);
+        return regex.IsMatch(word);
+
+        // if (keywords.Length <= 0) return false;
+        // var rx = new Regex("\\d", RegexOptions.IgnoreCase);
+
+        // var isMatch = rx.IsMatch(word);
+
+        // return isMatch || keywords.Contains(word);
     }
 }
 
@@ -1132,7 +1142,7 @@ public class TextBlock
 {
     #region Members
 
-    public RangeFloat FontSizeRange = new(5, 150);
+    public RangeFloat FontSizeRange = new(15, 150);
 
     public UIMargins EmphasisRectMargins = new();
     
@@ -1184,6 +1194,15 @@ public class TextBlock
         }
         
     }
+    #endregion
+
+    #region Static
+    public static void DrawText(Font font, string text, float fontSize, float fontSpacing, Vector2 topLeft, Raylib_CsLo.Color color)
+    {
+        DrawTextEx(font, text, topLeft, fontSize, fontSpacing, color);
+    }
+    
+
     #endregion
     
     #region TextSize
@@ -1297,7 +1316,6 @@ public class TextBlock
     {
         DrawTextEx(Font, text, topLeft, fontSize, fontSpacing, Color);
     }
-    
     private void DrawTextWrapNone(string text, Rect rect, Vector2 alignement)
     {
         if(Emphases.Count <= 0) DrawWord(text, rect, alignement);
@@ -1350,7 +1368,7 @@ public class TextBlock
         }
         else
         {
-            var lines = (int)MathF.Ceiling((textSize.X * 1.2f) / rectSize.X);
+            var lines = (int)MathF.Ceiling((textSize.X * 1.25f) / rectSize.X);
             var textHeight = lines * Font.baseSize;
             var lineSpacingHeight = lines <= 0 ? 0 : (lines - 1) * lineSpacing;
             var height = textHeight + lineSpacingHeight;
@@ -1371,6 +1389,8 @@ public class TextBlock
             Emphasis? lineBreakEmphasis = null;
             var curWordWidth = 0f;
             var curLineWidth = 0f;
+
+            var maxWidth = rect.Width;
             
             for (int i = 0; i < text.Length; i++)
             {
@@ -1379,15 +1399,18 @@ public class TextBlock
             
                 var charBaseSize = GetCharBaseSize(c);
                 float glyphWidth = charBaseSize.X * sizeF;
+                // if (glyphWidth > rect.Width) return;
             
-                if (curLineWidth + curWordWidth + glyphWidth >= rect.Width)//break line
+                if (curLineWidth + curWordWidth + glyphWidth >= maxWidth)//break line
                 {
+                    if (curLineWidth <= 0) return;
                     
                     if (c == ' ') 
                     {
                         var emphasis = GetEmphasis(curWord);
                         if(emphasis != null) DrawWord(curWord, fontSize, fontSpacing, pos, curWordWidth, emphasis);
                         else  DrawWord(curWord, fontSize, fontSpacing, pos);
+                        
                     }
                     else
                     {
@@ -1423,7 +1446,7 @@ public class TextBlock
                         
                     
                     curWord = string.Empty;
-                    curWord += c;
+                    if(c != ' ') curWord += c;
                     pos.Y += fontSize + lineSpacing;
                     pos.X = rect.TopLeft.X;
                     curLineWidth = 0f;
@@ -1438,13 +1461,13 @@ public class TextBlock
                     if (lineBreakInProcess)
                     {
                         lineBreakInProcess = false;
-                        if (lineBreakEmphasis != null) DrawWord(curWord, fontSize, fontSpacing, pos, curWordWidth, lineBreakEmphasis);
+                        if (lineBreakEmphasis != null) DrawWord(curWord, fontSize, fontSpacing, pos, curWordWidth - glyphWidth, lineBreakEmphasis);
                         else DrawWord(curWord, fontSize, fontSpacing, pos);
                     }
                     else
                     {
                         var wordEmphasis = GetEmphasis(curWord);
-                        if (wordEmphasis != null) DrawWord(curWord, fontSize, fontSpacing, pos, curWordWidth, wordEmphasis);
+                        if (wordEmphasis != null) DrawWord(curWord, fontSize, fontSpacing, pos, curWordWidth - glyphWidth, wordEmphasis);
                         else DrawWord(curWord, fontSize, fontSpacing, pos);
                     }
             
