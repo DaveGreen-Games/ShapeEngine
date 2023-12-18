@@ -1,8 +1,6 @@
 ﻿
 using ShapeEngine.Lib;
-using Raylib_CsLo;
 using System.Numerics;
-using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
@@ -73,15 +71,19 @@ namespace Examples.Scenes.ExampleScenes
 
 
             textBlock = new(font);
+            textBlock.Caret = new(-1, RED);
             var emphasis1 = new Emphasis(new ED_Block(), RED, BLACK);
             var emphasis2 = new Emphasis(new ED_Block(), BLUE, BLACK);
             var emphasis3 = new Emphasis(new ED_Transparent(), BLACK, YELLOW);
-            var textEmphasis1 = new TextEmphasis(emphasis1, "(rupture)|(bleed)");
+            var emphasis4 = new Emphasis(new ED_Transparent(), BLACK, GREEN);
+            var textEmphasis1 = new TextEmphasis(emphasis1, "(rupture)|(bleed)|(Rupture)|(Bleed)|[\" _ :]");
             var textEmphasis2 = new TextEmphasis(emphasis2, "(increased)|(added)");
             var textEmphasis3 = new TextEmphasis(emphasis3, "(\\d)|(sec)|(seconds)");
+            var textEmphasis4 = new TextEmphasis(emphasis4, "[A-Z]+$");
             textBlock.Emphases.Add(textEmphasis1);
             textBlock.Emphases.Add(textEmphasis2);
             textBlock.Emphases.Add(textEmphasis3);
+            textBlock.Emphases.Add(textEmphasis4);
 
             textBlock.EmphasisRectMargins = new(0.05f, 0f, 0.05f, 0f);
         }
@@ -89,6 +91,14 @@ namespace Examples.Scenes.ExampleScenes
         protected override void UpdateExampleTextEntryInactive(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
             textBlock.Font = font;
+            
+        }
+
+        protected override void UpdateExampleTextEntryActive(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        {
+            var index = textBox.CaretVisible ? textBox.CaretIndex : -1;
+            textBlock.Caret.Index = index;
+            // textBlock.Caret = new(index, 5f, RED);
         }
 
         protected override void HandleInputTextEntryInactive(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
