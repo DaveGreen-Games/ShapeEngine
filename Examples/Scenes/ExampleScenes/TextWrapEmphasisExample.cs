@@ -86,7 +86,8 @@ namespace Examples.Scenes.ExampleScenes
             textBlock.Emphases.Add(textEmphasis4);
 
             TextBlock.EmphasisRectMargins = new(0.05f, 0f, 0.05f, 0f);
-            
+            // TextBlock.FontSizeModifier = 2f;
+
         }
 
         protected override void UpdateExampleTextEntryInactive(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
@@ -118,7 +119,7 @@ namespace Examples.Scenes.ExampleScenes
         protected override void DrawText(Rect rect)
         {
             var text = textBox.Text;
-            textBlock.Draw(text, rect, new(0.5f, 0.5f), wrapModeChar ? TextWrapType.Char : TextWrapType.Word);
+            textBlock.Draw(text, rect, new(0), wrapModeChar ? TextWrapType.Char : TextWrapType.Word);
             // if (autoSize)
             // {
             //     if (wrapModeChar)
