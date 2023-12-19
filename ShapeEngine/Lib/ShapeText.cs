@@ -1706,8 +1706,14 @@ public class TextBlock
             var curWordWidth = 0f;
             var curLineWidth = 0f;
             
+            var caretTop = new Vector2();
+            var caretFound = false;
+            var caretWordOffset = -1f;
+            
             for (int i = 0; i < text.Length; i++)
             {
+                
+                
                 var c = text[i];
                 if (c == '\n') continue;
             
@@ -1723,6 +1729,17 @@ public class TextBlock
                 }
             
                 curWordWidth += glyphWidth + fontSpacing;
+                
+                // if (!caretFound && Caret.IsValid && i == Caret.Index)
+                // {
+                //     caretFound = true;
+                //     caretTop = pos + new Vector2(curWordWidth + fontSpacing / 2, 0f);
+                //     caretWordOffset = curWordWidth;
+                // }
+                if (i == Caret.Index - 1 && Caret.IsValid)
+                {
+                    caretWordOffset = curWordWidth;
+                }
                 if (c == ' ')
                 {
                     var wordEmphasis = GetEmphasis(curWord);
@@ -1730,12 +1747,19 @@ public class TextBlock
                     if (wordEmphasis != null) DrawWord(curWord, fontSize, fontSpacing, pos, curWordWidth - glyphWidth, wordEmphasis);
                     else DrawWord(curWord, fontSize, fontSpacing, pos);
             
+                    if (caretWordOffset >= 0)
+                    {
+                        caretFound = true;
+                        caretTop = pos + new Vector2(caretWordOffset + fontSpacing / 2, 0f);
+                        caretWordOffset = -1;
+                    }
+                    
                     curWord = string.Empty;
                     curLineWidth += curWordWidth;
                     pos.X = rect.TopLeft.X + curLineWidth; // curWordWidth;
                     curWordWidth = 0f;
                 }
-                else curWord += c;
+                else  curWord += c;
             }
             
             //draw last word
@@ -1743,6 +1767,24 @@ public class TextBlock
 
             if (lastWordEmphasis != null) DrawWord(curWord, fontSize, fontSpacing, pos, curWordWidth, lastWordEmphasis);
             else DrawWord(curWord, fontSize, fontSpacing, pos);
+            
+            if (caretFound)
+            {
+                Caret.Draw(caretTop, fontSize);
+            }
+            else if (caretWordOffset >= 0)
+            {
+                caretTop = pos + new Vector2(caretWordOffset + fontSpacing / 2, 0f);
+                Caret.Draw(caretTop, fontSize);
+            }
+            else
+            {
+                if (Caret.IsValid)
+                {
+                    // var topLeft = pos + new Vector2(curWordWidth + fontSpacing / 2, 0f);
+                    Caret.Draw(rect.TopLeft, fontSize);
+                }
+            }
         
         }
 
