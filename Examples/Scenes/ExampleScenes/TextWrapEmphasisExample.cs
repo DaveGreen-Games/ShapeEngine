@@ -85,7 +85,8 @@ namespace Examples.Scenes.ExampleScenes
             textBlock.Emphases.Add(textEmphasis3);
             textBlock.Emphases.Add(textEmphasis4);
 
-            textBlock.EmphasisRectMargins = new(0.05f, 0f, 0.05f, 0f);
+            TextBlock.EmphasisRectMargins = new(0.05f, 0f, 0.05f, 0f);
+            
         }
 
         protected override void UpdateExampleTextEntryInactive(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
