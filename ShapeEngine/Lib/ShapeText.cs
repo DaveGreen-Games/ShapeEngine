@@ -1046,7 +1046,6 @@ public static class ShapeText
 #endregion
 
 
-//todo caret still does not work for multiline textblocks
 //todo implement static functions for text block to replace shape text.
 
 #region NEW
@@ -1672,152 +1671,10 @@ public class TextBlock
                 if (Caret.IsValid)
                 {
                     var topLeft = pos + new Vector2(curWordWidth + fontSpacing / 2, 0f);
-                    Caret.Draw(pos, fontSize);
+                    Caret.Draw(topLeft, fontSize);
                 }
             }
         }
-        
-        
-        
-        /* backup
-         var pos = rect.TopLeft;
-           
-           var curWord = string.Empty;
-           var lineBreakWord = string.Empty;
-           List<char> overshotChars = new();
-           List<float> overshotCharWidths = new();
-           var curWordWidth = 0f;
-           var curLineWidth = 0f;
-           
-           for (int i = 0; i < text.Length; i++)
-           {
-               var c = text[i];
-               if (c == '\n') continue;
-           
-               var charBaseSize = GetCharBaseSize(c);
-               float glyphWidth = charBaseSize.X * sizeF;
-           
-               if (curLineWidth + curWordWidth + glyphWidth >= rect.Width ||overshotChars.Count > 0)//break line
-               {
-                   if (c == ' ')
-                   {
-                       var wordEmphasis = GetEmphasis(curWord);
-
-                       if (overshotChars.Count > 0)
-                       {
-                           if (wordEmphasis != null) DrawWord(lineBreakWord, fontSize, fontSpacing, pos, curWordWidth, wordEmphasis);
-                           else DrawWord(lineBreakWord, fontSize, fontSpacing, pos);
-
-                           pos.Y += fontSize + lineSpacing;
-                           pos.X = rect.TopLeft.X;
-                           curLineWidth = 0f;
-                           curWordWidth = 0f;
-                           curWord = string.Empty;
-                           lineBreakWord = string.Empty;
-                           
-                           for (int j = 0; j < overshotChars.Count - 1; j++)
-                           {
-                               if (curWordWidth <= 0)
-                               {
-                                   curWord += overshotChars[j];
-                                   curWordWidth += overshotCharWidths[j] + fontSpacing;
-                                   if (curWordWidth >= rect.Width)
-                                   {
-                                       if (wordEmphasis != null) DrawWord(curWord, fontSize, fontSpacing, pos, curWordWidth, wordEmphasis);
-                                       else DrawWord(curWord, fontSize, fontSpacing, pos);
-                                       
-                                       pos.Y += fontSize + lineSpacing;
-                                       pos.X = rect.TopLeft.X;
-                                       curWordWidth = 0f;
-                                       curWord = string.Empty;
-                                   }
-                               }
-                               else
-                               {
-                                   if (curWordWidth + overshotCharWidths[j] + fontSpacing >= rect.Width)
-                                   {
-                                       if (wordEmphasis != null) DrawWord(curWord, fontSize, fontSpacing, pos, curWordWidth, wordEmphasis);
-                                       else DrawWord(curWord, fontSize, fontSpacing, pos);
-                                       
-                                       pos.Y += fontSize + lineSpacing;
-                                       pos.X = rect.TopLeft.X;
-                                       curWordWidth = 0f;
-                                       curWord = string.Empty;
-                                   }
-                                   
-                                   curWord += overshotChars[j];
-                                   curWordWidth += overshotCharWidths[j] + fontSpacing;
-                               }
-                           }
-
-                           if (curWordWidth > 0)
-                           {
-                               if (wordEmphasis != null) DrawWord(curWord, fontSize, fontSpacing, pos, curWordWidth, wordEmphasis);
-                               else DrawWord(curWord, fontSize, fontSpacing, pos);
-
-                               curLineWidth += curWordWidth;
-                               pos.X += curWordWidth;
-                               curWordWidth = 0f;
-                               curWord = string.Empty;
-                               overshotChars.Clear();
-                               overshotCharWidths.Clear();
-                           }
-                       }
-                       else
-                       {
-                           if (wordEmphasis != null) DrawWord(curWord, fontSize, fontSpacing, pos, curWordWidth, wordEmphasis);
-                           else DrawWord(curWord, fontSize, fontSpacing, pos);
-                           
-                           curWord = string.Empty;
-                           lineBreakWord = string.Empty;
-                           overshotChars.Clear();
-                           overshotCharWidths.Clear();
-                           pos.Y += fontSize + lineSpacing;
-                           pos.X = rect.TopLeft.X;
-                           curLineWidth = 0f;
-                           curWordWidth = 0f;
-                       }
-                       
-                   }
-                   else
-                   {
-                       if (overshotChars.Count <= 0)
-                       {
-                           lineBreakWord = curWord;
-                       }
-                       overshotChars.Add(c);
-                       overshotCharWidths.Add(glyphWidth);
-                       curWord += c;
-                       // else
-                       // {
-                       //     curWordWidth += glyphWidth + fontSpacing;
-                       // }
-                       
-                   }
-                   
-                   continue;
-               }
-           
-               curWordWidth += glyphWidth + fontSpacing;
-               if (c == ' ')
-               {
-                   var wordEmphasis = GetEmphasis(curWord);
-                   if (wordEmphasis != null) DrawWord(curWord, fontSize, fontSpacing, pos, curWordWidth, wordEmphasis);
-                   else DrawWord(curWord, fontSize, fontSpacing, pos);
-           
-                   curWord = string.Empty;
-                   curLineWidth += curWordWidth;
-                   pos.X = rect.TopLeft.X + curLineWidth; // curWordWidth;
-                   curWordWidth = 0f;
-               }
-               else curWord += c;
-           }
-           
-           var lastWordEmphasis = GetEmphasis(curWord);
-           if (lastWordEmphasis != null) DrawWord(curWord, fontSize, fontSpacing, pos, curWordWidth, lastWordEmphasis);
-           else DrawWord(curWord, fontSize, fontSpacing, pos);
-         */
-        
     }
     private void DrawTextWrapWord(string text, Rect rect, Vector2 alignement)
     {

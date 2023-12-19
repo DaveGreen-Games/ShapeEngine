@@ -91,7 +91,7 @@ namespace Examples.Scenes.ExampleScenes
         protected override void UpdateExampleTextEntryInactive(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
             textBlock.Font = font;
-            
+            textBlock.Caret.Index = -1;
         }
 
         protected override void UpdateExampleTextEntryActive(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
