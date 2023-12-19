@@ -1046,8 +1046,6 @@ public static class ShapeText
 #endregion
 
 
-//todo implement static functions for text block to replace shape text.
-
 #region NEW
 public class ED_Block : IEmphasisDrawer
 {
@@ -1138,6 +1136,47 @@ public enum TextWrapType
     Word = 2
 }
 
+public struct TextFont
+{
+    public readonly Font Font;
+    public float FontSpacing;
+    public float LineSpacing;
+    public Raylib_CsLo.Color Color;
+
+    public readonly bool IsValid;
+    
+    public TextFont()
+    {
+        IsValid = false;
+        Font = new();
+        FontSpacing = 0;
+        LineSpacing = 0;
+        Color = new();
+    }
+    public TextFont(Font font, Raylib_CsLo.Color color)
+    {
+        IsValid = true;
+        Font = font;
+        FontSpacing = 0f;
+        LineSpacing = 0f;
+        Color = color;
+    }
+    public TextFont(Font font, float fontSpacing, Raylib_CsLo.Color color)
+    {
+        IsValid = true;
+        Font = font;
+        FontSpacing = fontSpacing;
+        Color = color;
+    }
+    public TextFont(Font font, float fontSpacing, float lineSpacing, Raylib_CsLo.Color color)
+    {
+        IsValid = true;
+        Font = font;
+        FontSpacing = fontSpacing;
+        LineSpacing = lineSpacing;
+        Color = color;
+    }
+}
 public struct Caret
 {
     public int Index;
@@ -1177,6 +1216,8 @@ public struct Caret
     //     DrawLineEx(caretTop, caretBottom, Width, Color);
     // }
 }
+
+//todo implement text font struct
 public class TextBlock
 {
     #region Members
@@ -2360,12 +2401,18 @@ public class TextBlock
     
     #endregion
 }
+
+
+//TODO implement text block with dirty system
+//mouse pos / mouse selection emphasis / mouse caret color
+//function to move caret to mouse position or to specific index
+//event & virtual function when word was selected by mouse (mouse hovers over it)
+//maybe a word selection mode where user can move between words instead of moving the caret?
+
+//- Label (collection of words based on text, rect, color, emphases, font spacing, line spacing)
+//  - Word (text + rect + emphasis)
+
 #endregion
-
-
-
-
-
 
 
 
