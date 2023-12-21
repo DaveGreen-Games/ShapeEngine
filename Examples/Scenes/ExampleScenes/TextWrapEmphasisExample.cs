@@ -69,8 +69,8 @@ namespace Examples.Scenes.ExampleScenes
             // inputActions.Add(iaToggleAutoSize);
             inputActions.Add(iaToggleWrapMode);
 
-
-            textBlock = new(font);
+            var textFont = new TextFont(font, 0f, 0f, WHITE);
+            textBlock = new(textFont);
             textBlock.Caret = new(-1, RED);
             var emphasis1 = new Emphasis(new ED_Block(), RED, BLACK);
             var emphasis2 = new Emphasis(new ED_Block(), BLUE, BLACK);
@@ -85,14 +85,14 @@ namespace Examples.Scenes.ExampleScenes
             textBlock.Emphases.Add(textEmphasis3);
             textBlock.Emphases.Add(textEmphasis4);
 
-            TextBlock.EmphasisRectMargins = new(0.05f, 0f, 0.05f, 0f);
+            TextFont.EmphasisRectMargins = new(0.05f, 0f, 0.05f, 0f);
             // TextBlock.FontSizeModifier = 2f;
 
         }
 
         protected override void UpdateExampleTextEntryInactive(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            textBlock.Font = font;
+            textBlock.TextFont.Font = font;// textBlock.TextFont.ChangeFont(font);
             textBlock.Caret.Index = -1;
         }
 
@@ -197,14 +197,14 @@ namespace Examples.Scenes.ExampleScenes
             lineSpacing += lineSpacingIncrement;
             if (lineSpacing < 0) lineSpacing = maxLineSpacing;
             else if (lineSpacing > maxLineSpacing) lineSpacing = 0;
-            textBlock.LineSpacing = lineSpacing;
+            textBlock.TextFont.LineSpacing = lineSpacing;
         }
         private void ChangeFontSpacing()
         {
             fontSpacing += fontSpacingIncrement;
             if (fontSpacing < 0) fontSpacing = maxFontSpacing;
             else if (fontSpacing > maxFontSpacing) fontSpacing = 0;
-            textBlock.FontSpacing = fontSpacing;
+            textBlock.TextFont.FontSpacing = fontSpacing;
         }
         // private void ChangeFontSize()
         // {

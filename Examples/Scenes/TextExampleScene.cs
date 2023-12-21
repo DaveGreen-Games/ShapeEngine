@@ -291,12 +291,16 @@ namespace Examples.Scenes
         {
             var uiSize = ui.Area.Size;
             Rect r = new(topLeft, bottomRight);
+            
             float lineThickness = uiSize.Min() * 0.01f;
             // float fontSize = r.Width * 0.05f;
             float pointRadius = lineThickness * 2f;
             float interactionRadius = lineThickness * 4;
             r.DrawLines(lineThickness, ColorMedium);
-
+            
+            float margin = r.Size.Min() * 0.05f;
+            r = r.ApplyMarginsAbsolute(margin, margin, margin, margin);
+            
             if (!textEntryActive)
             {
                 //font.DrawText(textBox.Text, fontSize, fontSpacing, r.GetPoint(curAlignement), curAlignement, ColorHighlight1);
