@@ -24,7 +24,6 @@ public class TextBlock
     {
         if(textWrapType == TextWrapType.None)
         {
-            
             TextFont.DrawTextWrapNone(text, rect ,alignement, Caret, Emphases);
         }
         else if (textWrapType == TextWrapType.Char)
@@ -40,13 +39,22 @@ public class TextBlock
     #endregion
 }
 
-//TODO scaling behaves different on different screen sizes!!! should not be that way!
 
-//TODO implement text block with dirty system (Label)
-//mouse pos / mouse selection emphasis / mouse caret color
-//function to move caret to mouse position or to specific index
-//event & virtual function when word was selected by mouse (mouse hovers over it)
-//maybe a word selection mode where user can move between words instead of moving the caret?
 
-//- Label (collection of words based on text, rect, color, emphases, font spacing, line spacing)
-//  - Word (text + rect + emphasis)
+public class TextLabel
+{
+    //dirty system?
+    //mouse pos / mouse selection emphasis / mouse caret color
+    //function to move caret to mouse position or to specific index
+    //event & virtual function when word was selected by mouse (mouse hovers over it)
+    //maybe a word selection mode where user can move between words instead of moving the caret?
+
+    //- Label (collection of words based on text, rect, color, emphases, font spacing, line spacing)
+    //  - Word (text + rect + emphasis)
+    
+    public TextLabel()
+    {
+        
+    }
+}
+

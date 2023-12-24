@@ -12,7 +12,7 @@ public struct TextFont
     #region Static Members
 
     public static UIMargins EmphasisRectMargins = new();
-    public static RangeFloat FontSizeRange = new(15, 150);
+    public static RangeFloat FontSizeRange = new(10, 150);
     private static float fontSizeModifier = 1f;
     public static float FontSizeModifier
     {
@@ -112,7 +112,7 @@ public struct TextFont
         var textHeight = lines * BaseSize;
         var lineSpacingHeight = lines <= 0 ? 0 : (lines - 1) * lineSpacing;
         var height = textHeight + lineSpacingHeight;
-            
+
         var textArea = rectSize.X * height;
         var sizeF = MathF.Sqrt(rectSize.GetArea() / textArea);
         float fontSize = FontSizeRange.Clamp(BaseSize * sizeF);
@@ -218,8 +218,6 @@ public struct TextFont
         DrawTextPro(scaledFont.Font, text, r.TopLeft + originOffset, originOffset, rotDeg, scaledFont.FontSize, scaledFont.FontSpacing, scaledFont.Color);
     }
     public void DrawWord(string word, Vector2 topLeft) => DrawTextEx(Font, word, topLeft, FontSize, FontSpacing, Color);
-    public void DrawWord(string word, Vector2 topLeft, Raylib_CsLo.Color color) => DrawTextEx(Font, word, topLeft, FontSize, FontSpacing, color);
-
     public void DrawWord(string word, Rect rect, Vector2 alignement)
     {
         if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
@@ -242,19 +240,6 @@ public struct TextFont
         emphasis.DrawBackground(emphasisRect);
         
     }
-    public void DrawWord(string word, Vector2 topLeft, float width, Emphasis emphasis)
-    {
-        Rect r = new(topLeft, new Vector2(width, FontSize), new());
-        
-        var emphasisRect = EmphasisRectMargins.Apply(r);
-        
-        emphasis.DrawBackground(emphasisRect);
-        DrawWord(word, topLeft, emphasis.TextColor);
-        // DrawTextEx(font, word, r.TopLeft, fontSize, fontSpacing, emphasis.TextColor);
-        emphasis.DrawForeground(emphasisRect);
-        
-    }
-    
     
     public void DrawTextWrapNone(string text, Rect rect, Vector2 alignement)
     {
@@ -625,6 +610,21 @@ public struct TextFont
         }
     }
     
+    
+    private void DrawWord(string word, Vector2 topLeft, float width, Emphasis emphasis)
+    {
+        Rect r = new(topLeft, new Vector2(width, FontSize), new());
+        
+        var emphasisRect = EmphasisRectMargins.Apply(r);
+        
+        emphasis.DrawBackground(emphasisRect);
+        DrawWord(word, topLeft, emphasis.TextColor);
+        // DrawTextEx(font, word, r.TopLeft, fontSize, fontSpacing, emphasis.TextColor);
+        emphasis.DrawForeground(emphasisRect);
+        
+    }
+    private void DrawWord(string word, Vector2 topLeft, Raylib_CsLo.Color color) => DrawTextEx(Font, word, topLeft, FontSize, FontSpacing, color);
+
     #endregion
     
     public static Emphasis? GetEmphasis(string word, List<TextEmphasis>? emphases)
