@@ -36,7 +36,12 @@ public static class ShapeMath
         else if (value > max) return max;
         else return value;
     }
-
+    public static byte Clamp(byte value, byte min, byte max)
+    {
+        if (value < min) return min;
+        if (value > max) return max;
+        return value;
+    }
     public static int MaxInt(int value1, int value2)
     {
         if (value1 > value2) return value1;
