@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using Raylib_CsLo;
+using ShapeEngine.Color;
 
 namespace ShapeEngine.Lib
 {
@@ -215,7 +216,7 @@ namespace ShapeEngine.Lib
             var sysColor = ToSysColor();
             return new(sysColor.GetHue(), sysColor.GetSaturation(), sysColor.GetBrightness());
         }
-        public SColor FromHSV(float hue, float saturation, float value)
+        public static SColor FromHSV(float hue, float saturation, float value)
         {
             hue = ShapeMath.Clamp(hue, 0f, 1f);
             saturation = ShapeMath.Clamp(saturation, 0f, 1f);
@@ -238,15 +239,15 @@ namespace ShapeEngine.Lib
             return new(v, p, q, 255);
         }
 
-        public SColor FromHex(int colorValue) => FromHex(colorValue, byte.MaxValue);
-        public SColor FromHex(int colorValue, byte a)
+        public static SColor FromHex(int colorValue) => FromHex(colorValue, byte.MaxValue);
+        public static SColor FromHex(int colorValue, byte a)
         {
             byte[] rgb = BitConverter.GetBytes(colorValue);
             if (!BitConverter.IsLittleEndian) Array.Reverse(rgb);
             return new(rgb[2], rgb[1], rgb[0], a);
         }
-        public SColor FromHex(string hexColor) => FromHex(hexColor, byte.MaxValue);
-        public SColor FromHex(string hexColor, byte a)
+        public static SColor FromHex(string hexColor) => FromHex(hexColor, byte.MaxValue);
+        public static SColor FromHex(string hexColor, byte a)
         {
             //Remove # if present
             if (hexColor.IndexOf('#') != -1)
@@ -273,6 +274,24 @@ namespace ShapeEngine.Lib
 
             return new((byte)red, (byte)green, (byte)blue, a);
         }
+        public static SColor[] ParseColors(params int[] colors)
+        {
+            SColor[] palette = new SColor[colors.Length];
+            for (int i = 0; i < colors.Length; i++)
+            {
+                palette[i] = SColor.FromHex(colors[i]);
+            }
+            return palette;
+        }
+        public static SColor[] ParseColors(params string[] hexColors)
+        {
+            SColor[] palette = new SColor[hexColors.Length];
+            for (int i = 0; i < hexColors.Length; i++)
+            {
+                palette[i] = SColor.FromHex(hexColors[i]);
+            }
+            return palette;
+        }
 
         #endregion
 
@@ -290,8 +309,152 @@ namespace ShapeEngine.Lib
 
         private static byte Clamp(int value) => (byte)ShapeMath.Clamp(value, 0, 255);
     }
-    
-    
+
+    public class PaletteColor
+    {
+        public SColor Color;
+        public readonly int ID;
+
+        public PaletteColor()
+        {
+            this.ID = (int)ShapeID.NextID;
+            Color = new(); //randomize
+        }
+        public PaletteColor(SColor color)
+        {
+            this.ID = (int)ShapeID.NextID;
+            this.Color = color;
+        }
+        public PaletteColor(int id, SColor color)
+        {
+            this.ID = id;
+            this.Color = color;
+        }
+        
+    }
+    public class ColorContainer
+    {
+        private readonly PaletteColor[] colors;
+
+        public ColorContainer(params PaletteColor[] colors)
+        {
+            this.colors = colors;
+        }
+        public ColorContainer(IEnumerable<PaletteColor> colors)
+        {
+            this.colors = colors.ToArray();
+        }
+        public ColorContainer(Dictionary<int, SColor> colors)
+        {
+            this.colors = new PaletteColor[colors.Count];
+            int index = 0;
+            foreach (var kvp in colors)
+            {
+                this.colors[index] = new PaletteColor(kvp.Key, kvp.Value);
+                index++;
+            }
+        }
+
+        public void ApplyColor(PaletteColor target)
+        {
+            foreach (var source in colors)
+            {
+                if (source.ID != target.ID) continue;
+                target.Color = source.Color;
+                return;
+            }
+        }
+        // public void ApplyTo(Palette target)
+        // {
+        //     var targetColors = target.GetColors();
+        //     foreach (var c in targetColors)
+        //     {
+        //         ApplyColor(c);
+        //     }
+        // }
+        
+        
+        
+        public static ColorContainer Generate(int[] colors, params int[] colorIDs)
+        {
+            if (colors.Length <= 0 || colorIDs.Length <= 0) return new();
+            List<PaletteColor> container = new();
+            int size = colors.Length;
+            if (colorIDs.Length < size) size = colorIDs.Length;
+            for (int i = 0; i < size; i++)
+            {
+                var paletteColor = new PaletteColor(colorIDs[i], SColor.FromHex(colors[i]));
+                container.Add(paletteColor);
+            }
+            return new(container);
+        }
+        public static ColorContainer Generate(string[] hexColors, params int[] colorIDs)
+        {
+            if (hexColors.Length <= 0 || colorIDs.Length <= 0) return new();
+            List<PaletteColor> container = new();
+            int size = hexColors.Length;
+            if (colorIDs.Length < size) size = colorIDs.Length;
+            for (int i = 0; i < size; i++)
+            {
+                var paletteColor = new PaletteColor(colorIDs[i], SColor.FromHex(hexColors[i]));
+                container.Add(paletteColor);
+            }
+            return new(container);
+        }
+
+        
+        
+        
+    }
+    public abstract class Palette
+    {
+        public abstract List<PaletteColor> GetColors();
+
+        public void ApplyColorContainer(ColorContainer container)
+        {
+            var targetColors = GetColors();
+            foreach (var c in targetColors)
+            {
+                container.ApplyColor(c);
+            }
+        }
+    }
+
+    public class AnotherTestPalette : Palette
+    {
+
+        public SColor Color1 => color1.Color;
+        public SColor Color2 => color2.Color;
+        public SColor Color3 => color3.Color;
+
+        private readonly PaletteColor color1;
+        private readonly PaletteColor color2;
+        private readonly PaletteColor color3;
+
+        private readonly List<PaletteColor> colors;
+        public ColorContainer Container1 = new();
+        public ColorContainer Container2 = new();
+        
+        public AnotherTestPalette()
+        {
+            color1 = new PaletteColor(0, new(System.Drawing.Color.Aqua));
+            color2 = new PaletteColor(1, new(System.Drawing.Color.IndianRed));
+            color3 = new PaletteColor(2, new(System.Drawing.Color.LimeGreen));
+            colors = new() { color1, color2, color3 };
+        }
+
+
+        public override List<PaletteColor> GetColors() => colors;
+    }
+
+    public class CallerClass
+    {
+        public CallerClass()
+        {
+            var colorPalette = new AnotherTestPalette();
+            colorPalette.ApplyColorContainer(colorPalette.Container1);
+        }
+    }
     
     public static class ShapeColor
     {
