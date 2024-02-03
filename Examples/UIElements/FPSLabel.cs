@@ -2,29 +2,28 @@ using System.Numerics;
 using Raylib_CsLo;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Lib;
+using ShapeEngine.Text;
 
 namespace Examples.UIElements;
 
 public class FPSLabel
 {
-    public Font Font;
-    public Color Color = WHITE;
-
-    public FPSLabel(Font font, Color color)
+    private TextFont textFont;
+    public FPSLabel(Font font, Color color, float fontSpacing = 1f)
     {
-        this.Font = font;
-        Color = color;
+        this.textFont = new(font, fontSpacing, color);
 
     }
     public void Draw(Rect r, Vector2 textAlignement, float fontSpacing = 1f)
     {
         int fps = Raylib.GetFPS();
         float f = (float)fps / (float)GAMELOOP.FrameRateLimit;
-        var c = Color;
+        var c = textFont.Color;
         if (fps < 28 || f < 0.5f) c = RED;
         else if (f < 0.75f) c = YELLOW;
         //else c = GREEN;
         string fpsText = $"{fps}";
-        Font.DrawText(fpsText, r, fontSpacing, textAlignement, c);
+        textFont.DrawTextWrapNone(fpsText, r, textAlignement, c);
+        // Font.DrawText(fpsText, r, fontSpacing, textAlignement, c);
     }
 }

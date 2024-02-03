@@ -8,6 +8,7 @@ using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
+using ShapeEngine.Text;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -82,13 +83,13 @@ namespace Examples.Scenes.ExampleScenes
         public string Title { get; set; } = "";
         private Rect background = new();
         private Rect fill = new();
-        private Font font;
+        private TextFont font;
         private bool mouseInside = false;
         public Slider(float startValue, string title, Font font)
         {
             this.Title = title;
             this.CurValue = ShapeMath.Clamp(startValue, 0f, 1f);
-            this.font = font;
+            this.font = new(font, 1f, WHITE);
         }
 
         public void SetValue(float newValue)
@@ -115,8 +116,11 @@ namespace Examples.Scenes.ExampleScenes
         {
             background.DrawRounded(4f, 4, ExampleScene.ColorDarkB);
             fill.DrawRounded(4f, 4, ExampleScene.ColorMedium);
+            
             int textValue = (int)(CurValue * 100);
-            font.DrawText($"{Title} {textValue}", background, 1f, new Vector2(0.1f, 0.5f), mouseInside ? ExampleScene.ColorHighlight2 : ExampleScene.ColorHighlight3);
+            font.Color = mouseInside ? ExampleScene.ColorHighlight2 : ExampleScene.ColorHighlight3;
+            font.DrawTextWrapNone($"{Title} {textValue}", background, new Vector2(0.1f, 0.5f));
+            // font.DrawText(, background, 1f, new Vector2(0.1f, 0.5f), mouseInside ? ExampleScene.ColorHighlight2 : ExampleScene.ColorHighlight3);
         }
     }
     internal class Ship : ICameraFollowTarget
@@ -502,7 +506,11 @@ namespace Examples.Scenes.ExampleScenes
             var zoom = (int)(ShapeUtils.GetFactor(camera.ZoomLevel, 0.1f, 5f) * 100f);
             
             string text = $"Pos {x}/{y} | Rot {rot} | Zoom {zoom}";
-            font.DrawText(text, rect, 1f, new Vector2(0.5f, 0.5f), ColorHighlight3);
+            textFont.FontSpacing = 1f;
+            textFont.Color = ColorHighlight3;
+            textFont.DrawTextWrapNone(text, rect, new(0.5f));
+            
+            // font.DrawText(text, rect, 1f, new Vector2(0.5f, 0.5f), ColorHighlight3);
         }
         private void DrawInputDescription(Rect rect)
         {
@@ -515,8 +523,17 @@ namespace Examples.Scenes.ExampleScenes
             string onText = drawCameraFollowBoundary ? "ON" : "OFF";
             string textTop = $"Draw Camera Follow Boundary {onText} - Toggle {toggleDrawText}";
             string textBottom = $"{moveText} | Shake {shakeCameraText} | Rotate {rotateCameraText}";
-            font.DrawText(textTop, rects.top, 1f, new Vector2(0.5f, 0.5f), ColorMedium);
-            font.DrawText(textBottom, rects.bottom, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+            
+            textFont.FontSpacing = 1f;
+            
+            textFont.Color = ColorMedium;
+            textFont.DrawTextWrapNone(textTop, rects.top, new(0.5f));
+            
+            textFont.Color = ColorLight;
+            textFont.DrawTextWrapNone(textBottom, rects.bottom, new(0.5f));
+            
+            // font.DrawText(textTop, rects.top, 1f, new Vector2(0.5f, 0.5f), ColorMedium);
+            // font.DrawText(textBottom, rects.bottom, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
     }
 

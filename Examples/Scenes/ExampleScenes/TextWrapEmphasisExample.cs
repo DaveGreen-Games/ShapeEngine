@@ -70,7 +70,7 @@ namespace Examples.Scenes.ExampleScenes
             // inputActions.Add(iaToggleAutoSize);
             inputActions.Add(iaToggleWrapMode);
 
-            var textFont = new TextFont(font, 0f, 0f, WHITE);
+            // var tf = new TextFont(textFont.Font, 0f, 0f, WHITE);
             textBlock = new(textFont);
             textBlock.Caret = new(-1, RED);
             var emphasis1 = new Emphasis(new ED_Block(), RED, BLACK);
@@ -93,7 +93,7 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void UpdateExampleTextEntryInactive(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            textBlock.TextFont.Font = font;// textBlock.TextFont.ChangeFont(font);
+            textBlock.TextFont.Font = textFont.Font;// font;// textBlock.TextFont.ChangeFont(font);
             textBlock.Caret.Index = -1;
         }
 
@@ -188,7 +188,11 @@ namespace Examples.Scenes.ExampleScenes
             string textWrapMode = wrapModeChar ? "Char" : "Word";
 
             string text = $"Font Spacing {fontSpacingText} ({fontSpacing}) | Line Spacing {lineSpacingText} ({lineSpacing}) | Wrap Mode {wrapModeText} ({textWrapMode}))";
-            font.DrawText(text, rect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
+            
+            textFont.FontSpacing = 4f;
+            textFont.Color = ColorLight;
+            textFont.DrawTextWrapNone(text, rect, new(0.5f));
+            // font.DrawText(text, rect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
         }
 
         

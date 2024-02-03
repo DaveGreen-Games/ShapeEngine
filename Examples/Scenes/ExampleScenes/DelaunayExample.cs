@@ -46,7 +46,8 @@ namespace Examples.Scenes.ExampleScenes
             var addMultiplePointsGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
             var addMultiplePointsMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
             iaAddMultiplePoints = new(addMultiplePointsKB, addMultiplePointsGP, addMultiplePointsMB);
-
+            textFont.FontSpacing = 1f;
+            textFont.Color = ColorLight;
         }
         public override void Reset()
         {
@@ -212,9 +213,9 @@ namespace Examples.Scenes.ExampleScenes
                 sb.Append($"Triangles {curTriangulation.Count}");
             }
             
+            textFont.DrawTextWrapNone(sb.ToString(), rect, new(0.5f));
             
-            
-            font.DrawText(sb.ToString(), rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+            // font.DrawText(sb.ToString(), rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
     }
 

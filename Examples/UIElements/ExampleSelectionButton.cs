@@ -4,6 +4,7 @@ using ShapeEngine.UI;
 using System.Numerics;
 using ShapeEngine.Input;
 using ShapeEngine.Lib;
+using ShapeEngine.Text;
 
 namespace Examples.UIElements
 {
@@ -12,12 +13,12 @@ namespace Examples.UIElements
         //public string Text { get; set; } = "Button";
         private Vector2 prevMousePos = new();
         public ExampleScene? Scene { get; private set; } = null;
-        private Font font;
+        private TextFont textFont;
         public ExampleSelectionButton()
         {
             Hidden = true;
             DisabledSelection = true;
-            font = GAMELOOP.FontDefault; // GAMELOOP.GetFont(GameloopExamples.FONT_IndieFlowerRegular);
+            textFont = new TextFont(GAMELOOP.FontDefault, 5f, ExampleScene.ColorHighlight1);
 
         }
 
@@ -58,18 +59,21 @@ namespace Examples.UIElements
 
             if (Selected)
             {
-                //r.DrawLines(4f, GREEN);
-                font.DrawText(text, r, 5f, new(0f), ExampleScene.ColorHighlight2);
+                textFont.Color = ExampleScene.ColorHighlight2;
+                textFont.DrawTextWrapNone(text, r, new(0f));
+                // font.DrawText(text, r, 5f, new(0f), ExampleScene.ColorHighlight2);
             }
             else if (Pressed)
             {
-                //r.DrawLines(4f, YELLOW);
-                font.DrawText(text, r, 5f, new(0f), ExampleScene.ColorHighlight1);
+                textFont.Color = ExampleScene.ColorHighlight1;
+                textFont.DrawTextWrapNone(text, r, new(0f));
+                // font.DrawText(text, r, 5f, new(0f), ExampleScene.ColorHighlight1);
             }
             else
             {
-                //r.DrawLines(4f, WHITE);
-                font.DrawText(text, r, 5f, new(0f), ExampleScene.ColorHighlight1);
+                textFont.Color = ExampleScene.ColorHighlight1;
+                textFont.DrawTextWrapNone(text, r, new(0f));
+                // font.DrawText(text, r, 5f, new(0f), ExampleScene.ColorHighlight1);
             }
 
 

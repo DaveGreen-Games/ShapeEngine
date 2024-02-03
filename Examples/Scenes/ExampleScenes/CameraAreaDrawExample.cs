@@ -1,13 +1,10 @@
 using Raylib_CsLo;
 using ShapeEngine.Core;
 using ShapeEngine.Lib;
-using ShapeEngine.Random;
 using ShapeEngine.Screen;
-using System.Net.NetworkInformation;
 using System.Numerics;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.UI;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
 
@@ -186,7 +183,11 @@ namespace Examples.Scenes.ExampleScenes
         private void DrawStarInfo(Rect rect)
         {
             string infoText = $"Total Stars {stars.Count} | Drawn Stars {drawStars.Count} | Camera Size {camera.Area.Size.Round()}";
-            font.DrawText(infoText, rect, 1f, new Vector2(0.5f, 0.5f), ColorHighlight3);
+            
+            textFont.FontSpacing = 1f;
+            textFont.Color = ColorHighlight3;
+            textFont.DrawTextWrapNone(infoText, rect, new(0.5f));
+            // font.DrawText(infoText, rect, 1f, new Vector2(0.5f, 0.5f), ColorHighlight3);
         }
         private void DrawInputDescription(Rect rect)
         {
@@ -195,7 +196,10 @@ namespace Examples.Scenes.ExampleScenes
             string changeTargetText = iaChangeCameraTarget.GetInputTypeDescription(curDevice, true, 1, false);
             string moveText = ship.GetInputDescription(curDevice);
             string shipInfoText = $"{moveText} | Switch Ship {changeTargetText}";
-            font.DrawText(shipInfoText, rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+            textFont.FontSpacing = 1f;
+            textFont.Color = ColorLight;
+            textFont.DrawTextWrapNone(shipInfoText, rect, new(0.5f));
+            // font.DrawText(shipInfoText, rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
     }
 

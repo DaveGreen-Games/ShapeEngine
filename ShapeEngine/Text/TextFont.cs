@@ -218,6 +218,26 @@ public struct TextFont
         DrawTextPro(scaledFont.Font, text, r.TopLeft + originOffset, originOffset, rotDeg, scaledFont.FontSize, scaledFont.FontSpacing, scaledFont.Color);
     }
     public void DrawWord(string word, Vector2 topLeft) => DrawTextEx(Font, word, topLeft, FontSize, FontSpacing, Color);
+    public void DrawWord(string word, Vector2 topLeft, Vector2 alignement)
+    {
+        var size = GetTextSize(word);
+        Rect r = new(topLeft, size, alignement);
+        DrawTextEx(Font, word, r.TopLeft, FontSize, FontSpacing, Color);
+    }
+    public void DrawWord(string word, Vector2 topLeft, Vector2 alignement, Caret caret)
+    {
+        DrawWord(word, topLeft, alignement);
+        
+        if (caret.IsValid)
+        {
+            string caretText = word.Substring(0, caret.Index);
+            var caretTextSize =  GetTextSize(caretText);
+            Rect r = new(topLeft, caretTextSize, alignement);
+        
+            var caretTop = r.TopLeft + new Vector2(caretTextSize.X + FontSpacing * 0.5f, 0f);
+            caret.Draw(caretTop, FontSize);
+        }
+    }
     public void DrawWord(string word, Rect rect, Vector2 alignement)
     {
         if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
@@ -240,6 +260,8 @@ public struct TextFont
         emphasis.DrawBackground(emphasisRect);
         
     }
+
+    
     
     public void DrawTextWrapNone(string text, Rect rect, Vector2 alignement)
     {

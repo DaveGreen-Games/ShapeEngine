@@ -23,7 +23,8 @@ namespace Examples.Scenes
         private bool draggingTopLeft = false;
         private bool draggingBottomRight = false;
 
-        protected Font font;
+        //protected TextFont font;
+        // protected Font font;
         private int fontIndex = 0;
         private bool textEntryActive => textBox.Active;
 
@@ -55,7 +56,7 @@ namespace Examples.Scenes
             topLeft = topLeftRelative * s;
             bottomRight = bottomRightRelative * s;
             
-            font = GAMELOOP.GetFont(fontIndex);
+            //font =  new(GAMELOOP.GetFont(fontIndex),1f, ExampleScene.ColorLight);
 
             var enterTextKB = new InputTypeKeyboardButton(ShapeKeyboardButton.ENTER);
             var enterTextGP = new InputTypeGamepadButton(ShapeGamepadButton.MIDDLE_RIGHT);
@@ -391,7 +392,11 @@ namespace Examples.Scenes
             {
                 string info =
                     $"Write Custom Text {enterText} | Drag Rect Corners {dragText} | Change Font {nextFontText} ({GAMELOOP.GetFontName(fontIndex)})";
-                font.DrawText(info, top, 4f, new Vector2(0.5f, 0.5f), ColorLight);
+
+                textFont.FontSpacing = 4f;
+                textFont.Color = ColorLight;
+                textFont.DrawTextWrapNone(info, top, new(0.5f));
+                // font.DrawText(info, top, 4f, new Vector2(0.5f, 0.5f), ColorLight);
 
                 DrawInputDescriptionBottom(bottom);
                 // string alignmentInfo = $"{nextFontText} Font: {GAMELOOP.GetFontName(fontIndex)} | [{decreaseFontSpacingText}/{increaseFontSpacingText}] Font Spacing: {fontSpacing} | {nextAlignementText} Alignment: {curAlignement}";
@@ -400,8 +405,17 @@ namespace Examples.Scenes
             else
             {
                 string info = $"Cancel {cancelText} | Accept {finishText} | Clear Text {clearText} | Delete {deleteText} | Backspace {backspaceText}";
-                font.DrawText($"Text Entry Mode Active |  Caret Position [{caretPrevText}/{caretNextText}] ({textBox.CaretIndex})", top, 4f, new Vector2(0.5f, 0.5f), ColorHighlight3);
-                font.DrawText(info, bottom, 4f, new Vector2(0.5f, 0.5f), ColorLight);
+                
+                textFont.FontSpacing = 4f;
+                
+                textFont.Color = ColorHighlight3;
+                textFont.DrawTextWrapNone($"Text Entry Mode Active |  Caret Position [{caretPrevText}/{caretNextText}] ({textBox.CaretIndex})", top, new(0.5f));
+                
+                textFont.Color = ColorLight;
+                textFont.DrawTextWrapNone(info, bottom, new(0.5f));
+                
+                // font.DrawText($"Text Entry Mode Active |  Caret Position [{caretPrevText}/{caretNextText}] ({textBox.CaretIndex})", top, 4f, new Vector2(0.5f, 0.5f), ColorHighlight3);
+                // font.DrawText(info, bottom, 4f, new Vector2(0.5f, 0.5f), ColorLight);
             }
         }
         private void NextFont()
@@ -409,7 +423,7 @@ namespace Examples.Scenes
             int fontCount = GAMELOOP.GetFontCount();
             fontIndex++;
             if (fontIndex >= fontCount) fontIndex = 0;
-            font = GAMELOOP.GetFont(fontIndex);
+            textFont.Font = GAMELOOP.GetFont(fontIndex);
         }
         #endregion
     }

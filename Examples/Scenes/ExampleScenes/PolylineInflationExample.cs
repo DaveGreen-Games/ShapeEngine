@@ -44,6 +44,9 @@ namespace Examples.Scenes.ExampleScenes
             var offsetKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.S, ShapeKeyboardButton.W);
             var offsetGP = new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_DOWN, ShapeGamepadButton.LEFT_FACE_UP);
             changeOffset = new(offsetMW, offsetGP, offsetKB);
+            
+            textFont.FontSpacing = 1f;
+            textFont.Color = ColorLight;
 
         }
         public override void Reset()
@@ -212,7 +215,9 @@ namespace Examples.Scenes.ExampleScenes
             Rect bottomCenter = GAMELOOP.UIRects.GetRect("bottom center"); // Get("bottom").Get("center").GetRect(); // GAMELOOP.UIRects.GetChild("bottom").GetChild("center").Rect;
             string infoText =
                 $"Add Point {create} | Remove Point {delete} | Inflate {offset} {MathF.Round(offsetDelta * 100) / 100}";
-            font.DrawText(infoText, bottomCenter, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+            
+            textFont.DrawTextWrapNone(infoText, bottomCenter, new(0.5f));
+            // font.DrawText(infoText, bottomCenter, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
     }
 

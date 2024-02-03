@@ -6,6 +6,7 @@ using System.Text;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
+using ShapeEngine.Text;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -50,20 +51,33 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void DrawText(Rect rect)
         {
-            
             float fontSize = MathF.Abs(rect.Width) * 0.07f;
-            font.DrawText(textBox.Text, fontSize, fontSpacing, rect.GetPoint(curAlignement), curAlignement, ColorHighlight1);
+            textFont.FontSpacing = 1f;
+            textFont.Color = ColorLight;
+
+            textFont.FontSize = fontSize;
+            textFont.FontSpacing = fontSpacing;
+            textFont.Color = ColorHighlight1;
+            textFont.DrawWord(textBox.Text, rect.GetPoint(curAlignement), curAlignement);
+            // font.DrawText(textBox.Text, fontSize, fontSpacing, rect.GetPoint(curAlignement), curAlignement, ColorHighlight1);
         }
 
         protected override void DrawTextEntry(Rect rect)
         {
             float fontSize = rect.Width * 0.07f;
-            font.DrawText(textBox.Text, fontSize, fontSpacing, rect.GetPoint(curAlignement), curAlignement, ColorLight);
+            
+            textFont.FontSize = fontSize;
+            textFont.FontSpacing = fontSpacing;
+            textFont.Color = ColorLight;
+            Caret caret = new(textBox.CaretVisible ? textBox.CaretIndex : -1, ColorHighlight2, 0.05f);
+            textFont.DrawWord(textBox.Text, rect.GetPoint(curAlignement), curAlignement, caret);
+            // font.DrawText(textBox.Text, fontSize, fontSpacing, rect.GetPoint(curAlignement), curAlignement, ColorLight);
+
+            // if (textBox.CaretVisible)
+            // {
                 
-            if(textBox.CaretVisible)
-                font.DrawCaret(textBox.Text, rect, fontSize, fontSpacing, curAlignement, textBox.CaretIndex, 5f, ColorHighlight2);
-            
-            
+                // font.DrawCaret(textBox.Text, rect, fontSize, fontSpacing, curAlignement, textBox.CaretIndex, 5f, ColorHighlight2);
+            // }
         }
 
         protected override void DrawInputDescriptionBottom(Rect rect)
@@ -73,7 +87,12 @@ namespace Examples.Scenes.ExampleScenes
             string decreaseFontSpacingText = iaDeacreaseFontSpacing.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
             string increaseFontSpacingText = iaIncreaseFontSpacing.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
             string alignmentInfo = $"Font Spacing [{decreaseFontSpacingText}/{increaseFontSpacingText}] ({fontSpacing}) | Alignment {nextAlignementText} ({curAlignement})";
-            font.DrawText(alignmentInfo, rect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
+            
+            textFont.FontSpacing = 4f;
+            textFont.Color = ColorLight;
+            textFont.DrawTextWrapNone(alignmentInfo, rect, new(0.5f));
+            
+            // font.DrawText(alignmentInfo, rect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
         }
         
         private void ChangeFontSpacing(int amount)

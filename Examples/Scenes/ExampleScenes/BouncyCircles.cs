@@ -289,7 +289,11 @@ namespace Examples.Scenes.ExampleScenes
             DrawInputDescription(GAMELOOP.UIRects.GetRect("bottom center"));
             
             var objectCountText = $"Object Count: {gameObjectHandler.Count}";
-            font.DrawText(objectCountText, GAMELOOP.UIRects.GetRect("bottom right"), 1f, new Vector2(0.98f, 0.98f), ColorHighlight3);
+            
+            textFont.FontSpacing = 1f;
+            textFont.Color = ColorHighlight3;
+            textFont.DrawTextWrapNone(objectCountText, GAMELOOP.UIRects.GetRect("bottom right"), new Vector2(0.98f, 0.98f));
+            // font.DrawText(objectCountText, GAMELOOP.UIRects.GetRect("bottom right"), 1f, new Vector2(0.98f, 0.98f), ColorHighlight3);
         }
 
         private void DrawInputDescription(Rect rect)
@@ -304,7 +308,11 @@ namespace Examples.Scenes.ExampleScenes
             string slow4Text = iaSlow4.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
             
             var text = $"Add {addText} | Slow Motion : [{slow1Text} / {slow2Text} / {slow3Text} / {slow4Text}]";
-            font.DrawText(text, rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+            
+            textFont.FontSpacing = 1f;
+            textFont.Color = ColorLight;
+            textFont.DrawTextWrapNone(text, rect, new(0.5f));
+            // font.DrawText(text, rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
     }
 }

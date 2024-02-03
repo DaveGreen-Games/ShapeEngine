@@ -501,7 +501,7 @@ namespace Examples.Scenes.ExampleScenes
 
         internal enum ShapeType { None = 0, Triangle = 1, Rect = 2, Poly = 3};
 
-        private Font font;
+        // private Font font;
         private GameObjectHandlerCollision gameObjectHandler;
         private Rect boundaryRect = new();
 
@@ -539,7 +539,7 @@ namespace Examples.Scenes.ExampleScenes
         public AsteroidMiningExample()
         {
             Title = "Asteroid Mining Example";
-            font = GAMELOOP.GetFont(FontIDs.JetBrains);
+            // font = GAMELOOP.GetFont(FontIDs.JetBrains);
             UpdateBoundaryRect(GAMELOOP.Game.Area);
             gameObjectHandler = new GameObjectHandlerCollision(boundaryRect, 4, 4);
 
@@ -602,6 +602,9 @@ namespace Examples.Scenes.ExampleScenes
                 iaPickPolygonShape,
                 iaDragLaser
             };
+            
+            textFont.FontSpacing = 1f;
+            textFont.Color = ColorLight;
         }
         public override void Reset()
         {
@@ -1026,7 +1029,10 @@ namespace Examples.Scenes.ExampleScenes
                 sb.Append($"Laser: Drag {moveLaser} | ");
                 sb.Append($"Shoot {shootLaser}");
             }
-            font.DrawText(sb.ToString(), rect, 1f, new Vector2(0.5f, 0.95f), ColorLight);
+
+            
+            textFont.DrawTextWrapNone(sb.ToString(), rect, new(0.5f));
+            // font.DrawText(sb.ToString(), rect, 1f, new Vector2(0.5f, 0.95f), ColorLight);
             
             // var polymodeText = "[Tab] Polymode | [LMB] Place/Merge | [RMB] Cut | [1] Triangle | [2] Rect | [3] Poly | [Q] Regenerate | [X] Rotate | [C] Scale";
             // var laserText = "[Tab] Lasermode | [LMB] Move | [RMB] Shoot Laser";

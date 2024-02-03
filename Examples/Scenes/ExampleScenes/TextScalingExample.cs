@@ -6,6 +6,7 @@ using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
+using ShapeEngine.Text;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -47,15 +48,23 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void DrawText(Rect rect)
         {
-            font.DrawText(textBox.Text, rect, fontSpacing, new Vector2(0.5f, 0.5f), ColorHighlight1);
+            textFont.FontSpacing = fontSpacing;
+            textFont.Color = ColorHighlight1;
+            textFont.DrawTextWrapNone(textBox.Text, rect, new(0.5f));
+            // font.DrawText(textBox.Text, rect, fontSpacing, new Vector2(0.5f, 0.5f), ColorHighlight1);
         }
 
         protected override void DrawTextEntry(Rect rect)
         {
-            font.DrawText(textBox.Text, rect, fontSpacing, new Vector2(0.5f, 0.5f), ColorLight);
+            Caret caret = new(textBox.CaretVisible ? textBox.CaretIndex : -1, ColorHighlight2, 0.05f);
+            textFont.FontSpacing = fontSpacing;
+            textFont.Color = ColorLight;
+            textFont.DrawTextWrapNone(textBox.Text, rect, new(0.5f), caret);
             
-            if(textBox.CaretVisible)
-                font.DrawCaret(textBox.Text, rect, fontSpacing, new Vector2(0.5f, 0.5f), textBox.CaretIndex, 5f, ColorHighlight2);
+            // font.DrawText(textBox.Text, rect, fontSpacing, new Vector2(0.5f, 0.5f), ColorLight);
+            
+            // if(textBox.CaretVisible)
+                // font.DrawCaret(textBox.Text, rect, fontSpacing, new Vector2(0.5f, 0.5f), textBox.CaretIndex, 5f, ColorHighlight2);
         }
 
         protected override void DrawInputDescriptionBottom(Rect rect)
@@ -64,7 +73,11 @@ namespace Examples.Scenes.ExampleScenes
             string decreaseFontSpacingText = iaDeacreaseFontSpacing.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
             string increaseFontSpacingText = iaIncreaseFontSpacing.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
             string alignmentInfo = $"Font Spacing [{decreaseFontSpacingText}/{increaseFontSpacingText}] ({fontSpacing})";
-            font.DrawText(alignmentInfo, rect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
+            
+            textFont.FontSpacing = 4f;
+            textFont.Color = ColorLight;
+            textFont.DrawTextWrapNone(alignmentInfo, rect, new(0.5f));
+            // font.DrawText(alignmentInfo, rect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
         }
 
 

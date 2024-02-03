@@ -11,6 +11,7 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Screen;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
+using ShapeEngine.Text;
 
 namespace Examples.Scenes
 {
@@ -48,7 +49,8 @@ namespace Examples.Scenes
         private List<ExampleScene> examples = new();
         private List<ExampleSelectionButton> buttons = new();
         private UIElement curButton;
-        private Font titleFont;
+        // private Font titleFont;
+        private TextFont titleFont;
 
         private float tabChangeMouseWheelLockTimer = 0f;
         private InputActionLabel quitLabel;
@@ -76,9 +78,9 @@ namespace Examples.Scenes
             
             examples.Add(new TextScalingExample());
             examples.Add(new TextWrapEmphasisExample());
-            examples.Add(new WordEmphasisDynamicExample());
             examples.Add(new TextBoxExample()); 
             
+            // examples.Add(new WordEmphasisDynamicExample());
             //examples.Add(new TextEmphasisExample());
             //examples.Add(new WordEmphasisStaticExample());
             //examples.Add(new TextWrapExample());
@@ -86,7 +88,7 @@ namespace Examples.Scenes
             //examples.Add(new PolylineCollisionExample());
             //examples.Add(new CCDExample());
             
-            titleFont = GAMELOOP.FontDefault; // GAMELOOP.GetFont(GameloopExamples.FONT_IndieFlowerRegular);
+            titleFont = new(GAMELOOP.FontDefault, 10f, ExampleScene.ColorLight); // GAMELOOP.GetFont(GameloopExamples.FONT_IndieFlowerRegular);
 
             SetupButtons();
 
@@ -319,29 +321,38 @@ namespace Examples.Scenes
 
             var text = "Shape Engine Examples";
             var titleRect = new Rect(uiSize * new Vector2(0.5f, 0.01f), uiSize * new Vector2(0.75f, 0.09f), new Vector2(0.5f, 0f));
-            titleFont.DrawText(text, titleRect, 10, new(0.5f), ExampleScene.ColorLight);
-
+            // titleFont.DrawText(text, titleRect, 10, new(0.5f), ExampleScene.ColorLight);
+            titleFont.FontSpacing = 10f;
+            titleFont.Color = ExampleScene.ColorLight;
+            titleFont.DrawTextWrapNone(text, titleRect, new(0.5f));
             int pages = GetMaxPages();
             string prevName = GAMELOOP.InputActionUIPrevTab.GetInputTypeDescription(ShapeInput.CurrentInputDeviceType, true, 1, false);
             string nextName = GAMELOOP.InputActionUINextTab.GetInputTypeDescription(ShapeInput.CurrentInputDeviceType, true, 1, false);
             
             string pagesText = pages <= 1 ? "Page 1/1" : $"{prevName} <- Page #{curPageIndex + 1}/{pages} -> {nextName}";
             var pageRect = new Rect(uiSize * new Vector2(0.01f, 0.12f), uiSize * new Vector2(0.3f, 0.06f), new Vector2(0f, 0f));
-            titleFont.DrawText(pagesText, pageRect, 4f, new(0f, 0.5f), ExampleScene.ColorHighlight2);
+            titleFont.FontSpacing = 4f;
+            titleFont.Color = ExampleScene.ColorHighlight2;
+            titleFont.DrawTextWrapNone(pagesText, pageRect, new(0f, 0.5f));
+            // titleFont.DrawText(pagesText, pageRect, 4f, new(0f, 0.5f), ExampleScene.ColorHighlight2);
 
             Segment s = new(uiSize * new Vector2(0f, 0.22f), uiSize * new Vector2(1f, 0.22f));
             s.Draw(MathF.Max(4f * GAMELOOP.DevelopmentToScreen.AreaFactor, 0.5f), ExampleScene.ColorLight);
 
             var backRect = new Rect(uiSize * new Vector2(0.01f, 0.17f), uiSize * new Vector2(0.2f, 0.04f), new Vector2(0f, 0f));
             var curInputDevice = ShapeInput.CurrentInputDeviceTypeNoMouse;
-            quitLabel.Draw(backRect, new Vector2(0f), curInputDevice, 1f);
+            
+            quitLabel.Draw(backRect, new Vector2(0f), curInputDevice);
 
             var infoArea = ui.Area.ApplyMargins(0.7f, 0.025f, 0.14f, 0.79f);
             var infoAreaRects = infoArea.SplitV(0.5f);
             float p = GAMELOOP.GetScreenPercentage();
             int pi = (int)MathF.Round(p * 100);
-            titleFont.DrawText($"Window Focused: {Raylib.IsWindowFocused()} | [{pi}%]", infoAreaRects.top, 1f, new Vector2(1f, 1f), ExampleScene.ColorHighlight3);
-            titleFont.DrawText($"Cursor On Screen: {ShapeLoop.CursorOnScreen}", infoAreaRects.bottom, 1f, new Vector2(1f, 1f), ExampleScene.ColorHighlight3);
+            
+            titleFont.FontSpacing = 1f;
+            titleFont.Color = ExampleScene.ColorHighlight3;
+            titleFont.DrawTextWrapNone($"Window Focused: {Raylib.IsWindowFocused()} | [{pi}%]", infoAreaRects.top, new Vector2(1f, 1f));
+            titleFont.DrawTextWrapNone($"Cursor On Screen: {ShapeLoop.CursorOnScreen}", infoAreaRects.bottom, new Vector2(1f, 1f));
             
             // var r = ui.Area.ApplyMargins(0.75f, 0.025f, 0.17f, 0.79f);
             // titleFont.DrawText($"Cursor On Screen: {ShapeLoop.CursorOnScreen}", r, 1f, new Vector2(1f, 1f), ExampleScene.ColorHighlight2);
@@ -510,11 +521,18 @@ namespace Examples.Scenes
 
             var color = ExampleScene.ColorMedium;
             var alignement = new Vector2(1f, 0.05f);
-            titleFont.DrawText(fullscreenInfo, rects[0], 1f, alignement, color);
-            titleFont.DrawText(crtInfo, rects[1], 1f, alignement, color);
-            titleFont.DrawText(resetInfo, rects[2], 1f, alignement, color);
-            titleFont.DrawText(zoomInfo, rects[3], 1f, alignement, color);
-            titleFont.DrawText(pauseInfo, rects[4], 1f, alignement, color);
+            titleFont.FontSpacing = 1f;
+            titleFont.Color = color;
+            titleFont.DrawTextWrapNone(fullscreenInfo, rects[0], alignement);
+            titleFont.DrawTextWrapNone(crtInfo, rects[1], alignement);
+            titleFont.DrawTextWrapNone(resetInfo, rects[2], alignement);
+            titleFont.DrawTextWrapNone(zoomInfo, rects[3], alignement);
+            titleFont.DrawTextWrapNone(pauseInfo, rects[4], alignement);
+            // titleFont.DrawText(fullscreenInfo, rects[0], 1f, alignement, color);
+            // titleFont.DrawText(crtInfo, rects[1], 1f, alignement, color);
+            // titleFont.DrawText(resetInfo, rects[2], 1f, alignement, color);
+            // titleFont.DrawText(zoomInfo, rects[3], 1f, alignement, color);
+            // titleFont.DrawText(pauseInfo, rects[4], 1f, alignement, color);
         }
         
         private void DrawScreenInfoDebug(Rect uiArea)
@@ -537,7 +555,10 @@ namespace Examples.Scenes
             {
                 string infoText = infos[i];
                 var rect = rects[i];
-                titleFont.DrawText(infoText, rect, 1f, new Vector2(0.95f, 0.5f), WHITE);
+                titleFont.FontSpacing = 1f;
+                titleFont.Color = WHITE;
+                titleFont.DrawTextWrapNone(infoText, rect, new Vector2(0.95f, 0.5f));
+                // titleFont.DrawText(infoText, rect, 1f, new Vector2(0.95f, 0.5f), WHITE);
             }
         }
         

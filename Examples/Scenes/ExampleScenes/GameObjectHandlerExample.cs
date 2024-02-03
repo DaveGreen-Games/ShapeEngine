@@ -844,8 +844,13 @@ namespace Examples.Scenes.ExampleScenes
             
             var bottomRight = GAMELOOP.UIRects.GetRect("bottom right");
             var rects = bottomRight.SplitV(0.5f);
-            font.DrawText("Object Count", rects.top, 1f, new Vector2(0.5f, 0f), ColorHighlight3);
-            font.DrawText($"{gameObjectHandler.GetCollisionHandler().Count}", rects.bottom, 1f, new Vector2(0.5f, 0.5f), ColorHighlight3);
+            
+            textFont.FontSpacing = 1f;
+            textFont.Color = ColorHighlight3;
+            textFont.DrawTextWrapNone("Object Count", rects.top, new(0.5f, 0f));
+            textFont.DrawTextWrapNone($"{gameObjectHandler.GetCollisionHandler().Count}", rects.bottom, new(0.5f));
+            // font.DrawText("Object Count", rects.top, 1f, new Vector2(0.5f, 0f), ColorHighlight3);
+            // font.DrawText(, rects.bottom, 1f, new Vector2(0.5f, 0.5f), ColorHighlight3);
         }
 
         private void DrawInputText(Rect rect)
@@ -883,8 +888,12 @@ namespace Examples.Scenes.ExampleScenes
             if(drawDebug) sb.Append($"Normal Mode {toggleDebugText}");
             else sb.Append($"Debug Mode {toggleDebugText}");
             
-            font.DrawText(sbCamera.ToString(), top, 1f, new Vector2(0.5f, 0.5f), ColorLight);
-            font.DrawText(sb.ToString(), bottom, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+            textFont.FontSpacing = 1f;
+            textFont.Color = ColorLight;
+            textFont.DrawTextWrapNone(sbCamera.ToString(), top, new(0.5f));
+            textFont.DrawTextWrapNone(sb.ToString(), bottom, new(0.5f));
+            // font.DrawText(sbCamera.ToString(), top, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+            // font.DrawText(sb.ToString(), bottom, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
         private void SetupBoundary()
         {

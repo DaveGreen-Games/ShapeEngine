@@ -577,7 +577,10 @@ namespace Examples.Scenes.ExampleScenes
 
         private void DrawDescription(Rect rect)
         {
-            font.DrawText("Bump into other ships to destroy them.", rect, 1f, new Vector2(0.5f, 0.5f), ColorMedium);
+            textFont.FontSpacing = 1f;
+            textFont.Color = ColorMedium;
+            textFont.DrawTextWrapNone("Bump into other ships to destroy them.", rect, new(0.5f));
+            // font.DrawText("Bump into other ships to destroy them.", rect, 1f, new Vector2(0.5f, 0.5f), ColorMedium);
         }
         private void DrawInputDescription(Rect rect)
         {
@@ -588,15 +591,20 @@ namespace Examples.Scenes.ExampleScenes
             string centerTargetText = iaCenterTarget.GetInputTypeDescription(curDeviceNoMouse, true, 1, false);
             string moveText = ActiveSpaceShip != null ? ActiveSpaceShip.GetInputDescription(curDevice) : "";
             
+            textFont.FontSpacing = 1f;
+            textFont.Color = ColorLight;
+            
             if (spaceShips.Count <= 1)
             {
                 string textBottom = $"{moveText} | Add Ship {addShipText} | Center Mode {centerTargetActive} {centerTargetText}";
-                font.DrawText(textBottom, rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+                textFont.DrawTextWrapNone(textBottom, rect, new(0.5f));
+                // font.DrawText(textBottom, rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
             }
             else
             {
                 string textBottom = $"{moveText} | Add Ship {addShipText} | Next Ship {nextShipText} | Center Mode {centerTargetActive} {centerTargetText}";
-                font.DrawText(textBottom, rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+                textFont.DrawTextWrapNone(textBottom, rect, new(0.5f));
+                // font.DrawText(textBottom, rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
             }
             
             

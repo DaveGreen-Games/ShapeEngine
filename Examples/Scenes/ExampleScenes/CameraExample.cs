@@ -80,6 +80,9 @@ namespace Examples.Scenes.ExampleScenes
                 Pillar p = new(pos, size);
                 pillars.Add(p);
             }
+            
+            textFont.FontSpacing = 1f;
+            textFont.Color = ColorLight;
         }
         public override void Activate(IScene oldScene)
         {
@@ -209,8 +212,11 @@ namespace Examples.Scenes.ExampleScenes
             sbCamera.Append($"Zoom {zoomCamera} | ");
             sbCamera.Append($"Rotate {rotateCamera}");
             
-            font.DrawText(sbInfo.ToString(), top, 1f, new Vector2(0.5f, 0.5f), ColorLight);
-            font.DrawText(sbCamera.ToString(), bottom, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+            
+            textFont.DrawTextWrapNone(sbInfo.ToString(), top, new(0.5f));
+            textFont.DrawTextWrapNone(sbCamera.ToString(), bottom, new(0.5f));
+            // font.DrawText(sbInfo.ToString(), top, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+            // font.DrawText(sbCamera.ToString(), bottom, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
     }
 

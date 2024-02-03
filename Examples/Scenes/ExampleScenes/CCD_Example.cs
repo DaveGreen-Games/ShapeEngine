@@ -109,6 +109,9 @@ namespace Examples.Scenes.ExampleScenes
             boundaryRect = new Rect(new(0), new(1920, 1080), new(0.5f)).ApplyMargins(0.05f, 0.05f, 0.1f, 0.1f);
             boundaryRect.FlippedNormals = true;
             boundary = boundaryRect.GetEdges();
+            
+            textFont.FontSpacing = 1f;
+            textFont.Color = ColorLight;
         }
         public override void Reset()
         {
@@ -242,7 +245,9 @@ namespace Examples.Scenes.ExampleScenes
             Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 0.99f), uiSize * new Vector2(0.98f, 0.11f), new Vector2(0.5f, 1f));
             string infoText =
                 $"[LMB] Add Segment [RMB] Cancel Segment [Space] Shoot [1] Speed: {bulletSpeed} [2] Size: {bulletR} [C] CCD: {(CCD ? "ON" : "OFF")}";
-            font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+            
+            textFont.DrawTextWrapNone(infoText, infoRect, new(0.5f));
+            // font.DrawText(infoText, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
 
         private void Shoot()

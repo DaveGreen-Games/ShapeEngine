@@ -6,6 +6,7 @@ using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
 using ShapeEngine.Lib;
+using ShapeEngine.Text;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -19,13 +20,13 @@ namespace Examples.Scenes.ExampleScenes
         private InputAction joystickHorizontal;
         private InputAction joystickVertical;
         private string title;
-        private Font font;
+        private TextFont textFont;
         private float flashTimer = 0f;
         private const float flashDuration = 1f;
         private InputDeviceType curInputDeviceType = InputDeviceType.Keyboard;
         public JoystickVisualizer(bool left, Font font)
         {
-            this.font = font;
+            this.textFont = new(font, 1f, ExampleScene.ColorMedium);
             if (left)
             {
                 title = "AXIS LEFT";
@@ -142,9 +143,13 @@ namespace Examples.Scenes.ExampleScenes
             inputs.AddRange(joystickVertical.GetInputs(curInputDeviceType));
             var inputNamesRect = insideBottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
             var rects = inputNamesRect.SplitV(inputs.Count); // inputNamesRect.GetAlignedRectsVertical(inputs.Count, 0f, 1f);
+            
+            
+            textFont.Color = ExampleScene.ColorMedium;
             for (var i = 0; i < inputs.Count; i++)
             {
-                font.DrawText(inputs[i].GetName(true), rects[i], 1f, new Vector2(0.5f, 0f), ExampleScene.ColorMedium);
+                textFont.DrawTextWrapNone(inputs[i].GetName(true), rects[i], new(0.5f, 0f));
+                // font.DrawText(, rects[i], 1f, new Vector2(0.5f, 0f), ExampleScene.ColorMedium);
             }
             
             insideBottom.DrawLines(lineThickness / 2, flashColor1);
@@ -187,15 +192,16 @@ namespace Examples.Scenes.ExampleScenes
             inputRawCircle.DrawLines(lineThickness / 2, flashColor2, 2f);
             inputCircle.Draw(flashColor3, 32);
 
+            textFont.Color = flashColor1;
+            textFont.DrawTextWrapNone(title, top, new(0.5f, 0f));
             
-            
-            font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), flashColor1);
+            // font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), flashColor1);
         }
     }
     internal class TriggerVisualizer : InputVisualizer
     {
         private string title;
-        private Font font;
+        private TextFont textFont;
         private float flashTimer = 0f;
         private const float flashDuration = 1f;
         private InputDeviceType curInputDeviceType = InputDeviceType.Keyboard;
@@ -204,7 +210,7 @@ namespace Examples.Scenes.ExampleScenes
         
         public TriggerVisualizer(bool left, Font font)
         {
-            this.font = font;
+            this.textFont = new(font, 1f, ExampleScene.ColorMedium);
             
 
             if (left)
@@ -271,17 +277,21 @@ namespace Examples.Scenes.ExampleScenes
             var inputNamesRect = insideBottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
             var count = inputs.Count + 1;
             var rects = inputNamesRect.SplitV(count);
+            textFont.Color = ExampleScene.ColorMedium;
             for (var i = 0; i < count; i++)
             {
                 if (inputs.Count > i)
                 {
-                    font.DrawText(inputs[i].GetName(true), rects[i], 1f, new Vector2(0.5f, 0f), ExampleScene.ColorMedium);
+                    
+                    textFont.DrawTextWrapNone(inputs[i].GetName(true), rects[i], new(0.5f, 0f));
+                    // font.DrawText(, rects[i], 1f, new Vector2(0.5f, 0f), ExampleScene.ColorMedium);
                 }
                 else
                 {
                     var p = (int)(trigger.State.Axis * 100f);
-                    var percentageText = $"{p}%";
-                    font.DrawText(percentageText, rects[i], 1f, new Vector2(0.5f, 1f), ExampleScene.ColorMedium);
+                    var percentageText = $"{p}%";textFont.FontSpacing = 4f;
+                    textFont.DrawTextWrapNone(percentageText, rects[i], new(0.5f, 1f));
+                    // font.DrawText(percentageText, rects[i], 1f, new Vector2(0.5f, 1f), ExampleScene.ColorMedium);
                 }
             }
             
@@ -293,14 +303,15 @@ namespace Examples.Scenes.ExampleScenes
             }
 
             
-            
-            font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), flashColor1);
+            textFont.Color = flashColor1;
+            textFont.DrawTextWrapNone(title, top, new(0.5f, 0f));
+            // font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), flashColor1);
         }
     }
     internal class ButtonVisualizer : InputVisualizer
         {
             private string title;
-            private Font font;
+            private TextFont textFont;
             private float flashTimer = 0f;
             private const float flashDuration = 1f;
             private InputDeviceType curInputDeviceType = InputDeviceType.Keyboard;
@@ -308,7 +319,7 @@ namespace Examples.Scenes.ExampleScenes
             private InputAction button;
             public ButtonVisualizer(bool left, Font font)
             {
-                this.font = font;
+                this.textFont = new(font, 1f, ExampleScene.ColorMedium);
                 
     
                 if (left)
@@ -373,9 +384,11 @@ namespace Examples.Scenes.ExampleScenes
                 var inputs = button.GetInputs(curInputDeviceType);
                 var inputNamesRect = insideBottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
                 var rects = inputNamesRect.SplitV(inputs.Count); // inputNamesRect.GetAlignedRectsVertical(inputs.Count, 0f, 1f);
+                textFont.Color = ExampleScene.ColorMedium;
                 for (var i = 0; i < inputs.Count; i++)
                 {
-                    font.DrawText(inputs[i].GetName(true), rects[i], 1f, new Vector2(0.5f, 0f), ExampleScene.ColorMedium);
+                    textFont.DrawTextWrapNone(inputs[i].GetName(true), rects[i], new(0.5f, 0f));
+                    // font.DrawText(, rects[i], 1f, new Vector2(0.5f, 0f), ExampleScene.ColorMedium);
                 }
                 
                 
@@ -385,13 +398,15 @@ namespace Examples.Scenes.ExampleScenes
                     bottom.DrawLines(lineThickness, ExampleScene.ColorHighlight2);
                 }
     
-                font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), flashColor1);
+                textFont.Color = flashColor1;
+                textFont.DrawTextWrapNone(title, top, new(0.5f, 0f));
+                // font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), flashColor1);
             }
         }
     internal class ButtonHoldVisualizer : InputVisualizer
     {
         private string title;
-        private Font font;
+        private TextFont textFont;
         private float flashTimer = 0f;
         private float holdFinishedTimer = 0f;
         private const float holdFinishedDuration = 1f;
@@ -402,7 +417,7 @@ namespace Examples.Scenes.ExampleScenes
         private InputAction button;
         public ButtonHoldVisualizer(Font font)
         {
-            this.font = font;
+            this.textFont = new(font, 1f, ExampleScene.ColorMedium);
             
             this.title = "HOLD";
             var q = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
@@ -483,23 +498,27 @@ namespace Examples.Scenes.ExampleScenes
                 float thickness = ShapeMath.LerpFloat(lineThickness / 2, lineThickness * 2, f);
                 
                 circle.DrawLines(thickness, holdFinishedColor);
-            
-                font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), holdFinishedColor);
+                textFont.Color = holdFinishedColor;
+                textFont.DrawTextWrapNone(title, top, new(0.5f, 0f));
+                // font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), holdFinishedColor);
                 
             }
             else
             {
                 circle.DrawLines(lineThickness / 2, flashColor1);
-            
-                font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), flashColor1);
+                textFont.Color = flashColor1;
+                textFont.DrawTextWrapNone(title, top, new(0.5f, 0f));
+                // font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), flashColor1);
             }
             
             var inputs = button.GetInputs(curInputDeviceType);
             var inputNamesRect = bottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
             var rects = inputNamesRect.SplitV(inputs.Count);
+            textFont.Color = ExampleScene.ColorMedium;
             for (var i = 0; i < inputs.Count; i++)
             {
-                font.DrawText(inputs[i].GetName(true), rects[i], 1f, new Vector2(0.5f, 0f), ExampleScene.ColorMedium);
+                textFont.DrawTextWrapNone(inputs[i].GetName(true), rects[i], new(0.5f, 0f));
+                // font.DrawText(, rects[i], 1f, new Vector2(0.5f, 0f), ExampleScene.ColorMedium);
             }
             
             
@@ -535,7 +554,7 @@ namespace Examples.Scenes.ExampleScenes
     internal class ButtonDoubleTapVisualizer : InputVisualizer
     {
         private string title;
-        private Font font;
+        private TextFont textFont;
         private float flashTimer = 0f;
         private float doubleTapFinishedTimer = 0f;
         private const float doubleTapFinishedDuration = 1f;
@@ -549,7 +568,7 @@ namespace Examples.Scenes.ExampleScenes
         // private float lastActionDuration = 1f;
         public ButtonDoubleTapVisualizer(Font font)
         {
-            this.font = font;
+            this.textFont = new(font, 1f, ExampleScene.ColorMedium);
             
             this.title = "Double Tap";
             var q = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
@@ -653,15 +672,16 @@ namespace Examples.Scenes.ExampleScenes
                 float thickness = ShapeMath.LerpFloat(lineThickness / 2, lineThickness * 2, f);
                 
                 circle.DrawLines(thickness, holdFinishedColor);
-            
-                font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), holdFinishedColor);
+                textFont.Color = holdFinishedColor;
+                textFont.DrawTextWrapNone(title, top, new(0.5f, 0f));
                 
             }
             else
             {
                 circle.DrawLines(lineThickness / 2, flashColor1);
-            
-                font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), flashColor1);
+                textFont.Color = flashColor1;
+                textFont.DrawTextWrapNone(title, top, new(0.5f, 0f));
+                // font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), flashColor1);
             }
             
             
@@ -669,9 +689,11 @@ namespace Examples.Scenes.ExampleScenes
             var inputs = button.GetInputs(curInputDeviceType);
             var inputNamesRect = bottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
             var rects = inputNamesRect.SplitV(inputs.Count);
+            textFont.Color = ExampleScene.ColorMedium;
             for (var i = 0; i < inputs.Count; i++)
             {
-                font.DrawText(inputs[i].GetName(true), rects[i], 1f, new Vector2(0.5f, 0f), ExampleScene.ColorMedium);
+                textFont.DrawTextWrapNone(inputs[i].GetName(true), rects[i], new(0.5f, 0f));
+                // font.DrawText(, rects[i], 1f, new Vector2(0.5f, 0f), ExampleScene.ColorMedium);
             }
             
             

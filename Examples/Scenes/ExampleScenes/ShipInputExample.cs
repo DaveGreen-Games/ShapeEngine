@@ -384,25 +384,39 @@ namespace Examples.Scenes.ExampleScenes
         private void DrawGamepadInfo(Rect rect)
         {
             var text = $"Connected {ShapeInput.GamepadDeviceManager.GetConnectedGamepads().Count} | Available {ShapeInput.GamepadDeviceManager.GetAvailableGamepads().Count}";
-            font.DrawText(text, rect, 1f, new Vector2(0.5f, 0.5f), ColorHighlight3);
+            
+            textFont.FontSpacing = 1f;
+            textFont.Color = ColorHighlight3;
+            textFont.DrawTextWrapNone(text, rect, new(0.5f));
+            // font.DrawText(text, rect, 1f, new Vector2(0.5f, 0.5f), ColorHighlight3);
         }
         private void DrawDescription(Rect rect)
         {
-            font.DrawText("Use multiple gamepads!", rect, 1f, new Vector2(0.5f, 0.5f), ColorMedium);
+            textFont.FontSpacing = 1f;
+            textFont.Color = ColorMedium;
+            textFont.DrawTextWrapNone("Use multiple gamepads!", rect, new(0.5f));
+            // font.DrawText("Use multiple gamepads!", rect, 1f, new Vector2(0.5f, 0.5f), ColorMedium);
         }
         private void DrawInputDescription(Rect rect)
         {
+            textFont.FontSpacing = 1f;
+            textFont.Color = ColorLight;
+            
             var helper = GetActiveInputActionHelper();
             if (helper != null)
             {
                 string addShipText = helper.Add.GetInputTypeDescription(InputDeviceType.Gamepad, true, 1, false);
                 string moveText = helper.Remove.GetInputTypeDescription(InputDeviceType.Gamepad, true, 1, false);
                 string textBottom = $"{moveText} | Add Ship {addShipText}";
-                font.DrawText("textBottom", rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+                
+                
+                textFont.DrawTextWrapNone(textBottom, rect, new(0.5f));
+                // font.DrawText("textBottom", rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
             }
             else
             {
-                font.DrawText("No gamepads connected.", rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
+                textFont.DrawTextWrapNone("No gamepads connected.", rect, new(0.5f));
+                // font.DrawText("No gamepads connected.", rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
             }
             
         }

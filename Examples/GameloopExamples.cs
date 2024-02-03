@@ -258,7 +258,7 @@ namespace Examples
 
         private readonly List<InputAction> inputActions = new();
         
-        private FPSLabel fpsLabel = new(GetFontDefault(), ExampleScene.ColorHighlight3);
+        private FPSLabel fpsLabel;// = new(GetFontDefault(), ExampleScene.ColorHighlight3);
 
         private float mouseMovementTimer = 0f;
         private const float mouseMovementDuration = 2f;
@@ -304,10 +304,12 @@ namespace Examples
             ScreenShaders.Add(crtShader);
             
             FontDefault = GetFont(FontIDs.JetBrains);
-            fpsLabel.Font = FontDefault;
+            //fpsLabel.Font = FontDefault;
             this.VSync = false;
             this.FrameRateLimit = 60;
 
+            fpsLabel = new(GetFontDefault(), ExampleScene.ColorHighlight3);
+            
             HideOSCursor();
             //LockOSCursor();
             SwitchCursor(new SimpleCursorGameUI());

@@ -8,6 +8,7 @@ using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
+using ShapeEngine.Text;
 using ShapeEngine.UI;
 
 namespace Examples.Scenes
@@ -27,7 +28,8 @@ namespace Examples.Scenes
         public string Title { get; protected set; } = "Title Goes Here";
         public string Description { get; protected set; } = "No Description Yet.";
 
-        protected Font titleFont = GAMELOOP.FontDefault;
+        protected TextFont titleFont = new(GAMELOOP.FontDefault, 1f, ColorLight);
+        protected TextFont textFont = new(GAMELOOP.GetFont(FontIDs.JetBrains), 1f, ColorLight);
 
         //protected readonly ShapeInput input = GAMELOOP.Input;
         private InputActionLabel backLabel;
@@ -35,7 +37,7 @@ namespace Examples.Scenes
         public ExampleScene()
         {
             var action = GAMELOOP.InputActionUICancel;
-            backLabel = new(action, "BACK", GAMELOOP.FontDefault, ExampleScene.ColorHighlight3);
+            backLabel = new(action, "BACK", GAMELOOP.FontDefault, ExampleScene.ColorHighlight3, 4f);
         }
         public virtual void Reset() { }
 
@@ -121,7 +123,10 @@ namespace Examples.Scenes
                 ui.Area.Draw(ColorDark.ChangeAlpha((byte)150));
                 
                 var pausedRect = ui.Area.ApplyMargins(0.05f, 0.05f, 0.15f, 0.55f);
-                titleFont.DrawText("PAUSED", pausedRect, 30f, new(0.5f), ColorRustyRed);
+                titleFont.LineSpacing = 30f;
+                titleFont.Color = ColorRustyRed;
+                titleFont.DrawTextWrapNone("PAUSED", pausedRect, new(0.5f));
+                // titleFont.DrawText("PAUSED", pausedRect, 30f, new(0.5f), ColorRustyRed);
                 
                 return;
                 
@@ -137,7 +142,10 @@ namespace Examples.Scenes
             topLine.Draw(2f, ColorLight);
 
             var topCenterRect = GAMELOOP.UIRects.GetRect("top center"); // Get("top").Get("center").GetRect();
-            titleFont.DrawText(Title, topCenterRect, 10f, new(0.5f), ColorLight);
+            titleFont.LineSpacing = 10f;
+            titleFont.Color = ColorLight;
+            titleFont.DrawTextWrapNone(Title, topCenterRect, new(0.5f));
+            // titleFont.DrawText(Title, topCenterRect, 10f, new(0.5f), ColorLight);
 
             // string backText = "Back [ESC]";
             //Rect backRect = new Rect(uiSize * new Vector2(0.02f, 0.06f), uiSize * new Vector2(0.3f, 0.04f), new Vector2(0f, 1f));
@@ -160,7 +168,7 @@ namespace Examples.Scenes
             var backRect = ui.Area.ApplyMargins(0.012f, 0.85f, 0.012f, 0.95f);
             var curInputDevice = ShapeInput.CurrentInputDeviceTypeNoMouse;
             var backLabelRect = GAMELOOP.UIRects.GetRect("top left top"); // GetRect("top", "left", "top"); // Get("top").Get("left").Get("top").GetRect();
-            backLabel.Draw(backLabelRect, new(0f, 0f), curInputDevice, 4);
+            backLabel.Draw(backLabelRect, new(0f, 0f), curInputDevice);
             
             if (GAMELOOP.Paused) return;
 
@@ -215,7 +223,10 @@ namespace Examples.Scenes
             var gamepadRect = split[1];
 
             var deviceText = ShapeInput.GetCurInputDeviceGenericName();
-            titleFont.DrawText(deviceText, deviceRect, 1f, new Vector2(0.01f, 0.5f), ColorHighlight3);
+            titleFont.LineSpacing = 1f;
+            titleFont.Color = ColorHighlight3;
+            titleFont.DrawTextWrapNone(deviceText, deviceRect, new Vector2(0.01f, 0.5f));
+            // titleFont.DrawText(deviceText, deviceRect, 1f, new Vector2(0.01f, 0.5f), ColorHighlight3);
             
             string gamepadText = "No Gamepad Connected";
             if (GAMELOOP.CurGamepad != null)
@@ -224,7 +235,10 @@ namespace Examples.Scenes
                 gamepadText = $"Gamepad [{gamepadIndex}] Connected";
             }
             
-            titleFont.DrawText(gamepadText, gamepadRect, 1f, new Vector2(0.01f, 0.5f), GAMELOOP.CurGamepad != null ? ColorHighlight3 : ColorMedium);
+            titleFont.LineSpacing = 1f;
+            titleFont.Color = GAMELOOP.CurGamepad != null ? ColorHighlight3 : ColorMedium;
+            titleFont.DrawTextWrapNone(gamepadText, gamepadRect, new Vector2(0.01f, 0.5f));
+            // titleFont.DrawText(gamepadText, gamepadRect, 1f, new Vector2(0.01f, 0.5f), GAMELOOP.CurGamepad != null ? ColorHighlight3 : ColorMedium);
         }
         
         public virtual GameObjectHandler? GetGameObjectHandler()
