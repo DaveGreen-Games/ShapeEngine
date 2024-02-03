@@ -43,6 +43,17 @@ public class TextBlock
 
 public class TextLabel
 {
+    internal class Word
+    {
+        public Rect Rect;
+        public string Text;
+        public Emphasis? Emphasis = null;
+        public Raylib_CsLo.Color Color;
+        
+        
+    }
+    
+    
     //dirty system?
     //mouse pos / mouse selection emphasis / mouse caret color
     //function to move caret to mouse position or to specific index
@@ -51,6 +62,34 @@ public class TextLabel
 
     //- Label (collection of words based on text, rect, color, emphases, font spacing, line spacing)
     //  - Word (text + rect + emphasis)
+
+    private string text;
+    public string Text
+    {
+        get
+        { 
+            return text;
+        }
+        set
+        {
+            text = value;
+        }
+    }
+    
+    private Rect rect;
+    public Rect Rect
+    {
+        get
+        { 
+            return rect;
+        }
+        set
+        {
+            rect = value;
+        }
+    }
+
+    
     
     public TextLabel()
     {

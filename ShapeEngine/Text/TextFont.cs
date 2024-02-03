@@ -627,6 +627,10 @@ public struct TextFont
 
     #endregion
     
+    public void SetFilter(TextureFilter textureFilter = TextureFilter.TEXTURE_FILTER_BILINEAR)
+    {
+        SetTextureFilter(Font.texture, textureFilter);
+    }
     public static Emphasis? GetEmphasis(string word, List<TextEmphasis>? emphases)
     {
         if (emphases == null || emphases.Count <= 0) return null;
