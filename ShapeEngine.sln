@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShapeEngine", "ShapeEngine\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Examples", "Examples\Examples.csproj", "{C0C9EDD6-0155-4661-ABBA-329C5B955F7A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScreenSystem2", "ScreenSystem2\ScreenSystem2.csproj", "{8AA863B7-F9AE-49BB-BB50-6BFAE7611FA8}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,10 +21,6 @@ Global
 		{C0C9EDD6-0155-4661-ABBA-329C5B955F7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C0C9EDD6-0155-4661-ABBA-329C5B955F7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C0C9EDD6-0155-4661-ABBA-329C5B955F7A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8AA863B7-F9AE-49BB-BB50-6BFAE7611FA8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8AA863B7-F9AE-49BB-BB50-6BFAE7611FA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8AA863B7-F9AE-49BB-BB50-6BFAE7611FA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8AA863B7-F9AE-49BB-BB50-6BFAE7611FA8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
