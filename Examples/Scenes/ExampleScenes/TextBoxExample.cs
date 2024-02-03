@@ -62,6 +62,8 @@ namespace Examples.Scenes.ExampleScenes
                 
             if(textBox.CaretVisible)
                 font.DrawCaret(textBox.Text, rect, fontSize, fontSpacing, curAlignement, textBox.CaretIndex, 5f, ColorHighlight2);
+            
+            
         }
 
         protected override void DrawInputDescriptionBottom(Rect rect)
