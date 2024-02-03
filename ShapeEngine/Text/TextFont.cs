@@ -249,6 +249,14 @@ public struct TextFont
         scaledFont.DrawWord(text, r.TopLeft);
         //DrawTextEx(textFont.Font, text, r.TopLeft, info.fontSize, info.fontSpacing, textFont.Color);
     }
+    public void DrawTextWrapNone(string text, Rect rect, Vector2 alignement, Raylib_CsLo.Color color)
+    {
+        var scaledFont = ScaleDynamic(text, rect.Size);
+        var textSize = scaledFont.GetTextSize(text);
+        Rect r = new(rect.GetPoint(alignement), textSize, alignement);
+        scaledFont.DrawWord(text, r.TopLeft, color);
+    }
+
     public void DrawTextWrapNone(string text, Rect rect, Vector2 alignement, Caret caret)
     {
         var scaledFont = ScaleDynamic(text, rect.Size);

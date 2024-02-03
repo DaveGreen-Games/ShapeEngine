@@ -2,6 +2,7 @@
 using Raylib_CsLo;
 using ShapeEngine.Lib;
 using ShapeEngine.Core.Shapes;
+using ShapeEngine.Text;
 
 namespace ShapeEngine.Achievements
 {
@@ -114,7 +115,7 @@ namespace ShapeEngine.Achievements
             if (!achieved) Achieved?.Invoke(this);
             achieved = true; 
         }
-        public virtual void Draw(Font font, Rect rect, Raylib_CsLo.Color bgColor, Raylib_CsLo.Color textColor, Raylib_CsLo.Color progressColor, Raylib_CsLo.Color achievedColor)
+        public virtual void Draw(TextFont textFont, Rect rect, Raylib_CsLo.Color bgColor, Raylib_CsLo.Color textColor, Raylib_CsLo.Color progressColor, Raylib_CsLo.Color achievedColor)
         {
             Rect left = new(rect.X, rect.Y, rect.Width * 0.25f, rect.Height);
             Rect leftTop = new(left.X, left.Y, left.Width, left.Height * 0.5f);
@@ -124,14 +125,23 @@ namespace ShapeEngine.Achievements
             if (achieved) rect.DrawLines(3f, achievedColor);// SDrawing.DrawRect(rect, new(0f), 0f, 3f, achievedColor);
             int value = stat.value;
             int max = end;
-            ShapeText.DrawText(font, String.Format("{0}", value), leftTop, 1f, new(0.5f) ,textColor);
-            ShapeText.DrawText(font, String.Format("{0}", max), leftBottom, 1f, new(0.5f),textColor);
+
+            textFont.Color = textColor;
+            textFont.DrawTextWrapNone($"{value}", leftTop, new(0.5f));
+            textFont.DrawTextWrapNone($"{max}", leftBottom, new(0.5f));
+            // ShapeText.DrawText(font, String.Format("{0}", value), leftTop, 1f, new(0.5f) ,textColor);
+            // ShapeText.DrawText(font, String.Format("{0}", max), leftBottom, 1f, new(0.5f),textColor);
             if (hidden)
             {
-                if(achieved) ShapeText.DrawText(font, displayName, right, 1f, new(0.5f), achieved ? achievedColor : textColor);
-                else ShapeText.DrawText(font, "???", right, 1f, new(0.5f), textColor);
+                
+                if(achieved) textFont.DrawTextWrapNone(displayName, right, new(0.5f), achieved ? achievedColor : textColor); // ShapeText.DrawText(font, displayName, right, 1f, new(0.5f), achieved ? achievedColor : textColor);
+                else textFont.DrawTextWrapNone("???", right, new(0.5f), textColor); //ShapeText.DrawText(font, "???", right, 1f, new(0.5f), textColor);
             }
-            else ShapeText.DrawText(font, displayName, right, 1f, new(0.5f), achieved ? achievedColor : textColor);
+            else
+            {
+                textFont.Color = achieved ? achievedColor : textColor;
+                textFont.DrawTextWrapNone(displayName, leftBottom, new(0.5f));
+            }
         }
     }
 
@@ -160,7 +170,12 @@ namespace ShapeEngine.Achievements
         private List<Achievement> achievements = new();
 
         private List<AchievmentDrawStack> achievementDrawStack = new();
-        
+        private TextFont textFont;
+
+        public AchievementHandler(TextFont textFont)
+        {
+            this.textFont = textFont;
+        }
 
         public float achievedDisplayDuration = 5f;
         public float notificationDuration = 3f;
@@ -177,11 +192,11 @@ namespace ShapeEngine.Achievements
 
             }
         }
-        public void Draw(Font font, Rect achievementRect, Raylib_CsLo.Color background, Raylib_CsLo.Color text, Raylib_CsLo.Color progress, Raylib_CsLo.Color achieved) 
+        public void Draw(Rect achievementRect, Raylib_CsLo.Color background, Raylib_CsLo.Color text, Raylib_CsLo.Color progress, Raylib_CsLo.Color achieved) 
         {
             if (achievementDrawStack.Count > 0)
             {
-                achievementDrawStack[0].achievement.Draw(font, achievementRect, background, text, progress, achieved);
+                achievementDrawStack[0].achievement.Draw(textFont, achievementRect, background, text, progress, achieved);
             }
         }
         public void Close()
