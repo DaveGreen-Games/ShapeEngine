@@ -297,7 +297,7 @@ namespace Examples.Scenes
             // float fontSize = r.Width * 0.05f;
             float pointRadius = lineThickness * 2f;
             float interactionRadius = lineThickness * 4;
-            r.DrawLines(lineThickness, ColorMedium);
+            r.DrawLines(lineThickness, Colors.Medium);
             
             float margin = r.Size.Min() * 0.05f;
             r = r.ApplyMarginsAbsolute(margin, margin, margin, margin);
@@ -312,36 +312,36 @@ namespace Examples.Scenes
                 Circle topLeftInteractionCircle = new(topLeft, interactionRadius);
                 if (draggingTopLeft)
                 {
-                    topLeftInteractionCircle.Draw(ColorHighlight2);
+                    topLeftInteractionCircle.Draw(Colors.Highlight);
                 }
                 else if (mouseInsideTopLeft)
                 {
-                    topLeftPoint.Draw(ColorMedium);
+                    topLeftPoint.Draw(Colors.Medium);
                     topLeftInteractionCircle.Radius *= 2f;
-                    topLeftInteractionCircle.DrawLines(2f, ColorHighlight2, 4f);
+                    topLeftInteractionCircle.DrawLines(2f, Colors.Special, 4f);
                 }
                 else
                 {
-                    topLeftPoint.Draw(ColorMedium);
-                    topLeftInteractionCircle.DrawLines(2f, ColorMedium, 4f);
+                    topLeftPoint.Draw(Colors.Medium);
+                    topLeftInteractionCircle.DrawLines(2f, Colors.Medium, 4f);
                 }
 
                 Circle bottomRightPoint = new(bottomRight, pointRadius);
                 Circle bottomRightInteractionCircle = new(bottomRight, interactionRadius);
                 if (draggingBottomRight)
                 {
-                    bottomRightInteractionCircle.Draw(ColorHighlight2);
+                    bottomRightInteractionCircle.Draw(Colors.Special);
                 }
                 else if (mouseInsideBottomRight)
                 {
-                    bottomRightPoint.Draw(ColorMedium);
+                    bottomRightPoint.Draw(Colors.Medium);
                     bottomRightInteractionCircle.Radius *= 2f;
-                    bottomRightInteractionCircle.DrawLines(2f, ColorHighlight2, 4f);
+                    bottomRightInteractionCircle.DrawLines(2f, Colors.Special, 4f);
                 }
                 else
                 {
-                    bottomRightPoint.Draw(ColorMedium);
-                    bottomRightInteractionCircle.DrawLines(2f, ColorMedium, 4f);
+                    bottomRightPoint.Draw(Colors.Medium);
+                    bottomRightInteractionCircle.DrawLines(2f, Colors.Medium, 4f);
                 }
             }
             else
@@ -394,7 +394,7 @@ namespace Examples.Scenes
                     $"Write Custom Text {enterText} | Drag Rect Corners {dragText} | Change Font {nextFontText} ({GAMELOOP.GetFontName(fontIndex)})";
 
                 textFont.FontSpacing = 4f;
-                textFont.Color = ColorLight;
+                textFont.Color = Colors.Light;
                 textFont.DrawTextWrapNone(info, top, new(0.5f));
                 // font.DrawText(info, top, 4f, new Vector2(0.5f, 0.5f), ColorLight);
 
@@ -408,10 +408,10 @@ namespace Examples.Scenes
                 
                 textFont.FontSpacing = 4f;
                 
-                textFont.Color = ColorHighlight3;
+                textFont.Color = Colors.Warm;
                 textFont.DrawTextWrapNone($"Text Entry Mode Active |  Caret Position [{caretPrevText}/{caretNextText}] ({textBox.CaretIndex})", top, new(0.5f));
                 
-                textFont.Color = ColorLight;
+                textFont.Color = Colors.Light;
                 textFont.DrawTextWrapNone(info, bottom, new(0.5f));
                 
                 // font.DrawText($"Text Entry Mode Active |  Caret Position [{caretPrevText}/{caretNextText}] ({textBox.CaretIndex})", top, 4f, new Vector2(0.5f, 0.5f), ColorHighlight3);

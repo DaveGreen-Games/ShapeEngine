@@ -44,13 +44,13 @@ namespace Examples.Scenes.ExampleScenes
             private Circle hull;
             private Vector2 movementDir;
 
-            private readonly ShapeColor hullColorActive = ColorMedium;
-            private readonly ShapeColor outlineColorActive = ColorHighlight1;
-            private readonly ShapeColor cockpitColorActive = ColorHighlight3;
+            private readonly PaletteColor hullColorActive = Colors.PcMedium;
+            private readonly PaletteColor outlineColorActive = Colors.PcHighlight;
+            private readonly PaletteColor cockpitColorActive = Colors.PcSpecial;
             
-            private readonly ShapeColor hullColorInactive = ColorMedium;
-            private readonly ShapeColor outlineColorInactive = ColorMedium;
-            private readonly ShapeColor cockpitColorInactive = ColorHighlight2;
+            private readonly PaletteColor hullColorInactive = Colors.PcMedium;
+            private readonly PaletteColor outlineColorInactive = Colors.PcMedium;
+            private readonly PaletteColor cockpitColorInactive = Colors.PcLight;
             
             private readonly InputAction iaMoveHor;
             private readonly InputAction iaMoveVer;
@@ -187,17 +187,17 @@ namespace Examples.Scenes.ExampleScenes
                 var outlineColor = Selected ? outlineColorActive : outlineColorInactive;
                 var hullColor = Selected ? hullColorActive : hullColorInactive;
                 var cockpitColor = Selected ? cockpitColorActive : cockpitColorInactive;
-                DrawCircleV(hull.Center - rightThruster * hull.Radius, hull.Radius / 6, outlineColor.ToRayColor());
-                DrawCircleV(hull.Center - leftThruster * hull.Radius, hull.Radius / 6, outlineColor.ToRayColor());
-                hull.Draw(hullColor);
-                DrawCircleV(hull.Center + movementDir * hull.Radius * 0.66f, hull.Radius * 0.33f, cockpitColor.ToRayColor());
+                DrawCircleV(hull.Center - rightThruster * hull.Radius, hull.Radius / 6, outlineColor.Color.ToRayColor());
+                DrawCircleV(hull.Center - leftThruster * hull.Radius, hull.Radius / 6, outlineColor.Color.ToRayColor());
+                hull.Draw(hullColor.Color);
+                DrawCircleV(hull.Center + movementDir * hull.Radius * 0.66f, hull.Radius * 0.33f, cockpitColor.Color.ToRayColor());
 
-                hull.DrawLines(4f, outlineColor);
+                hull.DrawLines(4f, outlineColor.Color);
 
                 if (invisibleTimer > 0f)
                 {
                     Circle shield = new(hull.Center, hull.Radius + 12f);
-                    shield.DrawLines(2f, ColorHighlight2);
+                    shield.DrawLines(2f, Colors.Special);
                 }
             }
 
@@ -579,7 +579,7 @@ namespace Examples.Scenes.ExampleScenes
         private void DrawDescription(Rect rect)
         {
             textFont.FontSpacing = 1f;
-            textFont.Color = ColorMedium;
+            textFont.Color = Colors.Medium;
             textFont.DrawTextWrapNone("Bump into other ships to destroy them.", rect, new(0.5f));
             // font.DrawText("Bump into other ships to destroy them.", rect, 1f, new Vector2(0.5f, 0.5f), ColorMedium);
         }
@@ -593,7 +593,7 @@ namespace Examples.Scenes.ExampleScenes
             string moveText = ActiveSpaceShip != null ? ActiveSpaceShip.GetInputDescription(curDevice) : "";
             
             textFont.FontSpacing = 1f;
-            textFont.Color = ColorLight;
+            textFont.Color = Colors.Light;
             
             if (spaceShips.Count <= 1)
             {

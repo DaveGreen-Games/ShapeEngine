@@ -162,7 +162,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         public override void DrawGame(ScreenInfo game)
         {
-            wallCollidable.GetCollider().DrawShape(8f, ExampleScene.ColorHighlight2);
+            wallCollidable.GetCollider().DrawShape(8f, Colors.Highlight);
         }
 
         public override Rect GetBoundingBox()
@@ -213,7 +213,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         public override void DrawGame(ScreenInfo game)
         {
-            wallCollidable.GetCollider().DrawShape(4f, ExampleScene.ColorHighlight1);
+            wallCollidable.GetCollider().DrawShape(4f, Colors.Highlight);
         }
 
         public override Rect GetBoundingBox()
@@ -334,7 +334,7 @@ namespace Examples.Scenes.ExampleScenes
 
         public override void DrawGame(ScreenInfo game)
         {
-            auraCollidable.GetCollider().DrawShape(2f, ExampleScene.ColorHighlight1);
+            auraCollidable.GetCollider().DrawShape(2f, Colors.Highlight);
         }
 
         public override Rect GetBoundingBox()
@@ -394,7 +394,7 @@ namespace Examples.Scenes.ExampleScenes
         public void Draw()
         {
             var color = new ShapeColor(System.Drawing.Color.CornflowerBlue);
-            if (timer > 0) color = ExampleScene.ColorHighlight1;
+            if (timer > 0) color = Colors.Highlight;
             if (buffed) color = buffColor;
             collider.DrawShape(2f, color);
 
@@ -483,7 +483,7 @@ namespace Examples.Scenes.ExampleScenes
         public void Draw()
         {
             var color = new ShapeColor(System.Drawing.Color.MediumOrchid);
-            if (timer > 0) color = ExampleScene.ColorHighlight1;
+            if (timer > 0) color = Colors.Highlight;
             if (buffed) color = buffColor;
             if (collider is RectCollider r)
             {
@@ -569,7 +569,7 @@ namespace Examples.Scenes.ExampleScenes
         public void Draw()
         {
             var color = new ShapeColor(System.Drawing.Color.ForestGreen);
-            if (timer > 0) color = ExampleScene.ColorHighlight1;
+            if (timer > 0) color = Colors.Highlight;
             if (buffed) color = buffColor;
 
             if(collider is CircleCollider c)
@@ -815,9 +815,9 @@ namespace Examples.Scenes.ExampleScenes
         {
             if (drawDebug)
             {
-                var boundsColor = ColorLight;
-                var gridColor = ColorLight;
-                var fillColor = ColorMedium.ChangeAlpha(100);
+                var boundsColor = Colors.Light;
+                var gridColor = Colors.Light;
+                var fillColor = Colors.Medium.ChangeAlpha(100);
                 gameObjectHandler.DrawDebug(boundsColor, gridColor, fillColor);
             }
 
@@ -847,7 +847,7 @@ namespace Examples.Scenes.ExampleScenes
             var rects = bottomRight.SplitV(0.5f);
             
             textFont.FontSpacing = 1f;
-            textFont.Color = ColorHighlight3;
+            textFont.Color = Colors.Warm;
             textFont.DrawTextWrapNone("Object Count", rects.top, new(0.5f, 0f));
             textFont.DrawTextWrapNone($"{gameObjectHandler.GetCollisionHandler().Count}", rects.bottom, new(0.5f));
             // font.DrawText("Object Count", rects.top, 1f, new Vector2(0.5f, 0f), ColorHighlight3);
@@ -890,7 +890,7 @@ namespace Examples.Scenes.ExampleScenes
             else sb.Append($"Debug Mode {toggleDebugText}");
             
             textFont.FontSpacing = 1f;
-            textFont.Color = ColorLight;
+            textFont.Color = Colors.Light;
             textFont.DrawTextWrapNone(sbCamera.ToString(), top, new(0.5f));
             textFont.DrawTextWrapNone(sb.ToString(), bottom, new(0.5f));
             // font.DrawText(sbCamera.ToString(), top, 1f, new Vector2(0.5f, 0.5f), ColorLight);
@@ -908,9 +908,9 @@ namespace Examples.Scenes.ExampleScenes
         {
             if (segmentStarted)
             {
-                DrawCircleV(startPoint, 15f, ColorHighlight1.ToRayColor());
+                DrawCircleV(startPoint, 15f, Colors.Highlight.ToRayColor());
                 Segment s = new(startPoint, mousePos);
-                s.Draw(4, ColorHighlight1);
+                s.Draw(4, Colors.Highlight);
 
             }
         }

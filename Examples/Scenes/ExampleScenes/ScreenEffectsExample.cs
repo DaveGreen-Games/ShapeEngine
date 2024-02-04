@@ -116,11 +116,11 @@ namespace Examples.Scenes.ExampleScenes
         }
         public void Draw()
         {
-            background.DrawRounded(4f, 4, ExampleScene.ColorDarkB);
-            fill.DrawRounded(4f, 4, ExampleScene.ColorMedium);
+            background.DrawRounded(4f, 4, Colors.Dark);
+            fill.DrawRounded(4f, 4, Colors.Medium);
             
             int textValue = (int)(CurValue * 100);
-            font.Color = mouseInside ? ExampleScene.ColorHighlight2 : ExampleScene.ColorHighlight3;
+            font.Color = mouseInside ? Colors.Highlight: Colors.Special;
             font.DrawTextWrapNone($"{Title} {textValue}", background, new Vector2(0.1f, 0.5f));
             // font.DrawText(, background, 1f, new Vector2(0.1f, 0.5f), mouseInside ? ExampleScene.ColorHighlight2 : ExampleScene.ColorHighlight3);
         }
@@ -131,9 +131,9 @@ namespace Examples.Scenes.ExampleScenes
         private Vector2 movementDir;
         public float Speed = 500;
 
-        private ShapeColor hullColor = new(System.Drawing.Color.SteelBlue);
-        private ShapeColor outlineColor = new(System.Drawing.Color.IndianRed);
-        private ShapeColor cockpitColor = new(System.Drawing.Color.DodgerBlue);
+        private PaletteColor hullColor = Colors.PcCold; // new(System.Drawing.Color.SteelBlue);
+        private PaletteColor outlineColor = Colors.PcLight; //new(System.Drawing.Color.IndianRed);
+        private PaletteColor cockpitColor = Colors.PcWarm; // new(System.Drawing.Color.DodgerBlue);
 
         private InputAction iaMoveHor;
         private InputAction iaMoveVer;
@@ -160,7 +160,7 @@ namespace Examples.Scenes.ExampleScenes
             Hull = new(pos, r);
             SetupInput();
         }
-        public Ship(Vector2 pos, float r, ShapeColor hullColor, ShapeColor cockpitColor, ShapeColor outlineColor)
+        public Ship(Vector2 pos, float r, PaletteColor hullColor, PaletteColor cockpitColor, PaletteColor outlineColor)
         {
             Hull = new(pos, r);
             this.hullColor = hullColor;
@@ -227,12 +227,12 @@ namespace Examples.Scenes.ExampleScenes
         {
             var rightThruster = movementDir.RotateDeg(-25);
             var leftThruster = movementDir.RotateDeg(25);
-            DrawCircleV(Hull.Center - rightThruster * Hull.Radius, Hull.Radius / 6, outlineColor.ToRayColor());
-            DrawCircleV(Hull.Center - leftThruster * Hull.Radius, Hull.Radius / 6, outlineColor.ToRayColor());
-            Hull.Draw(hullColor);
-            DrawCircleV(Hull.Center + movementDir * Hull.Radius * 0.66f, Hull.Radius * 0.33f, cockpitColor.ToRayColor());
+            DrawCircleV(Hull.Center - rightThruster * Hull.Radius, Hull.Radius / 6, outlineColor.Color.ToRayColor());
+            DrawCircleV(Hull.Center - leftThruster * Hull.Radius, Hull.Radius / 6, outlineColor.Color.ToRayColor());
+            Hull.Draw(hullColor.Color);
+            DrawCircleV(Hull.Center + movementDir * Hull.Radius * 0.66f, Hull.Radius * 0.33f, cockpitColor.Color.ToRayColor());
 
-            Hull.DrawLines(4f, outlineColor);
+            Hull.DrawLines(4f, outlineColor.Color);
         }
         
         public void FollowStarted()
@@ -473,7 +473,7 @@ namespace Examples.Scenes.ExampleScenes
                 if (boundarySize.X > 0)
                 {
                     var innerBoundary = new Circle(boundaryCenter, boundarySize.X);
-                    var innerColor = ColorHighlight1.ChangeAlpha((byte)150);
+                    var innerColor = Colors.Highlight.ChangeAlpha((byte)150);
                     innerBoundary.DrawLines(thickness, innerColor);
                     
                 }
@@ -481,7 +481,7 @@ namespace Examples.Scenes.ExampleScenes
                 if (boundarySize.Y > 0)
                 {
                     var outerBoundary = new Circle(boundaryCenter, boundarySize.Y);
-                    var outerColor = ColorHighlight2.ChangeAlpha((byte)150);
+                    var outerColor = Colors.Special.ChangeAlpha((byte)150);
                     outerBoundary.DrawLines(thickness, outerColor);
                 }
             }
@@ -509,7 +509,7 @@ namespace Examples.Scenes.ExampleScenes
             
             string text = $"Pos {x}/{y} | Rot {rot} | Zoom {zoom}";
             textFont.FontSpacing = 1f;
-            textFont.Color = ColorHighlight3;
+            textFont.Color = Colors.Warm;
             textFont.DrawTextWrapNone(text, rect, new(0.5f));
             
             // font.DrawText(text, rect, 1f, new Vector2(0.5f, 0.5f), ColorHighlight3);
@@ -528,10 +528,10 @@ namespace Examples.Scenes.ExampleScenes
             
             textFont.FontSpacing = 1f;
             
-            textFont.Color = ColorMedium;
+            textFont.Color = Colors.Medium;
             textFont.DrawTextWrapNone(textTop, rects.top, new(0.5f));
             
-            textFont.Color = ColorLight;
+            textFont.Color = Colors.Light;
             textFont.DrawTextWrapNone(textBottom, rects.bottom, new(0.5f));
             
             // font.DrawText(textTop, rects.top, 1f, new Vector2(0.5f, 0.5f), ColorMedium);

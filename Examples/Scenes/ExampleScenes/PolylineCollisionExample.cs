@@ -108,13 +108,13 @@ namespace Examples.Scenes.ExampleScenes
         public void Draw()
         {
             float colF = collisionTimer > 0f ? collisionTimer / collisionTime : 0f;
-            var color = ShapeTween.Tween(ExampleScene.ColorHighlight2, ExampleScene.ColorHighlight1, colF, TweenType.QUAD_IN);
+            var color = ShapeTween.Tween(Colors.Special, Colors.Highlight, colF, TweenType.QUAD_IN);
 
             Collider.DrawShape(4f, color);
-            lastIntersection.Draw(2f, ExampleScene.ColorLight, ExampleScene.ColorLight);
+            lastIntersection.Draw(2f, Colors.Light, Colors.Light);
 
             //DrawCircleV(Collider.Pos, 25, BLUE);
-            DrawCircleV(Shape.GetCentroid(), 2, ExampleScene.ColorHighlight2.ToRayColor());
+            DrawCircleV(Shape.GetCentroid(), 2, Colors.Special.ToRayColor());
         }
     }
 
@@ -150,7 +150,7 @@ namespace Examples.Scenes.ExampleScenes
             boundary = boundaryRect.GetEdges();
             
             textFont.FontSpacing = 1f;
-            textFont.Color = ColorLight;
+            textFont.Color = Colors.Light;
 
         }
 
@@ -221,7 +221,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         protected override void DrawGameExample(ScreenInfo game)
         {
-            boundary.Draw(4f, ColorMedium);
+            boundary.Draw(4f, Colors.Medium);
             foreach (var seg in boundary)
             {
                 Segment normal = new(seg.Center, seg.Center + seg.Normal * 25f);
@@ -334,8 +334,8 @@ namespace Examples.Scenes.ExampleScenes
             {
                 if (vertex.Radius > 0f)
                 {
-                    if (vertex.Radius < vertexRadius * 2f) vertex.Draw(ColorLight);
-                    else vertex.Draw(ColorHighlight1);
+                    if (vertex.Radius < vertexRadius * 2f) vertex.Draw(Colors.Light);
+                    else vertex.Draw(Colors.Highlight);
                 }
             }
 
@@ -346,10 +346,10 @@ namespace Examples.Scenes.ExampleScenes
 
                 if (drawClosest)
                 {
-                    if (closestIndex == i) segment.Draw(4f, ColorHighlight2);
-                    else segment.Draw(4f, ColorLight);
+                    if (closestIndex == i) segment.Draw(4f, Colors.Special);
+                    else segment.Draw(4f, Colors.Light);
                 }
-                else segment.Draw(4f, ColorLight);
+                else segment.Draw(4f, Colors.Light);
 
                 Segment normal = new(segment.Center, segment.Center + segment.Normal * 25f);
                 normal.Draw(2f, new(Color.CornflowerBlue));
@@ -361,7 +361,7 @@ namespace Examples.Scenes.ExampleScenes
                 //}
             }
 
-            if (drawClosest) DrawCircleV(closest, vertexRadius, ColorHighlight1.ToRayColor());
+            if (drawClosest) DrawCircleV(closest, vertexRadius, Colors.Highlight.ToRayColor());
 
             //DrawCircleV(polyline.GetCentroid(), 15f, YELLOW);
         }

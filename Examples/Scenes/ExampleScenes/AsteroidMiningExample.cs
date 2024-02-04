@@ -607,7 +607,7 @@ namespace Examples.Scenes.ExampleScenes
             };
             
             textFont.FontSpacing = 1f;
-            textFont.Color = ColorLight;
+            
         }
         public override void Reset()
         {
@@ -1033,7 +1033,7 @@ namespace Examples.Scenes.ExampleScenes
                 sb.Append($"Shoot {shootLaser}");
             }
 
-            
+            textFont.Color = Colors.Light;
             textFont.DrawTextWrapNone(sb.ToString(), rect, new(0.5f));
             // font.DrawText(sb.ToString(), rect, 1f, new Vector2(0.5f, 0.95f), ColorLight);
             

@@ -49,16 +49,16 @@ namespace Examples.Scenes.ExampleScenes
         protected override void DrawText(Rect rect)
         {
             textFont.FontSpacing = fontSpacing;
-            textFont.Color = ColorHighlight1;
+            textFont.Color = Colors.Highlight;
             textFont.DrawTextWrapNone(textBox.Text, rect, new(0.5f));
             // font.DrawText(textBox.Text, rect, fontSpacing, new Vector2(0.5f, 0.5f), ColorHighlight1);
         }
 
         protected override void DrawTextEntry(Rect rect)
         {
-            Caret caret = new(textBox.CaretVisible ? textBox.CaretIndex : -1, ColorHighlight2, 0.05f);
+            Caret caret = new(textBox.CaretVisible ? textBox.CaretIndex : -1, Colors.Special, 0.05f);
             textFont.FontSpacing = fontSpacing;
-            textFont.Color = ColorLight;
+            textFont.Color = Colors.Light;
             textFont.DrawTextWrapNone(textBox.Text, rect, new(0.5f), caret);
             
             // font.DrawText(textBox.Text, rect, fontSpacing, new Vector2(0.5f, 0.5f), ColorLight);
@@ -75,7 +75,7 @@ namespace Examples.Scenes.ExampleScenes
             string alignmentInfo = $"Font Spacing [{decreaseFontSpacingText}/{increaseFontSpacingText}] ({fontSpacing})";
             
             textFont.FontSpacing = 4f;
-            textFont.Color = ColorLight;
+            textFont.Color = Colors.Light;
             textFont.DrawTextWrapNone(alignmentInfo, rect, new(0.5f));
             // font.DrawText(alignmentInfo, rect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
         }

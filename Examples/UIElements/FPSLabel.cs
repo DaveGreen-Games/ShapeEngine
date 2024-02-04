@@ -11,20 +11,24 @@ namespace Examples.UIElements;
 public class FPSLabel
 {
     private TextFont textFont;
-    private ShapeColor warningColor = new(Color.IndianRed);
-    private ShapeColor slowColor = new(Color.Goldenrod);
-    public FPSLabel(Font font, ShapeColor color, float fontSpacing = 1f)
+    private PaletteColor normal;
+    private PaletteColor slow;
+    private PaletteColor critical;
+    public FPSLabel(Font font, PaletteColor normal, PaletteColor slow, PaletteColor critical)
     {
-        this.textFont = new(font, fontSpacing, color);
+        this.normal = normal;
+        this.slow = slow;
+        this.critical = critical;
+        this.textFont = new(font, 1f, normal.Color);
 
     }
     public void Draw(Rect r, Vector2 textAlignement, float fontSpacing = 1f)
     {
         int fps = Raylib.GetFPS();
         float f = (float)fps / (float)GAMELOOP.FrameRateLimit;
-        var c = textFont.Color;
-        if (fps < 28 || f < 0.5f) c = warningColor;
-        else if (f < 0.75f) c = slowColor;
+        var c = normal.Color;
+        if (fps < 28 || f < 0.5f) c = critical.Color;
+        else if (f < 0.75f) c = slow.Color;
         //else c = GREEN;
         string fpsText = $"{fps}";
         textFont.DrawTextWrapNone(fpsText, r, textAlignement, c);

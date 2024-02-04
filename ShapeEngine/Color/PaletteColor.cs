@@ -4,7 +4,7 @@ namespace ShapeEngine.Color;
 
 public class PaletteColor
 {
-    public ShapeColor Color;
+    public ShapeColor Color { get; internal set; }
     public readonly int ID;
 
     public PaletteColor()

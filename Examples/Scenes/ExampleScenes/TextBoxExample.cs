@@ -53,11 +53,11 @@ namespace Examples.Scenes.ExampleScenes
         {
             float fontSize = MathF.Abs(rect.Width) * 0.07f;
             textFont.FontSpacing = 1f;
-            textFont.Color = ColorLight;
+            textFont.Color = Colors.Light;
 
             textFont.FontSize = fontSize;
             textFont.FontSpacing = fontSpacing;
-            textFont.Color = ColorHighlight1;
+            textFont.Color = Colors.Highlight;
             textFont.DrawWord(textBox.Text, rect.GetPoint(curAlignement), curAlignement);
             // font.DrawText(textBox.Text, fontSize, fontSpacing, rect.GetPoint(curAlignement), curAlignement, ColorHighlight1);
         }
@@ -68,8 +68,8 @@ namespace Examples.Scenes.ExampleScenes
             
             textFont.FontSize = fontSize;
             textFont.FontSpacing = fontSpacing;
-            textFont.Color = ColorLight;
-            Caret caret = new(textBox.CaretVisible ? textBox.CaretIndex : -1, ColorHighlight2, 0.05f);
+            textFont.Color = Colors.Light;
+            Caret caret = new(textBox.CaretVisible ? textBox.CaretIndex : -1, Colors.Special, 0.05f);
             textFont.DrawWord(textBox.Text, rect.GetPoint(curAlignement), curAlignement, caret);
             // font.DrawText(textBox.Text, fontSize, fontSpacing, rect.GetPoint(curAlignement), curAlignement, ColorLight);
 
@@ -89,7 +89,7 @@ namespace Examples.Scenes.ExampleScenes
             string alignmentInfo = $"Font Spacing [{decreaseFontSpacingText}/{increaseFontSpacingText}] ({fontSpacing}) | Alignment {nextAlignementText} ({curAlignement})";
             
             textFont.FontSpacing = 4f;
-            textFont.Color = ColorLight;
+            textFont.Color = Colors.Light;
             textFont.DrawTextWrapNone(alignmentInfo, rect, new(0.5f));
             
             // font.DrawText(alignmentInfo, rect, 4f, new Vector2(0.5f, 0.5f), ColorLight);

@@ -14,14 +14,18 @@ public class InputActionLabel
     private TextFont textFont;
     public InputAction InputAction;
     public string Title;
-    public InputActionLabel(InputAction inputAction, string title, Font font, ShapeColor color, float fontSpacing = 1f)
+    public PaletteColor color;
+    public InputActionLabel(InputAction inputAction, string title, Font font, PaletteColor color, float fontSpacing = 1f)
     {
+        this.color = color;
         this.InputAction = inputAction;
-        this.textFont = new(font, fontSpacing, color);
+        this.textFont = new(font, fontSpacing, color.Color);
         this.Title = title;
     }
     public void Draw(Rect r, Vector2 textAlignement, InputDeviceType curInputDeviceType)
     {
+        textFont.Color = color.Color;
+        
         string text = InputAction.GetInputTypeDescription(curInputDeviceType, true, 1, false);
         StringBuilder b = new(text.Length + Title.Length + 3);
         b.Append(Title);

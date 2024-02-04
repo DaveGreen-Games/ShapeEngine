@@ -1,5 +1,4 @@
-﻿global using static ShapeEngine.Core.ShapeLoop;
-
+﻿
 using System.Numerics;
 using Raylib_CsLo;
 using ShapeEngine.Lib;
@@ -33,7 +32,7 @@ namespace Examples
             // cursor.Draw(ExampleScene.ColorHighlight2);
             // cursor.DrawLines(1f, ExampleScene.ColorHighlight1);
             float size = ui.Area.Size.Min() * 0.02f;
-            SimpleCursorUI.DrawRoundedCursor(ui.MousePos, size, ExampleScene.ColorHighlight1);
+            SimpleCursorUI.DrawRoundedCursor(ui.MousePos, size, Colors.Warm);
         }
         public void DrawUI(ScreenInfo ui){}
         public void Update(float dt, ScreenInfo ui)
@@ -76,7 +75,7 @@ namespace Examples
             float size = ui.Area.Size.Min() * 0.02f;
             float t = 1f - (effectTimer / EffectDuration);
             //var c = effectTimer <= 0f ? ExampleScene.ColorHighlight1 : ExampleScene.ColorHighlight2;
-            var c = ExampleScene.ColorHighlight2.Lerp(ExampleScene.ColorHighlight1, t);
+            var c = Colors.Special.Lerp(Colors.Warm, t);
             //float curSize = effectTimer <= 0f ? size : ShapeMath.LerpFloat(size, size * 1.5f, t);// ShapeTween.Tween(size, size * 1.5f, t, TweenType.BOUNCE_OUT);
             
             DrawRoundedCursor(ui.MousePos, size, c);
@@ -194,40 +193,8 @@ namespace Examples
             return newRect.ApplyMargins(LeftFactor, RightFactor, 0.01f, 0.01f);
         }
     }
-    
-    
-    
-    public static class Colors
-    {
-       public class Palette : IColorPalette
-       {
-           private readonly List<PaletteColor> colors;
 
-           public Palette(params PaletteColor[] colors)
-           {
-               this.colors = colors.ToList();
-           }
-           public List<PaletteColor> GetColors() => colors;
-       }
-       
-       public static ShapeColor Color1 => color1.Color;
-       public static ShapeColor Color2 => color2.Color;
-       public static ShapeColor Color3 => color3.Color;
 
-       public static readonly ColorContainer Container1 = new();
-       public static readonly ColorContainer Container2 = new();
-       
-       private static readonly PaletteColor color1 = new PaletteColor(0, new(System.Drawing.Color.Aqua));
-       private static readonly PaletteColor color2 = new PaletteColor(1, new(System.Drawing.Color.IndianRed));
-       private static readonly PaletteColor color3 = new PaletteColor(2, new(System.Drawing.Color.LimeGreen));
-
-       public static readonly Palette ColorPalette = new(color1, color2, color3);
-
-       public static void ApplyColorContainer(ColorContainer cc) => cc.Apply(ColorPalette);
-    }
-       
-    
-    
     public class GameloopExamples : ShapeLoop
     {
         public Font FontDefault { get; private set; }
@@ -299,7 +266,7 @@ namespace Examples
 
         protected override void LoadContent()
         {
-            BackgroundColor = ExampleScene.ColorDark;
+            BackgroundColor = Colors.Background; // ExampleScene.ColorDark;
             
             fonts.Add(FontIDs.GruppoRegular, ContentLoader.LoadFont("Resources/Fonts/Gruppo-Regular.ttf", 100));
             fonts.Add(FontIDs.IndieFlowerRegular, ContentLoader.LoadFont("Resources/Fonts/IndieFlower-Regular.ttf", 100));
@@ -339,7 +306,7 @@ namespace Examples
             this.VSync = false;
             this.FrameRateLimit = 60;
 
-            fpsLabel = new(GetFontDefault(), ExampleScene.ColorHighlight3);
+            fpsLabel = new(GetFontDefault(), Colors.PcCold, Colors.PcText, Colors.PcHighlight);
             
             HideOSCursor();
             //LockOSCursor();
@@ -447,6 +414,7 @@ namespace Examples
 
         protected override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
+            BackgroundColor = Colors.Background;
             UIRects.SetRect(ui.Area);
 
             //int gamepadIndex = CurGamepad?.Index ?? -1;

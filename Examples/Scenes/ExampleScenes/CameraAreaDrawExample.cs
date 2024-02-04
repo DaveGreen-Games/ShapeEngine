@@ -19,8 +19,8 @@ namespace Examples.Scenes.ExampleScenes
         List<Star> stars = new();
         private List<Star> drawStars = new();
         
-        private Ship ship = new(new Vector2(0f), 30f, ColorMedium, ColorLight, ColorHighlight1);
-        private Ship ship2 = new(new Vector2(100, 0), 30f, ColorMedium, ColorHighlight2, ColorHighlight3);
+        private Ship ship = new(new Vector2(0f), 30f, Colors.PcCold, Colors.PcHighlight, Colors.PcLight);
+        private Ship ship2 = new(new Vector2(100, 0), 30f, Colors.PcCold, Colors.PcSpecial, Colors.PcLight);
         private Ship currentShip;
         private uint prevCameraTweenID = 0;
         private InputAction iaChangeCameraTarget;
@@ -186,7 +186,7 @@ namespace Examples.Scenes.ExampleScenes
             string infoText = $"Total Stars {stars.Count} | Drawn Stars {drawStars.Count} | Camera Size {camera.Area.Size.Round()}";
             
             textFont.FontSpacing = 1f;
-            textFont.Color = ColorHighlight3;
+            textFont.Color = Colors.Warm;
             textFont.DrawTextWrapNone(infoText, rect, new(0.5f));
             // font.DrawText(infoText, rect, 1f, new Vector2(0.5f, 0.5f), ColorHighlight3);
         }
@@ -198,7 +198,7 @@ namespace Examples.Scenes.ExampleScenes
             string moveText = ship.GetInputDescription(curDevice);
             string shipInfoText = $"{moveText} | Switch Ship {changeTargetText}";
             textFont.FontSpacing = 1f;
-            textFont.Color = ColorLight;
+            textFont.Color = Colors.Light;
             textFont.DrawTextWrapNone(shipInfoText, rect, new(0.5f));
             // font.DrawText(shipInfoText, rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }

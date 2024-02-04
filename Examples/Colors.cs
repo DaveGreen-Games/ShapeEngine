@@ -16,35 +16,35 @@ public static class Colors
     }
        
        
-    public static ShapeColor Background      => background.Color;
-    public static ShapeColor Dark       => dark.Color; 
-    public static ShapeColor Medium     => medium.Color; 
-    public static ShapeColor Light      => light.Color; 
-    public static ShapeColor Text => text.Color; 
-    public static ShapeColor Highlight => highlight.Color; 
-    public static ShapeColor Special => special.Color;
-    public static ShapeColor Warm   => warm.Color;
-    public static ShapeColor Cold   => cold.Color;
+    public static ShapeColor Background      => PcBackground.Color;
+    public static ShapeColor Dark       => PcDark.Color; 
+    public static ShapeColor Medium     => PcMedium.Color; 
+    public static ShapeColor Light      => PcLight.Color; 
+    public static ShapeColor Text => PcText.Color; 
+    public static ShapeColor Highlight => PcHighlight.Color; 
+    public static ShapeColor Special => PcSpecial.Color;
+    public static ShapeColor Warm   => PcWarm.Color;
+    public static ShapeColor Cold   => PcCold.Color;
 
     //public static readonly PaletteColor BackgroundP = new();
        
-    private static readonly PaletteColor background = new PaletteColor(0, new(System.Drawing.Color.DarkSlateGray));
-    private static readonly PaletteColor dark = new PaletteColor(1, new(System.Drawing.Color.DimGray));
-    private static readonly PaletteColor medium = new PaletteColor(2, new(System.Drawing.Color.DarkGray));
-    private static readonly PaletteColor light = new PaletteColor(3, new(System.Drawing.Color.LightGray));
-    private static readonly PaletteColor text = new PaletteColor(4, new(System.Drawing.Color.AntiqueWhite));
-    private static readonly PaletteColor highlight = new PaletteColor(5, new(System.Drawing.Color.Aquamarine));
-    private static readonly PaletteColor special = new PaletteColor(6, new(System.Drawing.Color.Coral));
-    private static readonly PaletteColor warm = new PaletteColor(7, new(System.Drawing.Color.IndianRed));
-    private static readonly PaletteColor cold = new PaletteColor(8, new(System.Drawing.Color.CornflowerBlue));
+    public static readonly PaletteColor PcBackground = new(0, new ShapeColor(System.Drawing.Color.DarkSlateGray));
+    public static readonly PaletteColor PcDark = new(1, new(System.Drawing.Color.DimGray));
+    public static readonly PaletteColor PcMedium = new(2, new(System.Drawing.Color.DarkGray));
+    public static readonly PaletteColor PcLight = new(3, new(System.Drawing.Color.LightGray));
+    public static readonly PaletteColor PcText = new(4, new(System.Drawing.Color.AntiqueWhite));
+    public static readonly PaletteColor PcHighlight = new(5, new(System.Drawing.Color.Aquamarine));
+    public static readonly PaletteColor PcSpecial = new(6, new(System.Drawing.Color.Coral));
+    public static readonly PaletteColor PcWarm = new(7, new(System.Drawing.Color.IndianRed));
+    public static readonly PaletteColor PcCold = new(8, new(System.Drawing.Color.CornflowerBlue));
        
     private static readonly Palette colorPalette = new
     (
-        background, 
-        dark, medium, light, 
-        text,
-        highlight, special,
-        warm, cold
+        PcBackground, 
+        PcDark, PcMedium, PcLight, 
+        PcText,
+        PcHighlight, PcSpecial,
+        PcWarm, PcCold
     );
 
     public static readonly Colorscheme DefaultColorscheme = new

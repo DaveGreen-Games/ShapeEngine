@@ -18,7 +18,7 @@ namespace Examples.UIElements
         {
             Hidden = true;
             DisabledSelection = true;
-            textFont = new TextFont(GAMELOOP.FontDefault, 5f, ExampleScene.ColorHighlight1);
+            textFont = new TextFont(GAMELOOP.FontDefault, 5f, Colors.Text);
 
         }
 
@@ -59,19 +59,19 @@ namespace Examples.UIElements
 
             if (Selected)
             {
-                textFont.Color = ExampleScene.ColorHighlight2;
+                textFont.Color = Colors.Highlight;
                 textFont.DrawTextWrapNone(text, r, new(0f));
                 // font.DrawText(text, r, 5f, new(0f), ExampleScene.ColorHighlight2);
             }
             else if (Pressed)
             {
-                textFont.Color = ExampleScene.ColorHighlight1;
+                textFont.Color = Colors.Special;
                 textFont.DrawTextWrapNone(text, r, new(0f));
                 // font.DrawText(text, r, 5f, new(0f), ExampleScene.ColorHighlight1);
             }
             else
             {
-                textFont.Color = ExampleScene.ColorHighlight1;
+                textFont.Color = Colors.Text;
                 textFont.DrawTextWrapNone(text, r, new(0f));
                 // font.DrawText(text, r, 5f, new(0f), ExampleScene.ColorHighlight1);
             }

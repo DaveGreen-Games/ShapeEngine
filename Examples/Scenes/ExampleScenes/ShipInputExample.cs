@@ -388,21 +388,21 @@ namespace Examples.Scenes.ExampleScenes
             var text = $"Connected {ShapeInput.GamepadDeviceManager.GetConnectedGamepads().Count} | Available {ShapeInput.GamepadDeviceManager.GetAvailableGamepads().Count}";
             
             textFont.FontSpacing = 1f;
-            textFont.Color = ColorHighlight3;
+            textFont.Color = Colors.Warm;
             textFont.DrawTextWrapNone(text, rect, new(0.5f));
             // font.DrawText(text, rect, 1f, new Vector2(0.5f, 0.5f), ColorHighlight3);
         }
         private void DrawDescription(Rect rect)
         {
             textFont.FontSpacing = 1f;
-            textFont.Color = ColorMedium;
+            textFont.Color = Colors.Medium;
             textFont.DrawTextWrapNone("Use multiple gamepads!", rect, new(0.5f));
             // font.DrawText("Use multiple gamepads!", rect, 1f, new Vector2(0.5f, 0.5f), ColorMedium);
         }
         private void DrawInputDescription(Rect rect)
         {
             textFont.FontSpacing = 1f;
-            textFont.Color = ColorLight;
+            textFont.Color = Colors.Light;
             
             var helper = GetActiveInputActionHelper();
             if (helper != null)

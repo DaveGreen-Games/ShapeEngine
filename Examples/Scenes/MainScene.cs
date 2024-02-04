@@ -55,6 +55,7 @@ namespace Examples.Scenes
 
         private float tabChangeMouseWheelLockTimer = 0f;
         private InputActionLabel quitLabel;
+        // private PaletteColor titleColor = Colors.PcHighlight;
         public MainScene()
         {
             for (var i = 0; i < 10; i++)
@@ -89,12 +90,12 @@ namespace Examples.Scenes
             //examples.Add(new PolylineCollisionExample());
             //examples.Add(new CCDExample());
             
-            titleFont = new(GAMELOOP.FontDefault, 10f, ExampleScene.ColorLight); // GAMELOOP.GetFont(GameloopExamples.FONT_IndieFlowerRegular);
+            titleFont = new(GAMELOOP.FontDefault, 10f, Colors.Text); // GAMELOOP.GetFont(GameloopExamples.FONT_IndieFlowerRegular);
 
             SetupButtons();
 
             var action = GAMELOOP.InputActionUICancel;// GAMELOOP.Input.GetAction(GameloopExamples.InputUICancelID);
-            quitLabel = new(action, "Quit", GAMELOOP.FontDefault, ExampleScene.ColorHighlight3);
+            quitLabel = new(action, "Quit", GAMELOOP.FontDefault, Colors.PcWarm);
         }
         
         public void OnWindowSizeChanged(DimensionConversionFactors conversionFactors)
@@ -288,6 +289,8 @@ namespace Examples.Scenes
 
         public void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
+            // titleFont.Color = titleColor.Color;
+            
             if (tabChangeMouseWheelLockTimer > 0f)
             {
                 tabChangeMouseWheelLockTimer -= dt;
@@ -324,7 +327,7 @@ namespace Examples.Scenes
             var titleRect = new Rect(uiSize * new Vector2(0.5f, 0.01f), uiSize * new Vector2(0.75f, 0.09f), new Vector2(0.5f, 0f));
             // titleFont.DrawText(text, titleRect, 10, new(0.5f), ExampleScene.ColorLight);
             titleFont.FontSpacing = 10f;
-            titleFont.Color = ExampleScene.ColorLight;
+            titleFont.Color = Colors.Text;
             titleFont.DrawTextWrapNone(text, titleRect, new(0.5f));
             int pages = GetMaxPages();
             string prevName = GAMELOOP.InputActionUIPrevTab.GetInputTypeDescription(ShapeInput.CurrentInputDeviceType, true, 1, false);
@@ -333,12 +336,12 @@ namespace Examples.Scenes
             string pagesText = pages <= 1 ? "Page 1/1" : $"{prevName} <- Page #{curPageIndex + 1}/{pages} -> {nextName}";
             var pageRect = new Rect(uiSize * new Vector2(0.01f, 0.12f), uiSize * new Vector2(0.3f, 0.06f), new Vector2(0f, 0f));
             titleFont.FontSpacing = 4f;
-            titleFont.Color = ExampleScene.ColorHighlight2;
+            titleFont.Color = Colors.Highlight;
             titleFont.DrawTextWrapNone(pagesText, pageRect, new(0f, 0.5f));
             // titleFont.DrawText(pagesText, pageRect, 4f, new(0f, 0.5f), ExampleScene.ColorHighlight2);
 
             Segment s = new(uiSize * new Vector2(0f, 0.22f), uiSize * new Vector2(1f, 0.22f));
-            s.Draw(MathF.Max(4f * GAMELOOP.DevelopmentToScreen.AreaFactor, 0.5f), ExampleScene.ColorLight);
+            s.Draw(MathF.Max(4f * GAMELOOP.DevelopmentToScreen.AreaFactor, 0.5f), Colors.Light);
 
             var backRect = new Rect(uiSize * new Vector2(0.01f, 0.17f), uiSize * new Vector2(0.2f, 0.04f), new Vector2(0f, 0f));
             var curInputDevice = ShapeInput.CurrentInputDeviceTypeNoMouse;
@@ -351,7 +354,7 @@ namespace Examples.Scenes
             int pi = (int)MathF.Round(p * 100);
             
             titleFont.FontSpacing = 1f;
-            titleFont.Color = ExampleScene.ColorHighlight3;
+            titleFont.Color = Colors.Medium;
             titleFont.DrawTextWrapNone($"Window Focused: {Raylib.IsWindowFocused()} | [{pi}%]", infoAreaRects.top, new Vector2(1f, 1f));
             titleFont.DrawTextWrapNone($"Cursor On Screen: {ShapeLoop.CursorOnScreen}", infoAreaRects.bottom, new Vector2(1f, 1f));
             
@@ -520,7 +523,7 @@ namespace Examples.Scenes
 
             var rects = area.SplitV(5);
 
-            var color = ExampleScene.ColorMedium;
+            var color = Colors.Medium;
             var alignement = new Vector2(1f, 0.05f);
             titleFont.FontSpacing = 1f;
             titleFont.Color = color;

@@ -26,7 +26,7 @@ namespace Examples.Scenes.ExampleScenes
         private InputDeviceType curInputDeviceType = InputDeviceType.Keyboard;
         public JoystickVisualizer(bool left, Font font)
         {
-            this.textFont = new(font, 1f, ExampleScene.ColorMedium);
+            this.textFont = new(font, 1f, Colors.Medium);
             if (left)
             {
                 title = "AXIS LEFT";
@@ -127,9 +127,9 @@ namespace Examples.Scenes.ExampleScenes
         public override void Draw(Rect area, float lineThickness)
         {
             float flashF = flashTimer / flashDuration;
-            var flashColor1 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight1, flashF);
-            var flashColor2 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight2, flashF);
-            var flashColor3 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight3, flashF);
+            var flashColor1 = Colors.Medium.Lerp(Colors.Highlight, flashF);
+            var flashColor2 = Colors.Medium.Lerp(Colors.Special, flashF);
+            var flashColor3 = Colors.Medium.Lerp(Colors.Warm, flashF);
             
             
             Rect top = area.ApplyMargins(0, 0, 0, 0.8f);
@@ -145,7 +145,7 @@ namespace Examples.Scenes.ExampleScenes
             var rects = inputNamesRect.SplitV(inputs.Count); // inputNamesRect.GetAlignedRectsVertical(inputs.Count, 0f, 1f);
             
             
-            textFont.Color = ExampleScene.ColorMedium;
+            textFont.Color = Colors.Medium;
             for (var i = 0; i < inputs.Count; i++)
             {
                 textFont.DrawTextWrapNone(inputs[i].GetName(true), rects[i], new(0.5f, 0f));
@@ -162,14 +162,14 @@ namespace Examples.Scenes.ExampleScenes
 
             if (joystickHorizontal.State.Down)
             {
-                leftSegment.Draw(lineThickness, ExampleScene.ColorHighlight2);
-                rightSegment.Draw(lineThickness, ExampleScene.ColorHighlight2);
+                leftSegment.Draw(lineThickness, Colors.Special);
+                rightSegment.Draw(lineThickness, Colors.Special);
             }
 
             if (joystickVertical.State.Down)
             {
-                bottomSegment.Draw(lineThickness, ExampleScene.ColorHighlight2);
-                topSegment.Draw(lineThickness, ExampleScene.ColorHighlight2);
+                bottomSegment.Draw(lineThickness, Colors.Special);
+                topSegment.Draw(lineThickness, Colors.Special);
             }
             
             Vector2 movementRaw = new
@@ -210,7 +210,7 @@ namespace Examples.Scenes.ExampleScenes
         
         public TriggerVisualizer(bool left, Font font)
         {
-            this.textFont = new(font, 1f, ExampleScene.ColorMedium);
+            this.textFont = new(font, 1f, Colors.Medium);
             
 
             if (left)
@@ -257,9 +257,9 @@ namespace Examples.Scenes.ExampleScenes
         public override void Draw(Rect area, float lineThickness)
         {
             float flashF = flashTimer / flashDuration;
-            var flashColor1 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight1, flashF);
-            var flashColor2 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight2, flashF);
-            var flashColor3 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight3, flashF);
+            var flashColor1 = Colors.Medium.Lerp(Colors.Highlight, flashF);
+            var flashColor2 = Colors.Medium.Lerp(Colors.Special, flashF);
+            var flashColor3 = Colors.Medium.Lerp(Colors.Warm, flashF);
             
             Rect top = area.ApplyMargins(0, 0, 0, 0.8f);
             Rect bottom = area.ApplyMargins(0, 0, 0.2f, 0);
@@ -277,7 +277,7 @@ namespace Examples.Scenes.ExampleScenes
             var inputNamesRect = insideBottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
             var count = inputs.Count + 1;
             var rects = inputNamesRect.SplitV(count);
-            textFont.Color = ExampleScene.ColorMedium;
+            textFont.Color = Colors.Medium;
             for (var i = 0; i < count; i++)
             {
                 if (inputs.Count > i)
@@ -299,7 +299,7 @@ namespace Examples.Scenes.ExampleScenes
 
             if (trigger.State.Down)
             {
-                bottom.DrawLines(lineThickness, ExampleScene.ColorHighlight2);
+                bottom.DrawLines(lineThickness, Colors.Special);
             }
 
             
@@ -319,7 +319,7 @@ namespace Examples.Scenes.ExampleScenes
             private InputAction button;
             public ButtonVisualizer(bool left, Font font)
             {
-                this.textFont = new(font, 1f, ExampleScene.ColorMedium);
+                this.textFont = new(font, 1f, Colors.Medium);
                 
     
                 if (left)
@@ -366,9 +366,9 @@ namespace Examples.Scenes.ExampleScenes
             public override void Draw(Rect area, float lineThickness)
             {
                 float flashF = flashTimer / flashDuration;
-                var flashColor1 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight1, flashF);
-                var flashColor2 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight2, flashF);
-                var flashColor3 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight3, flashF);
+                var flashColor1 = Colors.Medium.Lerp(Colors.Highlight, flashF);
+                var flashColor2 = Colors.Medium.Lerp(Colors.Special, flashF);
+                var flashColor3 = Colors.Medium.Lerp(Colors.Warm, flashF);
                 
                 
                 Rect top = area.ApplyMargins(0, 0, 0, 0.8f);
@@ -384,7 +384,7 @@ namespace Examples.Scenes.ExampleScenes
                 var inputs = button.GetInputs(curInputDeviceType);
                 var inputNamesRect = insideBottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
                 var rects = inputNamesRect.SplitV(inputs.Count); // inputNamesRect.GetAlignedRectsVertical(inputs.Count, 0f, 1f);
-                textFont.Color = ExampleScene.ColorMedium;
+                textFont.Color = Colors.Medium;
                 for (var i = 0; i < inputs.Count; i++)
                 {
                     textFont.DrawTextWrapNone(inputs[i].GetName(true), rects[i], new(0.5f, 0f));
@@ -395,7 +395,7 @@ namespace Examples.Scenes.ExampleScenes
     
                 if (button.State.Down)
                 {
-                    bottom.DrawLines(lineThickness, ExampleScene.ColorHighlight2);
+                    bottom.DrawLines(lineThickness, Colors.Special);
                 }
     
                 textFont.Color = flashColor1;
@@ -417,7 +417,7 @@ namespace Examples.Scenes.ExampleScenes
         private InputAction button;
         public ButtonHoldVisualizer(Font font)
         {
-            this.textFont = new(font, 1f, ExampleScene.ColorMedium);
+            this.textFont = new(font, 1f, Colors.Medium);
             
             this.title = "HOLD";
             var q = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
@@ -465,9 +465,9 @@ namespace Examples.Scenes.ExampleScenes
         public override void Draw(Rect area, float lineThickness)
         {
             float flashF = flashTimer / flashDuration;
-            var flashColor1 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight1, flashF);
-            var flashColor2 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight2, flashF);
-            var flashColor3 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight3, flashF);
+            var flashColor1 = Colors.Medium.Lerp(Colors.Highlight, flashF);
+            var flashColor2 = Colors.Medium.Lerp(Colors.Special, flashF);
+            var flashColor3 = Colors.Medium.Lerp(Colors.Warm, flashF);
             
             Rect top = area.ApplyMargins(0, 0, 0, 0.8f);
             Rect bottom = area.ApplyMargins(0, 0, 0.2f, 0);
@@ -494,7 +494,7 @@ namespace Examples.Scenes.ExampleScenes
             if (holdFinishedTimer > 0f)
             {
                 float f = holdFinishedTimer / holdFinishedDuration;
-                var holdFinishedColor = ExampleScene.ColorHighlight1.Lerp(ExampleScene.ColorHighlight2, f);
+                var holdFinishedColor = Colors.Highlight.Lerp(Colors.Special, f);
                 float thickness = ShapeMath.LerpFloat(lineThickness / 2, lineThickness * 2, f);
                 
                 circle.DrawLines(thickness, holdFinishedColor);
@@ -514,7 +514,7 @@ namespace Examples.Scenes.ExampleScenes
             var inputs = button.GetInputs(curInputDeviceType);
             var inputNamesRect = bottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
             var rects = inputNamesRect.SplitV(inputs.Count);
-            textFont.Color = ExampleScene.ColorMedium;
+            textFont.Color = Colors.Medium;
             for (var i = 0; i < inputs.Count; i++)
             {
                 textFont.DrawTextWrapNone(inputs[i].GetName(true), rects[i], new(0.5f, 0f));
@@ -568,7 +568,7 @@ namespace Examples.Scenes.ExampleScenes
         // private float lastActionDuration = 1f;
         public ButtonDoubleTapVisualizer(Font font)
         {
-            this.textFont = new(font, 1f, ExampleScene.ColorMedium);
+            this.textFont = new(font, 1f, Colors.Medium);
             
             this.title = "Double Tap";
             var q = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
@@ -647,9 +647,9 @@ namespace Examples.Scenes.ExampleScenes
         public override void Draw(Rect area, float lineThickness)
         {
             float flashF = flashTimer / flashDuration;
-            var flashColor1 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight1, flashF);
-            var flashColor2 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight2, flashF);
-            var flashColor3 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight3, flashF);
+            var flashColor1 = Colors.Medium.Lerp(Colors.Highlight, flashF);
+            var flashColor2 = Colors.Medium.Lerp(Colors.Special, flashF);
+            var flashColor3 = Colors.Medium.Lerp(Colors.Warm, flashF);
             
             Rect top = area.ApplyMargins(0, 0, 0, 0.8f);
             Rect bottom = area.ApplyMargins(0, 0, 0.2f, 0);
@@ -668,7 +668,7 @@ namespace Examples.Scenes.ExampleScenes
             if (doubleTapFinishedTimer > 0f)
             {
                 float f = doubleTapFinishedTimer / doubleTapFinishedDuration;
-                var holdFinishedColor = ExampleScene.ColorHighlight1.Lerp(ExampleScene.ColorHighlight2, f);
+                var holdFinishedColor = Colors.Highlight.Lerp(Colors.Special, f);
                 float thickness = ShapeMath.LerpFloat(lineThickness / 2, lineThickness * 2, f);
                 
                 circle.DrawLines(thickness, holdFinishedColor);
@@ -689,7 +689,7 @@ namespace Examples.Scenes.ExampleScenes
             var inputs = button.GetInputs(curInputDeviceType);
             var inputNamesRect = bottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
             var rects = inputNamesRect.SplitV(inputs.Count);
-            textFont.Color = ExampleScene.ColorMedium;
+            textFont.Color =Colors.Medium;
             for (var i = 0; i < inputs.Count; i++)
             {
                 textFont.DrawTextWrapNone(inputs[i].GetName(true), rects[i], new(0.5f, 0f));

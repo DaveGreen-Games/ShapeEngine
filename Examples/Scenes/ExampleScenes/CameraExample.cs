@@ -85,7 +85,7 @@ namespace Examples.Scenes.ExampleScenes
             }
             
             textFont.FontSpacing = 1f;
-            textFont.Color = ColorLight;
+            textFont.Color = Colors.Light;
         }
         public override void Activate(IScene oldScene)
         {

@@ -17,20 +17,20 @@ namespace Examples.Scenes
     public class ExampleScene : IScene
     {
 
-        public static ShapeColor ColorDark = ShapeColor.FromHex("0A131F");
-        public static ShapeColor ColorDarkB = ShapeColor.FromHex("#121F2B");
-        public static ShapeColor ColorMedium = ShapeColor.FromHex("1F3847");
-        public static ShapeColor ColorLight = ShapeColor.FromHex("B6E0E2");
-        public static ShapeColor ColorHighlight1 = ShapeColor.FromHex("E5F6DF");
-        public static ShapeColor ColorHighlight2 = ShapeColor.FromHex("E94957");
-        public static ShapeColor ColorHighlight3 = ShapeColor.FromHex("#FCA311");
-        public static ShapeColor ColorRustyRed = ShapeColor.FromHex("#DE3C4B");
+        // public static ShapeColor ColorDark = ShapeColor.FromHex("0A131F");
+        // public static ShapeColor ColorDarkB = ShapeColor.FromHex("#121F2B");
+        // public static ShapeColor ColorMedium = ShapeColor.FromHex("1F3847");
+        // public static ShapeColor ColorLight = ShapeColor.FromHex("B6E0E2");
+        // public static ShapeColor ColorHighlight1 = ShapeColor.FromHex("E5F6DF");
+        // public static ShapeColor ColorHighlight2 = ShapeColor.FromHex("E94957");
+        // public static ShapeColor ColorHighlight3 = ShapeColor.FromHex("#FCA311");
+        // public static ShapeColor ColorRustyRed = ShapeColor.FromHex("#DE3C4B");
 
         public string Title { get; protected set; } = "Title Goes Here";
         public string Description { get; protected set; } = "No Description Yet.";
 
-        protected TextFont titleFont = new(GAMELOOP.FontDefault, 1f, ColorLight);
-        protected TextFont textFont = new(GAMELOOP.GetFont(FontIDs.JetBrains), 1f, ColorLight);
+        protected TextFont titleFont = new(GAMELOOP.FontDefault, 1f, Colors.Highlight);
+        protected TextFont textFont = new(GAMELOOP.GetFont(FontIDs.JetBrains), 1f, Colors.Text);
 
         //protected readonly ShapeInput input = GAMELOOP.Input;
         private InputActionLabel backLabel;
@@ -38,7 +38,7 @@ namespace Examples.Scenes
         public ExampleScene()
         {
             var action = GAMELOOP.InputActionUICancel;
-            backLabel = new(action, "BACK", GAMELOOP.FontDefault, ExampleScene.ColorHighlight3, 4f);
+            backLabel = new(action, "BACK", GAMELOOP.FontDefault, Colors.PcWarm, 4f);
         }
         public virtual void Reset() { }
 
@@ -121,11 +121,11 @@ namespace Examples.Scenes
         {
             if (GAMELOOP.Paused)
             {
-                ui.Area.Draw(ColorDark.ChangeAlpha((byte)150));
-                
+                // ui.Area.Draw(ColorDark.ChangeAlpha((byte)150));
+                ui.Area.Draw(Colors.Dark);
                 var pausedRect = ui.Area.ApplyMargins(0.05f, 0.05f, 0.15f, 0.55f);
                 titleFont.LineSpacing = 30f;
-                titleFont.Color = ColorRustyRed;
+                titleFont.Color = Colors.Special;
                 titleFont.DrawTextWrapNone("PAUSED", pausedRect, new(0.5f));
                 // titleFont.DrawText("PAUSED", pausedRect, 30f, new(0.5f), ColorRustyRed);
                 
@@ -140,11 +140,11 @@ namespace Examples.Scenes
             // GAMELOOP.UIZones.TopLeft.CombineWith(GAMELOOP.UIZones.TopCenter).CombineWith(GAMELOOP.UIZones.TopRight).BottomSegment.Draw(2f, ColorLight);
             //GAMELOOP.RectTop.BottomSegment.Draw(2f, ColorLight);
             var topLine = GAMELOOP.UIRects.GetRectSingle("top").BottomSegment;
-            topLine.Draw(2f, ColorLight);
+            topLine.Draw(2f, Colors.Light);
 
             var topCenterRect = GAMELOOP.UIRects.GetRect("top center"); // Get("top").Get("center").GetRect();
             titleFont.LineSpacing = 10f;
-            titleFont.Color = ColorLight;
+            titleFont.Color = Colors.Highlight;
             titleFont.DrawTextWrapNone(Title, topCenterRect, new(0.5f));
             // titleFont.DrawText(Title, topCenterRect, 10f, new(0.5f), ColorLight);
 
@@ -208,14 +208,14 @@ namespace Examples.Scenes
         public virtual void OnCursorLockChanged(bool locked){}
         public virtual void OnWindowFocusChanged(bool focused){}
 
-        protected void DrawCross(Vector2 center, float length)
-        {
-            var c = ColorLight.ChangeAlpha(125);
-            Segment hor = new Segment(center - new Vector2(length / 2, 0f), center + new Vector2(length / 2, 0f));
-            Segment ver = new Segment(center - new Vector2(0f, length / 2), center + new Vector2(0f, length / 2));
-            hor.Draw(2f, c);
-            ver.Draw(2f, c);
-        }
+        // protected void DrawCross(Vector2 center, float length)
+        // {
+        //     var c = ColorLight.ChangeAlpha(125);
+        //     Segment hor = new Segment(center - new Vector2(length / 2, 0f), center + new Vector2(length / 2, 0f));
+        //     Segment ver = new Segment(center - new Vector2(0f, length / 2), center + new Vector2(0f, length / 2));
+        //     hor.Draw(2f, c);
+        //     ver.Draw(2f, c);
+        // }
         private void DrawInputDeviceInfo(Rect rect)
         {
             var infoRect = rect;
@@ -225,7 +225,7 @@ namespace Examples.Scenes
 
             var deviceText = ShapeInput.GetCurInputDeviceGenericName();
             titleFont.LineSpacing = 1f;
-            titleFont.Color = ColorHighlight3;
+            titleFont.Color = Colors.Medium;
             titleFont.DrawTextWrapNone(deviceText, deviceRect, new Vector2(0.01f, 0.5f));
             // titleFont.DrawText(deviceText, deviceRect, 1f, new Vector2(0.01f, 0.5f), ColorHighlight3);
             
@@ -237,7 +237,7 @@ namespace Examples.Scenes
             }
             
             titleFont.LineSpacing = 1f;
-            titleFont.Color = GAMELOOP.CurGamepad != null ? ColorHighlight3 : ColorMedium;
+            titleFont.Color = GAMELOOP.CurGamepad != null ? Colors.Highlight : Colors.Medium;
             titleFont.DrawTextWrapNone(gamepadText, gamepadRect, new Vector2(0.01f, 0.5f));
             // titleFont.DrawText(gamepadText, gamepadRect, 1f, new Vector2(0.01f, 0.5f), GAMELOOP.CurGamepad != null ? ColorHighlight3 : ColorMedium);
         }

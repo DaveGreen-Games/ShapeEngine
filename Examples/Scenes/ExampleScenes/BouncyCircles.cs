@@ -89,13 +89,13 @@ namespace Examples.Scenes.ExampleScenes
 
         public void DrawGame(ScreenInfo game)
         {
-            ShapeColor c = affectionCount switch
+            var c = affectionCount switch
             {
-                0 => new ShapeColor(System.Drawing.Color.ForestGreen),
-                1 => new ShapeColor(System.Drawing.Color.Goldenrod),
-                2 => new ShapeColor(System.Drawing.Color.Coral),
-                3 => new ShapeColor(System.Drawing.Color.IndianRed),
-                _ => new ShapeColor(System.Drawing.Color.FloralWhite),
+                0 => Colors.Warm, // new ShapeColor(System.Drawing.Color.ForestGreen),
+                1 => Colors.Cold,// new ShapeColor(System.Drawing.Color.Goldenrod),
+                2 => Colors.Highlight, // new ShapeColor(System.Drawing.Color.Coral),
+                3 => Colors.Special, //new ShapeColor(System.Drawing.Color.IndianRed),
+                _ => Colors.Light,// new ShapeColor(System.Drawing.Color.FloralWhite),
             };
             float r = Radius;
             ShapeDrawing.DrawCircleFast(Pos, Radius, c);
@@ -292,7 +292,7 @@ namespace Examples.Scenes.ExampleScenes
             var objectCountText = $"Object Count: {gameObjectHandler.Count}";
             
             textFont.FontSpacing = 1f;
-            textFont.Color = ColorHighlight3;
+            textFont.Color = Colors.Warm;
             textFont.DrawTextWrapNone(objectCountText, GAMELOOP.UIRects.GetRect("bottom right"), new Vector2(0.98f, 0.98f));
             // font.DrawText(objectCountText, GAMELOOP.UIRects.GetRect("bottom right"), 1f, new Vector2(0.98f, 0.98f), ColorHighlight3);
         }
@@ -311,7 +311,7 @@ namespace Examples.Scenes.ExampleScenes
             var text = $"Add {addText} | Slow Motion : [{slow1Text} / {slow2Text} / {slow3Text} / {slow4Text}]";
             
             textFont.FontSpacing = 1f;
-            textFont.Color = ColorLight;
+            textFont.Color = Colors.Light;
             textFont.DrawTextWrapNone(text, rect, new(0.5f));
             // font.DrawText(text, rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }

@@ -1,18 +1,42 @@
 namespace ShapeEngine.Color;
 
-public class ColorContainer
+public class Colorscheme
 {
     private readonly PaletteColor[] colors;
 
-    public ColorContainer(params PaletteColor[] colors)
+    public Colorscheme()
+    {
+        colors = Array.Empty<PaletteColor>();
+    }
+    public Colorscheme(params PaletteColor[] colors)
     {
         this.colors = colors;
     }
-    public ColorContainer(IEnumerable<PaletteColor> colors)
+    public Colorscheme(params ShapeColor[] colors)
+    {
+        var newColors = new PaletteColor[colors.Length];
+        for (int i = 0; i < colors.Length; i++)
+        {
+            newColors[i] = new(i, colors[i]);
+        }
+        this.colors = newColors;
+    }
+    public Colorscheme(IEnumerable<ShapeColor> colors)
+    {
+        var newColors = new List<PaletteColor>();
+        int index = 0;
+        foreach (var c in colors)
+        {
+            newColors.Add(new(index, c));
+            index++;
+        }
+        this.colors = newColors.ToArray();
+    }
+    public Colorscheme(IEnumerable<PaletteColor> colors)
     {
         this.colors = colors.ToArray();
     }
-    public ColorContainer(Dictionary<int, ShapeColor> colors)
+    public Colorscheme(Dictionary<int, ShapeColor> colors)
     {
         this.colors = new PaletteColor[colors.Count];
         int index = 0;
@@ -34,6 +58,7 @@ public class ColorContainer
     }
     public void Apply(IColorPalette palette)
     {
+        if (colors.Length <= 0) return;
         var targetColors = palette.GetColors();
         foreach (var c in targetColors)
         {
@@ -41,7 +66,7 @@ public class ColorContainer
         }
     }
         
-    public static ColorContainer Generate(int[] colors, params int[] colorIDs)
+    public static Colorscheme Generate(int[] colors, params int[] colorIDs)
     {
         if (colors.Length <= 0 || colorIDs.Length <= 0) return new();
         List<PaletteColor> container = new();
@@ -54,7 +79,7 @@ public class ColorContainer
         }
         return new(container);
     }
-    public static ColorContainer Generate(string[] hexColors, params int[] colorIDs)
+    public static Colorscheme Generate(string[] hexColors, params int[] colorIDs)
     {
         if (hexColors.Length <= 0 || colorIDs.Length <= 0) return new();
         List<PaletteColor> container = new();
