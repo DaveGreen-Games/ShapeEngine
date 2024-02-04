@@ -196,6 +196,39 @@ namespace Examples
         }
     }
     
+    /*
+     public static class ColorContainerData
+       {
+           public static readonly ColorContainer Container1 = new();
+           public static readonly ColorContainer Container2 = new();
+       }
+       public static class ColorPaletteData
+       {
+           public class Palette : IColorPalette
+           {
+               private readonly List<PaletteColor> colors;
+
+               public Palette(params PaletteColor[] colors)
+               {
+                   this.colors = colors.ToList();
+               }
+               public List<PaletteColor> GetColors() => colors;
+           }
+           
+           public static SColor Color1 => color1.Color;
+           public static SColor Color2 => color2.Color;
+           public static SColor Color3 => color3.Color;
+
+           private static readonly PaletteColor color1 = new PaletteColor(0, new(System.Drawing.Color.Aqua));
+           private static readonly PaletteColor color2 = new PaletteColor(1, new(System.Drawing.Color.IndianRed));
+           private static readonly PaletteColor color3 = new PaletteColor(2, new(System.Drawing.Color.LimeGreen));
+
+           public static readonly Palette ColorPalette = new(color1, color2, color3);
+
+           public static void ApplyColorContainer(ColorContainer cc) => cc.Apply(ColorPalette);
+       }
+       
+    */
     
     public class GameloopExamples : ShapeLoop
     {

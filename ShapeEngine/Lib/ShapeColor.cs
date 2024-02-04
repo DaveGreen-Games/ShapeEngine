@@ -5,10 +5,6 @@ using ShapeEngine.Color;
 
 namespace ShapeEngine.Lib
 {
-    
-    //new color palette system
-    // interface with apply color
-    //and id in SColor ?
     public readonly struct SColor : IEquatable<SColor>
     {
         #region Members
@@ -310,6 +306,7 @@ namespace ShapeEngine.Lib
         private static byte Clamp(int value) => (byte)ShapeMath.Clamp(value, 0, 255);
     }
 
+    
     public class PaletteColor
     {
         public SColor Color;
@@ -355,7 +352,7 @@ namespace ShapeEngine.Lib
             }
         }
 
-        public void ApplyColor(PaletteColor target)
+        private void ApplyColor(PaletteColor target)
         {
             foreach (var source in colors)
             {
@@ -364,16 +361,14 @@ namespace ShapeEngine.Lib
                 return;
             }
         }
-        // public void ApplyTo(Palette target)
-        // {
-        //     var targetColors = target.GetColors();
-        //     foreach (var c in targetColors)
-        //     {
-        //         ApplyColor(c);
-        //     }
-        // }
-        
-        
+        public void Apply(IColorPalette palette)
+        {
+            var targetColors = palette.GetColors();
+            foreach (var c in targetColors)
+            {
+                ApplyColor(c);
+            }
+        }
         
         public static ColorContainer Generate(int[] colors, params int[] colorIDs)
         {
@@ -401,60 +396,13 @@ namespace ShapeEngine.Lib
             }
             return new(container);
         }
-
-        
-        
-        
     }
-    public abstract class Palette
+    public interface IColorPalette
     {
-        public abstract List<PaletteColor> GetColors();
-
-        public void ApplyColorContainer(ColorContainer container)
-        {
-            var targetColors = GetColors();
-            foreach (var c in targetColors)
-            {
-                container.ApplyColor(c);
-            }
-        }
+        public List<PaletteColor> GetColors();
     }
 
-    public class AnotherTestPalette : Palette
-    {
-
-        public SColor Color1 => color1.Color;
-        public SColor Color2 => color2.Color;
-        public SColor Color3 => color3.Color;
-
-        private readonly PaletteColor color1;
-        private readonly PaletteColor color2;
-        private readonly PaletteColor color3;
-
-        private readonly List<PaletteColor> colors;
-        public ColorContainer Container1 = new();
-        public ColorContainer Container2 = new();
-        
-        public AnotherTestPalette()
-        {
-            color1 = new PaletteColor(0, new(System.Drawing.Color.Aqua));
-            color2 = new PaletteColor(1, new(System.Drawing.Color.IndianRed));
-            color3 = new PaletteColor(2, new(System.Drawing.Color.LimeGreen));
-            colors = new() { color1, color2, color3 };
-        }
-
-
-        public override List<PaletteColor> GetColors() => colors;
-    }
-
-    public class CallerClass
-    {
-        public CallerClass()
-        {
-            var colorPalette = new AnotherTestPalette();
-            colorPalette.ApplyColorContainer(colorPalette.Container1);
-        }
-    }
+    
     
     public static class ShapeColor
     {
@@ -704,4 +652,5 @@ namespace ShapeEngine.Lib
         
 
     }
+    
 }
