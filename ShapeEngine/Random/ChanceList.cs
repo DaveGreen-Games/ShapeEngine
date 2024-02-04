@@ -33,7 +33,7 @@ namespace ShapeEngine.Random
             if (values.Count <= 0) Generate();
             List<T> filtered = values.FindAll(match);
             if (filtered.Count <= 0) return default;
-            int index = rng.randI(0, filtered.Count);
+            int index = rng.RandI(0, filtered.Count);
             T value = filtered[index];
             //filtered.RemoveAt(index);
             return value;
@@ -41,7 +41,7 @@ namespace ShapeEngine.Random
 
         public List<T> Next(int min, int max)
         {
-            return Next(rng.randI(min, max));
+            return Next(rng.RandI(min, max));
         }
         public List<T> Next(int amount)
         {
@@ -56,7 +56,7 @@ namespace ShapeEngine.Random
         {
             if (values.Count <= 0) Generate();
 
-            int index = rng.randI(0, values.Count);
+            int index = rng.RandI(0, values.Count);
             T value = values[index];
             values.RemoveAt(index);
             return value;

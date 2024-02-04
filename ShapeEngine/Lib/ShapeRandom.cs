@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using ShapeEngine.Color;
 using ShapeEngine.Random;
 
 namespace ShapeEngine.Lib
@@ -12,6 +13,9 @@ namespace ShapeEngine.Lib
 
         public static void SetSeed(int seed) { rand.SetSeed(seed); }
 
+        public static bool Chance(float value) { return rand.Chance(value); }
+        
+        #region RandomItem
         public static T? PickRandomItem<T>(params WeightedItem<T>[] items)
         {
            return rand.PickRandomItem(items);
@@ -36,42 +40,66 @@ namespace ShapeEngine.Lib
         {
             return rand.PickRandomItems(amount, items);
         }
+        
+        #endregion
 
-        public static bool chance(float value) { return rand.chance(value); }
-        public static float randAngleRad() { return rand.randAngleRad(); }
-        public static float randAngleDeg() { return rand.randAngleDeg(); }
+        #region Angle
+        public static float RandAngleRad() { return rand.RandAngleRad(); }
+        public static float RandAngleDeg() { return rand.RandAngleDeg(); }
+        
+        public static float RandDirF() { return rand.RandDirF(); }
+        public static int RandDirI() { return rand.RandDirI(); }
+        #endregion
+        
+        #region Float
+        public static float RandF() { return rand.RandF(); }
+        public static float RandF(float max) { return rand.RandF(max); }
+        public static float RandF(float min, float max) { return rand.RandF(min, max); }
+        #endregion
+        
+        #region Int
+        public static int RandI() { return rand.RandI(); }
+        public static int RandI(int max) { return rand.RandI(max); }
+        public static int RandI(int min, int max) { return rand.RandI(min, max); }
+        #endregion
+        
+        #region Vec2
+        public static Vector2 RandVec2() { return rand.RandVec2(); }
+        public static Vector2 RandVec2(float max) { return rand.RandVec2(max); }
+        public static Vector2 RandVec2(float min, float max) { return rand.RandVec2(min, max); }
+        public static Vector2 RandPoint(Vector2 start, Vector2 end) { return rand.RandPoint(start, end); }
+        public static Vector2 RandPoint(Vector2 origin) { return rand.RandPoint(origin); }
+        public static Vector2 RandPoint(Vector2 origin, float max) { return rand.RandPoint(origin, max); }
+        public static Vector2 RandPoint(Vector2 origin, float min, float max) { return rand.RandPoint(origin, min, max); }
+        #endregion
+        
+        #region Color
+        public static ShapeColor RandColorAlpha(ShapeColor color) { return rand.RandColorAlpha(color); }
+        public static ShapeColor RandColorAlpha(ShapeColor color, int max) { return rand.RandColorAlpha(color, max); }
+        public static ShapeColor RandColorAlpha(ShapeColor color, int min, int max) { return rand.RandColorAlpha(color, min, max); }
+        
+        public static ShapeColor RandColorRed(ShapeColor color) { return rand.RandColorRed(color); }
+        public static ShapeColor RandColorRed(ShapeColor color, int max) { return rand.RandColorRed(color, max); }
+        public static ShapeColor RandColorRed(ShapeColor color, int min, int max) { return rand.RandColorRed(color, min, max); }
+        
+        public static ShapeColor RandColorGreen(ShapeColor color) { return rand.RandColorGreen(color); }
+        public static ShapeColor RandColorGreen(ShapeColor color, int max) { return rand.RandColorGreen(color, max); }
+        public static ShapeColor RandColorGreen(ShapeColor color, int min, int max) { return rand.RandColorGreen(color, min, max); }
+        
+        public static ShapeColor RandColorBlue(ShapeColor color) { return rand.RandColorBlue(color); }
+        public static ShapeColor RandColorBlue(ShapeColor color, int max) { return rand.RandColorBlue(color, max); }
+        public static ShapeColor RandColorBlue(ShapeColor color, int min, int max) { return rand.RandColorBlue(color, min, max); }
+        
+        public static ShapeColor RandColor() { return rand.RandColor(); }
+        public static ShapeColor RandColor(int alpha) { return rand.RandColor(alpha); }
+        public static ShapeColor RandColor(int min, int max, int alpha = -1) { return rand.RandColor(min, max, alpha); }
+        #endregion
 
-        public static float randDirF() { return rand.randDirF(); }
-        public static int randDirI() { return rand.randDirI(); }
-
-        public static float randF() { return rand.randF(); }
-        public static float randF(float max) { return rand.randF(max); }
-        public static float randF(float min, float max) { return rand.randF(min, max); }
-
-        public static int randI() { return rand.randI(); }
-        public static int randI(int max) { return rand.randI(max); }
-        public static int randI(int min, int max) { return rand.randI(min, max); }
-
-        public static Vector2 randVec2() { return rand.randVec2(); }
-        public static Vector2 randVec2(float max) { return rand.randVec2(max); }
-        public static Vector2 randVec2(float min, float max) { return rand.randVec2(min, max); }
-        public static Raylib_CsLo.Color randColor() { return rand.randColor(); }
-        public static Raylib_CsLo.Color randColor(int alpha) { return rand.randColor(alpha); }
-        public static Raylib_CsLo.Color randColor(Raylib_CsLo.Color color) { return rand.randColor(color); }
-        public static Raylib_CsLo.Color randColor(Raylib_CsLo.Color color, int max) { return rand.randColor(color, max); }
-        public static Raylib_CsLo.Color randColor(Raylib_CsLo.Color color, int min, int max) { return rand.randColor(color, min, max); }
-        public static Raylib_CsLo.Color randColor(int min, int max, int alpha = -1) { return rand.randColor(min, max, alpha); }
-
-
-        public static Vector2 randPoint(Vector2 start, Vector2 end) { return rand.randPoint(start, end); }
-        public static Vector2 randPoint(Vector2 origin) { return rand.randPoint(origin); }
-        public static Vector2 randPoint(Vector2 origin, float max) { return rand.randPoint(origin, max); }
-        public static Vector2 randPoint(Vector2 origin, float min, float max) { return rand.randPoint(origin, min, max); }
-
-        public static T? randCollection<T>(List<T> list, bool pop = false) { return rand.randCollection<T>(list, pop); }
-        public static List<T> randCollection<T>(List<T> source, int amount, bool pop = false) { return rand.randCollection<T>(source, amount, pop); }
-        public static T? randCollection<T>(T[] array) { return rand.randCollection(array); }
-
+        #region Collection
+        public static T? RandCollection<T>(List<T> list, bool pop = false) { return rand.RandCollection<T>(list, pop); }
+        public static List<T> RandCollection<T>(List<T> source, int amount, bool pop = false) { return rand.RandCollection<T>(source, amount, pop); }
+        public static T? RandCollection<T>(T[] array) { return rand.RandCollection(array); }
+        #endregion
     }
 }
 

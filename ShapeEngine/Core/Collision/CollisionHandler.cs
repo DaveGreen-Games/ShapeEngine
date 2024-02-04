@@ -1,5 +1,6 @@
 ﻿using ShapeEngine.Lib;
 using System.Numerics;
+using ShapeEngine.Color;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
@@ -428,7 +429,7 @@ namespace ShapeEngine.Core.Collision
             return bodies;
         }
         
-        public void DebugDraw(Raylib_CsLo.Color border, Raylib_CsLo.Color fill)
+        public void DebugDraw(ShapeColor border, ShapeColor fill)
         {
             spatialHash.DebugDraw(border, fill);
         }

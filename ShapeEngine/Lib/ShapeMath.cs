@@ -1,4 +1,5 @@
 using System.Numerics;
+using ShapeEngine.Color;
 
 namespace ShapeEngine.Lib;
 
@@ -68,8 +69,8 @@ public static class ShapeMath
     {
         if (from is float) return LerpFloat(from, to, f);
         else if (from is int) return LerpInt(from, to, f);
-        else if (from is Vector2) return ShapeVec.Lerp(from, to, f);
-        else if (from is Raylib_CsLo.Color) return ShapeColor.Lerp(from, to, f);
+        else if (from is Vector2 vec) return ShapeVec.Lerp(from, to, f);
+        else if (from is ShapeColor color) return color.Lerp(to, f);// ShapeColor.Lerp(from, to, f);
         else return from;
     }
 

@@ -62,7 +62,7 @@ public class RangeFloat
     }
 
     public Vector2 ToVector2() => new Vector2(Min, Max);
-    public float Rand() { return ShapeRandom.randF(Min, Max); }
+    public float Rand() { return ShapeRandom.RandF(Min, Max); }
     public float Lerp(float f) { return ShapeMath.LerpFloat(Min, Max, f); }
     public float Inverse(float value) { return (value - Min) / (Max - Min); }
     public float Remap(RangeFloat to, float value) { return to.Lerp(Inverse(value)); }

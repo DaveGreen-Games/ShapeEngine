@@ -1,6 +1,7 @@
 ﻿
 using System.Numerics;
 using Raylib_CsLo;
+using ShapeEngine.Color;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Shapes;
@@ -198,10 +199,10 @@ namespace ShapeEngine.Core.Shapes
             return newRect;
         }
 
-        public void Draw(Raylib_CsLo.Color startColor, Raylib_CsLo.Color colorShift)
+        public void Draw(ShapeColor startColor, ShapeColor colorShift)
         {
             rect.Draw(startColor);
-            var nextColor = startColor.Add(colorShift);
+            var nextColor = startColor + colorShift; //.Add(colorShift);
             foreach (var child in children.Values)
             {
                 child.Draw(nextColor, colorShift);
@@ -733,7 +734,7 @@ namespace ShapeEngine.Core.Shapes
         }
 
         
-        public readonly Vector2 GetRandomPointInside() { return new(ShapeRandom.randF(X, X + Width), ShapeRandom.randF(Y, Y + Height)); }
+        public readonly Vector2 GetRandomPointInside() { return new(ShapeRandom.RandF(X, X + Width), ShapeRandom.RandF(Y, Y + Height)); }
         
         public readonly Points GetRandomPointsInside(int amount)
         {
@@ -747,7 +748,7 @@ namespace ShapeEngine.Core.Shapes
 
         public readonly Vector2 GetRandomVertex()
         {
-            int randIndex = ShapeRandom.randI(0, 3);
+            int randIndex = ShapeRandom.RandI(0, 3);
             if (randIndex == 0) return TopLeft;
             else if (randIndex == 1) return BottomLeft;
             else if (randIndex == 2) return BottomRight;

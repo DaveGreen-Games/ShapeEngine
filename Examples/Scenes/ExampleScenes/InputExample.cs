@@ -127,9 +127,9 @@ namespace Examples.Scenes.ExampleScenes
         public override void Draw(Rect area, float lineThickness)
         {
             float flashF = flashTimer / flashDuration;
-            Color flashColor1 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight1, flashF);
-            Color flashColor2 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight2, flashF);
-            Color flashColor3 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight3, flashF);
+            var flashColor1 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight1, flashF);
+            var flashColor2 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight2, flashF);
+            var flashColor3 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight3, flashF);
             
             
             Rect top = area.ApplyMargins(0, 0, 0, 0.8f);
@@ -257,9 +257,9 @@ namespace Examples.Scenes.ExampleScenes
         public override void Draw(Rect area, float lineThickness)
         {
             float flashF = flashTimer / flashDuration;
-            Color flashColor1 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight1, flashF);
-            Color flashColor2 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight2, flashF);
-            Color flashColor3 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight3, flashF);
+            var flashColor1 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight1, flashF);
+            var flashColor2 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight2, flashF);
+            var flashColor3 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight3, flashF);
             
             Rect top = area.ApplyMargins(0, 0, 0, 0.8f);
             Rect bottom = area.ApplyMargins(0, 0, 0.2f, 0);
@@ -366,9 +366,9 @@ namespace Examples.Scenes.ExampleScenes
             public override void Draw(Rect area, float lineThickness)
             {
                 float flashF = flashTimer / flashDuration;
-                Color flashColor1 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight1, flashF);
-                Color flashColor2 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight2, flashF);
-                Color flashColor3 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight3, flashF);
+                var flashColor1 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight1, flashF);
+                var flashColor2 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight2, flashF);
+                var flashColor3 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight3, flashF);
                 
                 
                 Rect top = area.ApplyMargins(0, 0, 0, 0.8f);
@@ -465,9 +465,9 @@ namespace Examples.Scenes.ExampleScenes
         public override void Draw(Rect area, float lineThickness)
         {
             float flashF = flashTimer / flashDuration;
-            Color flashColor1 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight1, flashF);
-            Color flashColor2 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight2, flashF);
-            Color flashColor3 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight3, flashF);
+            var flashColor1 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight1, flashF);
+            var flashColor2 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight2, flashF);
+            var flashColor3 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight3, flashF);
             
             Rect top = area.ApplyMargins(0, 0, 0, 0.8f);
             Rect bottom = area.ApplyMargins(0, 0, 0.2f, 0);
@@ -494,7 +494,7 @@ namespace Examples.Scenes.ExampleScenes
             if (holdFinishedTimer > 0f)
             {
                 float f = holdFinishedTimer / holdFinishedDuration;
-                Color holdFinishedColor = ExampleScene.ColorHighlight1.Lerp(ExampleScene.ColorHighlight2, f);
+                var holdFinishedColor = ExampleScene.ColorHighlight1.Lerp(ExampleScene.ColorHighlight2, f);
                 float thickness = ShapeMath.LerpFloat(lineThickness / 2, lineThickness * 2, f);
                 
                 circle.DrawLines(thickness, holdFinishedColor);
@@ -647,9 +647,9 @@ namespace Examples.Scenes.ExampleScenes
         public override void Draw(Rect area, float lineThickness)
         {
             float flashF = flashTimer / flashDuration;
-            Color flashColor1 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight1, flashF);
-            Color flashColor2 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight2, flashF);
-            Color flashColor3 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight3, flashF);
+            var flashColor1 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight1, flashF);
+            var flashColor2 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight2, flashF);
+            var flashColor3 = ExampleScene.ColorMedium.Lerp(ExampleScene.ColorHighlight3, flashF);
             
             Rect top = area.ApplyMargins(0, 0, 0, 0.8f);
             Rect bottom = area.ApplyMargins(0, 0, 0.2f, 0);
@@ -668,7 +668,7 @@ namespace Examples.Scenes.ExampleScenes
             if (doubleTapFinishedTimer > 0f)
             {
                 float f = doubleTapFinishedTimer / doubleTapFinishedDuration;
-                Color holdFinishedColor = ExampleScene.ColorHighlight1.Lerp(ExampleScene.ColorHighlight2, f);
+                var holdFinishedColor = ExampleScene.ColorHighlight1.Lerp(ExampleScene.ColorHighlight2, f);
                 float thickness = ShapeMath.LerpFloat(lineThickness / 2, lineThickness * 2, f);
                 
                 circle.DrawLines(thickness, holdFinishedColor);

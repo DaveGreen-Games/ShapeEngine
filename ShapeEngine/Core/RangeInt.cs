@@ -35,7 +35,7 @@ public class RangeInt
         }
     }
 
-    public int Rand() { return ShapeRandom.randI(Min, Max); }
+    public int Rand() { return ShapeRandom.RandI(Min, Max); }
     public int Lerp(float f) { return (int)ShapeMath.LerpFloat(Min, Max, f); }
     public float Inverse(int value) { return (value - Min) / (Max - Min); }
     public int Remap(RangeInt to, int value) { return to.Lerp(Inverse(value)); }

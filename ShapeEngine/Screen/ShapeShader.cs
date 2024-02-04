@@ -1,5 +1,6 @@
 using System.Numerics;
 using Raylib_CsLo;
+using ShapeEngine.Color;
 using ShapeEngine.Lib;
 
 namespace ShapeEngine.Screen;
@@ -66,9 +67,9 @@ public class ShapeShader
         int valueLocation = GetShaderLocation(shader, propertyName);
         SetShaderValue(shader, valueLocation, new float[] { vec.X, vec.Y}, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
     }
-    public static void SetValueColor(Shader shader, string propertyName, Raylib_CsLo.Color color)
+    public static void SetValueColor(Shader shader, string propertyName, ShapeColor color)
     {
         int valueLocation = GetShaderLocation(shader, propertyName);
-        SetShaderValue(shader, valueLocation, new float[] {color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f}, ShaderUniformDataType.SHADER_UNIFORM_VEC4);
+        SetShaderValue(shader, valueLocation, new float[] {color.R / 255f, color.G / 255f, color.B / 255f, color.A / 255f}, ShaderUniformDataType.SHADER_UNIFORM_VEC4);
     }
 }

@@ -9,6 +9,7 @@ using System.Text;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
+using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -156,20 +157,20 @@ namespace Examples.Scenes.ExampleScenes
             {
                 var tri = curTriangulation[i];
                 if (i == closeTriangleIndex) continue;
-                tri.DrawLines(lineThickness, WHITE, LineCapType.CappedExtended, 4);
+                tri.DrawLines(lineThickness, new(Color.AntiqueWhite), LineCapType.CappedExtended, 4);
             }
-            if(closeTriangleIndex >= 0) curTriangulation[closeTriangleIndex].DrawLines(lineThicknessBig, GREEN, LineCapType.CappedExtended, 4);
+            if(closeTriangleIndex >= 0) curTriangulation[closeTriangleIndex].DrawLines(lineThicknessBig, new(Color.ForestGreen), LineCapType.CappedExtended, 4);
 
             for (int i = 0; i < points.Count; i++)
             {
                 var p = points[i];
                 if (i == closePointIndex)
                 {
-                    p.Draw(vertexSizeBig, GREEN);
+                    p.Draw(vertexSizeBig, new(Color.ForestGreen));
                 }
                 else
                 {
-                    p.Draw(vertexSize, PURPLE);
+                    p.Draw(vertexSize, new(Color.MediumPurple));
                 }
             }
         }

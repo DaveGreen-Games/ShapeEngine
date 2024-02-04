@@ -1,5 +1,6 @@
 using System.Numerics;
 using Raylib_CsLo;
+using ShapeEngine.Color;
 using ShapeEngine.Core;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Lib;
@@ -30,7 +31,7 @@ public struct TextFont
     public float FontSize;
     public float FontSpacing;
     public float LineSpacing;
-    public Raylib_CsLo.Color Color;
+    public ShapeColor Color;
 
 
     #endregion
@@ -43,9 +44,9 @@ public struct TextFont
         FontSpacing = 0f;
         LineSpacing = 0f;
         FontSize = font.baseSize;
-        Color = WHITE;
+        Color = new(System.Drawing.Color.White);
     }
-    public TextFont(Font font, Raylib_CsLo.Color color)
+    public TextFont(Font font, ShapeColor color)
     {
         Font = font;
         FontSpacing = 0f;
@@ -53,7 +54,7 @@ public struct TextFont
         FontSize = font.baseSize;
         Color = color;
     }
-    public TextFont(Font font, float fontSpacing, Raylib_CsLo.Color color)
+    public TextFont(Font font, float fontSpacing, ShapeColor color)
     {
         
         Font = font;
@@ -62,7 +63,7 @@ public struct TextFont
         FontSize = font.baseSize;
         Color = color;
     }
-    public TextFont(Font font, float fontSpacing, float lineSpacing, Raylib_CsLo.Color color)
+    public TextFont(Font font, float fontSpacing, float lineSpacing, ShapeColor color)
     {
         Font = font;
         FontSpacing = fontSpacing;
@@ -70,7 +71,7 @@ public struct TextFont
         FontSize = font.baseSize;
         Color = color;
     }
-    public TextFont(Font font, float fontSize, float fontSpacing, float lineSpacing, Raylib_CsLo.Color color)
+    public TextFont(Font font, float fontSize, float fontSpacing, float lineSpacing, ShapeColor color)
     {
         Font = font;
         FontSize = fontSize;
@@ -206,7 +207,7 @@ public struct TextFont
         var uiPos = rect.GetPoint(alignement);
         var charRect = new Rect(uiPos, charSize, alignement);
         
-        Raylib.DrawTextCodepoint(Font, c, charRect.TopLeft, fontSize, Color);
+        Raylib.DrawTextCodepoint(Font, c, charRect.TopLeft, fontSize, Color.ToRayColor());
     }
     public void Draw(string text, Rect rect, float rotDeg, Vector2 alignement)
     {
@@ -215,14 +216,14 @@ public struct TextFont
         var textSize = scaledFont.GetTextSize(text);
         Rect r = new(rect.GetPoint(alignement), textSize, alignement);
         var originOffset = alignement * textSize;
-        DrawTextPro(scaledFont.Font, text, r.TopLeft + originOffset, originOffset, rotDeg, scaledFont.FontSize, scaledFont.FontSpacing, scaledFont.Color);
+        DrawTextPro(scaledFont.Font, text, r.TopLeft + originOffset, originOffset, rotDeg, scaledFont.FontSize, scaledFont.FontSpacing, scaledFont.Color.ToRayColor());
     }
-    public void DrawWord(string word, Vector2 topLeft) => DrawTextEx(Font, word, topLeft, FontSize, FontSpacing, Color);
+    public void DrawWord(string word, Vector2 topLeft) => DrawTextEx(Font, word, topLeft, FontSize, FontSpacing, Color.ToRayColor());
     public void DrawWord(string word, Vector2 topLeft, Vector2 alignement)
     {
         var size = GetTextSize(word);
         Rect r = new(topLeft, size, alignement);
-        DrawTextEx(Font, word, r.TopLeft, FontSize, FontSpacing, Color);
+        DrawTextEx(Font, word, r.TopLeft, FontSize, FontSpacing, Color.ToRayColor());
     }
     public void DrawWord(string word, Vector2 topLeft, Vector2 alignement, Caret caret)
     {
@@ -271,7 +272,7 @@ public struct TextFont
         scaledFont.DrawWord(text, r.TopLeft);
         //DrawTextEx(textFont.Font, text, r.TopLeft, info.fontSize, info.fontSpacing, textFont.Color);
     }
-    public void DrawTextWrapNone(string text, Rect rect, Vector2 alignement, Raylib_CsLo.Color color)
+    public void DrawTextWrapNone(string text, Rect rect, Vector2 alignement, ShapeColor color)
     {
         var scaledFont = ScaleDynamic(text, rect.Size);
         var textSize = scaledFont.GetTextSize(text);
@@ -653,7 +654,7 @@ public struct TextFont
         emphasis.DrawForeground(emphasisRect);
         
     }
-    private void DrawWord(string word, Vector2 topLeft, Raylib_CsLo.Color color) => DrawTextEx(Font, word, topLeft, FontSize, FontSpacing, color);
+    private void DrawWord(string word, Vector2 topLeft, ShapeColor color) => DrawTextEx(Font, word, topLeft, FontSize, FontSpacing, color.ToRayColor());
 
     #endregion
     

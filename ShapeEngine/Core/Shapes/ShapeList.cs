@@ -25,8 +25,8 @@ public class ShapeList<T> : List<T>
         return hash.ToHashCode();
     }
 
-    public T? GetRandomItem() => ShapeRandom.randCollection(this);
+    public T? GetRandomItem() => ShapeRandom.RandCollection(this);
 
-    public List<T> GetRandomItems(int amount) => ShapeRandom.randCollection(this, amount);
+    public List<T> GetRandomItems(int amount) => ShapeRandom.RandCollection(this, amount);
     public T? GetItem(int index) => Count <= 0 ? default(T) : this[ShapeMath.WrapIndex(Count, index)];
 }

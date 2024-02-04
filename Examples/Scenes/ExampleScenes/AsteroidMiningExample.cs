@@ -5,11 +5,13 @@ using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 using System.Numerics;
 using System.Text;
+using ShapeEngine.Color;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
+using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -57,20 +59,20 @@ namespace Examples.Scenes.ExampleScenes
 
         private float delay = 1f;
 
-        private Color color;
-        public AsteroidShard(Polygon shape, Vector2 fractureCenter, Color color)
+        private ShapeColor color;
+        public AsteroidShard(Polygon shape, Vector2 fractureCenter, ShapeColor color)
         {
             this.shape = shape;
             this.rotDeg = 0f;
             this.pos = shape.GetCentroid();
             Vector2 dir = (pos - fractureCenter).Normalize();
-            this.vel = dir * ShapeRandom.randF(100, 300);
-            this.angularVelDeg = ShapeRandom.randF(-90, 90);
-            this.lifetime = ShapeRandom.randF(1.5f, 3f);
+            this.vel = dir * ShapeRandom.RandF(100, 300);
+            this.angularVelDeg = ShapeRandom.RandF(-90, 90);
+            this.lifetime = ShapeRandom.RandF(1.5f, 3f);
             this.lifetimeTimer = this.lifetime;
             this.delay = 0.5f;
             this.color = color;
-            this.color = YELLOW;
+            this.color = new(System.Drawing.Color.Goldenrod);
             //this.delay = SRNG.randF(0.25f, 1f);
             //this.lifetime = delay * 3f;
         }
@@ -106,9 +108,9 @@ namespace Examples.Scenes.ExampleScenes
         public override void DrawGame(ScreenInfo game)
         {
             //SDrawing.DrawCircleFast(pos, 4f, RED);
-            Color color = this.color.ChangeAlpha((byte)(255 * lifetimeF));
+            var c = this.color.ChangeAlpha((byte)(255 * lifetimeF));
             //color = this.color;
-            shape.DrawLines(2f * lifetimeF, color);
+            shape.DrawLines(2f * lifetimeF, c);
         }
         public override Rect GetBoundingBox() { return shape.GetBoundingBox(); }
         public override Vector2 GetPosition() { return pos; }
@@ -139,7 +141,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 float f = timer / Lifetime;
                 //Color color = YELLOW.ChangeAlpha((byte)(255 * f));
-                Segment.Draw(ShapeRandom.randF(4, 8) * f, YELLOW, LineCapType.CappedExtended, 3);
+                Segment.Draw(ShapeRandom.RandF(4, 8) * f, new(System.Drawing.Color.Goldenrod), LineCapType.CappedExtended, 3);
             }
             public void Renew() { timer = Lifetime; }
         }
@@ -197,7 +199,7 @@ namespace Examples.Scenes.ExampleScenes
         private float curThreshold = DamageThreshold;
 
         public event Action<Asteroid, Vector2>? Fractured;
-        private Color curColor = RED;
+        private ShapeColor curColor = new(Color.IndianRed);
 
         private DamagedSegments damagedSegments = new();
 
@@ -221,13 +223,13 @@ namespace Examples.Scenes.ExampleScenes
 
         private void SetDamageTreshold(float overshoot = 0f)
         {
-            curThreshold = DamageThreshold * ShapeRandom.randF(0.5f, 2f) + overshoot;
+            curThreshold = DamageThreshold * ShapeRandom.RandF(0.5f, 2f) + overshoot;
         }
         public void Overlapped()
         {
             overlapped = true;
         }
-        public Color GetColor()
+        public ShapeColor GetColor()
         {
             return curColor;
         }
@@ -267,13 +269,13 @@ namespace Examples.Scenes.ExampleScenes
             {
                 if (overlapped)
                 {
-                    curColor = GREEN;
-                    p.DrawLines(6f, GREEN);
+                    curColor = new(Color.ForestGreen);
+                    p.DrawLines(6f, new(System.Drawing.Color.ForestGreen));
                 }
                 else
                 {
-                    curColor = RED;
-                    p.DrawLines(3f, RED);
+                    curColor = new(Color.IndianRed);
+                    p.DrawLines(3f, new(System.Drawing.Color.IndianRed));
                 }
                 //p.DrawVertices(4f, RED);
             }
@@ -444,16 +446,17 @@ namespace Examples.Scenes.ExampleScenes
         public override void DrawGame(ScreenInfo game)
         {
             if (hybernate) return;
-            shape.DrawLines(4f, RED);
-            ShapeDrawing.DrawCircle(tip, 8f, RED);
+            var c = new ShapeColor(System.Drawing.Color.IndianRed);
+            shape.DrawLines(4f, c);
+            ShapeDrawing.DrawCircle(tip, 8f, c);
 
             if (laserEnabled && laserPoints.Count > 1)
             {
                 for (int i = 0; i < laserPoints.Count - 1; i++)
                 {
                     Segment laserSegment = new(laserPoints[i], laserPoints[i + 1]);
-                    laserSegment.Draw(4f, RED);
-                    ShapeDrawing.DrawCircle(laserPoints[i + 1], ShapeRandom.randF(6f, 12f), RED, 12);
+                    laserSegment.Draw(4f, c);
+                    ShapeDrawing.DrawCircle(laserPoints[i + 1], ShapeRandom.RandF(6f, 12f), c, 12);
                 }
                 
             }
@@ -492,7 +495,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 float f = timer / Lifetime;
                 //Color color = YELLOW.ChangeAlpha((byte)(255 * f));
-                shape.DrawLines(6f * f, YELLOW);
+                shape.DrawLines(6f * f, new(System.Drawing.Color.Goldenrod));
             }
         }
 
@@ -643,7 +646,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         private void OnAsteroidFractured(Asteroid a, Vector2 point)
         {
-            var cutShape = Polygon.Generate(point, ShapeRandom.randI(6, 12), 35, 100);
+            var cutShape = Polygon.Generate(point, ShapeRandom.RandI(6, 12), 35, 100);
             
             FractureAsteroid(a, cutShape);
         }
@@ -651,7 +654,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             RemoveAsteroid(a);
             var asteroidShape = a.GetPolygon();
-            Color color = a.GetColor();
+            var color = a.GetColor();
             var fracture = fractureHelper.Fracture(asteroidShape, cutShape);
             foreach (var cutoutShape in fracture.Cutouts)
             {
@@ -967,7 +970,7 @@ namespace Examples.Scenes.ExampleScenes
             //boundaryRect.DrawLines(4f, ColorLight);
             if(polyModeActive && curShapeType != ShapeType.None)
             {
-                curShape.DrawLines(2f, RED);
+                curShape.DrawLines(2f, new(Color.IndianRed));
             }
 
             gameObjectHandler.DrawGame(game);

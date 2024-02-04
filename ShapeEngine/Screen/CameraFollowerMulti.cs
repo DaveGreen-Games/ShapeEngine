@@ -29,8 +29,8 @@ public class CameraFollowerMulti : ICameraFollower
 
     public void DrawDebugRect()
     {
-        prevCameraRect.DrawLines(6f, RED);
-        prevCameraRect.Center.Draw(4f, GREEN);
+        prevCameraRect.DrawLines(6f, new(System.Drawing.Color.IndianRed));
+        prevCameraRect.Center.Draw(4f, new(System.Drawing.Color.LimeGreen));
         
     }
     public Rect Update(float dt, Rect cameraRect)

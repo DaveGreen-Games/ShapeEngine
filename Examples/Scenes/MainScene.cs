@@ -6,6 +6,7 @@ using System.Numerics;
 using ShapeEngine.Lib;
 using Examples.Scenes.ExampleScenes;
 using Examples.UIElements;
+using ShapeEngine.Color;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Screen;
@@ -556,7 +557,7 @@ namespace Examples.Scenes
                 string infoText = infos[i];
                 var rect = rects[i];
                 titleFont.FontSpacing = 1f;
-                titleFont.Color = WHITE;
+                titleFont.Color = ShapeColor.White;
                 titleFont.DrawTextWrapNone(infoText, rect, new Vector2(0.95f, 0.5f));
                 // titleFont.DrawText(infoText, rect, 1f, new Vector2(0.95f, 0.5f), WHITE);
             }

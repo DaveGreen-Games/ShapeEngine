@@ -171,7 +171,7 @@ namespace ShapeEngine.Core.Shapes
         public CollisionPoint GetClosestCollisionPoint(Vector2 p) => GetEdges().GetClosestCollisionPoint(p);
         public ClosestSegment GetClosestSegment(Vector2 p) => GetEdges().GetClosest(p);
 
-        public Vector2 GetRandomVertex() { return ShapeRandom.randCollection(this); }
+        public Vector2 GetRandomVertex() { return ShapeRandom.RandCollection(this); }
         public Segment GetRandomEdge() => GetEdges().GetRandomSegment();
         //public Vector2 GetRandomPoint() => GetRandomEdge().GetRandomPoint();
         //public Points GetRandomPoints(int amount) => GetEdges().GetRandomPoints(amount);

@@ -8,6 +8,7 @@ using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using Color = System.Drawing.Color;
 
 
 namespace Examples.Scenes.ExampleScenes
@@ -28,7 +29,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             if(shapeIndex == 1)//segment
             {
-                Vector2 dir = ShapeRandom.randVec2();
+                Vector2 dir = ShapeRandom.RandVec2();
                 Vector2 start = pos - dir * size * 0.5f;
                 Vector2 end = pos + dir * size * 0.5f;
                 SegmentCollider sc = new(start, end);
@@ -41,14 +42,14 @@ namespace Examples.Scenes.ExampleScenes
             }
             else if (shapeIndex == 3)//triangle
             {
-                Vector2 dir = ShapeRandom.randVec2();
+                Vector2 dir = ShapeRandom.RandVec2();
                 Vector2 A = pos + dir * size * 0.5f;
                 
                 Vector2 p = pos - dir * size * 0.5f;
                 Vector2 left = dir.GetPerpendicularLeft();
                 Vector2 right = dir.GetPerpendicularRight();
-                Vector2 B = p + left * ShapeRandom.randF(size * 0.1f, size * 0.5f);
-                Vector2 C = p + right * ShapeRandom.randF(size * 0.1f, size * 0.5f);
+                Vector2 B = p + left * ShapeRandom.RandF(size * 0.1f, size * 0.5f);
+                Vector2 C = p + right * ShapeRandom.RandF(size * 0.1f, size * 0.5f);
                 PolyCollider pc = new(pos, new(0f), A, B, C);
                 Collider = pc;
             }
@@ -61,17 +62,17 @@ namespace Examples.Scenes.ExampleScenes
             {
                 Rect r = new (pos, new Vector2(size, size) * 0.5f, new Vector2(0.5f));
                 var points = r.ToPolygon();
-                points.Rotate(pos, ShapeRandom.randAngleRad());
+                points.Rotate(pos, ShapeRandom.RandAngleRad());
                 Collider = new PolyCollider(points, pos, new(0f));
             }
             else if (shapeIndex == 6)//poly
             {
-                var poly = Polygon.Generate(pos, ShapeRandom.randI(6, 24), size * 0.1f, size * 0.5f);
+                var poly = Polygon.Generate(pos, ShapeRandom.RandI(6, 24), size * 0.1f, size * 0.5f);
                 Collider = new PolyCollider(poly, pos, new(0f));
             }
             else if (shapeIndex == 7)//polyline
             {
-                var poly = Polygon.Generate(pos, ShapeRandom.randI(6, 24), size * 0.1f, size * 0.5f);
+                var poly = Polygon.Generate(pos, ShapeRandom.RandI(6, 24), size * 0.1f, size * 0.5f);
                 Collider = new PolylineCollider(poly.ToPolyline(), pos, new(0f));
             }
             else
@@ -82,7 +83,7 @@ namespace Examples.Scenes.ExampleScenes
 
             Collider.ComputeCollision = true;
             Collider.ComputeIntersections = true;
-            Collider.Vel = ShapeRandom.randVec2(50, 300);
+            Collider.Vel = ShapeRandom.RandVec2(50, 300);
         }
        
         public void Collision(Intersection intersection)
@@ -107,13 +108,13 @@ namespace Examples.Scenes.ExampleScenes
         public void Draw()
         {
             float colF = collisionTimer > 0f ? collisionTimer / collisionTime : 0f;
-            Color color = ShapeTween.Tween(ExampleScene.ColorHighlight2, ExampleScene.ColorHighlight1, colF, TweenType.QUAD_IN);
+            var color = ShapeTween.Tween(ExampleScene.ColorHighlight2, ExampleScene.ColorHighlight1, colF, TweenType.QUAD_IN);
 
             Collider.DrawShape(4f, color);
             lastIntersection.Draw(2f, ExampleScene.ColorLight, ExampleScene.ColorLight);
 
             //DrawCircleV(Collider.Pos, 25, BLUE);
-            DrawCircleV(Shape.GetCentroid(), 2, ExampleScene.ColorHighlight2);
+            DrawCircleV(Shape.GetCentroid(), 2, ExampleScene.ColorHighlight2.ToRayColor());
         }
     }
 
@@ -161,7 +162,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            float shapeSize = ShapeRandom.randF(75, 150);
+            float shapeSize = ShapeRandom.RandF(75, 150);
             if (IsKeyPressed(KeyboardKey.KEY_ONE))
             {
                 colliders.Add(new ShapeCollider(1, mousePosGame, shapeSize));
@@ -224,7 +225,7 @@ namespace Examples.Scenes.ExampleScenes
             foreach (var seg in boundary)
             {
                 Segment normal = new(seg.Center, seg.Center + seg.Normal * 25f);
-                normal.Draw(2f, BLUE);
+                normal.Draw(2f, new(Color.CornflowerBlue));
             }
             DrawPolyline();
 
@@ -351,7 +352,7 @@ namespace Examples.Scenes.ExampleScenes
                 else segment.Draw(4f, ColorLight);
 
                 Segment normal = new(segment.Center, segment.Center + segment.Normal * 25f);
-                normal.Draw(2f, BLUE);
+                normal.Draw(2f, new(Color.CornflowerBlue));
 
                 //if (!polyline.AutomaticNormals)
                 //{
@@ -360,7 +361,7 @@ namespace Examples.Scenes.ExampleScenes
                 //}
             }
 
-            if (drawClosest) DrawCircleV(closest, vertexRadius, ColorHighlight1);
+            if (drawClosest) DrawCircleV(closest, vertexRadius, ColorHighlight1.ToRayColor());
 
             //DrawCircleV(polyline.GetCentroid(), 15f, YELLOW);
         }

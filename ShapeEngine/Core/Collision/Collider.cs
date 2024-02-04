@@ -1,5 +1,6 @@
 ﻿
 using System.Numerics;
+using ShapeEngine.Color;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Lib;
 using ShapeEngine.Core.Shapes;
@@ -107,7 +108,7 @@ namespace ShapeEngine.Core.Collision
             prevPos = Pos;
         }
         
-        public abstract void DrawShape(float lineThickness, Raylib_CsLo.Color color);
+        public abstract void DrawShape(float lineThickness, ShapeColor color);
     }
     public class CircleCollider : Collider
     {
@@ -135,7 +136,7 @@ namespace ShapeEngine.Core.Collision
             return c;
         }
 
-        public override void DrawShape(float lineThickness, Raylib_CsLo.Color color)
+        public override void DrawShape(float lineThickness, ShapeColor color)
         {
             var shape = GetCircleShape();
             shape.DrawLines(lineThickness, color);
@@ -204,7 +205,7 @@ namespace ShapeEngine.Core.Collision
 
             return new Segment(Pos, End, FlippedNormals);
         }
-        public override void DrawShape(float lineThickness, Raylib_CsLo.Color color)
+        public override void DrawShape(float lineThickness, ShapeColor color)
         {
             var shape = GetSegmentShape();
             shape.Draw(lineThickness, color);
@@ -266,7 +267,7 @@ namespace ShapeEngine.Core.Collision
             r.FlippedNormals = FlippedNormals;
             return r;
         }
-        public override void DrawShape(float lineThickness, Raylib_CsLo.Color color)
+        public override void DrawShape(float lineThickness, ShapeColor color)
         {
             var shape = GetRectShape();
             shape.DrawLines(lineThickness, color);
@@ -386,7 +387,7 @@ namespace ShapeEngine.Core.Collision
             p.FlippedNormals = FlippedNormals;
             return p;
         }
-        public override void DrawShape(float lineThickness, Raylib_CsLo.Color color)
+        public override void DrawShape(float lineThickness, ShapeColor color)
         {
             var shape = GetPolygonShape();
             shape.DrawLines(lineThickness, color);
@@ -504,7 +505,7 @@ namespace ShapeEngine.Core.Collision
             p.FlippedNormals = FlippedNormals;
             return p; 
         }
-        public override void DrawShape(float lineThickness, Raylib_CsLo.Color color)
+        public override void DrawShape(float lineThickness, ShapeColor color)
         {
             var shape = GetPolylineShape();
             shape.Draw(lineThickness, color);

@@ -6,6 +6,7 @@ using ShapeEngine.Screen;
 using Raylib_CsLo;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using ShapeEngine.Color;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
@@ -38,7 +39,7 @@ public class ShapeLoop
     #region Public Members
     public string[] LaunchParams { get; protected set; } = Array.Empty<string>();
     
-    public Raylib_CsLo.Color BackgroundColor = BLACK;
+    public ShapeColor BackgroundColor = ShapeColor.Black;
     public float ScreenEffectIntensity = 1.0f;
 
     public readonly ShaderContainer ScreenShaders = new();
@@ -370,14 +371,16 @@ public class ShapeLoop
         }
     }
 
-    public void Flash(float duration, Raylib_CsLo.Color startColor, Raylib_CsLo.Color endColor)
+    public void Flash(float duration, ShapeColor startColor, ShapeColor endColor)
     {
         if (duration <= 0.0f) return;
         if (ScreenEffectIntensity <= 0f) return;
-        byte startColorAlpha = (byte)(startColor.a * ScreenEffectIntensity);
-        startColor.a = startColorAlpha;
-        byte endColorAlpha = (byte)(endColor.a * ScreenEffectIntensity);
-        endColor.a = endColorAlpha;
+        startColor = startColor.SetAlpha((byte)(startColor.A * ScreenEffectIntensity));
+        endColor = endColor.SetAlpha((byte)(endColor.A * ScreenEffectIntensity));
+        // byte startColorAlpha = (byte)(startColor.A * ScreenEffectIntensity);
+        // startColor.A = startColorAlpha;
+        // byte endColorAlpha = (byte)(endColor.A * ScreenEffectIntensity);
+        // endColor.A = endColorAlpha;
 
         ShapeFlash flash = new(duration, startColor, endColor);
         shapeFlashes.Add(flash);
@@ -695,7 +698,7 @@ public class ShapeLoop
             }
             
             BeginDrawing();
-            ClearBackground(BackgroundColor);
+            ClearBackground(BackgroundColor.ToRayColor());
 
             BeginShaderMode(lastShader.Shader);
             target.Draw();
@@ -709,7 +712,7 @@ public class ShapeLoop
         else //single shader mode or only 1 screen shader is active
         {
             BeginDrawing();
-            ClearBackground(BackgroundColor);
+            ClearBackground(BackgroundColor.ToRayColor());
 
             if (activeScreenShaders.Count > 0)
             {

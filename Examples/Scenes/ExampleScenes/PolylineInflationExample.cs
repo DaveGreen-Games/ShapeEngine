@@ -5,9 +5,11 @@ using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 using System.Numerics;
+using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
+using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -168,18 +170,18 @@ namespace Examples.Scenes.ExampleScenes
                     if (closestIndex == i)
                     {
                         // segment.Start.Draw(relativeSize / 2, BLUE);
-                        segment.Draw(relativeSize, BLUE, LineCapType.CappedExtended, 4);
+                        segment.Draw(relativeSize, new(Color.CornflowerBlue), LineCapType.CappedExtended, 4);
                     }
                     else
                     {
                         // segment.Start.Draw(relativeSize / 2, WHITE);
-                        segment.Draw(relativeSize, WHITE, LineCapType.CappedExtended, 4);
+                        segment.Draw(relativeSize, new(Color.AntiqueWhite), LineCapType.CappedExtended, 4);
                     }
                 }
                 else
                 {
                     // segment.Start.Draw(relativeSize / 2, WHITE);
-                    segment.Draw(relativeSize, WHITE, LineCapType.CappedExtended, 4);
+                    segment.Draw(relativeSize, new(Color.AntiqueWhite), LineCapType.CappedExtended, 4);
                 }
             }
 
@@ -190,7 +192,7 @@ namespace Examples.Scenes.ExampleScenes
                 var polygons = ShapeClipper.Inflate(polyline, lerpOffsetDelta).ToPolygons();
                 foreach (var polygon in polygons)
                 {
-                    polygon.DrawLines(relativeSize, GOLD);
+                    polygon.DrawLines(relativeSize, new(Color.Goldenrod));
                 }
             }
         }

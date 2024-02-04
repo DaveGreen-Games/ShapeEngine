@@ -1,4 +1,5 @@
 using System.Numerics;
+using ShapeEngine.Color;
 
 namespace ShapeEngine.Core.Interfaces;
 
@@ -46,5 +47,5 @@ public interface ICollider : IPhysicsObject
     public Vector2 GetPreviousPosition();
     public void UpdatePreviousPosition(float dt);
 
-    public void DrawShape(float lineThickness, Raylib_CsLo.Color color);
+    public void DrawShape(float lineThickness, ShapeColor color);
 }

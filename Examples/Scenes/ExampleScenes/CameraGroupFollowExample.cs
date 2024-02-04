@@ -4,6 +4,7 @@ using ShapeEngine.Lib;
 using ShapeEngine.Random;
 using ShapeEngine.Screen;
 using System.Numerics;
+using ShapeEngine.Color;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
@@ -43,13 +44,13 @@ namespace Examples.Scenes.ExampleScenes
             private Circle hull;
             private Vector2 movementDir;
 
-            private readonly Color hullColorActive = ColorMedium;
-            private readonly Color outlineColorActive = ColorHighlight1;
-            private readonly Color cockpitColorActive = ColorHighlight3;
-
-            private readonly Color hullColorInactive = ColorMedium;
-            private readonly Color outlineColorInactive = ColorMedium;
-            private readonly Color cockpitColorInactive = ColorHighlight2;
+            private readonly ShapeColor hullColorActive = ColorMedium;
+            private readonly ShapeColor outlineColorActive = ColorHighlight1;
+            private readonly ShapeColor cockpitColorActive = ColorHighlight3;
+            
+            private readonly ShapeColor hullColorInactive = ColorMedium;
+            private readonly ShapeColor outlineColorInactive = ColorMedium;
+            private readonly ShapeColor cockpitColorInactive = ColorHighlight2;
             
             private readonly InputAction iaMoveHor;
             private readonly InputAction iaMoveVer;
@@ -59,7 +60,7 @@ namespace Examples.Scenes.ExampleScenes
             public SpaceShip(Vector2 pos)
             {
                 hull = new(pos, Size);
-                movementDir = ShapeRandom.randVec2();
+                movementDir = ShapeRandom.RandVec2();
                 invisibleTimer = 2f;
                 
                 var moveHorKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
@@ -140,7 +141,7 @@ namespace Examples.Scenes.ExampleScenes
                     if (targetDis < MinDistance * MinDistance)
                     {
                         outOfBoundsTimer = 0;
-                        dir = ShapeRandom.randVec2();
+                        dir = ShapeRandom.RandVec2();
                         speed = Speed * 0.25f;
                         turnSpeedDeg = TurningSpeedDeg; 
                     }
@@ -153,7 +154,7 @@ namespace Examples.Scenes.ExampleScenes
                     }
                     else
                     {
-                        dir = ShapeRandom.randVec2();
+                        dir = ShapeRandom.RandVec2();
                         speed = Speed * 0.25f;
                         turnSpeedDeg = TurningSpeedDeg;
                     }
@@ -176,7 +177,7 @@ namespace Examples.Scenes.ExampleScenes
 
             public Vector2 GetRandomSpawnPosition()
             {
-                return GetPosition() + ShapeRandom.randVec2(0, hull.Radius * 2);
+                return GetPosition() + ShapeRandom.RandVec2(0, hull.Radius * 2);
             }
             public void Draw()
             {
@@ -186,10 +187,10 @@ namespace Examples.Scenes.ExampleScenes
                 var outlineColor = Selected ? outlineColorActive : outlineColorInactive;
                 var hullColor = Selected ? hullColorActive : hullColorInactive;
                 var cockpitColor = Selected ? cockpitColorActive : cockpitColorInactive;
-                DrawCircleV(hull.Center - rightThruster * hull.Radius, hull.Radius / 6, outlineColor);
-                DrawCircleV(hull.Center - leftThruster * hull.Radius, hull.Radius / 6, outlineColor);
+                DrawCircleV(hull.Center - rightThruster * hull.Radius, hull.Radius / 6, outlineColor.ToRayColor());
+                DrawCircleV(hull.Center - leftThruster * hull.Radius, hull.Radius / 6, outlineColor.ToRayColor());
                 hull.Draw(hullColor);
-                DrawCircleV(hull.Center + movementDir * hull.Radius * 0.66f, hull.Radius * 0.33f, cockpitColor);
+                DrawCircleV(hull.Center + movementDir * hull.Radius * 0.66f, hull.Radius * 0.33f, cockpitColor.ToRayColor());
 
                 hull.DrawLines(4f, outlineColor);
 

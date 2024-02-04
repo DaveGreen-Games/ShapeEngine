@@ -140,12 +140,12 @@ namespace ShapeEngine.Core.Shapes
         public Vector2 GetRandomPointConvex()
         {
             var edges = GetEdges();
-            var ea = ShapeRandom.randCollection(edges, true);
-            var eb = ShapeRandom.randCollection(edges);
+            var ea = ShapeRandom.RandCollection(edges, true);
+            var eb = ShapeRandom.RandCollection(edges);
 
-            var pa = ea.Start.Lerp(ea.End, ShapeRandom.randF());
-            var pb = eb.Start.Lerp(eb.End, ShapeRandom.randF());
-            return pa.Lerp(pb, ShapeRandom.randF());
+            var pa = ea.Start.Lerp(ea.End, ShapeRandom.RandF());
+            var pb = eb.Start.Lerp(eb.End, ShapeRandom.RandF());
+            return pa.Lerp(pb, ShapeRandom.RandF());
         }
 
         public void Center(Vector2 newCenter)
@@ -326,7 +326,7 @@ namespace ShapeEngine.Core.Shapes
                 if (validIndices.Count <= 0) 
                     break;
 
-                int i = validIndices[ShapeRandom.randI(0, validIndices.Count)];
+                int i = validIndices[ShapeRandom.RandI(0, validIndices.Count)];
                 Vector2 a = vertices[i];
                 Vector2 b = ShapeUtils.GetItem(vertices, i + 1);
                 Vector2 c = ShapeUtils.GetItem(vertices, i - 1);
@@ -494,7 +494,7 @@ namespace ShapeEngine.Core.Shapes
 
             return randomPoints;
         }
-        public Vector2 GetRandomVertex() { return ShapeRandom.randCollection(this); }
+        public Vector2 GetRandomVertex() { return ShapeRandom.RandCollection(this); }
         public Segment GetRandomEdge() => GetEdges().GetRandomSegment();
         public Vector2 GetRandomPointOnEdge() => GetRandomEdge().GetRandomPoint();
         public Points GetRandomPointsOnEdge(int amount) => GetEdges().GetRandomPoints(amount);
@@ -708,7 +708,7 @@ namespace ShapeEngine.Core.Shapes
 
             for (int i = 0; i < pointCount; i++)
             {
-                float randLength = ShapeRandom.randF(minLength, maxLength);
+                float randLength = ShapeRandom.RandF(minLength, maxLength);
                 Vector2 p = ShapeVec.Rotate(ShapeVec.Right(), -angleStep * i) * randLength;
                 points.Add(p);
             }
@@ -722,7 +722,7 @@ namespace ShapeEngine.Core.Shapes
 
             for (int i = 0; i < pointCount; i++)
             {
-                float randLength = ShapeRandom.randF(minLength, maxLength);
+                float randLength = ShapeRandom.RandF(minLength, maxLength);
                 Vector2 p = ShapeVec.Rotate(ShapeVec.Right(), -angleStep * i) * randLength;
                 p += center;
                 points.Add(p);
@@ -749,17 +749,17 @@ namespace ShapeEngine.Core.Shapes
             Vector2 cur = segment.Start;
             while (true)
             {
-                cur += dir * ShapeRandom.randF(minSectionLength, maxSectionLength) * len;
+                cur += dir * ShapeRandom.RandF(minSectionLength, maxSectionLength) * len;
                 if ((cur - segment.End).LengthSquared() < minSectionLengthSq) break;
-                poly.Add(cur + dirRight * ShapeRandom.randF(magMin, magMax));
+                poly.Add(cur + dirRight * ShapeRandom.RandF(magMin, magMax));
             }
             cur = segment.End;
             poly.Add(cur);
             while (true)
             {
-                cur -= dir * ShapeRandom.randF(minSectionLength, maxSectionLength) * len;
+                cur -= dir * ShapeRandom.RandF(minSectionLength, maxSectionLength) * len;
                 if ((cur - segment.Start).LengthSquared() < minSectionLengthSq) break;
-                poly.Add(cur + dirLeft * ShapeRandom.randF(magMin, magMax));
+                poly.Add(cur + dirLeft * ShapeRandom.RandF(magMin, magMax));
             }
             return poly;
         }

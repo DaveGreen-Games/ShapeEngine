@@ -3,6 +3,7 @@
 
 using Raylib_CsLo;
 using System.Numerics;
+using ShapeEngine.Color;
 using ShapeEngine.Core;
 using ShapeEngine.Core.Shapes;
 
@@ -83,9 +84,9 @@ namespace ShapeEngine.Lib
         {
             return from.Lerp(to, Tween(t, tweenType));// SVec.Lerp(from, to, Tween(t, tweenType));
         }
-        public static Raylib_CsLo.Color Tween(this Raylib_CsLo.Color from, Raylib_CsLo.Color to, float t, TweenType tweenType)
+        public static ShapeColor Tween(this ShapeColor from, ShapeColor to, float t, TweenType tweenType)
         {
-            return from.Lerp(to, Tween(t, tweenType)); // SColor.LerpColor(from, to, Tween(t, tweenType));
+            return from.Lerp(to, Tween(t, tweenType));
         }
         public static Rect Tween(this Rect from, Rect to, float t, TweenType tweenType)
         {

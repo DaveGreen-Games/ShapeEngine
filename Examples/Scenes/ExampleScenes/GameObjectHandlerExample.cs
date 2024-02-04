@@ -4,6 +4,7 @@ using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 using System.Numerics;
 using System.Text;
+using ShapeEngine.Color;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
@@ -23,7 +24,7 @@ namespace Examples.Scenes.ExampleScenes
         protected ICollider collider = null!;
         protected uint[] collisionMask = new uint[] { };
         protected bool buffed = false;
-        protected Color buffColor = YELLOW;
+        protected ShapeColor buffColor = new(System.Drawing.Color.Gold);
         protected float startSpeed = 0f;
         private float totalSpeedFactor = 1f;
         public void Buff(float f)
@@ -392,7 +393,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         public void Draw()
         {
-            Color color = BLUE;
+            var color = new ShapeColor(System.Drawing.Color.CornflowerBlue);
             if (timer > 0) color = ExampleScene.ColorHighlight1;
             if (buffed) color = buffColor;
             collider.DrawShape(2f, color);
@@ -481,7 +482,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         public void Draw()
         {
-            Color color = PURPLE;
+            var color = new ShapeColor(System.Drawing.Color.MediumOrchid);
             if (timer > 0) color = ExampleScene.ColorHighlight1;
             if (buffed) color = buffColor;
             if (collider is RectCollider r)
@@ -567,7 +568,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         public void Draw()
         {
-            Color color = GREEN;
+            var color = new ShapeColor(System.Drawing.Color.ForestGreen);
             if (timer > 0) color = ExampleScene.ColorHighlight1;
             if (buffed) color = buffColor;
 
@@ -753,7 +754,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 for (int i = 0; i < 50; i++)
                 {
-                    Rock r = new(mousePosGame + ShapeRandom.randVec2(0, 50), ShapeRandom.randVec2() * 150, 60);
+                    Rock r = new(mousePosGame + ShapeRandom.RandVec2(0, 50), ShapeRandom.RandVec2() * 150, 60);
                     gameObjectHandler.AddAreaObject(r);
                 }
 
@@ -763,7 +764,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 for (int i = 0; i < 5; i++)
                 {
-                    Box b = new(mousePosGame + ShapeRandom.randVec2(0, 10), ShapeRandom.randVec2() * 75, 25);
+                    Box b = new(mousePosGame + ShapeRandom.RandVec2(0, 10), ShapeRandom.RandVec2() * 75, 25);
                     gameObjectHandler.AddAreaObject(b);
                 }
 
@@ -772,7 +773,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 for (int i = 0; i < 15; i++)
                 {
-                    Ball b = new(mousePosGame + ShapeRandom.randVec2(0, 5), ShapeRandom.randVec2() * 300, 10);
+                    Ball b = new(mousePosGame + ShapeRandom.RandVec2(0, 5), ShapeRandom.RandVec2() * 300, 10);
                     gameObjectHandler.AddAreaObject(b);
                 }
 
@@ -814,9 +815,9 @@ namespace Examples.Scenes.ExampleScenes
         {
             if (drawDebug)
             {
-                Color boundsColor = ColorLight;
-                Color gridColor = ColorLight;
-                Color fillColor = ColorMedium.ChangeAlpha(100);
+                var boundsColor = ColorLight;
+                var gridColor = ColorLight;
+                var fillColor = ColorMedium.ChangeAlpha(100);
                 gameObjectHandler.DrawDebug(boundsColor, gridColor, fillColor);
             }
 
@@ -907,7 +908,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             if (segmentStarted)
             {
-                DrawCircleV(startPoint, 15f, ColorHighlight1);
+                DrawCircleV(startPoint, 15f, ColorHighlight1.ToRayColor());
                 Segment s = new(startPoint, mousePos);
                 s.Draw(4, ColorHighlight1);
 

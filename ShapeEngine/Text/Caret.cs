@@ -1,4 +1,5 @@
 using System.Numerics;
+using ShapeEngine.Color;
 
 namespace ShapeEngine.Text;
 
@@ -6,17 +7,17 @@ public struct Caret
 {
     public int Index;
     public float WidthRelative;
-    public Raylib_CsLo.Color Color;
+    public ShapeColor Color;
 
     public bool IsValid => Index >= 0 && WidthRelative > 0f;
     public Caret()
     {
         Index = -1;
         WidthRelative = 0f;
-        Color = WHITE;
+        Color = ShapeColor.White;
     }
 
-    public Caret(int index, Raylib_CsLo.Color color, float relativeWidth = 0.05f)
+    public Caret(int index, ShapeColor color, float relativeWidth = 0.05f)
     {
         this.Index = index;
         this.Color = color;
@@ -26,7 +27,7 @@ public struct Caret
     public void Draw(Vector2 top, float height)
     {
         var bottom = top + new Vector2(0f, height);
-        DrawLineEx(top, bottom, WidthRelative * height, Color);
+        DrawLineEx(top, bottom, WidthRelative * height, Color.ToRayColor());
     }
     // public void Draw(string text, Vector2 topLeft, Font font, float fontSize, float fontSpacing)
     // {

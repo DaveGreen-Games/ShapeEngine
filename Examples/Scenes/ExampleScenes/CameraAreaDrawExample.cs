@@ -3,6 +3,7 @@ using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 using System.Numerics;
+using ShapeEngine.Color;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
@@ -33,7 +34,7 @@ namespace Examples.Scenes.ExampleScenes
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
 
             camera = new();
-            GenerateStars(ShapeRandom.randI(15000, 30000));
+            GenerateStars(ShapeRandom.RandI(15000, 30000));
             follower = new(ship.Speed * 1.1f, 200, 400);
             camera.Follower = follower;
             UpdateFollower(GAMELOOP.UI.Area.Size.Min());
@@ -62,7 +63,7 @@ namespace Examples.Scenes.ExampleScenes
                 Vector2 pos = universe.GetRandomPointInside();
 
                 //ChanceList<float> sizes = new((45, 1.5f), (25, 2f), (15, 2.5f), (10, 3f), (3, 3.5f), (2, 4f));
-                float size = ShapeRandom.randF(1.5f, 3f);// sizes.Next();
+                float size = ShapeRandom.RandF(1.5f, 3f);// sizes.Next();
                 Star star = new(pos, size);
                 stars.Add(star);
             }
@@ -96,7 +97,7 @@ namespace Examples.Scenes.ExampleScenes
             currentShip = ship;
             UpdateFollower(GAMELOOP.UI.Area.Size.Min());
             stars.Clear();
-            GenerateStars(ShapeRandom.randI(15000, 30000));
+            GenerateStars(ShapeRandom.RandI(15000, 30000));
 
         }
         protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
@@ -155,7 +156,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             foreach (var star in drawStars)
             {
-                star.Draw(new Color(20, 150, 150, 200));
+                star.Draw(new ShapeColor(20, 150, 150, 200));
             }
             ship.Draw();
             ship2.Draw();

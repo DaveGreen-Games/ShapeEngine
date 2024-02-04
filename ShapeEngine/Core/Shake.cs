@@ -72,7 +72,7 @@ namespace ShapeEngine.Core
             }
         }
         
-        private void UpdateValue(int index) { values[index] = Lerp(ShapeRandom.randF(-1.0f, 1.0f), values[index], Smoothness) * F; }
+        private void UpdateValue(int index) { values[index] = Lerp(ShapeRandom.RandF(-1.0f, 1.0f), values[index], Smoothness) * F; }
         private void ResetValues() { for (int i = 0; i < values.Length; i++) { values[i] = 0.0f; } }
     }
 

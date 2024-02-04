@@ -1,5 +1,4 @@
-﻿//global using static Examples.GameloopExamples;
-global using static ShapeEngine.Core.ShapeLoop;
+﻿global using static ShapeEngine.Core.ShapeLoop;
 
 using System.Numerics;
 using Raylib_CsLo;
@@ -8,11 +7,11 @@ using ShapeEngine.Persistent;
 using ShapeEngine.Core;
 using Examples.Scenes;
 using Examples.UIElements;
+using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Screen;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
-using ShapeEngine.UI;
 
 namespace Examples
 {
@@ -77,7 +76,7 @@ namespace Examples
             float size = ui.Area.Size.Min() * 0.02f;
             float t = 1f - (effectTimer / EffectDuration);
             //var c = effectTimer <= 0f ? ExampleScene.ColorHighlight1 : ExampleScene.ColorHighlight2;
-            var c = ShapeColor.Lerp(ExampleScene.ColorHighlight2, ExampleScene.ColorHighlight1, t);
+            var c = ExampleScene.ColorHighlight2.Lerp(ExampleScene.ColorHighlight1, t);
             //float curSize = effectTimer <= 0f ? size : ShapeMath.LerpFloat(size, size * 1.5f, t);// ShapeTween.Tween(size, size * 1.5f, t, TweenType.BOUNCE_OUT);
             
             DrawRoundedCursor(ui.MousePos, size, c);
@@ -112,7 +111,7 @@ namespace Examples
             effectTimer = 0f;
         }
 
-        internal static void DrawRoundedCursor(Vector2 tip, float size, Color color)
+        internal static void DrawRoundedCursor(Vector2 tip, float size, ShapeColor color)
         {
             var dir = new Vector2(1, 1).Normalize();
             var circleCenter = tip + dir * size * 2;
@@ -196,39 +195,38 @@ namespace Examples
         }
     }
     
-    /*
-     public static class ColorContainerData
+    
+    
+    public static class Colors
+    {
+       public class Palette : IColorPalette
        {
-           public static readonly ColorContainer Container1 = new();
-           public static readonly ColorContainer Container2 = new();
-       }
-       public static class ColorPaletteData
-       {
-           public class Palette : IColorPalette
+           private readonly List<PaletteColor> colors;
+
+           public Palette(params PaletteColor[] colors)
            {
-               private readonly List<PaletteColor> colors;
-
-               public Palette(params PaletteColor[] colors)
-               {
-                   this.colors = colors.ToList();
-               }
-               public List<PaletteColor> GetColors() => colors;
+               this.colors = colors.ToList();
            }
-           
-           public static SColor Color1 => color1.Color;
-           public static SColor Color2 => color2.Color;
-           public static SColor Color3 => color3.Color;
-
-           private static readonly PaletteColor color1 = new PaletteColor(0, new(System.Drawing.Color.Aqua));
-           private static readonly PaletteColor color2 = new PaletteColor(1, new(System.Drawing.Color.IndianRed));
-           private static readonly PaletteColor color3 = new PaletteColor(2, new(System.Drawing.Color.LimeGreen));
-
-           public static readonly Palette ColorPalette = new(color1, color2, color3);
-
-           public static void ApplyColorContainer(ColorContainer cc) => cc.Apply(ColorPalette);
+           public List<PaletteColor> GetColors() => colors;
        }
        
-    */
+       public static ShapeColor Color1 => color1.Color;
+       public static ShapeColor Color2 => color2.Color;
+       public static ShapeColor Color3 => color3.Color;
+
+       public static readonly ColorContainer Container1 = new();
+       public static readonly ColorContainer Container2 = new();
+       
+       private static readonly PaletteColor color1 = new PaletteColor(0, new(System.Drawing.Color.Aqua));
+       private static readonly PaletteColor color2 = new PaletteColor(1, new(System.Drawing.Color.IndianRed));
+       private static readonly PaletteColor color3 = new PaletteColor(2, new(System.Drawing.Color.LimeGreen));
+
+       public static readonly Palette ColorPalette = new(color1, color2, color3);
+
+       public static void ApplyColorContainer(ColorContainer cc) => cc.Apply(ColorPalette);
+    }
+       
+    
     
     public class GameloopExamples : ShapeLoop
     {
@@ -526,7 +524,7 @@ namespace Examples
         public string GetFontName(int id) { return fontNames[id]; }
         public Font GetRandomFont()
         {
-            Font? randFont = ShapeRandom.randCollection<Font>(fonts.Values.ToList(), false);
+            Font? randFont = ShapeRandom.RandCollection<Font>(fonts.Values.ToList(), false);
             return randFont != null ? (Font)randFont : FontDefault;
         }
         public void GoToMainScene()

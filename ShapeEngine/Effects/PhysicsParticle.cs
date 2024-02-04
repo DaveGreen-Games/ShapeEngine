@@ -3,6 +3,7 @@ using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 using System.Net.Http.Headers;
 using System.Numerics;
+using ShapeEngine.Color;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
@@ -54,7 +55,7 @@ namespace ShapeEngine.Effects
 
         public abstract IShape GetShape();
         public abstract IShape GetSimplifiedShape();
-        public abstract void DrawDebugShape(Raylib_CsLo.Color color);
+        public abstract void DrawDebugShape(ShapeColor color);
 
         public Vector2 GetPreviousPosition()
         {
@@ -66,6 +67,6 @@ namespace ShapeEngine.Effects
             prevPos = Pos;
         }
 
-        public abstract void DrawShape(float lineThickness, Raylib_CsLo.Color color);
+        public abstract void DrawShape(float lineThickness, ShapeColor color);
     }
 }

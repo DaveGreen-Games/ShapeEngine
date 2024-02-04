@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Text;
 using Raylib_CsLo;
+using ShapeEngine.Color;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
 using ShapeEngine.Lib;
@@ -13,7 +14,7 @@ public class InputActionLabel
     private TextFont textFont;
     public InputAction InputAction;
     public string Title;
-    public InputActionLabel(InputAction inputAction, string title, Font font, Color color, float fontSpacing = 1f)
+    public InputActionLabel(InputAction inputAction, string title, Font font, ShapeColor color, float fontSpacing = 1f)
     {
         this.InputAction = inputAction;
         this.textFont = new(font, fontSpacing, color);

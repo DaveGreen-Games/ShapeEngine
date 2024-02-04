@@ -1,3 +1,4 @@
+using ShapeEngine.Color;
 using ShapeEngine.Lib;
 
 namespace ShapeEngine.Screen;
@@ -6,11 +7,11 @@ internal sealed class ShapeFlash
 {
     private float maxDuration = 0.0f;
     private float flashTimer = 0.0f;
-    private Raylib_CsLo.Color startColor = new(0, 0, 0, 0);
-    private Raylib_CsLo.Color endColor = new(0, 0, 0, 0);
-    private Raylib_CsLo.Color curColor = new(0, 0, 0, 0);
+    private ShapeColor startColor;
+    private ShapeColor endColor;
+    private ShapeColor curColor;
 
-    public ShapeFlash(float duration, Raylib_CsLo.Color start, Raylib_CsLo.Color end)
+    public ShapeFlash(float duration, ShapeColor start, ShapeColor end)
     {
 
         maxDuration = duration;
@@ -26,7 +27,7 @@ internal sealed class ShapeFlash
         {
             flashTimer -= dt;
             float f = 1.0f - flashTimer / maxDuration;
-            curColor = startColor.Lerp(endColor, f); // SColor.LerpColor(startColor, endColor, f);
+            curColor = startColor.Lerp(endColor, f);
             if (flashTimer <= 0.0f)
             {
                 flashTimer = 0.0f;
@@ -35,6 +36,6 @@ internal sealed class ShapeFlash
         }
     }
     public bool IsFinished() { return flashTimer <= 0.0f; }
-    public Raylib_CsLo.Color GetColor() { return curColor; }
+    public ShapeColor GetColor() { return curColor; }
 
 }

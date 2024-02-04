@@ -1,5 +1,6 @@
 ﻿using ShapeEngine.Core;
 using Raylib_CsLo;
+using ShapeEngine.Color;
 using ShapeEngine.Lib;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Text;
@@ -115,7 +116,7 @@ namespace ShapeEngine.Achievements
             if (!achieved) Achieved?.Invoke(this);
             achieved = true; 
         }
-        public virtual void Draw(TextFont textFont, Rect rect, Raylib_CsLo.Color bgColor, Raylib_CsLo.Color textColor, Raylib_CsLo.Color progressColor, Raylib_CsLo.Color achievedColor)
+        public virtual void Draw(TextFont textFont, Rect rect, ShapeColor bgColor, ShapeColor textColor, ShapeColor progressColor, ShapeColor achievedColor)
         {
             Rect left = new(rect.X, rect.Y, rect.Width * 0.25f, rect.Height);
             Rect leftTop = new(left.X, left.Y, left.Width, left.Height * 0.5f);
@@ -192,7 +193,7 @@ namespace ShapeEngine.Achievements
 
             }
         }
-        public void Draw(Rect achievementRect, Raylib_CsLo.Color background, Raylib_CsLo.Color text, Raylib_CsLo.Color progress, Raylib_CsLo.Color achieved) 
+        public void Draw(Rect achievementRect, ShapeColor background, ShapeColor text, ShapeColor progress, ShapeColor achieved) 
         {
             if (achievementDrawStack.Count > 0)
             {

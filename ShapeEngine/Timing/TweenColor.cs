@@ -1,19 +1,20 @@
+using ShapeEngine.Color;
 using ShapeEngine.Lib;
 
 namespace ShapeEngine.Timing;
 
 public class TweenColor : ISequenceable
 {
-    public delegate bool TweenFunc(Raylib_CsLo.Color result);
+    public delegate bool TweenFunc(ShapeColor result);
 
     private TweenFunc func;
     private float duration;
     private float timer;
     private TweenType tweenType;
-    private Raylib_CsLo.Color from;
-    private Raylib_CsLo.Color to;
+    private ShapeColor from;
+    private ShapeColor to;
 
-    public TweenColor(TweenFunc tweenFunc, Raylib_CsLo.Color from, Raylib_CsLo.Color to, float duration, TweenType tweenType)
+    public TweenColor(TweenFunc tweenFunc, ShapeColor from, ShapeColor to, float duration, TweenType tweenType)
     {
         this.func = tweenFunc;
         this.duration = duration;
@@ -39,7 +40,7 @@ public class TweenColor : ISequenceable
         if (duration <= 0f) return true;
         float t = Clamp(timer / duration, 0f, 1f);
         timer += dt;
-        Raylib_CsLo.Color result = ShapeTween.Tween(from, to, t, tweenType);
+        var result = from.Tween(to, t, tweenType);
 
         return func(result) || t >= 1f;
     }

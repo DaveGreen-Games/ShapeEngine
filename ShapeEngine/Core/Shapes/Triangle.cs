@@ -191,8 +191,8 @@ namespace ShapeEngine.Core.Shapes
 
             for (int i = 0; i < pointCount; i++)
             {
-                float f1 = ShapeRandom.randF();
-                float f2 = ShapeRandom.randF();
+                float f1 = ShapeRandom.RandF();
+                float f2 = ShapeRandom.RandF();
                 Vector2 randPoint = GetPoint(f1, f2);
                 points.Add(randPoint);
             }
@@ -352,7 +352,7 @@ namespace ShapeEngine.Core.Shapes
         }
 
         
-        public readonly Vector2 GetRandomPointInside() => this.GetPoint(ShapeRandom.randF(), ShapeRandom.randF());
+        public readonly Vector2 GetRandomPointInside() => this.GetPoint(ShapeRandom.RandF(), ShapeRandom.RandF());
 
         public readonly Points GetRandomPointsInside(int amount)
         {
@@ -366,7 +366,7 @@ namespace ShapeEngine.Core.Shapes
 
         public readonly Vector2 GetRandomVertex()
         {
-            var randIndex = ShapeRandom.randI(0, 2);
+            var randIndex = ShapeRandom.RandI(0, 2);
             if (randIndex == 0) return A;
             else if (randIndex == 1) return B;
             else return C;

@@ -1,6 +1,7 @@
 ﻿using ShapeEngine.Lib;
 using ShapeEngine.Core.Shapes;
 using System.Numerics;
+using ShapeEngine.Color;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
@@ -207,9 +208,9 @@ namespace ShapeEngine.Core
             return (newPos, points);
         }
 
-        public virtual void DrawDebug(Raylib_CsLo.Color bounds, Raylib_CsLo.Color border, Raylib_CsLo.Color fill)
+        public virtual void DrawDebug(ShapeColor bounds, ShapeColor border, ShapeColor fill)
         {
-            DrawRectangleLinesEx(this.Bounds.Rectangle, 15f, bounds);
+            DrawRectangleLinesEx(this.Bounds.Rectangle, 15f, bounds.ToRayColor());
         }
 
         
@@ -341,7 +342,7 @@ namespace ShapeEngine.Core
             base.Update(dt, deltaSlow, game, ui);
         }
         
-        public override void DrawDebug(Raylib_CsLo.Color bounds, Raylib_CsLo.Color border, Raylib_CsLo.Color fill)
+        public override void DrawDebug(ShapeColor bounds, ShapeColor border, ShapeColor fill)
         {
             base.DrawDebug(bounds, border, fill);
             col.DebugDraw(border, fill);

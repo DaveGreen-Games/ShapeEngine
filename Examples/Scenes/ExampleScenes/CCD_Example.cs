@@ -9,6 +9,7 @@ using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using Color = System.Drawing.Color;
 
 
 namespace Examples.Scenes.ExampleScenes
@@ -67,13 +68,13 @@ namespace Examples.Scenes.ExampleScenes
         public void Draw()
         {
             float colF = collisionTimer > 0f ? collisionTimer / collisionTime : 0f;
-            Color color = ShapeTween.Tween(ExampleScene.ColorHighlight2, ExampleScene.ColorHighlight1, colF, TweenType.QUAD_IN);
+            var color = ShapeTween.Tween(ExampleScene.ColorHighlight2, ExampleScene.ColorHighlight1, colF, TweenType.QUAD_IN);
 
             Collider.DrawShape(4f, color);
             lastIntersection.Draw(2f, ExampleScene.ColorLight, ExampleScene.ColorLight);
 
             //DrawCircleV(Collider.Pos, 25, BLUE);
-            DrawCircleV(Shape.GetCentroid(), 2, ExampleScene.ColorHighlight2);
+            DrawCircleV(Shape.GetCentroid(), 2, ExampleScene.ColorHighlight2.ToRayColor());
 
             //prevPoints.Draw(5f, RED);
         }
@@ -212,15 +213,15 @@ namespace Examples.Scenes.ExampleScenes
             foreach (var seg in boundary)
             {
                 Segment normal = new(seg.Center, seg.Center + seg.Normal * 25f);
-                normal.Draw(2f, BLUE);
+                normal.Draw(2f, new(Color.CornflowerBlue));
             }
 
-            DrawCircleV(muzzlePos, bulletR * 2f, ColorHighlight2);
+            DrawCircleV(muzzlePos, bulletR * 2f, ColorHighlight2.ToRayColor());
 
             
             if (segmentStarted)
             {
-                DrawCircleV(startPoint, 15f, ColorHighlight1);
+                DrawCircleV(startPoint, 15f, ColorHighlight1.ToRayColor());
                 Segment s = new(startPoint, game.MousePos);
                 s.Draw(4, ColorHighlight1);
                 

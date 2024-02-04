@@ -1,6 +1,7 @@
 ﻿
 
 using Raylib_CsLo;
+using ShapeEngine.Color;
 
 namespace ShapeEngine.Stats
 {
@@ -13,7 +14,7 @@ namespace ShapeEngine.Stats
         public void AddStack();
         public bool RemoveStack();
         public void Update(float dt);
-        public void DrawUI(Rectangle r, Raylib_CsLo.Color barColor, Raylib_CsLo.Color bgColor, Raylib_CsLo.Color textColor);
+        public void DrawUI(Rectangle r, ShapeColor barColor, ShapeColor bgColor, ShapeColor textColor);
     }
 
     public struct BuffValue
@@ -132,7 +133,7 @@ namespace ShapeEngine.Stats
             }
         }
 
-        public virtual void DrawUI(Rectangle r, Raylib_CsLo.Color barColor, Raylib_CsLo.Color bgColor, Raylib_CsLo.Color textColor) { }
+        public virtual void DrawUI(Rectangle r, ShapeColor barColor, ShapeColor bgColor, ShapeColor textColor) { }
     }
     
     public class BuffSingle : IBuff
@@ -217,7 +218,7 @@ namespace ShapeEngine.Stats
             }
         }
 
-        public virtual void DrawUI(Rectangle r, Raylib_CsLo.Color barColor, Raylib_CsLo.Color bgColor, Raylib_CsLo.Color textColor) { }
+        public virtual void DrawUI(Rectangle r, ShapeColor barColor, ShapeColor bgColor, ShapeColor textColor) { }
     }
 
 

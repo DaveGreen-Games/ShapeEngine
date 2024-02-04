@@ -1,5 +1,6 @@
 ﻿
 using System.Numerics;
+using ShapeEngine.Color;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Shapes;
@@ -204,9 +205,9 @@ namespace ShapeEngine.Core.Shapes
         public Vector2 GetClosestVertex(Vector2 p) { return Center + (p - Center).Normalize() * Radius; }
         public Vector2 GetRandomPoint()
         {
-            float randAngle = ShapeRandom.randAngleRad();
+            float randAngle = ShapeRandom.RandAngleRad();
             var randDir = ShapeVec.VecFromAngleRad(randAngle);
-            return Center + randDir * ShapeRandom.randF(0, Radius);
+            return Center + randDir * ShapeRandom.RandF(0, Radius);
         }
         public Points GetRandomPoints(int amount)
         {
@@ -217,8 +218,8 @@ namespace ShapeEngine.Core.Shapes
             }
             return points;
         }
-        public Vector2 GetRandomVertex() { return ShapeRandom.randCollection(GetVertices(), false); }
-        public Segment GetRandomEdge() { return ShapeRandom.randCollection(GetEdges(), false); }
+        public Vector2 GetRandomVertex() { return ShapeRandom.RandCollection(GetVertices(), false); }
+        public Segment GetRandomEdge() { return ShapeRandom.RandCollection(GetEdges(), false); }
         public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
         public Points GetRandomPointsOnEdge(int amount)
         {
@@ -229,7 +230,7 @@ namespace ShapeEngine.Core.Shapes
             }
             return points;
         }
-        public void DrawShape(float linethickness, Raylib_CsLo.Color color) => this.DrawLines(linethickness, color);
+        public void DrawShape(float linethickness, ShapeColor color) => this.DrawLines(linethickness, color);
         #endregion
 
 

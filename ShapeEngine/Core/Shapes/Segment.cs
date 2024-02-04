@@ -1,5 +1,6 @@
 ﻿
 using System.Numerics;
+using ShapeEngine.Color;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Shapes;
@@ -147,7 +148,7 @@ namespace ShapeEngine.Core.Shapes
             float disSqB = (p - End).LengthSquared();
             return disSqA <= disSqB ? Start : End;
         }
-        public Vector2 GetRandomPoint() { return this.GetPoint(ShapeRandom.randF()); }
+        public Vector2 GetRandomPoint() { return this.GetPoint(ShapeRandom.RandF()); }
         public Points GetRandomPoints(int amount)
         {
             var points = new Points();
@@ -157,7 +158,7 @@ namespace ShapeEngine.Core.Shapes
             }
             return points;
         }
-        public Vector2 GetRandomVertex() { return ShapeRandom.chance(0.5f) ? Start : End; }
+        public Vector2 GetRandomVertex() { return ShapeRandom.Chance(0.5f) ? Start : End; }
 
         #endregion
 
@@ -442,7 +443,7 @@ namespace ShapeEngine.Core.Shapes
 
         #endregion
 
-        public void DrawNormal(float lineThickness, float length, Raylib_CsLo.Color color)
+        public void DrawNormal(float lineThickness, float length, ShapeColor color)
         {
             Segment n = new(Center, Center + Normal * length);
             n.Draw(lineThickness, color);

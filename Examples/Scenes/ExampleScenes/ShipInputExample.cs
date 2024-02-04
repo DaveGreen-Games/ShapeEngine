@@ -4,10 +4,12 @@ using ShapeEngine.Lib;
 using ShapeEngine.Random;
 using ShapeEngine.Screen;
 using System.Numerics;
+using ShapeEngine.Color;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
+using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -15,11 +17,11 @@ namespace Examples.Scenes.ExampleScenes
     {
         internal readonly struct ColorScheme
         {
-            public readonly Color Hull;
-            public readonly Color Outline;
-            public readonly Color Cockpit;
+            public readonly ShapeColor Hull;
+            public readonly ShapeColor Outline;
+            public readonly ShapeColor Cockpit;
 
-            public ColorScheme(Color hull, Color outline, Color cockpit)
+            public ColorScheme(ShapeColor hull, ShapeColor outline, ShapeColor cockpit)
             {
                 this.Hull = hull;
                 this.Outline = outline;
@@ -35,14 +37,14 @@ namespace Examples.Scenes.ExampleScenes
 
             public static readonly ColorScheme[] ColorSchemes = new[]
             {
-                new ColorScheme(DARKGRAY, GRAY, GREEN),
-                new ColorScheme(DARKGRAY, GRAY, BLUE),
-                new ColorScheme(DARKGRAY, GRAY, YELLOW),
-                new ColorScheme(DARKGRAY, GRAY, RED),
-                new ColorScheme(DARKGRAY, GRAY, ORANGE),
-                new ColorScheme(DARKGRAY, GRAY, PURPLE),
-                new ColorScheme(DARKGRAY, GRAY, PINK),
-                new ColorScheme(DARKGRAY, GRAY, SKYBLUE),
+                new ColorScheme(new(Color.DimGray), new(Color.Gray), new(Color.ForestGreen)),
+                new ColorScheme(new(Color.DimGray), new(Color.Gray), new(Color.CornflowerBlue)),
+                new ColorScheme(new(Color.DimGray), new(Color.Gray), new(Color.Goldenrod)),
+                new ColorScheme(new(Color.DimGray), new(Color.Gray), new(Color.IndianRed)),
+                new ColorScheme(new(Color.DimGray), new(Color.Gray), new(Color.DarkOrange)),
+                new ColorScheme(new(Color.DimGray), new(Color.Gray), new(Color.MediumPurple)),
+                new ColorScheme(new(Color.DimGray), new(Color.Gray), new(Color.MediumOrchid)),
+                new ColorScheme(new(Color.DimGray), new(Color.Gray), new(Color.CadetBlue)),
 
             };
             
@@ -57,7 +59,7 @@ namespace Examples.Scenes.ExampleScenes
             public SpaceShip(Vector2 pos, ShapeGamepadDevice gamepad)
             {
                 hull = new(pos, Size);
-                movementDir = ShapeRandom.randVec2();
+                movementDir = ShapeRandom.RandVec2();
                 
                 // var moveHorKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
                 var moveHorGP = new InputTypeGamepadAxis(ShapeGamepadAxis.LEFT_X, 0.1f);
@@ -114,7 +116,7 @@ namespace Examples.Scenes.ExampleScenes
 
             public Vector2 GetRandomSpawnPosition()
             {
-                return GetPosition() + ShapeRandom.randVec2(0, hull.Radius * 2);
+                return GetPosition() + ShapeRandom.RandVec2(0, hull.Radius * 2);
             }
             public void Draw()
             {
@@ -124,10 +126,10 @@ namespace Examples.Scenes.ExampleScenes
                 var outlineColor = colorScheme.Outline;
                 var hullColor = colorScheme.Hull;
                 var cockpitColor = colorScheme.Cockpit;
-                DrawCircleV(hull.Center - rightThruster * hull.Radius, hull.Radius / 6, outlineColor);
-                DrawCircleV(hull.Center - leftThruster * hull.Radius, hull.Radius / 6, outlineColor);
+                DrawCircleV(hull.Center - rightThruster * hull.Radius, hull.Radius / 6, outlineColor.ToRayColor());
+                DrawCircleV(hull.Center - leftThruster * hull.Radius, hull.Radius / 6, outlineColor.ToRayColor());
                 hull.Draw(hullColor);
-                DrawCircleV(hull.Center + movementDir * hull.Radius * 0.66f, hull.Radius * 0.33f, cockpitColor);
+                DrawCircleV(hull.Center + movementDir * hull.Radius * 0.66f, hull.Radius * 0.33f, cockpitColor.ToRayColor());
 
                 hull.DrawLines(4f, outlineColor);
             }

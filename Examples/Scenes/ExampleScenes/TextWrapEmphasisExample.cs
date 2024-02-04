@@ -1,4 +1,5 @@
 ﻿
+using System.Drawing;
 using ShapeEngine.Lib;
 using System.Numerics;
 using ShapeEngine.Core.Structs;
@@ -72,11 +73,11 @@ namespace Examples.Scenes.ExampleScenes
 
             // var tf = new TextFont(textFont.Font, 0f, 0f, WHITE);
             textBlock = new(textFont);
-            textBlock.Caret = new(-1, RED);
-            var emphasis1 = new Emphasis(new ED_Block(), RED, BLACK);
-            var emphasis2 = new Emphasis(new ED_Block(), BLUE, BLACK);
-            var emphasis3 = new Emphasis(new ED_Transparent(), BLACK, YELLOW);
-            var emphasis4 = new Emphasis(new ED_Transparent(), BLACK, GREEN);
+            textBlock.Caret = new(-1, new(Color.OrangeRed));
+            var emphasis1 = new Emphasis(new ED_Block(), new(Color.IndianRed), new(BLACK));
+            var emphasis2 = new Emphasis(new ED_Block(), new(Color.CornflowerBlue), new(Color.Black));
+            var emphasis3 = new Emphasis(new ED_Transparent(), new(Color.Black), new(Color.Goldenrod));
+            var emphasis4 = new Emphasis(new ED_Transparent(), new(Color.Black), new(Color.ForestGreen));
             var textEmphasis1 = new TextEmphasis(emphasis1, "(rupture)|(bleed)|(Rupture)|(Bleed)|[\" _ :]");
             var textEmphasis2 = new TextEmphasis(emphasis2, "(increased)|(added)");
             var textEmphasis3 = new TextEmphasis(emphasis3, "(\\d)|(sec)|(seconds)");

@@ -4,6 +4,7 @@ using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 using System.Numerics;
 using Examples.UIElements;
+using ShapeEngine.Color;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
@@ -16,14 +17,14 @@ namespace Examples.Scenes
     public class ExampleScene : IScene
     {
 
-        public static Color ColorDark = ShapeColor.HexToColor("0A131F");
-        public static Color ColorDarkB = ShapeColor.HexToColor("#121F2B");
-        public static Color ColorMedium = ShapeColor.HexToColor("1F3847");
-        public static Color ColorLight = ShapeColor.HexToColor("B6E0E2");
-        public static Color ColorHighlight1 = ShapeColor.HexToColor("E5F6DF");
-        public static Color ColorHighlight2 = ShapeColor.HexToColor("E94957");
-        public static Color ColorHighlight3 = ShapeColor.HexToColor("#FCA311");
-        public static Color ColorRustyRed = ShapeColor.HexToColor("#DE3C4B");
+        public static ShapeColor ColorDark = ShapeColor.FromHex("0A131F");
+        public static ShapeColor ColorDarkB = ShapeColor.FromHex("#121F2B");
+        public static ShapeColor ColorMedium = ShapeColor.FromHex("1F3847");
+        public static ShapeColor ColorLight = ShapeColor.FromHex("B6E0E2");
+        public static ShapeColor ColorHighlight1 = ShapeColor.FromHex("E5F6DF");
+        public static ShapeColor ColorHighlight2 = ShapeColor.FromHex("E94957");
+        public static ShapeColor ColorHighlight3 = ShapeColor.FromHex("#FCA311");
+        public static ShapeColor ColorRustyRed = ShapeColor.FromHex("#DE3C4B");
 
         public string Title { get; protected set; } = "Title Goes Here";
         public string Description { get; protected set; } = "No Description Yet.";
@@ -209,7 +210,7 @@ namespace Examples.Scenes
 
         protected void DrawCross(Vector2 center, float length)
         {
-            Color c = ColorLight.ChangeAlpha((byte)125);
+            var c = ColorLight.ChangeAlpha(125);
             Segment hor = new Segment(center - new Vector2(length / 2, 0f), center + new Vector2(length / 2, 0f));
             Segment ver = new Segment(center - new Vector2(0f, length / 2), center + new Vector2(0f, length / 2));
             hor.Draw(2f, c);

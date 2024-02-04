@@ -4,10 +4,12 @@ using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 using System.Numerics;
 using System.Text;
+using ShapeEngine.Color;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
+using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -23,8 +25,9 @@ namespace Examples.Scenes.ExampleScenes
 
         public void Draw()
         {
-            outline.DrawLines(4f, RED);
-            center.Draw(RED);
+            var c = new ShapeColor(Color.IndianRed);
+            outline.DrawLines(4f, c);
+            center.Draw(c);
         }
     }
     public class CameraExample : ExampleScene
@@ -76,7 +79,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 //Vector2 pos = SRNG.randVec2(0, 5000);
                 Vector2 pos = universe.GetRandomPointInside();
-                float size = ShapeRandom.randF(25, 100);
+                float size = ShapeRandom.RandF(25, 100);
                 Pillar p = new(pos, size);
                 pillars.Add(p);
             }
@@ -166,13 +169,14 @@ namespace Examples.Scenes.ExampleScenes
                 pillar.Draw();
             }
 
+            var c = new ShapeColor(Color.CornflowerBlue);
             float f = camera.ZoomFactor;
-            DrawCircleV(camera.Position, 8f * f, BLUE);
-            ShapeDrawing.DrawCircleLines(camera.Position, 64 * f, 2f * f, BLUE);
+            DrawCircleV(camera.Position, 8f * f, c.ToRayColor());
+            ShapeDrawing.DrawCircleLines(camera.Position, 64 * f, 2f * f, c);
             Segment hor = new(camera.Position - new Vector2(3000 * f, 0), camera.Position + new Vector2(3000 * f, 0));
-            hor.Draw(2f * f, BLUE);
+            hor.Draw(2f * f, c);
             Segment ver = new(camera.Position - new Vector2(0, 3000 * f), camera.Position + new Vector2(0, 3000 * f));
-            ver.Draw(2f * f, BLUE);
+            ver.Draw(2f * f, c);
         }
         protected override void DrawGameUIExample(ScreenInfo ui)
         {

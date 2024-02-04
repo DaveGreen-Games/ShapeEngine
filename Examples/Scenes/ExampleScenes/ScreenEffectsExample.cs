@@ -4,11 +4,13 @@ using ShapeEngine.Lib;
 using ShapeEngine.Random;
 using ShapeEngine.Screen;
 using System.Numerics;
+using ShapeEngine.Color;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
 using ShapeEngine.Text;
+using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -24,12 +26,12 @@ namespace Examples.Scenes.ExampleScenes
 
         public void Draw()
         {
-            Color color = DARKGRAY;
-            if (circle.Radius > 2f && circle.Radius <= 3f) color = GRAY;
-            else if (circle.Radius > 3f) color = WHITE;
+            var color = new ShapeColor(System.Drawing.Color.DarkGray);
+            if (circle.Radius > 2f && circle.Radius <= 3f) color = new(System.Drawing.Color.LightGray);
+            else if (circle.Radius > 3f) color = new(System.Drawing.Color.AntiqueWhite);
             ShapeDrawing.DrawCircleFast(circle.Center, circle.Radius, color);
         }
-        public void Draw(Color c) => ShapeDrawing.DrawCircleFast(circle.Center, circle.Radius, c);
+        public void Draw(ShapeColor c) => ShapeDrawing.DrawCircleFast(circle.Center, circle.Radius, c);
     }
     internal class Comet
     {
@@ -37,17 +39,17 @@ namespace Examples.Scenes.ExampleScenes
         private const float MinSize = 10f;
         private const float MaxSpeed = 150f;
         private const float MinSpeed = 10f;
-        private static ChanceList<Color> colors = new((50, ORANGE), (30, YELLOW), (10, RED), (5, PURPLE), (1, LIME));
+        private static ChanceList<ShapeColor> colors = new((50, new(Color.Orange)), (30, new(Color.Goldenrod)), (10, new(Color.IndianRed)), (5, new(Color.MediumPurple)), (1, new(Color.ForestGreen)));
         private static ChanceList<float> speeds = new((10, MinSpeed), (30, MinSpeed * 2.5f), (50, MinSpeed * 4f), (20, MaxSpeed / 2), (10, MaxSpeed));
         Circle circle;
         Vector2 vel;
-        Color color;
+        ShapeColor color;
         float speed = 0f;
         public Comet(Vector2 pos)
         {
-            this.circle = new(pos, ShapeRandom.randF(MinSize, MaxSize));
+            this.circle = new(pos, ShapeRandom.RandF(MinSize, MaxSize));
             this.speed = speeds.Next();
-            this.vel = ShapeRandom.randVec2() * this.speed;
+            this.vel = ShapeRandom.RandVec2() * this.speed;
             this.color = colors.Next();
 
         }
@@ -89,7 +91,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             this.Title = title;
             this.CurValue = ShapeMath.Clamp(startValue, 0f, 1f);
-            this.font = new(font, 1f, WHITE);
+            this.font = new(font, 1f, ShapeColor.White);
         }
 
         public void SetValue(float newValue)
@@ -129,9 +131,9 @@ namespace Examples.Scenes.ExampleScenes
         private Vector2 movementDir;
         public float Speed = 500;
 
-        private Color hullColor = BLUE;
-        private Color outlineColor = RED;
-        private Color cockpitColor = SKYBLUE;
+        private ShapeColor hullColor = new(System.Drawing.Color.SteelBlue);
+        private ShapeColor outlineColor = new(System.Drawing.Color.IndianRed);
+        private ShapeColor cockpitColor = new(System.Drawing.Color.DodgerBlue);
 
         private InputAction iaMoveHor;
         private InputAction iaMoveVer;
@@ -158,7 +160,7 @@ namespace Examples.Scenes.ExampleScenes
             Hull = new(pos, r);
             SetupInput();
         }
-        public Ship(Vector2 pos, float r, Color hullColor, Color cockpitColor, Color outlineColor)
+        public Ship(Vector2 pos, float r, ShapeColor hullColor, ShapeColor cockpitColor, ShapeColor outlineColor)
         {
             Hull = new(pos, r);
             this.hullColor = hullColor;
@@ -225,10 +227,10 @@ namespace Examples.Scenes.ExampleScenes
         {
             var rightThruster = movementDir.RotateDeg(-25);
             var leftThruster = movementDir.RotateDeg(25);
-            DrawCircleV(Hull.Center - rightThruster * Hull.Radius, Hull.Radius / 6, outlineColor);
-            DrawCircleV(Hull.Center - leftThruster * Hull.Radius, Hull.Radius / 6, outlineColor);
+            DrawCircleV(Hull.Center - rightThruster * Hull.Radius, Hull.Radius / 6, outlineColor.ToRayColor());
+            DrawCircleV(Hull.Center - leftThruster * Hull.Radius, Hull.Radius / 6, outlineColor.ToRayColor());
             Hull.Draw(hullColor);
-            DrawCircleV(Hull.Center + movementDir * Hull.Radius * 0.66f, Hull.Radius * 0.33f, cockpitColor);
+            DrawCircleV(Hull.Center + movementDir * Hull.Radius * 0.66f, Hull.Radius * 0.33f, cockpitColor.ToRayColor());
 
             Hull.DrawLines(4f, outlineColor);
         }
@@ -382,7 +384,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         private void ShakeCamera()
         {
-            camera.Shake(ShapeRandom.randF(0.8f, 2f), new Vector2(100, 100), 0, 25, 0.75f);
+            camera.Shake(ShapeRandom.RandF(0.8f, 2f), new Vector2(100, 100), 0, 25, 0.75f);
         }
         
         
@@ -441,7 +443,7 @@ namespace Examples.Scenes.ExampleScenes
                 if (comet.CheckCollision(ship.Hull))
                 {
                     float f = comet.GetCollisionIntensity();
-                    camera.Shake(ShapeRandom.randF(0.4f, 0.6f), new Vector2(150, 150) * f, 0, 10, 0.75f);
+                    camera.Shake(ShapeRandom.RandF(0.4f, 0.6f), new Vector2(150, 150) * f, 0, 10, 0.75f);
                     comets.RemoveAt(i);
 
                     GAMELOOP.Flash(0.25f, new(255, 255, 255, 150), new(0,0,0,0));

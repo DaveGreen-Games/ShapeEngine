@@ -2,6 +2,7 @@
 using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using System.Numerics;
+using ShapeEngine.Color;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
@@ -21,7 +22,7 @@ namespace Examples.Scenes.ExampleScenes
         public Vector2 Pos;
         public Vector2 Vel;
         public float Radius;
-        int areaLayer = ShapeRandom.randI(1, 5);
+        int areaLayer = ShapeRandom.RandI(1, 5);
         Color color = GREEN;
         private int affectionCount = 0;
         public int Layer { get { return areaLayer; } set { } }
@@ -32,7 +33,7 @@ namespace Examples.Scenes.ExampleScenes
             this.Vel = vel;
             this.Radius = radius;
 
-            int random = ShapeRandom.randI(0, 4);
+            int random = ShapeRandom.RandI(0, 4);
             if (random <= 0)
             {
                 tags = Array.Empty<uint>();
@@ -88,13 +89,13 @@ namespace Examples.Scenes.ExampleScenes
 
         public void DrawGame(ScreenInfo game)
         {
-            Color c = affectionCount switch
+            ShapeColor c = affectionCount switch
             {
-                0 => GREEN,
-                1 => YELLOW,
-                2 => ORANGE,
-                3 => RED,
-                _ => WHITE
+                0 => new ShapeColor(System.Drawing.Color.ForestGreen),
+                1 => new ShapeColor(System.Drawing.Color.Goldenrod),
+                2 => new ShapeColor(System.Drawing.Color.Coral),
+                3 => new ShapeColor(System.Drawing.Color.IndianRed),
+                _ => new ShapeColor(System.Drawing.Color.FloralWhite),
             };
             float r = Radius;
             ShapeDrawing.DrawCircleFast(Pos, Radius, c);
@@ -237,8 +238,8 @@ namespace Examples.Scenes.ExampleScenes
             {
                 for (var i = 0; i < 2500; i++)
                 {
-                    var randPos = mousePosGame + ShapeRandom.randVec2(0, 250);
-                    var vel = ShapeRandom.randVec2(100, 200);
+                    var randPos = mousePosGame + ShapeRandom.RandVec2(0, 250);
+                    var vel = ShapeRandom.RandVec2(100, 200);
                     Circ c = new(randPos, vel, 2);
                     //circles.Add(c);
                     gameObjectHandler.AddAreaObject(c);

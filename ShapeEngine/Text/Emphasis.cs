@@ -1,3 +1,4 @@
+using ShapeEngine.Color;
 using ShapeEngine.Core.Shapes;
 
 namespace ShapeEngine.Text;
@@ -5,10 +6,10 @@ namespace ShapeEngine.Text;
 public class Emphasis
 {
     private readonly IEmphasisDrawer drawer;
-    public Raylib_CsLo.Color Color;
-    public Raylib_CsLo.Color TextColor;
+    public ShapeColor Color;
+    public ShapeColor TextColor;
     
-    public Emphasis(IEmphasisDrawer drawer, Raylib_CsLo.Color color, Raylib_CsLo.Color textColor)
+    public Emphasis(IEmphasisDrawer drawer, ShapeColor color, ShapeColor textColor)
     {
         this.drawer = drawer;
         this.Color = color;

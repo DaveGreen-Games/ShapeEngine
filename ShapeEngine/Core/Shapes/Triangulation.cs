@@ -237,7 +237,7 @@ public class Triangulation : ShapeList<Triangle>
                     chance = (triArea - minArea) / (maxArea - minArea);
                 }
 
-                if (ShapeRandom.chance(chance)) final.Add(tri);
+                if (ShapeRandom.Chance(chance)) final.Add(tri);
                 else queue.AddRange(tri.Triangulate(minArea));
             }
             queue.RemoveAt(endIndex);
