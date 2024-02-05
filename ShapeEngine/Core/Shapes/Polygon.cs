@@ -1006,7 +1006,19 @@ namespace ShapeEngine.Core.Shapes
 
         #endregion
 
-
+        
+        //TODO implement
+        //ALternative algorithms
+            //https://en.wikipedia.org/wiki/Graham_scan
+            //https://en.wikipedia.org/wiki/Chan%27s_algorithm
+            
+        //GiftWrapping
+        //https://www.youtube.com/watch?v=YNyULRrydVI -> coding train
+        //https://en.wikipedia.org/wiki/Gift_wrapping_algorithm -> wiki
+        public static Polygon FindConvexHull(List<Vector2> points)
+        {
+            return new();
+        }
         
     }
 }
