@@ -1053,7 +1053,7 @@ public class ShapeLoop
     /// <returns></returns>
     private float CalculateScreenPercentage(Rect screen, Rect window)
     {
-        var intersection = screen.IntersectWith(window);
+        var intersection = screen.Difference(window);
         if (intersection.Width <= 0f && intersection.Height <= 0f) return 0f;
         
         var screenArea = screen.GetArea();
@@ -1097,6 +1097,234 @@ public class ShapeLoop
 }
    
 
+/*
+ public struct Rectangle : IEquatable<Rectangle>
+   {
+     private static Rectangle emptyRectangle;
+     [DataMember]
+     public int X;
+     [DataMember]
+     public int Y;
+     [DataMember]
+     public int Width;
+     [DataMember]
+     public int Height;
+
+     public static Rectangle Empty => Rectangle.emptyRectangle;
+
+     public int Left => this.X;
+
+     public int Right => this.X + this.Width;
+
+     public int Top => this.Y;
+
+     public int Bottom => this.Y + this.Height;
+
+     public bool IsEmpty => this.Width == 0 && this.Height == 0 && this.X == 0 && this.Y == 0;
+
+     public Point Location
+     {
+       get => new Point(this.X, this.Y);
+       set
+       {
+         this.X = value.X;
+         this.Y = value.Y;
+       }
+     }
+
+     public Point Size
+     {
+       get => new Point(this.Width, this.Height);
+       set
+       {
+         this.Width = value.X;
+         this.Height = value.Y;
+       }
+     }
+
+     public Point Center => new Point(this.X + this.Width / 2, this.Y + this.Height / 2);
+
+     internal string DebugDisplayString
+     {
+       get
+       {
+         return this.X.ToString() + "  " + (object) this.Y + "  " + (object) this.Width + "  " + (object) this.Height;
+       }
+     }
+
+     public Rectangle(int x, int y, int width, int height)
+     {
+       this.X = x;
+       this.Y = y;
+       this.Width = width;
+       this.Height = height;
+     }
+
+     public Rectangle(Point location, Point size)
+     {
+       this.X = location.X;
+       this.Y = location.Y;
+       this.Width = size.X;
+       this.Height = size.Y;
+     }
+
+     public static bool operator ==(Rectangle a, Rectangle b)
+     {
+       return a.X == b.X && a.Y == b.Y && a.Width == b.Width && a.Height == b.Height;
+     }
+
+     public static bool operator !=(Rectangle a, Rectangle b) => !(a == b);
+
+     public bool Contains(int x, int y)
+     {
+       return this.X <= x && x < this.X + this.Width && this.Y <= y && y < this.Y + this.Height;
+     }
+
+     public bool Contains(float x, float y)
+     {
+       return (double) this.X <= (double) x && (double) x < (double) (this.X + this.Width) && (double) this.Y <= (double) y && (double) y < (double) (this.Y + this.Height);
+     }
+
+     public bool Contains(Point value)
+     {
+       return this.X <= value.X && value.X < this.X + this.Width && this.Y <= value.Y && value.Y < this.Y + this.Height;
+     }
+
+     public void Contains(ref Point value, out bool result)
+     {
+       result = this.X <= value.X && value.X < this.X + this.Width && this.Y <= value.Y && value.Y < this.Y + this.Height;
+     }
+
+     public bool Contains(Vector2 value)
+     {
+       return (double) this.X <= (double) value.X && (double) value.X < (double) (this.X + this.Width) && (double) this.Y <= (double) value.Y && (double) value.Y < (double) (this.Y + this.Height);
+     }
+
+     public void Contains(ref Vector2 value, out bool result)
+     {
+       result = (double) this.X <= (double) value.X && (double) value.X < (double) (this.X + this.Width) && (double) this.Y <= (double) value.Y && (double) value.Y < (double) (this.Y + this.Height);
+     }
+
+     public bool Contains(Rectangle value)
+     {
+       return this.X <= value.X && value.X + value.Width <= this.X + this.Width && this.Y <= value.Y && value.Y + value.Height <= this.Y + this.Height;
+     }
+
+     public void Contains(ref Rectangle value, out bool result)
+     {
+       result = this.X <= value.X && value.X + value.Width <= this.X + this.Width && this.Y <= value.Y && value.Y + value.Height <= this.Y + this.Height;
+     }
+
+     public override bool Equals(object obj) => obj is Rectangle rectangle && this == rectangle;
+
+     public bool Equals(Rectangle other) => this == other;
+
+     public override int GetHashCode()
+     {
+       return (((17 * 23 + this.X.GetHashCode()) * 23 + this.Y.GetHashCode()) * 23 + this.Width.GetHashCode()) * 23 + this.Height.GetHashCode();
+     }
+
+     public void Inflate(int horizontalAmount, int verticalAmount)
+     {
+       this.X -= horizontalAmount;
+       this.Y -= verticalAmount;
+       this.Width += horizontalAmount * 2;
+       this.Height += verticalAmount * 2;
+     }
+
+     public void Inflate(float horizontalAmount, float verticalAmount)
+     {
+       this.X -= (int) horizontalAmount;
+       this.Y -= (int) verticalAmount;
+       this.Width += (int) horizontalAmount * 2;
+       this.Height += (int) verticalAmount * 2;
+     }
+
+     public bool Intersects(Rectangle value)
+     {
+       return value.Left < this.Right && this.Left < value.Right && value.Top < this.Bottom && this.Top < value.Bottom;
+     }
+
+     public void Intersects(ref Rectangle value, out bool result)
+     {
+       result = value.Left < this.Right && this.Left < value.Right && value.Top < this.Bottom && this.Top < value.Bottom;
+     }
+
+     public static Rectangle Intersect(Rectangle value1, Rectangle value2)
+     {
+       Rectangle result;
+       Rectangle.Intersect(ref value1, ref value2, out result);
+       return result;
+     }
+
+     public static void Intersect(ref Rectangle value1, ref Rectangle value2, out Rectangle result)
+     {
+       if (value1.Intersects(value2))
+       {
+         int num1 = Math.Min(value1.X + value1.Width, value2.X + value2.Width);
+         int x = Math.Max(value1.X, value2.X);
+         int y = Math.Max(value1.Y, value2.Y);
+         int num2 = Math.Min(value1.Y + value1.Height, value2.Y + value2.Height);
+         result = new Rectangle(x, y, num1 - x, num2 - y);
+       }
+       else
+         result = new Rectangle(0, 0, 0, 0);
+     }
+     public static Rectangle Union(Rectangle value1, Rectangle value2)
+   {
+     int x = Math.Min(value1.X, value2.X);
+     int y = Math.Min(value1.Y, value2.Y);
+     return new Rectangle(x, y, Math.Max(value1.Right, value2.Right) - x, Math.Max(value1.Bottom, value2.Bottom) - y);
+   }
+
+   public static void Union(ref Rectangle value1, ref Rectangle value2, out Rectangle result)
+   {
+     result.X = Math.Min(value1.X, value2.X);
+     result.Y = Math.Min(value1.Y, value2.Y);
+     result.Width = Math.Max(value1.Right, value2.Right) - result.X;
+     result.Height = Math.Max(value1.Bottom, value2.Bottom) - result.Y;
+   }
+
+     public void Offset(int offsetX, int offsetY)
+     {
+       this.X += offsetX;
+       this.Y += offsetY;
+     }
+
+     public void Offset(float offsetX, float offsetY)
+     {
+       this.X += (int) offsetX;
+       this.Y += (int) offsetY;
+     }
+
+     public void Offset(Point amount)
+     {
+       this.X += amount.X;
+       this.Y += amount.Y;
+     }
+
+     public void Offset(Vector2 amount)
+     {
+       this.X += (int) amount.X;
+       this.Y += (int) amount.Y;
+     }
+
+     public override string ToString()
+     {
+       return "{X:" + this.X.ToString() + " Y:" + this.Y.ToString() + " Width:" + this.Width.ToString() + " Height:" + this.Height.ToString() + "}";
+     }
+
+     
+
+     public void Deconstruct(out int x, out int y, out int width, out int height)
+     {
+       x = this.X;
+       y = this.Y;
+       width = this.Width;
+       height = this.Height;
+     }
+   }
+ */
 
 
 // internal static class RaylibWrapper
@@ -1206,7 +1434,6 @@ public class ShapeLoop
 //     
 //     #endregion
 // }
-
 
 // private void CheckInputDevice()
     // {

@@ -1,4 +1,5 @@
 ﻿
+using System.ComponentModel;
 using System.Numerics;
 using Raylib_CsLo;
 using ShapeEngine.Color;
@@ -211,13 +212,14 @@ namespace ShapeEngine.Core.Shapes
 
     }
 
+    
     public struct Rect : IShape, IEquatable<Rect>
     {
         #region Members
-        public float X;
-        public float Y;
-        public float Width;
-        public float Height;
+        public readonly float X;
+        public readonly float Y;
+        public readonly float Width;
+        public readonly float Height;
         #endregion
 
         #region Getter Setter
@@ -302,10 +304,10 @@ namespace ShapeEngine.Core.Shapes
         public bool Equals(Rect other)
         {
             return 
-                ShapeUtils.IsSimilar(X, other.X) && 
-                ShapeUtils.IsSimilar(Y, other.Y) && 
-                ShapeUtils.IsSimilar(Width, other.Width) && 
-                ShapeUtils.IsSimilar(Height, other.Height);
+                ShapeMath.EqualsF(X, other.X) && 
+                ShapeMath.EqualsF(Y, other.Y) && 
+                ShapeMath.EqualsF(Width, other.Width) && 
+                ShapeMath.EqualsF(Height, other.Height);
             //return 
             //    Math.Abs(X - other.X) < GameLoop.FloatComparisonTolerance && 
             //    Math.Abs(Y - other.Y) < GameLoop.FloatComparisonTolerance && 
@@ -325,11 +327,19 @@ namespace ShapeEngine.Core.Shapes
             if (obj is Rect r) return Equals(r);
             return false;
         }
-        public readonly override int GetHashCode() => HashCode.Combine(X, Y, Width, Height);
+        public readonly override int GetHashCode()
+        {
+            // return HashCode.Combine(X, Y, Width, Height);
+            return (((17 * 23 + this.X.GetHashCode()) * 23 + this.Y.GetHashCode()) * 23 + this.Width.GetHashCode()) * 23 + this.Height.GetHashCode();
+        }
+
         #endregion
 
         #region Public
 
+        // public readonly bool ContainsRect(Rect rect) =>
+        //     (X <= rect.X) && (rect.X + rect.Width <= X + Width) &&
+        //     (Y <= rect.Y) && (rect.Y + rect.Height <= Y + Height);
         public readonly bool ContainsShape(Segment other)
         {
             return ContainsPoint(other.Start) && ContainsPoint(other.End);
@@ -341,10 +351,13 @@ namespace ShapeEngine.Core.Shapes
         }
         public readonly bool ContainsShape(Rect other)
         {
-            return ContainsPoint(other.TopLeft) &&
-                ContainsPoint(other.BottomLeft) &&
-                ContainsPoint(other.BottomRight) &&
-                ContainsPoint(other.TopRight);
+            return (X <= other.X) && (other.X + other.Width <= X + Width) &&
+                (Y <= other.Y) && (other.Y + other.Height <= Y + Height);
+            // return this.X <= other.X && other.X + other.Width <= this.X + this.Width && this.Y <= other.Y && other.Y + other.Height <= this.Y + this.Height;
+            // return ContainsPoint(other.TopLeft) &&
+            //     ContainsPoint(other.BottomLeft) &&
+            //     ContainsPoint(other.BottomRight) &&
+            //     ContainsPoint(other.TopRight);
         }
         public readonly bool ContainsShape(Triangle other)
         {
@@ -396,14 +409,13 @@ namespace ShapeEngine.Core.Shapes
                 MathF.Round(Height));
         }
         
-        public readonly bool ContainsRect(Rect rect) =>
-            (X <= rect.X) && (rect.X + rect.Width <= X + Width) &&
-            (Y <= rect.Y) && (rect.Y + rect.Height <= Y + Height);
+        
+        
         /// <summary>
         /// Creates a rect that represents the intersection between a and b. If there is no intersection, an
         /// empty rect is returned.
         /// </summary>
-        public readonly Rect IntersectWith(Rect rect)
+        public readonly Rect Difference(Rect rect)
         {
 
             float x1 = MathF.Max(X, rect.X);
@@ -419,9 +431,26 @@ namespace ShapeEngine.Core.Shapes
             return new();
         }
         /// <summary>
+        /// Creates a rect that represents the intersection between a and b. If there is no intersection, an
+        /// empty rect is returned.
+        /// </summary>
+        public readonly Rect Difference2(Rect other)
+        {
+            if (OverlapShape(other))
+            {
+                float num1 = MathF.Min(X + Width, other.X + other.Width);
+                float x = MathF.Max(X, other.X);
+                float y = MathF.Max(Y, other.Y);
+                float num2 = MathF.Min(Y + Height, other.Y + other.Height);
+                return new Rect(x, y, num1 - x, num2 - y);
+            }
+            return new Rect(0, 0, 0, 0);
+        }
+        
+        /// <summary>
         /// Creates a rectangle that represents the union between a and b.
         /// </summary>
-        public readonly Rect CombineWith(Rect rect)
+        public readonly Rect Union(Rect rect)
         {
             float x1 = MathF.Min(X, rect.X);
             float x2 = MathF.Max(Right, rect.Right);
@@ -430,7 +459,28 @@ namespace ShapeEngine.Core.Shapes
 
             return new Rect(x1, y1, x2 - x1, y2 - y1);
         }
-
+        /// <summary>
+        /// Creates a rectangle that represents the union between a and b.
+        /// </summary>
+        public readonly Rect Union2(Rect other)
+        {
+            float x = MathF.Min(X, other.X);
+            float y = MathF.Min(Y, other.Y);
+            return new Rect(x, y, Math.Max(Right, other.Right) - x, Math.Max(Bottom, other.Bottom) - y);
+        }
+        
+        
+        public readonly Rect Inflate(float horizontalAmount, float verticalAmount)
+        {
+            return new
+                (
+                    X - horizontalAmount, 
+                    Y - verticalAmount, 
+                    Width + horizontalAmount * 2f, 
+                    Height +verticalAmount * 2f
+                );
+        }
+        
         
         
         public readonly (Rect top, Rect bottom) SplitV(float f)
@@ -526,7 +576,7 @@ namespace ShapeEngine.Core.Shapes
             return rects;
         }
         
-        public List<Rect> SplitH(int columns)
+        public readonly List<Rect> SplitH(int columns)
         {
             if (columns < 2) return new() { this };
             List<Rect> rects = new();
@@ -543,7 +593,7 @@ namespace ShapeEngine.Core.Shapes
             }
             return rects;
         }
-        public List<Rect> SplitV(int rows)
+        public readonly List<Rect> SplitV(int rows)
         {
             List<Rect> rects = new();
             Vector2 startPos = new(X, Y);
@@ -559,7 +609,7 @@ namespace ShapeEngine.Core.Shapes
             }
             return rects;
         }
-        public List<Rect> Split (int columns, int rows, bool leftToRight = true)
+        public readonly List<Rect> Split (int columns, int rows, bool leftToRight = true)
         {
             var rects = new List<Rect>();
             if (leftToRight)
@@ -628,7 +678,7 @@ namespace ShapeEngine.Core.Shapes
             return new() { left, bottom, right, top };
         }
 
-        public Triangulation Triangulate()
+        public readonly Triangulation Triangulate()
         {
             Triangle a = new(TopLeft, BottomLeft, BottomRight, FlippedNormals);
             Triangle b = new(TopLeft, BottomRight, TopRight, FlippedNormals);
@@ -754,9 +804,9 @@ namespace ShapeEngine.Core.Shapes
             else if (randIndex == 2) return BottomRight;
             else return TopRight;
         }
-        public Segment GetRandomEdge() => GetEdges().GetRandomSegment();
-        public Vector2 GetRandomPointOnEdge() => GetRandomEdge().GetRandomPoint();
-        public Points GetRandomPointsOnEdge(int amount) => GetEdges().GetRandomPoints(amount);
+        public readonly Segment GetRandomEdge() => GetEdges().GetRandomSegment();
+        public readonly Vector2 GetRandomPointOnEdge() => GetRandomEdge().GetRandomPoint();
+        public readonly Points GetRandomPointsOnEdge(int amount) => GetEdges().GetRandomPoints(amount);
 
         #endregion
         
@@ -769,6 +819,8 @@ namespace ShapeEngine.Core.Shapes
             float bottom = topLeft.Y + size.Y;
 
             return left <= point.X && right >= point.X && top <= point.Y && bottom >= point.Y;
+            
+            // return (double) this.X <= (double) value.X && (double) value.X < (double) (this.X + this.Width) && (double) this.Y <= (double) value.Y && (double) value.Y < (double) (this.Y + this.Height);
         }
 
         public static Rect Empty => new();
@@ -826,6 +878,10 @@ namespace ShapeEngine.Core.Shapes
 
             return dp1 * dp2 <= 0.0f || dp2 * dp3 <= 0.0f || dp3 * dp4 <= 0.0f;
         }
+        // public bool Intersects(Rectangle value)
+        // {
+        //     return value.Left < this.Right && this.Left < value.Right && value.Top < this.Bottom && this.Top < value.Bottom;
+        // }
         #endregion
 
         #region Intersect

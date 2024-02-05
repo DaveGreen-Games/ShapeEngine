@@ -4,7 +4,7 @@ namespace ShapeEngine.Lib
 {
     public static class ShapeUtils
     {
-        public const float FloatComparisonTolerance = 0.001f;
+        //public const float FloatComparisonTolerance = 0.001f;
 
 
         public static bool IsEqual<T>(List<T>? a, List<T>? b) where T : IEquatable<T>
@@ -26,7 +26,7 @@ namespace ShapeEngine.Lib
             }
             return hash.ToHashCode();
         }
-        public static bool IsSimilar(float a, float b, float tolerance = FloatComparisonTolerance) => MathF.Abs(a - b) <= tolerance;
+        //public static bool IsSimilar(float a, float b, float tolerance = FloatComparisonTolerance) => MathF.Abs(a - b) <= tolerance;
         public static float GetFactor(float cur, float min, float max)
         {
             return (cur - min) / (max - min);
