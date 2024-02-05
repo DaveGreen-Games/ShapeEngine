@@ -28,8 +28,8 @@ public static class Colors
 
     //public static readonly PaletteColor BackgroundP = new();
        
-    public static readonly PaletteColor PcBackground = new(0, new ColorRgba(System.Drawing.Color.DarkSlateGray));
-    public static readonly PaletteColor PcDark = new(1, new(System.Drawing.Color.DimGray));
+    public static readonly PaletteColor PcBackground = new(0, new ColorRgba(System.Drawing.Color.DarkSlateGray).ToHSL().ChangeLightness(-0.15f).ToRGB());
+    public static readonly PaletteColor PcDark = new(1, new ColorRgba(System.Drawing.Color.DarkSlateGray).ToHSL().ChangeLightness(-0.1f).ToRGB());
     public static readonly PaletteColor PcMedium = new(2, new(System.Drawing.Color.DarkGray));
     public static readonly PaletteColor PcLight = new(3, new(System.Drawing.Color.LightGray));
     public static readonly PaletteColor PcText = new(4, new(System.Drawing.Color.AntiqueWhite));
@@ -62,7 +62,7 @@ public static class Colors
         
     public static readonly Colorscheme WarmColorscheme = new
     (
-        new ColorRgba(System.Drawing.Color.DarkRed),
+        new ColorRgba(System.Drawing.Color.DarkRed).ToHSL().ChangeLightness(-0.2f).ToRGB(),
         new ColorRgba(System.Drawing.Color.SaddleBrown),
         new ColorRgba(System.Drawing.Color.Sienna),
         new ColorRgba(System.Drawing.Color.Salmon),
@@ -75,7 +75,7 @@ public static class Colors
        
     public static readonly Colorscheme ColdColorscheme = new
     (
-        new ColorRgba(System.Drawing.Color.Navy),
+        new ColorRgba(System.Drawing.Color.Navy).ToHSL().ChangeLightness(-0.17f).ToRGB(),
         new ColorRgba(System.Drawing.Color.DarkSlateBlue),
         new ColorRgba(System.Drawing.Color.SlateBlue),
         new ColorRgba(System.Drawing.Color.LightSteelBlue),
