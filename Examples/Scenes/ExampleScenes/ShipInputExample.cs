@@ -17,11 +17,11 @@ namespace Examples.Scenes.ExampleScenes
     {
         internal readonly struct ColorScheme
         {
-            public readonly ShapeColor Hull;
-            public readonly ShapeColor Outline;
-            public readonly ShapeColor Cockpit;
+            public readonly ColorRgba Hull;
+            public readonly ColorRgba Outline;
+            public readonly ColorRgba Cockpit;
 
-            public ColorScheme(ShapeColor hull, ShapeColor outline, ShapeColor cockpit)
+            public ColorScheme(ColorRgba hull, ColorRgba outline, ColorRgba cockpit)
             {
                 this.Hull = hull;
                 this.Outline = outline;
@@ -388,21 +388,21 @@ namespace Examples.Scenes.ExampleScenes
             var text = $"Connected {ShapeInput.GamepadDeviceManager.GetConnectedGamepads().Count} | Available {ShapeInput.GamepadDeviceManager.GetAvailableGamepads().Count}";
             
             textFont.FontSpacing = 1f;
-            textFont.Color = Colors.Warm;
+            textFont.ColorRgba = Colors.Warm;
             textFont.DrawTextWrapNone(text, rect, new(0.5f));
             // font.DrawText(text, rect, 1f, new Vector2(0.5f, 0.5f), ColorHighlight3);
         }
         private void DrawDescription(Rect rect)
         {
             textFont.FontSpacing = 1f;
-            textFont.Color = Colors.Medium;
+            textFont.ColorRgba = Colors.Medium;
             textFont.DrawTextWrapNone("Use multiple gamepads!", rect, new(0.5f));
             // font.DrawText("Use multiple gamepads!", rect, 1f, new Vector2(0.5f, 0.5f), ColorMedium);
         }
         private void DrawInputDescription(Rect rect)
         {
             textFont.FontSpacing = 1f;
-            textFont.Color = Colors.Light;
+            textFont.ColorRgba = Colors.Light;
             
             var helper = GetActiveInputActionHelper();
             if (helper != null)

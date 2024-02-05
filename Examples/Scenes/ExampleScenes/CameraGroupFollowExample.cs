@@ -187,12 +187,12 @@ namespace Examples.Scenes.ExampleScenes
                 var outlineColor = Selected ? outlineColorActive : outlineColorInactive;
                 var hullColor = Selected ? hullColorActive : hullColorInactive;
                 var cockpitColor = Selected ? cockpitColorActive : cockpitColorInactive;
-                DrawCircleV(hull.Center - rightThruster * hull.Radius, hull.Radius / 6, outlineColor.Color.ToRayColor());
-                DrawCircleV(hull.Center - leftThruster * hull.Radius, hull.Radius / 6, outlineColor.Color.ToRayColor());
-                hull.Draw(hullColor.Color);
-                DrawCircleV(hull.Center + movementDir * hull.Radius * 0.66f, hull.Radius * 0.33f, cockpitColor.Color.ToRayColor());
+                DrawCircleV(hull.Center - rightThruster * hull.Radius, hull.Radius / 6, outlineColor.ColorRgba.ToRayColor());
+                DrawCircleV(hull.Center - leftThruster * hull.Radius, hull.Radius / 6, outlineColor.ColorRgba.ToRayColor());
+                hull.Draw(hullColor.ColorRgba);
+                DrawCircleV(hull.Center + movementDir * hull.Radius * 0.66f, hull.Radius * 0.33f, cockpitColor.ColorRgba.ToRayColor());
 
-                hull.DrawLines(4f, outlineColor.Color);
+                hull.DrawLines(4f, outlineColor.ColorRgba);
 
                 if (invisibleTimer > 0f)
                 {
@@ -579,7 +579,7 @@ namespace Examples.Scenes.ExampleScenes
         private void DrawDescription(Rect rect)
         {
             textFont.FontSpacing = 1f;
-            textFont.Color = Colors.Medium;
+            textFont.ColorRgba = Colors.Medium;
             textFont.DrawTextWrapNone("Bump into other ships to destroy them.", rect, new(0.5f));
             // font.DrawText("Bump into other ships to destroy them.", rect, 1f, new Vector2(0.5f, 0.5f), ColorMedium);
         }
@@ -593,7 +593,7 @@ namespace Examples.Scenes.ExampleScenes
             string moveText = ActiveSpaceShip != null ? ActiveSpaceShip.GetInputDescription(curDevice) : "";
             
             textFont.FontSpacing = 1f;
-            textFont.Color = Colors.Light;
+            textFont.ColorRgba = Colors.Light;
             
             if (spaceShips.Count <= 1)
             {

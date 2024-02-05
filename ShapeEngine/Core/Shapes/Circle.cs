@@ -230,7 +230,7 @@ namespace ShapeEngine.Core.Shapes
             }
             return points;
         }
-        public void DrawShape(float linethickness, ShapeColor color) => this.DrawLines(linethickness, color);
+        public void DrawShape(float linethickness, ColorRgba colorRgba) => this.DrawLines(linethickness, colorRgba);
         #endregion
 
 

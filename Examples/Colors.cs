@@ -16,19 +16,19 @@ public static class Colors
     }
        
        
-    public static ShapeColor Background      => PcBackground.Color;
-    public static ShapeColor Dark       => PcDark.Color; 
-    public static ShapeColor Medium     => PcMedium.Color; 
-    public static ShapeColor Light      => PcLight.Color; 
-    public static ShapeColor Text => PcText.Color; 
-    public static ShapeColor Highlight => PcHighlight.Color; 
-    public static ShapeColor Special => PcSpecial.Color;
-    public static ShapeColor Warm   => PcWarm.Color;
-    public static ShapeColor Cold   => PcCold.Color;
+    public static ColorRgba Background      => PcBackground.ColorRgba;
+    public static ColorRgba Dark       => PcDark.ColorRgba; 
+    public static ColorRgba Medium     => PcMedium.ColorRgba; 
+    public static ColorRgba Light      => PcLight.ColorRgba; 
+    public static ColorRgba Text => PcText.ColorRgba; 
+    public static ColorRgba Highlight => PcHighlight.ColorRgba; 
+    public static ColorRgba Special => PcSpecial.ColorRgba;
+    public static ColorRgba Warm   => PcWarm.ColorRgba;
+    public static ColorRgba Cold   => PcCold.ColorRgba;
 
     //public static readonly PaletteColor BackgroundP = new();
        
-    public static readonly PaletteColor PcBackground = new(0, new ShapeColor(System.Drawing.Color.DarkSlateGray));
+    public static readonly PaletteColor PcBackground = new(0, new ColorRgba(System.Drawing.Color.DarkSlateGray));
     public static readonly PaletteColor PcDark = new(1, new(System.Drawing.Color.DimGray));
     public static readonly PaletteColor PcMedium = new(2, new(System.Drawing.Color.DarkGray));
     public static readonly PaletteColor PcLight = new(3, new(System.Drawing.Color.LightGray));
@@ -49,41 +49,41 @@ public static class Colors
 
     public static readonly Colorscheme DefaultColorscheme = new
     (
-        new ShapeColor(System.Drawing.Color.DarkSlateGray),
-        new ShapeColor(System.Drawing.Color.DimGray),
-        new ShapeColor(System.Drawing.Color.DarkGray),
-        new ShapeColor(System.Drawing.Color.LightGray),
-        new ShapeColor(System.Drawing.Color.AntiqueWhite),
-        new ShapeColor(System.Drawing.Color.Aquamarine),
-        new ShapeColor(System.Drawing.Color.Coral),
-        new ShapeColor(System.Drawing.Color.IndianRed),
-        new ShapeColor(System.Drawing.Color.CornflowerBlue)
+        new ColorRgba(System.Drawing.Color.DarkSlateGray),
+        new ColorRgba(System.Drawing.Color.DimGray),
+        new ColorRgba(System.Drawing.Color.DarkGray),
+        new ColorRgba(System.Drawing.Color.LightGray),
+        new ColorRgba(System.Drawing.Color.AntiqueWhite),
+        new ColorRgba(System.Drawing.Color.Aquamarine),
+        new ColorRgba(System.Drawing.Color.Coral),
+        new ColorRgba(System.Drawing.Color.IndianRed),
+        new ColorRgba(System.Drawing.Color.CornflowerBlue)
     );
         
     public static readonly Colorscheme WarmColorscheme = new
     (
-        new ShapeColor(System.Drawing.Color.DarkRed),
-        new ShapeColor(System.Drawing.Color.SaddleBrown),
-        new ShapeColor(System.Drawing.Color.Sienna),
-        new ShapeColor(System.Drawing.Color.Salmon),
-        new ShapeColor(System.Drawing.Color.Tomato),
-        new ShapeColor(System.Drawing.Color.OrangeRed),
-        new ShapeColor(System.Drawing.Color.HotPink),
-        new ShapeColor(System.Drawing.Color.Crimson),
-        new ShapeColor(System.Drawing.Color.Orchid)
+        new ColorRgba(System.Drawing.Color.DarkRed),
+        new ColorRgba(System.Drawing.Color.SaddleBrown),
+        new ColorRgba(System.Drawing.Color.Sienna),
+        new ColorRgba(System.Drawing.Color.Salmon),
+        new ColorRgba(System.Drawing.Color.Tomato),
+        new ColorRgba(System.Drawing.Color.OrangeRed),
+        new ColorRgba(System.Drawing.Color.HotPink),
+        new ColorRgba(System.Drawing.Color.Crimson),
+        new ColorRgba(System.Drawing.Color.Orchid)
     );
        
     public static readonly Colorscheme ColdColorscheme = new
     (
-        new ShapeColor(System.Drawing.Color.Navy),
-        new ShapeColor(System.Drawing.Color.DarkSlateBlue),
-        new ShapeColor(System.Drawing.Color.SlateBlue),
-        new ShapeColor(System.Drawing.Color.LightSteelBlue),
-        new ShapeColor(System.Drawing.Color.AliceBlue),
-        new ShapeColor(System.Drawing.Color.Aqua),
-        new ShapeColor(System.Drawing.Color.Aquamarine),
-        new ShapeColor(System.Drawing.Color.GreenYellow),
-        new ShapeColor(System.Drawing.Color.RoyalBlue)
+        new ColorRgba(System.Drawing.Color.Navy),
+        new ColorRgba(System.Drawing.Color.DarkSlateBlue),
+        new ColorRgba(System.Drawing.Color.SlateBlue),
+        new ColorRgba(System.Drawing.Color.LightSteelBlue),
+        new ColorRgba(System.Drawing.Color.AliceBlue),
+        new ColorRgba(System.Drawing.Color.Aqua),
+        new ColorRgba(System.Drawing.Color.Aquamarine),
+        new ColorRgba(System.Drawing.Color.GreenYellow),
+        new ColorRgba(System.Drawing.Color.RoyalBlue)
     );
        
     public static void ApplyColorscheme(Colorscheme cc) => cc.Apply(colorPalette);

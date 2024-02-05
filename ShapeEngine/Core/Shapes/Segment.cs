@@ -443,10 +443,10 @@ namespace ShapeEngine.Core.Shapes
 
         #endregion
 
-        public void DrawNormal(float lineThickness, float length, ShapeColor color)
+        public void DrawNormal(float lineThickness, float length, ColorRgba colorRgba)
         {
             Segment n = new(Center, Center + Normal * length);
-            n.Draw(lineThickness, color);
+            n.Draw(lineThickness, colorRgba);
         }
     }
 }

@@ -4,103 +4,7 @@ using ShapeEngine.Lib;
 
 namespace ShapeEngine.Color;
 
-public readonly struct ColorHSL
-{
-    /// <summary>
-    /// Value range from 0 - 360 (color wheel degrees)
-    /// </summary>
-    public readonly float Hue;
-    /// <summary>
-    /// Value range from 0 - 1 (gray to full color)
-    /// </summary>
-    public readonly float Saturation;
-    /// <summary>
-    /// Value range from 0 - 1 (black to white)
-    /// </summary>
-    public readonly float Lightness;
-
-
-    public ColorHSL(float hue, float saturation, float lightness)
-    {
-        this.Hue = hue;
-        this.Saturation = saturation;
-        this.Lightness = lightness;
-    }
-
-    public ShapeColor ToRGB()
-    {
-        double v;
-        double r,g,b;
-
-        r = Lightness;   // default to gray
-        g = Lightness;
-        b = Lightness;
-        v = (Lightness <= 0.5) ? (Lightness * (1.0 + Saturation)) : (Lightness + Saturation - Lightness * Saturation);
-        if (v > 0)
-        {
-              double m;
-              double sv;
-              int sextant;
-              double fract, vsf, mid1, mid2;
-
-              m = Lightness + Lightness - v;
-              sv = (v - m ) / v;
-              var h = Hue * 6.0;
-              sextant = (int)h;
-              fract = h - sextant;
-              vsf = v * sv * fract;
-              mid1 = m + vsf;
-              mid2 = v - vsf;
-              switch (sextant)
-              {
-                    case 0:
-                          r = v;
-                          g = mid1;
-                          b = m;
-                          break;
-                    case 1:
-                          r = mid2;
-                          g = v;
-                          b = m;
-                          break;
-                    case 2:
-                          r = m;
-                          g = v;
-                          b = mid1;
-                          break;
-                    case 3:
-                          r = m;
-                          g = mid2;
-                          b = v;
-                          break;
-                    case 4:
-                          r = mid1;
-                          g = m;
-                          b = v;
-                          break;
-                    case 5:
-                          r = v;
-                          g = m;
-                          b = mid2;
-                          break;
-              }
-        }
-
-        return new
-        (
-            Convert.ToByte(r * 255.0),
-            Convert.ToByte(g * 255.0),
-            Convert.ToByte(b * 255.0)
-        );
-    }
-    
-    
-    //change/set hue,saturation,lightness functions
-}
-
-
-
-public readonly struct ShapeColor : IEquatable<ShapeColor>
+public readonly struct ColorRgba : IEquatable<ColorRgba>
 {
     #region Members
     public readonly byte R;
@@ -111,63 +15,63 @@ public readonly struct ShapeColor : IEquatable<ShapeColor>
 
     #region Constructors
 
-    public ShapeColor()
+    public ColorRgba()
     {
         this.R = 0;
         this.G = 0;
         this.B = 0;
         this.A = 0;
     }
-    public ShapeColor(Raylib_CsLo.Color color)
+    public ColorRgba(Raylib_CsLo.Color color)
     {
         this.R = color.r;
         this.G = color.g;
         this.B = color.b;
         this.A = color.a;
     }
-    public ShapeColor(Raylib_CsLo.Color color, byte a)
+    public ColorRgba(Raylib_CsLo.Color color, byte a)
     {
         this.R = color.r;
         this.G = color.g;
         this.B = color.b;
         this.A = a;
     }
-    public ShapeColor(System.Drawing.Color color)
+    public ColorRgba(System.Drawing.Color color)
     {
         this.R = color.R;
         this.G = color.G;
         this.B = color.B;
         this.A = color.A;
     }
-    public ShapeColor(System.Drawing.Color color, byte a)
+    public ColorRgba(System.Drawing.Color color, byte a)
     {
         this.R = color.R;
         this.G = color.G;
         this.B = color.B;
         this.A = a;
     }
-    public ShapeColor(byte r, byte g, byte b, byte a)
+    public ColorRgba(byte r, byte g, byte b, byte a)
     {
         this.R = r;
         this.G = g;
         this.B = b;
         this.A = a;
     }
-    public ShapeColor(byte r, byte g, byte b)
+    public ColorRgba(byte r, byte g, byte b)
     {
         this.R = r;
         this.G = g;
         this.B = b;
         this.A = byte.MaxValue;
     }
-    public ShapeColor(int r, int g, int b, int a)
+    public ColorRgba(int r, int g, int b, int a)
     {
         this.R = (byte)ShapeMath.Clamp(r, 0, 255);
         this.G = (byte)ShapeMath.Clamp(g, 0, 255);
         this.B = (byte)ShapeMath.Clamp(b, 0, 255);
         this.A = (byte)ShapeMath.Clamp(a, 0, 255);
     }
-    public ShapeColor(int r, int g, int b)
+    public ColorRgba(int r, int g, int b)
     {
         this.R = (byte)ShapeMath.Clamp(r, 0, 255);
         this.G = (byte)ShapeMath.Clamp(g, 0, 255);
@@ -192,20 +96,20 @@ public readonly struct ShapeColor : IEquatable<ShapeColor>
     public bool IsOpaque() => A == byte.MaxValue;
     public bool IsNamed() => ToSysColor().IsNamedColor;
     public KnownColor ToKnownColor() => ToSysColor().ToKnownColor();
-    public static ShapeColor FromName(string name) => new(System.Drawing.Color.FromName(name));
+    public static ColorRgba FromName(string name) => new(System.Drawing.Color.FromName(name));
     #endregion
 
     #region Transformation
-    public ShapeColor Lerp(ShapeColor to, float f)
+    public ColorRgba Lerp(ColorRgba to, float f)
     {
-        return new ShapeColor(
+        return new ColorRgba(
             (byte)ShapeMath.LerpInt(R, to.R, f),
             (byte)ShapeMath.LerpInt(G, to.G, f),
             (byte)ShapeMath.LerpInt(B, to.B, f),
             (byte)ShapeMath.LerpInt(A, to.A, f));
     }
 
-    public static ShapeColor operator +(ShapeColor left, ShapeColor right)
+    public static ColorRgba operator +(ColorRgba left, ColorRgba right)
     {
         return new
         (
@@ -215,7 +119,7 @@ public readonly struct ShapeColor : IEquatable<ShapeColor>
             Clamp((int)left.A + (int)right.A)
         );
     }
-    public static ShapeColor operator -(ShapeColor left, ShapeColor right)
+    public static ColorRgba operator -(ColorRgba left, ColorRgba right)
     {
         return new
         (
@@ -225,7 +129,7 @@ public readonly struct ShapeColor : IEquatable<ShapeColor>
             Clamp((int)left.A - (int)right.A)
         );
     }
-    public static ShapeColor operator *(ShapeColor left, ShapeColor right)
+    public static ColorRgba operator *(ColorRgba left, ColorRgba right)
     {
         return new
         (
@@ -236,21 +140,21 @@ public readonly struct ShapeColor : IEquatable<ShapeColor>
         );
     }
         
-    public ShapeColor SetAlpha(byte a) => new(R, G, B, a);
-    public ShapeColor ChangeAlpha(int amount) => new(R, G, B, Clamp((int)A + amount));
-    public ShapeColor SetRed(byte r) => new(r, G, B, A);
-    public ShapeColor ChangeRed(int amount) => new(Clamp((int)R + amount), G, B, A);
-    public ShapeColor SetGreen(byte g) => new(R, g, B, A);
-    public ShapeColor ChangeGreen(int amount) => new(R, Clamp((int)G + amount), B, A);
-    public ShapeColor SetBlue(byte b) => new(R, G, b, A);
-    public ShapeColor ChangeBlue(int amount) => new(R, G, Clamp((int)B + amount), A);
+    public ColorRgba SetAlpha(byte a) => new(R, G, B, a);
+    public ColorRgba ChangeAlpha(int amount) => new(R, G, B, Clamp((int)A + amount));
+    public ColorRgba SetRed(byte r) => new(r, G, B, A);
+    public ColorRgba ChangeRed(int amount) => new(Clamp((int)R + amount), G, B, A);
+    public ColorRgba SetGreen(byte g) => new(R, g, B, A);
+    public ColorRgba ChangeGreen(int amount) => new(R, Clamp((int)G + amount), B, A);
+    public ColorRgba SetBlue(byte b) => new(R, G, b, A);
+    public ColorRgba ChangeBlue(int amount) => new(R, G, Clamp((int)B + amount), A);
     #endregion
 
     #region Conversion
     public System.Drawing.Color ToSysColor() => System.Drawing.Color.FromArgb(R, G, B, A);
     public Raylib_CsLo.Color ToRayColor() => new Raylib_CsLo.Color(R, G, B, A);
     
-    public ColorHSL ToHSL()
+    public ColorHsl ToHSL()
     {
         float r = R/255.0f;
         float g = G/255.0f;
@@ -270,7 +174,7 @@ public readonly struct ShapeColor : IEquatable<ShapeColor>
         l = (m + v) / 2.0f;
         if (l <= 0.0)
         {
-            return new ColorHSL(h,s,l);
+            return new ColorHsl(h,s,l);
         }
         vm = v - m;
         s = vm;
@@ -280,7 +184,7 @@ public readonly struct ShapeColor : IEquatable<ShapeColor>
         }
         else
         {
-            return new ColorHSL(h,s,l);
+            return new ColorHsl(h,s,l);
         }
         r2 = (v - r) / vm;
         g2 = (v - g) / vm;
@@ -299,12 +203,87 @@ public readonly struct ShapeColor : IEquatable<ShapeColor>
         }
         h /= 6.0f;
         
-        return new ColorHSL(h,s,l);
+        return new ColorHsl(h,s,l);
+    }
+    
+    public static ColorRgba FromHex(int colorValue) => FromHex(colorValue, byte.MaxValue);
+    public static ColorRgba FromHex(int colorValue, byte a)
+    {
+        byte[] rgb = BitConverter.GetBytes(colorValue);
+        if (!BitConverter.IsLittleEndian) Array.Reverse(rgb);
+        return new(rgb[2], rgb[1], rgb[0], a);
+    }
+    public static ColorRgba FromHex(string hexColor) => FromHex(hexColor, byte.MaxValue);
+    public static ColorRgba FromHex(string hexColor, byte a)
+    {
+        //Remove # if present
+        if (hexColor.IndexOf('#') != -1)
+            hexColor = hexColor.Replace("#", "");
+
+        int red = 0;
+        int green = 0;
+        int blue = 0;
+
+        if (hexColor.Length == 6)
+        {
+            //#RRGGBB
+            red = int.Parse(hexColor.Substring(0, 2), System.Globalization.NumberStyles.AllowHexSpecifier);
+            green = int.Parse(hexColor.Substring(2, 2), System.Globalization.NumberStyles.AllowHexSpecifier);
+            blue = int.Parse(hexColor.Substring(4, 2), System.Globalization.NumberStyles.AllowHexSpecifier);
+        }
+        else if (hexColor.Length == 3)
+        {
+            //#RGB
+            red = int.Parse(hexColor[0].ToString() + hexColor[0].ToString(), System.Globalization.NumberStyles.AllowHexSpecifier);
+            green = int.Parse(hexColor[1].ToString() + hexColor[1].ToString(), System.Globalization.NumberStyles.AllowHexSpecifier);
+            blue = int.Parse(hexColor[2].ToString() + hexColor[2].ToString(), System.Globalization.NumberStyles.AllowHexSpecifier);
+        }
+
+        return new((byte)red, (byte)green, (byte)blue, a);
+    }
+    public static ColorRgba[] ParseColors(params int[] colors)
+    {
+        ColorRgba[] palette = new ColorRgba[colors.Length];
+        for (int i = 0; i < colors.Length; i++)
+        {
+            palette[i] = ColorRgba.FromHex(colors[i]);
+        }
+        return palette;
+    }
+    public static ColorRgba[] ParseColors(params string[] hexColors)
+    {
+        ColorRgba[] palette = new ColorRgba[hexColors.Length];
+        for (int i = 0; i < hexColors.Length; i++)
+        {
+            palette[i] = ColorRgba.FromHex(hexColors[i]);
+        }
+        return palette;
     }
 
-    
-    
-    // /// <summary>
+    #endregion
+
+    #region Equatable & ToString
+    public override string ToString() => ToSysColor().ToString();
+
+    public static bool operator ==(ColorRgba left, ColorRgba right) =>
+        left.A == right.A && left.R == right.R && left.G == right.G && left.B == right.B;
+
+    public static bool operator !=(ColorRgba left, ColorRgba right) => !(left == right);
+    public override bool Equals([NotNullWhen(true)] object? obj) => obj is ColorRgba other && this.Equals(other);
+    public bool Equals(ColorRgba other) => this == other;
+    public override int GetHashCode() => ToSysColor().GetHashCode();
+    #endregion
+
+    public static ColorRgba White => new(255, 255, 255, 255);
+    public static ColorRgba Black => new(0, 0, 0, 255);
+    public static ColorRgba Clear => new(0, 0, 0, 0);
+    private static byte Clamp(int value) => (byte)ShapeMath.Clamp(value, 0, 255);
+}
+
+
+
+//BROKEN!!!
+// /// <summary>
     // /// Value range from 0 - 1;
     // /// </summary>
     // public float GetBrightness() => ToSysColor().GetBrightness();
@@ -369,7 +348,7 @@ public readonly struct ShapeColor : IEquatable<ShapeColor>
     // }
     //
     //
-    // //TODO fix from/to hsv color conversion!!!!
+    //
     // public (float hue, float saturation, float value) ToHSV()
     // {
     //     double hue;
@@ -452,78 +431,3 @@ public readonly struct ShapeColor : IEquatable<ShapeColor>
     // }
     //
     //----------------------------------------------
-
-    
-    public static ShapeColor FromHex(int colorValue) => FromHex(colorValue, byte.MaxValue);
-    public static ShapeColor FromHex(int colorValue, byte a)
-    {
-        byte[] rgb = BitConverter.GetBytes(colorValue);
-        if (!BitConverter.IsLittleEndian) Array.Reverse(rgb);
-        return new(rgb[2], rgb[1], rgb[0], a);
-    }
-    public static ShapeColor FromHex(string hexColor) => FromHex(hexColor, byte.MaxValue);
-    public static ShapeColor FromHex(string hexColor, byte a)
-    {
-        //Remove # if present
-        if (hexColor.IndexOf('#') != -1)
-            hexColor = hexColor.Replace("#", "");
-
-        int red = 0;
-        int green = 0;
-        int blue = 0;
-
-        if (hexColor.Length == 6)
-        {
-            //#RRGGBB
-            red = int.Parse(hexColor.Substring(0, 2), System.Globalization.NumberStyles.AllowHexSpecifier);
-            green = int.Parse(hexColor.Substring(2, 2), System.Globalization.NumberStyles.AllowHexSpecifier);
-            blue = int.Parse(hexColor.Substring(4, 2), System.Globalization.NumberStyles.AllowHexSpecifier);
-        }
-        else if (hexColor.Length == 3)
-        {
-            //#RGB
-            red = int.Parse(hexColor[0].ToString() + hexColor[0].ToString(), System.Globalization.NumberStyles.AllowHexSpecifier);
-            green = int.Parse(hexColor[1].ToString() + hexColor[1].ToString(), System.Globalization.NumberStyles.AllowHexSpecifier);
-            blue = int.Parse(hexColor[2].ToString() + hexColor[2].ToString(), System.Globalization.NumberStyles.AllowHexSpecifier);
-        }
-
-        return new((byte)red, (byte)green, (byte)blue, a);
-    }
-    public static ShapeColor[] ParseColors(params int[] colors)
-    {
-        ShapeColor[] palette = new ShapeColor[colors.Length];
-        for (int i = 0; i < colors.Length; i++)
-        {
-            palette[i] = ShapeColor.FromHex(colors[i]);
-        }
-        return palette;
-    }
-    public static ShapeColor[] ParseColors(params string[] hexColors)
-    {
-        ShapeColor[] palette = new ShapeColor[hexColors.Length];
-        for (int i = 0; i < hexColors.Length; i++)
-        {
-            palette[i] = ShapeColor.FromHex(hexColors[i]);
-        }
-        return palette;
-    }
-
-    #endregion
-
-    #region Equatable & ToString
-    public override string ToString() => ToSysColor().ToString();
-
-    public static bool operator ==(ShapeColor left, ShapeColor right) =>
-        left.A == right.A && left.R == right.R && left.G == right.G && left.B == right.B;
-
-    public static bool operator !=(ShapeColor left, ShapeColor right) => !(left == right);
-    public override bool Equals([NotNullWhen(true)] object? obj) => obj is ShapeColor other && this.Equals(other);
-    public bool Equals(ShapeColor other) => this == other;
-    public override int GetHashCode() => ToSysColor().GetHashCode();
-    #endregion
-
-    public static ShapeColor White => new(255, 255, 255, 255);
-    public static ShapeColor Black => new(0, 0, 0, 255);
-    public static ShapeColor Clear => new(0, 0, 0, 0);
-    private static byte Clamp(int value) => (byte)ShapeMath.Clamp(value, 0, 255);
-}

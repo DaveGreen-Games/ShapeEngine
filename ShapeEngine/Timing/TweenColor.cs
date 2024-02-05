@@ -5,16 +5,16 @@ namespace ShapeEngine.Timing;
 
 public class TweenColor : ISequenceable
 {
-    public delegate bool TweenFunc(ShapeColor result);
+    public delegate bool TweenFunc(ColorRgba result);
 
     private TweenFunc func;
     private float duration;
     private float timer;
     private TweenType tweenType;
-    private ShapeColor from;
-    private ShapeColor to;
+    private ColorRgba from;
+    private ColorRgba to;
 
-    public TweenColor(TweenFunc tweenFunc, ShapeColor from, ShapeColor to, float duration, TweenType tweenType)
+    public TweenColor(TweenFunc tweenFunc, ColorRgba from, ColorRgba to, float duration, TweenType tweenType)
     {
         this.func = tweenFunc;
         this.duration = duration;

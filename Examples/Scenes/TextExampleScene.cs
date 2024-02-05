@@ -394,7 +394,7 @@ namespace Examples.Scenes
                     $"Write Custom Text {enterText} | Drag Rect Corners {dragText} | Change Font {nextFontText} ({GAMELOOP.GetFontName(fontIndex)})";
 
                 textFont.FontSpacing = 4f;
-                textFont.Color = Colors.Light;
+                textFont.ColorRgba = Colors.Light;
                 textFont.DrawTextWrapNone(info, top, new(0.5f));
                 // font.DrawText(info, top, 4f, new Vector2(0.5f, 0.5f), ColorLight);
 
@@ -408,10 +408,10 @@ namespace Examples.Scenes
                 
                 textFont.FontSpacing = 4f;
                 
-                textFont.Color = Colors.Warm;
+                textFont.ColorRgba = Colors.Warm;
                 textFont.DrawTextWrapNone($"Text Entry Mode Active |  Caret Position [{caretPrevText}/{caretNextText}] ({textBox.CaretIndex})", top, new(0.5f));
                 
-                textFont.Color = Colors.Light;
+                textFont.ColorRgba = Colors.Light;
                 textFont.DrawTextWrapNone(info, bottom, new(0.5f));
                 
                 // font.DrawText($"Text Entry Mode Active |  Caret Position [{caretPrevText}/{caretNextText}] ({textBox.CaretIndex})", top, 4f, new Vector2(0.5f, 0.5f), ColorHighlight3);

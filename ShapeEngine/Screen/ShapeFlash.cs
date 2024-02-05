@@ -7,18 +7,18 @@ internal sealed class ShapeFlash
 {
     private float maxDuration = 0.0f;
     private float flashTimer = 0.0f;
-    private ShapeColor startColor;
-    private ShapeColor endColor;
-    private ShapeColor curColor;
+    private ColorRgba startColorRgba;
+    private ColorRgba endColorRgba;
+    private ColorRgba curColorRgba;
 
-    public ShapeFlash(float duration, ShapeColor start, ShapeColor end)
+    public ShapeFlash(float duration, ColorRgba start, ColorRgba end)
     {
 
         maxDuration = duration;
         flashTimer = duration;
-        startColor = start;
-        curColor = start;
-        endColor = end;
+        startColorRgba = start;
+        curColorRgba = start;
+        endColorRgba = end;
     }
 
     public void Update(float dt)
@@ -27,15 +27,15 @@ internal sealed class ShapeFlash
         {
             flashTimer -= dt;
             float f = 1.0f - flashTimer / maxDuration;
-            curColor = startColor.Lerp(endColor, f);
+            curColorRgba = startColorRgba.Lerp(endColorRgba, f);
             if (flashTimer <= 0.0f)
             {
                 flashTimer = 0.0f;
-                curColor = endColor;
+                curColorRgba = endColorRgba;
             }
         }
     }
     public bool IsFinished() { return flashTimer <= 0.0f; }
-    public ShapeColor GetColor() { return curColor; }
+    public ColorRgba GetColor() { return curColorRgba; }
 
 }

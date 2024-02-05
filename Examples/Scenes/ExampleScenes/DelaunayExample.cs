@@ -48,7 +48,7 @@ namespace Examples.Scenes.ExampleScenes
             var addMultiplePointsMB = new InputTypeMouseButton(ShapeMouseButton.RIGHT);
             iaAddMultiplePoints = new(addMultiplePointsKB, addMultiplePointsGP, addMultiplePointsMB);
             textFont.FontSpacing = 1f;
-            textFont.Color = Colors.Light;
+            textFont.ColorRgba = Colors.Light;
         }
         public override void Reset()
         {
@@ -214,7 +214,7 @@ namespace Examples.Scenes.ExampleScenes
                 sb.Append($"Triangles {curTriangulation.Count}");
             }
             
-            textFont.Color = Colors.Light;
+            textFont.ColorRgba = Colors.Light;
             textFont.DrawTextWrapNone(sb.ToString(), rect, new(0.5f));
             
             // font.DrawText(sb.ToString(), rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);

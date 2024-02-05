@@ -48,7 +48,7 @@ namespace Examples.Scenes.ExampleScenes
             changeOffset = new(offsetMW, offsetGP, offsetKB);
             
             textFont.FontSpacing = 1f;
-            textFont.Color = Colors.Light;
+            textFont.ColorRgba = Colors.Light;
 
         }
         public override void Reset()
@@ -218,7 +218,7 @@ namespace Examples.Scenes.ExampleScenes
             string infoText =
                 $"Add Point {create} | Remove Point {delete} | Inflate {offset} {MathF.Round(offsetDelta * 100) / 100}";
 
-            textFont.Color = Colors.Light;
+            textFont.ColorRgba = Colors.Light;
             textFont.DrawTextWrapNone(infoText, bottomCenter, new(0.5f));
             // font.DrawText(infoText, bottomCenter, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }

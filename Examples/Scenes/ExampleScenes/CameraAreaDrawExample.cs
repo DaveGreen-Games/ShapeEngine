@@ -156,7 +156,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             foreach (var star in drawStars)
             {
-                star.Draw(new ShapeColor(20, 150, 150, 200));
+                star.Draw(new ColorRgba(20, 150, 150, 200));
             }
             ship.Draw();
             ship2.Draw();
@@ -186,7 +186,7 @@ namespace Examples.Scenes.ExampleScenes
             string infoText = $"Total Stars {stars.Count} | Drawn Stars {drawStars.Count} | Camera Size {camera.Area.Size.Round()}";
             
             textFont.FontSpacing = 1f;
-            textFont.Color = Colors.Warm;
+            textFont.ColorRgba = Colors.Warm;
             textFont.DrawTextWrapNone(infoText, rect, new(0.5f));
             // font.DrawText(infoText, rect, 1f, new Vector2(0.5f, 0.5f), ColorHighlight3);
         }
@@ -198,7 +198,7 @@ namespace Examples.Scenes.ExampleScenes
             string moveText = ship.GetInputDescription(curDevice);
             string shipInfoText = $"{moveText} | Switch Ship {changeTargetText}";
             textFont.FontSpacing = 1f;
-            textFont.Color = Colors.Light;
+            textFont.ColorRgba = Colors.Light;
             textFont.DrawTextWrapNone(shipInfoText, rect, new(0.5f));
             // font.DrawText(shipInfoText, rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }

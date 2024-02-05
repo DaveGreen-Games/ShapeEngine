@@ -74,25 +74,25 @@ namespace ShapeEngine.Lib
         #endregion
         
         #region Color
-        public static ShapeColor RandColorAlpha(ShapeColor color) { return rand.RandColorAlpha(color); }
-        public static ShapeColor RandColorAlpha(ShapeColor color, int max) { return rand.RandColorAlpha(color, max); }
-        public static ShapeColor RandColorAlpha(ShapeColor color, int min, int max) { return rand.RandColorAlpha(color, min, max); }
+        public static ColorRgba RandColorAlpha(ColorRgba colorRgba) { return rand.RandColorAlpha(colorRgba); }
+        public static ColorRgba RandColorAlpha(ColorRgba colorRgba, int max) { return rand.RandColorAlpha(colorRgba, max); }
+        public static ColorRgba RandColorAlpha(ColorRgba colorRgba, int min, int max) { return rand.RandColorAlpha(colorRgba, min, max); }
         
-        public static ShapeColor RandColorRed(ShapeColor color) { return rand.RandColorRed(color); }
-        public static ShapeColor RandColorRed(ShapeColor color, int max) { return rand.RandColorRed(color, max); }
-        public static ShapeColor RandColorRed(ShapeColor color, int min, int max) { return rand.RandColorRed(color, min, max); }
+        public static ColorRgba RandColorRed(ColorRgba colorRgba) { return rand.RandColorRed(colorRgba); }
+        public static ColorRgba RandColorRed(ColorRgba colorRgba, int max) { return rand.RandColorRed(colorRgba, max); }
+        public static ColorRgba RandColorRed(ColorRgba colorRgba, int min, int max) { return rand.RandColorRed(colorRgba, min, max); }
         
-        public static ShapeColor RandColorGreen(ShapeColor color) { return rand.RandColorGreen(color); }
-        public static ShapeColor RandColorGreen(ShapeColor color, int max) { return rand.RandColorGreen(color, max); }
-        public static ShapeColor RandColorGreen(ShapeColor color, int min, int max) { return rand.RandColorGreen(color, min, max); }
+        public static ColorRgba RandColorGreen(ColorRgba colorRgba) { return rand.RandColorGreen(colorRgba); }
+        public static ColorRgba RandColorGreen(ColorRgba colorRgba, int max) { return rand.RandColorGreen(colorRgba, max); }
+        public static ColorRgba RandColorGreen(ColorRgba colorRgba, int min, int max) { return rand.RandColorGreen(colorRgba, min, max); }
         
-        public static ShapeColor RandColorBlue(ShapeColor color) { return rand.RandColorBlue(color); }
-        public static ShapeColor RandColorBlue(ShapeColor color, int max) { return rand.RandColorBlue(color, max); }
-        public static ShapeColor RandColorBlue(ShapeColor color, int min, int max) { return rand.RandColorBlue(color, min, max); }
+        public static ColorRgba RandColorBlue(ColorRgba colorRgba) { return rand.RandColorBlue(colorRgba); }
+        public static ColorRgba RandColorBlue(ColorRgba colorRgba, int max) { return rand.RandColorBlue(colorRgba, max); }
+        public static ColorRgba RandColorBlue(ColorRgba colorRgba, int min, int max) { return rand.RandColorBlue(colorRgba, min, max); }
         
-        public static ShapeColor RandColor() { return rand.RandColor(); }
-        public static ShapeColor RandColor(int alpha) { return rand.RandColor(alpha); }
-        public static ShapeColor RandColor(int min, int max, int alpha = -1) { return rand.RandColor(min, max, alpha); }
+        public static ColorRgba RandColor() { return rand.RandColor(); }
+        public static ColorRgba RandColor(int alpha) { return rand.RandColor(alpha); }
+        public static ColorRgba RandColor(int min, int max, int alpha = -1) { return rand.RandColor(min, max, alpha); }
         #endregion
 
         #region Collection

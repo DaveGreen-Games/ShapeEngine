@@ -24,7 +24,7 @@ namespace Examples.Scenes.ExampleScenes
         protected ICollider collider = null!;
         protected uint[] collisionMask = new uint[] { };
         protected bool buffed = false;
-        protected ShapeColor buffColor = new(System.Drawing.Color.Gold);
+        protected ColorRgba BuffColorRgba = new(System.Drawing.Color.Gold);
         protected float startSpeed = 0f;
         private float totalSpeedFactor = 1f;
         public void Buff(float f)
@@ -393,9 +393,9 @@ namespace Examples.Scenes.ExampleScenes
         }
         public void Draw()
         {
-            var color = new ShapeColor(System.Drawing.Color.CornflowerBlue);
+            var color = new ColorRgba(System.Drawing.Color.CornflowerBlue);
             if (timer > 0) color = Colors.Highlight;
-            if (buffed) color = buffColor;
+            if (buffed) color = BuffColorRgba;
             collider.DrawShape(2f, color);
 
         }
@@ -482,9 +482,9 @@ namespace Examples.Scenes.ExampleScenes
         }
         public void Draw()
         {
-            var color = new ShapeColor(System.Drawing.Color.MediumOrchid);
+            var color = new ColorRgba(System.Drawing.Color.MediumOrchid);
             if (timer > 0) color = Colors.Highlight;
-            if (buffed) color = buffColor;
+            if (buffed) color = BuffColorRgba;
             if (collider is RectCollider r)
             {
                 Rect shape = r.GetRectShape();
@@ -568,9 +568,9 @@ namespace Examples.Scenes.ExampleScenes
         }
         public void Draw()
         {
-            var color = new ShapeColor(System.Drawing.Color.ForestGreen);
+            var color = new ColorRgba(System.Drawing.Color.ForestGreen);
             if (timer > 0) color = Colors.Highlight;
-            if (buffed) color = buffColor;
+            if (buffed) color = BuffColorRgba;
 
             if(collider is CircleCollider c)
             {
@@ -847,7 +847,7 @@ namespace Examples.Scenes.ExampleScenes
             var rects = bottomRight.SplitV(0.5f);
             
             textFont.FontSpacing = 1f;
-            textFont.Color = Colors.Warm;
+            textFont.ColorRgba = Colors.Warm;
             textFont.DrawTextWrapNone("Object Count", rects.top, new(0.5f, 0f));
             textFont.DrawTextWrapNone($"{gameObjectHandler.GetCollisionHandler().Count}", rects.bottom, new(0.5f));
             // font.DrawText("Object Count", rects.top, 1f, new Vector2(0.5f, 0f), ColorHighlight3);
@@ -890,7 +890,7 @@ namespace Examples.Scenes.ExampleScenes
             else sb.Append($"Debug Mode {toggleDebugText}");
             
             textFont.FontSpacing = 1f;
-            textFont.Color = Colors.Light;
+            textFont.ColorRgba = Colors.Light;
             textFont.DrawTextWrapNone(sbCamera.ToString(), top, new(0.5f));
             textFont.DrawTextWrapNone(sb.ToString(), bottom, new(0.5f));
             // font.DrawText(sbCamera.ToString(), top, 1f, new Vector2(0.5f, 0.5f), ColorLight);

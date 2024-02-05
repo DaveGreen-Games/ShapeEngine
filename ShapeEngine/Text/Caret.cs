@@ -7,27 +7,27 @@ public struct Caret
 {
     public int Index;
     public float WidthRelative;
-    public ShapeColor Color;
+    public ColorRgba ColorRgba;
 
     public bool IsValid => Index >= 0 && WidthRelative > 0f;
     public Caret()
     {
         Index = -1;
         WidthRelative = 0f;
-        Color = ShapeColor.White;
+        ColorRgba = ColorRgba.White;
     }
 
-    public Caret(int index, ShapeColor color, float relativeWidth = 0.05f)
+    public Caret(int index, ColorRgba colorRgba, float relativeWidth = 0.05f)
     {
         this.Index = index;
-        this.Color = color;
+        this.ColorRgba = colorRgba;
         this.WidthRelative = relativeWidth;
     }
 
     public void Draw(Vector2 top, float height)
     {
         var bottom = top + new Vector2(0f, height);
-        DrawLineEx(top, bottom, WidthRelative * height, Color.ToRayColor());
+        DrawLineEx(top, bottom, WidthRelative * height, ColorRgba.ToRayColor());
     }
     // public void Draw(string text, Vector2 topLeft, Font font, float fontSize, float fontSpacing)
     // {

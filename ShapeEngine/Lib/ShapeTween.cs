@@ -84,7 +84,7 @@ namespace ShapeEngine.Lib
         {
             return from.Lerp(to, Tween(t, tweenType));// SVec.Lerp(from, to, Tween(t, tweenType));
         }
-        public static ShapeColor Tween(this ShapeColor from, ShapeColor to, float t, TweenType tweenType)
+        public static ColorRgba Tween(this ColorRgba from, ColorRgba to, float t, TweenType tweenType)
         {
             return from.Lerp(to, Tween(t, tweenType));
         }

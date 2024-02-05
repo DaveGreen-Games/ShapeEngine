@@ -313,7 +313,7 @@ namespace ShapeEngine.Core.Collision
         }
 
 
-        public void DebugDraw(ShapeColor border, ShapeColor fill)
+        public void DebugDraw(ColorRgba border, ColorRgba fill)
         {
             for (int i = 0; i < BucketCount; i++)
             {

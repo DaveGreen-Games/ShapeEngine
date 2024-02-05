@@ -19,16 +19,16 @@ public class FPSLabel
         this.normal = normal;
         this.slow = slow;
         this.critical = critical;
-        this.textFont = new(font, 1f, normal.Color);
+        this.textFont = new(font, 1f, normal.ColorRgba);
 
     }
     public void Draw(Rect r, Vector2 textAlignement, float fontSpacing = 1f)
     {
         int fps = Raylib.GetFPS();
         float f = (float)fps / (float)GAMELOOP.FrameRateLimit;
-        var c = normal.Color;
-        if (fps < 28 || f < 0.5f) c = critical.Color;
-        else if (f < 0.75f) c = slow.Color;
+        var c = normal.ColorRgba;
+        if (fps < 28 || f < 0.5f) c = critical.ColorRgba;
+        else if (f < 0.75f) c = slow.ColorRgba;
         //else c = GREEN;
         string fpsText = $"{fps}";
         textFont.DrawTextWrapNone(fpsText, r, textAlignement, c);

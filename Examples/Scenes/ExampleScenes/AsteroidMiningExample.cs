@@ -59,8 +59,8 @@ namespace Examples.Scenes.ExampleScenes
 
         private float delay = 1f;
 
-        private ShapeColor color;
-        public AsteroidShard(Polygon shape, Vector2 fractureCenter, ShapeColor color)
+        private ColorRgba colorRgba;
+        public AsteroidShard(Polygon shape, Vector2 fractureCenter, ColorRgba colorRgba)
         {
             this.shape = shape;
             this.rotDeg = 0f;
@@ -71,8 +71,8 @@ namespace Examples.Scenes.ExampleScenes
             this.lifetime = ShapeRandom.RandF(1.5f, 3f);
             this.lifetimeTimer = this.lifetime;
             this.delay = 0.5f;
-            this.color = color;
-            this.color = new(System.Drawing.Color.Goldenrod);
+            this.colorRgba = colorRgba;
+            this.colorRgba = new(System.Drawing.Color.Goldenrod);
             //this.delay = SRNG.randF(0.25f, 1f);
             //this.lifetime = delay * 3f;
         }
@@ -108,7 +108,7 @@ namespace Examples.Scenes.ExampleScenes
         public override void DrawGame(ScreenInfo game)
         {
             //SDrawing.DrawCircleFast(pos, 4f, RED);
-            var c = this.color.ChangeAlpha((byte)(255 * lifetimeF));
+            var c = this.colorRgba.ChangeAlpha((byte)(255 * lifetimeF));
             //color = this.color;
             shape.DrawLines(2f * lifetimeF, c);
         }
@@ -199,7 +199,7 @@ namespace Examples.Scenes.ExampleScenes
         private float curThreshold = DamageThreshold;
 
         public event Action<Asteroid, Vector2>? Fractured;
-        private ShapeColor curColor = new(Color.IndianRed);
+        private ColorRgba curColorRgba = new(Color.IndianRed);
 
         private DamagedSegments damagedSegments = new();
 
@@ -229,9 +229,9 @@ namespace Examples.Scenes.ExampleScenes
         {
             overlapped = true;
         }
-        public ShapeColor GetColor()
+        public ColorRgba GetColor()
         {
-            return curColor;
+            return curColorRgba;
         }
         public void Damage(float amount, Vector2 point)
         {
@@ -269,12 +269,12 @@ namespace Examples.Scenes.ExampleScenes
             {
                 if (overlapped)
                 {
-                    curColor = new(Color.ForestGreen);
+                    curColorRgba = new(Color.ForestGreen);
                     p.DrawLines(6f, new(System.Drawing.Color.ForestGreen));
                 }
                 else
                 {
-                    curColor = new(Color.IndianRed);
+                    curColorRgba = new(Color.IndianRed);
                     p.DrawLines(3f, new(System.Drawing.Color.IndianRed));
                 }
                 //p.DrawVertices(4f, RED);
@@ -446,7 +446,7 @@ namespace Examples.Scenes.ExampleScenes
         public override void DrawGame(ScreenInfo game)
         {
             if (hybernate) return;
-            var c = new ShapeColor(System.Drawing.Color.IndianRed);
+            var c = new ColorRgba(System.Drawing.Color.IndianRed);
             shape.DrawLines(4f, c);
             ShapeDrawing.DrawCircle(tip, 8f, c);
 
@@ -1033,7 +1033,7 @@ namespace Examples.Scenes.ExampleScenes
                 sb.Append($"Shoot {shootLaser}");
             }
 
-            textFont.Color = Colors.Light;
+            textFont.ColorRgba = Colors.Light;
             textFont.DrawTextWrapNone(sb.ToString(), rect, new(0.5f));
             // font.DrawText(sb.ToString(), rect, 1f, new Vector2(0.5f, 0.95f), ColorLight);
             

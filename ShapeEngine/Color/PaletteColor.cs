@@ -4,23 +4,23 @@ namespace ShapeEngine.Color;
 
 public class PaletteColor
 {
-    public ShapeColor Color { get; internal set; }
+    public ColorRgba ColorRgba { get; internal set; }
     public readonly int ID;
 
     public PaletteColor()
     {
         this.ID = (int)ShapeID.NextID;
-        Color = new(); //randomize
+        ColorRgba = new(); //randomize
     }
-    public PaletteColor(ShapeColor color)
+    public PaletteColor(ColorRgba colorRgba)
     {
         this.ID = (int)ShapeID.NextID;
-        this.Color = color;
+        this.ColorRgba = colorRgba;
     }
-    public PaletteColor(int id, ShapeColor color)
+    public PaletteColor(int id, ColorRgba colorRgba)
     {
         this.ID = id;
-        this.Color = color;
+        this.ColorRgba = colorRgba;
     }
         
 }

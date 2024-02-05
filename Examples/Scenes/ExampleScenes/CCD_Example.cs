@@ -112,7 +112,7 @@ namespace Examples.Scenes.ExampleScenes
             boundary = boundaryRect.GetEdges();
             
             textFont.FontSpacing = 1f;
-            textFont.Color = Colors.Light;
+            textFont.ColorRgba = Colors.Light;
         }
         public override void Reset()
         {

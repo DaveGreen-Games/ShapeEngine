@@ -116,18 +116,18 @@ namespace ShapeEngine.Achievements
             if (!achieved) Achieved?.Invoke(this);
             achieved = true; 
         }
-        public virtual void Draw(TextFont textFont, Rect rect, ShapeColor bgColor, ShapeColor textColor, ShapeColor progressColor, ShapeColor achievedColor)
+        public virtual void Draw(TextFont textFont, Rect rect, ColorRgba bgColorRgba, ColorRgba textColorRgba, ColorRgba progressColorRgba, ColorRgba achievedColorRgba)
         {
             Rect left = new(rect.X, rect.Y, rect.Width * 0.25f, rect.Height);
             Rect leftTop = new(left.X, left.Y, left.Width, left.Height * 0.5f);
             Rect leftBottom = new(left.X, left.Y +left.Height * 0.5f, left.Width, left.Height * 0.5f);
             Rect right = new(rect.X + rect.Width * 0.28f, rect.Y, rect.Width * 0.72f, rect.Height);
-            ShapeDrawing.DrawBar(rect, GetGoalPercentage(), progressColor, bgColor);
-            if (achieved) rect.DrawLines(3f, achievedColor);// SDrawing.DrawRect(rect, new(0f), 0f, 3f, achievedColor);
+            ShapeDrawing.DrawBar(rect, GetGoalPercentage(), progressColorRgba, bgColorRgba);
+            if (achieved) rect.DrawLines(3f, achievedColorRgba);// SDrawing.DrawRect(rect, new(0f), 0f, 3f, achievedColor);
             int value = stat.value;
             int max = end;
 
-            textFont.Color = textColor;
+            textFont.ColorRgba = textColorRgba;
             textFont.DrawTextWrapNone($"{value}", leftTop, new(0.5f));
             textFont.DrawTextWrapNone($"{max}", leftBottom, new(0.5f));
             // ShapeText.DrawText(font, String.Format("{0}", value), leftTop, 1f, new(0.5f) ,textColor);
@@ -135,12 +135,12 @@ namespace ShapeEngine.Achievements
             if (hidden)
             {
                 
-                if(achieved) textFont.DrawTextWrapNone(displayName, right, new(0.5f), achieved ? achievedColor : textColor); // ShapeText.DrawText(font, displayName, right, 1f, new(0.5f), achieved ? achievedColor : textColor);
-                else textFont.DrawTextWrapNone("???", right, new(0.5f), textColor); //ShapeText.DrawText(font, "???", right, 1f, new(0.5f), textColor);
+                if(achieved) textFont.DrawTextWrapNone(displayName, right, new(0.5f), achieved ? achievedColorRgba : textColorRgba); // ShapeText.DrawText(font, displayName, right, 1f, new(0.5f), achieved ? achievedColor : textColor);
+                else textFont.DrawTextWrapNone("???", right, new(0.5f), textColorRgba); //ShapeText.DrawText(font, "???", right, 1f, new(0.5f), textColor);
             }
             else
             {
-                textFont.Color = achieved ? achievedColor : textColor;
+                textFont.ColorRgba = achieved ? achievedColorRgba : textColorRgba;
                 textFont.DrawTextWrapNone(displayName, leftBottom, new(0.5f));
             }
         }
@@ -193,7 +193,7 @@ namespace ShapeEngine.Achievements
 
             }
         }
-        public void Draw(Rect achievementRect, ShapeColor background, ShapeColor text, ShapeColor progress, ShapeColor achieved) 
+        public void Draw(Rect achievementRect, ColorRgba background, ColorRgba text, ColorRgba progress, ColorRgba achieved) 
         {
             if (achievementDrawStack.Count > 0)
             {

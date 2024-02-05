@@ -292,7 +292,7 @@ namespace Examples.Scenes.ExampleScenes
             var objectCountText = $"Object Count: {gameObjectHandler.Count}";
             
             textFont.FontSpacing = 1f;
-            textFont.Color = Colors.Warm;
+            textFont.ColorRgba = Colors.Warm;
             textFont.DrawTextWrapNone(objectCountText, GAMELOOP.UIRects.GetRect("bottom right"), new Vector2(0.98f, 0.98f));
             // font.DrawText(objectCountText, GAMELOOP.UIRects.GetRect("bottom right"), 1f, new Vector2(0.98f, 0.98f), ColorHighlight3);
         }
@@ -311,7 +311,7 @@ namespace Examples.Scenes.ExampleScenes
             var text = $"Add {addText} | Slow Motion : [{slow1Text} / {slow2Text} / {slow3Text} / {slow4Text}]";
             
             textFont.FontSpacing = 1f;
-            textFont.Color = Colors.Light;
+            textFont.ColorRgba = Colors.Light;
             textFont.DrawTextWrapNone(text, rect, new(0.5f));
             // font.DrawText(text, rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }

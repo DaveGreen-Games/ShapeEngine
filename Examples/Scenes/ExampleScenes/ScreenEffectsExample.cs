@@ -26,12 +26,12 @@ namespace Examples.Scenes.ExampleScenes
 
         public void Draw()
         {
-            var color = new ShapeColor(System.Drawing.Color.DarkGray);
+            var color = new ColorRgba(System.Drawing.Color.DarkGray);
             if (circle.Radius > 2f && circle.Radius <= 3f) color = new(System.Drawing.Color.LightGray);
             else if (circle.Radius > 3f) color = new(System.Drawing.Color.AntiqueWhite);
             ShapeDrawing.DrawCircleFast(circle.Center, circle.Radius, color);
         }
-        public void Draw(ShapeColor c) => ShapeDrawing.DrawCircleFast(circle.Center, circle.Radius, c);
+        public void Draw(ColorRgba c) => ShapeDrawing.DrawCircleFast(circle.Center, circle.Radius, c);
     }
     internal class Comet
     {
@@ -39,18 +39,18 @@ namespace Examples.Scenes.ExampleScenes
         private const float MinSize = 10f;
         private const float MaxSpeed = 150f;
         private const float MinSpeed = 10f;
-        private static ChanceList<ShapeColor> colors = new((50, new(Color.Orange)), (30, new(Color.Goldenrod)), (10, new(Color.IndianRed)), (5, new(Color.MediumPurple)), (1, new(Color.ForestGreen)));
+        private static ChanceList<ColorRgba> colors = new((50, new(Color.Orange)), (30, new(Color.Goldenrod)), (10, new(Color.IndianRed)), (5, new(Color.MediumPurple)), (1, new(Color.ForestGreen)));
         private static ChanceList<float> speeds = new((10, MinSpeed), (30, MinSpeed * 2.5f), (50, MinSpeed * 4f), (20, MaxSpeed / 2), (10, MaxSpeed));
         Circle circle;
         Vector2 vel;
-        ShapeColor color;
+        ColorRgba colorRgba;
         float speed = 0f;
         public Comet(Vector2 pos)
         {
             this.circle = new(pos, ShapeRandom.RandF(MinSize, MaxSize));
             this.speed = speeds.Next();
             this.vel = ShapeRandom.RandVec2() * this.speed;
-            this.color = colors.Next();
+            this.colorRgba = colors.Next();
 
         }
         public void Update(float dt, Rect universe)
@@ -74,7 +74,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         public void Draw()
         {
-            circle.DrawLines(6f, color);
+            circle.DrawLines(6f, colorRgba);
         }
     }
 
@@ -91,7 +91,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             this.Title = title;
             this.CurValue = ShapeMath.Clamp(startValue, 0f, 1f);
-            this.font = new(font, 1f, ShapeColor.White);
+            this.font = new(font, 1f, ColorRgba.White);
         }
 
         public void SetValue(float newValue)
@@ -120,7 +120,7 @@ namespace Examples.Scenes.ExampleScenes
             fill.DrawRounded(4f, 4, Colors.Medium);
             
             int textValue = (int)(CurValue * 100);
-            font.Color = mouseInside ? Colors.Highlight: Colors.Special;
+            font.ColorRgba = mouseInside ? Colors.Highlight: Colors.Special;
             font.DrawTextWrapNone($"{Title} {textValue}", background, new Vector2(0.1f, 0.5f));
             // font.DrawText(, background, 1f, new Vector2(0.1f, 0.5f), mouseInside ? ExampleScene.ColorHighlight2 : ExampleScene.ColorHighlight3);
         }
@@ -227,12 +227,12 @@ namespace Examples.Scenes.ExampleScenes
         {
             var rightThruster = movementDir.RotateDeg(-25);
             var leftThruster = movementDir.RotateDeg(25);
-            DrawCircleV(Hull.Center - rightThruster * Hull.Radius, Hull.Radius / 6, outlineColor.Color.ToRayColor());
-            DrawCircleV(Hull.Center - leftThruster * Hull.Radius, Hull.Radius / 6, outlineColor.Color.ToRayColor());
-            Hull.Draw(hullColor.Color);
-            DrawCircleV(Hull.Center + movementDir * Hull.Radius * 0.66f, Hull.Radius * 0.33f, cockpitColor.Color.ToRayColor());
+            DrawCircleV(Hull.Center - rightThruster * Hull.Radius, Hull.Radius / 6, outlineColor.ColorRgba.ToRayColor());
+            DrawCircleV(Hull.Center - leftThruster * Hull.Radius, Hull.Radius / 6, outlineColor.ColorRgba.ToRayColor());
+            Hull.Draw(hullColor.ColorRgba);
+            DrawCircleV(Hull.Center + movementDir * Hull.Radius * 0.66f, Hull.Radius * 0.33f, cockpitColor.ColorRgba.ToRayColor());
 
-            Hull.DrawLines(4f, outlineColor.Color);
+            Hull.DrawLines(4f, outlineColor.ColorRgba);
         }
         
         public void FollowStarted()
@@ -509,7 +509,7 @@ namespace Examples.Scenes.ExampleScenes
             
             string text = $"Pos {x}/{y} | Rot {rot} | Zoom {zoom}";
             textFont.FontSpacing = 1f;
-            textFont.Color = Colors.Warm;
+            textFont.ColorRgba = Colors.Warm;
             textFont.DrawTextWrapNone(text, rect, new(0.5f));
             
             // font.DrawText(text, rect, 1f, new Vector2(0.5f, 0.5f), ColorHighlight3);
@@ -528,10 +528,10 @@ namespace Examples.Scenes.ExampleScenes
             
             textFont.FontSpacing = 1f;
             
-            textFont.Color = Colors.Medium;
+            textFont.ColorRgba = Colors.Medium;
             textFont.DrawTextWrapNone(textTop, rects.top, new(0.5f));
             
-            textFont.Color = Colors.Light;
+            textFont.ColorRgba = Colors.Light;
             textFont.DrawTextWrapNone(textBottom, rects.bottom, new(0.5f));
             
             // font.DrawText(textTop, rects.top, 1f, new Vector2(0.5f, 0.5f), ColorMedium);

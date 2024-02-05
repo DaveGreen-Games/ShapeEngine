@@ -12,7 +12,7 @@ public class Colorscheme
     {
         this.colors = colors;
     }
-    public Colorscheme(params ShapeColor[] colors)
+    public Colorscheme(params ColorRgba[] colors)
     {
         var newColors = new PaletteColor[colors.Length];
         for (int i = 0; i < colors.Length; i++)
@@ -21,7 +21,7 @@ public class Colorscheme
         }
         this.colors = newColors;
     }
-    public Colorscheme(IEnumerable<ShapeColor> colors)
+    public Colorscheme(IEnumerable<ColorRgba> colors)
     {
         var newColors = new List<PaletteColor>();
         int index = 0;
@@ -36,7 +36,7 @@ public class Colorscheme
     {
         this.colors = colors.ToArray();
     }
-    public Colorscheme(Dictionary<int, ShapeColor> colors)
+    public Colorscheme(Dictionary<int, ColorRgba> colors)
     {
         this.colors = new PaletteColor[colors.Count];
         int index = 0;
@@ -52,7 +52,7 @@ public class Colorscheme
         foreach (var source in colors)
         {
             if (source.ID != target.ID) continue;
-            target.Color = source.Color;
+            target.ColorRgba = source.ColorRgba;
             return;
         }
     }
@@ -74,7 +74,7 @@ public class Colorscheme
         if (colorIDs.Length < size) size = colorIDs.Length;
         for (int i = 0; i < size; i++)
         {
-            var paletteColor = new PaletteColor(colorIDs[i], ShapeColor.FromHex(colors[i]));
+            var paletteColor = new PaletteColor(colorIDs[i], ColorRgba.FromHex(colors[i]));
             container.Add(paletteColor);
         }
         return new(container);
@@ -87,7 +87,7 @@ public class Colorscheme
         if (colorIDs.Length < size) size = colorIDs.Length;
         for (int i = 0; i < size; i++)
         {
-            var paletteColor = new PaletteColor(colorIDs[i], ShapeColor.FromHex(hexColors[i]));
+            var paletteColor = new PaletteColor(colorIDs[i], ColorRgba.FromHex(hexColors[i]));
             container.Add(paletteColor);
         }
         return new(container);

@@ -19,12 +19,12 @@ public class InputActionLabel
     {
         this.color = color;
         this.InputAction = inputAction;
-        this.textFont = new(font, fontSpacing, color.Color);
+        this.textFont = new(font, fontSpacing, color.ColorRgba);
         this.Title = title;
     }
     public void Draw(Rect r, Vector2 textAlignement, InputDeviceType curInputDeviceType)
     {
-        textFont.Color = color.Color;
+        textFont.ColorRgba = color.ColorRgba;
         
         string text = InputAction.GetInputTypeDescription(curInputDeviceType, true, 1, false);
         StringBuilder b = new(text.Length + Title.Length + 3);

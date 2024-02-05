@@ -208,7 +208,7 @@ namespace ShapeEngine.Core
             return (newPos, points);
         }
 
-        public virtual void DrawDebug(ShapeColor bounds, ShapeColor border, ShapeColor fill)
+        public virtual void DrawDebug(ColorRgba bounds, ColorRgba border, ColorRgba fill)
         {
             DrawRectangleLinesEx(this.Bounds.Rectangle, 15f, bounds.ToRayColor());
         }
@@ -342,7 +342,7 @@ namespace ShapeEngine.Core
             base.Update(dt, deltaSlow, game, ui);
         }
         
-        public override void DrawDebug(ShapeColor bounds, ShapeColor border, ShapeColor fill)
+        public override void DrawDebug(ColorRgba bounds, ColorRgba border, ColorRgba fill)
         {
             base.DrawDebug(bounds, border, fill);
             col.DebugDraw(border, fill);

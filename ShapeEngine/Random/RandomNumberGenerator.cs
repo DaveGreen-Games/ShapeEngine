@@ -265,31 +265,31 @@ namespace ShapeEngine.Random
 
         #region Color
 
-        public ShapeColor RandColorRed(ShapeColor color) => color.SetRed((byte)RandI(0, 255));
-        public ShapeColor RandColorRed(ShapeColor color, int max) => color.SetRed((byte)RandI(0, max));
-        public ShapeColor RandColorRed(ShapeColor color, int min, int max) => color.SetRed((byte)RandI(min, max));
+        public ColorRgba RandColorRed(ColorRgba colorRgba) => colorRgba.SetRed((byte)RandI(0, 255));
+        public ColorRgba RandColorRed(ColorRgba colorRgba, int max) => colorRgba.SetRed((byte)RandI(0, max));
+        public ColorRgba RandColorRed(ColorRgba colorRgba, int min, int max) => colorRgba.SetRed((byte)RandI(min, max));
         
-        public ShapeColor RandColorGreen(ShapeColor color) => color.SetGreen((byte)RandI(0, 255));
-        public ShapeColor RandColorGreen(ShapeColor color, int max) => color.SetGreen((byte)RandI(0, max));
-        public ShapeColor RandColorGreen(ShapeColor color, int min, int max) => color.SetGreen((byte)RandI(min, max));
+        public ColorRgba RandColorGreen(ColorRgba colorRgba) => colorRgba.SetGreen((byte)RandI(0, 255));
+        public ColorRgba RandColorGreen(ColorRgba colorRgba, int max) => colorRgba.SetGreen((byte)RandI(0, max));
+        public ColorRgba RandColorGreen(ColorRgba colorRgba, int min, int max) => colorRgba.SetGreen((byte)RandI(min, max));
         
-        public ShapeColor RandColorBlue(ShapeColor color) => color.SetBlue((byte)RandI(0, 255));
-        public ShapeColor RandColorBlue(ShapeColor color, int max) => color.SetBlue((byte)RandI(0, max));
-        public ShapeColor RandColorBlue(ShapeColor color, int min, int max) => color.SetBlue((byte)RandI(min, max));
+        public ColorRgba RandColorBlue(ColorRgba colorRgba) => colorRgba.SetBlue((byte)RandI(0, 255));
+        public ColorRgba RandColorBlue(ColorRgba colorRgba, int max) => colorRgba.SetBlue((byte)RandI(0, max));
+        public ColorRgba RandColorBlue(ColorRgba colorRgba, int min, int max) => colorRgba.SetBlue((byte)RandI(min, max));
         
-        public ShapeColor RandColorAlpha(ShapeColor color)  => color.SetAlpha((byte)RandI(0, 255));
-        public ShapeColor RandColorAlpha(ShapeColor color, int max) => color.SetAlpha((byte)RandI(0, max));
-        public ShapeColor RandColorAlpha(ShapeColor color, int min, int max) => color.SetAlpha((byte)RandI(min, max));
+        public ColorRgba RandColorAlpha(ColorRgba colorRgba)  => colorRgba.SetAlpha((byte)RandI(0, 255));
+        public ColorRgba RandColorAlpha(ColorRgba colorRgba, int max) => colorRgba.SetAlpha((byte)RandI(0, max));
+        public ColorRgba RandColorAlpha(ColorRgba colorRgba, int min, int max) => colorRgba.SetAlpha((byte)RandI(min, max));
         
-        public ShapeColor RandColor() => RandColor(0, 255);
-        public ShapeColor RandColor(int alpha) => RandColor(0, 255, alpha); 
-        public ShapeColor RandColor(int min, int max, int alpha = -1)
+        public ColorRgba RandColor() => RandColor(0, 255);
+        public ColorRgba RandColor(int alpha) => RandColor(0, 255, alpha); 
+        public ColorRgba RandColor(int min, int max, int alpha = -1)
         {
             if (alpha < 0)
             {
-                return new ShapeColor(RandI(min, max), RandI(min, max), RandI(min, max), RandI(min, max));
+                return new ColorRgba(RandI(min, max), RandI(min, max), RandI(min, max), RandI(min, max));
             }
-            return new ShapeColor(RandI(min, max), RandI(min, max), RandI(min, max), alpha);
+            return new ColorRgba(RandI(min, max), RandI(min, max), RandI(min, max), alpha);
         }
         #endregion
 

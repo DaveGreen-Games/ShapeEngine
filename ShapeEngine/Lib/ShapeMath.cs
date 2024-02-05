@@ -70,7 +70,7 @@ public static class ShapeMath
         if (from is float) return LerpFloat(from, to, f);
         else if (from is int) return LerpInt(from, to, f);
         else if (from is Vector2 vec) return ShapeVec.Lerp(from, to, f);
-        else if (from is ShapeColor color) return color.Lerp(to, f);// ShapeColor.Lerp(from, to, f);
+        else if (from is ColorRgba color) return color.Lerp(to, f);// ShapeColor.Lerp(from, to, f);
         else return from;
     }
 

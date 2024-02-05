@@ -67,9 +67,9 @@ public class ShapeShader
         int valueLocation = GetShaderLocation(shader, propertyName);
         SetShaderValue(shader, valueLocation, new float[] { vec.X, vec.Y}, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
     }
-    public static void SetValueColor(Shader shader, string propertyName, ShapeColor color)
+    public static void SetValueColor(Shader shader, string propertyName, ColorRgba colorRgba)
     {
         int valueLocation = GetShaderLocation(shader, propertyName);
-        SetShaderValue(shader, valueLocation, new float[] {color.R / 255f, color.G / 255f, color.B / 255f, color.A / 255f}, ShaderUniformDataType.SHADER_UNIFORM_VEC4);
+        SetShaderValue(shader, valueLocation, new float[] {colorRgba.R / 255f, colorRgba.G / 255f, colorRgba.B / 255f, colorRgba.A / 255f}, ShaderUniformDataType.SHADER_UNIFORM_VEC4);
     }
 }

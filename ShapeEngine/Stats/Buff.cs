@@ -14,7 +14,7 @@ namespace ShapeEngine.Stats
         public void AddStack();
         public bool RemoveStack();
         public void Update(float dt);
-        public void DrawUI(Rectangle r, ShapeColor barColor, ShapeColor bgColor, ShapeColor textColor);
+        public void DrawUI(Rectangle r, ColorRgba barColorRgba, ColorRgba bgColorRgba, ColorRgba textColorRgba);
     }
 
     public struct BuffValue
@@ -133,7 +133,7 @@ namespace ShapeEngine.Stats
             }
         }
 
-        public virtual void DrawUI(Rectangle r, ShapeColor barColor, ShapeColor bgColor, ShapeColor textColor) { }
+        public virtual void DrawUI(Rectangle r, ColorRgba barColorRgba, ColorRgba bgColorRgba, ColorRgba textColorRgba) { }
     }
     
     public class BuffSingle : IBuff
@@ -218,7 +218,7 @@ namespace ShapeEngine.Stats
             }
         }
 
-        public virtual void DrawUI(Rectangle r, ShapeColor barColor, ShapeColor bgColor, ShapeColor textColor) { }
+        public virtual void DrawUI(Rectangle r, ColorRgba barColorRgba, ColorRgba bgColorRgba, ColorRgba textColorRgba) { }
     }
 
 

@@ -199,13 +199,13 @@ namespace ShapeEngine.Core.Shapes
             return newRect;
         }
 
-        public void Draw(ShapeColor startColor, ShapeColor colorShift)
+        public void Draw(ColorRgba startColorRgba, ColorRgba colorRgbaShift)
         {
-            rect.Draw(startColor);
-            var nextColor = startColor + colorShift; //.Add(colorShift);
+            rect.Draw(startColorRgba);
+            var nextColor = startColorRgba + colorRgbaShift; //.Add(colorShift);
             foreach (var child in children.Values)
             {
-                child.Draw(nextColor, colorShift);
+                child.Draw(nextColor, colorRgbaShift);
             }
         }
 

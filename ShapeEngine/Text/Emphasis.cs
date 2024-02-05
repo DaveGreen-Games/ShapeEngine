@@ -6,16 +6,16 @@ namespace ShapeEngine.Text;
 public class Emphasis
 {
     private readonly IEmphasisDrawer drawer;
-    public ShapeColor Color;
-    public ShapeColor TextColor;
+    public ColorRgba ColorRgba;
+    public ColorRgba TextColorRgba;
     
-    public Emphasis(IEmphasisDrawer drawer, ShapeColor color, ShapeColor textColor)
+    public Emphasis(IEmphasisDrawer drawer, ColorRgba colorRgba, ColorRgba textColorRgba)
     {
         this.drawer = drawer;
-        this.Color = color;
-        this.TextColor = textColor;
+        this.ColorRgba = colorRgba;
+        this.TextColorRgba = textColorRgba;
     }
 
-    public void DrawForeground(Rect rect) => drawer.DrawForeground(rect, Color);
-    public void DrawBackground(Rect rect) =>  drawer.DrawBackground(rect, Color);
+    public void DrawForeground(Rect rect) => drawer.DrawForeground(rect, ColorRgba);
+    public void DrawBackground(Rect rect) =>  drawer.DrawBackground(rect, ColorRgba);
 }

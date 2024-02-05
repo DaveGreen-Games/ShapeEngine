@@ -429,7 +429,7 @@ namespace ShapeEngine.Core.Collision
             return bodies;
         }
         
-        public void DebugDraw(ShapeColor border, ShapeColor fill)
+        public void DebugDraw(ColorRgba border, ColorRgba fill)
         {
             spatialHash.DebugDraw(border, fill);
         }

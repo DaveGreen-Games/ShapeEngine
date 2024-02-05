@@ -25,7 +25,7 @@ namespace Examples.Scenes.ExampleScenes
 
         public void Draw()
         {
-            var c = new ShapeColor(Color.IndianRed);
+            var c = new ColorRgba(Color.IndianRed);
             outline.DrawLines(4f, c);
             center.Draw(c);
         }
@@ -85,7 +85,7 @@ namespace Examples.Scenes.ExampleScenes
             }
             
             textFont.FontSpacing = 1f;
-            textFont.Color = Colors.Light;
+            textFont.ColorRgba = Colors.Light;
         }
         public override void Activate(IScene oldScene)
         {
@@ -169,7 +169,7 @@ namespace Examples.Scenes.ExampleScenes
                 pillar.Draw();
             }
 
-            var c = new ShapeColor(Color.CornflowerBlue);
+            var c = new ColorRgba(Color.CornflowerBlue);
             float f = camera.ZoomFactor;
             DrawCircleV(camera.Position, 8f * f, c.ToRayColor());
             ShapeDrawing.DrawCircleLines(camera.Position, 64 * f, 2f * f, c);

@@ -55,7 +55,7 @@ namespace ShapeEngine.Effects
 
         public abstract IShape GetShape();
         public abstract IShape GetSimplifiedShape();
-        public abstract void DrawDebugShape(ShapeColor color);
+        public abstract void DrawDebugShape(ColorRgba colorRgba);
 
         public Vector2 GetPreviousPosition()
         {
@@ -67,6 +67,6 @@ namespace ShapeEngine.Effects
             prevPos = Pos;
         }
 
-        public abstract void DrawShape(float lineThickness, ShapeColor color);
+        public abstract void DrawShape(float lineThickness, ColorRgba colorRgba);
     }
 }

@@ -327,7 +327,7 @@ namespace Examples.Scenes
             var titleRect = new Rect(uiSize * new Vector2(0.5f, 0.01f), uiSize * new Vector2(0.75f, 0.09f), new Vector2(0.5f, 0f));
             // titleFont.DrawText(text, titleRect, 10, new(0.5f), ExampleScene.ColorLight);
             titleFont.FontSpacing = 10f;
-            titleFont.Color = Colors.Text;
+            titleFont.ColorRgba = Colors.Text;
             titleFont.DrawTextWrapNone(text, titleRect, new(0.5f));
             int pages = GetMaxPages();
             string prevName = GAMELOOP.InputActionUIPrevTab.GetInputTypeDescription(ShapeInput.CurrentInputDeviceType, true, 1, false);
@@ -336,7 +336,7 @@ namespace Examples.Scenes
             string pagesText = pages <= 1 ? "Page 1/1" : $"{prevName} <- Page #{curPageIndex + 1}/{pages} -> {nextName}";
             var pageRect = new Rect(uiSize * new Vector2(0.01f, 0.12f), uiSize * new Vector2(0.3f, 0.06f), new Vector2(0f, 0f));
             titleFont.FontSpacing = 4f;
-            titleFont.Color = Colors.Highlight;
+            titleFont.ColorRgba = Colors.Highlight;
             titleFont.DrawTextWrapNone(pagesText, pageRect, new(0f, 0.5f));
             // titleFont.DrawText(pagesText, pageRect, 4f, new(0f, 0.5f), ExampleScene.ColorHighlight2);
 
@@ -354,7 +354,7 @@ namespace Examples.Scenes
             int pi = (int)MathF.Round(p * 100);
             
             titleFont.FontSpacing = 1f;
-            titleFont.Color = Colors.Medium;
+            titleFont.ColorRgba = Colors.Medium;
             titleFont.DrawTextWrapNone($"Window Focused: {Raylib.IsWindowFocused()} | [{pi}%]", infoAreaRects.top, new Vector2(1f, 1f));
             titleFont.DrawTextWrapNone($"Cursor On Screen: {ShapeLoop.CursorOnScreen}", infoAreaRects.bottom, new Vector2(1f, 1f));
             
@@ -526,7 +526,7 @@ namespace Examples.Scenes
             var color = Colors.Medium;
             var alignement = new Vector2(1f, 0.05f);
             titleFont.FontSpacing = 1f;
-            titleFont.Color = color;
+            titleFont.ColorRgba = color;
             titleFont.DrawTextWrapNone(fullscreenInfo, rects[0], alignement);
             titleFont.DrawTextWrapNone(crtInfo, rects[1], alignement);
             titleFont.DrawTextWrapNone(resetInfo, rects[2], alignement);
@@ -560,7 +560,7 @@ namespace Examples.Scenes
                 string infoText = infos[i];
                 var rect = rects[i];
                 titleFont.FontSpacing = 1f;
-                titleFont.Color = ShapeColor.White;
+                titleFont.ColorRgba = ColorRgba.White;
                 titleFont.DrawTextWrapNone(infoText, rect, new Vector2(0.95f, 0.5f));
                 // titleFont.DrawText(infoText, rect, 1f, new Vector2(0.95f, 0.5f), WHITE);
             }

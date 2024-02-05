@@ -110,15 +110,15 @@ namespace Examples
             effectTimer = 0f;
         }
 
-        internal static void DrawRoundedCursor(Vector2 tip, float size, ShapeColor color)
+        internal static void DrawRoundedCursor(Vector2 tip, float size, ColorRgba colorRgba)
         {
             var dir = new Vector2(1, 1).Normalize();
             var circleCenter = tip + dir * size * 2;
             var left = circleCenter + new Vector2(-1, 0) * size;
             var top = circleCenter + new Vector2(0, -1) * size;
-            ShapeDrawing.DrawLine(tip, left, 1f, color, LineCapType.CappedExtended, 3);
-            ShapeDrawing.DrawLine(tip, top, 1f, color, LineCapType.CappedExtended, 3);
-            ShapeDrawing.DrawCircleSectorLines(circleCenter, size, 180, 270, 1f, color, false, 4f);
+            ShapeDrawing.DrawLine(tip, left, 1f, colorRgba, LineCapType.CappedExtended, 3);
+            ShapeDrawing.DrawLine(tip, top, 1f, colorRgba, LineCapType.CappedExtended, 3);
+            ShapeDrawing.DrawCircleSectorLines(circleCenter, size, 180, 270, 1f, colorRgba, false, 4f);
         }
     }
     
@@ -266,7 +266,7 @@ namespace Examples
 
         protected override void LoadContent()
         {
-            BackgroundColor = Colors.Background; // ExampleScene.ColorDark;
+            BackgroundColorRgba = Colors.Background; // ExampleScene.ColorDark;
             
             fonts.Add(FontIDs.GruppoRegular, ContentLoader.LoadFont("Resources/Fonts/Gruppo-Regular.ttf", 100));
             fonts.Add(FontIDs.IndieFlowerRegular, ContentLoader.LoadFont("Resources/Fonts/IndieFlower-Regular.ttf", 100));
@@ -295,7 +295,7 @@ namespace Examples
             ShapeShader crtShader = new(crt, crtShaderID, true, 1);
             ShapeShader.SetValueFloat(crtShader.Shader, "renderWidth", CurScreenSize.Width);
             ShapeShader.SetValueFloat(crtShader.Shader, "renderHeight", CurScreenSize.Height);
-            var bgColor = BackgroundColor;
+            var bgColor = BackgroundColorRgba;
             ShapeShader.SetValueColor(crtShader.Shader, "cornerColor", bgColor);// 1, 0, 0, 1);
             ShapeShader.SetValueFloat(crtShader.Shader, "vignetteOpacity", 0.35f);
             ShapeShader.SetValueVector2(crtShader.Shader, "curvatureAmount", crtCurvature.X, crtCurvature.Y);//smaller values = bigger curvature
@@ -414,7 +414,7 @@ namespace Examples
 
         protected override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            BackgroundColor = Colors.Background;
+            BackgroundColorRgba = Colors.Background;
             UIRects.SetRect(ui.Area);
 
             //int gamepadIndex = CurGamepad?.Index ?? -1;

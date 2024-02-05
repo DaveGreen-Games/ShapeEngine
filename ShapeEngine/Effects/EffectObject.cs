@@ -54,7 +54,7 @@ namespace ShapeEngine.Effects
         public virtual Rect GetBoundingBox() { return new(Pos, Size, new(0.5f)); }
         protected float GetTweenFloat(float start, float end) { return ShapeTween.Tween(start, end, LifetimeF, TweenType); }
         protected Vector2 GetTweenVector2(Vector2 start, Vector2 end) { return start.Tween(end, LifetimeF, TweenType); }
-        protected ShapeColor GetTweenColor(ShapeColor startColor, ShapeColor endColor) { return startColor.Tween(endColor, LifetimeF, TweenType); }
+        protected ColorRgba GetTweenColor(ColorRgba startColorRgba, ColorRgba endColorRgba) { return startColorRgba.Tween(endColorRgba, LifetimeF, TweenType); }
 
         /*
         public virtual bool HasBehaviors() { return false; }

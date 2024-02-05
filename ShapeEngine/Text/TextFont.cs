@@ -31,7 +31,7 @@ public struct TextFont
     public float FontSize;
     public float FontSpacing;
     public float LineSpacing;
-    public ShapeColor Color;
+    public ColorRgba ColorRgba;
 
 
     #endregion
@@ -44,40 +44,40 @@ public struct TextFont
         FontSpacing = 0f;
         LineSpacing = 0f;
         FontSize = font.baseSize;
-        Color = new(System.Drawing.Color.White);
+        ColorRgba = new(System.Drawing.Color.White);
     }
-    public TextFont(Font font, ShapeColor color)
+    public TextFont(Font font, ColorRgba colorRgba)
     {
         Font = font;
         FontSpacing = 0f;
         LineSpacing = 0f;
         FontSize = font.baseSize;
-        Color = color;
+        ColorRgba = colorRgba;
     }
-    public TextFont(Font font, float fontSpacing, ShapeColor color)
+    public TextFont(Font font, float fontSpacing, ColorRgba colorRgba)
     {
         
         Font = font;
         FontSpacing = fontSpacing;
         LineSpacing = 0f;
         FontSize = font.baseSize;
-        Color = color;
+        ColorRgba = colorRgba;
     }
-    public TextFont(Font font, float fontSpacing, float lineSpacing, ShapeColor color)
+    public TextFont(Font font, float fontSpacing, float lineSpacing, ColorRgba colorRgba)
     {
         Font = font;
         FontSpacing = fontSpacing;
         LineSpacing = lineSpacing;
         FontSize = font.baseSize;
-        Color = color;
+        ColorRgba = colorRgba;
     }
-    public TextFont(Font font, float fontSize, float fontSpacing, float lineSpacing, ShapeColor color)
+    public TextFont(Font font, float fontSize, float fontSpacing, float lineSpacing, ColorRgba colorRgba)
     {
         Font = font;
         FontSize = fontSize;
         FontSpacing = fontSpacing;
         LineSpacing = lineSpacing;
-        Color = color;
+        ColorRgba = colorRgba;
     }
 
 
@@ -100,7 +100,7 @@ public struct TextFont
         float scaledFontSize = FontSizeRange.Clamp(BaseSize * f);
         f = scaledFontSize / BaseSize;
 
-        var newTextFont = new TextFont(Font, scaledFontSize, FontSpacing * f, LineSpacing * f, Color);
+        var newTextFont = new TextFont(Font, scaledFontSize, FontSpacing * f, LineSpacing * f, ColorRgba);
 
         return newTextFont;
     }
@@ -121,7 +121,7 @@ public struct TextFont
         lineSpacing *= sizeF;
         fontSpacing *= sizeF;
 
-        return new(Font, fontSize, fontSpacing, lineSpacing, Color);
+        return new(Font, fontSize, fontSpacing, lineSpacing, ColorRgba);
     }
     
     public Vector2 GetTextBaseSize(string text) => GetTextSize(text, BaseSize);
@@ -207,7 +207,7 @@ public struct TextFont
         var uiPos = rect.GetPoint(alignement);
         var charRect = new Rect(uiPos, charSize, alignement);
         
-        Raylib.DrawTextCodepoint(Font, c, charRect.TopLeft, fontSize, Color.ToRayColor());
+        Raylib.DrawTextCodepoint(Font, c, charRect.TopLeft, fontSize, ColorRgba.ToRayColor());
     }
     public void Draw(string text, Rect rect, float rotDeg, Vector2 alignement)
     {
@@ -216,14 +216,14 @@ public struct TextFont
         var textSize = scaledFont.GetTextSize(text);
         Rect r = new(rect.GetPoint(alignement), textSize, alignement);
         var originOffset = alignement * textSize;
-        DrawTextPro(scaledFont.Font, text, r.TopLeft + originOffset, originOffset, rotDeg, scaledFont.FontSize, scaledFont.FontSpacing, scaledFont.Color.ToRayColor());
+        DrawTextPro(scaledFont.Font, text, r.TopLeft + originOffset, originOffset, rotDeg, scaledFont.FontSize, scaledFont.FontSpacing, scaledFont.ColorRgba.ToRayColor());
     }
-    public void DrawWord(string word, Vector2 topLeft) => DrawTextEx(Font, word, topLeft, FontSize, FontSpacing, Color.ToRayColor());
+    public void DrawWord(string word, Vector2 topLeft) => DrawTextEx(Font, word, topLeft, FontSize, FontSpacing, ColorRgba.ToRayColor());
     public void DrawWord(string word, Vector2 topLeft, Vector2 alignement)
     {
         var size = GetTextSize(word);
         Rect r = new(topLeft, size, alignement);
-        DrawTextEx(Font, word, r.TopLeft, FontSize, FontSpacing, Color.ToRayColor());
+        DrawTextEx(Font, word, r.TopLeft, FontSize, FontSpacing, ColorRgba.ToRayColor());
     }
     public void DrawWord(string word, Vector2 topLeft, Vector2 alignement, Caret caret)
     {
@@ -257,7 +257,7 @@ public struct TextFont
         var emphasisRect = EmphasisRectMargins.Apply(r);
         
         emphasis.DrawForeground(emphasisRect);
-        scaledFont.DrawWord(word, r.TopLeft, emphasis.TextColor); //DrawTextEx(textFont.Font, word, r.TopLeft, info.fontSize, info.fontSpacing, emphasis.TextColor);
+        scaledFont.DrawWord(word, r.TopLeft, emphasis.TextColorRgba); //DrawTextEx(textFont.Font, word, r.TopLeft, info.fontSize, info.fontSpacing, emphasis.TextColor);
         emphasis.DrawBackground(emphasisRect);
         
     }
@@ -272,12 +272,12 @@ public struct TextFont
         scaledFont.DrawWord(text, r.TopLeft);
         //DrawTextEx(textFont.Font, text, r.TopLeft, info.fontSize, info.fontSpacing, textFont.Color);
     }
-    public void DrawTextWrapNone(string text, Rect rect, Vector2 alignement, ShapeColor color)
+    public void DrawTextWrapNone(string text, Rect rect, Vector2 alignement, ColorRgba colorRgba)
     {
         var scaledFont = ScaleDynamic(text, rect.Size);
         var textSize = scaledFont.GetTextSize(text);
         Rect r = new(rect.GetPoint(alignement), textSize, alignement);
-        scaledFont.DrawWord(text, r.TopLeft, color);
+        scaledFont.DrawWord(text, r.TopLeft, colorRgba);
     }
 
     public void DrawTextWrapNone(string text, Rect rect, Vector2 alignement, Caret caret)
@@ -649,12 +649,12 @@ public struct TextFont
         var emphasisRect = EmphasisRectMargins.Apply(r);
         
         emphasis.DrawBackground(emphasisRect);
-        DrawWord(word, topLeft, emphasis.TextColor);
+        DrawWord(word, topLeft, emphasis.TextColorRgba);
         // DrawTextEx(font, word, r.TopLeft, fontSize, fontSpacing, emphasis.TextColor);
         emphasis.DrawForeground(emphasisRect);
         
     }
-    private void DrawWord(string word, Vector2 topLeft, ShapeColor color) => DrawTextEx(Font, word, topLeft, FontSize, FontSpacing, color.ToRayColor());
+    private void DrawWord(string word, Vector2 topLeft, ColorRgba colorRgba) => DrawTextEx(Font, word, topLeft, FontSize, FontSpacing, colorRgba.ToRayColor());
 
     #endregion
     

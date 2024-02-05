@@ -125,7 +125,7 @@ namespace Examples.Scenes
                 ui.Area.Draw(Colors.Dark);
                 var pausedRect = ui.Area.ApplyMargins(0.05f, 0.05f, 0.15f, 0.55f);
                 titleFont.LineSpacing = 30f;
-                titleFont.Color = Colors.Special;
+                titleFont.ColorRgba = Colors.Special;
                 titleFont.DrawTextWrapNone("PAUSED", pausedRect, new(0.5f));
                 // titleFont.DrawText("PAUSED", pausedRect, 30f, new(0.5f), ColorRustyRed);
                 
@@ -144,7 +144,7 @@ namespace Examples.Scenes
 
             var topCenterRect = GAMELOOP.UIRects.GetRect("top center"); // Get("top").Get("center").GetRect();
             titleFont.LineSpacing = 10f;
-            titleFont.Color = Colors.Highlight;
+            titleFont.ColorRgba = Colors.Highlight;
             titleFont.DrawTextWrapNone(Title, topCenterRect, new(0.5f));
             // titleFont.DrawText(Title, topCenterRect, 10f, new(0.5f), ColorLight);
 
@@ -225,7 +225,7 @@ namespace Examples.Scenes
 
             var deviceText = ShapeInput.GetCurInputDeviceGenericName();
             titleFont.LineSpacing = 1f;
-            titleFont.Color = Colors.Medium;
+            titleFont.ColorRgba = Colors.Medium;
             titleFont.DrawTextWrapNone(deviceText, deviceRect, new Vector2(0.01f, 0.5f));
             // titleFont.DrawText(deviceText, deviceRect, 1f, new Vector2(0.01f, 0.5f), ColorHighlight3);
             
@@ -237,7 +237,7 @@ namespace Examples.Scenes
             }
             
             titleFont.LineSpacing = 1f;
-            titleFont.Color = GAMELOOP.CurGamepad != null ? Colors.Highlight : Colors.Medium;
+            titleFont.ColorRgba = GAMELOOP.CurGamepad != null ? Colors.Highlight : Colors.Medium;
             titleFont.DrawTextWrapNone(gamepadText, gamepadRect, new Vector2(0.01f, 0.5f));
             // titleFont.DrawText(gamepadText, gamepadRect, 1f, new Vector2(0.01f, 0.5f), GAMELOOP.CurGamepad != null ? ColorHighlight3 : ColorMedium);
         }

@@ -59,19 +59,19 @@ namespace Examples.UIElements
 
             if (Selected)
             {
-                textFont.Color = Colors.Highlight;
+                textFont.ColorRgba = Colors.Highlight;
                 textFont.DrawTextWrapNone(text, r, new(0f));
                 // font.DrawText(text, r, 5f, new(0f), ExampleScene.ColorHighlight2);
             }
             else if (Pressed)
             {
-                textFont.Color = Colors.Special;
+                textFont.ColorRgba = Colors.Special;
                 textFont.DrawTextWrapNone(text, r, new(0f));
                 // font.DrawText(text, r, 5f, new(0f), ExampleScene.ColorHighlight1);
             }
             else
             {
-                textFont.Color = Colors.Text;
+                textFont.ColorRgba = Colors.Text;
                 textFont.DrawTextWrapNone(text, r, new(0f));
                 // font.DrawText(text, r, 5f, new(0f), ExampleScene.ColorHighlight1);
             }

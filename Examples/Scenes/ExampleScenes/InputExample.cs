@@ -145,7 +145,7 @@ namespace Examples.Scenes.ExampleScenes
             var rects = inputNamesRect.SplitV(inputs.Count); // inputNamesRect.GetAlignedRectsVertical(inputs.Count, 0f, 1f);
             
             
-            textFont.Color = Colors.Medium;
+            textFont.ColorRgba = Colors.Medium;
             for (var i = 0; i < inputs.Count; i++)
             {
                 textFont.DrawTextWrapNone(inputs[i].GetName(true), rects[i], new(0.5f, 0f));
@@ -192,7 +192,7 @@ namespace Examples.Scenes.ExampleScenes
             inputRawCircle.DrawLines(lineThickness / 2, flashColor2, 2f);
             inputCircle.Draw(flashColor3, 32);
 
-            textFont.Color = flashColor1;
+            textFont.ColorRgba = flashColor1;
             textFont.DrawTextWrapNone(title, top, new(0.5f, 0f));
             
             // font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), flashColor1);
@@ -277,7 +277,7 @@ namespace Examples.Scenes.ExampleScenes
             var inputNamesRect = insideBottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
             var count = inputs.Count + 1;
             var rects = inputNamesRect.SplitV(count);
-            textFont.Color = Colors.Medium;
+            textFont.ColorRgba = Colors.Medium;
             for (var i = 0; i < count; i++)
             {
                 if (inputs.Count > i)
@@ -303,7 +303,7 @@ namespace Examples.Scenes.ExampleScenes
             }
 
             
-            textFont.Color = flashColor1;
+            textFont.ColorRgba = flashColor1;
             textFont.DrawTextWrapNone(title, top, new(0.5f, 0f));
             // font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), flashColor1);
         }
@@ -384,7 +384,7 @@ namespace Examples.Scenes.ExampleScenes
                 var inputs = button.GetInputs(curInputDeviceType);
                 var inputNamesRect = insideBottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
                 var rects = inputNamesRect.SplitV(inputs.Count); // inputNamesRect.GetAlignedRectsVertical(inputs.Count, 0f, 1f);
-                textFont.Color = Colors.Medium;
+                textFont.ColorRgba = Colors.Medium;
                 for (var i = 0; i < inputs.Count; i++)
                 {
                     textFont.DrawTextWrapNone(inputs[i].GetName(true), rects[i], new(0.5f, 0f));
@@ -398,7 +398,7 @@ namespace Examples.Scenes.ExampleScenes
                     bottom.DrawLines(lineThickness, Colors.Special);
                 }
     
-                textFont.Color = flashColor1;
+                textFont.ColorRgba = flashColor1;
                 textFont.DrawTextWrapNone(title, top, new(0.5f, 0f));
                 // font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), flashColor1);
             }
@@ -498,7 +498,7 @@ namespace Examples.Scenes.ExampleScenes
                 float thickness = ShapeMath.LerpFloat(lineThickness / 2, lineThickness * 2, f);
                 
                 circle.DrawLines(thickness, holdFinishedColor);
-                textFont.Color = holdFinishedColor;
+                textFont.ColorRgba = holdFinishedColor;
                 textFont.DrawTextWrapNone(title, top, new(0.5f, 0f));
                 // font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), holdFinishedColor);
                 
@@ -506,7 +506,7 @@ namespace Examples.Scenes.ExampleScenes
             else
             {
                 circle.DrawLines(lineThickness / 2, flashColor1);
-                textFont.Color = flashColor1;
+                textFont.ColorRgba = flashColor1;
                 textFont.DrawTextWrapNone(title, top, new(0.5f, 0f));
                 // font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), flashColor1);
             }
@@ -514,7 +514,7 @@ namespace Examples.Scenes.ExampleScenes
             var inputs = button.GetInputs(curInputDeviceType);
             var inputNamesRect = bottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
             var rects = inputNamesRect.SplitV(inputs.Count);
-            textFont.Color = Colors.Medium;
+            textFont.ColorRgba = Colors.Medium;
             for (var i = 0; i < inputs.Count; i++)
             {
                 textFont.DrawTextWrapNone(inputs[i].GetName(true), rects[i], new(0.5f, 0f));
@@ -672,14 +672,14 @@ namespace Examples.Scenes.ExampleScenes
                 float thickness = ShapeMath.LerpFloat(lineThickness / 2, lineThickness * 2, f);
                 
                 circle.DrawLines(thickness, holdFinishedColor);
-                textFont.Color = holdFinishedColor;
+                textFont.ColorRgba = holdFinishedColor;
                 textFont.DrawTextWrapNone(title, top, new(0.5f, 0f));
                 
             }
             else
             {
                 circle.DrawLines(lineThickness / 2, flashColor1);
-                textFont.Color = flashColor1;
+                textFont.ColorRgba = flashColor1;
                 textFont.DrawTextWrapNone(title, top, new(0.5f, 0f));
                 // font.DrawText(title, top, 1f, new Vector2(0.5f, 0f), flashColor1);
             }
@@ -689,7 +689,7 @@ namespace Examples.Scenes.ExampleScenes
             var inputs = button.GetInputs(curInputDeviceType);
             var inputNamesRect = bottom.ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
             var rects = inputNamesRect.SplitV(inputs.Count);
-            textFont.Color =Colors.Medium;
+            textFont.ColorRgba =Colors.Medium;
             for (var i = 0; i < inputs.Count; i++)
             {
                 textFont.DrawTextWrapNone(inputs[i].GetName(true), rects[i], new(0.5f, 0f));

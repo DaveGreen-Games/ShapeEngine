@@ -39,7 +39,7 @@ public class ShapeLoop
     #region Public Members
     public string[] LaunchParams { get; protected set; } = Array.Empty<string>();
     
-    public ShapeColor BackgroundColor = ShapeColor.Black;
+    public ColorRgba BackgroundColorRgba = ColorRgba.Black;
     public float ScreenEffectIntensity = 1.0f;
 
     public readonly ShaderContainer ScreenShaders = new();
@@ -371,18 +371,18 @@ public class ShapeLoop
         }
     }
 
-    public void Flash(float duration, ShapeColor startColor, ShapeColor endColor)
+    public void Flash(float duration, ColorRgba startColorRgba, ColorRgba endColorRgba)
     {
         if (duration <= 0.0f) return;
         if (ScreenEffectIntensity <= 0f) return;
-        startColor = startColor.SetAlpha((byte)(startColor.A * ScreenEffectIntensity));
-        endColor = endColor.SetAlpha((byte)(endColor.A * ScreenEffectIntensity));
+        startColorRgba = startColorRgba.SetAlpha((byte)(startColorRgba.A * ScreenEffectIntensity));
+        endColorRgba = endColorRgba.SetAlpha((byte)(endColorRgba.A * ScreenEffectIntensity));
         // byte startColorAlpha = (byte)(startColor.A * ScreenEffectIntensity);
         // startColor.A = startColorAlpha;
         // byte endColorAlpha = (byte)(endColor.A * ScreenEffectIntensity);
         // endColor.A = endColorAlpha;
 
-        ShapeFlash flash = new(duration, startColor, endColor);
+        ShapeFlash flash = new(duration, startColorRgba, endColorRgba);
         shapeFlashes.Add(flash);
     }
 
@@ -698,7 +698,7 @@ public class ShapeLoop
             }
             
             BeginDrawing();
-            ClearBackground(BackgroundColor.ToRayColor());
+            ClearBackground(BackgroundColorRgba.ToRayColor());
 
             BeginShaderMode(lastShader.Shader);
             target.Draw();
@@ -712,7 +712,7 @@ public class ShapeLoop
         else //single shader mode or only 1 screen shader is active
         {
             BeginDrawing();
-            ClearBackground(BackgroundColor.ToRayColor());
+            ClearBackground(BackgroundColorRgba.ToRayColor());
 
             if (activeScreenShaders.Count > 0)
             {

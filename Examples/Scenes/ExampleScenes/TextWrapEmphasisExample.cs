@@ -191,7 +191,7 @@ namespace Examples.Scenes.ExampleScenes
             string text = $"Font Spacing {fontSpacingText} ({fontSpacing}) | Line Spacing {lineSpacingText} ({lineSpacing}) | Wrap Mode {wrapModeText} ({textWrapMode}))";
             
             textFont.FontSpacing = 4f;
-            textFont.Color = Colors.Light;
+            textFont.ColorRgba = Colors.Light;
             textFont.DrawTextWrapNone(text, rect, new(0.5f));
             // font.DrawText(text, rect, 4f, new Vector2(0.5f, 0.5f), ColorLight);
         }
