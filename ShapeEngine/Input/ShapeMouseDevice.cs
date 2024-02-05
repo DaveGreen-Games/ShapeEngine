@@ -90,7 +90,7 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         if (isLocked) return 0f;
         if (!ShapeLoop.CursorOnScreen) return 0f;
        
-        var value = GetMouseDelta();
+        var value = Raylib.GetMouseDelta();
         float returnValue = axis == ShapeMouseAxis.VERTICAL ? value.Y : value.X;
         if (MathF.Abs(returnValue) < deadzone) return 0f;
         return returnValue;
@@ -139,7 +139,7 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         if (isLocked) return 0f;
         if (!ShapeLoop.CursorOnScreen) return 0f;
         
-        var value = GetMouseWheelMoveV();
+        var value = Raylib.GetMouseWheelMoveV();
         float returnValue = axis == ShapeMouseWheelAxis.VERTICAL ? value.Y : value.X;
         if (MathF.Abs(returnValue) < deadzone) return 0f;
         return returnValue;
@@ -232,7 +232,7 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         int id = (int)button;
         if (id is >= 10 and < 20)
         {
-            var value = GetMouseWheelMoveV();//.Clamp(-1f, 1f);
+            var value = Raylib.GetMouseWheelMoveV();//.Clamp(-1f, 1f);
             
             if (button == ShapeMouseButton.MW_LEFT) return value.X < -deadzone ? MathF.Abs(value.X) : 0f;
             if (button == ShapeMouseButton.MW_RIGHT) return value.X > deadzone ? value.X : 0f;
@@ -242,14 +242,14 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         }
         if (id >= 20)
         {
-            var mouseDelta = GetMouseDelta();
+            var mouseDelta = Raylib.GetMouseDelta();
             if (button == ShapeMouseButton.LEFT_AXIS) return mouseDelta.X < -deadzone ? MathF.Abs(mouseDelta.X) : 0f;
             if(button == ShapeMouseButton.RIGHT_AXIS) return mouseDelta.X > deadzone ? mouseDelta.X : 0f;
             if(button == ShapeMouseButton.UP_AXIS) return mouseDelta.Y < -deadzone ? MathF.Abs(mouseDelta.X) : 0f;
             if(button == ShapeMouseButton.DOWN_AXIS) return mouseDelta.Y > deadzone ? mouseDelta.Y : 0f;
             return 0f;
         }
-        return IsMouseButtonDown(id) ? 1f : 0f;
+        return Raylib.IsMouseButtonDown(id) ? 1f : 0f;
     }
     public InputState GetState(ShapeMouseButton button, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {

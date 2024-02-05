@@ -42,32 +42,32 @@ namespace ShapeEngine.Persistent
         {
             foreach (var item in shadersToUnload)
             {
-                UnloadShader(item);
+                Raylib.UnloadShader(item);
             }
 
             foreach (var item in texturesToUnload)
             {
-                UnloadTexture(item);
+                Raylib.UnloadTexture(item);
             }
             foreach (var item in imagesToUnload)
             {
-                UnloadImage(item);
+                Raylib.UnloadImage(item);
             }
             foreach (var item in fontsToUnload)
             {
-                UnloadFont(item);
+                Raylib.UnloadFont(item);
             }
             foreach (var item in wavesToUnload)
             {
-                UnloadWave(item);
+                Raylib.UnloadWave(item);
             }
             foreach (var item in soundsToUnload)
             {
-                UnloadSound(item);
+                Raylib.UnloadSound(item);
             }
             foreach (var item in musicToUnload)
             {
-                UnloadMusicStream(item);
+                Raylib.UnloadMusicStream(item);
             }
         }
 
@@ -149,7 +149,7 @@ namespace ShapeEngine.Persistent
         {
             foreach (var item in texturesToUnload)
             {
-                UnloadTexture(item);
+                Raylib.UnloadTexture(item);
             }
         }
 

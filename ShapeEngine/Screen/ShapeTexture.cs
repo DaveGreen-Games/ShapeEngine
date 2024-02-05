@@ -1,5 +1,6 @@
 using System.Numerics;
 using Raylib_CsLo;
+using ShapeEngine.Color;
 using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
 
@@ -24,7 +25,7 @@ internal sealed class ShapeTexture
     {
         if (!Loaded) return;
         Loaded = false;
-        UnloadRenderTexture(RenderTexture);
+        Raylib.UnloadRenderTexture(RenderTexture);
     }
     public void UpdateDimensions(Dimensions dimensions)
     {
@@ -32,7 +33,7 @@ internal sealed class ShapeTexture
 
         if (Width == dimensions.Width && Height == dimensions.Height) return;
         
-        UnloadRenderTexture(RenderTexture);
+        Raylib.UnloadRenderTexture(RenderTexture);
         SetTexture(dimensions);
     }
     public void Draw()
@@ -52,14 +53,14 @@ internal sealed class ShapeTexture
         
         var sourceRec = new Rectangle(0, 0, Width, -Height);
         
-        DrawTexturePro(RenderTexture.texture, sourceRec, destRec, origin, 0f, WHITE);
+        Raylib.DrawTexturePro(RenderTexture.texture, sourceRec, destRec, origin, 0f, new ColorRgba(System.Drawing.Color.White).ToRayColor());
     }
     
     private void SetTexture(Dimensions dimensions)
     {
         Width = dimensions.Width;
         Height = dimensions.Height;
-        RenderTexture = LoadRenderTexture(Width, Height);
+        RenderTexture = Raylib.LoadRenderTexture(Width, Height);
     }
     
     //public void DrawTexture(int targetWidth, int targetHeight)

@@ -49,42 +49,42 @@ namespace ShapeEngine.Audio
                 bus.Stopped += Stop;
             }
         }
-        public override bool IsPlaying() { return IsSoundPlaying(Sound); }
+        public override bool IsPlaying() { return Raylib.IsSoundPlaying(Sound); }
         public override void Play(float volume = 1f, float pitch = 1f)
         {
             float busVolume = GetCombinedBusVolume();
             Volume = volume;
             Pitch = pitch;
-            SetSoundVolume(Sound, busVolume * BaseVolume * Volume);
-            SetSoundPitch(Sound, BasePitch * Pitch);
-            PlaySound(Sound);
+            Raylib.SetSoundVolume(Sound, busVolume * BaseVolume * Volume);
+            Raylib.SetSoundPitch(Sound, BasePitch * Pitch);
+            Raylib.PlaySound(Sound);
         }
         protected override void UpdateBusVolume(float newBusVolume)
         {
-            SetSoundVolume(Sound, newBusVolume * BaseVolume * Volume);
+            Raylib.SetSoundVolume(Sound, newBusVolume * BaseVolume * Volume);
         }
         public override void Stop()
         {
             if (!IsPlaying()) return;
-            StopSound(Sound);
+            Raylib.StopSound(Sound);
             Paused = false;
         }
         public override void Pause()
         {
             if (!IsPlaying()) return;
-            PauseSound(Sound);
+            Raylib.PauseSound(Sound);
             Paused = true;
         }
         public override void Resume()
         {
             if (!Paused) return;
-            ResumeSound(Sound);
+            Raylib.ResumeSound(Sound);
             Paused = false;
         }
 
         public override void Unload()
         {
-            UnloadSound(Sound);
+            Raylib.UnloadSound(Sound);
         }
     }
     internal class SFXLoop : Audio
@@ -96,7 +96,7 @@ namespace ShapeEngine.Audio
         public Vector2 SpatialPos { get; set; } = new();
         public float MinSpatialRange { get; set; } = 0f;
         public float MaxSpatialRange { get; set; } = 0f;
-        public override bool IsPlaying() { return IsSoundPlaying(Sound); }
+        public override bool IsPlaying() { return Raylib.IsSoundPlaying(Sound); }
         public SFXLoop(uint id, Sound sound, Bus[] buses, float volume = 0.5f, float pitch = 1.0f)
         {
             this.ID = id;
@@ -149,12 +149,12 @@ namespace ShapeEngine.Audio
                     {
                         spatialVolumeFactor = 1f - ShapeMath.LerpInverseFloat(minSquared, maxSquared, disSq);
                     }
-                    SetSoundVolume(Sound, BaseVolume * spatialVolumeFactor);
+                    Raylib.SetSoundVolume(Sound, BaseVolume * spatialVolumeFactor);
                 }
 
                 if (!playing)
                 {
-                    PlaySound(Sound);
+                    Raylib.PlaySound(Sound);
                 }
             }
         }
@@ -168,39 +168,39 @@ namespace ShapeEngine.Audio
             {
                 if (Paused) Resume();
             }
-            SetSoundVolume(Sound, newBusVolume * BaseVolume * Volume);
+            Raylib.SetSoundVolume(Sound, newBusVolume * BaseVolume * Volume);
         }
         public override void Play(float volume = 1f, float pitch = 1f)
         {
             float busVolume = GetCombinedBusVolume();
             Volume = volume;
             Pitch = pitch;
-            SetSoundVolume(Sound, busVolume * BaseVolume * Volume);
-            SetSoundPitch(Sound, BasePitch * Pitch);
-            PlaySound(Sound);
+            Raylib.SetSoundVolume(Sound, busVolume * BaseVolume * Volume);
+            Raylib.SetSoundPitch(Sound, BasePitch * Pitch);
+            Raylib.PlaySound(Sound);
             IsLooping = true;
         }
         public override void Stop()
         {
-            if (IsPlaying()) StopSound(Sound);
+            if (IsPlaying()) Raylib.StopSound(Sound);
             Paused = false;
             IsLooping = false;
 
         }
         public override void Pause()
         {
-            if (IsPlaying()) PauseSound(Sound);
+            if (IsPlaying()) Raylib.PauseSound(Sound);
             Paused = true;
         }
         public override void Resume()
         {
-            if (Paused) ResumeSound(Sound);
+            if (Paused) Raylib.ResumeSound(Sound);
             Paused = false;
         }
 
         public override void Unload()
         {
-            UnloadSound(Sound);
+            Raylib.UnloadSound(Sound);
         }
     }
     internal class Song : Audio
@@ -226,9 +226,9 @@ namespace ShapeEngine.Audio
             float busVolume = GetCombinedBusVolume();
             Volume = volume;
             Pitch = pitch;
-            SetMusicVolume(Music, busVolume * BaseVolume * Volume);
-            SetMusicPitch(Music, BasePitch * Pitch);
-            PlayMusicStream(Music);
+            Raylib.SetMusicVolume(Music, busVolume * BaseVolume * Volume);
+            Raylib.SetMusicPitch(Music, BasePitch * Pitch);
+            Raylib.PlayMusicStream(Music);
         }
         protected override void UpdateBusVolume(float newBusVolume)
         {
@@ -240,43 +240,43 @@ namespace ShapeEngine.Audio
             {
                 if (Paused) Resume();
             }
-            SetMusicVolume(Music, newBusVolume * BaseVolume * Volume);
+            Raylib.SetMusicVolume(Music, newBusVolume * BaseVolume * Volume);
         }
-        public override bool IsPlaying() { return IsMusicStreamPlaying(Music); }
+        public override bool IsPlaying() { return Raylib.IsMusicStreamPlaying(Music); }
         public bool Update(float dt)
         {
             if (!IsPlaying()) return false;
             if (Paused) return false;
-            UpdateMusicStream(Music);
+            Raylib.UpdateMusicStream(Music);
             float f = GetPercentage();
             return f > 0.95f;
         }
         public override void Stop()
         {
             if (!IsPlaying()) return;
-            StopMusicStream(Music);
+            Raylib.StopMusicStream(Music);
             Paused = false;
         }
         public override void Pause()
         {
             if (!IsPlaying()) return;
-            PauseMusicStream(Music);
+            Raylib.PauseMusicStream(Music);
             Paused = true;
         }
         public override void Resume()
         {
             if (!Paused) return;
-            ResumeMusicStream(Music);
+            Raylib.ResumeMusicStream(Music);
             Paused = false;
         }
         public override void Unload()
         {
-            UnloadMusicStream(Music);
+            Raylib.UnloadMusicStream(Music);
         }
         public float GetPercentage()
         {
-            float length = GetMusicTimeLength(Music);
-            float played = GetMusicTimePlayed(Music);
+            float length = Raylib.GetMusicTimeLength(Music);
+            float played = Raylib.GetMusicTimePlayed(Music);
             if (length <= 0.0f) return 0.0f;
             return played / length;
         }

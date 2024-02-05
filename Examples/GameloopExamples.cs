@@ -12,6 +12,8 @@ using ShapeEngine.Screen;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
 
+
+
 namespace Examples
 {
     internal class SimpleCursorGameUI : ICursor
@@ -199,6 +201,7 @@ namespace Examples
     {
         public Font FontDefault { get; private set; }
 
+        
 
         private Dictionary<int, Font> fonts = new();
         private List<string> fontNames = new();

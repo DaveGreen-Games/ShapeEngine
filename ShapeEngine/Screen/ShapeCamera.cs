@@ -292,14 +292,14 @@ public sealed class ShapeCamera
 
     public Vector2 ScreenToWorld(Vector2 pos)
     {
-        var returnValue = GetScreenToWorld2D(pos, Camera);
+        var returnValue = Raylib.GetScreenToWorld2D(pos, Camera);
         if (returnValue.IsNan()) return pos;
         else return returnValue;
     }
 
     public Vector2 WorldToScreen(Vector2 pos)
     {
-        var returnValue = GetWorldToScreen2D(pos, Camera);
+        var returnValue = Raylib.GetWorldToScreen2D(pos, Camera);
         if (returnValue.IsNan()) return pos;
         else return returnValue;
     }

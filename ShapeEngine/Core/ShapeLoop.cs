@@ -1,8 +1,8 @@
-global using static Raylib_CsLo.Raylib;
+// global using static Raylib_CsLo.Raylib;
 
 
-using ShapeEngine.Screen;
 using Raylib_CsLo;
+using ShapeEngine.Screen;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using ShapeEngine.Color;
@@ -15,10 +15,9 @@ using ShapeEngine.Input;
 namespace ShapeEngine.Core;
 
 
+
 public class ShapeLoop
 {
-    
-    
     #region Static
     public static readonly string CURRENT_DIRECTORY = AppDomain.CurrentDomain.BaseDirectory; // Environment.CurrentDirectory;
     public static OSPlatform OS_PLATFORM { get; private set; } =
@@ -33,6 +32,9 @@ public class ShapeLoop
     public static bool IsWindows() => OS_PLATFORM == OSPlatform.Windows;
     public static bool IsLinux() => OS_PLATFORM == OSPlatform.Linux;
     public static bool IsOSX() => OS_PLATFORM == OSPlatform.OSX;
+    
+    
+    
     #endregion
     
     #region Public Members
@@ -97,12 +99,12 @@ public class ShapeLoop
             if (value)
             {
                 Raylib.SetWindowState(ConfigFlags.FLAG_VSYNC_HINT);
-                SetTargetFPS(Monitor.CurMonitor().Refreshrate);
+                Raylib.SetTargetFPS(Monitor.CurMonitor().Refreshrate);
             }
             else
             {
                 Raylib.ClearWindowState(ConfigFlags.FLAG_VSYNC_HINT);
-                SetTargetFPS(frameRateLimit);
+                Raylib.SetTargetFPS(frameRateLimit);
             }
         }
     }
@@ -181,7 +183,7 @@ public class ShapeLoop
                 ResetMousePosition();
                 return;
             }
-            SetWindowSize(windowSize.Width, windowSize.Height);
+            Raylib.SetWindowSize(windowSize.Width, windowSize.Height);
             CenterWindow();
 
             //CheckForWindowChanges();
@@ -254,11 +256,11 @@ public class ShapeLoop
         this.DevelopmentDimensions = developmentDimensions;
         // SetWindowState(ConfigFlags.FLAG_MSAA_4X_HINT);
         // SetWindowState(ConfigFlags.FLAG_WINDOW_HIGHDPI);
-        InitWindow(0, 0, "");
+        Raylib.InitWindow(0, 0, "");
         
-        SetWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
-        ClearWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
-        SetWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
+        Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
+        Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
+        Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
 
         Monitor = new MonitorDevice();
         SetupWindowDimensions();
@@ -274,7 +276,7 @@ public class ShapeLoop
         Camera.Activate();
         Camera.SetSize(CurScreenSize, DevelopmentDimensions);
         
-        var mousePosUI = GetMousePosition();
+        var mousePosUI = Raylib.GetMousePosition();
         var mousePosGame = Camera.ScreenToWorld(mousePosUI);
         var screenArea = new Rect(0, 0, CurScreenSize.Width, CurScreenSize.Height);
         var cameraArea = Camera.Area;
@@ -298,19 +300,19 @@ public class ShapeLoop
         ShapeInput.GamepadDeviceManager.OnGamepadConnectionChanged += OnGamepadConnectionChanged;
         
         //CursorOnScreen = Fullscreen || Raylib.IsCursorOnScreen();
-        CursorOnScreen = Fullscreen || Raylib.IsCursorOnScreen() || ( Raylib.IsWindowFocused() && screenArea.ContainsPoint(GetMousePosition()) );
+        CursorOnScreen = Fullscreen || Raylib.IsCursorOnScreen() || ( Raylib.IsWindowFocused() && screenArea.ContainsPoint(Raylib.GetMousePosition()) );
         cursorState = GetCursorState();
         windowState = GetWindowState();
         
     }
     public void SetupWindow(string windowName, bool undecorated, bool resizable, bool vsync = true, int fps = 60)
     {
-        SetWindowTitle(windowName);
-        if (undecorated) SetWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
-        else ClearWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
+        Raylib.SetWindowTitle(windowName);
+        if (undecorated) Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
+        else Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
 
-        if (resizable) SetWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
-        else ClearWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
+        if (resizable) Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
+        else Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
 
         FrameRateLimit = fps;
         VSync = vsync;
@@ -326,7 +328,7 @@ public class ShapeLoop
         StartGameloop();
         RunGameloop();
         EndGameloop();
-        CloseWindow();
+        Raylib.CloseWindow();
 
         return new ExitCode(restart);
     }
@@ -437,7 +439,7 @@ public class ShapeLoop
 
         int winPosX = monitor.Width / 2 - windowSize.Width / 2;
         int winPosY = monitor.Height / 2 - windowSize.Height / 2;
-        SetWindowPosition(winPosX + (int)monitor.Position.X, winPosY + (int)monitor.Position.Y);
+        Raylib.SetWindowPosition(winPosX + (int)monitor.Position.X, winPosY + (int)monitor.Position.Y);
         ResetMousePosition();
     }
     public void ResizeWindow(Dimensions newDimensions) => WindowSize = newDimensions;
@@ -476,12 +478,12 @@ public class ShapeLoop
     {
         while (!quit)
         {
-            if (WindowShouldClose())
+            if (Raylib.WindowShouldClose())
             {
                 Quit();
                 continue;
             }
-            var dt = GetFrameTime();
+            var dt = Raylib.GetFrameTime();
             Delta = dt;
             
             var newMonitor = Monitor.HasMonitorChanged();
@@ -501,7 +503,7 @@ public class ShapeLoop
             var screenArea = new Rect(0, 0, CurScreenSize.Width, CurScreenSize.Height);
             var cameraArea = Camera.Area;
 
-            var mousePos = GetMousePosition();
+            var mousePos = Raylib.GetMousePosition();
             if (mouseControlled) mousePos = lastControlledMousePosition;
             mouseControlled = false;
 
@@ -595,12 +597,12 @@ public class ShapeLoop
             if (curWindowState.Focused && !windowState.Focused)
             {
                 ResolveOnWindowFocusChanged(true);
-                SetWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
+                Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
             }
             else if (!curWindowState.Focused && windowState.Focused)
             {
                 ResolveOnWindowFocusChanged(false);
-                ClearWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
+                Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
             }
 
             if (curWindowState.Maximized && !windowState.Maximized)
@@ -652,17 +654,17 @@ public class ShapeLoop
             
             ResolveUpdate(dt, DeltaSlow, Game, UI);
             
-            BeginTextureMode(gameTexture.RenderTexture);
-            ClearBackground(new(0,0,0,0));
+            Raylib.BeginTextureMode(gameTexture.RenderTexture);
+            Raylib.ClearBackground(new(0,0,0,0));
             
-            BeginMode2D(Camera.Camera);
+            Raylib.BeginMode2D(Camera.Camera);
             ResolveDrawGame(Game);
-            EndMode2D();
+            Raylib.EndMode2D();
             
             foreach (var flash in shapeFlashes) screenArea.Draw(flash.GetColor());
             ResolveDrawGameUI(UI);
             if(CursorOnScreen) Cursor.DrawGameUI(UI);
-            EndTextureMode();
+            Raylib.EndTextureMode();
             
             DrawToScreen(screenArea, mousePosUI);
 
@@ -685,39 +687,39 @@ public class ShapeLoop
             ShapeTexture temp;
             foreach (var shader in activeScreenShaders)
             {
-                BeginTextureMode(target.RenderTexture);
-                ClearBackground(new(0,0,0,0));
-                BeginShaderMode(shader.Shader);
+                Raylib.BeginTextureMode(target.RenderTexture);
+                Raylib.ClearBackground(new(0,0,0,0));
+                Raylib.BeginShaderMode(shader.Shader);
                 source.Draw();
-                EndShaderMode();
-                EndTextureMode();
+                Raylib.EndShaderMode();
+                Raylib.EndTextureMode();
                 temp = source;
                 source = target;
                 target = temp;
             }
             
-            BeginDrawing();
-            ClearBackground(BackgroundColorRgba.ToRayColor());
+            Raylib.BeginDrawing();
+            Raylib.ClearBackground(BackgroundColorRgba.ToRayColor());
 
-            BeginShaderMode(lastShader.Shader);
+            Raylib.BeginShaderMode(lastShader.Shader);
             target.Draw();
-            EndShaderMode();
+            Raylib.EndShaderMode();
 
             ResolveDrawUI(UI);
             if(CursorOnScreen) Cursor.DrawUI(UI);
-            EndDrawing();
+            Raylib.EndDrawing();
             
         }
         else //single shader mode or only 1 screen shader is active
         {
-            BeginDrawing();
-            ClearBackground(BackgroundColorRgba.ToRayColor());
+            Raylib. BeginDrawing();
+            Raylib.ClearBackground(BackgroundColorRgba.ToRayColor());
 
             if (activeScreenShaders.Count > 0)
             {
-                BeginShaderMode(activeScreenShaders[0].Shader);
+                Raylib.BeginShaderMode(activeScreenShaders[0].Shader);
                 gameTexture.Draw();
-                EndShaderMode();
+                Raylib.EndShaderMode();
             }
             else
             {
@@ -726,7 +728,7 @@ public class ShapeLoop
             
             ResolveDrawUI(UI);
             if(CursorOnScreen) Cursor.DrawUI(UI);
-            EndDrawing();
+            Raylib.EndDrawing();
             
         }
     }
@@ -790,8 +792,6 @@ public class ShapeLoop
     protected virtual Vector2 ChangeMousePos(float dt, Vector2 mousePos, Rect screenArea) => mousePos;
     #endregion
 
-    
-    
     #region Monitor
     public bool SetMonitor(int newMonitor)
     {
@@ -816,9 +816,9 @@ public class ShapeLoop
         if (Fullscreen)
         {
             Raylib.SetWindowMonitor(monitor.Index);
-            SetWindowSize(monitor.Dimensions.Width, monitor.Dimensions.Height);
-            SetWindowPosition((int)monitor.Position.X, (int)monitor.Position.Y);
-            SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+            Raylib.SetWindowSize(monitor.Dimensions.Width, monitor.Dimensions.Height);
+            Raylib.SetWindowPosition((int)monitor.Position.X, (int)monitor.Position.Y);
+            Raylib.SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
         }
 
         var windowDimensions = windowSize;
@@ -840,8 +840,8 @@ public class ShapeLoop
         
         if (!Fullscreen)
         {
-            SetWindowPosition(x, y);
-            SetWindowSize(windowDimensions.Width, windowDimensions.Height);
+            Raylib.SetWindowPosition(x, y);
+            Raylib.SetWindowSize(windowDimensions.Width, windowDimensions.Height);
         }
         
         ResetMousePosition();
@@ -857,7 +857,7 @@ public class ShapeLoop
         WindowSize = monitor.Dimensions / 2;
         prevFullscreenWindowSize = windowSize;
         //CenterWindow();
-        WindowPosition = GetWindowPosition();
+        WindowPosition = Raylib.GetWindowPosition();
         prevWindowPosition = WindowPosition;
         prevFullscreenWindowPosition = WindowPosition;
         CalculateCurScreenSize();
@@ -886,12 +886,12 @@ public class ShapeLoop
     }
     private void CalculateCurScreenSize()
     {
-        if (IsWindowFullscreen())
+        if (Raylib.IsWindowFullscreen())
         {
-            int monitor = GetCurrentMonitor();
-            int mw = GetMonitorWidth(monitor);
-            int mh = GetMonitorHeight(monitor);
-            var scaleFactor = GetWindowScaleDPI();
+            int monitor = Raylib.GetCurrentMonitor();
+            int mw = Raylib.GetMonitorWidth(monitor);
+            int mh = Raylib.GetMonitorHeight(monitor);
+            var scaleFactor = Raylib.GetWindowScaleDPI();
             var scaleX = (int)scaleFactor.X;
             var scaleY = (int)scaleFactor.Y;
             CurScreenSize = new(mw * scaleX, mh * scaleY);
@@ -902,8 +902,8 @@ public class ShapeLoop
             // int scaleX = (int)scaleFactor.X;
             // int scaleY = (int)scaleFactor.Y;
             
-            int w = GetScreenWidth();
-            int h = GetScreenHeight();
+            int w = Raylib.GetScreenWidth();
+            int h = Raylib.GetScreenHeight();
             CurScreenSize = new(w , h);
         }
     }
@@ -1068,7 +1068,7 @@ public class ShapeLoop
         if(Fullscreen)Console.WriteLine("Fullscreen is Enabled");
         else Console.WriteLine("Fullscreen is Disabled");
         
-        if(IsWindowMaximized()) Console.WriteLine("Window is Maximized");
+        if(Raylib.IsWindowMaximized()) Console.WriteLine("Window is Maximized");
         else Console.WriteLine("Window is NOT Maximized");
         
         var dpi = Raylib.GetWindowScaleDPI();
@@ -1096,6 +1096,118 @@ public class ShapeLoop
     #endregion
 }
    
+
+
+
+// internal static class RaylibWrapper
+// {
+//     #region Flags
+//
+//     #region SetFlags
+//
+//     public static void SetFullscreenFlag(bool set = true)
+//     {
+//         if (set) SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+//         else ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+//     }
+//     public static void SetWindowResizableFlag(bool set = true)
+//     {
+//         if (set) SetWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
+//         else ClearWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
+//     }
+//     public static void SetWindowUndecoratedFlag(bool set = true)
+//     {
+//         if (set) SetWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
+//         else ClearWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
+//     }
+//     public static void SetWindowTransparentFlag(bool set = true)
+//     {
+//         if (set) SetWindowState(ConfigFlags.FLAG_WINDOW_TRANSPARENT);
+//         else ClearWindowState(ConfigFlags.FLAG_WINDOW_TRANSPARENT);
+//     }
+//     public static void SetMSAA4XHintFlag(bool set = true)
+//     {
+//         if (set) SetWindowState(ConfigFlags.FLAG_MSAA_4X_HINT);
+//         else ClearWindowState(ConfigFlags.FLAG_MSAA_4X_HINT);
+//     }
+//     public static void SetVsyncFlag(bool set = true)
+//     {
+//         if (set) SetWindowState(ConfigFlags.FLAG_VSYNC_HINT);
+//         else ClearWindowState(ConfigFlags.FLAG_VSYNC_HINT);
+//     }
+//     public static void SetWindowHiddenFlag(bool set = true)
+//     {
+//         if (set) SetWindowState(ConfigFlags.FLAG_WINDOW_HIDDEN);
+//         else ClearWindowState(ConfigFlags.FLAG_WINDOW_HIDDEN);
+//     }
+//     public static void SetWindowAlwaysRunFlag(bool set = true)
+//     {
+//         if (set) SetWindowState(ConfigFlags.FLAG_WINDOW_ALWAYS_RUN);
+//         else ClearWindowState(ConfigFlags.FLAG_WINDOW_ALWAYS_RUN);
+//     }
+//     public static void SetWindowMinimizedFlag(bool set = true)
+//     {
+//         if (set) SetWindowState(ConfigFlags.FLAG_WINDOW_MINIMIZED);
+//         else ClearWindowState(ConfigFlags.FLAG_WINDOW_MINIMIZED);
+//     }
+//     public static void SetWindowMaximizedFlag(bool set = true)
+//     {
+//         if (set) SetWindowState(ConfigFlags.FLAG_WINDOW_MAXIMIZED);
+//         else ClearWindowState(ConfigFlags.FLAG_WINDOW_MAXIMIZED);
+//     }
+//     public static void SetWindowUnfocusedFlag(bool set = true)
+//     {
+//         if (set) SetWindowState(ConfigFlags.FLAG_WINDOW_UNFOCUSED);
+//         else ClearWindowState(ConfigFlags.FLAG_WINDOW_UNFOCUSED);
+//         
+//     }
+//     public static void SetWindowTopmostFlag(bool set = true)
+//     {
+//         if (set) SetWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
+//         else ClearWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
+//         
+//     }
+//     public static void SetWindowHighDpiFlag(bool set = true)
+//     {
+//         if (set) SetWindowState(ConfigFlags.FLAG_WINDOW_HIGHDPI);
+//         else ClearWindowState(ConfigFlags.FLAG_WINDOW_HIGHDPI);
+//         
+//     }
+//     public static void SetWindowMousePassthrougFlag(bool set = true)
+//     {
+//         if (set) SetWindowState(ConfigFlags.FLAG_WINDOW_MOUSE_PASSTHROUGH);
+//         else ClearWindowState(ConfigFlags.FLAG_WINDOW_MOUSE_PASSTHROUGH);
+//         
+//     }
+//     public static void SetInterlacedHintFlag(bool set = true)
+//     {
+//         if (set) SetWindowState(ConfigFlags.FLAG_INTERLACED_HINT);
+//         else ClearWindowState(ConfigFlags.FLAG_INTERLACED_HINT);
+//     }
+//     #endregion
+//
+//     #region CheckFlag
+//     public static bool IsFullscreenFlag() => IsWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+//     public static bool IsWindowResizeableFlag() => IsWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
+//     public static bool IsWindowUndecoratedFlag() => IsWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
+//     public static bool IsWindowTransparentFlag() => IsWindowState(ConfigFlags.FLAG_WINDOW_TRANSPARENT);
+//     public static bool IsMSAA4XHintFlag() => IsWindowState(ConfigFlags.FLAG_MSAA_4X_HINT);
+//     public static bool IsVsyncFlag() => IsWindowState(ConfigFlags.FLAG_VSYNC_HINT);
+//     public static bool IsWindowHiddenFlag() => IsWindowState(ConfigFlags.FLAG_WINDOW_HIDDEN);
+//     public static bool IsWindowAlwaysRunFlag() => IsWindowState(ConfigFlags.FLAG_WINDOW_ALWAYS_RUN);
+//     public static bool IsWindowMinimizedFlag() => IsWindowState(ConfigFlags.FLAG_WINDOW_MINIMIZED);
+//     public static bool IsWindowMaximizedFlag() => IsWindowState(ConfigFlags.FLAG_WINDOW_MAXIMIZED);
+//     public static bool IsWindowUnfocusedFlag() => IsWindowState(ConfigFlags.FLAG_WINDOW_UNFOCUSED);
+//     public static bool IsWindowTopmostFlag() => IsWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
+//     public static bool IsWindowHighDpiFlag() => IsWindowState(ConfigFlags.FLAG_WINDOW_HIGHDPI);
+//     public static bool IsWindowMousePassthroughFlag() => IsWindowState(ConfigFlags.FLAG_WINDOW_MOUSE_PASSTHROUGH);
+//     public static bool IsInterlacedHintFlag() => IsWindowState(ConfigFlags.FLAG_INTERLACED_HINT);
+//     #endregion
+//     
+//     #endregion
+// }
+
+
 // private void CheckInputDevice()
     // {
     //     var prevInputDevice = CurrentInputDevice;

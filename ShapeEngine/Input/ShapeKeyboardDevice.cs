@@ -277,12 +277,12 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
     {
         if (isLocked) return 0f;
         bool modifierActive = IModifierKey.IsActive(modifierOperator, modifierKeys, null);
-        return (modifierActive && IsKeyDown((int)button)) ? 1f : 0f;
+        return (modifierActive && Raylib.IsKeyDown((int)button)) ? 1f : 0f;
     }
     public float GetValue(ShapeKeyboardButton button)
     {
         if (isLocked) return 0f;
-        return IsKeyDown((int)button) ? 1f : 0f;
+        return Raylib.IsKeyDown((int)button) ? 1f : 0f;
     }
 
     
@@ -356,8 +356,8 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
     public float GetValue(ShapeKeyboardButton neg, ShapeKeyboardButton pos)
     {
         if (isLocked) return 0f;
-        float vNegative = IsKeyDown((int)neg) ? 1f : 0f;
-        float vPositive = IsKeyDown((int)pos) ? 1f : 0f;
+        float vNegative = Raylib.IsKeyDown((int)neg) ? 1f : 0f;
+        float vPositive = Raylib.IsKeyDown((int)pos) ? 1f : 0f;
         return vPositive - vNegative;
     }
     

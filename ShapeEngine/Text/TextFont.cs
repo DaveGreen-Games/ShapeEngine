@@ -186,7 +186,7 @@ public struct TextFont
     {
         unsafe
         {
-            int index = GetGlyphIndex(Font, c);
+            int index = Raylib.GetGlyphIndex(Font, c);
             float glyphWidth = (Font.glyphs[index].advanceX == 0) ? Font.recs[index].width : Font.glyphs[index].advanceX;
             return new Vector2(glyphWidth, Font.baseSize);
         }
@@ -216,14 +216,14 @@ public struct TextFont
         var textSize = scaledFont.GetTextSize(text);
         Rect r = new(rect.GetPoint(alignement), textSize, alignement);
         var originOffset = alignement * textSize;
-        DrawTextPro(scaledFont.Font, text, r.TopLeft + originOffset, originOffset, rotDeg, scaledFont.FontSize, scaledFont.FontSpacing, scaledFont.ColorRgba.ToRayColor());
+        Raylib.DrawTextPro(scaledFont.Font, text, r.TopLeft + originOffset, originOffset, rotDeg, scaledFont.FontSize, scaledFont.FontSpacing, scaledFont.ColorRgba.ToRayColor());
     }
-    public void DrawWord(string word, Vector2 topLeft) => DrawTextEx(Font, word, topLeft, FontSize, FontSpacing, ColorRgba.ToRayColor());
+    public void DrawWord(string word, Vector2 topLeft) => Raylib.DrawTextEx(Font, word, topLeft, FontSize, FontSpacing, ColorRgba.ToRayColor());
     public void DrawWord(string word, Vector2 topLeft, Vector2 alignement)
     {
         var size = GetTextSize(word);
         Rect r = new(topLeft, size, alignement);
-        DrawTextEx(Font, word, r.TopLeft, FontSize, FontSpacing, ColorRgba.ToRayColor());
+        Raylib.DrawTextEx(Font, word, r.TopLeft, FontSize, FontSpacing, ColorRgba.ToRayColor());
     }
     public void DrawWord(string word, Vector2 topLeft, Vector2 alignement, Caret caret)
     {
@@ -654,13 +654,13 @@ public struct TextFont
         emphasis.DrawForeground(emphasisRect);
         
     }
-    private void DrawWord(string word, Vector2 topLeft, ColorRgba colorRgba) => DrawTextEx(Font, word, topLeft, FontSize, FontSpacing, colorRgba.ToRayColor());
+    private void DrawWord(string word, Vector2 topLeft, ColorRgba colorRgba) => Raylib.DrawTextEx(Font, word, topLeft, FontSize, FontSpacing, colorRgba.ToRayColor());
 
     #endregion
     
     public void SetFilter(TextureFilter textureFilter = TextureFilter.TEXTURE_FILTER_BILINEAR)
     {
-        SetTextureFilter(Font.texture, textureFilter);
+        Raylib.SetTextureFilter(Font.texture, textureFilter);
     }
     public static Emphasis? GetEmphasis(string word, List<TextEmphasis>? emphases)
     {

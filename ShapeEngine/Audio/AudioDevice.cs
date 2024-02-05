@@ -33,7 +33,7 @@ namespace ShapeEngine.Audio
         {
             if (!initialized)
             {
-                InitAudioDevice();
+                Raylib.InitAudioDevice();
                 initialized = true;
             }
             BusAdd(BUS_MASTER, 1f);
@@ -55,7 +55,7 @@ namespace ShapeEngine.Audio
             buses.Clear();
             playlists.Clear();
             soundBlockers.Clear();
-            CloseAudioDevice();
+            Raylib.CloseAudioDevice();
         }
         public void Update(float dt, ShapeCamera camera)// Vector2 cameraPos)
         {

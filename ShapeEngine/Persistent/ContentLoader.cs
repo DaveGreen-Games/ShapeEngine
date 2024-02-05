@@ -15,7 +15,7 @@ namespace ShapeEngine.Persistent
             unsafe
             {
                 Font f = Raylib.LoadFontEx(filePath, fontSize, (int*)0, GLYPH_COUNT);
-                SetTextureFilter(f.texture, TextureFilter.TEXTURE_FILTER_BILINEAR);
+                Raylib.SetTextureFilter(f.texture, TextureFilter.TEXTURE_FILTER_BILINEAR);
                 return f;
             }
         }

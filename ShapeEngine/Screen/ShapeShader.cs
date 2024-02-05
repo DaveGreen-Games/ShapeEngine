@@ -33,43 +33,43 @@ public class ShapeShader
     {
         if (!Loaded) return false;
         Loaded = false;
-        UnloadShader(Shader);
+        Raylib.UnloadShader(Shader);
         return true;
     }
     
     public static void SetValueFloat(Shader shader, string propertyName, float value)
     {
-        int valueLocation = GetShaderLocation(shader, propertyName);
-        SetShaderValue(shader, valueLocation, value, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
+        int valueLocation = Raylib.GetShaderLocation(shader, propertyName);
+        Raylib.SetShaderValue(shader, valueLocation, value, ShaderUniformDataType.SHADER_UNIFORM_FLOAT);
     }
     public static void SetValueVec(Shader shader, string propertyName, float[] values, ShaderUniformDataType dataType)
     {
-        int valueLocation = GetShaderLocation(shader, propertyName);
-        SetShaderValue(shader, valueLocation, values, dataType);
+        int valueLocation = Raylib.GetShaderLocation(shader, propertyName);
+        Raylib.SetShaderValue(shader, valueLocation, values, dataType);
     }
     public static void SetValueVector2(Shader shader, string propertyName, float v1, float v2)
     {
-        int valueLocation = GetShaderLocation(shader, propertyName);
-        SetShaderValue(shader, valueLocation, new float[] { v1, v2 }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
+        int valueLocation = Raylib.GetShaderLocation(shader, propertyName);
+        Raylib.SetShaderValue(shader, valueLocation, new float[] { v1, v2 }, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
     }
     public static void SetValueVector3(Shader shader, string propertyName, float v1, float v2, float v3)
     {
-        int valueLocation = GetShaderLocation(shader, propertyName);
-        SetShaderValue(shader, valueLocation, new float[] { v1, v2, v3 }, ShaderUniformDataType.SHADER_UNIFORM_VEC3);
+        int valueLocation = Raylib.GetShaderLocation(shader, propertyName);
+        Raylib.SetShaderValue(shader, valueLocation, new float[] { v1, v2, v3 }, ShaderUniformDataType.SHADER_UNIFORM_VEC3);
     }
     public static void SetValueVector4(Shader shader, string propertyName, float v1, float v2, float v3, float v4)
     {
-        int valueLocation = GetShaderLocation(shader, propertyName);
-        SetShaderValue(shader, valueLocation, new float[] { v1, v2, v3, v4 }, ShaderUniformDataType.SHADER_UNIFORM_VEC4);
+        int valueLocation = Raylib.GetShaderLocation(shader, propertyName);
+        Raylib.SetShaderValue(shader, valueLocation, new float[] { v1, v2, v3, v4 }, ShaderUniformDataType.SHADER_UNIFORM_VEC4);
     }
     public static void SetValueVector2(Shader shader, string propertyName, Vector2 vec)
     {
-        int valueLocation = GetShaderLocation(shader, propertyName);
-        SetShaderValue(shader, valueLocation, new float[] { vec.X, vec.Y}, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
+        int valueLocation = Raylib.GetShaderLocation(shader, propertyName);
+        Raylib.SetShaderValue(shader, valueLocation, new float[] { vec.X, vec.Y}, ShaderUniformDataType.SHADER_UNIFORM_VEC2);
     }
     public static void SetValueColor(Shader shader, string propertyName, ColorRgba colorRgba)
     {
-        int valueLocation = GetShaderLocation(shader, propertyName);
-        SetShaderValue(shader, valueLocation, new float[] {colorRgba.R / 255f, colorRgba.G / 255f, colorRgba.B / 255f, colorRgba.A / 255f}, ShaderUniformDataType.SHADER_UNIFORM_VEC4);
+        int valueLocation = Raylib.GetShaderLocation(shader, propertyName);
+        Raylib.SetShaderValue(shader, valueLocation, new float[] {colorRgba.R / 255f, colorRgba.G / 255f, colorRgba.B / 255f, colorRgba.A / 255f}, ShaderUniformDataType.SHADER_UNIFORM_VEC4);
     }
 }

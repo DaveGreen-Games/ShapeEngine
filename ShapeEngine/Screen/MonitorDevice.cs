@@ -52,23 +52,23 @@ namespace ShapeEngine.Screen
         }
         private void GenerateInfo()
         {
-            curIndex = GetCurrentMonitor();
-            monitorCount = GetMonitorCount();
+            curIndex = Raylib.GetCurrentMonitor();
+            monitorCount = Raylib.GetMonitorCount();
             monitors.Clear();
             for (int i = 0; i < monitorCount; i++)
             {
-                string name = GetMonitorName_(i);
-                int w =  GetMonitorWidth(i);
-                int h =  GetMonitorHeight(i);
-                Vector2 pos = GetMonitorPosition(i) + new Vector2(1, 1);
+                string name =Raylib.GetMonitorName_(i);
+                int w =  Raylib.GetMonitorWidth(i);
+                int h =  Raylib.GetMonitorHeight(i);
+                Vector2 pos = Raylib.GetMonitorPosition(i) + new Vector2(1, 1);
                 
-                int rr = GetMonitorRefreshRate(i);
+                int rr = Raylib.GetMonitorRefreshRate(i);
                 monitors.Add(new(name, w, h, pos, rr, i));
             }
         }
         public (bool changed, int oldIndex, int newIndex) HasIndexChanged()
         {
-            int index = GetCurrentMonitor();
+            int index = Raylib.GetCurrentMonitor();
             if (curIndex != index && IsValidIndex(index))
             {
                 int oldIndex = curIndex;
@@ -83,7 +83,7 @@ namespace ShapeEngine.Screen
         public MonitorInfo HasMonitorChanged()
         {
             MonitorInfo nextMonitor = CurMonitor();
-            int currentMonitorCount = GetMonitorCount();
+            int currentMonitorCount = Raylib.GetMonitorCount();
             if (currentMonitorCount != monitorCount)
             {
                 int dif = currentMonitorCount - monitorCount;

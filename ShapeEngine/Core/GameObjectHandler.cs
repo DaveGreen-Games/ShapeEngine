@@ -210,7 +210,8 @@ namespace ShapeEngine.Core
 
         public virtual void DrawDebug(ColorRgba bounds, ColorRgba border, ColorRgba fill)
         {
-            DrawRectangleLinesEx(this.Bounds.Rectangle, 15f, bounds.ToRayColor());
+            this.Bounds.DrawLines(15f, bounds);
+            // Raylib.DrawRectangleLinesEx(this.Bounds.Rectangle, 15f, bounds.ToRayColor());
         }
 
         

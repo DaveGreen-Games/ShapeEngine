@@ -1,5 +1,6 @@
 ﻿
 using System.Numerics;
+using System.Runtime.InteropServices.ComTypes;
 using Raylib_CsLo;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Collision;
@@ -41,7 +42,7 @@ namespace ShapeEngine.Lib;
 
         
         #region Custom Line Drawing
-        public static void DrawLine(Vector2 start, Vector2 end, float thickness, ColorRgba colorRgba, LineCapType capType = LineCapType.None, int capPoints = 0)
+        public static void DrawLine(Vector2 start, Vector2 end, float thickness, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0)
         {
             if (thickness < LineMinThickness) thickness = LineMinThickness;
             var w = end - start;
@@ -68,8 +69,8 @@ namespace ShapeEngine.Lib;
             var br = end + pR * thickness;
             var tr = end + pL * thickness;
             
-            Raylib.DrawTriangle(tl, bl, br, colorRgba.ToRayColor());
-            Raylib.DrawTriangle(tl, br, tr, colorRgba.ToRayColor());
+            Raylib.DrawTriangle(tl, bl, br, color.ToRayColor());
+            Raylib.DrawTriangle(tl, br, tr, color.ToRayColor());
 
             if (capType is LineCapType.None or LineCapType.Extended) return;
             if (capPoints <= 0) return;
@@ -80,8 +81,8 @@ namespace ShapeEngine.Lib;
                 var capStart = start - dir * thickness;
                 var capEnd = end + dir * thickness;
                 
-                Raylib.DrawTriangle(tl, capStart, bl, colorRgba.ToRayColor());
-                Raylib.DrawTriangle(tr, br, capEnd, colorRgba.ToRayColor());
+                Raylib.DrawTriangle(tl, capStart, bl, color.ToRayColor());
+                Raylib.DrawTriangle(tr, br, capEnd, color.ToRayColor());
             }
             else
             {
@@ -92,23 +93,23 @@ namespace ShapeEngine.Lib;
                 for (var i = 1; i <= capPoints; i++)
                 {
                     var pStart = start + pL.Rotate(- angleStep * i) * thickness;
-                    Raylib.DrawTriangle(pStart, start, curStart, colorRgba.ToRayColor());
+                    Raylib.DrawTriangle(pStart, start, curStart, color.ToRayColor());
                     curStart = pStart;
                         
                     var pEnd = end + pR.Rotate(- angleStep * i) * thickness;
-                    Raylib.DrawTriangle(pEnd, end, curEnd, colorRgba.ToRayColor());
+                    Raylib.DrawTriangle(pEnd, end, curEnd, color.ToRayColor());
                     curEnd = pEnd;
                 }
-                Raylib.DrawTriangle(curStart, bl, start, colorRgba.ToRayColor());
-                Raylib.DrawTriangle(curEnd, tr, end, colorRgba.ToRayColor());
+                Raylib.DrawTriangle(curStart, bl, start, color.ToRayColor());
+                Raylib.DrawTriangle(curEnd, tr, end, color.ToRayColor());
 
             }
         }
 
-        public static void DrawLine(float startX, float startY, float endX, float endY, float thickness, ColorRgba colorRgba,
+        public static void DrawLine(float startX, float startY, float endX, float endY, float thickness, ColorRgba color,
             LineCapType capType = LineCapType.None, int capPoints = 0)
         {
-            DrawLine(new(startX, startY), new(endX, endY), thickness, colorRgba, capType, capPoints);
+            DrawLine(new(startX, startY), new(endX, endY), thickness, color, capType, capPoints);
         }
         
         // public static void DrawLineBackup(Vector2 start, Vector2 end, float thickness, ShapeColor color, LineEndCap lineEndCap = LineEndCap.None, int endCapPoints = 0)
@@ -185,20 +186,20 @@ namespace ShapeEngine.Lib;
         #endregion
         
         #region Pixel
-        public static void DrawPixel(Vector2 pos, ColorRgba colorRgba) => Raylib.DrawPixelV(pos, colorRgba.ToRayColor()); 
-        public static void DrawPixel(float x, float y, ColorRgba colorRgba) => Raylib.DrawPixelV(new(x, y), colorRgba.ToRayColor());
+        public static void DrawPixel(Vector2 pos, ColorRgba color) => Raylib.DrawPixelV(pos, color.ToRayColor()); 
+        public static void DrawPixel(float x, float y, ColorRgba color) => Raylib.DrawPixelV(new(x, y), color.ToRayColor());
         #endregion
 
         #region Point
-        public static void Draw(this Vector2 p, float radius, ColorRgba colorRgba, int segments = 16)
+        public static void Draw(this Vector2 p, float radius, ColorRgba color, int segments = 16)
         {
-            DrawCircle(p, radius, colorRgba, segments);
+            DrawCircle(p, radius, color, segments);
         }
-        public static void Draw(this Points points, float r, ColorRgba colorRgba, int segments = 16)
+        public static void Draw(this Points points, float r, ColorRgba color, int segments = 16)
         {
             foreach (var p in points)
             {
-                p.Draw(r, colorRgba, segments);
+                p.Draw(r, color, segments);
             }
         }
 
@@ -206,15 +207,15 @@ namespace ShapeEngine.Lib;
 
         #region Segment
         
-        public static void Draw(this Segment segment, float thickness, ColorRgba colorRgba, LineCapType capType = LineCapType.None, int capPoints = 0 ) 
-            => DrawLine(segment.Start, segment.End, thickness, colorRgba, capType, capPoints);
+        public static void Draw(this Segment segment, float thickness, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0 ) 
+            => DrawLine(segment.Start, segment.End, thickness, color, capType, capPoints);
         
-        public static void Draw(this Segments segments, float thickness, ColorRgba colorRgba, LineCapType capType = LineCapType.None, int capPoints = 0)
+        public static void Draw(this Segments segments, float thickness, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0)
         {
             if (segments.Count <= 0) return;
             foreach (var seg in segments)
             {
-                seg.Draw(thickness, colorRgba, capType, capPoints);
+                seg.Draw(thickness, color, capType, capPoints);
             }
         }
         public static void Draw(this Segments segments, float thickness, List<ColorRgba> colors, LineCapType capType = LineCapType.None, int capPoints = 0)
@@ -227,10 +228,10 @@ namespace ShapeEngine.Lib;
             }
         }
         
-        public static void DrawVertices(this Segment segment, float vertexRadius, ColorRgba colorRgba, int vertexSegments = 16)
+        public static void DrawVertices(this Segment segment, float vertexRadius, ColorRgba color, int vertexSegments = 16)
         {
-            segment.Start.Draw( vertexRadius, colorRgba, vertexSegments);
-            segment.End.Draw(vertexRadius, colorRgba, vertexSegments);
+            segment.Start.Draw( vertexRadius, color, vertexSegments);
+            segment.End.Draw(vertexRadius, color, vertexSegments);
         }
        
         public static Segments CreateLightningLine(this Segment segment, int segments = 10, float maxSway = 80f)
@@ -329,9 +330,9 @@ namespace ShapeEngine.Lib;
             return result;
         }
         
-        public static void DrawLineDotted(Vector2 start, Vector2 end, int gaps, float thickness, ColorRgba colorRgba, LineCapType capType = LineCapType.None, int capPoints = 0)
+        public static void DrawLineDotted(Vector2 start, Vector2 end, int gaps, float thickness, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0)
         {
-            if (gaps <= 0) DrawLine(start, end, thickness, colorRgba, capType, capPoints);
+            if (gaps <= 0) DrawLine(start, end, thickness, color, capType, capPoints);
             else
             {
                 Vector2 w = end - start;
@@ -347,7 +348,7 @@ namespace ShapeEngine.Lib;
                     if (i % 2 == 0)
                     {
                         Vector2 next = cur + offset;
-                        DrawLine(cur, next, thickness, colorRgba, capType, capPoints);
+                        DrawLine(cur, next, thickness, color, capType, capPoints);
                         cur = next;
 
                     }
@@ -358,9 +359,9 @@ namespace ShapeEngine.Lib;
                 }
             }
         }
-        public static void DrawLineDotted(Vector2 start, Vector2 end, int gaps, float gapSizeF, float thickness, ColorRgba colorRgba, LineCapType capType = LineCapType.None, int capPoints = 0)
+        public static void DrawLineDotted(Vector2 start, Vector2 end, int gaps, float gapSizeF, float thickness, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0)
         {
-            if (gaps <= 0) DrawLine(start, end, thickness, colorRgba, capType, capPoints);
+            if (gaps <= 0) DrawLine(start, end, thickness, color, capType, capPoints);
             else
             {
                 Vector2 w = end - start;
@@ -382,7 +383,7 @@ namespace ShapeEngine.Lib;
                     if (i % 2 == 0)
                     {
                         Vector2 next = cur + offset;
-                        DrawLine(cur, next, thickness, colorRgba, capType, capPoints);
+                        DrawLine(cur, next, thickness, color, capType, capPoints);
                         cur = next;
                     }
                     else
@@ -392,14 +393,14 @@ namespace ShapeEngine.Lib;
                 }
             }
         }
-        public static void DrawLineGlow(Vector2 start, Vector2 end, float width, float endWidth, ColorRgba colorRgba, ColorRgba endColorRgba, int steps, LineCapType capType = LineCapType.None, int capPoints = 0)
+        public static void DrawLineGlow(Vector2 start, Vector2 end, float width, float endWidth, ColorRgba color, ColorRgba endColorRgba, int steps, LineCapType capType = LineCapType.None, int capPoints = 0)
         {
             float wStep = (endWidth - width) / steps;
 
-            int rStep = (endColorRgba.R - colorRgba.R) / steps;
-            int gStep = (endColorRgba.G - colorRgba.G) / steps;
-            int bStep = (endColorRgba.B - colorRgba.B) / steps;
-            int aStep = (endColorRgba.A - colorRgba.A) / steps;
+            int rStep = (endColorRgba.R - color.R) / steps;
+            int gStep = (endColorRgba.G - color.G) / steps;
+            int bStep = (endColorRgba.B - color.B) / steps;
+            int aStep = (endColorRgba.A - color.A) / steps;
 
             for (int i = steps; i >= 0; i--)
             {
@@ -408,48 +409,48 @@ namespace ShapeEngine.Lib;
                     start, end, width + wStep * i,
                     new
                     (
-                        colorRgba.R + rStep * i,
-                        colorRgba.G + gStep * i,
-                        colorRgba.B + bStep * i,
-                        colorRgba.A + aStep * i
+                        color.R + rStep * i,
+                        color.G + gStep * i,
+                        color.B + bStep * i,
+                        color.A + aStep * i
                     ),
                     capType,
                     capPoints
                 );
             }
         }
-        public static void DrawDotted(this Segment segment, int gaps, float thickness, ColorRgba colorRgba, LineCapType capType = LineCapType.None, int capPoints = 0)
+        public static void DrawDotted(this Segment segment, int gaps, float thickness, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0)
         {
-            DrawLineDotted(segment.Start, segment.End, gaps, thickness, colorRgba, capType, capPoints);
+            DrawLineDotted(segment.Start, segment.End, gaps, thickness, color, capType, capPoints);
         }
-        public static void DrawDotted(this Segment segment, int gaps, float gapSizeF, float thickness, ColorRgba colorRgba, LineCapType capType = LineCapType.None, int capPoints = 0)
+        public static void DrawDotted(this Segment segment, int gaps, float gapSizeF, float thickness, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0)
         {
-            DrawLineDotted(segment.Start, segment.End, gaps, gapSizeF, thickness, colorRgba, capType, capPoints);
+            DrawLineDotted(segment.Start, segment.End, gaps, gapSizeF, thickness, color, capType, capPoints);
         }
-        public static void DrawDotted(this Segments segments, int gaps, float thickness, ColorRgba colorRgba, LineCapType capType = LineCapType.None, int capPoints = 0)
+        public static void DrawDotted(this Segments segments, int gaps, float thickness, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0)
         {
             foreach (var seg in segments)
             {
-                seg.DrawDotted(gaps, thickness, colorRgba, capType, capPoints);
+                seg.DrawDotted(gaps, thickness, color, capType, capPoints);
             }
         }
-        public static void DrawDotted(this Segments segments, int gaps, float gapSizeF, float thickness, ColorRgba colorRgba, LineCapType capType = LineCapType.None, int capPoints = 0)
+        public static void DrawDotted(this Segments segments, int gaps, float gapSizeF, float thickness, ColorRgba color, LineCapType capType = LineCapType.None, int capPoints = 0)
         {
             foreach (var seg in segments)
             {
-                seg.DrawDotted(gaps, gapSizeF, thickness, colorRgba, capType, capPoints);
+                seg.DrawDotted(gaps, gapSizeF, thickness, color, capType, capPoints);
             }
         }
 
-        public static void DrawGlow(this Segment segment, float width, float endWidth, ColorRgba colorRgba, ColorRgba endColorRgba, int steps, LineCapType capType = LineCapType.None, int capPoints = 0)
+        public static void DrawGlow(this Segment segment, float width, float endWidth, ColorRgba color, ColorRgba endColorRgba, int steps, LineCapType capType = LineCapType.None, int capPoints = 0)
         {
-            DrawLineGlow(segment.Start, segment.End, width, endWidth, colorRgba, endColorRgba, steps, capType, capPoints);
+            DrawLineGlow(segment.Start, segment.End, width, endWidth, color, endColorRgba, steps, capType, capPoints);
         }
-        public static void DrawGlow(this Segments segments, float width, float endWidth, ColorRgba colorRgba, ColorRgba endColorRgba, int steps, LineCapType capType = LineCapType.None, int capPoints = 0)
+        public static void DrawGlow(this Segments segments, float width, float endWidth, ColorRgba color, ColorRgba endColorRgba, int steps, LineCapType capType = LineCapType.None, int capPoints = 0)
         {
             foreach (var seg in segments)
             {
-                seg.DrawGlow(width, endWidth, colorRgba, endColorRgba, steps, capType, capPoints);
+                seg.DrawGlow(width, endWidth, color, endColorRgba, steps, capType, capPoints);
             }
         }
 
@@ -457,26 +458,26 @@ namespace ShapeEngine.Lib;
         #endregion
 
         #region Circle
-        public static void DrawCircle(Vector2 center, float radius, ColorRgba colorRgba, int segments = 16)
+        public static void DrawCircle(Vector2 center, float radius, ColorRgba color, int segments = 16)
         {
             if (segments < 6) segments = 6;
-            Raylib.DrawCircleSector(center, radius, 0, 360, segments, colorRgba.ToRayColor());
+            Raylib.DrawCircleSector(center, radius, 0, 360, segments, color.ToRayColor());
         }
 
-        public static void Draw(this Circle c, ColorRgba colorRgba)
+        public static void Draw(this Circle c, ColorRgba color)
         {
-            DrawCircle(c.Center, c.Radius, colorRgba);
+            DrawCircle(c.Center, c.Radius, color);
         } 
-        public static void Draw(this Circle c, ColorRgba colorRgba, int segments)
+        public static void Draw(this Circle c, ColorRgba color, int segments)
         {
-            DrawCircle(c.Center, c.Radius, colorRgba, segments);
+            DrawCircle(c.Center, c.Radius, color, segments);
         }
-        public static void DrawLines(this Circle c, float lineThickness, int sides, ColorRgba colorRgba) => DrawPolyLinesEx(c.Center, sides, c.Radius, 0f, lineThickness, colorRgba.ToRayColor());
-        public static void DrawLines(this Circle c, float lineThickness, float rotDeg, int sides, ColorRgba colorRgba) => DrawPolyLinesEx(c.Center, sides, c.Radius, rotDeg, lineThickness, colorRgba.ToRayColor());
-        public static void DrawLines(this Circle c, float lineThickness, ColorRgba colorRgba, float sideLength = 8f)
+        public static void DrawLines(this Circle c, float lineThickness, int sides, ColorRgba color) => Raylib.DrawPolyLinesEx(c.Center, sides, c.Radius, 0f, lineThickness, color.ToRayColor());
+        public static void DrawLines(this Circle c, float lineThickness, float rotDeg, int sides, ColorRgba color) => Raylib.DrawPolyLinesEx(c.Center, sides, c.Radius, rotDeg, lineThickness, color.ToRayColor());
+        public static void DrawLines(this Circle c, float lineThickness, ColorRgba color, float sideLength = 8f)
         {
             int sides = GetCircleSideCount(c.Radius, sideLength);
-            DrawPolyLinesEx(c.Center, sides, c.Radius, 0f, lineThickness, colorRgba.ToRayColor());
+            Raylib.DrawPolyLinesEx(c.Center, sides, c.Radius, 0f, lineThickness, color.ToRayColor());
         }
         
         
@@ -485,49 +486,49 @@ namespace ShapeEngine.Lib;
         /// </summary>
         /// <param name="center"></param>
         /// <param name="radius"></param>
-        /// <param name="colorRgba"></param>
-        public static void DrawCircleFast(Vector2 center, float radius, ColorRgba colorRgba)
+        /// <param name="color"></param>
+        public static void DrawCircleFast(Vector2 center, float radius, ColorRgba color)
         {
             Rect r = new(center, new Vector2(radius * 2f), new Vector2(0.5f));
-            r.Draw(colorRgba);
+            r.Draw(color);
         }
         
-        public static void DrawCircleLines(Vector2 center, float radius, float lineThickness, int sides, ColorRgba colorRgba) => DrawPolyLinesEx(center, sides, radius, 0f, lineThickness, colorRgba.ToRayColor());
-        public static void DrawCircleLines(Vector2 center, float radius, float lineThickness, float rotDeg, int sides, ColorRgba colorRgba) => DrawPolyLinesEx(center, sides, radius, rotDeg, lineThickness, colorRgba.ToRayColor());
-        public static void DrawCircleLines(Vector2 center, float radius, float lineThickness, ColorRgba colorRgba, float sideLength = 8f)
+        public static void DrawCircleLines(Vector2 center, float radius, float lineThickness, int sides, ColorRgba color) => Raylib.DrawPolyLinesEx(center, sides, radius, 0f, lineThickness, color.ToRayColor());
+        public static void DrawCircleLines(Vector2 center, float radius, float lineThickness, float rotDeg, int sides, ColorRgba color) => Raylib.DrawPolyLinesEx(center, sides, radius, rotDeg, lineThickness, color.ToRayColor());
+        public static void DrawCircleLines(Vector2 center, float radius, float lineThickness, ColorRgba color, float sideLength = 8f)
         {
             int sides = GetCircleSideCount(radius, sideLength);
-            DrawPolyLinesEx(center, sides, radius, 0f, lineThickness, colorRgba.ToRayColor());
+            Raylib.DrawPolyLinesEx(center, sides, radius, 0f, lineThickness, color.ToRayColor());
         }
 
-        public static void DrawSector(this Circle c, float startAngleDeg, float endAngleDeg, int segments, ColorRgba colorRgba)
+        public static void DrawSector(this Circle c, float startAngleDeg, float endAngleDeg, int segments, ColorRgba color)
         {
-            Raylib.DrawCircleSector(c.Center, c.Radius, TransformAngleDeg(startAngleDeg), TransformAngleDeg(endAngleDeg), segments, colorRgba.ToRayColor());
+            Raylib.DrawCircleSector(c.Center, c.Radius, TransformAngleDeg(startAngleDeg), TransformAngleDeg(endAngleDeg), segments, color.ToRayColor());
         }
-        public static void DrawCircleSector(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, int segments, ColorRgba colorRgba)
+        public static void DrawCircleSector(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, int segments, ColorRgba color)
         {
-            Raylib.DrawCircleSector(center, radius, TransformAngleDeg(startAngleDeg), TransformAngleDeg(endAngleDeg), segments, colorRgba.ToRayColor());
-        }
-        
-        public static void DrawSectorLines(this Circle c, float startAngleDeg, float endAngleDeg, float lineThickness, ColorRgba colorRgba, bool closed = true, float sideLength = 8f)
-        {
-            DrawCircleSectorLines(c.Center, c.Radius, startAngleDeg, endAngleDeg, lineThickness, colorRgba, closed, sideLength);
-        }
-        public static void DrawSectorLines(this Circle c, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, float lineThickness, ColorRgba colorRgba, bool closed = true, float sideLength = 8f)
-        {
-            DrawCircleSectorLines(c.Center, c.Radius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, lineThickness, colorRgba, closed, sideLength); ;
-        }
-        public static void DrawSectorLines(this Circle c, float startAngleDeg, float endAngleDeg, int sides, float lineThickness, ColorRgba colorRgba, bool closed = true)
-        {
-            DrawCircleSectorLines(c.Center, c.Radius, startAngleDeg, endAngleDeg, sides, lineThickness, colorRgba, closed);
-        }
-        public static void DrawSectorLines(this Circle c, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, int sides, float lineThickness, ColorRgba colorRgba, bool closed = true)
-        {
-            DrawCircleSectorLines(c.Center, c.Radius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, sides, lineThickness, colorRgba, closed);
+            Raylib.DrawCircleSector(center, radius, TransformAngleDeg(startAngleDeg), TransformAngleDeg(endAngleDeg), segments, color.ToRayColor());
         }
         
+        public static void DrawSectorLines(this Circle c, float startAngleDeg, float endAngleDeg, float lineThickness, ColorRgba color, bool closed = true, float sideLength = 8f)
+        {
+            DrawCircleSectorLines(c.Center, c.Radius, startAngleDeg, endAngleDeg, lineThickness, color, closed, sideLength);
+        }
+        public static void DrawSectorLines(this Circle c, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, float lineThickness, ColorRgba color, bool closed = true, float sideLength = 8f)
+        {
+            DrawCircleSectorLines(c.Center, c.Radius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, lineThickness, color, closed, sideLength); ;
+        }
+        public static void DrawSectorLines(this Circle c, float startAngleDeg, float endAngleDeg, int sides, float lineThickness, ColorRgba color, bool closed = true)
+        {
+            DrawCircleSectorLines(c.Center, c.Radius, startAngleDeg, endAngleDeg, sides, lineThickness, color, closed);
+        }
+        public static void DrawSectorLines(this Circle c, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, int sides, float lineThickness, ColorRgba color, bool closed = true)
+        {
+            DrawCircleSectorLines(c.Center, c.Radius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, sides, lineThickness, color, closed);
+        }
         
-        public static void DrawCircleSectorLines(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, float lineThickness, ColorRgba colorRgba, bool closed = true, float sideLength = 8f)
+        
+        public static void DrawCircleSectorLines(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, float lineThickness, ColorRgba color, bool closed = true, float sideLength = 8f)
         {
             float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
             float endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
@@ -537,23 +538,23 @@ namespace ShapeEngine.Lib;
             if (closed)
             {
                 var sectorStart = center + ShapeVec.Rotate(ShapeVec.Right() * radius + new Vector2(lineThickness / 2, 0), startAngleRad);
-                DrawLine(center, sectorStart, lineThickness, colorRgba, LineCapType.CappedExtended, 2);
+                DrawLine(center, sectorStart, lineThickness, color, LineCapType.CappedExtended, 2);
 
                 var sectorEnd = center + ShapeVec.Rotate(ShapeVec.Right() * radius + new Vector2(lineThickness / 2, 0), endAngleRad);
-                DrawLine(center, sectorEnd, lineThickness, colorRgba, LineCapType.CappedExtended, 2);
+                DrawLine(center, sectorEnd, lineThickness, color, LineCapType.CappedExtended, 2);
             }
             for (int i = 0; i < sides; i++)
             {
                 Vector2 start = center + ShapeVec.Rotate(ShapeVec.Right() * radius, startAngleRad + angleStep * i);
                 Vector2 end = center + ShapeVec.Rotate(ShapeVec.Right() * radius, startAngleRad + angleStep * (i + 1));
-                DrawLine(start, end, lineThickness, colorRgba, LineCapType.CappedExtended, 2);
+                DrawLine(start, end, lineThickness, color, LineCapType.CappedExtended, 2);
             }
         }
-        public static void DrawCircleSectorLines(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, float lineThickness, ColorRgba colorRgba, bool closed = true, float sideLength = 8f)
+        public static void DrawCircleSectorLines(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, float lineThickness, ColorRgba color, bool closed = true, float sideLength = 8f)
         {
-            DrawCircleSectorLines(center, radius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, lineThickness, colorRgba, closed, sideLength); ;
+            DrawCircleSectorLines(center, radius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, lineThickness, color, closed, sideLength); ;
         }
-        public static void DrawCircleSectorLines(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, int sides, float lineThickness, ColorRgba colorRgba, bool closed = true)
+        public static void DrawCircleSectorLines(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, int sides, float lineThickness, ColorRgba color, bool closed = true)
         {
             float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
             float endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
@@ -562,24 +563,24 @@ namespace ShapeEngine.Lib;
             if (closed)
             {
                 Vector2 sectorStart = center + ShapeVec.Rotate(ShapeVec.Right() * radius + new Vector2(lineThickness / 2, 0), startAngleRad);
-                DrawLine(center, sectorStart, lineThickness, colorRgba, LineCapType.CappedExtended, 2);
+                DrawLine(center, sectorStart, lineThickness, color, LineCapType.CappedExtended, 2);
 
                 Vector2 sectorEnd = center + ShapeVec.Rotate(ShapeVec.Right() * radius + new Vector2(lineThickness / 2, 0), endAngleRad);
-                DrawLine(center, sectorEnd, lineThickness, colorRgba, LineCapType.CappedExtended, 2);
+                DrawLine(center, sectorEnd, lineThickness, color, LineCapType.CappedExtended, 2);
             }
             for (int i = 0; i < sides; i++)
             {
                 Vector2 start = center + ShapeVec.Rotate(ShapeVec.Right() * radius, startAngleRad + angleStep * i);
                 Vector2 end = center + ShapeVec.Rotate(ShapeVec.Right() * radius, startAngleRad + angleStep * (i + 1));
-                DrawLine(start, end, lineThickness, colorRgba, LineCapType.CappedExtended, 2);
+                DrawLine(start, end, lineThickness, color, LineCapType.CappedExtended, 2);
             }
         }
-        public static void DrawCircleSectorLines(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, int sides, float lineThickness, ColorRgba colorRgba, bool closed = true)
+        public static void DrawCircleSectorLines(Vector2 center, float radius, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, int sides, float lineThickness, ColorRgba color, bool closed = true)
         {
-            DrawCircleSectorLines(center, radius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, sides, lineThickness, colorRgba, closed);
+            DrawCircleSectorLines(center, radius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, sides, lineThickness, color, closed);
         }
 
-        public static void DrawCircleLinesDotted(Vector2 center, float radius, int sidesPerGap, float lineThickness, ColorRgba colorRgba, float sideLength = 8f, LineCapType capType = LineCapType.CappedExtended,  int capPoints = 2)
+        public static void DrawCircleLinesDotted(Vector2 center, float radius, int sidesPerGap, float lineThickness, ColorRgba color, float sideLength = 8f, LineCapType capType = LineCapType.CappedExtended,  int capPoints = 2)
         {
             float anglePieceRad = 360 * ShapeMath.DEGTORAD;
             int sides = GetCircleArcSideCount(radius, MathF.Abs(anglePieceRad * ShapeMath.RADTODEG), sideLength);
@@ -597,7 +598,7 @@ namespace ShapeEngine.Lib;
                 {
                     Vector2 start = center + ShapeVec.Rotate(ShapeVec.Right() * radius, angleStep * i);
                     Vector2 end = center + ShapeVec.Rotate(ShapeVec.Right() * radius, angleStep * (i + 1));
-                    DrawLine(start, end, lineThickness, colorRgba, capType, capPoints);
+                    DrawLine(start, end, lineThickness, color, capType, capPoints);
                 }
 
                 remainingSize -= sideLength;
@@ -678,69 +679,69 @@ namespace ShapeEngine.Lib;
         #endregion
 
         #region Ring
-        public static void DrawRingLines(Vector2 center, float innerRadius, float outerRadius, float lineThickness, ColorRgba colorRgba, float sideLength = 8f)
+        public static void DrawRingLines(Vector2 center, float innerRadius, float outerRadius, float lineThickness, ColorRgba color, float sideLength = 8f)
         {
-            DrawCircleLines(center, innerRadius, lineThickness, colorRgba, sideLength);
-            DrawCircleLines(center, outerRadius, lineThickness, colorRgba, sideLength);
+            DrawCircleLines(center, innerRadius, lineThickness, color, sideLength);
+            DrawCircleLines(center, outerRadius, lineThickness, color, sideLength);
         }
-        public static void DrawRingLines(Vector2 center, float innerRadius, float outerRadius, float startAngleDeg, float endAngleDeg, float lineThickness, ColorRgba colorRgba, float sideLength = 8f)
+        public static void DrawRingLines(Vector2 center, float innerRadius, float outerRadius, float startAngleDeg, float endAngleDeg, float lineThickness, ColorRgba color, float sideLength = 8f)
         {
-            DrawCircleSectorLines(center, innerRadius, startAngleDeg, endAngleDeg, lineThickness, colorRgba, false, sideLength);
-            DrawCircleSectorLines(center, outerRadius, startAngleDeg, endAngleDeg, lineThickness, colorRgba, false, sideLength);
+            DrawCircleSectorLines(center, innerRadius, startAngleDeg, endAngleDeg, lineThickness, color, false, sideLength);
+            DrawCircleSectorLines(center, outerRadius, startAngleDeg, endAngleDeg, lineThickness, color, false, sideLength);
 
             float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
             float endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
             Vector2 innerStart = center + ShapeVec.Rotate(ShapeVec.Right() * innerRadius - new Vector2(lineThickness / 2, 0), startAngleRad);
             Vector2 outerStart = center + ShapeVec.Rotate(ShapeVec.Right() * outerRadius + new Vector2(lineThickness / 2, 0), startAngleRad);
-            DrawLine(innerStart, outerStart, lineThickness, colorRgba, LineCapType.CappedExtended, 2);
+            DrawLine(innerStart, outerStart, lineThickness, color, LineCapType.CappedExtended, 2);
 
             Vector2 innerEnd = center + ShapeVec.Rotate(ShapeVec.Right() * innerRadius - new Vector2(lineThickness / 2, 0), endAngleRad);
             Vector2 outerEnd = center + ShapeVec.Rotate(ShapeVec.Right() * outerRadius + new Vector2(lineThickness / 2, 0), endAngleRad);
-            DrawLine(innerEnd, outerEnd, lineThickness, colorRgba, LineCapType.CappedExtended, 2);
+            DrawLine(innerEnd, outerEnd, lineThickness, color, LineCapType.CappedExtended, 2);
         }
-        public static void DrawRingLines(Vector2 center, float innerRadius, float outerRadius, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, float lineThickness, ColorRgba colorRgba, float sideLength = 8f)
+        public static void DrawRingLines(Vector2 center, float innerRadius, float outerRadius, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, float lineThickness, ColorRgba color, float sideLength = 8f)
         {
-            DrawRingLines(center, innerRadius, outerRadius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, lineThickness, colorRgba, sideLength);
+            DrawRingLines(center, innerRadius, outerRadius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, lineThickness, color, sideLength);
         }
-        public static void DrawRing(Vector2 center, float innerRadius, float outerRadius, ColorRgba colorRgba, float sideLength = 8f)
+        public static void DrawRing(Vector2 center, float innerRadius, float outerRadius, ColorRgba color, float sideLength = 8f)
         {
-            DrawRing(center, innerRadius, outerRadius, 0, 360, colorRgba, sideLength);
+            DrawRing(center, innerRadius, outerRadius, 0, 360, color, sideLength);
         }
-        public static void DrawRing(Vector2 center, float innerRadius, float outerRadius, int sides, ColorRgba colorRgba)
+        public static void DrawRing(Vector2 center, float innerRadius, float outerRadius, int sides, ColorRgba color)
         {
-            DrawRing(center, innerRadius, outerRadius, 0, 360, sides, colorRgba);
+            DrawRing(center, innerRadius, outerRadius, 0, 360, sides, color);
         }
-        public static void DrawRing(Vector2 center, float innerRadius, float outerRadius, float startAngleDeg, float endAngleDeg, ColorRgba colorRgba, float sideLength = 10f)
+        public static void DrawRing(Vector2 center, float innerRadius, float outerRadius, float startAngleDeg, float endAngleDeg, ColorRgba color, float sideLength = 10f)
         {
             float start = TransformAngleDeg(startAngleDeg);
             float end = TransformAngleDeg(endAngleDeg);
             float anglePiece = end - start;
             int sides = GetCircleArcSideCount(outerRadius, MathF.Abs(anglePiece), sideLength);
-            Raylib.DrawRing(center, innerRadius, outerRadius, start, end, sides, colorRgba.ToRayColor());
+            Raylib.DrawRing(center, innerRadius, outerRadius, start, end, sides, color.ToRayColor());
         }
-        public static void DrawRing(Vector2 center, float innerRadius, float outerRadius, float startAngleDeg, float endAngleDeg, int sides, ColorRgba colorRgba)
+        public static void DrawRing(Vector2 center, float innerRadius, float outerRadius, float startAngleDeg, float endAngleDeg, int sides, ColorRgba color)
         {
-            Raylib.DrawRing(center, innerRadius, outerRadius, TransformAngleDeg(startAngleDeg), TransformAngleDeg(endAngleDeg), sides, colorRgba.ToRayColor());
+            Raylib.DrawRing(center, innerRadius, outerRadius, TransformAngleDeg(startAngleDeg), TransformAngleDeg(endAngleDeg), sides, color.ToRayColor());
         }
-        public static void DrawRing(Vector2 center, float innerRadius, float outerRadius, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, ColorRgba colorRgba, float sideLength = 10f)
+        public static void DrawRing(Vector2 center, float innerRadius, float outerRadius, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, ColorRgba color, float sideLength = 10f)
         {
-            DrawRing(center, innerRadius, outerRadius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, colorRgba, sideLength);
+            DrawRing(center, innerRadius, outerRadius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, color, sideLength);
         }
-        public static void DrawRing(Vector2 center, float innerRadius, float outerRadius, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, int sides, ColorRgba colorRgba)
+        public static void DrawRing(Vector2 center, float innerRadius, float outerRadius, float startAngleDeg, float endAngleDeg, float rotOffsetDeg, int sides, ColorRgba color)
         {
-            DrawRing(center, innerRadius, outerRadius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, sides, colorRgba);
+            DrawRing(center, innerRadius, outerRadius, startAngleDeg + rotOffsetDeg, endAngleDeg + rotOffsetDeg, sides, color);
         }
 
         #endregion
 
         #region Rectangle
 
-        public static void Draw(this NinePatchRect npr, ColorRgba colorRgba)
+        public static void Draw(this NinePatchRect npr, ColorRgba color)
         {
             var rects = npr.Rects;
             foreach (var r in rects)
             {
-                r.Draw(colorRgba);
+                r.Draw(color);
             }
         }
         public static void Draw(this NinePatchRect npr, ColorRgba sourceColorRgba, ColorRgba patchColorRgba)
@@ -752,12 +753,12 @@ namespace ShapeEngine.Lib;
                 r.Draw(patchColorRgba);
             }
         }
-        public static void DrawLines(this NinePatchRect npr, float lineThickness, ColorRgba colorRgba)
+        public static void DrawLines(this NinePatchRect npr, float lineThickness, ColorRgba color)
         {
             var rects = npr.Rects;
             foreach (var r in rects)
             {
-                r.DrawLines(lineThickness, colorRgba);
+                r.DrawLines(lineThickness, color);
             }
         }
         public static void DrawLines(this NinePatchRect npr, float sourceLineThickness, float patchLineThickness, ColorRgba sourceColorRgba, ColorRgba patchColorRgba)
@@ -770,7 +771,7 @@ namespace ShapeEngine.Lib;
             }
         }
         
-        public static void DrawGrid(this Rect r, int lines, float lineThickness, ColorRgba colorRgba)
+        public static void DrawGrid(this Rect r, int lines, float lineThickness, ColorRgba color)
         {
             //float hGap = r.width / lines;
             //float vGap = r.height / lines;
@@ -783,36 +784,36 @@ namespace ShapeEngine.Lib;
 
             for (var i = 0; i < lines; i++)
             {
-                Raylib.DrawLineEx(tl + xOffset * i, bl + xOffset * i, lineThickness, colorRgba.ToRayColor());
-                Raylib.DrawLineEx(tl + yOffset * i, tr + yOffset * i, lineThickness, colorRgba.ToRayColor());
+                Raylib.DrawLineEx(tl + xOffset * i, bl + xOffset * i, lineThickness, color.ToRayColor());
+                Raylib.DrawLineEx(tl + yOffset * i, tr + yOffset * i, lineThickness, color.ToRayColor());
             }
         }
 
-        public static void DrawRect(Vector2 topLeft, Vector2 bottomRight, ColorRgba colorRgba) => DrawRectangleRec(new Rect(topLeft, bottomRight).Rectangle, colorRgba.ToRayColor());
-        public static void DrawRect(Vector2 topLeft, Vector2 bottomRight, Vector2 pivot, float rotDeg, ColorRgba colorRgba) => Draw(new Rect(topLeft, bottomRight),pivot, rotDeg, colorRgba);
-        public static void DrawRectLines(Vector2 topLeft, Vector2 bottomRight, float lineThickness, ColorRgba colorRgba) => DrawLines(new Rect(topLeft, bottomRight),lineThickness,colorRgba);
-        public static void DrawRectLines(Vector2 topLeft, Vector2 bottomRight, Vector2 pivot, float rotDeg, float lineThickness, ColorRgba colorRgba, LineCapType capType = LineCapType.Extended, int capPoints = 0)
+        public static void DrawRect(Vector2 topLeft, Vector2 bottomRight, ColorRgba color) => Raylib.DrawRectangleRec(new Rect(topLeft, bottomRight).Rectangle, color.ToRayColor());
+        public static void DrawRect(Vector2 topLeft, Vector2 bottomRight, Vector2 pivot, float rotDeg, ColorRgba color) => Draw(new Rect(topLeft, bottomRight),pivot, rotDeg, color);
+        public static void DrawRectLines(Vector2 topLeft, Vector2 bottomRight, float lineThickness, ColorRgba color) => DrawLines(new Rect(topLeft, bottomRight),lineThickness,color);
+        public static void DrawRectLines(Vector2 topLeft, Vector2 bottomRight, Vector2 pivot, float rotDeg, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.Extended, int capPoints = 0)
         {
-            DrawLines(new Rect(topLeft, bottomRight), pivot, rotDeg, lineThickness, colorRgba, capType, capPoints);
+            DrawLines(new Rect(topLeft, bottomRight), pivot, rotDeg, lineThickness, color, capType, capPoints);
 
         }
 
-        public static void Draw(this Rect rect, ColorRgba colorRgba) => DrawRectangleRec(rect.Rectangle, colorRgba.ToRayColor());
-        public static void Draw(this Rect rect, Vector2 pivot, float rotDeg, ColorRgba colorRgba)
+        public static void Draw(this Rect rect, ColorRgba color) => Raylib.DrawRectangleRec(rect.Rectangle, color.ToRayColor());
+        public static void Draw(this Rect rect, Vector2 pivot, float rotDeg, ColorRgba color)
         {
             var rr = rect.Rotate(pivot, rotDeg); // SRect.RotateRect(rect, pivot, rotDeg);
-            Raylib.DrawTriangle(rr.tl, rr.bl, rr.br, colorRgba.ToRayColor());
-            Raylib.DrawTriangle(rr.br, rr.tr, rr.tl, colorRgba.ToRayColor());
+            Raylib.DrawTriangle(rr.tl, rr.bl, rr.br, color.ToRayColor());
+            Raylib.DrawTriangle(rr.br, rr.tr, rr.tl, color.ToRayColor());
         }
-        public static void DrawLines(this Rect rect, float lineThickness, ColorRgba colorRgba) => Raylib.DrawRectangleLinesEx(rect.Rectangle, lineThickness, colorRgba.ToRayColor());
-        public static void DrawLines(this Rect rect, Vector2 pivot, float rotDeg, float lineThickness, ColorRgba colorRgba, LineCapType capType = LineCapType.Extended, int capPoints = 0)
+        public static void DrawLines(this Rect rect, float lineThickness, ColorRgba color) => Raylib.DrawRectangleLinesEx(rect.Rectangle, lineThickness, color.ToRayColor());
+        public static void DrawLines(this Rect rect, Vector2 pivot, float rotDeg, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.Extended, int capPoints = 0)
         {
             var rr = ShapeRect.Rotate(rect, pivot, rotDeg);
 
-            DrawLine(rr.tl, rr.tr, lineThickness, colorRgba, capType, capPoints);
-            DrawLine(rr.bl, rr.br, lineThickness, colorRgba, capType, capPoints);
-            DrawLine(rr.tl, rr.bl, lineThickness, colorRgba, capType, capPoints);
-            DrawLine(rr.tr, rr.br, lineThickness, colorRgba, capType, capPoints);
+            DrawLine(rr.tl, rr.tr, lineThickness, color, capType, capPoints);
+            DrawLine(rr.bl, rr.br, lineThickness, color, capType, capPoints);
+            DrawLine(rr.tl, rr.bl, lineThickness, color, capType, capPoints);
+            DrawLine(rr.tr, rr.br, lineThickness, color, capType, capPoints);
             // if (rounded)
             // {
             //     DrawCircle(rr.tl, lineThickness / 2, color);
@@ -837,41 +838,41 @@ namespace ShapeEngine.Lib;
             // }
         }
 
-        public static void DrawVertices(this Rect rect, float vertexRadius, ColorRgba colorRgba, int circleSegments = 8)
+        public static void DrawVertices(this Rect rect, float vertexRadius, ColorRgba color, int circleSegments = 8)
         {
-            DrawCircle(rect.TopLeft, vertexRadius, colorRgba    , circleSegments);
-            DrawCircle(rect.TopRight, vertexRadius, colorRgba   , circleSegments);
-            DrawCircle(rect.BottomLeft, vertexRadius, colorRgba , circleSegments);
-            DrawCircle(rect.BottomRight, vertexRadius, colorRgba, circleSegments);
+            DrawCircle(rect.TopLeft, vertexRadius, color    , circleSegments);
+            DrawCircle(rect.TopRight, vertexRadius, color   , circleSegments);
+            DrawCircle(rect.BottomLeft, vertexRadius, color , circleSegments);
+            DrawCircle(rect.BottomRight, vertexRadius, color, circleSegments);
         }
-        public static void DrawRounded(this Rect rect, float roundness, int segments, ColorRgba colorRgba) => Raylib.DrawRectangleRounded(rect.Rectangle, roundness, segments, colorRgba.ToRayColor());
-        public static void DrawRoundedLines(this Rect rect, float roundness, float lineThickness, int segments, ColorRgba colorRgba) => Raylib.DrawRectangleRoundedLines(rect.Rectangle, roundness, segments, lineThickness, colorRgba.ToRayColor());
+        public static void DrawRounded(this Rect rect, float roundness, int segments, ColorRgba color) => Raylib.DrawRectangleRounded(rect.Rectangle, roundness, segments, color.ToRayColor());
+        public static void DrawRoundedLines(this Rect rect, float roundness, float lineThickness, int segments, ColorRgba color) => Raylib.DrawRectangleRoundedLines(rect.Rectangle, roundness, segments, lineThickness, color.ToRayColor());
 
-        public static void DrawSlantedCorners(this Rect rect, ColorRgba colorRgba, float tlCorner, float trCorner, float brCorner, float blCorner)
+        public static void DrawSlantedCorners(this Rect rect, ColorRgba color, float tlCorner, float trCorner, float brCorner, float blCorner)
         {
             var points = GetSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner);
-            points.DrawPolygonConvex(rect.Center, colorRgba);
+            points.DrawPolygonConvex(rect.Center, color);
         }
-        public static void DrawSlantedCorners(this Rect rect, Vector2 pivot, float rotDeg, ColorRgba colorRgba, float tlCorner, float trCorner, float brCorner, float blCorner)
+        public static void DrawSlantedCorners(this Rect rect, Vector2 pivot, float rotDeg, ColorRgba color, float tlCorner, float trCorner, float brCorner, float blCorner)
         {
             var poly = GetSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner);
             poly.Rotate(pivot, rotDeg * ShapeMath.DEGTORAD);
-            poly.DrawPolygonConvex(rect.Center, colorRgba);
+            poly.DrawPolygonConvex(rect.Center, color);
             //DrawPolygonConvex(poly, rect.Center, color);
             //var points = SPoly.Rotate(GetSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner), pivot, rotDeg * SUtils.DEGTORAD);
             //DrawPolygonConvex(points, rect.Center, color);
         }
-        public static void DrawSlantedCornersLines(this Rect rect, float lineThickness, ColorRgba colorRgba, float tlCorner, float trCorner, float brCorner, float blCorner)
+        public static void DrawSlantedCornersLines(this Rect rect, float lineThickness, ColorRgba color, float tlCorner, float trCorner, float brCorner, float blCorner)
         {
             var points = GetSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner);
-            points.DrawLines(lineThickness, colorRgba);
+            points.DrawLines(lineThickness, color);
             // DrawLines(points, lineThickness, color);
         }
-        public static void DrawSlantedCornersLines(this Rect rect, Vector2 pivot, float rotDeg, float lineThickness, ColorRgba colorRgba, float tlCorner, float trCorner, float brCorner, float blCorner)
+        public static void DrawSlantedCornersLines(this Rect rect, Vector2 pivot, float rotDeg, float lineThickness, ColorRgba color, float tlCorner, float trCorner, float brCorner, float blCorner)
         {
             var poly = GetSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner);
             poly.Rotate(pivot, rotDeg * ShapeMath.DEGTORAD);
-            poly.DrawLines(lineThickness, colorRgba);
+            poly.DrawLines(lineThickness, color);
             // DrawLines(poly, lineThickness, color);
             //var points = SPoly.Rotate(GetSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner), pivot, rotDeg * SUtils.DEGTORAD);
             //DrawLines(points, lineThickness, color);
@@ -954,7 +955,7 @@ namespace ShapeEngine.Lib;
             return points;
         }
         
-        public static void DrawCorners(this Rect rect, float lineThickness, ColorRgba colorRgba, float tlCorner, float trCorner, float brCorner, float blCorner, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+        public static void DrawCorners(this Rect rect, float lineThickness, ColorRgba color, float tlCorner, float trCorner, float brCorner, float blCorner, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
         {
             var tl = rect.TopLeft;
             var tr = rect.TopRight;
@@ -964,31 +965,31 @@ namespace ShapeEngine.Lib;
             if (tlCorner > 0f)
             {
                 //DrawCircle(tl, lineThickness / 2, color);
-                DrawLine(tl, tl + new Vector2(MathF.Min(tlCorner, rect.Width), 0f), lineThickness, colorRgba, capType, capPoints);
-                DrawLine(tl, tl + new Vector2(0f, MathF.Min(tlCorner, rect.Height)), lineThickness, colorRgba, capType, capPoints);
+                DrawLine(tl, tl + new Vector2(MathF.Min(tlCorner, rect.Width), 0f), lineThickness, color, capType, capPoints);
+                DrawLine(tl, tl + new Vector2(0f, MathF.Min(tlCorner, rect.Height)), lineThickness, color, capType, capPoints);
             }
             if (trCorner > 0f)
             {
                 //DrawCircle(tr, lineThickness / 2, color);
-                DrawLine(tr, tr - new Vector2(MathF.Min(trCorner, rect.Width), 0f), lineThickness, colorRgba, capType, capPoints);
-                DrawLine(tr, tr + new Vector2(0f, MathF.Min(trCorner, rect.Height)), lineThickness, colorRgba, capType, capPoints);
+                DrawLine(tr, tr - new Vector2(MathF.Min(trCorner, rect.Width), 0f), lineThickness, color, capType, capPoints);
+                DrawLine(tr, tr + new Vector2(0f, MathF.Min(trCorner, rect.Height)), lineThickness, color, capType, capPoints);
             }
             if (brCorner > 0f)
             {
                 //DrawCircle(br, lineThickness / 2, color);
-                DrawLine(br, br - new Vector2(MathF.Min(brCorner, rect.Width), 0f), lineThickness, colorRgba, capType, capPoints);
-                DrawLine(br, br - new Vector2(0f, MathF.Min(brCorner, rect.Height)), lineThickness, colorRgba, capType, capPoints);
+                DrawLine(br, br - new Vector2(MathF.Min(brCorner, rect.Width), 0f), lineThickness, color, capType, capPoints);
+                DrawLine(br, br - new Vector2(0f, MathF.Min(brCorner, rect.Height)), lineThickness, color, capType, capPoints);
             }
             if (blCorner > 0f)
             {
                 //DrawCircle(bl, lineThickness / 2, color);
-                DrawLine(bl, bl + new Vector2(MathF.Min(blCorner, rect.Width), 0f), lineThickness, colorRgba, capType, capPoints);
-                DrawLine(bl, bl - new Vector2(0f, MathF.Min(blCorner, rect.Height)), lineThickness, colorRgba, capType, capPoints);
+                DrawLine(bl, bl + new Vector2(MathF.Min(blCorner, rect.Width), 0f), lineThickness, color, capType, capPoints);
+                DrawLine(bl, bl - new Vector2(0f, MathF.Min(blCorner, rect.Height)), lineThickness, color, capType, capPoints);
             }
         }
-        public static void DrawCorners(this Rect rect, float lineThickness, ColorRgba colorRgba, float cornerLength, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
-            => DrawCorners(rect, lineThickness, colorRgba, cornerLength, cornerLength, cornerLength, cornerLength, capType, capPoints);
-        public static void DrawCornersRelative(this Rect rect, float lineThickness, ColorRgba colorRgba, float tlCorner, float trCorner, float brCorner, float blCorner, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+        public static void DrawCorners(this Rect rect, float lineThickness, ColorRgba color, float cornerLength, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+            => DrawCorners(rect, lineThickness, color, cornerLength, cornerLength, cornerLength, cornerLength, capType, capPoints);
+        public static void DrawCornersRelative(this Rect rect, float lineThickness, ColorRgba color, float tlCorner, float trCorner, float brCorner, float blCorner, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
         {
             var tl = rect.TopLeft;
             var tr = rect.TopRight;
@@ -997,33 +998,33 @@ namespace ShapeEngine.Lib;
 
             if (tlCorner > 0f && tlCorner < 1f)
             {
-                DrawCircle(tl, lineThickness / 2, colorRgba);
-                DrawLine(tl, tl + new Vector2(tlCorner * rect.Width, 0f), lineThickness, colorRgba, capType, capPoints);
-                DrawLine(tl, tl + new Vector2(0f, tlCorner * rect.Height), lineThickness, colorRgba, capType, capPoints);
+                DrawCircle(tl, lineThickness / 2, color);
+                DrawLine(tl, tl + new Vector2(tlCorner * rect.Width, 0f), lineThickness, color, capType, capPoints);
+                DrawLine(tl, tl + new Vector2(0f, tlCorner * rect.Height), lineThickness, color, capType, capPoints);
             }
             if (trCorner > 0f && trCorner < 1f)
             {
-                DrawCircle(tr, lineThickness / 2, colorRgba);
-                DrawLine(tr, tr - new Vector2(tlCorner * rect.Width, 0f), lineThickness, colorRgba, capType, capPoints);
-                DrawLine(tr, tr + new Vector2(0f, tlCorner * rect.Height), lineThickness, colorRgba, capType, capPoints);
+                DrawCircle(tr, lineThickness / 2, color);
+                DrawLine(tr, tr - new Vector2(tlCorner * rect.Width, 0f), lineThickness, color, capType, capPoints);
+                DrawLine(tr, tr + new Vector2(0f, tlCorner * rect.Height), lineThickness, color, capType, capPoints);
             }
             if (brCorner > 0f && brCorner < 1f)
             {
-                DrawCircle(br, lineThickness / 2, colorRgba);
-                DrawLine(br, br - new Vector2(tlCorner * rect.Width, 0f), lineThickness, colorRgba, capType, capPoints);
-                DrawLine(br, br - new Vector2(0f, tlCorner * rect.Height), lineThickness, colorRgba, capType, capPoints);
+                DrawCircle(br, lineThickness / 2, color);
+                DrawLine(br, br - new Vector2(tlCorner * rect.Width, 0f), lineThickness, color, capType, capPoints);
+                DrawLine(br, br - new Vector2(0f, tlCorner * rect.Height), lineThickness, color, capType, capPoints);
             }
             if (blCorner > 0f && blCorner < 1f)
             {
-                DrawCircle(bl, lineThickness / 2, colorRgba);
-                DrawLine(bl, bl + new Vector2(tlCorner * rect.Width, 0f), lineThickness, colorRgba, capType, capPoints);
-                DrawLine(bl, bl - new Vector2(0f, tlCorner * rect.Height), lineThickness, colorRgba, capType, capPoints);
+                DrawCircle(bl, lineThickness / 2, color);
+                DrawLine(bl, bl + new Vector2(tlCorner * rect.Width, 0f), lineThickness, color, capType, capPoints);
+                DrawLine(bl, bl - new Vector2(0f, tlCorner * rect.Height), lineThickness, color, capType, capPoints);
             }
         }
-        public static void DrawCornersRelative(this Rect rect, float lineThickness, ColorRgba colorRgba, float cornerLengthFactor, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2) 
-            => DrawCornersRelative(rect, lineThickness, colorRgba, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor, capType, capPoints);
+        public static void DrawCornersRelative(this Rect rect, float lineThickness, ColorRgba color, float cornerLengthFactor, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2) 
+            => DrawCornersRelative(rect, lineThickness, color, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor, cornerLengthFactor, capType, capPoints);
         
-        public static void DrawCheckered(this Rect rect, float spacing, float lineThickness, float angleDeg, ColorRgba lineColorRgba, ColorRgba outlineColorRgba, ColorRgba bgColorRgba)
+        public static void DrawCheckered(this Rect rect, float spacing, float lineThickness, float angleDeg, ColorRgba lineColor, ColorRgba outlineColor, ColorRgba bgColor)
         {
             var size = new Vector2(rect.Width, rect.Height);
             var center = new Vector2(rect.X, rect.Y) + size / 2;
@@ -1035,7 +1036,7 @@ namespace ShapeEngine.Lib;
             //var bl = new Vector2(rect.X, rect.Y + rect.Height);
             //var br = new Vector2(rect.X + rect.Width, rect.Y + rect.Height);
 
-            if (bgColorRgba.A > 0) DrawRectangleRec(rect.Rectangle, bgColorRgba.ToRayColor());
+            if (bgColor.A > 0) rect.Draw(bgColor); //DrawRectangleRec(rect.Rectangle, bgColor.ToRayColor());
 
             Vector2 cur = new(-spacing / 2, 0f);
 
@@ -1055,7 +1056,7 @@ namespace ShapeEngine.Lib;
                 var collisionPoints = seg.IntersectShape(rect); // SGeometry.IntersectionSegmentRect(center, start, end, tl, tr, br, bl).points;
 
                 if (collisionPoints.Count >= 2) 
-                    DrawLine(collisionPoints[0].Point, collisionPoints[1].Point, lineThickness, lineColorRgba);
+                    DrawLine(collisionPoints[0].Point, collisionPoints[1].Point, lineThickness, lineColor);
                 else break;
                 cur.X -= spacing;
                 whileCounter++;
@@ -1074,16 +1075,16 @@ namespace ShapeEngine.Lib;
                 var seg = new Segment(start, end);
                 var collisionPoints = seg.IntersectShape(rect); //SGeometry.IntersectionSegmentRect(center, start, end, tl, tr, br, bl).points;
                 if (collisionPoints.Count >= 2) 
-                    DrawLine(collisionPoints[0].Point, collisionPoints[1].Point, lineThickness, lineColorRgba);
+                    DrawLine(collisionPoints[0].Point, collisionPoints[1].Point, lineThickness, lineColor);
                 else break;
                 cur.X += spacing;
                 whileCounter++;
             }
 
-            if (outlineColorRgba.A > 0) DrawLines(rect, new Vector2(0.5f, 0.5f), 0f, lineThickness, outlineColorRgba);
+            if (outlineColor.A > 0) DrawLines(rect, new Vector2(0.5f, 0.5f), 0f, lineThickness, outlineColor);
         }
 
-        public static void DrawLinesDotted(this Rect rect, int gapsPerSide, float lineThickness, ColorRgba colorRgba, LineCapType capType = LineCapType.CappedExtended, int capPoints = 3)
+        public static void DrawLinesDotted(this Rect rect, int gapsPerSide, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 3)
         {
             // if (cornerCircleSectors > 5)
             // {
@@ -1099,10 +1100,10 @@ namespace ShapeEngine.Lib;
             var segments = rect.GetEdges();
             foreach (var s in segments)
             {
-                DrawLineDotted(s.Start, s.End, gapsPerSide, lineThickness, colorRgba, capType, capPoints);
+                DrawLineDotted(s.Start, s.End, gapsPerSide, lineThickness, color, capType, capPoints);
             }
         }
-        public static void DrawLinesDotted(this Rect rect, int gapsPerSide, float gapSizeF, float lineThickness, ColorRgba colorRgba, LineCapType capType = LineCapType.CappedExtended, int capPoints = 3)
+        public static void DrawLinesDotted(this Rect rect, int gapsPerSide, float gapSizeF, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 3)
         {
             // if (cornerCircleSegments > 5)
             // {
@@ -1118,7 +1119,7 @@ namespace ShapeEngine.Lib;
             var segments = rect.GetEdges(); // SRect.GetEdges(rect);
             foreach (var s in segments)
             {
-                DrawLineDotted(s.Start, s.End, gapsPerSide, gapSizeF, lineThickness, colorRgba, capType, capPoints);
+                DrawLineDotted(s.Start, s.End, gapsPerSide, gapSizeF, lineThickness, color, capType, capPoints);
             }
         }
 
@@ -1126,64 +1127,64 @@ namespace ShapeEngine.Lib;
         #endregion
 
         #region Triangle
-        public static void DrawTriangle(Vector2 a, Vector2 b, Vector2 c, ColorRgba colorRgba) => Raylib.DrawTriangle(a, b, c, colorRgba.ToRayColor());
+        public static void DrawTriangle(Vector2 a, Vector2 b, Vector2 c, ColorRgba color) => Raylib.DrawTriangle(a, b, c, color.ToRayColor());
 
         public static void DrawTriangleLines(Vector2 a, Vector2 b, Vector2 c, float lineThickness,
-            ColorRgba colorRgba, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+            ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
         {
-            DrawLine(a, b, lineThickness, colorRgba, capType, capPoints);
-            DrawLine(b, c, lineThickness, colorRgba, capType, capPoints);
-            DrawLine(c, a, lineThickness, colorRgba, capType, capPoints);
+            DrawLine(a, b, lineThickness, color, capType, capPoints);
+            DrawLine(b, c, lineThickness, color, capType, capPoints);
+            DrawLine(c, a, lineThickness, color, capType, capPoints);
             
             // new Triangle(a, b, c).GetEdges().Draw(lineThickness, color);
         }
 
-        public static void Draw(this Triangle t, ColorRgba colorRgba) => Raylib.DrawTriangle(t.A, t.B, t.C, colorRgba.ToRayColor());
+        public static void Draw(this Triangle t, ColorRgba color) => Raylib.DrawTriangle(t.A, t.B, t.C, color.ToRayColor());
 
-        public static void DrawLines(this Triangle t, float lineThickness, ColorRgba colorRgba, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+        public static void DrawLines(this Triangle t, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
         {
-            DrawTriangleLines(t.A, t.B, t.C, lineThickness, colorRgba);
+            DrawTriangleLines(t.A, t.B, t.C, lineThickness, color);
             // t.GetEdges().Draw(lineThickness, color);
         }
 
-        public static void DrawVertices(this Triangle t, float vertexRadius, ColorRgba colorRgba, int circleSegments = 8)
+        public static void DrawVertices(this Triangle t, float vertexRadius, ColorRgba color, int circleSegments = 8)
         {
-            DrawCircle(t.A, vertexRadius, colorRgba, circleSegments);
-            DrawCircle(t.B, vertexRadius, colorRgba, circleSegments);
-            DrawCircle(t.C, vertexRadius, colorRgba, circleSegments);
+            DrawCircle(t.A, vertexRadius, color, circleSegments);
+            DrawCircle(t.B, vertexRadius, color, circleSegments);
+            DrawCircle(t.C, vertexRadius, color, circleSegments);
         }
-        public static void Draw(this Triangulation triangles, ColorRgba colorRgba) { foreach (var t in triangles) t.Draw(colorRgba); }
+        public static void Draw(this Triangulation triangles, ColorRgba color) { foreach (var t in triangles) t.Draw(color); }
 
-        public static void DrawLines(this Triangulation triangles, float lineThickness, ColorRgba colorRgba,
+        public static void DrawLines(this Triangulation triangles, float lineThickness, ColorRgba color,
             LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
         {
-            foreach (var t in triangles) t.DrawLines(lineThickness, colorRgba, capType, capPoints);
+            foreach (var t in triangles) t.DrawLines(lineThickness, color, capType, capPoints);
         }
         #endregion
 
         #region Polygon
 
-        public static void DrawPolygonConvex(this Polygon poly, ColorRgba colorRgba, bool clockwise = false) { DrawPolygonConvex(poly, poly.GetCentroid(), colorRgba, clockwise); }
-        public static void DrawPolygonConvex(this Polygon poly, Vector2 center, ColorRgba colorRgba, bool clockwise = false)
+        public static void DrawPolygonConvex(this Polygon poly, ColorRgba color, bool clockwise = false) { DrawPolygonConvex(poly, poly.GetCentroid(), color, clockwise); }
+        public static void DrawPolygonConvex(this Polygon poly, Vector2 center, ColorRgba color, bool clockwise = false)
         {
             if (clockwise)
             {
                 for (int i = 0; i < poly.Count - 1; i++)
                 {
-                    Raylib.DrawTriangle(poly[i], center, poly[i + 1], colorRgba.ToRayColor());
+                    Raylib.DrawTriangle(poly[i], center, poly[i + 1], color.ToRayColor());
                 }
-                Raylib.DrawTriangle(poly[poly.Count - 1], center, poly[0], colorRgba.ToRayColor());
+                Raylib.DrawTriangle(poly[poly.Count - 1], center, poly[0], color.ToRayColor());
             }
             else
             {
                 for (int i = 0; i < poly.Count - 1; i++)
                 {
-                    Raylib.DrawTriangle(poly[i], poly[i + 1], center, colorRgba.ToRayColor());
+                    Raylib.DrawTriangle(poly[i], poly[i + 1], center, color.ToRayColor());
                 }
-                Raylib.DrawTriangle(poly[poly.Count - 1], poly[0], center, colorRgba.ToRayColor());
+                Raylib.DrawTriangle(poly[poly.Count - 1], poly[0], center, color.ToRayColor());
             }
         }
-        public static void DrawPolygonConvex(this Polygon relativePoly, Vector2 pos, float scale, float rotDeg, ColorRgba colorRgba, bool clockwise = false)
+        public static void DrawPolygonConvex(this Polygon relativePoly, Vector2 pos, float scale, float rotDeg, ColorRgba color, bool clockwise = false)
         {
             if (clockwise)
             {
@@ -1192,13 +1193,13 @@ namespace ShapeEngine.Lib;
                     var a = pos + ShapeVec.Rotate(relativePoly[i] * scale, rotDeg * ShapeMath.DEGTORAD);
                     var b = pos;
                     var c = pos + ShapeVec.Rotate(relativePoly[i + 1] * scale, rotDeg * ShapeMath.DEGTORAD);
-                    Raylib.DrawTriangle(a, b, c, colorRgba.ToRayColor());
+                    Raylib.DrawTriangle(a, b, c, color.ToRayColor());
                 }
 
                 var aFinal = pos + ShapeVec.Rotate(relativePoly[relativePoly.Count - 1] * scale, rotDeg * ShapeMath.DEGTORAD);
                 var bFinal = pos;
                 var cFinal = pos + ShapeVec.Rotate(relativePoly[0] * scale, rotDeg * ShapeMath.DEGTORAD);
-                Raylib.DrawTriangle(aFinal, bFinal, cFinal, colorRgba.ToRayColor());
+                Raylib.DrawTriangle(aFinal, bFinal, cFinal, color.ToRayColor());
             }
             else
             {
@@ -1207,17 +1208,17 @@ namespace ShapeEngine.Lib;
                     var a = pos + ShapeVec.Rotate(relativePoly[i] * scale, rotDeg * ShapeMath.DEGTORAD);
                     var b = pos + ShapeVec.Rotate(relativePoly[i + 1] * scale, rotDeg * ShapeMath.DEGTORAD);
                     var c = pos;
-                    Raylib.DrawTriangle(a, b, c, colorRgba.ToRayColor());
+                    Raylib.DrawTriangle(a, b, c, color.ToRayColor());
                 }
 
                 var aFinal = pos + ShapeVec.Rotate(relativePoly[relativePoly.Count - 1] * scale, rotDeg * ShapeMath.DEGTORAD);
                 var bFinal = pos + ShapeVec.Rotate(relativePoly[0] * scale, rotDeg * ShapeMath.DEGTORAD);
                 var cFinal = pos;
-                Raylib.DrawTriangle(aFinal, bFinal, cFinal, colorRgba.ToRayColor());
+                Raylib.DrawTriangle(aFinal, bFinal, cFinal, color.ToRayColor());
             }
         }
         
-        public static void Draw(this Polygon poly, ColorRgba colorRgba) { poly.Triangulate().Draw(colorRgba); }
+        public static void Draw(this Polygon poly, ColorRgba color) { poly.Triangulate().Draw(color); }
 
         public static void DEBUG_DrawLinesCCW(this Polygon poly, float lineThickness, ColorRgba startColorRgba, ColorRgba endColorRgba)
         {
@@ -1294,7 +1295,7 @@ namespace ShapeEngine.Lib;
         // {
         //     poly.DrawLines(lineThickness, color, 2);
         // }
-        public static void DrawLines(this Polygon poly, float lineThickness, ColorRgba colorRgba, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+        public static void DrawLines(this Polygon poly, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
         {
             if (poly.Count < 3) return;
             // for (int i = 0; i < poly.Count - 1; i++)
@@ -1307,10 +1308,10 @@ namespace ShapeEngine.Lib;
             {
                 var start = poly[i];
                 var end = poly[(i + 1) % poly.Count];
-                DrawLine(start, end, lineThickness, colorRgba, capType, capPoints);
+                DrawLine(start, end, lineThickness, color, capType, capPoints);
             }
         }
-        public static void DrawLines(this Polygon poly, Vector2 pos, Vector2 size, float rotDeg, float lineThickness, ColorRgba colorRgba, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+        public static void DrawLines(this Polygon poly, Vector2 pos, Vector2 size, float rotDeg, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
         {
             if (poly.Count < 3) return;
             
@@ -1318,7 +1319,7 @@ namespace ShapeEngine.Lib;
             {
                 var start = pos + ShapeVec.Rotate(poly[i] * size, rotDeg * ShapeMath.DEGTORAD);
                 var end = pos + ShapeVec.Rotate(poly[(i + 1) % poly.Count] * size, rotDeg * ShapeMath.DEGTORAD);
-                DrawLine(start, end, lineThickness, colorRgba, capType, capPoints);
+                DrawLine(start, end, lineThickness, color, capType, capPoints);
             }
             
             // for (int i = 0; i < poly.Count - 1; i++)
@@ -1329,26 +1330,26 @@ namespace ShapeEngine.Lib;
             // }
             // DrawLineEx(pos + ShapeVec.Rotate(poly[poly.Count - 1] * size, rotDeg * ShapeMath.DEGTORAD), pos + ShapeVec.Rotate(poly[0] * size, rotDeg * ShapeMath.DEGTORAD), lineThickness, outlineColor);
         }
-        public static void DrawVertices(this Polygon poly, float vertexRadius, ColorRgba colorRgba, int circleSegments)
+        public static void DrawVertices(this Polygon poly, float vertexRadius, ColorRgba color, int circleSegments)
         {
             foreach (var p in poly)
             {
-                DrawCircle(p, vertexRadius, colorRgba, circleSegments);
+                DrawCircle(p, vertexRadius, color, circleSegments);
             }
         }
         
-        public static void DrawCornered(this Polygon poly, float lineThickness, ColorRgba colorRgba, float cornerLength, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+        public static void DrawCornered(this Polygon poly, float lineThickness, ColorRgba color, float cornerLength, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
         {
             for (var i = 0; i < poly.Count; i++)
             {
                 var prev = poly[(i-1)%poly.Count];
                 var cur = poly[i];
                 var next = poly[(i+1)%poly.Count];
-                DrawLine(cur, cur + next.Normalize() * cornerLength, lineThickness, colorRgba, capType, capPoints);
-                DrawLine(cur, cur + prev.Normalize() * cornerLength, lineThickness, colorRgba, capType, capPoints);
+                DrawLine(cur, cur + next.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
+                DrawLine(cur, cur + prev.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
             }
         }
-        public static void DrawCornered(this Polygon poly, float lineThickness, ColorRgba colorRgba, List<float> cornerLengths, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+        public static void DrawCornered(this Polygon poly, float lineThickness, ColorRgba color, List<float> cornerLengths, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
         {
             for (var i = 0; i < poly.Count; i++)
             {
@@ -1356,22 +1357,22 @@ namespace ShapeEngine.Lib;
                 var prev = poly[(i - 1) % poly.Count];
                 var cur = poly[i];
                 var next = poly[(i + 1) % poly.Count];
-                DrawLine(cur, cur + next.Normalize() * cornerLength, lineThickness, colorRgba, capType, capPoints);
-                DrawLine(cur, cur + prev.Normalize() * cornerLength, lineThickness, colorRgba, capType, capPoints);
+                DrawLine(cur, cur + next.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
+                DrawLine(cur, cur + prev.Normalize() * cornerLength, lineThickness, color, capType, capPoints);
             }
         }
-        public static void DrawCorneredRelative(this Polygon poly, float lineThickness, ColorRgba colorRgba, float cornerF, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+        public static void DrawCorneredRelative(this Polygon poly, float lineThickness, ColorRgba color, float cornerF, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
         {
             for (var i = 0; i < poly.Count; i++)
             {
                 var prev = poly[(i - 1) % poly.Count];
                 var cur = poly[i];
                 var next = poly[(i + 1) % poly.Count];
-                DrawLine(cur, cur.Lerp(next, cornerF), lineThickness, colorRgba, capType, capPoints);
-                DrawLine(cur, cur.Lerp(prev, cornerF), lineThickness, colorRgba, capType, capPoints);
+                DrawLine(cur, cur.Lerp(next, cornerF), lineThickness, color, capType, capPoints);
+                DrawLine(cur, cur.Lerp(prev, cornerF), lineThickness, color, capType, capPoints);
             }
         }
-        public static void DrawCorneredRelative(this Polygon poly, float lineThickness, ColorRgba colorRgba, List<float> cornerFactors, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+        public static void DrawCorneredRelative(this Polygon poly, float lineThickness, ColorRgba color, List<float> cornerFactors, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
         {
             for (var i = 0; i < poly.Count; i++)
             {
@@ -1379,22 +1380,22 @@ namespace ShapeEngine.Lib;
                 var prev = poly[(i - 1) % poly.Count];
                 var cur = poly[i];
                 var next = poly[(i + 1) % poly.Count];
-                DrawLine(cur, cur.Lerp(next, cornerF), lineThickness, colorRgba, capType, capPoints);
-                DrawLine(cur, cur.Lerp(prev, cornerF), lineThickness, colorRgba, capType, capPoints);
+                DrawLine(cur, cur.Lerp(next, cornerF), lineThickness, color, capType, capPoints);
+                DrawLine(cur, cur.Lerp(prev, cornerF), lineThickness, color, capType, capPoints);
             }
         }
         #endregion
 
         #region Polyline
 
-        public static void Draw(this Polyline polyline, float thickness, ColorRgba colorRgba, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
+        public static void Draw(this Polyline polyline, float thickness, ColorRgba color, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
         {
             if (polyline.Count < 2) return;
             for (var i = 0; i < polyline.Count - 1; i++)
             {
                 var start = polyline[i];
                 var end = polyline[i + 1];
-                DrawLine(start, end, thickness, colorRgba, capType, capPoints);
+                DrawLine(start, end, thickness, color, capType, capPoints);
             }
             // polyline.GetEdges().Draw(thickness, color);
         }
@@ -1411,40 +1412,40 @@ namespace ShapeEngine.Lib;
             }
             // polyline.GetEdges().Draw(thickness, colors);
         }
-        public static void DrawVertices(this Polyline polyline, float vertexRadius, ColorRgba colorRgba, int circleSegments)
+        public static void DrawVertices(this Polyline polyline, float vertexRadius, ColorRgba color, int circleSegments)
         {
             foreach (var p in polyline)
             {
-                DrawCircle(p, vertexRadius, colorRgba, circleSegments);
+                DrawCircle(p, vertexRadius, color, circleSegments);
             }
         }
 
-        public static void DrawDotted(this Polyline polyline, int gaps, float thickness, ColorRgba colorRgba, LineCapType capType = LineCapType.Capped, int capPoints = 3)
+        public static void DrawDotted(this Polyline polyline, int gaps, float thickness, ColorRgba color, LineCapType capType = LineCapType.Capped, int capPoints = 3)
         {
             if (polyline.Count < 2) return;
             for (var i = 0; i < polyline.Count - 1; i++)
             {
                 var start = polyline[i];
                 var end = polyline[i + 1];
-                DrawLineDotted(start, end, gaps, thickness, colorRgba, capType, capPoints);
+                DrawLineDotted(start, end, gaps, thickness, color, capType, capPoints);
             }
              // polyline.GetEdges().DrawDotted(gaps, thickness, color, endCapSegments);
         }
 
         public static void DrawDotted(this Polyline polyline, int gaps, float gapSizeF, 
-            float thickness, ColorRgba colorRgba, LineCapType capType = LineCapType.Capped, int capPoints = 3)
+            float thickness, ColorRgba color, LineCapType capType = LineCapType.Capped, int capPoints = 3)
         {
             if (polyline.Count < 2) return;
             for (var i = 0; i < polyline.Count - 1; i++)
             {
                 var start = polyline[i];
                 var end = polyline[i + 1];
-                DrawLineDotted(start, end, gaps, gapSizeF, thickness, colorRgba, capType, capPoints);
+                DrawLineDotted(start, end, gaps, gapSizeF, thickness, color, capType, capPoints);
             }
             // polyline.GetEdges().DrawDotted(gaps, gapSizeF, thickness, color, endCapSegments);
         }
 
-        public static void DrawGlow(this Polyline polyline, float width, float endWidth, ColorRgba colorRgba,
+        public static void DrawGlow(this Polyline polyline, float width, float endWidth, ColorRgba color,
             ColorRgba endColorRgba, int steps, LineCapType capType = LineCapType.CappedExtended, int capPoints = 2)
         {
             if (polyline.Count < 2) return;
@@ -1452,7 +1453,7 @@ namespace ShapeEngine.Lib;
             {
                 var start = polyline[i];
                 var end = polyline[i + 1];
-                DrawLineGlow(start, end, width, endWidth, colorRgba, endColorRgba, steps, capType, capPoints);
+                DrawLineGlow(start, end, width, endWidth, color, endColorRgba, steps, capType, capPoints);
             }
             // polyline.GetEdges().DrawGlow(width, endWidth, color, endColor, steps);
         }
@@ -1460,7 +1461,7 @@ namespace ShapeEngine.Lib;
         #endregion
         
         #region UI
-        public static void DrawOutlineBar(this Rect rect, float thickness, float f, ColorRgba colorRgba)
+        public static void DrawOutlineBar(this Rect rect, float thickness, float f, ColorRgba color)
         {
             Vector2 thicknessOffsetX = new Vector2(thickness, 0f);
             Vector2 thicknessOffsetY = new Vector2(0f, thickness);
@@ -1501,10 +1502,11 @@ namespace ShapeEngine.Lib;
 
                 //last line
                 if (i == lines - 1) end = ShapeVec.Lerp(start, end, newF);
-                DrawLineEx(start, end, thickness, colorRgba.ToRayColor());
+                ShapeDrawing.DrawLine(start, end, thickness, color);
+                // DrawLineEx(start, end, thickness, color.ToRayColor());
             }
         }
-        public static void DrawOutlineBar(this Rect rect, Vector2 pivot, float angleDeg, float thickness, float f, ColorRgba colorRgba)
+        public static void DrawOutlineBar(this Rect rect, Vector2 pivot, float angleDeg, float thickness, float f, ColorRgba color)
         {
             var rr = ShapeRect.Rotate(rect, pivot, angleDeg);
             //Vector2 thicknessOffsetX = new Vector2(thickness, 0f);
@@ -1549,17 +1551,18 @@ namespace ShapeEngine.Lib;
 
                 //last line
                 if (i == lines - 1) end = ShapeVec.Lerp(start, end, newF);
-                DrawLineEx(start, end, thickness, colorRgba.ToRayColor());
+                ShapeDrawing.DrawLine(start, end, thickness, color);
+                // Raylib.DrawLineEx(start, end, thickness, color.ToRayColor());
             }
         }
 
-        public static void DrawOutlineBar(this Circle c, float thickness, float f, ColorRgba colorRgba)
+        public static void DrawOutlineBar(this Circle c, float thickness, float f, ColorRgba color)
         {
-            DrawCircleSectorLines(c.Center, c.Radius, 0, 360 * f, thickness, colorRgba, false, 8f);
+            DrawCircleSectorLines(c.Center, c.Radius, 0, 360 * f, thickness, color, false, 8f);
         }
-        public static void DrawOutlineBar(this Circle c, float startOffsetDeg, float thickness, float f, ColorRgba colorRgba)
+        public static void DrawOutlineBar(this Circle c, float startOffsetDeg, float thickness, float f, ColorRgba color)
         {
-            DrawCircleSectorLines(c.Center, c.Radius, 0, 360 * f, startOffsetDeg, thickness, colorRgba, false, 8f);
+            DrawCircleSectorLines(c.Center, c.Radius, 0, 360 * f, startOffsetDeg, thickness, color, false, 8f);
         }
 
         public static void DrawBar(this Rect rect, float f, ColorRgba barColorRgba, ColorRgba bgColorRgba, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)

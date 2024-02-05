@@ -180,7 +180,7 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
             return value;
         }
         
-        return IsGamepadButtonDown(Index, id) ? 1f : 0f;
+        return Raylib.IsGamepadButtonDown(Index, id) ? 1f : 0f;
     }
     
     public InputState GetState(ShapeGamepadButton button, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
@@ -273,7 +273,7 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
     {
         if (!Connected || Index < 0 || isLocked) return 0f;
         
-        float value = GetGamepadAxisMovement(Index, (int)axis);
+        float value = Raylib.GetGamepadAxisMovement(Index, (int)axis);
         value -= axisCalibrationValues[axis];
         // if (axis is ShapeGamepadAxis.LEFT_TRIGGER or ShapeGamepadAxis.RIGHT_TRIGGER)
         // {
