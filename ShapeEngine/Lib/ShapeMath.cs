@@ -5,11 +5,23 @@ namespace ShapeEngine.Lib;
 
 public static class ShapeMath
 {
-    public const float DEGTORAD = MathF.PI / 180f;
-    public const float RADTODEG = 180f / MathF.PI;
 
+    #region Const
+
+    public const float DEGTORAD = PI / 180f;
+    public const float RADTODEG = 180f / PI;
+    /// <summary>Represents the natural logarithmic base, specified by the constant, <see langword="e" />.</summary>
+    public const float E = 2.7182817f;
+    /// <summary>Represents the ratio of the circumference of a circle to its diameter, specified by the constant, p.</summary>
+    public const float PI = 3.1415927f;
+    /// <summary>Represents the number of radians in one turn, specified by the constant, τ.</summary>
+    public const float Tau = 6.2831855f;
+    #endregion
+    
+    #region Round
     public static float RoundToDecimals(float number, int decimals)
     {
+        
         if (decimals <= 0) return MathF.Round(number);
         float value = MathF.Pow(10, decimals);
         return MathF.Round(number * value) / value;
@@ -25,6 +37,9 @@ public static class ShapeMath
             MathF.Round(v.Y * value) / value
         );
     }
+    #endregion
+   
+    #region Clamp
     public static float Clamp(float value, float min, float max)
     {
         if (value < min) return min;
@@ -43,6 +58,9 @@ public static class ShapeMath
         if (value > max) return max;
         return value;
     }
+    #endregion
+
+    #region Int
     public static int MaxInt(int value1, int value2)
     {
         if (value1 > value2) return value1;
@@ -57,8 +75,17 @@ public static class ShapeMath
     {
         return (int)MathF.Abs(value);
     }
+    #endregion
 
+    #region Float
+
+    public static bool EqualsF(float a, float b, float tolerance = 0.0001f) => MathF.Abs(a - b) < tolerance;
+    public static bool EqualsD(double a, double b, double tolerance = 0.0000001) => Math.Abs(a - b) < tolerance;
     
+
+    #endregion
+    
+    #region Lerp
     public static T LerpCollection<T>(List<T> collection, float f)
     {
         int index = WrapIndex(collection.Count, (int)(collection.Count * f));
@@ -98,6 +125,8 @@ public static class ShapeMath
         return rate;
     }
 
+
+    #region Float
     public static float LerpFloat(float from, float to, float f)
     {
         return (1.0f - f) * from + to * f;
@@ -111,7 +140,9 @@ public static class ShapeMath
     {
         return LerpFloat(minNew, maxNew, LerpInverseFloat(minOld, maxOld, value));
     }
+    #endregion
 
+    #region Int
     public static int LerpInt(int from, int to, float f)
     {
         return (int)LerpFloat(from, to, f);
@@ -127,7 +158,6 @@ public static class ShapeMath
         return LerpInt(minNew, maxNew, LerpInverseInt(minOld, maxOld, value));
     }
 
-    
     public static float LerpAngleRad(float from, float to, float f)
     {
         return from + GetShortestAngleRad(from, to) * f;
@@ -137,7 +167,11 @@ public static class ShapeMath
     {
         return from + GetShortestAngleDeg(from, to) * f;
     }
-
+    #endregion
+    
+    #endregion  
+    
+    #region Wrap
     public static int WrapIndex(int count, int index)
     {
         if (count <= 0) return 0;
@@ -166,7 +200,9 @@ public static class ShapeMath
     {
         return WrapF(amount, 0f, 360f);
     }
-    
+    #endregion
+
+    #region Angle
     public static float GetShortestAngleRad(float from, float to)
     {
         //from = WrapAngleRad(from);
@@ -191,4 +227,6 @@ public static class ShapeMath
         }
         return dif;
     }
+    #endregion
+    
 }
