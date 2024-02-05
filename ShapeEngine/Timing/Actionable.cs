@@ -1,5 +1,7 @@
 ﻿
 
+using ShapeEngine.Lib;
+
 namespace ShapeEngine.Timing
 {
     public class Actionable : ISequenceable
@@ -26,7 +28,7 @@ namespace ShapeEngine.Timing
         public bool Update(float dt)
         {
             if (duration <= 0f) return true;
-            float t = Clamp(timer / duration, 0f, 1f);
+            float t = ShapeMath.Clamp(timer / duration, 0f, 1f);
 
             timer += dt;
             action(t, dt);

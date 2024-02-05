@@ -37,7 +37,7 @@ public class TweenVector2 : ISequenceable
     public bool Update(float dt)
     {
         if (duration <= 0f) return true;
-        float t = Clamp(timer / duration, 0f, 1f);
+        float t = ShapeMath.Clamp(timer / duration, 0f, 1f);
         timer += dt;
         Vector2 result = ShapeTween.Tween(from, to, t, tweenType);
 

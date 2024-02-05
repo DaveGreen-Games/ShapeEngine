@@ -186,7 +186,7 @@ namespace ShapeEngine.Random
         #endregion
 
         #region Angle
-        public float RandAngleRad() { return RandF(0f, 2f * RayMath.PI); }
+        public float RandAngleRad() { return RandF(0f, 2f * ShapeMath.PI); }
         public float RandAngleDeg() { return RandF(0f, 359f); }
         #endregion
 

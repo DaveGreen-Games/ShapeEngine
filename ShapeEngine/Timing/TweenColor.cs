@@ -38,7 +38,7 @@ public class TweenColor : ISequenceable
     public bool Update(float dt)
     {
         if (duration <= 0f) return true;
-        float t = Clamp(timer / duration, 0f, 1f);
+        float t = ShapeMath.Clamp(timer / duration, 0f, 1f);
         timer += dt;
         var result = from.Tween(to, t, tweenType);
 

@@ -217,7 +217,7 @@ namespace ShapeEngine.Lib
         public static Polygon RotateList(this Rect rect, Vector2 pivot, float angleDeg)
         {
             var poly = rect.ToPolygon();
-            poly.Rotate(pivot, angleDeg * DEG2RAD);
+            poly.Rotate(pivot, angleDeg * ShapeMath.DEGTORAD);
             return poly;
             //return Polygon.Rotate(rect.ToPolygon(), pivot, angleDeg);
 
@@ -240,7 +240,7 @@ namespace ShapeEngine.Lib
         public static (Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr) Rotate(this Rect rect, Vector2 pivot, float angleDeg)
         {
             var poly = rect.ToPolygon();
-            poly.Rotate(pivot, angleDeg * DEG2RAD);
+            poly.Rotate(pivot, angleDeg * ShapeMath.DEGTORAD);
             return new(poly[0], poly[1], poly[2], poly[3]);
 
             //var rotated = SPoly.Rotate(rect.ToPolygon(), pivot, angleDeg);

@@ -704,7 +704,7 @@ namespace ShapeEngine.Core.Shapes
         public static Points GenerateRelative(int pointCount, float minLength, float maxLength)
         {
             Points points = new();
-            float angleStep = RayMath.PI * 2.0f / pointCount;
+            float angleStep = ShapeMath.PI * 2.0f / pointCount;
 
             for (int i = 0; i < pointCount; i++)
             {
@@ -718,7 +718,7 @@ namespace ShapeEngine.Core.Shapes
         public static Polygon Generate(Vector2 center, int pointCount, float minLength, float maxLength)
         {
             Polygon points = new();
-            float angleStep = RayMath.PI * 2.0f / pointCount;
+            float angleStep = ShapeMath.PI * 2.0f / pointCount;
 
             for (int i = 0; i < pointCount; i++)
             {

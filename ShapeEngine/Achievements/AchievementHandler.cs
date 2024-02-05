@@ -107,7 +107,7 @@ namespace ShapeEngine.Achievements
 
         public bool IsGoalActive() { return stat.value >= start; }
         public bool IsGoalFinished() { return stat.value >= end; }
-        public float GetGoalPercentage() { return Clamp( (float)(stat.value - start) / (float)(end - start), 0f, 1f); }
+        public float GetGoalPercentage() { return ShapeMath.Clamp( (float)(stat.value - start) / (float)(end - start), 0f, 1f); }
 
         public bool IsHidden() { return hidden; }
         public bool IsAchieved() { return achieved; }

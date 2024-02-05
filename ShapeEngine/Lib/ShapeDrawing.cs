@@ -532,7 +532,7 @@ namespace ShapeEngine.Lib;
             float startAngleRad = startAngleDeg * ShapeMath.DEGTORAD;
             float endAngleRad = endAngleDeg * ShapeMath.DEGTORAD;
             float anglePiece = endAngleRad - startAngleRad;
-            int sides = GetCircleArcSideCount(radius, MathF.Abs(anglePiece * RAD2DEG), sideLength);
+            int sides = GetCircleArcSideCount(radius, MathF.Abs(anglePiece * ShapeMath.RADTODEG), sideLength);
             float angleStep = anglePiece / sides;
             if (closed)
             {
@@ -582,7 +582,7 @@ namespace ShapeEngine.Lib;
         public static void DrawCircleLinesDotted(Vector2 center, float radius, int sidesPerGap, float lineThickness, ColorRgba colorRgba, float sideLength = 8f, LineCapType capType = LineCapType.CappedExtended,  int capPoints = 2)
         {
             float anglePieceRad = 360 * ShapeMath.DEGTORAD;
-            int sides = GetCircleArcSideCount(radius, MathF.Abs(anglePieceRad * RAD2DEG), sideLength);
+            int sides = GetCircleArcSideCount(radius, MathF.Abs(anglePieceRad * ShapeMath.RADTODEG), sideLength);
             float angleStep = anglePieceRad / sides;
 
             //int totalGaps = gaps * 2 + 1;
@@ -656,16 +656,16 @@ namespace ShapeEngine.Lib;
         
         private static int GetCircleSideCount(float radius, float maxLength = 10f)
         {
-            float circumference = 2.0f * PI * radius;
+            float circumference = 2.0f * ShapeMath.PI * radius;
             return (int)MathF.Max(circumference / maxLength, 1);
         }
         private static int GetCircleArcSideCount(float radius, float angleDeg, float maxLength = 10f)
         {
-            float circumference = 2.0f * PI * radius * (angleDeg / 360f);
+            float circumference = 2.0f * ShapeMath.PI * radius * (angleDeg / 360f);
             return (int)MathF.Max(circumference / maxLength, 1);
         }
         private static float TransformAngleDeg(float angleDeg) { return 450f - angleDeg; }
-        private static float TransformAngleRad(float angleRad) { return 2.5f * PI - angleRad; }
+        private static float TransformAngleRad(float angleRad) { return 2.5f * ShapeMath.PI - angleRad; }
 
         // private static Vector2 GetOffsetDir(Vector2 a, Vector2 b, Vector2 c, bool inside)
         // {
@@ -1470,7 +1470,7 @@ namespace ShapeEngine.Lib;
             Vector2 tr = tl + new Vector2(rect.Width, 0);
             Vector2 bl = tl + new Vector2(0, rect.Height);
 
-            int lines = (int)MathF.Ceiling(4 * Clamp(f, 0f, 1f));
+            int lines = (int)MathF.Ceiling(4 * ShapeMath.Clamp(f, 0f, 1f));
             float fMin = 0.25f * (lines - 1);
             float fMax = fMin + 0.25f;
             float newF = ShapeMath.RemapFloat(f, fMin, fMax, 0f, 1f);
@@ -1518,7 +1518,7 @@ namespace ShapeEngine.Lib;
             Vector2 tr = rr.tr;
             Vector2 bl = rr.bl;
 
-            int lines = (int)MathF.Ceiling(4 * Clamp(f, 0f, 1f));
+            int lines = (int)MathF.Ceiling(4 * ShapeMath.Clamp(f, 0f, 1f));
             float fMin = 0.25f * (lines - 1);
             float fMax = fMin + 0.25f;
             float newF = ShapeMath.RemapFloat(f, fMin, fMax, 0f, 1f);

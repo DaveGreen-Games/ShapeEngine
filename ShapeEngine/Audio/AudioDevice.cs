@@ -164,14 +164,14 @@ namespace ShapeEngine.Audio
         public void BusSetVolume(uint busID, float volume)
         {
             if (!buses.ContainsKey(busID)) return;
-            volume = Clamp(volume, 0.0f, 1.0f);
+            volume = ShapeMath.Clamp(volume, 0.0f, 1.0f);
             buses[busID].Volume = volume;
 
         }
         public void BusChangeVolume(uint busID, float amount)
         {
             if (!buses.ContainsKey(busID)) return;
-            float newVolume = Clamp(buses[busID].Volume + amount, 0.0f, 1.0f);
+            float newVolume = ShapeMath.Clamp(buses[busID].Volume + amount, 0.0f, 1.0f);
             buses[busID].Volume = newVolume;
         }
         public float BusGetVolume(uint busID)

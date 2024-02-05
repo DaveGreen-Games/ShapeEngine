@@ -127,11 +127,8 @@ public static class ShapeMath
 
 
     #region Float
-    public static float LerpFloat(float from, float to, float f)
-    {
-        return (1.0f - f) * from + to * f;
-        //return RayMath.Lerp(from, to, f);
-    }
+    public static float LerpFloat(float from, float to, float f) => (1.0f - f) * from + to * f;
+
     public static float LerpInverseFloat(float from, float to, float value)
     {
         return (value - from) / (to - from);

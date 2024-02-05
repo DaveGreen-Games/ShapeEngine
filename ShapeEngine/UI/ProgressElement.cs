@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using ShapeEngine.Lib;
 
 namespace ShapeEngine.UI
 {
@@ -29,7 +30,7 @@ namespace ShapeEngine.UI
 
         public void SetF(float value, bool setTransitionF = false)
         {
-            F = Clamp(value, 0f, 1f);
+            F = ShapeMath.Clamp(value, 0f, 1f);
             if (setTransitionF) TransitionF = F;
         }
         public override void Update(float dt, Vector2 mousePosUI)

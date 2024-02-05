@@ -128,7 +128,7 @@ namespace ShapeEngine.Lib
             float angle = ShapeMath.GetShortestAngleRad(angleA, ShapeVec.AngleRad(to));
             return ShapeVec.Rotate(from, ShapeMath.LerpFloat(0, angle, t));
         }
-        public static Vector2 Lerp(this Vector2 from, Vector2 to, float t) { return Vector2.Lerp(from, to, t); } //RayMath.Vector2Lerp(v1, v2, t);
+        public static Vector2 Lerp(this Vector2 from, Vector2 to, float t) { return Vector2.Lerp(from, to, t); }
 
         public static Vector2 LerpTowards(this Vector2 from, Vector2 to, float seconds, float dt)
         {
@@ -173,12 +173,12 @@ namespace ShapeEngine.Lib
         public static Vector2 Round(this Vector2 v) { return new(MathF.Round(v.X), MathF.Round(v.Y)); }
         public static Vector2 Truncate(this Vector2 v) { return new(MathF.Truncate(v.X), MathF.Truncate(v.Y)); }
         public static Vector2 Abs(this Vector2 v) { return Vector2.Abs(v); }
-        public static Vector2 Negate(this Vector2 v) { return Vector2.Negate(v); } //RayMath.Vector2Negate(v);
+        public static Vector2 Negate(this Vector2 v) { return Vector2.Negate(v); }
         public static Vector2 Min(this Vector2 v1, Vector2 v2) { return Vector2.Min(v1, v2); }
         public static Vector2 Max(this Vector2 v1, Vector2 v2) { return Vector2.Max(v1, v2); }
         public static Vector2 Clamp(this Vector2 v, Vector2 min, Vector2 max) { return Vector2.Clamp(v, min, max); }
         public static Vector2 Clamp(this Vector2 v, float min, float max) { return Vector2.Clamp(v, new(min), new(max)); }
-        //return value / value.Length(); // RayMath.Vector2Normalize(v); }//return Vector2.Normalize(v); } //Vector2 normalize returns NaN sometimes???
+        
         public static Vector2 Normalize(this Vector2 v) 
         {
             // //vector2 with length 0 can not be normalized (division by 0)
@@ -194,8 +194,8 @@ namespace ShapeEngine.Lib
             // float f = 1f / l;
             // return v * f;
         } 
-        public static Vector2 Reflect(this Vector2 v, Vector2 n) { return Vector2.Reflect(v, n); } //RayMath.Vector2Reflect(v, n);
-        //public static Vector2 Scale(this Vector2 v, float amount) { return RayMath.Vector2Scale(v, amount); }
+        public static Vector2 Reflect(this Vector2 v, Vector2 n) { return Vector2.Reflect(v, n); }
+        
         public static Vector2 ScaleUniform(this Vector2 v, float distance)
         {
             float length = v.Length();
@@ -226,19 +226,16 @@ namespace ShapeEngine.Lib
             result.Y = v.X * num2 + v.Y * num;
             return result;
 
-            //return RayMath.Vector2Rotate(v, angleRad); 
+            
         } //radians
         public static Vector2 RotateDeg(this Vector2 v, float angleDeg) { return Rotate(v, angleDeg * ShapeMath.DEGTORAD); }
         public static float AngleDeg(this Vector2 v1, Vector2 v2) { return AngleRad(v1, v2) * ShapeMath.RADTODEG; }
         public static float AngleDeg(this Vector2 v) { return AngleRad(v) * ShapeMath.RADTODEG; }
         public static float AngleRad(this Vector2 v) { return AngleRad(Zero(), v); }
-        public static float AngleRad(this Vector2 v1, Vector2 v2) { return MathF.Atan2(v2.Y, v2.X) - MathF.Atan2(v1.Y, v1.X); }// return RayMath.Vector2Angle(v1, v2); }
-        public static float Distance(this Vector2 v1, Vector2 v2) { return Vector2.Distance(v1, v2); }// RayMath.Vector2Distance(v1, v2); }
-        public static float Dot(this Vector2 v1, Vector2 v2) { return v1.X * v2.X + v1.Y * v2.Y; }// Vector2.Dot(v1, v2); }// RayMath.Vector2DotProduct(v1, v2); }
+        public static float AngleRad(this Vector2 v1, Vector2 v2) { return MathF.Atan2(v2.Y, v2.X) - MathF.Atan2(v1.Y, v1.X); }
+        public static float Distance(this Vector2 v1, Vector2 v2) { return Vector2.Distance(v1, v2); }
+        public static float Dot(this Vector2 v1, Vector2 v2) { return v1.X * v2.X + v1.Y * v2.Y; }
         public static float Cross(this Vector2 value1, Vector2 value2) { return value1.X * value2.Y - value1.Y * value2.X; }
-        
-        //public static float Length(Vector2 v) { return v.Length(); } //RayMath.Vector2Length(v);
-        //public static float LengthSquared(Vector2 v) { return v.LengthSquared(); } //RayMath.Vector2LengthSqr(v);
 
 
     }

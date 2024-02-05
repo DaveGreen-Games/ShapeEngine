@@ -179,14 +179,14 @@ namespace ShapeEngine.Core
             if (pos.X + halfSize.X > Bounds.Right)
             {
                 newPos.X = Bounds.Right - halfSize.X;
-                Vector2 p = new(Bounds.Right, Clamp(pos.Y, Bounds.Bottom, Bounds.Top));
+                Vector2 p = new(Bounds.Right, ShapeMath.Clamp(pos.Y, Bounds.Bottom, Bounds.Top));
                 Vector2 n = new(-1, 0);
                 points.Add(new(p, n));
             }
             else if (pos.X - halfSize.X < Bounds.Left)
             {
                 newPos.X = Bounds.Left + halfSize.X;
-                Vector2 p = new(Bounds.Left, Clamp(pos.Y, Bounds.Bottom, Bounds.Top));
+                Vector2 p = new(Bounds.Left, ShapeMath.Clamp(pos.Y, Bounds.Bottom, Bounds.Top));
                 Vector2 n = new(1, 0);
                 points.Add(new(p, n));
             }
@@ -194,14 +194,14 @@ namespace ShapeEngine.Core
             if (pos.Y + halfSize.Y > Bounds.Bottom)
             {
                 newPos.Y = Bounds.Bottom - halfSize.Y;
-                Vector2 p = new(Clamp(pos.X, Bounds.Left, Bounds.Right), Bounds.Bottom);
+                Vector2 p = new(ShapeMath.Clamp(pos.X, Bounds.Left, Bounds.Right), Bounds.Bottom);
                 Vector2 n = new(0, -1);
                 points.Add(new(p, n));
             }
             else if (pos.Y - halfSize.Y < Bounds.Top)
             {
                 newPos.Y =Bounds.Top + halfSize.Y;
-                Vector2 p = new(Clamp(pos.X, Bounds.Left, Bounds.Right), Bounds.Top);
+                Vector2 p = new(ShapeMath.Clamp(pos.X, Bounds.Left, Bounds.Right), Bounds.Top);
                 Vector2 n = new(0, 1);
                 points.Add(new(p, n));
             }
