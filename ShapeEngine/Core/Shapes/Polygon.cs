@@ -12,180 +12,6 @@ using ShapeEngine.Random;
 namespace ShapeEngine.Core.Shapes
 {
     
-    
-    
-    //extremely slow!!!
-    // public static class GrahamScan
-    // {
-    //     private const int TurnLeft = 1;
-    //     private const int TurnRight = -1;
-    //     private const int TurnNone = 0;
-    //     private static int Turn(Vector2 p, Vector2 q, Vector2 r)
-    //     {
-    //         return ((q.X - p.X) * (r.Y - p.Y) - (r.X - p.X) * (q.Y - p.Y)).CompareTo(0);
-    //     }
-    //     private static void KeepLeft(List<Vector2> hull, Vector2 r)
-    //     {
-    //         while (hull.Count > 1 && Turn(hull[^2], hull[^1], r) != TurnLeft)
-    //         {
-    //             // Console.WriteLine("Removing Point ({0}, {1}) because turning right ", hull[^1].X, hull[^1].Y);
-    //             hull.RemoveAt(hull.Count - 1);
-    //         }
-    //         if (hull.Count == 0 || hull[^1] != r)
-    //         {
-    //             // Console.WriteLine("Adding Point ({0}, {1})", r.X, r.Y);
-    //             hull.Add(r);
-    //         }
-    //         // Console.WriteLine("# Current Convex Hull #");
-    //         // foreach (var value in hull)
-    //         // {
-    //         //     Console.Write("(" + value.X+ "," + value.Y + ") ");
-    //         // }
-    //         // Console.WriteLine();
-    //         // Console.WriteLine();
-    //
-    //     }
-    //     private static float GetAngle(Vector2 p1, Vector2 p2)
-    //     {
-    //         float xDiff = p2.X - p1.X;
-    //         float yDiff = p2.Y - p1.Y;
-    //         return MathF.Atan2(yDiff, xDiff) * 180.0f / MathF.PI;
-    //     }
-    //     private static List<Vector2> MergeSort(Vector2 p0, List<Vector2> points)
-    //     {
-    //         if (points.Count == 1)
-    //         {
-    //             return points;
-    //         }
-    //         var sortedPoints = new List<Vector2>();
-    //         int middle = points.Count / 2;
-    //         var pointsL = points.GetRange(0, middle);
-    //         var pointsR = points.GetRange(middle, points.Count - middle);
-    //         pointsL = MergeSort(p0, pointsL);
-    //         pointsR = MergeSort(p0, pointsR);
-    //         var indexL = 0;
-    //         var indexR = 0;
-    //         for (var i = 0; i < pointsL.Count + pointsR.Count; i++)
-    //         {
-    //             if (indexL == pointsL.Count)
-    //             {
-    //                 sortedPoints.Add(pointsR[indexR]);
-    //                 indexR++;
-    //             }
-    //             else if (indexR == pointsR.Count)
-    //             {
-    //                 sortedPoints.Add(pointsL[indexL]);
-    //                 indexL++;
-    //             }
-    //             else if (GetAngle(p0, pointsL[indexL]) < GetAngle(p0, pointsR[indexR]))
-    //             {
-    //                 sortedPoints.Add(pointsL[indexL]);
-    //                 indexL++;
-    //             }
-    //             else
-    //             {
-    //                 sortedPoints.Add(pointsR[indexR]);
-    //                 indexR++;
-    //             }
-    //         }
-    //         return sortedPoints;
-    //     }
-    //     public static Polygon ConvexHull(List<Vector2> points)
-    //     {
-    //         if (points.Count < 3) return new();
-    //         // Console.WriteLine("# List of Point #");
-    //         // foreach (var value in points)
-    //         // {
-    //             // Console.Write("(" + value.getX() + "," + value.getY() + ") ");
-    //         // }
-    //         // Console.WriteLine();
-    //         // Console.WriteLine();
-    //
-    //         var p0 = points[0];
-    //         foreach (var value in points)
-    //         {
-    //             if (p0.Y > value.Y)
-    //                 p0 = value;
-    //         }
-    //
-    //         var order = points.Where(v => v != p0).ToList();// new List<Vector2>();
-    //         // foreach (var value in points)
-    //         // {
-    //             // if (p0 != value)
-    //                 // order.Add(value);
-    //         // }
-    //
-    //         order = MergeSort(p0, order);
-    //         // Console.WriteLine("# Sorted points based on angle with point p0 ({0},{1})#", p0.getX(), p0.getY());
-    //         // foreach (var value in order)
-    //         // {
-    //             // Console.WriteLine("(" + value.getX() + "," + value.getY() + ") : {0}", getAngle(p0, value));
-    //         // }
-    //         var result = new List<Vector2>();
-    //         result.Add(p0);
-    //         result.Add(order[0]);
-    //         result.Add(order[1]);
-    //         order.RemoveAt(0);
-    //         order.RemoveAt(0);
-    //         // Console.WriteLine("# Current Convex Hull #");
-    //         // foreach (var value in result)
-    //         // {
-    //             // Console.Write("(" + value.getX() + "," + value.getY() + ") ");
-    //         // }
-    //         // Console.WriteLine();
-    //         // Console.WriteLine();
-    //         foreach (var value in order)
-    //         {
-    //             KeepLeft(result, value);
-    //         }
-    //
-    //         
-    //         return new Polygon(result);
-    //         // Console.WriteLine();
-    //         // Console.WriteLine("# Convex Hull #");
-    //         // foreach (var value in result)
-    //         // {
-    //         // Console.Write("(" + value.getX() + "," + value.getY() + ") ");
-    //         // }
-    //         // Console.WriteLine();
-    //     }
-    //
-    //     // public static Polygon ConvexHull2(List<Vector2> points)
-    //     // {
-    //     //     if (points.Count < 3) return new();
-    //     //
-    //     //     //find bottom point
-    //     //     var p0 = points[0];
-    //     //     foreach (var value in points)
-    //     //     {
-    //     //         if (ShapeMath.EqualsF(p0.Y, value.Y))
-    //     //         {
-    //     //             if (p0.X > value.X) p0 = value;
-    //     //         }
-    //     //         else if (p0.Y > value.Y) p0 = value;
-    //     //     }
-    //     //     
-    //     //     var sorted = points.Where(v => v != p0).ToList();
-    //     //     sorted.Sort(
-    //     //         (v1, v2) =>
-    //     //         {
-    //     //             var a1 = p0.AngleRad(v1);
-    //     //             var a2 = p0.AngleRad(v2);
-    //     //             if (ShapeMath.EqualsF(a1, a2)) return 0;
-    //     //             else if (a1 < a2) return 1;
-    //     //             else return -1;
-    //     //         }
-    //     //     );
-    //     //     
-    //     //     
-    //     //     
-    //     //     return new();
-    //     // }
-    //     //
-    // }
-    //
-    
-    
     /// <summary>
     /// Points shoud be in CCW order.
     /// </summary>
@@ -1281,7 +1107,6 @@ namespace ShapeEngine.Core.Shapes
             return new Polygon(hull);
         }
         #endregion
-        
     }
 }
 
@@ -1349,3 +1174,178 @@ namespace ShapeEngine.Core.Shapes
         }*/
 //public Vector2 GetReferencePoint() { return GetCentroid(); }
 //public SegmentShape GetSegmentShape() { return new(GetEdges(), this.GetCentroid()); }
+
+//extremely slow!!!
+    // public static class GrahamScan
+    // {
+    //     private const int TurnLeft = 1;
+    //     private const int TurnRight = -1;
+    //     private const int TurnNone = 0;
+    //     private static int Turn(Vector2 p, Vector2 q, Vector2 r)
+    //     {
+    //         return ((q.X - p.X) * (r.Y - p.Y) - (r.X - p.X) * (q.Y - p.Y)).CompareTo(0);
+    //     }
+    //     private static void KeepLeft(List<Vector2> hull, Vector2 r)
+    //     {
+    //         while (hull.Count > 1 && Turn(hull[^2], hull[^1], r) != TurnLeft)
+    //         {
+    //             // Console.WriteLine("Removing Point ({0}, {1}) because turning right ", hull[^1].X, hull[^1].Y);
+    //             hull.RemoveAt(hull.Count - 1);
+    //         }
+    //         if (hull.Count == 0 || hull[^1] != r)
+    //         {
+    //             // Console.WriteLine("Adding Point ({0}, {1})", r.X, r.Y);
+    //             hull.Add(r);
+    //         }
+    //         // Console.WriteLine("# Current Convex Hull #");
+    //         // foreach (var value in hull)
+    //         // {
+    //         //     Console.Write("(" + value.X+ "," + value.Y + ") ");
+    //         // }
+    //         // Console.WriteLine();
+    //         // Console.WriteLine();
+    //
+    //     }
+    //     private static float GetAngle(Vector2 p1, Vector2 p2)
+    //     {
+    //         float xDiff = p2.X - p1.X;
+    //         float yDiff = p2.Y - p1.Y;
+    //         return MathF.Atan2(yDiff, xDiff) * 180.0f / MathF.PI;
+    //     }
+    //     private static List<Vector2> MergeSort(Vector2 p0, List<Vector2> points)
+    //     {
+    //         if (points.Count == 1)
+    //         {
+    //             return points;
+    //         }
+    //         var sortedPoints = new List<Vector2>();
+    //         int middle = points.Count / 2;
+    //         var pointsL = points.GetRange(0, middle);
+    //         var pointsR = points.GetRange(middle, points.Count - middle);
+    //         pointsL = MergeSort(p0, pointsL);
+    //         pointsR = MergeSort(p0, pointsR);
+    //         var indexL = 0;
+    //         var indexR = 0;
+    //         for (var i = 0; i < pointsL.Count + pointsR.Count; i++)
+    //         {
+    //             if (indexL == pointsL.Count)
+    //             {
+    //                 sortedPoints.Add(pointsR[indexR]);
+    //                 indexR++;
+    //             }
+    //             else if (indexR == pointsR.Count)
+    //             {
+    //                 sortedPoints.Add(pointsL[indexL]);
+    //                 indexL++;
+    //             }
+    //             else if (GetAngle(p0, pointsL[indexL]) < GetAngle(p0, pointsR[indexR]))
+    //             {
+    //                 sortedPoints.Add(pointsL[indexL]);
+    //                 indexL++;
+    //             }
+    //             else
+    //             {
+    //                 sortedPoints.Add(pointsR[indexR]);
+    //                 indexR++;
+    //             }
+    //         }
+    //         return sortedPoints;
+    //     }
+    //     public static Polygon ConvexHull(List<Vector2> points)
+    //     {
+    //         if (points.Count < 3) return new();
+    //         // Console.WriteLine("# List of Point #");
+    //         // foreach (var value in points)
+    //         // {
+    //             // Console.Write("(" + value.getX() + "," + value.getY() + ") ");
+    //         // }
+    //         // Console.WriteLine();
+    //         // Console.WriteLine();
+    //
+    //         var p0 = points[0];
+    //         foreach (var value in points)
+    //         {
+    //             if (p0.Y > value.Y)
+    //                 p0 = value;
+    //         }
+    //
+    //         var order = points.Where(v => v != p0).ToList();// new List<Vector2>();
+    //         // foreach (var value in points)
+    //         // {
+    //             // if (p0 != value)
+    //                 // order.Add(value);
+    //         // }
+    //
+    //         order = MergeSort(p0, order);
+    //         // Console.WriteLine("# Sorted points based on angle with point p0 ({0},{1})#", p0.getX(), p0.getY());
+    //         // foreach (var value in order)
+    //         // {
+    //             // Console.WriteLine("(" + value.getX() + "," + value.getY() + ") : {0}", getAngle(p0, value));
+    //         // }
+    //         var result = new List<Vector2>();
+    //         result.Add(p0);
+    //         result.Add(order[0]);
+    //         result.Add(order[1]);
+    //         order.RemoveAt(0);
+    //         order.RemoveAt(0);
+    //         // Console.WriteLine("# Current Convex Hull #");
+    //         // foreach (var value in result)
+    //         // {
+    //             // Console.Write("(" + value.getX() + "," + value.getY() + ") ");
+    //         // }
+    //         // Console.WriteLine();
+    //         // Console.WriteLine();
+    //         foreach (var value in order)
+    //         {
+    //             KeepLeft(result, value);
+    //         }
+    //
+    //         
+    //         return new Polygon(result);
+    //         // Console.WriteLine();
+    //         // Console.WriteLine("# Convex Hull #");
+    //         // foreach (var value in result)
+    //         // {
+    //         // Console.Write("(" + value.getX() + "," + value.getY() + ") ");
+    //         // }
+    //         // Console.WriteLine();
+    //     }
+    //
+    //     // public static Polygon ConvexHull2(List<Vector2> points)
+    //     // {
+    //     //     if (points.Count < 3) return new();
+    //     //
+    //     //     //find bottom point
+    //     //     var p0 = points[0];
+    //     //     foreach (var value in points)
+    //     //     {
+    //     //         if (ShapeMath.EqualsF(p0.Y, value.Y))
+    //     //         {
+    //     //             if (p0.X > value.X) p0 = value;
+    //     //         }
+    //     //         else if (p0.Y > value.Y) p0 = value;
+    //     //     }
+    //     //     
+    //     //     var sorted = points.Where(v => v != p0).ToList();
+    //     //     sorted.Sort(
+    //     //         (v1, v2) =>
+    //     //         {
+    //     //             var a1 = p0.AngleRad(v1);
+    //     //             var a2 = p0.AngleRad(v2);
+    //     //             if (ShapeMath.EqualsF(a1, a2)) return 0;
+    //     //             else if (a1 < a2) return 1;
+    //     //             else return -1;
+    //     //         }
+    //     //     );
+    //     //     
+    //     //     
+    //     //     
+    //     //     return new();
+    //     // }
+    //     //
+    // }
+    //
+    
+
+
+
