@@ -234,6 +234,12 @@ namespace ShapeEngine.Lib
         public static float AngleRad(this Vector2 v) { return AngleRad(Zero(), v); }
         public static float AngleRad(this Vector2 v1, Vector2 v2) { return MathF.Atan2(v2.Y, v2.X) - MathF.Atan2(v1.Y, v1.X); }
         public static float Distance(this Vector2 v1, Vector2 v2) { return Vector2.Distance(v1, v2); }
+
+        public static float DistanceSquared(this Vector2 v1, Vector2 v2)
+        {
+            return (v1 - v2).LengthSquared();
+            
+        }
         public static float Dot(this Vector2 v1, Vector2 v2) { return v1.X * v2.X + v1.Y * v2.Y; }
         public static float Cross(this Vector2 value1, Vector2 value2) { return value1.X * value2.Y - value1.Y * value2.X; }
 

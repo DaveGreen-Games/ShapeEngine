@@ -1,4 +1,5 @@
-﻿using Raylib_CsLo;
+﻿using System.Diagnostics;
+using Raylib_CsLo;
 using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using System.Numerics;
@@ -143,12 +144,10 @@ namespace Examples.Scenes.ExampleScenes
     }
     public class BouncyCircles : ExampleScene
     {
-
         Rect boundaryRect;
 
         Font font;
 
-        //List<Circ> circles = new();
         GameObjectHandler gameObjectHandler;
         private SlowMotionState? slowMotionState = null;
 
@@ -157,7 +156,11 @@ namespace Examples.Scenes.ExampleScenes
         private InputAction iaSlow2;
         private InputAction iaSlow3;
         private InputAction iaSlow4;
+        private InputAction iaToggleConvexHull;
         private List<InputAction> inputActions;
+
+        //private List<Circ> circs = new();
+        private bool showConvexHull = false;
         public BouncyCircles()
         {
             Title = "Bouncy Circles";
@@ -191,7 +194,11 @@ namespace Examples.Scenes.ExampleScenes
             var slow4GB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT);
             iaSlow4 = new(slow4GB, slow4KB);
 
-            inputActions = new() { iaAdd, iaSlow1, iaSlow2, iaSlow3, iaSlow4 };
+            var toggleConvexHullKB = new InputTypeKeyboardButton(ShapeKeyboardButton.C);
+            var toggleConvexHullGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_THUMB);
+            iaToggleConvexHull = new(toggleConvexHullKB, toggleConvexHullGP);
+            
+            inputActions = new() { iaAdd, iaSlow1, iaSlow2, iaSlow3, iaSlow4, iaToggleConvexHull };
 
         }
         public override void Reset()
@@ -243,6 +250,7 @@ namespace Examples.Scenes.ExampleScenes
                     Circ c = new(randPos, vel, 2);
                     //circles.Add(c);
                     gameObjectHandler.AddAreaObject(c);
+                    //circs.Add(c);
                 }
             }
 
@@ -262,6 +270,10 @@ namespace Examples.Scenes.ExampleScenes
             {
                 GAMELOOP.SlowMotion.Add(0f, 4f, SlowMotion.TagDefault);
             }
+            if (iaToggleConvexHull.State.Pressed)
+            {
+                showConvexHull = !showConvexHull;
+            }
         }
 
         public override void Activate(IScene oldScene)
@@ -278,6 +290,18 @@ namespace Examples.Scenes.ExampleScenes
         {
             //boundaryRect.DrawLines(4f, ColorLight);
             gameObjectHandler.DrawGame(game);
+
+            if (showConvexHull)
+            {
+                var circPoints = gameObjectHandler.GetAllGameObjects().Select(c => c.GetPosition()).ToList();
+                if (circPoints.Count() > 3)
+                {
+                    var hull = Polygon.FindConvexHull(circPoints);
+                    hull.DrawLines(4f, Colors.Special);
+                }
+            }
+            
+            
         }
         protected override void DrawGameUIExample(ScreenInfo ui)
         {
@@ -307,8 +331,9 @@ namespace Examples.Scenes.ExampleScenes
             string slow2Text = iaSlow2.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
             string slow3Text = iaSlow3.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
             string slow4Text = iaSlow4.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
+            string toggleConvexHullText = iaToggleConvexHull.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
             
-            var text = $"Add {addText} | Slow Motion : [{slow1Text} / {slow2Text} / {slow3Text} / {slow4Text}]";
+            var text = $"Add {addText} | Slow Motion : [{slow1Text} / {slow2Text} / {slow3Text} / {slow4Text}] | Convex Hull [{showConvexHull}] {toggleConvexHullText}";
             
             textFont.FontSpacing = 1f;
             textFont.ColorRgba = Colors.Light;

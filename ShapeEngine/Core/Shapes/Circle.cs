@@ -144,7 +144,38 @@ namespace ShapeEngine.Core.Shapes
             }
             return polyLine;
         }
-
+        public readonly (Vector2 top, Vector2 right, Vector2 bottom, Vector2 left) GetCorners()
+        {
+            var top = Center + new Vector2(0, -Radius);
+            var right = Center + new Vector2(Radius, 0);
+            var bottom = Center + new Vector2(0, Radius);
+            var left = Center + new Vector2(-Radius, 0);
+            return (top, right, bottom, left);
+        }
+        public readonly List<Vector2> GetCornersList()
+        {
+            var top = Center + new Vector2(0, -Radius);
+            var right = Center + new Vector2(Radius, 0);
+            var bottom = Center + new Vector2(0, Radius);
+            var left = Center + new Vector2(-Radius, 0);
+            return new() { top, right, bottom, left };
+        }
+        public readonly (Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl) GetRectCorners()
+        {
+            var tl = Center + new Vector2(-Radius, -Radius);
+            var tr = Center + new Vector2(Radius, -Radius);
+            var br = Center + new Vector2(Radius, Radius);
+            var bl = Center + new Vector2(-Radius, Radius);
+            return (tl, tr, br, bl);
+        }
+        public readonly List<Vector2> GetRectCornersList()
+        {
+            var tl = Center + new Vector2(-Radius, -Radius);
+            var tr = Center + new Vector2(Radius, -Radius);
+            var br = Center + new Vector2(Radius, Radius);
+            var bl = Center + new Vector2(-Radius, Radius);
+            return new() {tl, tr, br, bl};
+        }
         /*
         public Circle ScaleRadius(float scale) { return new(Center, Radius * scale); }
         public Circle ChangeRadius(float amount) { return new(Center, Radius + amount); }
