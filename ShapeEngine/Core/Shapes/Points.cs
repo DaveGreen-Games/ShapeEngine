@@ -153,5 +153,19 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
             points[i] = points[i].Truncate();
         }
     }
+    
+    
+    public static Points Move(Points points, Vector2 translation)
+    {
+        var result = new Points();
+        for (int i = 0; i < points.Count; i++)
+        {
+            result.Add(points[i] + translation);
+        }
+        return result;
+    }
+    
+    
+    
     #endregion
 }

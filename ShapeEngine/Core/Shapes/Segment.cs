@@ -56,7 +56,17 @@ namespace ShapeEngine.Core.Shapes
         #endregion
 
         #region Public
-        
+        public readonly Polygon Project(Vector2 v)
+        {
+            var points = new Points
+            {
+                Start,
+                End,
+                Start + v,
+                End + v,
+            };
+            return Polygon.FindConvexHull(points);
+        }
         public Segment Floor()
         {
             return new(Start.Floor(), End.Floor(), FlippedNormals);

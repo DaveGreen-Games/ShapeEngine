@@ -224,6 +224,15 @@ namespace ShapeEngine.Core.Shapes
         #endregion
 
         #region Public
+        public Polygon Project(Vector2 v)
+        {
+            var translated = Polygon.Move(this, v);
+            var points = new Points();
+            points.AddRange(this);
+            points.AddRange(translated);
+            return Polygon.FindConvexHull(points);
+        }
+        
         public bool ContainsShape(Segment other)
         {
             return ContainsPoint(other.Start) && ContainsPoint(other.End);
@@ -257,6 +266,18 @@ namespace ShapeEngine.Core.Shapes
         }
 
         public void FixWindingOrder() { if (this.IsClockwise()) this.Reverse(); }
+
+        public void MakeClockwise()
+        {
+            if (IsClockwise()) return;
+            this.Reverse();
+        }
+
+        public void MakeCounterClockwise()
+        {
+            if (!IsClockwise()) return;
+            this.Reverse();
+        }
         public void ReduceVertexCount(int newCount)
         {
             if (newCount < 3) Clear();//no points left to form a polygon
@@ -785,8 +806,7 @@ namespace ShapeEngine.Core.Shapes
             }
             return true;
         }
-
-
+        
 
         /// <summary>
         /// Get a rect that encapsulates all points.
@@ -955,6 +975,7 @@ namespace ShapeEngine.Core.Shapes
             }
             return result;
         }
+        
         public static Polygon Rotate(Polygon p, Vector2 pivot, float rotRad)
         {
             if (p.Count < 3) return new();
@@ -1191,6 +1212,8 @@ namespace ShapeEngine.Core.Shapes
         //https://www.youtube.com/watch?v=YNyULRrydVI -> coding train
         //https://en.wikipedia.org/wiki/Gift_wrapping_algorithm -> wiki
         public static Polygon FindConvexHull(List<Vector2> points) => ConvexHull_JarvisMarch(points);
+        public static Polygon FindConvexHull(Points points) => ConvexHull_JarvisMarch(points);
+        public static Polygon FindConvexHull(params Vector2[] points) => ConvexHull_JarvisMarch(points.ToList());
         public static Polygon FindConvexHull(Polygon points) => ConvexHull_JarvisMarch(points);
         public static Polygon FindConvexHull(params Polygon[] shapes)
         {
@@ -1201,6 +1224,7 @@ namespace ShapeEngine.Core.Shapes
             }
             return ConvexHull_JarvisMarch(allPoints);
         }
+        
         #endregion
         
         #region Jarvis March Algorithm (Find Convex Hull)

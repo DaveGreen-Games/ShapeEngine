@@ -68,7 +68,19 @@ namespace ShapeEngine.Core.Shapes
         #endregion
 
         #region Public
-
+        public readonly Polygon Project(Vector2 v)
+        {
+            var points = new Points
+            {
+                A,
+                B,
+                C,
+                A + v,
+                B + v,
+                C + v
+            };
+            return Polygon.FindConvexHull(points);
+        }
         public readonly bool ContainsShape(Segment other)
         {
             return ContainsPoint(other.Start) && ContainsPoint(other.End);

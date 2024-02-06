@@ -337,6 +337,24 @@ namespace ShapeEngine.Core.Shapes
 
         #region Public
 
+        public readonly Polygon Project(Vector2 v)
+        {
+            var translated = this.Move(v);
+            var points = new Points
+            {
+                TopLeft,
+                TopRight,
+                BottomRight,
+                BottomLeft,
+                translated.TopLeft,
+                translated.TopRight,
+                translated.BottomRight,
+                translated.BottomLeft
+            };
+            return Polygon.FindConvexHull(points);
+        }
+        
+        
         // public readonly bool ContainsRect(Rect rect) =>
         //     (X <= rect.X) && (rect.X + rect.Width <= X + Width) &&
         //     (Y <= rect.Y) && (rect.Y + rect.Height <= Y + Height);

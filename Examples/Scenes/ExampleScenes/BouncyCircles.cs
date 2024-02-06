@@ -144,6 +144,8 @@ namespace Examples.Scenes.ExampleScenes
     }
     public class BouncyCircles : ExampleScene
     {
+        Polygon source = Polygon.Generate(new Vector2(), 15, 100, 500);
+        
         Rect boundaryRect;
 
         Font font;
@@ -301,7 +303,16 @@ namespace Examples.Scenes.ExampleScenes
                 }
             }
             
-            
+            // var displacement = game.MousePos - source.GetCentroid();
+            // var target = Polygon.Move(source, displacement);
+            // var ch = source.Project(displacement);
+            // ch.MakeClockwise();
+            // ch.Draw(new(System.Drawing.Color.Chocolate));
+            // source.Draw(new(System.Drawing.Color.IndianRed));
+            // target.Draw(new(System.Drawing.Color.Teal));
+            //
+            // ch.DrawLines(6f, new(System.Drawing.Color.Orange));
+
         }
         protected override void DrawGameUIExample(ScreenInfo ui)
         {

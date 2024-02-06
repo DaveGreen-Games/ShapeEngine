@@ -66,6 +66,14 @@ namespace ShapeEngine.Core.Shapes
         #endregion
 
         #region Public
+        public Polygon Project(Vector2 v)
+        {
+            var translated = Move(this, v);
+            var points = new Points();
+            points.AddRange(this);
+            points.AddRange(translated);
+            return Polygon.FindConvexHull(points);
+        }
         public Vector2 GetCentroidOnLine()
         {
             if (Count <= 0) return new(0f);
@@ -266,6 +274,22 @@ namespace ShapeEngine.Core.Shapes
         public CollisionPoints IntersectShape(Polygon p) { return GetEdges().IntersectShape(p.GetEdges()); }
         public CollisionPoints IntersectShape(Polyline b) { return GetEdges().IntersectShape(b.GetEdges()); }
         #endregion
+
+        public static Polyline Center(Polyline p, Vector2 newCenter)
+        {
+            var centroid = p.GetCentroid();
+            var delta = newCenter - centroid;
+            return Move(p, delta);
+        }
+        public static Polyline Move(Polyline p, Vector2 translation)
+        {
+            var result = new Polyline();
+            for (int i = 0; i < p.Count; i++)
+            {
+                result.Add(p[i] + translation);
+            }
+            return result;
+        }
 
     }
 
