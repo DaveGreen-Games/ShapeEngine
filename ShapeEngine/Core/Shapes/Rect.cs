@@ -339,6 +339,8 @@ namespace ShapeEngine.Core.Shapes
 
         public readonly Polygon Project(Vector2 v)
         {
+            if (v.LengthSquared() <= 0f) return ToPolygon();
+            
             var translated = this.Move(v);
             var points = new Points
             {
@@ -353,7 +355,6 @@ namespace ShapeEngine.Core.Shapes
             };
             return Polygon.FindConvexHull(points);
         }
-        
         
         // public readonly bool ContainsRect(Rect rect) =>
         //     (X <= rect.X) && (rect.X + rect.Width <= X + Width) &&

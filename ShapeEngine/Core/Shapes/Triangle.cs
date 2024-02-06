@@ -70,6 +70,7 @@ namespace ShapeEngine.Core.Shapes
         #region Public
         public readonly Polygon Project(Vector2 v)
         {
+            if (v.LengthSquared() <= 0f) return ToPolygon();
             var points = new Points
             {
                 A,

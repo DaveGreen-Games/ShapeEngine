@@ -68,6 +68,7 @@ namespace ShapeEngine.Core.Shapes
         #region Public
         public Polygon Project(Vector2 v)
         {
+            if (v.LengthSquared() <= 0f) return ToPolygon();
             var translated = Move(this, v);
             var points = new Points();
             points.AddRange(this);
