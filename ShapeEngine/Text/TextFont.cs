@@ -199,7 +199,7 @@ public struct TextFont
 
     public void Draw(char c, Rect rect, Vector2 alignement)
     {
-        if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
+        if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.Inflate(FontSizeModifier, alignement);
         float f = rect.Size.Y / BaseSize;
         float fontSize = BaseSize * f;
         var charSize = GetCharSize(c, fontSize);
@@ -211,7 +211,7 @@ public struct TextFont
     }
     public void Draw(string text, Rect rect, float rotDeg, Vector2 alignement)
     {
-        if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
+        if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.Inflate(FontSizeModifier, alignement);
         var scaledFont = ScaleDynamic(text, rect.Size);
         var textSize = scaledFont.GetTextSize(text);
         Rect r = new(rect.GetPoint(alignement), textSize, alignement);
@@ -241,7 +241,7 @@ public struct TextFont
     }
     public void DrawWord(string word, Rect rect, Vector2 alignement)
     {
-        if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
+        if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.Inflate(FontSizeModifier, alignement);
         var scaledFont = ScaleDynamic(word, rect.Size);
         var textSize = scaledFont.GetTextSize(word);
         Rect r = new(rect.GetPoint(alignement), textSize, alignement);
@@ -249,7 +249,7 @@ public struct TextFont
     }
     public void DrawWord(string word, Rect rect, Vector2 alignement, Emphasis emphasis)
     {
-        if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
+        if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.Inflate(FontSizeModifier, alignement);
         var scaledFont = ScaleDynamic(word, rect.Size);
         var textSize = scaledFont.GetTextSize(word);
         Rect r = new(rect.GetPoint(alignement), textSize, alignement);
@@ -299,7 +299,7 @@ public struct TextFont
     }
     public void DrawTextWrapNone(string text, Rect rect, Vector2 alignement, Caret caret, List<TextEmphasis>? emphases)
     {
-        if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
+        if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.Inflate(FontSizeModifier, alignement);
         
         var scaledFont = ScaleDynamic(text, rect.Size);
         var textSize = scaledFont.GetTextSize(text);
@@ -372,7 +372,7 @@ public struct TextFont
     }
     public void DrawTextWrapChar(string text, Rect rect, Vector2 alignement, Caret caret, List<TextEmphasis>? emphases)
     {
-        if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
+        if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.Inflate(FontSizeModifier, alignement);
         // var rectSize = rect.Size;
         
         var textSize = GetTextBaseSize(text);
@@ -537,7 +537,7 @@ public struct TextFont
     }
     public void DrawTextWrapWord(string text, Rect rect, Vector2 alignement, Caret caret, List<TextEmphasis>? emphases)
     {
-        if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
+        if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.Inflate(FontSizeModifier, alignement);
         // var rectSize = rect.Size;
         var textSize = GetTextBaseSize(text);
 

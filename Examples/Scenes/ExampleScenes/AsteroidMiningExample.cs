@@ -729,7 +729,7 @@ namespace Examples.Scenes.ExampleScenes
         private void GenerateRect()
         {
             Rect r = new(curPos, new Vector2(curSize), new Vector2(0.5f));
-            curShape = r.RotateList(new Vector2(0.5f), curRot);
+            curShape = r.Rotate(new(0.5f), curRot);// r.RotateList(new Vector2(0.5f), curRot);
         }
         private void GeneratePoly()
         {

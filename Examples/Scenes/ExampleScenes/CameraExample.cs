@@ -20,7 +20,7 @@ namespace Examples.Scenes.ExampleScenes
         public Pillar(Vector2 pos, float size)
         {
             outline = new(pos, new Vector2(size), new Vector2(0.5f));
-            center = outline.ScaleSize(0.5f, new Vector2(0.5f));
+            center = outline.Inflate(0.5f, new Vector2(0.5f));
         }
 
         public void Draw()

@@ -1,14 +1,12 @@
 ﻿
-using System.ComponentModel;
 using System.Numerics;
 using Raylib_CsLo;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Interfaces;
-using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
-using ShapeEngine.Random;
+
 
 namespace ShapeEngine.Core.Shapes
 {
@@ -229,7 +227,7 @@ namespace ShapeEngine.Core.Shapes
         public readonly Vector2 BottomRight => new(X + Width, Y + Height);
         public readonly Vector2 BottomLeft => new(X, Y + Height);
         public readonly Vector2 Center => new(X + Width * 0.5f, Y + Height * 0.5f);
-
+        public readonly (Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr) Corners => (TopLeft, BottomLeft, BottomRight, TopRight);
         public readonly float Top => Y;
         public readonly float Bottom => Y + Height;
         public readonly float Left => X;
@@ -254,7 +252,7 @@ namespace ShapeEngine.Core.Shapes
         }
         public Rect(Vector2 topLeft, Vector2 bottomRight)
         {
-            var final = ShapeRect.Fix(topLeft, bottomRight);
+            var final = Fix(topLeft, bottomRight);
             this.X = final.topLeft.X;
             this.Y = final.topLeft.Y;
             this.Width = final.bottomRight.X - this.X;
@@ -290,6 +288,9 @@ namespace ShapeEngine.Core.Shapes
             this.Width = size.X;
             this.Height = size.Y;
         }
+
+        
+        
         public Rect(Rectangle rect)
         {
             this.X = rect.X;
@@ -335,8 +336,233 @@ namespace ShapeEngine.Core.Shapes
 
         #endregion
 
-        #region Public
+        #region Math
 
+        public readonly bool SeperateAxis(Vector2 axisStart, Vector2 axisEnd)
+        {
+            var n = axisStart - axisEnd;
+            var corners = ToPolygon();
+            var edgeAStart =    corners[0];
+            var edgeAEnd =      corners[1];
+            var edgeBStart =    corners[2];
+            var edgeBEnd =      corners[3];
+
+            var edgeARange = ProjectSegment(edgeAStart, edgeAEnd, n);
+            var edgeBRange = ProjectSegment(edgeBStart, edgeBEnd, n);
+            var rProjection = RangeHull(edgeARange, edgeBRange);
+
+            var axisRange = ProjectSegment(axisStart, axisEnd, n);
+            return !OverlappingRange(axisRange, rProjection);
+        }
+
+        
+        /// <summary>
+        /// Points are ordered in ccw order starting with top left. (tl, bl, br, tr)
+        /// </summary>
+        /// <param name="pivot"></param>
+        /// <param name="angleDeg"></param>
+        /// <returns></returns>
+        public readonly Polygon Rotate(Vector2 pivot, float angleDeg)
+        {
+            var poly = ToPolygon();
+            poly.Rotate(pivot, angleDeg * ShapeMath.DEGTORAD);
+            return poly;
+        }
+        public readonly Points RotateList(Vector2 pivot, float angleDeg)
+        {
+            var poly = ToPolygon();
+            poly.Rotate(pivot, angleDeg * ShapeMath.DEGTORAD);
+            return new(){poly[0], poly[1], poly[2], poly[3]};
+        }
+        public readonly (Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr) RotateCorners(Vector2 pivot, float angleDeg)
+        {
+            var poly = ToPolygon();
+            poly.Rotate(pivot, angleDeg * ShapeMath.DEGTORAD);
+            return new(poly[0], poly[1], poly[2], poly[3]);
+        }
+        public readonly Vector2 GetPoint(Vector2 alignement)
+        {
+            var offset = Size * alignement;
+            return TopLeft + offset;
+        }
+        public readonly Rect Lerp(Rect to, float f)
+        {
+            return
+                new
+                (
+                    ShapeMath.LerpFloat(X, to.X, f),
+                    ShapeMath.LerpFloat(Y, to.Y, f),
+                    ShapeMath.LerpFloat(Width, to.Width, f),
+                    ShapeMath.LerpFloat(Height, to.Height, f)
+                );
+        }
+        public readonly Rect Align(Vector2 alignement) { return new(TopLeft, Size, alignement); }
+        public readonly Rect ApplyMargins(float left, float right, float top, float bottom)
+        {
+            left = ShapeMath.Clamp(left, -1f, 1f);
+            right = ShapeMath.Clamp(right, -1f, 1f);
+            top = ShapeMath.Clamp(top, -1f, 1f);
+            bottom = ShapeMath.Clamp(bottom, -1f, 1f);
+
+
+            var tl = TopLeft; // new(X, Y);
+            var size = Size; //new(Width, Height);
+            var br = tl + size;
+
+            tl.X += size.X * left;
+            tl.Y += size.Y * top;
+            br.X -= size.X * right;
+            br.Y -= size.Y * bottom;
+
+            Vector2 finalTopLeft = new(MathF.Min(tl.X, br.X), MathF.Min(tl.Y, br.Y));
+            Vector2 finalBottomRight = new(MathF.Max(tl.X, br.X), MathF.Max(tl.Y, br.Y));
+            return new
+                (
+                    finalTopLeft.X,
+                    finalTopLeft.Y,
+                    finalBottomRight.X - finalTopLeft.X,
+                    finalBottomRight.Y - finalTopLeft.Y
+                );
+        }
+        public readonly Rect ApplyMarginsAbsolute(float left, float right, float top, float bottom)
+        {
+            var tl = TopLeft; // new(rect.X, rect.Y);
+            // var size = Size; // new(rect.Width, rect.Height);
+            var br = BottomRight; // tl + size;
+            
+            tl.X += left;
+            tl.Y += top;
+            br.X -= right;
+            br.Y -= bottom;
+
+            Vector2 finalTopLeft = new(MathF.Min(tl.X, br.X), MathF.Min(tl.Y, br.Y));
+            Vector2 finalBottomRight = new(MathF.Max(tl.X, br.X), MathF.Max(tl.Y, br.Y));
+            return new
+                (
+                    finalTopLeft.X,
+                    finalTopLeft.Y,
+                    finalBottomRight.X - finalTopLeft.X,
+                    finalBottomRight.Y - finalTopLeft.Y
+                );
+        }
+        
+        public readonly Rect Inflate(float horizontalAmount, float verticalAmount)
+        {
+            return new
+            (
+                X - horizontalAmount, 
+                Y - verticalAmount, 
+                Width + horizontalAmount * 2f, 
+                Height +verticalAmount * 2f
+            );
+        }
+        public readonly Rect Inflate(float scale, Vector2 alignement) => new(GetPoint(alignement), Size * scale, alignement);
+        public readonly Rect Inflate(Vector2 scale, Vector2 alignement) => new(GetPoint(alignement), Size * scale, alignement);
+        public readonly Rect SetSize(Vector2 newSize) => new(TopLeft, newSize, new(0f));
+        public readonly Rect SetSize(Vector2 newSize, Vector2 alignement) => new(GetPoint(alignement), newSize, alignement);
+        public readonly Rect ChangeSize(float amount, Vector2 alignement) => new(GetPoint(alignement), new(Width + amount, Height + amount), alignement);
+        public readonly Rect ChangeSize(Vector2 amount, Vector2 alignement) => new(GetPoint(alignement), Size + amount, alignement);
+
+        public readonly Rect Move(Vector2 amount) { return new( TopLeft + amount, Size, new(0f)); }
+
+        /// <summary>
+        /// Returns a value between 0 - 1 for x & y axis based on where the point is within the rect.
+        /// topleft is considered (0,0) and bottomright is considered (1,1).
+        /// </summary>
+        /// <param name="p"></param>
+        /// <returns></returns>
+        public readonly Vector2 GetPointFactors(Vector2 p)
+        {
+            var dif = p - TopLeft;
+            var intensity = dif / Size;
+
+            float xFactor = intensity.X < 0f ? 0f : intensity.X > 1f ? 1f : intensity.X;
+            float yFactor = intensity.Y < 0f ? 0f : intensity.Y > 1f ? 1f : intensity.Y;
+            return new(xFactor, yFactor);
+        }
+        /// <summary>
+        /// Returns a value between 0 - 1 for x axis based on where the point is within the rect.
+        /// topleft is considered (0,0) and bottomright is considered (1,1).
+        /// </summary>
+        /// <param name="x"></param>
+        /// <returns></returns>
+        public readonly float GetWidthPointFactor(float x)
+        {
+            float dif = x - Left;
+            float intensity = dif / Width;
+            return intensity < 0f ? 0f : intensity > 1f ? 1f : intensity;
+        }
+        /// <summary>
+        /// Returns a value between 0 - 1 for y axis based on where the point is within the rect.
+        /// topleft is considered (0,0) and bottomright is considered (1,1).
+        /// </summary>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public readonly float GetHeightPointFactor(float y)
+        {
+            float dif = y - Top;
+            float intensity = dif / Height;
+            return intensity < 0f ? 0f : intensity > 1f ? 1f : intensity;
+        }
+        public readonly Rect Enlarge(Vector2 p)
+        {
+            Vector2 tl = new
+                (
+                    MathF.Min(X, p.X),
+                    MathF.Min(Y, p.Y)
+                );
+            Vector2 br = new
+                (
+                    MathF.Max(X + Width, p.X),
+                    MathF.Max(Y + Height, p.Y)
+                );
+            return new(tl, br);
+        }
+        public readonly Vector2 ClampOnRect(Vector2 p)
+        {
+            return new
+                (
+                    ShapeMath.Clamp(p.X, X, X + Width),
+                    ShapeMath.Clamp(p.Y, Y, Y + Height)
+                );
+        }
+        
+        public readonly Rect Clamp(Rect bounds)
+        {
+            var tl = bounds.ClampOnRect(TopLeft);
+            var br = bounds.ClampOnRect(BottomRight);
+            return new(tl, br);
+        }
+        public readonly Rect Clamp(Vector2 min, Vector2 max) { return Clamp(new Rect(min, max)); }
+
+        #endregion
+        
+        #region Corners
+
+        /// <summary>
+        /// Corners a numbered in ccw order starting from the top left. (tl, bl, br, tr)
+        /// </summary>
+        /// <param name="corner">Corner Index from 0 to 3</param>
+        /// <returns></returns>
+        public readonly Vector2 GetCorner(int corner) => ToPolygon()[corner % 4];
+
+        /// <summary>
+        /// Points are ordered in ccw order starting from the top left. (tl, bl, br, tr)
+        /// </summary>
+        /// <returns></returns>
+        public readonly Polygon GetPointsRelative(Vector2 pos)
+        {
+            var points = ToPolygon(); //GetPoints(rect);
+            for (int i = 0; i < points.Count; i++)
+            {
+                points[i] -= pos;
+            }
+            return points;
+        }
+        #endregion
+        
+        #region Public
+        
         public readonly Polygon Project(Vector2 v)
         {
             if (v.LengthSquared() <= 0f) return ToPolygon();
@@ -487,19 +713,6 @@ namespace ShapeEngine.Core.Shapes
             float y = MathF.Min(Y, other.Y);
             return new Rect(x, y, Math.Max(Right, other.Right) - x, Math.Max(Bottom, other.Bottom) - y);
         }
-        
-        
-        public readonly Rect Inflate(float horizontalAmount, float verticalAmount)
-        {
-            return new
-                (
-                    X - horizontalAmount, 
-                    Y - verticalAmount, 
-                    Width + horizontalAmount * 2f, 
-                    Height +verticalAmount * 2f
-                );
-        }
-        
         
         
         public readonly (Rect top, Rect bottom) SplitV(float f)
@@ -685,10 +898,10 @@ namespace ShapeEngine.Core.Shapes
         public readonly Polyline ToPolyline() { return new() { TopLeft, BottomLeft, BottomRight, TopRight }; }
         public readonly Segments GetEdges() 
         {
-            Vector2 A = TopLeft;
-            Vector2 B = BottomLeft;
-            Vector2 C = BottomRight;
-            Vector2 D = TopRight;
+            var A = TopLeft;
+            var B = BottomLeft;
+            var C = BottomRight;
+            var D = TopRight;
 
             Segment left = new(A, B, FlippedNormals);
             Segment bottom = new(B, C, FlippedNormals);
@@ -829,7 +1042,176 @@ namespace ShapeEngine.Core.Shapes
 
         #endregion
         
+        #region UI
+        public readonly List<Rect> GetAlignedRectsHorizontal(int count, float gapRelative = 0f, float maxElementSizeRel = 1f)
+        {
+            List<Rect> rects = new();
+            Vector2 startPos = new(X, Y);
+            int gaps = count - 1;
+
+            float totalWidth = Width;
+            float gapSize = totalWidth * gapRelative;
+            float elementWidth = (totalWidth - gaps * gapSize) / count;
+            Vector2 offset = new(0f, 0f);
+            for (int i = 0; i < count; i++)
+            {
+                Vector2 size = new(elementWidth, Height);
+                Vector2 maxSize = maxElementSizeRel * new Vector2(Width, Height);
+                if (maxSize.X > 0f) size.X = MathF.Min(size.X, maxSize.X);
+                if (maxSize.Y > 0f) size.Y = MathF.Min(size.Y, maxSize.Y);
+                Rect r = new(startPos + offset, size, new(0f));
+                rects.Add(r);
+                offset += new Vector2(gapSize + elementWidth, 0f);
+            }
+            return rects;
+        }
+        public readonly List<Rect> GetAlignedRectsVertical(int count, float gapRelative = 0f, float maxElementSizeRel = 1f)
+        {
+            List<Rect> rects = new();
+            Vector2 startPos = new(X, Y);
+            int gaps = count - 1;
+
+            float totalHeight = Height;
+            float gapSize = totalHeight * gapRelative;
+            float elementHeight = (totalHeight - gaps * gapSize) / count;
+            Vector2 offset = new(0f, 0f);
+            for (int i = 0; i < count; i++)
+            {
+                Vector2 size = new(Width, elementHeight);
+                Vector2 maxSize = maxElementSizeRel * new Vector2(Width, Height);
+                if (maxSize.X > 0f) size.X = MathF.Min(size.X, maxSize.X);
+                if (maxSize.Y > 0f) size.Y = MathF.Min(size.Y, maxSize.Y);
+                Rect r = new(startPos + offset, size, new(0f));
+                rects.Add(r);
+                offset += new Vector2(0, gapSize + size.Y);
+            }
+            return rects;
+        }
+        public readonly List<Rect> GetAlignedRectsGrid(int columns, int rows, int count, float hGapRelative = 0f, float vGapRelative = 0f, bool leftToRight = true)
+        {
+            List<Rect> rects = new();
+            Vector2 startPos = new(X, Y);
+
+            int hGaps = columns - 1;
+            float totalWidth = Width;
+            float hGapSize = totalWidth * hGapRelative;
+            float elementWidth = (totalWidth - hGaps * hGapSize) / columns;
+            Vector2 hGap = new(hGapSize + elementWidth, 0);
+
+            int vGaps = rows - 1;
+            float totalHeight = Height;
+            float vGapSize = totalHeight * vGapRelative;
+            float elementHeight = (totalHeight - vGaps * vGapSize) / rows;
+            Vector2 vGap = new(0, vGapSize + elementHeight);
+
+            Vector2 elementSize = new(elementWidth, elementHeight);
+
+            for (int i = 0; i < count; i++)
+            {
+                var coords = ShapeUtils.TransformIndexToCoordinates(i, rows, columns, leftToRight);
+                Rect r = new(startPos + hGap * coords.col + vGap * coords.row, elementSize, new(0f));
+                rects.Add(r);
+            }
+            return rects;
+        }
+        #endregion
+        
         #region Static
+        /// <summary>
+        /// Checks if the top left point is further up & left than the bottom right point and returns the correct points if necessary.
+        /// </summary>
+        /// <param name="topLeft"></param>
+        /// <param name="bottomRight"></param>
+        /// <returns></returns>
+        public static (Vector2 topLeft, Vector2 bottomRight) Fix(Vector2 topLeft, Vector2 bottomRight)
+        {
+            Vector2 newTopLeft = new
+            (
+                MathF.Min(topLeft.X, bottomRight.X),
+                MathF.Min(topLeft.Y, bottomRight.Y)
+            );
+            Vector2 newBottomRight = new
+            (
+                MathF.Max(topLeft.X, bottomRight.X),
+                MathF.Max(topLeft.Y, bottomRight.Y)
+            );
+
+
+            return (newTopLeft, newBottomRight);
+        }
+         /// <summary>
+        /// Construct 9 rects out of an outer and inner rect.
+        /// </summary>
+        /// <param name="inner">The inner rect. Has to be inside of the outer rect.</param>
+        /// <param name="outer">The outer rect. Has to be bigger than the inner rect.</param>
+        /// <returns>A list of rectangle in the order [TL,TC,TR,LC,C,RC,BL,BC,BR].</returns>
+        public static List<Rect> GetNineTiles(Rect inner, Rect outer)
+        {
+            List<Rect> tiles = new();
+
+            //topLeft
+            Vector2 tl0 = new(outer.X, outer.Y);
+            Vector2 br0 = new(inner.X, inner.Y);
+            
+            //topCenter
+            Vector2 tl1 = new(inner.X, outer.Y);
+            Vector2 br1 = new(inner.X + inner.Width, inner.Y);
+            
+            //topRight
+            Vector2 tl2 = new(inner.X + inner.Width, outer.Y);
+            Vector2 br2 = new(outer.X + outer.Width, inner.Y);
+           
+            //rightCenter
+            Vector2 tl3 = br1;
+            Vector2 br3 = new(outer.X + outer.Width, inner.Y + inner.Height);
+            
+            //bottomRight
+            Vector2 tl4 = new(inner.X + inner.Width, inner.Y + inner.Height);
+            Vector2 br4 = new(outer.X + outer.Width, outer.Y + outer.Height);
+            
+            //bottomCenter
+            Vector2 tl5 = new(inner.X, inner.Y + inner.Height);
+            Vector2 br5 = new(inner.X + inner.Width, outer.Y + outer.Height);
+            
+            //bottomLeft
+            Vector2 tl6 = new(outer.X, inner.Y + inner.Height);
+            Vector2 br6 = new(inner.X, outer.Y + outer.Height);
+            
+            //leftCenter
+            Vector2 tl7 = new(outer.X, inner.Y);
+            Vector2 br7 = tl5;
+            
+            tiles.Add(new(tl0, br0));//topLeft
+            tiles.Add(new(tl1, br1));//topCenter
+            tiles.Add(new(tl2, br2));//topRight
+            tiles.Add(new(tl7, br7));//leftCenter
+            tiles.Add(inner);
+            tiles.Add(new(tl3, br3));//rightCenter
+            tiles.Add(new(tl6, br6));//bottomLeft
+            tiles.Add(new(tl5, br5));//bottomCenter
+            tiles.Add(new(tl4, br4));//bottomRight
+
+            return tiles;
+        }
+
+        /// <summary>
+        /// Returns the segments of a rect in ccw order. (tl -> bl, bl -> br, br -> tr, tr -> tl)
+        /// </summary>
+        /// <param name="tl"></param>
+        /// <param name="bl"></param>
+        /// <param name="br"></param>
+        /// <param name="tr"></param>
+        /// <returns></returns>
+        public static Segments GetEdges(Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr)
+        {
+            Segments segments = new()
+            {
+                new(tl, bl), new(bl, br), new(br, tr), new(tr, tl)
+            };
+
+            return segments;
+        }
+        public static Rect FromCircle(Circle c) => new(c.Center, new Vector2(c.Radius, c.Radius), new Vector2(0.5f, 0.5f));
         public static bool IsPointInRect(Vector2 point, Vector2 topLeft, Vector2 size)
         {
             float left = topLeft.X;
@@ -843,6 +1225,51 @@ namespace ShapeEngine.Core.Shapes
         }
 
         public static Rect Empty => new();
+        
+        public static bool OverlappingRange(float minA, float maxA, float minB, float maxB)
+        {
+            if (maxA < minA)
+            {
+                float temp = minA;
+                minA = maxA;
+                maxA = temp;
+            }
+            if (maxB < minB)
+            {
+                float temp = minB;
+                minB = maxB;
+                maxB = temp;
+            }
+            //return minA < maxB && maxA > minB;
+            return minB <= maxA && minA <= maxB;
+        }
+        public static bool OverlappingRange(RangeFloat a, RangeFloat b)
+        {
+            return OverlappingRange(a.Min, a.Max, b.Min, b.Max);
+        }
+        private static RangeFloat RangeHull(RangeFloat a, RangeFloat b)
+        {
+            return new
+                (
+                    a.Min < b.Min ? a.Min : b.Min,
+                    a.Max > b.Max ? a.Max : b.Max
+                );
+        }
+        public static RangeFloat ProjectSegment(Vector2 aPos, Vector2 aEnd, Vector2 onto)
+        {
+            Vector2 unitOnto = Vector2.Normalize(onto);
+            RangeFloat r = new(ShapeVec.Dot(unitOnto, aPos), ShapeVec.Dot(unitOnto, aEnd));
+            return r;
+        }
+        public static bool SegmentOnOneSide(Vector2 axisPos, Vector2 axisDir, Vector2 segmentPos, Vector2 segmentEnd)
+        {
+            Vector2 d1 = segmentPos - axisPos;
+            Vector2 d2 = segmentEnd - axisPos;
+            Vector2 n = ShapeVec.Rotate90CCW(axisDir);// new(-axisDir.Y, axisDir.X);
+            return Vector2.Dot(n, d1) * Vector2.Dot(n, d2) > 0.0f;
+        }
+
+        
         #endregion
         
         #region IShape
@@ -852,6 +1279,75 @@ namespace ShapeEngine.Core.Shapes
         public readonly bool ContainsPoint(Vector2 p) { return IsPointInRect(p, TopLeft, Size); }
         #endregion
 
+        #region Collision
+        public readonly (bool collided, Vector2 hitPoint, Vector2 n, Vector2 newPos) CollidePlayfield(Vector2 objPos, float objRadius)
+        {
+            var collided = false;
+            var hitPoint = objPos;
+            var n = new Vector2(0f, 0f);
+            var newPos = objPos;
+            if (objPos.X + objRadius > X + Width)
+            {
+                hitPoint = new(X + Width, objPos.Y);
+                newPos.X = hitPoint.X - objRadius;
+                n = new(-1, 0);
+                collided = true;
+            }
+            else if (objPos.X - objRadius < X)
+            {
+                hitPoint = new(X, objPos.Y);
+                newPos.X = hitPoint.X + objRadius;
+                n = new(1, 0);
+                collided = true;
+            }
+
+            if (objPos.Y + objRadius > Y + Height)
+            {
+                hitPoint = new(objPos.X, Y + Height);
+                newPos.Y = hitPoint.Y - objRadius;
+                n = new(0, -1);
+                collided = true;
+            }
+            else if (objPos.Y - objRadius < Y)
+            {
+                hitPoint = new(objPos.X, Y);
+                newPos.Y = hitPoint.Y + objRadius;
+                n = new(0, 1);
+                collided = true;
+            }
+
+            return (collided, hitPoint, n, newPos);
+        }
+        public readonly (bool outOfBounds, Vector2 newPos) WrapAroundPlayfield(Vector2 objPos, float objRadius)
+        {
+            var outOfBounds = false;
+            var newPos = objPos;
+            if (objPos.X + objRadius > X + Width)
+            {
+                newPos = new(X, objPos.Y);
+                outOfBounds = true;
+            }
+            else if (objPos.X - objRadius < X)
+            {
+                newPos = new(X + Width, objPos.Y);
+                outOfBounds = true;
+            }
+
+            if (objPos.Y + objRadius > Y + Height)
+            {
+                newPos = objPos with { Y = Y };
+                outOfBounds = true;
+            }
+            else if (objPos.Y - objRadius < Y)
+            {
+                newPos = objPos with { Y = Y + Height };
+                outOfBounds = true;
+            }
+
+            return (outOfBounds, newPos);
+        }
+        #endregion
+        
         #region Overlap
         public readonly bool OverlapShape(Segments segments)
         {
@@ -866,13 +1362,13 @@ namespace ShapeEngine.Core.Shapes
         public readonly bool OverlapShape(Triangle t) { return t.OverlapShape(this); }
         public readonly bool OverlapShape(Rect b)
         {
-            Vector2 aTopLeft = new(X, Y);
-            Vector2 aBottomRight = aTopLeft + new Vector2(Width, Height);
-            Vector2 bTopLeft = new(b.X, b.Y);
-            Vector2 bBottomRight = bTopLeft + new Vector2(b.Width, b.Height);
+            var aTopLeft = new Vector2(X, Y);
+            var aBottomRight = aTopLeft + new Vector2(Width, Height);
+            var bTopLeft = new Vector2(b.X, b.Y);
+            var bBottomRight = bTopLeft + new Vector2(b.Width, b.Height);
             return
-                ShapeRect.OverlappingRange(aTopLeft.X, aBottomRight.X, bTopLeft.X, bBottomRight.X) &&
-                ShapeRect.OverlappingRange(aTopLeft.Y, aBottomRight.Y, bTopLeft.Y, bBottomRight.Y);
+                Rect.OverlappingRange(aTopLeft.X, aBottomRight.X, bTopLeft.X, bBottomRight.X) &&
+                Rect.OverlappingRange(aTopLeft.Y, aBottomRight.Y, bTopLeft.Y, bBottomRight.Y);
         }
         public readonly bool OverlapShape(Polygon poly) { return poly.OverlapShape(this); }
         public readonly bool OverlapShape(Polyline pl) { return pl.OverlapShape(this); }

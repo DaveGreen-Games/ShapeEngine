@@ -801,14 +801,14 @@ namespace ShapeEngine.Lib;
         public static void Draw(this Rect rect, ColorRgba color) => Raylib.DrawRectangleRec(rect.Rectangle, color.ToRayColor());
         public static void Draw(this Rect rect, Vector2 pivot, float rotDeg, ColorRgba color)
         {
-            var rr = rect.Rotate(pivot, rotDeg); // SRect.RotateRect(rect, pivot, rotDeg);
+            var rr = rect.RotateCorners(pivot, rotDeg); // SRect.RotateRect(rect, pivot, rotDeg);
             Raylib.DrawTriangle(rr.tl, rr.bl, rr.br, color.ToRayColor());
             Raylib.DrawTriangle(rr.br, rr.tr, rr.tl, color.ToRayColor());
         }
         public static void DrawLines(this Rect rect, float lineThickness, ColorRgba color) => Raylib.DrawRectangleLinesEx(rect.Rectangle, lineThickness, color.ToRayColor());
         public static void DrawLines(this Rect rect, Vector2 pivot, float rotDeg, float lineThickness, ColorRgba color, LineCapType capType = LineCapType.Extended, int capPoints = 0)
         {
-            var rr = ShapeRect.Rotate(rect, pivot, rotDeg);
+            var rr = rect.RotateCorners(pivot, rotDeg); // ShapeRect.Rotate(rect, pivot, rotDeg);
 
             DrawLine(rr.tl, rr.tr, lineThickness, color, capType, capPoints);
             DrawLine(rr.bl, rr.br, lineThickness, color, capType, capPoints);
@@ -1508,17 +1508,17 @@ namespace ShapeEngine.Lib;
         }
         public static void DrawOutlineBar(this Rect rect, Vector2 pivot, float angleDeg, float thickness, float f, ColorRgba color)
         {
-            var rr = ShapeRect.Rotate(rect, pivot, angleDeg);
+            var rr = rect.RotateCorners(pivot, angleDeg);
             //Vector2 thicknessOffsetX = new Vector2(thickness, 0f);
             //Vector2 thicknessOffsetY = new Vector2(0f, thickness);
 
-            Vector2 leftExtension = ShapeVec.Rotate(new Vector2(-thickness / 2, 0f), angleDeg * ShapeMath.DEGTORAD);
-            Vector2 rightExtension = ShapeVec.Rotate(new Vector2(thickness / 2, 0f), angleDeg * ShapeMath.DEGTORAD);
+            var leftExtension = new Vector2(-thickness / 2, 0f).Rotate(angleDeg * ShapeMath.DEGTORAD);
+            var rightExtension = new Vector2(thickness / 2, 0f).Rotate(angleDeg * ShapeMath.DEGTORAD);
 
-            Vector2 tl = rr.tl;
-            Vector2 br = rr.br;
-            Vector2 tr = rr.tr;
-            Vector2 bl = rr.bl;
+            var tl = rr.tl;
+            var br = rr.br;
+            var tr = rr.tr;
+            var bl = rr.bl;
 
             int lines = (int)MathF.Ceiling(4 * ShapeMath.Clamp(f, 0f, 1f));
             float fMin = 0.25f * (lines - 1);

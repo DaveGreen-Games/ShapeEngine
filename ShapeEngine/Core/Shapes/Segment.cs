@@ -287,19 +287,19 @@ namespace ShapeEngine.Core.Shapes
         {
             //var result = IntersectSegmentSegmentInfo(a.start, a.end, b.start, b.end);
             //return result.intersected;
-            Vector2 axisAPos = Start;
-            Vector2 axisADir = End - Start;
-            if (ShapeRect.SegmentOnOneSide(axisAPos, axisADir, b.Start, b.End)) return false;
+            var axisAPos = Start;
+            var axisADir = End - Start;
+            if (Rect.SegmentOnOneSide(axisAPos, axisADir, b.Start, b.End)) return false;
 
-            Vector2 axisBPos = b.Start;
-            Vector2 axisBDir = b.End - b.Start;
-            if (ShapeRect.SegmentOnOneSide(axisBPos, axisBDir, Start, End)) return false;
+            var axisBPos = b.Start;
+            var axisBDir = b.End - b.Start;
+            if (Rect.SegmentOnOneSide(axisBPos, axisBDir, Start, End)) return false;
 
-            if (ShapeVec.Parallel(axisADir, axisBDir))
+            if (axisADir.Parallel(axisBDir))
             {
-                RangeFloat rangeA = ShapeRect.ProjectSegment(Start, End, axisADir);
-                RangeFloat rangeB = ShapeRect.ProjectSegment(b.Start, b.End, axisADir);
-                return ShapeRect.OverlappingRange(rangeA, rangeB);
+                var rangeA = Rect.ProjectSegment(Start, End, axisADir);
+                var rangeB = Rect.ProjectSegment(b.Start, b.End, axisADir);
+                return Rect.OverlappingRange(rangeA, rangeB);
             }
             return true;
         }
@@ -319,7 +319,7 @@ namespace ShapeEngine.Core.Shapes
                     End.X
                 );
 
-            if (!ShapeRect.OverlappingRange(rectRange, segmentRange)) return false;
+            if (!Rect.OverlappingRange(rectRange, segmentRange)) return false;
 
             rectRange.Min = r.Y;
             rectRange.Max = r.Y + r.Height;
@@ -329,11 +329,11 @@ namespace ShapeEngine.Core.Shapes
             segmentRange.Max = End.Y;
             segmentRange.Sort();
 
-            return ShapeRect.OverlappingRange(rectRange, segmentRange);
+            return Rect.OverlappingRange(rectRange, segmentRange);
         }
         public bool OverlapShape(Polygon poly) { return poly.OverlapShape(this); }
         public bool OverlapShape(Polyline pl) { return pl.OverlapShape(this); }
-        public bool OverlapSegmentLine(Vector2 linePos, Vector2 lineDir) { return !ShapeRect.SegmentOnOneSide(linePos, lineDir, Start, End); }
+        public bool OverlapSegmentLine(Vector2 linePos, Vector2 lineDir) { return !Rect.SegmentOnOneSide(linePos, lineDir, Start, End); }
         public static bool OverlapLineLine(Vector2 aPos, Vector2 aDir, Vector2 bPos, Vector2 bDir)
         {
             if (ShapeVec.Parallel(aDir, bDir))

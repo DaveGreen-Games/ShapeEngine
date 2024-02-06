@@ -881,7 +881,7 @@ namespace ShapeEngine.Core.Shapes
 
             foreach (var p in this)
             {
-                r = ShapeRect.Enlarge(r, p);
+                r = r.Enlarge(p);// ShapeRect.Enlarge(r, p);
             }
             return r;
         }
