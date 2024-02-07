@@ -14,16 +14,6 @@ using ShapeEngine.Input;
 
 namespace ShapeEngine.Core;
 
-// public static class RaylibWrapper
-// {
-//     
-// }
-//
-// public static class RaylibConverter
-// {
-//     
-// }
-
 public class ShapeLoop
 {
     #region Static
@@ -229,16 +219,21 @@ public class ShapeLoop
     private readonly ShapeTexture screenShaderBuffer = new();
     private readonly ShapeCamera basicCamera = new ShapeCamera();
     private ShapeCamera curCamera;
+    
     private Vector2 prevWindowPosition = new();
     private Dimensions prevFullscreenWindowSize = new(128, 128);
     private Vector2 prevFullscreenWindowPosition = new(0);
     private bool prevFullscreenWindowMaximized = false;
-    private bool quit = false;
-    private bool restart = false;
-    private List<ShapeFlash> shapeFlashes = new();
-    private List<DeferredInfo> deferred = new();
     private int frameRateLimit = 60;
     private Dimensions windowSize = new();
+    
+    
+    private bool quit = false;
+    private bool restart = false;
+    
+    private List<ShapeFlash> shapeFlashes = new();
+    private List<DeferredInfo> deferred = new();
+    
     
     // private readonly Gamepad[] gamepads = new Gamepad[8];
     // private readonly List<int> connectedGamepadIndices = new();
@@ -255,7 +250,6 @@ public class ShapeLoop
     #region Setup
     public ShapeLoop(Dimensions developmentDimensions, bool multiShaderSupport = false)
     {
-        
         #if DEBUG
         DebugMode = true;
         ReleaseMode = false;
@@ -463,6 +457,7 @@ public class ShapeLoop
         WindowSize = Monitor.CurMonitor().Dimensions / 2;
         //ResetMousePosition();
     }
+    
     public void ResetMousePosition()
     {
         // var monitor = Monitor.CurMonitor();
@@ -470,6 +465,7 @@ public class ShapeLoop
         var center = WindowPosition / 2 + WindowSize.ToVector2() / 2; // CurScreenSize.ToVector2() / 2;
         Raylib.SetMousePosition((int)center.X, (int)center.Y);
     }
+    
     public void ResetCamera() => Camera = basicCamera;
 
     
@@ -1102,6 +1098,148 @@ public class ShapeLoop
         Console.WriteLine("---------------------------------------");
     }
     #endregion
+    
+    
+    
+    /*
+    #region RaylibCore
+    private static bool isCursorEnabledRaylib = true;
+    private static bool CursorVisibleRaylib
+    {
+        get => !Raylib.IsCursorHidden();
+        set
+        {
+            if (value == !Raylib.IsCursorHidden()) return;
+            if(value) Raylib.ShowCursor();
+            else Raylib.HideCursor();
+        }
+    }
+    private static bool CursorEnabledRaylib
+    {
+        get => isCursorEnabledRaylib;
+        set
+        {
+            if (value == isCursorEnabledRaylib) return;
+            isCursorEnabledRaylib = value;
+            if(isCursorEnabledRaylib) Raylib.EnableCursor();
+            else Raylib.DisableCursor();
+        }
+    }
+    private static Vector2 MousePositionRaylib
+    {
+        get => Raylib.GetMousePosition();
+        set => Raylib.SetMousePosition((int)value.X, (int)value.Y);
+    }
+    #endregion
+    */
+    
+    /*
+    #region RaylibFlags
+
+    #region SetFlags
+
+    private static void SetFullscreenFlag(bool set = true)
+    {
+        if (set) Raylib_CsLo.Raylib.SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+        else Raylib_CsLo.Raylib.ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+    }
+    private static void SetWindowResizableFlag(bool set = true)
+    {
+        if (set) Raylib_CsLo.Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
+        else Raylib_CsLo.Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
+    }
+    private static void SetWindowUndecoratedFlag(bool set = true)
+    {
+        if (set) Raylib_CsLo.Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
+        else Raylib_CsLo.Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
+    }
+    private static void SetWindowTransparentFlag(bool set = true)
+    {
+        if (set) Raylib_CsLo.Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_TRANSPARENT);
+        else Raylib_CsLo.Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_TRANSPARENT);
+    }
+    private static void SetMSAA4XHintFlag(bool set = true)
+    {
+        if (set) Raylib_CsLo.Raylib.SetWindowState(ConfigFlags.FLAG_MSAA_4X_HINT);
+        else Raylib_CsLo.Raylib.ClearWindowState(ConfigFlags.FLAG_MSAA_4X_HINT);
+    }
+    private static void SetVsyncFlag(bool set = true)
+    {
+        if (set) Raylib_CsLo.Raylib.SetWindowState(ConfigFlags.FLAG_VSYNC_HINT);
+        else Raylib_CsLo.Raylib.ClearWindowState(ConfigFlags.FLAG_VSYNC_HINT);
+    }
+    private static void SetWindowHiddenFlag(bool set = true)
+    {
+        if (set) Raylib_CsLo.Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_HIDDEN);
+        else Raylib_CsLo.Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_HIDDEN);
+    }
+    private static void SetWindowAlwaysRunFlag(bool set = true)
+    {
+        if (set) Raylib_CsLo.Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_ALWAYS_RUN);
+        else Raylib_CsLo.Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_ALWAYS_RUN);
+    }
+    private static void SetWindowMinimizedFlag(bool set = true)
+    {
+        if (set) Raylib_CsLo.Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_MINIMIZED);
+        else Raylib_CsLo.Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_MINIMIZED);
+    }
+    private static void SetWindowMaximizedFlag(bool set = true)
+    {
+        if (set) Raylib_CsLo.Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_MAXIMIZED);
+        else Raylib_CsLo.Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_MAXIMIZED);
+    }
+    private static void SetWindowUnfocusedFlag(bool set = true)
+    {
+        if (set) Raylib_CsLo.Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_UNFOCUSED);
+        else Raylib_CsLo.Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_UNFOCUSED);
+        
+    }
+    private static void SetWindowTopmostFlag(bool set = true)
+    {
+        if (set) Raylib_CsLo.Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
+        else Raylib_CsLo.Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
+        
+    }
+    private static void SetWindowHighDpiFlag(bool set = true)
+    {
+        if (set) Raylib_CsLo.Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_HIGHDPI);
+        else Raylib_CsLo.Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_HIGHDPI);
+        
+    }
+    private static void SetWindowMousePassthrougFlag(bool set = true)
+    {
+        if (set) Raylib_CsLo.Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_MOUSE_PASSTHROUGH);
+        else Raylib_CsLo.Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_MOUSE_PASSTHROUGH);
+        
+    }
+    private static void SetInterlacedHintFlag(bool set = true)
+    {
+        if (set) Raylib_CsLo.Raylib.SetWindowState(ConfigFlags.FLAG_INTERLACED_HINT);
+        else Raylib_CsLo.Raylib.ClearWindowState(ConfigFlags.FLAG_INTERLACED_HINT);
+    }
+    #endregion
+
+    #region CheckFlag
+    private static bool IsFullscreen() => Raylib.IsWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+    private static bool IsWindowResizeable() => Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
+    private static bool IsWindowUndecorated() => Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
+    private static bool IsWindowTransparent() => Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_TRANSPARENT);
+    private static bool IsMSAA4XHint() => Raylib.IsWindowState(ConfigFlags.FLAG_MSAA_4X_HINT);
+    private static bool IsVsync() => Raylib.IsWindowState(ConfigFlags.FLAG_VSYNC_HINT);
+    private static bool IsWindowHidden() => Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_HIDDEN);
+    private static bool IsWindowAlwaysRun() => Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_ALWAYS_RUN);
+    private static bool IsWindowMinimized() => Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_MINIMIZED);
+    private static bool IsWindowMaximized() => Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_MAXIMIZED);
+    private static bool IsWindowUnfocused() => Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_UNFOCUSED);
+    private static bool IsWindowFocused() => !Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_UNFOCUSED);
+    private static bool IsWindowTopmost() => Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
+    private static bool IsWindowHighDpi() => Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_HIGHDPI);
+    private static bool IsWindowMousePassthrough() => Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_MOUSE_PASSTHROUGH);
+    private static bool IsInterlacedHint() => Raylib.IsWindowState(ConfigFlags.FLAG_INTERLACED_HINT);
+    #endregion
+    
+    #endregion
+    */
 }
    
 

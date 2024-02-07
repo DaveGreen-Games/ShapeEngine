@@ -1,4 +1,5 @@
 using System.Numerics;
+using ShapeEngine.Core;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Lib;
@@ -18,8 +19,7 @@ public class CameraFollowerMulti : ICameraFollower
     
     public CameraFollowerMulti()
     {
-        
-        
+
     }
     
     public void Reset()
