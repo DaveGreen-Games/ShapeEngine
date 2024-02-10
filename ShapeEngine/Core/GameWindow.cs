@@ -610,12 +610,22 @@ public sealed class GameWindow
             OnWindowFocusChanged?.Invoke(true);
             Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
             Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_HIDDEN);
-            if (displayState == WindowDisplayState.Minimized) DisplayState = WindowDisplayState.Normal;
+            // if (displayState == WindowDisplayState.Minimized) DisplayState = WindowDisplayState.Normal;
         }
         else if (!curWindowFlagState.Focused && windowFlagState.Focused)
         {
             OnWindowFocusChanged?.Invoke(false);
             Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
+        }
+        if (curWindowFlagState.Minimized && !windowFlagState.Minimized)
+        {
+            OnWindowMinimizedChanged?.Invoke(true);
+            displayState = WindowDisplayState.Minimized;
+        }
+        else if (!curWindowFlagState.Minimized && windowFlagState.Minimized)
+        {
+            OnWindowMinimizedChanged?.Invoke(false);
+            DisplayState = WindowDisplayState.Normal; //works for some reason....
         }
 
         if (curWindowFlagState.Maximized && !windowFlagState.Maximized)
@@ -646,16 +656,6 @@ public sealed class GameWindow
             else displayState = WindowDisplayState.Normal;
         }
         
-        if (curWindowFlagState.Minimized && !windowFlagState.Minimized)
-        {
-            OnWindowMinimizedChanged?.Invoke(true);
-            displayState = WindowDisplayState.Minimized;
-        }
-        else if (!curWindowFlagState.Minimized && windowFlagState.Minimized)
-        {
-            OnWindowMinimizedChanged?.Invoke(false);
-            DisplayState = WindowDisplayState.Normal; //works for some reason....
-        }
         
         if (curWindowFlagState.Topmost && !windowFlagState.Topmost)
         {
@@ -689,7 +689,7 @@ public sealed class GameWindow
     {
         var curCursorState = GetCurCursorState();
         
-        if (!MouseOnScreen)
+        if (!MouseOnScreen || Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_MINIMIZED))//fullscreen to minimize fix for enabling/showing os cursor
         {
             if (cursorState.OnScreen)
             {
