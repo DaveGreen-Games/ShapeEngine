@@ -25,7 +25,7 @@ public class FPSLabel
     public void Draw(Rect r, Vector2 textAlignement, float fontSpacing = 1f)
     {
         int fps = Raylib.GetFPS();
-        float f = (float)fps / (float)GAMELOOP.FrameRateLimit;
+        float f = (float)fps / (float)GAMELOOP.Window.FpsLimit; //FrameRateLimit;
         var c = normal.ColorRgba;
         if (fps < 28 || f < 0.5f) c = critical.ColorRgba;
         else if (f < 0.75f) c = slow.ColorRgba;

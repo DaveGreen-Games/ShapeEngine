@@ -221,13 +221,20 @@ namespace Examples.Scenes
             var maximizedState = GAMELOOP.InputActionMaximize.Consume();
             if (maximizedState is { Consumed: false, Pressed: true })
             { 
-                GAMELOOP.Maximized = !GAMELOOP.Maximized;
+                // GAMELOOP.Maximized = !GAMELOOP.Maximized;
+                GAMELOOP.Window.DisplayState = GAMELOOP.Window.DisplayState == WindowDisplayState.Maximized ? WindowDisplayState.Normal : WindowDisplayState.Maximized;
             }
-
+            var minimizeState = GAMELOOP.InputActionMinimize.Consume();
+            if (minimizeState is { Consumed: false, Pressed: true })
+            { 
+                // GAMELOOP.Maximized = !GAMELOOP.Maximized;
+                GAMELOOP.Window.DisplayState = GAMELOOP.Window.DisplayState == WindowDisplayState.Minimized ? WindowDisplayState.Normal : WindowDisplayState.Minimized;
+            }
             var fullscreenState = GAMELOOP.InputActionFullscreen.Consume();
             if (fullscreenState is { Consumed: false, Pressed: true })
             { 
-                GAMELOOP.Fullscreen = !GAMELOOP.Fullscreen;
+                // GAMELOOP.Fullscreen = !GAMELOOP.Fullscreen;
+                GAMELOOP.Window.DisplayState = GAMELOOP.Window.DisplayState == WindowDisplayState.Fullscreen ? WindowDisplayState.Normal : WindowDisplayState.Fullscreen;
             }
 
             var prevTabState = GAMELOOP.InputActionUIPrevTab.Consume();
@@ -283,7 +290,7 @@ namespace Examples.Scenes
             var nextMonitorState = GAMELOOP.InputActionNextMonitor.Consume();
             if (nextMonitorState is { Consumed: false, Pressed: true })
             { 
-                GAMELOOP.NextMonitor();
+                GAMELOOP.Window.NextMonitor();
             }
         }
 
@@ -350,13 +357,13 @@ namespace Examples.Scenes
 
             var infoArea = ui.Area.ApplyMargins(0.7f, 0.025f, 0.14f, 0.79f);
             var infoAreaRects = infoArea.SplitV(0.5f);
-            float p = GAMELOOP.GetScreenPercentage();
+            float p = GAMELOOP.Window.GetScreenPercentage();
             int pi = (int)MathF.Round(p * 100);
             
             titleFont.FontSpacing = 1f;
             titleFont.ColorRgba = Colors.Medium;
             titleFont.DrawTextWrapNone($"Window Focused: {Raylib.IsWindowFocused()} | [{pi}%]", infoAreaRects.top, new Vector2(1f, 1f));
-            titleFont.DrawTextWrapNone($"Cursor On Screen: {ShapeLoop.CursorOnScreen}", infoAreaRects.bottom, new Vector2(1f, 1f));
+            titleFont.DrawTextWrapNone($"Cursor On Screen: {GameWindow.IsMouseOnScreen}", infoAreaRects.bottom, new Vector2(1f, 1f));
             
             // var r = ui.Area.ApplyMargins(0.75f, 0.025f, 0.17f, 0.79f);
             // titleFont.DrawText($"Cursor On Screen: {ShapeLoop.CursorOnScreen}", r, 1f, new Vector2(1f, 1f), ExampleScene.ColorHighlight2);
@@ -416,7 +423,7 @@ namespace Examples.Scenes
         {
             if (curButton != button)
             {
-                GAMELOOP.Cursor.TriggerEffect("scale");
+                GAMELOOP.Window.Cursor.TriggerEffect("scale");
                 curButton.Deselect();
                 curButton = button;
             }
@@ -573,12 +580,12 @@ namespace Examples.Scenes
         public void Activate(IScene oldScene)
         {
             
-            GAMELOOP.SwitchCursor(new SimpleCursorUI());
+            GAMELOOP.Window.SwitchCursor(new SimpleCursorUI());
         }
 
         public void Deactivate()
         {
-            GAMELOOP.SwitchCursor(new SimpleCursorGameUI());
+            GAMELOOP.Window.SwitchCursor(new SimpleCursorGameUI());
         }
 
         public void Close()

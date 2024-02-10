@@ -130,7 +130,7 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
-            muzzlePos = GAMELOOP.Game.Area.GetPoint(new Vector2(0.05f, 0.5f)); // game.GetSize() * new Vector2(0.1f, 0.5f);
+            muzzlePos = GAMELOOP.GameScreenInfo.Area.GetPoint(new Vector2(0.05f, 0.5f)); // game.GetSize() * new Vector2(0.1f, 0.5f);
 
             HandleSegments(game.MousePos);
 
@@ -253,7 +253,7 @@ namespace Examples.Scenes.ExampleScenes
 
         private void Shoot()
         {
-            Vector2 mousePos = GAMELOOP.Game.MousePos;
+            Vector2 mousePos = GAMELOOP.GameScreenInfo.MousePos;
             Vector2 dir = (mousePos - muzzlePos).Normalize();
 
             Bullet b = new(muzzlePos, dir * bulletSpeed, bulletR);

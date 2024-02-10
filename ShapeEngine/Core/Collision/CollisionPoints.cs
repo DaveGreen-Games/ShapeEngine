@@ -83,6 +83,10 @@ namespace ShapeEngine.Core.Collision
 
     public class CollisionPoints : ShapeList<CollisionPoint>
     {
+        public CollisionPoints()
+        {
+            
+        }
         public CollisionPoints(params CollisionPoint[] points) { AddRange(points); }
         public CollisionPoints(IEnumerable<CollisionPoint> points) { AddRange(points); }
 

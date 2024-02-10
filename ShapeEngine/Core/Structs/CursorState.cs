@@ -1,22 +1,22 @@
 namespace ShapeEngine.Core.Structs;
 
-public readonly struct CursorState
+internal readonly struct CursorState
 {
-    public readonly bool Hidden;
-    public readonly bool Locked;
+    public readonly bool Visible;
+    public readonly bool Enabled;
     public readonly bool OnScreen;
 
     public CursorState()
     {
-        Hidden = false;
-        Locked = false;
+        Visible = true;
+        Enabled = true;
         OnScreen = true;
     }
 
-    public CursorState(bool hidden, bool locked, bool onScreen)
+    public CursorState(bool visible, bool enabled, bool onScreen)
     {
-        Hidden = hidden;
-        Locked = locked;
+        Visible = visible;
+        Enabled = enabled;
         OnScreen = onScreen;
     }
 }

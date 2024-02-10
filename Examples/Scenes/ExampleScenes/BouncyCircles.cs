@@ -163,6 +163,8 @@ namespace Examples.Scenes.ExampleScenes
 
         //private List<Circ> circs = new();
         private bool showConvexHull = false;
+
+        // private Stopwatch watch = new();
         public BouncyCircles()
         {
             Title = "Bouncy Circles";
@@ -170,7 +172,7 @@ namespace Examples.Scenes.ExampleScenes
             font = GAMELOOP.GetFont(FontIDs.JetBrains);
 
             
-            UpdateBoundaryRect(GAMELOOP.Game.Area);
+            UpdateBoundaryRect(GAMELOOP.GameScreenInfo.Area);
 
             //area = new AreaTest(boundaryRect, 2, 2);
             gameObjectHandler = new GameObjectHandlerCollision(boundaryRect, 2, 2);
@@ -219,6 +221,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
         {
+            // watch.Restart();
             UpdateBoundaryRect(game.Area);
             gameObjectHandler.ResizeBounds(boundaryRect);
             if (GAMELOOP.Paused) return;
@@ -234,6 +237,7 @@ namespace Examples.Scenes.ExampleScenes
             // }
             
             gameObjectHandler.Update(dt, deltaSlow, game, ui);
+            // Console.WriteLine($"Update {watch.ElapsedMilliseconds}ms");
         }
 
         public override void OnPauseChanged(bool paused)
@@ -243,6 +247,7 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
+            // watch.Restart();
             if (iaAdd.State.Pressed)
             {
                 for (var i = 0; i < 2500; i++)
@@ -276,6 +281,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 showConvexHull = !showConvexHull;
             }
+            // Console.WriteLine($"Input {watch.ElapsedMilliseconds}ms");
         }
 
         public override void Activate(IScene oldScene)
@@ -290,6 +296,7 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void DrawGameExample(ScreenInfo game)
         {
+            // watch.Restart();
             //boundaryRect.DrawLines(4f, ColorLight);
             gameObjectHandler.DrawGame(game);
 
@@ -302,7 +309,7 @@ namespace Examples.Scenes.ExampleScenes
                     hull.DrawLines(4f, Colors.Special);
                 }
             }
-            
+            // Console.WriteLine($"Draw Game {watch.ElapsedMilliseconds}ms");
             // var displacement = game.MousePos - source.GetCentroid();
             // var target = Polygon.Move(source, displacement);
             // var ch = source.Project(displacement);
@@ -316,12 +323,14 @@ namespace Examples.Scenes.ExampleScenes
         }
         protected override void DrawGameUIExample(ScreenInfo ui)
         {
+            // watch.Restart();
             gameObjectHandler.DrawGameUI(ui);
-            
+            // Console.WriteLine($"Draw Game UI {watch.ElapsedMilliseconds}ms");
         }
 
         protected override void DrawUIExample(ScreenInfo ui)
         {
+            // watch.Restart();
             DrawInputDescription(GAMELOOP.UIRects.GetRect("bottom center"));
             
             var objectCountText = $"Object Count: {gameObjectHandler.Count}";
@@ -330,6 +339,7 @@ namespace Examples.Scenes.ExampleScenes
             textFont.ColorRgba = Colors.Warm;
             textFont.DrawTextWrapNone(objectCountText, GAMELOOP.UIRects.GetRect("bottom right"), new Vector2(0.98f, 0.98f));
             // font.DrawText(objectCountText, GAMELOOP.UIRects.GetRect("bottom right"), 1f, new Vector2(0.98f, 0.98f), ColorHighlight3);
+            // Console.WriteLine($"Draw UI {watch.ElapsedMilliseconds}ms");
         }
 
         private void DrawInputDescription(Rect rect)

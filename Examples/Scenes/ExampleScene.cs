@@ -202,10 +202,10 @@ namespace Examples.Scenes
         public virtual void OnWindowMaximizeChanged(bool maximized){}
         public virtual void OnWindowFullscreenChanged(bool fullscreen){}
         public virtual void OnPausedChanged(bool newPaused){}
-        public virtual void OnCursorEnteredScreen(){}
-        public virtual void OnCursorHiddenChanged(bool hidden){}
-        public virtual void OnCursorLeftScreen(){}
-        public virtual void OnCursorLockChanged(bool locked){}
+        public virtual void OnMouseEnteredScreen(){}
+        public virtual void OnMouseVisibilityChanged(bool hidden){}
+        public virtual void OnMouseLeftScreen(){}
+        public virtual void OnMouseEnabledChanged(bool locked){}
         public virtual void OnWindowFocusChanged(bool focused){}
 
         // protected void DrawCross(Vector2 center, float length)

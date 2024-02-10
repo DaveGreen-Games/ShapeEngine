@@ -34,10 +34,10 @@ public interface IScene : IUpdateable, IDrawable
     public virtual void OnGamepadDisconnected(ShapeGamepadDevice gamepad){}
     public virtual void OnInputDeviceChanged(InputDeviceType prevDeviceType, InputDeviceType curDeviceType){}
     public virtual void OnPausedChanged(bool newPaused) { }
-    public virtual void OnCursorEnteredScreen() { }
-    public virtual void OnCursorLeftScreen() { }
-    public virtual void OnCursorHiddenChanged(bool hidden) { }
-    public virtual void OnCursorLockChanged(bool locked) { }
+    public virtual void OnMouseEnteredScreen() { }
+    public virtual void OnMouseLeftScreen() { }
+    public virtual void OnMouseVisibilityChanged(bool visible) { }
+    public virtual void OnMouseEnabledChanged(bool enabled) { }
     public virtual void OnWindowFocusChanged(bool focused) { }
     public virtual void OnWindowFullscreenChanged(bool fullscreen) { }
     public virtual void OnWindowMaximizeChanged(bool maximized) { }

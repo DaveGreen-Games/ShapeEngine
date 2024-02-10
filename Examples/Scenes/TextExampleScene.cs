@@ -50,7 +50,7 @@ namespace Examples.Scenes
         {
             Title = "Text Example Scene";
             
-            var s = GAMELOOP.UI.Area.Size;
+            var s = GAMELOOP.UIScreenInfo.Area.Size;
             topLeftRelative = new Vector2(0.1f, 0.2f);
             bottomRightRelative = new Vector2(0.9f, 0.8f);
             topLeft = topLeftRelative * s;

@@ -167,28 +167,35 @@ namespace ShapeEngine.Core
             Clear();
         }
         
-        protected (Vector2 safePosition, CollisionPoints points) HasLeftBounds(IGameObject obj)
+        protected (Vector2 safePosition, CollisionPoints? points) HasLeftBounds(IGameObject obj)
         {
             Rect bb = obj.GetBoundingBox();
             Vector2 pos = bb.Center;
             Vector2 halfSize = bb.Size * 0.5f;
 
             Vector2 newPos = pos;
-            CollisionPoints points = new();
-
+            CollisionPoints? points = null;
             if (pos.X + halfSize.X > Bounds.Right)
             {
                 newPos.X = Bounds.Right - halfSize.X;
                 Vector2 p = new(Bounds.Right, ShapeMath.Clamp(pos.Y, Bounds.Bottom, Bounds.Top));
                 Vector2 n = new(-1, 0);
-                points.Add(new(p, n));
+                points = new()
+                {
+                    new(p, n)
+                };
+                // points.Add(new(p, n));
             }
             else if (pos.X - halfSize.X < Bounds.Left)
             {
                 newPos.X = Bounds.Left + halfSize.X;
                 Vector2 p = new(Bounds.Left, ShapeMath.Clamp(pos.Y, Bounds.Bottom, Bounds.Top));
                 Vector2 n = new(1, 0);
-                points.Add(new(p, n));
+                points = new()
+                {
+                    new(p, n)
+                };
+                // points.Add(new(p, n));
             }
 
             if (pos.Y + halfSize.Y > Bounds.Bottom)
@@ -196,14 +203,28 @@ namespace ShapeEngine.Core
                 newPos.Y = Bounds.Bottom - halfSize.Y;
                 Vector2 p = new(ShapeMath.Clamp(pos.X, Bounds.Left, Bounds.Right), Bounds.Bottom);
                 Vector2 n = new(0, -1);
-                points.Add(new(p, n));
+                if (points == null)
+                {
+                    points = new()
+                    {
+                        new(p, n)
+                    };
+                }
+                else points.Add(new(p, n));
             }
             else if (pos.Y - halfSize.Y < Bounds.Top)
             {
                 newPos.Y =Bounds.Top + halfSize.Y;
                 Vector2 p = new(ShapeMath.Clamp(pos.X, Bounds.Left, Bounds.Right), Bounds.Top);
                 Vector2 n = new(0, 1);
-                points.Add(new(p, n));
+                if (points == null)
+                {
+                    points = new()
+                    {
+                        new(p, n)
+                    };
+                }
+                else points.Add(new(p, n));
             }
             return (newPos, points);
         }
@@ -251,7 +272,7 @@ namespace ShapeEngine.Core
                         if (obj.CheckHandlerBounds())
                         {
                             var check = HasLeftBounds(obj);
-                            if (check.points.Count > 0)
+                            if (check.points != null && check.points.Count > 0)
                             {
                                 obj.LeftHandlerBounds(check.safePosition, check.points);
                             }

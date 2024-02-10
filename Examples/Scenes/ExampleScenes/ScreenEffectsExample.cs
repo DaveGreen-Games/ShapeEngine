@@ -287,7 +287,7 @@ namespace Examples.Scenes.ExampleScenes
             follower = new(0, 100, 500);
             camera.Follower = follower;
             
-            UpdateFollower(GAMELOOP.UI.Area.Size.Min());
+            UpdateFollower(GAMELOOP.UIScreenInfo.Area.Size.Min());
             SetSliderValues();
 
             var shakeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.G);
@@ -336,7 +336,7 @@ namespace Examples.Scenes.ExampleScenes
         public override void Activate(IScene oldScene)
         {
             GAMELOOP.Camera = camera;
-            UpdateFollower(GAMELOOP.UI.Area.Size.Min());
+            UpdateFollower(GAMELOOP.UIScreenInfo.Area.Size.Min());
             
             follower.SetTarget(ship);
             // follower.Activate();
@@ -364,7 +364,7 @@ namespace Examples.Scenes.ExampleScenes
             follower.Reset();
             follower.SetTarget(ship);
             
-            UpdateFollower(GAMELOOP.UI.Area.Size.Min());
+            UpdateFollower(GAMELOOP.UIScreenInfo.Area.Size.Min());
             
             stars.Clear();
             comets.Clear();

@@ -543,7 +543,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             Title = "Asteroid Mining Example";
             // font = GAMELOOP.GetFont(FontIDs.JetBrains);
-            UpdateBoundaryRect(GAMELOOP.Game.Area);
+            UpdateBoundaryRect(GAMELOOP.GameScreenInfo.Area);
             gameObjectHandler = new GameObjectHandlerCollision(boundaryRect, 4, 4);
 
             laserDevice = new(new Vector2(0f), 100, gameObjectHandler);

@@ -37,7 +37,7 @@ namespace Examples.Scenes.ExampleScenes
             GenerateStars(ShapeRandom.RandI(15000, 30000));
             follower = new(ship.Speed * 1.1f, 200, 400);
             camera.Follower = follower;
-            UpdateFollower(GAMELOOP.UI.Area.Size.Min());
+            UpdateFollower(GAMELOOP.UIScreenInfo.Area.Size.Min());
             
             currentShip = ship;
 
@@ -74,7 +74,7 @@ namespace Examples.Scenes.ExampleScenes
             GAMELOOP.Camera = camera;
             follower.SetTarget(ship);
             currentShip = ship;
-            UpdateFollower(GAMELOOP.UI.Area.Size.Min());
+            UpdateFollower(GAMELOOP.UIScreenInfo.Area.Size.Min());
             // GAMELOOP.UseMouseMovement = false;
         }
 
@@ -95,7 +95,7 @@ namespace Examples.Scenes.ExampleScenes
             ship2.Reset(new Vector2(100, 0), 30f);
             follower.SetTarget(ship);
             currentShip = ship;
-            UpdateFollower(GAMELOOP.UI.Area.Size.Min());
+            UpdateFollower(GAMELOOP.UIScreenInfo.Area.Size.Min());
             stars.Clear();
             GenerateStars(ShapeRandom.RandI(15000, 30000));
 

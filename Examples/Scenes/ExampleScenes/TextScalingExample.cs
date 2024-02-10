@@ -22,7 +22,7 @@ namespace Examples.Scenes.ExampleScenes
         public TextScalingExample() : base()
         {
             Title = "Text Scaling Example";
-            var s = GAMELOOP.UI.Area.Size;
+            var s = GAMELOOP.UIScreenInfo.Area.Size;
             textBox.EmptyText = "Longer Test Text";
             var decreaseFontSpacingKB = new InputTypeKeyboardButton(ShapeKeyboardButton.S);
             var decreaseFontSpacingGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN);

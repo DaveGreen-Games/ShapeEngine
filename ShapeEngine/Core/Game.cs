@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using Raylib_CsLo;
@@ -127,7 +128,14 @@ public class Game
         Window.OnWindowSizeChanged += ResolveOnWindowSizeChanged;
         Window.OnWindowPositionChanged += ResolveOnWindowPositionChanged;
         Window.OnMonitorChanged += ResolveOnMonitorChanged;
-            
+        Window.OnMouseVisibilityChanged += ResolveOnMouseVisibilityChanged;
+        Window.OnMouseEnabledChanged += ResolveOnMouseEnabledChanged;
+        Window.OnMouseEnteredScreen += ResolveOnMouseEnteredScreen;
+        Window.OnMouseLeftScreen += ResolveOnMouseLeftScreen;
+        Window.OnWindowFocusChanged += ResolveOnWindowFocusChanged;
+        Window.OnWindowFullscreenChanged += ResolveOnWindowFullscreenChanged;
+        Window.OnWindowMaximizeChanged += ResolveOnWindowMaximizeChanged;
+        
         SetConversionFactors();
         
 
@@ -182,12 +190,23 @@ public class Game
             }
             var dt = Raylib.GetFrameTime();
             Delta = dt;
+
             
             Window.Update();
+            
             
             ShapeInput.Update();
             Camera.SetSize(Window.CurScreenSize, DevelopmentDimensions);
             if(!Paused) Camera.Update(dt);
+
+            if (Window.MouseOnScreen)
+            {
+                if (ShapeInput.CurrentInputDeviceType is InputDeviceType.Keyboard or InputDeviceType.Gamepad)
+                {
+                    Window.MoveMouse(ChangeMousePos(dt, Window.MousePosition, Window.ScreenArea));
+                }
+            }
+            
             
             gameTexture.UpdateDimensions(Window.CurScreenSize);
             screenShaderBuffer.UpdateDimensions(Window.CurScreenSize);
@@ -214,23 +233,28 @@ public class Game
             
             Raylib.BeginTextureMode(gameTexture.RenderTexture);
             Raylib.ClearBackground(new(0,0,0,0));
-            
+
             Raylib.BeginMode2D(Camera.Camera);
             ResolveDrawGame(GameScreenInfo);
             Raylib.EndMode2D();
-            
-            foreach (var flash in shapeFlashes) Window.ScreenArea.Draw(flash.GetColor());
+
             ResolveDrawGameUI(UIScreenInfo);
             if(Window.MouseOnScreen) Window.Cursor.DrawGameUI(UIScreenInfo);
+            
             Raylib.EndTextureMode();
             
+            
             DrawToScreen(Window.ScreenArea, mousePosUI);
+            
 
             ResolveDeferred();
         }
     }
     private void DrawToScreen(Rect screenArea, Vector2 mousePosUI)
     {
+        // Stopwatch watch = new();
+        // watch.Restart();
+        // Console.WriteLine($"Draw screen {watch.ElapsedMilliseconds}ms");
         var activeScreenShaders = ScreenShaders.GetActiveShaders();
         
         //multi shader support enabled and multiple screen shaders are active
@@ -392,14 +416,14 @@ public class Game
     protected virtual void OnInputDeviceChanged(InputDeviceType prevDeviceType, InputDeviceType newDeviceType) { }
     protected virtual void OnGamepadConnected(ShapeGamepadDevice gamepad) { }
     protected virtual void OnGamepadDisconnected(ShapeGamepadDevice gamepad) { }
-    protected virtual void OnCursorEnteredScreen() { }
-    protected virtual void OnCursorLeftScreen() { }
-    protected virtual void OnCursorHiddenChanged(bool hidden) { }
-    protected virtual void OnCursorLockChanged(bool locked) { }
+    protected virtual void OnMouseEnteredScreen() { }
+    protected virtual void OnMouseLeftScreen() { }
+    protected virtual void OnMouseVisibilityChanged(bool visible) { }
+    protected virtual void OnMouseEnabledChanged(bool enabled) { }
     protected virtual void OnWindowFocusChanged(bool focused) { }
     protected virtual void OnWindowFullscreenChanged(bool fullscreen) { }
     protected virtual void OnWindowMaximizeChanged(bool maximized) { }
-
+    protected virtual Vector2 ChangeMousePos(float dt, Vector2 mousePos, Rect screenArea) => mousePos;
     #endregion
 
     #region Resolve
@@ -455,25 +479,25 @@ public class Game
         OnPausedChanged(newPaused);
         CurScene.OnPauseChanged(newPaused);
     }
-    private void ResolveOnCursorEnteredScreen()
+    private void ResolveOnMouseEnteredScreen()
     {
-        OnCursorEnteredScreen();
-        CurScene.OnCursorEnteredScreen();
+        OnMouseEnteredScreen();
+        CurScene.OnMouseEnteredScreen();
     }
-    private void ResolveOnCursorLeftScreen()
+    private void ResolveOnMouseLeftScreen()
     {
-        OnCursorLeftScreen();
-        CurScene.OnCursorLeftScreen();
+        OnMouseLeftScreen();
+        CurScene.OnMouseLeftScreen();
     }
-    private void ResolveOnCursorHiddenChanged(bool hidden)
+    private void ResolveOnMouseVisibilityChanged(bool visible)
     {
-        OnCursorHiddenChanged(hidden);
-        CurScene.OnCursorHiddenChanged(hidden);
+        OnMouseVisibilityChanged(visible);
+        CurScene.OnMouseVisibilityChanged(visible);
     }
-    private void ResolveOnCursorLockChanged(bool locked)
+    private void ResolveOnMouseEnabledChanged(bool enabled)
     {
-        OnCursorLockChanged(locked);
-        CurScene.OnCursorLockChanged(locked);
+        OnMouseEnabledChanged(enabled);
+        CurScene.OnMouseEnabledChanged(enabled);
     }
     private void ResolveOnWindowFocusChanged(bool focused)
     {

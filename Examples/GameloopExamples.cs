@@ -197,7 +197,7 @@ namespace Examples
     }
 
 
-    public class GameloopExamples : ShapeLoop
+    public class GameloopExamples : Game
     {
         public Font FontDefault { get; private set; }
 
@@ -248,6 +248,7 @@ namespace Examples
         //gameloop controlled
         public InputAction InputActionFullscreen {get; private set;}
         public InputAction InputActionMaximize {get; private set;}
+        public InputAction InputActionMinimize {get; private set;}
         public InputAction InputActionNextMonitor {get; private set;}
         public InputAction InputActionCRTMinus {get; private set;}
         public InputAction InputActionCRTPlus {get; private set;}
@@ -265,7 +266,13 @@ namespace Examples
         private const float mouseMovementDuration = 2f;
 
         // public bool UseMouseMovement = true;
-        public GameloopExamples() : base(new(1920, 1080), true) {}
+        public GameloopExamples() : base
+            (
+                new GameSettings(){ DevelopmentDimensions = new(1920, 1080), MultiShaderSupport = true},
+                WindowSettings.Default
+            )
+        {
+        }
 
         protected override void LoadContent()
         {
@@ -296,8 +303,8 @@ namespace Examples
 
             Shader crt = ContentLoader.LoadFragmentShader("Resources/Shaders/CRTShader.fs");
             ShapeShader crtShader = new(crt, crtShaderID, true, 1);
-            ShapeShader.SetValueFloat(crtShader.Shader, "renderWidth", CurScreenSize.Width);
-            ShapeShader.SetValueFloat(crtShader.Shader, "renderHeight", CurScreenSize.Height);
+            ShapeShader.SetValueFloat(crtShader.Shader, "renderWidth", Window.CurScreenSize.Width);
+            ShapeShader.SetValueFloat(crtShader.Shader, "renderHeight", Window.CurScreenSize.Height);
             var bgColor = BackgroundColorRgba;
             ShapeShader.SetValueColor(crtShader.Shader, "cornerColor", bgColor);// 1, 0, 0, 1);
             ShapeShader.SetValueFloat(crtShader.Shader, "vignetteOpacity", 0.35f);
@@ -305,15 +312,17 @@ namespace Examples
             ScreenShaders.Add(crtShader);
             
             FontDefault = GetFont(FontIDs.JetBrains);
-            //fpsLabel.Font = FontDefault;
-            this.VSync = false;
-            this.FrameRateLimit = 60;
+            
+            
+            this.Window.FpsLimit = 60;
+            this.Window.VSync = false;
 
             fpsLabel = new(GetFontDefault(), Colors.PcCold, Colors.PcText, Colors.PcHighlight);
             
-            HideOSCursor();
-            //LockOSCursor();
-            SwitchCursor(new SimpleCursorGameUI());
+            // HideOSCursor();
+            Window.MouseVisible = false;
+            Window.MouseEnabled = true;
+            Window.SwitchCursor(new SimpleCursorGameUI());
 
         }
 
@@ -382,8 +391,8 @@ namespace Examples
             var crtShader = ScreenShaders.Get(crtShaderID);
             if (crtShader != null)
             {
-                ShapeShader.SetValueFloat(crtShader.Shader, "renderWidth", CurScreenSize.Width);
-                ShapeShader.SetValueFloat(crtShader.Shader, "renderHeight", CurScreenSize.Height);
+                ShapeShader.SetValueFloat(crtShader.Shader, "renderWidth", Window.CurScreenSize.Width);
+                ShapeShader.SetValueFloat(crtShader.Shader, "renderHeight", Window.CurScreenSize.Height);
             }
         }
 
@@ -426,22 +435,24 @@ namespace Examples
             var fullscreenState = InputActionFullscreen.Consume();
             if (fullscreenState is { Consumed: false, Pressed: true })
             {
-                GAMELOOP.Fullscreen = !GAMELOOP.Fullscreen;
+                Window.DisplayState = Window.DisplayState == WindowDisplayState.Fullscreen ? WindowDisplayState.Normal : WindowDisplayState.Fullscreen;
+                // GAMELOOP.Fullscreen = !GAMELOOP.Fullscreen;
             }
 
             var maximizeState = InputActionMaximize.Consume();
             if (maximizeState is { Consumed: false, Pressed: true })
             {
-                GAMELOOP.Maximized = !GAMELOOP.Maximized;
+                Window.DisplayState = Window.DisplayState == WindowDisplayState.Maximized ? WindowDisplayState.Normal : WindowDisplayState.Maximized;
+                // GAMELOOP.Maximized = !GAMELOOP.Maximized;
             }
 
             var nextMonitorState = InputActionNextMonitor.Consume();
             if (nextMonitorState is { Consumed: false, Pressed: true })
             {
-                GAMELOOP.NextMonitor();
+               Window.NextMonitor(); // GAMELOOP.NextMonitor();
             }
 
-            if (GAMELOOP.Paused) return;
+            if (Paused) return;
             
             
             var crtDefault = new Vector2(6, 4);
@@ -528,6 +539,9 @@ namespace Examples
             var maximizeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.M);
             var maximizeGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_THUMB);
             InputActionMaximize = new(GameloopAccessTag, maximizeKB, maximizeGB);
+            
+            var minimizeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.N);
+            InputActionMinimize = new(GameloopAccessTag, minimizeKB);
             
             var nextMonitorKB = new InputTypeKeyboardButton(ShapeKeyboardButton.N);
             //var nextMonitorGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_THUMB);
@@ -622,6 +636,7 @@ namespace Examples
             inputActions.Add(InputActionUINextPage);
             inputActions.Add(InputActionFullscreen);
             inputActions.Add(InputActionMaximize);
+            inputActions.Add(InputActionMinimize);
             inputActions.Add(InputActionNextMonitor);
             inputActions.Add(InputActionCRTMinus);
             inputActions.Add(InputActionCRTPlus);

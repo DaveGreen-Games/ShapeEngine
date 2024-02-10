@@ -1,6 +1,6 @@
 namespace ShapeEngine.Core.Structs;
 
-public readonly struct WindowState
+internal readonly struct WindowState
 {
     // public readonly WindowType WindowType;
     public readonly bool Minimized;
