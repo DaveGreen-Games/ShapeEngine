@@ -1,10 +1,8 @@
+using System.Diagnostics;
 using System.Numerics;
-using System.Security.Principal;
-using System.Windows.Markup;
 using Raylib_CsLo;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Input;
 using ShapeEngine.Screen;
 
 namespace ShapeEngine.Core;
@@ -287,7 +285,7 @@ public sealed class GameWindow
         set
         {
             if (value == displayState) return;
-
+            // StartOpacityLerp();
             var newState = value;
             if (value == WindowDisplayState.Normal)
             {
@@ -450,12 +448,37 @@ public sealed class GameWindow
 
     private CursorState cursorState;
     private WindowFlagState windowFlagState;
+    private bool focusLostFullscreen = false;
     #endregion
 
     #region Internal
+
+    // private float opacityLerpTimer = 0;
+    // private const float opacityLerpDuration = 0.25f;
+    //
+    // private void StartOpacityLerp()
+    // {
+    //     Raylib.SetWindowOpacity(0f);
+    //     opacityLerpTimer = opacityLerpDuration;
+    // }
+    //
+    // private void LerpOpacitiy(float dt)
+    // {
+    //     if (opacityLerpTimer > 0)
+    //     {
+    //         opacityLerpTimer -= dt;
+    //
+    //         if (opacityLerpTimer <= 0) opacityLerpTimer = 0f;
+    //
+    //         float f = 1f - (opacityLerpTimer / opacityLerpDuration);
+    //         Raylib.SetWindowOpacity(f);
+    //     }
+    // }
     internal GameWindow(WindowSettings windowSettings)
     {
         Raylib.InitWindow(0, 0, windowSettings.Title);
+        Raylib.SetWindowOpacity(0f);
+        
         Monitor = new MonitorDevice();
         SetupWindowDimensions();
         WindowMinSize = windowSettings.WindowMinSize;
@@ -493,11 +516,16 @@ public sealed class GameWindow
         
         cursorState = GetCurCursorState();
         windowFlagState = new WindowFlagState(); // GetCurWindowFlagState();
-        
+
         Raylib.SetWindowOpacity(windowSettings.WindowOpacity);
+
     }
-    internal void Update()
+    
+    internal void Update(float dt)
     {
+        
+        // LerpOpacitiy(dt);
+        
         var newMonitor = Monitor.HasMonitorChanged();
         if (newMonitor.Available)
         {
@@ -610,11 +638,21 @@ public sealed class GameWindow
             OnWindowFocusChanged?.Invoke(true);
             Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
             Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_HIDDEN);
+            if (focusLostFullscreen)
+            {
+                focusLostFullscreen = false;
+                DisplayState = WindowDisplayState.Fullscreen;
+            }
             // if (displayState == WindowDisplayState.Minimized) DisplayState = WindowDisplayState.Normal;
         }
         else if (!curWindowFlagState.Focused && windowFlagState.Focused)
         {
             OnWindowFocusChanged?.Invoke(false);
+            if (Raylib.IsWindowFullscreen())
+            {
+                DisplayState = WindowDisplayState.Normal;
+                focusLostFullscreen = true;
+            }
             Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
         }
         if (curWindowFlagState.Minimized && !windowFlagState.Minimized)

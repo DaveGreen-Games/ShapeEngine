@@ -194,7 +194,7 @@ public class Game
             Delta = dt;
 
             
-            Window.Update();
+            Window.Update(dt);
             
             
             ShapeInput.Update();
