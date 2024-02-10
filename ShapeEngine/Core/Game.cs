@@ -68,7 +68,7 @@ public class Game
     public ScreenInfo GameScreenInfo { get; private set; } = new();
     public ScreenInfo UIScreenInfo { get; private set; } = new();
     public float Delta { get; private set; } = 0f;
-    public float DeltaSlow { get; private set; } = 0f;
+    // public float DeltaSlow { get; private set; } = 0f;
     private bool paused = false;
     public bool Paused
     {
@@ -83,7 +83,7 @@ public class Game
             
         }
     }
-    public SlowMotion SlowMotion { get; private set; } = new SlowMotion();
+    //public SlowMotion SlowMotion { get; private set; } = new SlowMotion();
 
     /// <summary>
     /// Scaling factors from current screen size to development resolution.
@@ -132,9 +132,11 @@ public class Game
         Window.OnMouseEnabledChanged += ResolveOnMouseEnabledChanged;
         Window.OnMouseEnteredScreen += ResolveOnMouseEnteredScreen;
         Window.OnMouseLeftScreen += ResolveOnMouseLeftScreen;
+        
         Window.OnWindowFocusChanged += ResolveOnWindowFocusChanged;
         Window.OnWindowFullscreenChanged += ResolveOnWindowFullscreenChanged;
         Window.OnWindowMaximizeChanged += ResolveOnWindowMaximizeChanged;
+        //todo add remaining events here
         
         SetConversionFactors();
         
@@ -222,14 +224,14 @@ public class Game
             
             if (!Paused)
             {
-                SlowMotion.Update(dt);
+                // SlowMotion.Update(dt);
                 UpdateFlashes(dt);
             }
-            var defaultFactor = SlowMotion.GetFactor(SlowMotion.TagDefault);
-            DeltaSlow = Delta * defaultFactor;
+            // var defaultFactor = SlowMotion.GetFactor(SlowMotion.TagDefault);
+            // DeltaSlow = Delta * defaultFactor;
             Window.Cursor.Update(dt, UIScreenInfo);
             
-            ResolveUpdate(dt, DeltaSlow, GameScreenInfo, UIScreenInfo);
+            ResolveUpdate(dt, dt, GameScreenInfo, UIScreenInfo);
             
             Raylib.BeginTextureMode(gameTexture.RenderTexture);
             Raylib.ClearBackground(new(0,0,0,0));
