@@ -294,6 +294,7 @@ public sealed class GameWindow
                 Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
                 if (displayState == WindowDisplayState.Minimized)
                 {
+                    // Console.WriteLine("--------------|YEAH|----------------");
                     Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_MINIMIZED);
                     
                     if (PrevMinimizedDisplayState.DisplayState == WindowDisplayState.Fullscreen)
@@ -460,6 +461,8 @@ public sealed class GameWindow
         WindowMinSize = windowSettings.WindowMinSize;
         Raylib.SetWindowMinSize(WindowMinSize.Width, WindowMinSize.Height);
 
+        Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_ALWAYS_RUN);
+        
         if (windowSettings.Focused)
         {
             Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
@@ -607,6 +610,7 @@ public sealed class GameWindow
             OnWindowFocusChanged?.Invoke(true);
             Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
             Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_HIDDEN);
+            if (displayState == WindowDisplayState.Minimized) DisplayState = WindowDisplayState.Normal;
         }
         else if (!curWindowFlagState.Focused && windowFlagState.Focused)
         {
@@ -642,28 +646,15 @@ public sealed class GameWindow
             else displayState = WindowDisplayState.Normal;
         }
         
-        //todo minimize change is not detected !!!
         if (curWindowFlagState.Minimized && !windowFlagState.Minimized)
         {
             OnWindowMinimizedChanged?.Invoke(true);
             displayState = WindowDisplayState.Minimized;
-            
         }
         else if (!curWindowFlagState.Minimized && windowFlagState.Minimized)
         {
             OnWindowMinimizedChanged?.Invoke(false);
-            
-            
-            
-            // if (Raylib.IsWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE)) displayState = WindowDisplayState.Fullscreen;
-            // else if (Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_MAXIMIZED))
-            //     displayState = WindowDisplayState.Maximized;
-            // else displayState = WindowDisplayState.Normal;
-            //
-            //
-            //
-            // Raylib.SetWindowSize(prevDisplayStateChangeWindowSize.Width, prevDisplayStateChangeWindowSize.Height);
-            // Raylib.SetWindowPosition((int)prevDisplayStateChangeWindowPosition.X, (int)prevDisplayStateChangeWindowPosition.Y);
+            DisplayState = WindowDisplayState.Normal; //works for some reason....
         }
         
         if (curWindowFlagState.Topmost && !windowFlagState.Topmost)
