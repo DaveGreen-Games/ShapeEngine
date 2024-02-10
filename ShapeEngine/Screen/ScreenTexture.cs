@@ -6,14 +6,14 @@ using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.Screen;
 
-internal sealed class ShapeTexture
+internal sealed class ScreenTexture
 {
     public bool Loaded { get; private set; } = false;
     public RenderTexture RenderTexture { get; private set; } = new();
     public int Width { get; private set; } = 0;
     public int Height { get; private set; } = 0;
 
-    public ShapeTexture(){}
+    public ScreenTexture(){}
 
     public void Load(Dimensions dimensions)
     {

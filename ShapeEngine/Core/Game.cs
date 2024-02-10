@@ -101,8 +101,8 @@ public class Game
     
     #region Private Members
 
-    private readonly ShapeTexture gameTexture = new();
-    private readonly ShapeTexture screenShaderBuffer = new();
+    private readonly ScreenTexture gameTexture = new();
+    private readonly ScreenTexture screenShaderBuffer = new();
     private readonly ShapeCamera basicCamera = new ShapeCamera();
     private ShapeCamera curCamera;
     
@@ -271,9 +271,9 @@ public class Game
             ShapeShader lastShader = activeScreenShaders[lastIndex];
             activeScreenShaders.RemoveAt(lastIndex);
             
-            ShapeTexture source = gameTexture;
-            ShapeTexture target = screenShaderBuffer;
-            ShapeTexture temp;
+            ScreenTexture source = gameTexture;
+            ScreenTexture target = screenShaderBuffer;
+            ScreenTexture temp;
             foreach (var shader in activeScreenShaders)
             {
                 Raylib.BeginTextureMode(target.RenderTexture);
