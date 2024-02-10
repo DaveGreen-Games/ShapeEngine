@@ -133,9 +133,14 @@ public class Game
         Window.OnMouseEnteredScreen += ResolveOnMouseEnteredScreen;
         Window.OnMouseLeftScreen += ResolveOnMouseLeftScreen;
         
+        
         Window.OnWindowFocusChanged += ResolveOnWindowFocusChanged;
         Window.OnWindowFullscreenChanged += ResolveOnWindowFullscreenChanged;
         Window.OnWindowMaximizeChanged += ResolveOnWindowMaximizeChanged;
+        Window.OnWindowMinimizedChanged += ResolveOnWindowMinimizedChanged;
+        Window.OnWindowHiddenChanged += ResolveOnWindowHiddenChanged;
+        Window.OnWindowTopmostChanged += ResolveOnWindowTopmostChanged;
+        
         //todo add remaining events here
         
         SetConversionFactors();
@@ -425,6 +430,9 @@ public class Game
     protected virtual void OnWindowFocusChanged(bool focused) { }
     protected virtual void OnWindowFullscreenChanged(bool fullscreen) { }
     protected virtual void OnWindowMaximizeChanged(bool maximized) { }
+    protected virtual void OnWindowMinimizedChanged(bool minimized) { }
+    protected virtual void OnWindowHiddenChanged(bool hidden) { }
+    protected virtual void OnWindowTopmostChanged(bool topmost) { }
     protected virtual Vector2 ChangeMousePos(float dt, Vector2 mousePos, Rect screenArea) => mousePos;
     #endregion
 
@@ -518,7 +526,19 @@ public class Game
         
     }
     
-    
+    private void ResolveOnWindowMinimizedChanged(bool minimized)
+    {
+       OnWindowMinimizedChanged(minimized);
+    }
+    private void ResolveOnWindowHiddenChanged(bool hidden)
+    {
+        OnWindowHiddenChanged(hidden);
+        
+    }
+    private void ResolveOnWindowTopmostChanged(bool topmost)
+    {
+        OnWindowTopmostChanged(topmost);
+    }
 
     #endregion
     
