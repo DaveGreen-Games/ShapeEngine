@@ -763,6 +763,15 @@ public sealed class GameWindow
     
     
     #region Window
+
+    public void GoWindowFullscreen() => DisplayState = WindowDisplayState.Fullscreen;
+    public void GoWindowMaximize() => DisplayState = WindowDisplayState.Maximized;
+    public void GoWindowMinimize() => DisplayState = WindowDisplayState.Minimized;
+    public void GoWindowNormal() => DisplayState = WindowDisplayState.Normal;
+    public bool IsWindowFullscreen() => displayState == WindowDisplayState.Fullscreen;
+    public bool IsWindowMaximized() => displayState == WindowDisplayState.Maximized;
+    public bool IsWindowMinimized() => displayState == WindowDisplayState.Minimized;
+    public bool IsWindowNormal() => displayState == WindowDisplayState.Normal;
     public void CenterWindow()
     {
         if (displayState == WindowDisplayState.Fullscreen) return;
