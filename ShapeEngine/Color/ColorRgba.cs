@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
+using Raylib_cs;
 using ShapeEngine.Lib;
 
 namespace ShapeEngine.Color;
@@ -139,7 +140,19 @@ public readonly struct ColorRgba : IEquatable<ColorRgba>
             Clamp((int)left.A * (int)right.A)
         );
     }
-        
+
+    /// <summary>
+    /// Change the brightness of the color.
+    /// </summary>
+    /// <param name="correctionFactor">Range -1 to 1</param>
+    public ColorRgba ChangeBrightness(float correctionFactor) => new(Raylib.ColorBrightness(ToRayColor(), correctionFactor));
+    /// <summary>
+    /// Change the contrast of the color.
+    /// </summary>
+    /// <param name="correctionFactor">Range -1 to 1</param>
+    public ColorRgba ChangeContrast(float correctionFactor) => new(Raylib.ColorContrast(ToRayColor(), correctionFactor));
+
+    
     public ColorRgba SetAlpha(byte a) => new(R, G, B, a);
     public ColorRgba ChangeAlpha(int amount) => new(R, G, B, Clamp((int)A + amount));
     public ColorRgba SetRed(byte r) => new(r, G, B, A);
@@ -153,7 +166,21 @@ public readonly struct ColorRgba : IEquatable<ColorRgba>
     #region Conversion
     public System.Drawing.Color ToSysColor() => System.Drawing.Color.FromArgb(R, G, B, A);
     public Raylib_cs.Color ToRayColor() => new (R, G, B, A);
-    
+
+    public (float r, float g, float b, float a) Normalize()
+    {
+        return 
+        (
+            R / 255f,
+            G / 255f,
+            B / 255f,
+            A / 255f
+        );
+    }
+    public static ColorRgba FromNormalize(float r, float g, float b, float a) => new((byte)(r * 255f), (byte)(g * 255f), (byte)(b * 255f), (byte)(a * 255f));
+
+    public static ColorRgba FromNormalize((float r, float g, float b, float a) normalizedColor) => FromNormalize(normalizedColor.r, normalizedColor.g, normalizedColor.b, normalizedColor.a);
+
     public ColorHsl ToHSL()
     {
         float r = R/255.0f;
@@ -205,7 +232,9 @@ public readonly struct ColorRgba : IEquatable<ColorRgba>
         
         return new ColorHsl(h,s,l);
     }
+
     
+    public int ToHex() => Raylib.ColorToInt(ToRayColor());
     public static ColorRgba FromHex(int colorValue) => FromHex(colorValue, byte.MaxValue);
     public static ColorRgba FromHex(int colorValue, byte a)
     {

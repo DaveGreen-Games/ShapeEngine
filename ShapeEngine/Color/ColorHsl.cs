@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Raylib_cs;
 using ShapeEngine.Lib;
 
 namespace ShapeEngine.Color;
@@ -31,6 +32,16 @@ public readonly struct ColorHsl : IEquatable<ColorHsl>
     #endregion
 
     #region Conversion
+    public static ColorHsl RaylibColorToHsl(Raylib_cs.Color rayColor)
+    {
+        var hsv = Raylib.ColorToHSV(rayColor);
+        return new(hsv.X, hsv.Y, hsv.Z);
+    }
+
+    public static Raylib_cs.Color HslToRaylibColor(ColorHsl colorHsl)
+    {
+        return Raylib.ColorFromHSV(colorHsl.Hue, colorHsl.Saturation, colorHsl.Lightness);
+    }
     public ColorRgba ToRGB()
     {
         double v;

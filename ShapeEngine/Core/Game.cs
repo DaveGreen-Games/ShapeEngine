@@ -7,23 +7,9 @@ using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
-using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 
 namespace ShapeEngine.Core;
-public struct GameSettings
-{
-    public GameSettings Default => new()
-    {
-        MultiShaderSupport = false,
-        DevelopmentDimensions = new(1920, 1080)
-    };
-    
-    public bool MultiShaderSupport;
-    public Dimensions DevelopmentDimensions;
-    
-}
-
 
 public class Game
 {
@@ -140,9 +126,7 @@ public class Game
         Window.OnWindowMinimizedChanged += ResolveOnWindowMinimizedChanged;
         Window.OnWindowHiddenChanged += ResolveOnWindowHiddenChanged;
         Window.OnWindowTopmostChanged += ResolveOnWindowTopmostChanged;
-        
-        //todo add remaining events here
-        
+
         SetConversionFactors();
         
 
@@ -199,6 +183,7 @@ public class Game
             Delta = dt;
 
             
+            
             Window.Update(dt);
             
             
@@ -250,13 +235,14 @@ public class Game
             
             Raylib.EndTextureMode();
             
-            
             DrawToScreen(Window.ScreenArea, mousePosUI);
-            
 
             ResolveDeferred();
         }
     }
+
+    
+    
     private void DrawToScreen(Rect screenArea, Vector2 mousePosUI)
     {
         // Stopwatch watch = new();
@@ -317,6 +303,7 @@ public class Game
             
             ResolveDrawUI(UIScreenInfo);
             if(Window.MouseOnScreen) Window.Cursor.DrawUI(UIScreenInfo);
+            
             Raylib.EndDrawing();
             
         }

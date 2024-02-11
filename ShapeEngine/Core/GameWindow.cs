@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Numerics;
 using Raylib_cs;
 using ShapeEngine.Core.Shapes;
@@ -6,88 +5,6 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Screen;
 
 namespace ShapeEngine.Core;
-//Game 
-// -> Basic Gameloop
-// -> MonitorHandler
-// -> exit / restart
-// -> entry point
-// -> deferred system
-
-//GameWindow
-// -> Window Stuff (Position, Size, etc)
-// -> Mouse
-// -> Cursor
-// -> Cur Monitor
-// -> GameWindow should draw but get some info from game class
-
-// -> shaders ??
-// -> camera ??
-// -> Draw ??
-// -> Game/UI Texture ???
-// -> Input ???
-// -> 
-
-
-public enum WindowDisplayState
-{
-    Normal = 0,
-    Minimized = 1,
-    Maximized = 2,
-    Fullscreen = 3
-}
-public enum WindowBorder
-{
-    Resizabled = 0,
-    Fixed = 1,
-    Undecorated = 2
-}
-
-
-public struct WindowSettings
-{
-    public static WindowSettings Default => new()
-    {
-        Undecorated = false,
-        Focused = true,
-        WindowDisplayState = WindowDisplayState.Normal,
-        WindowBorder = WindowBorder.Resizabled,
-        WindowMinSize = new(480, 270),
-        WindowSize = new(960, 540),
-        // WindowLocation = new(0, 0),
-        Monitor = 0,
-        Vsync = false,
-        FrameRateLimit = 60,
-        MinFramerate = 30,
-        MaxFramerate = 240,
-        // AutoIconify = true,
-        WindowOpacity = 1f,
-        MouseEnabled = true,
-        MouseVisible = true
-    };
-    
-    // public Dimensions WindowLocation;
-    public Dimensions WindowSize;
-    public Dimensions WindowMinSize;
-    
-    public string Title;
-    public bool Undecorated;
-    public bool Focused;
-    
-    public WindowDisplayState WindowDisplayState;
-    public WindowBorder WindowBorder;
-    
-    public bool Vsync;
-    public int FrameRateLimit;
-    public int MinFramerate;
-    public int MaxFramerate;
-    public float WindowOpacity; //0-1
-    
-    public int Monitor;
-    public bool MouseVisible;
-    public bool MouseEnabled;
-    // public bool AutoIconify; //(minimizes window automatically if focus changes in fullscreen mode)
-
-}
 
 public sealed class GameWindow
 {
@@ -131,7 +48,6 @@ public sealed class GameWindow
             OnScreen = onScreen;
         }
     }
-
     private readonly struct PrevDisplayStateInfo
     {
         public readonly Dimensions WindowSize;
@@ -517,7 +433,7 @@ public sealed class GameWindow
         windowFlagState = new WindowFlagState(); // GetCurWindowFlagState();
 
         Raylib.SetWindowOpacity(windowSettings.WindowOpacity);
-
+        // Raylib.ToggleBorderlessWindowed();
     }
     
     internal void Update(float dt)
