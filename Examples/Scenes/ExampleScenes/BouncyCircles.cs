@@ -75,7 +75,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         
 
-        public void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        public void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             // affectionCount = 0;
             // float f = 1f;
@@ -87,7 +87,7 @@ namespace Examples.Scenes.ExampleScenes
             //     f *= factor;
             // }
 
-            Pos += Vel * dt;
+            Pos += Vel * time.Delta;
         }
 
 
@@ -220,7 +220,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             boundaryRect = gameArea.ApplyMargins(0.025f, 0.025f, 0.1f, 0.1f);
         }
-        protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        protected override void UpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             // watch.Restart();
             UpdateBoundaryRect(game.Area);
@@ -228,7 +228,7 @@ namespace Examples.Scenes.ExampleScenes
             if (GAMELOOP.Paused) return;
             
             var gamepad = GAMELOOP.CurGamepad;
-            InputAction.UpdateActions(dt, gamepad, inputActions);
+            InputAction.UpdateActions(time.Delta, gamepad, inputActions);
             
             // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
             // foreach (var ia in inputActions)
@@ -237,7 +237,7 @@ namespace Examples.Scenes.ExampleScenes
             //     ia.Update(dt);
             // }
             
-            gameObjectHandler.Update(dt, deltaSlow, game, ui);
+            gameObjectHandler.Update(time, game, ui);
             // Console.WriteLine($"Update {watch.ElapsedMilliseconds}ms");
         }
 

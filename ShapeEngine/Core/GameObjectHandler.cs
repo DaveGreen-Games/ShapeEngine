@@ -236,7 +236,7 @@ namespace ShapeEngine.Core
         }
 
         
-        public virtual void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        public virtual void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             drawToGameTextureObjects.Clear();
             drawToUITextureObjects.Clear();
@@ -260,7 +260,7 @@ namespace ShapeEngine.Core
                     if (obj.DrawToGame(game.Area)) drawToGameTextureObjects.Add(obj);
                     if (obj.DrawToGameUI(ui.Area)) drawToUITextureObjects.Add(obj);
                     
-                    obj.Update(dt,deltaSlow, game, ui);
+                    obj.Update(time, game, ui);
                     
                     if (obj.IsDead())
                     {
@@ -357,11 +357,11 @@ namespace ShapeEngine.Core
             col.Close();
         }
 
-        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             col.Update();
 
-            base.Update(dt, deltaSlow, game, ui);
+            base.Update(time, game, ui);
         }
         
         public override void DrawDebug(ColorRgba bounds, ColorRgba border, ColorRgba fill)

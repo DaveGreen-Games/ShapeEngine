@@ -103,13 +103,13 @@ namespace Examples.Scenes
             // }
         }
 
-        public void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        public void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
-            HandleInput(dt, game.MousePos, ui.MousePos);
+            HandleInput(time.Delta, game.MousePos, ui.MousePos);
 
             if (GAMELOOP.Paused) return;
-            HandleInputExample(dt, game.MousePos, ui.MousePos);
-            UpdateExample(dt, deltaSlow, game, ui);
+            HandleInputExample(time.Delta, game.MousePos, ui.MousePos);
+            UpdateExample(time, game, ui);
         }
         public void DrawGame(ScreenInfo game)
         {
@@ -179,7 +179,7 @@ namespace Examples.Scenes
         }
         
         protected virtual void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI) { }
-        protected virtual void UpdateExample(float dt, float slowDelta, ScreenInfo game, ScreenInfo ui) { }
+        protected virtual void UpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui) { }
         protected virtual void DrawGameUIExample(ScreenInfo ui) { }
         protected virtual void DrawUIExample(ScreenInfo ui) { }
         protected virtual void DrawGameExample(ScreenInfo game) { }

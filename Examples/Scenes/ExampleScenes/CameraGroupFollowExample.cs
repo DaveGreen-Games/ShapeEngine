@@ -531,7 +531,7 @@ namespace Examples.Scenes.ExampleScenes
         }
 
         
-        protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        protected override void UpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             var targetPos = ActiveSpaceShip?.GetPosition() ?? new();
 
@@ -539,7 +539,7 @@ namespace Examples.Scenes.ExampleScenes
             for (int i = spaceShips.Count - 1; i >= 0; i--)
             {
                 var ship = spaceShips[i];
-                ship.Update(dt, targetPos);
+                ship.Update(time.Delta, targetPos);
 
 
                 if (ActiveSpaceShip != null && ship != ActiveSpaceShip && ship.Overlap(ActiveSpaceShip))

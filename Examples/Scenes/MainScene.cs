@@ -293,19 +293,19 @@ namespace Examples.Scenes
             }
         }
 
-        public void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        public void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             // titleFont.Color = titleColor.Color;
             
             if (tabChangeMouseWheelLockTimer > 0f)
             {
-                tabChangeMouseWheelLockTimer -= dt;
+                tabChangeMouseWheelLockTimer -= time.Delta;
                 if (tabChangeMouseWheelLockTimer <= 0f) tabChangeMouseWheelLockTimer = 0f;
             }
-            HandleInput(dt, game.MousePos, ui.MousePos);
+            HandleInput(time.Delta, game.MousePos, ui.MousePos);
             foreach (var b in buttons)
             {
-                b.Update(dt, ui.MousePos);
+                b.Update(time.Delta, ui.MousePos);
             }
         }
         

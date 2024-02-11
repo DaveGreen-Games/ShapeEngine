@@ -758,7 +758,7 @@ namespace Examples.Scenes.ExampleScenes
             
 
         }
-        protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        protected override void UpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             // int gamepadIndex = -1;
             // if (GAMELOOP.CurGamepad != null)
@@ -768,17 +768,17 @@ namespace Examples.Scenes.ExampleScenes
 
             var gamepad = GAMELOOP.CurGamepad;
             var curDevice = ShapeInput.CurrentInputDeviceType;
-            joystickLeft.Update(dt, gamepad, curDevice);
-            joystickRight.Update(dt, gamepad, curDevice);
+            joystickLeft.Update(time.Delta, gamepad, curDevice);
+            joystickRight.Update(time.Delta, gamepad, curDevice);
             
-            buttonLeft.Update(dt, gamepad, curDevice);
-            buttonRight.Update(dt, gamepad, curDevice);
+            buttonLeft.Update(time.Delta, gamepad, curDevice);
+            buttonRight.Update(time.Delta, gamepad, curDevice);
             
-            triggerLeft.Update(dt, gamepad, curDevice);
-            triggerRight.Update(dt, gamepad, curDevice);
+            triggerLeft.Update(time.Delta, gamepad, curDevice);
+            triggerRight.Update(time.Delta, gamepad, curDevice);
             
-            buttonHold.Update(dt, gamepad, curDevice);
-            buttonDoubleTap.Update(dt, gamepad, curDevice);
+            buttonHold.Update(time.Delta, gamepad, curDevice);
+            buttonDoubleTap.Update(time.Delta, gamepad, curDevice);
         }
         protected override void DrawGameExample(ScreenInfo game)
         {

@@ -92,13 +92,13 @@ namespace Examples.Scenes.ExampleScenes
 
         }
 
-        protected override void UpdateExampleTextEntryInactive(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        protected override void UpdateExampleTextEntryInactive(float dt, ScreenInfo game, ScreenInfo ui)
         {
             textBlock.TextFont.Font = textFont.Font;// font;// textBlock.TextFont.ChangeFont(font);
             textBlock.Caret.Index = -1;
         }
 
-        protected override void UpdateExampleTextEntryActive(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        protected override void UpdateExampleTextEntryActive(float dt, ScreenInfo game, ScreenInfo ui)
         {
             var index = textBox.CaretVisible ? textBox.CaretIndex : -1;
             textBlock.Caret.Index = index;

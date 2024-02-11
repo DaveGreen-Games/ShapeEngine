@@ -27,7 +27,7 @@ namespace Examples.Scenes.ExampleScenes
         public abstract Vector2 GetPosition();
         public abstract Rect GetBoundingBox();
 
-        public virtual void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui) { }
+        public virtual void Update(GameTime time, ScreenInfo game, ScreenInfo ui) { }
         public virtual void DrawGame(ScreenInfo game) { }
         public virtual void DrawGameUI(ScreenInfo ui) { }
         public virtual void Overlap(CollisionInformation info) { }
@@ -74,11 +74,11 @@ namespace Examples.Scenes.ExampleScenes
             //this.delay = SRNG.randF(0.25f, 1f);
             //this.lifetime = delay * 3f;
         }
-        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             if(lifetimeTimer > 0f)
             {
-                lifetimeTimer -= dt;
+                lifetimeTimer -= time.Delta;
                 if(lifetimeTimer <= 0f)
                 {
                     lifetimeTimer = 0f;
@@ -92,8 +92,8 @@ namespace Examples.Scenes.ExampleScenes
                     {
                         
                         float prevRotDeg = rotDeg;
-                        pos += vel * dt;
-                        rotDeg += angularVelDeg * dt;
+                        pos += vel * time.Delta;
+                        rotDeg += angularVelDeg * time.Delta;
 
                         float rotDifDeg = rotDeg - prevRotDeg;
                         shape.Center(pos);
@@ -254,9 +254,9 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
 
-        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui) 
+        public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui) 
         {
-            damagedSegments.Update(dt);
+            damagedSegments.Update(time.Delta);
         }
         public override void DrawGame(ScreenInfo game)
         {
@@ -356,7 +356,7 @@ namespace Examples.Scenes.ExampleScenes
             this.tip = a;
         }
 
-        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             laserPoints.Clear();
             laserEnabled = false;
@@ -364,7 +364,7 @@ namespace Examples.Scenes.ExampleScenes
             
             // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
             iaShootLaser.Gamepad = GAMELOOP.CurGamepad;
-            iaShootLaser.Update(dt);
+            iaShootLaser.Update(time.Delta);
             
             if (aimingMode)
             {
@@ -395,7 +395,7 @@ namespace Examples.Scenes.ExampleScenes
                     float curDamagePerSecond = DamagePerSecond;
                     while(remainingLength > 0) //reflecting laser
                     {
-                        var result = CastLaser(dt, curLaserPos, curLaserDir, remainingLength, curDamagePerSecond, col);
+                        var result = CastLaser(time.Delta, curLaserPos, curLaserDir, remainingLength, curDamagePerSecond, col);
                         laserPoints.Add(result.endPoint);
                         curLaserPos = result.endPoint;
                         remainingLength = result.remainingLength;
@@ -629,16 +629,16 @@ namespace Examples.Scenes.ExampleScenes
             boundaryRect = gameArea.ApplyMargins(0.005f, 0.005f, 0.1f, 0.005f);
         }
         
-        protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        protected override void UpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             UpdateBoundaryRect(game.Area);
             gameObjectHandler.ResizeBounds(boundaryRect);
-            gameObjectHandler.Update(dt, deltaSlow, game, ui);
+            gameObjectHandler.Update(time, game, ui);
 
             for (int i = lastCutOuts.Count - 1; i >= 0; i--)
             {
                 var c = lastCutOuts[i];
-                c.Update(dt);
+                c.Update(time.Delta);
                 if (c.IsFinished()) lastCutOuts.RemoveAt(i);
             }
         }

@@ -425,13 +425,13 @@ namespace Examples
             }
         }
 
-        protected override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        protected override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             BackgroundColorRgba = Colors.Background;
             UIRects.SetRect(ui.Area);
 
             //int gamepadIndex = CurGamepad?.Index ?? -1;
-            InputAction.UpdateActions(dt, CurGamepad, inputActions);
+            InputAction.UpdateActions(time.Delta, CurGamepad, inputActions);
 
             var fullscreenState = InputActionFullscreen.Consume();
             if (fullscreenState is { Consumed: false, Pressed: true })
@@ -457,7 +457,7 @@ namespace Examples
             
             
             var crtDefault = new Vector2(6, 4);
-            var crtSpeed = crtDefault * 0.5f * dt;
+            var crtSpeed = crtDefault * 0.5f * time.Delta;
 
 
             var crtPlusState = InputActionCRTPlus.Consume();

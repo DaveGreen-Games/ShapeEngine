@@ -81,12 +81,12 @@ namespace Examples.Scenes.ExampleScenes
         {
             return false;
         }
-        public virtual void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        public virtual void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             var collidables = GetCollidables();
             foreach (var c in collidables)
             {
-                c.GetCollider().UpdateState(dt);
+                c.GetCollider().UpdateState(time.Delta);
             }
         }
         public abstract void DrawGame(ScreenInfo game);
@@ -409,10 +409,10 @@ namespace Examples.Scenes.ExampleScenes
             
         }
 
-        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
-            base.Update(dt, deltaSlow, game, ui);
-            rockCollidable.Update(dt);
+            base.Update(time, game, ui);
+            rockCollidable.Update(time.Delta);
         }
         public override void DrawGame(ScreenInfo game)
         {
@@ -500,10 +500,10 @@ namespace Examples.Scenes.ExampleScenes
             this.boxCollidable = new(pos, vel, size);
         }
 
-        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
-            base.Update(dt, deltaSlow, game, ui);
-            boxCollidable.Update(dt);
+            base.Update(time, game, ui);
+            boxCollidable.Update(time.Delta);
         }
         public override void DrawGame(ScreenInfo game)
         {
@@ -588,10 +588,10 @@ namespace Examples.Scenes.ExampleScenes
         }
         
 
-        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
-            base.Update(dt, deltaSlow, game, ui);
-            ballCollidable.Update(dt);
+            base.Update(time, game, ui);
+            ballCollidable.Update(time.Delta);
         }
         public override void DrawGame(ScreenInfo game)
         {
@@ -803,11 +803,11 @@ namespace Examples.Scenes.ExampleScenes
             HandleWalls(mousePosGame);
         }
 
-        protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        protected override void UpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             
             
-            gameObjectHandler.Update(dt, deltaSlow, game, ui);
+            gameObjectHandler.Update(time, game, ui);
         }
 
         protected override void DrawGameExample(ScreenInfo game)

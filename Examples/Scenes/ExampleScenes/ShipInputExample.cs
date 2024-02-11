@@ -311,7 +311,7 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
         
-        protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        protected override void UpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             // if (Raylib.IsGamepadAvailable(0))
             // {
@@ -353,7 +353,7 @@ namespace Examples.Scenes.ExampleScenes
 
             foreach (var ship in spaceShips)
             {
-                ship.Update(dt);
+                ship.Update(time.Delta);
             }
         }
         protected override void DrawGameExample(ScreenInfo game)

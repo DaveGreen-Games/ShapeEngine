@@ -135,14 +135,14 @@ namespace Examples.Scenes.ExampleScenes
         //         camera.Zoom(zoomDir * zoomSpeed * dt);
         //     }
         // }
-        protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        protected override void UpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             UpdateFollower(ui.Area.Size.Min());
             // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
             iaChangeCameraTarget.Gamepad = GAMELOOP.CurGamepad;
-            iaChangeCameraTarget.Update(dt);
+            iaChangeCameraTarget.Update(time.Delta);
             
-            currentShip.Update(dt, camera.RotationDeg);
+            currentShip.Update(time.Delta, camera.RotationDeg);
 
             drawStars.Clear();
             Rect cameraArea = game.Area;

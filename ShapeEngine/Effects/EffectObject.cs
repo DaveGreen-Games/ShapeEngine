@@ -66,9 +66,9 @@ namespace ShapeEngine.Effects
         
         //public Vector2 GetCameraFollowPosition(Vector2 camPos) { return GetPosition(); }
 
-        public virtual void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        public virtual void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
-            lifetimeTimer.Update(dt);
+            lifetimeTimer.Update(time.Delta);
         }
         public abstract void DrawGame(ScreenInfo game);
         public virtual void DrawGameUI(ScreenInfo ui) { }

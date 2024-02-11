@@ -421,7 +421,7 @@ namespace Examples.Scenes.ExampleScenes
             follower.Speed = ship.Speed;// * Lerp(0.5f, 2f, sliderF);
             follower.BoundaryDis = new(boundary);
         }
-        protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        protected override void UpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             UpdateFollower(ui.Area.Size.Min());
             //follower.Update(dt,camera);
@@ -429,16 +429,16 @@ namespace Examples.Scenes.ExampleScenes
             var slider = GAMELOOP.UIRects.GetRect("center").ApplyMargins(0.025f, 0.025f, 0.02f, 0.93f);
             var sliderLeft = slider.ApplyMargins(0f, 0.55f, 0f, 0f);
             var sliderRight = slider.ApplyMargins(0.55f, 0f, 0f, 0f);
-            intensitySlider.Update(dt, sliderLeft, ui.MousePos);
-            cameraFollowSlider.Update(dt, sliderRight, ui.MousePos);
+            intensitySlider.Update(time.Delta, sliderLeft, ui.MousePos);
+            cameraFollowSlider.Update(time.Delta, sliderRight, ui.MousePos);
             SetSliderValues();
             
-            ship.Update(dt, camera.RotationDeg);
+            ship.Update(time.Delta, camera.RotationDeg);
             
             for (int i = comets.Count - 1; i >= 0; i--)
             {
                 Comet comet = comets[i];
-                comet.Update(dt, universe);
+                comet.Update(time.Delta, universe);
 
                 if (comet.CheckCollision(ship.Hull))
                 {

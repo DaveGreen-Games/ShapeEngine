@@ -30,7 +30,13 @@ public readonly struct GameTime
     /// Seconds since last frame
     /// </summary>
     public readonly double ElapsedSeconds;
-    
+
+    public GameTime()
+    {
+        TotalSeconds = 0;
+        TotalFrames = 0;
+        ElapsedSeconds = 0;
+    }
     public GameTime(double totalSeconds, int totalFrames, double elapsedSeconds)
     {
         this.TotalSeconds = totalSeconds;
@@ -132,7 +138,8 @@ public class Game
 
     #region Public Members
     public string[] LaunchParams { get; protected set; } = Array.Empty<string>();
-    
+
+    public GameTime Time { get; private set; } = new GameTime();
     public ColorRgba BackgroundColorRgba = ColorRgba.Black;
     public float ScreenEffectIntensity = 1.0f;
 
@@ -151,7 +158,7 @@ public class Game
     }
     public ScreenInfo GameScreenInfo { get; private set; } = new();
     public ScreenInfo UIScreenInfo { get; private set; } = new();
-    public float Delta { get; private set; } = 0f;
+    // public float Delta { get; private set; } = 0f;
     // public float DeltaSlow { get; private set; } = 0f;
     private bool paused = false;
     public bool Paused
@@ -278,7 +285,8 @@ public class Game
                 continue;
             }
             var dt = Raylib.GetFrameTime();
-            Delta = dt;
+            Time = Time.TickF(dt);
+            // Delta = dt;
 
             
             
@@ -319,7 +327,7 @@ public class Game
             // DeltaSlow = Delta * defaultFactor;
             Window.Cursor.Update(dt, UIScreenInfo);
             
-            ResolveUpdate(dt, dt, GameScreenInfo, UIScreenInfo);
+            ResolveUpdate(Time, GameScreenInfo, UIScreenInfo);
             
             Raylib.BeginTextureMode(gameTexture.RenderTexture);
             Raylib.ClearBackground(new(0,0,0,0));
@@ -488,7 +496,7 @@ public class Game
     /// </summary>
     protected virtual void BeginRun() { }
 
-    protected virtual void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui) { }
+    protected virtual void Update(GameTime time, ScreenInfo game, ScreenInfo ui) { }
     protected virtual void DrawGame(ScreenInfo game) { }
     protected virtual void DrawGameUI(ScreenInfo ui) { }
     protected virtual void DrawUI(ScreenInfo ui) { }
@@ -532,10 +540,10 @@ public class Game
         }
     }
 
-    private void ResolveUpdate(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+    private void ResolveUpdate(GameTime time, ScreenInfo game, ScreenInfo ui)
     {
-        Update(dt, deltaSlow, game, ui);
-        CurScene.Update(dt, deltaSlow, GameScreenInfo, UIScreenInfo);
+        Update(time, game, ui);
+        CurScene.Update(time, GameScreenInfo, UIScreenInfo);
     }
     private void ResolveDrawGame(ScreenInfo game)
     {

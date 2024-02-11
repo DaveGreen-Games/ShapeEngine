@@ -32,7 +32,7 @@ namespace ShapeEngine.Core
         public virtual void OnMouseEnabledChanged(bool locked){}
         public virtual void OnWindowFocusChanged(bool focused){}
 
-        public virtual void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui) { }
+        public virtual void Update(GameTime time, ScreenInfo game, ScreenInfo ui) { }
         public virtual void DrawGame(ScreenInfo game) { }
         public virtual void DrawGameUI(ScreenInfo ui) { }
         public virtual void DrawUI(ScreenInfo ui) { }

@@ -1,6 +1,7 @@
 ﻿
 using ShapeEngine.Lib;
 using System.Numerics;
+using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
@@ -116,11 +117,11 @@ namespace Examples.Scenes
         {
             
         }
-        protected virtual void UpdateExampleTextEntryActive(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        protected virtual void UpdateExampleTextEntryActive(float dt, ScreenInfo game, ScreenInfo ui)
         {
             
         }
-        protected virtual void UpdateExampleTextEntryInactive(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        protected virtual void UpdateExampleTextEntryInactive(float dt, ScreenInfo game, ScreenInfo ui)
         {
             
         }
@@ -241,7 +242,7 @@ namespace Examples.Scenes
                 HandleInputTextEntryActive(dt, mousePosGame, mousePosUI);
             }
         }
-        protected override void UpdateExample(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        protected override void UpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             var uiSize = ui.Area.Size;
             
@@ -249,7 +250,7 @@ namespace Examples.Scenes
             {
                 topLeft = topLeftRelative * uiSize;
                 bottomRight = bottomRightRelative * uiSize;
-                UpdateExampleTextEntryActive(dt, deltaSlow, game, ui);
+                UpdateExampleTextEntryActive(time.Delta, game, ui);
                 return;
             }
             
@@ -285,7 +286,7 @@ namespace Examples.Scenes
                 }
             }
             
-            UpdateExampleTextEntryInactive(dt, deltaSlow, game, ui);
+            UpdateExampleTextEntryInactive(time.Delta, game, ui);
         }
         protected override void DrawGameUIExample(ScreenInfo ui)
         {

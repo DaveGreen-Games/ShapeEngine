@@ -40,11 +40,11 @@ namespace ShapeEngine.Effects
             ShapePhysics.UpdateState(this, dt); 
         }
 
-        public override void Update(float dt, float deltaSlow, ScreenInfo game, ScreenInfo ui)
+        public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
-            base.Update(dt, deltaSlow, game, ui);
-            UpdatePreviousPosition(dt);
-            UpdateState(dt);
+            base.Update(time, game, ui);
+            UpdatePreviousPosition(time.Delta);
+            UpdateState(time.Delta);
         }
 
         public ICollider GetCollider() { return this; }
