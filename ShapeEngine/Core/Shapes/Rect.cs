@@ -1,12 +1,11 @@
 ﻿
 using System.Numerics;
-using Raylib_CsLo;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
-
+using Raylib_cs;
 
 namespace ShapeEngine.Core.Shapes
 {
@@ -295,8 +294,8 @@ namespace ShapeEngine.Core.Shapes
         {
             this.X = rect.X;
             this.Y = rect.Y;
-            this.Width = rect.width;
-            this.Height = rect.height;
+            this.Width = rect.Width;
+            this.Height = rect.Height;
         }
         #endregion
 

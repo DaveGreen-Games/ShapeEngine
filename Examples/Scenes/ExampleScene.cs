@@ -1,16 +1,14 @@
-﻿using Raylib_CsLo;
-using ShapeEngine.Core;
+﻿using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 using System.Numerics;
 using Examples.UIElements;
-using ShapeEngine.Color;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
 using ShapeEngine.Text;
-using ShapeEngine.UI;
+
 
 namespace Examples.Scenes
 {

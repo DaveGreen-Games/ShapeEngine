@@ -22,18 +22,18 @@ public readonly struct ColorRgba : IEquatable<ColorRgba>
         this.B = 0;
         this.A = 0;
     }
-    public ColorRgba(Raylib_CsLo.Color color)
+    public ColorRgba(Raylib_cs.Color color)
     {
-        this.R = color.r;
-        this.G = color.g;
-        this.B = color.b;
-        this.A = color.a;
+        this.R = color.R;
+        this.G = color.G;
+        this.B = color.B;
+        this.A = color.A;
     }
-    public ColorRgba(Raylib_CsLo.Color color, byte a)
+    public ColorRgba(Raylib_cs.Color color, byte a)
     {
-        this.R = color.r;
-        this.G = color.g;
-        this.B = color.b;
+        this.R = color.R;
+        this.G = color.G;
+        this.B = color.B;
         this.A = a;
     }
     public ColorRgba(System.Drawing.Color color)
@@ -152,7 +152,7 @@ public readonly struct ColorRgba : IEquatable<ColorRgba>
 
     #region Conversion
     public System.Drawing.Color ToSysColor() => System.Drawing.Color.FromArgb(R, G, B, A);
-    public Raylib_CsLo.Color ToRayColor() => new Raylib_CsLo.Color(R, G, B, A);
+    public Raylib_cs.Color ToRayColor() => new (R, G, B, A);
     
     public ColorHsl ToHSL()
     {

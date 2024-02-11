@@ -1,7 +1,6 @@
-﻿using Raylib_CsLo;
+﻿using Raylib_cs;
 using ShapeEngine.Core;
 using ShapeEngine.Lib;
-using ShapeEngine.Screen;
 using System.Numerics;
 using System.Text;
 using ShapeEngine.Color;
@@ -908,7 +907,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             if (segmentStarted)
             {
-                DrawCircleV(startPoint, 15f, Colors.Highlight.ToRayColor());
+                ShapeDrawing.DrawCircle(startPoint, 15f, Colors.Highlight);
                 Segment s = new(startPoint, mousePos);
                 s.Draw(4, Colors.Highlight);
 

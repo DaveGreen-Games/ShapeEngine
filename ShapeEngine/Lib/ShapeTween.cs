@@ -1,10 +1,8 @@
 ﻿//source
 //https://github.com/idbrii/cs-tween/blob/main/Easing.cs
 
-using Raylib_CsLo;
 using System.Numerics;
 using ShapeEngine.Color;
-using ShapeEngine.Core;
 using ShapeEngine.Core.Shapes;
 
 namespace ShapeEngine.Lib

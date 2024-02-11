@@ -1,6 +1,5 @@
 using System.Numerics;
-using Microsoft.Win32.SafeHandles;
-using Raylib_CsLo;
+using Raylib_cs;
 using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
@@ -174,10 +173,10 @@ public sealed class ShapeCamera
     );
     public Camera2D Camera => new()
     {
-        target = Position,
-        offset = Offset,
-        zoom = ZoomLevel,
-        rotation = RotationDeg
+        Target = Position,
+        Offset = Offset,
+        Zoom = ZoomLevel,
+        Rotation = RotationDeg
     };
 
     public float ZoomFactor => 1f / ZoomLevel;

@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using Raylib_CsLo;
+﻿using Raylib_cs;
 using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using System.Numerics;
@@ -9,31 +8,35 @@ using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
+using ShapeEngine.Random;
 
 namespace Examples.Scenes.ExampleScenes
 {
 
     public class Circ : IGameObject
     {
-        // public const uint SlowTag1 = 1;
-        // public const uint SlowTag2 = 2;
-        // public const uint SlowTag3 = 3;
-
-        // private uint[] tags;
         public Vector2 Pos;
         public Vector2 Vel;
         public float Radius;
-        int areaLayer = ShapeRandom.RandI(1, 5);
-        Color color = GREEN;
-        // private int affectionCount = 0;
-        public int Layer { get { return areaLayer; } set { } }
+        private readonly int areaLayer;
+        public int Layer { get => areaLayer;
+            set { } }
 
+        private static ChanceList<int> layerChances = new((1000, 0), (250, 1), (50, 2));
+        
         public Circ(Vector2 pos, Vector2 vel, float radius)
         {
             this.Pos = pos;
-            this.Vel = vel;
             this.Radius = radius;
-
+            this.areaLayer = layerChances.Next();
+            
+            var velFactor = areaLayer switch
+            {
+                1 => 0.75f,
+                2 => 1.5f,
+                _ => 0.25f
+            };
+            this.Vel = vel * velFactor;
             // int random = ShapeRandom.RandI(0, 4);
             // if (random <= 0)
             // {
@@ -90,16 +93,14 @@ namespace Examples.Scenes.ExampleScenes
 
         public void DrawGame(ScreenInfo game)
         {
-            // var c = affectionCount switch
-            // {
-            //     0 => Colors.Warm, // new ShapeColor(System.Drawing.Color.ForestGreen),
-            //     1 => Colors.Cold,// new ShapeColor(System.Drawing.Color.Goldenrod),
-            //     2 => Colors.Highlight, // new ShapeColor(System.Drawing.Color.Coral),
-            //     3 => Colors.Special, //new ShapeColor(System.Drawing.Color.IndianRed),
-            //     _ => Colors.Light,// new ShapeColor(System.Drawing.Color.FloralWhite),
-            // };
-            float r = Radius;
-            ShapeDrawing.DrawCircleFast(Pos, Radius, Colors.Warm);
+            var color = areaLayer switch
+            {
+                1 => Colors.Highlight,
+                2 => Colors.Special,
+                _ => Colors.Medium
+            };
+
+            ShapeDrawing.DrawCircleFast(Pos, Radius, color);
         }
 
         public void DrawGameUI(ScreenInfo ui)
@@ -207,7 +208,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         public override void Reset()
         {
-            //circles.Clear();
+            
             gameObjectHandler.Clear();
         }
         public override GameObjectHandler? GetGameObjectHandler()
@@ -259,6 +260,8 @@ namespace Examples.Scenes.ExampleScenes
                     gameObjectHandler.AddAreaObject(c);
                     //circs.Add(c);
                 }
+
+                int count = gameObjectHandler.Count;
             }
 
             // if (iaSlow1.State.Pressed)

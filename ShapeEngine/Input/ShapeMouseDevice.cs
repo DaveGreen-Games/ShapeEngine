@@ -1,5 +1,5 @@
 using System.Text;
-using Raylib_CsLo;
+using Raylib_cs;
 using ShapeEngine.Core;
 
 namespace ShapeEngine.Input;
@@ -44,13 +44,13 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         var mouseWheel = Raylib.GetMouseWheelMoveV();
         if (mouseWheel.LengthSquared() > mouseWheelThreshold * mouseWheelThreshold) return true;
 
-        if (Raylib.IsMouseButtonDown(MouseButton.MOUSE_BUTTON_LEFT)) return true;
-        if (Raylib.IsMouseButtonDown(MouseButton.MOUSE_BUTTON_RIGHT)) return true;
-        if (Raylib.IsMouseButtonDown(MouseButton.MOUSE_BUTTON_MIDDLE)) return true;
-        if (Raylib.IsMouseButtonDown(MouseButton.MOUSE_BUTTON_EXTRA)) return true;
-        if (Raylib.IsMouseButtonDown(MouseButton.MOUSE_BUTTON_FORWARD)) return true;
-        if (Raylib.IsMouseButtonDown(MouseButton.MOUSE_BUTTON_BACK)) return true;
-        if (Raylib.IsMouseButtonDown(MouseButton.MOUSE_BUTTON_SIDE)) return true;
+        if (Raylib.IsMouseButtonDown(MouseButton.Left)) return true;
+        if (Raylib.IsMouseButtonDown(MouseButton.Right)) return true;
+        if (Raylib.IsMouseButtonDown(MouseButton.Middle)) return true;
+        if (Raylib.IsMouseButtonDown(MouseButton.Extra)) return true;
+        if (Raylib.IsMouseButtonDown(MouseButton.Forward)) return true;
+        if (Raylib.IsMouseButtonDown(MouseButton.Back)) return true;
+        if (Raylib.IsMouseButtonDown(MouseButton.Side)) return true;
 
         return false;
     }
@@ -249,7 +249,7 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
             if(button == ShapeMouseButton.DOWN_AXIS) return mouseDelta.Y > deadzone ? mouseDelta.Y : 0f;
             return 0f;
         }
-        return Raylib.IsMouseButtonDown(id) ? 1f : 0f;
+        return Raylib.IsMouseButtonDown((MouseButton)id) ? 1f : 0f;
     }
     public InputState GetState(ShapeMouseButton button, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {

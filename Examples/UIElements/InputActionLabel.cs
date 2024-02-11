@@ -1,11 +1,10 @@
 using System.Numerics;
 using System.Text;
-using Raylib_CsLo;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
-using ShapeEngine.Lib;
 using ShapeEngine.Text;
+using Raylib_cs;
 
 namespace Examples.UIElements;
 

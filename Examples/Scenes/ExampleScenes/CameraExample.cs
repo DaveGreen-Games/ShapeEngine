@@ -1,4 +1,4 @@
-﻿using Raylib_CsLo;
+﻿using Raylib_cs;
 using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Screen;
@@ -156,7 +156,7 @@ namespace Examples.Scenes.ExampleScenes
             if (dirX != 0 || dirY != 0)
             {
                 var movement = new Vector2(dirX, dirY).Normalize() * speed * dt * camera.ZoomFactor;
-                movement = movement.Rotate(-camera.RotationDeg * DEG2RAD);
+                movement = movement.Rotate(-camera.RotationDeg * ShapeMath.DEGTORAD);
                 camera.Position += movement;
                 //camera.Translation += movement;
             }
@@ -171,7 +171,7 @@ namespace Examples.Scenes.ExampleScenes
 
             var c = new ColorRgba(Color.CornflowerBlue);
             float f = camera.ZoomFactor;
-            DrawCircleV(camera.Position, 8f * f, c.ToRayColor());
+            ShapeDrawing.DrawCircle(camera.Position, 8f * f, c);
             ShapeDrawing.DrawCircleLines(camera.Position, 64 * f, 2f * f, c);
             Segment hor = new(camera.Position - new Vector2(3000 * f, 0), camera.Position + new Vector2(3000 * f, 0));
             hor.Draw(2f * f, c);

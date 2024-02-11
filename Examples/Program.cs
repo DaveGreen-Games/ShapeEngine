@@ -1,6 +1,4 @@
-﻿global using static Raylib_CsLo.Raylib;
-global using static Raylib_CsLo.RayMath;
-global using static Examples.Program;
+﻿global using static Examples.Program;
 
 
 namespace Examples

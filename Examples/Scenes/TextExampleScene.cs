@@ -1,6 +1,5 @@
 ﻿
 using ShapeEngine.Lib;
-using Raylib_CsLo;
 using System.Numerics;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;

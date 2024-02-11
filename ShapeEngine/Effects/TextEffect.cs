@@ -1,6 +1,4 @@
 ﻿using System.Numerics;
-using Raylib_CsLo;
-using ShapeEngine.Lib;
 using ShapeEngine.Text;
 
 namespace ShapeEngine.Effects

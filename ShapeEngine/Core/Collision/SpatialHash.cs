@@ -1,5 +1,5 @@
 ﻿using System.Numerics;
-using Raylib_CsLo;
+// using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Lib;
@@ -318,15 +318,23 @@ namespace ShapeEngine.Core.Collision
             for (int i = 0; i < BucketCount; i++)
             {
                 var coords = GetCoordinatesGrid(i);
-                var rect = new Rectangle(Bounds.X + coords.x * SpacingX, Bounds.Y + coords.y * SpacingY, SpacingX, SpacingY);
-
-                Raylib.DrawRectangleLinesEx(rect, 1, border.ToRayColor());
+                var rect = new Rect(Bounds.X + coords.x * SpacingX, Bounds.Y + coords.y * SpacingY, SpacingX, SpacingY);
+                rect.DrawLines(1f, border);
                 int id = GetCellID(coords.x, coords.y);
                 if (buckets[id].Count > 0)
                 {
-                    //DrawRectangleLinesEx(rect, 1, full);
-                    Raylib.DrawRectangleRec(rect, fill.ToRayColor());
+                    rect.Draw(fill);
                 }
+                
+                
+                // var rect = new Rectangle(Bounds.X + coords.x * SpacingX, Bounds.Y + coords.y * SpacingY, SpacingX, SpacingY);
+
+                // Raylib.DrawRectangleLinesEx(rect, 1, border.ToRayColor());
+                // int id = GetCellID(coords.x, coords.y);
+                // if (buckets[id].Count > 0)
+                // {
+                //     Raylib.DrawRectangleRec(rect, fill.ToRayColor());
+                // }
 
             }
         }

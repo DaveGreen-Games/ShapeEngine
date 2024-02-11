@@ -1,5 +1,5 @@
 using System.Text;
-using Raylib_CsLo;
+using Raylib_cs;
 
 namespace ShapeEngine.Input;
 
@@ -277,12 +277,12 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
     {
         if (isLocked) return 0f;
         bool modifierActive = IModifierKey.IsActive(modifierOperator, modifierKeys, null);
-        return (modifierActive && Raylib.IsKeyDown((int)button)) ? 1f : 0f;
+        return (modifierActive && Raylib.IsKeyDown((KeyboardKey)button)) ? 1f : 0f;
     }
     public float GetValue(ShapeKeyboardButton button)
     {
         if (isLocked) return 0f;
-        return Raylib.IsKeyDown((int)button) ? 1f : 0f;
+        return Raylib.IsKeyDown((KeyboardKey)button) ? 1f : 0f;
     }
 
     
@@ -356,8 +356,8 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
     public float GetValue(ShapeKeyboardButton neg, ShapeKeyboardButton pos)
     {
         if (isLocked) return 0f;
-        float vNegative = Raylib.IsKeyDown((int)neg) ? 1f : 0f;
-        float vPositive = Raylib.IsKeyDown((int)pos) ? 1f : 0f;
+        float vNegative = Raylib.IsKeyDown((KeyboardKey)neg) ? 1f : 0f;
+        float vPositive = Raylib.IsKeyDown((KeyboardKey)pos) ? 1f : 0f;
         return vPositive - vNegative;
     }
     

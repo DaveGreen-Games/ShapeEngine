@@ -74,7 +74,7 @@ namespace Examples.Scenes.ExampleScenes
             // var tf = new TextFont(textFont.Font, 0f, 0f, WHITE);
             textBlock = new(textFont);
             textBlock.Caret = new(-1, new(Color.OrangeRed));
-            var emphasis1 = new Emphasis(new ED_Block(), new(Color.IndianRed), new(BLACK));
+            var emphasis1 = new Emphasis(new ED_Block(), new(Color.IndianRed), new(Color.Black));
             var emphasis2 = new Emphasis(new ED_Block(), new(Color.CornflowerBlue), new(Color.Black));
             var emphasis3 = new Emphasis(new ED_Transparent(), new(Color.Black), new(Color.Goldenrod));
             var emphasis4 = new Emphasis(new ED_Transparent(), new(Color.Black), new(Color.ForestGreen));

@@ -1,7 +1,6 @@
 using System.Numerics;
-using Raylib_CsLo;
+using Raylib_cs;
 using ShapeEngine.Color;
-using ShapeEngine.Core;
 using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.Screen;
@@ -9,7 +8,7 @@ namespace ShapeEngine.Screen;
 internal sealed class ScreenTexture
 {
     public bool Loaded { get; private set; } = false;
-    public RenderTexture RenderTexture { get; private set; } = new();
+    public RenderTexture2D RenderTexture { get; private set; } = new();
     public int Width { get; private set; } = 0;
     public int Height { get; private set; } = 0;
 
@@ -40,10 +39,10 @@ internal sealed class ScreenTexture
     {
         var destRec = new Rectangle
         {
-            x = Width * 0.5f,
-            y = Height * 0.5f,
-            width = Width,
-            height = Height
+            X = Width * 0.5f,
+            Y = Height * 0.5f,
+            Width = Width,
+            Height = Height
         };
         Vector2 origin = new()
         {
@@ -53,7 +52,7 @@ internal sealed class ScreenTexture
         
         var sourceRec = new Rectangle(0, 0, Width, -Height);
         
-        Raylib.DrawTexturePro(RenderTexture.texture, sourceRec, destRec, origin, 0f, new ColorRgba(System.Drawing.Color.White).ToRayColor());
+        Raylib.DrawTexturePro(RenderTexture.Texture, sourceRec, destRec, origin, 0f, new ColorRgba(System.Drawing.Color.White).ToRayColor());
     }
     
     private void SetTexture(Dimensions dimensions)

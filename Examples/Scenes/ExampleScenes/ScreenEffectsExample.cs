@@ -1,4 +1,4 @@
-﻿using Raylib_CsLo;
+﻿using Raylib_cs;
 using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Random;
@@ -227,10 +227,10 @@ namespace Examples.Scenes.ExampleScenes
         {
             var rightThruster = movementDir.RotateDeg(-25);
             var leftThruster = movementDir.RotateDeg(25);
-            DrawCircleV(Hull.Center - rightThruster * Hull.Radius, Hull.Radius / 6, outlineColor.ColorRgba.ToRayColor());
-            DrawCircleV(Hull.Center - leftThruster * Hull.Radius, Hull.Radius / 6, outlineColor.ColorRgba.ToRayColor());
+            ShapeDrawing.DrawCircle(Hull.Center - rightThruster * Hull.Radius, Hull.Radius / 6, outlineColor.ColorRgba, 12);
+            ShapeDrawing.DrawCircle(Hull.Center - leftThruster * Hull.Radius, Hull.Radius / 6, outlineColor.ColorRgba, 12);
             Hull.Draw(hullColor.ColorRgba);
-            DrawCircleV(Hull.Center + movementDir * Hull.Radius * 0.66f, Hull.Radius * 0.33f, cockpitColor.ColorRgba.ToRayColor());
+            ShapeDrawing.DrawCircle(Hull.Center + movementDir * Hull.Radius * 0.66f, Hull.Radius * 0.33f, cockpitColor.ColorRgba, 12);
 
             Hull.DrawLines(4f, outlineColor.ColorRgba);
         }

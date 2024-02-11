@@ -1,5 +1,5 @@
 using System.Numerics;
-using Raylib_CsLo;
+using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
 using ShapeEngine.Core.Shapes;
@@ -27,7 +27,7 @@ public struct TextFont
     #region Members
 
     public Font Font;
-    public float BaseSize => Font.baseSize;
+    public float BaseSize => Font.BaseSize;
     public float FontSize;
     public float FontSpacing;
     public float LineSpacing;
@@ -43,7 +43,7 @@ public struct TextFont
         Font = font;
         FontSpacing = 0f;
         LineSpacing = 0f;
-        FontSize = font.baseSize;
+        FontSize = font.BaseSize;
         ColorRgba = new(System.Drawing.Color.White);
     }
     public TextFont(Font font, ColorRgba colorRgba)
@@ -51,7 +51,7 @@ public struct TextFont
         Font = font;
         FontSpacing = 0f;
         LineSpacing = 0f;
-        FontSize = font.baseSize;
+        FontSize = font.BaseSize;
         ColorRgba = colorRgba;
     }
     public TextFont(Font font, float fontSpacing, ColorRgba colorRgba)
@@ -60,7 +60,7 @@ public struct TextFont
         Font = font;
         FontSpacing = fontSpacing;
         LineSpacing = 0f;
-        FontSize = font.baseSize;
+        FontSize = font.BaseSize;
         ColorRgba = colorRgba;
     }
     public TextFont(Font font, float fontSpacing, float lineSpacing, ColorRgba colorRgba)
@@ -68,7 +68,7 @@ public struct TextFont
         Font = font;
         FontSpacing = fontSpacing;
         LineSpacing = lineSpacing;
-        FontSize = font.baseSize;
+        FontSize = font.BaseSize;
         ColorRgba = colorRgba;
     }
     public TextFont(Font font, float fontSize, float fontSpacing, float lineSpacing, ColorRgba colorRgba)
@@ -187,8 +187,8 @@ public struct TextFont
         unsafe
         {
             int index = Raylib.GetGlyphIndex(Font, c);
-            float glyphWidth = (Font.glyphs[index].advanceX == 0) ? Font.recs[index].width : Font.glyphs[index].advanceX;
-            return new Vector2(glyphWidth, Font.baseSize);
+            float glyphWidth = (Font.Glyphs[index].AdvanceX == 0) ? Font.Recs[index].Width : Font.Glyphs[index].AdvanceX;
+            return new Vector2(glyphWidth, Font.BaseSize);
         }
     }
 
@@ -658,9 +658,9 @@ public struct TextFont
 
     #endregion
     
-    public void SetFilter(TextureFilter textureFilter = TextureFilter.TEXTURE_FILTER_BILINEAR)
+    public void SetFilter(TextureFilter textureFilter = TextureFilter.Bilinear)
     {
-        Raylib.SetTextureFilter(Font.texture, textureFilter);
+        Raylib.SetTextureFilter(Font.Texture, textureFilter);
     }
     public static Emphasis? GetEmphasis(string word, List<TextEmphasis>? emphases)
     {

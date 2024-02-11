@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using Raylib_CsLo;
+using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Shapes;
@@ -170,7 +170,7 @@ public class Game
 
         quit = false;
         restart = false;
-        Raylib.SetExitKey(-1);
+        Raylib.SetExitKey(KeyboardKey.Null);
 
         StartGameloop();
         RunGameloop();

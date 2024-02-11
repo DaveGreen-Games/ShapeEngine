@@ -1,10 +1,7 @@
 ﻿
-using System.Drawing;
 using System.Numerics;
-using Raylib_CsLo;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Interfaces;
-using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
 using ShapeEngine.Random;
@@ -59,6 +56,8 @@ namespace ShapeEngine.Core.Shapes
             points.AddRange(translated);
             return Polygon.FindConvexHull(points);
         }
+
+        public Polygon ToConvex() => Polygon.FindConvexHull(this);
         
         public bool ContainsShape(Segment other)
         {

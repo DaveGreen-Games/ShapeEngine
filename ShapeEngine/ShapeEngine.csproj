@@ -34,7 +34,7 @@
 
   <ItemGroup>
     <PackageReference Include="Clipper2" Version="1.2.2" />
-    <PackageReference Include="Raylib-CsLo" Version="4.2.0.9" />
+    <PackageReference Include="Raylib-cs" Version="6.0.0" />
   </ItemGroup>
 
 	<ItemGroup>

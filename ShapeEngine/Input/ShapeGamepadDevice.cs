@@ -1,5 +1,5 @@
 using System.Text;
-using Raylib_CsLo;
+using Raylib_cs;
 
 namespace ShapeEngine.Input;
 
@@ -115,14 +115,14 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
 
     public void Calibrate()
     {
-        float leftX = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.GAMEPAD_AXIS_LEFT_X);
-        float leftY = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.GAMEPAD_AXIS_LEFT_Y);
+        float leftX = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.LeftX);
+        float leftY = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.LeftY);
         
-        float rightX = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.GAMEPAD_AXIS_RIGHT_X);
-        float rightY = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.GAMEPAD_AXIS_RIGHT_Y);
+        float rightX = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.RightX);
+        float rightY = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.RightY);
         
-        float triggerRight = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.GAMEPAD_AXIS_LEFT_TRIGGER);
-        float triggerLeft = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.GAMEPAD_AXIS_RIGHT_TRIGGER);
+        float triggerRight = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.LeftTrigger);
+        float triggerLeft = Raylib.GetGamepadAxisMovement(Index, GamepadAxis.RightTrigger);
 
         axisCalibrationValues[ShapeGamepadAxis.LEFT_X] = leftX;
         axisCalibrationValues[ShapeGamepadAxis.LEFT_Y] = leftY;
@@ -180,7 +180,7 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
             return value;
         }
         
-        return Raylib.IsGamepadButtonDown(Index, id) ? 1f : 0f;
+        return Raylib.IsGamepadButtonDown(Index, (GamepadButton)id) ? 1f : 0f;
     }
     
     public InputState GetState(ShapeGamepadButton button, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
@@ -273,7 +273,7 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
     {
         if (!Connected || Index < 0 || isLocked) return 0f;
         
-        float value = Raylib.GetGamepadAxisMovement(Index, (int)axis);
+        float value = Raylib.GetGamepadAxisMovement(Index, (GamepadAxis)axis);
         value -= axisCalibrationValues[axis];
         // if (axis is ShapeGamepadAxis.LEFT_TRIGGER or ShapeGamepadAxis.RIGHT_TRIGGER)
         // {

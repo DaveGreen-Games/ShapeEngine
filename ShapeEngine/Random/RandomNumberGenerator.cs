@@ -1,6 +1,4 @@
-﻿using Raylib_CsLo;
-using ShapeEngine.Core;
-using ShapeEngine.Core.Shapes;
+﻿using ShapeEngine.Core.Shapes;
 using ShapeEngine.Lib;
 using System.Numerics;
 using ShapeEngine.Color;

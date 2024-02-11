@@ -1,5 +1,3 @@
-using System.Text;
-using Raylib_CsLo;
 
 namespace ShapeEngine.Input;
 

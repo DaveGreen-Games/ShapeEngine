@@ -1,5 +1,4 @@
-﻿using Raylib_CsLo;
-using ShapeEngine.Core;
+﻿using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Random;
 using ShapeEngine.Screen;
@@ -9,6 +8,7 @@ using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
+using Raylib_cs;
 using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes
@@ -126,10 +126,11 @@ namespace Examples.Scenes.ExampleScenes
                 var outlineColor = colorScheme.Outline;
                 var hullColor = colorScheme.Hull;
                 var cockpitColor = colorScheme.Cockpit;
-                DrawCircleV(hull.Center - rightThruster * hull.Radius, hull.Radius / 6, outlineColor.ToRayColor());
-                DrawCircleV(hull.Center - leftThruster * hull.Radius, hull.Radius / 6, outlineColor.ToRayColor());
+                
+                ShapeDrawing.DrawCircle(hull.Center - rightThruster * hull.Radius, hull.Radius / 6, outlineColor, 12);
+                ShapeDrawing.DrawCircle(hull.Center - leftThruster * hull.Radius, hull.Radius / 6, outlineColor, 12);
                 hull.Draw(hullColor);
-                DrawCircleV(hull.Center + movementDir * hull.Radius * 0.66f, hull.Radius * 0.33f, cockpitColor.ToRayColor());
+                ShapeDrawing.DrawCircle(hull.Center + movementDir * hull.Radius * 0.66f, hull.Radius * 0.33f, cockpitColor, 12);
 
                 hull.DrawLines(4f, outlineColor);
             }

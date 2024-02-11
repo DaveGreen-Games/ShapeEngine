@@ -1,8 +1,5 @@
-﻿using Clipper2Lib;
-using Raylib_CsLo;
-using ShapeEngine.Core;
+﻿using ShapeEngine.Core;
 using ShapeEngine.Lib;
-using ShapeEngine.Screen;
 using System.Numerics;
 using System.Text;
 using ShapeEngine.Color;
@@ -11,6 +8,7 @@ using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
+using Raylib_cs;
 using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes
@@ -99,7 +97,7 @@ namespace Examples.Scenes.ExampleScenes
 
                         float rotDifDeg = rotDeg - prevRotDeg;
                         shape.Center(pos);
-                        shape.Rotate(new Vector2(0.5f), rotDifDeg * DEG2RAD);
+                        shape.Rotate(new Vector2(0.5f), rotDifDeg * ShapeMath.DEGTORAD);
                     }
                     
                 }
@@ -697,7 +695,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             float step = 45f;
             curRot += step;
-            curRot = Wrap(curRot, 0f, 360f);
+            curRot = ShapeMath.WrapAngleDeg(curRot);// ShapeMath.WrapF(curRot, 0f, 360f);
         }
         private void CycleSize()
         {
@@ -705,7 +703,7 @@ namespace Examples.Scenes.ExampleScenes
             float min = 50f;
             float max = 400;
             curSize += step;
-            curSize = Wrap(curSize, min, max);
+            curSize = ShapeMath.WrapF(curSize, min, max);
         }
         private void RegenerateShape()
         {
@@ -907,7 +905,7 @@ namespace Examples.Scenes.ExampleScenes
                     CycleRotation();
                     
                     float dif = curRot - oldRot;
-                    curShape.Rotate(new Vector2(0.5f), dif * DEG2RAD);
+                    curShape.Rotate(new Vector2(0.5f), dif * ShapeMath.DEGTORAD);
                     curShape.Center(curPos);
                 }
 

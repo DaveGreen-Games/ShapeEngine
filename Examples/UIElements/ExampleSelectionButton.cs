@@ -1,9 +1,6 @@
 ﻿using Examples.Scenes;
-using Raylib_CsLo;
 using ShapeEngine.UI;
 using System.Numerics;
-using ShapeEngine.Input;
-using ShapeEngine.Lib;
 using ShapeEngine.Text;
 
 namespace Examples.UIElements

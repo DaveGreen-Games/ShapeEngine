@@ -1,4 +1,4 @@
-﻿using Raylib_CsLo;
+﻿using Raylib_cs;
 using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Random;
@@ -159,7 +159,7 @@ namespace Examples.Scenes.ExampleScenes
                         turnSpeedDeg = TurningSpeedDeg;
                     }
                     
-                    var rotRad = ShapeUtils.AimAt(movementDir.AngleRad(), dir.AngleRad(), turnSpeedDeg * DEG2RAD, dt);
+                    var rotRad = ShapeUtils.AimAt(movementDir.AngleRad(), dir.AngleRad(), turnSpeedDeg * ShapeMath.DEGTORAD, dt);
                     movementDir = movementDir.Rotate(rotRad);
                     // var angle = ShapeMath.GetShortestAngleRad(movementDir.AngleRad(), dir.AngleRad());
                     // var angleMovementRad = MathF.Min(angle, TurningSpeed * DEG2RAD * dt);
@@ -187,10 +187,10 @@ namespace Examples.Scenes.ExampleScenes
                 var outlineColor = Selected ? outlineColorActive : outlineColorInactive;
                 var hullColor = Selected ? hullColorActive : hullColorInactive;
                 var cockpitColor = Selected ? cockpitColorActive : cockpitColorInactive;
-                DrawCircleV(hull.Center - rightThruster * hull.Radius, hull.Radius / 6, outlineColor.ColorRgba.ToRayColor());
-                DrawCircleV(hull.Center - leftThruster * hull.Radius, hull.Radius / 6, outlineColor.ColorRgba.ToRayColor());
+                ShapeDrawing.DrawCircle(hull.Center - rightThruster * hull.Radius, hull.Radius / 6, outlineColor.ColorRgba, 12);
+                ShapeDrawing.DrawCircle(hull.Center - leftThruster * hull.Radius, hull.Radius / 6, outlineColor.ColorRgba, 12);
                 hull.Draw(hullColor.ColorRgba);
-                DrawCircleV(hull.Center + movementDir * hull.Radius * 0.66f, hull.Radius * 0.33f, cockpitColor.ColorRgba.ToRayColor());
+                ShapeDrawing.DrawCircle(hull.Center + movementDir * hull.Radius * 0.66f, hull.Radius * 0.33f, cockpitColor.ColorRgba, 12);
 
                 hull.DrawLines(4f, outlineColor.ColorRgba);
 

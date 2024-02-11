@@ -1,6 +1,6 @@
 ﻿
 using System.Numerics;
-using Raylib_CsLo;
+using Raylib_cs;
 using ShapeEngine.Lib;
 using ShapeEngine.Persistent;
 using ShapeEngine.Core;
@@ -318,7 +318,7 @@ namespace Examples
             // this.Window.MaxFramerate = 480;
             // this.Window.FpsLimit = 240;
 
-            fpsLabel = new(GetFontDefault(), Colors.PcCold, Colors.PcText, Colors.PcHighlight);
+            fpsLabel = new(FontDefault, Colors.PcCold, Colors.PcText, Colors.PcHighlight);
             
             // HideOSCursor();
             Window.MouseVisible = false;

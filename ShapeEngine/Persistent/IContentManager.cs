@@ -1,4 +1,4 @@
-﻿using Raylib_CsLo;
+﻿using Raylib_cs;
 using System.Text;
 
 namespace ShapeEngine.Persistent
@@ -7,7 +7,7 @@ namespace ShapeEngine.Persistent
     {
         public void Close();
 
-        public Texture LoadTexture(string filePath);
+        public Texture2D LoadTexture(string filePath);
         public Image LoadImage(string filePath);
         public Font LoadFont(string filePath, int fontSize = 100);
         public Wave LoadWave(string filePath);
@@ -26,7 +26,7 @@ namespace ShapeEngine.Persistent
     {
 
         private List<Shader> shadersToUnload = new();
-        private List<Texture> texturesToUnload = new();
+        private List<Texture2D> texturesToUnload = new();
         private List<Image> imagesToUnload = new();
         private List<Font> fontsToUnload = new();
         private List<Sound> soundsToUnload = new();
@@ -71,55 +71,52 @@ namespace ShapeEngine.Persistent
             }
         }
 
-        public Texture LoadTexture(string filePath)
+        public Texture2D LoadTexture(string filePath)
         {
-            Texture t = ContentLoader.LoadTexture(filePath);
+            var t = ContentLoader.LoadTexture(filePath);
             texturesToUnload.Add(t);
             return t;
         }
         public Image LoadImage(string filePath)
         {
-            Image i = ContentLoader.LoadImage(filePath);
+            var i = ContentLoader.LoadImage(filePath);
             imagesToUnload.Add(i);
             return i;
         }
         public Font LoadFont(string filePath, int fontSize = 100)
         {
-            unsafe
-            {
-                Font f = ContentLoader.LoadFont(filePath, fontSize);
-                fontsToUnload.Add(f);
-                return f;
-            }
+            var f = ContentLoader.LoadFont(filePath, fontSize);
+            fontsToUnload.Add(f);
+            return f;
         }
         public Wave LoadWave(string filePath)
         {
-            Wave w = ContentLoader.LoadWave(filePath);
+            var w = ContentLoader.LoadWave(filePath);
             wavesToUnload.Add(w);
             return w;
         }
         public Sound LoadSound(string filePath)
         {
-            Sound s = ContentLoader.LoadSound(filePath);
+            var s = ContentLoader.LoadSound(filePath);
             soundsToUnload.Add(s);
             return s;
 
         }
         public Music LoadMusic(string filePath)
         {
-            Music m = ContentLoader.LoadMusicStream(filePath);
+            var m = ContentLoader.LoadMusicStream(filePath);
             musicToUnload.Add(m);
             return m;
         }
         public Shader LoadFragmentShader(string filePath)
         {
-            Shader fs = ContentLoader.LoadFragmentShader(filePath);
+            var fs = ContentLoader.LoadFragmentShader(filePath);
             shadersToUnload.Add(fs);
             return fs;
         }
         public Shader LoadVertexShader(string filePath)
         {
-            Shader vs = ContentLoader.LoadVertexShader(filePath);
+            var vs = ContentLoader.LoadVertexShader(filePath);
             shadersToUnload.Add(vs);
             return vs;
         }
@@ -137,7 +134,7 @@ namespace ShapeEngine.Persistent
     {
         public int GLYPH_COUNT = 0;
         private Dictionary<string, ContentInfo> content = new();
-        private List<Texture> texturesToUnload = new();
+        private List<Texture2D> texturesToUnload = new();
 
         public ContentManagerPacked(string path, string resourceFileName = "resources.txt")
         {
@@ -153,86 +150,123 @@ namespace ShapeEngine.Persistent
             }
         }
 
-        public Texture LoadTexture(string filePath)
+        public Texture2D LoadTexture(string filePath)
         {
-            Texture t = Raylib.LoadTextureFromImage(LoadImage(filePath));
-            texturesToUnload.Add(t);
-            return t;
+            string fileName = Path.GetFileNameWithoutExtension(filePath);
+            return ContentLoader.LoadTextureFromContent(content[fileName]);
+            // var t = Raylib.LoadTextureFromImage(LoadImage(filePath));
+            // texturesToUnload.Add(t);
+            // return t;
         }
         public Image LoadImage(string filePath)
         {
-            unsafe
-            {
-                string fileName = Path.GetFileNameWithoutExtension(filePath);
-                var data = content[fileName].data;
-                var extension = content[fileName].extension;
-                fixed (byte* ptr = data)
-                {
-                    return Raylib.LoadImageFromMemory(extension, ptr, data.Length);
-                }
-            }
+            string fileName = Path.GetFileNameWithoutExtension(filePath);
+            return ContentLoader.LoadImageFromContent(content[fileName]);
+            // byte[] data = content[fileName].data;
+            // string extension = content[fileName].extension;
+            // return Raylib.LoadImageFromMemory(extension, data);
+            // unsafe
+            // {
+            //     string fileName = Path.GetFileNameWithoutExtension(filePath);
+            //     var data = content[fileName].data;
+            //     var extension = content[fileName].extension;
+            //     fixed (byte* ptr = data)
+            //     {
+            //         return Raylib.LoadImageFromMemory(extension, ptr, data.Length);
+            //     }
+            // }
         }
         public Font LoadFont(string filePath, int fontSize = 100)
         {
-            unsafe
-            {
-                string fileName = Path.GetFileNameWithoutExtension(filePath);
-                var data = content[fileName].data;
-                var extension = content[fileName].extension;
-                fixed (byte* ptr = data)
-                {
-                    return Raylib.LoadFontFromMemory(extension, ptr, data.Length, fontSize, (int*)0, GLYPH_COUNT);
-                }
-            }
+            string fileName = Path.GetFileNameWithoutExtension(filePath);
+            return ContentLoader.LoadFontFromContent( content[fileName], fontSize);
+            
+            // string fileName = Path.GetFileNameWithoutExtension(filePath);
+            // byte[] data = content[fileName].data;
+            // string extension = content[fileName].extension;
+            // return Raylib.LoadFontFromMemory(extension, data, fontSize, Array.Empty<int>(), GLYPH_COUNT);
+            
+            // unsafe
+            // {
+            //     string fileName = Path.GetFileNameWithoutExtension(filePath);
+            //     var data = content[fileName].data;
+            //     var extension = content[fileName].extension;
+            //     fixed (byte* ptr = data)
+            //     {
+            //         return Raylib.LoadFontFromMemory(extension, ptr, data.Length, fontSize, (int*)0, GLYPH_COUNT);
+            //     }
+            // }
         }
         public Wave LoadWave(string filePath)
         {
-            unsafe
-            {
-                string filename = Path.GetFileNameWithoutExtension(filePath);
-                var data = content[filename].data;
-                var extension = content[filename].extension;
-                fixed (byte* ptr = data)
-                {
-                    return Raylib.LoadWaveFromMemory(extension, ptr, data.Length);
-                }
-            }
+            string fileName = Path.GetFileNameWithoutExtension(filePath);
+            return ContentLoader.LoadWaveFromContent(content[fileName]);
+            
+            // string filename = Path.GetFileNameWithoutExtension(filePath);
+            // byte[] data = content[filename].data;
+            // string extension = content[filename].extension;
+            // return Raylib.LoadWaveFromMemory(extension, data);
+            // unsafe
+            // {
+            //     string filename = Path.GetFileNameWithoutExtension(filePath);
+            //     var data = content[filename].data;
+            //     var extension = content[filename].extension;
+            //     fixed (byte* ptr = data)
+            //     {
+            //         return Raylib.LoadWaveFromMemory(extension, ptr, data.Length);
+            //     }
+            // }
         }
         public Sound LoadSound(string filePath)
         {
             string fileName = Path.GetFileNameWithoutExtension(filePath);
-            return Raylib.LoadSoundFromWave(LoadWave(fileName));
+            return ContentLoader.LoadSoundFromContent(content[fileName]);
+            // string fileName = Path.GetFileNameWithoutExtension(filePath);
+            // return Raylib.LoadSoundFromWave(LoadWave(fileName));
 
         }
         public Music LoadMusic(string filePath)
         {
-            unsafe
-            {
-                string fileName = Path.GetFileNameWithoutExtension(filePath);
-                var data = content[fileName].data;
-                var extension = content[fileName].extension;
-                fixed (byte* ptr = data)
-                {
-                    return Raylib.LoadMusicStreamFromMemory(extension, ptr, data.Length);
-                }
-            }
+            string fileName = Path.GetFileNameWithoutExtension(filePath);
+            return ContentLoader.LoadMusicFromContent( content[fileName]);
+            
+            // string fileName = Path.GetFileNameWithoutExtension(filePath);
+            // byte[] data = content[fileName].data;
+            // string extension = content[fileName].extension;
+            // return Raylib.LoadMusicStreamFromMemory(extension, data);
+            // unsafe
+            // {
+            //     string fileName = Path.GetFileNameWithoutExtension(filePath);
+            //     var data = content[fileName].data;
+            //     var extension = content[fileName].extension;
+            //     fixed (byte* ptr = data)
+            //     {
+            //         return Raylib.LoadMusicStreamFromMemory(extension, ptr, data.Length);
+            //     }
+            // }
         }
         public Shader LoadFragmentShader(string filePath)
         {
             string fileName = Path.GetFileNameWithoutExtension(filePath);
-            string file = Encoding.Default.GetString(content[fileName].data);
-            return Raylib.LoadShaderFromMemory(null, file);
+            return ContentLoader.LoadFragmentShaderFromContent(content[fileName]);
+            // string fileName = Path.GetFileNameWithoutExtension(filePath);
+            // string file = Encoding.Default.GetString(content[fileName].data);
+            // return Raylib.LoadShaderFromMemory(null, file);
         }
         public Shader LoadVertexShader(string filePath)
         {
             string fileName = Path.GetFileNameWithoutExtension(filePath);
-            string file = Encoding.Default.GetString(content[fileName].data);
-            return Raylib.LoadShaderFromMemory(file, "");
+            return ContentLoader.LoadVertexShaderFromContent(content[fileName]);
+            // string fileName = Path.GetFileNameWithoutExtension(filePath);
+            // string file = Encoding.Default.GetString(content[fileName].data);
+            // return Raylib.LoadShaderFromMemory(file, null);
         }
         public string LoadJson(string filePath)
         {
             string fileName = Path.GetFileNameWithoutExtension(filePath);
-            return Encoding.Default.GetString(content[fileName].data);
+            return ContentLoader.LoadJsonFromContent(content[fileName]);
+            // string fileName = Path.GetFileNameWithoutExtension(filePath);
+            // return Encoding.Default.GetString(content[fileName].data);
         }
 
     }

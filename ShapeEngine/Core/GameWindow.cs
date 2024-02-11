@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using System.Numerics;
-using Raylib_CsLo;
+using Raylib_cs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Screen;
@@ -108,7 +108,7 @@ public sealed class GameWindow
             Minimized = Raylib.IsWindowMinimized();
             Hidden = Raylib.IsWindowHidden();
             Focused = Raylib.IsWindowFocused();
-            Topmost = Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
+            Topmost = Raylib.IsWindowState(ConfigFlags.TopmostWindow);
         }
     }
     private readonly struct CursorState
@@ -250,19 +250,19 @@ public sealed class GameWindow
     public int Fps => Raylib.GetFPS();
     public bool VSync
     {
-        get =>Raylib.IsWindowState(ConfigFlags.FLAG_VSYNC_HINT);
+        get =>Raylib.IsWindowState(ConfigFlags.VSyncHint);
         
         set
         {
-            if (Raylib.IsWindowState(ConfigFlags.FLAG_VSYNC_HINT) == value) return;
+            if (Raylib.IsWindowState(ConfigFlags.VSyncHint) == value) return;
             if (value)
             {
-                Raylib.SetWindowState(ConfigFlags.FLAG_VSYNC_HINT);
+                Raylib.SetWindowState(ConfigFlags.VSyncHint);
                 Raylib.SetTargetFPS(Monitor.CurMonitor().Refreshrate);
             }
             else
             {
-                Raylib.ClearWindowState(ConfigFlags.FLAG_VSYNC_HINT);
+                Raylib.ClearWindowState(ConfigFlags.VSyncHint);
                 Raylib.SetTargetFPS(fpsLimit);
             }
         }
@@ -289,23 +289,22 @@ public sealed class GameWindow
             var newState = value;
             if (value == WindowDisplayState.Normal)
             {
-                Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
+                Raylib.SetWindowState(ConfigFlags.TopmostWindow);
                 if (displayState == WindowDisplayState.Minimized)
                 {
-                    // Console.WriteLine("--------------|YEAH|----------------");
-                    Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_MINIMIZED);
+                    Raylib.ClearWindowState(ConfigFlags.MinimizedWindow);
                     
                     if (PrevMinimizedDisplayState.DisplayState == WindowDisplayState.Fullscreen)
                     {
                         var mDim = Monitor.CurMonitor().Dimensions;
                         Raylib.SetWindowSize(mDim.Width, mDim.Height);
-                        Raylib.SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+                        Raylib.SetWindowState(ConfigFlags.FullscreenMode);
                         newState = WindowDisplayState.Fullscreen;
                     }
 
                     else if (PrevMinimizedDisplayState.DisplayState == WindowDisplayState.Maximized)
                     {
-                        Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_MAXIMIZED);
+                        Raylib.SetWindowState(ConfigFlags.MaximizedWindow);
                         
                         newState = WindowDisplayState.Maximized;
                     }
@@ -318,76 +317,76 @@ public sealed class GameWindow
                 }
                 else if (displayState == WindowDisplayState.Maximized)
                 {
-                    Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_MAXIMIZED);
+                    Raylib.ClearWindowState(ConfigFlags.MaximizedWindow);
                 }
                 else if (displayState == WindowDisplayState.Fullscreen)
                 {
-                    Raylib.ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+                    Raylib.ClearWindowState(ConfigFlags.FullscreenMode);
                     Raylib.SetWindowSize(PrevFullscreenDisplayState.WindowSize.Width, PrevFullscreenDisplayState.WindowSize.Height);
                     Raylib.SetWindowPosition((int)PrevFullscreenDisplayState.WindowPosition.X, (int)PrevFullscreenDisplayState.WindowPosition.Y);
 
                     if (PrevFullscreenDisplayState.DisplayState == WindowDisplayState.Minimized)
                     {
-                        Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_MINIMIZED);
+                        Raylib.SetWindowState(ConfigFlags.MinimizedWindow);
                         newState = WindowDisplayState.Minimized;
                     }
 
                     else if (PrevFullscreenDisplayState.DisplayState == WindowDisplayState.Maximized)
                     {
-                        Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_MAXIMIZED);
+                        Raylib.SetWindowState(ConfigFlags.MaximizedWindow);
                         newState = WindowDisplayState.Maximized;
                     }
                 }
             }
             else if (value == WindowDisplayState.Maximized)
             {
-                Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
+                Raylib.SetWindowState(ConfigFlags.TopmostWindow);
                 
                 if (displayState == WindowDisplayState.Fullscreen)
                 {
-                    Raylib.ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+                    Raylib.ClearWindowState(ConfigFlags.FullscreenMode);
                     Raylib.SetWindowSize(PrevFullscreenDisplayState.WindowSize.Width, PrevFullscreenDisplayState.WindowSize.Height);
                     Raylib.SetWindowPosition((int)PrevFullscreenDisplayState.WindowPosition.X, (int)PrevFullscreenDisplayState.WindowPosition.Y);
                 
                 }
-                else if (displayState == WindowDisplayState.Minimized)Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_MINIMIZED);
+                else if (displayState == WindowDisplayState.Minimized)Raylib.ClearWindowState(ConfigFlags.MinimizedWindow);
                 
-                Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_MAXIMIZED);
+                Raylib.SetWindowState(ConfigFlags.MaximizedWindow);
             }
             else if (value == WindowDisplayState.Minimized)
             {
-                Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
+                Raylib.ClearWindowState(ConfigFlags.TopmostWindow);
                 PrevMinimizedDisplayState = new(CurScreenSize, Raylib.GetWindowPosition(), DisplayState);
                 
                 if (displayState == WindowDisplayState.Fullscreen)
                 {
-                    Raylib.ClearWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+                    Raylib.ClearWindowState(ConfigFlags.FullscreenMode);
                     Raylib.SetWindowSize(PrevFullscreenDisplayState.WindowSize.Width, PrevFullscreenDisplayState.WindowSize.Height);
                     Raylib.SetWindowPosition((int)PrevFullscreenDisplayState.WindowPosition.X, (int)PrevFullscreenDisplayState.WindowPosition.Y);
                 
                 }
                 else if (displayState == WindowDisplayState.Maximized)
                 {
-                    Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_MAXIMIZED);
+                    Raylib.ClearWindowState(ConfigFlags.MaximizedWindow);
                 }
                 
-                Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_MINIMIZED);
+                Raylib.SetWindowState(ConfigFlags.MinimizedWindow);
                 
             }
             else if (value == WindowDisplayState.Fullscreen)
             {
                 PrevFullscreenDisplayState = new(CurScreenSize, Raylib.GetWindowPosition(), displayState);
-                Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
+                Raylib.SetWindowState(ConfigFlags.TopmostWindow);
 
-                if (displayState == WindowDisplayState.Maximized) Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_MAXIMIZED);
+                if (displayState == WindowDisplayState.Maximized) Raylib.ClearWindowState(ConfigFlags.MaximizedWindow);
                 else if (displayState == WindowDisplayState.Minimized)
                 {
-                    Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_MINIMIZED);
+                    Raylib.ClearWindowState(ConfigFlags.MinimizedWindow);
                 }
                 
                 var mDim = Monitor.CurMonitor().Dimensions;
                 Raylib.SetWindowSize(mDim.Width, mDim.Height);
-                Raylib.SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+                Raylib.SetWindowState(ConfigFlags.FullscreenMode);
             }
             
             displayState = newState;
@@ -403,19 +402,19 @@ public sealed class GameWindow
 
             if (value == WindowBorder.Fixed)
             { 
-                if(windowBorder == WindowBorder.Resizabled) Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
-                else if(windowBorder == WindowBorder.Undecorated) Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
+                if(windowBorder == WindowBorder.Resizabled) Raylib.ClearWindowState(ConfigFlags.ResizableWindow);
+                else if(windowBorder == WindowBorder.Undecorated) Raylib.ClearWindowState(ConfigFlags.UndecoratedWindow);
                 
             }
             else if (value == WindowBorder.Resizabled)
             {
-                if(windowBorder == WindowBorder.Undecorated) Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
-                Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
+                if(windowBorder == WindowBorder.Undecorated) Raylib.ClearWindowState(ConfigFlags.UndecoratedWindow);
+                Raylib.SetWindowState(ConfigFlags.ResizableWindow);
             }
             else if(value == WindowBorder.Undecorated)
             {
-                if(windowBorder == WindowBorder.Resizabled) Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_RESIZABLE);
-                Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_UNDECORATED);
+                if(windowBorder == WindowBorder.Resizabled) Raylib.ClearWindowState(ConfigFlags.ResizableWindow);
+                Raylib.SetWindowState(ConfigFlags.UndecoratedWindow);
             }
 
             windowBorder = value;
@@ -484,14 +483,14 @@ public sealed class GameWindow
         WindowMinSize = windowSettings.WindowMinSize;
         Raylib.SetWindowMinSize(WindowMinSize.Width, WindowMinSize.Height);
 
-        Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_ALWAYS_RUN);
+        Raylib.SetWindowState(ConfigFlags.AlwaysRunWindow);
         
         if (windowSettings.Focused)
         {
-            Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
-            Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_UNFOCUSED);
+            Raylib.SetWindowState(ConfigFlags.TopmostWindow);
+            Raylib.ClearWindowState(ConfigFlags.UnfocusedWindow);
         }
-        else Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_UNFOCUSED);
+        else Raylib.SetWindowState(ConfigFlags.UnfocusedWindow);
         
         
         VSync = windowSettings.Vsync;
@@ -624,8 +623,8 @@ public sealed class GameWindow
         MouseOnScreen = false;
         var curWindowFlagState = new WindowFlagState();
         
-        bool windowMousePassthrough = Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_MOUSE_PASSTHROUGH);
-        bool windowTransparent = Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_TRANSPARENT);
+        bool windowMousePassthrough = Raylib.IsWindowState(ConfigFlags.MousePassthroughWindow);
+        bool windowTransparent = Raylib.IsWindowState(ConfigFlags.TransparentWindow);
             
         if (curWindowFlagState is { Topmost: true, Focused: true, Hidden: false, Minimized: false }
             && !windowTransparent && !windowMousePassthrough)
@@ -636,8 +635,8 @@ public sealed class GameWindow
         if (curWindowFlagState.Focused && !windowFlagState.Focused)
         {
             OnWindowFocusChanged?.Invoke(true);
-            Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
-            Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_HIDDEN);
+            Raylib.SetWindowState(ConfigFlags.TopmostWindow);
+            Raylib.ClearWindowState(ConfigFlags.HiddenWindow);
             if (focusLostFullscreen)
             {
                 focusLostFullscreen = false;
@@ -653,7 +652,7 @@ public sealed class GameWindow
                 DisplayState = WindowDisplayState.Normal;
                 focusLostFullscreen = true;
             }
-            Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
+            Raylib.ClearWindowState(ConfigFlags.TopmostWindow);
         }
         if (curWindowFlagState.Minimized && !windowFlagState.Minimized)
         {
@@ -674,8 +673,8 @@ public sealed class GameWindow
         else if (!curWindowFlagState.Maximized && windowFlagState.Maximized)
         {
             OnWindowMaximizeChanged?.Invoke(false);
-            if (Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_MINIMIZED)) displayState = WindowDisplayState.Minimized;
-            else if (Raylib.IsWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE))
+            if (Raylib.IsWindowState(ConfigFlags.MinimizedWindow)) displayState = WindowDisplayState.Minimized;
+            else if (Raylib.IsWindowState(ConfigFlags.FullscreenMode))
                 displayState = WindowDisplayState.Fullscreen;
             else displayState = WindowDisplayState.Normal;
         }
@@ -688,9 +687,8 @@ public sealed class GameWindow
         else if (!curWindowFlagState.Fullscreen && windowFlagState.Fullscreen)
         {
             OnWindowFullscreenChanged?.Invoke(false);
-            if (Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_MINIMIZED)) displayState = WindowDisplayState.Minimized;
-            else if (Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_MAXIMIZED))
-                displayState = WindowDisplayState.Maximized;
+            if (Raylib.IsWindowState(ConfigFlags.MinimizedWindow)) displayState = WindowDisplayState.Minimized;
+            else if (Raylib.IsWindowState(ConfigFlags.MaximizedWindow)) displayState = WindowDisplayState.Maximized;
             else displayState = WindowDisplayState.Normal;
         }
         
@@ -698,26 +696,26 @@ public sealed class GameWindow
         if (curWindowFlagState.Topmost && !windowFlagState.Topmost)
         {
             OnWindowTopmostChanged?.Invoke(true);
-            Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_UNFOCUSED);
-            Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_HIDDEN);
+            Raylib.ClearWindowState(ConfigFlags.UnfocusedWindow);
+            Raylib.ClearWindowState(ConfigFlags.HiddenWindow);
         }
         else if (!curWindowFlagState.Topmost && windowFlagState.Topmost)
         {
             OnWindowTopmostChanged?.Invoke(false);
-            Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_UNFOCUSED);
+            Raylib.SetWindowState(ConfigFlags.UnfocusedWindow);
         }
         
         if (curWindowFlagState.Hidden && !windowFlagState.Hidden)
         {
             OnWindowHiddenChanged?.Invoke(true);
-            Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
-            Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_UNFOCUSED);
+            Raylib.ClearWindowState(ConfigFlags.TopmostWindow);
+            Raylib.SetWindowState(ConfigFlags.UnfocusedWindow);
         }
         else if (!curWindowFlagState.Hidden && windowFlagState.Hidden)
         {
             OnWindowHiddenChanged?.Invoke(false);
-            Raylib.SetWindowState(ConfigFlags.FLAG_WINDOW_TOPMOST);
-            Raylib.ClearWindowState(ConfigFlags.FLAG_WINDOW_UNFOCUSED);
+            Raylib.SetWindowState(ConfigFlags.TopmostWindow);
+            Raylib.ClearWindowState(ConfigFlags.UnfocusedWindow);
         }
         
         windowFlagState = curWindowFlagState;
@@ -727,7 +725,7 @@ public sealed class GameWindow
     {
         var curCursorState = GetCurCursorState();
         
-        if (!MouseOnScreen || Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_MINIMIZED))//fullscreen to minimize fix for enabling/showing os cursor
+        if (!MouseOnScreen || Raylib.IsWindowState(ConfigFlags.MinimizedWindow))//fullscreen to minimize fix for enabling/showing os cursor
         {
             if (cursorState.OnScreen)
             {
@@ -850,7 +848,7 @@ public sealed class GameWindow
             Raylib.SetWindowMonitor(monitor.Index);
             Raylib.SetWindowSize(monitor.Dimensions.Width, monitor.Dimensions.Height);
             Raylib.SetWindowPosition((int)monitor.Position.X, (int)monitor.Position.Y);
-            Raylib.SetWindowState(ConfigFlags.FLAG_FULLSCREEN_MODE);
+            Raylib.SetWindowState(ConfigFlags.FullscreenMode);
         }
 
         var windowDimensions = windowSize;

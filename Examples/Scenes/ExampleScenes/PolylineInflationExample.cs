@@ -1,14 +1,9 @@
-﻿
-
-using Raylib_CsLo;
-using ShapeEngine.Core;
-using ShapeEngine.Lib;
-using ShapeEngine.Screen;
+﻿using ShapeEngine.Lib;
 using System.Numerics;
-using ShapeEngine.Color;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
+using Raylib_cs;
 using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes
@@ -75,9 +70,9 @@ namespace Examples.Scenes.ExampleScenes
             var offsetState = changeOffset.State;
             offsetDelta += offsetState.AxisRaw * dt * 250f;
 
-            lerpOffsetDelta = Lerp(lerpOffsetDelta, offsetDelta, dt * 2f);
+            lerpOffsetDelta = ShapeMath.LerpFloat(lerpOffsetDelta, offsetDelta, dt * 2f);
 
-            offsetDelta = Clamp(offsetDelta, 0f, MaxOffset);
+            offsetDelta = ShapeMath.Clamp(offsetDelta, 0f, MaxOffset);
         }
         protected override void DrawGameExample(ScreenInfo game)
         {
@@ -102,10 +97,10 @@ namespace Examples.Scenes.ExampleScenes
                 float disSq = (mousePos - p).LengthSquared();
                 if (pickedVertex == -1 && disSq < (vertexRadius * vertexRadius) * 2f)
                 {
-                    DrawCircleV(p, vertexRadius * 2f, GREEN);
+                    ShapeDrawing.DrawCircle(p, vertexRadius * 2f, Colors.Highlight);
                     pickedVertex = i;
                 }
-                else DrawCircleV(p, vertexRadius, GRAY);
+                else ShapeDrawing.DrawCircle(p, vertexRadius, Colors.Medium);
                 if (drawClosest)
                 {
                     disSq = (closest - p).LengthSquared();
@@ -185,7 +180,7 @@ namespace Examples.Scenes.ExampleScenes
                 }
             }
 
-            if (drawClosest) DrawCircleV(closest, vertexRadius, RED);
+            if (drawClosest) ShapeDrawing.DrawCircle(closest, vertexRadius, Colors.Warm);
 
             if (lerpOffsetDelta > 10f)
             {

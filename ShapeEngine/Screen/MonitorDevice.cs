@@ -1,7 +1,6 @@
 ﻿
 using System.Numerics;
-using Raylib_CsLo;
-using ShapeEngine.Core;
+using Raylib_cs;
 using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.Screen

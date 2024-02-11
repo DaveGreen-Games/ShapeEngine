@@ -1,5 +1,4 @@
-﻿using System.Formats.Tar;
-using Raylib_CsLo;
+﻿using Raylib_cs;
 using ShapeEngine.Core;
 using ShapeEngine.UI;
 using System.Numerics;
@@ -558,7 +557,7 @@ namespace Examples.Scenes
             infos.Add($"Window(Screen) Size: {Raylib.GetScreenWidth()}|{Raylib.GetScreenHeight()}");
             infos.Add($"Render Size: {Raylib.GetRenderWidth()}|{Raylib.GetRenderHeight()}");
             infos.Add($"Scale DPI: {Raylib.GetWindowScaleDPI().X}|{Raylib.GetWindowScaleDPI().Y}");
-            infos.Add($"HIGH Dpi: {Raylib.IsWindowState(ConfigFlags.FLAG_WINDOW_HIGHDPI)}");
+            infos.Add($"HIGH Dpi: {Raylib.IsWindowState(ConfigFlags.HighDpiWindow)}");
 
             var rects = rightHalf.SplitV(infos.Count);
 
