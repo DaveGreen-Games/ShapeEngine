@@ -1,6 +1,8 @@
 using System.Numerics;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Shapes;
+using ShapeEngine.Core.Structs;
+
 namespace ShapeEngine.Core.Interfaces;
 
 public interface IGameObject : ISpatial, IUpdateable, IDrawable, IKillable//, IBehaviorReceiver
@@ -43,9 +45,8 @@ public interface IGameObject : ISpatial, IUpdateable, IDrawable, IKillable//, IB
     /// <summary>
     /// Will be called if the object left the bounds of the area. The BoundingCircle is used for this check.
     /// </summary>
-    /// <param name="safePosition">The closest position within the bounds.</param>
-    /// <param name="collisionPoints">The points where the object left the bounds. Can be 1 or 2 max.</param>
-    public void LeftHandlerBounds(Vector2 safePosition, CollisionPoints collisionPoints);
+    /// <param name="info">The info about where the object left the bounds.</param>
+    public void LeftHandlerBounds(BoundsCollisionInfo info);
         
     ///// <summary>
     ///// Can be used to adjust the follow position of an attached camera.

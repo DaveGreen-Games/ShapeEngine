@@ -122,14 +122,14 @@ namespace Examples.Scenes.ExampleScenes
             return true;
         }
 
-        public void LeftHandlerBounds(Vector2 safePosition, CollisionPoints collisionPoints)
+        public void LeftHandlerBounds(BoundsCollisionInfo info)
         {
-            Pos = safePosition;
-            foreach (var c in collisionPoints)
-            {
-                if (c.Normal.X != 0f) Vel.X *= -1;
-                else Vel.Y *= -1;
-            }
+            if (!info.Valid) return;
+            Pos = info.SafePosition;
+            
+            if (info.Horizontal.Valid) Vel.X *= -1;
+
+            if (info.Vertical.Valid) Vel.Y *= -1;
         }
 
         

@@ -79,7 +79,7 @@ namespace ShapeEngine.Effects
             return false;
         }
 
-        public virtual void LeftHandlerBounds(Vector2 safePosition, CollisionPoints collisionPoints)
+        public virtual void LeftHandlerBounds(BoundsCollisionInfo info)
         {
         }
 

@@ -115,7 +115,7 @@ namespace Examples.Scenes.ExampleScenes
             return false;
         }
 
-        public void LeftHandlerBounds(Vector2 safePosition, CollisionPoints collisionPoints)
+        public void LeftHandlerBounds(BoundsCollisionInfo info)
         {
             
         }

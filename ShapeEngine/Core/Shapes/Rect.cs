@@ -1279,71 +1279,187 @@ namespace ShapeEngine.Core.Shapes
         #endregion
 
         #region Collision
-        public readonly (bool collided, Vector2 hitPoint, Vector2 n, Vector2 newPos) CollidePlayfield(Vector2 objPos, float objRadius)
+        // public readonly (bool collided, Vector2 hitPoint, Vector2 n, Vector2 newPos) CollidePlayfield(Vector2 objPos, float objRadius)
+        // {
+        //     var collided = false;
+        //     var hitPoint = objPos;
+        //     var n = new Vector2(0f, 0f);
+        //     var newPos = objPos;
+        //     if (objPos.X + objRadius > X + Width)
+        //     {
+        //         hitPoint = new(X + Width, objPos.Y);
+        //         newPos.X = hitPoint.X - objRadius;
+        //         n = new(-1, 0);
+        //         collided = true;
+        //     }
+        //     else if (objPos.X - objRadius < X)
+        //     {
+        //         hitPoint = new(X, objPos.Y);
+        //         newPos.X = hitPoint.X + objRadius;
+        //         n = new(1, 0);
+        //         collided = true;
+        //     }
+        //
+        //     if (objPos.Y + objRadius > Y + Height)
+        //     {
+        //         hitPoint = new(objPos.X, Y + Height);
+        //         newPos.Y = hitPoint.Y - objRadius;
+        //         n = new(0, -1);
+        //         collided = true;
+        //     }
+        //     else if (objPos.Y - objRadius < Y)
+        //     {
+        //         hitPoint = new(objPos.X, Y);
+        //         newPos.Y = hitPoint.Y + objRadius;
+        //         n = new(0, 1);
+        //         collided = true;
+        //     }
+        //
+        //     return (collided, hitPoint, n, newPos);
+        // }
+        //
+        public readonly (bool outOfBounds, Vector2 newPos) BoundsWrapAround(Circle boundingCircle)
         {
-            var collided = false;
-            var hitPoint = objPos;
-            var n = new Vector2(0f, 0f);
-            var newPos = objPos;
-            if (objPos.X + objRadius > X + Width)
-            {
-                hitPoint = new(X + Width, objPos.Y);
-                newPos.X = hitPoint.X - objRadius;
-                n = new(-1, 0);
-                collided = true;
-            }
-            else if (objPos.X - objRadius < X)
-            {
-                hitPoint = new(X, objPos.Y);
-                newPos.X = hitPoint.X + objRadius;
-                n = new(1, 0);
-                collided = true;
-            }
-
-            if (objPos.Y + objRadius > Y + Height)
-            {
-                hitPoint = new(objPos.X, Y + Height);
-                newPos.Y = hitPoint.Y - objRadius;
-                n = new(0, -1);
-                collided = true;
-            }
-            else if (objPos.Y - objRadius < Y)
-            {
-                hitPoint = new(objPos.X, Y);
-                newPos.Y = hitPoint.Y + objRadius;
-                n = new(0, 1);
-                collided = true;
-            }
-
-            return (collided, hitPoint, n, newPos);
-        }
-        public readonly (bool outOfBounds, Vector2 newPos) WrapAroundPlayfield(Vector2 objPos, float objRadius)
-        {
+            var pos = boundingCircle.Center;
+            var radius = boundingCircle.Radius;
             var outOfBounds = false;
-            var newPos = objPos;
-            if (objPos.X + objRadius > X + Width)
+            var newPos = pos;
+            if (pos.X + radius > X + Width)
             {
-                newPos = new(X, objPos.Y);
+                newPos = new(X, pos.Y);
                 outOfBounds = true;
             }
-            else if (objPos.X - objRadius < X)
+            else if (pos.X - radius < X)
             {
-                newPos = new(X + Width, objPos.Y);
+                newPos = new(X + Width, pos.Y);
                 outOfBounds = true;
             }
 
-            if (objPos.Y + objRadius > Y + Height)
+            if (pos.Y + radius > Y + Height)
             {
-                newPos = objPos with { Y = Y };
+                newPos = pos with { Y = Y };
                 outOfBounds = true;
             }
-            else if (objPos.Y - objRadius < Y)
+            else if (pos.Y - radius < Y)
             {
-                newPos = objPos with { Y = Y + Height };
+                newPos = pos with { Y = Y + Height };
                 outOfBounds = true;
             }
 
             return (outOfBounds, newPos);
+        }
+        public readonly (bool outOfBounds, Vector2 newPos) BoundsWrapAround(Rect boundingBox)
+        {
+            var pos = boundingBox.Center;
+            var halfSize = boundingBox.Size * 0.5f;
+            var outOfBounds = false;
+            var newPos = pos;
+            if (pos.X + halfSize.X > X + Width)
+            {
+                newPos = new(X, pos.Y);
+                outOfBounds = true;
+            }
+            else if (pos.X - halfSize.X < X)
+            {
+                newPos = new(X + Width, pos.Y);
+                outOfBounds = true;
+            }
+
+            if (pos.Y + halfSize.Y > Y + Height)
+            {
+                newPos = pos with { Y = Y };
+                outOfBounds = true;
+            }
+            else if (pos.Y - halfSize.Y < Y)
+            {
+                newPos = pos with { Y = Y + Height };
+                outOfBounds = true;
+            }
+
+            return (outOfBounds, newPos);
+        }
+
+        public readonly BoundsCollisionInfo BoundsCollision(Circle boundingCircle)
+        {
+            var pos = boundingCircle.Center;
+            var radius = boundingCircle.Radius;
+            CollisionPoint horizontal;
+            CollisionPoint vertical;
+            if (pos.X + radius > Right)
+            {
+                pos.X = Right - radius;
+                Vector2 p = new(Right, ShapeMath.Clamp(pos.Y, Bottom, Top));
+                Vector2 n = new(-1, 0);
+                horizontal = new(p, n);
+            }
+            else if (pos.X - radius < Left)
+            {
+                pos.X = Left + radius;
+                Vector2 p = new(Left, ShapeMath.Clamp(pos.Y, Bottom, Top));
+                Vector2 n = new(1, 0);
+                horizontal = new(p, n);
+            }
+            else horizontal = new();
+
+            if (pos.Y + radius > Bottom)
+            {
+                pos.Y = Bottom - radius;
+                Vector2 p = new(ShapeMath.Clamp(pos.X, Left, Right), Bottom);
+                Vector2 n = new(0, -1);
+                vertical = new(p, n);
+            }
+            else if (pos.Y - radius < Top)
+            {
+                pos.Y = Top + radius;
+                Vector2 p = new(ShapeMath.Clamp(pos.X, Left, Right), Top);
+                Vector2 n = new(0, 1);
+                vertical = new(p, n);
+            }
+            else vertical = new();
+
+            return new(pos, horizontal, vertical);
+        }
+        public readonly BoundsCollisionInfo BoundsCollision(Rect boundingBox)
+        {
+            var pos = boundingBox.Center;
+            var halfSize = boundingBox.Size * 0.5f;
+
+            var newPos = pos;
+            CollisionPoint horizontal;
+            CollisionPoint vertical;
+            if (pos.X + halfSize.X > Right)
+            {
+                newPos.X = Right - halfSize.X;
+                Vector2 p = new(Right, ShapeMath.Clamp(pos.Y, Bottom, Top));
+                Vector2 n = new(-1, 0);
+                horizontal = new(p, n);
+            }
+            else if (pos.X - halfSize.X < Left)
+            {
+                newPos.X = Left + halfSize.X;
+                Vector2 p = new(Left, ShapeMath.Clamp(pos.Y, Bottom, Top));
+                Vector2 n = new(1, 0);
+                horizontal = new(p, n);
+            }
+            else horizontal = new();
+
+            if (pos.Y + halfSize.Y > Bottom)
+            {
+                newPos.Y = Bottom - halfSize.Y;
+                Vector2 p = new(ShapeMath.Clamp(pos.X, Left, Right), Bottom);
+                Vector2 n = new(0, -1);
+                vertical = new(p, n);
+            }
+            else if (pos.Y - halfSize.Y < Top)
+            {
+                newPos.Y = Top + halfSize.Y;
+                Vector2 p = new(ShapeMath.Clamp(pos.X, Left, Right), Top);
+                Vector2 n = new(0, 1);
+                vertical = new(p, n);
+            }
+            else vertical = new();
+
+            return new(newPos, horizontal, vertical);
         }
         #endregion
         

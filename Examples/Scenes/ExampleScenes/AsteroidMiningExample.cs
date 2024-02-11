@@ -40,7 +40,7 @@ namespace Examples.Scenes.ExampleScenes
         public bool DrawToGame(Rect gameArea) { return true; }
         public bool DrawToGameUI(Rect uiArea) { return false; }
         public bool CheckHandlerBounds() { return false; }
-        public void LeftHandlerBounds(Vector2 safePosition, CollisionPoints collisionPoints) { }
+        public void LeftHandlerBounds(BoundsCollisionInfo info) { }
 
         
     }
