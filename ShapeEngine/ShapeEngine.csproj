@@ -10,7 +10,7 @@
 	<Title>Shape Engine</Title>
 	<Authors>Dave Green</Authors>
 	<RepositoryUrl>https://github.com/DaveGreen-Games/ShapeEngine</RepositoryUrl>
-	<Version>0.9.0</Version>
+	<Version>0.9.9</Version>
 	<Description>My custom made engine based on the great Raylib Framework. Main focus is being performant and only using draw functions instead of textures.</Description>
 	<PackageProjectUrl>https://github.com/DaveGreen-Games/ShapeEngine</PackageProjectUrl>
 	<PackageIcon>shapeengine-icon.png</PackageIcon>
