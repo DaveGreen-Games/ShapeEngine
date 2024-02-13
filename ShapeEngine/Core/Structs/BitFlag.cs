@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace ShapeEngine.Lib;
+namespace ShapeEngine.Core.Structs;
 
 public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, IBitwiseOperators<BitFlag, uint, BitFlag>
 {
