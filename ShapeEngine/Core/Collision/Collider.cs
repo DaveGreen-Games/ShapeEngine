@@ -383,8 +383,10 @@ namespace ShapeEngine.Core.Collision
         public Polygon GetPolygonShape() 
         { 
             if(dirty) UpdateShape();
-            var p = new Polygon(shape);
-            p.FlippedNormals = FlippedNormals;
+            var p = new Polygon(shape)
+            {
+                FlippedNormals = FlippedNormals
+            };
             return p;
         }
         public override void DrawShape(float lineThickness, ColorRgba colorRgba)

@@ -51,7 +51,7 @@ namespace ShapeEngine.Effects
         public abstract void Overlap(CollisionInformation info);
         public abstract void OverlapEnded(ICollidable other);
         public abstract uint GetCollisionLayer();
-        public abstract uint[] GetCollisionMask();
+        public abstract BitFlag GetCollisionMask();
 
         public abstract IShape GetShape();
         public abstract IShape GetSimplifiedShape();

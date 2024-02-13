@@ -1,5 +1,6 @@
 ﻿using ShapeEngine.Lib;
 using System.Numerics;
+using System.Reflection.Metadata.Ecma335;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Interfaces;
@@ -72,6 +73,7 @@ namespace ShapeEngine.Core.Collision
         private OverlapRegister activeRegister = new();
         private OverlapRegister oldRegister = new();
 
+        private HashSet<ICollidable> collisionPartners = new();
 
         public int Count { get { return collidables.Count; } }
 
@@ -124,42 +126,52 @@ namespace ShapeEngine.Core.Collision
 
         public void Update()
         {
-            FillSpatialHash();
+            spatialHash.Fill(collidables);
+            // FillSpatialHash();//memory problem (38%)
 
-            ProcessCollisions();
+            ProcessCollisions(); //memory problem (55%)
             
             Resolve();
         }
         
 
-        private void FillSpatialHash()
-        {
-            spatialHash.Clear();
-
-            //fill spatial hash and filter out all disabled colliders
-            for (int i = collidables.Count - 1; i >= 0; i--)
-            {
-                var collidable = collidables[i];
-                var collider = collidable.GetCollider();
-                if (collider.Enabled)
-                {
-                    spatialHash.Add(collidable);
-                }
-                //IterationsPerFrame++;
-
-            }
-        }
+        // private void FillSpatialHash()
+        // {
+        //     spatialHash.Fill(collidables);
+        //     // spatialHash.Clear();
+        //     //
+        //     // //fill spatial hash and filter out all disabled colliders
+        //     // for (int i = collidables.Count - 1; i >= 0; i--)
+        //     // {
+        //     //     var collidable = collidables[i];
+        //     //     var collider = collidable.GetCollider();
+        //     //     if (collider.Enabled)
+        //     //     {
+        //     //         spatialHash.Add(collidable); //add is the problem 
+        //     //     }
+        //     //     //IterationsPerFrame++;
+        //     // }
+        //     //
+        //     //
+        // }
         private void ProcessCollisions()
         {
             foreach (var collidable in collidables)
             {
-                var others = spatialHash.GetObjects(collidable);
-                bool computeIntersections = collidable.GetCollider().ComputeIntersections;
-                List<Collision> cols = new();
-                foreach (var other in others)
-                {
-                    //IterationsPerFrame++;
+                collisionPartners.Clear();
+                
+                spatialHash.GetRegisteredObjects(collidable, ref collisionPartners);
+                // if(others == null || others.Count <= 0) continue; //memory problem 51% of 55%
+                if(collisionPartners.Count <= 0) continue;
 
+                var mask = collidable.GetCollisionMask();
+                bool computeIntersections = collidable.GetCollider().ComputeIntersections;
+                List<Collision>? cols = null;
+                foreach (var other in collisionPartners)
+                {
+                    if(other == collidable) continue;
+                    if (!mask.Has(other.GetCollisionLayer())) continue;
+                    
                     bool overlap = ShapeGeometry.Overlap(collidable, other);
                     if (overlap)
                     {
@@ -188,17 +200,19 @@ namespace ShapeEngine.Core.Collision
                             }
 
                             Collision c = new(collidable, other, firstContact, collisionPoints);
+                            cols ??= new();
                             cols.Add(c);
                         }
                         else
                         {
                             Collision c = new(collidable, other, firstContact);
+                            cols ??= new();
                             cols.Add(c);
                         }
                     }
                 }
 
-                if (cols.Count > 0)
+                if (cols != null && cols.Count > 0)
                 {
                     if (collisionStack.ContainsKey(collidable))
                     {
@@ -320,15 +334,18 @@ namespace ShapeEngine.Core.Collision
         
         public QueryInfos QuerySpace(ICollidable collidable, Vector2 origin, bool sorted = true)
         {
-            return QuerySpace(collidable.GetCollider(), origin, sorted, collidable.GetCollisionMask());
-        }
-        public QueryInfos QuerySpace(ICollider collider, Vector2 origin, bool sorted = true, params uint[] collisionMask)
-        {
+            // return QuerySpace(collidable.GetCollider(), origin,collidable.GetCollisionMask(), sorted);
             QueryInfos infos = new();
-            var objects = spatialHash.GetObjects(collider, collisionMask);
-            foreach (var obj in objects)
+            var colPartners = new HashSet<ICollidable>();
+            spatialHash.GetObjects(collidable, ref colPartners);
+            if (colPartners.Count <= 0) return infos;
+
+            var mask = collidable.GetCollisionMask();
+            var collider = collidable.GetCollider();
+            foreach (var obj in colPartners)
             {
-                if (obj.GetCollider() == collider) continue;
+                // if (obj == collidable) continue;
+                if(!mask.Has(obj.GetCollisionLayer())) continue;
                 var collisionPoints = ShapeGeometry.Intersect(collider, obj.GetCollider());
                 
                 if (collisionPoints.Valid) infos.Add(new(obj, origin, collisionPoints));
@@ -336,24 +353,50 @@ namespace ShapeEngine.Core.Collision
             if(sorted) infos.SortClosest(origin);
             return infos;
         }
-        public QueryInfos QuerySpace<T>(T shape, Vector2 origin, bool sorted = true, params uint[] collisionMask) where T : IShape
+        public QueryInfos QuerySpace(ICollider collider, Vector2 origin,BitFlag collisionMask, bool sorted = true)
         {
             QueryInfos infos = new();
-            var objects = spatialHash.GetObjects(shape, collisionMask);
-            foreach (var obj in objects)
+            var colPartners = new HashSet<ICollidable>();
+            spatialHash.GetObjects(collider, collisionMask, ref colPartners);
+            if (colPartners.Count <= 0) return infos;
+            // var objects = spatialHash.GetObjectsFiltered(collider, collisionMask);
+            foreach (var obj in colPartners)
             {
+                // if (obj.GetCollider() == collider) continue;
+                if(!collisionMask.Has(obj.GetCollisionLayer())) continue;
+                var collisionPoints = ShapeGeometry.Intersect(collider, obj.GetCollider());
+                
+                if (collisionPoints.Valid) infos.Add(new(obj, origin, collisionPoints));
+            }
+            if(sorted) infos.SortClosest(origin);
+            return infos;
+        }
+        public QueryInfos QuerySpace<T>(T shape, Vector2 origin, BitFlag collisionMask, bool sorted = true) where T : IShape
+        {
+            QueryInfos infos = new();
+            // var objects = spatialHash.GetObjectsFiltered(shape, collisionMask);
+            var colPartners = new HashSet<ICollidable>();
+            spatialHash.GetObjects(shape, collisionMask, ref colPartners);
+            if (colPartners.Count <= 0) return infos;
+            foreach (var obj in colPartners)
+            {
+                if(!collisionMask.Has(obj.GetCollisionLayer())) continue;
                 var collisionPoints = ShapeGeometry.Intersect(shape, obj.GetCollider().GetShape());
                 if (collisionPoints.Valid) infos.Add(new(obj, origin, collisionPoints));
             }
             if(sorted) infos.SortClosest(origin);
             return infos;
         }
-        public QueryInfos QuerySpace<T>(T shape, Vector2 origin, ICollidable[] exceptions, bool sorted = true, params uint[] collisionMask) where T : IShape
+        public QueryInfos QuerySpace<T>(T shape, Vector2 origin, ICollidable[] exceptions,BitFlag collisionMask, bool sorted = true) where T : IShape
         {
             QueryInfos infos = new();
-            var objects = spatialHash.GetObjects(shape, collisionMask);
-            foreach (var obj in objects)
+            // var objects = spatialHash.GetObjectsFiltered(shape, collisionMask);
+            var colPartners = new HashSet<ICollidable>();
+            spatialHash.GetObjects(shape, collisionMask, ref colPartners);
+            if (colPartners.Count <= 0) return infos;
+            foreach (var obj in colPartners)
             {
+                if(!collisionMask.Has(obj.GetCollisionLayer())) continue;
                 if(exceptions.Contains(obj)) continue;
 
                 var collisionPoints = ShapeGeometry.Intersect(shape, obj.GetCollider().GetShape());
@@ -364,69 +407,104 @@ namespace ShapeEngine.Core.Collision
         }
         
 
-        public List<ICollidable> CastSpace(ICollidable collidable, bool sorted = false)
+        public void CastSpace(ICollidable collidable, ref List<ICollidable> result, bool sorted = false)
         {
-            return CastSpace(collidable.GetCollider(), sorted, collidable.GetCollisionMask());
-        }
-        public List<ICollidable> CastSpace(ICollider collider, bool sorted = false, params uint[] collisionMask)
-        {
-            List<ICollidable> bodies = new();
-            var objects = spatialHash.GetObjects(collider, collisionMask);
-            foreach (ICollidable obj in objects)
+            // HashSet<ICollidable> bodies = new();
+            collisionPartners.Clear();
+            spatialHash.GetObjects(collidable, ref collisionPartners);
+            if (collisionPartners.Count <= 0) return;
+            var mask = collidable.GetCollisionMask();
+            foreach (var obj in collisionPartners)
             {
-                if(obj.GetCollider() == collider) continue;
+                // if(obj == collidable) continue;
+                if (!mask.Has(obj.GetCollisionLayer())) continue;
+
+                if (ShapeGeometry.Overlap(collidable.GetCollider(), obj.GetCollider()))
+                {
+                    result.Add(obj);
+                }
+            }
+            if (sorted && result.Count > 1)
+            {
+                var origin = collidable.GetCollider().Pos;
+                result.Sort
+                (
+                    (a, b) =>
+                    {
+                        float la = (origin - a.GetCollider().Pos).LengthSquared();
+                        float lb = (origin - b.GetCollider().Pos).LengthSquared();
+
+                        if (la > lb) return 1;
+                        if (ShapeMath.EqualsF(la, lb)) return 0;
+                        return -1;
+                    }
+                );
+            }
+        }
+        public void CastSpace(ICollider collider, BitFlag collisionMask,  ref List<ICollidable> result, bool sorted = false)
+        {
+            collisionPartners.Clear();
+            spatialHash.GetObjects(collider, collisionMask, ref collisionPartners);
+            if (collisionPartners.Count <= 0) return;
+            
+            foreach (var obj in collisionPartners)
+            {
+                // if(obj.GetCollider() == collider) continue;
+                if(!collisionMask.Has(obj.GetCollisionLayer())) continue;
 
                 if (ShapeGeometry.Overlap(collider, obj.GetCollider()))
                 {
-                    bodies.Add(obj);
+                    result.Add(obj);
                 }
             }
-            if (sorted && bodies.Count > 1)
+            if (sorted && result.Count > 1)
             {
-                bodies.Sort
+                var origin = collider.Pos;
+                result.Sort
                 (
                     (a, b) =>
                     {
-                        Vector2 pos = collider.Pos;
-                        float la = (pos - a.GetCollider().Pos).LengthSquared();
-                        float lb = (pos - b.GetCollider().Pos).LengthSquared();
+                        float la = (origin - a.GetCollider().Pos).LengthSquared();
+                        float lb = (origin - b.GetCollider().Pos).LengthSquared();
 
                         if (la > lb) return 1;
-                        else if (la == lb) return 0;
-                        else return -1;
+                        if (ShapeMath.EqualsF(la, lb)) return 0;
+                        return -1;
                     }
                 );
             }
-            return bodies;
         }
-        public List<ICollidable> CastSpace<T>(T castShape, bool sorted = false, params uint[] collisionMask) where T : IShape
+        public void CastSpace<T>(T castShape,BitFlag collisionMask, ref List<ICollidable> result, bool sorted = false) where T : IShape
         {
-            List<ICollidable> bodies = new();
-            var objects = spatialHash.GetObjects(castShape, collisionMask);
-            foreach (var obj in objects)
+            collisionPartners.Clear();
+            spatialHash.GetObjectsFiltered(castShape, collisionMask, ref collisionPartners);
+            if (collisionPartners.Count <= 0) return;
+            
+            foreach (var obj in collisionPartners)
             {
+                if(!collisionMask.Has(obj.GetCollisionLayer())) continue;
+                
                 if (ShapeGeometry.Overlap(castShape, obj.GetCollider().GetShape()))
                 {
-                    bodies.Add(obj);
+                    result.Add(obj);
                 }
             }
-            if (sorted && bodies.Count > 1)
+            if (sorted && result.Count > 1)
             {
-                bodies.Sort
+                var origin = castShape.GetCentroid();
+                result.Sort
                 (
                     (a, b) =>
                     {
-                        Vector2 pos = castShape.GetCentroid();
-                        float la = (pos - a.GetCollider().Pos).LengthSquared();
-                        float lb = (pos - b.GetCollider().Pos).LengthSquared();
+                        float la = (origin - a.GetCollider().Pos).LengthSquared();
+                        float lb = (origin - b.GetCollider().Pos).LengthSquared();
 
                         if (la > lb) return 1;
-                        else if (la == lb) return 0;
-                        else return -1;
+                        if (ShapeMath.EqualsF(la, lb)) return 0;
+                        return -1;
                     }
                 );
             }
-            return bodies;
         }
         
         public void DebugDraw(ColorRgba border, ColorRgba fill)

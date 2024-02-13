@@ -14,14 +14,14 @@ namespace Examples.Scenes.ExampleScenes
 {
     internal abstract class Collidable : ICollidable
     {
-        public static readonly uint WALL_ID = 1;
-        public static readonly uint ROCK_ID = 2;
-        public static readonly uint BOX_ID = 3;
-        public static readonly uint BALL_ID = 4;
-        public static readonly uint AURA_ID = 5;
+        protected static readonly uint WallFlag = BitFlag.GetFlagUint(1); //2
+        protected static readonly uint RockFlag = BitFlag.GetFlagUint(2); //4
+        protected static readonly uint BoxFlag = BitFlag.GetFlagUint(3); //8
+        protected static readonly uint BallFlag = BitFlag.GetFlagUint(4); //16
+        protected static readonly uint AuraFlag = BitFlag.GetFlagUint(5); //32
 
         protected ICollider collider = null!;
-        protected uint[] collisionMask = new uint[] { };
+        protected BitFlag collisionMask = BitFlag.Empty;
         protected bool buffed = false;
         protected ColorRgba BuffColorRgba = new(System.Drawing.Color.Gold);
         protected float startSpeed = 0f;
@@ -49,10 +49,7 @@ namespace Examples.Scenes.ExampleScenes
 
         public abstract uint GetCollisionLayer();
 
-        public uint[] GetCollisionMask()
-        {
-            return collisionMask;
-        }
+        public BitFlag GetCollisionMask() => collisionMask;
 
         public virtual void Overlap(CollisionInformation info) { }
 
@@ -68,6 +65,7 @@ namespace Examples.Scenes.ExampleScenes
     }
     internal abstract class Gameobject : IGameObject
     {
+        protected List<ICollidable> Collidables = new();
         public int Layer { get; set; } = 0;
 
         //protected float boundingRadius = 1f;
@@ -98,7 +96,7 @@ namespace Examples.Scenes.ExampleScenes
         public abstract Rect GetBoundingBox();
 
         public abstract bool HasCollidables();
-        public abstract List<ICollidable> GetCollidables();
+        public List<ICollidable> GetCollidables() => Collidables;
 
         
         public virtual void AddedToHandler(GameObjectHandler gameObjectHandler) { }
@@ -145,12 +143,12 @@ namespace Examples.Scenes.ExampleScenes
             this.collider.ComputeIntersections = false;
             this.collider.Enabled = true;
 
-            this.collisionMask = new uint[] { };
+            
+            this.collisionMask = BitFlag.Empty;
+            
         }
-        public override uint GetCollisionLayer()
-        {
-            return WALL_ID;
-        }
+
+        public override uint GetCollisionLayer() => WallFlag;
     }
     internal class Wall : Gameobject
     {
@@ -158,6 +156,7 @@ namespace Examples.Scenes.ExampleScenes
         public Wall(Vector2 start, Vector2 end)
         {
             wallCollidable = new(start, end);
+            Collidables.Add(wallCollidable);
         }
         public override void DrawGame(ScreenInfo game)
         {
@@ -170,10 +169,10 @@ namespace Examples.Scenes.ExampleScenes
         }
 
 
-        public override List<ICollidable> GetCollidables()
-        {
-            return new() { wallCollidable };
-        }
+        // public override List<ICollidable> GetCollidables() => Collidables;
+        // {
+        //     return new() { wallCollidable };
+        // }
 
         public override Vector2 GetPosition()
         {
@@ -196,12 +195,10 @@ namespace Examples.Scenes.ExampleScenes
             this.collider.ComputeIntersections = false;
             this.collider.Enabled = true;
 
-            this.collisionMask = new uint[] { };
+            this.collisionMask = BitFlag.Empty;
         }
-        public override uint GetCollisionLayer()
-        {
-            return WALL_ID;
-        }
+
+        public override uint GetCollisionLayer() => WallFlag;
     }
     internal class PolyWall : Gameobject
     {
@@ -209,6 +206,7 @@ namespace Examples.Scenes.ExampleScenes
         public PolyWall(Vector2 start, Vector2 end)
         {
             wallCollidable = new(start, end);
+            Collidables.Add(wallCollidable);
         }
         public override void DrawGame(ScreenInfo game)
         {
@@ -221,10 +219,10 @@ namespace Examples.Scenes.ExampleScenes
         }
 
 
-        public override List<ICollidable> GetCollidables()
-        {
-            return new() { wallCollidable };
-        }
+        // public override List<ICollidable> GetCollidables() => Collidables;
+        // {
+        //     return new() { wallCollidable };
+        // }
 
         public override Vector2 GetPosition()
         {
@@ -298,14 +296,15 @@ namespace Examples.Scenes.ExampleScenes
             this.collider.ComputeCollision = true;
             this.collider.ComputeIntersections = false;
             this.collider.Enabled = true;
-            this.collisionMask = new uint[] { ROCK_ID, BALL_ID, BOX_ID };
+
+            this.collisionMask = new(RockFlag); // BitFlag.Empty;
+            this.collisionMask = this.collisionMask.Add(BallFlag);
+            this.collisionMask = this.collisionMask.Add(BoxFlag);
+            
             buffFactor= f;
         }
 
-        public override uint GetCollisionLayer()
-        {
-            return AURA_ID;
-        }
+        public override uint GetCollisionLayer() => AuraFlag;
         public override void Overlap(CollisionInformation info)
         {
             foreach (var c in info.Collisions)
@@ -328,6 +327,7 @@ namespace Examples.Scenes.ExampleScenes
         public Aura(Vector2 pos, float radius, float f)
         {
             this.auraCollidable = new(pos, radius, f);
+            this.Collidables.Add(auraCollidable);
             
         }
 
@@ -342,10 +342,10 @@ namespace Examples.Scenes.ExampleScenes
         }
 
 
-        public override List<ICollidable> GetCollidables()
-        {
-            return new() { auraCollidable };
-        }
+        // public override List<ICollidable> GetCollidables()
+        // {
+        //     return new() { auraCollidable };
+        // }
 
         public override Vector2 GetPosition()
         {
@@ -368,13 +368,11 @@ namespace Examples.Scenes.ExampleScenes
             this.collider.ComputeIntersections = true;
             this.collider.Enabled = true;
             this.collider.SimplifyCollision = false;
-            this.collisionMask = new uint[] { WALL_ID };
+            this.collisionMask = new BitFlag(WallFlag); // ShapeFlag.SetUintFlag(0, WallFlag);
             this.startSpeed = vel.Length();
         }
-        public override uint GetCollisionLayer()
-        {
-            return ROCK_ID;
-        }
+
+        public override uint GetCollisionLayer() => RockFlag;
         public override void Overlap(CollisionInformation info)
         {
             if (info.CollisionSurface.Valid)
@@ -406,7 +404,7 @@ namespace Examples.Scenes.ExampleScenes
         public Rock(Vector2 pos, Vector2 vel, float size)
         {
             this.rockCollidable = new(pos, vel, size);
-            
+            this.Collidables.Add(rockCollidable);
         }
 
         public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
@@ -439,10 +437,10 @@ namespace Examples.Scenes.ExampleScenes
             return true;
         }
 
-        public override List<ICollidable> GetCollidables()
-        {
-            return new() { rockCollidable };
-        }
+        // public override List<ICollidable> GetCollidables()
+        // {
+        //     return new() { rockCollidable };
+        // }
 
     }
 
@@ -457,13 +455,12 @@ namespace Examples.Scenes.ExampleScenes
             this.collider.ComputeIntersections = true;
             this.collider.Enabled = true;
             this.collider.SimplifyCollision = false;
-            this.collisionMask = new uint[] { WALL_ID, BALL_ID };
+            this.collisionMask = new(WallFlag);
+            this.collisionMask = this.collisionMask.Add(BallFlag);
             this.startSpeed = vel.Length();
         }
-        public override uint GetCollisionLayer()
-        {
-            return BOX_ID;
-        }
+
+        public override uint GetCollisionLayer() => BoxFlag;
         public override void Overlap(CollisionInformation info)
         {
             if (info.CollisionSurface.Valid)
@@ -498,6 +495,7 @@ namespace Examples.Scenes.ExampleScenes
         public Box(Vector2 pos, Vector2 vel, float size)
         {
             this.boxCollidable = new(pos, vel, size);
+            this.Collidables.Add(boxCollidable);
         }
 
         public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
@@ -525,10 +523,10 @@ namespace Examples.Scenes.ExampleScenes
             return true;
         }
 
-        public override List<ICollidable> GetCollidables()
-        {
-            return new() { boxCollidable };
-        }
+        // public override List<ICollidable> GetCollidables()
+        // {
+        //     return new() { boxCollidable };
+        // }
 
     }
 
@@ -543,13 +541,12 @@ namespace Examples.Scenes.ExampleScenes
             this.collider.ComputeIntersections = true;
             this.collider.Enabled = true;
             this.collider.SimplifyCollision = false;
-            this.collisionMask = new uint[] { WALL_ID, BOX_ID };
+            this.collisionMask = new(WallFlag);
+            this.collisionMask = this.collisionMask.Add(BoxFlag);
             this.startSpeed = vel.Length();
         }
-        public override uint GetCollisionLayer()
-        {
-            return BALL_ID;
-        }
+
+        public override uint GetCollisionLayer() => BallFlag;
         public override void Overlap(CollisionInformation info)
         {
             if (info.CollisionSurface.Valid)
@@ -585,6 +582,7 @@ namespace Examples.Scenes.ExampleScenes
         public Ball(Vector2 pos, Vector2 vel, float size)
         {
             this.ballCollidable = new(pos, vel, size);
+            this.Collidables.Add(ballCollidable);
         }
         
 
@@ -613,10 +611,10 @@ namespace Examples.Scenes.ExampleScenes
             return true;
         }
 
-        public override List<ICollidable> GetCollidables()
-        {
-            return new() { ballCollidable };
-        }
+        // public override List<ICollidable> GetCollidables()
+        // {
+        //     return new() { ballCollidable };
+        // }
 
     }
 

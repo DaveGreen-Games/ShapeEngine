@@ -192,7 +192,7 @@ namespace Examples.Scenes.ExampleScenes
 
         private PolyCollider collider;
         private List<ICollidable> collidables = new();
-        private uint[] colMask = new uint[] { };
+        private BitFlag colMask = BitFlag.Empty;
         private bool overlapped = false;
         private float curThreshold = DamageThreshold;
 
@@ -290,7 +290,7 @@ namespace Examples.Scenes.ExampleScenes
         public override Vector2 GetPosition() { return collider.Pos; }
         public ICollider GetCollider() { return collider; }
         public uint GetCollisionLayer() { return AsteroidMiningExample.AsteriodLayer; }
-        public uint[] GetCollisionMask() { return colMask; }
+        public BitFlag GetCollisionMask() { return colMask; }
     }
 
     public class LaserDevice : SpaceObject
@@ -415,14 +415,15 @@ namespace Examples.Scenes.ExampleScenes
             Vector2 newEndPoint = endPoint;
             Vector2 newDir = dir;
 
-            var queryInfos = col.QuerySpace(new Segment(start, endPoint), start, true, AsteroidMiningExample.AsteriodLayer);
+            BitFlag bf = new(AsteroidMiningExample.AsteriodLayer);
+            var queryInfos = col.QuerySpace(new Segment(start, endPoint), start, bf, true);
             if (queryInfos.Count > 0)
             {
                 var closest = queryInfos[0];
                 if (closest.Points.Valid)
                 {
                     var other = closest.Collidable;
-                    if (other != null && other is Asteroid a)
+                    if (other is Asteroid a)
                     {
                         //perfect naming:)
                         newDir = dir.Reflect(closest.Points.Closest.Normal);
@@ -791,8 +792,9 @@ namespace Examples.Scenes.ExampleScenes
             {
                 SetCurPos(mousePosGame);
                 curShape.Center(curPos);
-                
-                var collidables = col.CastSpace(curShape, false, AsteriodLayer);
+                BitFlag mask = new(AsteriodLayer);
+                var collidables = new List<ICollidable>();
+                col.CastSpace(curShape, mask, ref collidables, false);
                 foreach (var collidable in collidables)
                 {
                     if (collidable is Asteroid asteroid)
