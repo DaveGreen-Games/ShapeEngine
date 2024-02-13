@@ -68,9 +68,12 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     #endregion
 }
 
+
 public static class ShapeFlag
 {
     #region Int
+
+    public static int GetFlagInt(int power) => (int)MathF.Pow(2, power);
     public static int ClearIntFlag()
     {
         return 0;
@@ -114,6 +117,7 @@ public static class ShapeFlag
     #endregion
     
     #region Uint
+    public static uint GetFlagUint(uint power) => (uint)MathF.Pow(2, power);
     public static uint ClearUintFlag()
     {
         return 0;
