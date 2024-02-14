@@ -1,10 +1,12 @@
 ﻿
 using System.Numerics;
+using System.Security.Cryptography.X509Certificates;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Lib;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Interfaces;
+using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.Core.Collision
 {
@@ -58,6 +60,250 @@ namespace ShapeEngine.Core.Collision
         
     }
 
+    public enum ShapeType
+    {
+        None = 0,
+        Circle = 1,
+        Segment = 2,
+        Triangle = 3,
+        Rect = 4,
+        Poly = 5,
+        PolyLine = 6
+    }
+    
+    //TODO IShape removal
+    //Remove ICollider interface -> just use abstract collider class
+    //implement a collider for each shape (segment, triangle, circle, rect, poly, polyline)
+    //collider uses shape type and GetSegmentShape(), GetCircleShape(), GetTriangleShape(), etc functions.
+    
+    //ICollidable get physics stuff
+    //Collider has an offset -> every time state is updated relativePos & vel is updated based on ICollidable parent state (using offset)
+    //Collider is basically just a wrapper class for shape structs
+
+    public abstract class Collidable2
+    {
+        public Collidable2(Vector2 position, BitFlag collisionMask, uint collisionLayer)
+        {
+            Position = position;
+            CollisionMask = collisionMask;
+            CollisionLayer = collisionLayer;
+        }
+
+        public bool Enabled { get; set; } = true;
+        public Vector2 Position { get; set; }
+        public Vector2 Velocity { get; set; } = new(0f);
+        public Vector2 ConstAcceleration { get; set; } = new(0f);
+        public Vector2 AccumulatedForce { get; private set; } = new(0f);
+        public float Mass { get; set; } = 1.0f;
+        public float Drag { get; set; } = 0f;
+        
+
+        public BitFlag CollisionMask { get; private set; }
+        public uint CollisionLayer { get; private set; }
+        
+        public List<Collider2> Colliders { get; private set; } = new();
+        public bool HasColliders => Colliders.Count > 1;
+
+        public Collider2? GetSingleCollider() => Colliders.Count != 1 ? null : Colliders[0];
+
+
+        /// <summary>
+        /// If false this shape does not take part in collision detection.
+        /// </summary>
+        public bool ComputeCollision { get; set; } = true;
+        /// <summary>
+        /// If false only overlaps will be reported but no further details on the intersection.
+        /// </summary>
+        public bool ComputeIntersections { get; set; } = false;
+
+        
+        public void ClearAccumulatedForce() => AccumulatedForce = new(0f);
+
+        public void AddForce(Vector2 force) => AccumulatedForce = ShapePhysics.AddForce(force, AccumulatedForce, Mass);
+
+        public void AddImpulse(Vector2 force) => Velocity = ShapePhysics.AddImpulse(force, Velocity, Mass);
+
+        public void UpdateState(float dt) 
+        {
+            foreach (var collider in Colliders)
+            {
+                collider.UpdateState(dt, Position, Velocity);
+            }
+            OnUpdateState(dt);
+        }
+
+        public abstract void Overlap(CollisionInformation info);
+        public abstract void OverlapEnded(ICollidable other);
+        
+        protected virtual void OnUpdateState(float dt)
+        {
+            
+        }
+    }
+    public abstract class Collider2
+    {
+        public Vector2 Offset { get; set; }
+        
+        public Vector2 Position { get; private set; }
+        public Vector2 Velocity { get; private set; }
+        public Vector2 PrevPosition { get; private set; }
+        public bool FlippedNormals { get; set; } = false;
+
+        public Collider2(Vector2 offset)
+        {
+            this.Offset = offset;
+        }
+
+        public void UpdateState(float dt, Vector2 parentPosition, Vector2 parentVelocity)
+        {
+            PrevPosition = Position;
+            Velocity = parentVelocity;
+            Position = parentPosition + Offset;
+            OnUpdateState(dt);
+        }
+
+        protected virtual void OnUpdateState(float dt)
+        {
+            
+        }
+
+        public abstract ShapeType GetShapeType();
+        public virtual Circle? GetCircleShape() => null;
+        public virtual Segment? GetSegmentShape() => null;
+        public virtual Triangle? GetTriangleShape() => null;
+        public virtual Rect? GetRectShape() => null;
+        public virtual Polygon? GetPolygonShape() => null;
+        public virtual Polyline? GetPolylineShape() => null;
+
+    }
+
+    public class SegmentCollider2 : Collider2
+    {
+        private Vector2 dir;
+        private float length;
+        private float originOffset = 0f;
+        
+        
+        /// <summary>
+        /// 0 Start = Position / 0.5 Center = Position / 1 End = Position
+        /// </summary>
+        public float OriginOffset
+        {
+            get => originOffset;
+            set
+            {
+                originOffset = ShapeMath.Clamp(value, 0f, 1f);
+                Recalculate();
+            } 
+        }
+        public Vector2 Dir
+        {
+            get => dir;
+            set
+            {
+                if (dir.LengthSquared() <= 0f) return;
+                dir = value;
+                Recalculate();
+            }
+        }
+        public float Length
+        {
+            get => length;
+            set
+            {
+                if (value <= 0) return;
+                length = value;
+                Recalculate();
+            }
+        }
+
+        
+        public Vector2 Start { get; private set; }  //  => Position;
+        public Vector2 End { get; private set; }  // => Position + Dir * Length;
+        
+        public Vector2 Center => (Start + End) * 0.5f; // Position + Dir * Length / 2;
+        
+        public Vector2 Displacement => End - Start;
+
+        private void Recalculate()
+        {
+            Start = Position - Dir * OriginOffset * Length;
+            End = Position + Dir * (1f - OriginOffset) * Length;
+        }
+
+        public SegmentCollider2(Vector2 offset, Vector2 dir, float length, float originOffset = 0f) : base(offset)
+        {
+            this.dir = dir;
+            this.length = length;
+            this.originOffset = originOffset;
+        }
+
+        public override ShapeType GetShapeType() => ShapeType.Segment;
+        public override Segment? GetSegmentShape() => new Segment(Start, End, FlippedNormals);
+    }
+    public class CircleCollider2 : Collider2
+    {
+        public float Radius { get; set; }
+        
+        
+        public CircleCollider2(Vector2 offset, float radius) : base(offset)
+        {
+            this.Radius = radius;
+        }
+
+        public override ShapeType GetShapeType() => ShapeType.Circle;
+        public override Circle? GetCircleShape() => new Circle(Position, Radius);
+    }
+    public class TriangleCollider2 : Collider2
+    {
+        public TriangleCollider2(Vector2 offset) : base(offset)
+        {
+        }
+
+        public override ShapeType GetShapeType() => ShapeType.Triangle;
+        public override Triangle? GetTriangleShape()
+        {
+            return base.GetTriangleShape();
+        }
+    }
+    public class RectCollider2 : Collider2
+    {
+        public RectCollider2(Vector2 offset) : base(offset)
+        {
+        }
+
+        public override ShapeType GetShapeType() => ShapeType.Rect;
+        public override Rect? GetRectShape()
+        {
+            return base.GetRectShape();
+        }
+    }
+    public class PolyCollider2 : Collider2
+    {
+        public PolyCollider2(Vector2 offset) : base(offset)
+        {
+        }
+
+        public override ShapeType GetShapeType() => ShapeType.Poly;
+        public override Polygon? GetPolygonShape()
+        {
+            return base.GetPolygonShape();
+        }
+    }
+    public class PolyLineCollider2 : Collider2
+    {
+        public PolyLineCollider2(Vector2 offset) : base(offset)
+        {
+        }
+
+        public override ShapeType GetShapeType() => ShapeType.PolyLine;
+        public override Polyline? GetPolylineShape()
+        {
+            return base.GetPolylineShape();
+        }
+    }
+    
+    
     public abstract class Collider : ICollider
     {
         public Collider() { }
