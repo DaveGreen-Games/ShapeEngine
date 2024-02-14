@@ -411,13 +411,13 @@ namespace Examples.Scenes.ExampleScenes
         }
         private (Vector2 endPoint, float remainingLength, Vector2 newDir) CastLaser(float dt, Vector2 start, Vector2 dir, float length, float damagePerSecond, CollisionHandler col)
         {
-            Vector2 endPoint = start + dir * length;
-            Vector2 newEndPoint = endPoint;
-            Vector2 newDir = dir;
+            var endPoint = start + dir * length;
+            var newEndPoint = endPoint;
+            var newDir = dir;
 
             BitFlag bf = new(AsteroidMiningExample.AsteriodLayer);
             var queryInfos = col.QuerySpace(new Segment(start, endPoint), start, bf, true);
-            if (queryInfos.Count > 0)
+            if (queryInfos is { Count: > 0 })
             {
                 var closest = queryInfos[0];
                 if (closest.Points.Valid)
@@ -438,7 +438,7 @@ namespace Examples.Scenes.ExampleScenes
 
             float remainingLength = length - usedLength;
             if (remainingLength <= 1) return new(newEndPoint, 0f, dir);
-            else return (newEndPoint - dir * 10f, remainingLength, newDir);
+            return (newEndPoint - dir * 10f, remainingLength, newDir);
             //return (newEndPoint, remainingLength, newDir);
         }
 
