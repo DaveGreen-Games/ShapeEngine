@@ -8,7 +8,7 @@ using ShapeEngine.Lib;
 
 namespace ShapeEngine.Core.Shapes
 {
-    public class Polyline : Points, IShape, IEquatable<Polyline>
+    public class Polyline : Points, IEquatable<Polyline>
     {
         #region Constructors
         public Polyline() { }
@@ -75,6 +75,43 @@ namespace ShapeEngine.Core.Shapes
             points.AddRange(translated);
             return Polygon.FindConvexHull(points);
         }
+        public Circle GetBoundingCircle()
+        {
+            float maxD = 0f;
+            int num = this.Count;
+            Vector2 origin = new();
+            for (int i = 0; i < num; i++) { origin += this[i]; }
+            origin *= (1f / num);
+            for (int i = 0; i < num; i++)
+            {
+                float d = (origin - this[i]).LengthSquared();
+                if (d > maxD) maxD = d;
+            }
+
+            return new Circle(origin, MathF.Sqrt(maxD));
+        }
+        public Rect GetBoundingBox()
+        {
+            if (Count < 2) return new();
+            Vector2 start = this[0];
+            Rect r = new(start.X, start.Y, 0, 0);
+
+            foreach (var p in this)
+            {
+                r = r.Enlarge(p); // ShapeRect.Enlarge(r, p);
+            }
+            return r;
+        }
+        public bool ContainsPoint(Vector2 p)
+        {
+            var segments = GetEdges();
+            foreach (var segment in segments)
+            {
+                if (segment.ContainsPoint(p)) return true;
+            }
+            return false;
+        }
+
         public Vector2 GetCentroidOnLine()
         {
             if (Count <= 0) return new(0f);
@@ -186,58 +223,7 @@ namespace ShapeEngine.Core.Shapes
         //public Points GetRandomPoints(int amount) => GetEdges().GetRandomPoints(amount);
 
         #endregion
-
-        #region IShape
         
-        public Vector2 GetCentroid()
-        {
-            //if(Count < 2) return new Vector2();
-            //
-            //Vector2 c = new();
-            //foreach (var p in this)
-            //{
-            //    c += p;
-            //}
-            //return c / Count;
-            return GetCentroidMean();
-        }
-        public Circle GetBoundingCircle()
-        {
-            float maxD = 0f;
-            int num = this.Count;
-            Vector2 origin = new();
-            for (int i = 0; i < num; i++) { origin += this[i]; }
-            origin *= (1f / num);
-            for (int i = 0; i < num; i++)
-            {
-                float d = (origin - this[i]).LengthSquared();
-                if (d > maxD) maxD = d;
-            }
-
-            return new Circle(origin, MathF.Sqrt(maxD));
-        }
-        public Rect GetBoundingBox()
-        {
-            if (Count < 2) return new();
-            Vector2 start = this[0];
-            Rect r = new(start.X, start.Y, 0, 0);
-
-            foreach (var p in this)
-            {
-                r = r.Enlarge(p); // ShapeRect.Enlarge(r, p);
-            }
-            return r;
-        }
-        public bool ContainsPoint(Vector2 p)
-        {
-            var segments = GetEdges();
-            foreach (var segment in segments)
-            {
-                if (segment.ContainsPoint(p)) return true;
-            }
-            return false;
-        }
-        #endregion
 
         #region Overlap
         public bool OverlapShape(Segments segments) { return GetEdges().OverlapShape(segments); }
@@ -267,18 +253,58 @@ namespace ShapeEngine.Core.Shapes
         #endregion
 
         #region Intersection
+        public CollisionPoints? Intersect(Collider collider)
+        {
+            if (!collider.Enabled) return null;
+
+            switch (collider.GetShapeType())
+            {
+                case ShapeType.Circle:
+                    var c = collider.GetCircleShape();
+                    return IntersectShape(c);
+                case ShapeType.Segment:
+                    var s = collider.GetSegmentShape();
+                    return IntersectShape(s);
+                case ShapeType.Triangle:
+                    var t = collider.GetTriangleShape();
+                    return IntersectShape(t);
+                case ShapeType.Rect:
+                    var r = collider.GetRectShape();
+                    return IntersectShape(r);
+                case ShapeType.Poly:
+                    var p = collider.GetPolygonShape();
+                    return IntersectShape(p);
+                case ShapeType.PolyLine:
+                    var pl = collider.GetPolylineShape();
+                    return IntersectShape(pl);
+            }
+
+            return null;
+        }
+
         //other shape center is used for checking segment normal and if necessary normal is flipped
-        public CollisionPoints IntersectShape(Segment s) { return GetEdges().IntersectShape(s); }
-        public CollisionPoints IntersectShape(Circle c) { return GetEdges().IntersectShape(c); }
-        public CollisionPoints IntersectShape(Triangle t) { return GetEdges().IntersectShape(t.GetEdges()); }
-        public CollisionPoints IntersectShape(Rect r) { return GetEdges().IntersectShape(r.GetEdges()); }
-        public CollisionPoints IntersectShape(Polygon p) { return GetEdges().IntersectShape(p.GetEdges()); }
-        public CollisionPoints IntersectShape(Polyline b) { return GetEdges().IntersectShape(b.GetEdges()); }
+        public CollisionPoints? IntersectShape(Segment s) { return GetEdges().IntersectShape(s); }
+        public CollisionPoints? IntersectShape(Circle c) { return GetEdges().IntersectShape(c); }
+        public CollisionPoints? IntersectShape(Triangle t) { return GetEdges().IntersectShape(t.GetEdges()); }
+        public CollisionPoints? IntersectShape(Rect r) { return GetEdges().IntersectShape(r.GetEdges()); }
+        public CollisionPoints? IntersectShape(Polygon p) { return GetEdges().IntersectShape(p.GetEdges()); }
+        public CollisionPoints? IntersectShape(Polyline b) { return GetEdges().IntersectShape(b.GetEdges()); }
         #endregion
+        public static Polyline GetShape(Points relative, Transform2D transform)
+        {
+            if (relative.Count < 3) return new();
+            Polyline shape = new();
+            for (int i = 0; i < relative.Count; i++)
+            {
+                shape.Add(transform.Apply(relative[i]));
+                // shape.Add(transform.Position + relative[i].Rotate(transform.RotationRad) * transform.Scale);
+            }
+            return shape;
+        }
 
         public static Polyline Center(Polyline p, Vector2 newCenter)
         {
-            var centroid = p.GetCentroid();
+            var centroid = p.GetCentroidMean();
             var delta = newCenter - centroid;
             return Move(p, delta);
         }

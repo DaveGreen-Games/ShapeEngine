@@ -122,6 +122,19 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
     public void Ceiling() { Points.Ceiling(this); }
     public void Truncate() { Points.Truncate(this); }
     public void Round() { Points.Round(this); }
+    
+    public List<Vector2> GetRelativePoints(Vector2 origin)
+    {
+        var relative = new List<Vector2>();
+        foreach (var p in this)  relative.Add(p - origin);
+        return relative;
+    }
+    public List<Vector2> GetRelativePoints(Transform2D transform)
+    {
+        var relative = new List<Vector2>();
+        foreach (var p in this)  relative.Add(transform.Revert(p));
+        return relative;
+    }
     #endregion
 
     #region Static

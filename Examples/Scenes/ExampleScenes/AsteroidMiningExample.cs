@@ -8,7 +8,6 @@ using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
-using Raylib_cs;
 using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes
@@ -30,8 +29,8 @@ namespace Examples.Scenes.ExampleScenes
         public virtual void Update(GameTime time, ScreenInfo game, ScreenInfo ui) { }
         public virtual void DrawGame(ScreenInfo game) { }
         public virtual void DrawGameUI(ScreenInfo ui) { }
-        public virtual void Overlap(CollisionInformation info) { }
-        public virtual void OverlapEnded(ICollidable other) { }
+        // public virtual void Overlap(CollisionInformation info) { }
+        // public virtual void OverlapEnded(ICollidable other) { }
         public virtual void AddedToHandler(GameObjectHandler gameObjectHandler) { }
         public virtual void RemovedFromHandler(GameObjectHandler gameObjectHandler) { }
         
@@ -42,7 +41,9 @@ namespace Examples.Scenes.ExampleScenes
         public bool CheckHandlerBounds() { return false; }
         public void LeftHandlerBounds(BoundsCollisionInfo info) { }
 
-        
+        public virtual bool HasCollisionBody() => false;
+
+        public virtual CollisionBody? GetCollisionBody() => null;
     }
     public class AsteroidShard : SpaceObject
     {
@@ -113,7 +114,7 @@ namespace Examples.Scenes.ExampleScenes
         public override Rect GetBoundingBox() { return shape.GetBoundingBox(); }
         public override Vector2 GetPosition() { return pos; }
     }
-    public class Asteroid : SpaceObject, ICollidable
+    public class Asteroid : SpaceObject //, ICollidable
     {
         internal class DamagedSegment
         {
@@ -190,9 +191,10 @@ namespace Examples.Scenes.ExampleScenes
         
         private const float DamageThreshold = 50f;
 
-        private PolyCollider collider;
-        private List<ICollidable> collidables = new();
-        private BitFlag colMask = BitFlag.Empty;
+        private AsteroidCollisionBody body;
+        // private PolyCollider collider;
+        // private List<ICollidable> collidables = new();
+        // private BitFlag colMask = BitFlag.Empty;
         private bool overlapped = false;
         private float curThreshold = DamageThreshold;
 
@@ -203,21 +205,32 @@ namespace Examples.Scenes.ExampleScenes
 
         public Asteroid(Vector2 pos, params Vector2[] shape)
         {
-            collider = new PolyCollider(pos, new(), shape);
-            collider.ComputeCollision = false;
-            collider.ComputeIntersections = false;
-            collidables.Add(this);
+            body = new AsteroidCollisionBody(this, pos, shape);
+            body.OnOverlapped += Overlapped;
+            // collider = new PolyCollider(pos, new(), shape);
+            // collider.ComputeCollision = false;
+            // collider.ComputeIntersections = false;
+            // collidables.Add(this);
             SetDamageTreshold(0f);
         }
         public Asteroid(Polygon shape)
         {
-            collider = new PolyCollider(shape);
-            collider.ComputeCollision = false;
-            collider.ComputeIntersections = false;
-            collidables.Add(this);
+            var pos = shape.GetCentroid();
+            body = new AsteroidCollisionBody(this, pos, shape);
+            body.OnOverlapped += Overlapped;
+            // collider = new PolyCollider(shape);
+            // collider.ComputeCollision = false;
+            // collider.ComputeIntersections = false;
+            // collidables.Add(this);
             SetDamageTreshold(0f);
+            
         }
-        public Polygon GetPolygon() { return collider.GetPolygonShape(); }
+
+        public override bool HasCollisionBody() => true;
+
+        public override CollisionBody? GetCollisionBody() => body;
+
+        public Polygon GetPolygon() { return body.GetShape(); }
 
         private void SetDamageTreshold(float overshoot = 0f)
         {
@@ -238,7 +251,7 @@ namespace Examples.Scenes.ExampleScenes
             if (amount <= 0) return;
 
 
-            var shape = collider.GetPolygonShape();
+            var shape = body.GetShape();
             var seg = shape.GetClosestSegment(point);
             damagedSegments.AddSegment(seg.Segment);
 
@@ -256,43 +269,91 @@ namespace Examples.Scenes.ExampleScenes
 
         public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui) 
         {
+            body.UpdateState(time.Delta);
             damagedSegments.Update(time.Delta);
         }
         public override void DrawGame(ScreenInfo game)
         {
-            //Color color = overlapped ? GREEN : WHITE;
-            //collider.GetShape().DrawShape(4f, color);
-            
-            if(collider.GetShape() is Polygon p)
+            var p = body.GetShape();
+            if (overlapped)
             {
-                if (overlapped)
-                {
-                    curColorRgba = new(Color.ForestGreen);
-                    p.DrawLines(6f, new(System.Drawing.Color.ForestGreen));
-                }
-                else
-                {
-                    curColorRgba = new(Color.IndianRed);
-                    p.DrawLines(3f, new(System.Drawing.Color.IndianRed));
-                }
-                //p.DrawVertices(4f, RED);
+                curColorRgba = new(Color.ForestGreen);
+                p.DrawLines(6f, new(System.Drawing.Color.ForestGreen));
             }
-
+            else
+            {
+                curColorRgba = new(Color.IndianRed);
+                p.DrawLines(3f, new(System.Drawing.Color.IndianRed));
+            }
             damagedSegments.Draw();
 
             overlapped = false;
         }
         
-        public virtual bool HasCollidables() { return true; }
-        public virtual List<ICollidable> GetCollidables() { return collidables; }
+        // public virtual bool HasCollidables() { return true; }
+        // public virtual List<ICollidable> GetCollidables() { return collidables; }
 
-        public override Rect GetBoundingBox() { return collider.GetShape().GetBoundingBox(); }
-        public override Vector2 GetPosition() { return collider.Pos; }
-        public ICollider GetCollider() { return collider; }
-        public uint GetCollisionLayer() { return AsteroidMiningExample.AsteriodLayer; }
-        public BitFlag GetCollisionMask() { return colMask; }
+        public override Rect GetBoundingBox() { return body.GetBoundingBox(); }
+        public override Vector2 GetPosition() { return body.Position; }
+        // public ICollider GetCollider() { return collider; }
+        // public uint GetCollisionLayer() { return AsteroidMiningExample.AsteriodLayer; }
+        // public BitFlag GetCollisionMask() { return colMask; }
     }
 
+    public class AsteroidCollisionBody : CollisionBody
+    {
+        public event Action? OnOverlapped;
+        public Asteroid AsteroidParent;
+        private readonly AsteroidCollider collider;
+        public AsteroidCollisionBody(Asteroid parent, Vector2 position, params Vector2[] shape)  : base(position)
+        {
+            AsteroidParent = parent;
+            collider = new AsteroidCollider(new Polygon(shape), new());
+            AddCollider(collider);
+            // collider = new PolyCollider(pos, new(), shape);
+            // collider.ComputeCollision = false;
+            // collider.ComputeIntersections = false;
+            // collidables.Add(this);
+            // SetDamageTreshold(0f);
+        }
+        public AsteroidCollisionBody(Asteroid parent, Vector2 position, Polygon shape) : base(position)
+        {
+            AsteroidParent = parent;
+            collider = new AsteroidCollider(shape, new());
+            AddCollider(collider);
+            // collider = new PolyCollider(shape);
+            // collider.ComputeCollision = false;
+            // collider.ComputeIntersections = false;
+            // collidables.Add(this);
+            // SetDamageTreshold(0f);
+            
+        }
+
+        public void Overlapped()
+        {
+            OnOverlapped?.Invoke();
+        }
+        public Polygon GetShape() => collider.GetPolygonShape();
+    }
+
+    public class AsteroidCollider : PolyCollider
+    {
+        public AsteroidCollider(Polygon absoluteShape, Vector2 offset) : base(absoluteShape, offset)
+        {
+            ComputeCollision = false;
+            ComputeIntersections = false;
+            CollisionLayer = AsteroidMiningExample.AsteriodLayer;
+            CollisionMask = BitFlag.Empty;
+        }
+        // public AsteroidCollider(List<Vector2> relativePoints, Vector2 offset) : base(relativePoints, offset)
+        // {
+        //     ComputeCollision = false;
+        //     ComputeIntersections = false;
+        //     CollisionLayer = AsteroidMiningExample.AsteriodLayer;
+        //     CollisionMask = BitFlag.Empty;
+        // }
+    }
+    
     public class LaserDevice : SpaceObject
     {
         private const float LaserRange = 1200;
@@ -422,13 +483,17 @@ namespace Examples.Scenes.ExampleScenes
                 var closest = queryInfos[0];
                 if (closest.Points.Valid)
                 {
-                    var other = closest.Collidable;
-                    if (other is Asteroid a)
+                    var other = closest.Collider;
+                    if (other is AsteroidCollider a)
                     {
                         //perfect naming:)
-                        newDir = dir.Reflect(closest.Points.Closest.Normal);
-                        newEndPoint = closest.Points.Closest.Point;  //closest.intersection.ColPoints[0].Point;
-                        a.Damage(damagePerSecond * dt, newEndPoint);
+                        if (a.Parent is AsteroidCollisionBody body)
+                        {
+                            newDir = dir.Reflect(closest.Points.Closest.Normal);
+                            newEndPoint = closest.Points.Closest.Point;  //closest.intersection.ColPoints[0].Point;
+                            body.AsteroidParent.Damage(damagePerSecond * dt, newEndPoint);
+                        }
+                        
                     }
                 }
             }
@@ -793,13 +858,18 @@ namespace Examples.Scenes.ExampleScenes
                 SetCurPos(mousePosGame);
                 curShape.Center(curPos);
                 BitFlag mask = new(AsteriodLayer);
-                var collidables = new List<ICollidable>();
-                col.CastSpace(curShape, mask, ref collidables, false);
-                foreach (var collidable in collidables)
+                var candidates = new List<Collider>();
+                col.CastSpace(curShape, mask, ref candidates);
+                foreach (var candidate in candidates)
                 {
-                    if (collidable is Asteroid asteroid)
+                    if (candidate is AsteroidCollider asteroid)
                     {
-                        asteroid.Overlapped();
+                        if (asteroid.Parent is AsteroidCollisionBody body)
+                        {
+                            body.Overlapped();
+                        }
+                        
+                        // asteroid.Overlapped();
                     }
                 }
 
@@ -807,15 +877,19 @@ namespace Examples.Scenes.ExampleScenes
                 {
                     Polygons polys = new();
 
-                    if (collidables.Count > 0)
+                    if (candidates.Count > 0)
                     {
-                        foreach (var collidable in collidables)
+                        foreach (var candidate in candidates)
                         {
-                            if (collidable is Asteroid asteroid)
+                            if (candidate is AsteroidCollider asteroid)
                             {
                                 //area.RemoveAreaObject(asteroid);
-                                RemoveAsteroid(asteroid);
-                                polys.Add(asteroid.GetPolygon());
+                                if (asteroid.Parent is AsteroidCollisionBody body)
+                                {
+                                    RemoveAsteroid(body.AsteroidParent);
+                                    polys.Add(asteroid.GetPolygonShape());
+                                }
+                                
                             }
                         }
                         var finalShapes = ShapeClipper.UnionMany(curShape.ToPolygon(), polys, Clipper2Lib.FillRule.NonZero).ToPolygons(true);
@@ -847,11 +921,15 @@ namespace Examples.Scenes.ExampleScenes
                 {
                     var cutShape = curShape.ToPolygon();
                     Polygons allCutOuts = new();
-                    foreach (var collidable in collidables)
+                    foreach (var candidate in candidates)
                     {
-                        if (collidable is Asteroid asteroid)
+                        if (candidate is AsteroidCollider asteroid)
                         {
-                            FractureAsteroid(asteroid, cutShape);
+                            if (asteroid.Parent is AsteroidCollisionBody body)
+                            {
+                                FractureAsteroid(body.AsteroidParent, cutShape);
+                            }
+                            
 
                             /*
                             //area.RemoveAreaObject(asteroid);

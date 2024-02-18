@@ -2,16 +2,16 @@ using System.Numerics;
 
 namespace ShapeEngine.Core.Interfaces
 {
-    public interface IPhysicsObject
+    public interface IPhysicsObject : ISpatial
     {
-        public Vector2 Pos { get; set; }
-        public Vector2 Vel { get; set; }
+        public Vector2 Position { get; set; }
+        public Vector2 Velocity { get; set; }
         public float Mass { get; set; }
         public float Drag { get; set; }
         public Vector2 ConstAcceleration { get; set; }
         public void AddForce(Vector2 force);
         public void AddImpulse(Vector2 force);
-        public bool IsStatic(float deltaSq) { return Vel.LengthSquared() <= deltaSq; }
+        public bool IsStatic(float deltaSq) { return Velocity.LengthSquared() <= deltaSq; }
         public Vector2 GetAccumulatedForce();
         public void ClearAccumulatedForce();
         public void UpdateState(float dt);

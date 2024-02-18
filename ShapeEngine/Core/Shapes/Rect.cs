@@ -210,7 +210,7 @@ namespace ShapeEngine.Core.Shapes
     }
 
     
-    public struct Rect : IShape, IEquatable<Rect>
+    public struct Rect : IEquatable<Rect>
     {
         #region Members
         public readonly float X;
@@ -580,7 +580,7 @@ namespace ShapeEngine.Core.Shapes
             };
             return Polygon.FindConvexHull(points);
         }
-        
+        public readonly bool ContainsPoint(Vector2 p) => Left <= p.X && Right >= p.X && Top <= p.Y && Bottom >= p.Y;
         // public readonly bool ContainsRect(Rect rect) =>
         //     (X <= rect.X) && (rect.X + rect.Width <= X + Width) &&
         //     (Y <= rect.Y) && (rect.Y + rect.Height <= Y + Height);
@@ -1211,17 +1211,17 @@ namespace ShapeEngine.Core.Shapes
             return segments;
         }
         public static Rect FromCircle(Circle c) => new(c.Center, new Vector2(c.Radius, c.Radius), new Vector2(0.5f, 0.5f));
-        public static bool IsPointInRect(Vector2 point, Vector2 topLeft, Vector2 size)
-        {
-            float left = topLeft.X;
-            float top = topLeft.Y;
-            float right = topLeft.X + size.X;
-            float bottom = topLeft.Y + size.Y;
-
-            return left <= point.X && right >= point.X && top <= point.Y && bottom >= point.Y;
-            
-            // return (double) this.X <= (double) value.X && (double) value.X < (double) (this.X + this.Width) && (double) this.Y <= (double) value.Y && (double) value.Y < (double) (this.Y + this.Height);
-        }
+        // public static bool IsPointInRect(Vector2 point, Vector2 topLeft, Vector2 size)
+        // {
+        //     float left = topLeft.X;
+        //     float top = topLeft.Y;
+        //     float right = topLeft.X + size.X;
+        //     float bottom = topLeft.Y + size.Y;
+        //
+        //     return left <= point.X && right >= point.X && top <= point.Y && bottom >= point.Y;
+        //     
+        //     // return (double) this.X <= (double) value.X && (double) value.X < (double) (this.X + this.Width) && (double) this.Y <= (double) value.Y && (double) value.Y < (double) (this.Y + this.Height);
+        // }
 
         public static Rect Empty => new();
         
@@ -1271,12 +1271,6 @@ namespace ShapeEngine.Core.Shapes
         
         #endregion
         
-        #region IShape
-        public readonly Vector2 GetCentroid() { return Center; }
-        public readonly Rect GetBoundingBox() { return this; }
-        public readonly Circle GetBoundingCircle() { return ToPolygon().GetBoundingCircle(); }
-        public readonly bool ContainsPoint(Vector2 p) { return IsPointInRect(p, TopLeft, Size); }
-        #endregion
 
         #region Collision
         // public readonly (bool collided, Vector2 hitPoint, Vector2 n, Vector2 newPos) CollidePlayfield(Vector2 objPos, float objRadius)
@@ -1515,12 +1509,41 @@ namespace ShapeEngine.Core.Shapes
         #endregion
 
         #region Intersect
-        public readonly CollisionPoints IntersectShape(Segment s) { return GetEdges().IntersectShape(s); }
-        public readonly CollisionPoints IntersectShape(Circle c) { return GetEdges().IntersectShape(c); }
-        public readonly CollisionPoints IntersectShape(Triangle t) { return GetEdges().IntersectShape(t.GetEdges()); }
-        public readonly CollisionPoints IntersectShape(Rect b) { return GetEdges().IntersectShape(b.GetEdges()); }
-        public readonly CollisionPoints IntersectShape(Polygon p) { return GetEdges().IntersectShape(p.GetEdges()); }
-        public readonly CollisionPoints IntersectShape(Polyline pl) { return GetEdges().IntersectShape(pl.GetEdges()); }
+        public readonly CollisionPoints? Intersect(Collider collider)
+        {
+            if (!collider.Enabled) return null;
+
+            switch (collider.GetShapeType())
+            {
+                case ShapeType.Circle:
+                    var c = collider.GetCircleShape();
+                    return IntersectShape(c);
+                case ShapeType.Segment:
+                    var s = collider.GetSegmentShape();
+                    return IntersectShape(s);
+                case ShapeType.Triangle:
+                    var t = collider.GetTriangleShape();
+                    return IntersectShape(t);
+                case ShapeType.Rect:
+                    var r = collider.GetRectShape();
+                    return IntersectShape(r);
+                case ShapeType.Poly:
+                    var p = collider.GetPolygonShape();
+                    return IntersectShape(p);
+                case ShapeType.PolyLine:
+                    var pl = collider.GetPolylineShape();
+                    return IntersectShape(pl);
+            }
+
+            return null;
+        }
+
+        public readonly CollisionPoints? IntersectShape(Segment s) { return GetEdges().IntersectShape(s); }
+        public readonly CollisionPoints? IntersectShape(Circle c) { return GetEdges().IntersectShape(c); }
+        public readonly CollisionPoints? IntersectShape(Triangle t) { return GetEdges().IntersectShape(t.GetEdges()); }
+        public readonly CollisionPoints? IntersectShape(Rect b) { return GetEdges().IntersectShape(b.GetEdges()); }
+        public readonly CollisionPoints? IntersectShape(Polygon p) { return GetEdges().IntersectShape(p.GetEdges()); }
+        public readonly CollisionPoints? IntersectShape(Polyline pl) { return GetEdges().IntersectShape(pl.GetEdges()); }
         #endregion
 
     }

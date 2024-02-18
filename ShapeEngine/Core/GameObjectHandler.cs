@@ -319,11 +319,18 @@ namespace ShapeEngine.Core
 
         protected override void AreaObjectAdded(IGameObject obj)
         {
-            if (obj.HasCollidables()) col.AddRange(obj.GetCollidables());
+            if (!obj.HasCollisionBody()) return;
+            var body = obj.GetCollisionBody();
+            if(body != null) col.Add(body);
+            
+            // if(obj.HasCollisionBody()) col.Add(obj.GetCollisionBody());
         }
         protected override void AreaObjectRemoved(IGameObject obj)
         {
-            if (obj.HasCollidables()) col.RemoveRange(obj.GetCollidables());
+            if (!obj.HasCollisionBody()) return;
+            var body = obj.GetCollisionBody();
+            if(body != null) col.Remove(body);
+            // if(obj.HasCollisionBody()) col.Remove(obj.GetCollisionBody());
         }
 
         public override void Clear()

@@ -6,28 +6,28 @@ namespace ShapeEngine.Core.Collision;
 public class Collision
 {
     public readonly bool FirstContact;
-    public readonly ICollidable Self;
-    public readonly ICollidable Other;
+    public readonly Collider Self;
+    public readonly Collider Other;
     public readonly Vector2 SelfVel;
     public readonly Vector2 OtherVel;
     public readonly Intersection Intersection;
 
-    public Collision(ICollidable self, ICollidable other, bool firstContact)
+    public Collision(Collider self, Collider other, bool firstContact)
     {
         this.Self = self;
         this.Other = other;
-        this.SelfVel = self.GetCollider().Vel;
-        this.OtherVel = other.GetCollider().Vel;
+        this.SelfVel = self.Velocity;
+        this.OtherVel = other.Velocity;
         this.Intersection = new();
         this.FirstContact = firstContact;
     }
-    public Collision(ICollidable self, ICollidable other, bool firstContact, CollisionPoints collisionPoints)
+    public Collision(Collider self, Collider other, bool firstContact, CollisionPoints? collisionPoints)
     {
         this.Self = self;
         this.Other = other;
-        this.SelfVel = self.GetCollider().Vel;
-        this.OtherVel = other.GetCollider().Vel;
-        this.Intersection = new(collisionPoints, SelfVel, self.GetCollider().Pos);
+        this.SelfVel = self.Velocity;
+        this.OtherVel = other.Velocity;
+        this.Intersection = new(collisionPoints, SelfVel, self.Position);
         this.FirstContact = firstContact;
     }
 

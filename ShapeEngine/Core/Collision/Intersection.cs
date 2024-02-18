@@ -8,16 +8,16 @@ public class Intersection
 {
     public readonly bool Valid;
     public readonly CollisionSurface CollisionSurface;
-    public readonly CollisionPoints ColPoints;
+    public readonly CollisionPoints? ColPoints;
 
-    public Intersection() { this.Valid = false; this.CollisionSurface = new(); this.ColPoints = new(); }
-    public Intersection(CollisionPoints points, Vector2 vel, Vector2 refPoint)
+    public Intersection() { this.Valid = false; this.CollisionSurface = new(); this.ColPoints = null; }
+    public Intersection(CollisionPoints? points, Vector2 vel, Vector2 refPoint)
     {
-        if (points.Count <= 0)
+        if (points == null || points.Count <= 0)
         {
             this.Valid = false;
             this.CollisionSurface = new();
-            this.ColPoints = new();
+            this.ColPoints = null;
         }
         else
         {
@@ -49,13 +49,13 @@ public class Intersection
             }
         }
     }
-    public Intersection(CollisionPoints points)
+    public Intersection(CollisionPoints? points)
     {
-        if (points.Count <= 0)
+        if (points == null || points.Count <= 0)
         {
             this.Valid = false;
             this.CollisionSurface = new();
-            this.ColPoints = new();
+            this.ColPoints = null;
         }
         else
         {

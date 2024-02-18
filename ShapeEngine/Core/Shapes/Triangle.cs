@@ -12,7 +12,7 @@ namespace ShapeEngine.Core.Shapes
     /// <summary>
     /// Class that represents a triangle by holding three points. Points a, b, c should be in ccw order!
     /// </summary>
-    public struct Triangle : IShape, IEquatable<Triangle>
+    public struct Triangle : IEquatable<Triangle>
     {
         #region Members
         public Vector2 A;
@@ -82,6 +82,52 @@ namespace ShapeEngine.Core.Shapes
             };
             return Polygon.FindConvexHull(points);
         }
+        public readonly Vector2 GetCentroid() { return (A + B + C) / 3; }
+        public readonly Rect GetBoundingBox() { return new Rect(A.X, A.Y, 0, 0).Enlarge(B).Enlarge(C); }
+        public readonly bool ContainsPoint(Vector2 p)
+        {
+            var ab = B - A;
+            var bc = C - B;
+            var ca = A - C;
+
+            var ap = p - A;
+            var bp = p - B;
+            var cp = p - C;
+
+            float c1 = ShapeVec.Cross(ab, ap);
+            float c2 = ShapeVec.Cross(bc, bp);
+            float c3 = ShapeVec.Cross(ca, cp);
+
+            if (c1 < 0f && c2 < 0f && c3 < 0f)
+            {
+                return true;
+            }
+
+            return false;
+        }
+        // public static bool IsPointInside(Vector2 a, Vector2 b, Vector2 c, Vector2 p)
+        // {
+        //     var ab = b - a;
+        //     var bc = c - b;
+        //     var ca = a - c;
+        //
+        //     var ap = p - a;
+        //     var bp = p - b;
+        //     var cp = p - c;
+        //
+        //     float c1 = ShapeVec.Cross(ab, ap);
+        //     float c2 = ShapeVec.Cross(bc, bp);
+        //     float c3 = ShapeVec.Cross(ca, cp);
+        //
+        //     if (c1 < 0f && c2 < 0f && c3 < 0f)
+        //     {
+        //         return true;
+        //     }
+        //
+        //     return false;
+        // }
+
+        
         public readonly bool ContainsShape(Segment other)
         {
             return ContainsPoint(other.Start) && ContainsPoint(other.End);
@@ -390,30 +436,6 @@ namespace ShapeEngine.Core.Shapes
 
         #endregion
 
-        #region Static
-        public static bool IsPointInTriangle(Vector2 a, Vector2 b, Vector2 c, Vector2 p)
-        {
-            Vector2 ab = b - a;
-            Vector2 bc = c - b;
-            Vector2 ca = a - c;
-
-            Vector2 ap = p - a;
-            Vector2 bp = p - b;
-            Vector2 cp = p - c;
-
-            float c1 = ShapeVec.Cross(ab, ap);
-            float c2 = ShapeVec.Cross(bc, bp);
-            float c3 = ShapeVec.Cross(ca, cp);
-
-            if (c1 < 0f && c2 < 0f && c3 < 0f)
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        #endregion
 
         #region Equality & HashCode
         public bool IsSimilar(Triangle other)
@@ -457,15 +479,7 @@ namespace ShapeEngine.Core.Shapes
             return false;
         }
         #endregion
-
-        #region IShape
-        public readonly Vector2 GetCentroid() { return (A + B + C) / 3; }
-        public readonly Rect GetBoundingBox() { return new Rect(A.X, A.Y, 0, 0).Enlarge(B).Enlarge(C); }
-        public readonly bool ContainsPoint(Vector2 p) { return IsPointInTriangle(A, B, C, p); }
-
         
-        public readonly Circle GetBoundingCircle() { return GetCircumCircle(); } // ToPolygon().GetBoundingCircle(); }
-        #endregion
 
         #region Overlap
         public readonly bool OverlapShape(Segments segments)
@@ -487,12 +501,41 @@ namespace ShapeEngine.Core.Shapes
         #endregion
 
         #region Intersect
-        public readonly CollisionPoints IntersectShape(Segment s) { return GetEdges().IntersectShape(s); }
-        public readonly CollisionPoints IntersectShape(Circle c) { return ToPolygon().IntersectShape(c); }
-        public readonly CollisionPoints IntersectShape(Triangle b) { return ToPolygon().IntersectShape(b.ToPolygon()); }
-        public readonly CollisionPoints IntersectShape(Rect r) { return ToPolygon().IntersectShape(r.ToPolygon()); }
-        public readonly CollisionPoints IntersectShape(Polygon p) { return ToPolygon().IntersectShape(p); }
-        public readonly CollisionPoints IntersectShape(Polyline pl) { return GetEdges().IntersectShape(pl.GetEdges()); }
+        public readonly CollisionPoints? Intersect(Collider collider)
+        {
+            if (!collider.Enabled) return null;
+
+            switch (collider.GetShapeType())
+            {
+                case ShapeType.Circle:
+                    var c = collider.GetCircleShape();
+                    return IntersectShape(c);
+                case ShapeType.Segment:
+                    var s = collider.GetSegmentShape();
+                    return IntersectShape(s);
+                case ShapeType.Triangle:
+                    var t = collider.GetTriangleShape();
+                    return IntersectShape(t);
+                case ShapeType.Rect:
+                    var r = collider.GetRectShape();
+                    return IntersectShape(r);
+                case ShapeType.Poly:
+                    var p = collider.GetPolygonShape();
+                    return IntersectShape(p);
+                case ShapeType.PolyLine:
+                    var pl = collider.GetPolylineShape();
+                    return IntersectShape(pl);
+            }
+
+            return null;
+        }
+
+        public readonly CollisionPoints? IntersectShape(Segment s) { return GetEdges().IntersectShape(s); }
+        public readonly CollisionPoints? IntersectShape(Circle c) { return ToPolygon().IntersectShape(c); }
+        public readonly CollisionPoints? IntersectShape(Triangle b) { return ToPolygon().IntersectShape(b.ToPolygon()); }
+        public readonly CollisionPoints? IntersectShape(Rect r) { return ToPolygon().IntersectShape(r.ToPolygon()); }
+        public readonly CollisionPoints? IntersectShape(Polygon p) { return ToPolygon().IntersectShape(p); }
+        public readonly CollisionPoints? IntersectShape(Polyline pl) { return GetEdges().IntersectShape(pl.GetEdges()); }
         #endregion
     }
 }

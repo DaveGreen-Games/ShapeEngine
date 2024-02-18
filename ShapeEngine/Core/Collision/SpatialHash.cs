@@ -1,6 +1,4 @@
 ﻿using System.Numerics;
-using System.Reflection.Metadata.Ecma335;
-// using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Lib;
@@ -12,9 +10,8 @@ namespace ShapeEngine.Core.Collision
     
     public class SpatialHash : IBounds
     {
-        public class Bucket : HashSet<ICollidable>
+        public class Bucket : HashSet<Collider>
         {
-            //maybe also a function that filters by bounding box overlap (only returns overlapping objects???)
             public Bucket? FilterObjects(BitFlag mask)
             {
                 if (Count <= 0 || mask.IsEmpty()) return null;
@@ -22,7 +19,7 @@ namespace ShapeEngine.Core.Collision
                 Bucket? objects = null;
                 foreach (var collidable in this)
                 {
-                    if (mask.Has(collidable.GetCollisionLayer()))
+                    if (mask.Has(collidable.CollisionLayer))
                     {
                         objects ??= new();
                         objects.Add(collidable);
@@ -32,109 +29,6 @@ namespace ShapeEngine.Core.Collision
             }
             public Bucket? Copy() => Count <= 0 ? null : (Bucket)this.ToHashSet();
         }
-        // private class SpatialHashBucket
-        // {
-        //     // public Dictionary<uint, HashSet<ICollidable>> Layers = new();
-        //     public HashSet<ICollidable>? Collidables = null;
-        //
-        //     private Dictionary<uint, int>? usedLayers = null;
-        //     // public List<uint> UsedLayers = new();
-        //     public int Count { get { return Collidables != null ? Collidables.Count : 0; } }
-        //
-        //     public void Clear()
-        //     {
-        //         Collidables?.Clear();
-        //         usedLayers?.Clear();
-        //     }
-        //     public void Add(ICollidable collidable)
-        //     {
-        //         Collidables ??= new();
-        //         usedLayers ??= new();
-        //         
-        //         Collidables.Add(collidable);
-        //         
-        //         var layer = collidable.GetCollisionLayer();
-        //         if (usedLayers.ContainsKey(layer)) usedLayers[layer] += 1;
-        //         else usedLayers.Add(layer, 1);
-        //     }
-        //     public void Remove(ICollidable collidable)
-        //     {
-        //         if (Collidables == null || Collidables.Count <= 0) return;
-        //         
-        //         var layer = collidable.GetCollisionLayer();
-        //         bool removed = Collidables.Remove(collidable);
-        //
-        //         if (!removed || usedLayers == null) return;
-        //         if (usedLayers.ContainsKey(layer))
-        //         {
-        //             if (usedLayers[layer] <= 1) usedLayers.Remove(layer);
-        //             else usedLayers[layer] -= 1;
-        //         }
-        //     }
-        //
-        //     public bool HasLayer(BitFlag mask)
-        //     {
-        //         if (usedLayers == null) return false;
-        //         
-        //         foreach (var layer in usedLayers.Keys)
-        //         {
-        //             if (mask.Has(layer))
-        //             {
-        //                 return true;
-        //             }
-        //         }
-        //
-        //         return false;
-        //     }
-        //     public List<ICollidable>? GetObjects(BitFlag mask)
-        //     {
-        //         if (Collidables == null || Collidables.Count <= 0 || usedLayers == null || usedLayers.Count <= 0 || mask.IsEmpty()) return null;
-        //         
-        //         if (!HasLayer(mask)) return null;
-        //
-        //         List<ICollidable>? objects = null;
-        //         foreach (var collidable in Collidables)
-        //         {
-        //             if (mask.Has(collidable.GetCollisionLayer()))
-        //             {
-        //                 objects ??= new();
-        //                 objects.Add(collidable);
-        //             }
-        //         }
-        //         return objects;
-        //     }
-        //
-        //     public List<ICollidable>? GetAllObjectsList()
-        //     {
-        //         if (Collidables == null || Collidables.Count <= 0) return null;
-        //         return Collidables.ToList();
-        //     }
-        //
-        //     // public SpatialHashBucketInfo GetBucketInfo()
-        //     // {
-        //     //     HashSet<ICollidable> active = new();
-        //     //     // List<uint> availableLayers = Layers.Keys.ToList();
-        //     //     foreach (var collidable in Collidables)
-        //     //     {
-        //     //         if (collidable.GetCollider().ComputeCollision) active.Add(collidable);
-        //     //         // {
-        //     //         //     var mask = collidable.GetCollisionMask();
-        //     //         //     foreach (var entry in mask)
-        //     //         //     {
-        //     //         //         if (Layers.ContainsKey(entry))
-        //     //         //         {
-        //     //         //             active.Add(collidable);
-        //     //         //             break;
-        //     //         //         }
-        //     //         //     }
-        //     //         //
-        //     //         // }
-        //     //     }
-        //     //
-        //     //     return new(active, Layers);
-        //     // }
-        //     //
-        // }
 
         #region Public Members
         public Rect Bounds { get; private set; }
@@ -147,8 +41,8 @@ namespace ShapeEngine.Core.Collision
 
         #region Private Members
         private Bucket[] buckets;
-        private readonly Dictionary<ICollidable, List<int>> register = new();
-        private readonly HashSet<ICollidable> registerKeys = new();
+        private readonly Dictionary<Collider, List<int>> register = new();
+        private readonly HashSet<Collider> registerKeys = new();
         private bool boundsResizeQueued = false;
         private Rect newBounds = new();
         #endregion
@@ -183,17 +77,15 @@ namespace ShapeEngine.Core.Collision
         #endregion
         
         #region Public
-        public void Fill(IEnumerable<ICollidable> collidables)
+        public void Fill(IEnumerable<CollisionBody> collisionBodies)
         {
             Clear();
 
-            foreach (var collidable in collidables)
+            foreach (var body in collisionBodies)
             {
-                var collider = collidable.GetCollider();
-                if (collider.Enabled)
+                if (body.Enabled)
                 {
-                    Add(collidable); //add is the problem 
-                    
+                    Add(body);
                 }
             }
             CleanRegister();
@@ -228,9 +120,9 @@ namespace ShapeEngine.Core.Collision
             }
         }
 
-        public void GetRegisteredCollisionCandidateBuckets(ICollidable collidable, ref List<Bucket> candidateBuckets)
+        public void GetRegisteredCollisionCandidateBuckets(Collider collider, ref List<Bucket> candidateBuckets)
         {
-            if (!register.TryGetValue(collidable, out var bucketIds)) return;
+            if (!register.TryGetValue(collider, out var bucketIds)) return;
             if (bucketIds.Count <= 0) return;
             foreach (var id in bucketIds)
             {
@@ -239,9 +131,16 @@ namespace ShapeEngine.Core.Collision
             }
         }
         
-        public void GetCandidateBuckets(ICollidable collidable, ref List<Bucket> candidateBuckets)
+        public void GetCandidateBuckets(CollisionBody collidable, ref List<Bucket> candidateBuckets)
         {
-            if (register.TryGetValue(collidable, out var bucketIds))
+            foreach (var collider in collidable.Colliders)
+            {
+                GetCandidateBuckets(collider, ref candidateBuckets);
+            }
+        }
+        public void GetCandidateBuckets(Collider collider, ref List<Bucket> candidateBuckets)
+        {
+            if (register.TryGetValue(collider, out var bucketIds))
             {
                 if (bucketIds.Count <= 0) return;
                 foreach (var id in bucketIds)
@@ -249,16 +148,58 @@ namespace ShapeEngine.Core.Collision
                     var bucket = buckets[id];
                     if(bucket.Count > 0) candidateBuckets.Add(buckets[id]);
                 }
-            }
 
-            GetCandidateBuckets(collidable.GetCollider(), ref candidateBuckets);
+                return;
+            }
+            List<int> ids = new();
+            GetCellIDs(collider, ref ids);
+            FillCandidateBuckets(ids, ref candidateBuckets);
         }
-        public void GetCandidateBuckets(ICollider collider, ref List<Bucket> candidateBuckets) => GetCandidateBuckets(collider.GetShape(), ref candidateBuckets);
-        public void GetCandidateBuckets<T>(T shape, ref List<Bucket> candidateBuckets) where T : IShape
+
+        public void GetCandidateBuckets(Segment segment, ref List<Bucket> candidateBuckets)
         {
             List<int> bucketIds = new();
-            GetCellIDs(shape, ref bucketIds);
+            GetCellIDs(segment, ref bucketIds);
             
+            FillCandidateBuckets(bucketIds, ref candidateBuckets);
+        }
+        public void GetCandidateBuckets(Circle circle, ref List<Bucket> candidateBuckets)
+        {
+            List<int> bucketIds = new();
+            GetCellIDs(circle, ref bucketIds);
+            
+            FillCandidateBuckets(bucketIds, ref candidateBuckets);
+        }
+        public void GetCandidateBuckets(Triangle triangle, ref List<Bucket> candidateBuckets)
+        {
+            List<int> bucketIds = new();
+            GetCellIDs(triangle, ref bucketIds);
+            
+            FillCandidateBuckets(bucketIds, ref candidateBuckets);
+        }
+        public void GetCandidateBuckets(Rect rect, ref List<Bucket> candidateBuckets)
+        {
+            List<int> bucketIds = new();
+            GetCellIDs(rect, ref bucketIds);
+            
+            FillCandidateBuckets(bucketIds, ref candidateBuckets);
+        }
+        public void GetCandidateBuckets(Polygon poly, ref List<Bucket> candidateBuckets)
+        {
+            List<int> bucketIds = new();
+            GetCellIDs(poly, ref bucketIds);
+            
+            FillCandidateBuckets(bucketIds, ref candidateBuckets);
+        }
+        public void GetCandidateBuckets(Polyline polyLine, ref List<Bucket> candidateBuckets)
+        {
+            List<int> bucketIds = new();
+            GetCellIDs(polyLine, ref bucketIds);
+            
+            FillCandidateBuckets(bucketIds, ref candidateBuckets);
+        }
+        private void FillCandidateBuckets(List<int> bucketIds, ref List<Bucket> candidateBuckets)
+        {
             if (bucketIds.Count <= 0) return;
             foreach (var id in bucketIds)
             {
@@ -267,33 +208,81 @@ namespace ShapeEngine.Core.Collision
             }
         }
 
-        public void GetUniqueObjects(ICollidable collidable, ref HashSet<ICollidable> result)
+        public void GetUniqueCandidates(CollisionBody collisionBody, ref HashSet<Collider> candidates)
         {
-            if (register.TryGetValue(collidable, out var bucketIds))
+            if (!collisionBody.HasColliders) return;
+            foreach (var collider in collisionBody.Colliders)
+            {
+                GetUniqueCandidates(collider, ref candidates);
+            }
+        }
+        public void GetUniqueCandidates(Collider collider, ref HashSet<Collider> candidates)
+        {
+            if (register.TryGetValue(collider, out var bucketIds))
             {
                 if (bucketIds.Count <= 0) return;
                 foreach (var id in bucketIds)
                 {
                     var bucket = buckets[id];
-                    if(bucket.Count > 0) result.UnionWith(bucket);
+                    if(bucket.Count > 0) candidates.UnionWith(bucket);
                 }
 
                 return;
             }
-
-            GetUniqueObjects(collidable.GetCollider(), ref result);
+            
+            List<int> ids = new();
+            GetCellIDs(collider, ref ids);
+            AccumulateUniqueCandidates(ids, ref candidates);
         }
-        public void GetUniqueObjects(ICollider collider, ref HashSet<ICollidable> result) => GetUniqueObjects(collider.GetShape(), ref result);
-        public void GetUniqueObjects<T>(T shape, ref HashSet<ICollidable> result) where T : IShape
+        public void GetUniqueCandidates(Segment segment, ref HashSet<Collider> candidates)
         {
             List<int> bucketIds = new();
-            GetCellIDs(shape, ref bucketIds);
+            GetCellIDs(segment, ref bucketIds);
             
+            AccumulateUniqueCandidates(bucketIds, ref candidates);
+        }
+        public void GetUniqueCandidates(Circle circle, ref HashSet<Collider> candidates)
+        {
+            List<int> bucketIds = new();
+            GetCellIDs(circle, ref bucketIds);
+            
+            AccumulateUniqueCandidates(bucketIds, ref candidates);
+        }
+        public void GetUniqueCandidates(Triangle triangle, ref HashSet<Collider> candidates)
+        {
+            List<int> bucketIds = new();
+            GetCellIDs(triangle, ref bucketIds);
+            
+            AccumulateUniqueCandidates(bucketIds, ref candidates);
+        }
+        public void GetUniqueCandidates(Rect rect, ref HashSet<Collider> candidates)
+        {
+            List<int> bucketIds = new();
+            GetCellIDs(rect, ref bucketIds);
+            
+            AccumulateUniqueCandidates(bucketIds, ref candidates);
+        }
+        public void GetUniqueCandidates(Polygon poly, ref HashSet<Collider> candidates)
+        {
+            List<int> bucketIds = new();
+            GetCellIDs(poly, ref bucketIds);
+            
+            AccumulateUniqueCandidates(bucketIds, ref candidates);
+        }
+        public void GetUniqueCandidates(Polyline polyLine, ref HashSet<Collider> candidates)
+        {
+            List<int> bucketIds = new();
+            GetCellIDs(polyLine, ref bucketIds);
+            
+            AccumulateUniqueCandidates(bucketIds, ref candidates);
+        }
+        private void AccumulateUniqueCandidates(List<int> bucketIds, ref HashSet<Collider> candidates)
+        {
             if (bucketIds.Count <= 0) return;
             foreach (var id in bucketIds)
             {
                 var bucket = buckets[id];
-                if(bucket.Count > 0) result.UnionWith(bucket);
+                if(bucket.Count > 0) candidates.UnionWith(bucket);
             }
         }
 
@@ -362,24 +351,33 @@ namespace ShapeEngine.Core.Collision
             int yi = Math.Clamp((int)Math.Floor((y - Bounds.Y) / SpacingY), 0, Rows - 1);
             return (xi, yi);
         }
-        private void Add(ICollidable collidable)//38% memory problem
+        private void Add(CollisionBody collisionBody)//38% memory problem
         {
-            List<int> ids;
-            if (register.ContainsKey(collidable)) ids = register[collidable];
-            else
+            if (!collisionBody.HasColliders) return;
+
+            foreach (var collider in collisionBody.Colliders)
             {
-                ids = new List<int>();
-                register.Add(collidable, ids);
+                if (!collider.Enabled) continue;
                 
-            }
-            GetCellIDs(collidable.GetCollider().GetShape(), ref ids);
-            // var hashes = GetCellIDs(collidable.GetCollider().GetShape()); //GetCellID 20% problem
-            if (ids.Count <= 0) return;
-            registerKeys.Remove(collidable);
-            // register[collidable] = hashes;
-            foreach (int hash in ids)
-            {
-                buckets[hash].Add(collidable); //Add 16% problem
+                List<int> ids;
+                if (register.TryGetValue(collider, out var value))
+                {
+                    ids = value;
+                    ids.Clear();
+                }
+                else
+                {
+                    ids = new List<int>();
+                    register.Add(collider, ids);
+                
+                }
+                GetCellIDs(collider, ref ids);
+                if (ids.Count <= 0) return;
+                registerKeys.Remove(collider);
+                foreach (int hash in ids)
+                {
+                    buckets[hash].Add(collider);
+                }
             }
         }
         private void CleanRegister()
@@ -407,12 +405,10 @@ namespace ShapeEngine.Core.Collision
                 SetSpacing();
             }
         }
-        private void GetCellIDs<T>(T shape, ref List<int> idList) where T : IShape
+        
+        private void GetCellIDs(Segment segment, ref List<int> idList)
         {
-            var boundingRect = shape.GetBoundingBox();
-            // List<int> hashes =  new List<int>();
-            // cellIds.Clear();
-            idList.Clear();
+            var boundingRect = segment.GetBoundingBox();
             var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
             var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
 
@@ -421,17 +417,122 @@ namespace ShapeEngine.Core.Collision
                 for (int i = topLeft.x; i <= bottomRight.x; i++)
                 {
                     int id = GetCellId(i, j);
-                    if (ShapeGeometry.Overlap(GetCellRectangle(id), shape)) //overlap 12% problem (probably because of boxing)
-                    {
-                        idList.Add(id);//6% problem
-                        // cellIds.Add(id);//6% problem
-                    }
-
-                    
+                    var cellRect = GetCellRectangle(id);
+                    if(cellRect.OverlapShape(segment)) idList.Add(id);
                 }
             }
-            //return hashes;
         }
+        private void GetCellIDs(Triangle triangle, ref List<int> idList)
+        {
+            var boundingRect = triangle.GetBoundingBox();
+            var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
+            var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
+
+            for (int j = topLeft.y; j <= bottomRight.y; j++)
+            {
+                for (int i = topLeft.x; i <= bottomRight.x; i++)
+                {
+                    int id = GetCellId(i, j);
+                    var cellRect = GetCellRectangle(id);
+                    if(cellRect.OverlapShape(triangle)) idList.Add(id);
+                }
+            }
+        }
+        private void GetCellIDs(Circle circle, ref List<int> idList)
+        {
+            var boundingRect = circle.GetBoundingBox();
+            var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
+            var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
+
+            for (int j = topLeft.y; j <= bottomRight.y; j++)
+            {
+                for (int i = topLeft.x; i <= bottomRight.x; i++)
+                {
+                    int id = GetCellId(i, j);
+                    var cellRect = GetCellRectangle(id);
+                    if(cellRect.OverlapShape(circle)) idList.Add(id);
+                }
+            }
+        }
+        private void GetCellIDs(Rect rect, ref List<int> idList)
+        {
+            var topLeft = GetCellCoordinate(rect.X, rect.Y);
+            var bottomRight = GetCellCoordinate(rect.X + rect.Width, rect.Y + rect.Height);
+
+            for (int j = topLeft.y; j <= bottomRight.y; j++)
+            {
+                for (int i = topLeft.x; i <= bottomRight.x; i++)
+                {
+                    int id = GetCellId(i, j);
+                    var cellRect = GetCellRectangle(id);
+                    if(cellRect.OverlapShape(rect)) idList.Add(id);
+                }
+            }
+        }
+        private void GetCellIDs(Polygon poly, ref List<int> idList)
+        {
+            var boundingRect = poly.GetBoundingBox();
+            var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
+            var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
+
+            for (int j = topLeft.y; j <= bottomRight.y; j++)
+            {
+                for (int i = topLeft.x; i <= bottomRight.x; i++)
+                {
+                    int id = GetCellId(i, j);
+                    var cellRect = GetCellRectangle(id);
+                    if(cellRect.OverlapShape(poly)) idList.Add(id);
+                }
+            }
+        }
+        private void GetCellIDs(Polyline polyLine, ref List<int> idList)
+        {
+            var boundingRect = polyLine.GetBoundingBox();
+            var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
+            var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
+
+            for (int j = topLeft.y; j <= bottomRight.y; j++)
+            {
+                for (int i = topLeft.x; i <= bottomRight.x; i++)
+                {
+                    int id = GetCellId(i, j);
+                    var cellRect = GetCellRectangle(id);
+                    if(cellRect.OverlapShape(polyLine)) idList.Add(id);
+                }
+            }
+        }
+        private void GetCellIDs(Collider collider, ref List<int> idList)
+        {
+            if (!collider.Enabled) return;
+            
+            switch (collider.GetShapeType())
+            {
+                case ShapeType.Circle: GetCellIDs(collider.GetCircleShape(), ref idList); 
+                    break;
+                case ShapeType.Segment: GetCellIDs(collider.GetSegmentShape(), ref idList); 
+                    break;
+                case ShapeType.Triangle: GetCellIDs(collider.GetTriangleShape(), ref idList); 
+                    break;
+                case ShapeType.Rect: GetCellIDs(collider.GetRectShape(), ref idList); 
+                    break;
+                case ShapeType.Poly: GetCellIDs(collider.GetPolygonShape(), ref idList); 
+                    break;
+                case ShapeType.PolyLine: GetCellIDs(collider.GetPolylineShape(), ref idList); 
+                    break;
+            }
+        }
+
+        // private void GetCellIDs(CollisionBody collidable, ref List<int> idList)
+        // {
+        //     if (!collidable.HasColliders) return;
+        //
+        //     foreach (var collider in collidable.Colliders)
+        //     {
+        //         GetCellIDs(collider, ref idList);
+        //     }
+        // }
+        
+        
         private void SetSpacing()
         {
             SpacingX = Bounds.Width / Cols;

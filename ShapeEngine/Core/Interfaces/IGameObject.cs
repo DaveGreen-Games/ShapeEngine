@@ -59,11 +59,11 @@ public interface IGameObject : ISpatial, IUpdateable, IDrawable, IKillable//, IB
     /// Should the area add the collidables from this object to the collision system on area entry.
     /// </summary>
     /// <returns></returns>
-    public virtual bool HasCollidables() { return false; }
+    public virtual bool HasCollisionBody() { return false; }
     /// <summary>
     /// All the collidables that should be added to the collision system on area entry.
     /// </summary>
     /// <returns></returns>
-    public virtual List<ICollidable> GetCollidables() { return new(); }
+    public virtual CollisionBody? GetCollisionBody() { return null; }
 
 }

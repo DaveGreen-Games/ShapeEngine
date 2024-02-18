@@ -9,7 +9,7 @@ using ShapeEngine.Lib;
 
 namespace ShapeEngine.Core.Shapes
 {
-    public readonly struct Segment : IShape, IEquatable<Segment>
+    public readonly struct Segment : IEquatable<Segment>
     {
         #region Members
         public readonly Vector2 Start;
@@ -28,8 +28,7 @@ namespace ShapeEngine.Core.Shapes
         //        return GetNormal();
         //    } 
         //}
-        public bool FlippedNormals { get { return flippedNormals; }
-            set { } }
+        public bool FlippedNormals { get { return flippedNormals; } set { } }
         public Vector2 Center { get { return (Start + End) * 0.5f; } }
         public Vector2 Dir { get { return Displacement.Normalize(); } }
         public Vector2 Displacement { get { return End - Start; } }
@@ -85,6 +84,28 @@ namespace ShapeEngine.Core.Shapes
             return new(Start.Truncate(), End.Truncate(), FlippedNormals);
         }
 
+        public readonly Rect GetBoundingBox() { return new(Start, End); }
+        public readonly bool ContainsPoint(Vector2 p) { return IsPointOnSegment(p, Start, End); }
+        public readonly CollisionPoint GetClosestCollisionPoint(Vector2 p)
+        {
+            CollisionPoint c;
+            var w = Displacement;
+            float t = (p - Start).Dot(w) / w.LengthSquared();
+            if (t < 0f) c = new(Start, Normal); 
+            else if (t > 1f) c = new(End, Normal);
+            else c = new(Start + w * t, Normal);
+
+            //if (AutomaticNormals) return c.FlipNormal(p);
+            return c;
+        }
+        
+        public readonly ClosestPoint GetClosestPoint(Vector2 p)
+        {
+            var cp = GetClosestCollisionPoint(p);
+            return new(cp, (cp.Point - p).Length());
+        }
+
+        
         public Segments Split(float f)
         {
             return Split(this.GetPoint(f));
@@ -204,33 +225,6 @@ namespace ShapeEngine.Core.Shapes
 
         #endregion
 
-        #region IShape
-        public readonly Rect GetBoundingBox() { return new(Start, End); }
-        public readonly Circle GetBoundingCircle() { return ToPolyline().GetBoundingCircle(); }
-        public readonly Vector2 GetCentroid() { return Center; }
-        public readonly bool ContainsPoint(Vector2 p) { return IsPointOnSegment(p, Start, End); }
-        public readonly CollisionPoint GetClosestCollisionPoint(Vector2 p)
-        {
-            CollisionPoint c;
-            var w = Displacement;
-            float t = (p - Start).Dot(w) / w.LengthSquared();
-            if (t < 0f) c = new(Start, Normal); 
-            else if (t > 1f) c = new(End, Normal);
-            else c = new(Start + w * t, Normal);
-
-            //if (AutomaticNormals) return c.FlipNormal(p);
-            return c;
-        }
-
-        public readonly ClosestPoint GetClosestPoint(Vector2 p)
-        {
-            var cp = GetClosestCollisionPoint(p);
-            return new(cp, (cp.Point - p).Length());
-        }
-        
-        
-        #endregion
-
         #region Equality & HashCode
         /// <summary>
         /// Checks the equality of 2 segments without the direction.
@@ -346,16 +340,44 @@ namespace ShapeEngine.Core.Shapes
         #endregion
 
         #region Intersection
-        public CollisionPoints IntersectShape(Segment b)
+        public readonly CollisionPoints? Intersect(Collider collider)
+        {
+            if (!collider.Enabled) return null;
+
+            switch (collider.GetShapeType())
+            {
+                case ShapeType.Circle:
+                    var c = collider.GetCircleShape();
+                    return IntersectShape(c);
+                case ShapeType.Segment:
+                    var s = collider.GetSegmentShape();
+                    return IntersectShape(s);
+                case ShapeType.Triangle:
+                    var t = collider.GetTriangleShape();
+                    return IntersectShape(t);
+                case ShapeType.Rect:
+                    var r = collider.GetRectShape();
+                    return IntersectShape(r);
+                case ShapeType.Poly:
+                    var p = collider.GetPolygonShape();
+                    return IntersectShape(p);
+                case ShapeType.PolyLine:
+                    var pl = collider.GetPolylineShape();
+                    return IntersectShape(pl);
+            }
+
+            return null;
+        }
+        public readonly CollisionPoints? IntersectShape(Segment b)
         {
             var info = ShapeGeometry.IntersectSegmentSegmentInfo(Start, End, b.Start, b.End);
             if (info.intersected)
             {
                 return new() { new(info.intersectPoint, b.Normal) };
             }
-            return new();
+            return null;
         }
-        public CollisionPoints IntersectShape(Circle c)
+        public readonly CollisionPoints? IntersectShape(Circle c)
         {
             float aX = Start.X;
             float aY = Start.Y;
@@ -371,7 +393,7 @@ namespace ShapeEngine.Core.Shapes
             if ((dX == 0) && (dY == 0))
             {
                 // A and B are the same points, no way to calculate intersection
-                return new();
+                return null;
             }
 
             float dl = (dX * dX + dY * dY);
@@ -394,7 +416,7 @@ namespace ShapeEngine.Core.Shapes
                     Vector2 n = ShapeVec.Normalize(ip - new Vector2(cX, cY));
                     return new() { new(ip, n) };
                 }
-                else return new();
+                else return null;
             }
             else if (dist < R)
             {
@@ -424,28 +446,29 @@ namespace ShapeEngine.Core.Shapes
                     points.Add(new(ip, n));
                 }
 
-                if (points.Count <= 0) return new();
+                if (points.Count <= 0) return null;
                 else return points;
             }
             else
             {
                 // no intersection
-                return new();
+                return null;
             }
         }
-        public CollisionPoints IntersectShape(Triangle t) { return IntersectShape(t.GetEdges()); }
-        public CollisionPoints IntersectShape(Rect rect) { return IntersectShape(rect.GetEdges()); }
-        public CollisionPoints IntersectShape(Polygon p) { return IntersectShape(p.GetEdges()); }
-        public CollisionPoints IntersectShape(Polyline pl) { return IntersectShape(pl.GetEdges()); }
-        public CollisionPoints IntersectShape(Segments shape)
+        public readonly CollisionPoints? IntersectShape(Triangle t) { return IntersectShape(t.GetEdges()); }
+        public readonly CollisionPoints? IntersectShape(Rect rect) { return IntersectShape(rect.GetEdges()); }
+        public readonly CollisionPoints? IntersectShape(Polygon p) { return IntersectShape(p.GetEdges()); }
+        public readonly CollisionPoints? IntersectShape(Polyline pl) { return IntersectShape(pl.GetEdges()); }
+        public readonly CollisionPoints? IntersectShape(Segments shape)
         {
-            CollisionPoints points = new();
+            CollisionPoints? points = null;
 
             foreach (var seg in shape)
             {
                 var collisionPoints = IntersectShape(seg);
-                if (collisionPoints.Valid)
+                if (collisionPoints != null && collisionPoints.Valid)
                 {
+                    points ??= new();
                     points.AddRange(collisionPoints);
                 }
             }

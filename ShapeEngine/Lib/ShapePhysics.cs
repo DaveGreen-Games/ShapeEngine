@@ -9,14 +9,14 @@ namespace ShapeEngine.Lib
     {
         private static void ApplyAccumulatedForce(this IPhysicsObject p, float dt)
         {
-            p.Vel += p.GetAccumulatedForce() * dt;
+            p.Velocity += p.GetAccumulatedForce() * dt;
             p.ClearAccumulatedForce();
         }
         private static void ApplyAcceleration(this IPhysicsObject p, float dt)
         {
             Vector2 force = p.ConstAcceleration * dt;
-            p.Vel += force;
-            p.Vel = ShapePhysics.ApplyDragForce(p.Vel, p.Drag, dt);
+            p.Velocity += force;
+            p.Velocity = ShapePhysics.ApplyDragForce(p.Velocity, p.Drag, dt);
         }
 
         /// <summary>
@@ -31,7 +31,7 @@ namespace ShapeEngine.Lib
         {
             ApplyAccumulatedForce(p, dt);
             ApplyAcceleration(p, dt);
-            p.Pos += p.Vel * dt;
+            p.Position += p.Velocity * dt;
         }
         /// <summary>
         /// Used for adding a force every frame. The total accumualted force should be applied at the end of the frame an reset to zero.
@@ -79,7 +79,7 @@ namespace ShapeEngine.Lib
         /// <param name="force">Impuls force to apply.</param>
         public static void AddImpuls(this IPhysicsObject p, Vector2 force)
         {
-            p.Vel = AddImpulse(force, p.Vel, p.Mass);
+            p.Velocity = AddImpulse(force, p.Velocity, p.Mass);
         }
 
 

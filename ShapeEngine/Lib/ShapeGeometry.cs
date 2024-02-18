@@ -16,153 +16,148 @@ namespace ShapeEngine.Lib
         /// </summary>
         public static float POINT_RADIUS = float.Epsilon;
 
-        #region CollisionHandler
-        //public static CollisionInfo GetCollisionInfo(this ICollidable self, ICollidable other)
-        //{
-        //    if (self == other) return new();
+        // #region CollisionHandler
+        // //public static CollisionInfo GetCollisionInfo(this ICollidable self, ICollidable other)
+        // //{
+        // //    if (self == other) return new();
+        // //
+        // //    bool overlap = self.Overlap(other);
+        // //    if (overlap)
+        // //    {
+        // //        return new(true, self, other, self.GetCollider().Intersect(other.GetCollider()));
+        // //    }
+        // //    return new();
+        // //}
         //
-        //    bool overlap = self.Overlap(other);
-        //    if (overlap)
-        //    {
-        //        return new(true, self, other, self.GetCollider().Intersect(other.GetCollider()));
-        //    }
-        //    return new();
-        //}
+        // public static bool CheckCCDDistance(this Circle c, Vector2 prevPos)
+        // {
+        //     float disSq = (c.Center - prevPos).LengthSquared();
+        //     float r = c.Radius;
+        //     //float r2 = r + r;
+        //     return disSq > r * r;// r2 * r2;
+        // }
+        // //public static Vector2 CheckCCD(this ICollider col, ICollider other)
+        // //{
+        // //    return CheckCCD(col.GetShape().GetBoundingCircle(), col.GetPrevPos(), other.GetShape());
+        // //}
+        // public static Vector2 CheckCCD(this IShape shape, Vector2 prevPos, IShape other)
+        // {
+        //     if(shape is Circle c)
+        //     {
+        //         return CheckCCD(c, prevPos, other);
+        //     }
+        //     else
+        //     {
+        //         return CheckCCD(shape.GetBoundingCircle(), prevPos, other);
+        //     }
+        // }
+        // public static Vector2 CheckCCD(this Circle c, Vector2 prevPos, IShape other)
+        // {
+        //     Segment centerRay = new(prevPos, c.Center);
+        //     float r = c.Radius;
+        //     float r2 = r + r;
+        //     //moved more than twice the shapes radius -> means gap between last & cur frame
+        //     if (centerRay.LengthSquared > r2 * r2)
+        //     {
+        //         var collisionPoints = centerRay.Intersect(other);
+        //         if (collisionPoints.Valid)
+        //         {
+        //             Intersection intersection = new(collisionPoints);
+        //             if (intersection.Valid && intersection.CollisionSurface.Valid)
+        //             {
+        //                 return intersection.CollisionSurface.Point - centerRay.Dir * r;
+        //             }
+        //         }
+        //         
+        //     }
+        //     return c.Center;
+        // }
 
-        public static bool CheckCCDDistance(this Circle c, Vector2 prevPos)
-        {
-            float disSq = (c.Center - prevPos).LengthSquared();
-            float r = c.Radius;
-            //float r2 = r + r;
-            return disSq > r * r;// r2 * r2;
-        }
-        //public static Vector2 CheckCCD(this ICollider col, ICollider other)
-        //{
-        //    return CheckCCD(col.GetShape().GetBoundingCircle(), col.GetPrevPos(), other.GetShape());
-        //}
-        public static Vector2 CheckCCD(this IShape shape, Vector2 prevPos, IShape other)
-        {
-            if(shape is Circle c)
-            {
-                return CheckCCD(c, prevPos, other);
-            }
-            else
-            {
-                return CheckCCD(shape.GetBoundingCircle(), prevPos, other);
-            }
-        }
-        public static Vector2 CheckCCD(this Circle c, Vector2 prevPos, IShape other)
-        {
-            Segment centerRay = new(prevPos, c.Center);
-            float r = c.Radius;
-            float r2 = r + r;
-            //moved more than twice the shapes radius -> means gap between last & cur frame
-            if (centerRay.LengthSquared > r2 * r2)
-            {
-                var collisionPoints = centerRay.Intersect(other);
-                if (collisionPoints.Valid)
-                {
-                    Intersection intersection = new(collisionPoints);
-                    if (intersection.Valid && intersection.CollisionSurface.Valid)
-                    {
-                        return intersection.CollisionSurface.Point - centerRay.Dir * r;
-                    }
-                }
-                
-            }
-            return c.Center;
-        }
-
-
-        public static bool Overlap(this ICollidable a, ICollidable b)
-        {
-            //if (a == b) return false;
-            //if (a == null || b == null) return false;
-            return Overlap(a.GetCollider(), b.GetCollider());
-        }
-        public static bool Overlap(this ICollider colA, ICollider colB)
-        {
-            return Overlap(colA.GetShape(), colB.GetShape());
-        }
-        public static bool Overlap(this Rect rect, ICollider col)
-        {
-            return Overlap(rect, col.GetShape());
-        }
         
-        //Most of the shapes implementing the IShape interface are structs
-        //to prevent frequent boxing, all functions using IShape as parameter type are generic
-        public static bool Overlap<T, U>(this T a, U b) where T : IShape where U : IShape
-        {
-            if (a is Segment s) return Overlap(s, b);
-            else if (a is Circle c) return Overlap(c, b);
-            else if (a is Triangle t) return Overlap(t, b);
-            else if (a is Rect r) return Overlap(r, b);
-            else if (a is Polygon p) return Overlap(p, b);
-            else if (a is Polyline pl) return Overlap(pl, b);
-            else return a.GetBoundingBox().Overlap(b);
-        }
-        public static bool Overlap<T>(this Segment seg, T shape) where T : IShape
-        {
-            if (shape is Segment s) return seg.OverlapShape(s);
-            else if (shape is Circle c) return seg.OverlapShape(c);
-            else if (shape is Triangle t) return seg.OverlapShape(t);
-            else if (shape is Rect r) return seg.OverlapShape(r);
-            else if (shape is Polygon p) return seg.OverlapShape(p);
-            else if (shape is Polyline pl) return seg.OverlapShape(pl);
-            else return seg.OverlapShape(shape.GetBoundingBox());
-        }
-        public static bool Overlap<T>(this Circle circle, T shape) where T : IShape
-        {
-            if (shape is Segment s) return circle.OverlapShape(s);
-            else if (shape is Circle c) return circle.OverlapShape(c);
-            else if (shape is Triangle t) return circle.OverlapShape(t);
-            else if (shape is Rect r) return circle.OverlapShape(r);
-            else if (shape is Polygon p) return circle.OverlapShape(p);
-            else if (shape is Polyline pl) return circle.OverlapShape(pl);
-            else return circle.OverlapShape(shape.GetBoundingBox());
-        }
-        public static bool Overlap<T>(this Triangle triangle, T shape) where T : IShape
-        {
-            if (shape is Segment s) return triangle.OverlapShape(s);
-            else if (shape is Circle c) return triangle.OverlapShape(c);
-            else if (shape is Triangle t) return triangle.OverlapShape(t);
-            else if (shape is Rect r) return triangle.OverlapShape(r);
-            else if (shape is Polygon p) return triangle.OverlapShape(p);
-            else if (shape is Polyline pl) return triangle.OverlapShape(pl);
-            else return triangle.OverlapShape(shape.GetBoundingBox());
-        }
-        public static bool Overlap<T>(this Rect rect, T shape) where T : IShape
-        {
-            if (shape is Segment s)         return s.OverlapShape(rect);
-            else if(shape is Circle c)      return c.OverlapShape(rect);
-            else if(shape is Triangle t)    return t.OverlapShape(rect);
-            else if(shape is Rect r)        return r.OverlapShape(rect);
-            else if(shape is Polygon p)     return p.OverlapShape(rect);
-            else if (shape is Polyline pl) return   rect.OverlapShape(pl);
-            else return rect.OverlapShape(shape.GetBoundingBox());
-        }
-        public static bool Overlap<T>(this Polygon poly, T shape) where T : IShape
-        {
-            if (shape is Segment s) return poly.OverlapShape(s);
-            else if (shape is Circle c) return poly.OverlapShape(c);
-            else if (shape is Triangle t) return poly.OverlapShape(t);
-            else if (shape is Rect r) return poly.OverlapShape(r);
-            else if (shape is Polygon p) return poly.OverlapShape(p);
-            else if (shape is Polyline pl) return   poly.OverlapShape(pl);
-            else return poly.OverlapShape(shape.GetBoundingBox());
-        }
-        public static bool Overlap<T>(this Polyline pl, T shape) where T : IShape
-        {
-            if (shape is Segment s) return pl.OverlapShape(s);
-            else if (shape is Circle c) return pl.OverlapShape(c);
-            else if (shape is Triangle t) return pl.OverlapShape(t);
-            else if (shape is Rect r) return pl.OverlapShape(r);
-            else if (shape is Polygon p) return pl.OverlapShape(p);
-            else if (shape is Polyline otherPl) return  pl.OverlapShape(otherPl);
-            else return pl.OverlapShape(shape.GetBoundingBox());
-        }
-        public static bool OverlapBoundingBox(this ICollider a, ICollider b) { return a.GetShape().GetBoundingBox().OverlapShape(b.GetShape().GetBoundingBox()); }
-
+        // public static bool Overlap(this Rect rect, ICollider col)
+        // {
+        //     return Overlap(rect, col.GetShape());
+        // }
+        //
+        // //Most of the shapes implementing the IShape interface are structs
+        // //to prevent frequent boxing, all functions using IShape as parameter type are generic
+        // public static bool Overlap<T, U>(this T a, U b) where T : IShape where U : IShape
+        // {
+        //     if (a is Segment s) return Overlap(s, b);
+        //     else if (a is Circle c) return Overlap(c, b);
+        //     else if (a is Triangle t) return Overlap(t, b);
+        //     else if (a is Rect r) return Overlap(r, b);
+        //     else if (a is Polygon p) return Overlap(p, b);
+        //     else if (a is Polyline pl) return Overlap(pl, b);
+        //     else return a.GetBoundingBox().Overlap(b);
+        // }
+        // public static bool Overlap<T>(this Segment seg, T shape) where T : IShape
+        // {
+        //     if (shape is Segment s) return seg.OverlapShape(s);
+        //     else if (shape is Circle c) return seg.OverlapShape(c);
+        //     else if (shape is Triangle t) return seg.OverlapShape(t);
+        //     else if (shape is Rect r) return seg.OverlapShape(r);
+        //     else if (shape is Polygon p) return seg.OverlapShape(p);
+        //     else if (shape is Polyline pl) return seg.OverlapShape(pl);
+        //     else return seg.OverlapShape(shape.GetBoundingBox());
+        // }
+        // public static bool Overlap<T>(this Circle circle, T shape) where T : IShape
+        // {
+        //     if (shape is Segment s) return circle.OverlapShape(s);
+        //     else if (shape is Circle c) return circle.OverlapShape(c);
+        //     else if (shape is Triangle t) return circle.OverlapShape(t);
+        //     else if (shape is Rect r) return circle.OverlapShape(r);
+        //     else if (shape is Polygon p) return circle.OverlapShape(p);
+        //     else if (shape is Polyline pl) return circle.OverlapShape(pl);
+        //     else return circle.OverlapShape(shape.GetBoundingBox());
+        // }
+        // public static bool Overlap<T>(this Triangle triangle, T shape) where T : IShape
+        // {
+        //     if (shape is Segment s) return triangle.OverlapShape(s);
+        //     else if (shape is Circle c) return triangle.OverlapShape(c);
+        //     else if (shape is Triangle t) return triangle.OverlapShape(t);
+        //     else if (shape is Rect r) return triangle.OverlapShape(r);
+        //     else if (shape is Polygon p) return triangle.OverlapShape(p);
+        //     else if (shape is Polyline pl) return triangle.OverlapShape(pl);
+        //     else return triangle.OverlapShape(shape.GetBoundingBox());
+        // }
+        // public static bool Overlap<T>(this Rect rect, T shape) where T : IShape
+        // {
+        //     if (shape is Segment s)         return s.OverlapShape(rect);
+        //     else if(shape is Circle c)      return c.OverlapShape(rect);
+        //     else if(shape is Triangle t)    return t.OverlapShape(rect);
+        //     else if(shape is Rect r)        return r.OverlapShape(rect);
+        //     else if(shape is Polygon p)     return p.OverlapShape(rect);
+        //     else if (shape is Polyline pl) return   rect.OverlapShape(pl);
+        //     else return rect.OverlapShape(shape.GetBoundingBox());
+        // }
+        // public static bool Overlap<T>(this Polygon poly, T shape) where T : IShape
+        // {
+        //     if (shape is Segment s) return poly.OverlapShape(s);
+        //     else if (shape is Circle c) return poly.OverlapShape(c);
+        //     else if (shape is Triangle t) return poly.OverlapShape(t);
+        //     else if (shape is Rect r) return poly.OverlapShape(r);
+        //     else if (shape is Polygon p) return poly.OverlapShape(p);
+        //     else if (shape is Polyline pl) return   poly.OverlapShape(pl);
+        //     else return poly.OverlapShape(shape.GetBoundingBox());
+        // }
+        // public static bool Overlap<T>(this Polyline pl, T shape) where T : IShape
+        // {
+        //     if (shape is Segment s) return pl.OverlapShape(s);
+        //     else if (shape is Circle c) return pl.OverlapShape(c);
+        //     else if (shape is Triangle t) return pl.OverlapShape(t);
+        //     else if (shape is Rect r) return pl.OverlapShape(r);
+        //     else if (shape is Polygon p) return pl.OverlapShape(p);
+        //     else if (shape is Polyline otherPl) return  pl.OverlapShape(otherPl);
+        //     else return pl.OverlapShape(shape.GetBoundingBox());
+        // }
+        //
+        // public static bool OverlapBoundingBox(this ICollider a, ICollider b) { return a.GetShape().GetBoundingBox().OverlapShape(b.GetShape().GetBoundingBox()); }
+        //
+        //
+        
+        
+        
         //private static CollisionPoints GetCollisionPoints(this IShape a, IShape b)
         //{
         //    if (a is Segment s) return Intersect(s, b);
@@ -173,108 +168,108 @@ namespace ShapeEngine.Lib
         //    else if (a is Polyline pl) return Intersect(pl, b);
         //    else return Intersect(a.GetBoundingBox(), b);
         //}
-        public static CollisionPoints Intersect(this ICollidable a, ICollidable b)
-        {
-            return Intersect(a.GetCollider(), b.GetCollider());
-        }
-        public static CollisionPoints Intersect(this ICollider colA, ICollider colB)
-        {
-            return Intersect(colA.GetShape(), colA.SimplifyCollision ? colB.GetSimplifiedShape() : colB.GetShape());
-        }
-        
-        public static CollisionPoints Intersect<T, U>(this T a, U b) where T : IShape where U : IShape
-        {
-            if (a is Segment s) return Intersect(s, b);
-            else if (a is Circle c) return Intersect(c, b);
-            else if (a is Triangle t) return Intersect(t, b);
-            else if (a is Rect r) return Intersect(r, b);
-            else if (a is Polygon p) return Intersect(p, b);
-            else if (a is Polyline pl) return Intersect(pl, b);
-            else return Intersect(a.GetBoundingBox(), b);
-
-            //var collisionPoints = a.GetCollisionPoints(b);
-            ////if (collisionPoints.Valid)
-            ////{
-            ////    if(b is Segment seg)
-            ////    {
-            ////        if (seg.AutomaticNormals)
-            ////        {
-            ////            collisionPoints.FlipNormals(a.GetCentroid());
-            ////        }
-            ////    }
-            ////    else if(b is Polyline pl)
-            ////    {
-            ////        if (pl.AutomaticNormals)
-            ////        {
-            ////            collisionPoints.FlipNormals(a.GetCentroid());
-            ////        }
-            ////    }
-            ////    //intersection = intersection.CheckVelocityNew(aVelocity);
-            ////}
-            //return collisionPoints;
-        }
-        public static CollisionPoints Intersect<T>(this Segment seg, T shape) where T : IShape
-        {
-            if (shape is Segment s) return seg.IntersectShape(s);
-            else if (shape is Circle c) return seg.IntersectShape(c);
-            else if (shape is Triangle t) return seg.IntersectShape(t);
-            else if (shape is Rect r) return seg.IntersectShape(r);
-            else if (shape is Polygon p) return seg.IntersectShape(p);
-            else if (shape is Polyline pl) return seg.IntersectShape(pl);
-            else return seg.IntersectShape(shape.GetBoundingBox());
-        }
-        public static CollisionPoints Intersect<T>(this Circle circle, T shape) where T : IShape
-        {
-            if (shape is Segment s)         return circle.IntersectShape(s);
-            else if (shape is Circle c)     return circle.IntersectShape(c);
-            else if (shape is Triangle t)   return circle.IntersectShape(t);
-            else if (shape is Rect r)       return circle.IntersectShape(r);
-            else if (shape is Polygon p)    return circle.IntersectShape(p);
-            else if (shape is Polyline pl)  return circle.IntersectShape(pl);
-            else return circle.IntersectShape(shape.GetBoundingBox());// new();
-        }
-        public static CollisionPoints Intersect<T>(this Triangle triangle, T shape) where T : IShape
-        {
-            if (shape is Segment s)         return triangle.IntersectShape(s);
-            else if (shape is Circle c)     return triangle.IntersectShape(c);
-            else if (shape is Triangle t)   return triangle.IntersectShape(t);
-            else if (shape is Rect r)       return triangle.IntersectShape(r);
-            else if (shape is Polygon p)    return triangle.IntersectShape(p);
-            else if (shape is Polyline pl)  return triangle.IntersectShape(pl);
-            else return triangle.IntersectShape(shape.GetBoundingBox());// new();
-        }
-        public static CollisionPoints Intersect<T>(this Rect rect, T shape) where T : IShape
-        {
-            if (shape is Segment s)         return rect.IntersectShape(s);
-            else if (shape is Circle c)     return rect.IntersectShape(c);
-            else if (shape is Triangle t)   return rect.IntersectShape(t);
-            else if (shape is Rect r)       return rect.IntersectShape(r);
-            else if (shape is Polygon p)    return rect.IntersectShape(p);
-            else if (shape is Polyline pl)  return rect.IntersectShape(pl);
-            else return rect.IntersectShape(shape.GetBoundingBox());// new();
-        }
-        public static CollisionPoints Intersect<T>(this Polygon poly, T shape) where T : IShape
-        {
-            if (shape is Segment s)         return poly.IntersectShape(s);
-            else if (shape is Circle c)     return poly.IntersectShape(c);
-            else if (shape is Triangle t)   return poly.IntersectShape(t);
-            else if (shape is Rect r)       return poly.IntersectShape(r);
-            else if (shape is Polygon p)    return poly.IntersectShape(p);
-            else if (shape is Polyline pl)  return poly.IntersectShape(pl);
-            else return poly.IntersectShape(shape.GetBoundingBox());// new();
-        }
-        public static CollisionPoints Intersect<T>(this Polyline pl, T shape) where T : IShape
-        {
-            if (shape is Segment s) return pl.IntersectShape(s);
-            else if (shape is Circle c) return pl.IntersectShape(c);
-            else if (shape is Triangle t) return pl.IntersectShape(t);
-            else if (shape is Rect r) return pl.IntersectShape(r);
-            else if (shape is Polygon p) return pl.IntersectShape(p);
-            else if (shape is Polyline otherPl) return pl.IntersectShape(otherPl);
-            else return pl.IntersectShape(shape.GetBoundingBox());
-        }
-        public static CollisionPoints IntersectBoundingBoxes(this ICollider a, ICollider b) { return a.GetShape().GetBoundingBox().IntersectShape(b.GetShape().GetBoundingBox()); }
-        #endregion
+        // public static CollisionPoints Intersect(this ICollidable a, ICollidable b)
+        // {
+        //     return Intersect(a.GetCollider(), b.GetCollider());
+        // }
+        // public static CollisionPoints Intersect(this ICollider colA, ICollider colB)
+        // {
+        //     return Intersect(colA.GetShape(), colA.SimplifyCollision ? colB.GetSimplifiedShape() : colB.GetShape());
+        // }
+        //
+        // public static CollisionPoints Intersect<T, U>(this T a, U b) where T : IShape where U : IShape
+        // {
+        //     if (a is Segment s) return Intersect(s, b);
+        //     else if (a is Circle c) return Intersect(c, b);
+        //     else if (a is Triangle t) return Intersect(t, b);
+        //     else if (a is Rect r) return Intersect(r, b);
+        //     else if (a is Polygon p) return Intersect(p, b);
+        //     else if (a is Polyline pl) return Intersect(pl, b);
+        //     else return Intersect(a.GetBoundingBox(), b);
+        //
+        //     //var collisionPoints = a.GetCollisionPoints(b);
+        //     ////if (collisionPoints.Valid)
+        //     ////{
+        //     ////    if(b is Segment seg)
+        //     ////    {
+        //     ////        if (seg.AutomaticNormals)
+        //     ////        {
+        //     ////            collisionPoints.FlipNormals(a.GetCentroid());
+        //     ////        }
+        //     ////    }
+        //     ////    else if(b is Polyline pl)
+        //     ////    {
+        //     ////        if (pl.AutomaticNormals)
+        //     ////        {
+        //     ////            collisionPoints.FlipNormals(a.GetCentroid());
+        //     ////        }
+        //     ////    }
+        //     ////    //intersection = intersection.CheckVelocityNew(aVelocity);
+        //     ////}
+        //     //return collisionPoints;
+        // }
+        // public static CollisionPoints Intersect<T>(this Segment seg, T shape) where T : IShape
+        // {
+        //     if (shape is Segment s) return seg.IntersectShape(s);
+        //     else if (shape is Circle c) return seg.IntersectShape(c);
+        //     else if (shape is Triangle t) return seg.IntersectShape(t);
+        //     else if (shape is Rect r) return seg.IntersectShape(r);
+        //     else if (shape is Polygon p) return seg.IntersectShape(p);
+        //     else if (shape is Polyline pl) return seg.IntersectShape(pl);
+        //     else return seg.IntersectShape(shape.GetBoundingBox());
+        // }
+        // public static CollisionPoints Intersect<T>(this Circle circle, T shape) where T : IShape
+        // {
+        //     if (shape is Segment s)         return circle.IntersectShape(s);
+        //     else if (shape is Circle c)     return circle.IntersectShape(c);
+        //     else if (shape is Triangle t)   return circle.IntersectShape(t);
+        //     else if (shape is Rect r)       return circle.IntersectShape(r);
+        //     else if (shape is Polygon p)    return circle.IntersectShape(p);
+        //     else if (shape is Polyline pl)  return circle.IntersectShape(pl);
+        //     else return circle.IntersectShape(shape.GetBoundingBox());// new();
+        // }
+        // public static CollisionPoints Intersect<T>(this Triangle triangle, T shape) where T : IShape
+        // {
+        //     if (shape is Segment s)         return triangle.IntersectShape(s);
+        //     else if (shape is Circle c)     return triangle.IntersectShape(c);
+        //     else if (shape is Triangle t)   return triangle.IntersectShape(t);
+        //     else if (shape is Rect r)       return triangle.IntersectShape(r);
+        //     else if (shape is Polygon p)    return triangle.IntersectShape(p);
+        //     else if (shape is Polyline pl)  return triangle.IntersectShape(pl);
+        //     else return triangle.IntersectShape(shape.GetBoundingBox());// new();
+        // }
+        // public static CollisionPoints Intersect<T>(this Rect rect, T shape) where T : IShape
+        // {
+        //     if (shape is Segment s)         return rect.IntersectShape(s);
+        //     else if (shape is Circle c)     return rect.IntersectShape(c);
+        //     else if (shape is Triangle t)   return rect.IntersectShape(t);
+        //     else if (shape is Rect r)       return rect.IntersectShape(r);
+        //     else if (shape is Polygon p)    return rect.IntersectShape(p);
+        //     else if (shape is Polyline pl)  return rect.IntersectShape(pl);
+        //     else return rect.IntersectShape(shape.GetBoundingBox());// new();
+        // }
+        // public static CollisionPoints Intersect<T>(this Polygon poly, T shape) where T : IShape
+        // {
+        //     if (shape is Segment s)         return poly.IntersectShape(s);
+        //     else if (shape is Circle c)     return poly.IntersectShape(c);
+        //     else if (shape is Triangle t)   return poly.IntersectShape(t);
+        //     else if (shape is Rect r)       return poly.IntersectShape(r);
+        //     else if (shape is Polygon p)    return poly.IntersectShape(p);
+        //     else if (shape is Polyline pl)  return poly.IntersectShape(pl);
+        //     else return poly.IntersectShape(shape.GetBoundingBox());// new();
+        // }
+        // public static CollisionPoints Intersect<T>(this Polyline pl, T shape) where T : IShape
+        // {
+        //     if (shape is Segment s) return pl.IntersectShape(s);
+        //     else if (shape is Circle c) return pl.IntersectShape(c);
+        //     else if (shape is Triangle t) return pl.IntersectShape(t);
+        //     else if (shape is Rect r) return pl.IntersectShape(r);
+        //     else if (shape is Polygon p) return pl.IntersectShape(p);
+        //     else if (shape is Polyline otherPl) return pl.IntersectShape(otherPl);
+        //     else return pl.IntersectShape(shape.GetBoundingBox());
+        // }
+        // public static CollisionPoints IntersectBoundingBoxes(this ICollider a, ICollider b) { return a.GetShape().GetBoundingBox().IntersectShape(b.GetShape().GetBoundingBox()); }
+        // #endregion
         
         #region Helper
         private static float TriangleAreaSigned(Vector2 a, Vector2 b, Vector2 c) { return (a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X); }
@@ -338,8 +333,9 @@ namespace ShapeEngine.Lib
             }
         }
         
-        public static List<Vector2> IntersectCircleCircle(Vector2 aPos, float aRadius, Vector2 bPos, float bRadius) { return IntersectCircleCircle(aPos.X, aPos.Y, aRadius, bPos.X, bPos.Y, bRadius); }
-        public static List<Vector2> IntersectCircleCircle(float cx0, float cy0, float radius0, float cx1, float cy1, float radius1)
+        
+        public static List<Vector2>? IntersectCircleCircle(Vector2 aPos, float aRadius, Vector2 bPos, float bRadius) { return IntersectCircleCircle(aPos.X, aPos.Y, aRadius, bPos.X, bPos.Y, bRadius); }
+        public static List<Vector2>? IntersectCircleCircle(float cx0, float cy0, float radius0, float cx1, float cy1, float radius1)
         {
             // Find the distance between the centers.
             float dx = cx0 - cx1;
@@ -350,17 +346,17 @@ namespace ShapeEngine.Lib
             if (dist > radius0 + radius1)
             {
                 // No solutions, the circles are too far apart.
-                return new();
+                return null;
             }
             else if (dist < Math.Abs(radius0 - radius1))
             {
                 // No solutions, one circle contains the other.
-                return new();
+                return null;
             }
-            else if ((dist == 0) && (radius0 == radius1))
+            else if ((dist == 0) && ShapeMath.EqualsF(radius0, radius1))// (radius0 == radius1))
             {
                 // No solutions, the circles coincide.
-                return new();
+                return null;
             }
             else
             {
@@ -373,26 +369,26 @@ namespace ShapeEngine.Lib
                 double cy2 = cy0 + a * (cy1 - cy0) / dist;
 
                 // Get the points P3.
-                Vector2 intersection1 = new Vector2(
+                var intersection1 = new Vector2(
                     (float)(cx2 + h * (cy1 - cy0) / dist),
                     (float)(cy2 - h * (cx1 - cx0) / dist));
-                Vector2 intersection2 = new Vector2(
+                var intersection2 = new Vector2(
                     (float)(cx2 - h * (cy1 - cy0) / dist),
                     (float)(cy2 + h * (cx1 - cx0) / dist));
 
                 // See if we have 1 or 2 solutions.
-                if (dist == radius0 + radius1) return new() { intersection1 };
+                if (ShapeMath.EqualsF((float)dist, radius0 + radius1)) return new() { intersection1 };
                 return new() { intersection1, intersection2 };
             }
 
         }
-        public static List<Vector2> IntersectSegmentCircle(Vector2 start, Vector2 end, Vector2 circlePos, float circleRadius) { return IntersectSegmentCircle(start.X, start.Y, end.X, end.Y, circlePos.X, circlePos.Y, circleRadius);  }
-        public static List<Vector2> IntersectLineCircle(float aX, float aY, float dX, float dY, float cX, float cY, float R)
+        public static List<Vector2>? IntersectSegmentCircle(Vector2 start, Vector2 end, Vector2 circlePos, float circleRadius) { return IntersectSegmentCircle(start.X, start.Y, end.X, end.Y, circlePos.X, circlePos.Y, circleRadius);  }
+        public static List<Vector2>? IntersectLineCircle(float aX, float aY, float dX, float dY, float cX, float cY, float R)
         {
             if ((dX == 0) && (dY == 0))
             {
                 // A and B are the same points, no way to calculate intersection
-                return new();
+                return null;
             }
 
             float dl = (dX * dX + dY * dY);
@@ -404,7 +400,7 @@ namespace ShapeEngine.Lib
 
             float dist = (new Vector2(nearestX, nearestY) - new Vector2(cX, cY)).Length(); // point_dist(nearestX, nearestY, cX, cY);
 
-            if (dist == R)
+            if (ShapeMath.EqualsF(dist, R))
             {
                 // line segment touches circle; one intersection point
                 float iX = nearestX;
@@ -431,17 +427,17 @@ namespace ShapeEngine.Lib
             else
             {
                 // no intersection
-                return new();
+                return null;
             }
         }
-        public static List<Vector2> IntersectSegmentCircle(float aX, float aY, float bX, float bY, float cX, float cY, float R)
+        public static List<Vector2>? IntersectSegmentCircle(float aX, float aY, float bX, float bY, float cX, float cY, float R)
         {
             float dX = bX - aX;
             float dY = bY - aY;
             if ((dX == 0) && (dY == 0))
             {
                 // A and B are the same points, no way to calculate intersection
-                return new();
+                return null;
             }
 
             float dl = (dX * dX + dY * dY);
@@ -453,7 +449,7 @@ namespace ShapeEngine.Lib
 
             float dist = (new Vector2(nearestX, nearestY) - new Vector2(cX, cY)).Length(); // point_dist(nearestX, nearestY, cX, cY);
 
-            if (dist == R)
+            if (ShapeMath.EqualsF(dist, R))
             {
                 // line segment touches circle; one intersection point
                 float iX = nearestX;
@@ -464,11 +460,11 @@ namespace ShapeEngine.Lib
                     // intersection point is not actually within line segment
                     return new() { new Vector2(iX, iY) };
                 }
-                else return new();
+                else return null;
             }
             else if (dist < R)
             {
-                List<Vector2> intersectionPoints = new();
+                List<Vector2>? intersectionPoints = null;
                 // two possible intersection points
 
                 float dt = MathF.Sqrt(R * R - dist * dist) / MathF.Sqrt(dl);
@@ -480,6 +476,7 @@ namespace ShapeEngine.Lib
                 if (t1 >= 0f && t1 <= 1f)
                 {
                     // intersection point is actually within line segment
+                    intersectionPoints ??= new();
                     intersectionPoints.Add(new Vector2(i1X, i1Y));
                 }
 
@@ -489,6 +486,7 @@ namespace ShapeEngine.Lib
                 float i2Y = aY + t2 * dY;
                 if (t2 >= 0f && t2 <= 1f)
                 {
+                    intersectionPoints ??= new();
                     // intersection point is actually within line segment
                     intersectionPoints.Add(new Vector2(i2X, i2Y));
                 }
@@ -497,10 +495,10 @@ namespace ShapeEngine.Lib
             else
             {
                 // no intersection
-                return new();
+                return null;
             }
         }
-        public static List<Vector2> IntersectCircleSegment(Vector2 circlePos, float circleRadius, Vector2 start, Vector2 end) { return IntersectSegmentCircle(start, end, circlePos, circleRadius); }
+        public static List<Vector2>? IntersectCircleSegment(Vector2 circlePos, float circleRadius, Vector2 start, Vector2 end) { return IntersectSegmentCircle(start, end, circlePos, circleRadius); }
         
        
         #endregion

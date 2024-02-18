@@ -1,7 +1,6 @@
 ﻿
 using System.Numerics;
 using ShapeEngine.Core.Collision;
-using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
 using ShapeEngine.Random;
@@ -12,7 +11,7 @@ namespace ShapeEngine.Core.Shapes
     /// <summary>
     /// Points shoud be in CCW order.
     /// </summary>
-    public class Polygon : Points, IShape, IEquatable<Polygon>
+    public class Polygon : Points, IEquatable<Polygon>
     {
         #region Constructors
         public Polygon() { }
@@ -58,7 +57,53 @@ namespace ShapeEngine.Core.Shapes
         }
 
         public Polygon ToConvex() => Polygon.FindConvexHull(this);
-        
+        public Circle GetBoundingCircle()
+        {
+            float maxD = 0f;
+            int num = this.Count;
+            Vector2 origin = new();
+            for (int i = 0; i < num; i++) { origin += this[i]; }
+            origin = origin / num;
+            //origin *= (1f / (float)num);
+            for (int i = 0; i < num; i++)
+            {
+                float d = (origin - this[i]).LengthSquared();
+                if (d > maxD) maxD = d;
+            }
+
+            return new Circle(origin, MathF.Sqrt(maxD));
+        }
+        public Rect GetBoundingBox()
+        {
+            if (Count < 2) return new();
+            Vector2 start = this[0];
+            Rect r = new(start.X, start.Y, 0, 0);
+
+            foreach (var p in this)
+            {
+                r = r.Enlarge(p);// ShapeRect.Enlarge(r, p);
+            }
+            return r;
+        }
+        public bool ContainsPoint(Vector2 p) { return IsPointInPoly(p, this); }
+        public Vector2 GetCentroid()
+        {
+            //return GetCentroidMean();
+            Vector2 result = new();
+            
+            for (int i = 0; i < Count; i++)
+            {
+                var a = this[i];
+                var b = this[(i + 1) % Count];
+                //float factor = a.X * b.Y - b.X * a.Y; //clockwise 
+                float factor = a.Y * b.X - a.X * b.Y; //counter clockwise
+                result.X += (a.X + b.X) * factor;
+                result.Y += (a.Y + b.Y) * factor;
+            }
+            
+            return result * (1f / (GetArea() * 6f));
+        }
+
         public bool ContainsShape(Segment other)
         {
             return ContainsPoint(other.Start) && ContainsPoint(other.End);
@@ -521,7 +566,7 @@ namespace ShapeEngine.Core.Shapes
         public Segment GetRandomEdge() => GetEdges().GetRandomSegment();
         public Vector2 GetRandomPointOnEdge() => GetRandomEdge().GetRandomPoint();
         public Points GetRandomPointsOnEdge(int amount) => GetEdges().GetRandomPoints(amount);
-
+        
         #endregion
 
         #region Static
@@ -713,13 +758,14 @@ namespace ShapeEngine.Core.Shapes
             return axis;
         }
 
-        public static Polygon GetShape(Points relative, Vector2 pos, float rotRad, Vector2 scale)
+        public static Polygon GetShape(Points relative, Transform2D transform)
         {
             if (relative.Count < 3) return new();
             Polygon shape = new();
             for (int i = 0; i < relative.Count; i++)
             {
-                shape.Add(pos + ShapeVec.Rotate(relative[i], rotRad) * scale);
+                shape.Add(transform.Apply(relative[i]));
+                // shape.Add(pos + ShapeVec.Rotate(relative[i], rotRad) * scale);
             }
             return shape;
         }
@@ -854,57 +900,7 @@ namespace ShapeEngine.Core.Shapes
             return shape;
         }
         #endregion
-
-        #region IShape
-        public Circle GetBoundingCircle()
-        {
-            float maxD = 0f;
-            int num = this.Count;
-            Vector2 origin = new();
-            for (int i = 0; i < num; i++) { origin += this[i]; }
-            origin = origin / num;
-            //origin *= (1f / (float)num);
-            for (int i = 0; i < num; i++)
-            {
-                float d = (origin - this[i]).LengthSquared();
-                if (d > maxD) maxD = d;
-            }
-
-            return new Circle(origin, MathF.Sqrt(maxD));
-        }
-        public Rect GetBoundingBox()
-        {
-            if (Count < 2) return new();
-            Vector2 start = this[0];
-            Rect r = new(start.X, start.Y, 0, 0);
-
-            foreach (var p in this)
-            {
-                r = r.Enlarge(p);// ShapeRect.Enlarge(r, p);
-            }
-            return r;
-        }
-        public bool ContainsPoint(Vector2 p) { return IsPointInPoly(p, this); }
-        public Vector2 GetCentroid()
-        {
-            //return GetCentroidMean();
-            Vector2 result = new();
-            
-            for (int i = 0; i < Count; i++)
-            {
-                Vector2 a = this[i];
-                Vector2 b = this[(i + 1) % Count];
-                //float factor = a.X * b.Y - b.X * a.Y; //clockwise 
-                float factor = a.Y * b.X - a.X * b.Y; //counter clockwise
-                result.X += (a.X + b.X) * factor;
-                result.Y += (a.Y + b.Y) * factor;
-            }
-            
-            return result * (1f / (GetArea() * 6f));
-        }
         
-        #endregion
-
         #region Private
         private float GetAreaSigned()
         {
@@ -957,10 +953,10 @@ namespace ShapeEngine.Core.Shapes
             {
                 if (c.ContainsPoint(p)) return true;
             }
-            for (int i = 0; i < Count; i++)
+            for (var i = 0; i < Count; i++)
             {
-                Vector2 start = GetPoint(i); // this[i];
-                Vector2 end = GetPoint(i + 1); // this[(i + 1) % Count];
+                var start = GetPoint(i); // this[i];
+                var end = GetPoint(i + 1); // this[(i + 1) % Count];
                 if (c.OverlapShape(new Segment(start, end))) return true;
             }
             return false;
@@ -1020,12 +1016,41 @@ namespace ShapeEngine.Core.Shapes
         #endregion
 
         #region Intersect
-        public CollisionPoints IntersectShape(Segment s) { return GetEdges().IntersectShape(s); }
-        public CollisionPoints IntersectShape(Circle c) { return GetEdges().IntersectShape(c); }
-        public CollisionPoints IntersectShape(Triangle t) { return GetEdges().IntersectShape(t.GetEdges()); }
-        public CollisionPoints IntersectShape(Rect r) { return GetEdges().IntersectShape(r.GetEdges()); }
-        public CollisionPoints IntersectShape(Polygon b) { return GetEdges().IntersectShape(b.GetEdges()); }
-        public CollisionPoints IntersectShape(Polyline pl) { return GetEdges().IntersectShape(pl.GetEdges()); }
+        public CollisionPoints? Intersect(Collider collider)
+        {
+            if (!collider.Enabled) return null;
+
+            switch (collider.GetShapeType())
+            {
+                case ShapeType.Circle:
+                    var c = collider.GetCircleShape();
+                    return IntersectShape(c);
+                case ShapeType.Segment:
+                    var s = collider.GetSegmentShape();
+                    return IntersectShape(s);
+                case ShapeType.Triangle:
+                    var t = collider.GetTriangleShape();
+                    return IntersectShape(t);
+                case ShapeType.Rect:
+                    var r = collider.GetRectShape();
+                    return IntersectShape(r);
+                case ShapeType.Poly:
+                    var p = collider.GetPolygonShape();
+                    return IntersectShape(p);
+                case ShapeType.PolyLine:
+                    var pl = collider.GetPolylineShape();
+                    return IntersectShape(pl);
+            }
+
+            return null;
+        }
+
+        public CollisionPoints? IntersectShape(Segment s) { return GetEdges().IntersectShape(s); }
+        public CollisionPoints? IntersectShape(Circle c) { return GetEdges().IntersectShape(c); }
+        public CollisionPoints? IntersectShape(Triangle t) { return GetEdges().IntersectShape(t.GetEdges()); }
+        public CollisionPoints? IntersectShape(Rect r) { return GetEdges().IntersectShape(r.GetEdges()); }
+        public CollisionPoints? IntersectShape(Polygon b) { return GetEdges().IntersectShape(b.GetEdges()); }
+        public CollisionPoints? IntersectShape(Polyline pl) { return GetEdges().IntersectShape(pl.GetEdges()); }
 
         #endregion
 

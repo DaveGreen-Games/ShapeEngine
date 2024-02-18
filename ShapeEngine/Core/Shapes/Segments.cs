@@ -198,42 +198,46 @@ public class Segments : ShapeList<Segment>
     #endregion
 
     #region Intersection
-    public CollisionPoints IntersectShape(Segment s)
+    public CollisionPoints? IntersectShape(Segment s)
     {
-        CollisionPoints points = new();
+        CollisionPoints? points = null;
 
         foreach (var seg in this)
         {
             var collisionPoints = seg.IntersectShape(s);
-            if (collisionPoints.Valid)
+            if (collisionPoints != null && collisionPoints.Valid)
             {
+                points ??= new();
                 points.AddRange(collisionPoints);
             }
         }
         return points;
     }
-    public CollisionPoints IntersectShape(Circle c)
+    public CollisionPoints? IntersectShape(Circle c)
     {
-        CollisionPoints points = new();
+        CollisionPoints? points = null;
         foreach (var seg in this)
         {
             var intersectPoints = ShapeGeometry.IntersectSegmentCircle(seg.Start, seg.End, c.Center, c.Radius);
+            if(intersectPoints == null) continue;
             foreach (var p in intersectPoints)
             {
                 var n = ShapeVec.Normalize(p - c.Center);
+                points ??= new();
                 points.Add(new(p, n));
             }
         }
         return points;
     }
-    public CollisionPoints IntersectShape(Segments b)
+    public CollisionPoints? IntersectShape(Segments b)
     {
-        CollisionPoints points = new();
+        CollisionPoints? points = null;
         foreach (var seg in this)
         {
             var collisionPoints = seg.IntersectShape(b);
-            if (collisionPoints.Valid)
+            if (collisionPoints != null && collisionPoints.Valid)
             {
+                points ??= new();
                 points.AddRange(collisionPoints);
             }
         }

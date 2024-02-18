@@ -59,37 +59,37 @@ public class CollisionInformation
         }
         return filtered;
     }
-    public List<ICollidable> FilterObjects(Predicate<ICollidable> match)
+    public HashSet<Collider> FilterColliders(Predicate<Collider> match)
     {
-        HashSet<ICollidable> filtered = new();
+        HashSet<Collider> filtered = new();
         foreach (var c in Collisions)
         {
             if (match(c.Other)) filtered.Add(c.Other);
         }
-        return filtered.ToList();
+        return filtered;
     }
-    public List<ICollidable> GetAllObjects()
+    public HashSet<Collider> GetAllColliders()
     {
-        HashSet<ICollidable> others = new();
+        HashSet<Collider> others = new();
         foreach (var c in Collisions)
         {
             others.Add(c.Other);
 
         }
-        return others.ToList();
+        return others;
     }
     public List<Collision> GetFirstContactCollisions()
     {
         return FilterCollisions((c) => c.FirstContact);
     }
-    public List<ICollidable> GetFirstContactObjects()
+    public HashSet<Collider> GetFirstContactColliders()
     {
         var filtered = GetFirstContactCollisions();
-        HashSet<ICollidable> others = new();
+        HashSet<Collider> others = new();
         foreach (var c in filtered)
         {
             others.Add(c.Other);
         }
-        return others.ToList();
+        return others;
     }
 }
