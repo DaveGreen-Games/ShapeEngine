@@ -1,5 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Core.Collision;
+using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
 
 namespace ShapeEngine.Core.Shapes;
@@ -39,7 +40,7 @@ public readonly struct Quad : IEquatable<Quad>
     #endregion
 
     #region Constructor
-    private Quad(Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+    internal Quad(Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
         this.A = a;
         this.B = b;
@@ -99,6 +100,15 @@ public readonly struct Quad : IEquatable<Quad>
     #endregion
     
     #region Public
+
+    public Rect GetBoundingBox()
+    {
+        return new();
+    }
+    public readonly CollisionPoint GetClosestCollisionPoint(Vector2 p)
+    {
+        return new();
+    }
 
     public Polygon ToPolygon() => new() { A, B, C, D };
     public Vector2 GetPoint(Vector2 alignement)

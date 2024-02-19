@@ -552,6 +552,7 @@ namespace ShapeEngine.Core.Collision
         public virtual Circle GetCircleShape() => new();
         public virtual Segment GetSegmentShape() => new();
         public virtual Triangle GetTriangleShape() => new();
+        public virtual Quad GetQuadShape() => new();
         public virtual Rect GetRectShape() => new();
         public virtual Polygon GetPolygonShape() => new();
         public virtual Polyline GetPolylineShape() => new();

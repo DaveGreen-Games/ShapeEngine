@@ -6,7 +6,8 @@ public enum ShapeType
     Circle = 1,
     Segment = 2,
     Triangle = 3,
-    Rect = 4,
-    Poly = 5,
-    PolyLine = 6
+    Quad = 4,
+    Rect = 5,
+    Poly = 6,
+    PolyLine = 7
 }

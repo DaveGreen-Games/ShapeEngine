@@ -27,7 +27,7 @@ public class TriangleCollider : Collider
     public override Rect GetBoundingBox() => GetTriangleShape().GetBoundingBox();
     public override CollisionPoint GetClosestCollisionPoint(Vector2 p)
     {
-        var t = GetRectShape();
+        var t = GetTriangleShape();
         return t.GetClosestCollisionPoint(p);
     }
     public override ShapeType GetShapeType() => ShapeType.Triangle;
