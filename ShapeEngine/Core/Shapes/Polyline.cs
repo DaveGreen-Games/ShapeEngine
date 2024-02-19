@@ -233,6 +233,8 @@ namespace ShapeEngine.Core.Shapes
         {
             if (Count <= 0) return false;
             if (Count == 1) return c.ContainsPoint(this[0]);
+
+            if (c.ContainsPoint(this[0])) return true;
             
             for (var i = 0; i < Count - 1; i++)
             {
@@ -243,7 +245,8 @@ namespace ShapeEngine.Core.Shapes
 
             return false;
         }
-        public bool OverlapShape(Triangle t) { return GetEdges().OverlapShape(t); }
+
+        public bool OverlapShape(Triangle t) => t.OverlapShape(this);
         public bool OverlapShape(Rect r) { return GetEdges().OverlapShape(r); }
         public bool OverlapShape(Polygon p)
         {

@@ -600,8 +600,8 @@ namespace ShapeEngine.Core.Shapes
         public readonly bool OverlapShape(Triangle t)
         {
             if (ContainsPoint(t.A)) return true;
-            if (ContainsPoint(t.B)) return true;
-            if (ContainsPoint(t.C)) return true;
+            // if (ContainsPoint(t.B)) return true;
+            // if (ContainsPoint(t.C)) return true;
             if (t.ContainsPoint(Center)) return true;
 
             if (Segment.OverlapSegmentCircle(t.A, t.B, Center, Radius)) return true;
@@ -611,9 +611,9 @@ namespace ShapeEngine.Core.Shapes
         public readonly bool OverlapShape(Quad q)
         {
             if (ContainsPoint(q.A)) return true;
-            if (ContainsPoint(q.B)) return true;
-            if (ContainsPoint(q.C)) return true;
-            if (ContainsPoint(q.D)) return true;
+            // if (ContainsPoint(q.B)) return true;
+            // if (ContainsPoint(q.C)) return true;
+            // if (ContainsPoint(q.D)) return true;
             if (q.ContainsPoint(Center)) return true;
         
             if (Segment.OverlapSegmentCircle(q.A, q.B, Center, Radius)) return true;
@@ -626,7 +626,6 @@ namespace ShapeEngine.Core.Shapes
             if (Radius <= 0.0f) return r.ContainsPoint(Center);
             return ContainsPoint(r.ClampOnRect(Center));
         }
-
         public readonly bool OverlapShape(Polygon poly) => poly.OverlapShape(this);
         public readonly bool OverlapShape(Polyline pl) => pl.OverlapShape(this);
 

@@ -187,26 +187,26 @@ public readonly struct Quad : IEquatable<Quad>
         );
     }
 
-    private bool ContainsPointCheck(Vector2 a, Vector2 b, Vector2 pointToCheck)
-    {
-        if (a.Y < pointToCheck.Y && b.Y >= pointToCheck.Y || b.Y < pointToCheck.Y && a.Y >= pointToCheck.Y)
-        {
-            if (a.X + (pointToCheck.Y - a.Y) / (b.Y - a.Y) * (b.X - a.X) < pointToCheck.X)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
+    // private bool ContainsPointCheck(Vector2 a, Vector2 b, Vector2 pointToCheck)
+    // {
+    //     if (a.Y < pointToCheck.Y && b.Y >= pointToCheck.Y || b.Y < pointToCheck.Y && a.Y >= pointToCheck.Y)
+    //     {
+    //         if (a.X + (pointToCheck.Y - a.Y) / (b.Y - a.Y) * (b.X - a.X) < pointToCheck.X)
+    //         {
+    //             return true;
+    //         }
+    //     }
+    //     return false;
+    // }
     
     public bool ContainsPoint(Vector2 p)
     {
         var oddNodes = false;
 
-        if (ContainsPointCheck(D, A, p)) oddNodes = !oddNodes;
-        if (ContainsPointCheck(A, B, p)) oddNodes = !oddNodes;
-        if (ContainsPointCheck(B, C, p)) oddNodes = !oddNodes;
-        if (ContainsPointCheck(D, D, p)) oddNodes = !oddNodes;
+        if (Polygon.ContainsPointCheck(D, A, p)) oddNodes = !oddNodes;
+        if (Polygon.ContainsPointCheck(A, B, p)) oddNodes = !oddNodes;
+        if (Polygon.ContainsPointCheck(B, C, p)) oddNodes = !oddNodes;
+        if (Polygon.ContainsPointCheck(D, D, p)) oddNodes = !oddNodes;
         
         return oddNodes;
     }
@@ -349,55 +349,11 @@ public readonly struct Quad : IEquatable<Quad>
         }
         return false;
     }
-    public bool OverlapShape(Segment s)
-    {
-        if (ContainsPoint(s.Start)) return true;
-        if (ContainsPoint(s.End)) return true;
 
-        var seg = new Segment(A, B);
-        if (seg.OverlapShape(s)) return true;
-        
-        seg = new Segment(B, C);
-        if (seg.OverlapShape(s)) return true;
-        
-        seg = new Segment(C, D);
-        if (seg.OverlapShape(s)) return true;
-        
-        seg = new Segment(D, A);
-        return seg.OverlapShape(s);
-    }
+    public bool OverlapShape(Segment s) => s.OverlapShape(this);
 
     public bool OverlapShape(Circle c) => c.OverlapShape(this);
-    public bool OverlapShape(Triangle t)
-    {
-        if (t.ContainsPoint(A)) return true;
-        if (t.ContainsPoint(B)) return true;
-        if (t.ContainsPoint(C)) return true;
-        if (t.ContainsPoint(D)) return true;
-
-        var segAb = new Segment(A, B);
-        var segBc = new Segment(B, C);
-        var segCd = new Segment(C, D);
-        var segDa = new Segment(D, A);
-
-        var tSegment = t.SegmentAToB;
-        if (segAb.OverlapShape(tSegment)) return true;
-        if (segBc.OverlapShape(tSegment)) return true;
-        if (segCd.OverlapShape(tSegment)) return true;
-        if (segDa.OverlapShape(tSegment)) return true;
-        
-        tSegment = t.SegmentBToC;
-        if (segAb.OverlapShape(tSegment)) return true;
-        if (segBc.OverlapShape(tSegment)) return true;
-        if (segCd.OverlapShape(tSegment)) return true;
-        if (segDa.OverlapShape(tSegment)) return true;
-        
-        tSegment = t.SegmentCToA;
-        if (segAb.OverlapShape(tSegment)) return true;
-        if (segBc.OverlapShape(tSegment)) return true;
-        if (segCd.OverlapShape(tSegment)) return true;
-        return segDa.OverlapShape(tSegment);
-    }
+    public bool OverlapShape(Triangle t) => t.OverlapShape(this);
     public bool OverlapShape(Quad q)
     {
         if (ContainsPoint(q.A)) return true;

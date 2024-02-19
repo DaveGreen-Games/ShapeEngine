@@ -560,9 +560,26 @@ namespace ShapeEngine.Core.Shapes
 
         public bool OverlapShape(Segment b) => OverlapSegmentSegment(Start, End, b.Start, b.End);
         public bool OverlapShape(Circle c) => OverlapSegmentCircle(Start, End, c.Center, c.Radius);
-        public bool OverlapShape(Triangle t) { return t.OverlapShape(this); }
 
-        public bool OverlapShape(Quad q) { return q.OverlapShape(this); }
+        public bool OverlapShape(Triangle t)
+        {
+            if (t.ContainsPoint(Start)) return true;
+            // if (ContainsPoint(s.End)) return true;
+
+            if (OverlapSegmentSegment(Start, End, t.A, t.B)) return true;
+            if (OverlapSegmentSegment(Start, End, t.B, t.C)) return true;
+            return OverlapSegmentSegment(Start, End, t.C, t.A);
+        }
+
+        public bool OverlapShape(Quad q)
+        {
+            if (q.ContainsPoint(Start)) return true;
+
+            if (OverlapSegmentSegment(Start, End, q.A, q.B)) return true;
+            if (OverlapSegmentSegment(Start, End, q.B, q.C)) return true;
+            if (OverlapSegmentSegment(Start, End, q.C, q.D)) return true;
+            return OverlapSegmentSegment(Start, End, q.D, q.A);
+        }
         public bool OverlapShape(Rect r)
         {
             if (!r.OverlapRectLine(Start, Displacement)) return false;

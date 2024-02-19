@@ -523,27 +523,17 @@ namespace ShapeEngine.Core.Shapes
             return false;
         }
 
-        public readonly bool OverlapShape(Segment s)
-        {
-            if (ContainsPoint(s.Start)) return true;
-            if (ContainsPoint(s.End)) return true;
-
-            if (Segment.OverlapSegmentSegment(s.Start, s.End, A, B)) return true;
-            if (Segment.OverlapSegmentSegment(s.Start, s.End, B, C)) return true;
-            return Segment.OverlapSegmentSegment(s.Start, s.End, C, A);
-        }
-
+        public readonly bool OverlapShape(Segment s) => s.OverlapShape(this);
         public readonly bool OverlapShape(Circle c) => c.OverlapShape(this);
-
         public readonly bool OverlapShape(Triangle b)
         {
             if (ContainsPoint(b.A)) return true;
-            if (ContainsPoint(b.B)) return true;
-            if (ContainsPoint(b.C)) return true;
+            // if (ContainsPoint(b.B)) return true;
+            // if (ContainsPoint(b.C)) return true;
             
             if (b.ContainsPoint(A)) return true;
-            if (b.ContainsPoint(B)) return true;
-            if (b.ContainsPoint(C)) return true;
+            // if (b.ContainsPoint(B)) return true;
+            // if (b.ContainsPoint(C)) return true;
             
             if (Segment.OverlapSegmentSegment(A, B, b.A, b.B)) return true;
             if (Segment.OverlapSegmentSegment(A, B, b.B, b.C)) return true;
@@ -557,27 +547,26 @@ namespace ShapeEngine.Core.Shapes
             if (Segment.OverlapSegmentSegment(C, A, b.B, b.C)) return true;
             return Segment.OverlapSegmentSegment(C, A, b.C, b.A);
         }
-
         public readonly bool OverlapShape(Rect r)
         {
             var a = r.TopLeft;
             if (ContainsPoint(a)) return true;
             
-            var b = r.BottomLeft;
-            if (ContainsPoint(b)) return true;
-            
-            var c = r.BottomRight;
-            if (ContainsPoint(c)) return true;
-            
-            var d = r.TopRight;
-            if (ContainsPoint(d)) return true;
+            // if (ContainsPoint(b)) return true;
+            // if (ContainsPoint(c)) return true;
+            // if (ContainsPoint(d)) return true;
             
             if (r.ContainsPoint(A)) return true;
-            if (r.ContainsPoint(B)) return true;
-            if (r.ContainsPoint(C)) return true;
+            // if (r.ContainsPoint(B)) return true;
+            // if (r.ContainsPoint(C)) return true;
             
+            var b = r.BottomLeft;
             if (Segment.OverlapSegmentSegment(A, B, a, b)) return true;
+            
+            var c = r.BottomRight;
             if (Segment.OverlapSegmentSegment(A, B, b, c)) return true;
+            
+            var d = r.TopRight;
             if (Segment.OverlapSegmentSegment(A, B, c, d)) return true;
             if (Segment.OverlapSegmentSegment(A, B, d, a)) return true;
             
@@ -591,17 +580,16 @@ namespace ShapeEngine.Core.Shapes
             if (Segment.OverlapSegmentSegment(C, A, c, d)) return true;
             return Segment.OverlapSegmentSegment(C, A, d, a);
         }
-
-        public bool OverlapShape(Quad q)
+        public readonly bool OverlapShape(Quad q)
         {
             if (ContainsPoint(q.A)) return true;
-            if (ContainsPoint(q.B)) return true;
-            if (ContainsPoint(q.C)) return true;
-            if (ContainsPoint(q.D)) return true;
+            // if (ContainsPoint(q.B)) return true;
+            // if (ContainsPoint(q.C)) return true;
+            // if (ContainsPoint(q.D)) return true;
             
             if (q.ContainsPoint(A)) return true;
-            if (q.ContainsPoint(B)) return true;
-            if (q.ContainsPoint(C)) return true;
+            // if (q.ContainsPoint(B)) return true;
+            // if (q.ContainsPoint(C)) return true;
             
             if (Segment.OverlapSegmentSegment(A, B, q.A, q.B)) return true;
             if (Segment.OverlapSegmentSegment(A, B, q.B, q.C)) return true;
@@ -618,15 +606,46 @@ namespace ShapeEngine.Core.Shapes
             if (Segment.OverlapSegmentSegment(C, A, q.C, q.D)) return true;
             return Segment.OverlapSegmentSegment(C, A, q.D, q.A);
         }
-
         public readonly bool OverlapShape(Polygon poly)
         {
-            return poly.OverlapShape(this);
-        }
+            if (poly.Count <= 0) return false;
+            if (poly.Count == 1) return ContainsPoint(poly[0]);
+            
+            if (ContainsPoint(poly[0])) return true;
+            
+            var oddNodes = false;
+            
+            for (var i = 0; i < poly.Count; i++)
+            {
+                var start = poly[i];
+                var end = poly[(i + 1) % poly.Count];
+                if (Segment.OverlapSegmentSegment(A, B, start, end)) return true;
+                if (Segment.OverlapSegmentSegment(B, C, start, end)) return true;
+                if (Segment.OverlapSegmentSegment(C, A, start, end)) return true;
+                
+                if(Polygon.ContainsPointCheck(start, end, A)) oddNodes = !oddNodes;
+            }
 
+            return oddNodes;
+        }
         public readonly bool OverlapShape(Polyline pl)
         {
-            return pl.OverlapShape(this);
+            if (pl.Count <= 0) return false;
+            if (pl.Count == 1) return ContainsPoint(pl[0]);
+            
+            if (ContainsPoint(pl[0])) return true;
+            
+            for (var i = 0; i < pl.Count - 1; i++)
+            {
+                var start = pl[i];
+                var end = pl[(i + 1) % pl.Count];
+                if (Segment.OverlapSegmentSegment(A, B, start, end)) return true;
+                if (Segment.OverlapSegmentSegment(B, C, start, end)) return true;
+                if (Segment.OverlapSegmentSegment(C, A, start, end)) return true;
+                
+            }
+
+            return false;
         }
 
 

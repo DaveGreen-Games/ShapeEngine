@@ -85,7 +85,8 @@ namespace ShapeEngine.Core.Shapes
             }
             return r;
         }
-        public bool ContainsPoint(Vector2 p) { return IsPointInPoly(p, this); }
+        public bool ContainsPoint(Vector2 p) { return IsPointInPoly(this, p); }
+
         public Vector2 GetCentroid()
         {
             //return GetCentroidMean();
@@ -570,7 +571,18 @@ namespace ShapeEngine.Core.Shapes
         #endregion
 
         #region Static
-        public static bool IsPointInPoly(Vector2 point, Polygon poly)
+        internal static bool ContainsPointCheck(Vector2 a, Vector2 b, Vector2 pointToCheck)
+        {
+            if (a.Y < pointToCheck.Y && b.Y >= pointToCheck.Y || b.Y < pointToCheck.Y && a.Y >= pointToCheck.Y)
+            {
+                if (a.X + (pointToCheck.Y - a.Y) / (b.Y - a.Y) * (b.X - a.X) < pointToCheck.X)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        public static bool IsPointInPoly(Polygon poly, Vector2 p)
         {
             bool oddNodes = false;
             int num = poly.Count;
@@ -579,17 +591,71 @@ namespace ShapeEngine.Core.Shapes
             {
                 var vi = poly[i];
                 var vj = poly[j];
-                if (vi.Y < point.Y && vj.Y >= point.Y || vj.Y < point.Y && vi.Y >= point.Y)
-                {
-                    if (vi.X + (point.Y - vi.Y) / (vj.Y - vi.Y) * (vj.X - vi.X) < point.X)
-                    {
-                        oddNodes = !oddNodes;
-                    }
-                }
+                if (ContainsPointCheck(vi, vj, p)) oddNodes = !oddNodes;
                 j = i;
             }
 
             return oddNodes;
+        }
+        public static bool ContainsPoints(Polygon poly, Vector2 a, Vector2 b)
+        {
+            bool oddNodesA = false;
+            bool oddNodesB = false;
+            int num = poly.Count;
+            int j = num - 1;
+            for (int i = 0; i < num; i++)
+            {
+                var vi = poly[i];
+                var vj = poly[j];
+                if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
+                if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
+                
+                j = i;
+            }
+
+            return oddNodesA || oddNodesB;
+        }
+        public static bool ContainsPoints(Polygon poly, Vector2 a, Vector2 b, Vector2 c)
+        {
+            bool oddNodesA = false;
+            bool oddNodesB = false;
+            bool oddNodesC = false;
+            int num = poly.Count;
+            int j = num - 1;
+            for (int i = 0; i < num; i++)
+            {
+                var vi = poly[i];
+                var vj = poly[j];
+                if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
+                if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
+                if(ContainsPointCheck(vi, vj, c)) oddNodesC = !oddNodesC;
+                
+                j = i;
+            }
+
+            return oddNodesA || oddNodesB || oddNodesC;
+        }
+        public static bool ContainsPoints(Polygon poly, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+        {
+            bool oddNodesA = false;
+            bool oddNodesB = false;
+            bool oddNodesC = false;
+            bool oddNodesD = false;
+            int num = poly.Count;
+            int j = num - 1;
+            for (int i = 0; i < num; i++)
+            {
+                var vi = poly[i];
+                var vj = poly[j];
+                if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
+                if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
+                if(ContainsPointCheck(vi, vj, c)) oddNodesC = !oddNodesC;
+                if(ContainsPointCheck(vi, vj, d)) oddNodesD = !oddNodesD;
+                
+                j = i;
+            }
+
+            return oddNodesA || oddNodesB || oddNodesC || oddNodesD;
         }
 
         /// <summary>
@@ -935,7 +1001,7 @@ namespace ShapeEngine.Core.Shapes
         {
             if (Count < 3) return false;
             if (ContainsPoint(s.Start)) return true;
-            if (ContainsPoint(s.End)) return true;
+            // if (ContainsPoint(s.End)) return true;
             for (var i = 0; i < Count; i++)
             {
                 var start = GetPoint(i); // this[i];
@@ -948,20 +1014,18 @@ namespace ShapeEngine.Core.Shapes
         public bool OverlapShape(Circle c)
         {
             if (Count < 3) return false;
-            foreach (var p in this)
-            {
-                if (c.ContainsPoint(p)) return true;
-            }
+            if (c.ContainsPoint(this[0])) return true;
             if (ContainsPoint(c.Center)) return true;
             for (var i = 0; i < Count; i++)
             {
-                var start = this[i];// GetPoint(i);
-                var end = this[(i + 1) % Count];// GetPoint(i + 1);
+                var start = this[i];
+                var end = this[(i + 1) % Count];
                 if (Circle.OverlapCircleSegment(c.Center, c.Radius, start, end)) return true;
             }
             return false;
         }
-        public bool OverlapShape(Triangle t) { return OverlapShape(t.ToPolygon()); }
+
+        public bool OverlapShape(Triangle t) => t.OverlapShape(this);
         public bool OverlapShape(Rect r)
         {
             if (Count < 3) return false;
