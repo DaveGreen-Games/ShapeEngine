@@ -189,11 +189,28 @@ public class Segments : ShapeList<Segment>
         }
         return false;
     }
-    public bool OverlapShape(Segment s) { return s.OverlapShape(this); }
-    public bool OverlapShape(Circle c) { return c.OverlapShape(this); }
-    public bool OverlapShape(Triangle t) { return t.OverlapShape(this); }
-    public bool OverlapShape(Rect r) { return r.OverlapShape(this); }
-    public bool OverlapShape(Polyline pl) { return pl.OverlapShape(this); }
+    public bool OverlapShape(Segment s)
+    {
+        foreach (var seg in this)
+        {
+            if(Segment.OverlapSegmentSegment(seg.Start, seg.End, s.Start, s.End)) return true;
+        }
+        return false;
+    }
+
+    public bool OverlapShape(Circle c)
+    {
+        foreach (var seg in this)
+        {
+            if (Segment.OverlapSegmentCircle(seg.Start, seg.End, c.Center, c.Radius)) return true;
+        }
+        return false;
+    }
+    public bool OverlapShape(Triangle t) => t.OverlapShape(this);
+    public bool OverlapShape(Quad q) => q.OverlapShape(this);
+    public bool OverlapShape(Rect r) => r.OverlapShape(this);
+    public bool OverlapShape(Polyline pl) => pl.OverlapShape(this);
+    public bool OverlapShape(Polygon p) => p.OverlapShape(this);
 
     #endregion
 
@@ -204,44 +221,80 @@ public class Segments : ShapeList<Segment>
 
         foreach (var seg in this)
         {
-            var collisionPoints = seg.IntersectShape(s);
-            if (collisionPoints != null && collisionPoints.Valid)
+            var result = Segment.IntersectSegmentSegment(seg.Start, seg.End, s.Start, s.End);
+            if (result != null)
             {
                 points ??= new();
-                points.AddRange(collisionPoints);
+                points.AddRange((CollisionPoint)result);
             }
         }
         return points;
+        
+        // CollisionPoints? points = null;
+        //
+        // foreach (var seg in this)
+        // {
+        //     var collisionPoints = seg.IntersectShape(s);
+        //     if (collisionPoints != null && collisionPoints.Valid)
+        //     {
+        //         points ??= new();
+        //         points.AddRange(collisionPoints);
+        //     }
+        // }
+        // return points;
     }
     public CollisionPoints? IntersectShape(Circle c)
     {
         CollisionPoints? points = null;
         foreach (var seg in this)
         {
-            var intersectPoints = ShapeGeometry.IntersectSegmentCircle(seg.Start, seg.End, c.Center, c.Radius);
-            if(intersectPoints == null) continue;
-            foreach (var p in intersectPoints)
+            var result = Segment.IntersectSegmentCircle(seg.Start, seg.End, c.Center, c.Radius);
+            if (result.a != null || result.b != null)
             {
-                var n = ShapeVec.Normalize(p - c.Center);
                 points ??= new();
-                points.Add(new(p, n));
+                if(result.a != null) points.Add((CollisionPoint)result.a);
+                if(result.b != null) points.Add((CollisionPoint)result.b);
             }
+            // if(intersectPoints == null) continue;
+            // foreach (var p in intersectPoints)
+            // {
+                // var n = ShapeVec.Normalize(p - c.Center);
+                // points ??= new();
+                // points.Add(new(p, n));
+            // }
         }
         return points;
     }
     public CollisionPoints? IntersectShape(Segments b)
     {
         CollisionPoints? points = null;
+
         foreach (var seg in this)
         {
-            var collisionPoints = seg.IntersectShape(b);
-            if (collisionPoints != null && collisionPoints.Valid)
+            foreach (var bSeg in b)
             {
-                points ??= new();
-                points.AddRange(collisionPoints);
+                var result = Segment.IntersectSegmentSegment(seg.Start, seg.End, bSeg.Start, bSeg.End);
+                if (result != null)
+                {
+                    points ??= new();
+                    points.AddRange((CollisionPoint)result);
+                }
             }
+            
         }
         return points;
+        
+        // CollisionPoints? points = null;
+        // foreach (var seg in this)
+        // {
+            // var collisionPoints = seg.IntersectShape(b);
+            // if (collisionPoints != null && collisionPoints.Valid)
+            // {
+                // points ??= new();
+                // points.AddRange(collisionPoints);
+            // }
+        // }
+        // return points;
     }
 
     #endregion

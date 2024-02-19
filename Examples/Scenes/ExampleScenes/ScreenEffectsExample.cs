@@ -55,11 +55,11 @@ namespace Examples.Scenes.ExampleScenes
         }
         public void Update(float dt, Rect universe)
         {
-            circle.Center += vel * dt;
+            circle += vel * dt; // circle.Center += vel * dt;
 
             if (!universe.ContainsPoint(circle.Center))
             {
-                circle.Center = -circle.Center;
+                circle -= circle.Center; // circle.Center = -circle.Center;
             }
         }
         public bool CheckCollision(Circle ship)

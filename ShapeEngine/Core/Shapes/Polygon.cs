@@ -948,16 +948,16 @@ namespace ShapeEngine.Core.Shapes
         public bool OverlapShape(Circle c)
         {
             if (Count < 3) return false;
-            if (ContainsPoint(c.Center)) return true;
             foreach (var p in this)
             {
                 if (c.ContainsPoint(p)) return true;
             }
+            if (ContainsPoint(c.Center)) return true;
             for (var i = 0; i < Count; i++)
             {
-                var start = GetPoint(i); // this[i];
-                var end = GetPoint(i + 1); // this[(i + 1) % Count];
-                if (c.OverlapShape(new Segment(start, end))) return true;
+                var start = this[i];// GetPoint(i);
+                var end = this[(i + 1) % Count];// GetPoint(i + 1);
+                if (Circle.OverlapCircleSegment(c.Center, c.Radius, start, end)) return true;
             }
             return false;
         }
@@ -1010,7 +1010,18 @@ namespace ShapeEngine.Core.Shapes
             return false;
         }
         public bool OverlapShape(Polyline pl) { return pl.OverlapShape(this); }
+        public bool OverlapShape(Segments segments)
+        {
 
+            if (Count < 3 || segments.Count <= 0) return false;
+
+            foreach (var seg in segments)
+            {
+                if (OverlapShape(seg)) return true;
+            }
+
+            return false;
+        }
 
 
         #endregion

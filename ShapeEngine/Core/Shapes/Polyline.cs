@@ -228,7 +228,21 @@ namespace ShapeEngine.Core.Shapes
         #region Overlap
         public bool OverlapShape(Segments segments) { return GetEdges().OverlapShape(segments); }
         public bool OverlapShape(Segment s) { return GetEdges().OverlapShape(s); }
-        public bool OverlapShape(Circle c) { return GetEdges().OverlapShape(c); }
+
+        public bool OverlapShape(Circle c)
+        {
+            if (Count <= 0) return false;
+            if (Count == 1) return c.ContainsPoint(this[0]);
+            
+            for (var i = 0; i < Count - 1; i++)
+            {
+                var start = this[i];
+                var end = this[(i + 1) % Count];
+                if (Circle.OverlapCircleSegment(c.Center, c.Radius, start, end)) return true;
+            }
+
+            return false;
+        }
         public bool OverlapShape(Triangle t) { return GetEdges().OverlapShape(t); }
         public bool OverlapShape(Rect r) { return GetEdges().OverlapShape(r); }
         public bool OverlapShape(Polygon p)

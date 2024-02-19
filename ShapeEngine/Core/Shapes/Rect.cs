@@ -346,12 +346,12 @@ namespace ShapeEngine.Core.Shapes
             var edgeBStart =    corners[2];
             var edgeBEnd =      corners[3];
 
-            var edgeARange = ProjectSegment(edgeAStart, edgeAEnd, n);
-            var edgeBRange = ProjectSegment(edgeBStart, edgeBEnd, n);
+            var edgeARange = Segment.ProjectSegment(edgeAStart, edgeAEnd, n);
+            var edgeBRange = Segment.ProjectSegment(edgeBStart, edgeBEnd, n);
             var rProjection = RangeHull(edgeARange, edgeBRange);
 
-            var axisRange = ProjectSegment(axisStart, axisEnd, n);
-            return !OverlappingRange(axisRange, rProjection);
+            var axisRange = Segment.ProjectSegment(axisStart, axisEnd, n);
+            return !axisRange.OverlappingRange(rProjection);
         }
 
         
@@ -1225,27 +1225,7 @@ namespace ShapeEngine.Core.Shapes
 
         public static Rect Empty => new();
         
-        public static bool OverlappingRange(float minA, float maxA, float minB, float maxB)
-        {
-            if (maxA < minA)
-            {
-                float temp = minA;
-                minA = maxA;
-                maxA = temp;
-            }
-            if (maxB < minB)
-            {
-                float temp = minB;
-                minB = maxB;
-                maxB = temp;
-            }
-            //return minA < maxB && maxA > minB;
-            return minB <= maxA && minA <= maxB;
-        }
-        public static bool OverlappingRange(RangeFloat a, RangeFloat b)
-        {
-            return OverlappingRange(a.Min, a.Max, b.Min, b.Max);
-        }
+        
         private static RangeFloat RangeHull(RangeFloat a, RangeFloat b)
         {
             return new
@@ -1254,20 +1234,8 @@ namespace ShapeEngine.Core.Shapes
                     a.Max > b.Max ? a.Max : b.Max
                 );
         }
-        public static RangeFloat ProjectSegment(Vector2 aPos, Vector2 aEnd, Vector2 onto)
-        {
-            Vector2 unitOnto = Vector2.Normalize(onto);
-            RangeFloat r = new(ShapeVec.Dot(unitOnto, aPos), ShapeVec.Dot(unitOnto, aEnd));
-            return r;
-        }
-        public static bool SegmentOnOneSide(Vector2 axisPos, Vector2 axisDir, Vector2 segmentPos, Vector2 segmentEnd)
-        {
-            Vector2 d1 = segmentPos - axisPos;
-            Vector2 d2 = segmentEnd - axisPos;
-            Vector2 n = ShapeVec.Rotate90CCW(axisDir);// new(-axisDir.Y, axisDir.X);
-            return Vector2.Dot(n, d1) * Vector2.Dot(n, d2) > 0.0f;
-        }
-
+        
+        
         
         #endregion
         
@@ -1476,8 +1444,8 @@ namespace ShapeEngine.Core.Shapes
             var bTopLeft = new Vector2(b.X, b.Y);
             var bBottomRight = bTopLeft + new Vector2(b.Width, b.Height);
             return
-                Rect.OverlappingRange(aTopLeft.X, aBottomRight.X, bTopLeft.X, bBottomRight.X) &&
-                Rect.OverlappingRange(aTopLeft.Y, aBottomRight.Y, bTopLeft.Y, bBottomRight.Y);
+                RangeFloat.OverlappingRange(aTopLeft.X, aBottomRight.X, bTopLeft.X, bBottomRight.X) &&
+                RangeFloat.OverlappingRange(aTopLeft.Y, aBottomRight.Y, bTopLeft.Y, bBottomRight.Y);
         }
         public readonly bool OverlapShape(Polygon poly) { return poly.OverlapShape(this); }
         public readonly bool OverlapShape(Polyline pl) { return pl.OverlapShape(this); }

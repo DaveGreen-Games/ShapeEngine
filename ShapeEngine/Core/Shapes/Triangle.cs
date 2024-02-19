@@ -12,12 +12,12 @@ namespace ShapeEngine.Core.Shapes
     /// <summary>
     /// Class that represents a triangle by holding three points. Points a, b, c should be in ccw order!
     /// </summary>
-    public struct Triangle : IEquatable<Triangle>
+    public readonly struct Triangle : IEquatable<Triangle>
     {
         #region Members
-        public Vector2 A;
-        public Vector2 B;
-        public Vector2 C;
+        public readonly Vector2 A;
+        public readonly Vector2 B;
+        public readonly Vector2 C;
         #endregion
 
         #region Getter Setter
@@ -28,7 +28,7 @@ namespace ShapeEngine.Core.Shapes
         public readonly Segment SegmentBToC => new(B, C, FlippedNormals);
         public readonly Segment SegmentCToA => new(C, A, FlippedNormals);
 
-        public bool FlippedNormals { get; set; } = false;
+        public bool FlippedNormals { get; init; } = false;
         #endregion
 
         #region Constructors
@@ -94,16 +94,11 @@ namespace ShapeEngine.Core.Shapes
             var bp = p - B;
             var cp = p - C;
 
-            float c1 = ShapeVec.Cross(ab, ap);
-            float c2 = ShapeVec.Cross(bc, bp);
-            float c3 = ShapeVec.Cross(ca, cp);
+            float c1 = ab.Cross(ap);
+            float c2 = bc.Cross(bp);
+            float c3 = ca.Cross(cp);
 
-            if (c1 < 0f && c2 < 0f && c3 < 0f)
-            {
-                return true;
-            }
-
-            return false;
+            return c1 < 0f && c2 < 0f && c3 < 0f;
         }
         // public static bool IsPointInside(Vector2 a, Vector2 b, Vector2 c, Vector2 p)
         // {
@@ -479,14 +474,51 @@ namespace ShapeEngine.Core.Shapes
             return false;
         }
         #endregion
-        
+
+        #region Static
+
+        public static float AreaSigned(Vector2 a, Vector2 b, Vector2 c) { return (a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X); }
+
+
+        #endregion
 
         #region Overlap
+        public readonly bool Overlap(Collider collider)
+        {
+            if (!collider.Enabled) return false;
+
+            switch (collider.GetShapeType())
+            {
+                case ShapeType.Circle:
+                    var c = collider.GetCircleShape();
+                    return OverlapShape(c);
+                case ShapeType.Segment:
+                    var s = collider.GetSegmentShape();
+                    return OverlapShape(s);
+                case ShapeType.Triangle:
+                    var t = collider.GetTriangleShape();
+                    return OverlapShape(t);
+                case ShapeType.Rect:
+                    var r = collider.GetRectShape();
+                    return OverlapShape(r);
+                case ShapeType.Quad:
+                    var q = collider.GetQuadShape();
+                    return OverlapShape(q);
+                case ShapeType.Poly:
+                    var p = collider.GetPolygonShape();
+                    return OverlapShape(p);
+                case ShapeType.PolyLine:
+                    var pl = collider.GetPolylineShape();
+                    return OverlapShape(pl);
+            }
+
+            return false;
+        }
         public readonly bool OverlapShape(Segments segments)
         {
             foreach (var seg in segments)
             {
-                if (seg.OverlapShape(this)) return true;
+                if (OverlapShape(seg)) return true;
             }
             return false;
         }
@@ -496,25 +528,112 @@ namespace ShapeEngine.Core.Shapes
             if (ContainsPoint(s.Start)) return true;
             if (ContainsPoint(s.End)) return true;
 
-            var seg = new Segment(A, B);
-            if (seg.OverlapShape(s)) return true;
-            
-            seg = new Segment(B, C);
-            if (seg.OverlapShape(s)) return true;
-            
-            seg = new Segment(C, A);
-            return seg.OverlapShape(s);
+            if (Segment.OverlapSegmentSegment(s.Start, s.End, A, B)) return true;
+            if (Segment.OverlapSegmentSegment(s.Start, s.End, B, C)) return true;
+            return Segment.OverlapSegmentSegment(s.Start, s.End, C, A);
         }
-        public readonly bool OverlapShape(Circle c) { return ToPolygon().OverlapShape(c); }
-        public readonly bool OverlapShape(Triangle b) { return ToPolygon().OverlapShape(b.ToPolygon()); }
-        public readonly bool OverlapShape(Rect r) { return ToPolygon().OverlapShape(r); }
-        public readonly bool OverlapShape(Polygon poly) { return poly.OverlapShape(this); }
-        public readonly bool OverlapShape(Polyline pl) { return pl.OverlapShape(this); }
+
+        public readonly bool OverlapShape(Circle c) => c.OverlapShape(this);
+
+        public readonly bool OverlapShape(Triangle b)
+        {
+            if (ContainsPoint(b.A)) return true;
+            if (ContainsPoint(b.B)) return true;
+            if (ContainsPoint(b.C)) return true;
+            
+            if (b.ContainsPoint(A)) return true;
+            if (b.ContainsPoint(B)) return true;
+            if (b.ContainsPoint(C)) return true;
+            
+            if (Segment.OverlapSegmentSegment(A, B, b.A, b.B)) return true;
+            if (Segment.OverlapSegmentSegment(A, B, b.B, b.C)) return true;
+            if (Segment.OverlapSegmentSegment(A, B, b.C, b.A)) return true;
+            
+            if (Segment.OverlapSegmentSegment(B, C, b.A, b.B)) return true;
+            if (Segment.OverlapSegmentSegment(B, C, b.B, b.C)) return true;
+            if (Segment.OverlapSegmentSegment(B, C, b.C, b.A)) return true;
+            
+            if (Segment.OverlapSegmentSegment(C, A, b.A, b.B)) return true;
+            if (Segment.OverlapSegmentSegment(C, A, b.B, b.C)) return true;
+            return Segment.OverlapSegmentSegment(C, A, b.C, b.A);
+        }
+
+        public readonly bool OverlapShape(Rect r)
+        {
+            var a = r.TopLeft;
+            if (ContainsPoint(a)) return true;
+            
+            var b = r.BottomLeft;
+            if (ContainsPoint(b)) return true;
+            
+            var c = r.BottomRight;
+            if (ContainsPoint(c)) return true;
+            
+            var d = r.TopRight;
+            if (ContainsPoint(d)) return true;
+            
+            if (r.ContainsPoint(A)) return true;
+            if (r.ContainsPoint(B)) return true;
+            if (r.ContainsPoint(C)) return true;
+            
+            if (Segment.OverlapSegmentSegment(A, B, a, b)) return true;
+            if (Segment.OverlapSegmentSegment(A, B, b, c)) return true;
+            if (Segment.OverlapSegmentSegment(A, B, c, d)) return true;
+            if (Segment.OverlapSegmentSegment(A, B, d, a)) return true;
+            
+            if (Segment.OverlapSegmentSegment(B, C, a, b)) return true;
+            if (Segment.OverlapSegmentSegment(B, C, b, c)) return true;
+            if (Segment.OverlapSegmentSegment(B, C, c, d)) return true;
+            if (Segment.OverlapSegmentSegment(B, C, d, a)) return true;
+            
+            if (Segment.OverlapSegmentSegment(C, A, a, b)) return true;
+            if (Segment.OverlapSegmentSegment(C, A, b, c)) return true;
+            if (Segment.OverlapSegmentSegment(C, A, c, d)) return true;
+            return Segment.OverlapSegmentSegment(C, A, d, a);
+        }
+
+        public bool OverlapShape(Quad q)
+        {
+            if (ContainsPoint(q.A)) return true;
+            if (ContainsPoint(q.B)) return true;
+            if (ContainsPoint(q.C)) return true;
+            if (ContainsPoint(q.D)) return true;
+            
+            if (q.ContainsPoint(A)) return true;
+            if (q.ContainsPoint(B)) return true;
+            if (q.ContainsPoint(C)) return true;
+            
+            if (Segment.OverlapSegmentSegment(A, B, q.A, q.B)) return true;
+            if (Segment.OverlapSegmentSegment(A, B, q.B, q.C)) return true;
+            if (Segment.OverlapSegmentSegment(A, B, q.C, q.D)) return true;
+            if (Segment.OverlapSegmentSegment(A, B, q.D, q.A)) return true;
+            
+            if (Segment.OverlapSegmentSegment(B, C, q.A, q.B)) return true;
+            if (Segment.OverlapSegmentSegment(B, C, q.B, q.C)) return true;
+            if (Segment.OverlapSegmentSegment(B, C, q.C, q.D)) return true;
+            if (Segment.OverlapSegmentSegment(B, C, q.D, q.A)) return true;
+            
+            if (Segment.OverlapSegmentSegment(C, A, q.A, q.B)) return true;
+            if (Segment.OverlapSegmentSegment(C, A, q.B, q.C)) return true;
+            if (Segment.OverlapSegmentSegment(C, A, q.C, q.D)) return true;
+            return Segment.OverlapSegmentSegment(C, A, q.D, q.A);
+        }
+
+        public readonly bool OverlapShape(Polygon poly)
+        {
+            return poly.OverlapShape(this);
+        }
+
+        public readonly bool OverlapShape(Polyline pl)
+        {
+            return pl.OverlapShape(this);
+        }
 
 
         #endregion
 
         #region Intersect
+        
         public readonly CollisionPoints? Intersect(Collider collider)
         {
             if (!collider.Enabled) return null;
@@ -533,6 +652,9 @@ namespace ShapeEngine.Core.Shapes
                 case ShapeType.Rect:
                     var r = collider.GetRectShape();
                     return IntersectShape(r);
+                case ShapeType.Quad:
+                    var q = collider.GetQuadShape();
+                    return IntersectShape(q);
                 case ShapeType.Poly:
                     var p = collider.GetPolygonShape();
                     return IntersectShape(p);
@@ -544,10 +666,12 @@ namespace ShapeEngine.Core.Shapes
             return null;
         }
 
+
         public readonly CollisionPoints? IntersectShape(Segment s) { return GetEdges().IntersectShape(s); }
         public readonly CollisionPoints? IntersectShape(Circle c) { return ToPolygon().IntersectShape(c); }
         public readonly CollisionPoints? IntersectShape(Triangle b) { return ToPolygon().IntersectShape(b.ToPolygon()); }
         public readonly CollisionPoints? IntersectShape(Rect r) { return ToPolygon().IntersectShape(r.ToPolygon()); }
+        public readonly CollisionPoints? IntersectShape(Quad q) { return ToPolygon().IntersectShape(q.ToPolygon()); }
         public readonly CollisionPoints? IntersectShape(Polygon p) { return ToPolygon().IntersectShape(p); }
         public readonly CollisionPoints? IntersectShape(Polyline pl) { return GetEdges().IntersectShape(pl.GetEdges()); }
         

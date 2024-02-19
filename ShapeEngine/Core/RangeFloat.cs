@@ -72,4 +72,24 @@ public class RangeFloat
     {
         return ShapeMath.Clamp(value, Min, Max);
     }
+    public bool OverlappingRange(RangeFloat other) => OverlappingRange(Min, Max, other.Min, other.Max);
+
+    public static bool OverlappingRange(float minA, float maxA, float minB, float maxB)
+    {
+        if (maxA < minA)
+        {
+            float temp = minA;
+            minA = maxA;
+            maxA = temp;
+        }
+        if (maxB < minB)
+        {
+            float temp = minB;
+            minB = maxB;
+            maxB = temp;
+        }
+        //return minA < maxB && maxA > minB;
+        return minB <= maxA && minA <= maxB;
+    }
+    
 }

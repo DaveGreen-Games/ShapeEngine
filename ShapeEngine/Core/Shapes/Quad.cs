@@ -101,6 +101,7 @@ public readonly struct Quad : IEquatable<Quad>
     
     #region Public
 
+    //TODO implement
     public Rect GetBoundingBox()
     {
         return new();
@@ -109,6 +110,8 @@ public readonly struct Quad : IEquatable<Quad>
     {
         return new();
     }
+
+    public Segments GetEdges() => new() { SegmentAToB, SegmentBToC, SegmentCToD, SegmentDToA };
 
     public Polygon ToPolygon() => new() { A, B, C, D };
     public Vector2 GetPoint(Vector2 alignement)
@@ -195,6 +198,7 @@ public readonly struct Quad : IEquatable<Quad>
         }
         return false;
     }
+    
     public bool ContainsPoint(Vector2 p)
     {
         var oddNodes = false;
@@ -362,44 +366,10 @@ public readonly struct Quad : IEquatable<Quad>
         seg = new Segment(D, A);
         return seg.OverlapShape(s);
     }
-    public bool OverlapShape(Circle c)
-    {
-        if (c.ContainsPoint(A)) return true;
-        if (c.ContainsPoint(B)) return true;
-        if (c.ContainsPoint(C)) return true;
-        if (c.ContainsPoint(D)) return true;
-        
-        var seg = new Segment(A, B);
-        if (c.OverlapShape(seg)) return true;
-        
-        seg = new Segment(B, C);
-        if (c.OverlapShape(seg)) return true;
-        
-        seg = new Segment(C, D);
-        if (c.OverlapShape(seg)) return true;
-        
-        seg = new Segment(D, A);
-        return c.OverlapShape(seg);
-    }
+
+    public bool OverlapShape(Circle c) => c.OverlapShape(this);
     public bool OverlapShape(Triangle t)
     {
-        // if (t.ContainsPoint(A)) return true;
-        // if (t.ContainsPoint(B)) return true;
-        // if (t.ContainsPoint(C)) return true;
-        // if (t.ContainsPoint(D)) return true;
-        //
-        // var seg = new Segment(A, B);
-        // if (t.OverlapShape(seg)) return true;
-        //
-        // seg = new Segment(B, C);
-        // if (t.OverlapShape(seg)) return true;
-        //
-        // seg = new Segment(C, D);
-        // if (t.OverlapShape(seg)) return true;
-        //
-        // seg = new Segment(D, A);
-        // return t.OverlapShape(seg);
-        
         if (t.ContainsPoint(A)) return true;
         if (t.ContainsPoint(B)) return true;
         if (t.ContainsPoint(C)) return true;

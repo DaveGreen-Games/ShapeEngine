@@ -317,7 +317,8 @@ namespace Examples.Scenes
                 else if (mouseInsideTopLeft)
                 {
                     topLeftPoint.Draw(Colors.Medium);
-                    topLeftInteractionCircle.Radius *= 2f;
+                    topLeftInteractionCircle *= 2f;
+                    // topLeftInteractionCircle.Radius *= 2f;
                     topLeftInteractionCircle.DrawLines(2f, Colors.Special, 4f);
                 }
                 else
@@ -335,7 +336,8 @@ namespace Examples.Scenes
                 else if (mouseInsideBottomRight)
                 {
                     bottomRightPoint.Draw(Colors.Medium);
-                    bottomRightInteractionCircle.Radius *= 2f;
+                    bottomRightInteractionCircle *= 2f;
+                    // bottomRightInteractionCircle.Radius *= 2f;
                     bottomRightInteractionCircle.DrawLines(2f, Colors.Special, 4f);
                 }
                 else
