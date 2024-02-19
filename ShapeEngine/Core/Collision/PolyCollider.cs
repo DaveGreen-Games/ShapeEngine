@@ -8,49 +8,49 @@ namespace ShapeEngine.Core.Collision;
 public class PolyCollider : Collider
 {
     private readonly Polygon curShape;
-    private Vector2 scale = new(1f);
-    private float rotationRad = 0f;
-    private Transform2D prev;
-    private bool dirty;
+    // private Vector2 scale = new(1f);
+    // private float rotationRad = 0f;
+    // private Transform2D prev;
+    // private bool dirty = false;
     
-    public float RotationRad
-    {
-        get => rotationRad;
-        set
-        {
-            dirty = true;
-            rotationRad = value;
-        }
-    }
-    public Vector2 Scale
-    {
-        get => scale;
-        set
-        {
-            dirty = true;
-            scale = value;
-        }
-    }
+    // public float RotationRad
+    // {
+    //     get => rotationRad;
+    //     set
+    //     {
+    //         dirty = true;
+    //         rotationRad = value;
+    //     }
+    // }
+    // public Vector2 Scale
+    // {
+    //     get => scale;
+    //     set
+    //     {
+    //         dirty = true;
+    //         scale = value;
+    //     }
+    // }
 
     
     public PolyCollider(Polygon shape, Vector2 offset) : base(offset)
     {
         curShape = shape;
-        prev = new(Position, RotationRad, Scale);
+        // prev = new(Position, RotationRad, Scale);
         // UpdateShape();
     }
     
     public PolyCollider(Points relativePoints, Vector2 offset) : base(offset)
     {
-        prev = new(Position, RotationRad, Scale);
-        curShape = Polygon.GetShape(relativePoints, prev);
+        // prev = new(Position, RotationRad, Scale);
+        curShape = Polygon.GetShape(relativePoints, PrevTransform);
         // UpdateShape();
     }
     public PolyCollider(Vector2 offset, Segment s, float inflation, float alignement = 0.5f) : base(offset)
     {
         this.curShape = s.Inflate(inflation, alignement).ToPolygon();
         // var pos = this.shape.GetCentroid();
-        prev = new(Position, RotationRad, Scale);
+        // prev = new(Position, RotationRad, Scale);
         // UpdateShape();
     }
     public override Rect GetBoundingBox() => GetPolygonShape().GetBoundingBox();
@@ -68,29 +68,30 @@ public class PolyCollider : Collider
     public override ShapeType GetShapeType() => ShapeType.Poly;
     public override Polygon GetPolygonShape() => GeneratePolygonShape();
 
-    public List<Vector2> GetRelativeShape() => curShape.GetRelativePoints(prev);
-    protected override void OnAddedToCollisionBody(CollisionBody newParent)
-    {
-        prev = new(Position, RotationRad, Scale);
-    }
+    public List<Vector2> GetRelativeShape() => curShape.GetRelativePoints(PrevTransform);
+    // protected override void OnAddedToCollisionBody(CollisionBody newParent)
+    // {
+    //     prev = new(Position, RotationRad, Scale);
+    // }
 
     private Polygon GeneratePolygonShape() 
     {
-        if (Position != prev.Position || dirty) UpdateShape();
+        if(Dirty) UpdateShape();
+        // if (Position != prev.Position || dirty) UpdateShape();
         return curShape;
     }
     private void UpdateShape()
     {
-        dirty = false;
-        Transform2D cur = new(Position, RotationRad, Scale);
-        var dif = cur.Difference(prev);
-        prev = cur;
+        Dirty = false;
+        // Transform2D cur = new(Position, RotationRad, Scale);
+        var dif = CurTransform.Difference(PrevTransform);
+        // prev = cur;
         
         for (int i = 0; i < curShape.Count; i++)
         {
             var newPos = curShape[i] + dif.Position;//translation
-            var w = (newPos - Position).Rotate(dif.RotationRad) * dif.Scale;
-            curShape[i] = Position + w;
+            var w = (newPos - CurTransform.Position).Rotate(dif.RotationRad) * dif.Scale;
+            curShape[i] = CurTransform.Position + w;
         }
         
         //Variant 2

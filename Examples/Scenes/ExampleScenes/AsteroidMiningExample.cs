@@ -269,7 +269,7 @@ namespace Examples.Scenes.ExampleScenes
 
         public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui) 
         {
-            body.UpdateState(time.Delta);
+            body.Update(time.Delta);
             damagedSegments.Update(time.Delta);
         }
         public override void DrawGame(ScreenInfo game)
@@ -294,7 +294,7 @@ namespace Examples.Scenes.ExampleScenes
         // public virtual List<ICollidable> GetCollidables() { return collidables; }
 
         public override Rect GetBoundingBox() { return body.GetBoundingBox(); }
-        public override Vector2 GetPosition() { return body.Position; }
+        public override Vector2 GetPosition() { return body.Transform.Position; }
         // public ICollider GetCollider() { return collider; }
         // public uint GetCollisionLayer() { return AsteroidMiningExample.AsteriodLayer; }
         // public BitFlag GetCollisionMask() { return colMask; }

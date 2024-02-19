@@ -21,13 +21,13 @@ namespace ShapeEngine.Core.Shapes
         #endregion
 
         #region Getter Setter
-        public readonly Vector2 SideA { get { return B - A; } }
-        public readonly Vector2 SideB { get { return C - B; } }
-        public readonly Vector2 SideC { get { return A - C; } }
-        public readonly Segment SegmentA { get { return new Segment(A, B, FlippedNormals); } }
-        public readonly Segment SegmentB { get { return new Segment(B, C, FlippedNormals); } }
-        public readonly Segment SegmentC { get { return new Segment(C, A, FlippedNormals); } }
-           
+        public readonly Vector2 SideA => B - A;
+        public readonly Vector2 SideB => C - B;
+        public readonly Vector2 SideC => A - C;
+        public readonly Segment SegmentAToB => new(A, B, FlippedNormals);
+        public readonly Segment SegmentBToC => new(B, C, FlippedNormals);
+        public readonly Segment SegmentCToA => new(C, A, FlippedNormals);
+
         public bool FlippedNormals { get; set; } = false;
         #endregion
 
@@ -316,7 +316,7 @@ namespace ShapeEngine.Core.Shapes
         public readonly Polygon ToPolygon() => new() {A, B, C};
 
         public readonly Polyline ToPolyline() => new() { A, B, C };
-        public readonly Segments GetEdges() => new() { SegmentA, SegmentB, SegmentC };
+        public readonly Segments GetEdges() => new() { SegmentAToB, SegmentBToC, SegmentCToA };
         public readonly Triangulation Triangulate() => this.Triangulate(GetCentroid());
         public readonly float GetCircumference() => MathF.Sqrt(GetCircumferenceSquared());
         public readonly float GetCircumferenceSquared() => SideA.LengthSquared() + SideB.LengthSquared() + SideC.LengthSquared();
@@ -364,24 +364,24 @@ namespace ShapeEngine.Core.Shapes
         }
         public readonly ClosestSegment GetClosestSegment(Vector2 p)
         {
-            var closestSegment = SegmentA;
-            var cp = SegmentA.GetClosestCollisionPoint(p);
+            var closestSegment = SegmentAToB;
+            var cp = SegmentAToB.GetClosestCollisionPoint(p);
             float minDisSquared = (cp.Point - p).LengthSquared();
 
-            var curCP = SegmentB.GetClosestCollisionPoint(p);
+            var curCP = SegmentBToC.GetClosestCollisionPoint(p);
             float l = (curCP.Point - p).LengthSquared();
             if (l < minDisSquared)
             {
                 minDisSquared = l;
-                closestSegment = SegmentB;
+                closestSegment = SegmentBToC;
                 cp = curCP;
             }
-            curCP = SegmentC.GetClosestCollisionPoint(p);
+            curCP = SegmentCToA.GetClosestCollisionPoint(p);
             l = (curCP.Point - p).LengthSquared();
             if (l < minDisSquared)
             {
                 minDisSquared = l;
-                closestSegment = SegmentC;
+                closestSegment = SegmentCToA;
                 cp = curCP;
             }
             return new(closestSegment, cp, MathF.Sqrt(minDisSquared));
@@ -389,17 +389,17 @@ namespace ShapeEngine.Core.Shapes
         }
         public readonly CollisionPoint GetClosestCollisionPoint(Vector2 p)
         {
-            var cp = SegmentA.GetClosestCollisionPoint(p);
+            var cp = SegmentAToB.GetClosestCollisionPoint(p);
             float minDisSquared = (cp.Point - p).LengthSquared();
 
-            var curCP = SegmentB.GetClosestCollisionPoint(p);
+            var curCP = SegmentBToC.GetClosestCollisionPoint(p);
             float l = (curCP.Point - p).LengthSquared();
             if (l < minDisSquared)
             {
                 minDisSquared = l;
                 cp = curCP;
             }
-            curCP = SegmentC.GetClosestCollisionPoint(p);
+            curCP = SegmentCToA.GetClosestCollisionPoint(p);
             l = (curCP.Point - p).LengthSquared();
             if (l < minDisSquared)
             {
@@ -490,7 +490,21 @@ namespace ShapeEngine.Core.Shapes
             }
             return false;
         }
-        public readonly bool OverlapShape(Segment s) { return ToPolygon().OverlapShape(s); }
+
+        public readonly bool OverlapShape(Segment s)
+        {
+            if (ContainsPoint(s.Start)) return true;
+            if (ContainsPoint(s.End)) return true;
+
+            var seg = new Segment(A, B);
+            if (seg.OverlapShape(s)) return true;
+            
+            seg = new Segment(B, C);
+            if (seg.OverlapShape(s)) return true;
+            
+            seg = new Segment(C, A);
+            return seg.OverlapShape(s);
+        }
         public readonly bool OverlapShape(Circle c) { return ToPolygon().OverlapShape(c); }
         public readonly bool OverlapShape(Triangle b) { return ToPolygon().OverlapShape(b.ToPolygon()); }
         public readonly bool OverlapShape(Rect r) { return ToPolygon().OverlapShape(r); }
@@ -536,6 +550,7 @@ namespace ShapeEngine.Core.Shapes
         public readonly CollisionPoints? IntersectShape(Rect r) { return ToPolygon().IntersectShape(r.ToPolygon()); }
         public readonly CollisionPoints? IntersectShape(Polygon p) { return ToPolygon().IntersectShape(p); }
         public readonly CollisionPoints? IntersectShape(Polyline pl) { return GetEdges().IntersectShape(pl.GetEdges()); }
+        
         #endregion
     }
 }

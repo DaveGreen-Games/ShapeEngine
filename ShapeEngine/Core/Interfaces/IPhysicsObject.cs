@@ -1,10 +1,12 @@
 using System.Numerics;
+using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.Core.Interfaces
 {
-    public interface IPhysicsObject : ISpatial
+    public interface IPhysicsObject // : ISpatial
     {
-        public Vector2 Position { get; set; }
+        // public Vector2 Position { get; set; }
+        public Transform2D Transform { get; set; }
         public Vector2 Velocity { get; set; }
         public float Mass { get; set; }
         public float Drag { get; set; }
@@ -14,7 +16,7 @@ namespace ShapeEngine.Core.Interfaces
         public bool IsStatic(float deltaSq) { return Velocity.LengthSquared() <= deltaSq; }
         public Vector2 GetAccumulatedForce();
         public void ClearAccumulatedForce();
-        public void UpdateState(float dt);
+        public void Update(float dt);
     }
 
 }

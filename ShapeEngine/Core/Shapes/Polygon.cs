@@ -936,10 +936,10 @@ namespace ShapeEngine.Core.Shapes
             if (Count < 3) return false;
             if (ContainsPoint(s.Start)) return true;
             if (ContainsPoint(s.End)) return true;
-            for (int i = 0; i < Count; i++)
+            for (var i = 0; i < Count; i++)
             {
-                Vector2 start = GetPoint(i); // this[i];
-                Vector2 end = GetPoint(i + 1); //this[(i + 1) % Count];
+                var start = GetPoint(i); // this[i];
+                var end = GetPoint(i + 1); //this[(i + 1) % Count];
                 var segment = new Segment(start, end);
                 if (segment.OverlapShape(s)) return true;
             }

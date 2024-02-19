@@ -26,7 +26,7 @@ public class RectCollider : Collider
     public override ShapeType GetShapeType() => ShapeType.Rect;
     public override Rect GetRectShape()
     {
-        var r = new Rect(Position, Size, Alignement)
+        var r = new Rect(CurTransform.Position, Size * CurTransform.Scale, Alignement)
         {
             FlippedNormals = FlippedNormals
         };

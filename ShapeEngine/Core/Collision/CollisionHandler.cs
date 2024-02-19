@@ -35,7 +35,7 @@ namespace ShapeEngine.Core.Collision
             {
                 foreach (var entry in entries)
                 {
-                    entry.Self.ResolveOverlapEnded(entry.Other);
+                    entry.Self.ResolveCollisionEnded(entry.Other);
                 }
             }
 
@@ -148,6 +148,7 @@ namespace ShapeEngine.Core.Collision
                         foreach (var candidate in bucket)
                         {
                             if(candidate == collider) continue;
+                            if (candidate.Parent == collider.Parent) continue;
                             if (!mask.Has(candidate.CollisionLayer)) continue;
                             if (!collisionCandidateCheckRegister.Add(candidate)) continue;
 
@@ -178,7 +179,7 @@ namespace ShapeEngine.Core.Collision
                                     //closest point on bounds of other are now used for collision point
                                     if (collisionPoints == null || collisionPoints.Count <= 0)
                                     {
-                                        var refPoint = collider.PrevPosition;
+                                        var refPoint = collider.PrevTransform.Position;// PrevPosition;
                                         if (!candidate.ContainsPoint(refPoint))
                                         {
                                             var closest = candidate.GetClosestCollisionPoint(refPoint);
@@ -236,7 +237,7 @@ namespace ShapeEngine.Core.Collision
                 if(cols.Count > 0)
                 {
                     CollisionInformation collisionInfo = new(cols, collider.ComputeIntersections);
-                    collider.ResolveOverlap(collisionInfo);
+                    collider.ResolveCollision(collisionInfo);
                 }
             }
             collisionStack.Clear();
@@ -499,13 +500,13 @@ namespace ShapeEngine.Core.Collision
             }
             if (sorted && result.Count > 1)
             {
-                var origin = collisionBody.Position; // collidable.GetCollider().Pos;
+                var origin = collisionBody.Transform.Position; // collidable.GetCollider().Pos;
                 result.Sort
                 (
                     (a, b) =>
                     {
-                        float la = (origin - a.Position).LengthSquared();
-                        float lb = (origin - b.Position).LengthSquared();
+                        float la = (origin - a.CurTransform.Position).LengthSquared();
+                        float lb = (origin - b.CurTransform.Position).LengthSquared();
 
                         if (la > lb) return 1;
                         if (ShapeMath.EqualsF(la, lb)) return 0;
@@ -538,13 +539,13 @@ namespace ShapeEngine.Core.Collision
             }
             if (sorted && result.Count > 1)
             {
-                var origin = collider.Position;
+                var origin = collider.CurTransform.Position;
                 result.Sort
                 (
                     (a, b) =>
                     {
-                        float la = (origin - a.Position).LengthSquared();
-                        float lb = (origin - b.Position).LengthSquared();
+                        float la = (origin - a.CurTransform.Position).LengthSquared();
+                        float lb = (origin - b.CurTransform.Position).LengthSquared();
 
                         if (la > lb) return 1;
                         if (ShapeMath.EqualsF(la, lb)) return 0;
@@ -687,8 +688,8 @@ namespace ShapeEngine.Core.Collision
                 (
                     (a, b) =>
                     {
-                        float la = (sortOrigin - a.Position).LengthSquared();
-                        float lb = (sortOrigin - b.Position).LengthSquared();
+                        float la = (sortOrigin - a.CurTransform.Position).LengthSquared();
+                        float lb = (sortOrigin - b.CurTransform.Position).LengthSquared();
 
                         if (la > lb) return 1;
                         if (ShapeMath.EqualsF(la, lb)) return 0;

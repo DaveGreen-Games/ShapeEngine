@@ -1,14 +1,16 @@
 ﻿
 using System.Numerics;
+using System.Runtime.Versioning;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Lib;
 
 namespace ShapeEngine.Core.Collision
 {
     public abstract class Collider
     {
-        public event Action<CollisionInformation>? OnOverlapped;
-        public event Action<Collider>? OnOverlapEnded;
+        public event Action<CollisionInformation>? OnCollision;
+        public event Action<Collider>? OnCollisionEnded;
         
         
         private CollisionBody? parent = null;
@@ -53,11 +55,17 @@ namespace ShapeEngine.Core.Collision
             set => enabled = value;
         }
 
-        public Vector2 Offset { get; set; }
+        public bool Moves = true;
+        public bool Rotates = true;
+        public bool Scales = true;
+        // public Vector2 Offset { get; set; }
+        public Transform2D Offset { get; set; }
+        public Transform2D CurTransform { get; private set; }
+        public Transform2D PrevTransform { get; private set; }
         
-        public Vector2 Position { get; private set; }
+        // public Vector2 Position { get; private set; }
         public Vector2 Velocity => parent?.Velocity ?? new(0f);
-        public Vector2 PrevPosition { get; private set; }
+        // public Vector2 PrevPosition { get; private set; }
         
         public bool FlippedNormals { get; set; } = false;
 
@@ -69,44 +77,72 @@ namespace ShapeEngine.Core.Collision
         /// </summary>
         public bool ComputeIntersections { get; set; } = false;
 
-        internal void ResolveOverlap(CollisionInformation info)
+        protected bool Dirty = false;
+        
+        protected Collider()
         {
-            Overlap(info);
-            OnOverlapped?.Invoke(info);
+            this.Offset = new(new(0f), 0f, new(1f));
+        }
+        protected Collider(Vector2 offset)
+        {
+            this.Offset = new(offset, 0f, new(1f));
         }
 
-        internal void ResolveOverlapEnded(Collider other)
-        {
-            OverlapEnded(other);
-            OnOverlapEnded?.Invoke(other);
-        }
-        protected virtual void Overlap(CollisionInformation info) { }
-        protected virtual void OverlapEnded(Collider other) { }
-        protected Collider(Vector2 offset)
+        protected Collider(Transform2D offset)
         {
             this.Offset = offset;
         }
 
-        internal void UpdateState(float dt, Transform2D parentTransform)
+        
+        internal void ResolveCollision(CollisionInformation info)
         {
-            PrevPosition = Position;
-            Position = parentTransform.Apply(Offset);
-            // Position = parentPosition + Offset.Rotate(parentRotRad) * parentScale;
-            OnStateUpdated(dt);
+            Collision(info);
+            OnCollision?.Invoke(info);
+        }
+        internal void ResolveCollisionEnded(Collider other)
+        {
+            CollisionEnded(other);
+            OnCollisionEnded?.Invoke(other);
+        }
+        protected virtual void Collision(CollisionInformation info) { }
+        protected virtual void CollisionEnded(Collider other) { }
+        
+        public virtual void Update(float dt)
+        {
         }
 
-        internal void SetupPosition(Transform2D parentTransform)
+        internal void SetupTransform(Transform2D parentTransform)
         {
-            Position = parentTransform.Apply(Offset);
-            PrevPosition = Position;
+            UpdateTransform(parentTransform);
+            PrevTransform = CurTransform;
+        }
+        internal void UpdateTransform(Transform2D parentTransform)
+        {
+            PrevTransform = CurTransform;
+
+            var rot = Rotates ? parentTransform.RotationRad + Offset.RotationRad : Offset.RotationRad;
+            var scale = Scales ? parentTransform.Scale * Offset.Scale : Offset.Scale;
+            if (Moves)
+            {
+                if (Offset.Position.LengthSquared() <= 0) CurTransform = new(parentTransform.Position, rot, scale);
+                else
+                {
+                    var pos = parentTransform.Position + Offset.Position.Rotate(rot) * scale;
+                    CurTransform = new(pos, rot, scale);
+                }
+            }
+            else
+            {
+                CurTransform = new(Offset.Position, rot, scale);
+            }
+
+            Dirty = PrevTransform != CurTransform;
+            // Position = parentTransform.Apply(Offset);
+            // PrevPosition = Position;
         }
 
         protected virtual void OnAddedToCollisionBody(CollisionBody newParent) { }
         protected virtual void OnRemovedFromCollisionBody(CollisionBody formerParent) { }
-        protected virtual void OnStateUpdated(float dt)
-        {
-            
-        }
 
         public abstract Rect GetBoundingBox();
         public abstract bool ContainsPoint(Vector2 p);

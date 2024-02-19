@@ -1,6 +1,7 @@
 using System.Numerics;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Lib;
 
 namespace ShapeEngine.Core.Collision;
 
@@ -28,7 +29,7 @@ public class CircleCollider : Collider
     public override ShapeType GetShapeType() => ShapeType.Circle;
     public override Circle GetCircleShape()
     {
-        var c = new Circle(Position, Radius)
+        var c = new Circle(CurTransform.Position, Radius * CurTransform.Scale.Max())
         {
             FlippedNormals = FlippedNormals
         };

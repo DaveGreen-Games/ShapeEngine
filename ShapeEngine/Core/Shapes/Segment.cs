@@ -299,6 +299,8 @@ namespace ShapeEngine.Core.Shapes
         }
         public bool OverlapShape(Circle c) { return c.OverlapShape(this); }
         public bool OverlapShape(Triangle t) { return t.OverlapShape(this); }
+
+        public bool OverlapShape(Quad q) { return q.OverlapShape(this); }
         public bool OverlapShape(Rect r)
         {
             if (!r.OverlapRectLine(Start, Displacement)) return false;

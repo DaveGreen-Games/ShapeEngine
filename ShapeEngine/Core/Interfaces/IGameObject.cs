@@ -5,6 +5,64 @@ using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.Core.Interfaces;
 
+// public interface ISpatialTest
+// {
+//     public Vector2 Position { get; set; }
+//     public Rect GetBoundingBox();
+//         
+// }
+// public interface IUpdateableTest
+// {
+//     public void Update(GameTime time, ScreenInfo game, ScreenInfo ui);
+// }
+// public interface IDrawableTest
+// {
+//     public void DrawGame(ScreenInfo game);
+//     public void DrawGameUI(ScreenInfo ui);
+//     
+// }
+// public interface IKillableTest
+// {
+//     public bool Kill();
+//     public bool IsDead();
+// }
+// public interface IGameObjectTest : ISpatialTest, IUpdateableTest, IDrawableTest, IKillableTest//, IBehaviorReceiver
+// {
+//
+//     public bool DrawToGame(Rect gameArea);
+//     public bool DrawToGameUI(Rect screenArea);
+//         
+//     public int Layer { get; set; }
+//     public virtual void UpdateParallaxe(Vector2 newParallaxPosition) { }
+//     public sealed bool IsInLayer(int layer) { return this.Layer == layer; }
+//     public void AddedToHandler(GameObjectHandler gameObjectHandler);
+//     public void RemovedFromHandler(GameObjectHandler gameObjectHandler);
+//     public bool CheckHandlerBounds();
+//     public void LeftHandlerBounds(BoundsCollisionInfo info);
+//     // public virtual bool HasCollisionBody() { return false; }
+//     // public virtual CollisionBodyTest? GetCollisionBody() { return null; }
+//
+// }
+// public interface IPhysicsObjectTest : IGameObjectTest
+// {
+//     public Vector2 Velocity { get; set; }
+//     public float Mass { get; set; }
+//     public float Drag { get; set; }
+//     public Vector2 ConstAcceleration { get; set; }
+//     public void AddForce(Vector2 force);
+//     public void AddImpulse(Vector2 force);
+//     public bool IsStatic(float deltaSq) { return Velocity.LengthSquared() <= deltaSq; }
+//     public Vector2 GetAccumulatedForce();
+//     public void ClearAccumulatedForce();
+//     public void UpdateState(float dt);
+// }
+//
+// public class CollisionBodyTest : IPhysicsObjectTest
+// {
+//     
+// }
+
+
 public interface IGameObject : ISpatial, IUpdateable, IDrawable, IKillable//, IBehaviorReceiver
 {
 

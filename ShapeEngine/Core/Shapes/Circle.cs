@@ -280,10 +280,10 @@ namespace ShapeEngine.Core.Shapes
             if (ContainsPoint(s.Start)) return true;
             if (ContainsPoint(s.End)) return true;
 
-            Vector2 d = s.End - s.Start;
-            Vector2 lc = Center - s.Start;
-            Vector2 p = ShapeVec.Project(lc, d);
-            Vector2 nearest = s.Start + p;
+            var d = s.End - s.Start;
+            var lc = Center - s.Start;
+            var p = ShapeVec.Project(lc, d);
+            var nearest = s.Start + p;
 
             return
                 ContainsPoint(nearest) &&

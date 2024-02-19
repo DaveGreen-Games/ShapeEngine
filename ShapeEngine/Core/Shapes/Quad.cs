@@ -39,7 +39,7 @@ public readonly struct Quad : IEquatable<Quad>
     #endregion
 
     #region Constructor
-    public Quad(Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+    private Quad(Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
         this.A = a;
         this.B = b;
@@ -79,6 +79,22 @@ public readonly struct Quad : IEquatable<Quad>
         this.B = (new Vector2(topLeft.X, bottomRight.Y) - pivotPoint).Rotate(rotRad);
         this.C = (bottomRight - pivotPoint).Rotate(rotRad);
         this.D = (new Vector2(bottomRight.X, topLeft.Y) - pivotPoint).Rotate(rotRad);
+    }
+    public Quad(Vector2 pos, Vector2 size, float rotRad, Vector2 alignement)
+    {
+        var offset = size * alignement;
+        var topLeft = pos - offset;
+        
+        var a = topLeft - pos;
+        var b = topLeft + new Vector2(0f, size.Y);
+        var c = topLeft + size;
+        var d = topLeft + new Vector2(size.X, 0f);
+
+        this.A = pos + (a - pos).Rotate(rotRad);
+        this.B = pos + (b - pos).Rotate(rotRad);
+        this.C = pos + (c - pos).Rotate(rotRad);
+        this.D = pos + (d - pos).Rotate(rotRad);
+        
     }
     #endregion
     

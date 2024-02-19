@@ -85,9 +85,9 @@ public class Triangulation : ShapeList<Triangle>
         for (var i = 0; i < Count; i++)
         {
             var tri = this[i];
-            unique.Add(tri.SegmentA);
-            unique.Add(tri.SegmentB);
-            unique.Add(tri.SegmentC);
+            unique.Add(tri.SegmentAToB);
+            unique.Add(tri.SegmentBToC);
+            unique.Add(tri.SegmentCToA);
         }
 
         return new(unique);

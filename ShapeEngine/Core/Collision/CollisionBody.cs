@@ -8,20 +8,31 @@ namespace ShapeEngine.Core.Collision;
 
 public abstract class CollisionBody : IPhysicsObject
 {
+    public CollisionBody()
+    {
+        this.Transform = new();
+    }
     public CollisionBody(Vector2 position)
     {
-        Position = position;
+        this.Transform = new(position);
+        // Position = position;
         // CollisionMask = collisionMask;
         // CollisionLayer = collisionLayer;
+    }
+
+    public CollisionBody(Transform2D transform)
+    {
+        this.Transform = transform;
     }
 
     private Vector2 accumulatedForce = new(0f);
         
     public bool Enabled { get; set; } = true;
-    public Vector2 Position { get; set; }
-    public float RotationRad { get; set; } = 0f;
-    public Vector2 Scale { get; set; } = new(1f);
-    public Transform2D Transform => new(Position, RotationRad, Scale);
+    // public Vector2 Position { get; set; }
+    // public float RotationRad { get; set; } = 0f;
+    // public Vector2 Scale { get; set; } = new(1f);
+    // public Transform2D Transform => new(Position, RotationRad, Scale);
+    public Transform2D Transform { get; set; }
     public Vector2 Velocity { get; set; } = new(0f);
     public Vector2 ConstAcceleration { get; set; } = new(0f);
         
@@ -31,9 +42,9 @@ public abstract class CollisionBody : IPhysicsObject
 
     public bool AddCollider(Collider col)
     {
-        if (colliders.Add(col))
+        if (Colliders.Add(col))
         {
-            col.SetupPosition(Transform);
+            col.SetupTransform(Transform);
             col.Parent = this;
             return true;
         }
@@ -42,7 +53,7 @@ public abstract class CollisionBody : IPhysicsObject
 
     public bool RemoveCollider(Collider col)
     {
-        if (colliders.Remove(col))
+        if (Colliders.Remove(col))
         {
             col.Parent = null;
             return true;
@@ -51,9 +62,10 @@ public abstract class CollisionBody : IPhysicsObject
         return false;
     }
 
-    private HashSet<Collider> colliders = new();
-    public IEnumerable<Collider> Colliders => colliders;
-    public bool HasColliders => colliders.Count > 0;
+    // private readonly HashSet<Collider> colliders = new();
+    public HashSet<Collider> Colliders { get; } = new();
+
+    public bool HasColliders => Colliders.Count > 0;
 
     //public Collider2? GetSingleCollider() => Colliders.Count != 1 ? null : Colliders[0];
         
@@ -65,13 +77,14 @@ public abstract class CollisionBody : IPhysicsObject
 
     public void AddImpulse(Vector2 force) => Velocity = ShapePhysics.AddImpulse(force, Velocity, Mass);
 
-    public void UpdateState(float dt)
+    public void Update(float dt)
     {
         var trans = Transform;
-        ShapePhysics.UpdateState(this, dt);
+        this.UpdateState(dt);
         foreach (var collider in Colliders)
         {
-            collider.UpdateState(dt, trans);
+            collider.UpdateTransform(trans);
+            collider.Update(dt);
         }
         OnUpdateState(dt);
     }
@@ -286,13 +299,13 @@ public abstract class CollisionBody : IPhysicsObject
             
     }
 
-    public Vector2 GetPosition() => Position;
+    // public Vector2 GetPosition() => Transform.Position;
     public Rect GetBoundingBox()
     {
         if (!Enabled || !HasColliders) return new();
 
         Rect boundingBox = new();
-        foreach (var col in colliders)
+        foreach (var col in Colliders)
         {
             if(!col.Enabled) continue;
             boundingBox = boundingBox.Union(col.GetBoundingBox());

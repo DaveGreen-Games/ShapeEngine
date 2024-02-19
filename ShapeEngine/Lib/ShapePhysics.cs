@@ -31,7 +31,8 @@ namespace ShapeEngine.Lib
         {
             ApplyAccumulatedForce(p, dt);
             ApplyAcceleration(p, dt);
-            p.Position += p.Velocity * dt;
+            p.Transform = p.Transform.MoveBy(p.Velocity * dt);
+            // p.Position += p.Velocity * dt;
         }
         /// <summary>
         /// Used for adding a force every frame. The total accumualted force should be applied at the end of the frame an reset to zero.

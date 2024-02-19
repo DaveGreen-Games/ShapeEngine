@@ -27,7 +27,7 @@ public class Collision
         this.Other = other;
         this.SelfVel = self.Velocity;
         this.OtherVel = other.Velocity;
-        this.Intersection = new(collisionPoints, SelfVel, self.Position);
+        this.Intersection = new(collisionPoints, SelfVel, self.CurTransform.Position);
         this.FirstContact = firstContact;
     }
 

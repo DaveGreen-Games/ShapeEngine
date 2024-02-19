@@ -33,7 +33,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         public void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
-            body.UpdateState(time.Delta);
+            body.Update(time.Delta);
             // var collidables = GetCollidables();
             // foreach (var c in collidables)
             // {
@@ -45,7 +45,7 @@ namespace Examples.Scenes.ExampleScenes
 
 
 
-        public Vector2 GetPosition() => body.Position;
+        public Vector2 GetPosition() => body.Transform.Position;
         public Rect GetBoundingBox() => body.GetBoundingBox();
 
         // public abstract bool HasCollidables();
@@ -92,35 +92,51 @@ namespace Examples.Scenes.ExampleScenes
     {
         public static readonly uint WallFlag = BitFlag.GetFlagUint(1); //2
         public static readonly uint RockFlag = BitFlag.GetFlagUint(2); //4
-        public static readonly uint BoxFlag = BitFlag.GetFlagUint(3); //8
+        public static readonly uint BirdFlag = BitFlag.GetFlagUint(3); //8
         public static readonly uint BallFlag = BitFlag.GetFlagUint(4); //16
-        public static readonly uint AuraFlag = BitFlag.GetFlagUint(5); //32
+        // public static readonly uint BoxFlag = BitFlag.GetFlagUint(5); //32
+        // public static readonly uint AuraFlag = BitFlag.GetFlagUint(6); //64
     
         // protected BitFlag collisionMask = BitFlag.Empty;
         // protected ColorRgba BuffColorRgba = new(System.Drawing.Color.Gold);
-        protected bool buffed = false;
-        protected float startSpeed = 0f;
-        private float totalSpeedFactor = 1f;
-        
+        // protected bool buffed = false;
+        // protected float startSpeed = 0f;
+        // private float totalSpeedFactor = 1f;
+        public float RotationSpeedDeg;
         public GameobjectBody(Vector2 position) : base(position)
         {
+            this.RotationSpeedDeg = 0f;
         }
-        
-        public void Buff(float f)
+        public GameobjectBody(Vector2 position, float rotationSpeedDeg) : base(position)
         {
-            if (totalSpeedFactor < 0.01f) return;
-    
-            totalSpeedFactor *= f;
-            Velocity = Velocity.Normalize() * startSpeed * totalSpeedFactor;
-    
-            if (totalSpeedFactor != 1f) buffed = true;
+            this.RotationSpeedDeg = rotationSpeedDeg;
         }
-        public void EndBuff(float f)
+
+        protected override void OnUpdateState(float dt)
         {
-            totalSpeedFactor /= f;
-            Velocity = Velocity.Normalize() * startSpeed * totalSpeedFactor;
-            if (totalSpeedFactor == 1f) buffed = false;
+            if (RotationSpeedDeg != 0f)
+            {
+                Transform += RotationSpeedDeg * ShapeMath.DEGTORAD * dt;
+                // Transform = Transform.RotateByDeg(RotationSpeedDeg * dt);
+            }
+           
         }
+
+        // public void Buff(float f)
+        // {
+        //     if (totalSpeedFactor < 0.01f) return;
+        //
+        //     totalSpeedFactor *= f;
+        //     Velocity = Velocity.Normalize() * startSpeed * totalSpeedFactor;
+        //
+        //     if (totalSpeedFactor != 1f) buffed = true;
+        // }
+        // public void EndBuff(float f)
+        // {
+        //     totalSpeedFactor /= f;
+        //     Velocity = Velocity.Normalize() * startSpeed * totalSpeedFactor;
+        //     if (totalSpeedFactor == 1f) buffed = false;
+        // }
 
 
         // public abstract uint GetCollisionLayer();
@@ -216,7 +232,7 @@ namespace Examples.Scenes.ExampleScenes
             body.AddCollider(col);
 
             circleCollider = col;
-            circleCollider.OnOverlapped += Overlap;
+            circleCollider.OnCollision += Overlap;
         }
 
         private void Overlap(CollisionInformation info)
@@ -233,6 +249,112 @@ namespace Examples.Scenes.ExampleScenes
             // polyCollider.GetPolygonShape().DrawLines(4f, Colors.Highlight);
         }
     }
+    internal class Rock : GameObject
+    {
+        private PolyCollider polyCollider;
+        public Rock(Vector2 pos)
+        {
+            var shape = Polygon.Generate(pos, 6, 5, 50);
+            var col = new PolyCollider(shape, new(0f));
+            col.ComputeCollision = true;
+            col.ComputeIntersections = true;
+            col.Enabled = true;
+            col.CollisionMask = new(GameobjectBody.WallFlag);
+            col.CollisionMask = col.CollisionMask.Add(GameobjectBody.RockFlag);
+            col.CollisionLayer = GameobjectBody.RockFlag;
+
+            var rotSpeedDeg = ShapeRandom.RandF(-90, 90);
+            this.body = new(pos, rotSpeedDeg);
+            body.Velocity = ShapeRandom.RandVec2(50, 250);
+            body.AddCollider(col);
+
+            polyCollider = col;
+            polyCollider.OnCollision += Overlap;
+        }
+
+        
+        private void Overlap(CollisionInformation info)
+        {
+            if (info.CollisionSurface.Valid)
+            {
+                // body.Transform = body.Transform.ScaleBy(ShapeRandom.RandF(0.1f, 0.2f));
+                // body.Transform = body.Transform.SetScale(ShapeRandom.RandF(0.5f, 4f));
+                // timer = 0.25f;
+                body.Velocity = body.Velocity.Reflect(info.CollisionSurface.Normal);
+            }
+        }
+        public override void DrawGame(ScreenInfo game)
+        {
+            polyCollider.GetPolygonShape().DrawLines(4f, Colors.Warm);
+            // Circle c = new(body.Transform.Position, 5f);
+            // c.Draw(Colors.Cold);
+            // polyCollider.GetPolygonShape().DrawLines(4f, Colors.Highlight);
+        }
+    }
+    internal class Bird : GameObject
+    {
+        private CircleCollider circleCollider;
+        private TriangleCollider triangleCollider;
+        public Bird(Vector2 pos)
+        {
+            const float radius = 24f;
+            var cCol = new CircleCollider(new(0f), radius);
+            cCol.ComputeCollision = true;
+            cCol.ComputeIntersections = true;
+            cCol.Enabled = true;
+            cCol.CollisionMask = new(GameobjectBody.WallFlag);
+            cCol.CollisionLayer = GameobjectBody.BirdFlag;
+
+            var ta = new Vector2(0, -radius / 2);
+            var tb = new Vector2(0, radius / 2);
+            var tc = new Vector2(radius, 0);
+            var tOffset = new Vector2(radius, 0f);
+            var tCol = new TriangleCollider(ta, tb, tc, tOffset);
+            tCol.ComputeCollision = true;
+            tCol.ComputeIntersections = true;
+            tCol.Enabled = true;
+            tCol.CollisionMask = new(GameobjectBody.WallFlag);
+            tCol.CollisionMask = tCol.CollisionMask.Add(GameobjectBody.BirdFlag);
+            tCol.CollisionLayer = GameobjectBody.BirdFlag;
+            
+
+            this.body = new(pos);
+            body.Velocity = ShapeRandom.RandVec2(50, 250);
+            body.Transform = body.Transform.SetRotationRad(body.Velocity.AngleRad());
+            body.AddCollider(cCol);
+            body.AddCollider(tCol);
+
+            circleCollider = cCol;
+            circleCollider.OnCollision += Overlap;
+
+            triangleCollider = tCol;
+            triangleCollider.OnCollision += Overlap;
+        }
+
+        private void Overlap(CollisionInformation info)
+        {
+            if (info.CollisionSurface.Valid)
+            {
+                // timer = 0.25f;
+                body.Velocity = body.Velocity.Reflect(info.CollisionSurface.Normal);
+                body.Transform = body.Transform.SetRotationRad(body.Velocity.AngleRad());
+            }
+        }
+        public override void DrawGame(ScreenInfo game)
+        {
+            circleCollider.GetCircleShape().DrawLines(4f, Colors.Warm);
+            triangleCollider.GetTriangleShape().DrawLines(2f, Colors.Warm);
+
+            // var vel = body.Velocity;
+            // Segment s = new(body.Transform.Position, body.Transform.Position + vel);
+            // s.Draw(2f, Colors.Cold);
+
+            // var trianglePos = triangleCollider.CurTransform.Position;
+            // var trianglePosCircle = new Circle(trianglePos, 6f);
+            // trianglePosCircle.Draw(Colors.Cold);
+        }
+    }
+
 
     
     
@@ -689,10 +811,10 @@ namespace Examples.Scenes.ExampleScenes
         bool drawDebug = false;
 
         private readonly InputAction iaSpawnRock;
-        private readonly InputAction iaSpawnBox;
         private readonly InputAction iaSpawnBall;
-        // private readonly InputAction iaSpawnTrap;
-        private readonly InputAction iaSpawnAura;
+        private readonly InputAction iaSpawnBird;
+        // private readonly InputAction iaSpawnBox;
+        // private readonly InputAction iaSpawnAura;
         private readonly InputAction iaToggleDebug;
         private readonly InputAction iaPlaceWall;
         private readonly InputAction iaCancelWall;
@@ -719,21 +841,21 @@ namespace Examples.Scenes.ExampleScenes
             var spawnRockGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
             iaSpawnRock = new(spawnRockKB, spawnRockGB);
             
-            var spawnBoxKB = new InputTypeKeyboardButton(ShapeKeyboardButton.TWO);
-            var spawnBoxGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-            iaSpawnBox = new(spawnBoxKB, spawnBoxGB);
+            // var spawnBoxKB = new InputTypeKeyboardButton(ShapeKeyboardButton.TWO);
+            // var spawnBoxGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+            // iaSpawnBox = new(spawnBoxKB, spawnBoxGB);
             
             var spawnBallKB = new InputTypeKeyboardButton(ShapeKeyboardButton.THREE);
             var spawnBallGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
             iaSpawnBall = new(spawnBallKB, spawnBallGB);
             
-            // var spawnTrapKB = new InputTypeKeyboardButton(ShapeKeyboardButton.FOUR);
-            // var spawnTrapGB = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP, 0f, ShapeGamepadButton.LEFT_TRIGGER_BOTTOM, true);
-            // iaSpawnTrap = new(spawnTrapKB, spawnTrapGB);
+            var spawnBirdKB = new InputTypeKeyboardButton(ShapeKeyboardButton.TWO);
+            var spawnBirdGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+            iaSpawnBird = new(spawnBirdKB, spawnBirdGp);
             
-            var spawnAuraKB = new InputTypeKeyboardButton(ShapeKeyboardButton.FOUR);
-            var spawnAuraGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP , 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-            iaSpawnAura = new(spawnAuraKB, spawnAuraGB);
+            // var spawnAuraKB = new InputTypeKeyboardButton(ShapeKeyboardButton.FOUR);
+            // var spawnAuraGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP , 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+            // iaSpawnAura = new(spawnAuraKB, spawnAuraGB);
             
             var toggleDebugKB = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
             var toggleDebugGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
@@ -756,7 +878,7 @@ namespace Examples.Scenes.ExampleScenes
             inputActions = new()
             {
                 iaPlaceWall, iaCancelWall,
-                iaSpawnRock, iaSpawnBox, iaSpawnBall, iaSpawnAura,
+                iaSpawnRock, iaSpawnBall, iaSpawnBird,
                 iaToggleDebug,
                 iaMoveCameraH, iaMoveCameraV
             };
@@ -802,15 +924,19 @@ namespace Examples.Scenes.ExampleScenes
             //     ia.Update(dt);
             // }
             
-            // if (iaSpawnRock.State.Pressed)
-            // {
-            //     for (int i = 0; i < 50; i++)
-            //     {
-            //         Rock r = new(mousePosGame + ShapeRandom.RandVec2(0, 50), ShapeRandom.RandVec2() * 150, 60);
-            //         gameObjectHandler.AddAreaObject(r);
-            //     }
-            //
-            // }
+            if (iaSpawnRock.State.Pressed)
+            {
+                var r = new Rock(mousePosGame);
+                gameObjectHandler.AddAreaObject(r);
+                // for (int i = 0; i < 50; i++)
+                // {
+                //     var r = new Rock(mousePosGame);
+                //     gameObjectHandler.AddAreaObject(r);
+                //     // Rock r = new(mousePosGame + ShapeRandom.RandVec2(0, 50), ShapeRandom.RandVec2() * 150, 60);
+                //     // gameObjectHandler.AddAreaObject(r);
+                // }
+            
+            }
             //
             // if (iaSpawnBox.State.Pressed)
             // {
@@ -821,6 +947,12 @@ namespace Examples.Scenes.ExampleScenes
             //     }
             //
             // }
+            if (iaSpawnBird.State.Pressed)
+            {
+                Bird b = new(mousePosGame);
+                gameObjectHandler.AddAreaObject(b);
+            
+            }
             if (iaSpawnBall.State.Down)
             {
                 for (var i = 0; i < 5; i++)
@@ -921,9 +1053,10 @@ namespace Examples.Scenes.ExampleScenes
             string placeWallText = iaPlaceWall.GetInputTypeDescription(curInputDeviceAll, true, 1, false, false);
             string cancelWallText = iaCancelWall.GetInputTypeDescription(curInputDeviceAll, true, 1, false, false);
             string spawnRockText = iaSpawnRock.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
-            string spawnBoxText = iaSpawnBox.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            // string spawnBoxText = iaSpawnBox.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            string spawnBirdText = iaSpawnBird.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
             string spawnBallText = iaSpawnBall.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
-            string spawnAuraText = iaSpawnAura.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            // string spawnAuraText = iaSpawnAura.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
             //string spawnTrapText = iaSpawnTrap.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
             string toggleDebugText = iaToggleDebug.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
             
@@ -937,9 +1070,10 @@ namespace Examples.Scenes.ExampleScenes
             //sb.Append($"Spawn: Rock/Box/Ball/Aura [{spawnRockText}/{spawnBoxText}/{spawnBallText}/{spawnAuraText}] | ");
             sb.Append($"Spawn: ");
             sb.Append($"Rock {spawnRockText} - ");
-            sb.Append($"Box {spawnBoxText} - ");
+            sb.Append($"Bird {spawnBirdText} - ");
+            // sb.Append($"Box {spawnBoxText} - ");
             sb.Append($"Ball {spawnBallText} - ");
-            sb.Append($"Aura {spawnAuraText} | ");
+            // sb.Append($"Aura {spawnAuraText} | ");
             if(drawDebug) sb.Append($"Normal Mode {toggleDebugText}");
             else sb.Append($"Debug Mode {toggleDebugText}");
             

@@ -357,7 +357,7 @@ namespace ShapeEngine.Core.Collision
 
             foreach (var collider in collisionBody.Colliders)
             {
-                if (!collider.Enabled) continue;
+                if (!collider.Enabled || collider.Parent == null) continue;
                 
                 List<int> ids;
                 if (register.TryGetValue(collider, out var value))
