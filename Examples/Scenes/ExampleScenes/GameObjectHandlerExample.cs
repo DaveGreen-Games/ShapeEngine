@@ -34,6 +34,7 @@ namespace Examples.Scenes.ExampleScenes
         public void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             body.Update(time.Delta);
+            OnUpdate(time.Delta);
             // var collidables = GetCollidables();
             // foreach (var c in collidables)
             // {
@@ -41,6 +42,10 @@ namespace Examples.Scenes.ExampleScenes
             // }
         }
 
+        protected virtual void OnUpdate(float dt)
+        {
+            
+        }
         public abstract void DrawGame(ScreenInfo game);
 
 
@@ -51,6 +56,7 @@ namespace Examples.Scenes.ExampleScenes
         // public abstract bool HasCollidables();
         // public List<ICollidable> GetCollidables() => Collidables;
 
+        
         public bool HasCollisionBody() => true;
         public CollisionBody? GetCollisionBody() => body;
 
@@ -73,9 +79,9 @@ namespace Examples.Scenes.ExampleScenes
             
         }
 
-        public void DeltaFactorApplied(float f)
-        {
-        }
+        // public void DeltaFactorApplied(float f)
+        // {
+        // }
 
         public bool DrawToGame(Rect gameArea)
         {
@@ -94,8 +100,7 @@ namespace Examples.Scenes.ExampleScenes
         public static readonly uint RockFlag = BitFlag.GetFlagUint(2); //4
         public static readonly uint BirdFlag = BitFlag.GetFlagUint(3); //8
         public static readonly uint BallFlag = BitFlag.GetFlagUint(4); //16
-        // public static readonly uint BoxFlag = BitFlag.GetFlagUint(5); //32
-        // public static readonly uint AuraFlag = BitFlag.GetFlagUint(6); //64
+        public static readonly uint BulletFlag = BitFlag.GetFlagUint(5); //32
     
         // protected BitFlag collisionMask = BitFlag.Empty;
         // protected ColorRgba BuffColorRgba = new(System.Drawing.Color.Gold);
@@ -249,6 +254,59 @@ namespace Examples.Scenes.ExampleScenes
             // polyCollider.GetPolygonShape().DrawLines(4f, Colors.Highlight);
         }
     }
+    internal class Bullet : GameObject
+    {
+        private CircleCollider circleCollider;
+        private bool isDead = false;
+        private float deadTimer = 0f;
+        public Bullet(Vector2 pos)
+        {
+            var col = new CircleCollider(new(0f), 8f);
+            col.ComputeCollision = true;
+            col.ComputeIntersections = false;
+            col.Enabled = true;
+            col.CollisionMask = new(GameobjectBody.WallFlag);
+            col.CollisionLayer = GameobjectBody.BulletFlag;
+
+            this.body = new(pos);
+            body.Velocity = ShapeRandom.RandVec2(1500, 2000);
+            body.AddCollider(col);
+
+            circleCollider = col;
+            circleCollider.OnCollision += Overlap;
+        }
+
+        protected override void OnUpdate(float dt)
+        {
+            if (deadTimer > 0f)
+            {
+                deadTimer -= dt;
+            }
+        }
+
+        public override bool IsDead() => isDead && deadTimer <= 0f;
+        private void Overlap(CollisionInformation info)
+        {
+            if (info.Collisions.Count > 0)
+            {
+                body.Velocity = new();
+                body.Enabled = false;
+                deadTimer = 2f;
+                isDead = true;
+            }
+            // if (info.CollisionSurface.Valid)
+            // {
+            //     // timer = 0.25f;
+            //     body.Velocity = body.Velocity.Reflect(info.CollisionSurface.Normal);
+            // }
+        }
+        public override void DrawGame(ScreenInfo game)
+        {
+            circleCollider.GetCircleShape().Draw( Colors.Cold);
+            // polyCollider.GetPolygonShape().DrawLines(4f, Colors.Highlight);
+        }
+    }
+
     internal class Rock : GameObject
     {
         private PolyCollider polyCollider;
@@ -813,6 +871,7 @@ namespace Examples.Scenes.ExampleScenes
         private readonly InputAction iaSpawnRock;
         private readonly InputAction iaSpawnBall;
         private readonly InputAction iaSpawnBird;
+        private readonly InputAction iaSpawnBullet;
         // private readonly InputAction iaSpawnBox;
         // private readonly InputAction iaSpawnAura;
         private readonly InputAction iaToggleDebug;
@@ -853,9 +912,9 @@ namespace Examples.Scenes.ExampleScenes
             var spawnBirdGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN, 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
             iaSpawnBird = new(spawnBirdKB, spawnBirdGp);
             
-            // var spawnAuraKB = new InputTypeKeyboardButton(ShapeKeyboardButton.FOUR);
-            // var spawnAuraGB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP , 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-            // iaSpawnAura = new(spawnAuraKB, spawnAuraGB);
+            var spawnBulletKb = new InputTypeKeyboardButton(ShapeKeyboardButton.FOUR);
+            var spawnBulletGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP , 0f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
+            iaSpawnBullet = new(spawnBulletKb, spawnBulletGp);
             
             var toggleDebugKB = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
             var toggleDebugGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
@@ -878,7 +937,7 @@ namespace Examples.Scenes.ExampleScenes
             inputActions = new()
             {
                 iaPlaceWall, iaCancelWall,
-                iaSpawnRock, iaSpawnBall, iaSpawnBird,
+                iaSpawnRock, iaSpawnBall, iaSpawnBird, iaSpawnBullet,
                 iaToggleDebug,
                 iaMoveCameraH, iaMoveCameraV
             };
@@ -926,15 +985,12 @@ namespace Examples.Scenes.ExampleScenes
             
             if (iaSpawnRock.State.Pressed)
             {
-                var r = new Rock(mousePosGame);
-                gameObjectHandler.AddAreaObject(r);
-                // for (int i = 0; i < 50; i++)
-                // {
-                //     var r = new Rock(mousePosGame);
-                //     gameObjectHandler.AddAreaObject(r);
-                //     // Rock r = new(mousePosGame + ShapeRandom.RandVec2(0, 50), ShapeRandom.RandVec2() * 150, 60);
-                //     // gameObjectHandler.AddAreaObject(r);
-                // }
+                
+                for (int i = 0; i < 5; i++)
+                {
+                    var r = new Rock(mousePosGame);
+                    gameObjectHandler.AddAreaObject(r);
+                }
             
             }
             //
@@ -964,7 +1020,15 @@ namespace Examples.Scenes.ExampleScenes
                 }
 
             }
-
+            if (iaSpawnBullet.State.Pressed)
+            {
+                for (var i = 0; i < 100; i++)
+                {
+                    var bullet = new Bullet(mousePosGame);
+                    gameObjectHandler.AddAreaObject(bullet);
+                }
+                
+            }
             // if (iaSpawnTrap.State.Pressed)
             // {
             //     Trap t = new(mousePosGame, new Vector2(250, 250));
@@ -1056,6 +1120,7 @@ namespace Examples.Scenes.ExampleScenes
             // string spawnBoxText = iaSpawnBox.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
             string spawnBirdText = iaSpawnBird.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
             string spawnBallText = iaSpawnBall.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
+            string spawnBulletText = iaSpawnBullet.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
             // string spawnAuraText = iaSpawnAura.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
             //string spawnTrapText = iaSpawnTrap.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
             string toggleDebugText = iaToggleDebug.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false);
@@ -1073,6 +1138,7 @@ namespace Examples.Scenes.ExampleScenes
             sb.Append($"Bird {spawnBirdText} - ");
             // sb.Append($"Box {spawnBoxText} - ");
             sb.Append($"Ball {spawnBallText} - ");
+            sb.Append($"Bullet {spawnBulletText} | ");
             // sb.Append($"Aura {spawnAuraText} | ");
             if(drawDebug) sb.Append($"Normal Mode {toggleDebugText}");
             else sb.Append($"Debug Mode {toggleDebugText}");

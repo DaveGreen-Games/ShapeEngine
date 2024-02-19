@@ -224,12 +224,12 @@ namespace ShapeEngine.Core
             
             foreach (var layer in allObjects)
             {
-                List<IGameObject> objs = allObjects[layer.Key];
+                var objs = allObjects[layer.Key];
                 if (objs.Count <= 0) return;
 
                 for (int i = objs.Count - 1; i >= 0; i--)
                 {
-                    IGameObject obj = objs[i];
+                    var obj = objs[i];
                     if (obj == null)
                     {
                         objs.RemoveAt(i);
@@ -245,7 +245,8 @@ namespace ShapeEngine.Core
                     
                     if (obj.IsDead())
                     {
-                        objs.RemoveAt(i);
+                        RemoveAreaObject(obj);
+                        // objs.RemoveAt(i);
 
                     }
                     else
