@@ -169,6 +169,7 @@ namespace ShapeEngine.Core.Collision
                 case ShapeType.Circle: return Overlap(other.GetCircleShape());
                 case ShapeType.Segment: return Overlap(other.GetSegmentShape());
                 case ShapeType.Triangle: return Overlap(other.GetTriangleShape());
+                case ShapeType.Quad: return Overlap(other.GetQuadShape());
                 case ShapeType.Rect: return Overlap(other.GetRectShape());
                 case ShapeType.Poly: return Overlap(other.GetPolygonShape());
                 case ShapeType.PolyLine: return Overlap(other.GetPolylineShape());
@@ -194,6 +195,9 @@ namespace ShapeEngine.Core.Collision
                 case ShapeType.Rect:
                     var r = GetRectShape();
                     return r.OverlapShape(segment);
+                case ShapeType.Quad:
+                    var q = GetQuadShape();
+                    return q.OverlapShape(segment);
                 case ShapeType.Poly:
                     var p = GetPolygonShape();
                     return p.OverlapShape(segment);
@@ -222,6 +226,9 @@ namespace ShapeEngine.Core.Collision
                 case ShapeType.Rect:
                     var r = GetRectShape();
                     return r.OverlapShape(triangle);
+                case ShapeType.Quad:
+                    var q = GetQuadShape();
+                    return q.OverlapShape(triangle);
                 case ShapeType.Poly:
                     var p = GetPolygonShape();
                     return p.OverlapShape(triangle);
@@ -250,6 +257,9 @@ namespace ShapeEngine.Core.Collision
                 case ShapeType.Rect:
                     var r = GetRectShape();
                     return r.OverlapShape(circle);
+                case ShapeType.Quad:
+                    var q = GetQuadShape();
+                    return q.OverlapShape(circle);
                 case ShapeType.Poly:
                     var p = GetPolygonShape();
                     return p.OverlapShape(circle);
@@ -278,6 +288,9 @@ namespace ShapeEngine.Core.Collision
                 case ShapeType.Rect:
                     var r = GetRectShape();
                     return r.OverlapShape(rect);
+                case ShapeType.Quad:
+                    var q = GetQuadShape();
+                    return q.OverlapShape(rect);
                 case ShapeType.Poly:
                     var p = GetPolygonShape();
                     return p.OverlapShape(rect);
@@ -288,6 +301,38 @@ namespace ShapeEngine.Core.Collision
 
             return false;
         }
+        public bool Overlap(Quad quad)
+        {
+            if (!Enabled) return false;
+
+            switch (GetShapeType())
+            {
+                case ShapeType.Circle:
+                    var c = GetCircleShape();
+                    return c.OverlapShape(quad);
+                case ShapeType.Segment:
+                    var s = GetSegmentShape();
+                    return s.OverlapShape(quad);
+                case ShapeType.Triangle:
+                    var t = GetTriangleShape();
+                    return t.OverlapShape(quad);
+                case ShapeType.Rect:
+                    var r = GetRectShape();
+                    return r.OverlapShape(quad);
+                case ShapeType.Quad:
+                    var q = GetQuadShape();
+                    return q.OverlapShape(quad);
+                case ShapeType.Poly:
+                    var p = GetPolygonShape();
+                    return p.OverlapShape(quad);
+                case ShapeType.PolyLine:
+                    var pl = GetPolylineShape();
+                    return pl.OverlapShape(quad);
+            }
+
+            return false;
+        }
+
         public bool Overlap(Polygon poly)
         {
             if (!Enabled) return false;
@@ -306,6 +351,9 @@ namespace ShapeEngine.Core.Collision
                 case ShapeType.Rect:
                     var r = GetRectShape();
                     return r.OverlapShape(poly);
+                case ShapeType.Quad:
+                    var q = GetQuadShape();
+                    return q.OverlapShape(poly);
                 case ShapeType.Poly:
                     var p = GetPolygonShape();
                     return p.OverlapShape(poly);
@@ -334,6 +382,9 @@ namespace ShapeEngine.Core.Collision
                 case ShapeType.Rect:
                     var r = GetRectShape();
                     return r.OverlapShape(polyLine);
+                case ShapeType.Quad:
+                    var q = GetQuadShape();
+                    return q.OverlapShape(polyLine);
                 case ShapeType.Poly:
                     var p = GetPolygonShape();
                     return p.OverlapShape(polyLine);
@@ -371,6 +422,7 @@ namespace ShapeEngine.Core.Collision
                 case ShapeType.Segment: return Intersect(other.GetSegmentShape());
                 case ShapeType.Triangle: return Intersect(other.GetTriangleShape());
                 case ShapeType.Rect: return Intersect(other.GetRectShape());
+                case ShapeType.Quad: return Intersect(other.GetQuadShape());
                 case ShapeType.Poly: return Intersect(other.GetPolygonShape());
                 case ShapeType.PolyLine: return Intersect(other.GetPolylineShape());
             }
@@ -395,6 +447,9 @@ namespace ShapeEngine.Core.Collision
                 case ShapeType.Rect:
                     var r = GetRectShape();
                     return r.IntersectShape(segment);
+                case ShapeType.Quad:
+                    var q = GetQuadShape();
+                    return q.IntersectShape(segment);
                 case ShapeType.Poly:
                     var p = GetPolygonShape();
                     return p.IntersectShape(segment);
@@ -423,6 +478,9 @@ namespace ShapeEngine.Core.Collision
                 case ShapeType.Rect:
                     var r = GetRectShape();
                     return r.IntersectShape(triangle);
+                case ShapeType.Quad:
+                    var q = GetQuadShape();
+                    return q.IntersectShape(triangle);
                 case ShapeType.Poly:
                     var p = GetPolygonShape();
                     return p.IntersectShape(triangle);
@@ -451,6 +509,9 @@ namespace ShapeEngine.Core.Collision
                 case ShapeType.Rect:
                     var r = GetRectShape();
                     return r.IntersectShape(circle);
+                case ShapeType.Quad:
+                    var q = GetQuadShape();
+                    return q.IntersectShape(circle);
                 case ShapeType.Poly:
                     var p = GetPolygonShape();
                     return p.IntersectShape(circle);
@@ -479,12 +540,46 @@ namespace ShapeEngine.Core.Collision
                 case ShapeType.Rect:
                     var r = GetRectShape();
                     return r.IntersectShape(rect);
+                case ShapeType.Quad:
+                    var q = GetQuadShape();
+                    return q.IntersectShape(rect);
                 case ShapeType.Poly:
                     var p = GetPolygonShape();
                     return p.IntersectShape(rect);
                 case ShapeType.PolyLine:
                     var pl = GetPolylineShape();
                     return pl.IntersectShape(rect);
+            }
+
+            return null;
+        }
+        public CollisionPoints? Intersect(Quad quad)
+        {
+            if (!Enabled) return null;
+
+            switch (GetShapeType())
+            {
+                case ShapeType.Circle:
+                    var c = GetCircleShape();
+                    return c.IntersectShape(quad);
+                case ShapeType.Segment:
+                    var s = GetSegmentShape();
+                    return s.IntersectShape(quad);
+                case ShapeType.Triangle:
+                    var t = GetTriangleShape();
+                    return t.IntersectShape(quad);
+                case ShapeType.Rect:
+                    var r = GetRectShape();
+                    return r.IntersectShape(quad);
+                case ShapeType.Quad:
+                    var q = GetQuadShape();
+                    return q.IntersectShape(quad);
+                case ShapeType.Poly:
+                    var p = GetPolygonShape();
+                    return p.IntersectShape(quad);
+                case ShapeType.PolyLine:
+                    var pl = GetPolylineShape();
+                    return pl.IntersectShape(quad);
             }
 
             return null;
@@ -507,6 +602,9 @@ namespace ShapeEngine.Core.Collision
                 case ShapeType.Rect:
                     var r = GetRectShape();
                     return r.IntersectShape(poly);
+                case ShapeType.Quad:
+                    var q = GetQuadShape();
+                    return q.IntersectShape(poly);
                 case ShapeType.Poly:
                     var p = GetPolygonShape();
                     return p.IntersectShape(poly);
@@ -535,6 +633,9 @@ namespace ShapeEngine.Core.Collision
                 case ShapeType.Rect:
                     var r = GetRectShape();
                     return r.IntersectShape(polyLine);
+                case ShapeType.Quad:
+                    var q = GetQuadShape();
+                    return q.IntersectShape(polyLine);
                 case ShapeType.Poly:
                     var p = GetPolygonShape();
                     return p.IntersectShape(polyLine);

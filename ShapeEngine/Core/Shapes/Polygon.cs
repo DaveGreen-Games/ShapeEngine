@@ -997,12 +997,44 @@ namespace ShapeEngine.Core.Shapes
         //    }
         //    return false;
         //}
+        public bool Overlap(Collider collider)
+        {
+            if (!collider.Enabled) return false;
+
+            switch (collider.GetShapeType())
+            {
+                case ShapeType.Circle:
+                    var c = collider.GetCircleShape();
+                    return OverlapShape(c);
+                case ShapeType.Segment:
+                    var s = collider.GetSegmentShape();
+                    return OverlapShape(s);
+                case ShapeType.Triangle:
+                    var t = collider.GetTriangleShape();
+                    return OverlapShape(t);
+                case ShapeType.Rect:
+                    var r = collider.GetRectShape();
+                    return OverlapShape(r);
+                case ShapeType.Quad:
+                    var q = collider.GetQuadShape();
+                    return OverlapShape(q);
+                case ShapeType.Poly:
+                    var p = collider.GetPolygonShape();
+                    return OverlapShape(p);
+                case ShapeType.PolyLine:
+                    var pl = collider.GetPolylineShape();
+                    return OverlapShape(pl);
+            }
+
+            return false;
+        }
+
         public bool OverlapShape(Segment s) => s.OverlapShape(this);
-
         public bool OverlapShape(Circle c) => c.OverlapShape(this);
-
         public bool OverlapShape(Triangle t) => t.OverlapShape(this);
         public bool OverlapShape(Rect r) => r.OverlapShape(this);
+        public bool OverlapShape(Quad q) => q.OverlapShape(this);
+        
         public bool OverlapShape(Polygon b)
         {
 
@@ -1065,6 +1097,9 @@ namespace ShapeEngine.Core.Shapes
                 case ShapeType.Rect:
                     var r = collider.GetRectShape();
                     return IntersectShape(r);
+                case ShapeType.Quad:
+                    var q = collider.GetQuadShape();
+                    return IntersectShape(q);
                 case ShapeType.Poly:
                     var p = collider.GetPolygonShape();
                     return IntersectShape(p);
@@ -1080,6 +1115,46 @@ namespace ShapeEngine.Core.Shapes
         public CollisionPoints? IntersectShape(Circle c) { return GetEdges().IntersectShape(c); }
         public CollisionPoints? IntersectShape(Triangle t) { return GetEdges().IntersectShape(t.GetEdges()); }
         public CollisionPoints? IntersectShape(Rect r) { return GetEdges().IntersectShape(r.GetEdges()); }
+        public CollisionPoints? IntersectShape(Quad q)
+        {
+            if (Count < 3) return null;
+
+            CollisionPoints? points = null;
+            CollisionPoint? colPoint = null;
+            for (var i = 0; i < Count; i++)
+            {
+                colPoint = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count],q.A, q.B);
+                if (colPoint != null)
+                {
+                    points ??= new();
+                    points.Add((CollisionPoint)colPoint);
+                }
+                
+                colPoint = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], q.B, q.C);
+                if (colPoint != null)
+                {
+                    points ??= new();
+                    points.Add((CollisionPoint)colPoint);
+                }
+                
+                colPoint = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count],q.C, q.D);
+                if (colPoint != null)
+                {
+                    points ??= new();
+                    points.Add((CollisionPoint)colPoint);
+                }
+                
+                colPoint = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count],q.D, q.A);
+                if (colPoint != null)
+                {
+                    points ??= new();
+                    points.Add((CollisionPoint)colPoint);
+                }
+                
+            }
+            return points;
+        }
+        
         public CollisionPoints? IntersectShape(Polygon b) { return GetEdges().IntersectShape(b.GetEdges()); }
         public CollisionPoints? IntersectShape(Polyline pl) { return GetEdges().IntersectShape(pl.GetEdges()); }
 
