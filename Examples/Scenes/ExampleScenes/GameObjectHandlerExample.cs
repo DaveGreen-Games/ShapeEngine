@@ -250,8 +250,12 @@ namespace Examples.Scenes.ExampleScenes
         }
         public override void DrawGame(ScreenInfo game)
         {
-            circleCollider.GetCircleShape().DrawLines(4f, Colors.Warm);
-            // polyCollider.GetPolygonShape().DrawLines(4f, Colors.Highlight);
+            var c = circleCollider.GetCircleShape();
+
+            if (game.Area.OverlapShape(c))
+            {
+                c.DrawLines(4f, Colors.Warm);
+            }
         }
     }
     internal class Bullet : GameObject
