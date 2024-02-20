@@ -815,17 +815,17 @@ namespace ShapeEngine.Core.Shapes
         }
         public readonly CollisionPoints? IntersectShape(Polygon p)
         {
-            if (p.Count <= 1) return null;
-            if (p.Count == 2)
-            {
-                var cp = IntersectSegmentSegment(Start, End, p[0], p[1]);
-                if (cp != null)
-                {
-                    return new(){(CollisionPoint)cp};
-                }
-
-                return null;
-            }
+            if (p.Count <= 3) return null;
+            // if (p.Count == 2)
+            // {
+            //     var cp = IntersectSegmentSegment(Start, End, p[0], p[1]);
+            //     if (cp != null)
+            //     {
+            //         return new(){(CollisionPoint)cp};
+            //     }
+            //
+            //     return null;
+            // }
 
             CollisionPoints? points = null;
             CollisionPoint? colPoint = null;
@@ -871,6 +871,7 @@ namespace ShapeEngine.Core.Shapes
         }
         public readonly CollisionPoints? IntersectShape(Segments shape)
         {
+            if (shape.Count <= 0) return null;
             CollisionPoints? points = null;
 
             foreach (var seg in shape)
