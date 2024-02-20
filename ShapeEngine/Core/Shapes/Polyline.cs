@@ -257,35 +257,49 @@ namespace ShapeEngine.Core.Shapes
 
             return false;
         }
+        public bool OverlapShape(Segments segments)
+        {
+            if (Count < 2 || segments.Count <= 0) return false;
+            
+            for (var i = 0; i < Count - 1; i++)
+            {
+                var start = this[i];
+                var end = this[(i + 1) % Count];
 
-        public bool OverlapShape(Segments segments) { return GetEdges().OverlapShape(segments); }
+                foreach (var seg in segments)
+                {
+                    if (Segment.OverlapSegmentSegment(start, end, seg.Start, seg.End)) return true;
+                }
+            }
+
+            return false;
+        }
         public bool OverlapShape(Segment s) => s.OverlapShape(this);
-
         public bool OverlapShape(Circle c) => c.OverlapShape(this);
-        
-
         public bool OverlapShape(Triangle t) => t.OverlapShape(this);
         public bool OverlapShape(Rect r) => r.OverlapShape(this);
         public bool OverlapShape(Quad q) => q.OverlapShape(this);
-        public bool OverlapShape(Polygon p)
+        public bool OverlapShape(Polygon p) => p.OverlapShape(this);
+        public bool OverlapShape(Polyline b)
         {
-            for (int i = 0; i < Count - 1; i++)
+            if (Count < 2 || b.Count < 2) return false;
+            
+            for (var i = 0; i < Count - 1; i++)
             {
-                Vector2 startPolyline = GetPoint(i); // pl[i];
-                if (p.ContainsPoint(startPolyline)) return true;
-                Vector2 endPolyline = GetPoint(i + 1); // pl[(i + 1)];
-                Segment segPolyline = new(startPolyline, endPolyline);
-                for (int j = 0; j < p.Count; j++)
+                var start = this[i];
+                var end = this[(i + 1) % Count];
+
+                for (var j = 0; j < Count - 1; j++)
                 {
-                    Vector2 startPoly = p.GetPoint(j); // p[j];
-                    Vector2 endPoly = p.GetPoint(j); // p[(j + 1) % p.Count];
-                    Segment segPoly = new(startPoly, endPoly);
-                    if (segPolyline.OverlapShape(segPoly)) return true;
+                    var bStart = b[j];
+                    var bEnd = b[(j + 1) % b.Count];
+
+                    if (Segment.OverlapSegmentSegment(start, end, bStart, bEnd)) return true;
                 }
             }
+
             return false;
         }
-        public bool OverlapShape(Polyline b) { return GetEdges().OverlapShape(b.GetEdges()); }
         #endregion
 
         #region Intersection
@@ -322,10 +336,119 @@ namespace ShapeEngine.Core.Shapes
         }
 
         //other shape center is used for checking segment normal and if necessary normal is flipped
-        public CollisionPoints? IntersectShape(Segment s) { return GetEdges().IntersectShape(s); }
-        public CollisionPoints? IntersectShape(Circle c) { return GetEdges().IntersectShape(c); }
-        public CollisionPoints? IntersectShape(Triangle t) { return GetEdges().IntersectShape(t.GetEdges()); }
-        public CollisionPoints? IntersectShape(Rect r) { return GetEdges().IntersectShape(r.GetEdges()); }
+        public CollisionPoints? IntersectShape(Segment s)
+        {
+            if (Count < 2) return null;
+
+            CollisionPoints? points = null;
+            CollisionPoint? colPoint = null;
+            for (var i = 0; i < Count - 1; i++)
+            {
+                colPoint = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], s.Start, s.End);
+                if (colPoint != null)
+                {
+                    points ??= new();
+                    points.Add((CollisionPoint)colPoint);
+                }
+                
+            }
+            return points;
+        }
+        public CollisionPoints? IntersectShape(Circle c)
+        {
+            if (Count < 2) return null;
+            
+            CollisionPoints? points = null;
+            (CollisionPoint? a, CollisionPoint? b) result;
+
+            for (var i = 0; i < Count - 1; i++)
+            {
+                result = Segment.IntersectSegmentCircle(this[i], this[(i + 1) % Count], c.Center, c.Radius);
+                if (result.a != null || result.b != null)
+                {
+                    points ??= new();
+                    if(result.a != null) points.Add((CollisionPoint)result.a);
+                    if(result.b != null) points.Add((CollisionPoint)result.b);
+                }
+                
+            }
+            return points;
+        }
+        public CollisionPoints? IntersectShape(Triangle t)
+        {
+            if (Count < 2) return null;
+
+            CollisionPoints? points = null;
+            CollisionPoint? colPoint = null;
+            for (var i = 0; i < Count - 1; i++)
+            {
+                colPoint = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], t.A, t.B);
+                if (colPoint != null)
+                {
+                    points ??= new();
+                    points.Add((CollisionPoint)colPoint);
+                }
+                
+                colPoint = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], t.B, t.C);
+                if (colPoint != null)
+                {
+                    points ??= new();
+                    points.Add((CollisionPoint)colPoint);
+                }
+                
+                colPoint = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], t.C, t.A);
+                if (colPoint != null)
+                {
+                    points ??= new();
+                    points.Add((CollisionPoint)colPoint);
+                }
+                
+            }
+            return points;
+        }
+        public CollisionPoints? IntersectShape(Rect r)
+        {
+            if (Count < 2) return null;
+
+            CollisionPoints? points = null;
+            CollisionPoint? colPoint = null;
+            var a = r.TopLeft;
+            var b = r.BottomLeft;
+            var c = r.BottomRight;
+            var d = r.TopRight;
+            for (var i = 0; i < Count - 1; i++)
+            {
+                colPoint = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], a, b);
+                if (colPoint != null)
+                {
+                    points ??= new();
+                    points.Add((CollisionPoint)colPoint);
+                }
+                
+                colPoint = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], b, c);
+                if (colPoint != null)
+                {
+                    points ??= new();
+                    points.Add((CollisionPoint)colPoint);
+                }
+                
+                colPoint = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], c, d);
+                if (colPoint != null)
+                {
+                    points ??= new();
+                    points.Add((CollisionPoint)colPoint);
+                }
+                
+                colPoint = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count], d, a);
+                if (colPoint != null)
+                {
+                    points ??= new();
+                    points.Add((CollisionPoint)colPoint);
+                }
+                
+            }
+            return points;
+        }
         public CollisionPoints? IntersectShape(Quad q)
         {
             if (Count < 2) return null;
@@ -364,10 +487,66 @@ namespace ShapeEngine.Core.Shapes
             }
             return points;
         }
-
-        public CollisionPoints? IntersectShape(Polygon p) { return GetEdges().IntersectShape(p.GetEdges()); }
-        public CollisionPoints? IntersectShape(Polyline b) { return GetEdges().IntersectShape(b.GetEdges()); }
+        public CollisionPoints? IntersectShape(Polygon p)
+        {
+            if (p.Count < 3 || Count < 2) return null;
+            CollisionPoints? points = null;
+            for (var i = 0; i < Count - 1; i++)
+            {
+                for (var j = 0; j < p.Count; j++)
+                {
+                    var colPoint = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count],p[j], p[(j + 1) % p.Count]);
+                    if (colPoint != null)
+                    {
+                        points ??= new();
+                        points.Add((CollisionPoint)colPoint);
+                    }
+                }
+                
+            }
+            
+            return points;
+        }
+        public CollisionPoints? IntersectShape(Polyline b)
+        {
+            if (b.Count < 2 || Count < 2) return null;
+            CollisionPoints? points = null;
+            for (var i = 0; i < Count - 1; i++)
+            {
+                for (var j = 0; j < b.Count - 1; j++)
+                {
+                    var colPoint = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count],b[j], b[(j + 1) % b.Count]);
+                    if (colPoint != null)
+                    {
+                        points ??= new();
+                        points.Add((CollisionPoint)colPoint);
+                    }
+                }
+                
+            }
+            
+            return points;
+        }
+        public CollisionPoints? IntersectShape(Segments segments)
+        {
+            if (Count < 2 || segments.Count <= 0) return null;
+            CollisionPoints? points = null;
+            for (var i = 0; i < Count - 1; i++)
+            {
+                foreach (var seg in segments)
+                {
+                    var colPoint = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count],seg.Start, seg.End);
+                    if (colPoint != null)
+                    {
+                        points ??= new();
+                        points.Add((CollisionPoint)colPoint);
+                    }
+                }
+            }
+            return points;
+        }
         #endregion
+
         public static Polyline GetShape(Points relative, Transform2D transform)
         {
             if (relative.Count < 3) return new();

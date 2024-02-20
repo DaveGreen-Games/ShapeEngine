@@ -843,17 +843,17 @@ namespace ShapeEngine.Core.Shapes
         }
         public readonly CollisionPoints? IntersectShape(Polyline pl)
         {
-            if (pl.Count <= 1) return null;
-            if (pl.Count == 2)
-            {
-                var cp = IntersectSegmentSegment(Start, End, pl[0], pl[1]);
-                if (cp != null)
-                {
-                    return new(){(CollisionPoint)cp};
-                }
-
-                return null;
-            }
+            if (pl.Count < 2) return null;
+            // if (pl.Count == 2)
+            // {
+            //     var cp = IntersectSegmentSegment(Start, End, pl[0], pl[1]);
+            //     if (cp != null)
+            //     {
+            //         return new(){(CollisionPoint)cp};
+            //     }
+            //
+            //     return null;
+            // }
 
             CollisionPoints? points = null;
             CollisionPoint? colPoint = null;

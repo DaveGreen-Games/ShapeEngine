@@ -977,20 +977,6 @@ namespace ShapeEngine.Core.Shapes
             
             CollisionPoints? points = null;
             (CollisionPoint? a, CollisionPoint? b) result;
-            // if (p.Count == 2)
-            // {
-            //     result = IntersectCircleSegment(Center, Radius, p[0], p[1]);
-            //     if (result.a != null || result.b != null)
-            //     {
-            //         points ??= new();
-            //         if(result.a != null) points.Add((CollisionPoint)result.a);
-            //         if(result.b != null) points.Add((CollisionPoint)result.b);
-            //         return points;
-            //     }
-            //
-            //     return null;
-            // }
-
 
             for (var i = 0; i < p.Count; i++)
             {
@@ -1007,23 +993,23 @@ namespace ShapeEngine.Core.Shapes
         }
         public readonly CollisionPoints? IntersectShape(Polyline pl)
         {
-            if (pl.Count <= 1) return null;
+            if (pl.Count < 2) return null;
             
             CollisionPoints? points = null;
             (CollisionPoint? a, CollisionPoint? b) result;
-            if (pl.Count == 2)
-            {
-                result = IntersectCircleSegment(Center, Radius, pl[0], pl[1]);
-                if (result.a != null || result.b != null)
-                {
-                    points ??= new();
-                    if(result.a != null) points.Add((CollisionPoint)result.a);
-                    if(result.b != null) points.Add((CollisionPoint)result.b);
-                    return points;
-                }
-
-                return null;
-            }
+            // if (pl.Count == 2)
+            // {
+            //     result = IntersectCircleSegment(Center, Radius, pl[0], pl[1]);
+            //     if (result.a != null || result.b != null)
+            //     {
+            //         points ??= new();
+            //         if(result.a != null) points.Add((CollisionPoint)result.a);
+            //         if(result.b != null) points.Add((CollisionPoint)result.b);
+            //         return points;
+            //     }
+            //
+            //     return null;
+            // }
 
 
             for (var i = 0; i < pl.Count - 1; i++)

@@ -989,14 +989,7 @@ namespace ShapeEngine.Core.Shapes
         #endregion
 
         #region Overlap
-        //public static bool OverlapShape(this Polygon poly, Segments segments)
-        //{
-        //    foreach (var seg in segments)
-        //    {
-        //        if (poly.OverlapShape(seg)) return true;
-        //    }
-        //    return false;
-        //}
+        
         public bool Overlap(Collider collider)
         {
             if (!collider.Enabled) return false;
@@ -1028,51 +1021,95 @@ namespace ShapeEngine.Core.Shapes
 
             return false;
         }
-
         public bool OverlapShape(Segment s) => s.OverlapShape(this);
         public bool OverlapShape(Circle c) => c.OverlapShape(this);
         public bool OverlapShape(Triangle t) => t.OverlapShape(this);
         public bool OverlapShape(Rect r) => r.OverlapShape(this);
         public bool OverlapShape(Quad q) => q.OverlapShape(this);
-        
         public bool OverlapShape(Polygon b)
         {
-
             if (Count < 3 || b.Count < 3) return false;
-            //return a.IntersectShape(b).Count > 0;
+            
+            var oddNodesThis = false;
+            var oddNodesB = false;
+            var containsPointBCheckFinished = false;
 
-            Segments segmentsB = new();
-            for (int j = 0; j < b.Count; j++)
+            var pointToCeckThis = this[0];
+            var pointToCeckB = b[0];
+            
+            for (var i = 0; i < Count; i++)
             {
-                Vector2 startB = b.GetPoint(j); // b[j];
-                if (ContainsPoint(startB)) return true;
-                Vector2 endB = b.GetPoint(j + 1);// b[(j + 1) % b.Count];
-                Segment segB = new(startB, endB);
-                segmentsB.Add(segB);
+                var start = this[i];
+                var end = this[(i + 1) % Count];
+                
+                for (int j = 0; j < b.Count; j++)
+                {
+                    var bStart = b[j];
+                    var bEnd = b[(j + 1) % b.Count];
+                    if (Segment.OverlapSegmentSegment(start, end, bStart, bEnd)) return true;
+                    
+                    if (containsPointBCheckFinished) continue;
+                    if(Polygon.ContainsPointCheck(bStart, bEnd, pointToCeckThis)) oddNodesB = !oddNodesB;
+                }
+
+                if (!containsPointBCheckFinished)
+                {
+                    if (oddNodesB) return true;
+                    containsPointBCheckFinished = true;
+                }
+               
+                if(Polygon.ContainsPointCheck(start, end, pointToCeckB)) oddNodesThis = !oddNodesThis;
             }
 
-            for (int i = 0; i < Count; i++)
-            {
-                Vector2 startA = GetPoint(i); //  a[i];
-                if (b.ContainsPoint(startA)) return true;
-                Vector2 endA = GetPoint(i + 1); // a[(i + 1) % a.Count];
-                Segment segA = new(startA, endA);
-                if (segA.OverlapShape(segmentsB)) return true;
-            }
-            return false;
+            return oddNodesThis || oddNodesB;
         }
-        public bool OverlapShape(Polyline pl) { return pl.OverlapShape(this); }
+        public bool OverlapShape(Polyline pl)
+        {
+            if (Count < 3 || pl.Count < 2) return false;
+            
+            var oddNodes = false;
+            var pointToCeck = pl[0];
+
+            
+            for (var i = 0; i < Count; i++)
+            {
+                var start = this[i];
+                var end = this[(i + 1) % Count];
+                
+                for (int j = 0; j < pl.Count - 1; j++)
+                {
+                    var bStart = pl[j];
+                    var bEnd = pl[(j + 1) % pl.Count];
+                    if (Segment.OverlapSegmentSegment(start, end, bStart, bEnd)) return true;
+                }
+
+                if(Polygon.ContainsPointCheck(start, end, pointToCeck)) oddNodes = !oddNodes;
+            }
+
+            return oddNodes;
+        }
         public bool OverlapShape(Segments segments)
         {
-
             if (Count < 3 || segments.Count <= 0) return false;
+            
+            var oddNodes = false;
+            var pointToCeck = segments[0].Start;
 
-            foreach (var seg in segments)
+            
+            for (var i = 0; i < Count; i++)
             {
-                if (OverlapShape(seg)) return true;
+                var start = this[i];
+                var end = this[(i + 1) % Count];
+
+                foreach (var seg in segments)
+                {
+                    if (Segment.OverlapSegmentSegment(start, end, seg.Start, seg.End)) return true;
+                }
+
+                if(Polygon.ContainsPointCheck(start, end, pointToCeck)) oddNodes = !oddNodes;
             }
 
-            return false;
+            return oddNodes;
         }
 
 
@@ -1110,12 +1147,44 @@ namespace ShapeEngine.Core.Shapes
 
             return null;
         }
-
-        public CollisionPoints? IntersectShape(Segment s) { return GetEdges().IntersectShape(s); }
-        public CollisionPoints? IntersectShape(Circle c) { return GetEdges().IntersectShape(c); }
-        public CollisionPoints? IntersectShape(Triangle t) { return GetEdges().IntersectShape(t.GetEdges()); }
-        public CollisionPoints? IntersectShape(Rect r) { return GetEdges().IntersectShape(r.GetEdges()); }
-        public CollisionPoints? IntersectShape(Quad q)
+        public CollisionPoints? IntersectShape(Segment s)
+        {
+            if (Count < 3) return null;
+            CollisionPoints? points = null;
+            CollisionPoint? colPoint = null;
+            for (var i = 0; i < Count; i++)
+            {
+                colPoint = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count],s.Start, s.End);
+                if (colPoint != null)
+                {
+                    points ??= new();
+                    points.Add((CollisionPoint)colPoint);
+                }
+                
+            }
+            return points;
+        }
+        public CollisionPoints? IntersectShape(Circle c)
+        {
+            if (Count < 3) return null;
+            
+            CollisionPoints? points = null;
+            (CollisionPoint? a, CollisionPoint? b) result;
+            
+            for (var i = 0; i < Count; i++)
+            {
+                result = Segment.IntersectSegmentCircle(this[i], this[(i + 1) % Count], c.Center, c.Radius);
+                if (result.a != null || result.b != null)
+                {
+                    points ??= new();
+                    if(result.a != null) points.Add((CollisionPoint)result.a);
+                    if(result.b != null) points.Add((CollisionPoint)result.b);
+                }
+                
+            }
+            return points;
+        }
+        public CollisionPoints? IntersectShape(Triangle t)
         {
             if (Count < 3) return null;
 
@@ -1123,7 +1192,80 @@ namespace ShapeEngine.Core.Shapes
             CollisionPoint? colPoint = null;
             for (var i = 0; i < Count; i++)
             {
-                colPoint = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count],q.A, q.B);
+                colPoint = Segment.IntersectSegmentSegment( this[i], this[(i + 1) % Count], t.A, t.B);
+                if (colPoint != null)
+                {
+                    points ??= new();
+                    points.Add((CollisionPoint)colPoint);
+                }
+                
+                colPoint = Segment.IntersectSegmentSegment( this[i], this[(i + 1) % Count], t.B, t.C);
+                if (colPoint != null)
+                {
+                    points ??= new();
+                    points.Add((CollisionPoint)colPoint);
+                }
+                
+                colPoint = Segment.IntersectSegmentSegment( this[i], this[(i + 1) % Count], t.C, t.A);
+                if (colPoint != null)
+                {
+                    points ??= new();
+                    points.Add((CollisionPoint)colPoint);
+                }
+                
+            }
+            return points;
+        }
+        public CollisionPoints? IntersectShape(Rect r)
+        {
+            if (Count < 3) return null;
+
+            CollisionPoints? points = null;
+
+            var a = r.TopLeft;
+            var b = r.BottomLeft;
+            var c = r.BottomRight;
+            var d = r.TopRight;
+            
+            for (var i = 0; i < Count; i++)
+            {
+                var colPoint = Segment.IntersectSegmentSegment( this[i], this[(i + 1) % Count], a, b);
+                if (colPoint != null)
+                {
+                    points ??= new();
+                    points.Add((CollisionPoint)colPoint);
+                }
+                
+                colPoint = Segment.IntersectSegmentSegment( this[i], this[(i + 1) % Count], b, c);
+                if (colPoint != null)
+                {
+                    points ??= new();
+                    points.Add((CollisionPoint)colPoint);
+                }
+                
+                colPoint = Segment.IntersectSegmentSegment( this[i], this[(i + 1) % Count], c, d);
+                if (colPoint != null)
+                {
+                    points ??= new();
+                    points.Add((CollisionPoint)colPoint);
+                }
+                colPoint = Segment.IntersectSegmentSegment( this[i], this[(i + 1) % Count], d, a);
+                if (colPoint != null)
+                {
+                    points ??= new();
+                    points.Add((CollisionPoint)colPoint);
+                }
+            }
+            return points;
+        }
+        public CollisionPoints? IntersectShape(Quad q)
+        {
+            if (Count < 3) return null;
+
+            CollisionPoints? points = null;
+            for (var i = 0; i < Count; i++)
+            {
+                var colPoint = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count],q.A, q.B);
                 if (colPoint != null)
                 {
                     points ??= new();
@@ -1154,9 +1296,60 @@ namespace ShapeEngine.Core.Shapes
             }
             return points;
         }
-        
-        public CollisionPoints? IntersectShape(Polygon b) { return GetEdges().IntersectShape(b.GetEdges()); }
-        public CollisionPoints? IntersectShape(Polyline pl) { return GetEdges().IntersectShape(pl.GetEdges()); }
+        public CollisionPoints? IntersectShape(Polygon b)
+        {
+            if (Count < 3 || b.Count < 3) return null;
+            CollisionPoints? points = null;
+            for (var i = 0; i < Count; i++)
+            {
+                for (var j = 0; j < b.Count; j++)
+                {
+                    var colPoint = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count],b[j], b[(j + 1) % b.Count]);
+                    if (colPoint != null)
+                    {
+                        points ??= new();
+                        points.Add((CollisionPoint)colPoint);
+                    }
+                }
+            }
+            return points;
+        }
+        public CollisionPoints? IntersectShape(Polyline pl)
+        {
+            if (Count < 3 || pl.Count < 2) return null;
+            CollisionPoints? points = null;
+            for (var i = 0; i < Count; i++)
+            {
+                for (var j = 0; j < pl.Count - 1; j++)
+                {
+                    var colPoint = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count],pl[j], pl[(j + 1) % pl.Count]);
+                    if (colPoint != null)
+                    {
+                        points ??= new();
+                        points.Add((CollisionPoint)colPoint);
+                    }
+                }
+            }
+            return points;
+        }
+        public CollisionPoints? IntersectShape(Segments segments)
+        {
+            if (Count < 3 || segments.Count <= 0) return null;
+            CollisionPoints? points = null;
+            for (var i = 0; i < Count; i++)
+            {
+                foreach (var seg in segments)
+                {
+                    var colPoint = Segment.IntersectSegmentSegment(this[i], this[(i + 1) % Count],seg.Start, seg.End);
+                    if (colPoint != null)
+                    {
+                        points ??= new();
+                        points.Add((CollisionPoint)colPoint);
+                    }
+                }
+            }
+            return points;
+        }
 
         #endregion
 
@@ -1239,243 +1432,4 @@ namespace ShapeEngine.Core.Shapes
         #endregion
     }
 }
-
-
-
-
-//private Triangulation Subdivide(Triangle triangle, float minArea)
-        //{
-        //    var area = triangle.GetArea();
-        //    Triangulation final = new();
-        //    if (minArea > area / 3)
-        //    {
-        //        final.Add(triangle);
-        //    }
-        //    else
-        //    {
-        //        var triangulation = triangle.Triangulate();
-        //        foreach (var tri in triangulation)
-        //        {
-        //            final.AddRange(Subdivide(tri, minArea));
-        //        }
-        //    }
-        //    return final;
-        //}
-        
-        ///// <summary>
-        ///// Triangulate this polygon. 
-        ///// </summary>
-        ///// <param name="minArea">The minimum area a triangle must have to be further subdivided. Does not affect the initial triangulation.</param>
-        ///// <param name="subdivisions">A subdivision triangulates all triangles from the previous triangulation. (Do not go big!) </param>
-        ///// <returns></returns>
-        //public Triangulation Fracture(float minArea = -1, int subdivisions = 0)
-        //{
-        //    var triangulation = Triangulate();
-        //    if (subdivisions <= 0) return triangulation;
-        //    else
-        //    {
-        //        return Subdivide(triangulation, subdivisions, minArea);
-        //    }
-        //}
-        //private Triangulation Subdivide(Triangulation triangles, int remaining, float minArea = -1)
-        //{
-        //    if(remaining <= 0) return triangles;
-        //    Triangulation subdivision = new();
-        //    foreach (var tri in triangles)
-        //    {
-        //        var area = tri.GetArea();
-        //        //tri.GetRandomPoint()
-        //        if(minArea <= 0 || tri.GetArea() >= minArea) subdivision.AddRange(tri.Triangulate());
-        //        else subdivision.Add(tri);
-        //
-        //    }
-        //    return Subdivide(subdivision, remaining - 1, minArea);
-        //}
-/*
-        //only works with simple polygons that is why the ear clipper algorithm is used.
-        public Triangulation Fracture(int fractureComplexity = 0)//fix delauny triangulation
-        {
-            if (fractureComplexity <= 0) return SPoly.TriangulateDelaunay(this);
-
-            List<Vector2> points = new();
-            points.AddRange(this);
-            points.AddRange(GetRandomPoints(fractureComplexity));
-            return SPoly.TriangulateDelaunay(points);
-        }*/
-//public Vector2 GetReferencePoint() { return GetCentroid(); }
-//public SegmentShape GetSegmentShape() { return new(GetEdges(), this.GetCentroid()); }
-
-//extremely slow!!!
-    // public static class GrahamScan
-    // {
-    //     private const int TurnLeft = 1;
-    //     private const int TurnRight = -1;
-    //     private const int TurnNone = 0;
-    //     private static int Turn(Vector2 p, Vector2 q, Vector2 r)
-    //     {
-    //         return ((q.X - p.X) * (r.Y - p.Y) - (r.X - p.X) * (q.Y - p.Y)).CompareTo(0);
-    //     }
-    //     private static void KeepLeft(List<Vector2> hull, Vector2 r)
-    //     {
-    //         while (hull.Count > 1 && Turn(hull[^2], hull[^1], r) != TurnLeft)
-    //         {
-    //             // Console.WriteLine("Removing Point ({0}, {1}) because turning right ", hull[^1].X, hull[^1].Y);
-    //             hull.RemoveAt(hull.Count - 1);
-    //         }
-    //         if (hull.Count == 0 || hull[^1] != r)
-    //         {
-    //             // Console.WriteLine("Adding Point ({0}, {1})", r.X, r.Y);
-    //             hull.Add(r);
-    //         }
-    //         // Console.WriteLine("# Current Convex Hull #");
-    //         // foreach (var value in hull)
-    //         // {
-    //         //     Console.Write("(" + value.X+ "," + value.Y + ") ");
-    //         // }
-    //         // Console.WriteLine();
-    //         // Console.WriteLine();
-    //
-    //     }
-    //     private static float GetAngle(Vector2 p1, Vector2 p2)
-    //     {
-    //         float xDiff = p2.X - p1.X;
-    //         float yDiff = p2.Y - p1.Y;
-    //         return MathF.Atan2(yDiff, xDiff) * 180.0f / MathF.PI;
-    //     }
-    //     private static List<Vector2> MergeSort(Vector2 p0, List<Vector2> points)
-    //     {
-    //         if (points.Count == 1)
-    //         {
-    //             return points;
-    //         }
-    //         var sortedPoints = new List<Vector2>();
-    //         int middle = points.Count / 2;
-    //         var pointsL = points.GetRange(0, middle);
-    //         var pointsR = points.GetRange(middle, points.Count - middle);
-    //         pointsL = MergeSort(p0, pointsL);
-    //         pointsR = MergeSort(p0, pointsR);
-    //         var indexL = 0;
-    //         var indexR = 0;
-    //         for (var i = 0; i < pointsL.Count + pointsR.Count; i++)
-    //         {
-    //             if (indexL == pointsL.Count)
-    //             {
-    //                 sortedPoints.Add(pointsR[indexR]);
-    //                 indexR++;
-    //             }
-    //             else if (indexR == pointsR.Count)
-    //             {
-    //                 sortedPoints.Add(pointsL[indexL]);
-    //                 indexL++;
-    //             }
-    //             else if (GetAngle(p0, pointsL[indexL]) < GetAngle(p0, pointsR[indexR]))
-    //             {
-    //                 sortedPoints.Add(pointsL[indexL]);
-    //                 indexL++;
-    //             }
-    //             else
-    //             {
-    //                 sortedPoints.Add(pointsR[indexR]);
-    //                 indexR++;
-    //             }
-    //         }
-    //         return sortedPoints;
-    //     }
-    //     public static Polygon ConvexHull(List<Vector2> points)
-    //     {
-    //         if (points.Count < 3) return new();
-    //         // Console.WriteLine("# List of Point #");
-    //         // foreach (var value in points)
-    //         // {
-    //             // Console.Write("(" + value.getX() + "," + value.getY() + ") ");
-    //         // }
-    //         // Console.WriteLine();
-    //         // Console.WriteLine();
-    //
-    //         var p0 = points[0];
-    //         foreach (var value in points)
-    //         {
-    //             if (p0.Y > value.Y)
-    //                 p0 = value;
-    //         }
-    //
-    //         var order = points.Where(v => v != p0).ToList();// new List<Vector2>();
-    //         // foreach (var value in points)
-    //         // {
-    //             // if (p0 != value)
-    //                 // order.Add(value);
-    //         // }
-    //
-    //         order = MergeSort(p0, order);
-    //         // Console.WriteLine("# Sorted points based on angle with point p0 ({0},{1})#", p0.getX(), p0.getY());
-    //         // foreach (var value in order)
-    //         // {
-    //             // Console.WriteLine("(" + value.getX() + "," + value.getY() + ") : {0}", getAngle(p0, value));
-    //         // }
-    //         var result = new List<Vector2>();
-    //         result.Add(p0);
-    //         result.Add(order[0]);
-    //         result.Add(order[1]);
-    //         order.RemoveAt(0);
-    //         order.RemoveAt(0);
-    //         // Console.WriteLine("# Current Convex Hull #");
-    //         // foreach (var value in result)
-    //         // {
-    //             // Console.Write("(" + value.getX() + "," + value.getY() + ") ");
-    //         // }
-    //         // Console.WriteLine();
-    //         // Console.WriteLine();
-    //         foreach (var value in order)
-    //         {
-    //             KeepLeft(result, value);
-    //         }
-    //
-    //         
-    //         return new Polygon(result);
-    //         // Console.WriteLine();
-    //         // Console.WriteLine("# Convex Hull #");
-    //         // foreach (var value in result)
-    //         // {
-    //         // Console.Write("(" + value.getX() + "," + value.getY() + ") ");
-    //         // }
-    //         // Console.WriteLine();
-    //     }
-    //
-    //     // public static Polygon ConvexHull2(List<Vector2> points)
-    //     // {
-    //     //     if (points.Count < 3) return new();
-    //     //
-    //     //     //find bottom point
-    //     //     var p0 = points[0];
-    //     //     foreach (var value in points)
-    //     //     {
-    //     //         if (ShapeMath.EqualsF(p0.Y, value.Y))
-    //     //         {
-    //     //             if (p0.X > value.X) p0 = value;
-    //     //         }
-    //     //         else if (p0.Y > value.Y) p0 = value;
-    //     //     }
-    //     //     
-    //     //     var sorted = points.Where(v => v != p0).ToList();
-    //     //     sorted.Sort(
-    //     //         (v1, v2) =>
-    //     //         {
-    //     //             var a1 = p0.AngleRad(v1);
-    //     //             var a2 = p0.AngleRad(v2);
-    //     //             if (ShapeMath.EqualsF(a1, a2)) return 0;
-    //     //             else if (a1 < a2) return 1;
-    //     //             else return -1;
-    //     //         }
-    //     //     );
-    //     //     
-    //     //     
-    //     //     
-    //     //     return new();
-    //     // }
-    //     //
-    // }
-    //
-    
-
-
 
