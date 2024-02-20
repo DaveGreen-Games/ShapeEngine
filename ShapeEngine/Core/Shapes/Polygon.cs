@@ -1002,27 +1002,7 @@ namespace ShapeEngine.Core.Shapes
         public bool OverlapShape(Circle c) => c.OverlapShape(this);
 
         public bool OverlapShape(Triangle t) => t.OverlapShape(this);
-        public bool OverlapShape(Rect r)
-        {
-            if (Count < 3) return false;
-            var corners = r.ToPolygon();
-            foreach (var c in corners)
-            {
-                if (ContainsPoint(c)) return true;
-            }
-            foreach (var p in this)
-            {
-                if (r.ContainsPoint(p)) return true;
-            }
-
-            for (int i = 0; i < Count; i++)
-            {
-                Vector2 start = GetPoint(i); // poly[i];
-                Vector2 end = GetPoint(i + 1); // poly[(i + 1) % poly.Count];
-                if (r.OverlapShape(new Segment(start, end))) return true;
-            }
-            return false;
-        }
+        public bool OverlapShape(Rect r) => r.OverlapShape(this);
         public bool OverlapShape(Polygon b)
         {
 

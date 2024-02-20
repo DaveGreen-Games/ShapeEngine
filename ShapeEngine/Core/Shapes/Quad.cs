@@ -619,22 +619,22 @@ public readonly struct Quad : IEquatable<Quad>
             }
             return points;
         }
-        public CollisionPoints? IntersectShape(Triangle b)
+        public CollisionPoints? IntersectShape(Triangle t)
         {
             CollisionPoints? points = null;
-            var result = Segment.IntersectSegmentSegment(A, B, b.A, b.B);
+            var result = Segment.IntersectSegmentSegment(A, B, t.A, t.B);
             if (result != null)
             {
                 points ??= new();
                 points.AddRange((CollisionPoint)result);
             }
-            result = Segment.IntersectSegmentSegment(A, B, b.B, b.C);
+            result = Segment.IntersectSegmentSegment(A, B, t.B, t.C);
             if (result != null)
             {
                 points ??= new();
                 points.AddRange((CollisionPoint)result);
             }
-            result = Segment.IntersectSegmentSegment(A, B, b.C, b.A);
+            result = Segment.IntersectSegmentSegment(A, B, t.C, t.A);
             if (result != null)
             {
                 points ??= new();
@@ -642,57 +642,57 @@ public readonly struct Quad : IEquatable<Quad>
             }
             
                 
-            result = Segment.IntersectSegmentSegment(B, C, b.A, b.B);
+            result = Segment.IntersectSegmentSegment(B, C, t.A, t.B);
             if (result != null)
             {
                 points ??= new();
                 points.AddRange((CollisionPoint)result);
             }
-            result = Segment.IntersectSegmentSegment(B, C, b.B, b.C);
+            result = Segment.IntersectSegmentSegment(B, C, t.B, t.C);
             if (result != null)
             {
                 points ??= new();
                 points.AddRange((CollisionPoint)result);
             }
-            result = Segment.IntersectSegmentSegment(B, C, b.C, b.A);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            
-            result = Segment.IntersectSegmentSegment(C, D, b.A, b.B);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(C, D, b.B, b.C);
-            if (result != null)
-            {
-                points ??= new();
-                points.AddRange((CollisionPoint)result);
-            }
-            result = Segment.IntersectSegmentSegment(C, D, b.C, b.A);
+            result = Segment.IntersectSegmentSegment(B, C, t.C, t.A);
             if (result != null)
             {
                 points ??= new();
                 points.AddRange((CollisionPoint)result);
             }
             
-            result = Segment.IntersectSegmentSegment(D, A, b.A, b.B);
+            result = Segment.IntersectSegmentSegment(C, D, t.A, t.B);
             if (result != null)
             {
                 points ??= new();
                 points.AddRange((CollisionPoint)result);
             }
-            result = Segment.IntersectSegmentSegment(D, A, b.B, b.C);
+            result = Segment.IntersectSegmentSegment(C, D, t.B, t.C);
             if (result != null)
             {
                 points ??= new();
                 points.AddRange((CollisionPoint)result);
             }
-            result = Segment.IntersectSegmentSegment(D, A, b.C, b.A);
+            result = Segment.IntersectSegmentSegment(C, D, t.C, t.A);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            
+            result = Segment.IntersectSegmentSegment(D, A, t.A, t.B);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(D, A, t.B, t.C);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(D, A, t.C, t.A);
             if (result != null)
             {
                 points ??= new();

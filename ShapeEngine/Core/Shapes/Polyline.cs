@@ -233,7 +233,7 @@ namespace ShapeEngine.Core.Shapes
         
 
         public bool OverlapShape(Triangle t) => t.OverlapShape(this);
-        public bool OverlapShape(Rect r) { return GetEdges().OverlapShape(r); }
+        public bool OverlapShape(Rect r) => r.OverlapShape(this);
         public bool OverlapShape(Polygon p)
         {
             for (int i = 0; i < Count - 1; i++)
