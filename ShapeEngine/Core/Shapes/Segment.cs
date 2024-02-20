@@ -815,7 +815,7 @@ namespace ShapeEngine.Core.Shapes
         }
         public readonly CollisionPoints? IntersectShape(Polygon p)
         {
-            if (p.Count <= 3) return null;
+            if (p.Count < 3) return null;
             // if (p.Count == 2)
             // {
             //     var cp = IntersectSegmentSegment(Start, End, p[0], p[1]);

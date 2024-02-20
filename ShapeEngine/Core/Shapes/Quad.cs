@@ -327,149 +327,680 @@ public readonly struct Quad : IEquatable<Quad>
 
     #region Overlap
 
-    public bool OverlapShape(Segments segments)
+    public bool Overlap(Collider collider)
     {
-        var ab = SegmentAToB;
-        var bc = SegmentBToC;
-        var cd = SegmentCToD;
-        var da = SegmentDToA;
-        
-        foreach (var seg in segments)
+        if (!collider.Enabled) return false;
+
+        switch (collider.GetShapeType())
         {
-            if (ContainsPoint(seg.Start)) return true;
-            if (ContainsPoint(seg.End)) return true;
-
-            if (seg.OverlapShape(ab)) return true;
-        
-            if (seg.OverlapShape(bc)) return true;
-        
-            if (seg.OverlapShape(cd)) return true;
-
-            if (seg.OverlapShape(da)) return true;
+            case ShapeType.Circle:
+                var c = collider.GetCircleShape();
+                return OverlapShape(c);
+            case ShapeType.Segment:
+                var s = collider.GetSegmentShape();
+                return OverlapShape(s);
+            case ShapeType.Triangle:
+                var t = collider.GetTriangleShape();
+                return OverlapShape(t);
+            case ShapeType.Rect:
+                var r = collider.GetRectShape();
+                return OverlapShape(r);
+            case ShapeType.Quad:
+                var q = collider.GetQuadShape();
+                return OverlapShape(q);
+            case ShapeType.Poly:
+                var p = collider.GetPolygonShape();
+                return OverlapShape(p);
+            case ShapeType.PolyLine:
+                var pl = collider.GetPolylineShape();
+                return OverlapShape(pl);
         }
+
         return false;
     }
 
+    public bool OverlapShape(Segments segments)
+    {
+        if (segments.Count <= 0) return false;
+        if (ContainsPoint(segments[0].Start)) return true;
+        
+        foreach (var seg in segments)
+        {
+            if (Segment.OverlapSegmentSegment(A, B, seg.Start, seg.End)) return true;
+            if (Segment.OverlapSegmentSegment(B, C, seg.Start, seg.End)) return true;
+            if (Segment.OverlapSegmentSegment(C, D, seg.Start, seg.End)) return true;
+            if (Segment.OverlapSegmentSegment(D, A, seg.Start, seg.End)) return true;
+        }
+        return false;
+    }
     public bool OverlapShape(Segment s) => s.OverlapShape(this);
-
     public bool OverlapShape(Circle c) => c.OverlapShape(this);
     public bool OverlapShape(Triangle t) => t.OverlapShape(this);
     public bool OverlapShape(Quad q)
     {
         if (ContainsPoint(q.A)) return true;
-        if (ContainsPoint(q.B)) return true;
-        if (ContainsPoint(q.C)) return true;
-        if (ContainsPoint(q.D)) return true;
-
-        var segAb = new Segment(A, B);
-        var segBc = new Segment(B, C);
-        var segCd = new Segment(C, D);
-        var segDa = new Segment(D, A);
-
-        var qSegment = q.SegmentAToB;
-        if (segAb.OverlapShape(qSegment)) return true;
-        if (segBc.OverlapShape(qSegment)) return true;
-        if (segCd.OverlapShape(qSegment)) return true;
-        if (segDa.OverlapShape(qSegment)) return true;
+        if (q.ContainsPoint(A)) return true;
         
-        qSegment = q.SegmentBToC;
-        if (segAb.OverlapShape(qSegment)) return true;
-        if (segBc.OverlapShape(qSegment)) return true;
-        if (segCd.OverlapShape(qSegment)) return true;
-        if (segDa.OverlapShape(qSegment)) return true;
+        if (Segment.OverlapSegmentSegment(A, B, q.A, q.B)) return true;
+        if (Segment.OverlapSegmentSegment(A, B, q.B, q.C)) return true;
+        if (Segment.OverlapSegmentSegment(A, B, q.C, q.D)) return true;
+        if (Segment.OverlapSegmentSegment(A, B, q.D, q.A)) return true;
         
-        qSegment = q.SegmentCToD;
-        if (segAb.OverlapShape(qSegment)) return true;
-        if (segBc.OverlapShape(qSegment)) return true;
-        if (segCd.OverlapShape(qSegment)) return true;
-        if (segDa.OverlapShape(qSegment)) return true;
+        if (Segment.OverlapSegmentSegment(B, C, q.A, q.B)) return true;
+        if (Segment.OverlapSegmentSegment(B, C, q.B, q.C)) return true;
+        if (Segment.OverlapSegmentSegment(B, C, q.C, q.D)) return true;
+        if (Segment.OverlapSegmentSegment(B, C, q.D, q.A)) return true;
         
-        qSegment = q.SegmentDToA;
-        if (segAb.OverlapShape(qSegment)) return true;
-        if (segBc.OverlapShape(qSegment)) return true;
-        if (segCd.OverlapShape(qSegment)) return true;
-        return segDa.OverlapShape(qSegment);
+        if (Segment.OverlapSegmentSegment(C, D, q.A, q.B)) return true;
+        if (Segment.OverlapSegmentSegment(C, D, q.B, q.C)) return true;
+        if (Segment.OverlapSegmentSegment(C, D, q.C, q.D)) return true;
+        if (Segment.OverlapSegmentSegment(C, D, q.D, q.A)) return true;
+        
+        if (Segment.OverlapSegmentSegment(D, A, q.A, q.B)) return true;
+        if (Segment.OverlapSegmentSegment(D, A, q.B, q.C)) return true;
+        if (Segment.OverlapSegmentSegment(D, A, q.C, q.D)) return true;
+        return Segment.OverlapSegmentSegment(D, A, q.D, q.A);
     }
     public bool OverlapShape(Rect r)
     {
+        var a = r.TopLeft;
+        if (ContainsPoint(a)) return true;
         if (r.ContainsPoint(A)) return true;
-        if (r.ContainsPoint(B)) return true;
-        if (r.ContainsPoint(C)) return true;
-        if (r.ContainsPoint(D)) return true;
 
-        var segAb = new Segment(A, B);
-        var segBc = new Segment(B, C);
-        var segCd = new Segment(C, D);
-        var segDa = new Segment(D, A);
-
-        var qSegment = r.LeftSegment;
-        if (segAb.OverlapShape(qSegment)) return true;
-        if (segBc.OverlapShape(qSegment)) return true;
-        if (segCd.OverlapShape(qSegment)) return true;
-        if (segDa.OverlapShape(qSegment)) return true;
+        var b = r.BottomLeft;
+        if (Segment.OverlapSegmentSegment(A, B, a, b)) return true;
+        var c = r.BottomRight;
+        if (Segment.OverlapSegmentSegment(A, B, b, c)) return true;
+        var d = r.TopRight;
+        if (Segment.OverlapSegmentSegment(A, B, c, d)) return true;
+        if (Segment.OverlapSegmentSegment(A, B, d, a)) return true;
         
-        qSegment = r.BottomSegment;
-        if (segAb.OverlapShape(qSegment)) return true;
-        if (segBc.OverlapShape(qSegment)) return true;
-        if (segCd.OverlapShape(qSegment)) return true;
-        if (segDa.OverlapShape(qSegment)) return true;
+        if (Segment.OverlapSegmentSegment(B, C, a, b)) return true;
+        if (Segment.OverlapSegmentSegment(B, C, b, c)) return true;
+        if (Segment.OverlapSegmentSegment(B, C, c, d)) return true;
+        if (Segment.OverlapSegmentSegment(B, C, d, a)) return true;
         
-        qSegment = r.RightSegment;
-        if (segAb.OverlapShape(qSegment)) return true;
-        if (segBc.OverlapShape(qSegment)) return true;
-        if (segCd.OverlapShape(qSegment)) return true;
-        if (segDa.OverlapShape(qSegment)) return true;
+        if (Segment.OverlapSegmentSegment(C, D, a, b)) return true;
+        if (Segment.OverlapSegmentSegment(C, D, b, c)) return true;
+        if (Segment.OverlapSegmentSegment(C, D, c, d)) return true;
+        if (Segment.OverlapSegmentSegment(C, D, d, a)) return true;
         
-        qSegment = r.TopSegment;
-        if (segAb.OverlapShape(qSegment)) return true;
-        if (segBc.OverlapShape(qSegment)) return true;
-        if (segCd.OverlapShape(qSegment)) return true;
-        return segDa.OverlapShape(qSegment);
+        if (Segment.OverlapSegmentSegment(D, A, a, b)) return true;
+        if (Segment.OverlapSegmentSegment(D, A, b, c)) return true;
+        if (Segment.OverlapSegmentSegment(D, A, c, d)) return true;
+        return Segment.OverlapSegmentSegment(D, A, d, a);
     }
-    public bool OverlapShape(Polygon poly) => OverlapShape(poly.GetEdges());
-    public bool OverlapShape(Polyline pl) => OverlapShape(pl.GetEdges());
+    public bool OverlapShape(Polygon poly)
+    {
+        if (poly.Count < 3) return false;
+            
+        if (ContainsPoint(poly[0])) return true;
+            
+        var oddNodes = false;
+            
+        for (var i = 0; i < poly.Count; i++)
+        {
+            var start = poly[i];
+            var end = poly[(i + 1) % poly.Count];
+            if (Segment.OverlapSegmentSegment(A, B, start, end)) return true;
+            if (Segment.OverlapSegmentSegment(B, C, start, end)) return true;
+            if (Segment.OverlapSegmentSegment(C, D, start, end)) return true;
+            if (Segment.OverlapSegmentSegment(D, A, start, end)) return true;
+                
+            if(Polygon.ContainsPointCheck(start, end, A)) oddNodes = !oddNodes;
+        }
 
+        return oddNodes;
+    }
+    public bool OverlapShape(Polyline pl)
+    {
+        if (pl.Count < 2) return false;
+            
+        if (ContainsPoint(pl[0])) return true;
+            
+        for (var i = 0; i < pl.Count - 1; i++)
+        {
+            var start = pl[i];
+            var end = pl[(i + 1) % pl.Count];
+            if (Segment.OverlapSegmentSegment(A, B, start, end)) return true;
+            if (Segment.OverlapSegmentSegment(B, C, start, end)) return true;
+            if (Segment.OverlapSegmentSegment(C, D, start, end)) return true;
+            if (Segment.OverlapSegmentSegment(D, A, start, end)) return true;
+                
+        }
+
+        return false;
+    }
 
     #endregion
 
-    
-    // #region Intersection
-    //
-    // public readonly CollisionPoints? Intersect(Collider collider)
-    // {
-    //     if (!collider.Enabled) return null;
-    //
-    //     switch (collider.GetShapeType())
-    //     {
-    //         case ShapeType.Circle:
-    //             var c = collider.GetCircleShape();
-    //             return IntersectShape(c);
-    //         case ShapeType.Segment:
-    //             var s = collider.GetSegmentShape();
-    //             return IntersectShape(s);
-    //         case ShapeType.Triangle:
-    //             var t = collider.GetTriangleShape();
-    //             return IntersectShape(t);
-    //         case ShapeType.Rect:
-    //             var r = collider.GetRectShape();
-    //             return IntersectShape(r);
-    //         case ShapeType.Poly:
-    //             var p = collider.GetPolygonShape();
-    //             return IntersectShape(p);
-    //         case ShapeType.PolyLine:
-    //             var pl = collider.GetPolylineShape();
-    //             return IntersectShape(pl);
-    //     }
-    //
-    //     return null;
-    // }
-    // public readonly CollisionPoints? IntersectShape(Segment s) { return GetEdges().IntersectShape(s); }
-    // public readonly CollisionPoints? IntersectShape(Circle c) { return ToPolygon().IntersectShape(c); }
-    // public readonly CollisionPoints? IntersectShape(Triangle b) { return ToPolygon().IntersectShape(b.ToPolygon()); }
-    // public readonly CollisionPoints? IntersectShape(Rect r) { return ToPolygon().IntersectShape(r.ToPolygon()); }
-    // public readonly CollisionPoints? IntersectShape(Polygon p) { return ToPolygon().IntersectShape(p); }
-    // public readonly CollisionPoints? IntersectShape(Polyline pl) { return GetEdges().IntersectShape(pl.GetEdges()); }
-    //
-    // #endregion
-    
+    #region Intersect
+        
+        public CollisionPoints? Intersect(Collider collider)
+        {
+            if (!collider.Enabled) return null;
+
+            switch (collider.GetShapeType())
+            {
+                case ShapeType.Circle:
+                    var c = collider.GetCircleShape();
+                    return IntersectShape(c);
+                case ShapeType.Segment:
+                    var s = collider.GetSegmentShape();
+                    return IntersectShape(s);
+                case ShapeType.Triangle:
+                    var t = collider.GetTriangleShape();
+                    return IntersectShape(t);
+                case ShapeType.Rect:
+                    var r = collider.GetRectShape();
+                    return IntersectShape(r);
+                case ShapeType.Quad:
+                    var q = collider.GetQuadShape();
+                    return IntersectShape(q);
+                case ShapeType.Poly:
+                    var p = collider.GetPolygonShape();
+                    return IntersectShape(p);
+                case ShapeType.PolyLine:
+                    var pl = collider.GetPolylineShape();
+                    return IntersectShape(pl);
+            }
+
+            return null;
+        }
+
+        public CollisionPoints? IntersectShape(Segments segments)
+        {
+            if (segments.Count <= 0) return null;
+            
+            CollisionPoints? points = null;
+
+            foreach (var seg in segments)
+            {
+                var result = Segment.IntersectSegmentSegment(A, B, seg.Start, seg.End);
+                if (result != null)
+                {
+                    points ??= new();
+                    points.AddRange((CollisionPoint)result);
+                }
+                
+                result = Segment.IntersectSegmentSegment(B, C, seg.Start, seg.End);
+                if (result != null)
+                {
+                    points ??= new();
+                    points.AddRange((CollisionPoint)result);
+                }
+                
+                result = Segment.IntersectSegmentSegment(C, D, seg.Start, seg.End);
+                if (result != null)
+                {
+                    points ??= new();
+                    points.AddRange((CollisionPoint)result);
+                }
+                
+                result = Segment.IntersectSegmentSegment(D, A, seg.Start, seg.End);
+                if (result != null)
+                {
+                    points ??= new();
+                    points.AddRange((CollisionPoint)result);
+                }
+                
+            }
+            return points;
+        }
+        public CollisionPoints? IntersectShape(Segment s)
+        {
+            CollisionPoints? points = null;
+            var result = Segment.IntersectSegmentSegment(A, B, s.Start, s.End);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+                
+            result = Segment.IntersectSegmentSegment(B, C, s.Start, s.End);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+                
+            result = Segment.IntersectSegmentSegment(C, D, s.Start, s.End);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            
+            result = Segment.IntersectSegmentSegment(D, A, s.Start, s.End);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            return points;
+        }
+        public  CollisionPoints? IntersectShape(Circle c)
+        {
+            CollisionPoints? points = null;
+            var result = Segment.IntersectSegmentCircle(A, B, c.Center, c.Radius);
+            if (result.a != null || result.b != null)
+            {
+                points ??= new();
+                if(result.a != null) points.Add((CollisionPoint)result.a);
+                if(result.b != null) points.Add((CollisionPoint)result.b);
+                return points;
+            }
+                
+            result = Segment.IntersectSegmentCircle(B, C, c.Center, c.Radius);
+            if (result.a != null || result.b != null)
+            {
+                points ??= new();
+                if(result.a != null) points.Add((CollisionPoint)result.a);
+                if(result.b != null) points.Add((CollisionPoint)result.b);
+                return points;
+            }
+            
+            result = Segment.IntersectSegmentCircle(C, D, c.Center, c.Radius);
+            if (result.a != null || result.b != null)
+            {
+                points ??= new();
+                if(result.a != null) points.Add((CollisionPoint)result.a);
+                if(result.b != null) points.Add((CollisionPoint)result.b);
+                return points;
+            }
+            
+            result = Segment.IntersectSegmentCircle(D, A, c.Center, c.Radius);
+            if (result.a != null || result.b != null)
+            {
+                points ??= new();
+                if(result.a != null) points.Add((CollisionPoint)result.a);
+                if(result.b != null) points.Add((CollisionPoint)result.b);
+                return points;
+            }
+            return points;
+        }
+        public CollisionPoints? IntersectShape(Triangle b)
+        {
+            CollisionPoints? points = null;
+            var result = Segment.IntersectSegmentSegment(A, B, b.A, b.B);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(A, B, b.B, b.C);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(A, B, b.C, b.A);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            
+                
+            result = Segment.IntersectSegmentSegment(B, C, b.A, b.B);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(B, C, b.B, b.C);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(B, C, b.C, b.A);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            
+            result = Segment.IntersectSegmentSegment(C, D, b.A, b.B);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(C, D, b.B, b.C);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(C, D, b.C, b.A);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            
+            result = Segment.IntersectSegmentSegment(D, A, b.A, b.B);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(D, A, b.B, b.C);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(D, A, b.C, b.A);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+
+            return points;
+        }
+        public CollisionPoints? IntersectShape(Rect r)
+        {
+            CollisionPoints? points = null;
+            var a = r.TopLeft;
+            var b = r.BottomLeft;
+            var result = Segment.IntersectSegmentSegment(A, B, a, b);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+
+            var c = r.BottomRight;
+            result = Segment.IntersectSegmentSegment(A, B, b, c);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+
+            var d = r.TopRight;
+            result = Segment.IntersectSegmentSegment(A, B, c, d);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            
+            result = Segment.IntersectSegmentSegment(A, B, d, a);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            
+            
+            
+            result = Segment.IntersectSegmentSegment(B, C, a, b);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(B, C, b, c);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(B, C, c, d);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(B, C, d, a);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+
+            
+            result = Segment.IntersectSegmentSegment(C, D, a, b);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(C, D, b, c);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(C, D, c, d);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(C, D, d, a);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            
+            
+            result = Segment.IntersectSegmentSegment(D, A, a, b);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(D, A, b, c);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(D, A, c, d);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(D, A, d, a);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            return points;
+        }
+        public CollisionPoints? IntersectShape(Quad q)
+        {
+            CollisionPoints? points = null;
+            var result = Segment.IntersectSegmentSegment(A, B, q.A, q.B);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(A, B, q.B, q.C);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(A, B, q.C, q.D);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(A, B, q.D, q.A);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            
+            
+            result = Segment.IntersectSegmentSegment(B, C, q.A, q.B);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(B, C, q.B, q.C);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(B, C, q.C, q.D);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(B, C, q.D, q.A);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+
+            
+            result = Segment.IntersectSegmentSegment(C, D, q.A, q.B);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(C, D, q.B, q.C);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(C, D, q.C, q.D);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(C, D, q.D, q.A);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            
+            result = Segment.IntersectSegmentSegment(D, A, q.A, q.B);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(D, A, q.B, q.C);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(D, A, q.C, q.D);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            result = Segment.IntersectSegmentSegment(D, A, q.D, q.A);
+            if (result != null)
+            {
+                points ??= new();
+                points.AddRange((CollisionPoint)result);
+            }
+            return points;
+        }
+        public CollisionPoints? IntersectShape(Polygon p)
+        {
+            if (p.Count < 3) return null;
+
+            CollisionPoints? points = null;
+            CollisionPoint? colPoint = null;
+            for (var i = 0; i < p.Count; i++)
+            {
+                colPoint = Segment.IntersectSegmentSegment(A, B, p[i], p[(i + 1) % p.Count]);
+                if (colPoint != null)
+                {
+                    points ??= new();
+                    points.Add((CollisionPoint)colPoint);
+                }
+                
+                colPoint = Segment.IntersectSegmentSegment(B, C, p[i], p[(i + 1) % p.Count]);
+                if (colPoint != null)
+                {
+                    points ??= new();
+                    points.Add((CollisionPoint)colPoint);
+                }
+                
+                colPoint = Segment.IntersectSegmentSegment(C, D, p[i], p[(i + 1) % p.Count]);
+                if (colPoint != null)
+                {
+                    points ??= new();
+                    points.Add((CollisionPoint)colPoint);
+                }
+                
+                colPoint = Segment.IntersectSegmentSegment(D, A, p[i], p[(i + 1) % p.Count]);
+                if (colPoint != null)
+                {
+                    points ??= new();
+                    points.Add((CollisionPoint)colPoint);
+                }
+                
+            }
+            return points;
+        }
+        public CollisionPoints? IntersectShape(Polyline pl)
+        {
+            if (pl.Count < 2) return null;
+
+            CollisionPoints? points = null;
+            CollisionPoint? colPoint = null;
+            for (var i = 0; i < pl.Count - 1; i++)
+            {
+                colPoint = Segment.IntersectSegmentSegment(A, B, pl[i], pl[(i + 1) % pl.Count]);
+                if (colPoint != null)
+                {
+                    points ??= new();
+                    points.Add((CollisionPoint)colPoint);
+                }
+                
+                colPoint = Segment.IntersectSegmentSegment(B, C, pl[i], pl[(i + 1) % pl.Count]);
+                if (colPoint != null)
+                {
+                    points ??= new();
+                    points.Add((CollisionPoint)colPoint);
+                }
+                
+                colPoint = Segment.IntersectSegmentSegment(C, D, pl[i], pl[(i + 1) % pl.Count]);
+                if (colPoint != null)
+                {
+                    points ??= new();
+                    points.Add((CollisionPoint)colPoint);
+                }
+                
+                colPoint = Segment.IntersectSegmentSegment(D, A, pl[i], pl[(i + 1) % pl.Count]);
+                if (colPoint != null)
+                {
+                    points ??= new();
+                    points.Add((CollisionPoint)colPoint);
+                }
+            }
+            return points;
+        }
+        
+        
+        #endregion
+        
 }

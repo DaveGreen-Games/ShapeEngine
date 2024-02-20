@@ -973,23 +973,23 @@ namespace ShapeEngine.Core.Shapes
         }
         public readonly CollisionPoints? IntersectShape(Polygon p)
         {
-            if (p.Count <= 1) return null;
+            if (p.Count < 3) return null;
             
             CollisionPoints? points = null;
             (CollisionPoint? a, CollisionPoint? b) result;
-            if (p.Count == 2)
-            {
-                result = IntersectCircleSegment(Center, Radius, p[0], p[1]);
-                if (result.a != null || result.b != null)
-                {
-                    points ??= new();
-                    if(result.a != null) points.Add((CollisionPoint)result.a);
-                    if(result.b != null) points.Add((CollisionPoint)result.b);
-                    return points;
-                }
-
-                return null;
-            }
+            // if (p.Count == 2)
+            // {
+            //     result = IntersectCircleSegment(Center, Radius, p[0], p[1]);
+            //     if (result.a != null || result.b != null)
+            //     {
+            //         points ??= new();
+            //         if(result.a != null) points.Add((CollisionPoint)result.a);
+            //         if(result.b != null) points.Add((CollisionPoint)result.b);
+            //         return points;
+            //     }
+            //
+            //     return null;
+            // }
 
 
             for (var i = 0; i < p.Count; i++)

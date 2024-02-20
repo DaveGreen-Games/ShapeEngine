@@ -514,6 +514,7 @@ namespace ShapeEngine.Core.Shapes
 
             return false;
         }
+        
         public readonly bool OverlapShape(Segments segments)
         {
             if (segments.Count <= 0) return false;
@@ -614,8 +615,7 @@ namespace ShapeEngine.Core.Shapes
         }
         public readonly bool OverlapShape(Polygon poly)
         {
-            if (poly.Count <= 0) return false;
-            if (poly.Count == 1) return ContainsPoint(poly[0]);
+            if (poly.Count < 3) return false;
             
             if (ContainsPoint(poly[0])) return true;
             
@@ -636,8 +636,7 @@ namespace ShapeEngine.Core.Shapes
         }
         public readonly bool OverlapShape(Polyline pl)
         {
-            if (pl.Count <= 0) return false;
-            if (pl.Count == 1) return ContainsPoint(pl[0]);
+            if (pl.Count < 2) return false;
             
             if (ContainsPoint(pl[0])) return true;
             
@@ -1016,7 +1015,7 @@ namespace ShapeEngine.Core.Shapes
         }
         public readonly CollisionPoints? IntersectShape(Polygon p)
         {
-            if (p.Count <= 3) return null;
+            if (p.Count < 3) return null;
 
             CollisionPoints? points = null;
             CollisionPoint? colPoint = null;
@@ -1048,7 +1047,7 @@ namespace ShapeEngine.Core.Shapes
         }
         public readonly CollisionPoints? IntersectShape(Polyline pl)
         {
-            if (pl.Count <= 1) return null;
+            if (pl.Count < 2) return null;
 
             CollisionPoints? points = null;
             CollisionPoint? colPoint = null;
@@ -1081,6 +1080,7 @@ namespace ShapeEngine.Core.Shapes
         
         
         #endregion
+        
     }
 }
 
