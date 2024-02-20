@@ -183,9 +183,13 @@ public class Segments : ShapeList<Segment>
     #region Overlap
     public bool OverlapShape(Segments b)
     {
-        foreach (var segA in this)
+        foreach (var seg in this)
         {
-            if (segA.OverlapShape(b)) return true;
+            foreach (var bSeg in b)
+            {
+                if(Segment.OverlapSegmentSegment(seg.Start, seg.End, bSeg.Start, bSeg.End)) return true;
+            }
+            
         }
         return false;
     }
