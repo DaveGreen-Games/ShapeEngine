@@ -997,33 +997,9 @@ namespace ShapeEngine.Core.Shapes
         //    }
         //    return false;
         //}
-        public bool OverlapShape(Segment s)
-        {
-            if (Count < 3) return false;
-            if (ContainsPoint(s.Start)) return true;
-            // if (ContainsPoint(s.End)) return true;
-            for (var i = 0; i < Count; i++)
-            {
-                var start = GetPoint(i); // this[i];
-                var end = GetPoint(i + 1); //this[(i + 1) % Count];
-                var segment = new Segment(start, end);
-                if (segment.OverlapShape(s)) return true;
-            }
-            return false;
-        }
-        public bool OverlapShape(Circle c)
-        {
-            if (Count < 3) return false;
-            if (c.ContainsPoint(this[0])) return true;
-            if (ContainsPoint(c.Center)) return true;
-            for (var i = 0; i < Count; i++)
-            {
-                var start = this[i];
-                var end = this[(i + 1) % Count];
-                if (Circle.OverlapCircleSegment(c.Center, c.Radius, start, end)) return true;
-            }
-            return false;
-        }
+        public bool OverlapShape(Segment s) => s.OverlapShape(this);
+
+        public bool OverlapShape(Circle c) => c.OverlapShape(this);
 
         public bool OverlapShape(Triangle t) => t.OverlapShape(this);
         public bool OverlapShape(Rect r)

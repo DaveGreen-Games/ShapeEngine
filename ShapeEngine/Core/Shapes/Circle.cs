@@ -626,8 +626,35 @@ namespace ShapeEngine.Core.Shapes
             if (Radius <= 0.0f) return r.ContainsPoint(Center);
             return ContainsPoint(r.ClampOnRect(Center));
         }
-        public readonly bool OverlapShape(Polygon poly) => poly.OverlapShape(this);
-        public readonly bool OverlapShape(Polyline pl) => pl.OverlapShape(this);
+        public readonly bool OverlapShape(Polygon poly)
+        {
+            if (poly.Count < 3) return false;
+            if (ContainsPoint(poly[0])) return true;
+            if (poly.ContainsPoint(Center)) return true;
+            for (var i = 0; i < poly.Count; i++)
+            {
+                var start = poly[i];
+                var end = poly[(i + 1) % poly.Count];
+                if (Circle.OverlapCircleSegment(Center, Radius, start, end)) return true;
+            }
+            return false;
+        }
+        public readonly bool OverlapShape(Polyline pl)
+        {
+            if (pl.Count <= 0) return false;
+            if (pl.Count == 1) return ContainsPoint(pl[0]);
+
+            if (ContainsPoint(pl[0])) return true;
+            
+            for (var i = 0; i < pl.Count - 1; i++)
+            {
+                var start = pl[i];
+                var end = pl[(i + 1) % pl.Count];
+                if (OverlapCircleSegment(Center, Radius, start, end)) return true;
+            }
+
+            return false;
+        }
 
         public readonly bool OverlapCircleLine(Vector2 linePos, Vector2 lineDir) =>
             OverlapCircleLine(Center, Radius, linePos, lineDir);

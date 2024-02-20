@@ -606,8 +606,37 @@ namespace ShapeEngine.Core.Shapes
 
             return rectRange.OverlappingRange(segmentRange);
         }
-        public bool OverlapShape(Polygon poly) { return poly.OverlapShape(this); }
-        public bool OverlapShape(Polyline pl) { return pl.OverlapShape(this); }
+
+        public bool OverlapShape(Polygon poly)
+        {
+            if (poly.Count < 3) return false;
+            if (poly.ContainsPoint(Start)) return true;
+            if (ContainsPoint(poly[0])) return true;
+            
+            for (var i = 0; i < poly.Count; i++)
+            {
+                var start = poly[i];
+                var end = poly[(i + 1) % poly.Count];
+                if (OverlapSegmentSegment(Start, End, Start, End)) return true;
+            }
+            return false;
+        }
+
+        public bool OverlapShape(Polyline pl)
+        {
+            if (pl.Count <= 0) return false;
+            if (pl.Count == 1) return ContainsPoint(pl[0]);
+            
+            if (ContainsPoint(pl[0])) return true;
+            
+            for (var i = 0; i < pl.Count - 1; i++)
+            {
+                var start = pl[i];
+                var end = pl[(i + 1) % pl.Count];
+                if (OverlapSegmentSegment(Start, End, Start, End)) return true;
+            }
+            return false;
+        }
 
         public bool OverlapSegmentLine(Vector2 linePos, Vector2 lineDir) =>
             OverlapSegmentLine(Start, End, linePos, lineDir);
