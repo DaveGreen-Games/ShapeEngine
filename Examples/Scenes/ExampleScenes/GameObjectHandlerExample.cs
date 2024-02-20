@@ -985,10 +985,10 @@ namespace Examples.Scenes.ExampleScenes
             
             if (iaSpawnRock.State.Pressed)
             {
-                
-                for (int i = 0; i < 5; i++)
+                for (int i = 0; i < 50; i++)
                 {
-                    var r = new Rock(mousePosGame);
+                    var spawnPos = mousePosGame + ShapeRandom.RandVec2(0, 200);
+                    var r = new Rock(spawnPos);
                     gameObjectHandler.AddAreaObject(r);
                 }
             
@@ -1011,7 +1011,7 @@ namespace Examples.Scenes.ExampleScenes
             }
             if (iaSpawnBall.State.Down)
             {
-                for (var i = 0; i < 5; i++)
+                for (var i = 0; i < 10; i++)
                 {
                     // Ball b = new(mousePosGame + ShapeRandom.RandVec2(0, 5), ShapeRandom.RandVec2() * 300, 10);
                     // gameObjectHandler.AddAreaObject(b);
@@ -1056,13 +1056,13 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void UpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
-            
-            
             gameObjectHandler.Update(time, game, ui);
         }
 
         protected override void DrawGameExample(ScreenInfo game)
         {
+            // if (drawDebug) return;
+            
             if (drawDebug)
             {
                 var boundsColor = Colors.Light;
