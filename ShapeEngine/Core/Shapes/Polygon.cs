@@ -41,10 +41,6 @@ namespace ShapeEngine.Core.Shapes
         public override int GetHashCode() { return ShapeUtils.GetHashCode(this); }
         #endregion
 
-        #region Getter Setter
-        public bool FlippedNormals { get; set; }
-        #endregion
-
         #region Public
         public Polygon Project(Vector2 v)
         {
@@ -451,19 +447,11 @@ namespace ShapeEngine.Core.Shapes
         public Segments GetEdges()
         {
             if (Count <= 1) return new();
-            else if (Count == 2)
-            {
-                Vector2 A = this[0];
-                Vector2 B = this[1];
-
-                return new() { new(A, B, FlippedNormals) };
-            }
+            if (Count == 2) return new() { new(this[0], this[1]) };
             Segments segments = new();
             for (int i = 0; i < Count; i++)
             {
-                Vector2 start = this[i];
-                Vector2 end = this[(i + 1) % Count];
-                segments.Add(new(start, end, FlippedNormals));
+                segments.Add(new(this[i], this[(i + 1) % Count]));
             }
             return segments;
         }

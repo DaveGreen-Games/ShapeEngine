@@ -46,7 +46,6 @@ namespace ShapeEngine.Core.Shapes
         /// Flips the calculated normals for each segment. 
         /// false means default is used. (facing right)
         /// </summary>
-        public bool FlippedNormals { get; set; }
 
         public float Length => MathF.Sqrt(LengthSquared);
         public float LengthSquared
@@ -148,37 +147,12 @@ namespace ShapeEngine.Core.Shapes
         public Segments GetEdges()
         {
             if (Count <= 1) return new();
-            else if (Count == 2)
-            {
-                Vector2 A = this[0];
-                Vector2 B = this[1];
-                return new() { new(A, B, FlippedNormals) };
-                //if (AutomaticNormals)
-                //{
-                //    return new() { new(A, B) };
-                //}
-                //else
-                //{
-                //    return new() { new(A, B, FlippedNormals) };
-                //}
-            }
+            if (Count == 2) return new() { new(this[0], this[1]) };
 
             Segments segments = new();
             for (int i = 0; i < Count - 1; i++)
             {
-                Vector2 start = this[i];
-                Vector2 end = this[(i + 1) % Count];
-                segments.Add(new(start, end, FlippedNormals));
-
-                //if (AutomaticNormals)
-                //{
-                //    segments.Add(new(start, end));
-                //}
-                //else
-                //{
-                //    segments.Add(new(start, end, FlippedNormals));
-                //}
-
+                segments.Add(new(this[i], this[(i + 1) % Count]));
             }
             return segments;
         }

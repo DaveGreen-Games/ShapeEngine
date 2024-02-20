@@ -15,15 +15,14 @@ namespace ShapeEngine.Core.Shapes
 
         #region Getter Setter
         public float Diameter => Radius * 2f;
-        public readonly bool FlippedNormals { get; init; }
         #endregion
         
         #region Constructors
-        public Circle(Vector2 center, float radius, bool flippedNormals = false) { this.Center = center; this.Radius = radius; this.FlippedNormals = flippedNormals; }
-        public Circle(float x, float y, float radius, bool flippedNormals = false) { this.Center = new(x, y); this.Radius = radius; this.FlippedNormals = flippedNormals; }
-        public Circle(Circle c, float radius) { Center = c.Center; Radius = radius; FlippedNormals = c.FlippedNormals; }
-        public Circle(Circle c, Vector2 center) { Center = center; Radius = c.Radius; FlippedNormals = c.FlippedNormals; }
-        public Circle(Rect r) { Center = r.Center; Radius = MathF.Max(r.Width, r.Height); FlippedNormals = r.FlippedNormals; }
+        public Circle(Vector2 center, float radius) { this.Center = center; this.Radius = radius; }
+        public Circle(float x, float y, float radius) { this.Center = new(x, y); this.Radius = radius; }
+        public Circle(Circle c, float radius) { Center = c.Center; Radius = radius;}
+        public Circle(Circle c, Vector2 center) { Center = center; Radius = c.Radius; }
+        public Circle(Rect r) { Center = r.Center; Radius = MathF.Max(r.Width, r.Height); }
         #endregion
 
         #region Equality & Hashcode
@@ -109,16 +108,16 @@ namespace ShapeEngine.Core.Shapes
         public readonly Circle Truncate() { return new(Center.Truncate(), MathF.Truncate(Radius)); }
                 
         public readonly Vector2 GetPoint(float angleRad, float f) { return Center + new Vector2(Radius * f, 0f).Rotate(angleRad); }
-        public readonly Segments GetEdges(int pointCount = 16, bool insideNormals = false)
+        public readonly Segments GetEdges(int pointCount = 16)
         {
             float angleStep = (MathF.PI * 2f) / pointCount;
             Segments segments = new();
             for (int i = 0; i < pointCount; i++)
             {
-                Vector2 start = Center + new Vector2(Radius, 0f).Rotate(-angleStep * i);
-                Vector2 end = Center + new Vector2(Radius, 0f).Rotate(-angleStep * ((i + 1) % pointCount));
+                var start = Center + new Vector2(Radius, 0f).Rotate(-angleStep * i);
+                var end = Center + new Vector2(Radius, 0f).Rotate(-angleStep * ((i + 1) % pointCount));
 
-                segments.Add(new Segment(start, end, insideNormals));
+                segments.Add(new Segment(start, end));
             }
             return segments;
         }

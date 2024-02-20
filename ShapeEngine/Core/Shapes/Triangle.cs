@@ -24,11 +24,10 @@ namespace ShapeEngine.Core.Shapes
         public readonly Vector2 SideA => B - A;
         public readonly Vector2 SideB => C - B;
         public readonly Vector2 SideC => A - C;
-        public readonly Segment SegmentAToB => new(A, B, FlippedNormals);
-        public readonly Segment SegmentBToC => new(B, C, FlippedNormals);
-        public readonly Segment SegmentCToA => new(C, A, FlippedNormals);
+        public readonly Segment SegmentAToB => new(A, B);
+        public readonly Segment SegmentBToC => new(B, C);
+        public readonly Segment SegmentCToA => new(C, A);
 
-        public bool FlippedNormals { get; init; } = false;
         #endregion
 
         #region Constructors
@@ -39,17 +38,16 @@ namespace ShapeEngine.Core.Shapes
         /// <param name="b"></param>
         /// <param name="c"></param>
         /// <param name="flippedNormals"></param>
-        public Triangle(Vector2 a, Vector2 b, Vector2 c, bool flippedNormals = false) 
+        public Triangle(Vector2 a, Vector2 b, Vector2 c) 
         { 
             this.A = a; 
             this.B = b; 
             this.C = c;
-            this.FlippedNormals = flippedNormals;
         }
-        public Triangle(Vector2 p, Segment s, bool flippedNormals = false)
+        public Triangle(Vector2 p, Segment s)
         {
-            Vector2 w = s.Displacement;
-            Vector2 v = p - s.Start;
+            var w = s.Displacement;
+            var v = p - s.Start;
             float cross = w.Cross(v);
             if(cross <= 0f)
             {
@@ -63,7 +61,6 @@ namespace ShapeEngine.Core.Shapes
                 B = s.Start;
                 C = p;
             }
-            this.FlippedNormals = flippedNormals;
         }
         #endregion
 
@@ -168,10 +165,10 @@ namespace ShapeEngine.Core.Shapes
             return new Triangle(p, closest.Segment);
         }
 
-        public readonly Triangle Floor() { return new(A.Floor(), B.Floor(), C.Floor(), FlippedNormals); }
-        public readonly Triangle Ceiling() { return new(A.Ceiling(), B.Ceiling(), C.Ceiling(), FlippedNormals); }
-        public readonly Triangle Round() { return new(A.Round(), B.Round(), C.Round(), FlippedNormals); }
-        public readonly Triangle Truncate() { return new(A.Truncate(), B.Truncate(), C.Truncate(), FlippedNormals); }
+        public readonly Triangle Floor() { return new(A.Floor(), B.Floor(), C.Floor()); }
+        public readonly Triangle Ceiling() { return new(A.Ceiling(), B.Ceiling(), C.Ceiling()); }
+        public readonly Triangle Round() { return new(A.Round(), B.Round(), C.Round()); }
+        public readonly Triangle Truncate() { return new(A.Truncate(), B.Truncate(), C.Truncate()); }
         
         public readonly bool SharesVertex(Vector2 p) { return A == p || B == p || C == p; }
         public readonly bool SharesVertex(IEnumerable<Vector2> points)
@@ -239,7 +236,7 @@ namespace ShapeEngine.Core.Shapes
 
         public readonly Triangulation Triangulate(int pointCount)
         {
-            if (pointCount < 0) return new() { new(A, B, C, FlippedNormals) };
+            if (pointCount < 0) return new() { new(A, B, C) };
 
             Points points = new() { A, B, C };
 
@@ -255,7 +252,7 @@ namespace ShapeEngine.Core.Shapes
         }
         public readonly Triangulation Triangulate(float minArea)
         {
-            if (minArea <= 0) return new() { new(A,B,C,FlippedNormals) };
+            if (minArea <= 0) return new() { new(A,B,C) };
 
             float triArea = GetArea();
             float pieceCount = triArea / minArea;
@@ -287,25 +284,25 @@ namespace ShapeEngine.Core.Shapes
             Vector2 newA = pivot + (A - pivot).Rotate(rad);
             Vector2 newB = pivot + (B - pivot).Rotate(rad);
             Vector2 newC = pivot + (C - pivot).Rotate(rad);
-            return new(newA, newB, newC, FlippedNormals);
+            return new(newA, newB, newC);
         }
-        public readonly Triangle Scale(float scale) { return new(A * scale, B * scale, C * scale, FlippedNormals); }
-        public readonly Triangle Scale(Vector2 scale) { return new(A * scale, B * scale, C * scale, FlippedNormals); }
+        public readonly Triangle Scale(float scale) { return new(A * scale, B * scale, C * scale); }
+        public readonly Triangle Scale(Vector2 scale) { return new(A * scale, B * scale, C * scale); }
         public readonly Triangle Scale(Vector2 pivot, float scale)
         {
             Vector2 newA = pivot + (A - pivot) * scale;
             Vector2 newB = pivot + (B - pivot) * scale;
             Vector2 newC = pivot + (C - pivot) * scale;
-            return new(newA, newB, newC, FlippedNormals);
+            return new(newA, newB, newC);
         }
         public readonly Triangle Scale(Vector2 pivot, Vector2 scale)
         {
             Vector2 newA = pivot + (A - pivot) * scale;
             Vector2 newB = pivot + (B - pivot) * scale;
             Vector2 newC = pivot + (C - pivot) * scale;
-            return new(newA, newB, newC, FlippedNormals);
+            return new(newA, newB, newC);
         }
-        public readonly Triangle Move(Vector2 offset) { return new(A + offset, B + offset, C + offset, FlippedNormals); }
+        public readonly Triangle Move(Vector2 offset) { return new(A + offset, B + offset, C + offset); }
         
         public readonly Points ToPoints() => new() {A, B, C};
         public readonly Polygon ToPolygon() => new() {A, B, C};

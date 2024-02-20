@@ -24,12 +24,5 @@ public class RectCollider : Collider
         return r.GetClosestCollisionPoint(p);
     }
     public override ShapeType GetShapeType() => ShapeType.Rect;
-    public override Rect GetRectShape()
-    {
-        var r = new Rect(CurTransform.Position, Size * CurTransform.Scale, Alignement)
-        {
-            FlippedNormals = FlippedNormals
-        };
-        return r;
-    }
+    public override Rect GetRectShape() => new(CurTransform.Position, Size * CurTransform.Scale, Alignement);
 }

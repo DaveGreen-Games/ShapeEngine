@@ -67,7 +67,7 @@ namespace ShapeEngine.Core.Collision
         public Vector2 Velocity => parent?.Velocity ?? new(0f);
         // public Vector2 PrevPosition { get; private set; }
         
-        public bool FlippedNormals { get; set; } = false;
+        // public bool FlippedNormals { get; set; } = false;
 
         public BitFlag CollisionMask { get; set; } = BitFlag.Empty;
         public uint CollisionLayer { get; set; } = 0;

@@ -83,12 +83,5 @@ public class SegmentCollider : Collider
     }
 
     public override ShapeType GetShapeType() => ShapeType.Segment;
-    public override Segment GetSegmentShape()
-    {
-        var s = new Segment(Start, End, FlippedNormals)
-        {
-            FlippedNormals = FlippedNormals
-        };
-        return s;
-    }
+    public override Segment GetSegmentShape() => new(Start, End);
 }

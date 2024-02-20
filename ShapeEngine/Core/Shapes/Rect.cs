@@ -210,7 +210,7 @@ namespace ShapeEngine.Core.Shapes
     }
 
     
-    public struct Rect : IEquatable<Rect>
+    public readonly struct Rect : IEquatable<Rect>
     {
         #region Members
         public readonly float X;
@@ -220,7 +220,6 @@ namespace ShapeEngine.Core.Shapes
         #endregion
 
         #region Getter Setter
-        public bool FlippedNormals { get; set; } = false;
         public readonly Vector2 TopLeft => new(X, Y);
         public readonly Vector2 TopRight => new(X + Width, Y);
         public readonly Vector2 BottomRight => new(X + Width, Y + Height);
@@ -232,10 +231,10 @@ namespace ShapeEngine.Core.Shapes
         public readonly float Left => X;
         public readonly float Right => X + Width;
         
-        public readonly Segment LeftSegment => new(TopLeft, BottomLeft, FlippedNormals);
-        public readonly Segment BottomSegment => new(BottomLeft, BottomRight, FlippedNormals);
-        public readonly Segment RightSegment => new(BottomRight, TopRight, FlippedNormals);
-        public readonly Segment TopSegment => new(TopRight, TopLeft, FlippedNormals);
+        public readonly Segment LeftSegment => new(TopLeft, BottomLeft);
+        public readonly Segment BottomSegment => new(BottomLeft, BottomRight);
+        public readonly Segment RightSegment => new(BottomRight, TopRight);
+        public readonly Segment TopSegment => new(TopRight, TopLeft);
         public readonly Vector2 Size => new(Width, Height);
         public readonly Rectangle Rectangle => new(X, Y, Width, Height);
 
@@ -902,17 +901,17 @@ namespace ShapeEngine.Core.Shapes
             var C = BottomRight;
             var D = TopRight;
 
-            Segment left = new(A, B, FlippedNormals);
-            Segment bottom = new(B, C, FlippedNormals);
-            Segment right = new(C, D, FlippedNormals);
-            Segment top = new(D, A, FlippedNormals);
+            Segment left = new(A, B);
+            Segment bottom = new(B, C);
+            Segment right = new(C, D);
+            Segment top = new(D, A);
             return new() { left, bottom, right, top };
         }
 
         public readonly Triangulation Triangulate()
         {
-            Triangle a = new(TopLeft, BottomLeft, BottomRight, FlippedNormals);
-            Triangle b = new(TopLeft, BottomRight, TopRight, FlippedNormals);
+            Triangle a = new(TopLeft, BottomLeft, BottomRight);
+            Triangle b = new(TopLeft, BottomRight, TopRight);
             return new Triangulation() { a, b };
         }
         public readonly float GetCircumference() { return Width * 2 + Height * 2; }
@@ -1238,7 +1237,130 @@ namespace ShapeEngine.Core.Shapes
         
         
         #endregion
-        
+
+        #region Operators
+
+        public static Rect operator +(Rect left, Rect right)
+        {
+            return new
+                (
+                    left.X + right.X,
+                    left.Y + right.Y,
+                    left.Width + right.Width,
+                    left.Height + right.Height
+                );
+        }
+        public static Rect operator -(Rect left, Rect right)
+        {
+            return new
+            (
+                left.X - right.X,
+                left.Y - right.Y,
+                left.Width - right.Width,
+                left.Height - right.Height
+            );
+        }
+        public static Rect operator *(Rect left, Rect right)
+        {
+            return new
+            (
+                left.X * right.X,
+                left.Y * right.Y,
+                left.Width * right.Width,
+                left.Height * right.Height
+            );
+        }
+        public static Rect operator /(Rect left, Rect right)
+        {
+            return new
+            (
+                left.X / right.X,
+                left.Y / right.Y,
+                left.Width / right.Width,
+                left.Height / right.Height
+            );
+        }
+        public static Rect operator +(Rect left, Vector2 right)
+        {
+            return new
+            (
+                left.X + right.X,
+                left.Y + right.Y,
+                left.Width,
+                left.Height
+            );
+        }
+        public static Rect operator -(Rect left, Vector2 right)
+        {
+            return new
+            (
+                left.X - right.X,
+                left.Y - right.Y,
+                left.Width,
+                left.Height
+            );
+        }
+        public static Rect operator *(Rect left, Vector2 right)
+        {
+            return new
+            (
+                left.X,
+                left.Y,
+                left.Width * right.X,
+                left.Height * right.Y
+            );
+        }
+        public static Rect operator /(Rect left, Vector2 right)
+        {
+            return new
+            (
+                left.X,
+                left.Y,
+                left.Width / right.X,
+                left.Height / right.Y
+            );
+        }
+        public static Rect operator +(Rect left, float right)
+        {
+            return new
+            (
+                left.X + right,
+                left.Y + right,
+                left.Width,
+                left.Height
+            );
+        }
+        public static Rect operator -(Rect left, float right)
+        {
+            return new
+            (
+                left.X - right,
+                left.Y - right,
+                left.Width,
+                left.Height
+            );
+        }
+        public static Rect operator *(Rect left, float right)
+        {
+            return new
+            (
+                left.X,
+                left.Y,
+                left.Width * right,
+                left.Height * right
+            );
+        }
+        public static Rect operator /(Rect left, float right)
+        {
+            return new
+            (
+                left.X,
+                left.Y,
+                left.Width / right,
+                left.Height / right
+            );
+        }
+        #endregion
 
         #region Collision
         // public readonly (bool collided, Vector2 hitPoint, Vector2 n, Vector2 newPos) CollidePlayfield(Vector2 objPos, float objRadius)

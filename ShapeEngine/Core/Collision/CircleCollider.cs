@@ -27,12 +27,5 @@ public class CircleCollider : Collider
     }
     public override Rect GetBoundingBox() => GetCircleShape().GetBoundingBox();
     public override ShapeType GetShapeType() => ShapeType.Circle;
-    public override Circle GetCircleShape()
-    {
-        var c = new Circle(CurTransform.Position, Radius * CurTransform.Scale.Max())
-        {
-            FlippedNormals = FlippedNormals
-        };
-        return c;
-    }
+    public override Circle GetCircleShape() => new(CurTransform.Position, Radius * CurTransform.Scale.Max());
 }

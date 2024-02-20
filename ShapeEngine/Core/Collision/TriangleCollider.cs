@@ -36,10 +36,6 @@ public class TriangleCollider : Collider
         var finalA = CurTransform.Position + (A * CurTransform.Scale).Rotate(CurTransform.RotationRad);
         var finalB = CurTransform.Position + (B * CurTransform.Scale).Rotate(CurTransform.RotationRad);
         var finalC = CurTransform.Position + (C * CurTransform.Scale).Rotate(CurTransform.RotationRad);
-        var t = new Triangle(finalA, finalB, finalC)
-        {
-            FlippedNormals = FlippedNormals
-        };
-        return t;
+        return new(finalA, finalB, finalC);
     }
 }

@@ -15,7 +15,7 @@ namespace ShapeEngine.Core.Shapes
         public readonly Vector2 Start;
         public readonly Vector2 End;
         public readonly Vector2 Normal;
-        private readonly bool flippedNormals = false;
+        // private readonly bool flippedNormals = false;
         #endregion
 
         #region Getter Setter
@@ -28,7 +28,7 @@ namespace ShapeEngine.Core.Shapes
         //        return GetNormal();
         //    } 
         //}
-        public bool FlippedNormals { get { return flippedNormals; } set { } }
+        // public bool FlippedNormals { get { return flippedNormals; } set { } }
         public Vector2 Center { get { return (Start + End) * 0.5f; } }
         public Vector2 Dir { get { return Displacement.Normalize(); } }
         public Vector2 Displacement { get { return End - Start; } }
@@ -37,12 +37,12 @@ namespace ShapeEngine.Core.Shapes
         #endregion
 
         #region Constructor
-        public Segment(Vector2 start, Vector2 end, bool flippedNormals = false) 
+        public Segment(Vector2 start, Vector2 end) 
         { 
             this.Start = start; 
             this.End = end;
-            this.Normal = GetNormal(start, end, flippedNormals);
-            this.flippedNormals = flippedNormals;
+            this.Normal = GetNormal(start, end, false);
+            // this.flippedNormals = flippedNormals;
         }
         
         public Segment(float startX, float startY, float endX, float endY, bool flippedNormals = false) 
@@ -50,7 +50,7 @@ namespace ShapeEngine.Core.Shapes
             this.Start = new(startX, startY); 
             this.End = new(endX, endY);
             this.Normal = GetNormal(Start, End, flippedNormals);
-            this.flippedNormals = flippedNormals;
+            // this.flippedNormals = flippedNormals;
         }
         #endregion
 
@@ -69,19 +69,19 @@ namespace ShapeEngine.Core.Shapes
         }
         public Segment Floor()
         {
-            return new(Start.Floor(), End.Floor(), FlippedNormals);
+            return new(Start.Floor(), End.Floor());
         }
         public Segment Ceiling()
         {
-            return new(Start.Ceiling(), End.Ceiling(), FlippedNormals);
+            return new(Start.Ceiling(), End.Ceiling());
         }
         public Segment Round()
         {
-            return new(Start.Round(), End.Round(), FlippedNormals);
+            return new(Start.Round(), End.Round());
         }
         public Segment Truncate()
         {
-            return new(Start.Truncate(), End.Truncate(), FlippedNormals);
+            return new(Start.Truncate(), End.Truncate());
         }
 
         public readonly Rect GetBoundingBox() { return new(Start, End); }
@@ -112,15 +112,15 @@ namespace ShapeEngine.Core.Shapes
         }
         public Segments Split(Vector2 splitPoint)
         {
-            Segment A = new(Start, splitPoint, FlippedNormals);
-            Segment B = new(splitPoint, End, FlippedNormals);
-            return new() { A, B };
+            var a = new Segment(Start, splitPoint);
+            var b = new Segment(splitPoint, End);
+            return new() { a, b };
         }
 
-        public Segment SetStart(Vector2 newStart) { return new(newStart, End, FlippedNormals); }
-        public Segment MoveStart(Vector2 translation) { return new(Start + translation, End, FlippedNormals); }
-        public Segment SetEnd(Vector2 newEnd) { return new(Start, newEnd, FlippedNormals); }
-        public Segment MoveEnd(Vector2 translation) { return new(Start, End + translation, FlippedNormals); }
+        public Segment SetStart(Vector2 newStart) { return new(newStart, End); }
+        public Segment MoveStart(Vector2 translation) { return new(Start + translation, End); }
+        public Segment SetEnd(Vector2 newEnd) { return new(Start, newEnd); }
+        public Segment MoveEnd(Vector2 translation) { return new(Start, End + translation); }
         
         public Vector2 GetPoint(float f) { return Start.Lerp(End, f); }
         public Segment Rotate(float pivot, float rad)
@@ -195,9 +195,9 @@ namespace ShapeEngine.Core.Shapes
         #endregion
 
         #region Static
-        public static Vector2 GetNormal(Vector2 start, Vector2 end, bool flippedNormals)
+        public static Vector2 GetNormal(Vector2 start, Vector2 end, bool flippedNormal)
         {
-            if (flippedNormals) return (end - start).GetPerpendicularLeft().Normalize();
+            if (flippedNormal) return (end - start).GetPerpendicularLeft().Normalize();
             else return (end - start).GetPerpendicularRight().Normalize();
         }
         
