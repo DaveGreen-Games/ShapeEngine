@@ -133,6 +133,7 @@ namespace ShapeEngine.Core.Shapes
             return true;
         }
 
+        
         public void FixWindingOrder() { if (this.IsClockwise()) this.Reverse(); }
 
         public void MakeClockwise()
@@ -491,7 +492,7 @@ namespace ShapeEngine.Core.Shapes
         public Points ToPoints() { return new(this); }
         
         
-        public int GetClosestIndexOnEdge(Vector2 p)
+        public int GetClosestEdgePointByIndex(Vector2 p)
         {
             if (Count <= 0) return -1;
             if (Count == 1) return 0;

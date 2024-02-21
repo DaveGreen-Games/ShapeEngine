@@ -18,6 +18,9 @@ public readonly struct Quad : IEquatable<Quad>
     #endregion
 
     #region Getters
+
+    public Vector2 Center => GetPoint(0.5f);
+    public float AngleRad => BC.AngleRad();
     public Vector2 AB => B - A;
     public Vector2 BC => C - B;
     public Vector2 CD => D - C;
@@ -100,28 +103,207 @@ public readonly struct Quad : IEquatable<Quad>
     #endregion
     
     #region Public
-
-    //TODO implement
     public Rect GetBoundingBox()
     {
-        return new();
+        Rect r = new(A.X, A.Y, 0, 0);
+        r = r.Enlarge(B);
+        r = r.Enlarge(C);
+        r = r.Enlarge(D);
+        return r;
     }
-    public readonly CollisionPoint GetClosestCollisionPoint(Vector2 p)
+    public Vector2 GetPoint(Vector2 alignement) => GetPoint(alignement.X, alignement.Y);
+    public Vector2 GetPoint(float alignementX, float alignementY)
     {
-        return new();
+        var ab = A.Lerp(B, alignementY); // B - A;
+        var cd = C.Lerp(D, alignementY);
+        return ab.Lerp(cd, alignementX);
     }
+    public Vector2 GetPoint(float alignement) => GetPoint(alignement, alignement);
 
-    public Segments GetEdges() => new() { SegmentAToB, SegmentBToC, SegmentCToD, SegmentDToA };
-
-    public Polygon ToPolygon() => new() { A, B, C, D };
-    public Vector2 GetPoint(Vector2 alignement)
+    public Vector2 GetVertex(int index)
     {
-
-        var ab = A.Lerp(B, alignement.Y); // B - A;
-        var cd = C.Lerp(D, alignement.Y);
-        return ab.Lerp(cd, alignement.X);
+        var i = index % 4;
+        if (i == 0) return A;
+        if (i == 1) return B;
+        if (i == 2) return C;
+        return D;
     }
-    public Quad RotateRad(float angle, Vector2 pivot)
+    public Segment GetEdge(int index)
+    {
+        var i = index % 4;
+        if (i == 0) return SegmentAToB;
+        if (i == 1) return SegmentBToC;
+        if (i == 2) return SegmentCToD;
+        return SegmentDToA;
+    }
+
+    
+    public int GetClosestEdgePointByIndex(Vector2 p)
+    {
+        float minD = float.PositiveInfinity;
+        int closestIndex = -1;
+
+        var edge = SegmentAToB;
+        var closest = edge.GetClosestCollisionPoint(p).Point;
+        float d = (closest - p).LengthSquared();
+        if (d < minD)
+        {
+            closestIndex = 0;
+            minD = d;
+        }
+        edge = SegmentBToC;
+        closest = edge.GetClosestCollisionPoint(p).Point;
+        d = (closest - p).LengthSquared();
+        if (d < minD)
+        {
+            closestIndex = 1;
+            minD = d;
+        }
+        edge = SegmentCToD;
+        closest = edge.GetClosestCollisionPoint(p).Point;
+        d = (closest - p).LengthSquared();
+        if (d < minD)
+        {
+            closestIndex = 2;
+            minD = d;
+        }
+        edge = SegmentDToA;
+        closest = edge.GetClosestCollisionPoint(p).Point;
+        d = (closest - p).LengthSquared();
+        if (d < minD) return 3;
+        return closestIndex;
+    }
+    public ClosestPoint GetClosestPoint(Vector2 p)
+    {
+        var closest = GetClosestCollisionPoint(p);
+        return new(closest, (closest.Point - p).Length());
+    }
+    public CollisionPoint GetClosestCollisionPoint(Vector2 p)
+    {
+        float minD = float.PositiveInfinity;
+            
+        CollisionPoint closest = new();
+
+        var c = SegmentAToB.GetClosestCollisionPoint(p);
+        float d = (c.Point - p).LengthSquared();
+        if (d < minD)
+        {
+            closest = c;
+            minD = d;
+        }
+        
+        c = SegmentBToC.GetClosestCollisionPoint(p);
+        d = (c.Point - p).LengthSquared();
+        if (d < minD)
+        {
+            closest = c;
+            minD = d;
+        }
+        
+        c = SegmentCToD.GetClosestCollisionPoint(p);
+        d = (c.Point - p).LengthSquared();
+        if (d < minD)
+        {
+            closest = c;
+            minD = d;
+        }
+        c = SegmentDToA.GetClosestCollisionPoint(p);
+        d = (c.Point - p).LengthSquared();
+        if (d < minD)
+        {
+            closest = c;
+        }
+
+        return closest;
+    }
+
+    public ClosestSegment GetClosestSegment(Vector2 p)
+    {
+        float minD = float.PositiveInfinity;
+            
+        Segment closestSegment = new();
+        CollisionPoint closestPoint = new();
+        var c = SegmentAToB.GetClosestPoint(p);
+        if (c.Distance < minD)
+        {
+            closestSegment = SegmentAToB;
+            closestPoint = c.Closest;
+            minD = c.Distance;
+        }
+        
+        c = SegmentBToC.GetClosestPoint(p);
+        if (c.Distance < minD)
+        {
+            closestSegment = SegmentBToC;
+            closestPoint = c.Closest;
+            minD = c.Distance;
+        }
+        
+        c = SegmentCToD.GetClosestPoint(p);
+        if (c.Distance < minD)
+        {
+            closestSegment = SegmentCToD;
+            closestPoint = c.Closest;
+            minD = c.Distance;
+        }
+        c = SegmentDToA.GetClosestPoint(p);
+        if (c.Distance < minD)
+        {
+            closestSegment = SegmentDToA;
+            closestPoint = c.Closest;
+            minD = c.Distance;
+        }
+        return new(closestSegment, closestPoint, minD);
+    }
+    
+    public Vector2 GetRandomPointInside() => GetPoint(ShapeRandom.RandF(), ShapeRandom.RandF());
+    public Points GetRandomPointsInside(int amount)
+    {
+        var points = new Points();
+        for (int i = 0; i < amount; i++)
+        {
+            points.Add(GetRandomPointInside());
+        }
+
+        return points;
+    }
+    public Vector2 GetRandomVertex() => GetVertex(ShapeRandom.RandI(0, 3));
+    public Segment GetRandomEdge()  => GetEdge(ShapeRandom.RandI(0, 3));
+    public Vector2 GetRandomPointOnEdge() => GetRandomEdge().GetRandomPoint();
+    public Points GetRandomPointsOnEdge(int amount)
+    {
+        var points = new Points();
+
+        var ab = SegmentAToB;
+        var bc = SegmentBToC;
+        var cd = SegmentCToD;
+        var da = SegmentDToA;
+        
+        for (int i = 0; i < amount; i++)
+        {
+            var rIndex = ShapeRandom.RandI(0, 3);
+            switch (rIndex)
+            {
+                case 0:
+                    points.Add(ab.GetRandomPoint());
+                    break;
+                case 1:
+                    points.Add(bc.GetRandomPoint());
+                    break;
+                case 2:
+                    points.Add(cd.GetRandomPoint());
+                    break;
+                default:
+                    points.Add(da.GetRandomPoint());
+                    break;
+            }
+        }
+
+        return points;
+    }
+        
+    
+    public Quad RotateByRad(float angle, Vector2 pivot)
     {
         var pivotPoint = GetPoint(pivot);
         var a = (A - pivotPoint).Rotate(angle);
@@ -131,15 +313,14 @@ public readonly struct Quad : IEquatable<Quad>
         return new(a,b,c,d);
     }
 
-    public Quad RotateDeg(float angle, Vector2 pivot) => RotateRad(angle * ShapeMath.DEGTORAD, pivot);
-
-    public Triangulation Triangulate()
+    public Quad RotateByDeg(float angle, Vector2 pivot) => RotateByRad(angle * ShapeMath.DEGTORAD, pivot);
+    public Quad RotateToRad(float target, Vector2 pivot)
     {
-        Triangle abc = new(A,B,C);
-        Triangle cda= new(C,D,A);
-        return new Triangulation() { abc, cda };
+        float amount = ShapeMath.GetShortestAngleRad(AngleRad, target);
+        return RotateByRad(amount, pivot);
     }
-
+    public Quad RotateToDeg(float target, Vector2 pivot) => RotateToRad(target * ShapeMath.DEGTORAD, pivot);
+    
     public Quad MoveBy(Vector2 amount)
     {
         return new
@@ -187,6 +368,7 @@ public readonly struct Quad : IEquatable<Quad>
         );
     }
 
+    
     // private bool ContainsPointCheck(Vector2 a, Vector2 b, Vector2 pointToCheck)
     // {
     //     if (a.Y < pointToCheck.Y && b.Y >= pointToCheck.Y || b.Y < pointToCheck.Y && a.Y >= pointToCheck.Y)
@@ -209,6 +391,49 @@ public readonly struct Quad : IEquatable<Quad>
         if (Polygon.ContainsPointCheck(D, D, p)) oddNodes = !oddNodes;
         
         return oddNodes;
+    }
+    public bool ContainsShape(Segment other)
+    {
+        return ContainsPoint(other.Start) && ContainsPoint(other.End);
+    }
+    public bool ContainsShape(Circle other)
+    {
+        var points = other.GetVertices(8);
+        return ContainsShape(points);
+    }
+    public bool ContainsShape(Rect other)
+    {
+        return ContainsPoint(other.TopLeft) &&
+               ContainsPoint(other.BottomLeft) &&
+               ContainsPoint(other.BottomRight) &&
+               ContainsPoint(other.TopRight);
+    }
+    public bool ContainsShape(Triangle other)
+    {
+        return ContainsPoint(other.A) &&
+               ContainsPoint(other.B) &&
+               ContainsPoint(other.C);
+    }
+    public bool ContainsShape(Points points)
+    {
+        if (points.Count <= 0) return false;
+        foreach (var p in points)
+        {
+            if (!ContainsPoint(p)) return false;
+        }
+        return true;
+    }
+
+    public Segments GetEdges() => new() { SegmentAToB, SegmentBToC, SegmentCToD, SegmentDToA };
+
+    public Polygon ToPolygon() => new() { A, B, C, D };
+    public Points ToPoints() => new() { A, B, C, D };
+    public Polyline ToPolyline() => new() { A, B, C, D };
+    public Triangulation Triangulate()
+    {
+        Triangle abc = new(A,B,C);
+        Triangle cda= new(C,D,A);
+        return new Triangulation() { abc, cda };
     }
     #endregion
     
