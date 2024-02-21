@@ -53,10 +53,53 @@ namespace ShapeEngine.Core.Collision
                 this.Other = other;
             }
         }
+        private class ObjectRegister<T>
+        {
+            public readonly List<T> AllObjects = new();
+            private readonly List<T> tempHolding = new();
+            private readonly List<T> tempRemoving = new();
+            
+            public void Add(T obj) => tempHolding.Add(obj);
 
-        private readonly List<CollisionObject> collisionBodies = new();
-        private readonly List<CollisionObject> tempHolding = new();
-        private readonly List<CollisionObject> tempRemoving = new();
+            public void AddRange(IEnumerable<T> objs) => tempHolding.AddRange(objs);
+
+            public void AddRange(params T[] objs) => tempHolding.AddRange(objs);
+
+            public void Remove(T obj) => tempRemoving.Add(obj);
+
+            public void RemoveRange(IEnumerable<T> objs) => tempRemoving.AddRange(objs);
+
+            public void RemoveRange(params T[] objs) => tempRemoving.AddRange(objs);
+
+            public void Process()
+            {
+                foreach (var obj in tempHolding)
+                {
+                    AllObjects.Add(obj);
+                }
+                tempHolding.Clear();
+
+                foreach (var obj in tempRemoving)
+                {
+                    AllObjects.Remove(obj);
+                }
+                tempRemoving.Clear();
+            }
+            public void Clear()
+            {
+                AllObjects.Clear();
+                tempHolding.Clear();
+                tempRemoving.Clear();
+            }
+        }
+        
+        // private readonly List<CollisionObject> collisionBodies = new();
+        // private readonly List<CollisionObject> tempHolding = new();
+        // private readonly List<CollisionObject> tempRemoving = new();
+
+        private readonly ObjectRegister<CollisionObject> collisionBodyRegister = new();
+        private readonly ObjectRegister<Collider> colliderRegister = new();
+        
         private readonly SpatialHash spatialHash;
         private readonly Dictionary<Collider, List<Collision>> collisionStack = new();
         
@@ -66,8 +109,8 @@ namespace ShapeEngine.Core.Collision
 
         private readonly HashSet<Collider> collisionCandidateCheckRegister = new();
         private List<SpatialHash.Bucket> collisionCandidateBuckets = new();
-        
-        public int Count => collisionBodies.Count;
+
+        public int Count => collisionBodyRegister.AllObjects.Count; // collisionBodies.Count;
 
         public Rect Bounds => spatialHash.Bounds;
 
@@ -76,37 +119,25 @@ namespace ShapeEngine.Core.Collision
         
         
         public void ResizeBounds(Rect newBounds) { spatialHash.ResizeBounds(newBounds); }
+
+        public void Add(CollisionObject collisionObject) => collisionBodyRegister.Add(collisionObject);
+        public void AddRange(IEnumerable<CollisionObject> collisionObjects) => collisionBodyRegister.AddRange(collisionObjects);
+        public void AddRange(params CollisionObject[] collisionObjects)=> collisionBodyRegister.AddRange(collisionObjects);
+        public void Remove(CollisionObject collisionObject)=> collisionBodyRegister.Remove(collisionObject);
+        public void RemoveRange(IEnumerable<CollisionObject> collisionObjects)  => collisionBodyRegister.RemoveRange(collisionObjects);
+        public void RemoveRange(params CollisionObject[] collisionObjects)  => collisionBodyRegister.RemoveRange(collisionObjects);
         
-        public void Add(CollisionObject collidable)
-        {
-            tempHolding.Add(collidable);
-        }
-        public void AddRange(IEnumerable<CollisionObject> candidates)
-        {
-            tempHolding.AddRange(candidates);
-        }
-        public void AddRange(params CollisionObject[] candidates)
-        {
-            tempHolding.AddRange(candidates);
-        }
-        public void Remove(CollisionObject collidable)
-        {
-            tempRemoving.Add(collidable);
-        }
-        public void RemoveRange(IEnumerable<CollisionObject> candidates)
-        {
-            tempRemoving.AddRange(candidates);
-        }
-        public void RemoveRange(params CollisionObject[] candidates)
-        {
-            tempRemoving.AddRange(candidates);
-        }
+        public void Add(Collider collider) => colliderRegister.Add(collider);
+        public void AddRange(IEnumerable<Collider> colliders) => colliderRegister.AddRange(colliders);
+        public void AddRange(params Collider[] colliders)=> colliderRegister.AddRange(colliders);
+        public void Remove(Collider collider)=> colliderRegister.Remove(collider);
+        public void RemoveRange(IEnumerable<Collider> colliders)  => colliderRegister.RemoveRange(colliders);
+        public void RemoveRange(params Collider[] colliders)  => colliderRegister.RemoveRange(colliders);
         
         public void Clear()
         {
-            collisionBodies.Clear();
-            tempHolding.Clear();
-            tempRemoving.Clear();
+            collisionBodyRegister.Clear();
+            colliderRegister.Clear();
             collisionStack.Clear();
         }
         public void Close()
@@ -118,7 +149,7 @@ namespace ShapeEngine.Core.Collision
 
         public void Update()
         {
-            spatialHash.Fill(collisionBodies);
+            spatialHash.Fill(collisionBodyRegister.AllObjects, colliderRegister.AllObjects);
 
             ProcessCollisions();
             
@@ -126,7 +157,7 @@ namespace ShapeEngine.Core.Collision
         }
         private void ProcessCollisions()
         {
-            foreach (var collisionBody in collisionBodies)
+            foreach (var collisionBody in collisionBodyRegister.AllObjects)
             {
                 if (!collisionBody.Enabled || !collisionBody.HasColliders) continue;
 
@@ -149,7 +180,7 @@ namespace ShapeEngine.Core.Collision
                         foreach (var candidate in bucket)
                         {
                             if(candidate == collider) continue;
-                            if (candidate.Parent == collider.Parent) continue;
+                            if (candidate.Parent != null && collider.Parent != null && candidate.Parent == collider.Parent) continue;
                             if (!mask.Has(candidate.CollisionLayer)) continue;
                             if (!collisionCandidateCheckRegister.Add(candidate)) continue;
 
@@ -218,17 +249,8 @@ namespace ShapeEngine.Core.Collision
         }
         private void Resolve()
         {
-            foreach (var collidable in tempHolding)
-            {
-                collisionBodies.Add(collidable);
-            }
-            tempHolding.Clear();
-
-            foreach (var collidable in tempRemoving)
-            {
-                collisionBodies.Remove(collidable);
-            }
-            tempRemoving.Clear();
+            collisionBodyRegister.Process();
+            colliderRegister.Process();
 
 
             foreach (var kvp in collisionStack)
@@ -284,6 +306,24 @@ namespace ShapeEngine.Core.Collision
         //     return infos;
         // }
         //
+        public Dictionary<Collider, QueryInfos>? QuerySpace(CollisionObject collisionObject, Vector2 origin, bool sorted = true)
+        {
+            if (!collisionObject.Enabled || !collisionObject.HasColliders) return null;
+
+            Dictionary<Collider, QueryInfos>? result = null;
+            
+            foreach (var collider in collisionObject.Colliders)
+            {
+                var info = QuerySpace(collider, origin, sorted);
+                if (info != null && info.Count > 0)
+                {
+                    result ??= new();
+                    result.Add(collider, info);
+                }
+            }
+
+            return result;
+        }
         public QueryInfos? QuerySpace(Collider collider, Vector2 origin, bool sorted = true)
         {
             QueryInfos? infos = null;

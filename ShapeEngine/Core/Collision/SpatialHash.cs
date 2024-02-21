@@ -77,17 +77,23 @@ namespace ShapeEngine.Core.Collision
         #endregion
         
         #region Public
-        public void Fill(IEnumerable<CollisionObject> collisionBodies)
+        public void Fill(IEnumerable<CollisionObject> collisionBodies, IEnumerable<Collider> colliders)
         {
             Clear();
 
             foreach (var body in collisionBodies)
             {
-                if (body.Enabled)
+                if (body.Enabled && body.HasColliders)
                 {
                     Add(body);
                 }
             }
+
+            foreach (var collider in colliders)
+            {
+                Add(collider);
+            }
+            
             CleanRegister();
         }
         public void Close()
@@ -351,40 +357,67 @@ namespace ShapeEngine.Core.Collision
             int yi = Math.Clamp((int)Math.Floor((y - Bounds.Y) / SpacingY), 0, Rows - 1);
             return (xi, yi);
         }
-        private void Add(CollisionObject collisionBody)//38% memory problem
+        private void Add(CollisionObject collisionBody)
         {
-            if (!collisionBody.HasColliders) return;
-
+            // if (!collisionBody.HasColliders) return;
             foreach (var collider in collisionBody.Colliders)
             {
-                if (!collider.Enabled || collider.Parent == null) continue;
+                Add(collider);
+            }
+            /*
+             if (!collider.Enabled || collider.Parent == null) continue;
+               
+               List<int> ids;
+               if (register.TryGetValue(collider, out var value))
+               {
+                   ids = value;
+                   ids.Clear();
+               }
+               else
+               {
+                   ids = new List<int>();
+                   register.Add(collider, ids);
+               
+               }
+               GetCellIDs(collider, ref ids);
+               if (ids.Count <= 0) return;
+               registerKeys.Remove(collider);
+               foreach (int hash in ids)
+               {
+                   buckets[hash].Add(collider);
+               }
+             */
+        }
+        private void Add(Collider collider)
+        {
+            if (!collider.Enabled) return;
                 
-                List<int> ids;
-                if (register.TryGetValue(collider, out var value))
-                {
-                    ids = value;
-                    ids.Clear();
-                }
-                else
-                {
-                    ids = new List<int>();
-                    register.Add(collider, ids);
+            List<int> ids;
+            if (register.TryGetValue(collider, out var value))
+            {
+                ids = value;
+                ids.Clear();
+            }
+            else
+            {
+                ids = new List<int>();
+                register.Add(collider, ids);
                 
-                }
-                GetCellIDs(collider, ref ids);
-                if (ids.Count <= 0) return;
-                registerKeys.Remove(collider);
-                foreach (int hash in ids)
-                {
-                    buckets[hash].Add(collider);
-                }
+            }
+            GetCellIDs(collider, ref ids);
+            if (ids.Count <= 0) return;
+            registerKeys.Remove(collider);
+            foreach (int hash in ids)
+            {
+                buckets[hash].Add(collider);
             }
         }
+
         private void CleanRegister()
         {
-            foreach (var collidable in registerKeys)
+            foreach (var collider in registerKeys)
             {
-                register.Remove(collidable);
+                register.Remove(collider);
             }
 
             registerKeys.Clear();
@@ -435,6 +468,22 @@ namespace ShapeEngine.Core.Collision
                     int id = GetCellId(i, j);
                     var cellRect = GetCellRectangle(id);
                     if(cellRect.OverlapShape(triangle)) idList.Add(id);
+                }
+            }
+        }
+        private void GetCellIDs(Quad quad, ref List<int> idList)
+        {
+            var boundingRect = quad.GetBoundingBox();
+            var topLeft = GetCellCoordinate(boundingRect.X, boundingRect.Y);
+            var bottomRight = GetCellCoordinate(boundingRect.X + boundingRect.Width, boundingRect.Y + boundingRect.Height);
+
+            for (int j = topLeft.y; j <= bottomRight.y; j++)
+            {
+                for (int i = topLeft.x; i <= bottomRight.x; i++)
+                {
+                    int id = GetCellId(i, j);
+                    var cellRect = GetCellRectangle(id);
+                    if(cellRect.OverlapShape(quad)) idList.Add(id);
                 }
             }
         }
@@ -514,6 +563,8 @@ namespace ShapeEngine.Core.Collision
                 case ShapeType.Triangle: GetCellIDs(collider.GetTriangleShape(), ref idList); 
                     break;
                 case ShapeType.Rect: GetCellIDs(collider.GetRectShape(), ref idList); 
+                    break;
+                case ShapeType.Quad: GetCellIDs(collider.GetQuadShape(), ref idList); 
                     break;
                 case ShapeType.Poly: GetCellIDs(collider.GetPolygonShape(), ref idList); 
                     break;
