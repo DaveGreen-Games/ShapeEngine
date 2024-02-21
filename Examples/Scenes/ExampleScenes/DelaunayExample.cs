@@ -54,11 +54,7 @@ namespace Examples.Scenes.ExampleScenes
             points.Clear();
             curTriangulation.Clear();
         }
-        public override GameObjectHandler? GetGameObjectHandler()
-        {
-            return null;
-        }
-
+        
         
 
         //public override void Update(float dt, ScreenInfo game, ScreenInfo ui)
@@ -72,7 +68,7 @@ namespace Examples.Scenes.ExampleScenes
             return new(poly[0], poly[1], poly[2]);
         }
         
-        protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             
             lineThickness = 2f * GAMELOOP.Camera.ZoomFactor;
@@ -150,7 +146,7 @@ namespace Examples.Scenes.ExampleScenes
 
         }
         
-        protected override void DrawGameExample(ScreenInfo game)
+        protected override void OnDrawGameExample(ScreenInfo game)
         {
             for (int i = 0; i < curTriangulation.Count; i++)
             {
@@ -173,7 +169,7 @@ namespace Examples.Scenes.ExampleScenes
                 }
             }
         }
-        protected override void DrawGameUIExample(ScreenInfo ui)
+        protected override void OnDrawGameUIExample(ScreenInfo ui)
         {
             
         }
@@ -187,7 +183,7 @@ namespace Examples.Scenes.ExampleScenes
         //     font.DrawText(text, infoRect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         // }
         
-        protected override void DrawUIExample(ScreenInfo ui)
+        protected override void OnDrawUIExample(ScreenInfo ui)
         {
             var bottomCenter = GAMELOOP.UIRects.GetRect("bottom center");
             DrawInputText(bottomCenter);

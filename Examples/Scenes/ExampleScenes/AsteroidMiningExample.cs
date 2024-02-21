@@ -328,11 +328,12 @@ namespace Examples.Scenes.ExampleScenes
         private Points laserPoints = new();
         //private Vector2 laserEndPoint;
         private Vector2 aimDir = new();
-        private GameObjectHandlerCollision gameObjectHandler;
+        // private SpawnAreaCollision spawnArea;
+        private CollisionHandler? collisionHandler;
         public InputAction iaShootLaser;
-        public LaserDevice(Vector2 pos, float size, GameObjectHandlerCollision gameObjectHandler) 
+        public LaserDevice(Vector2 pos, float size, CollisionHandler? collisionHandler) 
         {
-            this.gameObjectHandler = gameObjectHandler;
+            this.collisionHandler = collisionHandler;
             this.pos = pos;
             this.size = size;
             this.rotRad = 0f;
@@ -399,30 +400,24 @@ namespace Examples.Scenes.ExampleScenes
             
             UpdateTriangle();
 
-            if (laserEnabled)
+            if (laserEnabled && collisionHandler != null)
             {
-                //laserEndPoint = tip + aimDir * LaserRange;
-                var col = gameObjectHandler.GetCollisionHandler();
-                if(col != null)
+                laserPoints.Add(tip);
+                    
+                float remainingLength = LaserRange;
+                Vector2 curLaserPos = tip;
+                Vector2 curLaserDir = aimDir;
+                float curDamagePerSecond = DamagePerSecond;
+                while(remainingLength > 0) //reflecting laser
                 {
-                    laserPoints.Add(tip);
-                    
-                    float remainingLength = LaserRange;
-                    Vector2 curLaserPos = tip;
-                    Vector2 curLaserDir = aimDir;
-                    float curDamagePerSecond = DamagePerSecond;
-                    while(remainingLength > 0) //reflecting laser
-                    {
-                        var result = CastLaser(time.Delta, curLaserPos, curLaserDir, remainingLength, curDamagePerSecond, col);
-                        laserPoints.Add(result.endPoint);
-                        curLaserPos = result.endPoint;
-                        remainingLength = result.remainingLength;
-                        curLaserDir = result.newDir;
-                        curDamagePerSecond *= 0.5f;
-                        remainingLength *= 0.5f;
-                        remainingLength = 0f; //reflecting turned off
-                    }
-                    
+                    var result = CastLaser(time.Delta, curLaserPos, curLaserDir, remainingLength, curDamagePerSecond, collisionHandler);
+                    laserPoints.Add(result.endPoint);
+                    curLaserPos = result.endPoint;
+                    remainingLength = result.remainingLength;
+                    curLaserDir = result.newDir;
+                    curDamagePerSecond *= 0.5f;
+                    remainingLength *= 0.5f;
+                    remainingLength = 0f; //reflecting turned off
                 }
 
             }
@@ -529,7 +524,7 @@ namespace Examples.Scenes.ExampleScenes
         internal enum ShapeType { None = 0, Triangle = 1, Rect = 2, Poly = 3};
 
         // private Font font;
-        private GameObjectHandlerCollision gameObjectHandler;
+        // private SpawnAreaCollision spawnArea;
         private Rect boundaryRect = new();
 
         private bool polyModeActive = false;
@@ -568,10 +563,11 @@ namespace Examples.Scenes.ExampleScenes
             Title = "Asteroid Mining Example";
             // font = GAMELOOP.GetFont(FontIDs.JetBrains);
             UpdateBoundaryRect(GAMELOOP.GameScreenInfo.Area);
-            gameObjectHandler = new GameObjectHandlerCollision(boundaryRect, 4, 4);
+            // spawnArea = new SpawnAreaCollision(boundaryRect, 4, 4);
+            if (InitSpawnArea(boundaryRect)) SpawnArea?.InitCollisionHandler(4, 4);
 
-            laserDevice = new(new Vector2(0f), 100, gameObjectHandler);
-            gameObjectHandler.AddAreaObject(laserDevice);
+            laserDevice = new(new Vector2(0f), 100, SpawnArea?.CollisionHandler);
+            SpawnArea?.AddGameObject(laserDevice);
 
             var modeChangeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.TAB);
             var modeChangeGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
@@ -635,18 +631,14 @@ namespace Examples.Scenes.ExampleScenes
         }
         public override void Reset()
         {
-            gameObjectHandler.Clear();
+            SpawnArea?.Clear();
             polyModeActive = false;
             curRot = 0f;
             curSize = 50f;
             curShapeType = ShapeType.Triangle;
             RegenerateShape();
-            laserDevice = new(new Vector2(0), 100, gameObjectHandler);
-            gameObjectHandler.AddAreaObject(laserDevice);
-        }
-        public override GameObjectHandler? GetGameObjectHandler()
-        {
-            return gameObjectHandler;
+            laserDevice = new(new Vector2(0), 100, SpawnArea?.CollisionHandler);
+            SpawnArea?.AddGameObject(laserDevice);
         }
 
         private void UpdateBoundaryRect(Rect gameArea)
@@ -655,11 +647,11 @@ namespace Examples.Scenes.ExampleScenes
             boundaryRect = gameArea.ApplyMargins(0.005f, 0.005f, 0.1f, 0.005f);
         }
         
-        protected override void UpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
+        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             UpdateBoundaryRect(game.Area);
-            gameObjectHandler.ResizeBounds(boundaryRect);
-            gameObjectHandler.Update(time, game, ui);
+            SpawnArea?.ResizeBounds(boundaryRect);
+            // spawnArea.Update(time, game, ui);
 
             for (int i = lastCutOuts.Count - 1; i >= 0; i--)
             {
@@ -688,7 +680,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 Vector2 center = piece.GetCentroid();
                 AsteroidShard shard = new(piece.ToPolygon(), center, color);
-                gameObjectHandler.AddAreaObject(shard);
+                SpawnArea?.AddGameObject(shard);
             }
             if (fracture.NewShapes.Count > 0)
             {
@@ -706,12 +698,12 @@ namespace Examples.Scenes.ExampleScenes
         private void AddAsteroid(Asteroid a)
         {
             a.Fractured += OnAsteroidFractured;
-            gameObjectHandler.AddAreaObject(a);
+            SpawnArea?.AddGameObject(a);
         }
         private void RemoveAsteroid(Asteroid a)
         {
             a.Fractured -= OnAsteroidFractured;
-            gameObjectHandler.RemoveAreaObject(a);
+            SpawnArea?.RemoveGameObject(a);
         }
         private void SetCurPos(Vector2 pos)
         {
@@ -774,7 +766,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         
         
-        protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             //clipRect = new(mousePosGame, new Vector2(100, 300), new Vector2(0f, 1f));
             //clipperRect = clipRect.ToClipperRect();
@@ -793,7 +785,7 @@ namespace Examples.Scenes.ExampleScenes
             //    testShapes = newShapes;
             //}
 
-            var col = gameObjectHandler.GetCollisionHandler();
+            var col = SpawnArea?.CollisionHandler;
             if (col == null) return;
 
             var gamepad = GAMELOOP.CurGamepad;
@@ -1002,7 +994,7 @@ namespace Examples.Scenes.ExampleScenes
 
 
 
-        protected override void DrawGameExample(ScreenInfo game)
+        protected override void OnDrawGameExample(ScreenInfo game)
         {
             
             //boundaryRect.DrawLines(4f, ColorLight);
@@ -1011,19 +1003,19 @@ namespace Examples.Scenes.ExampleScenes
                 curShape.DrawLines(2f, new(Color.IndianRed));
             }
 
-            gameObjectHandler.DrawGame(game);
+            // spawnArea.DrawGame(game);
 
             foreach (var cutOut in lastCutOuts)
             {
                 cutOut.Draw();
             }
         }
-        protected override void DrawGameUIExample(ScreenInfo ui)
-        {
-            gameObjectHandler.DrawGameUI(ui);
-        }
+        // protected override void OnDrawGameUIExample(ScreenInfo ui)
+        // {
+        //     // spawnArea.DrawGameUI(ui);
+        // }
 
-        protected override void DrawUIExample(ScreenInfo ui)
+        protected override void OnDrawUIExample(ScreenInfo ui)
         {
             var infoRect = GAMELOOP.UIRects.GetRect("bottom center");
             DrawInputText(infoRect);

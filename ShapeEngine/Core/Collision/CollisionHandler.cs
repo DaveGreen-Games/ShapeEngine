@@ -113,6 +113,7 @@ namespace ShapeEngine.Core.Collision
         {
             Clear();
             spatialHash.Close();
+            
         }
 
         public void Update()

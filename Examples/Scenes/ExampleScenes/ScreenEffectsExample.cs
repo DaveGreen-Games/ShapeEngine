@@ -333,7 +333,7 @@ namespace Examples.Scenes.ExampleScenes
                 comets.Add(comet);
             }
         }
-        public override void Activate(IScene oldScene)
+        public override void Activate(Scene oldScene)
         {
             GAMELOOP.Camera = camera;
             UpdateFollower(GAMELOOP.UIScreenInfo.Area.Size.Min());
@@ -346,10 +346,6 @@ namespace Examples.Scenes.ExampleScenes
         {
             GAMELOOP.ResetCamera();
             // follower.Deactivate();
-        }
-        public override GameObjectHandler? GetGameObjectHandler()
-        {
-            return null;
         }
         public override void Reset()
         {
@@ -388,7 +384,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         
         
-        protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
             var gamepad = GAMELOOP.CurGamepad;
@@ -421,7 +417,7 @@ namespace Examples.Scenes.ExampleScenes
             follower.Speed = ship.Speed;// * Lerp(0.5f, 2f, sliderF);
             follower.BoundaryDis = new(boundary);
         }
-        protected override void UpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
+        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             UpdateFollower(ui.Area.Size.Min());
             //follower.Update(dt,camera);
@@ -450,7 +446,7 @@ namespace Examples.Scenes.ExampleScenes
                 }
             }
         }
-        protected override void DrawGameExample(ScreenInfo game)
+        protected override void OnDrawGameExample(ScreenInfo game)
         {
             foreach (var star in stars)
             {
@@ -486,13 +482,13 @@ namespace Examples.Scenes.ExampleScenes
                 }
             }
         }
-        protected override void DrawGameUIExample(ScreenInfo ui)
+        protected override void OnDrawGameUIExample(ScreenInfo ui)
         {
             intensitySlider.Draw();
             cameraFollowSlider.Draw();
             
         }
-        protected override void DrawUIExample(ScreenInfo ui)
+        protected override void OnDrawUIExample(ScreenInfo ui)
         {
             DrawInputDescription(GAMELOOP.UIRects.GetRect("bottom center"));
             DrawCameraInfo(GAMELOOP.UIRects.GetRect("bottom right"));

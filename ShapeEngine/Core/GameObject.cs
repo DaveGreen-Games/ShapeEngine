@@ -42,11 +42,11 @@ public abstract class GameObject : IUpdateable, IDrawable
     /// <summary>
     /// Is called when gameobject is added to an area.
     /// </summary>
-    public virtual void OnSpawned(GameObjectHandler gameObjectHandler){}
+    public virtual void OnSpawned(SpawnArea spawnArea){}
     /// <summary>
     /// Is called by the area once a game object is dead.
     /// </summary>
-    public virtual void OnDespawned(GameObjectHandler gameObjectHandler){}
+    public virtual void OnDespawned(SpawnArea spawnArea){}
 
     /// <summary>
     /// Should this object be checked for leaving the bounds of the area?

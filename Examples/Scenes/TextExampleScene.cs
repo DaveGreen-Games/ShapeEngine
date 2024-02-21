@@ -140,7 +140,7 @@ namespace Examples.Scenes
         #endregion
 
         #region Base Class
-        protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             var gamepad = GAMELOOP.CurGamepad;
             foreach (var action in inputActions)
@@ -242,7 +242,7 @@ namespace Examples.Scenes
                 HandleInputTextEntryActive(dt, mousePosGame, mousePosUI);
             }
         }
-        protected override void UpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
+        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             var uiSize = ui.Area.Size;
             
@@ -288,7 +288,7 @@ namespace Examples.Scenes
             
             UpdateExampleTextEntryInactive(time.Delta, game, ui);
         }
-        protected override void DrawGameUIExample(ScreenInfo ui)
+        protected override void OnDrawGameUIExample(ScreenInfo ui)
         {
             var uiSize = ui.Area.Size;
             Rect r = new(topLeft, bottomRight);
@@ -356,7 +356,7 @@ namespace Examples.Scenes
             }
 
         }
-        protected override void DrawUIExample(ScreenInfo ui)
+        protected override void OnDrawUIExample(ScreenInfo ui)
         {
             var rects = GAMELOOP.UIRects.GetRect("bottom center").SplitV(0.35f);
             DrawDescription(rects.top, rects.bottom);

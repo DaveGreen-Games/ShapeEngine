@@ -12,18 +12,8 @@ using ShapeEngine.Text;
 
 namespace Examples.Scenes
 {
-    public class ExampleScene : IScene
+    public class ExampleScene : Scene
     {
-
-        // public static ShapeColor ColorDark = ShapeColor.FromHex("0A131F");
-        // public static ShapeColor ColorDarkB = ShapeColor.FromHex("#121F2B");
-        // public static ShapeColor ColorMedium = ShapeColor.FromHex("1F3847");
-        // public static ShapeColor ColorLight = ShapeColor.FromHex("B6E0E2");
-        // public static ShapeColor ColorHighlight1 = ShapeColor.FromHex("E5F6DF");
-        // public static ShapeColor ColorHighlight2 = ShapeColor.FromHex("E94957");
-        // public static ShapeColor ColorHighlight3 = ShapeColor.FromHex("#FCA311");
-        // public static ShapeColor ColorRustyRed = ShapeColor.FromHex("#DE3C4B");
-
         public string Title { get; protected set; } = "Title Goes Here";
         public string Description { get; protected set; } = "No Description Yet.";
 
@@ -40,7 +30,6 @@ namespace Examples.Scenes
         }
         public virtual void Reset() { }
 
-        public virtual void OnPauseChanged(bool paused){}
         
         private void HandleZoom(float dt)
         {
@@ -103,19 +92,19 @@ namespace Examples.Scenes
             // }
         }
 
-        public void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
+        protected override void OnUpdateGame(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             HandleInput(time.Delta, game.MousePos, ui.MousePos);
 
             if (GAMELOOP.Paused) return;
-            HandleInputExample(time.Delta, game.MousePos, ui.MousePos);
-            UpdateExample(time, game, ui);
+            OnHandleInputExample(time.Delta, game.MousePos, ui.MousePos);
+            OnUpdateExample(time, game, ui);
         }
-        public void DrawGame(ScreenInfo game)
+        protected override void OnDrawGame(ScreenInfo game)
         {
-            DrawGameExample(game);
+            OnDrawGameExample(game);
         }
-        public void DrawGameUI(ScreenInfo ui)
+        protected override void OnDrawGameUI(ScreenInfo ui)
         {
             if (GAMELOOP.Paused)
             {
@@ -131,12 +120,7 @@ namespace Examples.Scenes
                 
             }
             
-            DrawGameUIExample(ui);
-            
-            //Vector2 uiSize = ui.Area.Size;
-            // Segment s = new(uiSize * new Vector2(0f, 0.07f), uiSize * new Vector2(1f, 0.07f));
-            // GAMELOOP.UIZones.TopLeft.CombineWith(GAMELOOP.UIZones.TopCenter).CombineWith(GAMELOOP.UIZones.TopRight).BottomSegment.Draw(2f, ColorLight);
-            //GAMELOOP.RectTop.BottomSegment.Draw(2f, ColorLight);
+            OnDrawGameUIExample(ui);
             var topLine = GAMELOOP.UIRects.GetRectSingle("top").BottomSegment;
             topLine.Draw(2f, Colors.Light);
 
@@ -144,27 +128,10 @@ namespace Examples.Scenes
             titleFont.LineSpacing = 10f;
             titleFont.ColorRgba = Colors.Highlight;
             titleFont.DrawTextWrapNone(Title, topCenterRect, new(0.5f));
-            // titleFont.DrawText(Title, topCenterRect, 10f, new(0.5f), ColorLight);
-
-            // string backText = "Back [ESC]";
-            //Rect backRect = new Rect(uiSize * new Vector2(0.02f, 0.06f), uiSize * new Vector2(0.3f, 0.04f), new Vector2(0f, 1f));
-            // titleFont.DrawText(backText, backRect, 4f, new Vector2(0f, 0.5f), ColorHighlight2);
-            //var backRect = ui.Area.ApplyMargins(0.012f, 0.85f, 0.012f, 0.95f);
-            // var curInputDevice = input.CurrentInputDevice == InputDevice.Mouse
-            //     ? InputDevice.Keyboard
-            //     : input.CurrentInputDevice;
-            // backLabel.Color = ExampleScene.ColorMedium;
-            // backLabel.Draw(GAMELOOP.RectTopLeft.SplitH(0.75f).top, new(0f, 0f), curInputDevice, 4);
-            
-            // string fpsText = $"Fps: {Raylib.GetFPS()}";
-            // Rect fpsRect = new Rect(uiSize * new Vector2(0.98f, 0.06f), uiSize * new Vector2(0.3f, 0.04f), new Vector2(1f, 1f));
-            // titleFont.DrawText(fpsText, fpsRect, 4f, new Vector2(1f, 0.5f), ColorHighlight2);
-            
-            //DrawInputDeviceInfo(GAMELOOP.RectBottomLeft);
         }
-        public void DrawUI(ScreenInfo ui)
+        protected override void OnDrawUI(ScreenInfo ui)
         {
-            var backRect = ui.Area.ApplyMargins(0.012f, 0.85f, 0.012f, 0.95f);
+            // var backRect = ui.Area.ApplyMargins(0.012f, 0.85f, 0.012f, 0.95f);
             var curInputDevice = ShapeInput.CurrentInputDeviceTypeNoMouse;
             var backLabelRect = GAMELOOP.UIRects.GetRect("top left top"); // GetRect("top", "left", "top"); // Get("top").Get("left").Get("top").GetRect();
             backLabel.Draw(backLabelRect, new(0f, 0f), curInputDevice);
@@ -174,46 +141,16 @@ namespace Examples.Scenes
             var deviceRect = GAMELOOP.UIRects.GetRect("bottom left"); // GetRect("bottom", "left"); // Get("bottom").Get("left").GetRect();
             DrawInputDeviceInfo(deviceRect);
             
-            DrawUIExample(ui);
-            
+            OnDrawUIExample(ui);
         }
         
-        protected virtual void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI) { }
-        protected virtual void UpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui) { }
-        protected virtual void DrawGameUIExample(ScreenInfo ui) { }
-        protected virtual void DrawUIExample(ScreenInfo ui) { }
-        protected virtual void DrawGameExample(ScreenInfo game) { }
+        protected virtual void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI) { }
+        protected virtual void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui) { }
+        protected virtual void OnDrawGameUIExample(ScreenInfo ui) { }
+        protected virtual void OnDrawUIExample(ScreenInfo ui) { }
+        protected virtual void OnDrawGameExample(ScreenInfo game) { }
         
-        public virtual void OnWindowSizeChanged(DimensionConversionFactors conversionFactors)
-        {
-            // var cancelState = GAMELOOP.Input.ConsumeAction(GameloopExamples.InputUICancelID);
-            // if (cancelState is { Consumed: false, Pressed: true })
-            // {
-            //     GAMELOOP.Quit();
-            // }
-        }
-        public virtual void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos){}
-        public virtual void OnMonitorChanged(MonitorInfo newMonitor){}
-        public virtual void OnGamepadConnected(ShapeGamepadDevice gamepad){}
-        public virtual void OnGamepadDisconnected(ShapeGamepadDevice gamepad){}
-        public virtual void OnInputDeviceChanged(InputDeviceType prevDeviceType, InputDeviceType curDeviceType){}
-        public virtual void OnWindowMaximizeChanged(bool maximized){}
-        public virtual void OnWindowFullscreenChanged(bool fullscreen){}
-        public virtual void OnPausedChanged(bool newPaused){}
-        public virtual void OnMouseEnteredScreen(){}
-        public virtual void OnMouseVisibilityChanged(bool hidden){}
-        public virtual void OnMouseLeftScreen(){}
-        public virtual void OnMouseEnabledChanged(bool locked){}
-        public virtual void OnWindowFocusChanged(bool focused){}
-
-        // protected void DrawCross(Vector2 center, float length)
-        // {
-        //     var c = ColorLight.ChangeAlpha(125);
-        //     Segment hor = new Segment(center - new Vector2(length / 2, 0f), center + new Vector2(length / 2, 0f));
-        //     Segment ver = new Segment(center - new Vector2(0f, length / 2), center + new Vector2(0f, length / 2));
-        //     hor.Draw(2f, c);
-        //     ver.Draw(2f, c);
-        // }
+        
         private void DrawInputDeviceInfo(Rect rect)
         {
             var infoRect = rect;
@@ -240,28 +177,14 @@ namespace Examples.Scenes
             // titleFont.DrawText(gamepadText, gamepadRect, 1f, new Vector2(0.01f, 0.5f), GAMELOOP.CurGamepad != null ? ColorHighlight3 : ColorMedium);
         }
         
-        public virtual GameObjectHandler? GetGameObjectHandler()
-        {
-            return null;
-        }
-
-        // public void SetInput(ShapeInput input)
-        // {
-        //     //this.input = input;
-        // }
-
-        public virtual void Activate(IScene oldScene)
+        public override void Activate(Scene oldScene)
         {
             GAMELOOP.Camera.Reset();
         }
-        public virtual void Deactivate()
+        public override void Deactivate()
         {
             GAMELOOP.Camera.Reset();
             GAMELOOP.ResetCamera();
-        }
-        public virtual void Close()
-        {
-            
         }
 
     }

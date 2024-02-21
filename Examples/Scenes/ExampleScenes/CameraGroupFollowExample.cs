@@ -427,7 +427,7 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
         
-        public override void Activate(IScene oldScene)
+        public override void Activate(Scene oldScene)
         {
             GAMELOOP.Camera = camera;
             
@@ -437,10 +437,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             GAMELOOP.ResetCamera();
         }
-        public override GameObjectHandler? GetGameObjectHandler()
-        {
-            return null;
-        }
+        
         public override void Reset()
         {
             GAMELOOP.ScreenEffectIntensity = 1f;
@@ -490,7 +487,7 @@ namespace Examples.Scenes.ExampleScenes
 
             return next;
         }
-        protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
             var gamepad = GAMELOOP.CurGamepad;
@@ -531,7 +528,7 @@ namespace Examples.Scenes.ExampleScenes
         }
 
         
-        protected override void UpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
+        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             var targetPos = ActiveSpaceShip?.GetPosition() ?? new();
 
@@ -549,7 +546,7 @@ namespace Examples.Scenes.ExampleScenes
             }
             if(next != null) SelectShip(next);
         }
-        protected override void DrawGameExample(ScreenInfo game)
+        protected override void OnDrawGameExample(ScreenInfo game)
         {
             foreach (var star in stars)
             {
@@ -564,11 +561,11 @@ namespace Examples.Scenes.ExampleScenes
             cameraFollower.DrawDebugRect();
             
         }
-        protected override void DrawGameUIExample(ScreenInfo ui)
+        protected override void OnDrawGameUIExample(ScreenInfo ui)
         {
             
         }
-        protected override void DrawUIExample(ScreenInfo ui)
+        protected override void OnDrawUIExample(ScreenInfo ui)
         {
             var rects = GAMELOOP.UIRects.GetRect("bottom center").SplitV(0.35f);
             DrawDescription(rects.top);

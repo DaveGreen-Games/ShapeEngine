@@ -732,7 +732,7 @@ namespace Examples.Scenes.ExampleScenes
         }
 
         
-        public override void Activate(IScene oldScene)
+        public override void Activate(Scene oldScene)
         {
             InputAction.LockWhitelist(GAMELOOP.GameloopAccessTag, InputAction.DefaultAccessTag);
         }
@@ -742,10 +742,6 @@ namespace Examples.Scenes.ExampleScenes
             InputAction.Unlock();
         }
 
-        public override GameObjectHandler? GetGameObjectHandler()
-        {
-            return null;
-        }
         public override void Reset()
         {
             
@@ -753,12 +749,12 @@ namespace Examples.Scenes.ExampleScenes
         }
         
         
-        protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             
 
         }
-        protected override void UpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
+        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             // int gamepadIndex = -1;
             // if (GAMELOOP.CurGamepad != null)
@@ -780,11 +776,11 @@ namespace Examples.Scenes.ExampleScenes
             buttonHold.Update(time.Delta, gamepad, curDevice);
             buttonDoubleTap.Update(time.Delta, gamepad, curDevice);
         }
-        protected override void DrawGameExample(ScreenInfo game)
+        protected override void OnDrawGameExample(ScreenInfo game)
         {
             
         }
-        protected override void DrawGameUIExample(ScreenInfo ui)
+        protected override void OnDrawGameUIExample(ScreenInfo ui)
         {
             var screenArea = GAMELOOP.UIRects.GetRectSingle("center");// ui.Area;
             
@@ -821,7 +817,7 @@ namespace Examples.Scenes.ExampleScenes
 
         private Vector2 lastMouseDelta = new();
         private Vector2 lastMouseWheel = new();
-        protected override void DrawUIExample(ScreenInfo ui)
+        protected override void OnDrawUIExample(ScreenInfo ui)
         {
             Vector2 uiSize = ui.Area.Size;
 

@@ -187,7 +187,7 @@ public class Game
     public Dimensions DevelopmentDimensions { get; private set; }
     
     public GameWindow Window { get; private set; }
-    public IScene CurScene { get; private set; } = new SceneEmpty();
+    public Scene CurScene { get; private set; } = new SceneEmpty();
     #endregion
     
     #region Private Members
@@ -440,7 +440,7 @@ public class Game
     /// Switches to the new scene. Deactivate is called on the old scene and then Activate is called on the new scene.
     /// </summary>
     /// <param name="newScene"></param>
-    public void GoToScene(IScene newScene)
+    public void GoToScene(Scene newScene)
     {
         if (newScene == CurScene) return;
         CurScene.Deactivate();

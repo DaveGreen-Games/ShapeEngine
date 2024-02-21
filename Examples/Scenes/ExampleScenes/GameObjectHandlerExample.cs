@@ -820,9 +820,6 @@ namespace Examples.Scenes.ExampleScenes
 
     public class GameObjectHandlerExample : ExampleScene
     {
-        GameObjectHandlerCollision gameObjectHandler;
-        
-
         Rect boundaryRect;
         // private List<Wall> boundaryWalls = new();
         Font font;
@@ -906,36 +903,23 @@ namespace Examples.Scenes.ExampleScenes
             };
             
             boundaryRect = new(new(0f), new(5000,5000), new(0.5f));
-            gameObjectHandler = new(boundaryRect, 50, 50);
+            if (InitSpawnArea(boundaryRect))
+            {
+                SpawnArea?.InitCollisionHandler(50, 50);
+            }
+            
             SetupBoundary();
         }
-        public override GameObjectHandler? GetGameObjectHandler()
-        {
-            return gameObjectHandler;
-        }
-
-        public override void Activate(IScene oldScene)
-        {
-            // CameraTweenZoomFactor zoomFactorStart = new(1f, 0.75f, 0.25f, TweenType.LINEAR);
-            // CameraTweenZoomFactor zoomFactorHold = new(0.75f, 0.75f, 0.5f, TweenType.LINEAR);
-            // CameraTweenZoomFactor zoomFactorEnd = new(0.75f, 1f, 0.25f, TweenType.LINEAR);
-            // CameraTweenOffset tweenRight = new(new(0), new(100, 0), 0.25f, TweenType.LINEAR);
-            // CameraTweenOffset tweenLeft = new(new(100, 0), new(-25, 0), 0.25f, TweenType.LINEAR);
-            // CameraTweenOffset tweenEnd = new(new(-25, 0), new(-0, 0), 0.25f, TweenType.LINEAR);
-            // GAMELOOP.Camera.StartTweenSequence(zoomFactorStart, zoomFactorHold, zoomFactorEnd);
-            // GAMELOOP.Camera.StartTweenSequence(tweenRight, tweenLeft, tweenEnd);
-        }
-
         
         
         public override void Reset()
         {
-            gameObjectHandler.Clear();
+            SpawnArea?.Clear();
             SetupBoundary();
             drawDebug = false;
         }
 
-        protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             var gamepad = GAMELOOP.CurGamepad;
             InputAction.UpdateActions(dt, gamepad, inputActions);
@@ -952,7 +936,7 @@ namespace Examples.Scenes.ExampleScenes
                 {
                     var spawnPos = mousePosGame + ShapeRandom.RandVec2(0, 200);
                     var r = new Rock(spawnPos);
-                    gameObjectHandler.AddAreaObject(r);
+                    SpawnArea?.AddGameObject(r);
                 }
             
             }
@@ -969,7 +953,7 @@ namespace Examples.Scenes.ExampleScenes
             if (iaSpawnBird.State.Pressed)
             {
                 Bird b = new(mousePosGame);
-                gameObjectHandler.AddAreaObject(b);
+                SpawnArea?.AddGameObject(b);
             
             }
             if (iaSpawnBall.State.Down)
@@ -979,7 +963,7 @@ namespace Examples.Scenes.ExampleScenes
                     // Ball b = new(mousePosGame + ShapeRandom.RandVec2(0, 5), ShapeRandom.RandVec2() * 300, 10);
                     // gameObjectHandler.AddAreaObject(b);
                     var ball = new Ball(mousePosGame);
-                    gameObjectHandler.AddAreaObject(ball);
+                    SpawnArea?.AddGameObject(ball);
                 }
 
             }
@@ -988,7 +972,7 @@ namespace Examples.Scenes.ExampleScenes
                 for (var i = 0; i < 100; i++)
                 {
                     var bullet = new Bullet(mousePosGame);
-                    gameObjectHandler.AddAreaObject(bullet);
+                    SpawnArea?.AddGameObject(bullet);
                 }
                 
             }
@@ -1017,35 +1001,21 @@ namespace Examples.Scenes.ExampleScenes
             HandleWalls(mousePosGame);
         }
 
-        protected override void UpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
-        {
-            gameObjectHandler.Update(time, game, ui);
-        }
 
-        protected override void DrawGameExample(ScreenInfo game)
+        protected override void OnPreDrawGame(ScreenInfo game)
         {
-            // if (drawDebug) return;
-            
             if (drawDebug)
             {
                 var boundsColor = Colors.Light;
                 var gridColor = Colors.Light;
                 var fillColor = Colors.Medium.ChangeAlpha(100);
-                gameObjectHandler.DrawDebug(boundsColor, gridColor, fillColor);
+                SpawnArea?.DrawDebug(boundsColor, gridColor, fillColor);
             }
 
             DrawWalls(game.MousePos);
-
-            gameObjectHandler.DrawGame(game);
-            
-            // GAMELOOP.Camera.Area.DrawLines(12f, RED);
-        }
-        protected override void DrawGameUIExample(ScreenInfo ui)
-        {
-            gameObjectHandler.DrawGameUI(ui);
         }
 
-        protected override void DrawUIExample(ScreenInfo ui)
+        protected override void OnDrawUIExample(ScreenInfo ui)
         {
             // Vector2 uiSize = ui.Area.Size;
             // Rect infoRect = new Rect(uiSize * new Vector2(0.5f, 1f), uiSize * new Vector2(0.95f, 0.11f), new Vector2(0.5f, 1f));
@@ -1062,7 +1032,8 @@ namespace Examples.Scenes.ExampleScenes
             textFont.FontSpacing = 1f;
             textFont.ColorRgba = Colors.Warm;
             textFont.DrawTextWrapNone("Object Count", rects.top, new(0.5f, 0f));
-            textFont.DrawTextWrapNone($"{gameObjectHandler.GetCollisionHandler().Count}", rects.bottom, new(0.5f));
+            
+            textFont.DrawTextWrapNone($"{SpawnArea?.CollisionHandler?.Count ?? 0}", rects.bottom, new(0.5f));
             // font.DrawText("Object Count", rects.top, 1f, new Vector2(0.5f, 0f), ColorHighlight3);
             // font.DrawText(, rects.bottom, 1f, new Vector2(0.5f, 0.5f), ColorHighlight3);
         }
@@ -1119,7 +1090,7 @@ namespace Examples.Scenes.ExampleScenes
             BoundaryWall bottom = new(boundaryRect.BottomRight, boundaryRect.BottomLeft);
             BoundaryWall left = new(boundaryRect.TopLeft, boundaryRect.BottomLeft);
             BoundaryWall right = new(boundaryRect.BottomRight, boundaryRect.TopRight);
-            gameObjectHandler.AddAreaObjects(top, right, bottom, left);
+            SpawnArea?.AddGameObjects(top, right, bottom, left);
         }
         private void DrawWalls(Vector2 mousePos)
         {
@@ -1142,7 +1113,7 @@ namespace Examples.Scenes.ExampleScenes
                     if (lSq > 400)
                     {
                         PolyWall w = new(startPoint, mousePos);
-                        gameObjectHandler.AddAreaObject(w);
+                        SpawnArea?.AddGameObject(w);
                     }
 
                 }

@@ -53,7 +53,7 @@ namespace Examples.Scenes.ExampleScenes
             offsetDelta = 0f;
             lerpOffsetDelta = 0f;
         }
-        protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             base.HandleInput(dt, mousePosGame, mousePosUI);
             // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
@@ -74,7 +74,7 @@ namespace Examples.Scenes.ExampleScenes
 
             offsetDelta = ShapeMath.Clamp(offsetDelta, 0f, MaxOffset);
         }
-        protected override void DrawGameExample(ScreenInfo game)
+        protected override void OnDrawGameExample(ScreenInfo game)
         {
             Vector2 mousePos = game.MousePos;
 
@@ -191,11 +191,11 @@ namespace Examples.Scenes.ExampleScenes
                 }
             }
         }
-        protected override void DrawGameUIExample(ScreenInfo ui)
+        protected override void OnDrawGameUIExample(ScreenInfo ui)
         {
             
         }
-        protected override void DrawUIExample(ScreenInfo ui)
+        protected override void OnDrawUIExample(ScreenInfo ui)
         {
             Vector2 uiSize = ui.Area.Size;
 

@@ -4,7 +4,6 @@ using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 using System.Numerics;
 using ShapeEngine.Color;
-using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
@@ -69,7 +68,7 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
         
-        public override void Activate(IScene oldScene)
+        public override void Activate(Scene oldScene)
         {
             GAMELOOP.Camera = camera;
             follower.SetTarget(ship);
@@ -83,10 +82,7 @@ namespace Examples.Scenes.ExampleScenes
             GAMELOOP.ResetCamera();
             // GAMELOOP.UseMouseMovement = true;
         }
-        public override GameObjectHandler? GetGameObjectHandler()
-        {
-            return null;
-        }
+        
         public override void Reset()
         {
             GAMELOOP.ScreenEffectIntensity = 1f;
@@ -100,7 +96,7 @@ namespace Examples.Scenes.ExampleScenes
             GenerateStars(ShapeRandom.RandI(15000, 30000));
 
         }
-        protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             if (iaChangeCameraTarget.State.Pressed)
             {
@@ -135,7 +131,7 @@ namespace Examples.Scenes.ExampleScenes
         //         camera.Zoom(zoomDir * zoomSpeed * dt);
         //     }
         // }
-        protected override void UpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
+        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             UpdateFollower(ui.Area.Size.Min());
             // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
@@ -152,7 +148,7 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
 
-        protected override void DrawGameExample(ScreenInfo game)
+        protected override void OnDrawGameExample(ScreenInfo game)
         {
             foreach (var star in drawStars)
             {
@@ -172,7 +168,7 @@ namespace Examples.Scenes.ExampleScenes
         //     // DrawStarInfo(infoRect);
         // }
 
-        protected override void DrawUIExample(ScreenInfo ui)
+        protected override void OnDrawUIExample(ScreenInfo ui)
         {
             var rects = GAMELOOP.UIRects.GetRect("bottom center").SplitV(0.5f);
             DrawStarInfo(rects.top);

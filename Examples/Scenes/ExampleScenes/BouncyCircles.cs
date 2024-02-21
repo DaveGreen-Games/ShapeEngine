@@ -32,11 +32,11 @@ namespace Examples.Scenes.ExampleScenes
             };
             this.Vel = vel * velFactor;
         }
-        public void AddedToHandler(GameObjectHandler gameObjectHandler)
+        public void AddedToHandler(SpawnArea spawnArea)
         {
         }
 
-        public void RemovedFromHandler(GameObjectHandler gameObjectHandler)
+        public void RemovedFromHandler(SpawnArea spawnArea)
         {
         }
 
@@ -71,9 +71,9 @@ namespace Examples.Scenes.ExampleScenes
             
         }
 
-        public bool CheckHandlerBounds() => true;
+        public override bool IsCheckingHandlerBounds() => true;
 
-        public void LeftHandlerBounds(BoundsCollisionInfo info)
+        public override void OnLeftHandlerBounds(BoundsCollisionInfo info)
         {
             if (!info.Valid) return;
             Transform = Transform.SetPosition(info.SafePosition);
@@ -82,11 +82,6 @@ namespace Examples.Scenes.ExampleScenes
 
             if (info.Vertical.Valid) Vel.Y *= -1;
         }
-
-
-        public bool DrawToGame(Rect gameArea) => true;
-
-        public bool DrawToGameUI(Rect uiArea) => false;
     }
     public class BouncyCircles : ExampleScene
     {
@@ -96,8 +91,7 @@ namespace Examples.Scenes.ExampleScenes
 
         Font font;
 
-        GameObjectHandler gameObjectHandler;
-        private SlowMotionState? slowMotionState = null;
+        // private SlowMotionState? slowMotionState = null;
 
         private InputAction iaAdd;
         // private InputAction iaSlow1;
@@ -121,7 +115,8 @@ namespace Examples.Scenes.ExampleScenes
             UpdateBoundaryRect(GAMELOOP.GameScreenInfo.Area);
 
             //area = new AreaTest(boundaryRect, 2, 2);
-            gameObjectHandler = new GameObjectHandlerCollision(boundaryRect, 2, 2);
+            // spawnArea = new SpawnAreaCollision(boundaryRect, 2, 2);
+            if(InitSpawnArea(boundaryRect)) SpawnArea?.InitCollisionHandler(2, 2);
 
             var addKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
             var addMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
@@ -153,37 +148,24 @@ namespace Examples.Scenes.ExampleScenes
         }
         public override void Reset()
         {
-            
-            gameObjectHandler.Clear();
-        }
-        public override GameObjectHandler? GetGameObjectHandler()
-        {
-            return gameObjectHandler;
+            SpawnArea?.Clear();
         }
 
         private void UpdateBoundaryRect(Rect gameArea)
         {
             boundaryRect = gameArea.ApplyMargins(0.025f, 0.025f, 0.1f, 0.1f);
         }
-        protected override void UpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
+        protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             // watch.Restart();
             UpdateBoundaryRect(game.Area);
-            gameObjectHandler.ResizeBounds(boundaryRect);
+            SpawnArea?.ResizeBounds(boundaryRect);
             if (GAMELOOP.Paused) return;
             
             var gamepad = GAMELOOP.CurGamepad;
             InputAction.UpdateActions(time.Delta, gamepad, inputActions);
             
-            // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
-            // foreach (var ia in inputActions)
-            // {
-            //     ia.Gamepad = gamepadIndex;
-            //     ia.Update(dt);
-            // }
-            
-            gameObjectHandler.Update(time, game, ui);
-            // Console.WriteLine($"Update {watch.ElapsedMilliseconds}ms");
+            // spawnArea.Update(time, game, ui);
         }
 
         public override void OnPauseChanged(bool paused)
@@ -191,7 +173,7 @@ namespace Examples.Scenes.ExampleScenes
             
         }
 
-        protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             // watch.Restart();
             if (iaAdd.State.Pressed)
@@ -202,11 +184,10 @@ namespace Examples.Scenes.ExampleScenes
                     var vel = ShapeRandom.RandVec2(100, 200);
                     Circ c = new(randPos, vel, 2);
                     //circles.Add(c);
-                    gameObjectHandler.AddAreaObject(c);
+                    SpawnArea?.AddGameObject(c);
                     //circs.Add(c);
                 }
 
-                int count = gameObjectHandler.Count;
             }
 
             // if (iaSlow1.State.Pressed)
@@ -232,56 +213,34 @@ namespace Examples.Scenes.ExampleScenes
             // Console.WriteLine($"Input {watch.ElapsedMilliseconds}ms");
         }
 
-        public override void Activate(IScene oldScene)
-        {
-            // if(slowMotionState != null)GAMELOOP.SlowMotion.ApplyState(slowMotionState);
-        }
+        
 
-        public override void Deactivate()
+        protected override void OnDrawGameExample(ScreenInfo game)
         {
-            // slowMotionState = GAMELOOP.SlowMotion.Clear();
-        }
-
-        protected override void DrawGameExample(ScreenInfo game)
-        {
-            // watch.Restart();
-            //boundaryRect.DrawLines(4f, ColorLight);
-            gameObjectHandler.DrawGame(game);
+            // spawnArea.DrawGame(game);
 
             if (showConvexHull)
             {
-                var circPoints = gameObjectHandler.GetAllGameObjects().Select(c => c.Transform.Position).ToList();
-                if (circPoints.Count() > 3)
+                var circPoints = SpawnArea?.GetAllGameObjects().Select(c => c.Transform.Position).ToList();
+                if (circPoints != null && circPoints.Count() > 3)
                 {
                     var hull = Polygon.FindConvexHull(circPoints);
                     hull.DrawLines(4f, Colors.Special);
                 }
             }
-            // Console.WriteLine($"Draw Game {watch.ElapsedMilliseconds}ms");
-            // var displacement = game.MousePos - source.GetCentroid();
-            // var target = Polygon.Move(source, displacement);
-            // var ch = source.Project(displacement);
-            // ch.MakeClockwise();
-            // ch.Draw(new(System.Drawing.Color.Chocolate));
-            // source.Draw(new(System.Drawing.Color.IndianRed));
-            // target.Draw(new(System.Drawing.Color.Teal));
-            //
-            // ch.DrawLines(6f, new(System.Drawing.Color.Orange));
 
         }
-        protected override void DrawGameUIExample(ScreenInfo ui)
-        {
-            // watch.Restart();
-            gameObjectHandler.DrawGameUI(ui);
-            // Console.WriteLine($"Draw Game UI {watch.ElapsedMilliseconds}ms");
-        }
+        // protected override void OnDrawGameUIExample(ScreenInfo ui)
+        // {
+        //     spawnArea.DrawGameUI(ui);
+        // }
 
-        protected override void DrawUIExample(ScreenInfo ui)
+        protected override void OnDrawUIExample(ScreenInfo ui)
         {
             // watch.Restart();
             DrawInputDescription(GAMELOOP.UIRects.GetRect("bottom center"));
-            
-            var objectCountText = $"Object Count: {gameObjectHandler.Count}";
+
+            var objectCountText = $"Object Count: {SpawnArea?.Count ?? 0}";
             
             textFont.FontSpacing = 1f;
             textFont.ColorRgba = Colors.Warm;

@@ -6,55 +6,23 @@ using ShapeEngine.Lib;
 using Examples.Scenes.ExampleScenes;
 using Examples.UIElements;
 using ShapeEngine.Color;
-using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Screen;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
 using ShapeEngine.Text;
 
 namespace Examples.Scenes
 {
-    // public class UIBox
-    // {
-    //     public Rect Rect;
-    //     //private List<UIBox> children = new();
-    //
-    //     public virtual void Update(float dt, Rect parentRect)
-    //     {
-    //
-    //     }
-    //     public virtual void Draw()
-    //     {
-    //         
-    //     }
-    // }
-    
-    //Info box
-    //-General-
-    //Reset
-    //Fullscreen
-    
-    //-Scene-
-    //Zoom
-    //CRT Shader
-    
-    
-    public class MainScene : IScene
+    public class MainScene : Scene
     {
-        //should display names/description of all examples
-        //left half lists all examples vertical / right half displays short info
-
         private int curPageIndex = 0;
         private List<ExampleScene> examples = new();
         private List<ExampleSelectionButton> buttons = new();
         private UIElement curButton;
-        // private Font titleFont;
         private TextFont titleFont;
 
         private float tabChangeMouseWheelLockTimer = 0f;
         private InputActionLabel quitLabel;
-        // private PaletteColor titleColor = Colors.PcHighlight;
         public MainScene()
         {
             for (var i = 0; i < 10; i++)
@@ -97,34 +65,7 @@ namespace Examples.Scenes
             quitLabel = new(action, "Quit", GAMELOOP.FontDefault, Colors.PcWarm);
         }
         
-        public void OnWindowSizeChanged(DimensionConversionFactors conversionFactors)
-        {
-            
-        }
-
-        public void OnWindowPositionChanged(Vector2 oldPos, Vector2 newPos)
-        {
-        }
-
-        public void OnMonitorChanged(MonitorInfo newMonitor)
-        {
-        }
-
-        public void OnGamepadConnected(ShapeGamepadDevice gamepad)
-        {
-        }
-
-        public void OnGamepadDisconnected(ShapeGamepadDevice gamepad)
-        {
-        }
-
-        public void OnInputDeviceChanged(InputDeviceType prevDeviceType, InputDeviceType curDeviceType)
-        {
-        }
-
-        public void OnPauseChanged(bool paused){}
-        
-        public void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        private void HandleInput(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             // if (Raylib.IsKeyPressed(KeyboardKey.KEY_ONE))
             // {
@@ -293,7 +234,7 @@ namespace Examples.Scenes
             }
         }
 
-        public void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
+        protected override void OnUpdateGame(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             // titleFont.Color = titleColor.Color;
             
@@ -309,13 +250,13 @@ namespace Examples.Scenes
             }
         }
         
-        public void DrawGameUI(ScreenInfo ui)
-        {
-            
-           
-        }
+        // protected override void OnDrawGameUI(ScreenInfo ui)
+        // {
+        //     
+        //    
+        // }
 
-        public void DrawUI(ScreenInfo ui)
+        protected override void OnDrawUI(ScreenInfo ui)
         {
             var uiSize = ui.Area.Size;
             var start = uiSize * new Vector2(0.02f, 0.25f);
@@ -571,30 +512,18 @@ namespace Examples.Scenes
                 // titleFont.DrawText(infoText, rect, 1f, new Vector2(0.95f, 0.5f), WHITE);
             }
         }
-        
-        public GameObjectHandler? GetGameObjectHandler()
-        {
-            return null;
-        }
-        public void Activate(IScene oldScene)
+        public override void Activate(Scene oldScene)
         {
             
             GAMELOOP.Window.SwitchCursor(new SimpleCursorUI());
         }
 
-        public void Deactivate()
+        public override void Deactivate()
         {
             GAMELOOP.Window.SwitchCursor(new SimpleCursorGameUI());
         }
 
-        public void Close()
-        {
-            
-        }
-
-        
-
-        public void DrawGame(ScreenInfo game)
+        public override void Close()
         {
             
         }

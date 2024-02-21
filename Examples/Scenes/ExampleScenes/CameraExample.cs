@@ -87,24 +87,12 @@ namespace Examples.Scenes.ExampleScenes
             textFont.FontSpacing = 1f;
             textFont.ColorRgba = Colors.Light;
         }
-        public override void Activate(IScene oldScene)
-        {
-            
-        }
 
-        public override void Deactivate()
-        {
-
-        }
-        public override GameObjectHandler? GetGameObjectHandler()
-        {
-            return null;
-        }
         public override void Reset()
         {
             camera.Reset();
         }
-        protected override void HandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
+        protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             var gamepad = GAMELOOP.CurGamepad;
             InputAction.UpdateActions(dt, gamepad, inputActions);
@@ -162,7 +150,7 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
         
-        protected override void DrawGameExample(ScreenInfo game)
+        protected override void OnDrawGameExample(ScreenInfo game)
         {
             foreach (var pillar in pillars)
             {
@@ -178,12 +166,12 @@ namespace Examples.Scenes.ExampleScenes
             Segment ver = new(camera.Position - new Vector2(0, 3000 * f), camera.Position + new Vector2(0, 3000 * f));
             ver.Draw(2f * f, c);
         }
-        protected override void DrawGameUIExample(ScreenInfo ui)
+        protected override void OnDrawGameUIExample(ScreenInfo ui)
         {
             
         }
 
-        protected override void DrawUIExample(ScreenInfo ui)
+        protected override void OnDrawUIExample(ScreenInfo ui)
         {
             var bottomCenter = GAMELOOP.UIRects.GetRect("bottom center");
             DrawInputText(bottomCenter);
