@@ -1,10 +1,11 @@
 using System.Numerics;
+using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.Core;
 
-public abstract class GameObject
+public abstract class GameObject : IUpdateable, IDrawable
 {
     public Transform2D Transform { get; set; }
     public bool IsDead { get; private set; } = false;
