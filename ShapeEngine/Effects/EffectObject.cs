@@ -1,102 +1,48 @@
 ﻿using ShapeEngine.Core;
 using ShapeEngine.Lib;
-using ShapeEngine.Screen;
 using ShapeEngine.Timing;
 using System.Numerics;
 using ShapeEngine.Color;
-using ShapeEngine.Core.Collision;
-using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 
 namespace ShapeEngine.Effects
 {
-    /*
-    //experiment----------------------------
-    public abstract class DrawFuncBasic
+    public abstract class EffectObject : GameObject
     {
-        public delegate void DrawFunc<T>(T t) where T : DrawFuncBasic;
-    }
-    public class DrawFuncExecuter<T> : DrawFuncBasic where T : DrawFuncBasic
-    {
-        public DrawFunc<T>? Func = null;
-        public virtual bool Draw()
-        {
-            if (this is T t) Func?.Invoke(t);
-            return false;
-        }
-
-    }
-    //-------------------------------------
-    */
-    public abstract class EffectObject : IGameObject
-    {
-        public Vector2 Pos { get; set; }
-        public Vector2 Size { get; protected set; }
         public TweenType TweenType { get; set; } = TweenType.LINEAR;
         public float LifetimeF { get { return 1f - lifetimeTimer.F; } }
         protected BasicTimer lifetimeTimer = new();
 
-        public int Layer { get; set; } = 0;
 
-        public EffectObject(Vector2 pos, Vector2 size) { this.Pos = pos; this.Size = size; }
-        public EffectObject(Vector2 pos, Vector2 size, float lifeTime) { this.Pos = pos; this.Size = size; lifetimeTimer.Start(lifeTime); }
-
-        public bool Kill()
+        public EffectObject(Vector2 pos, Vector2 size)
         {
-            if (IsDead()) return false;
+            Transform = new(pos, 0f, size);
+        }
+
+        public EffectObject(Vector2 pos, Vector2 size, float lifeTime)
+        {
+            Transform = new(pos, 0f, size);
+            lifetimeTimer.Start(lifeTime);
+        }
+
+        protected override bool TryKill(string? killMessage = null, GameObject? killer = null)
+        {
             lifetimeTimer.Stop();
             return true;
         }
-        public bool IsDead() { return lifetimeTimer.IsFinished; }
-
-        public virtual Vector2 GetPosition() { return Pos; }
-        public virtual Rect GetBoundingBox() { return new(Pos, Size, new(0.5f)); }
+        
+        public override Rect GetBoundingBox() { return new(Transform.Position, Transform.Scale, new(0.5f)); }
         protected float GetTweenFloat(float start, float end) { return ShapeTween.Tween(start, end, LifetimeF, TweenType); }
         protected Vector2 GetTweenVector2(Vector2 start, Vector2 end) { return start.Tween(end, LifetimeF, TweenType); }
         protected ColorRgba GetTweenColor(ColorRgba startColorRgba, ColorRgba endColorRgba) { return startColorRgba.Tween(endColorRgba, LifetimeF, TweenType); }
 
-        /*
-        public virtual bool HasBehaviors() { return false; }
-        public virtual bool AddBehavior(IBehavior behavior) { return false; }
-        public virtual bool RemoveBehavior(IBehavior behavior) { return false; }
-        */
-        public void AddedToHandler(GameObjectHandler gameObjectHandler)     {}
-        public void RemovedFromHandler(GameObjectHandler gameObjectHandler) {}
-        
-        //public Vector2 GetCameraFollowPosition(Vector2 camPos) { return GetPosition(); }
-
-        public virtual void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
+        public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             lifetimeTimer.Update(time.Delta);
-        }
-        public abstract void DrawGame(ScreenInfo game);
-        public virtual void DrawGameUI(ScreenInfo ui) { }
-
-
-        public virtual bool CheckHandlerBounds()
-        {
-            return false;
+            if (lifetimeTimer.IsFinished) Kill();
         }
 
-        public virtual void LeftHandlerBounds(BoundsCollisionInfo info)
-        {
-        }
-
-        public virtual void DeltaFactorApplied(float f)
-        {
-            
-        }
-
-        
-        public virtual bool DrawToGame(Rect gameArea)
-        {
-            return true;
-        }
-        public virtual bool DrawToGameUI(Rect uiArea)
-        {
-            return false;
-        }
     }
 
     

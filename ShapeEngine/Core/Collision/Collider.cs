@@ -13,8 +13,8 @@ namespace ShapeEngine.Core.Collision
         public event Action<Collider>? OnCollisionEnded;
         
         
-        private CollisionBody? parent = null;
-        public CollisionBody? Parent
+        private CollisionObject? parent = null;
+        public CollisionObject? Parent
         {
             get => parent;
             internal set
@@ -141,15 +141,15 @@ namespace ShapeEngine.Core.Collision
             // PrevPosition = Position;
         }
 
-        protected virtual void OnAddedToCollisionBody(CollisionBody newParent) { }
-        protected virtual void OnRemovedFromCollisionBody(CollisionBody formerParent) { }
+        protected virtual void OnAddedToCollisionBody(CollisionObject newParent) { }
+        protected virtual void OnRemovedFromCollisionBody(CollisionObject formerParent) { }
 
         public abstract Rect GetBoundingBox();
         public abstract bool ContainsPoint(Vector2 p);
         public abstract CollisionPoint GetClosestCollisionPoint(Vector2 p);
 
         #region Overlap
-        public bool Overlap(CollisionBody other)
+        public bool Overlap(CollisionObject other)
         {
             if (!Enabled || !other.Enabled || !other.HasColliders) return false;
             foreach (var otherCol in other.Colliders)
@@ -398,7 +398,7 @@ namespace ShapeEngine.Core.Collision
         #endregion
 
         #region Intersect
-        public CollisionPoints? Intersect(CollisionBody other)
+        public CollisionPoints? Intersect(CollisionObject other)
         {
             if (!Enabled || !other.Enabled || !other.HasColliders) return null;
             CollisionPoints? result = null;

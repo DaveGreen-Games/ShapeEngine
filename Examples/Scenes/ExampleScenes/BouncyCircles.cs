@@ -13,48 +13,24 @@ using ShapeEngine.Random;
 namespace Examples.Scenes.ExampleScenes
 {
 
-    public class Circ : IGameObject
+    public class Circ : GameObject
     {
-        public Vector2 Pos;
         public Vector2 Vel;
-        public float Radius;
-        private readonly int areaLayer;
-        public int Layer { get => areaLayer;
-            set { } }
 
         private static ChanceList<int> layerChances = new((1000, 0), (250, 1), (50, 2));
         
         public Circ(Vector2 pos, Vector2 vel, float radius)
         {
-            this.Pos = pos;
-            this.Radius = radius;
-            this.areaLayer = layerChances.Next();
+            this.Transform = new(pos, 0f, new(radius));
+            this.Layer = layerChances.Next();
             
-            var velFactor = areaLayer switch
+            var velFactor = Layer switch
             {
                 1 => 0.75f,
                 2 => 1.5f,
                 _ => 0.25f
             };
             this.Vel = vel * velFactor;
-            // int random = ShapeRandom.RandI(0, 4);
-            // if (random <= 0)
-            // {
-            //     tags = Array.Empty<uint>();
-            // }
-            // else
-            // {
-            //     tags = new uint[random];
-            //     for (var i = 0; i < tags.Length; i++)
-            //     {
-            //         tags[i] = i switch
-            //         {
-            //             0 => SlowTag1,
-            //             1 => SlowTag2,
-            //             _ => SlowTag3
-            //         };
-            //     }
-            // }
         }
         public void AddedToHandler(GameObjectHandler gameObjectHandler)
         {
@@ -64,84 +40,53 @@ namespace Examples.Scenes.ExampleScenes
         {
         }
 
-        public Vector2 GetPosition()
-        {
-            return Pos;
-        }
 
-        public Rect GetBoundingBox()
+        public override Rect GetBoundingBox()
         {
-            return new Rect(Pos, new Vector2(Radius) * 2, new Vector2(0.5f));
+            return new Rect(Transform.Position, Transform.Scale * 2, new Vector2(0.5f));
         }
         
 
-        public void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
+        public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
-            // affectionCount = 0;
-            // float f = 1f;
-            // for (int i = 0; i < tags.Length; i++)
-            // {
-            //     float factor = GAMELOOP.SlowMotion.GetFactor(tags[i]);
-            //     if (factor == 1f) continue;
-            //     affectionCount++;
-            //     f *= factor;
-            // }
-
-            Pos += Vel * time.Delta;
+            Transform += Vel * time.Delta;
+            // Pos += Vel * time.Delta;
         }
 
 
-        public void DrawGame(ScreenInfo game)
+        public override void DrawGame(ScreenInfo game)
         {
-            var color = areaLayer switch
+            var color = Layer switch
             {
                 1 => Colors.Highlight,
                 2 => Colors.Special,
                 _ => Colors.Medium
             };
 
-            ShapeDrawing.DrawCircleFast(Pos, Radius, color);
+            ShapeDrawing.DrawCircleFast(Transform.Position, Transform.Scale.X, color);
         }
 
-        public void DrawGameUI(ScreenInfo ui)
+        public override void DrawGameUI(ScreenInfo ui)
         {
             
         }
 
-        public bool Kill()
-        {
-            return false;
-        }
-
-        public bool IsDead()
-        {
-            return false;
-        }
-        public bool CheckHandlerBounds()
-        {
-            return true;
-        }
+        public bool CheckHandlerBounds() => true;
 
         public void LeftHandlerBounds(BoundsCollisionInfo info)
         {
             if (!info.Valid) return;
-            Pos = info.SafePosition;
+            Transform = Transform.SetPosition(info.SafePosition);
             
             if (info.Horizontal.Valid) Vel.X *= -1;
 
             if (info.Vertical.Valid) Vel.Y *= -1;
         }
 
-        
-        public bool DrawToGame(Rect gameArea)
-        {
-            return true;
-        }
 
-        public bool DrawToGameUI(Rect uiArea)
-        {
-            return false;
-        }
+        public bool DrawToGame(Rect gameArea) => true;
+
+        public bool DrawToGameUI(Rect uiArea) => false;
     }
     public class BouncyCircles : ExampleScene
     {
@@ -305,7 +250,7 @@ namespace Examples.Scenes.ExampleScenes
 
             if (showConvexHull)
             {
-                var circPoints = gameObjectHandler.GetAllGameObjects().Select(c => c.GetPosition()).ToList();
+                var circPoints = gameObjectHandler.GetAllGameObjects().Select(c => c.Transform.Position).ToList();
                 if (circPoints.Count() > 3)
                 {
                     var hull = Polygon.FindConvexHull(circPoints);

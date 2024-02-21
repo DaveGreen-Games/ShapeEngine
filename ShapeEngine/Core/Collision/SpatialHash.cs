@@ -77,7 +77,7 @@ namespace ShapeEngine.Core.Collision
         #endregion
         
         #region Public
-        public void Fill(IEnumerable<CollisionBody> collisionBodies)
+        public void Fill(IEnumerable<CollisionObject> collisionBodies)
         {
             Clear();
 
@@ -131,7 +131,7 @@ namespace ShapeEngine.Core.Collision
             }
         }
         
-        public void GetCandidateBuckets(CollisionBody collidable, ref List<Bucket> candidateBuckets)
+        public void GetCandidateBuckets(CollisionObject collidable, ref List<Bucket> candidateBuckets)
         {
             foreach (var collider in collidable.Colliders)
             {
@@ -208,7 +208,7 @@ namespace ShapeEngine.Core.Collision
             }
         }
 
-        public void GetUniqueCandidates(CollisionBody collisionBody, ref HashSet<Collider> candidates)
+        public void GetUniqueCandidates(CollisionObject collisionBody, ref HashSet<Collider> candidates)
         {
             if (!collisionBody.HasColliders) return;
             foreach (var collider in collisionBody.Colliders)
@@ -351,7 +351,7 @@ namespace ShapeEngine.Core.Collision
             int yi = Math.Clamp((int)Math.Floor((y - Bounds.Y) / SpacingY), 0, Rows - 1);
             return (xi, yi);
         }
-        private void Add(CollisionBody collisionBody)//38% memory problem
+        private void Add(CollisionObject collisionBody)//38% memory problem
         {
             if (!collisionBody.HasColliders) return;
 

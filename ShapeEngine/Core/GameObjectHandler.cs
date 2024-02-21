@@ -29,12 +29,12 @@ namespace ShapeEngine.Core
         public virtual CollisionHandler? GetCollisionHandler() { return null; }
         public Vector2 ParallaxePosition { get; set; } = new(0f);
 
-        private SortedList<int, List<IGameObject>> allObjects = new();
+        private readonly SortedList<int, List<GameObject>> allObjects = new();
 
         //private Dictionary<uint, List<IAreaObject>> drawToScreenTextureObjects = new();
         //private List<IAreaObject> drawToScreenObjects = new();
-        private List<IGameObject> drawToGameTextureObjects = new();
-        private List<IGameObject> drawToUITextureObjects = new();
+        private readonly List<GameObject> drawToGameTextureObjects = new();
+        private readonly List<GameObject> drawToUITextureObjects = new();
 
 
         // private Dictionary<uint, IHandlerDeltaFactor> deltaFactors = new();
@@ -64,30 +64,30 @@ namespace ShapeEngine.Core
 
         public virtual void ResizeBounds(Rect newBounds) { Bounds = newBounds; }
         public bool HasLayer(int layer) { return allObjects.ContainsKey(layer); }
-        public List<IGameObject> GetAreaObjects(int layer, Predicate<IGameObject> match) { return HasLayer(layer) ? allObjects[layer].FindAll(match) : new(); }
-        public List<IGameObject> GetAllGameObjects()
+        public List<GameObject> GetAreaObjects(int layer, Predicate<GameObject> match) { return HasLayer(layer) ? allObjects[layer].FindAll(match) : new(); }
+        public List<GameObject> GetAllGameObjects()
         {
-            List<IGameObject> objects = new();
+            List<GameObject> objects = new();
             foreach (var layerGroup in allObjects.Values)
             {
                 objects.AddRange(layerGroup);
             }
             return objects;
         }
-        public List<IGameObject> GetAllGameObjects(Predicate<IGameObject> match) { return GetAllGameObjects().FindAll(match); }
+        public List<GameObject> GetAllGameObjects(Predicate<GameObject> match) { return GetAllGameObjects().FindAll(match); }
 
-        public void AddAreaObject(IGameObject gameObject)
+        public void AddAreaObject(GameObject gameObject)
         {
             int layer = gameObject.Layer;
             if (!allObjects.ContainsKey(layer)) AddLayer(layer);
 
             allObjects[layer].Add(gameObject);
             AreaObjectAdded(gameObject);
-            gameObject.AddedToHandler(this);
+            gameObject.OnSpawned(this);
         }
-        public void AddAreaObjects(params IGameObject[] areaObjects) { foreach (var ao in areaObjects) AddAreaObject(ao); }
-        public void AddAreaObjects(IEnumerable<IGameObject> areaObjects) { foreach (var ao in areaObjects) AddAreaObject(ao); }
-        public void RemoveAreaObject(IGameObject gameObject)
+        public void AddAreaObjects(params GameObject[] areaObjects) { foreach (var ao in areaObjects) AddAreaObject(ao); }
+        public void AddAreaObjects(IEnumerable<GameObject> areaObjects) { foreach (var ao in areaObjects) AddAreaObject(ao); }
+        public void RemoveAreaObject(GameObject gameObject)
         {
             if (allObjects.ContainsKey(gameObject.Layer))
             {
@@ -95,21 +95,21 @@ namespace ShapeEngine.Core
                 if (removed) AreaObjectRemoved(gameObject);
             }
         }
-        public void RemoveAreaObjects(params IGameObject[] areaObjects)
+        public void RemoveAreaObjects(params GameObject[] areaObjects)
         {
             foreach (var ao in areaObjects)
             {
                 RemoveAreaObject(ao);
             }
         }
-        public void RemoveAreaObjects(IEnumerable<IGameObject> areaObjects)
+        public void RemoveAreaObjects(IEnumerable<GameObject> areaObjects)
         {
             foreach (var ao in areaObjects)
             {
                 RemoveAreaObject(ao);
             }
         }
-        public void RemoveAreaObjects(int layer, Predicate<IGameObject> match)
+        public void RemoveAreaObjects(int layer, Predicate<GameObject> match)
         {
             if (allObjects.ContainsKey(layer))
             {
@@ -120,7 +120,7 @@ namespace ShapeEngine.Core
                 }
             }
         }
-        public void RemoveAreaObjects(Predicate<IGameObject> match)
+        public void RemoveAreaObjects(Predicate<GameObject> match)
         {
             var objs = GetAllGameObjects(match);
             foreach (var o in objs)
@@ -129,8 +129,8 @@ namespace ShapeEngine.Core
             }
         }
 
-        protected virtual void AreaObjectAdded(IGameObject obj) { }
-        protected virtual void AreaObjectRemoved(IGameObject obj) { }
+        protected virtual void AreaObjectAdded(GameObject obj) { }
+        protected virtual void AreaObjectRemoved(GameObject obj) { }
 
         public virtual void Clear()
         {
@@ -165,7 +165,7 @@ namespace ShapeEngine.Core
             Clear();
         }
         
-        private BoundsCollisionInfo HasLeftBounds(IGameObject obj) => Bounds.BoundsCollision(obj.GetBoundingBox());
+        private BoundsCollisionInfo HasLeftBounds(GameObject obj) => Bounds.BoundsCollision(obj.GetBoundingBox());
         // {
         //     
         //     var bb = obj.GetBoundingBox();
@@ -230,20 +230,20 @@ namespace ShapeEngine.Core
                 for (int i = objs.Count - 1; i >= 0; i--)
                 {
                     var obj = objs[i];
-                    if (obj == null)
-                    {
-                        objs.RemoveAt(i);
-                        return;
-                    }
+                    // if (obj == null)
+                    // {
+                    //     objs.RemoveAt(i);
+                    //     return;
+                    // }
 
                     obj.UpdateParallaxe(ParallaxePosition);
                     
-                    if (obj.DrawToGame(game.Area)) drawToGameTextureObjects.Add(obj);
-                    if (obj.DrawToGameUI(ui.Area)) drawToUITextureObjects.Add(obj);
+                    if (obj.IsDrawingToGame(game.Area)) drawToGameTextureObjects.Add(obj);
+                    if (obj.IsDrawingToGameUI(ui.Area)) drawToUITextureObjects.Add(obj);
                     
                     obj.Update(time, game, ui);
                     
-                    if (obj.IsDead())
+                    if (obj.IsDead)
                     {
                         RemoveAreaObject(obj);
                         // objs.RemoveAt(i);
@@ -251,12 +251,12 @@ namespace ShapeEngine.Core
                     }
                     else
                     {
-                        if (obj.CheckHandlerBounds())
+                        if (obj.IsCheckingHandlerBounds())
                         {
                             var check = HasLeftBounds(obj);
                             if (check.Valid)
                             {
-                                obj.LeftHandlerBounds(check);
+                                obj.OnLeftHandlerBounds(check);
                             }
                         }
                     }
@@ -318,19 +318,27 @@ namespace ShapeEngine.Core
 
         public override void ResizeBounds(Rect newBounds) { Bounds = newBounds; col.ResizeBounds(newBounds); }
 
-        protected override void AreaObjectAdded(IGameObject obj)
+        protected override void AreaObjectAdded(GameObject obj)
         {
-            if (!obj.HasCollisionBody()) return;
-            var body = obj.GetCollisionBody();
-            if(body != null) col.Add(body);
+            if (obj is CollisionObject co)
+            {
+                col.Add(co);
+            }
+            // if (!obj.HasCollisionBody()) return;
+            // var body = obj.GetCollisionBody();
+            // if(body != null) col.Add(body);
             
             // if(obj.HasCollisionBody()) col.Add(obj.GetCollisionBody());
         }
-        protected override void AreaObjectRemoved(IGameObject obj)
+        protected override void AreaObjectRemoved(GameObject obj)
         {
-            if (!obj.HasCollisionBody()) return;
-            var body = obj.GetCollisionBody();
-            if(body != null) col.Remove(body);
+            if (obj is CollisionObject co)
+            {
+                col.Remove(co);
+            }
+            // if (!obj.HasCollisionBody()) return;
+            // var body = obj.GetCollisionBody();
+            // if(body != null) col.Remove(body);
             // if(obj.HasCollisionBody()) col.Remove(obj.GetCollisionBody());
         }
 

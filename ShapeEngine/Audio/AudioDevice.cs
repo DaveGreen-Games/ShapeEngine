@@ -1,7 +1,7 @@
 ﻿using Raylib_cs;
 using ShapeEngine.Screen;
 using System.Numerics;
-using ShapeEngine.Core.Interfaces;
+using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Core.Shapes;
 
@@ -24,7 +24,7 @@ namespace ShapeEngine.Audio
         private Dictionary<uint, Playlist> playlists = new();
         private Playlist? currentPlaylist = null;
         private Dictionary<uint, float> soundBlockers = new();
-        public  IGameObject? SpatialTargetOverride { get; set; } = null;
+        public  GameObject? SpatialTargetOverride { get; set; } = null;
 
         private Rect cameraRect = new Rect();
 
@@ -63,7 +63,7 @@ namespace ShapeEngine.Audio
             //if(currentSong != null) UpdateMusicStream(currentSong.GetSong());
             //if (currentSong != null) currentSong.Update(dt);
 
-            if (SpatialTargetOverride != null && SpatialTargetOverride.IsDead()) SpatialTargetOverride = null;
+            if (SpatialTargetOverride != null && SpatialTargetOverride.IsDead) SpatialTargetOverride = null;
 
             foreach (var key in soundBlockers.Keys)
             {
@@ -79,7 +79,7 @@ namespace ShapeEngine.Audio
             {
                 Vector2 center;
                 if (SpatialTargetOverride == null) center = cameraRect.Center;// cameraPos; // ScreenHandler.CAMERA.RawPos;
-                else center = SpatialTargetOverride.GetPosition();
+                else center = SpatialTargetOverride.Transform.Position;
                 //if (SpatialTargetOverride != null) loop.SpatialPos = SpatialTargetOverride.GetPosition();
                 loop.Update(dt, center);
             }
@@ -291,7 +291,7 @@ namespace ShapeEngine.Audio
 
             Vector2 center;
             if (SpatialTargetOverride == null) center = cameraRect.Center;// GraphicsDevice.CAMERA.RawPos;
-            else center = SpatialTargetOverride.GetPosition();
+            else center = SpatialTargetOverride.Transform.Position;
 
             float disSq = (center - pos).LengthSquared();
             
@@ -354,323 +354,3 @@ namespace ShapeEngine.Audio
         
     }
 }
-
-
-//public static void PlaySong(int id, float volume = -1.0f, float pitch = -1.0f)
-//{
-//    if (!audioBusKeys.ContainsKey(id)) return;
-//    Bus bus = buses[audioBusKeys[id]];
-//    var newSong = bus.PlaySong(id, volume, pitch);
-//    if (newSong != null) currentSong = newSong;
-//}
-
-
-
-//PRIVATE FUNCS
-//private static void FilterSongs(List<int> songIDs)
-//{
-//    for (int i = songIDs.Count - 1; i >= 0; i--)
-//    {
-//        var id = songIDs[i];
-//        if (!audioBusKeys.ContainsKey(id)) songIDs.RemoveAt(i);
-//        if (!buses[audioBusKeys[id]].IsSong(id)) songIDs.RemoveAt(i);
-//    }
-//}
-//private static void InvokeOnPlaylistStarted(Playlist playlist, string playlistName, string songName)
-//{
-//    OnPlaylistStarted?.Invoke(playlist, playlistName, songName);
-//}
-
-
-//LOOPING SFX OLD
-/*
-public static void PlaySFXLoop(int id, int soundID, float volume = -1f, float pitch = -1f)
-{
-    if (loopers.ContainsKey(id))
-    {
-        var looper = loopers[id];
-        if (!looper.IsLooping())
-        {
-            looper.Start(volume, pitch);
-        }
-        else
-        {
-            looper.SetPitch(pitch);
-            looper.SetVolume(volume);
-        }
-    }
-    else
-    {
-        var looper = CreateSFXLoop(soundID, volume, pitch);
-        if (looper != null)
-        {
-            loopers.Add(id, looper);
-            looper.Start();
-        }
-    }
-
-}
-public static void PlaySFXLoop(int id, int soundID, Vector2 pos, float minRange, float maxRange, float volume = -1f, float pitch = -1f)
-{
-    if (loopers.ContainsKey(id))
-    {
-        var looper = loopers[id];
-
-        looper.IsSpatial = true;
-        looper.MinSpatialRange = minRange;
-        looper.MaxSpatialRange = maxRange;
-        looper.SpatialPos = pos;
-
-        if (!looper.IsLooping())
-        {
-            looper.Start(volume, pitch);
-        }
-        else
-        {
-            looper.SetPitch(pitch);
-            looper.SetVolume(volume);
-
-        }
-    }
-    else
-    {
-        var looper = CreateSFXLoop(soundID, minRange, maxRange, volume, pitch);
-        if (looper != null)
-        {
-            loopers.Add(id, looper);
-            looper.SpatialPos = pos;
-            looper.Start();
-        }
-    }
-
-}
-public static void UpdateSFXLoopSpatialPos(int id, Vector2 pos)
-{
-    if (!loopers.ContainsKey(id)) return;
-    loopers[id].SpatialPos = pos;
-}
-public static bool IsSFXLoopLooping(int id)
-{
-    if (!loopers.ContainsKey(id)) return false;
-    return loopers[id].IsLooping();
-}
-public static void RemoveSFXLoop(int id)
-{
-    if (!loopers.ContainsKey(id)) return;
-    loopers[id].Disable();
-    loopers.Remove(id);
-}
-public static void ClearSFXLoops()
-{
-    foreach (var looper in loopers.Values)
-    {
-        looper.Disable();
-    }
-    loopers.Clear();
-}
-public static void EnableSFXLoops()
-{
-    foreach (var looper in loopers.Values)
-    {
-        looper.Enable();
-    }
-}
-public static void DisableSFXLoops()
-{
-    foreach (var looper in loopers.Values)
-    {
-        looper.Disable();
-    }
-}
-//public static void EnableSFXLoop(string id)
-//{
-//    if (!loopers.ContainsKey(id)) return;
-//    loopers[id].Enable();
-//}
-//public static void DisableSFXLoop(string id)
-//{
-//    if (!loopers.ContainsKey(id)) return;
-//    loopers[id].Disable();
-//}
-//public static void StartSFXLoop(string id, float volume = -1f, float pitch = -1f)
-//{
-//    if (!loopers.ContainsKey(id)) return;
-//    loopers[id].Start(volume, pitch);
-//}
-//public static void StopSFXLoop(string id)
-//{
-//    if (!loopers.ContainsKey(id)) return;
-//    loopers[id].Stop();
-//}
-private static SFXLooper? CreateSFXLoop(int soundID, float minSpatialRange, float maxSpatialRange, float volume = -1.0f, float pitch = -1.0f)
-{
-    if (!audioBusKeys.ContainsKey(soundID)) return null;
-    //if (sFXLoopers.ContainsKey(id)) return null;
-
-    Bus bus = buses[audioBusKeys[soundID]];
-    var sfx = bus.GetSFX(soundID);
-    if (sfx != null)
-    {
-        SFXLooper looper = new(sfx, minSpatialRange, maxSpatialRange);
-        looper.SetVolume(volume);
-        looper.SetPitch(pitch);
-        //sFXLoopers.Add(id, looper);
-        return looper;
-    }
-    return null;
-}
-private static SFXLooper? CreateSFXLoop(int soundID, float volume = -1.0f, float pitch = -1.0f)
-{
-    if (!audioBusKeys.ContainsKey(soundID)) return null;
-    //if (sFXLoopers.ContainsKey(id)) return null;
-
-    Bus bus = buses[audioBusKeys[soundID]];
-    var sfx = bus.GetSFX(soundID);
-    if (sfx != null)
-    {
-        SFXLooper looper = new(sfx);
-        looper.SetVolume(volume);
-        looper.SetPitch(pitch);
-        //sFXLoopers.Add(id, looper);
-        return looper;
-    }
-    return null;
-}
-*/
-
-
-//PLAYLISTS OLD
-/*
-public static void StartPlaylist(int id)
-{
-    string songName = "";
-    if (currentPlaylist != null)
-    {
-        if (id == currentPlaylist.GetID())
-        {
-            songName = currentPlaylist.Start();
-        }
-        else
-        {
-            if (!playlists.ContainsKey(id)) return;
-            currentPlaylist.Stop();
-            currentPlaylist = playlists[id];
-            songName = currentPlaylist.Start();
-        }
-    }
-    else
-    {
-        currentPlaylist = playlists[id];
-        songName = currentPlaylist.Start();
-    }
-
-    if(currentPlaylist != null)
-    {
-        InvokeOnPlaylistStarted(currentPlaylist, currentPlaylist.DisplayName, songName);
-    }
-}
-public static Playlist? SwitchPlaylist(int id)
-{
-    if (currentPlaylist == null)
-    {
-        StartPlaylist(id);
-        return currentPlaylist;
-    }
-    if (!playlists.ContainsKey(id) || currentPlaylist.GetID() == id) return currentPlaylist;
-    currentPlaylist.Stop();
-    currentPlaylist = playlists[id];
-    currentPlaylist.Start();
-
-    return currentPlaylist;
-}
-public static Playlist? GetCurPlaylist()
-{
-    if (currentPlaylist == null) return null;
-    return currentPlaylist;
-}
-public static Playlist? GetPlaylist(int id)
-{
-    if (!playlists.ContainsKey(id)) return null;
-    return playlists[id];
-}
-public static void StopPlaylist()
-{
-    if (currentPlaylist == null) return;
-    currentPlaylist.Stop();
-}
-public static void PausePlaylist()
-{
-    if (currentPlaylist == null) return;
-    currentPlaylist.Pause();
-}
-public static void ResumePlaylist()
-{
-    if (currentPlaylist == null) return;
-    currentPlaylist.Resume();
-}
-public static bool IsPlaylistPaused()
-{
-    if (currentPlaylist == null) return false;
-    return currentPlaylist.IsPaused();
-}
-public static bool IsPlaylistPlaying()
-{
-    if (currentPlaylist == null) return false;
-    return currentPlaylist.IsPlaying();
-}
-public static void AddPlaylist(int id, string displayName, List<int> songIDs)
-{
-    if (playlists.ContainsKey(id)) return;
-
-    FilterSongs(songIDs);
-    if (songIDs.Count <= 0) return;
-    List<Song> songs = new();
-    foreach (var songName in songIDs)
-    {
-        Bus? bus = GetBusFromAudioName(songName);
-        if (bus == null) continue;
-        Song? s = bus.GetSong(songName);
-        if (s == null) continue;
-        songs.Add(s);
-    }
-    Playlist playlist = new(id, displayName, songs);
-    playlists.Add(id, playlist);
-}
-public static void RemovePlaylist(int id)
-{
-    if (!playlists.ContainsKey(id)) return;
-    if (currentPlaylist == playlists[id])
-    {
-        currentPlaylist.Stop();
-        currentPlaylist = null;
-    }
-    playlists.Remove(id);
-}
-public static int CurrentPlaylistID()
-{
-    if (currentPlaylist == null) return -1;
-    return currentPlaylist.GetID();
-}
-public static (string playlistName, string songName, float songPercentage) GetCurrentPlaylistInfo()
-{
-    if (currentPlaylist == null) return new("", "", 0f);
-    else return new
-        (
-            currentPlaylist.DisplayName,
-            currentPlaylist.GetCurrentSongDisplayName(),
-            currentPlaylist.GetCurrentSongPercentage()
-        );
-}
-public static string GetCurrentPlaylistSongDisplayName()
-{
-    if (currentPlaylist == null) return "no playlist playing";
-    string name = currentPlaylist.GetCurrentSongDisplayName();
-    if (name == "") return "no song playing";
-    return name;
-}
-public static float GetCurrentPlaylistSongPercentage()
-{
-    if (currentPlaylist == null) return 0.0f;
-    return currentPlaylist.GetCurrentSongPercentage();
-}
-*/

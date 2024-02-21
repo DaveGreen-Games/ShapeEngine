@@ -54,9 +54,9 @@ namespace ShapeEngine.Core.Collision
             }
         }
 
-        private readonly List<CollisionBody> collisionBodies = new();
-        private readonly List<CollisionBody> tempHolding = new();
-        private readonly List<CollisionBody> tempRemoving = new();
+        private readonly List<CollisionObject> collisionBodies = new();
+        private readonly List<CollisionObject> tempHolding = new();
+        private readonly List<CollisionObject> tempRemoving = new();
         private readonly SpatialHash spatialHash;
         private readonly Dictionary<Collider, List<Collision>> collisionStack = new();
         
@@ -77,27 +77,27 @@ namespace ShapeEngine.Core.Collision
         
         public void ResizeBounds(Rect newBounds) { spatialHash.ResizeBounds(newBounds); }
         
-        public void Add(CollisionBody collidable)
+        public void Add(CollisionObject collidable)
         {
             tempHolding.Add(collidable);
         }
-        public void AddRange(IEnumerable<CollisionBody> candidates)
+        public void AddRange(IEnumerable<CollisionObject> candidates)
         {
             tempHolding.AddRange(candidates);
         }
-        public void AddRange(params CollisionBody[] candidates)
+        public void AddRange(params CollisionObject[] candidates)
         {
             tempHolding.AddRange(candidates);
         }
-        public void Remove(CollisionBody collidable)
+        public void Remove(CollisionObject collidable)
         {
             tempRemoving.Add(collidable);
         }
-        public void RemoveRange(IEnumerable<CollisionBody> candidates)
+        public void RemoveRange(IEnumerable<CollisionObject> candidates)
         {
             tempRemoving.AddRange(candidates);
         }
-        public void RemoveRange(params CollisionBody[] candidates)
+        public void RemoveRange(params CollisionObject[] candidates)
         {
             tempRemoving.AddRange(candidates);
         }
@@ -471,7 +471,7 @@ namespace ShapeEngine.Core.Collision
         }
 
         
-        public void CastSpace(CollisionBody collisionBody, ref List<Collider> result, bool sorted = false)
+        public void CastSpace(CollisionObject collisionBody, ref List<Collider> result, bool sorted = false)
         {
             if (!collisionBody.HasColliders) return;
 

@@ -11,191 +11,125 @@ using ShapeEngine.Input;
 
 namespace Examples.Scenes.ExampleScenes
 {
-    internal abstract class GameObject : IGameObject
-    {
-        // protected List<ICollidable> Collidables = new();
-        protected GameobjectBody body;
+    // internal abstract class GameObjectExample : IGameObject
+    // {
+    //     // protected List<ICollidable> Collidables = new();
+    //     protected GameobjectBody body;
+    //
+    //     // protected GameObject(GameobjectBody body)
+    //     // {
+    //     //     this.body = body;
+    //     // }
+    //     public int Layer { get; set; } = 0;
+    //
+    //     public virtual bool IsDead()
+    //     {
+    //         return false;
+    //     }
+    //
+    //     public virtual bool Kill()
+    //     {
+    //         return false;
+    //     }
+    //     public void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
+    //     {
+    //         body.Update(time.Delta);
+    //         OnUpdate(time.Delta);
+    //         // var collidables = GetCollidables();
+    //         // foreach (var c in collidables)
+    //         // {
+    //         // c.GetCollider().UpdateState(time.Delta);
+    //         // }
+    //     }
+    //
+    //     protected virtual void OnUpdate(float dt)
+    //     {
+    //         
+    //     }
+    //     public abstract void DrawGame(ScreenInfo game);
+    //
+    //
+    //
+    //     public Vector2 GetPosition() => body.Transform.Position;
+    //     public Rect GetBoundingBox() => body.GetBoundingBox();
+    //
+    //     // public abstract bool HasCollidables();
+    //     // public List<ICollidable> GetCollidables() => Collidables;
+    //
+    //     
+    //     public bool HasCollisionBody() => true;
+    //     public CollisionBody? GetCollisionBody() => body;
+    //
+    //     public virtual void AddedToHandler(GameObjectHandler gameObjectHandler) { }
+    //
+    //     public virtual void RemovedFromHandler(GameObjectHandler gameObjectHandler) { }
+    //
+    //     public virtual void DrawGameUI(ScreenInfo ui)
+    //     {
+    //         
+    //     }
+    //
+    //     public bool CheckHandlerBounds()
+    //     {
+    //         return false;
+    //     }
+    //
+    //     public void LeftHandlerBounds(BoundsCollisionInfo info)
+    //     {
+    //         
+    //     }
+    //
+    //     // public void DeltaFactorApplied(float f)
+    //     // {
+    //     // }
+    //
+    //     public bool DrawToGame(Rect gameArea)
+    //     {
+    //         return true;
+    //     }
+    //
+    //     public bool DrawToGameUI(Rect screenArea)
+    //     {
+    //         return false;
+    //     }
+    // }
 
-        // protected GameObject(GameobjectBody body)
-        // {
-        //     this.body = body;
-        // }
-        public int Layer { get; set; } = 0;
-
-        public virtual bool IsDead()
-        {
-            return false;
-        }
-
-        public virtual bool Kill()
-        {
-            return false;
-        }
-        public void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
-        {
-            body.Update(time.Delta);
-            OnUpdate(time.Delta);
-            // var collidables = GetCollidables();
-            // foreach (var c in collidables)
-            // {
-            // c.GetCollider().UpdateState(time.Delta);
-            // }
-        }
-
-        protected virtual void OnUpdate(float dt)
-        {
-            
-        }
-        public abstract void DrawGame(ScreenInfo game);
-
-
-
-        public Vector2 GetPosition() => body.Transform.Position;
-        public Rect GetBoundingBox() => body.GetBoundingBox();
-
-        // public abstract bool HasCollidables();
-        // public List<ICollidable> GetCollidables() => Collidables;
-
-        
-        public bool HasCollisionBody() => true;
-        public CollisionBody? GetCollisionBody() => body;
-
-        public virtual void AddedToHandler(GameObjectHandler gameObjectHandler) { }
-
-        public virtual void RemovedFromHandler(GameObjectHandler gameObjectHandler) { }
-
-        public virtual void DrawGameUI(ScreenInfo ui)
-        {
-            
-        }
-
-        public bool CheckHandlerBounds()
-        {
-            return false;
-        }
-
-        public void LeftHandlerBounds(BoundsCollisionInfo info)
-        {
-            
-        }
-
-        // public void DeltaFactorApplied(float f)
-        // {
-        // }
-
-        public bool DrawToGame(Rect gameArea)
-        {
-            return true;
-        }
-
-        public bool DrawToGameUI(Rect screenArea)
-        {
-            return false;
-        }
-    }
-
-    internal class GameobjectBody : CollisionBody
+    internal static class CollisionFlags
     {
         public static readonly uint WallFlag = BitFlag.GetFlagUint(1); //2
         public static readonly uint RockFlag = BitFlag.GetFlagUint(2); //4
         public static readonly uint BirdFlag = BitFlag.GetFlagUint(3); //8
         public static readonly uint BallFlag = BitFlag.GetFlagUint(4); //16
         public static readonly uint BulletFlag = BitFlag.GetFlagUint(5); //32
-    
-        // protected BitFlag collisionMask = BitFlag.Empty;
-        // protected ColorRgba BuffColorRgba = new(System.Drawing.Color.Gold);
-        // protected bool buffed = false;
-        // protected float startSpeed = 0f;
-        // private float totalSpeedFactor = 1f;
-        public float RotationSpeedDeg;
-        public GameobjectBody(Vector2 position) : base(position)
-        {
-            this.RotationSpeedDeg = 0f;
-        }
-        public GameobjectBody(Vector2 position, float rotationSpeedDeg) : base(position)
-        {
-            this.RotationSpeedDeg = rotationSpeedDeg;
-        }
-
-        protected override void OnUpdateState(float dt)
-        {
-            if (RotationSpeedDeg != 0f)
-            {
-                Transform += RotationSpeedDeg * ShapeMath.DEGTORAD * dt;
-                // Transform = Transform.RotateByDeg(RotationSpeedDeg * dt);
-            }
-           
-        }
-
-        // public void Buff(float f)
-        // {
-        //     if (totalSpeedFactor < 0.01f) return;
-        //
-        //     totalSpeedFactor *= f;
-        //     Velocity = Velocity.Normalize() * startSpeed * totalSpeedFactor;
-        //
-        //     if (totalSpeedFactor != 1f) buffed = true;
-        // }
-        // public void EndBuff(float f)
-        // {
-        //     totalSpeedFactor /= f;
-        //     Velocity = Velocity.Normalize() * startSpeed * totalSpeedFactor;
-        //     if (totalSpeedFactor == 1f) buffed = false;
-        // }
-
-
-        // public abstract uint GetCollisionLayer();
-
-        // public BitFlag GetCollisionMask() => collisionMask;
-
-        // public virtual void Overlap(CollisionInformation info) { }
-
-        // public virtual void OverlapEnded(Collider other) { }
-
-        // public virtual void Update(float dt)
-        // {
-        //     //collider.UpdatePreviousPosition(dt);
-        //     collider.UpdateState(dt);
-        // }
-
-
-
     }
-    internal class PolyWall : GameObject
+    internal class PolyWall : CollisionObject
     {
         private readonly PolyCollider polyCollider;
-        // private Vector2 s;
-        // private Vector2 e;
-        // private Polygon p;
-        public PolyWall(Vector2 start, Vector2 end)
+        public PolyWall(Vector2 start, Vector2 end) : base((start + end) / 2)
         {
-            // this.p = new Segment(start, end).Inflate(40f, 0.5f).ToPolygon();
             var col = new PolyCollider(new(),new Segment(start, end), 40f, 0.5f);
             col.ComputeCollision = false;
             col.ComputeIntersections = false;
             col.Enabled = true;
             col.CollisionMask = BitFlag.Empty;
-            col.CollisionLayer = GameobjectBody.WallFlag;
+            col.CollisionLayer = CollisionFlags.WallFlag;
 
-            this.body = new((start + end) / 2 );
-            
-            body.AddCollider(col);
+            AddCollider(col);
 
             polyCollider = col;
-            // this.s = start;
-            // this.e = end;
         }
 
         public override void DrawGame(ScreenInfo game)
         {
-            // ShapeDrawing.DrawCircle(s, 15f, Colors.Cold, 12);
-            // ShapeDrawing.DrawCircle(e, 15f, Colors.Warm, 12);
-            // ShapeDrawing.DrawCircle(body.Position, 15f, Colors.Special, 12);
-            // p.DrawLines(6f, Colors.Highlight);
             polyCollider.GetPolygonShape().DrawLines(4f, Colors.Special);
         }
+
+        public override void DrawGameUI(ScreenInfo ui)
+        {
+            
+        }
     }
-    internal class BoundaryWall : GameObject
+    internal class BoundaryWall : CollisionObject
     {
         private PolyCollider polyCollider;
         public BoundaryWall(Vector2 start, Vector2 end)
@@ -205,11 +139,12 @@ namespace Examples.Scenes.ExampleScenes
             col.ComputeIntersections = false;
             col.Enabled = true;
             col.CollisionMask = BitFlag.Empty;
-            col.CollisionLayer = GameobjectBody.WallFlag;
+            col.CollisionLayer = CollisionFlags.WallFlag;
+
+            var pos = col.GetPolygonShape().GetCentroid();
+            Transform = new(pos);
             
-            this.body = new(col.GetPolygonShape().GetCentroid());
-            
-            body.AddCollider(col);
+            AddCollider(col);
 
             polyCollider = col;
         }
@@ -218,23 +153,25 @@ namespace Examples.Scenes.ExampleScenes
         {
             polyCollider.GetPolygonShape().DrawLines(8f, Colors.Highlight);
         }
-    }
 
-    internal class Ball : GameObject
+        public override void DrawGameUI(ScreenInfo ui)
+        {
+        }
+    }
+    internal class Ball : CollisionObject
     {
         private CircleCollider circleCollider;
-        public Ball(Vector2 pos)
+        public Ball(Vector2 pos) : base(pos)
         {
             var col = new CircleCollider(new(0f), 12f);
             col.ComputeCollision = true;
             col.ComputeIntersections = true;
             col.Enabled = true;
-            col.CollisionMask = new(GameobjectBody.WallFlag);
-            col.CollisionLayer = GameobjectBody.BallFlag;
+            col.CollisionMask = new(CollisionFlags.WallFlag);
+            col.CollisionLayer = CollisionFlags.BallFlag;
 
-            this.body = new(pos);
-            body.Velocity = ShapeRandom.RandVec2(50, 250);
-            body.AddCollider(col);
+            Velocity = ShapeRandom.RandVec2(50, 250);
+            AddCollider(col);
 
             circleCollider = col;
             circleCollider.OnCollision += Overlap;
@@ -245,7 +182,7 @@ namespace Examples.Scenes.ExampleScenes
             if (info.CollisionSurface.Valid)
             {
                 // timer = 0.25f;
-                body.Velocity = body.Velocity.Reflect(info.CollisionSurface.Normal);
+                Velocity = Velocity.Reflect(info.CollisionSurface.Normal);
             }
         }
         public override void DrawGame(ScreenInfo game)
@@ -257,46 +194,48 @@ namespace Examples.Scenes.ExampleScenes
                 c.DrawLines(4f, Colors.Warm);
             }
         }
+
+        public override void DrawGameUI(ScreenInfo ui)
+        {
+        }
     }
-    internal class Bullet : GameObject
+    internal class Bullet : CollisionObject
     {
         private CircleCollider circleCollider;
-        private bool isDead = false;
         private float deadTimer = 0f;
-        public Bullet(Vector2 pos)
+        public Bullet(Vector2 pos) : base(pos)
         {
             var col = new CircleCollider(new(0f), 8f);
             col.ComputeCollision = true;
             col.ComputeIntersections = false;
             col.Enabled = true;
-            col.CollisionMask = new(GameobjectBody.WallFlag);
-            col.CollisionLayer = GameobjectBody.BulletFlag;
+            col.CollisionMask = new(CollisionFlags.WallFlag);
+            col.CollisionLayer = CollisionFlags.BulletFlag;
 
-            this.body = new(pos);
-            body.Velocity = ShapeRandom.RandVec2(1500, 2000);
-            body.AddCollider(col);
+            Velocity = ShapeRandom.RandVec2(1500, 2000);
+            AddCollider(col);
 
             circleCollider = col;
             circleCollider.OnCollision += Overlap;
         }
 
-        protected override void OnUpdate(float dt)
+        public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
+            base.Update(time, game, ui);
             if (deadTimer > 0f)
             {
-                deadTimer -= dt;
+                deadTimer -= time.Delta;
+                if (deadTimer <= 0) Kill();
             }
         }
-
-        public override bool IsDead() => isDead && deadTimer <= 0f;
+        
         private void Overlap(CollisionInformation info)
         {
             if (info.Collisions.Count > 0)
             {
-                body.Velocity = new();
-                body.Enabled = false;
+                Velocity = new();
+                Enabled = false;
                 deadTimer = 2f;
-                isDead = true;
             }
             // if (info.CollisionSurface.Valid)
             // {
@@ -309,40 +248,53 @@ namespace Examples.Scenes.ExampleScenes
             circleCollider.GetCircleShape().Draw( Colors.Cold);
             // polyCollider.GetPolygonShape().DrawLines(4f, Colors.Highlight);
         }
-    }
 
-    internal class Rock : GameObject
+        public override void DrawGameUI(ScreenInfo ui)
+        {
+        }
+    }
+    internal class Rock : CollisionObject
     {
         private PolyCollider polyCollider;
-        public Rock(Vector2 pos)
+        private float rotationSpeedRad;
+        public Rock(Vector2 pos) : base(pos)
         {
             var shape = Polygon.Generate(pos, 6, 5, 50);
             var col = new PolyCollider(shape, new(0f));
             col.ComputeCollision = true;
             col.ComputeIntersections = true;
             col.Enabled = true;
-            col.CollisionMask = new(GameobjectBody.WallFlag);
-            col.CollisionMask = col.CollisionMask.Add(GameobjectBody.RockFlag);
-            col.CollisionLayer = GameobjectBody.RockFlag;
+            col.CollisionMask = new(CollisionFlags.WallFlag);
+            col.CollisionMask = col.CollisionMask.Add(CollisionFlags.RockFlag);
+            col.CollisionLayer = CollisionFlags.RockFlag;
 
-            var rotSpeedDeg = ShapeRandom.RandF(-90, 90);
-            this.body = new(pos, rotSpeedDeg);
-            body.Velocity = ShapeRandom.RandVec2(50, 250);
-            body.AddCollider(col);
+            rotationSpeedRad = ShapeRandom.RandF(-90, 90) * ShapeMath.DEGTORAD;
+            Velocity = ShapeRandom.RandVec2(50, 250);
+            AddCollider(col);
 
             polyCollider = col;
             polyCollider.OnCollision += Overlap;
         }
 
-        
+        public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
+        {
+            base.Update(time, game, ui);
+            if (rotationSpeedRad != 0f)
+            {
+                Transform += rotationSpeedRad * time.Delta;
+            }
+        }
+
         private void Overlap(CollisionInformation info)
         {
+            
+            
             if (info.CollisionSurface.Valid)
             {
                 // body.Transform = body.Transform.ScaleBy(ShapeRandom.RandF(0.1f, 0.2f));
                 // body.Transform = body.Transform.SetScale(ShapeRandom.RandF(0.5f, 4f));
                 // timer = 0.25f;
-                body.Velocity = body.Velocity.Reflect(info.CollisionSurface.Normal);
+                Velocity = Velocity.Reflect(info.CollisionSurface.Normal);
             }
         }
         public override void DrawGame(ScreenInfo game)
@@ -352,20 +304,24 @@ namespace Examples.Scenes.ExampleScenes
             // c.Draw(Colors.Cold);
             // polyCollider.GetPolygonShape().DrawLines(4f, Colors.Highlight);
         }
+
+        public override void DrawGameUI(ScreenInfo ui)
+        {
+        }
     }
-    internal class Bird : GameObject
+    internal class Bird : CollisionObject
     {
         private CircleCollider circleCollider;
         private TriangleCollider triangleCollider;
-        public Bird(Vector2 pos)
+        public Bird(Vector2 pos) : base(pos)
         {
             const float radius = 24f;
             var cCol = new CircleCollider(new(0f), radius);
             cCol.ComputeCollision = true;
             cCol.ComputeIntersections = true;
             cCol.Enabled = true;
-            cCol.CollisionMask = new(GameobjectBody.WallFlag);
-            cCol.CollisionLayer = GameobjectBody.BirdFlag;
+            cCol.CollisionMask = new(CollisionFlags.WallFlag);
+            cCol.CollisionLayer = CollisionFlags.BirdFlag;
 
             var ta = new Vector2(0, -radius / 2);
             var tb = new Vector2(0, radius / 2);
@@ -375,16 +331,15 @@ namespace Examples.Scenes.ExampleScenes
             tCol.ComputeCollision = true;
             tCol.ComputeIntersections = true;
             tCol.Enabled = true;
-            tCol.CollisionMask = new(GameobjectBody.WallFlag);
-            tCol.CollisionMask = tCol.CollisionMask.Add(GameobjectBody.BirdFlag);
-            tCol.CollisionLayer = GameobjectBody.BirdFlag;
+            tCol.CollisionMask = new(CollisionFlags.WallFlag);
+            tCol.CollisionMask = tCol.CollisionMask.Add(CollisionFlags.BirdFlag);
+            tCol.CollisionLayer = CollisionFlags.BirdFlag;
             
 
-            this.body = new(pos);
-            body.Velocity = ShapeRandom.RandVec2(50, 250);
-            body.Transform = body.Transform.SetRotationRad(body.Velocity.AngleRad());
-            body.AddCollider(cCol);
-            body.AddCollider(tCol);
+            Velocity = ShapeRandom.RandVec2(50, 250);
+            Transform = Transform.SetRotationRad(Velocity.AngleRad());
+            AddCollider(cCol);
+            AddCollider(tCol);
 
             circleCollider = cCol;
             circleCollider.OnCollision += Overlap;
@@ -398,8 +353,8 @@ namespace Examples.Scenes.ExampleScenes
             if (info.CollisionSurface.Valid)
             {
                 // timer = 0.25f;
-                body.Velocity = body.Velocity.Reflect(info.CollisionSurface.Normal);
-                body.Transform = body.Transform.SetRotationRad(body.Velocity.AngleRad());
+                Velocity = Velocity.Reflect(info.CollisionSurface.Normal);
+                Transform = Transform.SetRotationRad(Velocity.AngleRad());
             }
         }
         public override void DrawGame(ScreenInfo game)
@@ -414,6 +369,10 @@ namespace Examples.Scenes.ExampleScenes
             // var trianglePos = triangleCollider.CurTransform.Position;
             // var trianglePosCircle = new Circle(trianglePos, 6f);
             // trianglePosCircle.Draw(Colors.Cold);
+        }
+
+        public override void DrawGameUI(ScreenInfo ui)
+        {
         }
     }
 
