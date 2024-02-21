@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Numerics;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Shapes;
@@ -30,6 +31,12 @@ public abstract class CollisionObject : PhysicsObject
 
     public bool AddCollider(Collider col)
     {
+        if (col.Parent != null)
+        {
+            if (col.Parent == this) return false;
+            col.Parent.RemoveCollider(col);
+        }
+        
         if (Colliders.Add(col))
         {
             col.SetupTransform(Transform);
@@ -38,7 +45,6 @@ public abstract class CollisionObject : PhysicsObject
         }
         return false;
     }
-    
     public bool RemoveCollider(Collider col)
     {
         if (Colliders.Remove(col))
@@ -59,6 +65,10 @@ public abstract class CollisionObject : PhysicsObject
         base.Update(time, game, ui); // updates physics state
         foreach (var collider in Colliders)
         {
+            if (collider.Parent != this)
+            {
+                throw new WarningException("Collision Object tried to update collider with different parent!");
+            }
             collider.UpdateTransform(trans);
             collider.Update(time.Delta);
             OnColliderUpdated(collider);
