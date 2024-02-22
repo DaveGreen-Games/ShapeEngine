@@ -86,6 +86,13 @@ public static class ShapeMath
     #endregion
     
     #region Lerp
+    
+    public static float GetFactor(float cur, float min, float max)
+    {
+        return (cur - min) / (max - min);
+    }
+
+    
     public static T LerpCollection<T>(List<T> collection, float f)
     {
         int index = WrapIndex(collection.Count, (int)(collection.Count * f));
@@ -224,6 +231,60 @@ public static class ShapeMath
         }
         return dif;
     }
+    
+    public static float AimAt(Vector2 pos, Vector2 targetPos, float curAngleRad, float rotSpeedRad, float dt)
+    {
+        return AimAt(curAngleRad, ShapeVec.AngleRad(targetPos - pos), rotSpeedRad, dt);
+    }
+    public static float AimAt(float curAngleRad, float targetAngleRad, float rotSpeedRad, float dt)
+    {
+        float dif = ShapeMath.GetShortestAngleRad(curAngleRad, targetAngleRad);
+        float amount = MathF.Min(rotSpeedRad * dt, MathF.Abs(dif));
+        float dir = 1;
+        if (dif < 0) dir = -1;
+        else if (dir == 0) dir = 0;
+        return dir * amount;
+    }
+
+    #endregion
+
+    #region Coordinates
+
+    public static (int col, int row) TransformIndexToCoordinates(int index, int rows, int cols, bool leftToRight = true)
+    {
+        if (leftToRight)
+        {
+            int row = index / cols;
+            int col = index % cols;
+            return (col, row);
+        }
+        else
+        {
+            int col = index / rows;
+            int row = index % rows;
+            return (col, row);
+        }
+            
+    }
+    public static int TransformCoordinatesToIndex(int row, int col, int rows, int cols, bool leftToRight = true)
+    {
+        if (leftToRight)
+        {
+            return row * cols + col;
+        }
+        else
+        {
+            return col * rows + row;
+        }
+    }
+
+
     #endregion
     
+    public static bool Blinking(float timer, float interval)
+    {
+        if (interval <= 0f) return false;
+        return (int)(timer / interval) % 2 == 0;
+    }
+
 }

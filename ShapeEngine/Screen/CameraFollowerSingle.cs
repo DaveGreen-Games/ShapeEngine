@@ -65,7 +65,7 @@ public class CameraFollowerSingle : ICameraFollower
                 float maxBoundarySq = BoundaryDis.Max * BoundaryDis.Max;
                 if (disSq > minBoundarySq)
                 {
-                    float f = ShapeUtils.GetFactor(disSq, minBoundarySq, maxBoundarySq);
+                    float f = ShapeMath.GetFactor(disSq, minBoundarySq, maxBoundarySq);
                     curPosition = LerpPosition(curPosition,newPos, Speed * f, dt);
                 }
             }

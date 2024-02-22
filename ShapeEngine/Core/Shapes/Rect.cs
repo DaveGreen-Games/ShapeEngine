@@ -1,4 +1,5 @@
 ﻿
+using System.Data;
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Collision;
@@ -1079,7 +1080,7 @@ namespace ShapeEngine.Core.Shapes
         #endregion
         
         #region UI
-        public readonly List<Rect> GetAlignedRectsHorizontal(int count, float gapRelative = 0f, float maxElementSizeRel = 1f)
+        public List<Rect> GetAlignedRectsHorizontal(int count, float gapRelative = 0f, float maxElementSizeRel = 1f)
         {
             List<Rect> rects = new();
             Vector2 startPos = new(X, Y);
@@ -1101,7 +1102,7 @@ namespace ShapeEngine.Core.Shapes
             }
             return rects;
         }
-        public readonly List<Rect> GetAlignedRectsVertical(int count, float gapRelative = 0f, float maxElementSizeRel = 1f)
+        public List<Rect> GetAlignedRectsVertical(int count, float gapRelative = 0f, float maxElementSizeRel = 1f)
         {
             List<Rect> rects = new();
             Vector2 startPos = new(X, Y);
@@ -1123,7 +1124,7 @@ namespace ShapeEngine.Core.Shapes
             }
             return rects;
         }
-        public readonly List<Rect> GetAlignedRectsGrid(int columns, int rows, int count, float hGapRelative = 0f, float vGapRelative = 0f, bool leftToRight = true)
+        public List<Rect> GetAlignedRectsGrid(int columns, int rows, int count, float hGapRelative = 0f, float vGapRelative = 0f, bool leftToRight = true)
         {
             List<Rect> rects = new();
             Vector2 startPos = new(X, Y);
@@ -1144,7 +1145,7 @@ namespace ShapeEngine.Core.Shapes
 
             for (int i = 0; i < count; i++)
             {
-                var coords = ShapeUtils.TransformIndexToCoordinates(i, rows, columns, leftToRight);
+                var coords = ShapeMath.TransformIndexToCoordinates(i, rows, columns, leftToRight);
                 Rect r = new(startPos + hGap * coords.col + vGap * coords.row, elementSize, new(0f));
                 rects.Add(r);
             }

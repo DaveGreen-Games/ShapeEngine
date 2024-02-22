@@ -68,8 +68,8 @@ namespace Examples.Scenes.ExampleScenes
         }
         public float GetCollisionIntensity()
         {
-            float speedF = ShapeUtils.GetFactor(speed, MinSpeed, MaxSpeed);
-            float sizeF = ShapeUtils.GetFactor(circle.Radius, MinSize, MaxSize);
+            float speedF = ShapeMath.GetFactor(speed, MinSpeed, MaxSpeed);
+            float sizeF = ShapeMath.GetFactor(circle.Radius, MinSize, MaxSize);
             return speedF * sizeF;
         }
         public void Draw()
@@ -501,7 +501,7 @@ namespace Examples.Scenes.ExampleScenes
             var x = (int)pos.X;
             var y = (int)pos.Y;
             var rot = (int)camera.RotationDeg;
-            var zoom = (int)(ShapeUtils.GetFactor(camera.ZoomLevel, 0.1f, 5f) * 100f);
+            var zoom = (int)(ShapeMath.GetFactor(camera.ZoomLevel, 0.1f, 5f) * 100f);
             
             string text = $"Pos {x}/{y} | Rot {rot} | Zoom {zoom}";
             textFont.FontSpacing = 1f;

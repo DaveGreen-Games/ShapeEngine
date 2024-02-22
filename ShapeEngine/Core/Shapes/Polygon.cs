@@ -38,7 +38,7 @@ namespace ShapeEngine.Core.Shapes
             }
             return true;
         }
-        public override int GetHashCode() { return ShapeUtils.GetHashCode(this); }
+        public override int GetHashCode() { return Game.GetHashCode(this); }
         #endregion
 
         #region Public
@@ -297,12 +297,12 @@ namespace ShapeEngine.Core.Shapes
             Points result = new();
             for (int i = 0; i < Count; i++)
             {
-                Vector2 cur = this[i];
-                Vector2 prev = ShapeUtils.GetItem(this, i - 1);
-                Vector2 next = ShapeUtils.GetItem(this, i + 1);
+                var cur = this[i];
+                var prev = Game.GetItem(this, i - 1);
+                var next = Game.GetItem(this, i + 1);
 
-                Vector2 prevCur = prev - cur;
-                Vector2 nextCur = next - cur;
+                var prevCur = prev - cur;
+                var nextCur = next - cur;
                 if (prevCur.Cross(nextCur) != 0f) result.Add(cur);
             }
             Clear();
@@ -313,10 +313,10 @@ namespace ShapeEngine.Core.Shapes
             if (Count < 3) return;
             Points result = new();
 
-            for (int i = 0; i < Count; i++)
+            for (var i = 0; i < Count; i++)
             {
-                Vector2 cur = this[i];
-                Vector2 next = ShapeUtils.GetItem(this, i + 1);
+                var cur = this[i];
+                var next = Game.GetItem(this, i + 1);
                 if ((cur - next).LengthSquared() > toleranceSquared) result.Add(cur);
             }
             Clear();
@@ -402,12 +402,12 @@ namespace ShapeEngine.Core.Shapes
                     break;
 
                 int i = validIndices[ShapeRandom.RandI(0, validIndices.Count)];
-                Vector2 a = vertices[i];
-                Vector2 b = ShapeUtils.GetItem(vertices, i + 1);
-                Vector2 c = ShapeUtils.GetItem(vertices, i - 1);
+                var a = vertices[i];
+                var b = Game.GetItem(vertices, i + 1);
+                var c = Game.GetItem(vertices, i - 1);
 
-                Vector2 ba = b - a;
-                Vector2 ca = c - a;
+                var ba = b - a;
+                var ca = c - a;
                 float cross = ba.Cross(ca);
                 if (cross >= 0f)//makes sure that ear is not self intersecting
                 {

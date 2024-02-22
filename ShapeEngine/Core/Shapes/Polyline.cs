@@ -33,10 +33,8 @@ namespace ShapeEngine.Core.Shapes
             }
             return true;
         }
-        public override int GetHashCode()
-        {
-            return ShapeUtils.GetHashCode(this);
-        }
+        public override int GetHashCode() => Game.GetHashCode(this);
+
         #endregion
 
         #region Getter Setter

@@ -217,19 +217,45 @@ namespace ShapeEngine.Core.Shapes
         public bool IsValid() { return GetArea() > 0f; }
         public bool IsNarrow(float narrowValue = 0.2f)
         {
-            Points points = new() { A, B, C };
-            for (int i = 0; i < 3; i++)
-            {
-                Vector2 a = points[i];
-                Vector2 b = ShapeUtils.GetItem(points, i + 1);
-                Vector2 c = ShapeUtils.GetItem(points, i - 1);
-
-                Vector2 ba = (b - a).Normalize();
-                Vector2 ca = (c - a).Normalize();
-                float cross = ba.Cross(ca);
-                if (MathF.Abs(cross) < narrowValue) return true;
-            }
-            return false;
+            var prev = C;
+            var cur = A;
+            var next = B;
+            
+            var nextToCur = (next - cur).Normalize();
+            var prevToCur = (prev - cur).Normalize();
+            float cross = nextToCur.Cross(prevToCur);
+            if (MathF.Abs(cross) < narrowValue) return true;
+            
+            prev = A;
+            cur = B;
+            next = C;
+            
+            nextToCur = (next - cur).Normalize();
+            prevToCur = (prev - cur).Normalize();
+            cross = nextToCur.Cross(prevToCur);
+            if (MathF.Abs(cross) < narrowValue) return true;
+            
+            prev = B;
+            cur = C;
+            next = A;
+            
+            nextToCur = (next - cur).Normalize();
+            prevToCur = (prev - cur).Normalize();
+            cross = nextToCur.Cross(prevToCur);
+            return MathF.Abs(cross) < narrowValue;
+            // Points points = new() { A, B, C };
+            // for (int i = 0; i < 3; i++)
+            // {
+            //     var a = points[i];
+            //     var b = Game.GetItem(points, i + 1);
+            //     var c = Game.GetItem(points, i - 1);
+            //
+            //     var ba = (b - a).Normalize();
+            //     var ca = (c - a).Normalize();
+            //     float cross = ba.Cross(ca);
+            //     if (MathF.Abs(cross) < narrowValue) return true;
+            // }
+            // return false;
         }
         /// <summary>
         /// Returns a point inside the triangle.

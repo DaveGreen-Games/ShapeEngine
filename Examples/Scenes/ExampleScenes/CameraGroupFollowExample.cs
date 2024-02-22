@@ -159,7 +159,7 @@ namespace Examples.Scenes.ExampleScenes
                         turnSpeedDeg = TurningSpeedDeg;
                     }
                     
-                    var rotRad = ShapeUtils.AimAt(movementDir.AngleRad(), dir.AngleRad(), turnSpeedDeg * ShapeMath.DEGTORAD, dt);
+                    var rotRad = ShapeMath.AimAt(movementDir.AngleRad(), dir.AngleRad(), turnSpeedDeg * ShapeMath.DEGTORAD, dt);
                     movementDir = movementDir.Rotate(rotRad);
                     // var angle = ShapeMath.GetShortestAngleRad(movementDir.AngleRad(), dir.AngleRad());
                     // var angleMovementRad = MathF.Min(angle, TurningSpeed * DEG2RAD * dt);

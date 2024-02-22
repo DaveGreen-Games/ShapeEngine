@@ -13,7 +13,8 @@ public class Triangulation : ShapeList<Triangle>
     #endregion
         
     #region Equals & HashCode
-    public override int GetHashCode() { return ShapeUtils.GetHashCode(this); }
+    public override int GetHashCode() => Game.GetHashCode(this);
+
     public bool Equals(Triangulation? other)
     {
         if (other == null) return false;

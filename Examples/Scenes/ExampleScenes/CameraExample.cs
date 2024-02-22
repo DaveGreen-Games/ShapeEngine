@@ -191,7 +191,7 @@ namespace Examples.Scenes.ExampleScenes
             var x = (int)pos.X;
             var y = (int)pos.Y;
             var rot = (int)camera.BaseRotationDeg;
-            var zoom = (int)(ShapeUtils.GetFactor(camera.ZoomLevel, 0.1f, 5f) * 100f);
+            var zoom = (int)(ShapeMath.GetFactor(camera.ZoomLevel, 0.1f, 5f) * 100f);
 
             sbInfo.Append($"Pos {x}/{y} | ");
             sbInfo.Append($"Rot {rot} | ");
