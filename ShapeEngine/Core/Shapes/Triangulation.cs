@@ -24,6 +24,11 @@ public class Triangulation : ShapeList<Triangle>
         }
         return true;
     }
+
+    // public static bool operator ==(Triangulation left, Triangulation right) => left.Equals(right);
+    //
+    // public static bool operator !=(Triangulation left, Triangulation right) => !(left == right);
+
     #endregion
 
     #region Public

@@ -15,6 +15,14 @@ namespace ShapeEngine.Core.Shapes
 
         #region Getter Setter
         public float Diameter => Radius * 2f;
+        public Vector2 Top => Center + new Vector2(0, -Radius);
+        public Vector2 Right => Center + new Vector2(Radius, 0);
+        public Vector2 Bottom => Center + new Vector2(0, Radius);
+        public Vector2 Left => Center + new Vector2(-Radius, 0);
+        public Vector2 TopLeft => Center + new Vector2(-Radius, -Radius);
+        public Vector2 BottomLeft => Center + new Vector2(-Radius, Radius);
+        public Vector2 BottomRight => Center + new Vector2(Radius, Radius);
+        public Vector2 TopRight => Center + new Vector2(Radius, -Radius);
         #endregion
         
         #region Constructors
@@ -48,7 +56,7 @@ namespace ShapeEngine.Core.Shapes
         #endregion
 
         #region Public
-        public readonly Polygon Project(Vector2 v)
+        public Polygon Project(Vector2 v)
         {
             if (v.LengthSquared() <= 0f) return ToPolygon(8);
             var corners = GetCorners();
@@ -66,30 +74,65 @@ namespace ShapeEngine.Core.Shapes
             return Polygon.FindConvexHull(points);
         }
         
-        public bool ContainsShape(Segment other)
+        public bool ContainsPoint(Vector2 p) => (Center - p).LengthSquared() <= Radius * Radius;
+
+        public bool ContainsCollisionObject(CollisionObject collisionObject)
         {
-            return ContainsPoint(other.Start) && ContainsPoint(other.End);
+            if (!collisionObject.HasColliders) return false;
+            foreach (var collider in collisionObject.Colliders)
+            {
+                if (!ContainsCollider(collider)) return false;
+            }
+
+            return true;
         }
-        public bool ContainsShape(Circle other)
+        public bool ContainsCollider(Collider collider)
         {
-            float rDif = Radius - other.Radius;
+            switch (collider.GetShapeType())
+            {
+                case ShapeType.Circle: return ContainsShape(collider.GetCircleShape());
+                case ShapeType.Segment: return ContainsShape(collider.GetSegmentShape());
+                case ShapeType.Triangle: return ContainsShape(collider.GetTriangleShape());
+                case ShapeType.Quad: return ContainsShape(collider.GetQuadShape());
+                case ShapeType.Rect: return ContainsShape(collider.GetRectShape());
+                case ShapeType.Poly: return ContainsShape(collider.GetPolygonShape());
+                case ShapeType.PolyLine: return ContainsShape(collider.GetPolylineShape());
+            }
+
+            return false;
+        }
+
+        public bool ContainsShape(Segment segment)
+        {
+            return ContainsPoint(segment.Start) && ContainsPoint(segment.End);
+        }
+        public bool ContainsShape(Circle circle)
+        {
+            float rDif = Radius - circle.Radius;
             if(rDif <= 0) return false;
 
-            float disSquared = (Center - other.Center).LengthSquared();
+            float disSquared = (Center - circle.Center).LengthSquared();
             return disSquared < rDif * rDif;
         }
-        public bool ContainsShape(Rect other)
+        public bool ContainsShape(Rect rect)
         {
-            return ContainsPoint(other.TopLeft) &&
-                ContainsPoint(other.BottomLeft) &&
-                ContainsPoint(other.BottomRight) &&
-                ContainsPoint(other.TopRight);
+            return ContainsPoint(rect.TopLeft) &&
+                ContainsPoint(rect.BottomLeft) &&
+                ContainsPoint(rect.BottomRight) &&
+                ContainsPoint(rect.TopRight);
         }
-        public bool ContainsShape(Triangle other)
+        public bool ContainsShape(Triangle triangle)
         {
-            return ContainsPoint(other.A) &&
-                ContainsPoint(other.B) &&
-                ContainsPoint(other.C);
+            return ContainsPoint(triangle.A) &&
+                ContainsPoint(triangle.B) &&
+                ContainsPoint(triangle.C);
+        }
+        public bool ContainsShape(Quad quad)
+        {
+            return ContainsPoint(quad.A) &&
+                   ContainsPoint(quad.B) &&
+                   ContainsPoint(quad.C) &&
+                   ContainsPoint(quad.D);
         }
         public bool ContainsShape(Points points)
         {
@@ -102,13 +145,13 @@ namespace ShapeEngine.Core.Shapes
         }
         
         
-        public readonly Circle Floor() { return new(Center.Floor(), MathF.Floor(Radius)); }
-        public readonly Circle Ceiling() { return new(Center.Ceiling(), MathF.Ceiling(Radius)); }
-        public readonly Circle Round() { return new(Center.Round(), MathF.Round(Radius)); }
-        public readonly Circle Truncate() { return new(Center.Truncate(), MathF.Truncate(Radius)); }
+        public Circle Floor() { return new(Center.Floor(), MathF.Floor(Radius)); }
+        public Circle Ceiling() { return new(Center.Ceiling(), MathF.Ceiling(Radius)); }
+        public Circle Round() { return new(Center.Round(), MathF.Round(Radius)); }
+        public Circle Truncate() { return new(Center.Truncate(), MathF.Truncate(Radius)); }
                 
-        public readonly Vector2 GetPoint(float angleRad, float f) { return Center + new Vector2(Radius * f, 0f).Rotate(angleRad); }
-        public readonly Segments GetEdges(int pointCount = 16)
+        public Vector2 GetPoint(float angleRad, float f) { return Center + new Vector2(Radius * f, 0f).Rotate(angleRad); }
+        public Segments GetEdges(int pointCount = 16)
         {
             float angleStep = (MathF.PI * 2f) / pointCount;
             Segments segments = new();
@@ -121,7 +164,7 @@ namespace ShapeEngine.Core.Shapes
             }
             return segments;
         }
-        public readonly Points GetVertices(int count = 16)
+        public Points GetVertices(int count = 16)
         {
             float angleStep = (MathF.PI * 2f) / count;
             Points points = new();
@@ -132,7 +175,7 @@ namespace ShapeEngine.Core.Shapes
             }
             return points;
         }
-        public readonly Polygon ToPolygon(int pointCount = 16)
+        public Polygon ToPolygon(int pointCount = 16)
         {
             float angleStep = (MathF.PI * 2f) / pointCount;
             Polygon poly = new();
@@ -143,7 +186,7 @@ namespace ShapeEngine.Core.Shapes
             }
             return poly;
         }
-        public readonly Polyline ToPolyline(int pointCount = 16)
+        public Polyline ToPolyline(int pointCount = 16)
         {
             float angleStep = (MathF.PI * 2f) / pointCount;
             Polyline polyLine = new();
@@ -154,7 +197,7 @@ namespace ShapeEngine.Core.Shapes
             }
             return polyLine;
         }
-        public readonly (Vector2 top, Vector2 right, Vector2 bottom, Vector2 left) GetCorners()
+        public (Vector2 top, Vector2 right, Vector2 bottom, Vector2 left) GetCorners()
         {
             var top = Center + new Vector2(0, -Radius);
             var right = Center + new Vector2(Radius, 0);
@@ -162,7 +205,7 @@ namespace ShapeEngine.Core.Shapes
             var left = Center + new Vector2(-Radius, 0);
             return (top, right, bottom, left);
         }
-        public readonly List<Vector2> GetCornersList()
+        public List<Vector2> GetCornersList()
         {
             var top = Center + new Vector2(0, -Radius);
             var right = Center + new Vector2(Radius, 0);
@@ -170,7 +213,7 @@ namespace ShapeEngine.Core.Shapes
             var left = Center + new Vector2(-Radius, 0);
             return new() { top, right, bottom, left };
         }
-        public readonly (Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl) GetRectCorners()
+        public (Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl) GetRectCorners()
         {
             var tl = Center + new Vector2(-Radius, -Radius);
             var tr = Center + new Vector2(Radius, -Radius);
@@ -178,7 +221,7 @@ namespace ShapeEngine.Core.Shapes
             var bl = Center + new Vector2(-Radius, Radius);
             return (tl, tr, br, bl);
         }
-        public readonly List<Vector2> GetRectCornersList()
+        public List<Vector2> GetRectCornersList()
         {
             var tl = Center + new Vector2(-Radius, -Radius);
             var tr = Center + new Vector2(Radius, -Radius);
@@ -193,7 +236,7 @@ namespace ShapeEngine.Core.Shapes
         public Circle MoveCenter(Vector2 offset) { return new(Center + offset, Radius); }
         public Circle SetCenter(Vector2 newCenter) { return new(newCenter, Radius); }
         */
-        public readonly Circle Combine(Circle other)
+        public Circle Combine(Circle other)
         {
             return new
                 (
@@ -201,19 +244,49 @@ namespace ShapeEngine.Core.Shapes
                     Radius + other.Radius
                 );
         }
-        public static Circle Combine(params Circle[] circles)
+        
+        public Triangulation Triangulate() { return ToPolygon().Triangulate(); }
+        public float GetArea() { return MathF.PI * Radius * Radius; }
+        public float GetCircumference() { return MathF.PI * Radius * 2f; }
+        public float GetCircumferenceSquared() { return GetCircumference() * GetCircumference(); }
+        public Rect GetBoundingBox() { return new Rect(Center, new Vector2(Radius, Radius) * 2f, new(0.5f)); }
+
+        
+        public CollisionPoint GetClosestCollisionPoint(Vector2 p) 
         {
-            if (circles.Length <= 0) return new();
-            Vector2 combinedCenter = new();
-            float totalRadius = 0f;
-            for (int i = 0; i < circles.Length; i++)
-            {
-                var circle = circles[i];
-                combinedCenter += circle.Center;
-                totalRadius += circle.Radius;
-            }
-            return new(combinedCenter / circles.Length, totalRadius);
+            Vector2 normal = (p - Center).Normalize();
+            Vector2 point = Center + normal * Radius;
+            return new(point, normal);
         }
+        public Vector2 GetClosestVertex(Vector2 p) { return Center + (p - Center).Normalize() * Radius; }
+        public Vector2 GetRandomPoint()
+        {
+            float randAngle = ShapeRandom.RandAngleRad();
+            var randDir = ShapeVec.VecFromAngleRad(randAngle);
+            return Center + randDir * ShapeRandom.RandF(0, Radius);
+        }
+        public Points GetRandomPoints(int amount)
+        {
+            var points = new Points();
+            for (int i = 0; i < amount; i++)
+            {
+                points.Add(GetRandomPoint());
+            }
+            return points;
+        }
+        public Vector2 GetRandomVertex() { return ShapeRandom.RandCollection(GetVertices(), false); }
+        public Segment GetRandomEdge() { return ShapeRandom.RandCollection(GetEdges(), false); }
+        public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
+        public Points GetRandomPointsOnEdge(int amount)
+        {
+            var points = new Points();
+            for (int i = 0; i < amount; i++)
+            {
+                points.Add(GetRandomPointOnEdge());
+            }
+            return points;
+        }
+
         #endregion
 
         #region Operators
@@ -316,53 +389,22 @@ namespace ShapeEngine.Core.Shapes
         }
         #endregion
         
-        #region IShape
-        public Triangulation Triangulate() { return ToPolygon().Triangulate(); }
-        public float GetArea() { return MathF.PI * Radius * Radius; }
-        public float GetCircumference() { return MathF.PI * Radius * 2f; }
-        public float GetCircumferenceSquared() { return GetCircumference() * GetCircumference(); }
-        public Rect GetBoundingBox() { return new Rect(Center, new Vector2(Radius, Radius) * 2f, new(0.5f)); }
-
-        public bool ContainsPoint(Vector2 p) => (Center - p).LengthSquared() <= Radius * Radius;
-
-        public CollisionPoint GetClosestCollisionPoint(Vector2 p) 
-        {
-            Vector2 normal = (p - Center).Normalize();
-            Vector2 point = Center + normal * Radius;
-            return new(point, normal);
-        }
-        public Vector2 GetClosestVertex(Vector2 p) { return Center + (p - Center).Normalize() * Radius; }
-        public Vector2 GetRandomPoint()
-        {
-            float randAngle = ShapeRandom.RandAngleRad();
-            var randDir = ShapeVec.VecFromAngleRad(randAngle);
-            return Center + randDir * ShapeRandom.RandF(0, Radius);
-        }
-        public Points GetRandomPoints(int amount)
-        {
-            var points = new Points();
-            for (int i = 0; i < amount; i++)
-            {
-                points.Add(GetRandomPoint());
-            }
-            return points;
-        }
-        public Vector2 GetRandomVertex() { return ShapeRandom.RandCollection(GetVertices(), false); }
-        public Segment GetRandomEdge() { return ShapeRandom.RandCollection(GetEdges(), false); }
-        public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
-        public Points GetRandomPointsOnEdge(int amount)
-        {
-            var points = new Points();
-            for (int i = 0; i < amount; i++)
-            {
-                points.Add(GetRandomPointOnEdge());
-            }
-            return points;
-        }
-        // public void DrawShape(float linethickness, ColorRgba colorRgba) => this.DrawLines(linethickness, colorRgba);
-        #endregion
-
+        
         #region Static
+        public static Circle Combine(params Circle[] circles)
+        {
+            if (circles.Length <= 0) return new();
+            Vector2 combinedCenter = new();
+            float totalRadius = 0f;
+            for (int i = 0; i < circles.Length; i++)
+            {
+                var circle = circles[i];
+                combinedCenter += circle.Center;
+                totalRadius += circle.Radius;
+            }
+            return new(combinedCenter / circles.Length, totalRadius);
+        }
+
         public static bool OverlapCircleCircle(Vector2 aPos, float aRadius, Vector2 bPos, float bRadius)
         {
             if (aRadius <= 0.0f && bRadius > 0.0f) return ContainsCirclePoint(bPos, bRadius, aPos);

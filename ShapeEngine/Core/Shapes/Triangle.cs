@@ -37,7 +37,6 @@ namespace ShapeEngine.Core.Shapes
         /// <param name="a"></param>
         /// <param name="b"></param>
         /// <param name="c"></param>
-        /// <param name="flippedNormals"></param>
         public Triangle(Vector2 a, Vector2 b, Vector2 c) 
         { 
             this.A = a; 
@@ -65,9 +64,9 @@ namespace ShapeEngine.Core.Shapes
         #endregion
 
         #region Public
-        public readonly Polygon Project(Vector2 v)
+        public Polygon? Project(Vector2 v)
         {
-            if (v.LengthSquared() <= 0f) return ToPolygon();
+            if (v.LengthSquared() <= 0f) return null;
             var points = new Points
             {
                 A,
@@ -79,9 +78,9 @@ namespace ShapeEngine.Core.Shapes
             };
             return Polygon.FindConvexHull(points);
         }
-        public readonly Vector2 GetCentroid() { return (A + B + C) / 3; }
-        public readonly Rect GetBoundingBox() { return new Rect(A.X, A.Y, 0, 0).Enlarge(B).Enlarge(C); }
-        public readonly bool ContainsPoint(Vector2 p)
+        public Vector2 GetCentroid() { return (A + B + C) / 3; }
+        public Rect GetBoundingBox() { return new Rect(A.X, A.Y, 0, 0).Enlarge(B).Enlarge(C); }
+        public bool ContainsPoint(Vector2 p)
         {
             var ab = B - A;
             var bc = C - B;
@@ -119,30 +118,64 @@ namespace ShapeEngine.Core.Shapes
         //     return false;
         // }
 
-        
-        public readonly bool ContainsShape(Segment other)
+        public bool ContainsCollisionObject(CollisionObject collisionObject)
         {
-            return ContainsPoint(other.Start) && ContainsPoint(other.End);
+            if (!collisionObject.HasColliders) return false;
+            foreach (var collider in collisionObject.Colliders)
+            {
+                if (!ContainsCollider(collider)) return false;
+            }
+
+            return true;
         }
-        public readonly bool ContainsShape(Circle other)
+        public bool ContainsCollider(Collider collider)
         {
-            var points = other.GetVertices(8);
-            return ContainsShape(points);
+            switch (collider.GetShapeType())
+            {
+                case ShapeType.Circle: return ContainsShape(collider.GetCircleShape());
+                case ShapeType.Segment: return ContainsShape(collider.GetSegmentShape());
+                case ShapeType.Triangle: return ContainsShape(collider.GetTriangleShape());
+                case ShapeType.Quad: return ContainsShape(collider.GetQuadShape());
+                case ShapeType.Rect: return ContainsShape(collider.GetRectShape());
+                case ShapeType.Poly: return ContainsShape(collider.GetPolygonShape());
+                case ShapeType.PolyLine: return ContainsShape(collider.GetPolylineShape());
+            }
+
+            return false;
         }
-        public readonly bool ContainsShape(Rect other)
+
+        public bool ContainsShape(Segment segment)
         {
-            return ContainsPoint(other.TopLeft) &&
-                ContainsPoint(other.BottomLeft) &&
-                ContainsPoint(other.BottomRight) &&
-                ContainsPoint(other.TopRight);
+            return ContainsPoint(segment.Start) && ContainsPoint(segment.End);
         }
-        public readonly bool ContainsShape(Triangle other)
+        public bool ContainsShape(Circle circle)
         {
-            return ContainsPoint(other.A) &&
-                ContainsPoint(other.B) &&
-                ContainsPoint(other.C);
+            return ContainsPoint(circle.Top) &&
+                   ContainsPoint(circle.Left) &&
+                   ContainsPoint(circle.Bottom) &&
+                   ContainsPoint(circle.Right);
         }
-        public readonly bool ContainsShape(Points points)
+        public bool ContainsShape(Rect rect)
+        {
+            return ContainsPoint(rect.TopLeft) &&
+                ContainsPoint(rect.BottomLeft) &&
+                ContainsPoint(rect.BottomRight) &&
+                ContainsPoint(rect.TopRight);
+        }
+        public bool ContainsShape(Triangle triangle)
+        {
+            return ContainsPoint(triangle.A) &&
+                ContainsPoint(triangle.B) &&
+                ContainsPoint(triangle.C);
+        }
+        public bool ContainsShape(Quad quad)
+        {
+            return ContainsPoint(quad.A) &&
+                   ContainsPoint(quad.B) &&
+                   ContainsPoint(quad.C) &&
+                   ContainsPoint(quad.D);
+        }
+        public bool ContainsShape(Points points)
         {
             if (points.Count <= 0) return false;
             foreach (var p in points)
@@ -157,7 +190,7 @@ namespace ShapeEngine.Core.Shapes
         /// </summary>
         /// <param name="p"></param>
         /// <returns></returns>
-        public readonly Triangle ConstructAdjacentTriangle(Vector2 p)
+        public Triangle ConstructAdjacentTriangle(Vector2 p)
         {
             if(ContainsPoint(p)) return this;
 
@@ -165,13 +198,13 @@ namespace ShapeEngine.Core.Shapes
             return new Triangle(p, closest.Segment);
         }
 
-        public readonly Triangle Floor() { return new(A.Floor(), B.Floor(), C.Floor()); }
-        public readonly Triangle Ceiling() { return new(A.Ceiling(), B.Ceiling(), C.Ceiling()); }
-        public readonly Triangle Round() { return new(A.Round(), B.Round(), C.Round()); }
-        public readonly Triangle Truncate() { return new(A.Truncate(), B.Truncate(), C.Truncate()); }
+        public Triangle Floor() { return new(A.Floor(), B.Floor(), C.Floor()); }
+        public Triangle Ceiling() { return new(A.Ceiling(), B.Ceiling(), C.Ceiling()); }
+        public Triangle Round() { return new(A.Round(), B.Round(), C.Round()); }
+        public Triangle Truncate() { return new(A.Truncate(), B.Truncate(), C.Truncate()); }
         
-        public readonly bool SharesVertex(Vector2 p) { return A == p || B == p || C == p; }
-        public readonly bool SharesVertex(IEnumerable<Vector2> points)
+        public bool SharesVertex(Vector2 p) { return A == p || B == p || C == p; }
+        public bool SharesVertex(IEnumerable<Vector2> points)
         {
             foreach (var p in points)
             {
@@ -179,10 +212,10 @@ namespace ShapeEngine.Core.Shapes
             }
             return false;
         }
-        public readonly bool SharesVertex(Triangle t) { return SharesVertex(t.A) || SharesVertex(t.B) || SharesVertex(t.C); }
+        public bool SharesVertex(Triangle t) { return SharesVertex(t.A) || SharesVertex(t.B) || SharesVertex(t.C); }
         
-        public readonly bool IsValid() { return GetArea() > 0f; }
-        public readonly bool IsNarrow(float narrowValue = 0.2f)
+        public bool IsValid() { return GetArea() > 0f; }
+        public bool IsNarrow(float narrowValue = 0.2f)
         {
             Points points = new() { A, B, C };
             for (int i = 0; i < 3; i++)
@@ -204,7 +237,7 @@ namespace ShapeEngine.Core.Shapes
         /// <param name="f1">First value in the range 0 - 1.</param>
         /// <param name="f2">Second value in the range 0 - 1.</param>
         /// <returns></returns>
-        public readonly Vector2 GetPoint(float f1, float f2)
+        public Vector2 GetPoint(float f1, float f2)
         {
             if ((f1 + f2) > 1)
             {
@@ -219,7 +252,7 @@ namespace ShapeEngine.Core.Shapes
             //float y = (1f - f1Sq) * t.a.Y + (f1Sq * (1f - f2)) * t.b.Y + (f1Sq * f2) * t.c.Y;
             //return new(x, y);
         }
-        public readonly Circle GetCircumCircle()
+        public Circle GetCircumCircle()
         {
             Vector2 SqrA = new Vector2(A.X * A.X, A.Y * A.Y);
             Vector2 SqrB = new Vector2(B.X * B.X, B.Y * B.Y); 
@@ -234,7 +267,7 @@ namespace ShapeEngine.Core.Shapes
             return new(center, r);
         }
 
-        public readonly Triangulation Triangulate(int pointCount)
+        public Triangulation Triangulate(int pointCount)
         {
             if (pointCount < 0) return new() { new(A, B, C) };
 
@@ -250,7 +283,7 @@ namespace ShapeEngine.Core.Shapes
 
             return Polygon.TriangulateDelaunay(points);
         }
-        public readonly Triangulation Triangulate(float minArea)
+        public Triangulation Triangulate(float minArea)
         {
             if (minArea <= 0) return new() { new(A,B,C) };
 
@@ -259,7 +292,7 @@ namespace ShapeEngine.Core.Shapes
             int points = (int)MathF.Floor((pieceCount - 1f) * 0.5f);
             return Triangulate(points);
         }
-        public readonly Triangulation Triangulate(Vector2 p)
+        public Triangulation Triangulate(Vector2 p)
         {
             return new()
             {
@@ -269,7 +302,7 @@ namespace ShapeEngine.Core.Shapes
             };
         }
         
-        public readonly Triangle GetInsideTriangle(float abF, float bcF, float caF)
+        public Triangle GetInsideTriangle(float abF, float bcF, float caF)
         {
             Vector2 newA = ShapeVec.Lerp(A, B, abF);
             Vector2 newB = ShapeVec.Lerp(B, C, bcF);
@@ -278,42 +311,42 @@ namespace ShapeEngine.Core.Shapes
         }
 
         
-        public readonly Triangle Rotate(float rad) { return Rotate(GetCentroid(), rad); }
-        public readonly Triangle Rotate(Vector2 pivot, float rad)
+        public Triangle Rotate(float rad) { return Rotate(GetCentroid(), rad); }
+        public Triangle Rotate(Vector2 pivot, float rad)
         {
             Vector2 newA = pivot + (A - pivot).Rotate(rad);
             Vector2 newB = pivot + (B - pivot).Rotate(rad);
             Vector2 newC = pivot + (C - pivot).Rotate(rad);
             return new(newA, newB, newC);
         }
-        public readonly Triangle Scale(float scale) { return new(A * scale, B * scale, C * scale); }
-        public readonly Triangle Scale(Vector2 scale) { return new(A * scale, B * scale, C * scale); }
-        public readonly Triangle Scale(Vector2 pivot, float scale)
+        public Triangle Scale(float scale) { return new(A * scale, B * scale, C * scale); }
+        public Triangle Scale(Vector2 scale) { return new(A * scale, B * scale, C * scale); }
+        public Triangle Scale(Vector2 pivot, float scale)
         {
             Vector2 newA = pivot + (A - pivot) * scale;
             Vector2 newB = pivot + (B - pivot) * scale;
             Vector2 newC = pivot + (C - pivot) * scale;
             return new(newA, newB, newC);
         }
-        public readonly Triangle Scale(Vector2 pivot, Vector2 scale)
+        public Triangle Scale(Vector2 pivot, Vector2 scale)
         {
             Vector2 newA = pivot + (A - pivot) * scale;
             Vector2 newB = pivot + (B - pivot) * scale;
             Vector2 newC = pivot + (C - pivot) * scale;
             return new(newA, newB, newC);
         }
-        public readonly Triangle Move(Vector2 offset) { return new(A + offset, B + offset, C + offset); }
+        public Triangle Move(Vector2 offset) { return new(A + offset, B + offset, C + offset); }
         
-        public readonly Points ToPoints() => new() {A, B, C};
-        public readonly Polygon ToPolygon() => new() {A, B, C};
+        public Points ToPoints() => new() {A, B, C};
+        public Polygon ToPolygon() => new() {A, B, C};
 
-        public readonly Polyline ToPolyline() => new() { A, B, C };
-        public readonly Segments GetEdges() => new() { SegmentAToB, SegmentBToC, SegmentCToA };
-        public readonly Triangulation Triangulate() => this.Triangulate(GetCentroid());
-        public readonly float GetCircumference() => MathF.Sqrt(GetCircumferenceSquared());
-        public readonly float GetCircumferenceSquared() => SideA.LengthSquared() + SideB.LengthSquared() + SideC.LengthSquared();
+        public Polyline ToPolyline() => new() { A, B, C };
+        public Segments GetEdges() => new() { SegmentAToB, SegmentBToC, SegmentCToA };
+        public Triangulation Triangulate() => this.Triangulate(GetCentroid());
+        public float GetCircumference() => MathF.Sqrt(GetCircumferenceSquared());
+        public float GetCircumferenceSquared() => SideA.LengthSquared() + SideB.LengthSquared() + SideC.LengthSquared();
 
-        public readonly float GetArea() 
+        public float GetArea() 
         {
             //float al = A.Length();
             //float bl = B.Length();
@@ -331,7 +364,7 @@ namespace ShapeEngine.Core.Shapes
             return MathF.Abs((A.X - C.X) * (B.Y - C.Y) - (A.Y - C.Y) * (B.X - C.X)) / 2f;
         }
 
-        public readonly Vector2 GetClosestVertex(Vector2 p)
+        public Vector2 GetClosestVertex(Vector2 p)
         {
             var closest = A;
             float minDisSquared = (A - p).LengthSquared();
@@ -349,12 +382,12 @@ namespace ShapeEngine.Core.Shapes
             return closest;
         }
 
-        public readonly ClosestPoint GetClosestPoint(Vector2 p)
+        public ClosestPoint GetClosestPoint(Vector2 p)
         {
             var cp = GetClosestCollisionPoint(p);
             return new(cp, (cp.Point - p).Length());
         }
-        public readonly ClosestSegment GetClosestSegment(Vector2 p)
+        public ClosestSegment GetClosestSegment(Vector2 p)
         {
             var closestSegment = SegmentAToB;
             var cp = SegmentAToB.GetClosestCollisionPoint(p);
@@ -379,7 +412,7 @@ namespace ShapeEngine.Core.Shapes
             return new(closestSegment, cp, MathF.Sqrt(minDisSquared));
 
         }
-        public readonly CollisionPoint GetClosestCollisionPoint(Vector2 p)
+        public CollisionPoint GetClosestCollisionPoint(Vector2 p)
         {
             var cp = SegmentAToB.GetClosestCollisionPoint(p);
             float minDisSquared = (cp.Point - p).LengthSquared();
@@ -403,9 +436,9 @@ namespace ShapeEngine.Core.Shapes
         }
 
         
-        public readonly Vector2 GetRandomPointInside() => this.GetPoint(ShapeRandom.RandF(), ShapeRandom.RandF());
+        public Vector2 GetRandomPointInside() => this.GetPoint(ShapeRandom.RandF(), ShapeRandom.RandF());
 
-        public readonly Points GetRandomPointsInside(int amount)
+        public Points GetRandomPointsInside(int amount)
         {
             var points = new Points();
             for (int i = 0; i < amount; i++)
@@ -415,7 +448,7 @@ namespace ShapeEngine.Core.Shapes
             return points;
         }
 
-        public readonly Vector2 GetRandomVertex()
+        public Vector2 GetRandomVertex()
         {
             var randIndex = ShapeRandom.RandI(0, 2);
             if (randIndex == 0) return A;
@@ -427,7 +460,6 @@ namespace ShapeEngine.Core.Shapes
         public Points GetRandomPointsOnEdge(int amount) => GetEdges().GetRandomPoints(amount);
 
         #endregion
-
 
         #region Equality & HashCode
         public bool IsSimilar(Triangle other)
@@ -472,6 +504,119 @@ namespace ShapeEngine.Core.Shapes
         }
         #endregion
 
+        #region Operators
+
+        public static Triangle operator +(Triangle left, Triangle right)
+        {
+            return new
+            (
+                left.A + right.A,
+                left.B + right.B,
+                left.C + right.C
+            );
+        }
+        public static Triangle operator -(Triangle left, Triangle right)
+        {
+            return new
+            (
+                left.A - right.A,
+                left.B - right.B,
+                left.C - right.C
+            );
+        }
+        public static Triangle operator *(Triangle left, Triangle right)
+        {
+            return new
+            (
+                left.A * right.A,
+                left.B * right.B,
+                left.C * right.C
+            );
+        }
+        public static Triangle operator /(Triangle left, Triangle right)
+        {
+            return new
+            (
+                left.A / right.A,
+                left.B / right.B,
+                left.C / right.C
+            );
+        }
+        public static Triangle operator +(Triangle left, Vector2 right)
+        {
+            return new
+            (
+                left.A + right,
+                left.B + right,
+                left.C + right
+            );
+        }
+        public static Triangle operator -(Triangle left, Vector2 right)
+        {
+            return new
+            (
+                left.A - right,
+                left.B - right,
+                left.C - right
+            );
+        }
+        public static Triangle operator *(Triangle left, Vector2 right)
+        {
+            return new
+            (
+                left.A * right,
+                left.B * right,
+                left.C * right
+            );
+        }
+        public static Triangle operator /(Triangle left, Vector2 right)
+        {
+            return new
+            (
+                left.A / right,
+                left.B / right,
+                left.C / right
+            );
+        }
+        public static Triangle operator +(Triangle left, float right)
+        {
+            return new
+            (
+                left.A + new Vector2(right),
+                left.B + new Vector2(right),
+                left.C + new Vector2(right)
+            );
+        }
+        public static Triangle operator -(Triangle left, float right)
+        {
+            return new
+            (
+                left.A - new Vector2(right),
+                left.B - new Vector2(right),
+                left.C - new Vector2(right)
+            );
+        }
+        public static Triangle operator *(Triangle left, float right)
+        {
+            return new
+            (
+                left.A * right,
+                left.B * right,
+                left.C * right
+            );
+        }
+        public static Triangle operator /(Triangle left, float right)
+        {
+            return new
+            (
+                left.A / right,
+                left.B / right,
+                left.C / right
+            );
+        }
+        
+        #endregion
+        
         #region Static
 
         public static float AreaSigned(Vector2 a, Vector2 b, Vector2 c) { return (a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X); }

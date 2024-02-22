@@ -2,8 +2,6 @@
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Collision;
-using ShapeEngine.Core.Interfaces;
-using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
 
@@ -15,49 +13,39 @@ namespace ShapeEngine.Core.Shapes
         public readonly Vector2 Start;
         public readonly Vector2 End;
         public readonly Vector2 Normal;
-        // private readonly bool flippedNormals = false;
         #endregion
 
         #region Getter Setter
-        //maybe needs to be cached
-        //if it is cached segment needs to be immutable... so normal is always correct
-        //public Vector2 Normal 
-        //{ 
-        //    get 
-        //    {
-        //        return GetNormal();
-        //    } 
-        //}
-        // public bool FlippedNormals { get { return flippedNormals; } set { } }
-        public Vector2 Center { get { return (Start + End) * 0.5f; } }
-        public Vector2 Dir { get { return Displacement.Normalize(); } }
-        public Vector2 Displacement { get { return End - Start; } }
-        public float Length { get { return Displacement.Length(); } }
-        public float LengthSquared { get { return Displacement.LengthSquared(); } }
+        public Vector2 Center => (Start + End) * 0.5f;
+        public Vector2 Dir => Displacement.Normalize();
+        public Vector2 Displacement => End - Start;
+        public float Length => Displacement.Length();
+        public float LengthSquared => Displacement.LengthSquared();
+
         #endregion
 
         #region Constructor
-        public Segment(Vector2 start, Vector2 end) 
+        public Segment(Vector2 start, Vector2 end, bool flippedNormal = false) 
         { 
             this.Start = start; 
             this.End = end;
-            this.Normal = GetNormal(start, end, false);
+            this.Normal = GetNormal(start, end, flippedNormal);
             // this.flippedNormals = flippedNormals;
         }
         
-        public Segment(float startX, float startY, float endX, float endY, bool flippedNormals = false) 
+        public Segment(float startX, float startY, float endX, float endY, bool flippedNormal = false) 
         { 
             this.Start = new(startX, startY); 
             this.End = new(endX, endY);
-            this.Normal = GetNormal(Start, End, flippedNormals);
+            this.Normal = GetNormal(Start, End, flippedNormal);
             // this.flippedNormals = flippedNormals;
         }
         #endregion
 
         #region Public
-        public readonly Polygon Project(Vector2 v)
+        public Polygon? Project(Vector2 v)
         {
-            if (v.LengthSquared() <= 0f) return new();
+            if (v.LengthSquared() <= 0f) return null;
             var points = new Points
             {
                 Start,
@@ -67,6 +55,7 @@ namespace ShapeEngine.Core.Shapes
             };
             return Polygon.FindConvexHull(points);
         }
+        
         public Segment Floor()
         {
             return new(Start.Floor(), End.Floor());
@@ -473,6 +462,42 @@ namespace ShapeEngine.Core.Shapes
         }
         #endregion
 
+        #region Operators
+
+        public static Segment operator +(Segment left, Segment right) => new(left.Start + right.Start, left.End + right.End);
+        public static Segment operator -(Segment left, Segment right) => new(left.Start - right.Start, left.End - right.End);
+        public static Segment operator *(Segment left, Segment right) => new(left.Start * right.Start, left.End * right.End);
+        public static Segment operator /(Segment left, Segment right) => new(left.Start / right.Start, left.End / right.End);
+        
+        public static Segment operator +(Segment left, Vector2 right) => new(left.Start + right, left.End + right);
+        public static Segment operator -(Segment left, Vector2 right) => new(left.Start - right, left.End - right);
+        public static Segment operator *(Segment left, Vector2 right) => new(left.Start * right, left.End * right);
+        public static Segment operator /(Segment left, Vector2 right) => new(left.Start / right, left.End / right);
+
+        public static Segment operator +(Segment left, float right) => new(left.Start + new Vector2(right), left.End + new Vector2(right));
+        public static Segment operator -(Segment left, float right) => new(left.Start - new Vector2(right), left.End - new Vector2(right));
+        public static Segment operator *(Segment left, float right) => new(left.Start * right, left.End * right);
+        public static Segment operator /(Segment left, float right) => new(left.Start / right, left.End / right);
+        
+        // public static Segment operator +(Segment left, float right)
+        // {
+        //     return right == 0 ? left : new(left.Start, left.End + left.Dir * right);
+        // }
+        // public static Segment operator -(Segment left, float right)
+        // {
+        //     return right == 0 ? left : new(left.Start, left.End - left.Dir * right);
+        // }
+        // public static Segment operator *(Segment left, float right)
+        // {
+        //     return right == 0 ? left : new(left.Start, left.Start + left.Displacement * right);
+        // }
+        // public static Segment operator /(Segment left, float right)
+        // {
+        //     return right == 0 ? left : new(left.Start, left.Start + left.Displacement / right);
+        // }
+        //
+        #endregion
+        
         #region Equality & HashCode
         /// <summary>
         /// Checks the equality of 2 segments without the direction.

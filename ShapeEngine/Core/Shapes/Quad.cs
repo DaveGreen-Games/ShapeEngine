@@ -103,6 +103,61 @@ public readonly struct Quad : IEquatable<Quad>
     #endregion
     
     #region Public
+    public Polygon? Project(Vector2 v)
+    {
+        if (v.LengthSquared() <= 0f) return null;
+        var points = new Points
+        {
+            A, B, C, D,
+            A + v,
+            B + v,
+            C + v,
+            D + v
+        };
+        return Polygon.FindConvexHull(points);
+    }
+    
+    public Quad Floor()
+    {
+        return new
+        (
+            A.Floor(),
+            B.Floor(),
+            C.Floor(),
+            D.Floor()
+        );
+    }
+    public Quad Ceiling()
+    {
+        return new
+        (
+            A.Ceiling(),
+            B.Ceiling(),
+            C.Ceiling(),
+            D.Ceiling()
+        );
+    }
+    public Quad Round()
+    {
+        return new
+        (
+            A.Round(),
+            B.Round(),
+            C.Round(),
+            D.Round()
+        );
+    }
+    public Quad Truncate()
+    {
+        return new
+        (
+            A.Truncate(),
+            B.Truncate(),
+            C.Truncate(),
+            D.Truncate()
+        );
+    }
+
     public Rect GetBoundingBox()
     {
         Rect r = new(A.X, A.Y, 0, 0);
@@ -392,27 +447,62 @@ public readonly struct Quad : IEquatable<Quad>
         
         return oddNodes;
     }
-    public bool ContainsShape(Segment other)
+    public bool ContainsCollisionObject(CollisionObject collisionObject)
     {
-        return ContainsPoint(other.Start) && ContainsPoint(other.End);
+        if (!collisionObject.HasColliders) return false;
+        foreach (var collider in collisionObject.Colliders)
+        {
+            if (!ContainsCollider(collider)) return false;
+        }
+
+        return true;
     }
-    public bool ContainsShape(Circle other)
+    public bool ContainsCollider(Collider collider)
     {
-        var points = other.GetVertices(8);
-        return ContainsShape(points);
+        switch (collider.GetShapeType())
+        {
+            case ShapeType.Circle: return ContainsShape(collider.GetCircleShape());
+            case ShapeType.Segment: return ContainsShape(collider.GetSegmentShape());
+            case ShapeType.Triangle: return ContainsShape(collider.GetTriangleShape());
+            case ShapeType.Quad: return ContainsShape(collider.GetQuadShape());
+            case ShapeType.Rect: return ContainsShape(collider.GetRectShape());
+            case ShapeType.Poly: return ContainsShape(collider.GetPolygonShape());
+            case ShapeType.PolyLine: return ContainsShape(collider.GetPolylineShape());
+        }
+
+        return false;
     }
-    public bool ContainsShape(Rect other)
+    
+    public bool ContainsShape(Segment segment)
     {
-        return ContainsPoint(other.TopLeft) &&
-               ContainsPoint(other.BottomLeft) &&
-               ContainsPoint(other.BottomRight) &&
-               ContainsPoint(other.TopRight);
+        return ContainsPoint(segment.Start) && ContainsPoint(segment.End);
     }
-    public bool ContainsShape(Triangle other)
+    public bool ContainsShape(Circle circle)
     {
-        return ContainsPoint(other.A) &&
-               ContainsPoint(other.B) &&
-               ContainsPoint(other.C);
+        return ContainsPoint(circle.Top) &&
+               ContainsPoint(circle.Left) &&
+               ContainsPoint(circle.Bottom) &&
+               ContainsPoint(circle.Right);
+    }
+    public bool ContainsShape(Rect rect)
+    {
+        return ContainsPoint(rect.TopLeft) &&
+               ContainsPoint(rect.BottomLeft) &&
+               ContainsPoint(rect.BottomRight) &&
+               ContainsPoint(rect.TopRight);
+    }
+    public bool ContainsShape(Triangle triangle)
+    {
+        return ContainsPoint(triangle.A) &&
+               ContainsPoint(triangle.B) &&
+               ContainsPoint(triangle.C);
+    }
+    public bool ContainsShape(Quad quad)
+    {
+        return ContainsPoint(quad.A) &&
+               ContainsPoint(quad.B) &&
+               ContainsPoint(quad.C) &&
+               ContainsPoint(quad.D);
     }
     public bool ContainsShape(Points points)
     {
