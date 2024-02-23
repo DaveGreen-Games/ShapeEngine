@@ -189,9 +189,6 @@ namespace ShapeEngine.Core.Shapes
             if (flippedNormal) return (end - start).GetPerpendicularLeft().Normalize();
             else return (end - start).GetPerpendicularRight().Normalize();
         }
-        
-
-        
         public static bool IsPointOnSegment(Vector2 point, Vector2 start, Vector2 end)
         {
             var d = end - start;
@@ -257,8 +254,8 @@ namespace ShapeEngine.Core.Shapes
         }
         public static (bool intersected, Vector2 intersectPoint, float time) IntersectRaySegmentInfo(Vector2 rayPos, Vector2 rayDir, Vector2 segmentStart, Vector2 segmentEnd)
         {
-            Vector2 vel = segmentEnd - segmentStart;
-            Vector2 w = rayPos - segmentStart;
+            var vel = segmentEnd - segmentStart;
+            var w = rayPos - segmentStart;
             float p = rayDir.X * vel.Y - rayDir.Y * vel.X;
             if (p == 0.0f)
             {
@@ -283,6 +280,15 @@ namespace ShapeEngine.Core.Shapes
                 Vector2 intersectionPoint = segmentStart + vel * t;
                 return (true, intersectionPoint, t);
             }
+        }
+
+        public static (bool intersected, Vector2 intersectPoint, float time) IntersectLineSegmentInfo(Vector2 dir, Segment segment)
+        {
+            throw new NotImplementedException();
+        }
+        public static (bool intersected, Vector2 intersectPoint, float time) IntersectLineRectInfo(Vector2 dir, Rect rect)
+        {
+            throw new NotImplementedException();
         }
         public static bool OverlapSegmentSegment(Vector2 aStart, Vector2 aEnd, Vector2 bStart, Vector2 bEnd)
         {
