@@ -5,6 +5,7 @@ using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
 using Raylib_cs;
 using ShapeEngine.Color;
+using ShapeEngine.Core;
 using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes
@@ -21,6 +22,9 @@ namespace Examples.Scenes.ExampleScenes
         private InputAction createPoint;
         private InputAction deletePoint;
         private InputAction changeOffset;
+
+        private bool collisionSegmentValid = false;
+        private Segment collisionSegment = new(); // new(new(-192, -450), new(466, 750));
         
         public PolylineInflationExample()
         {
@@ -53,6 +57,8 @@ namespace Examples.Scenes.ExampleScenes
             dragIndex = -1;
             offsetDelta = 0f;
             lerpOffsetDelta = 0f;
+            collisionSegment = new();
+            collisionSegmentValid = false;
         }
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
@@ -74,6 +80,21 @@ namespace Examples.Scenes.ExampleScenes
             lerpOffsetDelta = ShapeMath.LerpFloat(lerpOffsetDelta, offsetDelta, dt * 2f);
 
             offsetDelta = ShapeMath.Clamp(offsetDelta, 0f, MaxOffset);
+
+
+            if (ShapeInput.KeyboardDevice.IsDown(ShapeKeyboardButton.H))
+            {
+                collisionSegmentValid = true;
+                collisionSegment = collisionSegment.SetStart(mousePosGame);
+            }
+
+            if (ShapeInput.KeyboardDevice.IsDown(ShapeKeyboardButton.G))
+            {
+                collisionSegmentValid = true;
+                collisionSegment = collisionSegment.SetEnd(mousePosGame);
+            }
+            
+
         }
         protected override void OnDrawGameExample(ScreenInfo game)
         {
@@ -183,13 +204,60 @@ namespace Examples.Scenes.ExampleScenes
 
             if (drawClosest) ShapeDrawing.DrawCircle(closest, vertexRadius, Colors.Warm);
 
+            Polygons? inflatedPolygons = null;
             if (lerpOffsetDelta > 10f)
             {
-                var polygons = ShapeClipper.Inflate(polyline, lerpOffsetDelta).ToPolygons();
-                foreach (var polygon in polygons)
+                inflatedPolygons = ShapeClipper.Inflate(polyline, lerpOffsetDelta).ToPolygons();
+                foreach (var polygon in inflatedPolygons)
                 {
                     polygon.DrawLines(relativeSize, new(Color.Goldenrod));
                 }
+            }
+
+
+            if (collisionSegmentValid)
+            {
+                var intersectionHappend = false;
+                if (inflatedPolygons != null)
+                {
+                    foreach (var polygon in inflatedPolygons)
+                    {
+                        var intersectionPoints = collisionSegment.IntersectShape(polygon);
+                        if (intersectionPoints != null && intersectionPoints.Count > 0)
+                        {
+                            foreach (var p in intersectionPoints)
+                            {
+                                if (p.Valid)
+                                {
+                                    if(!intersectionHappend) intersectionHappend = true;
+                                    p.Point.Draw(8f, new ColorRgba(Color.Crimson), 10);
+                                    Segment normal = new(p.Point, p.Point + p.Normal * 50f);
+                                    normal.Draw(4f, new ColorRgba(Color.Crimson));
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    var intersectionPoints = collisionSegment.IntersectShape(polyline);// polyline.IntersectShape(collisionSegment);
+                    if (intersectionPoints != null && intersectionPoints.Count > 0)
+                    {
+                        foreach (var p in intersectionPoints)
+                        {
+                            if (p.Valid)
+                            {
+                                if(!intersectionHappend) intersectionHappend = true;
+                                p.Point.Draw(8f, new ColorRgba(Color.Crimson), 10);
+                                Segment normal = new(p.Point, p.Point + p.Normal * 50f);
+                                normal.Draw(4f, new ColorRgba(Color.Crimson));
+                            }
+                        }
+                    }
+                }
+                
+                if(intersectionHappend) collisionSegment.Draw(4f, new ColorRgba(Color.Aquamarine), LineCapType.None);
+                else collisionSegment.Draw(4f, new ColorRgba(Color.Bisque), LineCapType.None);
             }
         }
         protected override void OnDrawGameUIExample(ScreenInfo ui)
