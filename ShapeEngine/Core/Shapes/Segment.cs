@@ -1,5 +1,6 @@
 ﻿
 using System.Numerics;
+using System.Runtime.InteropServices;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Structs;
@@ -290,6 +291,34 @@ namespace ShapeEngine.Core.Shapes
         {
             throw new NotImplementedException();
         }
+        
+        //BETTER SEGMENT VS SEGMENT INTERSECTION CHECK ?!
+        // public static Vector2 SegmentSegmentIntersectionPoint(Vector2 aStart, Vector2 aEnd, Vector2 bStart,
+        //     Vector2 bEnd)
+        // {
+        //     var a = GetLineABC(aStart, aEnd);
+        //     var b = GetLineABC(bStart, bEnd);
+        //
+        //     float det = a.a * b.b - b.a * a.b;
+        //     if(det != 0)
+        //     {
+        //         float x = (b.b * a.c - a.b * b.c) / det;
+        //         float y = (a.a * b.c - b.a * a.c) / det;
+        //         return new(x, y);
+        //     }
+        //
+        //     return new();
+        // }
+        // private static (float a, float b, float c) GetLineABC(Vector2 p1, Vector2 p2)
+        // {
+        //     float a = p2.Y - p1.Y;
+        //     float b = p1.X - p2.X;
+        //     float c = a * p1.X + b * p2.Y;
+        //     return (a, b, c);
+        // }
+        
+        
+        
         public static bool OverlapSegmentSegment(Vector2 aStart, Vector2 aEnd, Vector2 bStart, Vector2 bEnd)
         {
             var axisAPos = aStart;

@@ -4,6 +4,7 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
 using Raylib_cs;
+using ShapeEngine.Color;
 using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes
@@ -90,7 +91,7 @@ namespace Examples.Scenes.ExampleScenes
 
             var createState = createPoint.State;
             var deleteState = deletePoint.State;
-
+            
             for (int i = 0; i < polyline.Count; i++)
             {
                 var p = polyline[i];
