@@ -160,6 +160,7 @@ namespace Examples.Scenes.ExampleScenes
     internal class Ball : CollisionObject
     {
         private CircleCollider circleCollider;
+        
         public Ball(Vector2 pos) : base(pos)
         {
             var col = new CircleCollider(new(0f), 12f);
@@ -196,6 +197,7 @@ namespace Examples.Scenes.ExampleScenes
             c.DrawLines(4f, Colors.Warm);
         }
 
+        public override bool HasLeftBounds(Rect bounds) => !bounds.OverlapShape(circleCollider.GetCircleShape());
         public override bool IsDrawingToGame(Rect gameArea) => gameArea.OverlapShape(circleCollider.GetCircleShape());
         public override bool IsDrawingToGameUI(Rect screenArea) => false;
 
@@ -256,11 +258,15 @@ namespace Examples.Scenes.ExampleScenes
         public override void DrawGameUI(ScreenInfo ui)
         {
         }
+        public override bool HasLeftBounds(Rect bounds) => !bounds.OverlapShape(circleCollider.GetCircleShape());
+        public override bool IsDrawingToGame(Rect gameArea) => gameArea.OverlapShape(circleCollider.GetCircleShape());
     }
     internal class Rock : CollisionObject
     {
         private PolyCollider polyCollider;
         private float rotationSpeedRad;
+        private bool leftGameArea = false;
+        private Rect boundingBox;
         public Rock(Vector2 pos) : base(pos)
         {
             var shape = Polygon.Generate(pos, 6, 5, 50);
@@ -271,13 +277,15 @@ namespace Examples.Scenes.ExampleScenes
             col.CollisionMask = new(CollisionFlags.WallFlag);
             col.CollisionMask = col.CollisionMask.Add(CollisionFlags.RockFlag);
             col.CollisionLayer = CollisionFlags.RockFlag;
-
+            
             rotationSpeedRad = ShapeRandom.RandF(-90, 90) * ShapeMath.DEGTORAD;
             Velocity = ShapeRandom.RandVec2(50, 250);
             AddCollider(col);
 
             polyCollider = col;
             polyCollider.OnCollision += Overlap;
+
+            
         }
 
         public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
@@ -289,10 +297,54 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
 
+        public override bool HasLeftBounds(Rect bounds)
+        {
+            var leftBounds = !bounds.OverlapShape(boundingBox);
+
+            if (leftBounds)
+            {
+                var newBounds = bounds.ScaleSize(0.25f, new Vector2(0f));
+                var spawnPos = newBounds.GetRandomPointInside();
+                Transform = this.Transform.SetPosition(spawnPos);
+            }
+
+            return false;
+        }
+
+        public override bool IsDrawingToGame(Rect gameArea)
+        {
+            //is drawing to game is called first in Game class, so constructing bounding box once in here is fine
+            boundingBox = polyCollider.GetBoundingBox(); 
+
+            var inside = gameArea.OverlapShape(boundingBox);
+
+            if (inside && leftGameArea)
+            {
+                leftGameArea = false;
+                OnEnteredGameArea();
+            }
+            else if (!inside && !leftGameArea)
+            {
+                leftGameArea = true;
+                OnLeftGameArea();
+            }
+
+            return inside;
+        }
+
+        private void OnLeftGameArea()
+        {
+            var col = polyCollider;
+            col.CollisionMask = col.CollisionMask.Remove(CollisionFlags.RockFlag);
+        }
+
+        private void OnEnteredGameArea()
+        {
+            var col = polyCollider;
+            col.CollisionMask = col.CollisionMask.Add(CollisionFlags.RockFlag);
+        }
         private void Overlap(CollisionInformation info)
         {
-            
-            
             if (info.CollisionSurface.Valid)
             {
                 // body.Transform = body.Transform.ScaleBy(ShapeRandom.RandF(0.1f, 0.2f));

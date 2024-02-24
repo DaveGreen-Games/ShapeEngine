@@ -445,7 +445,7 @@ namespace ShapeEngine.Core.Shapes
                 );
         }
         
-        public readonly Rect Inflate(float horizontalAmount, float verticalAmount)
+        public readonly Rect ScaleSize(float horizontalAmount, float verticalAmount)
         {
             return new
             (
@@ -455,8 +455,8 @@ namespace ShapeEngine.Core.Shapes
                 Height +verticalAmount * 2f
             );
         }
-        public readonly Rect Inflate(float scale, Vector2 alignement) => new(GetPoint(alignement), Size * scale, alignement);
-        public readonly Rect Inflate(Vector2 scale, Vector2 alignement) => new(GetPoint(alignement), Size * scale, alignement);
+        public readonly Rect ScaleSize(float scale, Vector2 alignement) => new(GetPoint(alignement), Size * scale, alignement);
+        public readonly Rect ScaleSize(Vector2 scale, Vector2 alignement) => new(GetPoint(alignement), Size * scale, alignement);
         public readonly Rect SetSize(Vector2 newSize) => new(TopLeft, newSize, new(0f));
         public readonly Rect SetSize(Vector2 newSize, Vector2 alignement) => new(GetPoint(alignement), newSize, alignement);
         public readonly Rect ChangeSize(float amount, Vector2 alignement) => new(GetPoint(alignement), new(Width + amount, Height + amount), alignement);
