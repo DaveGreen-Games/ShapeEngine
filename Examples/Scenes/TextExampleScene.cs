@@ -30,7 +30,8 @@ namespace Examples.Scenes
 
         protected readonly ShapeTextBox textBox = new("Enter Text into this box");
         
-        protected const uint accessTagTextBox = 2345;
+        protected readonly uint accessTagTextBox = BitFlag.GetFlagUint(12);
+        
         private readonly InputAction iaEnterText;
         private readonly InputAction iaCancelText;
         private readonly InputAction iaFinishText;
@@ -154,8 +155,10 @@ namespace Examples.Scenes
             {
                 if (iaEnterText.State.Pressed)
                 {
+                    BitFlag mask = new(accessTagTextBox);
+                    InputAction.LockWhitelist(mask);
                     textBox.StartEntry();
-                    InputAction.LockWhitelist(accessTagTextBox);
+                    // InputAction.LockWhitelist(accessTagTextBox);
                     draggingBottomRight = false;
                     draggingTopLeft = false;
                     mouseInsideBottomRight = false;

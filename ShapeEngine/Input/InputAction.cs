@@ -1,5 +1,6 @@
 using System.Text;
 using ShapeEngine.Core;
+using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
 
 namespace ShapeEngine.Input;
@@ -506,14 +507,11 @@ public class InputAction
     #region Static
 
     #region Members
-    public static readonly uint AllAccessTag = 1000;
-    public static readonly uint DefaultAccessTag = 1001;
+    public static readonly uint AllAccessTag = BitFlag.GetFlagUint(31);
+    public static readonly uint DefaultAccessTag = BitFlag.GetFlagUint(30);
     public static bool Locked { get; private set; } = false;
-    private static readonly List<uint> lockWhitelist = new();
-    private static readonly List<uint> lockBlacklist = new();
-    
-    // private static readonly BitFlag lockWhitelist = new();
-    // private static readonly BitFlag lockBlacklist = new();
+    private static BitFlag lockWhitelist;
+    private static BitFlag lockBlacklist;
 
     #endregion
     
@@ -521,40 +519,50 @@ public class InputAction
     public static void Lock()
     {
         Locked = true;
-        lockWhitelist.Clear();
-        lockBlacklist.Clear();
+        lockWhitelist = BitFlag.Clear();
+        lockBlacklist = BitFlag.Clear();
     }
 
-    public static void Lock(uint[] whitelist, uint[] blacklist)
+    public static void Lock(BitFlag whitelist, BitFlag blacklist)
     {
         Locked = true;
-        lockWhitelist.Clear();
-        lockBlacklist.Clear();
-        if(whitelist.Length > 0) lockWhitelist.AddRange(whitelist);
-        if(blacklist.Length > 0) lockWhitelist.AddRange(blacklist);
+        lockWhitelist = whitelist;
+        lockBlacklist = blacklist;
+        // lockWhitelist.Clear();
+        // lockBlacklist.Clear();
+        // if(whitelist.Length > 0) lockWhitelist.AddRange(whitelist);
+        // if(blacklist.Length > 0) lockWhitelist.AddRange(blacklist);
     }
-    public static void LockWhitelist(params uint[] whitelist)
+    public static void LockWhitelist(BitFlag whitelist)
     {
         Locked = true;
-        lockWhitelist.Clear();
-        lockBlacklist.Clear();
-        if(whitelist.Length > 0) lockWhitelist.AddRange(whitelist);
-        
+        lockWhitelist = whitelist;
+        lockBlacklist = BitFlag.Clear();
+        // lockWhitelist.Clear();
+        // lockBlacklist.Clear();
+        // if(whitelist.Length > 0) lockWhitelist.AddRange(whitelist);
+
     }
-    public static void LockBlacklist(params uint[] blacklist)
+    public static void LockBlacklist(BitFlag blacklist)
     {
         Locked = true;
-        lockWhitelist.Clear();
-        lockBlacklist.Clear();
-        if(blacklist.Length > 0) lockBlacklist.AddRange(blacklist);
+        lockBlacklist = blacklist;
+        lockWhitelist = BitFlag.Clear();
     }
     public static void Unlock()
     {
         Locked = false;
-        lockWhitelist.Clear();
-        lockBlacklist.Clear();
+        lockWhitelist = BitFlag.Clear();
+        lockBlacklist = BitFlag.Clear();
     }
-    public static bool HasAccess(uint tag) => tag == AllAccessTag || (lockWhitelist.Contains(tag) && !lockBlacklist.Contains(tag));
+    public static bool HasAccess(uint tag)
+    {
+        if (tag == AllAccessTag) return true;
+        return (lockWhitelist.IsEmpty() || lockWhitelist.Has(tag)) && !lockBlacklist.Has(tag);
+        // return tag == AllAccessTag || (lockWhitelist.Has(tag) && !lockBlacklist.Has(tag));
+        // return tag == AllAccessTag || (lockWhitelist.Contains(tag) && !lockBlacklist.Contains(tag));
+    }
+
     public static bool HasAccess(InputAction action) => HasAccess(action.AccessTag);
     #endregion
     

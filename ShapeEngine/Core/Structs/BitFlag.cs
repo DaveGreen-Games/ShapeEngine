@@ -11,7 +11,7 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     }
     
     #region Operations Uint
-    public BitFlag Clear() => Empty;
+    public static BitFlag Clear() => Empty;
     public bool IsEmpty() => Flag == 0;
     public bool Has(uint value)
     {

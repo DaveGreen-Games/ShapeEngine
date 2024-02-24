@@ -734,7 +734,10 @@ namespace Examples.Scenes.ExampleScenes
         
         public override void Activate(Scene oldScene)
         {
-            InputAction.LockWhitelist(GAMELOOP.GameloopAccessTag, InputAction.DefaultAccessTag);
+            BitFlag mask = new(GAMELOOP.GameloopAccessTag);
+            mask = mask.Add(InputAction.DefaultAccessTag);
+            InputAction.LockWhitelist(mask);
+            // InputAction.LockWhitelist(GAMELOOP.GameloopAccessTag, InputAction.DefaultAccessTag);
         }
 
         public override void Deactivate()

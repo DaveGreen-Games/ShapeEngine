@@ -201,26 +201,23 @@ namespace Examples
     {
         public Font FontDefault { get; private set; }
 
-        
-
         private Dictionary<int, Font> fonts = new();
         private List<string> fontNames = new();
         private MainScene? mainScene = null;
 
         private uint crtShaderID = ShapeID.NextID;
         private Vector2 crtCurvature = new(6, 4);
-
         
         public ShapeGamepadDevice? CurGamepad = null;
 
         public RectContainerMain UIRects = new("main");
         
         
-        public readonly uint UIAccessTag = 100;
-        public readonly uint GameloopAccessTag = 200;
-        public readonly uint SceneAccessTag = 300;
-        public readonly uint GamepadMouseMovementTag = 1000;
-        public readonly uint KeyboardMouseMovementTag = 2000;
+        public readonly uint UIAccessTag = BitFlag.GetFlagUint(2);
+        public readonly uint GameloopAccessTag = BitFlag.GetFlagUint(3);
+        public readonly uint SceneAccessTag = BitFlag.GetFlagUint(4);
+        public readonly uint GamepadMouseMovementTag = BitFlag.GetFlagUint(5);
+        public readonly uint KeyboardMouseMovementTag = BitFlag.GetFlagUint(6);
         //ui
        
         public static IModifierKey  ModifierKeyGamepad = new ModifierKeyGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, false);

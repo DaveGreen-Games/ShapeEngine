@@ -260,7 +260,9 @@ namespace Examples.Scenes.ExampleScenes
         public override void Activate(Scene oldScene)
         {
             GAMELOOP.Camera = camera;
-            InputAction.LockBlacklist(GAMELOOP.SceneAccessTag, GAMELOOP.GamepadMouseMovementTag);
+            BitFlag mask = new(GAMELOOP.SceneAccessTag);
+            mask = mask.Add(GAMELOOP.GamepadMouseMovementTag);
+            InputAction.LockBlacklist(mask);
         }
 
         public override void Deactivate()
