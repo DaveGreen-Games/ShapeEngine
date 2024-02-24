@@ -30,7 +30,7 @@ namespace ShapeEngine.Core
         public CollisionHandler? CollisionHandler { get; private set; } = null;
         public Vector2 ParallaxePosition { get; set; } = new(0f);
 
-        private readonly SortedList<int, List<GameObject>> allObjects = new();
+        private readonly SortedList<uint, List<GameObject>> allObjects = new();
         private readonly List<GameObject> drawToGameTextureObjects = new();
         private readonly List<GameObject> drawToUITextureObjects = new();
 
@@ -78,8 +78,27 @@ namespace ShapeEngine.Core
             Bounds = newBounds;
             CollisionHandler?.ResizeBounds(newBounds);
         }
-        public bool HasLayer(int layer) { return allObjects.ContainsKey(layer); }
-        public List<GameObject> GetGameObjects(int layer, Predicate<GameObject> match) { return HasLayer(layer) ? allObjects[layer].FindAll(match) : new(); }
+        public bool HasLayer(uint layer) { return allObjects.ContainsKey(layer); }
+        public List<GameObject> GetGameObjects(uint layer, Predicate<GameObject> match) { return HasLayer(layer) ? allObjects[layer].FindAll(match) : new(); }
+        public List<GameObject> GetGameObjects(BitFlag layerMask)
+        {
+            var result = new List<GameObject>();
+            foreach (var kvp in allObjects)
+            {
+                if(layerMask.Has(kvp.Key)) result.AddRange(kvp.Value);
+            }
+            return result;
+        }
+        public List<GameObject> GetGameObjects(BitFlag layerMask, Predicate<GameObject> match)
+        {
+            var result = new List<GameObject>();
+            foreach (var kvp in allObjects)
+            {
+                if(layerMask.Has(kvp.Key)) result.AddRange(kvp.Value.FindAll(match));
+            }
+            return result;
+        }
+
         public List<GameObject> GetAllGameObjects()
         {
             List<GameObject> objects = new();
@@ -91,10 +110,11 @@ namespace ShapeEngine.Core
         }
         public List<GameObject> GetAllGameObjects(Predicate<GameObject> match) { return GetAllGameObjects().FindAll(match); }
 
+        
         public void AddGameObject(GameObject gameObject)
         {
-            int layer = gameObject.Layer;
-            if (!allObjects.ContainsKey(layer)) AddLayer(layer);
+            var layer = gameObject.Layer;
+            AddLayer(layer);
 
             allObjects[layer].Add(gameObject);
 
@@ -111,24 +131,21 @@ namespace ShapeEngine.Core
         }
         public void AddGameObjects(params GameObject[] areaObjects) { foreach (var ao in areaObjects) AddGameObject(ao); }
         public void AddGameObjects(IEnumerable<GameObject> areaObjects) { foreach (var ao in areaObjects) AddGameObject(ao); }
-        public void RemoveGameObject(GameObject gameObject)
+        public bool RemoveGameObject(GameObject gameObject)
         {
-            if (allObjects.TryGetValue(gameObject.Layer, out var o))
+            if (!allObjects.TryGetValue(gameObject.Layer, out var o)) return false;
+            if (!o.Remove(gameObject)) return false;
+            if (CollisionHandler != null)
             {
-                bool removed = o.Remove(gameObject);
-                if (removed)
+                if (gameObject is CollisionObject co)
                 {
-                    if (CollisionHandler != null)
-                    {
-                        if (gameObject is CollisionObject co)
-                        {
-                            CollisionHandler.Remove(co);
-                        }
-                    }
-                    OnGameObjectRemoved(gameObject);
-                    gameObject.OnDespawned(this);
+                    CollisionHandler.Remove(co);
                 }
             }
+            OnGameObjectRemoved(gameObject);
+            gameObject.OnDespawned(this);
+            return true;
+
         }
         public void RemoveGameObjects(params GameObject[] areaObjects)
         {
@@ -144,17 +161,48 @@ namespace ShapeEngine.Core
                 RemoveGameObject(ao);
             }
         }
-        public void RemoveGameObjects(int layer, Predicate<GameObject> match)
+        public List<GameObject>? RemoveGameObjects(uint layer, Predicate<GameObject> match)
         {
-            if (allObjects.ContainsKey(layer))
+            if (!allObjects.ContainsKey(layer)) return null;
+            List<GameObject>? result = null;
+            var objs = GetGameObjects(layer, match);
+            foreach (var o in objs)
             {
-                var objs = GetGameObjects(layer, match);
-                foreach (var o in objs)
-                {
-                    RemoveGameObject(o);
-                }
+                if(!RemoveGameObject(o)) continue;
+                result ??= new();
+                result.Add(o);
             }
+
+            return result;
         }
+        public List<GameObject>? RemoveGameObjects(BitFlag layerMask)
+        {
+            var objs = GetGameObjects(layerMask);
+            List<GameObject>? result = null;
+            foreach (var o in objs)
+            {
+                if (!RemoveGameObject(o)) continue;
+                result ??= new();
+                result.Add(o);
+            }
+
+            return result;
+        }
+        public List<GameObject>? RemoveGameObjects(BitFlag layerMask, Predicate<GameObject> match)
+        {
+            var objs = GetGameObjects(layerMask, match);
+            List<GameObject>? result = null;
+            foreach (var o in objs)
+            {
+                if (!RemoveGameObject(o)) continue;
+                result ??= new();
+                result.Add(o);
+            }
+
+            return result;
+        }
+
+        
         public void RemoveGameObjects(Predicate<GameObject> match)
         {
             var objs = GetAllGameObjects(match);
@@ -165,7 +213,7 @@ namespace ShapeEngine.Core
         }
 
         
-        public void ClearAreaAllObjects(Rect area, BitFlag areaLayerMask)
+        public void ClearArea(Rect area, BitFlag areaLayerMask)
         {
             clearArea = area;
             clearAreaMask = areaLayerMask;
@@ -173,8 +221,10 @@ namespace ShapeEngine.Core
         }
         public HashSet<CollisionObject>? ClearAreaCollisionObjects(Rect area, BitFlag collisionLayerMask)
         {
+            if (CollisionHandler == null) return null;
+            
             var result = new List<Collider>();
-            CollisionHandler?.CastSpace(area, collisionLayerMask, ref result);
+            CollisionHandler.CastSpace(area, collisionLayerMask, ref result);
 
             if (result.Count <= 0) return null;
             
@@ -208,16 +258,15 @@ namespace ShapeEngine.Core
             }
             CollisionHandler?.Clear();
         }
-        public virtual void ClearLayer(int layer)
+        public virtual void ClearLayer(uint layer)
         {
-            if (!allObjects.ContainsKey(layer)) return;
-            
-            var objects = allObjects[layer];
+            if (!allObjects.TryGetValue(layer, out var objects)) return;
+
             for (int i = objects.Count - 1; i >= 0; i--)
             {
                 var obj = objects[i];
-                OnGameObjectRemoved(obj);
                 objects.RemoveAt(i);
+                OnGameObjectRemoved(obj);
                 obj.OnDespawned(this);
                 
                 if (CollisionHandler == null) continue;
@@ -225,7 +274,7 @@ namespace ShapeEngine.Core
                 if (obj is CollisionObject co) CollisionHandler.Remove(co);
 
             }
-            objects.Clear();
+            // objects.Clear();
         }
 
         public virtual void Start() { }
@@ -364,7 +413,7 @@ namespace ShapeEngine.Core
             }
         }
 
-        protected void AddLayer(int layer)
+        private void AddLayer(uint layer)
         {
             if (!allObjects.ContainsKey(layer))
             {

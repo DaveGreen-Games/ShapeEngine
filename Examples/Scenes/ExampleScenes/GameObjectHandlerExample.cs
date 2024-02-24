@@ -121,7 +121,7 @@ namespace Examples.Scenes.ExampleScenes
             col.CollisionMask = BitFlag.Empty;
             col.CollisionLayer = CollisionFlags.WallFlag;
 
-            Layer = (int)SpawnAreaLayers.WallFlag;
+            Layer = SpawnAreaLayers.WallFlag;
             
             AddCollider(col);
 
@@ -151,7 +151,7 @@ namespace Examples.Scenes.ExampleScenes
             col.CollisionMask = BitFlag.Empty;
             col.CollisionLayer = CollisionFlags.BoundaryFlag;
 
-            Layer = (int)SpawnAreaLayers.BoundaryFlag;
+            Layer = SpawnAreaLayers.BoundaryFlag;
             var pos = col.GetPolygonShape().GetCentroid();
             Transform = new(pos);
             
@@ -189,7 +189,7 @@ namespace Examples.Scenes.ExampleScenes
             circleCollider = col;
             circleCollider.OnCollision += Overlap;
             
-            Layer = (int)SpawnAreaLayers.ObjectFlag;
+            Layer = SpawnAreaLayers.ObjectFlag;
         }
 
         private void Overlap(CollisionInformation info)
@@ -241,7 +241,7 @@ namespace Examples.Scenes.ExampleScenes
             circleCollider = col;
             circleCollider.OnCollision += Overlap;
             
-            Layer = (int)SpawnAreaLayers.ObjectFlag;
+            Layer = SpawnAreaLayers.ObjectFlag;
         }
 
         public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
@@ -305,7 +305,7 @@ namespace Examples.Scenes.ExampleScenes
             polyCollider = col;
             polyCollider.OnCollision += Overlap;
             
-            Layer = (int)SpawnAreaLayers.ObjectFlag;
+            Layer = SpawnAreaLayers.ObjectFlag;
 
             
         }
@@ -428,7 +428,7 @@ namespace Examples.Scenes.ExampleScenes
             triangleCollider = tCol;
             triangleCollider.OnCollision += Overlap;
             
-            Layer = (int)SpawnAreaLayers.ObjectFlag;
+            Layer = SpawnAreaLayers.ObjectFlag;
         }
 
         private void Overlap(CollisionInformation info)
@@ -903,13 +903,12 @@ namespace Examples.Scenes.ExampleScenes
 
     public class GameObjectHandlerExample : ExampleScene
     {
-        Rect boundaryRect;
-        // private List<Wall> boundaryWalls = new();
-        Font font;
+        private readonly Rect boundaryRect;
+        private Font font;
 
-        Vector2 startPoint = new();
-        bool segmentStarted = false;
-        bool drawDebug = false;
+        private Vector2 startPoint = new();
+        private bool segmentStarted = false;
+        private bool drawDebug = false;
 
         private readonly InputAction iaSpawnRock;
         private readonly InputAction iaSpawnBall;

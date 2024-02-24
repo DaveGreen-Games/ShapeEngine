@@ -25,7 +25,7 @@ public abstract class GameObject : IUpdateable, IDrawable
     /// <summary>
     /// The area layer the object is stored in. Higher layers are draw on top of lower layers.
     /// </summary>
-    public int Layer { get; set; }
+    public uint Layer { get; set; }
     /// <summary>
     /// Is called by the area. Can be used to update the objects position based on the new parallax position.
     /// </summary>
@@ -37,7 +37,7 @@ public abstract class GameObject : IUpdateable, IDrawable
     /// </summary>
     /// <param name="layer"></param>
     /// <returns></returns>
-    public bool IsInLayer(int layer) { return this.Layer == layer; }
+    public bool IsInLayer(uint layer) { return this.Layer == layer; }
 
     /// <summary>
     /// Is called when gameobject is added to an area.

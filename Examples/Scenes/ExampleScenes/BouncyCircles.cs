@@ -17,7 +17,7 @@ namespace Examples.Scenes.ExampleScenes
     {
         public Vector2 Vel;
 
-        private static ChanceList<int> layerChances = new((1000, 0), (250, 1), (50, 2));
+        private static ChanceList<uint> layerChances = new((1000, 0), (250, 1), (50, 2));
         
         public Circ(Vector2 pos, Vector2 vel, float radius)
         {
@@ -26,9 +26,9 @@ namespace Examples.Scenes.ExampleScenes
             
             var velFactor = Layer switch
             {
-                1 => 0.75f,
-                2 => 1.5f,
-                _ => 0.25f
+                1 => 1f,
+                2 => 1.1f,
+                _ => 0.9f
             };
             this.Vel = vel * velFactor;
         }
