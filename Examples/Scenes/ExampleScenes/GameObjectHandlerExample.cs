@@ -4,7 +4,6 @@ using ShapeEngine.Lib;
 using System.Numerics;
 using System.Text;
 using ShapeEngine.Core.Collision;
-using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
@@ -188,12 +187,17 @@ namespace Examples.Scenes.ExampleScenes
         public override void DrawGame(ScreenInfo game)
         {
             var c = circleCollider.GetCircleShape();
-
-            if (game.Area.OverlapShape(c))
-            {
-                c.DrawLines(4f, Colors.Warm);
-            }
+            //
+            // if (game.Area.OverlapShape(c))
+            // {
+            //     c.DrawLines(4f, Colors.Warm);
+            // }
+            
+            c.DrawLines(4f, Colors.Warm);
         }
+
+        public override bool IsDrawingToGame(Rect gameArea) => gameArea.OverlapShape(circleCollider.GetCircleShape());
+        public override bool IsDrawingToGameUI(Rect screenArea) => false;
 
         public override void DrawGameUI(ScreenInfo ui)
         {

@@ -266,7 +266,8 @@ public class Game
             
             Raylib.EndTextureMode();
             
-            DrawToScreen(Window.ScreenArea, mousePosUI);
+            //Window.ScreenArea, mousePosUI
+            DrawToScreen();
 
             ResolveDeferred();
         }
@@ -274,8 +275,10 @@ public class Game
 
     
     
-    private void DrawToScreen(Rect screenArea, Vector2 mousePosUI)
+    private void DrawToScreen()
     {
+        //parameters
+        //Rect screenArea, Vector2 mousePosUI
         // Stopwatch watch = new();
         // watch.Restart();
         // Console.WriteLine($"Draw screen {watch.ElapsedMilliseconds}ms");
