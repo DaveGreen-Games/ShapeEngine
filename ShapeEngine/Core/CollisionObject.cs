@@ -87,7 +87,8 @@ public abstract class CollisionObject : PhysicsObject
         foreach (var col in Colliders)
         {
             if(!col.Enabled) continue;
-            boundingBox = boundingBox.Union(col.GetBoundingBox());
+            if (boundingBox.Width <= 0 || boundingBox.Height <= 0) boundingBox = col.GetBoundingBox();
+            else boundingBox = boundingBox.Union(col.GetBoundingBox());
         }
     
         return boundingBox;

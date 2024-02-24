@@ -3,6 +3,7 @@ using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using System.Numerics;
 using System.Text;
+using ShapeEngine.Color;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
@@ -93,6 +94,12 @@ namespace Examples.Scenes.ExampleScenes
     //     }
     // }
 
+    internal static class SpawnAreaLayers
+    {
+        public static readonly uint BoundaryFlag = BitFlag.GetFlagUint(1);
+        public static readonly uint WallFlag = BitFlag.GetFlagUint(2);
+        public static readonly uint ObjectFlag = BitFlag.GetFlagUint(3);
+    }
     internal static class CollisionFlags
     {
         public static readonly uint WallFlag = BitFlag.GetFlagUint(1); //2
@@ -100,6 +107,7 @@ namespace Examples.Scenes.ExampleScenes
         public static readonly uint BirdFlag = BitFlag.GetFlagUint(3); //8
         public static readonly uint BallFlag = BitFlag.GetFlagUint(4); //16
         public static readonly uint BulletFlag = BitFlag.GetFlagUint(5); //32
+        public static readonly uint BoundaryFlag = BitFlag.GetFlagUint(6); //32
     }
     internal class PolyWall : CollisionObject
     {
@@ -113,6 +121,8 @@ namespace Examples.Scenes.ExampleScenes
             col.CollisionMask = BitFlag.Empty;
             col.CollisionLayer = CollisionFlags.WallFlag;
 
+            Layer = (int)SpawnAreaLayers.WallFlag;
+            
             AddCollider(col);
 
             polyCollider = col;
@@ -121,6 +131,7 @@ namespace Examples.Scenes.ExampleScenes
         public override void DrawGame(ScreenInfo game)
         {
             polyCollider.GetPolygonShape().DrawLines(4f, Colors.Special);
+            // GetBoundingBox().DrawLines(4f, Colors.Cold);
         }
 
         public override void DrawGameUI(ScreenInfo ui)
@@ -138,8 +149,9 @@ namespace Examples.Scenes.ExampleScenes
             col.ComputeIntersections = false;
             col.Enabled = true;
             col.CollisionMask = BitFlag.Empty;
-            col.CollisionLayer = CollisionFlags.WallFlag;
+            col.CollisionLayer = CollisionFlags.BoundaryFlag;
 
+            Layer = (int)SpawnAreaLayers.BoundaryFlag;
             var pos = col.GetPolygonShape().GetCentroid();
             Transform = new(pos);
             
@@ -168,6 +180,7 @@ namespace Examples.Scenes.ExampleScenes
             col.ComputeIntersections = true;
             col.Enabled = true;
             col.CollisionMask = new(CollisionFlags.WallFlag);
+            col.CollisionMask = col.CollisionMask.Add(CollisionFlags.BoundaryFlag);
             col.CollisionLayer = CollisionFlags.BallFlag;
 
             Velocity = ShapeRandom.RandVec2(50, 250);
@@ -175,6 +188,8 @@ namespace Examples.Scenes.ExampleScenes
 
             circleCollider = col;
             circleCollider.OnCollision += Overlap;
+            
+            Layer = (int)SpawnAreaLayers.ObjectFlag;
         }
 
         private void Overlap(CollisionInformation info)
@@ -195,6 +210,7 @@ namespace Examples.Scenes.ExampleScenes
             // }
             
             c.DrawLines(4f, Colors.Warm);
+            // GetBoundingBox().DrawLines(4f, Colors.Cold);
         }
 
         public override bool HasLeftBounds(Rect bounds) => !bounds.OverlapShape(circleCollider.GetCircleShape());
@@ -216,6 +232,7 @@ namespace Examples.Scenes.ExampleScenes
             col.ComputeIntersections = false;
             col.Enabled = true;
             col.CollisionMask = new(CollisionFlags.WallFlag);
+            col.CollisionMask = col.CollisionMask.Add(CollisionFlags.BoundaryFlag);
             col.CollisionLayer = CollisionFlags.BulletFlag;
 
             Velocity = ShapeRandom.RandVec2(1500, 2000);
@@ -223,6 +240,8 @@ namespace Examples.Scenes.ExampleScenes
 
             circleCollider = col;
             circleCollider.OnCollision += Overlap;
+            
+            Layer = (int)SpawnAreaLayers.ObjectFlag;
         }
 
         public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
@@ -276,6 +295,7 @@ namespace Examples.Scenes.ExampleScenes
             col.Enabled = true;
             col.CollisionMask = new(CollisionFlags.WallFlag);
             col.CollisionMask = col.CollisionMask.Add(CollisionFlags.RockFlag);
+            col.CollisionMask = col.CollisionMask.Add(CollisionFlags.BoundaryFlag);
             col.CollisionLayer = CollisionFlags.RockFlag;
             
             rotationSpeedRad = ShapeRandom.RandF(-90, 90) * ShapeMath.DEGTORAD;
@@ -284,6 +304,8 @@ namespace Examples.Scenes.ExampleScenes
 
             polyCollider = col;
             polyCollider.OnCollision += Overlap;
+            
+            Layer = (int)SpawnAreaLayers.ObjectFlag;
 
             
         }
@@ -356,6 +378,7 @@ namespace Examples.Scenes.ExampleScenes
         public override void DrawGame(ScreenInfo game)
         {
             polyCollider.GetPolygonShape().DrawLines(4f, Colors.Warm);
+            // GetBoundingBox().DrawLines(4f, Colors.Cold);
             // Circle c = new(body.Transform.Position, 5f);
             // c.Draw(Colors.Cold);
             // polyCollider.GetPolygonShape().DrawLines(4f, Colors.Highlight);
@@ -377,6 +400,7 @@ namespace Examples.Scenes.ExampleScenes
             cCol.ComputeIntersections = true;
             cCol.Enabled = true;
             cCol.CollisionMask = new(CollisionFlags.WallFlag);
+            cCol.CollisionMask = cCol.CollisionMask.Add(CollisionFlags.BoundaryFlag);
             cCol.CollisionLayer = CollisionFlags.BirdFlag;
 
             var ta = new Vector2(0, -radius / 2);
@@ -389,6 +413,7 @@ namespace Examples.Scenes.ExampleScenes
             tCol.Enabled = true;
             tCol.CollisionMask = new(CollisionFlags.WallFlag);
             tCol.CollisionMask = tCol.CollisionMask.Add(CollisionFlags.BirdFlag);
+            tCol.CollisionMask = tCol.CollisionMask.Add(CollisionFlags.BoundaryFlag);
             tCol.CollisionLayer = CollisionFlags.BirdFlag;
             
 
@@ -402,6 +427,8 @@ namespace Examples.Scenes.ExampleScenes
 
             triangleCollider = tCol;
             triangleCollider.OnCollision += Overlap;
+            
+            Layer = (int)SpawnAreaLayers.ObjectFlag;
         }
 
         private void Overlap(CollisionInformation info)
@@ -417,7 +444,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             circleCollider.GetCircleShape().DrawLines(4f, Colors.Warm);
             triangleCollider.GetTriangleShape().DrawLines(2f, Colors.Warm);
-
+            // GetBoundingBox().DrawLines(4f, Colors.Cold);
             // var vel = body.Velocity;
             // Segment s = new(body.Transform.Position, body.Transform.Position + vel);
             // s.Draw(2f, Colors.Cold);
@@ -888,6 +915,7 @@ namespace Examples.Scenes.ExampleScenes
         private readonly InputAction iaSpawnBall;
         private readonly InputAction iaSpawnBird;
         private readonly InputAction iaSpawnBullet;
+        private readonly InputAction iaStartClearArea;
         // private readonly InputAction iaSpawnBox;
         // private readonly InputAction iaSpawnAura;
         private readonly InputAction iaToggleDebug;
@@ -896,6 +924,11 @@ namespace Examples.Scenes.ExampleScenes
         private readonly InputAction iaMoveCameraH;
         private readonly InputAction iaMoveCameraV;
         private readonly List<InputAction> inputActions;
+
+        // private Rect clearArea = new();
+        private Vector2 clearAreaStartPoint = new();
+        private bool clearAreaActive = false;
+        private readonly BitFlag clearAreaMask;
         public GameObjectHandlerExample()
         {
             Title = "Gameobject Handler Example";
@@ -935,6 +968,10 @@ namespace Examples.Scenes.ExampleScenes
             var toggleDebugKB = new InputTypeKeyboardButton(ShapeKeyboardButton.Q);
             var toggleDebugGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_UP);
             iaToggleDebug = new(toggleDebugKB, toggleDebugGP);
+            
+            var clearAreaKb = new InputTypeKeyboardButton(ShapeKeyboardButton.X);
+            var clearAreaGp = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_TRIGGER_TOP);
+            iaStartClearArea = new(clearAreaKb, clearAreaGp);
 
             var cameraHorizontalKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
             var cameraHorizontalGP =
@@ -954,7 +991,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 iaPlaceWall, iaCancelWall,
                 iaSpawnRock, iaSpawnBall, iaSpawnBird, iaSpawnBullet,
-                iaToggleDebug,
+                iaToggleDebug, iaStartClearArea,
                 iaMoveCameraH, iaMoveCameraV
             };
             
@@ -965,6 +1002,11 @@ namespace Examples.Scenes.ExampleScenes
             }
             
             SetupBoundary();
+
+            clearAreaMask = new BitFlag(CollisionFlags.RockFlag);
+            clearAreaMask = clearAreaMask.Add(CollisionFlags.BallFlag);
+            clearAreaMask = clearAreaMask.Add(CollisionFlags.BirdFlag);
+            clearAreaMask = clearAreaMask.Add(CollisionFlags.WallFlag);
         }
         
         
@@ -985,6 +1027,18 @@ namespace Examples.Scenes.ExampleScenes
             //     ia.Gamepad = gamepadIndex;
             //     ia.Update(dt);
             // }
+
+            if (iaStartClearArea.State.Pressed)
+            {
+                clearAreaStartPoint = mousePosGame;
+                clearAreaActive = true;
+            }
+            else if (iaStartClearArea.State.Released)
+            {
+                var clearArea = new Rect(clearAreaStartPoint, mousePosGame);
+                SpawnArea?.ClearAreaCollisionObjects(clearArea, clearAreaMask);
+                clearAreaActive = false;
+            }
             
             if (iaSpawnRock.State.Pressed)
             {
@@ -1069,6 +1123,15 @@ namespace Examples.Scenes.ExampleScenes
             }
 
             DrawWalls(game.MousePos);
+        }
+
+        protected override void OnDrawGameExample(ScreenInfo game)
+        {
+            if (clearAreaActive)
+            {
+                var rect = new Rect(clearAreaStartPoint, game.MousePos);
+                rect.Draw(new ColorRgba(155, 155, 155, 155));
+            }
         }
 
         protected override void OnDrawUIExample(ScreenInfo ui)

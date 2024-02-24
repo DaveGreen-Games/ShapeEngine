@@ -747,6 +747,23 @@ namespace ShapeEngine.Core.Collision
             spatialHash.DebugDraw(border, fill);
         }
 
+        public static HashSet<CollisionObject>? GetParents(List<Collider> colliders)
+        {
+            if (colliders.Count <= 0) return null;
+            
+            var parents = new HashSet<CollisionObject>();
+            
+            foreach (var collider in colliders)
+            {
+                var parent = collider.Parent;
+                if (parent != null)
+                {
+                    parents.Add(parent);
+                }
+            }
+
+            return parents;
+        }
         
     }
 

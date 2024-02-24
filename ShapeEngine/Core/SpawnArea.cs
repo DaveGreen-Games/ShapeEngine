@@ -1,6 +1,7 @@
 ﻿using ShapeEngine.Lib;
 using ShapeEngine.Core.Shapes;
 using System.Numerics;
+using System.Runtime.Serialization;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Interfaces;
@@ -33,6 +34,11 @@ namespace ShapeEngine.Core
         private readonly List<GameObject> drawToGameTextureObjects = new();
         private readonly List<GameObject> drawToUITextureObjects = new();
 
+        private Rect clearArea = new();
+        private bool clearAreaActive = false;
+        private BitFlag clearAreaMask = new();
+        
+        
         // public SpawnArea()
         // {
         //     Bounds = new Rect();
@@ -120,6 +126,7 @@ namespace ShapeEngine.Core
                         }
                     }
                     OnGameObjectRemoved(gameObject);
+                    gameObject.OnDespawned(this);
                 }
             }
         }
@@ -157,6 +164,36 @@ namespace ShapeEngine.Core
             }
         }
 
+        
+        public void ClearAreaAllObjects(Rect area, BitFlag areaLayerMask)
+        {
+            clearArea = area;
+            clearAreaMask = areaLayerMask;
+            clearAreaActive = true;
+        }
+        public HashSet<CollisionObject>? ClearAreaCollisionObjects(Rect area, BitFlag collisionLayerMask)
+        {
+            var result = new List<Collider>();
+            CollisionHandler?.CastSpace(area, collisionLayerMask, ref result);
+
+            if (result.Count <= 0) return null;
+            
+            var removedParents = new HashSet<CollisionObject>();
+            
+            foreach (var collider in result)
+            {
+                var parent = collider.Parent;
+                if (parent != null && !removedParents.Contains(parent))
+                {
+                    RemoveGameObject(parent);
+                    removedParents.Add(parent);
+                }
+            }
+
+            return removedParents;
+        }
+        
+        
         protected virtual void OnGameObjectAdded(GameObject obj) { }
         protected virtual void OnGameObjectRemoved(GameObject obj) { }
 
@@ -173,17 +210,22 @@ namespace ShapeEngine.Core
         }
         public virtual void ClearLayer(int layer)
         {
-            if (allObjects.ContainsKey(layer))
+            if (!allObjects.ContainsKey(layer)) return;
+            
+            var objects = allObjects[layer];
+            for (int i = objects.Count - 1; i >= 0; i--)
             {
-                var objects = allObjects[layer];
-                for (int i = objects.Count - 1; i >= 0; i--)
-                {
-                    var obj = objects[i];
-                    OnGameObjectRemoved(obj);
-                    objects.RemoveAt(i);
-                }
-                objects.Clear();
+                var obj = objects[i];
+                OnGameObjectRemoved(obj);
+                objects.RemoveAt(i);
+                obj.OnDespawned(this);
+                
+                if (CollisionHandler == null) continue;
+                
+                if (obj is CollisionObject co) CollisionHandler.Remove(co);
+
             }
+            objects.Clear();
         }
 
         public virtual void Start() { }
@@ -252,21 +294,32 @@ namespace ShapeEngine.Core
 
             drawToGameTextureObjects.Clear();
             drawToUITextureObjects.Clear();
+
+            if (clearAreaActive)
+            {
+                //clear area is not within the bounds of the spawn area and therefore irrelevant
+                if (!Bounds.OverlapShape(clearArea)) clearAreaActive = false;
+            }
             
             foreach (var layer in allObjects)
             {
                 var objs = allObjects[layer.Key];
-                if (objs.Count <= 0) return;
+                if (objs.Count <= 0) continue;
 
                 for (int i = objs.Count - 1; i >= 0; i--)
                 {
                     var obj = objs[i];
-                    // if (obj == null)
-                    // {
-                    //     objs.RemoveAt(i);
-                    //     return;
-                    // }
 
+                    if (clearAreaActive && (clearAreaMask.IsEmpty() || clearAreaMask.Has((uint)layer.Key)))
+                    {
+                        if (clearArea.OverlapShape(obj.GetBoundingBox()))
+                        {
+                            RemoveGameObject(obj);
+                            continue;
+                        }
+                    }
+
+                    
                     obj.UpdateParallaxe(ParallaxePosition);
                     
                     if (obj.IsDrawingToGame(game.Area)) drawToGameTextureObjects.Add(obj);
@@ -293,6 +346,8 @@ namespace ShapeEngine.Core
 
                 }
             }
+
+            clearAreaActive = false;
         }
         public virtual void DrawGame(ScreenInfo game)
         {
@@ -321,6 +376,7 @@ namespace ShapeEngine.Core
         
     }
     
+
     // /// <summary>
     // /// Provides a simple area for managing adding/removing, updating, drawing, and colliding of area objects. 
     // /// </summary>
