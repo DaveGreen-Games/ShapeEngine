@@ -48,17 +48,25 @@ public abstract class GameObject : IUpdateable, IDrawable
     /// </summary>
     public virtual void OnDespawned(SpawnArea spawnArea){}
 
-    /// <summary>
-    /// Should this object be checked for leaving the bounds of the area?
-    /// </summary>
-    /// <returns></returns>
-    public virtual bool IsCheckingHandlerBounds() => false;
-    /// <summary>
-    /// Will be called if the object left the bounds of the area. The BoundingCircle is used for this check.
-    /// </summary>
-    /// <param name="info">The info about where the object left the bounds.</param>
-    public virtual void OnLeftHandlerBounds(BoundsCollisionInfo info){}
+    // /// <summary>
+    // /// Should this object be checked for leaving the bounds of the area?
+    // /// </summary>
+    // /// <returns></returns>
+    // public virtual bool IsCheckingHandlerBounds() => false;
+    // /// <summary>
+    // /// Will be called if the object left the bounds of the area. The BoundingCircle is used for this check.
+    // /// </summary>
+    // /// <param name="info">The info about where the object left the bounds.</param>
+    // public virtual void OnLeftHandlerBounds(BoundsCollisionInfo info){}
 
+    
+    /// <summary>
+    /// Get the bounds of the spawn area this object is in and return if this object should be removed from the spawn area.
+    /// </summary>
+    /// <param name="bounds">The rect bounds of the spawn area.</param>
+    /// <returns>If true is return object is removed from the spawn area</returns>
+    public virtual bool HasLeftBounds(Rect bounds) => false;
+    
     /// <summary>
     /// Tries to kill this game object.
     /// </summary>

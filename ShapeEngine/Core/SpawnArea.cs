@@ -107,9 +107,9 @@ namespace ShapeEngine.Core
         public void AddGameObjects(IEnumerable<GameObject> areaObjects) { foreach (var ao in areaObjects) AddGameObject(ao); }
         public void RemoveGameObject(GameObject gameObject)
         {
-            if (allObjects.ContainsKey(gameObject.Layer))
+            if (allObjects.TryGetValue(gameObject.Layer, out var o))
             {
-                bool removed = allObjects[gameObject.Layer].Remove(gameObject);
+                bool removed = o.Remove(gameObject);
                 if (removed)
                 {
                     if (CollisionHandler != null)
@@ -193,7 +193,7 @@ namespace ShapeEngine.Core
             CollisionHandler?.Close();
         }
         
-        private BoundsCollisionInfo HasLeftBounds(GameObject obj) => Bounds.BoundsCollision(obj.GetBoundingBox());
+        // private BoundsCollisionInfo HasLeftBounds(GameObject obj) => Bounds.BoundsCollision(obj.GetBoundingBox());
         // {
         //     
         //     var bb = obj.GetBoundingBox();
@@ -274,23 +274,22 @@ namespace ShapeEngine.Core
                     
                     obj.Update(time, game, ui);
                     
-                    if (obj.IsDead)
+                    if (obj.IsDead || obj.HasLeftBounds(Bounds))
                     {
                         RemoveGameObject(obj);
-                        // objs.RemoveAt(i);
-
                     }
-                    else
-                    {
-                        if (obj.IsCheckingHandlerBounds())
-                        {
-                            var check = HasLeftBounds(obj);
-                            if (check.Valid)
-                            {
-                                obj.OnLeftHandlerBounds(check);
-                            }
-                        }
-                    }
+                    // else
+                    // {
+                    //     
+                    //     if (obj.IsCheckingHandlerBounds())
+                    //     {
+                    //         var check = HasLeftBounds(obj);
+                    //         if (check.Valid)
+                    //         {
+                    //             obj.OnLeftHandlerBounds(check);
+                    //         }
+                    //     }
+                    // }
 
                 }
             }

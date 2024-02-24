@@ -71,17 +71,30 @@ namespace Examples.Scenes.ExampleScenes
             
         }
 
-        public override bool IsCheckingHandlerBounds() => true;
-
-        public override void OnLeftHandlerBounds(BoundsCollisionInfo info)
+        public override bool HasLeftBounds(Rect bounds)
         {
-            if (!info.Valid) return;
+            var info = bounds.BoundsCollision(GetBoundingBox());
+            if (!info.Valid) return false;
             Transform = Transform.SetPosition(info.SafePosition);
             
             if (info.Horizontal.Valid) Vel.X *= -1;
 
             if (info.Vertical.Valid) Vel.Y *= -1;
+
+            return false;
         }
+
+        // public override bool IsCheckingHandlerBounds() => true;
+        //
+        // public override void OnLeftHandlerBounds(BoundsCollisionInfo info)
+        // {
+        //     if (!info.Valid) return;
+        //     Transform = Transform.SetPosition(info.SafePosition);
+        //     
+        //     if (info.Horizontal.Valid) Vel.X *= -1;
+        //
+        //     if (info.Vertical.Valid) Vel.Y *= -1;
+        // }
     }
     public class BouncyCircles : ExampleScene
     {
