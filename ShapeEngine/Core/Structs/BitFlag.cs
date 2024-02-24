@@ -144,6 +144,14 @@ public readonly struct BitFlag : IBitwiseOperators<BitFlag, BitFlag, BitFlag>, I
     
     #region Static Uint
 
+    private static uint flagCounter = 1;
+    public static uint NextFlag => GetFlagUint(flagCounter++);
+    
+    
+    private static int flagCounterInt = 1;
+    public static int NextFlagInt => GetFlagInt(flagCounterInt++);
+    
+    
     public static uint EmptyUintFlag => 0;
     public static uint GetFlagUint(uint power) => (uint)MathF.Pow(2, power);
     public static bool HasUintFlag(uint flag, uint value)

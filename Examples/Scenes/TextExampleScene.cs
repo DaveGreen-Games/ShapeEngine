@@ -29,8 +29,8 @@ namespace Examples.Scenes
         private bool textEntryActive => textBox.Active;
 
         protected readonly ShapeTextBox textBox = new("Enter Text into this box");
-        
-        protected readonly uint accessTagTextBox = BitFlag.GetFlagUint(12);
+
+        protected readonly uint accessTagTextBox = InputAction.NextTag; // BitFlag.GetFlagUint(12);
         
         private readonly InputAction iaEnterText;
         private readonly InputAction iaCancelText;

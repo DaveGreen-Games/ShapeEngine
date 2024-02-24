@@ -211,13 +211,13 @@ namespace Examples
         public ShapeGamepadDevice? CurGamepad = null;
 
         public RectContainerMain UIRects = new("main");
-        
-        
-        public readonly uint UIAccessTag = BitFlag.GetFlagUint(2);
-        public readonly uint GameloopAccessTag = BitFlag.GetFlagUint(3);
-        public readonly uint SceneAccessTag = BitFlag.GetFlagUint(4);
-        public readonly uint GamepadMouseMovementTag = BitFlag.GetFlagUint(5);
-        public readonly uint KeyboardMouseMovementTag = BitFlag.GetFlagUint(6);
+
+
+        public readonly uint UIAccessTag = InputAction.NextTag; // BitFlag.GetFlagUint(2);
+        public readonly uint GameloopAccessTag = InputAction.NextTag; // BitFlag.GetFlagUint(3);
+        public readonly uint SceneAccessTag =  InputAction.NextTag; //BitFlag.GetFlagUint(4);
+        public readonly uint GamepadMouseMovementTag = InputAction.NextTag; // BitFlag.GetFlagUint(5);
+        public readonly uint KeyboardMouseMovementTag =  InputAction.NextTag; //BitFlag.GetFlagUint(6);
         //ui
        
         public static IModifierKey  ModifierKeyGamepad = new ModifierKeyGamepadButton(ShapeGamepadButton.RIGHT_TRIGGER_BOTTOM, false);

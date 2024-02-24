@@ -507,13 +507,16 @@ public class InputAction
     #region Static
 
     #region Members
-    public static readonly uint AllAccessTag = BitFlag.GetFlagUint(31);
-    public static readonly uint DefaultAccessTag = BitFlag.GetFlagUint(30);
+
+    public static readonly uint AllAccessTag = NextTag; // BitFlag.GetFlagUint(31);
+    public static readonly uint DefaultAccessTag = NextTag; // BitFlag.GetFlagUint(30);
     public static bool Locked { get; private set; } = false;
     private static BitFlag lockWhitelist;
     private static BitFlag lockBlacklist;
-
+    private static uint tagPowerCounter = 1;
+    public static uint NextTag => BitFlag.GetFlagUint(tagPowerCounter++);
     #endregion
+    
     
     #region Lock System
     public static void Lock()
