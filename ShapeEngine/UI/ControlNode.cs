@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Numerics;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Lib;
@@ -60,11 +61,22 @@ public readonly struct NavigationDirection
     public bool IsVertical => vertical != 0;
     public bool IsHorizontal => horizontal != 0;
     
-    public bool Up => vertical == -1;
-    public bool Down => vertical == 1;
-    public bool Left => horizontal == -1;
-    public bool Right => horizontal == 1;
+    public bool IsUp => vertical == -1;
+    public bool IsDown => vertical == 1;
+    public bool IsLeft => horizontal == -1;
+    public bool IsRight => horizontal == 1;
+
+
+    public static NavigationDirection GetEmpty() => new(0, 0);
+    public static NavigationDirection GetLeft() => new(-1, 0);
+    public static NavigationDirection GetRight() => new(1, 0);
+    public static NavigationDirection GetUp() => new(0, -1);
+    public static NavigationDirection GetDown() => new(0, 1);
     
+    public static NavigationDirection GetUpLeft() => new(-1, -1);
+    public static NavigationDirection GetDownLeft() => new(-1, 1);
+    public static NavigationDirection GetUpRight() => new(1, -1);
+    public static NavigationDirection GetDownRight() => new(1, 1);
     
     private static int Sign(int value)
     {
@@ -72,11 +84,244 @@ public readonly struct NavigationDirection
         if (value > 0) return 1;
         return 0;
     }
+
 }
 
-public class ControlNavigator
+public class ControlNodeNavigator
 {
+    #region Events
+    public event Action<ControlNodeNavigator>? OnNavigationStarted;
+    public event Action<ControlNodeNavigator>? OnNavigationEnded;
+    public event Action<ControlNodeNavigator, ControlNode>? OnControlNodeAdded;
+    public event Action<ControlNodeNavigator, ControlNode>? OnControlNodeRemoved;
+    public event Action<ControlNodeNavigator, ControlNode?, ControlNode?>? OnSelectedControlNodeChanged;
+    public event Action<ControlNodeNavigator, NavigationDirection>? OnNavigated;
+    #endregion
+
+    #region Private Members
+
+    private readonly HashSet<ControlNode> nodes = new();
+    private readonly List<ControlNode> navigableNodes = new();
+    private bool dirty = false;
+    private ControlNode? selectedNode = null;
+
+    #endregion
+
+    #region Getter & Setter
+
+    public ControlNode? SelectedNode
+    {
+        get => selectedNode;
+        set
+        {
+            if (value == null && selectedNode == null) return;
+            if (selectedNode == value) return;
+            
+            var prev = selectedNode;
+            selectedNode = value;
+            ResolveOnSelectedControlNodeChanged(prev, selectedNode);
+        }
+    }
+    public bool IsNavigating { get; private set; } = false;
+
+    #endregion
+
+    #region Public
+    public void StartNavigation()
+    {
+        if (IsNavigating) return;
+        IsNavigating = true;
+        selectedNode?.NavigationSelect();
+        ResolveOnNavigationStarted();
+    }
+    public void EndNavigation()
+    {
+        if (!IsNavigating) return;
+        IsNavigating = false;
+        selectedNode?.NavigationDeselect();
+        ResolveOnNavigationEnded();
+    }
     
+    public bool AddNode(ControlNode node)
+    {
+        if (!nodes.Add(node)) return false;
+        if (IsNavigating)
+        {
+            if (node.Selected && selectedNode == null) selectedNode = node;
+        }
+        else
+        {
+            if (node.Selected) node.Deselect();
+        }
+        
+        // if (IsNavigating)
+        // {
+        //     if (node.Selected)
+        //     {
+        //         if (selectedNode == null)
+        //         {
+        //             selectedNode = node;
+        //         }
+        //         else node.Deselect();
+        //     }
+        //     else
+        //     {
+        //         if (selectedNode == null)
+        //         {
+        //             if (node.NavigationSelect()) selectedNode = node;
+        //         }
+        //     }
+        // }
+        // else if (node.Selected) node.Deselect();
+        //
+        
+        dirty = true;
+        ResolveOnControlNodeAdded(node);
+        node.OnNavigableChanged += OnControlNodeNavigableChanged;
+        node.OnChildAdded += OnControlNodeChildAdded;
+        node.OnChildRemoved += OnControlNodeChildRemoved;
+        // node.OnSelectedChanged += OnNodeSelectionChanged;
+        return true;
+    }
+    public bool RemoveNode(ControlNode node)
+    {
+        if (!nodes.Remove(node)) return false;
+        dirty = true;
+        ResolveOnControlNodeRemoved(node);
+        node.OnNavigableChanged -= OnControlNodeNavigableChanged;
+        node.OnChildAdded -= OnControlNodeChildAdded;
+        node.OnChildRemoved -= OnControlNodeChildRemoved;
+        // node.OnSelectedChanged -= OnNodeSelectionChanged;
+        if (node == selectedNode) selectedNode = null; // selectedNode = GetClosestNode(node);
+        
+        return true;
+    }
+    
+    public void Update()
+    {
+        if (!IsNavigating) return;
+        if (selectedNode == null)
+        {
+            var navigable = GetNavigableNodes();
+            if (navigable.Count > 0)
+            {
+                selectedNode = navigable[0];
+                if (!selectedNode.NavigationSelect())
+                {
+                    throw new WarningException(
+                        "Control Node Navigation Selected return false when it should have returned true!");
+                }
+            }
+            else return;
+        }
+
+        var dir = selectedNode.GetNavigationDirection();
+        var nextNode = GetNextNode(dir);
+        if (nextNode != null && nextNode != selectedNode)
+        {
+            selectedNode.NavigationDeselect();
+            selectedNode = nextNode;
+            selectedNode.NavigationSelect();
+        }
+    }
+    #endregion
+
+    #region Private
+    private ControlNode? GetClosestNode(ControlNode node)
+    {
+        var navigable = GetNavigableNodes();
+        if (navigable.Count <= 0) return null;
+
+        var minDisSq = float.MaxValue;
+        ControlNode? closestNode = null;
+        
+        foreach (var other in navigable)
+        {
+            var disSq = node.GetDistanceSquaredTo(other);
+            if (disSq >= 0 && disSq < minDisSq)
+            {
+                closestNode = other;
+                minDisSq = disSq;
+            }
+        }
+        return closestNode;
+    }
+    private ControlNode? GetNextNode(NavigationDirection dir)
+    {
+        if (!dir.IsValid) return null;
+        var navigable = GetNavigableNodes();
+        if (navigable.Count <= 0) return null;
+
+        // throw new NotImplementedException();
+        return null;
+    }
+    private List<ControlNode> GetNavigableNodes()
+    {
+        if(dirty) CompileNavigableControlNodes();
+        return navigableNodes;
+    }
+
+    private void CompileNavigableControlNodes()
+    {
+        dirty = false;
+        navigableNodes.Clear();
+        var result = new HashSet<ControlNode>();
+        foreach (var node in nodes)
+        {
+            if(node.Navigable) navigableNodes.Add(node);
+            node.GetAllNavigableChildren(ref result);
+        }
+
+        if (result.Count > 0) navigableNodes.AddRange(result);
+    }
+    private void OnControlNodeChildAdded(ControlNode child) => dirty = true;
+    private void OnControlNodeChildRemoved(ControlNode child) => dirty = true;
+    private void OnControlNodeNavigableChanged(bool navigable) => dirty = true;
+    
+    #endregion
+    
+    #region Virtual
+    protected virtual void WasNavigated(NavigationDirection dir) { }
+    protected virtual void NavigationWasStarted() { }
+    protected virtual void NavigationWasEnded() { }
+    protected virtual void ControlNodeWasAdded(ControlNode node) { }
+    protected virtual void ControlNodeWasRemoved(ControlNode node) { }
+    protected virtual void SeletecControlNodeWasChanged(ControlNode? prev, ControlNode? cur) { }
+    #endregion
+    
+    #region Resolve
+
+    private void ResolveOnNavigated(NavigationDirection dir)
+    {
+        WasNavigated(dir);
+        OnNavigated?.Invoke(this, dir);
+    }
+    private void ResolveOnNavigationStarted()
+    {
+        NavigationWasStarted();
+        OnNavigationStarted?.Invoke(this);
+    }
+    private void ResolveOnNavigationEnded()
+    {
+        NavigationWasEnded();
+        OnNavigationEnded?.Invoke(this);
+    }
+    private void ResolveOnControlNodeAdded(ControlNode node)
+    {
+        ControlNodeWasAdded(node);
+        OnControlNodeAdded?.Invoke(this, node);
+    }
+    private void ResolveOnControlNodeRemoved(ControlNode node)
+    {
+        ControlNodeWasRemoved(node);
+        OnControlNodeRemoved?.Invoke(this, node);
+    }
+    private void ResolveOnSelectedControlNodeChanged(ControlNode? prev, ControlNode? cur)
+    {
+        SeletecControlNodeWasChanged(prev, cur);
+        OnSelectedControlNodeChanged?.Invoke(this, prev, cur);
+    }
+    #endregion
 }
 public abstract class ControlNode
 {
@@ -92,6 +337,11 @@ public abstract class ControlNode
     public event Action<Vector2>? OnMouseExited;
     public event Action<ControlNode, bool>? OnSelectedChanged;
     public event Action<ControlNode, bool>? OnPressedChanged;
+
+    public event Action<MouseFilter, MouseFilter>? OnMouseFilterChanged;
+    public event Action<SelectFilter, SelectFilter>? OnSelectionFilterChanged;
+    public event Action<InputFilter, InputFilter>? OnInputFilterChanged;
+    public event Action<bool>? OnNavigableChanged;
     // public event Action<ControlNode, bool>? OnFocusChanged;
     
     #endregion
@@ -99,6 +349,9 @@ public abstract class ControlNode
     #region Private Members
     private ControlNode? parent = null;
     private readonly List<ControlNode> children = new();
+    private SelectFilter selectionFilter = SelectFilter.None;
+    private MouseFilter mouseFilter = MouseFilter.Ignore;
+    private InputFilter inputFilter = InputFilter.None;
     private bool active = true;
     private bool visible = true;
     private bool parentActive = true;
@@ -106,6 +359,8 @@ public abstract class ControlNode
     private bool selected = false;
 
     private bool navigationSelected = false;
+
+    private bool prevNavigable = false;
     // private bool focused = false;
     #endregion
 
@@ -120,9 +375,42 @@ public abstract class ControlNode
     public Vector2 MinSize = new(0f);
     public Vector2 MaxSize = new(0f);
     
-    public SelectFilter SelectionFilter = SelectFilter.None;
-    public MouseFilter MouseFilter = MouseFilter.Ignore;
-    public InputFilter InputFilter = InputFilter.None;
+    public SelectFilter SelectionFilter
+    {
+        get => selectionFilter;
+        set
+        {
+            if (selectionFilter == value) return;
+            prevNavigable = Navigable;
+            var prev = selectionFilter;
+            selectionFilter = value;
+            ResolveOnSelectionFilterChanged(prev, selectionFilter);
+        }
+    }
+    public MouseFilter MouseFilter
+    {
+        get => mouseFilter;
+        set
+        {
+            if (mouseFilter == value) return;
+            var prev = mouseFilter;
+            mouseFilter = value;
+            ResolveOnMouseFilterChanged(prev, mouseFilter);
+        }
+    }
+    public InputFilter InputFilter
+    {
+        get => inputFilter;
+        set
+        {
+            if (inputFilter == value) return;
+            prevNavigable = Navigable;
+            var prev = inputFilter;
+            inputFilter = value;
+            ResolveOnInputFilterChanged(prev, inputFilter);
+            
+        }
+    }
 
     #endregion
 
@@ -133,7 +421,7 @@ public abstract class ControlNode
         set
         {
             if (active == value) return;
-            
+            prevNavigable = Navigable;
             active = value;
             ResolveActiveChanged();
             if(parent == null || (parentActive && active != parentActive))
@@ -147,7 +435,7 @@ public abstract class ControlNode
         set
         {
             if (visible == value) return;
-            
+            prevNavigable = Navigable;
             visible = value;
             ResolveVisibleChanged();
             if(parent == null || (parentVisible && visible != parentVisible))
@@ -207,7 +495,10 @@ public abstract class ControlNode
     public int ChildCount => children.Count;
     public bool HasParent => parent != null;
     public bool HasChildren => children.Count > 0;
-    public bool Navigable => SelectionFilter is SelectFilter.All or SelectFilter.Navigation;
+    public bool Navigable => 
+        IsActiveInHierarchy && IsVisibleInHierarchy &&
+        SelectionFilter is SelectFilter.All or SelectFilter.Navigation && 
+        InputFilter is InputFilter.All or InputFilter.MouseNever;
 
     #endregion
 
@@ -235,6 +526,7 @@ public abstract class ControlNode
         
         if (!checkActive)
         {
+            child.prevNavigable = child.Navigable;
             child.parentActive = checkActive;
             child.ResolveParentActiveChanged();
             if(child.active) child.ChangeChildrenActive(checkActive);
@@ -243,6 +535,7 @@ public abstract class ControlNode
         
         if (!checkVisible)
         {
+            child.prevNavigable = child.Navigable;
             child.parentVisible = checkVisible;
             child.ResolveParentVisibleChanged();
             if(child.visible) child.ChangeChildrenVisible(checkVisible);
@@ -261,18 +554,20 @@ public abstract class ControlNode
 
         if (child.parentActive == false)
         {
+            child.prevNavigable = child.Navigable;
             child.parentActive = true;
-            ResolveParentActiveChanged();
+            child.ResolveParentActiveChanged();
 
-            if (active) ChangeChildrenActive(active);
+            if (child.active) child.ChangeChildrenActive(child.active);
         }
 
         if (child.parentVisible == false)
         {
+            child.prevNavigable = child.Navigable;
             child.parentVisible = true;
-            ResolveParentVisibleChanged();
+            child.ResolveParentVisibleChanged();
             
-            if(visible) ChangeChildrenVisible(visible);
+            if(child.visible) child.ChangeChildrenVisible(child.visible);
         }
         
         return true;
@@ -299,11 +594,52 @@ public abstract class ControlNode
     public ControlNode? GetChild(int index) => children.Count <= index ? null : children[index];
     public List<ControlNode>? GetChildrenCopy() => children.ToList();
     public List<ControlNode>? GetChildren(Predicate<ControlNode> match) => children.FindAll(match);
+    public int GetAllChildren(ref HashSet<ControlNode> result)
+    {
+        if (children.Count <= 0) return 0;
+        
+        var count = result.Count;
+        foreach (var child in children)
+        {
+            result.Add(child);
+            child.GetAllChildren(ref result);
+        }
 
+        return result.Count - count;
+    }
+    public int GetAllChildren(Predicate<ControlNode> match, ref HashSet<ControlNode> result)
+    {
+        if (children.Count <= 0) return 0;
+        
+        var count = result.Count;
+        var matched = children.FindAll(match);
+        foreach (var child in matched)
+        {
+            result.Add(child);
+            child.GetAllChildren(match, ref result);
+        }
+
+        return result.Count - count;
+    }
+    public int GetAllNavigableChildren(ref HashSet<ControlNode> navigable)
+    {
+        if (children.Count <= 0) return 0;
+        if (!IsVisibleInHierarchy || !IsActiveInHierarchy) return 0;
+        
+        var count = navigable.Count;
+        foreach (var child in children)
+        {
+            if(child.Navigable) navigable.Add(child);
+            child.GetAllNavigableChildren(ref navigable);
+        }
+        return navigable.Count - count;
+    }
+    
     private void ChangeChildrenVisible(bool value)
     {
         foreach (var child in children)
         {
+            child.prevNavigable = child.Navigable;
             child.parentVisible = value;
             child.ResolveParentVisibleChanged();
             if(value || child.visible != value)
@@ -314,6 +650,7 @@ public abstract class ControlNode
     {
         foreach (var child in children)
         {
+            child.prevNavigable = child.Navigable;
             child.parentActive = value;
             child.ResolveParentActiveChanged();
             if(value || child.active != value)
@@ -325,32 +662,37 @@ public abstract class ControlNode
 
     #region Select & Deselect
 
-    public void Select()
+    public bool Select()
     {
-        if (SelectionFilter != SelectFilter.All) return;
+        if (SelectionFilter == SelectFilter.None) return false;
         Selected = true;
+        return true;
     }
 
-    public void Deselect()
+    public bool Deselect()
     {
-        if (SelectionFilter != SelectFilter.All) return;
+        if (SelectionFilter == SelectFilter.None) return false;
         Selected = false;
         navigationSelected = false;
+        return true;
     }
     
-    private void NavigationSelect()
+    public bool NavigationSelect()
     {
-        if (SelectionFilter is SelectFilter.Mouse or SelectFilter.None) return;
+        if (SelectionFilter is SelectFilter.Mouse or SelectFilter.None) return false;
+        if (InputFilter is InputFilter.None or InputFilter.MouseOnly) return false;
         Selected = true;
         navigationSelected = true;
-        
+        return true;
     }
 
-    private void NavigationDeselect()
+    public bool NavigationDeselect()
     {
-        if (SelectionFilter is SelectFilter.Mouse or SelectFilter.None) return;
+        if (SelectionFilter is SelectFilter.Mouse or SelectFilter.None) return false;
+        if (InputFilter is InputFilter.None or InputFilter.MouseOnly) return false;
         Selected = false;
         navigationSelected = false;
+        return true;
     }
     
     private void MouseSelect()
@@ -457,18 +799,18 @@ public abstract class ControlNode
                 else if (InputFilter == InputFilter.MouseNever)
                 {
                     pressed = GetPressedState();
-                    if (Navigable)
-                    {
-                        
-                    }
+                    // if (Navigable)
+                    // {
+                    // 
+                    // }
                 }
                 else if (InputFilter == InputFilter.All)
                 {
                     pressed = GetMousePressedState() || GetPressedState();
-                    if (Navigable)
-                    {
-                        
-                    }
+                    // if (Navigable)
+                    // {
+                    //
+                    // }
                 }
 
                 if (Pressed != pressed)
@@ -497,7 +839,21 @@ public abstract class ControlNode
     protected virtual bool GetPressedState() => false;
     protected virtual bool GetMousePressedState() => false;
 
-    protected virtual NavigationDirection GetNavigationDirection() => new();
+    public virtual NavigationDirection GetNavigationDirection() => new();
+    #endregion
+
+    #region Public
+
+    public float GetDistanceTo(ControlNode other)
+    {
+        if (other == this) return -1f;
+        return (other.Rect.TopLeft - Rect.TopLeft).Length();
+    }
+    public float GetDistanceSquaredTo(ControlNode other)
+    {
+        if (other == this) return -1f;
+        return (other.Rect.TopLeft - Rect.TopLeft).LengthSquared();
+    }
     #endregion
     
     #region Virtual
@@ -517,37 +873,42 @@ public abstract class ControlNode
     protected virtual void SelectedWasChanged(bool value) { }
     protected virtual void PressedWasChanged(bool value) { }
     // protected virtual void FocusWasChanged(bool value) { }
+    protected virtual void MouseFilterWasChanged(MouseFilter old, MouseFilter cur) { }
+    protected virtual void SelectionFilterWasChanged(SelectFilter old, SelectFilter cur) { }
+    protected virtual void InputFilterWasChanged(InputFilter old, InputFilter cur) { }
+    protected virtual void NavigableWasChanged(bool value) { }
     #endregion
 
     #region Private
-    
     private void ResolveActiveChanged()
     {
         ActiveWasChanged(active);
         OnActiveChanged?.Invoke(active);
+        ResolveOnNavigableChanged(Navigable);
     }
-
     private void ResolveVisibleChanged()
     {
         VisibleWasChanged(visible);
         OnVisibleChanged?.Invoke(visible);
+        ResolveOnNavigableChanged(Navigable);
     }
-
     private void ResolveParentVisibleChanged()
     {
         ParentVisibleWasChanged(parentVisible);
         OnParentVisibleChanged?.Invoke(parentVisible);
+        ResolveOnNavigableChanged(Navigable);
     }
-
     private void ResolveParentActiveChanged()
     {
         ParentActiveWasChanged(parentActive);
         OnParentActiveChanged?.Invoke(parentActive);
+        ResolveOnNavigableChanged(Navigable);
     }
     private void ResolveParentChanged(ControlNode? oldParent, ControlNode? newParent)
     {
         ParentWasChanged(oldParent, newParent);
         OnParentChanged?.Invoke(oldParent, newParent);
+        // ResolveOnNavigableChanged(Navigable);
     }
     private void ResolveChildAdded(ControlNode newChild)
     {
@@ -559,25 +920,21 @@ public abstract class ControlNode
         ChildWasRemoved(oldChild);
         OnChildRemoved?.Invoke(oldChild);
     }
-
     private void ResolveMouseEntered(Vector2 mousePos)
     {
         MouseHasEntered(mousePos);
         OnMouseEntered?.Invoke(mousePos);
     }
-
     private void ResolveMouseExited(Vector2 mousePos)
     {
         MouseHasExited(mousePos);
         OnMouseExited?.Invoke(mousePos);
     }
-
     private void ResolveSelectedChanged()
     {
         SelectedWasChanged(selected);
         OnSelectedChanged?.Invoke(this, selected);
     }
-
     private void ResolvePressedChanged()
     {
         PressedWasChanged(Pressed);
@@ -588,10 +945,37 @@ public abstract class ControlNode
     //     FocusWasChanged(focused);
     //     OnFocusChanged?.Invoke(this, focused);
     // }
+
+    private void ResolveOnMouseFilterChanged(MouseFilter old, MouseFilter cur)
+    {
+        MouseFilterWasChanged(old, cur);
+        OnMouseFilterChanged?.Invoke(old, cur);
+    }
+    private void ResolveOnSelectionFilterChanged(SelectFilter old, SelectFilter cur)
+    {
+        SelectionFilterWasChanged(old, cur);
+        OnSelectionFilterChanged?.Invoke(old, cur);
+        ResolveOnNavigableChanged(Navigable);
+    }
+    private void ResolveOnInputFilterChanged(InputFilter old, InputFilter cur)
+    {
+        InputFilterWasChanged(old, cur);
+        OnInputFilterChanged?.Invoke(old, cur);
+        ResolveOnNavigableChanged(Navigable);
+    }
+    private void ResolveOnNavigableChanged(bool value)
+    {
+        if (prevNavigable == Navigable) return;
+        NavigableWasChanged(value);
+        OnNavigableChanged?.Invoke(value);
+    }
     #endregion
     
     
     
     
-    
+    // public event Action<MouseFilter, MouseFilter>? OnMouseFilterChanged;
+    // public event Action<SelectFilter, SelectFilter>? OnSelectionFilterChanged;
+    // public event Action<InputFilter, InputFilter>? OnInputFilterChanged;
+    // public event Action<bool>? OnNavigableChanged;
 }
