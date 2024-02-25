@@ -1,5 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Core.Shapes;
+using ShapeEngine.Lib;
 
 namespace ShapeEngine.UI;
 
@@ -27,8 +28,6 @@ public enum MouseFilter
 public abstract class ControlNode
 {
     #region Events
-
-    
     public event Action<ControlNode?, ControlNode?>? OnParentChanged;
     public event Action<ControlNode>? OnChildAdded;
     public event Action<ControlNode>? OnChildRemoved;
@@ -36,6 +35,10 @@ public abstract class ControlNode
     public event Action<bool>? OnActiveChanged;
     public event Action<bool>? OnParentActiveChanged;
     public event Action<bool>? OnParentVisibleChanged;
+    public event Action<Vector2>? OnMouseEntered;
+    public event Action<Vector2>? OnMouseExited;
+    public event Action<ControlNode, bool>? OnSelectedChanged;
+    // public event Action<ControlNode, bool>? OnFocusChanged;
     
     #endregion
 
@@ -46,9 +49,29 @@ public abstract class ControlNode
     private bool visible = true;
     private bool parentActive = true;
     private bool parentVisible = true;
+    private bool selected = false;
+
+    private bool navigationSelected = false;
+    // private bool focused = false;
     #endregion
 
     #region Public Members
+    
+    public Vector2 Anchor = new(0f);
+    /// <summary>
+    /// Stretch determines the size of the rect based on the parent rect size. Values are relative and in range 0 - 1.
+    /// If Stretch values are 0 than the size of the rect can be set manually without it being changed by the parent rect size.
+    /// </summary>
+    public Vector2 Stretch = new(1, 1);
+    public Vector2 MinSize = new(0f);
+    public Vector2 MaxSize = new(0f);
+    
+    public SelectFilter SelectionFilter = SelectFilter.None;
+    public MouseFilter MouseFilter = MouseFilter.Ignore;
+
+    #endregion
+
+    #region Getters & Setters
     public bool Active
     {
         get => active;
@@ -86,16 +109,33 @@ public abstract class ControlNode
     /// </summary>
     public bool IsActiveInHierarchy => active && parentActive;
     
+    /// <summary>
+    /// Set the rect only on root nodes.
+    /// Otherwise it will have no effect except of changing the size if Stretch values are 0.
+    /// </summary>
     public Rect Rect { get; set; } = new();
-    public Vector2 Anchor = new();
-    public Vector2 Stretch = new(1, 1);
-    public SelectFilter SelectionFilter = SelectFilter.None;
-    public MouseFilter MouseFilter = MouseFilter.Ignore;
-
-    #endregion
-
-    #region Getters & Setters
-
+    public bool MouseInside { get; private set; } = false;
+    public Vector2 MouseInsidePosition { get; private set; }
+    public bool Selected
+    {
+        get => selected;
+        private set
+        {
+            if (selected == value) return;
+            selected = value;
+            ResolveSelectedChanged();
+        } 
+    }
+    // public bool Focused
+    // {
+    //     get => focused;
+    //     private set
+    //     {
+    //         if (focused == value) return;
+    //         focused = value;
+    //         ResolveFocusChanged();
+    //     } 
+    // }
     public ControlNode? Parent
     {
         get => parent;
@@ -226,38 +266,79 @@ public abstract class ControlNode
     
     #endregion
 
+    #region Select & Deselect
+
+    public void Select()
+    {
+        if (SelectionFilter != SelectFilter.All) return;
+        Selected = true;
+    }
+
+    public void Deselect()
+    {
+        if (SelectionFilter != SelectFilter.All) return;
+        Selected = false;
+        navigationSelected = false;
+    }
+    
+    private void NavigationSelect()
+    {
+        if (SelectionFilter is SelectFilter.Mouse or SelectFilter.None) return;
+        Selected = true;
+        navigationSelected = true;
+        
+    }
+
+    private void NavigationDeselect()
+    {
+        if (SelectionFilter is SelectFilter.Mouse or SelectFilter.None) return;
+        Selected = false;
+        navigationSelected = false;
+    }
+    
+    private void MouseSelect()
+    {
+        if (SelectionFilter is SelectFilter.Navigation or SelectFilter.None) return;
+        Selected = true;
+    }
+
+    private void MouseDeselect()
+    {
+        if (SelectionFilter is SelectFilter.Navigation or SelectFilter.None) return;
+        if (navigationSelected) return;
+        Selected = false;
+    }
+
+    
+    
+
+    #endregion
+    
     #region Update & Draw
     public void UpdateRect(Rect sourceRect)
     {
         var p = sourceRect.GetPoint(Anchor);
-        Rect = new(p, sourceRect.Size * Stretch, Anchor);
+        var size = Stretch.LengthSquared() == 0f ? Rect.Size : sourceRect.Size * Stretch;
+        size = size.Clamp(MinSize, MaxSize);
+        Rect = new(p, size, Anchor);
     }
     public void Update(float dt, Vector2 mousePos)
     {
-        if (!IsActiveInHierarchy) return;
-        
-        //check stuff with mouse filter and select filter
-        //if mouse filter is not ignore check if mouse entered rect
-        //if mouse filter is not stop pass mouse pos to children
-        //if select filter is mouse or all also trigger select
-        OnUpdate(dt, mousePos);
-        UpdateChildren(dt, mousePos);
+        if (parent != null) return;
+        InternalUpdate(dt, mousePos, true);
     }
-
     public void Draw()
     {
-        if (!IsVisibleInHierarchy) return;
-        
-        OnDraw();
-        DrawChildren();
+        if (parent != null) return;
+        InternalDraw();
     }
 
-    protected virtual void UpdateChildren(float dt, Vector2 mousePos)
+    protected virtual void UpdateChildren(float dt, Vector2 mousePos, bool mousePosValid)
     {
         foreach (var child in children)
         {
             child.UpdateRect(Rect);
-            child.Update(dt, mousePos);
+            child.InternalUpdate(dt, mousePos, mousePosValid);
             OnChildUpdated(child);
         }
     }
@@ -270,10 +351,58 @@ public abstract class ControlNode
             OnChildDrawn(child);
         }
     }
+
+    private void InternalUpdate(float dt, Vector2 mousePos, bool mousePosValid)
+    {
+        if (!IsActiveInHierarchy) return;
+
+        
+        if (MouseFilter != MouseFilter.Ignore)
+        {
+            if (MouseFilter == MouseFilter.Stop) mousePosValid = false;
+                
+            bool isMouseInside = mousePosValid && Rect.ContainsPoint(mousePos);
+            
+            if (MouseInside != isMouseInside)
+            {
+                MouseInside = isMouseInside;
+                if (isMouseInside)
+                {
+                    ResolveMouseEntered(mousePos);
+                    if (SelectionFilter is SelectFilter.All or SelectFilter.Mouse)
+                    {
+                        MouseSelect();
+                    }
+                }
+                else
+                {
+                    ResolveMouseExited(MouseInsidePosition);
+                    if (SelectionFilter is SelectFilter.All or SelectFilter.Mouse)
+                    {
+                        MouseDeselect();
+                    }
+                }
+            }
+
+            if (isMouseInside) MouseInsidePosition = mousePos;
+            
+        }
+        
+        OnUpdate(dt, mousePos, mousePosValid);
+        UpdateChildren(dt, mousePos, mousePosValid);
+    }
+
+    private void InternalDraw()
+    {
+        if (!IsVisibleInHierarchy) return;
+        
+        OnDraw();
+        DrawChildren();
+    }
     #endregion
 
     #region Virtual
-    protected virtual void OnUpdate(float dt, Vector2 mousePos) { }
+    protected virtual void OnUpdate(float dt, Vector2 mousePos, bool mousePosValid) { }
     protected virtual void OnChildUpdated(ControlNode child) { }
     protected virtual void OnDraw() { } 
     protected virtual void OnChildDrawn(ControlNode child) { }
@@ -284,10 +413,14 @@ public abstract class ControlNode
     protected virtual void ParentWasChanged(ControlNode? oldParent, ControlNode? newParent) { }
     protected virtual void ChildWasAdded(ControlNode newChild) { }
     protected virtual void ChildWasRemoved(ControlNode oldChild) { }
+    protected virtual void MouseHasEntered(Vector2 mousePos) { }
+    protected virtual void MouseHasExited(Vector2 mousePos) { }
+    protected virtual void SelectedWasChanged(bool value) { }
+    // protected virtual void FocusWasChanged(bool value) { }
     #endregion
 
     #region Private
-
+    
     private void ResolveActiveChanged()
     {
         ActiveWasChanged(active);
@@ -326,6 +459,30 @@ public abstract class ControlNode
         ChildWasRemoved(oldChild);
         OnChildRemoved?.Invoke(oldChild);
     }
+
+    private void ResolveMouseEntered(Vector2 mousePos)
+    {
+        MouseHasEntered(mousePos);
+        OnMouseEntered?.Invoke(mousePos);
+    }
+
+    private void ResolveMouseExited(Vector2 mousePos)
+    {
+        MouseHasExited(mousePos);
+        OnMouseExited?.Invoke(mousePos);
+    }
+
+    private void ResolveSelectedChanged()
+    {
+        SelectedWasChanged(selected);
+        OnSelectedChanged?.Invoke(this, selected);
+    }
+
+    // private void ResolveFocusChanged()
+    // {
+    //     FocusWasChanged(focused);
+    //     OnFocusChanged?.Invoke(this, focused);
+    // }
     #endregion
     
     
