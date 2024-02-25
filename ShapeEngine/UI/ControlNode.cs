@@ -34,6 +34,50 @@ public enum InputFilter
     All = 2
 }
 
+public readonly struct NavigationDirection
+{
+    private readonly int horizontal;
+    private readonly int vertical;
+
+    public NavigationDirection()
+    {
+        horizontal = 0;
+        vertical = 0;
+    }
+    public NavigationDirection(int hor, int vert)
+    {
+        this.horizontal = Sign(hor);
+        this.vertical = Sign(vert);
+    }
+
+    public NavigationDirection(Vector2 dir)
+    {
+        this.horizontal = MathF.Sign(dir.X);
+        this.vertical = MathF.Sign(dir.X);
+    }
+
+    public bool IsValid => IsVertical || IsHorizontal;
+    public bool IsVertical => vertical != 0;
+    public bool IsHorizontal => horizontal != 0;
+    
+    public bool Up => vertical == -1;
+    public bool Down => vertical == 1;
+    public bool Left => horizontal == -1;
+    public bool Right => horizontal == 1;
+    
+    
+    private static int Sign(int value)
+    {
+        if (value < 0) return -1;
+        if (value > 0) return 1;
+        return 0;
+    }
+}
+
+public class ControlNavigator
+{
+    
+}
 public abstract class ControlNode
 {
     #region Events
@@ -163,6 +207,7 @@ public abstract class ControlNode
     public int ChildCount => children.Count;
     public bool HasParent => parent != null;
     public bool HasChildren => children.Count > 0;
+    public bool Navigable => SelectionFilter is SelectFilter.All or SelectFilter.Navigation;
 
     #endregion
 
@@ -405,9 +450,26 @@ public abstract class ControlNode
             if (InputFilter != InputFilter.None)
             {
                 var pressed = false;
-                if (InputFilter == InputFilter.MouseOnly) pressed = GetMousePressedState(); 
-                else if (InputFilter == InputFilter.MouseNever) pressed = GetPressedState();
-                else if(InputFilter == InputFilter.All) pressed = GetMousePressedState() || GetPressedState();
+                if (InputFilter == InputFilter.MouseOnly)
+                {
+                    pressed = GetMousePressedState();
+                } 
+                else if (InputFilter == InputFilter.MouseNever)
+                {
+                    pressed = GetPressedState();
+                    if (Navigable)
+                    {
+                        
+                    }
+                }
+                else if (InputFilter == InputFilter.All)
+                {
+                    pressed = GetMousePressedState() || GetPressedState();
+                    if (Navigable)
+                    {
+                        
+                    }
+                }
 
                 if (Pressed != pressed)
                 {
@@ -435,6 +497,7 @@ public abstract class ControlNode
     protected virtual bool GetPressedState() => false;
     protected virtual bool GetMousePressedState() => false;
 
+    protected virtual NavigationDirection GetNavigationDirection() => new();
     #endregion
     
     #region Virtual
