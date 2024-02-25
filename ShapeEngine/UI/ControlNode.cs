@@ -407,7 +407,7 @@ public abstract class ControlNode
                 var pressed = false;
                 if (InputFilter == InputFilter.MouseOnly) pressed = GetMousePressedState(); 
                 else if (InputFilter == InputFilter.MouseNever) pressed = GetPressedState();
-                else pressed = GetMousePressedState() || GetPressedState();
+                else if(InputFilter == InputFilter.All) pressed = GetMousePressedState() || GetPressedState();
 
                 if (Pressed != pressed)
                 {
