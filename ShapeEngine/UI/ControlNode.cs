@@ -25,6 +25,15 @@ public enum MouseFilter
     Pass = 1,
     Stop = 2
 }
+
+public enum InputFilter
+{
+    None = 0,
+    MouseOnly = 1,
+    MouseNever = 2,
+    All = 2
+}
+
 public abstract class ControlNode
 {
     #region Events
@@ -38,6 +47,7 @@ public abstract class ControlNode
     public event Action<Vector2>? OnMouseEntered;
     public event Action<Vector2>? OnMouseExited;
     public event Action<ControlNode, bool>? OnSelectedChanged;
+    public event Action<ControlNode, bool>? OnPressedChanged;
     // public event Action<ControlNode, bool>? OnFocusChanged;
     
     #endregion
@@ -68,6 +78,7 @@ public abstract class ControlNode
     
     public SelectFilter SelectionFilter = SelectFilter.None;
     public MouseFilter MouseFilter = MouseFilter.Ignore;
+    public InputFilter InputFilter = InputFilter.None;
 
     #endregion
 
@@ -136,6 +147,7 @@ public abstract class ControlNode
     //         ResolveFocusChanged();
     //     } 
     // }
+    public bool Pressed { get; private set; } = false;
     public ControlNode? Parent
     {
         get => parent;
@@ -354,38 +366,56 @@ public abstract class ControlNode
 
     private void InternalUpdate(float dt, Vector2 mousePos, bool mousePosValid)
     {
-        if (!IsActiveInHierarchy) return;
+        //if it is not visible it should also not be updated!
+        if (!IsVisibleInHierarchy) return;
 
-        
-        if (MouseFilter != MouseFilter.Ignore)
+        if (IsActiveInHierarchy)
         {
-            if (MouseFilter == MouseFilter.Stop) mousePosValid = false;
-                
-            bool isMouseInside = mousePosValid && Rect.ContainsPoint(mousePos);
-            
-            if (MouseInside != isMouseInside)
+            if (MouseFilter != MouseFilter.Ignore)
             {
-                MouseInside = isMouseInside;
-                if (isMouseInside)
+                if (MouseFilter == MouseFilter.Stop) mousePosValid = false;
+                
+                bool isMouseInside = mousePosValid && Rect.ContainsPoint(mousePos);
+            
+                if (MouseInside != isMouseInside)
                 {
-                    ResolveMouseEntered(mousePos);
-                    if (SelectionFilter is SelectFilter.All or SelectFilter.Mouse)
+                    MouseInside = isMouseInside;
+                    if (isMouseInside)
                     {
-                        MouseSelect();
+                        ResolveMouseEntered(mousePos);
+                        if (SelectionFilter is SelectFilter.All or SelectFilter.Mouse)
+                        {
+                            MouseSelect();
+                        }
+                    }
+                    else
+                    {
+                        ResolveMouseExited(MouseInsidePosition);
+                        if (SelectionFilter is SelectFilter.All or SelectFilter.Mouse)
+                        {
+                            MouseDeselect();
+                        }
                     }
                 }
-                else
-                {
-                    ResolveMouseExited(MouseInsidePosition);
-                    if (SelectionFilter is SelectFilter.All or SelectFilter.Mouse)
-                    {
-                        MouseDeselect();
-                    }
-                }
+
+                if (isMouseInside) MouseInsidePosition = mousePos;
+            
             }
 
-            if (isMouseInside) MouseInsidePosition = mousePos;
+            if (InputFilter != InputFilter.None)
+            {
+                var pressed = false;
+                if (InputFilter == InputFilter.MouseOnly) pressed = GetMousePressedState(); 
+                else if (InputFilter == InputFilter.MouseNever) pressed = GetPressedState();
+                else pressed = GetMousePressedState() || GetPressedState();
+
+                if (Pressed != pressed)
+                {
+                    Pressed = pressed;
+                    ResolvePressedChanged();
+                }
             
+            }
         }
         
         OnUpdate(dt, mousePos, mousePosValid);
@@ -401,6 +431,12 @@ public abstract class ControlNode
     }
     #endregion
 
+    #region Input
+    protected virtual bool GetPressedState() => false;
+    protected virtual bool GetMousePressedState() => false;
+
+    #endregion
+    
     #region Virtual
     protected virtual void OnUpdate(float dt, Vector2 mousePos, bool mousePosValid) { }
     protected virtual void OnChildUpdated(ControlNode child) { }
@@ -416,6 +452,7 @@ public abstract class ControlNode
     protected virtual void MouseHasEntered(Vector2 mousePos) { }
     protected virtual void MouseHasExited(Vector2 mousePos) { }
     protected virtual void SelectedWasChanged(bool value) { }
+    protected virtual void PressedWasChanged(bool value) { }
     // protected virtual void FocusWasChanged(bool value) { }
     #endregion
 
@@ -478,6 +515,11 @@ public abstract class ControlNode
         OnSelectedChanged?.Invoke(this, selected);
     }
 
+    private void ResolvePressedChanged()
+    {
+        PressedWasChanged(Pressed);
+        OnPressedChanged?.Invoke(this, Pressed);
+    }
     // private void ResolveFocusChanged()
     // {
     //     FocusWasChanged(focused);
