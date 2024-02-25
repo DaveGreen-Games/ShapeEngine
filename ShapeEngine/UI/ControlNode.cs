@@ -32,7 +32,7 @@ public enum InputFilter
     None = 0,
     MouseOnly = 1,
     MouseNever = 2,
-    All = 2
+    All = 3
 }
 
 public readonly struct NavigationDirection
@@ -61,12 +61,21 @@ public readonly struct NavigationDirection
     public bool IsVertical => vertical != 0;
     public bool IsHorizontal => horizontal != 0;
     
-    public bool IsUp => vertical == -1;
-    public bool IsDown => vertical == 1;
-    public bool IsLeft => horizontal == -1;
-    public bool IsRight => horizontal == 1;
+    public bool IsUp => vertical == -1 && horizontal == 0;
+    public bool IsDown => vertical == 1 && horizontal == 0;
+    public bool IsLeft => horizontal == -1 && vertical == 0;
+    public bool IsRight => horizontal == 1 && vertical == 0;
+    public bool IsUpLeft => vertical == -1 && horizontal == -1;
+    public bool IsDownLeft => vertical == 1 && horizontal == -1;
+    public bool IsUpRight => vertical == -1 && horizontal == 1;
+    public bool IsDownRight => vertical == 1 && horizontal == 1;
+    
+    public Vector2 ToVector2() => new(horizontal, vertical);
+    public Vector2 ToAlignement() => new Vector2(horizontal + 1, vertical + 1) / 2;
+    // public Vector2 ToReverseAlignement() => new Vector2((horizontal * -1) + 1, (vertical * -1) + 1) / 2;
 
-
+    public NavigationDirection Invert() => new(horizontal * -1, vertical * -1);
+    
     public static NavigationDirection GetEmpty() => new(0, 0);
     public static NavigationDirection GetLeft() => new(-1, 0);
     public static NavigationDirection GetRight() => new(1, 0);
@@ -217,7 +226,7 @@ public class ControlNodeNavigator
 
         var dir = selectedNode.GetNavigationDirection();
         var nextNode = GetNextNode(dir);
-        if (nextNode != null && nextNode != selectedNode)
+        if (nextNode != null)
         {
             selectedNode.NavigationDeselect();
             selectedNode = nextNode;
@@ -249,11 +258,39 @@ public class ControlNodeNavigator
     private ControlNode? GetNextNode(NavigationDirection dir)
     {
         if (!dir.IsValid) return null;
+        if (selectedNode == null) return null;
         var navigable = GetNavigableNodes();
         if (navigable.Count <= 0) return null;
 
-        // throw new NotImplementedException();
-        return null;
+        var minDisSq = float.MaxValue;
+        var origin = selectedNode.GetNavigationOrigin(dir);
+        ControlNode? newNode = null;
+        
+        foreach (var node in navigable)
+        {
+            if(node == selectedNode) continue;
+            
+            var dif = node.GetNavigationOrigin(dir) - origin;
+            var neighborDistanceSquared = GetNeighborDistance(dif, dir);
+            if (neighborDistanceSquared >= minDisSq) continue;
+            minDisSq = neighborDistanceSquared;
+            newNode = node;
+        }
+        return newNode;
+    }
+    private float GetNeighborDistance(Vector2 dif, NavigationDirection dir)
+    {
+        if (dir.IsLeft) return dif.X < 0 ? dif.LengthSquared() : float.MaxValue;
+        if (dir.IsRight) return dif.X > 0 ? dif.LengthSquared() : float.MaxValue;
+        if (dir.IsUp) return dif.Y < 0 ? dif.LengthSquared() : float.MaxValue;
+        if (dir.IsDown) return dif.Y > 0 ? dif.LengthSquared() : float.MaxValue;
+        
+        if (dir.IsUpLeft) return dif is { X: < 0, Y: < 0 } ? dif.LengthSquared() : float.MaxValue;
+        if (dir.IsDownLeft) return dif is { X: < 0, Y: > 0 } ? dif.LengthSquared() : float.MaxValue;
+        if (dir.IsUpRight) return dif is { X: > 0, Y: < 0 } ? dif.LengthSquared() : float.MaxValue;
+        if (dir.IsDownRight) return dif is { X: > 0, Y: > 0 } ? dif.LengthSquared() : float.MaxValue;
+        
+        return float.MaxValue;
     }
     private List<ControlNode> GetNavigableNodes()
     {
@@ -323,6 +360,15 @@ public class ControlNodeNavigator
     }
     #endregion
 }
+
+
+//IsNavigator flag
+//if is navigator node compiles list of all navigable nodes
+//if children are navigators they are also used but not their children
+//if navigator is selected, navigation is started & if navigator is deselected, navigation is ended
+//if navigator selects child navigator then child navigator can just return invalid directions, while navigating its children
+    //to pass navigation back to parent child navigator just has to return valid navigation direction
+
 public abstract class ControlNode
 {
     #region Events
@@ -854,6 +900,9 @@ public abstract class ControlNode
         if (other == this) return -1f;
         return (other.Rect.TopLeft - Rect.TopLeft).LengthSquared();
     }
+
+    public Vector2 GetNavigationOrigin(NavigationDirection dir) => Rect.GetPoint(dir.Invert().ToAlignement());
+
     #endregion
     
     #region Virtual
