@@ -946,23 +946,15 @@ public abstract class ControlNode
                 var pressed = false;
                 if (InputFilter == InputFilter.MouseOnly)
                 {
-                    pressed = GetMousePressedState();
+                    pressed = MouseInside && GetMousePressedState();
                 } 
                 else if (InputFilter == InputFilter.MouseNever)
                 {
                     pressed = GetPressedState();
-                    // if (Navigable)
-                    // {
-                    // 
-                    // }
                 }
                 else if (InputFilter == InputFilter.All)
                 {
-                    pressed = GetMousePressedState() || GetPressedState();
-                    // if (Navigable)
-                    // {
-                    //
-                    // }
+                    pressed = (MouseInside && GetMousePressedState()) || GetPressedState();
                 }
 
                 if (Pressed != pressed)
@@ -988,9 +980,19 @@ public abstract class ControlNode
     #endregion
 
     #region Input
+    /// <summary>
+    /// Return if the key for the pressed state is down
+    /// </summary>
     protected virtual bool GetPressedState() => false;
+    
+    /// <summary>
+    /// Return if the mouse button for the pressed state is down (only is called when mouse is inside)
+    /// </summary>
     protected virtual bool GetMousePressedState() => false;
 
+    /// <summary>
+    /// Return the direction to move to another element.
+    /// </summary>
     public virtual NavigationDirection GetNavigationDirection() => new();
     #endregion
 
@@ -1127,11 +1129,38 @@ public abstract class ControlNode
     }
     #endregion
     
+}
+
+
+
+public class ControlNodeContainer : ControlNode
+{
+    public enum ContainerType
+    {
+        None = 0,
+        Horizontal = 1,
+        Vertical = 2,
+        Grid = 3
+    }
+
+    public event Action<ControlNode>? OnFirstNodeSelected;
+    public event Action<ControlNode>? OnLastNodeSelected;
+    public event Action<ControlNode>? OnNodeSelected;
+    
+    public int DisplayCount { get; set; } = 0;
+    public ContainerType Type { get; set; } = ContainerType.None;
+    public Vector2 Gap { get; set; } = new();
     
     
+
+}
+
+public class ControlNodeBoxContainer : ControlNodeContainer //???
+{
     
-    // public event Action<MouseFilter, MouseFilter>? OnMouseFilterChanged;
-    // public event Action<SelectFilter, SelectFilter>? OnSelectionFilterChanged;
-    // public event Action<InputFilter, InputFilter>? OnInputFilterChanged;
-    // public event Action<bool>? OnNavigableChanged;
+}
+
+public class ControlNodeGridContainer : ControlNodeContainer //???
+{
+    
 }

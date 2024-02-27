@@ -7,7 +7,7 @@ using ShapeEngine.UI;
 
 namespace Examples.Scenes.ExampleScenes
 {
-    internal class ControlNodeContainer : ControlNode
+    internal class ControlNodeTestContainer : ControlNodeContainer
     {
         // public ControlNodeContainer()
         // {
@@ -72,6 +72,7 @@ namespace Examples.Scenes.ExampleScenes
     }
     internal class ControlNodeButton : ControlNode
     {
+        private float inputCooldown = 0f;
         public ControlNodeButton(string text, Vector2 anchor, Vector2 stretch)
         {
             this.Anchor = anchor;
@@ -99,21 +100,22 @@ namespace Examples.Scenes.ExampleScenes
 
         public override NavigationDirection GetNavigationDirection()
         {
+            if (inputCooldown > 0f) return new();
+            
             var hor = 0;
             var vert = 0;
-            if (Raylib.IsKeyPressed(KeyboardKey.A)) hor = -1;
-            else if (Raylib.IsKeyPressed(KeyboardKey.D)) hor = 1;
+            if (Raylib.IsKeyDown(KeyboardKey.A)) hor = -1;
+            else if (Raylib.IsKeyDown(KeyboardKey.D)) hor = 1;
             
-            if (Raylib.IsKeyPressed(KeyboardKey.W)) vert = -1;
-            else if (Raylib.IsKeyPressed(KeyboardKey.S)) vert = 1;
+            if (Raylib.IsKeyDown(KeyboardKey.W)) vert = -1;
+            else if (Raylib.IsKeyDown(KeyboardKey.S)) vert = 1;
             return new(hor, vert);
         }
 
-        // private Vector2 mousePos = new();
-        // protected override void OnUpdate(float dt, Vector2 mousePos, bool mousePosValid)
-        // {
-        //     this.mousePos = mousePos;
-        // }
+        protected override void SelectedWasChanged(bool value)
+        {
+            if (value) inputCooldown = 0.25f;
+        }
 
         protected override void OnDraw()
         {
@@ -146,15 +148,21 @@ namespace Examples.Scenes.ExampleScenes
             }
             
         }
-        
-        
+
+        protected override void OnUpdate(float dt, Vector2 mousePos, bool mousePosValid)
+        {
+            if (inputCooldown > 0)
+            {
+                inputCooldown -= dt;
+            }
+        }
     }
     
     public class ControlNodeExampleScene : ExampleScene
     {
         // private readonly InputAction iaNextAlignement;
         private readonly ControlNodeNavigator navigator;
-        private readonly ControlNodeContainer container;
+        private readonly ControlNodeTestContainer container;
 
         private readonly ControlNodeButton optionButton;
         // private readonly EventTester eventTester;
