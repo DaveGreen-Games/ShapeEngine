@@ -48,6 +48,7 @@ namespace Examples.Scenes
             examples.Add(new TextScalingExample());
             examples.Add(new TextWrapEmphasisExample());
             examples.Add(new TextBoxExample()); 
+            examples.Add(new ControlNodeExampleScene()); 
             
             // examples.Add(new WordEmphasisDynamicExample());
             //examples.Add(new TextEmphasisExample());

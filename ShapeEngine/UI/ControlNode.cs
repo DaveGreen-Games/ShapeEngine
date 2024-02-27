@@ -118,18 +118,16 @@ public class ControlNodeNavigator
 
     #region Getter & Setter
 
-    public ControlNode? SelectedNode
+    public ControlNode? SelectedNode => selectedNode;
+
+    private void SetSelectedNode(ControlNode? newNode)
     {
-        get => selectedNode;
-        set
-        {
-            if (value == null && selectedNode == null) return;
-            if (selectedNode == value) return;
+        if (newNode == null && selectedNode == null) return;
+        if (selectedNode == newNode) return;
             
-            var prev = selectedNode;
-            selectedNode = value;
-            ResolveOnSelectedControlNodeChanged(prev, selectedNode);
-        }
+        var prev = selectedNode;
+        selectedNode = newNode;
+        ResolveOnSelectedControlNodeChanged(prev, selectedNode);
     }
     public bool IsNavigating { get; private set; } = false;
 
@@ -156,7 +154,7 @@ public class ControlNodeNavigator
         if (!nodes.Add(node)) return false;
         if (IsNavigating)
         {
-            if (node.Selected && selectedNode == null) selectedNode = node;
+            if (node.Selected && selectedNode == null) SetSelectedNode(node); //SelectedNode = node;
         }
         else
         {
@@ -189,7 +187,15 @@ public class ControlNodeNavigator
         node.OnNavigableChanged += OnControlNodeNavigableChanged;
         node.OnChildAdded += OnControlNodeChildAdded;
         node.OnChildRemoved += OnControlNodeChildRemoved;
-        // node.OnSelectedChanged += OnNodeSelectionChanged;
+        
+        //WHY DO THEY NOT TRIGGER !!!!
+        //RESOLVE SELECTED CHANGED IS CALLED IN CONTROL NODE
+        //BUT EVENT IS NOT TRIGGERED IN NAVIGATOR
+        node.OnSelectedChanged += OnNodeSelectionChanged;
+        node.OnSelectedChanged += (controlNode, b) =>
+        {
+            Console.WriteLine($"Selection Navigator Node Changed to {b}");
+        };
         return true;
     }
     public bool RemoveNode(ControlNode node)
@@ -200,8 +206,8 @@ public class ControlNodeNavigator
         node.OnNavigableChanged -= OnControlNodeNavigableChanged;
         node.OnChildAdded -= OnControlNodeChildAdded;
         node.OnChildRemoved -= OnControlNodeChildRemoved;
-        // node.OnSelectedChanged -= OnNodeSelectionChanged;
-        if (node == selectedNode) selectedNode = null; // selectedNode = GetClosestNode(node);
+        node.OnSelectedChanged -= OnNodeSelectionChanged;
+        if (node == selectedNode) SetSelectedNode(null); //SelectedNode = null; // selectedNode = GetClosestNode(node);
         
         return true;
     }
@@ -214,8 +220,9 @@ public class ControlNodeNavigator
             var navigable = GetNavigableNodes();
             if (navigable.Count > 0)
             {
-                selectedNode = navigable[0];
-                if (!selectedNode.NavigationSelect())
+                SetSelectedNode(navigable[0]);
+                // SelectedNode = navigable[0];
+                if (selectedNode == null || !selectedNode.NavigationSelect())
                 {
                     throw new WarningException(
                         "Control Node Navigation Selected return false when it should have returned true!");
@@ -224,12 +231,14 @@ public class ControlNodeNavigator
             else return;
         }
 
+        
         var dir = selectedNode.GetNavigationDirection();
         var nextNode = GetNextNode(dir);
         if (nextNode != null)
         {
             selectedNode.NavigationDeselect();
-            selectedNode = nextNode;
+            SetSelectedNode(nextNode);
+            // SelectedNode = nextNode;
             selectedNode.NavigationSelect();
         }
     }
@@ -314,6 +323,27 @@ public class ControlNodeNavigator
     private void OnControlNodeChildAdded(ControlNode child) => dirty = true;
     private void OnControlNodeChildRemoved(ControlNode child) => dirty = true;
     private void OnControlNodeNavigableChanged(bool navigable) => dirty = true;
+
+    private void OnNodeSelectionChanged(ControlNode node, bool value)
+    {
+        Console.WriteLine($"Selection changed to {value}");
+        if (!value) return;
+        
+        if (selectedNode == null)
+        {
+            Console.WriteLine($"Selection changed to {value} || Selected Node is null -> new node selected");
+            SetSelectedNode(node);
+            return;
+        }
+        
+        if (node != selectedNode)
+        {
+            Console.WriteLine($"Selection changed to {value} || New node is unequal selected node -> Selected Node deselected and changed to new node");
+            selectedNode.Deselect();
+            SetSelectedNode(node);
+            // selectedNode.NavigationSelect();
+        }
+    }
     
     #endregion
     
@@ -764,7 +794,19 @@ public abstract class ControlNode
     {
         var p = sourceRect.GetPoint(Anchor);
         var size = Stretch.LengthSquared() == 0f ? Rect.Size : sourceRect.Size * Stretch;
-        size = size.Clamp(MinSize, MaxSize);
+
+        if (MinSize.LengthSquared() > 0)
+        {
+            size = size.Max(MinSize);
+        }
+
+        if (MaxSize.LengthSquared() > 0)
+        {
+            size = size.Min(MaxSize);
+        }
+        
+        //size = size.Clamp(MinSize, MaxSize);
+        
         Rect = new(p, size, Anchor);
     }
     public void Update(float dt, Vector2 mousePos)
@@ -792,7 +834,7 @@ public abstract class ControlNode
     {
         foreach (var child in children)
         {
-            child.Draw();
+            child.InternalDraw();
             OnChildDrawn(child);
         }
     }
@@ -806,10 +848,9 @@ public abstract class ControlNode
         {
             if (MouseFilter != MouseFilter.Ignore)
             {
+                bool isMouseInside = mousePosValid && Rect.ContainsPoint(mousePos);
                 if (MouseFilter == MouseFilter.Stop) mousePosValid = false;
                 
-                bool isMouseInside = mousePosValid && Rect.ContainsPoint(mousePos);
-            
                 if (MouseInside != isMouseInside)
                 {
                     MouseInside = isMouseInside;
@@ -981,6 +1022,7 @@ public abstract class ControlNode
     }
     private void ResolveSelectedChanged()
     {
+        // Console.WriteLine($"Selected Changed to {selected} in {this.Anchor}");
         SelectedWasChanged(selected);
         OnSelectedChanged?.Invoke(this, selected);
     }
