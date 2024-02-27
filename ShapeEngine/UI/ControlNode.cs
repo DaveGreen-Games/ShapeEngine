@@ -552,10 +552,12 @@ public abstract class ControlNode
             prevNavigable = Navigable;
             active = value;
             ResolveActiveChanged();
-            if(parent == null || (parentActive && active != parentActive))
+            if(parent == null || parentActive)
                 ChangeChildrenActive(active);
         }
-        
+        //parent        active      inactive    active      inactive
+        //change to     active      inactive    inactive    active
+        //              yes         no          yes         no
     }
     public bool Visible
     {
@@ -566,8 +568,9 @@ public abstract class ControlNode
             prevNavigable = Navigable;
             visible = value;
             ResolveVisibleChanged();
-            if(parent == null || (parentVisible && visible != parentVisible))
+            if(parent == null || parentVisible)
                 ChangeChildrenVisible(visible);
+            
         } 
     }
 
@@ -658,7 +661,7 @@ public abstract class ControlNode
             child.prevNavigable = child.Navigable;
             child.parentActive = checkActive;
             child.ResolveParentActiveChanged();
-            if(child.active) child.ChangeChildrenActive(checkActive);
+            if(child.active != checkActive) child.ChangeChildrenActive(checkActive);
             
         }
         
@@ -667,7 +670,7 @@ public abstract class ControlNode
             child.prevNavigable = child.Navigable;
             child.parentVisible = checkVisible;
             child.ResolveParentVisibleChanged();
-            if(child.visible) child.ChangeChildrenVisible(checkVisible);
+            if(child.visible != checkVisible) child.ChangeChildrenVisible(checkVisible);
             
         }
         
@@ -771,8 +774,8 @@ public abstract class ControlNode
             child.prevNavigable = child.Navigable;
             child.parentVisible = value;
             child.ResolveParentVisibleChanged();
-            if(value || child.visible != value)
-                child.ChangeChildrenVisible(value);
+            // if(value || child.visible != value)
+            if(child.visible) child.ChangeChildrenVisible(value);
         }
     }
     private void ChangeChildrenActive(bool value)
@@ -782,9 +785,13 @@ public abstract class ControlNode
             child.prevNavigable = child.Navigable;
             child.parentActive = value;
             child.ResolveParentActiveChanged();
-            if(value || child.active != value)
-                child.ChangeChildrenActive(value);
+            // if(value || child.active != value)
+            if(child.active) child.ChangeChildrenActive(value);
         }
+        
+        //value     active      inactive    active      inactive
+        //child     active      inactive    inactive    active
+        //          yes         no          no          yes
     }
     
     #endregion

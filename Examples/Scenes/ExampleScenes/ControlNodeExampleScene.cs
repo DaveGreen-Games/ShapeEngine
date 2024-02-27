@@ -1,29 +1,12 @@
 using System.Numerics;
 using Raylib_cs;
-using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
-using ShapeEngine.Input;
 using ShapeEngine.Lib;
 using ShapeEngine.Text;
 using ShapeEngine.UI;
 
 namespace Examples.Scenes.ExampleScenes
 {
-    // internal class EventTester
-    // {
-    //     public EventTester(ControlNodeButton start, ControlNodeButton option, ControlNodeButton quit)
-    //     {
-    //         start.OnSelectedChanged += OnStartButtonSelectionChanged;
-    //         option.OnSelectedChanged += OnOptionButtonSelectionChanged;
-    //         quit.OnSelectedChanged += OnQuitButtonSelectionChanged;
-    //     }
-    //     
-    //     private void OnStartButtonSelectionChanged(ControlNode node, bool value) { Console.WriteLine($"Start Button Selection changed to {value}"); }
-    //     private void OnOptionButtonSelectionChanged(ControlNode node, bool value) { Console.WriteLine($"Option Button Selection changed to {value}"); }
-    //     private void OnQuitButtonSelectionChanged(ControlNode node, bool value) { Console.WriteLine($"Quit Button Selection changed to {value}"); }
-    // }
-    
-    
     internal class ControlNodeContainer : ControlNode
     {
         // public ControlNodeContainer()
@@ -46,6 +29,16 @@ namespace Examples.Scenes.ExampleScenes
             this.Anchor = anchor;
             this.Stretch = stretch;
         }
+
+        // protected override void ActiveWasChanged(bool value)
+        // {
+        //     Console.WriteLine($"Active was changed to {value} / Active In Hierarchy: {IsActiveInHierarchy}");
+        // }
+        //
+        // protected override void ParentActiveWasChanged(bool value)
+        // {
+        //     Console.WriteLine($"Parent Active was changed to {value} / Active In Hierarchy: {IsActiveInHierarchy}");
+        // }
 
         protected override void OnDraw()
         {
@@ -209,7 +202,7 @@ namespace Examples.Scenes.ExampleScenes
             
             navigator.AddNode(container);
 
-            optionButton.Active = false;
+            // optionButton.Active = false;
             
             navigator.StartNavigation();
 
