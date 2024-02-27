@@ -210,28 +210,90 @@ namespace ShapeEngine.Core.Shapes
 
     }
 
-    
+
+
     public readonly struct Rect : IEquatable<Rect>
     {
+        public readonly struct Margins
+        {
+            public bool Valid => Top != 0 || Bottom != 0 || Left != 0 || Right != 0;
+
+            public readonly float Top;
+            public readonly float Bottom;
+            public readonly float Left;
+            public readonly float Right;
+
+            public Margins()
+            {
+            }
+
+            public Margins(float top, float right, float bottom, float left)
+            {
+                this.Top = top;
+                this.Right = right;
+                this.Bottom = bottom;
+                this.Left = left;
+            }
+
+            public Margins(Vector2 horizontal, Vector2 vertical)
+            {
+                this.Left = horizontal.X;
+                this.Right = horizontal.Y;
+                this.Top = vertical.X;
+                this.Bottom = vertical.Y;
+            }
+
+            // public Rect Apply(Rect rect)
+            // {
+            //     var tl = new Vector2(rect.X, rect.Y);
+            //     var size = new Vector2(rect.Width, rect.Height);
+            //     var br = tl + size;
+            //
+            //     tl.X += size.X * Left;
+            //     tl.Y += size.Y * Top;
+            //     br.X -= size.X * Right;
+            //     br.Y -= size.Y * Bottom;
+            //
+            //     Vector2 finalTopLeft = new(MathF.Min(tl.X, br.X), MathF.Min(tl.Y, br.Y));
+            //     Vector2 finalBottomRight = new(MathF.Max(tl.X, br.X), MathF.Max(tl.Y, br.Y));
+            //     return new
+            //     (
+            //         finalTopLeft.X,
+            //         finalTopLeft.Y,
+            //         finalBottomRight.X - finalTopLeft.X,
+            //         finalBottomRight.Y - finalTopLeft.Y
+            //     );
+            // }
+
+        }
+
+
+
         #region Members
+
         public readonly float X;
         public readonly float Y;
         public readonly float Width;
         public readonly float Height;
+
         #endregion
 
         #region Getter Setter
+
         public readonly Vector2 TopLeft => new(X, Y);
         public readonly Vector2 TopRight => new(X + Width, Y);
         public readonly Vector2 BottomRight => new(X + Width, Y + Height);
         public readonly Vector2 BottomLeft => new(X, Y + Height);
         public readonly Vector2 Center => new(X + Width * 0.5f, Y + Height * 0.5f);
-        public readonly (Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr) Corners => (TopLeft, BottomLeft, BottomRight, TopRight);
+
+        public readonly (Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr) Corners =>
+            (TopLeft, BottomLeft, BottomRight, TopRight);
+
         public readonly float Top => Y;
         public readonly float Bottom => Y + Height;
         public readonly float Left => X;
         public readonly float Right => X + Width;
-        
+
         public readonly Segment LeftSegment => new(TopLeft, BottomLeft);
         public readonly Segment BottomSegment => new(BottomLeft, BottomRight);
         public readonly Segment RightSegment => new(BottomRight, TopRight);
@@ -242,6 +304,7 @@ namespace ShapeEngine.Core.Shapes
         #endregion
 
         #region Constructors
+
         public Rect(float x, float y, float width, float height)
         {
             this.X = x;
@@ -249,6 +312,7 @@ namespace ShapeEngine.Core.Shapes
             this.Width = width;
             this.Height = height;
         }
+
         public Rect(Vector2 topLeft, Vector2 bottomRight)
         {
             var final = Fix(topLeft, bottomRight);
@@ -278,6 +342,7 @@ namespace ShapeEngine.Core.Shapes
             //    this.height = bottomRight.Y - topLeft.Y;
             //}
         }
+
         public Rect(Vector2 pos, Vector2 size, Vector2 alignement)
         {
             var offset = size * alignement;
@@ -288,8 +353,8 @@ namespace ShapeEngine.Core.Shapes
             this.Height = size.Y;
         }
 
-        
-        
+
+
         public Rect(Rectangle rect)
         {
             this.X = rect.X;
@@ -297,16 +362,17 @@ namespace ShapeEngine.Core.Shapes
             this.Width = rect.Width;
             this.Height = rect.Height;
         }
+
         #endregion
 
         #region Equality & HashCode
-        
+
         public bool Equals(Rect other)
         {
-            return 
-                ShapeMath.EqualsF(X, other.X) && 
-                ShapeMath.EqualsF(Y, other.Y) && 
-                ShapeMath.EqualsF(Width, other.Width) && 
+            return
+                ShapeMath.EqualsF(X, other.X) &&
+                ShapeMath.EqualsF(Y, other.Y) &&
+                ShapeMath.EqualsF(Width, other.Width) &&
                 ShapeMath.EqualsF(Height, other.Height);
             //return 
             //    Math.Abs(X - other.X) < GameLoop.FloatComparisonTolerance && 
@@ -314,23 +380,28 @@ namespace ShapeEngine.Core.Shapes
             //    Math.Abs(Width - other.Width) < GameLoop.FloatComparisonTolerance && 
             //    Math.Abs(Height - other.Height) < GameLoop.FloatComparisonTolerance;
         }
+
         public static bool operator ==(Rect left, Rect right)
         {
             return left.Equals(right);
         }
+
         public static bool operator !=(Rect left, Rect right)
         {
             return !(left == right);
         }
+
         public override bool Equals(object? obj)
         {
             if (obj is Rect r) return Equals(r);
             return false;
         }
+
         public readonly override int GetHashCode()
         {
             // return HashCode.Combine(X, Y, Width, Height);
-            return (((17 * 23 + this.X.GetHashCode()) * 23 + this.Y.GetHashCode()) * 23 + this.Width.GetHashCode()) * 23 + this.Height.GetHashCode();
+            return (((17 * 23 + this.X.GetHashCode()) * 23 + this.Y.GetHashCode()) * 23 + this.Width.GetHashCode()) *
+                23 + this.Height.GetHashCode();
         }
 
         #endregion
@@ -341,10 +412,10 @@ namespace ShapeEngine.Core.Shapes
         {
             var n = axisStart - axisEnd;
             var corners = ToPolygon();
-            var edgeAStart =    corners[0];
-            var edgeAEnd =      corners[1];
-            var edgeBStart =    corners[2];
-            var edgeBEnd =      corners[3];
+            var edgeAStart = corners[0];
+            var edgeAEnd = corners[1];
+            var edgeBStart = corners[2];
+            var edgeBEnd = corners[3];
 
             var edgeARange = Segment.ProjectSegment(edgeAStart, edgeAEnd, n);
             var edgeBRange = Segment.ProjectSegment(edgeBStart, edgeBEnd, n);
@@ -354,7 +425,7 @@ namespace ShapeEngine.Core.Shapes
             return !axisRange.OverlappingRange(rProjection);
         }
 
-        
+
         /// <summary>
         /// Points are ordered in ccw order starting with top left. (tl, bl, br, tr)
         /// </summary>
@@ -367,23 +438,27 @@ namespace ShapeEngine.Core.Shapes
             poly.Rotate(pivot, angleDeg * ShapeMath.DEGTORAD);
             return poly;
         }
+
         public readonly Points RotateList(Vector2 pivot, float angleDeg)
         {
             var poly = ToPolygon();
             poly.Rotate(pivot, angleDeg * ShapeMath.DEGTORAD);
-            return new(){poly[0], poly[1], poly[2], poly[3]};
+            return new() { poly[0], poly[1], poly[2], poly[3] };
         }
+
         public readonly (Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr) RotateCorners(Vector2 pivot, float angleDeg)
         {
             var poly = ToPolygon();
             poly.Rotate(pivot, angleDeg * ShapeMath.DEGTORAD);
             return new(poly[0], poly[1], poly[2], poly[3]);
         }
+
         public readonly Vector2 GetPoint(Vector2 alignement)
         {
             var offset = Size * alignement;
             return TopLeft + offset;
         }
+
         public readonly Rect Lerp(Rect to, float f)
         {
             return
@@ -395,17 +470,34 @@ namespace ShapeEngine.Core.Shapes
                     ShapeMath.LerpFloat(Height, to.Height, f)
                 );
         }
-        public readonly Rect Align(Vector2 alignement) { return new(TopLeft, Size, alignement); }
-        public readonly Rect ApplyMargins(float left, float right, float top, float bottom)
+
+        public readonly Rect Align(Vector2 alignement)
         {
+            return new(TopLeft, Size, alignement);
+        }
+
+        public Rect ApplyMargins(Margins margins)
+        {
+            return !margins.Valid ? this : ApplyMargins(margins.Left, margins.Right, margins.Top, margins.Bottom);
+        }
+
+        public Rect ApplyMarginsAbsolute(Margins margins)
+        {
+            return !margins.Valid ? this : ApplyMarginsAbsolute(margins.Left, margins.Right, margins.Top, margins.Bottom);
+        }
+
+        public Rect ApplyMargins(float left, float right, float top, float bottom)
+        {
+            if (left == 0f && right == 0f && top == 0f && bottom == 0f) return this;
+            
             left = ShapeMath.Clamp(left, -1f, 1f);
             right = ShapeMath.Clamp(right, -1f, 1f);
             top = ShapeMath.Clamp(top, -1f, 1f);
             bottom = ShapeMath.Clamp(bottom, -1f, 1f);
 
 
-            var tl = TopLeft; // new(X, Y);
-            var size = Size; //new(Width, Height);
+            var tl = TopLeft;
+            var size = Size;
             var br = tl + size;
 
             tl.X += size.X * left;
@@ -423,11 +515,11 @@ namespace ShapeEngine.Core.Shapes
                     finalBottomRight.Y - finalTopLeft.Y
                 );
         }
-        public readonly Rect ApplyMarginsAbsolute(float left, float right, float top, float bottom)
+        public Rect ApplyMarginsAbsolute(float left, float right, float top, float bottom)
         {
-            var tl = TopLeft; // new(rect.X, rect.Y);
-            // var size = Size; // new(rect.Width, rect.Height);
-            var br = BottomRight; // tl + size;
+            if (left == 0f && right == 0f && top == 0f && bottom == 0f) return this;
+            var tl = TopLeft;
+            var br = BottomRight;
             
             tl.X += left;
             tl.Y += top;
@@ -444,6 +536,8 @@ namespace ShapeEngine.Core.Shapes
                     finalBottomRight.Y - finalTopLeft.Y
                 );
         }
+        
+        
         
         public readonly Rect ScaleSize(float horizontalAmount, float verticalAmount)
         {

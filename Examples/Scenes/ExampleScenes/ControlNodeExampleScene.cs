@@ -9,6 +9,21 @@ using ShapeEngine.UI;
 
 namespace Examples.Scenes.ExampleScenes
 {
+    // internal class EventTester
+    // {
+    //     public EventTester(ControlNodeButton start, ControlNodeButton option, ControlNodeButton quit)
+    //     {
+    //         start.OnSelectedChanged += OnStartButtonSelectionChanged;
+    //         option.OnSelectedChanged += OnOptionButtonSelectionChanged;
+    //         quit.OnSelectedChanged += OnQuitButtonSelectionChanged;
+    //     }
+    //     
+    //     private void OnStartButtonSelectionChanged(ControlNode node, bool value) { Console.WriteLine($"Start Button Selection changed to {value}"); }
+    //     private void OnOptionButtonSelectionChanged(ControlNode node, bool value) { Console.WriteLine($"Option Button Selection changed to {value}"); }
+    //     private void OnQuitButtonSelectionChanged(ControlNode node, bool value) { Console.WriteLine($"Quit Button Selection changed to {value}"); }
+    // }
+    
+    
     internal class ControlNodeContainer : ControlNode
     {
         // public ControlNodeContainer()
@@ -34,6 +49,15 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnDraw()
         {
+            if (!IsActiveInHierarchy)
+            {
+                textFont.ColorRgba = Colors.Medium;
+            }
+            else
+            {
+                textFont.ColorRgba = Colors.Text;
+            }
+            
             textFont.DrawWord(Text, Rect, Anchor);   
         }
     }
@@ -69,7 +93,8 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override bool GetPressedState()
         {
-            if (!Selected || MouseInside) return false;
+            // || MouseInside
+            if (!Selected) return false;
             return Raylib.IsKeyDown(KeyboardKey.Space);
         }
 
@@ -109,7 +134,7 @@ namespace Examples.Scenes.ExampleScenes
                 {
                     Rect.Draw(Colors.Warm);
                 }
-                else if (Selected && !MouseInside)
+                else if (Selected)
                 {
                     Rect.Draw(Colors.Medium);
                 }
@@ -137,7 +162,9 @@ namespace Examples.Scenes.ExampleScenes
         // private readonly InputAction iaNextAlignement;
         private readonly ControlNodeNavigator navigator;
         private readonly ControlNodeContainer container;
-        
+
+        private readonly ControlNodeButton optionButton;
+        // private readonly EventTester eventTester;
         public ControlNodeExampleScene() : base()
         {
             Title = "UI System 2.0 Example";
@@ -156,9 +183,11 @@ namespace Examples.Scenes.ExampleScenes
             };
 
             var startButton = new ControlNodeButton("Start", new(0.5f, 0.1f), new Vector2(0.9f, 0.25f));
-            var optionButton = new ControlNodeButton("Options", new(0.5f, 0.5f), new Vector2(0.9f, 0.25f));
+            optionButton = new ControlNodeButton("Options", new(0.5f, 0.5f), new Vector2(0.9f, 0.25f));
             var quitButton = new ControlNodeButton("Quit", new(0.5f, 0.9f), new Vector2(0.9f, 0.25f));
 
+            
+            
             buttonContainer.AddChild(startButton);
             buttonContainer.AddChild(optionButton);
             buttonContainer.AddChild(quitButton);
@@ -179,20 +208,38 @@ namespace Examples.Scenes.ExampleScenes
             container.AddChild(backButton);
             
             navigator.AddNode(container);
-            // var nextAlignementKB = new InputTypeKeyboardButton(ShapeKeyboardButton.D);
-            // var nextAlignementGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT);
-            // iaNextAlignement = new(accessTagTextBox,nextAlignementKB, nextAlignementGP);
-            // inputActions.Add(iaIncreaseFontSpacing);
 
-            // optionButton.Active = false;
+            optionButton.Active = false;
             
             navigator.StartNavigation();
+
+            
+            startButton.OnPressedChanged += OnStartButtonPressedChanged;
+            optionButton.OnPressedChanged += OnOptionButtonPressedChanged;
+            quitButton.OnPressedChanged += OnQuitButtonPressedChanged;
+            backButton.OnPressedChanged += OnBackButtonPressedChanged;
         }
 
+        private void OnStartButtonPressedChanged(ControlNode node, bool value)
+        {
+            if(!value) navigator.StartNavigation();
+        }
+        private void OnOptionButtonPressedChanged(ControlNode node, bool value)
+        {
+            if(!value) node.Active = false;
+        }
+        private void OnQuitButtonPressedChanged(ControlNode node, bool value)
+        {
+            if(!value) navigator.EndNavigation();
+        }
+        private void OnBackButtonPressedChanged(ControlNode node, bool value)
+        {
+            if(!value) optionButton.Active = true;
+        }
+        
         protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             container.UpdateRect(ui.Area);
-            // container.Rect = ui.Area;
             container.Update(time.Delta, ui.MousePos);
             navigator.Update();
         }
