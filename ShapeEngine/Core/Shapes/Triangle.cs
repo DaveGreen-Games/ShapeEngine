@@ -383,9 +383,9 @@ namespace ShapeEngine.Core.Shapes
         public Triangle Rotate(float rad) { return Rotate(GetCentroid(), rad); }
         public Triangle Rotate(Vector2 pivot, float rad)
         {
-            Vector2 newA = pivot + (A - pivot).Rotate(rad);
-            Vector2 newB = pivot + (B - pivot).Rotate(rad);
-            Vector2 newC = pivot + (C - pivot).Rotate(rad);
+            var newA = pivot + (A - pivot).Rotate(rad);
+            var newB = pivot + (B - pivot).Rotate(rad);
+            var newC = pivot + (C - pivot).Rotate(rad);
             return new(newA, newB, newC);
         }
         public Triangle Scale(float scale) { return new(A * scale, B * scale, C * scale); }
@@ -405,6 +405,12 @@ namespace ShapeEngine.Core.Shapes
             return new(newA, newB, newC);
         }
         public Triangle Move(Vector2 offset) { return new(A + offset, B + offset, C + offset); }
+        public Triangle Center(Vector2 newCenter)
+        {
+            var centroid = GetCentroid();
+            var delta = newCenter - centroid;
+            return Move(delta);
+        }
         
         public Points ToPoints() => new() {A, B, C};
         public Polygon ToPolygon() => new() {A, B, C};

@@ -87,7 +87,7 @@ namespace ShapeEngine.Core.Shapes
             if (Count <= 0) return new();
             if (Count == 1) return this[0];
             if (Count == 2) return (this[0] + this[1]) / 2;
-            // if (Count == 3) return (this[0] + this[1] + this[2]) / 3;
+            if (Count == 3) return (this[0] + this[1] + this[2]) / 3;
             
             var centroid = new Vector2();
             var area = 0f;

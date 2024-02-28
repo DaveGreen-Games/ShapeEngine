@@ -46,7 +46,8 @@ namespace Examples.Scenes.ExampleScenes
     // }
     public class AsteroidShard : GameObject
     {
-        private Polygon shape;
+        // private Polygon shape;
+        private Triangle shape;
         private Vector2 pos;
         private Vector2 vel;
         private float rotDeg = 0f;
@@ -58,12 +59,12 @@ namespace Examples.Scenes.ExampleScenes
         private float delay = 1f;
 
         private ColorRgba colorRgba;
-        public AsteroidShard(Polygon shape, Vector2 fractureCenter, ColorRgba colorRgba)
+        public AsteroidShard(Triangle shape, Vector2 fractureCenter, ColorRgba colorRgba)
         {
             this.shape = shape;
             this.rotDeg = 0f;
             this.pos = shape.GetCentroid();
-            Vector2 dir = (pos - fractureCenter).Normalize();
+            var dir = (pos - fractureCenter).Normalize();
             this.vel = dir * ShapeRandom.RandF(100, 300);
             this.angularVelDeg = ShapeRandom.RandF(-90, 90);
             this.lifetime = ShapeRandom.RandF(1.5f, 3f);
@@ -97,8 +98,9 @@ namespace Examples.Scenes.ExampleScenes
                         rotDeg += angularVelDeg * time.Delta;
 
                         float rotDifDeg = rotDeg - prevRotDeg;
-                        shape.Center(pos);
-                        shape.Rotate(new Vector2(0.5f), rotDifDeg * ShapeMath.DEGTORAD);
+                        
+                        shape = shape.Center(pos).Rotate(shape.GetCentroid(), rotDifDeg * ShapeMath.DEGTORAD);
+                        // shape = shape.Rotate(shape.GetCentroid(), rotDifDeg * ShapeMath.DEGTORAD);
                     }
                     
                 }
@@ -672,14 +674,17 @@ namespace Examples.Scenes.ExampleScenes
             var asteroidShape = a.GetPolygon();
             var color = a.GetColor();
             var fracture = fractureHelper.Fracture(asteroidShape, cutShape);
+            
             foreach (var cutoutShape in fracture.Cutouts)
             {
                 lastCutOuts.Add(new Cutout(cutoutShape));
             }
+
+            var center = cutShape.GetCentroid();
             foreach (var piece in fracture.Pieces)
             {
-                Vector2 center = piece.GetCentroid();
-                AsteroidShard shard = new(piece.ToPolygon(), center, color);
+                // Vector2 center = piece.GetCentroid();
+                AsteroidShard shard = new(piece, center, color);
                 SpawnArea?.AddGameObject(shard);
             }
             if (fracture.NewShapes.Count > 0)
@@ -717,9 +722,9 @@ namespace Examples.Scenes.ExampleScenes
         }
         private void CycleSize()
         {
-            float step = 50f;
-            float min = 50f;
-            float max = 400;
+            const float step = 100f;
+            const float min = 100f;
+            const int max = 800;
             curSize += step;
             curSize = ShapeMath.WrapF(curSize, min, max);
         }
