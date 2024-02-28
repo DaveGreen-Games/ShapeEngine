@@ -100,7 +100,17 @@ namespace Examples.Scenes.ExampleScenes
 
         public override NavigationDirection GetNavigationDirection()
         {
-            if (inputCooldown > 0f) return new();
+            if (inputCooldown > 0f)
+            {
+                if (Raylib.IsKeyReleased(KeyboardKey.A) ||
+                    Raylib.IsKeyReleased(KeyboardKey.D) ||
+                    Raylib.IsKeyReleased(KeyboardKey.W) ||
+                    Raylib.IsKeyReleased(KeyboardKey.S))
+                {
+                    inputCooldown = 0f;
+                }
+                else return new();
+            }
             
             var hor = 0;
             var vert = 0;
@@ -114,7 +124,12 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void SelectedWasChanged(bool value)
         {
-            if (value) inputCooldown = 0.25f;
+            if (value)
+            {
+                inputCooldown = 0.25f;
+                ContainerStretch = 2f;
+            }
+            else ContainerStretch = 1f;
         }
 
         protected override void OnDraw()
@@ -180,19 +195,28 @@ namespace Examples.Scenes.ExampleScenes
             var buttonContainer = new ControlNodeContainer
             {
                 Anchor = new Vector2(0.5f),
-                Stretch = new Vector2(0.5f, 0.5f)
+                Stretch = new Vector2(0.5f, 0.6f)
             };
 
-            var startButton = new ControlNodeButton("Start", new(0.5f, 0.1f), new Vector2(0.9f, 0.25f));
-            optionButton = new ControlNodeButton("Options", new(0.5f, 0.5f), new Vector2(0.9f, 0.25f));
-            var quitButton = new ControlNodeButton("Quit", new(0.5f, 0.9f), new Vector2(0.9f, 0.25f));
+            var startButton = new ControlNodeButton("Start", new(0.5f, 0f), new Vector2(0.98f, 0.95f));
+            optionButton = new ControlNodeButton("Options", new(0.5f, 0.5f), new Vector2(0.98f, 0.95f));
+            var quitButton = new ControlNodeButton("Quit", new(0.5f, 0.5f), new Vector2(0.98f, 0.95f));
 
-            
-            
             buttonContainer.AddChild(startButton);
             buttonContainer.AddChild(optionButton);
             buttonContainer.AddChild(quitButton);
-
+            
+            for (var i = 0; i < 3; i++)
+            {
+                var button = new ControlNodeButton($"B{i+3}", new(0.5f, 0.5f), new Vector2(0.98f, 0.95f));
+                buttonContainer.AddChild(button);
+            }
+            
+            buttonContainer.Type = ControlNodeContainer.ContainerType.Vertical;
+            buttonContainer.Gap = new Vector2(0f, 0.05f);
+            buttonContainer.DisplayCount = 3;
+            buttonContainer.DisplayIndex = 1;
+            
             container.AddChild(buttonContainer);
 
             var titleLabel = new ControlNodeLabel("UI System 2.0", new Vector2(0.5f, 0f), new Vector2(0.8f, 0.15f));

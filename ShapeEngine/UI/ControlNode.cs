@@ -402,7 +402,6 @@ public class ControlNodeNavigator
 
 
 
-
 public abstract class ControlNode
 {
     #region Events
@@ -469,8 +468,6 @@ public abstract class ControlNode
     /// </summary>
     public event Action<ControlNode, InputFilter, InputFilter>? OnInputFilterChanged;
     
-    // public event Action<ControlNode, bool>? OnFocusChanged;
-    
     #endregion
 
     #region Private Members
@@ -484,6 +481,14 @@ public abstract class ControlNode
     private bool parentActive = true;
     private bool parentVisible = true;
     private bool selected = false;
+    
+    private bool displayed = true;
+
+    public void SetDisplayed(ControlNode changer, bool value)
+    {
+        if (changer is not ControlNodeContainer) return;
+        displayed = value;
+    }
 
     private bool navigationSelected = false;
 
@@ -499,6 +504,9 @@ public abstract class ControlNode
     /// If Stretch values are 0 than the size of the rect can be set manually without it being changed by the parent rect size.
     /// </summary>
     public Vector2 Stretch = new(1, 1);
+
+    public float ContainerStretch = 1f;
+    
     public Vector2 MinSize = new(0f);
     public Vector2 MaxSize = new(0f);
     public Rect.Margins Margins = new();
@@ -577,7 +585,7 @@ public abstract class ControlNode
     /// <summary>
     /// Is this instance visible and are its parents visible to the root node?
     /// </summary>
-    public bool IsVisibleInHierarchy => visible && parentVisible;
+    public bool IsVisibleInHierarchy => visible && parentVisible && displayed;
     /// <summary>
     /// Is this instance active and are its parents active to the root node?
     /// </summary>
@@ -627,6 +635,7 @@ public abstract class ControlNode
     public bool HasParent => parent != null;
     public bool HasChildren => children.Count > 0;
     public IEnumerable<ControlNode> GetChildrenEnumerable => children;
+    // public List<ControlNode> GetChildren(Predicate<ControlNode> match) => children.FindAll(match);
     public bool Navigable => 
         IsActiveInHierarchy && IsVisibleInHierarchy &&
         SelectionFilter is SelectFilter.All or SelectFilter.Navigation && 
@@ -766,6 +775,33 @@ public abstract class ControlNode
         }
         return navigable.Count - count;
     }
+    public int GetAllVisibleInHierarchyChildren(ref List<ControlNode> visibleChildren)
+    {
+        if (children.Count <= 0) return 0;
+        if (!IsVisibleInHierarchy || !IsActiveInHierarchy) return 0;
+        
+        var count = visibleChildren.Count;
+        foreach (var child in children)
+        {
+            if(child.IsVisibleInHierarchy) visibleChildren.Add(child);
+            child.GetAllVisibleInHierarchyChildren(ref visibleChildren);
+        }
+        return visibleChildren.Count - count;
+    }
+    public int GetAllActiveInHierarchyChildren(ref List<ControlNode> activeChildren)
+    {
+        if (children.Count <= 0) return 0;
+        if (!IsVisibleInHierarchy || !IsActiveInHierarchy) return 0;
+        
+        var count = activeChildren.Count;
+        foreach (var child in children)
+        {
+            if(child.IsVisibleInHierarchy) activeChildren.Add(child);
+            child.GetAllActiveInHierarchyChildren(ref activeChildren);
+        }
+        return activeChildren.Count - count;
+    }
+    
     
     private void ChangeChildrenVisible(bool value)
     {
@@ -885,20 +921,23 @@ public abstract class ControlNode
         InternalDraw();
     }
 
-    protected virtual void UpdateChildren(float dt, Vector2 mousePos, bool mousePosValid)
+    protected virtual Rect SetChildRect(ControlNode child, Rect inputRect) => inputRect;
+    private void UpdateChildren(float dt, Vector2 mousePos, bool mousePosValid)
     {
         foreach (var child in children)
         {
-            child.UpdateRect(Rect);
+            if(!child.displayed) continue;
+            child.UpdateRect(SetChildRect(child, Rect));
             child.InternalUpdate(dt, mousePos, mousePosValid);
             OnChildUpdated(child);
         }
     }
 
-    protected virtual void DrawChildren()
+    private void DrawChildren()
     {
         foreach (var child in children)
         {
+            if(!child.displayed) continue;
             child.InternalDraw();
             OnChildDrawn(child);
         }
@@ -1143,24 +1182,335 @@ public class ControlNodeContainer : ControlNode
         Grid = 3
     }
 
-    public event Action<ControlNode>? OnFirstNodeSelected;
-    public event Action<ControlNode>? OnLastNodeSelected;
-    public event Action<ControlNode>? OnNodeSelected;
+    public event Action<ControlNode, ControlNode>? OnFirstNodeSelected;
+    public event Action<ControlNode, ControlNode>? OnLastNodeSelected;
+    public event Action<ControlNode, ControlNode>? OnNodeSelected;
+
     
-    public int DisplayCount { get; set; } = 0;
-    public ContainerType Type { get; set; } = ContainerType.None;
+    
+    public int GridRows
+    {
+        get => gridRows;
+        set
+        {
+            if (value == gridRows) return;
+            if (value > 0) gridRows = value;
+        }
+    }
+    public int GridColumns
+    {
+        get => gridColumns;
+        set
+        {
+            if (value == gridColumns) return;
+            if (value > 0) gridColumns = value;
+        }
+    }
+    public int DisplayCount
+    {
+        get => type == ContainerType.Grid ? gridColumns * gridRows : displayCount;
+        set
+        {
+            if (value == displayCount || type == ContainerType.Grid) return;
+            dirty = true;
+            
+            if (value < 0)
+            {
+                displayCount = -1;
+                displayIndex = 0;
+                return;
+            }
+
+            displayCount = value;
+            
+        }
+    }
+    public int DisplayIndex
+    {
+        get => displayIndex;
+        set
+        {
+            if (value == displayIndex) return;
+            dirty = true;
+            
+            if (value < 0)
+            {
+                displayIndex = 0;
+                return;
+            }
+
+            displayIndex = value;
+
+        }
+    }
+
+    
+    private ContainerType type = ContainerType.None;
+    public ContainerType Type
+    {
+        get => type;
+        set
+        {
+            if (value == type) return;
+            dirty = true;
+            type = value;
+        } 
+    }
     public Vector2 Gap { get; set; } = new();
-    
+
     
 
-}
+    #region Private Members
+    private int displayCount = -1;
+    private int displayIndex = 0;
+    private int gridRows = 1;
+    private int gridColumns = 1;
 
-public class ControlNodeBoxContainer : ControlNodeContainer //???
-{
+    private readonly List<ControlNode> displayedNodes = new();
     
-}
+    private bool dirty = false;
+    
+    private Vector2 curOffset = new();
+    private Vector2 gapSize = new();
+    private Vector2 startPos = new();
+    private Vector2 elementSize = new();
 
-public class ControlNodeGridContainer : ControlNodeContainer //???
-{
+    #endregion
     
+    #region Override
+    protected override void OnUpdate(float dt, Vector2 mousePos, bool mousePosValid)
+    {
+        if (Type == ContainerType.None) return;
+        if(dirty) CompileDisplayedNodes();
+        
+        if (Type == ContainerType.Vertical)
+        {
+            startPos = Rect.TopLeft;
+            float stretchFactorTotal = 0f;
+            int count = displayCount <= 0 ? displayedNodes.Count : displayCount;
+            for (int i = 0; i < count; i++)
+            {
+                if (i < displayedNodes.Count)
+                {
+                    stretchFactorTotal += displayedNodes[i].ContainerStretch;
+                }
+                else stretchFactorTotal += 1;
+            }
+            int gaps = count - 1;
+
+            float totalHeight = Rect.Height;
+            gapSize = new(0f, totalHeight * Gap.Y);
+            float elementHeight = (totalHeight - gaps * gapSize.Y) / stretchFactorTotal;
+            elementSize = new(0f, elementHeight);
+            curOffset = new(0f, 0f);
+        }
+
+        if (Type == ContainerType.Horizontal)
+        {
+            startPos = Rect.TopLeft;
+            var stretchFactorTotal = 0f;
+            int count = displayCount <= 0 ? displayedNodes.Count : displayCount;
+            for (var i = 0; i < count; i++)
+            {
+                if (i < displayedNodes.Count)
+                {
+                    stretchFactorTotal += displayedNodes[i].ContainerStretch;
+                }
+                else stretchFactorTotal += 1;
+            }
+            int gaps = count - 1;
+
+            float totalWidth = Rect.Width;
+            gapSize = new(totalWidth * Gap.X, 0f);
+            float elementWidth = (totalWidth - gaps * gapSize.X) / stretchFactorTotal;
+            elementSize = new(elementWidth, 0f);
+            curOffset = new(0f, 0f);
+        }
+
+        if (Type == ContainerType.Grid)
+        {
+            startPos = Rect.TopLeft;
+
+            int hGaps = GridColumns - 1;
+            float totalWidth = Rect.Width;
+            float hGapSize = totalWidth * Gap.X;
+            float elementWidth = (totalWidth - hGaps * hGapSize) / GridColumns;
+
+            int vGaps = GridRows - 1;
+            float totalHeight = Rect.Height;
+            float vGapSize = totalHeight * Gap.Y;
+            float elementHeight = (totalHeight - vGaps * vGapSize) / GridRows;
+
+            gapSize = new(hGapSize + elementWidth, vGapSize + elementHeight);
+            elementSize = new(elementWidth, elementHeight);
+            
+            
+        }
+        
+        
+    }
+    protected override Rect SetChildRect(ControlNode node, Rect inputRect)
+    {
+        if (Type == ContainerType.None) return inputRect;
+        if (Type == ContainerType.Vertical)
+        {
+            float height = elementSize.Y * node.ContainerStretch;
+            var size = new Vector2(Rect.Width, height);
+            var maxSize = node.MaxSize;
+            if (maxSize.X > 0f) size.X = MathF.Min(size.X, maxSize.X);
+            if (maxSize.Y > 0f) size.Y = MathF.Min(size.Y, maxSize.Y);
+            var r = new Rect(startPos + curOffset, size, new(0f));
+            curOffset += new Vector2(0f, gapSize.Y + height);
+            return r;
+        }
+
+        if (Type == ContainerType.Horizontal)
+        {
+            float width = elementSize.X * node.ContainerStretch;
+            Vector2 size = new(width, Rect.Height);
+            var maxSize = node.MaxSize;
+            if (maxSize.X > 0f) size.X = MathF.Min(size.X, maxSize.X);
+            if (maxSize.Y > 0f) size.Y = MathF.Min(size.Y, maxSize.Y);
+            var r = new Rect(startPos + curOffset, size, new(0f));
+            curOffset += new Vector2(gapSize.X + width, 0f);
+            return r;
+        }
+        
+        if (Type == ContainerType.Grid)
+        {
+            // int count = GridColumns * GridRows;
+            // if (displayedNodes.Count < count) count = displayedNodes.Count;
+            int i = displayedNodes.IndexOf(node);
+            if (i < 0) return inputRect;
+            var coords = ShapeMath.TransformIndexToCoordinates(i, GridRows, GridColumns, true);
+            var r = new Rect
+            (
+                startPos + new Vector2(gapSize.X * coords.col, 0f) + new Vector2(0f, gapSize.Y * coords.row), 
+                elementSize,
+                new(0f)
+            );
+            return r;
+        }
+
+        return inputRect;
+    }
+    protected override void ChildWasAdded(ControlNode newChild)
+    {
+        dirty = true;
+        newChild.OnSelectedChanged += OnChildSelectionChanged;
+        newChild.OnVisibleChanged += OnChildVisibleChanged;
+        newChild.OnParentVisibleChanged += OnChildParentVisibleChanged;
+    }
+    protected override void ChildWasRemoved(ControlNode oldChild)
+    {
+        dirty = true;
+        oldChild.OnSelectedChanged -= OnChildSelectionChanged;
+        oldChild.OnVisibleChanged -= OnChildVisibleChanged;
+        oldChild.OnParentVisibleChanged -= OnChildParentVisibleChanged;
+        oldChild.SetDisplayed(this, true);
+
+    }
+
+    #endregion
+    
+    #region Virtual
+    protected virtual void FirstNodeWasSelected(ControlNode node) { }
+    protected virtual void LastNodeWasSelected(ControlNode node) { }
+    protected virtual void NodeWasSelected(ControlNode node) { }
+    protected virtual bool IsFirst(ControlNode node)
+    {
+        if (displayedNodes.Count <= 0) return false;
+        return displayedNodes[0] == node;
+    }
+    protected virtual bool IsLast(ControlNode node)
+    {
+        if (displayedNodes.Count <= 0) return false;
+        return displayedNodes[^1] == node;
+    }
+    #endregion
+    
+    #region Private
+    private void CompileDisplayedNodes()
+    {
+        dirty = false;
+        displayedNodes.Clear();
+
+        var visibleChildren = GetChildren((node => node.IsVisibleInHierarchy));
+
+        if (visibleChildren == null) return;
+        
+        if (displayCount > 0)
+        {
+            if (displayIndex + displayCount > visibleChildren.Count)
+            {
+                displayIndex = visibleChildren.Count - displayCount;
+            }
+        }
+        
+        for (var i = 0; i < visibleChildren.Count; i++)
+        {
+            var child = visibleChildren[i];
+            if (DisplayCount == 0) child.SetDisplayed(this, false);
+            else if (DisplayCount > 0)
+            {
+                if (i < DisplayIndex) child.SetDisplayed(this, false);
+                else if (i >= DisplayIndex + DisplayCount) child.SetDisplayed(this, false);
+                else
+                {
+                    displayedNodes.Add(child);
+                    child.SetDisplayed(this, true);
+                }
+                
+            }
+            else
+            {
+                child.SetDisplayed(this, true);
+                displayedNodes.Add(child);
+            }
+        }
+    }
+    private void OnChildVisibleChanged(ControlNode child, bool visible)
+    {
+        dirty = true;
+    }
+    private void OnChildParentVisibleChanged(ControlNode child, bool parentVisible)
+    {
+        dirty = true;
+    }
+    private void OnChildSelectionChanged(ControlNode child, bool selected)
+    {
+        if(selected) ResolveOnNodeSelected(child);
+    }
+
+    private void ResolveOnFirstNodeSelected(ControlNode node)
+    {
+        FirstNodeWasSelected(node);
+        OnFirstNodeSelected?.Invoke(this, node);
+
+        
+        if (displayCount >= 0 && type is ContainerType.Horizontal or ContainerType.Vertical)
+        {
+            DisplayIndex -= 1;
+        }
+    }
+    private void ResolveOnLastNodeSelected(ControlNode node)
+    {
+        LastNodeWasSelected(node);
+        OnLastNodeSelected?.Invoke(this, node);
+
+        if (displayCount >= 0 && type is ContainerType.Horizontal or ContainerType.Vertical)
+        {
+            DisplayIndex += 1;
+        }
+    }
+    private void ResolveOnNodeSelected(ControlNode node)
+    {
+        if(IsFirst(node)) ResolveOnFirstNodeSelected(node);
+        else if(IsLast(node)) ResolveOnLastNodeSelected(node);
+        
+        NodeWasSelected(node);
+        OnNodeSelected?.Invoke(this, node);
+        
+    }
+    #endregion
 }
