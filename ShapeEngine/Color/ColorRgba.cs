@@ -98,6 +98,8 @@ public readonly struct ColorRgba : IEquatable<ColorRgba>
     public bool IsNamed() => ToSysColor().IsNamedColor;
     public KnownColor ToKnownColor() => ToSysColor().ToKnownColor();
     public static ColorRgba FromName(string name) => new(System.Drawing.Color.FromName(name));
+    public byte GetRelativeLuminance() => (byte)(0.2126f * R + 0.7152f * G + 0.0722f * B);
+    public float GetRelativeLuminanceF() => 0.2126f * (R / 255f) + 0.7152f * (G / 255f) + 0.0722f * (B / 255f);
     #endregion
 
     #region Transformation

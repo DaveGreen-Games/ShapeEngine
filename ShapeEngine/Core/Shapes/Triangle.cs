@@ -78,7 +78,35 @@ namespace ShapeEngine.Core.Shapes
             };
             return Polygon.FindConvexHull(points);
         }
-        public Vector2 GetCentroid() { return (A + B + C) / 3; }
+
+        public Vector2 GetCentroid()  => (A + B + C) / 3;
+        // {
+        //     //counter clockwise does not work
+        //     // float crossAb = A.X * B.Y - B.X * A.Y;
+        //     // float crossBc = B.X * C.Y - C.X * B.Y;
+        //     // float crossCa = C.X * A.Y - A.X * C.Y;
+        //     //
+        //     // float area = MathF.Abs(crossAb + crossBc + crossCa) / 2;
+        //     // if (area <= 0) return new();
+        //     //
+        //     // var centroid = (A + B) * crossAb;
+        //     // centroid += (B + C) * crossBc;
+        //     // centroid += (C + A) * crossCa;
+        //     // return centroid / (6 * area);
+        //     
+        //     //clockwise works
+        //     float crossAc = A.X * C.Y - C.X * A.Y;
+        //     float crossCb = C.X * B.Y - B.X * C.Y;
+        //     float crossBa = B.X * A.Y - A.X * B.Y;
+        //     float area = (crossAc + crossCb + crossBa) / 2;
+        //     if (area <= 0) return new();
+        //     var centroid = (A + C) * crossAc;
+        //     centroid += (C + B) * crossCb;
+        //     centroid += (B + A) * crossBa;
+        //     return centroid / (6 * area);
+        // }
+
+        // public Vector2 GetCenter() => (A + B + C) / 3;
         public Rect GetBoundingBox() { return new Rect(A.X, A.Y, 0, 0).Enlarge(B).Enlarge(C); }
         public bool ContainsPoint(Vector2 p)
         {
@@ -280,16 +308,31 @@ namespace ShapeEngine.Core.Shapes
         }
         public Circle GetCircumCircle()
         {
-            Vector2 SqrA = new Vector2(A.X * A.X, A.Y * A.Y);
-            Vector2 SqrB = new Vector2(B.X * B.X, B.Y * B.Y); 
-            Vector2 SqrC = new Vector2(C.X * C.X, C.Y * C.Y);
-
+            //alternative variant
+            //coding train
+            //https://editor.p5js.org/codingtrain/sketches/eJnSI84Tw
+            // var ab = (B - A).Rotate(ShapeMath.PI / 2);
+            // var ac = (C - A).Rotate(ShapeMath.PI / 2);
+            // var abMid = (A + B) / 2;
+            // var acMid = (A + C) / 2;
+            // // Find the intersection between the two perpendicular bisectors
+            // var numerator = ac.X * (abMid.Y - acMid.Y) - ac.Y * (abMid.X - acMid.X);
+            // var denominator = ac.Y * ab.X - ac.X * ab.Y;
+            // ab *= (numerator / denominator);
+            // var center = abMid + ab;
+            // var r = (C - center).Length();
+            
+            var SqrA = new Vector2(A.X * A.X, A.Y * A.Y);
+            var SqrB = new Vector2(B.X * B.X, B.Y * B.Y); 
+            var SqrC = new Vector2(C.X * C.X, C.Y * C.Y);
+            
             float D = (A.X * (B.Y - C.Y) + B.X * (C.Y - A.Y) + C.X * (A.Y - B.Y)) * 2f;
             float x = ((SqrA.X + SqrA.Y) * (B.Y - C.Y) + (SqrB.X + SqrB.Y) * (C.Y - A.Y) + (SqrC.X + SqrC.Y) * (A.Y - B.Y)) / D;
             float y = ((SqrA.X + SqrA.Y) * (C.X - B.X) + (SqrB.X + SqrB.Y) * (A.X - C.X) + (SqrC.X + SqrC.Y) * (B.X - A.X)) / D;
-
-            Vector2 center = new Vector2(x, y);
+            
+            var center = new Vector2(x, y);
             float r = (A - center).Length();
+            
             return new(center, r);
         }
 
@@ -372,23 +415,22 @@ namespace ShapeEngine.Core.Shapes
         public float GetCircumference() => MathF.Sqrt(GetCircumferenceSquared());
         public float GetCircumferenceSquared() => SideA.LengthSquared() + SideB.LengthSquared() + SideC.LengthSquared();
 
-        public float GetArea() 
-        {
-            //float al = A.Length();
-            //float bl = B.Length();
-            //float cl = C.Length();
-            //
-            //
-            //float i = (al + bl + cl) / 2f;
-            //float area1 = MathF.Sqrt(i * (i - al) * (i - bl) * (i - cl));
-            //float area2 = MathF.Abs((a.X - c.X) * (b.Y - c.Y) - (a.Y - c.Y) * (b.X - c.X)) / 2f;
-            //if(MathF.Abs(area1 - area2) > 1)
-            //{
-            //    int breakpoint = 0;
-            //}
+        public float GetArea() => MathF.Abs((A.X - C.X) * (B.Y - C.Y) - (A.Y - C.Y) * (B.X - C.X)) / 2f;
 
-            return MathF.Abs((A.X - C.X) * (B.Y - C.Y) - (A.Y - C.Y) * (B.X - C.X)) / 2f;
-        }
+        // public float GetAreaUnsigned()
+        // {
+        //     //clockwise works
+        //     float crossAc = A.X * C.Y - C.X * A.Y;
+        //     float crossCb = C.X * B.Y - B.X * C.Y;
+        //     float crossBa = B.X * A.Y - A.X * B.Y;
+        //     return (crossAc + crossCb + crossBa) / 2;
+        //     
+        //     //counter clockwise does not work
+        //     // float crossAb = A.X * B.Y - B.X * A.Y;
+        //     // float crossBc = B.X * C.Y - C.X * B.Y;
+        //     // float crossCa = C.X * A.Y - A.X * C.Y;
+        //     // return (crossAb + crossBc + crossCa) / 2;
+        // }
 
         public Vector2 GetClosestVertex(Vector2 p)
         {

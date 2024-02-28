@@ -84,20 +84,40 @@ namespace ShapeEngine.Core.Shapes
         
         public Vector2 GetCentroid()
         {
-            //return GetCentroidMean();
-            Vector2 result = new();
+            if (Count <= 0) return new();
+            if (Count == 1) return this[0];
+            if (Count == 2) return (this[0] + this[1]) / 2;
+            if (Count == 3) return (this[0] + this[1] + this[2]) / 3;
             
-            for (int i = 0; i < Count; i++)
+            var centroid = new Vector2();
+            var area = 0f;
+            for (int i = Count - 1; i >= 0; i--)
             {
                 var a = this[i];
-                var b = this[(i + 1) % Count];
-                //float factor = a.X * b.Y - b.X * a.Y; //clockwise 
-                float factor = a.Y * b.X - a.X * b.Y; //counter clockwise
-                result.X += (a.X + b.X) * factor;
-                result.Y += (a.Y + b.Y) * factor;
+                var index = ShapeMath.WrapIndex(Count, i - 1);
+                var b = this[index];
+                float cross = a.X * b.Y - b.X * a.Y; //clockwise 
+                area += cross;
+                centroid += (a + b) * cross;
             }
-            
-            return result * (1f / (GetArea() * 6f));
+
+            area *= 0.5f;
+            return centroid / (area * 6);
+
+            //return GetCentroidMean();
+            // Vector2 result = new();
+
+            // for (int i = 0; i < Count; i++)
+            // {
+            // var a = this[i];
+            // var b = this[(i + 1) % Count];
+            //// float factor = a.X * b.Y - b.X * a.Y; //clockwise 
+            // float factor = a.Y * b.X - a.X * b.Y; //counter clockwise
+            // result.X += (a.X + b.X) * factor;
+            // result.Y += (a.Y + b.Y) * factor;
+            // }
+
+            // return result * (1f / (GetArea() * 6f));
         }
         
         public bool ContainsPoint(Vector2 p) { return IsPointInPoly(this, p); }
@@ -379,8 +399,11 @@ namespace ShapeEngine.Core.Shapes
         public Vector2 GetCentroidMean()
         {
             if (Count <= 0) return new(0f);
-            Vector2 total = new(0f);
-            foreach (Vector2 p in this) { total += p; }
+            if (Count == 1) return this[0];
+            if (Count == 2) return (this[0] + this[1]) / 2;
+            if (Count == 3) return (this[0] + this[1] + this[2]) / 3;
+            var total = new Vector2(0f);
+            foreach (var p in this) { total += p; }
             return total / Count;
         }
         public Triangulation Triangulate()
@@ -479,8 +502,26 @@ namespace ShapeEngine.Core.Shapes
             }
             return lengthSq;
         }
-        public float GetArea() { return MathF.Abs(GetAreaSigned()); }
-        public bool IsClockwise() { return GetAreaSigned() > 0f; }
+
+        public float GetArea()
+        {
+            if (Count < 3) return 0f;
+            var area = 0f;
+            for (int i = Count - 1; i >= 0; i--)//backwards to be clockwise
+            {
+                var a = this[i];
+                var index = ShapeMath.WrapIndex(Count, i - 1);
+                var b = this[index];
+                float cross = a.X * b.Y - b.X * a.Y; //clockwise 
+                area += cross;
+            }
+
+            return area/ 2f;
+            
+            // return MathF.Abs(GetAreaSigned());
+        }
+        public bool IsClockwise() => GetArea() < 0f;
+
         public bool IsConvex()
         {
             int num = this.Count;
@@ -965,26 +1006,26 @@ namespace ShapeEngine.Core.Shapes
         }
         #endregion
         
-        #region Private
-        private float GetAreaSigned()
-        {
-            float totalArea = 0f;
-
-            for (int i = 0; i < this.Count; i++)
-            {
-                Vector2 a = this[i];
-                Vector2 b = this[(i + 1) % this.Count];
-
-                float dy = (a.Y + b.Y) / 2f;
-                float dx = b.X - a.X;
-
-                float area = dy * dx;
-                totalArea += area;
-            }
-
-            return totalArea;
-        }
-        #endregion
+        // #region Private
+        // private float GetAreaSigned()
+        // {
+        //     var totalArea = 0f;
+        //
+        //     for (int i = 0; i < this.Count; i++)
+        //     {
+        //         var a = this[i];
+        //         var b = this[(i + 1) % this.Count];
+        //
+        //         float dy = (a.Y + b.Y) / 2f;
+        //         float dx = b.X - a.X;
+        //
+        //         float area = dy * dx;
+        //         totalArea += area;
+        //     }
+        //
+        //     return totalArea;
+        // }
+        // #endregion
 
         #region Overlap
         

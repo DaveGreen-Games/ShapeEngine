@@ -1,10 +1,12 @@
 ﻿
 
+using System.Diagnostics;
 using Raylib_cs;
 using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using System.Numerics;
 using System.Text;
+using ShapeEngine.Color;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
@@ -148,12 +150,15 @@ namespace Examples.Scenes.ExampleScenes
         
         protected override void OnDrawGameExample(ScreenInfo game)
         {
+            
             for (int i = 0; i < curTriangulation.Count; i++)
             {
                 var tri = curTriangulation[i];
                 if (i == closeTriangleIndex) continue;
                 tri.DrawLines(lineThickness, new(Color.AntiqueWhite), LineCapType.CappedExtended, 4);
             }
+            
+            
             if(closeTriangleIndex >= 0) curTriangulation[closeTriangleIndex].DrawLines(lineThicknessBig, new(Color.ForestGreen), LineCapType.CappedExtended, 4);
 
             for (int i = 0; i < points.Count; i++)
