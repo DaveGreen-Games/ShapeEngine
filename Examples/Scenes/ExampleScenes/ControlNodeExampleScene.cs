@@ -72,7 +72,8 @@ namespace Examples.Scenes.ExampleScenes
     }
     internal class ControlNodeButton : ControlNode
     {
-        private float inputCooldown = 0f;
+        private float inputCooldownTimer = 0f;
+        private const float inputCooldown = 0.1f;
         public ControlNodeButton(string text, Vector2 anchor, Vector2 stretch)
         {
             this.Anchor = anchor;
@@ -100,14 +101,14 @@ namespace Examples.Scenes.ExampleScenes
 
         public override NavigationDirection GetNavigationDirection()
         {
-            if (inputCooldown > 0f)
+            if (inputCooldownTimer > 0f)
             {
                 if (Raylib.IsKeyReleased(KeyboardKey.A) ||
                     Raylib.IsKeyReleased(KeyboardKey.D) ||
                     Raylib.IsKeyReleased(KeyboardKey.W) ||
                     Raylib.IsKeyReleased(KeyboardKey.S))
                 {
-                    inputCooldown = 0f;
+                    inputCooldownTimer = 0f;
                 }
                 else return new();
             }
@@ -126,8 +127,8 @@ namespace Examples.Scenes.ExampleScenes
         {
             if (value)
             {
-                inputCooldown = 0.25f;
-                ContainerStretch = 2f;
+                inputCooldownTimer = inputCooldown;
+                ContainerStretch = 1.25f;
             }
             else ContainerStretch = 1f;
         }
@@ -166,9 +167,9 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnUpdate(float dt, Vector2 mousePos, bool mousePosValid)
         {
-            if (inputCooldown > 0)
+            if (inputCooldownTimer > 0)
             {
-                inputCooldown -= dt;
+                inputCooldownTimer -= dt;
             }
         }
     }
@@ -206,16 +207,16 @@ namespace Examples.Scenes.ExampleScenes
             buttonContainer.AddChild(optionButton);
             buttonContainer.AddChild(quitButton);
             
-            for (var i = 0; i < 3; i++)
+            for (var i = 0; i < 100; i++)
             {
                 var button = new ControlNodeButton($"B{i+3}", new(0.5f, 0.5f), new Vector2(0.98f, 0.95f));
                 buttonContainer.AddChild(button);
             }
             
             buttonContainer.Type = ControlNodeContainer.ContainerType.Vertical;
-            buttonContainer.Gap = new Vector2(0f, 0.05f);
-            buttonContainer.DisplayCount = 3;
-            buttonContainer.DisplayIndex = 1;
+            buttonContainer.Gap = new Vector2(0f, 0.025f);
+            buttonContainer.DisplayCount = 7;
+            buttonContainer.DisplayIndex = 0;
             
             container.AddChild(buttonContainer);
 
@@ -251,7 +252,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         private void OnOptionButtonPressedChanged(ControlNode node, bool value)
         {
-            if(!value) node.Active = false;
+            if (!value) node.Visible = false; // node.Active = false;
         }
         private void OnQuitButtonPressedChanged(ControlNode node, bool value)
         {
@@ -259,7 +260,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         private void OnBackButtonPressedChanged(ControlNode node, bool value)
         {
-            if(!value) optionButton.Active = true;
+            if (!value) optionButton.Visible = true; // optionButton.Active = true;
         }
         
         protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)

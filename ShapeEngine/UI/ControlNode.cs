@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Numerics;
+using System.Reflection;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Lib;
 
@@ -417,7 +418,10 @@ public abstract class ControlNode
     /// Parameters: Invoker, Old Child
     /// </summary>
     public event Action<ControlNode, ControlNode>? OnChildRemoved;
-    
+
+    public event Action<ControlNode, bool>? OnDisplayedChanged;
+    public event Action<ControlNode, bool>? OnActiveInHierarchyChanged;
+    public event Action<ControlNode, bool>? OnVisibleInHierarchyChanged;
     /// <summary>
     /// Parameters: Invoker, Value
     /// </summary>
@@ -434,6 +438,9 @@ public abstract class ControlNode
     /// Parameters: Invoker, Value
     /// </summary>
     public event Action<ControlNode,bool>? OnParentVisibleChanged;
+    
+    //changed in hierarchy events
+    
     /// <summary>
     /// Parameters: Invoker, Mouse Pos
     /// </summary>
@@ -484,15 +491,35 @@ public abstract class ControlNode
     
     private bool displayed = true;
 
-    public void SetDisplayed(ControlNode changer, bool value)
-    {
-        if (changer is not ControlNodeContainer) return;
-        displayed = value;
-    }
+    // public void SetDisplayed(ControlNode changer, bool value)
+    // {
+    //     if (changer is not ControlNodeContainer) return;
+    //     displayed = value;
+    // }
 
+    public bool Displayed
+    {
+        get => displayed;
+        set
+        {
+            if (value == displayed) return;
+            prevNavigable = Navigable;
+            prevIsVisibleInHierarchy = IsVisibleInHierarchy;
+            displayed = value;
+            ResolveOnDisplayedChanged();
+            foreach (var child in children)
+            {
+                child.Displayed = value;
+            }
+        }
+    }
+    
+    
     private bool navigationSelected = false;
 
     private bool prevNavigable = false;
+    private bool prevIsVisibleInHierarchy = false;
+    private bool prevIsActiveInHierarchy = false;
     // private bool focused = false;
     #endregion
 
@@ -558,6 +585,7 @@ public abstract class ControlNode
         {
             if (active == value) return;
             prevNavigable = Navigable;
+            prevIsActiveInHierarchy = IsActiveInHierarchy;
             active = value;
             ResolveActiveChanged();
             if(parent == null || parentActive)
@@ -574,6 +602,7 @@ public abstract class ControlNode
         {
             if (visible == value) return;
             prevNavigable = Navigable;
+            prevIsVisibleInHierarchy = IsVisibleInHierarchy;
             visible = value;
             ResolveVisibleChanged();
             if(parent == null || parentVisible)
@@ -582,6 +611,8 @@ public abstract class ControlNode
         } 
     }
 
+    public bool ParentVisible => parentVisible;
+    public bool ParentActive => parentActive;
     /// <summary>
     /// Is this instance visible and are its parents visible to the root node?
     /// </summary>
@@ -667,6 +698,7 @@ public abstract class ControlNode
         
         if (!checkActive)
         {
+            child.prevIsActiveInHierarchy = child.IsActiveInHierarchy;
             child.prevNavigable = child.Navigable;
             child.parentActive = checkActive;
             child.ResolveParentActiveChanged();
@@ -676,6 +708,7 @@ public abstract class ControlNode
         
         if (!checkVisible)
         {
+            child.prevIsVisibleInHierarchy = child.IsVisibleInHierarchy;
             child.prevNavigable = child.Navigable;
             child.parentVisible = checkVisible;
             child.ResolveParentVisibleChanged();
@@ -696,6 +729,7 @@ public abstract class ControlNode
         if (child.parentActive == false)
         {
             child.prevNavigable = child.Navigable;
+            child.prevIsActiveInHierarchy = child.IsActiveInHierarchy;
             child.parentActive = true;
             child.ResolveParentActiveChanged();
 
@@ -705,6 +739,7 @@ public abstract class ControlNode
         if (child.parentVisible == false)
         {
             child.prevNavigable = child.Navigable;
+            child.prevIsVisibleInHierarchy = child.IsVisibleInHierarchy;
             child.parentVisible = true;
             child.ResolveParentVisibleChanged();
             
@@ -775,7 +810,7 @@ public abstract class ControlNode
         }
         return navigable.Count - count;
     }
-    public int GetAllVisibleInHierarchyChildren(ref List<ControlNode> visibleChildren)
+    public int GetAllVisibleInHierarchyChildren(ref HashSet<ControlNode> visibleChildren)
     {
         if (children.Count <= 0) return 0;
         if (!IsVisibleInHierarchy || !IsActiveInHierarchy) return 0;
@@ -788,7 +823,7 @@ public abstract class ControlNode
         }
         return visibleChildren.Count - count;
     }
-    public int GetAllActiveInHierarchyChildren(ref List<ControlNode> activeChildren)
+    public int GetAllActiveInHierarchyChildren(ref HashSet<ControlNode> activeChildren)
     {
         if (children.Count <= 0) return 0;
         if (!IsVisibleInHierarchy || !IsActiveInHierarchy) return 0;
@@ -808,6 +843,7 @@ public abstract class ControlNode
         foreach (var child in children)
         {
             child.prevNavigable = child.Navigable;
+            child.prevIsVisibleInHierarchy = child.IsVisibleInHierarchy;
             child.parentVisible = value;
             child.ResolveParentVisibleChanged();
             // if(value || child.visible != value)
@@ -819,6 +855,7 @@ public abstract class ControlNode
         foreach (var child in children)
         {
             child.prevNavigable = child.Navigable;
+            child.prevIsActiveInHierarchy = child.IsActiveInHierarchy;
             child.parentActive = value;
             child.ResolveParentActiveChanged();
             // if(value || child.active != value)
@@ -1073,32 +1110,60 @@ public abstract class ControlNode
     protected virtual void SelectionFilterWasChanged(SelectFilter old, SelectFilter cur) { }
     protected virtual void InputFilterWasChanged(InputFilter old, InputFilter cur) { }
     protected virtual void NavigableWasChanged(bool value) { }
+    protected virtual void DisplayedWasChanged(bool value) { }
+    protected virtual void ActiveInHierarchyChanged(bool value) { }
+    protected virtual void VisibleInHierarchyChanged(bool value) { }
     #endregion
 
     #region Private
+
+    private void ResolveOnActiveInHierarchyChanged()
+    {
+        if (prevIsActiveInHierarchy == IsActiveInHierarchy) return;
+        ActiveInHierarchyChanged(IsActiveInHierarchy);
+        OnActiveInHierarchyChanged?.Invoke(this, IsActiveInHierarchy);
+    }
+
+    private void ResolveOnVisibleInHierarchyChanged()
+    {
+        if (prevIsVisibleInHierarchy == IsVisibleInHierarchy) return;
+        VisibleInHierarchyChanged(IsVisibleInHierarchy);
+        OnVisibleInHierarchyChanged?.Invoke(this, IsVisibleInHierarchy);
+    }
+    private void ResolveOnDisplayedChanged()
+    {
+        DisplayedWasChanged(displayed);
+        OnDisplayedChanged?.Invoke(this, displayed);
+        ResolveOnNavigableChanged();
+        ResolveOnVisibleInHierarchyChanged();
+    }
     private void ResolveActiveChanged()
     {
         ActiveWasChanged(active);
         OnActiveChanged?.Invoke(this, active);
-        ResolveOnNavigableChanged(Navigable);
+        ResolveOnNavigableChanged();
+        ResolveOnActiveInHierarchyChanged();
     }
     private void ResolveVisibleChanged()
     {
         VisibleWasChanged(visible);
         OnVisibleChanged?.Invoke(this, visible);
-        ResolveOnNavigableChanged(Navigable);
+        ResolveOnNavigableChanged();
+        ResolveOnVisibleInHierarchyChanged();
     }
     private void ResolveParentVisibleChanged()
     {
         ParentVisibleWasChanged(parentVisible);
         OnParentVisibleChanged?.Invoke(this, parentVisible);
-        ResolveOnNavigableChanged(Navigable);
+        ResolveOnNavigableChanged();
+        ResolveOnVisibleInHierarchyChanged();
     }
     private void ResolveParentActiveChanged()
     {
         ParentActiveWasChanged(parentActive);
         OnParentActiveChanged?.Invoke(this, parentActive);
-        ResolveOnNavigableChanged(Navigable);
+        ResolveOnNavigableChanged();
+        ResolveOnActiveInHierarchyChanged();
     }
     private void ResolveParentChanged(ControlNode? oldParent, ControlNode? newParent)
     {
@@ -1152,19 +1217,19 @@ public abstract class ControlNode
     {
         SelectionFilterWasChanged(old, cur);
         OnSelectionFilterChanged?.Invoke(this, old, cur);
-        ResolveOnNavigableChanged(Navigable);
+        ResolveOnNavigableChanged();
     }
     private void ResolveOnInputFilterChanged(InputFilter old, InputFilter cur)
     {
         InputFilterWasChanged(old, cur);
         OnInputFilterChanged?.Invoke(this, old, cur);
-        ResolveOnNavigableChanged(Navigable);
+        ResolveOnNavigableChanged();
     }
-    private void ResolveOnNavigableChanged(bool value)
+    private void ResolveOnNavigableChanged()
     {
         if (prevNavigable == Navigable) return;
-        NavigableWasChanged(value);
-        OnNavigableChanged?.Invoke(this, value);
+        NavigableWasChanged(Navigable);
+        OnNavigableChanged?.Invoke(this, Navigable);
     }
     #endregion
     
@@ -1398,16 +1463,19 @@ public class ControlNodeContainer : ControlNode
     {
         dirty = true;
         newChild.OnSelectedChanged += OnChildSelectionChanged;
-        newChild.OnVisibleChanged += OnChildVisibleChanged;
-        newChild.OnParentVisibleChanged += OnChildParentVisibleChanged;
+        newChild.OnVisibleInHierarchyChanged += OnChildVisibleInHierarchyChanged;
+        // newChild.OnVisibleChanged += OnChildVisibleChanged;
+        // newChild.OnParentVisibleChanged += OnChildParentVisibleChanged;
     }
     protected override void ChildWasRemoved(ControlNode oldChild)
     {
         dirty = true;
         oldChild.OnSelectedChanged -= OnChildSelectionChanged;
-        oldChild.OnVisibleChanged -= OnChildVisibleChanged;
-        oldChild.OnParentVisibleChanged -= OnChildParentVisibleChanged;
-        oldChild.SetDisplayed(this, true);
+        oldChild.OnVisibleInHierarchyChanged -= OnChildVisibleInHierarchyChanged;
+        // oldChild.OnVisibleChanged -= OnChildVisibleChanged;
+        // oldChild.OnParentVisibleChanged -= OnChildParentVisibleChanged;
+        // oldChild.SetDisplayed(this, true);
+        oldChild.Displayed = true;
 
     }
 
@@ -1435,7 +1503,7 @@ public class ControlNodeContainer : ControlNode
         dirty = false;
         displayedNodes.Clear();
 
-        var visibleChildren = GetChildren((node => node.IsVisibleInHierarchy));
+        var visibleChildren = GetChildren((node => node.Visible && node.ParentVisible && node.IsActiveInHierarchy));
 
         if (visibleChildren == null) return;
         
@@ -1450,30 +1518,35 @@ public class ControlNodeContainer : ControlNode
         for (var i = 0; i < visibleChildren.Count; i++)
         {
             var child = visibleChildren[i];
-            if (DisplayCount == 0) child.SetDisplayed(this, false);
+            if (DisplayCount == 0) child.Displayed = false;
             else if (DisplayCount > 0)
             {
-                if (i < DisplayIndex) child.SetDisplayed(this, false);
-                else if (i >= DisplayIndex + DisplayCount) child.SetDisplayed(this, false);
+                if (i < DisplayIndex) child.Displayed = false;
+                else if (i >= DisplayIndex + DisplayCount) child.Displayed = false;
                 else
                 {
                     displayedNodes.Add(child);
-                    child.SetDisplayed(this, true);
+                    child.Displayed = true;
                 }
-                
+
             }
             else
             {
-                child.SetDisplayed(this, true);
+                child.Displayed = true;
                 displayedNodes.Add(child);
             }
         }
     }
-    private void OnChildVisibleChanged(ControlNode child, bool visible)
-    {
-        dirty = true;
-    }
-    private void OnChildParentVisibleChanged(ControlNode child, bool parentVisible)
+    // private void OnChildVisibleChanged(ControlNode child, bool visible)
+    // {
+    //     dirty = true;
+    // }
+    // private void OnChildParentVisibleChanged(ControlNode child, bool parentVisible)
+    // {
+    //     dirty = true;
+    // }
+
+    private void OnChildVisibleInHierarchyChanged(ControlNode node, bool value)
     {
         dirty = true;
     }
@@ -1500,7 +1573,11 @@ public class ControlNodeContainer : ControlNode
 
         if (displayCount >= 0 && type is ContainerType.Horizontal or ContainerType.Vertical)
         {
+            Console.WriteLine("--------------------------");
+            Console.WriteLine($"Display Index: {DisplayIndex}");
             DisplayIndex += 1;
+            Console.WriteLine($"Container Display Index Increased by 1 to {DisplayIndex}");
+            Console.WriteLine("--------------------------");
         }
     }
     private void ResolveOnNodeSelected(ControlNode node)
