@@ -1592,16 +1592,16 @@ public static class ShapeDrawing
     public static void DrawBar(this Rect rect, float f, ColorRgba barColorRgba, ColorRgba bgColorRgba, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
     {
         f = 1.0f - f;
-        UIMargins progressMargins = new(f * top, f * right, f * bottom, f * left);
-        var progressRect = progressMargins.Apply(rect);
+        Rect.Margins progressMargins = new(f * top, f * right, f * bottom, f * left);
+        var progressRect = rect.ApplyMargins(progressMargins); // progressMargins.Apply(rect);
         rect.Draw(bgColorRgba);
         progressRect.Draw(barColorRgba);
     }
     public static void DrawBar(this Rect rect, Vector2 pivot, float angleDeg, float f, ColorRgba barColorRgba, ColorRgba bgColorRgba, float left = 0f, float right = 1f, float top = 0f, float bottom = 0f)
     {
         f = 1.0f - f;
-        UIMargins progressMargins = new(f * top, f * right, f * bottom, f * left);
-        var progressRect = progressMargins.Apply(rect);
+        Rect.Margins progressMargins = new(f * top, f * right, f * bottom, f * left);
+        var progressRect = rect.ApplyMargins(progressMargins); // progressMargins.Apply(rect);
         rect.Draw(pivot, angleDeg, bgColorRgba);
         progressRect.Draw(pivot, angleDeg, barColorRgba);
     }

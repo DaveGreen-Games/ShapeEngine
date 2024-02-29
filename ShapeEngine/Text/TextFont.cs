@@ -12,7 +12,7 @@ public struct TextFont
 {
     #region Static Members
 
-    public static UIMargins EmphasisRectMargins = new();
+    public static Rect.Margins EmphasisRectMargins = new();
     public static RangeFloat FontSizeRange = new(10, 150);
     private static float fontSizeModifier = 1f;
     public static float FontSizeModifier
@@ -253,8 +253,8 @@ public struct TextFont
         var scaledFont = ScaleDynamic(word, rect.Size);
         var textSize = scaledFont.GetTextSize(word);
         Rect r = new(rect.GetPoint(alignement), textSize, alignement);
-        
-        var emphasisRect = EmphasisRectMargins.Apply(r);
+
+        var emphasisRect = r.ApplyMargins(EmphasisRectMargins); // EmphasisRectMargins.Apply(r);
         
         emphasis.DrawForeground(emphasisRect);
         scaledFont.DrawWord(word, r.TopLeft, emphasis.TextColorRgba); //DrawTextEx(textFont.Font, word, r.TopLeft, info.fontSize, info.fontSpacing, emphasis.TextColor);
@@ -645,8 +645,8 @@ public struct TextFont
     private void DrawWord(string word, Vector2 topLeft, float width, Emphasis emphasis)
     {
         Rect r = new(topLeft, new Vector2(width, FontSize), new());
-        
-        var emphasisRect = EmphasisRectMargins.Apply(r);
+
+        var emphasisRect = r.ApplyMargins(EmphasisRectMargins); // EmphasisRectMargins.Apply(r);
         
         emphasis.DrawBackground(emphasisRect);
         DrawWord(word, topLeft, emphasis.TextColorRgba);
