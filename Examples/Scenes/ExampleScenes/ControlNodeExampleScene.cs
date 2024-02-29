@@ -156,7 +156,7 @@ namespace Examples.Scenes.ExampleScenes
             
                 if (MouseInside)
                 {
-                    var amount = Rect.Size.Y * 0.25f;
+                    var amount = Rect.Size.Min() * 0.25f;
                     var outside = Rect.ChangeSize(amount, new Vector2(0.5f, 0.5f));//  Rect.ScaleSize(1.2f, new Vector2(0.5f));
                     outside.DrawLines(2f, Colors.Medium);
                 }
@@ -199,7 +199,7 @@ namespace Examples.Scenes.ExampleScenes
                 Stretch = new Vector2(0.5f, 0.6f)
             };
 
-            var startButton = new ControlNodeButton("Start", new(0.5f, 0f), new Vector2(0.98f, 0.95f));
+            var startButton = new ControlNodeButton("Start", new(0.5f, 0.5f), new Vector2(0.98f, 0.95f));
             optionButton = new ControlNodeButton("Options", new(0.5f, 0.5f), new Vector2(0.98f, 0.95f));
             var quitButton = new ControlNodeButton("Quit", new(0.5f, 0.5f), new Vector2(0.98f, 0.95f));
 
@@ -207,16 +207,19 @@ namespace Examples.Scenes.ExampleScenes
             buttonContainer.AddChild(optionButton);
             buttonContainer.AddChild(quitButton);
             
-            for (var i = 0; i < 100; i++)
+            for (var i = 0; i < 18; i++)
             {
                 var button = new ControlNodeButton($"B{i+3}", new(0.5f, 0.5f), new Vector2(0.98f, 0.95f));
                 buttonContainer.AddChild(button);
             }
             
-            buttonContainer.Type = ControlNodeContainer.ContainerType.Vertical;
-            buttonContainer.Gap = new Vector2(0f, 0.025f);
-            buttonContainer.DisplayCount = 7;
+            buttonContainer.Type = ControlNodeContainer.ContainerType.Grid;
+            buttonContainer.Gap = new Vector2(0.025f, 0.025f);
+            buttonContainer.DisplayCount = 6;
             buttonContainer.DisplayIndex = 0;
+            buttonContainer.NavigationStep = 1;
+            buttonContainer.GridColumns = 4;
+            buttonContainer.GridRows = 4;
             
             container.AddChild(buttonContainer);
 
@@ -252,7 +255,8 @@ namespace Examples.Scenes.ExampleScenes
         }
         private void OnOptionButtonPressedChanged(ControlNode node, bool value)
         {
-            if (!value) node.Visible = false; // node.Active = false;
+            // if (!value) node.Visible = false;
+            if (!value) node.Active = false;
         }
         private void OnQuitButtonPressedChanged(ControlNode node, bool value)
         {
@@ -260,7 +264,8 @@ namespace Examples.Scenes.ExampleScenes
         }
         private void OnBackButtonPressedChanged(ControlNode node, bool value)
         {
-            if (!value) optionButton.Visible = true; // optionButton.Active = true;
+            // if (!value) optionButton.Visible = true;
+            if (!value) optionButton.Active = true;
         }
         
         protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)

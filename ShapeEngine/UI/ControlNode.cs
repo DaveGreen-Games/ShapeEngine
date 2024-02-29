@@ -174,7 +174,8 @@ public class ControlNodeNavigator
         return true;
     }
 
-    
+    private bool navigationPending = false;
+    private NavigationDirection prevDir = new();
     public void Update()
     {
         if (!IsNavigating) return;
@@ -194,16 +195,33 @@ public class ControlNodeNavigator
             else return;
         }
 
-        
-        var dir = selectedNode.GetNavigationDirection();
-        var nextNode = GetNextNode(dir);
-        if (nextNode != null && CheckNextNode(nextNode, dir))
+        if (navigationPending)
         {
-            selectedNode.NavigationDeselect();
-            SetSelectedNode(nextNode);
-            selectedNode.NavigationSelect();
-            ResolveOnNavigated(dir);
+            navigationPending = false;
+            var dir = prevDir;
+            
+            var nextNode = GetNextNode(dir);
+            if (nextNode != null && CheckNextNode(nextNode, dir))
+            {
+                selectedNode.NavigationDeselect();
+                SetSelectedNode(nextNode);
+                selectedNode.NavigationSelect();
+                ResolveOnNavigated(dir);
+            }
         }
+        else
+        {
+            var dir = selectedNode.GetNavigationDirection();
+            if (dir.IsValid)
+            {
+                selectedNode.NavigatedTo(dir);
+                navigationPending = true;
+                prevDir = dir;
+
+            }
+        }
+        
+        
     }
     #endregion
 
@@ -406,6 +424,8 @@ public class ControlNodeNavigator
 public abstract class ControlNode
 {
     #region Events
+
+    public event Action<ControlNode, NavigationDirection>? OnNavigated; 
     /// <summary>
     /// Parameters: Invoker, Old Parent, New Parent
     /// </summary>
@@ -575,6 +595,7 @@ public abstract class ControlNode
         }
     }
 
+    protected List<ControlNode>? DisplayedChildren = null;
     #endregion
 
     #region Getters & Setters
@@ -665,6 +686,8 @@ public abstract class ControlNode
     public int ChildCount => children.Count;
     public bool HasParent => parent != null;
     public bool HasChildren => children.Count > 0;
+    public int DisplayedChildrenCount => DisplayedChildren?.Count ?? 0;
+    public bool HasDisplayedChildren => DisplayedChildrenCount > 0;
     public IEnumerable<ControlNode> GetChildrenEnumerable => children;
     // public List<ControlNode> GetChildren(Predicate<ControlNode> match) => children.FindAll(match);
     public bool Navigable => 
@@ -961,7 +984,8 @@ public abstract class ControlNode
     protected virtual Rect SetChildRect(ControlNode child, Rect inputRect) => inputRect;
     private void UpdateChildren(float dt, Vector2 mousePos, bool mousePosValid)
     {
-        foreach (var child in children)
+        var iterator = DisplayedChildren ?? children;
+        foreach (var child in iterator)
         {
             if(!child.displayed) continue;
             child.UpdateRect(SetChildRect(child, Rect));
@@ -972,7 +996,8 @@ public abstract class ControlNode
 
     private void DrawChildren()
     {
-        foreach (var child in children)
+        var iterator = DisplayedChildren ?? children;
+        foreach (var child in iterator)
         {
             if(!child.displayed) continue;
             child.InternalDraw();
@@ -1070,6 +1095,17 @@ public abstract class ControlNode
     /// Return the direction to move to another element.
     /// </summary>
     public virtual NavigationDirection GetNavigationDirection() => new();
+
+    public void NavigatedTo(NavigationDirection dir)
+    {
+        HasNavigated(dir);
+        OnNavigated?.Invoke(this, dir);
+    }
+
+    protected virtual void HasNavigated(NavigationDirection dir)
+    {
+        
+    }
     #endregion
 
     #region Public
@@ -1090,6 +1126,9 @@ public abstract class ControlNode
     #endregion
     
     #region Virtual
+
+    // protected virtual IEnumerable<ControlNode>? GetChildrenIterator => null;
+    
     protected virtual void OnUpdate(float dt, Vector2 mousePos, bool mousePosValid) { }
     protected virtual void OnChildUpdated(ControlNode child) { }
     protected virtual void OnDraw() { } 
@@ -1116,7 +1155,6 @@ public abstract class ControlNode
     #endregion
 
     #region Private
-
     private void ResolveOnActiveInHierarchyChanged()
     {
         if (prevIsActiveInHierarchy == IsActiveInHierarchy) return;
@@ -1304,11 +1342,23 @@ public class ControlNodeContainer : ControlNode
                 return;
             }
 
-            displayIndex = value;
+            int maxValue = displayCount > ChildCount ? 0 : ChildCount - displayCount;
+            displayIndex = value > maxValue ? maxValue : value;
 
         }
     }
 
+    private int navigationStep = 1;
+    public int NavigationStep
+    {
+        get => navigationStep;
+        set
+        {
+            if (value == navigationStep) return;
+            if (value < 0) return;
+            navigationStep = value;
+        }
+    }
     
     private ContainerType type = ContainerType.None;
     public ContainerType Type
@@ -1331,7 +1381,7 @@ public class ControlNodeContainer : ControlNode
     private int gridRows = 1;
     private int gridColumns = 1;
 
-    private readonly List<ControlNode> displayedNodes = new();
+    // private readonly List<ControlNode> displayedNodes = new();
     
     private bool dirty = false;
     
@@ -1352,12 +1402,12 @@ public class ControlNodeContainer : ControlNode
         {
             startPos = Rect.TopLeft;
             float stretchFactorTotal = 0f;
-            int count = displayCount <= 0 ? displayedNodes.Count : displayCount;
+            int count = displayCount <= 0 ? DisplayedChildrenCount : displayCount;
             for (int i = 0; i < count; i++)
             {
-                if (i < displayedNodes.Count)
+                if (i < DisplayedChildrenCount)
                 {
-                    stretchFactorTotal += displayedNodes[i].ContainerStretch;
+                    stretchFactorTotal += DisplayedChildren[i].ContainerStretch;
                 }
                 else stretchFactorTotal += 1;
             }
@@ -1374,12 +1424,12 @@ public class ControlNodeContainer : ControlNode
         {
             startPos = Rect.TopLeft;
             var stretchFactorTotal = 0f;
-            int count = displayCount <= 0 ? displayedNodes.Count : displayCount;
+            int count = displayCount <= 0 ? DisplayedChildrenCount : displayCount;
             for (var i = 0; i < count; i++)
             {
-                if (i < displayedNodes.Count)
+                if (i < DisplayedChildrenCount)
                 {
-                    stretchFactorTotal += displayedNodes[i].ContainerStretch;
+                    stretchFactorTotal += DisplayedChildren[i].ContainerStretch;
                 }
                 else stretchFactorTotal += 1;
             }
@@ -1445,7 +1495,8 @@ public class ControlNodeContainer : ControlNode
         {
             // int count = GridColumns * GridRows;
             // if (displayedNodes.Count < count) count = displayedNodes.Count;
-            int i = displayedNodes.IndexOf(node);
+            if (DisplayedChildren == null) return inputRect;
+            int i = DisplayedChildren.IndexOf(node);
             if (i < 0) return inputRect;
             var coords = ShapeMath.TransformIndexToCoordinates(i, GridRows, GridColumns, true);
             var r = new Rect
@@ -1464,6 +1515,7 @@ public class ControlNodeContainer : ControlNode
         dirty = true;
         newChild.OnSelectedChanged += OnChildSelectionChanged;
         newChild.OnVisibleInHierarchyChanged += OnChildVisibleInHierarchyChanged;
+        newChild.OnNavigated += OnChildNavigated;
         // newChild.OnVisibleChanged += OnChildVisibleChanged;
         // newChild.OnParentVisibleChanged += OnChildParentVisibleChanged;
     }
@@ -1472,6 +1524,7 @@ public class ControlNodeContainer : ControlNode
         dirty = true;
         oldChild.OnSelectedChanged -= OnChildSelectionChanged;
         oldChild.OnVisibleInHierarchyChanged -= OnChildVisibleInHierarchyChanged;
+        oldChild.OnNavigated -= OnChildNavigated;
         // oldChild.OnVisibleChanged -= OnChildVisibleChanged;
         // oldChild.OnParentVisibleChanged -= OnChildParentVisibleChanged;
         // oldChild.SetDisplayed(this, true);
@@ -1482,26 +1535,135 @@ public class ControlNodeContainer : ControlNode
     #endregion
     
     #region Virtual
+    protected virtual void OnChildNavigated(ControlNode child, NavigationDirection dir)
+    {
+        if (NavigationStep == 0) return;
+
+        if (Type == ContainerType.None) return;
+        if (Type == ContainerType.Grid)
+        {
+            var index = DisplayedChildren.IndexOf(child);
+            var coords = ShapeMath.TransformIndexToCoordinates(index, GridRows, GridColumns, true);
+            
+            
+            if (coords.col <= 0 || coords.row <= 0)
+            {
+                if (coords.col <= 0 && coords.row <= 0)//topleft
+                {
+                    if(dir.IsLeft || dir.IsUp || dir.IsUpLeft)
+                    {
+                        DisplayIndex -= NavigationStep;
+                    }
+                }
+                else if (coords.col <= 0)//left
+                {
+                    if(dir.IsLeft)
+                    {
+                        DisplayIndex -= NavigationStep;
+                    }
+                }
+                else//top
+                {
+                    if(dir.IsUp)
+                    {
+                        DisplayIndex -= NavigationStep;
+                    }
+                }
+            }
+            else if (coords.col >= GridColumns || coords.row >= GridRows)
+            {
+                if (coords.col >= GridColumns && coords.row >= GridRows)//bottomRight
+                {
+                    if(dir.IsDown || dir.IsRight || dir.IsDownRight)
+                    {
+                        DisplayIndex -= NavigationStep;
+                    }
+                }
+                else if (coords.col >= GridColumns)//right
+                {
+                    if(dir.IsRight)
+                    {
+                        DisplayIndex -= NavigationStep;
+                    }
+                }
+                else//bottom
+                {
+                    if(dir.IsDown)
+                    {
+                        DisplayIndex -= NavigationStep;
+                    }
+                }
+            }
+            
+            
+        }
+        else
+        {
+            if (IsFirst(child))
+            {
+                if(dir.IsLeft || dir.IsUp || dir.IsUpLeft || dir.IsUpRight)
+                {
+                    DisplayIndex -= NavigationStep;
+                }
+            }
+            else if (IsLast(child))
+            {
+                if(dir.IsRight || dir.IsDown || dir.IsDownRight || dir.IsDownLeft)
+                {
+                    DisplayIndex += NavigationStep;
+                }
+            }
+        }
+    }
+
     protected virtual void FirstNodeWasSelected(ControlNode node) { }
     protected virtual void LastNodeWasSelected(ControlNode node) { }
     protected virtual void NodeWasSelected(ControlNode node) { }
     protected virtual bool IsFirst(ControlNode node)
     {
-        if (displayedNodes.Count <= 0) return false;
-        return displayedNodes[0] == node;
+        if (DisplayedChildrenCount <= 0) return false;
+        return DisplayedChildren[0] == node;
     }
     protected virtual bool IsLast(ControlNode node)
     {
-        if (displayedNodes.Count <= 0) return false;
-        return displayedNodes[^1] == node;
+        if (DisplayedChildrenCount <= 0) return false;
+        return DisplayedChildren[^1] == node;
     }
+    #endregion
+
+    #region Public
+    public void NextItem() => DisplayIndex += 1;
+    public void PreviousItem() => DisplayIndex -= 1;
+
+    public void NextPage()
+    {
+        if (displayCount <= 0) return;
+        
+        DisplayIndex += displayCount;
+    }
+    public void PrevPage()
+    {
+        if (displayCount <= 0) return;
+        DisplayIndex -= displayCount;
+    }
+    public void MovePage(int pages)
+    {
+        if (pages == 0) return;
+        if (displayCount <= 0) return;
+        DisplayIndex += displayCount * pages;
+    }
+
+    public void FirstPage() => DisplayIndex = 0;
+    public void LastPage() => DisplayIndex = ChildCount - displayCount;
+
     #endregion
     
     #region Private
     private void CompileDisplayedNodes()
     {
         dirty = false;
-        displayedNodes.Clear();
+        DisplayedChildren ??= new();
+        DisplayedChildren.Clear();
 
         var visibleChildren = GetChildren((node => node.Visible && node.ParentVisible && node.IsActiveInHierarchy));
 
@@ -1525,7 +1687,7 @@ public class ControlNodeContainer : ControlNode
                 else if (i >= DisplayIndex + DisplayCount) child.Displayed = false;
                 else
                 {
-                    displayedNodes.Add(child);
+                    DisplayedChildren.Add(child);
                     child.Displayed = true;
                 }
 
@@ -1533,7 +1695,7 @@ public class ControlNodeContainer : ControlNode
             else
             {
                 child.Displayed = true;
-                displayedNodes.Add(child);
+                DisplayedChildren.Add(child);
             }
         }
     }
@@ -1554,31 +1716,26 @@ public class ControlNodeContainer : ControlNode
     {
         if(selected) ResolveOnNodeSelected(child);
     }
-
     private void ResolveOnFirstNodeSelected(ControlNode node)
     {
         FirstNodeWasSelected(node);
         OnFirstNodeSelected?.Invoke(this, node);
 
         
-        if (displayCount >= 0 && type is ContainerType.Horizontal or ContainerType.Vertical)
-        {
-            DisplayIndex -= 1;
-        }
+        // if (displayCount >= 0 && type is ContainerType.Horizontal or ContainerType.Vertical)
+        // {
+        //     DisplayIndex -= 1;
+        // }
     }
     private void ResolveOnLastNodeSelected(ControlNode node)
     {
         LastNodeWasSelected(node);
         OnLastNodeSelected?.Invoke(this, node);
 
-        if (displayCount >= 0 && type is ContainerType.Horizontal or ContainerType.Vertical)
-        {
-            Console.WriteLine("--------------------------");
-            Console.WriteLine($"Display Index: {DisplayIndex}");
-            DisplayIndex += 1;
-            Console.WriteLine($"Container Display Index Increased by 1 to {DisplayIndex}");
-            Console.WriteLine("--------------------------");
-        }
+        // if (displayCount >= 0 && type is ContainerType.Horizontal or ContainerType.Vertical)
+        // {
+        //     DisplayIndex += 1;
+        // }
     }
     private void ResolveOnNodeSelected(ControlNode node)
     {
