@@ -196,7 +196,7 @@ namespace Examples.Scenes.ExampleScenes
             var buttonContainer = new ControlNodeContainer
             {
                 Anchor = new Vector2(0.5f),
-                Stretch = new Vector2(0.5f, 0.6f)
+                Stretch = new Vector2(0.8f, 0.6f)
             };
 
             var startButton = new ControlNodeButton("Start", new(0.5f, 0.5f), new Vector2(0.98f, 0.95f));
@@ -207,7 +207,7 @@ namespace Examples.Scenes.ExampleScenes
             buttonContainer.AddChild(optionButton);
             buttonContainer.AddChild(quitButton);
             
-            for (var i = 0; i < 18; i++)
+            for (var i = 0; i < 500; i++)
             {
                 var button = new ControlNodeButton($"B{i+3}", new(0.5f, 0.5f), new Vector2(0.98f, 0.95f));
                 buttonContainer.AddChild(button);
@@ -218,7 +218,7 @@ namespace Examples.Scenes.ExampleScenes
             buttonContainer.DisplayCount = 6;
             buttonContainer.DisplayIndex = 0;
             buttonContainer.NavigationStep = 1;
-            buttonContainer.Grid = new(4, 4, true);
+            buttonContainer.Grid = new(6, 6, true);
             // buttonContainer.GridColumns = 4;
             // buttonContainer.GridRows = 4;
             
