@@ -99,7 +99,7 @@ namespace Examples.Scenes.ExampleScenes
             return Raylib.IsMouseButtonDown(MouseButton.Left);
         }
 
-        public override NavigationDirection GetNavigationDirection()
+        public override Direction GetNavigationDirection()
         {
             if (inputCooldownTimer > 0f)
             {
@@ -218,8 +218,9 @@ namespace Examples.Scenes.ExampleScenes
             buttonContainer.DisplayCount = 6;
             buttonContainer.DisplayIndex = 0;
             buttonContainer.NavigationStep = 1;
-            buttonContainer.GridColumns = 4;
-            buttonContainer.GridRows = 4;
+            buttonContainer.Grid = new(4, 4, true);
+            // buttonContainer.GridColumns = 4;
+            // buttonContainer.GridRows = 4;
             
             container.AddChild(buttonContainer);
 

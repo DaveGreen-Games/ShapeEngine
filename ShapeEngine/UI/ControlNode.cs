@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Numerics;
 using System.Reflection;
+using System.Xml.Xsl;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Lib;
 
@@ -37,57 +38,57 @@ public enum InputFilter
 }
 
 
-public readonly struct NavigationDirection
+public readonly struct Direction : IEquatable<Direction>
 {
-    private readonly int horizontal;
-    private readonly int vertical;
+    public readonly int Horizontal;
+    public readonly int Vertical;
 
-    public NavigationDirection()
+    public Direction()
     {
-        horizontal = 0;
-        vertical = 0;
+        Horizontal = 0;
+        Vertical = 0;
     }
-    public NavigationDirection(int hor, int vert)
+    public Direction(int hor, int vert)
     {
-        this.horizontal = Sign(hor);
-        this.vertical = Sign(vert);
+        this.Horizontal = Sign(hor);
+        this.Vertical = Sign(vert);
     }
 
-    public NavigationDirection(Vector2 dir)
+    public Direction(Vector2 dir)
     {
-        this.horizontal = MathF.Sign(dir.X);
-        this.vertical = MathF.Sign(dir.X);
+        this.Horizontal = MathF.Sign(dir.X);
+        this.Vertical = MathF.Sign(dir.X);
     }
 
     public bool IsValid => IsVertical || IsHorizontal;
-    public bool IsVertical => vertical != 0;
-    public bool IsHorizontal => horizontal != 0;
+    public bool IsVertical => Vertical != 0;
+    public bool IsHorizontal => Horizontal != 0;
     
-    public bool IsUp => vertical == -1 && horizontal == 0;
-    public bool IsDown => vertical == 1 && horizontal == 0;
-    public bool IsLeft => horizontal == -1 && vertical == 0;
-    public bool IsRight => horizontal == 1 && vertical == 0;
-    public bool IsUpLeft => vertical == -1 && horizontal == -1;
-    public bool IsDownLeft => vertical == 1 && horizontal == -1;
-    public bool IsUpRight => vertical == -1 && horizontal == 1;
-    public bool IsDownRight => vertical == 1 && horizontal == 1;
+    public bool IsUp => Vertical == -1 && Horizontal == 0;
+    public bool IsDown => Vertical == 1 && Horizontal == 0;
+    public bool IsLeft => Horizontal == -1 && Vertical == 0;
+    public bool IsRight => Horizontal == 1 && Vertical == 0;
+    public bool IsUpLeft => Vertical == -1 && Horizontal == -1;
+    public bool IsDownLeft => Vertical == 1 && Horizontal == -1;
+    public bool IsUpRight => Vertical == -1 && Horizontal == 1;
+    public bool IsDownRight => Vertical == 1 && Horizontal == 1;
     
-    public Vector2 ToVector2() => new(horizontal, vertical);
-    public Vector2 ToAlignement() => new Vector2(horizontal + 1, vertical + 1) / 2;
+    public Vector2 ToVector2() => new(Horizontal, Vertical);
+    public Vector2 ToAlignement() => new Vector2(Horizontal + 1, Vertical + 1) / 2;
     // public Vector2 ToReverseAlignement() => new Vector2((horizontal * -1) + 1, (vertical * -1) + 1) / 2;
 
-    public NavigationDirection Invert() => new(horizontal * -1, vertical * -1);
+    public Direction Invert() => new(Horizontal * -1, Vertical * -1);
     
-    public static NavigationDirection GetEmpty() => new(0, 0);
-    public static NavigationDirection GetLeft() => new(-1, 0);
-    public static NavigationDirection GetRight() => new(1, 0);
-    public static NavigationDirection GetUp() => new(0, -1);
-    public static NavigationDirection GetDown() => new(0, 1);
+    public static Direction GetEmpty() => new(0, 0);
+    public static Direction GetLeft() => new(-1, 0);
+    public static Direction GetRight() => new(1, 0);
+    public static Direction GetUp() => new(0, -1);
+    public static Direction GetDown() => new(0, 1);
     
-    public static NavigationDirection GetUpLeft() => new(-1, -1);
-    public static NavigationDirection GetDownLeft() => new(-1, 1);
-    public static NavigationDirection GetUpRight() => new(1, -1);
-    public static NavigationDirection GetDownRight() => new(1, 1);
+    public static Direction GetUpLeft() => new(-1, -1);
+    public static Direction GetDownLeft() => new(-1, 1);
+    public static Direction GetUpRight() => new(1, -1);
+    public static Direction GetDownRight() => new(1, 1);
     
     private static int Sign(int value)
     {
@@ -96,6 +97,154 @@ public readonly struct NavigationDirection
         return 0;
     }
 
+    public bool Equals(Direction other) => Horizontal == other.Horizontal && Vertical == other.Vertical;
+
+    public override bool Equals(object? obj) => obj is Direction other && Equals(other);
+
+    public override int GetHashCode() => HashCode.Combine(Horizontal, Vertical);
+    
+    public static bool operator ==(Direction left, Direction right) => left.Equals(right);
+
+    public static bool operator !=(Direction left, Direction right) => !left.Equals(right);
+
+    public override string ToString()
+    {
+        return $"({Horizontal},{Vertical})";
+    }
+}
+public readonly struct Grid : IEquatable<Grid>
+{
+    public readonly struct Coordinates : IEquatable<Coordinates>
+    {
+        public readonly int Row;
+        public readonly int Col;
+        public bool IsValid => Row >= 0 && Col >= 0;
+
+    
+        public Coordinates()
+        {
+            this.Row = -1;
+            this.Col = -1;
+        }
+        public Coordinates(int col, int row)
+        {
+            this.Row = row;
+            this.Col = col;
+        }
+
+        public bool Equals(Coordinates other) => Row == other.Row && Col == other.Col;
+
+        public override bool Equals(object? obj) => obj is Coordinates other && Equals(other);
+
+        public override int GetHashCode() => HashCode.Combine(Row, Col);
+        
+        public static bool operator ==(Coordinates left, Coordinates right) => left.Equals(right);
+
+        public static bool operator !=(Coordinates left, Coordinates right) => !left.Equals(right);
+        
+        public override string ToString()
+        {
+            return $"({Col},{Row})";
+        }
+    }
+    
+    public readonly int Rows;
+    public readonly int Cols;
+    public readonly bool LeftToRight;
+    
+    public bool IsValid => Rows > 0 && Cols > 0;
+    public int Count => Rows * Cols;
+    
+    
+    public Grid()
+    {
+        this.Rows = 0;
+        this.Cols = 0;
+        this.LeftToRight = true;
+    }
+    public Grid(int rows, int cols)
+    {
+        this.Rows = rows;
+        this.Cols = cols;
+        this.LeftToRight = true;
+    }
+    public Grid(int rows, int cols, bool leftToRight)
+    {
+        this.Rows = rows;
+        this.Cols = cols;
+        this.LeftToRight = leftToRight;
+    }
+
+    public bool IsIndexInBounds(int index) => index >= 0 && index <= Count;
+    
+    public Coordinates IndexToCoordinates(int index)
+    {
+        if (!IsValid) return new();
+        
+        if (LeftToRight)
+        {
+            int row = index / Cols;
+            int col = index % Cols;
+            return new(col, row);
+        }
+        else
+        {
+            int col = index / Rows;
+            int row = index % Rows;
+            return new(col, row);
+        }
+            
+    }
+    
+    public int CoordinatesToIndex(Coordinates coordinates)
+    {
+        if (!IsValid || !coordinates.IsValid) return -1;
+        
+        if (LeftToRight)
+        {
+            return coordinates.Row * Cols + coordinates.Col;
+        }
+        else
+        {
+            return coordinates.Col * Rows + coordinates.Row;
+        }
+    }
+
+    public Direction GetDirection(Coordinates coordinates)
+    {
+        if (!coordinates.IsValid) return new();
+
+
+        var hor = coordinates.Col == 0 ? -1 : coordinates.Col >= Cols - 1 ? 1 : 0;
+        var ver = coordinates.Row == 0 ? -1 : coordinates.Row >= Rows - 1 ? 1 : 0;
+        return new(hor, ver);
+
+        // if (coordinates.Row == 0 && coordinates.Col == 0) return new(-1, -1);//topleft
+        // if (coordinates.Row == 0 && coordinates.Col > 0 && coordinates.Col < Cols) return new(0, -1);//top
+        // if (coordinates.Row == 0 && coordinates.Col >= Cols) return new(1, -1);//topRight
+
+        // if (coordinates.Row > 0 && coordinates.Row < Rows && coordinates.Col >= Cols) return new(1, 0);//right
+        // if (coordinates.Row >= Rows && coordinates.Col >= Cols) return new(1, 1); //bottom right
+        // if (coordinates.Row >= Rows && coordinates.Col > 0 && coordinates.Col < Cols) return new(0, 1); //bottom
+        // if (coordinates.Row >= Rows && coordinates.Col == 0) return new(0, 1); //bottomLeft
+
+    }
+
+    public bool Equals(Grid other) => Rows == other.Rows && Cols == other.Cols && LeftToRight == other.LeftToRight;
+
+    public override bool Equals(object? obj) => obj is Grid other && Equals(other);
+
+    public override int GetHashCode() => HashCode.Combine(Rows, Cols, LeftToRight);
+    
+    public static bool operator ==(Grid left, Grid right) => left.Equals(right);
+
+    public static bool operator !=(Grid left, Grid right) => !left.Equals(right);
+    
+    public override string ToString()
+    {
+        var leftToRightText = LeftToRight ? "L->R" : "T->B";
+        return $"Cols: {Cols}, Rows: {Rows}, {leftToRightText})";
+    }
 }
 
 public class ControlNodeNavigator
@@ -106,7 +255,7 @@ public class ControlNodeNavigator
     public event Action<ControlNodeNavigator, ControlNode>? OnControlNodeAdded;
     public event Action<ControlNodeNavigator, ControlNode>? OnControlNodeRemoved;
     public event Action<ControlNodeNavigator, ControlNode?, ControlNode?>? OnSelectedControlNodeChanged;
-    public event Action<ControlNodeNavigator, NavigationDirection>? OnNavigated;
+    public event Action<ControlNodeNavigator, Direction>? OnNavigated;
     #endregion
 
     #region Private Members
@@ -175,7 +324,7 @@ public class ControlNodeNavigator
     }
 
     private bool navigationPending = false;
-    private NavigationDirection prevDir = new();
+    private Direction prevDir = new();
     public void Update()
     {
         if (!IsNavigating) return;
@@ -245,7 +394,7 @@ public class ControlNodeNavigator
         }
         return closestNode;
     }
-    private ControlNode? GetNextNode(NavigationDirection dir)
+    private ControlNode? GetNextNode(Direction dir)
     {
         if (!dir.IsValid) return null;
         if (selectedNode == null) return null;
@@ -268,7 +417,7 @@ public class ControlNodeNavigator
         }
         return newNode;
     }
-    private float GetNeighborDistance(Vector2 dif, NavigationDirection dir)
+    private float GetNeighborDistance(Vector2 dif, Direction dir)
     {
         if (dir.IsLeft) return dif.X < 0 ? dif.LengthSquared() : float.MaxValue;
         if (dir.IsRight) return dif.X > 0 ? dif.LengthSquared() : float.MaxValue;
@@ -376,8 +525,8 @@ public class ControlNodeNavigator
     
     #region Virtual
 
-    protected virtual bool CheckNextNode(ControlNode nextNode, NavigationDirection dir) => true;
-    protected virtual void WasNavigated(NavigationDirection dir) { }
+    protected virtual bool CheckNextNode(ControlNode nextNode, Direction dir) => true;
+    protected virtual void WasNavigated(Direction dir) { }
     protected virtual void NavigationWasStarted() { }
     protected virtual void NavigationWasEnded() { }
     protected virtual void ControlNodeWasAdded(ControlNode node) { }
@@ -386,7 +535,7 @@ public class ControlNodeNavigator
     #endregion
     
     #region Resolve
-    private void ResolveOnNavigated(NavigationDirection dir)
+    private void ResolveOnNavigated(Direction dir)
     {
         WasNavigated(dir);
         OnNavigated?.Invoke(this, dir);
@@ -425,7 +574,7 @@ public abstract class ControlNode
 {
     #region Events
 
-    public event Action<ControlNode, NavigationDirection>? OnNavigated; 
+    public event Action<ControlNode, Direction>? OnNavigated; 
     /// <summary>
     /// Parameters: Invoker, Old Parent, New Parent
     /// </summary>
@@ -1094,15 +1243,15 @@ public abstract class ControlNode
     /// <summary>
     /// Return the direction to move to another element.
     /// </summary>
-    public virtual NavigationDirection GetNavigationDirection() => new();
+    public virtual Direction GetNavigationDirection() => new();
 
-    public void NavigatedTo(NavigationDirection dir)
+    public void NavigatedTo(Direction dir)
     {
         HasNavigated(dir);
         OnNavigated?.Invoke(this, dir);
     }
 
-    protected virtual void HasNavigated(NavigationDirection dir)
+    protected virtual void HasNavigated(Direction dir)
     {
         
     }
@@ -1121,7 +1270,7 @@ public abstract class ControlNode
         return (other.Rect.TopLeft - Rect.TopLeft).LengthSquared();
     }
 
-    public Vector2 GetNavigationOrigin(NavigationDirection dir) => Rect.GetPoint(dir.Invert().ToAlignement());
+    public Vector2 GetNavigationOrigin(Direction dir) => Rect.GetPoint(dir.Invert().ToAlignement());
 
     #endregion
     
@@ -1289,29 +1438,30 @@ public class ControlNodeContainer : ControlNode
     public event Action<ControlNode, ControlNode>? OnLastNodeSelected;
     public event Action<ControlNode, ControlNode>? OnNodeSelected;
 
-    
-    
-    public int GridRows
-    {
-        get => gridRows;
-        set
-        {
-            if (value == gridRows) return;
-            if (value > 0) gridRows = value;
-        }
-    }
-    public int GridColumns
-    {
-        get => gridColumns;
-        set
-        {
-            if (value == gridColumns) return;
-            if (value > 0) gridColumns = value;
-        }
-    }
+
+    public Grid Grid { get; set; } = new();
+    // public int GridRows
+    // {
+    //     get => gridRows;
+    //     set
+    //     {
+    //         if (value == gridRows) return;
+    //         if (value > 0) gridRows = value;
+    //     }
+    // }
+    // public int GridColumns
+    // {
+    //     get => gridColumns;
+    //     set
+    //     {
+    //         if (value == gridColumns) return;
+    //         if (value > 0) gridColumns = value;
+    //     }
+    // }
+    //
     public int DisplayCount
     {
-        get => type == ContainerType.Grid ? gridColumns * gridRows : displayCount;
+        get => type == ContainerType.Grid && Grid.IsValid ? Grid.Count : displayCount;
         set
         {
             if (value == displayCount || type == ContainerType.Grid) return;
@@ -1378,8 +1528,8 @@ public class ControlNodeContainer : ControlNode
     #region Private Members
     private int displayCount = -1;
     private int displayIndex = 0;
-    private int gridRows = 1;
-    private int gridColumns = 1;
+    // private int gridRows = 1;
+    // private int gridColumns = 1;
 
     // private readonly List<ControlNode> displayedNodes = new();
     
@@ -1444,17 +1594,18 @@ public class ControlNodeContainer : ControlNode
 
         if (Type == ContainerType.Grid)
         {
+            if (!Grid.IsValid) return;
             startPos = Rect.TopLeft;
 
-            int hGaps = GridColumns - 1;
+            int hGaps = Grid.Cols - 1;
             float totalWidth = Rect.Width;
             float hGapSize = totalWidth * Gap.X;
-            float elementWidth = (totalWidth - hGaps * hGapSize) / GridColumns;
+            float elementWidth = (totalWidth - hGaps * hGapSize) / Grid.Cols;
 
-            int vGaps = GridRows - 1;
+            int vGaps = Grid.Rows - 1;
             float totalHeight = Rect.Height;
             float vGapSize = totalHeight * Gap.Y;
-            float elementHeight = (totalHeight - vGaps * vGapSize) / GridRows;
+            float elementHeight = (totalHeight - vGaps * vGapSize) / Grid.Rows;
 
             gapSize = new(hGapSize + elementWidth, vGapSize + elementHeight);
             elementSize = new(elementWidth, elementHeight);
@@ -1496,12 +1647,13 @@ public class ControlNodeContainer : ControlNode
             // int count = GridColumns * GridRows;
             // if (displayedNodes.Count < count) count = displayedNodes.Count;
             if (DisplayedChildren == null) return inputRect;
+            if (!Grid.IsValid) return inputRect;
             int i = DisplayedChildren.IndexOf(node);
             if (i < 0) return inputRect;
-            var coords = ShapeMath.TransformIndexToCoordinates(i, GridRows, GridColumns, true);
+            var coords = Grid.IndexToCoordinates(i); // ShapeMath.TransformIndexToCoordinates(i, GridRows, GridColumns, true);
             var r = new Rect
             (
-                startPos + new Vector2(gapSize.X * coords.col, 0f) + new Vector2(0f, gapSize.Y * coords.row), 
+                startPos + new Vector2(gapSize.X * coords.Col, 0f) + new Vector2(0f, gapSize.Y * coords.Row), 
                 elementSize,
                 new(0f)
             );
@@ -1535,67 +1687,22 @@ public class ControlNodeContainer : ControlNode
     #endregion
     
     #region Virtual
-    protected virtual void OnChildNavigated(ControlNode child, NavigationDirection dir)
+    protected virtual void OnChildNavigated(ControlNode child, Direction dir)
     {
         if (NavigationStep == 0) return;
 
         if (Type == ContainerType.None) return;
         if (Type == ContainerType.Grid)
         {
+            if (!Grid.IsValid) return;
             var index = DisplayedChildren.IndexOf(child);
-            var coords = ShapeMath.TransformIndexToCoordinates(index, GridRows, GridColumns, true);
-            
-            
-            if (coords.col <= 0 || coords.row <= 0)
+            var coords = Grid.IndexToCoordinates(index);
+            var coordsDir = Grid.GetDirection(coords);
+            if ((coordsDir.Vertical != 0 && coordsDir.Vertical == dir.Vertical) || (coordsDir.Horizontal != 0 && coordsDir.Horizontal == dir.Horizontal))
             {
-                if (coords.col <= 0 && coords.row <= 0)//topleft
-                {
-                    if(dir.IsLeft || dir.IsUp || dir.IsUpLeft)
-                    {
-                        DisplayIndex -= NavigationStep;
-                    }
-                }
-                else if (coords.col <= 0)//left
-                {
-                    if(dir.IsLeft)
-                    {
-                        DisplayIndex -= NavigationStep;
-                    }
-                }
-                else//top
-                {
-                    if(dir.IsUp)
-                    {
-                        DisplayIndex -= NavigationStep;
-                    }
-                }
+                if(dir.IsLeft || dir.IsUp || dir.IsUpLeft || dir.IsUpRight) DisplayIndex -= NavigationStep;
+                else DisplayIndex += NavigationStep;
             }
-            else if (coords.col >= GridColumns || coords.row >= GridRows)
-            {
-                if (coords.col >= GridColumns && coords.row >= GridRows)//bottomRight
-                {
-                    if(dir.IsDown || dir.IsRight || dir.IsDownRight)
-                    {
-                        DisplayIndex -= NavigationStep;
-                    }
-                }
-                else if (coords.col >= GridColumns)//right
-                {
-                    if(dir.IsRight)
-                    {
-                        DisplayIndex -= NavigationStep;
-                    }
-                }
-                else//bottom
-                {
-                    if(dir.IsDown)
-                    {
-                        DisplayIndex -= NavigationStep;
-                    }
-                }
-            }
-            
-            
         }
         else
         {
