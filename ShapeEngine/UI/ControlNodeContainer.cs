@@ -1,64 +1,43 @@
 using System.Numerics;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Lib;
 
 namespace ShapeEngine.UI;
 
 public class ControlNodeContainer : ControlNode
 {
-    public enum ContainerType
-    {
-        None = 0,
-        Horizontal = 1,
-        Vertical = 2,
-        Grid = 3
-    }
+    // public enum ContainerType
+    // {
+    //     None = 0,
+    //     Horizontal = 1,
+    //     Vertical = 2,
+    //     Grid = 3
+    // }
 
     public event Action<ControlNode, ControlNode>? OnFirstNodeSelected;
     public event Action<ControlNode, ControlNode>? OnLastNodeSelected;
     public event Action<ControlNode, ControlNode>? OnNodeSelected;
 
 
-    public Grid Grid { get; set; } = new();
-    // public int GridRows
-    // {
-    //     get => gridRows;
-    //     set
-    //     {
-    //         if (value == gridRows) return;
-    //         if (value > 0) gridRows = value;
-    //     }
-    // }
-    // public int GridColumns
-    // {
-    //     get => gridColumns;
-    //     set
-    //     {
-    //         if (value == gridColumns) return;
-    //         if (value > 0) gridColumns = value;
-    //     }
-    // }
-    //
-    
-    public int DisplayCount
+    private Grid grid = new();
+
+    public Grid Grid
     {
-        get => type == ContainerType.Grid && Grid.IsValid ? Grid.Count : displayCount;
+        get => grid;
         set
         {
-            if (value == displayCount || type == ContainerType.Grid) return;
-            dirty = true;
-            
-            if (value < 0)
+            if (grid == value) return;
+            grid = value;
+            if (grid.Count < 0)
             {
-                displayCount = -1;
                 displayIndex = 0;
-                return;
             }
-
-            displayCount = value;
-            
+            dirty = true;
         }
     }
+
+    private int DisplayCount => grid.Count;
     public int DisplayIndex
     {
         get => displayIndex;
@@ -91,17 +70,17 @@ public class ControlNodeContainer : ControlNode
         }
     }
     
-    private ContainerType type = ContainerType.None;
-    public ContainerType Type
-    {
-        get => type;
-        set
-        {
-            if (value == type) return;
-            dirty = true;
-            type = value;
-        } 
-    }
+    // private ContainerType type = ContainerType.None;
+    // public ContainerType Type
+    // {
+    //     get => type;
+    //     set
+    //     {
+    //         if (value == type) return;
+    //         dirty = true;
+    //         type = value;
+    //     } 
+    // }
     public Vector2 Gap { get; set; } = new();
 
     
@@ -120,41 +99,20 @@ public class ControlNodeContainer : ControlNode
     private Vector2 gapSize = new();
     private Vector2 startPos = new();
     private Vector2 elementSize = new();
-
+    private Vector2 direction = new();
+    private Vector2 alignement = new();
     #endregion
     
     #region Override
+
     protected override void OnUpdate(float dt, Vector2 mousePos, bool mousePosValid)
     {
-        if (Type == ContainerType.None) return;
+        if (!Grid.IsValid) return;
         if(dirty) CompileDisplayedNodes();
-        
-        if (Type == ContainerType.Vertical)
-        {
-            startPos = Rect.TopLeft;
-            float stretchFactorTotal = 0f;
-            int count = DisplayCount <= 0 ? DisplayedChildrenCount : DisplayCount;
-            for (int i = 0; i < count; i++)
-            {
-                if (i < DisplayedChildrenCount)
-                {
-                    stretchFactorTotal += DisplayedChildren[i].ContainerStretch;
-                }
-                else stretchFactorTotal += 1;
-            }
-            int gaps = count - 1;
 
-            float totalHeight = Rect.Height;
-            gapSize = new(0f, totalHeight * Gap.Y);
-            float elementHeight = (totalHeight - gaps * gapSize.Y) / stretchFactorTotal;
-            elementSize = new(0f, elementHeight);
-            curOffset = new(0f, 0f);
-        }
-
-        if (Type == ContainerType.Horizontal)
+        var stretchFactorTotal = 0f;
+        if (!grid.IsGrid)
         {
-            startPos = Rect.TopLeft;
-            var stretchFactorTotal = 0f;
             int count = DisplayCount <= 0 ? DisplayedChildrenCount : DisplayCount;
             for (var i = 0; i < count; i++)
             {
@@ -164,84 +122,189 @@ public class ControlNodeContainer : ControlNode
                 }
                 else stretchFactorTotal += 1;
             }
-            int gaps = count - 1;
 
-            float totalWidth = Rect.Width;
-            gapSize = new(totalWidth * Gap.X, 0f);
-            float elementWidth = (totalWidth - gaps * gapSize.X) / stretchFactorTotal;
-            elementSize = new(elementWidth, 0f);
-            curOffset = new(0f, 0f);
-        }
-
-        if (Type == ContainerType.Grid)
-        {
-            if (!Grid.IsValid) return;
-            startPos = Rect.TopLeft;
-
-            int hGaps = Grid.Cols - 1;
-            float totalWidth = Rect.Width;
-            float hGapSize = totalWidth * Gap.X;
-            float elementWidth = (totalWidth - hGaps * hGapSize) / Grid.Cols;
-
-            int vGaps = Grid.Rows - 1;
-            float totalHeight = Rect.Height;
-            float vGapSize = totalHeight * Gap.Y;
-            float elementHeight = (totalHeight - vGaps * vGapSize) / Grid.Rows;
-
-            gapSize = new(hGapSize + elementWidth, vGapSize + elementHeight);
-            elementSize = new(elementWidth, elementHeight);
-            
-            
         }
         
+        startPos = Rect.GetPoint(Grid.Placement.Invert().ToAlignement()); // Rect.TopLeft;
+
+        float horizontalDivider = Grid.IsGrid ? Grid.Cols : Grid.IsHorizontal ? stretchFactorTotal : 1f;
+        float verticalDivider = Grid.IsGrid ? Grid.Rows : Grid.IsVertical ? stretchFactorTotal : 1f;
         
+        int hGaps = Grid.Cols - 1;
+        float totalWidth = Rect.Width;
+        float hGapSize = totalWidth * Gap.X;
+        float elementWidth = (totalWidth - hGaps * hGapSize) / horizontalDivider;
+
+        int vGaps = Grid.Rows - 1;
+        float totalHeight = Rect.Height;
+        float vGapSize = totalHeight * Gap.Y;
+        float elementHeight = (totalHeight - vGaps * vGapSize) / verticalDivider;
+
+        gapSize = new(hGapSize, vGapSize);
+        // gapSize = new(hGapSize + elementWidth, vGapSize + elementHeight);
+        elementSize = new(elementWidth, elementHeight);
+        direction = Grid.Placement.ToVector2();
+        // direction = new
+        //     (
+        //         Grid.IsGrid || Grid.IsHorizontal ? Grid.Placement.Horizontal : 0f,
+        //         Grid.IsGrid || Grid.IsVertical ? Grid.Placement.Vertical : 0f
+        //     );
+        alignement = Grid.Placement.Invert().ToAlignement();
+        curOffset = new(0f, 0f);
+
+        // if (Grid.IsVertical)
+        // {
+        //     startPos = Rect.TopLeft;
+        //     float stretchFactorTotal = 0f;
+        //     int count = DisplayCount <= 0 ? DisplayedChildrenCount : DisplayCount;
+        //     for (int i = 0; i < count; i++)
+        //     {
+        //         if (i < DisplayedChildrenCount)
+        //         {
+        //             stretchFactorTotal += DisplayedChildren[i].ContainerStretch;
+        //         }
+        //         else stretchFactorTotal += 1;
+        //     }
+        //     int gaps = count - 1;
+        //
+        //     float totalHeight = Rect.Height;
+        //     gapSize = new(0f, totalHeight * Gap.Y);
+        //     float elementHeight = (totalHeight - gaps * gapSize.Y) / stretchFactorTotal;
+        //     elementSize = new(0f, elementHeight);
+        //     curOffset = new(0f, 0f);
+        // }
+        //
+        // if (Grid.IsHorizontal)
+        // {
+        //     startPos = Rect.TopLeft;
+        //     var stretchFactorTotal = 0f;
+        //     int count = DisplayCount <= 0 ? DisplayedChildrenCount : DisplayCount;
+        //     for (var i = 0; i < count; i++)
+        //     {
+        //         if (i < DisplayedChildrenCount)
+        //         {
+        //             stretchFactorTotal += DisplayedChildren[i].ContainerStretch;
+        //         }
+        //         else stretchFactorTotal += 1;
+        //     }
+        //     int gaps = count - 1;
+        //
+        //     float totalWidth = Rect.Width;
+        //     gapSize = new(totalWidth * Gap.X, 0f);
+        //     float elementWidth = (totalWidth - gaps * gapSize.X) / stretchFactorTotal;
+        //     elementSize = new(elementWidth, 0f);
+        //     curOffset = new(0f, 0f);
+        // }
+        //
+        // if (Grid.IsGrid)
+        // {
+        //     startPos = Rect.GetPoint(Grid.Placement.Invert().ToAlignement()); // Rect.TopLeft;
+        //
+        //     int hGaps = Grid.Cols - 1;
+        //     float totalWidth = Rect.Width;
+        //     float hGapSize = totalWidth * Gap.X;
+        //     float elementWidth = (totalWidth - hGaps * hGapSize) / Grid.Cols;
+        //
+        //     int vGaps = Grid.Rows - 1;
+        //     float totalHeight = Rect.Height;
+        //     float vGapSize = totalHeight * Gap.Y;
+        //     float elementHeight = (totalHeight - vGaps * vGapSize) / Grid.Rows;
+        //
+        //     gapSize = new(hGapSize + elementWidth, vGapSize + elementHeight);
+        //     elementSize = new(elementWidth, elementHeight);
+        //     
+        //     
+        // }
+
+
     }
     protected override Rect SetChildRect(ControlNode node, Rect inputRect)
     {
-        if (Type == ContainerType.None) return inputRect;
-        if (Type == ContainerType.Vertical)
+        if (!Grid.IsValid) return inputRect;
+        if (DisplayedChildren == null) return inputRect;
+        
+        if (grid.IsGrid)
         {
-            float height = elementSize.Y * node.ContainerStretch;
-            var size = new Vector2(Rect.Width, height);
-            var maxSize = node.MaxSize;
-            if (maxSize.X > 0f) size.X = MathF.Min(size.X, maxSize.X);
-            if (maxSize.Y > 0f) size.Y = MathF.Min(size.Y, maxSize.Y);
-            var r = new Rect(startPos + curOffset, size, new(0f));
-            curOffset += new Vector2(0f, gapSize.Y + height);
+            int i = DisplayedChildren.IndexOf(node);
+            if (i < 0) return inputRect;
+            var coords = Grid.IndexToCoordinates(i);
+            var r = new Rect
+            (
+                startPos + ((gapSize + elementSize) * coords.ToVector2() * direction), //  new Vector2(gapSize.X * coords.Col, 0f) + new Vector2(0f, gapSize.Y * coords.Row), 
+                elementSize,
+                alignement
+            );
+
             return r;
         }
-
-        if (Type == ContainerType.Horizontal)
+        else
         {
-            float width = elementSize.X * node.ContainerStretch;
-            Vector2 size = new(width, Rect.Height);
-            var maxSize = node.MaxSize;
-            if (maxSize.X > 0f) size.X = MathF.Min(size.X, maxSize.X);
-            if (maxSize.Y > 0f) size.Y = MathF.Min(size.Y, maxSize.Y);
-            var r = new Rect(startPos + curOffset, size, new(0f));
-            curOffset += new Vector2(gapSize.X + width, 0f);
+            var size = new Vector2
+            (
+                grid.IsVertical ? elementSize.X : elementSize.X * node.ContainerStretch,
+                grid.IsHorizontal ? elementSize.Y : elementSize.Y * node.ContainerStretch
+            );
+            var clampedSize = new Vector2
+            (
+                node.MaxSize.X > 0 ? MathF.Min(size.X, MaxSize.X) : size.X,
+                node.MaxSize.Y > 0 ? MathF.Min(size.Y, MaxSize.Y) : size.Y
+            );
+            var r = new Rect
+            (
+                startPos + curOffset, // gapSize * coords.ToVector2() * direction, //  new Vector2(gapSize.X * coords.Col, 0f) + new Vector2(0f, gapSize.Y * coords.Row), 
+                clampedSize,
+                alignement
+            );
+
+            curOffset += (gapSize + size) * direction;
             return r;
         }
         
-        if (Type == ContainerType.Grid)
-        {
-            // int count = GridColumns * GridRows;
-            // if (displayedNodes.Count < count) count = displayedNodes.Count;
-            if (DisplayedChildren == null) return inputRect;
-            if (!Grid.IsValid) return inputRect;
-            int i = DisplayedChildren.IndexOf(node);
-            if (i < 0) return inputRect;
-            var coords = Grid.IndexToCoordinates(i); // ShapeMath.TransformIndexToCoordinates(i, GridRows, GridColumns, true);
-            var r = new Rect
-            (
-                startPos + new Vector2(gapSize.X * coords.Col, 0f) + new Vector2(0f, gapSize.Y * coords.Row), 
-                elementSize,
-                new(0f)
-            );
-            return r;
-        }
-
-        return inputRect;
+        
+        
+        // if (Grid.IsVertical)
+        // {
+        //     float height = elementSize.Y * node.ContainerStretch;
+        //     var size = new Vector2(Rect.Width, height);
+        //     var maxSize = node.MaxSize;
+        //     if (maxSize.X > 0f) size.X = MathF.Min(size.X, maxSize.X);
+        //     if (maxSize.Y > 0f) size.Y = MathF.Min(size.Y, maxSize.Y);
+        //     var r = new Rect(startPos + curOffset, size, new(0f));
+        //     curOffset += new Vector2(0f, gapSize.Y + height);
+        //     return r;
+        // }
+        //
+        // if (Grid.IsHorizontal)
+        // {
+        //     float width = elementSize.X * node.ContainerStretch;
+        //     Vector2 size = new(width, Rect.Height);
+        //     var maxSize = node.MaxSize;
+        //     if (maxSize.X > 0f) size.X = MathF.Min(size.X, maxSize.X);
+        //     if (maxSize.Y > 0f) size.Y = MathF.Min(size.Y, maxSize.Y);
+        //     var r = new Rect(startPos + curOffset, size, new(0f));
+        //     curOffset += new Vector2(gapSize.X + width, 0f);
+        //     return r;
+        // }
+        //
+        // if (Grid.IsGrid)
+        // {
+        //     // int count = GridColumns * GridRows;
+        //     // if (displayedNodes.Count < count) count = displayedNodes.Count;
+        //     if (DisplayedChildren == null) return inputRect;
+        //     if (!Grid.IsValid) return inputRect;
+        //     int i = DisplayedChildren.IndexOf(node);
+        //     if (i < 0) return inputRect;
+        //     var coords = Grid.IndexToCoordinates(i); // ShapeMath.TransformIndexToCoordinates(i, GridRows, GridColumns, true);
+        //     var r = new Rect
+        //     (
+        //         startPos + new Vector2(gapSize.X * coords.Col, 0f) + new Vector2(0f, gapSize.Y * coords.Row), 
+        //         elementSize,
+        //         new(0f)
+        //     );
+        //     return r;
+        // }
+        //
+        // return inputRect;
     }
     protected override void ChildWasAdded(ControlNode newChild)
     {
@@ -272,8 +335,13 @@ public class ControlNodeContainer : ControlNode
     {
         if (NavigationStep == 0) return;
 
-        if (Type == ContainerType.None) return;
-        if (Type == ContainerType.Grid)
+        if (!Grid.IsValid) return;
+        
+        var signedPlacement = grid.Placement.Signed;
+        // var factor = grid.IsVertical ? signedPlacement.Vertical : signedPlacement.Horizontal;
+        dir *= signedPlacement;
+        
+        if (Grid.IsGrid)
         {
             if (!Grid.IsValid) return;
             var index = DisplayedChildren.IndexOf(child);
@@ -306,10 +374,14 @@ public class ControlNodeContainer : ControlNode
         }
         else
         {
+            
+            
             if (IsFirst(child))
             {
                 if(dir.IsLeft || dir.IsUp || dir.IsUpLeft || dir.IsUpRight)
                 {
+                    // var signedPlacement = grid.Placement.Signed;
+                    // var factor = grid.IsVertical ? signedPlacement.Vertical : signedPlacement.Horizontal;
                     DisplayIndex -= NavigationStep;
                 }
             }
@@ -317,6 +389,8 @@ public class ControlNodeContainer : ControlNode
             {
                 if(dir.IsRight || dir.IsDown || dir.IsDownRight || dir.IsDownLeft)
                 {
+                    // var signedPlacement = grid.Placement.Signed;
+                    // var factor = grid.IsVertical ? signedPlacement.Vertical : signedPlacement.Horizontal;
                     DisplayIndex += NavigationStep;
                 }
             }

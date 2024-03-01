@@ -128,7 +128,7 @@ namespace Examples.Scenes.ExampleScenes
             if (value)
             {
                 inputCooldownTimer = inputCooldown;
-                ContainerStretch = 1.25f;
+                ContainerStretch =  1.25f;
             }
             else ContainerStretch = 1f;
         }
@@ -207,20 +207,17 @@ namespace Examples.Scenes.ExampleScenes
             buttonContainer.AddChild(optionButton);
             buttonContainer.AddChild(quitButton);
             
-            for (var i = 0; i < 50; i++)
+            for (var i = 0; i < 320; i++)
             {
                 var button = new ControlNodeButton($"B{i+3}", new(0.5f, 0.5f), new Vector2(0.98f, 0.95f));
                 buttonContainer.AddChild(button);
             }
             
-            buttonContainer.Type = ControlNodeContainer.ContainerType.Grid;
+            // buttonContainer.Type = ControlNodeContainer.ContainerType.Grid;
             buttonContainer.Gap = new Vector2(0.025f, 0.025f);
-            buttonContainer.DisplayCount = 6;
             buttonContainer.DisplayIndex = 0;
             buttonContainer.NavigationStep = 1;
-            buttonContainer.Grid = new(5, 4);
-            // buttonContainer.GridColumns = 4;
-            // buttonContainer.GridRows = 4;
+            buttonContainer.Grid = new(5, 5, false, true, false);
             
             container.AddChild(buttonContainer);
 

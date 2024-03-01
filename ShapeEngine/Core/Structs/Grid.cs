@@ -164,7 +164,12 @@ public readonly struct Grid : IEquatable<Grid>
     
     public bool IsLeftToRightFirst => !IsTopToBottomFirst;
     public bool IsValid => Rows > 0 && Cols > 0;
-    public int Count => Rows * Cols;
+    public bool IsHorizontal => Cols > 0 && Rows == 1;
+    // public bool IsHorizontalInvalid => Cols > 0 && Rows == 0;
+    public bool IsVertical => Rows > 0 && Cols == 1;
+    // public bool IsVerticalInvalid => Rows > 0 && Cols == 0;
+    public bool IsGrid => Cols > 1 && Rows > 1;
+    public int Count => Rows < 0 || Cols < 0 ? -1 : Rows * Cols;
     
     
     public Grid()
@@ -181,20 +186,34 @@ public readonly struct Grid : IEquatable<Grid>
         this.Placement = Direction.DownRight;
         this.IsTopToBottomFirst = false;
     }
-    public Grid(int cols, int rows, Direction placement)
+    public Grid(int cols, int rows, bool horizontalReversed = false, bool verticalReversed = false)
     {
         this.Cols = cols;
         this.Rows = rows;
-        this.Placement = placement;
+        this.Placement = new
+            (
+                cols <= 1 ? 0 : horizontalReversed ? -1 : 1,    
+                rows <= 1 ? 0 : verticalReversed ? -1 : 1    
+            );
         this.IsTopToBottomFirst = false;
     }
-    public Grid(int cols, int rows, Direction placement, bool isTopToBottomFirst)
+    public Grid(int cols, int rows, bool horizontalReversed = false, bool verticalReversed = false, bool isTopToBottomFirst = false)
     {
         this.Cols = cols;
         this.Rows = rows;
-        this.Placement = placement;
+        this.Placement = new
+        (
+            cols <= 1 ? 0 : horizontalReversed ? -1 : 1,    
+            rows <= 1 ? 0 : verticalReversed ? -1 : 1    
+        );
         this.IsTopToBottomFirst = isTopToBottomFirst;
     }
+
+
+    public static Grid GetVerticalGrid(int rows, bool reversed) => new(1, rows, false, reversed, false);
+    public static Grid GetHorizontalGrid(int cols, bool reversed) => new(cols, 1, reversed, false, false);
+    
+    
     
     public bool IsIndexInBounds(int index) => index >= 0 && index <= Count;
     public Vector2 GetCellSize(Rect bounds) => IsValid ? new Vector2(bounds.Width / Cols, bounds.Height / Rows) : new();
@@ -282,7 +301,7 @@ public readonly struct Grid : IEquatable<Grid>
     {
         if (!IsValid || !coordinates.IsValid) return -1;
         
-        if (!IsTopToBottomFirst)
+        if (IsLeftToRightFirst)
         {
             return coordinates.Row * Cols + coordinates.Col;
         }
