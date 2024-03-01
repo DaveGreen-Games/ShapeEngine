@@ -183,7 +183,11 @@ public readonly struct Grid : IEquatable<Grid>
     {
         this.Cols = cols;
         this.Rows = rows;
-        this.Placement = Direction.DownRight;
+        this.Placement = new
+        (
+            cols <= 1 ? 0 : 1,    
+            rows <= 1 ? 0 : 1    
+        );
         this.IsTopToBottomFirst = false;
     }
     public Grid(int cols, int rows, bool horizontalReversed = false, bool verticalReversed = false)
