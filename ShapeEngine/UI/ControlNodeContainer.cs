@@ -282,7 +282,7 @@ public class ControlNodeContainer : ControlNode
             if ((coordsDir.Vertical != 0 && coordsDir.Vertical == dir.Vertical) || (coordsDir.Horizontal != 0 && coordsDir.Horizontal == dir.Horizontal))
             {
                 //left to right setup
-                if (Grid.LeftToRight)
+                if (Grid.IsLeftToRightFirst)
                 {
                     if (dir.IsLeft) DisplayIndex -= 1;
                     else if (dir.IsUp) DisplayIndex -= Grid.Cols;

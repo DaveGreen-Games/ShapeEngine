@@ -196,7 +196,7 @@ public class Pathfinder
     public Pathfinder(Rect bounds, int cols, int rows)
     {
         this.bounds = bounds;
-        Grid = new(cols, rows, true);
+        Grid = new(cols, rows);
         CellSize = Grid.GetCellSize(bounds);
         cells = new();
         for (var i = 0; i < Grid.Count; i++)

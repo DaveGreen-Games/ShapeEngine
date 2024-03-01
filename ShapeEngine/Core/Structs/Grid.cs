@@ -159,8 +159,10 @@ public readonly struct Grid : IEquatable<Grid>
     // public readonly Direction Direction;
     public readonly int Rows;
     public readonly int Cols;
-    public readonly bool LeftToRight;
+    public readonly Direction Placement;
+    public readonly bool IsTopToBottomFirst;
     
+    public bool IsLeftToRightFirst => !IsTopToBottomFirst;
     public bool IsValid => Rows > 0 && Cols > 0;
     public int Count => Rows * Cols;
     
@@ -169,21 +171,31 @@ public readonly struct Grid : IEquatable<Grid>
     {
         this.Rows = 0;
         this.Cols = 0;
-        this.LeftToRight = true;
+        this.Placement = Direction.Empty;
+        this.IsTopToBottomFirst = false;
     }
     public Grid(int cols, int rows)
     {
         this.Cols = cols;
         this.Rows = rows;
-        this.LeftToRight = true;
+        this.Placement = Direction.DownRight;
+        this.IsTopToBottomFirst = false;
     }
-    public Grid(int cols, int rows, bool leftToRight)
+    public Grid(int cols, int rows, Direction placement)
     {
         this.Cols = cols;
         this.Rows = rows;
-        this.LeftToRight = leftToRight;
+        this.Placement = placement;
+        this.IsTopToBottomFirst = false;
     }
-
+    public Grid(int cols, int rows, Direction placement, bool isTopToBottomFirst)
+    {
+        this.Cols = cols;
+        this.Rows = rows;
+        this.Placement = placement;
+        this.IsTopToBottomFirst = isTopToBottomFirst;
+    }
+    
     public bool IsIndexInBounds(int index) => index >= 0 && index <= Count;
     public Vector2 GetCellSize(Rect bounds) => IsValid ? new Vector2(bounds.Width / Cols, bounds.Height / Rows) : new();
     
@@ -205,6 +217,22 @@ public readonly struct Grid : IEquatable<Grid>
         var row = coordinates.Row < 0 ? 0 : coordinates.Row > Rows ? Rows - 1 : coordinates.Row;
         return new(col, row);
         
+    }
+
+    public Vector2 GetPosition(Rect bounds, Coordinates coordinates)
+    {
+        var cellSize = GetCellSize(bounds);
+        var pos = bounds.GetPoint(Placement.Invert().ToAlignement());
+
+        return pos + cellSize * coordinates.ToVector2() * Placement.ToVector2();
+    }
+
+    public Rect GetRect(Rect bounds, Coordinates coordinates)
+    {
+        var cellSize = GetCellSize(bounds);
+        var alignement = Placement.Invert().ToAlignement();
+        var pos = bounds.GetPoint(alignement);
+        return new(pos, cellSize, alignement);
     }
     public bool AreCoordinatesInside(Coordinates coordinates)
     {
@@ -235,7 +263,7 @@ public readonly struct Grid : IEquatable<Grid>
     {
         if (!IsValid) return new();
         
-        if (LeftToRight)
+        if (!IsTopToBottomFirst)
         {
             int row = index / Cols;
             int col = index % Cols;
@@ -254,7 +282,7 @@ public readonly struct Grid : IEquatable<Grid>
     {
         if (!IsValid || !coordinates.IsValid) return -1;
         
-        if (LeftToRight)
+        if (!IsTopToBottomFirst)
         {
             return coordinates.Row * Cols + coordinates.Col;
         }
@@ -273,23 +301,50 @@ public readonly struct Grid : IEquatable<Grid>
         var ver = coordinates.Row == 0 ? -1 : coordinates.Row >= Rows - 1 ? 1 : 0;
         return new(hor, ver);
 
-        // if (coordinates.Row == 0 && coordinates.Col == 0) return new(-1, -1);//topleft
-        // if (coordinates.Row == 0 && coordinates.Col > 0 && coordinates.Col < Cols) return new(0, -1);//top
-        // if (coordinates.Row == 0 && coordinates.Col >= Cols) return new(1, -1);//topRight
+    }
 
-        // if (coordinates.Row > 0 && coordinates.Row < Rows && coordinates.Col >= Cols) return new(1, 0);//right
-        // if (coordinates.Row >= Rows && coordinates.Col >= Cols) return new(1, 1); //bottom right
-        // if (coordinates.Row >= Rows && coordinates.Col > 0 && coordinates.Col < Cols) return new(0, 1); //bottom
-        // if (coordinates.Row >= Rows && coordinates.Col == 0) return new(0, 1); //bottomLeft
+    public int GetRects(Rect bounds, ref List<Rect> result)
+    {
+        if (!IsValid) return 0;
+        
+        int count = result.Count;
 
+        if (IsLeftToRightFirst)
+        {
+            for (var row = 0; row <= Rows; row++)
+            {
+                for (var col = 0; col <= Cols; col++)
+                {
+                    var coordinates = new Coordinates(col, row);
+                    result.Add(GetRect(bounds, coordinates));
+                
+                }
+            }
+        }
+        else
+        {
+            
+            for (var col = 0; col <= Cols; col++)
+            {
+                for (var row = 0; row <= Rows; row++)
+                {
+                    var coordinates = new Coordinates(col, row);
+                    result.Add(GetRect(bounds, coordinates));
+                
+                }
+            }
+        }
+        
+
+        return result.Count - count;
     }
 
     #region Operators
-    public bool Equals(Grid other) => Rows == other.Rows && Cols == other.Cols && LeftToRight == other.LeftToRight;
+    public bool Equals(Grid other) => Rows == other.Rows && Cols == other.Cols && Placement == other.Placement && IsTopToBottomFirst == other.IsTopToBottomFirst;
 
     public override bool Equals(object? obj) => obj is Grid other && Equals(other);
 
-    public override int GetHashCode() => HashCode.Combine(Rows, Cols, LeftToRight);
+    public override int GetHashCode() => HashCode.Combine(Rows, Cols, Placement, IsTopToBottomFirst);
     
     public static bool operator ==(Grid left, Grid right) => left.Equals(right);
 
@@ -297,7 +352,7 @@ public readonly struct Grid : IEquatable<Grid>
     
     public override string ToString()
     {
-        var leftToRightText = LeftToRight ? "L->R" : "T->B";
+        var leftToRightText = !IsTopToBottomFirst ? "L->R" : "T->B";
         return $"Cols: {Cols}, Rows: {Rows}, {leftToRightText})";
     }
 
