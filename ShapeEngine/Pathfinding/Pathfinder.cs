@@ -130,7 +130,7 @@ public class Cell
         return Neighbors.Remove(cell);
     }
     
-    public void SetNeighbors(HashSet<Cell> neighbors)
+    public void SetNeighbors(HashSet<Cell>? neighbors)
     {
         Neighbors = neighbors;
     }
@@ -151,6 +151,7 @@ public class Cell
     
 }
 
+//make abstract and just handle cells and their values
 public class Pathfinder
 {
 
@@ -195,7 +196,7 @@ public class Pathfinder
     public Pathfinder(Rect bounds, int cols, int rows)
     {
         this.bounds = bounds;
-        Grid = new(rows, cols, true);
+        Grid = new(cols, rows, true);
         CellSize = Grid.GetCellSize(bounds);
         cells = new();
         for (var i = 0; i < Grid.Count; i++)
@@ -229,11 +230,13 @@ public class Pathfinder
 
     public bool AddNavObject(INavigationObject obj)
     {
+        //todo implement
         return false;
     }
 
     public bool RemoveNavObject(INavigationObject obj)
     {
+        //todo implement
         return false;
     }
     
@@ -344,6 +347,17 @@ public class Pathfinder
         if (oneWay) b.Disconnect(a);
         return true;
     }
+
+    private Cell? GetCell(Grid.Coordinates coordinates)
+    {
+        if (!Grid.AreCoordinatesInside(coordinates)) return null;
+        var index = Grid.CoordinatesToIndex(coordinates);
+        if (index >= 0 && index < cells.Count) return cells[index];
+        return null;
+    }
+
+    private Cell? GetNeighborCell(Cell cell, Direction dir) => GetCell(cell.Coordinates + dir);
+
     private Cell GetCell(Vector2 pos)
     {
         var index = Grid.GetCellIndex(pos, Bounds);
@@ -365,9 +379,66 @@ public class Pathfinder
 
         return result.Count - count;
     }
-    private HashSet<Cell> GetNeighbors(Cell cell, bool diagonal = true)
+    private HashSet<Cell>? GetNeighbors(Cell cell, bool diagonal = true)
     {
-        throw new NotImplementedException();
+        HashSet<Cell>? neighbors = null;
+        var coordinates = cell.Coordinates;
+
+        Cell? neighbor = null;
+        neighbor = GetCell(coordinates + Direction.Right);
+        if (neighbor != null)
+        {
+            neighbors ??= new();
+            neighbors.Add(neighbor);
+        }
+        neighbor = GetCell(coordinates + Direction.Left);
+        if (neighbor != null)
+        {
+            neighbors ??= new();
+            neighbors.Add(neighbor);
+        }
+        neighbor = GetCell(coordinates + Direction.Up);
+        if (neighbor != null)
+        {
+            neighbors ??= new();
+            neighbors.Add(neighbor);
+        }
+        neighbor = GetCell(coordinates + Direction.Down);
+        if (neighbor != null)
+        {
+            neighbors ??= new();
+            neighbors.Add(neighbor);
+        }
+
+        if (diagonal)
+        {
+            neighbor = GetCell(coordinates + Direction.UpLeft);
+            if (neighbor != null)
+            {
+                neighbors ??= new();
+                neighbors.Add(neighbor);
+            }
+            neighbor = GetCell(coordinates + Direction.UpRight);
+            if (neighbor != null)
+            {
+                neighbors ??= new();
+                neighbors.Add(neighbor);
+            }
+            neighbor = GetCell(coordinates + Direction.DownLeft);
+            if (neighbor != null)
+            {
+                neighbors ??= new();
+                neighbors.Add(neighbor);
+            }
+            neighbor = GetCell(coordinates + Direction.DownRight);
+            if (neighbor != null)
+            {
+                neighbors ??= new();
+                neighbors.Add(neighbor);
+            }
+        }
+        
+        return neighbors;
     }
     private void Regenerate()
     {
@@ -395,4 +466,23 @@ public class Pathfinder
         return new Rect(pos, CellSize, new Vector2(0f));
     }
     #endregion
+}
+
+
+public class PathfinderStatic : Pathfinder
+{
+    public PathfinderStatic(Rect bounds, int cols, int rows) : base(bounds, cols, rows)
+    {
+    }
+}
+
+
+//works like spatial hash
+//has an internal set of objects
+//clears all cells and goes through all objects and fills cells based on their shape with the specified value
+public class PathfinderDynamic : Pathfinder
+{
+    public PathfinderDynamic(Rect bounds, int cols, int rows) : base(bounds, cols, rows)
+    {
+    }
 }

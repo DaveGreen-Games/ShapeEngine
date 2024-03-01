@@ -218,7 +218,7 @@ namespace Examples.Scenes.ExampleScenes
             buttonContainer.DisplayCount = 6;
             buttonContainer.DisplayIndex = 0;
             buttonContainer.NavigationStep = 1;
-            buttonContainer.Grid = new(4, 5, true);
+            buttonContainer.Grid = new(5, 4, true);
             // buttonContainer.GridColumns = 4;
             // buttonContainer.GridRows = 4;
             

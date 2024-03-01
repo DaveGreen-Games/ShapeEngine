@@ -1,5 +1,6 @@
 using System.Numerics;
 using ShapeEngine.Core.Shapes;
+using ShapeEngine.Lib;
 
 namespace ShapeEngine.Core.Structs;
 
@@ -24,6 +25,8 @@ public readonly struct Grid : IEquatable<Grid>
         }
 
         public Vector2 ToVector2() => new Vector2(Col, Row);
+
+        #region Operators
         public bool Equals(Coordinates other) => Row == other.Row && Col == other.Col;
 
         public override bool Equals(object? obj) => obj is Coordinates other && Equals(other);
@@ -38,8 +41,122 @@ public readonly struct Grid : IEquatable<Grid>
         {
             return $"({Col},{Row})";
         }
+
+        public static Coordinates operator +(Coordinates left, Coordinates right)
+        {
+            return 
+                new
+                (
+                    left.Col + right.Col,
+                    left.Row + right.Row
+                );
+        }
+        public static Coordinates operator -(Coordinates left, Coordinates right)
+        {
+            return 
+                new
+                (
+                    left.Col - right.Col,
+                    left.Row - right.Row
+                );
+        }
+        public static Coordinates operator *(Coordinates left, Coordinates right)
+        {
+            return 
+                new
+                (
+                    left.Col * right.Col,
+                    left.Row * right.Row
+                );
+        }
+        public static Coordinates operator /(Coordinates left, Coordinates right)
+        {
+            return 
+                new
+                (
+                    right.Col == 0 ? left.Col : left.Col / right.Col,
+                    right.Row == 0 ? left.Row : left.Row / right.Row
+                );
+        }
+        public static Coordinates operator +(Coordinates left, Direction right)
+        {
+            return 
+                new
+                (
+                    left.Col + right.Horizontal,
+                    left.Row + right.Vertical
+                );
+        }
+        public static Coordinates operator -(Coordinates left, Direction right)
+        {
+            return 
+                new
+                (
+                    left.Col - right.Horizontal,
+                    left.Row - right.Vertical
+                );
+        }
+        public static Coordinates operator *(Coordinates left, Direction right)
+        {
+            return 
+                new
+                (
+                    left.Col * right.Horizontal,
+                    left.Row * right.Vertical
+                );
+        }
+        public static Coordinates operator /(Coordinates left, Direction right)
+        {
+            return 
+                new
+                (
+                    right.Horizontal == 0 ? left.Col : left.Col / right.Horizontal,
+                    right.Vertical == 0 ? left.Row : left.Row / right.Vertical
+                );
+        }
+        public static Coordinates operator +(Coordinates left, int right)
+        {
+            return 
+                new
+                (
+                    left.Col + right,
+                    left.Row + right
+                );
+        }
+        public static Coordinates operator -(Coordinates left, int right)
+        {
+            return 
+                new
+                (
+                    left.Col - right,
+                    left.Row - right
+                );
+        }
+        public static Coordinates operator *(Coordinates left, int right)
+        {
+            return 
+                new
+                (
+                    left.Col * right,
+                    left.Row * right
+                );
+        }
+        public static Coordinates operator /(Coordinates left, int right)
+        {
+            if (right == 0) return left;
+            return 
+                new
+                (
+                    left.Col / right,
+                    left.Row / right
+                );
+        }
+        
+        #endregion
     }
-    
+
+    // public readonly Rect Rect;
+    // public readonly Direction Direction;
     public readonly int Rows;
     public readonly int Cols;
     public readonly bool LeftToRight;
@@ -54,16 +171,16 @@ public readonly struct Grid : IEquatable<Grid>
         this.Cols = 0;
         this.LeftToRight = true;
     }
-    public Grid(int rows, int cols)
+    public Grid(int cols, int rows)
     {
-        this.Rows = rows;
         this.Cols = cols;
+        this.Rows = rows;
         this.LeftToRight = true;
     }
-    public Grid(int rows, int cols, bool leftToRight)
+    public Grid(int cols, int rows, bool leftToRight)
     {
-        this.Rows = rows;
         this.Cols = cols;
+        this.Rows = rows;
         this.LeftToRight = leftToRight;
     }
 
@@ -81,7 +198,20 @@ public readonly struct Grid : IEquatable<Grid>
         int yi = Math.Clamp((int)Math.Floor((pos.Y - bounds.Y) / cellSize.Y), 0, Rows - 1);
         return new(xi, yi);
     }
-    
+
+    public Coordinates ClampCoordinates(Coordinates coordinates)
+    {
+        var col = coordinates.Col < 0 ? 0 : coordinates.Col > Cols ? Cols - 1 : coordinates.Col;
+        var row = coordinates.Row < 0 ? 0 : coordinates.Row > Rows ? Rows - 1 : coordinates.Row;
+        return new(col, row);
+        
+    }
+    public bool AreCoordinatesInside(Coordinates coordinates)
+    {
+        if (coordinates.Col < 0 || coordinates.Col >= Cols) return false;
+        if (coordinates.Row < 0 || coordinates.Row >= Rows) return false;
+        return true;
+    }
 
     public int GetCellIndices(Rect rect, Rect bounds, ref HashSet<int> indices)
     {
@@ -154,6 +284,7 @@ public readonly struct Grid : IEquatable<Grid>
 
     }
 
+    #region Operators
     public bool Equals(Grid other) => Rows == other.Rows && Cols == other.Cols && LeftToRight == other.LeftToRight;
 
     public override bool Equals(object? obj) => obj is Grid other && Equals(other);
@@ -169,4 +300,8 @@ public readonly struct Grid : IEquatable<Grid>
         var leftToRightText = LeftToRight ? "L->R" : "T->B";
         return $"Cols: {Cols}, Rows: {Rows}, {leftToRightText})";
     }
+
+    
+    #endregion
+    
 }
