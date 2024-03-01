@@ -1,3 +1,6 @@
+using System.Numerics;
+using ShapeEngine.Core.Shapes;
+
 namespace ShapeEngine.Core.Structs;
 
 public readonly struct Grid : IEquatable<Grid>
@@ -20,6 +23,7 @@ public readonly struct Grid : IEquatable<Grid>
             this.Col = col;
         }
 
+        public Vector2 ToVector2() => new Vector2(Col, Row);
         public bool Equals(Coordinates other) => Row == other.Row && Col == other.Col;
 
         public override bool Equals(object? obj) => obj is Coordinates other && Equals(other);
@@ -64,6 +68,38 @@ public readonly struct Grid : IEquatable<Grid>
     }
 
     public bool IsIndexInBounds(int index) => index >= 0 && index <= Count;
+    public Vector2 GetCellSize(Rect bounds) => IsValid ? new Vector2(bounds.Width / Cols, bounds.Height / Rows) : new();
+    
+    public int GetCellIndex(Vector2 pos, Rect bounds)
+    {
+        return CoordinatesToIndex(GetCellCoordinate(pos, bounds));
+    }
+    public Coordinates GetCellCoordinate(Vector2 pos, Rect bounds)
+    {
+        var cellSize = GetCellSize(bounds);
+        int xi = Math.Clamp((int)Math.Floor((pos.X - bounds.X) / cellSize.X), 0, Cols - 1);
+        int yi = Math.Clamp((int)Math.Floor((pos.Y - bounds.Y) / cellSize.Y), 0, Rows - 1);
+        return new(xi, yi);
+    }
+    
+
+    public int GetCellIndices(Rect rect, Rect bounds, ref HashSet<int> indices)
+    {
+        var topLeft = GetCellCoordinate(rect.TopLeft, bounds);
+        var bottomRight = GetCellCoordinate(rect.BottomRight, bounds);
+
+        int count = indices.Count;
+        for (int j = topLeft.Row; j <= bottomRight.Row; j++)
+        {
+            for (int i = topLeft.Col; i <= bottomRight.Col; i++)
+            {
+                int id = CoordinatesToIndex(new(i, j));
+                indices.Add(id);
+            }
+        }
+
+        return indices.Count - count;
+    }
     
     public Coordinates IndexToCoordinates(int index)
     {

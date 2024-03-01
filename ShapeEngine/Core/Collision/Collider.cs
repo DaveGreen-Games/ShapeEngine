@@ -7,7 +7,20 @@ using ShapeEngine.Lib;
 
 namespace ShapeEngine.Core.Collision
 {
-    public abstract class Collider
+    public interface IShape
+    {
+        public ShapeType GetShapeType();
+        public Circle GetCircleShape() => new();
+        public Segment GetSegmentShape() => new();
+        public Triangle GetTriangleShape() => new();
+        public Quad GetQuadShape() => new();
+        public Rect GetRectShape() => new();
+        public Polygon GetPolygonShape() => new();
+        public Polyline GetPolylineShape() => new();
+    }
+    
+    
+    public abstract class Collider : IShape
     {
         public event Action<CollisionInformation>? OnCollision;
         public event Action<Collider>? OnCollisionEnded;
