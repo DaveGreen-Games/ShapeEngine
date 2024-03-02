@@ -6,6 +6,7 @@ using ShapeEngine.Color;
 using ShapeEngine.Core;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Shapes;
+using ShapeEngine.Core.Structs;
 using ShapeEngine.UI;
 
 namespace ShapeEngine.Lib;
