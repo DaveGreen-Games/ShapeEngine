@@ -1,7 +1,9 @@
 ﻿using ShapeEngine.Core.Shapes;
 using ShapeEngine.Lib;
 using System.Numerics;
+using Raylib_cs;
 using ShapeEngine.Color;
+using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.Random
 {
@@ -261,6 +263,15 @@ namespace ShapeEngine.Random
         //}
         #endregion
 
+        #region Size
+
+        public Size RandSize() => new(RandF(), RandF());
+        public Size RandSize(float max) => new(RandF(max), RandF(max));
+        public Size RandSize(float min, float max) => new(RandF(min, max), RandF(min, max));
+        public Size RandSize(Size max) => new(RandF(max.Width), RandF(max.Height));
+        public Size RandSize(Size min, Size max) => new(RandF(min.Width, max.Width), RandF(min.Height, max.Height));
+        #endregion
+        
         #region Color
 
         public ColorRgba RandColorRed(ColorRgba colorRgba) => colorRgba.SetRed((byte)RandI(0, 255));
@@ -313,26 +324,26 @@ namespace ShapeEngine.Random
         #region Rect
         public Rect RandRect(Vector2 alignement)
         {
-            Vector2 pos = RandVec2();
-            Vector2 size = RandVec2();
+            var pos = RandVec2();
+            var size = RandSize();
             return new(pos, size, alignement);
         }
         public Rect RandRect(Vector2 origin, Vector2 alignement)
         {
-            Vector2 pos = RandVec2();
-            Vector2 size = RandVec2();
+            var pos = RandVec2();
+            var size = RandSize();
             return new(origin + pos, size, alignement);
         }
         public Rect RandRect(float posMin, float posMax, float sizeMin, float sizeMax, Vector2 alignement)
         {
-            Vector2 pos = RandVec2(posMin, posMax);
-            Vector2 size = RandVec2(sizeMin, sizeMax);
+            var pos = RandVec2(posMin, posMax);
+            var size = RandSize(sizeMin, sizeMax);
             return new(pos, size, alignement);
         }
         public Rect RandRect(Vector2 origin, float posMin, float posMax, float sizeMin, float sizeMax, Vector2 alignement)
         {
-            Vector2 pos = RandVec2(posMin, posMax);
-            Vector2 size = RandVec2(sizeMin, sizeMax);
+            var pos = RandVec2(posMin, posMax);
+            var size = RandSize(sizeMin, sizeMax);
             return new(origin + pos, size, alignement);
         }
         #endregion

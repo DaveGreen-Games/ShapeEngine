@@ -249,7 +249,7 @@ namespace ShapeEngine.Core.Shapes
         public float GetArea() { return MathF.PI * Radius * Radius; }
         public float GetCircumference() { return MathF.PI * Radius * 2f; }
         public float GetCircumferenceSquared() { return GetCircumference() * GetCircumference(); }
-        public Rect GetBoundingBox() { return new Rect(Center, new Vector2(Radius, Radius) * 2f, new(0.5f)); }
+        public Rect GetBoundingBox() { return new Rect(Center, new Size(Radius, Radius) * 2f, new(0.5f)); }
 
         
         public CollisionPoint GetClosestCollisionPoint(Vector2 p) 

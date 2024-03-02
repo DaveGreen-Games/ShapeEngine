@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using ShapeEngine.Color;
+using ShapeEngine.Core.Structs;
 using ShapeEngine.Random;
 
 namespace ShapeEngine.Lib
@@ -71,6 +72,15 @@ namespace ShapeEngine.Lib
         public static Vector2 RandPoint(Vector2 origin) { return rand.RandPoint(origin); }
         public static Vector2 RandPoint(Vector2 origin, float max) { return rand.RandPoint(origin, max); }
         public static Vector2 RandPoint(Vector2 origin, float min, float max) { return rand.RandPoint(origin, min, max); }
+        #endregion
+        
+        #region Size
+
+        public static Size RandSize() => rand.RandSize();
+        public static Size RandSize(float max) => rand.RandSize(max);
+        public static Size RandSize(float min, float max) => rand.RandSize(min, max);
+        public static Size RandSize(Size max) => rand.RandSize(max);
+        public static Size RandSize(Size min, Size max) => rand.RandSize(min, max);
         #endregion
         
         #region Color

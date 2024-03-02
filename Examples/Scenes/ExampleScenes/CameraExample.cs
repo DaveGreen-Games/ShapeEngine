@@ -19,7 +19,7 @@ namespace Examples.Scenes.ExampleScenes
         Rect center = new();
         public Pillar(Vector2 pos, float size)
         {
-            outline = new(pos, new Vector2(size), new Vector2(0.5f));
+            outline = new(pos, new Size(size), new Vector2(0.5f));
             center = outline.ScaleSize(0.5f, new Vector2(0.5f));
         }
 
@@ -34,7 +34,7 @@ namespace Examples.Scenes.ExampleScenes
     {
         Font font;
         ShapeCamera camera;
-        Rect universe = new(new Vector2(0f), new Vector2(10000f), new Vector2(0.5f));
+        Rect universe = new(new Vector2(0f), new Size(10000f), new Vector2(0.5f));
 
         List<Pillar> pillars = new();
         

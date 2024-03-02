@@ -7,7 +7,7 @@ namespace ShapeEngine.Core.Collision;
 public class RectCollider : Collider
 {
     public Vector2 Alignement { get; set; }
-    public Vector2 Size { get; set; }
+    public Size Size { get; set; }
         
     public RectCollider(Vector2 offset) : base(offset)
     {

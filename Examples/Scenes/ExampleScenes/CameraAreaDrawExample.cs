@@ -14,7 +14,7 @@ namespace Examples.Scenes.ExampleScenes
     {
         Font font;
         Vector2 movementDir = new();
-        Rect universe = new(new Vector2(0f), new Vector2(10000f), new Vector2(0.5f));
+        Rect universe = new(new Vector2(0f), new Size(10000f), new Vector2(0.5f));
         List<Star> stars = new();
         private List<Star> drawStars = new();
         

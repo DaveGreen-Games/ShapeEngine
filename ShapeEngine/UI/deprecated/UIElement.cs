@@ -93,7 +93,7 @@ namespace ShapeEngine.UI
             else
             {
                 Vector2 topLeft = rect.TopLeft; // new Vector2(rect.x, rect.y);
-                Vector2 size = rect.Size;
+                Vector2 size = rect.Size.ToVector2();
                 Vector2 offset = size * alignement;
                 return Margins.Apply(new
                     (
@@ -115,7 +115,7 @@ namespace ShapeEngine.UI
         }
         public Vector2 GetSize()
         {
-            return GetRect().Size;
+            return GetRect().Size.ToVector2();
             //Rectangle rect = GetRect(new(0f));
             //return new(rect.width, rect.height);
         }

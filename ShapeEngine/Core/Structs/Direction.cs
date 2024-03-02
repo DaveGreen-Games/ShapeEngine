@@ -59,7 +59,7 @@ public readonly struct Direction : IEquatable<Direction>
         return 0;
     }
 
-    #region Operator2
+    #region Operators
 
     public static Direction operator +(Direction left, Direction right)
     {

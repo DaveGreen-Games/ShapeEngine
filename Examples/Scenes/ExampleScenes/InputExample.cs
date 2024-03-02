@@ -822,7 +822,7 @@ namespace Examples.Scenes.ExampleScenes
         private Vector2 lastMouseWheel = new();
         protected override void OnDrawUIExample(ScreenInfo ui)
         {
-            Vector2 uiSize = ui.Area.Size;
+            // Vector2 uiSize = ui.Area.Size;
 
             // var mouseDelta = Raylib.GetMouseDelta();
             // var mouseDeltaSq = mouseDelta.LengthSquared();

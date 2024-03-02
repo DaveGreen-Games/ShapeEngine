@@ -91,7 +91,7 @@ public sealed class ShapeCamera
     private Sequencer<ICameraTween> cameraTweens = new();
     private float cameraTweenTotalRotationDeg = 0f;
     private float cameraTweenTotalZoomFactor = 1f;
-    private Vector2 cameraTweenTotalOffset = new();
+    private Size cameraTweenTotalOffset = new();
 
     private ICameraFollower? follower = null;
     public ICameraFollower? Follower
@@ -106,13 +106,13 @@ public sealed class ShapeCamera
     }
     public Vector2 Position { get; set; } = new();
     
-    public Vector2 Size { get; private set; } = new();
+    public Size Size { get; private set; } = new();
     // public Vector2 SizeRaw => Size / zoomAdjustment;
     // private Vector2 sizeRaw => Size / zoomAdjustment;
     public Vector2 Alignement{ get; private set; } = new(0.5f);
     
-    public Vector2 BaseOffset => Size * Alignement;
-    public Vector2 Offset { get; private set; } = new();
+    public Size BaseOffset => Size * Alignement;
+    public Size Offset { get; private set; } = new();
     
     public float BaseRotationDeg { get; private set; } = 0f;
     public float RotationDeg { get; private set; } = 0f;
@@ -166,15 +166,15 @@ public sealed class ShapeCamera
     }
     public Rect Area => new
     (
-        Position.X - Offset.X * ZoomFactor, 
-        Position.Y - Offset.Y * ZoomFactor, 
-        Size.X * ZoomFactor,
-        Size.Y * ZoomFactor
+        Position.X - Offset.Width * ZoomFactor, 
+        Position.Y - Offset.Height * ZoomFactor, 
+        Size.Width * ZoomFactor,
+        Size.Height * ZoomFactor
     );
     public Camera2D Camera => new()
     {
         Target = Position,
-        Offset = Offset,
+        Offset = Offset.ToVector2(),
         Zoom = ZoomLevel,
         Rotation = RotationDeg
     };
@@ -187,7 +187,7 @@ public sealed class ShapeCamera
         cameraTweens.Update(dt);
         shake.Update(dt);
         
-        Vector2 shakeOffset = new(shake.Get(ShakeX), shake.Get(ShakeY));
+        var shakeOffset = new Size(shake.Get(ShakeX), shake.Get(ShakeY));
         
         Offset = BaseOffset + shakeOffset + cameraTweenTotalOffset;
         RotationDeg = BaseRotationDeg + shake.Get(ShakeRot) + cameraTweenTotalRotationDeg;
@@ -212,7 +212,7 @@ public sealed class ShapeCamera
     }
     internal void SetSize(Dimensions curScreenSize, Dimensions targetDimensions)
     {
-        Size = curScreenSize.ToVector2();
+        Size = curScreenSize.ToSize();
 
         //VARIANT 2
         // float xDif = curScreenSize.Width - targetDimensions.Width;
@@ -242,11 +242,11 @@ public sealed class ShapeCamera
         // zoomAdjustment = 1f;
     }
 
-    private float CalculateZoomLevel(Vector2 targetSize)
+    private float CalculateZoomLevel(Size targetSize)
     {
         var size = Size / zoomAdjustment;
-        var fX = 1f / (targetSize.X / size.X);
-        var fY = 1f / (targetSize.Y / size.Y);
+        var fX = 1f / (targetSize.Width / size.Width);
+        var fY = 1f / (targetSize.Height / size.Height);
         return fX < fY ? fX : fY;
 
     }

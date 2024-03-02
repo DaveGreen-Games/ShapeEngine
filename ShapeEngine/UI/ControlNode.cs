@@ -138,8 +138,8 @@ public abstract class ControlNode
 
     public float ContainerStretch = 1f;
     
-    public Vector2 MinSize = new(0f);
-    public Vector2 MaxSize = new(0f);
+    public Size MinSize = new(0f);
+    public Size MaxSize = new(0f);
     public Rect.Margins Margins = new();
     
     public SelectFilter SelectionFilter
@@ -540,12 +540,12 @@ public abstract class ControlNode
         var p = sourceRect.GetPoint(Anchor);
         var size = Stretch.LengthSquared() == 0f ? Rect.Size : sourceRect.Size * Stretch;
 
-        if (MinSize.LengthSquared() > 0)
+        if (MinSize.Area > 0)
         {
             size = size.Max(MinSize);
         }
 
-        if (MaxSize.LengthSquared() > 0)
+        if (MaxSize.Area > 0)
         {
             size = size.Min(MaxSize);
         }

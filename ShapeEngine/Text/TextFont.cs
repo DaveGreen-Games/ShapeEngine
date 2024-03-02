@@ -3,6 +3,7 @@ using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core;
 using ShapeEngine.Core.Shapes;
+using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
 using ShapeEngine.UI;
 
@@ -90,11 +91,11 @@ public struct TextFont
     //     var size = MeasureTextEx(Font, text, FontSize, FontSpacing);
     //     return ScaleDynamic(text, size);
     // }
-    public TextFont ScaleDynamic(string text, Vector2 rectSize)
+    public TextFont ScaleDynamic(string text, Size rectSize)
     {
         var fontDimensions = GetTextBaseSize(text);// MeasureTextEx(Font, text, BaseSize, FontSpacing);
-        float fX = rectSize.X / fontDimensions.X;
-        float fY = rectSize.Y / fontDimensions.Y;
+        float fX = rectSize.Width / fontDimensions.Width;
+        float fY = rectSize.Height / fontDimensions.Height;
         float f = MathF.Min(fX, fY);
 
         float scaledFontSize = FontSizeRange.Clamp(BaseSize * f);
@@ -104,18 +105,18 @@ public struct TextFont
 
         return newTextFont;
     }
-    public TextFont ScaleDynamicWrapMode(string text, Vector2 rectSize, float widthFactor = 1.3f)
+    public TextFont ScaleDynamicWrapMode(string text, Size rectSize, float widthFactor = 1.3f)
     {
         var fontSpacing = FontSpacing;
         var lineSpacing = LineSpacing;
         var textSize = GetTextBaseSize(text);
-        var lines = (int)MathF.Ceiling((textSize.X * widthFactor) / rectSize.X);
+        var lines = (int)MathF.Ceiling((textSize.Width * widthFactor) / rectSize.Width);
         var textHeight = lines * BaseSize;
         var lineSpacingHeight = lines <= 0 ? 0 : (lines - 1) * lineSpacing;
         var height = textHeight + lineSpacingHeight;
 
-        var textArea = rectSize.X * height;
-        var sizeF = MathF.Sqrt(rectSize.GetArea() / textArea);
+        var textArea = rectSize.Width * height;
+        var sizeF = MathF.Sqrt(rectSize.Area / textArea);
         float fontSize = FontSizeRange.Clamp(BaseSize * sizeF);
         sizeF = fontSize / BaseSize;
         lineSpacing *= sizeF;
@@ -124,11 +125,11 @@ public struct TextFont
         return new(Font, fontSize, fontSpacing, lineSpacing, ColorRgba);
     }
     
-    public Vector2 GetTextBaseSize(string text) => GetTextSize(text, BaseSize);
+    public Size GetTextBaseSize(string text) => GetTextSize(text, BaseSize);
     
     
-    public Vector2 GetTextSize(string text) => GetTextSize(text, FontSize);
-    public Vector2 GetTextSize(string text, float fontSize)
+    public Size GetTextSize(string text) => GetTextSize(text, FontSize);
+    public Size GetTextSize(string text, float fontSize)
     {
         float totalWidth = 0f;
 
@@ -136,17 +137,17 @@ public struct TextFont
         {
             var c = text[i];
             if (c == '\n') continue;
-            float w = GetCharSize(c, fontSize).X;
+            float w = GetCharSize(c, fontSize).Width;
             totalWidth += w;
         }
         float fontSpacingWidth = (text.Length - 1) * FontSpacing;
         totalWidth += fontSpacingWidth;
-        return new Vector2(totalWidth, fontSize);
+        return new Size(totalWidth, fontSize);
     }
 
     
-    public Vector2 GetTextSizeLineBreak(string text) => GetTextSizeLineBreak(text, FontSize);
-    public Vector2 GetTextSizeLineBreak(string text, float fontSize)
+    public Size GetTextSizeLineBreak(string text) => GetTextSizeLineBreak(text, FontSize);
+    public Size GetTextSizeLineBreak(string text, float fontSize)
     {
         float curWidth = 0f;
         float totalWidth = 0f;
@@ -162,33 +163,33 @@ public struct TextFont
                 totalHeight += fontSize + LineSpacing;
                 continue;
             }
-            float w = GetCharSize(c, fontSize).X;
+            float w = GetCharSize(c, fontSize).Width;
             totalWidth += w;
         }
         float fontSpacingWidth = (text.Length - 1) * FontSpacing;
         totalWidth += fontSpacingWidth;
-        return new Vector2(totalWidth, totalHeight);
+        return new Size(totalWidth, totalHeight);
     }
     
-    public Vector2 GetCharSize(char c)
+    public Size GetCharSize(char c)
     {
         var baseSize = GetCharBaseSize(c);
         float f = FontSize / (float)BaseSize;
         return baseSize * f;
     }
-    public Vector2 GetCharSize(char c, float fontSize)
+    public Size GetCharSize(char c, float fontSize)
     {
         var baseSize = GetCharBaseSize(c);
         float f = fontSize / (float)BaseSize;
         return baseSize * f;
     }
-    public readonly Vector2 GetCharBaseSize(char c)
+    public readonly Size GetCharBaseSize(char c)
     {
         unsafe
         {
             int index = Raylib.GetGlyphIndex(Font, c);
             float glyphWidth = (Font.Glyphs[index].AdvanceX == 0) ? Font.Recs[index].Width : Font.Glyphs[index].AdvanceX;
-            return new Vector2(glyphWidth, Font.BaseSize);
+            return new Size(glyphWidth, Font.BaseSize);
         }
     }
 
@@ -200,7 +201,7 @@ public struct TextFont
     public void Draw(char c, Rect rect, Vector2 alignement)
     {
         if(Math.Abs(FontSizeModifier - 1f) > 0.0001f) rect = rect.ScaleSize(FontSizeModifier, alignement);
-        float f = rect.Size.Y / BaseSize;
+        float f = rect.Size.Height / BaseSize;
         float fontSize = BaseSize * f;
         var charSize = GetCharSize(c, fontSize);
         
@@ -235,7 +236,7 @@ public struct TextFont
             var caretTextSize =  GetTextSize(caretText);
             Rect r = new(topLeft, caretTextSize, alignement);
         
-            var caretTop = r.TopLeft + new Vector2(caretTextSize.X + FontSpacing * 0.5f, 0f);
+            var caretTop = r.TopLeft + new Vector2(caretTextSize.Width + FontSpacing * 0.5f, 0f);
             caret.Draw(caretTop, FontSize);
         }
     }
@@ -293,7 +294,7 @@ public struct TextFont
             string caretText = text.Substring(0, caret.Index);
             var caretTextSize =  scaledFont.GetTextSize(caretText);
         
-            var caretTop = r.TopLeft + new Vector2(caretTextSize.X + scaledFont.FontSpacing * 0.5f, 0f);
+            var caretTop = r.TopLeft + new Vector2(caretTextSize.Width + scaledFont.FontSpacing * 0.5f, 0f);
             caret.Draw(caretTop, scaledFont.FontSize);
         }
     }
@@ -323,7 +324,7 @@ public struct TextFont
             }
             
             var c = text[i];
-            float w = scaledFont.GetCharSize(c).X; // GetCharSize(c, info.fontSize, textFont.Font).X;// + info.fontSpacing;
+            float w = scaledFont.GetCharSize(c).Width; // GetCharSize(c, info.fontSize, textFont.Font).X;// + info.fontSpacing;
             curWordWidth += w;
             curWordWidth += scaledFont.FontSpacing;
             
@@ -377,7 +378,7 @@ public struct TextFont
         
         var textSize = GetTextBaseSize(text);
 
-        if (textSize.X < rect.Size.X)//no wrapping needed
+        if (textSize.Width < rect.Size.Width)//no wrapping needed
         {
             DrawTextWrapNone(text, rect, alignement, caret, emphases);
         }
@@ -420,9 +421,9 @@ public struct TextFont
                 if (c == '\n') continue;
             
                 var charBaseSize = scaledFont.GetCharBaseSize(c);
-                float glyphWidth = charBaseSize.X * sizeF;
+                float glyphWidth = charBaseSize.Width * sizeF;
             
-                if (curLineWidth + curWordWidth + glyphWidth >= rect.Size.X && curLineWidth > 0)//break line
+                if (curLineWidth + curWordWidth + glyphWidth >= rect.Size.Width && curLineWidth > 0)//break line
                 {
                     if (c == ' ') 
                     {
@@ -541,7 +542,7 @@ public struct TextFont
         // var rectSize = rect.Size;
         var textSize = GetTextBaseSize(text);
 
-        if (textSize.X < rect.Size.X)
+        if (textSize.Width < rect.Size.Width)
         {
             DrawTextWrapNone(text, rect, alignement, caret, emphases);
         }
@@ -578,7 +579,7 @@ public struct TextFont
                 if (c == '\n') continue;
             
                 var charBaseSize = scaledFont.GetCharBaseSize(c);
-                float glyphWidth = charBaseSize.X * sizeF;
+                float glyphWidth = charBaseSize.Width * sizeF;
                 
                 if (curLineWidth + curWordWidth + glyphWidth >= rect.Width && curLineWidth > 0)//break line
                 {
@@ -644,7 +645,7 @@ public struct TextFont
     
     private void DrawWord(string word, Vector2 topLeft, float width, Emphasis emphasis)
     {
-        Rect r = new(topLeft, new Vector2(width, FontSize), new());
+        Rect r = new(topLeft, new Size(width, FontSize), new());
 
         var emphasisRect = r.ApplyMargins(EmphasisRectMargins); // EmphasisRectMargins.Apply(r);
         

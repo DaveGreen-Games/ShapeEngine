@@ -55,6 +55,7 @@ public readonly struct Dimensions : IEquatable<Dimensions>, IFormattable
     public DimensionConversionFactors GetConversionFactors(Dimensions to) => new(this, to);
 
     public Vector2 ToVector2() { return new Vector2(Width, Height); }
+    public Size ToSize() => new(Width, Height);
         
     public bool Equals(Dimensions other)
     {

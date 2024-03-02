@@ -1,11 +1,14 @@
 ﻿
 using System.Numerics;
 using ShapeEngine.Core;
+using ShapeEngine.Core.Structs;
 
 namespace ShapeEngine.Lib
 {
     public static class ShapeVec
     {
+
+        public static Size ToSize(this Vector2 v) => new(v.X, v.Y);
         public static bool IsSimilar(this Vector2 a, Vector2 b, float tolerance = 0.001f)
         {
             return 

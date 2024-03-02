@@ -96,9 +96,9 @@ public class ControlNodeContainer : ControlNode
     private bool dirty = false;
     
     private Vector2 curOffset = new();
-    private Vector2 gapSize = new();
+    private Size gapSize = new();
     private Vector2 startPos = new();
-    private Vector2 elementSize = new();
+    private Size elementSize = new();
     private Vector2 direction = new();
     private Vector2 alignement = new();
     #endregion
@@ -239,15 +239,15 @@ public class ControlNodeContainer : ControlNode
         }
         else
         {
-            var size = new Vector2
+            var size = new Size
             (
-                grid.IsVertical ? elementSize.X : elementSize.X * node.ContainerStretch,
-                grid.IsHorizontal ? elementSize.Y : elementSize.Y * node.ContainerStretch
+                grid.IsVertical ? elementSize.Width : elementSize.Width * node.ContainerStretch,
+                grid.IsHorizontal ? elementSize.Height : elementSize.Height * node.ContainerStretch
             );
-            var clampedSize = new Vector2
+            var clampedSize = new Size
             (
-                node.MaxSize.X > 0 ? MathF.Min(size.X, MaxSize.X) : size.X,
-                node.MaxSize.Y > 0 ? MathF.Min(size.Y, MaxSize.Y) : size.Y
+                node.MaxSize.Width > 0 ? MathF.Min(size.Width, MaxSize.Width) : size.Width,
+                node.MaxSize.Height > 0 ? MathF.Min(size.Height, MaxSize.Height) : size.Height
             );
             var r = new Rect
             (

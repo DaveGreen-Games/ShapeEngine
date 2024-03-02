@@ -298,7 +298,7 @@ namespace ShapeEngine.Core.Shapes
         public readonly Segment BottomSegment => new(BottomLeft, BottomRight);
         public readonly Segment RightSegment => new(BottomRight, TopRight);
         public readonly Segment TopSegment => new(TopRight, TopLeft);
-        public readonly Vector2 Size => new(Width, Height);
+        public readonly Size Size => new(Width, Height);
         public readonly Rectangle Rectangle => new(X, Y, Width, Height);
 
         #endregion
@@ -320,37 +320,23 @@ namespace ShapeEngine.Core.Shapes
             this.Y = final.topLeft.Y;
             this.Width = final.bottomRight.X - this.X;
             this.Height = final.bottomRight.Y - this.Y;
-            //if (topLeft.X > bottomRight.X)
-            //{
-            //    this.x = bottomRight.X;
-            //    this.width = topLeft.X - bottomRight.X;
-            //}
-            //else
-            //{
-            //    this.x = topLeft.X;
-            //    this.width = bottomRight.X - topLeft.X;
-            //}
-            //
-            //if (topLeft.Y > bottomRight.Y)
-            //{
-            //    this.y = bottomRight.Y;
-            //    this.height = topLeft.Y - bottomRight.Y;
-            //}
-            //else
-            //{
-            //    this.y = topLeft.Y;
-            //    this.height = bottomRight.Y - topLeft.Y;
-            //}
         }
 
-        public Rect(Vector2 pos, Vector2 size, Vector2 alignement)
+        public Rect(Vector2 topLeft, Size size)
         {
-            var offset = size * alignement;
-            var topLeft = pos - offset;
             this.X = topLeft.X;
             this.Y = topLeft.Y;
-            this.Width = size.X;
-            this.Height = size.Y;
+            this.Width = size.Width;
+            this.Height = size.Height;
+        }
+        public Rect(Vector2 position, Size size, Vector2 alignement)
+        {
+            var offset = size * alignement;
+            var topLeft = position - offset;
+            this.X = topLeft.X;
+            this.Y = topLeft.Y;
+            this.Width = size.Width;
+            this.Height = size.Height;
         }
 
 
@@ -500,10 +486,10 @@ namespace ShapeEngine.Core.Shapes
             var size = Size;
             var br = tl + size;
 
-            tl.X += size.X * left;
-            tl.Y += size.Y * top;
-            br.X -= size.X * right;
-            br.Y -= size.Y * bottom;
+            tl.X += size.Width * left;
+            tl.Y += size.Height * top;
+            br.X -= size.Width * right;
+            br.Y -= size.Height * bottom;
 
             Vector2 finalTopLeft = new(MathF.Min(tl.X, br.X), MathF.Min(tl.Y, br.Y));
             Vector2 finalBottomRight = new(MathF.Max(tl.X, br.X), MathF.Max(tl.Y, br.Y));
@@ -551,10 +537,10 @@ namespace ShapeEngine.Core.Shapes
         }
         public readonly Rect ScaleSize(float scale, Vector2 alignement) => new(GetPoint(alignement), Size * scale, alignement);
         public readonly Rect ScaleSize(Vector2 scale, Vector2 alignement) => new(GetPoint(alignement), Size * scale, alignement);
-        public readonly Rect SetSize(Vector2 newSize) => new(TopLeft, newSize, new(0f));
-        public readonly Rect SetSize(Vector2 newSize, Vector2 alignement) => new(GetPoint(alignement), newSize, alignement);
-        public readonly Rect ChangeSize(float amount, Vector2 alignement) => new(GetPoint(alignement), new(Width + amount, Height + amount), alignement);
-        public readonly Rect ChangeSize(Vector2 amount, Vector2 alignement) => new(GetPoint(alignement), Size + amount, alignement);
+        public readonly Rect SetSize(Size newSize) => new(TopLeft, newSize);
+        public readonly Rect SetSize(Size newSize, Vector2 alignement) => new(GetPoint(alignement), newSize, alignement);
+        public readonly Rect ChangeSize(float amount, Vector2 alignement) => new(GetPoint(alignement), Size + amount, alignement);
+        public readonly Rect ChangeSize(Size amount, Vector2 alignement) => new(GetPoint(alignement), Size + amount, alignement);
 
         public readonly Rect Move(Vector2 amount) { return new( TopLeft + amount, Size, new(0f)); }
 
@@ -949,7 +935,7 @@ namespace ShapeEngine.Core.Shapes
             Vector2 offset = new(0f, 0f);
             for (int i = 0; i < columns; i++)
             {
-                Vector2 size = new(elementWidth, Height);
+                var size = new Size(elementWidth, Height);
                 Rect r = new(startPos + offset, size, new(0f));
                 rects.Add(r);
                 offset += new Vector2(elementWidth, 0f);
@@ -965,7 +951,7 @@ namespace ShapeEngine.Core.Shapes
             Vector2 offset = new(0f, 0f);
             for (int i = 0; i < rows; i++)
             {
-                Vector2 size = new(Width, elementHeight);
+                var size = new Size(Width, elementHeight);
                 Rect r = new(startPos + offset, size, new(0f));
                 rects.Add(r);
                 offset += new Vector2(0, elementHeight);
@@ -1174,76 +1160,117 @@ namespace ShapeEngine.Core.Shapes
         #endregion
         
         #region UI
-        public List<Rect> GetAlignedRectsHorizontal(int count, float gapRelative = 0f, float maxElementSizeRel = 1f)
+        // public List<Rect>? GetAlignedRectsHorizontal(int count, float gap = 0f, bool reversed = false)
+        // {
+        //     // List<Rect> rects = new();
+        //     // Vector2 startPos = new(X, Y);
+        //     // int gaps = count - 1;
+        //     //
+        //     // float totalWidth = Width;
+        //     // float gapSize = totalWidth * gapRelative;
+        //     // float elementWidth = (totalWidth - gaps * gapSize) / count;
+        //     // Vector2 offset = new(0f, 0f);
+        //     // for (int i = 0; i < count; i++)
+        //     // {
+        //     //     Vector2 size = new(elementWidth, Height);
+        //     //     Vector2 maxSize = maxElementSizeRel * new Vector2(Width, Height);
+        //     //     if (maxSize.X > 0f) size.X = MathF.Min(size.X, maxSize.X);
+        //     //     if (maxSize.Y > 0f) size.Y = MathF.Min(size.Y, maxSize.Y);
+        //     //     Rect r = new(startPos + offset, size, new(0f));
+        //     //     rects.Add(r);
+        //     //     offset += new Vector2(gapSize + elementWidth, 0f);
+        //     // }
+        //     // return rects;
+        //     return null;
+        // }
+        // public List<Rect>? GetAlignedRectsVertical(int count, float gap = 0f, bool reversed = false)
+        // {
+        //     // List<Rect> rects = new();
+        //     // Vector2 startPos = new(X, Y);
+        //     // int gaps = count - 1;
+        //     //
+        //     // float totalHeight = Height;
+        //     // float gapSize = totalHeight * gapRelative;
+        //     // float elementHeight = (totalHeight - gaps * gapSize) / count;
+        //     // Vector2 offset = new(0f, 0f);
+        //     // for (int i = 0; i < count; i++)
+        //     // {
+        //     //     Vector2 size = new(Width, elementHeight);
+        //     //     Vector2 maxSize = maxElementSizeRel * new Vector2(Width, Height);
+        //     //     if (maxSize.X > 0f) size.X = MathF.Min(size.X, maxSize.X);
+        //     //     if (maxSize.Y > 0f) size.Y = MathF.Min(size.Y, maxSize.Y);
+        //     //     Rect r = new(startPos + offset, size, new(0f));
+        //     //     rects.Add(r);
+        //     //     offset += new Vector2(0, gapSize + size.Y);
+        //     // }
+        //     // return rects;
+        //     return null;
+        // }
+        public List<Rect>? GetAlignedRectsGrid(Grid grid, Size gap)
         {
-            List<Rect> rects = new();
-            Vector2 startPos = new(X, Y);
-            int gaps = count - 1;
+            var startPos = GetPoint(grid.Placement.Invert().ToAlignement());
 
+            float horizontalDivider = grid.Cols;
+            float verticalDivider = grid.Rows;
+        
+            int hGaps = grid.Cols - 1;
             float totalWidth = Width;
-            float gapSize = totalWidth * gapRelative;
-            float elementWidth = (totalWidth - gaps * gapSize) / count;
-            Vector2 offset = new(0f, 0f);
-            for (int i = 0; i < count; i++)
-            {
-                Vector2 size = new(elementWidth, Height);
-                Vector2 maxSize = maxElementSizeRel * new Vector2(Width, Height);
-                if (maxSize.X > 0f) size.X = MathF.Min(size.X, maxSize.X);
-                if (maxSize.Y > 0f) size.Y = MathF.Min(size.Y, maxSize.Y);
-                Rect r = new(startPos + offset, size, new(0f));
-                rects.Add(r);
-                offset += new Vector2(gapSize + elementWidth, 0f);
-            }
-            return rects;
-        }
-        public List<Rect> GetAlignedRectsVertical(int count, float gapRelative = 0f, float maxElementSizeRel = 1f)
-        {
-            List<Rect> rects = new();
-            Vector2 startPos = new(X, Y);
-            int gaps = count - 1;
+            float hGapSize = totalWidth * gap.Width;
+            float elementWidth = (totalWidth - hGaps * hGapSize) / horizontalDivider;
 
+            int vGaps = grid.Rows - 1;
             float totalHeight = Height;
-            float gapSize = totalHeight * gapRelative;
-            float elementHeight = (totalHeight - gaps * gapSize) / count;
-            Vector2 offset = new(0f, 0f);
-            for (int i = 0; i < count; i++)
+            float vGapSize = totalHeight * gap.Height;
+            float elementHeight = (totalHeight - vGaps * vGapSize) / verticalDivider;
+
+            var gapSize = new Size(hGapSize, vGapSize);
+            var elementSize = new Size(elementWidth, elementHeight);
+            var direction = grid.Placement.ToVector2();
+            var alignement = grid.Placement.Invert().ToAlignement();
+            // curOffset = new(0f, 0f);
+
+            if (grid.Count <= 0) return null;
+            List<Rect> result = new();
+
+            if (grid.IsTopToBottomFirst)
             {
-                Vector2 size = new(Width, elementHeight);
-                Vector2 maxSize = maxElementSizeRel * new Vector2(Width, Height);
-                if (maxSize.X > 0f) size.X = MathF.Min(size.X, maxSize.X);
-                if (maxSize.Y > 0f) size.Y = MathF.Min(size.Y, maxSize.Y);
-                Rect r = new(startPos + offset, size, new(0f));
-                rects.Add(r);
-                offset += new Vector2(0, gapSize + size.Y);
+                for (var col = 0; col < grid.Cols; col++)
+                {
+                    for (var row = 0; row < grid.Rows; row++)
+                    {
+                        var coords = new Grid.Coordinates(col, row);
+                        var r = new Rect
+                        (
+                            startPos + ((gapSize + elementSize) * coords.ToVector2() * direction), 
+                            elementSize,
+                            alignement
+                        );
+
+                        result.Add(r);
+                    }
+                }
             }
-            return rects;
-        }
-        public List<Rect> GetAlignedRectsGrid(int columns, int rows, int count, float hGapRelative = 0f, float vGapRelative = 0f, bool leftToRight = true)
-        {
-            List<Rect> rects = new();
-            Vector2 startPos = new(X, Y);
-
-            int hGaps = columns - 1;
-            float totalWidth = Width;
-            float hGapSize = totalWidth * hGapRelative;
-            float elementWidth = (totalWidth - hGaps * hGapSize) / columns;
-            Vector2 hGap = new(hGapSize + elementWidth, 0);
-
-            int vGaps = rows - 1;
-            float totalHeight = Height;
-            float vGapSize = totalHeight * vGapRelative;
-            float elementHeight = (totalHeight - vGaps * vGapSize) / rows;
-            Vector2 vGap = new(0, vGapSize + elementHeight);
-
-            Vector2 elementSize = new(elementWidth, elementHeight);
-
-            for (int i = 0; i < count; i++)
+            else
             {
-                var coords = ShapeMath.TransformIndexToCoordinates(i, rows, columns, leftToRight);
-                Rect r = new(startPos + hGap * coords.col + vGap * coords.row, elementSize, new(0f));
-                rects.Add(r);
+                for (var row = 0; row < grid.Rows; row++)
+                {
+                    for (var col = 0; col < grid.Cols; col++)
+                    {
+                        var coords = new Grid.Coordinates(col, row);
+                        var r = new Rect
+                        (
+                            startPos + ((gapSize + elementSize) * coords.ToVector2() * direction), 
+                            elementSize,
+                            alignement
+                        );
+
+                        result.Add(r);
+                    }
+                }
             }
-            return rects;
+            
+            
+            return result;
         }
         #endregion
         
@@ -1342,7 +1369,7 @@ namespace ShapeEngine.Core.Shapes
 
             return segments;
         }
-        public static Rect FromCircle(Circle c) => new(c.Center, new Vector2(c.Radius, c.Radius), new Vector2(0.5f, 0.5f));
+        public static Rect FromCircle(Circle c) => new(c.Center, new Size(c.Radius, c.Radius), new Vector2(0.5f, 0.5f));
         // public static bool IsPointInRect(Vector2 point, Vector2 topLeft, Vector2 size)
         // {
         //     float left = topLeft.X;
@@ -1571,23 +1598,23 @@ namespace ShapeEngine.Core.Shapes
             var halfSize = boundingBox.Size * 0.5f;
             var outOfBounds = false;
             var newPos = pos;
-            if (pos.X + halfSize.X > X + Width)
+            if (pos.X + halfSize.Width > X + Width)
             {
                 newPos = new(X, pos.Y);
                 outOfBounds = true;
             }
-            else if (pos.X - halfSize.X < X)
+            else if (pos.X - halfSize.Width < X)
             {
                 newPos = new(X + Width, pos.Y);
                 outOfBounds = true;
             }
 
-            if (pos.Y + halfSize.Y > Y + Height)
+            if (pos.Y + halfSize.Height > Y + Height)
             {
                 newPos = pos with { Y = Y };
                 outOfBounds = true;
             }
-            else if (pos.Y - halfSize.Y < Y)
+            else if (pos.Y - halfSize.Height < Y)
             {
                 newPos = pos with { Y = Y + Height };
                 outOfBounds = true;
@@ -1644,32 +1671,32 @@ namespace ShapeEngine.Core.Shapes
             var newPos = pos;
             CollisionPoint horizontal;
             CollisionPoint vertical;
-            if (pos.X + halfSize.X > Right)
+            if (pos.X + halfSize.Width > Right)
             {
-                newPos.X = Right - halfSize.X;
+                newPos.X = Right - halfSize.Width;
                 Vector2 p = new(Right, ShapeMath.Clamp(pos.Y, Bottom, Top));
                 Vector2 n = new(-1, 0);
                 horizontal = new(p, n);
             }
-            else if (pos.X - halfSize.X < Left)
+            else if (pos.X - halfSize.Width < Left)
             {
-                newPos.X = Left + halfSize.X;
+                newPos.X = Left + halfSize.Width;
                 Vector2 p = new(Left, ShapeMath.Clamp(pos.Y, Bottom, Top));
                 Vector2 n = new(1, 0);
                 horizontal = new(p, n);
             }
             else horizontal = new();
 
-            if (pos.Y + halfSize.Y > Bottom)
+            if (pos.Y + halfSize.Height > Bottom)
             {
-                newPos.Y = Bottom - halfSize.Y;
+                newPos.Y = Bottom - halfSize.Height;
                 Vector2 p = new(ShapeMath.Clamp(pos.X, Left, Right), Bottom);
                 Vector2 n = new(0, -1);
                 vertical = new(p, n);
             }
-            else if (pos.Y - halfSize.Y < Top)
+            else if (pos.Y - halfSize.Height < Top)
             {
-                newPos.Y = Top + halfSize.Y;
+                newPos.Y = Top + halfSize.Height;
                 Vector2 p = new(ShapeMath.Clamp(pos.X, Left, Right), Top);
                 Vector2 n = new(0, 1);
                 vertical = new(p, n);

@@ -2,6 +2,7 @@ using System.Numerics;
 using ShapeEngine.Core;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Shapes;
+using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
 
 namespace ShapeEngine.Screen;
@@ -13,7 +14,7 @@ public class CameraFollowerMulti : ICameraFollower
 
     private Rect prevCameraRect = new();
     public float TargetMargin = 250f;
-    public Vector2 MinSize = new(100, 100);
+    public Size MinSize = new(100, 100);
     public float LerpSpeedPosition = 0f;
     public float LerpSpeedSize = 0f;
     
@@ -63,7 +64,7 @@ public class CameraFollowerMulti : ICameraFollower
             float width = MathF.Max(leftDif, rightDif) * 2;
             float height = MathF.Max(topDif, bottomDif) * 2;
 
-            newCameraRect = new(pos, new Vector2(width, height), new Vector2(0.5f, 0.5f));
+            newCameraRect = new(pos, new Size(width, height), new Vector2(0.5f, 0.5f));
         }
 
         newCameraRect = newCameraRect.ApplyMarginsAbsolute(-TargetMargin, -TargetMargin, -TargetMargin, -TargetMargin);

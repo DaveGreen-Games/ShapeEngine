@@ -159,7 +159,7 @@ public class Pathfinder
 
     #region Public
 
-    public Vector2 CellSize { get; private set; }
+    public Size CellSize { get; private set; }
     public readonly Grid Grid;
 
     #endregion
@@ -181,7 +181,7 @@ public class Pathfinder
         get => bounds;
         set
         {
-            if (value.Size.LengthSquared() <= 0) return;
+            if (value.Size.Area <= 0) return;
             if (value == bounds) return;
             bounds = value;
             regenerateRequested = true;

@@ -259,7 +259,7 @@ namespace Examples.Scenes
 
         protected override void OnDrawUI(ScreenInfo ui)
         {
-            var uiSize = ui.Area.Size;
+            var uiSize = ui.Area.Size.ToVector2();
             var start = uiSize * new Vector2(0.02f, 0.25f);
             var size = uiSize * new Vector2(0.45f, 0.05f);
             var gap = uiSize * new Vector2(0f, 0.07f);
@@ -272,7 +272,7 @@ namespace Examples.Scenes
 
 
             var text = "Shape Engine Examples";
-            var titleRect = new Rect(uiSize * new Vector2(0.5f, 0.01f), uiSize * new Vector2(0.75f, 0.09f), new Vector2(0.5f, 0f));
+            var titleRect = new Rect(uiSize * new Vector2(0.5f, 0.01f), uiSize.ToSize() * new Size(0.75f, 0.09f), new Vector2(0.5f, 0f));
             // titleFont.DrawText(text, titleRect, 10, new(0.5f), ExampleScene.ColorLight);
             titleFont.FontSpacing = 10f;
             titleFont.ColorRgba = Colors.Text;
@@ -282,7 +282,7 @@ namespace Examples.Scenes
             string nextName = GAMELOOP.InputActionUINextTab.GetInputTypeDescription(ShapeInput.CurrentInputDeviceType, true, 1, false);
             
             string pagesText = pages <= 1 ? "Page 1/1" : $"{prevName} <- Page #{curPageIndex + 1}/{pages} -> {nextName}";
-            var pageRect = new Rect(uiSize * new Vector2(0.01f, 0.12f), uiSize * new Vector2(0.3f, 0.06f), new Vector2(0f, 0f));
+            var pageRect = new Rect(uiSize * new Vector2(0.01f, 0.12f), uiSize.ToSize() * new Vector2(0.3f, 0.06f), new Vector2(0f, 0f));
             titleFont.FontSpacing = 4f;
             titleFont.ColorRgba = Colors.Highlight;
             titleFont.DrawTextWrapNone(pagesText, pageRect, new(0f, 0.5f));
@@ -291,7 +291,7 @@ namespace Examples.Scenes
             Segment s = new(uiSize * new Vector2(0f, 0.22f), uiSize * new Vector2(1f, 0.22f));
             s.Draw(MathF.Max(4f * GAMELOOP.DevelopmentToScreen.AreaFactor, 0.5f), Colors.Light);
 
-            var backRect = new Rect(uiSize * new Vector2(0.01f, 0.17f), uiSize * new Vector2(0.2f, 0.04f), new Vector2(0f, 0f));
+            var backRect = new Rect(uiSize * new Vector2(0.01f, 0.17f), uiSize.ToSize() * new Size(0.2f, 0.04f), new Vector2(0f, 0f));
             var curInputDevice = ShapeInput.CurrentInputDeviceTypeNoMouse;
             
             quitLabel.Draw(backRect, new Vector2(0f), curInputDevice);

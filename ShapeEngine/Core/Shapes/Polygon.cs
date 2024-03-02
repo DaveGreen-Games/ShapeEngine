@@ -811,7 +811,7 @@ namespace ShapeEngine.Core.Shapes
         public static Triangle GetBoundingTriangle(IEnumerable<Vector2> points, float marginFactor = 1f)
         {
             var bounds = GetBoundingBox(points);
-            float dMax = ShapeVec.Max(bounds.Size) * marginFactor; // SVec.Max(bounds.BottomRight - bounds.BottomLeft) + margin; //  Mathf.Max(bounds.maxX - bounds.minX, bounds.maxY - bounds.minY) * Margin;
+            float dMax = bounds.Size.Max() * marginFactor; // SVec.Max(bounds.BottomRight - bounds.BottomLeft) + margin; //  Mathf.Max(bounds.maxX - bounds.minX, bounds.maxY - bounds.minY) * Margin;
             Vector2 center = bounds.Center;
 
             ////The float 0.866 is an arbitrary value determined for optimum supra triangle conditions.

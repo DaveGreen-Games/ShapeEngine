@@ -43,7 +43,7 @@ namespace Examples.Scenes.ExampleScenes
 
         public override Rect GetBoundingBox()
         {
-            return new Rect(Transform.Position, Transform.Scale * 2, new Vector2(0.5f));
+            return new Rect(Transform.Position, (Transform.Scale * 2).ToSize(), new Vector2(0.5f));
         }
         
 

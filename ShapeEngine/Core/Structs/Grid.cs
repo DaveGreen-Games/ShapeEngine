@@ -220,7 +220,7 @@ public readonly struct Grid : IEquatable<Grid>
     
     
     public bool IsIndexInBounds(int index) => index >= 0 && index <= Count;
-    public Vector2 GetCellSize(Rect bounds) => IsValid ? new Vector2(bounds.Width / Cols, bounds.Height / Rows) : new();
+    public Size GetCellSize(Rect bounds) => IsValid ? new Size(bounds.Width / Cols, bounds.Height / Rows) : new();
     
     public int GetCellIndex(Vector2 pos, Rect bounds)
     {
@@ -229,8 +229,8 @@ public readonly struct Grid : IEquatable<Grid>
     public Coordinates GetCellCoordinate(Vector2 pos, Rect bounds)
     {
         var cellSize = GetCellSize(bounds);
-        int xi = Math.Clamp((int)Math.Floor((pos.X - bounds.X) / cellSize.X), 0, Cols - 1);
-        int yi = Math.Clamp((int)Math.Floor((pos.Y - bounds.Y) / cellSize.Y), 0, Rows - 1);
+        int xi = Math.Clamp((int)Math.Floor((pos.X - bounds.X) / cellSize.Width), 0, Cols - 1);
+        int yi = Math.Clamp((int)Math.Floor((pos.Y - bounds.Y) / cellSize.Height), 0, Rows - 1);
         return new(xi, yi);
     }
 

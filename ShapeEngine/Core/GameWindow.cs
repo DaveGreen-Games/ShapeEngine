@@ -711,10 +711,10 @@ public sealed class GameWindow
     }
     public float GetScreenPercentage()
      {
-         var screenSize = Monitor.CurMonitor().Dimensions.ToVector2();
+         var screenSize = Monitor.CurMonitor().Dimensions.ToSize();
          var screenRect = new Rect(new(0f), screenSize, new(0f));
 
-         var windowSize = CurScreenSize.ToVector2();
+         var windowSize = CurScreenSize.ToSize();
          var windowPos = Raylib.GetWindowPosition();
          var windowRect = new Rect(windowPos, windowSize, new(0f));
          float p = CalculateScreenPercentage(screenRect, windowRect);
