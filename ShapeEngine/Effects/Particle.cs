@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
 
 namespace ShapeEngine.Effects
@@ -7,10 +8,10 @@ namespace ShapeEngine.Effects
     {
         public Vector2 Vel { get; set; } = new(0f);
 
-        public Particle(Vector2 pos, Vector2 size) : base(pos, size) { }
-        public Particle(Vector2 pos, Vector2 size, float lifetime) : base(pos, size, lifetime) { }
-        public Particle(Vector2 pos, Vector2 size, Vector2 vel, float lifetime) : base(pos, size, lifetime) { Vel = vel; }
-        public Particle(Vector2 pos, Vector2 size, float angleDeg, float lifetime) : base(pos, size, lifetime) { Vel = ShapeVec.Rotate(ShapeVec.Right(), angleDeg * ShapeMath.DEGTORAD); }
+        public Particle(Vector2 pos, Size size) : base(pos, size) { }
+        public Particle(Vector2 pos, Size size, float lifetime) : base(pos, size, lifetime) { }
+        public Particle(Vector2 pos, Size size, Vector2 vel, float lifetime) : base(pos, size, lifetime) { Vel = vel; }
+        public Particle(Vector2 pos, Size size, float angleDeg, float lifetime) : base(pos, size, lifetime) { Vel = ShapeVec.Rotate(ShapeVec.Right(), angleDeg * ShapeMath.DEGTORAD); }
 
     }
     

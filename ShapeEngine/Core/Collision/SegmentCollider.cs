@@ -55,7 +55,7 @@ public class SegmentCollider : Collider
 
     private void Recalculate()
     {
-        float s = CurTransform.Scale.Max();
+        float s = CurTransform.Size.Max();
         
         Start = CurTransform.Position - (Dir * OriginOffset * Length * s).Rotate(CurTransform.RotationRad);
         End = CurTransform.Position + (Dir * (1f - OriginOffset) * Length * s).Rotate(CurTransform.RotationRad);

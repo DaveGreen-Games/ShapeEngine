@@ -8,64 +8,64 @@ public readonly struct Transform2D : IEquatable<Transform2D>
 {
     public readonly Vector2 Position;
     public readonly float RotationRad;
-    public readonly Vector2 Scale;
+    public readonly Size Size;
 
     public Transform2D()
     {
         this.Position = new(0f);
         this.RotationRad = 0f;
-        this.Scale = new(1f);
+        this.Size = new(1f);
     }
     public Transform2D(Vector2 pos)
     {
         this.Position = pos;
         this.RotationRad = 0f;
-        this.Scale = new(1f);
+        this.Size = new(1f);
     }
     public Transform2D(float rotRad)
     {
         this.Position = new(0f);
         this.RotationRad = rotRad;
-        this.Scale = new(1f);
+        this.Size = new(1f);
     }
     public Transform2D(Vector2 pos, float rotRad)
     {
         this.Position = pos; 
         this.RotationRad = rotRad;
-        this.Scale = new(1f);
+        this.Size = new(1f);
     }
-    public Transform2D(Vector2 pos, float rotRad, Vector2 scale)
+    public Transform2D(Vector2 pos, float rotRad, Size size)
     {
         this.Position = pos; 
         this.RotationRad = rotRad; 
-        this.Scale = scale;
+        this.Size = size;
     }
 
     
     
-    public readonly Transform2D MoveBy(Vector2 amount) => new(Position + amount, RotationRad, Scale);
-    public readonly Transform2D MoveByX(float amount) => new(Position with { X = Position.X + amount }, RotationRad, Scale);
-    public readonly Transform2D MoveByY(float amount) => new(Position with { Y = Position.Y + amount }, RotationRad, Scale);
+    public readonly Transform2D MoveBy(Vector2 amount) => new(Position + amount, RotationRad, Size);
+    public readonly Transform2D MoveByX(float amount) => new(Position with { X = Position.X + amount }, RotationRad, Size);
+    public readonly Transform2D MoveByY(float amount) => new(Position with { Y = Position.Y + amount }, RotationRad, Size);
     
-    public readonly Transform2D ScaleBy(Vector2 amount) => new(Position, RotationRad, Scale + amount);
-    public readonly Transform2D ScaleBy(float amount) => new(Position, RotationRad, Scale + new Vector2(amount));
-    public readonly Transform2D ScaleByX(float amount) => new(Position, RotationRad, Scale with { X = Position.X + amount });
-    public readonly Transform2D ScaleByY(float amount) => new(Position, RotationRad, Scale with { Y = Position.Y + amount });
+    public readonly Transform2D ScaleBy(Size amount) => new(Position, RotationRad, Size + amount);
+    public readonly Transform2D ScaleBy(float amount) => new(Position, RotationRad, Size + new Vector2(amount));
+    public readonly Transform2D ScaleByX(float amount) => new(Position, RotationRad, new Size(Position.X + amount, Size.Height));
+    public readonly Transform2D ScaleByY(float amount) => new(Position, RotationRad, new Size(Size.Width, Position.Y + amount));
 
-    public readonly Transform2D RotateByRad(float amount) => new(Position, RotationRad + amount, Scale);
-    public readonly Transform2D RotateByDeg(float amount) => new(Position, RotationRad + (amount * ShapeMath.DEGTORAD), Scale);
+    public readonly Transform2D RotateByRad(float amount) => new(Position, RotationRad + amount, Size);
+    public readonly Transform2D RotateByDeg(float amount) => new(Position, RotationRad + (amount * ShapeMath.DEGTORAD), Size);
     
-    public readonly Transform2D SetPosition(Vector2 newPosition) => new(newPosition, RotationRad, Scale);
-    public readonly Transform2D SetRotationRad(float newRotationRad) => new(Position, newRotationRad, Scale);
-    public readonly Transform2D SetScale(Vector2 newScale) => new(Position, RotationRad, newScale);
-    public readonly Transform2D SetScale(float newScale) => new(Position, RotationRad, new(newScale));
+    public readonly Transform2D SetPosition(Vector2 newPosition) => new(newPosition, RotationRad, Size);
+    public readonly Transform2D SetRotationRad(float newRotationRad) => new(Position, newRotationRad, Size);
+    public readonly Transform2D SetSize(Size newSize) => new(Position, RotationRad, newSize);
+    public readonly Transform2D SetSize(float newSize) => new(Position, RotationRad, new(newSize));
 
     public readonly Transform2D Difference(Transform2D other)
     {
-        var scaleDif = new Vector2
+        var scaleDif = new Size
         (
-            other.Scale.X <= 0 ? 1f : Scale.X / other.Scale.X,
-            other.Scale.Y <= 0 ? 1f : Scale.Y / other.Scale.Y
+            other.Size.Width <= 0 ? 1f : Size.Width / other.Size.Width,
+            other.Size.Width <= 0 ? 1f : Size.Height / other.Size.Height
         );
         // var scaleChange = Scale - other.Scale;
         // var scaleDif = new Vector2
@@ -86,7 +86,7 @@ public readonly struct Transform2D : IEquatable<Transform2D>
         (
             Position + offset.Position,
             RotationRad + offset.RotationRad,
-            Scale * offset.Scale
+            Size * offset.Size
         );
     }
     public readonly Vector2 Revert(Vector2 p)
@@ -95,8 +95,8 @@ public readonly struct Transform2D : IEquatable<Transform2D>
         var w = (p - Position).Rotate(-RotationRad);
         return new
         (
-            Scale.X == 0f ? Position.X : Position.X + w.X,
-            Scale.Y == 0f ? Position.Y : Position.Y + w.Y
+            Size.Width == 0f ? Position.X : Position.X + w.X,
+            Size.Height == 0f ? Position.Y : Position.Y + w.Y
         );
         
         
@@ -105,7 +105,7 @@ public readonly struct Transform2D : IEquatable<Transform2D>
     public readonly Vector2 Apply(Vector2 offset)
     {
         if (offset.LengthSquared() == 0f) return Position;
-        return Position + offset.Rotate(RotationRad) * Scale;
+        return Position + offset.Rotate(RotationRad) * Size;
     }
 
     
@@ -163,7 +163,7 @@ public readonly struct Transform2D : IEquatable<Transform2D>
         (
             left.Position + right.Position,
             left.RotationRad + right.RotationRad,
-            left.Scale + right.Scale
+            left.Size + right.Size
         );
     }
     public static Transform2D operator -(Transform2D left, Transform2D right)
@@ -172,7 +172,7 @@ public readonly struct Transform2D : IEquatable<Transform2D>
         (
             left.Position - right.Position,
             left.RotationRad - right.RotationRad,
-            left.Scale - right.Scale
+            left.Size - right.Size
         );
     }
     public static Transform2D operator /(Transform2D left, Transform2D right)
@@ -181,7 +181,7 @@ public readonly struct Transform2D : IEquatable<Transform2D>
         (
             left.Position / right.Position,
             left.RotationRad / right.RotationRad,
-            left.Scale / right.Scale
+            left.Size / right.Size
         );
     }
     public static Transform2D operator *(Transform2D left, Transform2D right)
@@ -190,7 +190,7 @@ public readonly struct Transform2D : IEquatable<Transform2D>
         (
             left.Position * right.Position,
             left.RotationRad * right.RotationRad,
-            left.Scale * right.Scale
+            left.Size * right.Size
         );
     }
     
@@ -200,7 +200,7 @@ public readonly struct Transform2D : IEquatable<Transform2D>
         (
             left.Position + right,
             left.RotationRad,
-            left.Scale
+            left.Size
         );
     }
     public static Transform2D operator -(Transform2D left, Vector2 right)
@@ -209,7 +209,7 @@ public readonly struct Transform2D : IEquatable<Transform2D>
         (
             left.Position - right,
             left.RotationRad,
-            left.Scale
+            left.Size
         );
     }
     public static Transform2D operator *(Transform2D left, Vector2 right)
@@ -218,7 +218,7 @@ public readonly struct Transform2D : IEquatable<Transform2D>
         (
             left.Position * right,
             left.RotationRad,
-            left.Scale
+            left.Size
         );
     }
     public static Transform2D operator /(Transform2D left, Vector2 right)
@@ -227,7 +227,7 @@ public readonly struct Transform2D : IEquatable<Transform2D>
         (
             left.Position / right,
             left.RotationRad,
-            left.Scale
+            left.Size
         );
     }
     
@@ -237,7 +237,7 @@ public readonly struct Transform2D : IEquatable<Transform2D>
         (
             left.Position,
             left.RotationRad + right,
-            left.Scale
+            left.Size
         );
     }
     public static Transform2D operator -(Transform2D left, float right)
@@ -246,7 +246,7 @@ public readonly struct Transform2D : IEquatable<Transform2D>
         (
             left.Position,
             left.RotationRad - right,
-            left.Scale
+            left.Size
         );
     }
     public static Transform2D operator *(Transform2D left, float right)
@@ -254,8 +254,8 @@ public readonly struct Transform2D : IEquatable<Transform2D>
         return new
         (
             left.Position,
-            left.RotationRad,
-            left.Scale * right
+            left.RotationRad * right,
+            left.Size
         );
     }
     public static Transform2D operator /(Transform2D left, float right)
@@ -263,17 +263,56 @@ public readonly struct Transform2D : IEquatable<Transform2D>
         return new
         (
             left.Position,
-            left.RotationRad,
-            left.Scale * right
+            left.RotationRad /right,
+            left.Size 
         );
     }
+    
+    public static Transform2D operator +(Transform2D left, Size right)
+    {
+        return new
+        (
+            left.Position,
+            left.RotationRad,
+            left.Size + right
+        );
+    }
+    public static Transform2D operator -(Transform2D left, Size right)
+    {
+        return new
+        (
+            left.Position,
+            left.RotationRad,
+            left.Size - right
+        );
+    }
+    public static Transform2D operator *(Transform2D left, Size right)
+    {
+        return new
+        (
+            left.Position,
+            left.RotationRad,
+            left.Size * right
+        );
+    }
+    public static Transform2D operator /(Transform2D left, Size right)
+    {
+        return new
+        (
+            left.Position,
+            left.RotationRad,
+            left.Size / right
+        );
+    }
+
+    
 
     public static bool operator ==(Transform2D left, Transform2D right) => right.Equals(left);
 
     public static bool operator !=(Transform2D left, Transform2D right) => !(left == right);
-    public bool Equals(Transform2D other) => Position.Equals(other.Position) && RotationRad.Equals(other.RotationRad) && Scale.Equals(other.Scale);
+    public bool Equals(Transform2D other) => Position.Equals(other.Position) && RotationRad.Equals(other.RotationRad) && Size.Equals(other.Size);
 
     public override bool Equals(object? obj) => obj is Transform2D other && Equals(other);
 
-    public override int GetHashCode() => HashCode.Combine(Position, RotationRad, Scale);
+    public override int GetHashCode() => HashCode.Combine(Position, RotationRad, Size);
 }

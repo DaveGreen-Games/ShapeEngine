@@ -15,8 +15,8 @@ namespace ShapeEngine.Effects
         //add rotation?
         public float RotRad { get; set; } = 0f;
 
-        public Effect(Vector2 pos, Vector2 size, float rotRad) : base(pos, size) { RotRad = rotRad; }
-        public Effect(Vector2 pos, Vector2 size, float rotRad, float lifeTime) : base(pos, size, lifeTime) { RotRad = rotRad; }
+        public Effect(Vector2 pos, Size size, float rotRad) : base(pos, size) { RotRad = rotRad; }
+        public Effect(Vector2 pos, Size size, float rotRad, float lifeTime) : base(pos, size, lifeTime) { RotRad = rotRad; }
 
 
         public override void DrawGame(ScreenInfo game)

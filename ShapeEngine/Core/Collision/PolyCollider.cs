@@ -90,7 +90,7 @@ public class PolyCollider : Collider
         for (int i = 0; i < curShape.Count; i++)
         {
             var newPos = curShape[i] + dif.Position;//translation
-            var w = (newPos - CurTransform.Position).Rotate(dif.RotationRad) * dif.Scale;
+            var w = (newPos - CurTransform.Position).Rotate(dif.RotationRad) * dif.Size;
             curShape[i] = CurTransform.Position + w;
         }
         

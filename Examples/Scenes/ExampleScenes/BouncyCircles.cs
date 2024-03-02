@@ -43,7 +43,7 @@ namespace Examples.Scenes.ExampleScenes
 
         public override Rect GetBoundingBox()
         {
-            return new Rect(Transform.Position, (Transform.Scale * 2).ToSize(), new Vector2(0.5f));
+            return new Rect(Transform.Position, Transform.Size * new Size(2), new Vector2(0.5f));
         }
         
 
@@ -63,7 +63,7 @@ namespace Examples.Scenes.ExampleScenes
                 _ => Colors.Medium
             };
 
-            ShapeDrawing.DrawCircleFast(Transform.Position, Transform.Scale.X, color);
+            ShapeDrawing.DrawCircleFast(Transform.Position, Transform.Size.Width, color);
         }
 
         public override void DrawGameUI(ScreenInfo ui)

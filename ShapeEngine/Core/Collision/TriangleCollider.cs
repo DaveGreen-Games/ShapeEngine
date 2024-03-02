@@ -33,9 +33,9 @@ public class TriangleCollider : Collider
     public override ShapeType GetShapeType() => ShapeType.Triangle;
     public override Triangle GetTriangleShape()
     {
-        var finalA = CurTransform.Position + (A * CurTransform.Scale).Rotate(CurTransform.RotationRad);
-        var finalB = CurTransform.Position + (B * CurTransform.Scale).Rotate(CurTransform.RotationRad);
-        var finalC = CurTransform.Position + (C * CurTransform.Scale).Rotate(CurTransform.RotationRad);
+        var finalA = CurTransform.Position + (A * CurTransform.Size).Rotate(CurTransform.RotationRad);
+        var finalB = CurTransform.Position + (B * CurTransform.Size).Rotate(CurTransform.RotationRad);
+        var finalC = CurTransform.Position + (C * CurTransform.Size).Rotate(CurTransform.RotationRad);
         return new(finalA, finalB, finalC);
     }
 }
