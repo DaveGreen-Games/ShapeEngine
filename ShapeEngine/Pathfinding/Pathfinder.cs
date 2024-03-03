@@ -329,7 +329,7 @@ public abstract class Pathfinder
         
         PriorityQueue<Cell, float> openSet = new();
         HashSet<Cell> openSetCells = new();
-        // HashSet<Cell> closedSet = new();
+        HashSet<Cell> closedSet = new();
 
         var startCell = GetCell(start);
         var targetCell = GetCell(end);
@@ -352,13 +352,13 @@ public abstract class Pathfinder
             }
 
             openSetCells.Remove(current);
-            
+            closedSet.Add(current);
             
             if (current.Neighbors != null)
             {
                 foreach (var neighbor in current.Neighbors)
                 {
-                    if(!neighbor.Traversable) continue;
+                    if(closedSet.Contains(neighbor) || !neighbor.Traversable) continue;
                     
                     float tentativeGScore = current.GScore + WeightedDistanceToNeighbor(current, neighbor);
                     if (tentativeGScore < neighbor.GScore)
@@ -379,7 +379,7 @@ public abstract class Pathfinder
             {
                 foreach (var connection in current.Connections)
                 {
-                    if(!connection.Traversable) continue;
+                    if(closedSet.Contains(connection) || !connection.Traversable) continue;
                     
                     float tentativeGScore = current.GScore + WeightedDistanceToNeighbor(current, connection);
                     if (tentativeGScore < connection.GScore)

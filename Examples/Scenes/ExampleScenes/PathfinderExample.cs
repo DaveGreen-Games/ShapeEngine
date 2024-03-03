@@ -106,22 +106,28 @@ internal class PathfinderFlag
 
             startFlag = new(new Vector2(-250), 32);
 
+            
+            
+            SetupEndFlags();
+            
+        }
+
+        private void SetupEndFlags()
+        {
             for (int i = 0; i < 5; i++)
             {
-                var randPos = bounds.GetRandomPointInside();
+                var randPos = pathfinder.Bounds.GetRandomPointInside();
                 var flag = new PathfinderFlag(randPos, 32);
                 endFlags.Add(flag);
             }
-            
-            
-            
         }
-        
         
         public override void Reset()
         {
             pathfinder.Reset();
             paths.Clear();
+            endFlags.Clear();
+            SetupEndFlags();
         }
 
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
@@ -206,6 +212,12 @@ internal class PathfinderFlag
                 
                 watch.Stop();
                 Console.WriteLine($"{watch.ElapsedMilliseconds}ms");
+            }
+
+            if (Raylib.IsKeyPressed(KeyboardKey.H))
+            {
+                var flag = new PathfinderFlag(mousePosGame, 32);
+                endFlags.Add(flag);
             }
         }
 
