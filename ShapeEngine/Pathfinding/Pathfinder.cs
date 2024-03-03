@@ -9,105 +9,103 @@ using ShapeEngine.Stats;
 
 namespace ShapeEngine.Pathfinding;
 
-public interface INavigationObject : IShape
+// public interface INavigationObject : IShape
+// {
+//     public event Action<INavigationObject>? OnShapeChanged;
+//     public event Action<INavigationObject, float>? OnValueChanged;
+//
+//
+//     public float? GetOverrideValue() => null;
+//     public float? GetBonusValue() => null;
+//     public float? GetFlatValue() => null;
+// }
+// public class CellValue
+// {
+//     // public event Action<CellValue, float>? OnChanged;
+//     
+//     private float baseValue;
+//     private float totalBonus = 0f;
+//     private float totalFlat = 0f;
+//     private float cur;
+//     private bool dirty = false;
+//
+//     public float Override = -1f;
+//     public float Base 
+//     {
+//         get => baseValue;
+//         set
+//         {
+//             if (Math.Abs(baseValue - value) < 0.0001f) return;
+//             baseValue = value;
+//             dirty = true;
+//         }
+//     }
+//     public float Cur
+//     {
+//         get
+//         {
+//             if(dirty)Recalculate();
+//             return Override >= 0 ? Override : cur;
+//         }
+//         private set => cur = value;
+//     }
+//     public float TotalBonus
+//     {
+//         get => totalBonus;
+//         set
+//         {
+//             if (Math.Abs(totalBonus - value) < 0.0001f) return;
+//             totalBonus = value;
+//             dirty = true;
+//         }
+//     }
+//     public float TotalFlat 
+//     {
+//         get => totalFlat;
+//         set
+//         {
+//             if (Math.Abs(totalFlat - value) < 0.0001f) return;
+//             totalFlat = value;
+//             dirty = true;
+//         }
+//     }
+//         
+//
+//     public CellValue(float baseValue)
+//     {
+//         this.baseValue = baseValue;
+//         cur = baseValue;
+//     }
+//
+//
+//     public void Reset()
+//     {
+//         totalBonus = 0;
+//         totalFlat = 0;
+//         Override = -1;
+//         Recalculate();
+//     }
+//     private void Recalculate()
+//     {
+//         dirty = false;
+//         float old = Cur;
+//         if (TotalBonus >= 0f)
+//         {
+//             Cur = (Base + TotalFlat) * (1f + TotalBonus);
+//         }
+//         else
+//         {
+//             Cur = (Base + TotalFlat) / (1f + MathF.Abs(TotalBonus));
+//         }
+//
+//         // if (Math.Abs(Cur - old) > 0.0001f) OnChanged?.Invoke(this, old);
+//     }
+// }
+
+
+public abstract class Pathfinder
 {
-    public event Action<INavigationObject>? OnShapeChanged;
-    public event Action<INavigationObject, float>? OnValueChanged;
-
-
-    public float? GetOverrideValue() => null;
-    public float? GetBonusValue() => null;
-    public float? GetFlatValue() => null;
-}
-
-public class Path
-{
-    
-}
-public class CellValue
-{
-    // public event Action<CellValue, float>? OnChanged;
-    
-    private float baseValue;
-    private float totalBonus = 0f;
-    private float totalFlat = 0f;
-    private float cur;
-    private bool dirty = false;
-
-    public float Override = -1f;
-    public float Base 
-    {
-        get => baseValue;
-        set
-        {
-            if (Math.Abs(baseValue - value) < 0.0001f) return;
-            baseValue = value;
-            dirty = true;
-        }
-    }
-    public float Cur
-    {
-        get
-        {
-            if(dirty)Recalculate();
-            return Override >= 0 ? Override : cur;
-        }
-        private set => cur = value;
-    }
-    public float TotalBonus
-    {
-        get => totalBonus;
-        set
-        {
-            if (Math.Abs(totalBonus - value) < 0.0001f) return;
-            totalBonus = value;
-            dirty = true;
-        }
-    }
-    public float TotalFlat 
-    {
-        get => totalFlat;
-        set
-        {
-            if (Math.Abs(totalFlat - value) < 0.0001f) return;
-            totalFlat = value;
-            dirty = true;
-        }
-    }
-        
-
-    public CellValue(float baseValue)
-    {
-        this.baseValue = baseValue;
-        cur = baseValue;
-    }
-
-
-    public void Reset()
-    {
-        totalBonus = 0;
-        totalFlat = 0;
-        Override = -1;
-        Recalculate();
-    }
-    private void Recalculate()
-    {
-        dirty = false;
-        float old = Cur;
-        if (TotalBonus >= 0f)
-        {
-            Cur = (Base + TotalFlat) * (1f + TotalBonus);
-        }
-        else
-        {
-            Cur = (Base + TotalFlat) / (1f + MathF.Abs(TotalBonus));
-        }
-
-        // if (Math.Abs(Cur - old) > 0.0001f) OnChanged?.Invoke(this, old);
-    }
-}
-
-public class Cell
+    public class Cell
 {
     private readonly Pathfinder parent;
 
@@ -122,7 +120,7 @@ public class Cell
     public Grid.Coordinates Coordinates;
     public HashSet<Cell>? Neighbors = null;
     public HashSet<Cell>? Connections = null;
-    public bool Traversable => Value.Cur > 0;
+    public bool Traversable => Weight > 0;
 
     public bool HasNeighbors => Neighbors is { Count: > 0 };
     public bool HasConnections => Connections is { Count: > 0 };
@@ -130,13 +128,17 @@ public class Cell
     /// <summary>
     /// 0 = Blocked/Not Traversable, smaller than 1 -> decrease worth, bigger than 1 -> increase worth
     /// </summary>
-    public CellValue Value;
+    // public CellValue Value;
 
+    public float Weight = 1f;
+    public float GScore = 0f;
+    public float FScore = 0f;
+    
     public Cell(Grid.Coordinates coordinates, Pathfinder parent)
     {
         Coordinates = coordinates;
         this.parent = parent;
-        Value = new(1f);
+        // Value = new(1f);
     }
     
     public bool AddNeighbor(Cell cell)
@@ -170,13 +172,23 @@ public class Cell
     public void Reset()
     {
         Connections?.Clear();
-        Value.Reset();
+        Weight = 1;
+        // Value.Reset();
     }
 }
-
-//make abstract and just handle cells and their values
-public abstract class Pathfinder
+    public class Path
 {
+    public readonly Vector2 Start;
+    public readonly Vector2 End;
+    public readonly List<Rect> Rects;
+    
+    public Path(Vector2 start, Vector2 end, List<Rect> rects)
+    {
+        Start = start;
+        End = end;
+        Rects = rects;
+    }
+}
 
     public event Action<Pathfinder>? OnRegenerationRequested;
     public event Action<Pathfinder>? OnResetRequested;
@@ -186,6 +198,9 @@ public abstract class Pathfinder
     #region Public
     public Size CellSize { get; private set; }
     public readonly Grid Grid;
+    protected Dictionary<Cell, Cell> CellPath = new();
+    // protected List<float> GScores = new();
+    // protected List<float> FScores = new();
 
     #endregion
 
@@ -227,6 +242,8 @@ public abstract class Pathfinder
             var coordinates = Grid.IndexToCoordinates(i);
             var cell = new Cell(coordinates, this);
             cells.Add(cell);
+            // GScores.Add(0);
+            // FScores.Add(0);
         }
         
         for (var i = 0; i < Grid.Count; i++)
@@ -249,7 +266,141 @@ public abstract class Pathfinder
         }
         ResolveReset();
     }
-    public abstract bool GetPath(Vector2 start, Vector2 end, ref Path? result);
+
+    protected float DistanceToTarget(Cell current, Cell target)
+    {
+        var cc = current.Coordinates;
+        var nc = target.Coordinates;
+
+        var c = nc - cc;
+
+        return c.Distance;
+        
+        // return (current.Rect.Center - target.Rect.Center).Length();
+    }
+
+    protected float WeightedDistanceToNeighbor(Cell current, Cell neighbor)
+    {
+        var cc = current.Coordinates;
+        var nc = neighbor.Coordinates;
+
+        var c = nc - cc;
+
+        return c.Distance * neighbor.Weight;
+        
+        
+        // var dis = (current.Rect.Center - neighbor.Rect.Center).Length();
+        // return dis * neighbor.Weight;
+    }
+
+    protected List<Rect> ReconstructPath(Cell from, Dictionary<Cell, Cell> cellPath)
+    {
+        List<Rect> rects = new() { from.Rect };
+
+        var current = from;
+
+        do
+        {
+            if (cellPath.ContainsKey(current))
+            {
+                current = cellPath[current];
+                rects.Add(current.Rect);
+            }
+            else current = null;
+
+        } while (current != null);
+
+
+        rects.Reverse();
+        return rects;
+    }
+    
+    public virtual Path? GetPath(Vector2 start, Vector2 end)
+    {
+        // GScore is the cost of the cheapest path from start to n currently known.
+        // FScore represents our current best guess as to how cheap a path could be from start to finish if it goes through n.
+        
+        CellPath.Clear();
+        foreach (var cell in cells)
+        {
+            cell.GScore = float.PositiveInfinity;
+            cell.FScore = float.PositiveInfinity;
+        }
+        
+        PriorityQueue<Cell, float> openSet = new();
+        HashSet<Cell> openSetCells = new();
+        // HashSet<Cell> closedSet = new();
+
+        var startCell = GetCell(start);
+        var targetCell = GetCell(end);
+
+        openSet.Enqueue(startCell, startCell.FScore);
+        openSetCells.Add(startCell);
+
+        startCell.GScore = 0;
+        startCell.FScore = DistanceToTarget(startCell, targetCell);
+
+        Cell current;
+        while (openSet.Count > 0)
+        {
+            current = openSet.Dequeue();
+
+            if (current == targetCell)
+            {
+                var rects = ReconstructPath(current, CellPath);
+                return new Path(start, end, rects);
+            }
+
+            openSetCells.Remove(current);
+            
+            
+            if (current.Neighbors != null)
+            {
+                foreach (var neighbor in current.Neighbors)
+                {
+                    if(!neighbor.Traversable) continue;
+                    
+                    float tentativeGScore = current.GScore + WeightedDistanceToNeighbor(current, neighbor);
+                    if (tentativeGScore < neighbor.GScore)
+                    {
+                        CellPath[neighbor] = current;
+                        neighbor.GScore = tentativeGScore;
+                        neighbor.FScore = tentativeGScore + DistanceToTarget(neighbor, targetCell);
+
+                        if (!openSetCells.Contains(neighbor))
+                        {
+                            openSet.Enqueue(neighbor, neighbor.FScore);
+                        }
+                    }
+                }
+            }
+            
+            if (current.Connections != null)
+            {
+                foreach (var connection in current.Connections)
+                {
+                    if(!connection.Traversable) continue;
+                    
+                    float tentativeGScore = current.GScore + WeightedDistanceToNeighbor(current, connection);
+                    if (tentativeGScore < connection.GScore)
+                    {
+                        CellPath[connection] = current;
+                        connection.GScore = tentativeGScore;
+                        connection.FScore = tentativeGScore + DistanceToTarget(connection, targetCell);
+
+                        if (!openSetCells.Contains(connection))
+                        {
+                            openSet.Enqueue(connection, connection.FScore);
+                        }
+                    }
+                }
+            }
+
+        }
+        
+        return null;
+    }
+    
     public bool AddConnections(Vector2 a, Vector2 b, bool oneWay)
     {
         var cellA = GetCell(a);
@@ -622,14 +773,15 @@ public abstract class Pathfinder
 
     #endregion
 
-    public void DrawDebug(ColorRgba bounds, ColorRgba standard, ColorRgba blocked, ColorRgba changed)
+    public void DrawDebug(ColorRgba bounds, ColorRgba standard, ColorRgba blocked, ColorRgba desirable, ColorRgba undesirable)
     {
         Bounds.DrawLines(12f, bounds);
         foreach (var cell in cells)
         {
             var r = cell.Rect;
-            if(cell.Value.Cur <= 0) r.ScaleSize(0.5f, new Vector2(0.5f)).Draw(blocked);
-            else if(Math.Abs(cell.Value.Cur - 1f) > 0.0001f) r.ScaleSize(0.65f, new Vector2(0.5f)).Draw(changed);
+            if(cell.Weight <= 0) r.ScaleSize(0.5f, new Vector2(0.5f)).Draw(blocked);
+            else if(cell.Weight < 1f) r.ScaleSize(0.65f, new Vector2(0.5f)).Draw(desirable);
+            else if(cell.Weight > 1f) r.ScaleSize(0.65f, new Vector2(0.5f)).Draw(undesirable);
             else r.ScaleSize(0.8f, new Vector2(0.5f)).Draw(standard);
         }
         
@@ -643,33 +795,33 @@ public class PathfinderStatic : Pathfinder
     {
     }
 
-    public override bool GetPath(Vector2 start, Vector2 end, ref Path? result)
-    {
-        throw new NotImplementedException();
-    }
+    // public override bool GetPath(Vector2 start, Vector2 end, ref Path? result)
+    // {
+    //     throw new NotImplementedException();
+    // }
 
-    public void AddBonus(Vector2 pos, float bonus)
-    {
-        var cell = GetCell(pos);
-        cell.Value.TotalBonus += bonus;
-    }
-    public void AddFlat(Vector2 pos, float flat)
-    {
-        var cell = GetCell(pos);
-        cell.Value.TotalFlat += flat;
-    }
-    public int AddFlat(Rect rect, float flat)
-    {
-        HashSet<Cell> result = new();
-        var cellCount = GetCells(rect, ref result);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in result)
-        {
-            cell.Value.TotalFlat += flat;
-        }
-
-        return cellCount;
-    }
+    // public void AddBonus(Vector2 pos, float bonus)
+    // {
+    //     var cell = GetCell(pos);
+    //     cell.Value.TotalBonus += bonus;
+    // }
+    // public void AddFlat(Vector2 pos, float flat)
+    // {
+    //     var cell = GetCell(pos);
+    //     cell.Value.TotalFlat += flat;
+    // }
+    // public int AddFlat(Rect rect, float flat)
+    // {
+    //     HashSet<Cell> result = new();
+    //     var cellCount = GetCells(rect, ref result);
+    //     if (cellCount <= 0) return 0;
+    //     foreach (var cell in result)
+    //     {
+    //         cell.Value.TotalFlat += flat;
+    //     }
+    //
+    //     return cellCount;
+    // }
     public int SetValue(Rect rect, float value)
     {
         HashSet<Cell> result = new();
@@ -677,9 +829,9 @@ public class PathfinderStatic : Pathfinder
         if (cellCount <= 0) return 0;
         foreach (var cell in result)
         {
-            cell.Value.Override = value;
+            cell.Weight = value;
         }
-
+    
         return cellCount;
     }
     //add functions to just change values of cells
@@ -699,8 +851,8 @@ public class PathfinderDynamic : Pathfinder
     {
     }
 
-    public override bool GetPath(Vector2 start, Vector2 end, ref Path? result)
-    {
-        throw new NotImplementedException();
-    }
+    // public override bool GetPath(Vector2 start, Vector2 end, ref Path? result)
+    // {
+    //     throw new NotImplementedException();
+    // }
 }

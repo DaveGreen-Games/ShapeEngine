@@ -1,4 +1,5 @@
 using System.Numerics;
+using ShapeEngine.Color;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Lib;
 
@@ -12,6 +13,16 @@ public readonly struct Grid : IEquatable<Grid>
         public readonly int Col;
         public bool IsValid => Row >= 0 && Col >= 0;
 
+        public int Distance
+        {
+            get
+            {
+                int r = Row < 0 ? Row * -1 : Row;
+                int c = Col < 0 ? Col * -1 : Col;
+                
+                return r + c;
+            }
+        }
     
         public Coordinates()
         {

@@ -1,5 +1,6 @@
 
 
+using System.Diagnostics;
 using System.Numerics;
 using System.Text;
 using Raylib_cs;
@@ -11,8 +12,51 @@ using ShapeEngine.Lib;
 using ShapeEngine.Pathfinding;
 using Color = System.Drawing.Color;
 
+
+
 namespace Examples.Scenes.ExampleScenes;
 
+
+internal class PathfinderFlag
+{
+    private Circle circle;
+    private bool dragging = false;
+    public bool IsDragging => dragging;
+    public bool mouseInside = false;
+    public Vector2 Position => circle.Center;
+    public PathfinderFlag(Vector2 pos, float r)
+    {
+        circle = new(pos, r);
+    }
+
+    public void Update(float dt, Vector2 mousePos)
+    {
+        mouseInside = circle.ContainsPoint(mousePos);
+        if (mouseInside)
+        {
+            if (Raylib.IsMouseButtonPressed(MouseButton.Left))
+            {
+                dragging = true;
+            }
+        }
+
+        if (dragging)
+        {
+            circle = new Circle(mousePos, circle.Radius);
+            if (Raylib.IsMouseButtonReleased(MouseButton.Left)) dragging = false;
+        }
+    }
+
+    public void Draw(ColorRgba color)
+    {
+        if (mouseInside)
+        {
+            Circle c = new(circle.Center, circle.Radius * 2f);
+            c.Draw(color);
+        }
+        else circle.Draw(color);
+    }
+}
 
     public class PathfinderExample : ExampleScene
     {
@@ -28,6 +72,10 @@ namespace Examples.Scenes.ExampleScenes;
         private bool rectStarted = false;
         private Vector2 rectStartPos = new();
 
+        private PathfinderFlag startFlag;
+        private List<PathfinderFlag> endFlags = new();
+        private List<Pathfinder.Path> paths = new();
+        Stopwatch watch = new();
         public PathfinderExample()
         {
             Title = "Pathfinder Example";
@@ -55,12 +103,25 @@ namespace Examples.Scenes.ExampleScenes;
 
             Rect bounds = new(new(0f), new(5000, 5000), new(0.5f));
             pathfinder = new(bounds, 50, 50);
+
+            startFlag = new(new Vector2(-250), 32);
+
+            for (int i = 0; i < 5; i++)
+            {
+                var randPos = bounds.GetRandomPointInside();
+                var flag = new PathfinderFlag(randPos, 32);
+                endFlags.Add(flag);
+            }
+            
+            
+            
         }
         
         
         public override void Reset()
         {
             pathfinder.Reset();
+            paths.Clear();
         }
 
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
@@ -76,48 +137,76 @@ namespace Examples.Scenes.ExampleScenes;
             cam.Position += moveCameraDir * 500 * dt * f;
 
 
-            
-            if (Raylib.IsKeyReleased(KeyboardKey.C))
+            startFlag.Update(dt, mousePosGame);
+            bool dragging = startFlag.IsDragging;
+            foreach (var flag in endFlags)
             {
-                if (rectStarted)
+                flag.Update(dt, mousePosGame);
+                dragging |= flag.IsDragging;
+            }
+            
+            
+            if (!startFlag.IsDragging && !dragging)
+            {
+                if (Raylib.IsKeyReleased(KeyboardKey.C))
                 {
-                    var r = new Rect(rectStartPos, mousePosGame);
-                    pathfinder.SetValue(r, 1);
+                    if (rectStarted)
+                    {
+                        var r = new Rect(rectStartPos, mousePosGame);
+                        pathfinder.SetValue(r, 1);
+                    }
+                }
+                if (Raylib.IsKeyReleased(KeyboardKey.V))
+                {
+                    if (rectStarted)
+                    {
+                        var r = new Rect(rectStartPos, mousePosGame);
+                        pathfinder.SetValue(r, 5);
+                    }
+                }
+                if (Raylib.IsKeyReleased(KeyboardKey.B))
+                {
+                    if (rectStarted)
+                    {
+                        var r = new Rect(rectStartPos, mousePosGame);
+                        pathfinder.SetValue(r, 0);
+                    }
+                }
+                if (Raylib.IsKeyReleased(KeyboardKey.X))
+                {
+                    if (rectStarted)
+                    {
+                        var r = new Rect(rectStartPos, mousePosGame);
+                        pathfinder.SetValue(r, 0.2f);
+                    }
+                }
+            
+                if (Raylib.IsMouseButtonPressed(MouseButton.Left))
+                {
+                    rectStarted = true;
+                    rectStartPos = mousePosGame;
+                }
+            
+                if (Raylib.IsMouseButtonReleased(MouseButton.Left))
+                {
+                    rectStarted = false;
                 }
             }
-            if (Raylib.IsKeyReleased(KeyboardKey.V))
+
+            if (Raylib.IsKeyPressed(KeyboardKey.Space))
             {
-                if (rectStarted)
+                paths.Clear();
+                watch.Restart();
+                
+                foreach (var flag in endFlags)
                 {
-                    var r = new Rect(rectStartPos, mousePosGame);
-                    pathfinder.SetValue(r, 2);
+                    var path = pathfinder.GetPath(startFlag.Position, flag.Position);
+                    if(path != null) paths.Add(path);
                 }
+                
+                watch.Stop();
+                Console.WriteLine($"{watch.ElapsedMilliseconds}ms");
             }
-            if (Raylib.IsKeyReleased(KeyboardKey.B))
-            {
-                if (rectStarted)
-                {
-                    var r = new Rect(rectStartPos, mousePosGame);
-                    pathfinder.SetValue(r, 0);
-                }
-            }
-            
-            if (Raylib.IsMouseButtonPressed(MouseButton.Left))
-            {
-                rectStarted = true;
-                rectStartPos = mousePosGame;
-            }
-            
-            if (Raylib.IsMouseButtonReleased(MouseButton.Left))
-            {
-                rectStarted = false;
-                // var r = new Rect(rectStartPos, mousePosGame);
-            
-                // if (ShapeRandom.Chance(0.33f)) pathfinder.SetValue(r, 2);
-                // else if (ShapeRandom.Chance(0.33f)) pathfinder.SetValue(r, 1);
-                // else pathfinder.SetValue(r, 0);
-            }
-            
         }
 
 
@@ -131,8 +220,9 @@ namespace Examples.Scenes.ExampleScenes;
             var cBounds = new ColorRgba(Color.PapayaWhip);
             var cBlocked = new ColorRgba(Color.IndianRed);
             var cDefault = new ColorRgba(Color.Gray);
-            var cChanged = new ColorRgba(Color.SeaGreen);
-            pathfinder.DrawDebug(cBounds, cDefault, cBlocked, cChanged);
+            var cDesirable = new ColorRgba(Color.SeaGreen);
+            var cUndesirable = new ColorRgba(Color.Chocolate);
+            pathfinder.DrawDebug(cBounds, cDefault, cBlocked, cDesirable, cUndesirable);
 
             if (rectStarted)
             {
@@ -140,6 +230,28 @@ namespace Examples.Scenes.ExampleScenes;
                 var c = new ColorRgba(Color.Gold).SetAlpha(200);
                 r.Draw(c);
             }
+            
+            
+
+            if (paths.Count > 0)
+            {
+                foreach (var path in paths)
+                {
+                    foreach (var r in path.Rects)
+                    {
+                        r.ScaleSize(0.3f, new Vector2(0.5f)).Draw(new ColorRgba(Color.DodgerBlue));
+                    }
+                }
+                
+            }
+            
+            startFlag.Draw(new ColorRgba(Color.Chartreuse));
+            foreach (var flag in endFlags)
+            {
+                flag.Draw(new ColorRgba(Color.Fuchsia));
+            }
+            
+
         }
 
         protected override void OnDrawUIExample(ScreenInfo ui)
