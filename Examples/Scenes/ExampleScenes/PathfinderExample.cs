@@ -17,6 +17,7 @@ using Color = System.Drawing.Color;
 namespace Examples.Scenes.ExampleScenes;
 
 
+
 internal class PathfinderFlag
 {
     private Circle circle;
@@ -159,7 +160,7 @@ internal class PathfinderFlag
                     if (rectStarted)
                     {
                         var r = new Rect(rectStartPos, mousePosGame);
-                        pathfinder.SetValue(r, 1);
+                        pathfinder.SetCellValues(r, Pathfinder.Default);
                     }
                 }
                 if (Raylib.IsKeyReleased(KeyboardKey.V))
@@ -167,7 +168,7 @@ internal class PathfinderFlag
                     if (rectStarted)
                     {
                         var r = new Rect(rectStartPos, mousePosGame);
-                        pathfinder.SetValue(r, 5);
+                        pathfinder.SetCellValues(r, -5);
                     }
                 }
                 if (Raylib.IsKeyReleased(KeyboardKey.B))
@@ -175,7 +176,7 @@ internal class PathfinderFlag
                     if (rectStarted)
                     {
                         var r = new Rect(rectStartPos, mousePosGame);
-                        pathfinder.SetValue(r, 0);
+                        pathfinder.SetCellValues(r, Pathfinder.Blocked);
                     }
                 }
                 if (Raylib.IsKeyReleased(KeyboardKey.X))
@@ -183,7 +184,7 @@ internal class PathfinderFlag
                     if (rectStarted)
                     {
                         var r = new Rect(rectStartPos, mousePosGame);
-                        pathfinder.SetValue(r, 0.2f);
+                        pathfinder.SetCellValues(r, 5);
                     }
                 }
             
@@ -206,7 +207,7 @@ internal class PathfinderFlag
                 
                 foreach (var flag in endFlags)
                 {
-                    var path = pathfinder.GetPath(startFlag.Position, flag.Position);
+                    var path = pathfinder.GetPath(startFlag.Position, flag.Position, 0);
                     if(path != null) paths.Add(path);
                 }
                 
@@ -234,7 +235,7 @@ internal class PathfinderFlag
             var cDefault = new ColorRgba(Color.Gray);
             var cDesirable = new ColorRgba(Color.SeaGreen);
             var cUndesirable = new ColorRgba(Color.Chocolate);
-            pathfinder.DrawDebug(cBounds, cDefault, cBlocked, cDesirable, cUndesirable);
+            pathfinder.DrawDebug(cBounds, cDefault, cBlocked, cDesirable, cUndesirable, 0);
 
             if (rectStarted)
             {

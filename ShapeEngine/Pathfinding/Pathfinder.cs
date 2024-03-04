@@ -1,11 +1,9 @@
-using System.IO.Pipes;
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
-using ShapeEngine.Stats;
 
 namespace ShapeEngine.Pathfinding;
 
@@ -102,94 +100,163 @@ namespace ShapeEngine.Pathfinding;
 //     }
 // }
 
+public interface IPathfinderObstacle : IShape
+{
+    
+}
 
 public abstract class Pathfinder
 {
+
+    public static readonly float Blocked = 0;
+    public static readonly float Default = 1;
+    
+    
     public class Cell
-{
-    private readonly Pathfinder parent;
-
-    public Rect Rect
     {
-        get
+        private readonly Pathfinder parent;
+
+        public bool DEBUG_Touched = false;
+        
+        public Rect Rect
         {
-            var pos = parent.Bounds.TopLeft + parent.CellSize * Coordinates.ToVector2();
-            return new Rect(pos, parent.CellSize, new Vector2(0f));
+            get
+            {
+                var pos = parent.Bounds.TopLeft + parent.CellSize * Coordinates.ToVector2();
+                return new Rect(pos, parent.CellSize, new Vector2(0f));
+            }
         }
-    }
-    public Grid.Coordinates Coordinates;
-    public HashSet<Cell>? Neighbors = null;
-    public HashSet<Cell>? Connections = null;
-    public bool Traversable => Weight > 0;
+        public readonly Grid.Coordinates Coordinates;
+        
+        private float weight = 1;
+        private Dictionary<uint, float>? weights = null;
 
-    public bool HasNeighbors => Neighbors is { Count: > 0 };
-    public bool HasConnections => Connections is { Count: > 0 };
+        internal HashSet<Cell>? Neighbors = null;
+        internal HashSet<Cell>? Connections = null;
+        internal float GScore = 0f;
+        internal float FScore = 0f;
+        
+        public Cell(Grid.Coordinates coordinates, Pathfinder parent)
+        {
+            Coordinates = coordinates;
+            this.parent = parent;
+            // Value = new(1f);
+        }
+        public void Reset()
+        {
+            Connections?.Clear();
+            weight = Default;
+            weights?.Clear();
+            DEBUG_Touched = false;
+        }
+        
+        public bool HasNeighbors => Neighbors is { Count: > 0 };
+        public bool HasConnections => Connections is { Count: > 0 };
+        
+        #region Neighbors & Connections
+        public bool AddNeighbor(Cell cell)
+        {
+            Neighbors ??= new();
+            return Neighbors.Add(cell);
+        }
+
+        public bool RemoveNeighbor(Cell cell)
+        {
+            if (Neighbors == null) return false;
+            return Neighbors.Remove(cell);
+        }
+        public void SetNeighbors(HashSet<Cell>? neighbors)
+        {
+            Neighbors = neighbors;
+        }
+        public bool Connect(Cell other)
+        {
+            if (other == this) return false;
+            Connections ??= new();
+            return Connections.Add(other);
+        }
+        public bool Disconnect(Cell other)
+        {
+            if (other == this) return false;
+            if (Connections == null) return false;
+            return Connections.Remove(other);
+        }
+        #endregion
+        
+        #region Weight
+        private float CalculateWeightFactor(float w)
+        {
+            if (w == 0) return 0f;
+            if (w < 0) return w * -1;
+            return 1f / w;
+        }
+        public bool IsTraversable() => weight > Blocked;
+        public bool IsTraversable(uint layer)
+        {
+            if (weights == null) return weight > Blocked;
+            if (weights.TryGetValue(layer, out float value)) return value > Blocked;
+            return weight > Blocked;
+        }
+        public void SetWeight(float value)
+        {
+            weight = value;
+        }
+        public void SetWeight(float value, uint layer)
+        {
+            weights ??= new();
+            weights[layer] = value;
+        }
+        public void ChangeWeight(float factor)
+        {
+            if (weight == 0) return;
+            if (factor == 0f) weight = 0;
+            if (weight < 0)weight /= factor;
+            else weight *= factor;
+        }
+        public void ChangeWeight(float factor, uint layer)
+        {
+            if (weights == null) return;
+            if (!weights.TryGetValue(layer, out float w)) return;
+            if (w == 0) return;
+            
+            if (factor == 0f) w = 0;
+            if (weight < 0) w /= factor;
+            else w *= factor;
+            
+            weights[layer] = w;
+        }
+
+        public float GetWeight() => weight;
+        public float GetWeight(uint layer) => weights?.GetValueOrDefault(layer, weight) ?? weight;
+        public float GetWeightFactor() => CalculateWeightFactor(weight);
+        public float GetWeightFactor(uint layer) => CalculateWeightFactor(GetWeight(layer));
+
+        public bool ClearWeight(uint layer) => weights?.Remove(layer) ?? false;
+        public bool HasWeight(uint layer) => weights?.ContainsKey(layer) ?? false;
+        public int ClearLayerWeights()
+        {
+            if (weights == null) return 0;
+            int count = weights.Count;
+            weights.Clear();
+            return count;
+        }
+        #endregion
+    }
     
-    /// <summary>
-    /// 0 = Blocked/Not Traversable, smaller than 1 -> decrease worth, bigger than 1 -> increase worth
-    /// </summary>
-    // public CellValue Value;
-
-    public float Weight = 1f;
-    public float GScore = 0f;
-    public float FScore = 0f;
-    
-    public Cell(Grid.Coordinates coordinates, Pathfinder parent)
-    {
-        Coordinates = coordinates;
-        this.parent = parent;
-        // Value = new(1f);
-    }
-    
-    public bool AddNeighbor(Cell cell)
-    {
-        Neighbors ??= new();
-        return Neighbors.Add(cell);
-    }
-
-    public bool RemoveNeighbor(Cell cell)
-    {
-        if (Neighbors == null) return false;
-        return Neighbors.Remove(cell);
-    }
-    public void SetNeighbors(HashSet<Cell>? neighbors)
-    {
-        Neighbors = neighbors;
-    }
-    public bool Connect(Cell other)
-    {
-        if (other == this) return false;
-        Connections ??= new();
-        return Connections.Add(other);
-    }
-    public bool Disconnect(Cell other)
-    {
-        if (other == this) return false;
-        if (Connections == null) return false;
-        return Connections.Remove(other);
-    }
-
-    public void Reset()
-    {
-        Connections?.Clear();
-        Weight = 1;
-        // Value.Reset();
-    }
-}
     public class Path
-{
-    public readonly Vector2 Start;
-    public readonly Vector2 End;
-    public readonly List<Rect> Rects;
-    
-    public Path(Vector2 start, Vector2 end, List<Rect> rects)
+    {
+        public readonly Vector2 Start;
+        public readonly Vector2 End;
+        public readonly List<Rect> Rects;
+        
+        public Path(Vector2 start, Vector2 end, List<Rect> rects)
     {
         Start = start;
         End = end;
         Rects = rects;
     }
-}
-
+    }
+    
     public event Action<Pathfinder>? OnRegenerationRequested;
     public event Action<Pathfinder>? OnResetRequested;
 
@@ -267,33 +334,34 @@ public abstract class Pathfinder
         ResolveReset();
     }
 
-    protected float DistanceToTarget(Cell current, Cell target)
+    private float DistanceToTarget(Cell current, Cell target)
     {
         var cc = current.Coordinates;
         var nc = target.Coordinates;
 
         var c = nc - cc;
 
-        return c.Distance;
+        const float relaxationValue = 1;
+        return c.Distance * relaxationValue;
         
         // return (current.Rect.Center - target.Rect.Center).Length();
     }
 
-    protected float WeightedDistanceToNeighbor(Cell current, Cell neighbor)
+    private float WeightedDistanceToNeighbor(Cell current, Cell neighbor, uint layer)
     {
         var cc = current.Coordinates;
         var nc = neighbor.Coordinates;
 
         var c = nc - cc;
 
-        return c.Distance * neighbor.Weight;
+        return c.Distance * neighbor.GetWeightFactor(layer);
         
         
         // var dis = (current.Rect.Center - neighbor.Rect.Center).Length();
         // return dis * neighbor.Weight;
     }
 
-    protected List<Rect> ReconstructPath(Cell from, Dictionary<Cell, Cell> cellPath)
+    private List<Rect> ReconstructPath(Cell from, Dictionary<Cell, Cell> cellPath)
     {
         List<Rect> rects = new() { from.Rect };
 
@@ -314,8 +382,7 @@ public abstract class Pathfinder
         rects.Reverse();
         return rects;
     }
-    
-    public virtual Path? GetPath(Vector2 start, Vector2 end)
+    public Path? GetPath(Vector2 start, Vector2 end, uint layer)
     {
         // GScore is the cost of the cheapest path from start to n currently known.
         // FScore represents our current best guess as to how cheap a path could be from start to finish if it goes through n.
@@ -325,6 +392,7 @@ public abstract class Pathfinder
         {
             cell.GScore = float.PositiveInfinity;
             cell.FScore = float.PositiveInfinity;
+            // cell.DEBUG_Touched = false;
         }
         
         PriorityQueue<Cell, float> openSet = new();
@@ -358,9 +426,9 @@ public abstract class Pathfinder
             {
                 foreach (var neighbor in current.Neighbors)
                 {
-                    if(closedSet.Contains(neighbor) || !neighbor.Traversable) continue;
+                    if(closedSet.Contains(neighbor) || !neighbor.IsTraversable(layer)) continue;
                     
-                    float tentativeGScore = current.GScore + WeightedDistanceToNeighbor(current, neighbor);
+                    float tentativeGScore = current.GScore + WeightedDistanceToNeighbor(current, neighbor, layer);
                     if (tentativeGScore < neighbor.GScore)
                     {
                         CellPath[neighbor] = current;
@@ -370,6 +438,7 @@ public abstract class Pathfinder
                         if (!openSetCells.Contains(neighbor))
                         {
                             openSet.Enqueue(neighbor, neighbor.FScore);
+                            neighbor.DEBUG_Touched = true;
                         }
                     }
                 }
@@ -379,9 +448,9 @@ public abstract class Pathfinder
             {
                 foreach (var connection in current.Connections)
                 {
-                    if(closedSet.Contains(connection) || !connection.Traversable) continue;
+                    if(closedSet.Contains(connection) || !connection.IsTraversable(layer)) continue;
                     
-                    float tentativeGScore = current.GScore + WeightedDistanceToNeighbor(current, connection);
+                    float tentativeGScore = current.GScore + WeightedDistanceToNeighbor(current, connection, layer);
                     if (tentativeGScore < connection.GScore)
                     {
                         CellPath[connection] = current;
@@ -400,7 +469,12 @@ public abstract class Pathfinder
         
         return null;
     }
+
     
+    #endregion
+    
+    #region Connections
+
     public bool AddConnections(Vector2 a, Vector2 b, bool oneWay)
     {
         var cellA = GetCell(a);
@@ -487,9 +561,8 @@ public abstract class Pathfinder
             }
         }
     }
-
     #endregion
-
+    
     #region Virtual
 
     protected virtual void ResetWasRequested(){}
@@ -664,11 +737,7 @@ public abstract class Pathfinder
    
     #region Private
 
-    private void ResolveReset()
-    {
-        ResetWasRequested();
-        OnResetRequested?.Invoke(this);
-    }
+    
     private bool ConnectCells(Cell a, Cell b, bool oneWay)
     {
         if (a == b) return false;
@@ -685,10 +754,7 @@ public abstract class Pathfinder
         return true;
     }
 
-    
     private Cell? GetNeighborCell(Cell cell, Direction dir) => GetCell(cell.Coordinates + dir);
-
-    
     private HashSet<Cell>? GetNeighbors(Cell cell, bool diagonal = true)
     {
         HashSet<Cell>? neighbors = null;
@@ -750,38 +816,36 @@ public abstract class Pathfinder
         
         return neighbors;
     }
-    // private void Regenerate()
-    // {
-    //     CellSize = Grid.GetCellSize(Bounds);// CalculateCellSize();
-    //     // RecalculateCellRects();
-    // }
-    // // private void RecalculateCellRects()
-    // // {
-    // //     foreach (var cell in cells)
-    // //     {
-    // //         var coordinates = cell.Coordinates;
-    // //         cell.Rect = GetRect(coordinates);
-    // //     }
-    // // }
-    
-    
     private void ResolveRegenerationRequested()
     {
         RegenerationWasRequested();
         OnRegenerationRequested?.Invoke(this);
     }
+    private void ResolveReset()
+    {
+        ResetWasRequested();
+        OnResetRequested?.Invoke(this);
+    }
 
     #endregion
 
-    public void DrawDebug(ColorRgba bounds, ColorRgba standard, ColorRgba blocked, ColorRgba desirable, ColorRgba undesirable)
+    public void DrawDebug(ColorRgba bounds, ColorRgba standard, ColorRgba blocked, ColorRgba desirable, ColorRgba undesirable, uint layer)
     {
         Bounds.DrawLines(12f, bounds);
         foreach (var cell in cells)
         {
             var r = cell.Rect;
-            if(cell.Weight <= 0) r.ScaleSize(0.5f, new Vector2(0.5f)).Draw(blocked);
-            else if(cell.Weight < 1f) r.ScaleSize(0.65f, new Vector2(0.5f)).Draw(desirable);
-            else if(cell.Weight > 1f) r.ScaleSize(0.65f, new Vector2(0.5f)).Draw(undesirable);
+
+            if (cell.DEBUG_Touched)
+            {
+                // r.DrawLines(4f, new ColorRgba(System.Drawing.Color.Azure));
+                r.ScaleSize(0.9f, new Vector2(0.5f)).Draw(new ColorRgba(System.Drawing.Color.Bisque));
+                // r.ScaleSize(0.5f, new Vector2(0.9f)).Draw(new ColorRgba(System.Drawing.Color.Red));
+            }
+            
+            if(cell.GetWeight(layer) == 0) r.ScaleSize(0.5f, new Vector2(0.5f)).Draw(blocked);
+            else if(cell.GetWeight(layer) < 1) r.ScaleSize(0.65f, new Vector2(0.5f)).Draw(undesirable);
+            else if(cell.GetWeight(layer) > 1) r.ScaleSize(0.65f, new Vector2(0.5f)).Draw(desirable);
             else r.ScaleSize(0.8f, new Vector2(0.5f)).Draw(standard);
         }
         
@@ -791,51 +855,719 @@ public abstract class Pathfinder
 
 public class PathfinderStatic : Pathfinder
 {
+    private HashSet<Cell> resultSet = new();
     public PathfinderStatic(Rect bounds, int cols, int rows) : base(bounds, cols, rows)
     {
     }
 
-    // public override bool GetPath(Vector2 start, Vector2 end, ref Path? result)
-    // {
-    //     throw new NotImplementedException();
-    // }
-
-    // public void AddBonus(Vector2 pos, float bonus)
-    // {
-    //     var cell = GetCell(pos);
-    //     cell.Value.TotalBonus += bonus;
-    // }
-    // public void AddFlat(Vector2 pos, float flat)
-    // {
-    //     var cell = GetCell(pos);
-    //     cell.Value.TotalFlat += flat;
-    // }
-    // public int AddFlat(Rect rect, float flat)
-    // {
-    //     HashSet<Cell> result = new();
-    //     var cellCount = GetCells(rect, ref result);
-    //     if (cellCount <= 0) return 0;
-    //     foreach (var cell in result)
-    //     {
-    //         cell.Value.TotalFlat += flat;
-    //     }
-    //
-    //     return cellCount;
-    // }
-    public int SetValue(Rect rect, float value)
+    #region Segment
+    public int SetCellValues(Segment shape, float value)
     {
-        HashSet<Cell> result = new();
-        var cellCount = GetCells(rect, ref result);
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
         if (cellCount <= 0) return 0;
-        foreach (var cell in result)
+        foreach (var cell in resultSet)
         {
-            cell.Weight = value;
+            cell.SetWeight(value);
         }
     
         return cellCount;
     }
-    //add functions to just change values of cells
-    //only those functions change values of cells and nothing else
+    public int ChangeCellValues(Segment shape, float factor)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            cell.ChangeWeight(factor);
+        }
+    
+        return cellCount;
+    }
+    
+    public int SetCellValues(Segment shape, float value, uint layer)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            cell.SetWeight(value, layer);
+        }
+    
+        return cellCount;
+    }
+    public int ChangeCellValues(Segment shape, float factor, uint layer)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            cell.ChangeWeight(factor, layer);
+        }
+    
+        return cellCount;
+    }
+
+    public int SetCellValues(Segment shape, float value, uint[] layers)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            if (layers.Length <= 0)
+            {
+                cell.SetWeight(value);
+                continue;
+            }
+            foreach (var layer in layers)
+            {
+                cell.SetWeight(value, layer);
+            }
+            
+        }
+    
+        return cellCount;
+    }
+    public int ChangeCellValues(Segment shape, float factor, uint[] layers)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            if (layers.Length <= 0)
+            {
+                cell.ChangeWeight(factor);
+                continue;
+            }
+            
+            foreach (var layer in layers)
+            {
+                cell.ChangeWeight(factor, layer);
+            }
+            
+        }
+    
+        return cellCount;
+    }
+    #endregion
+    
+    #region Circle
+    public int SetCellValues(Circle shape, float value)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            cell.SetWeight(value);
+        }
+    
+        return cellCount;
+    }
+    public int ChangeCellValues(Circle shape, float factor)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            cell.ChangeWeight(factor);
+        }
+    
+        return cellCount;
+    }
+    
+    public int SetCellValues(Circle shape, float value, uint layer)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            cell.SetWeight(value, layer);
+        }
+    
+        return cellCount;
+    }
+    public int ChangeCellValues(Circle shape, float factor, uint layer)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            cell.ChangeWeight(factor, layer);
+        }
+    
+        return cellCount;
+    }
+
+    public int SetCellValues(Circle shape, float value, uint[] layers)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            if (layers.Length <= 0)
+            {
+                cell.SetWeight(value);
+                continue;
+            }
+            foreach (var layer in layers)
+            {
+                cell.SetWeight(value, layer);
+            }
+            
+        }
+    
+        return cellCount;
+    }
+    public int ChangeCellValues(Circle shape, float factor, uint[] layers)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            if (layers.Length <= 0)
+            {
+                cell.ChangeWeight(factor);
+                continue;
+            }
+            
+            foreach (var layer in layers)
+            {
+                cell.ChangeWeight(factor, layer);
+            }
+            
+        }
+    
+        return cellCount;
+    }
+    #endregion
+    
+    #region Triangle
+    public int SetCellValues(Triangle shape, float value)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            cell.SetWeight(value);
+        }
+    
+        return cellCount;
+    }
+    public int ChangeCellValues(Triangle shape, float factor)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            cell.ChangeWeight(factor);
+        }
+    
+        return cellCount;
+    }
+    
+    public int SetCellValues(Triangle shape, float value, uint layer)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            cell.SetWeight(value, layer);
+        }
+    
+        return cellCount;
+    }
+    public int ChangeCellValues(Triangle shape, float factor, uint layer)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            cell.ChangeWeight(factor, layer);
+        }
+    
+        return cellCount;
+    }
+
+    public int SetCellValues(Triangle shape, float value, uint[] layers)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            if (layers.Length <= 0)
+            {
+                cell.SetWeight(value);
+                continue;
+            }
+            foreach (var layer in layers)
+            {
+                cell.SetWeight(value, layer);
+            }
+            
+        }
+    
+        return cellCount;
+    }
+    public int ChangeCellValues(Triangle shape, float factor, uint[] layers)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            if (layers.Length <= 0)
+            {
+                cell.ChangeWeight(factor);
+                continue;
+            }
+            
+            foreach (var layer in layers)
+            {
+                cell.ChangeWeight(factor, layer);
+            }
+            
+        }
+    
+        return cellCount;
+    }
+    #endregion
+    
+    #region Quad
+    public int SetCellValues(Quad shape, float value)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            cell.SetWeight(value);
+        }
+    
+        return cellCount;
+    }
+    public int ChangeCellValues(Quad shape, float factor)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            cell.ChangeWeight(factor);
+        }
+    
+        return cellCount;
+    }
+    
+    public int SetCellValues(Quad shape, float value, uint layer)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            cell.SetWeight(value, layer);
+        }
+    
+        return cellCount;
+    }
+    public int ChangeCellValues(Quad shape, float factor, uint layer)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            cell.ChangeWeight(factor, layer);
+        }
+    
+        return cellCount;
+    }
+
+    public int SetCellValues(Quad shape, float value, uint[] layers)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            if (layers.Length <= 0)
+            {
+                cell.SetWeight(value);
+                continue;
+            }
+            foreach (var layer in layers)
+            {
+                cell.SetWeight(value, layer);
+            }
+            
+        }
+    
+        return cellCount;
+    }
+    public int ChangeCellValues(Quad shape, float factor, uint[] layers)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            if (layers.Length <= 0)
+            {
+                cell.ChangeWeight(factor);
+                continue;
+            }
+            
+            foreach (var layer in layers)
+            {
+                cell.ChangeWeight(factor, layer);
+            }
+            
+        }
+    
+        return cellCount;
+    }
+    #endregion
+    
+    #region Rect
+    public int SetCellValues(Rect shape, float value)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            cell.SetWeight(value);
+        }
+    
+        return cellCount;
+    }
+    public int ChangeCellValues(Rect shape, float factor)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            cell.ChangeWeight(factor);
+        }
+    
+        return cellCount;
+    }
+    
+    public int SetCellValues(Rect shape, float value, uint layer)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            cell.SetWeight(value, layer);
+        }
+    
+        return cellCount;
+    }
+    public int ChangeCellValues(Rect shape, float factor, uint layer)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            cell.ChangeWeight(factor, layer);
+        }
+    
+        return cellCount;
+    }
+
+    public int SetCellValues(Rect shape, float value, uint[] layers)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            if (layers.Length <= 0)
+            {
+                cell.SetWeight(value);
+                continue;
+            }
+            foreach (var layer in layers)
+            {
+                cell.SetWeight(value, layer);
+            }
+            
+        }
+    
+        return cellCount;
+    }
+    public int ChangeCellValues(Rect shape, float factor, uint[] layers)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            if (layers.Length <= 0)
+            {
+                cell.ChangeWeight(factor);
+                continue;
+            }
+            
+            foreach (var layer in layers)
+            {
+                cell.ChangeWeight(factor, layer);
+            }
+            
+        }
+    
+        return cellCount;
+    }
+    #endregion
+    
+    #region Polygon
+    public int SetCellValues(Polygon shape, float value)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            cell.SetWeight(value);
+        }
+    
+        return cellCount;
+    }
+    public int ChangeCellValues(Polygon shape, float factor)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            cell.ChangeWeight(factor);
+        }
+    
+        return cellCount;
+    }
+    
+    public int SetCellValues(Polygon shape, float value, uint layer)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            cell.SetWeight(value, layer);
+        }
+    
+        return cellCount;
+    }
+    public int ChangeCellValues(Polygon shape, float factor, uint layer)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            cell.ChangeWeight(factor, layer);
+        }
+    
+        return cellCount;
+    }
+
+    public int SetCellValues(Polygon shape, float value, uint[] layers)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            if (layers.Length <= 0)
+            {
+                cell.SetWeight(value);
+                continue;
+            }
+            foreach (var layer in layers)
+            {
+                cell.SetWeight(value, layer);
+            }
+            
+        }
+    
+        return cellCount;
+    }
+    public int ChangeCellValues(Polygon shape, float factor, uint[] layers)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            if (layers.Length <= 0)
+            {
+                cell.ChangeWeight(factor);
+                continue;
+            }
+            
+            foreach (var layer in layers)
+            {
+                cell.ChangeWeight(factor, layer);
+            }
+            
+        }
+    
+        return cellCount;
+    }
+    #endregion
+
+    #region Polyline
+    public int SetCellValues(Polyline shape, float value)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            cell.SetWeight(value);
+        }
+    
+        return cellCount;
+    }
+    public int ChangeCellValues(Polyline shape, float factor)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            cell.ChangeWeight(factor);
+        }
+    
+        return cellCount;
+    }
+    
+    public int SetCellValues(Polyline shape, float value, uint layer)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            cell.SetWeight(value, layer);
+        }
+    
+        return cellCount;
+    }
+    public int ChangeCellValues(Polyline shape, float factor, uint layer)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            cell.ChangeWeight(factor, layer);
+        }
+    
+        return cellCount;
+    }
+
+    public int SetCellValues(Polyline shape, float value, uint[] layers)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            if (layers.Length <= 0)
+            {
+                cell.SetWeight(value);
+                continue;
+            }
+            foreach (var layer in layers)
+            {
+                cell.SetWeight(value, layer);
+            }
+            
+        }
+    
+        return cellCount;
+    }
+    public int ChangeCellValues(Polyline shape, float factor, uint[] layers)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            if (layers.Length <= 0)
+            {
+                cell.ChangeWeight(factor);
+                continue;
+            }
+            
+            foreach (var layer in layers)
+            {
+                cell.ChangeWeight(factor, layer);
+            }
+            
+        }
+    
+        return cellCount;
+    }
+    #endregion
+    
+    
+    // public void SetCellValues(Rect rect, Func<int, int> setCellValue)
+    // {
+    //     resultSet.Clear();
+    //     var cellCount = GetCells(rect, ref resultSet);
+    //     if (cellCount <= 0) return;
+    //     foreach (var cell in resultSet)
+    //     {
+    //         cell.SetWeight(setCellValue(cell.GetWeight()));
+    //     }
+    // }
+    // public void SetCellValues(Rect rect, Func<int, int> setCellValue, uint layer)
+    // {
+    //     resultSet.Clear();
+    //     var cellCount = GetCells(rect, ref resultSet);
+    //     if (cellCount <= 0) return;
+    //     foreach (var cell in resultSet)
+    //     {
+    //         cell.SetWeight(setCellValue(cell.GetWeight(layer)), layer);
+    //     }
+    // }
+    // public void SetCellValues(Rect rect, Func<int, int> setCellValue, uint[] layers)
+    // {
+    //     resultSet.Clear();
+    //     var cellCount = GetCells(rect, ref resultSet);
+    //     if (cellCount <= 0) return;
+    //     foreach (var cell in resultSet)
+    //     {
+    //         foreach (var layer in layers)
+    //         {
+    //             cell.SetWeight(setCellValue(cell.GetWeight(layer)), layer);
+    //         }
+    //     }
+    // }
+    //
+
 }
 
 
