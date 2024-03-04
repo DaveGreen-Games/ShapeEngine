@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Collision;
@@ -6,6 +7,9 @@ using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
 
 namespace ShapeEngine.Pathfinding;
+
+
+
 
 // public interface INavigationObject : IShape
 // {
@@ -110,13 +114,74 @@ public abstract class Pathfinder
 
     public static readonly float Blocked = 0;
     public static readonly float Default = 1;
+    public static readonly float DiagonalLength = MathF.Sqrt(2f);
     
+
     
+    public class CellQueue
+    {
+        
+        private readonly List<Cell> cells = new();
+        // private static readonly Comparer<Cell> comparer = Comparer<Cell>.Create((x, y) => (int)(x.FScore - y.FScore));
+
+        public int Count => cells.Count;
+        public void Enqueue(Cell cell)
+        {
+            // if (cells == null)
+            // {
+            //     cells = new() { cell };
+            //     return;
+            // }
+            cells.Add(cell);
+            // if(cells.Count <= 0) cells.Add(cell);
+            
+            // int index = cells.BinarySearch(cell, comparer);
+            // if (index < 0) index = ~index;
+            // cells.Insert(index, cell);
+        }
+
+        public Cell Dequeue()
+        {
+            int minIndex = 0;
+            float minScore = float.PositiveInfinity;
+            for (int i = 0; i < cells.Count; i++)
+            {
+                var cell = cells[i];
+                if (cell.FScore < minScore)
+                {
+                    minScore = cell.FScore;
+                    minIndex = i;
+                }
+            }
+
+            var c = cells[minIndex];
+            cells.RemoveAt(minIndex);
+            
+            return c;
+            // if (cells is not { Count: > 0 }) return null;
+            // int lastIndex = cells.Count - 1;
+            // var cell = cells[lastIndex];
+            // cells.RemoveAt(lastIndex);
+            // return cell;
+        }
+
+        // public void UpdatePriority(Cell cell)
+        // {
+        //     if (cells is not { Count: > 0 }) return;
+        //     if (!cells.Remove(cell)) return;
+        //     
+        //     int index = cells.BinarySearch(cell, comparer);
+        //     if (index < 0) index = ~index;
+        //     cells.Insert(index, cell);
+        //
+        // }
+
+    }
     public class Cell
     {
         private readonly Pathfinder parent;
 
-        public bool DEBUG_Touched = false;
+        internal bool DEBUG_Touched = false;
         
         public Rect Rect
         {
@@ -133,8 +198,9 @@ public abstract class Pathfinder
 
         internal HashSet<Cell>? Neighbors = null;
         internal HashSet<Cell>? Connections = null;
-        internal float GScore = 0f;
-        internal float FScore = 0f;
+        internal float GScore = float.PositiveInfinity;
+        internal float FScore = float.PositiveInfinity;
+        internal float H = float.PositiveInfinity;
         
         public Cell(Grid.Coordinates coordinates, Pathfinder parent)
         {
@@ -190,12 +256,12 @@ public abstract class Pathfinder
             if (w < 0) return w * -1;
             return 1f / w;
         }
-        public bool IsTraversable() => weight > Blocked;
+        public bool IsTraversable() => weight > Blocked || weight < Blocked;
         public bool IsTraversable(uint layer)
         {
-            if (weights == null) return weight > Blocked;
-            if (weights.TryGetValue(layer, out float value)) return value > Blocked;
-            return weight > Blocked;
+            if (weights == null) return IsTraversable();
+            if (weights.TryGetValue(layer, out float value)) return value > Blocked || value < Blocked;
+            return weight > Blocked || weight < Blocked;
         }
         public void SetWeight(float value)
         {
@@ -263,11 +329,16 @@ public abstract class Pathfinder
     #region Members
 
     #region Public
+
+    public int DEBUG_TOUCHED_COUNT { get; private set; } = 0;
+    public int DEBUG_TOUCHED_UNIQUE_COUNT { get; private set; } = 0;
+    
+    // public float RelaxationPower = 1f;
+    // public float KeepPathThreshold = 0f;
+    
     public Size CellSize { get; private set; }
     public readonly Grid Grid;
     protected Dictionary<Cell, Cell> CellPath = new();
-    // protected List<float> GScores = new();
-    // protected List<float> FScores = new();
 
     #endregion
 
@@ -336,25 +407,40 @@ public abstract class Pathfinder
 
     private float DistanceToTarget(Cell current, Cell target)
     {
+        // return (current.Rect.Center - target.Rect.Center).Length();
+        
         var cc = current.Coordinates;
         var nc = target.Coordinates;
 
         var c = nc - cc;
+        return c.Distance;
 
-        const float relaxationValue = 1;
-        return c.Distance * relaxationValue;
+        // if (RelaxationPower <= 1f) return c.Distance;
         
-        // return (current.Rect.Center - target.Rect.Center).Length();
+        // return MathF.Pow(c.Distance, RelaxationPower);
+        // return MathF.Pow(c.Distance, 4);
+
+        // return c.Col > c.Row ? c.Col : c.Row;
+        // const float relaxationValue = 1;
+        // return c.Distance * relaxationValue;
+
+        // if (factor <= 0f) return c.Distance;
+        // var dis = c.Distance;
+        // return dis * (dis * factor);
+        
     }
 
     private float WeightedDistanceToNeighbor(Cell current, Cell neighbor, uint layer)
     {
+        
+        // return (current.Rect.Center - neighbor.Rect.Center).Length() * neighbor.GetWeightFactor(layer);
         var cc = current.Coordinates;
         var nc = neighbor.Coordinates;
 
         var c = nc - cc;
-
-        return c.Distance * neighbor.GetWeightFactor(layer);
+        if (c.Col != 0 && c.Row != 0) return DiagonalLength * neighbor.GetWeightFactor(layer);//diagonal
+        return 1f *neighbor.GetWeightFactor(layer);
+        // return c.Distance * neighbor.GetWeightFactor(layer);
         
         
         // var dis = (current.Rect.Center - neighbor.Rect.Center).Length();
@@ -390,29 +476,44 @@ public abstract class Pathfinder
         CellPath.Clear();
         foreach (var cell in cells)
         {
-            cell.GScore = float.PositiveInfinity;
-            cell.FScore = float.PositiveInfinity;
-            // cell.DEBUG_Touched = false;
+            // cell.GScore = float.PositiveInfinity;
+            // cell.FScore = float.PositiveInfinity;
+            // cell.H = float.PositiveInfinity;
+            cell.DEBUG_Touched = false;
         }
+
+        // var gScores = new Dictionary<int, float>();
+        // var fScores = new Dictionary<int, float>();
+
+        DEBUG_TOUCHED_COUNT = 0;
+        DEBUG_TOUCHED_UNIQUE_COUNT = 0;
         
-        PriorityQueue<Cell, float> openSet = new();
+        //todo make members to save memory ?
+        // PriorityQueue<Cell, float> openSet = new();
+        CellQueue openSet = new();
         HashSet<Cell> openSetCells = new();
         HashSet<Cell> closedSet = new();
 
         var startCell = GetCell(start);
         var targetCell = GetCell(end);
 
-        openSet.Enqueue(startCell, startCell.FScore);
+        startCell.GScore = 0;
+        startCell.H = DistanceToTarget(startCell, targetCell);
+        startCell.FScore = startCell.H;
+        // openSet.Enqueue(startCell, startCell.FScore);
+        openSet.Enqueue(startCell);
         openSetCells.Add(startCell);
 
-        startCell.GScore = 0;
-        startCell.FScore = DistanceToTarget(startCell, targetCell);
+        
 
         Cell current;
         while (openSet.Count > 0)
         {
             current = openSet.Dequeue();
 
+            DEBUG_TOUCHED_UNIQUE_COUNT += 1;
+            
+            
             if (current == targetCell)
             {
                 var rects = ReconstructPath(current, CellPath);
@@ -427,20 +528,47 @@ public abstract class Pathfinder
                 foreach (var neighbor in current.Neighbors)
                 {
                     if(closedSet.Contains(neighbor) || !neighbor.IsTraversable(layer)) continue;
+
+                    neighbor.DEBUG_Touched = true;
+                    DEBUG_TOUCHED_COUNT++;
                     
                     float tentativeGScore = current.GScore + WeightedDistanceToNeighbor(current, neighbor, layer);
-                    if (tentativeGScore < neighbor.GScore)
-                    {
-                        CellPath[neighbor] = current;
-                        neighbor.GScore = tentativeGScore;
-                        neighbor.FScore = tentativeGScore + DistanceToTarget(neighbor, targetCell);
 
-                        if (!openSetCells.Contains(neighbor))
+                    if (openSetCells.Contains(neighbor))
+                    {
+                        if (tentativeGScore < neighbor.GScore)
                         {
-                            openSet.Enqueue(neighbor, neighbor.FScore);
-                            neighbor.DEBUG_Touched = true;
+                            neighbor.GScore = tentativeGScore;
+                            neighbor.FScore = neighbor.GScore + neighbor.H;
+                            CellPath[neighbor] = current;
                         }
                     }
+                    else
+                    {
+                        neighbor.GScore = tentativeGScore;
+                        neighbor.H = DistanceToTarget(neighbor, targetCell);
+                        neighbor.FScore = neighbor.GScore + neighbor.H;
+                        // openSet.Enqueue(neighbor, neighbor.FScore);
+                        openSet.Enqueue(neighbor);
+                        openSetCells.Add(neighbor);
+                        CellPath[neighbor] = current;
+                    }
+                    
+                    // if (tentativeGScore < neighbor.GScore)
+                    // {
+                    //     neighbor.DEBUG_Touched = true;
+                    //     DEBUG_TOUCHED_COUNT++;
+                    //     
+                    //     CellPath[neighbor] = current;
+                    //     neighbor.GScore = tentativeGScore;
+                    //     neighbor.FScore = tentativeGScore + DistanceToTarget(neighbor, targetCell);
+                    //
+                    //     if (!openSetCells.Contains(neighbor))
+                    //     {
+                    //         openSet.Enqueue(neighbor, neighbor.FScore);
+                    //         openSetCells.Add(neighbor);
+                    //     }
+                    // }
                 }
             }
             
@@ -449,21 +577,54 @@ public abstract class Pathfinder
                 foreach (var connection in current.Connections)
                 {
                     if(closedSet.Contains(connection) || !connection.IsTraversable(layer)) continue;
+
+                    connection.DEBUG_Touched = true;
+                    DEBUG_TOUCHED_COUNT++;
                     
                     float tentativeGScore = current.GScore + WeightedDistanceToNeighbor(current, connection, layer);
-                    if (tentativeGScore < connection.GScore)
-                    {
-                        CellPath[connection] = current;
-                        connection.GScore = tentativeGScore;
-                        connection.FScore = tentativeGScore + DistanceToTarget(connection, targetCell);
 
-                        if (!openSetCells.Contains(connection))
+                    if (openSetCells.Contains(connection))
+                    {
+                        if (tentativeGScore < connection.GScore)
                         {
-                            openSet.Enqueue(connection, connection.FScore);
+                            connection.GScore = tentativeGScore;
+                            connection.FScore = connection.GScore + connection.H;
+                            CellPath[connection] = current;
                         }
+                    }
+                    else
+                    {
+                        connection.GScore = tentativeGScore;
+                        connection.H = DistanceToTarget(connection, targetCell);
+                        connection.FScore = connection.GScore + connection.H;
+                        // openSet.Enqueue(neighbor, neighbor.FScore);
+                        openSet.Enqueue(connection);
+                        openSetCells.Add(connection);
+                        CellPath[connection] = current;
                     }
                 }
             }
+            
+            // if (current.Connections != null)
+            // {
+            //     foreach (var connection in current.Connections)
+            //     {
+            //         if(closedSet.Contains(connection) || !connection.IsTraversable(layer)) continue;
+            //         
+            //         float tentativeGScore = current.GScore + WeightedDistanceToNeighbor(current, connection, layer);
+            //         if (tentativeGScore < connection.GScore)
+            //         {
+            //             CellPath[connection] = current;
+            //             connection.GScore = tentativeGScore;
+            //             connection.FScore = tentativeGScore + DistanceToTarget(connection, targetCell);
+            //
+            //             if (!openSetCells.Contains(connection))
+            //             {
+            //                 openSet.Enqueue(connection, connection.FScore);
+            //             }
+            //         }
+            //     }
+            // }
 
         }
         

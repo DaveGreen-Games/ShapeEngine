@@ -76,6 +76,11 @@ internal class PathfinderFlag
         private PathfinderFlag startFlag;
         private List<PathfinderFlag> endFlags = new();
         private List<Pathfinder.Path> paths = new();
+
+        private Circle? connectionCircleA = null;
+        private Circle? connectionCircleB = null;
+        
+        
         Stopwatch watch = new();
         public PathfinderExample()
         {
@@ -102,8 +107,8 @@ internal class PathfinderFlag
                 iaMoveCameraH, iaMoveCameraV
             };
 
-            Rect bounds = new(new(0f), new(5000, 5000), new(0.5f));
-            pathfinder = new(bounds, 50, 50);
+            Rect bounds = new(new(0f), new(8000, 8000), new(0.5f));
+            pathfinder = new(bounds, 100, 100);
 
             startFlag = new(new Vector2(-250), 32);
 
@@ -115,7 +120,7 @@ internal class PathfinderFlag
 
         private void SetupEndFlags()
         {
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 1; i++)
             {
                 var randPos = pathfinder.Bounds.GetRandomPointInside();
                 var flag = new PathfinderFlag(randPos, 32);
@@ -204,21 +209,54 @@ internal class PathfinderFlag
             {
                 paths.Clear();
                 watch.Restart();
+                // for (int i = 0; i < endFlags.Count; i++)
+                // {
+                //     var flag = endFlags[i];
+                //     pathfinder.RelaxationPower = 1f;
+                //     var path = pathfinder.GetPath(startFlag.Position, flag.Position, 0);
+                //     if(path != null) paths.Add(path);
+                // }
+                var flag = endFlags[0];
+                // pathfinder.RelaxationPower = 1f;
+                var path = pathfinder.GetPath(startFlag.Position, flag.Position, 0);
+                if(path != null) paths.Add(path);
+                // watch.Stop();
                 
-                foreach (var flag in endFlags)
-                {
-                    var path = pathfinder.GetPath(startFlag.Position, flag.Position, 0);
-                    if(path != null) paths.Add(path);
-                }
-                
-                watch.Stop();
-                Console.WriteLine($"{watch.ElapsedMilliseconds}ms");
+                Console.WriteLine("---Path Search Started---");
+                var pathCount = path?.Rects.Count ?? 0;
+                Console.WriteLine($"Path found in: {watch.ElapsedMilliseconds}ms containing {pathCount} cells.");
+                Console.WriteLine($"Cells touched {pathfinder.DEBUG_TOUCHED_COUNT} | Unique cells touched {pathfinder.DEBUG_TOUCHED_UNIQUE_COUNT} | {ShapeMath.RoundToDecimals((float)pathfinder.DEBUG_TOUCHED_UNIQUE_COUNT / pathfinder.Grid.Count, 2)}%");
+                Console.WriteLine($"---Path Search Ended with Success {pathCount > 0}");
             }
 
             if (Raylib.IsKeyPressed(KeyboardKey.H))
             {
                 var flag = new PathfinderFlag(mousePosGame, 32);
                 endFlags.Add(flag);
+            }
+
+            if (Raylib.IsKeyPressed(KeyboardKey.G))
+            {
+                if (connectionCircleA != null && connectionCircleB != null)
+                {
+                    var a = (Circle)connectionCircleA;
+                    var b = (Circle)connectionCircleB;
+                    pathfinder.RemoveConnections(a.GetBoundingBox(), b.GetBoundingBox(), false);
+
+                    connectionCircleA = null; // new Circle(mousePosGame, 64);
+                    connectionCircleB = null;
+                }
+                else if (connectionCircleA != null && connectionCircleB == null)
+                {
+                    connectionCircleB = new Circle(mousePosGame, 64);
+                    var a = (Circle)connectionCircleA;
+                    var b = (Circle)connectionCircleB;
+                    pathfinder.AddConnections(a.GetBoundingBox(), b.GetBoundingBox(), false);
+                }
+                else
+                {
+                    connectionCircleA = new Circle(mousePosGame, 64);
+                }
             }
         }
 
@@ -265,6 +303,15 @@ internal class PathfinderFlag
             }
             
 
+            connectionCircleA?.DrawLines(8f, new ColorRgba(Color.Chartreuse));
+            connectionCircleB?.DrawLines(8f, new ColorRgba(Color.Fuchsia));
+            if (connectionCircleA != null && connectionCircleB != null)
+            {
+                var a = (Circle)connectionCircleA;
+                var b = (Circle)connectionCircleB;
+                Segment s = new(a.Center, b.Center);
+                s.Draw(6f, new ColorRgba(Color.Chartreuse));
+            }
         }
 
         protected override void OnDrawUIExample(ScreenInfo ui)
