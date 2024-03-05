@@ -224,8 +224,11 @@ internal class PathfinderFlag
                 
                 Console.WriteLine("---Path Search Started---");
                 var pathCount = path?.Rects.Count ?? 0;
+                var touchPercentage = ShapeMath.RoundToDecimals(((float)pathfinder.DEBUG_TOUCHED_UNIQUE_COUNT / pathfinder.Grid.Count) * 100f, 2);
+                var successRate = ShapeMath.RoundToDecimals(((float)pathCount / pathfinder.DEBUG_TOUCHED_UNIQUE_COUNT) * 100f, 2);
                 Console.WriteLine($"Path found in: {watch.ElapsedMilliseconds}ms containing {pathCount} cells.");
-                Console.WriteLine($"Cells touched {pathfinder.DEBUG_TOUCHED_COUNT} | Unique cells touched {pathfinder.DEBUG_TOUCHED_UNIQUE_COUNT} | {ShapeMath.RoundToDecimals((float)pathfinder.DEBUG_TOUCHED_UNIQUE_COUNT / pathfinder.Grid.Count, 2)}%");
+                Console.WriteLine($"Max Open Set Count: {pathfinder.DEBUG_MAX_OPEN_SET_COUNT} | Unique cells touched {pathfinder.DEBUG_TOUCHED_UNIQUE_COUNT}");
+                Console.WriteLine($"Success rate: {successRate}% | Touched {touchPercentage}%");
                 Console.WriteLine($"---Path Search Ended with Success {pathCount > 0}");
             }
 

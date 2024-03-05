@@ -757,7 +757,20 @@ public static class ShapeDrawing
             r.DrawLines(patchLineThickness, patchColorRgba);
         }
     }
-    
+
+    public static void Draw(this Grid grid, Rect bounds, float lineThickness, ColorRgba color)
+    {
+        Vector2 rowSpacing = new(0f, bounds.Height / grid.Rows);
+        for (int row = 0; row < grid.Rows + 1; row++)
+        {
+            DrawLine(bounds.TopLeft + rowSpacing * row, bounds.TopRight + rowSpacing * row, lineThickness, color);
+        }
+        Vector2 colSpacing = new(bounds.Width / grid.Cols, 0f);
+        for (int col = 0; col < grid.Cols + 1; col++)
+        {
+            DrawLine(bounds.TopLeft + colSpacing * col, bounds.BottomLeft + colSpacing * col, lineThickness, color);
+        }
+    }
     public static void DrawGrid(this Rect r, int lines, float lineThickness, ColorRgba color)
     {
         //float hGap = r.width / lines;

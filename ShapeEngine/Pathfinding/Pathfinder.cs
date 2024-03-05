@@ -181,7 +181,7 @@ public abstract class Pathfinder
     {
         private readonly Pathfinder parent;
 
-        internal bool DEBUG_Touched = false;
+        // internal bool DEBUG_Touched = false;
         
         public Rect Rect
         {
@@ -213,7 +213,7 @@ public abstract class Pathfinder
             Connections?.Clear();
             weight = Default;
             weights?.Clear();
-            DEBUG_Touched = false;
+            // DEBUG_Touched = false;
         }
         
         public bool HasNeighbors => Neighbors is { Count: > 0 };
@@ -330,8 +330,11 @@ public abstract class Pathfinder
 
     #region Public
 
-    public int DEBUG_TOUCHED_COUNT { get; private set; } = 0;
-    public int DEBUG_TOUCHED_UNIQUE_COUNT { get; private set; } = 0;
+    // public int DEBUG_TOUCHED_COUNT { get; private set; } = 0;
+    public int DEBUG_TOUCHED_UNIQUE_COUNT => closedSet.Count;
+    public int DEBUG_MAX_OPEN_SET_COUNT { get; private set; } = 0;
+
+    private HashSet<Cell> closedSet = new();
     
     // public float RelaxationPower = 1f;
     // public float KeepPathThreshold = 0f;
@@ -364,7 +367,31 @@ public abstract class Pathfinder
             ResolveRegenerationRequested();
         }
     }
-    
+
+    public List<Rect> GetTraversableRects(int layer)
+    {
+        var rects = new List<Rect>();
+        foreach (var cell in cells)
+        {
+            if (cell.IsTraversable())
+            {
+                rects.Add(cell.Rect);
+            }
+        }
+
+        return rects;
+    }
+    public List<Rect> GetRects(int minWeight, int maxWeight, int layer)
+    {
+        var rects = new List<Rect>();
+        foreach (var cell in cells)
+        {
+            var w = cell.GetWeight();
+            if(w >= minWeight && w <= maxWeight) rects.Add(cell.Rect);
+        }
+
+        return rects;
+    }
     #endregion
     
     #endregion
@@ -472,30 +499,25 @@ public abstract class Pathfinder
     {
         // GScore is the cost of the cheapest path from start to n currently known.
         // FScore represents our current best guess as to how cheap a path could be from start to finish if it goes through n.
+        var startCell = GetCell(start);
+        var targetCell = GetCell(end);
+        if (!startCell.IsTraversable(layer) || !targetCell.IsTraversable(layer)) return null;
+        
         
         CellPath.Clear();
-        foreach (var cell in cells)
-        {
-            // cell.GScore = float.PositiveInfinity;
-            // cell.FScore = float.PositiveInfinity;
-            // cell.H = float.PositiveInfinity;
-            cell.DEBUG_Touched = false;
-        }
 
-        // var gScores = new Dictionary<int, float>();
-        // var fScores = new Dictionary<int, float>();
-
-        DEBUG_TOUCHED_COUNT = 0;
-        DEBUG_TOUCHED_UNIQUE_COUNT = 0;
+        DEBUG_MAX_OPEN_SET_COUNT = 0;
+        
         
         //todo make members to save memory ?
         // PriorityQueue<Cell, float> openSet = new();
         CellQueue openSet = new();
         HashSet<Cell> openSetCells = new();
-        HashSet<Cell> closedSet = new();
+        closedSet.Clear();
+        // HashSet<Cell> closedSet = new();
 
-        var startCell = GetCell(start);
-        var targetCell = GetCell(end);
+        // var startCell = GetCell(start);
+        // var targetCell = GetCell(end);
 
         startCell.GScore = 0;
         startCell.H = DistanceToTarget(startCell, targetCell);
@@ -504,15 +526,16 @@ public abstract class Pathfinder
         openSet.Enqueue(startCell);
         openSetCells.Add(startCell);
 
-        
 
         Cell current;
         while (openSet.Count > 0)
         {
             current = openSet.Dequeue();
-
-            DEBUG_TOUCHED_UNIQUE_COUNT += 1;
             
+            if (openSetCells.Count > DEBUG_MAX_OPEN_SET_COUNT)
+            {
+                DEBUG_MAX_OPEN_SET_COUNT = openSetCells.Count;
+            }
             
             if (current == targetCell)
             {
@@ -529,9 +552,6 @@ public abstract class Pathfinder
                 {
                     if(closedSet.Contains(neighbor) || !neighbor.IsTraversable(layer)) continue;
 
-                    neighbor.DEBUG_Touched = true;
-                    DEBUG_TOUCHED_COUNT++;
-                    
                     float tentativeGScore = current.GScore + WeightedDistanceToNeighbor(current, neighbor, layer);
 
                     if (openSetCells.Contains(neighbor))
@@ -553,7 +573,6 @@ public abstract class Pathfinder
                         openSetCells.Add(neighbor);
                         CellPath[neighbor] = current;
                     }
-                    
                     // if (tentativeGScore < neighbor.GScore)
                     // {
                     //     neighbor.DEBUG_Touched = true;
@@ -578,8 +597,8 @@ public abstract class Pathfinder
                 {
                     if(closedSet.Contains(connection) || !connection.IsTraversable(layer)) continue;
 
-                    connection.DEBUG_Touched = true;
-                    DEBUG_TOUCHED_COUNT++;
+                    // connection.DEBUG_Touched = true;
+                    // DEBUG_TOUCHED_COUNT++;
                     
                     float tentativeGScore = current.GScore + WeightedDistanceToNeighbor(current, connection, layer);
 
@@ -997,7 +1016,7 @@ public abstract class Pathfinder
         {
             var r = cell.Rect;
 
-            if (cell.DEBUG_Touched)
+            if(closedSet.Contains(cell)) //touched
             {
                 // r.DrawLines(4f, new ColorRgba(System.Drawing.Color.Azure));
                 r.ScaleSize(0.9f, new Vector2(0.5f)).Draw(new ColorRgba(System.Drawing.Color.Bisque));
@@ -1509,6 +1528,8 @@ public class PathfinderStatic : Pathfinder
         if (cellCount <= 0) return 0;
         foreach (var cell in resultSet)
         {
+            // if(shape.ContainsShape(cell.Rect)) cell.SetWeight(0);
+            // else cell.SetWeight(value);
             cell.SetWeight(value);
         }
     

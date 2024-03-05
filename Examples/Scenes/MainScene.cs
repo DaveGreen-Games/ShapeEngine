@@ -50,6 +50,7 @@ namespace Examples.Scenes
             examples.Add(new TextBoxExample()); 
             examples.Add(new ControlNodeExampleScene()); 
             examples.Add(new PathfinderExample()); 
+            examples.Add(new PathfinderExample2()); 
             
             // examples.Add(new WordEmphasisDynamicExample());
             //examples.Add(new TextEmphasisExample());
