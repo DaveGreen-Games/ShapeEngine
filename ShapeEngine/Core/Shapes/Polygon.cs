@@ -652,7 +652,7 @@ namespace ShapeEngine.Core.Shapes
                 j = i;
             }
 
-            return oddNodesA || oddNodesB;
+            return oddNodesA && oddNodesB;
         }
         public static bool ContainsPoints(Polygon poly, Vector2 a, Vector2 b, Vector2 c)
         {
@@ -672,7 +672,7 @@ namespace ShapeEngine.Core.Shapes
                 j = i;
             }
 
-            return oddNodesA || oddNodesB || oddNodesC;
+            return oddNodesA && oddNodesB && oddNodesC;
         }
         public static bool ContainsPoints(Polygon poly, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
         {
@@ -694,7 +694,7 @@ namespace ShapeEngine.Core.Shapes
                 j = i;
             }
 
-            return oddNodesA || oddNodesB || oddNodesC || oddNodesD;
+            return oddNodesA && oddNodesB && oddNodesC && oddNodesD;
         }
 
         /// <summary>

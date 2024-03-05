@@ -109,6 +109,14 @@ public interface IPathfinderObstacle : IShape
     
 }
 
+public interface IPathfinderAgent
+{
+    public event Action<IPathfinderAgent, Vector2, Vector2> OnRequestPath;
+
+
+    public bool RecievePath(Pathfinder.Path? path);
+
+}
 public abstract class Pathfinder
 {
 
@@ -392,6 +400,7 @@ public abstract class Pathfinder
 
         return rects;
     }
+    
     #endregion
     
     #endregion
@@ -495,13 +504,81 @@ public abstract class Pathfinder
         rects.Reverse();
         return rects;
     }
+    
+    public Cell? GetClosestTraversableCell(Cell cell)
+    {
+
+        if (cell.Neighbors == null || cell.Neighbors.Count <= 0) return null;
+
+        HashSet<Cell> lookedAt = new();
+        List<Cell> nextNeighbors = new();
+        List<Cell> currentNeighbors = new();
+        foreach (var neighbor in cell.Neighbors)
+        {
+            currentNeighbors.Add(neighbor);
+            lookedAt.Add(neighbor);
+        }
+        lookedAt.Add(cell);
+        
+        var minDisSq = float.PositiveInfinity;
+        Cell? closestNeighbor = null;
+        while (currentNeighbors.Count > 0)
+        {
+            foreach (var neighbor in currentNeighbors)
+            {
+                if (neighbor.IsTraversable())
+                {
+                    var disSq = (cell.Rect.Center - neighbor.Rect.Center).LengthSquared();
+                    if (disSq < minDisSq)
+                    {
+                        minDisSq = disSq;
+                        closestNeighbor = neighbor;
+                    }
+                }
+                else nextNeighbors.Add(neighbor);
+            }
+
+            if (closestNeighbor != null) return closestNeighbor;
+            currentNeighbors.Clear();
+            GetNewNeighbors(nextNeighbors, ref lookedAt, ref currentNeighbors);
+        }
+
+        return null;
+    }
+
+    private void GetNewNeighbors(List<Cell> collection, ref HashSet<Cell> lookedAt, ref List<Cell> newNeighbors)
+    {
+        foreach (var cell in collection)
+        {
+            if(cell.Neighbors == null || cell.Neighbors.Count <= 0) continue;
+            foreach (var neighbor in cell.Neighbors)
+            {
+                if(lookedAt.Contains(neighbor)) continue;
+                lookedAt.Add(neighbor);
+                newNeighbors.Add(neighbor);
+            }
+        }
+    }
+    
     public Path? GetPath(Vector2 start, Vector2 end, uint layer)
     {
         // GScore is the cost of the cheapest path from start to n currently known.
         // FScore represents our current best guess as to how cheap a path could be from start to finish if it goes through n.
         var startCell = GetCell(start);
+        if (!startCell.IsTraversable())
+        {
+            var newStartCell = GetClosestTraversableCell(startCell);
+            if (newStartCell == null) return null;
+            startCell = newStartCell;
+        }
+        
         var targetCell = GetCell(end);
-        if (!startCell.IsTraversable(layer) || !targetCell.IsTraversable(layer)) return null;
+        if (!targetCell.IsTraversable())
+        {
+            var newTargetCell = GetClosestTraversableCell(targetCell);
+            if (newTargetCell == null) return null;
+            targetCell = newTargetCell;
+        }
         
         
         CellPath.Clear();

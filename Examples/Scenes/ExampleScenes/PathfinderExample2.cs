@@ -659,7 +659,7 @@ namespace Examples.Scenes.ExampleScenes
                 var center = universe.GetRandomPointInside();
                 var shape = Polygon.Generate(center, 14, 250, 500);
                 var asteroid = new AsteroidObstacle(shape);
-                pathfinder.SetCellValues(shape, -5);
+                pathfinder.SetCellValues(shape, 0);
                 asteroids.Add(asteroid);
             }
             
