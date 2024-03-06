@@ -175,10 +175,15 @@ public class Pathfinder
     private class CellQueue
     {
         
-        private readonly List<Cell> cells = new();
+        private readonly List<Cell> cells;
         // private static readonly Comparer<Cell> comparer = Comparer<Cell>.Create((x, y) => (int)(x.FScore - y.FScore));
 
+        public CellQueue(int capacity)
+        {
+            cells = new(capacity);
+        }
         public int Count => cells.Count;
+        public void Clear() => cells.Clear();
         public void Enqueue(Cell cell)
         {
             // if (cells == null)
@@ -382,6 +387,7 @@ public class Pathfinder
     }
     }
 
+    //todo implement
     public enum OperationType
     {
         Override = 0,
@@ -419,11 +425,14 @@ public class Pathfinder
     #region Private
     private Rect bounds;
     private readonly List<Cell> cells;
-    private HashSet<Cell> cellHelper1 = new();
-    private HashSet<Cell> cellHelper2 = new();
-    private HashSet<Cell> resultSet = new();
-    private readonly HashSet<Cell> closedSet = new();
-    private readonly Dictionary<Cell, Cell> cellPath = new();
+    private HashSet<Cell> cellHelper1 = new(1024);
+    private HashSet<Cell> cellHelper2 = new(1024);
+    private HashSet<Cell> resultSet = new(1024);
+    
+    private readonly CellQueue openSet = new(1024);
+    private readonly HashSet<Cell> openSetCells = new(1024);
+    private readonly HashSet<Cell> closedSet = new(1024);
+    private readonly Dictionary<Cell, Cell> cellPath = new(1024);
 
     /// <summary>
     /// How many agent requests are handled each frame
@@ -452,14 +461,8 @@ public class Pathfinder
 
     #endregion
     
-    
-    
-    
     #endregion
 
-    
-    
-    
     public Pathfinder(Rect bounds, int cols, int rows)
     {
         this.bounds = bounds;
@@ -562,21 +565,13 @@ public class Pathfinder
             targetCell = newTargetCell;
         }
         
-        
         cellPath.Clear();
 
         DEBUG_MAX_OPEN_SET_COUNT = 0;
         
-        
-        //todo make members to save memory ?
-        // PriorityQueue<Cell, float> openSet = new();
-        CellQueue openSet = new();
-        HashSet<Cell> openSetCells = new();
         closedSet.Clear();
-        // HashSet<Cell> closedSet = new();
-
-        // var startCell = GetCell(start);
-        // var targetCell = GetCell(end);
+        openSetCells.Clear();
+        openSet.Clear();
 
         startCell.GScore = 0;
         startCell.H = DistanceToTarget(startCell, targetCell);
@@ -598,7 +593,15 @@ public class Pathfinder
             
             if (current == targetCell)
             {
-                var rects = ReconstructPath(current, cellPath);
+                var startCoordinates = startCell.Coordinates;
+                var targetCoordinates = targetCell.Coordinates;
+                var dif = startCoordinates - targetCoordinates;
+                var rects = ReconstructPath(current, dif.Distance);
+                
+                // if(openSet.Count > 1024) Console.WriteLine($"Open Set Count: {openSet.Count}, Open Set Cells Count: {openSetCells}");
+                // if(closedSet.Count > 1024) Console.WriteLine($"Closed Set Count: {closedSet.Count}");
+                // if(cellPath.Count > 1024) Console.WriteLine($"Cell Path Count: {cellPath.Count}");
+    
                 return new Path(start, end, rects);
             }
 
@@ -1906,9 +1909,9 @@ public class Pathfinder
         // var dis = (current.Rect.Center - neighbor.Rect.Center).Length();
         // return dis * neighbor.Weight;
     }
-    private List<Rect> ReconstructPath(Cell from, Dictionary<Cell, Cell> cellPath)
+    private List<Rect> ReconstructPath(Cell from, int capacityEstimate)
     {
-        List<Rect> rects = new() { from.Rect };
+        List<Rect> rects = new(capacityEstimate) { from.Rect };
 
         var current = from;
 
@@ -1923,6 +1926,7 @@ public class Pathfinder
 
         } while (current != null);
 
+        // if(cellPath.Count > 250) Console.WriteLine($"Cell Path Count: {cellPath.Count}, Capacity Estimate: {capacityEstimate}, Rect Count: {rects.Count}");
 
         rects.Reverse();
         return rects;

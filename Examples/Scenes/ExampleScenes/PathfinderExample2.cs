@@ -382,7 +382,7 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
         
-        private const int chaserCount = 100;
+        // private const int chaserCount = 100;
         private readonly Rect universe;
         // private readonly List<Rect> universeSectors;
         private readonly Pathfinder pathfinder;
@@ -416,7 +416,7 @@ namespace Examples.Scenes.ExampleScenes
             AddAsteroids(30);
             AddChasers(2500);
 
-            pathfinder.RequestsPerFrame = 15;
+            pathfinder.RequestsPerFrame = 50;
         }
         public override void Activate(Scene oldScene)
         {
