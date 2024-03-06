@@ -237,6 +237,12 @@ public readonly struct Grid : IEquatable<Grid>
     {
         return CoordinatesToIndex(GetCellCoordinate(pos, bounds));
     }
+    public int GetCellIndexUnclamped(Vector2 pos, Rect bounds)
+    {
+        var result = GetCellCoordinate(pos, bounds);
+        if (!AreCoordinatesInside(result)) return -1;
+        return CoordinatesToIndex(result);
+    }
     public Coordinates GetCellCoordinate(Vector2 pos, Rect bounds)
     {
         var cellSize = GetCellSize(bounds);
@@ -244,7 +250,13 @@ public readonly struct Grid : IEquatable<Grid>
         int yi = Math.Clamp((int)Math.Floor((pos.Y - bounds.Y) / cellSize.Height), 0, Rows - 1);
         return new(xi, yi);
     }
-
+    public Coordinates GetCellCoordinateUnclamped(Vector2 pos, Rect bounds)
+    {
+        var cellSize = GetCellSize(bounds);
+        int xi = (int)Math.Floor((pos.X - bounds.X) / cellSize.Width);
+        int yi = (int)Math.Floor((pos.Y - bounds.Y) / cellSize.Height);
+        return new(xi, yi);
+    }
     public Coordinates ClampCoordinates(Coordinates coordinates)
     {
         var col = coordinates.Col < 0 ? 0 : coordinates.Col > Cols ? Cols - 1 : coordinates.Col;

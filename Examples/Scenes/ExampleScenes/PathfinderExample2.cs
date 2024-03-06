@@ -367,7 +367,7 @@ namespace Examples.Scenes.ExampleScenes
             private float speed;
 
             private Ship? target = null;
-            private PathfinderStatic pathfinder;
+            private Pathfinder pathfinder;
             private Pathfinder.Path? currentPath = null;
             private int currentPathIndex = -1;
             private Vector2 nextPathPoint = new();
@@ -377,7 +377,7 @@ namespace Examples.Scenes.ExampleScenes
             private Vector2 lastTargetPosition = new();
             // private bool directChase = false;
 
-            public Chaser(Vector2 pos, float size, float speed, PathfinderStatic pathfinder)
+            public Chaser(Vector2 pos, float size, float speed, Pathfinder pathfinder)
             {
                 this.body = new(pos, size);
                 this.speed = ShapeRandom.RandF(speed * 0.5f, speed * 2f);
@@ -560,6 +560,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             private readonly Polygon shape;
 
+            public Polygon GetShape() => shape;
             public AsteroidObstacle(Polygon shape)
             {
                 this.shape = shape;
@@ -574,7 +575,7 @@ namespace Examples.Scenes.ExampleScenes
         private const int chaserCount = 100;
         private readonly Rect universe;
         // private readonly List<Rect> universeSectors;
-        private readonly PathfinderStatic pathfinder;
+        private readonly Pathfinder pathfinder;
         private readonly Ship ship;
         private readonly ShapeCamera camera;
         private readonly InputAction iaDrawDebug;

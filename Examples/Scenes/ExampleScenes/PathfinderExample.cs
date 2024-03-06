@@ -68,7 +68,7 @@ internal class PathfinderFlag
         
         private readonly List<InputAction> inputActions;
 
-        private readonly PathfinderStatic pathfinder;
+        private readonly Pathfinder pathfinder;
 
         private bool rectStarted = false;
         private Vector2 rectStartPos = new();
