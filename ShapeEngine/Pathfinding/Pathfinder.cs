@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics.SymbolStore;
 using System.IO.Pipes;
 using System.Numerics;
 using ShapeEngine.Color;
@@ -112,7 +113,7 @@ public interface IPathfinderObstacle : IShape
 
 public interface IPathfinderAgent
 {
-    public class PathRequest
+    public class PathRequest // : IEquatable<PathRequest>, IEqualityComparer<PathRequest>
     {
         public readonly IPathfinderAgent? Agent;
         public readonly Vector2 Start;
@@ -137,21 +138,39 @@ public interface IPathfinderAgent
             this.End = end;
             this.Priority = priority;
         }
+
+        // public bool Equals(PathRequest other)
+        // {
+        //     if (Agent == null || other.Agent == null) return false;
+        //     return Agent == other.Agent;
+        // }
+        //
+        // public bool Equals(PathRequest x, PathRequest y)
+        // {
+        //     return x.Equals(y);
+        // }
+        //
+        // public int GetHashCode(PathRequest obj)
+        // {
+        //     return HashCode.Combine(Agent, Start, End, Priority);
+        // }
     }
     public event Action<PathRequest> OnRequestPath;
 
-    public bool ReceiveRequestedPath(Pathfinder.Path? path);
+    public void ReceiveRequestedPath(Pathfinder.Path? path, PathRequest request);
     public uint GetLayer();
     public void AddedToPathfinder(Pathfinder pathfinder);
-    public void RemovedFromPathfinder(Pathfinder pathfinder);
+    public void RemovedFromPathfinder();
 
 }
+
 public class Pathfinder
 {
 
     public static readonly float Blocked = 0;
     public static readonly float Default = 1;
     public static readonly float DiagonalLength = MathF.Sqrt(2f);
+    
     
     private class CellQueue
     {
@@ -362,7 +381,19 @@ public class Pathfinder
         Rects = rects;
     }
     }
-    
+
+    public enum OperationType
+    {
+        Override = 0,
+        Add = 1,
+        Multiply = 2
+    }
+    public struct CellValue
+    {
+        public float Value;
+        public OperationType Type;
+        public int Layer;
+    }
     
     
     public event Action<Pathfinder>? OnRegenerationRequested;
@@ -379,6 +410,7 @@ public class Pathfinder
     // public int DEBUG_TOUCHED_COUNT { get; private set; } = 0;
     public int DEBUG_TOUCHED_UNIQUE_COUNT => closedSet.Count;
     public int DEBUG_MAX_OPEN_SET_COUNT { get; private set; } = 0;
+    public int DEBUG_PATH_REQUEST_COUNT => pathRequests.Count;
     public Size CellSize { get; private set; }
     public readonly Grid Grid;
     
@@ -399,7 +431,8 @@ public class Pathfinder
     /// </summary>
     public int RequestsPerFrame = 0;
     private readonly List<IPathfinderAgent.PathRequest> pathRequests = new();
-    private readonly Dictionary<IPathfinderAgent, IPathfinderAgent.PathRequest> agents = new();
+    private readonly Dictionary<IPathfinderAgent, IPathfinderAgent.PathRequest?> agents = new();
+    // private readonly HashSet<IPathfinderAgent> agents = new();
     #endregion
 
     #region Getters & Setters
@@ -454,6 +487,10 @@ public class Pathfinder
     
     #region Public
 
+    public void Update(float dt)
+    {
+        HandlePathRequests();
+    }
     public void Reset()
     {
         foreach (var cell in cells)
@@ -680,7 +717,8 @@ public class Pathfinder
 
     public bool AddAgent(IPathfinderAgent agent)
     {
-        if (!agents.TryAdd(agent, new())) return false;
+        // if (!agents.Add(agent)) return false;
+        if (!agents.TryAdd(agent, null)) return false;
 
         agent.OnRequestPath += OnAgentRequestedPath;
         agent.AddedToPathfinder(this);
@@ -688,18 +726,31 @@ public class Pathfinder
     }
     public bool RemoveAgent(IPathfinderAgent agent)
     {
+        // if (!agents.Remove(agent)) return false;
         if (!agents.Remove(agent, out var request)) return false;
-        pathRequests.Remove(request);
+        if(request != null) pathRequests.Remove(request);
         
         agent.OnRequestPath -= OnAgentRequestedPath;
+        agent.RemovedFromPathfinder();
         return true;
+    }
+
+    public void ClearAgents()
+    {
+        pathRequests.Clear();
+        var allAgents = this.agents.Keys;
+        foreach (var agent in allAgents)
+        {
+            agent.OnRequestPath -= OnAgentRequestedPath;
+        }
+        agents.Clear();
     }
     private void OnAgentRequestedPath(IPathfinderAgent.PathRequest request)
     {
         if (request.Agent == null) return;
         
         var prevRequest = agents[request.Agent];
-        pathRequests.Remove(prevRequest);
+        if(prevRequest != null) pathRequests.Remove(prevRequest);
         agents[request.Agent] = request;
         pathRequests.Add(request);
     }
@@ -714,17 +765,37 @@ public class Pathfinder
             pathRequests.Sort((a, b) => a.Priority - b.Priority); 
         }
 
-        int endIndex = RequestsPerFrame > 0 ? ShapeMath.MaxInt(pathRequests.Count - RequestsPerFrame, 0) : 0;
-        
-        for (int i = pathRequests.Count - 1; i >= endIndex; i--)
+        int requests = 0;
+        while (pathRequests.Count > 0 && (RequestsPerFrame <= 0 || requests <= RequestsPerFrame))
         {
-            var request = pathRequests[i];
-            pathRequests.RemoveAt(i);
-            if (request.Agent == null) continue;
+            var lastIndex = pathRequests.Count - 1;
+            var request = pathRequests[lastIndex];
+            pathRequests.RemoveAt(lastIndex);
+            if (request.Agent == null) continue; //should not happen
+            agents[request.Agent] = null; //handled and therefore cleared
+            requests ++;
             var path = GetPath(request.Start, request.End, request.Agent.GetLayer());
             if(path == null) continue;
-            request.Agent.ReceiveRequestedPath(path);
+            request.Agent.ReceiveRequestedPath(path, request);
         }
+        pathRequests.Clear();
+        
+        // int endIndex = RequestsPerFrame > 0 ? ShapeMath.MaxInt(pathRequests.Count - RequestsPerFrame, 0) : 0;
+        //
+        // for (int i = pathRequests.Count - 1; i >= endIndex; i--)
+        // {
+        //     var request = pathRequests[i];
+        //     // pathRequests.RemoveAt(i);
+        //     if (request.Agent == null) continue; //should not happen
+        //     agents[request.Agent] = null; //handled and therefor cleared
+        //     var path = GetPath(request.Start, request.End, request.Agent.GetLayer());
+        //     if(path == null) continue;
+        //     request.Agent.ReceiveRequestedPath(path, request);
+        // }
+        // pathRequests.Clear();
+        
+        
+        
     }
 
 

@@ -13,248 +13,11 @@ using Color = System.Drawing.Color;
 
 namespace Examples.Scenes.ExampleScenes
 {
-    // internal class Star
-    // {
-    //     Circle circle;
-    //     public Star(Vector2 pos, float size)
-    //     {
-    //         circle = new(pos, size);
-    //     }
-    //
-    //     public Rect GetBoundingBox() => circle.GetBoundingBox();
-    //
-    //     public void Draw()
-    //     {
-    //         var color = new ColorRgba(System.Drawing.Color.DarkGray);
-    //         if (circle.Radius > 2f && circle.Radius <= 3f) color = new(System.Drawing.Color.LightGray);
-    //         else if (circle.Radius > 3f) color = new(System.Drawing.Color.AntiqueWhite);
-    //         ShapeDrawing.DrawCircleFast(circle.Center, circle.Radius, color);
-    //     }
-    //     public void Draw(ColorRgba c) => ShapeDrawing.DrawCircleFast(circle.Center, circle.Radius, c);
-    // }
-    // internal class Comet
-    // {
-    //     private const float MaxSize = 20f;
-    //     private const float MinSize = 10f;
-    //     private const float MaxSpeed = 150f;
-    //     private const float MinSpeed = 10f;
-    //     private static ChanceList<ColorRgba> colors = new((50, new(Color.Orange)), (30, new(Color.Goldenrod)), (10, new(Color.IndianRed)), (5, new(Color.MediumPurple)), (1, new(Color.ForestGreen)));
-    //     private static ChanceList<float> speeds = new((10, MinSpeed), (30, MinSpeed * 2.5f), (50, MinSpeed * 4f), (20, MaxSpeed / 2), (10, MaxSpeed));
-    //     Circle circle;
-    //     Vector2 vel;
-    //     ColorRgba colorRgba;
-    //     float speed = 0f;
-    //     public Comet(Vector2 pos)
-    //     {
-    //         this.circle = new(pos, ShapeRandom.RandF(MinSize, MaxSize));
-    //         this.speed = speeds.Next();
-    //         this.vel = ShapeRandom.RandVec2() * this.speed;
-    //         this.colorRgba = colors.Next();
-    //
-    //     }
-    //     public void Update(float dt, Rect universe)
-    //     {
-    //         circle += vel * dt; // circle.Center += vel * dt;
-    //
-    //         if (!universe.ContainsPoint(circle.Center))
-    //         {
-    //             circle -= circle.Center; // circle.Center = -circle.Center;
-    //         }
-    //     }
-    //     public bool CheckCollision(Circle ship)
-    //     {
-    //         return circle.OverlapShape(ship);
-    //     }
-    //     public float GetCollisionIntensity()
-    //     {
-    //         float speedF = ShapeMath.GetFactor(speed, MinSpeed, MaxSpeed);
-    //         float sizeF = ShapeMath.GetFactor(circle.Radius, MinSize, MaxSize);
-    //         return speedF * sizeF;
-    //     }
-    //     public void Draw()
-    //     {
-    //         circle.DrawLines(6f, colorRgba);
-    //     }
-    // }
-    //
-    //
-    // internal class Slider
-    // {
-    //     public float CurValue { get; private set; } = 0f;
-    //     public string Title { get; set; } = "";
-    //     private Rect background = new();
-    //     private Rect fill = new();
-    //     private TextFont font;
-    //     private bool mouseInside = false;
-    //     public Slider(float startValue, string title, Font font)
-    //     {
-    //         this.Title = title;
-    //         this.CurValue = ShapeMath.Clamp(startValue, 0f, 1f);
-    //         this.font = new(font, 1f, ColorRgba.White);
-    //     }
-    //
-    //     public void SetValue(float newValue)
-    //     {
-    //         CurValue = ShapeMath.Clamp(newValue, 0f, 1f);
-    //     }
-    //     public void Update(float dt, Rect r, Vector2 mousePos)
-    //     {
-    //         background = r; // ui.Area.ApplyMargins(0.025f, 0.6f, 0.1f, 0.85f);
-    //         mouseInside = background.ContainsPoint(mousePos);
-    //         if (mouseInside)
-    //         {
-    //             if (GAMELOOP.InputActionUIAccept.State.Down || GAMELOOP.InputActionUIAcceptMouse.State.Down)
-    //             {
-    //                 float intensity = background.GetWidthPointFactor(mousePos.X);
-    //                 CurValue = intensity;
-    //                 fill = background.SetSize(background.Size * new Vector2(intensity, 1f));
-    //             }
-    //             else fill = background.SetSize(background.Size * new Vector2(CurValue, 1f));
-    //         }
-    //         else fill = background.SetSize(background.Size * new Vector2(CurValue, 1f));
-    //     }
-    //     public void Draw()
-    //     {
-    //         background.DrawRounded(4f, 4, Colors.Dark);
-    //         fill.DrawRounded(4f, 4, Colors.Medium);
-    //         
-    //         int textValue = (int)(CurValue * 100);
-    //         font.ColorRgba = mouseInside ? Colors.Highlight: Colors.Special;
-    //         font.DrawTextWrapNone($"{Title} {textValue}", background, new Vector2(0.1f, 0.5f));
-    //         // font.DrawText(, background, 1f, new Vector2(0.1f, 0.5f), mouseInside ? ExampleScene.ColorHighlight2 : ExampleScene.ColorHighlight3);
-    //     }
-    // }
-    //
-    // internal class Ship : ICameraFollowTarget
-    // {
-    //     public Circle Hull { get; private set; }
-    //     private Vector2 movementDir;
-    //     public float Speed = 500;
-    //
-    //     private PaletteColor hullColor = Colors.PcCold; // new(System.Drawing.Color.SteelBlue);
-    //     private PaletteColor outlineColor = Colors.PcLight; //new(System.Drawing.Color.IndianRed);
-    //     private PaletteColor cockpitColor = Colors.PcWarm; // new(System.Drawing.Color.DodgerBlue);
-    //
-    //     private InputAction iaMoveHor;
-    //     private InputAction iaMoveVer;
-    //     
-    //     
-    //     private void SetupInput()
-    //     {
-    //         var moveHorKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
-    //         // var moveHorGP =
-    //             // new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_LEFT, ShapeGamepadButton.LEFT_FACE_RIGHT);//reverse modifier
-    //         var moveHor2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_X, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-    //         var moveHorMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.HORIZONTAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-    //         iaMoveHor = new(moveHorKB, moveHor2GP, moveHorMW);
-    //         
-    //         var moveVerKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.W, ShapeKeyboardButton.S);
-    //         // var moveVerGP =
-    //             // new InputTypeGamepadButtonAxis(ShapeGamepadButton.LEFT_FACE_UP, ShapeGamepadButton.LEFT_FACE_DOWN);//reverse modifier
-    //         var moveVer2GP = new InputTypeGamepadAxis(ShapeGamepadAxis.RIGHT_Y, 0.1f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyGamepadReversed);
-    //         var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
-    //         iaMoveVer = new(moveVerKB, moveVer2GP, moveVerMW);
-    //     }
-    //     public Ship(Vector2 pos, float r)
-    //     {
-    //         Hull = new(pos, r);
-    //         SetupInput();
-    //     }
-    //     public Ship(Vector2 pos, float r, PaletteColor hullColor, PaletteColor cockpitColor, PaletteColor outlineColor)
-    //     {
-    //         Hull = new(pos, r);
-    //         this.hullColor = hullColor;
-    //         this.cockpitColor = cockpitColor;
-    //         this.outlineColor = outlineColor;
-    //         SetupInput();
-    //     }
-    //
-    //     public string GetInputDescription(InputDeviceType inputDeviceType)
-    //     {
-    //         string hor = iaMoveHor.GetInputTypeDescription(inputDeviceType, true, 1, false, false);
-    //         string ver = iaMoveVer.GetInputTypeDescription(inputDeviceType, true, 1, false, false);
-    //         return $"Move Horizontal [{hor}] Vertical [{ver}]";
-    //     }
-    //     public void Reset(Vector2 pos, float r)
-    //     {
-    //         Hull = new(pos, r);
-    //     } 
-    //     
-    //     public void Update(float dt, float cameraRotationDeg)
-    //     {
-    //         // int dirX = 0;
-    //         // int dirY = 0;
-    //         //
-    //         //
-    //         //
-    //         // if (IsKeyDown(KeyboardKey.KEY_A))
-    //         // {
-    //         //     dirX = -1;
-    //         // }
-    //         // else if (IsKeyDown(KeyboardKey.KEY_D))
-    //         // {
-    //         //     dirX = 1;
-    //         // }
-    //         //
-    //         // if (IsKeyDown(KeyboardKey.KEY_W))
-    //         // {
-    //         //     dirY = -1;
-    //         // }
-    //         // else if (IsKeyDown(KeyboardKey.KEY_S))
-    //         // {
-    //         //     dirY = 1;
-    //         // }
-    //         // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
-    //         
-    //         iaMoveHor.Gamepad = GAMELOOP.CurGamepad;
-    //         iaMoveHor.Update(dt);
-    //         
-    //         iaMoveVer.Gamepad = GAMELOOP.CurGamepad;
-    //         iaMoveVer.Update(dt);
-    //         
-    //         Vector2 dir = new(iaMoveHor.State.AxisRaw, iaMoveVer.State.AxisRaw);
-    //         float lsq = dir.LengthSquared();
-    //         if (lsq > 0f)
-    //         {
-    //             movementDir = dir.Normalize();
-    //             movementDir = movementDir.RotateDeg(-cameraRotationDeg);
-    //             var movement = movementDir * Speed * dt;
-    //             Hull = new Circle(Hull.Center + movement, Hull.Radius);
-    //         }
-    //         
-    //     }
-    //     public void Draw()
-    //     {
-    //         var rightThruster = movementDir.RotateDeg(-25);
-    //         var leftThruster = movementDir.RotateDeg(25);
-    //         ShapeDrawing.DrawCircle(Hull.Center - rightThruster * Hull.Radius, Hull.Radius / 6, outlineColor.ColorRgba, 12);
-    //         ShapeDrawing.DrawCircle(Hull.Center - leftThruster * Hull.Radius, Hull.Radius / 6, outlineColor.ColorRgba, 12);
-    //         Hull.Draw(hullColor.ColorRgba);
-    //         ShapeDrawing.DrawCircle(Hull.Center + movementDir * Hull.Radius * 0.66f, Hull.Radius * 0.33f, cockpitColor.ColorRgba, 12);
-    //
-    //         Hull.DrawLines(4f, outlineColor.ColorRgba);
-    //     }
-    //     
-    //     public void FollowStarted()
-    //     {
-    //         
-    //     }
-    //     public void FollowEnded()
-    //     {
-    //         
-    //     }
-    //     public Vector2 GetCameraFollowPosition()
-    //     {
-    //         return Hull.Center;
-    //     }
-    // }
-    //
-    
-    
      
     
     public class PathfinderExample2 : ExampleScene
     {
+        
         private class Ship : ICameraFollowTarget
         {
             // public Circle Hull { get; private set; }
@@ -361,8 +124,15 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
 
-        private class Chaser
+        private class Chaser : IPathfinderAgent
         {
+            
+            // public static int RequestCount = 0;
+            // private static readonly int MaxRequestsPerFrame = 150;
+            // private static bool RequestSlotAvailable => RequestCount < MaxRequestsPerFrame;
+            // private static void RequestSlotUsed() => RequestCount++;
+            // public static void ClearRequestCount() => RequestCount = 0;
+            
             private Circle body;
             private float speed;
 
@@ -522,28 +292,37 @@ namespace Examples.Scenes.ExampleScenes
                 // }
             }
 
-            private bool GetNewPath()
+            private void GetNewPath()
             {
-                if (target == null) return false;
+                if (target == null) return;
+                // if (!RequestSlotAvailable) return;
+                // RequestSlotUsed();
+                
                 var chasePos = target.GetChasePosition();
                 
+                IPathfinderAgent.PathRequest request = 
+                    new(
+                        this, 
+                        body.Center, 
+                        chasePos,
+                        ((int)(body.Center - chasePos).LengthSquared()) * -1
+                    );
+                OnRequestPath?.Invoke(request);
                 
-                currentPath = pathfinder.GetPath(body.Center, chasePos, 0);
-                if (currentPath != null)
-                {
-                    if (currentPath.Rects.Count > 0)
-                    {
-                        lastTargetPosition = chasePos;
-                        nextPathPoint = currentPath.Rects[0].GetClosestPoint(chasePos).Closest.Point;
-                        currentPathIndex = 1;
-                        return true;
-                    }
-
-                    currentPath = null;
-
-                }
-
-                return false;
+                // currentPath = pathfinder.GetPath(body.Center, chasePos, 0);
+                // if (currentPath != null)
+                // {
+                //     if (currentPath.Rects.Count > 0)
+                //     {
+                //         lastTargetPosition = chasePos;
+                //         nextPathPoint = currentPath.Rects[0].GetClosestPoint(chasePos).Closest.Point;
+                //         currentPathIndex = 1;
+                //         return;
+                //     }
+                //
+                //     currentPath = null;
+                //
+                // }
             }
 
             private bool SetNextPathPoint()
@@ -553,6 +332,37 @@ namespace Examples.Scenes.ExampleScenes
                 
                 nextPathPoint = currentPath.Rects[currentPathIndex].GetRandomPointInside();
                 return false;
+            }
+
+            public event Action<IPathfinderAgent.PathRequest>? OnRequestPath;
+            public void ReceiveRequestedPath(Pathfinder.Path? path, IPathfinderAgent.PathRequest request)
+            {
+                currentPath = path;
+                
+                if (path != null)
+                {
+                    if (path.Rects.Count > 0)
+                    {
+                        lastTargetPosition = request.End;
+                        nextPathPoint = path.Rects[0].GetClosestPoint(request.End).Closest.Point;
+                        currentPathIndex = 1;
+                        return;
+                    }
+            
+                    currentPath = null;
+                }
+            }
+            
+            public uint GetLayer() => 0;
+            
+            public void AddedToPathfinder(Pathfinder pf)
+            {
+                
+            }
+            
+            public void RemovedFromPathfinder()
+            {
+                
             }
         }
 
@@ -591,7 +401,7 @@ namespace Examples.Scenes.ExampleScenes
             Title = "Pathfinder Example 2";
 
             universe = new(new Vector2(0f), new Size(10000), new Vector2(0.5f));
-            pathfinder = new(universe, 100, 100);
+            pathfinder = new(universe, 50, 50);
             // universeSectors = pathfinder.GetTraversableRects(0);
             camera = new();
             follower = new(0, 75, 300);
@@ -605,6 +415,8 @@ namespace Examples.Scenes.ExampleScenes
             
             AddAsteroids(30);
             AddChasers(2500);
+
+            pathfinder.RequestsPerFrame = 15;
         }
         public override void Activate(Scene oldScene)
         {
@@ -650,6 +462,7 @@ namespace Examples.Scenes.ExampleScenes
                 var chaser = new Chaser(r.GetRandomPointInside(), 20f, 100f, pathfinder);
                 chaser.SetTarget(ship);
                 chasers.Add(chaser);
+                pathfinder.AddAgent(chaser);
             }   
         }
 
@@ -668,8 +481,19 @@ namespace Examples.Scenes.ExampleScenes
 
         private void RemoveChasers(int amount)
         {
-            if(amount >= chasers.Count)chasers.Clear();
-            chasers.RemoveRange(chasers.Count - amount, amount);
+            if (amount >= chasers.Count)
+            {
+                chasers.Clear();
+                pathfinder.ClearAgents();
+                return;
+            }
+
+            for (int i = chasers.Count - 1; i >= chasers.Count - amount; i--)
+            {
+                var chaser = chasers[i];
+                chasers.RemoveAt(i);
+                pathfinder.RemoveAgent(chaser);
+            }
         }
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
@@ -694,8 +518,11 @@ namespace Examples.Scenes.ExampleScenes
         }
         protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
+            pathfinder.Update(time.Delta);
             UpdateFollower(camera.Size.Min());
             ship.Update(time.Delta);
+            
+            // Chaser.ClearRequestCount();
             foreach (var chaser in chasers)
             {
                 chaser.Update(time.Delta);
@@ -771,7 +598,8 @@ namespace Examples.Scenes.ExampleScenes
             var rot = (int)camera.RotationDeg;
             var zoom = (int)(ShapeMath.GetFactor(camera.ZoomLevel, 0.1f, 5f) * 100f);
             
-            string text = $"Pos {x}/{y} | Rot {rot} | Zoom {zoom}";
+            // string text = $"Pos {x}/{y} | Rot {rot} | Zoom {zoom}";
+            string text = $"Path requests {pathfinder.DEBUG_PATH_REQUEST_COUNT}";
             textFont.FontSpacing = 1f;
             textFont.ColorRgba = Colors.Warm;
             textFont.DrawTextWrapNone(text, rect, new(0.5f));
