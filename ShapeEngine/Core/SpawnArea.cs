@@ -14,18 +14,21 @@ namespace ShapeEngine.Core
     /// </summary>
     public class SpawnArea : IUpdateable, IDrawable, IBounds
     {
-        public int Count
-        {
-            get
-            {
-                int count = 0;
-                foreach (var objects in allObjects.Values)
-                {
-                    count += objects.Count;
-                }
-                return count;
-            }
-        }
+        // public int Count
+        // {
+        //     get
+        //     {
+        //         int count = 0;
+        //         foreach (var objects in allObjects.Values)
+        //         {
+        //             count += objects.Count;
+        //         }
+        //         return count;
+        //     }
+        // }
+
+        public int NewLayerStartCapacity = 128;
+        public int Count { get; private set; } = 0;
         public Rect Bounds { get; protected set; }
         public CollisionHandler? CollisionHandler { get; private set; } = null;
         public Vector2 ParallaxePosition { get; set; } = new(0f);
@@ -37,8 +40,8 @@ namespace ShapeEngine.Core
         private Rect clearArea = new();
         private bool clearAreaActive = false;
         private BitFlag clearAreaMask = new();
-        
-        
+
+        private List<GameObject> removalList = new(1024);
         // public SpawnArea()
         // {
         //     Bounds = new Rect();
@@ -79,42 +82,115 @@ namespace ShapeEngine.Core
             CollisionHandler?.ResizeBounds(newBounds);
         }
         public bool HasLayer(uint layer) { return allObjects.ContainsKey(layer); }
-        public List<GameObject> GetGameObjects(uint layer, Predicate<GameObject> match) { return HasLayer(layer) ? allObjects[layer].FindAll(match) : new(); }
-        public List<GameObject> GetGameObjects(BitFlag layerMask)
+
+        public List<GameObject>? GetGameObjects(uint layer, Predicate<GameObject> match)
         {
-            var result = new List<GameObject>();
-            foreach (var kvp in allObjects)
-            {
-                if(layerMask.Has(kvp.Key)) result.AddRange(kvp.Value);
-            }
-            return result;
+            if (Count <= 0) return null;
+            return HasLayer(layer) ? allObjects[layer].FindAll(match) : null;
         }
-        public List<GameObject> GetGameObjects(BitFlag layerMask, Predicate<GameObject> match)
+        public void GetGameObjects(uint layer, Predicate<GameObject> match, ref List<GameObject> result)
         {
-            var result = new List<GameObject>();
+            if (Count <= 0) return;
+            if (!HasLayer(layer)) return;
+
+            // var cnt = 0;
+            foreach (var obj in allObjects[layer])
+            {
+                // cnt++;
+                if (!match.Invoke(obj)) continue;
+                // result ??= new(allObjects[layer].Count - cnt);
+                result.Add(obj);
+            }
+        }
+        public void GetGameObjects(BitFlag layerMask, ref List<GameObject> result)
+        {
+            if (Count <= 0) return;
+            // var result = new List<GameObject>(Count / 2);
             foreach (var kvp in allObjects)
             {
-                if(layerMask.Has(kvp.Key)) result.AddRange(kvp.Value.FindAll(match));
+                if (layerMask.Has(kvp.Key))
+                {
+                    if (kvp.Value.Count > 0)
+                    {
+                        // result ??= new(kvp.Value.Count);
+                        result.AddRange(kvp.Value);
+                    }
+                    
+                }
             }
-            return result;
+            // return result;
+        }
+        public void GetGameObjects(BitFlag layerMask, Predicate<GameObject> match, ref List<GameObject> result)
+        {
+            if (Count <= 0) return;
+            
+            // var result = new List<GameObject>(Count / 2);
+            foreach (var kvp in allObjects)
+            {
+                if (layerMask.Has(kvp.Key))
+                {
+                    if (kvp.Value.Count > 0)
+                    {
+                        // result ??= new(kvp.Value.Count);
+                        result.AddRange(kvp.Value.FindAll(match));
+                    }
+                    
+                }
+            }
+            // return result;
         }
 
-        public List<GameObject> GetAllGameObjects()
+        public List<GameObject>? GetAllGameObjects()
         {
-            List<GameObject> objects = new();
+            if (Count <= 0) return null;
+            List<GameObject> objects = new(Count);
             foreach (var layerGroup in allObjects.Values)
             {
                 objects.AddRange(layerGroup);
             }
             return objects;
         }
-        public List<GameObject> GetAllGameObjects(Predicate<GameObject> match) { return GetAllGameObjects().FindAll(match); }
+        public void GetAllGameObjects(ref List<GameObject> result)
+        {
+            if (Count <= 0) return;
+            // result ??= new(Count);
+            
+            foreach (var layerGroup in allObjects.Values)
+            {
+                result.AddRange(layerGroup);
+            }
+        }
+
+        public void GetAllGameObjects(Predicate<GameObject> match, ref List<GameObject> result)
+        {
+            if (Count <= 0) return;
+
+            // result ??= new(Count / 2);
+            
+            foreach (var layerGroup in allObjects.Values)
+            {
+                result.AddRange(layerGroup.FindAll(match));
+            }
+        }
+        public List<GameObject>? GetAllGameObjects(Predicate<GameObject> match)
+        {
+            if (Count <= 0) return null;
+            List<GameObject> objects = new(Count / 2);
+            foreach (var layerGroup in allObjects.Values)
+            {
+                objects.AddRange(layerGroup.FindAll(match));
+            }
+            return objects;
+            
+            
+            // return GetAllGameObjects().FindAll(match);
+        }
 
         
         public void AddGameObject(GameObject gameObject)
         {
             var layer = gameObject.Layer;
-            AddLayer(layer);
+            AddLayer(layer, NewLayerStartCapacity <= 0 ? 4 : NewLayerStartCapacity);
 
             allObjects[layer].Add(gameObject);
 
@@ -125,7 +201,8 @@ namespace ShapeEngine.Core
                     CollisionHandler.Add(co);
                 }
             }
-            
+
+            Count++;
             OnGameObjectAdded(gameObject);
             gameObject.OnSpawned(this);
         }
@@ -142,6 +219,8 @@ namespace ShapeEngine.Core
                     CollisionHandler.Remove(co);
                 }
             }
+
+            Count--;
             OnGameObjectRemoved(gameObject);
             gameObject.OnDespawned(this);
             return true;
@@ -161,52 +240,66 @@ namespace ShapeEngine.Core
                 RemoveGameObject(ao);
             }
         }
-        public List<GameObject>? RemoveGameObjects(uint layer, Predicate<GameObject> match)
-        {
-            if (!allObjects.ContainsKey(layer)) return null;
-            List<GameObject>? result = null;
-            var objs = GetGameObjects(layer, match);
-            foreach (var o in objs)
-            {
-                if(!RemoveGameObject(o)) continue;
-                result ??= new();
-                result.Add(o);
-            }
-
-            return result;
-        }
-        public List<GameObject>? RemoveGameObjects(BitFlag layerMask)
-        {
-            var objs = GetGameObjects(layerMask);
-            List<GameObject>? result = null;
-            foreach (var o in objs)
-            {
-                if (!RemoveGameObject(o)) continue;
-                result ??= new();
-                result.Add(o);
-            }
-
-            return result;
-        }
-        public List<GameObject>? RemoveGameObjects(BitFlag layerMask, Predicate<GameObject> match)
-        {
-            var objs = GetGameObjects(layerMask, match);
-            List<GameObject>? result = null;
-            foreach (var o in objs)
-            {
-                if (!RemoveGameObject(o)) continue;
-                result ??= new();
-                result.Add(o);
-            }
-
-            return result;
-        }
-
         
+        
+        public void RemoveGameObjects(uint layer, Predicate<GameObject> match, ref List<GameObject> result)
+        {
+            if (!allObjects.ContainsKey(layer)) return;
+            // List<GameObject>? result = null;
+            // var objs = GetGameObjects(layer, match);
+            removalList.Clear();
+            GetGameObjects(layer, match, ref removalList);
+            // int cnt = 0;
+            foreach (var o in removalList)
+            {
+                // cnt++;
+                if(!RemoveGameObject(o)) continue;
+                // result ??= new(removalList.Count - cnt);
+                result.Add(o);
+            }
+
+            // return result;
+        }
+        public void RemoveGameObjects(BitFlag layerMask, ref List<GameObject> result)
+        {
+            // var objs = GetGameObjects(layerMask);
+            removalList.Clear();
+            GetGameObjects(layerMask, ref removalList);
+            // List<GameObject>? result = null;
+            // var cnt = 0;
+            foreach (var o in removalList)
+            {
+                // cnt++;
+                if (!RemoveGameObject(o)) continue;
+                // result ??= new(objs.Count - cnt);
+                result.Add(o);
+            }
+
+            // return result;
+        }
+        public void RemoveGameObjects(BitFlag layerMask, Predicate<GameObject> match, ref List<GameObject> result)
+        {
+            // var objs = GetGameObjects(layerMask, match);
+            removalList.Clear();
+            GetGameObjects(layerMask, match, ref removalList);
+            // List<GameObject>? result = null;
+            // var cnt = 0;
+            foreach (var o in removalList)
+            {
+                // cnt++;
+                if (!RemoveGameObject(o)) continue;
+                // result ??= new(objs.Count - cnt);
+                result.Add(o);
+            }
+
+            // return result;
+        }
         public void RemoveGameObjects(Predicate<GameObject> match)
         {
-            var objs = GetAllGameObjects(match);
-            foreach (var o in objs)
+            // var objs = GetAllGameObjects(match);
+            removalList.Clear();
+            GetAllGameObjects(match, ref removalList);
+            foreach (var o in removalList)
             {
                 RemoveGameObject(o);
             }
@@ -257,6 +350,7 @@ namespace ShapeEngine.Core
                 ClearLayer(layer);
             }
             CollisionHandler?.Clear();
+            Count = 0;
         }
         public virtual void ClearLayer(uint layer)
         {
@@ -268,6 +362,7 @@ namespace ShapeEngine.Core
                 objects.RemoveAt(i);
                 OnGameObjectRemoved(obj);
                 obj.OnDespawned(this);
+                Count--;
                 
                 if (CollisionHandler == null) continue;
                 
@@ -413,11 +508,11 @@ namespace ShapeEngine.Core
             }
         }
 
-        private void AddLayer(uint layer)
+        private void AddLayer(uint layer, int capacityEstimate = 128)
         {
             if (!allObjects.ContainsKey(layer))
             {
-                allObjects.Add(layer, new());
+                allObjects.Add(layer, new(capacityEstimate));
             }
         }
         

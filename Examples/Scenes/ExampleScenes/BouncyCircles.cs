@@ -116,6 +116,8 @@ namespace Examples.Scenes.ExampleScenes
 
         //private List<Circ> circs = new();
         private bool showConvexHull = false;
+        private readonly List<GameObject> circles = new(65536);
+        private readonly List<Vector2> circlePoints = new(65536);
 
         // private Stopwatch watch = new();
         public BouncyCircles()
@@ -162,6 +164,7 @@ namespace Examples.Scenes.ExampleScenes
         public override void Reset()
         {
             SpawnArea?.Clear();
+            circles.Clear();
         }
 
         private void UpdateBoundaryRect(Rect gameArea)
@@ -191,15 +194,18 @@ namespace Examples.Scenes.ExampleScenes
             // watch.Restart();
             if (iaAdd.State.Pressed)
             {
-                for (var i = 0; i < 2500; i++)
+                if (SpawnArea != null)
                 {
-                    var randPos = mousePosGame + ShapeRandom.RandVec2(0, 250);
-                    var vel = ShapeRandom.RandVec2(100, 200);
-                    Circ c = new(randPos, vel, 2);
-                    //circles.Add(c);
-                    SpawnArea?.AddGameObject(c);
-                    //circs.Add(c);
+                    for (var i = 0; i < 2500; i++)
+                    {
+                        var randPos = mousePosGame + ShapeRandom.RandVec2(0, 250);
+                        var vel = ShapeRandom.RandVec2(100, 200);
+                        Circ c = new(randPos, vel, 2);
+                        SpawnArea.AddGameObject(c);
+                        circles.Add(c);
+                    }
                 }
+                
 
             }
 
@@ -232,14 +238,17 @@ namespace Examples.Scenes.ExampleScenes
         {
             // spawnArea.DrawGame(game);
 
-            if (showConvexHull)
+            if (showConvexHull && circles.Count > 3)
             {
-                var circPoints = SpawnArea?.GetAllGameObjects().Select(c => c.Transform.Position).ToList();
-                if (circPoints != null && circPoints.Count() > 3)
+                // var circPoints = SpawnArea?.GetAllGameObjects().Select(c => c.Transform.Position).ToList();
+                // var circPoints = circles.Select(c => c.Transform.Position).ToList();
+                circlePoints.Clear();
+                foreach (var circ in circles)
                 {
-                    var hull = Polygon.FindConvexHull(circPoints);
-                    hull.DrawLines(4f, Colors.Special);
+                    circlePoints.Add(circ.Transform.Position);
                 }
+                var hull = Polygon.FindConvexHull(circlePoints);
+                hull.DrawLines(4f, Colors.Special);
             }
 
         }
