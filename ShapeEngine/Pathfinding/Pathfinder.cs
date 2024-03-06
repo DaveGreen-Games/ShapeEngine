@@ -117,6 +117,9 @@ public interface IPathfinderAgent
         public readonly IPathfinderAgent? Agent;
         public readonly Vector2 Start;
         public readonly Vector2 End;
+        /// <summary>
+        /// The higher the priority the sooner path requests are handled.
+        /// </summary>
         public readonly int Priority;
 
         public bool Valid => Agent != null;
@@ -139,7 +142,6 @@ public interface IPathfinderAgent
 
     public bool ReceiveRequestedPath(Pathfinder.Path? path);
     public uint GetLayer();
-
     public void AddedToPathfinder(Pathfinder pathfinder);
     public void RemovedFromPathfinder(Pathfinder pathfinder);
 
@@ -391,8 +393,11 @@ public class Pathfinder
     private readonly HashSet<Cell> closedSet = new();
     private readonly Dictionary<Cell, Cell> cellPath = new();
 
-    // private readonly SortedDictionary<int, List<IPathfinderAgent.PathRequest>> pathRequests = new();
-    private int requestsPerFrame = 25;
+    /// <summary>
+    /// How many agent requests are handled each frame
+    /// smaller or equal to zero handles all incoming requests
+    /// </summary>
+    public int RequestsPerFrame = 0;
     private readonly List<IPathfinderAgent.PathRequest> pathRequests = new();
     private readonly Dictionary<IPathfinderAgent, IPathfinderAgent.PathRequest> agents = new();
     #endregion
@@ -420,54 +425,6 @@ public class Pathfinder
     #endregion
 
     
-    public bool AddAgent(IPathfinderAgent agent)
-    {
-        if (!agents.TryAdd(agent, new())) return false;
-
-        agent.OnRequestPath += OnAgentRequestedPath;
-        agent.AddedToPathfinder(this);
-        return true;
-    }
-    public bool RemoveAgent(IPathfinderAgent agent)
-    {
-        if (!agents.Remove(agent, out var request)) return false;
-        pathRequests.Remove(request);
-        
-        agent.OnRequestPath -= OnAgentRequestedPath;
-        return true;
-    }
-    private void OnAgentRequestedPath(IPathfinderAgent.PathRequest request)
-    {
-        if (request.Agent == null) return;
-        
-        var prevRequest = agents[request.Agent];
-        pathRequests.Remove(prevRequest);
-        agents[request.Agent] = request;
-    }
-
-    private void HandlePathRequests()
-    {
-        if (pathRequests.Count <= 0) return;
-        
-        if (pathRequests.Count > requestsPerFrame)
-        {
-            //sorted from highest priority to lowest
-            //lowest priority is most important 
-            //makes it possible to remove from the end 
-            pathRequests.Sort((a, b) => b.Priority - a.Priority ); 
-        }
-
-        int endIndex = ShapeMath.MaxInt(pathRequests.Count - requestsPerFrame, 0);
-        for (int i = pathRequests.Count - 1; i >= endIndex; i--)
-        {
-            var request = pathRequests[i];
-            pathRequests.RemoveAt(i);
-            if (request.Agent == null) continue;
-            var path = GetPath(request.Start, request.End, request.Agent.GetLayer());
-            if(path == null) continue;
-            request.Agent.ReceiveRequestedPath(path);
-        }
-    }
     
     
     public Pathfinder(Rect bounds, int cols, int rows)
@@ -716,6 +673,60 @@ public class Pathfinder
     }
 
     
+
+    #endregion
+    
+    #region Agent System
+
+    public bool AddAgent(IPathfinderAgent agent)
+    {
+        if (!agents.TryAdd(agent, new())) return false;
+
+        agent.OnRequestPath += OnAgentRequestedPath;
+        agent.AddedToPathfinder(this);
+        return true;
+    }
+    public bool RemoveAgent(IPathfinderAgent agent)
+    {
+        if (!agents.Remove(agent, out var request)) return false;
+        pathRequests.Remove(request);
+        
+        agent.OnRequestPath -= OnAgentRequestedPath;
+        return true;
+    }
+    private void OnAgentRequestedPath(IPathfinderAgent.PathRequest request)
+    {
+        if (request.Agent == null) return;
+        
+        var prevRequest = agents[request.Agent];
+        pathRequests.Remove(prevRequest);
+        agents[request.Agent] = request;
+        pathRequests.Add(request);
+    }
+
+    private void HandlePathRequests()
+    {
+        if (pathRequests.Count <= 0) return;
+        
+        if (RequestsPerFrame > 0 && pathRequests.Count > RequestsPerFrame)
+        {
+            //sorted from highest priority to lowest in ascending order (highest is at the end for easier removing)
+            pathRequests.Sort((a, b) => a.Priority - b.Priority); 
+        }
+
+        int endIndex = RequestsPerFrame > 0 ? ShapeMath.MaxInt(pathRequests.Count - RequestsPerFrame, 0) : 0;
+        
+        for (int i = pathRequests.Count - 1; i >= endIndex; i--)
+        {
+            var request = pathRequests[i];
+            pathRequests.RemoveAt(i);
+            if (request.Agent == null) continue;
+            var path = GetPath(request.Start, request.End, request.Agent.GetLayer());
+            if(path == null) continue;
+            request.Agent.ReceiveRequestedPath(path);
+        }
+    }
+
 
     #endregion
     
