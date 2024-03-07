@@ -108,9 +108,34 @@ namespace ShapeEngine.Pathfinding;
 
 public interface IPathfinderObstacle : IShape
 {
+    //todo implement
+    //cell has list of cell values
+    //cell values are in some way added together into a single value for each layer present
+    //Objects are stored in Dictionary<Object, List<Cell>>
+    //if an object is removed cell values are removed from affected cells
+    //function for changing shape (remove cell values from affected cells -> calculate new affected cells and set value)
+    
+    //OR! go through all the objects each frame
+    //go through each affected cell and add flat, add bonus or add override?
+    public enum OperationType
+    {
+        Override = 0,
+        OverrideMin = 1,
+        OverrideMax = 2,
+        Add = 3,
+        Multiply = 4
+    }
+    public class CellValue
+    {
+        public float Value;
+        public OperationType Type;
+        public int Layer;
+    }
+
+    
     public event Action<IPathfinderObstacle>? OnShapeChanged;
-    // public HashSet<Pathfinder.CellValue> GetCellValues();
     public float GetValue();
+    // public List<CellValue>? GetCellValues();
 }
 
 public interface IPathfinderAgent
@@ -176,9 +201,7 @@ public class Pathfinder
     
     private class CellQueue
     {
-        
         private readonly List<Cell> cells;
-        // private static readonly Comparer<Cell> comparer = Comparer<Cell>.Create((x, y) => (int)(x.FScore - y.FScore));
 
         public CellQueue(int capacity)
         {
@@ -188,42 +211,34 @@ public class Pathfinder
         public void Clear() => cells.Clear();
         public void Enqueue(Cell cell)
         {
-            // if (cells == null)
-            // {
-            //     cells = new() { cell };
-            //     return;
-            // }
             cells.Add(cell);
-            // if(cells.Count <= 0) cells.Add(cell);
-            
-            // int index = cells.BinarySearch(cell, comparer);
-            // if (index < 0) index = ~index;
-            // cells.Insert(index, cell);
         }
 
-        public Cell Dequeue()
+        public Cell? Dequeue()
         {
-            int minIndex = 0;
-            float minScore = float.PositiveInfinity;
-            for (int i = 0; i < cells.Count; i++)
+            if (Count <= 0) return null;
+            if (Count == 1)
+            {
+                var cell = cells[0];
+                cells.RemoveAt(0);
+                return cell;
+            }
+            var minIndex = 0;
+            var current = cells[0];
+            for (var i = 1; i < cells.Count; i++)
             {
                 var cell = cells[i];
-                if (cell.FScore < minScore)
+                // if (cell.FScore < current.FScore || (Math.Abs(cell.FScore - current.FScore) < 0.0001f && cell.H < current.H))
+                if(cell.CompareTo(current) < 0)
                 {
-                    minScore = cell.FScore;
                     minIndex = i;
+                    current = cell;
                 }
             }
-
-            var c = cells[minIndex];
+            
             cells.RemoveAt(minIndex);
             
-            return c;
-            // if (cells is not { Count: > 0 }) return null;
-            // int lastIndex = cells.Count - 1;
-            // var cell = cells[lastIndex];
-            // cells.RemoveAt(lastIndex);
-            // return cell;
+            return current;
         }
 
         // public void UpdatePriority(Cell cell)
@@ -238,7 +253,7 @@ public class Pathfinder
         // }
 
     }
-    private class Cell
+    private class Cell : IComparable<Cell>
     {
         private readonly Pathfinder parent;
 
@@ -317,6 +332,28 @@ public class Pathfinder
         #endregion
         
         #region Weight
+        
+
+        // public void AddCellValue(IPathfinderObstacle.CellValue value)
+        // {
+        //     
+        // }
+        //
+        // public void RemoveCellValue(IPathfinderObstacle.CellValue cellValue)
+        // {
+        //     
+        // }
+        // public void AddCellValues(IEnumerable<IPathfinderObstacle.CellValue> cellValues)
+        // {
+        //     
+        // }
+        //
+        // public void RemoveCellValues(IEnumerable<IPathfinderObstacle.CellValue> cellValues)
+        // {
+        //     
+        // }
+        
+        
         private float CalculateWeightFactor(float w)
         {
             if (w == 0) return 0f;
@@ -374,6 +411,16 @@ public class Pathfinder
             return count;
         }
         #endregion
+
+        public int CompareTo(Cell? other)
+        {
+            if (ReferenceEquals(this, other)) return 0;
+            if (ReferenceEquals(null, other)) return 1;
+            
+            int fScoreComparison = FScore.CompareTo(other.FScore);
+            if (fScoreComparison != 0) return fScoreComparison;
+            return H.CompareTo(other.H);
+        }
     }
     public class Path
     {
@@ -389,27 +436,6 @@ public class Pathfinder
     }
     }
 
-    //todo implement
-    //cell has list of cell values
-    //cell values are in some way added together into a single value for each layer present
-    //Objects are stored in Dictionary<Object, List<Cell>>
-    //if an object is removed cell values are removed from affected cells
-    //function for changing shape (remove cell values from affected cells -> calculate new affected cells and set value)
-    
-    //OR! go through all the objects each frame
-    //go through each affected cell and add flat, add bonus or add override?
-    public enum OperationType
-    {
-        Override = 0,
-        Add = 1,
-        Multiply = 2
-    }
-    public struct CellValue
-    {
-        public float Value;
-        public OperationType Type;
-        public int Layer;
-    }
     
     
     public event Action<Pathfinder>? OnRegenerationRequested;
@@ -601,10 +627,10 @@ public class Pathfinder
         openSetCells.Add(startCell);
 
 
-        Cell current;
         while (openSet.Count > 0)
         {
-            current = openSet.Dequeue();
+            var current = openSet.Dequeue();
+            if(current == null) continue;
             
             if (openSetCells.Count > DEBUG_MAX_OPEN_SET_COUNT)
             {
@@ -809,9 +835,12 @@ public class Pathfinder
     {
         foreach (var kvp in obstacles)
         {
+            // var cellValues = kvp.Key.GetCellValues();
+            // if(cellValues == null || cellValues.Count <= 0)continue;
             foreach (var cell in kvp.Value)
             {
                 cell.SetWeight(kvp.Key.GetValue());
+                // cell.AddCellValues(cellValues);
             }
         }
     }
@@ -2402,11 +2431,9 @@ public class Pathfinder
 
             // if(closedSet.Contains(cell)) //touched
             // {
-            //     // r.DrawLines(4f, new ColorRgba(System.Drawing.Color.Azure));
             //     r.ScaleSize(0.9f, new Vector2(0.5f)).Draw(new ColorRgba(System.Drawing.Color.Bisque));
-            //     // r.ScaleSize(0.5f, new Vector2(0.9f)).Draw(new ColorRgba(System.Drawing.Color.Red));
             // }
-            
+            //
             if(cell.GetWeight(layer) == 0) r.ScaleSize(0.5f, new Vector2(0.5f)).Draw(blocked);
             else if(cell.GetWeight(layer) < 1) r.ScaleSize(0.65f, new Vector2(0.5f)).Draw(undesirable);
             else if(cell.GetWeight(layer) > 1) r.ScaleSize(0.65f, new Vector2(0.5f)).Draw(desirable);
