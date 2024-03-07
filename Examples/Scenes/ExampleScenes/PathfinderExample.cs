@@ -61,8 +61,6 @@ internal class PathfinderFlag
 
     public class PathfinderExample : ExampleScene
     {
-        private Font font;
-
         private readonly InputAction iaMoveCameraH;
         private readonly InputAction iaMoveCameraV;
         
@@ -79,14 +77,9 @@ internal class PathfinderFlag
 
         private Circle? connectionCircleA = null;
         private Circle? connectionCircleB = null;
-        
-        
-        Stopwatch watch = new();
         public PathfinderExample()
         {
             Title = "Pathfinder Example";
-
-            font = GAMELOOP.GetFont(FontIDs.JetBrains);
 
             var cameraHorizontalKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.A, ShapeKeyboardButton.D);
             var cameraHorizontalGP =
@@ -208,28 +201,25 @@ internal class PathfinderFlag
             if (Raylib.IsKeyPressed(KeyboardKey.Space))
             {
                 paths.Clear();
-                watch.Restart();
-                // for (int i = 0; i < endFlags.Count; i++)
-                // {
-                //     var flag = endFlags[i];
-                //     pathfinder.RelaxationPower = 1f;
-                //     var path = pathfinder.GetPath(startFlag.Position, flag.Position, 0);
-                //     if(path != null) paths.Add(path);
-                // }
-                var flag = endFlags[0];
-                // pathfinder.RelaxationPower = 1f;
-                var path = pathfinder.GetPath(startFlag.Position, flag.Position, 0);
-                if(path != null) paths.Add(path);
-                // watch.Stop();
+                // watch.Restart();
+                for (int i = 0; i < endFlags.Count; i++)
+                {
+                    var flag = endFlags[i];
+                    var path = pathfinder.GetPath(startFlag.Position, flag.Position, 0);
+                    if(path != null) paths.Add(path);
+                }
+                // var flag = endFlags[0];
+                // var path = pathfinder.GetPath(startFlag.Position, flag.Position, 0);
+                // if(path != null) paths.Add(path);
                 
-                Console.WriteLine("---Path Search Started---");
-                var pathCount = path?.Rects.Count ?? 0;
-                var touchPercentage = ShapeMath.RoundToDecimals(((float)pathfinder.DEBUG_TOUCHED_UNIQUE_COUNT / pathfinder.Grid.Count) * 100f, 2);
-                var successRate = ShapeMath.RoundToDecimals(((float)pathCount / pathfinder.DEBUG_TOUCHED_UNIQUE_COUNT) * 100f, 2);
-                Console.WriteLine($"Path found in: {watch.ElapsedMilliseconds}ms containing {pathCount} cells.");
-                Console.WriteLine($"Max Open Set Count: {pathfinder.DEBUG_MAX_OPEN_SET_COUNT} | Unique cells touched {pathfinder.DEBUG_TOUCHED_UNIQUE_COUNT}");
-                Console.WriteLine($"Success rate: {successRate}% | Touched {touchPercentage}%");
-                Console.WriteLine($"---Path Search Ended with Success {pathCount > 0}");
+                // Console.WriteLine("---Path Search Started---");
+                // var pathCount = path?.Rects.Count ?? 0;
+                // var touchPercentage = ShapeMath.RoundToDecimals(((float)pathfinder.DEBUG_TOUCHED_UNIQUE_COUNT / pathfinder.Grid.Count) * 100f, 2);
+                // var successRate = ShapeMath.RoundToDecimals(((float)pathCount / pathfinder.DEBUG_TOUCHED_UNIQUE_COUNT) * 100f, 2);
+                // Console.WriteLine($"Path found in: {watch.ElapsedMilliseconds}ms containing {pathCount} cells.");
+                // Console.WriteLine($"Max Open Set Count: {pathfinder.DEBUG_MAX_OPEN_SET_COUNT} | Unique cells touched {pathfinder.DEBUG_TOUCHED_UNIQUE_COUNT}");
+                // Console.WriteLine($"Success rate: {successRate}% | Touched {touchPercentage}%");
+                // Console.WriteLine($"---Path Search Ended with Success {pathCount > 0}");
             }
 
             if (Raylib.IsKeyPressed(KeyboardKey.H))

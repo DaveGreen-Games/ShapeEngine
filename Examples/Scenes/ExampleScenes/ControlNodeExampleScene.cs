@@ -181,6 +181,8 @@ namespace Examples.Scenes.ExampleScenes
         private readonly ControlNodeTestContainer container;
 
         private readonly ControlNodeButton optionButton;
+
+        private readonly ControlNodeContainer buttonContainer;
         // private readonly EventTester eventTester;
         public ControlNodeExampleScene() : base()
         {
@@ -193,7 +195,7 @@ namespace Examples.Scenes.ExampleScenes
             };
             navigator = new();
 
-            var buttonContainer = new ControlNodeContainer
+            buttonContainer = new ControlNodeContainer
             {
                 Anchor = new Vector2(0.5f),
                 Stretch = new Vector2(0.8f, 0.6f)
@@ -207,7 +209,7 @@ namespace Examples.Scenes.ExampleScenes
             buttonContainer.AddChild(optionButton);
             buttonContainer.AddChild(quitButton);
             
-            for (var i = 0; i < 320; i++)
+            for (var i = 0; i < 64; i++)
             {
                 var button = new ControlNodeButton($"B{i+3}", new(0.5f, 0.5f), new Vector2(0.98f, 0.95f));
                 buttonContainer.AddChild(button);
@@ -268,6 +270,27 @@ namespace Examples.Scenes.ExampleScenes
         
         protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
+            if (Raylib.IsKeyPressed(KeyboardKey.One))
+            {
+                buttonContainer.Grid = new(1, 7, false, false, false);
+            }
+            if (Raylib.IsKeyPressed(KeyboardKey.Two))
+            {
+                buttonContainer.Grid = new(5, 1, true, false, false);
+            }
+            if (Raylib.IsKeyPressed(KeyboardKey.Three))
+            {
+                buttonContainer.Grid = new(5, 5, false, false, false);
+            }
+            if (Raylib.IsKeyPressed(KeyboardKey.Four))
+            {
+                buttonContainer.Grid = new(5, 8, false, true, false);
+            }
+            if (Raylib.IsKeyPressed(KeyboardKey.Five))
+            {
+                buttonContainer.Grid = new(3, 3, true, true, true);
+            }
+            
             container.UpdateRect(ui.Area);
             container.Update(time.Delta, ui.MousePos);
             navigator.Update();

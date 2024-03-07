@@ -2400,12 +2400,12 @@ public class Pathfinder
         {
             var r = cell.Rect;
 
-            if(closedSet.Contains(cell)) //touched
-            {
-                // r.DrawLines(4f, new ColorRgba(System.Drawing.Color.Azure));
-                r.ScaleSize(0.9f, new Vector2(0.5f)).Draw(new ColorRgba(System.Drawing.Color.Bisque));
-                // r.ScaleSize(0.5f, new Vector2(0.9f)).Draw(new ColorRgba(System.Drawing.Color.Red));
-            }
+            // if(closedSet.Contains(cell)) //touched
+            // {
+            //     // r.DrawLines(4f, new ColorRgba(System.Drawing.Color.Azure));
+            //     r.ScaleSize(0.9f, new Vector2(0.5f)).Draw(new ColorRgba(System.Drawing.Color.Bisque));
+            //     // r.ScaleSize(0.5f, new Vector2(0.9f)).Draw(new ColorRgba(System.Drawing.Color.Red));
+            // }
             
             if(cell.GetWeight(layer) == 0) r.ScaleSize(0.5f, new Vector2(0.5f)).Draw(blocked);
             else if(cell.GetWeight(layer) < 1) r.ScaleSize(0.65f, new Vector2(0.5f)).Draw(undesirable);
