@@ -13,6 +13,16 @@ public readonly struct Grid : IEquatable<Grid>
         public readonly int Col;
         public bool IsValid => Row >= 0 && Col >= 0;
 
+        public int Count
+        {
+            get
+            {
+                int r = Row < 0 ? Row * -1 : Row;
+                int c = Col < 0 ? Col * -1 : Col;
+                
+                return r * c;
+            }
+        }
         public int Distance
         {
             get

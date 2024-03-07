@@ -4,6 +4,7 @@ using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 using System.Numerics;
 using ShapeEngine.Color;
+using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Core.Shapes;
@@ -50,6 +51,10 @@ namespace Examples.Scenes.ExampleScenes
                 SetupInput();
             }
 
+            public bool Overlaps(Polygon poly)
+            {
+                return hull.OverlapShape(poly);
+            }
             private void CreateHull(Vector2 pos, float size)
             {
                 var a = pos + new Vector2(size, 0);
@@ -272,8 +277,9 @@ namespace Examples.Scenes.ExampleScenes
                 
             }
 
-            public void Draw()
+            public void Draw(Rect cameraRect)
             {
+                if (!body.GetBoundingBox().OverlapShape(cameraRect)) return;
                 // body. DrawLines(body.Radius * 0.25f, Colors.Special);
                 ShapeDrawing.DrawCircleFast(body.Center, body.Radius, Colors.Special);
                 // if (currentPath != null)
@@ -366,20 +372,55 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
 
-        private class AsteroidObstacle
+        private class AsteroidObstacle : IPathfinderObstacle
         {
-            private readonly Polygon shape;
+            public event Action<IPathfinderObstacle>? OnShapeChanged;
+            
+            private Polygon shape;
+            private Rect bb;
+            private Vector2 center;
+            private float timer = 0f;
+            private const float Interval = 1f;
 
             public Polygon GetShape() => shape;
-            public AsteroidObstacle(Polygon shape)
+            public AsteroidObstacle(Vector2 center)
             {
-                this.shape = shape;
+                this.center = center;
+                this.shape = GenerateShape();
+                this.bb = this.shape.GetBoundingBox();
             }
 
-            public void Draw()
+            public void Update(float dt)
             {
-                shape.DrawLines(16f, Colors.Highlight);
+                timer -= dt;
+                if (timer <= 0)
+                {
+                    SetTimer();
+                    shape = GenerateShape();
+                    bb = shape.GetBoundingBox();
+                    OnShapeChanged?.Invoke(this);
+                }
             }
+            public void Draw(Rect cameraRect)
+            {
+                if (!bb.OverlapShape(cameraRect)) return;   
+                if(AsteroidLineThickness > 1) shape.DrawLines(AsteroidLineThickness, Colors.Highlight);
+            }
+
+            private void SetTimer()
+            {
+                timer = ShapeRandom.RandF(Interval, Interval * 4);
+            }
+            private Polygon GenerateShape()
+            {
+                return Polygon.Generate(center, AsteroidPointCount, AsteroidMinSize, AsteroidMaxSize);
+            }
+            
+            public ShapeType GetShapeType() => ShapeType.Poly;
+
+            public Polygon GetPolygonShape() => shape;
+            
+            public float GetValue() => 0;
         }
         
         // private const int chaserCount = 100;
@@ -395,6 +436,11 @@ namespace Examples.Scenes.ExampleScenes
 
         private readonly List<Chaser> chasers = new();
         private readonly List<AsteroidObstacle> asteroids = new();
+        private const int AsteroidCount = 30; //30
+        private const int AsteroidPointCount = 14; //14
+        private const float AsteroidMinSize = 250; //250
+        private const float AsteroidMaxSize = 500; //500
+        private const float AsteroidLineThickness = 10f;
         
         public PathfinderExample2()
         {
@@ -413,7 +459,7 @@ namespace Examples.Scenes.ExampleScenes
             var toggleDrawGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
             iaDrawDebug = new(toggleDrawKB, toggleDrawGP);
             
-            AddAsteroids(30);
+            AddAsteroids(AsteroidCount);
             AddChasers(2500);
 
             pathfinder.RequestsPerFrame = 50;
@@ -439,8 +485,12 @@ namespace Examples.Scenes.ExampleScenes
             
             UpdateFollower(camera.Size.Min());
 
+            foreach (var asteroid in asteroids)
+            {
+                pathfinder.RemoveObstacle(asteroid);
+            }
             asteroids.Clear();
-            AddAsteroids(30);
+            AddAsteroids(AsteroidCount);
             
             var unblockedRects = pathfinder.GetRects(1, 100, 0);
             foreach (var chaser in chasers)
@@ -471,10 +521,11 @@ namespace Examples.Scenes.ExampleScenes
             for (int i = 0; i < amount; i++)
             {
                 var center = universe.GetRandomPointInside();
-                var shape = Polygon.Generate(center, 14, 250, 500);
-                var asteroid = new AsteroidObstacle(shape);
-                pathfinder.SetCellValues(shape, 0);
+                // var shape = Polygon.Generate(center, AsteroidPointCount, AsteroidMinSize, AsteroidMaxSize);
+                var asteroid = new AsteroidObstacle(center);
+                // pathfinder.SetCellValues(shape, 0);
                 asteroids.Add(asteroid);
+                pathfinder.AddObstacle(asteroid);
             }
             
         }
@@ -518,11 +569,27 @@ namespace Examples.Scenes.ExampleScenes
         }
         protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
+            ship.Update(time.Delta);
+            pathfinder.SetCellValues(ship.GetChasePosition(), 5);
+            var removedCount = 0;
+            for (int i = asteroids.Count - 1; i >= 0; i--)
+            {
+                var asteroid = asteroids[i];
+                if (ship.Overlaps(asteroid.GetShape()))
+                {
+                    pathfinder.RemoveObstacle(asteroid);
+                    asteroids.RemoveAt(i);
+                    removedCount++;
+                    continue;
+                }
+                
+                asteroid.Update(time.Delta);
+            }
+            
+            if(removedCount > 0) AddAsteroids(removedCount);
+            
             pathfinder.Update(time.Delta);
             UpdateFollower(camera.Size.Min());
-            ship.Update(time.Delta);
-            
-            // Chaser.ClearRequestCount();
             foreach (var chaser in chasers)
             {
                 chaser.Update(time.Delta);
@@ -567,11 +634,11 @@ namespace Examples.Scenes.ExampleScenes
             
             foreach (var asteroid in asteroids)
             {
-                asteroid.Draw();
+                asteroid.Draw(game.Area);
             }
             foreach (var chaser in chasers)
             {
-                chaser.Draw();
+                chaser.Draw(game.Area);
             }
             
             ship.Draw();

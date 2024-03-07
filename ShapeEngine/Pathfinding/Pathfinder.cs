@@ -108,7 +108,9 @@ namespace ShapeEngine.Pathfinding;
 
 public interface IPathfinderObstacle : IShape
 {
-    
+    public event Action<IPathfinderObstacle>? OnShapeChanged;
+    // public HashSet<Pathfinder.CellValue> GetCellValues();
+    public float GetValue();
 }
 
 public interface IPathfinderAgent
@@ -388,6 +390,14 @@ public class Pathfinder
     }
 
     //todo implement
+    //cell has list of cell values
+    //cell values are in some way added together into a single value for each layer present
+    //Objects are stored in Dictionary<Object, List<Cell>>
+    //if an object is removed cell values are removed from affected cells
+    //function for changing shape (remove cell values from affected cells -> calculate new affected cells and set value)
+    
+    //OR! go through all the objects each frame
+    //go through each affected cell and add flat, add bonus or add override?
     public enum OperationType
     {
         Override = 0,
@@ -438,10 +448,12 @@ public class Pathfinder
     /// How many agent requests are handled each frame
     /// smaller or equal to zero handles all incoming requests
     /// </summary>
-    public int RequestsPerFrame = 0;
-    private readonly List<IPathfinderAgent.PathRequest> pathRequests = new();
-    private readonly Dictionary<IPathfinderAgent, IPathfinderAgent.PathRequest?> agents = new();
-    // private readonly HashSet<IPathfinderAgent> agents = new();
+    public int RequestsPerFrame = 25;
+    private readonly List<IPathfinderAgent.PathRequest> pathRequests = new(256);
+    private readonly Dictionary<IPathfinderAgent, IPathfinderAgent.PathRequest?> agents = new(1024);
+
+    private readonly Dictionary<IPathfinderObstacle, List<Cell>> obstacles = new(256);
+    
     #endregion
 
     #region Getters & Setters
@@ -468,7 +480,7 @@ public class Pathfinder
         this.bounds = bounds;
         Grid = new(cols, rows);
         CellSize = Grid.GetCellSize(bounds);
-        cells = new();
+        cells = new(Grid.Count + 1);
         for (var i = 0; i < Grid.Count; i++)
         {
             var coordinates = Grid.IndexToCoordinates(i);
@@ -492,7 +504,15 @@ public class Pathfinder
 
     public void Update(float dt)
     {
+        HandleObstacles();
         HandlePathRequests();
+    }
+
+    public void Close()
+    {
+        ClearAgents();
+        pathRequests.Clear();
+        
     }
     public void Reset()
     {
@@ -715,6 +735,284 @@ public class Pathfinder
     
 
     #endregion
+
+    #region Obstacles System
+
+    public void ClearObstacles()
+    {
+        foreach (var obstacle in obstacles)
+        {
+            foreach (var cell in obstacle.Value)
+            {
+                cell.SetWeight(1);
+            }
+            obstacle.Key.OnShapeChanged -= OnObstacleShapeChanged;
+        }
+        obstacles.Clear();
+    }
+    public bool AddObstacle(IPathfinderObstacle obstacle)
+    {
+        
+        List<Cell>? cellList = null;
+        GenerateObstacleCells(obstacle, ref cellList);
+        // switch (obstacle.GetShapeType())
+        // {
+        //     case ShapeType.None: return false;
+        //     case ShapeType.Circle:
+        //         GenerateCellList(obstacle.GetCircleShape(), ref cellList);
+        //         break;
+        //     case ShapeType.Segment: 
+        //         GenerateCellList(obstacle.GetSegmentShape(), ref cellList);
+        //         break;
+        //     case ShapeType.Triangle:
+        //         GenerateCellList(obstacle.GetTriangleShape(), ref cellList);
+        //         break;
+        //     case ShapeType.Quad:
+        //         GenerateCellList(obstacle.GetQuadShape(), ref cellList);
+        //         break;
+        //     case ShapeType.Rect:
+        //         GenerateCellList(obstacle.GetRectShape(), ref cellList);
+        //         break;
+        //     case ShapeType.Poly:
+        //         GenerateCellList(obstacle.GetPolygonShape(), ref cellList);
+        //         break;
+        //     case ShapeType.PolyLine:
+        //         GenerateCellList(obstacle.GetPolylineShape(), ref cellList);
+        //         break;
+        // }
+
+        if (cellList == null) return false;
+        obstacles.Add(obstacle, cellList);
+
+        obstacle.OnShapeChanged += OnObstacleShapeChanged;
+        return true;
+    }
+    public bool RemoveObstacle(IPathfinderObstacle obstacle)
+    {
+        obstacles.TryGetValue(obstacle, out var cellList);
+        
+        if (cellList != null)
+        {
+            foreach (var cell in cellList)
+            {
+                cell.SetWeight(1);
+            }
+        }
+
+        if (!obstacles.Remove(obstacle)) return false;
+        
+        obstacle.OnShapeChanged -= OnObstacleShapeChanged;
+        return true;
+
+    }
+    private void HandleObstacles()
+    {
+        foreach (var kvp in obstacles)
+        {
+            foreach (var cell in kvp.Value)
+            {
+                cell.SetWeight(kvp.Key.GetValue());
+            }
+        }
+    }
+    private void OnObstacleShapeChanged(IPathfinderObstacle obstacle)
+    {
+        obstacles.TryGetValue(obstacle, out var value);
+        if (value != null)
+        {
+
+            foreach (var cell in value)
+            {
+                cell.SetWeight(1);
+            }
+            GenerateObstacleCells(obstacle, ref value);
+            
+        }
+    }
+    
+    
+    private void GenerateObstacleCells(IPathfinderObstacle obstacle, ref List<Cell>? cellList)
+    {
+        switch (obstacle.GetShapeType())
+        {
+            case ShapeType.None: return;
+            case ShapeType.Circle:
+                GenerateCellList(obstacle.GetCircleShape(), ref cellList);
+                break;
+            case ShapeType.Segment: 
+                GenerateCellList(obstacle.GetSegmentShape(), ref cellList);
+                break;
+            case ShapeType.Triangle:
+                GenerateCellList(obstacle.GetTriangleShape(), ref cellList);
+                break;
+            case ShapeType.Quad:
+                GenerateCellList(obstacle.GetQuadShape(), ref cellList);
+                break;
+            case ShapeType.Rect:
+                GenerateCellList(obstacle.GetRectShape(), ref cellList);
+                break;
+            case ShapeType.Poly:
+                GenerateCellList(obstacle.GetPolygonShape(), ref cellList);
+                break;
+            case ShapeType.PolyLine:
+                GenerateCellList(obstacle.GetPolylineShape(), ref cellList);
+                break;
+        }
+    }
+    private void GenerateCellList(Segment shape, ref List<Cell>? cellList)
+    {
+        var rect = shape.GetBoundingBox();
+        var topLeft = Grid.GetCellCoordinate(rect.TopLeft, bounds);
+        var bottomRight = Grid.GetCellCoordinate(rect.BottomRight, bounds);
+
+        
+        var dif = bottomRight - topLeft;
+        if (cellList == null) cellList = new(dif.Count);
+        else cellList.Clear();
+        
+        for (int j = topLeft.Row; j <= bottomRight.Row; j++)
+        {
+            for (int i = topLeft.Col; i <= bottomRight.Col; i++)
+            {
+                int index = Grid.CoordinatesToIndex(new(i, j));
+                var cell = GetCell(index);
+                if(cell == null) continue;
+                if(cell.Rect.OverlapShape(shape)) cellList.Add(cell);
+            }
+        }
+    }
+    private void GenerateCellList(Circle shape, ref List<Cell>? cellList)
+    {
+        var rect = shape.GetBoundingBox();
+        var topLeft = Grid.GetCellCoordinate(rect.TopLeft, bounds);
+        var bottomRight = Grid.GetCellCoordinate(rect.BottomRight, bounds);
+
+        
+        var dif = bottomRight - topLeft;
+        if (cellList == null) cellList = new(dif.Count);
+        else cellList.Clear();
+        
+        for (int j = topLeft.Row; j <= bottomRight.Row; j++)
+        {
+            for (int i = topLeft.Col; i <= bottomRight.Col; i++)
+            {
+                int index = Grid.CoordinatesToIndex(new(i, j));
+                var cell = GetCell(index);
+                if(cell == null) continue;
+                if(cell.Rect.OverlapShape(shape)) cellList.Add(cell);
+            }
+        }
+    }
+    private void GenerateCellList(Triangle shape, ref List<Cell>? cellList)
+    {
+        var rect = shape.GetBoundingBox();
+        var topLeft = Grid.GetCellCoordinate(rect.TopLeft, bounds);
+        var bottomRight = Grid.GetCellCoordinate(rect.BottomRight, bounds);
+
+        
+        var dif = bottomRight - topLeft;
+        if (cellList == null) cellList = new(dif.Count);
+        else cellList.Clear();
+        
+        for (int j = topLeft.Row; j <= bottomRight.Row; j++)
+        {
+            for (int i = topLeft.Col; i <= bottomRight.Col; i++)
+            {
+                int index = Grid.CoordinatesToIndex(new(i, j));
+                var cell = GetCell(index);
+                if(cell == null) continue;
+                if(cell.Rect.OverlapShape(shape)) cellList.Add(cell);
+            }
+        }
+    }
+    private void GenerateCellList(Quad shape, ref List<Cell>? cellList)
+    {
+        var rect = shape.GetBoundingBox();
+        var topLeft = Grid.GetCellCoordinate(rect.TopLeft, bounds);
+        var bottomRight = Grid.GetCellCoordinate(rect.BottomRight, bounds);
+
+        
+        var dif = bottomRight - topLeft;
+        if (cellList == null) cellList = new(dif.Count);
+        else cellList.Clear();
+        
+        for (int j = topLeft.Row; j <= bottomRight.Row; j++)
+        {
+            for (int i = topLeft.Col; i <= bottomRight.Col; i++)
+            {
+                int index = Grid.CoordinatesToIndex(new(i, j));
+                var cell = GetCell(index);
+                if(cell == null) continue;
+                if(cell.Rect.OverlapShape(shape)) cellList.Add(cell);
+            }
+        }
+    }
+    private void GenerateCellList(Rect rect, ref List<Cell>? cellList)
+    {
+        var topLeft = Grid.GetCellCoordinate(rect.TopLeft, bounds);
+        var bottomRight = Grid.GetCellCoordinate(rect.BottomRight, bounds);
+
+        
+        var dif = bottomRight - topLeft;
+        if (cellList == null) cellList = new(dif.Count);
+        else cellList.Clear();
+        
+        for (int j = topLeft.Row; j <= bottomRight.Row; j++)
+        {
+            for (int i = topLeft.Col; i <= bottomRight.Col; i++)
+            {
+                int index = Grid.CoordinatesToIndex(new(i, j));
+                var cell = GetCell(index);
+                if(cell == null) continue;
+                if(cell.Rect.OverlapShape(rect)) cellList.Add(cell);
+            }
+        }
+    }
+    private void GenerateCellList(Polygon shape, ref List<Cell>? cellList)
+    {
+        var rect = shape.GetBoundingBox();
+        var topLeft = Grid.GetCellCoordinate(rect.TopLeft, bounds);
+        var bottomRight = Grid.GetCellCoordinate(rect.BottomRight, bounds);
+
+        
+        var dif = bottomRight - topLeft;
+        if (cellList == null) cellList = new(dif.Count);
+        else cellList.Clear();
+        
+        for (int j = topLeft.Row; j <= bottomRight.Row; j++)
+        {
+            for (int i = topLeft.Col; i <= bottomRight.Col; i++)
+            {
+                int index = Grid.CoordinatesToIndex(new(i, j));
+                var cell = GetCell(index);
+                if(cell == null) continue;
+                if(cell.Rect.OverlapShape(shape)) cellList.Add(cell);
+            }
+        }
+    }
+    private void GenerateCellList(Polyline shape, ref List<Cell>? cellList)
+    {
+        var rect = shape.GetBoundingBox();
+        var topLeft = Grid.GetCellCoordinate(rect.TopLeft, bounds);
+        var bottomRight = Grid.GetCellCoordinate(rect.BottomRight, bounds);
+
+        
+        var dif = bottomRight - topLeft;
+        if (cellList == null) cellList = new(dif.Count);
+        else cellList.Clear();
+        
+        for (int j = topLeft.Row; j <= bottomRight.Row; j++)
+        {
+            for (int i = topLeft.Col; i <= bottomRight.Col; i++)
+            {
+                int index = Grid.CoordinatesToIndex(new(i, j));
+                var cell = GetCell(index);
+                if(cell == null) continue;
+                if(cell.Rect.OverlapShape(shape)) cellList.Add(cell);
+            }
+        }
+    }
+    #endregion
     
     #region Agent System
 
@@ -745,6 +1043,7 @@ public class Pathfinder
         foreach (var agent in allAgents)
         {
             agent.OnRequestPath -= OnAgentRequestedPath;
+            agent.RemovedFromPathfinder();
         }
         agents.Clear();
     }

@@ -17,6 +17,25 @@ namespace ShapeEngine.Core.Collision
         public Rect GetRectShape() => new();
         public Polygon GetPolygonShape() => new();
         public Polyline GetPolylineShape() => new();
+
+        // public Rect GetBoundingBox()
+        // {
+        //     switch (GetShapeType())
+        //     {
+        //         case ShapeType.None: return new();
+        //         case ShapeType.Circle: return GetCircleShape().GetBoundingBox();
+        //         case ShapeType.Segment:return GetSegmentShape().GetBoundingBox();
+        //         case ShapeType.Triangle:return GetTriangleShape().GetBoundingBox();
+        //         case ShapeType.Quad:return GetQuadShape().GetBoundingBox();
+        //         case ShapeType.Rect:return GetRectShape();
+        //         case ShapeType.Poly:return GetPolygonShape().GetBoundingBox();
+        //         case ShapeType.PolyLine:return GetPolylineShape().GetBoundingBox();
+        //     }
+        //
+        //     return new();
+        // }
+        //
+        //
     }
     
     
