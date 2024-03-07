@@ -12,8 +12,13 @@ namespace ShapeEngine.Core.Collision
     {
         private class OverlapRegister
         {
-            private HashSet<OverlapEntry> entries = new();
+            private HashSet<OverlapEntry> entries;
 
+            public OverlapRegister(int capacity)
+            {
+                entries = new(capacity);
+            }
+            
             public OverlapEntry? FindEntry(Collider self, Collider other)
             {
                 foreach (var entry in entries)
@@ -55,9 +60,16 @@ namespace ShapeEngine.Core.Collision
         }
         private class ObjectRegister<T>
         {
-            public readonly List<T> AllObjects = new();
-            private readonly List<T> tempHolding = new();
-            private readonly List<T> tempRemoving = new();
+            public readonly HashSet<T> AllObjects;
+            private readonly List<T> tempHolding;
+            private readonly List<T> tempRemoving;
+
+            public ObjectRegister(int capacity)
+            {
+                AllObjects = new(capacity);
+                tempHolding = new(capacity / 4);
+                tempRemoving = new(capacity / 4);
+            }
             
             public void Add(T obj) => tempHolding.Add(obj);
 
@@ -73,39 +85,63 @@ namespace ShapeEngine.Core.Collision
 
             public void Process()
             {
+                foreach (var obj in tempRemoving)
+                {
+                    AllObjects.Remove(obj);
+                }
+                tempRemoving.Clear();
+                
                 foreach (var obj in tempHolding)
                 {
                     AllObjects.Add(obj);
                 }
                 tempHolding.Clear();
 
-                foreach (var obj in tempRemoving)
-                {
-                    AllObjects.Remove(obj);
-                }
-                tempRemoving.Clear();
+                
             }
+            protected virtual void ObjectAdded(T obj) { }
+            protected virtual void ObjectRemoved(T obj) { }
             public void Clear()
             {
+                foreach (var obj in AllObjects)
+                {
+                    ObjectRemoved(obj);
+                }
                 AllObjects.Clear();
                 tempHolding.Clear();
                 tempRemoving.Clear();
             }
         }
-        
-        // private readonly List<CollisionObject> collisionBodies = new();
-        // private readonly List<CollisionObject> tempHolding = new();
-        // private readonly List<CollisionObject> tempRemoving = new();
 
-        private readonly ObjectRegister<CollisionObject> collisionBodyRegister = new();
-        private readonly ObjectRegister<Collider> colliderRegister = new();
+        private class CollisionObjectRegister : ObjectRegister<CollisionObject>
+        {
+            private readonly CollisionHandler handler;
+            public CollisionObjectRegister(int capacity, CollisionHandler handler) : base(capacity)
+            {
+                this.handler = handler;
+            }
+
+            protected override void ObjectAdded(CollisionObject obj)
+            {
+                obj.OnCollisionSystemEntered(handler);
+            }
+
+            protected override void ObjectRemoved(CollisionObject obj)
+            {
+                obj.OnCollisionSystemLeft(handler);
+            }
+        }
+        
+        
+        private readonly CollisionObjectRegister collisionBodyRegister;
+        private readonly ObjectRegister<Collider> colliderRegister;
         
         private readonly SpatialHash spatialHash;
-        private readonly Dictionary<Collider, List<Collision>> collisionStack = new();
+        private readonly Dictionary<Collider, List<Collision>> collisionStack;
         
         //use for detecting when overlap has ended
-        private readonly OverlapRegister activeRegister = new();
-        private readonly OverlapRegister oldRegister = new();
+        private readonly OverlapRegister activeRegister;
+        private readonly OverlapRegister oldRegister;
 
         private readonly HashSet<Collider> collisionCandidateCheckRegister = new();
         private List<SpatialHash.Bucket> collisionCandidateBuckets = new();
@@ -114,8 +150,26 @@ namespace ShapeEngine.Core.Collision
 
         public Rect Bounds => spatialHash.Bounds;
 
-        public CollisionHandler(float x, float y, float w, float h, int rows, int cols) { spatialHash = new(x, y, w, h, rows, cols); }
-        public CollisionHandler(Rect bounds, int rows, int cols) { spatialHash = new(bounds.X, bounds.Y, bounds.Width, bounds.Height, rows, cols); }
+        public CollisionHandler(float x, float y, float w, float h, int rows, int cols, int startCapacity = 1024)
+        {
+            spatialHash = new(x, y, w, h, rows, cols);
+            collisionBodyRegister = new(startCapacity, this);
+            colliderRegister = new(startCapacity);
+            collisionStack = new(startCapacity / 4);
+            activeRegister = new(startCapacity / 4);
+            oldRegister = new(startCapacity / 4);
+        }
+
+        public CollisionHandler(Rect bounds, int rows, int cols, int startCapacity = 1024)
+        {
+            spatialHash = new(bounds.X, bounds.Y, bounds.Width, bounds.Height, rows, cols);
+            
+            collisionBodyRegister = new(startCapacity, this);
+            colliderRegister = new(startCapacity);
+            collisionStack = new(startCapacity / 4);
+            activeRegister = new(startCapacity / 4);
+            oldRegister = new(startCapacity / 4);
+        }
         
         
         public void ResizeBounds(Rect newBounds) { spatialHash.ResizeBounds(newBounds); }

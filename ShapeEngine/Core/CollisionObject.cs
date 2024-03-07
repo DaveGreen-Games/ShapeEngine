@@ -56,6 +56,15 @@ public abstract class CollisionObject : PhysicsObject
         return false;
     }
 
+    /// <summary>
+    /// Is called when collision object is added to a collision handler.
+    /// </summary>
+    public virtual void OnCollisionSystemEntered(CollisionHandler handler){}
+    /// <summary>
+    /// Is called when the collision object is removed from a collision handler.
+    /// </summary>
+    public virtual void OnCollisionSystemLeft(CollisionHandler handler){}
+    
     public HashSet<Collider> Colliders { get; } = new();
     public bool HasColliders => Colliders.Count > 0;
 

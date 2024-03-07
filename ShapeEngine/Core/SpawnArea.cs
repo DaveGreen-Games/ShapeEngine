@@ -6,6 +6,7 @@ using ShapeEngine.Color;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Structs;
+using ShapeEngine.Pathfinding;
 
 namespace ShapeEngine.Core
 {
@@ -31,6 +32,7 @@ namespace ShapeEngine.Core
         public int Count { get; private set; } = 0;
         public Rect Bounds { get; protected set; }
         public CollisionHandler? CollisionHandler { get; private set; } = null;
+        public Pathfinder? Pathfinder { get; private set; } = null;
         public Vector2 ParallaxePosition { get; set; } = new(0f);
 
         private readonly SortedList<uint, List<GameObject>> allObjects = new();
@@ -75,6 +77,28 @@ namespace ShapeEngine.Core
             CollisionHandler = null;
             return true;
         }
+        
+        public virtual bool InitPathfinder(int rows, int cols)
+        {
+            if (Pathfinder != null) return false;
+            Pathfinder = new(Bounds, rows, cols);
+            return true;
+        }
+        public virtual bool InitPathfinder(Pathfinder pathfinder)
+        {
+            if (Pathfinder != null) return false;
+            if (Pathfinder == pathfinder) return false;
+            Pathfinder = pathfinder;
+            return true;
+        }
+        public virtual bool RemovePathfinder()
+        {
+            if (Pathfinder == null) return false;
+            Pathfinder.Close();
+            Pathfinder = null;
+            return true;
+        }
+
         
         public virtual void ResizeBounds(Rect newBounds)
         {
@@ -196,10 +220,12 @@ namespace ShapeEngine.Core
 
             if (CollisionHandler != null)
             {
-                if (gameObject is CollisionObject co)
-                {
-                    CollisionHandler.Add(co);
-                }
+                if (gameObject is CollisionObject co) CollisionHandler.Add(co);
+            }
+
+            if (Pathfinder != null)
+            {
+                if (gameObject is IPathfinderAgent agent) Pathfinder.AddAgent(agent);
             }
 
             Count++;
@@ -212,14 +238,17 @@ namespace ShapeEngine.Core
         {
             if (!allObjects.TryGetValue(gameObject.Layer, out var o)) return false;
             if (!o.Remove(gameObject)) return false;
+            
             if (CollisionHandler != null)
             {
-                if (gameObject is CollisionObject co)
-                {
-                    CollisionHandler.Remove(co);
-                }
+                if (gameObject is CollisionObject co) CollisionHandler.Remove(co);
             }
-
+            
+            if (Pathfinder != null)
+            {
+                if (gameObject is IPathfinderAgent agent) Pathfinder.RemoveAgent(agent);
+            }
+            
             Count--;
             OnGameObjectRemoved(gameObject);
             gameObject.OnDespawned(this);

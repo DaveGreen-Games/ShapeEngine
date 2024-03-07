@@ -7,6 +7,11 @@ namespace ShapeEngine.Core;
 
 public abstract class GameObject : IUpdateable, IDrawable
 {
+    public event Action<GameObject, string?, GameObject?>? OnKilled;
+    // public event Action<GameObject, SpawnArea>? OnSpawned;
+    // public event Action<GameObject, SpawnArea>? OnDespawned;
+    
+    
     public Transform2D Transform { get; set; }
     public bool IsDead { get; private set; } = false;
     
@@ -78,12 +83,13 @@ public abstract class GameObject : IUpdateable, IDrawable
         if (TryKill(killMessage, killer))
         {
             IsDead = true;
-            OnKilled();
+            WasKilled(killMessage, killer);
+            OnKilled?.Invoke(this, killMessage, killer);
             return true;
         }
 
         return false;
     }
-    protected virtual void OnKilled() { }
+    protected virtual void WasKilled(string? killMessage = null, GameObject? killer = null) { }
     protected virtual bool TryKill(string? killMessage = null, GameObject? killer = null) => true;
 }
