@@ -15,19 +15,10 @@ namespace ShapeEngine.Core
     /// </summary>
     public class SpawnArea : IUpdateable, IDrawable, IBounds
     {
-        // public int Count
-        // {
-        //     get
-        //     {
-        //         int count = 0;
-        //         foreach (var objects in allObjects.Values)
-        //         {
-        //             count += objects.Count;
-        //         }
-        //         return count;
-        //     }
-        // }
-
+        public event Action<GameObject>? OnGameObjectAdded;
+        public event Action<GameObject>? OnGameObjectRemoved;
+        
+        
         public int NewLayerStartCapacity = 128;
         public int Count { get; private set; } = 0;
         public Rect Bounds { get; protected set; }
@@ -229,7 +220,8 @@ namespace ShapeEngine.Core
             }
 
             Count++;
-            OnGameObjectAdded(gameObject);
+            GameObjectWasAdded(gameObject);
+            OnGameObjectAdded?.Invoke(gameObject);
             gameObject.OnSpawned(this);
         }
         public void AddGameObjects(params GameObject[] areaObjects) { foreach (var ao in areaObjects) AddGameObject(ao); }
@@ -250,7 +242,8 @@ namespace ShapeEngine.Core
             }
             
             Count--;
-            OnGameObjectRemoved(gameObject);
+            GameObjectWasRemoved(gameObject);
+            OnGameObjectRemoved?.Invoke(gameObject);
             gameObject.OnDespawned(this);
             return true;
 
@@ -366,8 +359,8 @@ namespace ShapeEngine.Core
         }
         
         
-        protected virtual void OnGameObjectAdded(GameObject obj) { }
-        protected virtual void OnGameObjectRemoved(GameObject obj) { }
+        protected virtual void GameObjectWasAdded(GameObject obj) { }
+        protected virtual void GameObjectWasRemoved(GameObject obj) { }
 
         public virtual void Clear()
         {
@@ -389,7 +382,7 @@ namespace ShapeEngine.Core
             {
                 var obj = objects[i];
                 objects.RemoveAt(i);
-                OnGameObjectRemoved(obj);
+                GameObjectWasRemoved(obj);
                 obj.OnDespawned(this);
                 Count--;
                 
