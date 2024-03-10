@@ -375,7 +375,12 @@ namespace Examples.Scenes.ExampleScenes
         private class AsteroidObstacle : IPathfinderObstacle
         {
             public event Action<IPathfinderObstacle>? OnShapeChanged;
-            
+            public IPathfinderObstacle.CellValue[] GetCellValues()
+            {
+                return cellValues;
+            }
+
+            private readonly IPathfinderObstacle.CellValue[] cellValues;
             private Polygon shape;
             private Rect bb;
             private Vector2 center;
@@ -388,6 +393,23 @@ namespace Examples.Scenes.ExampleScenes
                 this.center = center;
                 this.shape = GenerateShape();
                 this.bb = this.shape.GetBoundingBox();
+
+                cellValues = new IPathfinderObstacle.CellValue[1];
+                if (ShapeRandom.Chance(0.2f))
+                {
+                    IPathfinderObstacle.CellValue v = new(-5f, IPathfinderObstacle.CellValueType.Set);
+                    cellValues[0] = v;
+                }
+                else if (ShapeRandom.Chance(0.2f))
+                {
+                    IPathfinderObstacle.CellValue v = new(5f, IPathfinderObstacle.CellValueType.Set);
+                    cellValues[0] = v;
+                }
+                else //blocking
+                {
+                    IPathfinderObstacle.CellValue v = new(0, IPathfinderObstacle.CellValueType.Block);
+                    cellValues[0] = v;
+                }
             }
 
             public void Update(float dt)
@@ -437,7 +459,7 @@ namespace Examples.Scenes.ExampleScenes
         private readonly List<Chaser> chasers = new();
         private readonly List<AsteroidObstacle> asteroids = new();
         private const int AsteroidCount = 30; //30
-        private const int AsteroidPointCount = 14; //14
+        private const int AsteroidPointCount = 12; //14
         private const float AsteroidMinSize = 250; //250
         private const float AsteroidMaxSize = 500; //500
         private const float AsteroidLineThickness = 10f;
@@ -570,7 +592,7 @@ namespace Examples.Scenes.ExampleScenes
         protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             ship.Update(time.Delta);
-            pathfinder.SetCellValues(ship.GetChasePosition(), 5);
+            // pathfinder.SetCellValues(ship.GetChasePosition(), 5);
             var removedCount = 0;
             for (int i = asteroids.Count - 1; i >= 0; i--)
             {

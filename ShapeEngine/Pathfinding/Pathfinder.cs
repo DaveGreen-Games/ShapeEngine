@@ -1,6 +1,3 @@
-using System.Collections.Concurrent;
-using System.Diagnostics.SymbolStore;
-using System.IO.Pipes;
 using System.Numerics;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Collision;
@@ -10,132 +7,66 @@ using ShapeEngine.Lib;
 
 namespace ShapeEngine.Pathfinding;
 
-
-
-
-// public interface INavigationObject : IShape
-// {
-//     public event Action<INavigationObject>? OnShapeChanged;
-//     public event Action<INavigationObject, float>? OnValueChanged;
-//
-//
-//     public float? GetOverrideValue() => null;
-//     public float? GetBonusValue() => null;
-//     public float? GetFlatValue() => null;
-// }
-// public class CellValue
-// {
-//     // public event Action<CellValue, float>? OnChanged;
-//     
-//     private float baseValue;
-//     private float totalBonus = 0f;
-//     private float totalFlat = 0f;
-//     private float cur;
-//     private bool dirty = false;
-//
-//     public float Override = -1f;
-//     public float Base 
-//     {
-//         get => baseValue;
-//         set
-//         {
-//             if (Math.Abs(baseValue - value) < 0.0001f) return;
-//             baseValue = value;
-//             dirty = true;
-//         }
-//     }
-//     public float Cur
-//     {
-//         get
-//         {
-//             if(dirty)Recalculate();
-//             return Override >= 0 ? Override : cur;
-//         }
-//         private set => cur = value;
-//     }
-//     public float TotalBonus
-//     {
-//         get => totalBonus;
-//         set
-//         {
-//             if (Math.Abs(totalBonus - value) < 0.0001f) return;
-//             totalBonus = value;
-//             dirty = true;
-//         }
-//     }
-//     public float TotalFlat 
-//     {
-//         get => totalFlat;
-//         set
-//         {
-//             if (Math.Abs(totalFlat - value) < 0.0001f) return;
-//             totalFlat = value;
-//             dirty = true;
-//         }
-//     }
-//         
-//
-//     public CellValue(float baseValue)
-//     {
-//         this.baseValue = baseValue;
-//         cur = baseValue;
-//     }
-//
-//
-//     public void Reset()
-//     {
-//         totalBonus = 0;
-//         totalFlat = 0;
-//         Override = -1;
-//         Recalculate();
-//     }
-//     private void Recalculate()
-//     {
-//         dirty = false;
-//         float old = Cur;
-//         if (TotalBonus >= 0f)
-//         {
-//             Cur = (Base + TotalFlat) * (1f + TotalBonus);
-//         }
-//         else
-//         {
-//             Cur = (Base + TotalFlat) / (1f + MathF.Abs(TotalBonus));
-//         }
-//
-//         // if (Math.Abs(Cur - old) > 0.0001f) OnChanged?.Invoke(this, old);
-//     }
-// }
-
 public interface IPathfinderObstacle : IShape
 {
-    //todo implement
-    //cell has list of cell values
-    //cell values are in some way added together into a single value for each layer present
-    //Objects are stored in Dictionary<Object, List<Cell>>
-    //if an object is removed cell values are removed from affected cells
-    //function for changing shape (remove cell values from affected cells -> calculate new affected cells and set value)
-    
-    //OR! go through all the objects each frame
-    //go through each affected cell and add flat, add bonus or add override?
-    public enum OperationType
+    public enum CellValueType
     {
-        Override = 0,
-        OverrideMin = 1,
-        OverrideMax = 2,
-        Add = 3,
-        Multiply = 4
+        None = 0,
+        Flat = 1,
+        Bonus = 2,
+        Set = 3,
+        SetMin = 4,
+        SetMax = 5,
+        Block = 6,
+        Clear = 7
+        
     }
-    public class CellValue
+    public readonly struct CellValue
     {
-        public float Value;
-        public OperationType Type;
-        public int Layer;
+        /// <summary>
+        /// Higher numbers mean the cell is more favorable
+        /// Smaller numbers mean the cell is less favorable
+        /// BaseValue/Flat/Bonus of 0 is default
+        /// A value of 5 makes the cell distance 5 timer shorter, a value -5 make the cell distance 5 timer longer
+        /// </summary>
+        public readonly float Value;
+        public readonly CellValueType Type;
+        public readonly uint Layer;
+
+        public bool Valid => Type != CellValueType.None;
+
+        public CellValue()
+        {
+            Value = 0;
+            Type = CellValueType.None;
+            Layer = 0;
+        }
+        public CellValue(float value, CellValueType type)
+        {
+            Value = value;
+            Type = type;
+            Layer = 0;
+        }
+        public CellValue(float value, CellValueType type, uint layer)
+        {
+            Value = value;
+            Type = type;
+            Layer = layer;
+        }
     }
 
     
+    /// <summary>
+    /// Invoke this event the shape of the obstacle has changed
+    /// </summary>
     public event Action<IPathfinderObstacle>? OnShapeChanged;
-    public float GetValue();
-    // public List<CellValue>? GetCellValues();
+    
+    /// <summary>
+    /// Those are the values that will change the pathfinder grid. Do not change them once the obstacle was added.
+    /// If the cell values have to be changed the obstacle has to be removed with the orginial values, and can then be
+    /// added again with the new values
+    /// </summary>
+    public CellValue[] GetCellValues();
 }
 
 public interface IPathfinderAgent
@@ -194,10 +125,9 @@ public interface IPathfinderAgent
 public class Pathfinder
 {
 
-    public static readonly float Blocked = 0;
-    public static readonly float Default = 1;
-    public static readonly float DiagonalLength = MathF.Sqrt(2f);
-    
+    // public static readonly float Blocked = 0;
+    // public static readonly float Default = 1;
+    private static readonly float DiagonalLength = MathF.Sqrt(2f);
     
     private class CellQueue
     {
@@ -255,10 +185,98 @@ public class Pathfinder
     }
     private class Cell : IComparable<Cell>
     {
-        private readonly Pathfinder parent;
+        private class CellWeight
+        {
+            // public bool Blocked = false;
+            private int blockCount = 0;
+            private float baseValue = 0;
+            private float flat = 0;
+            private float bonus = 0;
+            public bool Blocked => blockCount > 0;
 
-        // internal bool DEBUG_Touched = false;
-        
+            public void Apply(IPathfinderObstacle.CellValue value)
+            {
+                if (!value.Valid) return;
+                switch (value.Type)
+                {
+                    case IPathfinderObstacle.CellValueType.Flat:
+                        flat += value.Value;
+                        break;
+                    case IPathfinderObstacle.CellValueType.Bonus:
+                        bonus += value.Value;
+                        break;
+                    case IPathfinderObstacle.CellValueType.Set:
+                        baseValue = value.Value;
+                        break;
+                    case IPathfinderObstacle.CellValueType.SetMin:
+                        if (baseValue > value.Value) baseValue = value.Value;
+                        break;
+                    case IPathfinderObstacle.CellValueType.SetMax:
+                        if (baseValue < value.Value) baseValue = value.Value;
+                        break;
+                    case IPathfinderObstacle.CellValueType.Block:
+                        blockCount++;
+                        break;
+                    case IPathfinderObstacle.CellValueType.Clear:
+                        Reset();
+                        break;
+                }
+            }
+
+            public void Remove(IPathfinderObstacle.CellValue value)
+            {
+                if (!value.Valid) return;
+                switch (value.Type)
+                {
+                    case IPathfinderObstacle.CellValueType.Flat:
+                        flat -= value.Value;
+                        break;
+                    case IPathfinderObstacle.CellValueType.Bonus:
+                        bonus -= value.Value;
+                        break;
+                    case IPathfinderObstacle.CellValueType.Set:
+                        if (Math.Abs(baseValue - value.Value) < 0.0001f) baseValue = 0;
+                        break;
+                    case IPathfinderObstacle.CellValueType.SetMin:
+                        if (Math.Abs(baseValue - value.Value) < 0.0001f) baseValue = 0;
+                        break;
+                    case IPathfinderObstacle.CellValueType.SetMax:
+                        if (Math.Abs(baseValue - value.Value) < 0.0001f) baseValue = 0;
+                        break;
+                    case IPathfinderObstacle.CellValueType.Block:
+                        blockCount--;
+                        break;
+                }
+            }
+            public float Cur => blockCount > 0 ? 0 : GetBaseValueFactor() * GetBonusFactor();
+            // public float Cur => blockCount > 0 ? 0 : MathF.Max(baseValue + flat, 0) * GetBonusFactor();
+
+            private float GetBaseValueFactor()
+            {
+                var v = baseValue + flat;
+                if (v > 0) return 1f / v; //more favorable
+                if (v < 0) return MathF.Abs(v); //less favorable
+                return 1f; //normal
+            } 
+            private float GetBonusFactor()
+            {
+                if (bonus > 0) return 1f / bonus; //more favorable
+                if (bonus < 0) return MathF.Abs(bonus); //less favorable
+                return 1f; //normal
+            } 
+            public void Reset()
+            {
+                baseValue = 0;
+                flat = 0;
+                bonus = 0;
+                blockCount = 0;
+            }
+        }
+
+        #region Members
+
+        #region Public
+
         public Rect Rect
         {
             get
@@ -268,16 +286,32 @@ public class Pathfinder
             }
         }
         public readonly Grid.Coordinates Coordinates;
-        
-        private float weight = 1;
-        private Dictionary<uint, float>? weights = null;
+
+        #endregion
+
+        #region Internal
 
         internal HashSet<Cell>? Neighbors = null;
         internal HashSet<Cell>? Connections = null;
         internal float GScore = float.PositiveInfinity;
         internal float FScore = float.PositiveInfinity;
         internal float H = float.PositiveInfinity;
+
+        #endregion
+
+        #region Private
+
+        private readonly CellWeight weight = new();
+        private Dictionary<uint, CellWeight>? weights = null;
+        private readonly Pathfinder parent;
+
+        #endregion
         
+
+        #endregion
+
+        #region Public
+
         public Cell(Grid.Coordinates coordinates, Pathfinder parent)
         {
             Coordinates = coordinates;
@@ -287,21 +321,19 @@ public class Pathfinder
         public void Reset()
         {
             Connections?.Clear();
-            weight = Default;
-            weights?.Clear();
-            // DEBUG_Touched = false;
+            
+            weight.Reset();
+            ResetWeights();
+            // weights?.Clear();
         }
 
-        public void Clear()
-        {
-            weight = Default;
-            weights?.Clear();
-        }
+
+        #endregion
         
+        #region Neighbors & Connections
         public bool HasNeighbors => Neighbors is { Count: > 0 };
         public bool HasConnections => Connections is { Count: > 0 };
         
-        #region Neighbors & Connections
         public bool AddNeighbor(Cell cell)
         {
             Neighbors ??= new();
@@ -330,85 +362,89 @@ public class Pathfinder
             return Connections.Remove(other);
         }
         #endregion
+
+        #region CellValues
+
+        public void ApplyCellValue(IPathfinderObstacle.CellValue value)
+        {
+            if (value.Layer > 0)
+            {
+                if (weights == null) weights = new();
+                if (!weights.ContainsKey(value.Layer))
+                {
+                    weights.Add(value.Layer, new());
+                }
+            }
+            else weight.Apply(value);
+        }
+        public void RemoveCellValue(IPathfinderObstacle.CellValue value)
+        {
+            if (value.Layer > 0)
+            {
+                if (weights == null) return;
+                if (!weights.ContainsKey(value.Layer)) return;
+                weights[value.Layer].Remove(value);
+            }
+            else weight.Remove(value);
+        }
+        
+        public void ApplyCellValues(IEnumerable<IPathfinderObstacle.CellValue> values)
+        {
+            foreach (var value in values)
+            {
+                ApplyCellValue(value);
+            }
+        }
+        public void RemoveCellValues(IEnumerable<IPathfinderObstacle.CellValue> values)
+        {
+            foreach (var value in values)
+            {
+                RemoveCellValue(value);
+            }
+        }
+
+
+        #endregion
         
         #region Weight
-        
 
-        // public void AddCellValue(IPathfinderObstacle.CellValue value)
-        // {
-        //     
-        // }
-        //
-        // public void RemoveCellValue(IPathfinderObstacle.CellValue cellValue)
-        // {
-        //     
-        // }
-        // public void AddCellValues(IEnumerable<IPathfinderObstacle.CellValue> cellValues)
-        // {
-        //     
-        // }
-        //
-        // public void RemoveCellValues(IEnumerable<IPathfinderObstacle.CellValue> cellValues)
-        // {
-        //     
-        // }
-        
-        
-        private float CalculateWeightFactor(float w)
-        {
-            if (w == 0) return 0f;
-            if (w < 0) return w * -1;
-            return 1f / w;
-        }
-        public bool IsTraversable() => weight > Blocked || weight < Blocked;
+        public bool IsTraversable() => !weight.Blocked; // weight > Blocked || weight < Blocked;
         public bool IsTraversable(uint layer)
         {
-            if (weights == null) return IsTraversable();
-            if (weights.TryGetValue(layer, out float value)) return value > Blocked || value < Blocked;
-            return weight > Blocked || weight < Blocked;
+            if (weights == null) return !weight.Blocked; // IsTraversable();
+            if (weights.TryGetValue(layer, out var value)) return !value.Blocked; // value > Blocked || value < Blocked;
+            return !weight.Blocked; // weight > Blocked || weight < Blocked;
         }
-        public void SetWeight(float value)
+        public float GetWeight() => weight.Cur;
+        public float GetWeight(uint layer)
         {
-            weight = value;
-        }
-        public void SetWeight(float value, uint layer)
-        {
-            weights ??= new();
-            weights[layer] = value;
-        }
-        public void ChangeWeight(float factor)
-        {
-            if (weight == 0) return;
-            if (factor == 0f) weight = 0;
-            if (weight < 0)weight /= factor;
-            else weight *= factor;
-        }
-        public void ChangeWeight(float factor, uint layer)
-        {
-            if (weights == null) return;
-            if (!weights.TryGetValue(layer, out float w)) return;
-            if (w == 0) return;
-            
-            if (factor == 0f) w = 0;
-            if (weight < 0) w /= factor;
-            else w *= factor;
-            
-            weights[layer] = w;
+            if (weights == null) return weight.Cur;
+            return weights.TryGetValue(layer, out var w) ? w.Cur : weight.Cur;
         }
 
-        public float GetWeight() => weight;
-        public float GetWeight(uint layer) => weights?.GetValueOrDefault(layer, weight) ?? weight;
-        public float GetWeightFactor() => CalculateWeightFactor(weight);
-        public float GetWeightFactor(uint layer) => CalculateWeightFactor(GetWeight(layer));
-
-        public bool ClearWeight(uint layer) => weights?.Remove(layer) ?? false;
         public bool HasWeight(uint layer) => weights?.ContainsKey(layer) ?? false;
-        public int ClearLayerWeights()
+        public bool ResetWeight(uint layer)
         {
-            if (weights == null) return 0;
-            int count = weights.Count;
-            weights.Clear();
-            return count;
+            if (layer <= 0)
+            {
+                weight.Reset();
+                return true;
+            }
+            
+            if (weights == null) return false;
+            if (!weights.TryGetValue(layer, out var cell)) return false;
+            cell.Reset();
+            return true;
+
+        }
+        public void ResetWeights()
+        {
+            weight.Reset();
+            if (weights == null || weights.Count <= 0) return;
+            foreach (var key in weights.Keys)
+            {
+                weights[key].Reset();
+            }
         }
         #endregion
 
@@ -436,7 +472,6 @@ public class Pathfinder
     }
     }
 
-    
     
     public event Action<Pathfinder>? OnRegenerationRequested;
     public event Action<Pathfinder>? OnReset;
@@ -479,6 +514,7 @@ public class Pathfinder
     private readonly Dictionary<IPathfinderAgent, IPathfinderAgent.PathRequest?> agents = new(1024);
 
     private readonly Dictionary<IPathfinderObstacle, List<Cell>> obstacles = new(256);
+    // private readonly Dictionary<Cell, int> affectedCells = new(1024);
     
     #endregion
 
@@ -530,7 +566,7 @@ public class Pathfinder
 
     public void Update(float dt)
     {
-        HandleObstacles();
+        // HandleObstacles();
         HandlePathRequests();
     }
 
@@ -548,21 +584,21 @@ public class Pathfinder
         }
         ResolveReset();
     }
-    public void Clear()
-    {
-        foreach (var cell in cells)
-        {
-            cell.Clear();
-        }
-    }
-    public void Clear(Rect rect)
+    // public void Clear()
+    // {
+    //     foreach (var cell in cells)
+    //     {
+    //         cell.Clear();
+    //     }
+    // }
+    public void Reset(Rect rect)
     {
         cellHelper1.Clear();
         var count = GetCells(rect, ref cellHelper1);
         if (count <= 0) return;
         foreach (var cell in cellHelper1)
         {
-            cell.Clear();
+            cell.Reset();
         }
     }
 
@@ -583,8 +619,8 @@ public class Pathfinder
     
     public float GetWeight(int index) => GetCell(index)?.GetWeight() ?? 1;
     public float GetWeight(int index, uint layer) => GetCell(index)?.GetWeight(layer) ?? 1;
-    public bool IsTraversable(int index) => GetCell(index)?.IsTraversable() ?? false;
-    public bool IsTraversable(int index, uint layer) => GetCell(index)?.IsTraversable(layer) ?? false;
+    public bool IsTraversable(int index) => GetCell(index)?.IsTraversable() ?? true;
+    public bool IsTraversable(int index, uint layer) => GetCell(index)?.IsTraversable(layer) ?? true;
     
     #endregion
 
@@ -770,7 +806,7 @@ public class Pathfinder
         {
             foreach (var cell in obstacle.Value)
             {
-                cell.SetWeight(1);
+                cell.Reset();
             }
             obstacle.Key.OnShapeChanged -= OnObstacleShapeChanged;
         }
@@ -778,37 +814,20 @@ public class Pathfinder
     }
     public bool AddObstacle(IPathfinderObstacle obstacle)
     {
-        
         List<Cell>? cellList = null;
         GenerateObstacleCells(obstacle, ref cellList);
-        // switch (obstacle.GetShapeType())
-        // {
-        //     case ShapeType.None: return false;
-        //     case ShapeType.Circle:
-        //         GenerateCellList(obstacle.GetCircleShape(), ref cellList);
-        //         break;
-        //     case ShapeType.Segment: 
-        //         GenerateCellList(obstacle.GetSegmentShape(), ref cellList);
-        //         break;
-        //     case ShapeType.Triangle:
-        //         GenerateCellList(obstacle.GetTriangleShape(), ref cellList);
-        //         break;
-        //     case ShapeType.Quad:
-        //         GenerateCellList(obstacle.GetQuadShape(), ref cellList);
-        //         break;
-        //     case ShapeType.Rect:
-        //         GenerateCellList(obstacle.GetRectShape(), ref cellList);
-        //         break;
-        //     case ShapeType.Poly:
-        //         GenerateCellList(obstacle.GetPolygonShape(), ref cellList);
-        //         break;
-        //     case ShapeType.PolyLine:
-        //         GenerateCellList(obstacle.GetPolylineShape(), ref cellList);
-        //         break;
-        // }
-
+        
         if (cellList == null) return false;
         obstacles.Add(obstacle, cellList);
+        
+        var cellValues = obstacle.GetCellValues();
+        foreach (var c in cellList)
+        {
+            foreach (var v in cellValues)
+            {
+                c.ApplyCellValue(v);
+            }
+        }
 
         obstacle.OnShapeChanged += OnObstacleShapeChanged;
         return true;
@@ -816,47 +835,62 @@ public class Pathfinder
     public bool RemoveObstacle(IPathfinderObstacle obstacle)
     {
         obstacles.TryGetValue(obstacle, out var cellList);
-        
+        var cellValues = obstacle.GetCellValues();
         if (cellList != null)
         {
-            foreach (var cell in cellList)
+            foreach (var c in cellList)
             {
-                cell.SetWeight(1);
+                foreach (var v in cellValues)
+                {
+                    c.RemoveCellValue(v);
+                }
             }
         }
-
+        
         if (!obstacles.Remove(obstacle)) return false;
         
         obstacle.OnShapeChanged -= OnObstacleShapeChanged;
         return true;
 
     }
-    private void HandleObstacles()
-    {
-        foreach (var kvp in obstacles)
-        {
-            // var cellValues = kvp.Key.GetCellValues();
-            // if(cellValues == null || cellValues.Count <= 0)continue;
-            foreach (var cell in kvp.Value)
-            {
-                cell.SetWeight(kvp.Key.GetValue());
-                // cell.AddCellValues(cellValues);
-            }
-        }
-    }
     private void OnObstacleShapeChanged(IPathfinderObstacle obstacle)
     {
-        obstacles.TryGetValue(obstacle, out var value);
-        if (value != null)
+        obstacles.TryGetValue(obstacle, out var cellList);
+        var cellValues = obstacle.GetCellValues();
+        if (cellList != null && cellList.Count > 0)
         {
-
-            foreach (var cell in value)
+            foreach (var c in cellList)
             {
-                cell.SetWeight(1);
+                foreach (var v in cellValues)
+                {
+                    c.RemoveCellValue(v);
+                }
             }
-            GenerateObstacleCells(obstacle, ref value);
-            
         }
+        
+        GenerateObstacleCells(obstacle, ref cellList);
+        obstacles[obstacle] = cellList ?? new();
+        if (cellList != null && cellList.Count > 0)
+        {
+            foreach (var c in cellList)
+            {
+                foreach (var v in cellValues)
+                {
+                    c.ApplyCellValue(v);
+                }
+            }
+        }
+        
+        // obstacles.TryGetValue(obstacle, out var value);
+        // if (value != null)
+        // {
+        //     foreach (var cell in value)
+        //     {
+        //         cell.SetWeight(1);
+        //     }
+        //     GenerateObstacleCells(obstacle, ref value);
+        //     
+        // }
     }
     
     
@@ -1239,307 +1273,171 @@ public class Pathfinder
         }
     }
     #endregion
-
+    
     #region Set Cell Values
-
+    
     #region Index
-
-    public bool SetCellValues(int index, float value)
+    
+    public bool ApplyCellValue(int index, IPathfinderObstacle.CellValue value)
     {
         var cell = GetCell(index);
         if (cell == null) return false;
-        cell.SetWeight(value);
+        cell.ApplyCellValue(value);
         return true;
     }
-    public bool ChangeCellValues(int index, float factor)
+    public bool RemoveCellValue(int index, IPathfinderObstacle.CellValue value)
     {
         var cell = GetCell(index);
         if (cell == null) return false;
-        cell.ChangeWeight(factor);
+        cell.RemoveCellValue(value);
+        return true;
+    }
+    public bool ApplyCellValues(int index, params IPathfinderObstacle.CellValue[] values)
+    {
+        var cell = GetCell(index);
+        if (cell == null) return false;
+        cell.ApplyCellValues(values);
+        return true;
+    }
+    public bool RemoveCellValues(int index, params IPathfinderObstacle.CellValue[] values)
+    {
+        var cell = GetCell(index);
+        if (cell == null) return false;
+        cell.RemoveCellValues(values);
         return true;
     }
     
-    public bool SetCellValues(int index, float value, uint layer)
-    {
-        var cell = GetCell(index);
-        if (cell == null) return false;
-        cell.SetWeight(value, layer);
-        return true;
-    }
-    public bool ChangeCellValues(int index, float factor, uint layer)
-    {
-        var cell = GetCell(index);
-        if (cell == null) return false;
-        cell.ChangeWeight(factor, layer);
-        return true;
-    }
-
-    public bool SetCellValues(int index, float value, uint[] layers)
-    {
-        var cell = GetCell(index);
-        if (cell == null) return false;
-        foreach (var layer in layers)
-        {
-            cell.SetWeight(value, layer);
-        }
-        return true;
-    }
-    public bool ChangeCellValues(int index, float factor, uint[] layers)
-    {
-        var cell = GetCell(index);
-        if (cell == null) return false;
-        foreach (var layer in layers)
-        {
-            cell.ChangeWeight(factor, layer);
-        }
-        return true;
-    }
-    
-
     #endregion
     
     #region Position
-
-    public bool SetCellValues(Vector2 position, float value)
-    {
-        var cell = GetCell(position);
-        if (cell == null) return false;
-        cell.SetWeight(value);
-        return true;
-    }
-    public bool ChangeCellValues(Vector2 position, float factor)
-    {
-        var cell = GetCell(position);
-        if (cell == null) return false;
-        cell.ChangeWeight(factor);
-        return true;
-    }
     
-    public bool SetCellValues(Vector2 position, float value, uint layer)
+    public bool ApplyCellValue(Vector2 position, IPathfinderObstacle.CellValue value)
     {
         var cell = GetCell(position);
         if (cell == null) return false;
-        cell.SetWeight(value, layer);
+        cell.ApplyCellValue(value);
         return true;
     }
-    public bool ChangeCellValues(Vector2 position, float factor, uint layer)
+    public bool RemoveCellValue(Vector2 position, IPathfinderObstacle.CellValue value)
     {
         var cell = GetCell(position);
         if (cell == null) return false;
-        cell.ChangeWeight(factor, layer);
+        cell.RemoveCellValue(value);
         return true;
     }
-
-    public bool SetCellValues(Vector2 position, float value, uint[] layers)
+    public bool ApplyCellValues(Vector2 position, IEnumerable<IPathfinderObstacle.CellValue> values)
     {
         var cell = GetCell(position);
         if (cell == null) return false;
-        foreach (var layer in layers)
-        {
-            cell.SetWeight(value, layer);
-        }
+        cell.ApplyCellValues(values);
         return true;
     }
-    public bool ChangeCellValues(Vector2 position, float factor, uint[] layers)
+    public bool RemoveCellValues(Vector2 position, IEnumerable<IPathfinderObstacle.CellValue> values)
     {
         var cell = GetCell(position);
         if (cell == null) return false;
-        foreach (var layer in layers)
-        {
-            cell.ChangeWeight(factor, layer);
-        }
+        cell.RemoveCellValues(values);
         return true;
     }
 
     #endregion
     
     #region Segment
-    public int SetCellValues(Segment shape, float value)
+    public int ApplyCellValue(Segment shape, IPathfinderObstacle.CellValue value)
     {
         resultSet.Clear();
         var cellCount = GetCells(shape, ref resultSet);
         if (cellCount <= 0) return 0;
         foreach (var cell in resultSet)
         {
-            cell.SetWeight(value);
+            cell.ApplyCellValue(value);
         }
     
         return cellCount;
     }
-    public int ChangeCellValues(Segment shape, float factor)
+    public int RemoveCellValue(Segment shape, IPathfinderObstacle.CellValue value)
     {
         resultSet.Clear();
         var cellCount = GetCells(shape, ref resultSet);
         if (cellCount <= 0) return 0;
         foreach (var cell in resultSet)
         {
-            cell.ChangeWeight(factor);
+            cell.RemoveCellValue(value);
         }
     
         return cellCount;
     }
-    
-    public int SetCellValues(Segment shape, float value, uint layer)
+    public int ApplyCellValues(Segment shape, params IPathfinderObstacle.CellValue[] values)
     {
         resultSet.Clear();
         var cellCount = GetCells(shape, ref resultSet);
         if (cellCount <= 0) return 0;
         foreach (var cell in resultSet)
         {
-            cell.SetWeight(value, layer);
+            cell.ApplyCellValues(values);
         }
     
         return cellCount;
     }
-    public int ChangeCellValues(Segment shape, float factor, uint layer)
+    public int RemoveCellValues(Segment shape, params IPathfinderObstacle.CellValue[] values)
     {
         resultSet.Clear();
         var cellCount = GetCells(shape, ref resultSet);
         if (cellCount <= 0) return 0;
         foreach (var cell in resultSet)
         {
-            cell.ChangeWeight(factor, layer);
+            cell.RemoveCellValues(values);
         }
     
         return cellCount;
     }
-
-    public int SetCellValues(Segment shape, float value, uint[] layers)
-    {
-        resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
-        {
-            if (layers.Length <= 0)
-            {
-                cell.SetWeight(value);
-                continue;
-            }
-            foreach (var layer in layers)
-            {
-                cell.SetWeight(value, layer);
-            }
-            
-        }
-    
-        return cellCount;
-    }
-    public int ChangeCellValues(Segment shape, float factor, uint[] layers)
-    {
-        resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
-        {
-            if (layers.Length <= 0)
-            {
-                cell.ChangeWeight(factor);
-                continue;
-            }
-            
-            foreach (var layer in layers)
-            {
-                cell.ChangeWeight(factor, layer);
-            }
-            
-        }
-    
-        return cellCount;
-    }
-    
     #endregion
     
     #region Circle
-    public int SetCellValues(Circle shape, float value)
+    public int ApplyCellValue(Circle shape, IPathfinderObstacle.CellValue value)
     {
         resultSet.Clear();
         var cellCount = GetCells(shape, ref resultSet);
         if (cellCount <= 0) return 0;
         foreach (var cell in resultSet)
         {
-            cell.SetWeight(value);
+            cell.ApplyCellValue(value);
         }
     
         return cellCount;
     }
-    public int ChangeCellValues(Circle shape, float factor)
+    public int RemoveCellValue(Circle shape, IPathfinderObstacle.CellValue value)
     {
         resultSet.Clear();
         var cellCount = GetCells(shape, ref resultSet);
         if (cellCount <= 0) return 0;
         foreach (var cell in resultSet)
         {
-            cell.ChangeWeight(factor);
+            cell.RemoveCellValue(value);
         }
     
         return cellCount;
     }
-    
-    public int SetCellValues(Circle shape, float value, uint layer)
+    public int ApplyCellValues(Circle shape, params IPathfinderObstacle.CellValue[] values)
     {
         resultSet.Clear();
         var cellCount = GetCells(shape, ref resultSet);
         if (cellCount <= 0) return 0;
         foreach (var cell in resultSet)
         {
-            cell.SetWeight(value, layer);
+            cell.ApplyCellValues(values);
         }
     
         return cellCount;
     }
-    public int ChangeCellValues(Circle shape, float factor, uint layer)
+    public int RemoveCellValues(Circle shape, params IPathfinderObstacle.CellValue[] values)
     {
         resultSet.Clear();
         var cellCount = GetCells(shape, ref resultSet);
         if (cellCount <= 0) return 0;
         foreach (var cell in resultSet)
         {
-            cell.ChangeWeight(factor, layer);
-        }
-    
-        return cellCount;
-    }
-
-    public int SetCellValues(Circle shape, float value, uint[] layers)
-    {
-        resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
-        {
-            if (layers.Length <= 0)
-            {
-                cell.SetWeight(value);
-                continue;
-            }
-            foreach (var layer in layers)
-            {
-                cell.SetWeight(value, layer);
-            }
-            
-        }
-    
-        return cellCount;
-    }
-    public int ChangeCellValues(Circle shape, float factor, uint[] layers)
-    {
-        resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
-        {
-            if (layers.Length <= 0)
-            {
-                cell.ChangeWeight(factor);
-                continue;
-            }
-            
-            foreach (var layer in layers)
-            {
-                cell.ChangeWeight(factor, layer);
-            }
-            
+            cell.RemoveCellValues(values);
         }
     
         return cellCount;
@@ -1547,191 +1445,50 @@ public class Pathfinder
     #endregion
     
     #region Triangle
-    public int SetCellValues(Triangle shape, float value)
+    public int ApplyCellValue(Triangle shape, IPathfinderObstacle.CellValue value)
     {
         resultSet.Clear();
         var cellCount = GetCells(shape, ref resultSet);
         if (cellCount <= 0) return 0;
         foreach (var cell in resultSet)
         {
-            cell.SetWeight(value);
+            cell.ApplyCellValue(value);
         }
     
         return cellCount;
     }
-    public int ChangeCellValues(Triangle shape, float factor)
+    public int RemoveCellValue(Triangle shape, IPathfinderObstacle.CellValue value)
     {
         resultSet.Clear();
         var cellCount = GetCells(shape, ref resultSet);
         if (cellCount <= 0) return 0;
         foreach (var cell in resultSet)
         {
-            cell.ChangeWeight(factor);
+            cell.RemoveCellValue(value);
         }
     
         return cellCount;
     }
-    
-    public int SetCellValues(Triangle shape, float value, uint layer)
+    public int ApplyCellValues(Triangle shape, params IPathfinderObstacle.CellValue[] values)
     {
         resultSet.Clear();
         var cellCount = GetCells(shape, ref resultSet);
         if (cellCount <= 0) return 0;
         foreach (var cell in resultSet)
         {
-            cell.SetWeight(value, layer);
+            cell.ApplyCellValues(values);
         }
     
         return cellCount;
     }
-    public int ChangeCellValues(Triangle shape, float factor, uint layer)
+    public int RemoveCellValues(Triangle shape, params IPathfinderObstacle.CellValue[] values)
     {
         resultSet.Clear();
         var cellCount = GetCells(shape, ref resultSet);
         if (cellCount <= 0) return 0;
         foreach (var cell in resultSet)
         {
-            cell.ChangeWeight(factor, layer);
-        }
-    
-        return cellCount;
-    }
-
-    public int SetCellValues(Triangle shape, float value, uint[] layers)
-    {
-        resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
-        {
-            if (layers.Length <= 0)
-            {
-                cell.SetWeight(value);
-                continue;
-            }
-            foreach (var layer in layers)
-            {
-                cell.SetWeight(value, layer);
-            }
-            
-        }
-    
-        return cellCount;
-    }
-    public int ChangeCellValues(Triangle shape, float factor, uint[] layers)
-    {
-        resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
-        {
-            if (layers.Length <= 0)
-            {
-                cell.ChangeWeight(factor);
-                continue;
-            }
-            
-            foreach (var layer in layers)
-            {
-                cell.ChangeWeight(factor, layer);
-            }
-            
-        }
-    
-        return cellCount;
-    }
-    #endregion
-    
-    #region Quad
-    public int SetCellValues(Quad shape, float value)
-    {
-        resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
-        {
-            cell.SetWeight(value);
-        }
-    
-        return cellCount;
-    }
-    public int ChangeCellValues(Quad shape, float factor)
-    {
-        resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
-        {
-            cell.ChangeWeight(factor);
-        }
-    
-        return cellCount;
-    }
-    
-    public int SetCellValues(Quad shape, float value, uint layer)
-    {
-        resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
-        {
-            cell.SetWeight(value, layer);
-        }
-    
-        return cellCount;
-    }
-    public int ChangeCellValues(Quad shape, float factor, uint layer)
-    {
-        resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
-        {
-            cell.ChangeWeight(factor, layer);
-        }
-    
-        return cellCount;
-    }
-
-    public int SetCellValues(Quad shape, float value, uint[] layers)
-    {
-        resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
-        {
-            if (layers.Length <= 0)
-            {
-                cell.SetWeight(value);
-                continue;
-            }
-            foreach (var layer in layers)
-            {
-                cell.SetWeight(value, layer);
-            }
-            
-        }
-    
-        return cellCount;
-    }
-    public int ChangeCellValues(Quad shape, float factor, uint[] layers)
-    {
-        resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
-        {
-            if (layers.Length <= 0)
-            {
-                cell.ChangeWeight(factor);
-                continue;
-            }
-            
-            foreach (var layer in layers)
-            {
-                cell.ChangeWeight(factor, layer);
-            }
-            
+            cell.RemoveCellValues(values);
         }
     
         return cellCount;
@@ -1739,95 +1496,101 @@ public class Pathfinder
     #endregion
     
     #region Rect
-    public int SetCellValues(Rect shape, float value)
+    public int ApplyCellValue(Rect shape, IPathfinderObstacle.CellValue value)
     {
         resultSet.Clear();
         var cellCount = GetCells(shape, ref resultSet);
         if (cellCount <= 0) return 0;
         foreach (var cell in resultSet)
         {
-            cell.SetWeight(value);
+            cell.ApplyCellValue(value);
         }
     
         return cellCount;
     }
-    public int ChangeCellValues(Rect shape, float factor)
+    public int RemoveCellValue(Rect shape, IPathfinderObstacle.CellValue value)
     {
         resultSet.Clear();
         var cellCount = GetCells(shape, ref resultSet);
         if (cellCount <= 0) return 0;
         foreach (var cell in resultSet)
         {
-            cell.ChangeWeight(factor);
+            cell.RemoveCellValue(value);
         }
     
         return cellCount;
     }
-    
-    public int SetCellValues(Rect shape, float value, uint layer)
+    public int ApplyCellValues(Rect shape, params IPathfinderObstacle.CellValue[] values)
     {
         resultSet.Clear();
         var cellCount = GetCells(shape, ref resultSet);
         if (cellCount <= 0) return 0;
         foreach (var cell in resultSet)
         {
-            cell.SetWeight(value, layer);
+            cell.ApplyCellValues(values);
         }
     
         return cellCount;
     }
-    public int ChangeCellValues(Rect shape, float factor, uint layer)
+    public int RemoveCellValues(Rect shape, params IPathfinderObstacle.CellValue[] values)
     {
         resultSet.Clear();
         var cellCount = GetCells(shape, ref resultSet);
         if (cellCount <= 0) return 0;
         foreach (var cell in resultSet)
         {
-            cell.ChangeWeight(factor, layer);
+            cell.RemoveCellValues(values);
         }
     
         return cellCount;
     }
-
-    public int SetCellValues(Rect shape, float value, uint[] layers)
+    #endregion
+    
+    #region Quad
+    public int ApplyCellValue(Quad shape, IPathfinderObstacle.CellValue value)
     {
         resultSet.Clear();
         var cellCount = GetCells(shape, ref resultSet);
         if (cellCount <= 0) return 0;
         foreach (var cell in resultSet)
         {
-            if (layers.Length <= 0)
-            {
-                cell.SetWeight(value);
-                continue;
-            }
-            foreach (var layer in layers)
-            {
-                cell.SetWeight(value, layer);
-            }
-            
+            cell.ApplyCellValue(value);
         }
     
         return cellCount;
     }
-    public int ChangeCellValues(Rect shape, float factor, uint[] layers)
+    public int RemoveCellValue(Quad shape, IPathfinderObstacle.CellValue value)
     {
         resultSet.Clear();
         var cellCount = GetCells(shape, ref resultSet);
         if (cellCount <= 0) return 0;
         foreach (var cell in resultSet)
         {
-            if (layers.Length <= 0)
-            {
-                cell.ChangeWeight(factor);
-                continue;
-            }
-            
-            foreach (var layer in layers)
-            {
-                cell.ChangeWeight(factor, layer);
-            }
-            
+            cell.RemoveCellValue(value);
+        }
+    
+        return cellCount;
+    }
+    public int ApplyCellValues(Quad shape, params IPathfinderObstacle.CellValue[] values)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            cell.ApplyCellValues(values);
+        }
+    
+        return cellCount;
+    }
+    public int RemoveCellValues(Quad shape, params IPathfinderObstacle.CellValue[] values)
+    {
+        resultSet.Clear();
+        var cellCount = GetCells(shape, ref resultSet);
+        if (cellCount <= 0) return 0;
+        foreach (var cell in resultSet)
+        {
+            cell.RemoveCellValues(values);
         }
     
         return cellCount;
@@ -1835,200 +1598,106 @@ public class Pathfinder
     #endregion
     
     #region Polygon
-    public int SetCellValues(Polygon shape, float value)
+    public int ApplyCellValue(Polygon shape, IPathfinderObstacle.CellValue value)
     {
         resultSet.Clear();
         var cellCount = GetCells(shape, ref resultSet);
         if (cellCount <= 0) return 0;
         foreach (var cell in resultSet)
         {
-            // if(shape.ContainsShape(cell.Rect)) cell.SetWeight(0);
-            // else cell.SetWeight(value);
-            cell.SetWeight(value);
+            cell.ApplyCellValue(value);
         }
     
         return cellCount;
     }
-    public int ChangeCellValues(Polygon shape, float factor)
+    public int RemoveCellValue(Polygon shape, IPathfinderObstacle.CellValue value)
     {
         resultSet.Clear();
         var cellCount = GetCells(shape, ref resultSet);
         if (cellCount <= 0) return 0;
         foreach (var cell in resultSet)
         {
-            cell.ChangeWeight(factor);
+            cell.RemoveCellValue(value);
         }
     
         return cellCount;
     }
-    
-    public int SetCellValues(Polygon shape, float value, uint layer)
+    public int ApplyCellValues(Polygon shape, params IPathfinderObstacle.CellValue[] values)
     {
         resultSet.Clear();
         var cellCount = GetCells(shape, ref resultSet);
         if (cellCount <= 0) return 0;
         foreach (var cell in resultSet)
         {
-            cell.SetWeight(value, layer);
+            cell.ApplyCellValues(values);
         }
     
         return cellCount;
     }
-    public int ChangeCellValues(Polygon shape, float factor, uint layer)
+    public int RemoveCellValues(Polygon shape, params IPathfinderObstacle.CellValue[] values)
     {
         resultSet.Clear();
         var cellCount = GetCells(shape, ref resultSet);
         if (cellCount <= 0) return 0;
         foreach (var cell in resultSet)
         {
-            cell.ChangeWeight(factor, layer);
-        }
-    
-        return cellCount;
-    }
-
-    public int SetCellValues(Polygon shape, float value, uint[] layers)
-    {
-        resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
-        {
-            if (layers.Length <= 0)
-            {
-                cell.SetWeight(value);
-                continue;
-            }
-            foreach (var layer in layers)
-            {
-                cell.SetWeight(value, layer);
-            }
-            
-        }
-    
-        return cellCount;
-    }
-    public int ChangeCellValues(Polygon shape, float factor, uint[] layers)
-    {
-        resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
-        {
-            if (layers.Length <= 0)
-            {
-                cell.ChangeWeight(factor);
-                continue;
-            }
-            
-            foreach (var layer in layers)
-            {
-                cell.ChangeWeight(factor, layer);
-            }
-            
+            cell.RemoveCellValues(values);
         }
     
         return cellCount;
     }
     #endregion
-
+    
     #region Polyline
-    public int SetCellValues(Polyline shape, float value)
+    public int ApplyCellValue(Polyline shape, IPathfinderObstacle.CellValue value)
     {
         resultSet.Clear();
         var cellCount = GetCells(shape, ref resultSet);
         if (cellCount <= 0) return 0;
         foreach (var cell in resultSet)
         {
-            cell.SetWeight(value);
+            cell.ApplyCellValue(value);
         }
     
         return cellCount;
     }
-    public int ChangeCellValues(Polyline shape, float factor)
+    public int RemoveCellValue(Polyline shape, IPathfinderObstacle.CellValue value)
     {
         resultSet.Clear();
         var cellCount = GetCells(shape, ref resultSet);
         if (cellCount <= 0) return 0;
         foreach (var cell in resultSet)
         {
-            cell.ChangeWeight(factor);
+            cell.RemoveCellValue(value);
         }
     
         return cellCount;
     }
-    
-    public int SetCellValues(Polyline shape, float value, uint layer)
+    public int ApplyCellValues(Polyline shape, params IPathfinderObstacle.CellValue[] values)
     {
         resultSet.Clear();
         var cellCount = GetCells(shape, ref resultSet);
         if (cellCount <= 0) return 0;
         foreach (var cell in resultSet)
         {
-            cell.SetWeight(value, layer);
+            cell.ApplyCellValues(values);
         }
     
         return cellCount;
     }
-    public int ChangeCellValues(Polyline shape, float factor, uint layer)
+    public int RemoveCellValues(Polyline shape, params IPathfinderObstacle.CellValue[] values)
     {
         resultSet.Clear();
         var cellCount = GetCells(shape, ref resultSet);
         if (cellCount <= 0) return 0;
         foreach (var cell in resultSet)
         {
-            cell.ChangeWeight(factor, layer);
-        }
-    
-        return cellCount;
-    }
-
-    public int SetCellValues(Polyline shape, float value, uint[] layers)
-    {
-        resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
-        {
-            if (layers.Length <= 0)
-            {
-                cell.SetWeight(value);
-                continue;
-            }
-            foreach (var layer in layers)
-            {
-                cell.SetWeight(value, layer);
-            }
-            
-        }
-    
-        return cellCount;
-    }
-    public int ChangeCellValues(Polyline shape, float factor, uint[] layers)
-    {
-        resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
-        {
-            if (layers.Length <= 0)
-            {
-                cell.ChangeWeight(factor);
-                continue;
-            }
-            
-            foreach (var layer in layers)
-            {
-                cell.ChangeWeight(factor, layer);
-            }
-            
+            cell.RemoveCellValues(values);
         }
     
         return cellCount;
     }
     #endregion
-    
-
     #endregion
     
     #region Virtual
@@ -2229,8 +1898,8 @@ public class Pathfinder
         var nc = neighbor.Coordinates;
 
         var c = nc - cc;
-        if (c.Col != 0 && c.Row != 0) return DiagonalLength * neighbor.GetWeightFactor(layer);//diagonal
-        return 1f *neighbor.GetWeightFactor(layer);
+        if (c.Col != 0 && c.Row != 0) return DiagonalLength * neighbor.GetWeight(layer);//diagonal
+        return 1f * neighbor.GetWeight(layer);
         // return c.Distance * neighbor.GetWeightFactor(layer);
         
         
@@ -2435,8 +2104,8 @@ public class Pathfinder
             // }
             //
             if(cell.GetWeight(layer) == 0) r.ScaleSize(0.5f, new Vector2(0.5f)).Draw(blocked);
-            else if(cell.GetWeight(layer) < 1) r.ScaleSize(0.65f, new Vector2(0.5f)).Draw(undesirable);
-            else if(cell.GetWeight(layer) > 1) r.ScaleSize(0.65f, new Vector2(0.5f)).Draw(desirable);
+            else if(cell.GetWeight(layer) > 1) r.ScaleSize(0.65f, new Vector2(0.5f)).Draw(undesirable);
+            else if(cell.GetWeight(layer) < 1) r.ScaleSize(0.65f, new Vector2(0.5f)).Draw(desirable);
             else r.ScaleSize(0.8f, new Vector2(0.5f)).Draw(standard);
         }
         

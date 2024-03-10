@@ -158,7 +158,7 @@ internal class PathfinderFlag
                     if (rectStarted)
                     {
                         var r = new Rect(rectStartPos, mousePosGame);
-                        pathfinder.SetCellValues(r, Pathfinder.Default);
+                        pathfinder.ApplyCellValue(r, new (0, IPathfinderObstacle.CellValueType.Clear));
                     }
                 }
                 if (Raylib.IsKeyReleased(KeyboardKey.V))
@@ -166,7 +166,7 @@ internal class PathfinderFlag
                     if (rectStarted)
                     {
                         var r = new Rect(rectStartPos, mousePosGame);
-                        pathfinder.SetCellValues(r, -5);
+                        pathfinder.ApplyCellValue(r, new (-5f, IPathfinderObstacle.CellValueType.Set));
                     }
                 }
                 if (Raylib.IsKeyReleased(KeyboardKey.B))
@@ -174,7 +174,7 @@ internal class PathfinderFlag
                     if (rectStarted)
                     {
                         var r = new Rect(rectStartPos, mousePosGame);
-                        pathfinder.SetCellValues(r, Pathfinder.Blocked);
+                        pathfinder.ApplyCellValue(r, new (0, IPathfinderObstacle.CellValueType.Block));
                     }
                 }
                 if (Raylib.IsKeyReleased(KeyboardKey.X))
@@ -182,7 +182,7 @@ internal class PathfinderFlag
                     if (rectStarted)
                     {
                         var r = new Rect(rectStartPos, mousePosGame);
-                        pathfinder.SetCellValues(r, 5);
+                        pathfinder.ApplyCellValue(r, new (5f, IPathfinderObstacle.CellValueType.Set));
                     }
                 }
             
