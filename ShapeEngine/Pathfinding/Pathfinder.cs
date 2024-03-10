@@ -15,8 +15,8 @@ public interface IPathfinderObstacle : IShape
         Flat = 1,
         Bonus = 2,
         Set = 3,
-        SetMin = 4,
-        SetMax = 5,
+        SetOverrideBlock = 4,
+        SetReset = 5,
         Block = 6,
         Clear = 7
         
@@ -189,6 +189,7 @@ public class Pathfinder
         {
             // public bool Blocked = false;
             private int blockCount = 0;
+            private int overrideBlockCount = 0;
             private float baseValue = 0;
             private float flat = 0;
             private float bonus = 0;
@@ -208,11 +209,13 @@ public class Pathfinder
                     case IPathfinderObstacle.CellValueType.Set:
                         baseValue = value.Value;
                         break;
-                    case IPathfinderObstacle.CellValueType.SetMin:
-                        if (baseValue > value.Value) baseValue = value.Value;
+                    case IPathfinderObstacle.CellValueType.SetOverrideBlock:
+                        baseValue = value.Value;
+                        overrideBlockCount++;
                         break;
-                    case IPathfinderObstacle.CellValueType.SetMax:
-                        if (baseValue < value.Value) baseValue = value.Value;
+                    case IPathfinderObstacle.CellValueType.SetReset:
+                        Reset();
+                        baseValue = value.Value;
                         break;
                     case IPathfinderObstacle.CellValueType.Block:
                         blockCount++;
@@ -237,18 +240,19 @@ public class Pathfinder
                     case IPathfinderObstacle.CellValueType.Set:
                         if (Math.Abs(baseValue - value.Value) < 0.0001f) baseValue = 0;
                         break;
-                    case IPathfinderObstacle.CellValueType.SetMin:
-                        if (Math.Abs(baseValue - value.Value) < 0.0001f) baseValue = 0;
+                    case IPathfinderObstacle.CellValueType.SetOverrideBlock:
+                        baseValue = 0;
+                        overrideBlockCount--;
                         break;
-                    case IPathfinderObstacle.CellValueType.SetMax:
-                        if (Math.Abs(baseValue - value.Value) < 0.0001f) baseValue = 0;
+                    case IPathfinderObstacle.CellValueType.SetReset:
+                        baseValue = 0;
                         break;
                     case IPathfinderObstacle.CellValueType.Block:
                         blockCount--;
                         break;
                 }
             }
-            public float Cur => blockCount > 0 ? 0 : GetBaseValueFactor() * GetBonusFactor();
+            public float Cur => blockCount > 0 && overrideBlockCount <= 0 ? 0 : GetBaseValueFactor() * GetBonusFactor();
             // public float Cur => blockCount > 0 ? 0 : MathF.Max(baseValue + flat, 0) * GetBonusFactor();
 
             private float GetBaseValueFactor()

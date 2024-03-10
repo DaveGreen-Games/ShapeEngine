@@ -166,7 +166,7 @@ internal class PathfinderFlag
                     if (rectStarted)
                     {
                         var r = new Rect(rectStartPos, mousePosGame);
-                        pathfinder.ApplyCellValue(r, new (-5f, IPathfinderObstacle.CellValueType.Set));
+                        pathfinder.ApplyCellValue(r, new (-5f, IPathfinderObstacle.CellValueType.SetReset));
                     }
                 }
                 if (Raylib.IsKeyReleased(KeyboardKey.B))
@@ -182,7 +182,7 @@ internal class PathfinderFlag
                     if (rectStarted)
                     {
                         var r = new Rect(rectStartPos, mousePosGame);
-                        pathfinder.ApplyCellValue(r, new (5f, IPathfinderObstacle.CellValueType.Set));
+                        pathfinder.ApplyCellValue(r, new (5f, IPathfinderObstacle.CellValueType.SetReset));
                     }
                 }
             
