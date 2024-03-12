@@ -1,3 +1,4 @@
+using System.Net.NetworkInformation;
 using Raylib_cs;
 using ShapeEngine.Core;
 using ShapeEngine.Lib;
@@ -11,6 +12,7 @@ using ShapeEngine.Core.Shapes;
 using ShapeEngine.Input;
 using ShapeEngine.Pathfinding;
 using Color = System.Drawing.Color;
+using Path = ShapeEngine.Pathfinding.Path;
 
 namespace Examples.Scenes.ExampleScenes
 {
@@ -22,10 +24,17 @@ namespace Examples.Scenes.ExampleScenes
         private class Ship : ICameraFollowTarget
         {
             // public Circle Hull { get; private set; }
-            private Triangle hull = new();
-            private Vector2 movementDir = new();
-            public float Speed = 500;
+            private Triangle hull;
+            private Vector2 pivot;
+            private Vector2 movementDir;
+            private float angleRad;
+            private float stopTimer = 0f;
+            private float accelTimer = 0f;
+            private const float AccelTime = 0.25f;
+            private const float StopTime = 0.5f;
+            public const float Speed = 750;
         
+            
             private readonly PaletteColor hullColor = Colors.PcCold;
         
             private InputAction iaMoveHor;
@@ -60,7 +69,7 @@ namespace Examples.Scenes.ExampleScenes
                 var a = pos + new Vector2(size, 0);
                 var b = pos + new Vector2(-size, -size * 0.75f);
                 var c = pos + new Vector2(-size, size * 0.75f);
-
+                pivot = pos;
                 hull = new Triangle(a, b, c);
             }
             
@@ -74,8 +83,27 @@ namespace Examples.Scenes.ExampleScenes
             {
                 CreateHull(pos, size);
                 movementDir = new(0, 0);
-            } 
-            
+                angleRad = 0f;
+            }
+
+            private void Move(float dt, Vector2 dir, float speed)
+            {
+                movementDir = dir; // amount.Normalize();
+                var newAngle = movementDir.AngleRad();
+                var angleDif = ShapeMath.GetShortestAngleRad(angleRad, newAngle);
+                var movement = movementDir * speed * dt;
+
+                hull = hull.Move(movement);
+                pivot += movement;
+
+                var angleMovement = MathF.Sign(angleDif) * dt * MathF.PI * 4f;
+                if (MathF.Abs(angleMovement) > MathF.Abs(angleDif))
+                {
+                    angleMovement = angleDif;
+                }
+                angleRad += angleMovement;
+                hull = hull.Rotate(pivot, angleMovement);
+            }
             public void Update(float dt)
             {
                 iaMoveHor.Gamepad = GAMELOOP.CurGamepad;
@@ -88,16 +116,27 @@ namespace Examples.Scenes.ExampleScenes
                 float lsq = dir.LengthSquared();
                 if (lsq > 0f)
                 {
-                    var curAngle = movementDir.AngleRad();
-                    movementDir = dir.Normalize();
-                    var newAngle = movementDir.AngleRad();
-                    var angleDif = ShapeMath.GetShortestAngleRad(curAngle, newAngle);
-                    var movement = movementDir * Speed * dt;
+                    stopTimer = 0f;
 
-                    hull = hull.Move(movement);
-                    hull = hull.Rotate(angleDif);
+                    float accelF = 1f;
+                    if (accelTimer <= AccelTime)
+                    {
+                        accelTimer += dt;
+                        accelF = accelTimer / AccelTime;
+                    }
                     
-                    // hull = new Circle(hull.Center + movement, hull.Radius);
+                    Move(dt, dir.Normalize(), Speed * accelF * accelF);
+                }
+                else
+                {
+                    accelTimer = 0f;
+                    if (stopTimer <= StopTime)
+                    {
+                        stopTimer += dt;
+                        float stopF = 1f - (stopTimer / StopTime);
+                        Move(dt, movementDir, Speed * stopF * stopF);
+                    }
+                    else movementDir = new();
                 }
                 
             }
@@ -123,6 +162,14 @@ namespace Examples.Scenes.ExampleScenes
             }
 
             public Vector2 GetChasePosition() => hull.GetCentroid();
+            public Vector2 GetPredictedChasePosition(float seconds = 1f)
+            {
+                if (movementDir.LengthSquared() <= 0f) return GetChasePosition();
+                
+                
+                return hull.GetCentroid() + movementDir * Speed * seconds;
+            }
+
             public Vector2 GetCameraFollowPosition()
             {
                 return hull.GetCentroid();
@@ -140,23 +187,37 @@ namespace Examples.Scenes.ExampleScenes
             
             private Circle body;
             private float speed;
-
+            private bool Predictor => predictionSeconds > 0f;
+            private float predictionSeconds;
+            private const float PredictorSeconds = 3f;
             private Ship? target = null;
             private Pathfinder pathfinder;
-            private Pathfinder.Path? currentPath = null;
+            private Path? currentPath = null;
             private int currentPathIndex = -1;
             private Vector2 nextPathPoint = new();
+            // private float endMovementTimer = 0f;
+            // private const float EndMovementTime = 5f;
             
             private float pathTimer = 0f;
             private const float pathTimerInterval = 1f;
             private Vector2 lastTargetPosition = new();
+
+            public const float MinPathRequestDistance = 250f;
+            private const float MinPathRequestDistanceSquared = MinPathRequestDistance * MinPathRequestDistance;
+            
+            public const float MaxPathRequestDistance = 2500f;
+            private const float MaxPathRequestDistanceSquared = MaxPathRequestDistance * MaxPathRequestDistance;
             // private bool directChase = false;
 
             public Chaser(Vector2 pos, float size, float speed, Pathfinder pathfinder)
             {
                 this.body = new(pos, size);
-                this.speed = ShapeRandom.RandF(speed * 0.5f, speed * 2f);
                 this.pathfinder = pathfinder;
+                if (ShapeRandom.Chance(0.25f))
+                    predictionSeconds = ShapeRandom.RandF(PredictorSeconds * 0.75f, PredictorSeconds * 1f);
+
+
+                this.speed = speed * (Predictor ? ShapeRandom.RandF(0.55f, 0.65f) : ShapeRandom.RandF(0.4f, 0.5f));
                 SetPathTimer();
             }
 
@@ -178,8 +239,8 @@ namespace Examples.Scenes.ExampleScenes
                     return;
                 }
                 
-                var disSq = (target.GetChasePosition() - body.Center).LengthSquared();
-                if (disSq < 500 * 500)
+                var disSq = (GetTargetPosition() - body.Center).LengthSquared();
+                if (disSq < MaxPathRequestDistanceSquared)
                 {
                     pathTimer = ShapeRandom.RandF(pathTimerInterval * 0.5f, pathTimerInterval * 1.5f);
                 }
@@ -205,13 +266,47 @@ namespace Examples.Scenes.ExampleScenes
             public void Update(float dt)
             {
                 if (pathTimer > 0) pathTimer -= dt;
+
+                if (target == null) return;
+
+                var chasePos = GetTargetPosition();
+                var targetDisSq = (chasePos - body.Center).LengthSquared();
+                // if (targetDisSq > MaxPathRequestDistanceSquared)
+                // {
+                //     if (endMovementTimer <= EndMovementTime)
+                //     {
+                //         endMovementTimer += dt;
+                //         float f = 1f - ( endMovementTimer / EndMovementTime );
+                //         var newPos = body.Center.MoveTowards(chasePos, speed * dt * f);
+                //         body = new Circle(newPos, body.Radius);
+                //     }
+                //     
+                //     return;
+                // }
+                //
+                // endMovementTimer = 0f;
+                //
+                // if (targetDisSq < MinPathRequestDistance)
+                // {
+                //     float f = 0.8f;
+                //     var newPos = body.Center.MoveTowards(chasePos, speed * dt * f);
+                //     body = new Circle(newPos, body.Radius);
+                //     return;
+                // }
                 
                 
                 
-                if (target != null && pathTimer <= 0)
+                if (targetDisSq < MinPathRequestDistanceSquared || targetDisSq > MaxPathRequestDistanceSquared)
                 {
-                    // directChase = false;
-                    
+                    float f = targetDisSq > MaxPathRequestDistanceSquared ? 0.25f : 0.8f;
+                    var newPos = body.Center.MoveTowards(chasePos, speed * dt * f);
+                    body = new Circle(newPos, body.Radius);
+                    return;
+                }
+                
+                
+                if (pathTimer <= 0)
+                {
                     if (currentPath == null)
                     {
                         GetNewPath();
@@ -221,9 +316,8 @@ namespace Examples.Scenes.ExampleScenes
                     }
                     else
                     {
-                        var chasePos = target.GetChasePosition();
-                        var disSq = (chasePos - lastTargetPosition).LengthSquared();
-                        if (disSq > 250 * 250)
+                        // var chasePos = target.GetChasePosition();
+                        if ((chasePos - lastTargetPosition).LengthSquared() > 250 * 250)
                         {
                             GetNewPath();
                             
@@ -235,9 +329,6 @@ namespace Examples.Scenes.ExampleScenes
                 // {
                 //     GetNewPath();
                 // }
-
-                
-                
 
                 if (currentPath != null)
                 {
@@ -266,14 +357,6 @@ namespace Examples.Scenes.ExampleScenes
                     var newPos = body.Center.MoveTowards(nextPathPoint, speed * dt);
                     body = new Circle(newPos, body.Radius);
                 }
-                // else
-                // {
-                //     if (target != null && directChase)
-                //     {
-                //         var newPos = body.Center.MoveTowards(target.GetChasePosition(), speed * dt * 2f);
-                //         body = new Circle(newPos, body.Radius);
-                //     }
-                // }
                 
             }
 
@@ -281,7 +364,14 @@ namespace Examples.Scenes.ExampleScenes
             {
                 if (!body.GetBoundingBox().OverlapShape(cameraRect)) return;
                 // body. DrawLines(body.Radius * 0.25f, Colors.Special);
-                ShapeDrawing.DrawCircleFast(body.Center, body.Radius, Colors.Special);
+                var c = Predictor ? Colors.Highlight : Colors.Special;
+                ShapeDrawing.DrawCircleFast(body.Center, body.Radius, c);
+
+
+                // if (Predictor)
+                // {
+                //     GetTargetPosition().Draw(36f, new ColorRgba(Color.Lime));
+                // }
                 // if (currentPath != null)
                 // {
                 //     currentPath.Start.Draw(8f, new ColorRgba(Color.LawnGreen));
@@ -298,15 +388,31 @@ namespace Examples.Scenes.ExampleScenes
                 // }
             }
 
+            private Vector2 GetTargetPosition()
+            {
+                if (target == null) return new();
+                if (Predictor)
+                {
+                    var predicted = target.GetPredictedChasePosition(predictionSeconds);
+                    var pDisSQ = (predicted - body.Center).LengthSquared();
+                    var direct = target.GetChasePosition();
+                    var dDisSq = (direct - body.Center).LengthSquared();
+
+                    if (pDisSQ < dDisSq) return predicted;
+                    return direct;
+
+                }
+                return target.GetChasePosition();
+            }
             private void GetNewPath()
             {
                 if (target == null) return;
                 // if (!RequestSlotAvailable) return;
                 // RequestSlotUsed();
+
+                var chasePos = GetTargetPosition(); // target.GetChasePosition();
                 
-                var chasePos = target.GetChasePosition();
-                
-                IPathfinderAgent.PathRequest request = 
+                PathRequest request = 
                     new(
                         this, 
                         body.Center, 
@@ -340,8 +446,8 @@ namespace Examples.Scenes.ExampleScenes
                 return false;
             }
 
-            public event Action<IPathfinderAgent.PathRequest>? OnRequestPath;
-            public void ReceiveRequestedPath(Pathfinder.Path? path, IPathfinderAgent.PathRequest request)
+            public event Action<PathRequest>? OnRequestPath;
+            public void ReceiveRequestedPath(Path? path, PathRequest request)
             {
                 currentPath = path;
                 
@@ -375,17 +481,18 @@ namespace Examples.Scenes.ExampleScenes
         private class AsteroidObstacle : IPathfinderObstacle
         {
             public event Action<IPathfinderObstacle>? OnShapeChanged;
-            public IPathfinderObstacle.CellValue[] GetCellValues()
+            public NodeValue[] GetNodeValues()
             {
-                return cellValues;
+                return nodeValues;
             }
 
-            private readonly IPathfinderObstacle.CellValue[] cellValues;
+            private readonly NodeValue[] nodeValues;
             private Polygon shape;
             private Rect bb;
             private Vector2 center;
             private float timer = 0f;
             private const float Interval = 1f;
+            private const bool AllowShapeChange = false;
 
             public Polygon GetShape() => shape;
             public AsteroidObstacle(Vector2 center)
@@ -394,22 +501,25 @@ namespace Examples.Scenes.ExampleScenes
                 this.shape = GenerateShape();
                 this.bb = this.shape.GetBoundingBox();
 
-                cellValues = new IPathfinderObstacle.CellValue[1];
-                if (ShapeRandom.Chance(0.2f))
+                nodeValues = new NodeValue[1];
+                NodeValue v = new(0, NodeValueType.Block);
+                nodeValues[0] = v;
+                
+                /*if (ShapeRandom.Chance(0.2f))
                 {
-                    IPathfinderObstacle.CellValue v = new(-5f, IPathfinderObstacle.CellValueType.Set);
-                    cellValues[0] = v;
+                    NodeValue v = new(-5f, NodeValueType.Set);
+                    nodeValues[0] = v;
                 }
                 else if (ShapeRandom.Chance(0.2f))
                 {
-                    IPathfinderObstacle.CellValue v = new(5f, IPathfinderObstacle.CellValueType.Set);
-                    cellValues[0] = v;
+                    NodeValue v = new(5f, NodeValueType.Set);
+                    nodeValues[0] = v;
                 }
                 else //blocking
                 {
-                    IPathfinderObstacle.CellValue v = new(0, IPathfinderObstacle.CellValueType.Block);
-                    cellValues[0] = v;
-                }
+                    NodeValue v = new(0, NodeValueType.Block);
+                    nodeValues[0] = v;
+                }*/
             }
 
             public void Update(float dt)
@@ -418,9 +528,14 @@ namespace Examples.Scenes.ExampleScenes
                 if (timer <= 0)
                 {
                     SetTimer();
-                    shape = GenerateShape();
-                    bb = shape.GetBoundingBox();
-                    OnShapeChanged?.Invoke(this);
+                    if (AllowShapeChange)
+                    {
+                        shape = GenerateShape();
+                        bb = shape.GetBoundingBox();
+                        OnShapeChanged?.Invoke(this);
+                    }
+                    
+                    
                 }
             }
             public void Draw(Rect cameraRect)
@@ -459,20 +574,20 @@ namespace Examples.Scenes.ExampleScenes
         private readonly List<Chaser> chasers = new();
         private readonly List<AsteroidObstacle> asteroids = new();
         private const int AsteroidCount = 30; //30
-        private const int AsteroidPointCount = 12; //14
+        private const int AsteroidPointCount = 10 ; //14
         private const float AsteroidMinSize = 250; //250
         private const float AsteroidMaxSize = 500; //500
-        private const float AsteroidLineThickness = 10f;
+        private const float AsteroidLineThickness = 8f;
         
         public PathfinderExample2()
         {
             Title = "Pathfinder Example 2";
 
-            universe = new(new Vector2(0f), new Size(10000), new Vector2(0.5f));
-            pathfinder = new(universe, 50, 50);
+            universe = new(new Vector2(0f), new Size(15000), new Vector2(0.5f));
+            pathfinder = new(universe, 250, 250);
             // universeSectors = pathfinder.GetTraversableRects(0);
             camera = new();
-            follower = new(0, 75, 300);
+            follower = new(0, 300, 500);
             camera.Follower = follower;
             ship = new(new Vector2(0f), 45f);
             UpdateFollower(camera.Size.Min());
@@ -482,7 +597,7 @@ namespace Examples.Scenes.ExampleScenes
             iaDrawDebug = new(toggleDrawKB, toggleDrawGP);
             
             AddAsteroids(AsteroidCount);
-            AddChasers(2500);
+            AddChasers(25000);
 
             pathfinder.RequestsPerFrame = 50;
         }
@@ -490,6 +605,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             GAMELOOP.Camera = camera;
             UpdateFollower(camera.Size.Min());
+            camera.SetZoom(0.7f);
             follower.SetTarget(ship);
         }
 
@@ -499,7 +615,7 @@ namespace Examples.Scenes.ExampleScenes
         }
         public override void Reset()
         {
-            pathfinder.Reset();
+            pathfinder.ResetCells();
             camera.Reset();
             follower.Reset();
             ship.Reset(new Vector2(0f), 45f);
@@ -531,7 +647,7 @@ namespace Examples.Scenes.ExampleScenes
             for (var i = 0; i < amount; i++)
             {
                 var r = ShapeRandom.RandCollection(unblockedRects, false);
-                var chaser = new Chaser(r.GetRandomPointInside(), 20f, 100f, pathfinder);
+                var chaser = new Chaser(r.GetRandomPointInside(), 20f, Ship.Speed , pathfinder);
                 chaser.SetTarget(ship);
                 chasers.Add(chaser);
                 pathfinder.AddAgent(chaser);
@@ -586,7 +702,7 @@ namespace Examples.Scenes.ExampleScenes
             // var minBoundary = 0.12f * size;
             // var maxBoundary = ShapeMath.LerpFloat(0.55f, 0.15f, sliderF) * size;
             // var boundary = new Vector2(minBoundary, maxBoundary) * camera.ZoomFactor;
-            follower.Speed = ship.Speed;
+            follower.Speed = Ship.Speed * 2.5f;
             // follower.BoundaryDis = new(boundary);
         }
         protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
@@ -652,6 +768,9 @@ namespace Examples.Scenes.ExampleScenes
                     var outerColor = Colors.Special.ChangeAlpha((byte)150);
                     outerBoundary.DrawLines(thickness, outerColor);
                 }
+                
+                ShapeDrawing.DrawCircleLines(ship.GetChasePosition(), Chaser.MinPathRequestDistance, 8f, new ColorRgba(Color.Aqua));
+                ShapeDrawing.DrawCircleLines(ship.GetChasePosition(), Chaser.MaxPathRequestDistance, 8f, new ColorRgba(Color.Aqua));
             }
             
             foreach (var asteroid in asteroids)
@@ -688,10 +807,10 @@ namespace Examples.Scenes.ExampleScenes
             var zoom = (int)(ShapeMath.GetFactor(camera.ZoomLevel, 0.1f, 5f) * 100f);
             
             // string text = $"Pos {x}/{y} | Rot {rot} | Zoom {zoom}";
-            string text = $"Path requests {pathfinder.DEBUG_PATH_REQUEST_COUNT}";
+            // string text = $"Path requests {pathfinder.DEBUG_PATH_REQUEST_COUNT}";
             textFont.FontSpacing = 1f;
             textFont.ColorRgba = Colors.Warm;
-            textFont.DrawTextWrapNone(text, rect, new(0.5f));
+            textFont.DrawTextWrapNone("", rect, new(0.5f));
             
         }
         private void DrawInputDescription(Rect rect)

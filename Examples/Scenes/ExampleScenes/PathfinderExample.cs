@@ -11,7 +11,7 @@ using ShapeEngine.Input;
 using ShapeEngine.Lib;
 using ShapeEngine.Pathfinding;
 using Color = System.Drawing.Color;
-
+using Path = ShapeEngine.Pathfinding.Path;
 
 
 namespace Examples.Scenes.ExampleScenes;
@@ -73,7 +73,7 @@ internal class PathfinderFlag
 
         private PathfinderFlag startFlag;
         private List<PathfinderFlag> endFlags = new();
-        private List<Pathfinder.Path> paths = new();
+        private List<Path> paths = new();
 
         private Circle? connectionCircleA = null;
         private Circle? connectionCircleB = null;
@@ -123,7 +123,7 @@ internal class PathfinderFlag
         
         public override void Reset()
         {
-            pathfinder.Reset();
+            pathfinder.ResetCells();
             paths.Clear();
             endFlags.Clear();
             SetupEndFlags();
@@ -158,7 +158,7 @@ internal class PathfinderFlag
                     if (rectStarted)
                     {
                         var r = new Rect(rectStartPos, mousePosGame);
-                        pathfinder.ApplyCellValue(r, new (0, IPathfinderObstacle.CellValueType.Clear));
+                        pathfinder.ApplyCellValue(r, new (0, NodeValueType.Clear));
                     }
                 }
                 if (Raylib.IsKeyReleased(KeyboardKey.V))
@@ -166,7 +166,7 @@ internal class PathfinderFlag
                     if (rectStarted)
                     {
                         var r = new Rect(rectStartPos, mousePosGame);
-                        pathfinder.ApplyCellValue(r, new (-5f, IPathfinderObstacle.CellValueType.SetReset));
+                        pathfinder.ApplyCellValue(r, new (-5f, NodeValueType.SetReset));
                     }
                 }
                 if (Raylib.IsKeyReleased(KeyboardKey.B))
@@ -174,7 +174,7 @@ internal class PathfinderFlag
                     if (rectStarted)
                     {
                         var r = new Rect(rectStartPos, mousePosGame);
-                        pathfinder.ApplyCellValue(r, new (0, IPathfinderObstacle.CellValueType.Block));
+                        pathfinder.ApplyCellValue(r, new (0, NodeValueType.Block));
                     }
                 }
                 if (Raylib.IsKeyReleased(KeyboardKey.X))
@@ -182,7 +182,7 @@ internal class PathfinderFlag
                     if (rectStarted)
                     {
                         var r = new Rect(rectStartPos, mousePosGame);
-                        pathfinder.ApplyCellValue(r, new (5f, IPathfinderObstacle.CellValueType.SetReset));
+                        pathfinder.ApplyCellValue(r, new (5f, NodeValueType.SetReset));
                     }
                 }
             
@@ -205,7 +205,7 @@ internal class PathfinderFlag
                 for (int i = 0; i < endFlags.Count; i++)
                 {
                     var flag = endFlags[i];
-                    var path = pathfinder.GetPath(startFlag.Position, flag.Position, 0);
+                    var path = pathfinder.GetRectPath(startFlag.Position, flag.Position, 0);
                     if(path != null) paths.Add(path);
                 }
                 // var flag = endFlags[0];
@@ -263,7 +263,7 @@ internal class PathfinderFlag
         {
             var cBounds = new ColorRgba(Color.PapayaWhip);
             var cBlocked = new ColorRgba(Color.IndianRed);
-            var cDefault = new ColorRgba(Color.Gray);
+            var cDefault = new ColorRgba(Color.DarkSlateGray).ChangeBrightness(-0.3f);
             var cDesirable = new ColorRgba(Color.SeaGreen);
             var cUndesirable = new ColorRgba(Color.Chocolate);
             pathfinder.DrawDebug(cBounds, cDefault, cBlocked, cDesirable, cUndesirable, 0);
@@ -281,9 +281,9 @@ internal class PathfinderFlag
             {
                 foreach (var path in paths)
                 {
-                    foreach (var r in path.Rects)
+                    foreach (var rect in path.Rects)
                     {
-                        r.ScaleSize(0.3f, new Vector2(0.5f)).Draw(new ColorRgba(Color.DodgerBlue));
+                        rect.ScaleSize(0.3f, new Vector2(0.5f)).Draw(new ColorRgba(Color.DodgerBlue));
                     }
                 }
                 

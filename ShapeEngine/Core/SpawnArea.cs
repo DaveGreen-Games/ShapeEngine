@@ -85,7 +85,7 @@ namespace ShapeEngine.Core
         public virtual bool RemovePathfinder()
         {
             if (Pathfinder == null) return false;
-            Pathfinder.Close();
+            Pathfinder.Clear();
             Pathfinder = null;
             return true;
         }

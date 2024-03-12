@@ -207,6 +207,10 @@ public static class ShapeMath
     #endregion
 
     #region Angle
+
+    public static int GetShortestAngleRadSign(float from, float to) => MathF.Sign(GetShortestAngleRad(from, to));
+    public static int GetShortestAngleDegSign(float from, float to) => MathF.Sign(GetShortestAngleDeg(from, to));
+
     public static float GetShortestAngleRad(float from, float to)
     {
         //from = WrapAngleRad(from);

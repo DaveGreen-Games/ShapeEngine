@@ -310,7 +310,7 @@ namespace Examples
             
             FontDefault = GetFont(FontIDs.JetBrains);
 
-            this.Window.FpsLimit = 60;             
+            this.Window.FpsLimit = 120;             
             this.Window.VSync = false;
             // this.Window.MaxFramerate = 480;
             // this.Window.FpsLimit = 240;
