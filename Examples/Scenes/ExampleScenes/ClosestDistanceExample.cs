@@ -20,32 +20,38 @@ public class ClosestDistanceExample : ExampleScene
         public abstract void Move(Vector2 newPosition);
         public abstract void Draw(ColorRgba color);
         public abstract ShapeType GetShapeType();
+        public abstract ClosestDistance GetClosestDistanceTo(Shape shape);
     }
 
     private class PointShape : Shape
     {
-        private Vector2 position;
+        public Vector2 Position;
         private float size;
         public PointShape(Vector2 pos, float size)
         {
-            this.position = pos;
+            this.Position = pos;
             this.size = size;
         }
         public override void Move(Vector2 newPosition)
         {
-            position = newPosition;
+            Position = newPosition;
         }
 
         public override void Draw(ColorRgba color)
         {
-            position.Draw(size, color, 16);
+            Position.Draw(size, color, 16);
         }
 
         public override ShapeType GetShapeType() => ShapeType.None;
+        
+        public override ClosestDistance GetClosestDistanceTo(Shape shape)
+        {
+            return new();
+        }
     }
     private class SegmentShape : Shape
     {
-        private Segment segment;
+        public Segment Segment;
         private Vector2 position;
         public SegmentShape(Vector2 pos, float size)
         {
@@ -54,40 +60,53 @@ public class ClosestDistanceExample : ExampleScene
             var offset = new Vector2(size, 0f).Rotate(randAngle);
             var start = pos - offset;
             var end = pos + offset;
-            segment = new(start, end);
+            Segment = new(start, end);
         }
         public override void Move(Vector2 newPosition)
         {
             var offset = newPosition - position;
-            segment.Move(offset);
+            Segment = Segment.Move(offset);
             position = newPosition;
         }
 
         public override void Draw(ColorRgba color)
         {
-            segment.Draw(LineThickness, color);
+            Segment.Draw(LineThickness, color);
         }
 
         public override ShapeType GetShapeType() => ShapeType.Segment;
+        
+        public override ClosestDistance GetClosestDistanceTo(Shape shape)
+        {
+            if (shape is PointShape pointShape) return Segment.GetClosestDistanceTo(pointShape.Position);
+            if (shape is SegmentShape segmentShape) return Segment.GetClosestDistanceTo(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Segment.GetClosestDistanceTo(circleShape.Circle);
+            return new();
+        }
     }
     private class CircleShape : Shape
     {
-        private Circle circle;
+        public Circle Circle;
         public CircleShape(Vector2 pos, float size)
         {
-            circle = new(pos, size);
+            Circle = new(pos, size);
         }
         public override void Move(Vector2 newPosition)
         {
-            circle = new(newPosition, circle.Radius);
+            Circle = new(newPosition, Circle.Radius);
         }
 
         public override void Draw(ColorRgba color)
         {
-            circle.DrawLines(LineThickness, color);
+            Circle.DrawLines(LineThickness, color);
         }
 
         public override ShapeType GetShapeType() => ShapeType.Circle;
+        
+        public override ClosestDistance GetClosestDistanceTo(Shape shape)
+        {
+            return new();
+        }
     }
     private class TriangleShape : Shape
     {
@@ -117,6 +136,11 @@ public class ClosestDistanceExample : ExampleScene
         }
 
         public override ShapeType GetShapeType() => ShapeType.Triangle;
+        
+        public override ClosestDistance GetClosestDistanceTo(Shape shape)
+        {
+            return new();
+        }
     }
     private class QuadShape : Shape
     {
@@ -137,6 +161,11 @@ public class ClosestDistanceExample : ExampleScene
         }
 
         public override ShapeType GetShapeType() => ShapeType.Quad;
+        
+        public override ClosestDistance GetClosestDistanceTo(Shape shape)
+        {
+            return new();
+        }
     }
     private class RectShape : Shape
     {
@@ -158,6 +187,11 @@ public class ClosestDistanceExample : ExampleScene
         }
 
         public override ShapeType GetShapeType() => ShapeType.Rect;
+        
+        public override ClosestDistance GetClosestDistanceTo(Shape shape)
+        {
+            return new();
+        }
     }
     private class PolygonShape : Shape
     {
@@ -182,6 +216,11 @@ public class ClosestDistanceExample : ExampleScene
         }
 
         public override ShapeType GetShapeType() => ShapeType.Poly;
+        
+        public override ClosestDistance GetClosestDistanceTo(Shape shape)
+        {
+            return new();
+        }
     }
     private class PolylineShape : Shape
     {
@@ -211,7 +250,13 @@ public class ClosestDistanceExample : ExampleScene
         }
 
         public override ShapeType GetShapeType() => ShapeType.PolyLine;
+        
+        public override ClosestDistance GetClosestDistanceTo(Shape shape)
+        {
+            return new();
+        }
     }
+    
     
     private InputAction nextStaticShape;
     private InputAction nextMovingShape;
@@ -280,6 +325,18 @@ public class ClosestDistanceExample : ExampleScene
     {
         staticShape.Draw(new ColorRgba(Color.Lime));
         movingShape.Draw(new ColorRgba(Color.Red));
+
+        var closestDistance = staticShape.GetClosestDistanceTo(movingShape);
+        if (closestDistance.DistanceSquared > 0)
+        {
+            var seg = closestDistance.GetSegment();
+            seg.Draw(LineThickness / 2, new ColorRgba(Color.Blue));
+            closestDistance.A.Draw(12f, new ColorRgba(Raylib_cs.Color.Yellow));
+            closestDistance.B.Draw(12f, new ColorRgba(Raylib_cs.Color.Orange));
+            
+        }
+        
+        
     }
     protected override void OnDrawGameUIExample(ScreenInfo ui)
     {
@@ -321,7 +378,6 @@ public class ClosestDistanceExample : ExampleScene
                 break;
         }
     }
-
     private void NextMovingShape(Vector2 pos, float size = 150f)
     {
         switch (movingShape.GetShapeType())

@@ -1,6 +1,7 @@
 ﻿
 using System.Numerics;
 using System.Runtime.InteropServices;
+using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Structs;
@@ -76,25 +77,7 @@ namespace ShapeEngine.Core.Shapes
 
         public readonly Rect GetBoundingBox() { return new(Start, End); }
         public readonly bool ContainsPoint(Vector2 p) { return IsPointOnSegment(p, Start, End); }
-        public readonly CollisionPoint GetClosestCollisionPoint(Vector2 p)
-        {
-            CollisionPoint c;
-            var w = Displacement;
-            float t = (p - Start).Dot(w) / w.LengthSquared();
-            if (t < 0f) c = new(Start, Normal); 
-            else if (t > 1f) c = new(End, Normal);
-            else c = new(Start + w * t, Normal);
-
-            //if (AutomaticNormals) return c.FlipNormal(p);
-            return c;
-        }
         
-        public readonly ClosestPoint GetClosestPoint(Vector2 p)
-        {
-            var cp = GetClosestCollisionPoint(p);
-            return new(cp, (cp.Point - p).Length());
-        }
-
         
         public Segments Split(float f)
         {
@@ -164,12 +147,9 @@ namespace ShapeEngine.Core.Shapes
         }
         public Polyline ToPolyline() { return new Polyline() {Start, End}; }
         public Segments GetEdges() { return new Segments(){this}; }
-        public Vector2 GetClosestVertex(Vector2 p)
-        {
-            float disSqA = (p - Start).LengthSquared();
-            float disSqB = (p - End).LengthSquared();
-            return disSqA <= disSqB ? Start : End;
-        }
+        
+        
+        
         public Vector2 GetRandomPoint() { return this.GetPoint(ShapeRandom.RandF()); }
         public Points GetRandomPoints(int amount)
         {
@@ -576,6 +556,69 @@ namespace ShapeEngine.Core.Shapes
         }
         #endregion
 
+        #region Closest
+
+        public static Vector2 GetClosestPoint(Vector2 segmentStart, Vector2 segmentEnd, Vector2 p)
+        {
+            var w = (segmentEnd - segmentStart);
+            float t = (p - segmentStart).Dot(w) / w.LengthSquared();
+            if (t < 0f) return segmentStart;
+            if (t > 1f) return segmentEnd;
+            return segmentStart + w * t;
+            
+        }
+        public ClosestDistance GetClosestDistanceTo(Vector2 p) => new(GetClosestPoint(Start, End, p), p);
+        public ClosestDistance GetClosestDistanceTo(Segment segment)
+        {
+            var selfA = GetClosestDistanceTo(segment.Start);
+            var selfB = GetClosestDistanceTo(segment.End);
+            var otherA = segment.GetClosestDistanceTo(Start);
+            var otherB = segment.GetClosestDistanceTo(End);
+            
+            var min = selfA;
+            if (selfB.DistanceSquared < min.DistanceSquared) min = selfB;
+            if (otherA.DistanceSquared < min.DistanceSquared) min = otherA;
+            return otherB.DistanceSquared < min.DistanceSquared ? otherB : min;
+        }
+        public ClosestDistance GetClosestDistanceTo(Circle circle)
+        {
+            var segmentPoint = GetClosestPoint(Start, End, circle.Center);
+            var dir = (segmentPoint - circle.Center).Normalize();
+            var circlePoint = circle.Center + dir * circle.Radius;
+            return new(segmentPoint, circlePoint);
+        }
+        
+        
+        
+        public Vector2 GetClosestVertex(Vector2 p)
+        {
+            float disSqA = (p - Start).LengthSquared();
+            float disSqB = (p - End).LengthSquared();
+            return disSqA <= disSqB ? Start : End;
+        }
+        
+        //remove
+        public CollisionPoint GetClosestCollisionPoint(Vector2 p)
+        {
+            CollisionPoint c;
+            var w = Displacement;
+            float t = (p - Start).Dot(w) / w.LengthSquared();
+            if (t < 0f) c = new(Start, Normal); 
+            else if (t > 1f) c = new(End, Normal);
+            else c = new(Start + w * t, Normal);
+
+            return c;
+        }
+        
+        //remove
+        public ClosestPoint GetClosestPoint(Vector2 p)
+        {
+            var cp = GetClosestCollisionPoint(p);
+            return new(cp, (cp.Point - p).Length());
+        }
+
+        #endregion
+        
         #region Overlap
         public readonly bool Overlap(Collider collider)
         {

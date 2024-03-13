@@ -74,75 +74,6 @@ namespace ShapeEngine.Core.Shapes
             return Polygon.FindConvexHull(points);
         }
         
-        public bool ContainsPoint(Vector2 p) => (Center - p).LengthSquared() <= Radius * Radius;
-
-        public bool ContainsCollisionObject(CollisionObject collisionObject)
-        {
-            if (!collisionObject.HasColliders) return false;
-            foreach (var collider in collisionObject.Colliders)
-            {
-                if (!ContainsCollider(collider)) return false;
-            }
-
-            return true;
-        }
-        public bool ContainsCollider(Collider collider)
-        {
-            switch (collider.GetShapeType())
-            {
-                case ShapeType.Circle: return ContainsShape(collider.GetCircleShape());
-                case ShapeType.Segment: return ContainsShape(collider.GetSegmentShape());
-                case ShapeType.Triangle: return ContainsShape(collider.GetTriangleShape());
-                case ShapeType.Quad: return ContainsShape(collider.GetQuadShape());
-                case ShapeType.Rect: return ContainsShape(collider.GetRectShape());
-                case ShapeType.Poly: return ContainsShape(collider.GetPolygonShape());
-                case ShapeType.PolyLine: return ContainsShape(collider.GetPolylineShape());
-            }
-
-            return false;
-        }
-
-        public bool ContainsShape(Segment segment)
-        {
-            return ContainsPoint(segment.Start) && ContainsPoint(segment.End);
-        }
-        public bool ContainsShape(Circle circle)
-        {
-            float rDif = Radius - circle.Radius;
-            if(rDif <= 0) return false;
-
-            float disSquared = (Center - circle.Center).LengthSquared();
-            return disSquared < rDif * rDif;
-        }
-        public bool ContainsShape(Rect rect)
-        {
-            return ContainsPoint(rect.TopLeft) &&
-                ContainsPoint(rect.BottomLeft) &&
-                ContainsPoint(rect.BottomRight) &&
-                ContainsPoint(rect.TopRight);
-        }
-        public bool ContainsShape(Triangle triangle)
-        {
-            return ContainsPoint(triangle.A) &&
-                ContainsPoint(triangle.B) &&
-                ContainsPoint(triangle.C);
-        }
-        public bool ContainsShape(Quad quad)
-        {
-            return ContainsPoint(quad.A) &&
-                   ContainsPoint(quad.B) &&
-                   ContainsPoint(quad.C) &&
-                   ContainsPoint(quad.D);
-        }
-        public bool ContainsShape(Points points)
-        {
-            if (points.Count <= 0) return false;
-            foreach (var p in points)
-            {
-                if (!ContainsPoint(p)) return false;
-            }
-            return true;
-        }
         
         
         public Circle Floor() { return new(Center.Floor(), MathF.Floor(Radius)); }
@@ -252,13 +183,7 @@ namespace ShapeEngine.Core.Shapes
         public Rect GetBoundingBox() { return new Rect(Center, new Size(Radius, Radius) * 2f, new(0.5f)); }
 
         
-        public CollisionPoint GetClosestCollisionPoint(Vector2 p) 
-        {
-            Vector2 normal = (p - Center).Normalize();
-            Vector2 point = Center + normal * Radius;
-            return new(point, normal);
-        }
-        public Vector2 GetClosestVertex(Vector2 p) { return Center + (p - Center).Normalize() * Radius; }
+        
         public Vector2 GetRandomPoint()
         {
             float randAngle = ShapeRandom.RandAngleRad();
@@ -388,7 +313,104 @@ namespace ShapeEngine.Core.Shapes
             );
         }
         #endregion
+
+        #region Contains
+
+        public bool ContainsPoint(Vector2 p) => (Center - p).LengthSquared() <= Radius * Radius;
+
+        public bool ContainsCollisionObject(CollisionObject collisionObject)
+        {
+            if (!collisionObject.HasColliders) return false;
+            foreach (var collider in collisionObject.Colliders)
+            {
+                if (!ContainsCollider(collider)) return false;
+            }
+
+            return true;
+        }
+        public bool ContainsCollider(Collider collider)
+        {
+            switch (collider.GetShapeType())
+            {
+                case ShapeType.Circle: return ContainsShape(collider.GetCircleShape());
+                case ShapeType.Segment: return ContainsShape(collider.GetSegmentShape());
+                case ShapeType.Triangle: return ContainsShape(collider.GetTriangleShape());
+                case ShapeType.Quad: return ContainsShape(collider.GetQuadShape());
+                case ShapeType.Rect: return ContainsShape(collider.GetRectShape());
+                case ShapeType.Poly: return ContainsShape(collider.GetPolygonShape());
+                case ShapeType.PolyLine: return ContainsShape(collider.GetPolylineShape());
+            }
+
+            return false;
+        }
+
+        public bool ContainsShape(Segment segment)
+        {
+            return ContainsPoint(segment.Start) && ContainsPoint(segment.End);
+        }
+        public bool ContainsShape(Circle circle)
+        {
+            float rDif = Radius - circle.Radius;
+            if(rDif <= 0) return false;
+
+            float disSquared = (Center - circle.Center).LengthSquared();
+            return disSquared < rDif * rDif;
+        }
+        public bool ContainsShape(Rect rect)
+        {
+            return ContainsPoint(rect.TopLeft) &&
+                ContainsPoint(rect.BottomLeft) &&
+                ContainsPoint(rect.BottomRight) &&
+                ContainsPoint(rect.TopRight);
+        }
+        public bool ContainsShape(Triangle triangle)
+        {
+            return ContainsPoint(triangle.A) &&
+                ContainsPoint(triangle.B) &&
+                ContainsPoint(triangle.C);
+        }
+        public bool ContainsShape(Quad quad)
+        {
+            return ContainsPoint(quad.A) &&
+                   ContainsPoint(quad.B) &&
+                   ContainsPoint(quad.C) &&
+                   ContainsPoint(quad.D);
+        }
+        public bool ContainsShape(Points points)
+        {
+            if (points.Count <= 0) return false;
+            foreach (var p in points)
+            {
+                if (!ContainsPoint(p)) return false;
+            }
+            return true;
+        }
         
+
+        #endregion
+        
+        #region Closest
+
+        public static Vector2 GetClosestPoint(Vector2 center, float radius, Vector2 p)
+        {
+            var dir = (p - center).Normalize();
+            return center + dir * radius;
+        }
+        public ClosestDistance GetClosestDistanceTo(Vector2 p)
+        {
+            var cp = GetClosestPoint(Center, Radius, p);
+            return new ClosestDistance(cp, p);
+        }
+
+        //remove
+        public CollisionPoint GetClosestCollisionPoint(Vector2 p) 
+        {
+            Vector2 normal = (p - Center).Normalize();
+            Vector2 point = Center + normal * Radius;
+            return new(point, normal);
+        }
+        public Vector2 GetClosestVertex(Vector2 p) { return Center + (p - Center).Normalize() * Radius; }
+        #endregion
         
         #region Static
         public static Circle Combine(params Circle[] circles)
