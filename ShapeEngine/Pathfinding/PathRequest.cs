@@ -3,11 +3,6 @@ using System.Numerics;
 namespace ShapeEngine.Pathfinding;
 
 
-//TODO
-//RectPath & NodePath 
-//-> NodePath with NodePathType {Point, Rect} & GetPoint, GetRect function?
-//-> INodePath interface with NodePathType {Point, Rect} & GetPoint, GetRect function? 
-//how to combine both?
 
 
 public class PathRequest // : IEquatable<PathRequest>, IEqualityComparer<PathRequest>

@@ -42,135 +42,14 @@ namespace ShapeEngine.Core.Shapes
         #endregion
 
         #region Public
-        public Polygon Project(Vector2 v)
-        {
-            if (v.LengthSquared() <= 0f) return ToPolygon();
-            var translated = Polygon.Move(this, v);
-            var points = new Points();
-            points.AddRange(this);
-            points.AddRange(translated);
-            return Polygon.FindConvexHull(points);
-        }
 
-        public Polygon ToConvex() => Polygon.FindConvexHull(this);
-        public Circle GetBoundingCircle()
-        {
-            float maxD = 0f;
-            int num = this.Count;
-            Vector2 origin = new();
-            for (int i = 0; i < num; i++) { origin += this[i]; }
-            origin = origin / num;
-            //origin *= (1f / (float)num);
-            for (int i = 0; i < num; i++)
-            {
-                float d = (origin - this[i]).LengthSquared();
-                if (d > maxD) maxD = d;
-            }
-
-            return new Circle(origin, MathF.Sqrt(maxD));
-        }
-        public Rect GetBoundingBox()
-        {
-            if (Count < 2) return new();
-            Vector2 start = this[0];
-            Rect r = new(start.X, start.Y, 0, 0);
-
-            foreach (var p in this)
-            {
-                r = r.Enlarge(p);// ShapeRect.Enlarge(r, p);
-            }
-            return r;
-        }
-        
-        public Vector2 GetCentroid()
-        {
-            if (Count <= 0) return new();
-            if (Count == 1) return this[0];
-            if (Count == 2) return (this[0] + this[1]) / 2;
-            if (Count == 3) return (this[0] + this[1] + this[2]) / 3;
-            
-            var centroid = new Vector2();
-            var area = 0f;
-            for (int i = Count - 1; i >= 0; i--)
-            {
-                var a = this[i];
-                var index = ShapeMath.WrapIndex(Count, i - 1);
-                var b = this[index];
-                float cross = a.X * b.Y - b.X * a.Y; //clockwise 
-                area += cross;
-                centroid += (a + b) * cross;
-            }
-
-            area *= 0.5f;
-            return centroid / (area * 6);
-
-            //return GetCentroidMean();
-            // Vector2 result = new();
-
-            // for (int i = 0; i < Count; i++)
-            // {
-            // var a = this[i];
-            // var b = this[(i + 1) % Count];
-            //// float factor = a.X * b.Y - b.X * a.Y; //clockwise 
-            // float factor = a.Y * b.X - a.X * b.Y; //counter clockwise
-            // result.X += (a.X + b.X) * factor;
-            // result.Y += (a.Y + b.Y) * factor;
-            // }
-
-            // return result * (1f / (GetArea() * 6f));
-        }
-        
-        public bool ContainsPoint(Vector2 p) { return IsPointInPoly(this, p); }
-
-        public bool ContainsCollisionObject(CollisionObject collisionObject)
-        {
-            if (!collisionObject.HasColliders) return false;
-            foreach (var collider in collisionObject.Colliders)
-            {
-                if (!ContainsCollider(collider)) return false;
-            }
-
-            return true;
-        }
-        public bool ContainsCollider(Collider collider)
-        {
-            switch (collider.GetShapeType())
-            {
-                case ShapeType.Circle: return ContainsShape(collider.GetCircleShape());
-                case ShapeType.Segment: return ContainsShape(collider.GetSegmentShape());
-                case ShapeType.Triangle: return ContainsShape(collider.GetTriangleShape());
-                case ShapeType.Quad: return ContainsShape(collider.GetQuadShape());
-                case ShapeType.Rect: return ContainsShape(collider.GetRectShape());
-                case ShapeType.Poly: return ContainsShape(collider.GetPolygonShape());
-                case ShapeType.PolyLine: return ContainsShape(collider.GetPolylineShape());
-            }
-
-            return false;
-        }
-        public bool ContainsShape(Segment segment) => ContainsPoints(this, segment.Start, segment.End);
-        public bool ContainsShape(Circle circle) => ContainsPoints(this, circle.Top, circle.Left, circle.Bottom, circle.Right);
-        public bool ContainsShape(Rect rect) => ContainsPoints(this, rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight);
-        public bool ContainsShape(Triangle triangle) => ContainsPoints(this, triangle.A, triangle.B, triangle.C);
-        public bool ContainsShape(Quad quad) => ContainsPoints(this, quad.A, quad.B, quad.C, quad.D);
-        public bool ContainsShape(Points points)
-        {
-            if (points.Count <= 0) return false;
-            foreach (var p in points)
-            {
-                if (!ContainsPoint(p)) return false;
-            }
-            return true;
-        }
-
-        
+        #region Vertices
         public void FixWindingOrder() { if (this.IsClockwise()) this.Reverse(); }
-
         public void MakeClockwise()
         {
             if (IsClockwise()) return;
             this.Reverse();
         }
-
         public void MakeCounterClockwise()
         {
             if (!IsClockwise()) return;
@@ -223,94 +102,7 @@ namespace ShapeEngine.Core.Shapes
         {
             return this[ShapeMath.WrapIndex(Count, index)];
         }
-        /// <summary>
-        /// Computes the length of this polygon's apothem. This will only be valid if
-        /// the polygon is regular. More info: http://en.wikipedia.org/wiki/Apothem
-        /// </summary>
-        /// <returns>Return the length of the apothem.</returns>
-        public float GetApothem()
-        {
-            return (this.GetCentroid() - (this[0].Lerp(this[1], 0.5f))).Length();
-        }
-        public Vector2 GetRandomPointConvex()
-        {
-            var edges = GetEdges();
-            var ea = ShapeRandom.RandCollection(edges, true);
-            var eb = ShapeRandom.RandCollection(edges);
-
-            var pa = ea.Start.Lerp(ea.End, ShapeRandom.RandF());
-            var pb = eb.Start.Lerp(eb.End, ShapeRandom.RandF());
-            return pa.Lerp(pb, ShapeRandom.RandF());
-        }
-
-        public void Center(Vector2 newCenter)
-        {
-            var centroid = GetCentroid();
-            var delta = newCenter - centroid;
-            Move(delta);
-        }
-        public void Move(Vector2 translation)
-        {
-            for (int i = 0; i < Count; i++)
-            {
-                this[i] += translation;
-            }
-            //return path;
-        }
-        public void Rotate(Vector2 pivot, float rotRad)
-        {
-            if (Count < 3) return;
-            for (int i = 0; i < Count; i++)
-            {
-                Vector2 w = this[i] - pivot;
-                this[i] = pivot + w.Rotate(rotRad);
-            }
-            //return path;
-        }
-        public void Rotate(float rotRad)
-        {
-            if (Count < 3) return;// new();
-            for (int i = 0; i < Count; i++)
-            {
-                this[i] = this[i].Rotate(rotRad);
-            }
-            //return path;
-        }
-        public void Scale(float scale)
-        {
-            for (int i = 0; i < Count; i++)
-            {
-                this[i] *= scale;
-            }
-            //return path;
-        }
-        public void Scale(Vector2 pivot, float scale)
-        {
-            if (Count < 3) return;
-            for (int i = 0; i < Count; i++)
-            {
-                Vector2 w = this[i] - pivot;
-                this[i] = pivot + w * scale;
-            }
-        }
-        public void Scale(Vector2 pivot, Vector2 scale)
-        {
-            if (Count < 3) return;// new();
-            for (int i = 0; i < Count; i++)
-            {
-                Vector2 w = this[i] - pivot;
-                this[i] = pivot + w * scale;
-            }
-            //return path;
-        }
-        public void ScaleUniform(float distance)
-        {
-            for (int i = 0; i < Count; i++)
-            {
-                this[i] = ShapeVec.ScaleUniform(this[i], distance);
-            }
-        }
-
+        
         public void RemoveColinearVertices()
         {
             if (Count < 3) return;
@@ -359,53 +151,10 @@ namespace ShapeEngine.Core.Shapes
             Clear();
             AddRange(result);
         }
+        #endregion
 
-        public (Polygons newShapes, Polygons cutOuts) Cut(Polygon cutShape)
-        {
-            var cutOuts = ShapeClipper.Intersect(this, cutShape).ToPolygons(true);
-            var newShapes = ShapeClipper.Difference(this, cutShape).ToPolygons(true);
-
-            return (newShapes, cutOuts);
-        }
-        public (Polygons newShapes, Polygons cutOuts) CutMany(Polygons cutShapes)
-        {
-            var cutOuts = ShapeClipper.IntersectMany(this, cutShapes).ToPolygons(true);
-            var newShapes = ShapeClipper.DifferenceMany(this, cutShapes).ToPolygons(true);
-            return (newShapes, cutOuts);
-        }
-        public (Polygons newShapes, Polygons overlaps) Combine(Polygon other)
-        {
-            var overlaps = ShapeClipper.Intersect(this, other).ToPolygons(true);
-            var newShapes = ShapeClipper.Union(this, other).ToPolygons(true);
-            return (newShapes, overlaps);
-        }
-        public (Polygons newShapes, Polygons overlaps) Combine(Polygons others)
-        {
-            var overlaps = ShapeClipper.IntersectMany(this, others).ToPolygons(true);
-            var newShapes = ShapeClipper.UnionMany(this, others).ToPolygons(true);
-            return (newShapes, overlaps);
-        }
-        public (Polygons newShapes, Polygons cutOuts) CutSimple(Vector2 cutPos, float minCutRadius, float maxCutRadius, int pointCount = 16)
-        {
-            var cut = Generate(cutPos, pointCount, minCutRadius, maxCutRadius);
-            return this.Cut(cut);
-        }
-        public (Polygons newShapes, Polygons cutOuts) CutSimple(Segment cutLine, float minSectionLength = 0.025f, float maxSectionLength = 0.1f, float minMagnitude = 0.05f, float maxMagnitude = 0.25f)
-        {
-            var cut = Generate(cutLine, minMagnitude, maxMagnitude, minSectionLength, maxSectionLength);
-            return this.Cut(cut);
-        }
-
-        public Vector2 GetCentroidMean()
-        {
-            if (Count <= 0) return new(0f);
-            if (Count == 1) return this[0];
-            if (Count == 2) return (this[0] + this[1]) / 2;
-            if (Count == 3) return (this[0] + this[1] + this[2]) / 3;
-            var total = new Vector2(0f);
-            foreach (var p in this) { total += p; }
-            return total / Count;
-        }
+        #region Shape
+        public Triangle GetBoundingTriangle(float margin = 3f) { return Polygon.GetBoundingTriangle(this, margin); }
         public Triangulation Triangulate()
         {
             if (Count < 3) return new();
@@ -488,8 +237,86 @@ namespace ShapeEngine.Core.Shapes
             }
             return segments;
         }
+        public Circle GetBoundingCircle()
+        {
+            float maxD = 0f;
+            int num = this.Count;
+            Vector2 origin = new();
+            for (int i = 0; i < num; i++) { origin += this[i]; }
+            origin = origin / num;
+            //origin *= (1f / (float)num);
+            for (int i = 0; i < num; i++)
+            {
+                float d = (origin - this[i]).LengthSquared();
+                if (d > maxD) maxD = d;
+            }
+
+            return new Circle(origin, MathF.Sqrt(maxD));
+        }
+        public Rect GetBoundingBox()
+        {
+            if (Count < 2) return new();
+            Vector2 start = this[0];
+            Rect r = new(start.X, start.Y, 0, 0);
+
+            foreach (var p in this)
+            {
+                r = r.Enlarge(p);// ShapeRect.Enlarge(r, p);
+            }
+            return r;
+        }
+        public Polygon ToConvex() => Polygon.FindConvexHull(this);
+        #endregion
         
-        public Triangle GetBoundingTriangle(float margin = 3f) { return Polygon.GetBoundingTriangle(this, margin); }
+        #region Math
+
+        public Polygon Project(Vector2 v)
+        {
+            if (v.LengthSquared() <= 0f) return ToPolygon();
+            var translated = Polygon.Move(this, v);
+            var points = new Points();
+            points.AddRange(this);
+            points.AddRange(translated);
+            return Polygon.FindConvexHull(points);
+        }
+        public Vector2 GetCentroid()
+        {
+            if (Count <= 0) return new();
+            if (Count == 1) return this[0];
+            if (Count == 2) return (this[0] + this[1]) / 2;
+            if (Count == 3) return (this[0] + this[1] + this[2]) / 3;
+            
+            var centroid = new Vector2();
+            var area = 0f;
+            for (int i = Count - 1; i >= 0; i--)
+            {
+                var a = this[i];
+                var index = ShapeMath.WrapIndex(Count, i - 1);
+                var b = this[index];
+                float cross = a.X * b.Y - b.X * a.Y; //clockwise 
+                area += cross;
+                centroid += (a + b) * cross;
+            }
+
+            area *= 0.5f;
+            return centroid / (area * 6);
+
+            //return GetCentroidMean();
+            // Vector2 result = new();
+
+            // for (int i = 0; i < Count; i++)
+            // {
+            // var a = this[i];
+            // var b = this[(i + 1) % Count];
+            //// float factor = a.X * b.Y - b.X * a.Y; //clockwise 
+            // float factor = a.Y * b.X - a.X * b.Y; //counter clockwise
+            // result.X += (a.X + b.X) * factor;
+            // result.Y += (a.Y + b.Y) * factor;
+            // }
+
+            // return result * (1f / (GetArea() * 6f));
+        }
+
         public float GetCircumference() { return MathF.Sqrt(GetCircumferenceSquared()); }
         public float GetCircumferenceSquared()
         {
@@ -502,7 +329,6 @@ namespace ShapeEngine.Core.Shapes
             }
             return lengthSq;
         }
-
         public float GetArea()
         {
             if (Count < 3) return 0f;
@@ -540,8 +366,328 @@ namespace ShapeEngine.Core.Shapes
             return true;
         }
         public Points ToPoints() { return new(this); }
+        public Vector2 GetCentroidMean()
+        {
+            if (Count <= 0) return new(0f);
+            if (Count == 1) return this[0];
+            if (Count == 2) return (this[0] + this[1]) / 2;
+            if (Count == 3) return (this[0] + this[1] + this[2]) / 3;
+            var total = new Vector2(0f);
+            foreach (var p in this) { total += p; }
+            return total / Count;
+        }
+        /// <summary>
+        /// Computes the length of this polygon's apothem. This will only be valid if
+        /// the polygon is regular. More info: http://en.wikipedia.org/wiki/Apothem
+        /// </summary>
+        /// <returns>Return the length of the apothem.</returns>
+        public float GetApothem()
+        {
+            return (this.GetCentroid() - (this[0].Lerp(this[1], 0.5f))).Length();
+        }
+
+        #endregion
         
+        #region Contains
+        public bool ContainsPoint(Vector2 p) { return IsPointInPoly(p); }
+
+        public bool ContainsCollisionObject(CollisionObject collisionObject)
+        {
+            if (!collisionObject.HasColliders) return false;
+            foreach (var collider in collisionObject.Colliders)
+            {
+                if (!ContainsCollider(collider)) return false;
+            }
+
+            return true;
+        }
+        public bool ContainsCollider(Collider collider)
+        {
+            switch (collider.GetShapeType())
+            {
+                case ShapeType.Circle: return ContainsShape(collider.GetCircleShape());
+                case ShapeType.Segment: return ContainsShape(collider.GetSegmentShape());
+                case ShapeType.Triangle: return ContainsShape(collider.GetTriangleShape());
+                case ShapeType.Quad: return ContainsShape(collider.GetQuadShape());
+                case ShapeType.Rect: return ContainsShape(collider.GetRectShape());
+                case ShapeType.Poly: return ContainsShape(collider.GetPolygonShape());
+                case ShapeType.PolyLine: return ContainsShape(collider.GetPolylineShape());
+            }
+
+            return false;
+        }
+        public bool ContainsShape(Segment segment) => ContainsPoints(segment.Start, segment.End);
+        public bool ContainsShape(Circle circle) => ContainsPoints(circle.Top, circle.Left, circle.Bottom, circle.Right);
+        public bool ContainsShape(Rect rect) => ContainsPoints(rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight);
+        public bool ContainsShape(Triangle triangle) => ContainsPoints(triangle.A, triangle.B, triangle.C);
+        public bool ContainsShape(Quad quad) => ContainsPoints(quad.A, quad.B, quad.C, quad.D);
+        public bool ContainsShape(Points points)
+        {
+            if (points.Count <= 0) return false;
+            foreach (var p in points)
+            {
+                if (!ContainsPoint(p)) return false;
+            }
+            return true;
+        }
         
+        public bool IsPointInPoly(Vector2 p)
+        {
+            var oddNodes = false;
+            int num = Count;
+            int j = num - 1;
+            for (int i = 0; i < num; i++)
+            {
+                var vi = this[i];
+                var vj = this[j];
+                if (ContainsPointCheck(vi, vj, p)) oddNodes = !oddNodes;
+                j = i;
+            }
+
+            return oddNodes;
+        }
+        public bool ContainsPoints(Vector2 a, Vector2 b)
+        {
+            var oddNodesA = false;
+            var oddNodesB = false;
+            int num = Count;
+            int j = num - 1;
+            for (var i = 0; i < num; i++)
+            {
+                var vi = this[i];
+                var vj = this[j];
+                if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
+                if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
+                
+                j = i;
+            }
+
+            return oddNodesA && oddNodesB;
+        }
+        public bool ContainsPoints(Vector2 a, Vector2 b, Vector2 c)
+        {
+            var oddNodesA = false;
+            var oddNodesB = false;
+            var oddNodesC = false;
+            int num = Count;
+            int j = num - 1;
+            for (int i = 0; i < num; i++)
+            {
+                var vi = this[i];
+                var vj = this[j];
+                if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
+                if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
+                if(ContainsPointCheck(vi, vj, c)) oddNodesC = !oddNodesC;
+                
+                j = i;
+            }
+
+            return oddNodesA && oddNodesB && oddNodesC;
+        }
+        public bool ContainsPoints(Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+        {
+            var oddNodesA = false;
+            var oddNodesB = false;
+            var oddNodesC = false;
+            var oddNodesD = false;
+            int num = Count;
+            int j = num - 1;
+            for (int i = 0; i < num; i++)
+            {
+                var vi = this[i];
+                var vj = this[j];
+                if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
+                if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
+                if(ContainsPointCheck(vi, vj, c)) oddNodesC = !oddNodesC;
+                if(ContainsPointCheck(vi, vj, d)) oddNodesD = !oddNodesD;
+                
+                j = i;
+            }
+
+            return oddNodesA && oddNodesB && oddNodesC && oddNodesD;
+        }
+
+        
+        #endregion
+        
+        #region Translation
+        public void CenterSelf(Vector2 newCenter)
+        {
+            var centroid = GetCentroid();
+            var delta = newCenter - centroid;
+            MoveSelf(delta);
+        }
+        public void MoveSelf(Vector2 translation)
+        {
+            for (int i = 0; i < Count; i++)
+            {
+                this[i] += translation;
+            }
+            //return path;
+        }
+        public void RotateSelf(Vector2 pivot, float rotRad)
+        {
+            if (Count < 3) return;
+            for (int i = 0; i < Count; i++)
+            {
+                Vector2 w = this[i] - pivot;
+                this[i] = pivot + w.Rotate(rotRad);
+            }
+            //return path;
+        }
+        public void RotateSelf(float rotRad)
+        {
+            if (Count < 3) return;// new();
+            for (int i = 0; i < Count; i++)
+            {
+                this[i] = this[i].Rotate(rotRad);
+            }
+            //return path;
+        }
+        public void ScaleSelf(float scale)
+        {
+            for (int i = 0; i < Count; i++)
+            {
+                this[i] *= scale;
+            }
+            //return path;
+        }
+        public void ScaleSelf(Vector2 pivot, float scale)
+        {
+            if (Count < 3) return;
+            for (int i = 0; i < Count; i++)
+            {
+                Vector2 w = this[i] - pivot;
+                this[i] = pivot + w * scale;
+            }
+        }
+        public void ScaleSelf(Vector2 pivot, Vector2 scale)
+        {
+            if (Count < 3) return;// new();
+            for (int i = 0; i < Count; i++)
+            {
+                Vector2 w = this[i] - pivot;
+                this[i] = pivot + w * scale;
+            }
+            //return path;
+        }
+        public void ScaleUniformSelf(float distance)
+        {
+            for (int i = 0; i < Count; i++)
+            {
+                this[i] = ShapeVec.ScaleUniform(this[i], distance);
+            }
+        }
+        public Polygon GetCenteredPolygon(Vector2 newCenter)
+        {
+            var centroid = GetCentroid();
+            var delta = newCenter - centroid;
+            return GetMovedPolygon(delta);
+        }
+        public Polygon GetMovedPolygon(Vector2 translation)
+        {
+            Polygon result = new();
+            for (var i = 0; i < Count; i++)
+            {
+                result.Add(this[i] + translation);
+            }
+            return result;
+        }
+        public Polygon GetRotatedPolygon(Vector2 pivot, float rotRad)
+        {
+            if (Count < 3) return new();
+            Polygon rotated = new();
+            for (var i = 0; i < Count; i++)
+            {
+                var w = this[i] - pivot;
+                rotated.Add(pivot + w.Rotate(rotRad));
+            }
+            return rotated;
+        }
+        public Polygon GetScaledPolygon(float scale)
+        {
+            Polygon shape = new();
+            for (var i = 0; i < Count; i++)
+            {
+                shape.Add(this[i] * scale);
+            }
+            return shape;
+        }
+        public Polygon GetScalePolygon(Vector2 pivot, float scale)
+        {
+            if (Count < 3) return new();
+            Polygon scaled = new();
+            for (var i = 0; i < Count; i++)
+            {
+                var w = this[i] - pivot;
+                scaled.Add(pivot + w * scale);
+            }
+            return scaled;
+        }
+        public Polygon GetScaledPolygon(Vector2 pivot, Vector2 scale)
+        {
+            if (Count < 3) return new();
+            Polygon scaled = new();
+            for (var i = 0; i < Count; i++)
+            {
+                var w = this[i] - pivot;
+                scaled.Add(pivot + w * scale);
+            }
+            return scaled;
+        }
+        public Polygon GetScaleUniformPolygon(float distance)
+        {
+            Polygon shape = new();
+            for (var i = 0; i < Count; i++)
+            {
+                shape.Add(this[i].ScaleUniform(distance));
+            }
+            return shape;
+        }
+        
+        #endregion
+        
+        #region Clipping
+
+        public (Polygons newShapes, Polygons cutOuts) Cut(Polygon cutShape)
+        {
+            var cutOuts = ShapeClipper.Intersect(this, cutShape).ToPolygons(true);
+            var newShapes = ShapeClipper.Difference(this, cutShape).ToPolygons(true);
+
+            return (newShapes, cutOuts);
+        }
+        public (Polygons newShapes, Polygons cutOuts) CutMany(Polygons cutShapes)
+        {
+            var cutOuts = ShapeClipper.IntersectMany(this, cutShapes).ToPolygons(true);
+            var newShapes = ShapeClipper.DifferenceMany(this, cutShapes).ToPolygons(true);
+            return (newShapes, cutOuts);
+        }
+        public (Polygons newShapes, Polygons overlaps) Combine(Polygon other)
+        {
+            var overlaps = ShapeClipper.Intersect(this, other).ToPolygons(true);
+            var newShapes = ShapeClipper.Union(this, other).ToPolygons(true);
+            return (newShapes, overlaps);
+        }
+        public (Polygons newShapes, Polygons overlaps) Combine(Polygons others)
+        {
+            var overlaps = ShapeClipper.IntersectMany(this, others).ToPolygons(true);
+            var newShapes = ShapeClipper.UnionMany(this, others).ToPolygons(true);
+            return (newShapes, overlaps);
+        }
+        public (Polygons newShapes, Polygons cutOuts) CutSimple(Vector2 cutPos, float minCutRadius, float maxCutRadius, int pointCount = 16)
+        {
+            var cut = Generate(cutPos, pointCount, minCutRadius, maxCutRadius);
+            return this.Cut(cut);
+        }
+        public (Polygons newShapes, Polygons cutOuts) CutSimple(Segment cutLine, float minSectionLength = 0.025f, float maxSectionLength = 0.1f, float minMagnitude = 0.05f, float maxMagnitude = 0.25f)
+        {
+            var cut = Generate(cutLine, minMagnitude, maxMagnitude, minSectionLength, maxSectionLength);
+            return this.Cut(cut);
+        }
+        #endregion
+        
+        #region Closest
+
         public int GetClosestEdgePointByIndex(Vector2 p)
         {
             if (Count <= 0) return -1;
@@ -573,7 +719,10 @@ namespace ShapeEngine.Core.Shapes
         }
         public CollisionPoint GetClosestCollisionPoint(Vector2 p) => GetEdges().GetClosestCollisionPoint(p);
         public ClosestSegment GetClosestSegment(Vector2 p) => GetEdges().GetClosest(p);
-        
+        #endregion
+
+        #region Random
+
         public Vector2 GetRandomPointInside()
         {
             var triangles = Triangulate();
@@ -606,6 +755,18 @@ namespace ShapeEngine.Core.Shapes
         public Segment GetRandomEdge() => GetEdges().GetRandomSegment();
         public Vector2 GetRandomPointOnEdge() => GetRandomEdge().GetRandomPoint();
         public Points GetRandomPointsOnEdge(int amount) => GetEdges().GetRandomPoints(amount);
+        public Vector2 GetRandomPointConvex()
+        {
+            var edges = GetEdges();
+            var ea = ShapeRandom.RandCollection(edges, true);
+            var eb = ShapeRandom.RandCollection(edges);
+
+            var pa = ea.Start.Lerp(ea.End, ShapeRandom.RandF());
+            var pb = eb.Start.Lerp(eb.End, ShapeRandom.RandF());
+            return pa.Lerp(pb, ShapeRandom.RandF());
+        }
+
+        #endregion
         
         #endregion
 
@@ -621,82 +782,8 @@ namespace ShapeEngine.Core.Shapes
             }
             return false;
         }
-        public static bool IsPointInPoly(Polygon poly, Vector2 p)
-        {
-            var oddNodes = false;
-            int num = poly.Count;
-            int j = num - 1;
-            for (int i = 0; i < num; i++)
-            {
-                var vi = poly[i];
-                var vj = poly[j];
-                if (ContainsPointCheck(vi, vj, p)) oddNodes = !oddNodes;
-                j = i;
-            }
-
-            return oddNodes;
-        }
-        public static bool ContainsPoints(Polygon poly, Vector2 a, Vector2 b)
-        {
-            var oddNodesA = false;
-            var oddNodesB = false;
-            int num = poly.Count;
-            int j = num - 1;
-            for (int i = 0; i < num; i++)
-            {
-                var vi = poly[i];
-                var vj = poly[j];
-                if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
-                if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
-                
-                j = i;
-            }
-
-            return oddNodesA && oddNodesB;
-        }
-        public static bool ContainsPoints(Polygon poly, Vector2 a, Vector2 b, Vector2 c)
-        {
-            var oddNodesA = false;
-            var oddNodesB = false;
-            var oddNodesC = false;
-            int num = poly.Count;
-            int j = num - 1;
-            for (int i = 0; i < num; i++)
-            {
-                var vi = poly[i];
-                var vj = poly[j];
-                if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
-                if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
-                if(ContainsPointCheck(vi, vj, c)) oddNodesC = !oddNodesC;
-                
-                j = i;
-            }
-
-            return oddNodesA && oddNodesB && oddNodesC;
-        }
-        public static bool ContainsPoints(Polygon poly, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
-        {
-            var oddNodesA = false;
-            var oddNodesB = false;
-            var oddNodesC = false;
-            var oddNodesD = false;
-            int num = poly.Count;
-            int j = num - 1;
-            for (int i = 0; i < num; i++)
-            {
-                var vi = poly[i];
-                var vj = poly[j];
-                if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
-                if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
-                if(ContainsPointCheck(vi, vj, c)) oddNodesC = !oddNodesC;
-                if(ContainsPointCheck(vi, vj, d)) oddNodesD = !oddNodesD;
-                
-                j = i;
-            }
-
-            return oddNodesA && oddNodesB && oddNodesC && oddNodesD;
-        }
-
+        
+        
         /// <summary>
         /// Triangulates a set of points. Only works with non self intersecting shapes.
         /// </summary>
@@ -937,96 +1024,9 @@ namespace ShapeEngine.Core.Shapes
             return poly;
         }
 
-        public static Polygon Center(Polygon p, Vector2 newCenter)
-        {
-            var centroid = p.GetCentroid();
-            var delta = newCenter - centroid;
-            return Move(p, delta);
-        }
-        public static Polygon Move(Polygon p, Vector2 translation)
-        {
-            Polygon result = new();
-            for (int i = 0; i < p.Count; i++)
-            {
-                result.Add(p[i] + translation);
-            }
-            return result;
-        }
         
-        public static Polygon Rotate(Polygon p, Vector2 pivot, float rotRad)
-        {
-            if (p.Count < 3) return new();
-            Polygon rotated = new();
-            for (int i = 0; i < p.Count; i++)
-            {
-                Vector2 w = p[i] - pivot;
-                rotated.Add(pivot + w.Rotate(rotRad));
-            }
-            return rotated;
-        }
-        public static Polygon Scale(Polygon p, float scale)
-        {
-            Polygon shape = new();
-            for (int i = 0; i < p.Count; i++)
-            {
-                shape.Add(p[i] * scale);
-            }
-            return shape;
-        }
-        public static Polygon Scale(Polygon p, Vector2 pivot, float scale)
-        {
-            if (p.Count < 3) return new();
-            Polygon scaled = new();
-            for (int i = 0; i < p.Count; i++)
-            {
-                Vector2 w = p[i] - pivot;
-                scaled.Add(pivot + w * scale);
-            }
-            return scaled;
-        }
-        public static Polygon Scale(Polygon p, Vector2 pivot, Vector2 scale)
-        {
-            if (p.Count < 3) return new();
-            Polygon scaled = new();
-            for (int i = 0; i < p.Count; i++)
-            {
-                Vector2 w = p[i] - pivot;
-                scaled.Add(pivot + w * scale);
-            }
-            return scaled;
-        }
-        public static Polygon ScaleUniform(Polygon p, float distance)
-        {
-            Polygon shape = new();
-            for (int i = 0; i < p.Count; i++)
-            {
-                shape.Add(ShapeVec.ScaleUniform(p[i], distance));
-            }
-            return shape;
-        }
         #endregion
         
-        // #region Private
-        // private float GetAreaSigned()
-        // {
-        //     var totalArea = 0f;
-        //
-        //     for (int i = 0; i < this.Count; i++)
-        //     {
-        //         var a = this[i];
-        //         var b = this[(i + 1) % this.Count];
-        //
-        //         float dy = (a.Y + b.Y) / 2f;
-        //         float dx = b.X - a.X;
-        //
-        //         float area = dy * dx;
-        //         totalArea += area;
-        //     }
-        //
-        //     return totalArea;
-        // }
-        // #endregion
-
         #region Overlap
         
         public bool Overlap(Collider collider)

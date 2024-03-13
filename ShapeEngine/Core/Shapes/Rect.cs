@@ -218,21 +218,21 @@ namespace ShapeEngine.Core.Shapes
         public readonly Polygon Rotate(Vector2 pivot, float angleDeg)
         {
             var poly = ToPolygon();
-            poly.Rotate(pivot, angleDeg * ShapeMath.DEGTORAD);
+            poly.RotateSelf(pivot, angleDeg * ShapeMath.DEGTORAD);
             return poly;
         }
 
         public readonly Points RotateList(Vector2 pivot, float angleDeg)
         {
             var poly = ToPolygon();
-            poly.Rotate(pivot, angleDeg * ShapeMath.DEGTORAD);
+            poly.RotateSelf(pivot, angleDeg * ShapeMath.DEGTORAD);
             return new() { poly[0], poly[1], poly[2], poly[3] };
         }
 
         public readonly (Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr) RotateCorners(Vector2 pivot, float angleDeg)
         {
             var poly = ToPolygon();
-            poly.Rotate(pivot, angleDeg * ShapeMath.DEGTORAD);
+            poly.RotateSelf(pivot, angleDeg * ShapeMath.DEGTORAD);
             return new(poly[0], poly[1], poly[2], poly[3]);
         }
 
