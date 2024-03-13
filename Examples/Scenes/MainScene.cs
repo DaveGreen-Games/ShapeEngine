@@ -32,6 +32,7 @@ namespace Examples.Scenes
                 b.WasSelected += OnButtonSelected;
             }
             curButton = buttons[0];
+            examples.Add(new ClosestDistanceExample());
             examples.Add(new PolylineInflationExample());
             examples.Add(new AsteroidMiningExample());
             examples.Add(new GameObjectHandlerExample());

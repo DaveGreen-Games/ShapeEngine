@@ -89,7 +89,7 @@ public readonly struct Quad : IEquatable<Quad>
         var offset = size * alignement;
         var topLeft = pos - offset;
         
-        var a = topLeft - pos;
+        var a = topLeft;
         var b = topLeft + new Vector2(0f, size.Y);
         var c = topLeft + size;
         var d = topLeft + new Vector2(size.X, 0f);
