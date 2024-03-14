@@ -396,12 +396,180 @@ namespace ShapeEngine.Core.Shapes
             var dir = (p - center).Normalize();
             return center + dir * radius;
         }
+        
         public ClosestDistance GetClosestDistanceTo(Vector2 p)
         {
             var cp = GetClosestPoint(Center, Radius, p);
             return new ClosestDistance(cp, p);
         }
+        public ClosestDistance GetClosestDistanceTo(Segment segment)
+        {
+            var segmentPoint = Segment.GetClosestPoint(segment.Start, segment.End, Center);
+            var dir = (segmentPoint - Center).Normalize();
+            var circlePoint = Center + dir * Radius;
+            return new(circlePoint, segmentPoint);
+        }
+        public ClosestDistance GetClosestDistanceTo(Circle circle)
+        {
+            var w = Center - circle.Center;
+            var dir = w.Normalize();
+            var a = Center - dir * Radius;
+            var b = circle.Center + dir * circle.Radius;
+            
+            return new(a, b);
+        }
 
+        public ClosestDistance GetClosestDistanceTo(Triangle triangle)
+        {
+            var point = Segment.GetClosestPoint(triangle.A, triangle.B, Center);
+            var disSq = (Center - point).LengthSquared();
+            var minDisSq = disSq;
+            var closestPoint = point;
+            
+            point = Segment.GetClosestPoint(triangle.B, triangle.C, Center);
+            disSq = (Center - point).LengthSquared();
+            if (disSq < minDisSq)
+            {
+                minDisSq = disSq;
+                closestPoint = point;
+            }
+            
+            point = Segment.GetClosestPoint(triangle.C, triangle.A, Center);
+            disSq = (Center - point).LengthSquared();
+            if (disSq < minDisSq) closestPoint = point;
+
+            var dir = (closestPoint - Center).Normalize();
+
+            return new(Center + dir * Radius, closestPoint);
+
+        }
+        public ClosestDistance GetClosestDistanceTo(Quad quad)
+        {
+            var point = Segment.GetClosestPoint(quad.A, quad.B, Center);
+            var disSq = (Center - point).LengthSquared();
+            var minDisSq = disSq;
+            var closestPoint = point;
+            
+            point = Segment.GetClosestPoint(quad.B, quad.C, Center);
+            disSq = (Center - point).LengthSquared();
+            if (disSq < minDisSq)
+            {
+                minDisSq = disSq;
+                closestPoint = point;
+            }
+            
+            point = Segment.GetClosestPoint(quad.C, quad.D, Center);
+            disSq = (Center - point).LengthSquared();
+            if (disSq < minDisSq)
+            {
+                minDisSq = disSq;
+                closestPoint = point;
+            }
+            
+            point = Segment.GetClosestPoint(quad.D, quad.A, Center);
+            disSq = (Center - point).LengthSquared();
+            if (disSq < minDisSq) closestPoint = point;
+
+            var dir = (closestPoint - Center).Normalize();
+
+            return new(Center + dir * Radius, closestPoint);
+
+        }
+        public ClosestDistance GetClosestDistanceTo(Rect rect)
+        {
+            var point = Segment.GetClosestPoint(rect.TopLeft, rect.BottomLeft, Center);
+            var disSq = (Center - point).LengthSquared();
+            var minDisSq = disSq;
+            var closestPoint = point;
+            
+            point = Segment.GetClosestPoint(rect.BottomLeft, rect.BottomRight, Center);
+            disSq = (Center - point).LengthSquared();
+            if (disSq < minDisSq)
+            {
+                minDisSq = disSq;
+                closestPoint = point;
+            }
+            
+            point = Segment.GetClosestPoint(rect.BottomRight, rect.TopRight, Center);
+            disSq = (Center - point).LengthSquared();
+            if (disSq < minDisSq)
+            {
+                minDisSq = disSq;
+                closestPoint = point;
+            }
+            
+            point = Segment.GetClosestPoint(rect.TopRight, rect.TopLeft, Center);
+            disSq = (Center - point).LengthSquared();
+            if (disSq < minDisSq) closestPoint = point;
+
+            var dir = (closestPoint - Center).Normalize();
+
+            return new(Center + dir * Radius, closestPoint);
+
+        }
+        public ClosestDistance GetClosestDistanceTo(Polygon polygon)
+        {
+            if (polygon.Count <= 0) return new();
+            if (polygon.Count == 1) return GetClosestDistanceTo(polygon[0]);
+            if (polygon.Count == 2) return GetClosestDistanceTo(new Segment(polygon[0], polygon[1]));
+            if (polygon.Count == 3) return GetClosestDistanceTo(new Triangle(polygon[0], polygon[1], polygon[2]));
+            if (polygon.Count == 4) return GetClosestDistanceTo(new Quad(polygon[0], polygon[1], polygon[2], polygon[3]));
+
+            Vector2 closestPoint = new();
+            Vector2 displacement = new();
+            float minDisSq = float.PositiveInfinity;
+            
+            for (var i = 0; i < polygon.Count; i++)
+            {
+                var p1 = polygon[i];
+                var p2 = polygon[(i + 1) % polygon.Count];
+                
+                var next = Segment.GetClosestPoint(p1, p2, Center);
+                var w = (next - Center);
+                var disSq = w.LengthSquared();
+                if (disSq < minDisSq)
+                {
+                    minDisSq = disSq;
+                    displacement = w;
+                    closestPoint = next;
+                }
+            }
+
+            var dir = displacement.Normalize();
+            return new(Center + dir * Radius, closestPoint);
+        }
+        public ClosestDistance GetClosestDistanceTo(Polyline polyline)
+        {
+            if (polyline.Count <= 0) return new();
+            if (polyline.Count == 1) return GetClosestDistanceTo(polyline[0]);
+            if (polyline.Count == 2) return GetClosestDistanceTo(new Segment(polyline[0], polyline[1]));
+            if (polyline.Count == 3) return GetClosestDistanceTo(new Triangle(polyline[0], polyline[1], polyline[2]));
+            if (polyline.Count == 4) return GetClosestDistanceTo(new Quad(polyline[0], polyline[1], polyline[2], polyline[3]));
+
+            Vector2 closestPoint = new();
+            Vector2 displacement = new();
+            float minDisSq = float.PositiveInfinity;
+            
+            for (var i = 0; i < polyline.Count - 1; i++)
+            {
+                var p1 = polyline[i];
+                var p2 = polyline[(i + 1) % polyline.Count];
+                
+                var next = Segment.GetClosestPoint(p1, p2, Center);
+                var w = (next - Center);
+                var disSq = w.LengthSquared();
+                if (disSq < minDisSq)
+                {
+                    minDisSq = disSq;
+                    displacement = w;
+                    closestPoint = next;
+                }
+            }
+
+            var dir = displacement.Normalize();
+            return new(Center + dir * Radius, closestPoint);
+        }
+        
         //remove
         public CollisionPoint GetClosestCollisionPoint(Vector2 p) 
         {
