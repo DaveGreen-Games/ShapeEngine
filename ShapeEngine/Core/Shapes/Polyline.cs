@@ -97,16 +97,7 @@ namespace ShapeEngine.Core.Shapes
             }
             return r;
         }
-        public bool ContainsPoint(Vector2 p)
-        {
-            var segments = GetEdges();
-            foreach (var segment in segments)
-            {
-                if (segment.ContainsPoint(p)) return true;
-            }
-            return false;
-        }
-
+        
         public Vector2 GetCentroidOnLine()
         {
             if (Count <= 0) return new(0f);
@@ -155,6 +146,41 @@ namespace ShapeEngine.Core.Shapes
         
         public Points ToPoints() { return new(this); }
 
+        public Vector2 GetRandomVertex() { return ShapeRandom.RandCollection(this); }
+        public Segment GetRandomEdge() => GetEdges().GetRandomSegment();
+        //public Vector2 GetRandomPoint() => GetRandomEdge().GetRandomPoint();
+        //public Points GetRandomPoints(int amount) => GetEdges().GetRandomPoints(amount);
+
+        #endregion
+
+        #region Closest
+        public ClosestDistance GetClosestDistanceTo(Vector2 p)
+        {
+            if (Count <= 0) return new();
+            if (Count == 1) return new(this[0], p);
+            if (Count == 2) return new(Segment.GetClosestPoint(this[0], this[1], p), p);
+            if (Count == 3) return new(Triangle.GetClosestPoint(this[0], this[1], this[2], p), p);
+            if (Count == 4) return new(Quad.GetClosestPoint(this[0], this[1], this[2], this[3], p), p);
+
+            var cp = new Vector2();
+            var minDisSq = float.PositiveInfinity;
+            for (var i = 0; i < Count - 1; i++)
+            {
+                var start = this[i];
+                var end = this[(i + 1) % Count];
+                var next = Segment.GetClosestPoint(start, end, p);
+                var disSq = (next - p).LengthSquared();
+                if (disSq < minDisSq)
+                {
+                    minDisSq = disSq;
+                    cp = next;
+                }
+
+            }
+
+            return new(cp, p);
+        }
+        
         public int GetClosestIndexOnEdge(Vector2 p)
         {
             if (Count <= 0) return -1;
@@ -186,15 +212,23 @@ namespace ShapeEngine.Core.Shapes
         }
         public CollisionPoint GetClosestCollisionPoint(Vector2 p) => GetEdges().GetClosestCollisionPoint(p);
         public ClosestSegment GetClosestSegment(Vector2 p) => GetEdges().GetClosest(p);
+        #endregion
 
-        public Vector2 GetRandomVertex() { return ShapeRandom.RandCollection(this); }
-        public Segment GetRandomEdge() => GetEdges().GetRandomSegment();
-        //public Vector2 GetRandomPoint() => GetRandomEdge().GetRandomPoint();
-        //public Points GetRandomPoints(int amount) => GetEdges().GetRandomPoints(amount);
+        #region Contains
+        public bool ContainsPoint(Vector2 p)
+        {
+            var segments = GetEdges();
+            foreach (var segment in segments)
+            {
+                if (segment.ContainsPoint(p)) return true;
+            }
+            return false;
+        }
+
+        
 
         #endregion
         
-
         #region Overlap
         public bool Overlap(Collider collider)
         {
@@ -517,6 +551,7 @@ namespace ShapeEngine.Core.Shapes
         }
         #endregion
 
+        #region Static
         public static Polyline GetShape(Points relative, Transform2D transform)
         {
             if (relative.Count < 3) return new();
@@ -544,7 +579,7 @@ namespace ShapeEngine.Core.Shapes
             }
             return result;
         }
-
+        #endregion
     }
 
 }

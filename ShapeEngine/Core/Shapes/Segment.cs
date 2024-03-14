@@ -587,6 +587,62 @@ namespace ShapeEngine.Core.Shapes
             var circlePoint = circle.Center + dir * circle.Radius;
             return new(segmentPoint, circlePoint);
         }
+        public ClosestDistance GetClosestDistanceTo(Triangle triangle)
+        {
+            var selfA = GetClosestDistanceTo(triangle.A);
+            var selfB = GetClosestDistanceTo(triangle.B);
+            var selfC = GetClosestDistanceTo(triangle.C);
+            var otherA = triangle.GetClosestDistanceTo(Start);
+            var otherB = triangle.GetClosestDistanceTo(End);
+
+            var min = selfA;
+            if (selfB.DistanceSquared < min.DistanceSquared) min = selfB;
+            if (selfC.DistanceSquared < min.DistanceSquared) min = selfC;
+            if (otherA.DistanceSquared < min.DistanceSquared) min = otherA;
+            return otherB.DistanceSquared < min.DistanceSquared ? otherB : min;
+        }
+        public ClosestDistance GetClosestDistanceTo(Quad quad)
+        {
+            var selfA = GetClosestDistanceTo(quad.A);
+            var selfB = GetClosestDistanceTo(quad.B);
+            var selfC = GetClosestDistanceTo(quad.C);
+            var selfD = GetClosestDistanceTo(quad.D);
+            var otherA = quad.GetClosestDistanceTo(Start);
+            var otherB = quad.GetClosestDistanceTo(End);
+
+            var min = selfA;
+            if (selfB.DistanceSquared < min.DistanceSquared) min = selfB;
+            if (selfC.DistanceSquared < min.DistanceSquared) min = selfC;
+            if (selfD.DistanceSquared < min.DistanceSquared) min = selfD;
+            if (otherA.DistanceSquared < min.DistanceSquared) min = otherA;
+            return otherB.DistanceSquared < min.DistanceSquared ? otherB : min;
+        }
+        public ClosestDistance GetClosestDistanceTo(Rect rect)
+        {
+            var selfA = GetClosestDistanceTo(rect.TopLeft);
+            var selfB = GetClosestDistanceTo(rect.BottomLeft);
+            var selfC = GetClosestDistanceTo(rect.BottomRight);
+            var selfD = GetClosestDistanceTo(rect.TopRight);
+            var otherA = rect.GetClosestDistanceTo(Start);
+            var otherB = rect.GetClosestDistanceTo(End);
+
+            var min = selfA;
+            if (selfB.DistanceSquared < min.DistanceSquared) min = selfB;
+            if (selfC.DistanceSquared < min.DistanceSquared) min = selfC;
+            if (selfD.DistanceSquared < min.DistanceSquared) min = selfD;
+            if (otherA.DistanceSquared < min.DistanceSquared) min = otherA;
+            return otherB.DistanceSquared < min.DistanceSquared ? otherB : min;
+        }
+
+        public ClosestDistance GetClosestDistanceTo(Polygon polygon)
+        {
+            return new();
+        }
+
+        public ClosestDistance GetClosestDistanceTo(Polyline polyline)
+        {
+            return new();
+        }
         
         
         

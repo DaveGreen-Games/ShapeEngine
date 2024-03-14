@@ -388,128 +388,6 @@ namespace ShapeEngine.Core.Shapes
 
         #endregion
         
-        #region Contains
-        public bool ContainsPoint(Vector2 p) { return IsPointInPoly(p); }
-
-        public bool ContainsCollisionObject(CollisionObject collisionObject)
-        {
-            if (!collisionObject.HasColliders) return false;
-            foreach (var collider in collisionObject.Colliders)
-            {
-                if (!ContainsCollider(collider)) return false;
-            }
-
-            return true;
-        }
-        public bool ContainsCollider(Collider collider)
-        {
-            switch (collider.GetShapeType())
-            {
-                case ShapeType.Circle: return ContainsShape(collider.GetCircleShape());
-                case ShapeType.Segment: return ContainsShape(collider.GetSegmentShape());
-                case ShapeType.Triangle: return ContainsShape(collider.GetTriangleShape());
-                case ShapeType.Quad: return ContainsShape(collider.GetQuadShape());
-                case ShapeType.Rect: return ContainsShape(collider.GetRectShape());
-                case ShapeType.Poly: return ContainsShape(collider.GetPolygonShape());
-                case ShapeType.PolyLine: return ContainsShape(collider.GetPolylineShape());
-            }
-
-            return false;
-        }
-        public bool ContainsShape(Segment segment) => ContainsPoints(segment.Start, segment.End);
-        public bool ContainsShape(Circle circle) => ContainsPoints(circle.Top, circle.Left, circle.Bottom, circle.Right);
-        public bool ContainsShape(Rect rect) => ContainsPoints(rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight);
-        public bool ContainsShape(Triangle triangle) => ContainsPoints(triangle.A, triangle.B, triangle.C);
-        public bool ContainsShape(Quad quad) => ContainsPoints(quad.A, quad.B, quad.C, quad.D);
-        public bool ContainsShape(Points points)
-        {
-            if (points.Count <= 0) return false;
-            foreach (var p in points)
-            {
-                if (!ContainsPoint(p)) return false;
-            }
-            return true;
-        }
-        
-        public bool IsPointInPoly(Vector2 p)
-        {
-            var oddNodes = false;
-            int num = Count;
-            int j = num - 1;
-            for (int i = 0; i < num; i++)
-            {
-                var vi = this[i];
-                var vj = this[j];
-                if (ContainsPointCheck(vi, vj, p)) oddNodes = !oddNodes;
-                j = i;
-            }
-
-            return oddNodes;
-        }
-        public bool ContainsPoints(Vector2 a, Vector2 b)
-        {
-            var oddNodesA = false;
-            var oddNodesB = false;
-            int num = Count;
-            int j = num - 1;
-            for (var i = 0; i < num; i++)
-            {
-                var vi = this[i];
-                var vj = this[j];
-                if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
-                if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
-                
-                j = i;
-            }
-
-            return oddNodesA && oddNodesB;
-        }
-        public bool ContainsPoints(Vector2 a, Vector2 b, Vector2 c)
-        {
-            var oddNodesA = false;
-            var oddNodesB = false;
-            var oddNodesC = false;
-            int num = Count;
-            int j = num - 1;
-            for (int i = 0; i < num; i++)
-            {
-                var vi = this[i];
-                var vj = this[j];
-                if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
-                if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
-                if(ContainsPointCheck(vi, vj, c)) oddNodesC = !oddNodesC;
-                
-                j = i;
-            }
-
-            return oddNodesA && oddNodesB && oddNodesC;
-        }
-        public bool ContainsPoints(Vector2 a, Vector2 b, Vector2 c, Vector2 d)
-        {
-            var oddNodesA = false;
-            var oddNodesB = false;
-            var oddNodesC = false;
-            var oddNodesD = false;
-            int num = Count;
-            int j = num - 1;
-            for (int i = 0; i < num; i++)
-            {
-                var vi = this[i];
-                var vj = this[j];
-                if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
-                if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
-                if(ContainsPointCheck(vi, vj, c)) oddNodesC = !oddNodesC;
-                if(ContainsPointCheck(vi, vj, d)) oddNodesD = !oddNodesD;
-                
-                j = i;
-            }
-
-            return oddNodesA && oddNodesB && oddNodesC && oddNodesD;
-        }
-
-        
-        #endregion
-        
         #region Translation
         public void CenterSelf(Vector2 newCenter)
         {
@@ -686,41 +564,6 @@ namespace ShapeEngine.Core.Shapes
         }
         #endregion
         
-        #region Closest
-
-        public int GetClosestEdgePointByIndex(Vector2 p)
-        {
-            if (Count <= 0) return -1;
-            if (Count == 1) return 0;
-
-            float minD = float.PositiveInfinity;
-            int closestIndex = -1;
-
-            for (var i = 0; i < Count; i++)
-            {
-                var start = this[i];
-                var end = this[(i + 1) % Count];
-                var edge = new Segment(start, end);
-
-                Vector2 closest = edge.GetClosestCollisionPoint(p).Point;
-                float d = (closest - p).LengthSquared();
-                if (d < minD)
-                {
-                    closestIndex = i;
-                    minD = d;
-                }
-            }
-            return closestIndex;
-        }
-        public ClosestPoint GetClosestPoint(Vector2 p)
-        {
-            var cp = GetEdges().GetClosestCollisionPoint(p);
-            return new(cp, (cp.Point - p).Length());
-        }
-        public CollisionPoint GetClosestCollisionPoint(Vector2 p) => GetEdges().GetClosestCollisionPoint(p);
-        public ClosestSegment GetClosestSegment(Vector2 p) => GetEdges().GetClosest(p);
-        #endregion
-
         #region Random
 
         public Vector2 GetRandomPointInside()
@@ -1022,6 +865,229 @@ namespace ShapeEngine.Core.Shapes
                 poly.Add(cur + dirLeft * ShapeRandom.RandF(magMin, magMax));
             }
             return poly;
+        }
+
+        
+        #endregion
+
+        #region Closest
+
+        public ClosestDistance GetClosestDistanceTo(Vector2 p)
+        {
+            if (Count <= 0) return new();
+            if (Count == 1) return new(this[0], p);
+            if (Count == 2) return new(Segment.GetClosestPoint(this[0], this[1], p), p);
+            if (Count == 3) return new(Triangle.GetClosestPoint(this[0], this[1], this[2], p), p);
+            if (Count == 4) return new(Quad.GetClosestPoint(this[0], this[1], this[2], this[3], p), p);
+
+            var cp = new Vector2();
+            var minDisSq = float.PositiveInfinity;
+            for (var i = 0; i < Count; i++)
+            {
+                var start = this[i];
+                var end = this[(i + 1) % Count];
+                var next = Segment.GetClosestPoint(start, end, p);
+                var disSq = (next - p).LengthSquared();
+                if (disSq < minDisSq)
+                {
+                    minDisSq = disSq;
+                    cp = next;
+                }
+
+            }
+
+            return new(cp, p);
+        }
+
+        
+        
+        // public (Vector2 a, Vector2 b) GetClosestDistance(Polygon other)
+        // {
+        //     List<ClosestPoint> otherPoints = new();
+        //     List<ClosestPoint> selfPoints = new();
+        //     
+        //     foreach (var p in this)
+        //     {
+        //         var cp = other.GetClosestPoint(p);
+        //         otherPoints.Add(cp);
+        //     }
+        //     foreach (var p in other)
+        //     {
+        //         var cp = GetClosestPoint(p);
+        //         selfPoints.Add(cp);
+        //     }
+        //
+        //     float minDisQq = float.PositiveInfinity;
+        //     Vector2 cSelf = new();
+        //     Vector2 cOther = new();
+        //     foreach (var sp in selfPoints)
+        //     {
+        //         foreach (var op in otherPoints)
+        //         {
+        //             var dSq = (sp.Closest.Point - op.Closest.Point).LengthSquared();
+        //             if (dSq < minDisQq)
+        //             {
+        //                 minDisQq = dSq;
+        //                 cSelf = sp.Closest.Point;
+        //                 cOther = op.Closest.Point;
+        //             }
+        //         }
+        //     }
+        //
+        //     return (cSelf, cOther);
+        // }
+        //
+        
+        public int GetClosestEdgePointByIndex(Vector2 p)
+        {
+            if (Count <= 0) return -1;
+            if (Count == 1) return 0;
+
+            float minD = float.PositiveInfinity;
+            int closestIndex = -1;
+
+            for (var i = 0; i < Count; i++)
+            {
+                var start = this[i];
+                var end = this[(i + 1) % Count];
+                var edge = new Segment(start, end);
+
+                Vector2 closest = edge.GetClosestCollisionPoint(p).Point;
+                float d = (closest - p).LengthSquared();
+                if (d < minD)
+                {
+                    closestIndex = i;
+                    minD = d;
+                }
+            }
+            return closestIndex;
+        }
+        public ClosestPoint GetClosestPoint(Vector2 p)
+        {
+            var cp = GetEdges().GetClosestCollisionPoint(p);
+            return new(cp, (cp.Point - p).Length());
+        }
+        public CollisionPoint GetClosestCollisionPoint(Vector2 p) => GetEdges().GetClosestCollisionPoint(p);
+        public ClosestSegment GetClosestSegment(Vector2 p) => GetEdges().GetClosest(p);
+        #endregion
+        
+        #region Contains
+        public bool ContainsPoint(Vector2 p) { return IsPointInPoly(p); }
+
+        public bool ContainsCollisionObject(CollisionObject collisionObject)
+        {
+            if (!collisionObject.HasColliders) return false;
+            foreach (var collider in collisionObject.Colliders)
+            {
+                if (!ContainsCollider(collider)) return false;
+            }
+
+            return true;
+        }
+        public bool ContainsCollider(Collider collider)
+        {
+            switch (collider.GetShapeType())
+            {
+                case ShapeType.Circle: return ContainsShape(collider.GetCircleShape());
+                case ShapeType.Segment: return ContainsShape(collider.GetSegmentShape());
+                case ShapeType.Triangle: return ContainsShape(collider.GetTriangleShape());
+                case ShapeType.Quad: return ContainsShape(collider.GetQuadShape());
+                case ShapeType.Rect: return ContainsShape(collider.GetRectShape());
+                case ShapeType.Poly: return ContainsShape(collider.GetPolygonShape());
+                case ShapeType.PolyLine: return ContainsShape(collider.GetPolylineShape());
+            }
+
+            return false;
+        }
+        public bool ContainsShape(Segment segment) => ContainsPoints(segment.Start, segment.End);
+        public bool ContainsShape(Circle circle) => ContainsPoints(circle.Top, circle.Left, circle.Bottom, circle.Right);
+        public bool ContainsShape(Rect rect) => ContainsPoints(rect.TopLeft, rect.BottomLeft, rect.BottomRight, rect.TopRight);
+        public bool ContainsShape(Triangle triangle) => ContainsPoints(triangle.A, triangle.B, triangle.C);
+        public bool ContainsShape(Quad quad) => ContainsPoints(quad.A, quad.B, quad.C, quad.D);
+        public bool ContainsShape(Points points)
+        {
+            if (points.Count <= 0) return false;
+            foreach (var p in points)
+            {
+                if (!ContainsPoint(p)) return false;
+            }
+            return true;
+        }
+        
+        public bool IsPointInPoly(Vector2 p)
+        {
+            var oddNodes = false;
+            int num = Count;
+            int j = num - 1;
+            for (int i = 0; i < num; i++)
+            {
+                var vi = this[i];
+                var vj = this[j];
+                if (ContainsPointCheck(vi, vj, p)) oddNodes = !oddNodes;
+                j = i;
+            }
+
+            return oddNodes;
+        }
+        public bool ContainsPoints(Vector2 a, Vector2 b)
+        {
+            var oddNodesA = false;
+            var oddNodesB = false;
+            int num = Count;
+            int j = num - 1;
+            for (var i = 0; i < num; i++)
+            {
+                var vi = this[i];
+                var vj = this[j];
+                if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
+                if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
+                
+                j = i;
+            }
+
+            return oddNodesA && oddNodesB;
+        }
+        public bool ContainsPoints(Vector2 a, Vector2 b, Vector2 c)
+        {
+            var oddNodesA = false;
+            var oddNodesB = false;
+            var oddNodesC = false;
+            int num = Count;
+            int j = num - 1;
+            for (int i = 0; i < num; i++)
+            {
+                var vi = this[i];
+                var vj = this[j];
+                if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
+                if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
+                if(ContainsPointCheck(vi, vj, c)) oddNodesC = !oddNodesC;
+                
+                j = i;
+            }
+
+            return oddNodesA && oddNodesB && oddNodesC;
+        }
+        public bool ContainsPoints(Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+        {
+            var oddNodesA = false;
+            var oddNodesB = false;
+            var oddNodesC = false;
+            var oddNodesD = false;
+            int num = Count;
+            int j = num - 1;
+            for (int i = 0; i < num; i++)
+            {
+                var vi = this[i];
+                var vj = this[j];
+                if(ContainsPointCheck(vi, vj, a)) oddNodesA = !oddNodesA;
+                if(ContainsPointCheck(vi, vj, b)) oddNodesB = !oddNodesB;
+                if(ContainsPointCheck(vi, vj, c)) oddNodesC = !oddNodesC;
+                if(ContainsPointCheck(vi, vj, d)) oddNodesD = !oddNodesD;
+                
+                j = i;
+            }
+
+            return oddNodesA && oddNodesB && oddNodesC && oddNodesD;
         }
 
         

@@ -81,6 +81,11 @@ public class ClosestDistanceExample : ExampleScene
             if (shape is PointShape pointShape) return Segment.GetClosestDistanceTo(pointShape.Position);
             if (shape is SegmentShape segmentShape) return Segment.GetClosestDistanceTo(segmentShape.Segment);
             if (shape is CircleShape circleShape) return Segment.GetClosestDistanceTo(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Segment.GetClosestDistanceTo(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Segment.GetClosestDistanceTo(quadShape.Quad);
+            if (shape is RectShape rectShape) return Segment.GetClosestDistanceTo(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Segment.GetClosestDistanceTo(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Segment.GetClosestDistanceTo(polylineShape.Polyline);
             return new();
         }
     }
@@ -111,7 +116,7 @@ public class ClosestDistanceExample : ExampleScene
     private class TriangleShape : Shape
     {
         private Vector2 position;
-        private Triangle shape;
+        public Triangle Triangle;
 
         public TriangleShape(Vector2 pos, float size)
         {
@@ -120,19 +125,19 @@ public class ClosestDistanceExample : ExampleScene
             var a = pos + new Vector2(size * ShapeRandom.RandF(0.5f, 1f), size * ShapeRandom.RandF(-0.5f, 0.5f)).Rotate(randAngle);
             var b = pos + new Vector2(-size * ShapeRandom.RandF(0.5f, 1f), -size * ShapeRandom.RandF(0.5f, 1f)).Rotate(randAngle);
             var c = pos + new Vector2(-size * ShapeRandom.RandF(0.5f, 1f), size * ShapeRandom.RandF(0.5f, 1f)).Rotate(randAngle);
-            shape = new(a, b, c);
+            Triangle = new(a, b, c);
         }
 
         public override void Move(Vector2 newPosition)
         {
             var offset = newPosition - position;
-            shape = shape.Move(offset);
+            Triangle = Triangle.Move(offset);
             position = newPosition;
         }
 
         public override void Draw(ColorRgba color)
         {
-            shape.DrawLines(LineThickness, color);
+            Triangle.DrawLines(LineThickness, color);
         }
 
         public override ShapeType GetShapeType() => ShapeType.Triangle;
@@ -144,20 +149,20 @@ public class ClosestDistanceExample : ExampleScene
     }
     private class QuadShape : Shape
     {
-        private Quad quad;
+        public Quad Quad;
         public QuadShape(Vector2 pos, float size)
         {
             var randAngle = ShapeRandom.RandAngleRad();
-            quad = new(pos, new Vector2(size), randAngle, new Vector2(0.5f));
+            Quad = new(pos, new Vector2(size), randAngle, new Vector2(0.5f));
         }
         public override void Move(Vector2 newPosition)
         {
-            quad = quad.MoveTo(newPosition, new Vector2(0.5f));
+            Quad = Quad.MoveTo(newPosition, new Vector2(0.5f));
         }
 
         public override void Draw(ColorRgba color)
         {
-           quad.DrawLines(LineThickness, color);
+           Quad.DrawLines(LineThickness, color);
         }
 
         public override ShapeType GetShapeType() => ShapeType.Quad;
@@ -169,21 +174,21 @@ public class ClosestDistanceExample : ExampleScene
     }
     private class RectShape : Shape
     {
-        private Rect rect;
+        public Rect Rect;
 
         public RectShape(Vector2 pos, float size)
         {
-            rect = new(pos, new(size, size), new Vector2(0.5f));
+            Rect = new(pos, new(size, size), new Vector2(0.5f));
         }
         public override void Move(Vector2 newPosition)
         {
-            var offset = newPosition - rect.Center;
-            rect = rect.Move(offset);
+            var offset = newPosition - Rect.Center;
+            Rect = Rect.Move(offset);
         }
 
         public override void Draw(ColorRgba color)
         {
-            rect.DrawLines(LineThickness, color);
+            Rect.DrawLines(LineThickness, color);
         }
 
         public override ShapeType GetShapeType() => ShapeType.Rect;
@@ -196,23 +201,23 @@ public class ClosestDistanceExample : ExampleScene
     private class PolygonShape : Shape
     {
         private Vector2 position;
-        private readonly Polygon polygon;
+        public readonly Polygon Polygon;
 
         public PolygonShape(Vector2 pos, float size)
         {
-            polygon = Polygon.Generate(pos, ShapeRandom.RandI(8, 16), size / 2, size);
+            Polygon = Polygon.Generate(pos, ShapeRandom.RandI(8, 16), size / 2, size);
             position = pos;
         }
         public override void Move(Vector2 newPosition)
         {
             var offset = newPosition - position;
-            polygon.MoveSelf(offset);
+            Polygon.MoveSelf(offset);
             position = newPosition;
         }
 
         public override void Draw(ColorRgba color)
         {
-            polygon.DrawLines(LineThickness, color);
+            Polygon.DrawLines(LineThickness, color);
         }
 
         public override ShapeType GetShapeType() => ShapeType.Poly;
@@ -225,28 +230,28 @@ public class ClosestDistanceExample : ExampleScene
     private class PolylineShape : Shape
     {
         private Vector2 position;
-        private readonly Polyline polyline;
+        public readonly Polyline Polyline;
 
         public PolylineShape(Vector2 pos, float size)
         {
             
-            polyline = Polygon.Generate(pos, ShapeRandom.RandI(8, 16), size / 2, size).ToPolyline();
+            Polyline = Polygon.Generate(pos, ShapeRandom.RandI(8, 16), size / 2, size).ToPolyline();
             position = pos;
         }
         public override void Move(Vector2 newPosition)
         {
             var offset = newPosition - position;
-            for (var i = 0; i < polyline.Count; i++)
+            for (var i = 0; i < Polyline.Count; i++)
             {
-                var p = polyline[i];
-                polyline[i] = p + offset;
+                var p = Polyline[i];
+                Polyline[i] = p + offset;
             }
             position = newPosition;
         }
 
         public override void Draw(ColorRgba color)
         {
-            polyline.Draw(LineThickness, color);
+            Polyline.Draw(LineThickness, color);
         }
 
         public override ShapeType GetShapeType() => ShapeType.PolyLine;
