@@ -149,9 +149,9 @@ public class ClosestDistanceExample : ExampleScene
         {
             position = pos;
             var randAngle = ShapeRandom.RandAngleRad();
-            var a = pos + new Vector2(size * ShapeRandom.RandF(0.5f, 1f), size * ShapeRandom.RandF(-0.5f, 0.5f)).Rotate(randAngle);
-            var b = pos + new Vector2(-size * ShapeRandom.RandF(0.5f, 1f), -size * ShapeRandom.RandF(0.5f, 1f)).Rotate(randAngle);
-            var c = pos + new Vector2(-size * ShapeRandom.RandF(0.5f, 1f), size * ShapeRandom.RandF(0.5f, 1f)).Rotate(randAngle);
+            var a = pos + new Vector2(size * ShapeRandom.RandF(0.75f, 1.5f), size * ShapeRandom.RandF(-0.5f, 0.5f)).Rotate(randAngle);
+            var b = pos + new Vector2(-size * ShapeRandom.RandF(0.75f, 1.5f), -size * ShapeRandom.RandF(0.5f, 1f)).Rotate(randAngle);
+            var c = pos + new Vector2(-size * ShapeRandom.RandF(0.75f, 1.5f), size * ShapeRandom.RandF(0.5f, 1f)).Rotate(randAngle);
             Triangle = new(a, b, c);
         }
 
@@ -188,7 +188,7 @@ public class ClosestDistanceExample : ExampleScene
         public QuadShape(Vector2 pos, float size)
         {
             var randAngle = ShapeRandom.RandAngleRad();
-            Quad = new(pos, new Vector2(size), randAngle, new Vector2(0.5f));
+            Quad = new(pos, new Size(size * 2), randAngle, new Vector2(0.5f));
         }
         public override void Move(Vector2 newPosition)
         {
@@ -204,14 +204,14 @@ public class ClosestDistanceExample : ExampleScene
         
         public override ClosestDistance GetClosestDistanceTo(Shape shape)
         {
-            // if (shape is PointShape pointShape) return Quad.GetClosestDistanceTo(pointShape.Position);
-            // if (shape is SegmentShape segmentShape) return Quad.GetClosestDistanceTo(segmentShape.Segment);
-            // if (shape is CircleShape circleShape) return Quad.GetClosestDistanceTo(circleShape.Circle);
-            // if (shape is TriangleShape triangleShape) return Quad.GetClosestDistanceTo(triangleShape.Triangle);
-            // if (shape is QuadShape quadShape) return Quad.GetClosestDistanceTo(quadShape.Quad);
-            // if (shape is RectShape rectShape) return Quad.GetClosestDistanceTo(rectShape.Rect);
-            // if (shape is PolygonShape polygonShape) return Quad.GetClosestDistanceTo(polygonShape.Polygon);
-            // if (shape is PolylineShape polylineShape) return Quad.GetClosestDistanceTo(polylineShape.Polyline);
+            if (shape is PointShape pointShape) return Quad.GetClosestDistanceTo(pointShape.Position);
+            if (shape is SegmentShape segmentShape) return Quad.GetClosestDistanceTo(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Quad.GetClosestDistanceTo(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Quad.GetClosestDistanceTo(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Quad.GetClosestDistanceTo(quadShape.Quad);
+            if (shape is RectShape rectShape) return Quad.GetClosestDistanceTo(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Quad.GetClosestDistanceTo(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Quad.GetClosestDistanceTo(polylineShape.Polyline);
             return new();
         }
     }
@@ -221,7 +221,7 @@ public class ClosestDistanceExample : ExampleScene
 
         public RectShape(Vector2 pos, float size)
         {
-            Rect = new(pos, new(size, size), new Vector2(0.5f));
+            Rect = new(pos, new(size * 2, size * 2), new Vector2(0.5f));
         }
         public override void Move(Vector2 newPosition)
         {
@@ -238,14 +238,14 @@ public class ClosestDistanceExample : ExampleScene
         
         public override ClosestDistance GetClosestDistanceTo(Shape shape)
         {
-            // if (shape is PointShape pointShape) return Rect.GetClosestDistanceTo(pointShape.Position);
-            // if (shape is SegmentShape segmentShape) return Rect.GetClosestDistanceTo(segmentShape.Segment);
-            // if (shape is CircleShape circleShape) return Rect.GetClosestDistanceTo(circleShape.Circle);
-            // if (shape is TriangleShape triangleShape) return Rect.GetClosestDistanceTo(triangleShape.Triangle);
-            // if (shape is QuadShape quadShape) return Rect.GetClosestDistanceTo(quadShape.Quad);
-            // if (shape is RectShape rectShape) return Rect.GetClosestDistanceTo(rectShape.Rect);
-            // if (shape is PolygonShape polygonShape) return Rect.GetClosestDistanceTo(polygonShape.Polygon);
-            // if (shape is PolylineShape polylineShape) return Rect.GetClosestDistanceTo(polylineShape.Polyline);
+            if (shape is PointShape pointShape) return Rect.GetClosestDistanceTo(pointShape.Position);
+            if (shape is SegmentShape segmentShape) return Rect.GetClosestDistanceTo(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Rect.GetClosestDistanceTo(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Rect.GetClosestDistanceTo(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Rect.GetClosestDistanceTo(quadShape.Quad);
+            if (shape is RectShape rectShape) return Rect.GetClosestDistanceTo(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Rect.GetClosestDistanceTo(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Rect.GetClosestDistanceTo(polylineShape.Polyline);
             return new();
         }
     }
@@ -275,14 +275,14 @@ public class ClosestDistanceExample : ExampleScene
         
         public override ClosestDistance GetClosestDistanceTo(Shape shape)
         {
-            // if (shape is PointShape pointShape) return Polygon.GetClosestDistanceTo(pointShape.Position);
-            // if (shape is SegmentShape segmentShape) return Polygon.GetClosestDistanceTo(segmentShape.Segment);
-            // if (shape is CircleShape circleShape) return Polygon.GetClosestDistanceTo(circleShape.Circle);
-            // if (shape is TriangleShape triangleShape) return Polygon.GetClosestDistanceTo(triangleShape.Triangle);
-            // if (shape is QuadShape quadShape) return Polygon.GetClosestDistanceTo(quadShape.Quad);
-            // if (shape is RectShape rectShape) return Polygon.GetClosestDistanceTo(rectShape.Rect);
-            // if (shape is PolygonShape polygonShape) return Polygon.GetClosestDistanceTo(polygonShape.Polygon);
-            // if (shape is PolylineShape polylineShape) return Polygon.GetClosestDistanceTo(polylineShape.Polyline);
+            if (shape is PointShape pointShape) return Polygon.GetClosestDistanceTo(pointShape.Position);
+            if (shape is SegmentShape segmentShape) return Polygon.GetClosestDistanceTo(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Polygon.GetClosestDistanceTo(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Polygon.GetClosestDistanceTo(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Polygon.GetClosestDistanceTo(quadShape.Quad);
+            if (shape is RectShape rectShape) return Polygon.GetClosestDistanceTo(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Polygon.GetClosestDistanceTo(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Polygon.GetClosestDistanceTo(polylineShape.Polyline);
             return new();
         }
     }
@@ -317,14 +317,14 @@ public class ClosestDistanceExample : ExampleScene
         
         public override ClosestDistance GetClosestDistanceTo(Shape shape)
         {
-            // if (shape is PointShape pointShape) return Polyline.GetClosestDistanceTo(pointShape.Position);
-            // if (shape is SegmentShape segmentShape) return Polyline.GetClosestDistanceTo(segmentShape.Segment);
-            // if (shape is CircleShape circleShape) return Polyline.GetClosestDistanceTo(circleShape.Circle);
-            // if (shape is TriangleShape triangleShape) return Polyline.GetClosestDistanceTo(triangleShape.Triangle);
-            // if (shape is QuadShape quadShape) return Polyline.GetClosestDistanceTo(quadShape.Quad);
-            // if (shape is RectShape rectShape) return Polyline.GetClosestDistanceTo(rectShape.Rect);
-            // if (shape is PolygonShape polygonShape) return Polyline.GetClosestDistanceTo(polygonShape.Polygon);
-            // if (shape is PolylineShape polylineShape) return Polyline.GetClosestDistanceTo(polylineShape.Polyline);
+            if (shape is PointShape pointShape) return Polyline.GetClosestDistanceTo(pointShape.Position);
+            if (shape is SegmentShape segmentShape) return Polyline.GetClosestDistanceTo(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Polyline.GetClosestDistanceTo(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Polyline.GetClosestDistanceTo(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Polyline.GetClosestDistanceTo(quadShape.Quad);
+            if (shape is RectShape rectShape) return Polyline.GetClosestDistanceTo(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Polyline.GetClosestDistanceTo(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Polyline.GetClosestDistanceTo(polylineShape.Polyline);
             return new();
         }
     }
@@ -429,9 +429,9 @@ public class ClosestDistanceExample : ExampleScene
         
         leftRect.DrawLines(2f, Colors.Highlight);
         rightRect.DrawLines(2f, Colors.Warm);
-        // string infoText =
-            // $"Add Point {create} | Remove Point {delete} | Inflate {offset} {MathF.Round(offsetDelta * 100) / 100}";
+        // string infoText = $"Add Point {create} | Remove Point {delete} | Inflate {offset} {MathF.Round(offsetDelta * 100) / 100}";
 
+            
         var textStatic = $"{nextStatic} {staticShape.GetName()}";
         var textMiddle = " vs ";
         var textMoving = $"{movingShape.GetName()} {nextMoving}";
@@ -444,7 +444,7 @@ public class ClosestDistanceExample : ExampleScene
         textFont.DrawTextWrapNone(textMoving, rightRect.ApplyMarginsAbsolute(margin, margin, margin, margin), new(1f, 0.5f));
     }
 
-    private void NextStaticShape(float size = 150f)
+    private void NextStaticShape(float size = 300f)
     {
         switch (staticShape.GetShapeType())
         {
@@ -466,7 +466,7 @@ public class ClosestDistanceExample : ExampleScene
                 break;
         }
     }
-    private void NextMovingShape(Vector2 pos, float size = 150f)
+    private void NextMovingShape(Vector2 pos, float size = 125f)
     {
         switch (movingShape.GetShapeType())
         {

@@ -147,6 +147,7 @@ namespace ShapeEngine.Core.Collision
         public abstract bool ContainsPoint(Vector2 p);
         public abstract CollisionPoint GetClosestCollisionPoint(Vector2 p);
 
+        
         #region Overlap
         public bool Overlap(CollisionObject other)
         {
@@ -176,10 +177,28 @@ namespace ShapeEngine.Core.Collision
 
             return false;
         }
+        public bool Overlap(IShape other)
+        {
+            if (!Enabled) return false;
+
+            switch (other.GetShapeType())
+            {
+                case ShapeType.Circle: return Overlap(other.GetCircleShape());
+                case ShapeType.Segment: return Overlap(other.GetSegmentShape());
+                case ShapeType.Triangle: return Overlap(other.GetTriangleShape());
+                case ShapeType.Quad: return Overlap(other.GetQuadShape());
+                case ShapeType.Rect: return Overlap(other.GetRectShape());
+                case ShapeType.Poly: return Overlap(other.GetPolygonShape());
+                case ShapeType.PolyLine: return Overlap(other.GetPolylineShape());
+            }
+
+            return false;
+        }
+
         public bool Overlap(Segment segment)
         { 
             if (!Enabled) return false;
-
+            
             switch (GetShapeType())
             {
                 case ShapeType.Circle:
@@ -428,6 +447,24 @@ namespace ShapeEngine.Core.Collision
 
             return null;
         }
+        public CollisionPoints? Intersect(IShape other)
+        {
+            if (!Enabled) return null;
+
+            switch (other.GetShapeType())
+            {
+                case ShapeType.Circle: return Intersect(other.GetCircleShape());
+                case ShapeType.Segment: return Intersect(other.GetSegmentShape());
+                case ShapeType.Triangle: return Intersect(other.GetTriangleShape());
+                case ShapeType.Rect: return Intersect(other.GetRectShape());
+                case ShapeType.Quad: return Intersect(other.GetQuadShape());
+                case ShapeType.Poly: return Intersect(other.GetPolygonShape());
+                case ShapeType.PolyLine: return Intersect(other.GetPolylineShape());
+            }
+
+            return null;
+        }
+
         public CollisionPoints? Intersect(Segment segment)
         {
             if (!Enabled) return null;

@@ -543,8 +543,6 @@ namespace ShapeEngine.Core.Shapes
             if (polyline.Count <= 0) return new();
             if (polyline.Count == 1) return GetClosestDistanceTo(polyline[0]);
             if (polyline.Count == 2) return GetClosestDistanceTo(new Segment(polyline[0], polyline[1]));
-            if (polyline.Count == 3) return GetClosestDistanceTo(new Triangle(polyline[0], polyline[1], polyline[2]));
-            if (polyline.Count == 4) return GetClosestDistanceTo(new Quad(polyline[0], polyline[1], polyline[2], polyline[3]));
 
             Vector2 closestPoint = new();
             Vector2 displacement = new();

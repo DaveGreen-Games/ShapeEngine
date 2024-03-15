@@ -181,6 +181,281 @@ namespace ShapeEngine.Core.Shapes
             return new(cp, p);
         }
         
+        public ClosestDistance GetClosestDistanceTo(Segment segment)
+        {
+            if (Count <= 0) return new();
+            if (Count == 1)
+            {
+                var cp = Segment.GetClosestPoint(segment.Start, segment.End, this[0]);
+                return new(this[0], cp);
+            }
+            if (Count == 2) return new Segment(this[0], this[1]).GetClosestDistanceTo(segment);
+            
+            ClosestDistance closestDistance = new(new(), new(), float.PositiveInfinity);
+            
+            for (var i = 0; i < Count - 1; i++)
+            {
+                var p1 = this[i];
+                var p2 = this[(i + 1) % Count];
+                
+                var next = Segment.GetClosestPoint(segment.Start, segment.End, p1);
+                var cd = new ClosestDistance(p1, next);
+                if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
+                
+                next = Segment.GetClosestPoint(segment.Start, segment.End, p2);
+                cd = new ClosestDistance(p2, next);
+                if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
+                
+                next = Segment.GetClosestPoint(p1, p2, segment.Start);
+                cd = new ClosestDistance(next, segment.Start);
+                if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
+                
+                next = Segment.GetClosestPoint(p1, p2, segment.End);
+                cd = new ClosestDistance(next, segment.End);
+                if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
+            }
+            return closestDistance;
+        }
+        public ClosestDistance GetClosestDistanceTo(Circle circle)
+        {
+            if (Count <= 0) return new();
+            if (Count == 1)
+            {
+                var cp = Circle.GetClosestPoint(circle.Center, circle.Radius, this[0]);
+                return new(this[0], cp);
+            }
+            if (Count == 2) return new Segment(this[0], this[1]).GetClosestDistanceTo(circle);
+            
+            Vector2 closestPoint = new();
+            Vector2 displacement = new();
+            float minDisSq = float.PositiveInfinity;
+            
+            for (var i = 0; i < Count - 1; i++)
+            {
+                var p1 = this[i];
+                var p2 = this[(i + 1) % Count];
+                
+                var next = Segment.GetClosestPoint(p1, p2, circle.Center);
+                var w = (next - circle.Center);
+                var disSq = w.LengthSquared();
+                if (disSq < minDisSq)
+                {
+                    minDisSq = disSq;
+                    displacement = w;
+                    closestPoint = next;
+                }
+            }
+
+            var dir = displacement.Normalize();
+            return new(closestPoint, circle.Center + dir * circle.Radius);
+        }
+        public ClosestDistance GetClosestDistanceTo(Triangle triangle)
+        {
+            if (Count <= 0) return new();
+            if (Count == 1)
+            {
+                var cp = Triangle.GetClosestPoint(triangle.A, triangle.B, triangle.C, this[0]);
+                return new(this[0], cp);
+            }
+            if (Count == 2) return new Segment(this[0], this[1]).GetClosestDistanceTo(triangle);
+            
+            ClosestDistance closestDistance = new(new(), new(), float.PositiveInfinity);
+            
+            for (var i = 0; i < Count - 1; i++)
+            {
+                var p1 = this[i];
+                var p2 = this[(i + 1) % Count];
+                
+                var next = Triangle.GetClosestPoint(triangle.A, triangle.B, triangle.C, p1);
+                var cd = new ClosestDistance(p1, next);
+                if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
+                
+                next = Triangle.GetClosestPoint(triangle.A, triangle.B, triangle.C, p2);
+                cd = new ClosestDistance(p2, next);
+                if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
+                
+                next = Segment.GetClosestPoint(p1, p2, triangle.A);
+                cd = new ClosestDistance(next, triangle.A);
+                if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
+                
+                next = Segment.GetClosestPoint(p1, p2, triangle.B);
+                cd = new ClosestDistance(next, triangle.B);
+                if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
+                
+                next = Segment.GetClosestPoint(p1, p2, triangle.C);
+                cd = new ClosestDistance( next, triangle.C);
+                if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
+            }
+            return closestDistance;
+        }
+        public ClosestDistance GetClosestDistanceTo(Quad quad)
+        {
+            if (Count <= 0) return new();
+            if (Count == 1)
+            {
+                var cp = Quad.GetClosestPoint(quad.A, quad.B, quad.C, quad.D, this[0]);
+                return new(this[0], cp);
+            }
+            if (Count == 2) return new Segment(this[0], this[1]).GetClosestDistanceTo(quad);
+            
+            ClosestDistance closestDistance = new(new(), new(), float.PositiveInfinity);
+            
+            for (var i = 0; i < Count - 1; i++)
+            {
+                var p1 = this[i];
+                var p2 = this[(i + 1) % Count];
+                
+                var next = Quad.GetClosestPoint(quad.A, quad.B, quad.C, quad.D, p1);
+                var cd = new ClosestDistance(p1, next);
+                if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
+                
+                next = Quad.GetClosestPoint(quad.A, quad.B, quad.C, quad.D, p2);
+                cd = new ClosestDistance(p2, next);
+                if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
+                
+                next = Segment.GetClosestPoint(p1, p2, quad.A);
+                cd = new ClosestDistance(next, quad.A);
+                if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
+                
+                next = Segment.GetClosestPoint(p1, p2, quad.B);
+                cd = new ClosestDistance(next, quad.B);
+                if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
+                
+                next = Segment.GetClosestPoint(p1, p2, quad.C);
+                cd = new ClosestDistance(next, quad.C);
+                if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
+                
+                next = Segment.GetClosestPoint(p1, p2, quad.D);
+                cd = new ClosestDistance(next, quad.D);
+                if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
+            }
+            return closestDistance;
+        }
+        public ClosestDistance GetClosestDistanceTo(Rect rect)
+        {
+            if (Count <= 0) return new();
+            if (Count == 1)
+            {
+                var cp = Quad.GetClosestPoint(rect.A, rect.B, rect.C, rect.D, this[0]);
+                return new(this[0], cp);
+            }
+            if (Count == 2) return new Segment(this[0], this[1]).GetClosestDistanceTo(rect);
+            
+            ClosestDistance closestDistance = new(new(), new(), float.PositiveInfinity);
+            
+            for (var i = 0; i < Count - 1; i++)
+            {
+                var p1 = this[i];
+                var p2 = this[(i + 1) % Count];
+                
+                var next = Quad.GetClosestPoint(rect.A, rect.B, rect.C, rect.D, p1);
+                var cd = new ClosestDistance(p1, next);
+                if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
+                
+                next = Quad.GetClosestPoint(rect.A, rect.B, rect.C, rect.D, p2);
+                cd = new ClosestDistance(p2, next);
+                if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
+                
+                next = Segment.GetClosestPoint(p1, p2, rect.A);
+                cd = new ClosestDistance(next, rect.A);
+                if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
+                
+                next = Segment.GetClosestPoint(p1, p2, rect.B);
+                cd = new ClosestDistance(next, rect.B);
+                if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
+                
+                next = Segment.GetClosestPoint(p1, p2, rect.C);
+                cd = new ClosestDistance(next, rect.C);
+                if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
+                
+                next = Segment.GetClosestPoint(p1, p2, rect.D);
+                cd = new ClosestDistance(next, rect.D);
+                if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
+            }
+            return closestDistance;
+        }
+        public ClosestDistance GetClosestDistanceTo(Polygon polygon)
+        {
+            if (Count <= 0 || polygon.Count <= 0) return new();
+            if (Count == 1) return polygon.GetClosestDistanceTo(this[0]).ReversePoints();
+            if (Count == 2) return new Segment(this[0], this[1]).GetClosestDistanceTo(polygon);
+            if (polygon.Count == 1) return GetClosestDistanceTo(polygon[0]);
+            if (polygon.Count == 2) return GetClosestDistanceTo(new Segment(polygon[0], polygon[1]));
+            if (polygon.Count == 3) return GetClosestDistanceTo(new Triangle(polygon[0], polygon[1], polygon[2]));
+            if (polygon.Count == 4) return GetClosestDistanceTo(new Quad(polygon[0], polygon[1], polygon[2], polygon[3]));
+            
+            ClosestDistance closestDistance = new(new(), new(), float.PositiveInfinity);
+            
+            for (var i = 0; i < Count - 1; i++)
+            {
+                var self1 = this[i];
+                var self2 = this[(i + 1) % Count];
+
+                for (var j = 0; j < polygon.Count; j++)
+                {
+                    var other1 = polygon[j];
+                    var other2 = polygon[(j + 1) % polygon.Count];
+
+                    var next = Segment.GetClosestPoint(self1, self2, other1);
+                    var cd = new ClosestDistance(next, other1);
+                    if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
+                    
+                    next = Segment.GetClosestPoint(self1, self2, other2);
+                    cd = new ClosestDistance(next, other2);
+                    if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
+                    
+                    next = Segment.GetClosestPoint(other1, other2, self1);
+                    cd = new ClosestDistance(self1, next);
+                    if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
+                    
+                    next = Segment.GetClosestPoint(other1, other2, self2);
+                    cd = new ClosestDistance(self2, next);
+                    if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
+                }
+            }
+            return closestDistance;
+        }
+        public ClosestDistance GetClosestDistanceTo(Polyline polyline)
+        {
+            if (Count <= 0 || polyline.Count <= 0) return new();
+            if (Count == 1) return polyline.GetClosestDistanceTo(this[0]).ReversePoints();
+            if (Count == 2) return new Segment(this[0], this[1]).GetClosestDistanceTo(polyline);
+            if (polyline.Count == 1) return GetClosestDistanceTo(polyline[0]);
+            if (polyline.Count == 2) return GetClosestDistanceTo(new Segment(polyline[0], polyline[1]));
+            
+            ClosestDistance closestDistance = new(new(), new(), float.PositiveInfinity);
+            
+            for (var i = 0; i < Count - 1; i++)
+            {
+                var self1 = this[i];
+                var self2 = this[(i + 1) % Count];
+
+                for (var j = 0; j < polyline.Count - 1; j++)
+                {
+                    var other1 = polyline[j];
+                    var other2 = polyline[(j + 1) % polyline.Count];
+
+                    var next = Segment.GetClosestPoint(self1, self2, other1);
+                    var cd = new ClosestDistance(next, other1);
+                    if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
+                    
+                    next = Segment.GetClosestPoint(self1, self2, other2);
+                    cd = new ClosestDistance(next, other2);
+                    if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
+                    
+                    next = Segment.GetClosestPoint(other1, other2, self1);
+                    cd = new ClosestDistance(self1, next);
+                    if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
+                    
+                    next = Segment.GetClosestPoint(other1, other2, self2);
+                    cd = new ClosestDistance(self2, next);
+                    if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
+                }
+            }
+            return closestDistance;
+        }
+        
+        
         public int GetClosestIndexOnEdge(Vector2 p)
         {
             if (Count <= 0) return -1;

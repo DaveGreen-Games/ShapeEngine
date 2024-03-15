@@ -66,4 +66,6 @@ public struct ClosestDistance
         B = b;
         DistanceSquared = distanceSquared;
     }
+
+    public ClosestDistance ReversePoints() => new (B, A);
 }
