@@ -969,7 +969,7 @@ public readonly struct Quad : IEquatable<Quad>
         if (d < minD) return 3;
         return closestIndex;
     }
-    public ClosestPoint GetClosestPoint(Vector2 p)
+    internal ClosestPoint GetClosestPoint(Vector2 p)
     {
         var closest = GetClosestCollisionPoint(p);
         return new(closest, (closest.Point - p).Length());

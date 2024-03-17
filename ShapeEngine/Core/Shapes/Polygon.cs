@@ -1,5 +1,6 @@
 ﻿
 using System.Numerics;
+using Clipper2Lib;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
@@ -527,6 +528,49 @@ namespace ShapeEngine.Core.Shapes
         
         #region Clipping
 
+        public void UnionSelf(Polygon b, FillRule fillRule = FillRule.NonZero)
+        {
+            var result = Clipper.Union(this.ToClipperPaths(), b.ToClipperPaths(), fillRule);
+            if (result.Count > 0)
+            {
+                this.Clear();
+                foreach (var p in result[0])
+                {
+                    this.Add(p.ToVec2());
+                }
+            }
+            
+
+        }
+        
+        public bool MergeSelf(Polygon other, float distanceThreshold)
+        {
+            var cd = GetClosestDistanceTo(other);
+            if (cd.DistanceSquared < distanceThreshold * distanceThreshold)
+            {
+                var fillShape = Polygon.Generate(cd.A, 7, distanceThreshold, distanceThreshold * 2);
+                UnionSelf(fillShape, FillRule.NonZero);
+                UnionSelf(other, FillRule.NonZero);
+            }
+
+            return false;
+        }
+        public Polygon? Merge(Polygon other, float distanceThreshold)
+        {
+            var cd = GetClosestDistanceTo(other);
+            if (cd.DistanceSquared < distanceThreshold * distanceThreshold)
+            {
+                var fillShape = Polygon.Generate(cd.A, 7, distanceThreshold, distanceThreshold * 2);
+                var result = ShapeClipper.Union(this, fillShape, FillRule.NonZero);
+                if (result.Count > 0)
+                {
+                    result = ShapeClipper.Union(result[0].ToPolygon(), other, FillRule.NonZero);
+                    if (result.Count > 0) return result[0].ToPolygon();
+                }
+            }
+
+            return null;
+        }
         public (Polygons newShapes, Polygons cutOuts) Cut(Polygon cutShape)
         {
             var cutOuts = ShapeClipper.Intersect(this, cutShape).ToPolygons(true);
@@ -540,6 +584,8 @@ namespace ShapeEngine.Core.Shapes
             var newShapes = ShapeClipper.DifferenceMany(this, cutShapes).ToPolygons(true);
             return (newShapes, cutOuts);
         }
+
+        
         public (Polygons newShapes, Polygons overlaps) Combine(Polygon other)
         {
             var overlaps = ShapeClipper.Intersect(this, other).ToPolygons(true);
@@ -1249,7 +1295,7 @@ namespace ShapeEngine.Core.Shapes
             }
             return closestIndex;
         }
-        public ClosestPoint GetClosestPoint(Vector2 p)
+        internal ClosestPoint GetClosestPoint(Vector2 p)
         {
             var cp = GetEdges().GetClosestCollisionPoint(p);
             return new(cp, (cp.Point - p).Length());

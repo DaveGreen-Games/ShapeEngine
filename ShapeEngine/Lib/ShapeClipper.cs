@@ -8,6 +8,7 @@ namespace ShapeEngine.Lib
     public class Polygons : List<Polygon>
     {
         public Polygons() { }
+        public Polygons(int capacity) : base(capacity) { }
         public Polygons(params Polygon[] polygons) { AddRange(polygons); }
         public Polygons(IEnumerable<Polygon> polygons) { AddRange(polygons); }
     }
@@ -43,6 +44,21 @@ namespace ShapeEngine.Lib
             return Clipper.Union(a.ToClipperPaths(), other.ToClipperPaths(), fillRule);
         }
         public static PathsD Union(this Polygon a, Polygon b, FillRule fillRule = FillRule.NonZero) { return Clipper.Union(ToClipperPaths(a), ToClipperPaths(b), fillRule); }
+
+        // public static void UnionSelf(Polygon a, Polygon b, FillRule fillRule = FillRule.NonZero)
+        // {
+        //     var result = Clipper.Union(ToClipperPaths(a), ToClipperPaths(b), fillRule);
+        //     if (result.Count > 0)
+        //     {
+        //         a.Clear();
+        //         foreach (var p in result[0])
+        //         {
+        //             a.Add(p.ToVec2());
+        //         }
+        //     }
+        //     
+        //
+        // }
         
         public static PathsD Intersect(this Polygon subject, Polygon clip, FillRule fillRule = FillRule.NonZero, int precision = 2)
         {
@@ -71,6 +87,7 @@ namespace ShapeEngine.Lib
         {
             return Clipper.Difference(ToClipperPaths(subject), ToClipperPaths(clip), fillRule, precision);
         }
+        
         public static PathsD Difference(this Polygon clip, Polygons subjects, FillRule fillRule = FillRule.NonZero, int precision = 2)
         {
             var result = new PathsD();
@@ -89,6 +106,7 @@ namespace ShapeEngine.Lib
             }
             return cur;
         }
+        
 
         
         public static bool IsHole(this PathD path) { return !Clipper.IsPositive(path); }

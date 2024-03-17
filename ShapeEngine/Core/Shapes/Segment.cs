@@ -857,7 +857,6 @@ namespace ShapeEngine.Core.Shapes
             }
             return closestDistance;
         }
-        
         public ClosestDistance GetClosestDistanceTo(Polyline polyline)
         {
             if (polyline.Count <= 0) return new();
@@ -899,7 +898,6 @@ namespace ShapeEngine.Core.Shapes
             return disSqA <= disSqB ? Start : End;
         }
         
-        //remove
         public CollisionPoint GetClosestCollisionPoint(Vector2 p)
         {
             CollisionPoint c;
@@ -912,8 +910,7 @@ namespace ShapeEngine.Core.Shapes
             return c;
         }
         
-        //remove
-        public ClosestPoint GetClosestPoint(Vector2 p)
+        internal ClosestPoint GetClosestPoint(Vector2 p)
         {
             var cp = GetClosestCollisionPoint(p);
             return new(cp, (cp.Point - p).Length());

@@ -997,7 +997,7 @@ namespace ShapeEngine.Core.Shapes
             return closest;
         }
 
-        public ClosestPoint GetClosestPoint(Vector2 p)
+        internal ClosestPoint GetClosestPoint(Vector2 p)
         {
             var cp = GetClosestCollisionPoint(p);
             return new(cp, (cp.Point - p).Length());
