@@ -40,7 +40,7 @@ public class Triangulation : ShapeList<Triangle>
         float minDisSquared = float.PositiveInfinity;
         Triangle closestTriangle = new();
         var contained = false;
-        CollisionPoint closestTrianglePoint = new();
+        Vector2 closestTrianglePoint = new();
 
         for (var i = 0; i < Count; i++)
         {
@@ -54,7 +54,7 @@ public class Triangulation : ShapeList<Triangle>
                 {
                     minDisSquared = disSquared;
                     closestTriangle = tri;
-                    closestTrianglePoint = closestPoint;
+                    closestTrianglePoint = closestPoint.Point;
                     if (containsPoint) contained = true;
                 }
             }
@@ -65,11 +65,11 @@ public class Triangulation : ShapeList<Triangle>
                     contained = true;
                     minDisSquared = disSquared;
                     closestTriangle = tri;
-                    closestTrianglePoint = closestPoint;
+                    closestTrianglePoint = closestPoint.Point;
                 }
             }
         }
-        return new(closestTriangle, closestTrianglePoint, minDisSquared);
+        return new(closestTriangle, closestTrianglePoint, p);
     }
         
     public Points GetUniquePoints()

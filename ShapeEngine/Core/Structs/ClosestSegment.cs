@@ -5,28 +5,23 @@ namespace ShapeEngine.Core.Structs;
 public readonly struct ClosestSegment
 {
     public readonly Segment Segment;
-    public readonly ClosestPoint Point;
-    public readonly bool Valid => Point.Valid;
+    public readonly ClosestDistance ClosestDistance;
+    public readonly bool Valid => ClosestDistance.Valid;
     public ClosestSegment()
     {
         Segment = new();
-        Point = new();
+        ClosestDistance = new();
     }
 
-    public ClosestSegment(Segment segment, CollisionPoint point, float distance)
+    public ClosestSegment(Segment segment, ClosestDistance closestDistance)
     {
         Segment = segment;
-        Point = new(point, distance);
+        ClosestDistance = closestDistance;
     }
-    public ClosestSegment(Segment segment, Vector2 point, Vector2 normal, float distance)
+    public ClosestSegment(Segment segment, Vector2 segmentPoint, Vector2 point)
     {
         Segment = segment;
-        Point = new(point, normal, distance);
-            
-    }
-    public ClosestSegment(Segment segment, Vector2 point, float distance)
-    {
-        Segment = segment;
-        Point = new(point, segment.Normal, distance);
+        ClosestDistance = new(segmentPoint, point);
+
     }
 }

@@ -980,6 +980,7 @@ namespace ShapeEngine.Core.Shapes
                 cd = new ClosestDistance(next, segment.End);
                 if (cd.DistanceSquared < closestDistance.DistanceSquared) closestDistance = cd;
             }
+            
             return closestDistance;
         }
         public ClosestDistance GetClosestDistanceTo(Circle circle)
@@ -1295,13 +1296,37 @@ namespace ShapeEngine.Core.Shapes
             }
             return closestIndex;
         }
-        internal ClosestPoint GetClosestPoint(Vector2 p)
-        {
-            var cp = GetEdges().GetClosestCollisionPoint(p);
-            return new(cp, (cp.Point - p).Length());
-        }
+        // internal ClosestPoint GetClosestPoint(Vector2 p)
+        // {
+        //     var cp = GetEdges().GetClosestCollisionPoint(p);
+        //     return new(cp, (cp.Point - p).Length());
+        // }
+        //
         public CollisionPoint GetClosestCollisionPoint(Vector2 p) => GetEdges().GetClosestCollisionPoint(p);
-        public ClosestSegment GetClosestSegment(Vector2 p) => GetEdges().GetClosest(p);
+
+        public ClosestSegment GetClosestSegment(Vector2 p)
+        {
+            if (Count <= 1) return new();
+
+            var closestSegment = new Segment(this[0], this[1]);
+            var closestDistance = closestSegment.GetClosestDistanceTo(p);
+            
+            for (var i = 1; i < Count; i++)
+            {
+                var p1 = this[i];
+                var p2 = this[(i + 1) % Count];
+                var segment = new Segment(p1, p2);
+                var cd = segment.GetClosestDistanceTo(p);
+                if (cd.DistanceSquared < closestDistance.DistanceSquared)
+                {
+                    closestDistance = cd;
+                    closestSegment = segment;
+                }
+
+            }
+
+            return new(closestSegment, closestDistance);
+        }
         #endregion
         
         #region Contains

@@ -18,18 +18,18 @@ public class TriangleCollider : Collider
         this.B = b;
         this.C = c;
     }
-
-    public override bool ContainsPoint(Vector2 p)
-    {
-        var t = GetRectShape();
-        return t.ContainsPoint(p);
-    }
     public override Rect GetBoundingBox() => GetTriangleShape().GetBoundingBox();
-    public override CollisionPoint GetClosestCollisionPoint(Vector2 p)
-    {
-        var t = GetTriangleShape();
-        return t.GetClosestCollisionPoint(p);
-    }
+    // public override bool ContainsPoint(Vector2 p)
+    // {
+    //     var t = GetRectShape();
+    //     return t.ContainsPoint(p);
+    // }
+    //
+    // public override CollisionPoint GetClosestCollisionPoint(Vector2 p)
+    // {
+    //     var t = GetTriangleShape();
+    //     return t.GetClosestCollisionPoint(p);
+    // }
     public override ShapeType GetShapeType() => ShapeType.Triangle;
     public override Triangle GetTriangleShape()
     {

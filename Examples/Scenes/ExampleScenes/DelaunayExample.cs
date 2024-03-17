@@ -91,11 +91,11 @@ namespace Examples.Scenes.ExampleScenes
             closePointIndex = -1;
             closeTriangleIndex = -1;
 
-            var result = points.GetClosest(mousePosGame);
+            var result = points.GetClosestDistanceTo(mousePosGame);
             if(result.Valid && result.DistanceSquared <= pointDistanceSquared)
             {
                 //rmb deletes point
-                closePointIndex = points.IndexOf(result.Closest.Point);
+                closePointIndex = points.IndexOf(result.A);
             }
             else
             {

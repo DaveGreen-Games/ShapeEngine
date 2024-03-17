@@ -21,17 +21,17 @@ public class PolyLineCollider : Collider
     }
     
     public override Rect GetBoundingBox() => GetPolygonShape().GetBoundingBox();
-    public override bool ContainsPoint(Vector2 p)
-    {
-        var poly = GetPolygonShape();
-        return poly.ContainsPoint(p);
-    }
-
-    public override CollisionPoint GetClosestCollisionPoint(Vector2 p)
-    {
-        var poly = GetPolygonShape();
-        return poly.GetClosestCollisionPoint(p);
-    }
+    // public override bool ContainsPoint(Vector2 p)
+    // {
+    //     var poly = GetPolygonShape();
+    //     return poly.ContainsPoint(p);
+    // }
+    //
+    // public override CollisionPoint GetClosestCollisionPoint(Vector2 p)
+    // {
+    //     var poly = GetPolygonShape();
+    //     return poly.GetClosestCollisionPoint(p);
+    // }
     public override ShapeType GetShapeType() => ShapeType.PolyLine;
     public override Polyline GetPolylineShape()=> GeneratePolylineShape();
 

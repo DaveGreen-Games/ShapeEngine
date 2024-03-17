@@ -568,7 +568,6 @@ namespace ShapeEngine.Core.Shapes
             return new(Center + dir * Radius, closestPoint);
         }
         
-        //remove
         public CollisionPoint GetClosestCollisionPoint(Vector2 p) 
         {
             Vector2 normal = (p - Center).Normalize();

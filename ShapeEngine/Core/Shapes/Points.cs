@@ -37,27 +37,48 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
         return GetItem(index);
         //return Count <= 0 ? new() : this[index % Count];
     }
-        
-    public ClosestPoint GetClosest(Vector2 p)
+
+    public ClosestDistance GetClosestDistanceTo(Vector2 p)
     {
         if (Count <= 0) return new();
 
-        float minDisSquared = float.PositiveInfinity;
-        Vector2 closestPoint = new();
+        if (Count == 1) return new(this[0], p);
 
-        for (var i = 0; i < Count; i++)
+
+        var closestPoint = this[0];
+        var minDisSq = (closestPoint - p).LengthSquared();
+
+        for (var i = 1; i < Count; i++)
         {
-            var point = this[i];
-
-            float disSquared = (point - p).LengthSquared();
-            if (disSquared < minDisSquared)
-            {
-                minDisSquared = disSquared;
-                closestPoint = point;
-            }
+            var disSq = (this[i] - p).LengthSquared();
+            if (disSq >= minDisSq) continue;
+            minDisSq = disSq;
+            closestPoint = this[i];
         }
-        return new(closestPoint, (p -closestPoint), MathF.Sqrt(minDisSquared));
+
+        return new(closestPoint, p);
     }
+        
+    // public ClosestPoint GetClosest(Vector2 p)
+    // {
+    //     if (Count <= 0) return new();
+    //
+    //     float minDisSquared = float.PositiveInfinity;
+    //     Vector2 closestPoint = new();
+    //
+    //     for (var i = 0; i < Count; i++)
+    //     {
+    //         var point = this[i];
+    //
+    //         float disSquared = (point - p).LengthSquared();
+    //         if (disSquared < minDisSquared)
+    //         {
+    //             minDisSquared = disSquared;
+    //             closestPoint = point;
+    //         }
+    //     }
+    //     return new(closestPoint, (p -closestPoint), MathF.Sqrt(minDisSquared));
+    // }
     public int GetClosestIndex(Vector2 p)
     {
         if (Count <= 0) return -1;

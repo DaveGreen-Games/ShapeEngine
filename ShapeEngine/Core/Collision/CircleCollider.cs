@@ -14,17 +14,17 @@ public class CircleCollider : Collider
     {
         this.Radius = radius;
     }
-    public override bool ContainsPoint(Vector2 p)
-    {
-        var c = GetCircleShape();
-        return c.ContainsPoint(p);
-    }
-
-    public override CollisionPoint GetClosestCollisionPoint(Vector2 p)
-    {
-        var c = GetCircleShape();
-        return c.GetClosestCollisionPoint(p);
-    }
+    // public override bool ContainsPoint(Vector2 p)
+    // {
+    //     var c = GetCircleShape();
+    //     return c.ContainsPoint(p);
+    // }
+    //
+    // public override CollisionPoint GetClosestCollisionPoint(Vector2 p)
+    // {
+    //     var c = GetCircleShape();
+    //     return c.GetClosestCollisionPoint(p);
+    // }
     public override Rect GetBoundingBox() => GetCircleShape().GetBoundingBox();
     public override ShapeType GetShapeType() => ShapeType.Circle;
     public override Circle GetCircleShape() => new(CurTransform.Position, Radius * CurTransform.Size.Max());

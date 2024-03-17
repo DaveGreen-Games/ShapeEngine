@@ -997,34 +997,35 @@ namespace ShapeEngine.Core.Shapes
             return closest;
         }
 
-        internal ClosestPoint GetClosestPoint(Vector2 p)
-        {
-            var cp = GetClosestCollisionPoint(p);
-            return new(cp, (cp.Point - p).Length());
-        }
+        // internal ClosestPoint GetClosestPoint(Vector2 p)
+        // {
+        //     var cp = GetClosestCollisionPoint(p);
+        //     return new(cp, (cp.Point - p).Length());
+        // }
         public ClosestSegment GetClosestSegment(Vector2 p)
         {
-            var closestSegment = SegmentAToB;
-            var cp = SegmentAToB.GetClosestCollisionPoint(p);
-            float minDisSquared = (cp.Point - p).LengthSquared();
+            var currentSegment = SegmentAToB;
+            var closestSegment = currentSegment;
+            var closestDistance = currentSegment.GetClosestDistanceTo(p);
 
-            var curCP = SegmentBToC.GetClosestCollisionPoint(p);
-            float l = (curCP.Point - p).LengthSquared();
-            if (l < minDisSquared)
+
+            currentSegment = SegmentBToC;
+            var cd = currentSegment.GetClosestDistanceTo(p);
+            if (cd.DistanceSquared < closestDistance.DistanceSquared)
             {
-                minDisSquared = l;
-                closestSegment = SegmentBToC;
-                cp = curCP;
+                closestDistance = cd;
+                closestSegment = currentSegment;
             }
-            curCP = SegmentCToA.GetClosestCollisionPoint(p);
-            l = (curCP.Point - p).LengthSquared();
-            if (l < minDisSquared)
+            
+            currentSegment = SegmentCToA;
+            cd = currentSegment.GetClosestDistanceTo(p);
+            if (cd.DistanceSquared < closestDistance.DistanceSquared)
             {
-                minDisSquared = l;
-                closestSegment = SegmentCToA;
-                cp = curCP;
+                closestDistance = cd;
+                closestSegment = currentSegment;
             }
-            return new(closestSegment, cp, MathF.Sqrt(minDisSquared));
+            
+            return new(closestSegment, closestDistance);
 
         }
         public CollisionPoint GetClosestCollisionPoint(Vector2 p)

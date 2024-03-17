@@ -34,23 +34,39 @@ public class Segments : ShapeList<Segment>
     {
         if (Count <= 0) return new();
 
-        float minDisSquared = float.PositiveInfinity;
-        Segment closestSegment = new();
-        Vector2 closestSegmentPoint = new();
-        for (var i = 0; i < Count; i++)
+
+        var closestSegment = this[0];
+        var closestDistance = closestSegment.GetClosestDistanceTo(p);
+
+        for (int i = 1; i < Count - 1; i++)
         {
-            var seg = this[i];
-            var closestPoint = seg.GetClosestCollisionPoint(p).Point;
-            float disSquared = (closestPoint - p).LengthSquared();
-            if(disSquared < minDisSquared)
+            var segment = this[i];
+            var cd = segment.GetClosestDistanceTo(p);
+            if (cd.DistanceSquared < closestDistance.DistanceSquared)
             {
-                minDisSquared = disSquared;
-                closestSegment = seg;
-                closestSegmentPoint = closestPoint;
+                closestSegment = segment;
+                closestDistance = cd;
             }
         }
 
-        return new(closestSegment, closestSegmentPoint, MathF.Sqrt(minDisSquared));
+        return new(closestSegment, closestDistance);
+        // float minDisSquared = float.PositiveInfinity;
+        // Segment closestSegment = new();
+        // Vector2 closestSegmentPoint = new();
+        // for (var i = 0; i < Count; i++)
+        // {
+        //     var seg = this[i];
+        //     var closestPoint = seg.GetClosestCollisionPoint(p).Point;
+        //     float disSquared = (closestPoint - p).LengthSquared();
+        //     if(disSquared < minDisSquared)
+        //     {
+        //         minDisSquared = disSquared;
+        //         closestSegment = seg;
+        //         closestSegmentPoint = closestPoint;
+        //     }
+        // }
+        //
+        // return new(closestSegment, closestSegmentPoint, MathF.Sqrt(minDisSquared));
     }
     public CollisionPoint GetClosestCollisionPoint(Vector2 p)
     {

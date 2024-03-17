@@ -910,11 +910,11 @@ namespace ShapeEngine.Core.Shapes
             return c;
         }
         
-        internal ClosestPoint GetClosestPoint(Vector2 p)
-        {
-            var cp = GetClosestCollisionPoint(p);
-            return new(cp, (cp.Point - p).Length());
-        }
+        // internal ClosestPoint GetClosestPoint(Vector2 p)
+        // {
+        //     var cp = GetClosestCollisionPoint(p);
+        //     return new(cp, (cp.Point - p).Length());
+        // }
 
         #endregion
         

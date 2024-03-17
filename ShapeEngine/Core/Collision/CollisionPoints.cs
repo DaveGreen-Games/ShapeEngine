@@ -103,26 +103,65 @@ namespace ShapeEngine.Core.Collision
                     this[i] = this[i].FlipNormal();
             }
         }
-        
-        
-        public ClosestPoint GetClosestPoint(Vector2 p)
+
+        public CollisionPoint GetClosestCollisionPoint(Vector2 p)
         {
             if (Count <= 0) return new();
 
-            float minDisSquared = float.PositiveInfinity;
-            CollisionPoint closestPoint = new();
+            if (Count == 1) return this[0];
 
-            for (var i = 0; i < Count; i++)
+
+            var closestPoint = this[0];
+            var minDisSq = (closestPoint.Point - p).LengthSquared();
+
+            for (var i = 1; i < Count; i++)
             {
-                var point = this[i];
-
-                float disSquared = (point.Point - p).LengthSquared();
-                if (disSquared > minDisSquared) continue;
-                minDisSquared = disSquared;
-                closestPoint = point;
+                var disSq = (this[i].Point - p).LengthSquared();
+                if (disSq >= minDisSq) continue;
+                minDisSq = disSq;
+                closestPoint = this[i];
             }
-            return new(closestPoint, minDisSquared);
+
+            return closestPoint;
         }
+        public ClosestDistance GetClosestDistanceTo(Vector2 p)
+        {
+            if (Count <= 0) return new();
+
+            if (Count == 1) return new(this[0].Point, p);
+
+
+            var closestPoint = this[0];
+            var minDisSq = (closestPoint.Point - p).LengthSquared();
+
+            for (var i = 1; i < Count; i++)
+            {
+                var disSq = (this[i].Point - p).LengthSquared();
+                if (disSq >= minDisSq) continue;
+                minDisSq = disSq;
+                closestPoint = this[i];
+            }
+
+            return new(closestPoint.Point, p);
+        }
+        // public ClosestPoint GetClosestPoint(Vector2 p)
+        // {
+        //     if (Count <= 0) return new();
+        //
+        //     float minDisSquared = float.PositiveInfinity;
+        //     CollisionPoint closestPoint = new();
+        //
+        //     for (var i = 0; i < Count; i++)
+        //     {
+        //         var point = this[i];
+        //
+        //         float disSquared = (point.Point - p).LengthSquared();
+        //         if (disSquared > minDisSquared) continue;
+        //         minDisSquared = disSquared;
+        //         closestPoint = point;
+        //     }
+        //     return new(closestPoint, minDisSquared);
+        // }
 
         public override int GetHashCode() { return Game.GetHashCode(this); }
         public bool Equals(CollisionPoints? other)

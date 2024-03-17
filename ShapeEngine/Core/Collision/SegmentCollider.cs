@@ -70,17 +70,17 @@ public class SegmentCollider : Collider
 
     public override Rect GetBoundingBox() => GetSegmentShape().GetBoundingBox();
 
-    public override bool ContainsPoint(Vector2 p)
-    {
-        var s = GetSegmentShape();
-        return s.ContainsPoint(p);
-    }
-
-    public override CollisionPoint GetClosestCollisionPoint(Vector2 p)
-    {
-        var s = GetSegmentShape();
-        return s.GetClosestCollisionPoint(p);
-    }
+    // public override bool ContainsPoint(Vector2 p)
+    // {
+    //     var s = GetSegmentShape();
+    //     return s.ContainsPoint(p);
+    // }
+    //
+    // public override CollisionPoint GetClosestCollisionPoint(Vector2 p)
+    // {
+    //     var s = GetSegmentShape();
+    //     return s.GetClosestCollisionPoint(p);
+    // }
 
     public override ShapeType GetShapeType() => ShapeType.Segment;
     public override Segment GetSegmentShape() => new(Start, End);

@@ -969,11 +969,12 @@ public readonly struct Quad : IEquatable<Quad>
         if (d < minD) return 3;
         return closestIndex;
     }
-    internal ClosestPoint GetClosestPoint(Vector2 p)
-    {
-        var closest = GetClosestCollisionPoint(p);
-        return new(closest, (closest.Point - p).Length());
-    }
+    // internal ClosestPoint GetClosestPoint(Vector2 p)
+    // {
+    //     var closest = GetClosestCollisionPoint(p);
+    //     return new(closest, (closest.Point - p).Length());
+    // }
+    //
     public CollisionPoint GetClosestCollisionPoint(Vector2 p)
     {
         float minD = float.PositiveInfinity;
@@ -1018,38 +1019,39 @@ public readonly struct Quad : IEquatable<Quad>
         float minD = float.PositiveInfinity;
             
         Segment closestSegment = new();
-        CollisionPoint closestPoint = new();
-        var c = SegmentAToB.GetClosestPoint(p);
-        if (c.Distance < minD)
+        // CollisionPoint closestPoint = new();
+        var c = Segment.GetClosestPoint(A, B, p); // SegmentAToB.GetClosestPoint(p);
+        var disSq = (c - p).LengthSquared();
+        if (disSq < minD)
         {
             closestSegment = SegmentAToB;
-            closestPoint = c.Closest;
-            minD = c.Distance;
+            minD = disSq;
         }
         
-        c = SegmentBToC.GetClosestPoint(p);
-        if (c.Distance < minD)
+        c =  Segment.GetClosestPoint(B, C, p);
+        disSq = (c - p).LengthSquared();
+        if (disSq < minD)
         {
             closestSegment = SegmentBToC;
-            closestPoint = c.Closest;
-            minD = c.Distance;
+            minD = disSq;
         }
         
-        c = SegmentCToD.GetClosestPoint(p);
-        if (c.Distance < minD)
+        c =  Segment.GetClosestPoint(C, D, p);
+        disSq = (c - p).LengthSquared();
+        if (disSq < minD)
         {
             closestSegment = SegmentCToD;
-            closestPoint = c.Closest;
-            minD = c.Distance;
+            minD = disSq;
         }
-        c = SegmentDToA.GetClosestPoint(p);
-        if (c.Distance < minD)
+        c =  Segment.GetClosestPoint(D, A, p);
+        disSq = (c - p).LengthSquared();
+        if (disSq < minD)
         {
             closestSegment = SegmentDToA;
-            closestPoint = c.Closest;
-            minD = c.Distance;
+            minD = disSq;
         }
-        return new(closestSegment, closestPoint, minD);
+        
+        return new(closestSegment, c, p);
     }
     
     #endregion

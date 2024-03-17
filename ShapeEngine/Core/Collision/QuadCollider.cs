@@ -20,9 +20,9 @@ public class QuadCollider : Collider
         this.Size = size;
         this.Alignement = alignement;
     }
-    public override bool ContainsPoint(Vector2 p) => GetQuadShape().ContainsPoint(p);
+    // public override bool ContainsPoint(Vector2 p) => GetQuadShape().ContainsPoint(p);
+    // public override CollisionPoint GetClosestCollisionPoint(Vector2 p) => GetQuadShape().GetClosestCollisionPoint(p);
     public override Rect GetBoundingBox() => GetQuadShape().GetBoundingBox();
-    public override CollisionPoint GetClosestCollisionPoint(Vector2 p) => GetQuadShape().GetClosestCollisionPoint(p);
     public override ShapeType GetShapeType() => ShapeType.Quad;
     public override Quad GetQuadShape() => new Quad(CurTransform.Position, Size * CurTransform.Size,CurTransform.RotationRad, Alignement);
 }
