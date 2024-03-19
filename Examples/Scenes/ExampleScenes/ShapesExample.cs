@@ -13,17 +13,26 @@ namespace Examples.Scenes.ExampleScenes;
 
 
 
-public class ClosestDistanceExample : ExampleScene
+public class ShapesExample : ExampleScene
 {
     private const float LineThickness = 4f;
-    
+
+    private enum ShapeMode
+    {
+        Overlap = 0,
+        Intersection = 1,
+        ClosestDistance = 2
+    }
     private abstract class Shape
     {
         public abstract void Move(Vector2 newPosition);
         public abstract void Draw(ColorRgba color);
         public abstract ShapeType GetShapeType();
         public abstract ClosestDistance GetClosestDistanceTo(Shape shape);
+        public abstract bool OverlapWith(Shape shape);
+        public abstract CollisionPoints? IntersectWith(Shape shape);
 
+        
         public string GetName()
         {
             switch (GetShapeType())
@@ -67,6 +76,14 @@ public class ClosestDistanceExample : ExampleScene
         {
             return new();
         }
+        public override bool OverlapWith(Shape shape)
+        {
+            return false;
+        }
+        public override CollisionPoints? IntersectWith(Shape shape)
+        {
+            return null;
+        }
     }
     private class SegmentShape : Shape
     {
@@ -107,6 +124,30 @@ public class ClosestDistanceExample : ExampleScene
             if (shape is PolylineShape polylineShape) return Segment.GetClosestDistanceTo(polylineShape.Polyline);
             return new();
         }
+        public override bool OverlapWith(Shape shape)
+        {
+            if (shape is PointShape pointShape) return Segment.ContainsPoint(pointShape.Position);
+            if (shape is SegmentShape segmentShape) return Segment.OverlapShape(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Segment.OverlapShape(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Segment.OverlapShape(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Segment.OverlapShape(quadShape.Quad);
+            if (shape is RectShape rectShape) return Segment.OverlapShape(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Segment.OverlapShape(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Segment.OverlapShape(polylineShape.Polyline);
+            return new();
+        }
+        public override CollisionPoints? IntersectWith(Shape shape)
+        {
+            if (shape is PointShape pointShape) return null;
+            if (shape is SegmentShape segmentShape) return Segment.IntersectShape(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Segment.IntersectShape(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Segment.IntersectShape(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Segment.IntersectShape(quadShape.Quad);
+            if (shape is RectShape rectShape) return Segment.IntersectShape(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Segment.IntersectShape(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Segment.IntersectShape(polylineShape.Polyline);
+            return new();
+        }
     }
     private class CircleShape : Shape
     {
@@ -137,6 +178,30 @@ public class ClosestDistanceExample : ExampleScene
             if (shape is RectShape rectShape) return Circle.GetClosestDistanceTo(rectShape.Rect);
             if (shape is PolygonShape polygonShape) return Circle.GetClosestDistanceTo(polygonShape.Polygon);
             if (shape is PolylineShape polylineShape) return Circle.GetClosestDistanceTo(polylineShape.Polyline);
+            return new();
+        }
+        public override bool OverlapWith(Shape shape)
+        {
+            if (shape is PointShape pointShape) return Circle.ContainsPoint(pointShape.Position);
+            if (shape is SegmentShape segmentShape) return Circle.OverlapShape(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Circle.OverlapShape(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Circle.OverlapShape(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Circle.OverlapShape(quadShape.Quad);
+            if (shape is RectShape rectShape) return Circle.OverlapShape(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Circle.OverlapShape(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Circle.OverlapShape(polylineShape.Polyline);
+            return new();
+        }
+        public override CollisionPoints? IntersectWith(Shape shape)
+        {
+            if (shape is PointShape pointShape) return null;
+            if (shape is SegmentShape segmentShape) return Circle.IntersectShape(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Circle.IntersectShape(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Circle.IntersectShape(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Circle.IntersectShape(quadShape.Quad);
+            if (shape is RectShape rectShape) return Circle.IntersectShape(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Circle.IntersectShape(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Circle.IntersectShape(polylineShape.Polyline);
             return new();
         }
     }
@@ -181,6 +246,31 @@ public class ClosestDistanceExample : ExampleScene
             if (shape is PolylineShape polylineShape) return Triangle.GetClosestDistanceTo(polylineShape.Polyline);
             return new();
         }
+        
+        public override bool OverlapWith(Shape shape)
+        {
+            if (shape is PointShape pointShape) return Triangle.ContainsPoint(pointShape.Position);
+            if (shape is SegmentShape segmentShape) return Triangle.OverlapShape(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Triangle.OverlapShape(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Triangle.OverlapShape(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Triangle.OverlapShape(quadShape.Quad);
+            if (shape is RectShape rectShape) return Triangle.OverlapShape(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Triangle.OverlapShape(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Triangle.OverlapShape(polylineShape.Polyline);
+            return new();
+        }
+        public override CollisionPoints? IntersectWith(Shape shape)
+        {
+            if (shape is PointShape pointShape) return null;
+            if (shape is SegmentShape segmentShape) return Triangle.IntersectShape(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Triangle.IntersectShape(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Triangle.IntersectShape(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Triangle.IntersectShape(quadShape.Quad);
+            if (shape is RectShape rectShape) return Triangle.IntersectShape(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Triangle.IntersectShape(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Triangle.IntersectShape(polylineShape.Polyline);
+            return new();
+        }
     }
     private class QuadShape : Shape
     {
@@ -214,6 +304,32 @@ public class ClosestDistanceExample : ExampleScene
             if (shape is PolylineShape polylineShape) return Quad.GetClosestDistanceTo(polylineShape.Polyline);
             return new();
         }
+        
+        public override bool OverlapWith(Shape shape)
+        {
+            if (shape is PointShape pointShape) return Quad.ContainsPoint(pointShape.Position);
+            if (shape is SegmentShape segmentShape) return Quad.OverlapShape(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Quad.OverlapShape(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Quad.OverlapShape(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Quad.OverlapShape(quadShape.Quad);
+            if (shape is RectShape rectShape) return Quad.OverlapShape(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Quad.OverlapShape(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Quad.OverlapShape(polylineShape.Polyline);
+            return new();
+        }
+        public override CollisionPoints? IntersectWith(Shape shape)
+        {
+            if (shape is PointShape pointShape) return null;
+            if (shape is SegmentShape segmentShape) return Quad.IntersectShape(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Quad.IntersectShape(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Quad.IntersectShape(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Quad.IntersectShape(quadShape.Quad);
+            if (shape is RectShape rectShape) return Quad.IntersectShape(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Quad.IntersectShape(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Quad.IntersectShape(polylineShape.Polyline);
+            return new();
+        }
+        
     }
     private class RectShape : Shape
     {
@@ -248,6 +364,32 @@ public class ClosestDistanceExample : ExampleScene
             if (shape is PolylineShape polylineShape) return Rect.GetClosestDistanceTo(polylineShape.Polyline);
             return new();
         }
+        
+        public override bool OverlapWith(Shape shape)
+        {
+            if (shape is PointShape pointShape) return Rect.ContainsPoint(pointShape.Position);
+            if (shape is SegmentShape segmentShape) return Rect.OverlapShape(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Rect.OverlapShape(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Rect.OverlapShape(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Rect.OverlapShape(quadShape.Quad);
+            if (shape is RectShape rectShape) return Rect.OverlapShape(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Rect.OverlapShape(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Rect.OverlapShape(polylineShape.Polyline);
+            return new();
+        }
+        public override CollisionPoints? IntersectWith(Shape shape)
+        {
+            if (shape is PointShape pointShape) return null;
+            if (shape is SegmentShape segmentShape) return Rect.IntersectShape(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Rect.IntersectShape(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Rect.IntersectShape(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Rect.IntersectShape(quadShape.Quad);
+            if (shape is RectShape rectShape) return Rect.IntersectShape(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Rect.IntersectShape(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Rect.IntersectShape(polylineShape.Polyline);
+            return new();
+        }
+
     }
     private class PolygonShape : Shape
     {
@@ -285,6 +427,32 @@ public class ClosestDistanceExample : ExampleScene
             if (shape is PolylineShape polylineShape) return Polygon.GetClosestDistanceTo(polylineShape.Polyline);
             return new();
         }
+        
+        public override bool OverlapWith(Shape shape)
+        {
+            if (shape is PointShape pointShape) return Polygon.ContainsPoint(pointShape.Position);
+            if (shape is SegmentShape segmentShape) return Polygon.OverlapShape(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Polygon.OverlapShape(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Polygon.OverlapShape(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Polygon.OverlapShape(quadShape.Quad);
+            if (shape is RectShape rectShape) return Polygon.OverlapShape(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Polygon.OverlapShape(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Polygon.OverlapShape(polylineShape.Polyline);
+            return new();
+        }
+        public override CollisionPoints? IntersectWith(Shape shape)
+        {
+            if (shape is PointShape pointShape) return null;
+            if (shape is SegmentShape segmentShape) return Polygon.IntersectShape(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Polygon.IntersectShape(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Polygon.IntersectShape(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Polygon.IntersectShape(quadShape.Quad);
+            if (shape is RectShape rectShape) return Polygon.IntersectShape(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Polygon.IntersectShape(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Polygon.IntersectShape(polylineShape.Polyline);
+            return new();
+        }
+
     }
     private class PolylineShape : Shape
     {
@@ -327,20 +495,47 @@ public class ClosestDistanceExample : ExampleScene
             if (shape is PolylineShape polylineShape) return Polyline.GetClosestDistanceTo(polylineShape.Polyline);
             return new();
         }
+        
+        public override bool OverlapWith(Shape shape)
+        {
+            if (shape is PointShape pointShape) return Polyline.ContainsPoint(pointShape.Position);
+            if (shape is SegmentShape segmentShape) return Polyline.OverlapShape(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Polyline.OverlapShape(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Polyline.OverlapShape(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Polyline.OverlapShape(quadShape.Quad);
+            if (shape is RectShape rectShape) return Polyline.OverlapShape(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Polyline.OverlapShape(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Polyline.OverlapShape(polylineShape.Polyline);
+            return new();
+        }
+        public override CollisionPoints? IntersectWith(Shape shape)
+        {
+            if (shape is PointShape pointShape) return null;
+            if (shape is SegmentShape segmentShape) return Polyline.IntersectShape(segmentShape.Segment);
+            if (shape is CircleShape circleShape) return Polyline.IntersectShape(circleShape.Circle);
+            if (shape is TriangleShape triangleShape) return Polyline.IntersectShape(triangleShape.Triangle);
+            if (shape is QuadShape quadShape) return Polyline.IntersectShape(quadShape.Quad);
+            if (shape is RectShape rectShape) return Polyline.IntersectShape(rectShape.Rect);
+            if (shape is PolygonShape polygonShape) return Polyline.IntersectShape(polygonShape.Polygon);
+            if (shape is PolylineShape polylineShape) return Polyline.IntersectShape(polylineShape.Polyline);
+            return new();
+        }
+
     }
     
     
     private InputAction nextStaticShape;
     private InputAction nextMovingShape;
+    private InputAction changeMode;
     // private InputAction changeOffset;
 
     private Shape staticShape;
     private Shape movingShape;
-
+    private ShapeMode shapeMode = ShapeMode.Overlap;
     
-    public ClosestDistanceExample()
+    public ShapesExample()
     {
-        Title = "Closest Distance Example";
+        Title = "Shapes Example";
 
         var nextStaticShapeMb = new InputTypeMouseButton(ShapeMouseButton.LEFT);
         var nextStaticShapeGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
@@ -351,6 +546,11 @@ public class ClosestDistanceExample : ExampleScene
         var nextMovingShapeGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_RIGHT);
         var nextMovingShapeKb = new InputTypeKeyboardButton(ShapeKeyboardButton.E);
         nextMovingShape = new(nextMovingShapeMb, nextMovingShapeGp, nextMovingShapeKb);
+        
+        var changeModeMB = new InputTypeMouseButton(ShapeMouseButton.MIDDLE);
+        var changeModeGp = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_LEFT);
+        var changeModeKb = new InputTypeKeyboardButton(ShapeKeyboardButton.TAB);
+        changeMode = new(changeModeMB, changeModeGp, changeModeKb);
         
         // var offsetMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f);
         // var offsetKB = new InputTypeKeyboardButtonAxis(ShapeKeyboardButton.S, ShapeKeyboardButton.W);
@@ -379,6 +579,9 @@ public class ClosestDistanceExample : ExampleScene
         nextMovingShape.Gamepad = gamepad;
         nextMovingShape.Update(dt);
         
+        changeMode.Gamepad = gamepad;
+        changeMode.Update(dt);
+        
         // changeOffset.Gamepad = gamepad;
         // changeOffset.Update(dt);
 
@@ -391,24 +594,80 @@ public class ClosestDistanceExample : ExampleScene
         {
             NextMovingShape(mousePosGame);   
         }
-        movingShape.Move(mousePosGame);
-    }
-    protected override void OnDrawGameExample(ScreenInfo game)
-    {
-        staticShape.Draw(Colors.Highlight.ChangeBrightness(-0.3f));
-        movingShape.Draw(Colors.Warm.ChangeBrightness(-0.3f));
 
-        var closestDistance = staticShape.GetClosestDistanceTo(movingShape);
-        if (closestDistance.DistanceSquared > 0)
+        if (changeMode.State.Pressed)
         {
-            var seg = closestDistance.GetSegment();
-            seg.Draw(LineThickness / 2, Colors.Light);
-            closestDistance.A.Draw(12f, Colors.Highlight);
-            closestDistance.B.Draw(12f, Colors.Warm);
-            
+            switch (shapeMode)
+            {
+                case ShapeMode.Overlap: 
+                    shapeMode = ShapeMode.Intersection;
+                    break;
+                case ShapeMode.Intersection:
+                    shapeMode = ShapeMode.ClosestDistance;
+                    break;
+                case ShapeMode.ClosestDistance:
+                    shapeMode = ShapeMode.Overlap;
+                    break;
+            }
         }
         
+        movingShape.Move(mousePosGame);
+    }
+
+    protected override void OnDrawGameExample(ScreenInfo game)
+    {
         
+
+        if (shapeMode == ShapeMode.Overlap)
+        {
+            bool overlap = staticShape.OverlapWith(movingShape);
+            if (overlap)
+            {
+                staticShape.Draw(Colors.Highlight);
+                movingShape.Draw(Colors.Warm);
+            }
+            else
+            {
+                staticShape.Draw(Colors.Highlight.ChangeBrightness(-0.3f));
+                movingShape.Draw(Colors.Warm.ChangeBrightness(-0.3f));
+            }
+        }
+        else if (shapeMode == ShapeMode.Intersection)
+        {
+            var result = movingShape.IntersectWith(staticShape);
+            if (result == null || result.Count <= 0)
+            {
+                staticShape.Draw(Colors.Highlight.ChangeBrightness(-0.3f));
+                movingShape.Draw(Colors.Warm.ChangeBrightness(-0.3f));
+            }
+            else
+            {
+                staticShape.Draw(Colors.Highlight);
+                movingShape.Draw(Colors.Warm);
+
+                foreach (var cp in result)
+                {
+                    cp.Point.Draw(6f, Colors.Special, 16);
+                    ShapeDrawing.DrawLine(cp.Point, cp.Point + cp.Normal * 30f, 2f, Colors.Special, LineCapType.Capped, 4);
+                }
+            }
+            
+        }
+        else
+        {
+            staticShape.Draw(Colors.Highlight.ChangeBrightness(-0.3f));
+            movingShape.Draw(Colors.Warm.ChangeBrightness(-0.3f));
+            
+            var closestDistance = staticShape.GetClosestDistanceTo(movingShape);
+            if (closestDistance.DistanceSquared > 0)
+            {
+                var seg = closestDistance.GetSegment();
+                seg.Draw(LineThickness / 2, Colors.Light);
+                closestDistance.A.Draw(12f, Colors.Highlight);
+                closestDistance.B.Draw(12f, Colors.Warm);
+            
+            }
+        }
     }
     protected override void OnDrawGameUIExample(ScreenInfo ui)
     {
@@ -417,9 +676,20 @@ public class ClosestDistanceExample : ExampleScene
     protected override void OnDrawUIExample(ScreenInfo ui)
     {
         var curDevice = ShapeInput.CurrentInputDeviceType;
-        var nextStatic = nextStaticShape. GetInputTypeDescription( curDevice, true, 1, false); 
-        var nextMoving = nextMovingShape. GetInputTypeDescription( curDevice, true, 1, false); 
+        var nextStaticText = nextStaticShape. GetInputTypeDescription( curDevice, true, 1, false); 
+        var nextMovingText = nextMovingShape. GetInputTypeDescription( curDevice, true, 1, false); 
+        var changeModeText = changeMode. GetInputTypeDescription( curDevice, true, 1, false); 
         // var offset = changeOffset.GetInputTypeDescription( curDevice , true, 1, false);
+
+        var topCenter = GAMELOOP.UIRects.GetRect("center").ApplyMargins(0,0,0,0.92f);
+        textFont.ColorRgba = Colors.Light;
+        var mode = 
+            shapeMode == ShapeMode.Overlap ? "Overlap" :
+            shapeMode == ShapeMode.Intersection ? "Intersection" : 
+            "Closest Distance";
+        
+        textFont.DrawTextWrapNone($"{changeModeText} Mode: {mode}", topCenter, new(0.5f, 0.5f));
+        
         var bottomCenter = GAMELOOP.UIRects.GetRect("bottom center");
         var hSplit = bottomCenter.SplitH(0.45f, 0.1f, 0.45f);
         var margin = bottomCenter.Height * 0.05f;
@@ -432,9 +702,9 @@ public class ClosestDistanceExample : ExampleScene
         // string infoText = $"Add Point {create} | Remove Point {delete} | Inflate {offset} {MathF.Round(offsetDelta * 100) / 100}";
 
             
-        var textStatic = $"{nextStatic} {staticShape.GetName()}";
+        var textStatic = $"{nextStaticText} {staticShape.GetName()}";
         var textMiddle = " vs ";
-        var textMoving = $"{movingShape.GetName()} {nextMoving}";
+        var textMoving = $"{movingShape.GetName()} {nextMovingText}";
         
         textFont.ColorRgba = Colors.Highlight;
         textFont.DrawTextWrapNone(textStatic, leftRect.ApplyMarginsAbsolute(margin, margin, margin, margin), new(0f, 0.5f));
