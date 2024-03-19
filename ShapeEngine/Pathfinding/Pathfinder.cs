@@ -28,7 +28,7 @@ public class Pathfinder
     // public int DEBUG_PATH_REQUEST_COUNT => pathRequests.Count;
     public Size CellSize { get; private set; }
     public readonly Grid Grid;
-    
+    // public int NodeCount => cells.Count;
     #endregion
 
     #region Private
@@ -1375,12 +1375,12 @@ public class Pathfinder
 
     #region Review if needed
 
-    public List<Rect> GetTraversableRects(int layer)
+    public List<Rect> GetRects(bool traversable = true)
     {
         var rects = new List<Rect>();
         foreach (var cell in cells)
         {
-            if (cell.IsTraversable())
+            if (!traversable || cell.IsTraversable())
             {
                 rects.Add(cell.Rect);
             }
@@ -1388,18 +1388,189 @@ public class Pathfinder
 
         return rects;
     }
-    public List<Rect> GetRects(int minWeight, int maxWeight, int layer)
+    public List<Rect> GetRects(uint layer, int minWeight, int maxWeight)
     {
         var rects = new List<Rect>();
         foreach (var cell in cells)
         {
-            var w = cell.GetWeight();
+            var w = cell.GetWeight(layer);
             if(w >= minWeight && w <= maxWeight) rects.Add(cell.Rect);
         }
 
         return rects;
     }
+    public List<Rect> GetRects(Rect area, bool traversable = true)
+    {
+        cellHelper1.Clear();
+        GetCells(area, ref cellHelper1);
+        var result = new List<Rect>();
+        foreach (var node in cellHelper1)
+        {
+            if (!traversable || node.IsTraversable())
+            {
+                result.Add(node.GetRect());
+            }
+        }
 
+        return result;
+    }
+    public List<Rect> GetRects(Rect area, uint layer, int minWeight, int maxWeight)
+    {
+        cellHelper1.Clear();
+        GetCells(area, ref cellHelper1);
+        var result = new List<Rect>();
+        foreach (var node in cellHelper1)
+        {
+            var w = node.GetWeight(layer);
+            if (w >= minWeight && w <= maxWeight)
+            {
+                result.Add(node.GetRect());
+            }
+        }
+
+        return result;
+    }
 
     #endregion
 }
+
+
+/*
+ //alternative obstacle shape changed system
+ public bool AddObstacle(IPathfinderObstacle obstacle)
+      {
+          List<GridNode>? cellList = null;
+          GenerateObstacleCells(obstacle, ref cellList);
+          
+          if (cellList == null) return false;
+          obstacles.Add(obstacle, cellList);
+          
+          var cellValues = obstacle.GetNodeValues();
+          foreach (var c in cellList)
+          {
+              foreach (var v in cellValues)
+              {
+                  c.ApplyCellValue(v);
+              }
+          }
+
+          obstacle.OnShapeChanged += OnObstacleShapeChanged;
+          return true;
+      }
+      public bool RemoveObstacle(IPathfinderObstacle obstacle)
+      {
+          obstacles.TryGetValue(obstacle, out var cellList);
+          var cellValues = obstacle.GetNodeValues();
+          if (cellList != null)
+          {
+              foreach (var c in cellList)
+              {
+                  foreach (var v in cellValues)
+                  {
+                      c.RemoveCellValue(v);
+                  }
+              }
+          }
+          
+          if (!obstacles.Remove(obstacle)) return false;
+          
+          obstacle.OnShapeChanged -= OnObstacleShapeChanged;
+          return true;
+
+      }
+
+      private bool DoesObstacleOverlapCellRect(IPathfinderObstacle obstacle, Rect rect)
+      {
+          switch (obstacle.GetShapeType())
+          {
+              case ShapeType.Circle: return obstacle.GetCircleShape().OverlapShape(rect);
+              case ShapeType.Segment: return obstacle.GetSegmentShape().OverlapShape(rect);
+              case ShapeType.Triangle: return obstacle.GetTriangleShape().OverlapShape(rect);
+              case ShapeType.Quad: return obstacle.GetQuadShape().OverlapShape(rect);
+              case ShapeType.Rect: return obstacle.GetRectShape().OverlapShape(rect);
+              case ShapeType.Poly: return obstacle.GetPolygonShape().OverlapShape(rect);
+              case ShapeType.PolyLine: return obstacle.GetPolylineShape().OverlapShape(rect);
+          }
+
+          return false;
+      }
+      private void OnObstacleShapeChanged(IPathfinderObstacle obstacle, Rect area)
+      {
+          cellHelper1.Clear();
+          var cellCount = GetCells(area, ref cellHelper1);
+          if (cellCount <= 0) return;
+          
+          
+          obstacles.TryGetValue(obstacle, out var cellList);
+          bool cellListIsEmpty = false;
+          if (cellList == null)
+          {
+              cellList = new(cellCount);
+              obstacles[obstacle] = cellList;
+              cellListIsEmpty = true;
+          }
+          
+          var cellValues = obstacle.GetNodeValues();
+          
+          foreach (var cell in cellHelper1)
+          {
+              var cr = cell.GetRect();
+              var overlaps = DoesObstacleOverlapCellRect(obstacle, cr);
+                  
+              if (!cellListIsEmpty && cellList.Contains(cell))
+              {
+                  if (!overlaps)
+                  {
+                      foreach (var v in cellValues)
+                      {
+                          cell.RemoveCellValue(v);
+                      }
+
+                      cellList.Remove(cell);
+                  }
+              }
+              else
+              {
+                  if (overlaps)
+                  {
+                      foreach (var v in cellValues)
+                      {
+                          cell.ApplyCellValue(v);
+                      }
+
+                      cellList.Add(cell);
+                  }
+              }
+                  
+          }
+
+
+
+          // obstacles.TryGetValue(obstacle, out var cellList);
+          // var cellValues = obstacle.GetNodeValues();
+          // if (cellList != null && cellList.Count > 0)
+          // {
+          //     foreach (var c in cellList)
+          //     {
+          //         foreach (var v in cellValues)
+          //         {
+          //             c.RemoveCellValue(v);
+          //         }
+          //     }
+          // }
+          
+          // GenerateObstacleCells(obstacle, ref cellList);
+          // obstacles[obstacle] = cellList ?? new();
+          // if (cellList != null && cellList.Count > 0)
+          // {
+          //     foreach (var c in cellList)
+          //     {
+          //         foreach (var v in cellValues)
+          //         {
+          //             c.ApplyCellValue(v);
+          //         }
+          //     }
+          // }
+      }
+      
+ */
