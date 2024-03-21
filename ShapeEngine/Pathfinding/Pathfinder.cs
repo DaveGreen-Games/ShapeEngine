@@ -10,39 +10,23 @@ namespace ShapeEngine.Pathfinding;
 public class Pathfinder
 {
 
-    // private static readonly float DiagonalLength = MathF.Sqrt(2f);
     public event Action<Pathfinder>? OnRegenerationRequested;
     public event Action<Pathfinder>? OnCleared;
-    // public event Action<Pathfinder>? OnCleared;
 
     #region Members
 
     #region Public
-
-    // public float RelaxationPower = 1f;
-    // public float KeepPathThreshold = 0f;
-
-    // public int DEBUG_TOUCHED_COUNT { get; private set; } = 0;
-    // public int DEBUG_TOUCHED_UNIQUE_COUNT => closedSet.Count;
-    // public int DEBUG_MAX_OPEN_SET_COUNT { get; private set; } = 0;
-    // public int DEBUG_PATH_REQUEST_COUNT => pathRequests.Count;
     public Size CellSize { get; private set; }
     public readonly Grid Grid;
-    // public int NodeCount => cells.Count;
     #endregion
 
     #region Private
     private Rect bounds;
-    private readonly List<GridNode> cells;
-    private HashSet<GridNode> cellHelper1 = new(1024);
-    private HashSet<GridNode> cellHelper2 = new(1024);
+    private readonly List<GridNode> nodes;
+    private HashSet<GridNode> nodeHelper1 = new(1024);
+    private HashSet<GridNode> nodeHelper2 = new(1024);
     private HashSet<GridNode> resultSet = new(1024);
     
-    // private readonly NodeQueue openSet = new(1024);
-    // private readonly HashSet<Node> openSetCells = new(1024);
-    // private readonly HashSet<Node> closedSet = new(1024);
-    // private readonly Dictionary<Node, Node> cellPath = new(1024);
-
     /// <summary>
     /// How many agent requests are handled each frame
     /// smaller or equal to zero handles all incoming requests
@@ -50,9 +34,7 @@ public class Pathfinder
     public int RequestsPerFrame = 25;
     private readonly List<PathRequest> pathRequests = new(256);
     private readonly Dictionary<IPathfinderAgent, PathRequest?> agents = new(1024);
-
     private readonly Dictionary<IPathfinderObstacle, List<GridNode>> obstacles = new(256);
-    // private readonly Dictionary<Cell, int> affectedCells = new(1024);
     
     #endregion
 
@@ -80,21 +62,21 @@ public class Pathfinder
         this.bounds = bounds;
         Grid = new(cols, rows);
         CellSize = Grid.GetCellSize(bounds);
-        cells = new(Grid.Count + 1);
+        nodes = new(Grid.Count + 1);
         for (var i = 0; i < Grid.Count; i++)
         {
             var coordinates = Grid.IndexToCoordinates(i);
-            var cell = new GridNode(coordinates, this);
-            cells.Add(cell);
+            var node = new GridNode(coordinates, this);
+            nodes.Add(node);
             // GScores.Add(0);
             // FScores.Add(0);
         }
         
         for (var i = 0; i < Grid.Count; i++)
         {
-            var cell = cells[i];
-            var neighbors = GetNeighbors(cell, true);
-            cell.SetNeighbors(neighbors);
+            var node = nodes[i];
+            var neighbors = GetNeighbors(node, true);
+            node.SetNeighbors(neighbors);
         }
         
     }
@@ -113,24 +95,24 @@ public class Pathfinder
         ClearObstacles();
         ClearAgents();
         pathRequests.Clear();
-        ResetCells();
+        ResetNodes();
         ResolveClear();
     }
-    public void ResetCells()
+    public void ResetNodes()
     {
-        foreach (var cell in cells)
+        foreach (var node in nodes)
         {
-            cell.Reset();
+            node.Reset();
         }
     }
-    public void ResetCells(Rect rect)
+    public void ResetNodes(Rect rect)
     {
-        cellHelper1.Clear();
-        var count = GetCells(rect, ref cellHelper1);
+        nodeHelper1.Clear();
+        var count = GetNodes(rect, ref nodeHelper1);
         if (count <= 0) return;
-        foreach (var cell in cellHelper1)
+        foreach (var node in nodeHelper1)
         {
-            cell.Reset();
+            node.Reset();
         }
     }
 
@@ -149,10 +131,10 @@ public class Pathfinder
     }
 
     
-    public float GetWeight(int index) => GetCell(index)?.GetWeight() ?? 1;
-    public float GetWeight(int index, uint layer) => GetCell(index)?.GetWeight(layer) ?? 1;
-    public bool IsTraversable(int index) => GetCell(index)?.IsTraversable() ?? true;
-    public bool IsTraversable(int index, uint layer) => GetCell(index)?.IsTraversable(layer) ?? true;
+    public float GetWeight(int index) => GetNode(index)?.GetWeight() ?? 1;
+    public float GetWeight(int index, uint layer) => GetNode(index)?.GetWeight(layer) ?? 1;
+    public bool IsTraversable(int index) => GetNode(index)?.IsTraversable() ?? true;
+    public bool IsTraversable(int index, uint layer) => GetNode(index)?.IsTraversable(layer) ?? true;
     
     #endregion
 
@@ -162,9 +144,9 @@ public class Pathfinder
     {
         foreach (var obstacle in obstacles)
         {
-            foreach (var cell in obstacle.Value)
+            foreach (var node in obstacle.Value)
             {
-                cell.Reset();
+                node.Reset();
             }
             obstacle.Key.OnShapeChanged -= OnObstacleShapeChanged;
         }
@@ -172,18 +154,18 @@ public class Pathfinder
     }
     public bool AddObstacle(IPathfinderObstacle obstacle)
     {
-        List<GridNode>? cellList = null;
-        GenerateObstacleCells(obstacle, ref cellList);
+        List<GridNode>? nodeList = null;
+        GenerateObstacleCells(obstacle, ref nodeList);
         
-        if (cellList == null) return false;
-        obstacles.Add(obstacle, cellList);
+        if (nodeList == null) return false;
+        obstacles.Add(obstacle, nodeList);
         
-        var cellValues = obstacle.GetNodeValues();
-        foreach (var c in cellList)
+        var nodeValues = obstacle.GetNodeValues();
+        foreach (var c in nodeList)
         {
-            foreach (var v in cellValues)
+            foreach (var v in nodeValues)
             {
-                c.ApplyCellValue(v);
+                c.ApplyNodeValue(v);
             }
         }
 
@@ -192,15 +174,15 @@ public class Pathfinder
     }
     public bool RemoveObstacle(IPathfinderObstacle obstacle)
     {
-        obstacles.TryGetValue(obstacle, out var cellList);
-        var cellValues = obstacle.GetNodeValues();
-        if (cellList != null)
+        obstacles.TryGetValue(obstacle, out var nodeList);
+        var nodeValues = obstacle.GetNodeValues();
+        if (nodeList != null)
         {
-            foreach (var c in cellList)
+            foreach (var c in nodeList)
             {
-                foreach (var v in cellValues)
+                foreach (var v in nodeValues)
                 {
-                    c.RemoveCellValue(v);
+                    c.RemoveNodeValue(v);
                 }
             }
         }
@@ -221,7 +203,7 @@ public class Pathfinder
             {
                 foreach (var v in cellValues)
                 {
-                    c.RemoveCellValue(v);
+                    c.RemoveNodeValue(v);
                 }
             }
         }
@@ -234,7 +216,7 @@ public class Pathfinder
             {
                 foreach (var v in cellValues)
                 {
-                    c.ApplyCellValue(v);
+                    c.ApplyNodeValue(v);
                 }
             }
         }
@@ -242,9 +224,9 @@ public class Pathfinder
         // obstacles.TryGetValue(obstacle, out var value);
         // if (value != null)
         // {
-        //     foreach (var cell in value)
+        //     foreach (var node in value)
         //     {
-        //         cell.SetWeight(1);
+        //         node.SetWeight(1);
         //     }
         //     GenerateObstacleCells(obstacle, ref value);
         //     
@@ -296,9 +278,9 @@ public class Pathfinder
             for (int i = topLeft.Col; i <= bottomRight.Col; i++)
             {
                 int index = Grid.CoordinatesToIndex(new(i, j));
-                var cell = GetCell(index);
-                if(cell == null) continue;
-                if(cell.Rect.OverlapShape(shape)) cellList.Add(cell);
+                var node = GetNode(index);
+                if(node == null) continue;
+                if(node.Rect.OverlapShape(shape)) cellList.Add(node);
             }
         }
     }
@@ -318,9 +300,9 @@ public class Pathfinder
             for (int i = topLeft.Col; i <= bottomRight.Col; i++)
             {
                 int index = Grid.CoordinatesToIndex(new(i, j));
-                var cell = GetCell(index);
-                if(cell == null) continue;
-                if(cell.Rect.OverlapShape(shape)) cellList.Add(cell);
+                var node = GetNode(index);
+                if(node == null) continue;
+                if(node.Rect.OverlapShape(shape)) cellList.Add(node);
             }
         }
     }
@@ -340,9 +322,9 @@ public class Pathfinder
             for (int i = topLeft.Col; i <= bottomRight.Col; i++)
             {
                 int index = Grid.CoordinatesToIndex(new(i, j));
-                var cell = GetCell(index);
-                if(cell == null) continue;
-                if(cell.Rect.OverlapShape(shape)) cellList.Add(cell);
+                var node = GetNode(index);
+                if(node == null) continue;
+                if(node.Rect.OverlapShape(shape)) cellList.Add(node);
             }
         }
     }
@@ -362,9 +344,9 @@ public class Pathfinder
             for (int i = topLeft.Col; i <= bottomRight.Col; i++)
             {
                 int index = Grid.CoordinatesToIndex(new(i, j));
-                var cell = GetCell(index);
-                if(cell == null) continue;
-                if(cell.Rect.OverlapShape(shape)) cellList.Add(cell);
+                var node = GetNode(index);
+                if(node == null) continue;
+                if(node.Rect.OverlapShape(shape)) cellList.Add(node);
             }
         }
     }
@@ -383,9 +365,9 @@ public class Pathfinder
             for (int i = topLeft.Col; i <= bottomRight.Col; i++)
             {
                 int index = Grid.CoordinatesToIndex(new(i, j));
-                var cell = GetCell(index);
-                if(cell == null) continue;
-                if(cell.Rect.OverlapShape(rect)) cellList.Add(cell);
+                var node = GetNode(index);
+                if(node == null) continue;
+                if(node.Rect.OverlapShape(rect)) cellList.Add(node);
             }
         }
     }
@@ -405,9 +387,9 @@ public class Pathfinder
             for (int i = topLeft.Col; i <= bottomRight.Col; i++)
             {
                 int index = Grid.CoordinatesToIndex(new(i, j));
-                var cell = GetCell(index);
-                if(cell == null) continue;
-                if(cell.Rect.OverlapShape(shape)) cellList.Add(cell);
+                var node = GetNode(index);
+                if(node == null) continue;
+                if(node.Rect.OverlapShape(shape)) cellList.Add(node);
             }
         }
     }
@@ -427,9 +409,9 @@ public class Pathfinder
             for (int i = topLeft.Col; i <= bottomRight.Col; i++)
             {
                 int index = Grid.CoordinatesToIndex(new(i, j));
-                var cell = GetCell(index);
-                if(cell == null) continue;
-                if(cell.Rect.OverlapShape(shape)) cellList.Add(cell);
+                var node = GetNode(index);
+                if(node == null) continue;
+                if(node.Rect.OverlapShape(shape)) cellList.Add(node);
             }
         }
     }
@@ -497,7 +479,7 @@ public class Pathfinder
             if (request.Agent == null) continue; //should not happen
             agents[request.Agent] = null; //handled and therefore cleared
             requests ++;
-            var path = GetRectPath(request.Start, request.End, request.Agent.GetLayer()); //GetPath(request.Start, request.End, request.Agent.GetLayer());
+            var path = GetPath(request.Start, request.End, request.Agent.GetLayer()); //GetPath(request.Start, request.End, request.Agent.GetLayer());
             if(path == null) continue;
             request.Agent.ReceiveRequestedPath(path, request);
         }
@@ -521,9 +503,9 @@ public class Pathfinder
         
     }
 
-    public Path? GetRectPath(Vector2 start, Vector2 end, uint layer)
+    public Path? GetPath(Vector2 start, Vector2 end, uint layer)
     {
-        var startNode = GetCellClamped(start);
+        var startNode = GetNodeClamped(start);
         
         if (!startNode.IsTraversable())
         {
@@ -532,7 +514,7 @@ public class Pathfinder
             else return null;
         }
         
-        var endNode = GetCellClamped(end);
+        var endNode = GetNodeClamped(end);
         if (!endNode.IsTraversable())
         {
             var newEndNode = endNode.GetClosestTraversableCell();
@@ -540,7 +522,7 @@ public class Pathfinder
             else return null;
         }
 
-        return AStar.GetRectPath(startNode, endNode, layer);
+        return AStar.GetPath(startNode, endNode, layer);
     }
     
     #endregion
@@ -549,140 +531,140 @@ public class Pathfinder
 
     public bool AddConnections(Vector2 a, Vector2 b, bool oneWay)
     {
-        var cellA = GetCell(a);
+        var cellA = GetNode(a);
         if (cellA == null) return false;
         
-        var cellB = GetCell(b);
+        var cellB = GetNode(b);
         if (cellB == null) return false;
         
-        return ConnectCells(cellA, cellB, oneWay);
+        return ConnectNodes(cellA, cellB, oneWay);
     }
     public void AddConnections(Vector2 a, Rect b, bool oneWay)
     {
-        var cellA = GetCell(a);
+        var cellA = GetNode(a);
         if (cellA == null) return;
         
-        cellHelper1.Clear();
-        if (GetCells(b, ref cellHelper1) <= 0) return;
+        nodeHelper1.Clear();
+        if (GetNodes(b, ref nodeHelper1) <= 0) return;
         
-        foreach (var cell in cellHelper1)
+        foreach (var node in nodeHelper1)
         {
-            ConnectCells(cellA, cell, oneWay);
+            ConnectNodes(cellA, node, oneWay);
         }
 
     }
     public void AddConnections(Rect a, Vector2 b, bool oneWay)
     {
-        cellHelper1.Clear();
-        if (GetCells(a, ref cellHelper2) <= 0) return;
-        var cellB = GetCell(b);
+        nodeHelper1.Clear();
+        if (GetNodes(a, ref nodeHelper2) <= 0) return;
+        var cellB = GetNode(b);
         if (cellB == null) return;
-        foreach (var cell in cellHelper1)
+        foreach (var node in nodeHelper1)
         {
-            ConnectCells(cell, cellB, oneWay);
+            ConnectNodes(node, cellB, oneWay);
         }
     }
     public void AddConnections(Rect a, Rect b, bool oneWay)
     {
-        cellHelper1.Clear();
-        if (GetCells(a, ref cellHelper1) <= 0) return;
+        nodeHelper1.Clear();
+        if (GetNodes(a, ref nodeHelper1) <= 0) return;
         
-        cellHelper2.Clear();
-        if (GetCells(b, ref cellHelper2) <= 0) return;
+        nodeHelper2.Clear();
+        if (GetNodes(b, ref nodeHelper2) <= 0) return;
         
-        foreach (var cellA in cellHelper1)
+        foreach (var cellA in nodeHelper1)
         {
-            foreach (var cellB in cellHelper2)
+            foreach (var cellB in nodeHelper2)
             {
-                ConnectCells(cellA, cellB, oneWay);
+                ConnectNodes(cellA, cellB, oneWay);
             }
         }
     }
     public bool RemoveConnections(Vector2 a, Vector2 b, bool oneWay)
     {
-        var cellA = GetCell(a);
+        var cellA = GetNode(a);
         if (cellA == null) return false;
         
-        var cellB = GetCell(b);
+        var cellB = GetNode(b);
         if (cellB == null) return false;
         
-        return DisconnectCells(cellA, cellB, oneWay);
+        return DisconnectNodes(cellA, cellB, oneWay);
     }
     public void RemoveConnections(Vector2 a, Rect b, bool oneWay)
     {
-        var cellA = GetCell(a);
+        var cellA = GetNode(a);
         if (cellA == null) return;
         
-        cellHelper1.Clear();
-        if (GetCells(b, ref cellHelper1) <= 0) return;
+        nodeHelper1.Clear();
+        if (GetNodes(b, ref nodeHelper1) <= 0) return;
         
-        foreach (var cell in cellHelper1)
+        foreach (var node in nodeHelper1)
         {
-            DisconnectCells(cellA, cell, oneWay);
+            DisconnectNodes(cellA, node, oneWay);
         }
 
     }
     public void RemoveConnections(Rect a, Vector2 b, bool oneWay)
     {
-        var cellB = GetCell(b);
+        var cellB = GetNode(b);
         if (cellB == null) return;
         
-        cellHelper1.Clear();
-        if (GetCells(a, ref cellHelper2) <= 0) return;
+        nodeHelper1.Clear();
+        if (GetNodes(a, ref nodeHelper2) <= 0) return;
         
-        foreach (var cell in cellHelper1)
+        foreach (var node in nodeHelper1)
         {
-            DisconnectCells(cell, cellB, oneWay);
+            DisconnectNodes(node, cellB, oneWay);
         }
     }
     public void RemoveConnections(Rect a, Rect b, bool oneWay)
     {
-        cellHelper1.Clear();
-        if (GetCells(a, ref cellHelper1) <= 0) return;
+        nodeHelper1.Clear();
+        if (GetNodes(a, ref nodeHelper1) <= 0) return;
         
-        cellHelper2.Clear();
-        if (GetCells(b, ref cellHelper2) <= 0) return;
+        nodeHelper2.Clear();
+        if (GetNodes(b, ref nodeHelper2) <= 0) return;
         
-        foreach (var cellA in cellHelper1)
+        foreach (var cellA in nodeHelper1)
         {
-            foreach (var cellB in cellHelper2)
+            foreach (var cellB in nodeHelper2)
             {
-                DisconnectCells(cellA, cellB, oneWay);
+                DisconnectNodes(cellA, cellB, oneWay);
             }
         }
     }
     #endregion
     
-    #region Set Cell Values
+    #region Set Node Values
     
     #region Index
     
-    public bool ApplyCellValue(int index, NodeValue value)
+    public bool ApplyNodeValue(int index, NodeValue value)
     {
-        var cell = GetCell(index);
-        if (cell == null) return false;
-        cell.ApplyCellValue(value);
+        var node = GetNode(index);
+        if (node == null) return false;
+        node.ApplyNodeValue(value);
         return true;
     }
-    public bool RemoveCellValue(int index, NodeValue value)
+    public bool RemoveNodeValue(int index, NodeValue value)
     {
-        var cell = GetCell(index);
-        if (cell == null) return false;
-        cell.RemoveCellValue(value);
+        var node = GetNode(index);
+        if (node == null) return false;
+        node.RemoveNodeValue(value);
         return true;
     }
-    public bool ApplyCellValues(int index, params NodeValue[] values)
+    public bool ApplyNodeValues(int index, params NodeValue[] values)
     {
-        var cell = GetCell(index);
-        if (cell == null) return false;
-        cell.ApplyCellValues(values);
+        var node = GetNode(index);
+        if (node == null) return false;
+        node.ApplyNodeValues(values);
         return true;
     }
-    public bool RemoveCellValues(int index, params NodeValue[] values)
+    public bool RemoveNodeValues(int index, params NodeValue[] values)
     {
-        var cell = GetCell(index);
-        if (cell == null) return false;
-        cell.RemoveCellValues(values);
+        var node = GetNode(index);
+        if (node == null) return false;
+        node.RemoveNodeValues(values);
         return true;
     }
     
@@ -690,391 +672,391 @@ public class Pathfinder
     
     #region Position
     
-    public bool ApplyCellValue(Vector2 position, NodeValue value)
+    public bool ApplyNodeValue(Vector2 position, NodeValue value)
     {
-        var cell = GetCell(position);
-        if (cell == null) return false;
-        cell.ApplyCellValue(value);
+        var node = GetNode(position);
+        if (node == null) return false;
+        node.ApplyNodeValue(value);
         return true;
     }
-    public bool RemoveCellValue(Vector2 position, NodeValue value)
+    public bool RemoveNodeValue(Vector2 position, NodeValue value)
     {
-        var cell = GetCell(position);
-        if (cell == null) return false;
-        cell.RemoveCellValue(value);
+        var node = GetNode(position);
+        if (node == null) return false;
+        node.RemoveNodeValue(value);
         return true;
     }
-    public bool ApplyCellValues(Vector2 position, IEnumerable<NodeValue> values)
+    public bool ApplyNodeValues(Vector2 position, IEnumerable<NodeValue> values)
     {
-        var cell = GetCell(position);
-        if (cell == null) return false;
-        cell.ApplyCellValues(values);
+        var node = GetNode(position);
+        if (node == null) return false;
+        node.ApplyNodeValues(values);
         return true;
     }
-    public bool RemoveCellValues(Vector2 position, IEnumerable<NodeValue> values)
+    public bool RemoveNodeValues(Vector2 position, IEnumerable<NodeValue> values)
     {
-        var cell = GetCell(position);
-        if (cell == null) return false;
-        cell.RemoveCellValues(values);
+        var node = GetNode(position);
+        if (node == null) return false;
+        node.RemoveNodeValues(values);
         return true;
     }
 
     #endregion
     
     #region Segment
-    public int ApplyCellValue(Segment shape, NodeValue value)
+    public int ApplyNodeValue(Segment shape, NodeValue value)
     {
         resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
+        var nodeCount = GetNodes(shape, ref resultSet);
+        if (nodeCount <= 0) return 0;
+        foreach (var node in resultSet)
         {
-            cell.ApplyCellValue(value);
+            node.ApplyNodeValue(value);
         }
     
-        return cellCount;
+        return nodeCount;
     }
-    public int RemoveCellValue(Segment shape, NodeValue value)
+    public int RemoveNodeValue(Segment shape, NodeValue value)
     {
         resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
+        var nodeCount = GetNodes(shape, ref resultSet);
+        if (nodeCount <= 0) return 0;
+        foreach (var node in resultSet)
         {
-            cell.RemoveCellValue(value);
+            node.RemoveNodeValue(value);
         }
     
-        return cellCount;
+        return nodeCount;
     }
-    public int ApplyCellValues(Segment shape, params NodeValue[] values)
+    public int ApplyNodeValues(Segment shape, params NodeValue[] values)
     {
         resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
+        var nodeCount = GetNodes(shape, ref resultSet);
+        if (nodeCount <= 0) return 0;
+        foreach (var node in resultSet)
         {
-            cell.ApplyCellValues(values);
+            node.ApplyNodeValues(values);
         }
     
-        return cellCount;
+        return nodeCount;
     }
-    public int RemoveCellValues(Segment shape, params NodeValue[] values)
+    public int RemoveNodeValues(Segment shape, params NodeValue[] values)
     {
         resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
+        var nodeCount = GetNodes(shape, ref resultSet);
+        if (nodeCount <= 0) return 0;
+        foreach (var node in resultSet)
         {
-            cell.RemoveCellValues(values);
+            node.RemoveNodeValues(values);
         }
     
-        return cellCount;
+        return nodeCount;
     }
     #endregion
     
     #region Circle
-    public int ApplyCellValue(Circle shape, NodeValue value)
+    public int ApplyNodeValue(Circle shape, NodeValue value)
     {
         resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
+        var nodeCount = GetNodes(shape, ref resultSet);
+        if (nodeCount <= 0) return 0;
+        foreach (var node in resultSet)
         {
-            cell.ApplyCellValue(value);
+            node.ApplyNodeValue(value);
         }
     
-        return cellCount;
+        return nodeCount;
     }
-    public int RemoveCellValue(Circle shape, NodeValue value)
+    public int RemoveNodeValue(Circle shape, NodeValue value)
     {
         resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
+        var nodeCount = GetNodes(shape, ref resultSet);
+        if (nodeCount <= 0) return 0;
+        foreach (var node in resultSet)
         {
-            cell.RemoveCellValue(value);
+            node.RemoveNodeValue(value);
         }
     
-        return cellCount;
+        return nodeCount;
     }
-    public int ApplyCellValues(Circle shape, params NodeValue[] values)
+    public int ApplyNodeValues(Circle shape, params NodeValue[] values)
     {
         resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
+        var nodeCount = GetNodes(shape, ref resultSet);
+        if (nodeCount <= 0) return 0;
+        foreach (var node in resultSet)
         {
-            cell.ApplyCellValues(values);
+            node.ApplyNodeValues(values);
         }
     
-        return cellCount;
+        return nodeCount;
     }
-    public int RemoveCellValues(Circle shape, params NodeValue[] values)
+    public int RemoveNodeValues(Circle shape, params NodeValue[] values)
     {
         resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
+        var nodeCount = GetNodes(shape, ref resultSet);
+        if (nodeCount <= 0) return 0;
+        foreach (var node in resultSet)
         {
-            cell.RemoveCellValues(values);
+            node.RemoveNodeValues(values);
         }
     
-        return cellCount;
+        return nodeCount;
     }
     #endregion
     
     #region Triangle
-    public int ApplyCellValue(Triangle shape, NodeValue value)
+    public int ApplyNodeValue(Triangle shape, NodeValue value)
     {
         resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
+        var nodeCount = GetNodes(shape, ref resultSet);
+        if (nodeCount <= 0) return 0;
+        foreach (var node in resultSet)
         {
-            cell.ApplyCellValue(value);
+            node.ApplyNodeValue(value);
         }
     
-        return cellCount;
+        return nodeCount;
     }
-    public int RemoveCellValue(Triangle shape, NodeValue value)
+    public int RemoveNodeValue(Triangle shape, NodeValue value)
     {
         resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
+        var nodeCount = GetNodes(shape, ref resultSet);
+        if (nodeCount <= 0) return 0;
+        foreach (var node in resultSet)
         {
-            cell.RemoveCellValue(value);
+            node.RemoveNodeValue(value);
         }
     
-        return cellCount;
+        return nodeCount;
     }
-    public int ApplyCellValues(Triangle shape, params NodeValue[] values)
+    public int ApplyNodeValues(Triangle shape, params NodeValue[] values)
     {
         resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
+        var nodeCount = GetNodes(shape, ref resultSet);
+        if (nodeCount <= 0) return 0;
+        foreach (var node in resultSet)
         {
-            cell.ApplyCellValues(values);
+            node.ApplyNodeValues(values);
         }
     
-        return cellCount;
+        return nodeCount;
     }
-    public int RemoveCellValues(Triangle shape, params NodeValue[] values)
+    public int RemoveNodeValues(Triangle shape, params NodeValue[] values)
     {
         resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
+        var nodeCount = GetNodes(shape, ref resultSet);
+        if (nodeCount <= 0) return 0;
+        foreach (var node in resultSet)
         {
-            cell.RemoveCellValues(values);
+            node.RemoveNodeValues(values);
         }
     
-        return cellCount;
+        return nodeCount;
     }
     #endregion
     
     #region Rect
-    public int ApplyCellValue(Rect shape, NodeValue value)
+    public int ApplyNodeValue(Rect shape, NodeValue value)
     {
         resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
+        var nodeCount = GetNodes(shape, ref resultSet);
+        if (nodeCount <= 0) return 0;
+        foreach (var node in resultSet)
         {
-            cell.ApplyCellValue(value);
+            node.ApplyNodeValue(value);
         }
     
-        return cellCount;
+        return nodeCount;
     }
-    public int RemoveCellValue(Rect shape, NodeValue value)
+    public int RemoveNodeValue(Rect shape, NodeValue value)
     {
         resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
+        var nodeCount = GetNodes(shape, ref resultSet);
+        if (nodeCount <= 0) return 0;
+        foreach (var node in resultSet)
         {
-            cell.RemoveCellValue(value);
+            node.RemoveNodeValue(value);
         }
     
-        return cellCount;
+        return nodeCount;
     }
-    public int ApplyCellValues(Rect shape, params NodeValue[] values)
+    public int ApplyNodeValues(Rect shape, params NodeValue[] values)
     {
         resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
+        var nodeCount = GetNodes(shape, ref resultSet);
+        if (nodeCount <= 0) return 0;
+        foreach (var node in resultSet)
         {
-            cell.ApplyCellValues(values);
+            node.ApplyNodeValues(values);
         }
     
-        return cellCount;
+        return nodeCount;
     }
-    public int RemoveCellValues(Rect shape, params NodeValue[] values)
+    public int RemoveNodeValues(Rect shape, params NodeValue[] values)
     {
         resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
+        var nodeCount = GetNodes(shape, ref resultSet);
+        if (nodeCount <= 0) return 0;
+        foreach (var node in resultSet)
         {
-            cell.RemoveCellValues(values);
+            node.RemoveNodeValues(values);
         }
     
-        return cellCount;
+        return nodeCount;
     }
     #endregion
     
     #region Quad
-    public int ApplyCellValue(Quad shape, NodeValue value)
+    public int ApplyNodeValue(Quad shape, NodeValue value)
     {
         resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
+        var nodeCount = GetNodes(shape, ref resultSet);
+        if (nodeCount <= 0) return 0;
+        foreach (var node in resultSet)
         {
-            cell.ApplyCellValue(value);
+            node.ApplyNodeValue(value);
         }
     
-        return cellCount;
+        return nodeCount;
     }
-    public int RemoveCellValue(Quad shape, NodeValue value)
+    public int RemoveNodeValue(Quad shape, NodeValue value)
     {
         resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
+        var nodeCount = GetNodes(shape, ref resultSet);
+        if (nodeCount <= 0) return 0;
+        foreach (var node in resultSet)
         {
-            cell.RemoveCellValue(value);
+            node.RemoveNodeValue(value);
         }
     
-        return cellCount;
+        return nodeCount;
     }
-    public int ApplyCellValues(Quad shape, params NodeValue[] values)
+    public int ApplyNodeValues(Quad shape, params NodeValue[] values)
     {
         resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
+        var nodeCount = GetNodes(shape, ref resultSet);
+        if (nodeCount <= 0) return 0;
+        foreach (var node in resultSet)
         {
-            cell.ApplyCellValues(values);
+            node.ApplyNodeValues(values);
         }
     
-        return cellCount;
+        return nodeCount;
     }
-    public int RemoveCellValues(Quad shape, params NodeValue[] values)
+    public int RemoveNodeValues(Quad shape, params NodeValue[] values)
     {
         resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
+        var nodeCount = GetNodes(shape, ref resultSet);
+        if (nodeCount <= 0) return 0;
+        foreach (var node in resultSet)
         {
-            cell.RemoveCellValues(values);
+            node.RemoveNodeValues(values);
         }
     
-        return cellCount;
+        return nodeCount;
     }
     #endregion
     
     #region Polygon
-    public int ApplyCellValue(Polygon shape, NodeValue value)
+    public int ApplyNodeValue(Polygon shape, NodeValue value)
     {
         resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
+        var nodeCount = GetNodes(shape, ref resultSet);
+        if (nodeCount <= 0) return 0;
+        foreach (var node in resultSet)
         {
-            cell.ApplyCellValue(value);
+            node.ApplyNodeValue(value);
         }
     
-        return cellCount;
+        return nodeCount;
     }
-    public int RemoveCellValue(Polygon shape, NodeValue value)
+    public int RemoveNodeValue(Polygon shape, NodeValue value)
     {
         resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
+        var nodeCount = GetNodes(shape, ref resultSet);
+        if (nodeCount <= 0) return 0;
+        foreach (var node in resultSet)
         {
-            cell.RemoveCellValue(value);
+            node.RemoveNodeValue(value);
         }
     
-        return cellCount;
+        return nodeCount;
     }
-    public int ApplyCellValues(Polygon shape, params NodeValue[] values)
+    public int ApplyNodeValues(Polygon shape, params NodeValue[] values)
     {
         resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
+        var nodeCount = GetNodes(shape, ref resultSet);
+        if (nodeCount <= 0) return 0;
+        foreach (var node in resultSet)
         {
-            cell.ApplyCellValues(values);
+            node.ApplyNodeValues(values);
         }
     
-        return cellCount;
+        return nodeCount;
     }
-    public int RemoveCellValues(Polygon shape, params NodeValue[] values)
+    public int RemoveNodeValues(Polygon shape, params NodeValue[] values)
     {
         resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
+        var nodeCount = GetNodes(shape, ref resultSet);
+        if (nodeCount <= 0) return 0;
+        foreach (var node in resultSet)
         {
-            cell.RemoveCellValues(values);
+            node.RemoveNodeValues(values);
         }
     
-        return cellCount;
+        return nodeCount;
     }
     #endregion
     
     #region Polyline
-    public int ApplyCellValue(Polyline shape, NodeValue value)
+    public int ApplyNodeValue(Polyline shape, NodeValue value)
     {
         resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
+        var nodeCount = GetNodes(shape, ref resultSet);
+        if (nodeCount <= 0) return 0;
+        foreach (var node in resultSet)
         {
-            cell.ApplyCellValue(value);
+            node.ApplyNodeValue(value);
         }
     
-        return cellCount;
+        return nodeCount;
     }
-    public int RemoveCellValue(Polyline shape, NodeValue value)
+    public int RemoveNodeValue(Polyline shape, NodeValue value)
     {
         resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
+        var nodeCount = GetNodes(shape, ref resultSet);
+        if (nodeCount <= 0) return 0;
+        foreach (var node in resultSet)
         {
-            cell.RemoveCellValue(value);
+            node.RemoveNodeValue(value);
         }
     
-        return cellCount;
+        return nodeCount;
     }
-    public int ApplyCellValues(Polyline shape, params NodeValue[] values)
+    public int ApplyNodeValues(Polyline shape, params NodeValue[] values)
     {
         resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
+        var nodeCount = GetNodes(shape, ref resultSet);
+        if (nodeCount <= 0) return 0;
+        foreach (var node in resultSet)
         {
-            cell.ApplyCellValues(values);
+            node.ApplyNodeValues(values);
         }
     
-        return cellCount;
+        return nodeCount;
     }
-    public int RemoveCellValues(Polyline shape, params NodeValue[] values)
+    public int RemoveNodeValues(Polyline shape, params NodeValue[] values)
     {
         resultSet.Clear();
-        var cellCount = GetCells(shape, ref resultSet);
-        if (cellCount <= 0) return 0;
-        foreach (var cell in resultSet)
+        var nodeCount = GetNodes(shape, ref resultSet);
+        if (nodeCount <= 0) return 0;
+        foreach (var node in resultSet)
         {
-            cell.RemoveCellValues(values);
+            node.RemoveNodeValues(values);
         }
     
-        return cellCount;
+        return nodeCount;
     }
     #endregion
     #endregion
@@ -1090,29 +1072,29 @@ public class Pathfinder
     
     #region GetCells
 
-    private GridNode? GetCell(int index)
+    private GridNode? GetNode(int index)
     {
         if (!Grid.IsIndexInBounds(index)) return null;
-        return cells[index];
+        return nodes[index];
     }
-    private GridNode? GetCell(Grid.Coordinates coordinates)
+    private GridNode? GetNode(Grid.Coordinates coordinates)
     {
         if (!Grid.AreCoordinatesInside(coordinates)) return null;
         var index = Grid.CoordinatesToIndex(coordinates);
-        if (index >= 0 && index < cells.Count) return cells[index];
+        if (index >= 0 && index < nodes.Count) return nodes[index];
         return null;
     }
-    private GridNode? GetCell(Vector2 position)
+    private GridNode? GetNode(Vector2 position)
     {
         var index = Grid.GetCellIndexUnclamped(position, bounds);
         if (!Grid.IsIndexInBounds(index)) return null;
-        return cells[index];
+        return nodes[index];
     }
-    private GridNode GetCellClamped(Vector2 position)
+    private GridNode GetNodeClamped(Vector2 position)
     {
-        return cells[Grid.GetCellIndex(position, bounds)];
+        return nodes[Grid.GetCellIndex(position, bounds)];
     }
-    private int GetCells(Segment segment, ref HashSet<GridNode> result)
+    private int GetNodes(Segment segment, ref HashSet<GridNode> result)
     {
         var rect = segment.GetBoundingBox();
         var topLeft = Grid.GetCellCoordinate(rect.TopLeft, bounds);
@@ -1123,15 +1105,15 @@ public class Pathfinder
             for (int i = topLeft.Col; i <= bottomRight.Col; i++)
             {
                 int index = Grid.CoordinatesToIndex(new(i, j));
-                var cell = GetCell(index);
-                if(cell == null) continue;
-                if(cell.Rect.OverlapShape(segment)) result.Add(cell);
+                var node = GetNode(index);
+                if(node == null) continue;
+                if(node.Rect.OverlapShape(segment)) result.Add(node);
             }
         }
 
         return result.Count - count;
     }
-    private int GetCells(Circle circle, ref HashSet<GridNode> result)
+    private int GetNodes(Circle circle, ref HashSet<GridNode> result)
     {
         var rect = circle.GetBoundingBox();
         var topLeft = Grid.GetCellCoordinate(rect.TopLeft, bounds);
@@ -1142,15 +1124,15 @@ public class Pathfinder
             for (int i = topLeft.Col; i <= bottomRight.Col; i++)
             {
                 int index = Grid.CoordinatesToIndex(new(i, j));
-                var cell = GetCell(index);
-                if(cell == null) continue;
-                if(cell.Rect.OverlapShape(circle)) result.Add(cell);
+                var node = GetNode(index);
+                if(node == null) continue;
+                if(node.Rect.OverlapShape(circle)) result.Add(node);
             }
         }
 
         return result.Count - count;
     }
-    private int GetCells(Triangle triangle, ref HashSet<GridNode> result)
+    private int GetNodes(Triangle triangle, ref HashSet<GridNode> result)
     {
         var rect = triangle.GetBoundingBox();
         var topLeft = Grid.GetCellCoordinate(rect.TopLeft, bounds);
@@ -1161,15 +1143,15 @@ public class Pathfinder
             for (int i = topLeft.Col; i <= bottomRight.Col; i++)
             {
                 int index = Grid.CoordinatesToIndex(new(i, j));
-                var cell = GetCell(index);
-                if(cell == null) continue;
-                if(cell.Rect.OverlapShape(triangle)) result.Add(cell);
+                var node = GetNode(index);
+                if(node == null) continue;
+                if(node.Rect.OverlapShape(triangle)) result.Add(node);
             }
         }
 
         return result.Count - count;
     }
-    private int GetCells(Quad quad, ref HashSet<GridNode> result)
+    private int GetNodes(Quad quad, ref HashSet<GridNode> result)
     {
         var rect = quad.GetBoundingBox();
         var topLeft = Grid.GetCellCoordinate(rect.TopLeft, bounds);
@@ -1180,15 +1162,15 @@ public class Pathfinder
             for (int i = topLeft.Col; i <= bottomRight.Col; i++)
             {
                 int index = Grid.CoordinatesToIndex(new(i, j));
-                var cell = GetCell(index);
-                if(cell == null) continue;
-                if(cell.Rect.OverlapShape(quad)) result.Add(cell);
+                var node = GetNode(index);
+                if(node == null) continue;
+                if(node.Rect.OverlapShape(quad)) result.Add(node);
             }
         }
 
         return result.Count - count;
     }
-    private int GetCells(Rect rect, ref HashSet<GridNode> result)
+    private int GetNodes(Rect rect, ref HashSet<GridNode> result)
     {
         var topLeft = Grid.GetCellCoordinate(rect.TopLeft, bounds);
         var bottomRight = Grid.GetCellCoordinate(rect.BottomRight, bounds);
@@ -1198,13 +1180,13 @@ public class Pathfinder
             for (int i = topLeft.Col; i <= bottomRight.Col; i++)
             {
                 int index = Grid.CoordinatesToIndex(new(i, j));
-                result.Add(cells[index]);
+                result.Add(nodes[index]);
             }
         }
 
         return result.Count - count;
     }
-    private int GetCells(Polygon polygon, ref HashSet<GridNode> result)
+    private int GetNodes(Polygon polygon, ref HashSet<GridNode> result)
     {
         var rect = polygon.GetBoundingBox();
         var topLeft = Grid.GetCellCoordinate(rect.TopLeft, bounds);
@@ -1215,15 +1197,15 @@ public class Pathfinder
             for (int i = topLeft.Col; i <= bottomRight.Col; i++)
             {
                 int index = Grid.CoordinatesToIndex(new(i, j));
-                var cell = GetCell(index);
-                if(cell == null) continue;
-                if(cell.Rect.OverlapShape(polygon)) result.Add(cell);
+                var node = GetNode(index);
+                if(node == null) continue;
+                if(node.Rect.OverlapShape(polygon)) result.Add(node);
             }
         }
 
         return result.Count - count;
     }
-    private int GetCells(Polyline polyline, ref HashSet<GridNode> result)
+    private int GetNodes(Polyline polyline, ref HashSet<GridNode> result)
     {
         var rect = polyline.GetBoundingBox();
         var topLeft = Grid.GetCellCoordinate(rect.TopLeft, bounds);
@@ -1234,9 +1216,9 @@ public class Pathfinder
             for (int i = topLeft.Col; i <= bottomRight.Col; i++)
             {
                 int index = Grid.CoordinatesToIndex(new(i, j));
-                var cell = GetCell(index);
-                if(cell == null) continue;
-                if(cell.Rect.OverlapShape(polyline)) result.Add(cell);
+                var node = GetNode(index);
+                if(node == null) continue;
+                if(node.Rect.OverlapShape(polyline)) result.Add(node);
             }
         }
 
@@ -1245,32 +1227,32 @@ public class Pathfinder
     #endregion
 
     #region Path Helper
-    private Node? GetNeighborCell(GridNode node, Direction dir) => GetCell(node.Coordinates + dir);
+    private Node? GetNeighborNode(GridNode node, Direction dir) => GetNode(node.Coordinates + dir);
     private HashSet<Node>? GetNeighbors(GridNode node, bool diagonal = true)
     {
         HashSet<Node>? neighbors = null;
         var coordinates = node.Coordinates;
 
         Node? neighbor = null;
-        neighbor = GetCell(coordinates + Direction.Right);
+        neighbor = GetNode(coordinates + Direction.Right);
         if (neighbor != null)
         {
             neighbors ??= new();
             neighbors.Add(neighbor);
         }
-        neighbor = GetCell(coordinates + Direction.Left);
+        neighbor = GetNode(coordinates + Direction.Left);
         if (neighbor != null)
         {
             neighbors ??= new();
             neighbors.Add(neighbor);
         }
-        neighbor = GetCell(coordinates + Direction.Up);
+        neighbor = GetNode(coordinates + Direction.Up);
         if (neighbor != null)
         {
             neighbors ??= new();
             neighbors.Add(neighbor);
         }
-        neighbor = GetCell(coordinates + Direction.Down);
+        neighbor = GetNode(coordinates + Direction.Down);
         if (neighbor != null)
         {
             neighbors ??= new();
@@ -1279,25 +1261,25 @@ public class Pathfinder
 
         if (diagonal)
         {
-            neighbor = GetCell(coordinates + Direction.UpLeft);
+            neighbor = GetNode(coordinates + Direction.UpLeft);
             if (neighbor != null)
             {
                 neighbors ??= new();
                 neighbors.Add(neighbor);
             }
-            neighbor = GetCell(coordinates + Direction.UpRight);
+            neighbor = GetNode(coordinates + Direction.UpRight);
             if (neighbor != null)
             {
                 neighbors ??= new();
                 neighbors.Add(neighbor);
             }
-            neighbor = GetCell(coordinates + Direction.DownLeft);
+            neighbor = GetNode(coordinates + Direction.DownLeft);
             if (neighbor != null)
             {
                 neighbors ??= new();
                 neighbors.Add(neighbor);
             }
-            neighbor = GetCell(coordinates + Direction.DownRight);
+            neighbor = GetNode(coordinates + Direction.DownRight);
             if (neighbor != null)
             {
                 neighbors ??= new();
@@ -1311,7 +1293,7 @@ public class Pathfinder
     #endregion
 
     #region Connection Helper
-    private bool ConnectCells(Node a, Node b, bool oneWay)
+    private bool ConnectNodes(Node a, Node b, bool oneWay)
     {
         if (a == b) return false;
 
@@ -1319,7 +1301,7 @@ public class Pathfinder
         if (!oneWay) b.Connect(a);
         return true;
     }
-    private bool DisconnectCells(Node a, Node b, bool oneWay)
+    private bool DisconnectNodes(Node a, Node b, bool oneWay)
     {
         if (a == b) return false;
         a.Disconnect(b);
@@ -1328,11 +1310,6 @@ public class Pathfinder
     }
     #endregion
     
-    // private Rect GetRect(Grid.Coordinates coordinates)
-    // {
-    //     var pos = Bounds.TopLeft + CellSize * coordinates.ToVector2();
-    //     return new Rect(pos, CellSize, new Vector2(0f));
-    // }
     private void ResolveRegenerationRequested()
     {
         RegenerationWasRequested();
@@ -1343,30 +1320,24 @@ public class Pathfinder
         WasCleared();
         OnCleared?.Invoke(this);
     }
-
-    // private void ResolveCleared()
-    // {
-    //     WasCleared();
-    //     OnCleared?.Invoke(this);
-    // }
     #endregion
 
     #region Debug
     public void DrawDebug(ColorRgba bounds, ColorRgba standard, ColorRgba blocked, ColorRgba desirable, ColorRgba undesirable, uint layer)
     {
         Bounds.DrawLines(12f, bounds);
-        foreach (var cell in cells)
+        foreach (var node in nodes)
         {
-            var r = cell.Rect;
+            var r = node.Rect;
 
-            // if(closedSet.Contains(cell)) //touched
+            // if(closedSet.Contains(node)) //touched
             // {
             //     r.ScaleSize(0.9f, new Vector2(0.5f)).Draw(new ColorRgba(System.Drawing.Color.Bisque));
             // }
             //
-            if(cell.GetWeight(layer) == 0) r.ScaleSize(0.5f, new Vector2(0.5f)).Draw(blocked);
-            else if(cell.GetWeight(layer) > 1) r.ScaleSize(0.65f, new Vector2(0.5f)).Draw(undesirable);
-            else if(cell.GetWeight(layer) < 1) r.ScaleSize(0.65f, new Vector2(0.5f)).Draw(desirable);
+            if(node.GetWeight(layer) == 0) r.ScaleSize(0.5f, new Vector2(0.5f)).Draw(blocked);
+            else if(node.GetWeight(layer) > 1) r.ScaleSize(0.65f, new Vector2(0.5f)).Draw(undesirable);
+            else if(node.GetWeight(layer) < 1) r.ScaleSize(0.65f, new Vector2(0.5f)).Draw(desirable);
             else r.ScaleSize(0.8f, new Vector2(0.5f)).Draw(standard);
         }
         
@@ -1378,11 +1349,11 @@ public class Pathfinder
     public List<Rect> GetRects(bool traversable = true)
     {
         var rects = new List<Rect>();
-        foreach (var cell in cells)
+        foreach (var node in nodes)
         {
-            if (!traversable || cell.IsTraversable())
+            if (!traversable || node.IsTraversable())
             {
-                rects.Add(cell.Rect);
+                rects.Add(node.Rect);
             }
         }
 
@@ -1391,20 +1362,20 @@ public class Pathfinder
     public List<Rect> GetRects(uint layer, int minWeight, int maxWeight)
     {
         var rects = new List<Rect>();
-        foreach (var cell in cells)
+        foreach (var node in nodes)
         {
-            var w = cell.GetWeight(layer);
-            if(w >= minWeight && w <= maxWeight) rects.Add(cell.Rect);
+            var w = node.GetWeight(layer);
+            if(w >= minWeight && w <= maxWeight) rects.Add(node.Rect);
         }
 
         return rects;
     }
     public List<Rect> GetRects(Rect area, bool traversable = true)
     {
-        cellHelper1.Clear();
-        GetCells(area, ref cellHelper1);
+        nodeHelper1.Clear();
+        GetNodes(area, ref nodeHelper1);
         var result = new List<Rect>();
-        foreach (var node in cellHelper1)
+        foreach (var node in nodeHelper1)
         {
             if (!traversable || node.IsTraversable())
             {
@@ -1416,10 +1387,10 @@ public class Pathfinder
     }
     public List<Rect> GetRects(Rect area, uint layer, int minWeight, int maxWeight)
     {
-        cellHelper1.Clear();
-        GetCells(area, ref cellHelper1);
+        nodeHelper1.Clear();
+        GetNodes(area, ref nodeHelper1);
         var result = new List<Rect>();
-        foreach (var node in cellHelper1)
+        foreach (var node in nodeHelper1)
         {
             var w = node.GetWeight(layer);
             if (w >= minWeight && w <= maxWeight)
@@ -1497,36 +1468,36 @@ public class Pathfinder
       private void OnObstacleShapeChanged(IPathfinderObstacle obstacle, Rect area)
       {
           cellHelper1.Clear();
-          var cellCount = GetCells(area, ref cellHelper1);
-          if (cellCount <= 0) return;
+          var nodeCount = GetCells(area, ref cellHelper1);
+          if (nodeCount <= 0) return;
           
           
           obstacles.TryGetValue(obstacle, out var cellList);
           bool cellListIsEmpty = false;
           if (cellList == null)
           {
-              cellList = new(cellCount);
+              cellList = new(nodeCount);
               obstacles[obstacle] = cellList;
               cellListIsEmpty = true;
           }
           
           var cellValues = obstacle.GetNodeValues();
           
-          foreach (var cell in cellHelper1)
+          foreach (var node in cellHelper1)
           {
-              var cr = cell.GetRect();
+              var cr = node.GetRect();
               var overlaps = DoesObstacleOverlapCellRect(obstacle, cr);
                   
-              if (!cellListIsEmpty && cellList.Contains(cell))
+              if (!cellListIsEmpty && cellList.Contains(node))
               {
                   if (!overlaps)
                   {
                       foreach (var v in cellValues)
                       {
-                          cell.RemoveCellValue(v);
+                          node.RemoveCellValue(v);
                       }
 
-                      cellList.Remove(cell);
+                      cellList.Remove(node);
                   }
               }
               else
@@ -1535,10 +1506,10 @@ public class Pathfinder
                   {
                       foreach (var v in cellValues)
                       {
-                          cell.ApplyCellValue(v);
+                          node.ApplyCellValue(v);
                       }
 
-                      cellList.Add(cell);
+                      cellList.Add(node);
                   }
               }
                   

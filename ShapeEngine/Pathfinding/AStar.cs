@@ -10,7 +10,7 @@ internal static class AStar
     private static readonly Dictionary<Node, Node> cellPath = new(1024);
     
     
-    public static Path? GetRectPath(Node startNode, Node endNode, uint layer)
+    public static Path? GetPath(Node startNode, Node endNode, uint layer)
     {
         cellPath.Clear();
         closedSet.Clear();
@@ -33,7 +33,7 @@ internal static class AStar
             if (current == endNode)
             {
                 var countEstimate = startNode.EstimateCellCount(endNode);
-                var pathPoints = ReconstructRectPath(current, countEstimate);
+                var pathPoints = ReconstructPath(current, countEstimate);
     
                 return new Path(startNode.GetPosition(), endNode.GetPosition(), pathPoints);
                 
@@ -109,7 +109,7 @@ internal static class AStar
         
         return null;
     }
-    private static List<Rect> ReconstructRectPath(Node from, int capacityEstimate)
+    private static List<Rect> ReconstructPath(Node from, int capacityEstimate)
     {
         
         List<Rect> nodes = new(capacityEstimate) { from.GetRect() };

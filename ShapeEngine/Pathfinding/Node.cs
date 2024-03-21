@@ -174,7 +174,7 @@ internal abstract class Node : IComparable<Node>
 
     #region CellValues
 
-    public void ApplyCellValue(NodeValue value)
+    public void ApplyNodeValue(NodeValue value)
     {
         if (value.Layer > 0)
         {
@@ -188,7 +188,7 @@ internal abstract class Node : IComparable<Node>
         }
         else weight.Apply(value);
     }
-    public void RemoveCellValue(NodeValue value)
+    public void RemoveNodeValue(NodeValue value)
     {
         if (value.Layer > 0)
         {
@@ -199,18 +199,18 @@ internal abstract class Node : IComparable<Node>
         else weight.Remove(value);
     }
         
-    public void ApplyCellValues(IEnumerable<NodeValue> values)
+    public void ApplyNodeValues(IEnumerable<NodeValue> values)
     {
         foreach (var value in values)
         {
-            ApplyCellValue(value);
+            ApplyNodeValue(value);
         }
     }
-    public void RemoveCellValues(IEnumerable<NodeValue> values)
+    public void RemoveNodeValues(IEnumerable<NodeValue> values)
     {
         foreach (var value in values)
         {
-            RemoveCellValue(value);
+            RemoveNodeValue(value);
         }
     }
 

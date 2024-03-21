@@ -123,7 +123,7 @@ internal class PathfinderFlag
         
         public override void Reset()
         {
-            pathfinder.ResetCells();
+            pathfinder.ResetNodes();
             paths.Clear();
             endFlags.Clear();
             SetupEndFlags();
@@ -158,7 +158,7 @@ internal class PathfinderFlag
                     if (rectStarted)
                     {
                         var r = new Rect(rectStartPos, mousePosGame);
-                        pathfinder.ApplyCellValue(r, new (0, NodeValueType.Clear));
+                        pathfinder.ApplyNodeValue(r, new (0, NodeValueType.Clear));
                     }
                 }
                 if (Raylib.IsKeyReleased(KeyboardKey.V))
@@ -166,7 +166,7 @@ internal class PathfinderFlag
                     if (rectStarted)
                     {
                         var r = new Rect(rectStartPos, mousePosGame);
-                        pathfinder.ApplyCellValue(r, new (-5f, NodeValueType.SetReset));
+                        pathfinder.ApplyNodeValue(r, new (-5f, NodeValueType.SetReset));
                     }
                 }
                 if (Raylib.IsKeyReleased(KeyboardKey.B))
@@ -174,7 +174,7 @@ internal class PathfinderFlag
                     if (rectStarted)
                     {
                         var r = new Rect(rectStartPos, mousePosGame);
-                        pathfinder.ApplyCellValue(r, new (0, NodeValueType.Block));
+                        pathfinder.ApplyNodeValue(r, new (0, NodeValueType.Block));
                     }
                 }
                 if (Raylib.IsKeyReleased(KeyboardKey.X))
@@ -182,7 +182,7 @@ internal class PathfinderFlag
                     if (rectStarted)
                     {
                         var r = new Rect(rectStartPos, mousePosGame);
-                        pathfinder.ApplyCellValue(r, new (5f, NodeValueType.SetReset));
+                        pathfinder.ApplyNodeValue(r, new (5f, NodeValueType.SetReset));
                     }
                 }
             
@@ -205,7 +205,7 @@ internal class PathfinderFlag
                 for (int i = 0; i < endFlags.Count; i++)
                 {
                     var flag = endFlags[i];
-                    var path = pathfinder.GetRectPath(startFlag.Position, flag.Position, 0);
+                    var path = pathfinder.GetPath(startFlag.Position, flag.Position, 0);
                     if(path != null) paths.Add(path);
                 }
                 // var flag = endFlags[0];
