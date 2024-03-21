@@ -934,10 +934,8 @@ public class PathfinderExample2 : ExampleScene
         
         
         ship.Update(time.Delta);
-        // pathfinder.SetCellValues(ship.GetChasePosition(), 5);
-        // var removedCount = 0;
         
-        var minCellDistance = pathfinder.CellSize.Max();
+        
         for (int i = asteroids.Count - 1; i >= 0; i--)
         {
             var asteroid = asteroids[i];

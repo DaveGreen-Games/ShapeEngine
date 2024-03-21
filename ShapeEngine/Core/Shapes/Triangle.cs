@@ -1328,7 +1328,7 @@ namespace ShapeEngine.Core.Shapes
                 points ??= new();
                 if(result.a != null) points.Add((CollisionPoint)result.a);
                 if(result.b != null) points.Add((CollisionPoint)result.b);
-                return points;
+                // return points;
             }
                 
             result = Segment.IntersectSegmentCircle(B, C, c.Center, c.Radius);
@@ -1337,7 +1337,7 @@ namespace ShapeEngine.Core.Shapes
                 points ??= new();
                 if(result.a != null) points.Add((CollisionPoint)result.a);
                 if(result.b != null) points.Add((CollisionPoint)result.b);
-                return points;
+                // return points;
             }
             
             result = Segment.IntersectSegmentCircle(C, A, c.Center, c.Radius);
@@ -1346,7 +1346,7 @@ namespace ShapeEngine.Core.Shapes
                 points ??= new();
                 if(result.a != null) points.Add((CollisionPoint)result.a);
                 if(result.b != null) points.Add((CollisionPoint)result.b);
-                return points;
+                // return points;
             }
 
             return points;
