@@ -775,6 +775,219 @@ namespace ShapeEngine.Core.Collision
                 }
             }
         }
+        
+        
+        public int CastSpace(CollisionObject collisionBody)
+        {
+            if (!collisionBody.HasColliders) return 0;
+
+            int count = 0;
+            foreach (var collider in collisionBody.Colliders)
+            {
+                collisionCandidateBuckets.Clear();
+                collisionCandidateCheckRegister.Clear();
+                spatialHash.GetCandidateBuckets(collider, ref collisionCandidateBuckets);
+                if (collisionCandidateBuckets.Count <= 0) return 0;
+
+                var mask = collider.CollisionMask;
+                foreach (var bucket in collisionCandidateBuckets)
+                {
+                    foreach (var candidate in bucket)
+                    {
+                        if (candidate == collider) continue;
+                        if (!mask.Has(candidate.CollisionLayer)) continue;
+                        if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+
+                        if (collider.Overlap(candidate))
+                        {
+                            count++;
+                        }
+                    }
+                }
+            }
+
+            return count;
+        }
+        public int CastSpace(Collider collider)
+        {
+            collisionCandidateBuckets.Clear();
+            collisionCandidateCheckRegister.Clear();
+            
+            spatialHash.GetCandidateBuckets(collider, ref collisionCandidateBuckets);
+            if (collisionCandidateBuckets.Count <= 0) return 0;
+
+            int count = 0;
+            var mask = collider.CollisionMask;
+            foreach (var bucket in collisionCandidateBuckets)
+            {
+                foreach (var candidate in bucket)
+                {
+                    if (candidate == collider) continue;
+                    if (!mask.Has(candidate.CollisionLayer)) continue;
+                    if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+
+                    if (collider.Overlap(candidate))
+                    {
+                        count++;
+                    }
+                }
+            }
+
+            return count;
+        }
+        public int CastSpace(Segment shape, BitFlag collisionMask)
+        {
+            collisionCandidateBuckets.Clear();
+            collisionCandidateCheckRegister.Clear();
+            
+            spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
+            if (collisionCandidateBuckets.Count <= 0) return 0;
+
+            int count = 0;
+            foreach (var bucket in collisionCandidateBuckets)
+            {
+                foreach (var candidate in bucket)
+                {
+                    if (!collisionMask.Has(candidate.CollisionLayer)) continue;
+                    if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+                    
+                    if (candidate.Overlap(shape))
+                    {
+                        count++;
+                    }
+                }
+            }
+
+            return count;
+        }
+        public int CastSpace(Triangle shape, BitFlag collisionMask)
+        {
+            collisionCandidateBuckets.Clear();
+            collisionCandidateCheckRegister.Clear();
+            
+            spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
+            if (collisionCandidateBuckets.Count <= 0) return 0;
+
+            int count = 0;
+            foreach (var bucket in collisionCandidateBuckets)
+            {
+                foreach (var candidate in bucket)
+                {
+                    if (!collisionMask.Has(candidate.CollisionLayer)) continue;
+                    if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+                    
+                    if (candidate.Overlap(shape))
+                    {
+                        count++;
+                    }
+                }
+            }
+
+            return count;
+        }
+        public int CastSpace(Circle shape, BitFlag collisionMask)
+        {
+            collisionCandidateBuckets.Clear();
+            collisionCandidateCheckRegister.Clear();
+            
+            spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
+            if (collisionCandidateBuckets.Count <= 0) return 0;
+
+            int count = 0;
+            foreach (var bucket in collisionCandidateBuckets)
+            {
+                foreach (var candidate in bucket)
+                {
+                    if (!collisionMask.Has(candidate.CollisionLayer)) continue;
+                    if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+                    
+                    if (candidate.Overlap(shape))
+                    {
+                        count++;
+                    }
+                }
+            }
+
+            return count;
+        }
+        public int CastSpace(Rect shape, BitFlag collisionMask)
+        {
+            collisionCandidateBuckets.Clear();
+            collisionCandidateCheckRegister.Clear();
+            
+            spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
+            if (collisionCandidateBuckets.Count <= 0) return 0;
+
+            int count = 0;
+            foreach (var bucket in collisionCandidateBuckets)
+            {
+                foreach (var candidate in bucket)
+                {
+                    if (!collisionMask.Has(candidate.CollisionLayer)) continue;
+                    if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+                    
+                    if (candidate.Overlap(shape))
+                    {
+                        count++;
+                    }
+                }
+            }
+
+            return count;
+        }
+        public int CastSpace(Polygon shape, BitFlag collisionMask)
+        {
+            collisionCandidateBuckets.Clear();
+            collisionCandidateCheckRegister.Clear();
+            
+            spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
+            if (collisionCandidateBuckets.Count <= 0) return 0;
+
+            int count = 0;
+            foreach (var bucket in collisionCandidateBuckets)
+            {
+                foreach (var candidate in bucket)
+                {
+                    if (!collisionMask.Has(candidate.CollisionLayer)) continue;
+                    if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+                    
+                    if (candidate.Overlap(shape))
+                    {
+                        count++;
+                    }
+                }
+            }
+
+            return count;
+        }
+        public int CastSpace(Polyline shape, BitFlag collisionMask)
+        {
+            collisionCandidateBuckets.Clear();
+            collisionCandidateCheckRegister.Clear();
+            
+            spatialHash.GetCandidateBuckets(shape, ref collisionCandidateBuckets);
+            if (collisionCandidateBuckets.Count <= 0) return 0;
+
+            int count = 0;
+            foreach (var bucket in collisionCandidateBuckets)
+            {
+                foreach (var candidate in bucket)
+                {
+                    if (!collisionMask.Has(candidate.CollisionLayer)) continue;
+                    if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+                    
+                    if (candidate.Overlap(shape))
+                    {
+                        count++;
+                    }
+                }
+            }
+
+            return count;
+        }
+        
+        
+        
         public void SortCastResult(ref List<Collider> result, Vector2 sortOrigin)
         {
             if (result.Count > 1)
