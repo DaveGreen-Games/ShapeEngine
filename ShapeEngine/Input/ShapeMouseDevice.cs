@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Text;
 using Raylib_cs;
 using ShapeEngine.Core;
@@ -15,7 +16,27 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
     private bool wasUsed = false;
     private bool isLocked = false;
 
-    internal ShapeMouseDevice() { }
+    private readonly Dictionary<ShapeMouseButton, InputState> buttonStates = new(AllShapeMouseButtons.Length);
+    private readonly Dictionary<ShapeMouseAxis, InputState> axisStates = new(2);
+    private readonly Dictionary<ShapeMouseWheelAxis, InputState> wheelAxisStates = new(2);
+
+    internal ShapeMouseDevice()
+    {
+        foreach (var button in AllShapeMouseButtons)
+        {
+            buttonStates.Add(button, new());
+        }
+        
+        axisStates.Add(ShapeMouseAxis.HORIZONTAL, new());
+        axisStates.Add(ShapeMouseAxis.VERTICAL, new());
+        
+        wheelAxisStates.Add(ShapeMouseWheelAxis.HORIZONTAL, new());
+        wheelAxisStates.Add(ShapeMouseWheelAxis.VERTICAL, new());
+    }
+    
+    public InputState GetButtonState(ShapeMouseButton button) => buttonStates[button];
+    public InputState GetAxisState(ShapeMouseAxis axis) => axisStates[axis];
+    public InputState GetWheelAxisState(ShapeMouseWheelAxis axis) => wheelAxisStates[axis];
     
     public bool WasUsed() => wasUsed;
     public bool IsLocked() => isLocked;
@@ -32,6 +53,8 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
 
     public void Update()
     {
+        UpdateStates();
+        
         wasUsed = WasMouseUsed(MoveThreshold, MouseWheelThreshold);
     }
     public void Calibrate(){ }
@@ -55,6 +78,30 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         return false;
     }
 
+    private void UpdateStates()
+    {
+        foreach (var state in buttonStates)
+        {
+            var button = state.Key;
+            var prevState = state.Value;
+            var curState = CreateInputState(button);
+            buttonStates[button] = new InputState(prevState, curState);
+        }
+        foreach (var state in axisStates)
+        {
+            var axis = state.Key;
+            var prevState = state.Value;
+            var curState = CreateInputState(axis);
+            axisStates[axis] = new InputState(prevState, curState);
+        }
+        foreach (var state in wheelAxisStates)
+        {
+            var axis = state.Key;
+            var prevState = state.Value;
+            var curState = CreateInputState(axis);
+            wheelAxisStates[axis] = new InputState(prevState, curState);
+        }
+    }
    
     #region Axis
     public static string GetAxisName(ShapeMouseAxis axis, bool shortHand = true)
@@ -95,25 +142,25 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         if (MathF.Abs(returnValue) < deadzone) return 0f;
         return returnValue;
     }
-    public InputState GetState(ShapeMouseAxis axis, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeMouseAxis axis, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         float axisValue = GetValue(axis, deadzone, modifierOperator, modifierKeys);
         bool down = axisValue != 0f;
         return new(down, !down, axisValue, -1, InputDeviceType.Mouse);
     }
-    public InputState GetState(ShapeMouseAxis axis, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeMouseAxis axis, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
-        return new(previousState, GetState(axis, deadzone, modifierOperator, modifierKeys));
+        return new(previousState, CreateInputState(axis, deadzone, modifierOperator, modifierKeys));
     }
-    public InputState GetState(ShapeMouseAxis axis, float deadzone = 0.5f)
+    public InputState CreateInputState(ShapeMouseAxis axis, float deadzone = 0.5f)
     {
         float axisValue = GetValue(axis, deadzone);
         bool down = axisValue != 0f;
         return new(down, !down, axisValue, -1, InputDeviceType.Mouse);
     }
-    public InputState GetState(ShapeMouseAxis axis, InputState previousState, float deadzone = 0.5f)
+    public InputState CreateInputState(ShapeMouseAxis axis, InputState previousState, float deadzone = 0.5f)
     {
-        return new(previousState, GetState(axis, deadzone));
+        return new(previousState, CreateInputState(axis, deadzone));
     }
     #endregion
 
@@ -144,27 +191,27 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         if (MathF.Abs(returnValue) < deadzone) return 0f;
         return returnValue;
     }
-    public InputState GetState(ShapeMouseWheelAxis axis, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeMouseWheelAxis axis, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         
         float axisValue = GetValue(axis, deadzone, modifierOperator, modifierKeys);
         bool down = axisValue != 0f;
         return new(down, !down, axisValue, -1, InputDeviceType.Mouse);
     }
-    public InputState GetState(ShapeMouseWheelAxis axis, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeMouseWheelAxis axis, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
-        return new(previousState, GetState(axis, deadzone, modifierOperator, modifierKeys));
+        return new(previousState, CreateInputState(axis, deadzone, modifierOperator, modifierKeys));
     }
-    public InputState GetState(ShapeMouseWheelAxis axis, float deadzone = 0.2f)
+    public InputState CreateInputState(ShapeMouseWheelAxis axis, float deadzone = 0.2f)
     {
         
         float axisValue = GetValue(axis, deadzone);
         bool down = axisValue != 0f;
         return new(down, !down, axisValue, -1, InputDeviceType.Mouse);
     }
-    public InputState GetState(ShapeMouseWheelAxis axis, InputState previousState, float deadzone = 0.2f)
+    public InputState CreateInputState(ShapeMouseWheelAxis axis, InputState previousState, float deadzone = 0.2f)
     {
-        return new(previousState, GetState(axis, deadzone));
+        return new(previousState, CreateInputState(axis, deadzone));
     }
     
     public static string GetWheelAxisName(ShapeMouseWheelAxis axis, bool shortHand = true)
@@ -251,25 +298,25 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         }
         return Raylib.IsMouseButtonDown((MouseButton)id) ? 1f : 0f;
     }
-    public InputState GetState(ShapeMouseButton button, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeMouseButton button, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         var value = GetValue(button, deadzone, modifierOperator, modifierKeys);
         bool down = value != 0f;
         return new(down, !down, down ? 1f : 0f, -1, InputDeviceType.Mouse);
     }
-    public InputState GetState(ShapeMouseButton button, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeMouseButton button, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
-        return new(previousState, GetState(button, deadzone, modifierOperator, modifierKeys));
+        return new(previousState, CreateInputState(button, deadzone, modifierOperator, modifierKeys));
     }
-    public InputState GetState(ShapeMouseButton button, float deadzone = 0f)
+    public InputState CreateInputState(ShapeMouseButton button, float deadzone = 0f)
     {
         var value = GetValue(button, deadzone);
         bool down = value != 0f;
         return new(down, !down, down ? 1f : 0f, -1, InputDeviceType.Mouse);
     }
-    public InputState GetState(ShapeMouseButton button, InputState previousState, float deadzone = 0f)
+    public InputState CreateInputState(ShapeMouseButton button, InputState previousState, float deadzone = 0f)
     {
-        return new(previousState, GetState(button, deadzone));
+        return new(previousState, CreateInputState(button, deadzone));
     }
     #endregion
 
@@ -309,25 +356,25 @@ public sealed class ShapeMouseDevice : ShapeInputDevice
         float vPositive = GetValue(pos, deadzone);
         return vPositive - vNegative;
     }
-    public InputState GetState(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         float axis = GetValue(neg, pos, deadzone, modifierOperator, modifierKeys);
         bool down = axis != 0f;
         return new(down, !down, axis, -1, InputDeviceType.Mouse);
     }
-    public InputState GetState(ShapeMouseButton neg, ShapeMouseButton pos, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
-        return new(previousState, GetState(neg, pos, deadzone, modifierOperator, modifierKeys));
+        return new(previousState, CreateInputState(neg, pos, deadzone, modifierOperator, modifierKeys));
     }
-    public InputState GetState(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = 0f)
+    public InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, float deadzone = 0f)
     {
         float axis = GetValue(neg, pos, deadzone);
         bool down = axis != 0f;
         return new(down, !down, axis, -1, InputDeviceType.Mouse);
     }
-    public InputState GetState(ShapeMouseButton neg, ShapeMouseButton pos, InputState previousState, float deadzone = 0f)
+    public InputState CreateInputState(ShapeMouseButton neg, ShapeMouseButton pos, InputState previousState, float deadzone = 0f)
     {
-        return new(previousState, GetState(neg, pos, deadzone));
+        return new(previousState, CreateInputState(neg, pos, deadzone));
     }
     
 

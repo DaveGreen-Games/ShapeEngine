@@ -31,13 +31,13 @@ public sealed class InputTypeKeyboardButton : IInputType
     public InputState GetState(ShapeGamepadDevice? gamepad = null)
     {
         //if (gamepad != null) return new();
-        return ShapeInput.KeyboardDevice.GetState(button, modifierOperator, modifierKeys);
+        return ShapeInput.KeyboardDevice.CreateInputState(button, modifierOperator, modifierKeys);
     }
 
     public InputState GetState(InputState prev, ShapeGamepadDevice? gamepad = null)
     {
         //if (gamepad != null) return new();
-        return ShapeInput.KeyboardDevice.GetState(button, prev, modifierOperator, modifierKeys);
+        return ShapeInput.KeyboardDevice.CreateInputState(button, prev, modifierOperator, modifierKeys);
     }
     public string GetName(bool shorthand = true)
     {

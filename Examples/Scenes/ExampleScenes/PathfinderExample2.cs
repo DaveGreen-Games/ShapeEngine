@@ -889,12 +889,17 @@ public class PathfinderExample2 : ExampleScene
         iaDrawDebug.Gamepad = gamepad;
         iaDrawDebug.Update(dt);
 
-        if (Raylib.IsMouseButtonPressed(MouseButton.Left))
+        // if (Raylib.IsMouseButtonPressed(MouseButton.Left))
+        // {
+        //     AddAsteroid(mousePosGame);
+        // }
+        
+        if (ShapeMouseButton.LEFT.GetInputState().Pressed)
         {
             AddAsteroid(mousePosGame);
         }
         
-        if (Raylib.IsMouseButtonPressed(MouseButton.Right))
+        if (ShapeMouseButton.RIGHT.GetInputState().Pressed)
         {
             AddChasers(100, mousePosGame);
         }

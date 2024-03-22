@@ -51,13 +51,13 @@ public class InputTypeKeyboardButtonAxis : IInputType
     public InputState GetState(ShapeGamepadDevice? gamepad = null)
     {
         // if (gamepad != null) return new();
-        return ShapeInput.KeyboardDevice.GetState(neg, pos, modifierOperator, modifierKeys);
+        return ShapeInput.KeyboardDevice.CreateInputState(neg, pos, modifierOperator, modifierKeys);
     }
 
     public InputState GetState(InputState prev, ShapeGamepadDevice? gamepad = null)
     {
         // if (gamepad != null) return new();
-        return ShapeInput.KeyboardDevice.GetState(neg, pos, prev, modifierOperator, modifierKeys);
+        return ShapeInput.KeyboardDevice.CreateInputState(neg, pos, prev, modifierOperator, modifierKeys);
     }
     public InputDeviceType GetInputDevice() => InputDeviceType.Keyboard;
     

@@ -15,8 +15,15 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
     public readonly List<char> UsedCharacters = new();
     public readonly List<ShapeKeyboardButton> UsedButtons = new();
     
-    // private readonly Dictionary<ShapeKeyboardButton, InputState> buttonStates = new();
-    internal ShapeKeyboardDevice() { }
+    private readonly Dictionary<ShapeKeyboardButton, InputState> buttonStates = new(AllShapeKeyboardButtons.Length);
+
+    internal ShapeKeyboardDevice()
+    {
+        foreach (var button in AllShapeKeyboardButtons)
+        {
+            buttonStates.Add(button, new());
+        }
+    }
     
     public bool IsLocked() => isLocked;
 
@@ -34,6 +41,8 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
     
     public void Update()
     {
+        UpdateButtonStates();
+        
         UsedButtons.Clear();
         var keycode = Raylib.GetKeyPressed();
         while (keycode > 0)
@@ -60,6 +69,8 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
     }
     
     public void Calibrate(){}
+    
+    public InputState GetButtonState(ShapeKeyboardButton button) => buttonStates[button];
     
     public List<char> GetStreamChar()
     {
@@ -142,6 +153,20 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
 
     private bool WasKeyboardUsed() => !isLocked && UsedButtons.Count > 0;// Raylib.GetKeyPressed() > 0;
 
+    private void UpdateButtonStates()
+    {
+        foreach (var state in buttonStates)
+        {
+            var button = state.Key;
+            var prevState = state.Value;
+            var curState = CreateInputState(button);
+            buttonStates[button] = new InputState(prevState, curState);
+
+        }
+    }
+
+
+    
     #region Button
 
     public static string GetButtonName(ShapeKeyboardButton button, bool shortHand = true)
@@ -303,23 +328,23 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
     //     return buttonStates[button];
     // }
     //
-    public InputState GetState(ShapeKeyboardButton button)
+    public InputState CreateInputState(ShapeKeyboardButton button)
     {
         bool down = IsDown(button);
         return new(down, !down, down ? 1f : 0f, -1, InputDeviceType.Keyboard);
     }
-    public InputState GetState(ShapeKeyboardButton button, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeKeyboardButton button, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         bool down = IsDown(button, modifierOperator, modifierKeys);
         return new(down, !down, down ? 1f : 0f, -1, InputDeviceType.Keyboard);
     }
-    public InputState GetState(ShapeKeyboardButton button, InputState previousState, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeKeyboardButton button, InputState previousState, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
-        return new(previousState, GetState(button, modifierOperator, modifierKeys));
+        return new(previousState, CreateInputState(button, modifierOperator, modifierKeys));
     }
-    public InputState GetState(ShapeKeyboardButton button, InputState previousState)
+    public InputState CreateInputState(ShapeKeyboardButton button, InputState previousState)
     {
-        return new(previousState, GetState(button));
+        return new(previousState, CreateInputState(button));
     }
 
     #endregion
@@ -362,26 +387,26 @@ public sealed class ShapeKeyboardDevice : ShapeInputDevice
         return vPositive - vNegative;
     }
     
-    public InputState GetState(ShapeKeyboardButton neg, ShapeKeyboardButton pos, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeKeyboardButton neg, ShapeKeyboardButton pos, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         float axis = GetValue(neg, pos, modifierOperator, modifierKeys);
         bool down = axis != 0f;
         return new(down, !down, axis, -1, InputDeviceType.Keyboard);
     }
-    public InputState GetState(ShapeKeyboardButton neg, ShapeKeyboardButton pos,
+    public InputState CreateInputState(ShapeKeyboardButton neg, ShapeKeyboardButton pos,
         InputState previousState, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
-        return new(previousState, GetState(neg, pos, modifierOperator, modifierKeys));
+        return new(previousState, CreateInputState(neg, pos, modifierOperator, modifierKeys));
     }
-    public InputState GetState(ShapeKeyboardButton neg, ShapeKeyboardButton pos)
+    public InputState CreateInputState(ShapeKeyboardButton neg, ShapeKeyboardButton pos)
     {
         float axis = GetValue(neg, pos);
         bool down = axis != 0f;
         return new(down, !down, axis, -1, InputDeviceType.Keyboard);
     }
-    public InputState GetState(ShapeKeyboardButton neg, ShapeKeyboardButton pos, InputState previousState)
+    public InputState CreateInputState(ShapeKeyboardButton neg, ShapeKeyboardButton pos, InputState previousState)
     {
-        return new(previousState, GetState(neg, pos));
+        return new(previousState, CreateInputState(neg, pos));
     }
 
     #endregion

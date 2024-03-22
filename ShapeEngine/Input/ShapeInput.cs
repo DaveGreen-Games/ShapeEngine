@@ -13,8 +13,30 @@ public static class ShapeInput
     public static readonly ShapeKeyboardDevice KeyboardDevice = new();
     public static readonly ShapeMouseDevice MouseDevice = new();
     public static readonly ShapeGamepadDeviceManager GamepadDeviceManager = new();
-    
-    
+
+
+    public static InputState GetInputState(this ShapeKeyboardButton button) => KeyboardDevice.GetButtonState(button);
+    public static InputState GetInputState(this ShapeMouseButton button) => MouseDevice.GetButtonState(button);
+    public static InputState GetInputState(this ShapeMouseAxis axis) => MouseDevice.GetAxisState(axis);
+    public static InputState GetInputState(this ShapeMouseWheelAxis axis) => MouseDevice.GetWheelAxisState(axis);
+    public static InputState GetInputState(this ShapeGamepadButton button, int gamepadIndex)
+    {
+        var gamepad = GamepadDeviceManager.GetGamepad(gamepadIndex);
+
+        if (gamepad == null) return new();
+
+        return gamepad.GetButtonState(button);
+    }
+    public static InputState GetInputState(this ShapeGamepadAxis axis, int gamepadIndex)
+    {
+        var gamepad = GamepadDeviceManager.GetGamepad(gamepadIndex);
+
+        if (gamepad == null) return new();
+
+        return gamepad.GetAxisState(axis);
+    }
+
+
     internal static void Update()
     {
         KeyboardDevice.Update();
@@ -23,6 +45,7 @@ public static class ShapeInput
         CheckInputDevice();
     }
 
+    
     
 
     #region InputDeviceType

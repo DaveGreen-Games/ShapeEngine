@@ -39,13 +39,13 @@ public class InputTypeMouseButton : IInputType
     public InputState GetState(ShapeGamepadDevice? gamepad = null)
     {
         // if (gamepad != null) return new();
-        return ShapeInput.MouseDevice.GetState(button, deadzone, modifierOperator, modifierKeys);
+        return ShapeInput.MouseDevice.CreateInputState(button, deadzone, modifierOperator, modifierKeys);
     }
 
     public InputState GetState(InputState prev, ShapeGamepadDevice? gamepad = null)
     {
         // if (gamepad != null) return new();
-        return ShapeInput.MouseDevice.GetState(button, prev, deadzone, modifierOperator, modifierKeys);
+        return ShapeInput.MouseDevice.CreateInputState(button, prev, deadzone, modifierOperator, modifierKeys);
     }
     public virtual string GetName(bool shorthand = true)
     {

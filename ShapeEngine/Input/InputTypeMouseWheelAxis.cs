@@ -49,13 +49,13 @@ public class InputTypeMouseWheelAxis : IInputType
     public InputState GetState(ShapeGamepadDevice? gamepad = null)
     {
         // if (gamepad != null) return new();
-        return ShapeInput.MouseDevice.GetState(axis, deadzone, modifierOperator, modifierKeys);
+        return ShapeInput.MouseDevice.CreateInputState(axis, deadzone, modifierOperator, modifierKeys);
     }
 
     public InputState GetState(InputState prev, ShapeGamepadDevice? gamepad = null)
     {
         // if (gamepad != null) return new();
-        return ShapeInput.MouseDevice.GetState(axis, prev, deadzone, modifierOperator, modifierKeys);
+        return ShapeInput.MouseDevice.CreateInputState(axis, prev, deadzone, modifierOperator, modifierKeys);
     }
     public InputDeviceType GetInputDevice() => InputDeviceType.Mouse;
     public IInputType Copy() => new InputTypeMouseWheelAxis(axis);

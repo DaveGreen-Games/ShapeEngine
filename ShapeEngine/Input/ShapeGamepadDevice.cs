@@ -11,6 +11,10 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
     public static readonly ShapeGamepadButton[] AllShapeGamepadButtons = Enum.GetValues<ShapeGamepadButton>();
     public static readonly ShapeGamepadAxis[] AllShapeGamepadAxis = Enum.GetValues<ShapeGamepadAxis>();
     
+    
+    private readonly Dictionary<ShapeGamepadButton, InputState> buttonStates = new (AllShapeGamepadButtons.Length);
+    private readonly Dictionary<ShapeGamepadAxis, InputState> axisStates = new (AllShapeGamepadAxis.Length);
+    
 
     public readonly int Index;
     
@@ -49,8 +53,20 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
             Calibrate();
         }
         
+        foreach (var button in AllShapeGamepadButtons)
+        {
+            buttonStates.Add(button, new());
+        }
+        foreach (var axis in AllShapeGamepadAxis)
+        {
+            axisStates.Add(axis, new());
+        }
+        
     }
 
+    public InputState GetButtonState(ShapeGamepadButton button) => buttonStates[button];
+    public InputState GetAxisState(ShapeGamepadAxis axis) => axisStates[axis];
+    
     public bool WasUsed() => wasUsed;
     public bool IsLocked() => isLocked;
 
@@ -65,6 +81,9 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
     }
     public void Update()
     {
+        UpdateButtonStates();
+        UpdateAxisStates();
+        
         wasUsed = false;
         if(UsedButtons.Count > 0) UsedButtons.Clear();
         if(UsedAxis.Count > 0) UsedAxis.Clear();
@@ -137,6 +156,30 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
         // triggerFix = false;
         //trigger fix is not necessary anymore I think...
     }
+    
+    private void UpdateButtonStates()
+    {
+        foreach (var state in buttonStates)
+        {
+            var button = state.Key;
+            var prevState = state.Value;
+            var curState = CreateInputState(button);
+            buttonStates[button] = new InputState(prevState, curState);
+
+        }
+    }
+
+    private void UpdateAxisStates()
+    {
+        foreach (var state in axisStates)
+        {
+            var button = state.Key;
+            var prevState = state.Value;
+            var curState = CreateInputState(button);
+            axisStates[button] = new InputState(prevState, curState);
+
+        }
+    }
 
     #region Button
 
@@ -183,23 +226,23 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
         return Raylib.IsGamepadButtonDown(Index, (GamepadButton)id) ? 1f : 0f;
     }
     
-    public InputState GetState(ShapeGamepadButton button, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeGamepadButton button, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         bool down = IsDown(button, deadzone, modifierOperator, modifierKeys);
         return new(down, !down, down ? 1f : 0f, Index, InputDeviceType.Gamepad);
     }
-    public InputState GetState(ShapeGamepadButton button, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeGamepadButton button, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
-        return new(previousState, GetState(button, deadzone, modifierOperator, modifierKeys));
+        return new(previousState, CreateInputState(button, deadzone, modifierOperator, modifierKeys));
     }
-    public InputState GetState(ShapeGamepadButton button, float deadzone = 0.1f)
+    public InputState CreateInputState(ShapeGamepadButton button, float deadzone = 0.1f)
     {
         bool down = IsDown(button, deadzone);
         return new(down, !down, down ? 1f : 0f, Index, InputDeviceType.Gamepad);
     }
-    public InputState GetState(ShapeGamepadButton button, InputState previousState, float deadzone = 0.1f)
+    public InputState CreateInputState(ShapeGamepadButton button, InputState previousState, float deadzone = 0.1f)
     {
-        return new(previousState, GetState(button, deadzone));
+        return new(previousState, CreateInputState(button, deadzone));
     }
     public static string GetButtonName(ShapeGamepadButton button, bool shortHand = true)
     {
@@ -283,25 +326,25 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
         return value;
     }
     
-    public InputState GetState(ShapeGamepadAxis axis, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeGamepadAxis axis, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         float axisValue = GetValue(axis, deadzone, modifierOperator, modifierKeys);
         bool down = axisValue != 0f;
         return new(down, !down, axisValue, Index, InputDeviceType.Gamepad);
     }
-    public InputState GetState(ShapeGamepadAxis axis, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeGamepadAxis axis, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
-        return new(previousState, GetState(axis, deadzone, modifierOperator, modifierKeys));
+        return new(previousState, CreateInputState(axis, deadzone, modifierOperator, modifierKeys));
     }
-    public InputState GetState(ShapeGamepadAxis axis, float deadzone = 0.1f)
+    public InputState CreateInputState(ShapeGamepadAxis axis, float deadzone = 0.1f)
     {
         float axisValue = GetValue(axis, deadzone);
         bool down = axisValue != 0f;
         return new(down, !down, axisValue, Index, InputDeviceType.Gamepad);
     }
-    public InputState GetState(ShapeGamepadAxis axis, InputState previousState, float deadzone = 0.1f)
+    public InputState CreateInputState(ShapeGamepadAxis axis, InputState previousState, float deadzone = 0.1f)
     {
-        return new(previousState, GetState(axis, deadzone));
+        return new(previousState, CreateInputState(axis, deadzone));
     }
     public static string GetAxisName(ShapeGamepadAxis axis, bool shortHand = true)
     {
@@ -356,25 +399,25 @@ public sealed class ShapeGamepadDevice : ShapeInputDevice
         return vPositive - vNegative;
     }
     
-    public InputState GetState(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
         float axis = GetValue(neg, pos, deadzone, modifierOperator, modifierKeys);
         bool down = axis != 0f;
         return new(down, !down, axis, Index, InputDeviceType.Gamepad);
     }
-    public InputState GetState(ShapeGamepadButton neg, ShapeGamepadButton pos, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
+    public InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, InputState previousState, float deadzone, ModifierKeyOperator modifierOperator, params IModifierKey[] modifierKeys)
     {
-        return new(previousState, GetState(neg, pos, deadzone, modifierOperator, modifierKeys));
+        return new(previousState, CreateInputState(neg, pos, deadzone, modifierOperator, modifierKeys));
     }
-    public InputState GetState(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = 0.1f)
+    public InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, float deadzone = 0.1f)
     {
         float axis = GetValue(neg, pos, deadzone);
         bool down = axis != 0f;
         return new(down, !down, axis, Index, InputDeviceType.Gamepad);
     }
-    public InputState GetState(ShapeGamepadButton neg, ShapeGamepadButton pos, InputState previousState, float deadzone = 0.2f)
+    public InputState CreateInputState(ShapeGamepadButton neg, ShapeGamepadButton pos, InputState previousState, float deadzone = 0.2f)
     {
-        return new(previousState, GetState(neg, pos, deadzone));
+        return new(previousState, CreateInputState(neg, pos, deadzone));
     }
 
     #endregion

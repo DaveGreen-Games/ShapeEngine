@@ -55,13 +55,13 @@ public class InputTypeGamepadButtonAxis : IInputType
     }
     public InputState GetState(ShapeGamepadDevice? gamepad)
     {
-        return gamepad != null ? gamepad.GetState(neg, pos, deadzone, modifierOperator, modifierKeys) : new();
+        return gamepad != null ? gamepad.CreateInputState(neg, pos, deadzone, modifierOperator, modifierKeys) : new();
         // return GetState(neg, pos, gamepad, deadzone, modifierOperator, modifierKeys);
     }
 
     public InputState GetState(InputState prev, ShapeGamepadDevice? gamepad)
     {
-        return gamepad != null ? gamepad.GetState(neg, pos, prev, deadzone, modifierOperator, modifierKeys) : new();
+        return gamepad != null ? gamepad.CreateInputState(neg, pos, prev, deadzone, modifierOperator, modifierKeys) : new();
         //return GetState(neg, pos, prev, gamepad, deadzone, modifierOperator, modifierKeys);
     }
 
