@@ -1,6 +1,5 @@
 using System.Numerics;
 using ShapeEngine.Color;
-using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Lib;
@@ -648,13 +647,6 @@ public class Pathfinder
         node.ApplyNodeValue(value);
         return true;
     }
-    public bool RemoveNodeValue(int index, NodeValue value)
-    {
-        var node = GetNode(index);
-        if (node == null) return false;
-        node.RemoveNodeValue(value);
-        return true;
-    }
     public bool ApplyNodeValues(int index, params NodeValue[] values)
     {
         var node = GetNode(index);
@@ -662,14 +654,6 @@ public class Pathfinder
         node.ApplyNodeValues(values);
         return true;
     }
-    public bool RemoveNodeValues(int index, params NodeValue[] values)
-    {
-        var node = GetNode(index);
-        if (node == null) return false;
-        node.RemoveNodeValues(values);
-        return true;
-    }
-    
     #endregion
     
     #region Position
@@ -681,13 +665,6 @@ public class Pathfinder
         node.ApplyNodeValue(value);
         return true;
     }
-    public bool RemoveNodeValue(Vector2 position, NodeValue value)
-    {
-        var node = GetNode(position);
-        if (node == null) return false;
-        node.RemoveNodeValue(value);
-        return true;
-    }
     public bool ApplyNodeValues(Vector2 position, IEnumerable<NodeValue> values)
     {
         var node = GetNode(position);
@@ -695,14 +672,7 @@ public class Pathfinder
         node.ApplyNodeValues(values);
         return true;
     }
-    public bool RemoveNodeValues(Vector2 position, IEnumerable<NodeValue> values)
-    {
-        var node = GetNode(position);
-        if (node == null) return false;
-        node.RemoveNodeValues(values);
-        return true;
-    }
-
+    
     #endregion
     
     #region Segment
@@ -714,18 +684,6 @@ public class Pathfinder
         foreach (var node in resultSet)
         {
             node.ApplyNodeValue(value);
-        }
-    
-        return nodeCount;
-    }
-    public int RemoveNodeValue(Segment shape, NodeValue value)
-    {
-        resultSet.Clear();
-        var nodeCount = GetNodes(shape, ref resultSet);
-        if (nodeCount <= 0) return 0;
-        foreach (var node in resultSet)
-        {
-            node.RemoveNodeValue(value);
         }
     
         return nodeCount;
@@ -742,18 +700,7 @@ public class Pathfinder
     
         return nodeCount;
     }
-    public int RemoveNodeValues(Segment shape, params NodeValue[] values)
-    {
-        resultSet.Clear();
-        var nodeCount = GetNodes(shape, ref resultSet);
-        if (nodeCount <= 0) return 0;
-        foreach (var node in resultSet)
-        {
-            node.RemoveNodeValues(values);
-        }
     
-        return nodeCount;
-    }
     #endregion
     
     #region Circle
@@ -765,18 +712,6 @@ public class Pathfinder
         foreach (var node in resultSet)
         {
             node.ApplyNodeValue(value);
-        }
-    
-        return nodeCount;
-    }
-    public int RemoveNodeValue(Circle shape, NodeValue value)
-    {
-        resultSet.Clear();
-        var nodeCount = GetNodes(shape, ref resultSet);
-        if (nodeCount <= 0) return 0;
-        foreach (var node in resultSet)
-        {
-            node.RemoveNodeValue(value);
         }
     
         return nodeCount;
@@ -793,18 +728,7 @@ public class Pathfinder
     
         return nodeCount;
     }
-    public int RemoveNodeValues(Circle shape, params NodeValue[] values)
-    {
-        resultSet.Clear();
-        var nodeCount = GetNodes(shape, ref resultSet);
-        if (nodeCount <= 0) return 0;
-        foreach (var node in resultSet)
-        {
-            node.RemoveNodeValues(values);
-        }
     
-        return nodeCount;
-    }
     #endregion
     
     #region Triangle
@@ -816,18 +740,6 @@ public class Pathfinder
         foreach (var node in resultSet)
         {
             node.ApplyNodeValue(value);
-        }
-    
-        return nodeCount;
-    }
-    public int RemoveNodeValue(Triangle shape, NodeValue value)
-    {
-        resultSet.Clear();
-        var nodeCount = GetNodes(shape, ref resultSet);
-        if (nodeCount <= 0) return 0;
-        foreach (var node in resultSet)
-        {
-            node.RemoveNodeValue(value);
         }
     
         return nodeCount;
@@ -844,18 +756,7 @@ public class Pathfinder
     
         return nodeCount;
     }
-    public int RemoveNodeValues(Triangle shape, params NodeValue[] values)
-    {
-        resultSet.Clear();
-        var nodeCount = GetNodes(shape, ref resultSet);
-        if (nodeCount <= 0) return 0;
-        foreach (var node in resultSet)
-        {
-            node.RemoveNodeValues(values);
-        }
     
-        return nodeCount;
-    }
     #endregion
     
     #region Rect
@@ -871,18 +772,7 @@ public class Pathfinder
     
         return nodeCount;
     }
-    public int RemoveNodeValue(Rect shape, NodeValue value)
-    {
-        resultSet.Clear();
-        var nodeCount = GetNodes(shape, ref resultSet);
-        if (nodeCount <= 0) return 0;
-        foreach (var node in resultSet)
-        {
-            node.RemoveNodeValue(value);
-        }
     
-        return nodeCount;
-    }
     public int ApplyNodeValues(Rect shape, params NodeValue[] values)
     {
         resultSet.Clear();
@@ -895,18 +785,7 @@ public class Pathfinder
     
         return nodeCount;
     }
-    public int RemoveNodeValues(Rect shape, params NodeValue[] values)
-    {
-        resultSet.Clear();
-        var nodeCount = GetNodes(shape, ref resultSet);
-        if (nodeCount <= 0) return 0;
-        foreach (var node in resultSet)
-        {
-            node.RemoveNodeValues(values);
-        }
     
-        return nodeCount;
-    }
     #endregion
     
     #region Quad
@@ -922,18 +801,7 @@ public class Pathfinder
     
         return nodeCount;
     }
-    public int RemoveNodeValue(Quad shape, NodeValue value)
-    {
-        resultSet.Clear();
-        var nodeCount = GetNodes(shape, ref resultSet);
-        if (nodeCount <= 0) return 0;
-        foreach (var node in resultSet)
-        {
-            node.RemoveNodeValue(value);
-        }
     
-        return nodeCount;
-    }
     public int ApplyNodeValues(Quad shape, params NodeValue[] values)
     {
         resultSet.Clear();
@@ -946,18 +814,7 @@ public class Pathfinder
     
         return nodeCount;
     }
-    public int RemoveNodeValues(Quad shape, params NodeValue[] values)
-    {
-        resultSet.Clear();
-        var nodeCount = GetNodes(shape, ref resultSet);
-        if (nodeCount <= 0) return 0;
-        foreach (var node in resultSet)
-        {
-            node.RemoveNodeValues(values);
-        }
     
-        return nodeCount;
-    }
     #endregion
     
     #region Polygon
@@ -973,18 +830,7 @@ public class Pathfinder
     
         return nodeCount;
     }
-    public int RemoveNodeValue(Polygon shape, NodeValue value)
-    {
-        resultSet.Clear();
-        var nodeCount = GetNodes(shape, ref resultSet);
-        if (nodeCount <= 0) return 0;
-        foreach (var node in resultSet)
-        {
-            node.RemoveNodeValue(value);
-        }
     
-        return nodeCount;
-    }
     public int ApplyNodeValues(Polygon shape, params NodeValue[] values)
     {
         resultSet.Clear();
@@ -997,18 +843,7 @@ public class Pathfinder
     
         return nodeCount;
     }
-    public int RemoveNodeValues(Polygon shape, params NodeValue[] values)
-    {
-        resultSet.Clear();
-        var nodeCount = GetNodes(shape, ref resultSet);
-        if (nodeCount <= 0) return 0;
-        foreach (var node in resultSet)
-        {
-            node.RemoveNodeValues(values);
-        }
     
-        return nodeCount;
-    }
     #endregion
     
     #region Polyline
@@ -1024,18 +859,7 @@ public class Pathfinder
     
         return nodeCount;
     }
-    public int RemoveNodeValue(Polyline shape, NodeValue value)
-    {
-        resultSet.Clear();
-        var nodeCount = GetNodes(shape, ref resultSet);
-        if (nodeCount <= 0) return 0;
-        foreach (var node in resultSet)
-        {
-            node.RemoveNodeValue(value);
-        }
     
-        return nodeCount;
-    }
     public int ApplyNodeValues(Polyline shape, params NodeValue[] values)
     {
         resultSet.Clear();
@@ -1048,18 +872,7 @@ public class Pathfinder
     
         return nodeCount;
     }
-    public int RemoveNodeValues(Polyline shape, params NodeValue[] values)
-    {
-        resultSet.Clear();
-        var nodeCount = GetNodes(shape, ref resultSet);
-        if (nodeCount <= 0) return 0;
-        foreach (var node in resultSet)
-        {
-            node.RemoveNodeValues(values);
-        }
     
-        return nodeCount;
-    }
     #endregion
     #endregion
     
@@ -1406,6 +1219,8 @@ public class Pathfinder
 
     #endregion
 }
+
+
 
 
 /*

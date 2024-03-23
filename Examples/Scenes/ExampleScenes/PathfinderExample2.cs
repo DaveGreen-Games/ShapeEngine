@@ -2,6 +2,7 @@ using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 using System.Numerics;
+using System.Reflection.Metadata;
 using Clipper2Lib;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Collision;
@@ -23,8 +24,11 @@ public class PathfinderExample2 : ExampleScene
     private class Ship : ICameraFollowTarget
     {
         // public Circle Hull { get; private set; }
+        private Pathfinder pathfinder;
+        private Vector2 chasePosition;
+        private int lastTraversableNodeIndex = -1;
         private Triangle hull;
-        private readonly float size;
+        private readonly float shipSize;
         private Vector2 pivot;
         private Vector2 movementDir;
         private float angleRad;
@@ -53,17 +57,18 @@ public class PathfinderExample2 : ExampleScene
             var moveVerMW = new InputTypeMouseWheelAxis(ShapeMouseWheelAxis.VERTICAL, 0.2f, ModifierKeyOperator.Or, GameloopExamples.ModifierKeyMouseReversed);
             iaMoveVer = new(moveVerKB, moveVer2GP, moveVerMW);
         }
-        public Ship(Vector2 pos, float size)
+        public Ship(Vector2 pos, float shipSize, Pathfinder pathfinder)
         {
-            this.size = size;
-            CreateHull(pos, size);
-            
+            this.pathfinder = pathfinder;
+            this.shipSize = shipSize;
+            CreateHull(pos, shipSize);
+            chasePosition = hull.A;
             SetupInput();
         }
 
         public Polygon GetCutShape(float minSize)
         {
-            var s = MathF.Max(minSize, size);
+            var s = MathF.Max(minSize, shipSize);
             return Polygon.Generate(pivot, 12, s, s * 2);
         }
 
@@ -89,6 +94,7 @@ public class PathfinderExample2 : ExampleScene
         public void Reset(Vector2 pos, float size)
         {
             CreateHull(pos, size);
+            chasePosition = hull.A;
             movementDir = new(0, 0);
             angleRad = 0f;
         }
@@ -145,7 +151,14 @@ public class PathfinderExample2 : ExampleScene
                 }
                 else movementDir = new();
             }
-            
+
+            var nodeIndex = pathfinder.GetIndex(hull.A);
+            if (lastTraversableNodeIndex != nodeIndex && pathfinder.IsTraversable(nodeIndex))
+            {
+                lastTraversableNodeIndex = nodeIndex;
+                var r = pathfinder.GetRect(nodeIndex);
+                chasePosition = r.Center;
+            }
         }
         public void Draw()
         {
@@ -168,7 +181,8 @@ public class PathfinderExample2 : ExampleScene
             
         }
 
-        public Vector2 GetChasePosition() => hull.A; //GetCentroid();
+        public Vector2 GetPosition() => hull.A;
+        public Vector2 GetChasePosition() => chasePosition; //GetCentroid();
         public Vector2 GetPredictedChasePosition(float seconds = 1f)
         {
             if (movementDir.LengthSquared() <= 0f) return GetChasePosition();
@@ -449,7 +463,15 @@ public class PathfinderExample2 : ExampleScene
             if (currentPath == null) return true;
             if (currentPathIndex >= currentPath.Rects.Count) return true;
             
-            nextPathPoint = currentPath.Rects[currentPathIndex].GetRandomPointInside();
+            var nextPos = currentPath.Rects[currentPathIndex].GetRandomPointInside();
+
+            var index = pathfinder.GetIndex(nextPos);
+            if (!pathfinder.IsTraversable(index))
+            {
+                currentPath = null;
+                return true;
+            }
+            nextPathPoint = nextPos;
             return false;
         }
 
@@ -487,8 +509,8 @@ public class PathfinderExample2 : ExampleScene
 
     private class AsteroidObstacle
     {
-        public static readonly NodeValue NodeValue = new(0, NodeValueType.Block);
-        public static readonly NodeValue NodeValueReset = new(1, NodeValueType.Clear);
+        public static readonly NodeValue NodeValue = new(NodeValueType.Block);
+        public static readonly NodeValue NodeValueReset = new(NodeValueType.Reset);
         private Polygon shape;
         private Triangulation triangulation;
         private Rect bb;
@@ -513,11 +535,11 @@ public class PathfinderExample2 : ExampleScene
         }
 
         
-        public void Draw(Rect cameraRect)
+        public void Draw(Rect cameraRect, bool drawFilled)
         {
             if (!bb.OverlapShape(cameraRect)) return;
 
-            triangulation.Draw(Colors.Background);
+            if(drawFilled) triangulation.Draw(Colors.Background);
             
             if (AsteroidLineThickness > 1)
             {
@@ -582,7 +604,7 @@ public class PathfinderExample2 : ExampleScene
         camera = new();
         follower = new(0, 300, 500);
         camera.Follower = follower;
-        ship = new(new Vector2(0f), 45f);
+        ship = new(new Vector2(0f), 45f, pathfinder);
         UpdateFollower(camera.Size.Min());
         
         var toggleDrawKB = new InputTypeKeyboardButton(ShapeKeyboardButton.T);
@@ -598,7 +620,7 @@ public class PathfinderExample2 : ExampleScene
     {
         GAMELOOP.Camera = camera;
         UpdateFollower(camera.Size.Min());
-        camera.SetZoom(0.7f);
+        camera.SetZoom(0.6f);
         follower.SetTarget(ship);
     }
 
@@ -611,6 +633,7 @@ public class PathfinderExample2 : ExampleScene
         var universeWidth = ShapeRandom.RandF(8000, 12000);
         var universeHeight = ShapeRandom.RandF(8000, 12000);
         universe = new(new Vector2(0f), new Size(universeWidth, universeHeight) , new Vector2(0.5f));
+        universeShape = universe.ToPolygon();
         var cols = (int)(universeWidth / CellSize);
         var rows = (int)(universeHeight / CellSize);
         pathfinder = new(universe, cols, rows);
@@ -690,7 +713,7 @@ public class PathfinderExample2 : ExampleScene
 
                 if (newShape.OverlapShape(existingShape))
                 {
-                    newShape.UnionSelf(existingShape, FillRule.NonZero);
+                    newShape.UnionShapeSelf(existingShape, FillRule.NonZero);
                     shapes.RemoveAt(j);
                 }
                 else
@@ -699,8 +722,8 @@ public class PathfinderExample2 : ExampleScene
                     if (cd.DistanceSquared <= cellDisSq)
                     {
                         var fillShape = Polygon.Generate(cd.A, 7, cellDistance, cellDistance * 2);
-                        newShape.UnionSelf(fillShape, FillRule.NonZero);
-                        newShape.UnionSelf(existingShape, FillRule.NonZero);
+                        newShape.UnionShapeSelf(fillShape, FillRule.NonZero);
+                        newShape.UnionShapeSelf(existingShape, FillRule.NonZero);
                         shapes.RemoveAt(j);
                     }
                 }
@@ -754,36 +777,7 @@ public class PathfinderExample2 : ExampleScene
     //
     private void AddAsteroid(Vector2 position)
     {
-        // var asteroid = new AsteroidObstacle(position);
-        // // var asteroidShape = asteroid.GetShape();
-        // var nextShape = asteroid.GetShape();
-        // Polygon prevShape;
-        //
-        // do
-        // {
-        //     prevShape = nextShape;
-        //     nextShape = CombineAsteroids(nextShape);
-        // } 
-        // while (nextShape != prevShape);
-        //
-        // if (nextShape == asteroid.GetShape())
-        // {
-        //     asteroids.Add(asteroid);
-        //     pathfinder.AddObstacle(asteroid);
-        // }
-        // else
-        // {
-        //     var newAsteroid = new AsteroidObstacle(nextShape);
-        //     asteroids.Add(newAsteroid);
-        //     pathfinder.AddObstacle(newAsteroid);
-        // }
-       
         var asteroidShape = AsteroidObstacle.GenerateShape(position);
-        // var result = asteroidShape.Intersect(universeShape);
-        // if (result.Count > 0)
-        // {
-        //     asteroidShape = result[0].ToPolygon();
-        // }
         
         pathfinder.ApplyNodeValue(asteroidShape, AsteroidObstacle.NodeValue);
         
@@ -797,7 +791,28 @@ public class PathfinderExample2 : ExampleScene
             
             if (asteroidShape.OverlapShape(otherShape))
             {
-                asteroidShape.UnionSelf(otherShape, FillRule.NonZero);
+                var unionResult = Clipper.Union(asteroidShape.ToClipperPaths(), otherShape.ToClipperPaths(), FillRule.NonZero);
+                if (unionResult.Count > 0)
+                {
+                    
+                    foreach (var pathD in unionResult)
+                    {
+                        if (pathD.IsHole())
+                        {
+                            pathfinder.ApplyNodeValue(pathD.ToPolygon(), AsteroidObstacle.NodeValue);
+                        }
+                        else
+                        {
+                            asteroidShape.Clear();
+                            foreach (var p in pathD)
+                            {
+                                asteroidShape.AddRange(p.ToVec2());
+                            }
+                        }
+                    }
+                }
+                
+                // asteroidShape.UnionShapeSelf(otherShape, FillRule.NonZero);
                 asteroids.RemoveAt(i);
             }
             else
@@ -806,9 +821,51 @@ public class PathfinderExample2 : ExampleScene
                 if (cd.DistanceSquared < cellDisSq)
                 {
                     fillShape = Polygon.Generate(cd.A, 7, cellDistance, cellDistance * 2);
-                    asteroidShape.UnionSelf(fillShape, FillRule.NonZero);
+                    var unionResult = Clipper.Union(asteroidShape.ToClipperPaths(), fillShape.ToClipperPaths(), FillRule.NonZero);
+                    if (unionResult.Count > 0)
+                    {
+                        foreach (var pathD in unionResult)
+                        {
+                            if (pathD.IsHole())
+                            {
+                                pathfinder.ApplyNodeValue(pathD.ToPolygon(), AsteroidObstacle.NodeValue);
+                            }
+                            else
+                            {
+                                asteroidShape.Clear();
+                                foreach (var p in pathD)
+                                {
+                                    asteroidShape.AddRange(p.ToVec2());
+                                }
+                            }
+                        }
+                    }
+                    
+                    
+                    // asteroidShape.UnionShapeSelf(fillShape, FillRule.NonZero);
                     pathfinder.ApplyNodeValue(fillShape, AsteroidObstacle.NodeValue);
-                    asteroidShape.UnionSelf(otherShape, FillRule.NonZero);
+                    
+                    unionResult = Clipper.Union(asteroidShape.ToClipperPaths(), otherShape.ToClipperPaths(), FillRule.NonZero);
+                    if (unionResult.Count > 0)
+                    {
+                        foreach (var pathD in unionResult)
+                        {
+                            if (pathD.IsHole())
+                            {
+                                pathfinder.ApplyNodeValue(pathD.ToPolygon(), AsteroidObstacle.NodeValue);
+                            }
+                            else
+                            {
+                                asteroidShape.Clear();
+                                foreach (var p in pathD)
+                                {
+                                    asteroidShape.AddRange(p.ToVec2());
+                                }
+                            }
+                        }
+                    }
+
+                    // asteroidShape.UnionShapeSelf(otherShape, FillRule.NonZero);
                     asteroids.RemoveAt(i);
                 }
             }
@@ -824,9 +881,6 @@ public class PathfinderExample2 : ExampleScene
         
         var newAsteroid = new AsteroidObstacle(asteroidShape);
         asteroids.Add(newAsteroid);
-
-        // pathfinder.ApplyNodeValue(asteroidShape, AsteroidObstacle.NodeValue);
-
     }
 
     private void RemoveChasers(int amount)
@@ -902,7 +956,7 @@ public class PathfinderExample2 : ExampleScene
         
         ship.Update(time.Delta);
 
-        var index = pathfinder.GetIndex(ship.GetChasePosition());
+        var index = pathfinder.GetIndex(ship.GetPosition());
         if (!pathfinder.IsTraversable(index))
         {
             var r = pathfinder.GetRect(index);
@@ -915,7 +969,7 @@ public class PathfinderExample2 : ExampleScene
                 var asteroid = asteroids[i];
                
                 var asteroidShape = asteroid.GetShape();
-                var result = asteroidShape.Cut(cutShape);
+                var result = asteroidShape.CutShape(cutShape);
                 
                 if (result.cutOuts.Count > 0 )
                 {
@@ -1020,7 +1074,7 @@ public class PathfinderExample2 : ExampleScene
         
         foreach (var asteroid in asteroids)
         {
-            asteroid.Draw(game.Area);
+            asteroid.Draw(game.Area, !drawDebug);
         }
         foreach (var chaser in chasers)
         {

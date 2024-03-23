@@ -7,9 +7,7 @@ internal abstract class Node : IComparable<Node>
 {
     private class NodeWeight
     {
-        // public bool Blocked = false;
         private int blockCount = 0;
-        private int overrideBlockCount = 0;
         private float baseValue = 0;
         private float flat = 0;
         private float bonus = 0;
@@ -20,60 +18,52 @@ internal abstract class Node : IComparable<Node>
             if (!value.Valid) return;
             switch (value.Type)
             {
-                case NodeValueType.Flat:
-                    flat += value.Value;
+                case NodeValueType.Reset:
+                    Reset();
                     break;
-                case NodeValueType.Bonus:
-                    bonus += value.Value;
-                    break;
-                case NodeValueType.Set:
+                
+                case NodeValueType.SetValue:
                     baseValue = value.Value;
                     break;
-                case NodeValueType.SetOverrideBlock:
-                    baseValue = value.Value;
-                    overrideBlockCount++;
-                    break;
-                case NodeValueType.SetReset:
+                case NodeValueType.ResetThenSet:
                     Reset();
                     baseValue = value.Value;
                     break;
                 case NodeValueType.Block:
                     blockCount++;
                     break;
-                case NodeValueType.Clear:
-                    Reset();
-                    break;
-            }
-        }
-
-        public void Remove(NodeValue value)
-        {
-            if (!value.Valid) return;
-            switch (value.Type)
-            {
-                case NodeValueType.Flat:
-                    flat -= value.Value;
-                    break;
-                case NodeValueType.Bonus:
-                    bonus -= value.Value;
-                    break;
-                case NodeValueType.Set:
-                    if (Math.Abs(baseValue - value.Value) < 0.0001f) baseValue = 0;
-                    break;
-                case NodeValueType.SetOverrideBlock:
-                    baseValue = 0;
-                    overrideBlockCount--;
-                    break;
-                case NodeValueType.SetReset:
-                    baseValue = 0;
-                    break;
-                case NodeValueType.Block:
+                case NodeValueType.Unblock:
                     blockCount--;
                     break;
+                case NodeValueType.ResetThenBlock:
+                    Reset();
+                    blockCount++;
+                    break;
+                case NodeValueType.AddFlat:
+                    flat += value.Value;
+                    break;
+                case NodeValueType.RemoveFlat:
+                    flat -= value.Value;
+                    break;
+                case NodeValueType.ResetFlat:
+                    flat = 0;
+                    break;
+                case NodeValueType.AddBonus:
+                    bonus += value.Value;
+                    break;
+                case NodeValueType.RemoveBonus:
+                    bonus -= value.Value;
+                    break;
+                case NodeValueType.ResetBonus:
+                    bonus = 0;
+                    break;
+                
+                
+                
             }
         }
-        public float Cur => blockCount > 0 && overrideBlockCount <= 0 ? 0 : GetBaseValueFactor() * GetBonusFactor();
-        // public float Cur => blockCount > 0 ? 0 : MathF.Max(baseValue + flat, 0) * GetBonusFactor();
+        
+        public float Cur => blockCount > 0 ? 0 : GetBaseValueFactor() * GetBonusFactor();
 
         private float GetBaseValueFactor()
         {
@@ -188,29 +178,12 @@ internal abstract class Node : IComparable<Node>
         }
         else weight.Apply(value);
     }
-    public void RemoveNodeValue(NodeValue value)
-    {
-        if (value.Layer > 0)
-        {
-            if (weights == null) return;
-            if (!weights.ContainsKey(value.Layer)) return;
-            weights[value.Layer].Remove(value);
-        }
-        else weight.Remove(value);
-    }
         
     public void ApplyNodeValues(IEnumerable<NodeValue> values)
     {
         foreach (var value in values)
         {
             ApplyNodeValue(value);
-        }
-    }
-    public void RemoveNodeValues(IEnumerable<NodeValue> values)
-    {
-        foreach (var value in values)
-        {
-            RemoveNodeValue(value);
         }
     }
 

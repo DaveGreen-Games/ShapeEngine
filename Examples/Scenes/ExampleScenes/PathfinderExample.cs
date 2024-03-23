@@ -158,7 +158,7 @@ internal class PathfinderFlag
                     if (rectStarted)
                     {
                         var r = new Rect(rectStartPos, mousePosGame);
-                        pathfinder.ApplyNodeValue(r, new (0, NodeValueType.Clear));
+                        pathfinder.ApplyNodeValue(r, new (NodeValueType.Reset));
                     }
                 }
                 if (Raylib.IsKeyReleased(KeyboardKey.V))
@@ -166,7 +166,7 @@ internal class PathfinderFlag
                     if (rectStarted)
                     {
                         var r = new Rect(rectStartPos, mousePosGame);
-                        pathfinder.ApplyNodeValue(r, new (-5f, NodeValueType.SetReset));
+                        pathfinder.ApplyNodeValue(r, new (-5f, NodeValueType.ResetThenSet));
                     }
                 }
                 if (Raylib.IsKeyReleased(KeyboardKey.B))
@@ -174,7 +174,7 @@ internal class PathfinderFlag
                     if (rectStarted)
                     {
                         var r = new Rect(rectStartPos, mousePosGame);
-                        pathfinder.ApplyNodeValue(r, new (0, NodeValueType.Block));
+                        pathfinder.ApplyNodeValue(r, new (NodeValueType.ResetThenBlock));
                     }
                 }
                 if (Raylib.IsKeyReleased(KeyboardKey.X))
@@ -182,7 +182,7 @@ internal class PathfinderFlag
                     if (rectStarted)
                     {
                         var r = new Rect(rectStartPos, mousePosGame);
-                        pathfinder.ApplyNodeValue(r, new (5f, NodeValueType.SetReset));
+                        pathfinder.ApplyNodeValue(r, new (5f, NodeValueType.ResetThenSet));
                     }
                 }
             

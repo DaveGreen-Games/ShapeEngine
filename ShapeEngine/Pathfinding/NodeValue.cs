@@ -20,12 +20,25 @@ public readonly struct NodeValue
         Type = NodeValueType.None;
         Layer = 0;
     }
+    public NodeValue(NodeValueType type)
+    {
+        Value = 0f;
+        Type = type;
+        Layer = 0;
+    }
+    public NodeValue(NodeValueType type, uint layer)
+    {
+        Value = 0f;
+        Type = type;
+        Layer = layer;
+    }
     public NodeValue(float value, NodeValueType type)
     {
         Value = value;
         Type = type;
         Layer = 0;
     }
+    
     public NodeValue(float value, NodeValueType type, uint layer)
     {
         Value = value;

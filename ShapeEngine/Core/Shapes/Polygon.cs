@@ -528,7 +528,7 @@ namespace ShapeEngine.Core.Shapes
         
         #region Clipping
 
-        public void UnionSelf(Polygon b, FillRule fillRule = FillRule.NonZero)
+        public void UnionShapeSelf(Polygon b, FillRule fillRule = FillRule.NonZero)
         {
             var result = Clipper.Union(this.ToClipperPaths(), b.ToClipperPaths(), fillRule);
             if (result.Count > 0)
@@ -543,19 +543,19 @@ namespace ShapeEngine.Core.Shapes
 
         }
         
-        public bool MergeSelf(Polygon other, float distanceThreshold)
+        public bool MergeShapeSelf(Polygon other, float distanceThreshold)
         {
             var cd = GetClosestDistanceTo(other);
             if (cd.DistanceSquared < distanceThreshold * distanceThreshold)
             {
                 var fillShape = Polygon.Generate(cd.A, 7, distanceThreshold, distanceThreshold * 2);
-                UnionSelf(fillShape, FillRule.NonZero);
-                UnionSelf(other, FillRule.NonZero);
+                UnionShapeSelf(fillShape, FillRule.NonZero);
+                UnionShapeSelf(other, FillRule.NonZero);
             }
 
             return false;
         }
-        public Polygon? Merge(Polygon other, float distanceThreshold)
+        public Polygon? MergeShape(Polygon other, float distanceThreshold)
         {
             var cd = GetClosestDistanceTo(other);
             if (cd.DistanceSquared < distanceThreshold * distanceThreshold)
@@ -571,14 +571,14 @@ namespace ShapeEngine.Core.Shapes
 
             return null;
         }
-        public (Polygons newShapes, Polygons cutOuts) Cut(Polygon cutShape)
+        public (Polygons newShapes, Polygons cutOuts) CutShape(Polygon cutShape)
         {
             var cutOuts = ShapeClipper.Intersect(this, cutShape).ToPolygons(true);
             var newShapes = ShapeClipper.Difference(this, cutShape).ToPolygons(true);
 
             return (newShapes, cutOuts);
         }
-        public (Polygons newShapes, Polygons cutOuts) CutMany(Polygons cutShapes)
+        public (Polygons newShapes, Polygons cutOuts) CutShapeMany(Polygons cutShapes)
         {
             var cutOuts = ShapeClipper.IntersectMany(this, cutShapes).ToPolygons(true);
             var newShapes = ShapeClipper.DifferenceMany(this, cutShapes).ToPolygons(true);
@@ -586,27 +586,27 @@ namespace ShapeEngine.Core.Shapes
         }
 
         
-        public (Polygons newShapes, Polygons overlaps) Combine(Polygon other)
+        public (Polygons newShapes, Polygons overlaps) CombineShape(Polygon other)
         {
             var overlaps = ShapeClipper.Intersect(this, other).ToPolygons(true);
             var newShapes = ShapeClipper.Union(this, other).ToPolygons(true);
             return (newShapes, overlaps);
         }
-        public (Polygons newShapes, Polygons overlaps) Combine(Polygons others)
+        public (Polygons newShapes, Polygons overlaps) CombineShape(Polygons others)
         {
             var overlaps = ShapeClipper.IntersectMany(this, others).ToPolygons(true);
             var newShapes = ShapeClipper.UnionMany(this, others).ToPolygons(true);
             return (newShapes, overlaps);
         }
-        public (Polygons newShapes, Polygons cutOuts) CutSimple(Vector2 cutPos, float minCutRadius, float maxCutRadius, int pointCount = 16)
+        public (Polygons newShapes, Polygons cutOuts) CutShapeSimple(Vector2 cutPos, float minCutRadius, float maxCutRadius, int pointCount = 16)
         {
             var cut = Generate(cutPos, pointCount, minCutRadius, maxCutRadius);
-            return this.Cut(cut);
+            return this.CutShape(cut);
         }
-        public (Polygons newShapes, Polygons cutOuts) CutSimple(Segment cutLine, float minSectionLength = 0.025f, float maxSectionLength = 0.1f, float minMagnitude = 0.05f, float maxMagnitude = 0.25f)
+        public (Polygons newShapes, Polygons cutOuts) CutShapeSimple(Segment cutLine, float minSectionLength = 0.025f, float maxSectionLength = 0.1f, float minMagnitude = 0.05f, float maxMagnitude = 0.25f)
         {
             var cut = Generate(cutLine, minMagnitude, maxMagnitude, minSectionLength, maxSectionLength);
-            return this.Cut(cut);
+            return this.CutShape(cut);
         }
         #endregion
         
