@@ -85,13 +85,13 @@ namespace Examples.Scenes.ExampleScenes
             if (ShapeInput.KeyboardDevice.IsDown(ShapeKeyboardButton.H))
             {
                 collisionSegmentValid = true;
-                collisionSegment = collisionSegment.SetStart(mousePosGame);
+                collisionSegment = collisionSegment.MoveStartTo(mousePosGame);
             }
 
             if (ShapeInput.KeyboardDevice.IsDown(ShapeKeyboardButton.G))
             {
                 collisionSegmentValid = true;
-                collisionSegment = collisionSegment.SetEnd(mousePosGame);
+                collisionSegment = collisionSegment.MoveEndTo(mousePosGame);
             }
             
 

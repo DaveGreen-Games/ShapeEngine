@@ -101,7 +101,7 @@ public class ShapesExample : ExampleScene
         public override void Move(Vector2 newPosition)
         {
             var offset = newPosition - position;
-            Segment = Segment.Move(offset);
+            Segment = Segment.MoveBy(offset);
             position = newPosition;
         }
 
