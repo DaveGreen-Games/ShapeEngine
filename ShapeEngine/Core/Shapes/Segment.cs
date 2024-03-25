@@ -1,7 +1,5 @@
 ﻿
 using System.Numerics;
-using System.Runtime.InteropServices;
-using Raylib_cs;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Structs;
@@ -77,10 +75,12 @@ namespace ShapeEngine.Core.Shapes
         }
 
         #endregion
-       
-        #region Public
+
+        #region Shapes
         public readonly Rect GetBoundingBox() { return new(Start, End); }
-        public readonly bool ContainsPoint(Vector2 p) { return IsPointOnSegment(p, Start, End); }
+
+        public Polyline ToPolyline() { return new Polyline() {Start, End}; }
+        public Segments GetEdges() { return new Segments(){this}; }
         public Points Inflate(float thickness, float alignement = 0.5f)
         {
             var dir = Dir;
@@ -105,11 +105,7 @@ namespace ShapeEngine.Core.Shapes
             return new() { a, b };
         }
 
-        
-        
-        public Polyline ToPolyline() { return new Polyline() {Start, End}; }
-        public Segments GetEdges() { return new Segments(){this}; }
-        
+
         #endregion
 
         #region Point & Vertext
@@ -141,14 +137,14 @@ namespace ShapeEngine.Core.Shapes
         #endregion
         
         #region Transform
-        public Segment ScaleBy(float scale, float originF = 0.5f)
+        public Segment ScaleLength(float scale, float originF = 0.5f)
         {
             var p = GetPoint(originF);
             var s = Start - p;
             var e = End - p;
             return new Segment(p + s * scale, p + e * scale);
         }
-        public Segment ScaleBy(Vector2 scale, float originF = 0.5f)
+        public Segment ScaleLength(Size scale, float originF = 0.5f)
         {
             var p = GetPoint(originF);
             var s = Start - p;
@@ -156,7 +152,7 @@ namespace ShapeEngine.Core.Shapes
             return new Segment(p + s * scale, p + e * scale);
         }
 
-        private static Vector2 ChangeSize(Vector2 from, Vector2 to, float amount)
+        private static Vector2 ChangeLength(Vector2 from, Vector2 to, float amount)
         {
             var w = (to - from);
             var lSq = w.LengthSquared();
@@ -165,9 +161,9 @@ namespace ShapeEngine.Core.Shapes
             var dir = w / l;
             return from + dir * (l + amount);
         }
-        public Segment ScaleByUniformFromStart(float amount)
+        public Segment ChangeLengthFromStart(float amount)
         {
-            var newEnd = ChangeSize(Start, End, amount);
+            var newEnd = ChangeLength(Start, End, amount);
             return new(Start, newEnd);
             // var w = (End - Start);
             // var lSq = w.LengthSquared();
@@ -176,9 +172,9 @@ namespace ShapeEngine.Core.Shapes
             // var dir = w / l;
             // return new(Start, Start + dir * (l + amount));
         }
-        public Segment ScaleByUniformFromEnd(float amount)
+        public Segment ChangeLengthFromEnd(float amount)
         {
-            var newStart = ChangeSize(End, Start, amount);
+            var newStart = ChangeLength(End, Start, amount);
             return new(newStart, End);
             // var w = (Start - End);
             // var lSq = w.LengthSquared();
@@ -194,19 +190,19 @@ namespace ShapeEngine.Core.Shapes
         /// <param name="amount"></param>
         /// <param name="originF"></param>
         /// <returns></returns>
-        public Segment ScaleByUniform(float amount, float originF = 0.5f)
+        public Segment ChangeLength(float amount, float originF = 0.5f)
         {
             if (amount == 0) return this;
-            if (originF <= 0f) return ScaleByUniformFromStart(amount);
-            if (originF >= 1f) return ScaleByUniformFromEnd(amount);
+            if (originF <= 0f) return ChangeLengthFromStart(amount);
+            if (originF >= 1f) return ChangeLengthFromEnd(amount);
             
             var p = GetPoint(originF);
-            var newStart = ChangeSize(p, Start, amount * (1f - originF));
-            var newEnd = ChangeSize(p, End, amount * originF);
+            var newStart = ChangeLength(p, Start, amount * (1f - originF));
+            var newEnd = ChangeLength(p, End, amount * originF);
             return new(newStart, newEnd);
         }
 
-        private static Vector2 ScaleTo(Vector2 from, Vector2 to, float length)
+        private static Vector2 SetLength(Vector2 from, Vector2 to, float length)
         {
             if (length <= 0f) return from;
             var w = (to - from);
@@ -216,14 +212,14 @@ namespace ShapeEngine.Core.Shapes
             var dir = w / l;
             return from + dir * length;
         }
-        public Segment ScaleToFromStart(float length)
+        public Segment SetLengthFromStart(float length)
         {
-            var newEnd = ScaleTo(Start, End, length);
+            var newEnd = SetLength(Start, End, length);
             return new(Start, newEnd);
         }
-        public Segment ScaleToFromEnd(float length)
+        public Segment SetLengthFromEnd(float length)
         {
-            var newStart = ScaleTo(End, Start, length);
+            var newStart = SetLength(End, Start, length);
             return new(newStart, End);
         }
         
@@ -234,32 +230,32 @@ namespace ShapeEngine.Core.Shapes
         /// <param name="length"></param>
         /// <param name="originF"></param>
         /// <returns></returns>
-        public Segment ScaleTo(float length, float originF = 0.5f)
+        public Segment SetLength(float length, float originF = 0.5f)
         {
-            if (originF <= 0f) return ScaleToFromStart(length);
-            if (originF >= 1f) return ScaleToFromEnd(length);
+            if (originF <= 0f) return SetLengthFromStart(length);
+            if (originF >= 1f) return SetLengthFromEnd(length);
             
             var p = GetPoint(originF);
-            var newStart = ScaleTo(p, Start, length * (1f - originF));
-            var newEnd = ScaleTo(p, End, length * originF);
+            var newStart = SetLength(p, Start, length * (1f - originF));
+            var newEnd = SetLength(p, End, length * originF);
             return new(newStart, newEnd);
             
         }
         
-        public Segment MoveStartTo(Vector2 position) { return new(position, End); }
-        public Segment MoveStartBy(Vector2 offset) { return new(Start + offset, End); }
-        public Segment MoveEndTo(Vector2 position) { return new(Start, position); }
-        public Segment MoveEndBy(Vector2 offset) { return new(Start, End + offset); }
-        public Segment MoveBy(Vector2 offset) { return new(Start + offset, End + offset); }
-        public Segment MoveBy(float x, float y) { return MoveBy(new Vector2(x, y)); }
-        public Segment MoveBy(Vector2 offset, float f) { return new(Start + (offset * (1f - f)), End + (offset * f)); }
-        public Segment MoveTo(Vector2 position, float originF = 0.5f)
+        public Segment SetStart(Vector2 position) { return new(position, End); }
+        public Segment ChangeStart(Vector2 offset) { return new(Start + offset, End); }
+        public Segment SetEnd(Vector2 position) { return new(Start, position); }
+        public Segment ChangeEnd(Vector2 offset) { return new(Start, End + offset); }
+        public Segment ChangePosition(Vector2 offset) { return new(Start + offset, End + offset); }
+        public Segment ChangePosition(float x, float y) { return ChangePosition(new Vector2(x, y)); }
+        public Segment ChangePosition(Vector2 offset, float f) { return new(Start + (offset * (1f - f)), End + (offset * f)); }
+        public Segment SetPosition(Vector2 position, float originF = 0.5f)
         {
             var point = GetPoint(originF);
             var offset = position - point;
-            return MoveBy(offset);
+            return ChangePosition(offset);
         }
-        public Segment RotateBy(float angleRad, float originF = 0.5f)
+        public Segment ChangeRotation(float angleRad, float originF = 0.5f)
         {
             var p = GetPoint(originF);
             var s = Start - p;
@@ -273,7 +269,7 @@ namespace ShapeEngine.Core.Shapes
         //     return RotateBy(amountRad, originF);
         // }
         //
-        public Segment RotateTo(float angleRad, float originF = 0.5f)
+        public Segment SetRotation(float angleRad, float originF = 0.5f)
         {
             if (originF <= 0f) return RotateStartTo(angleRad);
             if (originF >= 1f) return RotateEndTo(angleRad);
@@ -281,19 +277,19 @@ namespace ShapeEngine.Core.Shapes
             var origin = GetPoint(originF);
             var fromAngleRad = (origin - Start).AngleRad();
             var amountRad = ShapeMath.GetShortestAngleRad(fromAngleRad, angleRad);
-            return RotateBy(amountRad, originF);
+            return ChangeRotation(amountRad, originF);
         }
         public Segment RotateStartTo(float toAngleRad)
         {
             var fromAngleRad = (Start - End).AngleRad();
             var amountRad = ShapeMath.GetShortestAngleRad(fromAngleRad, toAngleRad);
-            return RotateBy(amountRad, 1f);
+            return ChangeRotation(amountRad, 1f);
         }
         public Segment RotateEndTo(float toAngleRad)
         {
             var fromAngleRad = (End - Start).AngleRad();
             var amountRad = ShapeMath.GetShortestAngleRad(fromAngleRad, toAngleRad);
-            return RotateBy(amountRad, 0f);
+            return ChangeRotation(amountRad, 0f);
         }
        
         /// <summary>
@@ -306,9 +302,9 @@ namespace ShapeEngine.Core.Shapes
         /// <returns></returns>
         public Segment ApplyTransform(Transform2D transform, float originF = 0.5f)
         {
-            var newSegment = MoveBy(transform.Position, originF);
-            newSegment = newSegment.RotateBy(transform.RotationRad, originF);
-            return newSegment.ScaleByUniform(transform.Size.Width, originF);
+            var newSegment = ChangePosition(transform.Position, originF);
+            newSegment = newSegment.ChangeRotation(transform.RotationRad, originF);
+            return newSegment.ChangeLength(transform.Size.Width, originF);
         }
 
         /// <summary>
@@ -321,9 +317,9 @@ namespace ShapeEngine.Core.Shapes
         /// <returns></returns>
         public Segment SetTransform(Transform2D transform, float originF = 0.5f)
         {
-            var newSegment = MoveTo(transform.Position, originF);
-            newSegment = newSegment.RotateTo(transform.RotationRad, originF);
-            return newSegment.ScaleTo(transform.Size.Width, originF);
+            var newSegment = SetPosition(transform.Position, originF);
+            newSegment = newSegment.SetRotation(transform.RotationRad, originF);
+            return newSegment.SetLength(transform.Size.Width, originF);
         }
 
         #endregion
@@ -720,6 +716,12 @@ namespace ShapeEngine.Core.Shapes
         }
         #endregion
 
+        #region Contains
+        
+        public readonly bool ContainsPoint(Vector2 p) { return IsPointOnSegment(p, Start, End); }
+        
+        #endregion
+        
         #region Closest
 
         public static Vector2 GetClosestPoint(Vector2 segmentStart, Vector2 segmentEnd, Vector2 p)

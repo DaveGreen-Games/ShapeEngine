@@ -55,7 +55,8 @@ namespace ShapeEngine.Core.Shapes
         }
         #endregion
 
-        #region Public
+        #region Math
+
         public Polygon Project(Vector2 v)
         {
             if (v.LengthSquared() <= 0f) return ToPolygon(8);
@@ -74,14 +75,53 @@ namespace ShapeEngine.Core.Shapes
             return Polygon.FindConvexHull(points);
         }
         
-        
-        
         public Circle Floor() { return new(Center.Floor(), MathF.Floor(Radius)); }
         public Circle Ceiling() { return new(Center.Ceiling(), MathF.Ceiling(Radius)); }
         public Circle Round() { return new(Center.Round(), MathF.Round(Radius)); }
         public Circle Truncate() { return new(Center.Truncate(), MathF.Truncate(Radius)); }
-                
+        
+        public float GetArea() { return MathF.PI * Radius * Radius; }
+        public float GetCircumference() { return MathF.PI * Radius * 2f; }
+        public float GetCircumferenceSquared() { return GetCircumference() * GetCircumference(); }
+
+        #endregion
+
+        #region Points & Vertext
+
         public Vector2 GetPoint(float angleRad, float f) { return Center + new Vector2(Radius * f, 0f).Rotate(angleRad); }
+        public Vector2 GetRandomPoint()
+        {
+            float randAngle = ShapeRandom.RandAngleRad();
+            var randDir = ShapeVec.VecFromAngleRad(randAngle);
+            return Center + randDir * ShapeRandom.RandF(0, Radius);
+        }
+        public Points GetRandomPoints(int amount)
+        {
+            var points = new Points();
+            for (int i = 0; i < amount; i++)
+            {
+                points.Add(GetRandomPoint());
+            }
+            return points;
+        }
+        public Vector2 GetRandomVertex() { return ShapeRandom.RandCollection(GetVertices(), false); }
+        public Segment GetRandomEdge() { return ShapeRandom.RandCollection(GetEdges(), false); }
+        public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
+        public Points GetRandomPointsOnEdge(int amount)
+        {
+            var points = new Points();
+            for (int i = 0; i < amount; i++)
+            {
+                points.Add(GetRandomPointOnEdge());
+            }
+            return points;
+        }
+
+
+        #endregion
+
+        #region Shapes
+
         public Segments GetEdges(int pointCount = 16)
         {
             float angleStep = (MathF.PI * 2f) / pointCount;
@@ -128,6 +168,23 @@ namespace ShapeEngine.Core.Shapes
             }
             return polyLine;
         }
+        public Triangulation Triangulate() { return ToPolygon().Triangulate(); }
+        public Rect GetBoundingBox() { return new Rect(Center, new Size(Radius, Radius) * 2f, new(0.5f)); }
+
+        public Circle Combine(Circle other)
+        {
+            return new
+            (
+                (Center + other.Center) / 2,
+                Radius + other.Radius
+            );
+        }
+
+
+        #endregion
+        
+        #region Corners
+        
         public (Vector2 top, Vector2 right, Vector2 bottom, Vector2 left) GetCorners()
         {
             var top = Center + new Vector2(0, -Radius);
@@ -160,60 +217,45 @@ namespace ShapeEngine.Core.Shapes
             var bl = Center + new Vector2(-Radius, Radius);
             return new() {tl, tr, br, bl};
         }
-        /*
-        public Circle ScaleRadius(float scale) { return new(Center, Radius * scale); }
-        public Circle ChangeRadius(float amount) { return new(Center, Radius + amount); }
-        public Circle SetRadius(float newRadius) { return new(Center, newRadius); }
-        public Circle MoveCenter(Vector2 offset) { return new(Center + offset, Radius); }
-        public Circle SetCenter(Vector2 newCenter) { return new(newCenter, Radius); }
-        */
-        public Circle Combine(Circle other)
-        {
-            return new
-                (
-                    (Center + other.Center) / 2,
-                    Radius + other.Radius
-                );
-        }
-        
-        public Triangulation Triangulate() { return ToPolygon().Triangulate(); }
-        public float GetArea() { return MathF.PI * Radius * Radius; }
-        public float GetCircumference() { return MathF.PI * Radius * 2f; }
-        public float GetCircumferenceSquared() { return GetCircumference() * GetCircumference(); }
-        public Rect GetBoundingBox() { return new Rect(Center, new Size(Radius, Radius) * 2f, new(0.5f)); }
-
-        
-        
-        public Vector2 GetRandomPoint()
-        {
-            float randAngle = ShapeRandom.RandAngleRad();
-            var randDir = ShapeVec.VecFromAngleRad(randAngle);
-            return Center + randDir * ShapeRandom.RandF(0, Radius);
-        }
-        public Points GetRandomPoints(int amount)
-        {
-            var points = new Points();
-            for (int i = 0; i < amount; i++)
-            {
-                points.Add(GetRandomPoint());
-            }
-            return points;
-        }
-        public Vector2 GetRandomVertex() { return ShapeRandom.RandCollection(GetVertices(), false); }
-        public Segment GetRandomEdge() { return ShapeRandom.RandCollection(GetEdges(), false); }
-        public Vector2 GetRandomPointOnEdge() { return GetRandomEdge().GetRandomPoint(); }
-        public Points GetRandomPointsOnEdge(int amount)
-        {
-            var points = new Points();
-            for (int i = 0; i < amount; i++)
-            {
-                points.Add(GetRandomPointOnEdge());
-            }
-            return points;
-        }
-
         #endregion
 
+        #region Transform
+
+        public Circle ScaleRadius(float scale) => new(Center, Radius * scale);
+        public Circle ChangeRadius(float amount) => new(Center, Radius + amount);
+        public Circle SetRadius(float radius) => new(Center, radius);
+
+        public Circle ChangePosition(Vector2 offset) => this + offset;
+        public Circle ChangePosition(float x, float y) => this + new Vector2(x, y);
+        public Circle SetPosition(Vector2 position) => new Circle(position, Radius);
+        
+        /// <summary>
+        /// Moves the circle by transform.Position
+        /// Changes the radius of the moved circle by transform.Size.Width!
+        /// </summary>
+        /// <param name="transform"></param>
+        /// <returns></returns>
+        public Circle ApplyTransform(Transform2D transform)
+        {
+            var newCircle = ChangePosition(transform.Position);
+            return newCircle.ChangeRadius(transform.Size.Width);
+        }
+
+        /// <summary>
+        /// Moves the circle to transform.Position
+        /// Set the radius of the moved circle to transform.Size.Width!
+        /// </summary>
+        /// <param name="transform"></param>
+        /// <returns></returns>
+        public Circle SetTransform(Transform2D transform)
+        {
+            var newCircle = SetPosition(transform.Position);
+            return newCircle.SetRadius(transform.Size.Width);
+        }
+
+
+        #endregion
+        
         #region Operators
 
         public static Circle operator +(Circle left, Circle right)

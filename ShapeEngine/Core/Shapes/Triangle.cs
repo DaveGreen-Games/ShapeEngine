@@ -63,7 +63,12 @@ namespace ShapeEngine.Core.Shapes
         }
         #endregion
 
-        #region Public
+        #region Math
+        
+        public bool IsValid() { return GetArea() > 0f; }
+
+        public Vector2 GetCentroid()  => (A + B + C) / 3;
+
         public Polygon? Project(Vector2 v)
         {
             if (v.LengthSquared() <= 0f) return null;
@@ -78,67 +83,15 @@ namespace ShapeEngine.Core.Shapes
             };
             return Polygon.FindConvexHull(points);
         }
-
-        public Vector2 GetCentroid()  => (A + B + C) / 3;
-        // {
-        //     //counter clockwise does not work
-        //     // float crossAb = A.X * B.Y - B.X * A.Y;
-        //     // float crossBc = B.X * C.Y - C.X * B.Y;
-        //     // float crossCa = C.X * A.Y - A.X * C.Y;
-        //     //
-        //     // float area = MathF.Abs(crossAb + crossBc + crossCa) / 2;
-        //     // if (area <= 0) return new();
-        //     //
-        //     // var centroid = (A + B) * crossAb;
-        //     // centroid += (B + C) * crossBc;
-        //     // centroid += (C + A) * crossCa;
-        //     // return centroid / (6 * area);
-        //     
-        //     //clockwise works
-        //     float crossAc = A.X * C.Y - C.X * A.Y;
-        //     float crossCb = C.X * B.Y - B.X * C.Y;
-        //     float crossBa = B.X * A.Y - A.X * B.Y;
-        //     float area = (crossAc + crossCb + crossBa) / 2;
-        //     if (area <= 0) return new();
-        //     var centroid = (A + C) * crossAc;
-        //     centroid += (C + B) * crossCb;
-        //     centroid += (B + A) * crossBa;
-        //     return centroid / (6 * area);
-        // }
-
-        // public Vector2 GetCenter() => (A + B + C) / 3;
-        public Rect GetBoundingBox() { return new Rect(A.X, A.Y, 0, 0).Enlarge(B).Enlarge(C); }
-        
-        /// <summary>
-        /// Construct an adjacent triangle on the closest side to the point p. If p is inside the triangle, the triangle is returned.
-        /// </summary>
-        /// <param name="p"></param>
-        /// <returns></returns>
-        public Triangle ConstructAdjacentTriangle(Vector2 p)
-        {
-            if(ContainsPoint(p)) return this;
-
-            var closest = GetClosestSegment(p);
-            return new Triangle(p, closest.Segment);
-        }
-
         public Triangle Floor() { return new(A.Floor(), B.Floor(), C.Floor()); }
         public Triangle Ceiling() { return new(A.Ceiling(), B.Ceiling(), C.Ceiling()); }
         public Triangle Round() { return new(A.Round(), B.Round(), C.Round()); }
         public Triangle Truncate() { return new(A.Truncate(), B.Truncate(), C.Truncate()); }
-        
-        public bool SharesVertex(Vector2 p) { return A == p || B == p || C == p; }
-        public bool SharesVertex(IEnumerable<Vector2> points)
-        {
-            foreach (var p in points)
-            {
-                if (SharesVertex(p)) return true;
-            }
-            return false;
-        }
-        public bool SharesVertex(Triangle t) { return SharesVertex(t.A) || SharesVertex(t.B) || SharesVertex(t.C); }
-        
-        public bool IsValid() { return GetArea() > 0f; }
+
+        public float GetCircumference() => MathF.Sqrt(GetCircumferenceSquared());
+        public float GetCircumferenceSquared() => SideA.LengthSquared() + SideB.LengthSquared() + SideC.LengthSquared();
+        public float GetArea() => MathF.Abs((A.X - C.X) * (B.Y - C.Y) - (A.Y - C.Y) * (B.X - C.X)) / 2f;
+
         public bool IsNarrow(float narrowValue = 0.2f)
         {
             var prev = C;
@@ -181,27 +134,12 @@ namespace ShapeEngine.Core.Shapes
             // }
             // return false;
         }
-        /// <summary>
-        /// Returns a point inside the triangle.
-        /// </summary>
-        /// <param name="f1">First value in the range 0 - 1.</param>
-        /// <param name="f2">Second value in the range 0 - 1.</param>
-        /// <returns></returns>
-        public Vector2 GetPoint(float f1, float f2)
-        {
-            if ((f1 + f2) > 1)
-            {
-                f1 = 1f - f1;
-                f2 = 1f - f2;
-            }
-            Vector2 ac = (C - A) * f1;
-            Vector2 ab = (B - A) * f2;
-            return A + ac + ab;
-            //float f1Sq = MathF.Sqrt(f1);
-            //float x = (1f - f1Sq) * t.a.X + (f1Sq * (1f - f2)) * t.b.X + (f1Sq * f2) * t.c.X;
-            //float y = (1f - f1Sq) * t.a.Y + (f1Sq * (1f - f2)) * t.b.Y + (f1Sq * f2) * t.c.Y;
-            //return new(x, y);
-        }
+
+        #endregion
+        
+        #region Shapes
+
+        public Rect GetBoundingBox() { return new Rect(A.X, A.Y, 0, 0).Enlarge(B).Enlarge(C); }
         public Circle GetCircumCircle()
         {
             //alternative variant
@@ -231,6 +169,26 @@ namespace ShapeEngine.Core.Shapes
             
             return new(center, r);
         }
+        
+        public Points ToPoints() => new() {A, B, C};
+        public Polygon ToPolygon() => new() {A, B, C};
+        public Polyline ToPolyline() => new() { A, B, C };
+        public Segments GetEdges() => new() { SegmentAToB, SegmentBToC, SegmentCToA };
+        
+        /// <summary>
+        /// Construct an adjacent triangle on the closest side to the point p. If p is inside the triangle, the triangle is returned.
+        /// </summary>
+        /// <param name="p"></param>
+        /// <returns></returns>
+        public Triangle ConstructAdjacentTriangle(Vector2 p)
+        {
+            if(ContainsPoint(p)) return this;
+
+            var closest = GetClosestSegment(p);
+            return new Triangle(p, closest.Segment);
+        }
+
+        public Triangulation Triangulate() => this.Triangulate(GetCentroid());
 
         public Triangulation Triangulate(int pointCount)
         {
@@ -275,66 +233,33 @@ namespace ShapeEngine.Core.Shapes
             return new(newA, newB, newC);
         }
 
-        
-        public Triangle Rotate(float rad) { return Rotate(GetCentroid(), rad); }
-        public Triangle Rotate(Vector2 pivot, float rad)
-        {
-            var newA = pivot + (A - pivot).Rotate(rad);
-            var newB = pivot + (B - pivot).Rotate(rad);
-            var newC = pivot + (C - pivot).Rotate(rad);
-            return new(newA, newB, newC);
-        }
-        public Triangle Scale(float scale) { return new(A * scale, B * scale, C * scale); }
-        public Triangle Scale(Vector2 scale) { return new(A * scale, B * scale, C * scale); }
-        public Triangle Scale(Vector2 pivot, float scale)
-        {
-            Vector2 newA = pivot + (A - pivot) * scale;
-            Vector2 newB = pivot + (B - pivot) * scale;
-            Vector2 newC = pivot + (C - pivot) * scale;
-            return new(newA, newB, newC);
-        }
-        public Triangle Scale(Vector2 pivot, Vector2 scale)
-        {
-            Vector2 newA = pivot + (A - pivot) * scale;
-            Vector2 newB = pivot + (B - pivot) * scale;
-            Vector2 newC = pivot + (C - pivot) * scale;
-            return new(newA, newB, newC);
-        }
-        public Triangle Move(Vector2 offset) { return new(A + offset, B + offset, C + offset); }
-        public Triangle Center(Vector2 newCenter)
-        {
-            var centroid = GetCentroid();
-            var delta = newCenter - centroid;
-            return Move(delta);
-        }
-        
-        public Points ToPoints() => new() {A, B, C};
-        public Polygon ToPolygon() => new() {A, B, C};
 
-        public Polyline ToPolyline() => new() { A, B, C };
-        public Segments GetEdges() => new() { SegmentAToB, SegmentBToC, SegmentCToA };
-        public Triangulation Triangulate() => this.Triangulate(GetCentroid());
-        public float GetCircumference() => MathF.Sqrt(GetCircumferenceSquared());
-        public float GetCircumferenceSquared() => SideA.LengthSquared() + SideB.LengthSquared() + SideC.LengthSquared();
-        public float GetArea() => MathF.Abs((A.X - C.X) * (B.Y - C.Y) - (A.Y - C.Y) * (B.X - C.X)) / 2f;
-
-        // public float GetAreaUnsigned()
-        // {
-        //     //clockwise works
-        //     float crossAc = A.X * C.Y - C.X * A.Y;
-        //     float crossCb = C.X * B.Y - B.X * C.Y;
-        //     float crossBa = B.X * A.Y - A.X * B.Y;
-        //     return (crossAc + crossCb + crossBa) / 2;
-        //     
-        //     //counter clockwise does not work
-        //     // float crossAb = A.X * B.Y - B.X * A.Y;
-        //     // float crossBc = B.X * C.Y - C.X * B.Y;
-        //     // float crossCa = C.X * A.Y - A.X * C.Y;
-        //     // return (crossAb + crossBc + crossCa) / 2;
-        // }
-
+        #endregion
         
-        
+        #region Points & Vertex
+        /// <summary>
+        /// Returns a point inside the triangle.
+        /// </summary>
+        /// <param name="f1">First value in the range 0 - 1.</param>
+        /// <param name="f2">Second value in the range 0 - 1.</param>
+        /// <returns></returns>
+
+        public Vector2 GetPoint(float f1, float f2)
+        {
+            if ((f1 + f2) > 1)
+            {
+                f1 = 1f - f1;
+                f2 = 1f - f2;
+            }
+            Vector2 ac = (C - A) * f1;
+            Vector2 ab = (B - A) * f2;
+            return A + ac + ab;
+            //float f1Sq = MathF.Sqrt(f1);
+            //float x = (1f - f1Sq) * t.a.X + (f1Sq * (1f - f2)) * t.b.X + (f1Sq * f2) * t.c.X;
+            //float y = (1f - f1Sq) * t.a.Y + (f1Sq * (1f - f2)) * t.b.Y + (f1Sq * f2) * t.c.Y;
+            //return new(x, y);
+        }
+
         public Vector2 GetRandomPointInside() => this.GetPoint(ShapeRandom.RandF(), ShapeRandom.RandF());
         public Points GetRandomPointsInside(int amount)
         {
@@ -356,9 +281,21 @@ namespace ShapeEngine.Core.Shapes
         public Vector2 GetRandomPointOnEdge() => GetRandomEdge().GetRandomPoint();
         public Points GetRandomPointsOnEdge(int amount) => GetEdges().GetRandomPoints(amount);
 
-        #endregion
 
+        #endregion
+        
         #region Equality & HashCode
+        public bool SharesVertex(Vector2 p) { return A == p || B == p || C == p; }
+        public bool SharesVertex(IEnumerable<Vector2> points)
+        {
+            foreach (var p in points)
+            {
+                if (SharesVertex(p)) return true;
+            }
+            return false;
+        }
+        public bool SharesVertex(Triangle t) { return SharesVertex(t.A) || SharesVertex(t.B) || SharesVertex(t.C); }
+
         public bool IsSimilar(Triangle other)
         {
             return 
@@ -400,7 +337,206 @@ namespace ShapeEngine.Core.Shapes
             return false;
         }
         #endregion
+        
+        #region Transform
+        public Triangle ChangeRotation(float rad) { return ChangeRotation(rad, GetCentroid()); }
+        public Triangle ChangeRotation(float rad, Vector2 origin)
+        {
+            var newA = origin + (A - origin).Rotate(rad);
+            var newB = origin + (B - origin).Rotate(rad);
+            var newC = origin + (C - origin).Rotate(rad);
+            return new(newA, newB, newC);
+        }
 
+        public Triangle SetRotation(float rad)
+        {
+            var origin = GetCentroid();
+            var w = A - origin;
+            var currentAngleRad = w.AngleRad();
+            var amount = ShapeMath.GetShortestAngleRad(currentAngleRad, rad);
+            return ChangeRotation(amount, origin);
+        }
+        public Triangle SetRotation(float rad, Vector2 origin)
+        {
+            var w = A - origin;
+            if (w.LengthSquared() <= 0f)//origin is A
+            {
+                w = B - origin;
+                if (w.LengthSquared() <= 0f)//origin is B
+                {
+                    w = C - origin;
+                }
+            }
+
+            var currentAngleRad = w.AngleRad();
+            var amount = ShapeMath.GetShortestAngleRad(currentAngleRad, rad);
+            return ChangeRotation(amount, origin);
+        }
+        
+        public Triangle ScaleSize(float scale) => this * scale;
+        public Triangle ScaleSize(Size scale) => new Triangle(A * scale, B * scale, C * scale);
+        public Triangle ScaleSize(float scale, Vector2 origin)
+        {
+            var newA = origin + (A - origin) * scale;
+            var newB = origin + (B - origin) * scale;
+            var newC = origin + (C - origin) * scale;
+            return new(newA, newB, newC);
+        }
+        public Triangle ScaleSize(Size scale, Vector2 origin)
+        {
+            var newA = origin + (A - origin) * scale;
+            var newB = origin + (B - origin) * scale;
+            var newC = origin + (C - origin) * scale;
+            return new(newA, newB, newC);
+        }
+
+        public Triangle ChangeSize(float amount) => ChangeSize(amount, GetCentroid());
+        public Triangle ChangeSize(float amount, Vector2 origin)
+        {
+            Vector2 newA, newB, newC;
+            
+            var wA = (A - origin);
+            var lSqA = wA.LengthSquared();
+            if (lSqA <= 0f) newA = A;
+            else
+            {
+                var l = MathF.Sqrt(lSqA);
+                var dir = wA / l;
+                newA = origin + dir * (l + amount);
+            }
+            
+            var wB = (B - origin);
+            var lSqB = wB.LengthSquared();
+            if (lSqB <= 0f) newB = B;
+            else
+            {
+                var l = MathF.Sqrt(lSqB);
+                var dir = wB / l;
+                newB = origin + dir * (l + amount);
+            }
+           
+            var wC = (C - origin);
+            var lSqC = wC.LengthSquared();
+            if (lSqC <= 0f) newC = C;
+            else
+            {
+                var l = MathF.Sqrt(lSqC);
+                var dir = wC / l;
+                newC = origin + dir * (l + amount);
+            }
+            return new(newA, newB, newC);
+        }
+
+        public Triangle SetSize(float size) => SetSize(size, GetCentroid());
+        public Triangle SetSize(float size, Vector2 origin)
+        {
+            Vector2 newA, newB, newC;
+            
+            var wA = (A - origin);
+            var lSqA = wA.LengthSquared();
+            if (lSqA <= 0f) newA = A;
+            else
+            {
+                var l = MathF.Sqrt(lSqA);
+                var dir = wA / l;
+                newA = origin + dir * size;
+            }
+            
+            var wB = (B - origin);
+            var lSqB = wB.LengthSquared();
+            if (lSqB <= 0f) newB = B;
+            else
+            {
+                var l = MathF.Sqrt(lSqB);
+                var dir = wB / l;
+                newB = origin + dir * size;
+            }
+           
+            var wC = (C - origin);
+            var lSqC = wC.LengthSquared();
+            if (lSqC <= 0f) newC = C;
+            else
+            {
+                var l = MathF.Sqrt(lSqC);
+                var dir = wC / l;
+                newC = origin + dir * size;
+            }
+            return new(newA, newB, newC);
+        }
+        
+        public Triangle ChangePosition(Vector2 offset) { return new(A + offset, B + offset, C + offset); }
+        public Triangle SetPosition(Vector2 position)
+        {
+            var centroid = GetCentroid();
+            var delta = position - centroid;
+            return ChangePosition(delta);
+        }
+        public Triangle SetPosition(Vector2 position, Vector2 origin)
+        {
+            var delta = position - origin;
+            return ChangePosition(delta);
+        }
+
+        /// <summary>
+        /// Moves the triangle by transform.Position
+        /// Rotates the moved triangle by transform.RotationRad
+        /// Changes the size of the rotated triangle by transform.Size.Width!
+        /// </summary>
+        /// <param name="transform"></param>
+        /// <returns></returns>
+        public Triangle ApplyTransform(Transform2D transform)
+        {
+            var newTriangle = ChangePosition(transform.Position);
+            newTriangle = newTriangle.ChangeRotation(transform.RotationRad);
+            return newTriangle.ChangeSize(transform.Size.Width);
+        }
+        
+        /// <summary>
+        /// Moves the triangle to transform.Position
+        /// Rotates the moved triangle to transform.RotationRad
+        /// Sets the size of the rotated triangle to transform.Size.Width
+        /// </summary>
+        /// <param name="transform"></param>
+        /// <returns></returns>
+        public Triangle SetTransform(Transform2D transform)
+        {
+            var newTriangle = SetPosition(transform.Position);
+            newTriangle = newTriangle.SetRotation(transform.RotationRad);
+            return newTriangle.SetSize(transform.Size.Width);
+        }
+        
+        /// <summary>
+        /// Moves the triangle by transform.Position
+        /// Rotates the moved triangle by transform.RotationRad
+        /// Changes the size of the rotated triangle by transform.Size.Width!
+        /// </summary>
+        /// <param name="transform"></param>
+        /// <param name="origin"></param>
+        /// <returns></returns>
+        public Triangle ApplyTransform(Transform2D transform, Vector2 origin)
+        {
+            var newTriangle = ChangePosition(transform.Position);
+            newTriangle = newTriangle.ChangeRotation(transform.RotationRad, origin);
+            return newTriangle.ChangeSize(transform.Size.Width, origin);
+        }
+        
+        /// <summary>
+        /// Moves the triangle to transform.Position
+        /// Rotates the moved triangle to transform.RotationRad
+        /// Sets the size of the rotated triangle to transform.Size.Width
+        /// </summary>
+        /// <param name="transform"></param>
+        /// <param name="origin"></param>
+        /// <returns></returns>
+        public Triangle SetTransform(Transform2D transform, Vector2 origin)
+        {
+            var newTriangle = SetPosition(transform.Position, origin);
+            newTriangle = newTriangle.SetRotation(transform.RotationRad, origin);
+            return newTriangle.SetSize(transform.Size.Width, origin);
+        }
+
+        #endregion
+        
         #region Operators
 
         public static Triangle operator +(Triangle left, Triangle right)

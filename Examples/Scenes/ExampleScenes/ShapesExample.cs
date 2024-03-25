@@ -101,7 +101,7 @@ public class ShapesExample : ExampleScene
         public override void Move(Vector2 newPosition)
         {
             var offset = newPosition - position;
-            Segment = Segment.MoveBy(offset);
+            Segment = Segment.ChangePosition(offset);
             position = newPosition;
         }
 
@@ -223,7 +223,7 @@ public class ShapesExample : ExampleScene
         public override void Move(Vector2 newPosition)
         {
             var offset = newPosition - position;
-            Triangle = Triangle.Move(offset);
+            Triangle = Triangle.ChangePosition(offset);
             position = newPosition;
         }
 

@@ -106,7 +106,7 @@ public class PathfinderExample2 : ExampleScene
             var angleDif = ShapeMath.GetShortestAngleRad(angleRad, newAngle);
             var movement = movementDir * speed * dt;
 
-            hull = hull.Move(movement);
+            hull = hull.ChangePosition(movement);
             pivot += movement;
 
             var angleMovement = MathF.Sign(angleDif) * dt * MathF.PI * 4f;
@@ -115,7 +115,7 @@ public class PathfinderExample2 : ExampleScene
                 angleMovement = angleDif;
             }
             angleRad += angleMovement;
-            hull = hull.Rotate(pivot, angleMovement);
+            hull = hull.ChangeRotation(angleMovement, pivot);
         }
         public void Update(float dt)
         {

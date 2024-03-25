@@ -99,7 +99,7 @@ namespace Examples.Scenes.ExampleScenes
 
                         float rotDifDeg = rotDeg - prevRotDeg;
                         
-                        shape = shape.Center(pos).Rotate(shape.GetCentroid(), rotDifDeg * ShapeMath.DEGTORAD);
+                        shape = shape.SetPosition(pos).ChangeRotation(rotDifDeg * ShapeMath.DEGTORAD);
                         // shape = shape.Rotate(shape.GetCentroid(), rotDifDeg * ShapeMath.DEGTORAD);
                     }
                     
