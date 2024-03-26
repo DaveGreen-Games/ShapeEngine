@@ -4,6 +4,12 @@ namespace ShapeEngine.Core.Shapes;
 
 public class ShapeList<T> : List<T>
 {
+    public ShapeList(){}
+
+    public ShapeList(int capacity) : base(capacity)
+    {
+        
+    }
     public void AddRange(params T[] items) { AddRange(items as IEnumerable<T>);}
     public ShapeList<T> Copy()
     {

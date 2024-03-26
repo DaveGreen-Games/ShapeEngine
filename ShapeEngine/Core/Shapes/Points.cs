@@ -8,6 +8,7 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
 {
     #region Constructors
     public Points(){}
+    public Points(int capacity) : base(capacity){}
     public Points(IEnumerable<Vector2> points) { AddRange(points); }
     #endregion
 

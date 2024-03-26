@@ -750,7 +750,7 @@ namespace Examples.Scenes.ExampleScenes
         private void GenerateRect()
         {
             Rect r = new(curPos, new Size(curSize), new Vector2(0.5f));
-            curShape = r.Rotate(new(0.5f), curRot);// r.RotateList(new Vector2(0.5f), curRot);
+            curShape = r.Rotate(curRot, new(0.5f));// r.RotateList(new Vector2(0.5f), curRot);
         }
         private void GeneratePoly()
         {
@@ -813,7 +813,7 @@ namespace Examples.Scenes.ExampleScenes
             if (polyModeActive)
             {
                 SetCurPos(mousePosGame);
-                curShape.CenterSelf(curPos);
+                curShape.SetPosition(curPos);
                 BitFlag mask = new(AsteriodLayer);
                 var candidates = new List<Collider>();
                 col.CastSpace(curShape, mask, ref candidates);
@@ -942,8 +942,8 @@ namespace Examples.Scenes.ExampleScenes
                     CycleRotation();
                     
                     float dif = curRot - oldRot;
-                    curShape.RotateSelf(new Vector2(0.5f), dif * ShapeMath.DEGTORAD);
-                    curShape.CenterSelf(curPos);
+                    curShape.ChangeRotation(dif * ShapeMath.DEGTORAD, new Vector2(0.5f));
+                    curShape.SetPosition(curPos);
                 }
 
                 if (iaScaleShape.State.Pressed)//scale
@@ -951,8 +951,8 @@ namespace Examples.Scenes.ExampleScenes
                     float oldSize = curSize;
                     CycleSize();
                     float scale = curSize / oldSize;
-                    curShape.ScaleSelf(scale);
-                    curShape.CenterSelf(curPos);
+                    curShape.ScaleSize(scale);
+                    curShape.SetPosition(curPos);
                 }
 
                 

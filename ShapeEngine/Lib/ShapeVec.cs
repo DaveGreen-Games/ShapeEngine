@@ -199,15 +199,30 @@ namespace ShapeEngine.Lib
         } 
         public static Vector2 Reflect(this Vector2 v, Vector2 n) { return Vector2.Reflect(v, n); }
         
-        public static Vector2 ScaleUniform(this Vector2 v, float distance)
+        // public static Vector2 ScaleUniform(this Vector2 v, float distance)
+        // {
+        //     float length = v.Length();
+        //     if (length <= 0) return v;
+        //
+        //     float scale = 1f + (distance / v.Length());
+        //     return v * scale; // Scale(v, scale);
+        // }
+        public static Vector2 ChangeLength(this Vector2 v, float amount)
         {
-            float length = v.Length();
-            if (length <= 0) return v;
-
-            float scale = 1f + (distance / v.Length());
-            return v * scale; // Scale(v, scale);
+            var lSq = v.LengthSquared();
+            if (lSq <= 0f) return v;
+            var l = MathF.Sqrt(lSq);
+            var dir = v / l;
+            return dir * (l + amount);
         }
-
+        public static Vector2 SetLength(this Vector2 v, float length)
+        {
+            var lSq = v.LengthSquared();
+            if (lSq <= 0f) return v;
+            var l = MathF.Sqrt(lSq);
+            var dir = v / l;
+            return dir * length;
+        }
         /// <summary>
         /// Returns the product of v.Normalized() * v
         /// </summary>

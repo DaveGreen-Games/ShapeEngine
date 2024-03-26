@@ -404,7 +404,7 @@ public class ShapesExample : ExampleScene
         public override void Move(Vector2 newPosition)
         {
             var offset = newPosition - position;
-            Polygon.MoveSelf(offset);
+            Polygon.ChangePosition(offset);
             position = newPosition;
         }
 

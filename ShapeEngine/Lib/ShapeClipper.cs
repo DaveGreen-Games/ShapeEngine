@@ -196,8 +196,19 @@ namespace ShapeEngine.Lib
         public static PathsD MinkowskiDiff(this Polygon poly, Polygon path, bool isClosed = false) { return Clipper.MinkowskiDiff(poly.ToClipperPath(), path.ToClipperPath(), isClosed); }
         public static PathsD MinkowskiSum(this Polygon poly, Polygon path, bool isClosed = false) { return Clipper.MinkowskiSum(poly.ToClipperPath(), path.ToClipperPath(), isClosed); }
 
-        public static PathsD MinkowskiDiffOrigin(this Polygon poly, Polygon path, bool isClosed = false) { return Clipper.MinkowskiDiff(poly.ToClipperPath(), path.GetCenteredPolygon(new(0f)).ToClipperPath(), isClosed); }
-        public static PathsD MinkowskiSumOrigin(this Polygon poly, Polygon path, bool isClosed = false) { return Clipper.MinkowskiSum(poly.ToClipperPath(), path.GetCenteredPolygon(new(0f)).ToClipperPath(), isClosed); }
+        public static PathsD MinkowskiDiffOrigin(this Polygon poly, Polygon path, bool isClosed = false)
+        {
+            var pathCopy = path.SetPositionCopy(new(0f));
+            if (pathCopy == null) return new();
+            return Clipper.MinkowskiDiff(poly.ToClipperPath(), pathCopy.ToClipperPath(), isClosed);
+        }
+
+        public static PathsD MinkowskiSumOrigin(this Polygon poly, Polygon path, bool isClosed = false)
+        {
+            var pathCopy = path.SetPositionCopy(new(0f));
+            if (pathCopy == null) return new();
+            return Clipper.MinkowskiSum(poly.ToClipperPath(), pathCopy.ToClipperPath(), isClosed);
+        }
 
         public static Polygon CreateEllipse(Vector2 center, float radiusX, float radiusY = 0f, int steps = 0) { return Clipper.Ellipse(center.ToClipperPoint(), radiusX, radiusY, steps).ToPolygon(); }
 

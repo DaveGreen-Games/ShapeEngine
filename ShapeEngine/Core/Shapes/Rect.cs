@@ -374,17 +374,17 @@ public readonly struct Rect : IEquatable<Rect>
     /// <param name="pivot"></param>
     /// <param name="angleDeg"></param>
     /// <returns></returns>
-    public Polygon Rotate(Vector2 pivot, float angleDeg)
+    public Polygon Rotate(float angleDeg, Vector2 pivot)
     {
         var poly = ToPolygon();
-        poly.RotateSelf(pivot, angleDeg * ShapeMath.DEGTORAD);
+        poly.ChangeRotation(angleDeg * ShapeMath.DEGTORAD, pivot);
         return poly;
     }
 
-    public Points RotateList(Vector2 pivot, float angleDeg)
+    public Points RotateList(float angleDeg, Vector2 pivot)
     {
         var poly = ToPolygon();
-        poly.RotateSelf(pivot, angleDeg * ShapeMath.DEGTORAD);
+        poly.ChangeRotation(angleDeg * ShapeMath.DEGTORAD, pivot);
         return new() { poly[0], poly[1], poly[2], poly[3] };
     }
 
@@ -488,7 +488,7 @@ public readonly struct Rect : IEquatable<Rect>
     public (Vector2 tl, Vector2 bl, Vector2 br, Vector2 tr) RotateCorners(Vector2 pivot, float angleDeg)
     {
         var poly = ToPolygon();
-        poly.RotateSelf(pivot, angleDeg * ShapeMath.DEGTORAD);
+        poly.ChangeRotation(angleDeg * ShapeMath.DEGTORAD, pivot);
         return new(poly[0], poly[1], poly[2], poly[3]);
     }
     public Vector2 GetRandomPointInside() { return new(ShapeRandom.RandF(X, X + Width), ShapeRandom.RandF(Y, Y + Height)); }

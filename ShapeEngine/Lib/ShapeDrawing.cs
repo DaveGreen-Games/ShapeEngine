@@ -856,7 +856,7 @@ public static class ShapeDrawing
     public static void DrawSlantedCorners(this Rect rect, Vector2 pivot, float rotDeg, ColorRgba color, float tlCorner, float trCorner, float brCorner, float blCorner)
     {
         var poly = GetSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner);
-        poly.RotateSelf(pivot, rotDeg * ShapeMath.DEGTORAD);
+        poly.ChangeRotation(rotDeg * ShapeMath.DEGTORAD, pivot);
         poly.DrawPolygonConvex(rect.Center, color);
         //DrawPolygonConvex(poly, rect.Center, color);
         //var points = SPoly.Rotate(GetSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner), pivot, rotDeg * SUtils.DEGTORAD);
@@ -871,7 +871,7 @@ public static class ShapeDrawing
     public static void DrawSlantedCornersLines(this Rect rect, Vector2 pivot, float rotDeg, float lineThickness, ColorRgba color, float tlCorner, float trCorner, float brCorner, float blCorner)
     {
         var poly = GetSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner);
-        poly.RotateSelf(pivot, rotDeg * ShapeMath.DEGTORAD);
+        poly.ChangeRotation(rotDeg * ShapeMath.DEGTORAD, pivot);
         poly.DrawLines(lineThickness, color);
         // DrawLines(poly, lineThickness, color);
         //var points = SPoly.Rotate(GetSlantedCornerPoints(rect, tlCorner, trCorner, brCorner, blCorner), pivot, rotDeg * SUtils.DEGTORAD);

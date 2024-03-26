@@ -16,6 +16,11 @@ namespace ShapeEngine.Core.Shapes
     {
         #region Constructors
         public Polygon() { }
+
+        public Polygon(int capacity) : base(capacity)
+        {
+            
+        }
         
         /// <summary>
         /// Points should be in CCW order. Use Reverse if they are in CW order.
@@ -41,8 +46,6 @@ namespace ShapeEngine.Core.Shapes
         }
         public override int GetHashCode() { return Game.GetHashCode(this); }
         #endregion
-
-        #region Public
 
         #region Vertices
         public void FixWindingOrder() { if (this.IsClockwise()) this.Reverse(); }
@@ -389,139 +392,289 @@ namespace ShapeEngine.Core.Shapes
 
         #endregion
         
-        #region Translation
-        public void CenterSelf(Vector2 newCenter)
+        #region Transform
+        public void SetPosition(Vector2 newPosition)
         {
             var centroid = GetCentroid();
-            var delta = newCenter - centroid;
-            MoveSelf(delta);
+            var delta = newPosition - centroid;
+            ChangePosition(delta);
         }
-        public void MoveSelf(Vector2 translation)
+        public void ChangePosition(Vector2 offset)
         {
             for (int i = 0; i < Count; i++)
             {
-                this[i] += translation;
+                this[i] += offset;
             }
             //return path;
         }
-        public void RotateSelf(Vector2 pivot, float rotRad)
+        public void ChangeRotation(float rotRad, Vector2 origin)
         {
             if (Count < 3) return;
             for (int i = 0; i < Count; i++)
             {
-                Vector2 w = this[i] - pivot;
-                this[i] = pivot + w.Rotate(rotRad);
+                var w = this[i] - origin;
+                this[i] = origin + w.Rotate(rotRad);
             }
-            //return path;
         }
-        public void RotateSelf(float rotRad)
+        public void ChangeRotation(float rotRad)
         {
-            if (Count < 3) return;// new();
+            if (Count < 3) return;
+            var origin = GetCentroid();
             for (int i = 0; i < Count; i++)
             {
-                this[i] = this[i].Rotate(rotRad);
+                var w = this[i] - origin;
+                this[i] = origin + w.Rotate(rotRad);
             }
-            //return path;
         }
-        public void ScaleSelf(float scale)
+        
+        public void SetRotation(float angleRad, Vector2 origin)
         {
+            if (Count < 3) return;
+
+            var curAngle = (this[0] - origin).AngleRad();
+            var rotRad = ShapeMath.GetShortestAngleRad(curAngle, angleRad);
+            ChangeRotation(rotRad, origin);
+        }
+        public void SetRotation(float angleRad)
+        {
+            if (Count < 3) return;
+
+            var origin = GetCentroid();
+            var curAngle = (this[0] - origin).AngleRad();
+            var rotRad = ShapeMath.GetShortestAngleRad(curAngle, angleRad);
+            ChangeRotation(rotRad, origin);
+        }
+        public void ScaleSize(float scale)
+        {
+            if (Count < 3) return;
+            var origin = GetCentroid();
             for (int i = 0; i < Count; i++)
             {
-                this[i] *= scale;
+                var w = this[i] - origin;
+                this[i] = origin + w * scale;
             }
-            //return path;
         }
-        public void ScaleSelf(Vector2 pivot, float scale)
+        public void ScaleSize(float scale, Vector2 origin)
         {
             if (Count < 3) return;
             for (int i = 0; i < Count; i++)
             {
-                Vector2 w = this[i] - pivot;
-                this[i] = pivot + w * scale;
+                var w = this[i] - origin;
+                this[i] = origin + w * scale;
             }
         }
-        public void ScaleSelf(Vector2 pivot, Vector2 scale)
+        public void ScaleSize(Vector2 scale, Vector2 origin)
         {
             if (Count < 3) return;// new();
             for (int i = 0; i < Count; i++)
             {
-                Vector2 w = this[i] - pivot;
-                this[i] = pivot + w * scale;
+                var w = this[i] - origin;
+                this[i] = origin + w * scale;
             }
             //return path;
         }
-        public void ScaleUniformSelf(float distance)
+        public void ChangeSize(float amount, Vector2 origin)
         {
+            if (Count < 3) return;
+            for (var i = 0; i < Count; i++)
+            {
+                var w = this[i] - origin;
+                this[i] = origin + w.ChangeLength(amount);
+            }
+            
+        }
+        public void ChangeSize(float amount)
+        {
+            if (Count < 3) return;
+            var origin = GetCentroid();
+            for (var i = 0; i < Count; i++)
+            {
+                var w = this[i] - origin;
+                this[i] = origin + w.ChangeLength(amount);
+            }
+            
+        }
+
+        public void SetSize(float size, Vector2 origin)
+        {
+            if (Count < 3) return;
+            for (var i = 0; i < Count; i++)
+            {
+                var w = this[i] - origin;
+                this[i] = origin + w.SetLength(size);
+            }
+
+        }
+        public void SetSize(float size)
+        {
+            if (Count < 3) return;
+            var origin = GetCentroid();
+            for (var i = 0; i < Count; i++)
+            {
+                var w = this[i] - origin;
+                this[i] = origin + w.SetLength(size);
+            }
+
+        }
+
+        public void SetTransform(Transform2D transform, Vector2 origin)
+        {
+            SetPosition(transform.Position);
+            SetRotation(transform.RotationRad, origin);
+            SetSize(transform.Size.Width, origin);
+        }
+        public void ApplyTransform(Transform2D transform, Vector2 origin)
+        {
+            ChangePosition(transform.Position);
+            ChangeRotation(transform.RotationRad, origin);
+            ChangeSize(transform.Size.Width, origin);
+            
+        }
+        
+        
+        public Polygon? SetPositionCopy(Vector2 newPosition)
+        {
+            if (Count < 3) return null;
+            var centroid = GetCentroid();
+            var delta = newPosition - centroid;
+            return ChangePositionCopy(delta);
+        }
+        public Polygon? ChangePositionCopy(Vector2 offset)
+        {
+            if (Count < 3) return null;
+            var newPolygon = new Polygon(this.Count);
             for (int i = 0; i < Count; i++)
             {
-                this[i] = ShapeVec.ScaleUniform(this[i], distance);
+                newPolygon.Add(this[i] + offset);
             }
+
+            return newPolygon;
         }
-        public Polygon GetCenteredPolygon(Vector2 newCenter)
+        public Polygon? ChangeRotationCopy(float rotRad, Vector2 origin)
         {
-            var centroid = GetCentroid();
-            var delta = newCenter - centroid;
-            return GetMovedPolygon(delta);
-        }
-        public Polygon GetMovedPolygon(Vector2 translation)
-        {
-            Polygon result = new();
+            if (Count < 3) return null;
+            var newPolygon = new Polygon(this.Count);
             for (var i = 0; i < Count; i++)
             {
-                result.Add(this[i] + translation);
+                var w = this[i] - origin;
+                newPolygon.Add(origin + w.Rotate(rotRad));
             }
-            return result;
+
+            return newPolygon;
         }
-        public Polygon GetRotatedPolygon(Vector2 pivot, float rotRad)
+
+        public Polygon? ChangeRotationCopy(float rotRad)
         {
-            if (Count < 3) return new();
-            Polygon rotated = new();
+            if (Count < 3) return null;
+            return ChangeRotationCopy(rotRad, GetCentroid());
+        }
+
+        public Polygon? SetRotationCopy(float angleRad, Vector2 origin)
+        {
+            if (Count < 3) return null;
+            var curAngle = (this[0] - origin).AngleRad();
+            var rotRad = ShapeMath.GetShortestAngleRad(curAngle, angleRad);
+            return ChangeRotationCopy(rotRad, origin);
+        }
+        public Polygon? SetRotationCopy(float angleRad)
+        {
+            if (Count < 3) return null;
+
+            var origin = GetCentroid();
+            var curAngle = (this[0] - origin).AngleRad();
+            var rotRad = ShapeMath.GetShortestAngleRad(curAngle, angleRad);
+            return ChangeRotationCopy(rotRad, origin);
+        }
+        public Polygon? ScaleSizeCopy(float scale)
+        {
+            if (Count < 3) return null;
+            return ScaleSizeCopy(scale, GetCentroid());
+        }
+        public Polygon? ScaleSizeCopy(float scale, Vector2 origin)
+        {
+            if (Count < 3) return null;
+            var newPolygon = new Polygon(this.Count);
+            
             for (var i = 0; i < Count; i++)
             {
-                var w = this[i] - pivot;
-                rotated.Add(pivot + w.Rotate(rotRad));
+                var w = this[i] - origin;
+                newPolygon.Add( origin + w * scale);
             }
-            return rotated;
+
+            return newPolygon;
         }
-        public Polygon GetScaledPolygon(float scale)
+        public Polygon? ScaleSizeCopy(Vector2 scale, Vector2 origin)
         {
-            Polygon shape = new();
+            if (Count < 3) return null;
+            var newPolygon = new Polygon(this.Count);
+            
             for (var i = 0; i < Count; i++)
             {
-                shape.Add(this[i] * scale);
+                var w = this[i] - origin;
+                newPolygon.Add(origin + w * scale);
             }
-            return shape;
+
+            return newPolygon;
         }
-        public Polygon GetScalePolygon(Vector2 pivot, float scale)
+        public Polygon? ChangeSizeCopy(float amount, Vector2 origin)
         {
-            if (Count < 3) return new();
-            Polygon scaled = new();
+            if (Count < 3) return null;
+            var newPolygon = new Polygon(this.Count);
+            
             for (var i = 0; i < Count; i++)
             {
-                var w = this[i] - pivot;
-                scaled.Add(pivot + w * scale);
+                var w = this[i] - origin;
+                newPolygon.Add(origin + w.ChangeLength(amount));
             }
-            return scaled;
+
+            return newPolygon;
+
         }
-        public Polygon GetScaledPolygon(Vector2 pivot, Vector2 scale)
+        public Polygon? ChangeSizeCopy(float amount)
         {
-            if (Count < 3) return new();
-            Polygon scaled = new();
+            if (Count < 3) return null;
+            return ChangeSizeCopy(amount, GetCentroid());
+
+        }
+
+        public Polygon? SetSizeCopy(float size, Vector2 origin)
+        {
+            if (Count < 3) return null;
+            var newPolygon = new Polygon(this.Count);
+            
             for (var i = 0; i < Count; i++)
             {
-                var w = this[i] - pivot;
-                scaled.Add(pivot + w * scale);
+                var w = this[i] - origin;
+                newPolygon.Add(origin + w.SetLength(size));
             }
-            return scaled;
+
+            return newPolygon;
         }
-        public Polygon GetScaleUniformPolygon(float distance)
+        public Polygon? SetSizeCopy(float size)
         {
-            Polygon shape = new();
-            for (var i = 0; i < Count; i++)
-            {
-                shape.Add(this[i].ScaleUniform(distance));
-            }
-            return shape;
+            if (Count < 3) return null;
+            return SetSizeCopy(size, GetCentroid());
+
+        }
+
+        public Polygon? SetTransformCopy(Transform2D transform, Vector2 origin)
+        {
+            if (Count < 3) return null;
+            var newPolygon = SetPositionCopy(transform.Position);
+            if (newPolygon == null) return null;
+            newPolygon.SetRotation(transform.RotationRad, origin);
+            newPolygon.SetSize(transform.Size.Width, origin);
+            return newPolygon;
+        }
+        public Polygon? ApplyTransformCopy(Transform2D transform, Vector2 origin)
+        {
+            if (Count < 3) return null;
+            
+            var newPolygon = ChangePositionCopy(transform.Position);
+            if (newPolygon == null) return null;
+            newPolygon.ChangeRotation(transform.RotationRad, origin);
+            newPolygon.ChangeSize(transform.Size.Width, origin);
+            return newPolygon;
         }
         
         #endregion
@@ -655,8 +808,6 @@ namespace ShapeEngine.Core.Shapes
             return pa.Lerp(pb, ShapeRandom.RandF());
         }
 
-        #endregion
-        
         #endregion
 
         #region Static
