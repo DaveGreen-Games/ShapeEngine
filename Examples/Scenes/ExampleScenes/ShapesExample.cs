@@ -282,7 +282,7 @@ public class ShapesExample : ExampleScene
         }
         public override void Move(Vector2 newPosition)
         {
-            Quad = Quad.MoveTo(newPosition, new Vector2(0.5f));
+            Quad = Quad.SetPosition(newPosition, new Vector2(0.5f));
         }
 
         public override void Draw(ColorRgba color)
@@ -342,7 +342,7 @@ public class ShapesExample : ExampleScene
         public override void Move(Vector2 newPosition)
         {
             var offset = newPosition - Rect.Center;
-            Rect = Rect.Move(offset);
+            Rect = Rect.ChangePosition(offset);
         }
 
         public override void Draw(ColorRgba color)

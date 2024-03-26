@@ -101,8 +101,9 @@ public readonly struct Quad : IEquatable<Quad>
         
     }
     #endregion
-    
-    #region Public
+
+    #region Math
+
     public Polygon? Project(Vector2 v)
     {
         if (v.LengthSquared() <= 0f) return null;
@@ -158,6 +159,11 @@ public readonly struct Quad : IEquatable<Quad>
         );
     }
 
+
+    #endregion
+
+    #region Shapes
+
     public Rect GetBoundingBox()
     {
         Rect r = new(A.X, A.Y, 0, 0);
@@ -166,6 +172,32 @@ public readonly struct Quad : IEquatable<Quad>
         r = r.Enlarge(D);
         return r;
     }
+   
+    public Segment GetEdge(int index)
+    {
+        var i = index % 4;
+        if (i == 0) return SegmentAToB;
+        if (i == 1) return SegmentBToC;
+        if (i == 2) return SegmentCToD;
+        return SegmentDToA;
+    }
+
+    public Segments GetEdges() => new() { SegmentAToB, SegmentBToC, SegmentCToD, SegmentDToA };
+
+    public Polygon ToPolygon() => new() { A, B, C, D };
+    public Points ToPoints() => new() { A, B, C, D };
+    public Polyline ToPolyline() => new() { A, B, C, D };
+    public Triangulation Triangulate()
+    {
+        Triangle abc = new(A,B,C);
+        Triangle cda= new(C,D,A);
+        return new Triangulation() { abc, cda };
+    }
+
+    #endregion
+
+    #region Points & Vertex
+
     public Vector2 GetPoint(Vector2 alignement) => GetPoint(alignement.X, alignement.Y);
     public Vector2 GetPoint(float alignementX, float alignementY)
     {
@@ -183,17 +215,7 @@ public readonly struct Quad : IEquatable<Quad>
         if (i == 2) return C;
         return D;
     }
-    public Segment GetEdge(int index)
-    {
-        var i = index % 4;
-        if (i == 0) return SegmentAToB;
-        if (i == 1) return SegmentBToC;
-        if (i == 2) return SegmentCToD;
-        return SegmentDToA;
-    }
 
-    
-    
     public Vector2 GetRandomPointInside() => GetPoint(ShapeRandom.RandF(), ShapeRandom.RandF());
     public Points GetRandomPointsInside(int amount)
     {
@@ -239,40 +261,43 @@ public readonly struct Quad : IEquatable<Quad>
 
         return points;
     }
-        
+
+
+    #endregion
     
-    public Quad RotateByRad(float angle, Vector2 pivot)
+    #region Transform
+    public Quad ChangeRotation(float rad, Vector2 alignement)
     {
-        var pivotPoint = GetPoint(pivot);
-        var a = (A - pivotPoint).Rotate(angle);
-        var b = (B - pivotPoint).Rotate(angle);
-        var c = (C - pivotPoint).Rotate(angle);
-        var d = (D - pivotPoint).Rotate(angle);
+        var pivotPoint = GetPoint(alignement);
+        var a = (A - pivotPoint).Rotate(rad);
+        var b = (B - pivotPoint).Rotate(rad);
+        var c = (C - pivotPoint).Rotate(rad);
+        var d = (D - pivotPoint).Rotate(rad);
         return new(a,b,c,d);
     }
-
-    public Quad RotateByDeg(float angle, Vector2 pivot) => RotateByRad(angle * ShapeMath.DEGTORAD, pivot);
-    public Quad RotateToRad(float target, Vector2 pivot)
+    public Quad SetRotation(float angleRad, Vector2 alignement)
     {
-        float amount = ShapeMath.GetShortestAngleRad(AngleRad, target);
-        return RotateByRad(amount, pivot);
+        float amount = ShapeMath.GetShortestAngleRad(AngleRad, angleRad);
+        return ChangeRotation(amount, alignement);
     }
-    public Quad RotateToDeg(float target, Vector2 pivot) => RotateToRad(target * ShapeMath.DEGTORAD, pivot);
-    
-    public Quad MoveBy(Vector2 amount)
+
+    public Quad ChangeRotation(float rad) => ChangeRotation(rad, Center);
+    public Quad SetRotation(float angleRad) => SetRotation(angleRad, Center);
+
+    public Quad ChangePosition(Vector2 offset)
     {
         return new
         (
-            A + amount,
-            B + amount,
-            C + amount,
-            D + amount
+            A + offset,
+            B + offset,
+            C + offset,
+            D + offset
         );
     }
-    public Quad MoveTo(Vector2 target, Vector2 alignement)
+    public Quad SetPosition(Vector2 newPosition, Vector2 alignement)
     {
         var p = GetPoint(alignement);
-        var translation = target - p;
+        var translation = newPosition - p;
         return new
         (
             A + translation,
@@ -282,55 +307,267 @@ public readonly struct Quad : IEquatable<Quad>
         );
     }
 
-    public Quad ScaleBy(float amount, Vector2 alignement)
-    {
-        var p = GetPoint(alignement);
-        return new
-            (
-                A + (A - p) * amount,
-                B + (B - p) * amount,
-                C + (C - p) * amount,
-                D + (D - p) * amount
-            );
+    public Quad SetPosition(Vector2 newPosition) => SetPosition(newPosition, Center);
 
-    }
-    public Quad ScaleBy(Vector2 amount, Vector2 alignement)
+    
+    public Quad ScaleSize(float scale) => this * scale;
+    public Quad ScaleSize(Size scale) => new Quad(A * scale, B * scale, C * scale, D * scale);
+   
+    public Quad ScaleSize(float scale, Vector2 alignement)
     {
         var p = GetPoint(alignement);
         return new
         (
-            A + (A - p) * amount,
-            B + (B - p) * amount,
-            C + (C - p) * amount,
-            D + (D - p) * amount
+            A + (A - p) * scale,
+            B + (B - p) * scale,
+            C + (C - p) * scale,
+            D + (D - p) * scale
+        );
+
+    }
+    public Quad ScaleSize(Size scale, Vector2 alignement)
+    {
+        var p = GetPoint(alignement);
+        return new
+        (
+            A + (A - p) * scale,
+            B + (B - p) * scale,
+            C + (C - p) * scale,
+            D + (D - p) * scale
         );
     }
+    
+    public Quad ChangeSize(float amount) => ChangeSize(amount, Center);
+    public Quad ChangeSize(float amount, Vector2 alignement)
+    {
+        Vector2 newA, newB, newC, newD;
+
+        var origin = GetPoint(alignement);
+        
+        var wA = (A - origin);
+        var lSqA = wA.LengthSquared();
+        if (lSqA <= 0f) newA = A;
+        else
+        {
+            var l = MathF.Sqrt(lSqA);
+            var dir = wA / l;
+            newA = origin + dir * (l + amount);
+        }
+        
+        var wB = (B - origin);
+        var lSqB = wB.LengthSquared();
+        if (lSqB <= 0f) newB = B;
+        else
+        {
+            var l = MathF.Sqrt(lSqB);
+            var dir = wB / l;
+            newB = origin + dir * (l + amount);
+        }
+       
+        var wC = (C - origin);
+        var lSqC = wC.LengthSquared();
+        if (lSqC <= 0f) newC = C;
+        else
+        {
+            var l = MathF.Sqrt(lSqC);
+            var dir = wC / l;
+            newC = origin + dir * (l + amount);
+        }
+        
+        var wD = (D - origin);
+        var lSqD = wD.LengthSquared();
+        if (lSqD <= 0f) newD = D;
+        else
+        {
+            var l = MathF.Sqrt(lSqD);
+            var dir = wD / l;
+            newD = origin + dir * (l + amount);
+        }
+        return new(newA, newB, newC, newD);
+    }
+    
+    public Quad SetSize(float size) => SetSize(size, Center);
+    public Quad SetSize(float size, Vector2 alignement)
+    {
+        Vector2 newA, newB, newC, newD;
+        
+        var origin = GetPoint(alignement);
+        
+        var wA = (A - origin);
+        var lSqA = wA.LengthSquared();
+        if (lSqA <= 0f) newA = A;
+        else
+        {
+            var l = MathF.Sqrt(lSqA);
+            var dir = wA / l;
+            newA = origin + dir * size;
+        }
+        
+        var wB = (B - origin);
+        var lSqB = wB.LengthSquared();
+        if (lSqB <= 0f) newB = B;
+        else
+        {
+            var l = MathF.Sqrt(lSqB);
+            var dir = wB / l;
+            newB = origin + dir * size;
+        }
+       
+        var wC = (C - origin);
+        var lSqC = wC.LengthSquared();
+        if (lSqC <= 0f) newC = C;
+        else
+        {
+            var l = MathF.Sqrt(lSqC);
+            var dir = wC / l;
+            newC = origin + dir * size;
+        }
+        
+        var wD = (D - origin);
+        var lSqD = wD.LengthSquared();
+        if (lSqD <= 0f) newD = D;
+        else
+        {
+            var l = MathF.Sqrt(lSqD);
+            var dir = wD / l;
+            newD = origin + dir * size;
+        }
+        return new(newA, newB, newC, newD);
+    }
+    
+    
+    /// <summary>
+    /// Moves the quad by transform.Position
+    /// Rotates the moved quad by transform.RotationRad
+    /// Changes the size of the rotated quad by transform.Size!
+    /// </summary>
+    /// <param name="transform"></param>
+    /// <returns></returns>
+    public Quad ApplyTransform(Transform2D transform)
+    {
+        var newQuad = ChangePosition(transform.Position);
+        newQuad = newQuad.ChangeRotation(transform.RotationRad);
+        return newQuad.ChangeSize(transform.Size.Width);
+    }
+    
+    /// <summary>
+    /// Moves the quad to transform.Position
+    /// Rotates the moved quad to transform.RotationRad
+    /// Sets the size of the rotated quad to transform.Size.Width
+    /// </summary>
+    /// <param name="transform"></param>
+    /// <returns></returns>
+    public Quad SetTransform(Transform2D transform)
+    {
+        var newQuad = SetPosition(transform.Position);
+        newQuad = newQuad.SetRotation(transform.RotationRad);
+        return newQuad.SetSize(transform.Size.Width);
+    }
+    
+    /// <summary>
+    /// Moves the quad by transform.Position
+    /// Rotates the moved quad by transform.RotationRad
+    /// Changes the size of the rotated quad by transform.Size.Width!
+    /// </summary>
+    /// <param name="transform"></param>
+    /// <param name="alignement"></param>
+    /// <returns></returns>
+    public Quad ApplyTransform(Transform2D transform, Vector2 alignement)
+    {
+        var newQuad = ChangePosition(transform.Position);
+        newQuad = newQuad.ChangeRotation(transform.RotationRad, alignement);
+        return newQuad.ChangeSize(transform.Size.Width, alignement);
+    }
+    
+    /// <summary>
+    /// Moves the quad to transform.Position
+    /// Rotates the moved quad to transform.RotationRad
+    /// Sets the size of the rotated quad to transform.Size.Width
+    /// </summary>
+    /// <param name="transform"></param>
+    /// <param name="alignement"></param>
+    /// <returns></returns>
+    public Quad SetTransform(Transform2D transform, Vector2 alignement)
+    {
+        var newQuad = SetPosition(transform.Position, alignement);
+        newQuad = newQuad.SetRotation(transform.RotationRad, alignement);
+        return newQuad.SetSize(transform.Size.Width, alignement);
+    }
+    
+    
+    
+    // public Quad ScaleSize(float scale, Vector2 origin)
+    // {
+    //     var newA = origin + (A - origin) * scale;
+    //     var newB = origin + (B - origin) * scale;
+    //     var newC = origin + (C - origin) * scale;
+    //     var newD = origin + (D - origin) * scale;
+    //     return new(newA, newB, newC, newD);
+    // }
+    // public Quad ScaleSize(Size scale, Vector2 origin)
+    // {
+    //     var newA = origin + (A - origin) * scale;
+    //     var newB = origin + (B - origin) * scale;
+    //     var newC = origin + (C - origin) * scale;
+    //     var newD = origin + (D - origin) * scale;
+    //     return new(newA, newB, newC, newD);
+    // }
 
     
-    // private bool ContainsPointCheck(Vector2 a, Vector2 b, Vector2 pointToCheck)
+    
+    // public Triangle ChangeRotation(float rad) { return ChangeRotation(rad, GetCentroid()); }
+    // public Triangle ChangeRotation(float rad, Vector2 origin)
     // {
-    //     if (a.Y < pointToCheck.Y && b.Y >= pointToCheck.Y || b.Y < pointToCheck.Y && a.Y >= pointToCheck.Y)
+    //     var newA = origin + (A - origin).Rotate(rad);
+    //     var newB = origin + (B - origin).Rotate(rad);
+    //     var newC = origin + (C - origin).Rotate(rad);
+    //     return new(newA, newB, newC);
+    // }
+    //
+    // public Triangle SetRotation(float rad)
+    // {
+    //     var origin = GetCentroid();
+    //     var w = A - origin;
+    //     var currentAngleRad = w.AngleRad();
+    //     var amount = ShapeMath.GetShortestAngleRad(currentAngleRad, rad);
+    //     return ChangeRotation(amount, origin);
+    // }
+    // public Triangle SetRotation(float rad, Vector2 origin)
+    // {
+    //     var w = A - origin;
+    //     if (w.LengthSquared() <= 0f)//origin is A
     //     {
-    //         if (a.X + (pointToCheck.Y - a.Y) / (b.Y - a.Y) * (b.X - a.X) < pointToCheck.X)
+    //         w = B - origin;
+    //         if (w.LengthSquared() <= 0f)//origin is B
     //         {
-    //             return true;
+    //             w = C - origin;
     //         }
     //     }
-    //     return false;
+    //
+    //     var currentAngleRad = w.AngleRad();
+    //     var amount = ShapeMath.GetShortestAngleRad(currentAngleRad, rad);
+    //     return ChangeRotation(amount, origin);
     // }
+    //
     
-    public Segments GetEdges() => new() { SegmentAToB, SegmentBToC, SegmentCToD, SegmentDToA };
+    //
+    // public Triangle ChangePosition(Vector2 offset) { return new(A + offset, B + offset, C + offset); }
+    // public Triangle SetPosition(Vector2 position)
+    // {
+    //     var centroid = GetCentroid();
+    //     var delta = position - centroid;
+    //     return ChangePosition(delta);
+    // }
+    // public Triangle SetPosition(Vector2 position, Vector2 origin)
+    // {
+    //     var delta = position - origin;
+    //     return ChangePosition(delta);
+    // }
+    //
+    
 
-    public Polygon ToPolygon() => new() { A, B, C, D };
-    public Points ToPoints() => new() { A, B, C, D };
-    public Polyline ToPolyline() => new() { A, B, C, D };
-    public Triangulation Triangulate()
-    {
-        Triangle abc = new(A,B,C);
-        Triangle cda= new(C,D,A);
-        return new Triangulation() { abc, cda };
-    }
     #endregion
+        
     
     #region Operators
     public static Quad operator +(Quad left, Quad right)
