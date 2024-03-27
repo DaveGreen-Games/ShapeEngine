@@ -467,12 +467,14 @@ public class ShapesExample : ExampleScene
         }
         public override void Move(Vector2 newPosition)
         {
-            var offset = newPosition - position;
-            for (var i = 0; i < Polyline.Count; i++)
-            {
-                var p = Polyline[i];
-                Polyline[i] = p + offset;
-            }
+            
+            Polyline.SetPosition(newPosition, position);
+            // var offset = newPosition - position;
+            // for (var i = 0; i < Polyline.Count; i++)
+            // {
+            //     var p = Polyline[i];
+            //     Polyline[i] = p + offset;
+            // }
             position = newPosition;
         }
 

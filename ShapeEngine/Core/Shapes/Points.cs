@@ -159,6 +159,8 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
     }
     #endregion
 
+    
+    
     #region Static
     public static void Floor(List<Vector2> points)
     {
@@ -190,15 +192,15 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
     }
     
     
-    public static Points Move(Points points, Vector2 translation)
-    {
-        var result = new Points();
-        for (int i = 0; i < points.Count; i++)
-        {
-            result.Add(points[i] + translation);
-        }
-        return result;
-    }
+    // public static Points Move(Points points, Vector2 translation)
+    // {
+    //     var result = new Points();
+    //     for (int i = 0; i < points.Count; i++)
+    //     {
+    //         result.Add(points[i] + translation);
+    //     }
+    //     return result;
+    // }
     
     
     

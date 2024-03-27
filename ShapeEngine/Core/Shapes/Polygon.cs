@@ -277,7 +277,8 @@ namespace ShapeEngine.Core.Shapes
         public Polygon Project(Vector2 v)
         {
             if (v.LengthSquared() <= 0f) return ToPolygon();
-            var translated = Polygon.Move(this, v);
+            var translated = ChangePositionCopy(v); // Polygon.Move(this, v);
+            if (translated == null) return ToPolygon();
             var points = new Points();
             points.AddRange(this);
             points.AddRange(translated);
