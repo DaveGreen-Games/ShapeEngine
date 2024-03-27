@@ -27,7 +27,8 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
     }
     #endregion
 
-    #region Public
+    #region Points & Vertex
+
     /// <summary>
     /// Gets the value at the specified index wrapping around if index is smaller than 0 or bigger than count
     /// </summary>
@@ -38,48 +39,6 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
         return GetItem(index);
         //return Count <= 0 ? new() : this[index % Count];
     }
-
-    public ClosestDistance GetClosestDistanceTo(Vector2 p)
-    {
-        if (Count <= 0) return new();
-
-        if (Count == 1) return new(this[0], p);
-
-
-        var closestPoint = this[0];
-        var minDisSq = (closestPoint - p).LengthSquared();
-
-        for (var i = 1; i < Count; i++)
-        {
-            var disSq = (this[i] - p).LengthSquared();
-            if (disSq >= minDisSq) continue;
-            minDisSq = disSq;
-            closestPoint = this[i];
-        }
-
-        return new(closestPoint, p);
-    }
-        
-    // public ClosestPoint GetClosest(Vector2 p)
-    // {
-    //     if (Count <= 0) return new();
-    //
-    //     float minDisSquared = float.PositiveInfinity;
-    //     Vector2 closestPoint = new();
-    //
-    //     for (var i = 0; i < Count; i++)
-    //     {
-    //         var point = this[i];
-    //
-    //         float disSquared = (point - p).LengthSquared();
-    //         if (disSquared < minDisSquared)
-    //         {
-    //             minDisSquared = disSquared;
-    //             closestPoint = point;
-    //         }
-    //     }
-    //     return new(closestPoint, (p -closestPoint), MathF.Sqrt(minDisSquared));
-    // }
     public int GetClosestIndex(Vector2 p)
     {
         if (Count <= 0) return -1;
@@ -131,35 +90,276 @@ public class Points : ShapeList<Vector2>, IEquatable<Points>
 
     public Vector2 GetRandomPoint() => GetRandomItem();
     public List<Vector2> GetRandomPoints(int amount) => GetRandomItems(amount);
-    public Polygon ToPolygon()
-    {
-        return new Polygon(this);
-    }
-    public Polyline ToPolyline()
-    {
-        return new Polyline(this);
-    }
+
+    #endregion
+
+    #region Math
 
     public void Floor() { Points.Floor(this); }
     public void Ceiling() { Points.Ceiling(this); }
     public void Truncate() { Points.Truncate(this); }
     public void Round() { Points.Round(this); }
-    
-    public List<Vector2> GetRelativePoints(Vector2 origin)
+
+    #endregion
+
+    #region Shapes
+
+    public Polygon ToPolygon() => new(this);
+
+    public Polyline ToPolyline() => new(this);
+
+    public List<Vector2> GetRelativeVector2List(Vector2 origin)
     {
-        var relative = new List<Vector2>();
+        var relative = new List<Vector2>(Count);
         foreach (var p in this)  relative.Add(p - origin);
         return relative;
     }
-    public List<Vector2> GetRelativePoints(Transform2D transform)
+    public List<Vector2> GetRelativeVector2List(Transform2D transform)
     {
-        var relative = new List<Vector2>();
+        var relative = new List<Vector2>(Count);
         foreach (var p in this)  relative.Add(transform.Revert(p));
         return relative;
     }
+    
+    public Points GetRelativePoints(Vector2 origin)
+    {
+        var relative = new Points(Count);
+        foreach (var p in this)  relative.Add(p - origin);
+        return relative;
+    }
+    public Points GetRelativePoints(Transform2D transform)
+    {
+        var relative = new Points(Count);
+        foreach (var p in this)  relative.Add(transform.Revert(p));
+        return relative;
+    }
+
+    #endregion
+    
+    #region Closest Distance
+   
+    public ClosestDistance GetClosestDistanceTo(Vector2 p)
+    {
+        if (Count <= 0) return new();
+
+        if (Count == 1) return new(this[0], p);
+
+
+        var closestPoint = this[0];
+        var minDisSq = (closestPoint - p).LengthSquared();
+
+        for (var i = 1; i < Count; i++)
+        {
+            var disSq = (this[i] - p).LengthSquared();
+            if (disSq >= minDisSq) continue;
+            minDisSq = disSq;
+            closestPoint = this[i];
+        }
+
+        return new(closestPoint, p);
+    }
+    
     #endregion
 
+    #region Transform
+    public void SetPosition(Vector2 newPosition, Vector2 origin)
+    {
+        var delta = newPosition - origin;
+        ChangePosition(delta);
+    }
+    public void ChangePosition(Vector2 offset)
+    {
+        for (int i = 0; i < Count; i++)
+        {
+            this[i] += offset;
+        }
+    }
+    public void ChangeRotation(float rotRad, Vector2 origin)
+    {
+        if (Count < 2) return;
+        for (int i = 0; i < Count; i++)
+        {
+            var w = this[i] - origin;
+            this[i] = origin + w.Rotate(rotRad);
+        }
+    }
+    public void SetRotation(float angleRad, Vector2 origin)
+    {
+        if (Count < 2) return;
+
+        var curAngle = (this[0] - origin).AngleRad();
+        var rotRad = ShapeMath.GetShortestAngleRad(curAngle, angleRad);
+        ChangeRotation(rotRad, origin);
+    }
     
+    public void ScaleSize(float scale, Vector2 origin)
+    {
+        if (Count < 2) return;
+        for (int i = 0; i < Count; i++)
+        {
+            var w = this[i] - origin;
+            this[i] = origin + w * scale;
+        }
+    }
+    public void ScaleSize(Vector2 scale, Vector2 origin)
+    {
+        if (Count < 3) return;// new();
+        for (int i = 0; i < Count; i++)
+        {
+            var w = this[i] - origin;
+            this[i] = origin + w * scale;
+        }
+        //return path;
+    }
+    public void ChangeSize(float amount, Vector2 origin)
+    {
+        if (Count < 2) return;
+        for (var i = 0; i < Count; i++)
+        {
+            var w = this[i] - origin;
+            this[i] = origin + w.ChangeLength(amount);
+        }
+        
+    }
+    public void SetSize(float size, Vector2 origin)
+    {
+        if (Count < 2) return;
+        for (var i = 0; i < Count; i++)
+        {
+            var w = this[i] - origin;
+            this[i] = origin + w.SetLength(size);
+        }
+
+    }
+
+    public void SetTransform(Transform2D transform, Vector2 origin)
+    {
+        SetPosition(transform.Position, origin);
+        SetRotation(transform.RotationRad, origin);
+        SetSize(transform.Size.Width, origin);
+    }
+    public void ApplyTransform(Transform2D transform, Vector2 origin)
+    {
+        ChangePosition(transform.Position);
+        ChangeRotation(transform.RotationRad, origin);
+        ChangeSize(transform.Size.Width, origin);
+        
+    }
+    
+    
+    public Points? SetPositionCopy(Vector2 newPosition, Vector2 origin)
+    {
+        if (Count < 2) return null;
+        var delta = newPosition - origin;
+        return ChangePositionCopy(delta);
+    }
+    public Points? ChangePositionCopy(Vector2 offset)
+    {
+        if (Count < 3) return null;
+        var newPolygon = new Polygon(this.Count);
+        for (int i = 0; i < Count; i++)
+        {
+            newPolygon.Add(this[i] + offset);
+        }
+    
+        return newPolygon;
+    }
+    public Points? ChangeRotationCopy(float rotRad, Vector2 origin)
+    {
+        if (Count < 3) return null;
+        var newPolygon = new Polygon(this.Count);
+        for (var i = 0; i < Count; i++)
+        {
+            var w = this[i] - origin;
+            newPolygon.Add(origin + w.Rotate(rotRad));
+        }
+    
+        return newPolygon;
+    }
+    
+    public Points? SetRotationCopy(float angleRad, Vector2 origin)
+    {
+        if (Count < 3) return null;
+        var curAngle = (this[0] - origin).AngleRad();
+        var rotRad = ShapeMath.GetShortestAngleRad(curAngle, angleRad);
+        return ChangeRotationCopy(rotRad, origin);
+    }
+    
+    public Points? ScaleSizeCopy(float scale, Vector2 origin)
+    {
+        if (Count < 3) return null;
+        var newPolygon = new Polygon(this.Count);
+        
+        for (var i = 0; i < Count; i++)
+        {
+            var w = this[i] - origin;
+            newPolygon.Add( origin + w * scale);
+        }
+    
+        return newPolygon;
+    }
+    public Points? ScaleSizeCopy(Vector2 scale, Vector2 origin)
+    {
+        if (Count < 3) return null;
+        var newPolygon = new Polygon(this.Count);
+        
+        for (var i = 0; i < Count; i++)
+        {
+            var w = this[i] - origin;
+            newPolygon.Add(origin + w * scale);
+        }
+    
+        return newPolygon;
+    }
+    public Points? ChangeSizeCopy(float amount, Vector2 origin)
+    {
+        if (Count < 3) return null;
+        var newPolygon = new Polygon(this.Count);
+        
+        for (var i = 0; i < Count; i++)
+        {
+            var w = this[i] - origin;
+            newPolygon.Add(origin + w.ChangeLength(amount));
+        }
+    
+        return newPolygon;
+    
+    }
+    public Points? SetSizeCopy(float size, Vector2 origin)
+    {
+        if (Count < 3) return null;
+        var newPolygon = new Polygon(this.Count);
+        
+        for (var i = 0; i < Count; i++)
+        {
+            var w = this[i] - origin;
+            newPolygon.Add(origin + w.SetLength(size));
+        }
+    
+        return newPolygon;
+    }
+    
+    public Points? SetTransformCopy(Transform2D transform, Vector2 origin)
+    {
+        if (Count < 3) return null;
+        var newPoints = SetPositionCopy(transform.Position, origin);
+        if (newPoints == null) return null;
+        newPoints.SetRotation(transform.RotationRad, origin);
+        newPoints.SetSize(transform.Size.Width, origin);
+        return newPoints;
+    }
+    public Points? ApplyTransformCopy(Transform2D transform, Vector2 origin)
+    {
+        if (Count < 3) return null;
+        
+        var newPoints = ChangePositionCopy(transform.Position);
+        if (newPoints == null) return null;
+        newPoints.ChangeRotation(transform.RotationRad, origin);
+        newPoints.ChangeSize(transform.Size.Width, origin);
+        return newPoints;
+    }
+    
+    #endregion
     
     #region Static
     public static void Floor(List<Vector2> points)

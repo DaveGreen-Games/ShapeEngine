@@ -35,7 +35,7 @@ public class PolyLineCollider : Collider
     public override ShapeType GetShapeType() => ShapeType.PolyLine;
     public override Polyline GetPolylineShape()=> GeneratePolylineShape();
 
-    public List<Vector2> GetRelativeShape() => curShape.GetRelativePoints(PrevTransform);
+    public List<Vector2> GetRelativeShape() => curShape.GetRelativeVector2List(PrevTransform);
 
     private Polyline GeneratePolylineShape() 
     {

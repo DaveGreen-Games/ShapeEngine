@@ -27,9 +27,10 @@ namespace ShapeEngine.Core.Shapes
         /// </summary>
         /// <param name="points"></param>
         public Polygon(IEnumerable<Vector2> points) { AddRange(points); }
+        public Polygon(Points points) : base(points.Count) { AddRange(points); }
         
-        public Polygon(Polygon poly) { AddRange(poly); }
-        public Polygon(Polyline polyLine) { AddRange(polyLine); }
+        public Polygon(Polygon poly) : base(poly.Count) { AddRange(poly); }
+        public Polygon(Polyline polyLine) : base(polyLine.Count) { AddRange(polyLine); }
         #endregion
 
         #region Equals & Hashcode
@@ -400,23 +401,6 @@ namespace ShapeEngine.Core.Shapes
             var delta = newPosition - centroid;
             ChangePosition(delta);
         }
-        public void ChangePosition(Vector2 offset)
-        {
-            for (int i = 0; i < Count; i++)
-            {
-                this[i] += offset;
-            }
-            //return path;
-        }
-        public void ChangeRotation(float rotRad, Vector2 origin)
-        {
-            if (Count < 3) return;
-            for (int i = 0; i < Count; i++)
-            {
-                var w = this[i] - origin;
-                this[i] = origin + w.Rotate(rotRad);
-            }
-        }
         public void ChangeRotation(float rotRad)
         {
             if (Count < 3) return;
@@ -426,15 +410,6 @@ namespace ShapeEngine.Core.Shapes
                 var w = this[i] - origin;
                 this[i] = origin + w.Rotate(rotRad);
             }
-        }
-        
-        public void SetRotation(float angleRad, Vector2 origin)
-        {
-            if (Count < 3) return;
-
-            var curAngle = (this[0] - origin).AngleRad();
-            var rotRad = ShapeMath.GetShortestAngleRad(curAngle, angleRad);
-            ChangeRotation(rotRad, origin);
         }
         public void SetRotation(float angleRad)
         {
@@ -455,35 +430,6 @@ namespace ShapeEngine.Core.Shapes
                 this[i] = origin + w * scale;
             }
         }
-        public void ScaleSize(float scale, Vector2 origin)
-        {
-            if (Count < 3) return;
-            for (int i = 0; i < Count; i++)
-            {
-                var w = this[i] - origin;
-                this[i] = origin + w * scale;
-            }
-        }
-        public void ScaleSize(Vector2 scale, Vector2 origin)
-        {
-            if (Count < 3) return;// new();
-            for (int i = 0; i < Count; i++)
-            {
-                var w = this[i] - origin;
-                this[i] = origin + w * scale;
-            }
-            //return path;
-        }
-        public void ChangeSize(float amount, Vector2 origin)
-        {
-            if (Count < 3) return;
-            for (var i = 0; i < Count; i++)
-            {
-                var w = this[i] - origin;
-                this[i] = origin + w.ChangeLength(amount);
-            }
-            
-        }
         public void ChangeSize(float amount)
         {
             if (Count < 3) return;
@@ -494,17 +440,6 @@ namespace ShapeEngine.Core.Shapes
                 this[i] = origin + w.ChangeLength(amount);
             }
             
-        }
-
-        public void SetSize(float size, Vector2 origin)
-        {
-            if (Count < 3) return;
-            for (var i = 0; i < Count; i++)
-            {
-                var w = this[i] - origin;
-                this[i] = origin + w.SetLength(size);
-            }
-
         }
         public void SetSize(float size)
         {
@@ -518,20 +453,6 @@ namespace ShapeEngine.Core.Shapes
 
         }
 
-        public void SetTransform(Transform2D transform, Vector2 origin)
-        {
-            SetPosition(transform.Position);
-            SetRotation(transform.RotationRad, origin);
-            SetSize(transform.Size.Width, origin);
-        }
-        public void ApplyTransform(Transform2D transform, Vector2 origin)
-        {
-            ChangePosition(transform.Position);
-            ChangeRotation(transform.RotationRad, origin);
-            ChangeSize(transform.Size.Width, origin);
-            
-        }
-        
         
         public Polygon? SetPositionCopy(Vector2 newPosition)
         {
@@ -540,7 +461,7 @@ namespace ShapeEngine.Core.Shapes
             var delta = newPosition - centroid;
             return ChangePositionCopy(delta);
         }
-        public Polygon? ChangePositionCopy(Vector2 offset)
+        public new Polygon? ChangePositionCopy(Vector2 offset)
         {
             if (Count < 3) return null;
             var newPolygon = new Polygon(this.Count);
@@ -551,7 +472,7 @@ namespace ShapeEngine.Core.Shapes
 
             return newPolygon;
         }
-        public Polygon? ChangeRotationCopy(float rotRad, Vector2 origin)
+        public new Polygon? ChangeRotationCopy(float rotRad, Vector2 origin)
         {
             if (Count < 3) return null;
             var newPolygon = new Polygon(this.Count);
@@ -570,7 +491,7 @@ namespace ShapeEngine.Core.Shapes
             return ChangeRotationCopy(rotRad, GetCentroid());
         }
 
-        public Polygon? SetRotationCopy(float angleRad, Vector2 origin)
+        public new Polygon? SetRotationCopy(float angleRad, Vector2 origin)
         {
             if (Count < 3) return null;
             var curAngle = (this[0] - origin).AngleRad();
@@ -591,7 +512,7 @@ namespace ShapeEngine.Core.Shapes
             if (Count < 3) return null;
             return ScaleSizeCopy(scale, GetCentroid());
         }
-        public Polygon? ScaleSizeCopy(float scale, Vector2 origin)
+        public new Polygon? ScaleSizeCopy(float scale, Vector2 origin)
         {
             if (Count < 3) return null;
             var newPolygon = new Polygon(this.Count);
@@ -604,7 +525,7 @@ namespace ShapeEngine.Core.Shapes
 
             return newPolygon;
         }
-        public Polygon? ScaleSizeCopy(Vector2 scale, Vector2 origin)
+        public new Polygon? ScaleSizeCopy(Vector2 scale, Vector2 origin)
         {
             if (Count < 3) return null;
             var newPolygon = new Polygon(this.Count);
@@ -617,7 +538,7 @@ namespace ShapeEngine.Core.Shapes
 
             return newPolygon;
         }
-        public Polygon? ChangeSizeCopy(float amount, Vector2 origin)
+        public new Polygon? ChangeSizeCopy(float amount, Vector2 origin)
         {
             if (Count < 3) return null;
             var newPolygon = new Polygon(this.Count);
@@ -638,7 +559,7 @@ namespace ShapeEngine.Core.Shapes
 
         }
 
-        public Polygon? SetSizeCopy(float size, Vector2 origin)
+        public new Polygon? SetSizeCopy(float size, Vector2 origin)
         {
             if (Count < 3) return null;
             var newPolygon = new Polygon(this.Count);
@@ -658,7 +579,7 @@ namespace ShapeEngine.Core.Shapes
 
         }
 
-        public Polygon? SetTransformCopy(Transform2D transform, Vector2 origin)
+        public new Polygon? SetTransformCopy(Transform2D transform, Vector2 origin)
         {
             if (Count < 3) return null;
             var newPolygon = SetPositionCopy(transform.Position);
@@ -667,7 +588,7 @@ namespace ShapeEngine.Core.Shapes
             newPolygon.SetSize(transform.Size.Width, origin);
             return newPolygon;
         }
-        public Polygon? ApplyTransformCopy(Transform2D transform, Vector2 origin)
+        public new Polygon? ApplyTransformCopy(Transform2D transform, Vector2 origin)
         {
             if (Count < 3) return null;
             
@@ -1070,7 +991,7 @@ namespace ShapeEngine.Core.Shapes
 
         #region Closest
 
-        public ClosestDistance GetClosestDistanceTo(Vector2 p)
+        public new ClosestDistance GetClosestDistanceTo(Vector2 p)
         {
             if (Count <= 0) return new();
             if (Count == 1) return new(this[0], p);

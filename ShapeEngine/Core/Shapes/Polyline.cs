@@ -15,11 +15,11 @@ namespace ShapeEngine.Core.Shapes
         /// <summary>
         /// Points should be in CCW order. Use Reverse if they are in CW order.
         /// </summary>
-        /// <param name="edges"></param>
-        public Polyline(IEnumerable<Vector2> edges) { AddRange(edges); }
-        
-        public Polyline(Polyline polyLine) { AddRange(polyLine); }
-        public Polyline(Polygon poly) { AddRange(poly); }
+        /// <param name="points"></param>
+        public Polyline(IEnumerable<Vector2> points) { AddRange(points); }
+        public Polyline(Points points) : base(points.Count) { AddRange(points); }
+        public Polyline(Polyline polyLine) : base(polyLine.Count) { AddRange(polyLine); }
+        public Polyline(Polygon poly) : base(poly.Count) { AddRange(poly); }
         #endregion
 
         #region Equals & HashCode
@@ -203,28 +203,6 @@ namespace ShapeEngine.Core.Shapes
             var delta = newPosition - GetCentroidMean();
             ChangePosition(delta);
         }
-        public void SetPosition(Vector2 newPosition, Vector2 origin)
-        {
-            var delta = newPosition - origin;
-            ChangePosition(delta);
-        }
-        public void ChangePosition(Vector2 offset)
-        {
-            for (int i = 0; i < Count; i++)
-            {
-                this[i] += offset;
-            }
-            //return path;
-        }
-        public void ChangeRotation(float rotRad, Vector2 origin)
-        {
-            if (Count < 2) return;
-            for (int i = 0; i < Count; i++)
-            {
-                var w = this[i] - origin;
-                this[i] = origin + w.Rotate(rotRad);
-            }
-        }
         public void ChangeRotation(float rotRad)
         {
             if (Count < 2) return;
@@ -234,15 +212,6 @@ namespace ShapeEngine.Core.Shapes
                 var w = this[i] - origin;
                 this[i] = origin + w.Rotate(rotRad);
             }
-        }
-        
-        public void SetRotation(float angleRad, Vector2 origin)
-        {
-            if (Count < 2) return;
-
-            var curAngle = (this[0] - origin).AngleRad();
-            var rotRad = ShapeMath.GetShortestAngleRad(curAngle, angleRad);
-            ChangeRotation(rotRad, origin);
         }
         public void SetRotation(float angleRad)
         {
@@ -263,34 +232,6 @@ namespace ShapeEngine.Core.Shapes
                 this[i] = origin + w * scale;
             }
         }
-        public void ScaleSize(float scale, Vector2 origin)
-        {
-            if (Count < 2) return;
-            for (int i = 0; i < Count; i++)
-            {
-                var w = this[i] - origin;
-                this[i] = origin + w * scale;
-            }
-        }
-        public void ScaleSize(Vector2 scale, Vector2 origin)
-        {
-            if (Count < 2) return;
-            for (int i = 0; i < Count; i++)
-            {
-                var w = this[i] - origin;
-                this[i] = origin + w * scale;
-            }
-        }
-        public void ChangeSize(float amount, Vector2 origin)
-        {
-            if (Count < 2) return;
-            for (var i = 0; i < Count; i++)
-            {
-                var w = this[i] - origin;
-                this[i] = origin + w.ChangeLength(amount);
-            }
-            
-        }
         public void ChangeSize(float amount)
         {
             if (Count < 2) return;
@@ -301,17 +242,6 @@ namespace ShapeEngine.Core.Shapes
                 this[i] = origin + w.ChangeLength(amount);
             }
             
-        }
-
-        public void SetSize(float size, Vector2 origin)
-        {
-            if (Count < 2) return;
-            for (var i = 0; i < Count; i++)
-            {
-                var w = this[i] - origin;
-                this[i] = origin + w.SetLength(size);
-            }
-
         }
         public void SetSize(float size)
         {
@@ -324,21 +254,6 @@ namespace ShapeEngine.Core.Shapes
             }
 
         }
-
-        public void SetTransform(Transform2D transform, Vector2 origin)
-        {
-            SetPosition(transform.Position);
-            SetRotation(transform.RotationRad, origin);
-            SetSize(transform.Size.Width, origin);
-        }
-        public void ApplyTransform(Transform2D transform, Vector2 origin)
-        {
-            ChangePosition(transform.Position);
-            ChangeRotation(transform.RotationRad, origin);
-            ChangeSize(transform.Size.Width, origin);
-            
-        }
-        
         
         public Polyline? SetPositionCopy(Vector2 newPosition)
         {
@@ -347,7 +262,7 @@ namespace ShapeEngine.Core.Shapes
             var delta = newPosition - centroid;
             return ChangePositionCopy(delta);
         }
-        public Polyline? ChangePositionCopy(Vector2 offset)
+        public new Polyline? ChangePositionCopy(Vector2 offset)
         {
             if (Count < 2) return null;
             var newPolygon = new Polyline(this.Count);
@@ -358,7 +273,7 @@ namespace ShapeEngine.Core.Shapes
 
             return newPolygon;
         }
-        public Polyline? ChangeRotationCopy(float rotRad, Vector2 origin)
+        public new Polyline? ChangeRotationCopy(float rotRad, Vector2 origin)
         {
             if (Count < 2) return null;
             var newPolygon = new Polyline(this.Count);
@@ -377,7 +292,7 @@ namespace ShapeEngine.Core.Shapes
             return ChangeRotationCopy(rotRad, GetCentroidMean());
         }
 
-        public Polyline? SetRotationCopy(float angleRad, Vector2 origin)
+        public new Polyline? SetRotationCopy(float angleRad, Vector2 origin)
         {
             if (Count < 2) return null;
             var curAngle = (this[0] - origin).AngleRad();
@@ -398,7 +313,7 @@ namespace ShapeEngine.Core.Shapes
             if (Count < 2) return null;
             return ScaleSizeCopy(scale, GetCentroidMean());
         }
-        public Polyline? ScaleSizeCopy(float scale, Vector2 origin)
+        public new Polyline? ScaleSizeCopy(float scale, Vector2 origin)
         {
             if (Count < 2) return null;
             var newPolyline = new Polyline(this.Count);
@@ -411,7 +326,7 @@ namespace ShapeEngine.Core.Shapes
 
             return newPolyline;
         }
-        public Polyline? ScaleSizeCopy(Vector2 scale, Vector2 origin)
+        public new Polyline? ScaleSizeCopy(Vector2 scale, Vector2 origin)
         {
             if (Count < 2) return null;
             var newPolyline = new Polyline(this.Count);
@@ -424,7 +339,7 @@ namespace ShapeEngine.Core.Shapes
 
             return newPolyline;
         }
-        public Polyline? ChangeSizeCopy(float amount, Vector2 origin)
+        public new Polyline? ChangeSizeCopy(float amount, Vector2 origin)
         {
             if (Count < 2) return null;
             var newPolyline = new Polyline(this.Count);
@@ -445,7 +360,7 @@ namespace ShapeEngine.Core.Shapes
 
         }
 
-        public Polyline? SetSizeCopy(float size, Vector2 origin)
+        public new Polyline? SetSizeCopy(float size, Vector2 origin)
         {
             if (Count < 2) return null;
             var newPolyline = new Polyline(this.Count);
@@ -465,7 +380,7 @@ namespace ShapeEngine.Core.Shapes
 
         }
 
-        public Polyline? SetTransformCopy(Transform2D transform, Vector2 origin)
+        public new Polyline? SetTransformCopy(Transform2D transform, Vector2 origin)
         {
             if (Count < 2) return null;
             var newPolyline = SetPositionCopy(transform.Position);
@@ -474,7 +389,7 @@ namespace ShapeEngine.Core.Shapes
             newPolyline.SetSize(transform.Size.Width, origin);
             return newPolyline;
         }
-        public Polyline? ApplyTransformCopy(Transform2D transform, Vector2 origin)
+        public new Polyline? ApplyTransformCopy(Transform2D transform, Vector2 origin)
         {
             if (Count < 2) return null;
             
@@ -488,7 +403,7 @@ namespace ShapeEngine.Core.Shapes
         #endregion
         
         #region Closest
-        public ClosestDistance GetClosestDistanceTo(Vector2 p)
+        public new ClosestDistance GetClosestDistanceTo(Vector2 p)
         {
             if (Count <= 0) return new();
             if (Count == 1) return new(this[0], p);

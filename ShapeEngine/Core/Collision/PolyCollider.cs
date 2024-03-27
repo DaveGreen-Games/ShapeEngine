@@ -68,7 +68,7 @@ public class PolyCollider : Collider
     public override ShapeType GetShapeType() => ShapeType.Poly;
     public override Polygon GetPolygonShape() => GeneratePolygonShape();
 
-    public List<Vector2> GetRelativeShape() => curShape.GetRelativePoints(PrevTransform);
+    public List<Vector2> GetRelativeShape() => curShape.GetRelativeVector2List(PrevTransform);
     // protected override void OnAddedToCollisionBody(CollisionBody newParent)
     // {
     //     prev = new(Position, RotationRad, Scale);
