@@ -57,21 +57,31 @@ namespace ShapeEngine.Core.Shapes
 
         #region Math
 
-        public Polygon Project(Vector2 v)
+        public Points? GetProjectedShapePoints(Vector2 v, int pointCount = 8)
         {
-            if (v.LengthSquared() <= 0f) return ToPolygon(8);
-            var corners = GetCorners();
-            var points = new Points
+            if (pointCount < 4 || v.LengthSquared() <= 0f) return null;
+            float angleStep = (MathF.PI * 2f) / pointCount;
+            Points points = new(pointCount * 2);
+            for (var i = 0; i < pointCount; i++)
             {
-                corners.top,
-                corners.right,
-                corners.bottom,
-                corners.left,
-                corners.top + v,
-                corners.right + v,
-                corners.bottom + v,
-                corners.left +v
-            };
+                var p = Center + new Vector2(Radius, 0f).Rotate(angleStep * i);
+                points.Add(p);
+                points.Add(p + v);
+            }
+            return points;
+        }
+
+        public Polygon? ProjectShape(Vector2 v, int pointCount = 8)
+        {
+            if (pointCount < 4 || v.LengthSquared() <= 0f) return null;
+            float angleStep = (MathF.PI * 2f) / pointCount;
+            Points points = new(pointCount * 2);
+            for (var i = 0; i < pointCount; i++)
+            {
+                var p = Center + new Vector2(Radius, 0f).Rotate(angleStep * i);
+                points.Add(p);
+                points.Add(p + v);
+            }
             return Polygon.FindConvexHull(points);
         }
         

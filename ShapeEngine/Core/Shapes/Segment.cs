@@ -60,8 +60,19 @@ namespace ShapeEngine.Core.Shapes
         {
             return new(Start.Truncate(), End.Truncate());
         }
-
-        public Polygon? Project(Vector2 v)
+        public Points? GetProjectedShapePoints(Vector2 v)
+        {
+            if (v.LengthSquared() <= 0f) return null;
+            var points = new Points
+            {
+                Start,
+                End,
+                Start + v,
+                End + v,
+            };
+            return points;
+        }
+        public Polygon? ProjectShape(Vector2 v)
         {
             if (v.LengthSquared() <= 0f) return null;
             var points = new Points

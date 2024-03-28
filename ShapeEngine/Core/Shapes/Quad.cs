@@ -104,7 +104,21 @@ public readonly struct Quad : IEquatable<Quad>
 
     #region Math
 
-    public Polygon? Project(Vector2 v)
+    public Points? GetProjectedShapePoints(Vector2 v)
+    {
+        if (v.LengthSquared() <= 0f) return null;
+        var points = new Points
+        {
+            A, B, C, D,
+            A + v,
+            B + v,
+            C + v,
+            D + v
+        };
+        return points;
+    }
+    
+    public Polygon? ProjectShape(Vector2 v)
     {
         if (v.LengthSquared() <= 0f) return null;
         var points = new Points

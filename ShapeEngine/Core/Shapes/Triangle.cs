@@ -69,7 +69,21 @@ namespace ShapeEngine.Core.Shapes
 
         public Vector2 GetCentroid()  => (A + B + C) / 3;
 
-        public Polygon? Project(Vector2 v)
+        public Points? GetProjectedShapePoints(Vector2 v)
+        {
+            if (v.LengthSquared() <= 0f) return null;
+            var points = new Points
+            {
+                A,
+                B,
+                C,
+                A + v,
+                B + v,
+                C + v
+            };
+            return points;
+        }
+        public Polygon? ProjectShape(Vector2 v)
         {
             if (v.LengthSquared() <= 0f) return null;
             var points = new Points
@@ -83,6 +97,7 @@ namespace ShapeEngine.Core.Shapes
             };
             return Polygon.FindConvexHull(points);
         }
+        
         public Triangle Floor() { return new(A.Floor(), B.Floor(), C.Floor()); }
         public Triangle Ceiling() { return new(A.Ceiling(), B.Ceiling(), C.Ceiling()); }
         public Triangle Round() { return new(A.Round(), B.Round(), C.Round()); }

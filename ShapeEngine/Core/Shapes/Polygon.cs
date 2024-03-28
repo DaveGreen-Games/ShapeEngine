@@ -275,14 +275,29 @@ namespace ShapeEngine.Core.Shapes
         
         #region Math
 
-        public Polygon Project(Vector2 v)
+        public Points? GetProjectedShapePoints(Vector2 v)
         {
-            if (v.LengthSquared() <= 0f) return ToPolygon();
-            var translated = ChangePositionCopy(v); // Polygon.Move(this, v);
-            if (translated == null) return ToPolygon();
-            var points = new Points();
-            points.AddRange(this);
-            points.AddRange(translated);
+            if (v.LengthSquared() <= 0f) return null;
+            var points = new Points(Count);
+            for (var i = 0; i < Count; i++)
+            {
+                points.Add(this[i]);
+                points.Add(this[i] + v);
+            }
+            return points;
+        }
+
+        public Polygon? ProjectShape(Vector2 v)
+        {
+            if (v.LengthSquared() <= 0f) return null;
+            
+            var points = new Points(Count);
+            for (var i = 0; i < Count; i++)
+            {
+                points.Add(this[i]);
+                points.Add(this[i] + v);
+            }
+            
             return Polygon.FindConvexHull(points);
         }
         public Vector2 GetCentroid()
