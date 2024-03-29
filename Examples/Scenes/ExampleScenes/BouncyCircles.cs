@@ -32,14 +32,6 @@ namespace Examples.Scenes.ExampleScenes
             };
             this.Vel = vel * velFactor;
         }
-        public void AddedToHandler(SpawnArea spawnArea)
-        {
-        }
-
-        public void RemovedFromHandler(SpawnArea spawnArea)
-        {
-        }
-
 
         public override Rect GetBoundingBox()
         {
@@ -98,61 +90,31 @@ namespace Examples.Scenes.ExampleScenes
     }
     public class BouncyCircles : ExampleScene
     {
-        Polygon source = Polygon.Generate(new Vector2(), 15, 100, 500);
-        
         Rect boundaryRect;
 
-        Font font;
-
-        // private SlowMotionState? slowMotionState = null;
-
         private InputAction iaAdd;
-        // private InputAction iaSlow1;
-        // private InputAction iaSlow2;
-        // private InputAction iaSlow3;
-        // private InputAction iaSlow4;
         private InputAction iaToggleConvexHull;
         private List<InputAction> inputActions;
 
-        //private List<Circ> circs = new();
         private bool showConvexHull = false;
         private readonly List<GameObject> circles = new(65536);
         private readonly List<Vector2> circlePoints = new(65536);
 
-        // private Stopwatch watch = new();
         public BouncyCircles()
         {
             Title = "Bouncy Circles";
 
-            font = GAMELOOP.GetFont(FontIDs.JetBrains);
-
-            
             UpdateBoundaryRect(GAMELOOP.GameScreenInfo.Area);
 
-            //area = new AreaTest(boundaryRect, 2, 2);
-            // spawnArea = new SpawnAreaCollision(boundaryRect, 2, 2);
-            if(InitSpawnArea(boundaryRect)) SpawnArea?.InitCollisionHandler(2, 2);
+            InitSpawnArea(boundaryRect);
+            // InitCollisionHandler(boundaryRect, 2, 2);
+            
+            // if(InitSpawnArea(boundaryRect)) SpawnArea?.InitCollisionHandler(2, 2);
 
             var addKB = new InputTypeKeyboardButton(ShapeKeyboardButton.SPACE);
             var addMB = new InputTypeMouseButton(ShapeMouseButton.LEFT);
             var addGP = new InputTypeGamepadButton(ShapeGamepadButton.RIGHT_FACE_DOWN);
             iaAdd = new(addKB, addMB, addGP);
-
-            // var slow1KB = new InputTypeKeyboardButton(ShapeKeyboardButton.ONE);
-            // var slow1GB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_UP);
-            // iaSlow1 = new(slow1GB, slow1KB);
-            
-            // var slow2KB = new InputTypeKeyboardButton(ShapeKeyboardButton.TWO);
-            // var slow2GB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_RIGHT);
-            // iaSlow2 = new(slow2GB, slow2KB);
-            
-            // var slow3KB = new InputTypeKeyboardButton(ShapeKeyboardButton.THREE);
-            // var slow3GB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_DOWN);
-            // iaSlow3 = new(slow3GB, slow3KB);
-            
-            // var slow4KB = new InputTypeKeyboardButton(ShapeKeyboardButton.FOUR);
-            // var slow4GB = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_FACE_LEFT);
-            // iaSlow4 = new(slow4GB, slow4KB);
 
             var toggleConvexHullKB = new InputTypeKeyboardButton(ShapeKeyboardButton.C);
             var toggleConvexHullGP = new InputTypeGamepadButton(ShapeGamepadButton.LEFT_THUMB);
@@ -164,6 +126,7 @@ namespace Examples.Scenes.ExampleScenes
         public override void Reset()
         {
             SpawnArea?.Clear();
+            // CollisionHandler?.Clear();
             circles.Clear();
         }
 
@@ -173,15 +136,15 @@ namespace Examples.Scenes.ExampleScenes
         }
         protected override void OnUpdateExample(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
-            // watch.Restart();
             UpdateBoundaryRect(game.Area);
             SpawnArea?.ResizeBounds(boundaryRect);
+            // CollisionHandler?.ResizeBounds(boundaryRect);
+            
             if (GAMELOOP.Paused) return;
             
             var gamepad = GAMELOOP.CurGamepad;
             InputAction.UpdateActions(time.Delta, gamepad, inputActions);
             
-            // spawnArea.Update(time, game, ui);
         }
 
         public override void OnPauseChanged(bool paused)
@@ -191,7 +154,6 @@ namespace Examples.Scenes.ExampleScenes
 
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
-            // watch.Restart();
             if (iaAdd.State.Pressed)
             {
                 if (SpawnArea != null)
@@ -208,40 +170,18 @@ namespace Examples.Scenes.ExampleScenes
                 
 
             }
-
-            // if (iaSlow1.State.Pressed)
-            // {
-            //     GAMELOOP.SlowMotion.Add(0.75f, 4f, Circ.SlowTag1);
-            // }
-            // if (iaSlow2.State.Pressed)
-            // {
-            //     GAMELOOP.SlowMotion.Add(0.5f, 4f, Circ.SlowTag2);
-            // }
-            // if (iaSlow3.State.Pressed)
-            // {
-            //     GAMELOOP.SlowMotion.Add(0.25f, 4f, Circ.SlowTag3);
-            // }
-            // if (iaSlow4.State.Pressed)
-            // {
-            //     GAMELOOP.SlowMotion.Add(0f, 4f, SlowMotion.TagDefault);
-            // }
             if (iaToggleConvexHull.State.Pressed)
             {
                 showConvexHull = !showConvexHull;
             }
-            // Console.WriteLine($"Input {watch.ElapsedMilliseconds}ms");
         }
 
         
 
         protected override void OnDrawGameExample(ScreenInfo game)
         {
-            // spawnArea.DrawGame(game);
-
             if (showConvexHull && circles.Count > 3)
             {
-                // var circPoints = SpawnArea?.GetAllGameObjects().Select(c => c.Transform.Position).ToList();
-                // var circPoints = circles.Select(c => c.Transform.Position).ToList();
                 circlePoints.Clear();
                 foreach (var circ in circles)
                 {
@@ -252,14 +192,9 @@ namespace Examples.Scenes.ExampleScenes
             }
 
         }
-        // protected override void OnDrawGameUIExample(ScreenInfo ui)
-        // {
-        //     spawnArea.DrawGameUI(ui);
-        // }
 
         protected override void OnDrawUIExample(ScreenInfo ui)
         {
-            // watch.Restart();
             DrawInputDescription(GAMELOOP.UIRects.GetRect("bottom center"));
 
             var objectCountText = $"Object Count: {SpawnArea?.Count ?? 0}";
@@ -267,8 +202,6 @@ namespace Examples.Scenes.ExampleScenes
             textFont.FontSpacing = 1f;
             textFont.ColorRgba = Colors.Warm;
             textFont.DrawTextWrapNone(objectCountText, GAMELOOP.UIRects.GetRect("bottom right"), new Vector2(0.98f, 0.98f));
-            // font.DrawText(objectCountText, GAMELOOP.UIRects.GetRect("bottom right"), 1f, new Vector2(0.98f, 0.98f), ColorHighlight3);
-            // Console.WriteLine($"Draw UI {watch.ElapsedMilliseconds}ms");
         }
 
         private void DrawInputDescription(Rect rect)
@@ -277,10 +210,6 @@ namespace Examples.Scenes.ExampleScenes
             var curInputDeviceNoMouse = ShapeInput.CurrentInputDeviceTypeNoMouse;
             
             string addText = iaAdd.GetInputTypeDescription(curInputDeviceAll, true, 1, false);
-            // string slow1Text = iaSlow1.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
-            // string slow2Text = iaSlow2.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
-            // string slow3Text = iaSlow3.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
-            // string slow4Text = iaSlow4.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
             string toggleConvexHullText = iaToggleConvexHull.GetInputTypeDescription(curInputDeviceNoMouse, true, 1, false, false);
             
             var text = $"Add {addText} | Convex Hull [{showConvexHull}] {toggleConvexHullText}";
@@ -288,7 +217,6 @@ namespace Examples.Scenes.ExampleScenes
             textFont.FontSpacing = 1f;
             textFont.ColorRgba = Colors.Light;
             textFont.DrawTextWrapNone(text, rect, new(0.5f));
-            // font.DrawText(text, rect, 1f, new Vector2(0.5f, 0.5f), ColorLight);
         }
     }
 }

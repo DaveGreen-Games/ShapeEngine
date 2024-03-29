@@ -995,10 +995,12 @@ namespace Examples.Scenes.ExampleScenes
             };
             
             boundaryRect = new(new(0f), new(5000,5000), new(0.5f));
-            if (InitSpawnArea(boundaryRect))
-            {
-                SpawnArea?.InitCollisionHandler(50, 50);
-            }
+            InitSpawnArea(boundaryRect);
+            InitCollisionHandler(boundaryRect, 50, 50);
+            // if (InitSpawnArea(boundaryRect))
+            // {
+            //     SpawnArea?.InitCollisionHandler(50, 50);
+            // }
             
             SetupBoundary();
 
@@ -1012,9 +1014,35 @@ namespace Examples.Scenes.ExampleScenes
         public override void Reset()
         {
             SpawnArea?.Clear();
+            CollisionHandler?.Clear();
             SetupBoundary();
             drawDebug = false;
         }
+
+        private void ClearAreaCollisionObjects(Rect area, BitFlag collisionLayerMask)
+        {
+            if (CollisionHandler == null) return;
+            
+            var result = new List<Collider>();
+            CollisionHandler.CastSpace(area, collisionLayerMask, ref result);
+        
+            if (result.Count <= 0) return;
+            
+            var removedParents = new HashSet<CollisionObject>();
+            
+            foreach (var collider in result)
+            {
+                var parent = collider.Parent;
+                if (parent != null && !removedParents.Contains(parent))
+                {
+                    SpawnArea?.RemoveGameObject(parent);
+                    CollisionHandler?.Remove(parent);
+                    // RemoveGameObject(parent);
+                    removedParents.Add(parent);
+                }
+            }
+        }
+        
 
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
@@ -1035,7 +1063,7 @@ namespace Examples.Scenes.ExampleScenes
             else if (iaStartClearArea.State.Released)
             {
                 var clearArea = new Rect(clearAreaStartPoint, mousePosGame);
-                SpawnArea?.ClearAreaCollisionObjects(clearArea, clearAreaMask);
+                ClearAreaCollisionObjects(clearArea, clearAreaMask);
                 clearAreaActive = false;
             }
             
@@ -1046,6 +1074,7 @@ namespace Examples.Scenes.ExampleScenes
                     var spawnPos = mousePosGame + ShapeRandom.RandVec2(0, 200);
                     var r = new Rock(spawnPos);
                     SpawnArea?.AddGameObject(r);
+                    CollisionHandler?.Add(r);
                 }
             
             }
@@ -1063,6 +1092,7 @@ namespace Examples.Scenes.ExampleScenes
             {
                 Bird b = new(mousePosGame);
                 SpawnArea?.AddGameObject(b);
+                CollisionHandler?.Add(b);
             
             }
             if (iaSpawnBall.State.Down)
@@ -1073,6 +1103,7 @@ namespace Examples.Scenes.ExampleScenes
                     // gameObjectHandler.AddAreaObject(b);
                     var ball = new Ball(mousePosGame);
                     SpawnArea?.AddGameObject(ball);
+                    CollisionHandler?.Add(ball);
                 }
 
             }
@@ -1082,6 +1113,7 @@ namespace Examples.Scenes.ExampleScenes
                 {
                     var bullet = new Bullet(mousePosGame);
                     SpawnArea?.AddGameObject(bullet);
+                    CollisionHandler?.Add(bullet);
                 }
                 
             }
@@ -1119,6 +1151,7 @@ namespace Examples.Scenes.ExampleScenes
                 var gridColor = Colors.Light;
                 var fillColor = Colors.Medium.ChangeAlpha(100);
                 SpawnArea?.DrawDebug(boundsColor, gridColor, fillColor);
+                CollisionHandler?.DebugDraw(boundsColor, fillColor);
             }
 
             DrawWalls(game.MousePos);
@@ -1151,7 +1184,7 @@ namespace Examples.Scenes.ExampleScenes
             textFont.ColorRgba = Colors.Warm;
             textFont.DrawTextWrapNone("Object Count", rects.top, new(0.5f, 0f));
             
-            textFont.DrawTextWrapNone($"{SpawnArea?.CollisionHandler?.Count ?? 0}", rects.bottom, new(0.5f));
+            textFont.DrawTextWrapNone($"{CollisionHandler?.Count ?? 0}", rects.bottom, new(0.5f));
             // font.DrawText("Object Count", rects.top, 1f, new Vector2(0.5f, 0f), ColorHighlight3);
             // font.DrawText(, rects.bottom, 1f, new Vector2(0.5f, 0.5f), ColorHighlight3);
         }
@@ -1209,6 +1242,7 @@ namespace Examples.Scenes.ExampleScenes
             BoundaryWall left = new(boundaryRect.TopLeft, boundaryRect.BottomLeft);
             BoundaryWall right = new(boundaryRect.BottomRight, boundaryRect.TopRight);
             SpawnArea?.AddGameObjects(top, right, bottom, left);
+            CollisionHandler?.AddRange(top, right, bottom, left);
         }
         private void DrawWalls(Vector2 mousePos)
         {
@@ -1232,6 +1266,7 @@ namespace Examples.Scenes.ExampleScenes
                     {
                         PolyWall w = new(startPoint, mousePos);
                         SpawnArea?.AddGameObject(w);
+                        CollisionHandler?.Add(w);
                     }
 
                 }

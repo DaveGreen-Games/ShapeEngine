@@ -566,9 +566,12 @@ namespace Examples.Scenes.ExampleScenes
             // font = GAMELOOP.GetFont(FontIDs.JetBrains);
             UpdateBoundaryRect(GAMELOOP.GameScreenInfo.Area);
             // spawnArea = new SpawnAreaCollision(boundaryRect, 4, 4);
-            if (InitSpawnArea(boundaryRect)) SpawnArea?.InitCollisionHandler(4, 4);
+            InitSpawnArea(boundaryRect);
+            InitCollisionHandler(boundaryRect, 4, 4);
+            
+            // if (InitSpawnArea(boundaryRect)) SpawnArea?.InitCollisionHandler(4, 4);
 
-            laserDevice = new(new Vector2(0f), 100, SpawnArea?.CollisionHandler);
+            laserDevice = new(new Vector2(0f), 100, CollisionHandler);
             SpawnArea?.AddGameObject(laserDevice);
 
             var modeChangeKB = new InputTypeKeyboardButton(ShapeKeyboardButton.TAB);
@@ -634,12 +637,13 @@ namespace Examples.Scenes.ExampleScenes
         public override void Reset()
         {
             SpawnArea?.Clear();
+            CollisionHandler?.Clear();
             polyModeActive = false;
             curRot = 0f;
             curSize = 50f;
             curShapeType = ShapeType.Triangle;
             RegenerateShape();
-            laserDevice = new(new Vector2(0), 100, SpawnArea?.CollisionHandler);
+            laserDevice = new(new Vector2(0), 100, CollisionHandler);
             SpawnArea?.AddGameObject(laserDevice);
         }
 
@@ -653,6 +657,7 @@ namespace Examples.Scenes.ExampleScenes
         {
             UpdateBoundaryRect(game.Area);
             SpawnArea?.ResizeBounds(boundaryRect);
+            CollisionHandler?.ResizeBounds(boundaryRect);
             // spawnArea.Update(time, game, ui);
 
             for (int i = lastCutOuts.Count - 1; i >= 0; i--)
@@ -704,11 +709,13 @@ namespace Examples.Scenes.ExampleScenes
         {
             a.Fractured += OnAsteroidFractured;
             SpawnArea?.AddGameObject(a);
+            CollisionHandler?.Add(a);
         }
         private void RemoveAsteroid(Asteroid a)
         {
             a.Fractured -= OnAsteroidFractured;
             SpawnArea?.RemoveGameObject(a);
+            CollisionHandler?.Remove(a);
         }
         private void SetCurPos(Vector2 pos)
         {
@@ -769,8 +776,6 @@ namespace Examples.Scenes.ExampleScenes
         {
             laserDevice.SetHybernate(false);
         }
-        
-        
         protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
         {
             //clipRect = new(mousePosGame, new Vector2(100, 300), new Vector2(0f, 1f));
@@ -790,18 +795,11 @@ namespace Examples.Scenes.ExampleScenes
             //    testShapes = newShapes;
             //}
 
-            var col = SpawnArea?.CollisionHandler;
-            if (col == null) return;
+            if (CollisionHandler == null) return;
 
             var gamepad = GAMELOOP.CurGamepad;
             InputAction.UpdateActions(dt, gamepad, inputActions);
-            // int gamepadIndex = GAMELOOP.CurGamepad?.Index ?? -1;
-            // foreach (var ia in inputActions)
-            // {
-            //     ia.Gamepad = gamepad;
-            //     ia.Update(dt);
-            // }
-
+            
             
             if (iaModeChange.State.Pressed)
             {
@@ -816,7 +814,7 @@ namespace Examples.Scenes.ExampleScenes
                 curShape.SetPosition(curPos);
                 BitFlag mask = new(AsteriodLayer);
                 var candidates = new List<Collider>();
-                col.CastSpace(curShape, mask, ref candidates);
+                CollisionHandler.CastSpace(curShape, mask, ref candidates);
                 foreach (var candidate in candidates)
                 {
                     if (candidate is AsteroidCollider asteroid)
@@ -996,9 +994,6 @@ namespace Examples.Scenes.ExampleScenes
                 }
             }
         }
-
-
-
         protected override void OnDrawGameExample(ScreenInfo game)
         {
             

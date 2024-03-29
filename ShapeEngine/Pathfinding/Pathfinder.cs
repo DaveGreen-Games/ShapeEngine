@@ -83,6 +83,11 @@ public class Pathfinder
     
     #region Public
 
+    public void ResizeBounds(Rect newBounds)
+    {
+        bounds = newBounds;
+        CellSize = Grid.GetCellSize(bounds);
+    }
     public void Update(float dt)
     {
         // HandleObstacles();
@@ -136,287 +141,6 @@ public class Pathfinder
     public bool IsTraversable(int index, uint layer) => GetNode(index)?.IsTraversable(layer) ?? true;
     
     #endregion
-    
-    //
-    // #region Obstacles System
-    //
-    // public void ClearObstacles()
-    // {
-    //     foreach (var obstacle in obstacles)
-    //     {
-    //         foreach (var node in obstacle.Value)
-    //         {
-    //             node.Reset();
-    //         }
-    //         obstacle.Key.OnShapeChanged -= OnObstacleShapeChanged;
-    //     }
-    //     obstacles.Clear();
-    // }
-    // public bool AddObstacle(IPathfinderObstacle obstacle)
-    // {
-    //     List<GridNode>? nodeList = null;
-    //     GenerateObstacleCells(obstacle, ref nodeList);
-    //     
-    //     if (nodeList == null) return false;
-    //     obstacles.Add(obstacle, nodeList);
-    //     
-    //     var nodeValues = obstacle.GetNodeValues();
-    //     foreach (var c in nodeList)
-    //     {
-    //         foreach (var v in nodeValues)
-    //         {
-    //             c.ApplyNodeValue(v);
-    //         }
-    //     }
-    //
-    //     obstacle.OnShapeChanged += OnObstacleShapeChanged;
-    //     return true;
-    // }
-    // public bool RemoveObstacle(IPathfinderObstacle obstacle)
-    // {
-    //     obstacles.TryGetValue(obstacle, out var nodeList);
-    //     var nodeValues = obstacle.GetNodeValues();
-    //     if (nodeList != null)
-    //     {
-    //         foreach (var c in nodeList)
-    //         {
-    //             foreach (var v in nodeValues)
-    //             {
-    //                 c.RemoveNodeValue(v);
-    //             }
-    //         }
-    //     }
-    //     
-    //     if (!obstacles.Remove(obstacle)) return false;
-    //     
-    //     obstacle.OnShapeChanged -= OnObstacleShapeChanged;
-    //     return true;
-    //
-    // }
-    // private void OnObstacleShapeChanged(IPathfinderObstacle obstacle)
-    // {
-    //     obstacles.TryGetValue(obstacle, out var cellList);
-    //     var cellValues = obstacle.GetNodeValues();
-    //     if (cellList != null && cellList.Count > 0)
-    //     {
-    //         foreach (var c in cellList)
-    //         {
-    //             foreach (var v in cellValues)
-    //             {
-    //                 c.RemoveNodeValue(v);
-    //             }
-    //         }
-    //     }
-    //     
-    //     GenerateObstacleCells(obstacle, ref cellList);
-    //     obstacles[obstacle] = cellList ?? new();
-    //     if (cellList != null && cellList.Count > 0)
-    //     {
-    //         foreach (var c in cellList)
-    //         {
-    //             foreach (var v in cellValues)
-    //             {
-    //                 c.ApplyNodeValue(v);
-    //             }
-    //         }
-    //     }
-    //     
-    //     // obstacles.TryGetValue(obstacle, out var value);
-    //     // if (value != null)
-    //     // {
-    //     //     foreach (var node in value)
-    //     //     {
-    //     //         node.SetWeight(1);
-    //     //     }
-    //     //     GenerateObstacleCells(obstacle, ref value);
-    //     //     
-    //     // }
-    // }
-    //
-    //
-    // private void GenerateObstacleCells(IPathfinderObstacle obstacle, ref List<GridNode>? cellList)
-    // {
-    //     switch (obstacle.GetShapeType())
-    //     {
-    //         case ShapeType.None: return;
-    //         case ShapeType.Circle:
-    //             GenerateCellList(obstacle.GetCircleShape(), ref cellList);
-    //             break;
-    //         case ShapeType.Segment: 
-    //             GenerateCellList(obstacle.GetSegmentShape(), ref cellList);
-    //             break;
-    //         case ShapeType.Triangle:
-    //             GenerateCellList(obstacle.GetTriangleShape(), ref cellList);
-    //             break;
-    //         case ShapeType.Quad:
-    //             GenerateCellList(obstacle.GetQuadShape(), ref cellList);
-    //             break;
-    //         case ShapeType.Rect:
-    //             GenerateCellList(obstacle.GetRectShape(), ref cellList);
-    //             break;
-    //         case ShapeType.Poly:
-    //             GenerateCellList(obstacle.GetPolygonShape(), ref cellList);
-    //             break;
-    //         case ShapeType.PolyLine:
-    //             GenerateCellList(obstacle.GetPolylineShape(), ref cellList);
-    //             break;
-    //     }
-    // }
-    // private void GenerateCellList(Segment shape, ref List<GridNode>? cellList)
-    // {
-    //     var rect = shape.GetBoundingBox();
-    //     var topLeft = Grid.GetCellCoordinate(rect.TopLeft, bounds);
-    //     var bottomRight = Grid.GetCellCoordinate(rect.BottomRight, bounds);
-    //
-    //     
-    //     var dif = bottomRight - topLeft;
-    //     if (cellList == null) cellList = new(dif.Count);
-    //     else cellList.Clear();
-    //     
-    //     for (int j = topLeft.Row; j <= bottomRight.Row; j++)
-    //     {
-    //         for (int i = topLeft.Col; i <= bottomRight.Col; i++)
-    //         {
-    //             int index = Grid.CoordinatesToIndex(new(i, j));
-    //             var node = GetNode(index);
-    //             if(node == null) continue;
-    //             if(node.Rect.OverlapShape(shape)) cellList.Add(node);
-    //         }
-    //     }
-    // }
-    // private void GenerateCellList(Circle shape, ref List<GridNode>? cellList)
-    // {
-    //     var rect = shape.GetBoundingBox();
-    //     var topLeft = Grid.GetCellCoordinate(rect.TopLeft, bounds);
-    //     var bottomRight = Grid.GetCellCoordinate(rect.BottomRight, bounds);
-    //
-    //     
-    //     var dif = bottomRight - topLeft;
-    //     if (cellList == null) cellList = new(dif.Count);
-    //     else cellList.Clear();
-    //     
-    //     for (int j = topLeft.Row; j <= bottomRight.Row; j++)
-    //     {
-    //         for (int i = topLeft.Col; i <= bottomRight.Col; i++)
-    //         {
-    //             int index = Grid.CoordinatesToIndex(new(i, j));
-    //             var node = GetNode(index);
-    //             if(node == null) continue;
-    //             if(node.Rect.OverlapShape(shape)) cellList.Add(node);
-    //         }
-    //     }
-    // }
-    // private void GenerateCellList(Triangle shape, ref List<GridNode>? cellList)
-    // {
-    //     var rect = shape.GetBoundingBox();
-    //     var topLeft = Grid.GetCellCoordinate(rect.TopLeft, bounds);
-    //     var bottomRight = Grid.GetCellCoordinate(rect.BottomRight, bounds);
-    //
-    //     
-    //     var dif = bottomRight - topLeft;
-    //     if (cellList == null) cellList = new(dif.Count);
-    //     else cellList.Clear();
-    //     
-    //     for (int j = topLeft.Row; j <= bottomRight.Row; j++)
-    //     {
-    //         for (int i = topLeft.Col; i <= bottomRight.Col; i++)
-    //         {
-    //             int index = Grid.CoordinatesToIndex(new(i, j));
-    //             var node = GetNode(index);
-    //             if(node == null) continue;
-    //             if(node.Rect.OverlapShape(shape)) cellList.Add(node);
-    //         }
-    //     }
-    // }
-    // private void GenerateCellList(Quad shape, ref List<GridNode>? cellList)
-    // {
-    //     var rect = shape.GetBoundingBox();
-    //     var topLeft = Grid.GetCellCoordinate(rect.TopLeft, bounds);
-    //     var bottomRight = Grid.GetCellCoordinate(rect.BottomRight, bounds);
-    //
-    //     
-    //     var dif = bottomRight - topLeft;
-    //     if (cellList == null) cellList = new(dif.Count);
-    //     else cellList.Clear();
-    //     
-    //     for (int j = topLeft.Row; j <= bottomRight.Row; j++)
-    //     {
-    //         for (int i = topLeft.Col; i <= bottomRight.Col; i++)
-    //         {
-    //             int index = Grid.CoordinatesToIndex(new(i, j));
-    //             var node = GetNode(index);
-    //             if(node == null) continue;
-    //             if(node.Rect.OverlapShape(shape)) cellList.Add(node);
-    //         }
-    //     }
-    // }
-    // private void GenerateCellList(Rect rect, ref List<GridNode>? cellList)
-    // {
-    //     var topLeft = Grid.GetCellCoordinate(rect.TopLeft, bounds);
-    //     var bottomRight = Grid.GetCellCoordinate(rect.BottomRight, bounds);
-    //
-    //     
-    //     var dif = bottomRight - topLeft;
-    //     if (cellList == null) cellList = new(dif.Count);
-    //     else cellList.Clear();
-    //     
-    //     for (int j = topLeft.Row; j <= bottomRight.Row; j++)
-    //     {
-    //         for (int i = topLeft.Col; i <= bottomRight.Col; i++)
-    //         {
-    //             int index = Grid.CoordinatesToIndex(new(i, j));
-    //             var node = GetNode(index);
-    //             if(node == null) continue;
-    //             if(node.Rect.OverlapShape(rect)) cellList.Add(node);
-    //         }
-    //     }
-    // }
-    // private void GenerateCellList(Polygon shape, ref List<GridNode>? cellList)
-    // {
-    //     var rect = shape.GetBoundingBox();
-    //     var topLeft = Grid.GetCellCoordinate(rect.TopLeft, bounds);
-    //     var bottomRight = Grid.GetCellCoordinate(rect.BottomRight, bounds);
-    //
-    //     
-    //     var dif = bottomRight - topLeft;
-    //     if (cellList == null) cellList = new(dif.Count);
-    //     else cellList.Clear();
-    //     
-    //     for (int j = topLeft.Row; j <= bottomRight.Row; j++)
-    //     {
-    //         for (int i = topLeft.Col; i <= bottomRight.Col; i++)
-    //         {
-    //             int index = Grid.CoordinatesToIndex(new(i, j));
-    //             var node = GetNode(index);
-    //             if(node == null) continue;
-    //             if(node.Rect.OverlapShape(shape)) cellList.Add(node);
-    //         }
-    //     }
-    // }
-    // private void GenerateCellList(Polyline shape, ref List<GridNode>? cellList)
-    // {
-    //     var rect = shape.GetBoundingBox();
-    //     var topLeft = Grid.GetCellCoordinate(rect.TopLeft, bounds);
-    //     var bottomRight = Grid.GetCellCoordinate(rect.BottomRight, bounds);
-    //
-    //     
-    //     var dif = bottomRight - topLeft;
-    //     if (cellList == null) cellList = new(dif.Count);
-    //     else cellList.Clear();
-    //     
-    //     for (int j = topLeft.Row; j <= bottomRight.Row; j++)
-    //     {
-    //         for (int i = topLeft.Col; i <= bottomRight.Col; i++)
-    //         {
-    //             int index = Grid.CoordinatesToIndex(new(i, j));
-    //             var node = GetNode(index);
-    //             if(node == null) continue;
-    //             if(node.Rect.OverlapShape(shape)) cellList.Add(node);
-    //         }
-    //     }
-    // }
-    // #endregion
-    //
     
     #region Agent System
 
@@ -1138,9 +862,9 @@ public class Pathfinder
     #endregion
 
     #region Debug
-    public void DrawDebug(ColorRgba bounds, ColorRgba standard, ColorRgba blocked, ColorRgba desirable, ColorRgba undesirable, uint layer)
+    public void DrawDebug(ColorRgba boundary, ColorRgba standard, ColorRgba blocked, ColorRgba desirable, ColorRgba undesirable, uint layer)
     {
-        Bounds.DrawLines(12f, bounds);
+        Bounds.DrawLines(12f, boundary);
         foreach (var node in nodes)
         {
             var r = node.Rect;
@@ -1221,7 +945,286 @@ public class Pathfinder
 }
 
 
-
+//
+// #region Obstacles System
+//
+// public void ClearObstacles()
+// {
+//     foreach (var obstacle in obstacles)
+//     {
+//         foreach (var node in obstacle.Value)
+//         {
+//             node.Reset();
+//         }
+//         obstacle.Key.OnShapeChanged -= OnObstacleShapeChanged;
+//     }
+//     obstacles.Clear();
+// }
+// public bool AddObstacle(IPathfinderObstacle obstacle)
+// {
+//     List<GridNode>? nodeList = null;
+//     GenerateObstacleCells(obstacle, ref nodeList);
+//     
+//     if (nodeList == null) return false;
+//     obstacles.Add(obstacle, nodeList);
+//     
+//     var nodeValues = obstacle.GetNodeValues();
+//     foreach (var c in nodeList)
+//     {
+//         foreach (var v in nodeValues)
+//         {
+//             c.ApplyNodeValue(v);
+//         }
+//     }
+//
+//     obstacle.OnShapeChanged += OnObstacleShapeChanged;
+//     return true;
+// }
+// public bool RemoveObstacle(IPathfinderObstacle obstacle)
+// {
+//     obstacles.TryGetValue(obstacle, out var nodeList);
+//     var nodeValues = obstacle.GetNodeValues();
+//     if (nodeList != null)
+//     {
+//         foreach (var c in nodeList)
+//         {
+//             foreach (var v in nodeValues)
+//             {
+//                 c.RemoveNodeValue(v);
+//             }
+//         }
+//     }
+//     
+//     if (!obstacles.Remove(obstacle)) return false;
+//     
+//     obstacle.OnShapeChanged -= OnObstacleShapeChanged;
+//     return true;
+//
+// }
+// private void OnObstacleShapeChanged(IPathfinderObstacle obstacle)
+// {
+//     obstacles.TryGetValue(obstacle, out var cellList);
+//     var cellValues = obstacle.GetNodeValues();
+//     if (cellList != null && cellList.Count > 0)
+//     {
+//         foreach (var c in cellList)
+//         {
+//             foreach (var v in cellValues)
+//             {
+//                 c.RemoveNodeValue(v);
+//             }
+//         }
+//     }
+//     
+//     GenerateObstacleCells(obstacle, ref cellList);
+//     obstacles[obstacle] = cellList ?? new();
+//     if (cellList != null && cellList.Count > 0)
+//     {
+//         foreach (var c in cellList)
+//         {
+//             foreach (var v in cellValues)
+//             {
+//                 c.ApplyNodeValue(v);
+//             }
+//         }
+//     }
+//     
+//     // obstacles.TryGetValue(obstacle, out var value);
+//     // if (value != null)
+//     // {
+//     //     foreach (var node in value)
+//     //     {
+//     //         node.SetWeight(1);
+//     //     }
+//     //     GenerateObstacleCells(obstacle, ref value);
+//     //     
+//     // }
+// }
+//
+//
+// private void GenerateObstacleCells(IPathfinderObstacle obstacle, ref List<GridNode>? cellList)
+// {
+//     switch (obstacle.GetShapeType())
+//     {
+//         case ShapeType.None: return;
+//         case ShapeType.Circle:
+//             GenerateCellList(obstacle.GetCircleShape(), ref cellList);
+//             break;
+//         case ShapeType.Segment: 
+//             GenerateCellList(obstacle.GetSegmentShape(), ref cellList);
+//             break;
+//         case ShapeType.Triangle:
+//             GenerateCellList(obstacle.GetTriangleShape(), ref cellList);
+//             break;
+//         case ShapeType.Quad:
+//             GenerateCellList(obstacle.GetQuadShape(), ref cellList);
+//             break;
+//         case ShapeType.Rect:
+//             GenerateCellList(obstacle.GetRectShape(), ref cellList);
+//             break;
+//         case ShapeType.Poly:
+//             GenerateCellList(obstacle.GetPolygonShape(), ref cellList);
+//             break;
+//         case ShapeType.PolyLine:
+//             GenerateCellList(obstacle.GetPolylineShape(), ref cellList);
+//             break;
+//     }
+// }
+// private void GenerateCellList(Segment shape, ref List<GridNode>? cellList)
+// {
+//     var rect = shape.GetBoundingBox();
+//     var topLeft = Grid.GetCellCoordinate(rect.TopLeft, bounds);
+//     var bottomRight = Grid.GetCellCoordinate(rect.BottomRight, bounds);
+//
+//     
+//     var dif = bottomRight - topLeft;
+//     if (cellList == null) cellList = new(dif.Count);
+//     else cellList.Clear();
+//     
+//     for (int j = topLeft.Row; j <= bottomRight.Row; j++)
+//     {
+//         for (int i = topLeft.Col; i <= bottomRight.Col; i++)
+//         {
+//             int index = Grid.CoordinatesToIndex(new(i, j));
+//             var node = GetNode(index);
+//             if(node == null) continue;
+//             if(node.Rect.OverlapShape(shape)) cellList.Add(node);
+//         }
+//     }
+// }
+// private void GenerateCellList(Circle shape, ref List<GridNode>? cellList)
+// {
+//     var rect = shape.GetBoundingBox();
+//     var topLeft = Grid.GetCellCoordinate(rect.TopLeft, bounds);
+//     var bottomRight = Grid.GetCellCoordinate(rect.BottomRight, bounds);
+//
+//     
+//     var dif = bottomRight - topLeft;
+//     if (cellList == null) cellList = new(dif.Count);
+//     else cellList.Clear();
+//     
+//     for (int j = topLeft.Row; j <= bottomRight.Row; j++)
+//     {
+//         for (int i = topLeft.Col; i <= bottomRight.Col; i++)
+//         {
+//             int index = Grid.CoordinatesToIndex(new(i, j));
+//             var node = GetNode(index);
+//             if(node == null) continue;
+//             if(node.Rect.OverlapShape(shape)) cellList.Add(node);
+//         }
+//     }
+// }
+// private void GenerateCellList(Triangle shape, ref List<GridNode>? cellList)
+// {
+//     var rect = shape.GetBoundingBox();
+//     var topLeft = Grid.GetCellCoordinate(rect.TopLeft, bounds);
+//     var bottomRight = Grid.GetCellCoordinate(rect.BottomRight, bounds);
+//
+//     
+//     var dif = bottomRight - topLeft;
+//     if (cellList == null) cellList = new(dif.Count);
+//     else cellList.Clear();
+//     
+//     for (int j = topLeft.Row; j <= bottomRight.Row; j++)
+//     {
+//         for (int i = topLeft.Col; i <= bottomRight.Col; i++)
+//         {
+//             int index = Grid.CoordinatesToIndex(new(i, j));
+//             var node = GetNode(index);
+//             if(node == null) continue;
+//             if(node.Rect.OverlapShape(shape)) cellList.Add(node);
+//         }
+//     }
+// }
+// private void GenerateCellList(Quad shape, ref List<GridNode>? cellList)
+// {
+//     var rect = shape.GetBoundingBox();
+//     var topLeft = Grid.GetCellCoordinate(rect.TopLeft, bounds);
+//     var bottomRight = Grid.GetCellCoordinate(rect.BottomRight, bounds);
+//
+//     
+//     var dif = bottomRight - topLeft;
+//     if (cellList == null) cellList = new(dif.Count);
+//     else cellList.Clear();
+//     
+//     for (int j = topLeft.Row; j <= bottomRight.Row; j++)
+//     {
+//         for (int i = topLeft.Col; i <= bottomRight.Col; i++)
+//         {
+//             int index = Grid.CoordinatesToIndex(new(i, j));
+//             var node = GetNode(index);
+//             if(node == null) continue;
+//             if(node.Rect.OverlapShape(shape)) cellList.Add(node);
+//         }
+//     }
+// }
+// private void GenerateCellList(Rect rect, ref List<GridNode>? cellList)
+// {
+//     var topLeft = Grid.GetCellCoordinate(rect.TopLeft, bounds);
+//     var bottomRight = Grid.GetCellCoordinate(rect.BottomRight, bounds);
+//
+//     
+//     var dif = bottomRight - topLeft;
+//     if (cellList == null) cellList = new(dif.Count);
+//     else cellList.Clear();
+//     
+//     for (int j = topLeft.Row; j <= bottomRight.Row; j++)
+//     {
+//         for (int i = topLeft.Col; i <= bottomRight.Col; i++)
+//         {
+//             int index = Grid.CoordinatesToIndex(new(i, j));
+//             var node = GetNode(index);
+//             if(node == null) continue;
+//             if(node.Rect.OverlapShape(rect)) cellList.Add(node);
+//         }
+//     }
+// }
+// private void GenerateCellList(Polygon shape, ref List<GridNode>? cellList)
+// {
+//     var rect = shape.GetBoundingBox();
+//     var topLeft = Grid.GetCellCoordinate(rect.TopLeft, bounds);
+//     var bottomRight = Grid.GetCellCoordinate(rect.BottomRight, bounds);
+//
+//     
+//     var dif = bottomRight - topLeft;
+//     if (cellList == null) cellList = new(dif.Count);
+//     else cellList.Clear();
+//     
+//     for (int j = topLeft.Row; j <= bottomRight.Row; j++)
+//     {
+//         for (int i = topLeft.Col; i <= bottomRight.Col; i++)
+//         {
+//             int index = Grid.CoordinatesToIndex(new(i, j));
+//             var node = GetNode(index);
+//             if(node == null) continue;
+//             if(node.Rect.OverlapShape(shape)) cellList.Add(node);
+//         }
+//     }
+// }
+// private void GenerateCellList(Polyline shape, ref List<GridNode>? cellList)
+// {
+//     var rect = shape.GetBoundingBox();
+//     var topLeft = Grid.GetCellCoordinate(rect.TopLeft, bounds);
+//     var bottomRight = Grid.GetCellCoordinate(rect.BottomRight, bounds);
+//
+//     
+//     var dif = bottomRight - topLeft;
+//     if (cellList == null) cellList = new(dif.Count);
+//     else cellList.Clear();
+//     
+//     for (int j = topLeft.Row; j <= bottomRight.Row; j++)
+//     {
+//         for (int i = topLeft.Col; i <= bottomRight.Col; i++)
+//         {
+//             int index = Grid.CoordinatesToIndex(new(i, j));
+//             var node = GetNode(index);
+//             if(node == null) continue;
+//             if(node.Rect.OverlapShape(shape)) cellList.Add(node);
+//         }
+//     }
+// }
+// #endregion
+//
 
 /*
  //alternative obstacle shape changed system

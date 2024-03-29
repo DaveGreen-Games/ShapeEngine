@@ -1,8 +1,10 @@
 using System.Numerics;
+using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Interfaces;
 using ShapeEngine.Core.Shapes;
 using ShapeEngine.Core.Structs;
 using ShapeEngine.Input;
+using ShapeEngine.Pathfinding;
 using ShapeEngine.Screen;
 
 namespace ShapeEngine.Core;
@@ -10,7 +12,9 @@ namespace ShapeEngine.Core;
 public abstract class Scene : IUpdateable, IDrawable
 {
     public SpawnArea? SpawnArea { get; private set; } = null;
-
+    public CollisionHandler? CollisionHandler { get; private set; } = null;
+    public Pathfinder? Pathfinder { get; private set; } = null;
+    
     protected bool InitSpawnArea(Rect bounds)
     {
         if (SpawnArea != null) return false;
@@ -36,7 +40,6 @@ public abstract class Scene : IUpdateable, IDrawable
             
         return true;
     }
-
     protected bool RemoveSpawnArea()
     {
         if (SpawnArea == null) return false;
@@ -47,6 +50,49 @@ public abstract class Scene : IUpdateable, IDrawable
         return true;
     }
         
+    public bool InitCollisionHandler(Rect bounds, int rows, int cols)
+    {
+        if (CollisionHandler != null) return false;
+        CollisionHandler = new(bounds, rows, cols);
+        return true;
+    }
+    public bool InitCollisionHandler(CollisionHandler collisionHandler)
+    {
+        if (CollisionHandler != null) return false;
+        if (CollisionHandler == collisionHandler) return false;
+        CollisionHandler = collisionHandler; // new(Bounds, rows, cols);
+        return true;
+    }
+    public bool RemoveCollisionHandler()
+    {
+        if (CollisionHandler == null) return false;
+        CollisionHandler.Close();
+        CollisionHandler = null;
+        return true;
+    }
+    
+    public bool InitPathfinder(Rect bounds, int rows, int cols)
+    {
+        if (Pathfinder != null) return false;
+        Pathfinder = new(bounds, rows, cols);
+        return true;
+    }
+    public bool InitPathfinder(Pathfinder pathfinder)
+    {
+        if (Pathfinder != null) return false;
+        if (Pathfinder == pathfinder) return false;
+        Pathfinder = pathfinder;
+        return true;
+    }
+    public bool RemovePathfinder()
+    {
+        if (Pathfinder == null) return false;
+        Pathfinder.Clear();
+        Pathfinder = null;
+        return true;
+    }
+
+    
         
     public abstract void Activate(Scene oldScene);
     public abstract void Deactivate();
@@ -58,12 +104,16 @@ public abstract class Scene : IUpdateable, IDrawable
     public virtual void Close()
     {
         RemoveSpawnArea();
+        RemoveCollisionHandler();
+        RemovePathfinder();
     }
 
         
     public void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
     {
         SpawnArea?.Update(time, game, ui);
+        CollisionHandler?.Update();
+        Pathfinder?.Update(time.Delta);
         OnUpdateGame(time, game, ui);
     }
     public void DrawGame(ScreenInfo game)
