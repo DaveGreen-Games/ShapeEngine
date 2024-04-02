@@ -34,6 +34,7 @@ namespace Examples.Scenes
             curButton = buttons[0];
             examples.Add(new ShapesExample());
             examples.Add(new ProjectedShapesExample());
+            examples.Add(new EndlessSpaceCollision());
             // examples.Add(new PolygonHolesExample());
             examples.Add(new PolylineInflationExample());
             examples.Add(new AsteroidMiningExample());

@@ -9,8 +9,8 @@ namespace ShapeEngine.Core.Collision
 {
     public abstract class Collider : IShape
     {
-        public event Action<CollisionInformation>? OnCollision;
-        public event Action<Collider>? OnCollisionEnded;
+        public event Action<Collider, CollisionInformation>? OnCollision;
+        public event Action<Collider, Collider>? OnCollisionEnded;
         
         
         private CollisionObject? parent = null;
@@ -93,16 +93,16 @@ namespace ShapeEngine.Core.Collision
             this.Offset = offset;
         }
 
-        
+        // public void ForceShapeRecalculation() => Dirty = true;
         internal void ResolveCollision(CollisionInformation info)
         {
             Collision(info);
-            OnCollision?.Invoke(info);
+            OnCollision?.Invoke(this, info);
         }
         internal void ResolveCollisionEnded(Collider other)
         {
             CollisionEnded(other);
-            OnCollisionEnded?.Invoke(other);
+            OnCollisionEnded?.Invoke(this, other);
         }
         protected virtual void Collision(CollisionInformation info) { }
         protected virtual void CollisionEnded(Collider other) { }

@@ -192,7 +192,7 @@ namespace Examples.Scenes.ExampleScenes
             Layer = SpawnAreaLayers.ObjectFlag;
         }
 
-        private void Overlap(CollisionInformation info)
+        private void Overlap(Collider col, CollisionInformation info)
         {
             if (info.CollisionSurface.Valid)
             {
@@ -254,7 +254,7 @@ namespace Examples.Scenes.ExampleScenes
             }
         }
         
-        private void Overlap(CollisionInformation info)
+        private void Overlap(Collider col, CollisionInformation info)
         {
             if (info.Collisions.Count > 0)
             {
@@ -365,7 +365,7 @@ namespace Examples.Scenes.ExampleScenes
             var col = polyCollider;
             col.CollisionMask = col.CollisionMask.Add(CollisionFlags.RockFlag);
         }
-        private void Overlap(CollisionInformation info)
+        private void Overlap(Collider col, CollisionInformation info)
         {
             if (info.CollisionSurface.Valid)
             {
@@ -431,7 +431,7 @@ namespace Examples.Scenes.ExampleScenes
             Layer = SpawnAreaLayers.ObjectFlag;
         }
 
-        private void Overlap(CollisionInformation info)
+        private void Overlap(Collider col, CollisionInformation info)
         {
             if (info.CollisionSurface.Valid)
             {

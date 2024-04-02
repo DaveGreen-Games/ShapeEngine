@@ -299,7 +299,7 @@ namespace ShapeEngine.Core.Collision
             {
                 var coords = GetCoordinatesGrid(i);
                 var rect = new Rect(Bounds.X + coords.x * SpacingX, Bounds.Y + coords.y * SpacingY, SpacingX, SpacingY);
-                rect.DrawLines(1f, border);
+                rect.DrawLines(2f, border);
                 int id = GetCellId(coords.x, coords.y);
                 if (buckets[id].Count > 0)
                 {
