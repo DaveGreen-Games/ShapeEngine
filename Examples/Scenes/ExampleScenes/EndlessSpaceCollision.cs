@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.IO.Pipes;
 using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Screen;
@@ -17,34 +18,354 @@ namespace Examples.Scenes.ExampleScenes;
     
 public class EndlessSpaceCollision : ExampleScene
 {
+    
+    private readonly struct AutogunStats
+    {
+        public enum TargetingType
+        {
+            Closest = 0,
+            Furthest = 1,
+            LowestHp = 2,
+            HighestHp = 3
+        }
+        public readonly int Clipsize;
+        public readonly float ReloadTime;
+        public readonly float BulletsPerSecond;
+        public readonly float FirerateInterval => 1f / BulletsPerSecond;
+        public readonly float DetectionRange;
+        public readonly TargetingType Targeting;
+        public readonly float Accuracy;
+        public readonly ColorRgba Color;
+
+        public AutogunStats(int clipSize, float reloadTime, float bulletsPerSecond, float detectionRange, float accuracy,
+            TargetingType targetingType, ColorRgba color)
+        {
+            Clipsize = clipSize;
+            ReloadTime = reloadTime;
+            BulletsPerSecond = bulletsPerSecond;
+            DetectionRange = detectionRange;
+            Targeting = targetingType;
+            Accuracy = accuracy;
+            Color = color;
+
+        }
+    }
+
+    private readonly struct BulletStats
+    {
+        public readonly float Size;
+        public readonly float Speed;
+        public readonly float Damage;
+        public readonly float Lifetime;
+
+        public BulletStats(float size, float speed, float damage, float lifetime)
+        {
+            Size = size;
+            Speed = speed;
+            Damage = damage;
+            Lifetime = lifetime;
+        }
+
+        public BulletStats RandomizeSpeed(float min = 0.95f, float max = 1.05f, float shipSpeed = 0f)
+        {
+            return new(Size, Speed * ShapeRandom.RandF(min, max) + shipSpeed, Damage, Lifetime);
+        }
+    }
+    
+    private class Autogun
+    {
+        public event Action<Autogun, Bullet>? BulletFired;
+        private Vector2 pos;
+        private float aimingRotRad = 0f;
+        private float firerateTimer = 0f;
+        private float curShipSpeed = 0f;
+        private int curClipSize;
+        private float reloadTimer = 0f;
+        
+        public readonly AutogunStats Stats;
+        public readonly BulletStats BulletStats;
+
+        private AsteroidObstacle? curTarget = null;
+        private BitFlag castMask = new BitFlag(AsteroidObstacle.CollisionLayer);
+        private List<Collider> castResult = new(256);
+
+        private readonly CollisionHandler collisionHandler;
+
+        public Autogun(CollisionHandler collisionHandler, AutogunStats stats, BulletStats bulletStats)
+        {
+            this.collisionHandler = collisionHandler;
+            this.Stats = stats;
+            this.BulletStats = bulletStats;
+            this.curClipSize = stats.Clipsize;
+        }
+
+        public void Reset()
+        {
+            curTarget = null;
+            curClipSize = Stats.Clipsize;
+            firerateTimer = 0f;
+            reloadTimer = 0f;
+        }
+        public void Update(float dt, Vector2 position, float shipSpeed)
+        {
+            pos = position;
+            curShipSpeed = shipSpeed;
+
+            if (reloadTimer > 0f)
+            {
+                reloadTimer -= dt;
+                if (reloadTimer <= 0f)
+                {
+                    curClipSize = Stats.Clipsize;
+                    reloadTimer = 0f;
+                    if (curTarget != null && firerateTimer <= 0f)
+                    {
+                        firerateTimer = Stats.FirerateInterval;
+                        CreateBullet();
+                    }
+                }
+            }
+
+            if (curTarget != null)
+            {
+                if (curTarget.IsDead) curTarget = null;
+                else
+                {
+                    var disSq = (position - curTarget.Transform.Position).LengthSquared();
+                    if (disSq > Stats.DetectionRange * Stats.DetectionRange) curTarget = null;
+                }
+            }
+            
+            if (curTarget != null)
+            {
+                var aimDir = curTarget.Transform.Position - position;
+                aimingRotRad = aimDir.AngleRad();
+            }
+            else
+            {
+                FindNextTarget();
+
+                if (curTarget != null && curClipSize > 0) //target found
+                {
+                    if (firerateTimer <= 0f)
+                    {
+                        firerateTimer = Stats.FirerateInterval;
+                        CreateBullet();
+                    }
+                }
+            }
+            
+            if (firerateTimer > 0f)
+            {
+                firerateTimer -= dt;
+                if (firerateTimer <= 0f)
+                {
+                    if (curTarget != null && curClipSize > 0)
+                    {
+                        firerateTimer = Stats.FirerateInterval;
+                        CreateBullet();
+                    }
+                }
+            }
+        }
+
+        public void Draw()
+        {
+            curTarget?.GetBoundingBox().DrawLines(4f, Stats.Color);
+        }
+
+        public void DrawUI(Rect rect)
+        {
+            
+            if (reloadTimer > 0f)
+            {
+                
+                var f = reloadTimer / Stats.ReloadTime;
+                var marginRect = rect.ApplyMargins(0f, f, 0f, 0f);
+                marginRect.Draw(Stats.Color.ChangeBrightness(-0.5f));
+                rect.DrawLines(2f, Stats.Color);
+            }
+            else
+            {
+                
+                var f = 1f - ((float)curClipSize / (float)Stats.Clipsize);
+                var marginRect = rect.ApplyMargins(0f, f, 0f, 0f);
+                marginRect.Draw(Stats.Color.ChangeBrightness(-0.5f));
+                rect.DrawLines(2f, Stats.Color);
+            }
+        }
+        private void FindNextTarget()
+        {
+            castResult.Clear();
+            var castCircle = new Circle(pos, Stats.DetectionRange);
+            collisionHandler.CastSpace(castCircle, castMask, ref castResult);
+            if (castResult.Count <= 0) return;
+
+            if (castResult.Count == 1)
+            {
+                if (castResult[0].Parent is AsteroidObstacle a)
+                {
+                    curTarget = a;
+                }
+            }
+            else
+            {
+                if (Stats.Targeting == AutogunStats.TargetingType.Closest)
+                {
+                    var minDisSq = float.PositiveInfinity;
+                    AsteroidObstacle? closest = null;
+                    foreach (var collider in castResult)
+                    {
+                        if (collider.Parent is AsteroidObstacle a)
+                        {
+                            if (closest == null)
+                            {
+                                closest = a;
+                                minDisSq = (pos - collider.CurTransform.Position).LengthSquared();
+                            }
+                            else
+                            {
+                                var disSq = (pos - collider.CurTransform.Position).LengthSquared();
+                                if (disSq < minDisSq)
+                                {
+                                    minDisSq = disSq;
+                                    closest = a;
+                                }
+                            }
+                        }   
+                        
+                    }
+
+                    curTarget = closest;
+
+                }
+                else if (Stats.Targeting == AutogunStats.TargetingType.Furthest)
+                {
+                    var maxDisSq = -1f;
+                    AsteroidObstacle? furthest = null;
+                    foreach (var collider in castResult)
+                    {
+                        if (collider.Parent is AsteroidObstacle a)
+                        {
+                            if (furthest == null)
+                            {
+                                furthest = a;
+                                maxDisSq = (pos - collider.CurTransform.Position).LengthSquared();
+                            }
+                            else
+                            {
+                                var disSq = (pos - collider.CurTransform.Position).LengthSquared();
+                                if (disSq > maxDisSq)
+                                {
+                                    maxDisSq = disSq;
+                                    furthest = a;
+                                }
+                            }
+                        }   
+                        
+                    }
+
+                    curTarget = furthest;
+                }
+                else if (Stats.Targeting == AutogunStats.TargetingType.HighestHp)
+                {
+                    var maxHP = 0f;
+                    AsteroidObstacle? highest = null;
+                    foreach (var collider in castResult)
+                    {
+                        if (collider.Parent is AsteroidObstacle a)
+                        {
+                            if (highest == null)
+                            {
+                                highest = a;
+                                maxHP = a.Health;
+                            }
+                            else
+                            {
+                                if (a.Health > maxHP)
+                                {
+                                    maxHP = a.Health;
+                                    highest = a;
+                                }
+                            }
+                        }   
+                        
+                    }
+
+                    curTarget = highest;
+                }
+                else if (Stats.Targeting == AutogunStats.TargetingType.LowestHp)
+                {
+                    var minHP = 0f;
+                    AsteroidObstacle? lowest = null;
+                    foreach (var collider in castResult)
+                    {
+                        if (collider.Parent is AsteroidObstacle a)
+                        {
+                            if (lowest == null)
+                            {
+                                lowest = a;
+                                minHP = a.Health;
+                            }
+                            else
+                            {
+                                if (a.Health < minHP)
+                                {
+                                    minHP = a.Health;
+                                    lowest = a;
+                                }
+                            }
+                        }   
+                        
+                    }
+
+                    curTarget = lowest;
+                }
+            }
+        }
+        private void CreateBullet()
+        {
+            if (curClipSize <= 0) return;
+            
+            curClipSize--;
+            if (curClipSize <= 0)
+            {
+                reloadTimer = Stats.ReloadTime;
+            }
+            var dir = ShapeVec.VecFromAngleRad(aimingRotRad);
+            var randRot = ShapeRandom.RandF(-Stats.Accuracy, Stats.Accuracy);
+            dir = dir.Rotate(randRot);
+            var bullet = new Bullet(pos, dir, BulletStats.RandomizeSpeed(0.95f, 1.05f, curShipSpeed), Stats.Color);
+            collisionHandler.Add(bullet);
+            BulletFired?.Invoke(this, bullet);
+        }
+        
+    }
+    
     private class Bullet : CollisionObject
     {
         public static uint CollisionLayer = BitFlag.GetFlagUint(4);
         private CircleCollider collider;
-        private float damage;
-        private float size;
 
         private float effectTimer = 0f;
         private const float effectDuration = 0.25f;
 
-        private float lifetime;
-        private float maxLifetime;
+        private BulletStats stats;
         
-        public Bullet(Vector2 pos, Vector2 dir, float size, float speed, float damage, float lifetime)
+        private float lifetime;
+        private ColorRgba color;
+        
+        public Bullet(Vector2 pos, Vector2 dir, BulletStats stats, ColorRgba color)
         {
             
             this.Transform = new(pos, dir.AngleRad());
 
-            this.Velocity = dir * speed;
+            this.stats = stats;
+            this.Velocity = dir * stats.Speed;
             
-            this.damage = damage;
-
-            this.size = size;
-
-            this.lifetime = lifetime;
-            this.maxLifetime = lifetime;
+            this.lifetime = stats.Lifetime;
             
-            this.collider = new(new(0f), size);
+            this.collider = new(new(0f), stats.Size);
             this.collider.ComputeCollision = true;
             this.collider.ComputeIntersections = false;
             this.collider.CollisionLayer = CollisionLayer;
@@ -53,6 +374,7 @@ public class EndlessSpaceCollision : ExampleScene
             this.collider.OnCollisionEnded += OnColliderCollisionEnded;
             this.AddCollider(collider);
 
+            this.color = color;
 
         }
 
@@ -70,14 +392,14 @@ public class EndlessSpaceCollision : ExampleScene
                     var other = collision.Other.Parent;
                     if (other is AsteroidObstacle asteroid)
                     {
-                        asteroid.Damage(Transform.Position, damage);
+                        asteroid.Damage(Transform.Position, stats.Damage);
                     }
 
                     effectTimer = effectDuration;
                     collider.Enabled = false;
                     Velocity = new(0f);
-                    
-                    
+                    return;
+
                 }
             }
         }
@@ -111,13 +433,13 @@ public class EndlessSpaceCollision : ExampleScene
             {
                 float f = effectTimer / effectDuration;
 
-                var effectSquare = new Rect(Transform.Position, new Size(size * 5f * f * f), new(0.5f));
-                effectSquare.Draw(new ColorRgba(Color.Crimson));
+                var effectSquare = new Rect(Transform.Position, new Size(stats.Size * 5f * f * f), new(0.5f));
+                effectSquare.Draw(color);
             }
             else
             {
                 var circle = collider.GetCircleShape();
-                circle.DrawLines(4f, new ColorRgba(Color.Crimson), 4f);
+                circle.DrawLines(4f, color, 4f);
             }
             
         }
@@ -363,15 +685,21 @@ public class EndlessSpaceCollision : ExampleScene
         public static readonly uint CollisionLayer = BitFlag.GetFlagUint(2);
         // private Polygon shape;
         private PolyCollider collider;
-        private Triangulation triangulation;
+        public Triangulation Triangulation;
         private Rect bb;
 
         private float damageFlashTimer = 0f;
         private const float DamageFlashDuration = 0.25f;
 
-        private float health;
+        public float Health { get; private set; }
 
         public bool Big;
+
+        private Vector2 chasePosition = new();
+
+        private readonly float chaseStrength = 0f;
+        private float speed;
+        
         // private bool moved = false;
         // public AsteroidObstacle(Vector2 center)
         // {
@@ -386,9 +714,11 @@ public class EndlessSpaceCollision : ExampleScene
             
             this.Big = big;
             Transform = new(shape.GetCentroid());
-            var s = ShapeMath.LerpFloat(50, Ship.Speed, DifficultyFactor);
-            Velocity = ShapeRandom.RandVec2(s * 0.9f, s * 1.1f);
-            if (!big) Velocity *= 4f;
+            var s = ShapeMath.LerpFloat(50, Ship.Speed / 4, DifficultyFactor);
+            speed = ShapeRandom.RandF(0.95f, 1.05f) * s;
+            Velocity = ShapeRandom.RandVec2() * speed;
+            chaseStrength = ShapeMath.LerpFloat(0.5f, 1f, DifficultyFactor);
+            if (!big) Velocity *= 3.5f;
             
             collider = new PolyCollider(shape, new(0f));
             collider.ComputeCollision = false;
@@ -400,18 +730,18 @@ public class EndlessSpaceCollision : ExampleScene
             
             AddCollider(collider);
             this.bb = shape.GetBoundingBox();
-            this.triangulation = shape.Triangulate();
+            this.Triangulation = shape.Triangulate();
 
             var h = ShapeMath.LerpFloat(100, 1000, DifficultyFactor);
-            this.health = ShapeRandom.RandF(h * 0.9f, h * 1.1f);
-            if (!big) this.health /= 6f;
+            this.Health = ShapeRandom.RandF(h * 0.9f, h * 1.1f);
+            if (!big) this.Health /= 6f;
             // collider.OnShapeUpdated += OnColliderShapeUpdated;
         }
 
         public void Damage(Vector2 pos, float amount)
         {
-            health -= amount;
-            if (health <= 0f)
+            Health -= amount;
+            if (Health <= 0f)
             {
                 Kill();
             }
@@ -455,13 +785,23 @@ public class EndlessSpaceCollision : ExampleScene
         //     }
         // }
 
+        public void SetChasePosition(Vector2 position)
+        {
+            chasePosition = position;
+        }
         public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             base.Update(time, game, ui);
+
+            if (!Big)
+            {
+                var chaseDir = (chasePosition - Transform.Position).Normalize();
+                Velocity = Velocity.LerpDirection(chaseDir, chaseStrength); // chaseDir * speed;
+            }
             
             var shape = collider.GetPolygonShape();
             bb = shape.GetBoundingBox();
-            triangulation = shape.Triangulate();
+            Triangulation = shape.Triangulate();
 
 
             if (damageFlashTimer > 0f)
@@ -506,7 +846,7 @@ public class EndlessSpaceCollision : ExampleScene
         {
             if (!bb.OverlapShape(game.Area)) return;
 
-            triangulation.Draw(Colors.Background);
+            Triangulation.Draw(Colors.Background);
             
             if (AsteroidLineThickness > 1)
             {
@@ -523,6 +863,48 @@ public class EndlessSpaceCollision : ExampleScene
         }
     }
 
+    private class AsteroidShard
+    {
+        public Triangle Triangle;
+        private Triangle scaledTriangle;
+        public Vector2 Velocity;
+        public float Lifetime;
+        public float LifetimeTimer;
+        public AsteroidShard(Triangle triangle)
+        {
+            this.Triangle = triangle;
+            scaledTriangle = triangle;
+            Velocity = ShapeRandom.RandVec2(1250, 1500);
+            Lifetime = ShapeRandom.RandF(2f, 2.5f);
+            LifetimeTimer = Lifetime;
+        }
+
+        public bool IsDead => LifetimeTimer <= 0f;
+        public void Update(float dt)
+        {
+            if (IsDead) return;
+            LifetimeTimer -= dt;
+
+            Velocity = PhysicsObject.ApplyDragForce(Velocity, 2, dt);
+            
+            var f = LifetimeTimer / Lifetime;
+
+            var scale = ShapeMath.LerpFloat(0.1f, 1f, f * f);
+            
+            Triangle = Triangle.ChangePosition(Velocity * dt);
+            scaledTriangle = Triangle.ScaleSize(scale, Triangle.GetCentroid());
+
+
+        }
+
+        public void Draw()
+        {
+            if (IsDead) return;
+            scaledTriangle.Draw(Colors.Background);
+            scaledTriangle.DrawLines(AsteroidLineThickness / 2, Colors.Highlight.SetAlpha(150));
+        }
+    }
+    
     public static int Difficulty = 1;
     public static readonly int MaxDifficulty = 100;
     public static float DifficultyFactor => (float)Difficulty / (float)MaxDifficulty;
@@ -547,6 +929,7 @@ public class EndlessSpaceCollision : ExampleScene
     // private const float LastCutShapeDuration = 0.25f;
     
     private readonly List<AsteroidObstacle> asteroids = new(128);
+    private readonly List<AsteroidShard> shards = new(512);
     private readonly List<Bullet> bullets = new(1024);
     private const int AsteroidCount = 120; //30
     private const int AsteroidPointCount = 10 ; //14
@@ -557,16 +940,10 @@ public class EndlessSpaceCollision : ExampleScene
     private const int CollisionRows = 25;
     private const int CollisionCols = 25;
 
-    private const float MinigunFirerate = 1f / 20f;
-    private float minigunFirerateTimer = 0f;
-    
-    //minigun aims at closest
-    //autocannon aims at highest hp
-    
-    //guns have clipsize, firerate, damage, lifetime, reload time, detection range
-    
-    
-    // private readonly Size CollisionCellSize = new Size(UniverseSize / CollisionCols, UniverseSize / CollisionRows);
+    private readonly Autogun minigun;
+    private readonly Autogun cannon;
+
+    private readonly float cellSize;
     public EndlessSpaceCollision()
     {
         Title = "Endless Space Collision";
@@ -580,11 +957,23 @@ public class EndlessSpaceCollision : ExampleScene
         // pathfinder = new(universe, cols, rows);
 
         InitCollisionHandler(universe, CollisionRows, CollisionCols);
-        
+        cellSize = UniverseSize / CollisionRows;
         camera = new();
         follower = new(0, 300, 500);
         camera.Follower = follower;
         ship = new(new Vector2(0f), 45f);
+        
+        var minigunStats = new AutogunStats(200, 2, 20, 800, MathF.PI / 15, AutogunStats.TargetingType.Closest, new ColorRgba(Color.ForestGreen));
+        var minigunBulletStats = new BulletStats(12, 1250, 15, 0.75f);
+        minigun = new(CollisionHandler, minigunStats, minigunBulletStats);
+        
+        var cannonStats = new AutogunStats(18, 4, 3, 1750, MathF.PI / 24, AutogunStats.TargetingType.HighestHp, new ColorRgba(Color.Crimson));
+        var cannonBulletStats = new BulletStats(18, 2500, 300, 1f);
+        cannon = new(CollisionHandler, cannonStats, cannonBulletStats);
+
+        minigun.BulletFired += OnBulletFired;
+        cannon.BulletFired += OnBulletFired;
+        
         CollisionHandler?.Add(ship);
         UpdateFollower(camera.Size.Min());
         
@@ -594,6 +983,12 @@ public class EndlessSpaceCollision : ExampleScene
         
         AddAsteroids(AsteroidCount);
     }
+
+    private void OnBulletFired(Autogun gun, Bullet bullet)
+    {
+        bullets.Add(bullet);
+    }
+
     public override void Activate(Scene oldScene)
     {
         GAMELOOP.Camera = camera;
@@ -608,6 +1003,11 @@ public class EndlessSpaceCollision : ExampleScene
     }
     public override void Reset()
     {
+        CurScore = 0f;
+        Difficulty = 1;
+        DifficultyScore = 0f;
+        killedBigAsteroids = 0;
+        
         // var universeWidth = ShapeRandom.RandF(12000, 20000);
         // var universeHeight = ShapeRandom.RandF(12000, 20000);
         universe = new(new Vector2(0f), new Size(UniverseSize, UniverseSize) , new Vector2(0.5f));
@@ -617,10 +1017,13 @@ public class EndlessSpaceCollision : ExampleScene
         // pathfinder = new(universe, cols, rows);
         CollisionHandler?.Clear();
         asteroids.Clear();
+        shards.Clear();
         bullets.Clear();
         camera.Reset();
         follower.Reset();
         ship.Reset(new Vector2(0f), 45f);
+        cannon.Reset();
+        minigun.Reset();
         CollisionHandler?.Add(ship);
         follower.SetTarget(ship);
         
@@ -661,27 +1064,7 @@ public class EndlessSpaceCollision : ExampleScene
         CollisionHandler?.Add(a);
     }
 
-    private void AddSmallBullet(Vector2 pos, Vector2 dir)
-    {
-        var accuracy = MathF.PI / 15;
-        var randRot = ShapeRandom.RandF(-accuracy, accuracy);
-        dir = dir.Rotate(randRot);
-        var randSpeed = 800 * ShapeRandom.RandF(0.92f, 1.08f);
-        randSpeed += ship.GetCurSpeed();
-        var bullet = new Bullet(pos, dir, 13f, randSpeed, 10f, 1.5f);
-        bullets.Add(bullet);
-        CollisionHandler?.Add(bullet);
-    }
-    private void AddBigBullet(Vector2 pos, Vector2 dir)
-    {
-        var accuracy = MathF.PI / 20;
-        var randRot = ShapeRandom.RandF(-accuracy, accuracy);
-        dir = dir.Rotate(randRot);
-        var randSpeed = 400 * ShapeRandom.RandF(0.95f, 1.05f);
-        var bullet = new Bullet(pos, dir, 18f, randSpeed, 80f, 4f);
-        bullets.Add(bullet);
-        CollisionHandler?.Add(bullet);
-    }
+    
     private Vector2 GetRandomUniversePosition(float safeDistance = 2500)
     {
         var pos = universe.GetRandomPointInside();
@@ -702,22 +1085,6 @@ public class EndlessSpaceCollision : ExampleScene
         var gamepad = GAMELOOP.CurGamepad;
         iaDrawDebug.Gamepad = gamepad;
         iaDrawDebug.Update(dt);
-
-        if (minigunFirerateTimer > 0f) minigunFirerateTimer -= dt;
-
-        if (ShapeKeyboardButton.SPACE.GetInputState().Down)
-        {
-            if (minigunFirerateTimer <= 0f)
-            {
-                AddSmallBullet(ship.GetBarrelPosition(), ship.GetBarrelDirection());
-                minigunFirerateTimer = MinigunFirerate;
-            }
-        }
-        // if (ShapeMouseButton.LEFT.GetInputState().Pressed)
-        // {
-        //     AddAsteroid(mousePosGame);
-        // }
-        //
         
         if (iaDrawDebug.State.Pressed)
         {
@@ -753,10 +1120,19 @@ public class EndlessSpaceCollision : ExampleScene
         
         
         ship.Update(time, game, ui);
+        minigun.Update(time.Delta, ship.GetPosition(), ship.GetCurSpeed());
+        cannon.Update(time.Delta, ship.GetPosition(), ship.GetCurSpeed());
 
         UpdateFollower(camera.Size.Min());
 
-        universe = universe.SetPosition(ship.GetPosition(), new(0.5f));
+        var coordinates = ship.GetPosition() / cellSize;
+        var uX = (int)coordinates.X * cellSize;
+        var uY = (int)coordinates.Y * cellSize;
+        
+        universe = universe.SetPosition(new Vector2(uX, uY), new(0.5f));
+        // universe = universe.SetPosition(ship.GetPosition(), new(0.5f));
+        
+        
         CollisionHandler?.ResizeBounds(universe);
         CollisionHandler?.Update();
 
@@ -764,6 +1140,7 @@ public class EndlessSpaceCollision : ExampleScene
         for (int i = asteroids.Count - 1; i >= 0; i--)
         {
             var a = asteroids[i];
+            a.SetChasePosition(ship.GetPosition());
             a.Update(time, game, ui);
             if (!universe.OverlapShape(a.GetShape()))
             {
@@ -777,6 +1154,11 @@ public class EndlessSpaceCollision : ExampleScene
             {
                 asteroids.RemoveAt(i);
                 CollisionHandler?.Remove(a);
+                foreach (var tri in a.Triangulation)
+                {
+                    var shard = new AsteroidShard(tri);
+                    shards.Add(shard);
+                }
 
                 float scoreBonus = ShapeMath.LerpFloat(1, 4, DifficultyFactor);
                 
@@ -829,11 +1211,21 @@ public class EndlessSpaceCollision : ExampleScene
                 CollisionHandler?.Remove(bullet);
             }
         }
+        
+        
+        for (int i = shards.Count - 1; i >= 0; i--)
+        {
+            var shard = shards[i];
+            shard.Update(time.Delta);
+            if(shard.IsDead) shards.RemoveAt(i);
+        }
+
         // AddAsteroids(removed);
     }
     protected override void OnDrawGameExample(ScreenInfo game)
     {
         universe.DrawLines(12f, Colors.Dark);
+        universe.DrawGrid(CollisionRows, 12f, Colors.Dark.SetAlpha(200));
         
         if (drawDebug)
         {
@@ -858,17 +1250,30 @@ public class EndlessSpaceCollision : ExampleScene
                 var outerColor = Colors.Special.ChangeAlpha((byte)150);
                 outerBoundary.DrawLines(thickness, outerColor);
             }
-            
+
+
+            var minigunRange = new Circle(ship.GetPosition(), minigun.Stats.DetectionRange);
+            var cannonRange = new Circle(ship.GetPosition(), cannon.Stats.DetectionRange);
+            minigunRange.DrawLines(4f, minigun.Stats.Color.ChangeAlpha((byte)150));
+            cannonRange.DrawLines(4f, cannon.Stats.Color.ChangeAlpha((byte)150));
+
         }
 
         
-        
+        foreach (var shard in shards)
+        {
+            shard.Draw();
+        }
         foreach (var asteroid in asteroids)
         {
             asteroid.DrawGame(game);
         }
+
+        
         
         ship.DrawGame(game);
+        minigun.Draw();
+        cannon.Draw();
 
         foreach (var bullet in bullets)
         {
@@ -883,13 +1288,19 @@ public class EndlessSpaceCollision : ExampleScene
     }
     protected override void OnDrawGameUIExample(ScreenInfo ui)
     {
-        
+
     }
     protected override void OnDrawUIExample(ScreenInfo ui)
     {
         DrawInputDescription(GAMELOOP.UIRects.GetRect("bottom center"));
         DrawCameraInfo(GAMELOOP.UIRects.GetRect("bottom right"));
         DrawGameInfo(GAMELOOP.UIRects.GetRect("center"));
+        
+        
+        var rect = ui.Area.ApplyMargins(0.2f, 0.2f, 0.84f, 0.12f);
+        var split = rect.SplitH(0.5f);
+        minigun.DrawUI(split.left.ApplyMargins(0f, 0.025f, 0f, 0f));
+        cannon.DrawUI(split.right.ApplyMargins(0.025f, 0f, 0f, 0f));
     }
 
     private void DrawCameraInfo(Rect rect)
