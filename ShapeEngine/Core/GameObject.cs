@@ -8,6 +8,7 @@ namespace ShapeEngine.Core;
 public abstract class GameObject : IUpdateable, IDrawable
 {
     public event Action<GameObject, string?, GameObject?>? OnKilled;
+    public event Action<GameObject, string?, GameObject?>? OnRevived;
     // public event Action<GameObject, SpawnArea>? OnSpawned;
     // public event Action<GameObject, SpawnArea>? OnDespawned;
     
@@ -92,4 +93,21 @@ public abstract class GameObject : IUpdateable, IDrawable
     }
     protected virtual void WasKilled(string? killMessage = null, GameObject? killer = null) { }
     protected virtual bool TryKill(string? killMessage = null, GameObject? killer = null) => true;
+
+    public bool Revive(string? reviveMessage = null, GameObject? reviver = null)
+    {
+        if (!IsDead) return false;
+
+        if (TryRevive(reviveMessage, reviver))
+        {
+            IsDead = false;
+            WasRevived(reviveMessage, reviver);
+            OnRevived?.Invoke(this, reviveMessage, reviver);
+            return true;
+        }
+
+        return false;
+    }
+    protected virtual void WasRevived(string? reviveMessage = null, GameObject? reviver = null) { }
+    protected virtual bool TryRevive(string? reviveMessage = null, GameObject? reviver = null) => true;
 }

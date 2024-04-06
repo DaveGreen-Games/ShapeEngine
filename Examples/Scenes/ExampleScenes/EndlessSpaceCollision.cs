@@ -194,6 +194,7 @@ public class EndlessSpaceCollision : ExampleScene
                 rect.DrawLines(2f, Stats.Color);
             }
         }
+        
         private void FindNextTarget()
         {
             castResult.Clear();
@@ -341,7 +342,6 @@ public class EndlessSpaceCollision : ExampleScene
         }
         
     }
-    
     private class Bullet : CollisionObject
     {
         public static uint CollisionLayer = BitFlag.GetFlagUint(4);
@@ -451,6 +451,8 @@ public class EndlessSpaceCollision : ExampleScene
     }
     private class Ship : CollisionObject, ICameraFollowTarget
     {
+        public event Action? OnKilled;
+        
         public static readonly uint CollisionLayer = BitFlag.GetFlagUint(3);
         private Triangle hull;
         private float shipSize;
@@ -464,13 +466,19 @@ public class EndlessSpaceCollision : ExampleScene
         private const float AccelTime = 0.25f;
         private const float StopTime = 0.5f;
         public const float Speed = 750;
+
+        private const float CollisionStunTime = 0.5f;
+        private float collisionStunTimer = 0f;
+        private float collisionRotationDirection = 1;
+        private const float CollisionRotationSpeedRad = MathF.PI * 3;
     
         
         private readonly PaletteColor hullColor = Colors.PcCold;
     
         private InputAction iaMoveHor;
         private InputAction iaMoveVer;
-        
+        public int Health;
+        public const int MaxHp = 3;
         
         private void SetupInput()
         {
@@ -501,21 +509,41 @@ public class EndlessSpaceCollision : ExampleScene
             AddCollider(collider);
             SetupInput();
 
+            Health = MaxHp;
         }
 
         private void OnColliderCollision(Collider col, CollisionInformation info)
         {
             if (info.Collisions.Count > 0)
             {
-                if (info.Collisions[0].Other.Parent is AsteroidObstacle a)
+                foreach (var collision in info.Collisions)
                 {
-                    a.Cut(GetCutShape());
-                    
-                    if (info.CollisionSurface.Valid)
+                    if (collision.Other.Parent is AsteroidObstacle a)
                     {
-                        Velocity = info.CollisionSurface.Normal * 2500;
+                        a.Cut(GetCutShape());
+
+                        if (collisionStunTimer <= 0f)
+                        {
+                            Health--;
+                            if (Health <= 0)
+                            {
+                                collider.Enabled = false;
+                                Kill();
+                                OnKilled?.Invoke();
+                            }
+                        }
+                        
+                        if (info.CollisionSurface.Valid)
+                        {
+                            Velocity = info.CollisionSurface.Normal * 3500;
+                            collisionStunTimer = CollisionStunTime;
+                            collisionRotationDirection = ShapeRandom.RandDirF();
+                        }
+
+                        return;
                     }
                 }
+                
             }
             
         }
@@ -555,6 +583,8 @@ public class EndlessSpaceCollision : ExampleScene
         }
         public void Reset(Vector2 pos, float size)
         {
+            if (IsDead) Revive();
+            
             shipSize = size;
             Transform = new(pos);
             Drag = 5;
@@ -570,6 +600,9 @@ public class EndlessSpaceCollision : ExampleScene
             AddCollider(collider);
             movementDir = new(0, 0);
             angleRad = 0f;
+            collisionStunTimer = 0f;
+            Velocity = new(0f);
+            Health = MaxHp;
         }
 
         private void Move(float dt, Vector2 dir, float speed)
@@ -584,14 +617,24 @@ public class EndlessSpaceCollision : ExampleScene
             // hull = hull.ChangePosition(movement);
             // pivot += movement;
 
-            var angleMovement = MathF.Sign(angleDif) * dt * MathF.PI * 4f;
-            if (MathF.Abs(angleMovement) > MathF.Abs(angleDif))
+            if (collisionStunTimer > 0f)
             {
-                angleMovement = angleDif;
+                var angleMovement = CollisionRotationSpeedRad * collisionRotationDirection * dt;
+                Transform = Transform.RotateByRad(angleMovement);
+                angleRad += angleMovement; 
             }
+            else
+            {
+                var angleMovement = MathF.Sign(angleDif) * dt * MathF.PI * 4f;
+                if (MathF.Abs(angleMovement) > MathF.Abs(angleDif))
+                {
+                    angleMovement = angleDif;
+                }
 
-            Transform = Transform.RotateByRad(angleMovement);
-            angleRad += angleMovement;
+                Transform = Transform.RotateByRad(angleMovement);
+                angleRad += angleMovement; 
+            }
+            
             
             
             // hull = hull.ChangeRotation(angleMovement, hull.GetCentroid());
@@ -600,8 +643,19 @@ public class EndlessSpaceCollision : ExampleScene
 
         public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
-            
+            if(IsDead)return;
             base.Update(time, game, ui);
+
+            if (collisionStunTimer > 0f)
+            {
+                collisionStunTimer -= time.Delta;
+                
+                if (collisionStunTimer <= 0f)
+                {
+                    Velocity = new();
+                }
+            }
+            
             
             float dt = time.Delta;
             iaMoveHor.Gamepad = GAMELOOP.CurGamepad;
@@ -611,12 +665,9 @@ public class EndlessSpaceCollision : ExampleScene
             iaMoveVer.Update(dt);
             
             Vector2 dir = new(iaMoveHor.State.AxisRaw, iaMoveVer.State.AxisRaw);
-            var vel = Velocity.LengthSquared();
-            if (vel > 250)
-            {
-                dir = new(0f);
-            }
-            else Velocity = new(0f);
+
+            if (collisionStunTimer > 0f) dir = new(0f);
+            
             float lsq = dir.LengthSquared();
             if (lsq > 0f)
             {
@@ -672,6 +723,7 @@ public class EndlessSpaceCollision : ExampleScene
 
         public override void DrawGame(ScreenInfo game)
         {
+            if(IsDead)return;
             hull.DrawLines(4f, hullColor.ColorRgba);
         }
 
@@ -695,8 +747,7 @@ public class EndlessSpaceCollision : ExampleScene
 
         public bool Big;
 
-        private Vector2 chasePosition = new();
-
+        public Ship? target = null;
         private readonly float chaseStrength = 0f;
         private float speed;
         
@@ -784,17 +835,14 @@ public class EndlessSpaceCollision : ExampleScene
         //         triangulation = shape.Triangulate();
         //     }
         // }
-
-        public void SetChasePosition(Vector2 position)
-        {
-            chasePosition = position;
-        }
+        
         public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
             base.Update(time, game, ui);
 
-            if (!Big)
+            if (target != null)
             {
+                var chasePosition = target.GetPosition();
                 var chaseDir = (chasePosition - Transform.Position).Normalize();
                 Velocity = Velocity.LerpDirection(chaseDir, chaseStrength); // chaseDir * speed;
             }
@@ -862,7 +910,6 @@ public class EndlessSpaceCollision : ExampleScene
            
         }
     }
-
     private class AsteroidShard
     {
         public Triangle Triangle;
@@ -904,6 +951,187 @@ public class EndlessSpaceCollision : ExampleScene
             scaledTriangle.DrawLines(AsteroidLineThickness / 2, Colors.Highlight.SetAlpha(150));
         }
     }
+
+    private struct StrategemInfo
+    {
+        public float CallInTime;
+        public float Radius;
+        public float Damage;
+        public float Cooldown;
+
+        public StrategemInfo(float callInTime, float radius, float damage, float cooldown)
+        {
+            this.Cooldown = cooldown;
+            this.Damage = damage;
+            this.Radius = radius;
+            this.CallInTime = callInTime;
+        }
+
+    }
+    private class Strategem
+    {
+        private Vector2 center = new();
+        private CollisionHandler collisionHandler;
+        private StrategemInfo info;
+
+        
+        private bool placing = false;
+        private float callInTimer = 0f;
+        private float cooldownTimer = 0f;
+        
+        public Strategem(CollisionHandler collisionHandler, StrategemInfo info)
+        {
+            this.info = info;
+            this.collisionHandler = collisionHandler;
+        }
+
+        public void Reset()
+        {
+            placing = false;
+            center = new();
+            cooldownTimer = 0f;
+            callInTimer = 0f;
+        }
+        
+        public bool Activate(Vector2 pos)
+        {
+            if (cooldownTimer > 0f) return false;
+            if (callInTimer > 0f) return false;
+
+            if (placing)
+            {
+                return CallIn();
+            }
+            else
+            {
+                center = pos;
+                placing = true;
+                WasActivated();
+                return true;
+            }
+        }
+
+        private bool CallIn()
+        {
+            if (!placing) return false;
+            placing = false;
+            callInTimer = info.CallInTime;
+            WasCalledIn();
+            return true;
+        }
+
+        protected virtual void WasActivated()
+        {
+            
+        }
+        protected virtual void WasCalledIn()
+        {
+            
+        }
+
+        protected virtual void WasLaunched()
+        {
+            
+        }
+        public void Update(float dt, Vector2 pos)
+        {
+            if (placing)
+            {
+                center = pos;
+            }
+            
+            if (cooldownTimer > 0f)
+            {
+                cooldownTimer -= dt;
+                if (cooldownTimer <= 0f)
+                {
+                    
+                }
+            }
+
+            if (callInTimer > 0f)
+            {
+                callInTimer -= dt;
+                if (callInTimer <= 0f)
+                {
+                    Launch();
+                }
+            }
+        }
+
+        private void Launch()
+        {
+            cooldownTimer = info.Cooldown;
+            WasLaunched();
+        }
+
+        public void Draw()
+        {
+            if (cooldownTimer > 0f) return;
+
+            if (callInTimer > 0f)
+            {
+                float f = 1f - (callInTimer / info.CallInTime);
+                ShapeDrawing.DrawCircleLines(center, info.Radius, 6f, Colors.Dark);
+                ShapeDrawing.DrawCircleLines(center, info.Radius * f, 6f, Colors.Special);
+                ShapeDrawing.DrawCircle(center, 12f, Colors.Special);
+            }
+            else if (placing)
+            {
+                ShapeDrawing.DrawCircleLines(center, info.Radius, 6f, Colors.Cold);
+                ShapeDrawing.DrawCircle(center, 12f, Colors.Cold);
+            }
+            
+        }
+        
+        public void DrawUI(Rect rect)
+        {
+            
+            if (cooldownTimer > 0f)
+            {
+                var f = cooldownTimer / info.Cooldown;
+                var marginRect = rect.ApplyMargins(0f, f, 0f, 0f);
+                marginRect.Draw(Colors.Warm.ChangeBrightness(-0.5f));
+                rect.DrawLines(2f, Colors.Warm);
+            }
+            else if(callInTimer > 0f)
+            {
+                
+                float f = 1f - (callInTimer / info.CallInTime);
+                var marginRect = rect.ApplyMargins(0f, f, 0f, 0f);
+                marginRect.Draw(Colors.Special.ChangeBrightness(-0.5f));
+                rect.DrawLines(2f, Colors.Special);
+            }
+            else
+            {
+                rect.Draw(Colors.Cold.ChangeBrightness(-0.5f));
+                rect.DrawLines(2f, Colors.Cold);
+            }
+        }
+
+    }
+
+    private class OrbitalStrike : Strategem
+    {
+        public OrbitalStrike(CollisionHandler collisionHandler, StrategemInfo info) : base(collisionHandler, info)
+        {
+        }
+
+        protected override void WasActivated()
+        {
+            
+        }
+
+        protected override void WasCalledIn()
+        {
+            
+        }
+
+        protected override void WasLaunched()
+        {
+            
+        }
+    }
     
     public static int Difficulty = 1;
     public static readonly int MaxDifficulty = 100;
@@ -914,6 +1142,7 @@ public class EndlessSpaceCollision : ExampleScene
     public float DifficultyScore = 0f;
     public float CurScore = 0f;
     public int killedBigAsteroids = 0;
+    public int kills = 0;
     
     private Rect universe;
     private readonly Ship ship;
@@ -942,8 +1171,11 @@ public class EndlessSpaceCollision : ExampleScene
 
     private readonly Autogun minigun;
     private readonly Autogun cannon;
-
+    private readonly OrbitalStrike orbitalStrike;
+    
     private readonly float cellSize;
+
+    private bool gameOverScreenActive = false;
     public EndlessSpaceCollision()
     {
         Title = "Endless Space Collision";
@@ -962,6 +1194,7 @@ public class EndlessSpaceCollision : ExampleScene
         follower = new(0, 300, 500);
         camera.Follower = follower;
         ship = new(new Vector2(0f), 45f);
+        ship.OnKilled += OnShipKilled;
         
         var minigunStats = new AutogunStats(200, 2, 20, 800, MathF.PI / 15, AutogunStats.TargetingType.Closest, new ColorRgba(Color.ForestGreen));
         var minigunBulletStats = new BulletStats(12, 1250, 15, 0.75f);
@@ -971,6 +1204,9 @@ public class EndlessSpaceCollision : ExampleScene
         var cannonBulletStats = new BulletStats(18, 2500, 300, 1f);
         cannon = new(CollisionHandler, cannonStats, cannonBulletStats);
 
+        var orbitalStrikeInfo = new StrategemInfo(2f, 350f, 500f, 24f);
+        orbitalStrike = new OrbitalStrike(CollisionHandler, orbitalStrikeInfo);
+        
         minigun.BulletFired += OnBulletFired;
         cannon.BulletFired += OnBulletFired;
         
@@ -982,6 +1218,16 @@ public class EndlessSpaceCollision : ExampleScene
         iaDrawDebug = new(toggleDrawKB, toggleDrawGP);
         
         AddAsteroids(AsteroidCount);
+    }
+
+    private void OnShipKilled()
+    {
+        gameOverScreenActive = true;
+        drawDebug = false;
+        foreach (var a in asteroids)
+        {
+            a.target = null;
+        }
     }
 
     private void OnBulletFired(Autogun gun, Bullet bullet)
@@ -1003,6 +1249,10 @@ public class EndlessSpaceCollision : ExampleScene
     }
     public override void Reset()
     {
+        if (gameOverScreenActive) return;
+
+        drawDebug = false;
+        kills = 0;
         CurScore = 0f;
         Difficulty = 1;
         DifficultyScore = 0f;
@@ -1021,9 +1271,12 @@ public class EndlessSpaceCollision : ExampleScene
         bullets.Clear();
         camera.Reset();
         follower.Reset();
+        
         ship.Reset(new Vector2(0f), 45f);
+        
         cannon.Reset();
         minigun.Reset();
+        orbitalStrike.Reset();
         CollisionHandler?.Add(ship);
         follower.SetTarget(ship);
         
@@ -1050,6 +1303,7 @@ public class EndlessSpaceCollision : ExampleScene
         
         var shape = Polygon.Generate(pos, AsteroidPointCount, minSize, maxSize);
         var a = new AsteroidObstacle(shape, big);
+        if (!big) a.target = ship;
         asteroids.Add(a);
         CollisionHandler?.Add(a);
     }
@@ -1082,6 +1336,17 @@ public class EndlessSpaceCollision : ExampleScene
     
     protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
     {
+        if (gameOverScreenActive)
+        {
+            if (ShapeKeyboardButton.SPACE.GetInputState().Pressed)
+            {
+                gameOverScreenActive = false;
+                Reset();
+            }
+            
+            return;
+        }
+        
         var gamepad = GAMELOOP.CurGamepad;
         iaDrawDebug.Gamepad = gamepad;
         iaDrawDebug.Update(dt);
@@ -1089,6 +1354,11 @@ public class EndlessSpaceCollision : ExampleScene
         if (iaDrawDebug.State.Pressed)
         {
             drawDebug = !drawDebug;
+        }
+
+        if (ShapeMouseButton.LEFT.GetInputState().Pressed)
+        {
+            orbitalStrike.Activate(mousePosGame);
         }
     }
 
@@ -1122,6 +1392,7 @@ public class EndlessSpaceCollision : ExampleScene
         ship.Update(time, game, ui);
         minigun.Update(time.Delta, ship.GetPosition(), ship.GetCurSpeed());
         cannon.Update(time.Delta, ship.GetPosition(), ship.GetCurSpeed());
+        orbitalStrike.Update(time.Delta, game.MousePos);
 
         UpdateFollower(camera.Size.Min());
 
@@ -1140,7 +1411,6 @@ public class EndlessSpaceCollision : ExampleScene
         for (int i = asteroids.Count - 1; i >= 0; i--)
         {
             var a = asteroids[i];
-            a.SetChasePosition(ship.GetPosition());
             a.Update(time, game, ui);
             if (!universe.OverlapShape(a.GetShape()))
             {
@@ -1152,6 +1422,7 @@ public class EndlessSpaceCollision : ExampleScene
 
             if (a.IsDead)
             {
+                kills++;
                 asteroids.RemoveAt(i);
                 CollisionHandler?.Remove(a);
                 foreach (var tri in a.Triangulation)
@@ -1274,6 +1545,7 @@ public class EndlessSpaceCollision : ExampleScene
         ship.DrawGame(game);
         minigun.Draw();
         cannon.Draw();
+        orbitalStrike.Draw();
 
         foreach (var bullet in bullets)
         {
@@ -1292,15 +1564,55 @@ public class EndlessSpaceCollision : ExampleScene
     }
     protected override void OnDrawUIExample(ScreenInfo ui)
     {
-        DrawInputDescription(GAMELOOP.UIRects.GetRect("bottom center"));
+
+        if (gameOverScreenActive)
+        {
+
+            var area = ui.Area.ApplyMargins(0.1f, 0.1f, 0.2f, 0.2f);
+            
+            area.Draw(Colors.Dark.SetAlpha(200));
+
+            var rects = area.ApplyMargins(0.05f, 0.05f, 0.05f, 0.05f).SplitV(0.4f, 0.4f);
+            textFont.ColorRgba = Colors.Warm;
+            textFont.DrawTextWrapNone("Game Over", rects[0], new(0.5f));
+            
+            textFont.ColorRgba = Colors.Special;
+            textFont.DrawTextWrapNone($"Final Score: {CurScore} | Kills: {kills}", rects[1], new(0.5f));
+            
+            textFont.ColorRgba = Colors.Highlight;
+            textFont.DrawTextWrapNone($"Press Space", rects[2], new(0.5f));
+            return;
+        }
+        
+        // DrawInputDescription(GAMELOOP.UIRects.GetRect("bottom center"));
         DrawCameraInfo(GAMELOOP.UIRects.GetRect("bottom right"));
         DrawGameInfo(GAMELOOP.UIRects.GetRect("center"));
         
         
-        var rect = ui.Area.ApplyMargins(0.2f, 0.2f, 0.84f, 0.12f);
-        var split = rect.SplitH(0.5f);
-        minigun.DrawUI(split.left.ApplyMargins(0f, 0.025f, 0f, 0f));
-        cannon.DrawUI(split.right.ApplyMargins(0.025f, 0f, 0f, 0f));
+        var rect = ui.Area.ApplyMargins(0.2f, 0.2f, 0.95f, 0.02f);
+        var split = rect.SplitH(0.4f, 0.2f);
+        minigun.DrawUI(split[0].ApplyMargins(0f, 0.025f, 0f, 0f));
+        cannon.DrawUI(split[2].ApplyMargins(0.025f, 0f, 0f, 0f));
+
+        var strategemZone = ui.Area.ApplyMargins(0.2f, 0.2f, 0.91f, 0.06f);
+        var splitStrategem = strategemZone.SplitH(4);
+        orbitalStrike.DrawUI(splitStrategem[0]);
+        
+        
+        var count = Ship.MaxHp;
+        var hpRects = split[1].SplitH(count);
+        for (int i = 0; i < count; i++)
+        {
+            var hpRect = hpRects[i].ApplyMargins(0.1f, 0.1f, 0.1f, 0.1f);
+            if (i < ship.Health)
+            {
+                hpRect.Draw(Colors.Cold);
+            }
+            else
+            {
+                hpRect.Draw(Colors.Medium);
+            }
+        }
     }
 
     private void DrawCameraInfo(Rect rect)
