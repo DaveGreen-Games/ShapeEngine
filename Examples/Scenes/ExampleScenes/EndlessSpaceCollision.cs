@@ -955,72 +955,111 @@ public class EndlessSpaceCollision : ExampleScene
     private struct StrategemInfo
     {
         public float CallInTime;
-        public float Radius;
+        public float Size;
         public float Damage;
         public float Cooldown;
+        public float Duration;
+        public int Activations;
+        
+        public float ActivationInterval => Activations <= 0 ? 0f :  Duration / Activations;
+        public bool HasDuration => Duration > 0f;
+        public bool HasCooldown => Cooldown > 0f;
+        public bool HasCallInTime => CallInTime > 0f;
 
-        public StrategemInfo(float callInTime, float radius, float damage, float cooldown)
+        public StrategemInfo(float callInTime, float size, float damage, float cooldown, float duration, int activations)
         {
             this.Cooldown = cooldown;
             this.Damage = damage;
-            this.Radius = radius;
+            this.Size = size;
             this.CallInTime = callInTime;
+            this.Duration = duration;
+            this.Activations = activations;
         }
 
     }
-    private class Strategem
+    private abstract class Strategem
     {
-        private Vector2 center = new();
-        private CollisionHandler collisionHandler;
-        private StrategemInfo info;
+        public Vector2 Position { get; private set; } = new();
+        protected readonly CollisionHandler CollisionHandler;
+        public readonly StrategemInfo Info;
 
         
-        private bool placing = false;
+        protected bool PlacementActive { get; private set; } = false;
         private float callInTimer = 0f;
         private float cooldownTimer = 0f;
+        private float activeTimer = 0f;
+        private int remainingActivations = 0;
+        private float activationTimer = 0f;
+
+        public float CallInF => Info.CallInTime <= 0f ? 0f : callInTimer / Info.CallInTime;
+        public float CooldownF => Info.Cooldown <= 0f ? 0f : cooldownTimer / Info.Cooldown;
+        public float ActiveF => Info.Duration <= 0f ? 0f : activeTimer / Info.Duration;
+        public float ActivationF => Info.Activations <= 0f ? 0f : (float)remainingActivations / (float)Info.Activations;
         
         public Strategem(CollisionHandler collisionHandler, StrategemInfo info)
         {
-            this.info = info;
-            this.collisionHandler = collisionHandler;
+            this.Info = info;
+            this.CollisionHandler = collisionHandler;
         }
 
         public void Reset()
         {
-            placing = false;
-            center = new();
+            PlacementActive = false;
+            Position = new();
             cooldownTimer = 0f;
             callInTimer = 0f;
         }
         
-        public bool Activate(Vector2 pos)
+        public bool Request(Vector2 pos)
         {
             if (cooldownTimer > 0f) return false;
             if (callInTimer > 0f) return false;
 
-            if (placing)
+            if (PlacementActive)
             {
                 return CallIn();
             }
             else
             {
-                center = pos;
-                placing = true;
-                WasActivated();
+                Position = pos;
+                PlacementActive = true;
+                WasRequested();
                 return true;
             }
         }
-
         private bool CallIn()
         {
-            if (!placing) return false;
-            placing = false;
-            callInTimer = info.CallInTime;
+            if (!PlacementActive) return false;
+            PlacementActive = false;
+            callInTimer = Info.CallInTime;
             WasCalledIn();
             return true;
         }
+        private void Arrive()
+        {
+            HasArrived();
+            if (Info.Duration > 0f)
+            {
+                activeTimer = Info.Duration;
+                if (Info.Activations > 0)
+                {
+                    WasTriggered();
+                    remainingActivations = Info.Activations - 1;
+                    if(remainingActivations > 0) activationTimer = Info.ActivationInterval;
+                }
+                
+            }
+            else
+            {
+                cooldownTimer = Info.Cooldown;
+                HasFinished();
+            }
+            
+        }
 
-        protected virtual void WasActivated()
+        
+
+        protected virtual void WasRequested()
         {
             
         }
@@ -1028,16 +1067,46 @@ public class EndlessSpaceCollision : ExampleScene
         {
             
         }
-
-        protected virtual void WasLaunched()
+        protected virtual void HasArrived()
         {
             
         }
+        protected virtual void WasTriggered()
+        {
+            
+        }
+        protected virtual void HasFinished()
+        {
+            
+        }
+       
         public void Update(float dt, Vector2 pos)
         {
-            if (placing)
+            if (PlacementActive)
             {
-                center = pos;
+                Position = pos;
+            }
+
+            if (activationTimer > 0f)
+            {
+                activationTimer -= dt;
+                if (activationTimer <= 0f)
+                {
+                    WasTriggered();
+                    remainingActivations--;
+                    if (remainingActivations > 0) activationTimer = Info.ActivationInterval;
+
+                }
+            }
+            
+            if (activeTimer > 0f)
+            {
+                activeTimer -= dt;
+                if (activeTimer <= 0f)
+                {
+                    cooldownTimer = Info.Cooldown;
+                    HasFinished();
+                }
             }
             
             if (cooldownTimer > 0f)
@@ -1054,42 +1123,37 @@ public class EndlessSpaceCollision : ExampleScene
                 callInTimer -= dt;
                 if (callInTimer <= 0f)
                 {
-                    Launch();
+                    Arrive();
                 }
             }
         }
 
-        private void Launch()
-        {
-            cooldownTimer = info.Cooldown;
-            WasLaunched();
-        }
 
-        public void Draw()
-        {
-            if (cooldownTimer > 0f) return;
-
-            if (callInTimer > 0f)
-            {
-                float f = 1f - (callInTimer / info.CallInTime);
-                ShapeDrawing.DrawCircleLines(center, info.Radius, 6f, Colors.Dark);
-                ShapeDrawing.DrawCircleLines(center, info.Radius * f, 6f, Colors.Special);
-                ShapeDrawing.DrawCircle(center, 12f, Colors.Special);
-            }
-            else if (placing)
-            {
-                ShapeDrawing.DrawCircleLines(center, info.Radius, 6f, Colors.Cold);
-                ShapeDrawing.DrawCircle(center, 12f, Colors.Cold);
-            }
-            
-        }
+        public abstract void Draw();
+        // {
+        //     // if (cooldownTimer > 0f) return;
+        //     //
+        //     // if (callInTimer > 0f)
+        //     // {
+        //     //     float f = 1f - (callInTimer / info.CallInTime);
+        //     //     ShapeDrawing.DrawCircleLines(center, info.Size, 6f, Colors.Dark);
+        //     //     ShapeDrawing.DrawCircleLines(center, info.Size * f, 6f, Colors.Special);
+        //     //     ShapeDrawing.DrawCircle(center, 12f, Colors.Special);
+        //     // }
+        //     // else if (placing)
+        //     // {
+        //     //     ShapeDrawing.DrawCircleLines(center, info.Size, 6f, Colors.Cold);
+        //     //     ShapeDrawing.DrawCircle(center, 12f, Colors.Cold);
+        //     // }
+        //     
+        // }
         
         public void DrawUI(Rect rect)
         {
             
             if (cooldownTimer > 0f)
             {
-                var f = cooldownTimer / info.Cooldown;
+                var f = cooldownTimer / Info.Cooldown;
                 var marginRect = rect.ApplyMargins(0f, f, 0f, 0f);
                 marginRect.Draw(Colors.Warm.ChangeBrightness(-0.5f));
                 rect.DrawLines(2f, Colors.Warm);
@@ -1097,7 +1161,7 @@ public class EndlessSpaceCollision : ExampleScene
             else if(callInTimer > 0f)
             {
                 
-                float f = 1f - (callInTimer / info.CallInTime);
+                float f = 1f - (callInTimer / Info.CallInTime);
                 var marginRect = rect.ApplyMargins(0f, f, 0f, 0f);
                 marginRect.Draw(Colors.Special.ChangeBrightness(-0.5f));
                 rect.DrawLines(2f, Colors.Special);
@@ -1113,11 +1177,15 @@ public class EndlessSpaceCollision : ExampleScene
 
     private class OrbitalStrike : Strategem
     {
-        public OrbitalStrike(CollisionHandler collisionHandler, StrategemInfo info) : base(collisionHandler, info)
+
+        private List<Collider> castResult = new(128);
+        private readonly BitFlag mask;
+        public OrbitalStrike(CollisionHandler collisionHandler, StrategemInfo info, BitFlag mask) : base(collisionHandler, info)
         {
+            mask = this.mask;
         }
 
-        protected override void WasActivated()
+        protected override void WasRequested()
         {
             
         }
@@ -1127,8 +1195,34 @@ public class EndlessSpaceCollision : ExampleScene
             
         }
 
-        protected override void WasLaunched()
+        protected override void HasArrived()
         {
+            var circle = new Circle(Position, Info.Size);
+
+
+            castResult.Clear();
+            
+            CollisionHandler.CastSpace(circle, mask, ref castResult);
+        }
+        
+        
+        
+        public override void Draw()
+        {
+            if (CooldownF > 0f) return;
+
+            if (CallInF > 0f)
+            {
+                float f = 1f - CallInF;
+                ShapeDrawing.DrawCircleLines(Position, Info.Size, 6f, Colors.Dark);
+                ShapeDrawing.DrawCircleLines(Position, Info.Size * f, 6f, Colors.Special);
+                ShapeDrawing.DrawCircle(Position, 12f, Colors.Special);
+            }
+            else if (PlacementActive)
+            {
+                ShapeDrawing.DrawCircleLines(Position, Info.Size, 6f, Colors.Cold);
+                ShapeDrawing.DrawCircle(Position, 12f, Colors.Cold);
+            }
             
         }
     }
@@ -1204,8 +1298,9 @@ public class EndlessSpaceCollision : ExampleScene
         var cannonBulletStats = new BulletStats(18, 2500, 300, 1f);
         cannon = new(CollisionHandler, cannonStats, cannonBulletStats);
 
-        var orbitalStrikeInfo = new StrategemInfo(2f, 350f, 500f, 24f);
-        orbitalStrike = new OrbitalStrike(CollisionHandler, orbitalStrikeInfo);
+        var orbitalStrikeInfo = new StrategemInfo(2f, 350f, 500f, 24f, 0f, 0);
+        var orbitalStrikeMask = new BitFlag(AsteroidObstacle.CollisionLayer);
+        orbitalStrike = new OrbitalStrike(CollisionHandler, orbitalStrikeInfo, orbitalStrikeMask);
         
         minigun.BulletFired += OnBulletFired;
         cannon.BulletFired += OnBulletFired;
@@ -1358,7 +1453,7 @@ public class EndlessSpaceCollision : ExampleScene
 
         if (ShapeMouseButton.LEFT.GetInputState().Pressed)
         {
-            orbitalStrike.Activate(mousePosGame);
+            orbitalStrike.Request(mousePosGame);
         }
     }
 
