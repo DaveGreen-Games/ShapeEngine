@@ -961,7 +961,7 @@ public class EndlessSpaceCollision : ExampleScene
         public float Duration;
         public int Activations;
         
-        public float ActivationInterval => Activations <= 0 ? 0f :  Duration / Activations;
+        public float TriggerInterval => Activations <= 0 ? 0f :  Duration / Activations;
         public bool HasDuration => Duration > 0f;
         public bool HasCooldown => Cooldown > 0f;
         public bool HasCallInTime => CallInTime > 0f;
@@ -980,57 +980,69 @@ public class EndlessSpaceCollision : ExampleScene
     private abstract class Strategem
     {
         public Vector2 Position { get; private set; } = new();
+        public Vector2 Velocity { get; private set; } = new();
         protected readonly CollisionHandler CollisionHandler;
         public readonly StrategemInfo Info;
 
-        
-        protected bool PlacementActive { get; private set; } = false;
+        protected readonly BitFlag CastMask;
+        // protected bool PlacementActive { get; private set; } = false;
         private float callInTimer = 0f;
         private float cooldownTimer = 0f;
         private float activeTimer = 0f;
         private int remainingActivations = 0;
-        private float activationTimer = 0f;
+        private float triggerTimer = 0f;
+        private float travelTimer = 0f;
 
+        public bool IsReady => cooldownTimer <= 0f && callInTimer <= 0f && activeTimer <= 0f;
         public float CallInF => Info.CallInTime <= 0f ? 0f : callInTimer / Info.CallInTime;
         public float CooldownF => Info.Cooldown <= 0f ? 0f : cooldownTimer / Info.Cooldown;
         public float ActiveF => Info.Duration <= 0f ? 0f : activeTimer / Info.Duration;
         public float ActivationF => Info.Activations <= 0f ? 0f : (float)remainingActivations / (float)Info.Activations;
-        
-        public Strategem(CollisionHandler collisionHandler, StrategemInfo info)
+        public bool IsTravelling => travelTimer > 0f; // Velocity.LengthSquared() > 0f;
+        public Strategem(CollisionHandler collisionHandler, StrategemInfo info, BitFlag mask)
         {
             this.Info = info;
             this.CollisionHandler = collisionHandler;
+            this.CastMask = mask;
         }
 
         public void Reset()
         {
-            PlacementActive = false;
+            // PlacementActive = false;
+            travelTimer = 0f;
+            Velocity = new();
             Position = new();
             cooldownTimer = 0f;
             callInTimer = 0f;
         }
         
-        public bool Request(Vector2 pos)
+        public bool Request(Vector2 pos, Vector2 velocity)
         {
             if (cooldownTimer > 0f) return false;
             if (callInTimer > 0f) return false;
 
-            if (PlacementActive)
-            {
-                return CallIn();
-            }
-            else
-            {
-                Position = pos;
-                PlacementActive = true;
-                WasRequested();
-                return true;
-            }
+            // if (PlacementActive)
+            // {
+            //     return CallIn();
+            // }
+            // else
+            // {
+            //     Position = pos;
+            //     Velocity = velocity;
+            //     PlacementActive = true;
+            //     WasRequested();
+            //     return true;
+            // }
+            Position = pos;
+            Velocity = velocity;
+            travelTimer = 1f;
+            WasRequested();
+            return true;
         }
         private bool CallIn()
         {
-            if (!PlacementActive) return false;
-            PlacementActive = false;
+            // if (!PlacementActive) return false;
+            // PlacementActive = false;
             callInTimer = Info.CallInTime;
             WasCalledIn();
             return true;
@@ -1043,14 +1055,24 @@ public class EndlessSpaceCollision : ExampleScene
                 activeTimer = Info.Duration;
                 if (Info.Activations > 0)
                 {
-                    WasTriggered();
+                    WasTriggered(0, Info.Activations);
                     remainingActivations = Info.Activations - 1;
-                    if(remainingActivations > 0) activationTimer = Info.ActivationInterval;
+                    if(remainingActivations > 0) triggerTimer = Info.TriggerInterval;
                 }
+                else WasTriggered(0, 0);
                 
             }
             else
             {
+                if (Info.Activations > 0)
+                {
+                    for (int i = 0; i < Info.Activations; i++)
+                    {
+                        WasTriggered(i, Info.Activations);
+                    }
+                }
+                else WasTriggered(0, 0);
+                
                 cooldownTimer = Info.Cooldown;
                 HasFinished();
             }
@@ -1071,7 +1093,7 @@ public class EndlessSpaceCollision : ExampleScene
         {
             
         }
-        protected virtual void WasTriggered()
+        protected virtual void WasTriggered(int cur, int max)
         {
             
         }
@@ -1079,22 +1101,47 @@ public class EndlessSpaceCollision : ExampleScene
         {
             
         }
-       
-        public void Update(float dt, Vector2 pos)
+
+        protected virtual void CooldownHasFinished()
         {
-            if (PlacementActive)
+            
+        }
+       
+        public void Update(float dt)
+        {
+            // if (PlacementActive)
+            // {
+            //     Position = pos;
+            // }
+
+            if (IsTravelling)
             {
-                Position = pos;
+                Velocity = PhysicsObject.ApplyDragForce(Velocity, 2f, dt);
+                Position += Velocity * dt;
+                travelTimer -= dt;
+                if (travelTimer <= 0f)
+                {
+                    travelTimer = 0f;
+                    Velocity = new();
+                    CallIn();
+                }
+                // Velocity = PhysicsObject.ApplyDragForce(Velocity, 4f, dt);
+                // Position += Velocity * dt;
+                // if (Velocity.LengthSquared() < 50 * 50)
+                // {
+                    // Velocity = new();
+                    // CallIn();
+                // }
             }
 
-            if (activationTimer > 0f)
+            if (triggerTimer > 0f)
             {
-                activationTimer -= dt;
-                if (activationTimer <= 0f)
+                triggerTimer -= dt;
+                if (triggerTimer <= 0f)
                 {
-                    WasTriggered();
+                    WasTriggered(Info.Activations - remainingActivations, Info.Activations);
                     remainingActivations--;
-                    if (remainingActivations > 0) activationTimer = Info.ActivationInterval;
+                    if (remainingActivations > 0) triggerTimer = Info.TriggerInterval;
 
                 }
             }
@@ -1114,7 +1161,7 @@ public class EndlessSpaceCollision : ExampleScene
                 cooldownTimer -= dt;
                 if (cooldownTimer <= 0f)
                 {
-                    
+                    CooldownHasFinished();
                 }
             }
 
@@ -1179,10 +1226,8 @@ public class EndlessSpaceCollision : ExampleScene
     {
 
         private List<Collider> castResult = new(128);
-        private readonly BitFlag mask;
-        public OrbitalStrike(CollisionHandler collisionHandler, StrategemInfo info, BitFlag mask) : base(collisionHandler, info)
+        public OrbitalStrike(CollisionHandler collisionHandler, StrategemInfo info, BitFlag mask) : base(collisionHandler, info, mask)
         {
-            mask = this.mask;
         }
 
         protected override void WasRequested()
@@ -1195,14 +1240,24 @@ public class EndlessSpaceCollision : ExampleScene
             
         }
 
-        protected override void HasArrived()
+        protected override void WasTriggered(int cur, int max)
         {
             var circle = new Circle(Position, Info.Size);
-
-
             castResult.Clear();
             
-            CollisionHandler.CastSpace(circle, mask, ref castResult);
+            CollisionHandler.CastSpace(circle, CastMask, ref castResult);
+            if (castResult.Count > 0)
+            {
+                foreach (var collider in castResult)
+                {
+                    Console.WriteLine("Collider found");
+                    if (collider.Parent is AsteroidObstacle a)
+                    {
+                        a.Damage(a.Transform.Position ,Info.Damage);
+                        Console.WriteLine("Target hit");
+                    }
+                }
+            }
         }
         
         
@@ -1214,14 +1269,19 @@ public class EndlessSpaceCollision : ExampleScene
             if (CallInF > 0f)
             {
                 float f = 1f - CallInF;
-                ShapeDrawing.DrawCircleLines(Position, Info.Size, 6f, Colors.Dark);
-                ShapeDrawing.DrawCircleLines(Position, Info.Size * f, 6f, Colors.Special);
-                ShapeDrawing.DrawCircle(Position, 12f, Colors.Special);
+                ShapeDrawing.DrawCircleLines(Position, Info.Size, 6f, Colors.Dark, 6);
+                ShapeDrawing.DrawCircleLines(Position, Info.Size * f, 6f, Colors.Special, 6);
+                ShapeDrawing.DrawCircle(Position, 12f, Colors.Special, 24);
             }
-            else if (PlacementActive)
+            else if (ActiveF > 0f)
             {
-                ShapeDrawing.DrawCircleLines(Position, Info.Size, 6f, Colors.Cold);
-                ShapeDrawing.DrawCircle(Position, 12f, Colors.Cold);
+                var f = 1f - ActivationF;
+                ShapeDrawing.DrawCircle(Position, Info.Size * f * f, Colors.Special, 24);
+            }
+            else if (IsTravelling)
+            {
+                // ShapeDrawing.DrawCircleLines(Position, Info.Size, 6f, Colors.Cold, 6);
+                ShapeDrawing.DrawCircle(Position, 12f, Colors.Cold, 24);
             }
             
         }
@@ -1266,6 +1326,12 @@ public class EndlessSpaceCollision : ExampleScene
     private readonly Autogun minigun;
     private readonly Autogun cannon;
     private readonly OrbitalStrike orbitalStrike;
+    private float strategemChargeTimer = 0f;
+    private const float strategemMaxChargeTime = 0.5f;
+
+    private float StrategemChargeF => strategemChargeTimer <= 0f
+        ? 0f
+        : strategemChargeTimer / strategemMaxChargeTime;
     
     private readonly float cellSize;
 
@@ -1298,7 +1364,7 @@ public class EndlessSpaceCollision : ExampleScene
         var cannonBulletStats = new BulletStats(18, 2500, 300, 1f);
         cannon = new(CollisionHandler, cannonStats, cannonBulletStats);
 
-        var orbitalStrikeInfo = new StrategemInfo(2f, 350f, 500f, 24f, 0f, 0);
+        var orbitalStrikeInfo = new StrategemInfo(2f, 650, 500f, 12f, 0.1f, 0);
         var orbitalStrikeMask = new BitFlag(AsteroidObstacle.CollisionLayer);
         orbitalStrike = new OrbitalStrike(CollisionHandler, orbitalStrikeInfo, orbitalStrikeMask);
         
@@ -1409,6 +1475,7 @@ public class EndlessSpaceCollision : ExampleScene
         
         var shape = Polygon.Generate(pos, AsteroidPointCount, minSize, maxSize);
         var a = new AsteroidObstacle(shape, big);
+        if (!big) a.target = ship;
         asteroids.Add(a);
         CollisionHandler?.Add(a);
     }
@@ -1450,10 +1517,18 @@ public class EndlessSpaceCollision : ExampleScene
         {
             drawDebug = !drawDebug;
         }
+        
 
-        if (ShapeMouseButton.LEFT.GetInputState().Pressed)
+        if (ShapeKeyboardButton.ONE.GetInputState().Pressed && orbitalStrike.IsReady)
         {
-            orbitalStrike.Request(mousePosGame);
+            strategemChargeTimer = dt;
+        }
+
+        if (ShapeKeyboardButton.ONE.GetInputState().Released)
+        {
+            var speed = ShapeMath.LerpFloat(1000, 2500, StrategemChargeF);
+            orbitalStrike.Request(ship.GetBarrelPosition(), ship.GetBarrelDirection() * speed);
+            strategemChargeTimer = 0f;
         }
     }
 
@@ -1482,12 +1557,18 @@ public class EndlessSpaceCollision : ExampleScene
         //         else lastCutShapeTimers[i] = timer;
         //     }
         // }
-        
+
+        if (strategemChargeTimer > 0f)
+        {
+            strategemChargeTimer += time.Delta;
+            if (strategemChargeTimer > strategemMaxChargeTime) strategemChargeTimer = strategemMaxChargeTime;
+        }
         
         ship.Update(time, game, ui);
         minigun.Update(time.Delta, ship.GetPosition(), ship.GetCurSpeed());
         cannon.Update(time.Delta, ship.GetPosition(), ship.GetCurSpeed());
-        orbitalStrike.Update(time.Delta, game.MousePos);
+        
+        orbitalStrike.Update(time.Delta);
 
         UpdateFollower(camera.Size.Min());
 
@@ -1586,6 +1667,7 @@ public class EndlessSpaceCollision : ExampleScene
             if(shard.IsDead) shards.RemoveAt(i);
         }
 
+        
         // AddAsteroids(removed);
     }
     protected override void OnDrawGameExample(ScreenInfo game)
@@ -1691,7 +1773,15 @@ public class EndlessSpaceCollision : ExampleScene
 
         var strategemZone = ui.Area.ApplyMargins(0.2f, 0.2f, 0.91f, 0.06f);
         var splitStrategem = strategemZone.SplitH(4);
-        orbitalStrike.DrawUI(splitStrategem[0]);
+
+        if (strategemChargeTimer > 0f)
+        {
+            var chargeRect = splitStrategem[0].ApplyMargins(0, 1f - StrategemChargeF, 0f, 0f);
+            chargeRect.Draw(Colors.Warm.ChangeBrightness(-0.5f));
+            chargeRect.DrawLines(4f, Colors.Warm);
+        }
+        else orbitalStrike.DrawUI(splitStrategem[0]);
+        
         
         
         var count = Ship.MaxHp;
