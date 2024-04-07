@@ -1,5 +1,4 @@
 using System.Drawing;
-using System.IO.Pipes;
 using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Screen;
@@ -998,6 +997,7 @@ public class EndlessSpaceCollision : ExampleScene
         public float CooldownF => Info.Cooldown <= 0f ? 0f : cooldownTimer / Info.Cooldown;
         public float ActiveF => Info.Duration <= 0f ? 0f : activeTimer / Info.Duration;
         public float ActivationF => Info.Activations <= 0f ? 0f : (float)remainingActivations / (float)Info.Activations;
+        public float TriggerF => Info.TriggerInterval <= 0f ? 0f : 1f - (triggerTimer / Info.TriggerInterval);
         public bool IsTravelling => travelTimer > 0f; // Velocity.LengthSquared() > 0f;
         public Strategem(CollisionHandler collisionHandler, StrategemInfo info, BitFlag mask)
         {
@@ -1221,12 +1221,13 @@ public class EndlessSpaceCollision : ExampleScene
         }
 
     }
-
     private class OrbitalStrike : Strategem
     {
 
         private List<Collider> castResult = new(128);
-        public OrbitalStrike(CollisionHandler collisionHandler, StrategemInfo info, BitFlag mask) : base(collisionHandler, info, mask)
+        private readonly static StrategemInfo OrbitalStrikeInfo = new StrategemInfo(2f, 650, 500f, 12f, 0.1f, 0);
+        
+        public OrbitalStrike(CollisionHandler collisionHandler,BitFlag mask) : base(collisionHandler, OrbitalStrikeInfo, mask)
         {
         }
 
@@ -1250,11 +1251,9 @@ public class EndlessSpaceCollision : ExampleScene
             {
                 foreach (var collider in castResult)
                 {
-                    Console.WriteLine("Collider found");
                     if (collider.Parent is AsteroidObstacle a)
                     {
                         a.Damage(a.Transform.Position ,Info.Damage);
-                        Console.WriteLine("Target hit");
                     }
                 }
             }
@@ -1286,6 +1285,76 @@ public class EndlessSpaceCollision : ExampleScene
             
         }
     }
+    private class Barrage350mm : Strategem
+    {
+        private static readonly StrategemInfo Barrage350mmInfo = new StrategemInfo(4f, 1200, 150, 30f, 15f, 45);
+        
+        private List<Collider> castResult = new(128);
+        private Vector2 nextCastPostion = new();
+        private static readonly float BarrageSize = Barrage350mmInfo.Size / 4;
+        
+        public Barrage350mm(CollisionHandler collisionHandler, BitFlag mask) : base(collisionHandler, Barrage350mmInfo, mask)
+        {
+        }
+
+        private Vector2 GetNextCastPosition() => Position + ShapeRandom.RandVec2(0f, Info.Size - BarrageSize);
+
+        protected override void HasArrived()
+        {
+            nextCastPostion = GetNextCastPosition();
+        }
+
+        protected override void WasTriggered(int cur, int max)
+        {
+            var circle = new Circle(nextCastPostion, BarrageSize);
+            castResult.Clear();
+            
+            CollisionHandler.CastSpace(circle, CastMask, ref castResult);
+            if (castResult.Count > 0)
+            {
+                foreach (var collider in castResult)
+                {
+                    if (collider.Parent is AsteroidObstacle a)
+                    {
+                        a.Damage(a.Transform.Position, Info.Damage);
+                    }
+                }
+            }
+
+            if (cur < max)
+            {
+                nextCastPostion = GetNextCastPosition();
+            }
+        }
+        
+        
+        
+        public override void Draw()
+        {
+            if (CooldownF > 0f) return;
+
+            if (CallInF > 0f)
+            {
+                float f = 1f - CallInF;
+                ShapeDrawing.DrawCircleLines(Position, Info.Size, 6f, Colors.Dark, 6);
+                ShapeDrawing.DrawCircleLines(Position, Info.Size * f, 6f, Colors.Special, 6);
+                ShapeDrawing.DrawCircle(Position, 12f, Colors.Special, 24);
+            }
+            else if (IsTravelling)
+            {
+                // ShapeDrawing.DrawCircleLines(Position, Info.Size, 6f, Colors.Cold, 6);
+                ShapeDrawing.DrawCircle(Position, 12f, Colors.Cold, 24);
+            }
+            else if (ActiveF > 0f)
+            {
+                ShapeDrawing.DrawCircleLines(Position, Info.Size, 12f, Colors.Warm, 24);
+                ShapeDrawing.DrawCircle(nextCastPostion, BarrageSize * TriggerF, Colors.Warm, 24);
+                ShapeDrawing.DrawCircleLines(nextCastPostion, BarrageSize, 6f, Colors.Warm, 6);
+            }
+            
+        }
+    }
+    
     
     public static int Difficulty = 1;
     public static readonly int MaxDifficulty = 100;
@@ -1314,7 +1383,7 @@ public class EndlessSpaceCollision : ExampleScene
     private readonly List<AsteroidObstacle> asteroids = new(128);
     private readonly List<AsteroidShard> shards = new(512);
     private readonly List<Bullet> bullets = new(1024);
-    private const int AsteroidCount = 120; //30
+    private const int AsteroidCount = 240; //30
     private const int AsteroidPointCount = 10 ; //14
     private const float AsteroidMinSize = 200; //250
     private const float AsteroidMaxSize = 350; //500
@@ -1326,6 +1395,7 @@ public class EndlessSpaceCollision : ExampleScene
     private readonly Autogun minigun;
     private readonly Autogun cannon;
     private readonly OrbitalStrike orbitalStrike;
+    private readonly Barrage350mm barrage350mm;
     private float strategemChargeTimer = 0f;
     private const float strategemMaxChargeTime = 0.5f;
 
@@ -1364,9 +1434,12 @@ public class EndlessSpaceCollision : ExampleScene
         var cannonBulletStats = new BulletStats(18, 2500, 300, 1f);
         cannon = new(CollisionHandler, cannonStats, cannonBulletStats);
 
-        var orbitalStrikeInfo = new StrategemInfo(2f, 650, 500f, 12f, 0.1f, 0);
+        
         var orbitalStrikeMask = new BitFlag(AsteroidObstacle.CollisionLayer);
-        orbitalStrike = new OrbitalStrike(CollisionHandler, orbitalStrikeInfo, orbitalStrikeMask);
+        orbitalStrike = new OrbitalStrike(CollisionHandler, orbitalStrikeMask);
+        
+        var barrage350mmMask = new BitFlag(AsteroidObstacle.CollisionLayer);
+        barrage350mm = new Barrage350mm(CollisionHandler, barrage350mmMask);
         
         minigun.BulletFired += OnBulletFired;
         cannon.BulletFired += OnBulletFired;
@@ -1438,6 +1511,7 @@ public class EndlessSpaceCollision : ExampleScene
         cannon.Reset();
         minigun.Reset();
         orbitalStrike.Reset();
+        barrage350mm.Reset();
         CollisionHandler?.Add(ship);
         follower.SetTarget(ship);
         
@@ -1530,6 +1604,18 @@ public class EndlessSpaceCollision : ExampleScene
             orbitalStrike.Request(ship.GetBarrelPosition(), ship.GetBarrelDirection() * speed);
             strategemChargeTimer = 0f;
         }
+        
+        if (ShapeKeyboardButton.TWO.GetInputState().Pressed && barrage350mm.IsReady)
+        {
+            strategemChargeTimer = dt;
+        }
+
+        if (ShapeKeyboardButton.TWO.GetInputState().Released)
+        {
+            var speed = ShapeMath.LerpFloat(1000, 2500, StrategemChargeF);
+            barrage350mm.Request(ship.GetBarrelPosition(), ship.GetBarrelDirection() * speed);
+            strategemChargeTimer = 0f;
+        }
     }
 
     private void UpdateFollower(float size)
@@ -1558,26 +1644,32 @@ public class EndlessSpaceCollision : ExampleScene
         //     }
         // }
 
-        if (strategemChargeTimer > 0f)
+        
+
+        if (!gameOverScreenActive)
         {
-            strategemChargeTimer += time.Delta;
-            if (strategemChargeTimer > strategemMaxChargeTime) strategemChargeTimer = strategemMaxChargeTime;
+            if (strategemChargeTimer > 0f)
+            {
+                strategemChargeTimer += time.Delta;
+                if (strategemChargeTimer > strategemMaxChargeTime) strategemChargeTimer = strategemMaxChargeTime;
+            }
+            
+            ship.Update(time, game, ui);
+            minigun.Update(time.Delta, ship.GetPosition(), ship.GetCurSpeed());
+            cannon.Update(time.Delta, ship.GetPosition(), ship.GetCurSpeed());
+        
+            orbitalStrike.Update(time.Delta);
+            barrage350mm.Update(time.Delta);
+
+            UpdateFollower(camera.Size.Min());
+
+            var coordinates = ship.GetPosition() / cellSize;
+            var uX = (int)coordinates.X * cellSize;
+            var uY = (int)coordinates.Y * cellSize;
+        
+            universe = universe.SetPosition(new Vector2(uX, uY), new(0.5f));
         }
         
-        ship.Update(time, game, ui);
-        minigun.Update(time.Delta, ship.GetPosition(), ship.GetCurSpeed());
-        cannon.Update(time.Delta, ship.GetPosition(), ship.GetCurSpeed());
-        
-        orbitalStrike.Update(time.Delta);
-
-        UpdateFollower(camera.Size.Min());
-
-        var coordinates = ship.GetPosition() / cellSize;
-        var uX = (int)coordinates.X * cellSize;
-        var uY = (int)coordinates.Y * cellSize;
-        
-        universe = universe.SetPosition(new Vector2(uX, uY), new(0.5f));
-        // universe = universe.SetPosition(ship.GetPosition(), new(0.5f));
         
         
         CollisionHandler?.ResizeBounds(universe);
@@ -1659,7 +1751,6 @@ public class EndlessSpaceCollision : ExampleScene
             }
         }
         
-        
         for (int i = shards.Count - 1; i >= 0; i--)
         {
             var shard = shards[i];
@@ -1723,6 +1814,7 @@ public class EndlessSpaceCollision : ExampleScene
         minigun.Draw();
         cannon.Draw();
         orbitalStrike.Draw();
+        barrage350mm.Draw();
 
         foreach (var bullet in bullets)
         {
@@ -1782,7 +1874,13 @@ public class EndlessSpaceCollision : ExampleScene
         }
         else orbitalStrike.DrawUI(splitStrategem[0]);
         
-        
+        if (strategemChargeTimer > 0f)
+        {
+            var chargeRect = splitStrategem[1].ApplyMargins(0, 1f - StrategemChargeF, 0f, 0f);
+            chargeRect.Draw(Colors.Warm.ChangeBrightness(-0.5f));
+            chargeRect.DrawLines(4f, Colors.Warm);
+        }
+        else barrage350mm.DrawUI(splitStrategem[1]);
         
         var count = Ship.MaxHp;
         var hpRects = split[1].SplitH(count);
