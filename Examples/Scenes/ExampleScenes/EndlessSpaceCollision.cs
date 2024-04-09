@@ -3,7 +3,6 @@ using ShapeEngine.Core;
 using ShapeEngine.Lib;
 using ShapeEngine.Screen;
 using System.Numerics;
-using System.Runtime.InteropServices;
 using ShapeEngine.Color;
 using ShapeEngine.Core.Collision;
 using ShapeEngine.Core.Interfaces;
@@ -14,7 +13,306 @@ using Size = ShapeEngine.Core.Structs.Size;
 
 namespace Examples.Scenes.ExampleScenes;
 
-     
+
+
+public interface IPayload
+{
+    public void Launch(Vector2 start, Vector2 target);
+}
+public interface IPayloadConstructor
+{
+    public IPayload? Create(uint payloadId);
+}
+public readonly struct PdsInfo
+{
+    public readonly float CallInTime;
+    public readonly float Cooldown;
+    public readonly float Duration;
+    public readonly int Activations;
+    public readonly float DeploymentRadius;
+    public readonly uint PayloadID;
+    
+    public float TriggerInterval => Activations <= 0 ? 0f :  Duration / Activations;
+    public bool HasDuration => Duration > 0f;
+    public bool HasCooldown => Cooldown > 0f;
+    public bool HasCallInTime => CallInTime > 0f;
+
+    public PdsInfo(uint payloadId, float callInTime, float cooldown, float duration, int activations, float deploymentRadius)
+    {
+        this.PayloadID = payloadId;
+        this.Cooldown = cooldown;
+        this.CallInTime = callInTime;
+        this.Duration = duration;
+        this.Activations = activations;
+        this.DeploymentRadius = deploymentRadius;
+    }
+
+    public Vector2 GetDeploymentPosition(Vector2 pos)
+    {
+        if (DeploymentRadius <= 0f) return pos;
+        return pos + ShapeRandom.RandVec2(0f, DeploymentRadius);
+    }
+
+}
+
+public abstract class PayloadDeliverySystem
+{
+
+    public event Action<IPayload, int, int>? OnPayloadLaunched;
+    
+    private float callInTimer = 0f;
+    private float cooldownTimer = 0f;
+    private float activeTimer = 0f;
+    private int remainingActivations = 0;
+    private float triggerTimer = 0f;
+    
+    public bool IsReady => cooldownTimer <= 0f && callInTimer <= 0f && activeTimer <= 0f && !payloadMarkerActive;
+    public float CallInF => BasicInfo.CallInTime <= 0f ? 0f : callInTimer / BasicInfo.CallInTime;
+    public float CooldownF => BasicInfo.Cooldown <= 0f ? 0f : cooldownTimer / BasicInfo.Cooldown;
+    public float ActiveF => BasicInfo.Duration <= 0f ? 0f : activeTimer / BasicInfo.Duration;
+    public float ActivationF => BasicInfo.Activations <= 0f ? 0f : (float)remainingActivations / (float)BasicInfo.Activations;
+    public float TriggerF => BasicInfo.TriggerInterval <= 0f ? 0f : 1f - (triggerTimer / BasicInfo.TriggerInterval);
+
+    public readonly PdsInfo BasicInfo;
+    public readonly Vector2 Position;
+    private readonly IPayloadConstructor payloadConstructor;
+    
+
+    private PayloadMarker payloadMarker;
+    private bool payloadMarkerActive = false;
+    
+    protected PayloadDeliverySystem(PdsInfo info, IPayloadConstructor constructor, Vector2 position)
+    {
+        BasicInfo = info;
+        payloadConstructor = constructor;
+        payloadMarker = new();
+        payloadMarker.Ping += OnPayloadMarkerPing;
+        Position = position;
+    }
+
+    private void OnPayloadMarkerPing(Vector2 location)
+    {
+        payloadMarkerActive = false;
+        CallIn();
+    }
+
+
+    public void Update(float dt)
+    {
+        if (payloadMarkerActive)
+        {
+            payloadMarker.Update(dt);
+        }
+        
+        if (callInTimer > 0f)
+        {
+            callInTimer -= dt;
+            if (callInTimer <= 0f)
+            {
+                StartDeployment();
+            }
+        }
+        if (activeTimer > 0f)
+        {
+            activeTimer -= dt;
+            if (activeTimer <= 0f)
+            {
+                EndDeployment();
+            }
+        }
+        if (triggerTimer > 0f)
+        {
+            triggerTimer -= dt;
+            if (triggerTimer <= 0f)
+            {
+                LaunchPayload(BasicInfo.Activations - remainingActivations, BasicInfo.Activations);
+                remainingActivations--;
+                if (remainingActivations > 0) triggerTimer = BasicInfo.TriggerInterval;
+
+            }
+        }
+        if (cooldownTimer > 0f)
+        {
+            cooldownTimer -= dt;
+            if (cooldownTimer <= 0f)
+            {
+                CooldownHasFinished();
+            }
+        }
+        
+        WasUpdated(dt);
+    }
+
+    public abstract void Draw();
+
+    public abstract void DrawUI(Rect rect);
+    
+    public void Reset()
+    {
+        cooldownTimer = 0f;
+        callInTimer = 0f;
+        activeTimer = 0f;
+        remainingActivations = 0;
+        triggerTimer = 0f;
+        WasReset();
+    }
+    public bool Cancel()
+    {
+        if (IsReady) return false;
+        Reset();
+        cooldownTimer = BasicInfo.Cooldown;
+        WasCanceled();
+        return true;
+    }
+    
+    public bool RequestPayload(Vector2 location, Vector2 velocity, float drag = 2f, float time = 1f)
+    {
+        if (!IsReady) return false;
+        // if (payloadMarkerActive) return false;
+        // if (callInTimer > 0f) return false;
+        // if (activeTimer > 0f) return false;
+        // if (cooldownTimer > 0f) return false;
+
+        payloadMarker.Launch(location, velocity, drag, time);
+        payloadMarkerActive = true;
+        WasRequested();
+        return true;
+    }
+    
+    private void CallIn()
+    {
+        callInTimer = BasicInfo.CallInTime;
+        WasCalledIn();
+    }
+    private void StartDeployment()
+    {
+        if (BasicInfo.Duration > 0f)
+        {
+            activeTimer = BasicInfo.Duration;
+            if (BasicInfo.Activations > 0)
+            {
+                LaunchPayload(0, BasicInfo.Activations);
+                remainingActivations = BasicInfo.Activations - 1;
+                if(remainingActivations > 0) triggerTimer = BasicInfo.TriggerInterval;
+            }
+            else LaunchPayload(0, 0);
+            
+        }
+        else
+        {
+            if (BasicInfo.Activations > 0)
+            {
+                for (int i = 0; i < BasicInfo.Activations; i++)
+                {
+                    LaunchPayload(i, BasicInfo.Activations);
+                }
+            }
+            else LaunchPayload(0, 0);
+
+            EndDeployment();
+        }
+        DeploymentHasStarted();
+    }
+    private void EndDeployment()
+    {
+        cooldownTimer = BasicInfo.Cooldown;
+        DeploymentHasEnded();
+    }
+    private void LaunchPayload(int cur, int max)
+    {
+        var payload = payloadConstructor.Create(BasicInfo.PayloadID);
+        if (payload == null)
+        {
+            Cancel();
+            return;
+        }
+        
+        payload.Launch(Position, payloadMarker.Location);
+        
+        OnPayloadLaunched?.Invoke(payload, cur, max);
+        PayloadWasLaunched(payload, cur, max);
+    }
+    
+    protected virtual void PayloadWasLaunched(IPayload payload, int cur, int max) { }
+    protected virtual void WasReset() { }
+    protected virtual void WasCanceled() { }
+    protected virtual void WasRequested() { }
+    protected virtual void WasCalledIn() { }
+    protected virtual void DeploymentHasStarted() { }
+    protected virtual void DeploymentHasEnded() { }
+    protected virtual void CooldownHasFinished() { }
+    protected virtual void WasUpdated(float dt) { }
+    
+    
+    // {
+    //     if (CooldownF > 0f)
+    //     {
+    //         var marginRect = rect.ApplyMargins(0f, CooldownF, 0f, 0f);
+    //         marginRect.Draw(Colors.Warm.ChangeBrightness(-0.5f));
+    //         rect.DrawLines(2f, Colors.Warm);
+    //     }
+    //     else if(CallInF > 0f)
+    //     {
+    //         
+    //         float f = 1f - CallInF;
+    //         var marginRect = rect.ApplyMargins(0f, f, 0f, 0f);
+    //         marginRect.Draw(Colors.Special.ChangeBrightness(-0.5f));
+    //         rect.DrawLines(2f, Colors.Special);
+    //     }
+    //     else if (ActiveF > 0f)
+    //     {
+    //         float f = 1f - ActiveF;
+    //         var marginRect = rect.ApplyMargins(0f, f, 0f, 0f);
+    //         marginRect.Draw(Colors.Highlight.ChangeBrightness(-0.5f));
+    //         rect.DrawLines(2f, Colors.Highlight);
+    //     }
+    //     else
+    //     {
+    //         rect.Draw(Colors.Cold.ChangeBrightness(-0.5f));
+    //         rect.DrawLines(2f, Colors.Cold);
+    //     }
+    // }
+
+}
+public class PayloadMarker
+{
+    public event Action<Vector2>? Ping;
+    
+    public Vector2 Location { get; private set; }
+    public Vector2 Velocity { get; private set; }
+
+    private float dragCoefficient = 2f;
+    private float travelTime = 1f;
+    private float travelTimer = 0f;
+    public float TravelF => travelTime <= 0f ? 0f : travelTimer / travelTime;
+
+    public void Launch(Vector2 start, Vector2 velocity, float time = 1f, float drag = 2f)
+    {
+        Location = start;
+        Velocity = velocity;
+        travelTimer = 0f;
+        travelTime = time;
+        dragCoefficient = drag;
+    }
+    
+    public void Update(float dt)
+    {
+        if (travelTimer > 0f)
+        {
+            Velocity = PhysicsObject.ApplyDragForce(Velocity, dragCoefficient, dt);
+            Location += Velocity;
+            travelTimer -= dt;
+            if (travelTimer <= 0f)
+            {
+                Velocity = new();
+                Ping?.Invoke(Location);
+            }
+        }
+        
+    }
+}
+
+
     
 public class EndlessSpaceCollision : ExampleScene
 {
@@ -975,6 +1273,7 @@ public class EndlessSpaceCollision : ExampleScene
         }
 
     }
+    
     private readonly struct StrategemDestroyerInfo
     {
         public readonly float Size;
