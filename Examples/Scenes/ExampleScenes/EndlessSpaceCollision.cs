@@ -18,6 +18,10 @@ namespace Examples.Scenes.ExampleScenes;
 public interface IPayload
 {
     public void Launch(Vector2 start, Vector2 target);
+    public void Update(float dt);
+    public void Draw();
+    public bool IsFinished();
+
 }
 public interface IPayloadConstructor
 {
@@ -66,7 +70,7 @@ public abstract class PayloadDeliverySystem
     private int remainingActivations = 0;
     private float triggerTimer = 0f;
     
-    public bool IsReady => cooldownTimer <= 0f && callInTimer <= 0f && activeTimer <= 0f && !payloadMarkerActive;
+    public bool IsReady => cooldownTimer <= 0f && callInTimer <= 0f && activeTimer <= 0f && curMarker == null;
     public float CallInF => BasicInfo.CallInTime <= 0f ? 0f : callInTimer / BasicInfo.CallInTime;
     public float CooldownF => BasicInfo.Cooldown <= 0f ? 0f : cooldownTimer / BasicInfo.Cooldown;
     public float ActiveF => BasicInfo.Duration <= 0f ? 0f : activeTimer / BasicInfo.Duration;
@@ -78,30 +82,38 @@ public abstract class PayloadDeliverySystem
     private readonly IPayloadConstructor payloadConstructor;
     
 
-    private PayloadMarker payloadMarker;
-    private bool payloadMarkerActive = false;
+    protected PayloadMarker? curMarker { get; private set; } = null;
+
+    private readonly List<IPayload> payloads = new(32);
+    // private bool payloadMarkerActive = false;
     
     protected PayloadDeliverySystem(PdsInfo info, IPayloadConstructor constructor, Vector2 position)
     {
         BasicInfo = info;
         payloadConstructor = constructor;
-        payloadMarker = new();
-        payloadMarker.Ping += OnPayloadMarkerPing;
         Position = position;
     }
 
-    private void OnPayloadMarkerPing(Vector2 location)
+    private void OnPayloadMarkerLocationReached()
     {
-        payloadMarkerActive = false;
+        // payloadMarkerActive = false;
         CallIn();
     }
 
 
     public void Update(float dt)
     {
-        if (payloadMarkerActive)
+        for (int i = payloads.Count - 1; i >= 0; i--)
         {
-            payloadMarker.Update(dt);
+            var payload = payloads[i];
+            payload.Update(dt);
+            if(payload.IsFinished()) payloads.RemoveAt(i);
+        }
+        
+        
+        if (curMarker != null && curMarker.Launched)
+        {
+            curMarker.Update(dt);
         }
         
         if (callInTimer > 0f)
@@ -143,7 +155,18 @@ public abstract class PayloadDeliverySystem
         WasUpdated(dt);
     }
 
-    public abstract void Draw();
+    public void Draw()
+    {
+        WasDrawn();
+        
+        foreach (var payload in payloads)
+        {
+            payload.Draw();
+        }
+        
+        curMarker?.Draw();
+        
+    }
 
     public abstract void DrawUI(Rect rect);
     
@@ -154,6 +177,7 @@ public abstract class PayloadDeliverySystem
         activeTimer = 0f;
         remainingActivations = 0;
         triggerTimer = 0f;
+        DismissMarker();
         WasReset();
     }
     public bool Cancel()
@@ -165,16 +189,13 @@ public abstract class PayloadDeliverySystem
         return true;
     }
     
-    public bool RequestPayload(Vector2 location, Vector2 velocity, float drag = 2f, float time = 1f)
+    public bool RequestPayload(PayloadMarker marker)
     {
         if (!IsReady) return false;
-        // if (payloadMarkerActive) return false;
-        // if (callInTimer > 0f) return false;
-        // if (activeTimer > 0f) return false;
-        // if (cooldownTimer > 0f) return false;
+        if (!marker.Launched) return false;
 
-        payloadMarker.Launch(location, velocity, drag, time);
-        payloadMarkerActive = true;
+        curMarker = marker;
+        curMarker.OnTargetReached += OnPayloadMarkerLocationReached;
         WasRequested();
         return true;
     }
@@ -215,22 +236,36 @@ public abstract class PayloadDeliverySystem
     }
     private void EndDeployment()
     {
+        DismissMarker();
         cooldownTimer = BasicInfo.Cooldown;
         DeploymentHasEnded();
     }
     private void LaunchPayload(int cur, int max)
     {
+        if (curMarker == null || !curMarker.Launched) return;
+        
         var payload = payloadConstructor.Create(BasicInfo.PayloadID);
         if (payload == null)
         {
             Cancel();
             return;
         }
+
+        var targetLocation = BasicInfo.GetDeploymentPosition(curMarker.Location);
         
-        payload.Launch(Position, payloadMarker.Location);
+        payload.Launch(Position, targetLocation);
+        payloads.Add(payload);
         
         OnPayloadLaunched?.Invoke(payload, cur, max);
         PayloadWasLaunched(payload, cur, max);
+    }
+    private void DismissMarker()
+    {
+        if (curMarker == null) return;
+
+        curMarker.Dismiss();
+        curMarker.OnTargetReached -= OnPayloadMarkerLocationReached;
+        curMarker = null;
     }
     
     protected virtual void PayloadWasLaunched(IPayload payload, int cur, int max) { }
@@ -242,7 +277,7 @@ public abstract class PayloadDeliverySystem
     protected virtual void DeploymentHasEnded() { }
     protected virtual void CooldownHasFinished() { }
     protected virtual void WasUpdated(float dt) { }
-    
+    protected virtual void WasDrawn() { }
     
     // {
     //     if (CooldownF > 0f)
@@ -274,42 +309,67 @@ public abstract class PayloadDeliverySystem
     // }
 
 }
-public class PayloadMarker
+public abstract class PayloadMarker
 {
-    public event Action<Vector2>? Ping;
-    
+    public event Action? OnTargetReached;
+
     public Vector2 Location { get; private set; }
     public Vector2 Velocity { get; private set; }
+    public bool Launched { get; private set; } = false;
+    public bool TargetReached => Launched && travelTimer <= 0f;
 
     private float dragCoefficient = 2f;
-    private float travelTime = 1f;
-    private float travelTimer = 0f;
+    protected float travelTime {get; private set;}= 1f;
+    protected float travelTimer{get; private set;}= 0f;
     public float TravelF => travelTime <= 0f ? 0f : travelTimer / travelTime;
 
-    public void Launch(Vector2 start, Vector2 velocity, float time = 1f, float drag = 2f)
+    public bool Launch(Vector2 start, Vector2 velocity, float time = 1f, float drag = 2f)
     {
+        if (Launched) return false;
+
+        Launched = true;
         Location = start;
         Velocity = velocity;
-        travelTimer = 0f;
+        travelTimer = time;
         travelTime = time;
         dragCoefficient = drag;
+        
+        WasLaunched();
+        return true;
     }
-    
+    public bool Dismiss()
+    {
+        if (!Launched) return false;
+
+        Launched = false;
+        WasDismissed();
+        return true;
+    }
     public void Update(float dt)
     {
         if (travelTimer > 0f)
         {
             Velocity = PhysicsObject.ApplyDragForce(Velocity, dragCoefficient, dt);
-            Location += Velocity;
+            Location += Velocity * dt;
             travelTimer -= dt;
             if (travelTimer <= 0f)
             {
+                travelTimer = 0f;
                 Velocity = new();
-                Ping?.Invoke(Location);
+                OnTargetReached?.Invoke();
+                TargetWasReached();
             }
         }
-        
+        OnUpdate(dt);
     }
+
+    public abstract void Draw();
+
+
+    protected abstract void TargetWasReached();
+    protected abstract void WasDismissed();
+    protected abstract void WasLaunched();
+    protected abstract void OnUpdate(float dt);
 }
 
 
@@ -348,7 +408,6 @@ public class EndlessSpaceCollision : ExampleScene
 
         }
     }
-
     private readonly struct BulletStats
     {
         public readonly float Size;
@@ -369,7 +428,6 @@ public class EndlessSpaceCollision : ExampleScene
             return new(Size, Speed * ShapeRandom.RandF(min, max) + shipSpeed, Damage, Lifetime);
         }
     }
-    
     private class Autogun
     {
         public event Action<Autogun, Bullet>? BulletFired;
@@ -1257,176 +1315,195 @@ public class EndlessSpaceCollision : ExampleScene
         }
     }
 
-    private readonly struct StrategemInfo
+    private class PayloadConstructor : IPayloadConstructor
     {
-        public readonly float CallInTime;
-        public readonly float Cooldown;
-        
-        
-        public bool HasCooldown => Cooldown > 0f;
-        public bool HasCallInTime => CallInTime > 0f;
-
-        public StrategemInfo(float callInTime, float cooldown)
+        private CollisionHandler collisionHandler;
+        private BitFlag castMask;
+        public PayloadConstructor(CollisionHandler collisionHandler, BitFlag mask)
         {
-            this.Cooldown = cooldown;
-            this.CallInTime = callInTime;
-        }
-
-    }
-    
-    private readonly struct StrategemDestroyerInfo
-    {
-        public readonly float Size;
-        public readonly float Damage;
-        public readonly float Duration;
-        public readonly int Activations;
-        public readonly float Force;
-        public readonly StrategemInfo Basic;
-        public float TriggerInterval => Activations <= 0 ? 0f :  Duration / Activations;
-        public bool HasDuration => Duration > 0f;
-
-        public StrategemDestroyerInfo(StrategemInfo basic, float size, float damage, float duration, int activations, float force)
-        {
-            this.Basic = basic;
-            this.Damage = damage;
-            this.Size = size;
-            this.Duration = duration;
-            this.Activations = activations;
-            this.Force = force;
-        }
-
-    }
-    private abstract class Strategem
-    {
-        public const float TravelTime = 1f;
-        public Vector2 Position { get; private set; } = new();
-        public Vector2 Velocity { get; private set; } = new();
-        protected readonly CollisionHandler CollisionHandler;
-        public readonly StrategemInfo BasicInfo;
-
-        protected readonly BitFlag CastMask;
-        private float callInTimer = 0f;
-        private float cooldownTimer = 0f;
-        private float travelTimer = 0f;
-        public bool IsDeployed { get; private set; } = false;
-        
-
-        public bool IsReady => cooldownTimer <= 0f && callInTimer <= 0f && travelTimer <= 0f && !IsDeployed;
-        public float CallInF => BasicInfo.CallInTime <= 0f ? 0f : callInTimer / BasicInfo.CallInTime;
-        public float CooldownF => BasicInfo.Cooldown <= 0f ? 0f : cooldownTimer / BasicInfo.Cooldown;
-        public float TravelF => travelTimer <= 0f ? 0f : travelTimer / TravelTime;
-        public bool IsTravelling => travelTimer > 0f;
-
-        public virtual float ActiveF => 0f;
-        
-        
-        
-        public Strategem(CollisionHandler collisionHandler, StrategemInfo basicInfo, BitFlag mask)
-        {
-            this.BasicInfo = basicInfo;
-            this.CollisionHandler = collisionHandler;
-            this.CastMask = mask;
-        }
-
-        public void Reset()
-        {
-            travelTimer = 0f;
-            Velocity = new();
-            Position = new();
-            cooldownTimer = 0f;
-            callInTimer = 0f;
-            IsDeployed = false;
-            WasReset();
+            this.collisionHandler = collisionHandler;
+            this.castMask = mask;
         }
         
-        public bool Request(Vector2 pos, Vector2 velocity)
+        public enum PayloadIds
         {
-            if (cooldownTimer > 0f) return false;
-            if (callInTimer > 0f) return false;
-
-            Position = pos;
-            Velocity = velocity;
-            travelTimer = TravelTime;
-            WasRequested();
-            return true;
-        }
-        private bool CallIn()
-        {
-            callInTimer = BasicInfo.CallInTime;
-            WasCalledIn();
-            return true;
-        }
-        private void Deploy()
-        {
-            IsDeployed = true;
-            WasDeployed();
-        }
-        protected bool EndDeployment()
-        {
-            if (!IsDeployed) return false;
-
-            IsDeployed = false;
-            cooldownTimer = BasicInfo.Cooldown;
-            DeployementHasEnded();
-            return true;
-        }
-        public bool Cancel()
-        {
-            if (IsReady) return false;
-            Reset();
-            cooldownTimer = BasicInfo.Cooldown;
-            WasCanceled();
-            return true;
+            OrbitalStrike = 1,
+            Barrage350mm = 2
         }
         
         
-        protected virtual void WasReset() { }
-        protected virtual void WasCanceled() { }
-        protected virtual void WasRequested() { }
-        protected virtual void WasCalledIn() { }
-        protected virtual void WasDeployed() { }
-        protected virtual void DeployementHasEnded() { }
-        protected virtual void CooldownHasFinished() { }
-       
-        public virtual void Update(float dt)
+        public IPayload? Create(uint payloadId)
         {
-            if (IsTravelling)
+            var id = (PayloadIds)payloadId;
+
+            switch (id)
             {
-                Velocity = PhysicsObject.ApplyDragForce(Velocity, 2f, dt);
-                Position += Velocity * dt;
+                case PayloadIds.OrbitalStrike: return new OrbitalStrike(collisionHandler, castMask);
+                case PayloadIds.Barrage350mm: return new Barrage350mm();
+            }
+            
+            return null;
+        }
+    }
+    private class OrbitalStrike : IPayload
+    {
+        private const float Force = 2500;
+        private const float Size = 1500;
+        private const float Damage = 100;
+        private const float TravelTime = 0.5f;
+        
+        private List<Collider> castResult = new(128);
+        private const float SmokeDuration = 1.5f;
+        private float smokeTimer = 0f;
+        private float travelTimer = 0f;
+        private bool launched = false;
+        private bool finished = false;
+        
+        private float TravelF => travelTimer <= 0f ? 0f : 1f - (travelTimer / TravelTime);
+
+        private CollisionHandler colHandler;
+        private BitFlag castMask;
+
+        private Vector2 curPosition = new();
+        private Vector2 startLocation = new();
+        private Vector2 targetLocation = new();
+        
+        public OrbitalStrike(CollisionHandler collisionHandler, BitFlag mask)
+        {
+            colHandler = collisionHandler;
+            castMask = mask;
+        }
+        
+        public void Launch(Vector2 start, Vector2 target)
+        {
+            startLocation = start;
+            targetLocation = target;
+            travelTimer = TravelTime;
+            launched = true;
+        }
+
+        public bool IsFinished() => finished;
+        
+        public void Update(float dt)
+        {
+            if (!launched || finished) return;
+
+            if (travelTimer > 0f)
+            {
                 travelTimer -= dt;
                 if (travelTimer <= 0f)
                 {
-                    travelTimer = 0f;
-                    Velocity = new();
-                    CallIn();
+                    curPosition = targetLocation;
+                    Explode(targetLocation, Size, Damage, Force);
+                }
+                else
+                {
+                    curPosition = startLocation.Lerp(targetLocation, TravelF);
                 }
             }
-
-            if (cooldownTimer > 0f)
+            
+            if (smokeTimer > 0f)
             {
-                cooldownTimer -= dt;
-                if (cooldownTimer <= 0f)
+                smokeTimer -= dt;
+                if (smokeTimer <= 0f) finished = true;
+            }
+        }
+        
+        public void Draw()
+        {
+            if (travelTimer > 0f)
+            {
+                var f = TravelF;
+                ShapeDrawing.DrawCircle(targetLocation, 12f, Colors.Cold, 24);
+                ShapeDrawing.DrawCircleLines(targetLocation, Size * (1f - f), 6f, Colors.Medium, 6);
+                
+                // var f = TravelF;
+                // ShapeDrawing.DrawCircleLines(targetLocation, Size, 6f, Colors.Dark, 6);
+                // ShapeDrawing.DrawCircleSectorLines(targetLocation, Size, 0f, 359f * f, 6f, Colors.Special, false, 4f);
+                // ShapeDrawing.DrawCircleSectorLines(targetLocation, Size / 12, 0f, 359f * f, 6f, Colors.Special, false, 4f);
+                // ShapeDrawing.DrawCircle(targetLocation, 12f, Colors.Special, 24);
+                
+                var lineEnd = ShapeVec.Lerp(startLocation, targetLocation, f);
+                var w = lineEnd - DestroyerPosition;
+                var dir = w.Normalize();
+                var lineStart = lineEnd - dir * 800f;
+                
+                ShapeDrawing.DrawLine(lineStart, lineEnd, 24f * f, Colors.Cold);
+            }
+            
+            if (smokeTimer > 0f)
+            {
+                var f = 1f - (smokeTimer / SmokeDuration);
+                var color = Colors.Warm.Lerp(Colors.Medium.SetAlpha(50), f);
+                var size = ShapeMath.LerpFloat(Size * 0.5f, Size * 3f, f);
+                ShapeDrawing.DrawCircle(curPosition, size, color, 24);
+            }
+            
+        }
+
+        private void Explode(Vector2 pos, float size, float damage, float force)
+        {
+            var circle = new Circle(pos, size);
+            castResult.Clear();
+            
+            colHandler.CastSpace(circle, castMask, ref castResult);
+            if (castResult.Count > 0)
+            {
+                foreach (var collider in castResult)
                 {
-                    CooldownHasFinished();
+                    if (collider.Parent is AsteroidObstacle a)
+                    {
+                        var dir = (a.Transform.Position - pos).Normalize();
+                        a.Damage(a.Transform.Position, damage, dir * force);
+                    }
                 }
             }
+            
+            smokeTimer = SmokeDuration;
+        }
+        
+    }
+    private class Barrage350mm : IPayload
+    {
+        public void Launch(Vector2 start, Vector2 target)
+        {
+            
+        }
 
-            if (callInTimer > 0f)
+        public void Update(float dt)
+        {
+            
+        }
+
+        public void Draw()
+        {
+            
+        }
+
+        public bool IsFinished()
+        {
+            return true;
+        }
+    }
+    
+    private class Pds : PayloadDeliverySystem
+    {
+        public Pds(PdsInfo info, Vector2 position, CollisionHandler colHandler, BitFlag castMask) : base(info, new PayloadConstructor(colHandler, castMask), position)
+        {
+        }
+
+        protected override void WasDrawn()
+        {
+            if (CallInF > 0f && curMarker != null)
             {
-                callInTimer -= dt;
-                if (callInTimer <= 0f)
-                {
-                    Deploy();
-                }
+                // ShapeDrawing.DrawCircleLines(curMarker.Location, BasicInfo.DeploymentRadius, 6f, Colors.Cold);
+                ShapeDrawing.DrawCircleLines(curMarker.Location, BasicInfo.DeploymentRadius * CallInF, 6f, Colors.Medium);
+                // ShapeDrawing.DrawCircleSectorLines(Position, BasicInfo.DeploymentRadius, 0f, 359 * CallInF, 6f, Colors.Warm, false, 4f);
             }
         }
 
-
-        public abstract void Draw();
-        public void DrawUI(Rect rect)
+        public override void DrawUI(Rect rect)
         {
-            
             if (CooldownF > 0f)
             {
                 var marginRect = rect.ApplyMargins(0f, CooldownF, 0f, 0f);
@@ -1441,9 +1518,9 @@ public class EndlessSpaceCollision : ExampleScene
                 marginRect.Draw(Colors.Special.ChangeBrightness(-0.5f));
                 rect.DrawLines(2f, Colors.Special);
             }
-            else if (TravelF > 0f)
+            else if (curMarker != null && curMarker.TravelF > 0f)
             {
-                float f = 1f - TravelF;
+                float f = 1f - curMarker.TravelF;
                 var marginRect = rect.ApplyMargins(0f, f, 0f, 0f);
                 marginRect.Draw(Colors.Special.ChangeBrightness(-0.5f));
                 rect.DrawLines(2f, Colors.Special);
@@ -1461,338 +1538,600 @@ public class EndlessSpaceCollision : ExampleScene
                 rect.DrawLines(2f, Colors.Cold);
             }
         }
-
     }
-    private abstract class StrategemDestroyer : Strategem //orbital strikes etc
+    private class PayloadMarkerSimple : PayloadMarker
     {
-        private float activeTimer = 0f;
-        private int remainingActivations = 0;
-        private float triggerTimer = 0f;
+        private bool visible = false;
+        private float blinkTimer = 0f;
+        private float blinkInterval = 0.1f;
         
-        public override float ActiveF => DestroyerInfo.Duration <= 0f ? 0f : activeTimer / DestroyerInfo.Duration;
-        public float ActivationF => DestroyerInfo.Activations <= 0f ? 0f : (float)remainingActivations / (float)DestroyerInfo.Activations;
-        public float TriggerF => DestroyerInfo.TriggerInterval <= 0f ? 0f : 1f - (triggerTimer / DestroyerInfo.TriggerInterval);
-
-
-        public readonly StrategemDestroyerInfo DestroyerInfo;
-        protected StrategemDestroyer(CollisionHandler collisionHandler, StrategemDestroyerInfo info, BitFlag mask) : base(collisionHandler, info.Basic, mask)
+        
+        public override void Draw()
         {
-            DestroyerInfo = info;
-        }
+            if (!Launched) return;
 
-        protected override void WasDeployed()
-        {
-            if (DestroyerInfo.Duration > 0f)
+            if (TravelF > 0f)
             {
-                activeTimer = DestroyerInfo.Duration;
-                if (DestroyerInfo.Activations > 0)
+                if (visible)
                 {
-                    WasTriggered(0, DestroyerInfo.Activations);
-                    remainingActivations = DestroyerInfo.Activations - 1;
-                    if(remainingActivations > 0) triggerTimer = DestroyerInfo.TriggerInterval;
-                }
-                else WasTriggered(0, 0);
-                
+                    ShapeDrawing.DrawCircle(Location, 15, Colors.Cold, 24);
+                }  
+                ShapeDrawing.DrawCircleSectorLines(Location, 25f, 0, 359 * TravelF, 4f, Colors.Cold, false, 4f);
             }
             else
             {
-                if (DestroyerInfo.Activations > 0)
-                {
-                    for (int i = 0; i < DestroyerInfo.Activations; i++)
-                    {
-                        WasTriggered(i, DestroyerInfo.Activations);
-                    }
-                }
-                else WasTriggered(0, 0);
-
-                EndDeployment();
-            }
-        }
-        protected override void WasCanceled()
-        {
-            activeTimer = 0f;
-            remainingActivations = 0;
-            triggerTimer = 0f;
-        }
-        protected override void WasReset()
-        {
-            activeTimer = 0f;
-            remainingActivations = 0;
-            triggerTimer = 0f;
-        }
-        protected abstract void WasTriggered(int cur, int max);
-       
-        public override void Update(float dt)
-        {
-           base.Update(dt);
-
-            if (triggerTimer > 0f)
-            {
-                triggerTimer -= dt;
-                if (triggerTimer <= 0f)
-                {
-                    WasTriggered(DestroyerInfo.Activations - remainingActivations, DestroyerInfo.Activations);
-                    remainingActivations--;
-                    if (remainingActivations > 0) triggerTimer = DestroyerInfo.TriggerInterval;
-
-                }
+                ShapeDrawing.DrawCircle(Location, 15, Colors.Cold, 24);
             }
             
-            if (activeTimer > 0f)
-            {
-                activeTimer -= dt;
-                if (activeTimer <= 0f)
-                {
-                    EndDeployment();
-                }
-            }
             
         }
-        
-    }
-    
-    private abstract class StrategemPayload : Strategem //turrets for instance inherit from that
-    {
-        protected StrategemPayload(CollisionHandler collisionHandler, StrategemInfo basicInfo, BitFlag mask) : base(collisionHandler, basicInfo, mask)
+
+        protected override void TargetWasReached()
         {
+            
+        }
+
+        protected override void WasDismissed()
+        {
+           
+        }
+
+        protected override void WasLaunched()
+        {
+            blinkTimer = 0f;
+            blinkInterval = travelTime / 8;
+            visible = true;
+        }
+
+        protected override void OnUpdate(float dt)
+        {
+            if (TravelF > 0f)
+            {
+                blinkTimer += dt;
+                visible = ShapeMath.Blinking(blinkTimer, blinkInterval);
+            }
+            
         }
     }
     
-    private class OrbitalStrike : StrategemDestroyer
-    {
-
-        private List<Collider> castResult = new(128);
-        private const float SmokeDuration = 1.5f;
-        private float smokeTimer = 0f;
-
-        private static readonly StrategemDestroyerInfo Info =
-            new (new StrategemInfo(1.5f, 8), 800f, 150, 0.25f, 0, 2500);
-        public OrbitalStrike(CollisionHandler collisionHandler, BitFlag mask) : base(collisionHandler, Info, mask)
-        {
-            
-        }
-
-        protected override void WasTriggered(int cur, int max)
-        {
-            var circle = new Circle(Position, DestroyerInfo.Size);
-            castResult.Clear();
-            
-            CollisionHandler.CastSpace(circle, CastMask, ref castResult);
-            if (castResult.Count > 0)
-            {
-                foreach (var collider in castResult)
-                {
-                    if (collider.Parent is AsteroidObstacle a)
-                    {
-                        var dir = (a.Transform.Position - Position).Normalize();
-                        a.Damage(a.Transform.Position, DestroyerInfo.Damage, dir * DestroyerInfo.Force);
-                    }
-                }
-            }
-        }
-
-        protected override void WasReset()
-        {
-            base.WasReset();
-            smokeTimer = 0f;
-        }
-
-        protected override void WasCanceled()
-        {
-            base.WasCanceled();
-            smokeTimer = 0f;
-        }
-
-        protected override void WasDeployed()
-        {
-            base.WasDeployed();
-            smokeTimer = SmokeDuration;
-        }
-
-        public override void Update(float dt)
-        {
-            base.Update(dt);
-            if (smokeTimer > 0f)
-            {
-                smokeTimer -= dt;
-            }
-            
-        }
-
-        public override void Draw()
-        {
-            if (CooldownF > 0f)
-            {
-                if (smokeTimer > 0f)
-                {
-                    var f = 1f - (smokeTimer / SmokeDuration);
-                    var color = Colors.Warm.Lerp(Colors.Medium.SetAlpha(50), f);
-                    var size = ShapeMath.LerpFloat(DestroyerInfo.Size * 0.5f, DestroyerInfo.Size * 3f, f);
-                    ShapeDrawing.DrawCircle(Position, size, color, 24);
-                }
-            }
-
-            if (CallInF > 0f)
-            {
-                float f = 1f - CallInF;
-                ShapeDrawing.DrawCircleLines(Position, DestroyerInfo.Size, 6f, Colors.Dark, 6);
-                // ShapeDrawing.DrawCircleLines(Position, DestroyerInfo.Size * f, 6f, Colors.Special, 6);
-                ShapeDrawing.DrawCircleSectorLines(Position, DestroyerInfo.Size, 0f, 359f * f, 6f, Colors.Special, false, 4f);
-                ShapeDrawing.DrawCircleSectorLines(Position, DestroyerInfo.Size / 12, 0f, 359f * f, 6f, Colors.Special, false, 4f);
-                ShapeDrawing.DrawCircle(Position, 12f, Colors.Special, 24);
-                
-                var lineEnd = ShapeVec.Lerp(DestroyerPosition, Position, f);
-                var w = lineEnd - DestroyerPosition;
-                var dir = w.Normalize();
-                var lineStart = lineEnd - dir * 800f;
-                
-                ShapeDrawing.DrawLine(lineStart, lineEnd, 24f * f, Colors.Warm);
-            }
-            else if (ActiveF > 0f)
-            {
-                var f = 1f - ActiveF;
-                ShapeDrawing.DrawCircle(Position, DestroyerInfo.Size * f * f, Colors.Special, 36);
-                
-                
-            }
-            else if (IsTravelling)
-            {
-                // ShapeDrawing.DrawCircleLines(Position, Info.Size, 6f, Colors.Cold, 6);
-                ShapeDrawing.DrawCircle(Position, 12f, Colors.Cold, 24);
-            }
-            
-        }
-
-        
-    }
-    private class Barrage350mm : StrategemDestroyer
-    {
-        private static readonly StrategemDestroyerInfo Info =
-            new(new StrategemInfo(4f, 28), 1200, 150, 20f, 40, 1500);
-        
-        private List<Collider> castResult = new(128);
-        private Vector2 nextCastPostion = new();
-        private List<Vector3> smokePositions = new(Info.Activations);
-        private const float SmokeDuration = 0.5f;
-        
-        private static readonly float BarrageSize = Info.Size / 4;
-        
-        public Barrage350mm(CollisionHandler collisionHandler,  BitFlag mask) : base(collisionHandler, Info, mask)
-        {
-        }
-        private Vector2 GetNextCastPosition() => Position + ShapeRandom.RandVec2(0f, DestroyerInfo.Size - BarrageSize);
-
-        protected override void WasDeployed()
-        {
-            smokePositions.Clear();
-            nextCastPostion = GetNextCastPosition();
-            base.WasDeployed();
-        }
-
-        protected override void WasTriggered(int cur, int max)
-        {
-            var circle = new Circle(nextCastPostion, BarrageSize);
-            castResult.Clear();
-            
-            CollisionHandler.CastSpace(circle, CastMask, ref castResult);
-            if (castResult.Count > 0)
-            {
-                foreach (var collider in castResult)
-                {
-                    if (collider.Parent is AsteroidObstacle a)
-                    {
-                        // a.Damage(a.Transform.Position, DestroyerInfo.Damage);
-                        var dir = (a.Transform.Position - Position).Normalize();
-                        a.Damage(a.Transform.Position, DestroyerInfo.Damage, dir * DestroyerInfo.Force);
-                    }
-                }
-            }
-
-            if (cur < max)
-            {
-                var oldPosition = new Vector3(nextCastPostion, 0f);
-                smokePositions.Add(oldPosition);
-                nextCastPostion = GetNextCastPosition();
-            }
-        }
-
-        protected override void CooldownHasFinished()
-        {
-            smokePositions.Clear();
-        }
-
-        public override void Update(float dt)
-        {
-            base.Update(dt);
-            
-            for (int i = 0; i < smokePositions.Count; i++)
-            {
-                var pos = smokePositions[i];
-                smokePositions[i] = pos with { Z = pos.Z + dt };
-            }
-        }
-
-        private void DrawCastPositions()
-        {
-            for (int i = smokePositions.Count - 1; i >= 0; i--)
-            {
-                var p = smokePositions[i];
-                var time = p.Z;
-                var f = time / SmokeDuration;
-                if (f >= 1f)
-                {
-                    smokePositions.RemoveAt(i);
-                    continue;
-                }
-                var point = new Vector2(p.X, p.Y);
-                var color = Colors.Warm.Lerp(Colors.Medium.SetAlpha(50), f * f);
-                var size = ShapeMath.LerpFloat(BarrageSize * 0.1f, BarrageSize * 3f, f * f);
-                ShapeDrawing.DrawCircle(point, size, color, 24);
-            }
-        }
-        public override void Draw()
-        {
-            if (CooldownF > 0f)
-            {
-                DrawCastPositions();
-            }
-
-            if (CallInF > 0f)
-            {
-                float f = 1f - CallInF;
-                ShapeDrawing.DrawCircleLines(Position, DestroyerInfo.Size, 6f, Colors.Dark, 6);
-                // ShapeDrawing.DrawCircleLines(Position, DestroyerInfo.Size * f, 6f, Colors.Special, 6);
-                ShapeDrawing.DrawCircleSectorLines(Position, DestroyerInfo.Size, 0f, 359f * f, 6f, Colors.Special, false, 4f);
-                ShapeDrawing.DrawCircleSectorLines(Position, DestroyerInfo.Size / 12, 0f, 359f * f, 6f, Colors.Special, false, 4f);
-                ShapeDrawing.DrawCircle(Position, 12f, Colors.Special, 24);
-            }
-            else if (IsTravelling)
-            {
-                // ShapeDrawing.DrawCircleLines(Position, Info.Size, 6f, Colors.Cold, 6);
-                ShapeDrawing.DrawCircle(Position, 12f, Colors.Cold, 24);
-            }
-            else if (ActiveF > 0f)
-            {
-                DrawCastPositions();
-                
-                ShapeDrawing.DrawCircleLines(Position, DestroyerInfo.Size, 12f, Colors.Warm, 24);
-                // ShapeDrawing.DrawCircle(nextCastPostion, BarrageSize * (1f - TriggerF), Colors.Warm, 24);
-                // ShapeDrawing.DrawCircleLines(nextCastPostion, BarrageSize, 6f, Colors.Warm, 6);
-
-                // var lineStart = ShapeVec.Lerp(DestroyerPosition, nextCastPostion, TriggerF * 0.8f);
-                var lineEnd = ShapeVec.Lerp(DestroyerPosition, nextCastPostion, TriggerF);
-                var w = lineEnd - DestroyerPosition;
-                var dir = w.Normalize();
-                var lineStart = lineEnd - dir * 800f;
-                
-                ShapeDrawing.DrawLine(lineStart, lineEnd, 24f * TriggerF, Colors.Warm);
-            }
-            
-        }
-
-        
-    }
-
+    
+    // private class OrbitalStrike : StrategemDestroyer
+    // {
+    //
+    //     private List<Collider> castResult = new(128);
+    //     private const float SmokeDuration = 1.5f;
+    //     private float smokeTimer = 0f;
+    //
+    //     private static readonly StrategemDestroyerInfo Info =
+    //         new (new StrategemInfo(1.5f, 8), 800f, 150, 0.25f, 0, 2500);
+    //     public OrbitalStrike(CollisionHandler collisionHandler, BitFlag mask) : base(collisionHandler, Info, mask)
+    //     {
+    //         
+    //     }
+    //
+    //     protected override void WasTriggered(int cur, int max)
+    //     {
+    //         var circle = new Circle(Position, DestroyerInfo.Size);
+    //         castResult.Clear();
+    //         
+    //         CollisionHandler.CastSpace(circle, CastMask, ref castResult);
+    //         if (castResult.Count > 0)
+    //         {
+    //             foreach (var collider in castResult)
+    //             {
+    //                 if (collider.Parent is AsteroidObstacle a)
+    //                 {
+    //                     var dir = (a.Transform.Position - Position).Normalize();
+    //                     a.Damage(a.Transform.Position, DestroyerInfo.Damage, dir * DestroyerInfo.Force);
+    //                 }
+    //             }
+    //         }
+    //     }
+    //
+    //     protected override void WasReset()
+    //     {
+    //         base.WasReset();
+    //         smokeTimer = 0f;
+    //     }
+    //
+    //     protected override void WasCanceled()
+    //     {
+    //         base.WasCanceled();
+    //         smokeTimer = 0f;
+    //     }
+    //
+    //     protected override void WasDeployed()
+    //     {
+    //         base.WasDeployed();
+    //         smokeTimer = SmokeDuration;
+    //     }
+    //
+    //     public override void Update(float dt)
+    //     {
+    //         base.Update(dt);
+    //         if (smokeTimer > 0f)
+    //         {
+    //             smokeTimer -= dt;
+    //         }
+    //         
+    //     }
+    //
+    //     public override void Draw()
+    //     {
+    //         if (CooldownF > 0f)
+    //         {
+    //             if (smokeTimer > 0f)
+    //             {
+    //                 var f = 1f - (smokeTimer / SmokeDuration);
+    //                 var color = Colors.Warm.Lerp(Colors.Medium.SetAlpha(50), f);
+    //                 var size = ShapeMath.LerpFloat(DestroyerInfo.Size * 0.5f, DestroyerInfo.Size * 3f, f);
+    //                 ShapeDrawing.DrawCircle(Position, size, color, 24);
+    //             }
+    //         }
+    //
+    //         if (CallInF > 0f)
+    //         {
+    //             float f = 1f - CallInF;
+    //             ShapeDrawing.DrawCircleLines(Position, DestroyerInfo.Size, 6f, Colors.Dark, 6);
+    //             // ShapeDrawing.DrawCircleLines(Position, DestroyerInfo.Size * f, 6f, Colors.Special, 6);
+    //             ShapeDrawing.DrawCircleSectorLines(Position, DestroyerInfo.Size, 0f, 359f * f, 6f, Colors.Special, false, 4f);
+    //             ShapeDrawing.DrawCircleSectorLines(Position, DestroyerInfo.Size / 12, 0f, 359f * f, 6f, Colors.Special, false, 4f);
+    //             ShapeDrawing.DrawCircle(Position, 12f, Colors.Special, 24);
+    //             
+    //             var lineEnd = ShapeVec.Lerp(DestroyerPosition, Position, f);
+    //             var w = lineEnd - DestroyerPosition;
+    //             var dir = w.Normalize();
+    //             var lineStart = lineEnd - dir * 800f;
+    //             
+    //             ShapeDrawing.DrawLine(lineStart, lineEnd, 24f * f, Colors.Warm);
+    //         }
+    //         else if (ActiveF > 0f)
+    //         {
+    //             var f = 1f - ActiveF;
+    //             ShapeDrawing.DrawCircle(Position, DestroyerInfo.Size * f * f, Colors.Special, 36);
+    //             
+    //             
+    //         }
+    //         else if (IsTravelling)
+    //         {
+    //             // ShapeDrawing.DrawCircleLines(Position, Info.Size, 6f, Colors.Cold, 6);
+    //             ShapeDrawing.DrawCircle(Position, 12f, Colors.Cold, 24);
+    //         }
+    //         
+    //     }
+    //
+    //     
+    // }
+    // private class Barrage350mm : StrategemDestroyer
+    // {
+    //     private static readonly StrategemDestroyerInfo Info =
+    //         new(new StrategemInfo(4f, 28), 1200, 150, 20f, 40, 1500);
+    //     
+    //     private List<Collider> castResult = new(128);
+    //     private Vector2 nextCastPostion = new();
+    //     private List<Vector3> smokePositions = new(Info.Activations);
+    //     private const float SmokeDuration = 0.5f;
+    //     
+    //     private static readonly float BarrageSize = Info.Size / 4;
+    //     
+    //     public Barrage350mm(CollisionHandler collisionHandler,  BitFlag mask) : base(collisionHandler, Info, mask)
+    //     {
+    //     }
+    //     private Vector2 GetNextCastPosition() => Position + ShapeRandom.RandVec2(0f, DestroyerInfo.Size - BarrageSize);
+    //
+    //     protected override void WasDeployed()
+    //     {
+    //         smokePositions.Clear();
+    //         nextCastPostion = GetNextCastPosition();
+    //         base.WasDeployed();
+    //     }
+    //
+    //     protected override void WasTriggered(int cur, int max)
+    //     {
+    //         var circle = new Circle(nextCastPostion, BarrageSize);
+    //         castResult.Clear();
+    //         
+    //         CollisionHandler.CastSpace(circle, CastMask, ref castResult);
+    //         if (castResult.Count > 0)
+    //         {
+    //             foreach (var collider in castResult)
+    //             {
+    //                 if (collider.Parent is AsteroidObstacle a)
+    //                 {
+    //                     // a.Damage(a.Transform.Position, DestroyerInfo.Damage);
+    //                     var dir = (a.Transform.Position - Position).Normalize();
+    //                     a.Damage(a.Transform.Position, DestroyerInfo.Damage, dir * DestroyerInfo.Force);
+    //                 }
+    //             }
+    //         }
+    //
+    //         if (cur < max)
+    //         {
+    //             var oldPosition = new Vector3(nextCastPostion, 0f);
+    //             smokePositions.Add(oldPosition);
+    //             nextCastPostion = GetNextCastPosition();
+    //         }
+    //     }
+    //
+    //     protected override void CooldownHasFinished()
+    //     {
+    //         smokePositions.Clear();
+    //     }
+    //
+    //     public override void Update(float dt)
+    //     {
+    //         base.Update(dt);
+    //         
+    //         for (int i = 0; i < smokePositions.Count; i++)
+    //         {
+    //             var pos = smokePositions[i];
+    //             smokePositions[i] = pos with { Z = pos.Z + dt };
+    //         }
+    //     }
+    //
+    //     private void DrawCastPositions()
+    //     {
+    //         for (int i = smokePositions.Count - 1; i >= 0; i--)
+    //         {
+    //             var p = smokePositions[i];
+    //             var time = p.Z;
+    //             var f = time / SmokeDuration;
+    //             if (f >= 1f)
+    //             {
+    //                 smokePositions.RemoveAt(i);
+    //                 continue;
+    //             }
+    //             var point = new Vector2(p.X, p.Y);
+    //             var color = Colors.Warm.Lerp(Colors.Medium.SetAlpha(50), f * f);
+    //             var size = ShapeMath.LerpFloat(BarrageSize * 0.1f, BarrageSize * 3f, f * f);
+    //             ShapeDrawing.DrawCircle(point, size, color, 24);
+    //         }
+    //     }
+    //     public override void Draw()
+    //     {
+    //         if (CooldownF > 0f)
+    //         {
+    //             DrawCastPositions();
+    //         }
+    //
+    //         if (CallInF > 0f)
+    //         {
+    //             float f = 1f - CallInF;
+    //             ShapeDrawing.DrawCircleLines(Position, DestroyerInfo.Size, 6f, Colors.Dark, 6);
+    //             // ShapeDrawing.DrawCircleLines(Position, DestroyerInfo.Size * f, 6f, Colors.Special, 6);
+    //             ShapeDrawing.DrawCircleSectorLines(Position, DestroyerInfo.Size, 0f, 359f * f, 6f, Colors.Special, false, 4f);
+    //             ShapeDrawing.DrawCircleSectorLines(Position, DestroyerInfo.Size / 12, 0f, 359f * f, 6f, Colors.Special, false, 4f);
+    //             ShapeDrawing.DrawCircle(Position, 12f, Colors.Special, 24);
+    //         }
+    //         else if (IsTravelling)
+    //         {
+    //             // ShapeDrawing.DrawCircleLines(Position, Info.Size, 6f, Colors.Cold, 6);
+    //             ShapeDrawing.DrawCircle(Position, 12f, Colors.Cold, 24);
+    //         }
+    //         else if (ActiveF > 0f)
+    //         {
+    //             DrawCastPositions();
+    //             
+    //             ShapeDrawing.DrawCircleLines(Position, DestroyerInfo.Size, 12f, Colors.Warm, 24);
+    //             // ShapeDrawing.DrawCircle(nextCastPostion, BarrageSize * (1f - TriggerF), Colors.Warm, 24);
+    //             // ShapeDrawing.DrawCircleLines(nextCastPostion, BarrageSize, 6f, Colors.Warm, 6);
+    //
+    //             // var lineStart = ShapeVec.Lerp(DestroyerPosition, nextCastPostion, TriggerF * 0.8f);
+    //             var lineEnd = ShapeVec.Lerp(DestroyerPosition, nextCastPostion, TriggerF);
+    //             var w = lineEnd - DestroyerPosition;
+    //             var dir = w.Normalize();
+    //             var lineStart = lineEnd - dir * 800f;
+    //             
+    //             ShapeDrawing.DrawLine(lineStart, lineEnd, 24f * TriggerF, Colors.Warm);
+    //         }
+    //         
+    //     }
+    //
+    //     
+    // }
+    // private readonly struct StrategemInfo
+    // {
+    //     public readonly float CallInTime;
+    //     public readonly float Cooldown;
+    //     
+    //     
+    //     public bool HasCooldown => Cooldown > 0f;
+    //     public bool HasCallInTime => CallInTime > 0f;
+    //
+    //     public StrategemInfo(float callInTime, float cooldown)
+    //     {
+    //         this.Cooldown = cooldown;
+    //         this.CallInTime = callInTime;
+    //     }
+    //
+    // }
+    // private readonly struct StrategemDestroyerInfo
+    // {
+    //     public readonly float Size;
+    //     public readonly float Damage;
+    //     public readonly float Duration;
+    //     public readonly int Activations;
+    //     public readonly float Force;
+    //     public readonly StrategemInfo Basic;
+    //     public float TriggerInterval => Activations <= 0 ? 0f :  Duration / Activations;
+    //     public bool HasDuration => Duration > 0f;
+    //
+    //     public StrategemDestroyerInfo(StrategemInfo basic, float size, float damage, float duration, int activations, float force)
+    //     {
+    //         this.Basic = basic;
+    //         this.Damage = damage;
+    //         this.Size = size;
+    //         this.Duration = duration;
+    //         this.Activations = activations;
+    //         this.Force = force;
+    //     }
+    //
+    // }
+    // private abstract class Strategem
+    // {
+    //     public const float TravelTime = 1f;
+    //     public Vector2 Position { get; private set; } = new();
+    //     public Vector2 Velocity { get; private set; } = new();
+    //     protected readonly CollisionHandler CollisionHandler;
+    //     public readonly StrategemInfo BasicInfo;
+    //
+    //     protected readonly BitFlag CastMask;
+    //     private float callInTimer = 0f;
+    //     private float cooldownTimer = 0f;
+    //     private float travelTimer = 0f;
+    //     public bool IsDeployed { get; private set; } = false;
+    //     
+    //
+    //     public bool IsReady => cooldownTimer <= 0f && callInTimer <= 0f && travelTimer <= 0f && !IsDeployed;
+    //     public float CallInF => BasicInfo.CallInTime <= 0f ? 0f : callInTimer / BasicInfo.CallInTime;
+    //     public float CooldownF => BasicInfo.Cooldown <= 0f ? 0f : cooldownTimer / BasicInfo.Cooldown;
+    //     public float TravelF => travelTimer <= 0f ? 0f : travelTimer / TravelTime;
+    //     public bool IsTravelling => travelTimer > 0f;
+    //
+    //     public virtual float ActiveF => 0f;
+    //     
+    //     
+    //     
+    //     public Strategem(CollisionHandler collisionHandler, StrategemInfo basicInfo, BitFlag mask)
+    //     {
+    //         this.BasicInfo = basicInfo;
+    //         this.CollisionHandler = collisionHandler;
+    //         this.CastMask = mask;
+    //     }
+    //
+    //     public void Reset()
+    //     {
+    //         travelTimer = 0f;
+    //         Velocity = new();
+    //         Position = new();
+    //         cooldownTimer = 0f;
+    //         callInTimer = 0f;
+    //         IsDeployed = false;
+    //         WasReset();
+    //     }
+    //     
+    //     public bool Request(Vector2 pos, Vector2 velocity)
+    //     {
+    //         if (cooldownTimer > 0f) return false;
+    //         if (callInTimer > 0f) return false;
+    //
+    //         Position = pos;
+    //         Velocity = velocity;
+    //         travelTimer = TravelTime;
+    //         WasRequested();
+    //         return true;
+    //     }
+    //     private bool CallIn()
+    //     {
+    //         callInTimer = BasicInfo.CallInTime;
+    //         WasCalledIn();
+    //         return true;
+    //     }
+    //     private void Deploy()
+    //     {
+    //         IsDeployed = true;
+    //         WasDeployed();
+    //     }
+    //     protected bool EndDeployment()
+    //     {
+    //         if (!IsDeployed) return false;
+    //
+    //         IsDeployed = false;
+    //         cooldownTimer = BasicInfo.Cooldown;
+    //         DeployementHasEnded();
+    //         return true;
+    //     }
+    //     public bool Cancel()
+    //     {
+    //         if (IsReady) return false;
+    //         Reset();
+    //         cooldownTimer = BasicInfo.Cooldown;
+    //         WasCanceled();
+    //         return true;
+    //     }
+    //     
+    //     
+    //     protected virtual void WasReset() { }
+    //     protected virtual void WasCanceled() { }
+    //     protected virtual void WasRequested() { }
+    //     protected virtual void WasCalledIn() { }
+    //     protected virtual void WasDeployed() { }
+    //     protected virtual void DeployementHasEnded() { }
+    //     protected virtual void CooldownHasFinished() { }
+    //    
+    //     public virtual void Update(float dt)
+    //     {
+    //         if (IsTravelling)
+    //         {
+    //             Velocity = PhysicsObject.ApplyDragForce(Velocity, 2f, dt);
+    //             Position += Velocity * dt;
+    //             travelTimer -= dt;
+    //             if (travelTimer <= 0f)
+    //             {
+    //                 travelTimer = 0f;
+    //                 Velocity = new();
+    //                 CallIn();
+    //             }
+    //         }
+    //
+    //         if (cooldownTimer > 0f)
+    //         {
+    //             cooldownTimer -= dt;
+    //             if (cooldownTimer <= 0f)
+    //             {
+    //                 CooldownHasFinished();
+    //             }
+    //         }
+    //
+    //         if (callInTimer > 0f)
+    //         {
+    //             callInTimer -= dt;
+    //             if (callInTimer <= 0f)
+    //             {
+    //                 Deploy();
+    //             }
+    //         }
+    //     }
+    //
+    //
+    //     public abstract void Draw();
+    //     public void DrawUI(Rect rect)
+    //     {
+    //         
+    //         if (CooldownF > 0f)
+    //         {
+    //             var marginRect = rect.ApplyMargins(0f, CooldownF, 0f, 0f);
+    //             marginRect.Draw(Colors.Warm.ChangeBrightness(-0.5f));
+    //             rect.DrawLines(2f, Colors.Warm);
+    //         }
+    //         else if(CallInF > 0f)
+    //         {
+    //             
+    //             float f = 1f - CallInF;
+    //             var marginRect = rect.ApplyMargins(0f, f, 0f, 0f);
+    //             marginRect.Draw(Colors.Special.ChangeBrightness(-0.5f));
+    //             rect.DrawLines(2f, Colors.Special);
+    //         }
+    //         else if (TravelF > 0f)
+    //         {
+    //             float f = 1f - TravelF;
+    //             var marginRect = rect.ApplyMargins(0f, f, 0f, 0f);
+    //             marginRect.Draw(Colors.Special.ChangeBrightness(-0.5f));
+    //             rect.DrawLines(2f, Colors.Special);
+    //         }
+    //         else if (ActiveF > 0f)
+    //         {
+    //             float f = 1f - ActiveF;
+    //             var marginRect = rect.ApplyMargins(0f, f, 0f, 0f);
+    //             marginRect.Draw(Colors.Highlight.ChangeBrightness(-0.5f));
+    //             rect.DrawLines(2f, Colors.Highlight);
+    //         }
+    //         else
+    //         {
+    //             rect.Draw(Colors.Cold.ChangeBrightness(-0.5f));
+    //             rect.DrawLines(2f, Colors.Cold);
+    //         }
+    //     }
+    //
+    // }
+    // private abstract class StrategemDestroyer : Strategem //orbital strikes etc
+    // {
+    //     private float activeTimer = 0f;
+    //     private int remainingActivations = 0;
+    //     private float triggerTimer = 0f;
+    //     
+    //     public override float ActiveF => DestroyerInfo.Duration <= 0f ? 0f : activeTimer / DestroyerInfo.Duration;
+    //     public float ActivationF => DestroyerInfo.Activations <= 0f ? 0f : (float)remainingActivations / (float)DestroyerInfo.Activations;
+    //     public float TriggerF => DestroyerInfo.TriggerInterval <= 0f ? 0f : 1f - (triggerTimer / DestroyerInfo.TriggerInterval);
+    //
+    //
+    //     public readonly StrategemDestroyerInfo DestroyerInfo;
+    //     protected StrategemDestroyer(CollisionHandler collisionHandler, StrategemDestroyerInfo info, BitFlag mask) : base(collisionHandler, info.Basic, mask)
+    //     {
+    //         DestroyerInfo = info;
+    //     }
+    //
+    //     protected override void WasDeployed()
+    //     {
+    //         if (DestroyerInfo.Duration > 0f)
+    //         {
+    //             activeTimer = DestroyerInfo.Duration;
+    //             if (DestroyerInfo.Activations > 0)
+    //             {
+    //                 WasTriggered(0, DestroyerInfo.Activations);
+    //                 remainingActivations = DestroyerInfo.Activations - 1;
+    //                 if(remainingActivations > 0) triggerTimer = DestroyerInfo.TriggerInterval;
+    //             }
+    //             else WasTriggered(0, 0);
+    //             
+    //         }
+    //         else
+    //         {
+    //             if (DestroyerInfo.Activations > 0)
+    //             {
+    //                 for (int i = 0; i < DestroyerInfo.Activations; i++)
+    //                 {
+    //                     WasTriggered(i, DestroyerInfo.Activations);
+    //                 }
+    //             }
+    //             else WasTriggered(0, 0);
+    //
+    //             EndDeployment();
+    //         }
+    //     }
+    //     protected override void WasCanceled()
+    //     {
+    //         activeTimer = 0f;
+    //         remainingActivations = 0;
+    //         triggerTimer = 0f;
+    //     }
+    //     protected override void WasReset()
+    //     {
+    //         activeTimer = 0f;
+    //         remainingActivations = 0;
+    //         triggerTimer = 0f;
+    //     }
+    //     protected abstract void WasTriggered(int cur, int max);
+    //    
+    //     public override void Update(float dt)
+    //     {
+    //        base.Update(dt);
+    //
+    //         if (triggerTimer > 0f)
+    //         {
+    //             triggerTimer -= dt;
+    //             if (triggerTimer <= 0f)
+    //             {
+    //                 WasTriggered(DestroyerInfo.Activations - remainingActivations, DestroyerInfo.Activations);
+    //                 remainingActivations--;
+    //                 if (remainingActivations > 0) triggerTimer = DestroyerInfo.TriggerInterval;
+    //
+    //             }
+    //         }
+    //         
+    //         if (activeTimer > 0f)
+    //         {
+    //             activeTimer -= dt;
+    //             if (activeTimer <= 0f)
+    //             {
+    //                 EndDeployment();
+    //             }
+    //         }
+    //         
+    //     }
+    //     
+    // }
+    //
+    // private abstract class StrategemPayload : Strategem //turrets for instance inherit from that
+    // {
+    //     protected StrategemPayload(CollisionHandler collisionHandler, StrategemInfo basicInfo, BitFlag mask) : base(collisionHandler, basicInfo, mask)
+    //     {
+    //     }
+    // }
+    //
+    
+    
+    
     public static Vector2 DestroyerPosition = new(0f);
     public static int Difficulty = 1;
     public static readonly int MaxDifficulty = 100;
@@ -1832,14 +2171,20 @@ public class EndlessSpaceCollision : ExampleScene
 
     private readonly Autogun minigun;
     private readonly Autogun cannon;
-    private readonly OrbitalStrike orbitalStrike;
-    private readonly Barrage350mm barrage350mm;
-    private float strategemChargeTimer = 0f;
-    private const float strategemMaxChargeTime = 0.5f;
 
-    private float StrategemChargeF => strategemChargeTimer <= 0f
-        ? 0f
-        : strategemChargeTimer / strategemMaxChargeTime;
+    private readonly Pds orbitalStrike;
+    private readonly Pds orbitalStrike2;
+    private readonly Pds orbitalStrike3;
+    private readonly Pds orbitalStrike4;
+    
+    // private readonly OrbitalStrike orbitalStrike;
+    // private readonly Barrage350mm barrage350mm;
+    // private float strategemChargeTimer = 0f;
+    // private const float strategemMaxChargeTime = 0.5f;
+
+    // private float StrategemChargeF => strategemChargeTimer <= 0f
+    //     ? 0f
+    //     : strategemChargeTimer / strategemMaxChargeTime;
     
     private readonly float cellSize;
 
@@ -1872,16 +2217,20 @@ public class EndlessSpaceCollision : ExampleScene
         var minigunBulletStats = new BulletStats(12, 1250, 15, 0.75f);
         minigun = new(CollisionHandler, minigunStats, minigunBulletStats);
         
-        var cannonStats = new AutogunStats(18, 4, 3, 1750, MathF.PI / 24, AutogunStats.TargetingType.HighestHp, new ColorRgba(Color.Crimson));
+        var cannonStats = new AutogunStats(18, 4, 3, 1750, MathF.PI / 24, AutogunStats.TargetingType.LowestHp, new ColorRgba(Color.Crimson));
         var cannonBulletStats = new BulletStats(18, 2500, 300, 1f);
         cannon = new(CollisionHandler, cannonStats, cannonBulletStats);
 
+        var orbitalStrikePdsInfo = new PdsInfo((uint)PayloadConstructor.PayloadIds.OrbitalStrike, 2f, 8f, 0f, 0, 500f);
+        orbitalStrike = new(orbitalStrikePdsInfo, DestroyerPosition, CollisionHandler, new BitFlag(AsteroidObstacle.CollisionLayer));
+        orbitalStrike2 = new(orbitalStrikePdsInfo, DestroyerPosition, CollisionHandler, new BitFlag(AsteroidObstacle.CollisionLayer));
+        orbitalStrike3 = new(orbitalStrikePdsInfo, DestroyerPosition, CollisionHandler, new BitFlag(AsteroidObstacle.CollisionLayer));
+        orbitalStrike4 = new(orbitalStrikePdsInfo, DestroyerPosition, CollisionHandler, new BitFlag(AsteroidObstacle.CollisionLayer));
+        // var orbitalStrikeMask = new BitFlag(AsteroidObstacle.CollisionLayer);
+        // orbitalStrike = new OrbitalStrike(CollisionHandler, orbitalStrikeMask);
         
-        var orbitalStrikeMask = new BitFlag(AsteroidObstacle.CollisionLayer);
-        orbitalStrike = new OrbitalStrike(CollisionHandler, orbitalStrikeMask);
-        
-        var barrage350mmMask = new BitFlag(AsteroidObstacle.CollisionLayer);
-        barrage350mm = new Barrage350mm(CollisionHandler, barrage350mmMask);
+        // var barrage350mmMask = new BitFlag(AsteroidObstacle.CollisionLayer);
+        // barrage350mm = new Barrage350mm(CollisionHandler, barrage350mmMask);
         
         minigun.BulletFired += OnBulletFired;
         cannon.BulletFired += OnBulletFired;
@@ -1953,7 +2302,10 @@ public class EndlessSpaceCollision : ExampleScene
         cannon.Reset();
         minigun.Reset();
         orbitalStrike.Reset();
-        barrage350mm.Reset();
+        orbitalStrike2.Reset();
+        orbitalStrike3.Reset();
+        orbitalStrike4.Reset();
+        // barrage350mm.Reset();
         CollisionHandler?.Add(ship);
         follower.SetTarget(ship);
         
@@ -1995,7 +2347,6 @@ public class EndlessSpaceCollision : ExampleScene
         asteroids.Add(a);
         CollisionHandler?.Add(a);
     }
-
     
     private Vector2 GetRandomUniversePosition(float safeDistance = 2500)
     {
@@ -2009,8 +2360,6 @@ public class EndlessSpaceCollision : ExampleScene
 
         return pos;
     }
-    
-    
     
     protected override void OnHandleInputExample(float dt, Vector2 mousePosGame, Vector2 mousePosUI)
     {
@@ -2034,30 +2383,58 @@ public class EndlessSpaceCollision : ExampleScene
             drawDebug = !drawDebug;
         }
         
-
         if ((ShapeKeyboardButton.ONE.GetInputState().Pressed || ShapeKeyboardButton.UP.GetInputState().Pressed) && orbitalStrike.IsReady)
         {
-            strategemChargeTimer = dt;
+            PayloadMarkerSimple marker = new();
+            var speed = 2500;
+            marker.Launch(ship.GetBarrelPosition(), ship.GetBarrelDirection() * speed, 1f, 1.8f);
+            orbitalStrike.RequestPayload(marker);
         }
-
-        if ((ShapeKeyboardButton.ONE.GetInputState().Released || ShapeKeyboardButton.UP.GetInputState().Released) && orbitalStrike.IsReady)
+        if ((ShapeKeyboardButton.TWO.GetInputState().Pressed || ShapeKeyboardButton.DOWN.GetInputState().Pressed) && orbitalStrike2.IsReady)
         {
-            var speed = ShapeMath.LerpFloat(1000, 2500, StrategemChargeF);
-            orbitalStrike.Request(ship.GetBarrelPosition(), ship.GetBarrelDirection() * speed);
-            strategemChargeTimer = 0f;
+            PayloadMarkerSimple marker = new();
+            var speed = 3500;
+            marker.Launch(ship.GetBarrelPosition(), ship.GetBarrelDirection() * speed, 1f, 1.8f);
+            orbitalStrike2.RequestPayload(marker);
         }
-        
-        if ((ShapeKeyboardButton.TWO.GetInputState().Pressed || ShapeKeyboardButton.DOWN.GetInputState().Pressed) && barrage350mm.IsReady)
+        if ((ShapeKeyboardButton.THREE.GetInputState().Pressed || ShapeKeyboardButton.LEFT.GetInputState().Pressed) && orbitalStrike3.IsReady)
         {
-            strategemChargeTimer = dt;
+            PayloadMarkerSimple marker = new();
+            var speed = 4500;
+            marker.Launch(ship.GetBarrelPosition(), ship.GetBarrelDirection() * speed, 1f, 1.8f);
+            orbitalStrike3.RequestPayload(marker);
         }
-
-        if ((ShapeKeyboardButton.TWO.GetInputState().Released || ShapeKeyboardButton.DOWN.GetInputState().Released) && barrage350mm.IsReady)
+        if ((ShapeKeyboardButton.FOUR.GetInputState().Pressed || ShapeKeyboardButton.RIGHT.GetInputState().Pressed) && orbitalStrike4.IsReady)
         {
-            var speed = ShapeMath.LerpFloat(1000, 2500, StrategemChargeF);
-            barrage350mm.Request(ship.GetBarrelPosition(), ship.GetBarrelDirection() * speed);
-            strategemChargeTimer = 0f;
+            PayloadMarkerSimple marker = new();
+            var speed = 5500;
+            marker.Launch(ship.GetBarrelPosition(), ship.GetBarrelDirection() * speed, 1f, 1.8f);
+            orbitalStrike4.RequestPayload(marker);
         }
+        // if ((ShapeKeyboardButton.ONE.GetInputState().Pressed || ShapeKeyboardButton.UP.GetInputState().Pressed) && orbitalStrike.IsReady)
+        // {
+        //     strategemChargeTimer = dt;
+        // }
+        //
+        // if ((ShapeKeyboardButton.ONE.GetInputState().Released || ShapeKeyboardButton.UP.GetInputState().Released) && orbitalStrike.IsReady)
+        // {
+        //     var speed = ShapeMath.LerpFloat(1000, 2500, StrategemChargeF);
+        //     orbitalStrike.Request(ship.GetBarrelPosition(), ship.GetBarrelDirection() * speed);
+        //     strategemChargeTimer = 0f;
+        // }
+        //
+        // if ((ShapeKeyboardButton.TWO.GetInputState().Pressed || ShapeKeyboardButton.DOWN.GetInputState().Pressed) && barrage350mm.IsReady)
+        // {
+        //     strategemChargeTimer = dt;
+        // }
+        //
+        // if ((ShapeKeyboardButton.TWO.GetInputState().Released || ShapeKeyboardButton.DOWN.GetInputState().Released) && barrage350mm.IsReady)
+        // {
+        //     var speed = ShapeMath.LerpFloat(1000, 2500, StrategemChargeF);
+        //     barrage350mm.Request(ship.GetBarrelPosition(), ship.GetBarrelDirection() * speed);
+        //     strategemChargeTimer = 0f;
+        // }
+        //
     }
 
     private void UpdateFollower(float size)
@@ -2090,18 +2467,21 @@ public class EndlessSpaceCollision : ExampleScene
 
         if (!gameOverScreenActive)
         {
-            if (strategemChargeTimer > 0f)
-            {
-                strategemChargeTimer += time.Delta;
-                if (strategemChargeTimer > strategemMaxChargeTime) strategemChargeTimer = strategemMaxChargeTime;
-            }
+            // if (strategemChargeTimer > 0f)
+            // {
+            //     strategemChargeTimer += time.Delta;
+            //     if (strategemChargeTimer > strategemMaxChargeTime) strategemChargeTimer = strategemMaxChargeTime;
+            // }
             
             ship.Update(time, game, ui);
             minigun.Update(time.Delta, ship.GetPosition(), ship.GetCurSpeed());
             cannon.Update(time.Delta, ship.GetPosition(), ship.GetCurSpeed());
         
             orbitalStrike.Update(time.Delta);
-            barrage350mm.Update(time.Delta);
+            orbitalStrike2.Update(time.Delta);
+            orbitalStrike3.Update(time.Delta);
+            orbitalStrike4.Update(time.Delta);
+            // barrage350mm.Update(time.Delta);
 
             UpdateFollower(camera.Size.Min());
 
@@ -2256,7 +2636,10 @@ public class EndlessSpaceCollision : ExampleScene
         minigun.Draw();
         cannon.Draw();
         orbitalStrike.Draw();
-        barrage350mm.Draw();
+        orbitalStrike2.Draw();
+        orbitalStrike3.Draw();
+        orbitalStrike4.Draw();
+        // barrage350mm.Draw();
 
         foreach (var bullet in bullets)
         {
@@ -2308,22 +2691,19 @@ public class EndlessSpaceCollision : ExampleScene
         var strategemZone = ui.Area.ApplyMargins(0.2f, 0.2f, 0.91f, 0.06f);
         var splitStrategem = strategemZone.SplitH(0.225f,0.033f,0.225f,0.033f,0.225f,0.033f);
 
-        if (strategemChargeTimer > 0f)
-        {
-            var chargeRect = splitStrategem[0].ApplyMargins(0, 1f - StrategemChargeF, 0f, 0f);
-            chargeRect.Draw(Colors.Warm.ChangeBrightness(-0.5f));
-            chargeRect.DrawLines(4f, Colors.Warm);
-        }
-        else orbitalStrike.DrawUI(splitStrategem[0]);
+        orbitalStrike.DrawUI(splitStrategem[0]);
+        orbitalStrike2.DrawUI(splitStrategem[2]);
+        orbitalStrike3.DrawUI(splitStrategem[4]);
+        orbitalStrike4.DrawUI(splitStrategem[6]);
         
-        if (strategemChargeTimer > 0f)
-        {
-            var chargeRect = splitStrategem[2].ApplyMargins(0, 1f - StrategemChargeF, 0f, 0f);
-            chargeRect.Draw(Colors.Warm.ChangeBrightness(-0.5f));
-            chargeRect.DrawLines(4f, Colors.Warm);
-        }
-        else barrage350mm.DrawUI(splitStrategem[2]);
-        
+        // if (strategemChargeTimer > 0f)
+        // {
+        //     var chargeRect = splitStrategem[2].ApplyMargins(0, 1f - StrategemChargeF, 0f, 0f);
+        //     chargeRect.Draw(Colors.Warm.ChangeBrightness(-0.5f));
+        //     chargeRect.DrawLines(4f, Colors.Warm);
+        // }
+        // else barrage350mm.DrawUI(splitStrategem[2]);
+        //
         var count = Ship.MaxHp;
         var hpRects = split[1].SplitH(count);
         for (int i = 0; i < count; i++)
