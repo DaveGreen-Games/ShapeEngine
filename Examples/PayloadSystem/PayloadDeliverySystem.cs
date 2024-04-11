@@ -1,7 +1,18 @@
 using System.Numerics;
 using ShapeEngine.Core.Shapes;
+using ShapeEngine.Lib;
 
 namespace Examples.PayloadSystem;
+
+// public interface IPayloadTimingSystem
+// {
+//     public float GetTriggerInterval(int curActivation, int maxActivations, float duration, float remainingDuration);
+// }
+
+
+
+
+
 
 public abstract class PayloadDeliverySystem
 {
@@ -24,18 +35,19 @@ public abstract class PayloadDeliverySystem
     public readonly PdsInfo BasicInfo;
     public readonly Vector2 Position;
     private readonly IPayloadConstructor payloadConstructor;
-    
+    protected readonly IPayloadTargetingSystem TargetingSystem;
 
     protected PayloadMarker? curMarker { get; private set; } = null;
 
     private readonly List<IPayload> payloads = new(32);
     // private bool payloadMarkerActive = false;
     
-    protected PayloadDeliverySystem(PdsInfo info, IPayloadConstructor constructor, Vector2 position)
+    protected PayloadDeliverySystem(PdsInfo info, IPayloadTargetingSystem targetingSystem, IPayloadConstructor constructor, Vector2 position)
     {
         BasicInfo = info;
-        payloadConstructor = constructor;
+        TargetingSystem = targetingSystem;
         Position = position;
+        payloadConstructor = constructor;
     }
 
     private void OnPayloadMarkerLocationReached()
@@ -146,6 +158,7 @@ public abstract class PayloadDeliverySystem
     
     private void CallIn()
     {
+        if(curMarker != null) TargetingSystem.Activate(Position, curMarker.Location, curMarker.Direction);
         callInTimer = BasicInfo.CallInTime;
         WasCalledIn();
     }
@@ -162,6 +175,7 @@ public abstract class PayloadDeliverySystem
             }
             else LaunchPayload(0, 0);
             
+            DeploymentHasStarted();
         }
         else
         {
@@ -174,9 +188,10 @@ public abstract class PayloadDeliverySystem
             }
             else LaunchPayload(0, 0);
 
+            DeploymentHasStarted();
             EndDeployment();
         }
-        DeploymentHasStarted();
+        
     }
     private void EndDeployment()
     {
@@ -195,9 +210,9 @@ public abstract class PayloadDeliverySystem
             return;
         }
 
-        var targetLocation = BasicInfo.GetDeploymentPosition(curMarker.Location);
+        var targetLocation = TargetingSystem.GetTargetPosition(cur, max); // BasicInfo.GetDeploymentPosition(curMarker.Location);
         
-        payload.Launch(Position, targetLocation);
+        payload.Launch(Position, targetLocation, curMarker.Location, curMarker.Direction);
         payloads.Add(payload);
         
         OnPayloadLaunched?.Invoke(payload, cur, max);

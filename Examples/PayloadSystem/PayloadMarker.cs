@@ -9,6 +9,7 @@ public abstract class PayloadMarker
 
     public Vector2 Location { get; private set; }
     public Vector2 Velocity { get; private set; }
+    public Vector2 Direction { get; private set; }
     public bool Launched { get; private set; } = false;
     public bool TargetReached => Launched && travelTimer <= 0f;
 
@@ -17,13 +18,14 @@ public abstract class PayloadMarker
     protected float travelTimer{get; private set;}= 0f;
     public float TravelF => travelTime <= 0f ? 0f : travelTimer / travelTime;
 
-    public bool Launch(Vector2 start, Vector2 velocity, float time = 1f, float drag = 2f)
+    public bool Launch(Vector2 start, Vector2 dir, float speed, float time = 1f, float drag = 2f)
     {
         if (Launched) return false;
 
         Launched = true;
         Location = start;
-        Velocity = velocity;
+        Direction = dir;
+        Velocity = dir * speed;
         travelTimer = time;
         travelTime = time;
         dragCoefficient = drag;
