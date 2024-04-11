@@ -29,6 +29,28 @@ public abstract class CollisionObject : PhysicsObject
         set => enabled = value;
     }
 
+    public bool ProjectShape = false;
+
+    // public Polygon? GetProjectedShape(float dt)
+    // {
+    //     if (Colliders.Count <= 0) return null;
+    //     if (Velocity.LengthSquared() <= 0f || dt <= 0f) return null;
+    //     Points points = new(Colliders.Count * 6);
+    //     var velFraction = Velocity * dt;
+    //     foreach (var collider in Colliders)
+    //     {
+    //         var projectedPoints = collider.Project(velFraction);
+    //         if (projectedPoints != null && projectedPoints.Count > 0)
+    //         {
+    //             points.AddRange(projectedPoints);
+    //         }
+    //     }
+    //
+    //     if (points.Count > 0) return points.ToPolygon();
+    //
+    //     return null;
+    // }
+
     public bool AddCollider(Collider col)
     {
         if (col.Parent != null)

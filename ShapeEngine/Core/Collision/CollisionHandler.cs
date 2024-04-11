@@ -201,104 +201,196 @@ namespace ShapeEngine.Core.Collision
             
         }
 
-        public void Update()
+        public void Update(float dt)
         {
             spatialHash.Fill(collisionBodyRegister.AllObjects, colliderRegister.AllObjects);
 
-            ProcessCollisions();
+            ProcessCollisions(dt);
             
             Resolve();
         }
-        private void ProcessCollisions()
+        private void ProcessCollisions(float dt)
         {
             foreach (var collisionBody in collisionBodyRegister.AllObjects)
             {
                 if (!collisionBody.Enabled || !collisionBody.HasColliders) continue;
 
-                foreach (var collider in collisionBody.Colliders)
+                if (collisionBody.ProjectShape)
                 {
-                    if (!collider.Enabled) continue;
-                    
-                    collisionCandidateBuckets.Clear();
-                    collisionCandidateCheckRegister.Clear();
-                    spatialHash.GetRegisteredCollisionCandidateBuckets(collider, ref collisionCandidateBuckets);
-                    
-                    if(collisionCandidateBuckets.Count <= 0) continue;     
-                    
-                    var mask = collider.CollisionMask;
-                    bool computeIntersections = collider.ComputeIntersections;
-                    List<Collision>? cols = null;
-                    
-                    foreach (var bucket in collisionCandidateBuckets)
+                    foreach (var collider in collisionBody.Colliders)
                     {
-                        foreach (var candidate in bucket)
+                        if (!collider.Enabled) continue;
+
+                        var projected = collider.Project(collisionBody.Velocity * dt);
+                        if(projected == null) continue;
+                        collisionCandidateBuckets.Clear();
+                        collisionCandidateCheckRegister.Clear();
+                        spatialHash.GetCandidateBuckets(projected, ref collisionCandidateBuckets);
+                        
+                        if(collisionCandidateBuckets.Count <= 0) continue;     
+                        
+                        var mask = collider.CollisionMask;
+                        bool computeIntersections = collider.ComputeIntersections;
+                        List<Collision>? cols = null;
+                        
+                        foreach (var bucket in collisionCandidateBuckets)
                         {
-                            if(candidate == collider) continue;
-                            if (candidate.Parent != null && collider.Parent != null && candidate.Parent == collider.Parent) continue;
-                            if (!mask.Has(candidate.CollisionLayer)) continue;
-                            if (!collisionCandidateCheckRegister.Add(candidate)) continue;
-
-                            bool overlap = collider.Overlap(candidate); // ShapeGeometry.Overlap(collider, candidate);
-                            if (overlap)
+                            foreach (var candidate in bucket)
                             {
-                                var oldEntry = oldRegister.FindEntry(collider, candidate);
-                                bool firstContact;
-                                if (oldEntry != null)
-                                {
-                                    firstContact = false;
-                                    oldRegister.RemoveEntry(oldEntry);
-                                    activeRegister.AddEntry(oldEntry);
+                                if (candidate == collider) continue;
+                                if (candidate.Parent != null && collider.Parent != null && candidate.Parent == collider.Parent) continue;
+                                if (!mask.Has(candidate.CollisionLayer)) continue;
+                                if (!collisionCandidateCheckRegister.Add(candidate)) continue;
 
-                                }
-                                else
+                                bool overlap = projected.Overlap(candidate); // ShapeGeometry.Overlap(collider, candidate);
+                                if (overlap)
                                 {
-                                    firstContact = true;
-                                    activeRegister.AddEntry(new OverlapEntry(collider, candidate));
-                                }
-                                
-                                if (computeIntersections)
-                                {
-                                    //CollisionChecksPerFrame++;
-                                    var collisionPoints = collider.Intersect(candidate); // ShapeGeometry.Intersect(collider, candidate);
-
-                                    //shapes overlap but no collision points means collidable is completely inside other
-                                    //closest point on bounds of other are now used for collision point
-                                    if (collisionPoints == null || collisionPoints.Count <= 0)
+                                    var oldEntry = oldRegister.FindEntry(collider, candidate);
+                                    bool firstContact;
+                                    if (oldEntry != null)
                                     {
-                                        var refPoint = collider.PrevTransform.Position;// PrevPosition;
-                                        if (!candidate.ContainsPoint(refPoint))
-                                        {
-                                            var closest = candidate.GetClosestCollisionPoint(refPoint);
-                                            collisionPoints ??= new();
-                                            collisionPoints.Add(closest);
-                                        }
-                                        //CollisionPoint closest = shape.GetClosestPoint(refPoint);
-                                        //collisionPoints.Add(closest);
+                                        firstContact = false;
+                                        oldRegister.RemoveEntry(oldEntry);
+                                        activeRegister.AddEntry(oldEntry);
 
                                     }
+                                    else
+                                    {
+                                        firstContact = true;
+                                        activeRegister.AddEntry(new OverlapEntry(collider, candidate));
+                                    }
+                                    
+                                    if (computeIntersections)
+                                    {
+                                        //CollisionChecksPerFrame++;
+                                        var collisionPoints = projected.Intersect(candidate); // ShapeGeometry.Intersect(collider, candidate);
 
-                                    Collision c = new(collider, candidate, firstContact, collisionPoints);
-                                    cols ??= new();
-                                    cols.Add(c);
-                                }
-                                else
-                                {
-                                    Collision c = new(collider, candidate, firstContact);
-                                    cols ??= new();
-                                    cols.Add(c);
+                                        //shapes overlap but no collision points means collidable is completely inside other
+                                        //closest point on bounds of other are now used for collision point
+                                        if (collisionPoints == null || collisionPoints.Count <= 0)
+                                        {
+                                            var refPoint = collider.PrevTransform.Position;// PrevPosition;
+                                            if (!candidate.ContainsPoint(refPoint))
+                                            {
+                                                var closest = candidate.GetClosestCollisionPoint(refPoint);
+                                                collisionPoints ??= new();
+                                                collisionPoints.Add(closest);
+                                            }
+                                        }
+
+                                        Collision c = new(collider, candidate, firstContact, collisionPoints);
+                                        cols ??= new();
+                                        cols.Add(c);
+                                    }
+                                    else
+                                    {
+                                        Collision c = new(collider, candidate, firstContact);
+                                        cols ??= new();
+                                        cols.Add(c);
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    if (cols is { Count: > 0 })
-                    {
-                        if (!collisionStack.TryAdd(collider, cols))
+                        if (cols is { Count: > 0 })
                         {
-                            collisionStack[collider].AddRange(cols);
+                            if (!collisionStack.TryAdd(collider, cols))
+                            {
+                                collisionStack[collider].AddRange(cols);
+                            }
                         }
                     }
+                
                 }
+                else
+                {
+                    foreach (var collider in collisionBody.Colliders)
+                    {
+                        if (!collider.Enabled) continue;
+                    
+                        collisionCandidateBuckets.Clear();
+                        collisionCandidateCheckRegister.Clear();
+                        spatialHash.GetRegisteredCollisionCandidateBuckets(collider, ref collisionCandidateBuckets);
+                        
+                        if(collisionCandidateBuckets.Count <= 0) continue;     
+                        
+                        var mask = collider.CollisionMask;
+                        bool computeIntersections = collider.ComputeIntersections;
+                        List<Collision>? cols = null;
+                        
+                        foreach (var bucket in collisionCandidateBuckets)
+                        {
+                            foreach (var candidate in bucket)
+                            {
+                                if(candidate == collider) continue;
+                                if (candidate.Parent != null && collider.Parent != null && candidate.Parent == collider.Parent) continue;
+                                if (!mask.Has(candidate.CollisionLayer)) continue;
+                                if (!collisionCandidateCheckRegister.Add(candidate)) continue;
+
+                                bool overlap = collider.Overlap(candidate); // ShapeGeometry.Overlap(collider, candidate);
+                                if (overlap)
+                                {
+                                    var oldEntry = oldRegister.FindEntry(collider, candidate);
+                                    bool firstContact;
+                                    if (oldEntry != null)
+                                    {
+                                        firstContact = false;
+                                        oldRegister.RemoveEntry(oldEntry);
+                                        activeRegister.AddEntry(oldEntry);
+
+                                    }
+                                    else
+                                    {
+                                        firstContact = true;
+                                        activeRegister.AddEntry(new OverlapEntry(collider, candidate));
+                                    }
+                                    
+                                    if (computeIntersections)
+                                    {
+                                        //CollisionChecksPerFrame++;
+                                        var collisionPoints = collider.Intersect(candidate); // ShapeGeometry.Intersect(collider, candidate);
+
+                                        //shapes overlap but no collision points means collidable is completely inside other
+                                        //closest point on bounds of other are now used for collision point
+                                        if (collisionPoints == null || collisionPoints.Count <= 0)
+                                        {
+                                            var refPoint = collider.PrevTransform.Position;// PrevPosition;
+                                            if (!candidate.ContainsPoint(refPoint))
+                                            {
+                                                var closest = candidate.GetClosestCollisionPoint(refPoint);
+                                                collisionPoints ??= new();
+                                                collisionPoints.Add(closest);
+                                            }
+                                            //CollisionPoint closest = shape.GetClosestPoint(refPoint);
+                                            //collisionPoints.Add(closest);
+
+                                        }
+
+                                        Collision c = new(collider, candidate, firstContact, collisionPoints);
+                                        cols ??= new();
+                                        cols.Add(c);
+                                    }
+                                    else
+                                    {
+                                        Collision c = new(collider, candidate, firstContact);
+                                        cols ??= new();
+                                        cols.Add(c);
+                                    }
+                                }
+                            }
+                        }
+
+                        if (cols is { Count: > 0 })
+                        {
+                            if (!collisionStack.TryAdd(collider, cols))
+                            {
+                                collisionStack[collider].AddRange(cols);
+                            }
+                        }
+                    }
+                
+                }
+                
             }
         }
         private void Resolve()

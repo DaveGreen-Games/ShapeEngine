@@ -145,7 +145,36 @@ namespace ShapeEngine.Core.Collision
         protected virtual void OnRemovedFromCollisionBody(CollisionObject formerParent) { }
 
         public abstract Rect GetBoundingBox();
-        
+
+        public Polygon? Project(Vector2 v)
+        {
+            switch (GetShapeType())
+            {
+                case ShapeType.Circle:
+                    var c = GetCircleShape();
+                    return c.ProjectShape(v, 8);
+                case ShapeType.Segment:
+                    var s = GetSegmentShape();
+                    return s.ProjectShape(v);
+                case ShapeType.Triangle:
+                    var t = GetTriangleShape();
+                    return t.ProjectShape(v);
+                case ShapeType.Rect:
+                    var r = GetRectShape();
+                    return r.ProjectShape(v);
+                case ShapeType.Quad:
+                    var q = GetQuadShape();
+                    return q.ProjectShape(v);
+                case ShapeType.Poly:
+                    var p = GetPolygonShape();
+                    return p.ProjectShape(v);
+                case ShapeType.PolyLine:
+                    var pl = GetPolylineShape();
+                    return pl.ProjectShape(v);
+            }
+
+            return null;
+        }
 
         #region Closest
 
@@ -809,6 +838,7 @@ namespace ShapeEngine.Core.Collision
 
             return null;
         }
+        
         public CollisionPoints? Intersect(Triangle triangle)
         {
             if (!Enabled) return null;
