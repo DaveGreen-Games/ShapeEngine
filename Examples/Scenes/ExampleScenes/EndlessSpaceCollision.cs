@@ -839,6 +839,7 @@ public class EndlessSpaceCollision : ExampleScene
         
         public override void Update(GameTime time, ScreenInfo game, ScreenInfo ui)
         {
+            var prevPosition = Transform.Position;
             base.Update(time, game, ui);
 
             if (target != null)
@@ -850,7 +851,8 @@ public class EndlessSpaceCollision : ExampleScene
             
             var shape = collider.GetPolygonShape();
             bb = shape.GetBoundingBox();
-            Triangulation = shape.Triangulate();
+            // Triangulation = shape.Triangulate();
+            
 
             damageForce = PhysicsObject.ApplyDragForce(damageForce, 1.5f, time.Delta);
             Transform = Transform.MoveBy(damageForce * time.Delta);
@@ -859,8 +861,9 @@ public class EndlessSpaceCollision : ExampleScene
             {
                 damageFlashTimer -= time.Delta;
             }
-            
 
+            var moved = Transform.Position - prevPosition;
+            Triangulation.ChangePosition(moved);
         }
         // private void SetTimer()
         // {
