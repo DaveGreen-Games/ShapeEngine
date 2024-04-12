@@ -33,10 +33,9 @@ public class EndlessSpaceCollision : ExampleScene
         public readonly float DetectionRange;
         public readonly TargetingType Targeting;
         public readonly float Accuracy;
-        public readonly ColorRgba Color;
 
         public AutogunStats(int clipSize, float reloadTime, float bulletsPerSecond, float detectionRange, float accuracy,
-            TargetingType targetingType, ColorRgba color)
+            TargetingType targetingType)
         {
             Clipsize = clipSize;
             ReloadTime = reloadTime;
@@ -44,7 +43,6 @@ public class EndlessSpaceCollision : ExampleScene
             DetectionRange = detectionRange;
             Targeting = targetingType;
             Accuracy = accuracy;
-            Color = color;
 
         }
     }
@@ -77,6 +75,7 @@ public class EndlessSpaceCollision : ExampleScene
         private float curShipSpeed = 0f;
         private int curClipSize;
         private float reloadTimer = 0f;
+        private PaletteColor color;
         
         public readonly AutogunStats Stats;
         public readonly BulletStats BulletStats;
@@ -87,12 +86,13 @@ public class EndlessSpaceCollision : ExampleScene
 
         private readonly CollisionHandler collisionHandler;
 
-        public Autogun(CollisionHandler collisionHandler, AutogunStats stats, BulletStats bulletStats)
+        public Autogun(CollisionHandler collisionHandler, AutogunStats stats, BulletStats bulletStats, PaletteColor color)
         {
             this.collisionHandler = collisionHandler;
             this.Stats = stats;
             this.BulletStats = bulletStats;
             this.curClipSize = stats.Clipsize;
+            this.color = color;
         }
 
         public void Reset()
@@ -167,27 +167,28 @@ public class EndlessSpaceCollision : ExampleScene
 
         public void Draw()
         {
-            curTarget?.GetBoundingBox().DrawLines(4f, Stats.Color);
+            curTarget?.GetBoundingBox().DrawLines(4f, color.ColorRgba);
         }
 
         public void DrawUI(Rect rect)
         {
-            
+
+            var c = color.ColorRgba;
             if (reloadTimer > 0f)
             {
                 
                 var f = reloadTimer / Stats.ReloadTime;
                 var marginRect = rect.ApplyMargins(0f, f, 0f, 0f);
-                marginRect.Draw(Stats.Color.ChangeBrightness(-0.5f));
-                rect.DrawLines(2f, Stats.Color);
+                marginRect.Draw(c.ChangeBrightness(-0.5f));
+                rect.DrawLines(2f, c);
             }
             else
             {
                 
                 var f = 1f - ((float)curClipSize / (float)Stats.Clipsize);
                 var marginRect = rect.ApplyMargins(0f, f, 0f, 0f);
-                marginRect.Draw(Stats.Color.ChangeBrightness(-0.5f));
-                rect.DrawLines(2f, Stats.Color);
+                marginRect.Draw(c.ChangeBrightness(-0.5f));
+                rect.DrawLines(2f, c);
             }
         }
         
@@ -332,7 +333,7 @@ public class EndlessSpaceCollision : ExampleScene
             var dir = ShapeVec.VecFromAngleRad(aimingRotRad);
             var randRot = ShapeRandom.RandF(-Stats.Accuracy, Stats.Accuracy);
             dir = dir.Rotate(randRot);
-            var bullet = new Bullet(pos, dir, BulletStats.RandomizeSpeed(0.95f, 1.05f, curShipSpeed), Stats.Color);
+            var bullet = new Bullet(pos, dir, BulletStats.RandomizeSpeed(0.95f, 1.05f, curShipSpeed), color.ColorRgba);
             collisionHandler.Add(bullet);
             BulletFired?.Invoke(this, bullet);
         }
@@ -905,15 +906,15 @@ public class EndlessSpaceCollision : ExampleScene
         {
             if (!bb.OverlapShape(game.Area)) return;
 
-            Triangulation.Draw(Colors.Background);
+            Triangulation.Draw(Colors.PcBackground.ColorRgba);
             
             if (AsteroidLineThickness > 1)
             {
                 if (damageFlashTimer > 0f)
                 {
-                    collider.GetPolygonShape().DrawLines(AsteroidLineThickness, Colors.Warm);
+                    collider.GetPolygonShape().DrawLines(AsteroidLineThickness, Colors.PcWarm.ColorRgba);
                 }
-                else collider.GetPolygonShape().DrawLines(AsteroidLineThickness, Colors.Highlight);
+                else collider.GetPolygonShape().DrawLines(AsteroidLineThickness, Colors.PcHighlight.ColorRgba);
             }
         }
         public override void DrawGameUI(ScreenInfo ui)
@@ -958,8 +959,8 @@ public class EndlessSpaceCollision : ExampleScene
         public void Draw()
         {
             if (IsDead) return;
-            scaledTriangle.Draw(Colors.Background);
-            scaledTriangle.DrawLines(AsteroidLineThickness / 2, Colors.Highlight.SetAlpha(150));
+            scaledTriangle.Draw(Colors.PcBackground.ColorRgba);
+            scaledTriangle.DrawLines(AsteroidLineThickness / 2, Colors.PcHighlight.ColorRgba.SetAlpha(150));
         }
     }
 
@@ -1082,8 +1083,8 @@ public class EndlessSpaceCollision : ExampleScene
             if (travelTimer > 0f)
             {
                 var f = TravelF;
-                ShapeDrawing.DrawCircle(targetLocation, 12f, Colors.Cold, 24);
-                ShapeDrawing.DrawCircleLines(targetLocation, info.Radius * (1f - f), 6f, Colors.Medium, 6);
+                ShapeDrawing.DrawCircle(targetLocation, 12f, Colors.PcCold.ColorRgba, 24);
+                ShapeDrawing.DrawCircleLines(targetLocation, info.Radius * (1f - f), 6f, Colors.PcMedium.ColorRgba, 6);
                 
                 // var f = TravelF;
                 // ShapeDrawing.DrawCircleLines(targetLocation, Size, 6f, Colors.Dark, 6);
@@ -1096,13 +1097,13 @@ public class EndlessSpaceCollision : ExampleScene
                 var dir = w.Normalize();
                 var lineStart = lineEnd - dir * 800f;
                 
-                ShapeDrawing.DrawLine(lineStart, lineEnd, 24f * f, Colors.Cold);
+                ShapeDrawing.DrawLine(lineStart, lineEnd, 24f * f, Colors.PcCold.ColorRgba);
             }
             
             if (smokeTimer > 0f)
             {
                 var f = 1f - (smokeTimer / info.SmokeDuration);
-                var color = Colors.Warm.Lerp(Colors.Medium.SetAlpha(50), f);
+                var color = Colors.Warm.Lerp(Colors.PcMedium.ColorRgba.SetAlpha(50), f);
                 var size = ShapeMath.LerpFloat(info.Radius * 0.5f, info.Radius * 3f, f);
                 ShapeDrawing.DrawCircle(curPosition, size, color, 24);
             }
@@ -1171,7 +1172,7 @@ public class EndlessSpaceCollision : ExampleScene
         {
             if (CallInF > 0f && curMarker != null)
             {
-                TargetingSystem.DrawTargetArea(CallInF, Colors.Medium);
+                TargetingSystem.DrawTargetArea(CallInF, Colors.PcSpecial.ColorRgba);
                 // ShapeDrawing.DrawCircleLines(curMarker.Location, 500 * CallInF, 6f, Colors.Special);
             }
         }
@@ -1186,25 +1187,27 @@ public class EndlessSpaceCollision : ExampleScene
             }
             else if(CallInF > 0f)
             {
-                
+                var c = Colors.PcSpecial.ColorRgba;
                 float f = 1f - CallInF;
                 var marginRect = rect.ApplyMargins(0f, f, 0f, 0f);
-                marginRect.Draw(Colors.Special.ChangeBrightness(-0.5f));
-                rect.DrawLines(2f, Colors.Special);
+                marginRect.Draw(c.ChangeBrightness(-0.5f));
+                rect.DrawLines(2f, c);
             }
             else if (curMarker != null && curMarker.TravelF > 0f)
             {
+                var c = Colors.PcMedium.ColorRgba;
                 float f = 1f - curMarker.TravelF;
                 var marginRect = rect.ApplyMargins(0f, f, 0f, 0f);
-                marginRect.Draw(Colors.Special.ChangeBrightness(-0.5f));
-                rect.DrawLines(2f, Colors.Special);
+                marginRect.Draw(c.ChangeBrightness(-0.5f));
+                rect.DrawLines(2f, c);
             }
             else if (ActiveF > 0f)
             {
+                var c = Colors.PcMedium.ColorRgba;
                 float f = 1f - ActiveF;
                 var marginRect = rect.ApplyMargins(0f, f, 0f, 0f);
-                marginRect.Draw(Colors.Highlight.ChangeBrightness(-0.5f));
-                rect.DrawLines(2f, Colors.Highlight);
+                marginRect.Draw(c.ChangeBrightness(-0.5f));
+                rect.DrawLines(2f, c);
             }
             else
             {
@@ -1427,13 +1430,13 @@ public class EndlessSpaceCollision : ExampleScene
         ship = new(new Vector2(0f), ShipSize);
         ship.OnKilled += OnShipKilled;
         
-        var minigunStats = new AutogunStats(250, 2, 20, 800, MathF.PI / 15, AutogunStats.TargetingType.Closest, new ColorRgba(Color.ForestGreen));
+        var minigunStats = new AutogunStats(250, 2, 20, 800, MathF.PI / 15, AutogunStats.TargetingType.Closest);
         var minigunBulletStats = new BulletStats(12, 1250, 15, 0.75f);
-        minigun = new(CollisionHandler, minigunStats, minigunBulletStats);
+        minigun = new(CollisionHandler, minigunStats, minigunBulletStats, Colors.PcCold);
         
-        var cannonStats = new AutogunStats(20, 4, 4f, 1750, MathF.PI / 24, AutogunStats.TargetingType.LowestHp, new ColorRgba(Color.Crimson));
+        var cannonStats = new AutogunStats(20, 4, 4f, 1750, MathF.PI / 24, AutogunStats.TargetingType.LowestHp);
         var cannonBulletStats = new BulletStats(18, 2500, 200, 1f);
-        cannon = new(CollisionHandler, cannonStats, cannonBulletStats);
+        cannon = new(CollisionHandler, cannonStats, cannonBulletStats, Colors.PcCold);
 
         var orbitalStrikePdsInfo = new PdsInfo((uint)PayloadConstructor.PayloadIds.Bomb, 2f, 8f, 0f, 0);
         var barrage350mmInfo = new PdsInfo((uint)PayloadConstructor.PayloadIds.Grenade350mm, 4f, 24f, 30f, 15);
@@ -1832,8 +1835,9 @@ public class EndlessSpaceCollision : ExampleScene
 
             var minigunRange = new Circle(ship.GetPosition(), minigun.Stats.DetectionRange);
             var cannonRange = new Circle(ship.GetPosition(), cannon.Stats.DetectionRange);
-            minigunRange.DrawLines(4f, minigun.Stats.Color.ChangeAlpha((byte)150));
-            cannonRange.DrawLines(4f, cannon.Stats.Color.ChangeAlpha((byte)150));
+            var c = Colors.PcCold.ColorRgba.ChangeAlpha((byte)150);
+            minigunRange.DrawLines(4f, c);
+            cannonRange.DrawLines(4f, c);
 
         }
 
