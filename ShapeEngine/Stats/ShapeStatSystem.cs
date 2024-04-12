@@ -5,176 +5,280 @@ using ShapeEngine.Lib;
 namespace ShapeEngine.Stats;
 
 
-/*
-    Change Stat system (again...)
-        -> stat system holds IBuffs
-        -> stat system updates IBuffs
-        -> stat system removes finished IBuffs
-        -> stat system applies all buff effects of non finished IBuffs to stats
-        -> Tag stays in buff effect
-        -> Id moves from buff effect to IBuff
-        
-        -> IBuff has Draw(Rect rect) function
-        -> IBuffEffect keeps name & get text functions
-        -> IBuff receives Name & GetTextFunction
-*/
-
 //TESTING--------
-public static class BuffTags
+// public static class BuffTags
+// {
+//     public static readonly uint MovementSpeed = BitFlag.NextFlag;
+//     public static readonly uint ReloadSpeed = BitFlag.NextFlag;
+// }
+// public static class BuffEffects
+// {
+//     public static readonly BuffCreator.Buff.Effect MovementSpeedFreezeEffect = new (BuffTags.MovementSpeed, -0.1f, 0f, "Movement Speed");
+//
+//     public static readonly BuffCreator.Buff.Effect ReloadSpeedFreezeEffect = new (BuffTags.ReloadSpeed, 0f, 0.25f, "Reload Speed");
+// }
+// public static class Buffs
+// {
+//     public static readonly BuffCreator FreezeNerf = new(0, 5, 2, true, false, false, BuffEffects.MovementSpeedFreezeEffect, BuffEffects.ReloadSpeedFreezeEffect);
+// }
+//
+// public class Test
+// {
+//     
+//     public ShapeStatSystem playerStatSystem = new ShapeStatSystem();
+//
+//     public void OnPlayerHit()
+//     {
+//         playerStatSystem.AddBuff(Buffs.FreezeNerf.Clone());
+//     }
+// }
+
+public interface IBuffFactory
 {
-    public static readonly uint MovementSpeed = BitFlag.NextFlag;
-    public static readonly uint ReloadSpeed = BitFlag.NextFlag;
+    public IBuff2 Create();
 }
-public class FreezeNerf : IShapeBuff
+public interface IBuff2
 {
-    public static readonly uint MovementNerfId = ShapeID.NextID;
-    public static readonly uint ReloadNerfId = ShapeID.NextID;
-    public static BuffEffect MovementNerf => new BuffEffect(MovementNerfId, BuffTags.MovementSpeed, -0.1f, 0f, 5, 2f);
-    public static BuffEffect ReloadNerf => new BuffEffect(ReloadNerfId, BuffTags.ReloadSpeed, 0f, 0.25f, 1, 4f);
-    
-    public void AddTo(ShapeStatSystem shapeStatSystem)
-    {
-        shapeStatSystem.AddBuffEffect(MovementNerf);
-        shapeStatSystem.AddBuffEffect(ReloadNerf);
-    }
-
-    public void RemoveFrom(ShapeStatSystem shapeStatSystem)
-    {
-        shapeStatSystem.RemoveBuffEffect(MovementNerf);
-        shapeStatSystem.RemoveBuffEffect(ReloadNerf);
-    }
+    public void AddStacks(int amount);
+    public bool RemoveStacks(int amount);
+    public void ApplyTo(ShapeStat stat);
+    public void Update(float dt);
+    public bool IsFinished();
 }
-//---------------
 
-public interface IShapeBuff
+
+public class BuffCreator
 {
-    public void AddTo(ShapeStatSystem shapeStatSystem);
-
-    public void RemoveFrom(ShapeStatSystem shapeStatSystem);
-}
-public class BuffEffect
-{
-    public readonly struct Value
+    public class Buff
     {
-        public readonly float Bonus;
-        public readonly float Flat;
-        public Value()
+        public readonly struct Value
         {
-            this.Bonus = 0f;
-            this.Flat = 0f;
-        }
-        public Value(float bonus, float flat)
-        {
-            this.Bonus = bonus;
-            this.Flat = flat;
-        }
-
-        public float Apply(float baseValue) => (baseValue + Flat) * (1f + Bonus);
-
-        public Value Add(Value other) => new(Bonus + other.Bonus, Flat + other.Flat);
-    }
-    public uint Tag { get; private set; }
-    public uint Id { get; private set; }
-    
-    //split into bonus & flat
-    //buff value is just used for final value
-    // public Buff2.Value BuffValue { get; private set; }
-    public readonly float Bonus;
-    public readonly float Flat;
-    public int MaxStacks { get; private set; }
-    public int CurStacks { get; private set; }
-    public float Duration { get; private set; }
-    public float Timer { get; private set; }
-    public float TimerF
-    {
-        get
-        {
-            if (Duration <= 0f) return 0f;
-            return 1f - (Timer / Duration);
-        }
-    }
-    public float StackF
-    {
-        get
-        {
-            if (MaxStacks <= 0) return 0f;
-            return (float)CurStacks / (float)MaxStacks;
-        }
-    }
-
-    public bool StacksReplenishDuration = true;
-    public bool ClearAllStacksOnDurationEnd = false;
-    public bool Degrading = false;
-
-    public BuffEffect(uint id, uint tag, float bonus = 0f, float flat = 0f, int maxStacks = -1, float duration = -1)
-    {
-        Id = id;
-        Tag = tag;
-        Bonus = bonus;
-        Flat = flat;
-        MaxStacks = maxStacks;
-        Duration = duration;
-        if (this.Duration > 0f) Timer = this.Duration;
-        else Timer = 0f;
-    }
-    public void AddStacks(int amount)
-    {
-        if (CurStacks < MaxStacks || MaxStacks < 0) CurStacks += amount;
-        if (Duration > 0 && StacksReplenishDuration) Timer = Duration;
-    }
-    public bool RemoveStacks(int amount)
-    {
-        CurStacks -= amount;
-        if (CurStacks <= 0)
-        {
-            CurStacks = 0;
-            return true;
-        }
-
-        return false;
-    }
-    public BuffEffect.Value GetCurBuffValue()
-    {
-        float f = 1f;
-        if (Degrading && Duration > 0) f = TimerF;
-
-        var stacks = CurStacks + 1;
-
-        return new (Bonus * stacks * f, Flat * stacks * f);
-    }
-    public void Update(float dt)
-    {
-        if (Duration > 0f)
-        {
-            Timer -= dt;
-            if (Timer <= 0f)
+            public readonly float Bonus;
+            public readonly float Flat;
+            public Value()
             {
-                if (ClearAllStacksOnDurationEnd) CurStacks = 0;
-                else
+                this.Bonus = 0f;
+                this.Flat = 0f;
+            }
+            public Value(float bonus, float flat)
+            {
+                this.Bonus = bonus;
+                this.Flat = flat;
+            }
+
+            public float Apply(float baseValue) => (baseValue + Flat) * (1f + Bonus);
+
+            public Value Add(Value other) => new(Bonus + other.Bonus, Flat + other.Flat);
+            // public Value Add(Effect other) => new(Bonus + other.Bonus, Flat + other.Flat);
+            
+            public string ToText()
+            {
+                float bonusPercentage = (1 + Bonus) * 100;
+                return $"+{(int)bonusPercentage}% +{(int)Flat}";
+            }
+        }
+        public readonly struct Effect
+        {
+        
+            public readonly uint Tag;
+            public readonly float Bonus;
+            public readonly float Flat;
+            public readonly string TagName;
+            
+            public Effect(uint tag, float bonus = 0f, float flat = 0f, string tagName = "")
+            {
+                Tag = tag;
+                Bonus = bonus;
+                Flat = flat;
+                TagName = tagName;
+            }
+        
+            public string ToText()
+            {
+                float bonusPercentage = (1 + Bonus) * 100;
+                return $"{TagName} +{(int)bonusPercentage}% +{(int)Flat}";
+            }
+        
+        }
+
+        protected readonly List<Effect> Effects;
+        public uint Id { get; private set; }
+        public int MaxStacks { get; private set; }
+        public int CurStacks { get; private set; }
+        public float Duration { get; private set; }
+        public float Timer { get; private set; }
+        public float TimerF
+        {
+            get
+            {
+                if (Duration <= 0f) return 0f;
+                return 1f - (Timer / Duration);
+            }
+        }
+        public float StackF
+        {
+            get
+            {
+                if (MaxStacks <= 0) return 0f;
+                return (float)CurStacks / (float)MaxStacks;
+            }
+        }
+
+        public bool StacksReplenishDuration = true;
+        public bool ClearAllStacksOnDurationEnd = false;
+        public bool Degrading = false;
+
+        
+        
+        internal Buff(uint id, int maxStacks = -1, float duration = -1)
+        {
+            Id = id;
+            MaxStacks = maxStacks;
+            Duration = duration;
+            if (this.Duration > 0f) Timer = this.Duration;
+            else Timer = 0f;
+
+            Effects = new();
+        }
+        internal Buff(uint id, int maxStacks, float duration, params Effect[] effects)
+        {
+            Id = id;
+            MaxStacks = maxStacks;
+            Duration = duration;
+            if (this.Duration > 0f) Timer = this.Duration;
+            else Timer = 0f;
+
+            this.Effects = new(effects.Length);
+            this.Effects.AddRange(effects);
+        }
+        
+
+        // public Buff2 Clone() => new(Id, MaxStacks, Duration, Effects.ToArray());
+
+        public void AddEffect(Effect effect)
+        {
+            Effects.Add(effect);
+        }
+        
+        public void AddStacks(int amount)
+        {
+            if (CurStacks < MaxStacks || MaxStacks < 0) CurStacks += amount;
+            if (Duration > 0 && StacksReplenishDuration) Timer = Duration;
+        }
+        public bool RemoveStacks(int amount)
+        {
+            CurStacks -= amount;
+            if (CurStacks <= 0)
+            {
+                CurStacks = 0;
+                return true;
+            }
+
+            return false;
+        }
+        public void ApplyTo(ShapeStat stat)
+        {
+            if (Effects.Count <= 0) return;
+            foreach (var effect in Effects)
+            {
+                if (stat.IsAffected(effect.Tag))
                 {
-                    CurStacks -= 1;
-                    if (CurStacks > 0)
+                    stat.Apply(GetCurBuffValue(effect));
+                }
+            }
+        }
+        public virtual void Update(float dt)
+        {
+            if (Duration > 0f)
+            {
+                Timer -= dt;
+                if (Timer <= 0f)
+                {
+                    if (ClearAllStacksOnDurationEnd) CurStacks = 0;
+                    else
                     {
-                        Timer = Duration;
+                        CurStacks -= 1;
+                        if (CurStacks > 0)
+                        {
+                            Timer = Duration;
+                        }
                     }
                 }
             }
         }
-    }
-    
-    
-    public virtual void Draw(Rect rect) { }
-    
-    public bool IsFinished() => Duration > 0f && Timer <= 0f;
+        public virtual void Draw(Rect rect) { }
+        public virtual bool IsFinished() => Duration > 0f && Timer <= 0f;
+        public virtual void GetEffectTexts(ref List<string> result)
+        {
+            foreach (var effect in Effects)
+            {
+                var v = GetCurBuffValue(effect);
+                result.Add(v.ToText());
+            }
+        }
+        public virtual string GetStackText() => $"Stacks {CurStacks}/{MaxStacks}";
+        
+        protected virtual Buff.Value GetCurBuffValue(Buff.Effect effect)
+        {
+            float f = 1f;
+            if (Degrading && Duration > 0) f = TimerF;
+        
+            var stacks = CurStacks + 1;
+        
+            return new (effect.Bonus * stacks * f, effect.Flat * stacks * f);
+        }
 
-    public string GetValueText()
+    }
+
+    private readonly Buff.Effect[] effects;
+    private readonly uint id;
+    private readonly int stacks;
+    private readonly float duration;
+    private readonly bool stacksReplenishDuration;
+    private readonly bool clearAllStacksOnDurationEnd;
+    private readonly bool degrading;
+
+    public BuffCreator(uint id, int stacks, float duration, bool stacksReplenishDuration,
+        bool clearAllStacksOnDurationEnd, bool degrading, params Buff.Effect[] effects)
     {
-        var cur = GetCurBuffValue();
-        float bonusPercentage = (1 + cur.Bonus) * 100;
-        return $"+{(int)bonusPercentage}% +{(int)cur.Flat}";
+        this.id = id;
+        this.stacks = stacks;
+        this.duration = duration;
+        this.stacksReplenishDuration = stacksReplenishDuration;
+        this.clearAllStacksOnDurationEnd = clearAllStacksOnDurationEnd;
+        this.degrading = degrading;
+        this.effects = effects;
     }
-
-    public string GetStackText() => $"Stacks {CurStacks}/{MaxStacks}";
+    
+    public BuffCreator(uint id, int stacks, float duration, params Buff.Effect[] effects)
+    {
+        this.id = id;
+        this.stacks = stacks;
+        this.duration = duration;
+        this.stacksReplenishDuration = true;
+        this.clearAllStacksOnDurationEnd = false;
+        this.degrading = false;
+        this.effects = effects;
+    }
+    public BuffCreator(uint id, params Buff.Effect[] effects)
+    {
+        this.id = id;
+        this.stacks = -1;
+        this.duration = -1;
+        this.stacksReplenishDuration = true;
+        this.clearAllStacksOnDurationEnd = false;
+        this.degrading = false;
+        this.effects = effects;
+    }
+    
+    public Buff Clone()
+    {
+        var b = new Buff(id, stacks, duration, effects);
+        b.Degrading = degrading;
+        b.StacksReplenishDuration = stacksReplenishDuration;
+        b.ClearAllStacksOnDurationEnd = clearAllStacksOnDurationEnd;
+        return b;
+    }
 }
 public class ShapeStat
 {
@@ -195,7 +299,7 @@ public class ShapeStat
     }
     
     private bool locked = false;
-    private BuffEffect.Value total = new();
+    private BuffCreator.Buff.Value total = new();
     
     public ShapeStat(uint id, float baseValue, BitFlag tagMask)
     {
@@ -218,7 +322,7 @@ public class ShapeStat
     {
         total = new();
     }
-    public void Apply(BuffEffect.Value buffValue)
+    public void Apply(BuffCreator.Buff.Value buffValue)
     {
         if (Locked) return;
         total = total.Add(buffValue);
@@ -226,10 +330,10 @@ public class ShapeStat
 }
 public class ShapeStatSystem
 {
-    public event Action<BuffEffect>? OnBuffEffectRemoved;
+    public event Action<BuffCreator.Buff>? OnBuffRemoved;
 
     private readonly Dictionary<uint, ShapeStat> stats;
-    private readonly Dictionary<uint, BuffEffect> buffEffects;
+    private readonly Dictionary<uint, BuffCreator.Buff> buffEffects;
 
     public ShapeStatSystem()
     {
@@ -251,16 +355,17 @@ public class ShapeStatSystem
             if (buff.IsFinished())
             {
                 buffEffects.Remove(kvp.Key);
-                ResolveOnBuffEffectRemoved(buff);
+                ResolveOnBuffRemoved(buff);
             }
             else
             {
                 foreach (var stat in statValues)
                 {
-                    if(stat.IsAffected(buff.Tag))
-                    {
-                        stat.Apply(buff.GetCurBuffValue());
-                    }
+                    buff.ApplyTo(stat);
+                    // if(stat.IsAffected(buff.Tag))
+                    // {
+                    //     stat.Apply(buff.GetCurBuffValue());
+                    // }
                 }
             }
         }
@@ -276,7 +381,7 @@ public class ShapeStatSystem
         if(removed) stat.Reset();
         return removed;
     }
-    public void AddBuffEffect(BuffEffect buffEffect)
+    public void AddBuff(BuffCreator.Buff buffEffect)
     {
         if (buffEffects.ContainsKey(buffEffect.Id))
         {
@@ -284,14 +389,14 @@ public class ShapeStatSystem
         }
         else buffEffects.Add(buffEffect.Id, buffEffect);
     }
-    public bool RemoveBuffEffect(BuffEffect buffEffect)
+    public bool RemoveBuff(BuffCreator.Buff buffEffect)
     {
         if (buffEffects.ContainsKey(buffEffect.Id))
         {
             if (buffEffects[buffEffect.Id].RemoveStacks(1))
             {
                 buffEffects.Remove(buffEffect.Id);
-                ResolveOnBuffEffectRemoved(buffEffect);
+                ResolveOnBuffRemoved(buffEffect);
             }
 
             return true;
@@ -300,19 +405,10 @@ public class ShapeStatSystem
         return false;
     }
 
-    public void AddBuff(IShapeBuff buff)
+    protected virtual void BuffWasRemoved(BuffCreator.Buff buff) { }
+    private void ResolveOnBuffRemoved(BuffCreator.Buff buff)
     {
-        buff.AddTo(this);
-    }
-
-    public void RemoveBuff(IShapeBuff buff)
-    {
-        buff.RemoveFrom(this);
-    }
-    protected virtual void BuffEffectWasRemoved(BuffEffect buff) { }
-    private void ResolveOnBuffEffectRemoved(BuffEffect buff)
-    {
-        BuffEffectWasRemoved(buff);
-        OnBuffEffectRemoved?.Invoke(buff);
+        BuffWasRemoved(buff);
+        OnBuffRemoved?.Invoke(buff);
     }
 }
